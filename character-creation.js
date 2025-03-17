@@ -1,5 +1,6 @@
-let rolls = { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 }; // Controle de rolagem
-let resets = { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 }; // Controle de zerar
+// Inicializa os contadores para rolagens e resets por atributo
+let rolls = { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 }; // Limite de rolagens por atributo
+let resets = { health: 2, strength: 2, dexterity: 2, intelligence: 2, luck: 2 }; // Limite de resets por atributo
 
 // Função para rolar os dados
 function rollDice(sides) {
@@ -40,6 +41,7 @@ function rollStat(stat, button) {
         let secondRoll = document.getElementById(stat + "2");
         let totalRoll = document.getElementById(stat + "Total");
         let modifierDisplay = document.getElementById(stat + "Modifier");
+
         if (firstRoll.innerText === "-") {
             firstRoll.innerText = rollDice(6);
         } else if (secondRoll.innerText === "-") {
@@ -54,26 +56,29 @@ function rollStat(stat, button) {
             }
             rollValue += modifierValue;
             totalRoll.innerText = rollValue;
-            rolls[stat]--;
-            if (rolls[stat] === 0) disableButton(button);
+            rolls[stat]--; // Reduz o contador de rolagens para o atributo
+            if (rolls[stat] === 0) disableButton(button); // Desabilita o botão "🎲" quando atingir o limite
         }
+    } else {
+        alert("Você já usou todas as 3 rolagens permitidas para este atributo!");
     }
 }
 
-// Função para zerar o atributo
-function resetStat(stat) {
+// Função para zerar os atributos
+function resetStat(stat, button) {
     if (resets[stat] > 0) {
-        resets[stat]--; // Reduz o contador de vezes que pode zerar
         document.getElementById(stat + "1").innerText = "-";
         document.getElementById(stat + "2").innerText = "-";
         document.getElementById(stat + "Total").innerText = "-";
-        document.getElementById(stat + "Modifier").innerText = ""; // Remove o modificador
+        document.getElementById(stat + "Modifier").innerText = ""; // Limpa o modificador
+        resets[stat]--; // Reduz o contador de resets para o atributo
+        if (resets[stat] === 0) disableButton(button); // Desabilita o botão "Zerar" quando atingir o limite
     } else {
-        alert("Você já zerou este atributo 3 vezes!"); // Mensagem de alerta
+        alert("Você já zerou este atributo 2 vezes!"); // Mensagem ao ultrapassar o limite
     }
 }
 
-// Função para desabilitar botões quando necessário
+// Função para desabilitar um botão específico
 function disableButton(button) {
     button.disabled = true;
     button.style.opacity = "0.5";
