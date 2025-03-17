@@ -205,3 +205,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
+window.rollStat = rollStat;
+window.resetStat = resetStat;
