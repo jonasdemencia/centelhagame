@@ -28,6 +28,9 @@
         const app = firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth(); // Autenticação do Firebase
         const db = firebase.firestore(); // Banco de Dados Firestore
+
+        // Teste de inicialização
+        console.log("Firebase inicializado no index.html:", firebase.apps.length > 0);
     </script>
 </head>
 <body>
@@ -44,3 +47,4 @@
     <p id="message"></p>
 </body>
 </html>
+
