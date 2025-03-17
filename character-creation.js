@@ -133,16 +133,5 @@ function updateRacialModifiersDisplay() {
 // Adicionar evento ao campo de raça
 document.getElementById("race").addEventListener("change", updateRacialModifiersDisplay);
 
-// Verificar se os botões devem ser desativados ao carregar a página
-function checkButtonStates() {
-    for (const stat in rolls) {
-        const rollButton = document.querySelector(`#${stat} .button:first-child`); // Botão de rolar
-        const resetButton = document.querySelector(`#${stat} .button:last-child`); // Botão de zerar
-        if (rolls[stat] === 0) disableButton(rollButton);
-        if (resets[stat] === 0) disableButton(resetButton);
-    }
-}
-
 // Restaura o estado salvo no localStorage ao carregar a página
 restoreStateFromLocalStorage();
-checkButtonStates();
