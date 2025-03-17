@@ -37,33 +37,46 @@ function getRacialModifiers() {
 // Função para rolar o atributo
 function rollStat(stat, button) {
     if (rolls[stat] > 0) {
+        console.log(`Rolando atributo: ${stat}`);
         let firstRoll = document.getElementById(stat + "1");
         let secondRoll = document.getElementById(stat + "2");
         let totalRoll = document.getElementById(stat + "Total");
         let modifierDisplay = document.getElementById(stat + "Modifier");
 
-        if (firstRoll && secondRoll && totalRoll && modifierDisplay) {
-            if (firstRoll.innerText === "-") {
-                firstRoll.innerText = rollDice(6);
-            } else if (secondRoll.innerText === "-") {
-                secondRoll.innerText = rollDice(6);
-                let rollValue = parseInt(firstRoll.innerText) + parseInt(secondRoll.innerText);
-                const racialModifiers = getRacialModifiers();
-                const modifierValue = racialModifiers[stat];
-                modifierDisplay.innerText = modifierValue !== 0 ? ` (+${modifierValue})` : "";
-                rollValue += modifierValue;
-                totalRoll.innerText = rollValue;
-                rolls[stat]--; // Reduzir contador
-                savePlayerData(auth.currentUser.uid, getPlayerStats()); // Salvar no Firestore
-                if (rolls[stat] === 0) disableButton(button); // Desabilitar botão ao atingir limite
+        if (!firstRoll || !secondRoll || !totalRoll || !modifierDisplay) {
+            console.error(`Elementos DOM para ${stat} não encontrados.`);
+            return;
+        }
+
+        if (firstRoll.innerText === "-") {
+            firstRoll.innerText = rollDice(6);
+            console.log(`Primeira rolagem (${stat}): ${firstRoll.innerText}`);
+        } else if (secondRoll.innerText === "-") {
+            secondRoll.innerText = rollDice(6);
+            console.log(`Segunda rolagem (${stat}): ${secondRoll.innerText}`);
+
+            let rollValue = parseInt(firstRoll.innerText) + parseInt(secondRoll.innerText);
+            const racialModifiers = getRacialModifiers();
+            const modifierValue = racialModifiers[stat];
+
+            if (modifierValue !== 0) {
+                modifierDisplay.innerText = ` (+${modifierValue})`;
+            } else {
+                modifierDisplay.innerText = "";
             }
-        } else {
-            console.error("Elementos DOM para o atributo não encontrados.");
+
+            rollValue += modifierValue;
+            totalRoll.innerText = rollValue;
+            rolls[stat]--;
+            console.log(`Total (${stat}): ${rollValue}`);
+
+            if (rolls[stat] === 0) disableButton(button);
         }
     } else {
         alert("Você já usou todas as 3 rolagens permitidas para este atributo!");
     }
 }
+
 
 // Função para zerar os atributos
 function resetStat(stat, button) {
