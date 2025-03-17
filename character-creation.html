@@ -3,34 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Criação de Personagem</title>
-    <script src="character-creation.js" defer></script>
+    <title>Ficha de Criação de Personagem</title>
+    <link href="style.css" rel="stylesheet"> <!-- Referência ao CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet"> <!-- Fonte Eagle Lake -->
 </head>
-<body>
-    <h1>Criação de Personagem</h1>
+<body id="character-page">
+    <div class="container">
+        <h2 class="page-title">Ficha de Criação de Personagem</h2>
 
-    <div>
-        <h2>Força</h2>
-        <p>Dado 1: <span id="forca1">-</span></p>
-        <p>Dado 2: <span id="forca2">-</span></p>
-        <p>Total: <span id="forcaTotal">-</span></p>
-        <button class="roll-button" onclick="rollDice('forca')">Rolar Força</button>
+        <!-- Formulário: Nome e CPF -->
+        <div class="form-group">
+            <input type="text" id="name" placeholder="Nome" class="input-field">
+            <input type="text" id="cpf" placeholder="CPF" class="input-field">
+            <button id="submit" class="button">ENVIAR</button>
+        </div>
+
+        <!-- Campos: Raça, Alinhamento e Classe -->
+        <div class="label-group">
+            <label for="race" class="label-text">R a ç a:</label>
+            <select id="race" class="select-field">
+                <option value="">Selecione</option>
+                <option>Anão</option>
+                <option>Elfo</option>
+                <option>Humano</option>
+            </select>
+        </div>
+        <div class="label-group">
+            <label for="alignment" class="label-text">A l i n h a m e n t o:</label>
+            <select id="alignment" class="select-field">
+                <option value="">Selecione</option>
+                <option>Bondoso</option>
+                <option>Mau</option>
+                <option>Neutro</option>
+            </select>
+        </div>
+        <div class="label-group">
+            <label for="class" class="label-text">C l a s s e:</label>
+            <select id="class" class="select-field">
+                <option value="">Selecione</option>
+                <option>Paladino</option>
+                <option>Guerreiro</option>
+                <option>Ladino</option>
+                <option>Mago</option>
+            </select>
+        </div>
+
+        <!-- Instruções -->
+        <p class="instruction-paragraph">Você poderá rolar cada um dos atributos três vezes. Role de forma sábia.</p>
+
+        <!-- Seção de Atributos -->
+        <div class="stats-section stats" id="stats">
+            <!-- Vida -->
+            <div class="stat-box">
+                <strong class="stat-name">Vida:</strong>
+                <span id="health1" class="stat-value">-</span> + <span id="health2" class="stat-value">-</span>
+                <span id="healthModifier" class="racial-modifier"></span> =
+                <span id="healthTotal" class="stat-value">-</span>
+                <div class="stat-buttons-inline">
+                    <button onclick="rollStat('health', this)" class="button">🎲</button>
+                    <button onclick="resetStat('health')" class="button">Zerar</button>
+                </div>
+            </div>
+            <!-- Força -->
+            <div class="stat-box">
+                <strong class="stat-name">Força:</strong>
+                <span id="strength1" class="stat-value">-</span> + <span id="strength2" class="stat-value">-</span>
+                <span id="strengthModifier" class="racial-modifier"></span> =
+                <span id="strengthTotal" class="stat-value">-</span>
+                <div class="stat-buttons-inline">
+                    <button onclick="rollStat('strength', this)" class="button">🎲</button>
+                    <button onclick="resetStat('strength')" class="button">Zerar</button>
+                </div>
+            </div>
+            <!-- Repetição para outros atributos (Destreza, Inteligência, Sorte) -->
+        </div>
     </div>
 
-    <div>
-        <h2>Destreza</h2>
-        <p>Dado 1: <span id="destreza1">-</span></p>
-        <p>Dado 2: <span id="destreza2">-</span></p>
-        <p>Total: <span id="destrezaTotal">-</span></p>
-        <button class="roll-button" onclick="rollDice('destreza')">Rolar Destreza</button>
-    </div>
-
-    <div>
-        <h2>Inteligência</h2>
-        <p>Dado 1: <span id="inteligencia1">-</span></p>
-        <p>Dado 2: <span id="inteligencia2">-</span></p>
-        <p>Total: <span id="inteligenciaTotal">-</span></p>
-        <button class="roll-button" onclick="rollDice('inteligencia')">Rolar Inteligência</button>
-    </div>
+    <script src="character-creation.js"></script> <!-- Conecta ao arquivo JS -->
 </body>
 </html>
