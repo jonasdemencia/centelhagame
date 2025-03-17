@@ -1,11 +1,12 @@
-document.getElementById("race").addEventListener("change", updateRacialModifiersDisplay);
+let rolls = { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 }; // Controle de rolagem
+let resets = { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 }; // Controle de zerar
 
+// Função para rolar os dados
 function rollDice(sides) {
     return Math.floor(Math.random() * sides) + 1;
 }
 
-let rolls = { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 };
-
+// Função para obter modificadores raciais com base na raça escolhida
 function getRacialModifiers() {
     const race = document.getElementById("race").value;
     let modifiers = { health: 0, strength: 0, dexterity: 0, intelligence: 0, luck: 0 };
@@ -32,6 +33,7 @@ function getRacialModifiers() {
     return modifiers;
 }
 
+// Função para rolar o atributo
 function rollStat(stat, button) {
     if (rolls[stat] > 0) {
         let firstRoll = document.getElementById(stat + "1");
@@ -58,20 +60,27 @@ function rollStat(stat, button) {
     }
 }
 
+// Função para zerar o atributo
 function resetStat(stat) {
-    rolls[stat] = 3;
-    document.getElementById(stat + "1").innerText = "-";
-    document.getElementById(stat + "2").innerText = "-";
-    document.getElementById(stat + "Total").innerText = "-";
-    document.getElementById(stat + "Modifier").innerText = "";
+    if (resets[stat] > 0) {
+        resets[stat]--; // Reduz o contador de vezes que pode zerar
+        document.getElementById(stat + "1").innerText = "-";
+        document.getElementById(stat + "2").innerText = "-";
+        document.getElementById(stat + "Total").innerText = "-";
+        document.getElementById(stat + "Modifier").innerText = ""; // Remove o modificador
+    } else {
+        alert("Você já zerou este atributo 3 vezes!"); // Mensagem de alerta
+    }
 }
 
+// Função para desabilitar botões quando necessário
 function disableButton(button) {
     button.disabled = true;
     button.style.opacity = "0.5";
     button.style.cursor = "not-allowed";
 }
 
+// Atualizar os modificadores raciais com base na raça escolhida
 function updateRacialModifiersDisplay() {
     const racialModifiers = getRacialModifiers();
     for (const stat in racialModifiers) {
@@ -84,3 +93,6 @@ function updateRacialModifiersDisplay() {
         }
     }
 }
+
+// Adicionar evento ao campo de raça
+document.getElementById("race").addEventListener("change", updateRacialModifiersDisplay);
