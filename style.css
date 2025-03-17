@@ -1,37 +1,30 @@
+/* Fonte Eagle Lake */
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f9;
-}
-
-#character-page {
+    font-family: 'Eagle Lake', cursive;
     text-align: center;
+    margin: 0;
+    padding: 5px;
     background-color: #1a1a1a;
     color: white;
 }
 
-.container {
-    max-width: 800px;
-    margin: 10px auto;
-    padding: 20px;
-    border: 1px solid white;
+/* Botões alinhados horizontalmente */
+.stat-buttons-inline {
+    display: inline-flex;
+    gap: 10px;
+    margin-left: 10px; /* Espaço entre o resultado e os botões */
 }
 
 .button {
     background-color: transparent;
     color: white;
     border: 1px solid white;
-    padding: 10px 20px;
+    padding: 6px 12px;
+    font-family: 'Eagle Lake', cursive;
     cursor: pointer;
 }
 
 .button:hover {
     background-color: white;
     color: black;
-}
-
-.stat-buttons {
-    display: flex;
-    gap: 5px;
 }
