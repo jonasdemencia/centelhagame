@@ -118,7 +118,7 @@ function updateRacialModifiersDisplay() {
 document.getElementById("race").addEventListener("change", updateRacialModifiersDisplay);
 
 // Função para salvar os dados do jogador no Firestore
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 async function savePlayerData(uid, data) {
     try {
@@ -132,7 +132,6 @@ async function savePlayerData(uid, data) {
 
 
 // Função para recuperar os dados do jogador no Firestore
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 async function getPlayerData(uid) {
     try {
