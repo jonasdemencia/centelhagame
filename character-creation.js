@@ -51,6 +51,7 @@ function rollStat(stat, button) {
         if (firstRoll.innerText === "-") {
             firstRoll.innerText = rollDice(6);
             console.log(`Primeira rolagem (${stat}): ${firstRoll.innerText}`);
+            savePlayerData(auth.currentUser.uid, getPlayerStats()); // Salva após a primeira rolagem
         } else if (secondRoll.innerText === "-") {
             secondRoll.innerText = rollDice(6);
             console.log(`Segunda rolagem (${stat}): ${secondRoll.innerText}`);
@@ -71,12 +72,12 @@ function rollStat(stat, button) {
             console.log(`Total (${stat}): ${rollValue}`);
 
             if (rolls[stat] === 0) disableButton(button);
+            savePlayerData(auth.currentUser.uid, getPlayerStats()); // Salva após a segunda rolagem e cálculo do total
         }
     } else {
         alert("Você já usou todas as 3 rolagens permitidas para este atributo!");
     }
 }
-
 
 // Função para zerar os atributos
 function resetStat(stat, button) {
