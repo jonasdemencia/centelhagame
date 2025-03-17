@@ -5,12 +5,12 @@ import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/fireb
 
 // Configuração do Firebase
 const firebaseConfig = {
-    apiKey: "SUA_API_KEY",
-    authDomain: "SEU_AUTH_DOMAIN",
-    projectId: "SEU_PROJECT_ID",
-    storageBucket: "SEU_STORAGE_BUCKET",
-    messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-    appId: "SEU_APP_ID"
+  apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
+  authDomain: "centelhagame-9d511.firebaseapp.com",
+  projectId: "centelhagame-9d511",
+  storageBucket: "centelhagame-9d511.firebasestorage.app",
+  messagingSenderId: "700809803145",
+  appId: "1:700809803145:web:bff4c6a751ec9389919d58"
 };
 
 // Inicializa o Firebase
