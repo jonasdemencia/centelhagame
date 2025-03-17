@@ -1,41 +1,6 @@
 // Inicializa os contadores para rolagens e resets por atributo
-let rolls = JSON.parse(localStorage.getItem("rolls")) || { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 };
-let resets = JSON.parse(localStorage.getItem("resets")) || { health: 2, strength: 2, dexterity: 2, intelligence: 2, luck: 2 };
-
-// Função para salvar o estado atual no localStorage
-function updateLocalStorage() {
-    localStorage.setItem("rolls", JSON.stringify(rolls));
-    localStorage.setItem("resets", JSON.stringify(resets));
-    const currentValues = {};
-    ["health", "strength", "dexterity", "intelligence", "luck"].forEach(stat => {
-        currentValues[stat] = {
-            firstRoll: document.getElementById(stat + "1").innerText,
-            secondRoll: document.getElementById(stat + "2").innerText,
-            total: document.getElementById(stat + "Total").innerText,
-            modifier: document.getElementById(stat + "Modifier").innerText
-        };
-    });
-    localStorage.setItem("currentValues", JSON.stringify(currentValues));
-}
-
-// Recupera os valores salvos no localStorage
-function restoreStateFromLocalStorage() {
-    const savedValues = JSON.parse(localStorage.getItem("currentValues")) || {};
-    for (const stat in savedValues) {
-        if (savedValues.hasOwnProperty(stat)) {
-            // Atualiza os valores visuais no HTML
-            const firstRoll = document.getElementById(stat + "1");
-            const secondRoll = document.getElementById(stat + "2");
-            const total = document.getElementById(stat + "Total");
-            const modifier = document.getElementById(stat + "Modifier");
-
-            if (firstRoll) firstRoll.innerText = savedValues[stat].firstRoll || "-";
-            if (secondRoll) secondRoll.innerText = savedValues[stat].secondRoll || "-";
-            if (total) total.innerText = savedValues[stat].total || "-";
-            if (modifier) modifier.innerText = savedValues[stat].modifier || "";
-        }
-    }
-}
+let rolls = { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 }; // Limite de rolagens por atributo
+let resets = { health: 2, strength: 2, dexterity: 2, intelligence: 2, luck: 2 }; // Limite de resets por atributo
 
 // Função para rolar os dados
 function rollDice(sides) {
@@ -92,7 +57,6 @@ function rollStat(stat, button) {
             rollValue += modifierValue;
             totalRoll.innerText = rollValue;
             rolls[stat]--; // Reduz o contador de rolagens para o atributo
-            updateLocalStorage(); // Salva os valores e contadores
             if (rolls[stat] === 0) disableButton(button); // Desabilita o botão "🎲" quando atingir o limite
         }
     } else {
@@ -108,7 +72,6 @@ function resetStat(stat, button) {
         document.getElementById(stat + "Total").innerText = "-";
         document.getElementById(stat + "Modifier").innerText = ""; // Limpa o modificador
         resets[stat]--; // Reduz o contador de resets para o atributo
-        updateLocalStorage(); // Salva os valores e contadores
         if (resets[stat] === 0) disableButton(button); // Desabilita o botão "Zerar" quando atingir o limite
     } else {
         alert("Você já zerou este atributo 2 vezes!"); // Mensagem ao ultrapassar o limite
@@ -138,6 +101,3 @@ function updateRacialModifiersDisplay() {
 
 // Adicionar evento ao campo de raça
 document.getElementById("race").addEventListener("change", updateRacialModifiersDisplay);
-
-// Restaura o estado salvo no localStorage ao carregar a página
-restoreStateFromLocalStorage();
