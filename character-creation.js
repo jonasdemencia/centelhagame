@@ -119,12 +119,15 @@ async function savePlayerData(uid, data) {
 
 
 // Função para recuperar os dados do jogador no Firestore
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+
 async function getPlayerData(uid) {
     try {
-        const doc = await db.collection("players").doc(uid).get();
-        if (doc.exists) {
-            console.log("Dados do jogador recuperados:", doc.data());
-            return doc.data();
+        const playerRef = doc(db, "players", uid);
+        const playerSnap = await getDoc(playerRef);
+        if (playerSnap.exists()) {
+            console.log("Dados do jogador recuperados:", playerSnap.data());
+            return playerSnap.data();
         } else {
             console.log("Nenhum dado encontrado para este jogador.");
             return null;
@@ -134,6 +137,7 @@ async function getPlayerData(uid) {
         return null;
     }
 }
+
 
 // Função para obter os valores atuais dos atributos do jogador
 function getPlayerStats() {
