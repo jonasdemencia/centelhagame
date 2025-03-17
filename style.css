@@ -1,4 +1,4 @@
-/* Fonte Eagle Lake */
+/* Aplicação da fonte Eagle Lake */
 body {
     font-family: 'Eagle Lake', cursive;
     text-align: center;
@@ -8,11 +8,11 @@ body {
     color: white;
 }
 
-/* Botões alinhados horizontalmente */
+/* Estilo dos botões alinhados */
 .stat-buttons-inline {
-    display: inline-flex;
-    gap: 10px;
-    margin-left: 10px; /* Espaço entre o resultado e os botões */
+    display: inline-flex; /* Alinha os botões horizontalmente */
+    gap: 10px; /* Espaçamento entre os botões */
+    margin-left: 10px; /* Margem entre o resultado e os botões */
 }
 
 .button {
@@ -27,4 +27,10 @@ body {
 .button:hover {
     background-color: white;
     color: black;
+}
+
+/* Estilo dos valores */
+.stat-value {
+    font-size: 16px;
+    color: white;
 }
