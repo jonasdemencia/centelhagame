@@ -1,147 +1,61 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ficha de Criação de Personagem</title>
-    <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Clara:wght@300&display=swap" rel="stylesheet">
-    <style>
-        /* Suas estilizações do CSS aqui (mesma que mencionei antes) */
-        body {
-            text-align: center;
-            background-color: #1a1a1a;
-            color: white;
-            font-family: sans-serif;
-            margin: 0;
-            padding: 5px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 10px auto;
-            padding: 10px;
-            background: transparent;
-            border: 1px solid white;
-            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        /* Outros estilos já descritos anteriormente */
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2 class="page-title">Ficha de Criação de Personagem</h2>
-        <div class="form-group">
-            <input type="text" id="name" placeholder="Nome" class="input-field">
-            <input type="text" id="cpf" placeholder="CPF" class="input-field">
-            <button id="submit" class="button">ENVIAR</button>
-        </div>
-        <div class="label-group">
-            <label for="race" class="label-text label-eagle-lake">Raça:</label>
-            <select id="race" class="select-field">
-                <option value="">Selecione</option>
-                <option>Anão</option>
-                <option>Elfo</option>
-                <option>Humano</option>
-            </select>
-        </div>
-        <div class="stats-section stats" id="stats">
-            <div class="stat-box">
-                <strong class="stat-name">Vida:</strong>
-                <span id="health1" class="stat-value">-</span> + <span id="health2" class="stat-value">-</span>
-                <span id="healthModifier" class="racial-modifier"></span> =
-                <span id="healthTotal" class="stat-value">-</span>
-                <div class="stat-buttons">
-                    <button onclick="rollStat('health', this)" class="button">🎲</button>
-                    <button onclick="resetStat('health')" class="button">Zerar</button>
-                </div>
-            </div>
-            <!-- Outras estatísticas (força, destreza, etc.) seguem o mesmo padrão -->
+<div class="stats-section stats" id="stats">
+    <!-- Vida -->
+    <div class="stat-box">
+        <strong class="stat-name">Vida:</strong>
+        <span id="health1" class="stat-value">-</span> + <span id="health2" class="stat-value">-</span>
+        <span id="healthModifier" class="racial-modifier"></span> =
+        <span id="healthTotal" class="stat-value">-</span>
+        <div class="stat-buttons">
+            <button onclick="rollStat('health', this)" class="button">🎲</button>
+            <button onclick="resetStat('health')" class="button">Zerar</button>
         </div>
     </div>
-
-    <script>
-        function rollDice(sides) {
-            return Math.floor(Math.random() * sides) + 1;
-        }
-        let rolls = { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 };
-        function getRacialModifiers() {
-            const race = document.getElementById("race").value;
-            let modifiers = { health: 0, strength: 0, dexterity: 0, intelligence: 0, luck: 0 };
-            switch (race) {
-                case "Anão":
-                    modifiers.health += 12;
-                    modifiers.intelligence += 3;
-                    modifiers.strength += 6;
-                    modifiers.dexterity += 4;
-                    break;
-                case "Elfo":
-                    modifiers.health += 8;
-                    modifiers.intelligence += 4;
-                    modifiers.dexterity += 6;
-                    modifiers.strength += 4;
-                    break;
-                case "Humano":
-                    modifiers.health += 10;
-                    modifiers.intelligence += 6;
-                    modifiers.dexterity += 4;
-                    modifiers.strength += 4;
-                    break;
-            }
-            return modifiers;
-        }
-        function rollStat(stat, button) {
-            if (rolls[stat] > 0) {
-                let firstRoll = document.getElementById(stat + "1");
-                let secondRoll = document.getElementById(stat + "2");
-                let totalRoll = document.getElementById(stat + "Total");
-                let modifierDisplay = document.getElementById(stat + "Modifier");
-                if (firstRoll.innerText === "-") {
-                    firstRoll.innerText = rollDice(6);
-                } else if (secondRoll.innerText === "-") {
-                    secondRoll.innerText = rollDice(6);
-                    let rollValue = parseInt(firstRoll.innerText) + parseInt(secondRoll.innerText);
-                    const racialModifiers = getRacialModifiers();
-                    const modifierValue = racialModifiers[stat];
-                    if (modifierValue !== 0) {
-                        modifierDisplay.innerText = ` (+${modifierValue})`;
-                    } else {
-                        modifierDisplay.innerText = "";
-                    }
-                    rollValue += modifierValue;
-                    totalRoll.innerText = rollValue;
-                    rolls[stat]--;
-                    if (rolls[stat] === 0) disableButton(button);
-                }
-            }
-        }
-        function resetStat(stat) {
-            rolls[stat] = 3;
-            document.getElementById(stat + "1").innerText = "-";
-            document.getElementById(stat + "2").innerText = "-";
-            document.getElementById(stat + "Total").innerText = "-";
-            document.getElementById(stat + "Modifier").innerText = "";
-        }
-        function disableButton(button) {
-            button.disabled = true;
-            button.style.opacity = "0.5";
-            button.style.cursor = "not-allowed";
-        }
-        document.getElementById("race").addEventListener("change", updateRacialModifiersDisplay);
-        function updateRacialModifiersDisplay() {
-            const racialModifiers = getRacialModifiers();
-            for (const stat in racialModifiers) {
-                const modifierDisplay = document.getElementById(stat + "Modifier");
-                const modifierValue = racialModifiers[stat];
-                if (modifierValue !== 0) {
-                    modifierDisplay.innerText = ` (+${modifierValue})`;
-                } else {
-                    modifierDisplay.innerText = "";
-                }
-            }
-        }
-    </script>
-</body>
-</html>
+    
+    <!-- Força -->
+    <div class="stat-box">
+        <strong class="stat-name">Força:</strong>
+        <span id="strength1" class="stat-value">-</span> + <span id="strength2" class="stat-value">-</span>
+        <span id="strengthModifier" class="racial-modifier"></span> =
+        <span id="strengthTotal" class="stat-value">-</span>
+        <div class="stat-buttons">
+            <button onclick="rollStat('strength', this)" class="button">🎲</button>
+            <button onclick="resetStat('strength')" class="button">Zerar</button>
+        </div>
+    </div>
+    
+    <!-- Destreza -->
+    <div class="stat-box">
+        <strong class="stat-name">Destreza:</strong>
+        <span id="dexterity1" class="stat-value">-</span> + <span id="dexterity2" class="stat-value">-</span>
+        <span id="dexterityModifier" class="racial-modifier"></span> =
+        <span id="dexterityTotal" class="stat-value">-</span>
+        <div class="stat-buttons">
+            <button onclick="rollStat('dexterity', this)" class="button">🎲</button>
+            <button onclick="resetStat('dexterity')" class="button">Zerar</button>
+        </div>
+    </div>
+    
+    <!-- Inteligência -->
+    <div class="stat-box">
+        <strong class="stat-name">Inteligência:</strong>
+        <span id="intelligence1" class="stat-value">-</span> + <span id="intelligence2" class="stat-value">-</span>
+        <span id="intelligenceModifier" class="racial-modifier"></span> =
+        <span id="intelligenceTotal" class="stat-value">-</span>
+        <div class="stat-buttons">
+            <button onclick="rollStat('intelligence', this)" class="button">🎲</button>
+            <button onclick="resetStat('intelligence')" class="button">Zerar</button>
+        </div>
+    </div>
+    
+    <!-- Sorte -->
+    <div class="stat-box">
+        <strong class="stat-name">Sorte:</strong>
+        <span id="luck1" class="stat-value">-</span> + <span id="luck2" class="stat-value">-</span>
+        <span id="luckModifier" class="racial-modifier"></span> =
+        <span id="luckTotal" class="stat-value">-</span>
+        <div class="stat-buttons">
+            <button onclick="rollStat('luck', this)" class="button">🎲</button>
+            <button onclick="resetStat('luck')" class="button">Zerar</button>
+        </div>
+    </div>
+</div>
