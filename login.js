@@ -18,6 +18,19 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app); // Autenticação
 const db = getFirestore(app); // Banco de dados Firestore
 
+// Testando a conexão com Firestore
+async function testFirestoreConnection() {
+    try {
+        const testDoc = doc(db, "test", "connection");
+        await setDoc(testDoc, { status: "connected" });
+        console.log("Conexão com o Firestore: Sucesso");
+    } catch (error) {
+        console.error("Erro ao conectar com o Firestore:", error);
+    }
+}
+
+testFirestoreConnection(); // Testa a conexão ao carregar o arquivo
+
 // Função para verificar e criar dados iniciais no Firestore
 async function initializePlayerData(uid) {
     try {
@@ -54,6 +67,9 @@ document.getElementById("login-form").addEventListener("submit", function(event)
             const user = userCredential.user;
             document.getElementById("message").innerText = "Login bem-sucedido!";
             console.log("Usuário logado:", user);
+
+            // Testando o UID do usuário
+            console.log("UID do jogador autenticado:", user.uid);
 
             // Inicializa os dados do jogador no Firestore, se necessário
             await initializePlayerData(user.uid);
