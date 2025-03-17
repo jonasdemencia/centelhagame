@@ -1,6 +1,21 @@
+// Configurações do Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "SUA_API_KEY",
+    authDomain: "SEU_AUTH_DOMAIN",
+    projectId: "SEU_PROJECT_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
 // Inicializa os contadores para rolagens e resets por atributo
-let rolls = { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 }; // Limite de rolagens por atributo
-let resets = { health: 2, strength: 2, dexterity: 2, intelligence: 2, luck: 2 }; // Limite de resets por atributo
+let rolls = { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 };
+let resets = { health: 2, strength: 2, dexterity: 2, intelligence: 2, luck: 2 };
 
 // Função para rolar os dados
 function rollDice(sides) {
@@ -77,7 +92,6 @@ function rollStat(stat, button) {
     }
 }
 
-
 // Função para zerar os atributos
 function resetStat(stat, button) {
     if (resets[stat] > 0) {
@@ -118,8 +132,6 @@ function updateRacialModifiersDisplay() {
 document.getElementById("race").addEventListener("change", updateRacialModifiersDisplay);
 
 // Função para salvar os dados do jogador no Firestore
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
-
 async function savePlayerData(uid, data) {
     try {
         const playerRef = doc(db, "players", uid);
@@ -130,10 +142,7 @@ async function savePlayerData(uid, data) {
     }
 }
 
-
 // Função para recuperar os dados do jogador no Firestore
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
-
 async function getPlayerData(uid) {
     try {
         const playerRef = doc(db, "players", uid);
@@ -150,7 +159,6 @@ async function getPlayerData(uid) {
         return null;
     }
 }
-
 
 // Função para obter os valores atuais dos atributos do jogador
 function getPlayerStats() {
@@ -194,11 +202,7 @@ function getPlayerStats() {
 }
 
 // Recupera e exibe os dados ao carregar a página
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
-
 document.addEventListener("DOMContentLoaded", () => {
-    const auth = getAuth();
-    
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             console.log("Usuário autenticado:", user.uid);
@@ -214,10 +218,4 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } else {
             console.log("Nenhum jogador autenticado.");
-            window.location.href = "index.html"; // Redireciona para a página de login
-        }
-    });
-});
-
-window.rollStat = rollStat;
-window.resetStat = resetStat;
+            window.location.href = "index.html"; // Redirecion
