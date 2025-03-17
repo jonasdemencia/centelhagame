@@ -42,23 +42,23 @@ function rollStat(stat, button) {
         let totalRoll = document.getElementById(stat + "Total");
         let modifierDisplay = document.getElementById(stat + "Modifier");
 
-        if (firstRoll.innerText === "-") {
-            firstRoll.innerText = rollDice(6);
-        } else if (secondRoll.innerText === "-") {
-            secondRoll.innerText = rollDice(6);
-            let rollValue = parseInt(firstRoll.innerText) + parseInt(secondRoll.innerText);
-            const racialModifiers = getRacialModifiers();
-            const modifierValue = racialModifiers[stat];
-            if (modifierValue !== 0) {
-                modifierDisplay.innerText = ` (+${modifierValue})`;
-            } else {
-                modifierDisplay.innerText = "";
+        if (firstRoll && secondRoll && totalRoll && modifierDisplay) {
+            if (firstRoll.innerText === "-") {
+                firstRoll.innerText = rollDice(6);
+            } else if (secondRoll.innerText === "-") {
+                secondRoll.innerText = rollDice(6);
+                let rollValue = parseInt(firstRoll.innerText) + parseInt(secondRoll.innerText);
+                const racialModifiers = getRacialModifiers();
+                const modifierValue = racialModifiers[stat];
+                modifierDisplay.innerText = modifierValue !== 0 ? ` (+${modifierValue})` : "";
+                rollValue += modifierValue;
+                totalRoll.innerText = rollValue;
+                rolls[stat]--; // Reduzir contador
+                savePlayerData(auth.currentUser.uid, getPlayerStats()); // Salvar no Firestore
+                if (rolls[stat] === 0) disableButton(button); // Desabilitar botão ao atingir limite
             }
-            rollValue += modifierValue;
-            totalRoll.innerText = rollValue;
-            rolls[stat]--; // Reduz o contador de rolagens para o atributo
-            savePlayerData(auth.currentUser.uid, getPlayerStats()); // Salva os dados no Firestore
-            if (rolls[stat] === 0) disableButton(button); // Desabilita o botão "🎲" quando atingir o limite
+        } else {
+            console.error("Elementos DOM para o atributo não encontrados.");
         }
     } else {
         alert("Você já usou todas as 3 rolagens permitidas para este atributo!");
