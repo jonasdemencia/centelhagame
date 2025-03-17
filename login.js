@@ -7,7 +7,7 @@ const firebaseConfig = {
     apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
     authDomain: "centelhagame-9d511.firebaseapp.com",
     projectId: "centelhagame-9d511",
-    storageBucket: "centelhagame-9d511.firebaseapp.com",
+    storageBucket: "centelhagame-9d511.appspot.com",
     messagingSenderId: "700809803145",
     appId: "1:700809803145:web:bff4c6a751ec9389919d58"
 };
@@ -27,11 +27,11 @@ document.getElementById("login-form").addEventListener("submit", function(event)
             const user = userCredential.user;
             document.getElementById("message").innerText = "Login bem-sucedido!";
             console.log("Usuário logado:", user);
-            // Redireciona para uma página após o login
-            window.location.href = "batalha.html";
+            // Atualizado para redirecionar para a página de criação de ficha
+            window.location.href = "character-creation.html";
         })
         .catch((error) => {
             document.getElementById("message").innerText = "Erro ao fazer login: " + error.message;
-            console.error(error);
+            console.error("Erro ao fazer login:", error);
         });
 });
