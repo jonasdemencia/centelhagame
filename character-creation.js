@@ -57,6 +57,7 @@ function rollStat(stat, button) {
             rollValue += modifierValue;
             totalRoll.innerText = rollValue;
             rolls[stat]--; // Reduz o contador de rolagens para o atributo
+            savePlayerData(auth.currentUser.uid, getPlayerStats()); // Salva os dados no Firestore
             if (rolls[stat] === 0) disableButton(button); // Desabilita o botão "🎲" quando atingir o limite
         }
     } else {
@@ -72,6 +73,7 @@ function resetStat(stat, button) {
         document.getElementById(stat + "Total").innerText = "-";
         document.getElementById(stat + "Modifier").innerText = ""; // Limpa o modificador
         resets[stat]--; // Reduz o contador de resets para o atributo
+        savePlayerData(auth.currentUser.uid, getPlayerStats()); // Salva os dados no Firestore
         if (resets[stat] === 0) disableButton(button); // Desabilita o botão "Zerar" quando atingir o limite
     } else {
         alert("Você já zerou este atributo 2 vezes!"); // Mensagem ao ultrapassar o limite
@@ -101,3 +103,90 @@ function updateRacialModifiersDisplay() {
 
 // Adicionar evento ao campo de raça
 document.getElementById("race").addEventListener("change", updateRacialModifiersDisplay);
+
+// Função para salvar os dados do jogador no Firestore
+async function savePlayerData(uid, data) {
+    try {
+        await db.collection("players").doc(uid).set(data, { merge: true });
+        console.log("Dados salvos com sucesso!");
+    } catch (error) {
+        console.error("Erro ao salvar os dados:", error);
+    }
+}
+
+// Função para recuperar os dados do jogador no Firestore
+async function getPlayerData(uid) {
+    try {
+        const doc = await db.collection("players").doc(uid).get();
+        if (doc.exists) {
+            console.log("Dados do jogador recuperados:", doc.data());
+            return doc.data();
+        } else {
+            console.log("Nenhum dado encontrado para este jogador.");
+            return null;
+        }
+    } catch (error) {
+        console.error("Erro ao recuperar os dados:", error);
+        return null;
+    }
+}
+
+// Função para obter os valores atuais dos atributos do jogador
+function getPlayerStats() {
+    return {
+        health: {
+            firstRoll: document.getElementById("health1").innerText,
+            secondRoll: document.getElementById("health2").innerText,
+            total: document.getElementById("healthTotal").innerText,
+            rolls: rolls.health,
+            resets: resets.health
+        },
+        strength: {
+            firstRoll: document.getElementById("strength1").innerText,
+            secondRoll: document.getElementById("strength2").innerText,
+            total: document.getElementById("strengthTotal").innerText,
+            rolls: rolls.strength,
+            resets: resets.strength
+        },
+        dexterity: {
+            firstRoll: document.getElementById("dexterity1").innerText,
+            secondRoll: document.getElementById("dexterity2").innerText,
+            total: document.getElementById("dexterityTotal").innerText,
+            rolls: rolls.dexterity,
+            resets: resets.dexterity
+        },
+        intelligence: {
+            firstRoll: document.getElementById("intelligence1").innerText,
+            secondRoll: document.getElementById("intelligence2").innerText,
+            total: document.getElementById("intelligenceTotal").innerText,
+            rolls: rolls.intelligence,
+            resets: resets.intelligence
+        },
+        luck: {
+            firstRoll: document.getElementById("luck1").innerText,
+            secondRoll: document.getElementById("luck2").innerText,
+            total: document.getElementById("luckTotal").innerText,
+            rolls: rolls.luck,
+            resets: resets.luck
+        }
+    };
+}
+
+// Recupera e exibe os dados ao carregar a página
+document.addEventListener("DOMContentLoaded", async () => {
+    const user = auth.currentUser; // Obtém o usuário atual autenticado
+    if (user) {
+        const playerData = await getPlayerData(user.uid);
+        if (playerData) {
+            for (const stat in playerData) {
+                document.getElementById(stat + "1").innerText = playerData[stat].firstRoll || "-";
+                document.getElementById(stat + "2").innerText = playerData[stat].secondRoll || "-";
+                document.getElementById(stat + "Total").innerText = playerData[stat].total || "-";
+                rolls[stat] = playerData[stat].rolls || 3;
+                resets[stat] = playerData[stat].resets || 2;
+            }
+        }
+    } else {
+        console.log("Nenhum jogador autenticado.");
+    }
+});
