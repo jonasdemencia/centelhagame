@@ -75,10 +75,42 @@
                     <button onclick="resetStat('strength')" class="button">Zerar</button>
                 </div>
             </div>
-            <!-- Repetição para outros atributos (Destreza, Inteligência, Sorte) -->
+            <!-- Destreza -->
+            <div class="stat-box">
+                <strong class="stat-name">Destreza:</strong>
+                <span id="dexterity1" class="stat-value">-</span> + <span id="dexterity2" class="stat-value">-</span>
+                <span id="dexterityModifier" class="racial-modifier"></span> =
+                <span id="dexterityTotal" class="stat-value">-</span>
+                <div class="stat-buttons-inline">
+                    <button onclick="rollStat('dexterity', this)" class="button">🎲</button>
+                    <button onclick="resetStat('dexterity')" class="button">Zerar</button>
+                </div>
+            </div>
+            <!-- Inteligência -->
+            <div class="stat-box">
+                <strong class="stat-name">Inteligência:</strong>
+                <span id="intelligence1" class="stat-value">-</span> + <span id="intelligence2" class="stat-value">-</span>
+                <span id="intelligenceModifier" class="racial-modifier"></span> =
+                <span id="intelligenceTotal" class="stat-value">-</span>
+                <div class="stat-buttons-inline">
+                    <button onclick="rollStat('intelligence', this)" class="button">🎲</button>
+                    <button onclick="resetStat('intelligence')" class="button">Zerar</button>
+                </div>
+            </div>
+            <!-- Sorte -->
+            <div class="stat-box">
+                <strong class="stat-name">Sorte:</strong>
+                <span id="luck1" class="stat-value">-</span> + <span id="luck2" class="stat-value">-</span>
+                <span id="luckModifier" class="racial-modifier"></span> =
+                <span id="luckTotal" class="stat-value">-</span>
+                <div class="stat-buttons-inline">
+                    <button onclick="rollStat('luck', this)" class="button">🎲</button>
+                    <button onclick="resetStat('luck')" class="button">Zerar</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script src="character-creation.js"></script> <!-- Conecta ao arquivo JS -->
+    <script src="character-creation.js"></script> <!-- Conexão com o JS -->
 </body>
 </html>
