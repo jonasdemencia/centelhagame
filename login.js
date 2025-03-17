@@ -1,6 +1,7 @@
 // Importa os SDKs necessários do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 // Configuração do Firebase
 const firebaseConfig = {
@@ -14,7 +15,33 @@ const firebaseConfig = {
 
 // Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+const auth = getAuth(app); // Autenticação
+const db = getFirestore(app); // Banco de dados Firestore
+
+// Função para verificar e criar dados iniciais no Firestore
+async function initializePlayerData(uid) {
+    try {
+        const docRef = doc(db, "players", uid);
+        const docSnap = await getDoc(docRef);
+
+        if (!docSnap.exists()) {
+            // Dados iniciais para um novo jogador
+            const initialData = {
+                health: { firstRoll: "-", secondRoll: "-", total: "-", rolls: 3, resets: 2 },
+                strength: { firstRoll: "-", secondRoll: "-", total: "-", rolls: 3, resets: 2 },
+                dexterity: { firstRoll: "-", secondRoll: "-", total: "-", rolls: 3, resets: 2 },
+                intelligence: { firstRoll: "-", secondRoll: "-", total: "-", rolls: 3, resets: 2 },
+                luck: { firstRoll: "-", secondRoll: "-", total: "-", rolls: 3, resets: 2 }
+            };
+            await setDoc(docRef, initialData);
+            console.log("Dados iniciais criados para o jogador:", uid);
+        } else {
+            console.log("Jogador já possui dados no Firestore.");
+        }
+    } catch (error) {
+        console.error("Erro ao inicializar os dados do jogador:", error);
+    }
+}
 
 // Função para processar o login
 document.getElementById("login-form").addEventListener("submit", function(event) {
@@ -23,11 +50,15 @@ document.getElementById("login-form").addEventListener("submit", function(event)
     const password = document.getElementById("password").value;
 
     signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
+        .then(async (userCredential) => {
             const user = userCredential.user;
             document.getElementById("message").innerText = "Login bem-sucedido!";
             console.log("Usuário logado:", user);
-            // Atualizado para redirecionar para a página de criação de ficha
+
+            // Inicializa os dados do jogador no Firestore, se necessário
+            await initializePlayerData(user.uid);
+
+            // Redireciona para a página de criação de ficha
             window.location.href = "character-creation.html";
         })
         .catch((error) => {
