@@ -1,25 +1,37 @@
-// Simulação de banco de dados com usuários e senhas
-const users = {
-    "jogadorA": "senha123",
-    "jogadorB": "senha456"
+// Importa os SDKs necessários do Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+
+// Configuração do Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
+    authDomain: "centelhagame-9d511.firebaseapp.com",
+    projectId: "centelhagame-9d511",
+    storageBucket: "centelhagame-9d511.firebaseapp.com",
+    messagingSenderId: "700809803145",
+    appId: "1:700809803145:web:bff4c6a751ec9389919d58"
 };
+
+// Inicializa o Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
 // Função para processar o login
 document.getElementById("login-form").addEventListener("submit", function(event) {
     event.preventDefault(); // Evita o recarregamento da página
-
-    // Captura os valores inseridos nos campos de login
-    const username = document.getElementById("username").value;
+    const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
-    // Verifica se o usuário e senha estão corretos
-    if (users[username] && users[username] === password) {
-        document.getElementById("message").innerText = "Login bem-sucedido!";
-        document.getElementById("message").style.color = "green";
-        // Redireciona para outra página (exemplo: batalha.html)
-        window.location.href = "batalha.html";
-    } else {
-        document.getElementById("message").innerText = "Usuário ou senha inválidos!";
-        document.getElementById("message").style.color = "red";
-    }
+    signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            const user = userCredential.user;
+            document.getElementById("message").innerText = "Login bem-sucedido!";
+            console.log("Usuário logado:", user);
+            // Redireciona para uma página após o login
+            window.location.href = "batalha.html";
+        })
+        .catch((error) => {
+            document.getElementById("message").innerText = "Erro ao fazer login: " + error.message;
+            console.error(error);
+        });
 });
