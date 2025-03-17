@@ -1,36 +1,49 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Criação de Personagem</title>
-    <script src="character-creation.js" defer></script>
+    <title>Sistema de Login</title>
+    <!-- Conecta ao arquivo de estilo -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Conecta ao arquivo de script -->
+    <script type="module" defer src="login.js"></script>
+
+    <!-- Importação do Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
+    <script>
+        // Configuração do Firebase (dados fornecidos por você)
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
+            authDomain: "centelhagame-9d511.firebaseapp.com",
+            projectId: "centelhagame-9d511",
+            storageBucket: "centelhagame-9d511.appspot.com",
+            messagingSenderId: "700809803145",
+            appId: "1:700809803145:web:bff4c6a751ec9389919d58"
+        };
+
+        // Inicializar Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth(); // Autenticação do Firebase
+        const db = firebase.firestore(); // Banco de Dados Firestore
+
+        // Teste de inicialização
+        console.log("Firebase inicializado no index.html:", firebase.apps.length > 0);
+    </script>
 </head>
 <body>
-    <h1>Criação de Personagem</h1>
-
-    <div>
-        <h2>Força</h2>
-        <p>Dado 1: <span id="forca1">-</span></p>
-        <p>Dado 2: <span id="forca2">-</span></p>
-        <p>Total: <span id="forcaTotal">-</span></p>
-        <button class="roll-button" onclick="rollDice('forca')">Rolar Força</button>
-    </div>
-
-    <div>
-        <h2>Destreza</h2>
-        <p>Dado 1: <span id="destreza1">-</span></p>
-        <p>Dado 2: <span id="destreza2">-</span></p>
-        <p>Total: <span id="destrezaTotal">-</span></p>
-        <button class="roll-button" onclick="rollDice('destreza')">Rolar Destreza</button>
-    </div>
-
-    <div>
-        <h2>Inteligência</h2>
-        <p>Dado 1: <span id="inteligencia1">-</span></p>
-        <p>Dado 2: <span id="inteligencia2">-</span></p>
-        <p>Total: <span id="inteligenciaTotal">-</span></p>
-        <button class="roll-button" onclick="rollDice('inteligencia')">Rolar Inteligência</button>
-    </div>
+    <h1>Bem-vindo ao Sistema de Login</h1>
+    <form id="login-form">
+        <label for="email">Email:</label>
+        <input type="email" id="email" required>
+        <br>
+        <label for="password">Senha:</label>
+        <input type="password" id="password" required>
+        <br>
+        <button type="submit">Entrar</button>
+    </form>
+    <p id="message"></p>
 </body>
 </html>
