@@ -173,20 +173,27 @@ function getPlayerStats() {
 }
 
 // Recupera e exibe os dados ao carregar a página
-document.addEventListener("DOMContentLoaded", async () => {
-    const user = auth.currentUser; // Obtém o usuário atual autenticado
-    if (user) {
-        const playerData = await getPlayerData(user.uid);
-        if (playerData) {
-            for (const stat in playerData) {
-                document.getElementById(stat + "1").innerText = playerData[stat].firstRoll || "-";
-                document.getElementById(stat + "2").innerText = playerData[stat].secondRoll || "-";
-                document.getElementById(stat + "Total").innerText = playerData[stat].total || "-";
-                rolls[stat] = playerData[stat].rolls || 3;
-                resets[stat] = playerData[stat].resets || 2;
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+
+document.addEventListener("DOMContentLoaded", () => {
+    const auth = getAuth();
+    
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            console.log("Usuário autenticado:", user.uid);
+            const playerData = await getPlayerData(user.uid);
+            if (playerData) {
+                for (const stat in playerData) {
+                    document.getElementById(stat + "1").innerText = playerData[stat].firstRoll || "-";
+                    document.getElementById(stat + "2").innerText = playerData[stat].secondRoll || "-";
+                    document.getElementById(stat + "Total").innerText = playerData[stat].total || "-";
+                    rolls[stat] = playerData[stat].rolls || 3;
+                    resets[stat] = playerData[stat].resets || 2;
+                }
             }
+        } else {
+            console.log("Nenhum jogador autenticado.");
+            window.location.href = "index.html"; // Redireciona para a página de login
         }
-    } else {
-        console.log("Nenhum jogador autenticado.");
-    }
+    });
 });
