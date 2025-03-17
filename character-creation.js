@@ -1,6 +1,12 @@
 // Inicializa os contadores para rolagens e resets por atributo
-let rolls = { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 }; // Limite de rolagens por atributo
-let resets = { health: 2, strength: 2, dexterity: 2, intelligence: 2, luck: 2 }; // Limite de resets por atributo
+let rolls = JSON.parse(localStorage.getItem("rolls")) || { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 }; // Persistência de rolagens
+let resets = JSON.parse(localStorage.getItem("resets")) || { health: 2, strength: 2, dexterity: 2, intelligence: 2, luck: 2 }; // Persistência de resets
+
+// Atualiza os valores no localStorage após qualquer mudança
+function updateLocalStorage() {
+    localStorage.setItem("rolls", JSON.stringify(rolls));
+    localStorage.setItem("resets", JSON.stringify(resets));
+}
 
 // Função para rolar os dados
 function rollDice(sides) {
@@ -57,6 +63,7 @@ function rollStat(stat, button) {
             rollValue += modifierValue;
             totalRoll.innerText = rollValue;
             rolls[stat]--; // Reduz o contador de rolagens para o atributo
+            updateLocalStorage(); // Salva o novo estado no localStorage
             if (rolls[stat] === 0) disableButton(button); // Desabilita o botão "🎲" quando atingir o limite
         }
     } else {
@@ -72,6 +79,7 @@ function resetStat(stat, button) {
         document.getElementById(stat + "Total").innerText = "-";
         document.getElementById(stat + "Modifier").innerText = ""; // Limpa o modificador
         resets[stat]--; // Reduz o contador de resets para o atributo
+        updateLocalStorage(); // Salva o novo estado no localStorage
         if (resets[stat] === 0) disableButton(button); // Desabilita o botão "Zerar" quando atingir o limite
     } else {
         alert("Você já zerou este atributo 2 vezes!"); // Mensagem ao ultrapassar o limite
@@ -101,3 +109,14 @@ function updateRacialModifiersDisplay() {
 
 // Adicionar evento ao campo de raça
 document.getElementById("race").addEventListener("change", updateRacialModifiersDisplay);
+
+// Verificar se os botões devem ser desativados ao carregar a página
+function checkButtonStates() {
+    for (const stat in rolls) {
+        const rollButton = document.querySelector(`#${stat} .button:first-child`); // Botão de rolar
+        const resetButton = document.querySelector(`#${stat} .button:last-child`); // Botão de zerar
+        if (rolls[stat] === 0) disableButton(rollButton);
+        if (resets[stat] === 0) disableButton(resetButton);
+    }
+}
+checkButtonStates(); // Checa os estados ao carregar
