@@ -23,10 +23,16 @@ function restoreStateFromLocalStorage() {
     const savedValues = JSON.parse(localStorage.getItem("currentValues")) || {};
     for (const stat in savedValues) {
         if (savedValues.hasOwnProperty(stat)) {
-            document.getElementById(stat + "1").innerText = savedValues[stat].firstRoll || "-";
-            document.getElementById(stat + "2").innerText = savedValues[stat].secondRoll || "-";
-            document.getElementById(stat + "Total").innerText = savedValues[stat].total || "-";
-            document.getElementById(stat + "Modifier").innerText = savedValues[stat].modifier || "";
+            // Atualiza os valores visuais no HTML
+            const firstRoll = document.getElementById(stat + "1");
+            const secondRoll = document.getElementById(stat + "2");
+            const total = document.getElementById(stat + "Total");
+            const modifier = document.getElementById(stat + "Modifier");
+
+            if (firstRoll) firstRoll.innerText = savedValues[stat].firstRoll || "-";
+            if (secondRoll) secondRoll.innerText = savedValues[stat].secondRoll || "-";
+            if (total) total.innerText = savedValues[stat].total || "-";
+            if (modifier) modifier.innerText = savedValues[stat].modifier || "";
         }
     }
 }
