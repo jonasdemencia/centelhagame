@@ -4,22 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ficha de Criação de Personagem</title>
-    <link href="style.css" rel="stylesheet"> <!-- Estilos centralizados -->
+    <link href="style.css" rel="stylesheet"> <!-- Arquivo de estilo centralizado -->
     <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Clara:wght@300&display=swap" rel="stylesheet">
 </head>
-<body id="character-page"> <!-- Identificador único para estilos específicos -->
+<body id="character-page">
     <div class="container">
         <h2 class="page-title">Ficha de Criação de Personagem</h2>
-        
-        <!-- Campos Nome e CPF -->
+
+        <!-- Formulário de Nome e CPF -->
         <div class="form-group">
             <input type="text" id="name" placeholder="Nome" class="input-field">
             <input type="text" id="cpf" placeholder="CPF" class="input-field">
             <button id="submit" class="button">ENVIAR</button>
         </div>
 
-        <!-- Seleção de Raça -->
+        <!-- Campo de Raça -->
         <div class="label-group">
             <label for="race" class="label-text label-eagle-lake">R a ç a:</label>
             <select id="race" class="select-field">
@@ -30,7 +30,7 @@
             </select>
         </div>
 
-        <!-- Seleção de Alinhamento -->
+        <!-- Campo de Alinhamento -->
         <div class="label-group">
             <label for="alignment" class="label-text label-eagle-lake">A l i n h a m e n t o:</label>
             <select id="alignment" class="select-field">
@@ -41,7 +41,7 @@
             </select>
         </div>
 
-        <!-- Seleção de Classe -->
+        <!-- Campo de Classe -->
         <div class="label-group">
             <label for="class" class="label-text label-eagle-lake">C l a s s e:</label>
             <select id="class" class="select-field">
@@ -53,10 +53,10 @@
             </select>
         </div>
 
-        <!-- Instrução -->
+        <!-- Instruções -->
         <p class="instruction-paragraph">Você poderá rolar cada um dos atributos três vezes. Role de forma sábia.</p>
 
-        <!-- Seção de Atributos -->
+        <!-- Atributos e Botões -->
         <div class="stats-section stats" id="stats">
             <!-- Vida -->
             <div class="stat-box">
@@ -69,6 +69,7 @@
                     <button onclick="resetStat('health')" class="button">Zerar</button>
                 </div>
             </div>
+
             <!-- Força -->
             <div class="stat-box">
                 <strong class="stat-name">Força:</strong>
@@ -80,6 +81,7 @@
                     <button onclick="resetStat('strength')" class="button">Zerar</button>
                 </div>
             </div>
+
             <!-- Destreza -->
             <div class="stat-box">
                 <strong class="stat-name">Destreza:</strong>
@@ -91,6 +93,7 @@
                     <button onclick="resetStat('dexterity')" class="button">Zerar</button>
                 </div>
             </div>
+
             <!-- Inteligência -->
             <div class="stat-box">
                 <strong class="stat-name">Inteligência:</strong>
@@ -102,6 +105,7 @@
                     <button onclick="resetStat('intelligence')" class="button">Zerar</button>
                 </div>
             </div>
+
             <!-- Sorte -->
             <div class="stat-box">
                 <strong class="stat-name">Sorte:</strong>
@@ -116,6 +120,6 @@
         </div>
     </div>
 
-    <script src="character-creation.js"></script> <!-- Lógica separada no arquivo JS -->
+    <script src="character-creation.js"></script>
 </body>
 </html>
