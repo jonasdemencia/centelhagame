@@ -8,6 +8,27 @@
     <link rel="stylesheet" href="style.css">
     <!-- Conecta ao arquivo de script -->
     <script type="module" defer src="login.js"></script>
+
+    <!-- Importação do Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
+    <script>
+        // Configuração do Firebase (dados fornecidos por você)
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
+            authDomain: "centelhagame-9d511.firebaseapp.com",
+            projectId: "centelhagame-9d511",
+            storageBucket: "centelhagame-9d511.appspot.com",
+            messagingSenderId: "700809803145",
+            appId: "1:700809803145:web:bff4c6a751ec9389919d58"
+        };
+
+        // Inicializar Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth(); // Autenticação do Firebase
+        const db = firebase.firestore(); // Banco de Dados Firestore
+    </script>
 </head>
 <body>
     <h1>Bem-vindo ao Sistema de Login</h1>
