@@ -173,37 +173,37 @@ async function getPlayerData(uid) {
 function getPlayerStats() {
     return {
         health: {
-            firstRoll: document.getElementById("health1").innerText,
-            secondRoll: document.getElementById("health2").innerText,
-            total: document.getElementById("healthTotal").innerText,
+            firstRoll: parseInt(document.getElementById("health1").innerText) || 0,
+            secondRoll: parseInt(document.getElementById("health2").innerText) || 0,
+            total: parseInt(document.getElementById("healthTotal").innerText) || 0,
             rolls: rolls.health,
             resets: resets.health
         },
         strength: {
-            firstRoll: document.getElementById("strength1").innerText,
-            secondRoll: document.getElementById("strength2").innerText,
-            total: document.getElementById("strengthTotal").innerText,
+            firstRoll: parseInt(document.getElementById("strength1").innerText) || 0,
+            secondRoll: parseInt(document.getElementById("strength2").innerText) || 0,
+            total: parseInt(document.getElementById("strengthTotal").innerText) || 0,
             rolls: rolls.strength,
             resets: resets.strength
         },
         dexterity: {
-            firstRoll: document.getElementById("dexterity1").innerText,
-            secondRoll: document.getElementById("dexterity2").innerText,
-            total: document.getElementById("dexterityTotal").innerText,
+            firstRoll: parseInt(document.getElementById("dexterity1").innerText) || 0,
+            secondRoll: parseInt(document.getElementById("dexterity2").innerText) || 0,
+            total: parseInt(document.getElementById("dexterityTotal").innerText) || 0,
             rolls: rolls.dexterity,
             resets: resets.dexterity
         },
         intelligence: {
-            firstRoll: document.getElementById("intelligence1").innerText,
-            secondRoll: document.getElementById("intelligence2").innerText,
-            total: document.getElementById("intelligenceTotal").innerText,
+            firstRoll: parseInt(document.getElementById("intelligence1").innerText) || 0,
+            secondRoll: parseInt(document.getElementById("intelligence2").innerText) || 0,
+            total: parseInt(document.getElementById("intelligenceTotal").innerText) || 0,
             rolls: rolls.intelligence,
             resets: resets.intelligence
         },
         luck: {
-            firstRoll: document.getElementById("luck1").innerText,
-            secondRoll: document.getElementById("luck2").innerText,
-            total: document.getElementById("luckTotal").innerText,
+            firstRoll: parseInt(document.getElementById("luck1").innerText) || 0,
+            secondRoll: parseInt(document.getElementById("luck2").innerText) || 0,
+            total: parseInt(document.getElementById("luckTotal").innerText) || 0,
             rolls: rolls.luck,
             resets: resets.luck
         }
