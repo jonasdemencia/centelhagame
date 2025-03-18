@@ -50,35 +50,35 @@ function getRacialModifiers() {
 
 function rollStat(stat, button) {
     if (rolls[stat] > 0) {
-        console.log(`Rolando atributo: ${stat}`);
+        console.log(Rolando atributo: ${stat});
         let firstRoll = document.getElementById(stat + "1");
         let secondRoll = document.getElementById(stat + "2");
         let totalRoll = document.getElementById(stat + "Total");
         let modifierDisplay = document.getElementById(stat + "Modifier");
 
         if (!firstRoll || !secondRoll || !totalRoll || !modifierDisplay) {
-            console.error(`Elementos DOM para ${stat} não encontrados.`);
+            console.error(Elementos DOM para ${stat} não encontrados.);
             return;
         }
 
         if (firstRoll.innerText === "-") {
             firstRoll.innerText = rollDice(6);
-            console.log(`Primeira rolagem (${stat}): ${firstRoll.innerText}`);
+            console.log(Primeira rolagem (${stat}): ${firstRoll.innerText});
             savePlayerData(auth.currentUser.uid, getPlayerStats());
         } else if (secondRoll.innerText === "-") {
             secondRoll.innerText = rollDice(6);
-            console.log(`Segunda rolagem (${stat}): ${secondRoll.innerText}`);
+            console.log(Segunda rolagem (${stat}): ${secondRoll.innerText});
 
             let rollValue = parseInt(firstRoll.innerText) + parseInt(secondRoll.innerText);
             const racialModifiers = getRacialModifiers();
             const modifierValue = racialModifiers[stat];
 
-            modifierDisplay.innerText = modifierValue !== 0 ? ` (+${modifierValue})` : "";
+            modifierDisplay.innerText = modifierValue !== 0 ?  (+${modifierValue}) : "";
             rollValue += modifierValue;
             totalRoll.innerText = rollValue;
             rolls[stat]--;
 
-            console.log(`Total (${stat}): ${rollValue}`);
+            console.log(Total (${stat}): ${rollValue});
             if (rolls[stat] === 0) disableButton(button);
             savePlayerData(auth.currentUser.uid, getPlayerStats());
         }
@@ -111,7 +111,7 @@ function updateRacialModifiersDisplay() {
     const racialModifiers = getRacialModifiers();
     for (const stat in racialModifiers) {
         const modifierDisplay = document.getElementById(stat + "Modifier");
-        modifierDisplay.innerText = racialModifiers[stat] !== 0 ? ` (+${racialModifiers[stat]})` : "";
+        modifierDisplay.innerText = racialModifiers[stat] !== 0 ?  (+${racialModifiers[stat]}) : "";
     }
 }
 
@@ -146,7 +146,6 @@ async function getPlayerData(uid) {
 
 function getPlayerStats() {
     return {
-        playerName: document.getElementById("playerName").value, // Novo campo
         race: document.getElementById("race").value,
         alignment: document.getElementById("alignment").value,
         class: document.getElementById("class").value,
@@ -167,45 +166,18 @@ document.addEventListener("DOMContentLoaded", () => {
         if (user) {
             console.log("Usuário autenticado:", user.uid);
             const playerData = await getPlayerData(user.uid);
-
             if (playerData) {
-                // Verifica se os elementos existem antes de atribuir valores
-                const raceElement = document.getElementById("race");
-                if (raceElement) raceElement.value = playerData.race || "";
-
-                const alignmentElement = document.getElementById("alignment");
-                if (alignmentElement) alignmentElement.value = playerData.alignment || "";
-
-                const classElement = document.getElementById("class");
-                if (classElement) classElement.value = playerData.class || "";
-
-                const nameElement = document.getElementById("playerName");
-                if (nameElement) nameElement.value = playerData.playerName || ""; // Nome do jogador
-
-                const stats = ["health", "strength", "dexterity", "intelligence", "luck"];
-                stats.forEach(stat => {
-                    const firstRollEl = document.getElementById(stat + "1");
-                    const secondRollEl = document.getElementById(stat + "2");
-                    const totalEl = document.getElementById(stat + "Total");
-                    const modifierEl = document.getElementById(stat + "Modifier");
-
-                    if (playerData[stat]) {
-                        if (firstRollEl) firstRollEl.innerText = playerData[stat].firstRoll || "-";
-                        if (secondRollEl) secondRollEl.innerText = playerData[stat].secondRoll || "-";
-                        if (totalEl) totalEl.innerText = playerData[stat].total || "-";
-                        if (modifierEl) modifierEl.innerText = getRacialModifiers()[stat] ? ` (+${getRacialModifiers()[stat]})` : "";
+                for (const stat in playerData) {
+                    if (document.getElementById(stat)) {
+                        document.getElementById(stat).value = playerData[stat] || "";
                     }
-                });
-
-                console.log("Dados carregados na interface.");
+                }
             }
         } else {
             window.location.href = "index.html";
         }
     });
 });
-
-
 
 window.rollStat = rollStat;
 window.resetStat = resetStat;
