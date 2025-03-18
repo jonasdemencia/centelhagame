@@ -146,6 +146,9 @@ async function getPlayerData(uid) {
 
 function getPlayerStats() {
     return {
+        race: document.getElementById("race").value,
+        alignment: document.getElementById("alignment").value,
+        class: document.getElementById("class").value,
         health: { firstRoll: getStat("health1"), secondRoll: getStat("health2"), total: getStat("healthTotal"), rolls: rolls.health, resets: resets.health },
         strength: { firstRoll: getStat("strength1"), secondRoll: getStat("strength2"), total: getStat("strengthTotal"), rolls: rolls.strength, resets: resets.strength },
         dexterity: { firstRoll: getStat("dexterity1"), secondRoll: getStat("dexterity2"), total: getStat("dexterityTotal"), rolls: rolls.dexterity, resets: resets.dexterity },
@@ -165,11 +168,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const playerData = await getPlayerData(user.uid);
             if (playerData) {
                 for (const stat in playerData) {
-                    document.getElementById(stat + "1").innerText = playerData[stat].firstRoll || "-";
-                    document.getElementById(stat + "2").innerText = playerData[stat].secondRoll || "-";
-                    document.getElementById(stat + "Total").innerText = playerData[stat].total || "-";
-                    rolls[stat] = playerData[stat].rolls || 3;
-                    resets[stat] = playerData[stat].resets || 2;
+                    if (document.getElementById(stat)) {
+                        document.getElementById(stat).value = playerData[stat] || "";
+                    }
                 }
             }
         } else {
