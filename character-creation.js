@@ -167,17 +167,27 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Usuário autenticado:", user.uid);
             const playerData = await getPlayerData(user.uid);
             if (playerData) {
-                for (const stat in playerData) {
-                    if (document.getElementById(stat)) {
-                        document.getElementById(stat).value = playerData[stat] || "";
+                document.getElementById("race").value = playerData.race || "";
+                document.getElementById("alignment").value = playerData.alignment || "";
+                document.getElementById("class").value = playerData.class || "";
+                document.getElementById("playerName").value = playerData.playerName || ""; // Nome do jogador
+
+                const stats = ["health", "strength", "dexterity", "intelligence", "luck"];
+                stats.forEach(stat => {
+                    if (playerData[stat]) {
+                        document.getElementById(stat + "1").innerText = playerData[stat].firstRoll || "-";
+                        document.getElementById(stat + "2").innerText = playerData[stat].secondRoll || "-";
+                        document.getElementById(stat + "Total").innerText = playerData[stat].total || "-";
+                        document.getElementById(stat + "Modifier").innerText = getRacialModifiers()[stat] ? ` (+${getRacialModifiers()[stat]})` : "";
                     }
-                }
+                });
             }
         } else {
             window.location.href = "index.html";
         }
     });
 });
+
 
 window.rollStat = rollStat;
 window.resetStat = resetStat;
