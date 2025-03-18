@@ -50,35 +50,35 @@ function getRacialModifiers() {
 
 function rollStat(stat, button) {
     if (rolls[stat] > 0) {
-        console.log(Rolando atributo: ${stat});
+        console.log(`Rolando atributo: ${stat}`);
         let firstRoll = document.getElementById(stat + "1");
         let secondRoll = document.getElementById(stat + "2");
         let totalRoll = document.getElementById(stat + "Total");
         let modifierDisplay = document.getElementById(stat + "Modifier");
 
         if (!firstRoll || !secondRoll || !totalRoll || !modifierDisplay) {
-            console.error(Elementos DOM para ${stat} não encontrados.);
+            console.error(`Elementos DOM para ${stat} não encontrados.`);
             return;
         }
 
         if (firstRoll.innerText === "-") {
             firstRoll.innerText = rollDice(6);
-            console.log(Primeira rolagem (${stat}): ${firstRoll.innerText});
+            console.log(`Primeira rolagem (${stat}): ${firstRoll.innerText}`);
             savePlayerData(auth.currentUser.uid, getPlayerStats());
         } else if (secondRoll.innerText === "-") {
             secondRoll.innerText = rollDice(6);
-            console.log(Segunda rolagem (${stat}): ${secondRoll.innerText});
+            console.log(`Segunda rolagem (${stat}): ${secondRoll.innerText}`);
 
             let rollValue = parseInt(firstRoll.innerText) + parseInt(secondRoll.innerText);
             const racialModifiers = getRacialModifiers();
             const modifierValue = racialModifiers[stat];
 
-            modifierDisplay.innerText = modifierValue !== 0 ?  (+${modifierValue}) : "";
+            modifierDisplay.innerText = modifierValue !== 0 ? ` (+${modifierValue})` : "";
             rollValue += modifierValue;
             totalRoll.innerText = rollValue;
             rolls[stat]--;
 
-            console.log(Total (${stat}): ${rollValue});
+            console.log(`Total (${stat}): ${rollValue}`);
             if (rolls[stat] === 0) disableButton(button);
             savePlayerData(auth.currentUser.uid, getPlayerStats());
         }
@@ -111,7 +111,7 @@ function updateRacialModifiersDisplay() {
     const racialModifiers = getRacialModifiers();
     for (const stat in racialModifiers) {
         const modifierDisplay = document.getElementById(stat + "Modifier");
-        modifierDisplay.innerText = racialModifiers[stat] !== 0 ?  (+${racialModifiers[stat]}) : "";
+        modifierDisplay.innerText = racialModifiers[stat] !== 0 ? ` (+${racialModifiers[stat]})` : "";
     }
 }
 
