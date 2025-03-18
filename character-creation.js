@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
@@ -15,16 +15,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// Inicializa os contadores para rolagens e resets por atributo
-let rolls = { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 }; // Limite de rolagens por atributo
-let resets = { health: 2, strength: 2, dexterity: 2, intelligence: 2, luck: 2 }; // Limite de resets por atributo
+let rolls = { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 };
+let resets = { health: 2, strength: 2, dexterity: 2, intelligence: 2, luck: 2 };
 
-// Função para rolar os dados
 function rollDice(sides) {
     return Math.floor(Math.random() * sides) + 1;
 }
 
-// Função para obter modificadores raciais com base na raça escolhida
 function getRacialModifiers() {
     const race = document.getElementById("race").value;
     let modifiers = { health: 0, strength: 0, dexterity: 0, intelligence: 0, luck: 0 };
@@ -51,7 +48,6 @@ function getRacialModifiers() {
     return modifiers;
 }
 
-// Função para rolar o atributo
 function rollStat(stat, button) {
     if (rolls[stat] > 0) {
         console.log(`Rolando atributo: ${stat}`);
@@ -68,7 +64,7 @@ function rollStat(stat, button) {
         if (firstRoll.innerText === "-") {
             firstRoll.innerText = rollDice(6);
             console.log(`Primeira rolagem (${stat}): ${firstRoll.innerText}`);
-            savePlayerData(auth.currentUser.uid, getPlayerStats()); // Salva após a primeira rolagem
+            savePlayerData(auth.currentUser.uid, getPlayerStats());
         } else if (secondRoll.innerText === "-") {
             secondRoll.innerText = rollDice(6);
             console.log(`Segunda rolagem (${stat}): ${secondRoll.innerText}`);
@@ -77,66 +73,49 @@ function rollStat(stat, button) {
             const racialModifiers = getRacialModifiers();
             const modifierValue = racialModifiers[stat];
 
-            if (modifierValue !== 0) {
-                modifierDisplay.innerText = ` (+${modifierValue})`;
-            } else {
-                modifierDisplay.innerText = "";
-            }
-
+            modifierDisplay.innerText = modifierValue !== 0 ? ` (+${modifierValue})` : "";
             rollValue += modifierValue;
             totalRoll.innerText = rollValue;
             rolls[stat]--;
-            console.log(`Total (${stat}): ${rollValue}`);
 
+            console.log(`Total (${stat}): ${rollValue}`);
             if (rolls[stat] === 0) disableButton(button);
-            savePlayerData(auth.currentUser.uid, getPlayerStats()); // Salva após a segunda rolagem e cálculo do total
+            savePlayerData(auth.currentUser.uid, getPlayerStats());
         }
     } else {
         alert("Você já usou todas as 3 rolagens permitidas para este atributo!");
     }
 }
 
-// Função para zerar os atributos
 function resetStat(stat, button) {
     if (resets[stat] > 0) {
         document.getElementById(stat + "1").innerText = "-";
         document.getElementById(stat + "2").innerText = "-";
         document.getElementById(stat + "Total").innerText = "-";
-        document.getElementById(stat + "Modifier").innerText = ""; // Limpa o modificador
-        resets[stat]--; // Reduz o contador de resets para o atributo
-        savePlayerData(auth.currentUser.uid, getPlayerStats()); // Salva os dados no Firestore
-        if (resets[stat] === 0) disableButton(button); // Desabilita o botão "Zerar" quando atingir o limite
+        document.getElementById(stat + "Modifier").innerText = "";
+        resets[stat]--;
+        savePlayerData(auth.currentUser.uid, getPlayerStats());
+        if (resets[stat] === 0) disableButton(button);
     } else {
-        alert("Você já zerou este atributo 2 vezes!"); // Mensagem ao ultrapassar o limite
+        alert("Você já zerou este atributo 2 vezes!");
     }
 }
 
-// Função para desabilitar um botão específico
 function disableButton(button) {
     button.disabled = true;
     button.style.opacity = "0.5";
     button.style.cursor = "not-allowed";
 }
 
-// Atualizar os modificadores raciais com base na raça escolhida
 function updateRacialModifiersDisplay() {
     const racialModifiers = getRacialModifiers();
     for (const stat in racialModifiers) {
         const modifierDisplay = document.getElementById(stat + "Modifier");
-        const modifierValue = racialModifiers[stat];
-        if (modifierValue !== 0) {
-            modifierDisplay.innerText = ` (+${modifierValue})`;
-        } else {
-            modifierDisplay.innerText = "";
-        }
+        modifierDisplay.innerText = racialModifiers[stat] !== 0 ? ` (+${racialModifiers[stat]})` : "";
     }
 }
 
-// Adicionar evento ao campo de raça
 document.getElementById("race").addEventListener("change", updateRacialModifiersDisplay);
-
-// Função para salvar os dados do jogador no Firestore
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 async function savePlayerData(uid, data) {
     try {
@@ -147,9 +126,6 @@ async function savePlayerData(uid, data) {
         console.error("Erro ao salvar os dados:", error);
     }
 }
-
-
-// Função para recuperar os dados do jogador no Firestore
 
 async function getPlayerData(uid) {
     try {
@@ -168,54 +144,21 @@ async function getPlayerData(uid) {
     }
 }
 
-
-// Função para obter os valores atuais dos atributos do jogador
 function getPlayerStats() {
     return {
-        health: {
-            firstRoll: parseInt(document.getElementById("health1").innerText) || 0,
-            secondRoll: parseInt(document.getElementById("health2").innerText) || 0,
-            total: parseInt(document.getElementById("healthTotal").innerText) || 0,
-            rolls: rolls.health,
-            resets: resets.health
-        },
-        strength: {
-            firstRoll: parseInt(document.getElementById("strength1").innerText) || 0,
-            secondRoll: parseInt(document.getElementById("strength2").innerText) || 0,
-            total: parseInt(document.getElementById("strengthTotal").innerText) || 0,
-            rolls: rolls.strength,
-            resets: resets.strength
-        },
-        dexterity: {
-            firstRoll: parseInt(document.getElementById("dexterity1").innerText) || 0,
-            secondRoll: parseInt(document.getElementById("dexterity2").innerText) || 0,
-            total: parseInt(document.getElementById("dexterityTotal").innerText) || 0,
-            rolls: rolls.dexterity,
-            resets: resets.dexterity
-        },
-        intelligence: {
-            firstRoll: parseInt(document.getElementById("intelligence1").innerText) || 0,
-            secondRoll: parseInt(document.getElementById("intelligence2").innerText) || 0,
-            total: parseInt(document.getElementById("intelligenceTotal").innerText) || 0,
-            rolls: rolls.intelligence,
-            resets: resets.intelligence
-        },
-        luck: {
-            firstRoll: parseInt(document.getElementById("luck1").innerText) || 0,
-            secondRoll: parseInt(document.getElementById("luck2").innerText) || 0,
-            total: parseInt(document.getElementById("luckTotal").innerText) || 0,
-            rolls: rolls.luck,
-            resets: resets.luck
-        }
+        health: { firstRoll: getStat("health1"), secondRoll: getStat("health2"), total: getStat("healthTotal"), rolls: rolls.health, resets: resets.health },
+        strength: { firstRoll: getStat("strength1"), secondRoll: getStat("strength2"), total: getStat("strengthTotal"), rolls: rolls.strength, resets: resets.strength },
+        dexterity: { firstRoll: getStat("dexterity1"), secondRoll: getStat("dexterity2"), total: getStat("dexterityTotal"), rolls: rolls.dexterity, resets: resets.dexterity },
+        intelligence: { firstRoll: getStat("intelligence1"), secondRoll: getStat("intelligence2"), total: getStat("intelligenceTotal"), rolls: rolls.intelligence, resets: resets.intelligence },
+        luck: { firstRoll: getStat("luck1"), secondRoll: getStat("luck2"), total: getStat("luckTotal"), rolls: rolls.luck, resets: resets.luck }
     };
 }
 
-// Recupera e exibe os dados ao carregar a página
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+function getStat(id) {
+    return parseInt(document.getElementById(id).innerText) || 0;
+}
 
 document.addEventListener("DOMContentLoaded", () => {
-    const auth = getAuth();
-    
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             console.log("Usuário autenticado:", user.uid);
@@ -230,8 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         } else {
-            console.log("Nenhum jogador autenticado.");
-            window.location.href = "index.html"; // Redireciona para a página de login
+            window.location.href = "index.html";
         }
     });
 });
