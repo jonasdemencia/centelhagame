@@ -1,3 +1,20 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
+    authDomain: "centelhagame-9d511.firebaseapp.com",
+    projectId: "centelhagame-9d511",
+    storageBucket: "centelhagame-9d511.appspot.com",
+    messagingSenderId: "700809803145",
+    appId: "1:700809803145:web:bff4c6a751ec9389919d58"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
 // Inicializa os contadores para rolagens e resets por atributo
 let rolls = { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 }; // Limite de rolagens por atributo
 let resets = { health: 2, strength: 2, dexterity: 2, intelligence: 2, luck: 2 }; // Limite de resets por atributo
