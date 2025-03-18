@@ -146,6 +146,7 @@ async function getPlayerData(uid) {
 
 function getPlayerStats() {
     return {
+        playerName: document.getElementById("playerName").value, // Novo campo
         race: document.getElementById("race").value,
         alignment: document.getElementById("alignment").value,
         class: document.getElementById("class").value,
