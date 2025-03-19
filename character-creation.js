@@ -140,6 +140,10 @@ document.getElementById("name").addEventListener("input", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
 });
 
+document.getElementById("idade").addEventListener("input", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
 let saveTimeout;
 function debounceSave(uid, data) {
     clearTimeout(saveTimeout);
@@ -183,6 +187,7 @@ function getPlayerStats() {
         class: document.getElementById("class").value,
         maoDominante: document.getElementById("mao dominante").value,
         hemisferioDominante: document.getElementById("hemisfério dominante").value,
+        idade: document.getElementById("idade").value,
         health: {
             firstRoll: getStat("health1"),
             secondRoll: getStat("health2"),
@@ -238,6 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (playerData.class) document.getElementById("class").value = playerData.class;
                 if (playerData.maoDominante) document.getElementById("mao dominante").value = playerData.maoDominante;
                 if (playerData.hemisferioDominante) document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante;
+                if (playerData.idade) document.getElementById("idade").value = playerData.name;
 
                 // Preenchendo os atributos
                 const stats = ["health", "strength", "dexterity", "intelligence", "luck"];
