@@ -144,6 +144,11 @@ document.getElementById("idade").addEventListener("input", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
 });
 
+document.getElementById("submit").addEventListener("click", () => {
+    window.location.href = "inventario.html";
+});
+
+
 let saveTimeout;
 function debounceSave(uid, data) {
     clearTimeout(saveTimeout);
