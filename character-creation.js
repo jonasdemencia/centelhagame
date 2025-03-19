@@ -136,6 +136,10 @@ document.getElementById("hemisfério dominante").addEventListener("change", () =
     savePlayerData(auth.currentUser.uid, getPlayerStats());
 });
 
+document.getElementById("name").addEventListener("input", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
 let saveTimeout;
 function debounceSave(uid, data) {
     clearTimeout(saveTimeout);
@@ -173,6 +177,7 @@ async function getPlayerData(uid) {
 
 function getPlayerStats() {
     return {
+        name: document.getElementById("name").value,
         race: document.getElementById("race").value,
         alignment: document.getElementById("alignment").value,
         class: document.getElementById("class").value,
