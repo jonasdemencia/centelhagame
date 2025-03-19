@@ -243,7 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (playerData.class) document.getElementById("class").value = playerData.class;
                 if (playerData.maoDominante) document.getElementById("mao dominante").value = playerData.maoDominante;
                 if (playerData.hemisferioDominante) document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante;
-                if (playerData.idade) document.getElementById("idade").value = playerData.name;
+                if (playerData.idade) document.getElementById("idade").value = playerData.idade;
 
                 // Preenchendo os atributos
                 const stats = ["health", "strength", "dexterity", "intelligence", "luck"];
