@@ -128,6 +128,14 @@ document.getElementById("class").addEventListener("change", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
 });
 
+document.getElementById("mao dominante").addEventListener("change", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
+document.getElementById("hemisfério dominante").addEventListener("change", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
 let saveTimeout;
 function debounceSave(uid, data) {
     clearTimeout(saveTimeout);
@@ -168,6 +176,8 @@ function getPlayerStats() {
         race: document.getElementById("race").value,
         alignment: document.getElementById("alignment").value,
         class: document.getElementById("class").value,
+        maoDominante: document.getElementById("mao dominante").value, 
+        hemisferioDominante: document.getElementById("hemisfério dominante").value,
         health: { firstRoll: getStat("health1"), secondRoll: getStat("health2"), total: getStat("healthTotal"), rolls: rolls.health, resets: resets.health },
         strength: { firstRoll: getStat("strength1"), secondRoll: getStat("strength2"), total: getStat("strengthTotal"), rolls: rolls.strength, resets: resets.strength },
         dexterity: { firstRoll: getStat("dexterity1"), secondRoll: getStat("dexterity2"), total: getStat("dexterityTotal"), rolls: rolls.dexterity, resets: resets.dexterity },
