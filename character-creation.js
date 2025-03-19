@@ -140,6 +140,11 @@ document.getElementById("name").addEventListener("input", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
 });
 
+document.getElementById("age").addEventListener("input", () => {
+    console.log("Idade alterada para:", document.getElementById("age").value);
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
 let saveTimeout;
 function debounceSave(uid, data) {
     clearTimeout(saveTimeout);
