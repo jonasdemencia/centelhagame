@@ -225,25 +225,21 @@ function getStat(id) {
     return document.getElementById(id).innerText !== "-" ? parseInt(document.getElementById(id).innerText) : 0;
 }
 
-function getStat(id) {
-    return parseInt(document.getElementById(id).innerText) || 0;
-}
-
 document.addEventListener("DOMContentLoaded", () => {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             console.log("Usuário autenticado:", user.uid);
             const playerData = await getPlayerData(user.uid);
             if (playerData) {
-                // Preenche os campos básicos
-                document.getElementById("name").value = playerData.name || "";
-                document.getElementById("race").value = playerData.race || "";
-                document.getElementById("alignment").value = playerData.alignment || "";
-                document.getElementById("class").value = playerData.class || "";
-                document.getElementById("mao dominante").value = playerData.maoDominante || "";
-                document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante || "";
+                // Preenchendo os campos básicos
+                if (playerData.name) document.getElementById("name").value = playerData.name;
+                if (playerData.race) document.getElementById("race").value = playerData.race;
+                if (playerData.alignment) document.getElementById("alignment").value = playerData.alignment;
+                if (playerData.class) document.getElementById("class").value = playerData.class;
+                if (playerData.maoDominante) document.getElementById("mao dominante").value = playerData.maoDominante;
+                if (playerData.hemisferioDominante) document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante;
 
-                // Preenche os atributos
+                // Preenchendo os atributos
                 const stats = ["health", "strength", "dexterity", "intelligence", "luck"];
                 stats.forEach(stat => {
                     if (playerData[stat]) {
@@ -251,8 +247,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         document.getElementById(stat + "2").innerText = playerData[stat].secondRoll || "-";
                         document.getElementById(stat + "Total").innerText = playerData[stat].total || "-";
                         document.getElementById(stat + "Modifier").innerText = playerData[stat].modifier ? ` (+${playerData[stat].modifier})` : "";
-                        rolls[stat] = playerData[stat].rolls || 3;
-                        resets[stat] = playerData[stat].resets || 2;
+                        rolls[stat] = playerData[stat].rolls !== undefined ? playerData[stat].rolls : 3;
+                        resets[stat] = playerData[stat].resets !== undefined ? playerData[stat].resets : 2;
                     }
                 });
             }
