@@ -181,14 +181,48 @@ function getPlayerStats() {
         race: document.getElementById("race").value,
         alignment: document.getElementById("alignment").value,
         class: document.getElementById("class").value,
-        maoDominante: document.getElementById("mao dominante").value, 
+        maoDominante: document.getElementById("mao dominante").value,
         hemisferioDominante: document.getElementById("hemisfério dominante").value,
-        health: { firstRoll: getStat("health1"), secondRoll: getStat("health2"), total: getStat("healthTotal"), rolls: rolls.health, resets: resets.health },
-        strength: { firstRoll: getStat("strength1"), secondRoll: getStat("strength2"), total: getStat("strengthTotal"), rolls: rolls.strength, resets: resets.strength },
-        dexterity: { firstRoll: getStat("dexterity1"), secondRoll: getStat("dexterity2"), total: getStat("dexterityTotal"), rolls: rolls.dexterity, resets: resets.dexterity },
-        intelligence: { firstRoll: getStat("intelligence1"), secondRoll: getStat("intelligence2"), total: getStat("intelligenceTotal"), rolls: rolls.intelligence, resets: resets.intelligence },
-        luck: { firstRoll: getStat("luck1"), secondRoll: getStat("luck2"), total: getStat("luckTotal"), rolls: rolls.luck, resets: resets.luck }
+        health: {
+            firstRoll: getStat("health1"),
+            secondRoll: getStat("health2"),
+            total: getStat("healthTotal"),
+            rolls: rolls.health,
+            resets: resets.health
+        },
+        strength: {
+            firstRoll: getStat("strength1"),
+            secondRoll: getStat("strength2"),
+            total: getStat("strengthTotal"),
+            rolls: rolls.strength,
+            resets: resets.strength
+        },
+        dexterity: {
+            firstRoll: getStat("dexterity1"),
+            secondRoll: getStat("dexterity2"),
+            total: getStat("dexterityTotal"),
+            rolls: rolls.dexterity,
+            resets: resets.dexterity
+        },
+        intelligence: {
+            firstRoll: getStat("intelligence1"),
+            secondRoll: getStat("intelligence2"),
+            total: getStat("intelligenceTotal"),
+            rolls: rolls.intelligence,
+            resets: resets.intelligence
+        },
+        luck: {
+            firstRoll: getStat("luck1"),
+            secondRoll: getStat("luck2"),
+            total: getStat("luckTotal"),
+            rolls: rolls.luck,
+            resets: resets.luck
+        }
     };
+}
+
+function getStat(id) {
+    return document.getElementById(id).innerText !== "-" ? parseInt(document.getElementById(id).innerText) : 0;
 }
 
 function getStat(id) {
@@ -201,11 +235,26 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Usuário autenticado:", user.uid);
             const playerData = await getPlayerData(user.uid);
             if (playerData) {
-                for (const stat in playerData) {
-                    if (document.getElementById(stat)) {
-                        document.getElementById(stat).value = playerData[stat] || "";
+                // Preenche os campos básicos
+                document.getElementById("name").value = playerData.name || "";
+                document.getElementById("race").value = playerData.race || "";
+                document.getElementById("alignment").value = playerData.alignment || "";
+                document.getElementById("class").value = playerData.class || "";
+                document.getElementById("mao dominante").value = playerData.maoDominante || "";
+                document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante || "";
+
+                // Preenche os atributos
+                const stats = ["health", "strength", "dexterity", "intelligence", "luck"];
+                stats.forEach(stat => {
+                    if (playerData[stat]) {
+                        document.getElementById(stat + "1").innerText = playerData[stat].firstRoll || "-";
+                        document.getElementById(stat + "2").innerText = playerData[stat].secondRoll || "-";
+                        document.getElementById(stat + "Total").innerText = playerData[stat].total || "-";
+                        document.getElementById(stat + "Modifier").innerText = playerData[stat].modifier ? ` (+${playerData[stat].modifier})` : "";
+                        rolls[stat] = playerData[stat].rolls || 3;
+                        resets[stat] = playerData[stat].resets || 2;
                     }
-                }
+                });
             }
         } else {
             window.location.href = "index.html";
