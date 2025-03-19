@@ -236,14 +236,26 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Usuário autenticado:", user.uid);
             const playerData = await getPlayerData(user.uid);
             if (playerData) {
-                // Preenchendo os campos básicos
                 if (playerData.name) document.getElementById("name").value = playerData.name;
                 if (playerData.race) document.getElementById("race").value = playerData.race;
                 if (playerData.alignment) document.getElementById("alignment").value = playerData.alignment;
                 if (playerData.class) document.getElementById("class").value = playerData.class;
                 if (playerData.maoDominante) document.getElementById("mao dominante").value = playerData.maoDominante;
                 if (playerData.hemisferioDominante) document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante;
-                if (playerData.idade) document.getElementById("idade").value = playerData.idade;
+                
+                // Corrigindo a restauração da idade
+                if (playerData.idade) {
+                    const idadeSelect = document.getElementById("idade");
+                    const optionExists = [...idadeSelect.options].some(option => option.value === playerData.idade);
+
+                    if (optionExists) {
+                        idadeSelect.value = playerData.idade;
+                    } else {
+                        console.warn("O valor salvo da idade não corresponde a nenhuma opção no <select>.");
+                    }
+
+                    console.log("Idade restaurada:", playerData.idade);
+                }
 
                 // Preenchendo os atributos
                 const stats = ["health", "strength", "dexterity", "intelligence", "luck"];
