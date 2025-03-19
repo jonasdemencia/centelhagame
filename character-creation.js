@@ -115,7 +115,26 @@ function updateRacialModifiersDisplay() {
     }
 }
 
-document.getElementById("race").addEventListener("change", updateRacialModifiersDisplay);
+document.getElementById("race").addEventListener("change", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+    updateRacialModifiersDisplay();
+});
+
+document.getElementById("alignment").addEventListener("change", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
+document.getElementById("class").addEventListener("change", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
+let saveTimeout;
+function debounceSave(uid, data) {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+        savePlayerData(uid, data);
+    }, 300);
+}
 
 async function savePlayerData(uid, data) {
     try {
