@@ -1,10 +1,11 @@
 let selectedItem = null; // Armazena o item selecionado
 
-// Seleciona os itens clicados
+// Seleciona os itens clicados no baú
 document.querySelectorAll('.item').forEach(item => {
     item.addEventListener('click', () => {
         // Remove a seleção anterior
         document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
+        document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight')); // Remove highlight anterior
 
         // Define o novo item selecionado
         selectedItem = item;
@@ -13,9 +14,7 @@ document.querySelectorAll('.item').forEach(item => {
         // Destaca os slots compatíveis
         document.querySelectorAll('.slot').forEach(slot => {
             if (slot.dataset.slot === item.dataset.item) {
-                slot.classList.add('highlight');
-            } else {
-                slot.classList.remove('highlight');
+                slot.classList.add('highlight'); // Aplica o highlight
             }
         });
     });
@@ -86,7 +85,7 @@ document.querySelectorAll('.slot').forEach(slot => {
                 newItem.classList.add('selected');
             });
 
-            // Remove o item do slot e retorna o nome original do slot
+            // Remove o item do slot e restaura o nome do slot
             equippedItem.remove();
             slot.innerText = slotName; // Restaura o nome do slot
         }
