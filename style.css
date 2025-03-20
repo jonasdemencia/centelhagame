@@ -8,6 +8,11 @@ body {
     color: white;
 }
 
+/* Estilo para ocultar a página com a classe hidden */
+.hidden {
+    display: none;
+}
+
 /* Estilo dos botões alinhados */
 .stat-buttons-inline {
     display: inline-flex; /* Alinha os botões horizontalmente */
