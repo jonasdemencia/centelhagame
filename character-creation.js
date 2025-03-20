@@ -248,6 +248,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 return; // 🔹 Impede que o restante do código seja executado
             }
 
+            // 🔹 Remova a classe 'hidden' para mostrar a página
+            console.log("Removendo a classe 'hidden' do body.");
+            document.body.classList.remove("hidden");
+
             // 🔹 Mantendo sua lógica atual de preenchimento dos campos
             if (playerData) {
                 if (playerData.name) document.getElementById("name").value = playerData.name;
@@ -256,7 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (playerData.class) document.getElementById("class").value = playerData.class;
                 if (playerData.maoDominante) document.getElementById("mao dominante").value = playerData.maoDominante;
                 if (playerData.hemisferioDominante) document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante;
-                
+
                 // 🔹 Corrigindo a restauração da idade
                 if (playerData.idade) {
                     const idadeSelect = document.getElementById("idade");
@@ -285,7 +289,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
             }
         } else {
-            window.location.href = "index.html"; // 🔹 Se o usuário não estiver autenticado, volta para a página inicial
+            console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
+            window.location.href = "index.html";
         }
     });
 });
