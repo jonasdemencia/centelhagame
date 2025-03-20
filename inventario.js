@@ -1,28 +1,37 @@
-const items = document.querySelectorAll('.item');
-const slots = document.querySelectorAll('.slot');
+let selectedItem = null; // Armazena o item selecionado
 
-// Permitir que os itens sejam arrastáveis
-items.forEach(item => {
-    item.addEventListener('dragstart', (event) => {
-        event.dataTransfer.setData("text/plain", event.target.id);
+// Seleciona os itens clicados
+document.querySelectorAll('.item').forEach(item => {
+    item.addEventListener('click', () => {
+        // Remove a seleção anterior
+        document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
+        
+        // Define o novo item selecionado
+        selectedItem = item;
+        item.classList.add('selected');
+
+        // Destaca os slots compatíveis
+        document.querySelectorAll('.slot').forEach(slot => {
+            if (slot.dataset.slot === item.dataset.item) {
+                slot.classList.add('highlight');
+            } else {
+                slot.classList.remove('highlight');
+            }
+        });
     });
 });
 
-// Permitir que os slots aceitem os itens
-slots.forEach(slot => {
-    slot.addEventListener('dragover', (event) => {
-        event.preventDefault();
-    });
-
-    slot.addEventListener('drop', (event) => {
-        event.preventDefault();
-        const itemId = event.dataTransfer.getData("text/plain");
-        const item = document.getElementById(itemId);
-
-        // Adiciona o item no slot apenas se ele estiver vazio
-        if (slot.innerHTML === slot.dataset.default) {
-            slot.innerHTML = '';
-            slot.appendChild(item);
+// Permite equipar um item clicando em um slot
+document.querySelectorAll('.slot').forEach(slot => {
+    slot.addEventListener('click', () => {
+        if (selectedItem && slot.dataset.slot === selectedItem.dataset.item) {
+            slot.innerHTML = selectedItem.innerHTML; // Equipa o item
+            selectedItem.remove(); // Remove do baú
+            selectedItem = null; // Limpa a seleção
+            
+            // Remove os efeitos visuais
+            document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
+            document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
         }
     });
 });
