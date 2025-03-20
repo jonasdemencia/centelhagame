@@ -32,6 +32,25 @@ document.querySelectorAll('.slot').forEach(slot => {
             // Remove os efeitos visuais
             document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
             document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
+        } else if (slot.innerHTML !== slot.dataset.slot) {
+            // Desequipa e devolve para o baú
+            const itemText = slot.innerHTML;
+            slot.innerHTML = slot.dataset.slot;
+
+            // Cria um novo item no baú
+            const newItem = document.createElement("div");
+            newItem.classList.add("item");
+            newItem.dataset.item = slot.dataset.slot;
+            newItem.innerHTML = itemText;
+            
+            document.querySelector(".items").appendChild(newItem);
+            
+            // Adiciona o evento de clique novamente ao novo item
+            newItem.addEventListener('click', () => {
+                document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
+                selectedItem = newItem;
+                newItem.classList.add('selected');
+            });
         }
     });
 });
