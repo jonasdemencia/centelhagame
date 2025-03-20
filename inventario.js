@@ -23,16 +23,18 @@ document.querySelectorAll('.item').forEach(item => {
 
 // Permite equipar ou trocar um item ao clicar no slot
 document.querySelectorAll('.slot').forEach(slot => {
+    const slotName = slot.innerHTML; // Mantém o nome fixo do slot
+
     slot.addEventListener('click', () => {
         if (selectedItem && slot.dataset.slot === selectedItem.dataset.item) {
-            if (slot.innerHTML !== slot.dataset.slot) {
-                // Se o slot já tem um item, ele retorna para o baú
-                const previousItemText = slot.innerHTML;
+            const existingItem = slot.querySelector('.equipped-item');
 
+            if (existingItem) {
+                // Se já houver um item equipado, devolve ao baú
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
-                newItem.dataset.item = slot.dataset.slot;
-                newItem.innerHTML = previousItemText;
+                newItem.dataset.item = existingItem.dataset.item;
+                newItem.innerHTML = existingItem.innerHTML;
 
                 document.querySelector(".items").appendChild(newItem);
 
@@ -42,16 +44,52 @@ document.querySelectorAll('.slot').forEach(slot => {
                     selectedItem = newItem;
                     newItem.classList.add('selected');
                 });
+
+                // Remove o item anterior do slot
+                existingItem.remove();
             }
 
-            // Equipa o novo item
-            slot.innerHTML = selectedItem.innerHTML;
+            // Equipa o novo item dentro do slot, sem substituir o nome do slot
+            const equippedItem = document.createElement("div");
+            equippedItem.classList.add("equipped-item");
+            equippedItem.dataset.item = selectedItem.dataset.item;
+            equippedItem.innerHTML = selectedItem.innerHTML;
+
+            slot.appendChild(equippedItem);
             selectedItem.remove(); // Remove do baú
             selectedItem = null; // Limpa a seleção
+
+            // Mantém o nome do slot fixo
+            slot.firstChild.textContent = slotName;
 
             // Remove os efeitos visuais
             document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
             document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
+        }
+    });
+
+    // Permite desequipar um item ao clicar no slot
+    slot.addEventListener('dblclick', () => {
+        const equippedItem = slot.querySelector('.equipped-item');
+
+        if (equippedItem) {
+            // Cria um novo item no baú
+            const newItem = document.createElement("div");
+            newItem.classList.add("item");
+            newItem.dataset.item = equippedItem.dataset.item;
+            newItem.innerHTML = equippedItem.innerHTML;
+
+            document.querySelector(".items").appendChild(newItem);
+
+            // Adiciona evento de clique ao novo item
+            newItem.addEventListener('click', () => {
+                document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
+                selectedItem = newItem;
+                newItem.classList.add('selected');
+            });
+
+            // Remove o item do slot sem modificar o nome fixo
+            equippedItem.remove();
         }
     });
 });
