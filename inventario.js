@@ -1,10 +1,9 @@
-let selectedItem = null; // Item selecionado no baú
-let selectedSlot = null; // Slot atualmente destacado
+let selectedItem = null; // Item atualmente selecionado no baú
 
 // Seleciona os itens no baú ao clicar
 document.querySelectorAll('.item').forEach(item => {
     item.addEventListener('click', () => {
-        // Remove seleções anteriores
+        // Remove qualquer seleção anterior
         document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
         document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
 
@@ -12,17 +11,16 @@ document.querySelectorAll('.item').forEach(item => {
         selectedItem = item;
         item.classList.add('selected');
 
-        // Destaca o slot compatível
+        // Destaca os slots compatíveis
         document.querySelectorAll('.slot').forEach(slot => {
             if (slot.dataset.slot === item.dataset.item) {
                 slot.classList.add('highlight'); // Aplica efeito visual
-                selectedSlot = slot; // Define o slot compatível
             }
         });
     });
 });
 
-// Permite equipar ou substituir um item ao clicar no slot
+// Permite equipar ou substituir um item ao clicar no slot compatível
 document.querySelectorAll('.slot').forEach(slot => {
     const slotName = slot.innerText; // Guarda o nome original do slot
 
@@ -36,6 +34,7 @@ document.querySelectorAll('.slot').forEach(slot => {
                 newItem.classList.add("item");
                 newItem.dataset.item = equippedItem.dataset.item;
                 newItem.innerHTML = equippedItem.innerHTML;
+
                 document.querySelector(".items").appendChild(newItem);
 
                 // Adiciona evento de clique ao novo item
@@ -55,11 +54,10 @@ document.querySelectorAll('.slot').forEach(slot => {
             equippedItem.dataset.item = selectedItem.dataset.item;
             equippedItem.innerHTML = selectedItem.innerHTML;
 
-            slot.innerText = ""; // Remove o nome do slot
+            slot.innerHTML = ""; // Remove o nome do slot
             slot.appendChild(equippedItem);
             selectedItem.remove(); // Remove do baú
             selectedItem = null; // Limpa a seleção
-            selectedSlot = null; // Reseta o slot selecionado
 
             // Remove os efeitos visuais
             document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
@@ -99,6 +97,5 @@ document.getElementById("discard-slot").addEventListener("click", () => {
     if (selectedItem) {
         selectedItem.remove();
         selectedItem = null;
-        selectedSlot = null;
     }
 });
