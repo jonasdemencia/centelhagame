@@ -39,3 +39,49 @@ body {
     font-size: 16px;
     color: white;
 }
+
+/* Destaque dos slots */
+.highlight {
+    background-color: #3498db; /* Azul claro */
+    border-color: #2980b9; /* Borda azul */
+}
+
+/.slot, .item, .discard-slot {
+    width: 100px;
+    height: 45px;
+    background: #583101;
+    border: 2px solid #d4a373;
+    border-radius: 8px;
+    text-align: center;
+    line-height: 45px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.item {
+    background: #8b5a2b;
+}
+
+.slot {
+    background: rgba(100, 60, 30, 0.8);
+}
+
+/* Estilização do descarte */
+.discard-area {
+    margin-top: 20px;
+    padding: 10px;
+    background: rgba(50, 30, 15, 0.8);
+    border: 3px solid #a52a2a;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.discard-slot {
+    background: #a52a2a;
+    color: #fff;
+    font-weight: bold;
+}
