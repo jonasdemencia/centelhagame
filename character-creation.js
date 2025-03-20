@@ -146,15 +146,15 @@ document.getElementById("idade").addEventListener("input", () => {
 
 document.getElementById("submit").addEventListener("click", async () => {
     const data = getPlayerStats();
-    
-    // Verifique se todos os campos foram preenchidos antes de marcar como completo
+
+    // Verifique se todos os campos e rolagens foram preenchidos antes de marcar como completo
     if (isFichaCompleta(data)) {
-        data.fichaCompleta = true;
-        await savePlayerData(auth.currentUser.uid, data);
+        data.fichaCompleta = true; // Marca a ficha como completa
+        await savePlayerData(auth.currentUser.uid, data); // Salva no Firestore
         console.log("Ficha marcada como completa. Redirecionando para o inventário...");
-        window.location.href = "inventario.html";
+        window.location.href = "inventario.html"; // Redireciona
     } else {
-        alert("Por favor, preencha todos os campos antes de prosseguir!");
+        alert("Por favor, preencha todos os campos e finalize todas as rolagens antes de prosseguir!");
     }
 });
 
@@ -246,6 +246,14 @@ function getStat(id) {
 }
 
 function isFichaCompleta(playerData) {
+    const stats = ["health", "strength", "dexterity", "intelligence", "luck"];
+    const statsComplete = stats.every(stat => 
+        playerData[stat] &&
+        playerData[stat].firstRoll > 0 &&
+        playerData[stat].secondRoll > 0 &&
+        playerData[stat].total > 0
+    );
+
     return (
         playerData &&
         playerData.name &&
@@ -254,7 +262,8 @@ function isFichaCompleta(playerData) {
         playerData.class &&
         playerData.maoDominante &&
         playerData.hemisferioDominante &&
-        playerData.idade
+        playerData.idade &&
+        statsComplete // Verifica se os atributos estão completos
     );
 }
 
@@ -264,18 +273,18 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Usuário autenticado:", user.uid);
             const playerData = await getPlayerData(user.uid);
 
-            // 🔹 Se o jogador já enviou a ficha, redireciona para o inventário
-          if (isFichaCompleta(playerData)) {
-    console.log("Ficha já criada. Redirecionando para o inventário...");
-    window.location.href = "inventario.html";
-    return;
-}
+            // 🔹 Verifica se a ficha está completa, incluindo as rolagens e os atributos
+            if (playerData && playerData.fichaCompleta) {
+                console.log("Ficha já criada e completa. Redirecionando para o inventário...");
+                window.location.href = "inventario.html";
+                return; // Impede o restante do fluxo
+            }
 
-            // 🔹 Remova a classe 'hidden' para mostrar a página
-            console.log("Removendo a classe 'hidden' do body.");
+            // 🔹 Exibe a página de criação de ficha se incompleta
+            console.log("Ficha incompleta. Removendo a classe 'hidden' para exibir a página.");
             document.body.classList.remove("hidden");
 
-            // 🔹 Mantendo sua lógica atual de preenchimento dos campos
+            // 🔹 Preenche os campos com dados salvos, se existirem
             if (playerData) {
                 if (playerData.name) document.getElementById("name").value = playerData.name;
                 if (playerData.race) document.getElementById("race").value = playerData.race;
@@ -284,7 +293,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (playerData.maoDominante) document.getElementById("mao dominante").value = playerData.maoDominante;
                 if (playerData.hemisferioDominante) document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante;
 
-                // 🔹 Corrigindo a restauração da idade
+                // 🔹 Corrige a restauração da idade
                 if (playerData.idade) {
                     const idadeSelect = document.getElementById("idade");
                     const optionExists = [...idadeSelect.options].some(option => option.value === playerData.idade);
@@ -298,7 +307,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     console.log("Idade restaurada:", playerData.idade);
                 }
 
-                // Preenchendo os atributos
+                // 🔹 Preenche os atributos com dados salvos
                 const stats = ["health", "strength", "dexterity", "intelligence", "luck"];
                 stats.forEach(stat => {
                     if (playerData[stat]) {
@@ -318,5 +327,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+// 🔹 Mantendo os métodos utilitários necessários
 window.rollStat = rollStat;
 window.resetStat = resetStat;
