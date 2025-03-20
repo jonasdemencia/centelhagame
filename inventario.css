@@ -1,14 +1,31 @@
-/* Aplicando a fonte Eagle Lake */
+/* Aplicação da fonte Eagle Lake */
 body {
-    font-family: 'Eagle Lake', serif;
-    background: url('https://www.toptal.com/designers/subtlepatterns/patterns/wood_pattern.png');
-    color: #fff;
+    font-family: 'Eagle Lake', cursive;
     text-align: center;
-    padding: 20px;
+    margin: 0;
+    padding: 5px;
+    background-color: #1a1a1a;
+    color: white;
 }
 
+/* Container principal */
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    border: 4px solid #aa6c39;
+}
+
+/* Títulos */
 h1 {
     font-size: 32px;
+    margin-bottom: 10px;
+}
+
+h2 {
+    font-size: 24px;
     margin-bottom: 10px;
 }
 
@@ -17,16 +34,7 @@ p {
     margin-bottom: 20px;
 }
 
-.container {
-    max-width: 900px;
-    margin: auto;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 20px;
-    border-radius: 10px;
-    border: 4px solid #aa6c39;
-}
-
-/* Seção do personagem agora em formato vertical */
+/* Seção do personagem */
 .character {
     padding: 20px;
     background: rgba(0, 0, 0, 0.5);
@@ -43,14 +51,14 @@ p {
     gap: 10px;
 }
 
-/* Organização dos slots em fileiras */
+/* Organização dos slots */
 .slot-row {
     display: flex;
     justify-content: center;
     gap: 10px;
 }
 
-/* Melhor organização dos itens no baú */
+/* Baú de itens */
 .chest {
     margin-top: 20px;
     padding: 20px;
@@ -89,7 +97,19 @@ p {
     background: rgba(100, 60, 30, 0.8);
 }
 
-/* Estilização do descarte */
+/* Destaque do item selecionado */
+.selected {
+    background-color: #f1c40f; /* Amarelo */
+    border-color: #f39c12; /* Borda amarelo escuro */
+}
+
+/* Destaque dos slots compatíveis */
+.highlight {
+    background-color: #3498db; /* Azul claro */
+    border-color: #2980b9; /* Borda azul escuro */
+}
+
+/* Estilização da área de descarte */
 .discard-area {
     margin-top: 20px;
     padding: 10px;
@@ -106,4 +126,36 @@ p {
     background: #a52a2a;
     color: #fff;
     font-weight: bold;
+}
+
+/* Botões alinhados (se aplicável) */
+.stat-buttons-inline {
+    display: inline-flex;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+.button {
+    background-color: transparent;
+    color: white;
+    border: 1px solid white;
+    padding: 6px 12px;
+    font-family: 'Eagle Lake', cursive;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: white;
+    color: black;
+}
+
+/* Valores */
+.stat-value {
+    font-size: 16px;
+    color: white;
+}
+
+/* Página oculta */
+.hidden {
+    display: none;
 }
