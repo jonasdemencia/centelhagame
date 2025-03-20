@@ -1,40 +1,41 @@
-let selectedItem = null; // Armazena o item selecionado
+let selectedItem = null; // Item selecionado no baú
+let selectedSlot = null; // Slot atualmente destacado
 
-// Seleciona os itens clicados no baú
+// Seleciona os itens no baú ao clicar
 document.querySelectorAll('.item').forEach(item => {
     item.addEventListener('click', () => {
-        // Remove a seleção anterior
+        // Remove seleções anteriores
         document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
-        document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight')); // Remove highlight anterior
+        document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
 
         // Define o novo item selecionado
         selectedItem = item;
         item.classList.add('selected');
 
-        // Destaca os slots compatíveis
+        // Destaca o slot compatível
         document.querySelectorAll('.slot').forEach(slot => {
             if (slot.dataset.slot === item.dataset.item) {
-                slot.classList.add('highlight'); // Aplica o highlight
+                slot.classList.add('highlight'); // Aplica efeito visual
+                selectedSlot = slot; // Define o slot compatível
             }
         });
     });
 });
 
-// Permite equipar ou trocar um item ao clicar no slot
+// Permite equipar ou substituir um item ao clicar no slot
 document.querySelectorAll('.slot').forEach(slot => {
     const slotName = slot.innerText; // Guarda o nome original do slot
 
     slot.addEventListener('click', () => {
         if (selectedItem && slot.dataset.slot === selectedItem.dataset.item) {
-            const existingItem = slot.querySelector('.equipped-item');
+            const equippedItem = slot.querySelector('.equipped-item');
 
-            if (existingItem) {
-                // Se já houver um item equipado, devolve ao baú
+            if (equippedItem) {
+                // Se já houver um item equipado, ele volta para o baú
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
-                newItem.dataset.item = existingItem.dataset.item;
-                newItem.innerHTML = existingItem.innerHTML;
-
+                newItem.dataset.item = equippedItem.dataset.item;
+                newItem.innerHTML = equippedItem.innerHTML;
                 document.querySelector(".items").appendChild(newItem);
 
                 // Adiciona evento de clique ao novo item
@@ -45,19 +46,20 @@ document.querySelectorAll('.slot').forEach(slot => {
                 });
 
                 // Remove o item anterior do slot
-                existingItem.remove();
+                equippedItem.remove();
             }
 
-            // Equipa o novo item dentro do slot
+            // Equipa o novo item no slot
             const equippedItem = document.createElement("div");
             equippedItem.classList.add("equipped-item");
             equippedItem.dataset.item = selectedItem.dataset.item;
             equippedItem.innerHTML = selectedItem.innerHTML;
 
-            slot.innerText = ""; // Remove o nome do slot ao equipar
+            slot.innerText = ""; // Remove o nome do slot
             slot.appendChild(equippedItem);
             selectedItem.remove(); // Remove do baú
             selectedItem = null; // Limpa a seleção
+            selectedSlot = null; // Reseta o slot selecionado
 
             // Remove os efeitos visuais
             document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
@@ -97,5 +99,6 @@ document.getElementById("discard-slot").addEventListener("click", () => {
     if (selectedItem) {
         selectedItem.remove();
         selectedItem = null;
+        selectedSlot = null;
     }
 });
