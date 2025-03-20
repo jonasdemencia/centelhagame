@@ -240,6 +240,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (user) {
             console.log("Usuário autenticado:", user.uid);
             const playerData = await getPlayerData(user.uid);
+
+            // 🔹 Se o jogador já enviou a ficha, redireciona para o inventário
+            if (playerData && playerData.name) {
+                console.log("Ficha já criada. Redirecionando para o inventário...");
+                window.location.href = "inventario.html";
+                return; // 🔹 Impede que o restante do código seja executado
+            }
+
+            // 🔹 Mantendo sua lógica atual de preenchimento dos campos
             if (playerData) {
                 if (playerData.name) document.getElementById("name").value = playerData.name;
                 if (playerData.race) document.getElementById("race").value = playerData.race;
@@ -248,7 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (playerData.maoDominante) document.getElementById("mao dominante").value = playerData.maoDominante;
                 if (playerData.hemisferioDominante) document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante;
                 
-                // Corrigindo a restauração da idade
+                // 🔹 Corrigindo a restauração da idade
                 if (playerData.idade) {
                     const idadeSelect = document.getElementById("idade");
                     const optionExists = [...idadeSelect.options].some(option => option.value === playerData.idade);
@@ -276,7 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
             }
         } else {
-            window.location.href = "index.html";
+            window.location.href = "index.html"; // 🔹 Se o usuário não estiver autenticado, volta para a página inicial
         }
     });
 });
