@@ -68,7 +68,12 @@ p {
     background: rgba(100, 60, 30, 0.8);
 }
 
-/* Efeito ao arrastar */
-.item:active {
-    opacity: 0.5;
+/* Efeito ao selecionar um item */
+.selected {
+    outline: 3px solid gold;
+}
+
+/* Efeito nos slots quando um item pode ser equipado */
+.slot.highlight {
+    background-color: #aa6c39;
 }
