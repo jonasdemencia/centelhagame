@@ -23,7 +23,7 @@ document.querySelectorAll('.item').forEach(item => {
 
 // Permite equipar ou trocar um item ao clicar no slot
 document.querySelectorAll('.slot').forEach(slot => {
-    const slotName = slot.innerHTML; // Mantém o nome fixo do slot
+    const slotName = slot.innerText; // Guarda o nome original do slot
 
     slot.addEventListener('click', () => {
         if (selectedItem && slot.dataset.slot === selectedItem.dataset.item) {
@@ -49,18 +49,16 @@ document.querySelectorAll('.slot').forEach(slot => {
                 existingItem.remove();
             }
 
-            // Equipa o novo item dentro do slot, sem substituir o nome do slot
+            // Equipa o novo item dentro do slot
             const equippedItem = document.createElement("div");
             equippedItem.classList.add("equipped-item");
             equippedItem.dataset.item = selectedItem.dataset.item;
             equippedItem.innerHTML = selectedItem.innerHTML;
 
+            slot.innerText = ""; // Remove o nome do slot ao equipar
             slot.appendChild(equippedItem);
             selectedItem.remove(); // Remove do baú
             selectedItem = null; // Limpa a seleção
-
-            // Mantém o nome do slot fixo
-            slot.firstChild.textContent = slotName;
 
             // Remove os efeitos visuais
             document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
@@ -69,7 +67,7 @@ document.querySelectorAll('.slot').forEach(slot => {
     });
 
     // Permite desequipar um item ao clicar no slot
-    slot.addEventListener('dblclick', () => {
+    slot.addEventListener('click', () => {
         const equippedItem = slot.querySelector('.equipped-item');
 
         if (equippedItem) {
@@ -88,8 +86,9 @@ document.querySelectorAll('.slot').forEach(slot => {
                 newItem.classList.add('selected');
             });
 
-            // Remove o item do slot sem modificar o nome fixo
+            // Remove o item do slot e retorna o nome original do slot
             equippedItem.remove();
+            slot.innerText = slotName; // Restaura o nome do slot
         }
     });
 });
