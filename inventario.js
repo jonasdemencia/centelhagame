@@ -1,9 +1,9 @@
 let selectedItem = null; // Armazena o item selecionado 
 
-// Seleciona os itens clicados
+// Seleciona os itens clicados no baú
 document.querySelectorAll('.item').forEach(item => {
     item.addEventListener('click', () => {
-        // Remove a seleção anterior
+        // Limpa seleção anterior
         clearHighlights();
 
         // Define o novo item selecionado
@@ -13,29 +13,54 @@ document.querySelectorAll('.item').forEach(item => {
         // Destaca os slots compatíveis
         document.querySelectorAll('.slot').forEach(slot => {
             if (slot.dataset.slot === item.dataset.item) {
-                slot.classList.add('highlight'); // Adiciona classe de destaque
+                slot.classList.add('highlight'); // Adiciona o destaque
             }
         });
     });
 });
 
-// Permite equipar ou desequipar itens ao clicar nos slots
+// Gerencia o clique nos slots
 document.querySelectorAll('.slot').forEach(slot => {
     slot.addEventListener('click', () => {
+        // Verifica se há um item selecionado no baú
         if (selectedItem && slot.dataset.slot === selectedItem.dataset.item) {
-            // Caso o slot esteja vazio: equipa o item
-            if (slot.innerHTML === slot.dataset.slot) {
-                slot.innerHTML = selectedItem.innerHTML; // Equipa o item
-                selectedItem.remove(); // Remove do baú
-                selectedItem = null; // Limpa a seleção
-                clearHighlights();
+            // Verifica se o slot já está ocupado
+            if (slot.innerHTML !== slot.dataset.slot) {
+                // Desequipa o item atual e devolve ao baú
+                const equippedItemText = slot.innerHTML;
+
+                const newItem = document.createElement("div"); // Cria novo item no baú
+                newItem.classList.add("item");
+                newItem.dataset.item = slot.dataset.slot;
+                newItem.innerHTML = equippedItemText;
+
+                document.querySelector(".items").appendChild(newItem); // Adiciona ao baú
+
+                // Reaplica evento de clique ao novo item no baú
+                newItem.addEventListener('click', () => {
+                    clearHighlights();
+                    selectedItem = newItem;
+                    newItem.classList.add('selected');
+
+                    document.querySelectorAll('.slot').forEach(s => {
+                        if (s.dataset.slot === newItem.dataset.item) {
+                            s.classList.add('highlight'); // Destaca os slots compatíveis
+                        }
+                    });
+                });
             }
-        } else if (slot.innerHTML !== slot.dataset.slot) {
-            // Caso o slot já tenha um item: desequipa e devolve ao baú
-            const itemText = slot.innerHTML; // Recupera o texto do item equipado
+
+            // Equipa o novo item no slot
+            slot.innerHTML = selectedItem.innerHTML; // Substitui o item
+            selectedItem.remove(); // Remove o item do baú
+            selectedItem = null; // Limpa a seleção
+            clearHighlights();
+        } else if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
+            // Caso o jogador deseje apenas desequipar manualmente sem nenhum item selecionado
+            const itemText = slot.innerHTML;
             slot.innerHTML = slot.dataset.slot; // Reseta o slot ao estado original
 
-            // Cria um novo item no baú
+            // Cria novo item no baú
             const newItem = document.createElement("div");
             newItem.classList.add("item");
             newItem.dataset.item = slot.dataset.slot;
@@ -43,7 +68,7 @@ document.querySelectorAll('.slot').forEach(slot => {
 
             document.querySelector(".items").appendChild(newItem); // Adiciona ao baú
 
-            // Adiciona evento de clique ao novo item
+            // Reaplica evento de clique ao novo item
             newItem.addEventListener('click', () => {
                 clearHighlights();
                 selectedItem = newItem;
