@@ -144,8 +144,18 @@ document.getElementById("idade").addEventListener("input", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
 });
 
-document.getElementById("submit").addEventListener("click", () => {
-    window.location.href = "inventario.html";
+document.getElementById("submit").addEventListener("click", async () => {
+    const data = getPlayerStats();
+    
+    // Verifique se todos os campos foram preenchidos antes de marcar como completo
+    if (isFichaCompleta(data)) {
+        data.fichaCompleta = true;
+        await savePlayerData(auth.currentUser.uid, data);
+        console.log("Ficha marcada como completa. Redirecionando para o inventário...");
+        window.location.href = "inventario.html";
+    } else {
+        alert("Por favor, preencha todos os campos antes de prosseguir!");
+    }
 });
 
 
@@ -235,6 +245,19 @@ function getStat(id) {
     return document.getElementById(id).innerText !== "-" ? parseInt(document.getElementById(id).innerText) : 0;
 }
 
+function isFichaCompleta(playerData) {
+    return (
+        playerData &&
+        playerData.name &&
+        playerData.race &&
+        playerData.alignment &&
+        playerData.class &&
+        playerData.maoDominante &&
+        playerData.hemisferioDominante &&
+        playerData.idade
+    );
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -242,11 +265,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const playerData = await getPlayerData(user.uid);
 
             // 🔹 Se o jogador já enviou a ficha, redireciona para o inventário
-            if (playerData && playerData.name) {
-                console.log("Ficha já criada. Redirecionando para o inventário...");
-                window.location.href = "inventario.html";
-                return; // 🔹 Impede que o restante do código seja executado
-            }
+          if (isFichaCompleta(playerData)) {
+    console.log("Ficha já criada. Redirecionando para o inventário...");
+    window.location.href = "inventario.html";
+    return;
+}
 
             // 🔹 Remova a classe 'hidden' para mostrar a página
             console.log("Removendo a classe 'hidden' do body.");
