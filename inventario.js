@@ -21,15 +21,14 @@ document.querySelectorAll('.item').forEach(item => {
     });
 });
 
-// Permite equipar um item clicando em um slot
+// Permite equipar ou trocar um item ao clicar no slot
 document.querySelectorAll('.slot').forEach(slot => {
     slot.addEventListener('click', () => {
         if (selectedItem && slot.dataset.slot === selectedItem.dataset.item) {
-            // Se o slot já tiver um item equipado, devolve ao baú
             if (slot.innerHTML !== slot.dataset.slot) {
+                // Se o slot já tem um item, ele retorna para o baú
                 const previousItemText = slot.innerHTML;
 
-                // Cria um novo item no baú
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
                 newItem.dataset.item = slot.dataset.slot;
