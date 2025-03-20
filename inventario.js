@@ -5,7 +5,7 @@ document.querySelectorAll('.item').forEach(item => {
     item.addEventListener('click', () => {
         // Remove a seleção anterior
         document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
-        
+
         // Define o novo item selecionado
         selectedItem = item;
         item.classList.add('selected');
@@ -25,32 +25,34 @@ document.querySelectorAll('.item').forEach(item => {
 document.querySelectorAll('.slot').forEach(slot => {
     slot.addEventListener('click', () => {
         if (selectedItem && slot.dataset.slot === selectedItem.dataset.item) {
-            slot.innerHTML = selectedItem.innerHTML; // Equipa o item
+            // Se o slot já tiver um item equipado, devolve ao baú
+            if (slot.innerHTML !== slot.dataset.slot) {
+                const previousItemText = slot.innerHTML;
+
+                // Cria um novo item no baú
+                const newItem = document.createElement("div");
+                newItem.classList.add("item");
+                newItem.dataset.item = slot.dataset.slot;
+                newItem.innerHTML = previousItemText;
+
+                document.querySelector(".items").appendChild(newItem);
+
+                // Adiciona evento de clique ao novo item
+                newItem.addEventListener('click', () => {
+                    document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
+                    selectedItem = newItem;
+                    newItem.classList.add('selected');
+                });
+            }
+
+            // Equipa o novo item
+            slot.innerHTML = selectedItem.innerHTML;
             selectedItem.remove(); // Remove do baú
             selectedItem = null; // Limpa a seleção
-            
+
             // Remove os efeitos visuais
             document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
             document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
-        } else if (slot.innerHTML !== slot.dataset.slot) {
-            // Desequipa e devolve para o baú
-            const itemText = slot.innerHTML;
-            slot.innerHTML = slot.dataset.slot;
-
-            // Cria um novo item no baú
-            const newItem = document.createElement("div");
-            newItem.classList.add("item");
-            newItem.dataset.item = slot.dataset.slot;
-            newItem.innerHTML = itemText;
-            
-            document.querySelector(".items").appendChild(newItem);
-            
-            // Adiciona o evento de clique novamente ao novo item
-            newItem.addEventListener('click', () => {
-                document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
-                selectedItem = newItem;
-                newItem.classList.add('selected');
-            });
         }
     });
 });
