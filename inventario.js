@@ -54,3 +54,11 @@ document.querySelectorAll('.slot').forEach(slot => {
         }
     });
 });
+
+// Adicionando funcionalidade de descarte
+document.getElementById("discard-slot").addEventListener("click", () => {
+    if (selectedItem) {
+        selectedItem.remove();
+        selectedItem = null;
+    }
+});
