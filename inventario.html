@@ -3,10 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventário</title>
+    <title>Inventário de Itens</title>
+    <link rel="stylesheet" href="inventario.css">
 </head>
 <body>
-    <h1>Bem-vindo ao Inventário</h1>
-    <p>Aqui você equipará seus itens.</p>
+
+    <div class="container">
+        <h1>🏰 Inventário do Aventureiro 🏹</h1>
+        <p>Arraste os itens do baú para equipá-los no seu personagem.</p>
+
+        <div class="inventory">
+            <!-- Seção do personagem -->
+            <div class="character">
+                <h2>Personagem</h2>
+                <div class="equipment">
+                    <div class="slot" id="helmet">🪖 Cabeça</div>
+                    <div class="slot" id="armor">🛡️ Peitoral</div>
+                    <div class="slot" id="weapon">⚔️ Arma</div>
+                    <div class="slot" id="shield">🛡️ Escudo</div>
+                    <div class="slot" id="gloves">🧤 Luvas</div>
+                    <div class="slot" id="boots">🥾 Botas</div>
+                    <div class="slot" id="ring">💍 Anel</div>
+                    <div class="slot" id="amulet">📿 Amuleto</div>
+                </div>
+            </div>
+
+            <!-- Seção do baú de itens -->
+            <div class="chest">
+                <h2>Baú de Itens</h2>
+                <div class="items">
+                    <div class="item" draggable="true" id="iron-helmet">🪖 Elmo de Ferro</div>
+                    <div class="item" draggable="true" id="steel-armor">🛡️ Armadura de Aço</div>
+                    <div class="item" draggable="true" id="long-sword">⚔️ Espada Longa</div>
+                    <div class="item" draggable="true" id="wooden-shield">🛡️ Escudo de Madeira</div>
+                    <div class="item" draggable="true" id="leather-gloves">🧤 Luvas de Couro</div>
+                    <div class="item" draggable="true" id="iron-boots">🥾 Botas de Ferro</div>
+                    <div class="item" draggable="true" id="golden-ring">💍 Anel Dourado</div>
+                    <div class="item" draggable="true" id="magic-amulet">📿 Amuleto Místico</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="inventario.js"></script>
 </body>
 </html>
