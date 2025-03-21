@@ -15,8 +15,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let rolls = { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 };
-let resets = { health: 2, strength: 2, dexterity: 2, intelligence: 2, luck: 2 };
+let rolls = { energy: 3, skill: 3, charisma: 3, magic: 3, luck: 3 };
+let resets = { energy: 2, skill: 2, charisma: 2, magic: 2, luck: 2 };
 
 function rollDice(sides) {
     return Math.floor(Math.random() * sides) + 1;
@@ -24,25 +24,25 @@ function rollDice(sides) {
 
 function getRacialModifiers() {
     const race = document.getElementById("race").value;
-    let modifiers = { health: 0, strength: 0, dexterity: 0, intelligence: 0, luck: 0 };
+    let modifiers = { energy: 0, skill: 0, charisma: 0, magic: 0, luck: 0 };
     switch (race) {
         case "Anão":
-            modifiers.health += 12;
-            modifiers.intelligence += 3;
-            modifiers.strength += 6;
-            modifiers.dexterity += 4;
+            modifiers.energy += 12;
+            modifiers.magic += 3;
+            modifiers.skill += 6;
+            modifiers.charisma += 4;
             break;
         case "Elfo":
-            modifiers.health += 8;
-            modifiers.intelligence += 4;
-            modifiers.dexterity += 6;
-            modifiers.strength += 4;
+            modifiers.energy += 8;
+            modifiers.magic += 4;
+            modifiers.charisma += 6;
+            modifiers.skill += 4;
             break;
         case "Humano":
-            modifiers.health += 10;
-            modifiers.intelligence += 6;
-            modifiers.dexterity += 4;
-            modifiers.strength += 4;
+            modifiers.energy += 10;
+            modifiers.magic += 6;
+            modifiers.charisma += 4;
+            modifiers.skill += 4;
             break;
     }
     return modifiers;
@@ -203,33 +203,33 @@ function getPlayerStats() {
         maoDominante: document.getElementById("mao dominante").value,
         hemisferioDominante: document.getElementById("hemisfério dominante").value,
         idade: document.getElementById("idade").value,
-        health: {
-            firstRoll: getStat("health1"),
-            secondRoll: getStat("health2"),
-            total: getStat("healthTotal"),
-            rolls: rolls.health,
-            resets: resets.health
+        energy: {
+            firstRoll: getStat("energy1"),
+            secondRoll: getStat("energy2"),
+            total: getStat("energyTotal"),
+            rolls: rolls.energy,
+            resets: resets.energy
         },
-        strength: {
-            firstRoll: getStat("strength1"),
-            secondRoll: getStat("strength2"),
-            total: getStat("strengthTotal"),
-            rolls: rolls.strength,
-            resets: resets.strength
+        skill: {
+            firstRoll: getStat("skill1"),
+            secondRoll: getStat("skill2"),
+            total: getStat("skillTotal"),
+            rolls: rolls.skill,
+            resets: resets.skill
         },
-        dexterity: {
-            firstRoll: getStat("dexterity1"),
-            secondRoll: getStat("dexterity2"),
-            total: getStat("dexterityTotal"),
-            rolls: rolls.dexterity,
-            resets: resets.dexterity
+        charisma: {
+            firstRoll: getStat("charisma1"),
+            secondRoll: getStat("charisma2"),
+            total: getStat("charismaTotal"),
+            rolls: rolls.charisma,
+            resets: resets.charisma
         },
-        intelligence: {
-            firstRoll: getStat("intelligence1"),
-            secondRoll: getStat("intelligence2"),
-            total: getStat("intelligenceTotal"),
-            rolls: rolls.intelligence,
-            resets: resets.intelligence
+        magic: {
+            firstRoll: getStat("magic1"),
+            secondRoll: getStat("magic2"),
+            total: getStat("magicTotal"),
+            rolls: rolls.magic,
+            resets: resets.magic
         },
         luck: {
             firstRoll: getStat("luck1"),
@@ -246,7 +246,7 @@ function getStat(id) {
 }
 
 function isFichaCompleta(playerData) {
-    const stats = ["health", "strength", "dexterity", "intelligence", "luck"];
+    const stats = ["energy", "skill", "charisma", "magic", "luck"];
     const statsComplete = stats.every(stat => 
         playerData[stat] &&
         playerData[stat].firstRoll > 0 &&
@@ -308,7 +308,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 // 🔹 Preenche os atributos com dados salvos
-                const stats = ["health", "strength", "dexterity", "intelligence", "luck"];
+                const stats = ["energy", "skill", "charisma", "magic", "luck"];
                 stats.forEach(stat => {
                     if (playerData[stat]) {
                         document.getElementById(stat + "1").innerText = playerData[stat].firstRoll || "-";
