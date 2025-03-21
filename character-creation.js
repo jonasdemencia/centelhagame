@@ -103,9 +103,23 @@ function disableButton(button) {
 
 function updateRacialModifiersDisplay() {
     const racialModifiers = getRacialModifiers();
+
     for (const stat in racialModifiers) {
         const modifierDisplay = document.getElementById(stat + "Modifier");
-        modifierDisplay.innerText = racialModifiers[stat] !== 0 ? ` (+${racialModifiers[stat]})` : "";
+
+        if (modifierDisplay) {
+            let modifierValue = racialModifiers[stat];
+
+            // 🔹 Resetando valores antes de aplicar novos
+            modifierDisplay.innerText = "";
+
+            // 🔹 Corrigindo a exibição de valores negativos
+            if (modifierValue > 0) {
+                modifierDisplay.innerText = ` (+${modifierValue})`;
+            } else if (modifierValue < 0) {
+                modifierDisplay.innerText = ` (${modifierValue})`; // Apenas parênteses sem "+"
+            }
+        }
     }
 }
 
