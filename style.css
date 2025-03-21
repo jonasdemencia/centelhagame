@@ -3,16 +3,15 @@ body {
     font-family: 'Eagle Lake', cursive;
     text-align: center;
     margin: 0;
-    padding: 0; /* Removi padding do body para controlar melhor no container */
+    padding: 0;
     background-color: #1a1a1a;
     color: white;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh; /* Garante que ocupa a altura total da tela */
+    min-height: 100vh;
 }
 
-/* Estilo para ocultar a página com a classe hidden */
 .hidden {
     display: none;
 }
@@ -21,10 +20,6 @@ body {
     width: 90%;
     max-width: 600px;
     padding: 20px;
-    /* Se você tiver uma imagem de fundo, pode adicioná-la aqui */
-    /* background-image: url('sua-imagem-de-fundo.jpg'); */
-    /* background-size: cover; */
-    /* background-repeat: no-repeat; */
 }
 
 .page-title {
@@ -35,7 +30,7 @@ body {
 
 .form-group {
     margin-bottom: 15px;
-    text-align: left; /* Alinha os labels à esquerda */
+    text-align: left;
 }
 
 .label-text {
@@ -44,17 +39,36 @@ body {
     font-weight: bold;
 }
 
-.input-field, .select-field {
-    width: calc(100% - 22px); /* Ajuste para considerar a borda e o padding */
+.input-field {
+    width: calc(100% - 22px);
     padding: 10px;
     border: 1px solid white;
     background-color: transparent;
     color: white;
     margin-bottom: 10px;
-    box-sizing: border-box; /* Garante que padding e border não aumentem o tamanho total */
+    box-sizing: border-box;
 }
 
-/* Estilo dos botões */
+.select-field {
+    padding: 10px;
+    border: 1px solid white;
+    background-color: #333; /* Cor de fundo escura para o select */
+    color: white;
+    box-sizing: border-box;
+}
+
+/* Estilo para os selects menores */
+.small-field {
+    width: calc(50% - 12px); /* Metade da largura com um pequeno espaço */
+    margin-right: 10px; /* Espaçamento entre os selects */
+    margin-bottom: 10px; /* Adicionando margem inferior para espaçamento vertical se necessário */
+}
+
+/* Remove a margem direita do último elemento em um inline-group */
+.inline-group > div:last-child .small-field {
+    margin-right: 0;
+}
+
 .button {
     background-color: transparent;
     color: white;
@@ -78,20 +92,17 @@ body {
     font-size: 1.2em;
 }
 
-/* Estilo dos valores */
 .stat-value {
     font-size: 16px;
     color: white;
     margin: 0 5px;
 }
 
-/* Destaque dos slots */
 .highlight {
-    background-color: #3498db; /* Azul claro */
-    border-color: #2980b9; /* Borda azul */
+    background-color: #3498db;
+    border-color: #2980b9;
 }
 
-/* Estilo para a seção de instruções */
 .instruction-paragraph {
     text-align: center;
     margin-top: 20px;
@@ -100,7 +111,6 @@ body {
     color: #ccc;
 }
 
-/* Estilo para a seção de atributos */
 .stats-section {
     margin-top: 30px;
 }
@@ -112,18 +122,18 @@ body {
     border-radius: 5px;
     display: flex;
     align-items: center;
-    justify-content: space-between; /* Espaça os elementos internos */
+    justify-content: space-between;
 }
 
 .stat-name {
     font-weight: bold;
     margin-right: 10px;
-    width: 80px; /* Ajuste conforme necessário */
+    width: 80px;
     text-align: left;
 }
 
 .stat-buttons-inline {
-    display: flex; /* Alinha os botões horizontalmente */
+    display: flex;
     gap: 5px;
 }
 
@@ -134,4 +144,16 @@ body {
 
 .racial-modifier {
     margin: 0 10px;
+}
+
+/* Estilo para agrupar elementos inline */
+.inline-group {
+    display: flex;
+    gap: 20px; /* Espaçamento entre os grupos de selects */
+    margin-bottom: 15px; /* Espaçamento abaixo de cada grupo */
+}
+
+.inline-group .label-group {
+    flex-grow: 1; /* Permite que os grupos ocupem espaço igual */
+    margin-bottom: 0; /* Remove a margem inferior padrão do label-group dentro do inline-group */
 }
