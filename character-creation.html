@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ficha de Criação de Personagem</title>
-    <link href="style.css" rel="stylesheet"> <!-- Referência ao CSS -->
-    <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet"> <!-- Fonte Eagle Lake -->
+    <link href="style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet">
 </head>
 <body id="character-page" class="hidden">
     <div class="container">
         <h2 class="page-title">Ficha de Criação de Personagem</h2>
 
-        <!-- Formulário: Nome e CPF -->
+        <!-- Formulário: Nome e Botão Enviar -->
         <div class="form-group">
             <input type="text" id="name" placeholder="Nome do heroi" class="input-field">
             <button id="submit" class="button">ENVIAR</button>
@@ -46,7 +46,7 @@
                 <option>Mago</option>
             </select>
         </div>
- <div class="label-group">
+        <div class="label-group">
             <label for="mao dominante" class="label-text">M ã o  D o m i n a n t e:</label>
             <select id="mao dominante" class="select-field">
                 <option value="">Selecione</option>
@@ -67,61 +67,61 @@
             <label for="idade" class="label-text">I d a d e:</label>
             <select id="idade" class="select-field">
                 <option value="">Selecione</option>
-                <option disabled>Granula(7-10 anos)</option>
-                <option>Neófito(12-20 anos)</option>
-                <option>Confessor(25-35 anos)</option>
-                <option>Adepto(45-60 anos)</option>
-                <option disabled>Velho lobo(70-85 anos)</option>
+                <option disabled>Granula (7-10 anos)</option>
+                <option>Neófito (12-20 anos)</option>
+                <option>Confessor (25-35 anos)</option>
+                <option>Adepto (45-60 anos)</option>
+                <option disabled>Velho lobo (70-85 anos)</option>
             </select>
         </div>
-       
+
         <!-- Instruções -->
         <p class="instruction-paragraph">Você poderá rolar cada um dos atributos três vezes. Role de forma sábia.</p>
 
         <!-- Seção de Atributos -->
         <div class="stats-section stats" id="stats">
-            <!-- Vida -->
+            <!-- Energia -->
             <div class="stat-box">
-                <strong class="stat-name">Vida:</strong>
-                <span id="health1" class="stat-value">-</span> + <span id="health2" class="stat-value">-</span>
-                <span id="healthModifier" class="racial-modifier"></span> =
-                <span id="healthTotal" class="stat-value">-</span>
+                <strong class="stat-name">Energia:</strong>
+                <span id="energy1" class="stat-value">-</span> + <span id="energy2" class="stat-value">-</span>
+                <span id="energyModifier" class="racial-modifier"></span> =
+                <span id="energyTotal" class="stat-value">-</span>
                 <div class="stat-buttons-inline">
-                    <button onclick="rollStat('health', this)" class="button">🎲</button>
-                    <button onclick="resetStat('health', this)" class="button">Zerar</button>
+                    <button onclick="rollStat('energy', this)" class="button">🎲</button>
+                    <button onclick="resetStat('energy', this)" class="button">Zerar</button>
                 </div>
             </div>
-            <!-- Força -->
+            <!-- Habilidade -->
             <div class="stat-box">
-                <strong class="stat-name">Força:</strong>
-                <span id="strength1" class="stat-value">-</span> + <span id="strength2" class="stat-value">-</span>
-                <span id="strengthModifier" class="racial-modifier"></span> =
-                <span id="strengthTotal" class="stat-value">-</span>
+                <strong class="stat-name">Habilidade:</strong>
+                <span id="skill1" class="stat-value">-</span> + <span id="skill2" class="stat-value">-</span>
+                <span id="skillModifier" class="racial-modifier"></span> =
+                <span id="skillTotal" class="stat-value">-</span>
                 <div class="stat-buttons-inline">
-                    <button onclick="rollStat('strength', this)" class="button">🎲</button>
-                    <button onclick="resetStat('strength', this)" class="button">Zerar</button>
+                    <button onclick="rollStat('skill', this)" class="button">🎲</button>
+                    <button onclick="resetStat('skill', this)" class="button">Zerar</button>
                 </div>
             </div>
-            <!-- Destreza -->
+            <!-- Carisma -->
             <div class="stat-box">
-                <strong class="stat-name">Destreza:</strong>
-                <span id="dexterity1" class="stat-value">-</span> + <span id="dexterity2" class="stat-value">-</span>
-                <span id="dexterityModifier" class="racial-modifier"></span> =
-                <span id="dexterityTotal" class="stat-value">-</span>
+                <strong class="stat-name">Carisma:</strong>
+                <span id="charisma1" class="stat-value">-</span> + <span id="charisma2" class="stat-value">-</span>
+                <span id="charismaModifier" class="racial-modifier"></span> =
+                <span id="charismaTotal" class="stat-value">-</span>
                 <div class="stat-buttons-inline">
-                    <button onclick="rollStat('dexterity', this)" class="button">🎲</button>
-                    <button onclick="resetStat('dexterity', this)" class="button">Zerar</button>
+                    <button onclick="rollStat('charisma', this)" class="button">🎲</button>
+                    <button onclick="resetStat('charisma', this)" class="button">Zerar</button>
                 </div>
             </div>
-            <!-- Inteligência -->
+            <!-- Magia -->
             <div class="stat-box">
-                <strong class="stat-name">Inteligência:</strong>
-                <span id="intelligence1" class="stat-value">-</span> + <span id="intelligence2" class="stat-value">-</span>
-                <span id="intelligenceModifier" class="racial-modifier"></span> =
-                <span id="intelligenceTotal" class="stat-value">-</span>
+                <strong class="stat-name">Magia:</strong>
+                <span id="magic1" class="stat-value">-</span> + <span id="magic2" class="stat-value">-</span>
+                <span id="magicModifier" class="racial-modifier"></span> =
+                <span id="magicTotal" class="stat-value">-</span>
                 <div class="stat-buttons-inline">
-                    <button onclick="rollStat('intelligence', this)" class="button">🎲</button>
-                    <button onclick="resetStat('intelligence', this)" class="button">Zerar</button>
+                    <button onclick="rollStat('magic', this)" class="button">🎲</button>
+                    <button onclick="resetStat('magic', this)" class="button">Zerar</button>
                 </div>
             </div>
             <!-- Sorte -->
@@ -139,9 +139,9 @@
     </div>
 
     <!-- Scripts do Firebase -->
-<script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
-<script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js"></script>
-<script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
     
     <!-- Script principal -->
     <script src="character-creation.js" type="module"></script>
