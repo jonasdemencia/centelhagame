@@ -3,9 +3,13 @@ body {
     font-family: 'Eagle Lake', cursive;
     text-align: center;
     margin: 0;
-    padding: 5px;
+    padding: 0; /* Removi padding do body para controlar melhor no container */
     background-color: #1a1a1a;
     color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Garante que ocupa a altura total da tela */
 }
 
 /* Estilo para ocultar a página com a classe hidden */
@@ -13,20 +17,53 @@ body {
     display: none;
 }
 
-/* Estilo dos botões alinhados */
-.stat-buttons-inline {
-    display: inline-flex; /* Alinha os botões horizontalmente */
-    gap: 10px; /* Espaçamento entre os botões */
-    margin-left: 10px; /* Margem entre o resultado e os botões */
+.container {
+    width: 90%;
+    max-width: 600px;
+    padding: 20px;
+    /* Se você tiver uma imagem de fundo, pode adicioná-la aqui */
+    /* background-image: url('sua-imagem-de-fundo.jpg'); */
+    /* background-size: cover; */
+    /* background-repeat: no-repeat; */
 }
 
+.page-title {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2em;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    text-align: left; /* Alinha os labels à esquerda */
+}
+
+.label-text {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.input-field, .select-field {
+    width: calc(100% - 22px); /* Ajuste para considerar a borda e o padding */
+    padding: 10px;
+    border: 1px solid white;
+    background-color: transparent;
+    color: white;
+    margin-bottom: 10px;
+    box-sizing: border-box; /* Garante que padding e border não aumentem o tamanho total */
+}
+
+/* Estilo dos botões */
 .button {
     background-color: transparent;
     color: white;
     border: 1px solid white;
-    padding: 6px 12px;
+    padding: 10px 15px;
     font-family: 'Eagle Lake', cursive;
     cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 .button:hover {
@@ -34,10 +71,18 @@ body {
     color: black;
 }
 
+.submit-button {
+    display: block;
+    width: 100%;
+    margin-top: 30px;
+    font-size: 1.2em;
+}
+
 /* Estilo dos valores */
 .stat-value {
     font-size: 16px;
     color: white;
+    margin: 0 5px;
 }
 
 /* Destaque dos slots */
@@ -46,42 +91,47 @@ body {
     border-color: #2980b9; /* Borda azul */
 }
 
-/.slot, .item, .discard-slot {
-    width: 100px;
-    height: 45px;
-    background: #583101;
-    border: 2px solid #d4a373;
-    border-radius: 8px;
+/* Estilo para a seção de instruções */
+.instruction-paragraph {
     text-align: center;
-    line-height: 45px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
-}
-
-.item {
-    background: #8b5a2b;
-}
-
-.slot {
-    background: rgba(100, 60, 30, 0.8);
-}
-
-/* Estilização do descarte */
-.discard-area {
     margin-top: 20px;
-    padding: 10px;
-    background: rgba(50, 30, 15, 0.8);
-    border: 3px solid #a52a2a;
-    border-radius: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
+    margin-bottom: 30px;
+    font-style: italic;
+    color: #ccc;
 }
 
-.discard-slot {
-    background: #a52a2a;
-    color: #fff;
+/* Estilo para a seção de atributos */
+.stats-section {
+    margin-top: 30px;
+}
+
+.stat-box {
+    background-color: #333;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Espaça os elementos internos */
+}
+
+.stat-name {
     font-weight: bold;
+    margin-right: 10px;
+    width: 80px; /* Ajuste conforme necessário */
+    text-align: left;
+}
+
+.stat-buttons-inline {
+    display: flex; /* Alinha os botões horizontalmente */
+    gap: 5px;
+}
+
+.stat-buttons-inline button {
+    font-size: 1em;
+    padding: 5px 10px;
+}
+
+.racial-modifier {
+    margin: 0 10px;
 }
