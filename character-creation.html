@@ -4,84 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ficha de Criação de Personagem</title>
-    <link href="style.css" rel="stylesheet"> <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet"> </head>
-<body id="character-page">
+    <link href="style.css" rel="stylesheet"> <!-- Referência ao CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet"> <!-- Fonte Eagle Lake -->
+</head>
+<body id="character-page" class="hidden">
     <div class="container">
         <h2 class="page-title">Ficha de Criação de Personagem</h2>
 
+        <!-- Formulário: Nome e CPF -->
         <div class="form-group">
-            <label for="name" class="label-text">Nome:</label>
             <input type="text" id="name" placeholder="Nome do heroi" class="input-field">
+            <button id="submit" class="button">ENVIAR</button>
         </div>
 
-        <div class="inline-group">
-            <div class="label-group">
-                <label for="race" class="label-text">R a ç a:</label>
-                <select id="race" class="select-field small-field">
-                    <option value="">Selecione</option>
-                    <option>Anão</option>
-                    <option>Elfo</option>
-                    <option>Humano</option>
-                </select>
-            </div>
-            <div class="label-group">
-                <label for="alignment" class="label-text">A l i n h a m e n t o:</label>
-                <select id="alignment" class="select-field small-field">
-                    <option value="">Selecione</option>
-                    <option>Bondoso</option>
-                    <option>Mau</option>
-                    <option>Neutro</option>
-                </select>
-            </div>
+        <!-- Campos: Raça, Alinhamento e Classe -->
+        <div class="label-group">
+            <label for="race" class="label-text">R a ç a:</label>
+            <select id="race" class="select-field">
+                <option value="">Selecione</option>
+                <option>Anão</option>
+                <option>Elfo</option>
+                <option>Humano</option>
+            </select>
         </div>
-
-        <div class="inline-group">
-            <div class="label-group">
-                <label for="class" class="label-text">C l a s s e:</label>
-                <select id="class" class="select-field small-field">
-                    <option value="">Selecione</option>
-                    <option>Paladino</option>
-                    <option>Guerreiro</option>
-                    <option>Ladino</option>
-                    <option>Mago</option>
-                </select>
-            </div>
-            <div class="label-group">
-                <label for="mao dominante" class="label-text">M ã o  D o m i n a n t e:</label>
-                <select id="mao dominante" class="select-field small-field">
-                    <option value="">Selecione</option>
-                    <option>Mão esquerda</option>
-                    <option>Mão direita</option>
-                    <option disabled>Mão fantasma</option>
-                </select>
-            </div>
+        <div class="label-group">
+            <label for="alignment" class="label-text">A l i n h a m e n t o:</label>
+            <select id="alignment" class="select-field">
+                <option value="">Selecione</option>
+                <option>Bondoso</option>
+                <option>Mau</option>
+                <option>Neutro</option>
+            </select>
         </div>
-
-        <div class="inline-group">
-            <div class="label-group">
-                <label for="hemisfério dominante" class="label-text">H e m i s f é r i o  d o m i n a n t e:</label>
-                <select id="hemisfério dominante" class="select-field small-field">
-                    <option value="">Selecione</option>
-                    <option>Esquerdo</option>
-                    <option>Direito</option>
-                </select>
-            </div>
-            <div class="label-group">
-                <label for="idade" class="label-text">I d a d e:</label>
-                <select id="idade" class="select-field small-field">
-                    <option value="">Selecione</option>
-                    <option disabled>Granula(7-10 anos)</option>
-                    <option>Neófito(12-20 anos)</option>
-                    <option>Confessor(25-35 anos)</option>
-                    <option>Adepto(45-60 anos)</option>
-                    <option disabled>Velho lobo(70-85 anos)</option>
-                </select>
-            </div>
+        <div class="label-group">
+            <label for="class" class="label-text">C l a s s e:</label>
+            <select id="class" class="select-field">
+                <option value="">Selecione</option>
+                <option>Paladino</option>
+                <option>Guerreiro</option>
+                <option>Ladino</option>
+                <option>Mago</option>
+            </select>
         </div>
-
+ <div class="label-group">
+            <label for="mao dominante" class="label-text">M ã o  D o m i n a n t e:</label>
+            <select id="mao dominante" class="select-field">
+                <option value="">Selecione</option>
+                <option>Mão esquerda</option>
+                <option>Mão direita</option>
+                <option disabled>Mão fantasma</option>
+            </select>
+        </div>
+        <div class="label-group">
+            <label for="hemisfério dominante" class="label-text">H e m i s f é r i o  d o m i n a n t e:</label>
+            <select id="hemisfério dominante" class="select-field">
+                <option value="">Selecione</option>
+                <option>Esquerdo</option>
+                <option>Direito</option>
+            </select>
+        </div>
+        <div class="label-group">
+            <label for="idade" class="label-text">I d a d e:</label>
+            <select id="idade" class="select-field">
+                <option value="">Selecione</option>
+                <option disabled>Granula(7-10 anos)</option>
+                <option>Neófito(12-20 anos)</option>
+                <option>Confessor(25-35 anos)</option>
+                <option>Adepto(45-60 anos)</option>
+                <option disabled>Velho lobo(70-85 anos)</option>
+            </select>
+        </div>
+       
+        <!-- Instruções -->
         <p class="instruction-paragraph">Você poderá rolar cada um dos atributos três vezes. Role de forma sábia.</p>
 
+        <!-- Seção de Atributos -->
         <div class="stats-section stats" id="stats">
+            <!-- Vida -->
             <div class="stat-box">
                 <strong class="stat-name">Vida:</strong>
                 <span id="health1" class="stat-value">-</span> + <span id="health2" class="stat-value">-</span>
@@ -92,6 +91,7 @@
                     <button onclick="resetStat('health', this)" class="button">Zerar</button>
                 </div>
             </div>
+            <!-- Força -->
             <div class="stat-box">
                 <strong class="stat-name">Força:</strong>
                 <span id="strength1" class="stat-value">-</span> + <span id="strength2" class="stat-value">-</span>
@@ -102,6 +102,7 @@
                     <button onclick="resetStat('strength', this)" class="button">Zerar</button>
                 </div>
             </div>
+            <!-- Destreza -->
             <div class="stat-box">
                 <strong class="stat-name">Destreza:</strong>
                 <span id="dexterity1" class="stat-value">-</span> + <span id="dexterity2" class="stat-value">-</span>
@@ -112,6 +113,7 @@
                     <button onclick="resetStat('dexterity', this)" class="button">Zerar</button>
                 </div>
             </div>
+            <!-- Inteligência -->
             <div class="stat-box">
                 <strong class="stat-name">Inteligência:</strong>
                 <span id="intelligence1" class="stat-value">-</span> + <span id="intelligence2" class="stat-value">-</span>
@@ -122,6 +124,7 @@
                     <button onclick="resetStat('intelligence', this)" class="button">Zerar</button>
                 </div>
             </div>
+            <!-- Sorte -->
             <div class="stat-box">
                 <strong class="stat-name">Sorte:</strong>
                 <span id="luck1" class="stat-value">-</span> + <span id="luck2" class="stat-value">-</span>
@@ -133,13 +136,14 @@
                 </div>
             </div>
         </div>
-        <button id="submit" class="button submit-button">ENVIAR</button>
     </div>
 
-    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
+    <!-- Scripts do Firebase -->
+<script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
 <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js"></script>
 <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
-
+    
+    <!-- Script principal -->
     <script src="character-creation.js" type="module"></script>
 </body>
 </html>
