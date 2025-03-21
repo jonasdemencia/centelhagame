@@ -25,24 +25,18 @@ function rollDice(sides) {
 function getRacialModifiers() {
     const race = document.getElementById("race").value;
     let modifiers = { energy: 0, skill: 0, charisma: 0, magic: 0, luck: 0 };
+
     switch (race) {
         case "Anão":
-            modifiers.energy += 12;
-            modifiers.magic += 3;
-            modifiers.skill += 6;
-            modifiers.charisma += 4;
+            modifiers.energy += 2;  // Energia +2
+            modifiers.charisma -= 2; // Carisma -2
             break;
         case "Elfo":
-            modifiers.energy += 8;
-            modifiers.magic += 4;
-            modifiers.charisma += 6;
-            modifiers.skill += 4;
+            modifiers.skill += 2;  // Habilidade +2
+            modifiers.energy -= 2; // Energia -2
             break;
         case "Humano":
-            modifiers.energy += 10;
-            modifiers.magic += 6;
-            modifiers.charisma += 4;
-            modifiers.skill += 4;
+            // Humanos não têm modificadores
             break;
     }
     return modifiers;
@@ -195,6 +189,8 @@ async function getPlayerData(uid) {
 }
 
 function getPlayerStats() {
+    const racialModifiers = getRacialModifiers();
+
     return {
         name: document.getElementById("name").value,
         race: document.getElementById("race").value,
@@ -208,38 +204,44 @@ function getPlayerStats() {
             secondRoll: getStat("energy2"),
             total: getStat("energyTotal"),
             rolls: rolls.energy,
-            resets: resets.energy
+            resets: resets.energy,
+            modifier: racialModifiers.energy  // Salva o modificador no Firestore
         },
         skill: {
             firstRoll: getStat("skill1"),
             secondRoll: getStat("skill2"),
             total: getStat("skillTotal"),
             rolls: rolls.skill,
-            resets: resets.skill
+            resets: resets.skill,
+            modifier: racialModifiers.skill
         },
         charisma: {
             firstRoll: getStat("charisma1"),
             secondRoll: getStat("charisma2"),
             total: getStat("charismaTotal"),
             rolls: rolls.charisma,
-            resets: resets.charisma
+            resets: resets.charisma,
+            modifier: racialModifiers.charisma
         },
         magic: {
             firstRoll: getStat("magic1"),
             secondRoll: getStat("magic2"),
             total: getStat("magicTotal"),
             rolls: rolls.magic,
-            resets: resets.magic
+            resets: resets.magic,
+            modifier: racialModifiers.magic
         },
         luck: {
             firstRoll: getStat("luck1"),
             secondRoll: getStat("luck2"),
             total: getStat("luckTotal"),
             rolls: rolls.luck,
-            resets: resets.luck
+            resets: resets.luck,
+            modifier: racialModifiers.luck
         }
     };
 }
+
 
 function getStat(id) {
     return document.getElementById(id).innerText !== "-" ? parseInt(document.getElementById(id).innerText) : 0;
@@ -319,6 +321,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         resets[stat] = playerData[stat].resets !== undefined ? playerData[stat].resets : 2;
                     }
                 });
+                
+                // 🔹 Atualiza os modificadores raciais
+                updateRacialModifiersDisplay();
             }
         } else {
             console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
