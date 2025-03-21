@@ -11,7 +11,7 @@
     <div class="container">
         <h2 class="page-title">Ficha de Criação de Personagem</h2>
 
-        <!-- Formulário: Nome e CPF -->
+        <!-- Formulário: Nome -->
         <div class="form-group">
             <input type="text" id="name" placeholder="Nome do heroi" class="input-field">
             <button id="submit" class="button">ENVIAR</button>
@@ -46,7 +46,8 @@
                 <option>Mago</option>
             </select>
         </div>
- <div class="label-group">
+
+        <div class="label-group">
             <label for="mao dominante" class="label-text">M ã o  D o m i n a n t e:</label>
             <select id="mao dominante" class="select-field">
                 <option value="">Selecione</option>
@@ -80,70 +81,65 @@
 
         <!-- Seção de Atributos -->
         <div class="stats-section stats" id="stats">
-            <!-- Vida -->
+            <!-- Energia (Antes: Vida) -->
             <div class="stat-box">
-                <strong class="stat-name">Vida:</strong>
-                <span id="health1" class="stat-value">-</span> + <span id="health2" class="stat-value">-</span>
-                <span id="healthModifier" class="racial-modifier"></span> =
-                <span id="healthTotal" class="stat-value">-</span>
+                <strong class="stat-name">Energia:</strong>
+                <span id="energia1" class="stat-value">-</span> + <span id="energia2" class="stat-value">-</span>
+                <span id="energiaModifier" class="racial-modifier"></span> =
+                <span id="energiaTotal" class="stat-value">-</span>
                 <div class="stat-buttons-inline">
-                    <button onclick="rollStat('health', this)" class="button">🎲</button>
-                    <button onclick="resetStat('health', this)" class="button">Zerar</button>
+                    <button onclick="rollStat('energia', this)" class="button">🎲</button>
+                    <button onclick="resetStat('energia', this)" class="button">Zerar</button>
                 </div>
             </div>
-            <!-- Força -->
+            <!-- Habilidade (Antes: Força) -->
             <div class="stat-box">
-                <strong class="stat-name">Força:</strong>
-                <span id="strength1" class="stat-value">-</span> + <span id="strength2" class="stat-value">-</span>
-                <span id="strengthModifier" class="racial-modifier"></span> =
-                <span id="strengthTotal" class="stat-value">-</span>
+                <strong class="stat-name">Habilidade:</strong>
+                <span id="habilidade1" class="stat-value">-</span> + <span id="habilidade2" class="stat-value">-</span>
+                <span id="habilidadeModifier" class="racial-modifier"></span> =
+                <span id="habilidadeTotal" class="stat-value">-</span>
                 <div class="stat-buttons-inline">
-                    <button onclick="rollStat('strength', this)" class="button">🎲</button>
-                    <button onclick="resetStat('strength', this)" class="button">Zerar</button>
+                    <button onclick="rollStat('habilidade', this)" class="button">🎲</button>
+                    <button onclick="resetStat('habilidade', this)" class="button">Zerar</button>
                 </div>
             </div>
-            <!-- Destreza -->
+            <!-- Carisma (Antes: Destreza) -->
             <div class="stat-box">
-                <strong class="stat-name">Destreza:</strong>
-                <span id="dexterity1" class="stat-value">-</span> + <span id="dexterity2" class="stat-value">-</span>
-                <span id="dexterityModifier" class="racial-modifier"></span> =
-                <span id="dexterityTotal" class="stat-value">-</span>
+                <strong class="stat-name">Carisma:</strong>
+                <span id="carisma1" class="stat-value">-</span> + <span id="carisma2" class="stat-value">-</span>
+                <span id="carismaModifier" class="racial-modifier"></span> =
+                <span id="carismaTotal" class="stat-value">-</span>
                 <div class="stat-buttons-inline">
-                    <button onclick="rollStat('dexterity', this)" class="button">🎲</button>
-                    <button onclick="resetStat('dexterity', this)" class="button">Zerar</button>
+                    <button onclick="rollStat('carisma', this)" class="button">🎲</button>
+                    <button onclick="resetStat('carisma', this)" class="button">Zerar</button>
                 </div>
             </div>
-            <!-- Inteligência -->
+            <!-- Magia (Antes: Inteligência) -->
             <div class="stat-box">
-                <strong class="stat-name">Inteligência:</strong>
-                <span id="intelligence1" class="stat-value">-</span> + <span id="intelligence2" class="stat-value">-</span>
-                <span id="intelligenceModifier" class="racial-modifier"></span> =
-                <span id="intelligenceTotal" class="stat-value">-</span>
+                <strong class="stat-name">Magia:</strong>
+                <span id="magia1" class="stat-value">-</span> + <span id="magia2" class="stat-value">-</span>
+                <span id="magiaModifier" class="racial-modifier"></span> =
+                <span id="magiaTotal" class="stat-value">-</span>
                 <div class="stat-buttons-inline">
-                    <button onclick="rollStat('intelligence', this)" class="button">🎲</button>
-                    <button onclick="resetStat('intelligence', this)" class="button">Zerar</button>
+                    <button onclick="rollStat('magia', this)" class="button">🎲</button>
+                    <button onclick="resetStat('magia', this)" class="button">Zerar</button>
                 </div>
             </div>
-            <!-- Sorte -->
+            <!-- Sorte (Permanece) -->
             <div class="stat-box">
                 <strong class="stat-name">Sorte:</strong>
-                <span id="luck1" class="stat-value">-</span> + <span id="luck2" class="stat-value">-</span>
-                <span id="luckModifier" class="racial-modifier"></span> =
-                <span id="luckTotal" class="stat-value">-</span>
+                <span id="sorte1" class="stat-value">-</span> + <span id="sorte2" class="stat-value">-</span>
+                <span id="sorteModifier" class="racial-modifier"></span> =
+                <span id="sorteTotal" class="stat-value">-</span>
                 <div class="stat-buttons-inline">
-                    <button onclick="rollStat('luck', this)" class="button">🎲</button>
-                    <button onclick="resetStat('luck', this)" class="button">Zerar</button>
+                    <button onclick="rollStat('sorte', this)" class="button">🎲</button>
+                    <button onclick="resetStat('sorte', this)" class="button">Zerar</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Scripts do Firebase -->
-<script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
-<script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js"></script>
-<script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
-    
-    <!-- Script principal -->
-    <script src="character-creation.js" type="module"></script>
+    <script type="module" src="character-creation.js"></script>
 </body>
 </html>
