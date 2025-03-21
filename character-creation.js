@@ -124,8 +124,8 @@ function updateRacialModifiersDisplay() {
 }
 
 document.getElementById("race").addEventListener("change", () => {
-    savePlayerData(auth.currentUser.uid, getPlayerStats());
-    updateRacialModifiersDisplay();
+    updateRacialModifiersDisplay();  // Atualiza os modificadores imediatamente
+    savePlayerData(auth.currentUser.uid, getPlayerStats());  // Salva os novos valores no Firestore
 });
 
 document.getElementById("alignment").addEventListener("change", () => {
