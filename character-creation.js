@@ -15,35 +15,39 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// Configuração de atributos e contadores
-let rolls = { energy: 3, skill: 3, charisma: 3, magic: 3, luck: 3 };
-let resets = { energy: 2, skill: 2, charisma: 2, magic: 2, luck: 2 };
+let rolls = { health: 3, strength: 3, dexterity: 3, intelligence: 3, luck: 3 };
+let resets = { health: 2, strength: 2, dexterity: 2, intelligence: 2, luck: 2 };
 
 function rollDice(sides) {
     return Math.floor(Math.random() * sides) + 1;
 }
 
-// Obtém modificadores raciais
 function getRacialModifiers() {
     const race = document.getElementById("race").value;
-    let modifiers = { energy: 0, skill: 0, charisma: 0, magic: 0, luck: 0 };
+    let modifiers = { health: 0, strength: 0, dexterity: 0, intelligence: 0, luck: 0 };
     switch (race) {
         case "Anão":
-            modifiers.energy += 2;
-            modifiers.charisma -= 2;
+            modifiers.health += 12;
+            modifiers.intelligence += 3;
+            modifiers.strength += 6;
+            modifiers.dexterity += 4;
             break;
         case "Elfo":
-            modifiers.skill += 2;
-            modifiers.energy -= 2;
+            modifiers.health += 8;
+            modifiers.intelligence += 4;
+            modifiers.dexterity += 6;
+            modifiers.strength += 4;
             break;
         case "Humano":
-            // Humanos não têm modificadores raciais
+            modifiers.health += 10;
+            modifiers.intelligence += 6;
+            modifiers.dexterity += 4;
+            modifiers.strength += 4;
             break;
     }
     return modifiers;
 }
 
-// Rola os valores para um atributo
 function rollStat(stat, button) {
     if (rolls[stat] > 0) {
         console.log(`Rolando atributo: ${stat}`);
@@ -60,6 +64,7 @@ function rollStat(stat, button) {
         if (firstRoll.innerText === "-") {
             firstRoll.innerText = rollDice(6);
             console.log(`Primeira rolagem (${stat}): ${firstRoll.innerText}`);
+            savePlayerData(auth.currentUser.uid, getPlayerStats());
         } else if (secondRoll.innerText === "-") {
             secondRoll.innerText = rollDice(6);
             console.log(`Segunda rolagem (${stat}): ${secondRoll.innerText}`);
@@ -82,7 +87,6 @@ function rollStat(stat, button) {
     }
 }
 
-// Reseta um atributo
 function resetStat(stat, button) {
     if (resets[stat] > 0) {
         document.getElementById(stat + "1").innerText = "-";
@@ -103,7 +107,6 @@ function disableButton(button) {
     button.style.cursor = "not-allowed";
 }
 
-// Atualiza os modificadores raciais exibidos
 function updateRacialModifiersDisplay() {
     const racialModifiers = getRacialModifiers();
     for (const stat in racialModifiers) {
@@ -141,9 +144,22 @@ document.getElementById("idade").addEventListener("input", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
 });
 
-let saveTimeout;
+document.getElementById("submit").addEventListener("click", async () => {
+    const data = getPlayerStats();
 
-// Função debounce para evitar múltiplas chamadas ao salvar
+    // Verifique se todos os campos e rolagens foram preenchidos antes de marcar como completo
+    if (isFichaCompleta(data)) {
+        data.fichaCompleta = true; // Marca a ficha como completa
+        await savePlayerData(auth.currentUser.uid, data); // Salva no Firestore
+        console.log("Ficha marcada como completa. Redirecionando para o inventário...");
+        window.location.href = "inventario.html"; // Redireciona
+    } else {
+        alert("Por favor, preencha todos os campos e finalize todas as rolagens antes de prosseguir!");
+    }
+});
+
+
+let saveTimeout;
 function debounceSave(uid, data) {
     clearTimeout(saveTimeout);
     saveTimeout = setTimeout(() => {
@@ -151,7 +167,6 @@ function debounceSave(uid, data) {
     }, 300);
 }
 
-// Salva os dados do jogador no Firestore
 async function savePlayerData(uid, data) {
     try {
         const playerRef = doc(db, "players", uid);
@@ -162,7 +177,6 @@ async function savePlayerData(uid, data) {
     }
 }
 
-// Recupera os dados do jogador do Firestore
 async function getPlayerData(uid) {
     try {
         const playerRef = doc(db, "players", uid);
@@ -180,7 +194,6 @@ async function getPlayerData(uid) {
     }
 }
 
-// Retorna os atributos e informações do jogador
 function getPlayerStats() {
     return {
         name: document.getElementById("name").value,
@@ -190,33 +203,33 @@ function getPlayerStats() {
         maoDominante: document.getElementById("mao dominante").value,
         hemisferioDominante: document.getElementById("hemisfério dominante").value,
         idade: document.getElementById("idade").value,
-        energy: {
-            firstRoll: getStat("energy1"),
-            secondRoll: getStat("energy2"),
-            total: getStat("energyTotal"),
-            rolls: rolls.energy,
-            resets: resets.energy
+        health: {
+            firstRoll: getStat("health1"),
+            secondRoll: getStat("health2"),
+            total: getStat("healthTotal"),
+            rolls: rolls.health,
+            resets: resets.health
         },
-        skill: {
-            firstRoll: getStat("skill1"),
-            secondRoll: getStat("skill2"),
-            total: getStat("skillTotal"),
-            rolls: rolls.skill,
-            resets: resets.skill
+        strength: {
+            firstRoll: getStat("strength1"),
+            secondRoll: getStat("strength2"),
+            total: getStat("strengthTotal"),
+            rolls: rolls.strength,
+            resets: resets.strength
         },
-        charisma: {
-            firstRoll: getStat("charisma1"),
-            secondRoll: getStat("charisma2"),
-            total: getStat("charismaTotal"),
-            rolls: rolls.charisma,
-            resets: resets.charisma
+        dexterity: {
+            firstRoll: getStat("dexterity1"),
+            secondRoll: getStat("dexterity2"),
+            total: getStat("dexterityTotal"),
+            rolls: rolls.dexterity,
+            resets: resets.dexterity
         },
-        magic: {
-            firstRoll: getStat("magic1"),
-            secondRoll: getStat("magic2"),
-            total: getStat("magicTotal"),
-            rolls: rolls.magic,
-            resets: resets.magic
+        intelligence: {
+            firstRoll: getStat("intelligence1"),
+            secondRoll: getStat("intelligence2"),
+            total: getStat("intelligenceTotal"),
+            rolls: rolls.intelligence,
+            resets: resets.intelligence
         },
         luck: {
             firstRoll: getStat("luck1"),
@@ -228,14 +241,12 @@ function getPlayerStats() {
     };
 }
 
-// Obtém os valores de um atributo
 function getStat(id) {
     return document.getElementById(id).innerText !== "-" ? parseInt(document.getElementById(id).innerText) : 0;
 }
 
-// Verifica se todos os atributos e campos da ficha foram preenchidos
 function isFichaCompleta(playerData) {
-    const stats = ["energy", "skill", "charisma", "magic", "luck"];
+    const stats = ["health", "strength", "dexterity", "intelligence", "luck"];
     const statsComplete = stats.every(stat => 
         playerData[stat] &&
         playerData[stat].firstRoll > 0 &&
@@ -262,14 +273,18 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Usuário autenticado:", user.uid);
             const playerData = await getPlayerData(user.uid);
 
+            // 🔹 Verifica se a ficha está completa, incluindo as rolagens e os atributos
             if (playerData && playerData.fichaCompleta) {
                 console.log("Ficha já criada e completa. Redirecionando para o inventário...");
                 window.location.href = "inventario.html";
-                return;
+                return; // Impede o restante do fluxo
             }
 
+            // 🔹 Exibe a página de criação de ficha se incompleta
+            console.log("Ficha incompleta. Removendo a classe 'hidden' para exibir a página.");
             document.body.classList.remove("hidden");
 
+            // 🔹 Preenche os campos com dados salvos, se existirem
             if (playerData) {
                 if (playerData.name) document.getElementById("name").value = playerData.name;
                 if (playerData.race) document.getElementById("race").value = playerData.race;
@@ -278,16 +293,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (playerData.maoDominante) document.getElementById("mao dominante").value = playerData.maoDominante;
                 if (playerData.hemisferioDominante) document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante;
 
+                // 🔹 Corrige a restauração da idade
                 if (playerData.idade) {
                     const idadeSelect = document.getElementById("idade");
                     const optionExists = [...idadeSelect.options].some(option => option.value === playerData.idade);
 
                     if (optionExists) {
                         idadeSelect.value = playerData.idade;
+                    } else {
+                        console.warn("O valor salvo da idade não corresponde a nenhuma opção no <select>.");
                     }
+
+                    console.log("Idade restaurada:", playerData.idade);
                 }
 
-                const stats = ["energy", "skill", "charisma", "magic", "luck"];
+                // 🔹 Preenche os atributos com dados salvos
+                const stats = ["health", "strength", "dexterity", "intelligence", "luck"];
                 stats.forEach(stat => {
                     if (playerData[stat]) {
                         document.getElementById(stat + "1").innerText = playerData[stat].firstRoll || "-";
@@ -306,6 +327,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// Expondo métodos necessários globalmente
+// 🔹 Mantendo os métodos utilitários necessários
 window.rollStat = rollStat;
 window.resetStat = resetStat;
