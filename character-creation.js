@@ -106,25 +106,39 @@ function updateRacialModifiersDisplay() {
 
     for (const stat in racialModifiers) {
         const modifierDisplay = document.getElementById(stat + "Modifier");
+        const totalRoll = document.getElementById(stat + "Total");
+        const firstRoll = document.getElementById(stat + "1");
+        const secondRoll = document.getElementById(stat + "2");
 
-        if (modifierDisplay) {
+        if (modifierDisplay && totalRoll && firstRoll && secondRoll) {
             let modifierValue = racialModifiers[stat];
 
-            // 🔹 Resetando valores antes de aplicar novos
+            // 🔹 Resetando a exibição do modificador antes de aplicar o novo
             modifierDisplay.innerText = "";
 
-            // 🔹 Corrigindo a exibição de valores negativos
+            // 🔹 Atualizando a exibição correta dos valores negativos e positivos
             if (modifierValue > 0) {
                 modifierDisplay.innerText = ` (+${modifierValue})`;
             } else if (modifierValue < 0) {
-                modifierDisplay.innerText = ` (${modifierValue})`; // Apenas parênteses sem "+"
+                modifierDisplay.innerText = ` (${modifierValue})`;
+            }
+
+            // 🔹 Recalcula o total caso os dados já tenham sido rolados
+            let firstValue = parseInt(firstRoll.innerText) || 0;
+            let secondValue = parseInt(secondRoll.innerText) || 0;
+            let newTotal = firstValue + secondValue + modifierValue;
+
+            // 🔹 Se os valores já foram rolados, atualiza o total
+            if (firstValue > 0 && secondValue > 0) {
+                totalRoll.innerText = newTotal;
             }
         }
     }
 }
 
+
 document.getElementById("race").addEventListener("change", () => {
-    updateRacialModifiersDisplay();  // Atualiza os modificadores imediatamente
+    updateRacialModifiersDisplay();  // Atualiza os modificadores e recalcula os totais
     savePlayerData(auth.currentUser.uid, getPlayerStats());  // Salva os novos valores no Firestore
 });
 
