@@ -183,18 +183,24 @@ async function loadInventoryData(uid) {
     }
 }
 
-// Inicializa e carrega o inventário ao iniciar
 document.addEventListener("DOMContentLoaded", () => {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             console.log("Usuário autenticado:", user.uid);
-            await loadInventoryData(user.uid);
+
+            const playerData = await getPlayerData(user.uid); // 🔹 Recupera os dados do Firestore
+            if (playerData) {
+                updateCharacterSheet(playerData); // 🔹 ATUALIZA A FICHA COM OS DADOS
+            }
+
+            await loadInventoryData(user.uid); // 🔹 Carrega o inventário do jogador
         } else {
             console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
             window.location.href = "index.html";
         }
     });
 });
+
 
 // 📌 Sistema de Carrossel entre as janelas
 const slides = document.querySelectorAll(".carousel-slide");
