@@ -195,3 +195,39 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
+// 📌 Sistema de Carrossel
+const pages = document.querySelectorAll(".page");
+let currentPage = 0;
+
+document.getElementById("prevBtn").addEventListener("click", () => {
+    pages[currentPage].classList.remove("active");
+    currentPage = (currentPage === 0) ? pages.length - 1 : currentPage - 1;
+    pages[currentPage].classList.add("active");
+});
+
+document.getElementById("nextBtn").addEventListener("click", () => {
+    pages[currentPage].classList.remove("active");
+    currentPage = (currentPage === pages.length - 1) ? 0 : currentPage + 1;
+    pages[currentPage].classList.add("active");
+});
+
+// 📌 Exibir a primeira página ao carregar
+pages[currentPage].classList.add("active");
+
+// 📌 Função para atualizar os dados da ficha no carrossel
+function updateCharacterSheet(playerData) {
+    document.getElementById("char-name").innerText = playerData.name || "-";
+    document.getElementById("char-race").innerText = playerData.race || "-";
+    document.getElementById("char-class").innerText = playerData.class || "-";
+    document.getElementById("char-alignment").innerText = playerData.alignment || "-";
+    document.getElementById("char-energy").innerText = playerData.energy.total || "-";
+    document.getElementById("char-skill").innerText = playerData.skill.total || "-";
+    document.getElementById("char-charisma").innerText = playerData.charisma.total || "-";
+    document.getElementById("char-magic").innerText = playerData.magic.total || "-";
+    document.getElementById("char-luck").innerText = playerData.luck.total || "-";
+    document.getElementById("char-couraca").innerText = playerData.couraca || "-";
+    document.getElementById("char-po").innerText = playerData.po || "-";
+    document.getElementById("char-hand").innerText = playerData.maoDominante || "-";
+    document.getElementById("char-hemisphere").innerText = playerData.hemisferioDominante || "-";
+}
