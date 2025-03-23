@@ -171,7 +171,7 @@ p {
 .carousel-container {
     display: flex;
     width: 100%;
-    max-width: 350px; /* Ajuste para ficar proporcional */
+    max-width: 450px; /* Aumentando a largura */
     overflow: hidden;
     position: relative;
 }
@@ -198,8 +198,8 @@ p {
 .carousel-buttons button {
     background: #aa6c39;
     border: none;
-    padding: 8px 12px;
-    font-size: 18px;
+    padding: 10px 15px;
+    font-size: 20px;
     cursor: pointer;
     color: white;
     border-radius: 5px;
