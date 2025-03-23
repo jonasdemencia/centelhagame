@@ -16,101 +16,102 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let selectedItem = null;
+let selectedItem = null; // Armazena o item selecionado 
 
-// Seleciona os itens no baú
+// Seleciona os itens clicados no baú
 document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll('.item').forEach(item => {
         item.addEventListener('click', () => {
             clearHighlights();
+
+            // Define o novo item selecionado
             selectedItem = item;
             item.classList.add('selected');
 
             // Destaca os slots compatíveis
             document.querySelectorAll('.slot').forEach(slot => {
                 if (slot.dataset.slot === item.dataset.item) {
-                    slot.classList.add('highlight');
+                    slot.classList.add('highlight'); // Adiciona o destaque
                 }
             });
         });
     });
-});
 
-// Gerencia o clique nos slots
-document.querySelectorAll('.slot').forEach(slot => {
-    slot.addEventListener('click', () => {
-        if (selectedItem && slot.dataset.slot === selectedItem.dataset.item) {
-            if (slot.innerHTML !== slot.dataset.slot) {
-                // Desequipa o item atual e devolve ao baú
-                const equippedItemText = slot.innerHTML;
+    // Gerencia o clique nos slots
+    document.querySelectorAll('.slot').forEach(slot => {
+        slot.addEventListener('click', () => {
+            if (selectedItem && slot.dataset.slot === selectedItem.dataset.item) {
+                if (slot.innerHTML !== slot.dataset.slot) {
+                    // Desequipa o item atual e devolve ao baú
+                    const equippedItemText = slot.innerHTML;
+
+                    const newItem = document.createElement("div");
+                    newItem.classList.add("item");
+                    newItem.dataset.item = slot.dataset.slot;
+                    newItem.innerHTML = equippedItemText;
+
+                    document.querySelector(".items").appendChild(newItem);
+                    addItemClickListener(newItem);
+                }
+
+                // Equipa o novo item no slot
+                slot.innerHTML = selectedItem.innerHTML;
+                selectedItem.remove();
+                selectedItem = null;
+                clearHighlights();
+
+                saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
+            } else if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
+                const itemText = slot.innerHTML;
+                slot.innerHTML = slot.dataset.slot;
+
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
                 newItem.dataset.item = slot.dataset.slot;
-                newItem.innerHTML = equippedItemText;
+                newItem.innerHTML = itemText;
 
                 document.querySelector(".items").appendChild(newItem);
-                newItem.addEventListener('click', () => { // 🛠 Corrigido aqui!
-                    clearHighlights();
-                    selectedItem = newItem;
-                    newItem.classList.add('selected');
+                addItemClickListener(newItem);
 
-                    document.querySelectorAll('.slot').forEach(s => {
-                        if (s.dataset.slot === newItem.dataset.item) {
-                            s.classList.add('highlight');
-                        }
-                    });
-                });
+                saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
             }
+        });
+    });
 
-            // Equipa o novo item no slot
-            slot.innerHTML = selectedItem.innerHTML;
+    // Adiciona funcionalidade ao botão de descarte
+    document.getElementById("discard-slot").addEventListener("click", () => {
+        if (selectedItem) {
             selectedItem.remove();
             selectedItem = null;
             clearHighlights();
-
-            saveInventoryData(auth.currentUser.uid);
-        } else if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
-            const itemText = slot.innerHTML;
-            slot.innerHTML = slot.dataset.slot;
-
-            const newItem = document.createElement("div");
-            newItem.classList.add("item");
-            newItem.dataset.item = slot.dataset.slot;
-            newItem.innerHTML = itemText;
-
-            document.querySelector(".items").appendChild(newItem);
-            newItem.addEventListener('click', () => { // 🛠 Corrigido aqui!
-                clearHighlights();
-                selectedItem = newItem;
-                newItem.classList.add('selected');
-
-                document.querySelectorAll('.slot').forEach(s => {
-                    if (s.dataset.slot === newItem.dataset.item) {
-                        s.classList.add('highlight');
-                    }
-                });
-            });
-
-            saveInventoryData(auth.currentUser.uid);
+            saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
         }
     });
+
 });
 
-// Botão de descarte
-document.getElementById("discard-slot").addEventListener("click", () => {
-    if (selectedItem) {
-        selectedItem.remove();
-        selectedItem = null;
+// Adiciona evento de clique aos novos itens do baú
+function addItemClickListener(item) {
+    item.addEventListener('click', () => {
         clearHighlights();
-        saveInventoryData(auth.currentUser.uid);
-    }
-});
+        selectedItem = item;
+        item.classList.add('selected');
 
-// Limpa os destaques
+        document.querySelectorAll('.slot').forEach(slot => {
+            if (slot.dataset.slot === item.dataset.item) {
+                slot.classList.add('highlight');
+            }
+        });
+    });
+}
+
+// Função para limpar destaques visuais
 function clearHighlights() {
     document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
     document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
 }
+
+// Função para salvar dados no Firestore
 async function saveInventoryData(uid) {
     const inventoryData = {
         itemsInChest: Array.from(document.querySelectorAll('.item')).map(item => ({
@@ -132,6 +133,7 @@ async function saveInventoryData(uid) {
     }
 }
 
+// Função para carregar dados do Firestore
 async function loadInventoryData(uid) {
     try {
         const playerRef = doc(db, "players", uid);
@@ -140,37 +142,23 @@ async function loadInventoryData(uid) {
         if (playerSnap.exists() && playerSnap.data().inventory) {
             const inventoryData = playerSnap.data().inventory;
 
-            document.querySelectorAll('.slot').forEach(slot => {
-                slot.innerHTML = slot.dataset.slot;
-            });
-
-            Object.keys(inventoryData.equippedItems).forEach(slotId => {
-                const slot = document.getElementById(slotId);
-                if (slot && inventoryData.equippedItems[slotId]) {
-                    slot.innerHTML = inventoryData.equippedItems[slotId];
-                }
-            });
-
+            // Carrega itens no baú
             const chestElement = document.querySelector('.items');
-            chestElement.innerHTML = "";
+            chestElement.innerHTML = ""; // Limpa o conteúdo atual
             inventoryData.itemsInChest.forEach(item => {
                 const newItem = document.createElement('div');
                 newItem.classList.add('item');
                 newItem.dataset.item = item.id;
                 newItem.innerHTML = item.content;
+
                 chestElement.appendChild(newItem);
+                addItemClickListener(newItem);
+            });
 
-                newItem.addEventListener('click', () => {
-                    clearHighlights();
-                    selectedItem = newItem;
-                    newItem.classList.add('selected');
-
-                    document.querySelectorAll('.slot').forEach(slot => {
-                        if (slot.dataset.slot === newItem.dataset.item) {
-                            slot.classList.add('highlight');
-                        }
-                    });
-                });
+            // Carrega itens equipados
+            document.querySelectorAll('.slot').forEach(slot => {
+                const equippedItem = inventoryData.equippedItems[slot.dataset.slot];
+                slot.innerHTML = equippedItem || slot.dataset.slot;
             });
 
             console.log("Inventário carregado com sucesso!");
@@ -180,4 +168,61 @@ async function loadInventoryData(uid) {
     } catch (error) {
         console.error("Erro ao carregar o inventário:", error);
     }
+}
+
+// Inicializa e carrega o inventário ao iniciar
+document.addEventListener("DOMContentLoaded", () => {
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            console.log("Usuário autenticado:", user.uid);
+
+            const playerData = await getPlayerData(user.uid); // 🔹 Recupera os dados da ficha
+            if (playerData) {
+                updateCharacterSheet(playerData); // 🔹 Atualiza a ficha do personagem
+            }
+
+            await loadInventoryData(user.uid); // 🔹 Carrega os itens do inventário e slots equipados
+        } else {
+            console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
+            window.location.href = "index.html";
+        }
+    });
+});
+
+// 📌 Sistema de Carrossel entre as janelas
+const slides = document.querySelectorAll(".carousel-slide");
+let currentSlide = 0;
+
+document.getElementById("prevBtn").addEventListener("click", () => {
+    slides[currentSlide].classList.remove("active");
+    currentSlide = (currentSlide === 0) ? slides.length - 1 : currentSlide - 1;
+    slides[currentSlide].classList.add("active");
+});
+
+document.getElementById("nextBtn").addEventListener("click", () => {
+    slides[currentSlide].classList.remove("active");
+    currentSlide = (currentSlide === slides.length - 1) ? 0 : currentSlide + 1;
+    slides[currentSlide].classList.add("active");
+});
+
+// 📌 Exibir a primeira janela ao carregar
+slides[currentSlide].classList.add("active");
+
+// 📌 Atualizar os dados da ficha de personagem ao carregar
+function updateCharacterSheet(playerData) {
+    if (!playerData) return;
+
+    document.getElementById("char-name").innerText = playerData.name || "-";
+    document.getElementById("char-race").innerText = playerData.race || "-";
+    document.getElementById("char-class").innerText = playerData.class || "-";
+    document.getElementById("char-alignment").innerText = playerData.alignment || "-";
+    document.getElementById("char-energy").innerText = playerData.energy?.total ?? "-";
+    document.getElementById("char-skill").innerText = playerData.skill?.total ?? "-";
+    document.getElementById("char-charisma").innerText = playerData.charisma?.total ?? "-";
+    document.getElementById("char-magic").innerText = playerData.magic?.total ?? "-";
+    document.getElementById("char-luck").innerText = playerData.luck?.total ?? "-";
+    document.getElementById("char-couraca").innerText = playerData.couraca || "0";
+    document.getElementById("char-po").innerText = playerData.po || "0";
+    document.getElementById("char-hand").innerText = playerData.maoDominante || "-";
+    document.getElementById("char-hemisphere").innerText = playerData.hemisferioDominante || "-";
 }
