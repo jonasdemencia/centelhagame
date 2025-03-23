@@ -208,3 +208,87 @@ p {
 .carousel-buttons button:hover {
     background: #8b5a2b;
 }
+
+/* 📌 Organização da ficha do personagem */
+.character-sheet {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px; /* Espaço entre os elementos */
+    justify-content: center; /* Centraliza a ficha */
+}
+
+.character-sheet p {
+    margin: 0;
+    flex-basis: 45%; /* Alinha pares Nome/Classe, Raça/Alinhamento */
+    text-align: left; /* Alinha à esquerda */
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.5); /* Fundo transparente */
+    border: 2px solid #aa6c39;
+    border-radius: 8px;
+}
+
+/* 📌 Atributos */
+.attribute-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px; /* Espaço entre os atributos */
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.attribute-container .attribute {
+    width: 60px; /* Janela quadrada */
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #8b5a2b;
+    border: 2px solid #d4a373;
+    border-radius: 8px;
+    font-size: 1.2em;
+    color: white;
+}
+
+/* 📌 Couraça e Dano */
+.couraca-dano {
+    display: flex;
+    gap: 20px; /* Espaço entre Couraça e Dano */
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.couraca-dano .attribute {
+    width: 80px; /* Ajuste ligeiramente maior */
+    height: 60px;
+}
+
+/* 📌 Mão Dominante e Hemisfério Dominante */
+.char-hand-container, .char-hemisphere-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.char-hand-container p, .char-hemisphere-container p {
+    margin: 0;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #aa6c39;
+    border-radius: 8px;
+}
+
+/* 📌 PO no Baú */
+#char-po-container {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #ffd700; /* Dourado */
+    border: 2px solid #aa6c39;
+    border-radius: 50%; /* Formato redondo */
+    font-size: 1.2em;
+}
