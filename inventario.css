@@ -217,17 +217,17 @@ p {
 .character-sheet {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px; /* Espaço entre as janelas */
+    gap: 8px; /* Espaço menor entre as janelas */
     justify-content: center; /* Centraliza a ficha */
-    font-size: 14px; /* Fonte menor para toda a ficha */
+    font-size: 13px; /* Fonte menor para toda a ficha */
 }
 
 .character-sheet p {
-    flex-basis: 45%; /* Permite que os pares Nome/Classe e Raça/Alinhamento fiquem lado a lado */
-    padding: 4px; /* Reduz o preenchimento interno */
-    font-size: 13px; /* Reduz ainda mais o tamanho da fonte */
+    flex-basis: 45%; /* Nome/Classe e Raça/Alinhamento lado a lado */
+    padding: 4px; /* Preenchimento interno ajustado */
+    font-size: 12px; /* Reduzindo o tamanho da fonte */
     background: rgba(0, 0, 0, 0.4); /* Fundo transparente mais suave */
-    border: 1px solid #aa6c39; /* Linha de borda menor */
+    border: 1px solid #aa6c39; /* Borda menor */
     border-radius: 6px;
     margin: 0;
 }
@@ -236,48 +236,70 @@ p {
 .attribute-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px; /* Espaço menor entre os atributos */
+    gap: 5px; /* Espaço ajustado entre os atributos */
     justify-content: center;
-    margin-top: 10px;
+    margin-top: 8px;
 }
 
 .attribute-container .attribute {
-    width: 50px; /* Janelas quadradas menores */
-    height: 50px;
     display: flex;
+    flex-direction: column; /* Permite que o nome fique acima do valor */
     justify-content: center;
     align-items: center;
+    width: 45px; /* Janelas quadradas menores */
+    height: 45px;
     background-color: #8b5a2b;
     border: 1px solid #d4a373; /* Borda menor */
     border-radius: 6px;
-    font-size: 1em; /* Texto ajustado */
+    font-size: 0.9em; /* Texto ajustado */
     color: white;
+    text-align: center;
+}
+
+.attribute-container .attribute .label {
+    font-size: 0.7em; /* Nome do atributo menor */
+    margin-bottom: 2px; /* Espaço entre o nome e o valor */
+    color: #ffffff;
 }
 
 /* 📌 Couraça e Dano */
 .couraca-dano {
     display: flex;
-    gap: 12px; /* Espaço ajustado entre Couraça e Dano */
+    gap: 10px; /* Espaço ajustado entre Couraça e Dano */
     justify-content: center;
-    margin-top: 10px;
+    margin-top: 8px;
 }
 
 .couraca-dano .attribute {
-    width: 60px; /* Um pouco maior que os atributos */
-    height: 50px;
-    font-size: 1em;
+    display: flex;
+    flex-direction: column; /* Permite que o nome fique acima do valor */
+    justify-content: center;
+    align-items: center;
+    width: 50px; /* Ligeiramente maior que os atributos */
+    height: 45px;
+    font-size: 0.9em;
+    background-color: #8b5a2b;
+    border: 1px solid #d4a373;
+    border-radius: 6px;
+    color: white;
+    text-align: center;
+}
+
+.couraca-dano .attribute .label {
+    font-size: 0.7em; /* Nome Couraça/Dano menor */
+    margin-bottom: 2px;
 }
 
 /* 📌 Mão Dominante e Hemisfério Dominante */
 .char-hand-container, .char-hemisphere-container {
-    margin-top: 10px; /* Menor espaçamento vertical */
+    margin-top: 8px; /* Menor espaçamento vertical */
     display: flex;
     justify-content: space-between; /* Separação uniforme */
 }
 
 .char-hand-container p, .char-hemisphere-container p {
-    padding: 4px;
-    font-size: 13px; /* Fonte reduzida */
+    padding: 3px; /* Ajuste no espaçamento interno */
+    font-size: 12px; /* Redução do tamanho da fonte */
     background: rgba(0, 0, 0, 0.4); /* Fundo transparente mais leve */
     border: 1px solid #aa6c39; /* Linha mais fina */
     border-radius: 6px;
@@ -287,15 +309,22 @@ p {
 /* 📌 PO no Baú */
 #char-po-container {
     position: absolute;
-    bottom: 5px; /* Ajustado para menor espaço */
-    right: 5px;
-    width: 40px; /* Janelas menores */
-    height: 40px;
+    bottom: 8px; /* Ajustado para menor espaço */
+    right: 8px;
+    width: 50px; /* Janelas menores */
+    height: 35px;
     display: flex;
+    flex-direction: column; /* Coloca o nome "PO" acima do valor */
     justify-content: center;
     align-items: center;
     background-color: #ffd700; /* Dourado */
     border: 1px solid #aa6c39; /* Linha mais fina */
-    border-radius: 50%; /* Formato redondo */
-    font-size: 0.9em; /* Fonte reduzida */
+    border-radius: 6px; /* Janelas menores e suaves */
+    font-size: 0.8em; /* Fonte reduzida */
+    color: black; /* Contraste para o texto */
+}
+
+#char-po-container .label {
+    font-size: 0.7em; /* Nome PO menor */
+    margin-bottom: 2px;
 }
