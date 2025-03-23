@@ -60,10 +60,10 @@ p {
 
 /* Baú de itens */
 .chest {
-    display: block; /* Garantir que o baú esteja visível */
-    position: static; /* Para acomodar o PO corretamente */
+    display: block; /* Certifica que o baú esteja visível */
+    position: relative; /* Corrige posição */
     margin-top: 20px;
-    padding: 20px;
+    padding: 15px; /* Espaço interno ajustado */
     background: rgba(0, 0, 0, 0.5);
     border: 3px solid #aa6c39;
     border-radius: 10px;
@@ -192,21 +192,20 @@ p {
 /* 📌 Botões de navegação do carrossel */
 .carousel-buttons {
     display: flex; /* Garante que os botões estejam visíveis */
-    justify-content: center; /* Centraliza os botões */
-    gap: 8px;
-    margin-top: 10px;
-    position: relative; /* Certifica que os botões estão no fluxo do carrossel */
-    z-index: 2; /* Mantém os botões acima das janelas do carrossel */
+    justify-content: center;
+    gap: 10px; /* Espaço ajustado */
+    margin-top: 15px; /* Espaço acima */
+    z-index: 2; /* Certifica que os botões estão acima do carrossel */
 }
 
 .carousel-buttons button {
     background: #aa6c39;
     border: none;
-    padding: 8px 12px; /* Botões menores */
-    font-size: 16px; /* Fonte reduzida */
-    cursor: pointer;
+    padding: 10px 15px;
+    font-size: 14px; /* Ajuste no tamanho da fonte */
     color: white;
     border-radius: 5px;
+    cursor: pointer;
 }
 
 .carousel-buttons button:hover {
