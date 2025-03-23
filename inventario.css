@@ -160,61 +160,31 @@ p {
     display: none;
 }
 
-/* 📌 Layout para o personagem + carrossel */
-.inventory-container {
+/* 📌 Container do Carrossel */
+.carousel-container {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 20px;
-}
-
-/* 📌 Estilização da ficha do personagem */
-.character-sheet {
-    width: 250px; /* Mesma largura do personagem */
-    padding: 20px;
-    background: rgba(0, 0, 0, 0.5);
-    border: 3px solid #aa6c39;
-    border-radius: 10px;
-    color: white;
-    text-align: center;
-}
-
-/* 📌 Estilização do carrossel */
-.carousel {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-}
-
-.carousel-content {
-    width: 80%;
+    width: 250px; /* Mesma largura da janela do personagem */
+    height: auto;
     overflow: hidden;
-    text-align: center;
+    position: relative;
 }
 
-.page {
+/* 📌 Cada janela do carrossel */
+.carousel-slide {
+    min-width: 100%;
+    transition: transform 0.5s ease-in-out;
     display: none;
-    font-size: 16px;
 }
 
-.page.active {
+/* 📌 Apenas a janela ativa é visível */
+.carousel-slide.active {
     display: block;
 }
 
-/* 📌 Botões do carrossel */
-button {
-    cursor: pointer;
-    background-color: #8b5a2b;
-    color: white;
-    border: 2px solid #d4a373;
-    padding: 6px 12px;
-    font-family: 'Eagle Lake', cursive;
-    font-size: 16px;
-    border-radius: 5px;
-}
-
-button:hover {
-    background-color: #d4a373;
-    color: black;
+/* 📌 Botões de navegação do carrossel */
+.carousel-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
 }
