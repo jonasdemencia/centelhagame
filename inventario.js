@@ -113,7 +113,6 @@ function clearHighlights() {
     document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
 }
 
-// Função para salvar dados no Firestore
 async function saveInventoryData(uid) {
     const inventoryData = {
         itemsInChest: Array.from(document.querySelectorAll('.item')).map(item => ({
@@ -135,6 +134,7 @@ async function saveInventoryData(uid) {
     }
 }
 
+
 // Função para carregar dados do Firestore
 async function loadInventoryData(uid) {
     try {
@@ -144,15 +144,27 @@ async function loadInventoryData(uid) {
         if (playerSnap.exists() && playerSnap.data().inventory) {
             const inventoryData = playerSnap.data().inventory;
 
-            // Carrega itens no baú
+            // 🔹 Limpa os slots antes de preencher
+            document.querySelectorAll('.slot').forEach(slot => {
+                slot.innerHTML = slot.dataset.slot;
+            });
+
+            // 🔹 Preenche os itens equipados
+            Object.keys(inventoryData.equippedItems).forEach(slotId => {
+                const slot = document.getElementById(slotId);
+                if (slot && inventoryData.equippedItems[slotId]) {
+                    slot.innerHTML = inventoryData.equippedItems[slotId];
+                }
+            });
+
+            // 🔹 Limpa e preenche os itens do baú
             const chestElement = document.querySelector('.items');
-            chestElement.innerHTML = ""; // Limpa o conteúdo atual
+            chestElement.innerHTML = "";
             inventoryData.itemsInChest.forEach(item => {
                 const newItem = document.createElement('div');
                 newItem.classList.add('item');
                 newItem.dataset.item = item.id;
                 newItem.innerHTML = item.content;
-
                 chestElement.appendChild(newItem);
 
                 newItem.addEventListener('click', () => {
@@ -167,6 +179,16 @@ async function loadInventoryData(uid) {
                     });
                 });
             });
+
+            console.log("Inventário carregado com sucesso!");
+        } else {
+            console.log("Nenhum inventário encontrado para este jogador.");
+        }
+    } catch (error) {
+        console.error("Erro ao carregar o inventário:", error);
+    }
+}
+
 
             // Carrega itens equipados
             document.querySelectorAll('.slot').forEach(slot => {
@@ -222,17 +244,19 @@ slides[currentSlide].classList.add("active");
 
 // 📌 Atualizar os dados da ficha de personagem ao carregar
 function updateCharacterSheet(playerData) {
+    if (!playerData) return;
+
     document.getElementById("char-name").innerText = playerData.name || "-";
     document.getElementById("char-race").innerText = playerData.race || "-";
     document.getElementById("char-class").innerText = playerData.class || "-";
     document.getElementById("char-alignment").innerText = playerData.alignment || "-";
-    document.getElementById("char-energy").innerText = playerData.energy.total || "-";
-    document.getElementById("char-skill").innerText = playerData.skill.total || "-";
-    document.getElementById("char-charisma").innerText = playerData.charisma.total || "-";
-    document.getElementById("char-magic").innerText = playerData.magic.total || "-";
-    document.getElementById("char-luck").innerText = playerData.luck.total || "-";
-    document.getElementById("char-couraca").innerText = playerData.couraca || "-";
-    document.getElementById("char-po").innerText = playerData.po || "-";
+    document.getElementById("char-energy").innerText = playerData.energy?.total ?? "-";
+    document.getElementById("char-skill").innerText = playerData.skill?.total ?? "-";
+    document.getElementById("char-charisma").innerText = playerData.charisma?.total ?? "-";
+    document.getElementById("char-magic").innerText = playerData.magic?.total ?? "-";
+    document.getElementById("char-luck").innerText = playerData.luck?.total ?? "-";
+    document.getElementById("char-couraca").innerText = playerData.couraca || "0";
+    document.getElementById("char-po").innerText = playerData.po || "0";
     document.getElementById("char-hand").innerText = playerData.maoDominante || "-";
     document.getElementById("char-hemisphere").innerText = playerData.hemisferioDominante || "-";
 }
