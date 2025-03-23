@@ -167,13 +167,13 @@ p {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px; /* Reduzido para otimizar o espaço */
 }
 
 .carousel-container {
     display: flex;
     width: 100%;
-    max-width: 450px; /* Aumentando a largura */
+    max-width: 400px; /* Largura ligeiramente menor */
     overflow: hidden;
     position: relative;
 }
@@ -193,15 +193,15 @@ p {
 .carousel-buttons {
     display: flex;
     justify-content: center;
-    gap: 10px;
-    margin-top: 10px;
+    gap: 8px; /* Reduzido para otimizar o espaço */
+    margin-top: 8px;
 }
 
 .carousel-buttons button {
     background: #aa6c39;
     border: none;
-    padding: 10px 15px;
-    font-size: 20px;
+    padding: 8px 12px; /* Botões menores */
+    font-size: 16px; /* Fonte reduzida */
     cursor: pointer;
     color: white;
     border-radius: 5px;
@@ -215,82 +215,85 @@ p {
 .character-sheet {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px; /* Espaço entre os elementos */
+    gap: 10px; /* Espaço entre as janelas */
     justify-content: center; /* Centraliza a ficha */
+    font-size: 14px; /* Fonte menor para toda a ficha */
 }
 
 .character-sheet p {
+    flex-basis: 45%; /* Permite que os pares Nome/Classe e Raça/Alinhamento fiquem lado a lado */
+    padding: 4px; /* Reduz o preenchimento interno */
+    font-size: 13px; /* Reduz ainda mais o tamanho da fonte */
+    background: rgba(0, 0, 0, 0.4); /* Fundo transparente mais suave */
+    border: 1px solid #aa6c39; /* Linha de borda menor */
+    border-radius: 6px;
     margin: 0;
-    flex-basis: 45%; /* Alinha pares Nome/Classe, Raça/Alinhamento */
-    text-align: left; /* Alinha à esquerda */
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.5); /* Fundo transparente */
-    border: 2px solid #aa6c39;
-    border-radius: 8px;
 }
 
 /* 📌 Atributos */
 .attribute-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px; /* Espaço entre os atributos */
+    gap: 6px; /* Espaço menor entre os atributos */
     justify-content: center;
-    margin-top: 20px;
+    margin-top: 10px;
 }
 
 .attribute-container .attribute {
-    width: 60px; /* Janela quadrada */
-    height: 60px;
+    width: 50px; /* Janelas quadradas menores */
+    height: 50px;
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: #8b5a2b;
-    border: 2px solid #d4a373;
-    border-radius: 8px;
-    font-size: 1.2em;
+    border: 1px solid #d4a373; /* Borda menor */
+    border-radius: 6px;
+    font-size: 1em; /* Texto ajustado */
     color: white;
 }
 
 /* 📌 Couraça e Dano */
 .couraca-dano {
     display: flex;
-    gap: 20px; /* Espaço entre Couraça e Dano */
+    gap: 12px; /* Espaço ajustado entre Couraça e Dano */
     justify-content: center;
-    margin-top: 20px;
+    margin-top: 10px;
 }
 
 .couraca-dano .attribute {
-    width: 80px; /* Ajuste ligeiramente maior */
-    height: 60px;
+    width: 60px; /* Um pouco maior que os atributos */
+    height: 50px;
+    font-size: 1em;
 }
 
 /* 📌 Mão Dominante e Hemisfério Dominante */
 .char-hand-container, .char-hemisphere-container {
-    margin-top: 20px;
+    margin-top: 10px; /* Menor espaçamento vertical */
     display: flex;
-    justify-content: center;
+    justify-content: space-between; /* Separação uniforme */
 }
 
 .char-hand-container p, .char-hemisphere-container p {
+    padding: 4px;
+    font-size: 13px; /* Fonte reduzida */
+    background: rgba(0, 0, 0, 0.4); /* Fundo transparente mais leve */
+    border: 1px solid #aa6c39; /* Linha mais fina */
+    border-radius: 6px;
     margin: 0;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.5);
-    border: 2px solid #aa6c39;
-    border-radius: 8px;
 }
 
 /* 📌 PO no Baú */
 #char-po-container {
     position: absolute;
-    bottom: 10px;
-    right: 10px;
-    width: 50px;
-    height: 50px;
+    bottom: 5px; /* Ajustado para menor espaço */
+    right: 5px;
+    width: 40px; /* Janelas menores */
+    height: 40px;
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: #ffd700; /* Dourado */
-    border: 2px solid #aa6c39;
+    border: 1px solid #aa6c39; /* Linha mais fina */
     border-radius: 50%; /* Formato redondo */
-    font-size: 1.2em;
+    font-size: 0.9em; /* Fonte reduzida */
 }
