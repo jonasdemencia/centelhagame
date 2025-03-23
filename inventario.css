@@ -264,9 +264,10 @@ p {
 
 /* Alinhamento de Mão Dominante e Hemisfério Dominante */
 /* Alinhamento horizontal de Mão Dominante e Hemisfério Dominante */
+/* Alinhamento horizontal de Mão Dominante e Hemisfério Dominante */
 .char-alignment {
     display: flex;
-    justify-content: center; /* Alinhadas horizontalmente */
+    justify-content: center; /* Centraliza horizontalmente */
     gap: 15px; /* Espaço entre as janelas */
     margin-top: 15px;
 }
@@ -276,6 +277,7 @@ p {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     width: 80px; /* Largura ajustada */
     height: 50px; /* Altura ajustada */
     background-color: rgba(0, 0, 0, 0.4);
@@ -287,12 +289,12 @@ p {
     padding: 5px;
 }
 
-/* Alinhamento horizontal de Couraça e Dano */
+/* Couraça e Dano agora abaixo de Mão Dominante e Hemisfério */
 .couraca-dano {
     display: flex;
-    justify-content: center; /* Alinhadas horizontalmente */
+    justify-content: center; /* Centraliza horizontalmente */
     gap: 15px; /* Espaço entre as janelas */
-    margin-top: 10px; /* Espaço acima */
+    margin-top: 10px; /* Espaçamento acima */
 }
 
 .couraca-dano .attribute {
@@ -314,6 +316,7 @@ p {
     font-size: 0.7em; /* Nome Couraça/Dano menor */
     margin-bottom: 2px;
 }
+
 
 
 /* PO no interior do baú */
