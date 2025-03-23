@@ -196,26 +196,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// 📌 Sistema de Carrossel
-const pages = document.querySelectorAll(".page");
-let currentPage = 0;
+// 📌 Sistema de Carrossel entre as janelas
+const slides = document.querySelectorAll(".carousel-slide");
+let currentSlide = 0;
 
 document.getElementById("prevBtn").addEventListener("click", () => {
-    pages[currentPage].classList.remove("active");
-    currentPage = (currentPage === 0) ? pages.length - 1 : currentPage - 1;
-    pages[currentPage].classList.add("active");
+    slides[currentSlide].classList.remove("active");
+    currentSlide = (currentSlide === 0) ? slides.length - 1 : currentSlide - 1;
+    slides[currentSlide].classList.add("active");
 });
 
 document.getElementById("nextBtn").addEventListener("click", () => {
-    pages[currentPage].classList.remove("active");
-    currentPage = (currentPage === pages.length - 1) ? 0 : currentPage + 1;
-    pages[currentPage].classList.add("active");
+    slides[currentSlide].classList.remove("active");
+    currentSlide = (currentSlide === slides.length - 1) ? 0 : currentSlide + 1;
+    slides[currentSlide].classList.add("active");
 });
 
-// 📌 Exibir a primeira página ao carregar
-pages[currentPage].classList.add("active");
+// 📌 Exibir a primeira janela ao carregar
+slides[currentSlide].classList.add("active");
 
-// 📌 Função para atualizar os dados da ficha no carrossel
+// 📌 Atualizar os dados da ficha de personagem ao carregar
 function updateCharacterSheet(playerData) {
     document.getElementById("char-name").innerText = playerData.name || "-";
     document.getElementById("char-race").innerText = playerData.race || "-";
