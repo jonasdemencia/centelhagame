@@ -233,55 +233,74 @@ p {
 }
 
 /* 📌 Atributos */
+/* Organização dos atributos */
 .attribute-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px; /* Espaço ajustado entre os atributos */
+    gap: 10px; /* Espaço entre os atributos */
     justify-content: center;
-    margin-top: 8px;
+    margin-top: 15px;
 }
 
 .attribute-container .attribute {
     display: flex;
-    flex-direction: column; /* Permite que o nome fique acima do valor */
-    justify-content: center;
+    flex-direction: column; /* Nomes acima dos valores */
     align-items: center;
-    width: 45px; /* Janelas quadradas menores */
+    width: 45px; /* Tamanho menor das janelas */
     height: 45px;
     background-color: #8b5a2b;
-    border: 1px solid #d4a373; /* Borda menor */
+    border: 1px solid #d4a373;
     border-radius: 6px;
-    font-size: 0.9em; /* Texto ajustado */
+    font-size: 0.9em;
     color: white;
     text-align: center;
 }
 
 .attribute-container .attribute .label {
-    font-size: 0.7em; /* Nome do atributo menor */
+    font-size: 0.7em; /* Nomes menores */
     margin-bottom: 2px; /* Espaço entre o nome e o valor */
     color: #ffffff;
 }
 
-/* 📌 Couraça e Dano */
+/* Alinhamento de Mão Dominante e Hemisfério Dominante */
+.char-alignment {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px; /* Espaçamento acima */
+    gap: 10px;
+}
+
+.char-hand-container,
+.char-hemisphere-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 70px; /* Tamanho ajustado */
+    height: 50px;
+    background-color: rgba(0, 0, 0, 0.4);
+    border: 1px solid #aa6c39;
+    border-radius: 6px;
+    font-size: 0.8em;
+    color: white;
+    text-align: center;
+}
+
+/* Couraça e Dano na direita */
 .couraca-dano {
     display: flex;
-    gap: 10px; /* Espaço ajustado entre Couraça e Dano */
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
-    margin-top: 8px;
+    gap: 10px;
 }
 
 .couraca-dano .attribute {
-    display: flex;
-    flex-direction: column; /* Permite que o nome fique acima do valor */
-    justify-content: center;
-    align-items: center;
-    width: 50px; /* Ligeiramente maior que os atributos */
-    height: 45px;
-    font-size: 0.9em;
+    width: 70px;
+    height: 50px;
     background-color: #8b5a2b;
     border: 1px solid #d4a373;
     border-radius: 6px;
-    color: white;
+    font-size: 0.9em;
     text-align: center;
 }
 
@@ -290,36 +309,20 @@ p {
     margin-bottom: 2px;
 }
 
-/* 📌 Mão Dominante e Hemisfério Dominante */
-.char-hand-container, .char-hemisphere-container {
-    margin-top: 8px; /* Menor espaçamento vertical */
-    display: flex;
-    justify-content: space-between; /* Separação uniforme */
-}
-
-.char-hand-container p, .char-hemisphere-container p {
-    padding: 3px; /* Ajuste no espaçamento interno */
-    font-size: 12px; /* Redução do tamanho da fonte */
-    background: rgba(0, 0, 0, 0.4); /* Fundo transparente mais leve */
-    border: 1px solid #aa6c39; /* Linha mais fina */
-    border-radius: 6px;
-    margin: 0;
-}
-
-/* 📌 PO no Baú */
+/* PO no interior do baú */
 #char-po-container {
     position: absolute;
-    bottom: 8px; /* Ajustado para menor espaço */
-    right: 8px;
+    bottom: 10px;
+    left: 10px; /* Ajuste para canto inferior esquerdo */
     width: 50px; /* Janelas menores */
     height: 35px;
     display: flex;
-    flex-direction: column; /* Coloca o nome "PO" acima do valor */
+    flex-direction: column; /* Coloca o nome acima do valor */
     justify-content: center;
     align-items: center;
     background-color: #ffd700; /* Dourado */
-    border: 1px solid #aa6c39; /* Linha mais fina */
-    border-radius: 6px; /* Janelas menores e suaves */
+    border: 1px solid #aa6c39;
+    border-radius: 6px;
     font-size: 0.8em; /* Fonte reduzida */
     color: black; /* Contraste para o texto */
 }
