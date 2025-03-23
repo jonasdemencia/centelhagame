@@ -60,6 +60,8 @@ p {
 
 /* Baú de itens */
 .chest {
+    display: block; /* Garantir que o baú esteja visível */
+    position: relative; /* Para acomodar o PO corretamente */
     margin-top: 20px;
     padding: 20px;
     background: rgba(0, 0, 0, 0.5);
