@@ -170,6 +170,17 @@ async function loadInventoryData(uid) {
     }
 }
 
+async function getPlayerData(uid) {
+    try {
+        const playerRef = doc(db, "players", uid);
+        const playerSnap = await getDoc(playerRef);
+        return playerSnap.exists() ? playerSnap.data() : null;
+    } catch (error) {
+        console.error("Erro ao recuperar os dados do jogador:", error);
+        return null;
+    }
+}
+
 // Inicializa e carrega o inventário ao iniciar
 document.addEventListener("DOMContentLoaded", () => {
     onAuthStateChanged(auth, async (user) => {
