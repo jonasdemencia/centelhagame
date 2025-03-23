@@ -50,7 +50,7 @@ document.querySelectorAll('.slot').forEach(slot => {
                 newItem.innerHTML = equippedItemText;
 
                 document.querySelector(".items").appendChild(newItem);
-                newItem.addEventListener('click', () => {
+                newItem.Listener('click', () => {
                     clearHighlights();
                     selectedItem = newItem;
                     newItem.classList.add('selected');
@@ -80,7 +80,7 @@ document.querySelectorAll('.slot').forEach(slot => {
             newItem.innerHTML = itemText;
 
             document.querySelector(".items").appendChild(newItem);
-            newItem.addEventListener('click', () => {
+            newItem.Listener('click', () => {
                 clearHighlights();
                 selectedItem = newItem;
                 newItem.classList.add('selected');
