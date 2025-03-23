@@ -16,22 +16,22 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let selectedItem = null; // Armazena o item selecionado 
+let selectedItem = null;
 
-// Seleciona os itens clicados no baú
-document.querySelectorAll('.item').forEach(item => {
-    item.addEventListener('click', () => {
-        clearHighlights();
+// Seleciona os itens no baú
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.item').forEach(item => {
+        item.addEventListener('click', () => {
+            clearHighlights();
+            selectedItem = item;
+            item.classList.add('selected');
 
-        // Define o novo item selecionado
-        selectedItem = item;
-        item.classList.add('selected');
-
-        // Destaca os slots compatíveis
-        document.querySelectorAll('.slot').forEach(slot => {
-            if (slot.dataset.slot === item.dataset.item) {
-                slot.classList.add('highlight'); // Adiciona o destaque
-            }
+            // Destaca os slots compatíveis
+            document.querySelectorAll('.slot').forEach(slot => {
+                if (slot.dataset.slot === item.dataset.item) {
+                    slot.classList.add('highlight');
+                }
+            });
         });
     });
 });
@@ -43,21 +43,20 @@ document.querySelectorAll('.slot').forEach(slot => {
             if (slot.innerHTML !== slot.dataset.slot) {
                 // Desequipa o item atual e devolve ao baú
                 const equippedItemText = slot.innerHTML;
-
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
                 newItem.dataset.item = slot.dataset.slot;
                 newItem.innerHTML = equippedItemText;
 
                 document.querySelector(".items").appendChild(newItem);
-                newItem.Listener('click', () => {
+                newItem.addEventListener('click', () => { // 🛠 Corrigido aqui!
                     clearHighlights();
                     selectedItem = newItem;
                     newItem.classList.add('selected');
 
                     document.querySelectorAll('.slot').forEach(s => {
                         if (s.dataset.slot === newItem.dataset.item) {
-                            s.classList.add('highlight'); // Destaca os slots compatíveis
+                            s.classList.add('highlight');
                         }
                     });
                 });
@@ -69,7 +68,7 @@ document.querySelectorAll('.slot').forEach(slot => {
             selectedItem = null;
             clearHighlights();
 
-            saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
+            saveInventoryData(auth.currentUser.uid);
         } else if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
             const itemText = slot.innerHTML;
             slot.innerHTML = slot.dataset.slot;
@@ -80,7 +79,7 @@ document.querySelectorAll('.slot').forEach(slot => {
             newItem.innerHTML = itemText;
 
             document.querySelector(".items").appendChild(newItem);
-            newItem.Listener('click', () => {
+            newItem.addEventListener('click', () => { // 🛠 Corrigido aqui!
                 clearHighlights();
                 selectedItem = newItem;
                 newItem.classList.add('selected');
@@ -92,27 +91,26 @@ document.querySelectorAll('.slot').forEach(slot => {
                 });
             });
 
-            saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
+            saveInventoryData(auth.currentUser.uid);
         }
     });
 });
 
-// Adiciona funcionalidade ao botão de descarte
+// Botão de descarte
 document.getElementById("discard-slot").addEventListener("click", () => {
     if (selectedItem) {
         selectedItem.remove();
         selectedItem = null;
         clearHighlights();
-        saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
+        saveInventoryData(auth.currentUser.uid);
     }
 });
 
-// Função para limpar destaques visuais
+// Limpa os destaques
 function clearHighlights() {
     document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
     document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
 }
-
 async function saveInventoryData(uid) {
     const inventoryData = {
         itemsInChest: Array.from(document.querySelectorAll('.item')).map(item => ({
@@ -134,8 +132,6 @@ async function saveInventoryData(uid) {
     }
 }
 
-
-// Função para carregar dados do Firestore
 async function loadInventoryData(uid) {
     try {
         const playerRef = doc(db, "players", uid);
@@ -144,12 +140,10 @@ async function loadInventoryData(uid) {
         if (playerSnap.exists() && playerSnap.data().inventory) {
             const inventoryData = playerSnap.data().inventory;
 
-            // 🔹 Limpa os slots antes de preencher
             document.querySelectorAll('.slot').forEach(slot => {
                 slot.innerHTML = slot.dataset.slot;
             });
 
-            // 🔹 Preenche os itens equipados
             Object.keys(inventoryData.equippedItems).forEach(slotId => {
                 const slot = document.getElementById(slotId);
                 if (slot && inventoryData.equippedItems[slotId]) {
@@ -157,7 +151,6 @@ async function loadInventoryData(uid) {
                 }
             });
 
-            // 🔹 Limpa e preenche os itens do baú
             const chestElement = document.querySelector('.items');
             chestElement.innerHTML = "";
             inventoryData.itemsInChest.forEach(item => {
@@ -187,76 +180,4 @@ async function loadInventoryData(uid) {
     } catch (error) {
         console.error("Erro ao carregar o inventário:", error);
     }
-}
-
-
-            // Carrega itens equipados
-            document.querySelectorAll('.slot').forEach(slot => {
-                const equippedItem = inventoryData.equippedItems[slot.dataset.slot];
-                slot.innerHTML = equippedItem || slot.dataset.slot;
-            });
-
-            console.log("Inventário carregado com sucesso!");
-        } else {
-            console.log("Nenhum inventário encontrado para este jogador.");
-        }
-    } catch (error) {
-        console.error("Erro ao carregar o inventário:", error);
-    }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            console.log("Usuário autenticado:", user.uid);
-
-            const playerData = await getPlayerData(user.uid); // 🔹 Recupera os dados da ficha
-            if (playerData) {
-                updateCharacterSheet(playerData); // 🔹 Atualiza a ficha do personagem
-            }
-
-            await loadInventoryData(user.uid); // 🔹 Carrega os itens do inventário e slots equipados
-        } else {
-            console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
-            window.location.href = "index.html";
-        }
-    });
-});
-
-// 📌 Sistema de Carrossel entre as janelas
-const slides = document.querySelectorAll(".carousel-slide");
-let currentSlide = 0;
-
-document.getElementById("prevBtn").addEventListener("click", () => {
-    slides[currentSlide].classList.remove("active");
-    currentSlide = (currentSlide === 0) ? slides.length - 1 : currentSlide - 1;
-    slides[currentSlide].classList.add("active");
-});
-
-document.getElementById("nextBtn").addEventListener("click", () => {
-    slides[currentSlide].classList.remove("active");
-    currentSlide = (currentSlide === slides.length - 1) ? 0 : currentSlide + 1;
-    slides[currentSlide].classList.add("active");
-});
-
-// 📌 Exibir a primeira janela ao carregar
-slides[currentSlide].classList.add("active");
-
-// 📌 Atualizar os dados da ficha de personagem ao carregar
-function updateCharacterSheet(playerData) {
-    if (!playerData) return;
-
-    document.getElementById("char-name").innerText = playerData.name || "-";
-    document.getElementById("char-race").innerText = playerData.race || "-";
-    document.getElementById("char-class").innerText = playerData.class || "-";
-    document.getElementById("char-alignment").innerText = playerData.alignment || "-";
-    document.getElementById("char-energy").innerText = playerData.energy?.total ?? "-";
-    document.getElementById("char-skill").innerText = playerData.skill?.total ?? "-";
-    document.getElementById("char-charisma").innerText = playerData.charisma?.total ?? "-";
-    document.getElementById("char-magic").innerText = playerData.magic?.total ?? "-";
-    document.getElementById("char-luck").innerText = playerData.luck?.total ?? "-";
-    document.getElementById("char-couraca").innerText = playerData.couraca || "0";
-    document.getElementById("char-po").innerText = playerData.po || "0";
-    document.getElementById("char-hand").innerText = playerData.maoDominante || "-";
-    document.getElementById("char-hemisphere").innerText = playerData.hemisferioDominante || "-";
 }
