@@ -15,7 +15,7 @@
         <!-- 📌 O Carrossel -->
         <div class="carousel-wrapper">
             <div class="carousel-container">
-                <!-- Janela do personagem (onde equipamos os itens) -->
+                <!-- Janela do personagem -->
                 <div class="carousel-slide active" id="character-window">
                     <div class="character">
                         <h2>Personagem</h2>
@@ -49,19 +49,40 @@
                         <p><strong>Raça:</strong> <span id="char-race">-</span></p>
                         <p><strong>Alinhamento:</strong> <span id="char-alignment">-</span></p>
 
-                        <!-- Atributos com janelas quadradas para os números -->
+                        <!-- Atributos com seus nomes e valores -->
                         <div class="attribute-container">
-                            <div class="attribute" title="Energia"><span id="char-energy">0</span></div>
-                            <div class="attribute" title="Habilidade"><span id="char-skill">0</span></div>
-                            <div class="attribute" title="Carisma"><span id="char-charisma">0</span></div>
-                            <div class="attribute" title="Magia"><span id="char-magic">0</span></div>
-                            <div class="attribute" title="Sorte"><span id="char-luck">0</span></div>
+                            <div class="attribute">
+                                <span class="label">Energia</span>
+                                <span id="char-energy">0</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Habilidade</span>
+                                <span id="char-skill">0</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Carisma</span>
+                                <span id="char-charisma">0</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Magia</span>
+                                <span id="char-magic">0</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Sorte</span>
+                                <span id="char-luck">0</span>
+                            </div>
                         </div>
 
-                        <!-- Couraça e Dano abaixo -->
+                        <!-- Couraça e Dano -->
                         <div class="couraca-dano">
-                            <div class="attribute" title="Couraça"><span id="char-couraca">0</span></div>
-                            <div class="attribute" title="Dano"><span id="char-dano">0</span></div>
+                            <div class="attribute">
+                                <span class="label">Couraça</span>
+                                <span id="char-couraca">0</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Dano</span>
+                                <span id="char-dano">0</span>
+                            </div>
                         </div>
 
                         <!-- Mão Dominante e Hemisfério Dominante -->
@@ -76,14 +97,14 @@
                 </div>
             </div>
 
-            <!-- Botões para alternar entre as janelas -->
+            <!-- Botões do Carrossel -->
             <div class="carousel-buttons">
                 <button id="prevBtn">◀</button>
                 <button id="nextBtn">▶</button>
             </div>
         </div>
 
-        <!-- 📌 Baú de Itens (fora do carrossel) -->
+        <!-- 📌 Baú de Itens -->
         <div class="chest">
             <h2>Baú de Itens</h2>
             <div class="items">
@@ -97,11 +118,12 @@
                 <div class="item" data-item="ring">💍 Anel Dourado</div>
             </div>
             <div id="char-po-container">
+                <span class="label">PO:</span>
                 <span id="char-po">0</span>
             </div>
         </div>
 
-        <!-- Área de descarte -->
+        <!-- Área de Descarte -->
         <div class="discard-area">
             <h2>Descartar Item</h2>
             <div class="discard-slot" id="discard-slot">área de descarte</div>
