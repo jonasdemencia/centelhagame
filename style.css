@@ -109,3 +109,12 @@ body {
     color: #fff;
     font-weight: bold;
 }
+
+/* Borda simples ao redor da ficha */
+.character-sheet {
+    border: 2px solid white; /* Borda branca */
+    border-radius: 6px; /* Bordas levemente arredondadas */
+    padding: 15px; /* Espaçamento interno */
+    background: rgba(0, 0, 0, 0.5); /* Fundo escuro para contraste */
+    margin: 20px auto; /* Centraliza a ficha com margem */
+}
