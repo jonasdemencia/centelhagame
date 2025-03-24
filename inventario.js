@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Destaca os slots compatíveis
             document.querySelectorAll('.slot').forEach(slot => {
-                if (slot.dataset.slot === item.dataset.item) {
+                if (slot.dataset.slot === getItemSlot(item.dataset.item)) {
                     slot.classList.add('highlight'); // Adiciona o destaque
                 }
             });
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Gerencia o clique nos slots
     document.querySelectorAll('.slot').forEach(slot => {
         slot.addEventListener('click', () => {
-            if (selectedItem && slot.dataset.slot === selectedItem.dataset.item) {
+            if (selectedItem && slot.dataset.slot === getItemSlot(selectedItem.dataset.item)) {
                 if (slot.innerHTML !== slot.dataset.slot) {
                     // Desequipa o item atual e devolve ao baú
                     const equippedItemText = slot.innerHTML;
@@ -108,6 +108,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
 });
+
+function getItemSlot(itemId) {
+    const allItems = Object.values(classStartingItems).flat();
+    const foundItem = allItems.find(item => item.id === itemId);
+    return foundItem ? foundItem.slot : null;
+}
 
 // Adiciona evento de clique aos novos itens do baú
 function addItemClickListener(item) {
