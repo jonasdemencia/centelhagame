@@ -13,40 +13,62 @@ body {
     display: none;
 }
 
-/* Estilo dos botões alinhados */
+/* Ajuste para atributos em formato justificado */
+.stat-box {
+    display: flex;
+    flex-direction: column; /* Atributos em formato vertical */
+    align-items: stretch; /* Alinha os elementos à largura do container */
+    gap: 5px; /* Espaço entre os elementos */
+    text-align: justify;
+    background: rgba(0, 0, 0, 0.5); /* Fundo escuro para destaque */
+    border: 1px solid #aa6c39; /* Borda dourada */
+    border-radius: 6px; /* Bordas arredondadas */
+    padding: 10px; /* Espaço interno */
+    margin-bottom: 10px; /* Espaço entre os blocos de atributos */
+}
+
+/* Nome do atributo */
+.stat-name {
+    font-size: 14px; /* Ajuste do tamanho da fonte */
+    font-weight: bold;
+    margin-bottom: 5px; /* Espaço abaixo do nome do atributo */
+    text-align: justify; /* Alinha texto do atributo */
+}
+
+/* Ajuste nos valores dos atributos */
+.stat-value {
+    font-size: 12px; /* Tamanho ajustado */
+    margin-right: 2px; /* Margem para espaçamento interno */
+    color: white; /* Contraste com o fundo */
+}
+
+/* Estilo dos botões 🎲 e Zerar */
 .stat-buttons-inline {
-    display: inline-flex; /* Alinha os botões horizontalmente */
-    gap: 10px; /* Espaçamento entre os botões */
-    margin-left: 10px; /* Margem entre o resultado e os botões */
+    display: flex; /* Botões alinhados horizontalmente */
+    justify-content: space-between; /* Justifica os botões ao longo da linha */
+    align-items: center; /* Alinha ao centro */
+    gap: 5px; /* Espaço reduzido entre os botões 🎲 e Zerar */
+    width: 100%; /* Ocupa toda a largura */
+    margin-top: 5px; /* Espaço acima dos botões */
 }
 
 .button {
-    background-color: transparent;
-    color: white;
-    border: 1px solid white;
-    padding: 6px 12px;
+    background-color: #8b5a2b; /* Fundo dos botões com contraste */
+    border: none;
+    padding: 6px 12px; /* Tamanho dos botões ajustado */
     font-family: 'Eagle Lake', cursive;
+    color: white;
+    font-size: 12px; /* Tamanho ajustado para consistência */
+    border-radius: 4px; /* Bordas arredondadas */
     cursor: pointer;
 }
 
 .button:hover {
-    background-color: white;
-    color: black;
+    background-color: #aa6c39; /* Destaca ao passar o mouse */
 }
 
-/* Estilo dos valores */
-.stat-value {
-    font-size: 16px;
-    color: white;
-}
-
-/* Destaque dos slots */
-.highlight {
-    background-color: #3498db; /* Azul claro */
-    border-color: #2980b9; /* Borda azul */
-}
-
-/.slot, .item, .discard-slot {
+/* Estilo geral para slots */
+.slot, .item, .discard-slot {
     width: 100px;
     height: 45px;
     background: #583101;
@@ -65,6 +87,12 @@ body {
 
 .slot {
     background: rgba(100, 60, 30, 0.8);
+}
+
+/* Destaque dos slots */
+.highlight {
+    background-color: #3498db; /* Azul claro */
+    border-color: #2980b9; /* Borda azul */
 }
 
 /* Estilização do descarte */
