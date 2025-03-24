@@ -43,8 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
         item.addEventListener('click', () => {
             clearHighlights();
 
-            console.log("Item clicado:", item.dataset.item);
-
             // Define o novo item selecionado
             selectedItem = item;
             item.classList.add('selected');
