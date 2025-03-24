@@ -133,6 +133,25 @@ async function saveInventoryData(uid) {
     }
 }
 
+async function savePlayerData(uid, playerData) {
+    try {
+        const playerRef = doc(db, "players", uid);
+        await setDoc(playerRef, { ...playerData }, { merge: true });
+        console.log("Dados do jogador salvos com sucesso!");
+    } catch (error) {
+        console.error("Erro ao salvar os dados do jogador:", error);
+    }
+}
+
+// Exemplo de uso ao selecionar uma classe (evento de mudança):
+document.querySelector('#class').addEventListener('change', async (event) => {
+    const selectedClass = event.target.value; // Classe selecionada
+    const uid = auth.currentUser.uid; // ID do jogador
+    await savePlayerData(uid, { class: selectedClass }); // Salva a classe no Firestore
+
+    loadStartingItemsForClass(selectedClass); // Atualiza os itens no baú
+});
+
 // Função para carregar dados do Firestore
 // Definição dos itens iniciais por classe
 const classStartingItems = {
