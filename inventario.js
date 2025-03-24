@@ -156,13 +156,18 @@ async function loadInventoryData(uid) {
             });
 
             // Carrega itens equipados
-document.querySelectorAll('.slot').forEach(slot => {
-    slot.innerHTML = slot.dataset.slot; // Sempre inicializa com o valor padrão (slot vazio)
-});
+            document.querySelectorAll('.slot').forEach(slot => {
+                slot.innerHTML = slot.dataset.slot; // Inicializa com o valor padrão (vazio)
+            });
 
             console.log("Inventário carregado com sucesso!");
         } else {
             console.log("Nenhum inventário encontrado para este jogador.");
+
+            // Garantir que os slots fiquem vazios se não houver dados
+            document.querySelectorAll('.slot').forEach(slot => {
+                slot.innerHTML = slot.dataset.slot; // Inicializa slots vazios
+            });
         }
     } catch (error) {
         console.error("Erro ao carregar o inventário:", error);
