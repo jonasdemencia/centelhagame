@@ -144,7 +144,7 @@ async function loadInventoryData(uid) {
 
             // Carrega itens no baú
             const chestElement = document.querySelector('.items');
-            chestElement.innerHTML = ""; // Limpa o conteúdo atual
+            chestElement.innerHTML = ""; // Limpa o conteúdo atual do baú
             inventoryData.itemsInChest.forEach(item => {
                 const newItem = document.createElement('div');
                 newItem.classList.add('item');
@@ -155,18 +155,19 @@ async function loadInventoryData(uid) {
                 addItemClickListener(newItem);
             });
 
-            // Carrega itens equipados
+            // Carrega itens equipados nos slots
             document.querySelectorAll('.slot').forEach(slot => {
-                slot.innerHTML = slot.dataset.slot; // Inicializa com o valor padrão (vazio)
+                const equippedItem = inventoryData.equippedItems[slot.dataset.slot];
+                slot.innerHTML = equippedItem || slot.dataset.slot; // Adiciona item ou mantém o slot padrão
             });
 
             console.log("Inventário carregado com sucesso!");
         } else {
             console.log("Nenhum inventário encontrado para este jogador.");
 
-            // Garantir que os slots fiquem vazios se não houver dados
+            // Garante que os slots fiquem vazios se não houver dados
             document.querySelectorAll('.slot').forEach(slot => {
-                slot.innerHTML = slot.dataset.slot; // Inicializa slots vazios
+                slot.innerHTML = slot.dataset.slot;
             });
         }
     } catch (error) {
