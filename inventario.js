@@ -172,7 +172,7 @@ async function loadInventoryData(uid, playerClass) {
                 equippedItems: {}
             };
 
-            await saveInventoryData(uid, inventoryData);
+            await setDoc(doc(db, "players", uid), { inventory: inventoryData }, { merge: true });
         }
 
         // 🔹 Exibe os itens do baú na interface
@@ -219,7 +219,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const playerData = await getPlayerData(user.uid);
             if (playerData) {
-                await loadInventoryData(user.uid, playerData.class); // 🔹 Agora passa a classe do jogador
+                await loadInventoryData(user.uid, playerData.class);
+                updateCharacterSheet(playerData);  // 🔹 Agora a ficha do carrossel será preenchida corretamente
             }
         } else {
             console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
