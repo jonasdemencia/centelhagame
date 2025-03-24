@@ -170,22 +170,22 @@ async function loadInventoryData(uid, playerClass) {
         const playerRef = doc(db, "players", uid);
         const playerSnap = await getDoc(playerRef);
 
-        let inventoryData = playerSnap.exists() ? playerSnap.data().inventory : null;
+        let inventoryData = playerSnap.exists() && playerSnap.data().inventory ? playerSnap.data().inventory : null;
 
-        if (!inventoryData) {
-            console.log("Nenhum inventário encontrado. Criando novo...");
+       if (!inventoryData || !inventoryData.itemsInChest) {
+    console.log("Nenhum inventário encontrado. Criando novo...");
 
-            // 🔹 Obtém os itens da classe do jogador
-            const startingItems = getStartingItems(playerClass);
+    // 🔹 Obtém os itens da classe do jogador
+    const startingItems = getStartingItems(playerClass);
 
-            // 🔹 Define o inventário inicial
-            inventoryData = {
-                itemsInChest: startingItems,
-                equippedItems: {}
-            };
+    // 🔹 Define o inventário inicial
+    inventoryData = {
+        itemsInChest: startingItems,
+        equippedItems: {}
+    };
 
-            await setDoc(doc(db, "players", uid), { inventory: inventoryData }, { merge: true });
-        }
+    await setDoc(doc(db, "players", uid), { inventory: inventoryData }, { merge: true });
+}
 
         // 🔹 Exibe os itens do baú na interface
         const chestElement = document.querySelector('.items');
@@ -243,18 +243,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // 📌 Sistema de Carrossel entre as janelas
-const slides = document.querySelectorAll(".carousel-slide");
-let currentSlide = 0;
+document.addEventListener("DOMContentLoaded", () => {
+    const slides = document.querySelectorAll(".carousel-slide");
+    let currentSlide = 0;
 
-document.getElementById("prevBtn").addEventListener("click", () => {
-    slides[currentSlide].classList.remove("active");
-    currentSlide = (currentSlide === 0) ? slides.length - 1 : currentSlide - 1;
-    slides[currentSlide].classList.add("active");
-});
+    document.getElementById("prevBtn").addEventListener("click", () => {
+        slides[currentSlide].classList.remove("active");
+        currentSlide = (currentSlide === 0) ? slides.length - 1 : currentSlide - 1;
+        slides[currentSlide].classList.add("active");
+    });
 
-document.getElementById("nextBtn").addEventListener("click", () => {
-    slides[currentSlide].classList.remove("active");
-    currentSlide = (currentSlide === slides.length - 1) ? 0 : currentSlide + 1;
+    document.getElementById("nextBtn").addEventListener("click", () => {
+        slides[currentSlide].classList.remove("active");
+        currentSlide = (currentSlide === slides.length - 1) ? 0 : currentSlide + 1;
+        slides[currentSlide].classList.add("active");
+    });
+
     slides[currentSlide].classList.add("active");
 });
 
