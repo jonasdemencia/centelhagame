@@ -16,6 +16,25 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// 🔹 Itens iniciais por classe
+const classStartingItems = {
+    "Mago": [{ id: "robe", content: "🧥 Robe Mágico", slot: "armor" }],
+    "Guerreiro": [{ id: "sword", content: "⚔️ Espada Longa", slot: "weapon" }],
+    "Ladino": [{ id: "dagger", content: "🗡️ Adaga", slot: "weapon" }],
+    "Estudante": [
+        { id: "scribe-bag", content: "📜 Bolsa de Escriba" },
+        { id: "pocket-knife", content: "🔪 Canivete", slot: "weapon" },
+        { id: "monastic-habit", content: "🧥 Hábito Monástico", slot: "armor" },
+        { id: "candles", content: "🕯️ Velas" },
+        { id: "herb-bag", content: "🌿 Pequeno Saco com Ervas Medicinais" }
+    ]
+};
+
+// 🔹 Função para obter os itens iniciais com base na classe
+function getStartingItems(playerClass) {
+    return classStartingItems[playerClass] ? [...classStartingItems[playerClass]] : [];
+}
+
 let selectedItem = null; // Armazena o item selecionado 
 
 // Seleciona os itens clicados no baú
@@ -134,46 +153,52 @@ async function saveInventoryData(uid) {
 }
 
 // Função para carregar dados do Firestore
-async function loadInventoryData(uid) {
+async function loadInventoryData(uid, playerClass) {
     try {
         const playerRef = doc(db, "players", uid);
         const playerSnap = await getDoc(playerRef);
 
-        if (playerSnap.exists() && playerSnap.data().inventory) {
-            const inventoryData = playerSnap.data().inventory;
+        let inventoryData = playerSnap.exists() ? playerSnap.data().inventory : null;
 
-            // Carrega itens no baú
-            const chestElement = document.querySelector('.items');
-            chestElement.innerHTML = ""; // Limpa o conteúdo atual do baú
-            inventoryData.itemsInChest.forEach(item => {
-                const newItem = document.createElement('div');
-                newItem.classList.add('item');
-                newItem.dataset.item = item.id;
-                newItem.innerHTML = item.content;
+        if (!inventoryData) {
+            console.log("Nenhum inventário encontrado. Criando novo...");
 
-                chestElement.appendChild(newItem);
-                addItemClickListener(newItem);
-            });
+            // 🔹 Obtém os itens da classe do jogador
+            const startingItems = getStartingItems(playerClass);
 
-            // Carrega itens equipados nos slots
-            document.querySelectorAll('.slot').forEach(slot => {
-                const equippedItem = inventoryData.equippedItems[slot.dataset.slot];
-                slot.innerHTML = equippedItem || slot.dataset.slot; // Adiciona item ou mantém o slot padrão
-            });
+            // 🔹 Define o inventário inicial
+            inventoryData = {
+                itemsInChest: startingItems,
+                equippedItems: {}
+            };
 
-            console.log("Inventário carregado com sucesso!");
-        } else {
-            console.log("Nenhum inventário encontrado para este jogador.");
-
-            // Garante que os slots fiquem vazios se não houver dados
-            document.querySelectorAll('.slot').forEach(slot => {
-                slot.innerHTML = slot.dataset.slot;
-            });
+            await saveInventoryData(uid, inventoryData);
         }
+
+        // 🔹 Exibe os itens do baú na interface
+        const chestElement = document.querySelector('.items');
+        chestElement.innerHTML = "";
+        inventoryData.itemsInChest.forEach(item => {
+            const newItem = document.createElement('div');
+            newItem.classList.add('item');
+            newItem.dataset.item = item.id;
+            newItem.innerHTML = item.content;
+            chestElement.appendChild(newItem);
+            addItemClickListener(newItem);
+        });
+
+        // 🔹 Carrega os itens equipados nos slots
+        document.querySelectorAll('.slot').forEach(slot => {
+            const equippedItem = inventoryData.equippedItems[slot.dataset.slot];
+            slot.innerHTML = equippedItem || slot.dataset.slot;
+        });
+
+        console.log("Inventário carregado com sucesso!");
     } catch (error) {
         console.error("Erro ao carregar o inventário:", error);
     }
 }
+
 
 async function getPlayerData(uid) {
     try {
@@ -192,18 +217,17 @@ document.addEventListener("DOMContentLoaded", () => {
         if (user) {
             console.log("Usuário autenticado:", user.uid);
 
-            const playerData = await getPlayerData(user.uid); // 🔹 Recupera os dados da ficha
+            const playerData = await getPlayerData(user.uid);
             if (playerData) {
-                updateCharacterSheet(playerData); // 🔹 Atualiza a ficha do personagem
+                await loadInventoryData(user.uid, playerData.class); // 🔹 Agora passa a classe do jogador
             }
-
-            await loadInventoryData(user.uid); // 🔹 Carrega os itens do inventário e slots equipados
         } else {
             console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
             window.location.href = "index.html";
         }
     });
 });
+
 
 // 📌 Sistema de Carrossel entre as janelas
 const slides = document.querySelectorAll(".carousel-slide");
