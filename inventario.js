@@ -61,17 +61,16 @@ document.addEventListener("DOMContentLoaded", () => {
         slot.addEventListener('click', () => {
             if (selectedItem && slot.dataset.slot === getItemSlot(selectedItem.dataset.item)) {
                 if (slot.innerHTML !== slot.dataset.slot) {
-                    // Desequipa o item atual e devolve ao baú
-                    const equippedItemText = slot.innerHTML;
+    const equippedItemText = slot.innerHTML;
 
-                    const newItem = document.createElement("div");
-                    newItem.classList.add("item");
-                    newItem.dataset.item = slot.dataset.slot;
-                    newItem.innerHTML = equippedItemText;
+    const newItem = document.createElement("div");
+    newItem.classList.add("item");
+    newItem.dataset.item = selectedItem.dataset.item; // Certifique-se de que o dataset é atualizado com o ID correto
+    newItem.innerHTML = equippedItemText;
 
-                    document.querySelector(".items").appendChild(newItem);
-                    addItemClickListener(newItem);
-                }
+    document.querySelector(".items").appendChild(newItem);
+    addItemClickListener(newItem); // Adiciona novamente o evento de clique ao novo item
+}
 
                 // Equipa o novo item no slot
                 slot.innerHTML = selectedItem.innerHTML;
@@ -80,20 +79,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 clearHighlights();
 
                 saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
-            } else if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
-                const itemText = slot.innerHTML;
-                slot.innerHTML = slot.dataset.slot;
+            if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
+    const itemText = slot.innerHTML;
+    slot.innerHTML = slot.dataset.slot; // Restaura o texto padrão do slot
 
-                const newItem = document.createElement("div");
-                newItem.classList.add("item");
-                newItem.dataset.item = slot.dataset.slot;
-                newItem.innerHTML = itemText;
+    const newItem = document.createElement("div");
+    newItem.classList.add("item");
+    newItem.dataset.item = slot.dataset.slot; // Certifique-se de que o dataset seja atualizado corretamente
+    newItem.innerHTML = itemText;
 
-                document.querySelector(".items").appendChild(newItem);
-                addItemClickListener(newItem);
+    document.querySelector(".items").appendChild(newItem);
+    addItemClickListener(newItem); // Adiciona o evento de clique ao novo item
 
-                saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
-            }
+    saveInventoryData(auth.currentUser.uid); // Salva alterações
+}
+
         });
     });
 
@@ -118,12 +118,13 @@ function getItemSlot(itemId) {
 // Adiciona evento de clique aos novos itens do baú
 function addItemClickListener(item) {
     item.addEventListener('click', () => {
-        clearHighlights();
-        selectedItem = item;
+        clearHighlights(); // Limpa destaques anteriores
+        selectedItem = item; // Atualiza o item selecionado
         item.classList.add('selected');
 
+        // Destaca os slots compatíveis
         document.querySelectorAll('.slot').forEach(slot => {
-            if (slot.dataset.slot === item.dataset.item) {
+            if (slot.dataset.slot === getItemSlot(item.dataset.item)) {
                 slot.classList.add('highlight');
             }
         });
