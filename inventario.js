@@ -134,6 +134,47 @@ async function saveInventoryData(uid) {
 }
 
 // Função para carregar dados do Firestore
+// Definição dos itens iniciais por classe
+const classStartingItems = {
+    Mago: [
+        { name: "Robe", type: "equipable", slot: "armor slot" }
+    ],
+    Guerreiro: [
+        { name: "Espada", type: "equipable", slot: "weapon slot" }
+    ],
+    Ladino: [
+        { name: "Adaga", type: "equipable", slot: "weapon slot" }
+    ],
+    Estudante: [
+        { name: "Bolsa de escriba", type: "consumable", slot: null },
+        { name: "Canivete", type: "equipable", slot: "weapon slot" },
+        { name: "Hábito monástico", type: "equipable", slot: "armor slot" },
+        { name: "Velas", type: "consumable", slot: null },
+        { name: "Pequeno saco com ervas medicinais", type: "consumable", slot: null }
+    ]
+};
+
+// Função para carregar itens iniciais no baú com base na classe
+function loadStartingItemsForClass(playerClass) {
+    const startingItems = classStartingItems[playerClass] || [];
+    const chestElement = document.querySelector('.items');
+
+    // Limpa os itens do baú (se necessário)
+    chestElement.innerHTML = "";
+
+    // Adiciona os itens iniciais da classe ao baú
+    startingItems.forEach(item => {
+        const newItem = document.createElement('div');
+        newItem.classList.add('item');
+        newItem.dataset.item = item.slot ? item.slot : "consumable"; // Define o tipo do item
+        newItem.innerHTML = `${item.name} - ${item.type === "consumable" ? "Consumível" : "Equipável"}`;
+
+        chestElement.appendChild(newItem);
+        addItemClickListener(newItem); // Adiciona a funcionalidade de clique para itens
+    });
+}
+
+// Função para carregar dados do Firestore
 async function loadInventoryData(uid) {
     try {
         const playerRef = doc(db, "players", uid);
@@ -169,6 +210,12 @@ async function loadInventoryData(uid) {
             document.querySelectorAll('.slot').forEach(slot => {
                 slot.innerHTML = slot.dataset.slot;
             });
+
+            // Caso seja a primeira vez ou sem inventário, carregar itens iniciais
+            const playerData = await getPlayerData(uid);
+            if (playerData && playerData.class) {
+                loadStartingItemsForClass(playerData.class); // Carrega os itens iniciais com base na classe
+            }
         }
     } catch (error) {
         console.error("Erro ao carregar o inventário:", error);
