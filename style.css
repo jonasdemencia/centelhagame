@@ -13,35 +13,57 @@ body {
     display: none;
 }
 
-/* Estilo dos botões alinhados */
-.stat-buttons-inline {
-    display: flex; /* Alinha os botões horizontalmente */
-    justify-content: flex-end; /* Botões à direita */
-    gap: 5px; /* Espaço entre os botões 🎲 e Zerar */
-    margin-left: auto; /* Garante que os botões fiquem à direita */
+/* Estilo para os atributos e alinhamento */
+.stat-box {
+    display: flex;
+    justify-content: space-between; /* Espaça os itens à esquerda e à direita */
+    align-items: center; /* Centraliza os itens verticalmente */
+    background: rgba(0, 0, 0, 0.5); /* Fundo escuro para destaque */
+    border: 1px solid #aa6c39; /* Borda dourada */
+    border-radius: 6px; /* Bordas arredondadas */
+    padding: 10px; /* Espaço interno */
+    margin-bottom: 10px; /* Espaço abaixo de cada atributo */
 }
 
+/* Nome do atributo à esquerda */
+.stat-name {
+    font-size: 14px; /* Ajuste do tamanho da fonte */
+    font-weight: bold;
+    margin-right: auto; /* Garante que o nome fique alinhado à esquerda */
+    text-align: left; /* Justifica o nome à esquerda */
+}
+
+/* Valores dos atributos */
+.stat-value {
+    font-size: 14px; /* Tamanho ajustado dos valores */
+    color: white; /* Contraste com o fundo */
+}
+
+/* Botões de dados e zerar alinhados à direita */
+.stat-buttons-inline {
+    display: flex; /* Alinha os botões horizontalmente */
+    justify-content: flex-end; /* Alinha os botões à direita */
+    gap: 5px; /* Reduz a distância entre os botões 🎲 e Zerar */
+    margin-left: auto; /* Garante que os botões fiquem na extremidade direita */
+}
+
+/* Estilo dos botões 🎲 e Zerar */
 .button {
-    background-color: transparent;
-    color: white;
-    border: 1px solid white;
-    padding: 6px 12px;
+    background-color: #8b5a2b; /* Fundo dos botões com contraste */
+    border: none;
+    padding: 6px 12px; /* Tamanho dos botões ajustado */
     font-family: 'Eagle Lake', cursive;
+    color: white;
+    font-size: 12px;
+    border-radius: 4px; /* Bordas arredondadas */
     cursor: pointer;
 }
 
 .button:hover {
-    background-color: white;
-    color: black;
+    background-color: #aa6c39; /* Fundo mais claro ao passar o mouse */
 }
 
-/* Estilo dos valores */
-.stat-value {
-    font-size: 14px;
-    color: white;
-}
-
-/* Estilo para slots */
+/* Estilo para slots (não modificado, mantido para consistência) */
 .slot, .item, .discard-slot {
     width: 100px;
     height: 45px;
@@ -86,13 +108,4 @@ body {
     background: #a52a2a;
     color: #fff;
     font-weight: bold;
-}
-
-/* Borda simples ao redor da ficha */
-.character-sheet {
-    border: 2px solid white; /* Adiciona borda branca */
-    border-radius: 10px; /* Bordas arredondadas mais visíveis */
-    padding: 20px; /* Espaço interno para conteúdo */
-    background: rgba(0, 0, 0, 0.8); /* Fundo mais destacado */
-    margin: 30px auto; /* Centraliza e adiciona margem acima/abaixo */
 }
