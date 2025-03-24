@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Destaca os slots compatíveis
             document.querySelectorAll('.slot').forEach(slot => {
-                if (slot.dataset.slot === getItemSlot(item.dataset.item)) {
+                if (slot.dataset.slot === item.dataset.item) {
                     slot.classList.add('highlight'); // Adiciona o destaque
                 }
             });
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Gerencia o clique nos slots
     document.querySelectorAll('.slot').forEach(slot => {
         slot.addEventListener('click', () => {
-            if (selectedItem && slot.dataset.slot === getItemSlot(selectedItem.dataset.item)) {
+            if (selectedItem && slot.dataset.slot === selectedItem.dataset.item) {
                 if (slot.innerHTML !== slot.dataset.slot) {
                     // Desequipa o item atual e devolve ao baú
                     const equippedItemText = slot.innerHTML;
@@ -109,18 +109,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-function getItemSlot(itemId) {
-    const slotMappings = {
-        "pocket-knife": "weapon",
-        "monastic-habit": "armor"
-    };
-
-    return slotMappings[itemId] || null;
-}
-
-    return slotMappings[itemId] || document.querySelector(`.item[data-item="${itemId}"]`)?.dataset.slot || null;
-}
-
 // Adiciona evento de clique aos novos itens do baú
 function addItemClickListener(item) {
     item.addEventListener('click', () => {
@@ -129,8 +117,8 @@ function addItemClickListener(item) {
         item.classList.add('selected');
 
         document.querySelectorAll('.slot').forEach(slot => {
-            if (slot.dataset.slot === getItemSlot(item.dataset.item)) {
-                slot.classList.add('highlight'); // Agora apenas os slots corretos serão destacados
+            if (slot.dataset.slot === item.dataset.item) {
+                slot.classList.add('highlight');
             }
         });
     });
@@ -170,22 +158,22 @@ async function loadInventoryData(uid, playerClass) {
         const playerRef = doc(db, "players", uid);
         const playerSnap = await getDoc(playerRef);
 
-        let inventoryData = playerSnap.exists() && playerSnap.data().inventory ? playerSnap.data().inventory : null;
+        let inventoryData = playerSnap.exists() ? playerSnap.data().inventory : null;
 
-       if (!inventoryData || !inventoryData.itemsInChest) {
-    console.log("Nenhum inventário encontrado. Criando novo...");
+        if (!inventoryData) {
+            console.log("Nenhum inventário encontrado. Criando novo...");
 
-    // 🔹 Obtém os itens da classe do jogador
-    const startingItems = getStartingItems(playerClass);
+            // 🔹 Obtém os itens da classe do jogador
+            const startingItems = getStartingItems(playerClass);
 
-    // 🔹 Define o inventário inicial
-    inventoryData = {
-        itemsInChest: startingItems,
-        equippedItems: {}
-    };
+            // 🔹 Define o inventário inicial
+            inventoryData = {
+                itemsInChest: startingItems,
+                equippedItems: {}
+            };
 
-    await setDoc(doc(db, "players", uid), { inventory: inventoryData }, { merge: true });
-}
+            await setDoc(doc(db, "players", uid), { inventory: inventoryData }, { merge: true });
+        }
 
         // 🔹 Exibe os itens do baú na interface
         const chestElement = document.querySelector('.items');
@@ -243,22 +231,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // 📌 Sistema de Carrossel entre as janelas
-document.addEventListener("DOMContentLoaded", () => {
-    const slides = document.querySelectorAll(".carousel-slide");
-    let currentSlide = 0;
+const slides = document.querySelectorAll(".carousel-slide");
+let currentSlide = 0;
 
-    document.getElementById("prevBtn").addEventListener("click", () => {
-        slides[currentSlide].classList.remove("active");
-        currentSlide = (currentSlide === 0) ? slides.length - 1 : currentSlide - 1;
-        slides[currentSlide].classList.add("active");
-    });
+document.getElementById("prevBtn").addEventListener("click", () => {
+    slides[currentSlide].classList.remove("active");
+    currentSlide = (currentSlide === 0) ? slides.length - 1 : currentSlide - 1;
+    slides[currentSlide].classList.add("active");
+});
 
-    document.getElementById("nextBtn").addEventListener("click", () => {
-        slides[currentSlide].classList.remove("active");
-        currentSlide = (currentSlide === slides.length - 1) ? 0 : currentSlide + 1;
-        slides[currentSlide].classList.add("active");
-    });
-
+document.getElementById("nextBtn").addEventListener("click", () => {
+    slides[currentSlide].classList.remove("active");
+    currentSlide = (currentSlide === slides.length - 1) ? 0 : currentSlide + 1;
     slides[currentSlide].classList.add("active");
 });
 
