@@ -21,7 +21,7 @@ const classStartingItems = {
     "Mago": [{ id: "robe", content: "🧥 Robe Mágico", slot: "armor" }],
     "Guerreiro": [{ id: "sword", content: "⚔️ Espada Longa", slot: "weapon" }],
     "Ladino": [{ id: "dagger", content: "🗡️ Adaga", slot: "weapon" }],
-    "Estudante": [
+    "Candidato": [
         { id: "scribe-bag", content: "📜 Bolsa de Escriba" },
         { id: "pocket-knife", content: "🔪 Canivete", slot: "weapon" },
         { id: "monastic-habit", content: "🧥 Hábito Monástico", slot: "armor" },
