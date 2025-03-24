@@ -133,74 +133,6 @@ async function saveInventoryData(uid) {
     }
 }
 
-async function savePlayerData(uid, playerData) {
-    try {
-        const playerRef = doc(db, "players", uid);
-        await setDoc(playerRef, { ...playerData }, { merge: true });
-        console.log("Dados do jogador salvos com sucesso!");
-    } catch (error) {
-        console.error("Erro ao salvar os dados do jogador:", error);
-    }
-}
-
-// Exemplo de uso ao selecionar uma classe (evento de mudança):
-document.querySelector('#class').addEventListener('change', async (event) => {
-    const selectedClass = event.target.value; // Classe selecionada
-    const uid = auth.currentUser.uid; // ID do jogador
-    await savePlayerData(uid, { class: selectedClass }); // Salva a classe no Firestore
-
-    loadStartingItemsForClass(selectedClass); // Atualiza os itens no baú
-});
-
-// Função para carregar dados do Firestore
-// Definição dos itens iniciais por classe
-const classStartingItems = {
-    Mago: [
-        { name: "Robe", type: "equipable", slot: "armor slot" }
-    ],
-    Guerreiro: [
-        { name: "Espada", type: "equipable", slot: "weapon slot" }
-    ],
-    Ladino: [
-        { name: "Adaga", type: "equipable", slot: "weapon slot" }
-    ],
-    Estudante: [
-        { name: "Bolsa de escriba", type: "consumable", slot: null },
-        { name: "Canivete", type: "equipable", slot: "weapon slot" },
-        { name: "Hábito monástico", type: "equipable", slot: "armor slot" },
-        { name: "Velas", type: "consumable", slot: null },
-        { name: "Pequeno saco com ervas medicinais", type: "consumable", slot: null }
-    ]
-};
-
-// Após carregar os itens iniciais para a classe
-const playerData = await getPlayerData(uid);
-if (playerData && playerData.class) {
-    console.log(`Carregando itens iniciais para a classe: ${playerData.class}`);
-    loadStartingItemsForClass(playerData.class); // Carrega os itens iniciais
-    saveInventoryData(uid); // 🔹 Salva os itens no Firestore imediatamente
-}
-
-// Função para carregar itens iniciais no baú com base na classe
-function loadStartingItemsForClass(playerClass) {
-    const startingItems = classStartingItems[playerClass] || [];
-    const chestElement = document.querySelector('.items');
-
-    // Limpa os itens do baú (se necessário)
-    chestElement.innerHTML = "";
-
-    // Adiciona os itens iniciais da classe ao baú
-    startingItems.forEach(item => {
-        const newItem = document.createElement('div');
-        newItem.classList.add('item');
-        newItem.dataset.item = item.slot ? item.slot : "consumable"; // Define o tipo do item
-        newItem.innerHTML = `${item.name} - ${item.type === "consumable" ? "Consumível" : "Equipável"}`;
-
-        chestElement.appendChild(newItem);
-        addItemClickListener(newItem); // Adiciona a funcionalidade de clique para itens
-    });
-}
-
 // Função para carregar dados do Firestore
 async function loadInventoryData(uid) {
     try {
@@ -233,29 +165,15 @@ async function loadInventoryData(uid) {
         } else {
             console.log("Nenhum inventário encontrado para este jogador.");
 
-            // Garante que os slots fiquem vazios
+            // Garante que os slots fiquem vazios se não houver dados
             document.querySelectorAll('.slot').forEach(slot => {
                 slot.innerHTML = slot.dataset.slot;
             });
-
-            // Carrega itens iniciais com base na classe do jogador
-            // Carrega itens iniciais com base na classe do jogador
-const playerData = await getPlayerData(uid);
-if (playerData && playerData.class) {
-    console.log(`Carregando itens iniciais para a classe: ${playerData.class}`);
-    loadStartingItemsForClass(playerData.class); // Carrega os itens iniciais
-    await saveInventoryData(uid); // Salva os itens no Firestore
-} else {
-    console.log("Classe do jogador não encontrada ou não definida.");
-}
-
-            }
         }
     } catch (error) {
         console.error("Erro ao carregar o inventário:", error);
     }
 }
-
 
 async function getPlayerData(uid) {
     try {
