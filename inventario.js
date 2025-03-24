@@ -173,6 +173,14 @@ const classStartingItems = {
     ]
 };
 
+// Após carregar os itens iniciais para a classe
+const playerData = await getPlayerData(uid);
+if (playerData && playerData.class) {
+    console.log(`Carregando itens iniciais para a classe: ${playerData.class}`);
+    loadStartingItemsForClass(playerData.class); // Carrega os itens iniciais
+    saveInventoryData(uid); // 🔹 Salva os itens no Firestore imediatamente
+}
+
 // Função para carregar itens iniciais no baú com base na classe
 function loadStartingItemsForClass(playerClass) {
     const startingItems = classStartingItems[playerClass] || [];
@@ -231,12 +239,16 @@ async function loadInventoryData(uid) {
             });
 
             // Carrega itens iniciais com base na classe do jogador
-            const playerData = await getPlayerData(uid);
-            if (playerData && playerData.class) {
-                console.log(`Carregando itens iniciais para a classe: ${playerData.class}`);
-                loadStartingItemsForClass(playerData.class); // Carrega os itens iniciais
-            } else {
-                console.log("Classe do jogador não encontrada ou não definida.");
+            // Carrega itens iniciais com base na classe do jogador
+const playerData = await getPlayerData(uid);
+if (playerData && playerData.class) {
+    console.log(`Carregando itens iniciais para a classe: ${playerData.class}`);
+    loadStartingItemsForClass(playerData.class); // Carrega os itens iniciais
+    await saveInventoryData(uid); // Salva os itens no Firestore
+} else {
+    console.log("Classe do jogador não encontrada ou não definida.");
+}
+
             }
         }
     } catch (error) {
