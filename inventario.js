@@ -156,10 +156,9 @@ async function loadInventoryData(uid) {
             });
 
             // Carrega itens equipados
-            document.querySelectorAll('.slot').forEach(slot => {
-                const equippedItem = inventoryData.equippedItems[slot.dataset.slot];
-                slot.innerHTML = equippedItem || slot.dataset.slot;
-            });
+document.querySelectorAll('.slot').forEach(slot => {
+    slot.innerHTML = slot.dataset.slot; // Sempre inicializa com o valor padrão (slot vazio)
+});
 
             console.log("Inventário carregado com sucesso!");
         } else {
