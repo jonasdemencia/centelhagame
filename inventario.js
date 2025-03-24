@@ -206,21 +206,25 @@ async function loadInventoryData(uid) {
         } else {
             console.log("Nenhum inventário encontrado para este jogador.");
 
-            // Garante que os slots fiquem vazios se não houver dados
+            // Garante que os slots fiquem vazios
             document.querySelectorAll('.slot').forEach(slot => {
                 slot.innerHTML = slot.dataset.slot;
             });
 
-            // Caso seja a primeira vez ou sem inventário, carregar itens iniciais
+            // Carrega itens iniciais com base na classe do jogador
             const playerData = await getPlayerData(uid);
             if (playerData && playerData.class) {
-                loadStartingItemsForClass(playerData.class); // Carrega os itens iniciais com base na classe
+                console.log(`Carregando itens iniciais para a classe: ${playerData.class}`);
+                loadStartingItemsForClass(playerData.class); // Carrega os itens iniciais
+            } else {
+                console.log("Classe do jogador não encontrada ou não definida.");
             }
         }
     } catch (error) {
         console.error("Erro ao carregar o inventário:", error);
     }
 }
+
 
 async function getPlayerData(uid) {
     try {
