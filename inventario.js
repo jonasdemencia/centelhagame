@@ -115,6 +115,9 @@ function getItemSlot(itemId) {
         "monastic-habit": "armor"
     };
 
+    return slotMappings[itemId] || null;
+}
+
     return slotMappings[itemId] || document.querySelector(`.item[data-item="${itemId}"]`)?.dataset.slot || null;
 }
 
@@ -126,8 +129,8 @@ function addItemClickListener(item) {
         item.classList.add('selected');
 
         document.querySelectorAll('.slot').forEach(slot => {
-            if (slot.dataset.slot === item.dataset.item) {
-                slot.classList.add('highlight');
+            if (slot.dataset.slot === getItemSlot(item.dataset.item)) {
+                slot.classList.add('highlight'); // Agora apenas os slots corretos serão destacados
             }
         });
     });
