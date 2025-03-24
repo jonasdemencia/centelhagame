@@ -110,9 +110,12 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function getItemSlot(itemId) {
-    const allItems = Object.values(classStartingItems).flat();
-    const foundItem = allItems.find(item => item.id === itemId);
-    return foundItem ? foundItem.slot : null;
+    const slotMappings = {
+        "pocket-knife": "weapon",
+        "monastic-habit": "armor"
+    };
+
+    return slotMappings[itemId] || document.querySelector(`.item[data-item="${itemId}"]`)?.dataset.slot || null;
 }
 
 // Adiciona evento de clique aos novos itens do baú
