@@ -70,7 +70,10 @@ document.addEventListener("DOMContentLoaded", () => {
             clearHighlights();
 
             saveInventoryData(auth.currentUser.uid);
-            setTimeout(updateCharacterCouraca, 50); // Pequeno atraso para garantir que o DOM foi atualizado
+            setTimeout(() => {
+                updateCharacterCouraca();
+                updateCharacterDamage();
+            }, 50);
         } else if (selectedItem === null && currentEquippedItem) {
             // Desequipa um item existente
             const itemText = slot.innerHTML;
@@ -84,7 +87,10 @@ document.addEventListener("DOMContentLoaded", () => {
             document.querySelector(".items").appendChild(newItem);
             addItemClickListener(newItem);
 
-            setTimeout(updateCharacterCouraca, 50); // Pequeno atraso para garantir que o DOM foi atualizado
+            setTimeout(() => {
+                updateCharacterCouraca();
+                updateCharacterDamage();
+            }, 50);
             saveInventoryData(auth.currentUser.uid);
         }
     });
@@ -239,6 +245,16 @@ function updateCharacterCouraca() {
     couracaElement.innerText = baseCouraca + bonusCouraca;
 }
 
+function updateCharacterDamage() {
+    const weaponSlot = document.querySelector(".slot[data-slot='arma']");
+    const damageDisplay = document.querySelector("#damageValue"); // Supondo que tenha um elemento para exibir o dano
+
+    if (weaponSlot && weaponSlot.innerHTML.includes("Canivete")) {
+        damageDisplay.textContent = "1D3"; 
+    } else {
+        damageDisplay.textContent = "1";
+    }
+}
 
 // Inicializa e carrega o inventário ao iniciar
 document.addEventListener("DOMContentLoaded", () => {
