@@ -16,56 +16,43 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let selectedItem = null; // Armazena o ID do item selecionado
-let selectedItemElement = null; // Armazena o elemento do item selecionado
+let selectedItem = null; // Armazena o item selecionado
 let currentPlayerData = null; // Armazena os dados do jogador
 
 // Itens iniciais que o jogador deve ter
 const initialItems = [
     { id: "bolsa-de-escriba", content: "Bolsa de escriba" },
-    { id: "weapon", content: "canivete" },
-    { id: "armor", content: "Hábito monástico" },
+    { id: "weapon", content: "canivete" }, // Mudando o id para corresponder ao slot
+    { id: "armor", content: "Hábito monástico" }, // Mudando o id para corresponder ao slot
     { id: "velas", content: "Velas" },
-    { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais" },
-    { id: "pao-estragado", content: "Pão Estragado", consumable: true, quantity: 5 }
+    { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais" }
 ];
 
 // Seleciona os itens clicados no baú
 document.addEventListener("DOMContentLoaded", () => {
-    const itemsContainer = document.querySelector('.items');
-    if (itemsContainer) {
-        itemsContainer.addEventListener('click', (event) => {
-            const itemElement = event.target.closest('.item');
-            if (itemElement) {
-                clearHighlights();
-                selectedItem = itemElement.dataset.item;
-                selectedItemElement = itemElement;
-                itemElement.classList.add('selected');
+    document.querySelectorAll('.item').forEach(item => {
+        item.addEventListener('click', () => {
+            clearHighlights();
 
-                const useButton = document.getElementById('useBtn');
-                const itemData = initialItems.find(i => i.id === selectedItem) || { consumable: false, quantity: 0 };
+            // Define o novo item selecionado
+            selectedItem = item;
+            item.classList.add('selected');
 
-                if (itemData.consumable && itemData.quantity > 0) {
-                    useButton.style.display = 'inline-block';
-                } else {
-                    useButton.style.display = 'none';
+            // Destaca os slots compatíveis
+            document.querySelectorAll('.slot').forEach(slot => {
+                if (slot.dataset.slot === item.dataset.item) {
+                    slot.classList.add('highlight'); // Adiciona o destaque
                 }
-
-                document.querySelectorAll('.slot').forEach(slot => {
-                    if (slot.dataset.slot === selectedItem) {
-                        slot.classList.add('highlight');
-                    }
-                });
-            }
+            });
         });
-    }
+    });
 
     document.querySelectorAll('.slot').forEach(slot => {
         slot.addEventListener('click', () => {
             const slotType = slot.dataset.slot;
             const currentEquippedItem = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
 
-            if (selectedItem && slotType === selectedItem) {
+            if (selectedItem && slotType === selectedItem.dataset.item) {
                 // Equipa um novo item
                 if (currentEquippedItem) {
                     // Desequipa o item atual e devolve ao baú
@@ -74,15 +61,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     newItem.dataset.item = slotType;
                     newItem.innerHTML = currentEquippedItem;
                     document.querySelector(".items").appendChild(newItem);
-                    // addItemClickListener(newItem); // Removido
+                    addItemClickListener(newItem);
                 }
 
-                slot.innerHTML = selectedItemElement.innerHTML;
-                selectedItemElement.remove();
+                slot.innerHTML = selectedItem.innerHTML;
+                selectedItem.remove();
                 selectedItem = null;
-                selectedItemElement = null;
                 clearHighlights();
-                document.getElementById('useBtn').style.display = 'none';
 
                 saveInventoryData(auth.currentUser.uid);
                 updateCharacterCouraca();
@@ -98,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 newItem.innerHTML = itemText;
 
                 document.querySelector(".items").appendChild(newItem);
-                // addItemClickListener(newItem); // Removido
+                addItemClickListener(newItem);
 
                 updateCharacterCouraca();
                 updateCharacterDamage();
@@ -110,90 +95,29 @@ document.addEventListener("DOMContentLoaded", () => {
     // Adiciona funcionalidade ao botão de descarte
     document.getElementById("discard-slot").addEventListener("click", () => {
         if (selectedItem) {
-            const itemIndex = initialItems.findIndex(item => item.id === selectedItem);
-            if (itemIndex !== -1) {
-                initialItems.splice(itemIndex, 1);
-            }
-            if (selectedItemElement) {
-                selectedItemElement.remove();
-                selectedItemElement = null;
-            }
+            selectedItem.remove();
             selectedItem = null;
             clearHighlights();
-            document.getElementById('useBtn').style.display = 'none';
             saveInventoryData(auth.currentUser.uid);
         }
     });
 
-    const useButton = document.getElementById('useBtn');
-    useButton.addEventListener('click', () => {
-        if (selectedItem) {
-            const itemIndex = initialItems.findIndex(item => item.id === selectedItem);
-            if (itemIndex !== -1 && initialItems[itemIndex].consumable && initialItems[itemIndex].quantity > 0) {
-                const itemData = initialItems[itemIndex];
-
-                // Efeito do item "pao-estragado"
-                if (itemData.id === 'pao-estragado') {
-                    const energyElement = document.getElementById('char-energy');
-                    if (energyElement) {
-                        let currentEnergy = parseInt(energyElement.innerText || '0');
-                        currentEnergy -= 2;
-                        energyElement.innerText = Math.max(0, currentEnergy);
-                    }
-                }
-
-                // Decrementa a quantidade do item
-                initialItems[itemIndex].quantity--;
-
-                // Atualiza a UI do baú
-                const chestElement = document.querySelector('.items');
-                const itemElement = chestElement.querySelector(`.item[data-item="${selectedItem}"]`);
-                if (itemElement) {
-                    itemElement.innerHTML = itemData.content;
-                    const quantitySpan = itemElement.querySelector('.item-quantity');
-                    if (itemData.quantity > 1) {
-                        if (!quantitySpan) {
-                            const newQuantitySpan = document.createElement('span');
-                            newQuantitySpan.classList.add('item-quantity');
-                            newQuantitySpan.textContent = ` (${itemData.quantity})`;
-                            itemElement.appendChild(newQuantitySpan);
-                        } else {
-                            quantitySpan.textContent = ` (${itemData.quantity})`;
-                        }
-                    } else if (itemData.quantity === 1) {
-                        if (quantitySpan) {
-                            quantitySpan.textContent = '';
-                        } else {
-                            const newQuantitySpan = document.createElement('span');
-                            newQuantitySpan.classList.add('item-quantity');
-                            newQuantitySpan.textContent = '';
-                            itemElement.appendChild(newQuantitySpan);
-                        }
-                    } else if (itemData.quantity <= 0) {
-                        // Remove o item do array initialItems
-                        initialItems.splice(itemIndex, 1);
-                        // Remove o item do DOM
-                        itemElement.remove();
-                        selectedItem = null;
-                        selectedItemElement = null;
-                        useButton.style.display = 'none';
-                        saveInventoryData(auth.currentUser.uid); // Salva aqui para refletir a remoção
-                        return;
-                    }
-                }
-
-                selectedItem = null;
-                if (selectedItemElement) {
-                    selectedItemElement.classList.remove('selected');
-                    selectedItemElement = null;
-                }
-                useButton.style.display = 'none';
-
-                saveInventoryData(auth.currentUser.uid);
-            }
-        }
-    });
 });
+
+// Adiciona evento de clique aos novos itens do baú
+function addItemClickListener(item) {
+    item.addEventListener('click', () => {
+        clearHighlights();
+        selectedItem = item;
+        item.classList.add('selected');
+
+        document.querySelectorAll('.slot').forEach(slot => {
+            if (slot.dataset.slot === item.dataset.item) {
+                slot.classList.add('highlight');
+            }
+        });
+    });
+}
 
 // Função para limpar destaques visuais
 function clearHighlights() {
@@ -204,11 +128,9 @@ function clearHighlights() {
 // Função para salvar dados no Firestore
 async function saveInventoryData(uid) {
     const inventoryData = {
-        itemsInChest: initialItems.map(item => ({
-            id: item.id,
-            content: item.content,
-            consumable: item.consumable,
-            quantity: item.quantity
+        itemsInChest: Array.from(document.querySelectorAll('.item')).map(item => ({
+            id: item.dataset.item,
+            content: item.innerHTML
         })),
         equippedItems: Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
             acc[slot.dataset.slot] = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
@@ -235,7 +157,7 @@ async function loadInventoryData(uid) {
         if (!playerSnap.exists() || !playerSnap.data().inventory) {
             // Se o inventário não existir, inicializa com os itens iniciais
             const initialInventoryData = {
-                itemsInChest: initialItems.map(item => ({ ...item })), // Cria uma cópia dos itens iniciais
+                itemsInChest: initialItems,
                 equippedItems: {
                     weapon: null, // Slot para arma
                     armor: null,  // Slot para armadura
@@ -257,9 +179,6 @@ async function loadInventoryData(uid) {
             updateCharacterDamage(); // Atualiza o Dano ao carregar inicialmente
         } else {
             const inventoryData = playerSnap.data().inventory;
-            // Atualiza a variável initialItems com os dados do Firestore
-            initialItems.length = 0; // Limpa o array existente
-            inventoryData.itemsInChest.forEach(item => initialItems.push({ ...item }));
             loadInventoryUI(inventoryData);
             updateCharacterCouraca(); // Atualiza a Couraça ao carregar inicialmente
             updateCharacterDamage(); // Atualiza o Dano ao carregar inicialmente
@@ -279,16 +198,8 @@ function loadInventoryUI(inventoryData) {
         newItem.dataset.item = item.id;
         newItem.innerHTML = item.content;
 
-        if (item.consumable && item.quantity > 0) {
-            const quantitySpan = document.createElement('span');
-            quantitySpan.classList.add('item-quantity');
-            quantitySpan.textContent = item.quantity > 1 ? ` (${item.quantity})` : '';
-            newItem.appendChild(quantitySpan);
-        }
-
         chestElement.appendChild(newItem);
-        // Usamos o event listener no container agora
-        // addItemClickListener(newItem);
+        addItemClickListener(newItem);
     });
 
     // Carrega itens equipados
@@ -353,313 +264,6 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
             window.location.href = "index.html";
-        }
-    });
-
-    // Event listener para o botão "Usar"
-    const useButton = document.getElementById('useBtn');
-    useButton.addEventListener('click', () => {
-        if (selectedItem) {
-            const itemIndex = initialItems.findIndex(item => item.id === selectedItem);
-            if (itemIndex !== -1 && initialItems[itemIndex].consumable && initialItems[itemIndex].quantity > 0) {
-                const itemData = initialItems[itemIndex];
-
-                // Efeito do item "pao-estragado"
-                if (itemData.id === 'pao-estragado') {
-                    const energyElement = document.getElementById('char-energy');
-                    if (energyElement) {
-                        let currentEnergy = parseInt(energyElement.innerText || '0');
-                        currentEnergy -= 2;
-                        energyElement.innerText = Math.max(0, currentEnergy);
-                    }
-                }
-
-                // Decrementa a quantidade do item
-                initialItems[itemIndex].quantity--;
-
-                // Atualiza a UI do baú
-                const chestElement = document.querySelector('.items');
-                const itemElement = chestElement.querySelector(`.item[data-item="${selectedItem}"]`);
-                if (itemElement) {
-                    itemElement.innerHTML = itemData.content;
-                    const quantitySpan = itemElement.querySelector('.item-quantity');
-                    if (itemData.quantity > 1) {
-                        if (!quantitySpan) {
-                            const newQuantitySpan = document.createElement('span');
-                            newQuantitySpan.classList.add('item-quantity');
-                            newQuantitySpan.textContent = ` (${itemData.quantity})`;
-                            itemElement.appendChild(newQuantitySpan);
-                        } else {
-                            quantitySpan.textContent = ` (${itemData.quantity})`;
-                        }
-                    } else if (itemData.quantity === 1) {
-                        if (quantitySpan) {
-                            quantitySpan.textContent = '';
-                        } else {
-                            const newQuantitySpan = document.createElement('span');
-                            newQuantitySpan.classList.add('item-quantity');
-                            newQuantitySpan.textContent = '';
-                            itemElement.appendChild(newQuantitySpan);
-                        }
-                    } else if (itemData.quantity <= 0) {
-                        const removedItemId = initialItems.splice(itemIndex, 1)[0]?.id;
-                        if (removedItemId) {
-                            const removedElement = chestElement.querySelector(`.item[data-item="${removedItemId}"]`);
-                            if (removedElement) {
-                                removedElement.remove();
-                            }
-                        }
-                        selectedItem = null;
-                        selectedItemElement = null;
-                        useButton.style.display = 'none';
-                        saveInventoryData(auth.currentUser.uid);
-                        return;
-                    }
-                }
-
-                selectedItem = null;
-                if (selectedItemElement) {
-                    selectedItemElement.classList.remove('selected');
-                    selectedItemElement = null;
-                }
-                useButton.style.display = 'none';
-
-                saveInventoryData(auth.currentUser.uid);
-            }
-        }
-    });
-});
-
-// Função para limpar destaques visuais
-function clearHighlights() {
-    document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
-    document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
-}
-
-// Função para salvar dados no Firestore
-async function saveInventoryData(uid) {
-    const inventoryData = {
-        itemsInChest: initialItems.map(item => ({ ...item })), // Salva uma cópia do item
-        equippedItems: Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
-            acc[slot.dataset.slot] = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
-            return acc;
-        }, {})
-    };
-
-    try {
-        const playerRef = doc(db, "players", uid);
-        await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-        console.log("Inventário salvo com sucesso!");
-        // A atualização da Couraça agora é feita diretamente no evento de clique
-    } catch (error) {
-        console.error("Erro ao salvar o inventário:", error);
-    }
-}
-
-// Função para carregar dados do Firestore
-async function loadInventoryData(uid) {
-    try {
-        const playerRef = doc(db, "players", uid);
-        const playerSnap = await getDoc(playerRef);
-
-        if (!playerSnap.exists() || !playerSnap.data().inventory) {
-            // Se o inventário não existir, inicializa com os itens iniciais
-            const initialInventoryData = {
-                itemsInChest: initialItems.map(item => ({ ...item })), // Cria uma cópia dos itens iniciais
-                equippedItems: {
-                    weapon: null, // Slot para arma
-                    armor: null,  // Slot para armadura
-                    helmet: null,
-                    amulet: null,
-                    shield: null,
-                    gloves: null,
-                    ring: null,
-                    boots: null
-                }
-            };
-            await setDoc(playerRef, { inventory: initialInventoryData }, { merge: true });
-            console.log("Inventário inicializado com os itens padrão.");
-            // Agora que o inventário inicial foi salvo, vamos carregá-lo
-            const updatedPlayerSnap = await getDoc(playerRef);
-            const inventoryData = updatedPlayerSnap.data().inventory;
-            // Atualiza a variável initialItems com os dados do Firestore
-            initialItems.length = 0; // Limpa o array existente
-            inventoryData.itemsInChest.forEach(item => initialItems.push({ ...item }));
-            loadInventoryUI(inventoryData);
-            updateCharacterCouraca(); // Atualiza a Couraça ao carregar inicialmente
-            updateCharacterDamage(); // Atualiza o Dano ao carregar inicialmente
-        } else {
-            const inventoryData = playerSnap.data().inventory;
-            // Atualiza a variável initialItems com os dados do Firestore
-            initialItems.length = 0; // Limpa o array existente
-            inventoryData.itemsInChest.forEach(item => initialItems.push({ ...item }));
-            loadInventoryUI(inventoryData);
-            updateCharacterCouraca(); // Atualiza a Couraça ao carregar inicialmente
-            updateCharacterDamage(); // Atualiza o Dano ao carregar inicialmente
-        }
-    } catch (error) {
-        console.error("Erro ao carregar o inventário:", error);
-    }
-}
-
-function loadInventoryUI(inventoryData) {
-    // Carrega itens no baú
-    const chestElement = document.querySelector('.items');
-    chestElement.innerHTML = ""; // Limpa o conteúdo atual
-    inventoryData.itemsInChest.forEach(item => {
-        const newItem = document.createElement('div');
-        newItem.classList.add('item');
-        newItem.dataset.item = item.id;
-        newItem.innerHTML = item.content;
-
-        if (item.consumable && item.quantity > 0) {
-            const quantitySpan = document.createElement('span');
-            quantitySpan.classList.add('item-quantity');
-            newItem.appendChild(document.createTextNode(item.content)); // Adiciona o texto do item primeiro
-            quantitySpan.textContent = item.quantity > 1 ? ` (${item.quantity})` : '';
-            newItem.appendChild(quantitySpan);
-        }
-
-        chestElement.appendChild(newItem);
-        // O listener de clique agora está no container
-        // addItemClickListener(newItem);
-    });
-
-    // Carrega itens equipados
-    document.querySelectorAll('.slot').forEach(slot => {
-        const equippedItem = inventoryData.equippedItems[slot.dataset.slot];
-        slot.innerHTML = equippedItem || slot.dataset.slot;
-    });
-}
-
-async function getPlayerData(uid) {
-    try {
-        const playerRef = doc(db, "players", uid);
-        const playerSnap = await getDoc(playerRef);
-        return playerSnap.exists() ? playerSnap.data() : null;
-    } catch (error) {
-        console.error("Erro ao recuperar os dados do jogador:", error);
-        return null;
-    }
-}
-
-// Função para atualizar o valor da Couraça na ficha do personagem
-function updateCharacterCouraca() {
-    const couracaElement = document.getElementById("char-couraca");
-    if (!couracaElement) return;
-
-    let baseCouraca = 0; // Explicitly set baseCouraca to 0
-    let bonusCouraca = 0;
-
-    const armorSlot = document.querySelector('.slot[data-slot="armor"]');
-    if (armorSlot && armorSlot.innerHTML === "Hábito monástico") {
-        bonusCouraca += 2;
-    }
-
-    const totalCouraca = baseCouraca + bonusCouraca;
-    couracaElement.innerText = totalCouraca;
-}
-
-function updateCharacterDamage() {
-    const weaponSlot = document.querySelector(".slot[data-slot='weapon']"); // Certifique-se de que o dataset é correto
-    const damageDisplay = document.querySelector("#char-dano"); // O elemento onde o dano é exibido
-
-    if (weaponSlot && weaponSlot.innerHTML.toLowerCase().includes("canivete")) {
-        damageDisplay.textContent = "1D3";
-    } else {
-        damageDisplay.textContent = "1";
-    }
-}
-
-
-// Inicializa e carrega o inventário ao iniciar
-document.addEventListener("DOMContentLoaded", () => {
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            console.log("Usuário autenticado:", user.uid);
-
-            currentPlayerData = await getPlayerData(user.uid); // 🔹 Recupera os dados da ficha
-            if (currentPlayerData) {
-                updateCharacterSheet(currentPlayerData); // 🔹 Atualiza a ficha do personagem
-            }
-
-            await loadInventoryData(user.uid); // 🔹 Carrega os itens do inventário e slots equipados
-        } else {
-            console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
-            window.location.href = "index.html";
-        }
-    });
-
-    // Event listener para o botão "Usar"
-    const useButton = document.getElementById('useBtn');
-    useButton.addEventListener('click', () => {
-        if (selectedItem) {
-            const itemIndex = initialItems.findIndex(item => item.id === selectedItem);
-            if (itemIndex !== -1 && initialItems[itemIndex].consumable && initialItems[itemIndex].quantity > 0) {
-                const itemData = initialItems[itemIndex];
-
-                // Efeito do item "pao-estragado"
-                if (itemData.id === 'pao-estragado') {
-                    const energyElement = document.getElementById('char-energy');
-                    if (energyElement) {
-                        let currentEnergy = parseInt(energyElement.innerText || '0');
-                        currentEnergy -= 2;
-                        energyElement.innerText = Math.max(0, currentEnergy);
-                    }
-                }
-
-                // Decrementa a quantidade do item
-                initialItems[itemIndex].quantity--;
-
-                // Atualiza a UI do baú
-                const chestElement = document.querySelector('.items');
-                const itemElement = chestElement.querySelector(`.item[data-item="${selectedItem}"]`);
-                if (itemElement) {
-                    itemElement.innerHTML = itemData.content;
-                    const quantitySpan = itemElement.querySelector('.item-quantity');
-                    if (itemData.quantity > 1) {
-                        if (!quantitySpan) {
-                            const newQuantitySpan = document.createElement('span');
-                            newQuantitySpan.classList.add('item-quantity');
-                            newQuantitySpan.textContent = ` (${itemData.quantity})`;
-                            itemElement.appendChild(newQuantitySpan);
-                        } else {
-                            quantitySpan.textContent = ` (${itemData.quantity})`;
-                        }
-                    } else if (itemData.quantity === 1) {
-                        if (quantitySpan) {
-                            quantitySpan.textContent = '';
-                        } else {
-                            const newQuantitySpan = document.createElement('span');
-                            newQuantitySpan.classList.add('item-quantity');
-                            newQuantitySpan.textContent = '';
-                            itemElement.appendChild(newQuantitySpan);
-                        }
-                    } else if (itemData.quantity <= 0) {
-                        const removedItemId = initialItems.splice(itemIndex, 1)[0]?.id;
-                        if (removedItemId) {
-                            const removedElement = chestElement.querySelector(`.item[data-item="${removedItemId}"]`);
-                            if (removedElement) {
-                                removedElement.remove();
-                            }
-                        }
-                        selectedItem = null;
-                        selectedItemElement = null;
-                        useButton.style.display = 'none';
-                        saveInventoryData(auth.currentUser.uid);
-                        return;
-                    }
-                }
-
-                selectedItem = null;
-                if (selectedItemElement) {
-                    selectedItemElement.classList.remove('selected');
-                    selectedItemElement = null;
-                }
-                useButton.style.display = 'none';
-
-                saveInventoryData(auth.currentUser.uid);
-            }
         }
     });
 });
@@ -699,5 +303,5 @@ function updateCharacterSheet(playerData) {
     document.getElementById("char-couraca").innerText = playerData.couraca || "0";
     document.getElementById("char-po").innerText = playerData.po || "0";
     document.getElementById("char-hand").innerText = playerData.maoDominante || "-";
-    // document.getElementById("char-dano").innerText = playerData.dano || "1"; // O dano agora é atualizado pela função updateCharacterDamage
+    document.getElementById("char-hemisphere").innerText = playerData.hemisferioDominante || "-";
 }
