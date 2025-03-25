@@ -25,8 +25,10 @@ const initialItems = [
     { id: "weapon", content: "canivete" }, // Mudando o id para corresponder ao slot
     { id: "armor", content: "Hábito monástico" }, // Mudando o id para corresponder ao slot
     { id: "velas", content: "Velas" },
-    { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3 },
-    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2 }
+    { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2 }, // Adicionando efeito e valor
+    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2 }, // Mantendo como estava por enquanto
+    { id: "pao", content: "Pão", consumable: true, quantity: 1 },
+    { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 2, effect: "damage", value: 1 } // Adicionando o pão mofado com efeito
 ];
 
 // Função para exibir/ocultar o botão de usar
@@ -90,6 +92,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     newItem.dataset.item = slotType;
                     newItem.dataset.consumable = slot.dataset.consumable; // Mantém a propriedade consumable
                     newItem.dataset.quantity = slot.dataset.quantity;     // Mantém a quantidade
+                    newItem.dataset.effect = slot.dataset.effect;         // Mantém o efeito
+                    newItem.dataset.value = slot.dataset.value;           // Mantém o valor
                     newItem.innerHTML = currentEquippedItem;
                     itemsContainer.appendChild(newItem);
                     addItemClickListener(newItem);
@@ -98,6 +102,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 slot.innerHTML = selectedItem.innerHTML;
                 slot.dataset.consumable = selectedItem.dataset.consumable; // Atualiza a propriedade consumable do slot
                 slot.dataset.quantity = selectedItem.dataset.quantity;     // Atualiza a quantidade do slot
+                slot.dataset.effect = selectedItem.dataset.effect;         // Atualiza o efeito do slot
+                slot.dataset.value = selectedItem.dataset.value;           // Atualiza o valor do slot
                 selectedItem.remove();
                 selectedItem = null;
                 clearHighlights();
@@ -112,9 +118,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 const itemText = slot.innerHTML;
                 const consumable = slot.dataset.consumable === 'true';
                 const quantity = slot.dataset.quantity;
+                const effect = slot.dataset.effect;
+                const value = slot.dataset.value;
                 slot.innerHTML = slot.dataset.slot;
                 delete slot.dataset.consumable; // Remove a propriedade consumable do slot
                 delete slot.dataset.quantity;     // Remove a quantidade do slot
+                delete slot.dataset.effect;       // Remove o efeito do slot
+                delete slot.dataset.value;        // Remove o valor do slot
 
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
@@ -123,6 +133,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (consumable) {
                     newItem.dataset.consumable = 'true';
                     newItem.dataset.quantity = quantity;
+                    if (effect) newItem.dataset.effect = effect;
+                    if (value) newItem.dataset.value = value;
                 }
 
                 itemsContainer.appendChild(newItem);
@@ -154,11 +166,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Adiciona funcionalidade ao botão de usar
     if (useButton) {
-        useButton.addEventListener("click", () => {
+        useButton.addEventListener("click", async () => { // Adicionando async para usar await
             console.log("Botão 'Usar' clicado");
             if (selectedItem && selectedItem.dataset.consumable === 'true') {
                 const itemId = selectedItem.dataset.item;
-                console.log("Usando item consumível:", selectedItem.innerHTML, "ID:", itemId);
+                const itemName = selectedItem.innerHTML.split('<span')[0].trim(); // Obtém o nome do item sem a quantidade
+                console.log("Usando item consumível:", itemName, "ID:", itemId);
                 let quantity = parseInt(selectedItem.dataset.quantity);
                 if (!isNaN(quantity) && quantity > 0) {
                     quantity--;
@@ -171,14 +184,39 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
 
                     if (quantity === 0) {
-                        console.log("Item consumível esgotado:", selectedItem.innerHTML);
+                        console.log("Item consumível esgotado:", itemName);
                         selectedItem.remove();
                         selectedItem = null;
                         clearHighlights();
                         toggleUseButton(false);
                     }
+
+                    // Aplica o efeito do item
+                    if (selectedItem && selectedItem.dataset.effect) {
+                        const effect = selectedItem.dataset.effect;
+                        const value = parseInt(selectedItem.dataset.value);
+                        console.log("Aplicando efeito:", effect, "com valor:", value);
+
+                        if (effect === "damage" && itemName === "Pão Mofado") {
+                            if (currentPlayerData && currentPlayerData.energy && currentPlayerData.energy.total > 0) {
+                                currentPlayerData.energy.total -= value;
+                                document.getElementById("char-energy").innerText = currentPlayerData.energy.total;
+                                await savePlayerData(auth.currentUser.uid, currentPlayerData); // Salva os dados atualizados do jogador
+                                console.log("Energia diminuída para:", currentPlayerData.energy.total);
+                            }
+                        } else if (effect === "heal" && itemName === "Pequeno saco com ervas medicinais") {
+                            if (currentPlayerData && currentPlayerData.energy) {
+                                const initialEnergy = currentPlayerData.energy.initial || currentPlayerData.energy.total; // Usar initial se existir, senão o total atual
+                                const newEnergy = currentPlayerData.energy.total + value;
+                                currentPlayerData.energy.total = Math.min(newEnergy, initialEnergy); // Não ultrapassa o valor inicial
+                                document.getElementById("char-energy").innerText = currentPlayerData.energy.total;
+                                await savePlayerData(auth.currentUser.uid, currentPlayerData); // Salva os dados atualizados do jogador
+                                console.log("Energia aumentada para:", currentPlayerData.energy.total);
+                            }
+                        }
+                    }
+
                     saveInventoryData(auth.currentUser.uid);
-                    // Aqui você pode adicionar a lógica para o efeito do item
                     console.log("Quantidade restante:", quantity);
                 }
             } else if (selectedItem) {
@@ -232,6 +270,12 @@ async function saveInventoryData(uid) {
         if (item.dataset.consumable === 'true') {
             data.consumable = true;
             data.quantity = parseInt(item.dataset.quantity);
+            if (item.dataset.effect) {
+                data.effect = item.dataset.effect;
+            }
+            if (item.dataset.value) {
+                data.value = parseInt(item.dataset.value);
+            }
         }
         return data;
     });
@@ -243,6 +287,12 @@ async function saveInventoryData(uid) {
             if (slot.dataset.consumable === 'true') {
                 acc[slot.dataset.slot + '_consumable'] = true;
                 acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity);
+                if (slot.dataset.effect) {
+                    acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
+                }
+                if (slot.dataset.value) {
+                    acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value);
+                }
             }
         }
         return acc;
@@ -317,6 +367,12 @@ function loadInventoryUI(inventoryData) {
         if (item.consumable) {
             newItem.dataset.consumable = 'true';
             newItem.dataset.quantity = item.quantity;
+            if (item.effect) {
+                newItem.dataset.effect = item.effect;
+            }
+            if (item.value) {
+                newItem.dataset.value = item.value;
+            }
             if (item.quantity > 0) {
                 newItem.innerHTML += ` <span class="item-quantity">(${item.quantity})</span>`;
             }
@@ -334,13 +390,27 @@ function loadInventoryUI(inventoryData) {
             if (inventoryData.equippedItems[slot.dataset.slot + '_consumable']) {
                 slot.dataset.consumable = 'true';
                 slot.dataset.quantity = inventoryData.equippedItems[slot.dataset.slot + '_quantity'];
+                if (inventoryData.equippedItems[slot.dataset.slot + '_effect']) {
+                    slot.dataset.effect = inventoryData.equippedItems[slot.dataset.slot + '_effect'];
+                } else {
+                    delete slot.dataset.effect;
+                }
+                if (inventoryData.equippedItems[slot.dataset.slot + '_value']) {
+                    slot.dataset.value = inventoryData.equippedItems[slot.dataset.slot + '_value'];
+                } else {
+                    delete slot.dataset.value;
+                }
             } else {
                 delete slot.dataset.consumable;
                 delete slot.dataset.quantity;
+                delete slot.dataset.effect;
+                delete slot.dataset.value;
             }
         } else {
             delete slot.dataset.consumable;
             delete slot.dataset.quantity;
+            delete slot.dataset.effect;
+            delete slot.dataset.value;
         }
     });
 }
@@ -349,7 +419,18 @@ async function getPlayerData(uid) {
     try {
         const playerRef = doc(db, "players", uid);
         const playerSnap = await getDoc(playerRef);
-        return playerSnap.exists() ? playerSnap.data() : null;
+        if (playerSnap.exists()) {
+            const data = playerSnap.data();
+            // Armazena a energia inicial se ainda não estiver definida
+            if (data.energy && !data.energy.initial) {
+                data.energy.initial = data.energy.total;
+                await setDoc(playerRef, data, { merge: true }); // Salva a energia inicial
+                console.log("Energia inicial do jogador definida como:", data.energy.total);
+            }
+            return data;
+        } else {
+            return null;
+        }
     } catch (error) {
         console.error("Erro ao recuperar os dados do jogador:", error);
         return null;
@@ -452,4 +533,15 @@ function updateCharacterSheet(playerData) {
     document.getElementById("char-po").innerText = playerData.po || "0";
     document.getElementById("char-hand").innerText = playerData.maoDominante || "-";
     document.getElementById("char-hemisphere").innerText = playerData.hemisferioDominante || "-";
+}
+
+// Nova função para salvar os dados do jogador (além do inventário)
+async function savePlayerData(uid, playerData) {
+    try {
+        const playerRef = doc(db, "players", uid);
+        await setDoc(playerRef, playerData, { merge: true });
+        console.log("Dados do jogador salvos com sucesso!");
+    } catch (error) {
+        console.error("Erro ao salvar os dados do jogador:", error);
+    }
 }
