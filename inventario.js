@@ -72,6 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
     addItemClickListener(newItem); // Adiciona novamente o evento de clique ao novo item
 }
 
+
                 // Equipa o novo item no slot
                 slot.innerHTML = selectedItem.innerHTML;
                 selectedItem.remove();
@@ -79,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 clearHighlights();
 
                 saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
-            if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
+           if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
     const itemText = slot.innerHTML;
     slot.innerHTML = slot.dataset.slot; // Restaura o texto padrão do slot
 
@@ -93,6 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     saveInventoryData(auth.currentUser.uid); // Salva alterações
 }
+
 
         });
     });
@@ -130,6 +132,7 @@ function addItemClickListener(item) {
         });
     });
 }
+
 
 // Função para limpar destaques visuais
 function clearHighlights() {
