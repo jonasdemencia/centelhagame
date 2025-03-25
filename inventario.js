@@ -246,15 +246,16 @@ function updateCharacterCouraca() {
 }
 
 function updateCharacterDamage() {
-    const weaponSlot = document.querySelector(".slot[data-slot='arma']");
-    const damageDisplay = document.querySelector("#damageValue"); // Supondo que tenha um elemento para exibir o dano
+    const weaponSlot = document.querySelector(".slot[data-slot='weapon']"); // Certifique-se de que o dataset é correto
+    const damageDisplay = document.querySelector("#damageValue"); // O elemento onde o dano é exibido
 
-    if (weaponSlot && weaponSlot.innerHTML.includes("Canivete")) {
+    if (weaponSlot && weaponSlot.innerHTML.toLowerCase().includes("canivete")) {
         damageDisplay.textContent = "1D3"; 
     } else {
         damageDisplay.textContent = "1";
     }
 }
+
 
 // Inicializa e carrega o inventário ao iniciar
 document.addEventListener("DOMContentLoaded", () => {
