@@ -85,8 +85,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.querySelector(".items").appendChild(newItem);
                 addItemClickListener(newItem);
 
+                updateCharacterCouraca(); // Atualiza a Couraça imediatamente APÓS manipular o DOM
                 saveInventoryData(auth.currentUser.uid);
-                updateCharacterCouraca(); // Atualiza a Couraça imediatamente após desequipar
             }
         });
     });
