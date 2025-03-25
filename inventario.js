@@ -228,12 +228,8 @@ function updateCharacterCouraca() {
     let baseCouraca = parseInt(document.getElementById("char-couraca").innerText || "0");
     let bonusCouraca = 0;
 
-    const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
-        acc[slot.dataset.slot] = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
-        return acc;
-    }, {});
-
-    if (equippedItems && equippedItems.armor === "Hábito monástico") {
+    const armorSlot = document.querySelector('.slot[data-slot="armor"]');
+    if (armorSlot && armorSlot.innerHTML === "Hábito monástico") {
         bonusCouraca += 2;
     }
 
