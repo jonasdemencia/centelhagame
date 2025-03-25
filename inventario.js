@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     newItem.dataset.item = slotType;
                     newItem.innerHTML = currentEquippedItem;
                     document.querySelector(".items").appendChild(newItem);
-                    addItemClickListener(newItem);
+                    // addItemClickListener(newItem); // Removido
                 }
 
                 slot.innerHTML = selectedItemElement.innerHTML;
@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 newItem.innerHTML = itemText;
 
                 document.querySelector(".items").appendChild(newItem);
-                addItemClickListener(newItem);
+                // addItemClickListener(newItem); // Removido
 
                 updateCharacterCouraca();
                 updateCharacterDamage();
@@ -194,31 +194,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
-
-// Adiciona evento de clique aos novos itens do baú
-function addItemClickListener(item) {
-    item.addEventListener('click', () => {
-        clearHighlights();
-        selectedItem = item.dataset.item;
-        selectedItemElement = item;
-        item.classList.add('selected');
-
-        const useButton = document.getElementById('useBtn');
-        const itemData = initialItems.find(i => i.id === selectedItem) || { consumable: false, quantity: 0 };
-
-        if (itemData.consumable && itemData.quantity > 0) {
-            useButton.style.display = 'inline-block';
-        } else {
-            useButton.style.display = 'none';
-        }
-
-        document.querySelectorAll('.slot').forEach(slot => {
-            if (slot.dataset.slot === item.dataset.item) {
-                slot.classList.add('highlight');
-            }
-        });
-    });
-}
 
 // Função para limpar destaques visuais
 function clearHighlights() {
@@ -454,11 +429,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
-
-// Adiciona evento de clique aos novos itens do baú
-function addItemClickListener(item) {
-    // Agora o event listener está no container
-}
 
 // Função para limpar destaques visuais
 function clearHighlights() {
@@ -729,5 +699,5 @@ function updateCharacterSheet(playerData) {
     document.getElementById("char-couraca").innerText = playerData.couraca || "0";
     document.getElementById("char-po").innerText = playerData.po || "0";
     document.getElementById("char-hand").innerText = playerData.maoDominante || "-";
-    document.getElementById("char-hemisphere").innerText = playerData.hemisferioDominante || "-";
+    // document.getElementById("char-dano").innerText = playerData.dano || "1"; // O dano agora é atualizado pela função updateCharacterDamage
 }
