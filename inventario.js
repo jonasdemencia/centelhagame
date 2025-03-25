@@ -70,10 +70,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 clearHighlights();
 
                 saveInventoryData(auth.currentUser.uid);
-                setTimeout(() => {
-                    updateCharacterCouraca();
-                    updateCharacterDamage();
-                }, 50);
+                updateCharacterCouraca();
+                updateCharacterDamage();
             } else if (selectedItem === null && currentEquippedItem) {
                 // Desequipa um item existente
                 const itemText = slot.innerHTML;
@@ -87,10 +85,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.querySelector(".items").appendChild(newItem);
                 addItemClickListener(newItem);
 
-                setTimeout(() => {
-                    updateCharacterCouraca();
-                    updateCharacterDamage();
-                }, 50);
+                updateCharacterCouraca();
+                updateCharacterDamage();
                 saveInventoryData(auth.currentUser.uid);
             }
         });
