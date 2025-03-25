@@ -32,36 +32,40 @@ const initialItems = [
 
 // Seleciona os itens clicados no baú
 document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll('.item').forEach(item => {
-        item.addEventListener('click', () => {
-            clearHighlights();
-            selectedItem = item.dataset.item;
-            selectedItemElement = item;
-            item.classList.add('selected');
+    const itemsContainer = document.querySelector('.items');
+    if (itemsContainer) {
+        itemsContainer.addEventListener('click', (event) => {
+            const itemElement = event.target.closest('.item');
+            if (itemElement) {
+                clearHighlights();
+                selectedItem = itemElement.dataset.item;
+                selectedItemElement = itemElement;
+                itemElement.classList.add('selected');
 
-            const useButton = document.getElementById('useBtn');
-            const itemData = initialItems.find(i => i.id === selectedItem) || { consumable: false, quantity: 0 };
+                const useButton = document.getElementById('useBtn');
+                const itemData = initialItems.find(i => i.id === selectedItem) || { consumable: false, quantity: 0 };
 
-            if (itemData.consumable && itemData.quantity > 0) {
-                useButton.style.display = 'inline-block';
-            } else {
-                useButton.style.display = 'none';
-            }
-
-            document.querySelectorAll('.slot').forEach(slot => {
-                if (slot.dataset.slot === item.dataset.item) {
-                    slot.classList.add('highlight');
+                if (itemData.consumable && itemData.quantity > 0) {
+                    useButton.style.display = 'inline-block';
+                } else {
+                    useButton.style.display = 'none';
                 }
-            });
+
+                document.querySelectorAll('.slot').forEach(slot => {
+                    if (slot.dataset.slot === selectedItem) {
+                        slot.classList.add('highlight');
+                    }
+                });
+            }
         });
-    });
+    }
 
     document.querySelectorAll('.slot').forEach(slot => {
         slot.addEventListener('click', () => {
             const slotType = slot.dataset.slot;
             const currentEquippedItem = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
 
-            if (selectedItem && slotType === selectedItem.dataset.item) {
+            if (selectedItem && slotType === selectedItem) {
                 // Equipa um novo item
                 if (currentEquippedItem) {
                     // Desequipa o item atual e devolve ao baú
@@ -73,8 +77,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     addItemClickListener(newItem);
                 }
 
-                slot.innerHTML = selectedItem.innerHTML;
-                selectedItem.remove();
+                slot.innerHTML = selectedItemElement.innerHTML;
+                selectedItemElement.remove();
                 selectedItem = null;
                 selectedItemElement = null;
                 clearHighlights();
@@ -106,9 +110,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Adiciona funcionalidade ao botão de descarte
     document.getElementById("discard-slot").addEventListener("click", () => {
         if (selectedItem) {
-            const itemDataIndex = initialItems.findIndex(i => i.id === selectedItem);
-            if (itemDataIndex !== -1) {
-                initialItems.splice(itemDataIndex, 1); // Remove o item da lista
+            const itemIndex = initialItems.findIndex(item => item.id === selectedItem);
+            if (itemIndex !== -1) {
+                initialItems.splice(itemIndex, 1);
             }
             if (selectedItemElement) {
                 selectedItemElement.remove();
@@ -124,51 +128,60 @@ document.addEventListener("DOMContentLoaded", () => {
     const useButton = document.getElementById('useBtn');
     useButton.addEventListener('click', () => {
         if (selectedItem) {
-            // Lógica para usar o item selecionado
-            const itemDataIndex = initialItems.findIndex(i => i.id === selectedItem);
-            if (itemDataIndex !== -1 && initialItems[itemDataIndex].consumable && initialItems[itemDataIndex].quantity > 0) {
-                const itemData = initialItems[itemDataIndex];
+            const itemIndex = initialItems.findIndex(item => item.id === selectedItem);
+            if (itemIndex !== -1 && initialItems[itemIndex].consumable && initialItems[itemIndex].quantity > 0) {
+                const itemData = initialItems[itemIndex];
 
                 // Efeito do item "pao-estragado"
                 if (itemData.id === 'pao-estragado') {
-                    // Reduz a energia do jogador (substitua pela sua lógica de atualização de energia)
                     const energyElement = document.getElementById('char-energy');
                     if (energyElement) {
                         let currentEnergy = parseInt(energyElement.innerText || '0');
                         currentEnergy -= 2;
-                        energyElement.innerText = Math.max(0, currentEnergy); // Não deixar a energia ficar negativa
+                        energyElement.innerText = Math.max(0, currentEnergy);
                     }
                 }
 
                 // Decrementa a quantidade do item
-                initialItems[itemDataIndex].quantity--;
+                initialItems[itemIndex].quantity--;
 
                 // Atualiza a UI do baú
                 const chestElement = document.querySelector('.items');
                 const itemElement = chestElement.querySelector(`.item[data-item="${selectedItem}"]`);
                 if (itemElement) {
                     itemElement.innerHTML = itemData.content;
+                    const quantitySpan = itemElement.querySelector('.item-quantity');
                     if (itemData.quantity > 1) {
-                        const quantitySpan = document.createElement('span');
-                        quantitySpan.classList.add('item-quantity');
-                        quantitySpan.textContent = ` (${itemData.quantity})`;
-                        itemElement.appendChild(quantitySpan);
+                        if (!quantitySpan) {
+                            const newQuantitySpan = document.createElement('span');
+                            newQuantitySpan.classList.add('item-quantity');
+                            newQuantitySpan.textContent = ` (${itemData.quantity})`;
+                            itemElement.appendChild(newQuantitySpan);
+                        } else {
+                            quantitySpan.textContent = ` (${itemData.quantity})`;
+                        }
                     } else if (itemData.quantity === 1) {
-                        const quantitySpan = document.createElement('span');
-                        quantitySpan.classList.add('item-quantity');
-                        quantitySpan.textContent = ``;
-                        itemElement.appendChild(quantitySpan);
+                        if (quantitySpan) {
+                            quantitySpan.textContent = '';
+                        } else {
+                            const newQuantitySpan = document.createElement('span');
+                            newQuantitySpan.classList.add('item-quantity');
+                            newQuantitySpan.textContent = '';
+                            itemElement.appendChild(newQuantitySpan);
+                        }
                     } else if (itemData.quantity <= 0) {
-                        // Remove o item se a quantidade chegar a zero
+                        // Remove o item do array initialItems
+                        initialItems.splice(itemIndex, 1);
+                        // Remove o item do DOM
                         itemElement.remove();
                         selectedItem = null;
                         selectedItemElement = null;
                         useButton.style.display = 'none';
-                        return; // Sai da função para evitar erros
+                        saveInventoryData(auth.currentUser.uid); // Salva aqui para refletir a remoção
+                        return;
                     }
                 }
 
-                // Esconde o botão "Usar" e deseleciona o item
                 selectedItem = null;
                 if (selectedItemElement) {
                     selectedItemElement.classList.remove('selected');
@@ -176,7 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 useButton.style.display = 'none';
 
-                // Salva os dados atualizados (incluindo a quantidade)
                 saveInventoryData(auth.currentUser.uid);
             }
         }
@@ -300,7 +312,8 @@ function loadInventoryUI(inventoryData) {
         }
 
         chestElement.appendChild(newItem);
-        addItemClickListener(newItem);
+        // Usamos o event listener no container agora
+        // addItemClickListener(newItem);
     });
 
     // Carrega itens equipados
@@ -372,24 +385,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const useButton = document.getElementById('useBtn');
     useButton.addEventListener('click', () => {
         if (selectedItem) {
-            // Lógica para usar o item selecionado
-            const itemDataIndex = initialItems.findIndex(i => i.id === selectedItem);
-            if (itemDataIndex !== -1 && initialItems[itemDataIndex].consumable && initialItems[itemDataIndex].quantity > 0) {
-                const itemData = initialItems[itemDataIndex];
+            const itemIndex = initialItems.findIndex(item => item.id === selectedItem);
+            if (itemIndex !== -1 && initialItems[itemIndex].consumable && initialItems[itemIndex].quantity > 0) {
+                const itemData = initialItems[itemIndex];
 
                 // Efeito do item "pao-estragado"
                 if (itemData.id === 'pao-estragado') {
-                    // Reduz a energia do jogador (substitua pela sua lógica de atualização de energia)
                     const energyElement = document.getElementById('char-energy');
                     if (energyElement) {
                         let currentEnergy = parseInt(energyElement.innerText || '0');
                         currentEnergy -= 2;
-                        energyElement.innerText = Math.max(0, currentEnergy); // Não deixar a energia ficar negativa
+                        energyElement.innerText = Math.max(0, currentEnergy);
                     }
                 }
 
                 // Decrementa a quantidade do item
-                initialItems[itemDataIndex].quantity--;
+                initialItems[itemIndex].quantity--;
 
                 // Atualiza a UI do baú
                 const chestElement = document.querySelector('.items');
@@ -416,16 +427,21 @@ document.addEventListener("DOMContentLoaded", () => {
                             itemElement.appendChild(newQuantitySpan);
                         }
                     } else if (itemData.quantity <= 0) {
-                        // Remove o item se a quantidade chegar a zero
-                        itemElement.remove();
+                        const removedItemId = initialItems.splice(itemIndex, 1)[0]?.id;
+                        if (removedItemId) {
+                            const removedElement = chestElement.querySelector(`.item[data-item="${removedItemId}"]`);
+                            if (removedElement) {
+                                removedElement.remove();
+                            }
+                        }
                         selectedItem = null;
                         selectedItemElement = null;
                         useButton.style.display = 'none';
-                        return; // Sai da função para evitar erros
+                        saveInventoryData(auth.currentUser.uid);
+                        return;
                     }
                 }
 
-                // Esconde o botão "Usar" e deseleciona o item
                 selectedItem = null;
                 if (selectedItemElement) {
                     selectedItemElement.classList.remove('selected');
@@ -433,7 +449,245 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 useButton.style.display = 'none';
 
-                // Salva os dados atualizados (incluindo a quantidade)
+                saveInventoryData(auth.currentUser.uid);
+            }
+        }
+    });
+});
+
+// Adiciona evento de clique aos novos itens do baú
+function addItemClickListener(item) {
+    // Agora o event listener está no container
+}
+
+// Função para limpar destaques visuais
+function clearHighlights() {
+    document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
+    document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
+}
+
+// Função para salvar dados no Firestore
+async function saveInventoryData(uid) {
+    const inventoryData = {
+        itemsInChest: initialItems.map(item => ({ ...item })), // Salva uma cópia do item
+        equippedItems: Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
+            acc[slot.dataset.slot] = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
+            return acc;
+        }, {})
+    };
+
+    try {
+        const playerRef = doc(db, "players", uid);
+        await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+        console.log("Inventário salvo com sucesso!");
+        // A atualização da Couraça agora é feita diretamente no evento de clique
+    } catch (error) {
+        console.error("Erro ao salvar o inventário:", error);
+    }
+}
+
+// Função para carregar dados do Firestore
+async function loadInventoryData(uid) {
+    try {
+        const playerRef = doc(db, "players", uid);
+        const playerSnap = await getDoc(playerRef);
+
+        if (!playerSnap.exists() || !playerSnap.data().inventory) {
+            // Se o inventário não existir, inicializa com os itens iniciais
+            const initialInventoryData = {
+                itemsInChest: initialItems.map(item => ({ ...item })), // Cria uma cópia dos itens iniciais
+                equippedItems: {
+                    weapon: null, // Slot para arma
+                    armor: null,  // Slot para armadura
+                    helmet: null,
+                    amulet: null,
+                    shield: null,
+                    gloves: null,
+                    ring: null,
+                    boots: null
+                }
+            };
+            await setDoc(playerRef, { inventory: initialInventoryData }, { merge: true });
+            console.log("Inventário inicializado com os itens padrão.");
+            // Agora que o inventário inicial foi salvo, vamos carregá-lo
+            const updatedPlayerSnap = await getDoc(playerRef);
+            const inventoryData = updatedPlayerSnap.data().inventory;
+            // Atualiza a variável initialItems com os dados do Firestore
+            initialItems.length = 0; // Limpa o array existente
+            inventoryData.itemsInChest.forEach(item => initialItems.push({ ...item }));
+            loadInventoryUI(inventoryData);
+            updateCharacterCouraca(); // Atualiza a Couraça ao carregar inicialmente
+            updateCharacterDamage(); // Atualiza o Dano ao carregar inicialmente
+        } else {
+            const inventoryData = playerSnap.data().inventory;
+            // Atualiza a variável initialItems com os dados do Firestore
+            initialItems.length = 0; // Limpa o array existente
+            inventoryData.itemsInChest.forEach(item => initialItems.push({ ...item }));
+            loadInventoryUI(inventoryData);
+            updateCharacterCouraca(); // Atualiza a Couraça ao carregar inicialmente
+            updateCharacterDamage(); // Atualiza o Dano ao carregar inicialmente
+        }
+    } catch (error) {
+        console.error("Erro ao carregar o inventário:", error);
+    }
+}
+
+function loadInventoryUI(inventoryData) {
+    // Carrega itens no baú
+    const chestElement = document.querySelector('.items');
+    chestElement.innerHTML = ""; // Limpa o conteúdo atual
+    inventoryData.itemsInChest.forEach(item => {
+        const newItem = document.createElement('div');
+        newItem.classList.add('item');
+        newItem.dataset.item = item.id;
+        newItem.innerHTML = item.content;
+
+        if (item.consumable && item.quantity > 0) {
+            const quantitySpan = document.createElement('span');
+            quantitySpan.classList.add('item-quantity');
+            newItem.appendChild(document.createTextNode(item.content)); // Adiciona o texto do item primeiro
+            quantitySpan.textContent = item.quantity > 1 ? ` (${item.quantity})` : '';
+            newItem.appendChild(quantitySpan);
+        }
+
+        chestElement.appendChild(newItem);
+        // O listener de clique agora está no container
+        // addItemClickListener(newItem);
+    });
+
+    // Carrega itens equipados
+    document.querySelectorAll('.slot').forEach(slot => {
+        const equippedItem = inventoryData.equippedItems[slot.dataset.slot];
+        slot.innerHTML = equippedItem || slot.dataset.slot;
+    });
+}
+
+async function getPlayerData(uid) {
+    try {
+        const playerRef = doc(db, "players", uid);
+        const playerSnap = await getDoc(playerRef);
+        return playerSnap.exists() ? playerSnap.data() : null;
+    } catch (error) {
+        console.error("Erro ao recuperar os dados do jogador:", error);
+        return null;
+    }
+}
+
+// Função para atualizar o valor da Couraça na ficha do personagem
+function updateCharacterCouraca() {
+    const couracaElement = document.getElementById("char-couraca");
+    if (!couracaElement) return;
+
+    let baseCouraca = 0; // Explicitly set baseCouraca to 0
+    let bonusCouraca = 0;
+
+    const armorSlot = document.querySelector('.slot[data-slot="armor"]');
+    if (armorSlot && armorSlot.innerHTML === "Hábito monástico") {
+        bonusCouraca += 2;
+    }
+
+    const totalCouraca = baseCouraca + bonusCouraca;
+    couracaElement.innerText = totalCouraca;
+}
+
+function updateCharacterDamage() {
+    const weaponSlot = document.querySelector(".slot[data-slot='weapon']"); // Certifique-se de que o dataset é correto
+    const damageDisplay = document.querySelector("#char-dano"); // O elemento onde o dano é exibido
+
+    if (weaponSlot && weaponSlot.innerHTML.toLowerCase().includes("canivete")) {
+        damageDisplay.textContent = "1D3";
+    } else {
+        damageDisplay.textContent = "1";
+    }
+}
+
+
+// Inicializa e carrega o inventário ao iniciar
+document.addEventListener("DOMContentLoaded", () => {
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            console.log("Usuário autenticado:", user.uid);
+
+            currentPlayerData = await getPlayerData(user.uid); // 🔹 Recupera os dados da ficha
+            if (currentPlayerData) {
+                updateCharacterSheet(currentPlayerData); // 🔹 Atualiza a ficha do personagem
+            }
+
+            await loadInventoryData(user.uid); // 🔹 Carrega os itens do inventário e slots equipados
+        } else {
+            console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
+            window.location.href = "index.html";
+        }
+    });
+
+    // Event listener para o botão "Usar"
+    const useButton = document.getElementById('useBtn');
+    useButton.addEventListener('click', () => {
+        if (selectedItem) {
+            const itemIndex = initialItems.findIndex(item => item.id === selectedItem);
+            if (itemIndex !== -1 && initialItems[itemIndex].consumable && initialItems[itemIndex].quantity > 0) {
+                const itemData = initialItems[itemIndex];
+
+                // Efeito do item "pao-estragado"
+                if (itemData.id === 'pao-estragado') {
+                    const energyElement = document.getElementById('char-energy');
+                    if (energyElement) {
+                        let currentEnergy = parseInt(energyElement.innerText || '0');
+                        currentEnergy -= 2;
+                        energyElement.innerText = Math.max(0, currentEnergy);
+                    }
+                }
+
+                // Decrementa a quantidade do item
+                initialItems[itemIndex].quantity--;
+
+                // Atualiza a UI do baú
+                const chestElement = document.querySelector('.items');
+                const itemElement = chestElement.querySelector(`.item[data-item="${selectedItem}"]`);
+                if (itemElement) {
+                    itemElement.innerHTML = itemData.content;
+                    const quantitySpan = itemElement.querySelector('.item-quantity');
+                    if (itemData.quantity > 1) {
+                        if (!quantitySpan) {
+                            const newQuantitySpan = document.createElement('span');
+                            newQuantitySpan.classList.add('item-quantity');
+                            newQuantitySpan.textContent = ` (${itemData.quantity})`;
+                            itemElement.appendChild(newQuantitySpan);
+                        } else {
+                            quantitySpan.textContent = ` (${itemData.quantity})`;
+                        }
+                    } else if (itemData.quantity === 1) {
+                        if (quantitySpan) {
+                            quantitySpan.textContent = '';
+                        } else {
+                            const newQuantitySpan = document.createElement('span');
+                            newQuantitySpan.classList.add('item-quantity');
+                            newQuantitySpan.textContent = '';
+                            itemElement.appendChild(newQuantitySpan);
+                        }
+                    } else if (itemData.quantity <= 0) {
+                        const removedItemId = initialItems.splice(itemIndex, 1)[0]?.id;
+                        if (removedItemId) {
+                            const removedElement = chestElement.querySelector(`.item[data-item="${removedItemId}"]`);
+                            if (removedElement) {
+                                removedElement.remove();
+                            }
+                        }
+                        selectedItem = null;
+                        selectedItemElement = null;
+                        useButton.style.display = 'none';
+                        saveInventoryData(auth.currentUser.uid);
+                        return;
+                    }
+                }
+
+                selectedItem = null;
+                if (selectedItemElement) {
+                    selectedItemElement.classList.remove('selected');
+                    selectedItemElement = null;
+                }
+                useButton.style.display = 'none';
+
                 saveInventoryData(auth.currentUser.uid);
             }
         }
