@@ -57,30 +57,30 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Gerencia o clique nos slots
-    document.querySelectorAll('.slot').forEach(slot => {
-slot.addEventListener('click', () => {
-    if (selectedItem && slot.dataset.slot === getItemSlot(selectedItem.dataset.item)) {
-        if (slot.innerHTML !== slot.dataset.slot) {
-            // Desequipa o item atual e devolve ao baú
-            const equippedItemText = slot.innerHTML;
+document.querySelectorAll('.slot').forEach(slot => {
+    slot.addEventListener('click', () => {
+        if (selectedItem && slot.dataset.slot === getItemSlot(selectedItem.dataset.item)) {
+            if (slot.innerHTML !== slot.dataset.slot) {
+                // Desequipa o item atual e devolve ao baú
+                const equippedItemText = slot.innerHTML;
+                const newItem = document.createElement("div");
+                newItem.classList.add("item");
+                newItem.dataset.item = selectedItem.dataset.item;  // 🔹 Agora salva corretamente
+                newItem.innerHTML = equippedItemText;
 
-            const newItem = document.createElement("div");
-            newItem.classList.add("item");
-            newItem.dataset.item = getItemSlot(slot.dataset.slot);
-            newItem.innerHTML = equippedItemText;
+                document.querySelector(".items").appendChild(newItem);
+                addItemClickListener(newItem);
+            }
 
-            document.querySelector(".items").appendChild(newItem);
-            addItemClickListener(newItem);
+            // Equipa o novo item no slot
+            slot.innerHTML = selectedItem.innerHTML;
+            selectedItem.remove();
+            selectedItem = null;
+            clearHighlights();
+
+            saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
         }
-
-        // Equipa o novo item no slot
-        slot.innerHTML = selectedItem.innerHTML;
-        selectedItem.remove();
-        selectedItem = null;
-        clearHighlights();
-
-        saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
-    }
+    });  // ✅ FECHANDO CORRETAMENTE
 });
 
 
@@ -158,22 +158,20 @@ async function loadInventoryData(uid, playerClass) {
 
         let inventoryData = playerSnap.exists() ? playerSnap.data().inventory : null;
 
-        if (!inventoryData) {
-            console.log("Nenhum inventário encontrado. Criando novo...");
+        if (!inventoryData || !inventoryData.itemsInChest) {  // 🔹 Garante que não carregue itens errados
+    console.log("Nenhum inventário encontrado. Criando novo...");
+    
+    // 🔹 Limpa o inventário antes de adicionar os itens certos
+    inventoryData = {
+        itemsInChest: getStartingItems(playerClass),
+        equippedItems: {}
+    };
+    
+    await setDoc(doc(db, "players", uid), { inventory: inventoryData }, { merge: true });
+} else {
+    console.log("Inventário encontrado no Firestore:", inventoryData);
+}
 
-            // 🔹 Obtém os itens da classe do jogador
-            const startingItems = classStartingItems[playerClass] ? [...classStartingItems[playerClass]] : [];
-            console.log(`Itens carregados para a classe ${playerClass}:`, startingItems);
-
-
-            // 🔹 Define o inventário inicial
-            inventoryData = {
-                itemsInChest: startingItems,
-                equippedItems: {}
-            };
-
-            await setDoc(doc(db, "players", uid), { inventory: inventoryData }, { merge: true });
-        }
 
         // 🔹 Exibe os itens do baú na interface
         const chestElement = document.querySelector('.items');
@@ -187,11 +185,14 @@ async function loadInventoryData(uid, playerClass) {
             addItemClickListener(newItem);
         });
 
-        // 🔹 Garante que os eventos de clique sejam reatribuídos a todos os itens do baú
-document.querySelectorAll('.item').forEach(item => {
-    addItemClickListener(item);
-});
-console.log("Eventos de clique foram reatribuídos aos itens no baú.");
+       // 🔹 Garante que os eventos de clique são reatribuídos a cada item do baú corretamente
+setTimeout(() => {
+    document.querySelectorAll('.item').forEach(item => {
+        addItemClickListener(item);
+    });
+    console.log("Eventos de clique foram reatribuídos aos itens no baú.");
+}, 500);  // 🔹 Timeout para garantir que os itens foram carregados
+
 
 
         // 🔹 Carrega os itens equipados nos slots
