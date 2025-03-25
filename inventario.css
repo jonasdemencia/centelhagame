@@ -316,11 +316,7 @@ p {
     margin-bottom: 2px;
 }
 
-.item-quantity {
-    font-size: 0.8em;
-    color: #aaa;
-    margin-left: 5px;
-}
+
 
 /* PO no interior do baú */
 #char-po-container {
