@@ -61,17 +61,17 @@ document.addEventListener("DOMContentLoaded", () => {
         slot.addEventListener('click', () => {
             if (selectedItem && slot.dataset.slot === getItemSlot(selectedItem.dataset.item)) {
                 if (slot.innerHTML !== slot.dataset.slot) {
-    const equippedItemText = slot.innerHTML;
+                    // Desequipa o item atual e devolve ao baú
+                    const equippedItemText = slot.innerHTML;
 
-    const newItem = document.createElement("div");
-    newItem.classList.add("item");
-    newItem.dataset.item = selectedItem.dataset.item; // Certifique-se de que o dataset é atualizado com o ID correto
-    newItem.innerHTML = equippedItemText;
+                    const newItem = document.createElement("div");
+                    newItem.classList.add("item");
+                    newItem.dataset.item = slot.dataset.slot;
+                    newItem.innerHTML = equippedItemText;
 
-    document.querySelector(".items").appendChild(newItem);
-    addItemClickListener(newItem); // Adiciona novamente o evento de clique ao novo item
-}
-
+                    document.querySelector(".items").appendChild(newItem);
+                    addItemClickListener(newItem);
+                }
 
                 // Equipa o novo item no slot
                 slot.innerHTML = selectedItem.innerHTML;
@@ -80,22 +80,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 clearHighlights();
 
                 saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
-           if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
-    const itemText = slot.innerHTML;
-    slot.innerHTML = slot.dataset.slot; // Restaura o texto padrão do slot
+            } else if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
+                const itemText = slot.innerHTML;
+                slot.innerHTML = slot.dataset.slot;
 
-    const newItem = document.createElement("div");
-    newItem.classList.add("item");
-    newItem.dataset.item = slot.dataset.slot; // Certifique-se de que o dataset seja atualizado corretamente
-    newItem.innerHTML = itemText;
+                const newItem = document.createElement("div");
+                newItem.classList.add("item");
+                newItem.dataset.item = slot.dataset.slot;
+                newItem.innerHTML = itemText;
 
-    document.querySelector(".items").appendChild(newItem);
-    addItemClickListener(newItem); // Adiciona o evento de clique ao novo item
+                document.querySelector(".items").appendChild(newItem);
+                addItemClickListener(newItem);
 
-    saveInventoryData(auth.currentUser.uid); // Salva alterações
-}
-
-
+                saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
+            }
         });
     });
 
@@ -120,19 +118,17 @@ function getItemSlot(itemId) {
 // Adiciona evento de clique aos novos itens do baú
 function addItemClickListener(item) {
     item.addEventListener('click', () => {
-        clearHighlights(); // Limpa destaques anteriores
-        selectedItem = item; // Atualiza o item selecionado
+        clearHighlights();
+        selectedItem = item;
         item.classList.add('selected');
 
-        // Destaca os slots compatíveis
         document.querySelectorAll('.slot').forEach(slot => {
-            if (slot.dataset.slot === getItemSlot(item.dataset.item)) {
+            if (slot.dataset.slot === item.dataset.item) {
                 slot.classList.add('highlight');
             }
         });
     });
 }
-
 
 // Função para limpar destaques visuais
 function clearHighlights() {
