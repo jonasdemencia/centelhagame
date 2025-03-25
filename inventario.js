@@ -17,6 +17,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 let selectedItem = null; // Armazena o item selecionado
+let currentPlayerData = null; // Armazena os dados do jogador
 
 // Itens iniciais que o jogador deve ter
 const initialItems = [
@@ -49,40 +50,40 @@ document.addEventListener("DOMContentLoaded", () => {
     // Gerencia o clique nos slots
     document.querySelectorAll('.slot').forEach(slot => {
         slot.addEventListener('click', () => {
-            if (selectedItem && slot.dataset.slot === selectedItem.dataset.item) {
-                if (slot.innerHTML !== slot.dataset.slot) {
-                    // Desequipa o item atual e devolve ao baú
-                    const equippedItemText = slot.innerHTML;
+            const slotType = slot.dataset.slot;
+            const currentEquippedItem = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
 
+            if (selectedItem && slotType === selectedItem.dataset.item) {
+                // Equipa um novo item
+                if (currentEquippedItem) {
+                    // Desequipa o item atual e devolve ao baú
                     const newItem = document.createElement("div");
                     newItem.classList.add("item");
-                    newItem.dataset.item = slot.dataset.slot;
-                    newItem.innerHTML = equippedItemText;
-
+                    newItem.dataset.item = slotType;
+                    newItem.innerHTML = currentEquippedItem;
                     document.querySelector(".items").appendChild(newItem);
                     addItemClickListener(newItem);
                 }
 
-                // Equipa o novo item no slot
                 slot.innerHTML = selectedItem.innerHTML;
                 selectedItem.remove();
                 selectedItem = null;
                 clearHighlights();
 
-                saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
-            } else if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
-                const itemText = slot.innerHTML;
+                saveInventoryData(auth.currentUser.uid);
+                updateCharacterCouraca(); // Atualiza a Couraça imediatamente após equipar
+            } else if (selectedItem === null && currentEquippedItem) {
+                // Desequipa um item existente
                 slot.innerHTML = slot.dataset.slot;
-
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
-                newItem.dataset.item = slot.dataset.slot;
-                newItem.innerHTML = itemText;
-
+                newItem.dataset.item = slotType;
+                newItem.innerHTML = currentEquippedItem;
                 document.querySelector(".items").appendChild(newItem);
                 addItemClickListener(newItem);
 
-                saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
+                saveInventoryData(auth.currentUser.uid);
+                updateCharacterCouraca(); // Atualiza a Couraça imediatamente após desequipar
             }
         });
     });
@@ -93,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
             selectedItem.remove();
             selectedItem = null;
             clearHighlights();
-            saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
+            saveInventoryData(auth.currentUser.uid);
         }
     });
 
@@ -137,7 +138,7 @@ async function saveInventoryData(uid) {
         const playerRef = doc(db, "players", uid);
         await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
         console.log("Inventário salvo com sucesso!");
-        // A atualização da Couraça será feita ao carregar os dados
+        // A atualização da Couraça agora é feita diretamente no evento de clique
     } catch (error) {
         console.error("Erro ao salvar o inventário:", error);
     }
@@ -170,11 +171,11 @@ async function loadInventoryData(uid) {
             const updatedPlayerSnap = await getDoc(playerRef);
             const inventoryData = updatedPlayerSnap.data().inventory;
             loadInventoryUI(inventoryData);
-            updateCharacterCouraca(inventoryData.equippedItems); // Atualiza a Couraça ao carregar
+            updateCharacterCouraca(); // Atualiza a Couraça ao carregar inicialmente
         } else {
             const inventoryData = playerSnap.data().inventory;
             loadInventoryUI(inventoryData);
-            updateCharacterCouraca(inventoryData.equippedItems); // Atualiza a Couraça ao carregar
+            updateCharacterCouraca(); // Atualiza a Couraça ao carregar inicialmente
         }
     } catch (error) {
         console.error("Erro ao carregar o inventário:", error);
@@ -214,12 +215,17 @@ async function getPlayerData(uid) {
 }
 
 // Função para atualizar o valor da Couraça na ficha do personagem
-function updateCharacterCouraca(equippedItems) {
+function updateCharacterCouraca() {
     const couracaElement = document.getElementById("char-couraca");
     if (!couracaElement) return;
 
     let baseCouraca = parseInt(document.getElementById("char-couraca").innerText || 0);
     let bonusCouraca = 0;
+
+    const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
+        acc[slot.dataset.slot] = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
+        return acc;
+    }, {});
 
     if (equippedItems && equippedItems.armor === "Hábito monástico") {
         bonusCouraca += 2;
@@ -235,9 +241,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (user) {
             console.log("Usuário autenticado:", user.uid);
 
-            const playerData = await getPlayerData(user.uid); // 🔹 Recupera os dados da ficha
-            if (playerData) {
-                updateCharacterSheet(playerData); // 🔹 Atualiza a ficha do personagem
+            currentPlayerData = await getPlayerData(user.uid); // 🔹 Recupera os dados da ficha
+            if (currentPlayerData) {
+                updateCharacterSheet(currentPlayerData); // 🔹 Atualiza a ficha do personagem
             }
 
             await loadInventoryData(user.uid); // 🔹 Carrega os itens do inventário e slots equipados
