@@ -16,7 +16,16 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let selectedItem = null; // Armazena o item selecionado 
+let selectedItem = null; // Armazena o item selecionado
+
+// Itens iniciais que o jogador deve ter
+const initialItems = [
+    { id: "bolsa-de-escriba", content: "Bolsa de escriba" },
+    { id: "weapon", content: "canivete" }, // Mudando o id para corresponder ao slot
+    { id: "armor", content: "Hábito monástico" }, // Mudando o id para corresponder ao slot
+    { id: "velas", content: "Velas" },
+    { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais" }
+];
 
 // Seleciona os itens clicados no baú
 document.addEventListener("DOMContentLoaded", () => {
@@ -139,35 +148,55 @@ async function loadInventoryData(uid) {
         const playerRef = doc(db, "players", uid);
         const playerSnap = await getDoc(playerRef);
 
-        if (playerSnap.exists() && playerSnap.data().inventory) {
-            const inventoryData = playerSnap.data().inventory;
-
-            // Carrega itens no baú
-            const chestElement = document.querySelector('.items');
-            chestElement.innerHTML = ""; // Limpa o conteúdo atual
-            inventoryData.itemsInChest.forEach(item => {
-                const newItem = document.createElement('div');
-                newItem.classList.add('item');
-                newItem.dataset.item = item.id;
-                newItem.innerHTML = item.content;
-
-                chestElement.appendChild(newItem);
-                addItemClickListener(newItem);
-            });
-
-            // Carrega itens equipados
-            document.querySelectorAll('.slot').forEach(slot => {
-                const equippedItem = inventoryData.equippedItems[slot.dataset.slot];
-                slot.innerHTML = equippedItem || slot.dataset.slot;
-            });
-
-            console.log("Inventário carregado com sucesso!");
+        if (!playerSnap.exists() || !playerSnap.data().inventory) {
+            // Se o inventário não existir, inicializa com os itens iniciais
+            const initialInventoryData = {
+                itemsInChest: initialItems,
+                equippedItems: {
+                    weapon: null, // Slot para arma
+                    armor: null,  // Slot para armadura
+                    helmet: null,
+                    amulet: null,
+                    shield: null,
+                    gloves: null,
+                    ring: null,
+                    boots: null
+                }
+            };
+            await setDoc(playerRef, { inventory: initialInventoryData }, { merge: true });
+            console.log("Inventário inicializado com os itens padrão.");
+            // Agora que o inventário inicial foi salvo, vamos carregá-lo
+            const updatedPlayerSnap = await getDoc(playerRef);
+            const inventoryData = updatedPlayerSnap.data().inventory;
+            loadInventoryUI(inventoryData);
         } else {
-            console.log("Nenhum inventário encontrado para este jogador.");
+            const inventoryData = playerSnap.data().inventory;
+            loadInventoryUI(inventoryData);
         }
     } catch (error) {
         console.error("Erro ao carregar o inventário:", error);
     }
+}
+
+function loadInventoryUI(inventoryData) {
+    // Carrega itens no baú
+    const chestElement = document.querySelector('.items');
+    chestElement.innerHTML = ""; // Limpa o conteúdo atual
+    inventoryData.itemsInChest.forEach(item => {
+        const newItem = document.createElement('div');
+        newItem.classList.add('item');
+        newItem.dataset.item = item.id;
+        newItem.innerHTML = item.content;
+
+        chestElement.appendChild(newItem);
+        addItemClickListener(newItem);
+    });
+
+    // Carrega itens equipados
+    document.querySelectorAll('.slot').forEach(slot => {
+        const equippedItem = inventoryData.equippedItems[slot.dataset.slot];
+        slot.innerHTML = equippedItem || slot.dataset.slot;
+    });
 }
 
 async function getPlayerData(uid) {
