@@ -172,6 +172,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 const itemId = selectedItem.dataset.item;
                 const itemName = selectedItem.innerHTML.split('<span')[0].trim(); // Obtém o nome do item sem a quantidade
                 console.log("Usando item consumível:", itemName, "ID:", itemId);
+                console.log("selectedItem:", selectedItem); // LOG
+                console.log("selectedItem.dataset.quantity:", selectedItem.dataset.quantity); // LOG
+                console.log("itemName:", itemName); // LOG
                 let quantity = parseInt(selectedItem.dataset.quantity);
                 if (!isNaN(quantity) && quantity > 0) {
                     quantity--;
@@ -204,7 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 await savePlayerData(auth.currentUser.uid, currentPlayerData); // Salva os dados atualizados do jogador
                                 console.log("Energia diminuída para:", currentPlayerData.energy.total);
                             }
-                        } else if (effect === "heal" && itemName === "Pequeno saco com ervas medicinais" || itemName === "Poção de Cura Menor") {
+                        } else if (effect === "heal" && (itemName === "Pequeno saco com ervas medicinais" || itemName === "Poção de Cura Menor")) {
                             if (currentPlayerData && currentPlayerData.energy) {
                                 const initialEnergy = currentPlayerData.energy.initial || currentPlayerData.energy.total; // Usar initial se existir, senão o total atual
                                 const newEnergy = currentPlayerData.energy.total + value;
@@ -287,11 +290,11 @@ async function saveInventoryData(uid) {
             if (slot.dataset.consumable === 'true') {
                 acc[slot.dataset.slot + '_consumable'] = true;
                 acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity);
-                if (slot.dataset.effect) {
+                if (slot.dataset.slot + '_effect') {
                     acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
                 }
-                if (slot.dataset.value) {
-                    acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value);
+                if (slot.dataset.slot + '_value') {
+                    acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.slot + '_value');
                 }
             }
         }
