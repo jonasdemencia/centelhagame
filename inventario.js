@@ -97,9 +97,13 @@ slot.addEventListener('click', () => {
 });
 
 function getItemSlot(itemId) {
-    const allItems = Object.values(classStartingItems).flat();
-    const foundItem = allItems.find(item => item.id === itemId);
-    return foundItem ? foundItem.slot : null;
+    const slotMappings = {
+        "pocket-knife": "weapon",
+        "monastic-habit": "armor"
+    };
+
+    console.log(`Buscando slot para o item ${itemId}:`, slotMappings[itemId] || "Nenhum encontrado");
+    return slotMappings[itemId] || null;
 }
 
 // Adiciona evento de clique aos novos itens do baú
@@ -158,7 +162,9 @@ async function loadInventoryData(uid, playerClass) {
             console.log("Nenhum inventário encontrado. Criando novo...");
 
             // 🔹 Obtém os itens da classe do jogador
-            const startingItems = getStartingItems(playerClass);
+            const startingItems = classStartingItems[playerClass] ? [...classStartingItems[playerClass]] : [];
+            console.log(`Itens carregados para a classe ${playerClass}:`, startingItems);
+
 
             // 🔹 Define o inventário inicial
             inventoryData = {
@@ -182,7 +188,10 @@ async function loadInventoryData(uid, playerClass) {
         });
 
         // 🔹 Garante que os eventos de clique sejam reatribuídos a todos os itens do baú
-document.querySelectorAll('.item').forEach(addItemClickListener);
+document.querySelectorAll('.item').forEach(item => {
+    addItemClickListener(item);
+});
+console.log("Eventos de clique foram reatribuídos aos itens no baú.");
 
 
         // 🔹 Carrega os itens equipados nos slots
