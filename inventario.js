@@ -58,44 +58,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Gerencia o clique nos slots
     document.querySelectorAll('.slot').forEach(slot => {
-        slot.addEventListener('click', () => {
-            if (selectedItem && slot.dataset.slot === getItemSlot(selectedItem.dataset.item)) {
-                if (slot.innerHTML !== slot.dataset.slot) {
-                    // Desequipa o item atual e devolve ao baú
-                    const equippedItemText = slot.innerHTML;
+slot.addEventListener('click', () => {
+    if (selectedItem && slot.dataset.slot === getItemSlot(selectedItem.dataset.item)) {
+        if (slot.innerHTML !== slot.dataset.slot) {
+            // Desequipa o item atual e devolve ao baú
+            const equippedItemText = slot.innerHTML;
 
-                    const newItem = document.createElement("div");
-                    newItem.classList.add("item");
-                    newItem.dataset.item = slot.dataset.slot;
-                    newItem.innerHTML = equippedItemText;
+            const newItem = document.createElement("div");
+            newItem.classList.add("item");
+            newItem.dataset.item = getItemSlot(slot.dataset.slot);
+            newItem.innerHTML = equippedItemText;
 
-                    document.querySelector(".items").appendChild(newItem);
-                    addItemClickListener(newItem);
-                }
+            document.querySelector(".items").appendChild(newItem);
+            addItemClickListener(newItem);
+        }
 
-                // Equipa o novo item no slot
-                slot.innerHTML = selectedItem.innerHTML;
-                selectedItem.remove();
-                selectedItem = null;
-                clearHighlights();
+        // Equipa o novo item no slot
+        slot.innerHTML = selectedItem.innerHTML;
+        selectedItem.remove();
+        selectedItem = null;
+        clearHighlights();
 
-                saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
-            } else if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
-                const itemText = slot.innerHTML;
-                slot.innerHTML = slot.dataset.slot;
+        saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
+    }
+});
 
-                const newItem = document.createElement("div");
-                newItem.classList.add("item");
-                newItem.dataset.item = slot.dataset.slot;
-                newItem.innerHTML = itemText;
-
-                document.querySelector(".items").appendChild(newItem);
-                addItemClickListener(newItem);
-
-                saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
-            }
-        });
-    });
 
     // Adiciona funcionalidade ao botão de descarte
     document.getElementById("discard-slot").addEventListener("click", () => {
@@ -123,12 +110,13 @@ function addItemClickListener(item) {
         item.classList.add('selected');
 
         document.querySelectorAll('.slot').forEach(slot => {
-            if (slot.dataset.slot === item.dataset.item) {
+            if (slot.dataset.slot === getItemSlot(item.dataset.item)) {
                 slot.classList.add('highlight');
             }
         });
     });
 }
+
 
 // Função para limpar destaques visuais
 function clearHighlights() {
@@ -192,6 +180,10 @@ async function loadInventoryData(uid, playerClass) {
             chestElement.appendChild(newItem);
             addItemClickListener(newItem);
         });
+
+        // 🔹 Garante que os eventos de clique sejam reatribuídos a todos os itens do baú
+document.querySelectorAll('.item').forEach(addItemClickListener);
+
 
         // 🔹 Carrega os itens equipados nos slots
         document.querySelectorAll('.slot').forEach(slot => {
