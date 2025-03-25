@@ -4,12 +4,12 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 
 // Configuração Firebase
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY", // Substitua pela sua apiKey
-    authDomain: "YOUR_AUTH_DOMAIN", // Substitua pelo seu authDomain
-    projectId: "YOUR_PROJECT_ID", // Substitua pelo seu projectId
-    storageBucket: "YOUR_STORAGE_BUCKET", // Substitua pelo seu storageBucket
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Substitua pelo seu messagingSenderId
-    appId: "YOUR_APP_ID" // Substitua pelo seu appId
+    apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
+    authDomain: "centelhagame-9d511.firebaseapp.com",
+    projectId: "centelhagame-9d511",
+    storageBucket: "centelhagame-9d511.appspot.com",
+    messagingSenderId: "700809803145",
+    appId: "1:700809803145:web:bff4c6a751ec9389919d58"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -17,7 +17,6 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 let selectedItem = null; // Armazena o item selecionado
-let currentPlayerData = null; // Armazena os dados do jogador
 
 // Itens iniciais que o jogador deve ter
 const initialItems = [
@@ -50,36 +49,40 @@ document.addEventListener("DOMContentLoaded", () => {
     // Gerencia o clique nos slots
     document.querySelectorAll('.slot').forEach(slot => {
         slot.addEventListener('click', () => {
-            const slotType = slot.dataset.slot;
-            const currentEquippedItem = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
-
-            if (selectedItem && slotType === selectedItem.dataset.item) {
-                // Equipa um novo item
-                if (currentEquippedItem) {
+            if (selectedItem && slot.dataset.slot === selectedItem.dataset.item) {
+                if (slot.innerHTML !== slot.dataset.slot) {
                     // Desequipa o item atual e devolve ao baú
+                    const equippedItemText = slot.innerHTML;
+
                     const newItem = document.createElement("div");
                     newItem.classList.add("item");
-                    newItem.dataset.item = slotType;
-                    newItem.innerHTML = currentEquippedItem;
+                    newItem.dataset.item = slot.dataset.slot;
+                    newItem.innerHTML = equippedItemText;
+
                     document.querySelector(".items").appendChild(newItem);
                     addItemClickListener(newItem);
                 }
 
+                // Equipa o novo item no slot
                 slot.innerHTML = selectedItem.innerHTML;
                 selectedItem.remove();
                 selectedItem = null;
                 clearHighlights();
-                saveInventoryData(auth.currentUser.uid);
-            } else if (selectedItem === null && currentEquippedItem) {
-                // Desequipa um item existente
+
+                saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
+            } else if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
+                const itemText = slot.innerHTML;
                 slot.innerHTML = slot.dataset.slot;
+
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
-                newItem.dataset.item = slotType;
-                newItem.innerHTML = currentEquippedItem;
+                newItem.dataset.item = slot.dataset.slot;
+                newItem.innerHTML = itemText;
+
                 document.querySelector(".items").appendChild(newItem);
                 addItemClickListener(newItem);
-                saveInventoryData(auth.currentUser.uid);
+
+                saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
             }
         });
     });
@@ -90,7 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
             selectedItem.remove();
             selectedItem = null;
             clearHighlights();
-            saveInventoryData(auth.currentUser.uid);
+            saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
         }
     });
 
@@ -134,7 +137,7 @@ async function saveInventoryData(uid) {
         const playerRef = doc(db, "players", uid);
         await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
         console.log("Inventário salvo com sucesso!");
-        updateCharacterCouraca(); // Atualiza a couraça após salvar o inventário
+        // A atualização da Couraça será feita ao carregar os dados
     } catch (error) {
         console.error("Erro ao salvar o inventário:", error);
     }
@@ -167,11 +170,12 @@ async function loadInventoryData(uid) {
             const updatedPlayerSnap = await getDoc(playerRef);
             const inventoryData = updatedPlayerSnap.data().inventory;
             loadInventoryUI(inventoryData);
+            updateCharacterCouraca(inventoryData.equippedItems); // Atualiza a Couraça ao carregar
         } else {
             const inventoryData = playerSnap.data().inventory;
             loadInventoryUI(inventoryData);
+            updateCharacterCouraca(inventoryData.equippedItems); // Atualiza a Couraça ao carregar
         }
-        updateCharacterCouraca(); // Atualiza a couraça após carregar o inventário
     } catch (error) {
         console.error("Erro ao carregar o inventário:", error);
     }
@@ -210,23 +214,19 @@ async function getPlayerData(uid) {
 }
 
 // Função para atualizar o valor da Couraça na ficha do personagem
-function updateCharacterCouraca() {
-    if (!currentPlayerData) return;
+function updateCharacterCouraca(equippedItems) {
+    const couracaElement = document.getElementById("char-couraca");
+    if (!couracaElement) return;
 
-    const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
-        acc[slot.dataset.slot] = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
-        return acc;
-    }, {});
-
-    let baseCouraca = parseInt(currentPlayerData.couraca || 0);
+    let baseCouraca = parseInt(document.getElementById("char-couraca").innerText || 0);
     let bonusCouraca = 0;
 
-    if (equippedItems.armor === "Hábito monástico") {
+    if (equippedItems && equippedItems.armor === "Hábito monástico") {
         bonusCouraca += 2;
     }
 
     const totalCouraca = baseCouraca + bonusCouraca;
-    document.getElementById("char-couraca").innerText = totalCouraca;
+    couracaElement.innerText = totalCouraca;
 }
 
 // Inicializa e carrega o inventário ao iniciar
@@ -235,10 +235,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (user) {
             console.log("Usuário autenticado:", user.uid);
 
-            currentPlayerData = await getPlayerData(user.uid); // 🔹 Recupera os dados da ficha
-            if (currentPlayerData) {
-                updateCharacterSheet(currentPlayerData); // 🔹 Atualiza a ficha do personagem
-                updateCharacterCouraca(); // Atualiza a couraça inicialmente
+            const playerData = await getPlayerData(user.uid); // 🔹 Recupera os dados da ficha
+            if (playerData) {
+                updateCharacterSheet(playerData); // 🔹 Atualiza a ficha do personagem
             }
 
             await loadInventoryData(user.uid); // 🔹 Carrega os itens do inventário e slots equipados
