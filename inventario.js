@@ -20,12 +20,11 @@ let selectedItem = null; // Armazena o item selecionado
 
 // Itens iniciais que o jogador deve ter
 const initialItems = [
-    { id: "bolsa-de-escriba", content: "📜 Bolsa de escriba" },
-    { id: "armor", content: "🧥 Hábito monástico" },
-    { id: "velas", content: "🕯️ Velas" },
-    { id: "pequeno-saco-ervas", content: "🌿 Pequeno saco com ervas medicinais" }
-    { id: "weapon", content: "⚔️ canivete" },
-    
+    { id: "bolsa-de-escriba", content: "Bolsa de escriba" },
+    { id: "weapon", content: "canivete" }, // Mudando o id para corresponder ao slot
+    { id: "armor", content: "Hábito monástico" }, // Mudando o id para corresponder ao slot
+    { id: "velas", content: "Velas" },
+    { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais" }
 ];
 
 // Seleciona os itens clicados no baú
