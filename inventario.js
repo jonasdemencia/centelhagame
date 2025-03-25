@@ -74,11 +74,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 updateCharacterCouraca(); // Atualiza a Couraça imediatamente após equipar
             } else if (selectedItem === null && currentEquippedItem) {
                 // Desequipa um item existente
+                const itemText = slot.innerHTML;
                 slot.innerHTML = slot.dataset.slot;
+
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
                 newItem.dataset.item = slotType;
-                newItem.innerHTML = currentEquippedItem;
+                newItem.innerHTML = itemText;
+
                 document.querySelector(".items").appendChild(newItem);
                 addItemClickListener(newItem);
 
@@ -219,7 +222,8 @@ function updateCharacterCouraca() {
     const couracaElement = document.getElementById("char-couraca");
     if (!couracaElement) return;
 
-    let baseCouraca = parseInt(document.getElementById("char-couraca").innerText || 0);
+    // Lê o valor base da Couraça DIRETAMENTE do elemento
+    let baseCouraca = parseInt(document.getElementById("char-couraca").innerText || "0");
     let bonusCouraca = 0;
 
     const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
