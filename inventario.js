@@ -87,26 +87,30 @@ document.querySelectorAll('.slot').forEach(slot => {
             clearHighlights();
 
             saveInventoryData(auth.currentUser.uid);
-        } 
-        // 🔹 Lógica para desequipar caso clique no slot sem um item selecionado
-        else if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
-            const itemText = slot.innerHTML;
-            slot.innerHTML = slot.dataset.slot;
-
-            const newItem = document.createElement("div");
-            newItem.classList.add("item");
-            newItem.dataset.item = Object.keys(classStartingItems["Candidato"])
-                .find(key => classStartingItems["Candidato"][key].content === itemText) || slot.dataset.slot;
-            newItem.innerHTML = itemText;
-
-            document.querySelector(".items").appendChild(newItem);
-            addItemClickListener(newItem);
-            console.log(`Item ${itemText} foi desequipado e voltou para o baú.`);
-
-            saveInventoryData(auth.currentUser.uid);
         }
-    });
-});
+            
+        // 🔹 Lógica para desequipar caso clique no slot sem um item selecionado
+else if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
+    const itemText = slot.innerHTML;
+    slot.innerHTML = slot.dataset.slot;
+
+    const newItem = document.createElement("div");
+    newItem.classList.add("item");
+
+    // 🔹 Obtém o ID correto do item antes de devolvê-lo ao baú
+    const itemId = Object.keys(classStartingItems["Candidato"])
+        .find(key => classStartingItems["Candidato"][key].content === itemText) || slot.dataset.slot;
+
+    newItem.dataset.item = itemId;
+    newItem.innerHTML = itemText;
+
+    document.querySelector(".items").appendChild(newItem);
+    addItemClickListener(newItem);
+
+    console.log(`Item ${itemText} foi desequipado e voltou para o baú (ID: ${newItem.dataset.item}).`);
+
+    saveInventoryData(auth.currentUser.uid);
+}
 
 
 
@@ -140,9 +144,12 @@ function addItemClickListener(item) {
         selectedItem = item;
         item.classList.add('selected');
 
+        console.log(`Item clicado: ${item.innerHTML} (ID: ${item.dataset.item})`);
+
         document.querySelectorAll('.slot').forEach(slot => {
             if (slot.dataset.slot === getItemSlot(item.dataset.item)) {
                 slot.classList.add('highlight');
+                console.log(`Slot compatível encontrado: ${slot.dataset.slot}`);
             }
         });
     });
