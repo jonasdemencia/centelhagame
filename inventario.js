@@ -16,25 +16,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 🔹 Itens iniciais por classe
-const classStartingItems = {
-    "Mago": [{ id: "robe", content: "🧥 Robe Mágico", slot: "armor" }],
-    "Guerreiro": [{ id: "sword", content: "⚔️ Espada Longa", slot: "weapon" }],
-    "Ladino": [{ id: "dagger", content: "🗡️ Adaga", slot: "weapon" }],
-    "Candidato": [
-        { id: "scribe-bag", content: "📜 Bolsa de Escriba" },
-        { id: "pocket-knife", content: "🔪 Canivete", slot: "weapon" },
-        { id: "monastic-habit", content: "🧥 Hábito Monástico", slot: "armor" },
-        { id: "candles", content: "🕯️ Velas" },
-        { id: "herb-bag", content: "🌿 Pequeno Saco com Ervas Medicinais" }
-    ]
-};
-
-// 🔹 Função para obter os itens iniciais com base na classe
-function getStartingItems(playerClass) {
-    return classStartingItems[playerClass] ? [...classStartingItems[playerClass]] : [];
-}
-
 let selectedItem = null; // Armazena o item selecionado 
 
 // Seleciona os itens clicados no baú
@@ -49,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Destaca os slots compatíveis
             document.querySelectorAll('.slot').forEach(slot => {
-                if (slot.dataset.slot === getItemSlot(item.dataset.item)) {
+                if (slot.dataset.slot === item.dataset.item) {
                     slot.classList.add('highlight'); // Adiciona o destaque
                 }
             });
@@ -57,63 +38,45 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Gerencia o clique nos slots
-document.querySelectorAll('.slot').forEach(slot => {
-    slot.addEventListener('click', () => {
-        console.log(`Tentando equipar: ${selectedItem ? selectedItem.innerHTML : "Nenhum item selecionado"}`);
+    document.querySelectorAll('.slot').forEach(slot => {
+        slot.addEventListener('click', () => {
+            if (selectedItem && slot.dataset.slot === selectedItem.dataset.item) {
+                if (slot.innerHTML !== slot.dataset.slot) {
+                    // Desequipa o item atual e devolve ao baú
+                    const equippedItemText = slot.innerHTML;
 
-        if (selectedItem && slot.dataset.slot === getItemSlot(selectedItem.dataset.item)) {
-            console.log(`Equipando ${selectedItem.innerHTML} no slot ${slot.dataset.slot}`);
+                    const newItem = document.createElement("div");
+                    newItem.classList.add("item");
+                    newItem.dataset.item = slot.dataset.slot;
+                    newItem.innerHTML = equippedItemText;
 
-            if (slot.innerHTML !== slot.dataset.slot) {
-                // 🔹 Se houver um item no slot, devolve ao baú corretamente
-                const equippedItemText = slot.innerHTML;
-                const equippedItemId = Object.keys(classStartingItems["Candidato"])
-                    .find(key => classStartingItems["Candidato"][key].content === equippedItemText) || slot.dataset.slot;
+                    document.querySelector(".items").appendChild(newItem);
+                    addItemClickListener(newItem);
+                }
+
+                // Equipa o novo item no slot
+                slot.innerHTML = selectedItem.innerHTML;
+                selectedItem.remove();
+                selectedItem = null;
+                clearHighlights();
+
+                saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
+            } else if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
+                const itemText = slot.innerHTML;
+                slot.innerHTML = slot.dataset.slot;
 
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
-                newItem.dataset.item = equippedItemId;
-                newItem.innerHTML = equippedItemText;
+                newItem.dataset.item = slot.dataset.slot;
+                newItem.innerHTML = itemText;
 
                 document.querySelector(".items").appendChild(newItem);
                 addItemClickListener(newItem);
-                console.log(`Desequipado: ${equippedItemText}, retornando ao baú`);
+
+                saveInventoryData(auth.currentUser.uid); // Salva alterações no Firestore
             }
-
-            // 🔹 Equipa o novo item
-            slot.innerHTML = selectedItem.innerHTML;
-            selectedItem.remove();
-            selectedItem = null;
-            clearHighlights();
-
-            saveInventoryData(auth.currentUser.uid);
-        } 
-            
-        // 🔹 Lógica para desequipar caso clique no slot sem um item selecionado
-        else if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
-            const itemText = slot.innerHTML;
-            slot.innerHTML = slot.dataset.slot;
-
-            const newItem = document.createElement("div");
-            newItem.classList.add("item");
-
-            // 🔹 Obtém o ID correto do item antes de devolvê-lo ao baú
-            const itemId = Object.keys(classStartingItems["Candidato"])
-                .find(key => classStartingItems["Candidato"][key].content === itemText) || slot.dataset.slot;
-
-            newItem.dataset.item = itemId;
-            newItem.innerHTML = itemText;
-
-            document.querySelector(".items").appendChild(newItem);
-            addItemClickListener(newItem);
-
-            console.log(`Item ${itemText} foi desequipado e voltou para o baú (ID: ${newItem.dataset.item}).`);
-
-            saveInventoryData(auth.currentUser.uid);
-        }
-    }); // ✅ FECHA O EVENTO DE CLIQUE
-}); // ✅ FECHA O forEach
-
+        });
+    });
 
     // Adiciona funcionalidade ao botão de descarte
     document.getElementById("discard-slot").addEventListener("click", () => {
@@ -127,16 +90,6 @@ document.querySelectorAll('.slot').forEach(slot => {
 
 });
 
-function getItemSlot(itemId) {
-    const slotMappings = {
-        "pocket-knife": "weapon",
-        "monastic-habit": "armor"
-    };
-
-    console.log(`Buscando slot para o item ${itemId}:`, slotMappings[itemId] || "Nenhum encontrado");
-    return slotMappings[itemId] || null;
-}
-
 // Adiciona evento de clique aos novos itens do baú
 function addItemClickListener(item) {
     item.addEventListener('click', () => {
@@ -144,17 +97,13 @@ function addItemClickListener(item) {
         selectedItem = item;
         item.classList.add('selected');
 
-        console.log(`Item clicado: ${item.innerHTML} (ID: ${item.dataset.item})`);
-
         document.querySelectorAll('.slot').forEach(slot => {
-            if (slot.dataset.slot === getItemSlot(item.dataset.item)) {
+            if (slot.dataset.slot === item.dataset.item) {
                 slot.classList.add('highlight');
-                console.log(`Slot compatível encontrado: ${slot.dataset.slot}`);
             }
         });
     });
 }
-
 
 // Função para limpar destaques visuais
 function clearHighlights() {
@@ -185,60 +134,41 @@ async function saveInventoryData(uid) {
 }
 
 // Função para carregar dados do Firestore
-async function loadInventoryData(uid, playerClass) {
+async function loadInventoryData(uid) {
     try {
         const playerRef = doc(db, "players", uid);
         const playerSnap = await getDoc(playerRef);
 
-        let inventoryData = playerSnap.exists() ? playerSnap.data().inventory : null;
+        if (playerSnap.exists() && playerSnap.data().inventory) {
+            const inventoryData = playerSnap.data().inventory;
 
-        if (!inventoryData || !inventoryData.itemsInChest) {  // 🔹 Garante que não carregue itens errados
-            console.log("Nenhum inventário encontrado. Criando novo...");
-    
-            // 🔹 Limpa o inventário antes de adicionar os itens certos
-            inventoryData = {
-                itemsInChest: getStartingItems(playerClass),
-                equippedItems: {}
-            };
-    
-            await setDoc(doc(db, "players", uid), { inventory: inventoryData }, { merge: true });
-        } else {
-            console.log("Inventário encontrado no Firestore:", inventoryData);
-        }
+            // Carrega itens no baú
+            const chestElement = document.querySelector('.items');
+            chestElement.innerHTML = ""; // Limpa o conteúdo atual
+            inventoryData.itemsInChest.forEach(item => {
+                const newItem = document.createElement('div');
+                newItem.classList.add('item');
+                newItem.dataset.item = item.id;
+                newItem.innerHTML = item.content;
 
-        // 🔹 Exibe os itens do baú na interface
-        const chestElement = document.querySelector('.items');
-        chestElement.innerHTML = "";
-        inventoryData.itemsInChest.forEach(item => {
-            const newItem = document.createElement('div');
-            newItem.classList.add('item');
-            newItem.dataset.item = item.id;
-            newItem.innerHTML = item.content;
-            chestElement.appendChild(newItem);
-            addItemClickListener(newItem);
-        });
-
-        // 🔹 Garante que os eventos de clique são reatribuídos a cada item do baú corretamente
-        setTimeout(() => {
-            document.querySelectorAll('.item').forEach(item => {
-                addItemClickListener(item);
+                chestElement.appendChild(newItem);
+                addItemClickListener(newItem);
             });
-            console.log("Eventos de clique foram reatribuídos aos itens no baú.");
-        }, 500);  // 🔹 Timeout para garantir que os itens foram carregados
 
-        // 🔹 Carrega os itens equipados nos slots
-        document.querySelectorAll('.slot').forEach(slot => {
-            const equippedItem = inventoryData.equippedItems[slot.dataset.slot];
-            slot.innerHTML = equippedItem || slot.dataset.slot;
-        });
+            // Carrega itens equipados
+            document.querySelectorAll('.slot').forEach(slot => {
+                const equippedItem = inventoryData.equippedItems[slot.dataset.slot];
+                slot.innerHTML = equippedItem || slot.dataset.slot;
+            });
 
-        console.log("Inventário carregado com sucesso!");
+            console.log("Inventário carregado com sucesso!");
+        } else {
+            console.log("Nenhum inventário encontrado para este jogador.");
+        }
     } catch (error) {
         console.error("Erro ao carregar o inventário:", error);
     }
 }
-
-
 
 async function getPlayerData(uid) {
     try {
@@ -257,18 +187,18 @@ document.addEventListener("DOMContentLoaded", () => {
         if (user) {
             console.log("Usuário autenticado:", user.uid);
 
-            const playerData = await getPlayerData(user.uid);
+            const playerData = await getPlayerData(user.uid); // 🔹 Recupera os dados da ficha
             if (playerData) {
-                await loadInventoryData(user.uid, playerData.class);
-                updateCharacterSheet(playerData);  // 🔹 Agora a ficha do carrossel será preenchida corretamente
+                updateCharacterSheet(playerData); // 🔹 Atualiza a ficha do personagem
             }
+
+            await loadInventoryData(user.uid); // 🔹 Carrega os itens do inventário e slots equipados
         } else {
             console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
             window.location.href = "index.html";
         }
     });
 });
-
 
 // 📌 Sistema de Carrossel entre as janelas
 const slides = document.querySelectorAll(".carousel-slide");
