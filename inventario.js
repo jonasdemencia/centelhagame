@@ -47,49 +47,49 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Gerencia o clique nos slots
-    document.querySelectorAll('.slot').forEach(slot => {
-        slot.addEventListener('click', () => {
-            const slotType = slot.dataset.slot;
-            const currentEquippedItem = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
+  document.querySelectorAll('.slot').forEach(slot => {
+    slot.addEventListener('click', () => {
+        const slotType = slot.dataset.slot;
+        const currentEquippedItem = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
 
-            if (selectedItem && slotType === selectedItem.dataset.item) {
-                // Equipa um novo item
-                if (currentEquippedItem) {
-                    // Desequipa o item atual e devolve ao baú
-                    const newItem = document.createElement("div");
-                    newItem.classList.add("item");
-                    newItem.dataset.item = slotType;
-                    newItem.innerHTML = currentEquippedItem;
-                    document.querySelector(".items").appendChild(newItem);
-                    addItemClickListener(newItem);
-                }
-
-                slot.innerHTML = selectedItem.innerHTML;
-                selectedItem.remove();
-                selectedItem = null;
-                clearHighlights();
-
-                saveInventoryData(auth.currentUser.uid);
-                updateCharacterCouraca(); // Atualiza a Couraça imediatamente após equipar
-            } else if (selectedItem === null && currentEquippedItem) {
-                // Desequipa um item existente
-                const itemText = slot.innerHTML;
-                slot.innerHTML = slot.dataset.slot;
-
+        if (selectedItem && slotType === selectedItem.dataset.item) {
+            // Equipa um novo item
+            if (currentEquippedItem) {
+                // Desequipa o item atual e devolve ao baú
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
                 newItem.dataset.item = slotType;
-                newItem.innerHTML = itemText;
-
+                newItem.innerHTML = currentEquippedItem;
                 document.querySelector(".items").appendChild(newItem);
                 addItemClickListener(newItem);
-
-                updateCharacterCouraca(); // Atualiza a Couraça imediatamente APÓS manipular o DOM
-                saveInventoryData(auth.currentUser.uid);
             }
-        });
+
+            slot.innerHTML = selectedItem.innerHTML;
+            selectedItem.remove();
+            selectedItem = null;
+            clearHighlights();
+
+            saveInventoryData(auth.currentUser.uid);
+            setTimeout(updateCharacterCouraca, 50); // Pequeno atraso para garantir que o DOM foi atualizado
+        } else if (selectedItem === null && currentEquippedItem) {
+            // Desequipa um item existente
+            const itemText = slot.innerHTML;
+            slot.innerHTML = slot.dataset.slot;
+
+            const newItem = document.createElement("div");
+            newItem.classList.add("item");
+            newItem.dataset.item = slotType;
+            newItem.innerHTML = itemText;
+
+            document.querySelector(".items").appendChild(newItem);
+            addItemClickListener(newItem);
+
+            setTimeout(updateCharacterCouraca, 50); // Pequeno atraso para garantir que o DOM foi atualizado
+            saveInventoryData(auth.currentUser.uid);
+        }
     });
+});
+
 
     // Adiciona funcionalidade ao botão de descarte
     document.getElementById("discard-slot").addEventListener("click", () => {
@@ -222,8 +222,7 @@ function updateCharacterCouraca() {
     const couracaElement = document.getElementById("char-couraca");
     if (!couracaElement) return;
 
-    // Lê o valor base da Couraça DIRETAMENTE do elemento
-    let baseCouraca = parseInt(document.getElementById("char-couraca").innerText || "0");
+    let baseCouraca = 0; // Define um valor base para evitar somas incorretas
     let bonusCouraca = 0;
 
     const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
@@ -231,13 +230,15 @@ function updateCharacterCouraca() {
         return acc;
     }, {});
 
-    if (equippedItems && equippedItems.armor === "Hábito monástico") {
+    // Se o Hábito Monástico estiver equipado, adiciona o bônus
+    if (equippedItems.armor === "Hábito monástico") {
         bonusCouraca += 2;
     }
 
-    const totalCouraca = baseCouraca + bonusCouraca;
-    couracaElement.innerText = totalCouraca;
+    // Atualiza a interface com o novo valor calculado
+    couracaElement.innerText = baseCouraca + bonusCouraca;
 }
+
 
 // Inicializa e carrega o inventário ao iniciar
 document.addEventListener("DOMContentLoaded", () => {
