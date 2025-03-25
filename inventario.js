@@ -76,8 +76,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Desequipa um item existente
                 const itemText = slot.innerHTML;
                 slot.innerHTML = slot.dataset.slot;
-                console.log("Desequipando item:", itemText);
-                console.log("Slot da armadura após desequipar (DOM):", document.querySelector('.slot[data-slot="armor"]').innerHTML);
 
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
@@ -90,8 +88,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 updateCharacterCouraca();
                 updateCharacterDamage();
                 saveInventoryData(auth.currentUser.uid);
-                console.log("Slot da armadura após updateCharacterCouraca:", document.querySelector('.slot[data-slot="armor"]').innerHTML);
-                console.log("Valor da Couraça após updateCharacterCouraca:", document.getElementById("char-couraca").innerText);
             }
         });
     });
@@ -229,7 +225,7 @@ function updateCharacterCouraca() {
     const couracaElement = document.getElementById("char-couraca");
     if (!couracaElement) return;
 
-    let baseCouraca = parseInt(document.getElementById("char-couraca").innerText || "0");
+    let baseCouraca = 0; // Explicitly set baseCouraca to 0
     let bonusCouraca = 0;
 
     const armorSlot = document.querySelector('.slot[data-slot="armor"]');
