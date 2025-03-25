@@ -59,32 +59,34 @@ document.addEventListener("DOMContentLoaded", () => {
     // Gerencia o clique nos slots
 document.querySelectorAll('.slot').forEach(slot => {
     slot.addEventListener('click', () => {
+        console.log(`Tentando equipar: ${selectedItem ? selectedItem.innerHTML : "Nenhum item selecionado"}`);
+
         if (selectedItem && slot.dataset.slot === getItemSlot(selectedItem.dataset.item)) {
+            console.log(`Equipando ${selectedItem.innerHTML} no slot ${slot.dataset.slot}`);
+
             if (slot.innerHTML !== slot.dataset.slot) {
-                // 🔹 Obtém o ID correto do item antes de removê-lo do slot
+                // 🔹 Se houver um item no slot, devolve ao baú corretamente
                 const equippedItemText = slot.innerHTML;
                 const equippedItemId = Object.keys(classStartingItems["Candidato"])
                     .find(key => classStartingItems["Candidato"][key].content === equippedItemText) || slot.dataset.slot;
 
-                // 🔹 Cria um novo elemento para colocar no baú
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
-                newItem.dataset.item = equippedItemId;  // ✅ Agora com ID correto
+                newItem.dataset.item = equippedItemId;
                 newItem.innerHTML = equippedItemText;
 
                 document.querySelector(".items").appendChild(newItem);
                 addItemClickListener(newItem);
-
-                console.log(`Item desequipado e devolvido ao baú: ${equippedItemText} (${newItem.dataset.item})`);
+                console.log(`Desequipado: ${equippedItemText}, retornando ao baú`);
             }
 
-            // 🔹 Equipa o novo item no slot
+            // 🔹 Equipa o novo item
             slot.innerHTML = selectedItem.innerHTML;
             selectedItem.remove();
             selectedItem = null;
             clearHighlights();
 
-            saveInventoryData(auth.currentUser.uid); // 🔹 Salva alterações no Firestore
+            saveInventoryData(auth.currentUser.uid);
         } 
         // 🔹 Lógica para desequipar caso clique no slot sem um item selecionado
         else if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
@@ -95,18 +97,17 @@ document.querySelectorAll('.slot').forEach(slot => {
             newItem.classList.add("item");
             newItem.dataset.item = Object.keys(classStartingItems["Candidato"])
                 .find(key => classStartingItems["Candidato"][key].content === itemText) || slot.dataset.slot;
-
             newItem.innerHTML = itemText;
 
             document.querySelector(".items").appendChild(newItem);
             addItemClickListener(newItem);
+            console.log(`Item ${itemText} foi desequipado e voltou para o baú.`);
 
-            console.log(`Item ${itemText} desequipado e devolvido ao baú corretamente.`);
-
-            saveInventoryData(auth.currentUser.uid); // 🔹 Salva alterações no Firestore
+            saveInventoryData(auth.currentUser.uid);
         }
     });
 });
+
 
 
 
