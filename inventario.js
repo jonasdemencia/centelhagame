@@ -87,32 +87,32 @@ document.querySelectorAll('.slot').forEach(slot => {
             clearHighlights();
 
             saveInventoryData(auth.currentUser.uid);
-        }
+        } 
             
         // 🔹 Lógica para desequipar caso clique no slot sem um item selecionado
-else if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
-    const itemText = slot.innerHTML;
-    slot.innerHTML = slot.dataset.slot;
+        else if (selectedItem === null && slot.innerHTML !== slot.dataset.slot) {
+            const itemText = slot.innerHTML;
+            slot.innerHTML = slot.dataset.slot;
 
-    const newItem = document.createElement("div");
-    newItem.classList.add("item");
+            const newItem = document.createElement("div");
+            newItem.classList.add("item");
 
-    // 🔹 Obtém o ID correto do item antes de devolvê-lo ao baú
-    const itemId = Object.keys(classStartingItems["Candidato"])
-        .find(key => classStartingItems["Candidato"][key].content === itemText) || slot.dataset.slot;
+            // 🔹 Obtém o ID correto do item antes de devolvê-lo ao baú
+            const itemId = Object.keys(classStartingItems["Candidato"])
+                .find(key => classStartingItems["Candidato"][key].content === itemText) || slot.dataset.slot;
 
-    newItem.dataset.item = itemId;
-    newItem.innerHTML = itemText;
+            newItem.dataset.item = itemId;
+            newItem.innerHTML = itemText;
 
-    document.querySelector(".items").appendChild(newItem);
-    addItemClickListener(newItem);
+            document.querySelector(".items").appendChild(newItem);
+            addItemClickListener(newItem);
 
-    console.log(`Item ${itemText} foi desequipado e voltou para o baú (ID: ${newItem.dataset.item}).`);
+            console.log(`Item ${itemText} foi desequipado e voltou para o baú (ID: ${newItem.dataset.item}).`);
 
-    saveInventoryData(auth.currentUser.uid);
-}
-
-
+            saveInventoryData(auth.currentUser.uid);
+        }
+    }); // ✅ FECHA O EVENTO DE CLIQUE
+}); // ✅ FECHA O forEach
 
 
     // Adiciona funcionalidade ao botão de descarte
@@ -193,19 +193,18 @@ async function loadInventoryData(uid, playerClass) {
         let inventoryData = playerSnap.exists() ? playerSnap.data().inventory : null;
 
         if (!inventoryData || !inventoryData.itemsInChest) {  // 🔹 Garante que não carregue itens errados
-    console.log("Nenhum inventário encontrado. Criando novo...");
+            console.log("Nenhum inventário encontrado. Criando novo...");
     
-    // 🔹 Limpa o inventário antes de adicionar os itens certos
-    inventoryData = {
-        itemsInChest: getStartingItems(playerClass),
-        equippedItems: {}
-    };
+            // 🔹 Limpa o inventário antes de adicionar os itens certos
+            inventoryData = {
+                itemsInChest: getStartingItems(playerClass),
+                equippedItems: {}
+            };
     
-    await setDoc(doc(db, "players", uid), { inventory: inventoryData }, { merge: true });
-} else {
-    console.log("Inventário encontrado no Firestore:", inventoryData);
-}
-
+            await setDoc(doc(db, "players", uid), { inventory: inventoryData }, { merge: true });
+        } else {
+            console.log("Inventário encontrado no Firestore:", inventoryData);
+        }
 
         // 🔹 Exibe os itens do baú na interface
         const chestElement = document.querySelector('.items');
@@ -219,15 +218,13 @@ async function loadInventoryData(uid, playerClass) {
             addItemClickListener(newItem);
         });
 
-       // 🔹 Garante que os eventos de clique são reatribuídos a cada item do baú corretamente
-setTimeout(() => {
-    document.querySelectorAll('.item').forEach(item => {
-        addItemClickListener(item);
-    });
-    console.log("Eventos de clique foram reatribuídos aos itens no baú.");
-}, 500);  // 🔹 Timeout para garantir que os itens foram carregados
-
-
+        // 🔹 Garante que os eventos de clique são reatribuídos a cada item do baú corretamente
+        setTimeout(() => {
+            document.querySelectorAll('.item').forEach(item => {
+                addItemClickListener(item);
+            });
+            console.log("Eventos de clique foram reatribuídos aos itens no baú.");
+        }, 500);  // 🔹 Timeout para garantir que os itens foram carregados
 
         // 🔹 Carrega os itens equipados nos slots
         document.querySelectorAll('.slot').forEach(slot => {
@@ -240,6 +237,7 @@ setTimeout(() => {
         console.error("Erro ao carregar o inventário:", error);
     }
 }
+
 
 
 async function getPlayerData(uid) {
