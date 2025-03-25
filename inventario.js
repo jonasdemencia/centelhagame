@@ -26,7 +26,8 @@ const initialItems = [
     { id: "armor", content: "Hábito monástico" }, // Mudando o id para corresponder ao slot
     { id: "velas", content: "Velas" },
     { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2 }, // Adicionando efeito e valor
-    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2 }, // Mantendo como estava por enquanto
+    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3 }, // Adicionando efeito e valor para a poção
+    { id: "pao", content: "Pão", consumable: true, quantity: 1 },
     { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 2, effect: "damage", value: 1 } // Adicionando o pão mofado com efeito
 ];
 
@@ -203,7 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 await savePlayerData(auth.currentUser.uid, currentPlayerData); // Salva os dados atualizados do jogador
                                 console.log("Energia diminuída para:", currentPlayerData.energy.total);
                             }
-                        } else if (effect === "heal" && itemName === "Pequeno saco com ervas medicinais") {
+                        } else if (effect === "heal" && itemName === "Pequeno saco com ervas medicinais" || itemName === "Poção de Cura Menor") {
                             if (currentPlayerData && currentPlayerData.energy) {
                                 const initialEnergy = currentPlayerData.energy.initial || currentPlayerData.energy.total; // Usar initial se existir, senão o total atual
                                 const newEnergy = currentPlayerData.energy.total + value;
@@ -372,6 +373,8 @@ function loadInventoryUI(inventoryData) {
             if (item.value) {
                 newItem.dataset.value = item.value;
             }
+            // Remove qualquer contador de quantidade existente antes de adicionar o novo
+            newItem.innerHTML = newItem.innerHTML.replace(/ <span class="item-quantity">\(\d+\)<\/span>/g, '');
             if (item.quantity > 0) {
                 newItem.innerHTML += ` <span class="item-quantity">(${item.quantity})</span>`;
             }
