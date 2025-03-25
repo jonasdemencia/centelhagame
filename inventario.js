@@ -47,55 +47,54 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-  document.querySelectorAll('.slot').forEach(slot => {
-    slot.addEventListener('click', () => {
-        const slotType = slot.dataset.slot;
-        const currentEquippedItem = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
+    document.querySelectorAll('.slot').forEach(slot => {
+        slot.addEventListener('click', () => {
+            const slotType = slot.dataset.slot;
+            const currentEquippedItem = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
 
-        if (selectedItem && slotType === selectedItem.dataset.item) {
-            // Equipa um novo item
-            if (currentEquippedItem) {
-                // Desequipa o item atual e devolve ao baú
+            if (selectedItem && slotType === selectedItem.dataset.item) {
+                // Equipa um novo item
+                if (currentEquippedItem) {
+                    // Desequipa o item atual e devolve ao baú
+                    const newItem = document.createElement("div");
+                    newItem.classList.add("item");
+                    newItem.dataset.item = slotType;
+                    newItem.innerHTML = currentEquippedItem;
+                    document.querySelector(".items").appendChild(newItem);
+                    addItemClickListener(newItem);
+                }
+
+                slot.innerHTML = selectedItem.innerHTML;
+                selectedItem.remove();
+                selectedItem = null;
+                clearHighlights();
+
+                saveInventoryData(auth.currentUser.uid);
+                setTimeout(() => {
+                    updateCharacterCouraca();
+                    updateCharacterDamage();
+                }, 50);
+            } else if (selectedItem === null && currentEquippedItem) {
+                // Desequipa um item existente
+                const itemText = slot.innerHTML;
+                slot.innerHTML = slot.dataset.slot;
+
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
                 newItem.dataset.item = slotType;
-                newItem.innerHTML = currentEquippedItem;
+                newItem.innerHTML = itemText;
+
                 document.querySelector(".items").appendChild(newItem);
                 addItemClickListener(newItem);
+
+                setTimeout(() => {
+                    updateCharacterCouraca();
+                    updateCharacterDamage();
+                }, 50);
+                saveInventoryData(auth.currentUser.uid);
             }
-
-            slot.innerHTML = selectedItem.innerHTML;
-            selectedItem.remove();
-            selectedItem = null;
-            clearHighlights();
-
-            saveInventoryData(auth.currentUser.uid);
-            setTimeout(() => {
-                updateCharacterCouraca();
-                updateCharacterDamage();
-            }, 50);
-        } else if (selectedItem === null && currentEquippedItem) {
-            // Desequipa um item existente
-            const itemText = slot.innerHTML;
-            slot.innerHTML = slot.dataset.slot;
-
-            const newItem = document.createElement("div");
-            newItem.classList.add("item");
-            newItem.dataset.item = slotType;
-            newItem.innerHTML = itemText;
-
-            document.querySelector(".items").appendChild(newItem);
-            addItemClickListener(newItem);
-
-            setTimeout(() => {
-                updateCharacterCouraca();
-                updateCharacterDamage();
-            }, 50);
-            saveInventoryData(auth.currentUser.uid);
-        }
+        });
     });
-});
-
 
     // Adiciona funcionalidade ao botão de descarte
     document.getElementById("discard-slot").addEventListener("click", () => {
@@ -181,10 +180,12 @@ async function loadInventoryData(uid) {
             const inventoryData = updatedPlayerSnap.data().inventory;
             loadInventoryUI(inventoryData);
             updateCharacterCouraca(); // Atualiza a Couraça ao carregar inicialmente
+            updateCharacterDamage(); // Atualiza o Dano ao carregar inicialmente
         } else {
             const inventoryData = playerSnap.data().inventory;
             loadInventoryUI(inventoryData);
             updateCharacterCouraca(); // Atualiza a Couraça ao carregar inicialmente
+            updateCharacterDamage(); // Atualiza o Dano ao carregar inicialmente
         }
     } catch (error) {
         console.error("Erro ao carregar o inventário:", error);
@@ -228,7 +229,7 @@ function updateCharacterCouraca() {
     const couracaElement = document.getElementById("char-couraca");
     if (!couracaElement) return;
 
-    let baseCouraca = 0; // Define um valor base para evitar somas incorretas
+    let baseCouraca = parseInt(document.getElementById("char-couraca").innerText || "0");
     let bonusCouraca = 0;
 
     const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
@@ -236,30 +237,23 @@ function updateCharacterCouraca() {
         return acc;
     }, {});
 
-    // Se o Hábito Monástico estiver equipado, adiciona o bônus
-    if (equippedItems.armor === "Hábito monástico") {
+    if (equippedItems && equippedItems.armor === "Hábito monástico") {
         bonusCouraca += 2;
     }
 
-    // Atualiza a interface com o novo valor calculado
-    couracaElement.innerText = baseCouraca + bonusCouraca;
+    const totalCouraca = baseCouraca + bonusCouraca;
+    couracaElement.innerText = totalCouraca;
 }
 
 function updateCharacterDamage() {
-    const weaponSlot = document.querySelector(".slot[data-slot='weapon']");
-    const damageDisplay = document.getElementById("damageValue"); // Elemento onde o dano é exibido
+    const weaponSlot = document.querySelector(".slot[data-slot='weapon']"); // Certifique-se de que o dataset é correto
+    const damageDisplay = document.querySelector("#char-dano"); // O elemento onde o dano é exibido
 
-    if (!weaponSlot || !damageDisplay) return; // Verifica se os elementos existem antes de continuar
-
-    const equippedWeapon = weaponSlot.innerText.trim().toLowerCase(); // Garante que pegamos o texto corretamente
-
-    if (equippedWeapon === "canivete") {
+    if (weaponSlot && weaponSlot.innerHTML.toLowerCase().includes("canivete")) {
         damageDisplay.textContent = "1D3";
     } else {
         damageDisplay.textContent = "1";
     }
-
-    console.log(`Dano atualizado: ${damageDisplay.textContent}`); // Para debug
 }
 
 
