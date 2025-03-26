@@ -177,24 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.log("itemName:", itemName); // LOG
                 let quantity = parseInt(selectedItem.dataset.quantity);
                 if (!isNaN(quantity) && quantity > 0) {
-                    quantity--;
-                    selectedItem.dataset.quantity = quantity;
-                    const quantitySpan = selectedItem.querySelector('.item-quantity');
-                    if (quantitySpan) {
-                        quantitySpan.textContent = quantity > 0 ? `(${quantity})` : '';
-                    } else if (quantity > 0) {
-                        selectedItem.innerHTML += ` <span class="item-quantity">(${quantity})</span>`;
-                    }
-
-                    if (quantity === 0) {
-                        console.log("Item consumível esgotado:", itemName);
-                        selectedItem.remove();
-                        selectedItem = null;
-                        clearHighlights();
-                        toggleUseButton(false);
-                    }
-
-                    // Aplica o efeito do item
+                    // Aplica o efeito do item ANTES de decrementar a quantidade para a verificação
                     if (selectedItem && selectedItem.dataset.effect) {
                         const effect = selectedItem.dataset.effect;
                         const value = parseInt(selectedItem.dataset.value);
@@ -217,6 +200,23 @@ document.addEventListener("DOMContentLoaded", () => {
                                 console.log("Energia aumentada para:", currentPlayerData.energy.total);
                             }
                         }
+                    }
+
+                    quantity--;
+                    selectedItem.dataset.quantity = quantity;
+                    const quantitySpan = selectedItem.querySelector('.item-quantity');
+                    if (quantitySpan) {
+                        quantitySpan.textContent = quantity > 0 ? `(${quantity})` : '';
+                    } else if (quantity > 0) {
+                        selectedItem.innerHTML += ` <span class="item-quantity">(${quantity})</span>`;
+                    }
+
+                    if (quantity === 0) {
+                        console.log("Item consumível esgotado:", itemName);
+                        selectedItem.remove();
+                        selectedItem = null;
+                        clearHighlights();
+                        toggleUseButton(false);
                     }
 
                     saveInventoryData(auth.currentUser.uid);
