@@ -6,6 +6,7 @@ body {
     padding: 5px;
     background-color: #333; /* Cinza escuro para o fundo do body */
     color: #f0f0f0; /* Branco acinzentado para o texto geral */
+    font-size: 14px; /* Diminuindo o tamanho da fonte padrão */
 }
 
 /* Estilo para ocultar a página com a classe hidden */
@@ -19,11 +20,11 @@ body {
     flex-direction: column; /* Alinha os itens verticalmente para a descrição ficar abaixo */
     justify-content: flex-start; /* Alinha os itens ao início */
     align-items: stretch; /* Estica os itens para preencher a largura */
-    background: rgba(0, 0, 0, 0.6); /* Preto com transparência para destaque */
-    border: 1px solid #8b4513; /* Marrom para a borda */
+    background: rgba(0, 0, 0, 0.7); /* Preto com transparência para destaque */
+    border: 1px solid #555; /* Cinza para a borda */
     border-radius: 6px; /* Bordas arredondadas */
-    padding: 10px; /* Espaço interno */
-    margin-bottom: 10px; /* Espaço abaixo de cada atributo */
+    padding: 8px; /* Reduzindo um pouco o padding */
+    margin-bottom: 8px; /* Reduzindo um pouco a margem */
 }
 
 .stat-box > div { /* Estilos para a linha principal do atributo (nome, valores, botões) */
@@ -35,10 +36,10 @@ body {
 
 /* Nome do atributo à esquerda */
 .stat-name {
-    font-size: 16px; /* Aumentei um pouco para melhor leitura */
+    font-size: 14px; /* Diminuindo o tamanho da fonte */
     font-weight: bold;
     text-align: left; /* Justifica o nome à esquerda */
-    color: #f0f0f0; /* Branco acinzentado */
+    color: #eee; /* Branco acinzentado */
     flex-grow: 1; /* Permite que o nome ocupe mais espaço */
     display: flex;
     align-items: center;
@@ -46,7 +47,7 @@ body {
 
 /* Valores dos atributos */
 .stat-value {
-    font-size: 16px; /* Aumentei um pouco para melhor leitura */
+    font-size: 14px; /* Diminuindo o tamanho da fonte */
     color: #fff; /* Branco */
     margin-left: 5px;
 }
@@ -54,61 +55,61 @@ body {
 /* Botões de dados e zerar alinhados à direita */
 .stat-buttons-inline {
     display: flex; /* Alinha os botões horizontalmente */
-    gap: 5px; /* Reduz a distância entre os botões 🎲 e Zerar */
+    gap: 2px; /* Diminuindo a distância entre os botões */
 }
 
 /* Estilo dos botões 🎲 e Zerar */
 .button {
-    background-color: #8b4513; /* Marrom para o fundo dos botões */
+    background-color: #555; /* Cinza para o fundo dos botões */
     border: none;
-    padding: 8px 16px; /* Aumentei um pouco o tamanho */
+    padding: 6px 10px; /* Reduzindo o tamanho dos botões */
     font-family: 'Eagle Lake', cursive;
     color: #f0f0f0; /* Branco acinzentado para o texto dos botões */
-    font-size: 14px; /* Aumentei um pouco a fonte */
+    font-size: 12px; /* Diminuindo o tamanho da fonte dos botões */
     border-radius: 4px; /* Bordas arredondadas */
     cursor: pointer;
 }
 
 .button:hover {
-    background-color: #a0522d; /* Tom de marrom mais claro ao passar o mouse */
+    background-color: #777; /* Tom de cinza mais claro ao passar o mouse */
 }
 
 /* Estilo para slots (não modificado, mantido para consistência) */
 .slot, .item, .discard-slot {
-    width: 100px;
-    height: 45px;
-    background: #583101; /* Marrom escuro */
-    border: 2px solid #d2b48c; /* Marrom claro */
-    border-radius: 8px;
+    width: 80px; /* Diminuindo o tamanho */
+    height: 35px; /* Diminuindo o tamanho */
+    background: #444; /* Cinza mais escuro */
+    border: 2px solid #888; /* Cinza claro */
+    border-radius: 6px; /* Arredondamento menor */
     text-align: center;
-    line-height: 45px;
+    line-height: 35px; /* Ajustando a altura da linha */
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px; /* Diminuindo a fonte */
     font-weight: bold;
     color: #f0f0f0;
 }
 
 .item {
-    background: #a0522d; /* Marrom */
+    background: #777; /* Cinza */
 }
 
 .slot {
-    background: rgba(100, 60, 30, 0.8); /* Tom de marrom */
+    background: rgba(68, 68, 68, 0.8); /* Tom de cinza */
 }
 
 /* Destaque dos slots */
 .highlight {
-    background-color: #808080; /* Cinza */
-    border-color: #696969; /* Cinza mais escuro */
+    background-color: #999; /* Cinza mais claro */
+    border-color: #aaa; /* Cinza ainda mais claro */
 }
 
 /* Estilização do descarte */
 .discard-area {
-    margin-top: 20px;
-    padding: 10px;
+    margin-top: 15px; /* Reduzindo a margem */
+    padding: 8px; /* Reduzindo o padding */
     background: rgba(50, 50, 50, 0.8); /* Cinza escuro */
-    border: 3px solid #8b4513; /* Marrom */
-    border-radius: 10px;
+    border: 2px solid #777; /* Cinza */
+    border-radius: 8px; /* Arredondamento menor */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -116,95 +117,98 @@ body {
 }
 
 .discard-slot {
-    background: #8b4513; /* Marrom */
+    background: #777; /* Cinza */
     color: #fff;
     font-weight: bold;
 }
 
 /* Estilos para a seção de criação de personagem */
 #character-page .container {
-    max-width: 600px; /* Limita a largura do conteúdo para melhor leitura em telas maiores */
-    margin: 20px auto; /* Centraliza o container na tela */
-    padding: 20px;
+    max-width: 500px; /* Reduzindo a largura máxima */
+    margin: 15px auto; /* Reduzindo a margem */
+    padding: 15px; /* Reduzindo o padding */
     background-color: #fff; /* Branco para o fundo do container */
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.7); /* Sombra mais escura */
+    border-radius: 6px; /* Arredondamento menor */
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.7); /* Sombra mais escura e menor */
     opacity: 0.95; /* Aumentei um pouco a opacidade */
     color: #333; /* Cor do texto dentro do container (cinza escuro) */
+    font-size: 14px; /* Diminuindo o tamanho da fonte */
 }
 
 #character-page .page-title {
-    margin-bottom: 20px;
-    color: #8b4513; /* Marrom para o título */
+    margin-bottom: 15px; /* Reduzindo a margem */
+    color: #555; /* Cinza para o título */
+    font-size: 1.5em; /* Diminuindo o tamanho do título */
 }
 
 #character-page .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 15px; /* Reduzindo a margem */
     display: flex;
     flex-direction: column; /* Alinha os elementos verticalmente em telas menores */
-    gap: 10px;
+    gap: 8px; /* Reduzindo o espaçamento */
 }
 
 #character-page .input-field {
-    padding: 10px;
-    border: 1px solid #8b4513; /* Marrom para a borda */
+    padding: 8px; /* Reduzindo o padding */
+    border: 1px solid #555; /* Cinza para a borda */
     border-radius: 4px;
-    background-color: #f0f0f0; /* Branco acinzentado */
+    background-color: #eee; /* Branco acinzentado */
     color: #333;
     font-family: 'Eagle Lake', cursive;
-    font-size: 16px;
+    font-size: 14px;
 }
 
 #character-page .label-group {
-    margin-bottom: 15px;
+    margin-bottom: 10px; /* Reduzindo a margem */
     text-align: left; /* Alinha os rótulos à esquerda */
 }
 
 #character-page .label-text {
     display: block;
-    margin-bottom: 5px;
-    font-size: 16px;
-    color: #8b4513; /* Marrom para os rótulos */
+    margin-bottom: 3px; /* Reduzindo a margem */
+    font-size: 14px;
+    color: #555; /* Cinza para os rótulos */
 }
 
 #character-page .select-field {
     width: 100%;
-    padding: 10px;
-    border: 1px solid #8b4513; /* Marrom para a borda */
+    padding: 8px; /* Reduzindo o padding */
+    border: 1px solid #555; /* Cinza para a borda */
     border-radius: 4px;
-    background-color: #f0f0f0; /* Branco acinzentado */
+    background-color: #eee; /* Branco acinzentado */
     color: #333;
     font-family: 'Eagle Lake', cursive;
-    font-size: 16px;
+    font-size: 14px;
 }
 
 #character-page .inline-description {
-    font-size: 12px;
-    color: #666; /* Cinza mais claro */
+    font-size: 10px; /* Diminuindo ainda mais */
+    color: #777; /* Cinza mais claro */
     text-align: left;
-    margin-top: 5px;
+    margin-top: 3px; /* Reduzindo a margem */
 }
 
 /* Estilos para Accordion */
 .accordion {
-    margin-bottom: 15px;
-    border: 1px solid #8b4513; /* Marrom para a borda */
+    margin-bottom: 10px; /* Reduzindo a margem */
+    border: 1px solid #555; /* Cinza para a borda */
     border-radius: 4px;
     background-color: #f0f0f0; /* Branco acinzentado */
     overflow: hidden; /* Garante que o conteúdo expandido não vaze */
+    font-size: 14px; /* Diminuindo a fonte */
 }
 
 .accordion-button {
     background-color: #ddd; /* Cinza claro */
     color: #333;
     cursor: pointer;
-    padding: 10px;
+    padding: 8px; /* Reduzindo o padding */
     width: 100%;
     border: none;
     text-align: left;
     outline: none;
     font-family: 'Eagle Lake', cursive;
-    font-size: 16px;
+    font-size: 14px; /* Diminuindo a fonte */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -219,40 +223,41 @@ body {
 }
 
 .accordion-content {
-    padding: 10px;
+    padding: 8px; /* Reduzindo o padding */
     background-color: #eee; /* Branco acinzentado */
     color: #333;
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease-out;
-    font-size: 14px;
+    font-size: 12px; /* Diminuindo a fonte */
     text-align: left;
 }
 
 .accordion-content p {
-    margin-bottom: 10px;
+    margin-bottom: 8px; /* Reduzindo a margem */
 }
 
 .accordion-content .label-group {
-    margin-bottom: 10px;
+    margin-bottom: 8px; /* Reduzindo a margem */
 }
 
 .accordion-content .race-info p {
-    margin-left: 15px;
+    margin-left: 10px; /* Reduzindo a margem */
     font-style: italic;
-    color: #666;
+    color: #777;
+    font-size: 12px; /* Diminuindo a fonte */
 }
 
 /* Estilos para o Ícone de Informação (Modal) */
 .info-icon {
-    color: #8b4513; /* Marrom */
+    color: #555; /* Cinza */
     cursor: pointer;
-    font-size: 1.2em;
-    margin-left: 5px;
+    font-size: 1em; /* Reduzindo o tamanho */
+    margin-left: 3px; /* Reduzindo a margem */
 }
 
 .info-icon:hover {
-    color: #583101; /* Marrom mais escuro */
+    color: #333; /* Cinza escuro */
 }
 
 /* Estilos para o Modal */
@@ -270,21 +275,21 @@ body {
 
 .modal-content {
     background-color: #f0f0f0; /* Branco acinzentado */
-    margin: 15% auto; /* Centraliza verticalmente e horizontalmente */
-    padding: 20px;
+    margin: 10% auto; /* Reduzindo a margem */
+    padding: 15px; /* Reduzindo o padding */
     border: 1px solid #888; /* Cinza claro para a borda */
     width: 80%; /* Largura da caixa do modal */
-    border-radius: 8px;
+    border-radius: 6px; /* Arredondamento menor */
     position: relative;
     color: #333;
     text-align: left;
-    font-size: 14px;
+    font-size: 12px; /* Diminuindo a fonte */
 }
 
 .close-button {
     color: #aaa;
     float: right;
-    font-size: 28px;
+    font-size: 22px; /* Reduzindo o tamanho */
     font-weight: bold;
 }
 
@@ -296,19 +301,21 @@ body {
 }
 
 .modal-content h3 {
-    color: #8b4513; /* Marrom para o título do modal */
+    color: #555; /* Cinza para o título do modal */
     margin-top: 0;
-    margin-bottom: 15px;
+    margin-bottom: 10px; /* Reduzindo a margem */
     text-align: center;
+    font-size: 1.3em; /* Diminuindo o tamanho do título */
 }
 
 .modal-content p, .modal-content ol {
-    margin-bottom: 15px;
+    margin-bottom: 10px; /* Reduzindo a margem */
+    font-size: 12px; /* Diminuindo a fonte */
 }
 
 /* Estilos para a seção de atributos */
 .stats-section {
-    margin-top: 20px;
+    margin-top: 15px; /* Reduzindo a margem */
 }
 
 .stats-section .stat-box {
@@ -332,31 +339,20 @@ body {
 }
 
 .racial-modifier {
-    font-size: 12px;
-    color: #8b4513; /* Marrom */
-    margin-left: 5px;
-}
-
-.attribute-info-icon {
-    color: #8b4513; /* Marrom */
-    cursor: pointer;
-    font-size: 0.9em;
-    margin-left: 5px;
-}
-
-.attribute-info-icon:hover {
-    color: #583101; /* Marrom mais escuro */
+    font-size: 10px; /* Diminuindo a fonte */
+    color: #777; /* Cinza mais claro */
+    margin-left: 3px; /* Reduzindo a margem */
 }
 
 .attribute-description-container {
     display: none; /* Oculto por padrão */
     width: 100%; /* Ocupa toda a largura do .stat-box */
-    background-color: #f0f0f0; /* Branco acinzentado para a descrição */
+    background-color: #eee; /* Branco acinzentado para a descrição */
     color: #333; /* Cinza escuro para o texto da descrição */
-    padding: 10px;
+    padding: 8px; /* Reduzindo o padding */
     border-radius: 4px;
-    margin-top: 10px; /* Espaço entre a linha do atributo e a descrição */
-    font-size: 12px;
+    margin-top: 5px; /* Espaço entre a linha do atributo e a descrição */
+    font-size: 10px; /* Diminuindo a fonte */
     text-align: left;
     box-sizing: border-box; /* Garante que o padding não aumente a largura total */
 }
