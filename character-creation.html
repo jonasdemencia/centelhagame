@@ -232,18 +232,5 @@
 <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
 
     <script src="character-creation.js" type="module"></script>
-    <script>
-        // Script para funcionalidade do accordion
-        document.addEventListener('DOMContentLoaded', () => {
-            const accordionButtons = document.querySelectorAll('.accordion-button');
-            accordionButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const accordionContent = button.nextElementSibling;
-                    button.classList.toggle('active');
-                    accordionContent.style.maxHeight = accordionContent.style.maxHeight ? null : accordionContent.scrollHeight + "px";
-                });
-            });
-        });
-    </script>
 </body>
 </html>
