@@ -374,13 +374,13 @@ function loadInventoryUI(inventoryData) {
         const newItem = document.createElement('div');
         newItem.classList.add('item');
         newItem.dataset.item = item.id;
-        newItem.innerHTML = `${item.content}`;
+      newItem.innerHTML = `${item.content}`;
 
-const expandToggle = document.createElement("span");
+let expandToggle = document.createElement("span");
 expandToggle.classList.add("item-expand-toggle");
 expandToggle.textContent = "+";
 
-const descriptionDiv = document.createElement("div");
+let descriptionDiv = document.createElement("div");
 descriptionDiv.classList.add("item-description");
 descriptionDiv.style.display = "none";
 descriptionDiv.textContent = item.description || "Descrição do item.";
