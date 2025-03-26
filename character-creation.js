@@ -23,8 +23,6 @@ let defeitoSelecionado1 = null;
 let defeitoSelecionado2 = null;
 let defeitoCentralFinal = null;
 let selecoesDefeito = 0;
-let primeiroDefeitoIndex = -1;
-let segundoDefeitoIndex = -1;
 
 function rollDice(sides) {
     return Math.floor(Math.random() * sides) + 1;
@@ -51,42 +49,189 @@ function getRacialModifiers() {
 }
 
 function rollStat(stat, button) {
-    // ... (Código da função rollStat permanece o mesmo) ...
+    if (rolls[stat] > 0) {
+        console.log(`Rolando atributo: ${stat}`);
+        let firstRoll = document.getElementById(stat + "1");
+        let secondRoll = document.getElementById(stat + "2");
+        let totalRoll = document.getElementById(stat + "Total");
+        let modifierDisplay = document.getElementById(stat + "Modifier");
+
+        if (!firstRoll || !secondRoll || !totalRoll || !modifierDisplay) {
+            console.error(`Elementos DOM para ${stat} não encontrados.`);
+            return;
+        }
+
+        if (firstRoll.innerText === "-") {
+            firstRoll.innerText = rollDice(6);
+            console.log(`Primeira rolagem (${stat}): ${firstRoll.innerText}`);
+            savePlayerData(auth.currentUser.uid, getPlayerStats());
+        } else if (secondRoll.innerText === "-") {
+            secondRoll.innerText = rollDice(6);
+            console.log(`Segunda rolagem (${stat}): ${secondRoll.innerText}`);
+
+            let rollValue = parseInt(firstRoll.innerText) + parseInt(secondRoll.innerText);
+            const racialModifiers = getRacialModifiers();
+            const modifierValue = racialModifiers[stat];
+
+            modifierDisplay.innerText = modifierValue !== 0 ? ` (${modifierValue})` : "";
+            modifierDisplay.className = 'racial-modifier'; // Resetando classes
+            if (modifierValue > 0) {
+                modifierDisplay.classList.add('positive');
+            } else if (modifierValue < 0) {
+                modifierDisplay.classList.add('negative');
+            }
+
+            rollValue += modifierValue;
+            totalRoll.innerText = rollValue;
+            rolls[stat]--;
+
+            console.log(`Total (${stat}): ${rollValue}`);
+            if (rolls[stat] === 0) disableButton(button);
+            savePlayerData(auth.currentUser.uid, getPlayerStats());
+        }
+    } else {
+        alert("Você já usou todas as 3 rolagens permitidas para este atributo!");
+    }
 }
 
 function resetStat(stat, button) {
-    // ... (Código da função resetStat permanece o mesmo) ...
+    if (resets[stat] > 0) {
+        document.getElementById(stat + "1").innerText = "-";
+        document.getElementById(stat + "2").innerText = "-";
+        document.getElementById(stat + "Total").innerText = "-";
+        document.getElementById(stat + "Modifier").innerText = "";
+        document.getElementById(stat + "Modifier").className = 'racial-modifier'; // Resetando classes
+        resets[stat]--;
+        savePlayerData(auth.currentUser.uid, getPlayerStats());
+        if (resets[stat] === 0) disableButton(button);
+    } else {
+        alert("Você já zerou este atributo 2 vezes!");
+    }
 }
 
 function disableButton(button) {
-    // ... (Código da função disableButton permanece o mesmo) ...
+    button.disabled = true;
+    button.style.opacity = "0.5";
+    button.style.cursor = "not-allowed";
 }
 
 function updateRacialModifiersDisplay() {
-    // ... (Código da função updateRacialModifiersDisplay permanece o mesmo) ...
+    const racialModifiers = getRacialModifiers();
+
+    for (const stat in racialModifiers) {
+        const modifierDisplay = document.getElementById(stat + "Modifier");
+        const totalRoll = document.getElementById(stat + "Total");
+        const firstRoll = document.getElementById(stat + "1");
+        const secondRoll = document.getElementById(stat + "2");
+
+        if (modifierDisplay && totalRoll && firstRoll && secondRoll) {
+            let modifierValue = racialModifiers[stat];
+
+            modifierDisplay.innerText = modifierValue !== 0 ? ` (${modifierValue})` : "";
+            modifierDisplay.className = 'racial-modifier'; // Resetando classes
+            if (modifierValue > 0) {
+                modifierDisplay.classList.add('positive');
+            } else if (modifierValue < 0) {
+                modifierDisplay.classList.add('negative');
+            }
+
+            let firstValue = parseInt(firstRoll.innerText) || 0;
+            let secondValue = parseInt(secondRoll.innerText) || 0;
+            let newTotal = firstValue + secondValue + modifierValue;
+
+            if (firstValue > 0 && secondValue > 0) {
+                totalRoll.innerText = newTotal;
+            }
+        }
+    }
 }
 
 document.getElementById("race").addEventListener("change", () => {
-    // ... (Código do evento de change para raça permanece o mesmo) ...
+    updateRacialModifiersDisplay();  // Atualiza os modificadores e recalcula os totais
+    savePlayerData(auth.currentUser.uid, getPlayerStats());  // Salva os novos valores no Firestore
 });
 
-// ... (Event listeners para outros campos permanecem os mesmos) ...
+document.getElementById("alignment").addEventListener("change", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
+document.getElementById("class").addEventListener("change", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
+document.getElementById("mao dominante").addEventListener("change", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
+document.getElementById("hemisfério dominante").addEventListener("change", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
+document.getElementById("name").addEventListener("input", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
+document.getElementById("idade").addEventListener("input", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
 
 document.getElementById("submit").addEventListener("click", async () => {
-    // ... (Código do evento de click para submit permanece o mesmo) ...
+    const data = getPlayerStats();
+    const completionStatus = isFichaCompleta(data);
+
+    if (completionStatus === true) {
+        data.fichaCompleta = true;
+        await savePlayerData(auth.currentUser.uid, data);
+        console.log("Ficha marcada como completa. Redirecionando para o inventário...");
+        window.location.href = "inventario.html";
+    } else {
+        let message = "Por favor, preencha todos os campos e finalize todas as rolagens antes de prosseguir!\n\n";
+        if (completionStatus.missingFields.length > 0) {
+            message += "Campos faltando: " + completionStatus.missingFields.join(", ") + "\n";
+        }
+        if (completionStatus.unrolledStats.length > 0) {
+            message += "Atributos a serem rolados: " + completionStatus.unrolledStats.join(", ") + "\n";
+        }
+        if (completionStatus.missingDefeitoCentral) {
+            message += "Selecione seu Defeito Central!\n";
+        }
+        alert(message);
+    }
 });
 
 let saveTimeout;
 function debounceSave(uid, data) {
-    // ... (Código da função debounceSave permanece o mesmo) ...
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+        savePlayerData(uid, data);
+    }, 300);
 }
 
 async function savePlayerData(uid, data) {
-    // ... (Código da função savePlayerData permanece o mesmo) ...
+    try {
+        const playerRef = doc(db, "players", uid);
+        await setDoc(playerRef, data, { merge: true });
+        console.log("Dados salvos com sucesso!");
+    } catch (error) {
+        console.error("Erro ao salvar os dados:", error);
+    }
 }
 
 async function getPlayerData(uid) {
-    // ... (Código da função getPlayerData permanece o mesmo) ...
+    try {
+        const playerRef = doc(db, "players", uid);
+        const playerSnap = await getDoc(playerRef);
+        if (playerSnap.exists()) {
+            console.log("Dados do jogador recuperados:", playerSnap.data());
+            return playerSnap.data();
+        } else {
+            console.log("Nenhum dado encontrado para este jogador.");
+            return null;
+        }
+    } catch (error) {
+        console.error("Erro ao recuperar os dados:", error);
+        return null;
+    }
 }
 
 function getPlayerStats() {
@@ -101,15 +246,13 @@ function getPlayerStats() {
         hemisferioDominante: document.getElementById("hemisfério dominante").value,
         idade: document.getElementById("idade").value,
         defeitoCentral: defeitoCentralFinal,
-        primeiroDefeitoIndex: primeiroDefeitoIndex,
-        segundoDefeitoIndex: segundoDefeitoIndex,
         energy: {
             firstRoll: getStat("energy1"),
             secondRoll: getStat("energy2"),
             total: getStat("energyTotal"),
             rolls: rolls.energy,
             resets: resets.energy,
-            modifier: racialModifiers.energy
+            modifier: racialModifiers.energy  // Salva o modificador no Firestore
         },
         skill: {
             firstRoll: getStat("skill1"),
@@ -151,7 +294,30 @@ function getStat(id) {
 }
 
 function isFichaCompleta(playerData) {
-    // ... (Código da função isFichaCompleta permanece o mesmo) ...
+    const missingFields = [];
+    const unrolledStats = [];
+    const stats = ["energy", "skill", "charisma", "magic", "luck"];
+    let missingDefeitoCentral = false;
+
+    if (!playerData.name) missingFields.push("Nome do heroi");
+    if (!playerData.race) missingFields.push("Raça");
+    if (!playerData.alignment) missingFields.push("Alinhamento");
+    if (!playerData.class) missingFields.push("Classe");
+    if (!playerData.maoDominante) missingFields.push("Mão Dominante");
+    if (!playerData.hemisferioDominante) missingFields.push("Hemisfério Dominante");
+    if (!playerData.idade) missingFields.push("Idade");
+    if (!playerData.defeitoCentral) missingDefeitoCentral = true;
+
+    stats.forEach(stat => {
+        if (!playerData[stat] || playerData[stat].firstRoll === 0 || playerData[stat].secondRoll === 0 || playerData[stat].total === 0) {
+            unrolledStats.push(stat.charAt(0).toUpperCase() + stat.slice(1)); // Capitaliza o nome do atributo
+        }
+    });
+
+    if (missingFields.length > 0 || unrolledStats.length > 0 || missingDefeitoCentral) {
+        return { missingFields, unrolledStats, missingDefeitoCentral };
+    }
+    return true;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -174,17 +340,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const escolherDefeito2Button = document.getElementById("escolher-defeito-2");
     const defeitoCentralFinalDiv = document.getElementById("defeito-central-final");
     const defeitoCentralFinalSpan = defeitoCentralFinalDiv.querySelector("span");
-    const descricaoDefeitosSelecionadosDiv = document.getElementById("descricao-defeitos-selecionados");
 
-    listaDeDefeitos.forEach((li, index) => {
+    listaDeDefeitos.forEach(li => {
         defeitos.push(li.textContent);
-        li.textContent = `${index + 1}. ${li.textContent}`; // Adiciona a numeração
     });
+
+    let primeiroDefeitoIndex = -1;
+    let segundoDefeitoIndex = -1;
 
     if (selecionarDefeitoButton) {
         selecionarDefeitoButton.addEventListener("click", () => {
             if (selecoesDefeito < 2) {
                 let randomIndex = Math.floor(Math.random() * defeitos.length);
+                const defeito = defeitos[randomIndex];
 
                 if (selecoesDefeito === 0) {
                     primeiroDefeitoIndex = randomIndex;
@@ -195,20 +363,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     escolhaDefeitoDiv.style.display = "block";
                 }
 
-                // Exibe as opções para escolha e suas descrições
+                // Exibe as opções para escolha
                 if (selecoesDefeito === 2) {
-                    const primeiroDefeitoNome = defeitos[primeiroDefeitoIndex].split('. ')[1];
-                    const segundoDefeitoNome = defeitos[segundoDefeitoIndex].split('. ')[1];
-                    const primeiroDefeitoElement = listaDeDefeitos[primeiroDefeitoIndex];
-                    const segundoDefeitoElement = listaDeDefeitos[segundoDefeitoIndex];
+                    const primeiroDefeito = defeitos[primeiroDefeitoIndex];
+                    const segundoDefeito = defeitos[segundoDefeitoIndex];
 
-                    escolherDefeito1Button.textContent = `Escolher: ${primeiroDefeitoNome}`;
-                    escolherDefeito2Button.textContent = `Escolher: ${segundoDefeitoNome}`;
-
-                    const descricao1 = primeiroDefeitoElement.dataset.descricao;
-                    const descricao2 = segundoDefeitoElement.dataset.descricao;
-
-                    descricaoDefeitosSelecionadosDiv.innerHTML = `<p><strong>Opção 1:</strong> ${primeiroDefeitoNome} - ${descricao1}</p><p><strong>Opção 2:</strong> ${segundoDefeitoNome} - ${descricao2}</p>`;
+                    escolherDefeito1Button.textContent = `Escolher: ${primeiroDefeito}`;
+                    escolherDefeito2Button.textContent = `Escolher: ${segundoDefeito}`;
                 }
             } else {
                 alert("Você já selecionou dois defeitos. Escolha um deles.");
@@ -218,7 +379,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (escolherDefeito1Button) {
         escolherDefeito1Button.addEventListener("click", () => {
-            defeitoCentralFinal = defeitos[primeiroDefeitoIndex].split('. ')[1];
+            defeitoCentralFinal = defeitos[primeiroDefeitoIndex];
             escolhaDefeitoDiv.style.display = "none";
             defeitoCentralFinalDiv.style.display = "block";
             defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
@@ -228,16 +389,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 selecionarDefeitoButton.style.opacity = "0.5";
                 selecionarDefeitoButton.style.cursor = "not-allowed";
             }
-            descricaoDefeitosSelecionadosDiv.innerHTML = ""; // Limpa as descrições
 
+            // Destaca o defeito escolhido e esconde o outro
             listaDeDefeitos.forEach((li, index) => {
                 if (index === primeiroDefeitoIndex) {
                     li.classList.add("defeito-selecionado");
                 } else if (index === segundoDefeitoIndex) {
                     li.classList.add("defeito-nao-selecionado");
-                } else {
-                    li.classList.remove("defeito-selecionado");
-                    li.classList.remove("defeito-nao-selecionado");
                 }
             });
             savePlayerData(auth.currentUser.uid, getPlayerStats());
@@ -246,7 +404,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (escolherDefeito2Button) {
         escolherDefeito2Button.addEventListener("click", () => {
-            defeitoCentralFinal = defeitos[segundoDefeitoIndex].split('. ')[1];
+            defeitoCentralFinal = defeitos[segundoDefeitoIndex];
             escolhaDefeitoDiv.style.display = "none";
             defeitoCentralFinalDiv.style.display = "block";
             defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
@@ -256,16 +414,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 selecionarDefeitoButton.style.opacity = "0.5";
                 selecionarDefeitoButton.style.cursor = "not-allowed";
             }
-            descricaoDefeitosSelecionadosDiv.innerHTML = ""; // Limpa as descrições
 
+            // Destaca o defeito escolhido e esconde o outro
             listaDeDefeitos.forEach((li, index) => {
                 if (index === segundoDefeitoIndex) {
                     li.classList.add("defeito-selecionado");
                 } else if (index === primeiroDefeitoIndex) {
                     li.classList.add("defeito-nao-selecionado");
-                } else {
-                    li.classList.remove("defeito-selecionado");
-                    li.classList.remove("defeito-nao-selecionado");
                 }
             });
             savePlayerData(auth.currentUser.uid, getPlayerStats());
@@ -290,13 +445,48 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // 🔹 Preenche os campos com dados salvos, se existirem
             if (playerData) {
-                // ... (Restauração de outros campos permanece a mesma) ...
+                if (playerData.name) document.getElementById("name").value = playerData.name;
+                if (playerData.race) document.getElementById("race").value = playerData.race;
+                if (playerData.alignment) document.getElementById("alignment").value = playerData.alignment;
+                if (playerData.class) document.getElementById("class").value = playerData.class;
+                if (playerData.maoDominante) document.getElementById("mao dominante").value = playerData.maoDominante;
+                if (playerData.hemisferioDominante) document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante;
+
+                // 🔹 Corrige a restauração da idade
+                if (playerData.idade) {
+                    const idadeSelect = document.getElementById("idade");
+                    const optionExists = [...idadeSelect.options].some(option => option.value === playerData.idade);
+
+                    if (optionExists) {
+                        idadeSelect.value = playerData.idade;
+                    } else {
+                        console.warn("O valor salvo da idade não corresponde a nenhuma opção no <select>.");
+                    }
+                    console.log("Idade restaurada:", playerData.idade);
+                }
+
+                // 🔹 Preenche os atributos com dados salvos
+                const stats = ["energy", "skill", "charisma", "magic", "luck"];
+                stats.forEach(stat => {
+                    if (playerData[stat]) {
+                        document.getElementById(stat + "1").innerText = playerData[stat].firstRoll || "-";
+                        document.getElementById(stat + "2").innerText = playerData[stat].secondRoll || "-";
+                        document.getElementById(stat + "Total").innerText = playerData[stat].total || "-";
+                        document.getElementById(stat + "Modifier").innerText = playerData[stat].modifier ? ` (${playerData[stat].modifier})` : "";
+                        document.getElementById(stat + "Modifier").className = 'racial-modifier';
+                        if (playerData[stat].modifier > 0) {
+                            document.getElementById(stat + "Modifier").classList.add('positive');
+                        } else if (playerData[stat].modifier < 0) {
+                            document.getElementById(stat + "Modifier").classList.add('negative');
+                        }
+                        rolls[stat] = playerData[stat].rolls !== undefined ? playerData[stat].rolls : 3;
+                        resets[stat] = playerData[stat].resets !== undefined ? playerData[stat].resets : 2;
+                    }
+                });
 
                 // 🔹 Restaura o estado do Defeito Central
-                if (playerData.defeitoCentral && playerData.primeiroDefeitoIndex !== undefined && playerData.segundoDefeitoIndex !== undefined) {
+                if (playerData.defeitoCentral) {
                     defeitoCentralFinal = playerData.defeitoCentral;
-                    primeiroDefeitoIndex = playerData.primeiroDefeitoIndex;
-                    segundoDefeitoIndex = playerData.segundoDefeitoIndex;
                     defeitoCentralFinalDiv.style.display = "block";
                     defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
                     selecoesDefeito = 2; // Simula que as duas seleções já foram feitas
@@ -309,13 +499,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     // Restaura a visualização dos defeitos na lista
                     listaDeDefeitos.forEach((li, index) => {
-                        if (index === primeiroDefeitoIndex && li.textContent.includes(defeitoCentralFinal)) {
+                        if (li.textContent === defeitoCentralFinal) {
                             li.classList.add("defeito-selecionado");
-                        } else if (index === segundoDefeitoIndex && !li.textContent.includes(defeitoCentralFinal)) {
+                        } else if (playerData.primeiroDefeito && li.textContent === playerData.primeiroDefeito && li.textContent !== defeitoCentralFinal) {
                             li.classList.add("defeito-nao-selecionado");
-                        } else if (index === segundoDefeitoIndex && li.textContent.includes(defeitoCentralFinal)) {
-                            li.classList.add("defeito-selecionado");
-                        } else if (index === primeiroDefeitoIndex && !li.textContent.includes(defeitoCentralFinal)) {
+                        } else if (playerData.segundoDefeito && li.textContent === playerData.segundoDefeito && li.textContent !== defeitoCentralFinal) {
                             li.classList.add("defeito-nao-selecionado");
                         }
                     });
@@ -326,7 +514,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     defeitoCentralFinal = null;
                     escolhaDefeitoDiv.style.display = "none";
                     defeitoCentralFinalDiv.style.display = "none";
-                    descricaoDefeitosSelecionadosDiv.innerHTML = "";
                     listaDeDefeitos.forEach(li => {
                         li.classList.remove("defeito-selecionado");
                         li.classList.remove("defeito-nao-selecionado");
