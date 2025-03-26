@@ -63,18 +63,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Verifica se o item é consumível e mostra/oculta o botão "Usar"
         if (selectedItem.dataset.consumable === 'true') {
-            toggleUseButton(true);
+            // Posiciona o botão "Usar" ao lado do item
+            const itemRect = item.getBoundingClientRect();
+            const chestRect = itemsContainer.getBoundingClientRect();
+            useButton.style.display = "block";
+            useButton.style.position = "absolute";
+            useButton.style.top = `${itemRect.top - chestRect.top + (itemRect.height / 2) - (useButton.offsetHeight / 2)}px`;
+            useButton.style.left = `${itemRect.right - chestRect.left + 10}px`; // 10px de distância
         } else {
-            toggleUseButton(false);
+            useButton.style.display = "none";
+            useButton.style.position = ""; // Reset position
+            useButton.style.top = "";
+            useButton.style.left = "";
         }
     }
 
     // Adiciona evento de clique aos itens iniciais
     if (itemsContainer) {
         itemsContainer.querySelectorAll('.item').forEach(item => {
-            item.addEventListener('click', () => {
+            item.addEventListener('click', (event) => {
                 // Verifica se o clique foi no botão de expandir
-                if (!item.classList.contains('item-expand-toggle')) {
+                if (!event.target.classList.contains('item-expand-toggle')) {
                     handleItemClick(item);
                 }
             });
@@ -256,9 +265,18 @@ function addItemClickListener(item) {
 
             // Verifica se o item é consumível e mostra/oculta o botão "Usar"
             if (selectedItem.dataset.consumable === 'true') {
-                toggleUseButton(true);
+                // Posiciona o botão "Usar" ao lado do item
+                const itemRect = item.getBoundingClientRect();
+                const chestRect = itemsContainer.getBoundingClientRect();
+                useButton.style.display = "block";
+                useButton.style.position = "absolute";
+                useButton.style.top = `${itemRect.top - chestRect.top + (itemRect.height / 2) - (useButton.offsetHeight / 2)}px`;
+                useButton.style.left = `${itemRect.right - chestRect.left + 10}px`; // 10px de distância
             } else {
-                toggleUseButton(false);
+                useButton.style.display = "none";
+                useButton.style.position = ""; // Reset position
+                useButton.style.top = "";
+                useButton.style.left = "";
             }
         }
     });
