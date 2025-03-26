@@ -3,254 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ficha de Criação de Personagem</title>
-    <link href="style.css" rel="stylesheet"> <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-</head>
-<body id="character-page" class="hidden">
+    <title>Inventário de Itens</title>
+    <link rel="stylesheet" href="inventario.css">
+    <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet"> </head>
+<body>
     <div class="container">
-        <h2 class="page-title">Ficha de Criação de Personagem</h2>
+        <h1>Inventário</h1>
+        <p>Selecione um item e para equipá-lo toque em um slot. Toque em um slot para desequipar. Toque em um item e toque em <span class="discard"> Descarte</span> se não o quiser mais.</p>
+        <button id="useBtn" style="display:none;">Usar</button>
 
-        <div class="form-group">
-            <input type="text" id="name" placeholder="Nome do heroi" class="input-field">
-            <p class="inline-description">Escolha um nome digno para seu aventureiro!</p>
-            <button id="submit" class="button">ENVIAR</button>
-        </div>
+        <div class="carousel-wrapper">
+            <div class="carousel-container">
+                <div class="carousel-slide active" id="character-window">
+                    <div class="character">
+                        <h2>Personagem</h2>
+                        <div class="equipment">
+                            <div class="slot" id="helmet" data-slot="helmet">🪖 Cabeça</div>
+                            <div class="slot" id="amulet" data-slot="amulet">📿 Amuleto</div>
+                            <div class="slot-row">
+                                <div class="slot" id="weapon" data-slot="weapon">⚔️ Mão Esquerda</div>
+                                <div class="slot" id="armor" data-slot="armor">🛡️ Peitoral</div>
+                                <div class="slot" id="shield" data-slot="shield">🛡️ Mão Direita</div>
+                            </div>
+                            <div class="slot-row">
+                                <div class="slot" id="gloves" data-slot="gloves">🧤 Luvas</div>
+                                <div class="slot" id="ring" data-slot="ring">💍 Anel</div>
+                            </div>
+                            <div class="slot" id="boots" data-slot="boots">🥾 Botas</div>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="accordion">
-            <button class="accordion-button">R a ç a: <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>Escolha a raça do seu personagem. Cada raça possui características e modificadores de atributos únicos.</p>
-                <div class="label-group">
-                    <label for="race" class="label-text">Selecione:</label>
-                    <select id="race" class="select-field">
-                        <option value="">Selecione</option>
-                        <option>Anão</option>
-                        <option>Elfo</option>
-                        <option>Humano</option>
-                    </select>
+                <div class="carousel-slide" id="character-sheet">
+                    <div class="character-sheet">
+                        <h2>Ficha do Personagem</h2>
+
+                        <p><strong>Nome:</strong> <span id="char-name">-</span></p>
+                        <p><strong>Classe:</strong> <span id="char-class">-</span></p>
+
+                        <p><strong>Raça:</strong> <span id="char-race">-</span></p>
+                        <p><strong>Alinhamento:</strong> <span id="char-alignment">-</span></p>
+
+                        <div class="attribute-container">
+                            <div class="attribute">
+                                <span class="label">Energia</span>
+                                <span id="char-energy">0</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Habilidade</span>
+                                <span id="char-skill">0</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Carisma</span>
+                                <span id="char-charisma">0</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Magia</span>
+                                <span id="char-magic">0</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Sorte</span>
+                                <span id="char-luck">0</span>
+                            </div>
+                        </div>
+
+                        <div class="char-alignment">
+                            <div class="char-hand-container">
+                                <span>Mão Dominante</span>
+                                <span id="char-hand">-</span>
+                            </div>
+                            <div class="char-hemisphere-container">
+                                <span>Hemisfério Dominante</span>
+                                <span id="char-hemisphere">-</span>
+                            </div>
+                        </div>
+
+                        <div class="couraca-dano">
+                            <div class="attribute">
+                                <span class="label">Couraça</span>
+                                <span id="char-couraca">0</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Dano</span>
+                                <span id="char-dano">0</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="race-info">
-                    <p><strong>Anão:</strong> Conhecidos por sua robustez e afinidade com a mineração. +2 Energia, -2 Carisma.</p>
-                    <p><strong>Elfo:</strong> Seres elegantes e conectados com a natureza. +2 Habilidade, -2 Energia.</p>
-                    <p><strong>Humano:</strong> Adaptáveis e versáteis. Não possuem modificadores raciais.</p>
-                </div>
+            </div>
+
+            <div class="carousel-buttons">
+                <button id="prevBtn">◀</button>
+                <button id="nextBtn">▶</button>
             </div>
         </div>
 
-        <div class="accordion">
-            <button class="accordion-button">A l i n h a m e n t o: <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>O alinhamento descreve a visão moral e ética do seu personagem.</p>
-                <div class="label-group">
-                    <label for="alignment" class="label-text">Selecione:</label>
-                    <select id="alignment" class="select-field">
-                        <option value="">Selecione</option>
-                        <option disabled>Humanista (Em breve)</option>
-                        <option disabled>Behaviorista (Em breve)</option>
-                        <option disabled>Psicanalista (Em breve)</option>
-                        <option>Estudante</option>
-                    </select>
+        <div class="chest">
+            <h2>Baú de Itens</h2>
+            <div class="items">
                 </div>
-                <p><strong>Estudante:</strong> Um indivíduo em aprendizado, focado em adquirir conhecimento e novas experiências.</p>
-                </div>
-        </div>
-
-        <div class="accordion">
-            <button class="accordion-button">C l a s s e: <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>A classe representa a profissão ou vocação principal do seu personagem.</p>
-                <div class="label-group">
-                    <label for="class" class="label-text">Selecione:</label>
-                    <select id="class" class="select-field">
-                        <option value="">Selecione</option>
-                        <option disabled>Paladino (Em breve)</option>
-                        <option disabled>Guerreiro (Em breve)</option>
-                        <option disabled>Ladino (Em breve)</option>
-                        <option disabled>Mago (Em breve)</option>
-                        <option>Candidato</option>
-                    </select>
-                </div>
-                <p><strong>Candidato:</strong> Um aspirante a herói, ainda descobrindo seu caminho e potencial.</p>
-                </div>
-        </div>
-
-        <div class="accordion">
-            <button class="accordion-button">M ã o  D o m i n a n t e: <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>Escolha a mão que seu personagem utiliza com mais destreza.</p>
-                <div class="label-group">
-                    <label for="mao dominante" class="label-text">Selecione:</label>
-                    <select id="mao dominante" class="select-field">
-                        <option value="">Selecione</option>
-                        <option>esquerda</option>
-                        <option>direita</option>
-                        <option disabled>Membro fantasma</option>
-                    </select>
-                </div>
-                <p><strong>Esquerda:</strong> Seu personagem é canhoto.</p>
-                <p><strong>Direita:</strong> Seu personagem é destro.</p>
-                <p><strong>Membro fantasma:</strong> (Opção indisponível no momento).</p>
+            <div id="char-po-container">
+                <span class="label">PO:</span>
+                <span id="char-po">0</span>
             </div>
         </div>
 
-        <div class="accordion">
-            <button class="accordion-button">H e m i s f é r i o  d o m i n a n t e: <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>Selecione o hemisfério cerebral que seu personagem utiliza de forma mais proeminente.</p>
-                <div class="label-group">
-                    <label for="hemisfério dominante" class="label-text">Selecione:</label>
-                    <select id="hemisfério dominante" class="select-field">
-                        <option value="">Selecione</option>
-                        <option>Esquerdo</option>
-                        <option>Direito</option>
-                    </select>
-                </div>
-                <p><strong>Esquerdo:</strong> Geralmente associado ao raciocínio lógico, linguagem e análise.</p>
-                <p><strong>Direito:</strong> Frequentemente ligado à criatividade, intuição e reconhecimento espacial.</p>
-            </div>
-        </div>
-
-        <div class="accordion">
-            <button class="accordion-button">I d a d e: <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>A idade pode influenciar a aparência e a história do seu personagem.</p>
-                <div class="label-group">
-                    <label for="idade" class="label-text">Selecione:</label>
-                    <select id="idade" class="select-field">
-                        <option value="">Selecione</option>
-                        <option disabled>Granula (7-10 anos)</option>
-                        <option>Neófito (12-20 anos)</option>
-                        <option>Confessor (25-35 anos)</option>
-                        <option>Adepto (45-60 anos)</option>
-                        <option disabled>Velho lobo (70-85 anos)</option>
-                    </select>
-                </div>
-                <p><strong>Neófito:</strong> Jovem e cheio de potencial.</p>
-                <p><strong>Confessor:</strong> Na flor da idade, com experiência e convicção.</p>
-                <p><strong>Adepto:</strong> Mais experiente e com sabedoria acumulada.</p>
-                </div>
-        </div>
-
-        <p class="instruction-paragraph">Você poderá rolar cada um dos atributos três vezes. Role de forma sábia. <i class="fa-solid fa-info-circle info-icon" onclick="document.getElementById('instructions-modal').style.display='block'"></i></p>
-
-        <div id="instructions-modal" class="modal">
-            <div class="modal-content">
-                <span class="close-button" onclick="document.getElementById('instructions-modal').style.display='none'">&times;</span>
-                <h3>Instruções para Rolagem de Atributos</h3>
-                <p>Para cada atributo (Energia, Habilidade, Carisma, Magia, Sorte), você tem direito a três rolagens.</p>
-                <ol>
-                    <li>Clique no botão com o ícone de dado (🎲) para realizar a primeira rolagem.</li>
-                    <li>Clique novamente no mesmo botão para realizar a segunda rolagem.</li>
-                    <li>Após a segunda rolagem, o valor total do atributo será calculado, levando em consideração quaisquer modificadores raciais.</li>
-                    <li>Você pode usar o botão "Zerar" para limpar as rolagens daquele atributo e ter mais duas chances de rolar. Você tem direito a dois "zeramentos" por atributo.</li>
-                    <li>Escolha sabiamente seus resultados, pois eles definirão as capacidades iniciais do seu personagem!</li>
-                </ol>
-            </div>
-        </div>
-
-        <div class="stats-section stats" id="stats">
-            <div class="stat-box">
-                <strong class="stat-name">
-                    Energia:
-                    <i class="fa-solid fa-info-circle attribute-info-icon" data-attribute="energia"></i>
-                </strong>
-                <span id="energy1" class="stat-value">-</span> + <span id="energy2" class="stat-value">-</span>
-                <span id="energyModifier" class="racial-modifier"></span> =
-                <span id="energyTotal" class="stat-value">-</span>
-                <div class="stat-buttons-inline">
-                    <button onclick="rollStat('energy', this)" class="button">🎲</button>
-                    <button onclick="resetStat('energy', this)" class="button">Zerar</button>
-                </div>
-                <div class="attribute-description-container" id="energia-description">Representa a vitalidade física e a resistência do seu personagem.</div>
-            </div>
-            <div class="stat-box">
-                <strong class="stat-name">
-                    Habilidade:
-                    <i class="fa-solid fa-info-circle attribute-info-icon" data-attribute="habilidade"></i>
-                </strong>
-                <span id="skill1" class="stat-value">-</span> + <span id="skill2" class="stat-value">-</span>
-                <span id="skillModifier" class="racial-modifier"></span> =
-                <span id="skillTotal" class="stat-value">-</span>
-                <div class="stat-buttons-inline">
-                    <button onclick="rollStat('skill', this)" class="button">🎲</button>
-                    <button onclick="resetStat('skill', this)" class="button">Zerar</button>
-                </div>
-                <div class="attribute-description-container" id="habilidade-description">Mede a destreza física, agilidade e coordenação motora.</div>
-            </div>
-            <div class="stat-box">
-                <strong class="stat-name">
-                    Carisma:
-                    <i class="fa-solid fa-info-circle attribute-info-icon" data-attribute="carisma"></i>
-                </strong>
-                <span id="charisma1" class="stat-value">-</span> + <span id="charisma2" class="stat-value">-</span>
-                <span id="charismaModifier" class="racial-modifier"></span> =
-                <span id="charismaTotal" class="stat-value">-</span>
-                <div class="stat-buttons-inline">
-                    <button onclick="rollStat('charisma', this)" class="button">🎲</button>
-                    <button onclick="resetStat('charisma', this)" class="button">Zerar</button>
-                </div>
-                <div class="attribute-description-container" id="carisma-description">Reflete a capacidade de persuasão, liderança e atratividade do personagem.</div>
-            </div>
-            <div class="stat-box">
-                <strong class="stat-name">
-                    Magia:
-                    <i class="fa-solid fa-info-circle attribute-info-icon" data-attribute="magia"></i>
-                </strong>
-                <span id="magic1" class="stat-value">-</span> + <span id="magic2" class="stat-value">-</span>
-                <span id="magicModifier" class="racial-modifier"></span> =
-                <span id="magicTotal" class="stat-value">-</span>
-                <div class="stat-buttons-inline">
-                    <button onclick="rollStat('magic', this)" class="button">🎲</button>
-                    <button onclick="resetStat('magic', this)" class="button">Zerar</button>
-                </div>
-                <div class="attribute-description-container" id="magia-description">Representa o potencial mágico e a capacidade de manipular energias arcanas.</div>
-            </div>
-            <div class="stat-box">
-                <strong class="stat-name">
-                    Sorte:
-                    <i class="fa-solid fa-info-circle attribute-info-icon" data-attribute="sorte"></i>
-                </strong>
-                <span id="luck1" class="stat-value">-</span> + <span id="luck2" class="stat-value">-</span>
-                <span id="luckModifier" class="racial-modifier"></span> =
-                <span id="luckTotal" class="stat-value">-</span>
-                <div class="stat-buttons-inline">
-                    <button onclick="rollStat('luck', this)" class="button">🎲</button>
-                    <button onclick="resetStat('luck', this)" class="button">Zerar</button>
-                </div>
-                <div class="attribute-description-container" id="sorte-description">Indica a predisposição do personagem a eventos fortuitos e sua capacidade de escapar de situações perigosas.</div>
-            </div>
+        <div class="discard-area">
+            <h2>Descartar Item</h2>
+            <div class="discard-slot" id="discard-slot">área de descarte</div>
         </div>
     </div>
 
-    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
-<script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js"></script>
-<script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
-
-    <script src="character-creation.js" type="module"></script>
-    <script>
-        // Script para funcionalidade do accordion
-        document.addEventListener('DOMContentLoaded', () => {
-            const accordionButtons = document.querySelectorAll('.accordion-button');
-            accordionButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const accordionContent = button.nextElementSibling;
-                    button.classList.toggle('active');
-                    accordionContent.style.maxHeight = accordionContent.style.maxHeight ? null : accordionContent.scrollHeight + "px";
-                });
-            });
-
-            // Script para funcionalidade do ícone de informação dos atributos
-            const infoIcons = document.querySelectorAll('.attribute-info-icon');
-            infoIcons.forEach(icon => {
-                icon.addEventListener('click', function() {
-                    const attribute = this.dataset.attribute;
-                    const descriptionContainer = document.getElementById(`${attribute}-description`);
-                    if (descriptionContainer) {
-                        descriptionContainer.classList.toggle('show');
-                    }
-                });
-            });
-        });
-    </script>
+    <script type="module" src="inventario.js"></script>
 </body>
 </html>
