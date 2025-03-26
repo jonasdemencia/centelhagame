@@ -28,7 +28,7 @@ const initialItems = [
     { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2 }, // Adicionando efeito e valor
     { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3 }, // Adicionando efeito e valor para a poção
     { id: "pao", content: "Pão", consumable: true, quantity: 1 },
-    { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 1 } // Quantidade aumentada para 20
+    { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 5 } // Quantidade aumentada para 20
 ];
 
 // Função para exibir/ocultar o botão de usar
