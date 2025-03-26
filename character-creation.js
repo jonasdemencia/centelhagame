@@ -314,36 +314,10 @@ document.addEventListener("DOMContentLoaded", () => {
     accordionButtons.forEach(button => {
         button.addEventListener('click', () => {
             const accordionContent = button.nextElementSibling;
-
-            // Fecha todos os outros accordions abertos
-            accordionButtons.forEach(otherButton => {
-                if (otherButton !== button && otherButton.classList.contains('active')) {
-                    otherButton.classList.remove('active');
-                    otherButton.nextElementSibling.style.display = 'none';
-                }
-            });
-
-            // Abre/fecha o accordion atual
             button.classList.toggle('active');
-            if (accordionContent.style.display === 'block' || accordionContent.style.display === '') {
-                accordionContent.style.display = 'none';
-            } else {
-                accordionContent.style.display = 'block';
-            }
+            accordionContent.style.maxHeight = accordionContent.style.maxHeight ? null : accordionContent.scrollHeight + "px";
         });
     });
-
-    // Inicialmente, esconde todos os conteúdos dos accordions
-    const accordionContents = document.querySelectorAll('.accordion-content');
-    accordionContents.forEach(content => {
-        content.style.display = 'none';
-    });
-
-    // Opcional: Manter o primeiro accordion aberto por padrão
-    if (accordionButtons.length > 0 && accordionButtons[0].nextElementSibling) {
-        accordionButtons[0].classList.add('active');
-        accordionButtons[0].nextElementSibling.style.display = 'block';
-    }
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
