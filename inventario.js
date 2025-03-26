@@ -134,16 +134,40 @@ document.addEventListener("DOMContentLoaded", () => {
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
                 newItem.dataset.item = slotType;
-                newItem.innerHTML = itemText;
+
+                // Encontra o item original na lista de itens iniciais para obter a descrição
+                const originalItem = initialItems.find(item => item.content === itemText);
+                newItem.innerHTML = `
+                    ${itemText}
+                    <span class="item-expand-toggle">+</span>
+                    <div class="item-description" style="display: none;">
+                        ${originalItem ? originalItem.description : 'Descrição do item.'}
+                    </div>
+                `;
+
                 if (consumable) {
                     newItem.dataset.consumable = 'true';
                     newItem.dataset.quantity = quantity;
                     if (effect) newItem.dataset.effect = effect;
                     if (value) newItem.dataset.value = value;
+                    // Adiciona a quantidade visualmente
+                    if (quantity > 0) {
+                        newItem.innerHTML += ` <span class="item-quantity">(${quantity})</span>`;
+                    }
                 }
 
                 itemsContainer.appendChild(newItem);
                 addItemClickListener(newItem);
+                // Adicionar o listener para o botão de expandir do novo item
+                const expandToggle = newItem.querySelector('.item-expand-toggle');
+                const descriptionDiv = newItem.querySelector('.item-description');
+                if (expandToggle && descriptionDiv) {
+                    expandToggle.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        descriptionDiv.style.display = descriptionDiv.style.display === 'none' ? 'block' : 'none';
+                        expandToggle.textContent = descriptionDiv.style.display === 'none' ? '+' : '-';
+                    });
+                }
 
                 updateCharacterCouraca();
                 updateCharacterDamage();
