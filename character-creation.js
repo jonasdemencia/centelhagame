@@ -333,44 +333,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Defeito Central functionality
     const defeitosListaElement = document.getElementById("defeitos-lista");
-    const listaDeDefeitos = defeitosListaElement.querySelectorAll("li");
+    if (defeitosListaElement) {
+        const liElements = defeitosListaElement.querySelectorAll("li");
+        liElements.forEach(li => {
+            defeitos.push(li.textContent);
+        });
+    }
+
     const selecionarDefeitoButton = document.getElementById("selecionar-defeito");
+    const defeitoSelecionado1Div = document.getElementById("defeito-selecionado-1");
+    const defeitoSelecionado2Div = document.getElementById("defeito-selecionado-2");
     const escolhaDefeitoDiv = document.getElementById("escolha-defeito");
     const escolherDefeito1Button = document.getElementById("escolher-defeito-1");
     const escolherDefeito2Button = document.getElementById("escolher-defeito-2");
     const defeitoCentralFinalDiv = document.getElementById("defeito-central-final");
     const defeitoCentralFinalSpan = defeitoCentralFinalDiv.querySelector("span");
 
-    listaDeDefeitos.forEach(li => {
-        defeitos.push(li.textContent);
-    });
-
-    let primeiroDefeitoIndex = -1;
-    let segundoDefeitoIndex = -1;
-
     if (selecionarDefeitoButton) {
         selecionarDefeitoButton.addEventListener("click", () => {
             if (selecoesDefeito < 2) {
-                let randomIndex = Math.floor(Math.random() * defeitos.length);
+                const randomIndex = Math.floor(Math.random() * defeitos.length);
                 const defeito = defeitos[randomIndex];
-
                 if (selecoesDefeito === 0) {
-                    primeiroDefeitoIndex = randomIndex;
-                    selecoesDefeito++;
+                    defeitoSelecionado1 = defeito;
+                    defeitoSelecionado1Div.style.display = "block";
+                    defeitoSelecionado1Div.querySelector("span").textContent = defeito;
                 } else if (selecoesDefeito === 1) {
-                    segundoDefeitoIndex = randomIndex;
-                    selecoesDefeito++;
+                    defeitoSelecionado2 = defeito;
+                    defeitoSelecionado2Div.style.display = "block";
+                    defeitoSelecionado2Div.querySelector("span").textContent = defeito;
                     escolhaDefeitoDiv.style.display = "block";
                 }
-
-                // Exibe as opções para escolha
-                if (selecoesDefeito === 2) {
-                    const primeiroDefeito = defeitos[primeiroDefeitoIndex];
-                    const segundoDefeito = defeitos[segundoDefeitoIndex];
-
-                    escolherDefeito1Button.textContent = `Escolher: ${primeiroDefeito}`;
-                    escolherDefeito2Button.textContent = `Escolher: ${segundoDefeito}`;
-                }
+                selecoesDefeito++;
             } else {
                 alert("Você já selecionou dois defeitos. Escolha um deles.");
             }
@@ -379,50 +373,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (escolherDefeito1Button) {
         escolherDefeito1Button.addEventListener("click", () => {
-            defeitoCentralFinal = defeitos[primeiroDefeitoIndex];
+            defeitoCentralFinal = defeitoSelecionado1;
             escolhaDefeitoDiv.style.display = "none";
             defeitoCentralFinalDiv.style.display = "block";
             defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
-            selecoesDefeito = 2; // Impede novas seleções
-            if (selecionarDefeitoButton) {
-                selecionarDefeitoButton.disabled = true;
-                selecionarDefeitoButton.style.opacity = "0.5";
-                selecionarDefeitoButton.style.cursor = "not-allowed";
-            }
-
-            // Destaca o defeito escolhido e esconde o outro
-            listaDeDefeitos.forEach((li, index) => {
-                if (index === primeiroDefeitoIndex) {
-                    li.classList.add("defeito-selecionado");
-                } else if (index === segundoDefeitoIndex) {
-                    li.classList.add("defeito-nao-selecionado");
-                }
-            });
             savePlayerData(auth.currentUser.uid, getPlayerStats());
         });
     }
 
     if (escolherDefeito2Button) {
         escolherDefeito2Button.addEventListener("click", () => {
-            defeitoCentralFinal = defeitos[segundoDefeitoIndex];
+            defeitoCentralFinal = defeitoSelecionado2;
             escolhaDefeitoDiv.style.display = "none";
             defeitoCentralFinalDiv.style.display = "block";
             defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
-            selecoesDefeito = 2; // Impede novas seleções
-            if (selecionarDefeitoButton) {
-                selecionarDefeitoButton.disabled = true;
-                selecionarDefeitoButton.style.opacity = "0.5";
-                selecionarDefeitoButton.style.cursor = "not-allowed";
-            }
-
-            // Destaca o defeito escolhido e esconde o outro
-            listaDeDefeitos.forEach((li, index) => {
-                if (index === segundoDefeitoIndex) {
-                    li.classList.add("defeito-selecionado");
-                } else if (index === primeiroDefeitoIndex) {
-                    li.classList.add("defeito-nao-selecionado");
-                }
-            });
             savePlayerData(auth.currentUser.uid, getPlayerStats());
         });
     }
@@ -496,28 +460,15 @@ document.addEventListener("DOMContentLoaded", () => {
                         selecionarDefeitoButton.style.opacity = "0.5";
                         selecionarDefeitoButton.style.cursor = "not-allowed";
                     }
-
-                    // Restaura a visualização dos defeitos na lista
-                    listaDeDefeitos.forEach((li, index) => {
-                        if (li.textContent === defeitoCentralFinal) {
-                            li.classList.add("defeito-selecionado");
-                        } else if (playerData.primeiroDefeito && li.textContent === playerData.primeiroDefeito && li.textContent !== defeitoCentralFinal) {
-                            li.classList.add("defeito-nao-selecionado");
-                        } else if (playerData.segundoDefeito && li.textContent === playerData.segundoDefeito && li.textContent !== defeitoCentralFinal) {
-                            li.classList.add("defeito-nao-selecionado");
-                        }
-                    });
                 } else {
                     selecoesDefeito = 0;
-                    primeiroDefeitoIndex = -1;
-                    segundoDefeitoIndex = -1;
+                    defeitoSelecionado1 = null;
+                    defeitoSelecionado2 = null;
                     defeitoCentralFinal = null;
+                    defeitoSelecionado1Div.style.display = "none";
+                    defeitoSelecionado2Div.style.display = "none";
                     escolhaDefeitoDiv.style.display = "none";
                     defeitoCentralFinalDiv.style.display = "none";
-                    listaDeDefeitos.forEach(li => {
-                        li.classList.remove("defeito-selecionado");
-                        li.classList.remove("defeito-nao-selecionado");
-                    });
                     if (selecionarDefeitoButton) {
                         selecionarDefeitoButton.disabled = false;
                         selecionarDefeitoButton.style.opacity = "1";
