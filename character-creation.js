@@ -168,15 +168,22 @@ document.getElementById("idade").addEventListener("input", () => {
 
 document.getElementById("submit").addEventListener("click", async () => {
     const data = getPlayerStats();
+    const completionStatus = isFichaCompleta(data);
 
-    // Verifique se todos os campos e rolagens foram preenchidos antes de marcar como completo
-    if (isFichaCompleta(data)) {
-        data.fichaCompleta = true; // Marca a ficha como completa
-        await savePlayerData(auth.currentUser.uid, data); // Salva no Firestore
+    if (completionStatus === true) {
+        data.fichaCompleta = true;
+        await savePlayerData(auth.currentUser.uid, data);
         console.log("Ficha marcada como completa. Redirecionando para o inventário...");
-        window.location.href = "inventario.html"; // Redireciona
+        window.location.href = "inventario.html";
     } else {
-        alert("Por favor, preencha todos os campos e finalize todas as rolagens antes de prosseguir!");
+        let message = "Por favor, preencha todos os campos e finalize todas as rolagens antes de prosseguir!\n\n";
+        if (completionStatus.missingFields.length > 0) {
+            message += "Campos faltando: " + completionStatus.missingFields.join(", ") + "\n";
+        }
+        if (completionStatus.unrolledStats.length > 0) {
+            message += "Atributos a serem rolados: " + completionStatus.unrolledStats.join(", ") + "\n";
+        }
+        alert(message);
     }
 });
 
@@ -276,25 +283,28 @@ function getStat(id) {
 }
 
 function isFichaCompleta(playerData) {
+    const missingFields = [];
+    const unrolledStats = [];
     const stats = ["energy", "skill", "charisma", "magic", "luck"];
-    const statsComplete = stats.every(stat => 
-        playerData[stat] &&
-        playerData[stat].firstRoll > 0 &&
-        playerData[stat].secondRoll > 0 &&
-        playerData[stat].total > 0
-    );
 
-    return (
-        playerData &&
-        playerData.name &&
-        playerData.race &&
-        playerData.alignment &&
-        playerData.class &&
-        playerData.maoDominante &&
-        playerData.hemisferioDominante &&
-        playerData.idade &&
-        statsComplete // Verifica se os atributos estão completos
-    );
+    if (!playerData.name) missingFields.push("Nome do heroi");
+    if (!playerData.race) missingFields.push("Raça");
+    if (!playerData.alignment) missingFields.push("Alinhamento");
+    if (!playerData.class) missingFields.push("Classe");
+    if (!playerData.maoDominante) missingFields.push("Mão Dominante");
+    if (!playerData.hemisferioDominante) missingFields.push("Hemisfério Dominante");
+    if (!playerData.idade) missingFields.push("Idade");
+
+    stats.forEach(stat => {
+        if (!playerData[stat] || playerData[stat].firstRoll === 0 || playerData[stat].secondRoll === 0 || playerData[stat].total === 0) {
+            unrolledStats.push(stat.charAt(0).toUpperCase() + stat.slice(1)); // Capitaliza o nome do atributo
+        }
+    });
+
+    if (missingFields.length > 0 || unrolledStats.length > 0) {
+        return { missingFields, unrolledStats };
+    }
+    return true;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -349,7 +359,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         resets[stat] = playerData[stat].resets !== undefined ? playerData[stat].resets : 2;
                     }
                 });
-                
+
                 // 🔹 Atualiza os modificadores raciais
                 updateRacialModifiersDisplay();
             }
