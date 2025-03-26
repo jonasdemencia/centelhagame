@@ -63,27 +63,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Verifica se o item é consumível e mostra/oculta o botão "Usar"
         if (selectedItem.dataset.consumable === 'true') {
-            // Posiciona o botão "Usar" ao lado do item
-            const itemRect = item.getBoundingClientRect();
-            const chestRect = itemsContainer.getBoundingClientRect();
-            useButton.style.display = "block";
-            useButton.style.position = "absolute";
-            useButton.style.top = `${itemRect.top - chestRect.top + (itemRect.height / 2) - (useButton.offsetHeight / 2)}px`;
-            useButton.style.left = `${itemRect.right - chestRect.left + 10}px`; // 10px de distância
+            toggleUseButton(true);
         } else {
-            useButton.style.display = "none";
-            useButton.style.position = ""; // Reset position
-            useButton.style.top = "";
-            useButton.style.left = "";
+            toggleUseButton(false);
         }
     }
 
     // Adiciona evento de clique aos itens iniciais
     if (itemsContainer) {
         itemsContainer.querySelectorAll('.item').forEach(item => {
-            item.addEventListener('click', (event) => {
+            item.addEventListener('click', () => {
                 // Verifica se o clique foi no botão de expandir
-                if (!event.target.classList.contains('item-expand-toggle')) {
+                if (!item.classList.contains('item-expand-toggle')) {
                     handleItemClick(item);
                 }
             });
@@ -110,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     newItem.dataset.value = slot.dataset.value;         // Mantém o valor
                     newItem.innerHTML = currentEquippedItem;
                     itemsContainer.appendChild(newItem);
-                    addItemClickListener(newItem, itemsContainer, useButton);
+                    addItemClickListener(newItem);
                 }
 
                 slot.innerHTML = selectedItem.innerHTML;
@@ -152,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 itemsContainer.appendChild(newItem);
-                addItemClickListener(newItem, itemsContainer, useButton);
+                addItemClickListener(newItem);
 
                 updateCharacterCouraca();
                 updateCharacterDamage();
@@ -248,8 +239,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Adiciona evento de clique aos novos itens do baú
-function addItemClickListener(item, itemsContainer, useButton) {
+function addItemClickListener(item) {
     item.addEventListener('click', (event) => {
+        // Verifica se o clique foi no botão de expandir
         if (!event.target.classList.contains('item-expand-toggle')) {
             console.log("Novo item clicado no baú:", item);
             clearHighlights();
@@ -264,18 +256,9 @@ function addItemClickListener(item, itemsContainer, useButton) {
 
             // Verifica se o item é consumível e mostra/oculta o botão "Usar"
             if (selectedItem.dataset.consumable === 'true') {
-                // Posiciona o botão "Usar" ao lado do item
-                const itemRect = item.getBoundingClientRect();
-                const chestRect = itemsContainer.getBoundingClientRect();
-                useButton.style.display = "block";
-                useButton.style.position = "absolute";
-                useButton.style.top = `${itemRect.top - chestRect.top + (itemRect.height / 2) - (useButton.offsetHeight / 2)}px`;
-                useButton.style.left = `${itemRect.right - chestRect.left + 10}px`; // 10px de distância
+                toggleUseButton(true);
             } else {
-                useButton.style.display = "none";
-                useButton.style.position = ""; // Reset position
-                useButton.style.top = "";
-                useButton.style.left = "";
+                toggleUseButton(false);
             }
         }
     });
@@ -387,8 +370,6 @@ function loadInventoryUI(inventoryData) {
     // Carrega itens no baú
     const chestElement = document.querySelector('.items');
     chestElement.innerHTML = ""; // Limpa o conteúdo atual
-    const itemsContainer = document.querySelector('.items'); // Obtém a referência aqui também
-    const useButton = document.getElementById("useBtn");   // Obtém a referência aqui também
     inventoryData.itemsInChest.forEach(item => {
         const newItem = document.createElement('div');
         newItem.classList.add('item');
@@ -417,7 +398,7 @@ function loadInventoryUI(inventoryData) {
         }
 
         chestElement.appendChild(newItem);
-        addItemClickListener(newItem, itemsContainer, useButton); // Passa as referências aqui
+        addItemClickListener(newItem); // Mantenha esta linha para a seleção do item
         // Adicionar o listener para o botão de expandir
         const expandToggle = newItem.querySelector('.item-expand-toggle');
         const descriptionDiv = newItem.querySelector('.item-description');
