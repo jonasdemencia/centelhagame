@@ -93,6 +93,8 @@ p {
 
 .item {
     background: #8b5a2b;
+    position: relative; /* Para posicionar o toggle dentro */
+    padding-right: 25px; /* Espaço para o botão de expandir */
 }
 
 .slot {
@@ -339,4 +341,28 @@ p {
 #char-po-container .label {
     font-size: 0.7em; /* Nome PO menor */
     margin-bottom: 2px;
+}
+
+/* Estilos para o expandir/recolher dos itens */
+.item-expand-toggle {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 18px;
+}
+
+.item-description {
+    margin-top: 5px;
+    padding: 5px;
+    border: 1px solid #eee;
+    background-color: #f9f9f9;
+    font-size: 0.9em;
+    color: black; /* Garante que a cor do texto da descrição seja legível */
 }
