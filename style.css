@@ -340,8 +340,15 @@ body {
 
 .racial-modifier {
     font-size: 10px; /* Diminuindo a fonte */
-    color: #777; /* Cinza mais claro */
     margin-left: 3px; /* Reduzindo a margem */
+}
+
+.racial-modifier.positive {
+    color: lightgreen;
+}
+
+.racial-modifier.negative {
+    color: darkorange;
 }
 
 .attribute-description-container {
