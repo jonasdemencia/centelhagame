@@ -234,6 +234,8 @@ p {
     gap: 8px; /* Espaço menor entre as janelas */
     justify-content: center; /* Centraliza a ficha */
     font-size: 13px; /* Fonte menor para toda a ficha */
+    width: 250px; /* Adicionando a mesma largura do .character */
+    margin: auto; /* Centraliza a ficha também */
 }
 
 .character-sheet p {
@@ -384,4 +386,20 @@ p {
     color: black;
     z-index: 10; /* Garante que a descrição fique sempre na frente de outros elementos */
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); /* Adiciona uma sombra para destacar ainda mais */
+}
+
+#useBtn {
+    display: none; /* Inicialmente oculto */
+    position: absolute; /* Permite o posicionamento via JavaScript */
+    /* Você pode adicionar outros estilos aqui, como cor de fundo, borda, etc. */
+    background-color: #4CAF50; /* Exemplo de cor */
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 5px;
+    z-index: 11; /* Garante que fique acima de outros elementos */
 }
