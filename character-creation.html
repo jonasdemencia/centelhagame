@@ -4,51 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ficha de Criação de Personagem</title>
-    <link href="style.css" rel="stylesheet"> <!-- Referência ao CSS -->
-    <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet"> <!-- Fonte Eagle Lake -->
+    <link href="style.css" rel="stylesheet"> <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body id="character-page" class="hidden">
     <div class="container">
         <h2 class="page-title">Ficha de Criação de Personagem</h2>
 
-        <!-- Formulário: Nome e CPF -->
         <div class="form-group">
             <input type="text" id="name" placeholder="Nome do heroi" class="input-field">
+            <p class="inline-description">Escolha um nome digno para seu aventureiro!</p>
             <button id="submit" class="button">ENVIAR</button>
         </div>
 
-        <!-- Campos: Raça, Alinhamento e Classe -->
-        <div class="label-group">
-            <label for="race" class="label-text">R a ç a:</label>
-            <select id="race" class="select-field">
-                <option value="">Selecione</option>
-                <option>Anão</option>
-                <option>Elfo</option>
-                <option>Humano</option>
-            </select>
+        <div class="accordion">
+            <button class="accordion-button">R a ç a: <i class="fa-solid fa-caret-down"></i></button>
+            <div class="accordion-content">
+                <p>Escolha a raça do seu personagem. Cada raça possui características e modificadores de atributos únicos.</p>
+                <div class="label-group">
+                    <label for="race" class="label-text">Selecione:</label>
+                    <select id="race" class="select-field">
+                        <option value="">Selecione</option>
+                        <option>Anão</option>
+                        <option>Elfo</option>
+                        <option>Humano</option>
+                    </select>
+                </div>
+                <div class="race-info">
+                    <p><strong>Anão:</strong> Conhecidos por sua robustez e afinidade com a mineração. +2 Energia, -2 Carisma.</p>
+                    <p><strong>Elfo:</strong> Seres elegantes e conectados com a natureza. +2 Habilidade, -2 Energia.</p>
+                    <p><strong>Humano:</strong> Adaptáveis e versáteis. Não possuem modificadores raciais.</p>
+                </div>
+            </div>
         </div>
-        <div class="label-group">
-            <label for="alignment" class="label-text">A l i n h a m e n t o:</label>
-            <select id="alignment" class="select-field">
-                <option value="">Selecione</option>
-                <option disabled>Humanista</option>
-                <option disabled>Behaviorista</option>
-                <option disabled>Psicanalista</option>
-                <option>Estudante</option>
-            </select>
+
+        <div class="accordion">
+            <button class="accordion-button">A l i n h a m e n t o: <i class="fa-solid fa-caret-down"></i></button>
+            <div class="accordion-content">
+                <p>O alinhamento descreve a visão moral e ética do seu personagem.</p>
+                <div class="label-group">
+                    <label for="alignment" class="label-text">Selecione:</label>
+                    <select id="alignment" class="select-field">
+                        <option value="">Selecione</option>
+                        <option disabled>Humanista (Em breve)</option>
+                        <option disabled>Behaviorista (Em breve)</option>
+                        <option disabled>Psicanalista (Em breve)</option>
+                        <option>Estudante</option>
+                    </select>
+                </div>
+                <p><strong>Estudante:</strong> Um indivíduo em aprendizado, focado em adquirir conhecimento e novas experiências.</p>
+                </div>
         </div>
-        <div class="label-group">
-            <label for="class" class="label-text">C l a s s e:</label>
-            <select id="class" class="select-field">
-                <option value="">Selecione</option>
-                <option disabled>Paladino</option>
-                <option disabled>Guerreiro</option>
-                <option disabled>Ladino</option>
-                <option disabled>Mago</option>
-                <option>Candidato</option>
-            </select>
+
+        <div class="accordion">
+            <button class="accordion-button">C l a s s e: <i class="fa-solid fa-caret-down"></i></button>
+            <div class="accordion-content">
+                <p>A classe representa a profissão ou vocação principal do seu personagem.</p>
+                <div class="label-group">
+                    <label for="class" class="label-text">Selecione:</label>
+                    <select id="class" class="select-field">
+                        <option value="">Selecione</option>
+                        <option disabled>Paladino (Em breve)</option>
+                        <option disabled>Guerreiro (Em breve)</option>
+                        <option disabled>Ladino (Em breve)</option>
+                        <option disabled>Mago (Em breve)</option>
+                        <option>Candidato</option>
+                    </select>
+                </div>
+                <p><strong>Candidato:</strong> Um aspirante a herói, ainda descobrindo seu caminho e potencial.</p>
+                </div>
         </div>
- <div class="label-group">
+
+        <div class="label-group">
             <label for="mao dominante" class="label-text">M ã o  D o m i n a n t e:</label>
             <select id="mao dominante" class="select-field">
                 <option value="">Selecione</option>
@@ -65,24 +91,46 @@
                 <option>Direito</option>
             </select>
         </div>
-        <div class="label-group">
-            <label for="idade" class="label-text">I d a d e:</label>
-            <select id="idade" class="select-field">
-                <option value="">Selecione</option>
-                <option disabled>Granula(7-10 anos)</option>
-                <option>Neófito(12-20 anos)</option>
-                <option>Confessor(25-35 anos)</option>
-                <option>Adepto(45-60 anos)</option>
-                <option disabled>Velho lobo(70-85 anos)</option>
-            </select>
-        </div>
-       
-        <!-- Instruções -->
-        <p class="instruction-paragraph">Você poderá rolar cada um dos atributos três vezes. Role de forma sábia.</p>
 
-        <!-- Seção de Atributos -->
+        <div class="accordion">
+            <button class="accordion-button">I d a d e: <i class="fa-solid fa-caret-down"></i></button>
+            <div class="accordion-content">
+                <p>A idade pode influenciar a aparência e a história do seu personagem.</p>
+                <div class="label-group">
+                    <label for="idade" class="label-text">Selecione:</label>
+                    <select id="idade" class="select-field">
+                        <option value="">Selecione</option>
+                        <option disabled>Granula (7-10 anos)</option>
+                        <option>Neófito (12-20 anos)</option>
+                        <option>Confessor (25-35 anos)</option>
+                        <option>Adepto (45-60 anos)</option>
+                        <option disabled>Velho lobo (70-85 anos)</option>
+                    </select>
+                </div>
+                <p><strong>Neófito:</strong> Jovem e cheio de potencial.</p>
+                <p><strong>Confessor:</strong> Na flor da idade, com experiência e convicção.</p>
+                <p><strong>Adepto:</strong> Mais experiente e com sabedoria acumulada.</p>
+                </div>
+        </div>
+
+        <p class="instruction-paragraph">Você poderá rolar cada um dos atributos três vezes. Role de forma sábia. <i class="fa-solid fa-info-circle info-icon" onclick="document.getElementById('instructions-modal').style.display='block'"></i></p>
+
+        <div id="instructions-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="document.getElementById('instructions-modal').style.display='none'">&times;</span>
+                <h3>Instruções para Rolagem de Atributos</h3>
+                <p>Para cada atributo (Energia, Habilidade, Carisma, Magia, Sorte), você tem direito a três rolagens.</p>
+                <ol>
+                    <li>Clique no botão com o ícone de dado (🎲) para realizar a primeira rolagem.</li>
+                    <li>Clique novamente no mesmo botão para realizar a segunda rolagem.</li>
+                    <li>Após a segunda rolagem, o valor total do atributo será calculado, levando em consideração quaisquer modificadores raciais.</li>
+                    <li>Você pode usar o botão "Zerar" para limpar as rolagens daquele atributo e ter mais duas chances de rolar. Você tem direito a dois "zeramentos" por atributo.</li>
+                    <li>Escolha sabiamente seus resultados, pois eles definirão as capacidades iniciais do seu personagem!</li>
+                </ol>
+            </div>
+        </div>
+
         <div class="stats-section stats" id="stats">
-            <!-- Energia -->
             <div class="stat-box">
                 <strong class="stat-name">Energia:</strong>
                 <span id="energy1" class="stat-value">-</span> + <span id="energy2" class="stat-value">-</span>
@@ -93,7 +141,6 @@
                     <button onclick="resetStat('energy', this)" class="button">Zerar</button>
                 </div>
             </div>
-            <!-- Habilidade -->
             <div class="stat-box">
                 <strong class="stat-name">Habilidade:</strong>
                 <span id="skill1" class="stat-value">-</span> + <span id="skill2" class="stat-value">-</span>
@@ -104,7 +151,6 @@
                     <button onclick="resetStat('skill', this)" class="button">Zerar</button>
                 </div>
             </div>
-            <!-- Carisma -->
             <div class="stat-box">
                 <strong class="stat-name">Carisma:</strong>
                 <span id="charisma1" class="stat-value">-</span> + <span id="charisma2" class="stat-value">-</span>
@@ -115,7 +161,6 @@
                     <button onclick="resetStat('charisma', this)" class="button">Zerar</button>
                 </div>
             </div>
-            <!-- Magia -->
             <div class="stat-box">
                 <strong class="stat-name">Magia:</strong>
                 <span id="magic1" class="stat-value">-</span> + <span id="magic2" class="stat-value">-</span>
@@ -126,7 +171,6 @@
                     <button onclick="resetStat('magic', this)" class="button">Zerar</button>
                 </div>
             </div>
-            <!-- Sorte -->
             <div class="stat-box">
                 <strong class="stat-name">Sorte:</strong>
                 <span id="luck1" class="stat-value">-</span> + <span id="luck2" class="stat-value">-</span>
@@ -140,12 +184,23 @@
         </div>
     </div>
 
-    <!-- Scripts do Firebase -->
-<script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
 <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js"></script>
 <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
-    
-    <!-- Script principal -->
+
     <script src="character-creation.js" type="module"></script>
+    <script>
+        // Script para funcionalidade do accordion
+        document.addEventListener('DOMContentLoaded', () => {
+            const accordionButtons = document.querySelectorAll('.accordion-button');
+            accordionButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const accordionContent = button.nextElementSibling;
+                    button.classList.toggle('active');
+                    accordionContent.style.maxHeight = accordionContent.style.maxHeight ? null : accordionContent.scrollHeight + "px";
+                });
+            });
+        });
+    </script>
 </body>
 </html>
