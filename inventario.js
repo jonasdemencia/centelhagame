@@ -371,35 +371,16 @@ function loadInventoryUI(inventoryData) {
     const chestElement = document.querySelector('.items');
     chestElement.innerHTML = ""; // Limpa o conteúdo atual
     inventoryData.itemsInChest.forEach(item => {
-    const newItem = document.createElement('div');
-    newItem.classList.add('item');
-    newItem.dataset.item = item.id;
-    newItem.innerHTML = `${item.content}`;
-
-    let expandToggle = document.createElement("span");
-    expandToggle.classList.add("item-expand-toggle");
-    expandToggle.textContent = "+";
-
-    let descriptionDiv = document.createElement("div");
-    descriptionDiv.classList.add("item-description");
-    descriptionDiv.style.display = "none";
-    descriptionDiv.textContent = item.description || "Descrição do item.";
-
-    // 🔹 Adicionando corretamente os elementos ao DOM
-    newItem.appendChild(expandToggle);
-    newItem.appendChild(descriptionDiv);
-
-    // 🔹 Evento de expansão funcionando para todos os itens
-    expandToggle.addEventListener("click", (event) => {
-        event.stopPropagation(); // Impede conflitos com a seleção do item
-        descriptionDiv.style.display = (descriptionDiv.style.display === "none") ? "block" : "none";
-        expandToggle.textContent = (descriptionDiv.style.display === "none") ? "+" : "-";
-    });
-
-    chestElement.appendChild(newItem);
-    addItemClickListener(newItem);
-});
-
+        const newItem = document.createElement('div');
+        newItem.classList.add('item');
+        newItem.dataset.item = item.id;
+        newItem.innerHTML = `
+            ${item.content}
+            <span class="item-expand-toggle">+</span>
+            <div class="item-description" style="display: none;">
+                ${item.description || 'Descrição do item.'}
+            </div>
+        `;
         if (item.consumable) {
             newItem.dataset.consumable = 'true';
             newItem.dataset.quantity = item.quantity;
