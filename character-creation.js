@@ -67,7 +67,14 @@ function rollStat(stat, button) {
             const racialModifiers = getRacialModifiers();
             const modifierValue = racialModifiers[stat];
 
-            modifierDisplay.innerText = modifierValue !== 0 ? ` (+${modifierValue})` : "";
+            modifierDisplay.innerText = modifierValue !== 0 ? ` (${modifierValue})` : "";
+            modifierDisplay.className = 'racial-modifier'; // Resetando classes
+            if (modifierValue > 0) {
+                modifierDisplay.classList.add('positive');
+            } else if (modifierValue < 0) {
+                modifierDisplay.classList.add('negative');
+            }
+
             rollValue += modifierValue;
             totalRoll.innerText = rollValue;
             rolls[stat]--;
@@ -87,6 +94,7 @@ function resetStat(stat, button) {
         document.getElementById(stat + "2").innerText = "-";
         document.getElementById(stat + "Total").innerText = "-";
         document.getElementById(stat + "Modifier").innerText = "";
+        document.getElementById(stat + "Modifier").className = 'racial-modifier'; // Resetando classes
         resets[stat]--;
         savePlayerData(auth.currentUser.uid, getPlayerStats());
         if (resets[stat] === 0) disableButton(button);
@@ -113,22 +121,18 @@ function updateRacialModifiersDisplay() {
         if (modifierDisplay && totalRoll && firstRoll && secondRoll) {
             let modifierValue = racialModifiers[stat];
 
-            // 🔹 Resetando a exibição do modificador antes de aplicar o novo
-            modifierDisplay.innerText = "";
-
-            // 🔹 Atualizando a exibição correta dos valores negativos e positivos
+            modifierDisplay.innerText = modifierValue !== 0 ? ` (${modifierValue})` : "";
+            modifierDisplay.className = 'racial-modifier'; // Resetando classes
             if (modifierValue > 0) {
-                modifierDisplay.innerText = ` (+${modifierValue})`;
+                modifierDisplay.classList.add('positive');
             } else if (modifierValue < 0) {
-                modifierDisplay.innerText = ` (${modifierValue})`;
+                modifierDisplay.classList.add('negative');
             }
 
-            // 🔹 Recalcula o total caso os dados já tenham sido rolados
             let firstValue = parseInt(firstRoll.innerText) || 0;
             let secondValue = parseInt(secondRoll.innerText) || 0;
             let newTotal = firstValue + secondValue + modifierValue;
 
-            // 🔹 Se os valores já foram rolados, atualiza o total
             if (firstValue > 0 && secondValue > 0) {
                 totalRoll.innerText = newTotal;
             }
@@ -360,7 +364,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         document.getElementById(stat + "1").innerText = playerData[stat].firstRoll || "-";
                         document.getElementById(stat + "2").innerText = playerData[stat].secondRoll || "-";
                         document.getElementById(stat + "Total").innerText = playerData[stat].total || "-";
-                        document.getElementById(stat + "Modifier").innerText = playerData[stat].modifier ? ` (+${playerData[stat].modifier})` : "";
+                        document.getElementById(stat + "Modifier").innerText = playerData[stat].modifier ? ` (${playerData[stat].modifier})` : "";
+                        document.getElementById(stat + "Modifier").className = 'racial-modifier';
+                        if (playerData[stat].modifier > 0) {
+                            document.getElementById(stat + "Modifier").classList.add('positive');
+                        } else if (playerData[stat].modifier < 0) {
+                            document.getElementById(stat + "Modifier").classList.add('negative');
+                        }
                         rolls[stat] = playerData[stat].rolls !== undefined ? playerData[stat].rolls : 3;
                         resets[stat] = playerData[stat].resets !== undefined ? playerData[stat].resets : 2;
                     }
