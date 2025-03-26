@@ -28,7 +28,7 @@ const initialItems = [
     { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2 }, // Adicionando efeito e valor
     { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3 }, // Adicionando efeito e valor para a poção
     { id: "pao", content: "Pão", consumable: true, quantity: 1 },
-    { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 2, effect: "damage", value: 1 } // Adicionando o pão mofado com efeito
+    { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 1 } // Quantidade aumentada para 20
 ];
 
 // Função para exibir/ocultar o botão de usar
@@ -262,7 +262,7 @@ function clearHighlights() {
     document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
 }
 
-// Função para salvar dados no Firestore
+// Função para salvar dados do inventário no Firestore
 async function saveInventoryData(uid) {
     console.log("Salvando dados do inventário para o usuário:", uid);
     const itemsInChest = Array.from(document.querySelectorAll('.item')).map(item => {
@@ -546,6 +546,15 @@ async function savePlayerData(uid, playerData) {
         const playerRef = doc(db, "players", uid);
         await setDoc(playerRef, playerData, { merge: true });
         console.log("Dados do jogador salvos com sucesso!");
+
+        // -------------------- CONDIÇÃO DE MORTE (AGORA GERAL) --------------------
+        if (playerData.energy && playerData.energy.total <= 0) {
+            alert("Seu personagem morreu! Game Over.");
+            console.log("GAME OVER: Energia chegou a 0 ou menos.");
+            // Aqui você pode adicionar mais lógica de game over, se necessário.
+        }
+        // ----------------------------------------------------------------------
+
     } catch (error) {
         console.error("Erro ao salvar os dados do jogador:", error);
     }
