@@ -18,6 +18,12 @@ const auth = getAuth(app);
 let rolls = { energy: 3, skill: 3, charisma: 3, magic: 3, luck: 3 };
 let resets = { energy: 2, skill: 2, charisma: 2, magic: 2, luck: 2 };
 
+let defeitos = [];
+let defeitoSelecionado1 = null;
+let defeitoSelecionado2 = null;
+let defeitoCentralFinal = null;
+let selecoesDefeito = 0;
+
 function rollDice(sides) {
     return Math.floor(Math.random() * sides) + 1;
 }
@@ -186,6 +192,9 @@ document.getElementById("submit").addEventListener("click", async () => {
         if (completionStatus.unrolledStats.length > 0) {
             message += "Atributos a serem rolados: " + completionStatus.unrolledStats.join(", ") + "\n";
         }
+        if (completionStatus.missingDefeitoCentral) {
+            message += "Selecione seu Defeito Central!\n";
+        }
         alert(message);
     }
 });
@@ -236,6 +245,7 @@ function getPlayerStats() {
         maoDominante: document.getElementById("mao dominante").value,
         hemisferioDominante: document.getElementById("hemisfério dominante").value,
         idade: document.getElementById("idade").value,
+        defeitoCentral: defeitoCentralFinal,
         energy: {
             firstRoll: getStat("energy1"),
             secondRoll: getStat("energy2"),
@@ -287,6 +297,7 @@ function isFichaCompleta(playerData) {
     const missingFields = [];
     const unrolledStats = [];
     const stats = ["energy", "skill", "charisma", "magic", "luck"];
+    let missingDefeitoCentral = false;
 
     if (!playerData.name) missingFields.push("Nome do heroi");
     if (!playerData.race) missingFields.push("Raça");
@@ -295,6 +306,7 @@ function isFichaCompleta(playerData) {
     if (!playerData.maoDominante) missingFields.push("Mão Dominante");
     if (!playerData.hemisferioDominante) missingFields.push("Hemisfério Dominante");
     if (!playerData.idade) missingFields.push("Idade");
+    if (!playerData.defeitoCentral) missingDefeitoCentral = true;
 
     stats.forEach(stat => {
         if (!playerData[stat] || playerData[stat].firstRoll === 0 || playerData[stat].secondRoll === 0 || playerData[stat].total === 0) {
@@ -302,8 +314,8 @@ function isFichaCompleta(playerData) {
         }
     });
 
-    if (missingFields.length > 0 || unrolledStats.length > 0) {
-        return { missingFields, unrolledStats };
+    if (missingFields.length > 0 || unrolledStats.length > 0 || missingDefeitoCentral) {
+        return { missingFields, unrolledStats, missingDefeitoCentral };
     }
     return true;
 }
@@ -318,6 +330,66 @@ document.addEventListener("DOMContentLoaded", () => {
             accordionContent.style.maxHeight = accordionContent.style.maxHeight ? null : accordionContent.scrollHeight + "px";
         });
     });
+
+    // Defeito Central functionality
+    const defeitosListaElement = document.getElementById("defeitos-lista");
+    if (defeitosListaElement) {
+        const liElements = defeitosListaElement.querySelectorAll("li");
+        liElements.forEach(li => {
+            defeitos.push(li.textContent);
+        });
+    }
+
+    const selecionarDefeitoButton = document.getElementById("selecionar-defeito");
+    const defeitoSelecionado1Div = document.getElementById("defeito-selecionado-1");
+    const defeitoSelecionado2Div = document.getElementById("defeito-selecionado-2");
+    const escolhaDefeitoDiv = document.getElementById("escolha-defeito");
+    const escolherDefeito1Button = document.getElementById("escolher-defeito-1");
+    const escolherDefeito2Button = document.getElementById("escolher-defeito-2");
+    const defeitoCentralFinalDiv = document.getElementById("defeito-central-final");
+    const defeitoCentralFinalSpan = defeitoCentralFinalDiv.querySelector("span");
+
+    if (selecionarDefeitoButton) {
+        selecionarDefeitoButton.addEventListener("click", () => {
+            if (selecoesDefeito < 2) {
+                const randomIndex = Math.floor(Math.random() * defeitos.length);
+                const defeito = defeitos[randomIndex];
+                if (selecoesDefeito === 0) {
+                    defeitoSelecionado1 = defeito;
+                    defeitoSelecionado1Div.style.display = "block";
+                    defeitoSelecionado1Div.querySelector("span").textContent = defeito;
+                } else if (selecoesDefeito === 1) {
+                    defeitoSelecionado2 = defeito;
+                    defeitoSelecionado2Div.style.display = "block";
+                    defeitoSelecionado2Div.querySelector("span").textContent = defeito;
+                    escolhaDefeitoDiv.style.display = "block";
+                }
+                selecoesDefeito++;
+            } else {
+                alert("Você já selecionou dois defeitos. Escolha um deles.");
+            }
+        });
+    }
+
+    if (escolherDefeito1Button) {
+        escolherDefeito1Button.addEventListener("click", () => {
+            defeitoCentralFinal = defeitoSelecionado1;
+            escolhaDefeitoDiv.style.display = "none";
+            defeitoCentralFinalDiv.style.display = "block";
+            defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
+            savePlayerData(auth.currentUser.uid, getPlayerStats());
+        });
+    }
+
+    if (escolherDefeito2Button) {
+        escolherDefeito2Button.addEventListener("click", () => {
+            defeitoCentralFinal = defeitoSelecionado2;
+            escolhaDefeitoDiv.style.display = "none";
+            defeitoCentralFinalDiv.style.display = "block";
+            defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
+            savePlayerData(auth.currentUser.uid, getPlayerStats());
+        });
+    }
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -375,6 +447,34 @@ document.addEventListener("DOMContentLoaded", () => {
                         resets[stat] = playerData[stat].resets !== undefined ? playerData[stat].resets : 2;
                     }
                 });
+
+                // 🔹 Restaura o estado do Defeito Central
+                if (playerData.defeitoCentral) {
+                    defeitoCentralFinal = playerData.defeitoCentral;
+                    defeitoCentralFinalDiv.style.display = "block";
+                    defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
+                    selecoesDefeito = 2; // Simula que as duas seleções já foram feitas
+                    escolhaDefeitoDiv.style.display = "none";
+                    if (selecionarDefeitoButton) {
+                        selecionarDefeitoButton.disabled = true;
+                        selecionarDefeitoButton.style.opacity = "0.5";
+                        selecionarDefeitoButton.style.cursor = "not-allowed";
+                    }
+                } else {
+                    selecoesDefeito = 0;
+                    defeitoSelecionado1 = null;
+                    defeitoSelecionado2 = null;
+                    defeitoCentralFinal = null;
+                    defeitoSelecionado1Div.style.display = "none";
+                    defeitoSelecionado2Div.style.display = "none";
+                    escolhaDefeitoDiv.style.display = "none";
+                    defeitoCentralFinalDiv.style.display = "none";
+                    if (selecionarDefeitoButton) {
+                        selecionarDefeitoButton.disabled = false;
+                        selecionarDefeitoButton.style.opacity = "1";
+                        selecionarDefeitoButton.style.cursor = "pointer";
+                    }
+                }
 
                 // 🔹 Atualiza os modificadores raciais
                 updateRacialModifiersDisplay();
