@@ -151,10 +151,7 @@
         <div class="stats-section stats" id="stats">
             <div class="stat-box">
                 <div>
-                    <strong class="stat-name">
-                        Energia:
-                        <i class="fa-solid fa-info-circle attribute-info-icon" data-attribute="energia"></i>
-                    </strong>
+                    <strong class="stat-name">Energia:</strong>
                     <div>
                         <span id="energy1" class="stat-value">-</span> + <span id="energy2" class="stat-value">-</span>
                         <span id="energyModifier" class="racial-modifier"></span> =
@@ -169,10 +166,7 @@
             </div>
             <div class="stat-box">
                 <div>
-                    <strong class="stat-name">
-                        Habilidade:
-                        <i class="fa-solid fa-info-circle attribute-info-icon" data-attribute="habilidade"></i>
-                    </strong>
+                    <strong class="stat-name">Habilidade:</strong>
                     <div>
                         <span id="skill1" class="stat-value">-</span> + <span id="skill2" class="stat-value">-</span>
                         <span id="skillModifier" class="racial-modifier"></span> =
@@ -187,10 +181,7 @@
             </div>
             <div class="stat-box">
                 <div>
-                    <strong class="stat-name">
-                        Carisma:
-                        <i class="fa-solid fa-info-circle attribute-info-icon" data-attribute="carisma"></i>
-                    </strong>
+                    <strong class="stat-name">Carisma:</strong>
                     <div>
                         <span id="charisma1" class="stat-value">-</span> + <span id="charisma2" class="stat-value">-</span>
                         <span id="charismaModifier" class="racial-modifier"></span> =
@@ -205,10 +196,7 @@
             </div>
             <div class="stat-box">
                 <div>
-                    <strong class="stat-name">
-                        Magia:
-                        <i class="fa-solid fa-info-circle attribute-info-icon" data-attribute="magia"></i>
-                    </strong>
+                    <strong class="stat-name">Magia:</strong>
                     <div>
                         <span id="magic1" class="stat-value">-</span> + <span id="magic2" class="stat-value">-</span>
                         <span id="magicModifier" class="racial-modifier"></span> =
@@ -223,10 +211,7 @@
             </div>
             <div class="stat-box">
                 <div>
-                    <strong class="stat-name">
-                        Sorte:
-                        <i class="fa-solid fa-info-circle attribute-info-icon" data-attribute="sorte"></i>
-                    </strong>
+                    <strong class="stat-name">Sorte:</strong>
                     <div>
                         <span id="luck1" class="stat-value">-</span> + <span id="luck2" class="stat-value">-</span>
                         <span id="luckModifier" class="racial-modifier"></span> =
@@ -256,18 +241,6 @@
                     const accordionContent = button.nextElementSibling;
                     button.classList.toggle('active');
                     accordionContent.style.maxHeight = accordionContent.style.maxHeight ? null : accordionContent.scrollHeight + "px";
-                });
-            });
-
-            // Script para funcionalidade do ícone de informação dos atributos
-            const infoIcons = document.querySelectorAll('.attribute-info-icon');
-            infoIcons.forEach(icon => {
-                icon.addEventListener('click', function() {
-                    const attribute = this.dataset.attribute;
-                    const descriptionContainer = document.getElementById(`${attribute}-description`);
-                    if (descriptionContainer) {
-                        descriptionContainer.classList.toggle('show');
-                    }
                 });
             });
         });
