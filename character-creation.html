@@ -43,16 +43,60 @@
             background-color: #ccc;
         }
 
+        /* Removendo o display: none inicial da lista */
         #defeitos-lista {
-            display: none; /* Esconde a lista de defeitos inicialmente */
+            margin-top: 10px;
+        }
+
+        #defeitos-lista ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #defeitos-lista li {
+            padding: 5px 0;
+            cursor: pointer;
         }
 
         .defeito-selecionado {
+            font-weight: bold;
+            color: green;
+        }
+
+        .defeito-nao-selecionado {
+            color: #ccc;
+            font-style: italic;
+        }
+
+        #selecionar-defeito {
             margin-top: 10px;
+        }
+
+        .defeito-opcao {
             padding: 8px;
             border: 1px solid #ddd;
             background-color: #f9f9f9;
             border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        #escolha-defeito {
+            margin-top: 10px;
+        }
+
+        .pequeno {
+            font-size: 0.8em;
+            padding: 5px 10px;
+            margin-right: 5px;
+        }
+
+        #defeito-central-final {
+            margin-top: 10px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            background-color: #e6ffe6;
+            border-radius: 4px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -265,14 +309,12 @@
                     </ul>
                 </div>
                 <button id="selecionar-defeito" class="button">Selecionar Defeito Aleatoriamente</button>
-                <div id="defeito-selecionado-1" class="defeito-selecionado" style="display: none;">Defeito 1: <span></span></div>
-                <div id="defeito-selecionado-2" class="defeito-selecionado" style="display: none;">Defeito 2: <span></span></div>
                 <div id="escolha-defeito" style="display: none;">
                     <p>Escolha um dos defeitos centrais:</p>
                     <button id="escolher-defeito-1" class="button pequeno">Escolher Defeito 1</button>
                     <button id="escolher-defeito-2" class="button pequeno">Escolher Defeito 2</button>
-                    <div id="defeito-central-final" class="defeito-selecionado" style="display: none;">Defeito Central Escolhido: <span></span></div>
                 </div>
+                <div id="defeito-central-final" style="display: none;">Defeito Central Escolhido: <span></span></div>
             </div>
         </div>
 
