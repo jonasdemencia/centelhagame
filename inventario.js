@@ -96,19 +96,19 @@ document.addEventListener("DOMContentLoaded", () => {
                     newItem.classList.add("item");
                     newItem.dataset.item = slotType;
                     newItem.dataset.consumable = slot.dataset.consumable; // Mantém a propriedade consumable
-                    newItem.dataset.quantity = slot.dataset.quantity;    // Mantém a quantidade
-                    newItem.dataset.effect = slot.dataset.effect;        // Mantém o efeito
-                    newItem.dataset.value = slot.dataset.value;         // Mantém o valor
+                    newItem.dataset.quantity = slot.dataset.quantity;     // Mantém a quantidade
+                    newItem.dataset.effect = slot.dataset.effect;         // Mantém o efeito
+                    newItem.dataset.value = slot.dataset.value;          // Mantém o valor
                     newItem.innerHTML = currentEquippedItem;
                     itemsContainer.appendChild(newItem);
                     addItemClickListener(newItem);
                 }
 
-                slot.innerHTML = selectedItem.innerHTML;
+                slot.innerHTML = selectedItem.innerHTML.split('<span class="item-expand-toggle">')[0].trim(); // MODIFICADO AQUI
                 slot.dataset.consumable = selectedItem.dataset.consumable; // Atualiza a propriedade consumable do slot
-                slot.dataset.quantity = selectedItem.dataset.quantity;    // Atualiza a quantidade do slot
-                slot.dataset.effect = selectedItem.dataset.effect;        // Atualiza o efeito do slot
-                slot.dataset.value = selectedItem.dataset.value;         // Atualiza o valor do slot
+                slot.dataset.quantity = selectedItem.dataset.quantity;     // Atualiza a quantidade do slot
+                slot.dataset.effect = selectedItem.dataset.effect;         // Atualiza o efeito do slot
+                slot.dataset.value = selectedItem.dataset.value;          // Atualiza o valor do slot
                 selectedItem.remove();
                 selectedItem = null;
                 clearHighlights();
@@ -127,9 +127,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 const value = slot.dataset.value;
                 slot.innerHTML = slot.dataset.slot;
                 delete slot.dataset.consumable; // Remove a propriedade consumable do slot
-                delete slot.dataset.quantity;    // Remove a quantidade do slot
-                delete slot.dataset.effect;        // Remove o efeito do slot
-                delete slot.dataset.value;         // Remove o valor do slot
+                delete slot.dataset.quantity;     // Remove a quantidade do slot
+                delete slot.dataset.effect;         // Remove o efeito do slot
+                delete slot.dataset.value;          // Remove o valor do slot
 
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
