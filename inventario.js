@@ -19,16 +19,16 @@ const auth = getAuth(app);
 let selectedItem = null; // Armazena o item selecionado
 let currentPlayerData = null; // Armazena os dados do jogador
 
-// Itens iniciais que o jogador deve ter
+// Itens iniciais que o jogador deve ter (adicionando descrições)
 const initialItems = [
-    { id: "bolsa-de-escriba", content: "Bolsa de escriba" },
-    { id: "weapon", content: "canivete" }, // Mudando o id para corresponder ao slot
-    { id: "armor", content: "Hábito monástico" }, // Mudando o id para corresponder ao slot
-    { id: "velas", content: "Velas" },
-    { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2 }, // Adicionando efeito e valor
-    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3 }, // Adicionando efeito e valor para a poção
-    { id: "pao", content: "Pão", consumable: true, quantity: 1 },
-    { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 5 } // Quantidade aumentada para 20
+    { id: "bolsa-de-escriba", content: "Bolsa de escriba", description: "Uma bolsa para guardar pergaminhos e penas." },
+    { id: "weapon", content: "canivete", description: "Uma pequena lâmina afiada." }, // Mudando o id para corresponder ao slot
+    { id: "armor", content: "Hábito monástico", description: "Vestes simples que oferecem pouca proteção." }, // Mudando o id para corresponder ao slot
+    { id: "velas", content: "Velas", description: "Fontes de luz portáteis." },
+    { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2, description: "Um pequeno saco contendo ervas que podem curar ferimentos leves." }, // Adicionando efeito e valor
+    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." }, // Adicionando efeito e valor para a poção
+    { id: "pao", content: "Pão", consumable: true, quantity: 1, description: "Um pedaço de pão simples." },
+    { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 5, description: "Um pedaço de pão velho e mofado. Estranhamente, parece ter um efeito... diferente." } // Quantidade aumentada para 20
 ];
 
 // Função para exibir/ocultar o botão de usar
@@ -72,7 +72,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // Adiciona evento de clique aos itens iniciais
     if (itemsContainer) {
         itemsContainer.querySelectorAll('.item').forEach(item => {
-            item.addEventListener('click', () => handleItemClick(item));
+            item.addEventListener('click', () => {
+                // Verifica se o clique foi no botão de expandir
+                if (!item.classList.contains('item-expand-toggle')) {
+                    handleItemClick(item);
+                }
+            });
         });
     }
 
@@ -92,8 +97,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     newItem.dataset.item = slotType;
                     newItem.dataset.consumable = slot.dataset.consumable; // Mantém a propriedade consumable
                     newItem.dataset.quantity = slot.dataset.quantity;     // Mantém a quantidade
-                    newItem.dataset.effect = slot.dataset.effect;         // Mantém o efeito
-                    newItem.dataset.value = slot.dataset.value;           // Mantém o valor
+                    newItem.dataset.effect = slot.dataset.effect;       // Mantém o efeito
+                    newItem.dataset.value = slot.dataset.value;         // Mantém o valor
                     newItem.innerHTML = currentEquippedItem;
                     itemsContainer.appendChild(newItem);
                     addItemClickListener(newItem);
@@ -102,8 +107,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 slot.innerHTML = selectedItem.innerHTML;
                 slot.dataset.consumable = selectedItem.dataset.consumable; // Atualiza a propriedade consumable do slot
                 slot.dataset.quantity = selectedItem.dataset.quantity;     // Atualiza a quantidade do slot
-                slot.dataset.effect = selectedItem.dataset.effect;         // Atualiza o efeito do slot
-                slot.dataset.value = selectedItem.dataset.value;           // Atualiza o valor do slot
+                slot.dataset.effect = selectedItem.dataset.effect;       // Atualiza o efeito do slot
+                slot.dataset.value = selectedItem.dataset.value;         // Atualiza o valor do slot
                 selectedItem.remove();
                 selectedItem = null;
                 clearHighlights();
@@ -124,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 delete slot.dataset.consumable; // Remove a propriedade consumable do slot
                 delete slot.dataset.quantity;     // Remove a quantidade do slot
                 delete slot.dataset.effect;       // Remove o efeito do slot
-                delete slot.dataset.value;        // Remove o valor do slot
+                delete slot.dataset.value;         // Remove o valor do slot
 
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
@@ -235,23 +240,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Adiciona evento de clique aos novos itens do baú
 function addItemClickListener(item) {
-    item.addEventListener('click', () => {
-        console.log("Novo item clicado no baú:", item);
-        clearHighlights();
-        selectedItem = item;
-        item.classList.add('selected');
+    item.addEventListener('click', (event) => {
+        // Verifica se o clique foi no botão de expandir
+        if (!event.target.classList.contains('item-expand-toggle')) {
+            console.log("Novo item clicado no baú:", item);
+            clearHighlights();
+            selectedItem = item;
+            item.classList.add('selected');
 
-        document.querySelectorAll('.slot').forEach(slot => {
-            if (slot.dataset.slot === item.dataset.item) {
-                slot.classList.add('highlight');
+            document.querySelectorAll('.slot').forEach(slot => {
+                if (slot.dataset.slot === item.dataset.item) {
+                    slot.classList.add('highlight');
+                }
+            });
+
+            // Verifica se o item é consumível e mostra/oculta o botão "Usar"
+            if (selectedItem.dataset.consumable === 'true') {
+                toggleUseButton(true);
+            } else {
+                toggleUseButton(false);
             }
-        });
-
-        // Verifica se o item é consumível e mostra/oculta o botão "Usar"
-        if (selectedItem.dataset.consumable === 'true') {
-            toggleUseButton(true);
-        } else {
-            toggleUseButton(false);
         }
     });
 }
@@ -268,7 +276,7 @@ async function saveInventoryData(uid) {
     const itemsInChest = Array.from(document.querySelectorAll('.item')).map(item => {
         const data = {
             id: item.dataset.item,
-            content: item.innerHTML
+            content: item.innerHTML.split('<span class="item-expand-toggle">')[0].trim() // Remove o botão de expandir ao salvar
         };
         if (item.dataset.consumable === 'true') {
             data.consumable = true;
@@ -290,11 +298,11 @@ async function saveInventoryData(uid) {
             if (slot.dataset.consumable === 'true') {
                 acc[slot.dataset.slot + '_consumable'] = true;
                 acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity);
-                if (slot.dataset.slot + '_effect') {
+                if (slot.dataset.effect) {
                     acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
                 }
-                if (slot.dataset.slot + '_value') {
-                    acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.slot + '_value');
+                if (slot.dataset.value) {
+                    acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value);
                 }
             }
         }
@@ -366,7 +374,13 @@ function loadInventoryUI(inventoryData) {
         const newItem = document.createElement('div');
         newItem.classList.add('item');
         newItem.dataset.item = item.id;
-        newItem.innerHTML = item.content;
+        newItem.innerHTML = `
+            ${item.content}
+            <span class="item-expand-toggle">+</span>
+            <div class="item-description" style="display: none;">
+                ${item.description || 'Descrição do item.'}
+            </div>
+        `;
         if (item.consumable) {
             newItem.dataset.consumable = 'true';
             newItem.dataset.quantity = item.quantity;
@@ -384,7 +398,17 @@ function loadInventoryUI(inventoryData) {
         }
 
         chestElement.appendChild(newItem);
-        addItemClickListener(newItem);
+        addItemClickListener(newItem); // Mantenha esta linha para a seleção do item
+        // Adicionar o listener para o botão de expandir
+        const expandToggle = newItem.querySelector('.item-expand-toggle');
+        const descriptionDiv = newItem.querySelector('.item-description');
+        if (expandToggle && descriptionDiv) {
+            expandToggle.addEventListener('click', (event) => {
+                event.stopPropagation(); // Impede que o clique no "+" selecione o item para equipar
+                descriptionDiv.style.display = descriptionDiv.style.display === 'none' ? 'block' : 'none';
+                expandToggle.textContent = descriptionDiv.style.display === 'none' ? '+' : '-';
+            });
+        }
     });
 
     // Carrega itens equipados
