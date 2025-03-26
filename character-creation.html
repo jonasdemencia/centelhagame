@@ -74,22 +74,40 @@
                 </div>
         </div>
 
-        <div class="label-group">
-            <label for="mao dominante" class="label-text">M ã o  D o m i n a n t e:</label>
-            <select id="mao dominante" class="select-field">
-                <option value="">Selecione</option>
-                <option>esquerda</option>
-                <option>direita</option>
-                <option disabled>Membro fantasma</option>
-            </select>
+        <div class="accordion">
+            <button class="accordion-button">M ã o  D o m i n a n t e: <i class="fa-solid fa-caret-down"></i></button>
+            <div class="accordion-content">
+                <p>Escolha a mão que seu personagem utiliza com mais destreza.</p>
+                <div class="label-group">
+                    <label for="mao dominante" class="label-text">Selecione:</label>
+                    <select id="mao dominante" class="select-field">
+                        <option value="">Selecione</option>
+                        <option>esquerda</option>
+                        <option>direita</option>
+                        <option disabled>Membro fantasma</option>
+                    </select>
+                </div>
+                <p><strong>Esquerda:</strong> Seu personagem é canhoto.</p>
+                <p><strong>Direita:</strong> Seu personagem é destro.</p>
+                <p><strong>Membro fantasma:</strong> (Opção indisponível no momento).</p>
+            </div>
         </div>
-        <div class="label-group">
-            <label for="hemisfério dominante" class="label-text">H e m i s f é r i o  d o m i n a n t e:</label>
-            <select id="hemisfério dominante" class="select-field">
-                <option value="">Selecione</option>
-                <option>Esquerdo</option>
-                <option>Direito</option>
-            </select>
+
+        <div class="accordion">
+            <button class="accordion-button">H e m i s f é r i o  d o m i n a n t e: <i class="fa-solid fa-caret-down"></i></button>
+            <div class="accordion-content">
+                <p>Selecione o hemisfério cerebral que seu personagem utiliza de forma mais proeminente.</p>
+                <div class="label-group">
+                    <label for="hemisfério dominante" class="label-text">Selecione:</label>
+                    <select id="hemisfério dominante" class="select-field">
+                        <option value="">Selecione</option>
+                        <option>Esquerdo</option>
+                        <option>Direito</option>
+                    </select>
+                </div>
+                <p><strong>Esquerdo:</strong> Geralmente associado ao raciocínio lógico, linguagem e análise.</p>
+                <p><strong>Direito:</strong> Frequentemente ligado à criatividade, intuição e reconhecimento espacial.</p>
+            </div>
         </div>
 
         <div class="accordion">
@@ -133,6 +151,7 @@
         <div class="stats-section stats" id="stats">
             <div class="stat-box">
                 <strong class="stat-name">Energia:</strong>
+                <div class="stat-description">Representa a vitalidade física e a resistência do seu personagem.</div>
                 <span id="energy1" class="stat-value">-</span> + <span id="energy2" class="stat-value">-</span>
                 <span id="energyModifier" class="racial-modifier"></span> =
                 <span id="energyTotal" class="stat-value">-</span>
@@ -143,6 +162,7 @@
             </div>
             <div class="stat-box">
                 <strong class="stat-name">Habilidade:</strong>
+                <div class="stat-description">Mede a destreza física, agilidade e coordenação motora.</div>
                 <span id="skill1" class="stat-value">-</span> + <span id="skill2" class="stat-value">-</span>
                 <span id="skillModifier" class="racial-modifier"></span> =
                 <span id="skillTotal" class="stat-value">-</span>
@@ -153,6 +173,7 @@
             </div>
             <div class="stat-box">
                 <strong class="stat-name">Carisma:</strong>
+                <div class="stat-description">Reflete a capacidade de persuasão, liderança e atratividade do personagem.</div>
                 <span id="charisma1" class="stat-value">-</span> + <span id="charisma2" class="stat-value">-</span>
                 <span id="charismaModifier" class="racial-modifier"></span> =
                 <span id="charismaTotal" class="stat-value">-</span>
@@ -163,6 +184,7 @@
             </div>
             <div class="stat-box">
                 <strong class="stat-name">Magia:</strong>
+                <div class="stat-description">Representa o potencial mágico e a capacidade de manipular energias arcanas.</div>
                 <span id="magic1" class="stat-value">-</span> + <span id="magic2" class="stat-value">-</span>
                 <span id="magicModifier" class="racial-modifier"></span> =
                 <span id="magicTotal" class="stat-value">-</span>
@@ -173,6 +195,7 @@
             </div>
             <div class="stat-box">
                 <strong class="stat-name">Sorte:</strong>
+                <div class="stat-description">Indica a predisposição do personagem a eventos fortuitos e sua capacidade de escapar de situações perigosas.</div>
                 <span id="luck1" class="stat-value">-</span> + <span id="luck2" class="stat-value">-</span>
                 <span id="luckModifier" class="racial-modifier"></span> =
                 <span id="luckTotal" class="stat-value">-</span>
