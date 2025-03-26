@@ -371,28 +371,34 @@ function loadInventoryUI(inventoryData) {
     const chestElement = document.querySelector('.items');
     chestElement.innerHTML = ""; // Limpa o conteúdo atual
     inventoryData.itemsInChest.forEach(item => {
-        const newItem = document.createElement('div');
-        newItem.classList.add('item');
-        newItem.dataset.item = item.id;
-      newItem.innerHTML = `${item.content}`;
+    const newItem = document.createElement('div');
+    newItem.classList.add('item');
+    newItem.dataset.item = item.id;
+    newItem.innerHTML = `${item.content}`;
 
-let expandToggle = document.createElement("span");
-expandToggle.classList.add("item-expand-toggle");
-expandToggle.textContent = "+";
+    let expandToggle = document.createElement("span");
+    expandToggle.classList.add("item-expand-toggle");
+    expandToggle.textContent = "+";
 
-let descriptionDiv = document.createElement("div");
-descriptionDiv.classList.add("item-description");
-descriptionDiv.style.display = "none";
-descriptionDiv.textContent = item.description || "Descrição do item.";
+    let descriptionDiv = document.createElement("div");
+    descriptionDiv.classList.add("item-description");
+    descriptionDiv.style.display = "none";
+    descriptionDiv.textContent = item.description || "Descrição do item.";
 
-expandToggle.addEventListener("click", (event) => {
-    event.stopPropagation();
-    descriptionDiv.style.display = descriptionDiv.style.display === "none" ? "block" : "none";
-    expandToggle.textContent = descriptionDiv.style.display === "none" ? "+" : "-";
+    // 🔹 Adicionando corretamente os elementos ao DOM
+    newItem.appendChild(expandToggle);
+    newItem.appendChild(descriptionDiv);
+
+    // 🔹 Evento de expansão funcionando para todos os itens
+    expandToggle.addEventListener("click", (event) => {
+        event.stopPropagation(); // Impede conflitos com a seleção do item
+        descriptionDiv.style.display = (descriptionDiv.style.display === "none") ? "block" : "none";
+        expandToggle.textContent = (descriptionDiv.style.display === "none") ? "+" : "-";
+    });
+
+    chestElement.appendChild(newItem);
+    addItemClickListener(newItem);
 });
-
-newItem.appendChild(expandToggle);
-newItem.appendChild(descriptionDiv);
 
         if (item.consumable) {
             newItem.dataset.consumable = 'true';
