@@ -475,7 +475,8 @@ function updateCharacterCouraca() {
     let bonusCouraca = 0;
 
     const armorSlot = document.querySelector('.slot[data-slot="armor"]');
-    // VERIFIQUE SE A GRAFIA AQUI CORRESPONDE EXATAMENTE AO NOME DO ITEM NO INVENTÁRIO E NO SLOT
+    console.log("Conteúdo do slot de armadura:", armorSlot ? armorSlot.innerHTML : "Slot de armadura não encontrado"); // ADICIONE ESTA LINHA
+
     if (armorSlot && armorSlot.innerHTML === "Hábito monástico") {
         bonusCouraca += 2;
     }
