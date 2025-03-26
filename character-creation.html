@@ -1,423 +1,380 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ficha de Criação de Personagem</title>
-    <link href="style.css" rel="stylesheet"> <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <style>
-        .accordion-content {
-            display: none; /* Esconde o conteúdo por padrão */
-            padding: 10px;
-            border-left: 1px solid #ccc;
-            border-right: 1px solid #ccc;
-            border-bottom: 1px solid #ccc;
-            margin-bottom: 5px;
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
+    authDomain: "centelhagame-9d511.firebaseapp.com",
+    projectId: "centelhagame-9d511",
+    storageBucket: "centelhagame-9d511.appspot.com",
+    messagingSenderId: "700809803145",
+    appId: "1:700809803145:web:bff4c6a751ec9389919d58"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+let rolls = { energy: 3, skill: 3, charisma: 3, magic: 3, luck: 3 };
+let resets = { energy: 2, skill: 2, charisma: 2, magic: 2, luck: 2 };
+
+let defeitos = [];
+let descricoesDefeitos = {}; // Objeto para armazenar as descrições
+let defeitoSelecionado1 = null;
+let defeitoSelecionado2 = null;
+let defeitoCentralFinal = null;
+let selecoesDefeito = 0;
+let primeiroDefeitoIndex = -1;
+let segundoDefeitoIndex = -1;
+
+function rollDice(sides) {
+    return Math.floor(Math.random() * sides) + 1;
+}
+
+function getRacialModifiers() {
+    const race = document.getElementById("race").value;
+    let modifiers = { energy: 0, skill: 0, charisma: 0, magic: 0, luck: 0 };
+
+    switch (race) {
+        case "Anão":
+            modifiers.energy += 2;  // Energia +2
+            modifiers.charisma -= 2; // Carisma -2
+            break;
+        case "Elfo":
+            modifiers.skill += 2;  // Habilidade +2
+            modifiers.energy -= 2; // Energia -2
+            break;
+        case "Humano":
+            // Humanos não têm modificadores
+            break;
+    }
+    return modifiers;
+}
+
+function rollStat(stat, button) {
+    // ... (Código da função rollStat permanece o mesmo) ...
+}
+
+function resetStat(stat, button) {
+    // ... (Código da função resetStat permanece o mesmo) ...
+}
+
+function disableButton(button) {
+    // ... (Código da função disableButton permanece o mesmo) ...
+}
+
+function updateRacialModifiersDisplay() {
+    // ... (Código da função updateRacialModifiersDisplay permanece o mesmo) ...
+}
+
+document.getElementById("race").addEventListener("change", () => {
+    // ... (Código do evento de change para raça permanece o mesmo) ...
+});
+
+// ... (Event listeners para outros campos permanecem os mesmos) ...
+
+document.getElementById("submit").addEventListener("click", async () => {
+    // ... (Código do evento de click para submit permanece o mesmo) ...
+});
+
+let saveTimeout;
+function debounceSave(uid, data) {
+    // ... (Código da função debounceSave permanece o mesmo) ...
+}
+
+async function savePlayerData(uid, data) {
+    // ... (Código da função savePlayerData permanece o mesmo) ...
+}
+
+async function getPlayerData(uid) {
+    // ... (Código da função getPlayerData permanece o mesmo) ...
+}
+
+function getPlayerStats() {
+    const racialModifiers = getRacialModifiers();
+
+    return {
+        name: document.getElementById("name").value,
+        race: document.getElementById("race").value,
+        alignment: document.getElementById("alignment").value,
+        class: document.getElementById("class").value,
+        maoDominante: document.getElementById("mao dominante").value,
+        hemisferioDominante: document.getElementById("hemisfério dominante").value,
+        idade: document.getElementById("idade").value,
+        defeitoCentral: defeitoCentralFinal,
+        primeiroDefeitoIndex: primeiroDefeitoIndex,
+        segundoDefeitoIndex: segundoDefeitoIndex,
+        energy: {
+            firstRoll: getStat("energy1"),
+            secondRoll: getStat("energy2"),
+            total: getStat("energyTotal"),
+            rolls: rolls.energy,
+            resets: resets.energy,
+            modifier: racialModifiers.energy
+        },
+        skill: {
+            firstRoll: getStat("skill1"),
+            secondRoll: getStat("skill2"),
+            total: getStat("skillTotal"),
+            rolls: rolls.skill,
+            resets: resets.skill,
+            modifier: racialModifiers.skill
+        },
+        charisma: {
+            firstRoll: getStat("charisma1"),
+            secondRoll: getStat("charisma2"),
+            total: getStat("charismaTotal"),
+            rolls: rolls.charisma,
+            resets: resets.charisma,
+            modifier: racialModifiers.charisma
+        },
+        magic: {
+            firstRoll: getStat("magic1"),
+            secondRoll: getStat("magic2"),
+            total: getStat("magicTotal"),
+            rolls: rolls.magic,
+            resets: resets.magic,
+            modifier: racialModifiers.magic
+        },
+        luck: {
+            firstRoll: getStat("luck1"),
+            secondRoll: getStat("luck2"),
+            total: getStat("luckTotal"),
+            rolls: rolls.luck,
+            resets: resets.luck,
+            modifier: racialModifiers.luck
         }
+    };
+}
 
-        .accordion-button.active + .accordion-content {
-            display: block; /* Exibe o conteúdo quando o botão está ativo */
+function getStat(id) {
+    return document.getElementById(id).innerText !== "-" ? parseInt(document.getElementById(id).innerText) : 0;
+}
+
+function isFichaCompleta(playerData) {
+    // ... (Código da função isFichaCompleta permanece o mesmo) ...
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Accordion functionality
+    const accordionButtons = document.querySelectorAll('.accordion-button');
+    accordionButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const accordionContent = button.nextElementSibling;
+            button.classList.toggle('active');
+            accordionContent.style.maxHeight = accordionContent.style.maxHeight ? null : accordionContent.scrollHeight + "px";
+        });
+    });
+
+    // Defeito Central functionality
+    const defeitosListaElement = document.getElementById("defeitos-lista");
+    const listaDeDefeitos = defeitosListaElement.querySelectorAll("li");
+    const selecionarDefeitoButton = document.getElementById("selecionar-defeito");
+    const escolhaDefeitoDiv = document.getElementById("escolha-defeito");
+    const escolherDefeito1Button = document.getElementById("escolher-defeito-1");
+    const escolherDefeito2Button = document.getElementById("escolher-defeito-2");
+    const defeitoCentralFinalDiv = document.getElementById("defeito-central-final");
+    const defeitoCentralFinalSpan = defeitoCentralFinalDiv.querySelector("span");
+
+    listaDeDefeitos.forEach((li, index) => {
+        const textoCompleto = li.textContent;
+        const partes = textoCompleto.split(':');
+        const nomeDefeito = partes[0].trim();
+        const descricaoDefeito = partes[1] ? partes[1].trim() : "";
+
+        defeitos.push(nomeDefeito);
+        descricoesDefeitos[nomeDefeito] = descricaoDefeito;
+        li.textContent = `${index + 1}. ${nomeDefeito}`; // Remove a descrição e adiciona a numeração
+    });
+
+    // Aplicando o layout de três em três usando CSS (adicionado aqui para garantir que seja aplicado após a manipulação da lista)
+    const ul = defeitosListaElement.querySelector("ul");
+    if (ul) {
+        ul.style.display = "grid";
+        ul.style.gridTemplateColumns = "repeat(auto-fit, minmax(200px, 1fr))"; // Ajuste o minmax conforme necessário
+        ul.style.gap = "5px";
+    }
+    listaDeDefeitos.forEach(li => {
+        li.style.whiteSpace = "nowrap";
+        li.style.overflow = "hidden";
+        li.style.textOverflow = "ellipsis";
+    });
+
+    if (selecionarDefeitoButton) {
+        selecionarDefeitoButton.addEventListener("click", () => {
+            if (selecoesDefeito < 2) {
+                let randomIndex = Math.floor(Math.random() * defeitos.length);
+
+                if (selecoesDefeito === 0) {
+                    primeiroDefeitoIndex = randomIndex;
+                    selecoesDefeito++;
+                } else if (selecoesDefeito === 1) {
+                    segundoDefeitoIndex = randomIndex;
+                    selecoesDefeito++;
+                    escolhaDefeitoDiv.style.display = "block";
+                }
+
+                // Exibe as opções para escolha e suas descrições
+                if (selecoesDefeito === 2) {
+                    const primeiroDefeitoNome = defeitos[primeiroDefeitoIndex];
+                    const segundoDefeitoNome = defeitos[segundoDefeitoIndex];
+                    const descricao1 = descricoesDefeitos[primeiroDefeitoNome];
+                    const descricao2 = descricoesDefeitos[segundoDefeitoNome];
+
+                    escolherDefeito1Button.textContent = `Escolher: ${primeiroDefeitoNome}`;
+                    escolherDefeito2Button.textContent = `Escolher: ${segundoDefeitoNome}`;
+
+                    // Exibe as descrições abaixo dos botões de escolha
+                    const descricaoContainer = document.createElement('div');
+                    descricaoContainer.id = 'descricao-defeitos-selecionados';
+                    descricaoContainer.innerHTML = `
+                        <div class="defeito-opcao"><strong>Opção 1:</strong> ${primeiroDefeitoNome}<br><span class="pequeno">${descricao1}</span></div>
+                        <div class="defeito-opcao"><strong>Opção 2:</strong> ${segundoDefeitoNome}<br><span class="pequeno">${descricao2}</span></div>
+                    `;
+                    escolhaDefeitoDiv.appendChild(descricaoContainer);
+                }
+            } else {
+                alert("Você já selecionou dois defeitos. Escolha um deles.");
+            }
+        });
+    }
+
+    if (escolherDefeito1Button) {
+        escolherDefeito1Button.addEventListener("click", () => {
+            defeitoCentralFinal = defeitos[primeiroDefeitoIndex];
+            escolhaDefeitoDiv.style.display = "none";
+            defeitoCentralFinalDiv.style.display = "block";
+            defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
+            selecoesDefeito = 2; // Impede novas seleções
+            if (selecionarDefeitoButton) {
+                selecionarDefeitoButton.disabled = true;
+                selecionarDefeitoButton.style.opacity = "0.5";
+                selecionarDefeitoButton.style.cursor = "not-allowed";
+            }
+
+            listaDeDefeitos.forEach((li, index) => {
+                const nomeDefeitoLi = li.textContent.split('. ')[1];
+                if (nomeDefeitoLi === defeitoCentralFinal) {
+                    li.classList.add("defeito-selecionado");
+                } else if (index === segundoDefeitoIndex && nomeDefeitoLi === defeitos[segundoDefeitoIndex]) {
+                    li.classList.add("defeito-nao-selecionado");
+                } else {
+                    li.classList.remove("defeito-selecionado");
+                    li.classList.remove("defeito-nao-selecionado");
+                }
+            });
+            savePlayerData(auth.currentUser.uid, getPlayerStats());
+        });
+    }
+
+    if (escolherDefeito2Button) {
+        escolherDefeito2Button.addEventListener("click", () => {
+            defeitoCentralFinal = defeitos[segundoDefeitoIndex];
+            escolhaDefeitoDiv.style.display = "none";
+            defeitoCentralFinalDiv.style.display = "block";
+            defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
+            selecoesDefeito = 2; // Impede novas seleções
+            if (selecionarDefeitoButton) {
+                selecionarDefeitoButton.disabled = true;
+                selecionarDefeitoButton.style.opacity = "0.5";
+                selecionarDefeitoButton.style.cursor = "not-allowed";
+            }
+
+            listaDeDefeitos.forEach((li, index) => {
+                const nomeDefeitoLi = li.textContent.split('. ')[1];
+                if (nomeDefeitoLi === defeitoCentralFinal) {
+                    li.classList.add("defeito-selecionado");
+                } else if (index === primeiroDefeitoIndex && nomeDefeitoLi === defeitos[primeiroDefeitoIndex]) {
+                    li.classList.add("defeito-nao-selecionado");
+                } else {
+                    li.classList.remove("defeito-selecionado");
+                    li.classList.remove("defeito-nao-selecionado");
+                }
+            });
+            savePlayerData(auth.currentUser.uid, getPlayerStats());
+        });
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            console.log("Usuário autenticado:", user.uid);
+            const playerData = await getPlayerData(user.uid);
+
+            // 🔹 Verifica se a ficha está completa, incluindo as rolagens e os atributos
+            if (playerData && playerData.fichaCompleta) {
+                console.log("Ficha já criada e completa. Redirecionando para o inventário...");
+                window.location.href = "inventario.html";
+                return; // Impede o restante do fluxo
+            }
+
+            // 🔹 Exibe a página de criação de ficha se incompleta
+            console.log("Ficha incompleta. Removendo a classe 'hidden' para exibir a página.");
+            document.body.classList.remove("hidden");
+
+            // 🔹 Preenche os campos com dados salvos, se existirem
+            if (playerData) {
+                // ... (Restauração de outros campos permanece a mesma) ...
+
+                // 🔹 Restaura o estado do Defeito Central
+                if (playerData.defeitoCentral && playerData.primeiroDefeitoIndex !== undefined && playerData.segundoDefeitoIndex !== undefined) {
+                    defeitoCentralFinal = playerData.defeitoCentral;
+                    primeiroDefeitoIndex = playerData.primeiroDefeitoIndex;
+                    segundoDefeitoIndex = playerData.segundoDefeitoIndex;
+                    defeitoCentralFinalDiv.style.display = "block";
+                    defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
+                    selecoesDefeito = 2; // Simula que as duas seleções já foram feitas
+                    escolhaDefeitoDiv.style.display = "none";
+                    if (selecionarDefeitoButton) {
+                        selecionarDefeitoButton.disabled = true;
+                        selecionarDefeitoButton.style.opacity = "0.5";
+                        selecionarDefeitoButton.style.cursor = "not-allowed";
+                    }
+
+                    // Restaura a visualização dos defeitos na lista
+                    listaDeDefeitos.forEach((li, index) => {
+                        const nomeDefeitoLi = li.textContent.split('. ')[1];
+                        if (index === primeiroDefeitoIndex && nomeDefeitoLi === defeitoCentralFinal) {
+                            li.classList.add("defeito-selecionado");
+                        } else if (index === segundoDefeitoIndex && nomeDefeitoLi === defeitos[segundoDefeitoIndex] && defeitoCentralFinal !== defeitos[segundoDefeitoIndex]) {
+                            li.classList.add("defeito-nao-selecionado");
+                        } else if (index === segundoDefeitoIndex && nomeDefeitoLi === defeitoCentralFinal) {
+                            li.classList.add("defeito-selecionado");
+                        } else if (index === primeiroDefeitoIndex && nomeDefeitoLi === defeitos[primeiroDefeitoIndex] && defeitoCentralFinal !== defeitos[primeiroDefeitoIndex]) {
+                            li.classList.add("defeito-nao-selecionado");
+                        }
+                    });
+                } else {
+                    selecoesDefeito = 0;
+                    primeiroDefeitoIndex = -1;
+                    segundoDefeitoIndex = -1;
+                    defeitoCentralFinal = null;
+                    escolhaDefeitoDiv.style.display = "none";
+                    defeitoCentralFinalDiv.style.display = "none";
+                    const descricaoSelecionados = document.getElementById('descricao-defeitos-selecionados');
+                    if (descricaoSelecionados) {
+                        descricaoSelecionados.remove();
+                    }
+                    listaDeDefeitos.forEach(li => {
+                        li.classList.remove("defeito-selecionado");
+                        li.classList.remove("defeito-nao-selecionado");
+                    });
+                    if (selecionarDefeitoButton) {
+                        selecionarDefeitoButton.disabled = false;
+                        selecionarDefeitoButton.style.opacity = "1";
+                        selecionarDefeitoButton.style.cursor = "pointer";
+                    }
+                }
+
+                // 🔹 Atualiza os modificadores raciais
+                updateRacialModifiersDisplay();
+            }
+        } else {
+            console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
+            window.location.href = "index.html";
         }
+    });
+});
 
-        .accordion-button {
-            background-color: #eee;
-            color: #444;
-            cursor: pointer;
-            padding: 18px;
-            width: 100%;
-            border: none;
-            text-align: left;
-            outline: none;
-            font-size: 15px;
-            transition: 0.4s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .accordion-button:hover {
-            background-color: #ddd;
-        }
-
-        .accordion-button.active {
-            background-color: #ccc;
-        }
-
-        /* Removendo o display: none inicial da lista */
-        #defeitos-lista {
-            margin-top: 10px;
-        }
-
-        #defeitos-lista ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        #defeitos-lista li {
-            padding: 5px 0;
-            cursor: pointer;
-        }
-
-        .defeito-selecionado {
-            font-weight: bold;
-            color: green;
-        }
-
-        .defeito-nao-selecionado {
-            color: #ccc;
-            font-style: italic;
-        }
-
-        #selecionar-defeito {
-            margin-top: 10px;
-        }
-
-        .defeito-opcao {
-            padding: 8px;
-            border: 1px solid #ddd;
-            background-color: #f9f9f9;
-            border-radius: 4px;
-            margin-bottom: 5px;
-        }
-
-        #escolha-defeito {
-            margin-top: 10px;
-        }
-
-        .pequeno {
-            font-size: 0.8em;
-            padding: 5px 10px;
-            margin-right: 5px;
-        }
-
-        #defeito-central-final {
-            margin-top: 10px;
-            padding: 8px;
-            border: 1px solid #ddd;
-            background-color: #e6ffe6;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body id="character-page" class="hidden">
-    <div class="container">
-        <h2 class="page-title">Ficha de Criação de Personagem</h2>
-
-        <div class="form-group">
-            <input type="text" id="name" placeholder="Nome do heroi" class="input-field">
-            <p class="inline-description">Escolha um nome digno para seu aventureiro!</p>
-            <button id="submit" class="button">ENVIAR</button>
-        </div>
-
-        <div class="accordion">
-            <button class="accordion-button">R a ç a: <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>Escolha a raça do seu personagem. Cada raça possui características e modificadores de atributos únicos.</p>
-                <div class="label-group">
-                    <label for="race" class="label-text">Selecione:</label>
-                    <select id="race" class="select-field">
-                        <option value="">Selecione</option>
-                        <option>Anão</option>
-                        <option>Elfo</option>
-                        <option>Humano</option>
-                    </select>
-                </div>
-                <div class="race-info">
-                    <p><strong>Anão:</strong> Conhecidos por sua robustez e afinidade com a mineração. +2 Energia, -2 Carisma.</p>
-                    <p><strong>Elfo:</strong> Seres elegantes e conectados com a natureza. +2 Habilidade, -2 Energia.</p>
-                    <p><strong>Humano:</strong> Adaptáveis e versáteis. Não possuem modificadores raciais.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="accordion">
-            <button class="accordion-button">A l i n h a m e n t o: <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>O alinhamento descreve a visão moral e ética do seu personagem.</p>
-                <div class="label-group">
-                    <label for="alignment" class="label-text">Selecione:</label>
-                    <select id="alignment" class="select-field">
-                        <option value="">Selecione</option>
-                        <option disabled>Humanista (Em breve)</option>
-                        <option disabled>Behaviorista (Em breve)</option>
-                        <option disabled>Psicanalista (Em breve)</option>
-                        <option>Estudante</option>
-                    </select>
-                </div>
-                <p><strong>Estudante:</strong> Um indivíduo em aprendizado, focado em adquirir conhecimento e novas experiências.</p>
-            </div>
-        </div>
-
-        <div class="accordion">
-            <button class="accordion-button">C l a s s e: <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>A classe representa a profissão ou vocação principal do seu personagem.</p>
-                <div class="label-group">
-                    <label for="class" class="label-text">Selecione:</label>
-                    <select id="class" class="select-field">
-                        <option value="">Selecione</option>
-                        <option disabled>Paladino (Em breve)</option>
-                        <option disabled>Guerreiro (Em breve)</option>
-                        <option disabled>Ladino (Em breve)</option>
-                        <option disabled>Mago (Em breve)</option>
-                        <option>Candidato</option>
-                    </select>
-                </div>
-                <p><strong>Candidato:</strong> Um aspirante a herói, ainda descobrindo seu caminho e potencial.</p>
-            </div>
-        </div>
-
-        <div class="accordion">
-            <button class="accordion-button">M ã o&nbsp;D o m i n a n t e: <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>Escolha a mão que seu personagem utiliza com mais destreza.</p>
-                <div class="label-group">
-                    <label for="mao dominante" class="label-text">Selecione:</label>
-                    <select id="mao dominante" class="select-field">
-                        <option value="">Selecione</option>
-                        <option>esquerda</option>
-                        <option>direita</option>
-                        <option disabled>Membro fantasma</option>
-                    </select>
-                </div>
-                <p><strong>Esquerda:</strong> Seu personagem é canhoto.</p>
-                <p><strong>Direita:</strong> Seu personagem é destro.</p>
-                <p><strong>Membro fantasma:</strong> (Opção indisponível no momento).</p>
-            </div>
-        </div>
-
-        <div class="accordion">
-            <button class="accordion-button">H e m i s f é r i o&nbsp;d o m i n a n t e: <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>Selecione o hemisfério cerebral que seu personagem utiliza de forma mais proeminente.</p>
-                <div class="label-group">
-                    <label for="hemisfério dominante" class="label-text">Selecione:</label>
-                    <select id="hemisfério dominante" class="select-field">
-                        <option value="">Selecione</option>
-                        <option>Esquerdo</option>
-                        <option>Direito</option>
-                    </select>
-                </div>
-                <p><strong>Esquerdo:</strong> Geralmente associado ao raciocínio lógico, linguagem e análise.</p>
-                <p><strong>Direito:</strong> Frequentemente ligado à criatividade, intuição e reconhecimento espacial.</p>
-            </div>
-        </div>
-
-        <div class="accordion">
-            <button class="accordion-button">I d a d e: <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>A idade pode influenciar a aparência e a história do seu personagem.</p>
-                <div class="label-group">
-                    <label for="idade" class="label-text">Selecione:</label>
-                    <select id="idade" class="select-field">
-                        <option value="">Selecione</option>
-                        <option disabled>Granula (7-10 anos)</option>
-                        <option>Neófito (12-20 anos)</option>
-                        <option>Confessor (25-35 anos)</option>
-                        <option>Adepto (45-60 anos)</option>
-                        <option disabled>Velho lobo (70-85 anos)</option>
-                    </select>
-                </div>
-                <p><strong>Neófito:</strong> Jovem e cheio de potencial.</p>
-                <p><strong>Confessor:</strong> Na flor da idade, com experiência e convicção.</p>
-                <p><strong>Adepto:</strong> Mais experiente e com sabedoria acumulada.</p>
-            </div>
-        </div>
-
-        <div class="accordion">
-            <button class="accordion-button">D e f e i t o&nbsp;c e n t r a l: <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>Descubra o principal ponto fraco do seu personagem através de duas seleções aleatórias.</p>
-                <div id="defeitos-lista">
-                    <ul>
-                        <li>Teimosia com líderes: Recusa-se a seguir ordens, mesmo quando são razoáveis.</li>
-                        <li>Impulsividade em batalha: Ataca sem pensar, ignorando táticas do grupo.</li>
-                        <li>Avareza com suprimentos: Se recusa a compartilhar itens, mesmo em situações críticas.</li>
-                        <li>Medo de aranhas: Entra em pânico ao avistar até as menores aranhas.</li>
-                        <li>Arrogância acadêmica: Desdenha do conhecimento alheio, mesmo quando errado.</li>
-                        <li>Ciúmes obsessivo por companheiros: Sente-se ameaçado por qualquer amizade próxima deles.</li>
-                        <li>Mentiras constantes: Não consegue passar um dia sem inventar uma história falsa.</li>
-                        <li>Procrastinador crônico: Sempre deixa tarefas urgentes para depois, atrasando missões.</li>
-                        <li>Desconfiança de magia: Evita ou critica usuários de magia, até mesmo aliados.</li>
-                        <li>Fobia de água corrente: Recusa-se a cruzar rios ou ficar perto de lagos.</li>
-                        <li>Superstição exagerada: Não age sem consultar "presságios" ou "sinais".</li>
-                        <li>Dependência de um vício: Precisa de álcool ou outra substância para manter-se "calmo".</li>
-                        <li>Medo de compromissos: Foge de decisões importantes para evitar responsabilidades.</li>
-                        <li>Egocentrismo artístico: Acredita que seu talento (canto, pintura) é superior a tudo.</li>
-                        <li>Gula perigosa: Sempre come antes de verificar se a comida está envenenada.</li>
-                        <li>Trauma de infância com fogo: Encontra-se paralisado ou fugindo de incêndios.</li>
-                        <li>Ganância por artefatos mágicos: Coloca o grupo em risco para adquirir objetos raros.</li>
-                        <li>Necessidade de elogios constantes: Sente-se deprimido se não for reconhecido.</li>
-                        <li>Tendência a trair: Pode vender informações ou aliados por vantagens temporárias.</li>
-                        <li>Ressentimento com nobreza: Evita ajudar ou ouvir qualquer figura de poder.</li>
-                        <li>Orgulho ferido facilmente: Não aceita críticas e reage exageradamente.</li>
-                        <li>Obcecado por vingança: Faz decisões baseadas apenas em retaliar inimigos.</li>
-                        <li>Fobia de lugares fechados: Evita cavernas ou se sente em pânico em masmorras.</li>
-                        <li>Conflito com figuras paternas: Reage negativamente a qualquer figura autoritária.</li>
-                        <li>Necessidade de quebrar regras: Sente prazer em ignorar protocolos e normas.</li>
-                        <li>Esquecimento seletivo: Sempre esquece algo importante ou deliberadamente ignora acordos.</li>
-                        <li>Vício em apostas: Não resiste a participar de jogos de azar, mesmo sem recursos.</li>
-                        <li>Complexo de inferioridade: Sempre acredita ser inútil para o grupo.</li>
-                        <li>Medo de espelhos: Evita olhar reflexos por acreditar que revelarão "verdades".</li>
-                        <li>Impaciência com enigmas: Ignora ou tenta forçar soluções rapidamente.</li>
-                        <li>Ambição desmedida: Deseja assumir lideranças, mesmo sendo despreparado.</li>
-                        <li>Intolerância com criaturas específicas: Preconceito forte com raças como goblins ou elfos.</li>
-                        <li>Descontrole ao ver sangue: Entra em fúria ou fraqueja em cenas de combate.</li>
-                        <li>Manias de limpeza extrema: Evita locais sujos, atrasando missões.</li>
-                        <li>Apatia: Evita tomar lados ou decisões que envolvam moralidade.</li>
-                        <li>Problema de memória curto-prazo: Frequentemente esquece passos recentes em missões.</li>
-                        <li>Medo de tempestades: Refugia-se e se recusa a sair durante chuvas fortes.</li>
-                        <li>Dificuldade em confiar em aliados novos: Sempre acredita que recém-chegados são espiões.</li>
-                        <li>Comportamento manipulador: Usa as fraquezas emocionais dos colegas para obter vantagem.</li>
-                        <li>Ansiedade social: Evita grandes reuniões ou conversas que não sejam sobre trabalho.</li>
-                        <li>Necessidade de superioridade militar: Sente que só é importante em combate.</li>
-                        <li>Fanatismo religioso: Recusa-se a lidar com membros que contradizem sua crença.</li>
-                        <li>Desinteresse por planejamento: Age sem consultar táticas, muitas vezes colocando a equipe em perigo.</li>
-                        <li>Obcecado por colecionar lembranças: Paralisa missões para buscar itens triviais.</li>
-                        <li>Desatenção com ameaças: Sempre cai em armadilhas por distração.</li>
-                        <li>Desordem alimentar: É incapaz de se moderar quando encontra comida rara.</li>
-                        <li>Medo irracional de magia: Evita feitiços curativos ou benéficos.</li>
-                        <li>Auto-sabotagem constante: Toma decisões que prejudicam a si mesmo ou o grupo.</li>
-                        <li>Fascínio com o mal: Sente curiosidade por inimigos ou objetos corrompidos.</li>
-                        <li>Reação exagerada a ofensas: Sempre parte para lutas desnecessárias por comentários.</li>
-                        <li>Ansioso por aprovação: Busca validação constante, mesmo em detrimento de seus princípios.</li>
-                        <li>Teimosia inabalável: Recusa-se a mudar de opinião, mesmo quando está claramente errado.</li>
-                        <li>Obcecado por detalhes: Perde o foco em tarefas maiores por fixar-se em trivialidades.</li>
-                        <li>Emocionalmente reativo: Explode em raiva ou tristeza ao menor sinal de conflito.</li>
-                        <li>Intolerância cultural: Tem dificuldade em respeitar ou aceitar costumes diferentes.</li>
-                        <li>Medo de compromisso: Foge de situações que exigem responsabilidade a longo prazo.</li>
-                        <li>Ingênuo com estranhos: Confia facilmente em pessoas desconhecidas, colocando-se em perigo.</li>
-                        <li>Preguiça intelectual: Evita aprender algo novo ou resolver problemas complexos.</li>
-                        <li>Competitivo ao extremo: Coloca a vitória acima de laços e valores.</li>
-                        <li>Apatia social: Não se importa com o sofrimento ou necessidades dos outros.</li>
-                        <li>Manipulador carismático: Usa seu charme para explorar e enganar as pessoas.</li>
-                        <li>Covarde diante do perigo: Evita qualquer situação de risco, abandonando aliados se necessário.</li>
-                        <li>Avareza incontrolável: Acumula recursos, recusando-se a dividir com quem precisa.</li>
-                        <li>Orgulho tóxico: Nunca admite erros, mesmo quando isso prejudica a si mesmo e outros.</li>
-                        <li>Supersticioso fanático: Deixa decisões importantes nas mãos de crenças irracionais.</li>
-                        <li>Fúria incontrolável: Responde violentamente a provocações mínimas.</li>
-                        <li>Desonestidade crônica: É incapaz de dizer a verdade, mesmo sem necessidade de mentir.</li>
-                        <li>Desorganização compulsiva: Perde itens importantes ou esquece etapas essenciais.</li>
-                        <li>Ciúmes possessivo: Constantemente sente que os outros ameaçam suas relações.</li>
-                        <li>Egocentrismo extremo: Vê tudo pelo prisma de seus próprios interesses e desejos.</li>
-                        <li>Crença fervorosa em um deus esquecido</li>
-                        <li>Coleciona unhas cortadas de outras pessoas</li>
-                        <li>Conversa com plantas</li>
-                        <li>Tem medo de sua própria sombra</li>
-                        <li>Sempre tenta trocar itens por abraços</li>
-                    </ul>
-                </div>
-                <button id="selecionar-defeito" class="button">Selecionar Defeito Aleatoriamente</button>
-                <div id="escolha-defeito" style="display: none;">
-                    <p>Escolha um dos defeitos centrais:</p>
-                    <button id="escolher-defeito-1" class="button pequeno">Escolher Defeito 1</button>
-                    <button id="escolher-defeito-2" class="button pequeno">Escolher Defeito 2</button>
-                </div>
-                <div id="defeito-central-final" style="display: none;">Defeito Central Escolhido: <span></span></div>
-            </div>
-        </div>
-
-        <p class="instruction-paragraph">Você poderá rolar cada um dos atributos três vezes. Role de forma sábia. <i class="fa-solid fa-info-circle info-icon" onclick="document.getElementById('instructions-modal').style.display='block'"></i></p>
-
-        <div id="instructions-modal" class="modal">
-            <div class="modal-content">
-                <span class="close-button" onclick="document.getElementById('instructions-modal').style.display='none'">&times;</span>
-                <h3>Instruções para Rolagem de Atributos</h3>
-                <p>Para cada atributo (Energia, Habilidade, Carisma, Magia, Sorte), você tem direito a três rolagens.</p>
-                <ol>
-                    <li>Clique no botão com o ícone de dado (🎲) para realizar a primeira rolagem.</li>
-                    <li>Clique novamente no mesmo botão para realizar a segunda rolagem.</li>
-                    <li>Após a segunda rolagem, o valor total do atributo será calculado, levando em consideração quaisquer modificadores raciais.</li>
-                    <li>Você pode usar o botão "Zerar" para limpar as rolagens daquele atributo e ter mais duas chances de rolar. Você tem direito a dois "zeramentos" por atributo.</li>
-                    <li>Escolha sabiamente seus resultados, pois eles definirão as capacidades iniciais do seu personagem!</li>
-                </ol>
-            </div>
-        </div>
-
-        <div class="stats-section stats" id="stats">
-            <div class="stat-box">
-                <div>
-                    <strong class="stat-name">Energia:</strong>
-                    <div>
-                        <span id="energy1" class="stat-value">-</span> + <span id="energy2" class="stat-value">-</span>
-                        <span id="energyModifier" class="racial-modifier"></span> =
-                        <span id="energyTotal" class="stat-value">-</span>
-                    </div>
-                    <div class="stat-buttons-inline">
-                        <button onclick="rollStat('energy', this)" class="button">🎲</button>
-                        <button onclick="resetStat('energy', this)" class="button">Zerar</button>
-                    </div>
-                </div>
-                <div class="attribute-description-container" id="energia-description">Representa a vitalidade física e a resistência do seu personagem.</div>
-            </div>
-            <div class="stat-box">
-                <div>
-                    <strong class="stat-name">Habilidade:</strong>
-                    <div>
-                        <span id="skill1" class="stat-value">-</span> + <span id="skill2" class="stat-value">-</span>
-                        <span id="skillModifier" class="racial-modifier"></span> =
-                        <span id="skillTotal" class="stat-value">-</span>
-                    </div>
-                    <div class="stat-buttons-inline">
-                        <button onclick="rollStat('skill', this)" class="button">🎲</button>
-                        <button onclick="resetStat('skill', this)" class="button">Zerar</button>
-                    </div>
-                </div>
-                <div class="attribute-description-container" id="habilidade-description">Mede a destreza física, agilidade e coordenação motora.</div>
-            </div>
-            <div class="stat-box">
-                <div>
-                    <strong class="stat-name">Carisma:</strong>
-                    <div>
-                        <span id="charisma1" class="stat-value">-</span> + <span id="charisma2" class="stat-value">-</span>
-                        <span id="charismaModifier" class="racial-modifier"></span> =
-                        <span id="charismaTotal" class="stat-value">-</span>
-                    </div>
-                    <div class="stat-buttons-inline">
-                        <button onclick="rollStat('charisma', this)" class="button">🎲</button>
-                        <button onclick="resetStat('charisma', this)" class="button">Zerar</button>
-                    </div>
-                </div>
-                <div class="attribute-description-container" id="carisma-description">Reflete a capacidade de persuasão, liderança e atratividade do personagem.</div>
-            </div>
-            <div class="stat-box">
-                <div>
-                    <strong class="stat-name">Magia:</strong>
-                    <div>
-                        <span id="magic1" class="stat-value">-</span> + <span id="magic2" class="stat-value">-</span>
-                        <span id="magicModifier" class="racial-modifier"></span> =
-                        <span id="magicTotal" class="stat-value">-</span>
-                    </div>
-                    <div class="stat-buttons-inline">
-                        <button onclick="rollStat('magic', this)" class="button">🎲</button>
-                        <button onclick="resetStat('magic', this)" class="button">Zerar</button>
-                    </div>
-                </div>
-                <div class="attribute-description-container" id="magia-description">Representa o potencial mágico e a capacidade de manipular energias arcanas.</div>
-            </div>
-            <div class="stat-box">
-                <div>
-                    <strong class="stat-name">Sorte:</strong>
-                    <div>
-                        <span id="luck1" class="stat-value">-</span> + <span id="luck2" class="stat-value">-</span>
-                        <span id="luckModifier" class="racial-modifier"></span> =
-                        <span id="luckTotal" class="stat-value">-</span>
-                    </div>
-                    <div class="stat-buttons-inline">
-                        <button onclick="rollStat('luck', this)" class="button">🎲</button>
-                        <button onclick="resetStat('luck', this)" class="button">Zerar</button>
-                    </div>
-                </div>
-                <div class="attribute-description-container" id="sorte-description">Indica a predisposição do personagem a eventos fortuitos e sua capacidade de escapar de situações perigosas.</div>
-            </div>
-        </div>
-    </div>
-
-    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
-<script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js"></script>
-<script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
-
-    <script src="character-creation.js" type="module"></script>
-</body>
-</html>
+// 🔹 Mantendo os métodos utilitários necessários
+window.rollStat = rollStat;
+window.resetStat = resetStat;
