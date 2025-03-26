@@ -4,8 +4,8 @@ body {
     text-align: center;
     margin: 0;
     padding: 5px;
-    background-color: #1a1a1a;
-    color: white;
+    background-color: #333; /* Cinza escuro para o fundo do body */
+    color: #f0f0f0; /* Branco acinzentado para o texto geral */
 }
 
 /* Estilo para ocultar a página com a classe hidden */
@@ -18,8 +18,8 @@ body {
     display: flex;
     justify-content: space-between; /* Espaça os itens à esquerda e à direita */
     align-items: center; /* Centraliza os itens verticalmente */
-    background: rgba(0, 0, 0, 0.5); /* Fundo escuro para destaque */
-    border: 1px solid #aa6c39; /* Borda dourada */
+    background: rgba(0, 0, 0, 0.6); /* Preto com transparência para destaque */
+    border: 1px solid #8b4513; /* Marrom para a borda */
     border-radius: 6px; /* Bordas arredondadas */
     padding: 10px; /* Espaço interno */
     margin-bottom: 10px; /* Espaço abaixo de cada atributo */
@@ -27,16 +27,17 @@ body {
 
 /* Nome do atributo à esquerda */
 .stat-name {
-    font-size: 14px; /* Ajuste do tamanho da fonte */
+    font-size: 16px; /* Aumentei um pouco para melhor leitura */
     font-weight: bold;
     margin-right: auto; /* Garante que o nome fique alinhado à esquerda */
     text-align: left; /* Justifica o nome à esquerda */
+    color: #eee; /* Branco acinzentado */
 }
 
 /* Valores dos atributos */
 .stat-value {
-    font-size: 14px; /* Tamanho ajustado dos valores */
-    color: white; /* Contraste com o fundo */
+    font-size: 16px; /* Aumentei um pouco para melhor leitura */
+    color: #fff; /* Branco */
 }
 
 /* Botões de dados e zerar alinhados à direita */
@@ -49,54 +50,55 @@ body {
 
 /* Estilo dos botões 🎲 e Zerar */
 .button {
-    background-color: #8b5a2b; /* Fundo dos botões com contraste */
+    background-color: #8b4513; /* Marrom para o fundo dos botões */
     border: none;
-    padding: 6px 12px; /* Tamanho dos botões ajustado */
+    padding: 8px 16px; /* Aumentei um pouco o tamanho */
     font-family: 'Eagle Lake', cursive;
-    color: white;
-    font-size: 12px;
+    color: #f0f0f0; /* Branco acinzentado para o texto dos botões */
+    font-size: 14px; /* Aumentei um pouco a fonte */
     border-radius: 4px; /* Bordas arredondadas */
     cursor: pointer;
 }
 
 .button:hover {
-    background-color: #aa6c39; /* Fundo mais claro ao passar o mouse */
+    background-color: #a0522d; /* Tom de marrom mais claro ao passar o mouse */
 }
 
 /* Estilo para slots (não modificado, mantido para consistência) */
 .slot, .item, .discard-slot {
     width: 100px;
     height: 45px;
-    background: #583101;
-    border: 2px solid #d4a373;
+    background: #583101; /* Marrom escuro */
+    border: 2px solid #d2b48c; /* Marrom claro */
     border-radius: 8px;
     text-align: center;
     line-height: 45px;
     cursor: pointer;
     font-size: 14px;
     font-weight: bold;
+    color: #f0f0f0;
 }
 
 .item {
-    background: #8b5a2b;
+    background: #a0522d; /* Marrom */
 }
 
 .slot {
-    background: rgba(100, 60, 30, 0.8);
+    background: rgba(100, 60, 30, 0.8); /* Tom de marrom */
 }
 
 /* Destaque dos slots */
 .highlight {
-    background-color: #3498db; /* Azul claro */
-    border-color: #2980b9; /* Borda azul */
+    background-color: #808080; /* Cinza */
+    border-color: #696969; /* Cinza mais escuro */
 }
 
 /* Estilização do descarte */
 .discard-area {
     margin-top: 20px;
     padding: 10px;
-    background: rgba(50, 30, 15, 0.8);
-    border: 3px solid #a52a2a;
+    background: rgba(50, 50, 50, 0.8); /* Cinza escuro */
+    border: 3px solid #8b4513; /* Marrom */
     border-radius: 10px;
     display: flex;
     justify-content: center;
@@ -105,7 +107,7 @@ body {
 }
 
 .discard-slot {
-    background: #a52a2a;
+    background: #8b4513; /* Marrom */
     color: #fff;
     font-weight: bold;
 }
@@ -115,21 +117,22 @@ body {
     max-width: 600px; /* Limita a largura do conteúdo para melhor leitura em telas maiores */
     margin: 20px auto; /* Centraliza o container na tela */
     padding: 20px;
-    background-color: rgba(0, 0, 0, 0.7); /* Fundo um pouco mais transparente */
+    background-color: #222; /* Preto para o fundo do container */
     border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Adiciona uma sombra sutil */
-    /* Simulação de textura com gradiente */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.7); /* Sombra mais escura */
+    /* Simulação de textura com gradiente (ajustado para tons de cinza e marrom claro) */
     background-image:
-        radial-gradient(circle, rgba(50,50,50,0.05) 1px, transparent 1px),
-        radial-gradient(circle, rgba(70,70,70,0.05) 1px, transparent 1px);
+        radial-gradient(circle, rgba(80,80,80,0.05) 1px, transparent 1px),
+        radial-gradient(circle, rgba(100,100,100,0.05) 1px, transparent 1px);
     background-size: 15px 15px; /* Ajuste o tamanho do padrão conforme preferir */
     background-position: 0 0, 8px 8px; /* Ajuste a posição para variar o padrão */
-    opacity: 0.9;
+    opacity: 0.95; /* Aumentei um pouco a opacidade */
+    color: #f0f0f0; /* Cor do texto dentro do container */
 }
 
 #character-page .page-title {
     margin-bottom: 20px;
-    color: #aa6c39; /* Título em cor dourada */
+    color: #d2b48c; /* Marrom claro para o título */
 }
 
 #character-page .form-group {
@@ -141,10 +144,10 @@ body {
 
 #character-page .input-field {
     padding: 10px;
-    border: 1px solid #aa6c39;
+    border: 1px solid #8b4513; /* Marrom para a borda */
     border-radius: 4px;
-    background-color: #333;
-    color: white;
+    background-color: #444; /* Cinza mais escuro */
+    color: #f0f0f0;
     font-family: 'Eagle Lake', cursive;
     font-size: 16px;
 }
@@ -158,16 +161,16 @@ body {
     display: block;
     margin-bottom: 5px;
     font-size: 16px;
-    color: #d4a373;
+    color: #d2b48c; /* Marrom claro para os rótulos */
 }
 
 #character-page .select-field {
     width: 100%;
     padding: 10px;
-    border: 1px solid #aa6c39;
+    border: 1px solid #8b4513; /* Marrom para a borda */
     border-radius: 4px;
-    background-color: #333;
-    color: white;
+    background-color: #444; /* Cinza mais escuro */
+    color: #f0f0f0;
     font-family: 'Eagle Lake', cursive;
     font-size: 16px;
 }
@@ -182,15 +185,15 @@ body {
 /* Estilos para Accordion */
 .accordion {
     margin-bottom: 15px;
-    border: 1px solid #aa6c39;
+    border: 1px solid #8b4513; /* Marrom para a borda */
     border-radius: 4px;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.7); /* Preto com transparência */
     overflow: hidden; /* Garante que o conteúdo expandido não vaze */
 }
 
 .accordion-button {
-    background-color: #333;
-    color: white;
+    background-color: #444; /* Cinza escuro */
+    color: #f0f0f0;
     cursor: pointer;
     padding: 10px;
     width: 100%;
@@ -205,16 +208,16 @@ body {
 }
 
 .accordion-button:hover {
-    background-color: #444;
+    background-color: #555; /* Cinza um pouco mais claro */
 }
 
 .accordion-button.active {
-    background-color: #444;
+    background-color: #555; /* Cinza um pouco mais claro */
 }
 
 .accordion-content {
     padding: 10px;
-    background-color: #222;
+    background-color: #333; /* Cinza escuro */
     color: #eee;
     max-height: 0;
     overflow: hidden;
@@ -234,11 +237,12 @@ body {
 .accordion-content .race-info p {
     margin-left: 15px;
     font-style: italic;
+    color: #ccc;
 }
 
 /* Estilos para o Ícone de Informação (Modal) */
 .info-icon {
-    color: #d4a373;
+    color: #d2b48c; /* Marrom claro */
     cursor: pointer;
     font-size: 1.2em;
     margin-left: 5px;
@@ -258,18 +262,18 @@ body {
     width: 100%; /* Largura total */
     height: 100%; /* Altura total */
     overflow: auto; /* Habilita scroll se o conteúdo for grande */
-    background-color: rgba(0,0,0,0.4); /* Fundo preto com transparência */
+    background-color: rgba(0,0,0,0.7); /* Preto com mais transparência */
 }
 
 .modal-content {
-    background-color: #333;
+    background-color: #444; /* Cinza escuro */
     margin: 15% auto; /* Centraliza verticalmente e horizontalmente */
     padding: 20px;
-    border: 1px solid #888;
+    border: 1px solid #888; /* Cinza claro para a borda */
     width: 80%; /* Largura da caixa do modal */
     border-radius: 8px;
     position: relative;
-    color: white;
+    color: #f0f0f0;
     text-align: left;
     font-size: 14px;
 }
@@ -289,7 +293,7 @@ body {
 }
 
 .modal-content h3 {
-    color: #aa6c39;
+    color: #d2b48c; /* Marrom claro para o título do modal */
     margin-top: 0;
     margin-bottom: 15px;
     text-align: center;
@@ -305,53 +309,30 @@ body {
 }
 
 .stats-section .stat-box {
-    display: flex;
-    justify-content: space-between; /* Espaça os itens à esquerda e à direita */
-    align-items: center; /* Centraliza os itens verticalmente */
-    background: rgba(0, 0, 0, 0.5); /* Fundo escuro para destaque */
-    border: 1px solid #aa6c39; /* Borda dourada */
-    border-radius: 6px; /* Bordas arredondadas */
-    padding: 10px; /* Espaço interno */
-    margin-bottom: 10px; /* Espaço abaixo de cada atributo */
+    /* Os estilos já foram definidos anteriormente */
 }
 
 .stats-section .stat-name {
-    font-size: 14px; /* Ajuste do tamanho da fonte */
-    font-weight: bold;
-    margin-right: auto; /* Garante que o nome fique alinhado à esquerda */
-    text-align: left; /* Justifica o nome à esquerda */
+    /* Os estilos já foram definidos anteriormente */
+    display: flex; /* Para alinhar o texto com o ícone */
+    align-items: center; /* Alinhamento vertical */
 }
 
 .stats-section .stat-value {
-    font-size: 14px; /* Tamanho ajustado dos valores */
-    color: white; /* Contraste com o fundo */
+    /* Os estilos já foram definidos anteriormente */
 }
 
 .stats-section .stat-buttons-inline {
-    display: flex; /* Alinha os botões horizontalmente */
-    justify-content: flex-end; /* Alinha os botões à direita */
-    gap: 5px; /* Reduz a distância entre os botões 🎲 e Zerar */
-    margin-left: auto; /* Garante que os botões fiquem na extremidade direita */
+    /* Os estilos já foram definidos anteriormente */
 }
 
 .stats-section .button {
-    background-color: #8b5a2b; /* Fundo dos botões com contraste */
-    border: none;
-    padding: 6px 12px; /* Tamanho dos botões ajustado */
-    font-family: 'Eagle Lake', cursive;
-    color: white;
-    font-size: 12px;
-    border-radius: 4px; /* Bordas arredondadas */
-    cursor: pointer;
-}
-
-.button:hover {
-    background-color: #aa6c39; /* Fundo mais claro ao passar o mouse */
+    /* Os estilos já foram definidos anteriormente */
 }
 
 .racial-modifier {
     font-size: 12px;
-    color: #d4a373;
+    color: #d2b48c; /* Marrom claro */
     margin-left: 5px;
 }
 
@@ -360,4 +341,30 @@ body {
     color: #ccc;
     text-align: left;
     margin-bottom: 5px;
+}
+
+.attribute-info-icon {
+    color: #d2b48c;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-left: 5px;
+}
+
+.attribute-info-icon:hover {
+    color: #fff;
+}
+
+.attribute-description-container {
+    display: none; /* Oculto por padrão */
+    background-color: #333;
+    color: #eee;
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 5px;
+    font-size: 12px;
+    text-align: left;
+}
+
+.attribute-description-container.show {
+    display: block; /* Exibe quando a classe 'show' é adicionada */
 }
