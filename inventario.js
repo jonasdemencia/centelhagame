@@ -110,7 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     newItem.dataset.value = slot.dataset.value;         // Mantém o valor
                     newItem.innerHTML = currentEquippedItem;
                     itemsContainer.appendChild(newItem);
-                    addItemClickListener(newItem);
+                    addItemClickListener(newItem, itemsContainer, useButton);
                 }
 
                 slot.innerHTML = selectedItem.innerHTML;
@@ -152,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 itemsContainer.appendChild(newItem);
-                addItemClickListener(newItem);
+                addItemClickListener(newItem, itemsContainer, useButton);
 
                 updateCharacterCouraca();
                 updateCharacterDamage();
@@ -248,9 +248,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Adiciona evento de clique aos novos itens do baú
-function addItemClickListener(item) {
+function addItemClickListener(item, itemsContainer, useButton) {
     item.addEventListener('click', (event) => {
-        // Verifica se o clique foi no botão de expandir
         if (!event.target.classList.contains('item-expand-toggle')) {
             console.log("Novo item clicado no baú:", item);
             clearHighlights();
@@ -388,6 +387,8 @@ function loadInventoryUI(inventoryData) {
     // Carrega itens no baú
     const chestElement = document.querySelector('.items');
     chestElement.innerHTML = ""; // Limpa o conteúdo atual
+    const itemsContainer = document.querySelector('.items'); // Obtém a referência aqui também
+    const useButton = document.getElementById("useBtn");   // Obtém a referência aqui também
     inventoryData.itemsInChest.forEach(item => {
         const newItem = document.createElement('div');
         newItem.classList.add('item');
@@ -416,7 +417,7 @@ function loadInventoryUI(inventoryData) {
         }
 
         chestElement.appendChild(newItem);
-        addItemClickListener(newItem); // Mantenha esta linha para a seleção do item
+        addItemClickListener(newItem, itemsContainer, useButton); // Passa as referências aqui
         // Adicionar o listener para o botão de expandir
         const expandToggle = newItem.querySelector('.item-expand-toggle');
         const descriptionDiv = newItem.querySelector('.item-description');
