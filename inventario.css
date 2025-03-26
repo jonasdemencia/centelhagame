@@ -359,10 +359,16 @@ p {
 }
 
 .item-description {
-    margin-top: 5px;
+    position: absolute; /* Permite o posicionamento exato */
+    top: calc(100% + 2px); /* Posiciona abaixo do item (100% da altura + uma pequena margem) */
+    left: 0; /* Alinha à esquerda do item */
+    width: 100%; /* Ocupa a largura total do item */
+    margin-top: 0; /* Remove a margem superior padrão */
     padding: 5px;
     border: 1px solid #eee;
     background-color: #f9f9f9;
     font-size: 0.9em;
-    color: black; /* Garante que a cor do texto da descrição seja legível */
+    color: black;
+    z-index: 10; /* Garante que a descrição fique sempre na frente de outros elementos */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); /* Adiciona uma sombra para destacar ainda mais */
 }
