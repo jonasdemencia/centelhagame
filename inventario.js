@@ -475,13 +475,14 @@ function updateCharacterCouraca() {
     let bonusCouraca = 0;
 
     const armorSlot = document.querySelector('.slot[data-slot="armor"]');
-    console.log("Conteúdo do slot de armadura:", armorSlot ? armorSlot.innerHTML : "Slot de armadura não encontrado"); // ADICIONE ESTA LINHA
+    console.log("Conteúdo do slot de armadura:", armorSlot ? armorSlot.innerHTML : "Slot de armadura não encontrado");
 
-    if (armorSlot && armorSlot.innerHTML === "Hábito monástico") {
+    if (armorSlot && armorSlot.innerHTML.trim() === "Hábito monástico") { // MODIFICADO
         bonusCouraca += 2;
     }
 
     const totalCouraca = baseCouraca + bonusCouraca;
+    console.log("Valor total da couraça:", totalCouraca); // ADICIONADO
     couracaElement.innerText = totalCouraca;
 }
 
