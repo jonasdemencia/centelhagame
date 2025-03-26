@@ -136,7 +136,6 @@ function updateRacialModifiersDisplay() {
     }
 }
 
-
 document.getElementById("race").addEventListener("change", () => {
     updateRacialModifiersDisplay();  // Atualiza os modificadores e recalcula os totais
     savePlayerData(auth.currentUser.uid, getPlayerStats());  // Salva os novos valores no Firestore
@@ -186,7 +185,6 @@ document.getElementById("submit").addEventListener("click", async () => {
         alert(message);
     }
 });
-
 
 let saveTimeout;
 function debounceSave(uid, data) {
@@ -277,7 +275,6 @@ function getPlayerStats() {
     };
 }
 
-
 function getStat(id) {
     return document.getElementById(id).innerText !== "-" ? parseInt(document.getElementById(id).innerText) : 0;
 }
@@ -308,6 +305,16 @@ function isFichaCompleta(playerData) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Accordion functionality
+    const accordionButtons = document.querySelectorAll('.accordion-button');
+    accordionButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const accordionContent = button.nextElementSibling;
+            button.classList.toggle('active');
+            accordionContent.style.maxHeight = accordionContent.style.maxHeight ? null : accordionContent.scrollHeight + "px";
+        });
+    });
+
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             console.log("Usuário autenticado:", user.uid);
@@ -343,7 +350,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     } else {
                         console.warn("O valor salvo da idade não corresponde a nenhuma opção no <select>.");
                     }
-
                     console.log("Idade restaurada:", playerData.idade);
                 }
 
