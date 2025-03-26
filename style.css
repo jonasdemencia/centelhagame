@@ -1,3 +1,115 @@
+/* Aplicação da fonte Eagle Lake */
+body {
+    font-family: 'Eagle Lake', cursive;
+    text-align: center;
+    margin: 0;
+    padding: 5px;
+    background-color: #1a1a1a;
+    color: white;
+}
+
+/* Estilo para ocultar a página com a classe hidden */
+.hidden {
+    display: none;
+}
+
+/* Estilo para os atributos e alinhamento */
+.stat-box {
+    display: flex;
+    justify-content: space-between; /* Espaça os itens à esquerda e à direita */
+    align-items: center; /* Centraliza os itens verticalmente */
+    background: rgba(0, 0, 0, 0.5); /* Fundo escuro para destaque */
+    border: 1px solid #aa6c39; /* Borda dourada */
+    border-radius: 6px; /* Bordas arredondadas */
+    padding: 10px; /* Espaço interno */
+    margin-bottom: 10px; /* Espaço abaixo de cada atributo */
+}
+
+/* Nome do atributo à esquerda */
+.stat-name {
+    font-size: 14px; /* Ajuste do tamanho da fonte */
+    font-weight: bold;
+    margin-right: auto; /* Garante que o nome fique alinhado à esquerda */
+    text-align: left; /* Justifica o nome à esquerda */
+}
+
+/* Valores dos atributos */
+.stat-value {
+    font-size: 14px; /* Tamanho ajustado dos valores */
+    color: white; /* Contraste com o fundo */
+}
+
+/* Botões de dados e zerar alinhados à direita */
+.stat-buttons-inline {
+    display: flex; /* Alinha os botões horizontalmente */
+    justify-content: flex-end; /* Alinha os botões à direita */
+    gap: 5px; /* Reduz a distância entre os botões 🎲 e Zerar */
+    margin-left: auto; /* Garante que os botões fiquem na extremidade direita */
+}
+
+/* Estilo dos botões 🎲 e Zerar */
+.button {
+    background-color: #8b5a2b; /* Fundo dos botões com contraste */
+    border: none;
+    padding: 6px 12px; /* Tamanho dos botões ajustado */
+    font-family: 'Eagle Lake', cursive;
+    color: white;
+    font-size: 12px;
+    border-radius: 4px; /* Bordas arredondadas */
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #aa6c39; /* Fundo mais claro ao passar o mouse */
+}
+
+/* Estilo para slots (não modificado, mantido para consistência) */
+.slot, .item, .discard-slot {
+    width: 100px;
+    height: 45px;
+    background: #583101;
+    border: 2px solid #d4a373;
+    border-radius: 8px;
+    text-align: center;
+    line-height: 45px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.item {
+    background: #8b5a2b;
+}
+
+.slot {
+    background: rgba(100, 60, 30, 0.8);
+}
+
+/* Destaque dos slots */
+.highlight {
+    background-color: #3498db; /* Azul claro */
+    border-color: #2980b9; /* Borda azul */
+}
+
+/* Estilização do descarte */
+.discard-area {
+    margin-top: 20px;
+    padding: 10px;
+    background: rgba(50, 30, 15, 0.8);
+    border: 3px solid #a52a2a;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.discard-slot {
+    background: #a52a2a;
+    color: #fff;
+    font-weight: bold;
+}
+
 /* Estilos para a seção de criação de personagem */
 #character-page .container {
     max-width: 600px; /* Limita a largura do conteúdo para melhor leitura em telas maiores */
@@ -6,6 +118,13 @@
     background-color: rgba(0, 0, 0, 0.7); /* Fundo um pouco mais transparente */
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Adiciona uma sombra sutil */
+    /* Simulação de textura com gradiente */
+    background-image:
+        radial-gradient(circle, rgba(50,50,50,0.05) 1px, transparent 1px),
+        radial-gradient(circle, rgba(70,70,70,0.05) 1px, transparent 1px);
+    background-size: 15px 15px; /* Ajuste o tamanho do padrão conforme preferir */
+    background-position: 0 0, 8px 8px; /* Ajuste a posição para variar o padrão */
+    opacity: 0.9;
 }
 
 #character-page .page-title {
@@ -186,27 +305,59 @@
 }
 
 .stats-section .stat-box {
-    /* Os estilos já estavam definidos anteriormente */
+    display: flex;
+    justify-content: space-between; /* Espaça os itens à esquerda e à direita */
+    align-items: center; /* Centraliza os itens verticalmente */
+    background: rgba(0, 0, 0, 0.5); /* Fundo escuro para destaque */
+    border: 1px solid #aa6c39; /* Borda dourada */
+    border-radius: 6px; /* Bordas arredondadas */
+    padding: 10px; /* Espaço interno */
+    margin-bottom: 10px; /* Espaço abaixo de cada atributo */
 }
 
 .stats-section .stat-name {
-    /* Os estilos já estavam definidos anteriormente */
+    font-size: 14px; /* Ajuste do tamanho da fonte */
+    font-weight: bold;
+    margin-right: auto; /* Garante que o nome fique alinhado à esquerda */
+    text-align: left; /* Justifica o nome à esquerda */
 }
 
 .stats-section .stat-value {
-    /* Os estilos já estavam definidos anteriormente */
+    font-size: 14px; /* Tamanho ajustado dos valores */
+    color: white; /* Contraste com o fundo */
 }
 
 .stats-section .stat-buttons-inline {
-    /* Os estilos já estavam definidos anteriormente */
+    display: flex; /* Alinha os botões horizontalmente */
+    justify-content: flex-end; /* Alinha os botões à direita */
+    gap: 5px; /* Reduz a distância entre os botões 🎲 e Zerar */
+    margin-left: auto; /* Garante que os botões fiquem na extremidade direita */
 }
 
 .stats-section .button {
-    /* Os estilos já estavam definidos anteriormente */
+    background-color: #8b5a2b; /* Fundo dos botões com contraste */
+    border: none;
+    padding: 6px 12px; /* Tamanho dos botões ajustado */
+    font-family: 'Eagle Lake', cursive;
+    color: white;
+    font-size: 12px;
+    border-radius: 4px; /* Bordas arredondadas */
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #aa6c39; /* Fundo mais claro ao passar o mouse */
 }
 
 .racial-modifier {
     font-size: 12px;
     color: #d4a373;
     margin-left: 5px;
+}
+
+.stat-description {
+    font-size: 12px;
+    color: #ccc;
+    text-align: left;
+    margin-bottom: 5px;
 }
