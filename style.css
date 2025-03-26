@@ -4,112 +4,132 @@ body {
     text-align: center;
     margin: 0;
     padding: 5px;
-    background-color: #333; /* Cinza escuro para o fundo do body */
-    color: #f0f0f0; /* Branco acinzentado para o texto geral */
-    font-size: 14px; /* Diminuindo o tamanho da fonte padrão */
+    background-color: #1a1a1a;
+    color: white;
 }
 
-/* Estilo para ocultar a página com a classe hidden */
-.hidden {
-    display: none;
+/* Container principal */
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    border: 4px solid #aa6c39;
 }
 
-/* Estilo para os atributos e alinhamento */
-.stat-box {
+/* Títulos */
+h1 {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+/* Seção do personagem */
+.character {
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 3px solid #aa6c39;
+    border-radius: 10px;
+    width: 250px;
+    margin: auto;
+}
+
+.equipment {
     display: flex;
-    flex-direction: column; /* Alinha os itens verticalmente para a descrição ficar abaixo */
-    justify-content: flex-start; /* Alinha os itens ao início */
-    align-items: stretch; /* Estica os itens para preencher a largura */
-    background: rgba(0, 0, 0, 0.7); /* Preto com transparência para destaque */
-    border: 1px solid #555; /* Cinza para a borda */
-    border-radius: 6px; /* Bordas arredondadas */
-    padding: 8px; /* Reduzindo um pouco o padding */
-    margin-bottom: 8px; /* Reduzindo um pouco a margem */
-}
-
-.stat-box > div { /* Estilos para a linha principal do atributo (nome, valores, botões) */
-    display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-    width: 100%;
+    gap: 10px;
 }
 
-/* Nome do atributo à esquerda */
-.stat-name {
-    font-size: 14px; /* Diminuindo o tamanho da fonte */
-    font-weight: bold;
-    text-align: left; /* Justifica o nome à esquerda */
-    color: #eee; /* Branco acinzentado */
-    flex-grow: 1; /* Permite que o nome ocupe mais espaço */
+/* Organização dos slots */
+.slot-row {
     display: flex;
-    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
-/* Valores dos atributos */
-.stat-value {
-    font-size: 14px; /* Diminuindo o tamanho da fonte */
-    color: #fff; /* Branco */
-    margin-left: 5px;
+/* Baú de itens */
+.chest {
+    display: block; /* Certifica que o baú esteja visível */
+    position: relative; /* Corrige posição */
+    margin-top: 20px;
+    padding: 15px; /* Espaço interno ajustado */
+    background: rgba(0, 0, 0, 0.5);
+    border: 3px solid #aa6c39;
+    border-radius: 10px;
+    min-height: 300px; /* Dobra o tamanho vertical (ajuste conforme necessário) */
 }
 
-/* Botões de dados e zerar alinhados à direita */
-.stat-buttons-inline {
-    display: flex; /* Alinha os botões horizontalmente */
-    gap: 2px; /* Diminuindo a distância entre os botões */
+.items {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    justify-content: start; /* Alinha os itens ao início para melhor visualização em espaço maior */
+    align-items: start; /* Alinha os itens ao início para melhor visualização em espaço maior */
+    padding: 10px;
+    overflow-y: auto; /* Adiciona barra de rolagem vertical se o conteúdo exceder a altura */
+    max-height: calc(300px - 40px); /* Garante que a rolagem ocorra dentro do baú (ajuste conforme necessário) */
 }
 
-/* Estilo dos botões 🎲 e Zerar */
-.button {
-    background-color: #555; /* Cinza para o fundo dos botões */
-    border: none;
-    padding: 6px 10px; /* Reduzindo o tamanho dos botões */
-    font-family: 'Eagle Lake', cursive;
-    color: #f0f0f0; /* Branco acinzentado para o texto dos botões */
-    font-size: 12px; /* Diminuindo o tamanho da fonte dos botões */
-    border-radius: 4px; /* Bordas arredondadas */
-    cursor: pointer;
-}
-
-.button:hover {
-    background-color: #777; /* Tom de cinza mais claro ao passar o mouse */
-}
-
-/* Estilo para slots (não modificado, mantido para consistência) */
+/* Estilo dos itens e slots */
 .slot, .item, .discard-slot {
-    width: 80px; /* Diminuindo o tamanho */
-    height: 35px; /* Diminuindo o tamanho */
-    background: #444; /* Cinza mais escuro */
-    border: 2px solid #888; /* Cinza claro */
-    border-radius: 6px; /* Arredondamento menor */
+    width: 100px;
+    height: 100px; /* Torna os itens quadrados */
+    background: #583101;
+    border: 2px solid #d4a373;
+    border-radius: 8px;
     text-align: center;
-    line-height: 35px; /* Ajustando a altura da linha */
+    line-height: 100px; /* Centraliza o texto verticalmente */
     cursor: pointer;
-    font-size: 12px; /* Diminuindo a fonte */
+    font-size: 14px;
     font-weight: bold;
-    color: #f0f0f0;
+    display: flex; /* Para centralizar o conteúdo */
+    justify-content: center; /* Centraliza o conteúdo horizontalmente */
+    align-items: center; /* Centraliza o conteúdo verticalmente */
+    white-space: normal; /* Permite que o texto quebre para caber no quadrado */
+    word-break: break-word; /* Força a quebra de palavras longas */
 }
 
 .item {
-    background: #777; /* Cinza */
+    background: #8b5a2b;
+    position: relative; /* Para posicionar o toggle dentro */
+    padding-right: 25px; /* Espaço para o botão de expandir */
+    line-height: normal; /* Remove o line-height fixo para permitir múltiplas linhas */
 }
 
 .slot {
-    background: rgba(68, 68, 68, 0.8); /* Tom de cinza */
+    background: rgba(100, 60, 30, 0.8);
 }
 
-/* Destaque dos slots */
+/* Destaque do item selecionado */
+.selected {
+    background-color: #f1c40f; /* Amarelo */
+    border-color: #f39c12; /* Borda amarelo escuro */
+}
+
+/* Destaque dos slots compatíveis */
 .highlight {
-    background-color: #999; /* Cinza mais claro */
-    border-color: #aaa; /* Cinza ainda mais claro */
+    background-color: #3498db; /* Azul claro */
+    border-color: #2980b9; /* Borda azul escuro */
 }
 
-/* Estilização do descarte */
+/* Estilização da área de descarte */
 .discard-area {
-    margin-top: 15px; /* Reduzindo a margem */
-    padding: 8px; /* Reduzindo o padding */
-    background: rgba(50, 50, 50, 0.8); /* Cinza escuro */
-    border: 2px solid #777; /* Cinza */
-    border-radius: 8px; /* Arredondamento menor */
+    margin-top: 20px;
+    padding: 10px;
+    background: rgba(50, 30, 15, 0.8);
+    border: 3px solid #a52a2a;
+    border-radius: 10px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -117,253 +137,251 @@ body {
 }
 
 .discard-slot {
-    background: #777; /* Cinza */
+    background: #a52a2a;
     color: #fff;
     font-weight: bold;
+    height: auto; /* Ajusta a altura automaticamente */
+    line-height: normal; /* Remove a altura de linha fixa */
+    padding: 10px; /* Adiciona um pouco de preenchimento interno */
 }
 
-/* Estilos para a seção de criação de personagem */
-#character-page .container {
-    max-width: 500px; /* Reduzindo a largura máxima */
-    margin: 15px auto; /* Reduzindo a margem */
-    padding: 15px; /* Reduzindo o padding */
-    background-color: #fff; /* Branco para o fundo do container */
-    border-radius: 6px; /* Arredondamento menor */
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.7); /* Sombra mais escura e menor */
-    opacity: 0.95; /* Aumentei um pouco a opacidade */
-    color: #333; /* Cor do texto dentro do container (cinza escuro) */
-    font-size: 14px; /* Diminuindo o tamanho da fonte */
+/* Botões alinhados (se aplicável) */
+.stat-buttons-inline {
+    display: inline-flex;
+    gap: 10px;
+    margin-left: 10px;
 }
 
-#character-page .page-title {
-    margin-bottom: 15px; /* Reduzindo a margem */
-    color: #555; /* Cinza para o título */
-    font-size: 1.5em; /* Diminuindo o tamanho do título */
-}
-
-#character-page .form-group {
-    margin-bottom: 15px; /* Reduzindo a margem */
-    display: flex;
-    flex-direction: column; /* Alinha os elementos verticalmente em telas menores */
-    gap: 8px; /* Reduzindo o espaçamento */
-}
-
-#character-page .input-field {
-    padding: 8px; /* Reduzindo o padding */
-    border: 1px solid #555; /* Cinza para a borda */
-    border-radius: 4px;
-    background-color: #eee; /* Branco acinzentado */
-    color: #333;
+.button {
+    background-color: transparent;
+    color: white;
+    border: 1px solid white;
+    padding: 6px 12px;
     font-family: 'Eagle Lake', cursive;
-    font-size: 14px;
-}
-
-#character-page .label-group {
-    margin-bottom: 10px; /* Reduzindo a margem */
-    text-align: left; /* Alinha os rótulos à esquerda */
-}
-
-#character-page .label-text {
-    display: block;
-    margin-bottom: 3px; /* Reduzindo a margem */
-    font-size: 14px;
-    color: #555; /* Cinza para os rótulos */
-}
-
-#character-page .select-field {
-    width: 100%;
-    padding: 8px; /* Reduzindo o padding */
-    border: 1px solid #555; /* Cinza para a borda */
-    border-radius: 4px;
-    background-color: #eee; /* Branco acinzentado */
-    color: #333;
-    font-family: 'Eagle Lake', cursive;
-    font-size: 14px;
-}
-
-#character-page .inline-description {
-    font-size: 10px; /* Diminuindo ainda mais */
-    color: #777; /* Cinza mais claro */
-    text-align: left;
-    margin-top: 3px; /* Reduzindo a margem */
-}
-
-/* Estilos para Accordion */
-.accordion {
-    margin-bottom: 10px; /* Reduzindo a margem */
-    border: 1px solid #555; /* Cinza para a borda */
-    border-radius: 4px;
-    background-color: #f0f0f0; /* Branco acinzentado */
-    overflow: hidden; /* Garante que o conteúdo expandido não vaze */
-    font-size: 14px; /* Diminuindo a fonte */
-}
-
-.accordion-button {
-    background-color: #ddd; /* Cinza claro */
-    color: #333;
     cursor: pointer;
-    padding: 8px; /* Reduzindo o padding */
-    width: 100%;
-    border: none;
-    text-align: left;
-    outline: none;
-    font-family: 'Eagle Lake', cursive;
-    font-size: 14px; /* Diminuindo a fonte */
+}
+
+.button:hover {
+    background-color: white;
+    color: black;
+}
+
+/* Valores */
+.stat-value {
+    font-size: 16px;
+    color: white;
+}
+
+/* Página oculta */
+.hidden {
+    display: none;
+}
+
+/* 📌 Ajustes do carrossel */
+.carousel-wrapper {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
+    margin-bottom: 15px; /* Reduzido para otimizar o espaço */
 }
 
-.accordion-button:hover {
-    background-color: #ccc; /* Cinza um pouco mais claro */
-}
-
-.accordion-button.active {
-    background-color: #ccc; /* Cinza um pouco mais claro */
-}
-
-.accordion-content {
-    padding: 8px; /* Reduzindo o padding */
-    background-color: #eee; /* Branco acinzentado */
-    color: #333;
-    max-height: 0;
+.carousel-container {
+    display: flex;
+    width: 100%;
+    max-width: 400px; /* Largura ligeiramente menor */
     overflow: hidden;
-    transition: max-height 0.3s ease-out;
-    font-size: 12px; /* Diminuindo a fonte */
-    text-align: left;
-}
-
-.accordion-content p {
-    margin-bottom: 8px; /* Reduzindo a margem */
-}
-
-.accordion-content .label-group {
-    margin-bottom: 8px; /* Reduzindo a margem */
-}
-
-.accordion-content .race-info p {
-    margin-left: 10px; /* Reduzindo a margem */
-    font-style: italic;
-    color: #777;
-    font-size: 12px; /* Diminuindo a fonte */
-}
-
-/* Estilos para o Ícone de Informação (Modal) */
-.info-icon {
-    color: #555; /* Cinza */
-    cursor: pointer;
-    font-size: 1em; /* Reduzindo o tamanho */
-    margin-left: 3px; /* Reduzindo a margem */
-}
-
-.info-icon:hover {
-    color: #333; /* Cinza escuro */
-}
-
-/* Estilos para o Modal */
-.modal {
-    display: none; /* Oculto por padrão */
-    position: fixed; /* Fica fixo na tela */
-    z-index: 1; /* Garante que fique por cima de outros elementos */
-    left: 0;
-    top: 0;
-    width: 100%; /* Largura total */
-    height: 100%; /* Altura total */
-    overflow: auto; /* Habilita scroll se o conteúdo for grande */
-    background-color: rgba(0,0,0,0.7); /* Preto com mais transparência */
-}
-
-.modal-content {
-    background-color: #f0f0f0; /* Branco acinzentado */
-    margin: 10% auto; /* Reduzindo a margem */
-    padding: 15px; /* Reduzindo o padding */
-    border: 1px solid #888; /* Cinza claro para a borda */
-    width: 80%; /* Largura da caixa do modal */
-    border-radius: 6px; /* Arredondamento menor */
     position: relative;
-    color: #333;
-    text-align: left;
-    font-size: 12px; /* Diminuindo a fonte */
 }
 
-.close-button {
-    color: #aaa;
-    float: right;
-    font-size: 22px; /* Reduzindo o tamanho */
-    font-weight: bold;
+/* 📌 As janelas do carrossel */
+.carousel-slide {
+    min-width: 100%;
+    transition: transform 0.5s ease-in-out;
+    display: none;
 }
 
-.close-button:hover,
-.close-button:focus {
-    color: #000;
-    text-decoration: none;
+.carousel-slide.active {
+    display: block;
+}
+
+/* 📌 Botões de navegação do carrossel */
+.carousel-buttons {
+    display: flex; /* Garante que os botões estejam visíveis */
+    justify-content: center;
+    gap: 10px; /* Espaço ajustado */
+    margin-top: 15px; /* Espaço acima */
+    z-index: 2; /* Certifica que os botões estão acima do carrossel */
+}
+
+.carousel-buttons button {
+    background: #aa6c39;
+    border: none;
+    padding: 10px 15px;
+    font-size: 14px; /* Ajuste no tamanho da fonte */
+    color: white;
+    border-radius: 5px;
     cursor: pointer;
 }
 
-.modal-content h3 {
-    color: #555; /* Cinza para o título do modal */
-    margin-top: 0;
-    margin-bottom: 10px; /* Reduzindo a margem */
+.carousel-buttons button:hover {
+    background: #8b5a2b;
+}
+
+/* 📌 Organização da ficha do personagem */
+.character-sheet {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px; /* Espaço menor entre as janelas */
+    justify-content: center; /* Centraliza a ficha */
+    font-size: 13px; /* Fonte menor para toda a ficha */
+}
+
+.character-sheet p {
+    flex-basis: 45%; /* Nome/Classe e Raça/Alinhamento lado a lado */
+    padding: 4px; /* Preenchimento interno ajustado */
+    font-size: 12px; /* Reduzindo o tamanho da fonte */
+    background: rgba(0, 0, 0, 0.4); /* Fundo transparente mais suave */
+    border: 1px solid #aa6c39; /* Borda menor */
+    border-radius: 6px;
+    margin: 0;
+}
+
+/* 📌 Atributos */
+/* Organização dos atributos */
+.attribute-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px; /* Espaço entre os atributos */
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.attribute-container .attribute {
+    display: flex;
+    flex-direction: column; /* Nomes acima dos valores */
+    align-items: center;
+    width: 45px; /* Tamanho menor das janelas */
+    height: 45px;
+    background-color: #8b5a2b;
+    border: 1px solid #d4a373;
+    border-radius: 6px;
+    font-size: 0.9em;
+    color: white;
     text-align: center;
-    font-size: 1.3em; /* Diminuindo o tamanho do título */
 }
 
-.modal-content p, .modal-content ol {
-    margin-bottom: 10px; /* Reduzindo a margem */
-    font-size: 12px; /* Diminuindo a fonte */
+.attribute-container .attribute .label {
+    font-size: 0.7em; /* Nomes menores */
+    margin-bottom: 2px; /* Espaço entre o nome e o valor */
+    color: #ffffff;
 }
 
-/* Estilos para a seção de atributos */
-.stats-section {
-    margin-top: 15px; /* Reduzindo a margem */
+/* Alinhamento de Mão Dominante e Hemisfério Dominante */
+/* Alinhamento horizontal de Mão Dominante e Hemisfério Dominante */
+/* Alinhamento horizontal de Mão Dominante e Hemisfério Dominante */
+.char-alignment {
+    display: flex;
+    justify-content: center; /* Centraliza horizontalmente */
+    gap: 15px; /* Espaço entre as janelas */
+    margin-top: 15px;
 }
 
-.stats-section .stat-box {
-    /* Os estilos foram atualizados no início do CSS */
+.char-hand-container,
+.char-hemisphere-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 80px; /* Largura ajustada */
+    height: 50px; /* Altura ajustada */
+    background-color: rgba(0, 0, 0, 0.4);
+    border: 1px solid #aa6c39;
+    border-radius: 6px;
+    font-size: 0.8em;
+    color: white;
+    text-align: center;
+    padding: 5px;
 }
 
-.stats-section .stat-name {
-    /* Os estilos foram atualizados no início do CSS */
+/* Couraça e Dano agora abaixo de Mão Dominante e Hemisfério */
+.couraca-dano {
+    display: flex;
+    justify-content: center; /* Centraliza horizontalmente */
+    gap: 15px; /* Espaço entre as janelas */
+    margin-top: 10px; /* Espaçamento acima */
 }
 
-.stats-section .stat-value {
-    /* Os estilos foram atualizados no início do CSS */
+.couraca-dano .attribute {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 80px; /* Tamanho ajustado */
+    height: 50px;
+    background-color: #8b5a2b;
+    border: 1px solid #d4a373;
+    border-radius: 6px;
+    font-size: 0.9em;
+    text-align: center;
+    color: white;
 }
 
-.stats-section .stat-buttons-inline {
-    /* Os estilos foram atualizados no início do CSS */
+.couraca-dano .attribute .label {
+    font-size: 0.7em; /* Nome Couraça/Dano menor */
+    margin-bottom: 2px;
 }
 
-.stats-section .button {
-    /* Os estilos foram atualizados no início do CSS */
+
+
+/* PO no interior do baú */
+#char-po-container {
+    position: absolute;
+    bottom: 10px;
+    left: 10px; /* Ajuste para canto inferior esquerdo */
+    width: 50px; /* Janelas menores */
+    height: 35px;
+    display: flex;
+    flex-direction: column; /* Coloca o nome acima do valor */
+    justify-content: center;
+    align-items: center;
+    background-color: #ffd700; /* Dourado */
+    border: 1px solid #aa6c39;
+    border-radius: 6px;
+    font-size: 0.8em; /* Fonte reduzida */
+    color: black; /* Contraste para o texto */
 }
 
-.racial-modifier {
-    font-size: 10px; /* Diminuindo a fonte */
-    margin-left: 3px; /* Reduzindo a margem */
+#char-po-container .label {
+    font-size: 0.7em; /* Nome PO menor */
+    margin-bottom: 2px;
 }
 
-.racial-modifier.positive {
-    color: lightgreen;
+/* Estilos para o expandir/recolher dos itens */
+.item-expand-toggle {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 18px;
 }
 
-.racial-modifier.negative {
-    color: darkorange;
-}
-
-.attribute-description-container {
-    display: none; /* Oculto por padrão */
-    width: 100%; /* Ocupa toda a largura do .stat-box */
-    background-color: #eee; /* Branco acinzentado para a descrição */
-    color: #333; /* Cinza escuro para o texto da descrição */
-    padding: 8px; /* Reduzindo o padding */
-    border-radius: 4px;
-    margin-top: 5px; /* Espaço entre a linha do atributo e a descrição */
-    font-size: 10px; /* Diminuindo a fonte */
-    text-align: left;
-    box-sizing: border-box; /* Garante que o padding não aumente a largura total */
-}
-
-.attribute-description-container.show {
-    display: block; /* Exibe quando a classe 'show' é adicionada */
+.item-description {
+    position: absolute; /* Permite o posicionamento exato */
+    top: calc(100% + 2px); /* Posiciona abaixo do item (100% da altura + uma pequena margem) */
+    left: 0; /* Alinha à esquerda do item */
+    width: 100%; /* Ocupa a largura total do item */
+    margin-top: 0; /* Remove a margem superior padrão */
+    padding: 5px;
+    border: 1px solid #eee;
+    background-color: #f9f9f9;
+    font-size: 0.9em;
+    color: black;
+    z-index: 10; /* Garante que a descrição fique sempre na frente de outros elementos */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); /* Adiciona uma sombra para destacar ainda mais */
 }
