@@ -374,13 +374,26 @@ function loadInventoryUI(inventoryData) {
         const newItem = document.createElement('div');
         newItem.classList.add('item');
         newItem.dataset.item = item.id;
-        newItem.innerHTML = `
-            ${item.content}
-            <span class="item-expand-toggle">+</span>
-            <div class="item-description" style="display: none;">
-                ${item.description || 'Descrição do item.'}
-            </div>
-        `;
+        newItem.innerHTML = `${item.content}`;
+
+const expandToggle = document.createElement("span");
+expandToggle.classList.add("item-expand-toggle");
+expandToggle.textContent = "+";
+
+const descriptionDiv = document.createElement("div");
+descriptionDiv.classList.add("item-description");
+descriptionDiv.style.display = "none";
+descriptionDiv.textContent = item.description || "Descrição do item.";
+
+expandToggle.addEventListener("click", (event) => {
+    event.stopPropagation();
+    descriptionDiv.style.display = descriptionDiv.style.display === "none" ? "block" : "none";
+    expandToggle.textContent = descriptionDiv.style.display === "none" ? "+" : "-";
+});
+
+newItem.appendChild(expandToggle);
+newItem.appendChild(descriptionDiv);
+
         if (item.consumable) {
             newItem.dataset.consumable = 'true';
             newItem.dataset.quantity = item.quantity;
