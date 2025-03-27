@@ -1,6 +1,6 @@
-import initializeApp from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC0XfvjonW2gdleGAZX7NBYPGMwI2siJw",
@@ -117,8 +117,6 @@ document.getElementById("race").addEventListener("change", () => {
     });
     updateRacialModifiersDisplay();
 });
-
-// Event listeners for other fields remain the same
 
 document.getElementById("submit").addEventListener("click", async () => {
     const user = auth.currentUser;
