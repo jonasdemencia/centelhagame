@@ -56,6 +56,14 @@ async function initializePlayerData(uid) {
     }
 }
 
+// Função para obter parâmetros da URL
+function getUrlParameter(name) {
+    name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+    const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+    const results = regex.exec(location.search);
+    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+}
+
 // Função para processar o login
 document.getElementById("login-form").addEventListener("submit", function(event) {
     event.preventDefault(); // Evita o recarregamento da página
@@ -74,8 +82,14 @@ document.getElementById("login-form").addEventListener("submit", function(event)
             // Inicializa os dados do jogador no Firestore, se necessário
             await initializePlayerData(user.uid);
 
-            // Redireciona para a página de criação de ficha
-            window.location.href = "character-creation.html";
+            // Lógica de redirecionamento
+            const redirectUrl = getUrlParameter('redirect');
+            if (redirectUrl) {
+                window.location.href = redirectUrl;
+            } else {
+                // Redireciona para a página de criação de ficha (comportamento padrão)
+                window.location.href = "character-creation.html";
+            }
         })
         .catch((error) => {
             document.getElementById("message").innerText = "Erro ao fazer login: " + error.message;
