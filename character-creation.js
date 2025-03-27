@@ -3,7 +3,7 @@ import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/fireb
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyC0XfvjonW2gdleGAZX7NBYPGMwI2siJw",
+    apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
     authDomain: "centelhagame-9d511.firebaseapp.com",
     projectId: "centelhagame-9d511",
     storageBucket: "centelhagame-9d511.appspot.com",
@@ -17,14 +17,6 @@ const auth = getAuth(app);
 
 let rolls = { energy: 3, skill: 3, charisma: 3, magic: 3, luck: 3 };
 let resets = { energy: 2, skill: 2, charisma: 2, magic: 2, luck: 2 };
-let defeitos = [];
-let descricoesDefeitos = {}; // Objeto para armazenar as descrições
-let defeitoSelecionado1 = null;
-let defeitoSelecionado2 = null;
-let defeitoCentralFinal = null;
-let selecoesDefeito = 0;
-let primeiroDefeitoIndex = -1;
-let segundoDefeitoIndex = -1;
 
 function rollDice(sides) {
     return Math.floor(Math.random() * sides) + 1;
@@ -33,141 +25,209 @@ function rollDice(sides) {
 function getRacialModifiers() {
     const race = document.getElementById("race").value;
     let modifiers = { energy: 0, skill: 0, charisma: 0, magic: 0, luck: 0 };
+
     switch (race) {
         case "Anão":
-            modifiers.energy += 2; // Energia +2
+            modifiers.energy += 2;  // Energia +2
             modifiers.charisma -= 2; // Carisma -2
             break;
         case "Elfo":
-            modifiers.skill += 2; // Habilidade +2
+            modifiers.skill += 2;  // Habilidade +2
             modifiers.energy -= 2; // Energia -2
             break;
         case "Humano":
-            // Humanos não tem modificadores
+            // Humanos não têm modificadores
             break;
     }
     return modifiers;
 }
 
 function rollStat(stat, button) {
-    const firstRollId = `${stat}1`;
-    const secondRollId = `${stat}2`;
-    const totalId = `${stat}Total`;
-    const modifierId = `${stat}Modifier`;
-
     if (rolls[stat] > 0) {
-        const roll1 = rollDice(6);
-        const roll2 = rollDice(6);
-        document.getElementById(firstRollId).innerText = roll1;
-        document.getElementById(secondRollId).innerText = roll2;
+        console.log(`Rolando atributo: ${stat}`);
+        let firstRoll = document.getElementById(stat + "1");
+        let secondRoll = document.getElementById(stat + "2");
+        let totalRoll = document.getElementById(stat + "Total");
+        let modifierDisplay = document.getElementById(stat + "Modifier");
 
-        const racialModifiers = getRacialModifiers();
-        const modifierValue = racialModifiers[stat] || 0;
-        document.getElementById(modifierId).innerText = modifierValue > 0 ? `+${modifierValue}` : (modifierValue < 0 ? modifierValue : '');
-
-        const total = roll1 + roll2 + modifierValue;
-        document.getElementById(totalId).innerText = total;
-        rolls[stat]--;
-        if (rolls[stat] === 0) {
-            disableButton(button);
+        if (!firstRoll || !secondRoll || !totalRoll || !modifierDisplay) {
+            console.error(`Elementos DOM para ${stat} não encontrados.`);
+            return;
         }
+
+        if (firstRoll.innerText === "-") {
+            firstRoll.innerText = rollDice(6);
+            console.log(`Primeira rolagem (${stat}): ${firstRoll.innerText}`);
+            savePlayerData(auth.currentUser.uid, getPlayerStats());
+        } else if (secondRoll.innerText === "-") {
+            secondRoll.innerText = rollDice(6);
+            console.log(`Segunda rolagem (${stat}): ${secondRoll.innerText}`);
+
+            let rollValue = parseInt(firstRoll.innerText) + parseInt(secondRoll.innerText);
+            const racialModifiers = getRacialModifiers();
+            const modifierValue = racialModifiers[stat];
+
+            modifierDisplay.innerText = modifierValue !== 0 ? ` (${modifierValue})` : "";
+            modifierDisplay.className = 'racial-modifier'; // Resetando classes
+            if (modifierValue > 0) {
+                modifierDisplay.classList.add('positive');
+            } else if (modifierValue < 0) {
+                modifierDisplay.classList.add('negative');
+            }
+
+            rollValue += modifierValue;
+            totalRoll.innerText = rollValue;
+            rolls[stat]--;
+
+            console.log(`Total (${stat}): ${rollValue}`);
+            if (rolls[stat] === 0) disableButton(button);
+            savePlayerData(auth.currentUser.uid, getPlayerStats());
+        }
+    } else {
+        alert("Você já usou todas as 3 rolagens permitidas para este atributo!");
     }
 }
 
 function resetStat(stat, button) {
-    const firstRollId = `${stat}1`;
-    const secondRollId = `${stat}2`;
-    const totalId = `${stat}Total`;
-    const modifierId = `${stat}Modifier`;
-
     if (resets[stat] > 0) {
-        document.getElementById(firstRollId).innerText = '-';
-        document.getElementById(secondRollId).innerText = '-';
-        document.getElementById(totalId).innerText = '-';
-        document.getElementById(modifierId).innerText = '';
-        rolls[stat] = 3;
+        document.getElementById(stat + "1").innerText = "-";
+        document.getElementById(stat + "2").innerText = "-";
+        document.getElementById(stat + "Total").innerText = "-";
+        document.getElementById(stat + "Modifier").innerText = "";
+        document.getElementById(stat + "Modifier").className = 'racial-modifier'; // Resetando classes
         resets[stat]--;
-        const rollButton = button.previousElementSibling;
-        rollButton.disabled = false;
+        savePlayerData(auth.currentUser.uid, getPlayerStats());
+        if (resets[stat] === 0) disableButton(button);
+    } else {
+        alert("Você já zerou este atributo 2 vezes!");
     }
 }
 
 function disableButton(button) {
     button.disabled = true;
+    button.style.opacity = "0.5";
+    button.style.cursor = "not-allowed";
 }
 
 function updateRacialModifiersDisplay() {
     const racialModifiers = getRacialModifiers();
-    document.getElementById('energyModifier').innerText = racialModifiers.energy > 0 ? `+${racialModifiers.energy}` : (racialModifiers.energy < 0 ? racialModifiers.energy : '');
-    document.getElementById('skillModifier').innerText = racialModifiers.skill > 0 ? `+${racialModifiers.skill}` : (racialModifiers.skill < 0 ? racialModifiers.skill : '');
-    document.getElementById('charismaModifier').innerText = racialModifiers.charisma > 0 ? `+${racialModifiers.charisma}` : (racialModifiers.charisma < 0 ? racialModifiers.charisma : '');
-    document.getElementById('magicModifier').innerText = racialModifiers.magic > 0 ? `+${racialModifiers.magic}` : (racialModifiers.magic < 0 ? racialModifiers.magic : '');
-    document.getElementById('luckModifier').innerText = racialModifiers.luck > 0 ? `+${racialModifiers.luck}` : (racialModifiers.luck < 0 ? racialModifiers.luck : '');
+
+    for (const stat in racialModifiers) {
+        const modifierDisplay = document.getElementById(stat + "Modifier");
+        const totalRoll = document.getElementById(stat + "Total");
+        const firstRoll = document.getElementById(stat + "1");
+        const secondRoll = document.getElementById(stat + "2");
+
+        if (modifierDisplay && totalRoll && firstRoll && secondRoll) {
+            let modifierValue = racialModifiers[stat];
+
+            modifierDisplay.innerText = modifierValue !== 0 ? ` (${modifierValue})` : "";
+            modifierDisplay.className = 'racial-modifier'; // Resetando classes
+            if (modifierValue > 0) {
+                modifierDisplay.classList.add('positive');
+            } else if (modifierValue < 0) {
+                modifierDisplay.classList.add('negative');
+            }
+
+            let firstValue = parseInt(firstRoll.innerText) || 0;
+            let secondValue = parseInt(secondRoll.innerText) || 0;
+            let newTotal = firstValue + secondValue + modifierValue;
+
+            if (firstValue > 0 && secondValue > 0) {
+                totalRoll.innerText = newTotal;
+            }
+        }
+    }
 }
 
 document.getElementById("race").addEventListener("change", () => {
-    rolls = { energy: 3, skill: 3, charisma: 3, magic: 3, luck: 3 };
-    resets = { energy: 2, skill: 2, charisma: 2, magic: 2, luck: 2 };
-    const statContainers = document.querySelectorAll('.stat-box');
-    statContainers.forEach(container => {
-        const rollButton = container.querySelector('.stat-buttons-inline button:first-child');
-        const resetButton = container.querySelector('.stat-buttons-inline button:last-child');
-        if (rollButton) rollButton.disabled = false;
-        if (resetButton) resetButton.click(); // Simulate click to reset values
-    });
-    updateRacialModifiersDisplay();
+    updateRacialModifiersDisplay();  // Atualiza os modificadores e recalcula os totais
+    savePlayerData(auth.currentUser.uid, getPlayerStats());  // Salva os novos valores no Firestore
+});
+
+document.getElementById("alignment").addEventListener("change", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
+document.getElementById("class").addEventListener("change", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
+document.getElementById("mao dominante").addEventListener("change", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
+document.getElementById("hemisfério dominante").addEventListener("change", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
+document.getElementById("name").addEventListener("input", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
+document.getElementById("idade").addEventListener("input", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
 });
 
 document.getElementById("submit").addEventListener("click", async () => {
-    const user = auth.currentUser;
-    if (user) {
-        const uid = user.uid;
-        const playerData = getPlayerStats();
-        if (isFichaCompleta(playerData)) {
-            await savePlayerData(uid, playerData);
-            alert('Ficha salva!');
-        } else {
-            alert('Preencha todos os campos obrigatórios.');
-        }
+    const data = getPlayerStats();
+    const completionStatus = isFichaCompleta(data);
+
+    if (completionStatus === true) {
+        data.fichaCompleta = true;
+        await savePlayerData(auth.currentUser.uid, data);
+        console.log("Ficha marcada como completa. Redirecionando para o inventário...");
+        window.location.href = "inventario.html";
     } else {
-        alert('Usuário não autenticado.');
+        let message = "Por favor, preencha todos os campos e finalize todas as rolagens antes de prosseguir!\n\n";
+        if (completionStatus.missingFields.length > 0) {
+            message += "Campos faltando: " + completionStatus.missingFields.join(", ") + "\n";
+        }
+        if (completionStatus.unrolledStats.length > 0) {
+            message += "Atributos a serem rolados: " + completionStatus.unrolledStats.join(", ") + "\n";
+        }
+        alert(message);
     }
 });
 
 let saveTimeout;
 function debounceSave(uid, data) {
     clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(() => savePlayerData(uid, data), 1000);
+    saveTimeout = setTimeout(() => {
+        savePlayerData(uid, data);
+    }, 300);
 }
 
 async function savePlayerData(uid, data) {
     try {
-        const playerDoc = doc(db, "players", uid);
-        await setDoc(playerDoc, data);
-        console.log("Dados do jogador salvos com sucesso!");
+        const playerRef = doc(db, "players", uid);
+        await setDoc(playerRef, data, { merge: true });
+        console.log("Dados salvos com sucesso!");
     } catch (error) {
-        console.error("Erro ao salvar os dados do jogador:", error);
+        console.error("Erro ao salvar os dados:", error);
     }
 }
 
 async function getPlayerData(uid) {
     try {
-        const playerDoc = doc(db, "players", uid);
-        const docSnap = await getDoc(playerDoc);
-        if (docSnap.exists()) {
-            return docSnap.data();
+        const playerRef = doc(db, "players", uid);
+        const playerSnap = await getDoc(playerRef);
+        if (playerSnap.exists()) {
+            console.log("Dados do jogador recuperados:", playerSnap.data());
+            return playerSnap.data();
         } else {
-            console.log("Nenhum documento encontrado para este usuário.");
+            console.log("Nenhum dado encontrado para este jogador.");
             return null;
         }
     } catch (error) {
-        console.error("Erro ao buscar os dados do jogador:", error);
+        console.error("Erro ao recuperar os dados:", error);
         return null;
     }
 }
 
 function getPlayerStats() {
     const racialModifiers = getRacialModifiers();
+
     return {
         name: document.getElementById("name").value,
         race: document.getElementById("race").value,
@@ -176,14 +236,46 @@ function getPlayerStats() {
         maoDominante: document.getElementById("mao dominante").value,
         hemisferioDominante: document.getElementById("hemisfério dominante").value,
         idade: document.getElementById("idade").value,
-        defeitoCentral: defeitoCentralFinal,
-        primeiroDefeitoIndex: primeiroDefeitoIndex,
-        segundoDefeitoIndex: segundoDefeitoIndex,
-        energy: { firstRoll: getStat("energy1"), secondRoll: getStat("energy2"), total: getStat("energyTotal"), rolls: rolls.energy, resets: resets.energy, modifier: racialModifiers.energy },
-        skill: { firstRoll: getStat("skill1"), secondRoll: getStat("skill2"), total: getStat("skillTotal"), rolls: rolls.skill, resets: resets.skill, modifier: racialModifiers.skill },
-        charisma: { firstRoll: getStat("charisma1"), secondRoll: getStat("charisma2"), total: getStat("charismaTotal"), rolls: rolls.charisma, resets: resets.charisma, modifier: racialModifiers.charisma },
-        magic: { firstRoll: getStat("magic1"), secondRoll: getStat("magic2"), total: getStat("magicTotal"), rolls: rolls.magic, resets: resets.magic, modifier: racialModifiers.magic },
-        luck: { firstRoll: getStat("luck1"), secondRoll: getStat("luck2"), total: getStat("luckTotal"), rolls: rolls.luck, resets: resets.luck, modifier: racialModifiers.luck }
+        energy: {
+            firstRoll: getStat("energy1"),
+            secondRoll: getStat("energy2"),
+            total: getStat("energyTotal"),
+            rolls: rolls.energy,
+            resets: resets.energy,
+            modifier: racialModifiers.energy  // Salva o modificador no Firestore
+        },
+        skill: {
+            firstRoll: getStat("skill1"),
+            secondRoll: getStat("skill2"),
+            total: getStat("skillTotal"),
+            rolls: rolls.skill,
+            resets: resets.skill,
+            modifier: racialModifiers.skill
+        },
+        charisma: {
+            firstRoll: getStat("charisma1"),
+            secondRoll: getStat("charisma2"),
+            total: getStat("charismaTotal"),
+            rolls: rolls.charisma,
+            resets: resets.charisma,
+            modifier: racialModifiers.charisma
+        },
+        magic: {
+            firstRoll: getStat("magic1"),
+            secondRoll: getStat("magic2"),
+            total: getStat("magicTotal"),
+            rolls: rolls.magic,
+            resets: resets.magic,
+            modifier: racialModifiers.magic
+        },
+        luck: {
+            firstRoll: getStat("luck1"),
+            secondRoll: getStat("luck2"),
+            total: getStat("luckTotal"),
+            rolls: rolls.luck,
+            resets: resets.luck,
+            modifier: racialModifiers.luck
+        }
     };
 }
 
@@ -192,7 +284,28 @@ function getStat(id) {
 }
 
 function isFichaCompleta(playerData) {
-    return playerData.name && playerData.race && playerData.alignment && playerData.class && playerData.maoDominante && playerData.hemisferioDominante && playerData.idade && playerData.defeitoCentral;
+    const missingFields = [];
+    const unrolledStats = [];
+    const stats = ["energy", "skill", "charisma", "magic", "luck"];
+
+    if (!playerData.name) missingFields.push("Nome do heroi");
+    if (!playerData.race) missingFields.push("Raça");
+    if (!playerData.alignment) missingFields.push("Alinhamento");
+    if (!playerData.class) missingFields.push("Classe");
+    if (!playerData.maoDominante) missingFields.push("Mão Dominante");
+    if (!playerData.hemisferioDominante) missingFields.push("Hemisfério Dominante");
+    if (!playerData.idade) missingFields.push("Idade");
+
+    stats.forEach(stat => {
+        if (!playerData[stat] || playerData[stat].firstRoll === 0 || playerData[stat].secondRoll === 0 || playerData[stat].total === 0) {
+            unrolledStats.push(stat.charAt(0).toUpperCase() + stat.slice(1)); // Capitaliza o nome do atributo
+        }
+    });
+
+    if (missingFields.length > 0 || unrolledStats.length > 0) {
+        return { missingFields, unrolledStats };
+    }
+    return true;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -206,119 +319,73 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Defeito Central functionality
-    const defeitosListaElement = document.getElementById("defeitos-lista");
-    const listaDeDefeitos = defeitosListaElement.querySelectorAll("li");
-    const selecionarDefeitoButton = document.getElementById("selecionar-defeito");
-    const escolhaDefeitoDiv = document.getElementById("escolha-defeito");
-    const escolherDefeito1Button = document.getElementById("escolher-defeito-1");
-    const escolherDefeito2Button = document.getElementById("escolher-defeito-2");
-    const defeitoCentralFinalDiv = document.getElementById("defeito-central-final");
-    const defeitoCentralFinalSpan = defeitoCentralFinalDiv.querySelector("span");
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            console.log("Usuário autenticado:", user.uid);
+            const playerData = await getPlayerData(user.uid);
 
-    listaDeDefeitos.forEach((li, index) => {
-        const textoCompleto = li.textContent;
-        const partes = textoCompleto.split(':');
-        const nomeDefeito = partes[0].trim();
-        const descricaoDefeito = partes[1] ? partes[1].trim() : "";
-        defeitos.push(nomeDefeito);
-        descricoesDefeitos[nomeDefeito] = descricaoDefeito;
-        li.textContent = `${index + 1}. ${nomeDefeito}`; // Remove a descrição e adiciona a numeração
-    });
+            // 🔹 Verifica se a ficha está completa, incluindo as rolagens e os atributos
+            if (playerData && playerData.fichaCompleta) {
+                console.log("Ficha já criada e completa. Redirecionando para o inventário...");
+                window.location.href = "inventario.html";
+                return; // Impede o restante do fluxo
+            }
 
-    // Aplicando o layout de três em três usando CSS (adicionado aqui para garantir que seja aplicado após a manipulação da lista)
-    const ul = defeitosListaElement.querySelector("ul");
-    if (ul) {
-        ul.style.display = "grid";
-        ul.style.gridTemplateColumns = "repeat(auto-fit, minmax(200px, 1fr))"; // Ajuste o minmax conforme necessário
-        ul.style.gap = "5px";
-    }
-    listaDeDefeitos.forEach(li => {
-        li.style.whiteSpace = "nowrap";
-        li.style.overflow = "hidden";
-        li.style.textOverflow = "ellipsis";
-    });
+            // 🔹 Exibe a página de criação de ficha se incompleta
+            console.log("Ficha incompleta. Removendo a classe 'hidden' para exibir a página.");
+            document.body.classList.remove("hidden");
 
-    if (selecionarDefeitoButton) selecionarDefeitoButton.addEventListener("click", () => {
-        if (selecoesDefeito < 2) {
-            let randomIndex = Math.floor(Math.random() * defeitos.length);
-            if (selecoesDefeito === 0) primeiroDefeitoIndex = randomIndex;
-            else if (selecoesDefeito === 1) segundoDefeitoIndex = randomIndex;
-            selecoesDefeito++;
-            escolhaDefeitoDiv.style.display = "block"; // Exibe as opções para escolha e suas descrições
+            // 🔹 Preenche os campos com dados salvos, se existirem
+            if (playerData) {
+                if (playerData.name) document.getElementById("name").value = playerData.name;
+                if (playerData.race) document.getElementById("race").value = playerData.race;
+                if (playerData.alignment) document.getElementById("alignment").value = playerData.alignment;
+                if (playerData.class) document.getElementById("class").value = playerData.class;
+                if (playerData.maoDominante) document.getElementById("mao dominante").value = playerData.maoDominante;
+                if (playerData.hemisferioDominante) document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante;
 
-            if (selecoesDefeito === 2) {
-                const primeiroDefeitoNome = defeitos[primeiroDefeitoIndex];
-                const segundoDefeitoNome = defeitos[segundoDefeitoIndex];
-                const descricao1 = descricoesDefeitos[primeiroDefeitoNome];
-                const descricao2 = descricoesDefeitos[segundoDefeitoNome];
-                escolherDefeito1Button.textContent = `Opção 1: ${primeiroDefeitoNome}`;
-                escolherDefeito2Button.textContent = `Opção 2: ${segundoDefeitoNome}`;
+                // 🔹 Corrige a restauração da idade
+                if (playerData.idade) {
+                    const idadeSelect = document.getElementById("idade");
+                    const optionExists = [...idadeSelect.options].some(option => option.value === playerData.idade);
 
-                // Exibe as descrições abaixo dos botões de escolha
-                const descricaoContainer = document.createElement('div');
-                descricaoContainer.id = 'descricao-defeitos-selecionados';
-                descricaoContainer.innerHTML = `
-                    <p><strong>Opção 1:</strong> ${primeiroDefeitoNome}<br>${descricao1}</p>
-                    <p><strong>Opção 2:</strong> ${segundoDefeitoNome}<br>${descricao2}</p>
-                `;
-                escolhaDefeitoDiv.appendChild(descricaoContainer);
+                    if (optionExists) {
+                        idadeSelect.value = playerData.idade;
+                    } else {
+                        console.warn("O valor salvo da idade não corresponde a nenhuma opção no <select>.");
+                    }
+                    console.log("Idade restaurada:", playerData.idade);
+                }
+
+                // 🔹 Preenche os atributos com dados salvos
+                const stats = ["energy", "skill", "charisma", "magic", "luck"];
+                stats.forEach(stat => {
+                    if (playerData[stat]) {
+                        document.getElementById(stat + "1").innerText = playerData[stat].firstRoll || "-";
+                        document.getElementById(stat + "2").innerText = playerData[stat].secondRoll || "-";
+                        document.getElementById(stat + "Total").innerText = playerData[stat].total || "-";
+                        document.getElementById(stat + "Modifier").innerText = playerData[stat].modifier ? ` (${playerData[stat].modifier})` : "";
+                        document.getElementById(stat + "Modifier").className = 'racial-modifier';
+                        if (playerData[stat].modifier > 0) {
+                            document.getElementById(stat + "Modifier").classList.add('positive');
+                        } else if (playerData[stat].modifier < 0) {
+                            document.getElementById(stat + "Modifier").classList.add('negative');
+                        }
+                        rolls[stat] = playerData[stat].rolls !== undefined ? playerData[stat].rolls : 3;
+                        resets[stat] = playerData[stat].resets !== undefined ? playerData[stat].resets : 2;
+                    }
+                });
+
+                // 🔹 Atualiza os modificadores raciais
+                updateRacialModifiersDisplay();
             }
         } else {
-            alert("Você já selecionou dois defeitos. Escolha um deles.");
+            console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
+            window.location.href = "index.html";
         }
     });
-
-    if (escolherDefeito1Button) {
-        escolherDefeito1Button.addEventListener("click", () => {
-            defeitoCentralFinal = defeitos[primeiroDefeitoIndex];
-            escolhaDefeitoDiv.style.display = "none";
-            defeitoCentralFinalDiv.style.display = "block";
-            defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
-            selecoesDefeito = 0; // Reseta para futuras seleções, se necessário
-            const accordionButton = document.querySelector('.accordion-button:contains("D e f e i t o\u00a0c e n t r a l")');
-            if (accordionButton) {
-                const selectedOptionSpan = accordionButton.querySelector('.selected-option');
-                if (selectedOptionSpan) {
-                    selectedOptionSpan.textContent = defeitoCentralFinal;
-                }
-            }
-        });
-    }
-
-    if (escolherDefeito2Button) {
-        escolherDefeito2Button.addEventListener("click", () => {
-            defeitoCentralFinal = defeitos[segundoDefeitoIndex];
-            escolhaDefeitoDiv.style.display = "none";
-            defeitoCentralFinalDiv.style.display = "block";
-            defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
-            selecoesDefeito = 0; // Reseta para futuras seleções, se necessário
-            const accordionButton = document.querySelector('.accordion-button:contains("D e f e i t o\u00a0c e n t r a l")');
-            if (accordionButton) {
-                const selectedOptionSpan = accordionButton.querySelector('.selected-option');
-                if (selectedOptionSpan) {
-                    selectedOptionSpan.textContent = defeitoCentralFinal;
-                }
-            }
-        });
-    }
-
-    // Atualização dos headers dos acordeões com a opção selecionada
-    accordionButtons.forEach(button => {
-        const accordionContent = button.nextElementSibling;
-        const selectElements = accordionContent.querySelectorAll('select.select-field'); // Seletor mais específico para seus selects
-
-        selectElements.forEach(select => {
-            select.addEventListener('change', (event) => {
-                const selectedOption = event.target.value;
-                const originalText = button.textContent.split(':')[0];
-                const selectedOptionSpan = button.querySelector('.selected-option'); // Seleciona o span onde a opção será exibida
-                if (selectedOptionSpan) {
-                    selectedOptionSpan.textContent = selectedOption.trim();
-                } else {
-                    button.textContent = `${originalText}: ${selectedOption.trim()}`; // Fallback caso o span não exista (mas ele existe no seu HTML)
-                }
-            });
-        });
-    });
 });
+
+// 🔹 Mantendo os métodos utilitários necessários
+window.rollStat = rollStat;
+window.resetStat = resetStat;
