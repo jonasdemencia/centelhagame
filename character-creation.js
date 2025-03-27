@@ -146,47 +146,65 @@ function updateRacialModifiersDisplay() {
     }
 }
 
-function updateAccordionTitle(selectElement) {
-    const selectedValue = selectElement.value;
-    const accordionContent = selectElement.closest('.accordion-collapse');
-    if (accordionContent) {
-        const accordionButton = accordionContent.previousElementSibling;
-        if (accordionButton && accordionButton.classList.contains('accordion-button')) {
-            const originalText = accordionButton.textContent.split(':')[0].trim() + ':';
-            accordionButton.textContent = selectedValue ? `${originalText} ${selectedValue}` : originalText;
-        }
-    }
-}
-
 document.getElementById("race").addEventListener("change", () => {
-    updateRacialModifiersDisplay();  // Atualiza os modificadores e recalcula os totais
-    savePlayerData(auth.currentUser.uid, getPlayerStats());  // Salva os novos valores no Firestore
-    updateAccordionTitle(document.getElementById("race"));
+    updateRacialModifiersDisplay();
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+    const raceSelect = document.getElementById("race");
+    const accordionButton = raceSelect.closest('.accordion-collapse')?.previousElementSibling;
+    if (accordionButton && accordionButton.classList.contains('accordion-button')) {
+        const originalText = accordionButton.textContent.split(':')[0].trim() + ':';
+        accordionButton.textContent = raceSelect.value ? `${originalText} ${raceSelect.value}` : originalText;
+    }
 });
 
 document.getElementById("alignment").addEventListener("change", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
-    updateAccordionTitle(document.getElementById("alignment"));
+    const alignmentSelect = document.getElementById("alignment");
+    const accordionButton = alignmentSelect.closest('.accordion-collapse')?.previousElementSibling;
+    if (accordionButton && accordionButton.classList.contains('accordion-button')) {
+        const originalText = accordionButton.textContent.split(':')[0].trim() + ':';
+        accordionButton.textContent = alignmentSelect.value ? `${originalText} ${alignmentSelect.value}` : originalText;
+    }
 });
 
 document.getElementById("class").addEventListener("change", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
-    updateAccordionTitle(document.getElementById("class"));
+    const classSelect = document.getElementById("class");
+    const accordionButton = classSelect.closest('.accordion-collapse')?.previousElementSibling;
+    if (accordionButton && accordionButton.classList.contains('accordion-button')) {
+        const originalText = accordionButton.textContent.split(':')[0].trim() + ':';
+        accordionButton.textContent = classSelect.value ? `${originalText} ${classSelect.value}` : originalText;
+    }
 });
 
 document.getElementById("mao dominante").addEventListener("change", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
-    updateAccordionTitle(document.getElementById("mao dominante"));
+    const maoDominanteSelect = document.getElementById("mao dominante");
+    const accordionButton = maoDominanteSelect.closest('.accordion-collapse')?.previousElementSibling;
+    if (accordionButton && accordionButton.classList.contains('accordion-button')) {
+        const originalText = accordionButton.textContent.split(':')[0].trim() + ':';
+        accordionButton.textContent = maoDominanteSelect.value ? `${originalText} ${maoDominanteSelect.value}` : originalText;
+    }
 });
 
 document.getElementById("hemisfério dominante").addEventListener("change", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
-    updateAccordionTitle(document.getElementById("hemisfério dominante"));
+    const hemisferioDominanteSelect = document.getElementById("hemisfério dominante");
+    const accordionButton = hemisferioDominanteSelect.closest('.accordion-collapse')?.previousElementSibling;
+    if (accordionButton && accordionButton.classList.contains('accordion-button')) {
+        const originalText = accordionButton.textContent.split(':')[0].trim() + ':';
+        accordionButton.textContent = hemisferioDominanteSelect.value ? `${originalText} ${hemisferioDominanteSelect.value}` : originalText;
+    }
 });
 
 document.getElementById("idade").addEventListener("change", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
-    updateAccordionTitle(document.getElementById("idade"));
+    const idadeSelect = document.getElementById("idade");
+    const accordionButton = idadeSelect.closest('.accordion-collapse')?.previousElementSibling;
+    if (accordionButton && accordionButton.classList.contains('accordion-button')) {
+        const originalText = accordionButton.textContent.split(':')[0].trim() + ':';
+        accordionButton.textContent = idadeSelect.value ? `${originalText} ${idadeSelect.value}` : originalText;
+    }
 });
 
 document.getElementById("name").addEventListener("input", () => {
@@ -270,7 +288,7 @@ function getPlayerStats() {
             total: getStat("energyTotal"),
             rolls: rolls.energy,
             resets: resets.energy,
-            modifier: racialModifiers.energy  // Salva o modificador no Firestore
+            modifier: racialModifiers.energy
         },
         skill: {
             firstRoll: getStat("skill1"),
@@ -412,24 +430,14 @@ document.addEventListener("DOMContentLoaded", () => {
     function initializeAccordionTitles() {
         const selects = document.querySelectorAll('select');
         selects.forEach(select => {
-            updateAccordionTitle(select);
+            const accordionButton = select.closest('.accordion-collapse')?.previousElementSibling;
+            if (accordionButton && accordionButton.classList.contains('accordion-button') && select.value) {
+                const originalText = accordionButton.textContent.split(':')[0].trim() + ':';
+                accordionButton.textContent = `${originalText} ${select.value}`;
+            }
         });
     }
 
-    function updateAccordionTitle(selectElement) {
-        const selectedValue = selectElement.value;
-        const accordionContent = selectElement.closest('.accordion-collapse');
-        if (accordionContent) {
-            const accordionButton = accordionContent.previousElementSibling;
-            if (accordionButton && accordionButton.classList.contains('accordion-button')) {
-                const originalTextMatch = accordionButton.textContent.match(/^(.+?):/);
-                const originalText = originalTextMatch ? originalTextMatch[1].trim() + ':' : accordionButton.textContent.trim() + ':';
-                accordionButton.textContent = selectedValue ? `${originalText} ${selectedValue}` : originalText;
-            }
-        }
-    }
-
-    // Inicializa os títulos dos acordeões ao carregar a página
     initializeAccordionTitles();
 
     onAuthStateChanged(auth, async (user) => {
@@ -437,18 +445,15 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Usuário autenticado:", user.uid);
             const playerData = await getPlayerData(user.uid);
 
-            // 🔹 Verifica se a ficha está completa, incluindo as rolagens e os atributos
             if (playerData && playerData.fichaCompleta) {
                 console.log("Ficha já criada e completa. Redirecionando para o inventário...");
                 window.location.href = "inventario.html";
-                return; // Impede o restante do fluxo
+                return;
             }
 
-            // 🔹 Exibe a página de criação de ficha se incompleta
             console.log("Ficha incompleta. Removendo a classe 'hidden' para exibir a página.");
             document.body.classList.remove("hidden");
 
-            // 🔹 Preenche os campos com dados salvos, se existirem
             if (playerData) {
                 if (playerData.name) document.getElementById("name").value = playerData.name;
                 const selects = {
@@ -463,11 +468,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     const selectElement = document.getElementById(id);
                     if (playerData[id]) {
                         selectElement.value = playerData[id];
-                        updateAccordionTitle(selectElement);
+                        const accordionButton = selectElement.closest('.accordion-collapse')?.previousElementSibling;
+                        if (accordionButton && accordionButton.classList.contains('accordion-button')) {
+                            const originalText = accordionButton.textContent.split(':')[0].trim() + ':';
+                            accordionButton.textContent = `${originalText} ${playerData[id]}`;
+                        }
                     }
                 }
 
-                // 🔹 Preenche os atributos com dados salvos
                 const stats = ["energy", "skill", "charisma", "magic", "luck"];
                 stats.forEach(stat => {
                     if (playerData[stat]) {
@@ -486,12 +494,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 });
 
-                // 🔹 Restaura o estado do Defeito Central
                 if (playerData.defeitoCentral) {
                     defeitoCentralFinal = playerData.defeitoCentral;
                     defeitoCentralFinalDiv.style.display = "block";
                     defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
-                    selecoesDefeito = 2; // Simula que as duas seleções já foram feitas
+                    selecoesDefeito = 2;
                     escolhaDefeitoDiv.style.display = "none";
                     if (selecionarDefeitoButton) {
                         selecionarDefeitoButton.disabled = true;
@@ -514,7 +521,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
 
-                // 🔹 Atualiza os modificadores raciais
                 updateRacialModifiersDisplay();
             }
         } else {
@@ -524,6 +530,5 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// 🔹 Mantendo os métodos utilitários necessários
 window.rollStat = rollStat;
 window.resetStat = resetStat;
