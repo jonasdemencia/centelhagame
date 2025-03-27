@@ -148,47 +148,22 @@ function updateRacialModifiersDisplay() {
 
 document.getElementById("race").addEventListener("change", () => {
     updateRacialModifiersDisplay();  // Atualiza os modificadores e recalcula os totais
-    document.getElementById("race-selected").innerText = document.getElementById("race").value; // Exibe a raça selecionada
-    const raceAccordion = document.querySelector('.accordion-button:contains("Raça")');
-    if (raceAccordion) raceAccordion.classList.remove('active');
-    const raceContent = raceAccordion ? raceAccordion.nextElementSibling : null;
-    if (raceContent) raceContent.style.maxHeight = null;
     savePlayerData(auth.currentUser.uid, getPlayerStats());  // Salva os novos valores no Firestore
 });
 
 document.getElementById("alignment").addEventListener("change", () => {
-    document.getElementById("alignment-selected").innerText = document.getElementById("alignment").value;
-    const alignmentAccordion = document.querySelector('.accordion-button:contains("Alinhamento")');
-    if (alignmentAccordion) alignmentAccordion.classList.remove('active');
-    const alignmentContent = alignmentAccordion ? alignmentAccordion.nextElementSibling : null;
-    if (alignmentContent) alignmentContent.style.maxHeight = null;
     savePlayerData(auth.currentUser.uid, getPlayerStats());
 });
 
 document.getElementById("class").addEventListener("change", () => {
-    document.getElementById("class-selected").innerText = document.getElementById("class").value;
-    const classAccordion = document.querySelector('.accordion-button:contains("Classe")');
-    if (classAccordion) classAccordion.classList.remove('active');
-    const classContent = classAccordion ? classAccordion.nextElementSibling : null;
-    if (classContent) classContent.style.maxHeight = null;
     savePlayerData(auth.currentUser.uid, getPlayerStats());
 });
 
 document.getElementById("mao dominante").addEventListener("change", () => {
-    document.getElementById("mao-dominante-selected").innerText = document.getElementById("mao dominante").value;
-    const maoDominanteAccordion = document.querySelector('.accordion-button:contains("Mão Dominante")');
-    if (maoDominanteAccordion) maoDominanteAccordion.classList.remove('active');
-    const maoDominanteContent = maoDominanteAccordion ? maoDominanteAccordion.nextElementSibling : null;
-    if (maoDominanteContent) maoDominanteContent.style.maxHeight = null;
     savePlayerData(auth.currentUser.uid, getPlayerStats());
 });
 
 document.getElementById("hemisfério dominante").addEventListener("change", () => {
-    document.getElementById("hemisferio-dominante-selected").innerText = document.getElementById("hemisfério dominante").value;
-    const hemisferioDominanteAccordion = document.querySelector('.accordion-button:contains("Hemisfério Dominante")');
-    if (hemisferioDominanteAccordion) hemisferioDominanteAccordion.classList.remove('active');
-    const hemisferioDominanteContent = hemisferioDominanteAccordion ? hemisferioDominanteAccordion.nextElementSibling : null;
-    if (hemisferioDominanteContent) hemisferioDominanteContent.style.maxHeight = null;
     savePlayerData(auth.currentUser.uid, getPlayerStats());
 });
 
@@ -196,12 +171,7 @@ document.getElementById("name").addEventListener("input", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
 });
 
-document.getElementById("idade").addEventListener("change", () => {
-    document.getElementById("idade-selected").innerText = document.getElementById("idade").value;
-    const idadeAccordion = document.querySelector('.accordion-button:contains("Idade")');
-    if (idadeAccordion) idadeAccordion.classList.remove('active');
-    const idadeContent = idadeAccordion ? idadeAccordion.nextElementSibling : null;
-    if (idadeContent) idadeContent.style.maxHeight = null;
+document.getElementById("idade").addEventListener("input", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
 });
 
@@ -215,7 +185,7 @@ document.getElementById("submit").addEventListener("click", async () => {
         console.log("Ficha marcada como completa. Redirecionando para o inventário...");
         window.location.href = "inventario.html";
     } else {
-        let message = "Por favor, preencha todos os campos obrigatórios e finalize todas as rolagens antes de prosseguir!\n\n";
+        let message = "Por favor, preencha todos os campos e finalize todas as rolagens antes de prosseguir!\n\n";
         if (completionStatus.missingFields.length > 0) {
             message += "Campos faltando: " + completionStatus.missingFields.join(", ") + "\n";
         }
@@ -361,33 +331,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Adiciona funcionalidade para abrir o acordeão ao clicar em "Selecionar" para campos regulares
-    const selectFields = document.querySelectorAll('.select-field');
-    selectFields.forEach(select => {
-        const selectId = select.id;
-        const selectButton = document.getElementById(`${selectId}-select-button`);
-        if (selectButton) {
-            selectButton.addEventListener('click', () => {
-                const accordionButton = document.querySelector(`.accordion-button:contains("${select.options[select.selectedIndex].parentNode.label}")`);
-                if (accordionButton) {
-                    accordionButton.classList.add('active');
-                    const accordionContent = accordionButton.nextElementSibling;
-                    accordionContent.style.maxHeight = accordionContent.scrollHeight + "px";
-                }
-                // Simula um clique no select para abrir as opções (opcional, dependendo do seu HTML)
-                select.focus();
-                select.size = select.options.length; // Expande o select para mostrar as opções
-                // Esconde o botão "Selecionar" enquanto as opções estão visíveis
-                selectButton.style.display = 'none';
-            });
-
-            select.addEventListener('blur', () => {
-                select.size = 1; // Retrai o select
-                selectButton.style.display = 'inline-block'; // Mostra o botão "Selecionar" novamente
-            });
-        }
-    });
-
     // Defeito Central functionality
     const defeitosListaElement = document.getElementById("defeitos-lista");
     if (defeitosListaElement) {
@@ -405,53 +348,45 @@ document.addEventListener("DOMContentLoaded", () => {
     const escolherDefeito2Button = document.getElementById("escolher-defeito-2");
     const defeitoCentralFinalDiv = document.getElementById("defeito-central-final");
     const defeitoCentralFinalSpan = defeitoCentralFinalDiv.querySelector("span");
-    const selecionarDefeitoPrincipalButton = document.getElementById("selecionar-defeito-principal"); // Novo botão
 
-    if (selecionarDefeitoPrincipalButton) {
-        selecionarDefeitoPrincipalButton.addEventListener("click", () => {
-            const defeitoCentralAccordion = document.querySelector('.accordion-button:contains("D e f e i t o\\u00a0c e n t r a l")');
-            if (defeitoCentralAccordion) {
-                defeitoCentralAccordion.classList.add('active');
-                const accordionContent = defeitoCentralAccordion.nextElementSibling;
-                accordionContent.style.maxHeight = accordionContent.scrollHeight + "px";
-            }
-            // Simula o clique no botão existente para sortear os defeitos
-            if (selecionarDefeitoButton) {
-                selecionarDefeitoButton.click();
+    if (selecionarDefeitoButton) {
+        selecionarDefeitoButton.addEventListener("click", () => {
+            if (selecoesDefeito < 2) {
+                const randomIndex = Math.floor(Math.random() * defeitos.length);
+                const defeito = defeitos[randomIndex];
+                if (selecoesDefeito === 0) {
+                    defeitoSelecionado1 = defeito;
+                    defeitoSelecionado1Div.style.display = "block";
+                    defeitoSelecionado1Div.querySelector("span").textContent = defeito;
+                } else if (selecoesDefeito === 1) {
+                    defeitoSelecionado2 = defeito;
+                    defeitoSelecionado2Div.style.display = "block";
+                    defeitoSelecionado2Div.querySelector("span").textContent = defeito;
+                    escolhaDefeitoDiv.style.display = "block";
+                }
+                selecoesDefeito++;
+            } else {
+                alert("Você já selecionou dois defeitos. Escolha um deles.");
             }
         });
     }
 
     if (escolherDefeito1Button) {
         escolherDefeito1Button.addEventListener("click", () => {
-            defeitoCentralFinal = defeitoSelecionado1Div.querySelector("span").textContent;
+            defeitoCentralFinal = defeitoSelecionado1;
             escolhaDefeitoDiv.style.display = "none";
             defeitoCentralFinalDiv.style.display = "block";
             defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
-            const defeitoCentralAccordion = document.querySelector('.accordion-button:contains("D e f e i t o\\u00a0c e n t r a l")');
-            if (defeitoCentralAccordion) {
-                defeitoCentralAccordion.classList.remove('active');
-                const accordionContent = defeitoCentralAccordion.nextElementSibling;
-                accordionContent.style.maxHeight = null;
-            }
-            document.getElementById("defeito-central-selected").innerText = defeitoCentralFinal;
             savePlayerData(auth.currentUser.uid, getPlayerStats());
         });
     }
 
     if (escolherDefeito2Button) {
         escolherDefeito2Button.addEventListener("click", () => {
-            defeitoCentralFinal = defeitoSelecionado2Div.querySelector("span").textContent;
+            defeitoCentralFinal = defeitoSelecionado2;
             escolhaDefeitoDiv.style.display = "none";
             defeitoCentralFinalDiv.style.display = "block";
             defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
-            const defeitoCentralAccordion = document.querySelector('.accordion-button:contains("D e f e i t o\\u00a0c e n t r a l")');
-            if (defeitoCentralAccordion) {
-                defeitoCentralAccordion.classList.remove('active');
-                const accordionContent = defeitoCentralAccordion.nextElementSibling;
-                accordionContent.style.maxHeight = null;
-            }
-            document.getElementById("defeito-central-selected").innerText = defeitoCentralFinal;
             savePlayerData(auth.currentUser.uid, getPlayerStats());
         });
     }
@@ -475,26 +410,11 @@ document.addEventListener("DOMContentLoaded", () => {
             // 🔹 Preenche os campos com dados salvos, se existirem
             if (playerData) {
                 if (playerData.name) document.getElementById("name").value = playerData.name;
-                if (playerData.race) {
-                    document.getElementById("race").value = playerData.race;
-                    document.getElementById("race-selected").innerText = playerData.race;
-                }
-                if (playerData.alignment) {
-                    document.getElementById("alignment").value = playerData.alignment;
-                    document.getElementById("alignment-selected").innerText = playerData.alignment;
-                }
-                if (playerData.class) {
-                    document.getElementById("class").value = playerData.class;
-                    document.getElementById("class-selected").innerText = playerData.class;
-                }
-                if (playerData.maoDominante) {
-                    document.getElementById("mao dominante").value = playerData.maoDominante;
-                    document.getElementById("mao-dominante-selected").innerText = playerData.maoDominante;
-                }
-                if (playerData.hemisferioDominante) {
-                    document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante;
-                    document.getElementById("hemisferio-dominante-selected").innerText = playerData.hemisferioDominante;
-                }
+                if (playerData.race) document.getElementById("race").value = playerData.race;
+                if (playerData.alignment) document.getElementById("alignment").value = playerData.alignment;
+                if (playerData.class) document.getElementById("class").value = playerData.class;
+                if (playerData.maoDominante) document.getElementById("mao dominante").value = playerData.maoDominante;
+                if (playerData.hemisferioDominante) document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante;
 
                 // 🔹 Corrige a restauração da idade
                 if (playerData.idade) {
@@ -503,7 +423,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     if (optionExists) {
                         idadeSelect.value = playerData.idade;
-                        document.getElementById("idade-selected").innerText = playerData.idade;
                     } else {
                         console.warn("O valor salvo da idade não corresponde a nenhuma opção no <select>.");
                     }
@@ -534,7 +453,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     defeitoCentralFinal = playerData.defeitoCentral;
                     defeitoCentralFinalDiv.style.display = "block";
                     defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
-                    document.getElementById("defeito-central-selected").innerText = defeitoCentralFinal;
                     selecoesDefeito = 2; // Simula que as duas seleções já foram feitas
                     escolhaDefeitoDiv.style.display = "none";
                     if (selecionarDefeitoButton) {
