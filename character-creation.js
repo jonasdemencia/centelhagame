@@ -430,16 +430,18 @@ document.addEventListener("DOMContentLoaded", () => {
     function updateAccordionTitle(selectElement) {
     const accordionButton = selectElement.closest('.accordion-collapse')?.previousElementSibling;
     if (accordionButton && accordionButton.classList.contains('accordion-button')) {
-        const originalText = accordionButton.textContent.split(':')[0].trim() + ':'; // Mantém o nome original da janela
-        accordionButton.textContent = `${originalText} ${selectElement.value}`;
+        const originalText = accordionButton.textContent.split(':')[0].trim() + ':'; // Mantém o título original
+        accordionButton.textContent = `${originalText} ${selectElement.value}`; // Adiciona a opção escolhida
     }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Aplica o evento para atualizar os títulos sempre que uma opção for selecionada
-    document.querySelectorAll('select').forEach(select => {
-        select.addEventListener('change', () => updateAccordionTitle(select));
-        updateAccordionTitle(select); // Atualiza ao carregar a página, caso já tenha uma escolha salva
+    // Captura todos os <select> dentro dos acordeões e adiciona o evento de mudança
+    document.querySelectorAll(".accordion-collapse select").forEach(select => {
+        select.addEventListener("change", function () {
+            updateAccordionTitle(this);
+        });
+        updateAccordionTitle(select); // Atualiza os títulos ao carregar a página
     });
 });
 
