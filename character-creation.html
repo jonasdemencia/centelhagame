@@ -1,381 +1,236 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ficha de Criação de Personagem</title>
-    <link href="style.css" rel="stylesheet"> <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <style>
-        .accordion-content {
-            display: none; /* Esconde o conteúdo por padrão */
-            padding: 10px;
-            border-left: 1px solid #ccc;
-            border-right: 1px solid #ccc;
-            border-bottom: 1px solid #ccc;
-            margin-bottom: 5px;
-        }
-
-        .accordion-button.active + .accordion-content {
-            display: block; /* Exibe o conteúdo quando o botão está ativo */
-        }
-
-        .accordion-button {
-            background-color: #eee;
-            color: #444;
-            cursor: pointer;
-            padding: 18px;
-            width: 100%;
-            border: none;
-            text-align: left;
-            outline: none;
-            font-size: 15px;
-            transition: 0.4s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .accordion-button:hover {
-            background-color: #ddd;
-        }
-
-        .accordion-button.active {
-            background-color: #ccc;
-        }
-
-        #defeitos-lista {
-            display: none; /* Esconde a lista de defeitos inicialmente */
-        }
-
-        .defeito-selecionado {
-            margin-top: 10px;
-            padding: 8px;
-            border: 1px solid #ddd;
-            background-color: #f9f9f9;
-            border-radius: 4px;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha de Criação de Personagem</title>
+    <link href="style.css" rel="stylesheet"> <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body id="character-page" class="hidden">
-    <div class="container">
-        <h2 class="page-title">Ficha de Criação de Personagem</h2>
+    <div class="container">
+        <h2 class="page-title">Ficha de Criação de Personagem</h2>
 
-        <div class="form-group">
-            <input type="text" id="name" placeholder="Nome do heroi" class="input-field">
-            <p class="inline-description">Escolha um nome digno para seu aventureiro!</p>
-            <button id="submit" class="button">ENVIAR</button>
-        </div>
+        <div class="form-group">
+            <input type="text" id="name" placeholder="Nome do heroi" class="input-field">
+            <p class="inline-description">Escolha um nome digno para seu aventureiro!</p>
+            <button id="submit" class="button">ENVIAR</button>
+        </div>
 
-        <div class="accordion">
-            <button class="accordion-button">R a ç a: <span class="selected-option"></span> <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>Escolha a raça do seu personagem. Cada raça possui características e modificadores de atributos únicos.</p>
-                <div class="label-group">
-                    <label for="race" class="label-text">Selecione:</label>
-                    <select id="race" class="select-field">
-                        <option value="">Selecione</option>
-                        <option>Anão</option>
-                        <option>Elfo</option>
-                        <option>Humano</option>
-                    </select>
-                </div>
-                <div class="race-info">
-                    <p><strong>Anão:</strong> Conhecidos por sua robustez e afinidade com a mineração. +2 Energia, -2 Carisma.</p>
-                    <p><strong>Elfo:</strong> Seres elegantes e conectados com a natureza. +2 Habilidade, -2 Energia.</p>
-                    <p><strong>Humano:</strong> Adaptáveis e versáteis. Não possuem modificadores raciais.</p>
-                </div>
-            </div>
-        </div>
+        <div class="accordion">
+            <button class="accordion-button">R a ç a: <i class="fa-solid fa-caret-down"></i></button>
+            <div class="accordion-content">
+                <p>Escolha a raça do seu personagem. Cada raça possui características e modificadores de atributos únicos.</p>
+                <div class="label-group">
+                    <label for="race" class="label-text">Selecione:</label>
+                    <select id="race" class="select-field">
+                        <option value="">Selecione</option>
+                        <option>Anão</option>
+                        <option>Elfo</option>
+                        <option>Humano</option>
+                    </select>
+                </div>
+                <div class="race-info">
+                    <p><strong>Anão:</strong> Conhecidos por sua robustez e afinidade com a mineração. +2 Energia, -2 Carisma.</p>
+                    <p><strong>Elfo:</strong> Seres elegantes e conectados com a natureza. +2 Habilidade, -2 Energia.</p>
+                    <p><strong>Humano:</strong> Adaptáveis e versáteis. Não possuem modificadores raciais.</p>
+                </div>
+            </div>
+        </div>
 
-        <div class="accordion">
-            <button class="accordion-button">A l i n h a m e n t o: <span class="selected-option"></span> <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>O alinhamento descreve a visão moral e ética do seu personagem.</p>
-                <div class="label-group">
-                    <label for="alignment" class="label-text">Selecione:</label>
-                    <select id="alignment" class="select-field">
-                        <option value="">Selecione</option>
-                        <option disabled>Humanista (Em breve)</option>
-                        <option disabled>Behaviorista (Em breve)</option>
-                        <option disabled>Psicanalista (Em breve)</option>
-                        <option>Estudante</option>
-                    </select>
-                </div>
-                <p><strong>Estudante:</strong> Um indivíduo em aprendizado, focado em adquirir conhecimento e novas experiências.</p>
-            </div>
-        </div>
+        <div class="accordion">
+            <button class="accordion-button">A l i n h a m e n t o: <i class="fa-solid fa-caret-down"></i></button>
+            <div class="accordion-content">
+                <p>O alinhamento descreve a visão moral e ética do seu personagem.</p>
+                <div class="label-group">
+                    <label for="alignment" class="label-text">Selecione:</label>
+                    <select id="alignment" class="select-field">
+                        <option value="">Selecione</option>
+                        <option disabled>Humanista (Em breve)</option>
+                        <option disabled>Behaviorista (Em breve)</option>
+                        <option disabled>Psicanalista (Em breve)</option>
+                        <option>Estudante</option>
+                    </select>
+                </div>
+                <p><strong>Estudante:</strong> Um indivíduo em aprendizado, focado em adquirir conhecimento e novas experiências.</p>
+                </div>
+        </div>
 
-        <div class="accordion">
-            <button class="accordion-button">C l a s s e: <span class="selected-option"></span> <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>A classe representa a profissão ou vocação principal do seu personagem.</p>
-                <div class="label-group">
-                    <label for="class" class="label-text">Selecione:</label>
-                    <select id="class" class="select-field">
-                        <option value="">Selecione</option>
-                        <option disabled>Paladino (Em breve)</option>
-                        <option disabled>Guerreiro (Em breve)</option>
-                        <option disabled>Ladino (Em breve)</option>
-                        <option disabled>Mago (Em breve)</option>
-                        <option>Candidato</option>
-                    </select>
-                </div>
-                <p><strong>Candidato:</strong> Um aspirante a herói, ainda descobrindo seu caminho e potencial.</p>
-            </div>
-        </div>
+        <div class="accordion">
+            <button class="accordion-button">C l a s s e: <i class="fa-solid fa-caret-down"></i></button>
+            <div class="accordion-content">
+                <p>A classe representa a profissão ou vocação principal do seu personagem.</p>
+                <div class="label-group">
+                    <label for="class" class="label-text">Selecione:</label>
+                    <select id="class" class="select-field">
+                        <option value="">Selecione</option>
+                        <option disabled>Paladino (Em breve)</option>
+                        <option disabled>Guerreiro (Em breve)</option>
+                        <option disabled>Ladino (Em breve)</option>
+                        <option disabled>Mago (Em breve)</option>
+                        <option>Candidato</option>
+                    </select>
+                </div>
+                <p><strong>Candidato:</strong> Um aspirante a herói, ainda descobrindo seu caminho e potencial.</p>
+                </div>
+        </div>
 
-        <div class="accordion">
-            <button class="accordion-button">M ã o&nbsp;D o m i n a n t e: <span class="selected-option"></span> <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>Escolha a mão que seu personagem utiliza com mais destreza.</p>
-                <div class="label-group">
-                    <label for="mao dominante" class="label-text">Selecione:</label>
-                    <select id="mao dominante" class="select-field">
-                        <option value="">Selecione</option>
-                        <option>esquerda</option>
-                        <option>direita</option>
-                        <option disabled>Membro fantasma</option>
-                    </select>
-                </div>
-                <p><strong>Esquerda:</strong> Seu personagem é canhoto.</p>
-                <p><strong>Direita:</strong> Seu personagem é destro.</p>
-                <p><strong>Membro fantasma:</strong> (Opção indisponível no momento).</p>
-            </div>
-        </div>
+        <div class="accordion">
+            <button class="accordion-button">M ã o  D o m i n a n t e: <i class="fa-solid fa-caret-down"></i></button>
+            <div class="accordion-content">
+                <p>Escolha a mão que seu personagem utiliza com mais destreza.</p>
+                <div class="label-group">
+                    <label for="mao dominante" class="label-text">Selecione:</label>
+                    <select id="mao dominante" class="select-field">
+                        <option value="">Selecione</option>
+                        <option>esquerda</option>
+                        <option>direita</option>
+                        <option disabled>Membro fantasma</option>
+                    </select>
+                </div>
+                <p><strong>Esquerda:</strong> Seu personagem é canhoto.</p>
+                <p><strong>Direita:</strong> Seu personagem é destro.</p>
+                <p><strong>Membro fantasma:</strong> (Opção indisponível no momento).</p>
+            </div>
+        </div>
 
-        <div class="accordion">
-            <button class="accordion-button">H e m i s f é r i o&nbsp;d o m i n a n t e: <span class="selected-option"></span> <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>Selecione o hemisfério cerebral que seu personagem utiliza de forma mais proeminente.</p>
-                <div class="label-group">
-                    <label for="hemisfério dominante" class="label-text">Selecione:</label>
-                    <select id="hemisfério dominante" class="select-field">
-                        <option value="">Selecione</option>
-                        <option>Esquerdo</option>
-                        <option>Direito</option>
-                    </select>
-                </div>
-                <p><strong>Esquerdo:</strong> Geralmente associado ao raciocínio lógico, linguagem e análise.</p>
-                <p><strong>Direito:</strong> Frequentemente ligado à criatividade, intuição e reconhecimento espacial.</p>
-            </div>
-        </div>
+        <div class="accordion">
+            <button class="accordion-button">H e m i s f é r i o  d o m i n a n t e: <i class="fa-solid fa-caret-down"></i></button>
+            <div class="accordion-content">
+                <p>Selecione o hemisfério cerebral que seu personagem utiliza de forma mais proeminente.</p>
+                <div class="label-group">
+                    <label for="hemisfério dominante" class="label-text">Selecione:</label>
+                    <select id="hemisfério dominante" class="select-field">
+                        <option value="">Selecione</option>
+                        <option>Esquerdo</option>
+                        <option>Direito</option>
+                    </select>
+                </div>
+                <p><strong>Esquerdo:</strong> Geralmente associado ao raciocínio lógico, linguagem e análise.</p>
+                <p><strong>Direito:</strong> Frequentemente ligado à criatividade, intuição e reconhecimento espacial.</p>
+            </div>
+        </div>
 
-        <div class="accordion">
-            <button class="accordion-button">I d a d e: <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>A idade pode influenciar a aparência e a história do seu personagem.</p>
-                <div class="label-group">
-                    <label for="idade" class="label-text">Selecione:</label>
-                    <select id="idade" class="select-field">
-                        <option value="">Selecione</option>
-                        <option disabled>Granula (7-10 anos)</option>
-                        <option>Neófito (12-20 anos)</option>
-                        <option>Confessor (25-35 anos)</option>
-                        <option>Adepto (45-60 anos)</option>
-                        <option disabled>Velho lobo (70-85 anos)</option>
-                    </select>
-                </div>
-                <p><strong>Neófito:</strong> Jovem e cheio de potencial.</p>
-                <p><strong>Confessor:</strong> Na flor da idade, com experiência e convicção.</p>
-                <p><strong>Adepto:</strong> Mais experiente e com sabedoria acumulada.</p>
-            </div>
-        </div>
+        <div class="accordion">
+            <button class="accordion-button">I d a d e: <i class="fa-solid fa-caret-down"></i></button>
+            <div class="accordion-content">
+                <p>A idade pode influenciar a aparência e a história do seu personagem.</p>
+                <div class="label-group">
+                    <label for="idade" class="label-text">Selecione:</label>
+                    <select id="idade" class="select-field">
+                        <option value="">Selecione</option>
+                        <option disabled>Granula (7-10 anos)</option>
+                        <option>Neófito (12-20 anos)</option>
+                        <option>Confessor (25-35 anos)</option>
+                        <option>Adepto (45-60 anos)</option>
+                        <option disabled>Velho lobo (70-85 anos)</option>
+                    </select>
+                </div>
+                <p><strong>Neófito:</strong> Jovem e cheio de potencial.</p>
+                <p><strong>Confessor:</strong> Na flor da idade, com experiência e convicção.</p>
+                <p><strong>Adepto:</strong> Mais experiente e com sabedoria acumulada.</p>
+                </div>
+        </div>
 
-        <div class="accordion">
-            <button class="accordion-button">D e f e i t o&nbsp;c e n t r a l: <span class="selected-option"></span> <i class="fa-solid fa-caret-down"></i></button>
-            <div class="accordion-content">
-                <p>Descubra o principal ponto fraco do seu personagem através de duas seleções aleatórias.</p>
-                <div id="defeitos-lista">
-                    <ul>
-                        <li>Teimosia com líderes: Recusa-se a seguir ordens, mesmo quando são razoáveis.</li>
-                        <li>Impulsividade em batalha: Ataca sem pensar, ignorando táticas do grupo.</li>
-                        <li>Avareza com suprimentos: Se recusa a compartilhar itens, mesmo em situações críticas.</li>
-                        <li>Medo de aranhas: Entra em pânico ao avistar até as menores aranhas.</li>
-                        <li>Arrogância acadêmica: Desdenha do conhecimento alheio, mesmo quando errado.</li>
-                        <li>Ciúmes obsessivo por companheiros: Sente-se ameaçado por qualquer amizade próxima deles.</li>
-                        <li>Mentiras constantes: Não consegue passar um dia sem inventar uma história falsa.</li>
-                        <li>Procrastinador crônico: Sempre deixa tarefas urgentes para depois, atrasando missões.</li>
-                        <li>Desconfiança de magia: Evita ou critica usuários de magia, até mesmo aliados.</li>
-                        <li>Fobia de água corrente: Recusa-se a cruzar rios ou ficar perto de lagos.</li>
-                        <li>Superstição exagerada: Não age sem consultar "presságios" ou "sinais".</li>
-                        <li>Dependência de um vício: Precisa de álcool ou outra substância para manter-se "calmo".</li>
-                        <li>Medo de compromissos: Foge de decisões importantes para evitar responsabilidades.</li>
-                        <li>Egocentrismo artístico: Acredita que seu talento (canto, pintura) é superior a tudo.</li>
-                        <li>Gula perigosa: Sempre come antes de verificar se a comida está envenenada.</li>
-                        <li>Trauma de infância com fogo: Encontra-se paralisado ou fugindo de incêndios.</li>
-                        <li>Ganância por artefatos mágicos: Coloca o grupo em risco para adquirir objetos raros.</li>
-                        <li>Necessidade de elogios constantes: Sente-se deprimido se não for reconhecido.</li>
-                        <li>Tendência a trair: Pode vender informações ou aliados por vantagens temporárias.</li>
-                        <li>Ressentimento com nobreza: Evita ajudar ou ouvir qualquer figura de poder.</li>
-                        <li>Orgulho ferido facilmente: Não aceita críticas e reage exageradamente.</li>
-                        <li>Obcecado por vingança: Faz decisões baseadas apenas em retaliar inimigos.</li>
-                        <li>Fobia de lugares fechados: Evita cavernas ou se sente em pânico em masmorras.</li>
-                        <li>Conflito com figuras paternas: Reage negativamente a qualquer figura autoritária.</li>
-                        <li>Necessidade de quebrar regras: Sente prazer em ignorar protocolos e normas.</li>
-                        <li>Esquecimento seletivo: Sempre esquece algo importante ou deliberadamente ignora acordos.</li>
-                        <li>Vício em apostas: Não resiste a participar de jogos de azar, mesmo sem recursos.</li>
-                        <li>Complexo de inferioridade: Sempre acredita ser inútil para o grupo.</li>
-                        <li>Medo de espelhos: Evita olhar reflexos por acreditar que revelarão "verdades".</li>
-                        <li>Impaciência com enigmas: Ignora ou tenta forçar soluções rapidamente.</li>
-                        <li>Ambição desmedida: Deseja assumir lideranças, mesmo sendo despreparado.</li>
-                        <li>Intolerância com criaturas específicas: Preconceito forte com raças como goblins ou elfos.</li>
-                        <li>Descontrole ao ver sangue: Entra em fúria ou fraqueja em cenas de combate.</li>
-                        <li>Manias de limpeza extrema: Evita locais sujos, atrasando missões.</li>
-                        <li>Apatia: Evita tomar lados ou decisões que envolvam moralidade.</li>
-                        <li>Problema de memória curto-prazo: Frequentemente esquece passos recentes em missões.</li>
-                        <li>Medo de tempestades: Refugia-se e se recusa a sair durante chuvas fortes.</li>
-                        <li>Dificuldade em confiar em aliados novos: Sempre acredita que recém-chegados são espiões.</li>
-                        <li>Comportamento manipulador: Usa as fraquezas emocionais dos colegas para obter vantagem.</li>
-                        <li>Ansiedade social: Evita grandes reuniões ou conversas que não sejam sobre trabalho.</li>
-                        <li>Necessidade de superioridade militar: Sente que só é importante em combate.</li>
-                        <li>Fanatismo religioso: Recusa-se a lidar com membros que contradizem sua crença.</li>
-                        <li>Desinteresse por planejamento: Age sem consultar táticas, muitas vezes colocando a equipe em perigo.</li>
-                        <li>Obcecado por colecionar lembranças: Paralisa missões para buscar itens triviais.</li>
-                        <li>Desatenção com ameaças: Sempre cai em armadilhas por distração.</li>
-                        <li>Desordem alimentar: É incapaz de se moderar quando encontra comida rara.</li>
-                        <li>Medo irracional de magia: Evita feitiços curativos ou benéficos.</li>
-                        <li>Auto-sabotagem constante: Toma decisões que prejudicam a si mesmo ou o grupo.</li>
-                        <li>Fascínio com o mal: Sente curiosidade por inimigos ou objetos corrompidos.</li>
-                        <li>Reação exagerada a ofensas: Sempre parte para lutas desnecessárias por comentários.</li>
-                        <li>Ansioso por aprovação: Busca validação constante, mesmo em detrimento de seus princípios.</li>
-                        <li>Teimosia inabalável: Recusa-se a mudar de opinião, mesmo quando está claramente errado.</li>
-                        <li>Obcecado por detalhes: Perde o foco em tarefas maiores por fixar-se em trivialidades.</li>
-                        <li>Emocionalmente reativo: Explode em raiva ou tristeza ao menor sinal de conflito.</li>
-                        <li>Intolerância cultural: Tem dificuldade em respeitar ou aceitar costumes diferentes.</li>
-                        <li>Medo de compromisso: Foge de situações que exigem responsabilidade a longo prazo.</li>
-                        <li>Ingênuo com estranhos: Confia facilmente em pessoas desconhecidas, colocando-se em perigo.</li>
-                        <li>Preguiça intelectual: Evita aprender algo novo ou resolver problemas complexos.</li>
-                        <li>Competitivo ao extremo: Coloca a vitória acima de laços e valores.</li>
-                        <li>Apatia social: Não se importa com o sofrimento ou necessidades dos outros.</li>
-                        <li>Manipulador carismático: Usa seu charme para explorar e enganar as pessoas.</li>
-                        <li>Covarde diante do perigo: Evita qualquer situação de risco, abandonando aliados se necessário.</li>
-                        <li>Avareza incontrolável: Acumula recursos, recusando-se a dividir com quem precisa.</li>
-                        <li>Orgulho tóxico: Nunca admite erros, mesmo quando isso prejudica a si mesmo e outros.</li>
-                        <li>Supersticioso fanático: Deixa decisões importantes nas mãos de crenças irracionais.</li>
-                        <li>Fúria incontrolável: Responde violentamente a provocações mínimas.</li>
-                        <li>Desonestidade crônica: É incapaz de dizer a verdade, mesmo sem necessidade de mentir.</li>
-                        <li>Desorganização compulsiva: Perde itens importantes ou esquece etapas essenciais.</li>
-                        <li>Ciúmes possessivo: Constantemente sente que os outros ameaçam suas relações.</li>
-                        <li>Egocentrismo extremo: Vê tudo pelo prisma de seus próprios interesses e desejos.</li>
-                        <li>Crença fervorosa em um deus esquecido</li>
-                        <li>Coleciona unhas cortadas de outras pessoas</li>
-                        <li>Conversa com plantas</li>
-                        <li>Tem medo de sua própria sombra</li>
-                        <li>Sempre tenta trocar itens por abraços</li>
-                    </ul>
-                </div>
-                <button id="selecionar-defeito" class="button">Selecionar Defeito Aleatoriamente</button>
-                <div id="defeito-selecionado-1" class="defeito-selecionado" style="display: none;">Defeito 1: <span></span></div>
-                <div id="defeito-selecionado-2" class="defeito-selecionado" style="display: none;">Defeito 2: <span></span></div>
-                <div id="escolha-defeito" style="display: none;">
-                    <p>Escolha um dos defeitos centrais:</p>
-                    <button id="escolher-defeito-1" class="button pequeno">Escolher Defeito 1</button>
-                    <button id="escolher-defeito-2" class="button pequeno">Escolher Defeito 2</button>
-                    <div id="defeito-central-final" class="defeito-selecionado" style="display: none;">Defeito Central Escolhido: <span></span></div>
-                </div>
-            </div>
-        </div>
+        <p class="instruction-paragraph">Você poderá rolar cada um dos atributos três vezes. Role de forma sábia. <i class="fa-solid fa-info-circle info-icon" onclick="document.getElementById('instructions-modal').style.display='block'"></i></p>
 
-        <p class="instruction-paragraph">Você poderá rolar cada um dos atributos três vezes. Role de forma sábia. <i class="fa-solid fa-info-circle info-icon" onclick="document.getElementById('instructions-modal').style.display='block'"></i></p>
+        <div id="instructions-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="document.getElementById('instructions-modal').style.display='none'">&times;</span>
+                <h3>Instruções para Rolagem de Atributos</h3>
+                <p>Para cada atributo (Energia, Habilidade, Carisma, Magia, Sorte), você tem direito a três rolagens.</p>
+                <ol>
+                    <li>Clique no botão com o ícone de dado (🎲) para realizar a primeira rolagem.</li>
+                    <li>Clique novamente no mesmo botão para realizar a segunda rolagem.</li>
+                    <li>Após a segunda rolagem, o valor total do atributo será calculado, levando em consideração quaisquer modificadores raciais.</li>
+                    <li>Você pode usar o botão "Zerar" para limpar as rolagens daquele atributo e ter mais duas chances de rolar. Você tem direito a dois "zeramentos" por atributo.</li>
+                    <li>Escolha sabiamente seus resultados, pois eles definirão as capacidades iniciais do seu personagem!</li>
+                </ol>
+            </div>
+        </div>
 
-        <div id="instructions-modal" class="modal">
-            <div class="modal-content">
-                <span class="close-button" onclick="document.getElementById('instructions-modal').style.display='none'">&times;</span>
-                <h3>Instruções para Rolagem de Atributos</h3>
-                <p>Para cada atributo (Energia, Habilidade, Carisma, Magia, Sorte), você tem direito a três rolagens.</p>
-                <ol>
-                    <li>Clique no botão com o ícone de dado (🎲) para realizar a primeira rolagem.</li>
-                    <li>Clique novamente no mesmo botão para realizar a segunda rolagem.</li>
-                    <li>Após a segunda rolagem, o valor total do atributo será calculado, levando em consideração quaisquer modificadores raciais.</li>
-                    <li>Você pode usar o botão "Zerar" para limpar as rolagens daquele atributo e ter mais duas chances de rolar. Você tem direito a dois "zeramentos" por atributo.</li>
-                    <li>Escolha sabiamente seus resultados, pois eles definirão as capacidades iniciais do seu personagem!</li>
-                </ol>
-            </div>
-        </div>
+        <div class="stats-section stats" id="stats">
+            <div class="stat-box">
+                <div>
+                    <strong class="stat-name">Energia:</strong>
+                    <div>
+                        <span id="energy1" class="stat-value">-</span> + <span id="energy2" class="stat-value">-</span>
+                        <span id="energyModifier" class="racial-modifier"></span> =
+                        <span id="energyTotal" class="stat-value">-</span>
+                    </div>
+                    <div class="stat-buttons-inline">
+                        <button onclick="rollStat('energy', this)" class="button">🎲</button>
+                        <button onclick="resetStat('energy', this)" class="button">Zerar</button>
+                    </div>
+                </div>
+                <div class="attribute-description-container" id="energia-description">Representa a vitalidade física e a resistência do seu personagem.</div>
+            </div>
+            <div class="stat-box">
+                <div>
+                    <strong class="stat-name">Habilidade:</strong>
+                    <div>
+                        <span id="skill1" class="stat-value">-</span> + <span id="skill2" class="stat-value">-</span>
+                        <span id="skillModifier" class="racial-modifier"></span> =
+                        <span id="skillTotal" class="stat-value">-</span>
+                    </div>
+                    <div class="stat-buttons-inline">
+                        <button onclick="rollStat('skill', this)" class="button">🎲</button>
+                        <button onclick="resetStat('skill', this)" class="button">Zerar</button>
+                    </div>
+                </div>
+                <div class="attribute-description-container" id="habilidade-description">Mede a destreza física, agilidade e coordenação motora.</div>
+            </div>
+            <div class="stat-box">
+                <div>
+                    <strong class="stat-name">Carisma:</strong>
+                    <div>
+                        <span id="charisma1" class="stat-value">-</span> + <span id="charisma2" class="stat-value">-</span>
+                        <span id="charismaModifier" class="racial-modifier"></span> =
+                        <span id="charismaTotal" class="stat-value">-</span>
+                    </div>
+                    <div class="stat-buttons-inline">
+                        <button onclick="rollStat('charisma', this)" class="button">🎲</button>
+                        <button onclick="resetStat('charisma', this)" class="button">Zerar</button>
+                    </div>
+                </div>
+                <div class="attribute-description-container" id="carisma-description">Reflete a capacidade de persuasão, liderança e atratividade do personagem.</div>
+            </div>
+            <div class="stat-box">
+                <div>
+                    <strong class="stat-name">Magia:</strong>
+                    <div>
+                        <span id="magic1" class="stat-value">-</span> + <span id="magic2" class="stat-value">-</span>
+                        <span id="magicModifier" class="racial-modifier"></span> =
+                        <span id="magicTotal" class="stat-value">-</span>
+                    </div>
+                    <div class="stat-buttons-inline">
+                        <button onclick="rollStat('magic', this)" class="button">🎲</button>
+                        <button onclick="resetStat('magic', this)" class="button">Zerar</button>
+                    </div>
+                </div>
+                <div class="attribute-description-container" id="magia-description">Representa o potencial mágico e a capacidade de manipular energias arcanas.</div>
+            </div>
+            <div class="stat-box">
+                <div>
+                    <strong class="stat-name">Sorte:</strong>
+                    <div>
+                        <span id="luck1" class="stat-value">-</span> + <span id="luck2" class="stat-value">-</span>
+                        <span id="luckModifier" class="racial-modifier"></span> =
+                        <span id="luckTotal" class="stat-value">-</span>
+                    </div>
+                    <div class="stat-buttons-inline">
+                        <button onclick="rollStat('luck', this)" class="button">🎲</button>
+                        <button onclick="resetStat('luck', this)" class="button">Zerar</button>
+                    </div>
+                </div>
+                <div class="attribute-description-container" id="sorte-description">Indica a predisposição do personagem a eventos fortuitos e sua capacidade de escapar de situações perigosas.</div>
+            </div>
+        </div>
+    </div>
 
-        <div class="stats-section stats" id="stats">
-            <div class="stat-box">
-                <div>
-                    <strong class="stat-name">Energia:</strong>
-                    <div>
-                        <span id="energy1" class="stat-value">-</span> + <span id="energy2" class="stat-value">-</span>
-                        <span id="energyModifier" class="racial-modifier"></span> =
-                        <span id="energyTotal" class="stat-value">-</span>
-                    </div>
-                    <div class="stat-buttons-inline">
-                        <button onclick="rollStat('energy', this)" class="button">🎲</button>
-                        <button onclick="resetStat('energy', this)" class="button">Zerar</button>
-                    </div>
-                </div>
-                <div class="attribute-description-container" id="energia-description">Representa a vitalidade física e a resistência do seu personagem.</div>
-            </div>
-            <div class="stat-box">
-                <div>
-                    <strong class="stat-name">Habilidade:</strong>
-                    <div>
-                        <span id="skill1" class="stat-value">-</span> + <span id="skill2" class="stat-value">-</span>
-                        <span id="skillModifier" class="racial-modifier"></span> =
-                        <span id="skillTotal" class="stat-value">-</span>
-                    </div>
-                    <div class="stat-buttons-inline">
-                        <button onclick="rollStat('skill', this)" class="button">🎲</button>
-                        <button onclick="resetStat('skill', this)" class="button">Zerar</button>
-                    </div>
-                </div>
-                <div class="attribute-description-container" id="habilidade-description">Mede a destreza física, agilidade e coordenação motora.</div>
-            </div>
-            <div class="stat-box">
-                <div>
-                    <strong class="stat-name">Carisma:</strong>
-                    <div>
-                        <span id="charisma1" class="stat-value">-</span> + <span id="charisma2" class="stat-value">-</span>
-                        <span id="charismaModifier" class="racial-modifier"></span> =
-                        <span id="charismaTotal" class="stat-value">-</span>
-                    </div>
-                    <div class="stat-buttons-inline">
-                        <button onclick="rollStat('charisma', this)" class="button">🎲</button>
-                        <button onclick="resetStat('charisma', this)" class="button">Zerar</button>
-                    </div>
-                </div>
-                <div class="attribute-description-container" id="carisma-description">Reflete a capacidade de persuasão, liderança e atratividade do personagem.</div>
-            </div>
-            <div class="stat-box">
-                <div>
-                    <strong class="stat-name">Magia:</strong>
-                    <div>
-                        <span id="magic1" class="stat-value">-</span> + <span id="magic2" class="stat-value">-</span>
-                        <span id="magicModifier" class="racial-modifier"></span> =
-                        <span id="magicTotal" class="stat-value">-</span>
-                    </div>
-                    <div class="stat-buttons-inline">
-                        <button onclick="rollStat('magic', this)" class="button">🎲</button>
-                        <button onclick="resetStat('magic', this)" class="button">Zerar</button>
-                    </div>
-                </div>
-                <div class="attribute-description-container" id="magia-description">Representa o potencial mágico e a capacidade de manipular energias arcanas.</div>
-            </div>
-            <div class="stat-box">
-                <div>
-                    <strong class="stat-name">Sorte:</strong>
-                    <div>
-                        <span id="luck1" class="stat-value">-</span> + <span id="luck2" class="stat-value">-</span>
-                        <span id="luckModifier" class="racial-modifier"></span> =
-                        <span id="luckTotal" class="stat-value">-</span>
-                    </div>
-                    <div class="stat-buttons-inline">
-                        <button onclick="rollStat('luck', this)" class="button">🎲</button>
-                        <button onclick="resetStat('luck', this)" class="button">Zerar</button>
-                    </div>
-                </div>
-                <div class="attribute-description-container" id="sorte-description">Indica a predisposição do personagem a eventos fortuitos e sua capacidade de escapar de situações perigosas.</div>
-            </div>
-        </div>
-    </div>
-
-    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
 <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js"></script>
 <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
 
-    <script src="character-creation.js" type="module"></script>
+    <script src="character-creation.js" type="module"></script>
 </body>
 </html>
