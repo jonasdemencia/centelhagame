@@ -444,8 +444,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-    initializeAccordionTitles();
-
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             console.log("Usuário autenticado:", user.uid);
