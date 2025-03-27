@@ -164,20 +164,14 @@ body {
 }
 
 #character-page .label-text {
-    display: block; /* Garante que o rótulo fique em sua própria linha */
+    display: block;
     margin-bottom: 3px; /* Reduzindo a margem */
     font-size: 14px;
     color: #555; /* Cinza para os rótulos */
 }
 
-#character-page .select-container {
-    display: flex; /* Use Flexbox para alinhar os itens na mesma linha */
-    align-items: center; /* Alinha verticalmente os itens ao centro */
-    gap: 10px; /* Adiciona um espaço entre os elementos dentro do container */
-}
-
 #character-page .select-field {
-    flex-grow: 1; /* Permite que o select ocupe o espaço restante */
+    width: 100%;
     padding: 8px; /* Reduzindo o padding */
     border: 1px solid #555; /* Cinza para a borda */
     border-radius: 4px;
@@ -372,15 +366,4 @@ body {
 
 .attribute-description-container.show {
     display: block; /* Exibe quando a classe 'show' é adicionada */
-}
-
-#character-page .select-container .button.pequeno {
-    padding: 6px 10px;
-    font-size: 12px;
-}
-
-#character-page .select-container span {
-    margin-left: 5px;
-    font-size: 12px;
-    color: #777;
 }
