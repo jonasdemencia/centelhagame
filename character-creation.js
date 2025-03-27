@@ -18,12 +18,6 @@ const auth = getAuth(app);
 let rolls = { energy: 3, skill: 3, charisma: 3, magic: 3, luck: 3 };
 let resets = { energy: 2, skill: 2, charisma: 2, magic: 2, luck: 2 };
 
-let defeitos = [];
-let defeitoSelecionado1 = null;
-let defeitoSelecionado2 = null;
-let defeitoCentralFinal = null;
-let selecoesDefeito = 0;
-
 function rollDice(sides) {
     return Math.floor(Math.random() * sides) + 1;
 }
@@ -147,67 +141,31 @@ function updateRacialModifiersDisplay() {
 }
 
 document.getElementById("race").addEventListener("change", () => {
-    updateRacialModifiersDisplay();
-    savePlayerData(auth.currentUser.uid, getPlayerStats());
-    const raceSelect = document.getElementById("race");
-    const accordionButton = raceSelect.closest('.accordion-collapse')?.previousElementSibling;
-    if (accordionButton && accordionButton.classList.contains('accordion-button')) {
-        const originalText = accordionButton.textContent.split(':')[0].trim() + ':';
-        accordionButton.textContent = raceSelect.value ? `${originalText} ${raceSelect.value}` : originalText;
-    }
+    updateRacialModifiersDisplay();  // Atualiza os modificadores e recalcula os totais
+    savePlayerData(auth.currentUser.uid, getPlayerStats());  // Salva os novos valores no Firestore
 });
 
 document.getElementById("alignment").addEventListener("change", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
-    const alignmentSelect = document.getElementById("alignment");
-    const accordionButton = alignmentSelect.closest('.accordion-collapse')?.previousElementSibling;
-    if (accordionButton && accordionButton.classList.contains('accordion-button')) {
-        const originalText = accordionButton.textContent.split(':')[0].trim() + ':';
-        accordionButton.textContent = alignmentSelect.value ? `${originalText} ${alignmentSelect.value}` : originalText;
-    }
 });
 
 document.getElementById("class").addEventListener("change", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
-    const classSelect = document.getElementById("class");
-    const accordionButton = classSelect.closest('.accordion-collapse')?.previousElementSibling;
-    if (accordionButton && accordionButton.classList.contains('accordion-button')) {
-        const originalText = accordionButton.textContent.split(':')[0].trim() + ':';
-        accordionButton.textContent = classSelect.value ? `${originalText} ${classSelect.value}` : originalText;
-    }
 });
 
 document.getElementById("mao dominante").addEventListener("change", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
-    const maoDominanteSelect = document.getElementById("mao dominante");
-    const accordionButton = maoDominanteSelect.closest('.accordion-collapse')?.previousElementSibling;
-    if (accordionButton && accordionButton.classList.contains('accordion-button')) {
-        const originalText = accordionButton.textContent.split(':')[0].trim() + ':';
-        accordionButton.textContent = maoDominanteSelect.value ? `${originalText} ${maoDominanteSelect.value}` : originalText;
-    }
 });
 
 document.getElementById("hemisfério dominante").addEventListener("change", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
-    const hemisferioDominanteSelect = document.getElementById("hemisfério dominante");
-    const accordionButton = hemisferioDominanteSelect.closest('.accordion-collapse')?.previousElementSibling;
-    if (accordionButton && accordionButton.classList.contains('accordion-button')) {
-        const originalText = accordionButton.textContent.split(':')[0].trim() + ':';
-        accordionButton.textContent = hemisferioDominanteSelect.value ? `${originalText} ${hemisferioDominanteSelect.value}` : originalText;
-    }
-});
-
-document.getElementById("idade").addEventListener("change", () => {
-    savePlayerData(auth.currentUser.uid, getPlayerStats());
-    const idadeSelect = document.getElementById("idade");
-    const accordionButton = idadeSelect.closest('.accordion-collapse')?.previousElementSibling;
-    if (accordionButton && accordionButton.classList.contains('accordion-button')) {
-        const originalText = accordionButton.textContent.split(':')[0].trim() + ':';
-        accordionButton.textContent = idadeSelect.value ? `${originalText} ${idadeSelect.value}` : originalText;
-    }
 });
 
 document.getElementById("name").addEventListener("input", () => {
+    savePlayerData(auth.currentUser.uid, getPlayerStats());
+});
+
+document.getElementById("idade").addEventListener("input", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
 });
 
@@ -227,9 +185,6 @@ document.getElementById("submit").addEventListener("click", async () => {
         }
         if (completionStatus.unrolledStats.length > 0) {
             message += "Atributos a serem rolados: " + completionStatus.unrolledStats.join(", ") + "\n";
-        }
-        if (completionStatus.missingDefeitoCentral) {
-            message += "Selecione seu Defeito Central!\n";
         }
         alert(message);
     }
@@ -281,14 +236,13 @@ function getPlayerStats() {
         maoDominante: document.getElementById("mao dominante").value,
         hemisferioDominante: document.getElementById("hemisfério dominante").value,
         idade: document.getElementById("idade").value,
-        defeitoCentral: defeitoCentralFinal,
         energy: {
             firstRoll: getStat("energy1"),
             secondRoll: getStat("energy2"),
             total: getStat("energyTotal"),
             rolls: rolls.energy,
             resets: resets.energy,
-            modifier: racialModifiers.energy
+            modifier: racialModifiers.energy  // Salva o modificador no Firestore
         },
         skill: {
             firstRoll: getStat("skill1"),
@@ -333,7 +287,6 @@ function isFichaCompleta(playerData) {
     const missingFields = [];
     const unrolledStats = [];
     const stats = ["energy", "skill", "charisma", "magic", "luck"];
-    let missingDefeitoCentral = false;
 
     if (!playerData.name) missingFields.push("Nome do heroi");
     if (!playerData.race) missingFields.push("Raça");
@@ -342,7 +295,6 @@ function isFichaCompleta(playerData) {
     if (!playerData.maoDominante) missingFields.push("Mão Dominante");
     if (!playerData.hemisferioDominante) missingFields.push("Hemisfério Dominante");
     if (!playerData.idade) missingFields.push("Idade");
-    if (!playerData.defeitoCentral) missingDefeitoCentral = true;
 
     stats.forEach(stat => {
         if (!playerData[stat] || playerData[stat].firstRoll === 0 || playerData[stat].secondRoll === 0 || playerData[stat].total === 0) {
@@ -350,148 +302,62 @@ function isFichaCompleta(playerData) {
         }
     });
 
-    if (missingFields.length > 0 || unrolledStats.length > 0 || missingDefeitoCentral) {
-        return { missingFields, unrolledStats, missingDefeitoCentral };
+    if (missingFields.length > 0 || unrolledStats.length > 0) {
+        return { missingFields, unrolledStats };
     }
     return true;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    function updateAccordionTitle(selectElement) {
-        const accordionButton = selectElement.closest('.accordion-collapse').previousElementSibling;
-        const selectedText = selectElement.value || "Selecione..."; // Se não houver escolha, mantém "Selecione..."
-        const optionDisplay = accordionButton.querySelector(".selected-option");
-
-        if (optionDisplay) {
-            optionDisplay.textContent = selectedText;
-        }
-    }
-
-    // Aplica o evento de mudança para todos os <select>
-    document.querySelectorAll(".accordion-collapse select").forEach(select => {
-        select.addEventListener("change", function () {
-            updateAccordionTitle(this);
+    // Accordion functionality
+    const accordionButtons = document.querySelectorAll('.accordion-button');
+    accordionButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const accordionContent = button.nextElementSibling;
+            button.classList.toggle('active');
+            accordionContent.style.maxHeight = accordionContent.style.maxHeight ? null : accordionContent.scrollHeight + "px";
         });
-        updateAccordionTitle(select); // Atualiza os títulos ao carregar a página
     });
-});
-
-
-    // Defeito Central functionality
-    const defeitosListaElement = document.getElementById("defeitos-lista");
-    if (defeitosListaElement) {
-        const liElements = defeitosListaElement.querySelectorAll("li");
-        liElements.forEach(li => {
-            defeitos.push(li.textContent);
-        });
-    }
-
-    const selecionarDefeitoButton = document.getElementById("selecionar-defeito");
-    const defeitoSelecionado1Div = document.getElementById("defeito-selecionado-1");
-    const defeitoSelecionado2Div = document.getElementById("defeito-selecionado-2");
-    const escolhaDefeitoDiv = document.getElementById("escolha-defeito");
-    const escolherDefeito1Button = document.getElementById("escolher-defeito-1");
-    const escolherDefeito2Button = document.getElementById("escolher-defeito-2");
-    const defeitoCentralFinalDiv = document.getElementById("defeito-central-final");
-    const defeitoCentralFinalSpan = defeitoCentralFinalDiv.querySelector("span");
-
-    if (selecionarDefeitoButton) {
-        selecionarDefeitoButton.addEventListener("click", () => {
-            if (selecoesDefeito < 2) {
-                const randomIndex = Math.floor(Math.random() * defeitos.length);
-                const defeito = defeitos[randomIndex];
-                if (selecoesDefeito === 0) {
-                    defeitoSelecionado1 = defeito;
-                    defeitoSelecionado1Div.style.display = "block";
-                    defeitoSelecionado1Div.querySelector("span").textContent = defeito;
-                } else if (selecoesDefeito === 1) {
-                    defeitoSelecionado2 = defeito;
-                    defeitoSelecionado2Div.style.display = "block";
-                    defeitoSelecionado2Div.querySelector("span").textContent = defeito;
-                    escolhaDefeitoDiv.style.display = "block";
-                }
-                selecoesDefeito++;
-            } else {
-                alert("Você já selecionou dois defeitos. Escolha um deles.");
-            }
-        });
-    }
-
-    if (escolherDefeito1Button) {
-        escolherDefeito1Button.addEventListener("click", () => {
-            defeitoCentralFinal = defeitoSelecionado1;
-            escolhaDefeitoDiv.style.display = "none";
-            defeitoCentralFinalDiv.style.display = "block";
-            defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
-            savePlayerData(auth.currentUser.uid, getPlayerStats());
-        });
-    }
-
-    if (escolherDefeito2Button) {
-        escolherDefeito2Button.addEventListener("click", () => {
-            defeitoCentralFinal = defeitoSelecionado2;
-            escolhaDefeitoDiv.style.display = "none";
-            defeitoCentralFinalDiv.style.display = "block";
-            defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
-            savePlayerData(auth.currentUser.uid, getPlayerStats());
-        });
-    }
-
-    function updateAccordionTitle(selectElement) {
-    const accordionButton = selectElement.closest('.accordion-collapse')?.previousElementSibling;
-    if (accordionButton && accordionButton.classList.contains('accordion-button')) {
-        const originalText = accordionButton.textContent.split(':')[0].trim() + ':'; // Mantém o título original
-        accordionButton.textContent = `${originalText} ${selectElement.value}`; // Adiciona a opção escolhida
-    }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    // Captura todos os <select> dentro dos acordeões e adiciona o evento de mudança
-    document.querySelectorAll(".accordion-collapse select").forEach(select => {
-        select.addEventListener("change", function () {
-            updateAccordionTitle(this);
-        });
-        updateAccordionTitle(select); // Atualiza os títulos ao carregar a página
-    });
-});
-
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             console.log("Usuário autenticado:", user.uid);
             const playerData = await getPlayerData(user.uid);
 
+            // 🔹 Verifica se a ficha está completa, incluindo as rolagens e os atributos
             if (playerData && playerData.fichaCompleta) {
                 console.log("Ficha já criada e completa. Redirecionando para o inventário...");
                 window.location.href = "inventario.html";
-                return;
+                return; // Impede o restante do fluxo
             }
 
+            // 🔹 Exibe a página de criação de ficha se incompleta
             console.log("Ficha incompleta. Removendo a classe 'hidden' para exibir a página.");
             document.body.classList.remove("hidden");
 
+            // 🔹 Preenche os campos com dados salvos, se existirem
             if (playerData) {
                 if (playerData.name) document.getElementById("name").value = playerData.name;
-                const selects = {
-                    race: 'Raça',
-                    alignment: 'Alinhamento',
-                    class: 'Classe',
-                    'mao dominante': 'Mão Dominante',
-                    'hemisfério dominante': 'Hemisfério Dominante',
-                    idade: 'Idade'
-                };
-                for (const id in selects) {
-                    const selectElement = document.getElementById(id);
-                    if (playerData[id]) {
-                        selectElement.value = playerData[id];
-                        const accordionButton = selectElement.closest('.accordion-collapse')?.previousElementSibling;
-                        if (accordionButton && accordionButton.classList.contains('accordion-button')) {
-                            const originalText = accordionButton.textContent.split(':')[0].trim() + ':';
-                            accordionButton.textContent = `${originalText} ${playerData[id]}`;
-                        }
+                if (playerData.race) document.getElementById("race").value = playerData.race;
+                if (playerData.alignment) document.getElementById("alignment").value = playerData.alignment;
+                if (playerData.class) document.getElementById("class").value = playerData.class;
+                if (playerData.maoDominante) document.getElementById("mao dominante").value = playerData.maoDominante;
+                if (playerData.hemisferioDominante) document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante;
+
+                // 🔹 Corrige a restauração da idade
+                if (playerData.idade) {
+                    const idadeSelect = document.getElementById("idade");
+                    const optionExists = [...idadeSelect.options].some(option => option.value === playerData.idade);
+
+                    if (optionExists) {
+                        idadeSelect.value = playerData.idade;
+                    } else {
+                        console.warn("O valor salvo da idade não corresponde a nenhuma opção no <select>.");
                     }
+                    console.log("Idade restaurada:", playerData.idade);
                 }
 
+                // 🔹 Preenche os atributos com dados salvos
                 const stats = ["energy", "skill", "charisma", "magic", "luck"];
                 stats.forEach(stat => {
                     if (playerData[stat]) {
@@ -510,33 +376,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 });
 
-                if (playerData.defeitoCentral) {
-                    defeitoCentralFinal = playerData.defeitoCentral;
-                    defeitoCentralFinalDiv.style.display = "block";
-                    defeitoCentralFinalSpan.textContent = defeitoCentralFinal;
-                    selecoesDefeito = 2;
-                    escolhaDefeitoDiv.style.display = "none";
-                    if (selecionarDefeitoButton) {
-                        selecionarDefeitoButton.disabled = true;
-                        selecionarDefeitoButton.style.opacity = "0.5";
-                        selecionarDefeitoButton.style.cursor = "not-allowed";
-                    }
-                } else {
-                    selecoesDefeito = 0;
-                    defeitoSelecionado1 = null;
-                    defeitoSelecionado2 = null;
-                    defeitoCentralFinal = null;
-                    defeitoSelecionado1Div.style.display = "none";
-                    defeitoSelecionado2Div.style.display = "none";
-                    escolhaDefeitoDiv.style.display = "none";
-                    defeitoCentralFinalDiv.style.display = "none";
-                    if (selecionarDefeitoButton) {
-                        selecionarDefeitoButton.disabled = false;
-                        selecionarDefeitoButton.style.opacity = "1";
-                        selecionarDefeitoButton.style.cursor = "pointer";
-                    }
-                }
-
+                // 🔹 Atualiza os modificadores raciais
                 updateRacialModifiersDisplay();
             }
         } else {
@@ -546,5 +386,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+// 🔹 Mantendo os métodos utilitários necessários
 window.rollStat = rollStat;
 window.resetStat = resetStat;
