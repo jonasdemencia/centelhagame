@@ -357,15 +357,25 @@ function isFichaCompleta(playerData) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Accordion functionality
-    const accordionButtons = document.querySelectorAll('.accordion-button');
-    accordionButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const accordionContent = button.nextElementSibling;
-            button.classList.toggle('active');
-            accordionContent.style.maxHeight = accordionContent.style.maxHeight ? null : accordionContent.scrollHeight + "px";
+    function updateAccordionTitle(selectElement) {
+        const accordionButton = selectElement.closest('.accordion-collapse').previousElementSibling;
+        const selectedText = selectElement.value || "Selecione..."; // Se não houver escolha, mantém "Selecione..."
+        const optionDisplay = accordionButton.querySelector(".selected-option");
+
+        if (optionDisplay) {
+            optionDisplay.textContent = selectedText;
+        }
+    }
+
+    // Aplica o evento de mudança para todos os <select>
+    document.querySelectorAll(".accordion-collapse select").forEach(select => {
+        select.addEventListener("change", function () {
+            updateAccordionTitle(this);
         });
+        updateAccordionTitle(select); // Atualiza os títulos ao carregar a página
     });
+});
+
 
     // Defeito Central functionality
     const defeitosListaElement = document.getElementById("defeitos-lista");
