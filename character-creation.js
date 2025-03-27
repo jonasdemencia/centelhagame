@@ -149,30 +149,72 @@ function updateRacialModifiersDisplay() {
 document.getElementById("race").addEventListener("change", () => {
     updateRacialModifiersDisplay();  // Atualiza os modificadores e recalcula os totais
     savePlayerData(auth.currentUser.uid, getPlayerStats());  // Salva os novos valores no Firestore
+    const raceSelect = document.getElementById("race");
+    const raceLabel = document.querySelector('.accordion-button[aria-controls="race-content"]'); // Ajuste o seletor conforme sua estrutura HTML
+    if (raceLabel && raceSelect.value) {
+        raceLabel.textContent = `Raça: ${raceSelect.value}`;
+    } else if (raceLabel) {
+        raceLabel.textContent = `Raça:`; // Caso a seleção seja removida
+    }
 });
 
 document.getElementById("alignment").addEventListener("change", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
+    const alignmentSelect = document.getElementById("alignment");
+    const alignmentLabel = document.querySelector('.accordion-button[aria-controls="alignment-content"]'); // Ajuste o seletor conforme sua estrutura HTML
+    if (alignmentLabel && alignmentSelect.value) {
+        alignmentLabel.textContent = `Alinhamento: ${alignmentSelect.value}`;
+    } else if (alignmentLabel) {
+        alignmentLabel.textContent = `Alinhamento:`; // Caso a seleção seja removida
+    }
 });
 
 document.getElementById("class").addEventListener("change", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
+    const classSelect = document.getElementById("class");
+    const classLabel = document.querySelector('.accordion-button[aria-controls="class-content"]'); // Ajuste o seletor conforme sua estrutura HTML
+    if (classLabel && classSelect.value) {
+        classLabel.textContent = `Classe: ${classSelect.value}`;
+    } else if (classLabel) {
+        classLabel.textContent = `Classe:`; // Caso a seleção seja removida
+    }
 });
 
 document.getElementById("mao dominante").addEventListener("change", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
+    const maoDominanteSelect = document.getElementById("mao dominante");
+    const maoDominanteLabel = document.querySelector('.accordion-button[aria-controls="mao-dominante-content"]'); // Ajuste o seletor conforme sua estrutura HTML
+    if (maoDominanteLabel && maoDominanteSelect.value) {
+        maoDominanteLabel.textContent = `Mão Dominante: ${maoDominanteSelect.value}`;
+    } else if (maoDominanteLabel) {
+        maoDominanteLabel.textContent = `Mão Dominante:`; // Caso a seleção seja removida
+    }
 });
 
 document.getElementById("hemisfério dominante").addEventListener("change", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
+    const hemisferioDominanteSelect = document.getElementById("hemisfério dominante");
+    const hemisferioDominanteLabel = document.querySelector('.accordion-button[aria-controls="hemisferio-dominante-content"]'); // Ajuste o seletor conforme sua estrutura HTML
+    if (hemisferioDominanteLabel && hemisferioDominanteSelect.value) {
+        hemisferioDominanteLabel.textContent = `Hemisfério Dominante: ${hemisferioDominanteSelect.value}`;
+    } else if (hemisferioDominanteLabel) {
+        hemisferioDominanteLabel.textContent = `Hemisfério Dominante:`; // Caso a seleção seja removida
+    }
 });
 
 document.getElementById("name").addEventListener("input", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
 });
 
-document.getElementById("idade").addEventListener("input", () => {
+document.getElementById("idade").addEventListener("change", () => {
     savePlayerData(auth.currentUser.uid, getPlayerStats());
+    const idadeSelect = document.getElementById("idade");
+    const idadeLabel = document.querySelector('.accordion-button[aria-controls="idade-content"]'); // Ajuste o seletor conforme sua estrutura HTML
+    if (idadeLabel && idadeSelect.value) {
+        idadeLabel.textContent = `Idade: ${idadeSelect.value}`;
+    } else if (idadeLabel) {
+        idadeLabel.textContent = `Idade:`; // Caso a seleção seja removida
+    }
 });
 
 document.getElementById("submit").addEventListener("click", async () => {
@@ -391,6 +433,43 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Atualização dos títulos das seções ao carregar a página (para restaurar valores salvos)
+    const raceSelect = document.getElementById("race");
+    const raceLabel = document.querySelector('.accordion-button[aria-controls="race-content"]');
+    if (raceLabel && raceSelect.value) {
+        raceLabel.textContent = `Raça: ${raceSelect.value}`;
+    }
+
+    const alignmentSelect = document.getElementById("alignment");
+    const alignmentLabel = document.querySelector('.accordion-button[aria-controls="alignment-content"]');
+    if (alignmentLabel && alignmentSelect.value) {
+        alignmentLabel.textContent = `Alinhamento: ${alignmentSelect.value}`;
+    }
+
+    const classSelect = document.getElementById("class");
+    const classLabel = document.querySelector('.accordion-button[aria-controls="class-content"]');
+    if (classLabel && classSelect.value) {
+        classLabel.textContent = `Classe: ${classSelect.value}`;
+    }
+
+    const maoDominanteSelect = document.getElementById("mao dominante");
+    const maoDominanteLabel = document.querySelector('.accordion-button[aria-controls="mao-dominante-content"]');
+    if (maoDominanteLabel && maoDominanteSelect.value) {
+        maoDominanteLabel.textContent = `Mão Dominante: ${maoDominanteSelect.value}`;
+    }
+
+    const hemisferioDominanteSelect = document.getElementById("hemisfério dominante");
+    const hemisferioDominanteLabel = document.querySelector('.accordion-button[aria-controls="hemisferio-dominante-content"]');
+    if (hemisferioDominanteLabel && hemisferioDominanteSelect.value) {
+        hemisferioDominanteLabel.textContent = `Hemisfério Dominante: ${hemisferioDominanteSelect.value}`;
+    }
+
+    const idadeSelect = document.getElementById("idade");
+    const idadeLabel = document.querySelector('.accordion-button[aria-controls="idade-content"]');
+    if (idadeLabel && idadeSelect.value) {
+        idadeLabel.textContent = `Idade: ${idadeSelect.value}`;
+    }
+
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             console.log("Usuário autenticado:", user.uid);
@@ -410,11 +489,26 @@ document.addEventListener("DOMContentLoaded", () => {
             // 🔹 Preenche os campos com dados salvos, se existirem
             if (playerData) {
                 if (playerData.name) document.getElementById("name").value = playerData.name;
-                if (playerData.race) document.getElementById("race").value = playerData.race;
-                if (playerData.alignment) document.getElementById("alignment").value = playerData.alignment;
-                if (playerData.class) document.getElementById("class").value = playerData.class;
-                if (playerData.maoDominante) document.getElementById("mao dominante").value = playerData.maoDominante;
-                if (playerData.hemisferioDominante) document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante;
+                if (playerData.race) {
+                    document.getElementById("race").value = playerData.race;
+                    if (raceLabel) raceLabel.textContent = `Raça: ${playerData.race}`; // Atualiza o título ao restaurar
+                }
+                if (playerData.alignment) {
+                    document.getElementById("alignment").value = playerData.alignment;
+                    if (alignmentLabel) alignmentLabel.textContent = `Alinhamento: ${playerData.alignment}`; // Atualiza o título ao restaurar
+                }
+                if (playerData.class) {
+                    document.getElementById("class").value = playerData.class;
+                    if (classLabel) classLabel.textContent = `Classe: ${playerData.class}`; // Atualiza o título ao restaurar
+                }
+                if (playerData.maoDominante) {
+                    document.getElementById("mao dominante").value = playerData.maoDominante;
+                    if (maoDominanteLabel) maoDominanteLabel.textContent = `Mão Dominante: ${playerData.maoDominante}`; // Atualiza o título ao restaurar
+                }
+                if (playerData.hemisferioDominante) {
+                    document.getElementById("hemisfério dominante").value = playerData.hemisferioDominante;
+                    if (hemisferioDominanteLabel) hemisferioDominanteLabel.textContent = `Hemisfério Dominante: ${playerData.hemisferioDominante}`; // Atualiza o título ao restaurar
+                }
 
                 // 🔹 Corrige a restauração da idade
                 if (playerData.idade) {
@@ -423,6 +517,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     if (optionExists) {
                         idadeSelect.value = playerData.idade;
+                        if (idadeLabel) idadeLabel.textContent = `Idade: ${playerData.idade}`; // Atualiza o título ao restaurar
                     } else {
                         console.warn("O valor salvo da idade não corresponde a nenhuma opção no <select>.");
                     }
