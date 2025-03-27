@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const monsterData = {
                 "lobo": {
                     nome: "Lobo Faminto",
-                    imagem: "url_da_imagem_do_lobo.png", // Substitua pela URL real
+                    imagem: "https://github.com/jonasdemencia/centelhagame/blob/main/piclumen-1741478059758.png?raw=true", // Substitua pela URL real
                     descricao: "Um lobo selvagem com presas afiadas.",
                     habilidade: 3,
                     couraça: 12,
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 "goblin": {
                     nome: "Goblin Sorrateiro",
-                    imagem: "url_da_imagem_do_goblin.png", // Substitua pela URL real
+                    imagem: "https://github.com/jonasdemencia/centelhagame/blob/main/piclumen-1737155146344.png?raw=true", // Substitua pela URL real
                     descricao: "Um pequeno goblin com olhos espertos.",
                     habilidade: 2,
                     couraça: 10,
