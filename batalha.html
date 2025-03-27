@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batalha - CentelhaGame</title>
+    <link rel="stylesheet" href="style.css"> <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Batalha</h1>
+    </header>
+
+    <main>
+        <section id="monster-area">
+            <img id="monster-image" src="" alt="Imagem do Monstro">
+            <h2 id="monster-name">Nome do Monstro</h2>
+            <p id="monster-description">Descrição do Monstro aparecerá aqui.</p>
+        </section>
+
+        <section id="player-actions">
+            <button id="abrir-inventario" disabled>Inventário</button>
+            <button id="iniciar-luta">Lute</button>
+            <button id="correr-batalha" style="display:none;">Correr</button>
+            <div id="attack-options" style="display:none;">
+                <button id="atacar-corpo-a-corpo" style="display:none;">Corpo a Corpo</button>
+                <button id="atacar-a-distancia" style="display:none;">À Distância</button>
+            </div>
+            <button id="rolar-iniciativa" style="display:none;">Rolar Iniciativa</button>
+            <button id="atacar-monstro" style="display:none;">Rolar Ataque</button>
+        </section>
+
+        <section id="battle-log">
+            <h2>Registro de Batalha</h2>
+            <div id="battle-log-content">
+                </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 CentelhaGame</p>
+    </footer>
+
+    <script type="module" src="batalha.js"></script>
+</body>
+</html>
