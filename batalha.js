@@ -227,17 +227,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
 
                         // Event listener para o botão "DANO"
-                        if (rolarDanoButton && playerData && playerData.dano) {
+                        if (rolarDanoButton) {
                             rolarDanoButton.addEventListener('click', () => {
-                                const damageRollResult = rollDice(playerData.dano);
-                                currentMonster.pontosDeEnergia -= damageRollResult;
-                                battleLogContent.innerHTML += `<p>Você rolou <strong>${damageRollResult}</strong> de dano!</p>`;
-                                battleLogContent.innerHTML += `<p>${currentMonster.nome} sofreu ${damageRollResult} de dano. Pontos de Energia restantes: ${currentMonster.pontosDeEnergia}.</p>`;
-                                rolarDanoButton.style.display = 'none';
-                                // No futuro: Lógica para o turno do monstro após o dano
+                                if (playerData && playerData.dano) {
+                                    const playerDamage = playerData.dano; // Lê o dano diretamente do playerData
+                                    const damageRollResult = rollDice(playerDamage);
+                                    currentMonster.pontosDeEnergia -= damageRollResult;
+                                    battleLogContent.innerHTML += `<p>Você rolou <strong>${damageRollResult}</strong> de dano!</p>`;
+                                    battleLogContent.innerHTML += `<p>${currentMonster.nome} sofreu ${damageRollResult} de dano. Pontos de Energia restantes: ${currentMonster.pontosDeEnergia}.</p>`;
+                                    rolarDanoButton.style.display = 'none';
+                                    // No futuro: Lógica para o turno do monstro após o dano
+                                } else {
+                                    console.error("Campo 'dano' não encontrado nos dados do jogador.");
+                                    battleLogContent.innerHTML += `<p class="error">Erro: Campo 'dano' não encontrado nos seus dados. Por favor, verifique seu personagem.</p>`;
+                                    rolarDanoButton.style.display = 'none';
+                                }
                             });
-                        } else if (rolarDanoButton) {
-                            console.error("Botão 'DANO' encontrado, mas playerData ou playerData.dano não definidos.");
                         } else {
                             console.error("Botão 'DANO' não encontrado (ID: rolar-dano)");
                         }
