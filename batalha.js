@@ -38,10 +38,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const initiativeResult = sessionStorage.getItem('initiativeResult');
     const luteButtonClicked = sessionStorage.getItem('luteButtonClicked') === 'true';
 
+    console.log("DOMContentLoaded: initiativeResult =", initiativeResult);
+
     if (initiativeResult) {
-        // Resultado da iniciativa já existe
+        console.log("DOMContentLoaded: initiativeResult encontrado:", initiativeResult);
         if (lutarButton) lutarButton.style.display = 'none';
         if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'none';
+        battleLogContent.innerHTML = ""; // Limpa o log antes de adicionar a mensagem persistida
         if (initiativeResult === 'player') {
             battleLogContent.innerHTML += `<p>Você venceu a iniciativa e atacará primeiro.</p>`;
             if (attackOptionsDiv) attackOptionsDiv.style.display = 'block';
@@ -54,14 +57,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'block'; // Permitir rolar novamente em caso de empate
         }
     } else if (luteButtonClicked) {
-        // Botão "Lute" foi clicado, mas a iniciativa ainda não foi rolada
+        console.log("DOMContentLoaded: luteButtonClicked é true, iniciativa não rolada.");
         if (lutarButton) lutarButton.style.display = 'none';
         if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'block';
     } else {
-        // Estado inicial
+        console.log("DOMContentLoaded: Estado inicial.");
         if (lutarButton) lutarButton.style.display = 'block';
         if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'none';
         if (attackOptionsDiv) attackOptionsDiv.style.display = 'none'; // Garante que as opções de ataque estejam escondidas inicialmente
+        battleLogContent.innerHTML = ""; // Limpa o log no estado inicial
     }
 
     onAuthStateChanged(auth, (user) => {
@@ -135,22 +139,25 @@ document.addEventListener('DOMContentLoaded', () => {
                                     battleLogContent.innerHTML += `<p>Você rolou ${playerRoll} + ${playerAbility} (Habilidade) = <strong>${playerTotalInitiative}</strong> para iniciativa.</p>`;
                                     battleLogContent.innerHTML += `<p>${currentMonster.nome} rolou ${monsterRoll} + ${currentMonster.habilidade} (Habilidade) = <strong>${monsterTotalInitiative}</strong> para iniciativa.</p>`;
 
+                                    let initiativeWinner = '';
                                     if (playerTotalInitiative > monsterTotalInitiative) {
                                         battleLogContent.innerHTML += `<p>Você venceu a iniciativa! Você ataca primeiro.</p>`;
                                         if (attackOptionsDiv) {
                                             attackOptionsDiv.style.display = 'block';
                                         }
-                                        sessionStorage.setItem('initiativeResult', 'player'); // Salva o resultado
+                                        initiativeWinner = 'player';
                                     } else if (monsterTotalInitiative > playerTotalInitiative) {
                                         battleLogContent.innerHTML += `<p>${currentMonster.nome} venceu a iniciativa! O monstro ataca primeiro.</p>`;
-                                        sessionStorage.setItem('initiativeResult', 'monster'); // Salva o resultado
+                                        initiativeWinner = 'monster';
                                         // Aqui, no futuro, implementaremos a ação do monstro
                                     } else {
                                         battleLogContent.innerHTML += `<p>Houve um empate na iniciativa!</p>`;
-                                        sessionStorage.setItem('initiativeResult', 'tie'); // Salva o resultado
+                                        initiativeWinner = 'tie';
                                         // Podemos adicionar uma lógica de desempate aqui, se necessário
+                                        if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'block';
                                     }
 
+                                    sessionStorage.setItem('initiativeResult', initiativeWinner); // Salva o resultado
                                     rolarIniciativaButton.style.display = 'none';
                                     sessionStorage.removeItem('luteButtonClicked');
                                 });
