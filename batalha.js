@@ -36,6 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Verifica o estado da batalha no Session Storage
     const initiativeResult = sessionStorage.getItem('initiativeResult');
+    const playerInitiativeRoll = sessionStorage.getItem('playerInitiativeRoll');
+    const monsterInitiativeRoll = sessionStorage.getItem('monsterInitiativeRoll');
+    const playerAbility = sessionStorage.getItem('playerAbility');
+    const monsterAbility = sessionStorage.getItem('monsterAbility');
     const luteButtonClicked = sessionStorage.getItem('luteButtonClicked') === 'true';
 
     console.log("DOMContentLoaded: initiativeResult =", initiativeResult);
@@ -44,16 +48,19 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("DOMContentLoaded: initiativeResult encontrado:", initiativeResult);
         if (lutarButton) lutarButton.style.display = 'none';
         if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'none';
-        battleLogContent.innerHTML = ""; // Limpa o log antes de adicionar a mensagem persistida
+        battleLogContent.innerHTML = ""; // Limpa o log para reconstruir
+        if (playerInitiativeRoll && monsterInitiativeRoll && playerAbility !== null && monsterAbility !== null) {
+            battleLogContent.innerHTML += `<p>Você rolou ${playerInitiativeRoll} + ${playerAbility} (Habilidade) = <strong>${parseInt(playerInitiativeRoll) + parseInt(playerAbility)}</strong> para iniciativa.</p>`;
+            battleLogContent.innerHTML += `<p>${currentMonster.nome} rolou ${monsterInitiativeRoll} + ${monsterAbility} (Habilidade) = <strong>${parseInt(monsterInitiativeRoll) + parseInt(monsterAbility)}</strong> para iniciativa.</p>`;
+        }
         if (initiativeResult === 'player') {
             battleLogContent.innerHTML += `<p>Você venceu a iniciativa e atacará primeiro.</p>`;
             if (attackOptionsDiv) attackOptionsDiv.style.display = 'block';
         } else if (initiativeResult === 'monster') {
-            battleLogContent.innerHTML += `<p>O monstro venceu a iniciativa e atacará primeiro.</p>`;
+            battleLogContent.innerHTML += `<p>${currentMonster.nome} venceu a iniciativa e atacará primeiro.</p>`;
             // Aqui, no futuro, implementaremos a ação do monstro
         } else if (initiativeResult === 'tie') {
             battleLogContent.innerHTML += `<p>Houve um empate na iniciativa!</p>`;
-            // Lógica de desempate, se houver
             if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'block'; // Permitir rolar novamente em caso de empate
         }
     } else if (luteButtonClicked) {
@@ -109,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (docSnap.exists()) {
                             const playerData = docSnap.data();
                             console.log("Dados do jogador:", playerData);
-                            const playerAbility = playerData.habilidade ? playerData.habilidade : 0;
+                            const playerAbilityValue = playerData.habilidade ? playerData.habilidade : 0;
                             const playerAttackBonus = 0;
 
                             const inventarioButton = document.getElementById("abrir-inventario");
@@ -133,35 +140,34 @@ document.addEventListener('DOMContentLoaded', () => {
                                 rolarIniciativaButton.addEventListener('click', () => {
                                     const playerRoll = Math.floor(Math.random() * 20) + 1;
                                     const monsterRoll = Math.floor(Math.random() * 20) + 1;
-                                    const playerTotalInitiative = playerRoll + playerAbility;
-                                    const monsterTotalInitiative = monsterRoll + currentMonster.habilidade;
+                                    const monsterAbilityValue = currentMonster.habilidade;
 
-                                    battleLogContent.innerHTML += `<p>Você rolou ${playerRoll} + ${playerAbility} (Habilidade) = <strong>${playerTotalInitiative}</strong> para iniciativa.</p>`;
-                                    battleLogContent.innerHTML += `<p>${currentMonster.nome} rolou ${monsterRoll} + ${currentMonster.habilidade} (Habilidade) = <strong>${monsterTotalInitiative}</strong> para iniciativa.</p>`;
+                                    battleLogContent.innerHTML += `<p>Você rolou ${playerRoll} + ${playerAbilityValue} (Habilidade) = <strong>${playerRoll + playerAbilityValue}</strong> para iniciativa.</p>`;
+                                    battleLogContent.innerHTML += `<p>${currentMonster.nome} rolou ${monsterRoll} + ${monsterAbilityValue} (Habilidade) = <strong>${monsterRoll + monsterAbilityValue}</strong> para iniciativa.</p>`;
 
                                     let initiativeWinner = '';
-                                    if (playerTotalInitiative > monsterTotalInitiative) {
+                                    if (playerRoll + playerAbilityValue > monsterRoll + monsterAbilityValue) {
                                         battleLogContent.innerHTML += `<p>Você venceu a iniciativa! Você ataca primeiro.</p>`;
                                         if (attackOptionsDiv) {
                                             attackOptionsDiv.style.display = 'block';
                                         }
                                         initiativeWinner = 'player';
-                                        console.log("Iniciativa ganha pelo jogador, initiativeWinner =", initiativeWinner);
-                                    } else if (monsterTotalInitiative > playerTotalInitiative) {
+                                    } else if (monsterRoll + monsterAbilityValue > playerRoll + playerAbilityValue) {
                                         battleLogContent.innerHTML += `<p>${currentMonster.nome} venceu a iniciativa! O monstro ataca primeiro.</p>`;
                                         initiativeWinner = 'monster';
-                                        console.log("Iniciativa ganha pelo monstro, initiativeWinner =", initiativeWinner);
                                         // Aqui, no futuro, implementaremos a ação do monstro
                                     } else {
                                         battleLogContent.innerHTML += `<p>Houve um empate na iniciativa!</p>`;
                                         initiativeWinner = 'tie';
-                                        console.log("Empate na iniciativa, initiativeWinner =", initiativeWinner);
-                                        // Podemos adicionar uma lógica de desempate aqui, se necessário
                                         if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'block';
                                     }
 
-                                    sessionStorage.setItem('initiativeResult', initiativeWinner); // Salva o resultado
-                                    console.log("initiativeResult salvo no Session Storage:", initiativeWinner);
+                                    sessionStorage.setItem('initiativeResult', initiativeWinner);
+                                    sessionStorage.setItem('playerInitiativeRoll', playerRoll);
+                                    sessionStorage.setItem('monsterInitiativeRoll', monsterRoll);
+                                    sessionStorage.setItem('playerAbility', playerAbilityValue);
+                                    sessionStorage.setItem('monsterAbility', monsterAbilityValue);
+
                                     rolarIniciativaButton.style.display = 'none';
                                     sessionStorage.removeItem('luteButtonClicked');
                                 });
