@@ -31,21 +31,25 @@ function getUrlParameter(name) {
 // Função para rolar dados (ex: "1D6", "2D4")
 function rollDice(diceString) {
     const parts = diceString.toUpperCase().split('D');
-    if (parts.length !== 2) {
+    if (parts.length === 1 && !isNaN(parseInt(parts[0]))) {
+        // Se for apenas um número, retorna esse número
+        return parseInt(parts[0]);
+    } else if (parts.length === 2) {
+        const numDice = parseInt(parts[0]);
+        const numSides = parseInt(parts[1]);
+        if (isNaN(numDice) || isNaN(numSides) || numDice <= 0 || numSides <= 0) {
+            console.error("Valores de dado inválidos:", diceString);
+            return 0;
+        }
+        let totalRoll = 0;
+        for (let i = 0; i < numDice; i++) {
+            totalRoll += Math.floor(Math.random() * numSides) + 1;
+        }
+        return totalRoll;
+    } else {
         console.error("Formato de dado inválido:", diceString);
         return 0;
     }
-    const numDice = parseInt(parts[0]);
-    const numSides = parseInt(parts[1]);
-    if (isNaN(numDice) || isNaN(numSides) || numDice <= 0 || numSides <= 0) {
-        console.error("Valores de dado inválidos:", diceString);
-        return 0;
-    }
-    let totalRoll = 0;
-    for (let i = 0; i < numDice; i++) {
-        totalRoll += Math.floor(Math.random() * numSides) + 1;
-    }
-    return totalRoll;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
