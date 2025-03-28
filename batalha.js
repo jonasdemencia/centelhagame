@@ -167,21 +167,17 @@ document.addEventListener('DOMContentLoaded', () => {
             battleLogContent.innerHTML += `<p>${currentMonster.nome} causou <strong>${monsterDamageRoll}</strong> de dano.</p>`;
             battleLogContent.innerHTML += `<p>Sua vida restante: <strong>${playerHealth}</strong>.</p>`;
 
-            // Salva o estado da batalha com a vida atualizada do jogador
+            // Atualiza a energia do jogador na ficha e salva o estado da batalha
             const user = auth.currentUser;
             if (user) {
+                updatePlayerEnergyInFirestore(user.uid, playerHealth);
                 saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
             }
 
             // Verifica se o jogador foi derrotado
             if (playerHealth <= 0) {
                 battleLogContent.innerHTML += `<p><strong style="color: red;">Você foi derrotado!</strong></p>`;
-                // Atualiza a energia do jogador na ficha ao final da batalha (derrota)
-                const userDerrota = auth.currentUser;
-                if (userDerrota) {
-                    updatePlayerEnergyInFirestore(userDerrota.uid, playerHealth);
-                }
-                // Adicione aqui a lógica para o fim da batalha (ex: desabilitar botões, mostrar opções)
+                // Lógica adicional de fim de batalha pode ser adicionada aqui
             }
         } else {
             battleLogContent.innerHTML += `<p>O ataque do ${currentMonster.nome} errou.</p>`;
@@ -408,12 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 // Verifica se o monstro foi derrotado
                                 if (currentMonster.pontosDeEnergia <= 0) {
                                     battleLogContent.innerHTML += `<p><strong style="color: green;">${currentMonster.nome} foi derrotado!</strong></p>`;
-                                    // Atualiza a energia do jogador na ficha ao final da batalha (vitória)
-                                    const userVitoria = auth.currentUser;
-                                    if (userVitoria) {
-                                        updatePlayerEnergyInFirestore(userVitoria.uid, playerHealth);
-                                    }
-                                    // Adicione aqui a lógica para a vitória do jogador (ex: mostrar recompensas)
+                                    // Aqui você pode adicionar lógica para recompensar o jogador e, opcionalmente, restaurar parte da energia.
                                 } else {
                                     monsterAttack(); // Turno do monstro se o monstro ainda estiver vivo
                                 }
