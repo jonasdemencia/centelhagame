@@ -55,7 +55,7 @@ function rollDice(diceString) {
 // Função para atualizar a energia do jogador na ficha do Firestore
 function updatePlayerEnergyInFirestore(userId, newEnergy) {
     const playerDocRef = doc(db, "players", userId);
-    return setDoc(playerDocRef, { vida: newEnergy }, { merge: true })
+    return setDoc(playerDocRef, { energia: newEnergy }, { merge: true }) // Atualiza o campo "energia"
         .then(() => {
             console.log("Energia do jogador atualizada na ficha:", newEnergy);
         })
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const monsterName = getUrlParameter('monstro');
     let currentMonster; // Declara currentMonster no escopo superior
     let playerData; // Para armazenar os dados do jogador
-    let playerHealth = 0; // Adiciona a vida do jogador
+    let playerHealth = 0; // Adiciona a vida do jogador (agora representando a energia)
     let isPlayerTurn = false; // Variável para controlar o turno
 
     const monsterData = {
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const monsterDamageRoll = rollDice(currentMonster.dano);
             playerHealth -= monsterDamageRoll;
             battleLogContent.innerHTML += `<p>${currentMonster.nome} causou <strong>${monsterDamageRoll}</strong> de dano.</p>`;
-            battleLogContent.innerHTML += `<p>Sua vida restante: <strong>${playerHealth}</strong>.</p>`;
+            battleLogContent.innerHTML += `<p>Sua energia restante: <strong>${playerHealth}</strong>.</p>`; // Atualiza a mensagem para "energia"
 
             // Atualiza a energia do jogador na ficha e salva o estado da batalha
             const user = auth.currentUser;
@@ -248,8 +248,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             playerHealth = savedState.playerHealth;
                             console.log("Estado da batalha carregado do Firestore:", savedState);
                             console.log("Pontos de Energia do monstro carregados:", currentMonster.pontosDeEnergia);
-                            console.log("Vida do jogador carregada:", playerHealth);
-                            // Atualizar a interface com a vida do jogador (se houver um elemento para isso)
+                            console.log("Energia do jogador carregada:", playerHealth); // Atualiza a mensagem para "energia"
+                            // Atualizar a interface com a energia do jogador (se houver um elemento para isso)
                             const playerHealthDisplay = document.getElementById("player-health");
                             if (playerHealthDisplay) {
                                 playerHealthDisplay.innerText = playerHealth;
@@ -263,9 +263,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 attackOptionsDiv.style.display = 'none';
                             }
                         } else {
-                            // Se não houver estado salvo, usa os pontos de energia iniciais e define a vida do jogador
-                            console.log("Usando pontos de energia iniciais do monstro e definindo vida inicial do jogador.");
-                            // Defina a vida inicial do jogador com base nos dados do personagem (a ser carregado)
+                            // Se não houver estado salvo, usa os pontos de energia iniciais e define a energia do jogador
+                            console.log("Usando pontos de energia iniciais do monstro e definindo energia inicial do jogador.");
+                            // Defina a energia inicial do jogador com base nos dados do personagem (a ser carregado)
                         }
                         document.getElementById("monster-name").innerText = currentMonster.nome;
                         // A descrição e a imagem já foram carregadas inicialmente
@@ -278,11 +278,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (docSnap.exists()) {
                         playerData = docSnap.data();
                         const playerAbilityValue = playerData.habilidade ? playerData.habilidade : 0;
-                        playerHealth = playerData.vida ? parseInt(playerData.vida) : 20; // Define a vida inicial do jogador
+                        playerHealth = playerData.energia ? parseInt(playerData.energia) : 8; // Retornando ao fallback de 8
                         const inventarioButton = document.getElementById("abrir-inventario");
                         const playerHealthDisplay = document.getElementById("player-health");
                         if (inventarioButton) inventarioButton.disabled = false;
-                        if (playerHealthDisplay) playerHealthDisplay.innerText = playerHealth; // Exibe a vida inicial do jogador
+                        if (playerHealthDisplay) playerHealthDisplay.innerText = playerHealth; // Exibe a energia inicial do jogador
 
                         if (lutarButton) {
                             lutarButton.disabled = false;
