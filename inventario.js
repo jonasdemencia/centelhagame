@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
 // Configuração Firebase
@@ -97,8 +97,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     newItem.dataset.item = slotType;
                     newItem.dataset.consumable = slot.dataset.consumable; // Mantém a propriedade consumable
                     newItem.dataset.quantity = slot.dataset.quantity;     // Mantém a quantidade
-                    newItem.dataset.effect = slot.dataset.effect;         // Mantém o efeito
-                    newItem.dataset.value = slot.dataset.value;          // Mantém o valor
+                    newItem.dataset.effect = slot.dataset.effect;       // Mantém o efeito
+                    newItem.dataset.value = slot.dataset.value;       // Mantém o valor
                     newItem.innerHTML = currentEquippedItem;
                     itemsContainer.appendChild(newItem);
                     addItemClickListener(newItem);
@@ -107,8 +107,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 slot.innerHTML = selectedItem.innerHTML.split('<span class="item-expand-toggle">')[0].trim(); // MODIFICADO AQUI
                 slot.dataset.consumable = selectedItem.dataset.consumable; // Atualiza a propriedade consumable do slot
                 slot.dataset.quantity = selectedItem.dataset.quantity;     // Atualiza a quantidade do slot
-                slot.dataset.effect = selectedItem.dataset.effect;         // Atualiza o efeito do slot
-                slot.dataset.value = selectedItem.dataset.value;          // Atualiza o valor do slot
+                slot.dataset.effect = selectedItem.dataset.effect;       // Atualiza o efeito do slot
+                slot.dataset.value = selectedItem.dataset.value;       // Atualiza o valor do slot
                 selectedItem.remove();
                 selectedItem = null;
                 clearHighlights();
@@ -128,8 +128,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 slot.innerHTML = slot.dataset.slot;
                 delete slot.dataset.consumable; // Remove a propriedade consumable do slot
                 delete slot.dataset.quantity;     // Remove a quantidade do slot
-                delete slot.dataset.effect;         // Remove o efeito do slot
-                delete slot.dataset.value;          // Remove o valor do slot
+                delete slot.dataset.effect;       // Remove o efeito do slot
+                delete slot.dataset.value;       // Remove o valor do slot
 
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
@@ -510,14 +510,29 @@ function updateCharacterCouraca() {
     couracaElement.innerText = totalCouraca;
 }
 
-function updateCharacterDamage() {
+async function updateCharacterDamage() {
     const weaponSlot = document.querySelector(".slot[data-slot='weapon']"); // Certifique-se de que o dataset é correto
     const damageDisplay = document.querySelector("#char-dano"); // O elemento onde o dano é exibido
+    const uid = auth.currentUser.uid; // Obtém o UID do usuário logado
+
+    let newDamageValue = "1"; // Valor padrão
 
     if (weaponSlot && weaponSlot.innerHTML.toLowerCase().includes("canivete")) {
+        newDamageValue = "1D3";
         damageDisplay.textContent = "1D3";
     } else {
         damageDisplay.textContent = "1";
+    }
+
+    // Atualiza o campo 'dano' no Firestore
+    if (uid) {
+        const playerRef = doc(db, "players", uid);
+        try {
+            await updateDoc(playerRef, { dano: newDamageValue });
+            console.log("Campo 'dano' atualizado no Firestore para:", newDamageValue);
+        } catch (error) {
+            console.error("Erro ao atualizar o campo 'dano' no Firestore:", error);
+        }
     }
 }
 
