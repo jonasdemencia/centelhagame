@@ -194,4 +194,26 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = `index.html?redirect=${encodeURIComponent(currentPageUrl)}`;
         }
     });
+
+    // Lógica para o botão "Corpo a Corpo"
+    const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
+    if (atacarCorpoACorpoButton) {
+        atacarCorpoACorpoButton.addEventListener('click', () => {
+            const playerAttackRoll = Math.floor(Math.random() * 20) + 1;
+            const monsterArmorClass = currentMonster.couraça; // Obtém a couraça do monstro
+
+            battleLogContent.innerHTML += `<p>Você atacou corpo a corpo e rolou um <strong>${playerAttackRoll}</strong>.</p>`;
+
+            if (playerAttackRoll >= monsterArmorClass) {
+                battleLogContent.innerHTML += `<p>Seu ataque acertou o ${currentMonster.nome} (Couraça: ${monsterArmorClass})!</p>`;
+                // No próximo passo, implementaremos a rolagem de dano aqui
+            } else {
+                battleLogContent.innerHTML += `<p>Seu ataque errou o ${currentMonster.nome} (Couraça: ${monsterArmorClass}).</p>`;
+            }
+
+            // Após o ataque do jogador, podemos (no futuro) iniciar o turno do monstro aqui
+        });
+    } else {
+        console.error("Botão 'Corpo a Corpo' não encontrado (ID: atacar-corpo-a-corpo)");
+    }
 });
