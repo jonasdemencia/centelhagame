@@ -1,5 +1,3 @@
-// batalha.js
-
 // Importa os SDKs necessários do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
@@ -36,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const monsterData = {
                 "lobo": {
                     nome: "Lobo Faminto",
-                    imagem: "https://via.placeholder.com/150", // URL genérica para teste
+                    imagem: "https://via.placeholder.com/150",
                     descricao: "Um lobo selvagem com presas afiadas.",
                     habilidade: 3,
                     couraça: 12,
@@ -44,19 +42,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 "goblin": {
                     nome: "Goblin Sorrateiro",
-                    imagem: "https://via.placeholder.com/150", // URL genérica para teste
+                    imagem: "https://via.placeholder.com/150",
                     descricao: "Um pequeno goblin com olhos espertos.",
                     habilidade: 2,
                     couraça: 10,
                     pontosDeEnergia: 15
-                },
-                // Adicione outros monstros conforme necessário
+                }
             };
             const currentMonster = monsterData[monsterName];
 
             if (currentMonster) {
                 console.log("Dados do monstro:", currentMonster);
-                // Atualizar a interface com as informações do monstro
                 document.getElementById("monster-name").innerText = currentMonster.nome;
                 document.getElementById("monster-description").innerText = currentMonster.descricao;
                 const monsterImageElement = document.getElementById("monster-image");
@@ -72,22 +68,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (docSnap.exists()) {
                             const playerData = docSnap.data();
                             console.log("Dados do jogador:", playerData);
-                            // Armazenar os dados do jogador em variáveis para uso posterior
-                            const playerAbility = playerData.dexterity ? playerData.dexterity.total : 0; // Exemplo: usando destreza como habilidade, com fallback para 0
-                            const playerAttackBonus = 0; // Inicialmente 0
+                            const playerAbility = playerData.dexterity ? playerData.dexterity.total : 0;
+                            const playerAttackBonus = 0;
 
-                            // Habilitar os botões "Inventário" e "Lute"
                             const inventarioButton = document.getElementById("abrir-inventario");
                             const lutarButton = document.getElementById("iniciar-luta");
 
                             if (inventarioButton) inventarioButton.disabled = false;
                             if (lutarButton) lutarButton.disabled = false;
-
                         } else {
                             console.log("Nenhum documento encontrado para o jogador:", user.uid);
-                            // Lógica para lidar com a ausência de dados do jogador
                             alert("Dados do jogador não encontrados. Por favor, crie seu personagem.");
-                            window.location.href = "character-creation.html"; // Redirecionar para a criação de personagem
+                            window.location.href = "character-creation.html";
                         }
                     })
                     .catch(error => {
@@ -95,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
             } else {
                 console.error("Monstro não encontrado:", monsterName);
-                // Exibir mensagem de erro na página
                 document.getElementById("monster-name").innerText = "Monstro não encontrado";
                 document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
             }
