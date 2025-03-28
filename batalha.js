@@ -29,6 +29,20 @@ function getUrlParameter(name) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    const lutarButton = document.getElementById("iniciar-luta");
+    const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
+    const battleLogContent = document.getElementById("battle-log-content");
+    const attackOptionsDiv = document.getElementById("attack-options");
+
+    // Verifica se o botão "Lute" já foi clicado antes da atualização
+    if (sessionStorage.getItem('luteButtonClicked') === 'true') {
+        if (lutarButton) lutarButton.style.display = 'none';
+        if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'block';
+    } else {
+        if (lutarButton) lutarButton.style.display = 'block';
+        if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'none';
+    }
+
     onAuthStateChanged(auth, (user) => {
         if (user) {
             // Usuário está logado!
@@ -70,25 +84,54 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (docSnap.exists()) {
                             const playerData = docSnap.data();
                             console.log("Dados do jogador:", playerData);
-                            const playerAbility = playerData.habilidade ? playerData.habilidade : 0; // Usando o nome correto do atributo
+                            const playerAbility = playerData.habilidade ? playerData.habilidade : 0;
                             const playerAttackBonus = 0;
 
                             const inventarioButton = document.getElementById("abrir-inventario");
-                            const lutarButton = document.getElementById("iniciar-luta");
-                            const rolarIniciativaButton = document.getElementById("rolar-iniciativa"); // Obtém o botão de rolar iniciativa
 
                             if (inventarioButton) inventarioButton.disabled = false;
                             if (lutarButton) {
                                 lutarButton.disabled = false;
-                                // Adiciona o event listener para o botão "Lute"
                                 lutarButton.addEventListener('click', () => {
-                                    lutarButton.style.display = 'none'; // Esconde o botão "Lute"
+                                    lutarButton.style.display = 'none';
                                     if (rolarIniciativaButton) {
-                                        rolarIniciativaButton.style.display = 'block'; // Mostra o botão "Rolar Iniciativa"
+                                        rolarIniciativaButton.style.display = 'block';
+                                        sessionStorage.setItem('luteButtonClicked', 'true');
                                     } else {
                                         console.error("Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
                                     }
                                 });
+                            }
+
+                            // Event listener para o botão "Rolar Iniciativa"
+                            if (rolarIniciativaButton) {
+                                rolarIniciativaButton.addEventListener('click', () => {
+                                    const playerRoll = Math.floor(Math.random() * 20) + 1;
+                                    const monsterRoll = Math.floor(Math.random() * 20) + 1;
+                                    const playerTotalInitiative = playerRoll + playerAbility;
+                                    const monsterTotalInitiative = monsterRoll + currentMonster.habilidade;
+
+                                    battleLogContent.innerHTML += `<p>Você rolou ${playerRoll} + ${playerAbility} (Habilidade) = <strong>${playerTotalInitiative}</strong> para iniciativa.</p>`;
+                                    battleLogContent.innerHTML += `<p>${currentMonster.nome} rolou ${monsterRoll} + ${currentMonster.habilidade} (Habilidade) = <strong>${monsterTotalInitiative}</strong> para iniciativa.</p>`;
+
+                                    if (playerTotalInitiative > monsterTotalInitiative) {
+                                        battleLogContent.innerHTML += `<p>Você venceu a iniciativa! Você ataca primeiro.</p>`;
+                                        if (attackOptionsDiv) {
+                                            attackOptionsDiv.style.display = 'block'; // Mostra as opções de ataque
+                                        }
+                                    } else if (monsterTotalInitiative > playerTotalInitiative) {
+                                        battleLogContent.innerHTML += `<p>${currentMonster.nome} venceu a iniciativa! O monstro ataca primeiro.</p>`;
+                                        // Aqui, no futuro, implementaremos a ação do monstro
+                                    } else {
+                                        battleLogContent.innerHTML += `<p>Houve um empate na iniciativa!</p>`;
+                                        // Podemos adicionar uma lógica de desempate aqui, se necessário
+                                    }
+
+                                    rolarIniciativaButton.style.display = 'none';
+                                    sessionStorage.removeItem('luteButtonClicked'); // Remove o indicador do Session Storage
+                                });
+                            } else {
+                                console.error("Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
                             }
 
                         } else {
