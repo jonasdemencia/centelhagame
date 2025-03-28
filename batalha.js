@@ -60,6 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const monsterName = getUrlParameter('monstro');
     let currentMonster; // Declara currentMonster no escopo superior
     let playerData; // Para armazenar os dados do jogador
+    let playerHealth = 0; // Adiciona a vida do jogador
+    let isPlayerTurn = false; // Variável para controlar o turno
 
     const monsterData = {
         "lobo": {
@@ -68,7 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
             descricao: "Um lobo selvagem com presas afiadas.",
             habilidade: 3,
             couraça: 12,
-            pontosDeEnergia: 20
+            pontosDeEnergia: 20,
+            dano: "1D6" // Adiciona o dano do monstro
         },
         "goblin": {
             nome: "Goblin Sorrateiro",
@@ -76,7 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
             descricao: "Um pequeno goblin com olhos espertos.",
             habilidade: 2,
             couraça: 10,
-            pontosDeEnergia: 15
+            pontosDeEnergia: 15,
+            dano: "1D4" // Adiciona o dano do monstro
         }
     };
     currentMonster = monsterData[monsterName]; // Atribui o valor de currentMonster aqui
@@ -98,9 +102,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Função para salvar o estado da batalha no Firestore
-    function saveBattleState(userId, monsterName, monsterHealth) {
+    function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
         const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
-        setDoc(battleDocRef, { monsterHealth: monsterHealth }, { merge: true })
+        setDoc(battleDocRef, { monsterHealth: monsterHealth, playerHealth: playerHealth }, { merge: true })
             .then(() => {
                 console.log("Estado da batalha salvo no Firestore.");
             })
@@ -116,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(docSnap => {
                 if (docSnap.exists()) {
                     console.log("Estado da batalha carregado do Firestore:", docSnap.data());
-                    return docSnap.data().monsterHealth;
+                    return docSnap.data();
                 } else {
                     console.log("Nenhum estado de batalha encontrado para este monstro.");
                     return null;
@@ -126,6 +130,50 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Erro ao carregar o estado da batalha:", error);
                 return null;
             });
+    }
+
+    // Função para o ataque do monstro
+    function monsterAttack() {
+        if (!currentMonster || playerHealth <= 0) return; // Se o monstro não existir ou o jogador estiver derrotado, não ataca
+
+        battleLogContent.innerHTML += `<hr><p><strong>Turno do ${currentMonster.nome}</strong></p>`;
+
+        // Rola o ataque do monstro (1D20 + habilidade do monstro)
+        const monsterAttackRoll = Math.floor(Math.random() * 20) + 1 + currentMonster.habilidade;
+        battleLogContent.innerHTML += `<p>${currentMonster.nome} rolou <strong>${monsterAttackRoll}</strong> para atacar.</p>`;
+
+        // Compara com a defesa do jogador (vamos assumir que o jogador tem uma defesa base por enquanto)
+        const playerDefense = playerData?.defesa ? parseInt(playerData.defesa) : 10; // Pega a defesa do jogador ou usa 10 como base
+        battleLogContent.innerHTML += `<p>Sua Defesa é <strong>${playerDefense}</strong>.</p>`;
+
+        if (monsterAttackRoll >= playerDefense) {
+            battleLogContent.innerHTML += `<p>O ataque do ${currentMonster.nome} acertou!</p>`;
+
+            // Rola o dano do monstro
+            const monsterDamageRoll = rollDice(currentMonster.dano);
+            playerHealth -= monsterDamageRoll;
+            battleLogContent.innerHTML += `<p>${currentMonster.nome} causou <strong>${monsterDamageRoll}</strong> de dano.</p>`;
+            battleLogContent.innerHTML += `<p>Sua vida restante: <strong>${playerHealth}</strong>.</p>`;
+
+            // Salva o estado da batalha com a vida atualizada do jogador
+            const user = auth.currentUser;
+            if (user) {
+                saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+            }
+
+            // Verifica se o jogador foi derrotado
+            if (playerHealth <= 0) {
+                battleLogContent.innerHTML += `<p><strong style="color: red;">Você foi derrotado!</strong></p>`;
+                // Adicione aqui a lógica para o fim da batalha (ex: desabilitar botões, mostrar opções)
+            }
+        } else {
+            battleLogContent.innerHTML += `<p>O ataque do ${currentMonster.nome} errou.</p>`;
+        }
+
+        // Após o ataque do monstro, é o turno do jogador novamente (se o jogador não foi derrotado)
+        if (playerHealth > 0) {
+            attackOptionsDiv.style.display = 'block';
+        }
     }
 
     // Verifica o estado da batalha no Session Storage
@@ -150,9 +198,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (initiativeResult === 'player') {
             battleLogContent.innerHTML += `<p>Você venceu a iniciativa e atacará primeiro.</p>`;
             if (attackOptionsDiv) attackOptionsDiv.style.display = 'block';
+            isPlayerTurn = true;
         } else if (initiativeResult === 'monster') {
             battleLogContent.innerHTML += `<p>${currentMonster.nome} venceu a iniciativa e atacará primeiro.</p>`;
             if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+            isPlayerTurn = false;
+            monsterAttack(); // Monstro ataca primeiro
         } else if (initiativeResult === 'tie') {
             battleLogContent.innerHTML += `<p>Houve um empate na iniciativa!</p>`;
             if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'block'; // Permitir rolar novamente em caso de empate
@@ -178,13 +229,30 @@ document.addEventListener('DOMContentLoaded', () => {
             // Carregar o estado da batalha ao carregar a página
             if (currentMonster) {
                 loadBattleState(userId, monsterName)
-                    .then(savedHealth => {
-                        if (savedHealth !== null) {
-                            currentMonster.pontosDeEnergia = savedHealth;
+                    .then(savedState => {
+                        if (savedState) {
+                            currentMonster.pontosDeEnergia = savedState.monsterHealth;
+                            playerHealth = savedState.playerHealth;
+                            console.log("Estado da batalha carregado do Firestore:", savedState);
                             console.log("Pontos de Energia do monstro carregados:", currentMonster.pontosDeEnergia);
+                            console.log("Vida do jogador carregada:", playerHealth);
+                            // Atualizar a interface com a vida do jogador (se houver um elemento para isso)
+                            const playerHealthDisplay = document.getElementById("player-health");
+                            if (playerHealthDisplay) {
+                                playerHealthDisplay.innerText = playerHealth;
+                            }
+                            // Se a vida do monstro for <= 0 ou a vida do jogador for <= 0, a batalha acabou
+                            if (currentMonster.pontosDeEnergia <= 0) {
+                                battleLogContent.innerHTML += `<p><strong style="color: green;">${currentMonster.nome} foi derrotado!</strong></p>`;
+                                attackOptionsDiv.style.display = 'none';
+                            } else if (playerHealth <= 0) {
+                                battleLogContent.innerHTML += `<p><strong style="color: red;">Você foi derrotado!</strong></p>`;
+                                attackOptionsDiv.style.display = 'none';
+                            }
                         } else {
-                            // Se não houver estado salvo, usa os pontos de energia iniciais
-                            console.log("Usando pontos de energia iniciais do monstro.");
+                            // Se não houver estado salvo, usa os pontos de energia iniciais e define a vida do jogador
+                            console.log("Usando pontos de energia iniciais do monstro e definindo vida inicial do jogador.");
+                            // Defina a vida inicial do jogador com base nos dados do personagem (a ser carregado)
                         }
                         document.getElementById("monster-name").innerText = currentMonster.nome;
                         // A descrição e a imagem já foram carregadas inicialmente
@@ -197,8 +265,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (docSnap.exists()) {
                         playerData = docSnap.data();
                         const playerAbilityValue = playerData.habilidade ? playerData.habilidade : 0;
+                        playerHealth = playerData.vida ? parseInt(playerData.vida) : 20; // Define a vida inicial do jogador
                         const inventarioButton = document.getElementById("abrir-inventario");
+                        const playerHealthDisplay = document.getElementById("player-health");
                         if (inventarioButton) inventarioButton.disabled = false;
+                        if (playerHealthDisplay) playerHealthDisplay.innerText = playerHealth; // Exibe a vida inicial do jogador
+
                         if (lutarButton) {
                             lutarButton.disabled = false;
                             lutarButton.addEventListener('click', () => {
@@ -229,16 +301,20 @@ document.addEventListener('DOMContentLoaded', () => {
                                         attackOptionsDiv.style.display = 'block';
                                     }
                                     initiativeWinner = 'player';
+                                    isPlayerTurn = true;
                                     console.log("Jogador venceu a iniciativa! initiativeWinner =", initiativeWinner); // ADICIONADO LOG
                                     sessionStorage.setItem('initiativeResult', initiativeWinner);
                                     console.log("initiativeResult salvo no Session Storage:", sessionStorage.getItem('initiativeResult')); // ADICIONADO LOG
                                 } else if (monsterRoll + monsterAbilityValue > playerRoll + playerAbilityValue) {
                                     battleLogContent.innerHTML += `<p>${currentMonster.nome} venceu a iniciativa! O monstro ataca primeiro.</p>`;
                                     initiativeWinner = 'monster';
+                                    isPlayerTurn = false;
                                     if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+                                    monsterAttack(); // Monstro ataca primeiro
                                 } else {
                                     battleLogContent.innerHTML += `<p>Houve um empate na iniciativa!</p>`;
                                     initiativeWinner = 'tie';
+                                    isPlayerTurn = false;
                                     if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'block';
                                 }
 
@@ -260,10 +336,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         if (atacarCorpoACorpoButton) {
                             atacarCorpoACorpoButton.addEventListener('click', () => {
-                                const playerAttackRoll = Math.floor(Math.random() * 20) + 1;
+                                if (!isPlayerTurn) {
+                                    battleLogContent.innerHTML += `<p>Não é seu turno!</p>`;
+                                    return;
+                                }
+                                const playerAttackRoll = Math.floor(Math.random() * 20) + 1 + playerAbilityValue; // Adiciona a habilidade ao ataque
                                 const monsterArmorClass = currentMonster.couraça; // Obtém a couraça do monstro
 
-                                battleLogContent.innerHTML += `<p>Você atacou corpo a corpo e rolou um <strong>${playerAttackRoll}</strong>.</p>`;
+                                battleLogContent.innerHTML += `<p>Você atacou corpo a corpo e rolou um <strong>${playerAttackRoll}</strong> (1D20 + ${playerAbilityValue} de Habilidade).</p>`;
 
                                 if (playerAttackRoll >= monsterArmorClass) {
                                     battleLogContent.innerHTML += `<p>Seu ataque acertou o ${currentMonster.nome} (Couraça: ${monsterArmorClass})!</p>`;
@@ -273,7 +353,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                     }
                                 } else {
                                     battleLogContent.innerHTML += `<p>Seu ataque errou o ${currentMonster.nome} (Couraça: ${monsterArmorClass}).</p>`;
-                                    // No futuro: Lógica para o turno do monstro aqui
+                                    attackOptionsDiv.style.display = 'none'; // Fim do turno do jogador
+                                    isPlayerTurn = false;
+                                    monsterAttack(); // Turno do monstro
                                 }
                             });
                         } else {
@@ -283,6 +365,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Event listener para o botão "DANO"
                         if (rolarDanoButton) {
                             rolarDanoButton.addEventListener('click', () => {
+                                if (!isPlayerTurn) {
+                                    battleLogContent.innerHTML += `<p>Não é seu turno!</p>`;
+                                    return;
+                                }
                                 let playerDamage;
                                 if (playerData && playerData.dano) {
                                     playerDamage = playerData.dano;
@@ -291,15 +377,24 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
                                 const damageRollResult = rollDice(playerDamage);
                                 currentMonster.pontosDeEnergia -= damageRollResult;
-                                battleLogContent.innerHTML += `<p>Você rolou <strong>${damageRollResult}</strong> de dano!</p>`;
+                                battleLogContent.innerHTML += `<p>Você rolou <strong>${damageRollResult}</strong> de dano (${playerDamage})!</p>`;
                                 battleLogContent.innerHTML += `<p>${currentMonster.nome} sofreu ${damageRollResult} de dano. Pontos de Energia restantes: ${currentMonster.pontosDeEnergia}.</p>`;
                                 rolarDanoButton.style.display = 'none';
+                                attackOptionsDiv.style.display = 'none'; // Fim do turno do jogador
+                                isPlayerTurn = false;
 
                                 // Salvar o estado da batalha no Firestore
-                                if (currentMonster) {
-                                    saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia);
+                                if (currentMonster && user) {
+                                    saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
                                 }
-                                // No futuro: Lógica para o turno do monstro após o dano
+
+                                // Verifica se o monstro foi derrotado
+                                if (currentMonster.pontosDeEnergia <= 0) {
+                                    battleLogContent.innerHTML += `<p><strong style="color: green;">${currentMonster.nome} foi derrotado!</strong></p>`;
+                                    // Adicione aqui a lógica para a vitória do jogador (ex: mostrar recompensas)
+                                } else {
+                                    monsterAttack(); // Turno do monstro se o monstro ainda estiver vivo
+                                }
                             });
                         } else {
                             console.error("Botão 'DANO' não encontrado (ID: rolar-dano)");
