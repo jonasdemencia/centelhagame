@@ -34,13 +34,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const battleLogContent = document.getElementById("battle-log-content");
     const attackOptionsDiv = document.getElementById("attack-options");
 
-    // Verifica se o botão "Lute" já foi clicado antes da atualização
-    if (sessionStorage.getItem('luteButtonClicked') === 'true') {
+    // Verifica o estado da batalha no Session Storage
+    const initiativeResult = sessionStorage.getItem('initiativeResult');
+    const luteButtonClicked = sessionStorage.getItem('luteButtonClicked') === 'true';
+
+    if (initiativeResult) {
+        // Resultado da iniciativa já existe
+        if (lutarButton) lutarButton.style.display = 'none';
+        if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'none';
+        if (initiativeResult === 'player') {
+            battleLogContent.innerHTML += `<p>Você venceu a iniciativa e atacará primeiro.</p>`;
+            if (attackOptionsDiv) attackOptionsDiv.style.display = 'block';
+        } else if (initiativeResult === 'monster') {
+            battleLogContent.innerHTML += `<p>O monstro venceu a iniciativa e atacará primeiro.</p>`;
+            // Aqui, no futuro, implementaremos a ação do monstro
+        } else if (initiativeResult === 'tie') {
+            battleLogContent.innerHTML += `<p>Houve um empate na iniciativa!</p>`;
+            // Lógica de desempate, se houver
+            if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'block'; // Permitir rolar novamente em caso de empate
+        }
+    } else if (luteButtonClicked) {
+        // Botão "Lute" foi clicado, mas a iniciativa ainda não foi rolada
         if (lutarButton) lutarButton.style.display = 'none';
         if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'block';
     } else {
+        // Estado inicial
         if (lutarButton) lutarButton.style.display = 'block';
         if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'none';
+        if (attackOptionsDiv) attackOptionsDiv.style.display = 'none'; // Garante que as opções de ataque estejam escondidas inicialmente
     }
 
     onAuthStateChanged(auth, (user) => {
@@ -117,18 +138,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                     if (playerTotalInitiative > monsterTotalInitiative) {
                                         battleLogContent.innerHTML += `<p>Você venceu a iniciativa! Você ataca primeiro.</p>`;
                                         if (attackOptionsDiv) {
-                                            attackOptionsDiv.style.display = 'block'; // Mostra as opções de ataque
+                                            attackOptionsDiv.style.display = 'block';
                                         }
+                                        sessionStorage.setItem('initiativeResult', 'player'); // Salva o resultado
                                     } else if (monsterTotalInitiative > playerTotalInitiative) {
                                         battleLogContent.innerHTML += `<p>${currentMonster.nome} venceu a iniciativa! O monstro ataca primeiro.</p>`;
+                                        sessionStorage.setItem('initiativeResult', 'monster'); // Salva o resultado
                                         // Aqui, no futuro, implementaremos a ação do monstro
                                     } else {
                                         battleLogContent.innerHTML += `<p>Houve um empate na iniciativa!</p>`;
+                                        sessionStorage.setItem('initiativeResult', 'tie'); // Salva o resultado
                                         // Podemos adicionar uma lógica de desempate aqui, se necessário
                                     }
 
                                     rolarIniciativaButton.style.display = 'none';
-                                    sessionStorage.removeItem('luteButtonClicked'); // Remove o indicador do Session Storage
+                                    sessionStorage.removeItem('luteButtonClicked');
                                 });
                             } else {
                                 console.error("Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
