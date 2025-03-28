@@ -28,6 +28,26 @@ function getUrlParameter(name) {
     return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 }
 
+// Função para rolar dados (ex: "1D6", "2D4")
+function rollDice(diceString) {
+    const parts = diceString.toUpperCase().split('D');
+    if (parts.length !== 2) {
+        console.error("Formato de dado inválido:", diceString);
+        return 0;
+    }
+    const numDice = parseInt(parts[0]);
+    const numSides = parseInt(parts[1]);
+    if (isNaN(numDice) || isNaN(numSides) || numDice <= 0 || numSides <= 0) {
+        console.error("Valores de dado inválidos:", diceString);
+        return 0;
+    }
+    let totalRoll = 0;
+    for (let i = 0; i < numDice; i++) {
+        totalRoll += Math.floor(Math.random() * numSides) + 1;
+    }
+    return totalRoll;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const lutarButton = document.getElementById("iniciar-luta");
     const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
@@ -35,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const attackOptionsDiv = document.getElementById("attack-options");
     const monsterName = getUrlParameter('monstro');
     let currentMonster; // Declara currentMonster no escopo superior
+    let playerData; // Para armazenar os dados do jogador
 
     const monsterData = {
         "lobo": {
@@ -120,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
             getDoc(playerDocRef)
                 .then(docSnap => {
                     if (docSnap.exists()) {
-                        const playerData = docSnap.data();
+                        playerData = docSnap.data();
                         const playerAbilityValue = playerData.habilidade ? playerData.habilidade : 0;
                         const inventarioButton = document.getElementById("abrir-inventario");
                         if (inventarioButton) inventarioButton.disabled = false;
@@ -179,6 +200,48 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.error("Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
                         }
 
+                        // Lógica para o botão "Corpo a Corpo"
+                        const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
+                        const rolarDanoButton = document.getElementById("rolar-dano");
+
+                        if (atacarCorpoACorpoButton) {
+                            atacarCorpoACorpoButton.addEventListener('click', () => {
+                                const playerAttackRoll = Math.floor(Math.random() * 20) + 1;
+                                const monsterArmorClass = currentMonster.couraça; // Obtém a couraça do monstro
+
+                                battleLogContent.innerHTML += `<p>Você atacou corpo a corpo e rolou um <strong>${playerAttackRoll}</strong>.</p>`;
+
+                                if (playerAttackRoll >= monsterArmorClass) {
+                                    battleLogContent.innerHTML += `<p>Seu ataque acertou o ${currentMonster.nome} (Couraça: ${monsterArmorClass})!</p>`;
+                                    atacarCorpoACorpoButton.style.display = 'none';
+                                    if (rolarDanoButton) {
+                                        rolarDanoButton.style.display = 'block';
+                                    }
+                                } else {
+                                    battleLogContent.innerHTML += `<p>Seu ataque errou o ${currentMonster.nome} (Couraça: ${monsterArmorClass}).</p>`;
+                                    // No futuro: Lógica para o turno do monstro aqui
+                                }
+                            });
+                        } else {
+                            console.error("Botão 'Corpo a Corpo' não encontrado (ID: atacar-corpo-a-corpo)");
+                        }
+
+                        // Event listener para o botão "DANO"
+                        if (rolarDanoButton && playerData && playerData.dano) {
+                            rolarDanoButton.addEventListener('click', () => {
+                                const damageRollResult = rollDice(playerData.dano);
+                                currentMonster.pontosDeEnergia -= damageRollResult;
+                                battleLogContent.innerHTML += `<p>Você rolou <strong>${damageRollResult}</strong> de dano!</p>`;
+                                battleLogContent.innerHTML += `<p>${currentMonster.nome} sofreu ${damageRollResult} de dano. Pontos de Energia restantes: ${currentMonster.pontosDeEnergia}.</p>`;
+                                rolarDanoButton.style.display = 'none';
+                                // No futuro: Lógica para o turno do monstro após o dano
+                            });
+                        } else if (rolarDanoButton) {
+                            console.error("Botão 'DANO' encontrado, mas playerData ou playerData.dano não definidos.");
+                        } else {
+                            console.error("Botão 'DANO' não encontrado (ID: rolar-dano)");
+                        }
+
                     } else {
                         console.log("Nenhum documento encontrado para o jogador:", user.uid);
                         alert("Dados do jogador não encontrados. Por favor, crie seu personagem.");
@@ -194,26 +257,4 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = `index.html?redirect=${encodeURIComponent(currentPageUrl)}`;
         }
     });
-
-    // Lógica para o botão "Corpo a Corpo"
-    const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
-    if (atacarCorpoACorpoButton) {
-        atacarCorpoACorpoButton.addEventListener('click', () => {
-            const playerAttackRoll = Math.floor(Math.random() * 20) + 1;
-            const monsterArmorClass = currentMonster.couraça; // Obtém a couraça do monstro
-
-            battleLogContent.innerHTML += `<p>Você atacou corpo a corpo e rolou um <strong>${playerAttackRoll}</strong>.</p>`;
-
-            if (playerAttackRoll >= monsterArmorClass) {
-                battleLogContent.innerHTML += `<p>Seu ataque acertou o ${currentMonster.nome} (Couraça: ${monsterArmorClass})!</p>`;
-                // No próximo passo, implementaremos a rolagem de dano aqui
-            } else {
-                battleLogContent.innerHTML += `<p>Seu ataque errou o ${currentMonster.nome} (Couraça: ${monsterArmorClass}).</p>`;
-            }
-
-            // Após o ataque do jogador, podemos (no futuro) iniciar o turno do monstro aqui
-        });
-    } else {
-        console.error("Botão 'Corpo a Corpo' não encontrado (ID: atacar-corpo-a-corpo)");
-    }
 });
