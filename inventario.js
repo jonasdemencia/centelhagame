@@ -19,11 +19,11 @@ const auth = getAuth(app);
 let selectedItem = null; // Armazena o item selecionado
 let currentPlayerData = null; // Armazena os dados do jogador
 
-// Itens iniciais que o jogador deve ter (adicionando descrições)
+// Itens iniciais que o jogador deve ter (adicionando descrições e propriedade de defesa)
 const initialItems = [
     { id: "bolsa-de-escriba", content: "Bolsa de escriba", description: "Uma bolsa para guardar pergaminhos e penas." },
     { id: "weapon", content: "canivete", description: "Uma pequena lâmina afiada." }, // Mudando o id para corresponder ao slot
-    { id: "armor", content: "Hábito monástico", description: "Vestes simples que oferecem pouca proteção." }, // Mudando o id para corresponder ao slot
+    { id: "armor", content: "Hábito monástico", description: "Vestes simples que oferecem pouca proteção.", defense: 2 }, // Mudando o id para corresponder ao slot e adicionando defesa
     { id: "velas", content: "Velas", description: "Fontes de luz portáteis." },
     { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2, description: "Um pequeno saco contendo ervas que podem curar ferimentos leves." }, // Adicionando efeito e valor
     { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." }, // Adicionando efeito e valor para a poção
@@ -96,9 +96,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     newItem.classList.add("item");
                     newItem.dataset.item = slotType;
                     newItem.dataset.consumable = slot.dataset.consumable; // Mantém a propriedade consumable
-                    newItem.dataset.quantity = slot.dataset.quantity;     // Mantém a quantidade
-                    newItem.dataset.effect = slot.dataset.effect;       // Mantém o efeito
-                    newItem.dataset.value = slot.dataset.value;       // Mantém o valor
+                    newItem.dataset.quantity = slot.dataset.quantity;
+                    newItem.dataset.effect = slot.dataset.effect;
+                    newItem.dataset.value = slot.dataset.value;
                     newItem.innerHTML = currentEquippedItem;
                     itemsContainer.appendChild(newItem);
                     addItemClickListener(newItem);
@@ -106,9 +106,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 slot.innerHTML = selectedItem.innerHTML.split('<span class="item-expand-toggle">')[0].trim(); // MODIFICADO AQUI
                 slot.dataset.consumable = selectedItem.dataset.consumable; // Atualiza a propriedade consumable do slot
-                slot.dataset.quantity = selectedItem.dataset.quantity;     // Atualiza a quantidade do slot
-                slot.dataset.effect = selectedItem.dataset.effect;       // Atualiza o efeito do slot
-                slot.dataset.value = selectedItem.dataset.value;       // Atualiza o valor do slot
+                slot.dataset.quantity = selectedItem.dataset.quantity;
+                slot.dataset.effect = selectedItem.dataset.effect;
+                slot.dataset.value = selectedItem.dataset.value;
                 selectedItem.remove();
                 selectedItem = null;
                 clearHighlights();
@@ -127,9 +127,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 const value = slot.dataset.value;
                 slot.innerHTML = slot.dataset.slot;
                 delete slot.dataset.consumable; // Remove a propriedade consumable do slot
-                delete slot.dataset.quantity;     // Remove a quantidade do slot
-                delete slot.dataset.effect;       // Remove o efeito do slot
-                delete slot.dataset.value;       // Remove o valor do slot
+                delete slot.dataset.quantity;
+                delete slot.dataset.effect;
+                delete slot.dataset.value;
 
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
@@ -495,14 +495,37 @@ function updateCharacterCouraca() {
     const couracaElement = document.getElementById("char-couraca");
     if (!couracaElement) return;
 
-    let baseCouraca = 0; // Explicitly set baseCouraca to 0
+    let baseCouraca = 0; // Você pode ter uma couraça base, se quiser
     let bonusCouraca = 0;
 
+    // Verifica o item equipado no slot de armadura
     const armorSlot = document.querySelector('.slot[data-slot="armor"]');
-    console.log("Conteúdo do slot de armadura:", armorSlot ? armorSlot.innerHTML : "Slot de armadura não encontrado");
+    if (armorSlot && armorSlot.innerHTML !== armorSlot.dataset.slot) {
+        const equippedArmorName = armorSlot.innerHTML;
+        const armorData = initialItems.find(item => item.content === equippedArmorName);
+        if (armorData && armorData.defense) {
+            bonusCouraca += armorData.defense;
+        }
+    }
 
-    if (armorSlot && armorSlot.innerHTML.includes("Hábito monástico")) { // MODIFICADO PARA INCLUDES
-        bonusCouraca += 2;
+    // Verifica o item equipado no slot de botas
+    const bootsSlot = document.querySelector('.slot[data-slot="boots"]');
+    if (bootsSlot && bootsSlot.innerHTML !== bootsSlot.dataset.slot) {
+        const equippedBootsName = bootsSlot.innerHTML;
+        const bootsData = initialItems.find(item => item.content === equippedBootsName);
+        if (bootsData && bootsData.defense) {
+            bonusCouraca += bootsData.defense;
+        }
+    }
+
+    // Verifica o item equipado no slot de escudo
+    const shieldSlot = document.querySelector('.slot[data-slot="shield"]');
+    if (shieldSlot && shieldSlot.innerHTML !== shieldSlot.dataset.slot) {
+        const equippedShieldName = shieldSlot.innerHTML;
+        const shieldData = initialItems.find(item => item.content === equippedShieldName);
+        if (shieldData && shieldData.defense) {
+            bonusCouraca += shieldData.defense;
+        }
     }
 
     const totalCouraca = baseCouraca + bonusCouraca;
