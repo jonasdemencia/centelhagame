@@ -146,18 +146,22 @@ document.addEventListener('DOMContentLoaded', () => {
                                             attackOptionsDiv.style.display = 'block';
                                         }
                                         initiativeWinner = 'player';
+                                        console.log("Iniciativa ganha pelo jogador, initiativeWinner =", initiativeWinner);
                                     } else if (monsterTotalInitiative > playerTotalInitiative) {
                                         battleLogContent.innerHTML += `<p>${currentMonster.nome} venceu a iniciativa! O monstro ataca primeiro.</p>`;
                                         initiativeWinner = 'monster';
+                                        console.log("Iniciativa ganha pelo monstro, initiativeWinner =", initiativeWinner);
                                         // Aqui, no futuro, implementaremos a ação do monstro
                                     } else {
                                         battleLogContent.innerHTML += `<p>Houve um empate na iniciativa!</p>`;
                                         initiativeWinner = 'tie';
+                                        console.log("Empate na iniciativa, initiativeWinner =", initiativeWinner);
                                         // Podemos adicionar uma lógica de desempate aqui, se necessário
                                         if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'block';
                                     }
 
                                     sessionStorage.setItem('initiativeResult', initiativeWinner); // Salva o resultado
+                                    console.log("initiativeResult salvo no Session Storage:", initiativeWinner);
                                     rolarIniciativaButton.style.display = 'none';
                                     sessionStorage.removeItem('luteButtonClicked');
                                 });
