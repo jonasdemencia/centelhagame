@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             // Nenhum usuário está logado. Redirecionar para a página de login.
             const currentPageUrl = window.location.href;
-            window.location.href = `login.html?redirect=${encodeURIComponent(currentPageUrl)}`;
+            window.location.href = `index.html?redirect=${encodeURIComponent(currentPageUrl)}`;
         }
     });
 });
