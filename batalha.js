@@ -96,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (attackOptionsDiv) attackOptionsDiv.style.display = 'block';
         } else if (initiativeResult === 'monster') {
             battleLogContent.innerHTML += `<p>${currentMonster.nome} venceu a iniciativa e atacará primeiro.</p>`;
-            // Oculta as opções de ataque do jogador se o monstro ganhou
             if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
         } else if (initiativeResult === 'tie') {
             battleLogContent.innerHTML += `<p>Houve um empate na iniciativa!</p>`;
@@ -155,10 +154,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                         attackOptionsDiv.style.display = 'block';
                                     }
                                     initiativeWinner = 'player';
+                                    console.log("Jogador venceu a iniciativa! initiativeWinner =", initiativeWinner); // ADICIONADO LOG
+                                    sessionStorage.setItem('initiativeResult', initiativeWinner);
+                                    console.log("initiativeResult salvo no Session Storage:", sessionStorage.getItem('initiativeResult')); // ADICIONADO LOG
                                 } else if (monsterRoll + monsterAbilityValue > playerRoll + playerAbilityValue) {
                                     battleLogContent.innerHTML += `<p>${currentMonster.nome} venceu a iniciativa! O monstro ataca primeiro.</p>`;
                                     initiativeWinner = 'monster';
-                                    // Oculta as opções de ataque do jogador se o monstro ganhou
                                     if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
                                 } else {
                                     battleLogContent.innerHTML += `<p>Houve um empate na iniciativa!</p>`;
@@ -166,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'block';
                                 }
 
-                                sessionStorage.setItem('initiativeResult', initiativeWinner);
                                 sessionStorage.setItem('playerInitiativeRoll', playerRoll.toString());
                                 sessionStorage.setItem('monsterInitiativeRoll', monsterRoll.toString());
                                 sessionStorage.setItem('playerAbility', playerAbilityValue.toString());
