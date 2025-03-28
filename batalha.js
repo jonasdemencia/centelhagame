@@ -3,7 +3,7 @@
 // Importa os SDKs necessários do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 // Configuração do Firebase (substitua com suas próprias configurações)
 const firebaseConfig = {
@@ -97,6 +97,37 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
     }
 
+    // Função para salvar o estado da batalha no Firestore
+    function saveBattleState(userId, monsterName, monsterHealth) {
+        const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
+        setDoc(battleDocRef, { monsterHealth: monsterHealth }, { merge: true })
+            .then(() => {
+                console.log("Estado da batalha salvo no Firestore.");
+            })
+            .catch((error) => {
+                console.error("Erro ao salvar o estado da batalha:", error);
+            });
+    }
+
+    // Função para carregar o estado da batalha do Firestore
+    function loadBattleState(userId, monsterName) {
+        const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
+        return getDoc(battleDocRef)
+            .then(docSnap => {
+                if (docSnap.exists()) {
+                    console.log("Estado da batalha carregado do Firestore:", docSnap.data());
+                    return docSnap.data().monsterHealth;
+                } else {
+                    console.log("Nenhum estado de batalha encontrado para este monstro.");
+                    return null;
+                }
+            })
+            .catch((error) => {
+                console.error("Erro ao carregar o estado da batalha:", error);
+                return null;
+            });
+    }
+
     // Verifica o estado da batalha no Session Storage
     const initiativeResult = sessionStorage.getItem('initiativeResult');
     const playerInitiativeRoll = sessionStorage.getItem('playerInitiativeRoll');
@@ -141,6 +172,25 @@ document.addEventListener('DOMContentLoaded', () => {
     onAuthStateChanged(auth, (user) => {
         if (user) {
             // Usuário está logado!
+            const userId = user.uid;
+            const monsterName = getUrlParameter('monstro');
+
+            // Carregar o estado da batalha ao carregar a página
+            if (currentMonster) {
+                loadBattleState(userId, monsterName)
+                    .then(savedHealth => {
+                        if (savedHealth !== null) {
+                            currentMonster.pontosDeEnergia = savedHealth;
+                            console.log("Pontos de Energia do monstro carregados:", currentMonster.pontosDeEnergia);
+                        } else {
+                            // Se não houver estado salvo, usa os pontos de energia iniciais
+                            console.log("Usando pontos de energia iniciais do monstro.");
+                        }
+                        document.getElementById("monster-name").innerText = currentMonster.nome;
+                        // A descrição e a imagem já foram carregadas inicialmente
+                    });
+            }
+
             const playerDocRef = doc(db, "players", user.uid);
             getDoc(playerDocRef)
                 .then(docSnap => {
@@ -244,6 +294,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                 battleLogContent.innerHTML += `<p>Você rolou <strong>${damageRollResult}</strong> de dano!</p>`;
                                 battleLogContent.innerHTML += `<p>${currentMonster.nome} sofreu ${damageRollResult} de dano. Pontos de Energia restantes: ${currentMonster.pontosDeEnergia}.</p>`;
                                 rolarDanoButton.style.display = 'none';
+
+                                // Salvar o estado da batalha no Firestore
+                                if (currentMonster) {
+                                    saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia);
+                                }
                                 // No futuro: Lógica para o turno do monstro após o dano
                             });
                         } else {
