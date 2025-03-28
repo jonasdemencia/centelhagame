@@ -1,3 +1,5 @@
+// batalha.js
+
 // Importa os SDKs necessários do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
@@ -68,14 +70,27 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (docSnap.exists()) {
                             const playerData = docSnap.data();
                             console.log("Dados do jogador:", playerData);
-                            const playerAbility = playerData.dexterity ? playerData.dexterity.total : 0;
+                            const playerAbility = playerData.habilidade ? playerData.habilidade : 0; // Usando o nome correto do atributo
                             const playerAttackBonus = 0;
 
                             const inventarioButton = document.getElementById("abrir-inventario");
                             const lutarButton = document.getElementById("iniciar-luta");
+                            const rolarIniciativaButton = document.getElementById("rolar-iniciativa"); // Obtém o botão de rolar iniciativa
 
                             if (inventarioButton) inventarioButton.disabled = false;
-                            if (lutarButton) lutarButton.disabled = false;
+                            if (lutarButton) {
+                                lutarButton.disabled = false;
+                                // Adiciona o event listener para o botão "Lute"
+                                lutarButton.addEventListener('click', () => {
+                                    lutarButton.style.display = 'none'; // Esconde o botão "Lute"
+                                    if (rolarIniciativaButton) {
+                                        rolarIniciativaButton.style.display = 'block'; // Mostra o botão "Rolar Iniciativa"
+                                    } else {
+                                        console.error("Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
+                                    }
+                                });
+                            }
+
                         } else {
                             console.log("Nenhum documento encontrado para o jogador:", user.uid);
                             alert("Dados do jogador não encontrados. Por favor, crie seu personagem.");
