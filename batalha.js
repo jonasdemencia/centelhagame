@@ -163,9 +163,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Rola o dano do monstro
             const monsterDamageRoll = rollDice(currentMonster.dano);
+            console.log("Dano rolado pelo monstro:", monsterDamageRoll); // ADICIONADO LOG
+            console.log("Energia do jogador antes do dano:", playerHealth); // ADICIONADO LOG
             playerHealth -= monsterDamageRoll;
             battleLogContent.innerHTML += `<p>${currentMonster.nome} causou <strong>${monsterDamageRoll}</strong> de dano.</p>`;
             battleLogContent.innerHTML += `<p>Sua energia restante: <strong>${playerHealth}</strong>.</p>`; // Atualiza a mensagem para "energia"
+            console.log("Energia do jogador depois do dano:", playerHealth); // ADICIONADO LOG
 
             // Atualiza a energia do jogador na ficha e salva o estado da batalha
             const user = auth.currentUser;
