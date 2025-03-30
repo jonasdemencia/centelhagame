@@ -1,5 +1,3 @@
-// batalha.js
-
 // Importa os SDKs necessários do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
@@ -220,6 +218,11 @@ document.addEventListener('DOMContentLoaded', () => {
             battleLogContent.innerHTML += `<hr><p><strong>Turno do Jogador</strong></p>`; // Adicionado log do turno do jogador
             console.log("LOG: monsterAttack - Antes de exibir opções, attackOptionsDiv:", attackOptionsDiv); // ADICIONADO
             attackOptionsDiv.style.display = 'block';
+            // Mostrar o botão de ataque corpo a corpo
+            const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
+            if (atacarCorpoACorpoButton) {
+                atacarCorpoACorpoButton.style.display = 'block';
+            }
             isPlayerTurn = true;
             console.log("LOG: monsterAttack - **FINAL DO TURNO DO MONSTRO - INICIANDO TURNO DO JOGADOR** - attackOptionsDiv.style.display:", attackOptionsDiv.style.display, "isPlayerTurn:", isPlayerTurn);
         } else {
@@ -262,6 +265,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (attackOptionsDiv) {
                 console.log("LOG: Iniciativa do jogador vencida - Antes de exibir opções, attackOptionsDiv:", attackOptionsDiv); // ADICIONADO
                 attackOptionsDiv.style.display = 'block';
+                // Mostrar o botão de ataque corpo a corpo
+                const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
+                if (atacarCorpoACorpoButton) {
+                    atacarCorpoACorpoButton.style.display = 'block';
+                }
                 console.log("LOG: DOMContentLoaded - Iniciativa do jogador vencida. Exibindo opções de ataque.");
                 battleLogContent.innerHTML += `<hr><p><strong>Turno do Jogador</strong></p>`; // Adicionado log do turno do jogador
             }
@@ -379,6 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.log("LOG: onAuthStateChanged - Energia inicial do jogador exibida.");
                         }
 
+                        const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo"); // Obtém a referência aqui dentro do escopo
                         if (lutarButton) {
                             lutarButton.disabled = false;
                             lutarButton.addEventListener('click', () => {
@@ -415,6 +424,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     if (attackOptionsDiv) {
                                         console.log("LOG: Iniciativa do jogador vencida - Antes de exibir opções, attackOptionsDiv:", attackOptionsDiv); // ADICIONADO
                                         attackOptionsDiv.style.display = 'block';
+                                        // Mostrar o botão de ataque corpo a corpo
+                                        if (atacarCorpoACorpoButton) {
+                                            atacarCorpoACorpoButton.style.display = 'block';
+                                        }
                                         console.log("LOG: onAuthStateChanged - Jogador venceu a iniciativa, exibindo opções de ataque.");
                                         battleLogContent.innerHTML += `<hr><p><strong>Turno do Jogador</strong></p>`; // Adicionado log do turno do jogador
                                     }
@@ -453,7 +466,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
 
                         // Lógica para o botão "Corpo a Corpo"
-                        const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
                         const rolarDanoButton = document.getElementById("rolar-dano");
 
                         if (atacarCorpoACorpoButton) {
