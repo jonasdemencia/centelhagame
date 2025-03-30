@@ -173,6 +173,12 @@ document.addEventListener('DOMContentLoaded', () => {
             battleLogContent.innerHTML += `<p>Sua energia restante: <strong>${playerHealth}</strong>.</p>`; // Atualiza a mensagem para "energia"
             console.log("Energia do jogador depois do dano:", playerHealth); // ADICIONADO LOG
 
+            // Após o ataque do monstro que acerta, é o turno do jogador
+            isPlayerTurn = true;
+            if (attackOptionsDiv) {
+                attackOptionsDiv.style.display = 'block';
+            }
+
             // Atualiza a energia do jogador na ficha e salva o estado da batalha
             const user = auth.currentUser;
             if (user) {
