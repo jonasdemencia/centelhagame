@@ -243,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (user) {
             // Usuário está logado!
             const userId = user.uid;
+            console.log("ID do usuário logado:", userId); // ADICIONEI ESTE LOG
             const monsterName = getUrlParameter('monstro');
 
             // Carregar o estado da batalha ao carregar a página
