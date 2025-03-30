@@ -57,10 +57,10 @@ function updatePlayerEnergyInFirestore(userId, newEnergy) {
     const playerDocRef = doc(db, "players", userId);
     return setDoc(playerDocRef, { energy: { total: newEnergy } }, { merge: true }) // Atualiza o campo "energy.total"
         .then(() => {
-            console.log("Energia do jogador atualizada na ficha:", newEnergy);
+            console.log("LOG: Energia do jogador atualizada na ficha:", newEnergy);
         })
         .catch((error) => {
-            console.error("Erro ao atualizar a energia do jogador na ficha:", error);
+            console.error("LOG: Erro ao atualizar a energia do jogador na ficha:", error);
         });
 }
 
@@ -96,79 +96,88 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     currentMonster = monsterData[monsterName]; // Atribui o valor de currentMonster aqui
+    console.log("LOG: Dados do monstro carregados:", currentMonster);
 
     if (currentMonster) {
-        console.log("Dados do monstro (carregamento inicial):", currentMonster);
+        console.log("LOG: Dados do monstro (carregamento inicial):", currentMonster);
         document.getElementById("monster-name").innerText = currentMonster.nome;
         document.getElementById("monster-description").innerText = currentMonster.descricao;
         const monsterImageElement = document.getElementById("monster-image");
         if (monsterImageElement) {
             monsterImageElement.src = currentMonster.imagem;
         } else {
-            console.error("Elemento de imagem do monstro não encontrado (ID: monster-image)");
+            console.error("LOG: Elemento de imagem do monstro não encontrado (ID: monster-image)");
         }
     } else {
-        console.error("Monstro não encontrado:", monsterName);
+        console.error("LOG: Monstro não encontrado:", monsterName);
         document.getElementById("monster-name").innerText = "Monstro não encontrado";
         document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
     }
 
     // Função para salvar o estado da batalha no Firestore
     function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
+        console.log("LOG: Tentando salvar o estado da batalha - User:", userId, "Monstro:", monsterName, "Vida Monstro:", monsterHealth, "Vida Jogador:", playerHealth);
         const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
         setDoc(battleDocRef, { monsterHealth: monsterHealth, playerHealth: playerHealth }, { merge: true })
             .then(() => {
-                console.log("Estado da batalha salvo no Firestore.");
+                console.log("LOG: Estado da batalha salvo no Firestore.");
             })
             .catch((error) => {
-                console.error("Erro ao salvar o estado da batalha:", error);
+                console.error("LOG: Erro ao salvar o estado da batalha:", error);
             });
     }
 
     // Função para carregar o estado da batalha do Firestore
     function loadBattleState(userId, monsterName) {
+        console.log("LOG: Tentando carregar o estado da batalha - User:", userId, "Monstro:", monsterName);
         const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
         return getDoc(battleDocRef)
             .then(docSnap => {
                 if (docSnap.exists()) {
-                    console.log("Estado da batalha carregado do Firestore:", docSnap.data());
+                    console.log("LOG: Estado da batalha carregado do Firestore:", docSnap.data());
                     return docSnap.data();
                 } else {
-                    console.log("Nenhum estado de batalha encontrado para este monstro.");
+                    console.log("LOG: Nenhum estado de batalha encontrado para este monstro.");
                     return null;
                 }
             })
             .catch((error) => {
-                console.error("Erro ao carregar o estado da batalha:", error);
+                console.error("LOG: Erro ao carregar o estado da batalha:", error);
                 return null;
             });
     }
 
     // Função para o ataque do monstro
     function monsterAttack() {
-        if (!currentMonster || playerHealth <= 0) return; // Se o monstro não existir ou o jogador estiver derrotado, não ataca
+        console.log("LOG: Iniciando ataque do monstro. currentMonster:", currentMonster, "playerHealth:", playerHealth);
+        if (!currentMonster || playerHealth <= 0) {
+            console.log("LOG: Monstro não existe ou jogador derrotado, retornando.");
+            return; // Se o monstro não existir ou o jogador estiver derrotado, não ataca
+        }
 
         battleLogContent.innerHTML += `<hr><p><strong>Turno do ${currentMonster.nome}</strong></p>`;
 
         // Rola o ataque do monstro (1D20 + habilidade do monstro)
         const monsterAttackRoll = Math.floor(Math.random() * 20) + 1 + currentMonster.habilidade;
         battleLogContent.innerHTML += `<p>${currentMonster.nome} rolou <strong>${monsterAttackRoll}</strong> para atacar.</p>`;
+        console.log("LOG: Rolagem de ataque do monstro:", monsterAttackRoll);
 
         // Compara com a defesa do jogador (vamos assumir que o jogador tem uma defesa base por enquanto)
         const playerDefense = playerData?.defesa ? parseInt(playerData.defesa) : 10; // Pega a defesa do jogador ou usa 10 como base
         battleLogContent.innerHTML += `<p>Sua Defesa é <strong>${playerDefense}</strong>.</p>`;
+        console.log("LOG: Defesa do jogador:", playerDefense);
 
         if (monsterAttackRoll >= playerDefense) {
             battleLogContent.innerHTML += `<p>O ataque do ${currentMonster.nome} acertou!</p>`;
 
             // Rola o dano do monstro
             const monsterDamageRoll = rollDice(currentMonster.dano);
-            console.log("Dano rolado pelo monstro:", monsterDamageRoll); // ADICIONADO LOG
-            console.log("Energia do jogador antes do dano:", playerHealth); // ADICIONADO LOG
+            console.log("LOG: Dano rolado pelo monstro:", monsterDamageRoll);
+            console.log("LOG: Energia do jogador antes do dano:", playerHealth);
             playerHealth -= monsterDamageRoll;
             battleLogContent.innerHTML += `<p>${currentMonster.nome} causou <strong>${monsterDamageRoll}</strong> de dano.</p>`;
             battleLogContent.innerHTML += `<p>Sua energia restante: <strong>${playerHealth}</strong>.</p>`; // Atualiza a mensagem para "energia"
-            console.log("Energia do jogador depois do dano:", playerHealth); // ADICIONADO LOG
+            console.log("LOG: Energia do jogador depois do dano:", playerHealth);
 
             // Atualiza a energia do jogador na ficha e salva o estado da batalha
             const user = auth.currentUser;
@@ -187,11 +196,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Após o ataque do monstro, é o turno do jogador novamente (se o jogador não foi derrotado)
-        console.log("Energia do jogador antes de exibir opções:", playerHealth); // ADICIONADO LOG
-        console.log("Elemento attackOptionsDiv:", attackOptionsDiv); // ADICIONADO LOG
+        console.log("LOG: Energia do jogador antes de exibir opções:", playerHealth);
+        console.log("LOG: Elemento attackOptionsDiv:", attackOptionsDiv);
         if (playerHealth > 0) {
             attackOptionsDiv.style.display = 'block';
-            isPlayerTurn = true; // ADICIONEI ESTA LINHA AQUI!!!
+            isPlayerTurn = true;
+            console.log("LOG: Turno do jogador iniciado. attackOptionsDiv.style.display:", attackOptionsDiv.style.display, "isPlayerTurn:", isPlayerTurn);
+        } else {
+            console.log("LOG: Jogador derrotado, opções de ataque não exibidas.");
+            attackOptionsDiv.style.display = 'none';
+            isPlayerTurn = false;
         }
     }
 
@@ -203,10 +217,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const monsterAbilityStored = sessionStorage.getItem('monsterAbility');
     const luteButtonClicked = sessionStorage.getItem('luteButtonClicked') === 'true';
 
-    console.log("DOMContentLoaded: initiativeResult =", initiativeResult);
+    console.log("LOG: DOMContentLoaded - initiativeResult =", initiativeResult);
 
     if (initiativeResult && currentMonster) { // Garante que currentMonster esteja definido
-        console.log("DOMContentLoaded: initiativeResult encontrado:", initiativeResult);
+        console.log("LOG: DOMContentLoaded - initiativeResult encontrado:", initiativeResult);
         if (lutarButton) lutarButton.style.display = 'none';
         if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'none';
         battleLogContent.innerHTML = ""; // Limpa o log para reconstruir
@@ -218,21 +232,23 @@ document.addEventListener('DOMContentLoaded', () => {
             battleLogContent.innerHTML += `<p>Você venceu a iniciativa e atacará primeiro.</p>`;
             if (attackOptionsDiv) attackOptionsDiv.style.display = 'block';
             isPlayerTurn = true;
+            console.log("LOG: Iniciativa do jogador vencida. attackOptionsDiv.style.display:", attackOptionsDiv.style.display, "isPlayerTurn:", isPlayerTurn);
         } else if (initiativeResult === 'monster') {
             battleLogContent.innerHTML += `<p>${currentMonster.nome} venceu a iniciativa e atacará primeiro.</p>`;
             if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
             isPlayerTurn = false;
+            console.log("LOG: Iniciativa do monstro vencida. attackOptionsDiv.style.display:", attackOptionsDiv.style.display, "isPlayerTurn:", isPlayerTurn);
             monsterAttack(); // Monstro ataca primeiro
         } else if (initiativeResult === 'tie') {
             battleLogContent.innerHTML += `<p>Houve um empate na iniciativa!</p>`;
             if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'block'; // Permitir rolar novamente em caso de empate
         }
     } else if (luteButtonClicked) {
-        console.log("DOMContentLoaded: luteButtonClicked é true, iniciativa não rolada.");
+        console.log("LOG: DOMContentLoaded - luteButtonClicked é true, iniciativa não rolada.");
         if (lutarButton) lutarButton.style.display = 'none';
         if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'block';
     } else {
-        console.log("DOMContentLoaded: Estado inicial.");
+        console.log("LOG: DOMContentLoaded - Estado inicial.");
         if (lutarButton) lutarButton.style.display = 'block';
         if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'none';
         if (attackOptionsDiv) attackOptionsDiv.style.display = 'none'; // Garante que as opções de ataque estejam escondidas inicialmente
@@ -243,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (user) {
             // Usuário está logado!
             const userId = user.uid;
-            console.log("ID do usuário logado:", userId); // ADICIONEI ESTE LOG
+            console.log("LOG: Usuário logado. ID:", userId);
             const monsterName = getUrlParameter('monstro');
 
             // Carregar o estado da batalha ao carregar a página
@@ -253,9 +269,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (savedState) {
                             currentMonster.pontosDeEnergia = savedState.monsterHealth;
                             playerHealth = savedState.playerHealth;
-                            console.log("Estado da batalha carregado do Firestore:", savedState);
-                            console.log("Pontos de Energia do monstro carregados:", currentMonster.pontosDeEnergia);
-                            console.log("Energia do jogador carregada (do estado da batalha):", playerHealth); // Atualiza a mensagem para "energia"
+                            console.log("LOG: Estado da batalha carregado do Firestore:", savedState);
+                            console.log("LOG: Pontos de Energia do monstro carregados:", currentMonster.pontosDeEnergia);
+                            console.log("LOG: Energia do jogador carregada (do estado da batalha):", playerHealth); // Atualiza a mensagem para "energia"
                             // Atualizar a interface com a energia do jogador (se houver um elemento para isso)
                             const playerHealthDisplay = document.getElementById("player-health");
                             if (playerHealthDisplay) {
@@ -271,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         } else {
                             // Se não houver estado salvo, usa os pontos de energia iniciais e define a energia do jogador
-                            console.log("Nenhum estado de batalha encontrado, carregando energia da ficha do jogador.");
+                            console.log("LOG: Nenhum estado de batalha encontrado, carregando energia da ficha do jogador.");
                             // Defina a energia inicial do jogador com base nos dados do personagem (a ser carregado)
                         }
                         document.getElementById("monster-name").innerText = currentMonster.nome;
@@ -285,8 +301,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (docSnap.exists()) {
                         playerData = docSnap.data();
                         const playerAbilityValue = playerData.habilidade ? playerData.habilidade : 0;
+                        console.log("LOG: Dados do jogador carregados:", playerData);
+                        console.log("LOG: Habilidade do jogador:", playerAbilityValue);
                         // ---------------------- MODIFICAÇÃO IMPORTANTE AQUI ----------------------
                         playerHealth = playerData.energy?.total ? parseInt(playerData.energy.total) : 8; // Lê a energia de playerData.energy.total
+                        console.log("LOG: Energia do jogador carregada da ficha:", playerHealth);
                         // -------------------------------------------------------------------------
                         const inventarioButton = document.getElementById("abrir-inventario");
                         const playerHealthDisplay = document.getElementById("player-health");
@@ -296,12 +315,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (lutarButton) {
                             lutarButton.disabled = false;
                             lutarButton.addEventListener('click', () => {
+                                console.log("LOG: Botão 'Lutar' clicado.");
                                 lutarButton.style.display = 'none';
                                 if (rolarIniciativaButton) {
                                     rolarIniciativaButton.style.display = 'block';
                                     sessionStorage.setItem('luteButtonClicked', 'true');
                                 } else {
-                                    console.error("Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
+                                    console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
                                 }
                             });
                         }
@@ -309,9 +329,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Event listener para o botão "Rolar Iniciativa"
                         if (rolarIniciativaButton) {
                             rolarIniciativaButton.addEventListener('click', () => {
+                                console.log("LOG: Botão 'Rolar Iniciativa' clicado.");
                                 const playerRoll = Math.floor(Math.random() * 20) + 1;
                                 const monsterRoll = Math.floor(Math.random() * 20) + 1;
                                 const monsterAbilityValue = currentMonster.habilidade;
+                                console.log("LOG: Rolagem de iniciativa do jogador:", playerRoll);
+                                console.log("LOG: Rolagem de iniciativa do monstro:", monsterRoll);
+                                console.log("LOG: Habilidade do monstro:", monsterAbilityValue);
 
                                 battleLogContent.innerHTML += `<p>Você rolou ${playerRoll} + ${playerAbilityValue} (Habilidade) = <strong>${playerRoll + playerAbilityValue}</strong> para iniciativa.</p>`;
                                 battleLogContent.innerHTML += `<p>${currentMonster.nome} rolou ${monsterRoll} + ${monsterAbilityValue} (Habilidade) = <strong>${monsterRoll + monsterAbilityValue}</strong> para iniciativa.</p>`;
@@ -321,22 +345,25 @@ document.addEventListener('DOMContentLoaded', () => {
                                     battleLogContent.innerHTML += `<p>Você venceu a iniciativa! Você ataca primeiro.</p>`;
                                     if (attackOptionsDiv) {
                                         attackOptionsDiv.style.display = 'block';
+                                        console.log("LOG: Jogador venceu a iniciativa, exibindo opções de ataque.");
                                     }
                                     initiativeWinner = 'player';
                                     isPlayerTurn = true;
-                                    console.log("Jogador venceu a iniciativa! initiativeWinner =", initiativeWinner); // ADICIONADO LOG
+                                    console.log("LOG: Jogador venceu a iniciativa! initiativeWinner =", initiativeWinner, "isPlayerTurn =", isPlayerTurn);
                                     sessionStorage.setItem('initiativeResult', initiativeWinner);
-                                    console.log("initiativeResult salvo no Session Storage:", sessionStorage.getItem('initiativeResult')); // ADICIONADO LOG
+                                    console.log("LOG: initiativeResult salvo no Session Storage:", sessionStorage.getItem('initiativeResult'));
                                 } else if (monsterRoll + monsterAbilityValue > playerRoll + playerAbilityValue) {
                                     battleLogContent.innerHTML += `<p>${currentMonster.nome} venceu a iniciativa! O monstro ataca primeiro.</p>`;
                                     initiativeWinner = 'monster';
                                     isPlayerTurn = false;
                                     if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+                                    console.log("LOG: Monstro venceu a iniciativa! initiativeWinner =", initiativeWinner, "isPlayerTurn =", isPlayerTurn);
                                     monsterAttack(); // Monstro ataca primeiro
                                 } else {
                                     battleLogContent.innerHTML += `<p>Houve um empate na iniciativa!</p>`;
                                     initiativeWinner = 'tie';
                                     isPlayerTurn = false;
+                                    console.log("LOG: Empate na iniciativa! initiativeWinner =", initiativeWinner, "isPlayerTurn =", isPlayerTurn);
                                     if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'block';
                                 }
 
@@ -349,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 sessionStorage.removeItem('luteButtonClicked');
                             });
                         } else {
-                            console.error("Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
+                            console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
                         }
 
                         // Lógica para o botão "Corpo a Corpo"
@@ -358,12 +385,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         if (atacarCorpoACorpoButton) {
                             atacarCorpoACorpoButton.addEventListener('click', () => {
+                                console.log("LOG: Botão 'Corpo a Corpo' clicado. isPlayerTurn:", isPlayerTurn);
                                 if (!isPlayerTurn) {
                                     battleLogContent.innerHTML += `<p>Não é seu turno!</p>`;
                                     return;
                                 }
                                 const playerAttackRoll = Math.floor(Math.random() * 20) + 1 + playerAbilityValue; // Adiciona a habilidade ao ataque
                                 const monsterArmorClass = currentMonster.couraça; // Obtém a couraça do monstro
+                                console.log("LOG: Rolagem de ataque do jogador:", playerAttackRoll);
+                                console.log("LOG: Couraça do monstro:", monsterArmorClass);
 
                                 battleLogContent.innerHTML += `<p>Você atacou corpo a corpo e rolou um <strong>${playerAttackRoll}</strong> (1D20 + ${playerAbilityValue} de Habilidade).</p>`;
 
@@ -377,16 +407,18 @@ document.addEventListener('DOMContentLoaded', () => {
                                     battleLogContent.innerHTML += `<p>Seu ataque errou o ${currentMonster.nome} (Couraça: ${monsterArmorClass}).</p>`;
                                     attackOptionsDiv.style.display = 'none'; // Fim do turno do jogador
                                     isPlayerTurn = false;
+                                    console.log("LOG: Ataque do jogador errou. isPlayerTurn:", isPlayerTurn);
                                     monsterAttack(); // Turno do monstro
                                 }
                             });
                         } else {
-                            console.error("Botão 'Corpo a Corpo' não encontrado (ID: atacar-corpo-a-corpo)");
+                            console.error("LOG: Botão 'Corpo a Corpo' não encontrado (ID: atacar-corpo-a-corpo)");
                         }
 
                         // Event listener para o botão "DANO"
                         if (rolarDanoButton) {
                             rolarDanoButton.addEventListener('click', () => {
+                                console.log("LOG: Botão 'DANO' clicado. isPlayerTurn:", isPlayerTurn);
                                 if (!isPlayerTurn) {
                                     battleLogContent.innerHTML += `<p>Não é seu turno!</p>`;
                                     return;
@@ -398,12 +430,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                     playerDamage = "1"; // Define o dano padrão como "1"
                                 }
                                 const damageRollResult = rollDice(playerDamage);
+                                console.log("LOG: Dano rolado pelo jogador:", damageRollResult, "Dados de dano:", playerDamage);
                                 currentMonster.pontosDeEnergia -= damageRollResult;
                                 battleLogContent.innerHTML += `<p>Você rolou <strong>${damageRollResult}</strong> de dano (${playerDamage})!</p>`;
                                 battleLogContent.innerHTML += `<p>${currentMonster.nome} sofreu ${damageRollResult} de dano. Pontos de Energia restantes: ${currentMonster.pontosDeEnergia}.</p>`;
                                 rolarDanoButton.style.display = 'none';
                                 attackOptionsDiv.style.display = 'none'; // Fim do turno do jogador
                                 isPlayerTurn = false;
+                                console.log("LOG: Dano causado ao monstro. Pontos de Energia restantes do monstro:", currentMonster.pontosDeEnergia, "isPlayerTurn:", isPlayerTurn);
 
                                 // Salvar o estado da batalha no Firestore
                                 if (currentMonster && user) {
@@ -415,21 +449,22 @@ document.addEventListener('DOMContentLoaded', () => {
                                     battleLogContent.innerHTML += `<p><strong style="color: green;">${currentMonster.nome} foi derrotado!</strong></p>`;
                                     // Aqui você pode adicionar lógica para recompensar o jogador e, opcionalmente, restaurar parte da energia.
                                 } else {
+                                    console.log("LOG: Turno do monstro após o ataque do jogador.");
                                     monsterAttack(); // Turno do monstro APÓS o jogador causar dano
                                 }
                             });
                         } else {
-                            console.error("Botão 'DANO' não encontrado (ID: rolar-dano)");
+                            console.error("LOG: Botão 'DANO' não encontrado (ID: rolar-dano)");
                         }
 
                     } else {
-                        console.log("Nenhum documento encontrado para o jogador:", user.uid);
+                        console.log("LOG: Nenhum documento encontrado para o jogador:", user.uid);
                         alert("Dados do jogador não encontrados. Por favor, crie seu personagem.");
                         window.location.href = "character-creation.html";
                     }
                 })
                 .catch(error => {
-                    console.error("Erro ao buscar dados do jogador:", error);
+                    console.error("LOG: Erro ao buscar dados do jogador:", error);
                 });
         } else {
             // Nenhum usuário está logado. Redirecionar para a página de login.
