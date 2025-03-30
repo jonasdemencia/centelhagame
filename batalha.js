@@ -175,8 +175,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Após o ataque do monstro que acerta, é o turno do jogador
             isPlayerTurn = true;
+            console.log("Após ataque do monstro acertar: isPlayerTurn =", isPlayerTurn); // ADICIONADO LOG
             if (attackOptionsDiv) {
                 attackOptionsDiv.style.display = 'block';
+                console.log("Após ataque do monstro acertar: attackOptionsDiv.style.display =", attackOptionsDiv.style.display); // ADICIONADO LOG
             }
 
             // Atualiza a energia do jogador na ficha e salva o estado da batalha
