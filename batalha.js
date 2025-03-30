@@ -185,16 +185,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             battleLogContent.innerHTML += `<p>O ataque do ${currentMonster.nome} errou.</p>`;
+            // ✅ Restaurar o turno do jogador
+            isPlayerTurn = true;
+
+            // ✅ Tornar opções de ataque visíveis
+            if (attackOptionsDiv) {
+                attackOptionsDiv.style.display = 'block';
+            }
         }
 
-        // Após o ataque do monstro, é o turno do jogador novamente (se o jogador não foi derrotado)
-        console.log("Energia do jogador antes de exibir opções:", playerHealth); // ADICIONADO LOG
-        console.log("Elemento attackOptionsDiv:", attackOptionsDiv); // ADICIONADO LOG
-        if (playerHealth > 0) {
-            attackOptionsDiv.style.display = 'block';
-            isPlayerTurn = true;
-            console.log("Opções de ataque exibidas após turno do monstro."); // ADICIONADO LOG
-        }
+        // Após o ataque do monstro, é o turno do jogador novamente (se o jogador não foi derrotado) - ESTE BLOCO FOI MOVIDO PARA DENTRO DO ELSE
+        // console.log("Energia do jogador antes de exibir opções:", playerHealth); // ADICIONADO LOG
+        // console.log("Elemento attackOptionsDiv:", attackOptionsDiv); // ADICIONADO LOG
+        // if (playerHealth > 0) {
+        //     attackOptionsDiv.style.display = 'block';
+        //     isPlayerTurn = true;
+        //     console.log("Opções de ataque exibidas após turno do monstro."); // ADICIONADO LOG
+        // }
     }
 
     // Verifica o estado da batalha no Session Storage
