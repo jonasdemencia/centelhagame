@@ -364,10 +364,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     battleLogContent.innerHTML += `<p>Não é seu turno!</p>`;
                                     return;
                                 }
-                                const playerAttackRoll = Math.floor(Math.random() * 20) + 1 + playerAbilityValue; // Adiciona a habilidade ao ataque
+                                const playerAttackRoll = Math.floor(Math.random() * 20) + 1; // Removido + playerAbilityValue daqui
                                 const monsterArmorClass = currentMonster.couraça; // Obtém a couraça do monstro
 
-                                battleLogContent.innerHTML += `<p>Você atacou corpo a corpo e rolou um <strong>${playerAttackRoll}</strong> (1D20 + ${playerAbilityValue} de Habilidade).</p>`;
+                                battleLogContent.innerHTML += `<p>Você atacou corpo a corpo e rolou um <strong>${playerAttackRoll}</strong> (1D20).</p>`; // Removido a menção da Habilidade aqui
 
                                 if (playerAttackRoll >= monsterArmorClass) {
                                     battleLogContent.innerHTML += `<p>Seu ataque acertou o ${currentMonster.nome} (Couraça: ${monsterArmorClass})!</p>`;
