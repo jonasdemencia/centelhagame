@@ -284,8 +284,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(docSnap => {
                     if (docSnap.exists()) {
                         playerData = docSnap.data();
-                        const playerAbilityValue = playerData.habilidade ? playerData.habilidade : 0;
                         // ---------------------- MODIFICAÇÃO IMPORTANTE AQUI ----------------------
+                        const playerAbilityValue = playerData.skill?.total ? parseInt(playerData.skill.total) : 0; // Obtém a Habilidade do jogador
                         playerHealth = playerData.energy?.total ? parseInt(playerData.energy.total) : 8; // Lê a energia de playerData.energy.total
                         // -------------------------------------------------------------------------
                         const inventarioButton = document.getElementById("abrir-inventario");
@@ -313,8 +313,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const monsterRoll = Math.floor(Math.random() * 20) + 1;
                                 const monsterAbilityValue = currentMonster.habilidade;
 
+                                // ---------------------- MODIFICAÇÃO IMPORTANTE AQUI ----------------------
                                 battleLogContent.innerHTML += `<p>Você rolou ${playerRoll} + ${playerAbilityValue} (Habilidade) = <strong>${playerRoll + playerAbilityValue}</strong> para iniciativa.</p>`;
                                 battleLogContent.innerHTML += `<p>${currentMonster.nome} rolou ${monsterRoll} + ${monsterAbilityValue} (Habilidade) = <strong>${monsterRoll + monsterAbilityValue}</strong> para iniciativa.</p>`;
+                                // -------------------------------------------------------------------------
 
                                 let initiativeWinner = '';
                                 if (playerRoll + playerAbilityValue > monsterRoll + monsterAbilityValue) {
