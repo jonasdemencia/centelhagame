@@ -187,6 +187,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Após o ataque do monstro, é o turno do jogador novamente (se o jogador não foi derrotado)
+        console.log("Energia do jogador antes de exibir opções:", playerHealth); // ADICIONADO LOG
+        console.log("Elemento attackOptionsDiv:", attackOptionsDiv); // ADICIONADO LOG
         if (playerHealth > 0) {
             attackOptionsDiv.style.display = 'block';
             isPlayerTurn = true; // ADICIONEI ESTA LINHA AQUI!!!
