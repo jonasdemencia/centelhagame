@@ -218,6 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("LOG: monsterAttack - Elemento attackOptionsDiv:", attackOptionsDiv);
         if (playerHealth > 0) {
             battleLogContent.innerHTML += `<hr><p><strong>Turno do Jogador</strong></p>`; // Adicionado log do turno do jogador
+            console.log("LOG: monsterAttack - Antes de exibir opções, attackOptionsDiv:", attackOptionsDiv); // ADICIONADO
             attackOptionsDiv.style.display = 'block';
             isPlayerTurn = true;
             console.log("LOG: monsterAttack - **FINAL DO TURNO DO MONSTRO - INICIANDO TURNO DO JOGADOR** - attackOptionsDiv.style.display:", attackOptionsDiv.style.display, "isPlayerTurn:", isPlayerTurn);
@@ -259,6 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (initiativeResult === 'player') {
             battleLogContent.innerHTML += `<p>Você venceu a iniciativa e atacará primeiro.</p>`;
             if (attackOptionsDiv) {
+                console.log("LOG: Iniciativa do jogador vencida - Antes de exibir opções, attackOptionsDiv:", attackOptionsDiv); // ADICIONADO
                 attackOptionsDiv.style.display = 'block';
                 console.log("LOG: DOMContentLoaded - Iniciativa do jogador vencida. Exibindo opções de ataque.");
                 battleLogContent.innerHTML += `<hr><p><strong>Turno do Jogador</strong></p>`; // Adicionado log do turno do jogador
@@ -411,6 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (playerRoll + playerAbilityValue > monsterRoll + monsterAbilityValue) {
                                     battleLogContent.innerHTML += `<p>Você venceu a iniciativa! Você ataca primeiro.</p>`;
                                     if (attackOptionsDiv) {
+                                        console.log("LOG: Iniciativa do jogador vencida - Antes de exibir opções, attackOptionsDiv:", attackOptionsDiv); // ADICIONADO
                                         attackOptionsDiv.style.display = 'block';
                                         console.log("LOG: onAuthStateChanged - Jogador venceu a iniciativa, exibindo opções de ataque.");
                                         battleLogContent.innerHTML += `<hr><p><strong>Turno do Jogador</strong></p>`; // Adicionado log do turno do jogador
