@@ -150,8 +150,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         battleLogContent.innerHTML += `<hr><p><strong>Turno do ${currentMonster.nome}</strong></p>`;
 
-        // Rola o ataque do monstro (1D20 + habilidade do monstro)
-        const monsterAttackRoll = Math.floor(Math.random() * 20) + 1 + currentMonster.habilidade;
+        // Rola o ataque do monstro (1D20) - REMOVIDO + currentMonster.habilidade
+        const monsterAttackRoll = Math.floor(Math.random() * 20) + 1;
         battleLogContent.innerHTML += `<p>${currentMonster.nome} rolou <strong>${monsterAttackRoll}</strong> para atacar.</p>`;
 
         // Compara com a defesa do jogador (vamos assumir que o jogador tem uma defesa base por enquanto)
@@ -312,6 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const playerRoll = Math.floor(Math.random() * 20) + 1;
                                 const monsterRoll = Math.floor(Math.random() * 20) + 1;
                                 const monsterAbilityValue = currentMonster.habilidade;
+                                const playerAbilityValue = playerData.skill?.total ? parseInt(playerData.skill.total) : 0;
 
                                 // ---------------------- MODIFICAÇÃO IMPORTANTE AQUI ----------------------
                                 battleLogContent.innerHTML += `<p>Você rolou ${playerRoll} + ${playerAbilityValue} (Habilidade) = <strong>${playerRoll + playerAbilityValue}</strong> para iniciativa.</p>`;
