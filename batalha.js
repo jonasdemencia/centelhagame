@@ -55,7 +55,7 @@ function rollDice(diceString) {
 // Função para atualizar a energia do jogador na ficha do Firestore
 function updatePlayerEnergyInFirestore(userId, newEnergy) {
     const playerDocRef = doc(db, "players", userId);
-    return setDoc(playerDocRef, { energia: newEnergy }, { merge: true }) // Atualiza o campo "energia"
+    return setDoc(playerDocRef, { energy: { total: newEnergy } }, { merge: true }) // Atualiza o campo "energy.total"
         .then(() => {
             console.log("Energia do jogador atualizada na ficha:", newEnergy);
         })
@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         battleLogContent.innerHTML = ""; // Limpa o log no estado inicial
     }
 
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
             // Usuário está logado!
             const userId = user.uid;
@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             playerHealth = savedState.playerHealth;
                             console.log("Estado da batalha carregado do Firestore:", savedState);
                             console.log("Pontos de Energia do monstro carregados:", currentMonster.pontosDeEnergia);
-                            console.log("Energia do jogador carregada:", playerHealth); // Atualiza a mensagem para "energia"
+                            console.log("Energia do jogador carregada (do estado da batalha):", playerHealth); // Atualiza a mensagem para "energia"
                             // Atualizar a interface com a energia do jogador (se houver um elemento para isso)
                             const playerHealthDisplay = document.getElementById("player-health");
                             if (playerHealthDisplay) {
@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         } else {
                             // Se não houver estado salvo, usa os pontos de energia iniciais e define a energia do jogador
-                            console.log("Usando pontos de energia iniciais do monstro e definindo energia inicial do jogador.");
+                            console.log("Nenhum estado de batalha encontrado, carregando energia da ficha do jogador.");
                             // Defina a energia inicial do jogador com base nos dados do personagem (a ser carregado)
                         }
                         document.getElementById("monster-name").innerText = currentMonster.nome;
@@ -285,7 +285,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (docSnap.exists()) {
                         playerData = docSnap.data();
                         const playerAbilityValue = playerData.habilidade ? playerData.habilidade : 0;
-                        playerHealth = playerData.energia ? parseInt(playerData.energia) : 8; // Retornando ao fallback de 8
+                        // ---------------------- MODIFICAÇÃO IMPORTANTE AQUI ----------------------
+                        playerHealth = playerData.energy?.total ? parseInt(playerData.energy.total) : 8; // Lê a energia de playerData.energy.total
+                        // -------------------------------------------------------------------------
                         const inventarioButton = document.getElementById("abrir-inventario");
                         const playerHealthDisplay = document.getElementById("player-health");
                         if (inventarioButton) inventarioButton.disabled = false;
