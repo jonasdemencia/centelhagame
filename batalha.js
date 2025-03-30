@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
             descricao: "Um lobo selvagem com presas afiadas.",
             habilidade: 3,
             couraça: 12,
-            pontosDeEnergia: 20,
+            pontosDeEnergia: 15,
             dano: "1D6" // Adiciona o dano do monstro
         },
         "goblin": {
@@ -146,6 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Função para o ataque do monstro
     function monsterAttack() {
+        console.log("Função monsterAttack chamada."); // ADICIONADO LOG
         if (!currentMonster || playerHealth <= 0) return; // Se o monstro não existir ou o jogador estiver derrotado, não ataca
 
         battleLogContent.innerHTML += `<hr><p><strong>Turno do ${currentMonster.nome}</strong></p>`;
@@ -191,7 +192,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Elemento attackOptionsDiv:", attackOptionsDiv); // ADICIONADO LOG
         if (playerHealth > 0) {
             attackOptionsDiv.style.display = 'block';
-            isPlayerTurn = true; // ADICIONEI ESTA LINHA AQUI!!!
+            isPlayerTurn = true;
+            console.log("Opções de ataque exibidas após turno do monstro."); // ADICIONADO LOG
         }
     }
 
