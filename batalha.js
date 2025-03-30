@@ -217,6 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("LOG: monsterAttack - Energia do jogador antes de exibir opções:", playerHealth);
         console.log("LOG: monsterAttack - Elemento attackOptionsDiv:", attackOptionsDiv);
         if (playerHealth > 0) {
+            battleLogContent.innerHTML += `<hr><p><strong>Turno do Jogador</strong></p>`; // Adicionado log do turno do jogador
             attackOptionsDiv.style.display = 'block';
             isPlayerTurn = true;
             console.log("LOG: monsterAttack - **FINAL DO TURNO DO MONSTRO - INICIANDO TURNO DO JOGADOR** - attackOptionsDiv.style.display:", attackOptionsDiv.style.display, "isPlayerTurn:", isPlayerTurn);
@@ -260,6 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (attackOptionsDiv) {
                 attackOptionsDiv.style.display = 'block';
                 console.log("LOG: DOMContentLoaded - Iniciativa do jogador vencida. Exibindo opções de ataque.");
+                battleLogContent.innerHTML += `<hr><p><strong>Turno do Jogador</strong></p>`; // Adicionado log do turno do jogador
             }
             isPlayerTurn = true;
             console.log("LOG: DOMContentLoaded - Iniciativa do jogador vencida. attackOptionsDiv.style.display:", attackOptionsDiv.style.display, "isPlayerTurn:", isPlayerTurn);
@@ -411,6 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     if (attackOptionsDiv) {
                                         attackOptionsDiv.style.display = 'block';
                                         console.log("LOG: onAuthStateChanged - Jogador venceu a iniciativa, exibindo opções de ataque.");
+                                        battleLogContent.innerHTML += `<hr><p><strong>Turno do Jogador</strong></p>`; // Adicionado log do turno do jogador
                                     }
                                     initiativeWinner = 'player';
                                     isPlayerTurn = true;
@@ -519,6 +522,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     console.log("LOG: Botão 'DANO' - Monstro derrotado.");
                                     // Aqui você pode adicionar lógica para recompensar o jogador e, opcionalmente, restaurar parte da energia.
                                 } else {
+                                    battleLogContent.innerHTML += `<p><strong>Fim do Turno do Jogador</strong></p>`; // Adicionado log do fim do turno do jogador
                                     console.log("LOG: Botão 'DANO' - Turno do monstro após o ataque do jogador.");
                                     monsterAttack(); // Turno do monstro APÓS o jogador causar dano
                                 }
