@@ -414,8 +414,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (currentMonster.pontosDeEnergia <= 0) {
                                     battleLogContent.innerHTML += `<p><strong style="color: green;">${currentMonster.nome} foi derrotado!</strong></p>`;
                                     // Aqui você pode adicionar lógica para recompensar o jogador e, opcionalmente, restaurar parte da energia.
+                                } else {
+                                    monsterAttack(); // Turno do monstro APÓS o jogador causar dano
                                 }
-                                // REMOVI A CHAMADA A monsterAttack() AQUI
                             });
                         } else {
                             console.error("Botão 'DANO' não encontrado (ID: rolar-dano)");
