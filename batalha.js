@@ -146,7 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Função para o ataque do monstro
     function monsterAttack() {
-        console.log("Função monsterAttack chamada."); // ADICIONADO LOG
+        console.log("Função monsterAttack chamada. isPlayerTurn:", isPlayerTurn, "attackOptionsDiv.style.display:", attackOptionsDiv?.style.display); // LOG 1: Início da função
+
         if (!currentMonster || playerHealth <= 0) return; // Se o monstro não existir ou o jogador estiver derrotado, não ataca
 
         battleLogContent.innerHTML += `<hr><p><strong>Turno do ${currentMonster.nome}</strong></p>`;
@@ -160,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
         battleLogContent.innerHTML += `<p>Sua Defesa é <strong>${playerDefense}</strong>.</p>`;
 
         if (monsterAttackRoll >= playerDefense) {
+            // ... (monster hits logic) ...
             battleLogContent.innerHTML += `<p>O ataque do ${currentMonster.nome} acertou!</p>`;
 
             // Rola o dano do monstro
@@ -185,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             battleLogContent.innerHTML += `<p>O ataque do ${currentMonster.nome} errou.</p>`;
+            console.log("Monstro errou. Antes de restaurar turno: isPlayerTurn:", isPlayerTurn, "attackOptionsDiv.style.display:", attackOptionsDiv?.style.display); // LOG 2: Antes de restaurar o turno
             // ✅ Restaurar o turno do jogador
             isPlayerTurn = true;
 
@@ -192,6 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (attackOptionsDiv) {
                 attackOptionsDiv.style.display = 'block';
             }
+            console.log("Monstro errou. Depois de restaurar turno: isPlayerTurn:", isPlayerTurn, "attackOptionsDiv.style.display:", attackOptionsDiv?.style.display); // LOG 3: Depois de restaurar o turno
         }
 
         // Após o ataque do monstro, é o turno do jogador novamente (se o jogador não foi derrotado) - ESTE BLOCO FOI MOVIDO PARA DENTRO DO ELSE
@@ -370,6 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         if (atacarCorpoACorpoButton) {
                             atacarCorpoACorpoButton.addEventListener('click', () => {
+                                console.log("Botão 'Corpo a Corpo' clicado. isPlayerTurn:", isPlayerTurn, "attackOptionsDiv.style.display:", attackOptionsDiv?.style.display); // LOG 4: Ao clicar no botão de ataque
                                 if (!isPlayerTurn) {
                                     battleLogContent.innerHTML += `<p>Não é seu turno!</p>`;
                                     return;
@@ -389,6 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     battleLogContent.innerHTML += `<p>Seu ataque errou o ${currentMonster.nome} (Couraça: ${monsterArmorClass}).</p>`;
                                     attackOptionsDiv.style.display = 'none'; // Fim do turno do jogador
                                     isPlayerTurn = false;
+                                    console.log("Jogador errou. Fim do turno. isPlayerTurn:", isPlayerTurn, "attackOptionsDiv.style.display:", attackOptionsDiv?.style.display); // LOG 5: Após o erro do jogador
                                     monsterAttack(); // Turno do monstro
                                 }
                             });
