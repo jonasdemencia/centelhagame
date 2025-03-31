@@ -74,6 +74,27 @@ function updatePlayerEnergyInFirestore(userId, newEnergy) {
         });
 }
 
+// Função para carregar o estado da batalha do Firestore (MOVIDA PARA O ESCOPO GLOBAL)
+function loadBattleState(userId, monsterName) {
+    console.log("LOG: loadBattleState chamado com userId:", userId, "monsterName:", monsterName);
+    const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
+    return getDoc(battleDocRef)
+        .then(docSnap => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                console.log("LOG: Estado da batalha carregado do Firestore:", data);
+                return data;
+            } else {
+                console.log("LOG: Nenhum estado de batalha encontrado para este monstro.");
+                return null;
+            }
+        })
+        .catch((error) => {
+            console.error("LOG: Erro ao carregar o estado da batalha:", error);
+            return null;
+        });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: DOMContentLoaded evento disparado.");
     const lutarButton = document.getElementById("iniciar-luta");
@@ -482,7 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 } else if (monsterRoll + monsterAbilityValue > playerRoll + playerAbilityValue) {
                                     setTimeout(() => {
                                         startNewTurnBlock(currentMonster.nome);
-                                        addLogMessage(`<p>${currentMonster.nome} venceu a iniciativa! O monstro ataca primeiro.</p>`, 1000);
+                                        addLogMessage(`<p>${currentMonster.nome} venceu a iniciativa e atacará primeiro.</p>`, 1000);
                                         initiativeWinner = 'monster';
                                         isPlayerTurn = false;
                                         if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
