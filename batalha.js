@@ -391,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("LOG: DOMContentLoaded - Log de batalha limpo (estado inicial).");
     }
 
-    onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(auth, (user) => { // Removido o 'async' aqui
         console.log("LOG: onAuthStateChanged chamado.");
         if (user) {
             // Usuário está logado!
@@ -402,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Carregar o estado da batalha ao carregar a página
             if (currentMonster) {
                 loadBattleState(userId, monsterName)
-                    .then(async savedState => {
+                    .then(async savedState => { // Mantemos o 'async' aqui para usar 'await' dentro do 'then'
                         if (savedState) {
                             currentMonster.pontosDeEnergia = savedState.monsterHealth;
                             playerHealth = savedState.playerHealth;
@@ -433,12 +433,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         document.getElementById("monster-name").innerText = currentMonster.nome;
                         console.log("LOG: onAuthStateChanged - Nome do monstro exibido.");
                         // A descrição e a imagem já foram carregadas inicialmente
+                    })
+                    .catch(error => {
+                        console.error("LOG: Erro ao carregar o estado da batalha:", error);
                     });
             }
 
             const playerDocRef = doc(db, "players", user.uid);
             getDoc(playerDocRef)
-                .then(async docSnap => {
+                .then(async docSnap => { // Mantemos o 'async' aqui para usar 'await' dentro do 'then'
                     if (docSnap.exists()) {
                         playerData = docSnap.data();
                         playerAbilityValue = playerData.habilidade ? playerData.habilidade : 0;
