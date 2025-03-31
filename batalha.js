@@ -391,6 +391,18 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("LOG: DOMContentLoaded - Log de batalha limpo (estado inicial).");
     }
 
+    function handleLutarButtonClick() { // Função separada para o evento de clique do botão "Lutar"
+        console.log("LOG: Botão 'Lutar' clicado.");
+        lutarButton.style.display = 'none';
+        if (rolarIniciativaButton) {
+            rolarIniciativaButton.style.display = 'block';
+            sessionStorage.setItem('luteButtonClicked', 'true');
+            console.log("LOG: Botão 'Lutar' escondido, botão 'Rolar Iniciativa' exibido.");
+        } else {
+            console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
+        }
+    }
+
     onAuthStateChanged(auth, (user) => { // Removido o 'async' aqui
         console.log("LOG: onAuthStateChanged chamado.");
         if (user) {
@@ -465,17 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         if (lutarButton) {
                             lutarButton.disabled = false;
-                            lutarButton.addEventListener('click', () => {
-                                console.log("LOG: Botão 'Lutar' clicado.");
-                                lutarButton.style.display = 'none';
-                                if (rolarIniciativaButton) {
-                                    rolarIniciativaButton.style.display = 'block';
-                                    sessionStorage.setItem('luteButtonClicked', 'true');
-                                    console.log("LOG: Botão 'Lutar' escondido, botão 'Rolar Iniciativa' exibido.");
-                                } else {
-                                    console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
-                                }
-                            });
+                            lutarButton.addEventListener('click', handleLutarButtonClick); // Usando a função separada aqui
                             console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
                         }
 
