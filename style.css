@@ -367,3 +367,56 @@ body {
 .attribute-description-container.show {
     display: block; /* Exibe quando a classe 'show' é adicionada */
 }
+
+/* Estilos para a seção de registro de batalha */
+#battle-log {
+    margin-top: 20px; /* Adicione um pouco de espaço acima do log */
+    border: 1px solid #555; /* Uma borda para definir a área do log */
+    border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0.5); /* Um fundo levemente transparente */
+    padding: 10px; /* Espaçamento interno */
+    text-align: left; /* Alinhe o texto do log à esquerda para melhor leitura */
+}
+
+#battle-log h2 {
+    color: #eee; /* Cor do título do log */
+    margin-top: 0; /* Remova a margem superior padrão do h2 */
+    margin-bottom: 10px; /* Espaço abaixo do título */
+    text-align: center; /* Centralize o título do log */
+}
+
+/* Estilos para o conteúdo do registro de batalha (a janela de rolagem) */
+#battle-log-content {
+    max-height: 200px; /* Defina uma altura máxima para a janela de log */
+    overflow-y: auto; /* Adiciona uma barra de rolagem vertical quando o conteúdo exceder a altura máxima */
+    border: 1px solid #777; /* Uma borda interna para o conteúdo */
+    border-radius: 4px;
+    background-color: #444; /* Um fundo mais escuro para o conteúdo do log */
+    padding: 8px; /* Espaçamento interno para o texto do log */
+    font-size: 12px; /* Tamanho da fonte para o texto do log */
+    color: #f0f0f0; /* Cor do texto do log */
+    white-space: pre-wrap; /* Mantém a formatação do texto e quebra linhas longas */
+    display: flex;
+    flex-direction: column-reverse; /* Exibe as mensagens mais recentes no topo (devido ao seu script) */
+}
+
+/* Estilo para as mensagens individuais no log (opcional) */
+#battle-log-content p {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    padding: 2px 5px;
+    border-bottom: 1px solid #666; /* Linha divisória entre as mensagens (opcional) */
+}
+
+#battle-log-content p:last-child {
+    border-bottom: none; /* Remove a linha inferior da última mensagem */
+}
+
+/* Estilo para o indicador de rolagem (opcional) */
+#scroll-indicator {
+    display: none;
+    text-align: center;
+    color: #999;
+    font-size: 1.2em;
+    margin-top: 5px;
+}
