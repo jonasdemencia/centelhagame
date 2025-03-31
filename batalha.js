@@ -567,10 +567,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         // Lógica para o botão "Corpo a Corpo"
                         if (atacarCorpoACorpoButton) {
-                            atacarCorpoACorpoButton.addEventListener('click', () => {
+                            atacarCorpoACorpoButton.addEventListener('click', async () => {
                                 console.log("LOG: Botão 'Corpo a Corpo' clicado. isPlayerTurn:", isPlayerTurn);
                                 if (!isPlayerTurn) {
-                                    addLogMessage(`<p>Não é seu turno!</p>`, 1000);
+                                    await addLogMessage(`<p>Não é seu turno!</p>`, 1000);
                                     return;
                                 }
                                 if (attackOptionsDiv) {
@@ -578,39 +578,39 @@ document.addEventListener('DOMContentLoaded', () => {
                                     const buttons = attackOptionsDiv.querySelectorAll('.button');
                                     buttons.forEach(button => button.disabled = true);
                                 }
-                                addLogMessage(`Você optou pelo ataque corpo a corpo.`, 1000);
-                                setTimeout(() => {
-                                    const playerAttackRoll = Math.floor(Math.random() * 20) + 1 + playerAbilityValue; // Adiciona a habilidade ao ataque
-                                    const monsterArmorClass = currentMonster.couraça; // Obtém a couraça do monstro
-                                    console.log("LOG: Botão 'Corpo a Corpo' - Rolagem de ataque do jogador:", playerAttackRoll);
-                                    console.log("LOG: Botão 'Corpo a Corpo' - Couraça do monstro:", monsterArmorClass);
 
-                                    addLogMessage(`Você atacou corpo a corpo e rolou um ${playerAttackRoll} (1D20 + ${playerAbilityValue} de Habilidade).`, 1000);
+                                startNewTurnBlock("Jogador"); // Adiciona o início do turno aqui
 
-                                    setTimeout(() => {
-                                        if (playerAttackRoll >= monsterArmorClass) {
-                                            addLogMessage(`Seu ataque acertou o ${currentMonster.nome} (Couraça: ${monsterArmorClass})!`, 1000);
-                                            if (atacarCorpoACorpoButton) atacarCorpoACorpoButton.style.display = 'none';
-                                            if (rolarDanoButton) {
-                                                rolarDanoButton.style.display = 'block';
-                                            }
-                                            if (attackOptionsDiv) {
-                                                const buttons = attackOptionsDiv.querySelectorAll('.button');
-                                                buttons.forEach(button => button.disabled = false);
-                                            }
-                                            console.log("LOG: Botão 'Corpo a Corpo' - Ataque acertou, escondendo 'Corpo a Corpo', exibindo 'DANO'.");
-                                        } else {
-                                            addLogMessage(`Seu ataque errou o ${currentMonster.nome} (Couraça: ${monsterArmorClass}).`, 1000);
-                                            addLogMessage(`Fim do Turno do Jogador.`, 1000);
-                                            endPlayerTurn();
-                                            console.log("LOG: Botão 'Corpo a Corpo' - Ataque errou. isPlayerTurn:", isPlayerTurn);
-                                            if (attackOptionsDiv) {
-                                                const buttons = attackOptionsDiv.querySelectorAll('.button');
-                                                buttons.forEach(button => button.disabled = false);
-                                            }
-                                        }
-                                    }, 1000);
-                                }, 1000);
+                                await addLogMessage(`Você optou pelo ataque corpo a corpo.`, 1000);
+
+                                const playerRoll = Math.floor(Math.random() * 20) + 1 + playerAbilityValue; // Adiciona a habilidade ao ataque
+                                const monsterArmorClass = currentMonster.couraça; // Obtém a couraça do monstro
+                                console.log("LOG: Botão 'Corpo a Corpo' - Rolagem de ataque do jogador:", playerRoll);
+                                console.log("LOG: Botão 'Corpo a Corpo' - Couraça do monstro:", monsterArmorClass);
+
+                                await addLogMessage(`Você atacou corpo a corpo e rolou um ${playerRoll} (1D20 + ${playerAbilityValue} de Habilidade).`, 1000);
+
+                                if (playerRoll >= monsterArmorClass) {
+                                    await addLogMessage(`Seu ataque acertou o ${currentMonster.nome} (Couraça: ${monsterArmorClass})!`, 1000);
+                                    if (atacarCorpoACorpoButton) atacarCorpoACorpoButton.style.display = 'none';
+                                    if (rolarDanoButton) {
+                                        rolarDanoButton.style.display = 'block';
+                                    }
+                                    if (attackOptionsDiv) {
+                                        const buttons = attackOptionsDiv.querySelectorAll('.button');
+                                        buttons.forEach(button => button.disabled = false);
+                                    }
+                                    console.log("LOG: Botão 'Corpo a Corpo' - Ataque acertou, escondendo 'Corpo a Corpo', exibindo 'DANO'.");
+                                } else {
+                                    await addLogMessage(`Seu ataque errou o ${currentMonster.nome} (Couraça: ${monsterArmorClass}).`, 1000);
+                                    await addLogMessage(`Fim do Turno do Jogador.`, 1000);
+                                    endPlayerTurn();
+                                    console.log("LOG: Botão 'Corpo a Corpo' - Ataque errou. isPlayerTurn:", isPlayerTurn);
+                                    if (attackOptionsDiv) {
+                                        const buttons = attackOptionsDiv.querySelectorAll('.button');
+                                        buttons.forEach(button => button.disabled = false);
+                                    }
+                                }
                             });
                             console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Corpo a Corpo'.");
                         } else {
