@@ -391,18 +391,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("LOG: DOMContentLoaded - Log de batalha limpo (estado inicial).");
     }
 
-    // function handleLutarButtonClick() { // Função separada para o evento de clique do botão "Lutar"
-    //     console.log("LOG: Botão 'Lutar' clicado.");
-    //     lutarButton.style.display = 'none';
-    //     if (rolarIniciativaButton) {
-    //         rolarIniciativaButton.style.display = 'block';
-    //         sessionStorage.setItem('luteButtonClicked', 'true');
-    //         console.log("LOG: Botão 'Lutar' escondido, botão 'Rolar Iniciativa' exibido.");
-    //     } else {
-    //         console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
-    //     }
-    // }
-
     onAuthStateChanged(auth, (user) => { // Removido o 'async' aqui
         console.log("LOG: onAuthStateChanged chamado.");
         if (user) {
@@ -475,10 +463,20 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.log("LOG: onAuthStateChanged - Energia inicial do jogador exibida.");
                         }
 
-                        if (lutarButton) { // Linha 150
+                        if (lutarButton) { // Line 150
                             lutarButton.disabled = false;
-                            // lutarButton.addEventListener('click', handleLutarButtonClick); // Comentando a linha original
-                            console.log("LOG: onAuthStateChanged - Event listener para 'Lutar' seria adicionado aqui.");
+                            lutarButton.addEventListener('click', function() { // Using a traditional function here
+                                console.log("LOG: Botão 'Lutar' clicado.");
+                                lutarButton.style.display = 'none';
+                                if (rolarIniciativaButton) {
+                                    rolarIniciativaButton.style.display = 'block';
+                                    sessionStorage.setItem('luteButtonClicked', 'true');
+                                    console.log("LOG: Botão 'Lutar' escondido, botão 'Rolar Iniciativa' exibido.");
+                                } else {
+                                    console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
+                                }
+                            });
+                            console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
                         }
 
                         // Event listener para o botão "Rolar Iniciativa"
