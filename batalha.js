@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
     }
 
-    function addLogMessage(message, delay = 0, typingSpeed = 40) {
+    function addLogMessage(message, delay = 0, typingSpeed = 30) {
         return new Promise(resolve => {
             const logContainer = document.getElementById("battle-log-content"); // Obtém a referência do container do log
             if (currentTurnBlock) {
