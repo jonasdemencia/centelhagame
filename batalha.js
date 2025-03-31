@@ -196,17 +196,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         startNewTurnBlock(currentMonster.nome);
 
-        addLogMessage(`<hr>`);
-        addLogMessage(`<strong>Turno do ${currentMonster.nome}</strong>`);
+        addLogMessage(`Turno do ${currentMonster.nome}`);
 
         // Rola o ataque do monstro (1D20 + habilidade do monstro)
         const monsterAttackRoll = Math.floor(Math.random() * 20) + 1 + currentMonster.habilidade;
-        addLogMessage(`${currentMonster.nome} rolou <strong>${monsterAttackRoll}</strong> para atacar.`);
+        addLogMessage(`${currentMonster.nome} rolou ${monsterAttackRoll} para atacar.`);
         console.log("LOG: monsterAttack - Rolagem de ataque do monstro:", monsterAttackRoll);
 
         // Compara com a defesa do jogador (vamos assumir que o jogador tem uma defesa base por enquanto)
         const playerDefense = playerData?.defesa ? parseInt(playerData.defesa) : 10; // Pega a defesa do jogador ou usa 10 como base
-        addLogMessage(`Sua Defesa é <strong>${playerDefense}</strong>.`);
+        addLogMessage(`Sua Defesa é ${playerDefense}.`);
         console.log("LOG: monsterAttack - Defesa do jogador:", playerDefense);
 
         if (monsterAttackRoll >= playerDefense) {
@@ -217,8 +216,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("LOG: monsterAttack - Dano rolado pelo monstro:", monsterDamageRoll);
             console.log("LOG: monsterAttack - Energia do jogador antes do dano:", playerHealth);
             playerHealth -= monsterDamageRoll;
-            addLogMessage(`${currentMonster.nome} causou <strong>${monsterDamageRoll}</strong> de dano.`);
-            addLogMessage(`Sua energia restante: <strong>${playerHealth}</strong>.`); // Atualiza a mensagem para "energia"
+            addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano.`);
+            addLogMessage(`Sua energia restante: ${playerHealth}.`); // Atualiza a mensagem para "energia"
             console.log("LOG: monsterAttack - Energia do jogador depois do dano:", playerHealth);
 
             // Atualiza a energia do jogador na ficha e salva o estado da batalha
@@ -230,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Verifica se o jogador foi derrotado
             if (playerHealth <= 0) {
-                addLogMessage(`<p><strong style="color: red;">Você foi derrotado!</strong></p>`);
+                addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`);
                 console.log("LOG: monsterAttack - Jogador derrotado.");
                 // Lógica adicional de fim de batalha pode ser adicionada aqui
             }
@@ -244,8 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("LOG: monsterAttack - Elemento attackOptionsDiv:", attackOptionsDiv);
         if (playerHealth > 0) {
             startNewTurnBlock("Jogador");
-            addLogMessage(`<hr>`);
-            addLogMessage(`<strong>Turno do Jogador</strong>`); // Adicionado log do turno do jogador
+            addLogMessage(`Turno do Jogador`); // Adicionado log do turno do jogador
             console.log("LOG: monsterAttack - Antes de exibir opções, attackOptionsDiv:", attackOptionsDiv); // ADICIONADO
             attackOptionsDiv.style.display = 'block';
             // Mostrar o botão de ataque corpo a corpo
@@ -286,8 +284,15 @@ document.addEventListener('DOMContentLoaded', () => {
         battleLogContent.innerHTML = ""; // Limpa o log para reconstruir
         console.log("LOG: DOMContentLoaded - Log de batalha limpo.");
         if (playerInitiativeRoll && monsterInitiativeRoll && playerAbilityStored !== null && monsterAbilityStored !== null) {
-            addLogMessage(`<p>Você rolou ${playerInitiativeRoll} + ${playerAbilityStored} (Habilidade) = <strong>${parseInt(playerInitiativeRoll) + parseInt(playerAbilityStored)}</strong> para iniciativa.</p>`);
-            addLogMessage(`<p>${currentMonster.nome} rolou ${monsterInitiativeRoll} + ${monsterAbilityStored} (Habilidade) = <strong>${parseInt(monsterInitiativeRoll) + parseInt(monsterAbilityStored)}</strong> para iniciativa.</p>`);
+            const initiativeBlock = document.createElement('div');
+            initiativeBlock.classList.add('turn-block');
+            const initiativeTitle = document.createElement('h4');
+            initiativeTitle.textContent = "Iniciativa";
+            initiativeBlock.appendChild(initiativeTitle);
+            initiativeBlock.innerHTML += `<p>Você rolou ${playerInitiativeRoll} + ${playerAbilityStored} (Habilidade) = <strong>${parseInt(playerInitiativeRoll) + parseInt(playerAbilityStored)}</strong> para iniciativa.</p>`;
+            initiativeBlock.innerHTML += `<p>${currentMonster.nome} rolou ${monsterInitiativeRoll} + ${monsterAbilityStored} (Habilidade) = <strong>${parseInt(monsterInitiativeRoll) + parseInt(monsterAbilityStored)}</strong> para iniciativa.</p>`;
+            battleLogContent.prepend(initiativeBlock);
+            currentTurnBlock = null;
             console.log("LOG: DOMContentLoaded - Informações de iniciativa adicionadas ao log.");
         }
         if (initiativeResult === 'player') {
@@ -302,8 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     atacarCorpoACorpoButton.style.display = 'block';
                 }
                 console.log("LOG: DOMContentLoaded - Iniciativa do jogador vencida. Exibindo opções de ataque.");
-                addLogMessage(`<hr>`);
-                addLogMessage(`<strong>Turno do Jogador</strong>`); // Adicionado log do turno do jogador
+                addLogMessage(`Turno do Jogador`); // Adicionado log do turno do jogador
             }
             isPlayerTurn = true;
             console.log("LOG: DOMContentLoaded - Iniciativa do jogador vencida. attackOptionsDiv.style.display:", attackOptionsDiv.style.display, "isPlayerTurn:", isPlayerTurn);
@@ -378,11 +382,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                             // Se a vida do monstro for <= 0 ou a vida do jogador for <= 0, a batalha acabou
                             if (currentMonster.pontosDeEnergia <= 0) {
-                                addLogMessage(`<p><strong style="color: green;">${currentMonster.nome} foi derrotado!</strong></p>`);
+                                addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`);
                                 attackOptionsDiv.style.display = 'none';
                                 console.log("LOG: onAuthStateChanged - Monstro derrotado, escondendo opções de ataque.");
                             } else if (playerHealth <= 0) {
-                                addLogMessage(`<p><strong style="color: red;">Você foi derrotado!</strong></p>`);
+                                addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`);
                                 attackOptionsDiv.style.display = 'none';
                                 console.log("LOG: onAuthStateChanged - Jogador derrotado, escondendo opções de ataque.");
                             }
@@ -454,8 +458,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const initiativeTitle = document.createElement('h4');
                                 initiativeTitle.textContent = "Iniciativa";
                                 initiativeBlock.appendChild(initiativeTitle);
-                                initiativeBlock.innerHTML += `<p>Você rolou ${playerRoll} + ${playerAbilityValue} (Habilidade) = <strong>${playerRoll + playerAbilityValue}</strong> para iniciativa.</p>`;
-                                initiativeBlock.innerHTML += `<p>${currentMonster.nome} rolou ${monsterRoll} + ${monsterAbilityValue} (Habilidade) = <strong>${monsterRoll + monsterAbilityValue}</strong> para iniciativa.</p>`;
+                                initiativeBlock.innerHTML += `<p>Você rolou ${playerRoll} + ${playerAbilityValue} (Habilidade) = ${playerRoll + playerAbilityValue} para iniciativa.</p>`;
+                                initiativeBlock.innerHTML += `<p>${currentMonster.nome} rolou ${monsterRoll} + ${monsterAbilityValue} (Habilidade) = ${monsterRoll + monsterAbilityValue} para iniciativa.</p>`;
                                 battleLogContent.prepend(initiativeBlock);
                                 currentTurnBlock = null; // Reset current turn block
 
@@ -471,8 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                             atacarCorpoACorpoButton.style.display = 'block';
                                         }
                                         console.log("LOG: onAuthStateChanged - Jogador venceu a iniciativa, exibindo opções de ataque.");
-                                        addLogMessage(`<hr>`);
-                                        addLogMessage(`<strong>Turno do Jogador</strong>`); // Adicionado log do turno do jogador
+                                        addLogMessage(`Turno do Jogador`); // Adicionado log do turno do jogador
                                     }
                                     initiativeWinner = 'player';
                                     isPlayerTurn = true;
@@ -519,14 +522,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                     addLogMessage(`<p>Não é seu turno!</p>`);
                                     return;
                                 }
-                                addLogMessage(`<hr>`);
-                                addLogMessage(`<strong>Ataque Corpo a Corpo</strong>`);
+                                addLogMessage(`Ataque Corpo a Corpo`);
                                 const playerAttackRoll = Math.floor(Math.random() * 20) + 1 + playerAbilityValue; // Adiciona a habilidade ao ataque
                                 const monsterArmorClass = currentMonster.couraça; // Obtém a couraça do monstro
                                 console.log("LOG: Botão 'Corpo a Corpo' - Rolagem de ataque do jogador:", playerAttackRoll);
                                 console.log("LOG: Botão 'Corpo a Corpo' - Couraça do monstro:", monsterArmorClass);
 
-                                addLogMessage(`Você atacou corpo a corpo e rolou um <strong>${playerAttackRoll}</strong> (1D20 + ${playerAbilityValue} de Habilidade).`);
+                                addLogMessage(`Você atacou corpo a corpo e rolou um ${playerAttackRoll} (1D20 + ${playerAbilityValue} de Habilidade).`);
 
                                 if (playerAttackRoll >= monsterArmorClass) {
                                     addLogMessage(`Seu ataque acertou o ${currentMonster.nome} (Couraça: ${monsterArmorClass})!`);
@@ -556,8 +558,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     addLogMessage(`<p>Não é seu turno!</p>`);
                                     return;
                                 }
-                                addLogMessage(`<hr>`);
-                                addLogMessage(`<strong>Rolagem de Dano</strong>`);
+                                addLogMessage(`Rolagem de Dano`);
                                 let playerDamage;
                                 if (playerData && playerData.dano) {
                                     playerDamage = playerData.dano;
@@ -567,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const damageRollResult = rollDice(playerDamage);
                                 console.log("LOG: Botão 'DANO' - Dano rolado pelo jogador:", damageRollResult, "Dados de dano:", playerDamage);
                                 currentMonster.pontosDeEnergia -= damageRollResult;
-                                addLogMessage(`Você rolou <strong>${damageRollResult}</strong> de dano (${playerDamage})!`);
+                                addLogMessage(`Você rolou ${damageRollResult} de dano (${playerDamage})!`);
                                 addLogMessage(`${currentMonster.nome} sofreu ${damageRollResult} de dano. Pontos de Energia restantes: ${currentMonster.pontosDeEnergia}.`);
                                 rolarDanoButton.style.display = 'none';
                                 attackOptionsDiv.style.display = 'none'; // Fim do turno do jogador
@@ -581,11 +582,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 // Verifica se o monstro foi derrotado
                                 if (currentMonster.pontosDeEnergia <= 0) {
-                                    addLogMessage(`<p><strong style="color: green;">${currentMonster.nome} foi derrotado!</strong></p>`);
+                                    addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`);
                                     console.log("LOG: Botão 'DANO' - Monstro derrotado.");
                                     // Aqui você pode adicionar lógica para recompensar o jogador e, opcionalmente, restaurar parte da energia.
                                 } else {
-                                    addLogMessage(`<strong>Fim do Turno do Jogador</strong>`); // Adicionado log do fim do turno do jogador
+                                    addLogMessage(`Fim do Turno do Jogador`); // Adicionado log do fim do turno do jogador
                                     console.log("LOG: Botão 'DANO' - Turno do monstro após o ataque do jogador.");
                                     monsterAttack(); // Turno do monstro APÓS o jogador causar dano
                                 }
