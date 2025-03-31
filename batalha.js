@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
     }
 
-    function addLogMessage(message, delay = 0, typingSpeed = 80) { // Aumentei typingSpeed para 80 (quanto maior, mais lento)
+    function addLogMessage(message, delay = 0, typingSpeed = 30) {
         if (currentTurnBlock) {
             const p = document.createElement('p');
             currentTurnBlock.appendChild(p);
@@ -187,24 +187,20 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             const p = document.createElement('p');
             p.textContent = message;
-            battleLogContent.appendChild(p); // Alterado para appendChild para adicionar no final
+            battleLogContent.prepend(p);
         }
-        // Rolagem automática para o fim
-        battleLogContent.scrollTop = battleLogContent.scrollHeight;
     }
 
     function startNewTurnBlock(turnName) {
         if (currentTurnBlock) {
-            battleLogContent.appendChild(currentTurnBlock); // Adiciona o bloco anterior ao final
+            battleLogContent.prepend(currentTurnBlock);
         }
         currentTurnBlock = document.createElement('div');
         currentTurnBlock.classList.add('turn-block');
         const turnTitle = document.createElement('h4');
         turnTitle.textContent = `Turno do ${turnName}`;
         currentTurnBlock.appendChild(turnTitle);
-        battleLogContent.appendChild(currentTurnBlock); // Adiciona o novo bloco ao final
-        // Rolagem automática para o fim
-        battleLogContent.scrollTop = battleLogContent.scrollHeight;
+        battleLogContent.prepend(currentTurnBlock); // Adiciona o novo bloco no topo
     }
 
     function endPlayerTurn() {
@@ -340,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 startNewTurnBlock("Jogador");
                 addLogMessage(`<p>Você venceu a iniciativa e atacará primeiro.</p>`, 1000);
                 if (attackOptionsDiv) {
-                    console.log("LOG: onAuthStateChanged - Iniciativa do jogador vencida - Antes de exibir opções, attackOptionsDiv:", attackOptionsDiv); // ADICIONADO
+                    console.log("LOG: Iniciativa do jogador vencida - Antes de exibir opções, attackOptionsDiv:", attackOptionsDiv); // ADICIONADO
                     attackOptionsDiv.style.display = 'block';
                     // Mostrar o botão de ataque corpo a corpo
                     if (atacarCorpoACorpoButton) {
