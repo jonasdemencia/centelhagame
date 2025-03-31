@@ -480,9 +480,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
                         }
 
-                        // Event listener para o botão "Rolar Iniciativa"
+                   // Event listener para o botão "Rolar Iniciativa"
                         if (rolarIniciativaButton) {
-                            rolarIniciativaButton.addEventListener('click', () => {
+                            rolarIniciativaButton.addEventListener('click', async () => {
                                 console.log("LOG: Botão 'Rolar Iniciativa' clicado.");
                                 const playerRoll = Math.floor(Math.random() * 20) + 1;
                                 const monsterRoll = Math.floor(Math.random() * 20) + 1;
@@ -493,15 +493,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 battleLogContent.innerHTML = ""; // Limpa o conteúdo para adicionar os blocos de iniciativa
                                 startNewTurnBlock("Iniciativa");
-                                addLogMessage(`Você rolou ${playerRoll} + ${playerAbilityValue} (Habilidade) = ${playerRoll + playerAbilityValue} para iniciativa.`, 1000);
-                                addLogMessage(`${currentMonster.nome} rolou ${monsterRoll} + ${monsterAbilityValue} (Habilidade) = ${monsterRoll + monsterAbilityValue} para iniciativa.`, 1000);
+                                await addLogMessage(`Turno do Iniciativa`, 1000); // Adicionado await aqui
+                                await addLogMessage(`Você rolou ${playerRoll} + ${playerAbilityValue} (Habilidade) = ${playerRoll + playerAbilityValue} para iniciativa.`, 1000);
+                                await addLogMessage(`${currentMonster.nome} rolou ${monsterRoll} + ${monsterAbilityValue} (Habilidade) = ${monsterRoll + monsterAbilityValue} para iniciativa.`, 1000);
                                 currentTurnBlock = null; // Reset current turn block
 
                                 let initiativeWinner = '';
                                 if (playerRoll + playerAbilityValue > monsterRoll + monsterAbilityValue) {
-                                    setTimeout(() => {
+                                    setTimeout(async () => {
                                         startNewTurnBlock("Jogador");
-                                        addLogMessage(`<p>Você venceu a iniciativa! Você ataca primeiro.</p>`, 1000);
+                                        await addLogMessage(`<p>Você venceu a iniciativa! Você ataca primeiro.</p>`, 1000);
                                         if (attackOptionsDiv) {
                                             console.log("LOG: onAuthStateChanged - Iniciativa do jogador vencida - Antes de exibir opções, attackOptionsDiv:", attackOptionsDiv); // ADICIONADO
                                             attackOptionsDiv.style.display = 'block';
@@ -510,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 atacarCorpoACorpoButton.style.display = 'block';
                                             }
                                             console.log("LOG: onAuthStateChanged - Jogador venceu a iniciativa, exibindo opções de ataque.");
-                                            addLogMessage(`Turno do Jogador`, 1000); // Adicionado log do turno do jogador
+                                            await addLogMessage(`Turno do Jogador`, 1000); // Adicionado log do turno do jogador
                                         }
                                         initiativeWinner = 'player';
                                         isPlayerTurn = true;
@@ -519,17 +520,17 @@ document.addEventListener('DOMContentLoaded', () => {
                                         console.log("LOG: onAuthStateChanged - initiativeResult salvo no Session Storage:", sessionStorage.getItem('initiativeResult'));
                                     }, 500);
                                 } else if (monsterRoll + monsterAbilityValue > playerRoll + playerAbilityValue) {
-                                    setTimeout(() => {
+                                    setTimeout(async () => {
                                         startNewTurnBlock(currentMonster.nome);
-                                        addLogMessage(`<p>${currentMonster.nome} venceu a iniciativa e atacará primeiro.</p>`, 1000);
+                                        await addLogMessage(`<p>${currentMonster.nome} venceu a iniciativa e atacará primeiro.</p>`, 1000);
                                         initiativeWinner = 'monster';
                                         isPlayerTurn = false;
                                         if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
                                         console.log("LOG: onAuthStateChanged - Monstro venceu a iniciativa! initiativeWinner =", initiativeWinner, "isPlayerTurn =", isPlayerTurn);
-                                        monsterAttack(); // Monstro ataca primeiro
+                                        await monsterAttack(); // Monstro ataca primeiro
                                     }, 500);
                                 } else {
-                                    addLogMessage(`<p>Houve um empate na iniciativa!</p>`, 1000);
+                                    await addLogMessage(`<p>Houve um empate na iniciativa!</p>`, 1000);
                                     initiativeWinner = 'tie';
                                     isPlayerTurn = false;
                                     console.log("LOG: onAuthStateChanged - Empate na iniciativa! initiativeWinner =", initiativeWinner, "isPlayerTurn =", isPlayerTurn);
