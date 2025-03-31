@@ -95,6 +95,19 @@ function loadBattleState(userId, monsterName) {
         });
 }
 
+// Função para salvar o estado da batalha no Firestore
+function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
+    console.log("LOG: saveBattleState chamado com userId:", userId, "monsterName:", monsterName, "monsterHealth:", monsterHealth, "playerHealth:", playerHealth);
+    const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
+    return setDoc(battleDocRef, { monsterHealth: monsterHealth, playerHealth: playerHealth }, { merge: true })
+        .then(() => {
+            console.log("LOG: Estado da batalha salvo no Firestore.");
+        })
+        .catch((error) => {
+            console.error("LOG: Erro ao salvar o estado da batalha:", error);
+        });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: DOMContentLoaded evento disparado.");
     const lutarButton = document.getElementById("iniciar-luta");
@@ -152,25 +165,29 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
     }
 
-    function addLogMessage(message, delay = 0) {
-        if (delay > 0) {
-            setTimeout(() => {
-                const p = document.createElement('p');
-                p.textContent = message;
-                if (currentTurnBlock) {
-                    currentTurnBlock.appendChild(p);
-                } else {
-                    battleLogContent.prepend(p);
+    function addLogMessage(message, delay = 0, typingSpeed = 30) {
+        if (currentTurnBlock) {
+            const p = document.createElement('p');
+            currentTurnBlock.appendChild(p);
+            let index = 0;
+            function typeWriter() {
+                if (index < message.length) {
+                    p.textContent += message.charAt(index);
+                    index++;
+                    setTimeout(typeWriter, typingSpeed);
+                } else if (delay > 0) {
+                    setTimeout(() => {}, delay); // Adiciona um delay extra após a digitação se necessário
                 }
-            }, delay);
+            }
+            if (delay === 0) {
+                typeWriter();
+            } else {
+                setTimeout(typeWriter, delay);
+            }
         } else {
             const p = document.createElement('p');
             p.textContent = message;
-            if (currentTurnBlock) {
-                currentTurnBlock.appendChild(p);
-            } else {
-                battleLogContent.prepend(p);
-            }
+            battleLogContent.prepend(p);
         }
     }
 
@@ -183,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const turnTitle = document.createElement('h4');
         turnTitle.textContent = `Turno do ${turnName}`;
         currentTurnBlock.appendChild(turnTitle);
+        battleLogContent.prepend(currentTurnBlock); // Adiciona o novo bloco no topo
     }
 
     function endPlayerTurn() {
@@ -195,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1500); // Pequeno delay antes do turno do monstro
     }
 
-    // Função para o ataque do monstro (agora com delays)
+    // Função para o ataque do monstro (agora com delays e log em tempo real)
     function monsterAttack() {
         console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
         if (!currentMonster || playerHealth <= 0) {
