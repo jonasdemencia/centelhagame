@@ -315,28 +315,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (initiativeResult && currentMonster) { // Garante que currentMonster esteja definido
         console.log("LOG: DOMContentLoaded - initiativeResult encontrado:", initiativeResult);
         if (lutarButton) { // Line 150
-                            lutarButton.disabled = false;
-                            lutarButton.addEventListener('click', function() {
-                                console.log("LOG: Botão 'Lutar' clicado.");
+                                        lutarButton.disabled = false;
+                                        lutarButton.addEventListener('click', function() {
+                                            console.log("LOG: Botão 'Lutar' clicado.");
 
-                                // Desabilita o botão de inventário ao clicar em "Lute"
-                                const inventarioButton = document.getElementById("abrir-inventario");
-                                if (inventarioButton) {
-                                    inventarioButton.disabled = true;
-                                    console.log("LOG: Botão de inventário desabilitado.");
-                                }
+                                            // Desabilita o botão de inventário ao clicar em "Lute"
+                                            const inventarioButton = document.getElementById("abrir-inventario");
+                                            if (inventarioButton) {
+                                                inventarioButton.disabled = true;
+                                                console.log("LOG: Botão de inventário desabilitado.");
+                                            }
 
-                                lutarButton.style.display = 'none';
-                                if (rolarIniciativaButton) {
-                                    rolarIniciativaButton.style.display = 'block';
-                                    sessionStorage.setItem('luteButtonClicked', 'true');
-                                    console.log("LOG: Botão 'Lutar' escondido, botão 'Rolar Iniciativa' exibido.");
-                                } else {
-                                    console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
-                                }
-                            });
-                            console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
-                        }
+                                            lutarButton.style.display = 'none';
+                                            if (rolarIniciativaButton) {
+                                                rolarIniciativaButton.style.display = 'block';
+                                                sessionStorage.setItem('luteButtonClicked', 'true');
+                                                console.log("LOG: Botão 'Lutar' escondido, botão 'Rolar Iniciativa' exibido.");
+                                            } else {
+                                                console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
+                                            }
+                                        });
+                                        console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
+                                    }
         if (rolarIniciativaButton) {
             rolarIniciativaButton.style.display = 'none';
             console.log("LOG: DOMContentLoaded - Botão 'Rolar Iniciativa' escondido.");
@@ -477,6 +477,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (inventarioButton) {
                             inventarioButton.disabled = false;
                             console.log("LOG: onAuthStateChanged - Botão de inventário habilitado.");
+
+                            // Adiciona o evento de clique para redirecionar para a página de inventário
+                            inventarioButton.addEventListener('click', function() {
+                                console.log("LOG: Botão 'Inventário' clicado. Redirecionando para inventário.");
+                                window.location.href = '/inventario.html'; // Ajuste o caminho se necessário
+                            });
                         }
                         if (playerHealthDisplay) {
                             playerHealthDisplay.innerText = playerHealth; // Exibe a energia inicial do jogador
@@ -499,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
                         }
 
-                   // Event listener para o botão "Rolar Iniciativa"
+                       // Event listener para o botão "Rolar Iniciativa"
                         if (rolarIniciativaButton) {
                             rolarIniciativaButton.addEventListener('click', async () => {
                                 console.log("LOG: Botão 'Rolar Iniciativa' clicado.");
