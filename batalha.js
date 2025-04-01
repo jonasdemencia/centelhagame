@@ -125,6 +125,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
     console.log("LOG: Variáveis iniciais declaradas.");
 
+    let isBattleStarted = false; // Adicione esta linha
+
     const monsterData = {
         "lobo": {
             nome: "Lobo Faminto",
@@ -314,29 +316,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (initiativeResult && currentMonster) { // Garante que currentMonster esteja definido
         console.log("LOG: DOMContentLoaded - initiativeResult encontrado:", initiativeResult);
-        if (lutarButton) { // Line 150
-                                        lutarButton.disabled = false;
-                                        lutarButton.addEventListener('click', function() {
-                                            console.log("LOG: Botão 'Lutar' clicado.");
-
-                                            // Desabilita o botão de inventário ao clicar em "Lute"
-                                            const inventarioButton = document.getElementById("abrir-inventario");
-                                            if (inventarioButton) {
-                                                inventarioButton.disabled = true;
-                                                console.log("LOG: Botão de inventário desabilitado.");
-                                            }
-
-                                            lutarButton.style.display = 'none';
-                                            if (rolarIniciativaButton) {
-                                                rolarIniciativaButton.style.display = 'block';
-                                                sessionStorage.setItem('luteButtonClicked', 'true');
-                                                console.log("LOG: Botão 'Lutar' escondido, botão 'Rolar Iniciativa' exibido.");
-                                            } else {
-                                                console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
-                                            }
-                                        });
-                                        console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
-                                    }
+        if (lutarButton) {
+    lutarButton.disabled = false;
+    lutarButton.addEventListener('click', () => {
+        console.log("LOG: Botão 'Lutar' clicado.");
+        isBattleStarted = true; // Adicione esta linha
+        lutarButton.style.display = 'none';
+        if (rolarIniciativaButton) {
+            rolarIniciativaButton.style.display = 'block';
+            sessionStorage.setItem('luteButtonClicked', 'true');
+            console.log("LOG: Botão 'Lutar' escondido, botão 'Rolar Iniciativa' exibido.");
+        } else {
+            console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
+        }
+    });
+    console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
+}
         if (rolarIniciativaButton) {
             rolarIniciativaButton.style.display = 'none';
             console.log("LOG: DOMContentLoaded - Botão 'Rolar Iniciativa' escondido.");
@@ -475,15 +470,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         const inventarioButton = document.getElementById("abrir-inventario");
                         const playerHealthDisplay = document.getElementById("player-health");
                         if (inventarioButton) {
-                            inventarioButton.disabled = false;
-                            console.log("LOG: onAuthStateChanged - Botão de inventário habilitado.");
+    inventarioButton.disabled = false;
+    console.log("LOG: onAuthStateChanged - Botão de inventário habilitado.");
 
-                            // Adiciona o evento de clique para redirecionar para a página de inventário
-                            inventarioButton.addEventListener('click', function() {
-                                console.log("LOG: Botão 'Inventário' clicado. Redirecionando para inventário.");
-                                window.location.href = 'https://jonasdemencia.github.io/centelhagame/inventario.html';
-                            });
-                        }
+    // Adiciona o evento de clique para redirecionar para a página de inventário
+    inventarioButton.addEventListener('click', function() {
+        console.log("LOG: Botão 'Inventário' clicado. Redirecionando para inventário.");
+        if (isBattleStarted) {
+            addLogMessage(`<p style="color: yellow;">Você não pode acessar o inventário durante a batalha!</p>`, 1000);
+            console.log("LOG: Acesso ao inventário bloqueado durante a batalha.");
+        } else {
+            window.location.href = 'https://jonasdemencia.github.io/centelhagame/inventario.html';
+        }
+    });
+}
                         if (playerHealthDisplay) {
                             playerHealthDisplay.innerText = playerHealth; // Exibe a energia inicial do jogador
                             console.log("LOG: onAuthStateChanged - Energia inicial do jogador exibida.");
