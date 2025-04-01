@@ -5,6 +5,9 @@ import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/fireb
 
 console.log("LOG: batalha.js carregado.");
 
+// Declaração da variável isBattleStarted no escopo global
+let isBattleStarted = false;
+
 // Configuração do Firebase (substitua com suas próprias configurações)
 const firebaseConfig = {
     apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
@@ -124,8 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTurnBlock = null; // Para armazenar o bloco do turno atual
     let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
     console.log("LOG: Variáveis iniciais declaradas.");
-
-    let isBattleStarted = false; // Adicione esta linha
 
     const monsterData = {
         "lobo": {
