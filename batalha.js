@@ -321,6 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
     lutarButton.addEventListener('click', () => {
         console.log("LOG: Botão 'Lutar' clicado.");
         isBattleStarted = true; // Adicione esta linha
+        console.log("LOG: Botão 'Lutar' clicado - isBattleStarted agora é:", isBattleStarted); // ADICIONE ESTA LINHA
         lutarButton.style.display = 'none';
         if (rolarIniciativaButton) {
             rolarIniciativaButton.style.display = 'block';
@@ -475,6 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Adiciona o evento de clique para redirecionar para a página de inventário
     inventarioButton.addEventListener('click', function() {
+        console.log("LOG: Botão 'Inventário' clicado. Valor de isBattleStarted:", isBattleStarted); // ADICIONE ESTA LINHA
         console.log("LOG: Botão 'Inventário' clicado. Redirecionando para inventário.");
         if (isBattleStarted) {
             addLogMessage(`<p style="color: yellow;">Você não pode acessar o inventário durante a batalha!</p>`, 1000);
