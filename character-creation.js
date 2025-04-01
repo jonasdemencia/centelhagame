@@ -34,7 +34,7 @@ function getRacialModifiers() {
 
     switch (race) {
         case "Anão":
-            modifiers.energy += 50;  // Energia +50
+            modifiers.energy += 200;  // Energia +200
             modifiers.charisma -= 2; // Carisma -2
             break;
         case "Elfo":
