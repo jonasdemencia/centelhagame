@@ -321,9 +321,18 @@ document.addEventListener('DOMContentLoaded', () => {
     lutarButton.disabled = false;
     lutarButton.addEventListener('click', () => {
         console.log("LOG: Botão 'Lutar' clicado.");
-        isBattleStarted = true; // Adicione esta linha
-        console.log("LOG: Botão 'Lutar' clicado - isBattleStarted agora é:", isBattleStarted); // ADICIONE ESTA LINHA
         lutarButton.style.display = 'none';
+
+        // Desabilita o botão de inventário
+        const inventarioButton = document.getElementById("abrir-inventario");
+        if (inventarioButton) {
+            inventarioButton.disabled = true;
+            inventarioButton.style.opacity = '0.5'; // Opcional: Diminui a opacidade para indicar que está desabilitado
+            inventarioButton.style.cursor = 'not-allowed'; // Opcional: Muda o cursor para indicar que não é clicável
+        } else {
+            console.error("LOG: Botão 'Inventário' não encontrado (ID: abrir-inventario)");
+        }
+
         if (rolarIniciativaButton) {
             rolarIniciativaButton.style.display = 'block';
             sessionStorage.setItem('luteButtonClicked', 'true');
@@ -331,6 +340,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
         }
+        // Não precisamos mais desta linha por enquanto
+        // isBattleStarted = true;
+        // console.log("LOG: Botão 'Lutar' clicado - isBattleStarted agora é:", isBattleStarted);
     });
     console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
 }
