@@ -481,7 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             // Adiciona o evento de clique para redirecionar para a página de inventário
                             inventarioButton.addEventListener('click', function() {
                                 console.log("LOG: Botão 'Inventário' clicado. Redirecionando para inventário.");
-                                window.location.href = 'https://jonasdemencia.github.io/inventario.html';
+                                window.location.href = 'https://jonasdemencia.github.io/centelhagame/inventario.html';
                             });
                         }
                         if (playerHealthDisplay) {
