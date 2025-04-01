@@ -5,9 +5,6 @@ import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/fireb
 
 console.log("LOG: batalha.js carregado.");
 
-// Declaração da variável isBattleStarted no escopo global
-let isBattleStarted = false;
-
 // Configuração do Firebase (substitua com suas próprias configurações)
 const firebaseConfig = {
     apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
@@ -318,34 +315,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (initiativeResult && currentMonster) { // Garante que currentMonster esteja definido
         console.log("LOG: DOMContentLoaded - initiativeResult encontrado:", initiativeResult);
         if (lutarButton) {
-    lutarButton.disabled = false;
-    lutarButton.addEventListener('click', () => {
-        console.log("LOG: Botão 'Lutar' clicado.");
-        lutarButton.style.display = 'none';
-
-        // Desabilita o botão de inventário
-        const inventarioButton = document.getElementById("abrir-inventario");
-        if (inventarioButton) {
-            inventarioButton.disabled = true;
-            inventarioButton.style.opacity = '0.5'; // Opcional: Diminui a opacidade para indicar que está desabilitado
-            inventarioButton.style.cursor = 'not-allowed'; // Opcional: Muda o cursor para indicar que não é clicável
-        } else {
-            console.error("LOG: Botão 'Inventário' não encontrado (ID: abrir-inventario)");
+            lutarButton.style.display = 'none';
+            console.log("LOG: DOMContentLoaded - Botão 'Lutar' escondido.");
         }
-
-        if (rolarIniciativaButton) {
-            rolarIniciativaButton.style.display = 'block';
-            sessionStorage.setItem('luteButtonClicked', 'true');
-            console.log("LOG: Botão 'Lutar' escondido, botão 'Rolar Iniciativa' exibido.");
-        } else {
-            console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
-        }
-        // Não precisamos mais desta linha por enquanto
-        // isBattleStarted = true;
-        // console.log("LOG: Botão 'Lutar' clicado - isBattleStarted agora é:", isBattleStarted);
-    });
-    console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
-}
         if (rolarIniciativaButton) {
             rolarIniciativaButton.style.display = 'none';
             console.log("LOG: DOMContentLoaded - Botão 'Rolar Iniciativa' escondido.");
@@ -484,21 +456,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         const inventarioButton = document.getElementById("abrir-inventario");
                         const playerHealthDisplay = document.getElementById("player-health");
                         if (inventarioButton) {
-    inventarioButton.disabled = false;
-    console.log("LOG: onAuthStateChanged - Botão de inventário habilitado.");
-
-    // Adiciona o evento de clique para redirecionar para a página de inventário
-    inventarioButton.addEventListener('click', function() {
-        console.log("LOG: Botão 'Inventário' clicado. Valor de isBattleStarted:", isBattleStarted); // ADICIONE ESTA LINHA
-        console.log("LOG: Botão 'Inventário' clicado. Redirecionando para inventário.");
-        if (isBattleStarted) {
-            addLogMessage(`<p style="color: yellow;">Você não pode acessar o inventário durante a batalha!</p>`, 1000);
-            console.log("LOG: Acesso ao inventário bloqueado durante a batalha.");
-        } else {
-            window.location.href = 'https://jonasdemencia.github.io/centelhagame/inventario.html';
-        }
-    });
-}
+                            inventarioButton.disabled = false;
+                            console.log("LOG: onAuthStateChanged - Botão de inventário habilitado.");
+                        }
                         if (playerHealthDisplay) {
                             playerHealthDisplay.innerText = playerHealth; // Exibe a energia inicial do jogador
                             console.log("LOG: onAuthStateChanged - Energia inicial do jogador exibida.");
@@ -520,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
                         }
 
-                       // Event listener para o botão "Rolar Iniciativa"
+                   // Event listener para o botão "Rolar Iniciativa"
                         if (rolarIniciativaButton) {
                             rolarIniciativaButton.addEventListener('click', async () => {
                                 console.log("LOG: Botão 'Rolar Iniciativa' clicado.");
