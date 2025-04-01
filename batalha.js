@@ -314,10 +314,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (initiativeResult && currentMonster) { // Garante que currentMonster esteja definido
         console.log("LOG: DOMContentLoaded - initiativeResult encontrado:", initiativeResult);
-        if (lutarButton) {
-            lutarButton.style.display = 'none';
-            console.log("LOG: DOMContentLoaded - Botão 'Lutar' escondido.");
-        }
+        if (lutarButton) { // Line 150
+                            lutarButton.disabled = false;
+                            lutarButton.addEventListener('click', function() {
+                                console.log("LOG: Botão 'Lutar' clicado.");
+
+                                // Desabilita o botão de inventário ao clicar em "Lute"
+                                const inventarioButton = document.getElementById("abrir-inventario");
+                                if (inventarioButton) {
+                                    inventarioButton.disabled = true;
+                                    console.log("LOG: Botão de inventário desabilitado.");
+                                }
+
+                                lutarButton.style.display = 'none';
+                                if (rolarIniciativaButton) {
+                                    rolarIniciativaButton.style.display = 'block';
+                                    sessionStorage.setItem('luteButtonClicked', 'true');
+                                    console.log("LOG: Botão 'Lutar' escondido, botão 'Rolar Iniciativa' exibido.");
+                                } else {
+                                    console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
+                                }
+                            });
+                            console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
+                        }
         if (rolarIniciativaButton) {
             rolarIniciativaButton.style.display = 'none';
             console.log("LOG: DOMContentLoaded - Botão 'Rolar Iniciativa' escondido.");
