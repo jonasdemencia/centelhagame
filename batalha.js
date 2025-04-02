@@ -127,6 +127,27 @@ document.addEventListener('DOMContentLoaded', () => {
     let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
     console.log("LOG: Variáveis iniciais declaradas.");
 
+    // === INÍCIO DA LÓGICA DO BOTÃO 'LUTAR' ===
+    if (lutarButton) {
+        lutarButton.disabled = false; // Inicialmente habilitado
+        lutarButton.addEventListener('click', () => {
+            console.log("LOG: Botão 'Lutar' clicado.");
+            lutarButton.style.display = 'none';
+            isBattleActive = true; // Ativa o estado de batalha
+
+            if (rolarIniciativaButton) {
+                rolarIniciativaButton.style.display = 'block';
+                sessionStorage.setItem('luteButtonClicked', 'true');
+                console.log("LOG: Botão 'Lutar' escondido e botão 'Rolar Iniciativa' exibido.");
+            } else {
+                console.error("LOG: Botão 'Rolar Iniciativa' não encontrado.");
+            }
+        });
+    } else {
+        console.error("LOG: Botão 'Lutar' não encontrado (ID: iniciar-luta).");
+    }
+    // === FIM DA LÓGICA DO BOTÃO 'LUTAR' ===
+});
     const monsterData = {
         "lobo": {
             nome: "Lobo Faminto",
