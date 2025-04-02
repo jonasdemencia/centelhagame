@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const botaoIniciativa = document.getElementById("rolar-iniciativa");
     const logBatalha = document.getElementById("battle-log-content");
 
-  if (botaoInventario) {
+ if (botaoInventario) {
     botaoInventario.addEventListener("click", function () {
         window.location.href = "https://jonasdemencia.github.io/centelhagame/inventario.html";
     });
@@ -460,6 +460,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                 addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1500);
                                 attackOptionsDiv.style.display = 'none';
                                 console.log("LOG: onAuthStateChanged - Monstro derrotado, escondendo opções de ataque.");
+                                // *** ADICIONANDO O BOTÃO "EXAMINAR ADVERSÁRIO" AQUI ***
+                                const examinarButton = document.createElement('button');
+                                examinarButton.textContent = 'Examinar Adversário';
+                                examinarButton.id = 'examinar-adversario'; // Opcional: para referenciar o botão depois
+                                battleLogContent.appendChild(examinarButton);
+                                console.log("LOG: onAuthStateChanged - Botão 'Examinar Adversário' criado e adicionado.");
+                                // *** FIM DA ADIÇÃO DO BOTÃO ***
                             } else if (playerHealth <= 0) {
                                 addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1500);
                                 attackOptionsDiv.style.display = 'none';
@@ -548,147 +555,140 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 atacarCorpoACorpoButton.style.display = 'block';
                                             }
                                             console.log("LOG: onAuthStateChanged - Jogador venceu a iniciativa, exibindo opções de ataque.");
-                                            await addLogMessage(`Turno do Jogador`, 1000); // Adicionado log do turno do jogador
+                                            addLogMessage(`Turno do Jogador`, 1000);
                                         }
-                                        initiativeWinner = 'player';
                                         isPlayerTurn = true;
-                                        console.log("LOG: onAuthStateChanged - Jogador venceu a iniciativa! initiativeWinner =", initiativeWinner, "isPlayerTurn =", isPlayerTurn);
-                                        sessionStorage.setItem('initiativeResult', initiativeWinner);
-                                        console.log("LOG: onAuthStateChanged - initiativeResult salvo no Session Storage:", sessionStorage.getItem('initiativeResult'));
+                                        console.log("LOG: onAuthStateChanged - Iniciativa do jogador vencida. attackOptionsDiv.style.display:", attackOptionsDiv.style.display, "isPlayerTurn:", isPlayerTurn);
+                                        sessionStorage.setItem('initiativeResult', 'player');
+                                        sessionStorage.setItem('playerInitiativeRoll', playerRoll);
+                                        sessionStorage.setItem('monsterInitiativeRoll', monsterRoll);
+                                        sessionStorage.setItem('playerAbility', playerAbilityValue);
+                                        sessionStorage.setItem('monsterAbility', monsterAbilityValue);
                                     }, 500);
                                 } else if (monsterRoll + monsterAbilityValue > playerRoll + playerAbilityValue) {
                                     setTimeout(async () => {
                                         startNewTurnBlock(currentMonster.nome);
-                                        await addLogMessage(`<p>${currentMonster.nome} venceu a iniciativa e atacará primeiro.</p>`, 1000);
-                                        initiativeWinner = 'monster';
+                                        await addLogMessage(`<p>${currentMonster.nome} venceu a iniciativa! ${currentMonster.nome} ataca primeiro.</p>`, 1000);
+                                        if (attackOptionsDiv) {
+                                            attackOptionsDiv.style.display = 'none';
+                                            console.log("LOG: onAuthStateChanged - Monstro venceu a iniciativa, escondendo opções de ataque.");
+                                        }
                                         isPlayerTurn = false;
-                                        if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
-                                        console.log("LOG: onAuthStateChanged - Monstro venceu a iniciativa! initiativeWinner =", initiativeWinner, "isPlayerTurn =", isPlayerTurn);
-                                        await monsterAttack(); // Monstro ataca primeiro
+                                        console.log("LOG: onAuthStateChanged - Iniciativa do monstro vencida. attackOptionsDiv.style.display:", attackOptionsDiv.style.display, "isPlayerTurn:", isPlayerTurn);
+                                        sessionStorage.setItem('initiativeResult', 'monster');
+                                        sessionStorage.setItem('playerInitiativeRoll', playerRoll);
+                                        sessionStorage.setItem('monsterInitiativeRoll', monsterRoll);
+                                        sessionStorage.setItem('playerAbility', playerAbilityValue);
+                                        sessionStorage.setItem('monsterAbility', monsterAbilityValue);
+                                        monsterAttack(); // Monstro ataca primeiro
                                     }, 500);
                                 } else {
                                     await addLogMessage(`<p>Houve um empate na iniciativa!</p>`, 1000);
-                                    initiativeWinner = 'tie';
-                                    isPlayerTurn = false;
-                                    console.log("LOG: onAuthStateChanged - Empate na iniciativa! initiativeWinner =", initiativeWinner, "isPlayerTurn =", isPlayerTurn);
-                                    if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'block';
+                                    if (rolarIniciativaButton) {
+                                        rolarIniciativaButton.style.display = 'block'; // Permitir rolar novamente em caso de empate
+                                        console.log("LOG: onAuthStateChanged - Empate na iniciativa. Exibindo botão 'Rolar Iniciativa'.");
+                                    }
+                                    sessionStorage.removeItem('initiativeResult');
+                                    sessionStorage.removeItem('playerInitiativeRoll');
+                                    sessionStorage.removeItem('monsterInitiativeRoll');
+                                    sessionStorage.removeItem('playerAbility');
+                                    sessionStorage.removeItem('monsterAbility');
                                 }
-
-                                sessionStorage.setItem('playerInitiativeRoll', playerRoll.toString());
-                                sessionStorage.setItem('monsterInitiativeRoll', monsterRoll.toString());
-                                sessionStorage.setItem('playerAbility', playerAbilityValue.toString());
-                                sessionStorage.setItem('monsterAbility', monsterAbilityValue.toString());
-
-                                rolarIniciativaButton.style.display = 'none';
-                                sessionStorage.removeItem('luteButtonClicked');
-                                console.log("LOG: onAuthStateChanged - Iniciativa rolada, botões de iniciativa escondidos.");
+                                if (rolarIniciativaButton) {
+                                    rolarIniciativaButton.style.display = 'none';
+                                    console.log("LOG: onAuthStateChanged - Botão 'Rolar Iniciativa' escondido após a rolagem.");
+                                }
                             });
                             console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Rolar Iniciativa'.");
-                        } else {
-                            console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
                         }
 
-                        // Lógica para o botão "Corpo a Corpo"
+                        // Event listener para o botão de ataque corpo a corpo
                         if (atacarCorpoACorpoButton) {
                             atacarCorpoACorpoButton.addEventListener('click', async () => {
-                                console.log("LOG: Botão 'Corpo a Corpo' clicado. isPlayerTurn:", isPlayerTurn);
-                                if (!isPlayerTurn) {
-                                    await addLogMessage(`<p>Não é seu turno!</p>`, 1000);
+                                console.log("LOG: Botão 'Atacar Corpo a Corpo' clicado.");
+                                if (!isPlayerTurn || !currentMonster || currentMonster.pontosDeEnergia <= 0) {
+                                    console.log("LOG: Botão 'Atacar Corpo a Corpo' clicado fora do turno ou monstro já derrotado.");
                                     return;
                                 }
-                                if (attackOptionsDiv) {
-                                    // Desabilita os botões de ação durante a sequência
-                                    const buttons = attackOptionsDiv.querySelectorAll('.button');
-                                    buttons.forEach(button => button.disabled = true);
-                                }
 
-                                startNewTurnBlock("Jogador"); // Adiciona o início do turno aqui
+                                startNewTurnBlock("Jogador");
+                                await addLogMessage(`<p>Você ataca corpo a corpo.</p>`, 1000);
 
-                                await addLogMessage(`Você optou pelo ataque corpo a corpo.`, 1000);
+                                const playerAttackRoll = Math.floor(Math.random() * 20) + 1 + playerAbilityValue;
+                                await addLogMessage(`Você rolou ${playerAttackRoll} para atacar.`, 1000);
+                                console.log("LOG: onAuthStateChanged - Rolagem de ataque do jogador:", playerAttackRoll);
 
-                                const playerRoll = Math.floor(Math.random() * 20) + 1 + playerAbilityValue; // Adiciona a habilidade ao ataque
-                                const monsterArmorClass = currentMonster.couraça; // Obtém a couraça do monstro
-                                console.log("LOG: Botão 'Corpo a Corpo' - Rolagem de ataque do jogador:", playerRoll);
-                                console.log("LOG: Botão 'Corpo a Corpo' - Couraça do monstro:", monsterArmorClass);
+                                const monsterDefense = currentMonster.couraça;
+                                await addLogMessage(`${currentMonster.nome} tem ${monsterDefense} de Couraça.`, 1000);
+                                console.log("LOG: onAuthStateChanged - Couraça do monstro:", monsterDefense);
 
-                                await addLogMessage(`Você atacou corpo a corpo e rolou um ${playerRoll} (1D20 + ${playerAbilityValue} de Habilidade).`, 1000);
+                                if (playerAttackRoll >= monsterDefense) {
+                                    await addLogMessage(`<p>Seu ataque acertou!</p>`, 1000);
+                                    const damageRoll = rollDice(playerData.dano ? playerData.dano : "1D1"); // Usa o dano do jogador ou 1D1 como padrão
+                                    currentMonster.pontosDeEnergia -= damageRoll;
+                                    await addLogMessage(`Você causou ${damageRoll} de dano.`, 1000);
+                                    await addLogMessage(`${currentMonster.nome} tem agora ${currentMonster.pontosDeEnergia} pontos de energia restantes.`, 1000);
+                                    console.log("LOG: onAuthStateChanged - Dano causado:", damageRoll);
+                                    console.log("LOG: onAuthStateChanged - Pontos de energia restantes do monstro:", currentMonster.pontosDeEnergia);
 
-                                if (playerRoll >= monsterArmorClass) {
-                                    await addLogMessage(`Seu ataque acertou o ${currentMonster.nome} (Couraça: ${monsterArmorClass})!`, 1000);
-                                    if (atacarCorpoACorpoButton) atacarCorpoACorpoButton.style.display = 'none';
-                                    if (rolarDanoButton) {
-                                        rolarDanoButton.style.display = 'block';
+                                    // Salvar o estado da batalha
+                                    saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+
+                                    if (currentMonster.pontosDeEnergia <= 0) {
+                                        await addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1500);
+                                        attackOptionsDiv.style.display = 'none';
+                                        // *** ADICIONANDO O BOTÃO "EXAMINAR ADVERSÁRIO" AQUI (DUPLICADO PARA GARANTIR QUE APAREÇA) ***
+                                        const examinarButton = document.createElement('button');
+                                        examinarButton.textContent = 'Examinar Adversário';
+                                        examinarButton.id = 'examinar-adversario'; // Opcional: para referenciar o botão depois
+                                        battleLogContent.appendChild(examinarButton);
+                                        console.log("LOG: onAuthStateChanged - Botão 'Examinar Adversário' criado e adicionado (após ataque).");
+                                        // *** FIM DA ADIÇÃO DO BOTÃO ***
+                                    } else {
+                                        endPlayerTurn(); // Fim do turno do jogador, vez do monstro
                                     }
-                                    if (attackOptionsDiv) {
-                                        const buttons = attackOptionsDiv.querySelectorAll('.button');
-                                        buttons.forEach(button => button.disabled = false);
-                                    }
-                                    console.log("LOG: Botão 'Corpo a Corpo' - Ataque acertou, escondendo 'Corpo a Corpo', exibindo 'DANO'.");
                                 } else {
-                                    await addLogMessage(`Seu ataque errou o ${currentMonster.nome} (Couraça: ${monsterArmorClass}).`, 1000);
-                                    await addLogMessage(`Fim do Turno do Jogador.`, 1000);
-                                    endPlayerTurn();
-                                    console.log("LOG: Botão 'Corpo a Corpo' - Ataque errou. isPlayerTurn:", isPlayerTurn);
-                                    if (attackOptionsDiv) {
-                                        const buttons = attackOptionsDiv.querySelectorAll('.button');
-                                        buttons.forEach(button => button.disabled = false);
-                                    }
+                                    await addLogMessage(`<p>Seu ataque errou.</p>`, 1000);
+                                    endPlayerTurn(); // Fim do turno do jogador, vez do monstro
                                 }
                             });
-                            console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Corpo a Corpo'.");
+                            console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Atacar Corpo a Corpo'.");
                         } else {
-                            console.error("LOG: Botão 'Corpo a Corpo' não encontrado (ID: atacar-corpo-a-corpo)");
+                            console.error("LOG: Botão 'Atacar Corpo a Corpo' não encontrado (ID: atacar-corpo-a-corpo)");
                         }
 
-                        // Event listener para o botão "DANO"
+                        // Event listener para o botão "Rolar Dano" (POR ENQUANTO ESCONDIDO POIS O ATAQUE JÁ ROLA O DANO)
                         if (rolarDanoButton) {
-                            rolarDanoButton.addEventListener('click', () => {
-                                console.log("LOG: Botão 'DANO' clicado. isPlayerTurn:", isPlayerTurn);
-                                if (!isPlayerTurn) {
-                                    addLogMessage(`<p>Não é seu turno!</p>`, 1000);
+                            rolarDanoButton.style.display = 'none'; // Escondendo por enquanto
+                            rolarDanoButton.addEventListener('click', async () => {
+                                console.log("LOG: Botão 'Rolar Dano' clicado.");
+                                if (!isPlayerTurn || !currentMonster || currentMonster.pontosDeEnergia <= 0) {
+                                    console.log("LOG: Botão 'Rolar Dano' clicado fora do turno ou monstro já derrotado.");
                                     return;
                                 }
-                                if (attackOptionsDiv) {
-                                    const buttons = attackOptionsDiv.querySelectorAll('.button');
-                                    buttons.forEach(button => button.disabled = true);
+                                const damageRoll = rollDice(playerData.dano ? playerData.dano : "1D1");
+                                currentMonster.pontosDeEnergia -= damageRoll;
+                                await addLogMessage(`Você rolou ${damageRoll} de dano.`, 1000);
+                                await addLogMessage(`${currentMonster.nome} tem agora ${currentMonster.pontosDeEnergia} pontos de energia restantes.`, 1000);
+                                console.log("LOG: onAuthStateChanged - Dano rolado:", damageRoll);
+                                console.log("LOG: onAuthStateChanged - Pontos de energia restantes do monstro:", currentMonster.pontosDeEnergia);
+
+                                // Salvar o estado da batalha
+                                saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+
+                                if (currentMonster.pontosDeEnergia <= 0) {
+                                    await addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1500);
+                                    attackOptionsDiv.style.display = 'none';
+                                    // *** ADICIONANDO O BOTÃO "EXAMINAR ADVERSÁRIO" AQUI (DUPLICADO PARA GARANTIR QUE APAREÇA) ***
+                                    const examinarButton = document.createElement('button');
+                                    examinarButton.textContent = 'Examinar Adversário';
+                                    examinarButton.id = 'examinar-adversario'; // Opcional: para referenciar o botão depois
+                                    battleLogContent.appendChild(examinarButton);
+                                    console.log("LOG: onAuthStateChanged - Botão 'Examinar Adversário' criado e adicionado (após dano).");
+                                    // *** FIM DA ADIÇÃO DO BOTÃO ***
+                                } else {
+                                    endPlayerTurn();
                                 }
-                                addLogMessage(`Rolagem de Dano`, 1000);
-                                setTimeout(() => {
-                                    const damageRollResult = rollDice(playerDamage);
-                                    console.log("LOG: Botão 'DANO' - Dano rolado pelo jogador:", damageRollResult, "Dados de dano:", playerDamage);
-                                    addLogMessage(`Você rolou ${damageRollResult} de dano (${playerDamage})!`, 1000);
-
-                                    setTimeout(() => {
-                                        currentMonster.pontosDeEnergia -= damageRollResult;
-                                        addLogMessage(`${currentMonster.nome} sofreu ${damageRollResult} de dano. Pontos de Energia restantes: ${currentMonster.pontosDeEnergia}.`, 1000);
-                                        if (rolarDanoButton) rolarDanoButton.style.display = 'none';
-                                        attackOptionsDiv.style.display = 'none'; // Fim do turno do jogador
-                                        isPlayerTurn = false;
-                                        console.log("LOG: Botão 'DANO' - Dano causado ao monstro. Pontos de Energia restantes do monstro:", currentMonster.pontosDeEnergia, "isPlayerTurn:", isPlayerTurn);
-
-                                        // Salvar o estado da batalha no Firestore
-                                        if (currentMonster && user) {
-                                            saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-                                        }
-
-                                        setTimeout(() => {
-                                            // Verifica se o monstro foi derrotado
-                                            if (currentMonster.pontosDeEnergia <= 0) {
-                                                addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-                                                console.log("LOG: Botão 'DANO' - Monstro derrotado.");
-                                                // Aqui você pode adicionar lógica para recompensar o jogador e, opcionalmente, restaurar parte da energia.
-                                            } else {
-                                                addLogMessage(`Fim do Turno do Jogador.`, 1000);
-                                                console.log("LOG: Botão 'DANO' - Turno do monstro após o ataque do jogador.");
-                                                monsterAttack(); // Turno do monstro APÓS o jogador causar dano
-                                            }
-                                            if (attackOptionsDiv) {
-                                                const buttons = attackOptionsDiv.querySelectorAll('.button');
-                                                buttons.forEach(button => button.disabled = false);
-                                            }
-                                        }, 1000);
-                                    }, 1000);
-                                }, 1000);
                             });
                             console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'DANO'.");
                         } else {
