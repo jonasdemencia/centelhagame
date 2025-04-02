@@ -270,6 +270,49 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("LOG: monsterAttack - Monstro não existe ou jogador derrotado, retornando.");
             return; // Se o monstro não existir ou o jogador estiver derrotado, não ataca
         }
+        
+document.addEventListener("DOMContentLoaded", function () {
+    const botaoInventario = document.getElementById("abrir-inventario");
+    const botaoIniciativa = document.getElementById("rolar-iniciativa");
+    const logBatalha = document.getElementById("battle-log-content");
+
+    if (botaoInventario) {
+        botaoInventario.disabled = false; // Habilita o botão no início
+        botaoInventario.addEventListener("click", function () {
+            console.log("Botão de inventário clicado!");
+            window.location.href = "https://jonasdemencia.github.io/centelhagame/inventario";
+        });
+    } else {
+        console.error("Erro: Botão de inventário NÃO encontrado!");
+    }
+
+    // Função para desativar o botão de inventário
+    function desativarInventario() {
+        if (botaoInventario) {
+            botaoInventario.disabled = true;
+            console.log("Botão de inventário desativado.");
+        }
+    }
+
+    // Desativa o botão ao rolar iniciativa
+    if (botaoIniciativa) {
+        botaoIniciativa.addEventListener("click", function () {
+            console.log("Batalha iniciada. Desativando inventário.");
+            desativarInventario();
+        });
+    }
+
+    // Observador para desativar o inventário quando o log de batalha mudar (ou seja, quando a luta começar)
+    if (logBatalha) {
+        const observer = new MutationObserver(() => {
+            console.log("Mudança detectada no log de batalha. Desativando inventário.");
+            desativarInventario();
+            observer.disconnect(); // Evita chamadas repetidas
+        });
+
+        observer.observe(logBatalha, { childList: true, subtree: true });
+    }
+});
 
         startNewTurnBlock(currentMonster.nome);
         await addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
