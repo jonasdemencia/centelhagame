@@ -218,6 +218,40 @@ document.addEventListener('DOMContentLoaded', () => {
         battleLogContent.prepend(currentTurnBlock); // Adiciona o novo bloco no topo
     }
 
+    document.addEventListener("DOMContentLoaded", function () {
+    const botaoInventario = document.getElementById("abrir-inventario"); // Use seu ID
+    const botaoIniciativa = document.getElementById("rolar-iniciativa"); // Use seu ID
+    const logBatalha = document.getElementById("battle-log-content"); // Use seu ID
+
+    // Adiciona evento ao botão de inventário para redirecionar
+    if (botaoInventario) {
+        botaoInventario.addEventListener("click", function () {
+            window.location.href = "https://jonasdemencia.github.io/centelhagame/inventario";
+        });
+    }
+
+    // Função para desativar o botão de inventário
+    function desativarInventario() {
+        if (botaoInventario) {
+            botaoInventario.disabled = true;
+        }
+    }
+
+    // Evento para desativar o botão ao rolar iniciativa
+    if (botaoIniciativa) {
+        botaoIniciativa.addEventListener("click", desativarInventario);
+    }
+
+    // Observer para detectar mudanças no log de batalha
+    if (logBatalha) {
+        const observer = new MutationObserver(() => {
+            desativarInventario();
+        });
+
+        observer.observe(logBatalha, { childList: true, subtree: true });
+    }
+});
+
     function endPlayerTurn() {
         isPlayerTurn = false;
         if (attackOptionsDiv) {
