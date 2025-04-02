@@ -130,9 +130,9 @@ document.addEventListener('DOMContentLoaded', () => {
             nome: "Lobo Faminto",
             imagem: "https://via.placeholder.com/150",
             descricao: "Um lobo selvagem com presas afiadas.",
-            habilidade: 3,
-            couraça: 12,
-            pontosDeEnergia: 20,
+            habilidade: 1,
+            couraça: 1,
+            pontosDeEnergia: 1,
             dano: "1D6" // Adiciona o dano do monstro
         },
         "goblin": {
