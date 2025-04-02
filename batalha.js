@@ -302,22 +302,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
     const botaoInventario = document.getElementById("abrir-inventario");
     const botaoIniciativa = document.getElementById("rolar-iniciativa");
     const logBatalha = document.getElementById("battle-log-content");
 
-    if (botaoInventario) {
-        botaoInventario.disabled = false; // Habilita o botão no início
-        botaoInventario.addEventListener("click", function () {
-            console.log("Botão de inventário clicado!");
-            window.location.href = "https://jonasdemencia.github.io/centelhagame/inventario";
-        });
-    } else {
-        console.error("Erro: Botão de inventário NÃO encontrado!");
-    }
-
-    // Função para desativar o botão de inventário
     function desativarInventario() {
         if (botaoInventario) {
             botaoInventario.disabled = true;
@@ -343,8 +331,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         observer.observe(logBatalha, { childList: true, subtree: true });
     }
-});
-
 
     // Verifica o estado da batalha no Session Storage
     const initiativeResult = sessionStorage.getItem('initiativeResult');
@@ -508,6 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.log("LOG: onAuthStateChanged - Energia inicial do jogador exibida.");
                         }
 
+                        // Event listener para o botão "Lutar" (AGORA MOVIDO PARA DENTRO DO onAuthStateChanged APÓS CARREGAR OS DADOS)
                         if (lutarButton) {
                             lutarButton.disabled = false;
                             lutarButton.addEventListener('click', () => {
@@ -524,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
                         }
 
-                   // Event listener para o botão "Rolar Iniciativa"
+                        // Event listener para o botão "Rolar Iniciativa"
                         if (rolarIniciativaButton) {
                             rolarIniciativaButton.addEventListener('click', async () => {
                                 console.log("LOG: Botão 'Rolar Iniciativa' clicado.");
