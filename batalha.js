@@ -116,7 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const attackOptionsDiv = document.getElementById("attack-options");
     const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
     const rolarDanoButton = document.getElementById("rolar-dano");
-    const abrirInventarioButton = document.getElementById("abrir-inventario"); // Obtém o botão de inventário
     const monsterName = getUrlParameter('monstro');
     let currentMonster; // Declara currentMonster no escopo superior
     let playerData; // Para armazenar os dados do jogador
@@ -459,11 +458,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (inventarioButton) {
                             inventarioButton.disabled = false;
                             console.log("LOG: onAuthStateChanged - Botão de inventário habilitado.");
-                            inventarioButton.addEventListener('click', () => {
-                                console.log("LOG: Botão 'Abrir Inventário' clicado.");
-                                window.location.href = "https://jonasdemencia.github.io/centelhagame/inventario.html";
-                            });
-                            console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Abrir Inventário'.");
                         }
                         if (playerHealthDisplay) {
                             playerHealthDisplay.innerText = playerHealth; // Exibe a energia inicial do jogador
@@ -486,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
                         }
 
-                       // Event listener para o botão "Rolar Iniciativa"
+                   // Event listener para o botão "Rolar Iniciativa"
                         if (rolarIniciativaButton) {
                             rolarIniciativaButton.addEventListener('click', async () => {
                                 console.log("LOG: Botão 'Rolar Iniciativa' clicado.");
@@ -682,5 +676,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     console.log("LOG: Event listener para DOMContentLoaded finalizado.");
 });
+
+console.log("LOG: Fim do script batalha.js");
 
 console.log("LOG: Fim do script batalha.js");
