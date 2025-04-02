@@ -351,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         atacarCorpoACorpoButton.style.display = 'block';
                     }
                     console.log("LOG: DOMContentLoaded - Iniciativa do jogador vencida. Exibindo opções de ataque.");
-                    addLogMessage(`Turno do Jogador`, 1000); // Adicionado log
+                    addLogMessage(`Turno do Jogador`, 1000); // Adicionado log do turno do jogador
                 }
                 isPlayerTurn = true;
                 console.log("LOG: DOMContentLoaded - Iniciativa do jogador vencida.
@@ -469,6 +469,7 @@ onAuthStateChanged - Nenhum estado de batalha encontrado, carregando energia da 
                         playerHealth = playerData.energy?.total ? parseInt(playerData.energy.total) : 8; // Lê a energia de playerData.energy.total
                         console.log("LOG: onAuthStateChanged - Energia do jogador carregada da ficha:", playerHealth);
                         // -------------------------------------------------------------------------
+                        const inventarioButton = document.getElementById("abrir-inventario");
                         const playerHealthDisplay = document.getElementById("player-health");
                         if (inventarioButton) {
                             inventarioButton.disabled = false;
@@ -495,8 +496,7 @@ onAuthStateChanged - Nenhum estado de batalha encontrado, carregando energia da 
                                         console.log("LOG: Botão de inventário desativado ao iniciar a luta.");
                                     }
                                 } else {
-                                    console.error("LOG: Botão 'Rolar Iniciativa' não encontrado
-(ID: rolar-iniciativa)");
+                                    console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
                                 }
                             });
                             console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
@@ -531,7 +531,7 @@ onAuthStateChanged - Nenhum estado de batalha encontrado, carregando energia da 
                                 if (playerRoll + playerAbilityValue > monsterRoll + monsterAbilityValue) {
                                     setTimeout(async () => {
                                         startNewTurnBlock("Jogador");
-                                        await addLogMessage(`<p>Você venceu a iniciativa! Você ataca primeiro.</p>`, 1000);
+                                        await addLogMessage(`<p>Você venceu a iniciativa e atacará primeiro.</p>`, 1000);
                                         if (attackOptionsDiv) {
                                             console.log("LOG: onAuthStateChanged - Iniciativa do jogador vencida - Antes de exibir opções, attackOptionsDiv:", attackOptionsDiv); // ADICIONADO
                                             attackOptionsDiv.style.display = 'block';
@@ -585,8 +585,7 @@ onAuthStateChanged - Nenhum estado de batalha encontrado, carregando energia da 
                             atacarCorpoACorpoButton.addEventListener('click', async () => {
                                 console.log("LOG: Botão 'Corpo a Corpo' clicado. isPlayerTurn:", isPlayerTurn);
                                 if (!isPlayerTurn) {
-                                    await addLogMessage(`<p>Não
-é seu turno!</p>`, 1000);
+                                    await addLogMessage(`<p>Não é seu turno!</p>`, 1000);
                                     return;
                                 }
                                 if
@@ -641,8 +640,7 @@ onAuthStateChanged - Nenhum estado de batalha encontrado, carregando energia da 
                                     addLogMessage(`<p>Não é seu turno!</p>`, 1000);
                                     return;
                                 }
-                                if
-                                (attackOptionsDiv) {
+                                if (attackOptionsDiv) {
                                     const buttons = attackOptionsDiv.querySelectorAll('.button');
                                     buttons.forEach(button => button.disabled = true);
                                 }
