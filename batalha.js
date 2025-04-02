@@ -306,6 +306,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const botaoIniciativa = document.getElementById("rolar-iniciativa");
     const logBatalha = document.getElementById("battle-log-content");
 
+  if (botaoInventario) {
+    botaoInventario.addEventListener("click", function () {
+        window.location.href = "https://jonasdemencia.github.io/centelhagame/inventario.html";
+    });
+}
+
     function desativarInventario() {
         if (botaoInventario) {
             botaoInventario.disabled = true;
