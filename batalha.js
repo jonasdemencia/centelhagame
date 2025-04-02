@@ -727,5 +727,3 @@ if (playerHealthDisplay) {
 });
 
 console.log("LOG: Fim do script batalha.js");
-
-console.log("LOG: Fim do script batalha.js");
