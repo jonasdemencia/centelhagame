@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
             imagem: "https://via.placeholder.com/150",
             descricao: "Um lobo selvagem com presas afiadas.",
             habilidade: 3,
-            couraça: 2,
+            couraça: 12,
             pontosDeEnergia: 20,
             dano: "1D6" // Adiciona o dano do monstro
         },
