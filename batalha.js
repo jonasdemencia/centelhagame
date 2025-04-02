@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
             descricao: "Um lobo selvagem com presas afiadas.",
             habilidade: 3,
             couraça: 1,
-            pontosDeEnergia: 20,
+            pontosDeEnergia: 2,
             dano: "1D6" // Adiciona o dano do monstro
         },
         "goblin": {
