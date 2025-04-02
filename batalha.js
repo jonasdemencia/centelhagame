@@ -457,16 +457,18 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                             // Se a vida do monstro for <= 0 ou a vida do jogador for <= 0, a batalha acabou
                             if (currentMonster.pontosDeEnergia <= 0) {
-                                addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1500);
-                                attackOptionsDiv.style.display = 'none';
-                                console.log("LOG: onAuthStateChanged - Monstro derrotado, escondendo opções de ataque.");
-                                // *** ADICIONANDO O BOTÃO "EXAMINAR ADVERSÁRIO" AQUI ***
-                                const examinarButton = document.createElement('button');
-                                examinarButton.textContent = 'Examinar Adversário';
-                                examinarButton.id = 'examinar-adversario'; // Opcional: para referenciar o botão depois
-                                battleLogContent.appendChild(examinarButton);
-                                console.log("LOG: onAuthStateChanged - Botão 'Examinar Adversário' criado e adicionado.");
-                                // *** FIM DA ADIÇÃO DO BOTÃO ***
+                                const derrotaMonstroMensagem = `<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`;
+                                addLogMessage(derrotaMonstroMensagem, 1500).then(() => {
+                                    attackOptionsDiv.style.display = 'none';
+                                    console.log("LOG: onAuthStateChanged - Monstro derrotado, escondendo opções de ataque.");
+                                    // *** ADICIONANDO O BOTÃO "EXAMINAR ADVERSÁRIO" AQUI ***
+                                    const examinarButton = document.createElement('button');
+                                    examinarButton.textContent = 'Examinar Adversário';
+                                    examinarButton.id = 'examinar-adversario'; // Opcional: para referenciar o botão depois
+                                    battleLogContent.appendChild(examinarButton);
+                                    console.log("LOG: onAuthStateChanged - Botão 'Examinar Adversário' criado e adicionado.");
+                                    // *** FIM DA ADIÇÃO DO BOTÃO ***
+                                });
                             } else if (playerHealth <= 0) {
                                 addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1500);
                                 attackOptionsDiv.style.display = 'none';
@@ -635,15 +637,18 @@ document.addEventListener('DOMContentLoaded', () => {
                                     saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
 
                                     if (currentMonster.pontosDeEnergia <= 0) {
-                                        await addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1500);
-                                        attackOptionsDiv.style.display = 'none';
-                                        // *** ADICIONANDO O BOTÃO "EXAMINAR ADVERSÁRIO" AQUI (DUPLICADO PARA GARANTIR QUE APAREÇA) ***
-                                        const examinarButton = document.createElement('button');
-                                        examinarButton.textContent = 'Examinar Adversário';
-                                        examinarButton.id = 'examinar-adversario'; // Opcional: para referenciar o botão depois
-                                        battleLogContent.appendChild(examinarButton);
-                                        console.log("LOG: onAuthStateChanged - Botão 'Examinar Adversário' criado e adicionado (após ataque).");
-                                        // *** FIM DA ADIÇÃO DO BOTÃO ***
+                                        const derrotaMonstroMensagem = `<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`;
+                                        addLogMessage(derrotaMonstroMensagem, 1500).then(() => {
+                                            attackOptionsDiv.style.display = 'none';
+                                            console.log("LOG: onAuthStateChanged - Monstro derrotado, escondendo opções de ataque.");
+                                            // *** ADICIONANDO O BOTÃO "EXAMINAR ADVERSÁRIO" AQUI ***
+                                            const examinarButton = document.createElement('button');
+                                            examinarButton.textContent = 'Examinar Adversário';
+                                            examinarButton.id = 'examinar-adversario'; // Opcional: para referenciar o botão depois
+                                            battleLogContent.appendChild(examinarButton);
+                                            console.log("LOG: onAuthStateChanged - Botão 'Examinar Adversário' criado e adicionado.");
+                                            // *** FIM DA ADIÇÃO DO BOTÃO ***
+                                        });
                                     } else {
                                         endPlayerTurn(); // Fim do turno do jogador, vez do monstro
                                     }
@@ -677,15 +682,18 @@ document.addEventListener('DOMContentLoaded', () => {
                                 saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
 
                                 if (currentMonster.pontosDeEnergia <= 0) {
-                                    await addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1500);
-                                    attackOptionsDiv.style.display = 'none';
-                                    // *** ADICIONANDO O BOTÃO "EXAMINAR ADVERSÁRIO" AQUI (DUPLICADO PARA GARANTIR QUE APAREÇA) ***
-                                    const examinarButton = document.createElement('button');
-                                    examinarButton.textContent = 'Examinar Adversário';
-                                    examinarButton.id = 'examinar-adversario'; // Opcional: para referenciar o botão depois
-                                    battleLogContent.appendChild(examinarButton);
-                                    console.log("LOG: onAuthStateChanged - Botão 'Examinar Adversário' criado e adicionado (após dano).");
-                                    // *** FIM DA ADIÇÃO DO BOTÃO ***
+                                    const derrotaMonstroMensagem = `<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`;
+                                    addLogMessage(derrotaMonstroMensagem, 1500).then(() => {
+                                        attackOptionsDiv.style.display = 'none';
+                                        console.log("LOG: onAuthStateChanged - Monstro derrotado, escondendo opções de ataque.");
+                                        // *** ADICIONANDO O BOTÃO "EXAMINAR ADVERSÁRIO" AQUI ***
+                                        const examinarButton = document.createElement('button');
+                                        examinarButton.textContent = 'Examinar Adversário';
+                                        examinarButton.id = 'examinar-adversario'; // Opcional: para referenciar o botão depois
+                                        battleLogContent.appendChild(examinarButton);
+                                        console.log("LOG: onAuthStateChanged - Botão 'Examinar Adversário' criado e adicionado.");
+                                        // *** FIM DA ADIÇÃO DO BOTÃO ***
+                                    });
                                 } else {
                                     endPlayerTurn();
                                 }
