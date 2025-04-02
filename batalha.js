@@ -460,6 +460,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1500);
                                 attackOptionsDiv.style.display = 'none';
                                 console.log("LOG: onAuthStateChanged - Monstro derrotado, escondendo opções de ataque.");
+                                document.getElementById("examinarBtn").style.display = "block";
+                                console.log("LOG: onAuthStateChanged - Botão 'Examinar Adversário' exibido.");
                             } else if (playerHealth <= 0) {
                                 addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1500);
                                 attackOptionsDiv.style.display = 'none';
