@@ -226,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Adiciona evento ao botão de inventário para redirecionar
     if (botaoInventario) {
         botaoInventario.addEventListener("click", function () {
+            console.log("Botão de inventário clicado!"); // Log de teste
             window.location.href = "https://jonasdemencia.github.io/centelhagame/inventario";
         });
     }
