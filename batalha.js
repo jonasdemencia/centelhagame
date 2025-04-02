@@ -5,6 +5,8 @@ import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/fireb
 
 console.log("LOG: batalha.js carregado.");
 
+let isBattleActive = false; // Batalha inicialmente inativa
+
 // Configuração do Firebase (substitua com suas próprias configurações)
 const firebaseConfig = {
     apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
@@ -403,6 +405,15 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("LOG: Usuário logado. ID:", userId);
             const monsterName = getUrlParameter('monstro');
 
+            // Verifique o estado da batalha
+        if (isBattleActive && inventarioButton) {
+            inventarioButton.disabled = true; // Desabilita o botão de inventário se a batalha estiver ativa
+            console.log("LOG: Botão de inventário desabilitado devido ao estado ativo da batalha.");
+        } else if (inventarioButton) {
+            inventarioButton.disabled = false; // Habilita o botão caso a batalha não esteja ativa
+            console.log("LOG: Botão de inventário habilitado (sem batalha ativa).");
+        }
+
             // Carregar o estado da batalha ao carregar a página
             if (currentMonster) {
                 loadBattleState(userId, monsterName)
@@ -454,21 +465,38 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.log("LOG: onAuthStateChanged - Energia do jogador carregada da ficha:", playerHealth);
                         // -------------------------------------------------------------------------
                         const inventarioButton = document.getElementById("abrir-inventario");
-                        const playerHealthDisplay = document.getElementById("player-health");
-                        if (inventarioButton) {
-                            inventarioButton.disabled = false;
-                            console.log("LOG: onAuthStateChanged - Botão de inventário habilitado.");
-                        }
-                        if (playerHealthDisplay) {
-                            playerHealthDisplay.innerText = playerHealth; // Exibe a energia inicial do jogador
-                            console.log("LOG: onAuthStateChanged - Energia inicial do jogador exibida.");
-                        }
+const playerHealthDisplay = document.getElementById("player-health");
+
+// Verificação se o botão de inventário existe
+if (inventarioButton) {
+    // Desabilita o botão caso a batalha esteja ativa
+    inventarioButton.addEventListener('click', () => {
+        if (isBattleActive) { 
+            alert("Você não pode acessar o inventário durante a batalha!");
+            console.log("LOG: Tentativa de abrir o inventário durante a batalha bloqueada.");
+        } else {
+            console.log("LOG: Inventário acessado normalmente.");
+            // Aqui você coloca a lógica para abrir o inventário.
+        }
+    });
+
+    // Configuração inicial do botão (com base na batalha)
+    inventarioButton.disabled = isBattleActive; // Desabilita se a batalha já começou
+    console.log("LOG: Botão de inventário configurado. Estado inicial: ", isBattleActive ? "desabilitado" : "habilitado");
+}
+
+// Exibir a energia inicial do jogador, se aplicável
+if (playerHealthDisplay) {
+    playerHealthDisplay.innerText = playerHealth; // Exibe a energia inicial do jogador
+    console.log("LOG: Energia inicial do jogador exibida.");
+}
 
                         if (lutarButton) {
                             lutarButton.disabled = false;
                             lutarButton.addEventListener('click', () => {
                                 console.log("LOG: Botão 'Lutar' clicado.");
                                 lutarButton.style.display = 'none';
+                                isBattleActive = true; // A batalha agora está ativa
                                 if (rolarIniciativaButton) {
                                     rolarIniciativaButton.style.display = 'block';
                                     sessionStorage.setItem('luteButtonClicked', 'true');
