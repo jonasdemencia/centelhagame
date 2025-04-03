@@ -31,6 +31,18 @@ function getLoggedInUserId() {
     return user ? user.uid : null;
 }
 
+const lootMonstros = {
+    "goblin1": [
+        { nome: "Moedas de Ouro", imagem: "moedas.png", minQuantidade: 5, maxQuantidade: 15, probabilidade: 0.8 },
+        { nome: "Pequena Poção de Vida", imagem: "pocao_pequena.png", minQuantidade: 1, maxQuantidade: 1, probabilidade: 0.4 }
+    ],
+    "esqueleto1": [
+        { nome: "Osso", imagem: "osso.png", minQuantidade: 1, maxQuantidade: 2, probabilidade: 0.7 },
+        { nome: "Espada de Madeira", imagem: "espada_madeira.png", minQuantidade: 1, maxQuantidade: 1, probabilidade: 0.1 }
+    ],
+    // Adicione outros monstros e seus loots aqui
+};
+
 // Função para exibir os itens obtidos do Firestore
 async function exibirItens() {
     itensObtidosDiv.innerHTML = ""; // Limpa a exibição anterior
