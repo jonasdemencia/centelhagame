@@ -456,6 +456,7 @@ turn-block p {
     margin-bottom: 20px;
     background-color: rgba(0, 0, 0, 0.7); /* Fundo semi-transparente */
     color: #f0f0f0;
+    width: 600px; /* Ajuste este valor conforme necessário */
 }
 
 .item {
