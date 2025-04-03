@@ -2,10 +2,55 @@
 <html>
 <head>
     <title>Itens Obtidos</title>
-    <link rel="stylesheet" href="style.css"> </head>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Estilos adicionados para o expandir/recolher - Você pode mover isso para o seu style.css */
+        .item {
+            position: relative; /* Para posicionar o toggle dentro */
+            padding-right: 25px; /* Espaço para o botão de expandir */
+            margin-bottom: 10px; /* Adicionado para separar os itens */
+            border: 1px solid #ccc; /* Adicionado para visualização */
+            padding: 10px;
+            background-color: #f9f9f9; /* Adicionado para visualização */
+            color: #333; /* Adicionado para visualização */
+        }
+
+        .item-expand-toggle {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            text-align: center;
+            line-height: 18px;
+            background-color: #eee; /* Adicionado para visualização */
+        }
+
+        .item-description {
+            margin-top: 5px;
+            padding: 5px;
+            border: 1px solid #eee;
+            background-color: #f9f9f9;
+            font-size: 0.9em;
+            display: none; /* Inicialmente oculto */
+            color: #555; /* Adicionado para visualização */
+        }
+    </style>
+</head>
 <body>
     <h1>Itens Obtidos na Batalha</h1>
     <div id="itens-obtidos">
+        <div class="item">
+            Nome do Item Obtido
+            <span class="item-expand-toggle">+</span>
+            <div class="item-description">
+                Descrição detalhada do item obtido.
+            </div>
+        </div>
         </div>
     <button id="inventario-button">Inventário</button>
     <script src="loot.js"></script>
