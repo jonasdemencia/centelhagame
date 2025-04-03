@@ -1,5 +1,4 @@
-import './loot.js'; // Certifique-se de que o caminho está correto
-// Importa os SDKs necessários do Firebase
+import { lootMonstros } from './loot.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
@@ -113,39 +112,47 @@ async function handlePostBattle() {
     console.log("handlePostBattle chamado.");
 
     const monsterName = getUrlParameter('monstro');
-    const lootData = lootmonstros[monsterName];
-    let obtainedLoot = [];
+    const lootBlueprint = lootMonstros[monsterName]; // Acessa o lootMonstros do loot.js
+    const userId = auth.currentUser?.uid;
 
-    if (lootData && Object.keys(lootData).length > 0) {
-        for (const itemName in lootData) {
-            const probability = lootData[itemName];
-            if (Math.random() < probability) {
-                obtainedLoot.push(itemName);
+    if (!userId) {
+        console.error("Usuário não autenticado ao finalizar a batalha.");
+        return;
+    }
+
+    if (lootBlueprint && lootBlueprint.length > 0) {
+        let obtainedLoot = [];
+        for (const lootItem of lootBlueprint) {
+            if (Math.random() < lootItem.probabilidade) {
+                const quantidade = Math.floor(Math.random() * (lootItem.maxQuantidade - lootItem.minQuantidade + 1)) + lootItem.minQuantidade;
+                obtainedLoot.push({
+                    nome: lootItem.nome,
+                    imagem: lootItem.imagem,
+                    quantidade: quantidade
+                });
             }
         }
 
         if (obtainedLoot.length > 0) {
-            console.log("Loot a ser coletado:", obtainedLoot);
-            sessionStorage.setItem('battleLoot', JSON.stringify(obtainedLoot)); // Armazena o loot na sessionStorage
-            await addLogMessage(`<p style="color: gold;">Você derrotou o ${monsterName}!</p>`, 1000);
+            console.log("Loot obtido:", obtainedLoot);
+            await addLogMessage(`<p style="color: gold;">Você derrotou o ${monsterName} e obteve loot!</p>`, 1000);
+
+            // Salva o loot no Firestore
+            const lootCollectionRef = collection(db, "users", userId, "loot");
+            for (const item of obtainedLoot) {
+                await setDoc(doc(lootCollectionRef), item);
+            }
         } else {
-            await addLogMessage(`<p>Você derrotou o ${monsterName}.</p>`, 1000);
-            sessionStorage.removeItem('battleLoot'); // Limpa qualquer loot anterior
+            await addLogMessage(`<p>Você derrotou o ${monsterName}, mas não obteve nenhum item.</p>`, 1000);
         }
     } else {
         await addLogMessage(`<p>Você derrotou o ${monsterName}.</p>`, 1000);
-        sessionStorage.removeItem('battleLoot'); // Limpa qualquer loot anterior
     }
 
-    // Exibe o botão de loot para o jogador coletar as recompensas
-    const lootButton = document.getElementById('loot-button'); // ID CORRIGIDO PARA 'loot-button'
-    if (lootButton) {
-        lootButton.style.display = 'block';
-        console.log("Botão 'Coletar Recompensas' exibido.");
-        // **NÃO ADICIONAMOS O EVENT LISTENER AQUI**, pois você já o tem definido (imagino) para navegar para loot.html.
-    } else {
-        console.error("Erro: Botão 'Coletar Recompensas' não encontrado no HTML (ID: loot-button).");
-    }
+    // Redireciona para a página de loot após um pequeno delay
+    setTimeout(() => {
+        window.location.href = 'loot.html';
+    }, 2000); // Tempo para o jogador ler a mensagem
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -164,17 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTurnBlock = null; // Para armazenar o bloco do turno atual
     let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
     console.log("LOG: Variáveis iniciais declaradas.");
-
-    // ** INSIRA O CÓDIGO DO BOTÃO DE LOOT AQUI **
-    const collectRewardsButton = document.getElementById('loot-button');
-    if (collectRewardsButton) {
-        collectRewardsButton.addEventListener('click', () => {
-            console.log("Botão 'Coletar Recompensas' clicado, navegando para loot.html");
-            window.location.href = 'loot.html';
-        });
-    } else {
-        console.error("Erro: Botão 'Coletar Recompensas' não encontrado no HTML (ID: loot-button) para adicionar o event listener.");
-    }
 
     const monsterData = {
         "lobo": {
