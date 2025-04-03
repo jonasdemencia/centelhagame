@@ -511,3 +511,30 @@ h1 {
     color: #f0f0f0;
     margin-bottom: 20px;
 }
+
+/* Estilos adicionais para a página de loot */
+#recolher-tudo-button {
+    background-color: #007bff; /* Azul */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-family: 'Eagle Lake', cursive;
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 15px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#recolher-tudo-button:hover {
+    background-color: #0056b3; /* Azul mais escuro */
+}
+
+#mensagem {
+    color: #f0f0f0;
+    font-size: 1.2em;
+    margin-top: 15px;
+    font-weight: bold;
+}
