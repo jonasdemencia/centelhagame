@@ -678,6 +678,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                             if (currentMonster.pontosDeEnergia <= 0) {
                                                 addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1000);
                                                 console.log("LOG: Botão 'DANO' - Monstro derrotado.");
+                                                document.getElementById("examinarBtn").style.display = "block";
+                                                console.log("TESTE: Botão 'Examinar Adversário' forçado a aparecer.");
                                                 // Aqui você pode adicionar lógica para recompensar o jogador e, opcionalmente, restaurar parte da energia.
                                             } else {
                                                 addLogMessage(`Fim do Turno do Jogador.`, 1000);
