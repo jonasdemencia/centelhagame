@@ -165,6 +165,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
     console.log("LOG: Variáveis iniciais declaradas.");
 
+    // ** INSIRA O CÓDIGO DO BOTÃO DE LOOT AQUI **
+    const collectRewardsButton = document.getElementById('loot-button');
+    if (collectRewardsButton) {
+        collectRewardsButton.addEventListener('click', () => {
+            console.log("Botão 'Coletar Recompensas' clicado, navegando para loot.html");
+            window.location.href = 'loot.html';
+        });
+    } else {
+        console.error("Erro: Botão 'Coletar Recompensas' não encontrado no HTML (ID: loot-button) para adicionar o event listener.");
+    }
+
     const monsterData = {
         "lobo": {
             nome: "Lobo Faminto",
@@ -741,17 +752,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("LOG: onAuthStateChanged - Nenhum usuário logado, redirecionando para login.");
         }
     });
-
-                          // **ADICIONE ESTE BLOCO PARA O EVENT LISTENER DO BOTÃO DE LOOT**
-    const collectRewardsButton = document.getElementById('loot-button');
-    if (collectRewardsButton) {
-        collectRewardsButton.addEventListener('click', () => {
-            console.log("Botão 'Coletar Recompensas' clicado, navegando para loot.html");
-            window.location.href = 'loot.html';
-        });
-    } else {
-        console.error("Erro: Botão 'Coletar Recompensas' não encontrado no HTML (ID: loot-button) para adicionar o event listener.");
-    }
 
     console.log("LOG: Event listener para DOMContentLoaded finalizado.");
 });
