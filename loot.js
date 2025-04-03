@@ -19,11 +19,11 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 const itensObtidosDiv = document.getElementById("itens-obtidos");
-const inventarioButton = document.getElementById("inventario-button");
+let inventarioButton = null; // Inicialmente nulo
 let recolherTudoButton = null; // Inicialmente nulo
 const mensagemDiv = document.createElement("div");
 mensagemDiv.id = "mensagem";
-document.body.insertBefore(mensagemDiv, inventarioButton);
+document.body.insertBefore(mensagemDiv, null); // Insere antes do primeiro elemento filho do body
 
 // Função para obter o UID do usuário logado
 function getLoggedInUserId() {
@@ -166,16 +166,6 @@ function exibirMensagem(mensagem) {
     }, 3000); // Limpa a mensagem após 3 segundos
 }
 
-// Evento de clique do botão "Inventário"
-inventarioButton.addEventListener("click", () => {
-    const userId = getLoggedInUserId();
-    if (userId) {
-        window.location.href = "inventory.html"; // Redireciona para a página de inventário
-    } else {
-        exibirMensagem("Você precisa estar logado para ver o inventário.");
-    }
-});
-
 // Função para simular o recebimento de novos itens (para testes)
 async function simularRecebimentoDeItens(novosItens) {
     const userId = getLoggedInUserId();
@@ -195,8 +185,24 @@ const itensDeExemplo = [
     { nome: "Moedas de Ouro", imagem: "moedas.png", quantidade: 10 },
 ];
 
-// Simula o recebimento de itens ao carregar a página (apenas para demonstração)
+// Evento de clique do botão "Inventário" e simulação de recebimento ao carregar a página
 document.addEventListener('DOMContentLoaded', () => {
+    inventarioButton = document.getElementById("inventario-button"); // Inicializa inventarioButton aqui
+
+    // Evento de clique do botão "Inventário"
+    if (inventarioButton) {
+        inventarioButton.addEventListener("click", () => {
+            const userId = getLoggedInUserId();
+            if (userId) {
+                window.location.href = "inventory.html"; // Redireciona para a página de inventário
+            } else {
+                exibirMensagem("Você precisa estar logado para ver o inventário.");
+            }
+        });
+    } else {
+        console.error("Botão 'Inventário' não encontrado no DOM.");
+    }
+
     // Verifica se o usuário está logado antes de tentar exibir os itens
     onAuthStateChanged(auth, (user) => {
         if (user) {
