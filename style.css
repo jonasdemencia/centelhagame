@@ -58,7 +58,7 @@ body {
     gap: 2px; /* Diminuindo a distância entre os botões */
 }
 
-/* Estilo dos botões  e Zerar */
+/* Estilo dos botões  e Zerar */
 .button {
     background-color: #555; /* Cinza para o fundo dos botões */
     border: none;
@@ -256,7 +256,7 @@ body {
     margin-left: 3px; /* Reduzindo a margem */
 }
 
-info-icon:hover {
+.info-icon:hover {
     color: #333; /* Cinza escuro */
 }
 
@@ -293,7 +293,7 @@ info-icon:hover {
     font-weight: bold;
 }
 
-close-button:hover,
+.close-button:hover,
 .close-button:focus {
     color: #000;
     text-decoration: none;
@@ -308,7 +308,7 @@ close-button:hover,
     font-size: 1.3em; /* Diminuindo o tamanho do título */
 }
 
-modal-content p, .modal-content ol {
+.modal-content p, .modal-content ol {
     margin-bottom: 10px; /* Reduzindo a margem */
     font-size: 12px; /* Diminuindo a fonte */
 }
@@ -326,15 +326,15 @@ modal-content p, .modal-content ol {
     /* Os estilos foram atualizados no início do CSS */
 }
 
-stats-section .stat-value {
+.stats-section .stat-value {
     /* Os estilos foram atualizados no início do CSS */
 }
 
-stats-section .stat-buttons-inline {
+.stats-section .stat-buttons-inline {
     /* Os estilos foram atualizados no início do CSS */
 }
 
-stats-section .button {
+.stats-section .button {
     /* Os estilos foram atualizados no início do CSS */
 }
 
@@ -343,11 +343,11 @@ stats-section .button {
     margin-left: 3px; /* Reduzindo a margem */
 }
 
-racial-modifier.positive {
+.racial-modifier.positive {
     color: lightgreen;
 }
 
-racial-modifier.negative {
+.racial-modifier.negative {
     color: darkorange;
 }
 
@@ -364,7 +364,7 @@ racial-modifier.negative {
     box-sizing: border-box; /* Garante que o padding não aumente a largura total */
 }
 
-attribute-description-container.show {
+.attribute-description-container.show {
     display: block; /* Exibe quando a classe 'show' é adicionada */
 }
 
@@ -422,7 +422,7 @@ attribute-description-container.show {
     color: #f0f0f0;
 }
 
-turn-block h4 {
+.turn-block h4 {
     margin-top: 0;
     color: #ddd;
     font-size: 1.1em;
@@ -432,7 +432,7 @@ turn-block h4 {
     text-align: left; /* Alinha o título do turno à esquerda */
 }
 
-turn-block p {
+.turn-block p {
     margin: 5px 0;
     font-size: 12px;
     text-align: left; /* Alinha o texto do turno à esquerda */
@@ -449,35 +449,43 @@ turn-block p {
 
 /* Estilos para a página de loot */
 #itens-obtidos {
-    display: inline-block;
+    display: flex; /* Alterado para flex para melhor controle do layout dos itens */
+    flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
+    justify-content: center; /* Centraliza os itens horizontalmente */
     border: 1px solid #555; /* Cinza para a borda */
     border-radius: 6px;
     padding: 10px;
     margin-bottom: 20px;
     background-color: rgba(0, 0, 0, 0.7); /* Fundo semi-transparente */
     color: #f0f0f0;
-    width: 600px; /* Ajuste este valor conforme necessário */
+    max-width: 80%; /* Tornando responsivo com largura máxima */
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .item {
     margin: 10px;
     display: flex;
-    align-items: center;
-    justify-content: left;
+    flex-direction: column; /* Alinha imagem e texto verticalmente */
+    align-items: center; /* Centraliza os itens dentro do bloco */
+    justify-content: center;
+    text-align: center; /* Centraliza o texto */
+    width: calc(33% - 20px); /* Aproximadamente 3 itens por linha em telas maiores, com margens */
+    min-width: 150px; /* Largura mínima para evitar quebra inadequada em telas menores */
 }
 
-item img {
+.item img {
     width: 50px;
     height: 50px;
-    margin-right: 10px;
+    margin-bottom: 5px; /* Adiciona espaço abaixo da imagem */
 }
 
-item p {
-    margin-right: 10px;
+.item p {
     font-size: 14px;
+    margin-bottom: 5px; /* Adiciona espaço abaixo do texto */
 }
 
-item button {
+.item button {
     background-color: #555;
     border: none;
     padding: 6px 10px;
@@ -488,7 +496,7 @@ item button {
     cursor: pointer;
 }
 
-item button:hover {
+.item button:hover {
     background-color: #777;
 }
 
@@ -527,6 +535,7 @@ h1 {
     display: block;
     margin-left: auto;
     margin-right: auto;
+    width: fit-content; /* Ajusta a largura ao conteúdo */
 }
 
 #recolher-tudo-button:hover {
