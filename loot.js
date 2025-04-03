@@ -210,8 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             mensagemDiv.textContent = "Faça login para ver os itens.";
         }
+        exibirItens(); // Chama exibirItens aqui para garantir que seja executado após o carregamento do DOM
     });
 });
 
-// Exibir os itens na página ao carregar (a chamada real agora está dentro do evento DOMContentLoaded)
-// exibirItens();
+// Exibir os itens na página ao carregar (removido daqui para ser chamado dentro do DOMContentLoaded)
