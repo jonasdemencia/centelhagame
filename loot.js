@@ -1,10 +1,22 @@
 // Importa os SDKs necessários do Firebase
-import { getAuth } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc, increment, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
-// Inicializa o Firebase (assumindo que já foi inicializado em outro lugar, como no arquivo de login)
-const auth = getAuth();
-const db = getFirestore();
+// Configuração do Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
+    authDomain: "centelhagame-9d511.firebaseapp.com",
+    projectId: "centelhagame-9d511",
+    storageBucket: "centelhagame-9d511.appspot.com",
+    messagingSenderId: "700809803145",
+    appId: "1:700809803145:web:bff4c6a751ec9389919d58"
+};
+
+// Inicializa o Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
 const itensObtidosDiv = document.getElementById("itens-obtidos");
 const inventarioButton = document.getElementById("inventario-button");
@@ -174,11 +186,13 @@ const itensDeExemplo = [
 // Simula o recebimento de itens ao carregar a página (apenas para demonstração)
 document.addEventListener('DOMContentLoaded', () => {
     // Verifica se o usuário está logado antes de tentar exibir os itens
-    if (getLoggedInUserId()) {
-        simularRecebimentoDeItens(itensDeExemplo);
-    } else {
-        mensagemDiv.textContent = "Faça login para ver os itens.";
-    }
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            simularRecebimentoDeItens(itensDeExemplo);
+        } else {
+            mensagemDiv.textContent = "Faça login para ver os itens.";
+        }
+    });
 });
 
 // Exibir os itens na página ao carregar (a chamada real agora está dentro do evento DOMContentLoaded)
