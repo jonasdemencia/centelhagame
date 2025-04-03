@@ -58,7 +58,7 @@ body {
     gap: 2px; /* Diminuindo a distância entre os botões */
 }
 
-/* Estilo dos botões 🎲 e Zerar */
+/* Estilo dos botões  e Zerar */
 .button {
     background-color: #555; /* Cinza para o fundo dos botões */
     border: none;
@@ -256,7 +256,7 @@ body {
     margin-left: 3px; /* Reduzindo a margem */
 }
 
-.info-icon:hover {
+info-icon:hover {
     color: #333; /* Cinza escuro */
 }
 
@@ -293,7 +293,7 @@ body {
     font-weight: bold;
 }
 
-.close-button:hover,
+close-button:hover,
 .close-button:focus {
     color: #000;
     text-decoration: none;
@@ -308,7 +308,7 @@ body {
     font-size: 1.3em; /* Diminuindo o tamanho do título */
 }
 
-.modal-content p, .modal-content ol {
+modal-content p, .modal-content ol {
     margin-bottom: 10px; /* Reduzindo a margem */
     font-size: 12px; /* Diminuindo a fonte */
 }
@@ -326,15 +326,15 @@ body {
     /* Os estilos foram atualizados no início do CSS */
 }
 
-.stats-section .stat-value {
+stats-section .stat-value {
     /* Os estilos foram atualizados no início do CSS */
 }
 
-.stats-section .stat-buttons-inline {
+stats-section .stat-buttons-inline {
     /* Os estilos foram atualizados no início do CSS */
 }
 
-.stats-section .button {
+stats-section .button {
     /* Os estilos foram atualizados no início do CSS */
 }
 
@@ -343,11 +343,11 @@ body {
     margin-left: 3px; /* Reduzindo a margem */
 }
 
-.racial-modifier.positive {
+racial-modifier.positive {
     color: lightgreen;
 }
 
-.racial-modifier.negative {
+racial-modifier.negative {
     color: darkorange;
 }
 
@@ -364,7 +364,7 @@ body {
     box-sizing: border-box; /* Garante que o padding não aumente a largura total */
 }
 
-.attribute-description-container.show {
+attribute-description-container.show {
     display: block; /* Exibe quando a classe 'show' é adicionada */
 }
 
@@ -422,7 +422,7 @@ body {
     color: #f0f0f0;
 }
 
-.turn-block h4 {
+turn-block h4 {
     margin-top: 0;
     color: #ddd;
     font-size: 1.1em;
@@ -432,7 +432,7 @@ body {
     text-align: left; /* Alinha o título do turno à esquerda */
 }
 
-.turn-block p {
+turn-block p {
     margin: 5px 0;
     font-size: 12px;
     text-align: left; /* Alinha o texto do turno à esquerda */
@@ -445,4 +445,69 @@ body {
     color: #999;
     font-size: 1.2em;
     margin-top: 5px;
+}
+
+/* Estilos para a página de loot */
+#itens-obtidos {
+    display: inline-block;
+    border: 1px solid #555; /* Cinza para a borda */
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 20px;
+    background-color: rgba(0, 0, 0, 0.7); /* Fundo semi-transparente */
+    color: #f0f0f0;
+}
+
+.item {
+    margin: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: left;
+}
+
+item img {
+    width: 50px;
+    height: 50px;
+    margin-right: 10px;
+}
+
+item p {
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+item button {
+    background-color: #555;
+    border: none;
+    padding: 6px 10px;
+    font-family: 'Eagle Lake', cursive;
+    color: #f0f0f0;
+    font-size: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+item button:hover {
+    background-color: #777;
+}
+
+#inventario-button {
+    background-color: #555;
+    border: none;
+    padding: 10px 20px;
+    font-family: 'Eagle Lake', cursive;
+    color: #f0f0f0;
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+#inventario-button:hover {
+    background-color: #777;
+}
+
+h1 {
+    color: #f0f0f0;
+    margin-bottom: 20px;
 }
