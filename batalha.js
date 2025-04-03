@@ -130,9 +130,9 @@ document.addEventListener('DOMContentLoaded', () => {
             nome: "Lobo Faminto",
             imagem: "https://via.placeholder.com/150",
             descricao: "Um lobo selvagem com presas afiadas.",
-            habilidade: 1,
-            couraça: 1,
-            pontosDeEnergia: 1,
+            habilidade: 3,
+            couraça: 12,
+            pontosDeEnergia: 20,
             dano: "1D6" // Adiciona o dano do monstro
         },
         "goblin": {
@@ -460,8 +460,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1500);
                                 attackOptionsDiv.style.display = 'none';
                                 console.log("LOG: onAuthStateChanged - Monstro derrotado, escondendo opções de ataque.");
-                                document.getElementById("examinarBtn").style.display = "block";
-                                console.log("LOG: onAuthStateChanged - Botão 'Examinar Adversário' exibido.");
                             } else if (playerHealth <= 0) {
                                 addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1500);
                                 attackOptionsDiv.style.display = 'none';
@@ -678,8 +676,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                             if (currentMonster.pontosDeEnergia <= 0) {
                                                 addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1000);
                                                 console.log("LOG: Botão 'DANO' - Monstro derrotado.");
-                                                document.getElementById("examinarBtn").style.display = "block";
-                                                console.log("TESTE: Botão 'Examinar Adversário' forçado a aparecer.");
                                                 // Aqui você pode adicionar lógica para recompensar o jogador e, opcionalmente, restaurar parte da energia.
                                             } else {
                                                 addLogMessage(`Fim do Turno do Jogador.`, 1000);
