@@ -1,12 +1,10 @@
-// Dados de exemplo dos itens obtidos
-const itensObtidos = [
-    { nome: "Poção de Vida", imagem: "pocao.png", quantidade: 2 },
-    { nome: "Espada de Ferro", imagem: "espada.png", quantidade: 1 },
-    { nome: "Moedas de Ouro", imagem: "moedas.png", quantidade: 10 },
-];
+// Importa os SDKs necessários do Firebase
+import { getAuth } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
-// Dados de exemplo do inventário do jogador (inicialmente vazio)
-const inventario = [];
+// Inicializa o Firebase (assumindo que já foi inicializado em outro lugar, como no arquivo de login)
+const auth = getAuth();
+const db = getFirestore();
 
 const itensObtidosDiv = document.getElementById("itens-obtidos");
 const inventarioButton = document.getElementById("inventario-button");
@@ -15,9 +13,29 @@ const mensagemDiv = document.createElement("div");
 mensagemDiv.id = "mensagem";
 document.body.insertBefore(mensagemDiv, inventarioButton);
 
-// Função para exibir os itens na página
-function exibirItens() {
+// Função para obter o UID do usuário logado
+function getLoggedInUserId() {
+    const user = auth.currentUser;
+    return user ? user.uid : null;
+}
+
+// Função para exibir os itens obtidos do Firestore
+async function exibirItens() {
     itensObtidosDiv.innerHTML = ""; // Limpa a exibição anterior
+    const userId = getLoggedInUserId();
+
+    if (!userId) {
+        console.error("Usuário não autenticado.");
+        mensagemDiv.textContent = "Erro: Usuário não autenticado.";
+        return;
+    }
+
+    const lootCollectionRef = collection(db, "users", userId, "loot");
+    const lootSnapshot = await getDocs(lootCollectionRef);
+    const itensObtidos = [];
+    lootSnapshot.forEach(doc => {
+        itensObtidos.push({ id: doc.id, ...doc.data() });
+    });
 
     if (itensObtidos.length > 0 && !recolherTudoButton) {
         recolherTudoButton = document.createElement("button");
@@ -29,13 +47,13 @@ function exibirItens() {
         removerRecolherTudoButton();
     }
 
-    itensObtidos.forEach((item, index) => {
+    itensObtidos.forEach(item => {
         const itemDiv = document.createElement("div");
         itemDiv.classList.add("item");
         itemDiv.innerHTML = `
             <img src="${item.imagem}" alt="${item.nome}">
             <p>${item.nome} (x${item.quantidade})</p>
-            <button onclick="recolherItem(${index})">Recolher</button>
+            <button onclick="recolherItem('${item.id}')">Recolher</button>
         `;
         itensObtidosDiv.appendChild(itemDiv);
     });
@@ -49,40 +67,71 @@ function removerRecolherTudoButton() {
     }
 }
 
-// Função para recolher um item individualmente
-function recolherItem(index) {
-    if (index >= 0 && index < itensObtidos.length) {
-        const item = itensObtidos[index];
-        adicionarAoInventario(item);
-        exibirMensagem(`Você recolheu: ${item.nome}`);
-        itensObtidos.splice(index, 1);
+// Função para recolher um item individualmente do Firestore
+async function recolherItem(itemId) {
+    const userId = getLoggedInUserId();
+    if (!userId) return;
+
+    const lootItemRef = doc(db, "users", userId, "loot", itemId);
+    const lootDoc = await getDoc(lootItemRef);
+
+    if (lootDoc.exists()) {
+        const itemData = lootDoc.data();
+        await adicionarAoInventario(itemData);
+        await deleteDoc(lootItemRef);
+        exibirMensagem(`Você recolheu: ${itemData.nome}`);
         exibirItens();
     }
 }
 
-// Função para recolher todos os itens
-function recolherTudo() {
-    if (itensObtidos.length > 0) {
-        itensObtidos.forEach(item => {
-            adicionarAoInventario(item);
+// Função para recolher todos os itens do Firestore
+async function recolherTudo() {
+    const userId = getLoggedInUserId();
+    if (!userId) return;
+
+    const lootCollectionRef = collection(db, "users", userId, "loot");
+    const lootSnapshot = await getDocs(lootCollectionRef);
+
+    if (!lootSnapshot.empty) {
+        const promises = [];
+        lootSnapshot.forEach(doc => {
+            const itemData = doc.data();
+            promises.push(adicionarAoInventario(itemData));
+            promises.push(deleteDoc(doc.ref));
         });
+        await Promise.all(promises);
         exibirMensagem(`Todos os itens foram recolhidos!`);
-        itensObtidos.length = 0; // Limpa o array de itens obtidos
         exibirItens();
     } else {
         exibirMensagem("Nenhum item para recolher.");
     }
 }
 
-// Função para adicionar um item ao inventário
-function adicionarAoInventario(itemParaAdicionar) {
-    const itemExistente = inventario.find(item => item.nome === itemParaAdicionar.nome);
-    if (itemExistente) {
-        itemExistente.quantidade += itemParaAdicionar.quantidade;
+// Função para adicionar um item ao inventário do Firestore
+async function adicionarAoInventario(itemParaAdicionar) {
+    const userId = getLoggedInUserId();
+    if (!userId) return;
+
+    const inventarioCollectionRef = collection(db, "users", userId, "inventory");
+    const itemDocRef = doc(inventarioCollectionRef, itemParaAdicionar.nome); // Usando o nome como ID para facilitar a verificação
+
+    const docSnap = await getDoc(itemDocRef);
+
+    if (docSnap.exists()) {
+        // Item já existe, incrementa a quantidade
+        await updateDoc(itemDocRef, {
+            quantidade: increment(itemParaAdicionar.quantidade)
+        });
+        console.log(`Quantidade de ${itemParaAdicionar.nome} aumentada no inventário.`);
     } else {
-        inventario.push({ ...itemParaAdicionar }); // Adiciona uma cópia do item
+        // Item não existe, adiciona ao inventário
+        await setDoc(itemDocRef, {
+            nome: itemParaAdicionar.nome,
+            imagem: itemParaAdicionar.imagem,
+            quantidade: itemParaAdicionar.quantidade
+        });
+        console.log(`${itemParaAdicionar.nome} adicionado ao inventário.`);
     }
-    console.log("Inventário atualizado:", inventario); // Para depuração
 }
 
 // Função para exibir mensagens na página
@@ -95,12 +144,42 @@ function exibirMensagem(mensagem) {
 
 // Evento de clique do botão "Inventário"
 inventarioButton.addEventListener("click", () => {
-    // Redirecionar para a página de inventário (você precisará implementar essa parte)
-    console.log("Abrindo inventário...");
-    // Aqui você pode usar window.location.href = "pagina_do_inventario.html";
-    // Se você tiver uma página de inventário separada.
-    exibirMensagem("Abrindo inventário (funcionalidade não implementada na demonstração).");
+    const userId = getLoggedInUserId();
+    if (userId) {
+        window.location.href = "inventory.html"; // Redireciona para a página de inventário
+    } else {
+        exibirMensagem("Você precisa estar logado para ver o inventário.");
+    }
 });
 
-// Exibir os itens na página ao carregar
-exibirItens();
+// Função para simular o recebimento de novos itens (para testes)
+async function simularRecebimentoDeItens(novosItens) {
+    const userId = getLoggedInUserId();
+    if (!userId) return;
+
+    for (const item of novosItens) {
+        const lootCollectionRef = collection(db, "users", userId, "loot");
+        await setDoc(doc(lootCollectionRef), item);
+    }
+    exibirItens(); // Atualiza a exibição após adicionar os itens
+}
+
+// Dados de exemplo dos itens obtidos (para simulação)
+const itensDeExemplo = [
+    { nome: "Poção de Vida", imagem: "pocao.png", quantidade: 2 },
+    { nome: "Espada de Ferro", imagem: "espada.png", quantidade: 1 },
+    { nome: "Moedas de Ouro", imagem: "moedas.png", quantidade: 10 },
+];
+
+// Simula o recebimento de itens ao carregar a página (apenas para demonstração)
+document.addEventListener('DOMContentLoaded', () => {
+    // Verifica se o usuário está logado antes de tentar exibir os itens
+    if (getLoggedInUserId()) {
+        simularRecebimentoDeItens(itensDeExemplo);
+    } else {
+        mensagemDiv.textContent = "Faça login para ver os itens.";
+    }
+});
+
+// Exibir os itens na página ao carregar (a chamada real agora está dentro do evento DOMContentLoaded)
+// exibirItens();
