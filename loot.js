@@ -31,7 +31,7 @@ function getLoggedInUserId() {
     return user ? user.uid : null;
 }
 
-const lootMonstros = {
+export const lootMonstros = {
     "goblin1": [
         { nome: "Moedas de Ouro", imagem: "moedas.png", minQuantidade: 5, maxQuantidade: 15, probabilidade: 0.8 },
         { nome: "Pequena Poção de Vida", imagem: "pocao_pequena.png", minQuantidade: 1, maxQuantidade: 1, probabilidade: 0.4 }
