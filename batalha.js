@@ -8,7 +8,7 @@ import { getDatabase, ref, get, set, remove } from "https://www.gstatic.com/fire
 
 // --- Configuração do Firebase (Definida diretamente aqui) ---
 const firebaseConfig = {
-    apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw", // Substitua pela sua chave real se esta for placeholder
+    apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
     authDomain: "centelhagame-9d511.firebaseapp.com",
     projectId: "centelhagame-9d511",
     storageBucket: "centelhagame-9d511.appspot.com",
