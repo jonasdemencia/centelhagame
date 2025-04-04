@@ -471,6 +471,7 @@ body {
     text-align: center;
     width: calc(33% - 20px); /* Aproximadamente 3 itens por linha */
     min-width: 150px;
+    padding-bottom: 5px; /* Ajustando o padding inferior para diminuir o espaço */
 }
 
 .item img {
@@ -481,7 +482,7 @@ body {
 
 .item p {
     font-size: 14px;
-    margin-bottom: 10px; /* Espaço entre o texto e o botão */
+    margin-bottom: 5px; /* Mantendo um pequeno espaço entre o nome e o botão */
 }
 
 .item button {
