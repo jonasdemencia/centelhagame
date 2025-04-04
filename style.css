@@ -58,7 +58,7 @@ body {
     gap: 2px; /* Diminuindo a distância entre os botões */
 }
 
-/* Estilo dos botões  e Zerar */
+/* Estilo dos botões  e Zerar */
 .button {
     background-color: #555; /* Cinza para o fundo dos botões */
     border: none;
@@ -449,42 +449,40 @@ body {
 
 /* Estilos para a página de loot */
 #itens-obtidos {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    border: 1px solid #555;
+    display: flex; /* Alterado para flex para melhor controle do layout dos itens */
+    flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
+    justify-content: center; /* Centraliza os itens horizontalmente */
+    border: 1px solid #555; /* Cinza para a borda */
     border-radius: 6px;
     padding: 10px;
     margin-bottom: 20px;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.7); /* Fundo semi-transparente */
     color: #f0f0f0;
-    max-width: 80%;
+    max-width: 80%; /* Tornando responsivo com largura máxima */
     margin-left: auto;
     margin-right: auto;
 }
 
 .item {
     margin: 10px;
-    width: calc(33% - 20px);
-    min-width: 150px;
-    background-color: #f0f0f0;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    max-height: 200px; /* Altura máxima para os itens */
-    position: relative; /* Para posicionar o botão "Recolher" */
+    flex-direction: column; /* Alinha imagem e texto verticalmente */
+    align-items: center; /* Centraliza os itens dentro do bloco */
+    justify-content: center;
+    text-align: center; /* Centraliza o texto */
+    width: calc(33% - 20px); /* Aproximadamente 3 itens por linha em telas maiores, com margens */
+    min-width: 150px; /* Largura mínima para evitar quebra inadequada em telas menores */
 }
 
 .item img {
     width: 50px;
     height: 50px;
-    margin-bottom: 5px;
+    margin-bottom: 5px; /* Adiciona espaço abaixo da imagem */
 }
 
 .item p {
     font-size: 14px;
-    margin-bottom: 40px; /* Espaço para o botão */
+    margin-bottom: 5px; /* Adiciona espaço abaixo do texto */
 }
 
 .item button {
@@ -496,11 +494,6 @@ body {
     font-size: 12px;
     border-radius: 4px;
     cursor: pointer;
-    position: absolute; /* Posiciona o botão */
-    bottom: 10px; /* Alinha na parte inferior */
-    left: 50%; /* Centraliza horizontalmente */
-    transform: translateX(-50%); /* Ajusta o centralizado */
-    width: 80%; /* Largura do botão */
 }
 
 .item button:hover {
