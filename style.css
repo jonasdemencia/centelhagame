@@ -472,6 +472,7 @@ body {
     text-align: center; /* Centraliza o texto */
     width: calc(33% - 20px); /* Aproximadamente 3 itens por linha em telas maiores, com margens */
     min-width: 150px; /* Largura mínima para evitar quebra inadequada em telas menores */
+    background-color: #f0f0f0; /* Adicionado: Cor de fundo cinza claro */
 }
 
 .item img {
