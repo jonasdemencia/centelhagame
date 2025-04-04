@@ -31,6 +31,36 @@ function getLoggedInUserId() {
     return user ? user.uid : null;
 }
 
+const lootLobo = {
+  "peleDeLobo": {
+    nome: "Pele de Lobo",
+    descricao: "Uma pele de lobo macia."
+  },
+  "denteDeLobo": {
+    nome: "Dente de Lobo",
+    descricao: "Um dente afiado de lobo."
+  },
+  "carneDeLobo": {
+    nome: "Carne de Lobo",
+    descricao: "Carne fresca de lobo."
+  }
+};
+
+const lootGoblin = {
+  "moedaDeOuro": {
+    nome: "Moeda de Ouro",
+    descricao: "Uma moeda de ouro brilhante."
+  },
+  "facaRusty": {
+    nome: "Faca Enferrujada",
+    descricao: "Uma faca velha e enferrujada."
+  },
+  "orelhaDeGoblin": {
+    nome: "Orelha de Goblin",
+    descricao: "Uma orelha pontuda de goblin."
+  }
+};
+
 // Função para exibir os itens obtidos do Firestore
 async function exibirItens() {
     itensObtidosDiv.innerHTML = ""; // Limpa a exibição anterior
