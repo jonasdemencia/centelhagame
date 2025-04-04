@@ -214,9 +214,9 @@ async function simularRecebimentoDeItens(novosItens) {
 
 // Dados de exemplo dos itens obtidos (para simulação)
 const itensDeExemplo = [
-    { nome: "Poção de Vida", imagem: "pocao.png", quantidade: 2 },
-    { nome: "Espada de Ferro", imagem: "espada.png", quantidade: 1 },
-    { nome: "Moedas de Ouro", imagem: "moedas.png", quantidade: 10 },
+    { id: "pocao-vida", nome: "Poção de Vida", imagem: "pocao.png", quantidade: 2 },
+    { id: "espada-ferro", nome: "Espada de Ferro", imagem: "espada.png", quantidade: 1 },
+    { id: "moedas-ouro", nome: "Moedas de Ouro", imagem: "moedas.png", quantidade: 10 },
 ];
 
 // Simula o recebimento de itens ao carregar a página (apenas para demonstração)
