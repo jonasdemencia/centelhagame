@@ -209,5 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Exibir os itens na página ao carregar (a chamada real agora está dentro do evento DOMContentLoaded)
-// exibirItens();
+// 🔓 Torna as funções acessíveis no escopo global (para funcionar com onclick no HTML)
+window.recolherItem = recolherItem;
+window.recolherTudo = recolherTudo;
