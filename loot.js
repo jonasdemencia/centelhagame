@@ -154,22 +154,29 @@ async function adicionarAoInventario(item) {
     const inventory = playerData.inventory || {};
     const chest = inventory.itemsInChest || [];
 
+    // 🔒 Validação mínima
+    if (!item.nome) {
+        console.error("Item sem nome detectado:", item);
+        return;
+    }
+
+    // 🔑 Garante que exista um ID
+    const itemId = item.id || item.nome.toLowerCase().replace(/\s+/g, '-'); // fallback gerando id a partir do nome
+
     // Verifica se item já existe no baú
-    const indexExistente = chest.findIndex(existing => existing.id === item.id);
+    const indexExistente = chest.findIndex(existing => existing.id === itemId);
 
     if (indexExistente !== -1) {
-        // Se já existir, apenas incrementa a quantidade
         if (item.quantidade) {
             chest[indexExistente].quantity = (chest[indexExistente].quantity || 1) + item.quantidade;
         }
     } else {
-        // Se não existir, adiciona novo
         const itemParaAdicionar = {
-            id: item.id,
+            id: itemId,
             content: item.nome,
         };
 
-        if (item.quantidade) itemParaAdicionar.quantity = item.quantidade;
+        if (typeof item.quantidade === "number") itemParaAdicionar.quantity = item.quantidade;
         if (item.consumable) itemParaAdicionar.consumable = true;
         if (item.effect) itemParaAdicionar.effect = item.effect;
         if (item.value) itemParaAdicionar.value = item.value;
@@ -181,6 +188,7 @@ async function adicionarAoInventario(item) {
         "inventory.itemsInChest": chest
     });
 }
+
 
 // Função para exibir mensagens na página
 function exibirMensagem(mensagem) {
