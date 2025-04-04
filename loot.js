@@ -183,7 +183,8 @@ async function adicionarAoInventario(item) {
 
         chest.push(itemParaAdicionar);
     }
-
+    
+    console.log("Item para adicionar no inventário:", chest);
     await updateDoc(playerDocRef, {
         "inventory.itemsInChest": chest
     });
