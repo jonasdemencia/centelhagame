@@ -134,30 +134,52 @@ async function recolherTudo() {
 }
 
 // Função para adicionar um item ao inventário do Firestore
-async function adicionarAoInventario(itemParaAdicionar) {
+async function adicionarAoInventario(item) {
     const userId = getLoggedInUserId();
-    if (!userId) return;
 
-    const inventarioCollectionRef = collection(db, "users", userId, "inventory");
-    const itemDocRef = doc(inventarioCollectionRef, itemParaAdicionar.nome); // Usando o nome como ID para facilitar a verificação
-
-    const docSnap = await getDoc(itemDocRef);
-
-    if (docSnap.exists()) {
-        // Item já existe, incrementa a quantidade
-        await updateDoc(itemDocRef, {
-            quantidade: increment(itemParaAdicionar.quantidade)
-        });
-        console.log(`Quantidade de ${itemParaAdicionar.nome} aumentada no inventário.`);
-    } else {
-        // Item não existe, adiciona ao inventário
-        await setDoc(itemDocRef, {
-            nome: itemParaAdicionar.nome,
-            imagem: itemParaAdicionar.imagem,
-            quantidade: itemParaAdicionar.quantidade
-        });
-        console.log(`${itemParaAdicionar.nome} adicionado ao inventário.`);
+    if (!userId) {
+        console.error("Usuário não autenticado.");
+        return;
     }
+
+    const playerDocRef = doc(db, "players", userId);
+    const playerSnap = await getDoc(playerDocRef);
+
+    if (!playerSnap.exists()) {
+        console.error("Documento do jogador não encontrado.");
+        return;
+    }
+
+    const playerData = playerSnap.data();
+    const inventory = playerData.inventory || {};
+    const chest = inventory.itemsInChest || [];
+
+    // Verifica se item já existe no baú
+    const indexExistente = chest.findIndex(existing => existing.id === item.id);
+
+    if (indexExistente !== -1) {
+        // Se já existir, apenas incrementa a quantidade
+        if (item.quantidade) {
+            chest[indexExistente].quantity = (chest[indexExistente].quantity || 1) + item.quantidade;
+        }
+    } else {
+        // Se não existir, adiciona novo
+        const itemParaAdicionar = {
+            id: item.id,
+            content: item.nome,
+        };
+
+        if (item.quantidade) itemParaAdicionar.quantity = item.quantidade;
+        if (item.consumable) itemParaAdicionar.consumable = true;
+        if (item.effect) itemParaAdicionar.effect = item.effect;
+        if (item.value) itemParaAdicionar.value = item.value;
+
+        chest.push(itemParaAdicionar);
+    }
+
+    await updateDoc(playerDocRef, {
+        "inventory.itemsInChest": chest
+    });
 }
 
 // Função para exibir mensagens na página
