@@ -449,16 +449,16 @@ body {
 
 /* Estilos para a página de loot */
 #itens-obtidos {
-    display: flex; /* Alterado para flex para melhor controle do layout dos itens */
-    flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
-    justify-content: center; /* Centraliza os itens horizontalmente */
-    border: 1px solid #555; /* Cinza para a borda */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    border: 1px solid #555;
     border-radius: 6px;
     padding: 10px;
     margin-bottom: 20px;
-    background-color: rgba(0, 0, 0, 0.7); /* Fundo semi-transparente */
+    background-color: rgba(0, 0, 0, 0.7);
     color: #f0f0f0;
-    max-width: 80%; /* Tornando responsivo com largura máxima */
+    max-width: 80%;
     margin-left: auto;
     margin-right: auto;
 }
@@ -466,23 +466,21 @@ body {
 .item {
     margin: 10px;
     display: flex;
-    flex-direction: column; /* Alinha imagem e texto verticalmente */
-    align-items: center; /* Centraliza os itens dentro do bloco */
-    justify-content: center;
-    text-align: center; /* Centraliza o texto */
-    width: calc(33% - 20px); /* Aproximadamente 3 itens por linha em telas maiores, com margens */
-    min-width: 150px; /* Largura mínima para evitar quebra inadequada em telas menores */
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-width: 150px;
 }
 
 .item img {
     width: 50px;
     height: 50px;
-    margin-bottom: 5px; /* Adiciona espaço abaixo da imagem */
+    margin-bottom: 5px;
 }
 
 .item p {
     font-size: 14px;
-    margin-bottom: 5px; /* Adiciona espaço abaixo do texto */
+    margin-bottom: 5px;
 }
 
 .item button {
@@ -494,6 +492,8 @@ body {
     font-size: 12px;
     border-radius: 4px;
     cursor: pointer;
+    /* alterações para posicionar o botão sempre abaixo */
+    margin-top: auto;
 }
 
 .item button:hover {
@@ -523,7 +523,7 @@ h1 {
 
 /* Estilos adicionais para a página de loot */
 #recolher-tudo-button {
-    background-color: #007bff; /* Azul */
+    background-color: #007bff;
     color: white;
     border: none;
     padding: 10px 20px;
@@ -535,11 +535,11 @@ h1 {
     display: block;
     margin-left: auto;
     margin-right: auto;
-    width: fit-content; /* Ajusta a largura ao conteúdo */
+    width: fit-content;
 }
 
 #recolher-tudo-button:hover {
-    background-color: #0056b3; /* Azul mais escuro */
+    background-color: #0056b3;
 }
 
 #mensagem {
