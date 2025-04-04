@@ -114,6 +114,12 @@ function handlePostBattle() {
     const lootButton = document.getElementById('loot-button');
     if (lootButton) {
         lootButton.style.display = 'block'; // Ou 'inline-block'
+
+        // Adiciona um evento de clique ao botão de loot
+        lootButton.addEventListener('click', () => {
+            console.log("Botão de loot clicado. Redirecionando para loot.html");
+            window.location.href = 'loot.html';
+        });
     } else {
         console.error("Erro: Botão de loot não encontrado no HTML.");
     }
