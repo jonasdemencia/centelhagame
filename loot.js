@@ -79,7 +79,7 @@ function removerRecolherTudoButton() {
     }
 }
 
-// Função para recolher um item individualmente do Firestore
+// Função para recolher um item individualmente do Firestore e removê-lo do DOM
 async function recolherItem(itemId) {
     const userId = getLoggedInUserId();
     if (!userId) return;
@@ -92,7 +92,18 @@ async function recolherItem(itemId) {
         await adicionarAoInventario(itemData);
         await deleteDoc(lootItemRef);
         exibirMensagem(`Você recolheu: ${itemData.nome}`);
-        exibirItens();
+
+        // Remove o item do DOM sem precisar recarregar toda a lista
+        const itemDiv = document.querySelector(`[data-item-id="${itemId}"]`);
+        if (itemDiv) {
+            itemDiv.remove();
+        }
+
+        // Se não houver mais itens, remova o botão "Recolher Tudo"
+        const restanteDeItens = document.querySelectorAll(".item");
+        if (restanteDeItens.length === 0) {
+            removerRecolherTudoButton();
+        }
     }
 }
 
