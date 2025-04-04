@@ -62,11 +62,14 @@ async function exibirItens() {
     itensObtidos.forEach(item => {
         const itemDiv = document.createElement("div");
         itemDiv.classList.add("item");
+        itemDiv.setAttribute("data-item-id", item.id); // <-- ESSA LINHA FOI ADICIONADA
+
         itemDiv.innerHTML = `
             <img src="${item.imagem}" alt="${item.nome}">
             <p>${item.nome} (x${item.quantidade})</p>
             <button onclick="recolherItem('${item.id}')">Recolher</button>
         `;
+
         itensObtidosDiv.appendChild(itemDiv);
     });
 }
