@@ -19,29 +19,17 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 const itensObtidosDiv = document.getElementById("itens-obtidos");
-let inventarioButton = null; // Inicialmente nulo
+const inventarioButton = document.getElementById("inventario-button");
 let recolherTudoButton = null; // Inicialmente nulo
 const mensagemDiv = document.createElement("div");
 mensagemDiv.id = "mensagem";
-document.body.insertBefore(mensagemDiv, null); // Insere antes do primeiro elemento filho do body
+document.body.insertBefore(mensagemDiv, inventarioButton);
 
 // Função para obter o UID do usuário logado
 function getLoggedInUserId() {
     const user = auth.currentUser;
     return user ? user.uid : null;
 }
-
-export const lootMonstros = {
-    "goblin1": [
-        { nome: "Moedas de Ouro", imagem: "moedas.png", minQuantidade: 5, maxQuantidade: 15, probabilidade: 0.8 },
-        { nome: "Pequena Poção de Vida", imagem: "pocao_pequena.png", minQuantidade: 1, maxQuantidade: 1, probabilidade: 0.4 }
-    ],
-    "esqueleto1": [
-        { nome: "Osso", imagem: "osso.png", minQuantidade: 1, maxQuantidade: 2, probabilidade: 0.7 },
-        { nome: "Espada de Madeira", imagem: "espada_madeira.png", minQuantidade: 1, maxQuantidade: 1, probabilidade: 0.1 }
-    ],
-    // Adicione outros monstros e seus loots aqui
-};
 
 // Função para exibir os itens obtidos do Firestore
 async function exibirItens() {
@@ -166,6 +154,16 @@ function exibirMensagem(mensagem) {
     }, 3000); // Limpa a mensagem após 3 segundos
 }
 
+// Evento de clique do botão "Inventário"
+inventarioButton.addEventListener("click", () => {
+    const userId = getLoggedInUserId();
+    if (userId) {
+        window.location.href = "inventory.html"; // Redireciona para a página de inventário
+    } else {
+        exibirMensagem("Você precisa estar logado para ver o inventário.");
+    }
+});
+
 // Função para simular o recebimento de novos itens (para testes)
 async function simularRecebimentoDeItens(novosItens) {
     const userId = getLoggedInUserId();
@@ -185,24 +183,8 @@ const itensDeExemplo = [
     { nome: "Moedas de Ouro", imagem: "moedas.png", quantidade: 10 },
 ];
 
-// Evento de clique do botão "Inventário" e simulação de recebimento ao carregar a página
+// Simula o recebimento de itens ao carregar a página (apenas para demonstração)
 document.addEventListener('DOMContentLoaded', () => {
-    inventarioButton = document.getElementById("inventario-button"); // Inicializa inventarioButton aqui
-
-    // Evento de clique do botão "Inventário"
-    if (inventarioButton) {
-        inventarioButton.addEventListener("click", () => {
-            const userId = getLoggedInUserId();
-            if (userId) {
-                window.location.href = "inventory.html"; // Redireciona para a página de inventário
-            } else {
-                exibirMensagem("Você precisa estar logado para ver o inventário.");
-            }
-        });
-    } else {
-        console.error("Botão 'Inventário' não encontrado no DOM.");
-    }
-
     // Verifica se o usuário está logado antes de tentar exibir os itens
     onAuthStateChanged(auth, (user) => {
         if (user) {
@@ -210,8 +192,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             mensagemDiv.textContent = "Faça login para ver os itens.";
         }
-        exibirItens(); // Chama exibirItens aqui para garantir que seja executado após o carregamento do DOM
     });
 });
 
-// Exibir os itens na página ao carregar (removido daqui para ser chamado dentro do DOMContentLoaded)
+// Exibir os itens na página ao carregar (a chamada real agora está dentro do evento DOMContentLoaded)
+// exibirItens();
