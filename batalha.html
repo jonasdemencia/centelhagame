@@ -5,38 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Batalha - Centelha Game</title>
     <link rel="stylesheet" href="style.css"> <style>
-        /* Estilos básicos para as barras de vida (opcional) */
+        /* Estilos básicos (mantidos da versão anterior) */
+        body { font-family: sans-serif; margin: 15px;}
+        header, footer { margin-bottom: 15px; }
+        main { max-width: 800px; margin: auto;}
+        section { margin-bottom: 15px; padding: 10px; border: 1px solid #eee; border-radius: 5px;}
+        hr { border: 0; border-top: 1px solid #ccc; margin: 20px 0;}
+        button { padding: 8px 15px; margin: 5px; cursor: pointer; }
+        button:disabled { cursor: not-allowed; opacity: 0.6; }
+
         .health-bar-container {
-            width: 100%;
-            height: 20px;
-            background-color: #e0e0e0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
+            width: 100%; height: 20px; background-color: #e0e0e0; border-radius: 10px; overflow: hidden; margin-bottom: 10px; border: 1px solid #ccc;
         }
         .health-bar {
-            height: 100%;
-            background-color: #4caf50; /* Verde inicial */
-            width: 100%; /* Começa cheia */
-            transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out;
-            border-radius: 8px;
-             text-align: center; /* Para mostrar texto dentro se quiser */
-             color: white;
-             font-size: 12px;
-             line-height: 20px; /* Centraliza verticalmente */
+            height: 100%; background-color: #4caf50; width: 100%; transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out; border-radius: 8px;
         }
         #battleLog {
-            height: 200px; /* Ou altura desejada */
-            overflow-y: scroll;
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-top: 15px;
-            background-color: #f9f9f9;
-            font-family: monospace; /* Fica bom para logs */
-            font-size: 0.9em;
+            height: 200px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-top: 15px; background-color: #f9f9f9; font-family: monospace; font-size: 0.9em; line-height: 1.4;
         }
-        .log-entry { margin-bottom: 5px; }
+        .log-entry { margin-bottom: 5px; word-wrap: break-word;}
         .log-turno { font-weight: bold; margin-top: 10px; border-top: 1px dashed #aaa; padding-top: 5px;}
         .log-vitoria { color: green; font-weight: bold; }
         .log-derrota { color: red; font-weight: bold; }
@@ -44,24 +31,11 @@
         .log-dano-monstro { color: darkred; }
         .log-info { color: #555; }
         .log-sistema { color: purple; font-style: italic; }
-        .log-erro { color: red; background-color: #fee; padding: 2px; }
-        .turn-block {
-             border-left: 3px solid #ddd;
-             padding-left: 10px;
-             margin-bottom: 8px;
-        }
-        #monsterImage {
-            max-width: 150px; /* Ajuste o tamanho conforme necessário */
-            height: auto;
-            display: block;
-            margin: 10px auto;
-        }
-        #lootSection {
-            border: 1px solid goldenrod;
-            padding: 15px;
-            margin-top: 20px;
-            background-color: #fffacd;
-        }
+        .log-erro { color: red; background-color: #fee; padding: 2px; font-weight: bold;}
+        .turn-block { border-left: 3px solid #ddd; padding-left: 10px; margin-bottom: 8px;}
+        #monsterImage { max-width: 150px; height: auto; display: block; margin: 10px auto; border: 1px solid #eee; }
+        #lootSection { border: 1px solid goldenrod; padding: 15px; margin-top: 20px; background-color: #fffacd; border-radius: 5px;}
+        #lootSection h3 { margin-top: 0; }
     </style>
 </head>
 <body>
@@ -69,26 +43,28 @@
     <header>
         <h1>Batalha</h1>
         <button id="inventoryButton" onclick="window.location.href='inventario.html'">Inventário</button>
-         <button onclick="window.location.href='index.html'">Voltar ao Mapa</button> </header>
+        <button onclick="window.location.href='index.html'">Voltar ao Mapa</button>
+    </header>
 
     <main class="battle-container">
 
         <section id="monsterInfo">
             <h2 id="monsterName">Carregando Monstro...</h2>
-            <img id="monsterImage" src="" alt="Imagem do Monstro"> <div id="monsterHealthBarContainer" class="health-bar-container">
+            <img id="monsterImage" src="" alt="Imagem do Monstro"> <div id="monsterHealthBarContainer" class="health-bar-container" title="Energia do Monstro">
                 <div id="monsterHealthBar" class="health-bar"></div>
             </div>
             <p id="monsterEnergy">Energia: ? / ?</p>
-            </section>
+        </section>
 
         <hr>
 
         <section id="playerInfo">
             <h3>Seu Status</h3>
-             <div id="playerHealthBarContainer" class="health-bar-container">
-                <div id="playerHealthBar" class="health-bar"></div> </div>
+             <div id="playerHealthBarContainer" class="health-bar-container" title="Sua Energia">
+                <div id="playerHealthBar" class="health-bar"></div>
+             </div>
             <p id="playerEnergy">Sua Energia: ?</p>
-            </section>
+        </section>
 
         <hr>
 
@@ -111,21 +87,15 @@
         <section id="lootSection" style="display: none;">
             <h3>Loot Coletado!</h3>
             <div id="lootItems">
-                <p>Você encontrou:</p>
-                <ul>
-                    <li>Item 1 (Exemplo)</li>
-                    <li>Item 2 (Exemplo)</li>
-                </ul>
+                <p>Você encontrou: (Implementar listagem)</p>
             </div>
             <button id="collectLootButton">Coletar Tudo e Sair</button>
-             </section>
+        </section>
 
-         </main>
+    </main>
 
     <footer>
-        </footer>
-
-    <script src="firebase-config.js"></script>
+        <p>&copy; 2025 Centelha Game</p> </footer>
 
     <script type="module" src="batalha.js"></script>
 
