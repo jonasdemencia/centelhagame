@@ -1,6 +1,7 @@
 // Importa os SDKs necessários do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc, increment, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { lootLobo, lootGoblin } from './loot.js'; // Definições de loot
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
 // Configuração do Firebase
@@ -24,6 +25,70 @@ let recolherTudoButton = null; // Inicialmente nulo
 const mensagemDiv = document.createElement("div");
 mensagemDiv.id = "mensagem";
 document.body.insertBefore(mensagemDiv, inventarioButton);
+
+let ultimoMonstroDerrotado = null; // Armazena o tipo do monstro derrotado
+
+async function concederLoot(monsterType) {
+    const user = auth.currentUser;
+    if (!user) {
+        console.error("Usuário não autenticado.");
+        return;
+    }
+
+    let lootDoMonstro;
+    if (monsterType === "lobo") {
+        lootDoMonstro = lootLobo;
+    } else if (monsterType === "goblin") {
+        lootDoMonstro = lootGoblin;
+    } else {
+        console.warn(`Tipo de monstro desconhecido: ${monsterType}`);
+        return;
+    }
+
+    const inventarioCollectionRef = collection(db, "users", user.uid, "inventory");
+    const itensObtidosNestaBatalha = [];
+
+    for (const itemName in lootDoMonstro) {
+        if (lootDoMonstro.hasOwnProperty(itemName)) {
+            const item = lootDoMonstro[itemName];
+            const itemDocRef = doc(inventarioCollectionRef, item.nome);
+
+            try {
+                const docSnap = await getDoc(itemDocRef);
+                if (docSnap.exists()) {
+                    await updateDoc(itemDocRef, { quantidade: increment(1) });
+                } else {
+                    await setDoc(itemDocRef, {
+                        nome: item.nome,
+                        descricao: item.descricao,
+                        imagem: item.imagem || "item_padrao.png",
+                        quantidade: 1
+                    });
+                }
+                itensObtidosNestaBatalha.push(item);
+            } catch (error) {
+                console.error("Erro ao atualizar inventário:", error);
+            }
+        }
+    }
+
+    sessionStorage.setItem("lootObtido", JSON.stringify(itensObtidosNestaBatalha)); // Salva os itens para exibir na tela de loot
+}
+
+// Chamar a função ao final da batalha
+function iniciarBatalha(monsterType) {
+    console.log(`Batalha contra ${monsterType} começou.`);
+    setTimeout(() => { 
+        const resultado = lutarContraMonstro(monsterType);
+        if (resultado === "vitoria") {
+            ultimoMonstroDerrotado = monsterType;
+            concederLoot(ultimoMonstroDerrotado);
+            ultimoMonstroDerrotado = null;
+        } else {
+            exibirMensagem("Você foi derrotado!");
+        }
+    }, 3000);
+}
 
 // Função para obter o UID do usuário logado
 function getLoggedInUserId() {
