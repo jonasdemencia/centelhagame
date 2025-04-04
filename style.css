@@ -497,7 +497,7 @@ body {
     font-size: 12px;
     border-radius: 4px;
     cursor: pointer;
-    margin-top: auto; /* Empurrar o botão para o final */
+    margin-top: 5px; /* Diminui o espaçamento entre o item e o botão */
 }
 
 .item button:hover {
