@@ -222,10 +222,11 @@ async function simularRecebimentoDeItens(novosItens) {
 
 // Dados de exemplo dos itens obtidos (para simulação)
 const itensDeExemplo = [
-    { id: "pocao-vida", nome: "Poção de Vida", imagem: "pocao.png", quantidade: 2 },
-    { id: "espada-ferro", nome: "Espada de Ferro", imagem: "espada.png", quantidade: 1 },
-    { id: "moedas-ouro", nome: "Moedas de Ouro", imagem: "moedas.png", quantidade: 10 },
+    { id: "pocao-vida", nome: "Poção de Vida", imagem: "pocao.png", quantidade: 2, consumable: true, effect: "Recupera 50 de vida" },
+    { id: "espada-ferro", nome: "Espada de Ferro", imagem: "espada.png", quantidade: 1, value: 100 },
+    { id: "moedas-ouro", nome: "Moedas de Ouro", imagem: "moedas.png", quantidade: 10, value: 10 },
 ];
+
 
 // Simula o recebimento de itens ao carregar a página (apenas para demonstração)
 document.addEventListener('DOMContentLoaded', () => {
