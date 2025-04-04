@@ -466,10 +466,14 @@ body {
 .item {
     margin: 10px;
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Mantendo a direção da coluna */
     align-items: center;
     text-align: center;
+    width: calc(33% - 20px); /* Retornando para a largura anterior para o layout em grade */
     min-width: 150px;
+    /* Ajustes para garantir espaço para o botão */
+    justify-content: space-between; /* Espaça o conteúdo verticalmente */
+    padding-bottom: 15px; /* Adiciona um pouco de espaço na parte inferior para o botão */
 }
 
 .item img {
@@ -480,7 +484,8 @@ body {
 
 .item p {
     font-size: 14px;
-    margin-bottom: 5px;
+    margin-bottom: 0; /* Removendo a margem inferior padrão do texto */
+    flex-grow: 1; /* Permite que o texto ocupe o espaço restante */
 }
 
 .item button {
@@ -492,8 +497,8 @@ body {
     font-size: 12px;
     border-radius: 4px;
     cursor: pointer;
-    /* alterações para posicionar o botão sempre abaixo */
-    margin-top: auto;
+    /* Removendo o posicionamento absoluto */
+    margin-top: 5px; /* Adicionando um pouco de espaço acima do botão */
 }
 
 .item button:hover {
