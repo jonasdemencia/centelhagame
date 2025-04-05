@@ -574,6 +574,11 @@ async function updateCharacterDamage() {
 
 function renderizarInventario(inventory = {}) {
     const chestContainer = document.querySelector(".items");
+    if (!chestContainer) {
+        console.warn("Contêiner de itens do inventário não encontrado.");
+        return;
+    }
+
     chestContainer.innerHTML = ""; // Limpa o conteúdo anterior
 
     const items = Array.isArray(inventory.itemsInChest) ? inventory.itemsInChest : [];
