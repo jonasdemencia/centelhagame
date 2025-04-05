@@ -161,14 +161,13 @@ async function adicionarAoInventario(item) {
 
     // 🔒 Validação mínima
     const nomeItem = item.content || item.nome;
-if (!nomeItem) {
-    console.error("Item sem nome ou content detectado:", item);
-    return;
-}
+    if (!nomeItem) {
+        console.error("Item sem nome ou content detectado:", item);
+        return;
+    }
 
     // 🔑 Garante que exista um ID
     const itemId = item.id || nomeItem.toLowerCase().replace(/\s+/g, '-');
-    
 
     // Verifica se item já existe no baú
     const indexExistente = chest.findIndex(existing => existing.id === itemId);
@@ -179,10 +178,10 @@ if (!nomeItem) {
         }
     } else {
         const itemParaAdicionar = {
-    id: itemId,
-    content: nomeItem,
-    description: item.description || ""
-};
+            id: itemId,
+            content: nomeItem,
+            description: item.description || ""
+        };
         if (typeof item.quantidade === "number") itemParaAdicionar.quantity = item.quantidade;
         if (item.consumable) itemParaAdicionar.consumable = true;
         if (item.effect) itemParaAdicionar.effect = item.effect;
@@ -190,10 +189,9 @@ if (!nomeItem) {
 
         chest.push(itemParaAdicionar);
     }
-    
-    console.log("Item para adicionar no inventário:", chest);
+
+    console.log("Salvando inventário com:", chest);
     await updateDoc(playerDocRef, {
-        console.log("Salvando inventário com:", chest);
         "inventory.itemsInChest": chest
     });
 }
