@@ -468,25 +468,31 @@ function loadInventoryUI(inventoryData) {
     });
 }
 
-async function getPlayerData(uid) {
+function getPlayerData(uid, callback) {
     try {
         const playerRef = doc(db, "players", uid);
-        const playerSnap = await getDoc(playerRef);
-        if (playerSnap.exists()) {
-            const data = playerSnap.data();
-            // Armazena a energia inicial se ainda não estiver definida
-            if (data.energy && !data.energy.initial) {
-                data.energy.initial = data.energy.total;
-                await setDoc(playerRef, data, { merge: true }); // Salva a energia inicial
-                console.log("Energia inicial do jogador definida como:", data.energy.total);
+
+        // Escuta o documento do jogador em tempo real
+        return onSnapshot(playerRef, async (playerSnap) => {
+            if (playerSnap.exists()) {
+                const data = playerSnap.data();
+
+                // Armazena a energia inicial se ainda não estiver definida
+                if (data.energy && !data.energy.initial) {
+                    data.energy.initial = data.energy.total;
+                    await setDoc(playerRef, data, { merge: true }); // Salva a energia inicial
+                    console.log("Energia inicial do jogador definida como:", data.energy.total);
+                }
+
+                callback(data); // Envia os dados atualizados pro lugar que chamou a função
+            } else {
+                console.log("Documento do jogador não encontrado.");
+                callback(null);
             }
-            return data;
-        } else {
-            return null;
-        }
+        });
     } catch (error) {
         console.error("Erro ao recuperar os dados do jogador:", error);
-        return null;
+        callback(null);
     }
 }
 
@@ -559,6 +565,24 @@ async function updateCharacterDamage() {
     }
 }
 
+function renderizarInventario(items) {
+    const inventarioDiv = document.getElementById("inventario");
+    inventarioDiv.innerHTML = "";
+
+    items.forEach(item => {
+        const itemDiv = document.createElement("div");
+        itemDiv.classList.add("item-inventario");
+
+        itemDiv.innerHTML = `
+            <strong>${item.content}</strong>
+            ${item.quantity ? ` (x${item.quantity})` : ""}
+            <br>
+            <small>${item.description || ""}</small>
+        `;
+
+        inventarioDiv.appendChild(itemDiv);
+    });
+}
 
 // Inicializa e carrega o inventário ao iniciar
 document.addEventListener("DOMContentLoaded", () => {
