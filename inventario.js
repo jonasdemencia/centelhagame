@@ -593,21 +593,21 @@ function renderizarInventario(items) {
 
 // Inicializa e carrega o inventário ao iniciar
 document.addEventListener("DOMContentLoaded", () => {
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            console.log("Usuário autenticado:", user.uid);
-
-            currentPlayerData = await getPlayerData(user.uid); // 🔹 Recupera os dados da ficha
-            if (currentPlayerData) {
-                updateCharacterSheet(currentPlayerData); // 🔹 Atualiza a ficha do personagem
+    onAuthStateChanged(auth, (user) => {
+    if (user) {
+        console.log("Usuário autenticado:", user.uid);
+        getPlayerData(user.uid, (data) => {
+            if (data) {
+                console.log("Carregando dados do inventário para o usuário:", user.uid);
+                renderizarInventario(data.inventory); // Atualiza os itens no baú
+                preencherFichaPersonagem(data);        // Atualiza os dados da ficha
+            } else {
+                console.warn("Dados do jogador não encontrados.");
             }
-
-            await loadInventoryData(user.uid); // 🔹 Carrega os itens do inventário e slots equipados
-        } else {
-            console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
-            window.location.href = "index.html";
-        }
-    });
+        });
+    } else {
+        console.log("Usuário não autenticado.");
+    }
 });
 
 // 📌 Sistema de Carrossel entre as janelas
