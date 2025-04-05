@@ -468,33 +468,40 @@ function loadInventoryUI(inventoryData) {
     });
 }
 
-function getPlayerData(uid, callback) {
+async function getPlayerData(uid, callback) {
     try {
         const playerRef = doc(db, "players", uid);
 
-        // Escuta o documento do jogador em tempo real
-        return onSnapshot(playerRef, async (playerSnap) => {
+        // Escuta em tempo real com onSnapshot
+        onSnapshot(playerRef, async (playerSnap) => {
             if (playerSnap.exists()) {
                 const data = playerSnap.data();
 
-                // Armazena a energia inicial se ainda não estiver definida
+                // Armazena energia inicial, se necessário
                 if (data.energy && !data.energy.initial) {
                     data.energy.initial = data.energy.total;
-                    await setDoc(playerRef, data, { merge: true }); // Salva a energia inicial
+                    await setDoc(playerRef, data, { merge: true });
                     console.log("Energia inicial do jogador definida como:", data.energy.total);
                 }
 
-                callback(data); // Envia os dados atualizados pro lugar que chamou a função
+                if (typeof callback === 'function') {
+                    callback(data); // Chama a função passada com os dados atualizados
+                }
             } else {
-                console.log("Documento do jogador não encontrado.");
-                callback(null);
+                console.warn("Jogador não encontrado.");
+                if (typeof callback === 'function') {
+                    callback(null);
+                }
             }
         });
     } catch (error) {
         console.error("Erro ao recuperar os dados do jogador:", error);
-        callback(null);
+        if (typeof callback === 'function') {
+            callback(null);
+        }
     }
 }
+
 
 // Função para atualizar o valor da Couraça na ficha do personagem
 function updateCharacterCouraca() {
