@@ -572,22 +572,24 @@ async function updateCharacterDamage() {
     }
 }
 
-function renderizarInventario(items) {
-    const inventarioDiv = document.getElementById("inventario");
-    inventarioDiv.innerHTML = "";
+function renderizarInventario(inventory = {}) {
+    const chestContainer = document.querySelector(".items");
+    chestContainer.innerHTML = ""; // Limpa o conteúdo anterior
 
-    items.forEach(item => {
+    const items = Array.isArray(inventory.itemsInChest) ? inventory.itemsInChest : [];
+
+    items.forEach((item) => {
         const itemDiv = document.createElement("div");
-        itemDiv.classList.add("item-inventario");
-
+        itemDiv.classList.add("item");
+        itemDiv.setAttribute("data-item", item.id || "");
         itemDiv.innerHTML = `
-            <strong>${item.content}</strong>
-            ${item.quantity ? ` (x${item.quantity})` : ""}
-            <br>
-            <small>${item.description || ""}</small>
+            ${item.content || item.name || "Item sem nome"}
+            <span class="item-expand-toggle">+</span>
+            <div class="item-description" style="display: none;">
+                ${item.description || "Sem descrição"}
+            </div>
         `;
-
-        inventarioDiv.appendChild(itemDiv);
+        chestContainer.appendChild(itemDiv);
     });
 }
 
