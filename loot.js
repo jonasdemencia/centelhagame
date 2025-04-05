@@ -223,8 +223,8 @@ async function simularRecebimentoDeItens(novosItens) {
 
 // Dados de exemplo dos itens obtidos (para simulação)
 const itensDeExemplo = [
-    { id: "weapon", content: "canivete", description: "Uma pequena lâmina afiada." }, // Mudando o id para corresponder ao slot
-    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." }, // Adicionando efeito e valor para a poção
+    { id: "weapon", content: "Espada de madeira", description: "Uma espada de treinamento." }, // Mudando o id para corresponder ao slot
+    { id: "pocao-cura-minima", content: "Poção de Cura Minima", consumable: true, quantity: 2, effect: "heal", value: 2, description: "Uma poção que restaura uma quantidade minima de energia vital." }, // Adicionando efeito e valor para a poção
 ];
 
 
