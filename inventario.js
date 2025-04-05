@@ -594,21 +594,22 @@ function renderizarInventario(items) {
 // Inicializa e carrega o inventário ao iniciar
 document.addEventListener("DOMContentLoaded", () => {
     onAuthStateChanged(auth, (user) => {
-    if (user) {
-        console.log("Usuário autenticado:", user.uid);
-        getPlayerData(user.uid, (data) => {
-            if (data) {
-                console.log("Carregando dados do inventário para o usuário:", user.uid);
-                renderizarInventario(data.inventory); // Atualiza os itens no baú
-                updateCharacterSheet(data);        // Atualiza os dados da ficha
-            } else {
-                console.warn("Dados do jogador não encontrados.");
-            }
-        });
-    } else {
-        console.log("Usuário não autenticado.");
-    }
-});
+        if (user) {
+            console.log("Usuário autenticado:", user.uid);
+            getPlayerData(user.uid, (data) => {
+                if (data) {
+                    console.log("Carregando dados do inventário para o usuário:", user.uid);
+                    renderizarInventario(data.inventory); // Atualiza os itens no baú
+                    updateCharacterSheet(data);           // Atualiza os dados da ficha
+                } else {
+                    console.warn("Dados do jogador não encontrados.");
+                }
+            });
+        } else {
+            console.log("Usuário não autenticado.");
+        }
+    });
+}); // <- ESTE parêntese estava faltando!
 
 // 📌 Sistema de Carrossel entre as janelas
 const slides = document.querySelectorAll(".carousel-slide");
