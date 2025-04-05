@@ -209,7 +209,7 @@ function exibirMensagem(mensagem) {
 inventarioButton.addEventListener("click", () => {
     const userId = getLoggedInUserId();
     if (userId) {
-        window.location.href = "inventory.html"; // Redireciona para a página de inventário
+        window.location.href = "inventario.html"; // Redireciona para a página de inventário
     } else {
         exibirMensagem("Você precisa estar logado para ver o inventário.");
     }
