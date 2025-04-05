@@ -215,16 +215,18 @@ inventarioButton.addEventListener("click", () => {
     }
 });
 
-// Função para simular o recebimento de novos itens (para testes)
+// Simula o recebimento de novos itens (com ID fixo)
 async function simularRecebimentoDeItens(novosItens) {
     const userId = getLoggedInUserId();
     if (!userId) return;
 
     for (const item of novosItens) {
         const lootCollectionRef = collection(db, "users", userId, "loot");
-        await setDoc(doc(lootCollectionRef), item);
+        const itemRef = doc(lootCollectionRef, item.id); // <-- AQUI
+        await setDoc(itemRef, item);
     }
-    exibirItens(); // Atualiza a exibição após adicionar os itens
+
+    exibirItens(); // Atualiza a exibição
 }
 
 // Dados de exemplo dos itens obtidos (para simulação)
