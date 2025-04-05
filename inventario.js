@@ -600,7 +600,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data) {
                 console.log("Carregando dados do inventário para o usuário:", user.uid);
                 renderizarInventario(data.inventory); // Atualiza os itens no baú
-                preencherFichaPersonagem(data);        // Atualiza os dados da ficha
+                updateCharacterSheet(data);        // Atualiza os dados da ficha
             } else {
                 console.warn("Dados do jogador não encontrados.");
             }
