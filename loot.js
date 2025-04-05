@@ -86,6 +86,7 @@ function removerRecolherTudoButton() {
 
 // Função para recolher um item individualmente do Firestore e removê-lo do DOM
 async function recolherItem(itemId) {
+    console.log("Tentando recolher item com ID:", itemId);
     const userId = getLoggedInUserId();
     if (!userId) return;
 
@@ -94,6 +95,7 @@ async function recolherItem(itemId) {
 
     if (lootDoc.exists()) {
         const itemData = lootDoc.data();
+        console.log("Dados do item recolhido:", itemData);
         await adicionarAoInventario(itemData);
         await deleteDoc(lootItemRef);
         exibirMensagem(`Você recolheu: ${itemData.content || itemData.nome}`);
@@ -137,6 +139,7 @@ async function recolherTudo() {
 
 // Função para adicionar um item ao inventário do Firestore
 async function adicionarAoInventario(item) {
+    console.log("Adicionando ao inventário:", item);
     const userId = getLoggedInUserId();
 
     if (!userId) {
@@ -190,6 +193,7 @@ if (!nomeItem) {
     
     console.log("Item para adicionar no inventário:", chest);
     await updateDoc(playerDocRef, {
+        console.log("Salvando inventário com:", chest);
         "inventory.itemsInChest": chest
     });
 }
