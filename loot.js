@@ -64,11 +64,13 @@ async function exibirItens() {
         itemDiv.classList.add("item");
         itemDiv.setAttribute("data-item-id", item.id); // <-- ESSA LINHA FOI ADICIONADA
 
+        const nomeItem = item.content || item.nome || "Item sem nome";
+
         itemDiv.innerHTML = `
-            <img src="${item.imagem}" alt="${item.nome}">
-            <p>${item.nome} (x${item.quantidade})</p>
-            <button onclick="recolherItem('${item.id}')">Recolher</button>
-        `;
+    <img src="${item.imagem || 'img/default.png'}" alt="${nomeItem}">
+    <p>${nomeItem} ${item.quantidade ? `(x${item.quantidade})` : ""}</p>
+    <button onclick="recolherItem('${item.id}')">Recolher</button>
+`;
 
         itensObtidosDiv.appendChild(itemDiv);
     });
@@ -94,7 +96,7 @@ async function recolherItem(itemId) {
         const itemData = lootDoc.data();
         await adicionarAoInventario(itemData);
         await deleteDoc(lootItemRef);
-        exibirMensagem(`Você recolheu: ${itemData.nome}`);
+        exibirMensagem(`Você recolheu: ${itemData.content || itemData.nome}`);
 
         // Remove o item do DOM sem precisar recarregar toda a lista
         const itemDiv = document.querySelector(`[data-item-id="${itemId}"]`);
@@ -155,13 +157,15 @@ async function adicionarAoInventario(item) {
     const chest = inventory.itemsInChest || [];
 
     // 🔒 Validação mínima
-    if (!item.nome) {
-        console.error("Item sem nome detectado:", item);
-        return;
-    }
+    const nomeItem = item.content || item.nome;
+if (!nomeItem) {
+    console.error("Item sem nome ou content detectado:", item);
+    return;
+}
 
     // 🔑 Garante que exista um ID
-    const itemId = item.id || item.nome.toLowerCase().replace(/\s+/g, '-'); // fallback gerando id a partir do nome
+    const itemId = item.id || nomeItem.toLowerCase().replace(/\s+/g, '-');
+    
 
     // Verifica se item já existe no baú
     const indexExistente = chest.findIndex(existing => existing.id === itemId);
@@ -172,10 +176,10 @@ async function adicionarAoInventario(item) {
         }
     } else {
         const itemParaAdicionar = {
-            id: itemId,
-            content: item.nome,
-        };
-
+    id: itemId,
+    content: nomeItem,
+    description: item.description || ""
+};
         if (typeof item.quantidade === "number") itemParaAdicionar.quantity = item.quantidade;
         if (item.consumable) itemParaAdicionar.consumable = true;
         if (item.effect) itemParaAdicionar.effect = item.effect;
