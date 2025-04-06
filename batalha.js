@@ -144,14 +144,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const monsterData = {
         "lobo": {
-            nome: "Lobo Faminto",
-            imagem: "https://via.placeholder.com/150",
-            descricao: "Um lobo selvagem com presas afiadas.",
-            habilidade: 1,
-            couraça: 1,
-            pontosDeEnergia: 1,
-            dano: "1D6" // Adiciona o dano do monstro
-        },
+            "lobo": {
+    nome: "Lobo Faminto",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um lobo selvagem com presas afiadas.",
+    habilidade: 1,
+    couraça: 1,
+    pontosDeEnergia: 1,
+    dano: "1D6",
+    drops: [
+        {
+            id: "weapon",
+            content: "Espada de madeira",
+            description: "Uma espada de treinamento."
+        },
+        {
+            id: "pocao-cura-minima",
+            content: "Poção de Cura Minima",
+            consumable: true,
+            quantity: 2,
+            effect: "heal",
+            value: 2,
+            description: "Uma poção que restaura uma quantidade minima de energia vital."
+        }
+    ]
+}
+
         "goblin": {
             nome: "Goblin Sorrateiro",
             imagem: "https://via.placeholder.com/150",
