@@ -42,6 +42,14 @@ function getUrlParameter(name) {
     return value;
 }
 
+// Função para barra de HP
+function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
+    const barra = document.getElementById(idElemento);
+    const porcentagem = Math.max(0, (valorAtual / valorMaximo) * 100);
+    barra.style.width = `${porcentagem}%`;
+}
+
+
 // Função para rolar dados (ex: "1D6", "2D4")
 function rollDice(diceString) {
     console.log("LOG: rollDice chamado com:", diceString);
@@ -190,6 +198,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     currentMonster = monsterData[monsterName]; // Atribui o valor de currentMonster aqui
     console.log("LOG: Dados do monstro carregados:", currentMonster);
+
+    const vidaMaximaMonstro = currentMonster.pontosDeEnergia;
+const vidaMaximaJogador = jogador.pontosDeEnergia;
+
+// Atualiza visualmente as barras no início do combate
+atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, vidaMaximaMonstro);
+atualizarBarraHP("barra-hp-jogador", jogador.pontosDeEnergia, vidaMaximaJogador);
+
 
     if (currentMonster) {
         console.log("LOG: Dados do monstro (carregamento inicial):", currentMonster);
