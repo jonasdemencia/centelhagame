@@ -552,3 +552,21 @@ h1 {
     margin-top: 15px;
     font-weight: bold;
 }
+
+/* Barra de energia na página de batalha */
+.barra-hp-container {
+    width: 100%;
+    max-width: 200px;
+    background-color: #ccc;
+    border: 1px solid #333;
+    height: 20px;
+    margin-bottom: 10px;
+}
+
+.barra-hp {
+    height: 100%;
+    background-color: #4CAF50;
+    width: 100%;
+    transition: width 0.3s ease;
+}
+
