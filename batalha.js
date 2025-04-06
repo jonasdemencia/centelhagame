@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nome: "Lobo Faminto",
         imagem: "https://via.placeholder.com/150",
         descricao: "Um lobo selvagem com presas afiadas.",
-        habilidade: 1,
+        habilidade: 15,
         couraça: 1,
         pontosDeEnergia: 100,
         dano: "1D6",
