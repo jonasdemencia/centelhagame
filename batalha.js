@@ -303,7 +303,7 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
         await addLogMessage(`${currentMonster.nome} rolou ${monsterAttackRoll} para atacar.`, 1000);
         console.log("LOG: monsterAttack - Rolagem de ataque do monstro:", monsterAttackRoll);
 
-        const playerDefense = playerData?.defesa ? parseInt(playerData.defesa) : 10;
+        const playerDefense = playerData?.couraça ? parseInt(playerData.couraça) : 10;
         await addLogMessage(`Sua Defesa é ${playerDefense}.`, 1000);
         console.log("LOG: monsterAttack - Defesa do jogador:", playerDefense);
 
