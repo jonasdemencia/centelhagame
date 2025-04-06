@@ -711,7 +711,7 @@ atualizarBarraHP("barra-hp-jogador", jogador.pontosDeEnergia, vidaMaximaJogador)
                                     setTimeout(() => {
                                         currentMonster.pontosDeEnergia -= damageRollResult;
                                         addLogMessage(`${currentMonster.nome} sofreu ${damageRollResult} de dano. Pontos de Energia restantes: ${currentMonster.pontosDeEnergia}.`, 1000);
-                                        / 🟢 Atualiza a barra de HP do monstro
+                                        // 🟢 Atualiza a barra de HP do monstro
                                         atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
                                         if (rolarDanoButton) rolarDanoButton.style.display = 'none';
                                         attackOptionsDiv.style.display = 'none'; // Fim do turno do jogador
