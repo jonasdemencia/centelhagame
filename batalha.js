@@ -306,7 +306,7 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
         console.log("LOG: monsterAttack - playerData antes da defesa:", playerData); // ➡️ ADICIONE ESTE LOG
         console.log("LOG: monsterAttack - typeof playerData.couraca:", typeof playerData?.couraca); // ➡️ ADICIONE ESTE LOG
         console.log("LOG: monsterAttack - Valor de playerData.couraca:", playerData?.couraca);   // ➡️ ADICIONE ESTE LOG
-        const playerDefense = playerData?.couraca ? parseInt(playerData.couraça) : 10;
+        const playerDefense = playerData?.couraca ? parseInt(playerData.couraca) : 10;
         await addLogMessage(`Sua Defesa é ${playerDefense}.`, 1000);
         console.log("LOG: monsterAttack - Defesa do jogador:", playerDefense);
 
