@@ -313,6 +313,8 @@ atualizarBarraHP("barra-hp-jogador", jogador.pontosDeEnergia, vidaMaximaJogador)
             console.log("LOG: monsterAttack - Dano rolado pelo monstro:", monsterDamageRoll);
             console.log("LOG: monsterAttack - Energia do jogador antes do dano:", playerHealth);
             playerHealth -= monsterDamageRoll;
+            // 🔴 Atualiza a barra de HP do jogador
+            atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
             await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano.`, 1000);
             await addLogMessage(`Sua energia restante: ${playerHealth}.`, 1000); // Atualiza a mensagem para "energia"
             console.log("LOG: monsterAttack - Energia do jogador depois do dano:", playerHealth);
