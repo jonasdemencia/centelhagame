@@ -703,13 +703,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                             saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
                                         }
 
-                                        setTimeout(() => {
-                                            // Verifica se o monstro foi derrotado
-                                            if (currentMonster.pontosDeEnergia <= 0) {
-                                                addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-                                                console.log("LOG: Botão 'DANO' - Monstro derrotado.");
+                                        setTimeout(async () => {
+    // Verifica se o monstro foi derrotado
+    if (currentMonster.pontosDeEnergia <= 0) {
+        addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+        console.log("LOG: Botão 'DANO' - Monstro derrotado.");
 
-                                                // 🟢 Salva os drops do monstro no Firestore (se houver)
+        // 🟢 Salva os drops do monstro no Firestore (se houver)
         if (currentMonster.drops && Array.isArray(currentMonster.drops)) {
             const user = auth.currentUser;
             if (user) {
@@ -719,18 +719,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.warn("Usuário não autenticado. Não foi possível salvar os drops.");
             }
         }
-                                                
-                                                    handlePostBattle(); // Chamando a função para exibir o botão de loot
-                                            } else {
-                                                addLogMessage(`Fim do Turno do Jogador.`, 1000);
-                                                console.log("LOG: Botão 'DANO' - Turno do monstro após o ataque do jogador.");
-                                                monsterAttack(); // Turno do monstro APÓS o jogador causar dano
-                                            }
-                                            if (attackOptionsDiv) {
-                                                const buttons = attackOptionsDiv.querySelectorAll('.button');
-                                                buttons.forEach(button => button.disabled = false);
-                                            }
-                                        }, 1000);
+
+        handlePostBattle(); // Chamando a função para exibir o botão de loot
+    } else {
+        addLogMessage(`Fim do Turno do Jogador.`, 1000);
+        console.log("LOG: Botão 'DANO' - Turno do monstro após o ataque do jogador.");
+        monsterAttack(); // Turno do monstro APÓS o jogador causar dano
+    }
+
+    if (attackOptionsDiv) {
+        const buttons = attackOptionsDiv.querySelectorAll('.button');
+        buttons.forEach(button => button.disabled = false);
+    }
+}, 1000);
                                     }, 1000);
                                 }, 1000);
                             });
