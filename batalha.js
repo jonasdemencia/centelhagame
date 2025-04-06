@@ -204,7 +204,7 @@ const vidaMaximaMonstro = currentMonster.pontosDeEnergia;
 const vidaMaximaJogador = jogador.pontosDeEnergia;
 
 currentMonster.pontosDeEnergiaMax = vidaMaximaMonstro; // Salva para usar depois
-playerHealth = jogador.pontosDeEnergia;
+playerHealth = playerData.pontosDeEnergia;
 playerMaxHealth = vidaMaximaJogador; // Salva vida máxima do jogador
 
 // Atualiza visualmente as barras no início do combate
