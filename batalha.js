@@ -482,6 +482,23 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
         console.log("LOG: DOMContentLoaded - Log de batalha limpo (estado inicial).");
     }
 
+    // 👇 INSIRA AQUI: antes do onAuthStateChanged
+async function aguardarPlayerDataAntesDoAtaque() {
+    if (playerData && playerData.couraça !== undefined) {
+        console.log("playerData já carregado. Iniciando monsterAttack.");
+        await monsterAttack();
+    } else {
+        console.log("Aguardando playerData para iniciar monsterAttack...");
+        const checkInterval = setInterval(() => {
+            if (playerData && playerData.couraça !== undefined) {
+                clearInterval(checkInterval);
+                console.log("playerData carregado. Agora sim, iniciando monsterAttack.");
+                monsterAttack();
+            }
+        }, 100);
+    }
+}
+
     onAuthStateChanged(auth, async (user) => {
         console.log("LOG: onAuthStateChanged chamado.");
         if (user) {
@@ -620,7 +637,8 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
                                         isPlayerTurn = false;
                                         if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
                                         console.log("LOG: onAuthStateChanged - Monstro venceu a iniciativa! initiativeWinner =", initiativeWinner, "isPlayerTurn =", isPlayerTurn);
-                                        await monsterAttack(); // Monstro ataca primeiro
+                                        await aguardarPlayerDataAntesDoAtaque();
+(); // Monstro ataca primeiro
                                     }, 500);
                                 } else {
                                     await addLogMessage(`<p>Houve um empate na iniciativa!</p>`, 1000);
