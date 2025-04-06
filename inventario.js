@@ -491,11 +491,11 @@ async function getPlayerData(uid) {
 }
 
 // Função para atualizar o valor da Couraça na ficha do personagem
-function updateCharacterCouraca() {
+async function updateCharacterCouraca() {
     const couracaElement = document.getElementById("char-couraca");
     if (!couracaElement) return;
 
-    let baseCouraca = 0; // Você pode ter uma couraça base, se quiser
+    let baseCouraca = 0; // Valor base da couraça
     let bonusCouraca = 0;
 
     // Verifica o item equipado no slot de armadura
@@ -529,8 +529,20 @@ function updateCharacterCouraca() {
     }
 
     const totalCouraca = baseCouraca + bonusCouraca;
-    console.log("Valor total da couraça:", totalCouraca);
     couracaElement.innerText = totalCouraca;
+    console.log("Valor total da couraça:", totalCouraca);
+
+    // Atualiza o campo 'couraca' no Firestore
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+        const playerRef = doc(db, "players", uid);
+        try {
+            await updateDoc(playerRef, { couraca: totalCouraca });
+            console.log("Campo 'couraca' atualizado no Firestore para:", totalCouraca);
+        } catch (error) {
+            console.error("Erro ao atualizar o campo 'couraca' no Firestore:", error);
+        }
+    }
 }
 
 async function updateCharacterDamage() {
