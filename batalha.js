@@ -700,7 +700,18 @@ document.addEventListener('DOMContentLoaded', () => {
                                             if (currentMonster.pontosDeEnergia <= 0) {
                                                 addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1000);
                                                 console.log("LOG: Botão 'DANO' - Monstro derrotado.");
-                                                // Aqui você pode adicionar lógica para recompensar o jogador e, opcionalmente, restaurar parte da energia.
+
+                                                // 🟢 Salva os drops do monstro no Firestore (se houver)
+        if (currentMonster.drops && Array.isArray(currentMonster.drops)) {
+            const user = auth.currentUser;
+            if (user) {
+                await salvarDropsNoLoot(user.uid, currentMonster.drops);
+                console.log("Drops salvos no Firestore:", currentMonster.drops);
+            } else {
+                console.warn("Usuário não autenticado. Não foi possível salvar os drops.");
+            }
+        }
+                                                
                                                     handlePostBattle(); // Chamando a função para exibir o botão de loot
                                             } else {
                                                 addLogMessage(`Fim do Turno do Jogador.`, 1000);
