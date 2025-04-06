@@ -196,15 +196,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 };
 
-    currentMonster = monsterData[monsterName]; // Atribui o valor de currentMonster aqui
-    console.log("LOG: Dados do monstro carregados:", currentMonster);
+    currentMonster = monsterData[monsterName];
+console.log("LOG: Dados do monstro carregados:", currentMonster);
 
-    const vidaMaximaMonstro = currentMonster.pontosDeEnergia;
+const vidaMaximaMonstro = currentMonster.pontosDeEnergia;
 const vidaMaximaJogador = jogador.pontosDeEnergia;
 
+currentMonster.pontosDeEnergiaMax = vidaMaximaMonstro; // Salva para usar depois
+playerHealth = jogador.pontosDeEnergia;
+playerMaxHealth = vidaMaximaJogador; // Salva vida máxima do jogador
+
 // Atualiza visualmente as barras no início do combate
-atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, vidaMaximaMonstro);
-atualizarBarraHP("barra-hp-jogador", jogador.pontosDeEnergia, vidaMaximaJogador);
+atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
 
 
     if (currentMonster) {
