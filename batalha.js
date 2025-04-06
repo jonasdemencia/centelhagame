@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
 console.log("LOG: Dados do monstro carregados:", currentMonster);
 
 const vidaMaximaMonstro = currentMonster.pontosDeEnergia;
-const vidaMaximaJogador = jogador.pontosDeEnergia;
+const vidaMaximaJogador = playerData.pontosDeEnergia;
 
 currentMonster.pontosDeEnergiaMax = vidaMaximaMonstro; // Salva para usar depois
 playerHealth = playerData.pontosDeEnergia;
