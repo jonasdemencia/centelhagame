@@ -203,8 +203,6 @@ console.log("LOG: Dados do monstro carregados:", currentMonster);
 const vidaMaximaMonstro = currentMonster.pontosDeEnergia;
 
 currentMonster.pontosDeEnergiaMax = vidaMaximaMonstro; // Salva para usar depois
-playerHealth = playerData.pontosDeEnergia;
-playerMaxHealth = vidaMaximaJogador; // Salva vida máxima do jogador
 
 // Atualiza visualmente as barras no início do combate
 atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
