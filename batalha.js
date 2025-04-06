@@ -637,8 +637,7 @@ async function aguardarPlayerDataAntesDoAtaque() {
                                         isPlayerTurn = false;
                                         if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
                                         console.log("LOG: onAuthStateChanged - Monstro venceu a iniciativa! initiativeWinner =", initiativeWinner, "isPlayerTurn =", isPlayerTurn);
-                                        await aguardarPlayerDataAntesDoAtaque();
-(); // Monstro ataca primeiro
+                                        await aguardarPlayerDataAntesDoAtaque(); // Monstro ataca primeiro
                                     }, 500);
                                 } else {
                                     await addLogMessage(`<p>Houve um empate na iniciativa!</p>`, 1000);
