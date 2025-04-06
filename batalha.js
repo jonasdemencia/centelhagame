@@ -542,6 +542,11 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
                         playerHealth = playerData.energy?.total ? parseInt(playerData.energy.total) : 8; // Lê a energia de playerData.energy.total
                         console.log("LOG: onAuthStateChanged - Energia do jogador carregada da ficha:", playerHealth);
                         // -------------------------------------------------------------------------
+
+                        const vidaMaximaJogador = playerData.energy?.max ? parseInt(playerData.energy.max) : playerHealth; // Use a energia máxima da ficha, se existir.
+                        atualizarBarraHP("barra-hp-jogador", playerHealth, vidaMaximaJogador); // Use playerHealth (atual) e vidaMaximaJogador
+                        // ******************************************
+                        
                         const inventarioButton = document.getElementById("abrir-inventario");
                         const playerHealthDisplay = document.getElementById("player-health");
                         if (inventarioButton) {
