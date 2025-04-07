@@ -45,6 +45,14 @@ function getUrlParameter(name) {
 // Função para barra de HP
 function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
     const barra = document.getElementById(idElemento);
+    if (!barra) {
+        console.error(`Elemento com id "${idElemento}" não encontrado.`);
+        return;
+    }
+    if (!valorMaximo || valorMaximo <= 0) {
+        console.error(`Valor máximo inválido: ${valorMaximo}`);
+        return;
+    }
     const porcentagem = Math.max(0, (valorAtual / valorMaximo) * 100);
     barra.style.width = `${porcentagem}%`;
 }
