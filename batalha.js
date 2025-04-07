@@ -49,6 +49,13 @@ function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
     barra.style.width = `${porcentagem}%`;
 }
 
+function sincronizarEnergiaJogador() {
+    atualizarBarraHP("barra-hp-jogador", playerData.energiaAtual, playerData.energiaMax);
+    const playerHealthDisplay = document.getElementById("player-health");
+    if (playerHealthDisplay) {
+        playerHealthDisplay.innerText = playerData.energiaAtual;
+    }
+}
 
 // Função para rolar dados (ex: "1D6", "2D4")
 function rollDice(diceString) {
