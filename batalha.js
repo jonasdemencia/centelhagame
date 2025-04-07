@@ -161,7 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const monsterName = getUrlParameter('monstro');
     let currentMonster; // Declara currentMonster no escopo superior
     let playerData; // Para armazenar os dados do jogador
-    let playerHealth = 0; // Adiciona a vida do jogador (agora representando a energia)
     let playerMaxHealth = playerHealth; // ✅ AQUI! Esta linha é o que você precisava
     let isPlayerTurn = false; // Variável para controlar o turno
     let currentTurnBlock = null; // Para armazenar o bloco do turno atual
