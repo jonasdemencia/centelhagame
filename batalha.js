@@ -559,8 +559,8 @@ async function monsterAttack() {
                         console.log("LOG: onAuthStateChanged - Energia do jogador carregada da ficha:", playerHealth);
                         // -------------------------------------------------------------------------
 
-                        const vidaMaximaJogador = playerData.energy?.max ? parseInt(playerData.energy.max) : playerHealth; // Use a energia máxima da ficha, se existir.
-                        atualizarBarraHP("barra-hp-jogador", playerHealth, vidaMaximaJogador); // Use playerHealth (atual) e vidaMaximaJogador
+                        playerMaxHealth = playerData.energy?.max ? parseInt(playerData.energy.max) : playerHealth; // ← Atualiza a global
+                        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
                         // ******************************************
                         
                         const inventarioButton = document.getElementById("abrir-inventario");
