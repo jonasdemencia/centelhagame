@@ -141,14 +141,6 @@ function handlePostBattle() {
     }
 }
 
-function sincronizarEnergiaJogador() {
-    atualizarBarraHP("barra-hp-jogador", playerData.energiaAtual, playerData.energiaMax);
-    const playerHealthDisplay = document.getElementById("player-health");
-    if (playerHealthDisplay) {
-        playerHealthDisplay.innerText = playerData.energiaAtual;
-    }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: DOMContentLoaded evento disparado.");
     const lutarButton = document.getElementById("iniciar-luta");
