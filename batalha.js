@@ -288,85 +288,92 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
         }, 1500); // Pequeno delay antes do turno do monstro
     }
 
-// Função para o ataque do monstro (agora com delays e log em tempo real)
-    async function monsterAttack() {
-        console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
-        if (!currentMonster || playerHealth <= 0) {
-            console.log("LOG: monsterAttack - Monstro não existe ou jogador derrotado, retornando.");
-            return; // Se o monstro não existir ou o jogador estiver derrotado, não ataca
-        }
+async function monsterAttack() {
+    console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
+    if (!currentMonster || playerHealth <= 0) {
+        console.log("LOG: monsterAttack - Monstro não existe ou jogador derrotado, retornando.");
+        return;
+    }
 
-        startNewTurnBlock(currentMonster.nome);
-        await addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
+    startNewTurnBlock(currentMonster.nome);
+    await addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
 
-        const monsterAttackRoll = Math.floor(Math.random() * 20) + 1 + currentMonster.habilidade;
-        await addLogMessage(`${currentMonster.nome} rolou ${monsterAttackRoll} para atacar.`, 1000);
-        console.log("LOG: monsterAttack - Rolagem de ataque do monstro:", monsterAttackRoll);
+    const monsterAttackRoll = Math.floor(Math.random() * 20) + 1 + currentMonster.habilidade;
+    await addLogMessage(`${currentMonster.nome} rolou ${monsterAttackRoll} para atacar.`, 1000);
+    console.log("LOG: monsterAttack - Rolagem de ataque do monstro:", monsterAttackRoll);
 
-        console.log("LOG: monsterAttack - playerData antes da defesa:", playerData); // ➡️ ADICIONE ESTE LOG
-        console.log("LOG: monsterAttack - typeof playerData.couraca:", typeof playerData?.couraca); // ➡️ ADICIONE ESTE LOG
-        console.log("LOG: monsterAttack - Valor de playerData.couraca:", playerData?.couraca);   // ➡️ ADICIONE ESTE LOG
-        const playerDefense = playerData?.couraca ? parseInt(playerData.couraca) : 10;
-        await addLogMessage(`Sua Defesa é ${playerDefense}.`, 1000);
-        console.log("LOG: monsterAttack - Defesa do jogador:", playerDefense);
+    console.log("LOG: monsterAttack - playerData antes da defesa:", playerData);
+    console.log("LOG: monsterAttack - typeof playerData.couraca:", typeof playerData?.couraca);
+    console.log("LOG: monsterAttack - Valor de playerData.couraca:", playerData?.couraca);
+    const playerDefense = playerData?.couraca ? parseInt(playerData.couraca) : 10;
+    await addLogMessage(`Sua Defesa é ${playerDefense}.`, 1000);
+    console.log("LOG: monsterAttack - Defesa do jogador:", playerDefense);
 
-        if (monsterAttackRoll >= playerDefense) {
-            await addLogMessage(`O ataque do ${currentMonster.nome} acertou!`, 1000);
+    if (monsterAttackRoll >= playerDefense) {
+        await addLogMessage(`O ataque do ${currentMonster.nome} acertou!`, 1000);
 
-            const monsterDamageRoll = rollDice(currentMonster.dano);
-            console.log("LOG: monsterAttack - Dano rolado pelo monstro:", monsterDamageRoll);
-            console.log("LOG: monsterAttack - Energia do jogador antes do dano:", playerHealth);
-            playerHealth -= monsterDamageRoll;
-            // 🔴 Atualiza a barra de HP do jogador
-            atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-            await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano.`, 1000);
-            await addLogMessage(`Sua energia restante: ${playerHealth}.`, 1000); // Atualiza a mensagem para "energia"
-            console.log("LOG: monsterAttack - Energia do jogador depois do dano:", playerHealth);
+        const monsterDamageRoll = rollDice(currentMonster.dano);
+        console.log("LOG: monsterAttack - Dano rolado pelo monstro:", monsterDamageRoll);
+        console.log("LOG: playerHealth antes do dano:", playerHealth);
 
-            // Atualiza a energia do jogador na ficha e salva o estado da batalha
-            const user = auth.currentUser;
-            if (user) {
-                updatePlayerEnergyInFirestore(user.uid, playerHealth);
-                saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-            }
+        // Atualiza a vida do jogador
+        playerHealth -= monsterDamageRoll;
 
-            // Verifica se o jogador foi derrotado
-            if (playerHealth <= 0) {
-                await addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1000);
-                console.log("LOG: monsterAttack - Jogador derrotado.");
-                // Lógica adicional de fim de batalha pode ser adicionada aqui
-            } else {
-                // Após o ataque do monstro, é o turno do jogador novamente
-                startNewTurnBlock("Jogador");
-                await addLogMessage(`Turno do Jogador`, 1000);
-                if (attackOptionsDiv) {
-                    console.log("LOG: monsterAttack - **FINAL DO TURNO DO MONSTRO - INICIANDO TURNO DO JOGADOR** - attackOptionsDiv.style.display:", attackOptionsDiv.style.display, "isPlayerTurn:", isPlayerTurn);
-                    attackOptionsDiv.style.display = 'block';
-                    // Mostrar o botão de ataque corpo a corpo
-                    if (atacarCorpoACorpoButton) {
-                        atacarCorpoACorpoButton.style.display = 'block';
-                    }
-                    isPlayerTurn = true;
-                }
-            }
-        } else {
-            await addLogMessage(`O ataque do ${currentMonster.nome} errou.`, 1000);
-            console.log("LOG: monsterAttack - Ataque do monstro errou.");
-            // Após o ataque do monstro errar, é o turno do jogador novamente
-            startNewTurnBlock("Jogador");
-            await addLogMessage(`Turno do Jogador`, 1000);
-            if (attackOptionsDiv) {
-                console.log("LOG: monsterAttack - **FINAL DO TURNO DO MONSTRO - INICIANDO TURNO DO JOGADOR** - attackOptionsDiv.style.display:", attackOptionsDiv.style.display, "isPlayerTurn:", isPlayerTurn);
-                attackOptionsDiv.style.display = 'block';
-                // Mostrar o botão de ataque corpo a corpo
-                if (atacarCorpoACorpoButton) {
-                    atacarCorpoACorpoButton.style.display = 'block';
-                }
-                isPlayerTurn = true;
-            }
-        }
-    }
+        console.log("LOG: playerHealth depois do dano:", playerHealth);
 
+        //  Verifica se playerMaxHealth está definido
+        console.log("LOG: playerMaxHealth:", playerMaxHealth);
+
+        // Atualiza a barra de HP do jogador
+        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+
+        await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano.`, 1000);
+        await addLogMessage(`Sua energia restante: ${playerHealth}.`, 1000);
+        console.log("LOG: monsterAttack - Energia do jogador depois do dano:", playerHealth);
+
+        // Atualiza a energia do jogador na ficha e salva o estado da batalha
+        const user = auth.currentUser;
+        if (user) {
+            updatePlayerEnergyInFirestore(user.uid, playerHealth);
+            saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        }
+
+        // Verifica se o jogador foi derrotado
+        if (playerHealth <= 0) {
+            await addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1000);
+            console.log("LOG: monsterAttack - Jogador derrotado.");
+            // Lógica adicional de fim de batalha pode ser adicionada aqui
+        } else {
+            // Após o ataque do monstro, é o turno do jogador novamente
+            startNewTurnBlock("Jogador");
+            await addLogMessage(`Turno do Jogador`, 1000);
+            if (attackOptionsDiv) {
+                console.log("LOG: monsterAttack - **FINAL DO TURNO DO MONSTRO - INICIANDO TURNO DO JOGADOR** - attackOptionsDiv.style.display:", attackOptionsDiv.style.display, "isPlayerTurn:", isPlayerTurn);
+                attackOptionsDiv.style.display = 'block';
+                // Mostrar o botão de ataque corpo a corpo
+                if (atacarCorpoACorpoButton) {
+                    atacarCorpoACorpoButton.style.display = 'block';
+                }
+                isPlayerTurn = true;
+            }
+        }
+    } else {
+        await addLogMessage(`O ataque do ${currentMonster.nome} errou.`, 1000);
+        console.log("LOG: monsterAttack - Ataque do monstro errou.");
+        // Após o ataque do monstro errar, é o turno do jogador novamente
+        startNewTurnBlock("Jogador");
+        await addLogMessage(`Turno do Jogador`, 1000);
+        if (attackOptionsDiv) {
+            console.log("LOG: monsterAttack - **FINAL DO TURNO DO MONSTRO - INICIANDO TURNO DO JOGADOR** - attackOptionsDiv.style.display:", attackOptionsDiv.style.display, "isPlayerTurn:", isPlayerTurn);
+            attackOptionsDiv.style.display = 'block';
+            // Mostrar o botão de ataque corpo a corpo
+            if (atacarCorpoACorpoButton) {
+                atacarCorpoACorpoButton.style.display = 'block';
+            }
+            isPlayerTurn = true;
+        }
+    }
+}
     const botaoInventario = document.getElementById("abrir-inventario");
     const botaoIniciativa = document.getElementById("rolar-iniciativa");
     const logBatalha = document.getElementById("battle-log-content");
