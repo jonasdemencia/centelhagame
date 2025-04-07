@@ -604,7 +604,7 @@ async function monsterAttack() {
 
                                 battleLogContent.innerHTML = ""; // Limpa o conteúdo para adicionar os blocos de iniciativa
                                 startNewTurnBlock("Iniciativa");
-                                await addLogMessage(`Turno do Iniciativa`, 1000); // Adicionado await aqui
+                                await addLogMessage(`Turno de Iniciativa`, 1000); // Adicionado await aqui
                                 await addLogMessage(`Você rolou ${playerRoll} + ${playerAbilityValue} (Habilidade) = ${playerRoll + playerAbilityValue} para iniciativa.`, 1000);
                                 await addLogMessage(`${currentMonster.nome} rolou ${monsterRoll} + ${monsterAbilityValue} (Habilidade) = ${monsterRoll + monsterAbilityValue} para iniciativa.`, 1000);
                                 currentTurnBlock = null; // Reset current turn block
