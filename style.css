@@ -554,31 +554,32 @@ h1 {
 }
 
 /* Barra de energia na página de batalha */
-.barra-hp-container.pixel {
+.pixel {
+    font-family: 'PressStart2P', cursive;
+    image-rendering: pixelated;
+}
+
+.barra-hp-container {
     width: 200px;
     height: 24px;
     background-color: #2b2b2b;
-    border: 3px solid #000;
-    outline: 2px solid #fff;
+    border: 2px solid #000;
     padding: 2px;
-    box-sizing: border-box;
     position: relative;
-    margin-bottom: 10px;
     overflow: hidden;
+    margin: 20px auto;
 }
 
-.barra-hp.pixel {
+.barra-hp {
     background-color: #00ff00;
     height: 100%;
-    width: 100%;
-    transition: width 0.3s steps(4);
+    width: 75%;
     position: absolute;
-    top: 2px;
-    left: 2px;
-    z-index: 1;
+    top: 0;
+    left: 0;
 }
 
-.hp-label.pixel {
+.hp-label {
     position: absolute;
     top: 0;
     left: 0;
@@ -587,9 +588,9 @@ h1 {
     display: flex;
     align-items: center;
     justify-content: center;
+    color: white;
     font-size: 10px;
-    color: #fff;
     z-index: 2;
-    text-shadow: 1px 1px 0 #000;
+    text-shadow: 1px 1px black;
     pointer-events: none;
 }
