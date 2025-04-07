@@ -53,12 +53,12 @@ function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
         console.error(`Valor máximo inválido: ${valorMaximo}`);
         return;
     }
-
     const porcentagem = Math.max(0, (valorAtual / valorMaximo) * 100);
     barra.style.width = `${porcentagem}%`;
 
-    // Atualiza o texto da barra, se existir o span.hp-label dentro
-    const label = barra.querySelector('.hp-label');
+    // Atualiza o texto do label correspondente
+    const labelId = idElemento === "barra-hp-jogador" ? "hp-label-jogador" : "hp-label-monstro";
+    const label = document.getElementById(labelId);
     if (label) {
         label.textContent = `${valorAtual} / ${valorMaximo}`;
     }
