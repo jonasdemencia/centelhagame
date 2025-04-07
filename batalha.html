@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Batalha - CentelhaGame</title>
     <link rel="stylesheet" href="style.css">
+
+    <!-- Fonte pixelada -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
     <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
@@ -16,18 +20,22 @@
 
     <main>
 
-        <!-- ✅ BARRAS DE HP -->
+        <!-- ✅ BARRAS DE HP ESTILO PIXEL -->
         <section id="barras-hp" style="margin-bottom: 20px;">
             <div>
                 <strong>Jogador</strong>
-                <div class="barra-hp-container">
-                    <div id="barra-hp-jogador" class="barra-hp"></div>
+                <div class="barra-hp-container pixel">
+                    <div id="barra-hp-jogador" class="barra-hp pixel">
+                        <span class="hp-label" id="hp-jogador-label">30 / 30</span>
+                    </div>
                 </div>
             </div>
             <div>
                 <strong>Monstro</strong>
-                <div class="barra-hp-container">
-                    <div id="barra-hp-monstro" class="barra-hp"></div>
+                <div class="barra-hp-container pixel">
+                    <div id="barra-hp-monstro" class="barra-hp pixel">
+                        <span class="hp-label" id="hp-monstro-label">30 / 30</span>
+                    </div>
                 </div>
             </div>
         </section>
