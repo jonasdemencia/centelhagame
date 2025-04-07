@@ -49,6 +49,7 @@ function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
     barra.style.width = `${porcentagem}%`;
 }
 
+
 // Função para rolar dados (ex: "1D6", "2D4")
 function rollDice(diceString) {
     console.log("LOG: rollDice chamado com:", diceString);
@@ -112,10 +113,10 @@ function loadBattleState(userId, monsterName) {
 }
 
 // Função para salvar o estado da batalha no Firestore
-function saveBattleState(userId, monsterName, monsterHealth, playerData.energiaAtual) {
-    console.log("LOG: saveBattleState chamado com userId:", userId, "monsterName:", monsterName, "monsterHealth:", monsterHealth, "playerData.energiaAtual:", playerData.energiaAtual);
+function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
+    console.log("LOG: saveBattleState chamado com userId:", userId, "monsterName:", monsterName, "monsterHealth:", monsterHealth, "playerHealth:", playerHealth);
     const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
-    return setDoc(battleDocRef, { monsterHealth: monsterHealth, playerData.energiaAtual: playerData.energiaAtual }, { merge: true })
+    return setDoc(battleDocRef, { monsterHealth: monsterHealth, playerHealth: playerHealth }, { merge: true })
         .then(() => {
             console.log("LOG: Estado da batalha salvo no Firestore.");
         })
@@ -152,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const monsterName = getUrlParameter('monstro');
     let currentMonster; // Declara currentMonster no escopo superior
     let playerData; // Para armazenar os dados do jogador
-    let playerData.energiaAtual = 0; // Adiciona a vida do jogador (agora representando a energia)
+    let playerHealth = 0; // Adiciona a vida do jogador (agora representando a energia)
     let playerMaxHealth; // ✅ AQUI! Esta linha é o que você precisava
     let isPlayerTurn = false; // Variável para controlar o turno
     let currentTurnBlock = null; // Para armazenar o bloco do turno atual
@@ -289,8 +290,8 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
 
 // Função para o ataque do monstro (agora com delays e log em tempo real)
     async function monsterAttack() {
-        console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerData.energiaAtual:", playerData.energiaAtual, "isPlayerTurn:", isPlayerTurn);
-        if (!currentMonster || playerData.energiaAtual <= 0) {
+        console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
+        if (!currentMonster || playerHealth <= 0) {
             console.log("LOG: monsterAttack - Monstro não existe ou jogador derrotado, retornando.");
             return; // Se o monstro não existir ou o jogador estiver derrotado, não ataca
         }
@@ -314,23 +315,23 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
 
             const monsterDamageRoll = rollDice(currentMonster.dano);
             console.log("LOG: monsterAttack - Dano rolado pelo monstro:", monsterDamageRoll);
-            console.log("LOG: monsterAttack - Energia do jogador antes do dano:", playerData.energiaAtual);
-            playerData.energiaAtual -= monsterDamageRoll;
+            console.log("LOG: monsterAttack - Energia do jogador antes do dano:", playerHealth);
+            playerHealth -= monsterDamageRoll;
             // 🔴 Atualiza a barra de HP do jogador
-            atualizarBarraHP("barra-hp-jogador", playerData.energiaAtual, playerMaxHealth);
+            atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
             await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano.`, 1000);
-            await addLogMessage(`Sua energia restante: ${playerData.energiaAtual}.`, 1000); // Atualiza a mensagem para "energia"
-            console.log("LOG: monsterAttack - Energia do jogador depois do dano:", playerData.energiaAtual);
+            await addLogMessage(`Sua energia restante: ${playerHealth}.`, 1000); // Atualiza a mensagem para "energia"
+            console.log("LOG: monsterAttack - Energia do jogador depois do dano:", playerHealth);
 
             // Atualiza a energia do jogador na ficha e salva o estado da batalha
             const user = auth.currentUser;
             if (user) {
-                updatePlayerEnergyInFirestore(user.uid, playerData.energiaAtual);
-                saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerData.energiaAtual);
+                updatePlayerEnergyInFirestore(user.uid, playerHealth);
+                saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
             }
 
             // Verifica se o jogador foi derrotado
-            if (playerData.energiaAtual <= 0) {
+            if (playerHealth <= 0) {
                 await addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1000);
                 console.log("LOG: monsterAttack - Jogador derrotado.");
                 // Lógica adicional de fim de batalha pode ser adicionada aqui
@@ -498,14 +499,14 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
                     .then(savedState => {
                         if (savedState) {
                             currentMonster.pontosDeEnergia = savedState.monsterHealth;
-                            playerData.energiaAtual = savedState.playerData.energiaAtual;
+                            playerHealth = savedState.playerHealth;
                             console.log("LOG: onAuthStateChanged - Estado da batalha carregado do Firestore:", savedState);
                             console.log("LOG: onAuthStateChanged - Pontos de Energia do monstro carregados:", currentMonster.pontosDeEnergia);
-                            console.log("LOG: onAuthStateChanged - Energia do jogador carregada (do estado da batalha):", playerData.energiaAtual); // Atualiza a mensagem para "energia"
+                            console.log("LOG: onAuthStateChanged - Energia do jogador carregada (do estado da batalha):", playerHealth); // Atualiza a mensagem para "energia"
                             // Atualizar a interface com a energia do jogador (se houver um elemento para isso)
-                            const playerData.energiaAtualDisplay = document.getElementById("player-health");
-                            if (playerData.energiaAtualDisplay) {
-                                playerData.energiaAtualDisplay.innerText = playerData.energiaAtual;
+                            const playerHealthDisplay = document.getElementById("player-health");
+                            if (playerHealthDisplay) {
+                                playerHealthDisplay.innerText = playerHealth;
                                 console.log("LOG: onAuthStateChanged - Energia do jogador exibida na interface.");
                             }
                             // Se a vida do monstro for <= 0 ou a vida do jogador for <= 0, a batalha acabou
@@ -513,7 +514,7 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
                                 addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1500);
                                 attackOptionsDiv.style.display = 'none';
                                 console.log("LOG: onAuthStateChanged - Monstro derrotado, escondendo opções de ataque.");
-                            } else if (playerData.energiaAtual <= 0) {
+                            } else if (playerHealth <= 0) {
                                 addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1500);
                                 attackOptionsDiv.style.display = 'none';
                                 console.log("LOG: onAuthStateChanged - Jogador derrotado, escondendo opções de ataque.");
@@ -539,26 +540,22 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
                         console.log("LOG: onAuthStateChanged - Dados do jogador carregados:", playerData);
                         console.log("LOG: onAuthStateChanged - Habilidade do jogador:", playerAbilityValue);
                         // ---------------------- MODIFICAÇÃO IMPORTANTE AQUI ----------------------
-                        playerData.energiaAtual = playerData.energy?.total ? parseInt(playerData.energy.total) : 8;
-                        playerData.energiaMax = playerData.energy?.max ? parseInt(playerData.energy.max) : playerData.energiaAtual;
-
-                        // Atualiza a barra com os dados corretos
-                        atualizarBarraHP("barra-hp-jogador", playerData.energiaAtual, playerData.energiaMax);
-                        console.log("LOG: onAuthStateChanged - Energia do jogador carregada da ficha:", playerData.energiaAtual);
+                        playerHealth = playerData.energy?.total ? parseInt(playerData.energy.total) : 8; // Lê a energia de playerData.energy.total
+                        console.log("LOG: onAuthStateChanged - Energia do jogador carregada da ficha:", playerHealth);
                         // -------------------------------------------------------------------------
 
-                        const vidaMaximaJogador = playerData.energy?.max ? parseInt(playerData.energy.max) : playerData.energiaAtual; // Use a energia máxima da ficha, se existir.
-                        atualizarBarraHP("barra-hp-jogador", playerData.energiaAtual, vidaMaximaJogador); // Use playerData.energiaAtual (atual) e vidaMaximaJogador
+                        const vidaMaximaJogador = playerData.energy?.max ? parseInt(playerData.energy.max) : playerHealth; // Use a energia máxima da ficha, se existir.
+                        atualizarBarraHP("barra-hp-jogador", playerHealth, vidaMaximaJogador); // Use playerHealth (atual) e vidaMaximaJogador
                         // ******************************************
                         
                         const inventarioButton = document.getElementById("abrir-inventario");
-                        const playerData.energiaAtualDisplay = document.getElementById("player-health");
+                        const playerHealthDisplay = document.getElementById("player-health");
                         if (inventarioButton) {
                             inventarioButton.disabled = false;
                             console.log("LOG: onAuthStateChanged - Botão de inventário habilitado.");
                         }
-                        if (playerData.energiaAtualDisplay) {
-                            playerData.energiaAtualDisplay.innerText = playerData.energiaAtual; // Exibe a energia inicial do jogador
+                        if (playerHealthDisplay) {
+                            playerHealthDisplay.innerText = playerHealth; // Exibe a energia inicial do jogador
                             console.log("LOG: onAuthStateChanged - Energia inicial do jogador exibida.");
                         }
 
@@ -732,7 +729,7 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
 
                                         // Salvar o estado da batalha no Firestore
                                         if (currentMonster && user) {
-                                            saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerData.energiaAtual);
+                                            saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
                                         }
 
                                         setTimeout(async () => {
