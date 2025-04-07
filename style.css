@@ -555,18 +555,20 @@ h1 {
 
 /* Barra de energia na página de batalha */
 .barra-hp-container {
-    width: 100%;
-    max-width: 200px;
-    background-color: #ccc;
-    border: 1px solid #333;
-    height: 20px;
-    margin-bottom: 10px;
+    width: 100%;
+    max-width: 220px;
+    background-color: #555; /* Um tom mais escuro */
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    height: 20px;
+    margin-bottom: 10px;
+    border: 1px solid #222;
 }
 
 .barra-hp {
-    height: 100%;
-    background-color: #4CAF50;
-    width: 100%;
-    transition: width 0.3s ease;
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #67e367);
+    width: 100%;
+    transition: width 0.4s ease;
 }
-
