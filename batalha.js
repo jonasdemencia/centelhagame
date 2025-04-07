@@ -153,8 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const monsterName = getUrlParameter('monstro');
     let currentMonster; // Declara currentMonster no escopo superior
     let playerData; // Para armazenar os dados do jogador
-    let playerHealth = 0; // Adiciona a vida do jogador (agora representando a energia)
-    let playerMaxHealth; // ✅ AQUI! Esta linha é o que você precisava
+    let player.energy = 0; // Adiciona a vida do jogador (agora representando a energia)
+    let playerMaxEnergy; // ✅ AQUI! Esta linha é o que você precisava
     let isPlayerTurn = false; // Variável para controlar o turno
     let currentTurnBlock = null; // Para armazenar o bloco do turno atual
     let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
@@ -318,7 +318,7 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
             console.log("LOG: monsterAttack - Energia do jogador antes do dano:", playerHealth);
             playerHealth -= monsterDamageRoll;
             // 🔴 Atualiza a barra de HP do jogador
-            atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+            atualizarBarraHP("barra-hp-jogador", player.energy, playerMaxEnergy);
             await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano.`, 1000);
             await addLogMessage(`Sua energia restante: ${playerHealth}.`, 1000); // Atualiza a mensagem para "energia"
             console.log("LOG: monsterAttack - Energia do jogador depois do dano:", playerHealth);
@@ -545,7 +545,7 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
                         // -------------------------------------------------------------------------
 
                         const vidaMaximaJogador = playerData.energy?.max ? parseInt(playerData.energy.max) : playerHealth; // Use a energia máxima da ficha, se existir.
-                        atualizarBarraHP("barra-hp-jogador", playerHealth, vidaMaximaJogador); // Use playerHealth (atual) e vidaMaximaJogador
+                        atualizarBarraHP("barra-hp-jogador", player.energy, vidaMaximaJogador); // Use playerHealth (atual) e vidaMaximaJogador
                         // ******************************************
                         
                         const inventarioButton = document.getElementById("abrir-inventario");
