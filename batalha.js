@@ -45,18 +45,12 @@ function getUrlParameter(name) {
 // Função para barra de HP
 function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
     const barra = document.getElementById(idElemento);
-    if (!barra) {
-        console.error(`Elemento com id "${idElemento}" não encontrado.`);
-        return;
-    }
-    if (!valorMaximo || valorMaximo <= 0) {
-        console.error(`Valor máximo inválido: ${valorMaximo}`);
-        return;
-    }
+    if (!barra) return;
+    if (!valorMaximo || valorMaximo <= 0) return;
+
     const porcentagem = Math.max(0, (valorAtual / valorMaximo) * 100);
     barra.style.width = `${porcentagem}%`;
 
-    // Atualiza o texto do label correspondente
     const labelId = idElemento === "barra-hp-jogador" ? "hp-label-jogador" : "hp-label-monstro";
     const label = document.getElementById(labelId);
     if (label) {
