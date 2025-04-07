@@ -644,55 +644,59 @@ async function monsterAttack() {
 
                     // Lógica para o botão "Corpo a Corpo"
                     if (atacarCorpoACorpoButton) {
-                        atacarCorpoACorpoButton.addEventListener('click', async () => {
-                            console.log("LOG: Botão 'Corpo a Corpo' clicado. isPlayerTurn:", isPlayerTurn);
-                            if (!isPlayerTurn) {
-                                await addLogMessage(`<p>Não é seu turno!</p>`, 1000);
-                                return;
-                            }
-                            if (attackOptionsDiv) {
-                                // Desabilita os botões de ação durante a sequência
-                                    const buttons = attackOptionsDiv.querySelectorAll('.button');
-                                    buttons.forEach(button => button.disabled = true);
-                                }
+    atacarCorpoACorpoButton.addEventListener('click', async () => {
+        console.log("LOG: Botão 'Corpo a Corpo' clicado. isPlayerTurn:", isPlayerTurn);
 
-                                startNewTurnBlock("Jogador"); // Adiciona o início do turno aqui
+        if (!isPlayerTurn) {
+            await addLogMessage(`<p>Não é seu turno!</p>`, 1000);
+            return;
+        }
 
-                                await addLogMessage(`Você optou pelo ataque corpo a corpo.`, 1000);
+        if (attackOptionsDiv) {
+            const buttons = attackOptionsDiv.querySelectorAll('.button');
+            buttons.forEach(button => button.disabled = true);
+        }
 
-                                const playerRoll = Math.floor(Math.random() * 20) + 1 + playerAbilityValue; // Adiciona a habilidade ao ataque
-                                const monsterArmorClass = currentMonster.couraça; // Obtém a couraça do monstro
-                                console.log("LOG: Botão 'Corpo a Corpo' - Rolagem de ataque do jogador:", playerRoll);
-                                console.log("LOG: Botão 'Corpo a Corpo' - Couraça do monstro:", monsterArmorClass);
+        startNewTurnBlock("Jogador");
+        await addLogMessage(`Você optou pelo ataque corpo a corpo.`, 1000);
 
-                                await addLogMessage(`Você atacou corpo a corpo e rolou um ${playerRoll} (1D20 + ${playerAbilityValue} de Habilidade).`, 1000);
+        const playerRoll = Math.floor(Math.random() * 20) + 1 + playerAbilityValue;
+        const monsterArmorClass = currentMonster.couraça;
+        console.log("LOG: Rolagem do jogador:", playerRoll);
+        console.log("LOG: Couraça do monstro:", monsterArmorClass);
 
-                                if (playerRoll >= monsterArmorClass) {
-                                    await addLogMessage(`Seu ataque acertou o ${currentMonster.nome} (Couraça: ${monsterArmorClass})!`, 1000);
-                                    if (atacarCorpoACorpoButton) atacarCorpoACorpoButton.style.display = 'none';
-                                    if (rolarDanoButton) {
-                                        rolarDanoButton.style.display = 'block';
-                                    }
-                                    if (attackOptionsDiv) {
-                                        const buttons = attackOptionsDiv.querySelectorAll('.button');
-                                        buttons.forEach(button => button.disabled = false);
-                                    }
-                                    console.log("LOG: Botão 'Corpo a Corpo' - Ataque acertou, escondendo 'Corpo a Corpo', exibindo 'DANO'.");
-                                } else {
-                                    await addLogMessage(`Seu ataque errou o ${currentMonster.nome} (Couraça: ${monsterArmorClass}).`, 1000);
-                                    await addLogMessage(`Fim do Turno do Jogador.`, 1000);
-                                    endPlayerTurn();
-                                    console.log("LOG: Botão 'Corpo a Corpo' - Ataque errou. isPlayerTurn:", isPlayerTurn);
-                                    if (attackOptionsDiv) {
-                                        const buttons = attackOptionsDiv.querySelectorAll('.button');
-                                        buttons.forEach(button => button.disabled = false);
-                                    }
-                                }
-                            });
-                            console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Corpo a Corpo'.");
-                        } else {
-                            console.error("LOG: Botão 'Corpo a Corpo' não encontrado (ID: atacar-corpo-a-corpo)");
-                        }
+        await addLogMessage(`Você atacou e rolou ${playerRoll} (1D20 + ${playerAbilityValue}).`, 1000);
+
+        if (playerRoll >= monsterArmorClass) {
+            await addLogMessage(`Seu ataque acertou o ${currentMonster.nome}!`, 1000);
+
+            if (atacarCorpoACorpoButton) atacarCorpoACorpoButton.style.display = 'none';
+            if (rolarDanoButton) rolarDanoButton.style.display = 'block';
+
+            if (attackOptionsDiv) {
+                const buttons = attackOptionsDiv.querySelectorAll('.button');
+                buttons.forEach(button => button.disabled = false);
+            }
+
+            console.log("LOG: Ataque acertou, mostrando botão de dano.");
+        } else {
+            await addLogMessage(`Seu ataque errou o ${currentMonster.nome}.`, 1000);
+            await addLogMessage(`Fim do Turno do Jogador.`, 1000);
+            endPlayerTurn();
+
+            if (attackOptionsDiv) {
+                const buttons = attackOptionsDiv.querySelectorAll('.button');
+                buttons.forEach(button => button.disabled = false);
+            }
+
+            console.log("LOG: Ataque errou. Turno encerrado.");
+        }
+    }); // ✅ Aqui fecha corretamente o addEventListener
+    console.log("LOG: Event listener adicionado ao botão 'Corpo a Corpo'.");
+} else {
+    console.error("LOG: Botão 'Corpo a Corpo' não encontrado.");
+}
+
 
                         // Event listener para o botão "DANO"
                         if (rolarDanoButton) {
