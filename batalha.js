@@ -360,23 +360,6 @@ async function monsterAttack() {
             }
             isPlayerTurn = true;
         }
-    }
-        } else {
-            await addLogMessage(`O ataque do ${currentMonster.nome} errou.`, 1000);
-            console.log("LOG: monsterAttack - Ataque do monstro errou.");
-            // Após o ataque do monstro errar, é o turno do jogador novamente
-            startNewTurnBlock("Jogador");
-            await addLogMessage(`Turno do Jogador`, 1000);
-            if (attackOptionsDiv) {
-                console.log("LOG: monsterAttack - **FINAL DO TURNO DO MONSTRO - INICIANDO TURNO DO JOGADOR** - attackOptionsDiv.style.display:", attackOptionsDiv.style.display, "isPlayerTurn:", isPlayerTurn);
-                attackOptionsDiv.style.display = 'block';
-                // Mostrar o botão de ataque corpo a corpo
-                if (atacarCorpoACorpoButton) {
-                    atacarCorpoACorpoButton.style.display = 'block';
-                }
-                isPlayerTurn = true;
-            }
-        }
     }
 
     const botaoInventario = document.getElementById("abrir-inventario");
