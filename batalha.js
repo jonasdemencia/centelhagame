@@ -597,7 +597,7 @@ async function monsterAttack() {
                                 console.log("LOG: Botão 'Rolar Iniciativa' clicado.");
                                 const playerRoll = Math.floor(Math.random() * 20) + 1;
                                 const monsterRoll = Math.floor(Math.random() * 20) + 1;
-                                const playerAbilityValue = playerData?.habilidade || 0;
+                                const playerAbilityValue = playerData?.skill || 0;
                                 const monsterAbilityValue = currentMonster.habilidade;
                                 console.log("LOG: onAuthStateChanged - Rolagem de iniciativa do jogador:", playerRoll);
                                 console.log("LOG: onAuthStateChanged - Rolagem de iniciativa do monstro:", monsterRoll);
