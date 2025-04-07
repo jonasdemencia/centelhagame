@@ -540,7 +540,8 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
                         console.log("LOG: onAuthStateChanged - Dados do jogador carregados:", playerData);
                         console.log("LOG: onAuthStateChanged - Habilidade do jogador:", playerAbilityValue);
                         // ---------------------- MODIFICAÇÃO IMPORTANTE AQUI ----------------------
-                        playerHealth = playerData.energy?.total ? parseInt(playerData.energy.total) : 8; // Lê a energia de playerData.energy.total
+                        playerData.energiaAtual = playerData.energy?.total ? parseInt(playerData.energy.total) : 8;
+                        playerData.energiaMax = playerData.energy?.max ? parseInt(playerData.energy.max) : playerData.energiaAtual;
                         console.log("LOG: onAuthStateChanged - Energia do jogador carregada da ficha:", playerHealth);
                         // -------------------------------------------------------------------------
 
