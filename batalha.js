@@ -681,7 +681,7 @@ async function monsterAttack() {
 
                                 await addLogMessage(`Você optou pelo ataque corpo a corpo.`, 1000);
 
-                                const playerRoll = Math.floor(Math.random() * 20) + 1 + playerAbilityValue; // Adiciona a habilidade ao ataque
+                                const rolagemAtaque = 20; // Força crítico bruto para testar o SIFER
                                 // 🎲 Rolagem de ataque com bônus
 const playerRawRoll = Math.floor(Math.random() * 20) + 1;
 const playerRoll = playerRawRoll + playerAbilityValue;
