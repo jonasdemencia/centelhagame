@@ -407,11 +407,13 @@ async function loadInventoryData(uid) {
             loadInventoryUI(inventoryData);
             updateCharacterCouraca(); // Atualiza a Couraça ao carregar inicialmente
             updateCharacterDamage(); // Atualiza o Dano ao carregar inicialmente
+            updateCharacterPermiteSIFER(); // <-- aqui
         } else {
             const inventoryData = playerSnap.data().inventory;
             loadInventoryUI(inventoryData);
             updateCharacterCouraca(); // Atualiza a Couraça ao carregar inicialmente
             updateCharacterDamage(); // Atualiza o Dano ao carregar inicialmente
+            updateCharacterPermiteSIFER(); // <-- aqui
         }
     } catch (error) {
         console.error("Erro ao carregar o inventário:", error);
@@ -464,6 +466,32 @@ function loadInventoryUI(inventoryData) {
         }
     });
 
+    async function checkPermiteSIFER(equippedItems) {
+    let permiteSIFER = false;
+
+    // Percorre todos os itens equipados
+    for (let slot in equippedItems) {
+        const itemName = equippedItems[slot];
+        const itemData = initialItems.find(item => item.content === itemName);
+        if (itemData && itemData.permiteSIFER) {
+            permiteSIFER = true;
+            break;
+        }
+    }
+
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+        const playerRef = doc(db, "players", uid);
+        try {
+            await updateDoc(playerRef, { permiteSIFER: permiteSIFER });
+            console.log("Campo 'permiteSIFER' atualizado no Firestore para:", permiteSIFER);
+        } catch (error) {
+            console.error("Erro ao atualizar o campo 'permiteSIFER' no Firestore:", error);
+        }
+    }
+}
+
+
     // Carrega itens equipados
     document.querySelectorAll('.slot').forEach(slot => {
         const equippedItem = inventoryData.equippedItems[slot.dataset.slot];
@@ -496,6 +524,21 @@ function loadInventoryUI(inventoryData) {
         }
     });
 }
+
+async function updateCharacterPermiteSIFER() {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+
+    const permite = checkPermiteSIFER();
+    const playerRef = doc(db, "players", uid);
+    try {
+        await updateDoc(playerRef, { permiteSIFER: permite });
+        console.log("Campo 'permiteSIFER' atualizado para:", permite);
+    } catch (error) {
+        console.error("Erro ao atualizar o campo 'permiteSIFER' no Firestore:", error);
+    }
+}
+
 
 async function getPlayerData(uid) {
     try {
