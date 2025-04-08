@@ -341,24 +341,23 @@ async function saveInventoryData(uid) {
 
     const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
     const itemName = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
-    acc[slot.dataset.slot] = itemName;
-    if (itemName) {
-        // Salvando propriedade SIFER, se houver
-        if (slot.dataset.slot === 'weapon') {
-    acc.permiteSIFER = slot.dataset.sifer === 'true';
-}
+    const slotType = slot.dataset.slot;
 
+    acc[slotType] = itemName;
+
+    if (itemName) {
         if (slot.dataset.consumable === 'true') {
-            acc[slot.dataset.slot + '_consumable'] = true;
-            acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity);
-            if (slot.dataset.effect) {
-                acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
-            }
-            if (slot.dataset.value) {
-                acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value);
-            }
+            acc[slotType + '_consumable'] = true;
+            acc[slotType + '_quantity'] = parseInt(slot.dataset.quantity);
+            if (slot.dataset.effect) acc[slotType + '_effect'] = slot.dataset.effect;
+            if (slot.dataset.value) acc[slotType + '_value'] = parseInt(slot.dataset.value);
+        }
+
+        if (slotType === 'weapon' && slot.dataset.sifer === 'true') {
+            acc.permiteSIFER = true;
         }
     }
+
     return acc;
 }, {});
 
