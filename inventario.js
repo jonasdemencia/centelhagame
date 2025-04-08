@@ -318,9 +318,12 @@ async function saveInventoryData(uid) {
     const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
     const itemName = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
     acc[slot.dataset.slot] = itemName;
-
     if (itemName) {
-        // Checa se é consumível
+        // Salvando propriedade SIFER, se houver
+        if (slot.dataset.sifer === 'true') {
+            acc[slot.dataset.slot + '_permiteSIFER'] = true;
+        }
+
         if (slot.dataset.consumable === 'true') {
             acc[slot.dataset.slot + '_consumable'] = true;
             acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity);
@@ -331,13 +334,7 @@ async function saveInventoryData(uid) {
                 acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value);
             }
         }
-
-        // 💥 Adiciona o suporte ao SIFER, se aplicável
-        if (slot.dataset.permiteSifer === 'true') {
-            acc[slot.dataset.slot + '_permiteSIFER'] = true;
-        }
     }
-
     return acc;
 }, {});
 
