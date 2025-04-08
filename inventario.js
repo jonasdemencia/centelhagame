@@ -299,6 +299,23 @@ function addItemClickListener(item) {
     });
 }
 
+function atualizarPermiteSIFER(slot) {
+    const arma = slot.innerHTML.trim();
+    const isWeaponSlot = slot.dataset.slot === "weapon";
+    const originalItem = initialItems.find(item => item.content === arma);
+    const permiteSIFER = isWeaponSlot && originalItem?.permiteSIFER === true;
+
+    if (permiteSIFER) {
+        slot.dataset.sifer = "true";
+    } else {
+        delete slot.dataset.sifer;
+    }
+
+    updateDoc(doc(db, "personagens", auth.currentUser.uid), {
+        permiteSIFER: permiteSIFER
+    });
+}
+
 // Função para limpar destaques visuais
 function clearHighlights() {
     document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
