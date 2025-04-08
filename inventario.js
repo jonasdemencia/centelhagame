@@ -104,7 +104,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     addItemClickListener(newItem);
                 }
 
-                slot.innerHTML = selectedItem.innerHTML.split('<span class="item-expand-toggle">')[0].trim(); // MODIFICADO AQUI
+                const equippedItemText = selectedItem.innerHTML.split('<span class="item-expand-toggle">')[0].trim();
+slot.innerHTML = equippedItemText;
+
+// Encontra o item original
+const originalItem = initialItems.find(item => item.content === equippedItemText);
+
+// Verifica se ele permite SIFER
+if (slotType === "weapon" && originalItem?.permiteSIFER) {
+    slot.dataset.sifer = "true";
+} else {
+    delete slot.dataset.sifer;
+}
                 slot.dataset.consumable = selectedItem.dataset.consumable; // Atualiza a propriedade consumable do slot
                 slot.dataset.quantity = selectedItem.dataset.quantity;
                 slot.dataset.effect = selectedItem.dataset.effect;
