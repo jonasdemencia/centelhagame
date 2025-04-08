@@ -683,7 +683,6 @@ async function monsterAttack() {
 
                                 const rolagemAtaque = 20; // Força crítico bruto para testar o SIFER
                                 // 🎲 Rolagem de ataque com bônus
-const playerRawRoll = Math.floor(Math.random() * 20) + 1;
 const playerRoll = playerRawRoll + playerAbilityValue;
 const monsterArmorClass = currentMonster.couraça;
 
@@ -700,8 +699,7 @@ if (playerRawRoll === 20 && jogador.arma && jogador.arma.permiteSIFER) {
     const resultadoSIFER = ativarSIFER(jogador, currentMonster);
     aplicarEfeitosSIFER(resultadoSIFER); // Pode adicionar logs, efeitos ou mudanças no estado
 }
-
-                                const monsterArmorClass = currentMonster.couraça; // Obtém a couraça do monstro
+                            
                                 console.log("LOG: Botão 'Corpo a Corpo' - Rolagem de ataque do jogador:", playerRoll);
                                 console.log("LOG: Botão 'Corpo a Corpo' - Couraça do monstro:", monsterArmorClass);
 
