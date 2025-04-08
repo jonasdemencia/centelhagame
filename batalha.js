@@ -682,6 +682,25 @@ async function monsterAttack() {
                                 await addLogMessage(`Você optou pelo ataque corpo a corpo.`, 1000);
 
                                 const playerRoll = Math.floor(Math.random() * 20) + 1 + playerAbilityValue; // Adiciona a habilidade ao ataque
+                                // 🎲 Rolagem de ataque com bônus
+const playerRawRoll = Math.floor(Math.random() * 20) + 1;
+const playerRoll = playerRawRoll + playerAbilityValue;
+const monsterArmorClass = currentMonster.couraça;
+
+console.log("LOG: Botão 'Corpo a Corpo' - Rolagem de ataque (bruta):", playerRawRoll);
+console.log("LOG: Botão 'Corpo a Corpo' - Rolagem total com bônus:", playerRoll);
+console.log("LOG: Botão 'Corpo a Corpo' - Couraça do monstro:", monsterArmorClass);
+
+// Log no chat
+await addLogMessage(`Você atacou corpo a corpo e rolou um ${playerRoll} (1D20 + ${playerAbilityValue} de Habilidade).`, 1000);
+
+// 💥 Verifica se foi um crítico natural 20 e se a arma permite SIFER
+if (playerRawRoll === 20 && jogador.arma && jogador.arma.permiteSIFER) {
+    await addLogMessage(`<p style="color: goldenrod;"><strong>Crítico! Você ativou o Sistema SIFER!</strong></p>`, 1000);
+    const resultadoSIFER = ativarSIFER(jogador, currentMonster);
+    aplicarEfeitosSIFER(resultadoSIFER); // Pode adicionar logs, efeitos ou mudanças no estado
+}
+
                                 const monsterArmorClass = currentMonster.couraça; // Obtém a couraça do monstro
                                 console.log("LOG: Botão 'Corpo a Corpo' - Rolagem de ataque do jogador:", playerRoll);
                                 console.log("LOG: Botão 'Corpo a Corpo' - Couraça do monstro:", monsterArmorClass);
