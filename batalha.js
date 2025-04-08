@@ -683,7 +683,7 @@ async function monsterAttack() {
 
                                 const rolagemAtaque = 20; // Força crítico bruto para testar o SIFER
                                 // 🎲 Rolagem de ataque com bônus
-                            const playerRawRoll = rollDice("1d20"); // 👈 Adicione esta linha
+                            const playerRawRoll = 20; // 👈 Adicione esta linha
 const playerRoll = playerRawRoll + playerAbilityValue;
 const monsterArmorClass = currentMonster.couraça;
 
