@@ -110,12 +110,8 @@ slot.innerHTML = equippedItemText;
 // Encontra o item original
 const originalItem = initialItems.find(item => item.content === equippedItemText);
 
-// Verifica se ele permite SIFER
-if (slotType === "weapon" && originalItem?.permiteSIFER) {
-    slot.dataset.sifer = "true";
-} else {
-    delete slot.dataset.sifer;
-}
+atualizarPermiteSIFER(slot);
+
                 slot.dataset.consumable = selectedItem.dataset.consumable; // Atualiza a propriedade consumable do slot
                 slot.dataset.quantity = selectedItem.dataset.quantity;
                 slot.dataset.effect = selectedItem.dataset.effect;
@@ -141,6 +137,8 @@ if (slotType === "weapon" && originalItem?.permiteSIFER) {
                 delete slot.dataset.quantity;
                 delete slot.dataset.effect;
                 delete slot.dataset.value;
+
+                atualizarPermiteSIFER(slot); // 👉 Coloca aqui!
 
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
