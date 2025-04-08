@@ -370,81 +370,86 @@ body {
 
 /* Estilos para a seção de registro de batalha */
 #battle-log {
-    margin-top: 20px; /* Adicione um pouco de espaço acima do log */
-    border: 1px solid #555; /* Uma borda para definir a área do log */
+    margin-top: 20px; /* Espaço acima do log */
+    border: 1px solid #555; /* Borda da área */
     border-radius: 6px;
-    background-color: rgba(0, 0, 0, 0.5); /* Um fundo levemente transparente */
-    padding: 10px; /* Espaçamento interno */
-    text-align: left; /* Alinhe o texto do log à esquerda para melhor leitura */
+    background-color: rgba(0, 0, 0, 0.7); /* Fundo mais transparente */
+    padding: 15px; /* Mais espaçamento interno */
+    text-align: left; /* Alinhamento do texto */
 }
 
+/* Estilo do título da seção */
 #battle-log h2 {
-    color: #eee; /* Cor do título do log */
-    margin-top: 0; /* Remova a margem superior padrão do h2 */
-    margin-bottom: 10px; /* Espaço abaixo do título */
-    text-align: center; /* Centralize o título do log */
+    color: #ffd700; /* Dourado para destaque */
+    font-size: 1.5em; /* Título mais visível */
+    margin-top: 0; 
+    margin-bottom: 10px; 
+    text-align: center; /* Título centralizado */
+    text-transform: uppercase; /* Todas as letras maiúsculas */
+    font-weight: bold; /* Título em negrito */
 }
 
-/* Estilos para o conteúdo do registro de batalha (a janela de rolagem) */
+/* Estilos para o conteúdo do log */
 #battle-log-content {
-    max-height: 200px; /* Defina uma altura máxima para a janela de log */
-    overflow-y: auto; /* Adiciona uma barra de rolagem vertical quando o conteúdo exceder a altura máxima */
-    border: 1px solid #777; /* Uma borda interna para o conteúdo */
-    border-radius: 4px;
-    background-color: #444; /* Um fundo mais escuro para o conteúdo do log */
-    padding: 8px; /* Espaçamento interno para o texto do log */
-    font-size: 12px; /* Tamanho da fonte para o texto do log */
-    color: #f0f0f0; /* Cor do texto do log */
-    white-space: pre-wrap; /* Mantém a formatação do texto e quebra linhas longas */
+    max-height: 220px; /* Altura ajustada para mensagens longas */
+    overflow-y: auto; 
+    border: 1px solid #888; /* Borda para o container */
+    border-radius: 6px; /* Curvas suaves */
+    background-color: #222; /* Fundo mais escuro */
+    padding: 10px;
+    font-size: 13px; /* Texto um pouco maior */
+    color: #f0f0f0; 
+    white-space: pre-wrap; 
     display: flex;
-    flex-direction: column-reverse; /* Exibe as mensagens mais recentes no topo (devido ao seu script) */
+    flex-direction: column-reverse; 
 }
 
-/* Estilo para as mensagens individuais no log (opcional) */
+/* Estilo para cada mensagem individual no log */
 #battle-log-content p {
-    margin-top: 5px;
-    margin-bottom: 5px;
-    padding: 2px 5px;
-    border-bottom: 1px solid #666; /* Linha divisória entre as mensagens (opcional) */
+    margin: 5px 0; /* Espaçamento entre mensagens */
+    padding: 6px; /* Mais espaçamento interno */
+    border-bottom: 1px solid #444; /* Linha divisória */
+    border-radius: 4px; /* Curva suave nas mensagens */
 }
 
+/* Última mensagem (não terá linha divisória) */
 #battle-log-content p:last-child {
-    border-bottom: none; /* Remove a linha inferior da última mensagem */
+    border-bottom: none;
 }
 
 /* Estilos para os blocos de turno */
 .turn-block {
-    border: 1px solid #555;
-    margin-bottom: 10px;
-    padding: 8px;
+    border: 2px solid #555;
+    margin-bottom: 12px;
+    padding: 10px;
     background-color: #333;
-    border-radius: 4px;
-    color: #f0f0f0;
+    border-radius: 6px;
+    color: #fff;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); /* Adiciona um leve sombreado */
 }
 
 .turn-block h4 {
     margin-top: 0;
-    color: #ddd;
-    font-size: 1.1em;
+    color: #ffd700; /* Destaque em dourado */
+    font-size: 1.2em;
     margin-bottom: 5px;
-    border-bottom: 1px solid #666;
+    border-bottom: 2px solid #555;
     padding-bottom: 5px;
-    text-align: left; /* Alinha o título do turno à esquerda */
+    text-transform: uppercase; 
 }
 
 .turn-block p {
-    margin: 5px 0;
+    margin: 8px 0;
     font-size: 12px;
-    text-align: left; /* Alinha o texto do turno à esquerda */
 }
 
-/* Estilo para o indicador de rolagem (opcional) */
+/* Indicador de rolagem */
 #scroll-indicator {
     display: none;
     text-align: center;
-    color: #999;
+    color: #ff8c00; /* Laranja para chamar atenção */
     font-size: 1.2em;
-    margin-top: 5px;
+    margin-top: 10px;
 }
 
 /* Estilos para a página de loot */
