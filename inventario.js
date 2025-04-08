@@ -320,9 +320,9 @@ async function saveInventoryData(uid) {
     acc[slot.dataset.slot] = itemName;
     if (itemName) {
         // Salvando propriedade SIFER, se houver
-        if (slot.dataset.sifer === 'true') {
-            acc[slot.dataset.slot + '_permiteSIFER'] = true;
-        }
+        if (slot.dataset.slot === 'weapon') {
+    acc.permiteSIFER = slot.dataset.sifer === 'true';
+}
 
         if (slot.dataset.consumable === 'true') {
             acc[slot.dataset.slot + '_consumable'] = true;
