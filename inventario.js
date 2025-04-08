@@ -298,21 +298,19 @@ function addItemClickListener(item) {
 }
 
 function atualizarPermiteSIFER(slot) {
-    const arma = slot.innerHTML.trim();
-    const isWeaponSlot = slot.dataset.slot === "weapon";
-    const originalItem = initialItems.find(item => item.content === arma);
-    const permiteSIFER = isWeaponSlot && originalItem?.permiteSIFER === true;
+    const equippedItemName = slot.innerText.trim();
+    const itemOriginal = initialItems.find(item => item.content === equippedItemName);
 
-    if (permiteSIFER) {
+    if (itemOriginal && itemOriginal.permiteSIFER) {
         slot.dataset.sifer = "true";
+        console.log(`Item ${equippedItemName} permite SIFER`);
     } else {
         delete slot.dataset.sifer;
+        console.log(`Item ${equippedItemName} não permite SIFER - atributo removido`);
     }
-
-    updateDoc(doc(db, "personagens", auth.currentUser.uid), {
-        permiteSIFER: permiteSIFER
-    });
 }
+
+
 
 // Função para limpar destaques visuais
 function clearHighlights() {
