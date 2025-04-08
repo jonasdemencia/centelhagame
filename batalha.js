@@ -361,6 +361,7 @@ async function monsterAttack() {
                 // Mostrar o botão de ataque corpo a corpo
                 if (atacarCorpoACorpoButton) {
                     atacarCorpoACorpoButton.style.display = 'block';
+                    atacarCorpoACorpoButton.disabled = false;
                 }
                 isPlayerTurn = true;
             }
@@ -377,6 +378,7 @@ async function monsterAttack() {
             // Mostrar o botão de ataque corpo a corpo
             if (atacarCorpoACorpoButton) {
                 atacarCorpoACorpoButton.style.display = 'block';
+                atacarCorpoACorpoButton.disabled = false;
             }
             isPlayerTurn = true;
         }
@@ -455,7 +457,7 @@ async function monsterAttack() {
                     attackOptionsDiv.style.display = 'block';
                     // Mostrar o botão de ataque corpo a corpo
                     if (atacarCorpoACorpoButton) {
-                        atacarCorpoACorpoButton.style.display = 'block';
+                        ;
                     }
                     console.log("LOG: DOMContentLoaded - Iniciativa do jogador vencida. Exibindo opções de ataque.");
                     addLogMessage(`Turno do Jogador`, 1000); // Adicionado log do turno do jogador
@@ -620,7 +622,7 @@ async function monsterAttack() {
                                             attackOptionsDiv.style.display = 'block';
                                             // Mostrar o botão de ataque corpo a corpo
                                             if (atacarCorpoACorpoButton) {
-                                                atacarCorpoACorpoButton.style.display = 'block';
+                                                ;
                                             }
                                             console.log("LOG: onAuthStateChanged - Jogador venceu a iniciativa, exibindo opções de ataque.");
                                             await addLogMessage(`Turno do Jogador`, 1000); // Adicionado log do turno do jogador
