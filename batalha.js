@@ -676,7 +676,7 @@ async function monsterAttack() {
         const actionButtons = document.querySelectorAll('#attack-options button');
         actionButtons.forEach(button => button.disabled = true);
 
-        const playerAttackRollRaw = Math.floor(Math.random() * 20) + 1; // O d20 natural
+        const playerAttackRollRaw = 20; // // FORÇADO PARA TESTE SIFER
         const playerAttackRollTotal = playerAttackRollRaw + playerAbilityValue; // Usa playerAbilityValue já carregado
         const monsterDefense = currentMonster.couraça || 0; // Defesa do monstro
 
