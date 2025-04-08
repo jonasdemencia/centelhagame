@@ -22,7 +22,7 @@ let currentPlayerData = null; // Armazena os dados do jogador
 // Itens iniciais que o jogador deve ter (adicionando descrições e propriedade de defesa)
 const initialItems = [
     { id: "bolsa-de-escriba", content: "Bolsa de escriba", description: "Uma bolsa para guardar pergaminhos e penas." },
-    { id: "weapon", content: "canivete", description: "Uma pequena lâmina afiada.", permiteSIFER: true },
+    { id: "weapon", content: "canivete", description: "Uma pequena lâmina afiada.", permitesifer: true },
     { id: "armor", content: "Hábito monástico", description: "Vestes simples que oferecem pouca proteção.", defense: 2 }, // Mudando o id para corresponder ao slot e adicionando defesa
     { id: "velas", content: "Velas", description: "Fontes de luz portáteis." },
     { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2, description: "Um pequeno saco contendo ervas que podem curar ferimentos leves." }, // Adicionando efeito e valor
