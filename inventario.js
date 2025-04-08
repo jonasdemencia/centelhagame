@@ -316,22 +316,31 @@ async function saveInventoryData(uid) {
     });
 
     const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
-        const itemName = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
-        acc[slot.dataset.slot] = itemName;
-        if (itemName) {
-            if (slot.dataset.consumable === 'true') {
-                acc[slot.dataset.slot + '_consumable'] = true;
-                acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity);
-                if (slot.dataset.effect) {
-                    acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
-                }
-                if (slot.dataset.value) {
-                    acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value);
-                }
+    const itemName = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
+    acc[slot.dataset.slot] = itemName;
+
+    if (itemName) {
+        // Checa se é consumível
+        if (slot.dataset.consumable === 'true') {
+            acc[slot.dataset.slot + '_consumable'] = true;
+            acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity);
+            if (slot.dataset.effect) {
+                acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
+            }
+            if (slot.dataset.value) {
+                acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value);
             }
         }
-        return acc;
-    }, {});
+
+        // 💥 Adiciona o suporte ao SIFER, se aplicável
+        if (slot.dataset.permiteSifer === 'true') {
+            acc[slot.dataset.slot + '_permiteSIFER'] = true;
+        }
+    }
+
+    return acc;
+}, {});
+
 
     const inventoryData = {
         itemsInChest: itemsInChest,
