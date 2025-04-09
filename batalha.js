@@ -665,6 +665,101 @@ async function monsterAttack() {
                         console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
                     }
 
+                        
+                        // Event listener para o botão "Rolar localização"
+                        const rollLocationBtn = document.getElementById("rolar-localizacao");
+
+if (rollLocationBtn) {
+    rollLocationBtn.addEventListener('click', async () => {
+        rollLocationBtn.disabled = true;
+        rollLocationBtn.style.display = 'none';
+
+        const locationRoll = Math.floor(Math.random() * 20) + 1;
+        console.log("LOG: SIFER - Jogador rolou localização:", locationRoll);
+        await addLogMessage(`Rolando para localização... <strong style="color: yellow;">${locationRoll}</strong>!`, 800);
+
+        // Recupera os dados salvos do ataque
+        const { baseDamageRoll, weaponDamageRollForBonus } = window.siferContext || {};
+
+        let locationName = "";
+        let siferBonusDamage = 0;
+
+        // Lógica de localização SIFER
+        if (locationRoll >= 1 && locationRoll <= 5) {
+            locationName = "Membros Inferiores";
+            siferBonusDamage = Math.ceil(weaponDamageRollForBonus / 2);
+            await addLogMessage(`Alvo: ${locationName}. Bônus SIFER: ${siferBonusDamage} (Metade do dano da arma [${weaponDamageRollForBonus}/2]).`, 800);
+        } else if (locationRoll === 6) {
+            locationName = "Costas";
+            siferBonusDamage = weaponDamageRollForBonus;
+            await addLogMessage(`Alvo: ${locationName}. Bônus SIFER: ${siferBonusDamage} (Dano completo da arma [${weaponDamageRollForBonus}]).`, 800);
+        } else if (locationRoll >= 7 && locationRoll <= 10) {
+            locationName = "Membros Ofensivos";
+            siferBonusDamage = Math.ceil(weaponDamageRollForBonus / 2);
+            await addLogMessage(`Alvo: ${locationName}. Bônus SIFER: ${siferBonusDamage} (Metade do dano da arma [${weaponDamageRollForBonus}/2]).`, 800);
+        } else if (locationRoll >= 11 && locationRoll <= 16) {
+            locationName = "Abdômen/Tórax";
+            siferBonusDamage = Math.ceil(weaponDamageRollForBonus / 2);
+            await addLogMessage(`Alvo: ${locationName}. Bônus SIFER: ${siferBonusDamage} (Metade do dano da arma [${weaponDamageRollForBonus}/2]).`, 800);
+        } else if (locationRoll === 17) {
+            locationName = "Coração";
+            siferBonusDamage = weaponDamageRollForBonus;
+            await addLogMessage(`Alvo: ${locationName}. Bônus SIFER: ${siferBonusDamage} (Dano completo da arma [${weaponDamageRollForBonus}]).`, 800);
+        } else if (locationRoll === 18) {
+            locationName = "Olhos";
+            siferBonusDamage = weaponDamageRollForBonus;
+            await addLogMessage(`Alvo: ${locationName}. Bônus SIFER: ${siferBonusDamage} (Dano completo da arma [${weaponDamageRollForBonus}]).`, 800);
+        } else if (locationRoll === 19) {
+            locationName = "Pescoço/Garganta";
+            siferBonusDamage = weaponDamageRollForBonus * 2;
+            await addLogMessage(`Alvo: <strong style="color:red;">${locationName}</strong>! Bônus SIFER: ${siferBonusDamage} (Dano dobrado [${weaponDamageRollForBonus} x2]).`, 800);
+        } else if (locationRoll === 20) {
+            locationName = "Cabeça";
+            siferBonusDamage = weaponDamageRollForBonus * 2;
+            await addLogMessage(`Alvo: <strong style="color:red;">${locationName}</strong>! Bônus SIFER: ${siferBonusDamage} (Dano dobrado [${weaponDamageRollForBonus} x2]).`, 800);
+        }
+
+        const totalDamage = baseDamageRoll + siferBonusDamage;
+        await addLogMessage(`Dano total do crítico: <strong style="color:yellow;">${totalDamage}</strong> (${baseDamageRoll} base + ${siferBonusDamage} bônus SIFER).`, 1000);
+
+        currentMonster.pontosDeEnergia -= totalDamage;
+        currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+
+        atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+        await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}.`, 1000);
+
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+
+        if (currentMonster.pontosDeEnergia <= 0) {
+            await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+            isPlayerTurn = false;
+            sessionStorage.removeItem('initiativeResult');
+
+            if (typeof handlePostBattle === 'function') {
+                handlePostBattle();
+            } else {
+                const lootBtn = document.getElementById('loot-button');
+                const mapBtn = document.getElementById('back-to-map-button');
+                const attackOpts = document.getElementById('attack-options');
+                if (lootBtn && currentMonster.drops?.length > 0) lootBtn.style.display = 'block';
+                if (mapBtn) mapBtn.style.display = 'block';
+                if (attackOpts) attackOpts.style.display = 'none';
+            }
+        } else {
+            if (typeof endPlayerTurn === 'function') {
+                endPlayerTurn();
+            } else {
+                setTimeout(() => monsterAttack(), 1500);
+            }
+        }
+
+        window.siferContext = null;
+    });
+} else {
+    console.warn("Botão 'rolar-localizacao' não encontrado no DOM.");
+}
+
+
                     // Lógica para o botão "Corpo a Corpo"
                     if (atacarCorpoACorpoButton) {
                         atacarCorpoACorpoButton.addEventListener('click', async () => { // Ou .onclick = async () => {
@@ -688,110 +783,32 @@ async function monsterAttack() {
 
         // *** INÍCIO DA LÓGICA SIFER ***
         if (playerAttackRollRaw === 20) {
-            console.log("LOG: SIFER - Acerto Crítico!");
-             // Use a sua função addLogMessage existente aqui
-            await addLogMessage(`<strong style="color: orange;">ACERTO CRÍTICO (SIFER)!</strong>`, 500);
+    console.log("LOG: SIFER - Acerto Crítico!");
+    await addLogMessage(`<strong style="color: orange;">ACERTO CRÍTICO (SIFER)!</strong>`, 500);
 
-            const locationRoll = Math.floor(Math.random() * 20) + 1;
-            console.log("LOG: SIFER - Rolagem de localização:", locationRoll);
-             // Use a sua função addLogMessage existente aqui
-            await addLogMessage(`Rolando para localização... <strong style="color: yellow;">${locationRoll}</strong>!`, 800);
+    // Mostra botão para o jogador rolar a localização
+    const rollLocationBtn = document.getElementById("rolar-localizacao");
+    if (rollLocationBtn) {
+        rollLocationBtn.style.display = "inline-block";
+        rollLocationBtn.disabled = false;
+        rollLocationBtn.focus();
 
-            let locationName = "";
-            let siferBonusDamage = 0;
-            // Usa a SUA função rollDice existente
-            const baseDamageRoll = rollDice(playerData.dano || "1");
-            const weaponDamageRollForBonus = rollDice(playerData.dano || "0");
+        // Desabilita o botão de ataque enquanto o jogador não rolar a localização
+        atacarCorpoACorpoButton.disabled = true;
 
-            // Calcula o dano bônus SIFER conforme as regras especificadas
-            if (locationRoll >= 1 && locationRoll <= 5) {
-                locationName = "Membros Inferiores";
-                siferBonusDamage = Math.ceil(weaponDamageRollForBonus / 2);
-                await addLogMessage(`Alvo: ${locationName}. Bônus SIFER: ${siferBonusDamage} (Metade do dano da arma [${weaponDamageRollForBonus}/2]).`, 800); // Use addLogMessage
-            } else if (locationRoll === 6) {
-                locationName = "Costas";
-                siferBonusDamage = weaponDamageRollForBonus;
-                await addLogMessage(`Alvo: ${locationName}. Bônus SIFER: ${siferBonusDamage} (Dano completo da arma [${weaponDamageRollForBonus}]).`, 800); // Use addLogMessage
-            } else if (locationRoll >= 7 && locationRoll <= 10) {
-                locationName = "Membros Ofensivos";
-                siferBonusDamage = Math.ceil(weaponDamageRollForBonus / 2);
-                await addLogMessage(`Alvo: ${locationName}. Bônus SIFER: ${siferBonusDamage} (Metade do dano da arma [${weaponDamageRollForBonus}/2]).`, 800); // Use addLogMessage
-            } else if (locationRoll >= 11 && locationRoll <= 16) {
-                locationName = "Abdômen/Tórax";
-                siferBonusDamage = Math.ceil(weaponDamageRollForBonus / 2);
-                await addLogMessage(`Alvo: ${locationName}. Bônus SIFER: ${siferBonusDamage} (Metade do dano da arma [${weaponDamageRollForBonus}/2]).`, 800); // Use addLogMessage
-            } else if (locationRoll === 17) {
-                locationName = "Coração";
-                siferBonusDamage = weaponDamageRollForBonus;
-                await addLogMessage(`Alvo: ${locationName}. Bônus SIFER: ${siferBonusDamage} (Dano completo da arma [${weaponDamageRollForBonus}]).`, 800); // Use addLogMessage
-            } else if (locationRoll === 18) {
-                locationName = "Olhos";
-                siferBonusDamage = weaponDamageRollForBonus;
-                await addLogMessage(`Alvo: ${locationName}. Bônus SIFER: ${siferBonusDamage} (Dano completo da arma [${weaponDamageRollForBonus}]).`, 800); // Use addLogMessage
-            } else if (locationRoll === 19) {
-                locationName = "Pescoço/Garganta";
-                siferBonusDamage = weaponDamageRollForBonus * 2;
-                await addLogMessage(`Alvo: <strong style="color:red;">${locationName}</strong>! Bônus SIFER: ${siferBonusDamage} (Dobra do dano da arma [${weaponDamageRollForBonus} x2]!).`, 800); // Use addLogMessage
-            } else if (locationRoll === 20) {
-                locationName = "Cabeça";
-                siferBonusDamage = weaponDamageRollForBonus * 2;
-                await addLogMessage(`Alvo: <strong style="color:red;">${locationName}</strong>! Bônus SIFER: ${siferBonusDamage} (Dobra do dano da arma [${weaponDamageRollForBonus} x2]!).`, 800); // Use addLogMessage
-            }
+        // Salva o contexto atual (você pode usar variáveis globais ou sessionStorage se preferir)
+        window.siferContext = {
+            baseDamageRoll: rollDice(playerData.dano || "1"),
+            weaponDamageRollForBonus: rollDice(playerData.dano || "0")
+        };
+    } else {
+        console.error("Botão 'rolar-localizacao' não encontrado!");
+    }
 
-            // Calcula e aplica o dano total (Dano Base + Bônus SIFER)
-            const totalDamage = baseDamageRoll + siferBonusDamage;
-            console.log(`LOG: SIFER - Dano Base: ${baseDamageRoll}, Bônus: ${siferBonusDamage}, Total: ${totalDamage}`);
-             // Use a sua função addLogMessage existente aqui
-            await addLogMessage(`Dano total do crítico: <strong style="color:yellow;">${totalDamage}</strong> (${baseDamageRoll} base + ${siferBonusDamage} bônus SIFER).`, 1000);
+    // Sai do fluxo aqui e espera o clique no botão
+    return;
+}
 
-            currentMonster.pontosDeEnergia -= totalDamage;
-            currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia); // Não deixa HP negativo
-
-             // Use a sua função atualizarBarraHP existente aqui
-            atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
-             // Use a sua função addLogMessage existente aqui
-            await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}.`, 1000);
-
-            // Salva o estado da batalha APÓS aplicar o dano
-             // Use a sua função saveBattleState existente aqui (presume que userId e monsterName estão acessíveis)
-            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-
-            // Verifica derrota do Monstro (Lógica similar à original de acerto, mas adaptada para SIFER)
-            if (currentMonster.pontosDeEnergia <= 0) {
-                 console.log("LOG: SIFER - Monstro derrotado!");
-                 // Use a sua função addLogMessage existente aqui
-                 await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-                 isPlayerTurn = false; // Impede mais ações
-
-                 // Tenta replicar a lógica original de fim de batalha/loot
-                  // Limpar Session Storage (se existir essa lógica no original para derrota)
-                  sessionStorage.removeItem('initiativeResult');
-                  // ... remover outros itens de sessionStorage se aplicável ...
-
-                 // Tenta chamar a lógica pós-batalha existente (se houver uma função handlePostBattle)
-                  if (typeof handlePostBattle === 'function') {
-                       handlePostBattle();
-                  } else {
-                       // Lógica mínima se handlePostBattle não existir: mostrar botão de voltar/loot
-                       const lootBtn = document.getElementById('loot-button');
-                       const mapBtn = document.getElementById('back-to-map-button');
-                       const attackOpts = document.getElementById('attack-options'); // attackOptionsDiv
-                       if (lootBtn && currentMonster.drops && currentMonster.drops.length > 0) lootBtn.style.display = 'block';
-                       if (mapBtn) mapBtn.style.display = 'block';
-                       if (attackOpts) attackOpts.style.display = 'none'; // Esconde opções de ataque
-                  }
-            } else {
-                // Se o monstro sobreviveu ao SIFER, passa o turno
-                // Use a sua função endPlayerTurn existente aqui
-                 if (typeof endPlayerTurn === 'function') {
-                      endPlayerTurn();
-                 } else {
-                      console.error("LOG: Função endPlayerTurn não encontrada após SIFER.");
-                      isPlayerTurn = false;
-                      setTimeout(() => monsterAttack(), 1500); // Fallback: tenta chamar monsterAttack diretamente
-                 }
-            }
-            // *** FIM DA LÓGICA SIFER ***
 
         } else {
             // *** INÍCIO DA LÓGICA ORIGINAL DE ACERTO/ERRO (se não for 20 natural) ***
