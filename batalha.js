@@ -286,26 +286,38 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
         battleLogContent.prepend(currentTurnBlock); // Adiciona o novo bloco no topo
     }
 
-    function endPlayerTurn() {
-        isPlayerTurn = false;
-        if (attackOptionsDiv) {
-            attackOptionsDiv.style.display = 'none';
-        }
-        setTimeout(() => {
-            monsterAttack();
-        }, 1500); // Pequeno delay antes do turno do monstro
-    }
+    // Variável de controle para evitar chamadas repetitivas
+let isMonsterTurnRunning = false;
 
+// Finaliza o turno do jogador e inicia o turno do monstro
+function endPlayerTurn() {
+    console.log("LOG: Finalizando turno do jogador e iniciando turno do monstro.");
+    isPlayerTurn = false;
+
+    // Esconde as opções de ataque do jogador
+    if (attackOptionsDiv) {
+        attackOptionsDiv.style.display = 'none';
+    }
+
+    // Aguarda um pequeno delay antes de iniciar o turno do monstro
+    setTimeout(() => {
+        monsterAttack();
+    }, 1500);
+}
+
+// Lógica do turno do monstro
 async function monsterAttack() {
-    console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
-    
-    // Verifica se o turno do jogador ou se o monstro já foi derrotado
-    if (isPlayerTurn || !currentMonster || playerHealth <= 0) {
-        console.log("LOG: monsterAttack - Turno inválido ou monstro/jogador derrotado. Retornando.");
+    // Verifica se o turno do monstro já está em execução ou se o jogador foi derrotado
+    if (isMonsterTurnRunning || isPlayerTurn || playerHealth <= 0 || !currentMonster) {
+        console.log("LOG: monsterAttack - Turno inválido ou já em execução. Retornando.");
         return;
     }
 
-    // Inicia o bloco de log do turno do monstro
+    // Marca que o turno do monstro está em execução
+    isMonsterTurnRunning = true;
+
+    console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
+
     startNewTurnBlock(currentMonster.nome);
     await addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
 
@@ -323,26 +335,24 @@ async function monsterAttack() {
         const monsterDamageRoll = rollDice(currentMonster.dano);
         console.log("LOG: monsterAttack - Dano rolado pelo monstro:", monsterDamageRoll);
 
-        // Atualiza a vida do jogador
         playerHealth -= monsterDamageRoll;
         playerHealth = Math.max(0, playerHealth);
 
-        // Atualiza a barra de HP do jogador
         atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
         await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano.`, 1000);
         await addLogMessage(`Sua energia restante: ${playerHealth}.`, 1000);
 
-        // Atualiza a energia do jogador no Firestore
+        // Atualiza o estado do jogador no Firestore
         const user = auth.currentUser;
         if (user) {
             updatePlayerEnergyInFirestore(user.uid, playerHealth);
             saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         }
 
-        // Verifica se o jogador foi derrotado
         if (playerHealth <= 0) {
             await addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1000);
             console.log("LOG: monsterAttack - Jogador derrotado.");
+            isMonsterTurnRunning = false; // Reseta o controle
             return; // Encerra a batalha
         }
     } else {
@@ -354,8 +364,10 @@ async function monsterAttack() {
     endMonsterTurn();
 }
 
+// Finaliza o turno do monstro e inicia o turno do jogador
 function endMonsterTurn() {
     console.log("LOG: monsterAttack - **FINAL DO TURNO DO MONSTRO - INICIANDO TURNO DO JOGADOR**");
+    isMonsterTurnRunning = false; // Marca que o turno do monstro terminou
     isPlayerTurn = true;
 
     if (attackOptionsDiv) {
