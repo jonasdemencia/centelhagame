@@ -135,12 +135,18 @@ function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
 
 function handlePostBattle() {
     console.log("handlePostBattle chamado.");
+    
+    // Reativa o botão de inventário
+    const inventarioButton = document.getElementById("abrir-inventario");
+    if (inventarioButton) {
+        inventarioButton.disabled = false;
+        inventarioButton.style.display = 'block';
+    }
+    
     // Exibe o botão de loot
     const lootButton = document.getElementById('loot-button');
     if (lootButton) {
-        lootButton.style.display = 'block'; // Ou 'inline-block'
-
-        // Adiciona um evento de clique ao botão de loot
+        lootButton.style.display = 'block';
         lootButton.addEventListener('click', () => {
             console.log("Botão de loot clicado. Redirecionando para loot.html");
             window.location.href = 'loot.html';
@@ -148,6 +154,8 @@ function handlePostBattle() {
     } else {
         console.error("Erro: Botão de loot não encontrado no HTML.");
     }
+    
+    battleStarted = false; // Reset do estado da batalha
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -166,6 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isPlayerTurn = false; // Variável para controlar o turno
     let currentTurnBlock = null; // Para armazenar o bloco do turno atual
     let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
+    let battleStarted = false; // Variável de controle para estado da batalha
     console.log("LOG: Variáveis iniciais declaradas.");
 
     const monsterData = {
@@ -403,16 +412,7 @@ function endMonsterTurn() {
     }, 1500); // Delay para iniciar o turno do monstro
 }
 
-    // Observador para desativar o inventário quando o log de batalha mudar (ou seja, quando a luta começar)
-    if (logBatalha) {
-        const observer = new MutationObserver(() => {
-            console.log("Mudança detectada no log de batalha. Desativando inventário.");
-            observer.disconnect(); // Evita chamadas repetidas
-        });
-
-        observer.observe(logBatalha, { childList: true, subtree: true });
-    }
-
+    
     // Verifica o estado da batalha no Session Storage
     const initiativeResult = sessionStorage.getItem('initiativeResult');
     const playerInitiativeRoll = sessionStorage.getItem('playerInitiativeRoll');
@@ -560,11 +560,17 @@ function endMonsterTurn() {
                         // ******************************************
                         
                         const inventarioButton = document.getElementById("abrir-inventario");
-                        const playerHealthDisplay = document.getElementById("player-health");
-                        if (inventarioButton) {
-                            inventarioButton.disabled = false;
-                            console.log("LOG: onAuthStateChanged - Botão de inventário habilitado.");
-                        }
+const playerHealthDisplay = document.getElementById("player-health");
+if (inventarioButton) {
+    if (!battleStarted) { // Só habilita se a batalha não tiver começado
+        inventarioButton.disabled = false;
+        inventarioButton.style.display = 'block';
+    } else {
+        inventarioButton.disabled = true;
+        inventarioButton.style.display = 'none';
+    }
+    console.log("LOG: onAuthStateChanged - Estado do botão de inventário atualizado.");
+}
                         if (playerHealthDisplay) {
                             playerHealthDisplay.innerText = playerHealth; // Exibe a energia inicial do jogador
                             console.log("LOG: onAuthStateChanged - Energia inicial do jogador exibida.");
@@ -572,20 +578,29 @@ function endMonsterTurn() {
 
                         // Event listener para o botão "Lutar" (AGORA MOVIDO PARA DENTRO DO onAuthStateChanged APÓS CARREGAR OS DADOS)
                         if (lutarButton) {
-                            lutarButton.disabled = false;
-                            lutarButton.addEventListener('click', () => {
-                                console.log("LOG: Botão 'Lutar' clicado.");
-                                lutarButton.style.display = 'none';
-                                if (rolarIniciativaButton) {
-                                    rolarIniciativaButton.style.display = 'block';
-                                    sessionStorage.setItem('luteButtonClicked', 'true');
-                                    console.log("LOG: Botão 'Lutar' escondido, botão 'Rolar Iniciativa' exibido.");
-                                } else {
-                                    console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
-                                }
-                        });
-                        console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
-                        }
+    lutarButton.disabled = false;
+    lutarButton.addEventListener('click', () => {
+        console.log("LOG: Botão 'Lutar' clicado.");
+        lutarButton.style.display = 'none';
+        battleStarted = true; // Marca que a batalha começou
+        
+        // Desabilita o botão de inventário
+        const inventarioButton = document.getElementById("abrir-inventario");
+        if (inventarioButton) {
+            inventarioButton.disabled = true;
+            inventarioButton.style.display = 'none'; // Opcional: esconde o botão completamente
+        }
+        
+        if (rolarIniciativaButton) {
+            rolarIniciativaButton.style.display = 'block';
+            sessionStorage.setItem('luteButtonClicked', 'true');
+            console.log("LOG: Botão 'Lutar' escondido, botão 'Rolar Iniciativa' exibido.");
+        } else {
+            console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
+        }
+    });
+    console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
+}
 
                         // Event listener para o botão "Rolar Iniciativa"
                         if (rolarIniciativaButton) {
