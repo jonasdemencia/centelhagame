@@ -150,6 +150,22 @@ function handlePostBattle() {
     }
 }
 
+// Função para desativar o botão de inventário
+function desativarInventario() {
+    if (botaoInventario) {
+        botaoInventario.disabled = true;
+        console.log("Botão de inventário desativado.");
+    }
+}
+
+// Função para reativar o botão de inventário
+function reativarInventario() {
+    if (botaoInventario) {
+        botaoInventario.disabled = false;
+        console.log("Botão de inventário reativado.");
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: DOMContentLoaded evento disparado.");
     const lutarButton = document.getElementById("iniciar-luta");
