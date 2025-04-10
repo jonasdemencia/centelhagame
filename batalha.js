@@ -790,59 +790,65 @@ if (rollLocationBtn) {
 if (rollDamageBtn) {
     rollDamageBtn.addEventListener('click', async () => {
         console.log("LOG: Botão 'Rolar Dano' clicado.");
-        rollDamageBtn.disabled = true;
-        rollDamageBtn.style.display = "none";
-
-        // Verifica se é dano crítico (SIFER) ou normal
-        if (window.siferContext) {
-            // Lógica SIFER (crítico)
-            const { baseDamageRoll, siferBonusDamage } = window.siferContext;
-            const totalDamage = baseDamageRoll + siferBonusDamage;
-
-            console.log(`LOG: Calculando dano crítico: Base ${baseDamageRoll}, Bônus ${siferBonusDamage}, Total ${totalDamage}`);
+        
+        if (window.siferContext.awaiting_first_roll) {
+            // Primeira rolagem
+            const firstRoll = rollDice(playerData.dano || "1");
+            window.siferContext.baseDamageRoll = firstRoll;
+            window.siferContext.awaiting_first_roll = false;
+            
+            await addLogMessage(`Primeira rolagem de dano: <strong style="color:yellow;">${firstRoll}</strong>. Role novamente para o bônus!`, 1000);
+            
+            // Mantém o botão visível para a segunda rolagem
+            rollDamageBtn.innerText = "Rolar Segundo Dano";
+            
+        } else {
+            // Segunda rolagem
+            const secondRoll = rollDice(playerData.dano || "1");
+            window.siferContext.weaponDamageRollForBonus = secondRoll;
+            
+            await addLogMessage(`Segunda rolagem de dano: <strong style="color:yellow;">${secondRoll}</strong>!`, 1000);
+            
+            // Calcula o dano total com o bônus
+            const totalDamage = window.siferContext.baseDamageRoll + window.siferContext.siferBonusDamage;
+            
             await addLogMessage(`Dano total do crítico: <strong style="color:yellow;">${totalDamage}</strong>.`, 1000);
-
+            
+            // Aplica o dano e processa o resto da lógica
             currentMonster.pontosDeEnergia -= totalDamage;
             currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+            
+            atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+            await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}.`, 1000);
+            
+            // Esconde o botão após a segunda rolagem
+            rollDamageBtn.style.display = "none";
+            rollDamageBtn.disabled = true;
 
-            // Limpa o contexto SIFER após usar
-            window.siferContext = null;
-            console.log("LOG: Contexto SIFER limpo.");
-        } else {
-            // Lógica de dano normal
-            await addLogMessage(`Rolagem de Dano`, 1000);
-            const damageRollResult = rollDice(playerDamage);
-            console.log("LOG: Dano normal rolado:", damageRollResult);
-            await addLogMessage(`Você rolou ${damageRollResult} de dano (${playerDamage})!`, 1000);
-
-            currentMonster.pontosDeEnergia -= damageRollResult;
-            currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
-        }
-
-        // Atualiza a barra de HP e exibe mensagem
-        atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
-        await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}.`, 1000);
-
-        // Salva o estado da batalha
-        if (currentMonster && user) {
-            await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-        }
-
-        // Verifica se o monstro foi derrotado
-        if (currentMonster.pontosDeEnergia <= 0) {
-            await addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-            if (currentMonster.drops && Array.isArray(currentMonster.drops)) {
-                const user = auth.currentUser;
-                if (user) {
-                    await salvarDropsNoLoot(user.uid, currentMonster.drops);
+            // Salva o estado da batalha
+            if (currentMonster && user) {
+                await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+            }
+            
+            // Processa o resultado do combate
+            if (currentMonster.pontosDeEnergia <= 0) {
+                await addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+                if (currentMonster.drops && Array.isArray(currentMonster.drops)) {
+                    const user = auth.currentUser;
+                    if (user) {
+                        await salvarDropsNoLoot(user.uid, currentMonster.drops);
+                    }
+                }
+                handlePostBattle();
+            } else {
+                await addLogMessage(`Fim do Turno do Jogador.`, 1000);
+                if (isPlayerTurn) {
+                    endPlayerTurn();
                 }
             }
-            handlePostBattle();
-        } else {
-            await addLogMessage(`Fim do Turno do Jogador.`, 1000);
-            if (isPlayerTurn) {
-                endPlayerTurn();
-            }
+            
+            // Limpa o contexto SIFER
+            window.siferContext = null;
         }
     });
 } else {
@@ -888,11 +894,9 @@ if (atacarCorpoACorpoButton) {
 
                 // Calcula e salva o contexto necessário para o próximo passo
                 // Usar window é simples, mas outras abordagens são possíveis (ex: data attributes)
-                window.siferContext = {
-                     // Rola o dano base e o dano para bônus AGORA e guarda
-                    baseDamageRoll: rollDice(playerData.dano || "1"),
-                    weaponDamageRollForBonus: rollDice(playerData.dano || "1") // Assume que dano "0" retorna 0
-                };
+               window.siferContext = {
+    awaiting_first_roll: true // Indica que estamos esperando a primeira rolagem
+};
                 console.log("LOG: Contexto SIFER salvo:", window.siferContext);
 
             } else {
