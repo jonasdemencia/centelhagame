@@ -830,6 +830,7 @@ if (atacarCorpoACorpoButton) {
                         // Event listener para o botão "DANO"
             // --- INÍCIO TRECHO 3: Substituir listener 'rolar-dano' ---
 // Event listener para o botão "DANO" GERAL (Normal e SIFER)
+                        try {
 if (rolarDanoButton) {
                     rolarDanoButton.onclick = async () => { // Usa onclick e async
                         console.log("LOG: Botão 'DANO' clicado.");
@@ -924,18 +925,27 @@ if (rolarDanoButton) {
                         }
                         // --- Fim Aplicação do Dano ---
                     };
-                     console.log("Listener (v3) adicionado a 'rolar-dano'.");
-                } else {
-                    console.error("LOG: Botão 'DANO' não encontrado (ID: rolar-dano)");
-                }
-                 // Fim da configuração dos listeners
+                     // Event listener para o botão "DANO" GERAL (Normal e SIFER)
+try {
+    if (rolarDanoButton) {
+        rolarDanoButton.onclick = async () => {
+            // ... (todo o conteúdo do listener aqui dentro como já estava)
+        };
 
-            } catch (error) {
-                console.error("LOG: Erro CRÍTICO ao buscar dados do jogador:", error);
-                alert(`Erro ao carregar dados do jogador: ${error.message}. Verifique o console.`);
-                 // Redirecionar ou mostrar mensagem de erro mais robusta
-                 document.body.innerHTML = `<h1>Erro Fatal</h1><p>Não foi possível carregar os dados do jogador.</p><p>${error.message}</p><a href="index.html">Voltar</a>`;
-            }
+        console.log("Listener (v3) adicionado a 'rolar-dano'.");
+    } else {
+        console.error("LOG: Botão 'DANO' não encontrado (ID: rolar-dano)");
+    }
+} catch (error) {
+    console.error("LOG: Erro CRÍTICO ao configurar botão DANO:", error);
+    alert(`Erro ao configurar botão de dano: ${error.message}`);
+    document.body.innerHTML = `
+        <h1>Erro Fatal</h1>
+        <p>Não foi possível configurar o botão de dano.</p>
+        <p>${error.message}</p>
+        <a href="index.html">Voltar</a>`;
+}
+
 
         } else {
             // Nenhum usuário logado
