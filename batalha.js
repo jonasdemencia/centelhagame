@@ -405,14 +405,15 @@ function endMonsterTurn() {
     }, 1500); // Delay para iniciar o turno do monstro
 }
 
-    // Observador para desativar o inventário quando o log de batalha mudar (ou seja, quando a luta começar)
-    if (logBatalha) {
-        const observer = new MutationObserver(() => {
-            console.log("Mudança detectada no log de batalha. Desativando inventário.");
-        });
+    // Observador para desativar o inventário quando o log de batalha mudar
+    if (logBatalha) {
+        const observer = new MutationObserver(() => {
+            console.log("Mudança detectada no log de batalha. Desativando inventário.");
+            desativarInventario();
+        });
 
-        observer.observe(logBatalha, { childList: true, subtree: true });
-    }
+        observer.observe(logBatalha, { childList: true, subtree: true });
+    }
 
     // Verifica o estado da batalha no Session Storage
     const initiativeResult = sessionStorage.getItem('initiativeResult');
