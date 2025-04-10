@@ -301,16 +301,12 @@ function endPlayerTurn() {
 
 // Lógica do turno do monstro
 async function monsterAttack() {
-    // Verifica se o turno do monstro já está em execução ou se o jogador foi derrotado
-    if (isMonsterTurnRunning || isPlayerTurn || playerHealth <= 0 || !currentMonster) {
-        console.log("LOG: monsterAttack - Turno inválido ou já em execução. Retornando.");
+    console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
+
+    if (isPlayerTurn || playerHealth <= 0 || !currentMonster) {
+        console.log("LOG: monsterAttack - Turno inválido ou jogador derrotado. Retornando.");
         return;
     }
-
-    // Marca que o turno do monstro está em execução
-    isMonsterTurnRunning = true;
-
-    console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
 
     startNewTurnBlock(currentMonster.nome);
     await addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
@@ -336,7 +332,6 @@ async function monsterAttack() {
         await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano.`, 1000);
         await addLogMessage(`Sua energia restante: ${playerHealth}.`, 1000);
 
-        // Atualiza o estado do jogador no Firestore
         const user = auth.currentUser;
         if (user) {
             updatePlayerEnergyInFirestore(user.uid, playerHealth);
@@ -346,18 +341,17 @@ async function monsterAttack() {
         if (playerHealth <= 0) {
             await addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1000);
             console.log("LOG: monsterAttack - Jogador derrotado.");
-            isMonsterTurnRunning = false; // Reseta o controle
-            return; // Encerra a batalha
+            return; // Termina o jogo se o jogador for derrotado
         }
     } else {
         await addLogMessage(`O ataque do ${currentMonster.nome} errou.`, 1000);
         console.log("LOG: monsterAttack - Ataque do monstro errou.");
     }
 
-    // Finaliza o turno do monstro e inicia o turno do jogador
-    endMonsterTurn();
+    console.log("LOG: Finalizando turno do monstro.");
+    endMonsterTurn(); // Passa o turno para o jogador
 }
-
+    
 // Finaliza o turno do monstro e inicia o turno do jogador
 function endMonsterTurn() {
     console.log("LOG: Finalizando turno do monstro e iniciando turno do jogador.");
