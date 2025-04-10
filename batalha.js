@@ -759,11 +759,15 @@ if (rollDamageBtn) {
         await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}.`, 1000);
 
         if (currentMonster.pontosDeEnergia <= 0) {
-            await addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-            handlePostBattle();
-        } else {
-            endPlayerTurn();
-        }
+    await addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+    handlePostBattle();
+} else {
+    if (isPlayerTurn) { // Verifica se ainda é o turno do jogador
+        endPlayerTurn();
+    } else {
+        console.warn("LOG: Tentativa de chamar endPlayerTurn fora do turno do jogador. Abortando.");
+    }
+}
 
         // Limpa o contexto SIFER após finalizar o dano
         window.siferContext = null;
