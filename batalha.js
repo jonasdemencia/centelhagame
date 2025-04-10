@@ -360,12 +360,17 @@ async function monsterAttack() {
 
 // Finaliza o turno do monstro e inicia o turno do jogador
 function endMonsterTurn() {
-    console.log("LOG: monsterAttack - **FINAL DO TURNO DO MONSTRO - INICIANDO TURNO DO JOGADOR**");
-    isMonsterTurnRunning = false; // Marca que o turno do monstro terminou
-    isPlayerTurn = true;
+    console.log("LOG: Finalizando turno do monstro e iniciando turno do jogador.");
+    if (isPlayerTurn) {
+        console.error("LOG: endMonsterTurn chamado fora do turno do monstro. Abortando.");
+        return;
+    }
+
+    isPlayerTurn = true; // Marca que é o turno do jogador
 
     if (attackOptionsDiv) {
         attackOptionsDiv.style.display = 'block'; // Exibe as opções de ataque do jogador
+
         const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
         if (atacarCorpoACorpoButton) {
             atacarCorpoACorpoButton.disabled = false; // Habilita o botão de ataque
