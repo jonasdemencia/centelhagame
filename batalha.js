@@ -377,7 +377,19 @@ function endMonsterTurn() {
         const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
         if (atacarCorpoACorpoButton) {
             atacarCorpoACorpoButton.disabled = false; // Habilita o botão de ataque
+            atacarCorpoACorpoButton.style.display = 'inline-block'; // Mostra o botão novamente
         }
+
+        // Reseta o estado dos botões
+        const buttons = attackOptionsDiv.querySelectorAll('.button');
+        buttons.forEach(button => {
+            button.disabled = false;
+            if (button.id === 'atacar-corpo-a-corpo') {
+                button.style.display = 'inline-block';
+            } else {
+                button.style.display = 'none';
+            }
+        });
     }
 
     startNewTurnBlock("Jogador");
@@ -876,6 +888,7 @@ if (atacarCorpoACorpoButton) {
                  // LÓGICA ORIGINAL DE ACERTO (mostra botão rolar-dano, etc.)
                  console.log("LOG: Ataque normal acertou.");
                  atacarCorpoACorpoButton.style.display = 'none'; // Esconde o botão de ataque
+                 atacarCorpoACorpoButton.disabled = true; // Também desabilita o botão
                  if(rolarDanoButton) rolarDanoButton.style.display = 'inline-block'; // Mostra o de dano
 
                  await addLogMessage(`Você acertou o ${currentMonster.nome}! Role o dano.`, 1000);
