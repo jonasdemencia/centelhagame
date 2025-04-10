@@ -233,47 +233,41 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
         document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
     }
 
-    function addLogMessage(message, delay = 0, typingSpeed = 30) {
-        return new Promise(resolve => {
-            const logContainer = document.getElementById("battle-log-content"); // Obtém a referência do container do log
-            if (currentTurnBlock) {
-                const p = document.createElement('p');
-                currentTurnBlock.appendChild(p);
-                let index = 0;
-                function typeWriter() {
-                    if (index < message.length) {
-                        p.textContent += message.charAt(index);
-                        index++;
-                        setTimeout(typeWriter, typingSpeed);
-                    } else {
-                        if (delay > 0) {
-                            setTimeout(() => {
-                                logContainer.scrollTop = logContainer.scrollHeight; // Rola para o final após o delay
-                                resolve();
-                            }, delay);
-                        } else {
-                            logContainer.scrollTop = logContainer.scrollHeight; // Rola para o final imediatamente
-                            resolve();
-                        }
-                    }
-                }
-                if (delay === 0) {
-                    typeWriter();
-                } else {
-                    setTimeout(typeWriter, delay);
-                }
-            } else {
-                const p = document.createElement('p');
-                p.textContent = message;
-                battleLogContent.appendChild(p);
-                logContainer.scrollTop = logContainer.scrollHeight; // Rola para o final imediatamente
-                resolve(); // Resolve imediatamente se não houver efeito de digitação
-            }
-            // Rolagem automática para o fim (MOVIDO PARA DENTRO DAS CONDIÇÕES)
-            // battleLogContent.scrollTop = battleLogContent.scrollHeight;
-        });
-    }
+    async function addLogMessage(message, delay = 0, typingSpeed = 30) {
+    const logContainer = document.getElementById("battle-log-content");
+    return new Promise((resolve) => {
+        const p = document.createElement('p');
+        currentTurnBlock.appendChild(p); // Adiciona a mensagem ao bloco atual
+        let index = 0;
 
+        function typeWriter() {
+            if (index < message.length) {
+                p.textContent += message.charAt(index);
+                index++;
+                setTimeout(typeWriter, typingSpeed);
+            } else {
+                if (delay > 0) {
+                    setTimeout(() => {
+                        logContainer.scrollTop = logContainer.scrollHeight; // Rola para o final após o delay
+                        resolve();
+                    }, delay);
+                } else {
+                    logContainer.scrollTop = logContainer.scrollHeight; // Rola para o final imediatamente
+                    resolve();
+                }
+            }
+        }
+
+        if (typingSpeed > 0) {
+            typeWriter();
+        } else {
+            p.textContent = message;
+            logContainer.scrollTop = logContainer.scrollHeight;
+            resolve();
+        }
+    });
+}
+    
     function startNewTurnBlock(turnName) {
         if (currentTurnBlock) {
             battleLogContent.prepend(currentTurnBlock);
