@@ -900,55 +900,54 @@ if (atacarCorpoACorpoButton) {
             await addLogMessage(`<p>Não é seu turno!</p>`, 1000);
             return;
         }
-        
+
         if (attackOptionsDiv) {
             const buttons = attackOptionsDiv.querySelectorAll('.button');
             buttons.forEach(button => button.disabled = true);
         }
 
+        // Primeira mensagem
         await addLogMessage(`Rolagem de Dano`, 1000);
-        
+
+        // Rolagem de dano
         const damageRollResult = rollDice(playerDamage);
         console.log("LOG: Botão 'DANO' - Dano rolado pelo jogador:", damageRollResult, "Dados de dano:", playerDamage);
         await addLogMessage(`Você rolou ${damageRollResult} de dano (${playerDamage})!`, 1000);
 
+        // Aplica o dano
         currentMonster.pontosDeEnergia -= damageRollResult;
         await addLogMessage(`${currentMonster.nome} sofreu ${damageRollResult} de dano. Pontos de Energia restantes: ${currentMonster.pontosDeEnergia}.`, 1000);
-        
-        // Atualiza a barra de HP do monstro
+
+        // Atualiza a barra de HP
         atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
         
         if (rolarDanoButton) rolarDanoButton.style.display = 'none';
-        attackOptionsDiv.style.display = 'none'; // Fim do turno do jogador
+        attackOptionsDiv.style.display = 'none';
         isPlayerTurn = false;
-        console.log("LOG: Botão 'DANO' - Dano causado ao monstro. Pontos de Energia restantes do monstro:", currentMonster.pontosDeEnergia);
 
-        // Salvar o estado da batalha no Firestore
+        // Salvar estado da batalha
         if (currentMonster && user) {
             await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         }
 
-        // Verifica se o monstro foi derrotado
+        // Verifica derrota do monstro
         if (currentMonster.pontosDeEnergia <= 0) {
             await addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-            console.log("LOG: Botão 'DANO' - Monstro derrotado.");
-
-            // Salva os drops do monstro no Firestore (se houver)
+            
+            // Salva os drops
             if (currentMonster.drops && Array.isArray(currentMonster.drops)) {
                 const user = auth.currentUser;
                 if (user) {
                     await salvarDropsNoLoot(user.uid, currentMonster.drops);
                     console.log("Drops salvos no Firestore:", currentMonster.drops);
-                } else {
-                    console.warn("Usuário não autenticado. Não foi possível salvar os drops.");
                 }
             }
-
+            
             handlePostBattle();
         } else {
             await addLogMessage(`Fim do Turno do Jogador.`, 1000);
             console.log("LOG: Botão 'DANO' - Turno do monstro após o ataque do jogador.");
-            monsterAttack(); // Turno do monstro APÓS o jogador causar dano
+            monsterAttack();
         }
 
         if (attackOptionsDiv) {
@@ -960,7 +959,6 @@ if (atacarCorpoACorpoButton) {
 } else {
     console.error("LOG: Botão 'DANO' não encontrado (ID: rolar-dano)");
 }
-
                     } else {
                         console.log("LOG: onAuthStateChanged - Nenhum documento encontrado para o jogador:", user.uid);
                         alert("Dados do jogador não encontrados. Por favor, crie seu personagem.");
