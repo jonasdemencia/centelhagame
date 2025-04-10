@@ -933,3 +933,25 @@ try {
         <p>${error.message}</p>
         <a href="index.html">Voltar</a>`;
 }
+
+        } else {
+            // Nenhum usuário logado
+            userId = null; // Limpa ID global
+            playerData = null;
+            currentMonster = null;
+            window.siferContext = null; // Limpa contexto sifer se houver
+            console.log("LOG: Nenhum usuário logado, redirecionando para login.");
+            const currentPageUrl = window.location.href;
+            window.location.href = index.html?redirect=${encodeURIComponent(currentPageUrl)}; // Redireciona para login
+        }
+    }); // Fim onAuthStateChanged
+
+    console.log("LOG: Event listener para DOMContentLoaded finalizado.");
+}); // Fim DOMContentLoaded
+
+console.log("LOG: Fim do script batalha.js");
+
+// --- Variável Global para Contexto SIFER ---
+// Declarada fora para garantir que esteja acessível nos listeners
+// (Pode ser melhorada no futuro, mas funciona para este caso)
+window.siferContext = null;
