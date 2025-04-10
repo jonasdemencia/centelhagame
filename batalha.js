@@ -592,6 +592,7 @@ function endMonsterTurn() {
                         // Event listener para o botão "Rolar Iniciativa"
                         if (rolarIniciativaButton) {
                             rolarIniciativaButton.addEventListener('click', async () => {
+                                desativarInventario();
                                 console.log("LOG: Botão 'Rolar Iniciativa' clicado.");
                                 const playerRoll = Math.floor(Math.random() * 20) + 1;
                                 const monsterRoll = Math.floor(Math.random() * 20) + 1;
