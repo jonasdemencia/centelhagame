@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         imagem: "https://via.placeholder.com/150",
         descricao: "Um pequeno goblin com olhos espertos.",
         habilidade: 2,
-        couraça: 10,
+        couraça: 1,
         pontosDeEnergia: 15,
         dano: "1D4"
     }
@@ -864,8 +864,8 @@ if (atacarCorpoACorpoButton) {
         const actionButtons = document.querySelectorAll('#attack-options button');
         actionButtons.forEach(button => button.disabled = true);
 
-        //const playerAttackRollRaw =  20; // CASO QUEIRA FAZER O TESTE SIFER
-        const playerAttackRollRaw = Math.floor(Math.random() * 20) + 1; // ALEATÓRIO NORMAL ENTRE 1 A 20
+        //const playerAttackRollRaw =  Math.floor(Math.random() * 20) + 1; // aleatório normal
+        const playerAttackRollRaw = 20; // CASO QUEIRA FAZER O TESTE SIFER
         const playerAttackRollTotal = playerAttackRollRaw + playerAbilityValue;
         const monsterDefense = currentMonster.couraça || 0;
 
