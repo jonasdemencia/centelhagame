@@ -295,17 +295,28 @@ let isMonsterTurnRunning = false;
 // Finaliza o turno do jogador e inicia o turno do monstro
 function endPlayerTurn() {
     console.log("LOG: Finalizando turno do jogador e iniciando turno do monstro.");
-    isPlayerTurn = false;
-
-    // Esconde as opções de ataque do jogador
-    if (attackOptionsDiv) {
-        attackOptionsDiv.style.display = 'none';
+    if (!isPlayerTurn) {
+        console.error("LOG: endPlayerTurn chamado fora do turno do jogador. Abortando.");
+        return;
     }
 
-    // Aguarda um pequeno delay antes de iniciar o turno do monstro
+    isPlayerTurn = false; // Marca que o turno do jogador acabou
+
+    if (attackOptionsDiv) {
+        attackOptionsDiv.style.display = 'none'; // Esconde as opções de ataque do jogador
+        
+        // Reset dos botões para o próximo turno
+        const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
+        if (atacarCorpoACorpoButton) {
+            atacarCorpoACorpoButton.disabled = true;
+            atacarCorpoACorpoButton.style.display = 'none';
+        }
+    }
+
     setTimeout(() => {
+        console.log("LOG: Chamando monsterAttack após fim do turno do jogador.");
         monsterAttack();
-    }, 1500);
+    }, 1500); // Delay para iniciar o turno do monstro
 }
 
 // Lógica do turno do monstro
