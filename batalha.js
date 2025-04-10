@@ -269,16 +269,16 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
 }
     
     function startNewTurnBlock(turnName) {
-        if (currentTurnBlock) {
-            battleLogContent.prepend(currentTurnBlock);
-        }
-        currentTurnBlock = document.createElement('div');
-        currentTurnBlock.classList.add('turn-block');
-        const turnTitle = document.createElement('h4');
-        turnTitle.textContent = `Turno do ${turnName}`;
-        currentTurnBlock.appendChild(turnTitle);
-        battleLogContent.prepend(currentTurnBlock); // Adiciona o novo bloco no topo
-    }
+    if (currentTurnBlock) {
+        battleLogContent.prepend(currentTurnBlock);
+    }
+    currentTurnBlock = document.createElement('div');
+    currentTurnBlock.classList.add('turn-block');
+    const turnTitle = document.createElement('h4');
+    turnTitle.textContent = `Turno do ${turnName}`;
+    currentTurnBlock.appendChild(turnTitle);
+    battleLogContent.prepend(currentTurnBlock); // Adiciona o novo bloco no topo
+}
 
     // Variável de controle para evitar chamadas repetitivas
 let isMonsterTurnRunning = false;
