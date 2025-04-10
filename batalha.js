@@ -168,6 +168,13 @@ function reativarInventario() {
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: DOMContentLoaded evento disparado.");
+    botaoInventario = document.getElementById("abrir-inventario");
+    if (botaoInventario) {
+        botaoInventario.addEventListener("click", function () {
+            window.location.href = "https://jonasdemencia.github.io/centelhagame/inventario.html";
+        });
+    }
+});
     const lutarButton = document.getElementById("iniciar-luta");
     const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
     const battleLogContent = document.getElementById("battle-log-content");
@@ -182,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isPlayerTurn = false; // Variável para controlar o turno
     let currentTurnBlock = null; // Para armazenar o bloco do turno atual
     let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
+    let botaoInventario;
     console.log("LOG: Variáveis iniciais declaradas.");
 
     const monsterData = {
@@ -390,7 +398,6 @@ function endMonsterTurn() {
     startNewTurnBlock("Jogador");
     addLogMessage(`Turno do Jogador`, 1000);
 }
-    const botaoInventario = document.getElementById("abrir-inventario");
     const botaoIniciativa = document.getElementById("rolar-iniciativa");
     const logBatalha = document.getElementById("battle-log-content");
 
