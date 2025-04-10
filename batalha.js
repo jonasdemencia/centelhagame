@@ -395,6 +395,21 @@ function endMonsterTurn() {
     startNewTurnBlock("Jogador");
     addLogMessage(`Turno do Jogador`, 1000);
 }
+
+    function resetActionButtons() {
+    if (attackOptionsDiv) {
+        const buttons = attackOptionsDiv.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.disabled = false;
+            if (button.id === 'atacar-corpo-a-corpo') {
+                button.style.display = 'inline-block';
+            } else {
+                button.style.display = 'none';
+            }
+        });
+    }
+}
+    
     const botaoInventario = document.getElementById("abrir-inventario");
     const botaoIniciativa = document.getElementById("rolar-iniciativa");
     const logBatalha = document.getElementById("battle-log-content");
