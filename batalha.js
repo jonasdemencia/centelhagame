@@ -891,7 +891,7 @@ if (atacarCorpoACorpoButton) {
                 window.siferContext = {
                      // Rola o dano base e o dano para bônus AGORA e guarda
                     baseDamageRoll: rollDice(playerData.dano || "1"),
-                    weaponDamageRollForBonus: rollDice(playerData.dano || "0") // Assume que dano "0" retorna 0
+                    weaponDamageRollForBonus: rollDice(playerData.dano || "1") // Assume que dano "0" retorna 0
                 };
                 console.log("LOG: Contexto SIFER salvo:", window.siferContext);
 
