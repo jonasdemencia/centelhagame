@@ -150,31 +150,8 @@ function handlePostBattle() {
     }
 }
 
-// Função para desativar o botão de inventário
-function desativarInventario() {
-    if (botaoInventario) {
-        botaoInventario.disabled = true;
-        console.log("Botão de inventário desativado.");
-    }
-}
-
-// Função para reativar o botão de inventário
-function reativarInventario() {
-    if (botaoInventario) {
-        botaoInventario.disabled = false;
-        console.log("Botão de inventário reativado.");
-    }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: DOMContentLoaded evento disparado.");
-    botaoInventario = document.getElementById("abrir-inventario");
-    if (botaoInventario) {
-        botaoInventario.addEventListener("click", function () {
-            window.location.href = "https://jonasdemencia.github.io/centelhagame/inventario.html";
-        });
-    }
-});
     const lutarButton = document.getElementById("iniciar-luta");
     const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
     const battleLogContent = document.getElementById("battle-log-content");
@@ -189,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let isPlayerTurn = false; // Variável para controlar o turno
     let currentTurnBlock = null; // Para armazenar o bloco do turno atual
     let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
-    let botaoInventario;
     console.log("LOG: Variáveis iniciais declaradas.");
 
     const monsterData = {
@@ -398,17 +374,16 @@ function endMonsterTurn() {
     startNewTurnBlock("Jogador");
     addLogMessage(`Turno do Jogador`, 1000);
 }
+    const botaoInventario = document.getElementById("abrir-inventario");
     const botaoIniciativa = document.getElementById("rolar-iniciativa");
     const logBatalha = document.getElementById("battle-log-content");
 
   if (botaoInventario) {
-        desativarInventario(); // Garante que o inventário esteja desativado ao carregar
+    botaoInventario.addEventListener("click", function () {
+        window.location.href = "https://jonasdemencia.github.io/centelhagame/inventario.html";
+    });
+}
 
-        botaoInventario.addEventListener("click", function () {
-            window.location.href = "https://jonasdemencia.github.io/centelhagame/inventario.html";
-        });
-    }
-    
     function endPlayerTurn() {
     console.log("LOG: Finalizando turno do jogador e iniciando turno do monstro.");
     if (!isPlayerTurn) {
@@ -428,15 +403,15 @@ function endMonsterTurn() {
     }, 1500); // Delay para iniciar o turno do monstro
 }
 
-    // Observador para desativar o inventário quando o log de batalha mudar
-    if (logBatalha) {
-        const observer = new MutationObserver(() => {
-            console.log("Mudança detectada no log de batalha. Desativando inventário.");
-            desativarInventario();
-        });
+    // Observador para desativar o inventário quando o log de batalha mudar (ou seja, quando a luta começar)
+    if (logBatalha) {
+        const observer = new MutationObserver(() => {
+            console.log("Mudança detectada no log de batalha. Desativando inventário.");
+            observer.disconnect(); // Evita chamadas repetidas
+        });
 
-        observer.observe(logBatalha, { childList: true, subtree: true });
-    }
+        observer.observe(logBatalha, { childList: true, subtree: true });
+    }
 
     // Verifica o estado da batalha no Session Storage
     const initiativeResult = sessionStorage.getItem('initiativeResult');
@@ -615,7 +590,6 @@ function endMonsterTurn() {
                         // Event listener para o botão "Rolar Iniciativa"
                         if (rolarIniciativaButton) {
                             rolarIniciativaButton.addEventListener('click', async () => {
-                                desativarInventario();
                                 console.log("LOG: Botão 'Rolar Iniciativa' clicado.");
                                 const playerRoll = Math.floor(Math.random() * 20) + 1;
                                 const monsterRoll = Math.floor(Math.random() * 20) + 1;
