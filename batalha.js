@@ -379,11 +379,13 @@ function endMonsterTurn() {
     const logBatalha = document.getElementById("battle-log-content");
 
   if (botaoInventario) {
-    botaoInventario.addEventListener("click", function () {
-        window.location.href = "https://jonasdemencia.github.io/centelhagame/inventario.html";
-    });
-}
+        desativarInventario(); // Garante que o inventário esteja desativado ao carregar
 
+        botaoInventario.addEventListener("click", function () {
+            window.location.href = "https://jonasdemencia.github.io/centelhagame/inventario.html";
+        });
+    }
+    
     function endPlayerTurn() {
     console.log("LOG: Finalizando turno do jogador e iniciando turno do monstro.");
     if (!isPlayerTurn) {
@@ -407,7 +409,6 @@ function endMonsterTurn() {
     if (logBatalha) {
         const observer = new MutationObserver(() => {
             console.log("Mudança detectada no log de batalha. Desativando inventário.");
-            observer.disconnect(); // Evita chamadas repetidas
         });
 
         observer.observe(logBatalha, { childList: true, subtree: true });
