@@ -723,57 +723,62 @@ if (rollLocationBtn) {
         console.log("LOG: Botão 'Rolar Localização' clicado.");
         rollLocationBtn.disabled = true; // Desabilita após clicar
         rollLocationBtn.style.display = 'none'; // Esconde após clicar
-
-        // Garante que o contexto SIFER existe antes de prosseguir
-        if (!window.siferContext || typeof window.siferContext.baseDamageRoll === 'undefined' || typeof window.siferContext.weaponDamageRollForBonus === 'undefined') {
-            console.error("LOG: Erro - Contexto SIFER (window.siferContext) não encontrado ou inválido!");
-            await addLogMessage("Erro ao processar crítico. Contexto não encontrado.", 0);
-            if (typeof endPlayerTurn === 'function') {
-                endPlayerTurn();
-            }
-            return; // Interrompe a execução se o contexto estiver faltando
-        }
+        
+// Verifica se o contexto SIFER foi iniciado pelo botão de ataque
+    if (typeof window.siferContext !== 'object' || window.siferContext === null) {
+         console.error("LOG: Erro - Contexto SIFER não foi iniciado corretamente!");
+         await addLogMessage("Erro: Fluxo SIFER não iniciado.", 0);
+         // Tenta resetar ou passar turno
+         resetActionButtons(); // Chama uma função para resetar botões (se existir) ou habilita ataque manualmente
+         // if (typeof endPlayerTurn === 'function') { endPlayerTurn(); }
+         return;
+    }
 
         const locationRoll = Math.floor(Math.random() * 20) + 1;
         console.log("LOG: SIFER - Jogador rolou localização:", locationRoll);
         await addLogMessage(`Rolando para localização... <strong style="color: yellow;">${locationRoll}</strong>!`, 800);
 
-        const { baseDamageRoll, weaponDamageRollForBonus } = window.siferContext;
         let locationName = "";
         let siferBonusDamage = 0;
 
-        // Lógica de localização SIFER
-        if (locationRoll >= 1 && locationRoll <= 5) {
-            locationName = "Membros Inferiores";
-            siferBonusDamage = Math.ceil(weaponDamageRollForBonus / 2);
-        } else if (locationRoll === 6) {
-            locationName = "Costas";
-            siferBonusDamage = weaponDamageRollForBonus;
-        } else if (locationRoll >= 7 && locationRoll <= 10) {
-            locationName = "Membros Ofensivos";
-            siferBonusDamage = Math.ceil(weaponDamageRollForBonus / 2);
-        } else if (locationRoll >= 11 && locationRoll <= 16) {
-            locationName = "Abdômen/Tórax";
-            siferBonusDamage = Math.ceil(weaponDamageRollForBonus / 2);
-        } else if (locationRoll === 17) {
-            locationName = "Coração";
-            siferBonusDamage = weaponDamageRollForBonus;
-        } else if (locationRoll === 18) {
-            locationName = "Olhos";
-            siferBonusDamage = weaponDamageRollForBonus;
-        } else if (locationRoll === 19) {
-            locationName = "Pescoço/Garganta";
-            siferBonusDamage = weaponDamageRollForBonus * 2;
-        } else if (locationRoll === 20) {
-            locationName = "Cabeça";
-            siferBonusDamage = weaponDamageRollForBonus * 2;
-        }
+        let locationName = "";
+    let bonusCalculationType = 'none'; // Tipo de cálculo: 'half', 'full', 'double'
+
+    // Determina o local e o TIPO de cálculo do bônus
+    if (locationRoll >= 1 && locationRoll <= 5) {
+        locationName = "Membros Inferiores"; bonusCalculationType = 'half';
+    } else if (locationRoll === 6) {
+        locationName = "Costas"; bonusCalculationType = 'full';
+    } else if (locationRoll >= 7 && locationRoll <= 10) {
+         locationName = "Membros Ofensivos"; bonusCalculationType = 'half';
+    } else if (locationRoll >= 11 && locationRoll <= 16) {
+         locationName = "Abdômen/Tórax"; bonusCalculationType = 'half';
+    } else if (locationRoll === 17) {
+        locationName = "Coração"; bonusCalculationType = 'full';
+    } else if (locationRoll === 18) {
+        locationName = "Olhos"; bonusCalculationType = 'full';
+    } else if (locationRoll === 19) {
+        locationName = "Pescoço/Garganta"; bonusCalculationType = 'double';
+    } else if (locationRoll === 20) {
+        locationName = "Cabeça"; bonusCalculationType = 'double';
+    }
+
+    // Log do resultado e instrução para rolar dano
+    let bonusDesc = '';
+    if (bonusCalculationType === 'half') bonusDesc = 'Metade do dano da arma';
+    else if (bonusCalculationType === 'full') bonusDesc = 'Dano completo da arma';
+    else if (bonusCalculationType === 'double') bonusDesc = 'Dobra do dano da arma!';
+    await addLogMessage(`Alvo: ${locationName} (Bônus: ${bonusDesc}). Role o Dano!`, 800);
+
+    // Salva a informação necessária para o botão de dano
+    window.siferContext.locationRoll = locationRoll;
+    window.siferContext.locationName = locationName;
+    window.siferContext.bonusType = bonusCalculationType;
+    console.log("LOG: Contexto SIFER atualizado para rolagem de dano:", window.siferContext);
 
         console.log(`LOG: Localização: ${locationName}, Bônus: ${siferBonusDamage}`);
         await addLogMessage(`Alvo: ${locationName}. Bônus SIFER: ${siferBonusDamage}.`, 800);
 
-        // Salva o bônus no contexto para a rolagem de dano
-        window.siferContext.siferBonusDamage = siferBonusDamage;
 
         // Exibe o botão para rolar o dano
         if (rollDamageBtn) {
@@ -886,14 +891,9 @@ if (atacarCorpoACorpoButton) {
                 // Garante que o botão de ataque normal fique desabilitado
                 atacarCorpoACorpoButton.disabled = true;
 
-                // Calcula e salva o contexto necessário para o próximo passo
-                // Usar window é simples, mas outras abordagens são possíveis (ex: data attributes)
-                window.siferContext = {
-                     // Rola o dano base e o dano para bônus AGORA e guarda
-                    baseDamageRoll: rollDice(playerData.dano || "1"),
-                    weaponDamageRollForBonus: rollDice(playerData.dano || "0") // Assume que dano "0" retorna 0
-                };
-                console.log("LOG: Contexto SIFER salvo:", window.siferContext);
+                // Apenas inicia/limpa o contexto SIFER para indicar o fluxo crítico
+window.siferContext = {};
+console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.");
 
             } else {
                 console.error("Botão 'rolar-localizacao' não encontrado no HTML!");
@@ -918,6 +918,8 @@ if (atacarCorpoACorpoButton) {
                  if(rolarDanoButton) rolarDanoButton.style.display = 'inline-block'; // Mostra o de dano
 
                  await addLogMessage(`Você acertou o ${currentMonster.nome}! Role o dano.`, 1000);
+
+                 window.siferContext = null; // Garante que não estamos em fluxo SIFER
 
                  // Habilita APENAS o botão de rolar dano
                  // (actionButtons já estão desabilitados desde o início do listener)
