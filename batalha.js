@@ -792,67 +792,129 @@ if (rollLocationBtn) {
 }
 
 // Listener para o botão "Rolar Dano"
-if (rollDamageBtn) {
-    rollDamageBtn.addEventListener('click', async () => {
-        console.log("LOG: Botão 'Rolar Dano' clicado.");
-        rollDamageBtn.disabled = true;
-        rollDamageBtn.style.display = "none";
+// --- INÍCIO: NOVO CÓDIGO PARA O LISTENER 'rolar-dano' ---
+    rolarDanoButton.addEventListener('click', async () => { // Adicionado async
+        console.log("LOG: Botão 'DANO' clicado.");
+        if (!isPlayerTurn) {
+            await addLogMessage(`<p>Não é seu turno!</p>`, 1000);
+            return;
+        }
 
-        // Verifica se é dano crítico (SIFER) ou normal
-        if (window.siferContext) {
-            // Lógica SIFER (crítico)
-            const { baseDamageRoll, siferBonusDamage } = window.siferContext;
-            const totalDamage = baseDamageRoll + siferBonusDamage;
+        // Desabilita todos botões durante o processamento do dano
+        const actionButtons = document.querySelectorAll('#attack-options button');
+        actionButtons.forEach(button => button.disabled = true);
+        rolarDanoButton.style.display = 'none'; // Esconde o próprio botão de dano
 
-            console.log(`LOG: Calculando dano crítico: Base ${baseDamageRoll}, Bônus ${siferBonusDamage}, Total ${totalDamage}`);
+        let totalDamage = 0;
+        let baseDamageRoll = 0;
+        let siferBonusDamage = 0;
+        let isSiferDamage = false; // Flag para saber se é dano SIFER
+        const playerDamageDice = playerData?.dano || "1"; // Pega o dado de dano do jogador
+
+        // Verifica se estamos no contexto SIFER (definido pelo botão de localização)
+        if (window.siferContext && typeof window.siferContext.locationRoll === 'number' && typeof window.siferContext.bonusType === 'string') {
+            isSiferDamage = true;
+            console.log("LOG: Processando Dano SIFER...");
+            const { bonusType, locationName } = window.siferContext; // Pega o tipo de cálculo e nome do local
+
+             // Rola o dano base AGORA
+             baseDamageRoll = rollDice(playerDamageDice);
+             // Rola o dano para o bônus AGORA
+             const weaponDamageRollForBonus = rollDice(playerDamageDice); // Rola novamente
+
+             console.log(`LOG: SIFER - Rolagem Base: ${baseDamageRoll}, Rolagem Bônus: ${weaponDamageRollForBonus}`);
+
+            // Calcula o siferBonusDamage com base no tipo guardado e na rolagem AGORA
+            if (bonusType === 'half') {
+                siferBonusDamage = Math.ceil(weaponDamageRollForBonus / 2);
+            } else if (bonusType === 'full') {
+                siferBonusDamage = weaponDamageRollForBonus;
+            } else if (bonusType === 'double') {
+                siferBonusDamage = weaponDamageRollForBonus * 2;
+            } else {
+                 siferBonusDamage = 0; // Caso 'none' ou erro
+                 console.warn("LOG: Tipo de bônus SIFER desconhecido:", bonusType);
+            }
+
+            totalDamage = baseDamageRoll + siferBonusDamage;
+
+            console.log(`LOG: SIFER Final - Dano Base: ${baseDamageRoll}, Bônus: ${siferBonusDamage}, Total: ${totalDamage}`);
+            await addLogMessage(`Rolou Dano SIFER! Base: ${baseDamageRoll}, Bônus(${locationName}): ${siferBonusDamage}.`, 800);
             await addLogMessage(`Dano total do crítico: <strong style="color:yellow;">${totalDamage}</strong>.`, 1000);
-
-            currentMonster.pontosDeEnergia -= totalDamage;
-            currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
 
             // Limpa o contexto SIFER após usar
             window.siferContext = null;
             console.log("LOG: Contexto SIFER limpo.");
+
         } else {
-            // Lógica de dano normal
-            await addLogMessage(`Rolagem de Dano`, 1000);
-            const damageRollResult = rollDice(playerDamage);
-            console.log("LOG: Dano normal rolado:", damageRollResult);
-            await addLogMessage(`Você rolou ${damageRollResult} de dano (${playerDamage})!`, 1000);
+            // Lógica de Dano Normal
+            isSiferDamage = false;
+            console.log("LOG: Processando Dano Normal...");
+            await addLogMessage(`Rolagem de Dano Normal`, 1000);
+             baseDamageRoll = rollDice(playerDamageDice); // Rola o dano normal
+             totalDamage = baseDamageRoll; // Dano total é só o base
 
-            currentMonster.pontosDeEnergia -= damageRollResult;
-            currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+             console.log("LOG: Botão 'DANO' - Dano normal rolado:", totalDamage);
+             await addLogMessage(`Você rolou ${totalDamage} de dano (${playerDamageDice})!`, 1000);
         }
 
-        // Atualiza a barra de HP e exibe mensagem
-        atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
-        await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}.`, 1000);
+        // --- Aplicação do Dano e Fim do Turno (Comum a SIFER e Normal) ---
+        if (totalDamage > 0) { // Só aplica se houver dano
+            console.log(`Aplicando ${totalDamage} de dano ao monstro.`);
+            currentMonster.pontosDeEnergia -= totalDamage;
+            currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia); // Garante não ficar negativo
 
-        // Salva o estado da batalha
-        if (currentMonster && user) {
-            await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+            await addLogMessage(`${currentMonster.nome} sofreu ${totalDamage} de dano.`, 800);
+
+            atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+            await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}.`, 1000);
+
+            // Salva estado (precisa de userId e monsterName no escopo)
+            const user = auth.currentUser; // Pega o usuário atual
+            if (userId && monsterName && currentMonster) { // Verifica se as variáveis globais estão ok
+                 await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+            } else {
+                 console.error("Erro ao salvar estado: userId, monsterName ou currentMonster não definidos.");
+            }
+
+        } else {
+            console.log("Dano total foi zero, nenhum dano aplicado.");
+            await addLogMessage("Dano calculado foi zero.", 800);
         }
 
-        // Verifica se o monstro foi derrotado
+
+        // Verifica derrota e passa o turno
         if (currentMonster.pontosDeEnergia <= 0) {
-            await addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-            if (currentMonster.drops && Array.isArray(currentMonster.drops)) {
-                const user = auth.currentUser;
-                if (user) {
-                    await salvarDropsNoLoot(user.uid, currentMonster.drops);
-                }
+            console.log(`LOG: Monstro derrotado após ${isSiferDamage ? 'SIFER' : 'Dano Normal'}!`);
+            await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+            isPlayerTurn = false; // Garante que o turno não continue
+            // Chama handlePostBattle ou lógica similar
+            if (typeof handlePostBattle === 'function') {
+                 handlePostBattle();
+            } else {
+                console.error("Função handlePostBattle não definida.");
+                 // Fallback simples
+                 const lootBtn = document.getElementById('loot-button');
+                 const mapBtn = document.getElementById('back-to-map-button');
+                 if (lootBtn && currentMonster.drops?.length > 0) lootBtn.style.display = 'block';
+                 if (mapBtn) mapBtn.style.display = 'block';
+                 if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
             }
-            handlePostBattle();
         } else {
-            await addLogMessage(`Fim do Turno do Jogador.`, 1000);
-            if (isPlayerTurn) {
+            // Passa o turno para o monstro
+            console.log(`LOG: Monstro sobreviveu ao ${isSiferDamage ? 'SIFER' : 'Dano Normal'}. Passando turno.`);
+            // Usa a função endPlayerTurn para padronizar o fim do turno
+            if (typeof endPlayerTurn === 'function') {
                 endPlayerTurn();
+            } else {
+                 console.error(`LOG: Função endPlayerTurn não encontrada!`);
+                 isPlayerTurn = false;
+                 setTimeout(() => monsterAttack(), 1500); // Fallback
             }
         }
+        // --- Fim da Aplicação do Dano ---
     });
-} else {
-    console.warn("Botão 'Rolar Dano' não encontrado no DOM durante a configuração do listener.");
-}
+    // --- FIM: NOVO CÓDIGO PARA O LISTENER 'rolar-dano' ---
 // --- FIM DO TRECHO PARA 'rolar-localizacao' ---
 
                     // Lógica para o botão "Corpo a Corpo"
