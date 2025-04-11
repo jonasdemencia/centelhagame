@@ -811,7 +811,43 @@ if (rollLocationBtn) {
         const playerDamageDice = playerData?.dano || "1"; // Pega o dado de dano do jogador
 
         // Verifica se estamos no contexto SIFER (definido pelo botão de localização)
-        if (window.siferContext && typeof window.siferContext.locationRoll === 'number' && typeof window.siferContext.bonusType === 'string') {
+
+        if (window.siferContext && window.siferContext.bonusType) {
+    const { bonusType, locationName, damageStage } = window.siferContext;
+
+    if (!damageStage || damageStage === 'base') {
+        // Rolar apenas o dano base
+        baseDamageRoll = rollDice(playerDamageDice);
+        window.siferContext.baseDamageRoll = baseDamageRoll;
+        window.siferContext.damageStage = 'bonus';
+
+        await addLogMessage(`Dano base rolado: ${baseDamageRoll}. Agora role o bônus de ${locationName}.`, 800);
+
+        // Reexibe o botão para o próximo clique
+        rolarDanoButton.style.display = 'inline-block';
+        rolarDanoButton.disabled = false;
+        return;
+    } else if (damageStage === 'bonus') {
+        // Agora rola o bônus
+        const weaponDamageRollForBonus = rollDice(playerDamageDice);
+
+        if (bonusType === 'half') {
+            siferBonusDamage = Math.ceil(weaponDamageRollForBonus / 2);
+        } else if (bonusType === 'full') {
+            siferBonusDamage = weaponDamageRollForBonus;
+        } else if (bonusType === 'double') {
+            siferBonusDamage = weaponDamageRollForBonus * 2;
+        }
+
+        baseDamageRoll = window.siferContext.baseDamageRoll || 0;
+        totalDamage = baseDamageRoll + siferBonusDamage;
+
+        await addLogMessage(`Rolou bônus SIFER (${locationName}): ${siferBonusDamage}.`, 800);
+        await addLogMessage(`Dano total: <strong style="color:yellow;">${totalDamage}</strong>.`, 1000);
+
+        window.siferContext = null; // Limpa contexto
+    }
+
             isSiferDamage = true;
             console.log("LOG: Processando Dano SIFER...");
             const { bonusType, locationName } = window.siferContext; // Pega o tipo de cálculo e nome do local
