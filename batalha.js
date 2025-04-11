@@ -738,7 +738,6 @@ if (rollLocationBtn) {
         console.log("LOG: SIFER - Jogador rolou localização:", locationRoll);
         await addLogMessage(`Rolando para localização... <strong style="color: yellow;">${locationRoll}</strong>!`, 800);
 
-        let locationName = "";
         let siferBonusDamage = 0;
 
         let locationName = "";
