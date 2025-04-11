@@ -848,39 +848,6 @@ if (rollLocationBtn) {
         window.siferContext = null; // Limpa contexto
     }
 
-            isSiferDamage = true;
-            console.log("LOG: Processando Dano SIFER...");
-            const { bonusType, locationName } = window.siferContext; // Pega o tipo de cálculo e nome do local
-
-             // Rola o dano base AGORA
-             baseDamageRoll = rollDice(playerDamageDice);
-             // Rola o dano para o bônus AGORA
-             const weaponDamageRollForBonus = rollDice(playerDamageDice); // Rola novamente
-
-             console.log(`LOG: SIFER - Rolagem Base: ${baseDamageRoll}, Rolagem Bônus: ${weaponDamageRollForBonus}`);
-
-            // Calcula o siferBonusDamage com base no tipo guardado e na rolagem AGORA
-            if (bonusType === 'half') {
-                siferBonusDamage = Math.ceil(weaponDamageRollForBonus / 2);
-            } else if (bonusType === 'full') {
-                siferBonusDamage = weaponDamageRollForBonus;
-            } else if (bonusType === 'double') {
-                siferBonusDamage = weaponDamageRollForBonus * 2;
-            } else {
-                 siferBonusDamage = 0; // Caso 'none' ou erro
-                 console.warn("LOG: Tipo de bônus SIFER desconhecido:", bonusType);
-            }
-
-            totalDamage = baseDamageRoll + siferBonusDamage;
-
-            console.log(`LOG: SIFER Final - Dano Base: ${baseDamageRoll}, Bônus: ${siferBonusDamage}, Total: ${totalDamage}`);
-            await addLogMessage(`Rolou Dano SIFER! Base: ${baseDamageRoll}, Bônus(${locationName}): ${siferBonusDamage}.`, 800);
-            await addLogMessage(`Dano total do crítico: <strong style="color:yellow;">${totalDamage}</strong>.`, 1000);
-
-            // Limpa o contexto SIFER após usar
-            window.siferContext = null;
-            console.log("LOG: Contexto SIFER limpo.");
-
         } else {
             // Lógica de Dano Normal
             isSiferDamage = false;
