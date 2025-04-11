@@ -738,7 +738,9 @@ if (rollLocationBtn) {
         console.log("LOG: SIFER - Jogador rolou localização:", locationRoll);
         await addLogMessage(`Rolando para localização... <strong style="color: yellow;">${locationRoll}</strong>!`, 800);
 
+        
         let locationName = "";
+        let siferBonusDamage = 0;
     let bonusCalculationType = 'none'; // Tipo de cálculo: 'half', 'full', 'double'
 
     // Determina o local e o TIPO de cálculo do bônus
