@@ -933,8 +933,8 @@ if (atacarCorpoACorpoButton) {
         const actionButtons = document.querySelectorAll('#attack-options button');
         actionButtons.forEach(button => button.disabled = true);
 
-        //const playerAttackRollRaw =  Math.floor(Math.random() * 20) + 1; // aleatório normal
-        const playerAttackRollRaw = 20; // CASO QUEIRA FAZER O TESTE SIFER
+        //const playerAttackRollRaw =  20; // PARA TESTE 
+        const playerAttackRollRaw = Math.floor(Math.random() * 20) + 1; // ALEATÓRIO NORMAL
         const playerAttackRollTotal = playerAttackRollRaw + playerAbilityValue;
         const monsterDefense = currentMonster.couraça || 0;
 
