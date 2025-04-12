@@ -566,6 +566,7 @@ h1 {
     border: 1px solid #333;
     height: 20px;
     margin-bottom: 10px;
+    position: relative; /* Adicionado */
 }
 
 .barra-hp {
@@ -575,3 +576,15 @@ h1 {
     transition: width 0.3s ease;
 }
 
+/* Novo: estilo para o texto do valor */
+.hp-valor {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    text-shadow: 1px 1px 1px black;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1;
+}
