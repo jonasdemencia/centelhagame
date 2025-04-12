@@ -981,7 +981,7 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
                  atacarCorpoACorpoButton.disabled = true; // Também desabilita o botão
                  if(rolarDanoButton) rolarDanoButton.style.display = 'inline-block'; // Mostra o de dano
 
-                 await addLogMessage(`Você acertou o ${currentMonster.nome}! Role o dano.`, 1000);
+                 await addLogMessage(`Seu golpe atinge em cheio o ${currentMonster.nome}! Role o dano.`, 1000);
 
                  window.siferContext = null; // Garante que não estamos em fluxo SIFER
 
@@ -992,7 +992,7 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
              } else {
                   // LÓGICA ORIGINAL DE ERRO
                   console.log("LOG: Ataque normal errou.");
-                  await addLogMessage(`Você errou o ataque contra o ${currentMonster.nome}.`, 1000);
+                  await addLogMessage(`Seu ataque passa de raspão no ${currentMonster.nome}.`, 1000);
 
                    // Passa o turno para o monstro
                    if (typeof endPlayerTurn === 'function') {
