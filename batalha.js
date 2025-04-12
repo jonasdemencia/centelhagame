@@ -45,20 +45,22 @@ function getUrlParameter(name) {
 // Função para barra de HP
 function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
     const barra = document.getElementById(idElemento);
-    const valorSpan = document.getElementById(`${idElemento.replace('barra-', '')}-valor`);
+    const valorSpan = document.getElementById(`hp-${idElemento.replace('barra-hp-', '')}-valor`);
     
-    if (!barra || !valorSpan) {
-        console.error(`Elemento com id "${idElemento}" ou seu valor não encontrado.`);
+    if (!barra) {
+        console.error(`Elemento com id "${idElemento}" não encontrado.`);
         return;
     }
     if (!valorMaximo || valorMaximo <= 0) {
         console.error(`Valor máximo inválido: ${valorMaximo}`);
         return;
     }
-    
     const porcentagem = Math.max(0, (valorAtual / valorMaximo) * 100);
     barra.style.width = `${porcentagem}%`;
-    valorSpan.textContent = `${valorAtual}/${valorMaximo}`;
+    
+    if (valorSpan) {
+        valorSpan.textContent = `${valorAtual}/${valorMaximo}`;
+    }
 }
 
 // Função para rolar dados (ex: "1D6", "2D4")
