@@ -600,7 +600,7 @@ function endMonsterTurn() {
                         console.log("LOG: onAuthStateChanged - Energia do jogador carregada da ficha:", playerHealth);
                         // -------------------------------------------------------------------------
 
-                        playerMaxHealth = playerData.energy?.max ? parseInt(playerData.energy.max) : playerHealth; // ← Atualiza a global
+                        playerMaxHealth = playerData.energia ? parseInt(playerData.energia) : playerHealth;
                         atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
                         // ******************************************
                         
