@@ -31,6 +31,11 @@ const initialItems = [
     { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 5, description: "Um pedaço de pão velho e mofado. Estranhamente, parece ter um efeito... diferente." } // Quantidade aumentada para 20
 ];
 
+// Constantes para cálculo de tempo
+const GAME_TIME_MULTIPLIER = 7; // 7 segundos no jogo para cada 1 segundo real
+const SECONDS_PER_DAY = 86400; // Segundos em um dia
+const REAL_SECONDS_PER_GAME_DAY = SECONDS_PER_DAY / GAME_TIME_MULTIPLIER; // Segundos reais para um dia no jogo
+
 // Função para exibir/ocultar o botão de usar
 function toggleUseButton(show) {
     const useButton = document.getElementById("useBtn");
