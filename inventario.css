@@ -333,7 +333,20 @@ p {
     margin-bottom: 2px;
 }
 
+/* Estilo para o valor de energia atual/máximo */
+#char-energy {
+    font-size: 0.9em; /* Ajusta o tamanho da fonte para caber bem no espaço */
+    white-space: nowrap; /* Impede que quebre em duas linhas */
+    display: block; /* Garante que ocupe sua própria linha */
+    margin-top: 2px; /* Pequeno espaço após o rótulo */
+    font-weight: bold; /* Deixa o número em negrito */
+}
 
+/* Ajusta o container do atributo energia para comportar o novo formato */
+.attribute-container .attribute:has(#char-energy) {
+    height: auto; /* Permite que a altura se ajuste ao conteúdo */
+    padding: 5px 0; /* Adiciona um pouco de padding vertical */
+}
 
 /* PO no interior do baú */
 #char-po-container {
