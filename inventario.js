@@ -622,7 +622,7 @@ if (slides.length > 0) {
     slides[currentSlide].classList.add("active");
 }
 
-// 📌 Atualizar os dados da ficha de personagem ao carregar
+// 📌 Atualizar os dados da ficha de personagem ao carregar e barra de hp
 function updateCharacterSheet(playerData) {
     if (!playerData) return;
 
@@ -630,7 +630,19 @@ function updateCharacterSheet(playerData) {
     document.getElementById("char-race").innerText = playerData.race || "-";
     document.getElementById("char-class").innerText = playerData.class || "-";
     document.getElementById("char-alignment").innerText = playerData.alignment || "-";
-    document.getElementById("char-energy").innerText = `${playerData.energy?.total ?? "-"}/${playerData.energy?.initial ?? "-"}`;
+    
+    // Atualiza o texto da energia e a barra de HP
+    const energyTotal = playerData.energy?.total ?? 0;
+    const energyInitial = playerData.energy?.initial ?? 0;
+    document.getElementById("char-energy").innerText = `${energyTotal}/${energyInitial}`;
+    
+    // Atualiza a barra de HP
+    const barraHP = document.getElementById("barra-hp-inventario");
+    if (barraHP && energyInitial > 0) {
+        const porcentagem = Math.max(0, (energyTotal / energyInitial) * 100);
+        barraHP.style.width = `${porcentagem}%`;
+    }
+
     document.getElementById("char-skill").innerText = playerData.skill?.total ?? "-";
     document.getElementById("char-charisma").innerText = playerData.charisma?.total ?? "-";
     document.getElementById("char-magic").innerText = playerData.magic?.total ?? "-";
