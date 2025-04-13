@@ -212,23 +212,44 @@ document.addEventListener("DOMContentLoaded", () => {
                         const value = parseInt(selectedItem.dataset.value);
                         console.log("Aplicando efeito:", effect, "com valor:", value);
 
-                        if (effect === "damage" && itemName === "Pão Mofado") {
-                            if (currentPlayerData && currentPlayerData.energy && currentPlayerData.energy.total > 0) {
-                                currentPlayerData.energy.total -= value;
-                                document.getElementById("char-energy").innerText = `${currentPlayerData.energy.total}/${currentPlayerData.energy.initial}`;
-                                await savePlayerData(auth.currentUser.uid, currentPlayerData); // Salva os dados atualizados do jogador
-                                console.log("Energia diminuída para:", currentPlayerData.energy.total);
-                            }
-                        } else if (effect === "heal" && (itemName === "Pequeno saco com ervas medicinais" || itemName === "Poção de Cura Menor")) {
-                            if (currentPlayerData && currentPlayerData.energy) {
-                                const initialEnergy = currentPlayerData.energy.initial || currentPlayerData.energy.total; // Usar initial se existir, senão o total atual
-                                const newEnergy = currentPlayerData.energy.total + value;
-                                currentPlayerData.energy.total = Math.min(newEnergy, initialEnergy); // Não ultrapassa o valor inicial
-                                document.getElementById("char-energy").innerText = `${currentPlayerData.energy.total}/${currentPlayerData.energy.initial}`;
-                                await savePlayerData(auth.currentUser.uid, currentPlayerData); // Salva os dados atualizados do jogador
-                                console.log("Energia aumentada para:", currentPlayerData.energy.total);
-                            }
-                        }
+                       if (effect === "damage" && itemName === "Pão Mofado") {
+    if (currentPlayerData && currentPlayerData.energy && currentPlayerData.energy.total > 0) {
+        currentPlayerData.energy.total -= value;
+        // Atualiza o texto e a barra de HP
+        const energyTotal = currentPlayerData.energy.total;
+        const energyInitial = currentPlayerData.energy.initial;
+        document.getElementById("char-energy").innerText = `${energyTotal}/${energyInitial}`;
+        
+        // Atualiza a barra de HP
+        const barraHP = document.getElementById("barra-hp-inventario");
+        if (barraHP) {
+            const porcentagem = Math.max(0, (energyTotal / energyInitial) * 100);
+            barraHP.style.width = `${porcentagem}%`;
+        }
+
+        await savePlayerData(auth.currentUser.uid, currentPlayerData);
+        console.log("Energia diminuída para:", currentPlayerData.energy.total);
+    }
+} else if (effect === "heal" && (itemName === "Pequeno saco com ervas medicinais" || itemName === "Poção de Cura Menor")) {
+    if (currentPlayerData && currentPlayerData.energy) {
+        const initialEnergy = currentPlayerData.energy.initial;
+        const newEnergy = Math.min(currentPlayerData.energy.total + value, initialEnergy);
+        currentPlayerData.energy.total = newEnergy;
+        
+        // Atualiza o texto e a barra de HP
+        document.getElementById("char-energy").innerText = `${newEnergy}/${initialEnergy}`;
+        
+        // Atualiza a barra de HP
+        const barraHP = document.getElementById("barra-hp-inventario");
+        if (barraHP) {
+            const porcentagem = Math.max(0, (newEnergy / initialEnergy) * 100);
+            barraHP.style.width = `${porcentagem}%`;
+        }
+
+        await savePlayerData(auth.currentUser.uid, currentPlayerData);
+        console.log("Energia aumentada para:", currentPlayerData.energy.total);
+    }
+}
                     }
 
                     quantity--;
