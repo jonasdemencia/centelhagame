@@ -630,7 +630,7 @@ function updateCharacterSheet(playerData) {
     document.getElementById("char-race").innerText = playerData.race || "-";
     document.getElementById("char-class").innerText = playerData.class || "-";
     document.getElementById("char-alignment").innerText = playerData.alignment || "-";
-    document.getElementById("char-energy").innerText = playerData.energy?.total ?? "-";
+    document.getElementById("char-energy").innerText = `${playerData.energy?.total ?? "-"}/${playerData.energy?.initial ?? "-"}`;
     document.getElementById("char-skill").innerText = playerData.skill?.total ?? "-";
     document.getElementById("char-charisma").innerText = playerData.charisma?.total ?? "-";
     document.getElementById("char-magic").innerText = playerData.magic?.total ?? "-";
