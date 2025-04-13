@@ -726,6 +726,9 @@ function updateCharacterSheet(playerData) {
     document.getElementById("char-po").innerText = playerData.po || "0";
     document.getElementById("char-hand").innerText = playerData.maoDominante || "-";
     document.getElementById("char-hemisphere").innerText = playerData.hemisferioDominante || "-";
+
+    // Atualiza o dia
+    document.getElementById("char-day").innerText = playerData.gameTime?.currentDay ?? 1;
 }
 
 // Nova função para salvar os dados do jogador (além do inventário)
