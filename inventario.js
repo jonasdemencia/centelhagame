@@ -215,7 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         if (effect === "damage" && itemName === "Pão Mofado") {
                             if (currentPlayerData && currentPlayerData.energy && currentPlayerData.energy.total > 0) {
                                 currentPlayerData.energy.total -= value;
-                                document.getElementById("char-energy").innerText = currentPlayerData.energy.total;
+                                document.getElementById("char-energy").innerText = `${currentPlayerData.energy.total}/${currentPlayerData.energy.initial}`;
                                 await savePlayerData(auth.currentUser.uid, currentPlayerData); // Salva os dados atualizados do jogador
                                 console.log("Energia diminuída para:", currentPlayerData.energy.total);
                             }
@@ -224,7 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 const initialEnergy = currentPlayerData.energy.initial || currentPlayerData.energy.total; // Usar initial se existir, senão o total atual
                                 const newEnergy = currentPlayerData.energy.total + value;
                                 currentPlayerData.energy.total = Math.min(newEnergy, initialEnergy); // Não ultrapassa o valor inicial
-                                document.getElementById("char-energy").innerText = currentPlayerData.energy.total;
+                                document.getElementById("char-energy").innerText = `${currentPlayerData.energy.total}/${currentPlayerData.energy.initial}`;
                                 await savePlayerData(auth.currentUser.uid, currentPlayerData); // Salva os dados atualizados do jogador
                                 console.log("Energia aumentada para:", currentPlayerData.energy.total);
                             }
