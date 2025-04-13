@@ -604,18 +604,20 @@ document.addEventListener("DOMContentLoaded", () => {
         if (user) {
             console.log("Usuário autenticado:", user.uid);
 
-            currentPlayerData = await getPlayerData(user.uid); // 🔹 Recupera os dados da ficha
+            currentPlayerData = await getPlayerData(user.uid);
             if (currentPlayerData) {
-                updateCharacterSheet(currentPlayerData); // 🔹 Atualiza a ficha do personagem
+                updateCharacterSheet(currentPlayerData);
+                initializeGameTime(currentPlayerData); // Inicializa o sistema de tempo
             }
 
-            await loadInventoryData(user.uid); // 🔹 Carrega os itens do inventário e slots equipados
+            await loadInventoryData(user.uid);
         } else {
             console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
             window.location.href = "index.html";
         }
     });
 });
+
 
 // 📌 Sistema de Carrossel entre as janelas
 const slides = document.querySelectorAll(".carousel-slide");
