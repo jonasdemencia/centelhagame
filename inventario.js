@@ -631,9 +631,11 @@ function updateCharacterSheet(playerData) {
     document.getElementById("char-class").innerText = playerData.class || "-";
     document.getElementById("char-alignment").innerText = playerData.alignment || "-";
     
-    // Atualiza o texto da energia e a barra de HP
+    // Atualiza energia e barra de HP
     const energyTotal = playerData.energy?.total ?? 0;
     const energyInitial = playerData.energy?.initial ?? 0;
+    
+    // Atualiza o texto da energia
     document.getElementById("char-energy").innerText = `${energyTotal}/${energyInitial}`;
     
     // Atualiza a barra de HP
@@ -643,6 +645,7 @@ function updateCharacterSheet(playerData) {
         barraHP.style.width = `${porcentagem}%`;
     }
 
+    // Restante dos atributos
     document.getElementById("char-skill").innerText = playerData.skill?.total ?? "-";
     document.getElementById("char-charisma").innerText = playerData.charisma?.total ?? "-";
     document.getElementById("char-magic").innerText = playerData.magic?.total ?? "-";
