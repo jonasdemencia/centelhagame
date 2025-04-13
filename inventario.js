@@ -648,6 +648,52 @@ if (slides.length > 0) {
     slides[currentSlide].classList.add("active");
 }
 
+// Função para inicializar o sistema de tempo
+function initializeGameTime(playerData) {
+    // Se não existir timestamp inicial, cria um
+    if (!playerData.gameTime) {
+        playerData.gameTime = {
+            startTimestamp: Date.now(),
+            currentDay: 1
+        };
+    }
+
+    // Atualiza o dia atual baseado no tempo decorrido
+    updateGameDay(playerData);
+
+    // Inicia o intervalo para atualizar o tempo
+    setInterval(() => updateGameDay(playerData), 60000); // Verifica a cada minuto
+}
+
+// Função para atualizar o dia do jogo
+async function updateGameDay(playerData) {
+    const now = Date.now();
+    const startTime = playerData.gameTime.startTimestamp;
+    const elapsedRealSeconds = (now - startTime) / 1000;
+    const elapsedGameDays = Math.floor(elapsedRealSeconds / REAL_SECONDS_PER_GAME_DAY);
+    const newDay = elapsedGameDays + 1; // +1 porque começamos no dia 1
+
+    if (newDay !== playerData.gameTime.currentDay) {
+        playerData.gameTime.currentDay = newDay;
+        document.getElementById("char-day").innerText = newDay;
+
+        // Salva o novo dia no Firestore
+        try {
+            const uid = auth.currentUser?.uid;
+            if (uid) {
+                const playerRef = doc(db, "players", uid);
+                await updateDoc(playerRef, {
+                    'gameTime.currentDay': newDay,
+                    'gameTime.startTimestamp': startTime
+                });
+                console.log("Dia do jogo atualizado para:", newDay);
+            }
+        } catch (error) {
+            console.error("Erro ao salvar o dia do jogo:", error);
+        }
+    }
+}
+
 // 📌 Atualizar os dados da ficha de personagem ao carregar e barra de hp
 function updateCharacterSheet(playerData) {
     if (!playerData) return;
