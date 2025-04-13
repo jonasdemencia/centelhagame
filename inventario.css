@@ -348,6 +348,22 @@ p {
     padding: 5px 0; /* Adiciona um pouco de padding vertical */
 }
 
+/* Barra de HP no inventário */
+.attribute .barra-hp-container {
+    width: 40px; /* Largura menor que a da batalha */
+    height: 4px; /* Altura menor para ficar mais discreto */
+    background-color: #ccc;
+    border: 1px solid #333;
+    margin: 2px auto 0; /* Centraliza e adiciona um pequeno espaço acima */
+}
+
+.attribute .barra-hp {
+    height: 100%;
+    background-color: #4CAF50;
+    width: 100%;
+    transition: width 0.3s ease;
+}
+
 /* PO no interior do baú */
 #char-po-container {
     position: absolute;
