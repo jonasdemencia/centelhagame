@@ -48,6 +48,37 @@ function toggleUseButton(show) {
 
 // Seleciona os itens clicados no baú
 document.addEventListener("DOMContentLoaded", () => {
+    // Sistema de Carrossel entre as janelas (NOVO)
+    const slides = document.querySelectorAll(".carousel-slide");
+    let currentSlide = 0;
+
+    const prevBtn = document.getElementById("prevBtn");
+    if (prevBtn) {
+        prevBtn.addEventListener("click", () => {
+            slides[currentSlide].classList.remove("active");
+            currentSlide = (currentSlide === 0) ? slides.length - 1 : currentSlide - 1;
+            slides[currentSlide].classList.add("active");
+        });
+    } else {
+        console.warn("Botão 'Anterior' do carrossel não encontrado.");
+    }
+
+    const nextBtn = document.getElementById("nextBtn");
+    if (nextBtn) {
+        nextBtn.addEventListener("click", () => {
+            slides[currentSlide].classList.remove("active");
+            currentSlide = (currentSlide === slides.length - 1) ? 0 : currentSlide + 1;
+            slides[currentSlide].classList.add("active");
+        });
+    } else {
+        console.warn("Botão 'Próximo' do carrossel não encontrado.");
+    }
+
+    // Exibir a primeira janela ao carregar (NOVO)
+    if (slides.length > 0) {
+        slides[currentSlide].classList.add("active");
+    }
+    
     const itemsContainer = document.querySelector('.items');
     const slots = document.querySelectorAll('.slot');
     const discardSlot = document.getElementById("discard-slot");
@@ -619,36 +650,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-// 📌 Sistema de Carrossel entre as janelas
-const slides = document.querySelectorAll(".carousel-slide");
-let currentSlide = 0;
 
-const prevBtn = document.getElementById("prevBtn");
-if (prevBtn) {
-    prevBtn.addEventListener("click", () => {
-        slides[currentSlide].classList.remove("active");
-        currentSlide = (currentSlide === 0) ? slides.length - 1 : currentSlide - 1;
-        slides[currentSlide].classList.add("active");
-    });
-} else {
-    console.warn("Botão 'Anterior' do carrossel não encontrado.");
-}
-
-const nextBtn = document.getElementById("nextBtn");
-if (nextBtn) {
-    nextBtn.addEventListener("click", () => {
-        slides[currentSlide].classList.remove("active");
-        currentSlide = (currentSlide === slides.length - 1) ? 0 : currentSlide + 1;
-        slides[currentSlide].classList.add("active");
-    });
-} else {
-    console.warn("Botão 'Próximo' do carrossel não encontrado.");
-}
-
-// 📌 Exibir a primeira janela ao carregar
-if (slides.length > 0) {
-    slides[currentSlide].classList.add("active");
-}
 
 // Função para inicializar o sistema de tempo
 function initializeGameTime(playerData) {
