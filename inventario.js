@@ -48,7 +48,7 @@ function toggleUseButton(show) {
 
 // Seleciona os itens clicados no baú
 document.addEventListener("DOMContentLoaded", () => {
-    // Sistema de Carrossel entre as janelas (NOVO)
+    // Sistema de Carrossel
     const slides = document.querySelectorAll(".carousel-slide");
     let currentSlide = 0;
 
@@ -59,8 +59,6 @@ document.addEventListener("DOMContentLoaded", () => {
             currentSlide = (currentSlide === 0) ? slides.length - 1 : currentSlide - 1;
             slides[currentSlide].classList.add("active");
         });
-    } else {
-        console.warn("Botão 'Anterior' do carrossel não encontrado.");
     }
 
     const nextBtn = document.getElementById("nextBtn");
@@ -70,11 +68,9 @@ document.addEventListener("DOMContentLoaded", () => {
             currentSlide = (currentSlide === slides.length - 1) ? 0 : currentSlide + 1;
             slides[currentSlide].classList.add("active");
         });
-    } else {
-        console.warn("Botão 'Próximo' do carrossel não encontrado.");
     }
 
-    // Exibir a primeira janela ao carregar (NOVO)
+    // Exibir a primeira janela ao carregar
     if (slides.length > 0) {
         slides[currentSlide].classList.add("active");
     }
