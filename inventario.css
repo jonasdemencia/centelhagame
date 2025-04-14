@@ -396,7 +396,7 @@ p {
     bottom: 10px;
     left: 10px; /* Ajuste para canto inferior esquerdo */
     width: 50px; /* Janelas menores */
-    height: 38px;
+    height: 40px;
     display: flex;
     flex-direction: column; /* Coloca o nome acima do valor */
     justify-content: center;
@@ -404,7 +404,7 @@ p {
     background-color: #ffd700; /* Dourado */
     border: 1px solid #aa6c39;
     border-radius: 7px;
-    font-size: 0.6em; /* Fonte reduzida */
+    font-size: 0.7em; /* Fonte reduzida */
     color: black; /* Contraste para o texto */
 }
 
