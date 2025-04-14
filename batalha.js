@@ -353,7 +353,6 @@ async function monsterAttack() {
         console.log("LOG: monsterAttack - Dano rolado pelo monstro:", monsterDamageRoll);
 
         playerHealth -= monsterDamageRoll;
-        playerHealth = Math.max(0, playerHealth);
 
         atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
         await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano.`, 1000);
