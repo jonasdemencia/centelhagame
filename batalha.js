@@ -189,9 +189,9 @@ document.addEventListener('DOMContentLoaded', () => {
         descricao: "Um lobo selvagem com presas afiadas.",
         habilidade: 1,
         couraça: 1,
-        pontosDeEnergia: 50,
-        pontosDeEnergiaMax: 50,
-        dano: "1D50",
+        pontosDeEnergia: 5,
+        pontosDeEnergiaMax: 5,
+        dano: "1D6",
         drops: [
             {
                 id: "weapon",
@@ -327,23 +327,13 @@ function endPlayerTurn() {
 }
 
 // Lógica do turno do monstro
-// Lógica do turno do monstro (AJUSTADA PARA INCONSCIÊNCIA/MORTE)
 async function monsterAttack() {
     console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
 
-    // Verifica se o monstro pode atacar (jogador não está no turno, monstro existe)
-    // A verificação de playerHealth <= 0 será feita DEPOIS do dano
-    if (isPlayerTurn || !currentMonster) { // Removido 'playerHealth <= 0' daqui
-        console.log("LOG: monsterAttack - Condição inválida para iniciar ataque (Turno do Jogador? Monstro não existe?). Retornando.");
+    if (isPlayerTurn || playerHealth <= 0 || !currentMonster) {
+        console.log("LOG: monsterAttack - Turno inválido ou jogador derrotado. Retornando.");
         return;
     }
-    // Adiciona verificação se o monstro já foi derrotado
-    if (currentMonster.pontosDeEnergia <= 0) {
-         console.log("LOG: monsterAttack - Monstro já derrotado. Saindo.");
-         // Talvez chamar handlePostBattle aqui se necessário? Ou apenas retornar.
-         return;
-    }
-
 
     startNewTurnBlock(currentMonster.nome);
     await addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
@@ -356,94 +346,37 @@ async function monsterAttack() {
     await addLogMessage(`Sua Couraça é ${playerDefense}.`, 1000);
     console.log("LOG: monsterAttack - Defesa do jogador:", playerDefense);
 
-    let damageDealt = false; // Flag para saber se o monstro causou dano
-
     if (monsterAttackRoll >= playerDefense) {
         await addLogMessage(`O ataque do ${currentMonster.nome} acertou!`, 1000);
 
         const monsterDamageRoll = rollDice(currentMonster.dano);
         console.log("LOG: monsterAttack - Dano rolado pelo monstro:", monsterDamageRoll);
 
-        // Aplica dano ANTES de verificar derrota
         playerHealth -= monsterDamageRoll;
-        damageDealt = true; // Marca que houve dano
+        playerHealth = Math.max(0, playerHealth);
 
-        // Atualiza a barra de HP e logs (NÃO limita mais a 0 aqui)
         atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
         await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano.`, 1000);
-        await addLogMessage(`Sua energia restante: ${playerHealth}.`, 1000); // Mostrará valor negativo se for o caso
+        await addLogMessage(`Sua energia restante: ${playerHealth}.`, 1000);
 
-        // Salva o estado (inclusive HP negativo)
         const user = auth.currentUser;
         if (user) {
-            // Garante que a energia no Firestore reflita o valor atual, mesmo negativo
             updatePlayerEnergyInFirestore(user.uid, playerHealth);
             saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         }
 
-        // *** INÍCIO DA NOVA LÓGICA DE VERIFICAÇÃO DE HP ***
-        if (playerHealth <= -10) {
-            // MORTE PERMANENTE
-            await addLogMessage(`<p style="color: darkred; font-weight: bold;">VOCÊ MORREU!</p>`, 1000);
-            console.log("LOG: monsterAttack - Jogador MORREU (HP <= -10).");
-            isPlayerTurn = false; // Impede ações futuras
-            if (attackOptionsDiv) attackOptionsDiv.style.display = 'none'; // Garante que opções sumam
-
-            // *** ADICIONE AQUI A LÓGICA PARA MORTE PERMANENTE ***
-            // Ex: Redirecionar, mostrar tela específica, limpar save, etc.
-            // Exemplo simples: alerta e redireciona para uma página inicial
-             alert("Game Over! Você morreu.");
-             window.location.href = 'index.html'; // Ou página inicial/game over
-
-            return; // Interrompe a função monsterAttack, a batalha/jogo acabou aqui.
-
-        } else if (playerHealth <= 0) {
-            // INCONSCIENTE (Entre 0 e -9)
-            await addLogMessage(`<p style="color: orange; font-weight: bold;">Você está inconsciente!</p>`, 1000);
-            console.log("LOG: monsterAttack - Jogador INCONSCIENTE (0 >= HP > -10).");
-            isPlayerTurn = false; // Impede ações do jogador
-            if (attackOptionsDiv) attackOptionsDiv.style.display = 'none'; // Esconde opções
-
-            // *** ADICIONE AQUI A LÓGICA PARA INCONSCIÊNCIA ***
-            // Exemplo: Tratar como derrota na batalha, mas sem morte permanente.
-            // Poderia chamar handlePostBattle() aqui se ele trata derrota,
-            // ou apenas impedir que o turno volte ao jogador com o 'return'.
-            // Se o monstro devesse continuar atacando, removeria o return.
-
-            // Exemplo: Apenas impede o jogo de continuar nesta batalha.
-             await addLogMessage("A batalha termina aqui, você precisa se recuperar.", 1000);
-             // Mostrar botão para voltar ao mapa talvez?
-              const backToMapButton = document.getElementById('back-to-map-button');
-              if (backToMapButton) backToMapButton.style.display = 'block';
-
-            return; // PARA AQUI, tratando como fim da batalha atual (REMOVER SE MONSTRO CONTINUA ATACANDO)
+        if (playerHealth <= 0) {
+            await addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1000);
+            console.log("LOG: monsterAttack - Jogador derrotado.");
+            return; // Termina o jogo se o jogador for derrotado
         }
-        // *** FIM DA NOVA LÓGICA DE VERIFICAÇÃO DE HP ***
-
-        // Se chegou aqui, playerHealth > 0
-
     } else {
-        // Monstro errou o ataque
         await addLogMessage(`O ataque do ${currentMonster.nome} errou.`, 1000);
         console.log("LOG: monsterAttack - Ataque do monstro errou.");
     }
 
-    // Se o jogador não morreu nem ficou inconsciente, passa o turno para ele
     console.log("LOG: Finalizando turno do monstro.");
-    // Chama a função que inicia o turno do jogador (endMonsterTurn ou startPlayerTurn, dependendo da sua estrutura)
-    // Presumindo que endMonsterTurn() existe e faz isso:
-    if (typeof endMonsterTurn === 'function') {
-         endMonsterTurn();
-    } else {
-         console.error("Erro: Função endMonsterTurn não encontrada para passar o turno ao jogador!");
-         // Fallback: Tentar habilitar manualmente (pode não funcionar perfeitamente)
-         isPlayerTurn = true;
-         if(attackOptionsDiv) attackOptionsDiv.style.display = 'block';
-         if(atacarCorpoACorpoButton) {
-             atacarCorpoACorpoButton.disabled = false;
-             atacarCorpoACorpoButton.style.display = 'inline-block';
-         }
-    }
+    endMonsterTurn(); // Passa o turno para o jogador
 }
     
 // Finaliza o turno do monstro e inicia o turno do jogador
