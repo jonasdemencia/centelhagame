@@ -359,8 +359,9 @@ function endPlayerTurn() {
 async function monsterAttack() {
     console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
 
-    if (isPlayerTurn || playerHealth <= 0 || !currentMonster) {
-        console.log("LOG: monsterAttack - Turno inválido ou jogador derrotado. Retornando.");
+    // Verifica se o jogador já está morto
+    if (isPlayerTurn || playerHealth <= -10 || !currentMonster) {
+        console.log("LOG: monsterAttack - Turno inválido ou jogador morto. Retornando.");
         return;
     }
 
@@ -382,30 +383,41 @@ async function monsterAttack() {
         console.log("LOG: monsterAttack - Dano rolado pelo monstro:", monsterDamageRoll);
 
         playerHealth -= monsterDamageRoll;
-        playerHealth = Math.max(0, playerHealth);
+        // Removido o Math.max para permitir valores negativos
 
         atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
         await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano.`, 1000);
-        await addLogMessage(`Sua energia restante: ${playerHealth}.`, 1000);
+
+        // Verifica o estado do jogador após o dano
+        if (playerHealth <= -10) {
+            await addLogMessage(`<p style="color: darkred;">Você morreu!</p>`, 1000);
+            console.log("LOG: monsterAttack - Jogador morto.");
+            if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+            return; // Termina o jogo se o jogador morrer
+        } else if (playerHealth <= 0) {
+            await addLogMessage(`<p style="color: red;">Você está inconsciente!</p>`, 1000);
+            console.log("LOG: monsterAttack - Jogador inconsciente.");
+            if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+            // Não retorna aqui, o monstro continua atacando
+        }
+
+        await addLogMessage(`Sua energia: ${playerHealth}.`, 1000);
 
         const user = auth.currentUser;
         if (user) {
             updatePlayerEnergyInFirestore(user.uid, playerHealth);
             saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         }
-
-        if (playerHealth <= 0) {
-            await addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1000);
-            console.log("LOG: monsterAttack - Jogador derrotado.");
-            return; // Termina o jogo se o jogador for derrotado
-        }
     } else {
         await addLogMessage(`O ataque do ${currentMonster.nome} errou.`, 1000);
         console.log("LOG: monsterAttack - Ataque do monstro errou.");
     }
 
-    console.log("LOG: Finalizando turno do monstro.");
-    endMonsterTurn(); // Passa o turno para o jogador
+    // Se o jogador não estiver morto, continua o jogo
+    if (playerHealth > -10) {
+        console.log("LOG: Finalizando turno do monstro.");
+        endMonsterTurn(); // Passa o turno para o jogador
+    }
 }
     
 // Finaliza o turno do monstro e inicia o turno do jogador
