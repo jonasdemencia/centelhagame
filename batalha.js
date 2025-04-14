@@ -189,9 +189,9 @@ document.addEventListener('DOMContentLoaded', () => {
         descricao: "Um lobo selvagem com presas afiadas.",
         habilidade: 1,
         couraça: 1,
-        pontosDeEnergia: 5,
-        pontosDeEnergiaMax: 5,
-        dano: "1D6",
+        pontosDeEnergia: 50,
+        pontosDeEnergiaMax: 50,
+        dano: "1D50",
         drops: [
             {
                 id: "weapon",
