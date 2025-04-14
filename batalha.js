@@ -971,10 +971,17 @@ if (rollLocationBtn) {
                     // --- INÍCIO DO TRECHO 1: Substituir o listener de 'atacar-corpo-a-corpo' ---
 if (atacarCorpoACorpoButton) {
     atacarCorpoACorpoButton.addEventListener('click', async () => { // Ou .onclick = async () => {
-        if (!isPlayerTurn || playerHealth <= 0 || !currentMonster || currentMonster.pontosDeEnergia <= 0) {
-            console.log("LOG: Ataque inválido (Não é seu turno ou batalha acabou?). Retornando.");
-            return;
-        }
+        // Primeiro verifica se está morto (<=- 10)
+if (!isPlayerTurn || playerHealth <= -10 || !currentMonster || currentMonster.pontosDeEnergia <= 0) {
+    console.log("LOG: Ataque inválido (jogador morto ou batalha acabou). Retornando.");
+    return;
+}
+
+// Depois verifica se está inconsciente (entre 0 e -9)
+if (playerHealth <= 0) {
+    await addLogMessage(`<p style="color: red;">Você está inconsciente e não pode atacar!</p>`, 1000);
+    return;
+}
         console.log("LOG: Botão 'Atacar Corpo a Corpo' clicado.");
 
         // Desabilita TODOS os botões de ação inicialmente
