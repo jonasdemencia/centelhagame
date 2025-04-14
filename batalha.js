@@ -43,6 +43,7 @@ function getUrlParameter(name) {
 }
 
 // Função para barra de HP
+// Função para barra de HP
 function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
     const barra = document.getElementById(idElemento);
     const valorSpan = document.getElementById(`hp-${idElemento.replace('barra-hp-', '')}-valor`);
@@ -55,11 +56,39 @@ function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
         console.error(`Valor máximo inválido: ${valorMaximo}`);
         return;
     }
-    const porcentagem = Math.max(0, (valorAtual / valorMaximo) * 100);
+
+    // Novo cálculo de porcentagem considerando valores negativos
+    let porcentagem;
+    if (valorAtual > 0) {
+        porcentagem = (valorAtual / valorMaximo) * 100;
+    } else {
+        // Para valores negativos, calculamos a porcentagem até -10
+        porcentagem = Math.max(0, ((valorAtual + 10) / 10) * 30); // 30% é o máximo para valores negativos
+    }
+    
+    // Atualiza a largura da barra
     barra.style.width = `${porcentagem}%`;
     
+    // Define a cor da barra baseado no estado
+    if (valorAtual <= -10) {
+        barra.style.backgroundColor = '#000000'; // Preto para morto
+    } else if (valorAtual <= 0) {
+        barra.style.backgroundColor = '#8B0000'; // Vermelho escuro para inconsciente
+    } else if (valorAtual <= valorMaximo * 0.3) {
+        barra.style.backgroundColor = '#FF0000'; // Vermelho para baixa energia
+    } else {
+        barra.style.backgroundColor = '#008000'; // Verde para normal
+    }
+    
+    // Atualiza o texto
     if (valorSpan) {
-        valorSpan.textContent = `${valorAtual}/${valorMaximo}`;
+        if (valorAtual <= -10) {
+            valorSpan.innerHTML = `<span style="color: darkred">MORTO (${valorAtual}/${valorMaximo})</span>`;
+        } else if (valorAtual <= 0) {
+            valorSpan.innerHTML = `<span style="color: red">INCONSCIENTE (${valorAtual}/${valorMaximo})</span>`;
+        } else {
+            valorSpan.textContent = `${valorAtual}/${valorMaximo}`;
+        }
     }
 }
 
