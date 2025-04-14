@@ -365,15 +365,18 @@ async function monsterAttack() {
             saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         }
 
-        if (playerHealth <= 0) {
-            await addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1000);
-            console.log("LOG: monsterAttack - Jogador derrotado.");
-            return; // Termina o jogo se o jogador for derrotado
-        }
-    } else {
-        await addLogMessage(`O ataque do ${currentMonster.nome} errou.`, 1000);
-        console.log("LOG: monsterAttack - Ataque do monstro errou.");
-    }
+      if (playerHealth <= -10) {
+    await addLogMessage(`<p style="color: red;">Você morreu!</p>`, 1000);
+    console.log("LOG: monsterAttack - Jogador morto.");
+    return; // Termina o jogo se o jogador morrer
+} else if (playerHealth <= 0) {
+    await addLogMessage(`<p style="color: orange;">Você está inconsciente!</p>`, 1000);
+    console.log("LOG: monsterAttack - Jogador inconsciente.");
+    return; // Termina o turno se o jogador estiver inconsciente
+} else {
+    await addLogMessage(`O ataque do ${currentMonster.nome} errou.`, 1000);
+    console.log("LOG: monsterAttack - Ataque do monstro errou.");
+}
 
     console.log("LOG: Finalizando turno do monstro.");
     endMonsterTurn(); // Passa o turno para o jogador
