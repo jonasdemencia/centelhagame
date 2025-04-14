@@ -43,100 +43,99 @@
         <button id="useBtn" style="display:none;">Usar</button>
 
         <div class="carousel-wrapper">
-            <div class="carousel-container">
-                <div class="carousel-slide active" id="character-window">
-                    <div class="character">
-                        <h2>Personagem</h2>
-                        <div class="equipment">
-                            <div class="slot" id="helmet" data-slot="helmet">🪖 Cabeça</div>
-                            <div class="slot" id="amulet" data-slot="amulet">📿 Amuleto</div>
-                            <div class="slot-row">
-                                <div class="slot" id="weapon" data-slot="weapon">⚔️ Mão Esquerda</div>
-                                <div class="slot" id="armor" data-slot="armor">🛡️ Peitoral</div>
-                                <div class="slot" id="shield" data-slot="shield">🛡️ Mão Direita</div>
-                            </div>
-                            <div class="slot-row">
-                                <div class="slot" id="gloves" data-slot="gloves">🧤 Luvas</div>
-                                <div class="slot" id="ring" data-slot="ring">💍 Anel</div>
-                            </div>
-                            <div class="slot" id="boots" data-slot="boots">🥾 Botas</div>
+    <div class="carousel-container">
+        <div class="carousel-slide active" id="character-window">
+            <div class="character">
+                <h2>Personagem</h2>
+                <div class="equipment">
+                    <div class="slot" id="helmet" data-slot="helmet">🪖 Cabeça</div>
+                    <div class="slot" id="amulet" data-slot="amulet">📿 Amuleto</div>
+                    <div class="slot-row">
+                        <div class="slot" id="weapon" data-slot="weapon">⚔️ Mão Esquerda</div>
+                        <div class="slot" id="armor" data-slot="armor">🛡️ Peitoral</div>
+                        <div class="slot" id="shield" data-slot="shield">🛡️ Mão Direita</div>
+                    </div>
+                    <div class="slot-row">
+                        <div class="slot" id="gloves" data-slot="gloves">🧤 Luvas</div>
+                        <div class="slot" id="ring" data-slot="ring">💍 Anel</div>
+                    </div>
+                    <div class="slot" id="boots" data-slot="boots">🥾 Botas</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="carousel-slide" id="character-sheet">
+            <div class="character-sheet">
+                <h2>Ficha do Personagem</h2>
+                <p><strong>Nome:</strong> <span id="char-name">-</span></p>
+                <p><strong>Classe:</strong> <span id="char-class">-</span></p>
+                <p><strong>Raça:</strong> <span id="char-race">-</span></p>
+                <p><strong>Alinhamento:</strong> <span id="char-alignment">-</span></p>
+
+                <div class="attribute-container">
+                    <div class="attribute">
+                        <span class="label">Energia</span>
+                        <span id="char-energy">0/0</span>
+                        <div class="barra-hp-container">
+                            <div id="barra-hp-inventario" class="barra-hp"></div>
                         </div>
+                    </div>
+                    <div class="attribute">
+                        <span class="label">Habilidade</span>
+                        <span id="char-skill">0</span>
+                    </div>
+                    <div class="attribute">
+                        <span class="label">Carisma</span>
+                        <span id="char-charisma">0</span>
+                    </div>
+                    <div class="attribute">
+                        <span class="label">Magia</span>
+                        <span id="char-magic">0</span>
+                    </div>
+                    <div class="attribute">
+                        <span class="label">Sorte</span>
+                        <span id="char-luck">0</span>
                     </div>
                 </div>
 
-                <div class="carousel-slide" id="character-sheet">
-    <div class="character-sheet">
-        <h2>Ficha do Personagem</h2>
+                <div class="char-alignment">
+                    <div class="char-hand-container">
+                        <span>Mão Dominante</span>
+                        <span id="char-hand">-</span>
+                    </div>
+                    <div class="char-hemisphere-container">
+                        <span>Hemisfério Dominante</span>
+                        <span id="char-hemisphere">-</span>
+                    </div>
+                </div>
 
-        <p><strong>Nome:</strong> <span id="char-name">-</span></p>
-        <p><strong>Classe:</strong> <span id="char-class">-</span></p>
+                <div class="couraca-dano">
+                    <div class="attribute">
+                        <span class="label">Couraça</span>
+                        <span id="char-couraca">0</span>
+                    </div>
+                    <div class="attribute">
+                        <span class="label">Dano</span>
+                        <span id="char-dano">0</span>
+                    </div>
+                </div>
 
-        <p><strong>Raça:</strong> <span id="char-race">-</span></p>
-        <p><strong>Alinhamento:</strong> <span id="char-alignment">-</span></p>
-
-        <div class="attribute-container">
-            <div class="attribute">
-                <span class="label">Energia</span>
-                <span id="char-energy">0/0</span>
-                <div class="barra-hp-container">
-                    <div id="barra-hp-inventario" class="barra-hp"></div>
+                <div class="time-container">
+                    <div class="attribute">
+                        <span class="label">Dia</span>
+                        <span id="char-day">1</span>
+                    </div>
                 </div>
             </div>
-            <div class="attribute">
-                <span class="label">Habilidade</span>
-                <span id="char-skill">0</span>
-            </div>
-            <div class="attribute">
-                <span class="label">Carisma</span>
-                <span id="char-charisma">0</span>
-            </div>
-            <div class="attribute">
-                <span class="label">Magia</span>
-                <span id="char-magic">0</span>
-            </div>
-            <div class="attribute">
-                <span class="label">Sorte</span>
-                <span id="char-luck">0</span>
-            </div>
         </div>
-
-        <div class="char-alignment">
-            <div class="char-hand-container">
-                <span>Mão Dominante</span>
-                <span id="char-hand">-</span>
-            </div>
-            <div class="char-hemisphere-container">
-                <span>Hemisfério Dominante</span>
-                <span id="char-hemisphere">-</span>
-            </div>
-        </div>
-
-        <div class="couraca-dano">
-            <div class="attribute">
-                <span class="label">Couraça</span>
-                <span id="char-couraca">0</span>
-            </div>
-            <div class="attribute">
-                <span class="label">Dano</span>
-                <span id="char-dano">0</span>
-            </div>
-        </div>
-
-        <!-- Adicionar aqui o contador de dias -->
-        <div class="time-container">
-            <div class="attribute">
-                <span class="label">Dia</span>
-                <span id="char-day">1</span>
-            </div>
-        </div>
-    </div>
-</div>
-
+        <div class="carousel-nav">
             <div class="carousel-buttons">
                 <button id="prevBtn">◀</button>
                 <button id="nextBtn">▶</button>
             </div>
         </div>
+    </div>
+</div>
 
         <div class="chest">
             <h2>Baú de Itens</h2>
