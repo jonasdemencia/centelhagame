@@ -386,6 +386,13 @@ async function monsterAttack() {
         atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
         await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano.`, 1000);
 
+        // Salva o estado ANTES de verificar a morte/inconsciência
+        const user = auth.currentUser;
+        if (user) {
+            await updatePlayerEnergyInFirestore(user.uid, playerHealth);
+            await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        }
+
         // Verifica o estado do jogador após o dano
         if (playerHealth <= -10) {
             await addLogMessage(`<p style="color: darkred;">Você morreu!</p>`, 1000);
