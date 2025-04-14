@@ -396,15 +396,15 @@ p {
     bottom: 10px;
     left: 10px; /* Ajuste para canto inferior esquerdo */
     width: 50px; /* Janelas menores */
-    height: 35px;
+    height: 38px;
     display: flex;
     flex-direction: column; /* Coloca o nome acima do valor */
     justify-content: center;
     align-items: center;
     background-color: #ffd700; /* Dourado */
     border: 1px solid #aa6c39;
-    border-radius: 6px;
-    font-size: 0.8em; /* Fonte reduzida */
+    border-radius: 7px;
+    font-size: 0.6em; /* Fonte reduzida */
     color: black; /* Contraste para o texto */
 }
 
