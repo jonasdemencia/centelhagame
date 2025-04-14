@@ -216,11 +216,11 @@ document.addEventListener('DOMContentLoaded', () => {
         nome: "Lobo Faminto",
         imagem: "https://via.placeholder.com/150",
         descricao: "Um lobo selvagem com presas afiadas.",
-        habilidade: 1,
-        couraça: 1,
-        pontosDeEnergia: 5,
-        pontosDeEnergiaMax: 5,
-        dano: "1D6",
+        habilidade: 80,
+        couraça: 90,
+        pontosDeEnergia: 50,
+        pontosDeEnergiaMax: 50,
+        dano: "1D100",
         drops: [
             {
                 id: "weapon",
@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
         imagem: "https://via.placeholder.com/150",
         descricao: "Um pequeno goblin com olhos espertos.",
         habilidade: 20,
-        couraça: 1,
+        couraça: 40,
         pontosDeEnergia: 50,
         pontosDeEnergiaMax: 50,
         dano: "1D50"
