@@ -156,15 +156,13 @@ function loadBattleState(userId, monsterName) {
 
 // Função para salvar o estado da batalha no Firestore
 function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
-    console.log("LOG: saveBattleState chamado com userId:", userId, "monsterName:", monsterName, "monsterHealth:", monsterHealth, "playerHealth:", playerHealth);
-    const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
-    return setDoc(battleDocRef, { monsterHealth: monsterHealth, playerHealth: playerHealth }, { merge: true })
-        .then(() => {
-            console.log("LOG: Estado da batalha salvo no Firestore.");
-        })
-        .catch((error) => {
-            console.error("LOG: Erro ao salvar o estado da batalha:", error);
-        });
+    console.log("LOG: saveBattleState chamado com:", {userId, monsterName, monsterHealth, playerHealth});
+    const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
+    return setDoc(battleDocRef, { 
+        monsterHealth: monsterHealth, 
+        playerHealth: playerHealth,
+        lastUpdated: new Date().toISOString() // Adiciona timestamp
+    }, { merge: true });
 }
 
 function handlePostBattle() {
