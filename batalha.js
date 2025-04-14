@@ -242,11 +242,11 @@ document.addEventListener('DOMContentLoaded', () => {
         nome: "Goblin Sorrateiro",
         imagem: "https://via.placeholder.com/150",
         descricao: "Um pequeno goblin com olhos espertos.",
-        habilidade: 2,
+        habilidade: 20,
         couraça: 1,
-        pontosDeEnergia: 15,
-        pontosDeEnergiaMax: 15,
-        dano: "1D4"
+        pontosDeEnergia: 50,
+        pontosDeEnergiaMax: 50,
+        dano: "1D50"
     }
 };
 
