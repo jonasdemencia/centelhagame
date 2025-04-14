@@ -93,15 +93,17 @@ function rollDice(diceString) {
 
 // Função para atualizar a energia do jogador na ficha do Firestore
 function updatePlayerEnergyInFirestore(userId, newEnergy) {
-    console.log("LOG: updatePlayerEnergyInFirestore chamado com userId:", userId, "newEnergy:", newEnergy);
-    const playerDocRef = doc(db, "players", userId);
-    return setDoc(playerDocRef, { energy: { total: newEnergy } }, { merge: true }) // Atualiza o campo "energy.total"
-        .then(() => {
-            console.log("LOG: Energia do jogador atualizada na ficha:", newEnergy);
-        })
-        .catch((error) => {
-            console.error("LOG: Erro ao atualizar a energia do jogador na ficha:", error);
-        });
+    console.log("LOG: updatePlayerEnergyInFirestore chamado com userId:", userId, "newEnergy:", newEnergy);
+    // Garante que a energia não fique menor que -10
+    newEnergy = Math.max(-10, newEnergy);
+    const playerDocRef = doc(db, "players", userId);
+    return setDoc(playerDocRef, { energy: { total: newEnergy } }, { merge: true })
+        .then(() => {
+            console.log("LOG: Energia do jogador atualizada na ficha:", newEnergy);
+        })
+        .catch((error) => {
+            console.error("LOG: Erro ao atualizar a energia do jogador na ficha:", error);
+        });
 }
 
 // Função para carregar o estado da batalha do Firestore (MOVIDA PARA O ESCOPO GLOBAL)
