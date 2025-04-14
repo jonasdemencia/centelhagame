@@ -93,17 +93,15 @@ function rollDice(diceString) {
 
 // Função para atualizar a energia do jogador na ficha do Firestore
 function updatePlayerEnergyInFirestore(userId, newEnergy) {
-    console.log("LOG: updatePlayerEnergyInFirestore chamado com userId:", userId, "newEnergy:", newEnergy);
-    // Garante que a energia não fique menor que -10
-    newEnergy = Math.max(-10, newEnergy);
-    const playerDocRef = doc(db, "players", userId);
-    return setDoc(playerDocRef, { energy: { total: newEnergy } }, { merge: true })
-        .then(() => {
-            console.log("LOG: Energia do jogador atualizada na ficha:", newEnergy);
-        })
-        .catch((error) => {
-            console.error("LOG: Erro ao atualizar a energia do jogador na ficha:", error);
-        });
+    console.log("LOG: updatePlayerEnergyInFirestore chamado com userId:", userId, "newEnergy:", newEnergy);
+    const playerDocRef = doc(db, "players", userId);
+    return setDoc(playerDocRef, { energy: { total: newEnergy } }, { merge: true }) // Atualiza o campo "energy.total"
+        .then(() => {
+            console.log("LOG: Energia do jogador atualizada na ficha:", newEnergy);
+        })
+        .catch((error) => {
+            console.error("LOG: Erro ao atualizar a energia do jogador na ficha:", error);
+        });
 }
 
 // Função para carregar o estado da batalha do Firestore (MOVIDA PARA O ESCOPO GLOBAL)
@@ -191,9 +189,9 @@ document.addEventListener('DOMContentLoaded', () => {
         descricao: "Um lobo selvagem com presas afiadas.",
         habilidade: 1,
         couraça: 1,
-        pontosDeEnergia: 50,
-        pontosDeEnergiaMax: 50,
-        dano: "1D50",
+        pontosDeEnergia: 5,
+        pontosDeEnergiaMax: 5,
+        dano: "1D6",
         drops: [
             {
                 id: "weapon",
@@ -348,13 +346,14 @@ async function monsterAttack() {
     await addLogMessage(`Sua Couraça é ${playerDefense}.`, 1000);
     console.log("LOG: monsterAttack - Defesa do jogador:", playerDefense);
 
-    async function monsterAttack() {
-    
     if (monsterAttackRoll >= playerDefense) {
         await addLogMessage(`O ataque do ${currentMonster.nome} acertou!`, 1000);
+
         const monsterDamageRoll = rollDice(currentMonster.dano);
+        console.log("LOG: monsterAttack - Dano rolado pelo monstro:", monsterDamageRoll);
+
         playerHealth -= monsterDamageRoll;
-        playerHealth = Math.max(-10, playerHealth);
+        playerHealth = Math.max(0, playerHealth);
 
         atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
         await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano.`, 1000);
@@ -366,14 +365,10 @@ async function monsterAttack() {
             saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         }
 
-        if (playerHealth <= -10) {
-            await addLogMessage(`<p style="color: red;">Você morreu!</p>`, 1000);
-            console.log("LOG: monsterAttack - Jogador morto.");
-            return;
-        } else if (playerHealth <= 0) {
-            await addLogMessage(`<p style="color: orange;">Você está inconsciente!</p>`, 1000);
-            console.log("LOG: monsterAttack - Jogador inconsciente.");
-            return;
+        if (playerHealth <= 0) {
+            await addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1000);
+            console.log("LOG: monsterAttack - Jogador derrotado.");
+            return; // Termina o jogo se o jogador for derrotado
         }
     } else {
         await addLogMessage(`O ataque do ${currentMonster.nome} errou.`, 1000);
@@ -381,9 +376,43 @@ async function monsterAttack() {
     }
 
     console.log("LOG: Finalizando turno do monstro.");
-    endMonsterTurn();
+    endMonsterTurn(); // Passa o turno para o jogador
 }
     
+// Finaliza o turno do monstro e inicia o turno do jogador
+function endMonsterTurn() {
+    console.log("LOG: Finalizando turno do monstro e iniciando turno do jogador.");
+    if (isPlayerTurn) {
+        console.error("LOG: endMonsterTurn chamado fora do turno do monstro. Abortando.");
+        return;
+    }
+
+    isPlayerTurn = true; // Marca que é o turno do jogador
+
+    if (attackOptionsDiv) {
+        attackOptionsDiv.style.display = 'block'; // Exibe as opções de ataque do jogador
+
+        const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
+        if (atacarCorpoACorpoButton) {
+            atacarCorpoACorpoButton.disabled = false; // Habilita o botão de ataque
+            atacarCorpoACorpoButton.style.display = 'inline-block'; // Mostra o botão novamente
+        }
+
+        // Reseta o estado dos botões
+        const buttons = attackOptionsDiv.querySelectorAll('.button');
+        buttons.forEach(button => {
+            button.disabled = false;
+            if (button.id === 'atacar-corpo-a-corpo') {
+                button.style.display = 'inline-block';
+            } else {
+                button.style.display = 'none';
+            }
+        });
+    }
+
+    startNewTurnBlock("Jogador");
+    addLogMessage(`Turno do Jogador`, 1000);
+}
 
     function resetActionButtons() {
     if (attackOptionsDiv) {
