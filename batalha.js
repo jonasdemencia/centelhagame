@@ -348,41 +348,41 @@ async function monsterAttack() {
     await addLogMessage(`Sua Couraça é ${playerDefense}.`, 1000);
     console.log("LOG: monsterAttack - Defesa do jogador:", playerDefense);
 
+    async function monsterAttack() {
+    
     if (monsterAttackRoll >= playerDefense) {
-    await addLogMessage(`O ataque do ${currentMonster.nome} acertou!`, 1000);
+        await addLogMessage(`O ataque do ${currentMonster.nome} acertou!`, 1000);
+        const monsterDamageRoll = rollDice(currentMonster.dano);
+        playerHealth -= monsterDamageRoll;
+        playerHealth = Math.max(-10, playerHealth);
 
-    const monsterDamageRoll = rollDice(currentMonster.dano);
-    console.log("LOG: monsterAttack - Dano rolado pelo monstro:", monsterDamageRoll);
+        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+        await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano.`, 1000);
+        await addLogMessage(`Sua energia restante: ${playerHealth}.`, 1000);
 
-    playerHealth -= monsterDamageRoll;
-    playerHealth = Math.max(-10, playerHealth); // Alterado de 0 para -10
+        const user = auth.currentUser;
+        if (user) {
+            updatePlayerEnergyInFirestore(user.uid, playerHealth);
+            saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        }
 
-    atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-    await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano.`, 1000);
-    await addLogMessage(`Sua energia restante: ${playerHealth}.`, 1000);
-
-    const user = auth.currentUser;
-    if (user) {
-        updatePlayerEnergyInFirestore(user.uid, playerHealth);
-        saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        if (playerHealth <= -10) {
+            await addLogMessage(`<p style="color: red;">Você morreu!</p>`, 1000);
+            console.log("LOG: monsterAttack - Jogador morto.");
+            return;
+        } else if (playerHealth <= 0) {
+            await addLogMessage(`<p style="color: orange;">Você está inconsciente!</p>`, 1000);
+            console.log("LOG: monsterAttack - Jogador inconsciente.");
+            return;
+        }
+    } else {
+        await addLogMessage(`O ataque do ${currentMonster.nome} errou.`, 1000);
+        console.log("LOG: monsterAttack - Ataque do monstro errou.");
     }
 
-    if (playerHealth <= -10) {
-        await addLogMessage(`<p style="color: red;">Você morreu!</p>`, 1000);
-        console.log("LOG: monsterAttack - Jogador morto.");
-        return; // Termina o jogo se o jogador morrer
-    } else if (playerHealth <= 0) {
-        await addLogMessage(`<p style="color: orange;">Você está inconsciente!</p>`, 1000);
-        console.log("LOG: monsterAttack - Jogador inconsciente.");
-        return; // Termina o turno se o jogador estiver inconsciente
-    }
-} else {
-    await addLogMessage(`O ataque do ${currentMonster.nome} errou.`, 1000);
-    console.log("LOG: monsterAttack - Ataque do monstro errou.");
+    console.log("LOG: Finalizando turno do monstro.");
+    endMonsterTurn();
 }
-
-console.log("LOG: Finalizando turno do monstro.");
-endMonsterTurn(); // Passa o turno para o jogador
     
 // Finaliza o turno do monstro e inicia o turno do jogador
 function endMonsterTurn() {
