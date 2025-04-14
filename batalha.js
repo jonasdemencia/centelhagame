@@ -408,7 +408,6 @@ async function monsterAttack() {
 
         await addLogMessage(`Sua energia: ${playerHealth}.`, 1000);
 
-        const user = auth.currentUser;
         if (user) {
             updatePlayerEnergyInFirestore(user.uid, playerHealth);
             saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
