@@ -177,26 +177,21 @@ p {
     display: none;
 }
 
-/* 📌 Ajustes do carrossel */
+/* Correções do Carrossel */
 .carousel-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 15px; /* Reduzido para otimizar o espaço */
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto 50px auto;
 }
 
 .carousel-container {
-    display: flex;
-    width: 100%;
-    max-width: 400px; /* Largura ligeiramente menor */
-    overflow: hidden;
     position: relative;
+    width: 100%;
 }
 
-/* 📌 As janelas do carrossel */
 .carousel-slide {
-    min-width: 100%;
-    transition: transform 0.5s ease-in-out;
+    width: 100%;
     display: none;
 }
 
@@ -204,27 +199,33 @@ p {
     display: block;
 }
 
-/* 📌 Botões de navegação do carrossel */
 .carousel-buttons {
-    display: flex; /* Garante que os botões estejam visíveis */
+    position: absolute;
+    bottom: -40px;
+    left: 0;
+    right: 0;
+    display: flex;
     justify-content: center;
-    gap: 10px; /* Espaço ajustado */
-    margin-top: 15px; /* Espaço acima */
-    z-index: 2; /* Certifica que os botões estão acima do carrossel */
+    gap: 10px;
+    margin-top: 15px;
+    z-index: 100;
 }
 
 .carousel-buttons button {
     background: #aa6c39;
     border: none;
-    padding: 10px 15px;
-    font-size: 14px; /* Ajuste no tamanho da fonte */
+    padding: 10px 20px;
+    font-size: 16px;
     color: white;
     border-radius: 5px;
     cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .carousel-buttons button:hover {
     background: #8b5a2b;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
 }
 
 /* 📌 Organização da ficha do personagem */
