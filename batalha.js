@@ -365,15 +365,11 @@ async function monsterAttack() {
             saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         }
 
-        if (playerHealth <= -10) {
-    await addLogMessage(`<p style="color: red;">Você morreu!</p>`, 1000);
-    console.log("LOG: monsterAttack - Jogador morreu.");
-    return; // Termina o jogo se o jogador morreu
-} else if (playerHealth <= 0) {
-    await addLogMessage(`<p style="color: orange;">Você está inconsciente!</p>`, 1000);
-    console.log("LOG: monsterAttack - Jogador inconsciente. Ações limitadas podem ser implementadas aqui.");
-    // Aqui você pode implementar lógica adicional caso deseje permitir que o jogador recupere energia ou dependa de ajuda.
-}
+        if (playerHealth <= 0) {
+            await addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1000);
+            console.log("LOG: monsterAttack - Jogador derrotado.");
+            return; // Termina o jogo se o jogador for derrotado
+        }
     } else {
         await addLogMessage(`O ataque do ${currentMonster.nome} errou.`, 1000);
         console.log("LOG: monsterAttack - Ataque do monstro errou.");
@@ -571,18 +567,14 @@ function endMonsterTurn() {
                             }
                             // Se a vida do monstro for <= 0 ou a vida do jogador for <= 0, a batalha acabou
                             if (currentMonster.pontosDeEnergia <= 0) {
-    addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1500);
-    attackOptionsDiv.style.display = 'none';
-    console.log("LOG: onAuthStateChanged - Monstro derrotado, escondendo opções de ataque.");
-} else if (playerHealth <= -10) {
-    addLogMessage(`<p style="color: red;">Você morreu!</p>`, 1500);
-    attackOptionsDiv.style.display = 'none';
-    console.log("LOG: onAuthStateChanged - Jogador morreu, escondendo opções de ataque.");
-} else if (playerHealth <= 0) {
-    addLogMessage(`<p style="color: orange;">Você está inconsciente!</p>`, 1500);
-    attackOptionsDiv.style.display = 'none';
-    console.log("LOG: onAuthStateChanged - Jogador inconsciente, escondendo opções de ataque.");
-}
+                                addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1500);
+                                attackOptionsDiv.style.display = 'none';
+                                console.log("LOG: onAuthStateChanged - Monstro derrotado, escondendo opções de ataque.");
+                            } else if (playerHealth <= 0) {
+                                addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1500);
+                                attackOptionsDiv.style.display = 'none';
+                                console.log("LOG: onAuthStateChanged - Jogador derrotado, escondendo opções de ataque.");
+                            }
                         } else {
                             // Se não houver estado salvo, usa os pontos de energia iniciais e define a energia do jogador
                             console.log("LOG: onAuthStateChanged - Nenhum estado de batalha encontrado, carregando energia da ficha do jogador.");
