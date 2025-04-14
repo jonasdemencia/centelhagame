@@ -384,40 +384,6 @@ async function monsterAttack() {
     endMonsterTurn();
 }
     
-// Finaliza o turno do monstro e inicia o turno do jogador
-function endMonsterTurn() {
-    console.log("LOG: Finalizando turno do monstro e iniciando turno do jogador.");
-    if (isPlayerTurn) {
-        console.error("LOG: endMonsterTurn chamado fora do turno do monstro. Abortando.");
-        return;
-    }
-
-    isPlayerTurn = true; // Marca que é o turno do jogador
-
-    if (attackOptionsDiv) {
-        attackOptionsDiv.style.display = 'block'; // Exibe as opções de ataque do jogador
-
-        const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
-        if (atacarCorpoACorpoButton) {
-            atacarCorpoACorpoButton.disabled = false; // Habilita o botão de ataque
-            atacarCorpoACorpoButton.style.display = 'inline-block'; // Mostra o botão novamente
-        }
-
-        // Reseta o estado dos botões
-        const buttons = attackOptionsDiv.querySelectorAll('.button');
-        buttons.forEach(button => {
-            button.disabled = false;
-            if (button.id === 'atacar-corpo-a-corpo') {
-                button.style.display = 'inline-block';
-            } else {
-                button.style.display = 'none';
-            }
-        });
-    }
-
-    startNewTurnBlock("Jogador");
-    addLogMessage(`Turno do Jogador`, 1000);
-}
 
     function resetActionButtons() {
     if (attackOptionsDiv) {
