@@ -712,26 +712,39 @@ function loadInventoryUI(inventoryData) {
 }
 
 function loadDiceUI(diceState) {
-    const diceCollection = document.querySelector('.dice-items');
+    const diceGrid = document.querySelector('.dice-grid');
     const slots = document.querySelectorAll('.dice-slot');
     
+    if (!diceGrid || !slots.length) {
+        console.error('Elementos necessários não encontrados');
+        return;
+    }
+
     // Limpa a coleção e slots
-    diceCollection.innerHTML = '';
+    diceGrid.innerHTML = '';
     slots.forEach(slot => {
         slot.innerHTML = slot.dataset.dice;
     });
 
     // Carrega dados da coleção
     if (diceState.collection && Array.isArray(diceState.collection)) {
-        diceState.collection.forEach(dice => {
-            const diceElement = document.createElement('div');
-            diceElement.className = 'dice-item';
-            diceElement.dataset.diceType = dice.type;
-            diceElement.dataset.diceName = dice.name;
-            diceElement.textContent = dice.name;
-            diceCollection.appendChild(diceElement);
-            diceElement.addEventListener('click', () => handleDiceClick(diceElement));
-        });
+        // Agrupa dados em rows de 3
+        for (let i = 0; i < diceState.collection.length; i += 3) {
+            const row = document.createElement('div');
+            row.className = 'dice-row';
+            
+            for (let j = 0; j < 3 && i + j < diceState.collection.length; j++) {
+                const dice = diceState.collection[i + j];
+                const diceElement = document.createElement('div');
+                diceElement.className = 'dice-item';
+                diceElement.dataset.diceType = dice.type;
+                diceElement.textContent = dice.name || dice.type;
+                diceElement.addEventListener('click', () => handleDiceClick(diceElement));
+                row.appendChild(diceElement);
+            }
+            
+            diceGrid.appendChild(row);
+        }
     }
 
     // Carrega dados equipados
@@ -740,7 +753,7 @@ function loadDiceUI(diceState) {
             if (diceData) {
                 const slot = document.querySelector(`.dice-slot[data-dice="${slotType}"]`);
                 if (slot) {
-                    slot.textContent = diceData.name;
+                    slot.textContent = diceData.name || diceData.type;
                 }
             }
         });
