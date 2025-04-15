@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dado Personalizado</title>
+<title>Dado Realista</title>
 <style>
 /* Estilos gerais */
 body {
@@ -12,24 +12,23 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
-    background: linear-gradient(135deg, #6a85b6, #bac8e0);
+    background: radial-gradient(circle, #1e1e1e, #000000); /* Fundo escuro e elegante */
     font-family: Arial, sans-serif;
 }
 
 /* Perspectiva para o dado */
 .dice-container {
-    perspective: 800px;
+    perspective: 1000px;
 }
 
 /* Design do dado */
 .dice {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
     position: relative;
     transform-style: preserve-3d;
-    transition: transform 2s ease-out;
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6);
-    border-radius: 10px; /* Bordas arredondadas do dado */
+    transition: transform 1.5s ease-out;
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.7); /* Sombra externa */
 }
 
 /* Faces do dado */
@@ -40,22 +39,23 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-family: "Eagle Lake", cursive; /* Fonte personalizada */
-    color: #fff;
-    background: linear-gradient(145deg, #4a90e2, #2561a0); /* Gradiente para realismo */
-    border: 1px solid #000;
-    box-shadow: inset 0px 4px 6px rgba(0, 0, 0, 0.4); /* Sombra interna */
-    border-radius: 10px; /* Bordas arredondadas das faces */
+    color: #f0f0f0; /* Números claros para contraste */
+    background: linear-gradient(135deg, #333, #555); /* Textura metálica */
+    border-radius: 15px; /* Bordas bem arredondadas */
+    box-shadow: inset 0px 4px 6px rgba(0, 0, 0, 0.6), /* Sombra interna */
+                0px 4px 8px rgba(255, 255, 255, 0.2); /* Iluminação */
+    border: none; /* Remove a linha entre as faces */
 }
 
 /* Transformações para cada face */
-.face:nth-child(1) { transform: rotateY(0deg) translateZ(50px); }
-.face:nth-child(2) { transform: rotateY(90deg) translateZ(50px); }
-.face:nth-child(3) { transform: rotateY(180deg) translateZ(50px); }
-.face:nth-child(4) { transform: rotateY(-90deg) translateZ(50px); }
-.face:nth-child(5) { transform: rotateX(90deg) translateZ(50px); }
-.face:nth-child(6) { transform: rotateX(-90deg) translateZ(50px); }
+.face:nth-child(1) { transform: rotateY(0deg) translateZ(60px); }
+.face:nth-child(2) { transform: rotateY(90deg) translateZ(60px); }
+.face:nth-child(3) { transform: rotateY(180deg) translateZ(60px); }
+.face:nth-child(4) { transform: rotateY(-90deg) translateZ(60px); }
+.face:nth-child(5) { transform: rotateX(90deg) translateZ(60px); }
+.face:nth-child(6) { transform: rotateX(-90deg) translateZ(60px); }
 
 /* Botão de rolar dado */
 button {
@@ -63,16 +63,17 @@ button {
     padding: 10px 20px;
     font-size: 1rem;
     cursor: pointer;
-    background: #4a90e2;
+    background: linear-gradient(135deg, #444, #888); /* Gradiente para botão */
     border: none;
-    border-radius: 5px;
+    border-radius: 10px;
     color: #fff;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.4);
-    transition: background 0.3s ease;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.6);
+    transition: transform 0.2s ease, background 0.3s ease;
 }
 
 button:hover {
-    background: #2561a0;
+    transform: scale(1.1); /* Efeito de destaque ao passar o mouse */
+    background: linear-gradient(135deg, #666, #aaa);
 }
 </style>
 <!-- Importação da fonte Eagle Lake -->
