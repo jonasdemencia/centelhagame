@@ -38,34 +38,34 @@ let selectedDice = null;
 function initializeDiceCollection() {
     const diceCollection = document.querySelector('.dice-items');
     const initialDice = [
-        { type: 'D3', description: 'Dado de 3 faces' },
-        { type: 'D4', description: 'Dado de 4 faces' },
-        { type: 'D6', description: 'Dado de 6 faces' },
-        { type: 'D8', description: 'Dado de 8 faces' },
-        { type: 'D10', description: 'Dado de 10 faces' },
-        { type: 'D12', description: 'Dado de 12 faces' },
-        { type: 'D20', description: 'Dado de 20 faces' }
+        { type: 'D3', name: 'Dado de Cristal (D3)', description: 'Um pequeno dado triangular de cristal' },
+        { type: 'D4', name: 'Dado de Jade (D4)', description: 'Um dado piramidal de jade' },
+        { type: 'D6', name: 'Dado de Marfim (D6)', description: 'Um dado cúbico de marfim antigo' },
+        { type: 'D8', name: 'Dado de Âmbar (D8)', description: 'Um dado octaédrico de âmbar' },
+        { type: 'D10', name: 'Dado de Ametista (D10)', description: 'Um dado decaédrico de ametista' },
+        { type: 'D12', name: 'Dado de Safira (D12)', description: 'Um dado dodecaédrico de safira' },
+        { type: 'D20', name: 'Dado de Rubi (D20)', description: 'Um dado icosaédrico de rubi' }
     ];
+
+    diceCollection.innerHTML = ''; // Limpa a coleção antes de adicionar
 
     initialDice.forEach(dice => {
         const diceElement = document.createElement('div');
         diceElement.className = 'dice-item';
         diceElement.dataset.diceType = dice.type;
-        diceElement.textContent = dice.type;
+        diceElement.dataset.diceName = dice.name;
+        diceElement.textContent = dice.name;
         diceCollection.appendChild(diceElement);
 
-        // Adiciona evento de clique ao dado
         diceElement.addEventListener('click', () => handleDiceClick(diceElement));
     });
 }
-
 // Função para lidar com o clique em um dado
 function handleDiceClick(diceElement) {
     clearDiceHighlights();
     selectedDice = diceElement;
     diceElement.classList.add('selected');
 
-    // Destaca o slot correspondente
     const slots = document.querySelectorAll('.dice-slot');
     slots.forEach(slot => {
         if (slot.dataset.dice === diceElement.dataset.diceType) {
