@@ -140,6 +140,27 @@ const rollButton = document.getElementById('roll-button'); // Seleciona pelo nov
 const resultDisplay = document.getElementById('result-display');
 let isRolling = false;
 let pressStartTime = 0; // Variável para guardar o tempo de início do clique/toque
+let vibrationInterval;
+let maxPressDuration = 4000; // 4 segundos máximo
+
+function startDiceVibration() {
+    stopDiceVibration();
+    vibrationInterval = setInterval(() => {
+        const smallRandomX = (Math.random() - 0.5) * 10;
+        const smallRandomY = (Math.random() - 0.5) * 10;
+        const smallRandomZ = (Math.random() - 0.5) * 10;
+        
+        dice.style.transition = 'transform 0.1s';
+        dice.style.transform = `rotateX(${smallRandomX}deg) rotateY(${smallRandomY}deg) rotateZ(${smallRandomZ}deg)`;
+    }, 100);
+}
+
+function stopDiceVibration() {
+    if (vibrationInterval) {
+        clearInterval(vibrationInterval);
+        vibrationInterval = null;
+    }
+}
 
 // Mapeamento do resultado para rotações alvo (mantido)
 const rotations = {
@@ -154,38 +175,38 @@ const rotations = {
 // --- FUNÇÕES DE EVENTO PARA DETECTAR DURAÇÃO ---
 
 function handlePressStart(event) {
-    // Previne comportamento padrão de toque longo (como seleção de texto ou menu de contexto)
     event.preventDefault();
-    pressStartTime = Date.now(); // Guarda o momento do clique/toque
+    pressStartTime = Date.now();
     console.log("Press Start");
-    // Aplica feedback visual de botão pressionado
+    
     rollButton.style.transform = 'scale(0.97)';
     rollButton.style.boxShadow = '0px 2px 5px rgba(0, 0, 0, 0.6), inset 0px 1px 3px rgba(0,0,0,0.4)';
+    
+    startDiceVibration();
 }
 
 function handlePressEnd(event) {
-    // Restaura visual do botão
     rollButton.style.transform = '';
     rollButton.style.boxShadow = '';
+    
+    stopDiceVibration();
 
-    // Só executa se um toque/clique foi iniciado e não está rolando
     if (pressStartTime === 0 || isRolling) return;
 
     const pressEndTime = Date.now();
-    const pressDuration = pressEndTime - pressStartTime; // Calcula duração
+    let pressDuration = pressEndTime - pressStartTime;
+    pressDuration = Math.min(pressDuration, maxPressDuration);
+    
     console.log("Press End - Duration:", pressDuration, "ms");
-
-    rollDice(pressDuration); // Chama a função de rolar passando a duração
-
-    pressStartTime = 0; // Reseta o tempo de início
+    rollDice(pressDuration);
+    pressStartTime = 0;
 }
 
 function handlePressAbort(event) {
-    // Se o mouse sai do botão ou o toque é cancelado
     if (pressStartTime !== 0) {
         console.log("Press Aborted");
-        pressStartTime = 0; // Reseta para cancelar a rolagem em handlePressEnd
-        // Restaura visual do botão
+        pressStartTime = 0;
+        stopDiceVibration();
         rollButton.style.transform = '';
         rollButton.style.boxShadow = '';
     }
