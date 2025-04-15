@@ -534,6 +534,32 @@ async function saveInventoryData(uid) {
     }
 }
 
+// ADICIONE A FUNÇÃO saveDiceState AQUI, com a correção do parêntese
+async function saveDiceState(uid) {
+    try {
+        const diceState = {
+            collection: Array.from(document.querySelectorAll('.dice-items .dice-item')).map(die => ({
+                type: die.dataset.diceType,
+                name: die.dataset.diceName,
+                content: die.textContent
+            })),
+            equipped: Array.from(document.querySelectorAll('.dice-slot')).reduce((acc, slot) => {
+                const diceContent = slot.innerHTML !== slot.dataset.dice ? {
+                    type: slot.dataset.dice,
+                    name: slot.textContent
+                } : null;
+                acc[slot.dataset.dice] = diceContent;
+                return acc;
+            }, {})
+        };
+
+        const playerRef = doc(db, "players", uid);
+        await setDoc(playerRef, { diceStorage: diceState }, { merge: true });
+        console.log("Estado dos dados salvo com sucesso!", diceState);
+    } catch (error) {
+        console.error("Erro ao salvar estado dos dados:", error);
+    }
+}
 
 // Função para carregar o estado dos dados
 async function loadDiceState(uid) {
