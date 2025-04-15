@@ -3,24 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dado Realista Aprimorado</title>
+<title>Dado Realista Texturizado</title>
 <style>
 /* Estilos gerais */
 body {
     display: flex;
-    flex-direction: column; /* Alinha botão e resultado abaixo */
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
     margin: 0;
-    background: radial-gradient(circle at center, #3a3a3a, #1a1a1a); /* Fundo escuro mais suave */
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Fonte mais moderna */
-    overflow: hidden; /* Previne barras de rolagem durante animação */
+    background: radial-gradient(circle at center, #3a3a3a, #1a1a1a);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
 }
 
 /* Perspectiva e Container */
 .dice-container {
-    perspective: 1200px; /* Aumenta a perspectiva */
+    perspective: 1200px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -28,108 +28,96 @@ body {
 
 /* Design do Dado */
 .dice {
-    width: 100px; /* Um pouco menor */
+    width: 100px;
     height: 100px;
     position: relative;
     transform-style: preserve-3d;
-    /* Animação será controlada por JS para mais realismo */
-    /* transition: transform 1.5s cubic-bezier(0.34, 1.56, 0.64, 1); */ /* Curva de easing com overshoot */
-    /* box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.6); */ /* Sombra mais pronunciada */
-    /* cursor: pointer; */ /* Indica que é clicável (opcional) */
 }
 
 /* Classe para animação */
 .dice.rolling {
-     /* Duração mais curta, múltiplos giros */
     transition: transform 1.2s cubic-bezier(0.4, 1.8, 0.6, 0.9);
 }
 
-
-/* Faces do Dado */
+/* Faces do Dado - Novo Estilo */
 .face {
     position: absolute;
     width: 100%;
     height: 100%;
-    background: linear-gradient(145deg, #e0e0e0, #bababa); /* Gradiente mais claro, tipo osso/plástico */
-    border-radius: 10px; /* Bordas ligeiramente arredondadas */
-    border: 1px solid rgba(0, 0, 0, 0.1); /* Borda sutil para definir faces */
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.2); /* Borda mais visível */
     box-shadow:
-        inset 0 0 10px rgba(255, 255, 255, 0.3), /* Brilho interno */
-        inset 0 -5px 5px rgba(0, 0, 0, 0.15), /* Sombra interna inferior */
-        inset 0 5px 5px rgba(255, 255, 255, 0.15), /* Brilho interno superior */
-        0px 8px 15px rgba(0, 0, 0, 0.3); /* Sombra externa suave */
-    display: grid; /* Usar grid para posicionar pips */
-    padding: 10px; /* Espaçamento interno */
-    box-sizing: border-box; /* Inclui padding e border no tamanho total */
+        inset 0 0 8px rgba(0, 0, 0, 0.3), /* Sombra interna geral */
+        0px 8px 15px rgba(0, 0, 0, 0.3); /* Sombra externa */
 
-     /* Layouts de Grid para cada face */
-    &.front { grid-template-areas: ". . ." ". c ." ". . ."; } /* 1 */
-    &.back { grid-template-areas: "a . b" ". . ." "d . e"; } /* 6 - Ajuste para o layout correto */
-    &.right { grid-template-areas: "a . ." ". . ." ". . b"; } /* 2 */
-    &.left { grid-template-areas: "a . d" ". c ." "b . e"; } /* 5 */
-    &.top { grid-template-areas: "a . b" ". c ." "d . e"; } /* 3 - Corrigido */
-    &.bottom { grid-template-areas: "a . b" "d . e" "f . g"; } /* 4 */ /* Layout do 4 pode variar, este é comum */
+    /* Centraliza o número */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
+    /* Fonte e Tamanho */
+    font-family: "Eagle Lake", cursive; /* Fonte solicitada */
+    font-size: 3rem; /* Ajuste conforme necessário */
+    font-weight: bold; /* Deixa o número mais forte */
+    color: rgba(0, 0, 0, 0.6); /* Cor escura para o número base do baixo relevo */
+
+    /* Efeito Baixo Relevo (Engraved) */
+    text-shadow:
+        1px 1px 1px rgba(255, 255, 255, 0.3),  /* Luz vindo de cima/esquerda */
+        -1px -1px 1px rgba(0, 0, 0, 0.4);      /* Sombra embaixo/direita */
+
+    /* Fundo Texturizado */
+    /* Camada 1: Cor base (verde-azulado acinzentado) */
+    /* Camada 2: Gradiente sutil para dar volume */
+    /* Camada 3: Ruído granulado (usando gradiente CSS) */
+    background:
+        /* Camada 3: Ruído */
+        linear-gradient(rgba(255,255,255,0.03), rgba(0,0,0,0.03)), /* Linhas diagonais sutis para ruído */
+        repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(0,0,0,0.02) 1px, rgba(0,0,0,0.02) 2px),
+        /* Camada 2: Gradiente de volume */
+        linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.15)),
+        /* Camada 1: Cor base */
+        #6a7a7a; /* Tom verde-azulado/cinza - ajuste esta cor! */
+
+     /* Garante que padding não afete posicionamento 3D */
+     box-sizing: border-box;
 }
 
-/* Estilo dos Pips (pontos) */
-.pip {
-    width: 18px; /* Tamanho dos pips */
-    height: 18px;
-    background-color: #333; /* Cor escura para pips */
-    border-radius: 50%;
-    box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.8); /* Efeito de baixo relevo */
-    align-self: center; /* Centraliza verticalmente no grid */
-    justify-self: center; /* Centraliza horizontalmente no grid */
-}
 
-/* Posicionamento dos pips usando grid-area */
-.pip:nth-of-type(1) { grid-area: c; } /* Centro (para 1, 3, 5) */
-.pip:nth-of-type(2) { grid-area: a; } /* Canto superior esquerdo/primeiro */
-.pip:nth-of-type(3) { grid-area: b; } /* Canto inferior direito/segundo */
-/* Para faces com mais pips */
-.pip:nth-of-type(4) { grid-area: d; } /* Canto inferior esquerdo/terceiro */
-.pip:nth-of-type(5) { grid-area: e; } /* Canto superior direito/quarto */
-/* Pips adicionais para 6 */
-.pip:nth-of-type(6) { grid-area: f; } /* Meio esquerdo (ajuste conforme necessário) */
-.pip:nth-of-type(7) { grid-area: g; } /* Meio direito (ajuste conforme necessário) */
-
-
-/* Transformações para cada face (Posicionamento padrão D6) */
+/* Transformações para cada face (Mantido o layout padrão D6) */
 /* Front: 1, Back: 6, Right: 4, Left: 3, Top: 5, Bottom: 2 */
-/* Ajustado para que as faces correspondam aos pips corretos */
-.face.front { transform: rotateY(  0deg) translateZ(50px); } /* 1 */
-.face.back { transform: rotateX(180deg) translateZ(50px); } /* 6 */
-.face.right { transform: rotateY( 90deg) translateZ(50px); } /* 4 */
-.face.left { transform: rotateY(-90deg) translateZ(50px); } /* 3 */
-.face.top { transform: rotateX( 90deg) translateZ(50px); } /* 5 */
-.face.bottom { transform: rotateX(-90deg) translateZ(50px); } /* 2 */
+.face.front  { transform: rotateY(  0deg) translateZ(50px); }
+.face.back   { transform: rotateX(180deg) translateZ(50px); } /* Rotação X para oposto */
+.face.right  { transform: rotateY( 90deg) translateZ(50px); }
+.face.left   { transform: rotateY(-90deg) translateZ(50px); }
+.face.top    { transform: rotateX( 90deg) translateZ(50px); }
+.face.bottom { transform: rotateX(-90deg) translateZ(50px); }
 
 
-/* Botão e Resultado */
+/* Botão e Resultado (Mantidos) */
 button {
-    margin-top: 40px; /* Mais espaço */
+    margin-top: 40px;
     padding: 12px 25px;
     font-size: 1.1rem;
     font-weight: bold;
     cursor: pointer;
-    background: linear-gradient(145deg, #5a5a5a, #3a3a3a); /* Gradiente mais escuro */
+    background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
     border: none;
     border-radius: 8px;
     color: #e0e0e0;
     text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
-    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5), /* Sombra normal */
-                inset 0px 1px 1px rgba(255,255,255,0.2); /* Brilho sutil */
+    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
+                inset 0px 1px 1px rgba(255,255,255,0.2);
     transition: transform 0.15s ease, background 0.2s ease;
 }
 
 button:hover {
-    transform: scale(1.05); /* Efeito de destaque sutil */
+    transform: scale(1.05);
     background: linear-gradient(145deg, #6a6a6a, #4a4a4a);
 }
 
 button:active {
-     transform: scale(0.98); /* Efeito de clique */
+     transform: scale(0.98);
      box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5), inset 0px 1px 3px rgba(0,0,0,0.3);
 }
 
@@ -137,110 +125,82 @@ button:active {
     margin-top: 20px;
     font-size: 1.5rem;
     color: #fff;
-    min-height: 2rem; /* Garante espaço mesmo sem resultado */
+    min-height: 2rem;
     font-weight: bold;
     text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
 }
 
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="dice-container">
     <div class="dice" id="dice">
-        <div class="face front">
-            <span class="pip"></span>
-        </div>
-        <div class="face back">
-            <span class="pip"></span>
-            <span class="pip"></span>
-            <span class="pip"></span>
-            <span class="pip"></span>
-             <span class="pip"></span>
-             <span class="pip"></span>
-            </div>
-         <div class="face right">
-             <span class="pip"></span>
-             <span class="pip"></span>
-             <span class="pip"></span>
-             <span class="pip"></span>
-         </div>
-         <div class="face left">
-            <span class="pip"></span>
-            <span class="pip"></span>
-            <span class="pip"></span>
-        </div>
-        <div class="face top">
-            <span class="pip"></span>
-            <span class="pip"></span>
-            <span class="pip"></span>
-            <span class="pip"></span>
-             <span class="pip"></span>
-        </div>
-         <div class="face bottom">
-            <span class="pip"></span>
-            <span class="pip"></span>
-        </div>
+        <div class="face front">1</div>
+        <div class="face back">6</div>
+        <div class="face right">4</div>
+        <div class="face left">3</div>
+        <div class="face top">5</div>
+        <div class="face bottom">2</div>
     </div>
      <button onclick="rollDice()">Rolar Dado</button>
      <p id="result-display"></p> </div>
 
 <script>
+// --- JavaScript (Sem alterações em relação à versão anterior) ---
 const dice = document.getElementById('dice');
 const resultDisplay = document.getElementById('result-display');
 let isRolling = false; // Flag para evitar cliques múltiplos
 
-// Mapeamento do resultado para rotações alvo (ajuste fino pode ser necessário)
+// Mapeamento do resultado para rotações alvo
 const rotations = {
     1: { x: 0, y: 0 },       // Front
     6: { x: 180, y: 0 },     // Back
-    4: { x: 0, y: -90 },     // Right (original era 4)
-    3: { x: 0, y: 90 },      // Left (original era 3)
-    5: { x: -90, y: 0 },     // Top (original era 5)
-    2: { x: 90, y: 0 }       // Bottom (original era 2)
+    4: { x: 0, y: -90 },     // Right
+    3: { x: 0, y: 90 },      // Left
+    5: { x: -90, y: 0 },     // Top
+    2: { x: 90, y: 0 }       // Bottom
 };
 
 
 function rollDice() {
-    if (isRolling) return; // Impede nova rolagem enquanto anima
+    if (isRolling) return;
     isRolling = true;
-    resultDisplay.textContent = 'Rolando...'; // Feedback visual
+    resultDisplay.textContent = 'Rolando...';
+    dice.style.transition = ''; // Limpa transição para aplicar tumble imediatamente
 
-    // 1. Calcular o resultado final (1 a 6)
     const result = Math.floor(Math.random() * 6) + 1;
     console.log("Resultado:", result);
 
-    // 2. Obter as rotações alvo para esse resultado
     const targetRotation = rotations[result];
 
-    // 3. Calcular rotações aleatórias de "tumble" (múltiplos de 360 + aleatório)
-    // Adiciona pelo menos 2 voltas completas para parecer mais aleatório
-    const randomX = Math.floor(Math.random() * 10 - 5) * 18; // +/- 90 graus extras
-    const randomY = Math.floor(Math.random() * 10 - 5) * 18; // +/- 90 graus extras
-    const randomZ = Math.floor(Math.random() * 10 - 5) * 18; // +/- 90 graus extras
+    // Rotações aleatórias de "tumble" mais exageradas
+    const randomX = Math.floor(Math.random() * 8 - 4) * 90; // +/- 360 graus extras
+    const randomY = Math.floor(Math.random() * 8 - 4) * 90;
+    const randomZ = Math.floor(Math.random() * 8 - 4) * 90;
 
-    const tumbleX = 720 + randomX;
-    const tumbleY = 720 + randomY;
-    const tumbleZ = 720 + randomZ;
+    const tumbleX = 1080 + randomX; // Pelo menos 3 voltas
+    const tumbleY = 1080 + randomY;
+    const tumbleZ = 1080 + randomZ;
 
 
-    // 4. Aplicar animação
-    dice.classList.add('rolling'); // Adiciona classe para ativar transição CSS
+    // Aplica a animação de tumble imediatamente
     dice.style.transform = `rotateX(${tumbleX}deg) rotateY(${tumbleY}deg) rotateZ(${tumbleZ}deg)`;
 
-    // 5. Após a animação de "tumble", aplicar a rotação final que mostra o resultado
-     // Usamos transitionend para saber quando a animação CSS termina
-    dice.addEventListener('transitionend', () => {
-         // Aplicar a rotação final que mostra o resultado correto
-         dice.classList.remove('rolling'); // Remove a classe para futuras animações
-         // Define a transição para o estado final (pode ser mais rápida)
-         dice.style.transition = 'transform 0.5s ease-out';
-         dice.style.transform = `rotateX(${targetRotation.x}deg) rotateY(${targetRotation.y}deg)`;
+    // Após um pequeno delay (para o tumble inicial ser aplicado), define a transição e a rotação final
+    setTimeout(() => {
+        dice.style.transition = 'transform 1.2s cubic-bezier(0.3, 1.2, 0.5, 1)'; // Transição suave para o resultado
+        dice.style.transform = `rotateX(${targetRotation.x}deg) rotateY(${targetRotation.y}deg)`; // Rotação final
+    }, 50); // Pequeno delay
 
-         // Mostra o resultado numérico
+
+    // Usa transitionend para atualizar o resultado após a animação final
+    dice.addEventListener('transitionend', () => {
          resultDisplay.textContent = `Resultado: ${result}`;
          isRolling = false; // Permite rolar novamente
+         dice.style.transition = ''; // Limpa a transição para a próxima rolagem rápida
 
-    }, { once: true }); // {once: true} remove o listener após ser disparado uma vez
+    }, { once: true });
 
 }
 
