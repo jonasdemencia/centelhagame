@@ -36,7 +36,12 @@ let selectedDice = null;
 
 // Função para inicializar os dados da coleção
 function initializeDiceCollection() {
-    const diceCollection = document.querySelector('.dice-grid');
+    const diceGrid = document.querySelector('.dice-grid');
+    if (!diceGrid) {
+        console.error('Elemento .dice-grid não encontrado');
+        return;
+    }
+
     const initialDice = [
         { type: 'D3', name: 'Dado de Cristal (D3)', description: 'Um pequeno dado triangular de cristal' },
         { type: 'D4', name: 'Dado de Jade (D4)', description: 'Um dado piramidal de jade' },
@@ -47,14 +52,12 @@ function initializeDiceCollection() {
         { type: 'D20', name: 'Dado de Rubi (D20)', description: 'Um dado icosaédrico de rubi' }
     ];
 
-    diceCollection.innerHTML = ''; // Limpa a coleção
-    
-    // Agrupa os dados em rows de 3
+    diceGrid.innerHTML = '';
+
     for (let i = 0; i < initialDice.length; i += 3) {
         const row = document.createElement('div');
         row.className = 'dice-row';
         
-        // Adiciona até 3 dados nesta row
         for (let j = 0; j < 3 && i + j < initialDice.length; j++) {
             const dice = initialDice[i + j];
             const diceElement = document.createElement('div');
@@ -66,7 +69,7 @@ function initializeDiceCollection() {
             row.appendChild(diceElement);
         }
         
-        diceCollection.appendChild(row);
+        diceGrid.appendChild(row);
     }
 }
 
