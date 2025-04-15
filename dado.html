@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dado Interativo</title>
+<style>
+body {
+display: flex;
+justify-content: center;
+align-items: center;
+height: 100vh;
+margin: 0;
+background: #f0f0f0;
+font-family: Arial, sans-serif;
+}
+.dice-container {
+perspective: 800px;
+}
+.dice {
+width: 100px;
+height: 100px;
+position: relative;
+transform-style: preserve-3d;
+transition: transform 2s ease-out;
+}
+.face {
+position: absolute;
+width: 100%;
+height: 100%;
+background: #fff;
+border: 2px solid #000;
+display: flex;
+justify-content: center;
+align-items: center;
+font-size: 1.5rem;
+}
+.face:nth-child(1) { transform: rotateY(0deg) translateZ(50px); }
+.face:nth-child(2) { transform: rotateY(90deg) translateZ(50px); }
+.face:nth-child(3) { transform: rotateY(180deg) translateZ(50px); }
+.face:nth-child(4) { transform: rotateY(-90deg) translateZ(50px); }
+.face:nth-child(5) { transform: rotateX(90deg) translateZ(50px); }
+.face:nth-child(6) { transform: rotateX(-90deg) translateZ(50px); }
+button {
+margin-top: 20px;
+padding: 10px 20px;
+font-size: 1rem;
+cursor: pointer;
+}
+</style>
+</head>
+<body>
+<div class="dice-container">
+<div class="dice" id="dice">
+<div class="face">1</div>
+<div class="face">2</div>
+<div class="face">3</div>
+<div class="face">4</div>
+<div class="face">5</div>
+<div class="face">6</div>
+</div>
+<button onclick="rollDice()">Rolar Dado</button>
+</div>
+
+<script>
+function rollDice() {
+const dice = document.getElementById('dice');
+const xRotation = Math.floor(Math.random() * 4) * 90; // Rotação X
+const yRotation = Math.floor(Math.random() * 4) * 90; // Rotação Y
+dice.style.transform = `rotateX(${xRotation}deg) rotateY(${yRotation}deg)`;
+}
+</script>
+</body>
+</html>
