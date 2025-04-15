@@ -36,7 +36,7 @@ let selectedDice = null;
 
 // Função para inicializar os dados da coleção
 function initializeDiceCollection() {
-    const diceCollection = document.querySelector('.dice-items');
+    const diceCollection = document.querySelector('.dice-grid');
     const initialDice = [
         { type: 'D3', name: 'Dado de Cristal (D3)', description: 'Um pequeno dado triangular de cristal' },
         { type: 'D4', name: 'Dado de Jade (D4)', description: 'Um dado piramidal de jade' },
@@ -47,19 +47,29 @@ function initializeDiceCollection() {
         { type: 'D20', name: 'Dado de Rubi (D20)', description: 'Um dado icosaédrico de rubi' }
     ];
 
-    diceCollection.innerHTML = ''; // Limpa a coleção antes de adicionar
-
-    initialDice.forEach(dice => {
-        const diceElement = document.createElement('div');
-        diceElement.className = 'dice-item';
-        diceElement.dataset.diceType = dice.type;
-        diceElement.dataset.diceName = dice.name;
-        diceElement.textContent = dice.name;
-        diceCollection.appendChild(diceElement);
-
-        diceElement.addEventListener('click', () => handleDiceClick(diceElement));
-    });
+    diceCollection.innerHTML = ''; // Limpa a coleção
+    
+    // Agrupa os dados em rows de 3
+    for (let i = 0; i < initialDice.length; i += 3) {
+        const row = document.createElement('div');
+        row.className = 'dice-row';
+        
+        // Adiciona até 3 dados nesta row
+        for (let j = 0; j < 3 && i + j < initialDice.length; j++) {
+            const dice = initialDice[i + j];
+            const diceElement = document.createElement('div');
+            diceElement.className = 'dice-item';
+            diceElement.dataset.diceType = dice.type;
+            diceElement.dataset.diceName = dice.name;
+            diceElement.textContent = dice.name;
+            diceElement.addEventListener('click', () => handleDiceClick(diceElement));
+            row.appendChild(diceElement);
+        }
+        
+        diceCollection.appendChild(row);
+    }
 }
+
 // Função para lidar com o clique em um dado
 function handleDiceClick(diceElement) {
     clearDiceHighlights();
