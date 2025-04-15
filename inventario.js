@@ -698,6 +698,42 @@ function loadInventoryUI(inventoryData) {
     });
 }
 
+function loadDiceUI(diceState) {
+    const diceCollection = document.querySelector('.dice-items');
+    const slots = document.querySelectorAll('.dice-slot');
+    
+    // Limpa a coleção e slots
+    diceCollection.innerHTML = '';
+    slots.forEach(slot => {
+        slot.innerHTML = slot.dataset.dice;
+    });
+
+    // Carrega dados da coleção
+    if (diceState.collection && Array.isArray(diceState.collection)) {
+        diceState.collection.forEach(dice => {
+            const diceElement = document.createElement('div');
+            diceElement.className = 'dice-item';
+            diceElement.dataset.diceType = dice.type;
+            diceElement.dataset.diceName = dice.name;
+            diceElement.textContent = dice.name;
+            diceCollection.appendChild(diceElement);
+            diceElement.addEventListener('click', () => handleDiceClick(diceElement));
+        });
+    }
+
+    // Carrega dados equipados
+    if (diceState.equipped) {
+        Object.entries(diceState.equipped).forEach(([slotType, diceData]) => {
+            if (diceData) {
+                const slot = document.querySelector(`.dice-slot[data-dice="${slotType}"]`);
+                if (slot) {
+                    slot.textContent = diceData.name;
+                }
+            }
+        });
+    }
+}
+
 async function getPlayerData(uid) {
     try {
         const playerRef = doc(db, "players", uid);
@@ -815,6 +851,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             await loadInventoryData(user.uid);
+            await loadDiceState(user.uid); // Adicione esta linha aqui
         } else {
             console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
             window.location.href = "index.html";
