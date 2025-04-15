@@ -525,34 +525,24 @@ p {
     text-align: center;
 }
 
-/* Grid para os dados na coleção */
-.dice-grid {
+.dice-items {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px;
+    overflow-y: auto;
+    max-height: calc(300px - 60px);
+}
+
+/* Estilos para os slots de dados */
+.dice-slots {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-}
-
-.dice-row {
-    display: flex;
-    justify-content: center;
     gap: 10px;
+    padding: 10px;
 }
 
-/* Grid para os slots de dados */
-.dice-slots-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.dice-slot-row {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-}
-
-/* Estilo individual dos dados e slots */
-.dice-slot, .dice-item {
+.dice-slot {
     width: 80px;
     height: 80px;
     background: #583101;
@@ -564,16 +554,27 @@ p {
     cursor: pointer;
     font-size: 16px;
     color: white;
-    transition: all 0.3s ease;
-}
-
-.dice-item {
-    background: #8b5a2b;
+    margin: auto;
 }
 
 .dice-slot.highlight {
     background-color: #3498db;
     border-color: #2980b9;
+}
+
+.dice-item {
+    width: 80px;
+    height: 80px;
+    background: #8b5a2b;
+    border: 2px solid #d4a373;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 16px;
+    color: white;
+    margin: auto;
 }
 
 .dice-item.selected {
