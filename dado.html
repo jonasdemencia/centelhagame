@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dado Realista Texturizado</title>
+<title>Dado Realista Texturizado - Rolagem por Duração</title>
 <style>
 /* Estilos gerais */
 body {
@@ -16,6 +16,11 @@ body {
     background: radial-gradient(circle at center, #3a3a3a, #1a1a1a);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
+     /* Impede seleção de texto no mobile durante toque longo */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 /* Perspectiva e Container */
@@ -32,62 +37,41 @@ body {
     height: 100px;
     position: relative;
     transform-style: preserve-3d;
+    /* Remove transition base - será controlada por JS */
 }
 
-/* Classe para animação */
-.dice.rolling {
-    transition: transform 1.2s cubic-bezier(0.4, 1.8, 0.6, 0.9);
-}
-
-/* Faces do Dado - Novo Estilo */
+/* Faces do Dado - Estilo Mantido */
 .face {
     position: absolute;
     width: 100%;
     height: 100%;
     border-radius: 10px;
-    border: 1px solid rgba(0, 0, 0, 0.2); /* Borda mais visível */
+    border: 1px solid rgba(0, 0, 0, 0.2);
     box-shadow:
-        inset 0 0 8px rgba(0, 0, 0, 0.3), /* Sombra interna geral */
-        0px 8px 15px rgba(0, 0, 0, 0.3); /* Sombra externa */
-
-    /* Centraliza o número */
+        inset 0 0 8px rgba(0, 0, 0, 0.3),
+        0px 8px 15px rgba(0, 0, 0, 0.3);
     display: flex;
     justify-content: center;
     align-items: center;
-
-    /* Fonte e Tamanho */
-    font-family: "Eagle Lake", cursive; /* Fonte solicitada */
-    font-size: 3rem; /* Ajuste conforme necessário */
-    font-weight: bold; /* Deixa o número mais forte */
-    color: rgba(0, 0, 0, 0.6); /* Cor escura para o número base do baixo relevo */
-
-    /* Efeito Baixo Relevo (Engraved) */
+    font-family: "Eagle Lake", cursive;
+    font-size: 3rem;
+    font-weight: bold;
+    color: rgba(0, 0, 0, 0.6);
     text-shadow:
-        1px 1px 1px rgba(255, 255, 255, 0.3),  /* Luz vindo de cima/esquerda */
-        -1px -1px 1px rgba(0, 0, 0, 0.4);      /* Sombra embaixo/direita */
-
-    /* Fundo Texturizado */
-    /* Camada 1: Cor base (verde-azulado acinzentado) */
-    /* Camada 2: Gradiente sutil para dar volume */
-    /* Camada 3: Ruído granulado (usando gradiente CSS) */
+        1px 1px 1px rgba(255, 255, 255, 0.3),
+        -1px -1px 1px rgba(0, 0, 0, 0.4);
     background:
-        /* Camada 3: Ruído */
-        linear-gradient(rgba(255,255,255,0.03), rgba(0,0,0,0.03)), /* Linhas diagonais sutis para ruído */
+        linear-gradient(rgba(255,255,255,0.03), rgba(0,0,0,0.03)),
         repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(0,0,0,0.02) 1px, rgba(0,0,0,0.02) 2px),
-        /* Camada 2: Gradiente de volume */
         linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.15)),
-        /* Camada 1: Cor base */
-        #6a7a7a; /* Tom verde-azulado/cinza - ajuste esta cor! */
-
-     /* Garante que padding não afete posicionamento 3D */
+        #6a7a7a;
      box-sizing: border-box;
 }
 
 
-/* Transformações para cada face (Mantido o layout padrão D6) */
-/* Front: 1, Back: 6, Right: 4, Left: 3, Top: 5, Bottom: 2 */
+/* Transformações das Faces (Mantido) */
 .face.front  { transform: rotateY(  0deg) translateZ(50px); }
-.face.back   { transform: rotateX(180deg) translateZ(50px); } /* Rotação X para oposto */
+.face.back   { transform: rotateX(180deg) translateZ(50px); }
 .face.right  { transform: rotateY( 90deg) translateZ(50px); }
 .face.left   { transform: rotateY(-90deg) translateZ(50px); }
 .face.top    { transform: rotateX( 90deg) translateZ(50px); }
@@ -108,7 +92,12 @@ button {
     text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
     box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
                 inset 0px 1px 1px rgba(255,255,255,0.2);
-    transition: transform 0.15s ease, background 0.2s ease;
+    transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.15s ease; /* Adicionado transition para sombra */
+     /* Impede seleção de texto no botão */
+     user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 button:hover {
@@ -116,10 +105,8 @@ button:hover {
     background: linear-gradient(145deg, #6a6a6a, #4a4a4a);
 }
 
-button:active {
-     transform: scale(0.98);
-     box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5), inset 0px 1px 3px rgba(0,0,0,0.3);
-}
+/* Estilo :active removido pois controlaremos via JS */
+/* button:active { ... } */
 
 #result-display {
     margin-top: 20px;
@@ -143,16 +130,18 @@ button:active {
         <div class="face top">5</div>
         <div class="face bottom">2</div>
     </div>
-     <button onclick="rollDice()">Rolar Dado</button>
-     <p id="result-display"></p> </div>
+     <button id="roll-button">Rolar Dado</button>
+     <p id="result-display"></p>
+</div>
 
 <script>
-// --- JavaScript (Sem alterações em relação à versão anterior) ---
 const dice = document.getElementById('dice');
+const rollButton = document.getElementById('roll-button'); // Seleciona pelo novo ID
 const resultDisplay = document.getElementById('result-display');
-let isRolling = false; // Flag para evitar cliques múltiplos
+let isRolling = false;
+let pressStartTime = 0; // Variável para guardar o tempo de início do clique/toque
 
-// Mapeamento do resultado para rotações alvo
+// Mapeamento do resultado para rotações alvo (mantido)
 const rotations = {
     1: { x: 0, y: 0 },       // Front
     6: { x: 180, y: 0 },     // Back
@@ -162,50 +151,136 @@ const rotations = {
     2: { x: 90, y: 0 }       // Bottom
 };
 
+// --- FUNÇÕES DE EVENTO PARA DETECTAR DURAÇÃO ---
 
-function rollDice() {
+function handlePressStart(event) {
+    // Previne comportamento padrão de toque longo (como seleção de texto ou menu de contexto)
+    event.preventDefault();
+    pressStartTime = Date.now(); // Guarda o momento do clique/toque
+    console.log("Press Start");
+    // Aplica feedback visual de botão pressionado
+    rollButton.style.transform = 'scale(0.97)';
+    rollButton.style.boxShadow = '0px 2px 5px rgba(0, 0, 0, 0.6), inset 0px 1px 3px rgba(0,0,0,0.4)';
+}
+
+function handlePressEnd(event) {
+    // Restaura visual do botão
+    rollButton.style.transform = '';
+    rollButton.style.boxShadow = '';
+
+    // Só executa se um toque/clique foi iniciado e não está rolando
+    if (pressStartTime === 0 || isRolling) return;
+
+    const pressEndTime = Date.now();
+    const pressDuration = pressEndTime - pressStartTime; // Calcula duração
+    console.log("Press End - Duration:", pressDuration, "ms");
+
+    rollDice(pressDuration); // Chama a função de rolar passando a duração
+
+    pressStartTime = 0; // Reseta o tempo de início
+}
+
+function handlePressAbort(event) {
+    // Se o mouse sai do botão ou o toque é cancelado
+    if (pressStartTime !== 0) {
+        console.log("Press Aborted");
+        pressStartTime = 0; // Reseta para cancelar a rolagem em handlePressEnd
+        // Restaura visual do botão
+        rollButton.style.transform = '';
+        rollButton.style.boxShadow = '';
+    }
+}
+
+// --- ADICIONA OS LISTENERS AO BOTÃO ---
+if (rollButton) {
+    // Mouse Events
+    rollButton.addEventListener('mousedown', handlePressStart);
+    rollButton.addEventListener('mouseup', handlePressEnd);
+    rollButton.addEventListener('mouseleave', handlePressAbort); // Cancela se o mouse sair
+
+    // Touch Events
+    // Usar preventDefault em touchstart requer { passive: false } (ou omitir)
+    rollButton.addEventListener('touchstart', handlePressStart /*, { passive: false } */);
+    rollButton.addEventListener('touchend', handlePressEnd);
+    rollButton.addEventListener('touchcancel', handlePressAbort); // Cancela se o toque for interrompido
+    console.log("Listeners de duração adicionados ao botão.");
+} else {
+     console.error("Botão com id 'roll-button' não encontrado!");
+}
+
+
+// --- FUNÇÃO rollDice MODIFICADA PARA USAR DURAÇÃO ---
+function rollDice(duration) { // Aceita a duração como argumento
     if (isRolling) return;
     isRolling = true;
     resultDisplay.textContent = 'Rolando...';
-    dice.style.transition = ''; // Limpa transição para aplicar tumble imediatamente
+    dice.style.transition = 'none'; // Remove transição para aplicar o tumble inicial
 
     const result = Math.floor(Math.random() * 6) + 1;
     console.log("Resultado:", result);
-
     const targetRotation = rotations[result];
 
-    // Rotações aleatórias de "tumble" mais exageradas
-    const randomX = Math.floor(Math.random() * 8 - 4) * 90; // +/- 360 graus extras
-    const randomY = Math.floor(Math.random() * 8 - 4) * 90;
-    const randomZ = Math.floor(Math.random() * 8 - 4) * 90;
+    // --- Ajusta Tumble e Animação baseado na Duração ---
+    const quickClickThreshold = 250; // Limite para clique rápido (em ms) - AJUSTE ESTE VALOR
+    let baseTumble = 720;           // Voltas base padrão
+    let randomnessFactor = 4;       // Aleatoriedade padrão
+    let animationDuration = 1.2;    // Duração padrão
+    let easingFunction = 'cubic-bezier(0.4, 1.8, 0.6, 0.9)'; // Easing padrão (com overshoot)
 
-    const tumbleX = 1080 + randomX; // Pelo menos 3 voltas
-    const tumbleY = 1080 + randomY;
-    const tumbleZ = 1080 + randomZ;
+    if (duration < quickClickThreshold) {
+        // Clique Rápido = Lançamento "Leve"
+        console.log("Rolagem Leve!");
+        baseTumble = 360;       // 1 volta base
+        randomnessFactor = 2;   // Menos aleatório
+        animationDuration = 0.8; // Mais rápido
+        easingFunction = 'cubic-bezier(0.25, 1, 0.5, 1)'; // Suave
+    } else {
+        // Clique Longo = Lançamento "Forte"
+        console.log("Rolagem Forte!");
+        baseTumble = 1080;      // 3 voltas base
+        randomnessFactor = 6;   // Mais aleatório
+        animationDuration = 1.6; // Mais lento
+        easingFunction = 'cubic-bezier(0.34, 1.56, 0.64, 1)'; // Com mais "força"/overshoot
+    }
 
+    // Gera rotações de tumble com base nos fatores ajustados
+    const randomX = Math.floor(Math.random() * (randomnessFactor * 2 + 1) - randomnessFactor) * 90;
+    const randomY = Math.floor(Math.random() * (randomnessFactor * 2 + 1) - randomnessFactor) * 90;
+    const randomZ = Math.floor(Math.random() * (randomnessFactor * 2 + 1) - randomnessFactor) * 90;
 
-    // Aplica a animação de tumble imediatamente
-    dice.style.transform = `rotateX(${tumbleX}deg) rotateY(${tumbleY}deg) rotateZ(${tumbleZ}deg)`;
+    const tumbleX = baseTumble + randomX;
+    const tumbleY = baseTumble + randomY;
+    const tumbleZ = baseTumble + randomZ;
+    // --- Fim Ajuste ---
 
-    // Após um pequeno delay (para o tumble inicial ser aplicado), define a transição e a rotação final
-    setTimeout(() => {
-        dice.style.transition = 'transform 1.2s cubic-bezier(0.3, 1.2, 0.5, 1)'; // Transição suave para o resultado
-        dice.style.transform = `rotateX(${targetRotation.x}deg) rotateY(${targetRotation.y}deg)`; // Rotação final
-    }, 50); // Pequeno delay
+    // Aplica o tumble inicial (sem transição definida aqui)
+    requestAnimationFrame(() => { // Garante que o browser processe a remoção da transição
+        dice.style.transform = `rotateX(${tumbleX}deg) rotateY(${tumbleY}deg) rotateZ(${tumbleZ}deg)`;
+
+        // Após aplicar o tumble, define a transição e a rotação final
+        requestAnimationFrame(() => { // Garante que o browser processe o tumble antes da transição
+             dice.style.transition = `transform ${animationDuration}s ${easingFunction}`;
+             dice.style.transform = `rotateX(${targetRotation.x}deg) rotateY(${targetRotation.y}deg)`;
+        });
+    });
 
 
     // Usa transitionend para atualizar o resultado após a animação final
     dice.addEventListener('transitionend', () => {
          resultDisplay.textContent = `Resultado: ${result}`;
          isRolling = false; // Permite rolar novamente
-         dice.style.transition = ''; // Limpa a transição para a próxima rolagem rápida
+         dice.style.transition = 'none'; // Limpa a transição para a próxima rolagem
 
-    }, { once: true });
-
+    }, { once: true }); // Garante que o listener rode só uma vez por rolagem
 }
 
-// Opcional: Permitir clicar no dado para rolar
-// dice.addEventListener('click', rollDice);
+// Opcional: Adicionar listeners ao próprio dado para rolar ao clicar/tocar nele
+// dice.addEventListener('mousedown', handlePressStart);
+// dice.addEventListener('mouseup', handlePressEnd);
+// dice.addEventListener('mouseleave', handlePressAbort);
+// dice.addEventListener('touchstart', handlePressStart /*, { passive: false } */);
+// dice.addEventListener('touchend', handlePressEnd);
+// dice.addEventListener('touchcancel', handlePressAbort);
 
 </script>
 </body>
