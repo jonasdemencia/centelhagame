@@ -137,22 +137,58 @@
     </div>
 </div>
 
-        <div class="chest">
-            <h2>Alforge</h2>
-            <div class="items">
-                <div class="item">
-                    Item de Exemplo
-                    <span class="item-expand-toggle">+</span>
-                    <div class="item-description" style="display: none;">
-                        Descrição deste item de exemplo.
+        <div class="storage-carousel-wrapper">
+    <div class="storage-carousel-container">
+        <!-- Slide do Alforge -->
+        <div class="storage-carousel-slide active">
+            <div class="chest">
+                <h2>Alforge</h2>
+                <div class="items">
+                    <div class="item">
+                        Item de Exemplo
+                        <span class="item-expand-toggle">+</span>
+                        <div class="item-description" style="display: none;">
+                            Descrição deste item de exemplo.
+                        </div>
+                    </div>
+                </div>
+                <div id="char-po-container">
+                    <span class="label">Peças de Ouro:</span>
+                    <span id="char-po">0</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide do Estojo de Dados -->
+        <div class="storage-carousel-slide">
+            <div class="chest dice-chest">
+                <h2>Estojo de Dados</h2>
+                <div class="dice-container">
+                    <div class="dice-section collection">
+                        <h3>Coleção</h3>
+                        <div class="dice-items">
+                            <!-- Dados da coleção serão adicionados aqui -->
+                        </div>
+                    </div>
+                    <div class="dice-section for-use">
+                        <h3>Para Uso</h3>
+                        <div class="dice-items">
+                            <!-- Dados para uso serão adicionados aqui -->
+                        </div>
                     </div>
                 </div>
             </div>
-            <div id="char-po-container">
-                <span class="label">Peças de Ouro:</span>
-                <span id="char-po">0</span>
-            </div>
         </div>
+    </div>
+    
+    <!-- Botões de navegação do segundo carrossel -->
+    <div class="storage-carousel-nav">
+        <div class="storage-carousel-buttons">
+            <button id="prevStorageBtn">◀</button>
+            <button id="nextStorageBtn">▶</button>
+        </div>
+    </div>
+</div>
 
         <div class="discard-area">
             <h2>Descartar Item</h2>
