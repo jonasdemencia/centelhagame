@@ -31,6 +31,102 @@ const initialItems = [
     { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 5, description: "Um pedaço de pão velho e mofado. Estranhamente, parece ter um efeito... diferente." } // Quantidade aumentada para 20
 ];
 
+// Variável global para armazenar o dado selecionado
+let selectedDice = null;
+
+// Função para inicializar os dados da coleção
+function initializeDiceCollection() {
+    const diceCollection = document.querySelector('.dice-items');
+    const initialDice = [
+        { type: 'D3', description: 'Dado de 3 faces' },
+        { type: 'D4', description: 'Dado de 4 faces' },
+        { type: 'D6', description: 'Dado de 6 faces' },
+        { type: 'D8', description: 'Dado de 8 faces' },
+        { type: 'D10', description: 'Dado de 10 faces' },
+        { type: 'D12', description: 'Dado de 12 faces' },
+        { type: 'D20', description: 'Dado de 20 faces' }
+    ];
+
+    initialDice.forEach(dice => {
+        const diceElement = document.createElement('div');
+        diceElement.className = 'dice-item';
+        diceElement.dataset.diceType = dice.type;
+        diceElement.textContent = dice.type;
+        diceCollection.appendChild(diceElement);
+
+        // Adiciona evento de clique ao dado
+        diceElement.addEventListener('click', () => handleDiceClick(diceElement));
+    });
+}
+
+// Função para lidar com o clique em um dado
+function handleDiceClick(diceElement) {
+    clearDiceHighlights();
+    selectedDice = diceElement;
+    diceElement.classList.add('selected');
+
+    // Destaca o slot correspondente
+    const slots = document.querySelectorAll('.dice-slot');
+    slots.forEach(slot => {
+        if (slot.dataset.dice === diceElement.dataset.diceType) {
+            slot.classList.add('highlight');
+        }
+    });
+}
+
+// Função para limpar destaques dos dados
+function clearDiceHighlights() {
+    document.querySelectorAll('.dice-item').forEach(die => die.classList.remove('selected'));
+    document.querySelectorAll('.dice-slot').forEach(slot => slot.classList.remove('highlight'));
+}
+
+// Adiciona eventos aos slots de dados
+function initializeDiceSlots() {
+    const diceSlots = document.querySelectorAll('.dice-slot');
+    diceSlots.forEach(slot => {
+        slot.addEventListener('click', () => {
+            const slotType = slot.dataset.dice;
+            const currentEquippedDice = slot.innerHTML !== slotType ? slot.innerHTML : null;
+
+            if (selectedDice && slotType === selectedDice.dataset.diceType) {
+                // Equipa o dado
+                if (currentEquippedDice) {
+                    // Devolve o dado atual para a coleção
+                    const newDice = document.createElement('div');
+                    newDice.className = 'dice-item';
+                    newDice.dataset.diceType = slotType;
+                    newDice.textContent = currentEquippedDice;
+                    document.querySelector('.dice-items').appendChild(newDice);
+                    newDice.addEventListener('click', () => handleDiceClick(newDice));
+                }
+
+                // Coloca o novo dado no slot
+                slot.innerHTML = selectedDice.textContent;
+                selectedDice.remove();
+                selectedDice = null;
+                clearDiceHighlights();
+
+            } else if (selectedDice === null && currentEquippedDice) {
+                // Desequipa o dado
+                const newDice = document.createElement('div');
+                newDice.className = 'dice-item';
+                newDice.dataset.diceType = slotType;
+                newDice.textContent = currentEquippedDice;
+                document.querySelector('.dice-items').appendChild(newDice);
+                newDice.addEventListener('click', () => handleDiceClick(newDice));
+                
+                slot.innerHTML = slotType;
+            }
+        });
+    });
+}
+
+// Inicializa o sistema de dados quando a página carregar
+document.addEventListener('DOMContentLoaded', () => {
+    initializeDiceCollection();
+    initializeDiceSlots();
+});
+
 // Constantes para cálculo de tempo
 const GAME_TIME_MULTIPLIER = 7; // 7 segundos no jogo para cada 1 segundo real
 const SECONDS_PER_DAY = 86400; // Segundos em um dia
