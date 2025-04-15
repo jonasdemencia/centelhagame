@@ -458,3 +458,78 @@ p {
     border-radius: 5px;
     z-index: 11; /* Garante que fique acima de outros elementos */
 }
+
+/* Estilos para o segundo carrossel (storage) */
+.storage-carousel-wrapper {
+    position: relative;
+    width: 100%;
+    margin: 20px auto;
+}
+
+.storage-carousel-container {
+    position: relative;
+    width: 100%;
+}
+
+.storage-carousel-slide {
+    width: 100%;
+    display: none;
+}
+
+.storage-carousel-slide.active {
+    display: block;
+}
+
+.storage-carousel-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.storage-carousel-buttons button {
+    background: #aa6c39;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.storage-carousel-buttons button:hover {
+    background: #8b5a2b;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilos para o Estojo de Dados */
+.dice-container {
+    display: flex;
+    gap: 20px;
+    height: 100%;
+}
+
+.dice-section {
+    flex: 1;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid #aa6c39;
+    border-radius: 8px;
+}
+
+.dice-section h3 {
+    color: #d4a373;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.dice-items {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px;
+    overflow-y: auto;
+    max-height: calc(300px - 60px);
+}
