@@ -526,6 +526,44 @@ async function saveInventoryData(uid) {
     }
 }
 
+// Função para salvar o estado dos dados
+async function saveDiceState(uid) {
+    try {
+        const diceState = {
+            collection: Array.from(document.querySelectorAll('.dice-items .dice-item')).map(die => ({
+                type: die.dataset.diceType
+            })),
+            equipped: Array.from(document.querySelectorAll('.dice-slot')).reduce((acc, slot) => {
+                acc[slot.dataset.dice] = slot.innerHTML !== slot.dataset.dice ? slot.innerHTML : null;
+                return acc;
+            }, {})
+        };
+
+        const playerRef = doc(db, "players", uid);
+        await setDoc(playerRef, { diceStorage: diceState }, { merge: true });
+        console.log("Estado dos dados salvo com sucesso!");
+    } catch (error) {
+        console.error("Erro ao salvar estado dos dados:", error);
+    }
+}
+
+// Função para carregar o estado dos dados
+async function loadDiceState(uid) {
+    try {
+        const playerRef = doc(db, "players", uid);
+        const playerSnap = await getDoc(playerRef);
+        
+        if (playerSnap.exists() && playerSnap.data().diceStorage) {
+            const diceState = playerSnap.data().diceStorage;
+            loadDiceUI(diceState);
+        } else {
+            initializeDiceCollection(); // Inicializa com os dados padrão
+        }
+    } catch (error) {
+        console.error("Erro ao carregar estado dos dados:", error);
+    }
+}
+
 // Função para carregar dados do Firestore
 async function loadInventoryData(uid) {
     console.log("Carregando dados do inventário para o usuário:", uid);
