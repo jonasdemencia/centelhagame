@@ -231,40 +231,22 @@ if (rollButton) {
 
 
 // --- FUNÇÃO rollDice MODIFICADA PARA USAR DURAÇÃO ---
-function rollDice(duration) { // Aceita a duração como argumento
+function rollDice(duration) {
     if (isRolling) return;
     isRolling = true;
     resultDisplay.textContent = 'Rolando...';
-    dice.style.transition = 'none'; // Remove transição para aplicar o tumble inicial
+    dice.style.transition = 'none';
 
     const result = Math.floor(Math.random() * 6) + 1;
     console.log("Resultado:", result);
     const targetRotation = rotations[result];
 
-    // --- Ajusta Tumble e Animação baseado na Duração ---
-    const quickClickThreshold = 250; // Limite para clique rápido (em ms) - AJUSTE ESTE VALOR
-    let baseTumble = 720;           // Voltas base padrão
-    let randomnessFactor = 4;       // Aleatoriedade padrão
-    let animationDuration = 1.2;    // Duração padrão
-    let easingFunction = 'cubic-bezier(0.4, 1.8, 0.6, 0.9)'; // Easing padrão (com overshoot)
+    const force = Math.min(duration / maxPressDuration, 1);
+    const baseTumble = 360 + (force * 1080);
+    const randomnessFactor = 2 + (force * 6);
+    const animationDuration = 0.8 + (force * 1.2);
+    const easingFunction = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
 
-    if (duration < quickClickThreshold) {
-        // Clique Rápido = Lançamento "Leve"
-        console.log("Rolagem Leve!");
-        baseTumble = 360;       // 1 volta base
-        randomnessFactor = 2;   // Menos aleatório
-        animationDuration = 0.8; // Mais rápido
-        easingFunction = 'cubic-bezier(0.25, 1, 0.5, 1)'; // Suave
-    } else {
-        // Clique Longo = Lançamento "Forte"
-        console.log("Rolagem Forte!");
-        baseTumble = 1080;      // 3 voltas base
-        randomnessFactor = 6;   // Mais aleatório
-        animationDuration = 1.6; // Mais lento
-        easingFunction = 'cubic-bezier(0.34, 1.56, 0.64, 1)'; // Com mais "força"/overshoot
-    }
-
-    // Gera rotações de tumble com base nos fatores ajustados
     const randomX = Math.floor(Math.random() * (randomnessFactor * 2 + 1) - randomnessFactor) * 90;
     const randomY = Math.floor(Math.random() * (randomnessFactor * 2 + 1) - randomnessFactor) * 90;
     const randomZ = Math.floor(Math.random() * (randomnessFactor * 2 + 1) - randomnessFactor) * 90;
@@ -272,27 +254,21 @@ function rollDice(duration) { // Aceita a duração como argumento
     const tumbleX = baseTumble + randomX;
     const tumbleY = baseTumble + randomY;
     const tumbleZ = baseTumble + randomZ;
-    // --- Fim Ajuste ---
 
-    // Aplica o tumble inicial (sem transição definida aqui)
-    requestAnimationFrame(() => { // Garante que o browser processe a remoção da transição
+    requestAnimationFrame(() => {
         dice.style.transform = `rotateX(${tumbleX}deg) rotateY(${tumbleY}deg) rotateZ(${tumbleZ}deg)`;
 
-        // Após aplicar o tumble, define a transição e a rotação final
-        requestAnimationFrame(() => { // Garante que o browser processe o tumble antes da transição
-             dice.style.transition = `transform ${animationDuration}s ${easingFunction}`;
-             dice.style.transform = `rotateX(${targetRotation.x}deg) rotateY(${targetRotation.y}deg)`;
+        requestAnimationFrame(() => {
+            dice.style.transition = `transform ${animationDuration}s ${easingFunction}`;
+            dice.style.transform = `rotateX(${targetRotation.x}deg) rotateY(${targetRotation.y}deg)`;
         });
     });
 
-
-    // Usa transitionend para atualizar o resultado após a animação final
     dice.addEventListener('transitionend', () => {
-         resultDisplay.textContent = `Resultado: ${result}`;
-         isRolling = false; // Permite rolar novamente
-         dice.style.transition = 'none'; // Limpa a transição para a próxima rolagem
-
-    }, { once: true }); // Garante que o listener rode só uma vez por rolagem
+        resultDisplay.textContent = `Resultado: ${result}`;
+        isRolling = false;
+        dice.style.transition = 'none';
+    }, { once: true });
 }
 
 // Opcional: Adicionar listeners ao próprio dado para rolar ao clicar/tocar nele
