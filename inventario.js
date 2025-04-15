@@ -36,12 +36,7 @@ let selectedDice = null;
 
 // Função para inicializar os dados da coleção
 function initializeDiceCollection() {
-    const diceGrid = document.querySelector('.dice-grid');
-    if (!diceGrid) {
-        console.error('Elemento .dice-grid não encontrado');
-        return;
-    }
-
+    const diceCollection = document.querySelector('.dice-items');
     const initialDice = [
         { type: 'D3', name: 'Dado de Cristal (D3)', description: 'Um pequeno dado triangular de cristal' },
         { type: 'D4', name: 'Dado de Jade (D4)', description: 'Um dado piramidal de jade' },
@@ -52,27 +47,19 @@ function initializeDiceCollection() {
         { type: 'D20', name: 'Dado de Rubi (D20)', description: 'Um dado icosaédrico de rubi' }
     ];
 
-    diceGrid.innerHTML = '';
+    diceCollection.innerHTML = ''; // Limpa a coleção antes de adicionar
 
-    for (let i = 0; i < initialDice.length; i += 3) {
-        const row = document.createElement('div');
-        row.className = 'dice-row';
-        
-        for (let j = 0; j < 3 && i + j < initialDice.length; j++) {
-            const dice = initialDice[i + j];
-            const diceElement = document.createElement('div');
-            diceElement.className = 'dice-item';
-            diceElement.dataset.diceType = dice.type;
-            diceElement.dataset.diceName = dice.name;
-            diceElement.textContent = dice.name;
-            diceElement.addEventListener('click', () => handleDiceClick(diceElement));
-            row.appendChild(diceElement);
-        }
-        
-        diceGrid.appendChild(row);
-    }
+    initialDice.forEach(dice => {
+        const diceElement = document.createElement('div');
+        diceElement.className = 'dice-item';
+        diceElement.dataset.diceType = dice.type;
+        diceElement.dataset.diceName = dice.name;
+        diceElement.textContent = dice.name;
+        diceCollection.appendChild(diceElement);
+
+        diceElement.addEventListener('click', () => handleDiceClick(diceElement));
+    });
 }
-
 // Função para lidar com o clique em um dado
 function handleDiceClick(diceElement) {
     clearDiceHighlights();
@@ -166,66 +153,31 @@ function toggleUseButton(show) {
 // Seleciona os itens clicados no baú
 document.addEventListener("DOMContentLoaded", () => {
     // Sistema de Carrossel
-    // Sistema de Carrossel do Personagem
-const characterSlides = document.querySelectorAll(".carousel-wrapper:not(.inventory-carousel) .carousel-slide");
-let currentCharacterSlide = 0;
+    const slides = document.querySelectorAll(".carousel-slide");
+    let currentSlide = 0;
 
-const prevBtn = document.getElementById("prevBtn");
-if (prevBtn) {
-    prevBtn.addEventListener("click", () => {
-        characterSlides[currentCharacterSlide].classList.remove("active");
-        currentCharacterSlide = (currentCharacterSlide === 0) ? characterSlides.length - 1 : currentCharacterSlide - 1;
-        characterSlides[currentCharacterSlide].classList.add("active");
-    });
-}
+    const prevBtn = document.getElementById("prevBtn");
+    if (prevBtn) {
+        prevBtn.addEventListener("click", () => {
+            slides[currentSlide].classList.remove("active");
+            currentSlide = (currentSlide === 0) ? slides.length - 1 : currentSlide - 1;
+            slides[currentSlide].classList.add("active");
+        });
+    }
 
-const nextBtn = document.getElementById("nextBtn");
-if (nextBtn) {
-    nextBtn.addEventListener("click", () => {
-        characterSlides[currentCharacterSlide].classList.remove("active");
-        currentCharacterSlide = (currentCharacterSlide === characterSlides.length - 1) ? 0 : currentCharacterSlide + 1;
-        characterSlides[currentCharacterSlide].classList.add("active");
-    });
-}
-
-// Sistema de Carrossel do Inventário
-const inventorySlides = document.querySelectorAll(".inventory-carousel .carousel-slide");
-let currentInventorySlide = 0;
-
-const prevInventoryBtn = document.getElementById("prevInventoryBtn");
-if (prevInventoryBtn) {
-    prevInventoryBtn.addEventListener("click", () => {
-        inventorySlides[currentInventorySlide].classList.remove("active");
-        currentInventorySlide = (currentInventorySlide === 0) ? inventorySlides.length - 1 : currentInventorySlide - 1;
-        inventorySlides[currentInventorySlide].classList.add("active");
-    });
-}
-
-const nextInventoryBtn = document.getElementById("nextInventoryBtn");
-if (nextInventoryBtn) {
-    nextInventoryBtn.addEventListener("click", () => {
-        inventorySlides[currentInventorySlide].classList.remove("active");
-        currentInventorySlide = (currentInventorySlide === inventorySlides.length - 1) ? 0 : currentInventorySlide + 1;
-        inventorySlides[currentInventorySlide].classList.add("active");
-    });
-}
-
-// Exibir as primeiras janelas ao carregar
-if (characterSlides.length > 0) {
-    characterSlides[currentCharacterSlide].classList.add("active");
-}
-if (inventorySlides.length > 0) {
-    inventorySlides[currentInventorySlide].classList.add("active");
-}
+    const nextBtn = document.getElementById("nextBtn");
+    if (nextBtn) {
+        nextBtn.addEventListener("click", () => {
+            slides[currentSlide].classList.remove("active");
+            currentSlide = (currentSlide === slides.length - 1) ? 0 : currentSlide + 1;
+            slides[currentSlide].classList.add("active");
+        });
+    }
 
     // Exibir a primeira janela ao carregar
     if (slides.length > 0) {
         slides[currentSlide].classList.add("active");
     }
-
-    // Inicializa o sistema de dados
-    initializeDiceCollection();
-    initializeDiceSlots();
 
         // Exibir a primeira janela ao carregar
     if (slides.length > 0) {
@@ -747,39 +699,26 @@ function loadInventoryUI(inventoryData) {
 }
 
 function loadDiceUI(diceState) {
-    const diceGrid = document.querySelector('.dice-grid');
+    const diceCollection = document.querySelector('.dice-items');
     const slots = document.querySelectorAll('.dice-slot');
     
-    if (!diceGrid || !slots.length) {
-        console.error('Elementos necessários não encontrados');
-        return;
-    }
-
     // Limpa a coleção e slots
-    diceGrid.innerHTML = '';
+    diceCollection.innerHTML = '';
     slots.forEach(slot => {
         slot.innerHTML = slot.dataset.dice;
     });
 
     // Carrega dados da coleção
     if (diceState.collection && Array.isArray(diceState.collection)) {
-        // Agrupa dados em rows de 3
-        for (let i = 0; i < diceState.collection.length; i += 3) {
-            const row = document.createElement('div');
-            row.className = 'dice-row';
-            
-            for (let j = 0; j < 3 && i + j < diceState.collection.length; j++) {
-                const dice = diceState.collection[i + j];
-                const diceElement = document.createElement('div');
-                diceElement.className = 'dice-item';
-                diceElement.dataset.diceType = dice.type;
-                diceElement.textContent = dice.name || dice.type;
-                diceElement.addEventListener('click', () => handleDiceClick(diceElement));
-                row.appendChild(diceElement);
-            }
-            
-            diceGrid.appendChild(row);
-        }
+        diceState.collection.forEach(dice => {
+            const diceElement = document.createElement('div');
+            diceElement.className = 'dice-item';
+            diceElement.dataset.diceType = dice.type;
+            diceElement.dataset.diceName = dice.name;
+            diceElement.textContent = dice.name;
+            diceCollection.appendChild(diceElement);
+            diceElement.addEventListener('click', () => handleDiceClick(diceElement));
+        });
     }
 
     // Carrega dados equipados
@@ -788,7 +727,7 @@ function loadDiceUI(diceState) {
             if (diceData) {
                 const slot = document.querySelector(`.dice-slot[data-dice="${slotType}"]`);
                 if (slot) {
-                    slot.textContent = diceData.name || diceData.type;
+                    slot.textContent = diceData.name;
                 }
             }
         });
@@ -913,9 +852,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await loadInventoryData(user.uid);
             await loadDiceState(user.uid); // Adicione esta linha aqui
-
-        // Garante que os eventos dos dados sejam inicializados
-        initializeDiceSlots();
         } else {
             console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
             window.location.href = "index.html";
