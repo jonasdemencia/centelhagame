@@ -192,6 +192,10 @@ document.addEventListener("DOMContentLoaded", () => {
         slides[currentSlide].classList.add("active");
     }
 
+    // Inicializa o sistema de dados
+    initializeDiceCollection();
+    initializeDiceSlots();
+
         // Exibir a primeira janela ao carregar
     if (slides.length > 0) {
         slides[currentSlide].classList.add("active");
@@ -878,6 +882,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await loadInventoryData(user.uid);
             await loadDiceState(user.uid); // Adicione esta linha aqui
+
+        // Garante que os eventos dos dados sejam inicializados
+        initializeDiceSlots();
         } else {
             console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
             window.location.href = "index.html";
