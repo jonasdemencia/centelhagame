@@ -166,26 +166,57 @@ function toggleUseButton(show) {
 // Seleciona os itens clicados no baú
 document.addEventListener("DOMContentLoaded", () => {
     // Sistema de Carrossel
-    const slides = document.querySelectorAll(".carousel-slide");
-    let currentSlide = 0;
+    // Sistema de Carrossel do Personagem
+const characterSlides = document.querySelectorAll(".carousel-wrapper:not(.inventory-carousel) .carousel-slide");
+let currentCharacterSlide = 0;
 
-    const prevBtn = document.getElementById("prevBtn");
-    if (prevBtn) {
-        prevBtn.addEventListener("click", () => {
-            slides[currentSlide].classList.remove("active");
-            currentSlide = (currentSlide === 0) ? slides.length - 1 : currentSlide - 1;
-            slides[currentSlide].classList.add("active");
-        });
-    }
+const prevBtn = document.getElementById("prevBtn");
+if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+        characterSlides[currentCharacterSlide].classList.remove("active");
+        currentCharacterSlide = (currentCharacterSlide === 0) ? characterSlides.length - 1 : currentCharacterSlide - 1;
+        characterSlides[currentCharacterSlide].classList.add("active");
+    });
+}
 
-    const nextBtn = document.getElementById("nextBtn");
-    if (nextBtn) {
-        nextBtn.addEventListener("click", () => {
-            slides[currentSlide].classList.remove("active");
-            currentSlide = (currentSlide === slides.length - 1) ? 0 : currentSlide + 1;
-            slides[currentSlide].classList.add("active");
-        });
-    }
+const nextBtn = document.getElementById("nextBtn");
+if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+        characterSlides[currentCharacterSlide].classList.remove("active");
+        currentCharacterSlide = (currentCharacterSlide === characterSlides.length - 1) ? 0 : currentCharacterSlide + 1;
+        characterSlides[currentCharacterSlide].classList.add("active");
+    });
+}
+
+// Sistema de Carrossel do Inventário
+const inventorySlides = document.querySelectorAll(".inventory-carousel .carousel-slide");
+let currentInventorySlide = 0;
+
+const prevInventoryBtn = document.getElementById("prevInventoryBtn");
+if (prevInventoryBtn) {
+    prevInventoryBtn.addEventListener("click", () => {
+        inventorySlides[currentInventorySlide].classList.remove("active");
+        currentInventorySlide = (currentInventorySlide === 0) ? inventorySlides.length - 1 : currentInventorySlide - 1;
+        inventorySlides[currentInventorySlide].classList.add("active");
+    });
+}
+
+const nextInventoryBtn = document.getElementById("nextInventoryBtn");
+if (nextInventoryBtn) {
+    nextInventoryBtn.addEventListener("click", () => {
+        inventorySlides[currentInventorySlide].classList.remove("active");
+        currentInventorySlide = (currentInventorySlide === inventorySlides.length - 1) ? 0 : currentInventorySlide + 1;
+        inventorySlides[currentInventorySlide].classList.add("active");
+    });
+}
+
+// Exibir as primeiras janelas ao carregar
+if (characterSlides.length > 0) {
+    characterSlides[currentCharacterSlide].classList.add("active");
+}
+if (inventorySlides.length > 0) {
+    inventorySlides[currentInventorySlide].classList.add("active");
+}
 
     // Exibir a primeira janela ao carregar
     if (slides.length > 0) {
