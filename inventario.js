@@ -74,6 +74,35 @@ document.addEventListener("DOMContentLoaded", () => {
     if (slides.length > 0) {
         slides[currentSlide].classList.add("active");
     }
+
+        // Exibir a primeira janela ao carregar
+    if (slides.length > 0) {
+        slides[currentSlide].classList.add("active");
+    }
+
+    // ADICIONE SEU NOVO CÓDIGO AQUI
+    // Sistema de Carrossel para Armazenamento (Storage)
+    const storageSlides = document.querySelectorAll(".storage-carousel-slide");
+    let currentStorageSlide = 0;
+
+    const prevStorageBtn = document.getElementById("prevStorageBtn");
+    if (prevStorageBtn) {
+        prevStorageBtn.addEventListener("click", () => {
+            storageSlides[currentStorageSlide].classList.remove("active");
+            currentStorageSlide = (currentStorageSlide === 0) ? storageSlides.length - 1 : currentStorageSlide - 1;
+            storageSlides[currentStorageSlide].classList.add("active");
+        });
+    }
+
+    const nextStorageBtn = document.getElementById("nextStorageBtn");
+    if (nextStorageBtn) {
+        nextStorageBtn.addEventListener("click", () => {
+            storageSlides[currentStorageSlide].classList.remove("active");
+            currentStorageSlide = (currentStorageSlide === storageSlides.length - 1) ? 0 : currentStorageSlide + 1;
+            storageSlides[currentStorageSlide].classList.add("active");
+        });
+    }
+    
     
     const itemsContainer = document.querySelector('.items');
     const slots = document.querySelectorAll('.slot');
