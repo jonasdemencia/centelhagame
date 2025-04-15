@@ -84,7 +84,7 @@ function clearDiceHighlights() {
 function initializeDiceSlots() {
     const diceSlots = document.querySelectorAll('.dice-slot');
     diceSlots.forEach(slot => {
-        slot.addEventListener('click', () => {
+        slot.addEventListener('click', async () => {
             const slotType = slot.dataset.dice;
             const currentEquippedDice = slot.innerHTML !== slotType ? slot.innerHTML : null;
 
@@ -95,27 +95,35 @@ function initializeDiceSlots() {
                     const newDice = document.createElement('div');
                     newDice.className = 'dice-item';
                     newDice.dataset.diceType = slotType;
+                    newDice.dataset.diceName = currentEquippedDice;
                     newDice.textContent = currentEquippedDice;
                     document.querySelector('.dice-items').appendChild(newDice);
                     newDice.addEventListener('click', () => handleDiceClick(newDice));
                 }
 
                 // Coloca o novo dado no slot
-                slot.innerHTML = selectedDice.textContent;
+                slot.innerHTML = selectedDice.dataset.diceName;
                 selectedDice.remove();
                 selectedDice = null;
                 clearDiceHighlights();
+
+                // Salva o estado após equipar
+                await saveDiceState(auth.currentUser.uid);
 
             } else if (selectedDice === null && currentEquippedDice) {
                 // Desequipa o dado
                 const newDice = document.createElement('div');
                 newDice.className = 'dice-item';
                 newDice.dataset.diceType = slotType;
+                newDice.dataset.diceName = currentEquippedDice;
                 newDice.textContent = currentEquippedDice;
                 document.querySelector('.dice-items').appendChild(newDice);
                 newDice.addEventListener('click', () => handleDiceClick(newDice));
                 
                 slot.innerHTML = slotType;
+
+                // Salva o estado após desequipar
+                await saveDiceState(auth.currentUser.uid);
             }
         });
     });
