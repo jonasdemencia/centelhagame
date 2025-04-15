@@ -533,3 +533,51 @@ p {
     overflow-y: auto;
     max-height: calc(300px - 60px);
 }
+
+/* Estilos para os slots de dados */
+.dice-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+}
+
+.dice-slot {
+    width: 80px;
+    height: 80px;
+    background: #583101;
+    border: 2px solid #d4a373;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 16px;
+    color: white;
+    margin: auto;
+}
+
+.dice-slot.highlight {
+    background-color: #3498db;
+    border-color: #2980b9;
+}
+
+.dice-item {
+    width: 80px;
+    height: 80px;
+    background: #8b5a2b;
+    border: 2px solid #d4a373;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 16px;
+    color: white;
+    margin: auto;
+}
+
+.dice-item.selected {
+    background-color: #f1c40f;
+    border-color: #f39c12;
+}
