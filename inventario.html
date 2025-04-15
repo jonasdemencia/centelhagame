@@ -137,20 +137,15 @@
     </div>
 </div>
 
-        <div class="storage-carousel-wrapper">
-    <div class="storage-carousel-container">
+        <!-- Segundo carrossel para Alforge/Estojo de Dados -->
+<div class="carousel-wrapper inventory-carousel">
+    <div class="carousel-container">
         <!-- Slide do Alforge -->
-        <div class="storage-carousel-slide active">
+        <div class="carousel-slide active" id="alforge-window">
             <div class="chest">
                 <h2>Alforge</h2>
                 <div class="items">
-                    <div class="item">
-                        Item de Exemplo
-                        <span class="item-expand-toggle">+</span>
-                        <div class="item-description" style="display: none;">
-                            Descrição deste item de exemplo.
-                        </div>
-                    </div>
+                    <!-- ... seus itens ... -->
                 </div>
                 <div id="char-po-container">
                     <span class="label">Peças de Ouro:</span>
@@ -158,46 +153,34 @@
                 </div>
             </div>
         </div>
-        
-       <div class="carousel-slide" id="dice-storage">
-        <div class="chest dice-chest">
-            <h2>Estojo de Dados</h2>
-            <div class="dice-container">
-                <div class="dice-section">
-                    <h3>Coleção</h3>
-                    <div class="dice-grid">
-                        <!-- Os dados serão adicionados aqui via JavaScript -->
+
+        <!-- Slide do Estojo de Dados -->
+        <div class="carousel-slide" id="dice-storage">
+            <div class="chest dice-chest">
+                <h2>Estojo de Dados</h2>
+                <div class="dice-container">
+                    <div class="dice-section">
+                        <h3>Coleção</h3>
+                        <div class="dice-grid">
+                            <!-- Os dados serão adicionados aqui via JavaScript -->
+                        </div>
                     </div>
-                </div>
-                <div class="dice-section">
-                    <h3>Para Uso</h3>
-                    <div class="dice-slots-grid">
-                        <!-- Slots de dados em grupos de 3 -->
-                        <div class="dice-slot-row">
-                            <div class="dice-slot" data-dice="D3">D3</div>
-                            <div class="dice-slot" data-dice="D4">D4</div>
-                            <div class="dice-slot" data-dice="D6">D6</div>
-                        </div>
-                        <div class="dice-slot-row">
-                            <div class="dice-slot" data-dice="D8">D8</div>
-                            <div class="dice-slot" data-dice="D10">D10</div>
-                            <div class="dice-slot" data-dice="D12">D12</div>
-                        </div>
-                        <div class="dice-slot-row">
-                            <div class="dice-slot" data-dice="D20">D20</div>
+                    <div class="dice-section">
+                        <h3>Para Uso</h3>
+                        <div class="dice-slots-grid">
+                            <!-- ... seus slots de dados ... -->
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
     
-    <!-- Botões de navegação do segundo carrossel -->
-    <div class="storage-carousel-nav">
-        <div class="storage-carousel-buttons">
-            <button id="prevStorageBtn">◀</button>
-            <button id="nextStorageBtn">▶</button>
+    <!-- Botões do segundo carrossel -->
+    <div class="carousel-nav">
+        <div class="carousel-buttons">
+            <button id="prevInventoryBtn">◀</button>
+            <button id="nextInventoryBtn">▶</button>
         </div>
     </div>
 </div>
