@@ -581,3 +581,16 @@ p {
     background-color: #f1c40f;
     border-color: #f39c12;
 }
+
+/* Organizar os slots de dados em grupos de 3 */
+.dice-slots-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Espaço entre as linhas */
+}
+
+.dice-slot-row {
+    display: flex;
+    justify-content: center; /* Centraliza horizontalmente */
+    gap: 10px; /* Espaço entre os slots na mesma linha */
+}
