@@ -43,165 +43,157 @@
         <button id="useBtn" style="display:none;">Usar</button>
 
         <div class="carousel-wrapper">
-            <div class="carousel-container">
-                <div class="carousel-slide active" id="character-window">
-                    <div class="character">
-                        <h2>Personagem</h2>
-                        <div class="equipment">
-                            <div class="slot" id="helmet" data-slot="helmet">Cabeça</div>
-                            <div class="slot" id="amulet" data-slot="amulet">Amuleto</div>
-                            <div class="slot-row">
-                                <div class="slot" id="weapon" data-slot="weapon">Mão Esquerda</div>
-                                <div class="slot" id="armor" data-slot="armor">Peitoral</div>
-                                <div class="slot" id="shield" data-slot="shield">Mão Direita</div>
-                            </div>
-                            <div class="slot-row">
-                                <div class="slot" id="gloves" data-slot="gloves">Luvas</div>
-                                <div class="slot" id="ring" data-slot="ring">Anel</div>
-                            </div>
-                            <div class="slot" id="boots" data-slot="boots">Botas</div>
-                        </div>
+    <div class="carousel-container">
+        <div class="carousel-slide active" id="character-window">
+            <div class="character">
+                <h2>Personagem</h2>
+                <div class="equipment">
+                    <div class="slot" id="helmet" data-slot="helmet">Cabeça</div>
+                    <div class="slot" id="amulet" data-slot="amulet">Amuleto</div>
+                    <div class="slot-row">
+                        <div class="slot" id="weapon" data-slot="weapon">Mão Esquerda</div>
+                        <div class="slot" id="armor" data-slot="armor">Peitoral</div>
+                        <div class="slot" id="shield" data-slot="shield">Mão Direita</div>
                     </div>
-                </div>
-
-                <div class="carousel-slide" id="character-sheet">
-                    <div class="character-sheet">
-                        <h2>Ficha do Personagem</h2>
-                        <p><strong>Nome:</strong> <span id="char-name">-</span></p>
-                        <p><strong>Classe:</strong> <span id="char-class">-</span></p>
-                        <p><strong>Raça:</strong> <span id="char-race">-</span></p>
-                        <p><strong>Alinhamento:</strong> <span id="char-alignment">-</span></p>
-
-                        <div class="attribute-container">
-                            <div class="attribute">
-                                <span class="label">Energia</span>
-                                <span id="char-energy">0/0</span>
-                                <div class="barra-hp-container">
-                                    <div id="barra-hp-inventario" class="barra-hp"></div>
-                                </div>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Habilidade</span>
-                                <span id="char-skill">0</span>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Carisma</span>
-                                <span id="char-charisma">0</span>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Magia</span>
-                                <span id="char-magic">0</span>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Sorte</span>
-                                <span id="char-luck">0</span>
-                            </div>
-                        </div>
-
-                        <div class="char-alignment">
-                            <div class="char-hand-container">
-                                <span>Mão Dominante</span>
-                                <span id="char-hand">-</span>
-                            </div>
-                            <div class="char-hemisphere-container">
-                                <span>Hemisfério Dominante</span>
-                                <span id="char-hemisphere">-</span>
-                            </div>
-                        </div>
-
-                        <div class="couraca-dano">
-                            <div class="attribute">
-                                <span class="label">Couraça</span>
-                                <span id="char-couraca">0</span>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Dano</span>
-                                <span id="char-dano">0</span>
-                            </div>
-                        </div>
-
-                        <div class="time-container">
-                            <div class="attribute">
-                                <span class="label">Dia</span>
-                                <span id="char-day">1</span>
-                            </div>
-                        </div>
+                    <div class="slot-row">
+                        <div class="slot" id="gloves" data-slot="gloves">Luvas</div>
+                        <div class="slot" id="ring" data-slot="ring">Anel</div>
                     </div>
-                </div>
-                <div class="carousel-nav">
-                    <div class="carousel-buttons">
-                        <button id="prevBtn">◀</button>
-                        <button id="nextBtn">▶</button>
-                    </div>
+                    <div class="slot" id="boots" data-slot="boots">Botas</div>
                 </div>
             </div>
         </div>
 
-        <div class="storage-carousel-wrapper">
-            <div class="storage-carousel-container">
-                <!-- Slide do Alforge -->
-                <div class="storage-carousel-slide active">
-                    <div class="chest">
-                        <h2>Alforge</h2>
-                        <div class="items">
-                            <div class="item">
-                                Item de Exemplo
-                                <span class="item-expand-toggle">+</span>
-                                <div class="item-description" style="display: none;">
-                                    Descrição deste item de exemplo.
-                                </div>
-                            </div>
-                        </div>
-                        <div id="char-po-container">
-                            <span class="label">Peças de Ouro:</span>
-                            <span id="char-po">0</span>
+        <div class="carousel-slide" id="character-sheet">
+            <div class="character-sheet">
+                <h2>Ficha do Personagem</h2>
+                <p><strong>Nome:</strong> <span id="char-name">-</span></p>
+                <p><strong>Classe:</strong> <span id="char-class">-</span></p>
+                <p><strong>Raça:</strong> <span id="char-race">-</span></p>
+                <p><strong>Alinhamento:</strong> <span id="char-alignment">-</span></p>
+
+                <div class="attribute-container">
+                    <div class="attribute">
+                        <span class="label">Energia</span>
+                        <span id="char-energy">0/0</span>
+                        <div class="barra-hp-container">
+                            <div id="barra-hp-inventario" class="barra-hp"></div>
                         </div>
                     </div>
+                    <div class="attribute">
+                        <span class="label">Habilidade</span>
+                        <span id="char-skill">0</span>
+                    </div>
+                    <div class="attribute">
+                        <span class="label">Carisma</span>
+                        <span id="char-charisma">0</span>
+                    </div>
+                    <div class="attribute">
+                        <span class="label">Magia</span>
+                        <span id="char-magic">0</span>
+                    </div>
+                    <div class="attribute">
+                        <span class="label">Sorte</span>
+                        <span id="char-luck">0</span>
+                    </div>
                 </div>
-                
-                <!-- Slide do Estojo de Dados -->
-                <div class="storage-carousel-slide">
-                    <div class="chest dice-chest">
-                        <h2>Estojo de Dados</h2>
-                       <div class="dice-section collection">
-    <h3>Coleção</h3>
-    <div class="dice-items-grid">
-        <div class="dice-items-row">
-            <!-- Os dados serão adicionados aqui dinamicamente -->
+
+                <div class="char-alignment">
+                    <div class="char-hand-container">
+                        <span>Mão Dominante</span>
+                        <span id="char-hand">-</span>
+                    </div>
+                    <div class="char-hemisphere-container">
+                        <span>Hemisfério Dominante</span>
+                        <span id="char-hemisphere">-</span>
+                    </div>
+                </div>
+
+                <div class="couraca-dano">
+                    <div class="attribute">
+                        <span class="label">Couraça</span>
+                        <span id="char-couraca">0</span>
+                    </div>
+                    <div class="attribute">
+                        <span class="label">Dano</span>
+                        <span id="char-dano">0</span>
+                    </div>
+                </div>
+
+                <div class="time-container">
+                    <div class="attribute">
+                        <span class="label">Dia</span>
+                        <span id="char-day">1</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="carousel-nav">
+            <div class="carousel-buttons">
+                <button id="prevBtn">◀</button>
+                <button id="nextBtn">▶</button>
+            </div>
         </div>
     </div>
 </div>
-                            <div class="dice-section for-use">
-                                <h3>Para Uso</h3>
-                                <div class="dice-slots-grid">
-                                    <div class="dice-slot-row">
-                                        <div class="dice-slot" data-dice="D3">D3</div>
-                                        <div class="dice-slot" data-dice="D4">D4</div>
-                                        <div class="dice-slot" data-dice="D6">D6</div>
-                                    </div>
-                                    <div class="dice-slot-row">
-                                        <div class="dice-slot" data-dice="D8">D8</div>
-                                        <div class="dice-slot" data-dice="D10">D10</div>
-                                        <div class="dice-slot" data-dice="D12">D12</div>
-                                    </div>
-                                    <div class="dice-slot-row">
-                                        <div class="dice-slot" data-dice="D20">D20</div>
-                                    </div>
-                                </div>
-                            </div>
+
+        <div class="storage-carousel-wrapper">
+    <div class="storage-carousel-container">
+        <!-- Slide do Alforge -->
+        <div class="storage-carousel-slide active">
+            <div class="chest">
+                <h2>Alforge</h2>
+                <div class="items">
+                    <div class="item">
+                        Item de Exemplo
+                        <span class="item-expand-toggle">+</span>
+                        <div class="item-description" style="display: none;">
+                            Descrição deste item de exemplo.
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Botões de navegação do segundo carrossel -->
-            <div class="storage-carousel-nav">
-                <div class="storage-carousel-buttons">
-                    <button id="prevStorageBtn">◀</button>
-                    <button id="nextStorageBtn">▶</button>
+                <div id="char-po-container">
+                    <span class="label">Peças de Ouro:</span>
+                    <span id="char-po">0</span>
                 </div>
             </div>
         </div>
+        
+        <!-- Slide do Estojo de Dados -->
+        <div class="storage-carousel-slide">
+    <div class="chest dice-chest">
+        <h2>Estojo de Dados</h2>
+        <div class="dice-container">
+            <div class="dice-section collection">
+                <h3>Coleção</h3>
+                <div class="dice-items">
+                    <!-- Os dados da coleção serão adicionados aqui dinamicamente -->
+                </div>
+            </div>
+            <div class="dice-section for-use">
+                <h3>Para Uso</h3>
+                <div class="dice-slots">
+                    <div class="dice-slot" data-dice="D3">D3</div>
+                    <div class="dice-slot" data-dice="D4">D4</div>
+                    <div class="dice-slot" data-dice="D6">D6</div>
+                    <div class="dice-slot" data-dice="D8">D8</div>
+                    <div class="dice-slot" data-dice="D10">D10</div>
+                    <div class="dice-slot" data-dice="D12">D12</div>
+                    <div class="dice-slot" data-dice="D20">D20</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+    <!-- Botões de navegação do segundo carrossel -->
+    <div class="storage-carousel-nav">
+        <div class="storage-carousel-buttons">
+            <button id="prevStorageBtn">◀</button>
+            <button id="nextStorageBtn">▶</button>
+        </div>
+    </div>
+</div>
 
         <div class="discard-area">
             <h2>Descartar Item</h2>
