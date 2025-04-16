@@ -534,10 +534,18 @@ p {
     padding: 10px;
 }
 
+/* Estilos para os slots de dados */
 .dice-slots {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    padding: 10px;
+}
+
+.dice-slot-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
 }
 
 .dice-slot-row {
@@ -617,4 +625,10 @@ p {
 /* Substitua o estilo existente .dice-items por: */
 .dice-items {
     display: none; /* Removemos o grid anterior */
+}
+
+.storage-carousel-nav {
+    position: relative;
+    margin-top: 15px;
+    z-index: 100;
 }
