@@ -534,17 +534,12 @@ p {
     max-height: calc(300px - 60px);
 }
 
-/* Organizar os slots de dados em grupos de 3 */
-.dice-slots-grid {
+/* Estilos para os slots de dados */
+.dice-slots {
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Espaço entre as linhas */
-}
-
-.dice-slot-row {
-    display: flex;
-    justify-content: center; /* Centraliza horizontalmente */
-    gap: 10px; /* Espaço entre os slots na mesma linha */
+    gap: 10px;
+    padding: 10px;
 }
 
 .dice-slot {
