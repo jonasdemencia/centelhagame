@@ -525,23 +525,13 @@ p {
     text-align: center;
 }
 
-.dice-items-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+.dice-items {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
     padding: 10px;
     overflow-y: auto;
     max-height: calc(300px - 60px);
-}
-
-.dice-items-row {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-}
-
-.dice-items {
-    display: none;
 }
 
 /* Estilos para os slots de dados */
@@ -590,17 +580,4 @@ p {
 .dice-item.selected {
     background-color: #f1c40f;
     border-color: #f39c12;
-}
-
-/* Organizar os slots de dados em grupos de 3 */
-.dice-slots-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 15px; /* Espaço entre as linhas */
-}
-
-.dice-slot-row {
-    display: flex;
-    justify-content: center; /* Centraliza horizontalmente */
-    gap: 10px; /* Espaço entre os slots na mesma linha */
 }
