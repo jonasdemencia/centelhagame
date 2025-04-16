@@ -525,21 +525,37 @@ p {
     text-align: center;
 }
 
-.dice-items {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+
+/* Organização dos slots e itens em grupos de 3 */
+.dice-slots, .dice-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
     padding: 10px;
-    overflow-y: auto;
-    max-height: calc(300px - 60px);
 }
 
-/* Estilos para os slots de dados */
 .dice-slots {
     display: flex;
     flex-direction: column;
+    gap: 15px;
+}
+
+.dice-slot-row {
+    display: flex;
+    justify-content: center;
     gap: 10px;
-    padding: 10px;
+}
+
+.dice-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.dice-items-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
 }
 
 .dice-slot {
