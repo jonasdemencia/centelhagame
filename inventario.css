@@ -525,45 +525,21 @@ p {
     text-align: center;
 }
 
-
-/* Organização dos slots e itens em grupos de 3 */
-.dice-slots, .dice-items {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+.dice-items {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
     padding: 10px;
+    overflow-y: auto;
+    max-height: calc(300px - 60px);
 }
 
 /* Estilos para os slots de dados */
 .dice-slots {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 10px;
     padding: 10px;
-}
-
-.dice-slot-row {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-}
-
-.dice-slot-row {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-}
-
-.dice-items {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.dice-items-row {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
 }
 
 .dice-slot {
@@ -606,29 +582,15 @@ p {
     border-color: #f39c12;
 }
 
-/* Organização da coleção de dados em grupos de 3 */
-.dice-items-grid {
+/* Organizar os slots de dados em grupos de 3 */
+.dice-slots-grid {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    padding: 10px;
-    overflow-y: auto;
-    max-height: calc(300px - 60px);
+    gap: 15px; /* Espaço entre as linhas */
 }
 
-.dice-items-row {
+.dice-slot-row {
     display: flex;
-    justify-content: center;
-    gap: 10px;
-}
-
-/* Substitua o estilo existente .dice-items por: */
-.dice-items {
-    display: none; /* Removemos o grid anterior */
-}
-
-.storage-carousel-nav {
-    position: relative;
-    margin-top: 15px;
-    z-index: 100;
+    justify-content: center; /* Centraliza horizontalmente */
+    gap: 10px; /* Espaço entre os slots na mesma linha */
 }
