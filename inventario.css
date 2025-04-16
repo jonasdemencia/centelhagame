@@ -581,3 +581,24 @@ p {
     background-color: #f1c40f;
     border-color: #f39c12;
 }
+
+/* Organização da coleção de dados em grupos de 3 */
+.dice-items-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px;
+    overflow-y: auto;
+    max-height: calc(300px - 60px);
+}
+
+.dice-items-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* Substitua o estilo existente .dice-items por: */
+.dice-items {
+    display: none; /* Removemos o grid anterior */
+}
