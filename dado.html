@@ -336,9 +336,15 @@ function animateDice() {
     isRolling = false;
 
     // 🔧 FORÇA A ROTAÇÃO FINAL PARA MÚLTIPLOS DE 90
-    currentRotation.x = Math.round(currentRotation.x / 90) * 90;
-    currentRotation.y = Math.round(currentRotation.y / 90) * 90;
-    currentRotation.z = 0; // evita rotação diagonal inesperada
+    function snapToNearest90(value, threshold = 5) {
+    const nearest = Math.round(value / 90) * 90;
+    return Math.abs(value - nearest) <= threshold ? nearest : value;
+}
+
+currentRotation.x = snapToNearest90(currentRotation.x);
+currentRotation.y = snapToNearest90(currentRotation.y);
+currentRotation.z = 0;
+
 
     // Determina qual face está para cima (top-down sequence)
     const finalFaceIndex = Math.abs(currentRotation.x / 90) % 4;
