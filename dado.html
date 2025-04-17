@@ -35,7 +35,7 @@ body {
 /* Container da Perspectiva 3D (precisa ser filho do container da simulação) */
 .dice-perspective-container {
     perspective: 1200px;
-    width: 100px; /* Mesmo tamanho do dado */
+    width: 50px; /* Mesmo tamanho do dado */
     height: 100px;
     position: absolute; /* Posição será controlada pelo JS */
     top: 50%; /* Posição inicial (será sobrescrita) */
@@ -67,7 +67,7 @@ body {
     justify-content: center;
     align-items: center;
     font-family: "Eagle Lake", cursive;
-    font-size: 3rem;
+    font-size: 1.5rem;
     font-weight: bold;
     color: rgba(0, 0, 0, 0.6);
     text-shadow:
@@ -174,16 +174,16 @@ const resultDisplay = document.getElementById("result-display");
 
 // Constantes de configuração
 const MAX_PRESS_DURATION = 4000; // 4 segundos máximo
-const BASE_VELOCITY = 20;
-const GRAVITY = 0.5;
+const BASE_VELOCITY = 10;
+const FRICTION = 0.98; // Desaceleração
 const BOUNCE_DAMPING = 0.7;
-const ROTATION_SPEED = 15;
+const DICE_SIZE = 50; // Novo tamanho do dado
 
 // Variáveis de estado
 let isRolling = false;
 let pressStartTime = 0;
 let posX = window.innerWidth / 2;
-let posY = window.innerHeight - 100; // Começa na base
+let posY = window.innerHeight - 120; // Posição inicial
 let velocityY = 0;
 let rotationAngle = 0;
 let currentFace = 1;
@@ -214,21 +214,27 @@ function updateDiceVisual() {
 function animateDice() {
     if (!isRolling) return;
 
-    // Aplica gravidade
-    velocityY += GRAVITY;
+    // Move o dado (agora para cima na tela)
     posY += velocityY;
+    velocityY *= FRICTION; // Aplica desaceleração
 
-    // Verifica colisão com o chão
-    if (posY >= window.innerHeight - 100) {
-        posY = window.innerHeight - 100;
-        velocityY = -velocityY * BOUNCE_DAMPING;
+    // Verifica colisão com o topo
+    if (posY <= DICE_SIZE) {
+        posY = DICE_SIZE;
+        velocityY = Math.abs(velocityY) * BOUNCE_DAMPING;
+    }
 
-        // Efeito de quique (aumenta tamanho)
-        if (Math.abs(velocityY) > 1) {
+    // Verifica colisão com a base
+    if (posY >= window.innerHeight - 120) {
+        posY = window.innerHeight - 120;
+        velocityY = -Math.abs(velocityY) * BOUNCE_DAMPING;
+    }
+
+    // Efeito de quique
+    if (posY >= window.innerHeight - 121 || posY <= DICE_SIZE + 1) {
+        if (Math.abs(velocityY) > 0.5) {
             baseScale = 1.2;
             setTimeout(() => baseScale = 1.0, 100);
-
-            // Atualiza face atual
             rotationAngle += 90;
             currentFace = (currentFace % 6) + 1;
         }
@@ -238,9 +244,8 @@ function animateDice() {
     updateDiceVisual();
 
     // Verifica se deve parar
-    if (Math.abs(velocityY) < 0.1 && posY >= window.innerHeight - 101) {
+    if (Math.abs(velocityY) < 0.1) {
         isRolling = false;
-        // Aplica rotação final da face
         const finalRotation = faceRotations[currentFace];
         diceElement.style.transition = 'transform 0.4s ease-out';
         diceElement.style.transform = `rotateX(${finalRotation.x}deg) rotateY(${finalRotation.y}deg)`;
@@ -261,23 +266,19 @@ rollButton.addEventListener("mousedown", (e) => {
 rollButton.addEventListener("mouseup", (e) => {
     if (isRolling) return;
     
-    // Calcula força baseada no tempo pressionado (máximo 4 segundos)
     const pressDuration = Math.min(Date.now() - pressStartTime, MAX_PRESS_DURATION);
     const forceFactor = pressDuration / MAX_PRESS_DURATION;
     
-    // Inicia o lançamento
     isRolling = true;
     rollButton.disabled = true;
-    velocityY = -BASE_VELOCITY * forceFactor;
+    velocityY = -BASE_VELOCITY * forceFactor; // Negativo para mover para cima
     baseScale = 1.0;
     rotationAngle = 0;
     
     // Reseta posição inicial
-    posY = window.innerHeight - 100;
+    posY = window.innerHeight - 120;
     
-    // Inicia animação
     requestAnimationFrame(animateDice);
-    
     rollButton.style.transform = '';
 });
 
