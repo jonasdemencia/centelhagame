@@ -296,6 +296,17 @@ function animateDice() {
             // Movimento de rolagem
             posX += velocityX;
             velocityX *= FRICTION;
+            posY += velocityY;
+velocityY *= FRICTION;
+
+// Colisão com bordas verticais
+if (posY <= DICE_SIZE || posY >= window.innerHeight - DICE_SIZE) {
+    posY = posY <= DICE_SIZE ? DICE_SIZE : window.innerHeight - DICE_SIZE;
+    velocityY = -velocityY * WALL_BOUNCE_DAMPENING;
+    // Adiciona variação lateral leve ao quicar verticalmente
+    velocityX += (Math.random() - 0.5) * 2;
+}
+
             
             // Mantém o dado dentro da tela
             if (posY > window.innerHeight - DICE_SIZE) {
