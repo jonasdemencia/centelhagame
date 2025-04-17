@@ -178,16 +178,22 @@ const DICE_SIZE = 50;
 const GRAVITY = 0.5;
 const FRICTION = 0.98;
 const BOUNCE_DAMPENING = 0.65;
+const INITIAL_FORCE_MULTIPLIER = 40;
+const LATERAL_FORCE_RANGE = 15;
+const WALL_BOUNCE_DAMPENING = 0.8;
 
 // Estado do dado
 let isRolling = false;
 let pressStartTime = 0;
 let currentRotation = { x: 0, y: 0, z: 0 };
+let posX = window.innerWidth / 2;
 let posY = window.innerHeight - 120;
+let velocityX = 0;
 let velocityY = 0;
 let rollsRemaining = 0;
 let baseScale = 1.0;
-let phase = 'ready'; // ready, throwing, bouncing, rolling, stopped
+let phase = 'ready';
+const targetY = window.innerHeight * 0.4;
 
 // Sequência de faces
 const faceSequence = [
@@ -198,6 +204,7 @@ const faceSequence = [
 ];
 
 function updateDiceVisual() {
+    diceContainer.style.left = `${posX}px`;
     diceContainer.style.top = `${posY}px`;
     
     const { x, y, z } = currentRotation;
@@ -214,62 +221,77 @@ function animateDice() {
 
     switch (phase) {
         case 'throwing':
-            // Movimento inicial para cima
+            posX += velocityX;
             posY += velocityY;
             velocityY += GRAVITY;
 
-            // Verifica se atingiu o ponto mais alto
-            if (velocityY >= 0) {
+            // Colisões com paredes
+            if (posX <= DICE_SIZE || posX >= window.innerWidth - DICE_SIZE) {
+                posX = posX <= DICE_SIZE ? DICE_SIZE : window.innerWidth - DICE_SIZE;
+                velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
+                baseScale = 1.1;
+                setTimeout(() => baseScale = 1.0, 50);
+            }
+
+            // Chegada na área de jogo
+            if (posY >= targetY) {
                 phase = 'bouncing';
-                velocityY *= 0.5; // Reduz velocidade para iniciar quiques
+                posY = targetY;
+                velocityY = -Math.abs(velocityY) * BOUNCE_DAMPENING;
+                baseScale = 1.3;
+                setTimeout(() => baseScale = 1.0, 100);
             }
             break;
 
         case 'bouncing':
-            // Aplica gravidade e move
-            velocityY += GRAVITY;
+            posX += velocityX;
             posY += velocityY;
+            velocityX *= 0.98;
+            velocityY += GRAVITY;
 
-            // Verifica colisão com o chão
-            if (posY >= window.innerHeight - 120) {
-                posY = window.innerHeight - 120;
+            // Colisões com paredes
+            if (posX <= DICE_SIZE || posX >= window.innerWidth - DICE_SIZE) {
+                posX = posX <= DICE_SIZE ? DICE_SIZE : window.innerWidth - DICE_SIZE;
+                velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
+            }
+
+            // Colisão com área de jogo
+            if (posY >= targetY) {
+                posY = targetY;
                 velocityY = -velocityY * BOUNCE_DAMPENING;
+                
+                if (Math.abs(velocityY) > 2) {
+                    baseScale = 1.1 + Math.abs(velocityY) * 0.02;
+                    setTimeout(() => baseScale = 1.0, 100);
+                }
 
-                // Efeito de escala no quique
-                baseScale = 1.2 + Math.abs(velocityY) * 0.1;
-                setTimeout(() => baseScale = 1.0, 100);
-
-                // Verifica se deve passar para fase de rolagem
-                if (Math.abs(velocityY) < 5) {
+                if (Math.abs(velocityY) < 3 && Math.abs(velocityX) < 3) {
                     phase = 'rolling';
-                    velocityY = -5; // Velocidade inicial de rolagem
-                    rollsRemaining = Math.floor(Math.random() * 4) + 3;
+                    rollsRemaining = Math.floor(Math.random() * 6) + 6;
                 }
             }
             break;
 
         case 'rolling':
-            // Move o dado para cima enquanto rola
-            posY += velocityY;
-            velocityY *= FRICTION;
-
-            // Rotaciona o dado
-            if (Math.abs(velocityY) > 0.1) {
-                currentRotation.x += 10;
-                
-                // Efeito de quique leve durante rolagem
-                if (currentRotation.x % 90 < 10) {
-                    baseScale = 1.1;
-                    setTimeout(() => baseScale = 1.0, 50);
-                }
+            posX += velocityX;
+            velocityX *= 0.98;
+            currentRotation.x += 15 * Math.max(Math.abs(velocityX), 0.2);
+            
+            if (currentRotation.x % 90 < 15) {
+                baseScale = 1.05;
+                setTimeout(() => baseScale = 1.0, 50);
             }
 
-            // Verifica se deve parar
-            if (Math.abs(velocityY) < 0.1) {
+            // Colisões com paredes durante rolagem
+            if (posX <= DICE_SIZE || posX >= window.innerWidth - DICE_SIZE) {
+                posX = posX <= DICE_SIZE ? DICE_SIZE : window.innerWidth - DICE_SIZE;
+                velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
+            }
+
+            if (Math.abs(velocityX) < 0.1) {
                 phase = 'stopped';
                 isRolling = false;
                 
-                // Ajusta para face final
                 const finalFaceIndex = Math.floor((currentRotation.x / 90)) % 4;
                 const finalFace = faceSequence[finalFaceIndex];
                 currentRotation = { ...finalFace.rotation };
@@ -303,15 +325,17 @@ rollButton.addEventListener("mouseup", (e) => {
     rollButton.disabled = true;
     phase = 'throwing';
     
-    // Velocidade inicial baseada na força
-    velocityY = -20 - (forceFactor * 15);
+    // Velocidade inicial com componente lateral
+    const lateralForce = (Math.random() - 0.5) * LATERAL_FORCE_RANGE;
+    velocityX = lateralForce;
+    velocityY = -INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5);
     
     // Reseta posição e rotação
+    posX = window.innerWidth / 2;
     posY = window.innerHeight - 120;
     currentRotation = { x: 0, y: 0, z: 0 };
     baseScale = 1.0;
     
-    // Inicia animação
     requestAnimationFrame(animateDice);
     rollButton.style.transform = '';
 });
