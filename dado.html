@@ -167,6 +167,7 @@ button#roll-button:hover {
 
 
 <script>
+<script>
 const diceElement = document.getElementById("dice");
 const diceContainer = document.getElementById("dice-visual-container");
 const rollButton = document.getElementById("roll-button");
@@ -175,13 +176,19 @@ const resultDisplay = document.getElementById("result-display");
 // Configurações
 const MAX_PRESS_DURATION = 4000;
 const DICE_SIZE = 50;
-const GRAVITY = 0.4;
 const FRICTION = 0.98;
 const BOUNCE_DAMPENING = 0.75;
-const INITIAL_FORCE_MULTIPLIER = 60;
-const LATERAL_FORCE_RANGE = 15;
 const WALL_BOUNCE_DAMPENING = 0.8;
-const ROLL_SPEED = 8;
+const INITIAL_FORCE_MULTIPLIER = 15;
+const LATERAL_FORCE_RANGE = 8;
+
+// Configurações de escala para simular altura
+const SCALE = {
+    MIN: 0.8,    // Tamanho mínimo (dado no chão)
+    MAX: 2.0,    // Tamanho máximo (dado no ponto mais alto)
+    FLIGHT: 1.5, // Tamanho durante o voo
+    BOUNCE: 1.3  // Tamanho base para quiques
+};
 
 // Estado do dado
 let isRolling = false;
@@ -191,30 +198,35 @@ let posX = window.innerWidth / 2;
 let posY = window.innerHeight - 50;
 let velocityX = 0;
 let velocityY = 0;
-let rollsRemaining = 0;
-let baseScale = 1.0;
+let targetScale = 1.0;
+let currentScale = 1.0;
 let phase = 'ready';
-const targetY = window.innerHeight * 0.5;
+let flightTime = 0;
+let bounceCount = 0;
+let rollAngle = 0;
 
-// Sequência de faces
-const faceSequence = [
-    { face: 1, rotation: { x: 0, y: 0, z: 0 } },
-    { face: 2, rotation: { x: 90, y: 0, z: 0 } },
-    { face: 6, rotation: { x: 180, y: 0, z: 0 } },
-    { face: 5, rotation: { x: 270, y: 0, z: 0 } }
-];
+// Sequência de faces para visão top-down
+const faceSequence = [1, 2, 6, 5];
 
 function updateDiceVisual() {
     diceContainer.style.left = `${posX}px`;
     diceContainer.style.top = `${posY}px`;
     
+    // Interpola suavemente a escala
+    currentScale += (targetScale - currentScale) * 0.2;
+    
     const { x, y, z } = currentRotation;
     diceElement.style.transform = `
-        scale(${baseScale})
+        scale(${currentScale})
         rotateX(${x}deg)
         rotateY(${y}deg)
         rotateZ(${z}deg)
     `;
+}
+
+function simulateHeight(time, initialVelocity) {
+    const height = Math.sin(time * Math.PI) * initialVelocity;
+    return Math.max(0, height);
 }
 
 function animateDice() {
@@ -222,91 +234,85 @@ function animateDice() {
 
     switch (phase) {
         case 'throwing':
+            // Movimento horizontal
             posX += velocityX;
             posY += velocityY;
-            velocityY += GRAVITY;
             
-            // Ajuste de escala durante o lançamento inicial
-            baseScale = 1.2;
-
-            // Colisões com as bordas
+            // Simulação de altura através da escala
+            flightTime += 0.05;
+            const height = simulateHeight(flightTime, 1);
+            targetScale = SCALE.MIN + (height * (SCALE.MAX - SCALE.MIN));
+            
+            // Rotação durante o voo
+            currentRotation.x += velocityX * 2;
+            currentRotation.y += velocityY * 2;
+            
+            // Colisões com paredes
             if (posX <= DICE_SIZE || posX >= window.innerWidth - DICE_SIZE) {
                 posX = posX <= DICE_SIZE ? DICE_SIZE : window.innerWidth - DICE_SIZE;
                 velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
             }
-
-            // Transição para a fase de quique
-            if (posY <= targetY) {
+            
+            // Transição para quique
+            if (flightTime >= 1) {
                 phase = 'bouncing';
-                posY = targetY;
-                velocityY = Math.abs(velocityY) * BOUNCE_DAMPENING;
-                baseScale = 1.5;
-                setTimeout(() => baseScale = 1.0, 100);
+                bounceCount = Math.floor(Math.abs(velocityX) * 2) + 3;
+                flightTime = 0;
             }
             break;
 
         case 'bouncing':
+            // Movimento com atrito
             posX += velocityX;
             posY += velocityY;
-            velocityY += GRAVITY;
             velocityX *= FRICTION;
-
-            // Colisões com as bordas
-            if (posX <= DICE_SIZE || posX >= window.innerWidth - DICE_SIZE) {
-                posX = posX <= DICE_SIZE ? DICE_SIZE : window.innerWidth - DICE_SIZE;
-                velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
-            }
-
-            // Quiques na superfície
-            if (posY >= targetY) {
-                posY = targetY;
-                velocityY = -velocityY * BOUNCE_DAMPENING;
+            velocityY *= FRICTION;
+            
+            // Simulação de quiques
+            flightTime += 0.1;
+            const bounceHeight = Math.sin(flightTime * Math.PI) * (SCALE.BOUNCE / (bounceCount + 1));
+            targetScale = SCALE.MIN + bounceHeight;
+            
+            // Rotação durante quiques
+            if (flightTime >= 1) {
+                bounceCount--;
+                flightTime = 0;
+                currentRotation.x += 90;
                 
-                // Ajuste de escala nos quiques
-                if (Math.abs(velocityY) > 2) {
-                    baseScale = 1.1 + Math.abs(velocityY) * 0.03;
-                    setTimeout(() => baseScale = 1.0, 100);
-                }
-
-                // Transição para a fase de rolagem
-                if (Math.abs(velocityY) < 3) {
+                if (bounceCount <= 0) {
                     phase = 'rolling';
-                    velocityY = -ROLL_SPEED;
-                    velocityX *= 1.5;
-                    rollsRemaining = Math.floor(Math.random() * 4) + 8;
+                    rollAngle = 0;
+                    velocityX *= 2; // Impulso final para rolagem
                 }
             }
             break;
 
         case 'rolling':
-            posY -= ROLL_SPEED;
+            // Movimento de rolagem
             posX += velocityX;
             velocityX *= FRICTION;
-
-            // Rotação precisa de 90 graus por face
-            if (rollsRemaining > 0) {
-                currentRotation.x += 90;
-                rollsRemaining--;
-                baseScale = 1.1;
-                setTimeout(() => baseScale = 1.0, 50);
-            }
-
-            // Colisões com as bordas durante a rolagem
+            
+            // Rotação precisa durante rolagem
+            rollAngle += Math.abs(velocityX) * 15;
+            currentRotation.x = Math.floor(rollAngle / 90) * 90;
+            
+            // Escala fixa durante rolagem
+            targetScale = SCALE.MIN;
+            
+            // Colisões durante rolagem
             if (posX <= DICE_SIZE || posX >= window.innerWidth - DICE_SIZE) {
                 posX = posX <= DICE_SIZE ? DICE_SIZE : window.innerWidth - DICE_SIZE;
                 velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
             }
-
-            // Parada final
-            if (posY <= DICE_SIZE || rollsRemaining <= 0) {
+            
+            // Parada
+            if (Math.abs(velocityX) < 0.1) {
                 phase = 'stopped';
                 isRolling = false;
                 
+                // Face final
                 const finalFaceIndex = Math.floor((currentRotation.x / 90)) % 4;
-                const finalFace = faceSequence[finalFaceIndex];
-                currentRotation = { ...finalFace.rotation };
-                
-                resultDisplay.textContent = `Resultado: ${finalFace.face}`;
+                resultDisplay.textContent = `Resultado: ${faceSequence[finalFaceIndex]}`;
                 rollButton.disabled = false;
             }
             break;
@@ -335,16 +341,19 @@ rollButton.addEventListener("mouseup", () => {
     rollButton.disabled = true;
     phase = 'throwing';
     
-    // Velocidade inicial e força lateral
-    const lateralForce = (Math.random() - 0.5) * LATERAL_FORCE_RANGE;
-    velocityX = lateralForce;
-    velocityY = -INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5);
+    // Velocidade inicial
+    const angle = (Math.random() - 0.5) * Math.PI * 0.5;
+    const force = INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5);
+    velocityX = Math.cos(angle) * force;
+    velocityY = -Math.sin(angle) * force;
     
-    // Reset de posição e rotação
+    // Reset
     posX = window.innerWidth / 2;
     posY = window.innerHeight - 50;
     currentRotation = { x: 0, y: 0, z: 0 };
-    baseScale = 1.0;
+    flightTime = 0;
+    currentScale = SCALE.MIN;
+    targetScale = SCALE.FLIGHT;
     
     requestAnimationFrame(animateDice);
     rollButton.style.transform = '';
@@ -355,7 +364,6 @@ window.addEventListener("load", () => {
     updateDiceVisual();
     resultDisplay.textContent = "Pressione o botão para lançar o dado";
 });
-
 </script>
 
 </body>
