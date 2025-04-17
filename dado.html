@@ -172,46 +172,119 @@ const diceContainer = document.getElementById("dice-visual-container");
 const rollButton = document.getElementById("roll-button");
 const resultDisplay = document.getElementById("result-display");
 
-let rotX = 0, rotY = 0;
-let posX = window.innerWidth / 2;
-let posY = window.innerHeight / 2;
-const step = 100;
+// Constantes de configuração
+const MAX_PRESS_DURATION = 4000; // 4 segundos máximo
+const BASE_VELOCITY = 20;
+const GRAVITY = 0.5;
+const BOUNCE_DAMPING = 0.7;
+const ROTATION_SPEED = 15;
 
-function updateDicePositionAndRotation() {
+// Variáveis de estado
+let isRolling = false;
+let pressStartTime = 0;
+let posX = window.innerWidth / 2;
+let posY = window.innerHeight - 100; // Começa na base
+let velocityY = 0;
+let rotationAngle = 0;
+let currentFace = 1;
+let baseScale = 1.0;
+
+// Mapa de rotações para cada face
+const faceRotations = {
+    1: { x: 0, y: 0 },
+    2: { x: 90, y: 0 },
+    3: { x: 0, y: -90 },
+    4: { x: 0, y: 90 },
+    5: { x: -90, y: 0 },
+    6: { x: 180, y: 0 }
+};
+
+function updateDiceVisual() {
+    // Atualiza posição
     diceContainer.style.left = `${posX}px`;
     diceContainer.style.top = `${posY}px`;
-    diceElement.style.transition = "transform 0.5s ease-out";
-    diceElement.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+
+    // Aplica rotação e escala
+    diceElement.style.transform = `
+        rotateX(${rotationAngle}deg)
+        scale(${baseScale})
+    `;
 }
 
-document.addEventListener("keydown", (e) => {
-    switch (e.key) {
-        case "ArrowUp":
-            rotX -= 90;
-            posY -= step;
-            break;
-        case "ArrowDown":
-            rotX += 90;
-            posY += step;
-            break;
-        case "ArrowLeft":
-            rotY -= 90;
-            posX -= step;
-            break;
-        case "ArrowRight":
-            rotY += 90;
-            posX += step;
-            break;
-        default:
-            return;
+function animateDice() {
+    if (!isRolling) return;
+
+    // Aplica gravidade
+    velocityY += GRAVITY;
+    posY += velocityY;
+
+    // Verifica colisão com o chão
+    if (posY >= window.innerHeight - 100) {
+        posY = window.innerHeight - 100;
+        velocityY = -velocityY * BOUNCE_DAMPING;
+
+        // Efeito de quique (aumenta tamanho)
+        if (Math.abs(velocityY) > 1) {
+            baseScale = 1.2;
+            setTimeout(() => baseScale = 1.0, 100);
+
+            // Atualiza face atual
+            rotationAngle += 90;
+            currentFace = (currentFace % 6) + 1;
+        }
     }
-    updateDicePositionAndRotation();
+
+    // Atualiza visual
+    updateDiceVisual();
+
+    // Verifica se deve parar
+    if (Math.abs(velocityY) < 0.1 && posY >= window.innerHeight - 101) {
+        isRolling = false;
+        // Aplica rotação final da face
+        const finalRotation = faceRotations[currentFace];
+        diceElement.style.transition = 'transform 0.4s ease-out';
+        diceElement.style.transform = `rotateX(${finalRotation.x}deg) rotateY(${finalRotation.y}deg)`;
+        resultDisplay.textContent = `Resultado: ${currentFace}`;
+        rollButton.disabled = false;
+    } else {
+        requestAnimationFrame(animateDice);
+    }
+}
+
+// Eventos do botão
+rollButton.addEventListener("mousedown", (e) => {
+    if (isRolling) return;
+    pressStartTime = Date.now();
+    rollButton.style.transform = 'scale(0.95)';
 });
 
-// Inicializa a posição central
+rollButton.addEventListener("mouseup", (e) => {
+    if (isRolling) return;
+    
+    // Calcula força baseada no tempo pressionado (máximo 4 segundos)
+    const pressDuration = Math.min(Date.now() - pressStartTime, MAX_PRESS_DURATION);
+    const forceFactor = pressDuration / MAX_PRESS_DURATION;
+    
+    // Inicia o lançamento
+    isRolling = true;
+    rollButton.disabled = true;
+    velocityY = -BASE_VELOCITY * forceFactor;
+    baseScale = 1.0;
+    rotationAngle = 0;
+    
+    // Reseta posição inicial
+    posY = window.innerHeight - 100;
+    
+    // Inicia animação
+    requestAnimationFrame(animateDice);
+    
+    rollButton.style.transform = '';
+});
+
+// Inicialização
 window.addEventListener("load", () => {
-    updateDicePositionAndRotation();
-    if (resultDisplay) resultDisplay.textContent = "Use as setas para mover o dado.";
+    updateDiceVisual();
+    resultDisplay.textContent = "Pressione o botão para lançar o dado";
 });
 </script>
 
