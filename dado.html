@@ -231,12 +231,13 @@ button#roll-button:hover {
     // Cria o corpo físico do dado (um quadrado para física 2D)
     const initialX = screenWidth / 2;
     const initialY = screenHeight - diceSize * 1.5; // Começa perto da parte inferior
-    const diceBody = Bodies.rectangle(initialX, initialY, diceSize, diceSize, {
-    restitution: 0.3,    // Menos quique
-    friction: 0.1,       // Mais atrito com a superfície
-    frictionAir: 0.015,  // Resistência do ar moderada
-    slop: 0.1,
-    density: 0.001      // Massa menor para movimento mais suave
+    // Modifique as propriedades do diceBody
+const diceBody = Bodies.rectangle(initialX, initialY, diceSize, diceSize, {
+    restitution: 0.5,    // Elasticidade moderada para quicar
+    friction: 0.8,       // Mais atrito para rolar de verdade
+    frictionAir: 0.001,  // Menos resistência do ar
+    density: 0.008,      // Massa mais significativa
+    chamfer: { radius: 5 }, // Adiciona pequenos chanfros nas bordas para melhor rolagem
 });
 
     // Adiciona as paredes e o dado ao mundo
@@ -265,16 +266,25 @@ button#roll-button:hover {
     diceVisualContainer.style.left = `${pos.x}px`;
     diceVisualContainer.style.top = `${pos.y}px`;
 
-    // Rotação contínua durante o movimento
+    // Sistema de rotação melhorado
     if (speed > 0.1 || angularSpeed > 0.1) {
-        const rotX = (angle * 180 / Math.PI) * 2;
-        const rotY = angularSpeed * 360;
-        const rotZ = speed * 180;
+        // Base rotation from physics
+        const baseRotation = angle * (180 / Math.PI);
+        
+        // Adiciona rotações baseadas no movimento
+        const rotX = baseRotation + (speed * 30);  // Rotação frontal
+        const rotY = angularSpeed * 180;           // Rotação lateral
+        const rotZ = speed * 90;                   // Rotação no eixo
 
+        // Aplica transformação composta
         diceElement.style.transition = 'none';
-        diceElement.style.transform = `translate(-50%, -50%) rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`;
+        diceElement.style.transform = `
+            translate(-50%, -50%)
+            rotateX(${rotX}deg)
+            rotateY(${rotY}deg)
+            rotateZ(${rotZ}deg)
+        `;
     }
-
     // Verifica se o dado parou
     if (speed < stopThreshold && angularSpeed < stopThreshold) {
         stopCheckCounter++;
@@ -360,8 +370,8 @@ button#roll-button:hover {
     resultDisplay.textContent = 'Rolando...';
 
     finalResult = Math.floor(Math.random() * 6) + 1;
-    console.log("Resultado Sorteado:", finalResult);
 
+    // Reseta o estado
     Body.setStatic(diceBody, false);
     Body.setPosition(diceBody, { x: initialX, y: initialY });
     Body.setVelocity(diceBody, { x: 0, y: 0 });
@@ -369,25 +379,31 @@ button#roll-button:hover {
 
     const forceFactor = Math.min(duration / maxPressDuration, 1);
     
-    // Calcula ângulo aleatório para direção
-    const angle = Math.random() * Math.PI * 2;
+    // Ângulo de lançamento mais natural
+    const angle = (Math.random() * Math.PI / 2) - (Math.PI / 4); // -45° a +45°
     
-    // Força total baseada na duração
-    const totalForce = 0.05 + (forceFactor * 0.15);
+    // Força de lançamento mais realista
+    const baseSpeed = 0.1;
+    const maxSpeed = 0.3;
+    const throwSpeed = baseSpeed + (forceFactor * (maxSpeed - baseSpeed));
     
-    // Aplica força em uma direção aleatória
-    const launchForceX = Math.cos(angle) * totalForce;
-    const launchForceY = Math.sin(angle) * totalForce;
+    // Componentes da força
+    const launchForceX = Math.cos(angle) * throwSpeed;
+    const launchForceY = Math.sin(angle) * throwSpeed;
 
-    // Torque inicial mais significativo
-    const launchTorque = (Math.random() - 0.5) * 0.2 * (1 + forceFactor);
+    // Torque inicial para começar a rolar
+    const initialTorque = (Math.random() - 0.5) * 0.05 * (1 + forceFactor);
 
-    Body.applyForce(diceBody, diceBody.position, { 
-        x: launchForceX, 
-        y: launchForceY 
+    // Aplica as forças
+    Body.applyForce(diceBody, diceBody.position, {
+        x: launchForceX,
+        y: launchForceY
     });
-    Body.setAngularVelocity(diceBody, launchTorque);
+    
+    // Aplica torque inicial
+    Body.setAngularVelocity(diceBody, initialTorque);
 
+    // Reset visual
     diceElement.style.transition = 'none';
     diceElement.style.transform = 'rotateX(0deg) rotateY(0deg) rotateZ(0deg)';
 }
