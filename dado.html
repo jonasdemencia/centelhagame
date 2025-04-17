@@ -305,6 +305,7 @@ if (posY <= DICE_SIZE || posY >= window.innerHeight - DICE_SIZE) {
     velocityY = -velocityY * WALL_BOUNCE_DAMPENING;
     // Adiciona variação lateral leve ao quicar verticalmente
     velocityX += (Math.random() - 0.5) * 2;
+    currentRotation.y += 180; // simula inversão da rotação vertical
 }
 
             
@@ -334,7 +335,14 @@ if (posY <= DICE_SIZE || posY >= window.innerHeight - DICE_SIZE) {
                 isRolling = false;
                 
                 // Mantém a direção final da face
-                const finalFaceIndex = Math.floor(Math.abs(rollAngle) / 90) % 4;
+                const faceIndexX = Math.round(currentRotation.x / 90) % 4;
+const faceIndexY = Math.round(currentRotation.y / 90) % 4;
+
+// Combina os dois eixos para determinar a face de cima
+// (isso é uma simplificação: você pode expandir o `faceSequence` com uma matriz 3D mais tarde)
+const finalFaceIndex = (faceIndexX + faceIndexY) % 4;
+resultDisplay.textContent = `Resultado: ${faceSequence[Math.abs(finalFaceIndex)]}`;
+
                 resultDisplay.textContent = `Resultado: ${faceSequence[finalFaceIndex]}`;
                 rollButton.disabled = false;
             }
@@ -376,7 +384,7 @@ rollButton.addEventListener("mouseup", () => {
     const normalizedY = (dirY / magnitude);
     
     // Aplica força baseada no tempo pressionado
-    const force = INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5);
+    const force = INITIAL_FORCE_MULTIPLIER * (1 + forceFactor); // Dobro do valor anterior
     velocityX = normalizedX * force;
     velocityY = normalizedY * force;
     
