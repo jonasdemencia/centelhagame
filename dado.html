@@ -92,7 +92,6 @@ body {
 .face.top    { transform: rotateX( 90deg) translateZ(50px); }
 .face.bottom { transform: rotateX(-90deg) translateZ(50px); }
 
-
 /* Controles - Posicionados fixos na parte inferior */
 .controls {
     position: fixed; /* Fixo na tela */
@@ -140,9 +139,7 @@ button#roll-button:hover {
     font-weight: bold;
     text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
 }
-
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -164,8 +161,6 @@ button#roll-button:hover {
      <p id="result-display"></p>
 </div>
 
-
-
 <script>
 const diceElement = document.getElementById("dice");
 const diceContainer = document.getElementById("dice-visual-container");
@@ -184,34 +179,18 @@ function updateDicePositionAndRotation() {
     diceElement.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
 }
 
-document.addEventListener("keydown", (e) => {
-    switch (e.key) {
-        case "ArrowUp":
-            rotX -= 90;
-            posY -= step;
-            break;
-        case "ArrowDown":
-            rotX += 90;
-            posY += step;
-            break;
-        case "ArrowLeft":
-            rotY -= 90;
-            posX -= step;
-            break;
-        case "ArrowRight":
-            rotY += 90;
-            posX += step;
-            break;
-        default:
-            return;
-    }
+// Função para lançar o dado no eixo Y
+rollButton.addEventListener("click", () => {
+    rotX -= 90; // Rola para frente sempre no eixo Y
+    posY -= step; // Move o dado para cima no eixo Y
     updateDicePositionAndRotation();
+    resultDisplay.textContent = "Dado lançado!";
 });
 
 // Inicializa a posição central
 window.addEventListener("load", () => {
     updateDicePositionAndRotation();
-    if (resultDisplay) resultDisplay.textContent = "Use as setas para mover o dado.";
+    if (resultDisplay) resultDisplay.textContent = "Clique no botão para lançar o dado.";
 });
 </script>
 
