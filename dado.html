@@ -310,45 +310,44 @@ function animateDice() {
             break;
 
         case 'rolling':
-            // Movimento de rolagem
-            posX += velocityX;
-            velocityX *= FRICTION;
-            
-            // Rotação consistente com o movimento
-            const rotationDirection = velocityX > 0 ? 1 : -1;
-            rollAngle += rotationDirection * Math.abs(velocityX) * 15;
-            
-            // Garante que a rotação seja sempre múltiplo de 90
-            currentRotation.x = Math.round(rollAngle / 90) * 90;
-            
-            // Mantém tracking da face atual durante a rolagem
-            let currentFaceIndex = Math.abs(Math.floor(currentRotation.x / 90) % 4);
-            if (velocityX < 0) {
-                currentFaceIndex = (4 - currentFaceIndex) % 4;
-            }
-            
-            // Escala fixa durante rolagem
-            targetScale = SCALE.MIN;
-            
-            // Parada mais suave
-            if (Math.abs(velocityX) < 0.1) {
-                phase = 'stopped';
-                isRolling = false;
-                
-                // Garante que a face final corresponda à rotação visual
-                const finalRotation = Math.round(currentRotation.x / 90) * 90;
-                currentRotation.x = finalRotation;
-                const finalFaceIndex = Math.abs(finalRotation / 90) % 4;
-                
-                // Ajusta o índice com base na direção final
-                const adjustedFaceIndex = velocityX < 0 ? 
-                    (4 - finalFaceIndex) % 4 : 
-                    finalFaceIndex;
-                
-                resultDisplay.textContent = `Resultado: ${faceSequence[adjustedFaceIndex]}`;
-                rollButton.disabled = false;
-            }
-            break;
+    // Movimento de rolagem
+    posX += velocityX;
+    velocityX *= FRICTION;
+    
+    // Rotação consistente com o movimento
+    const rotationDirection = velocityX > 0 ? 1 : -1;
+    rollAngle += rotationDirection * Math.abs(velocityX) * 15;
+    
+    // Escala fixa durante rolagem
+    targetScale = SCALE.MIN;
+    
+    // Parada mais suave
+    if (Math.abs(velocityX) < 0.1) {
+        phase = 'stopped';
+        isRolling = false;
+        
+        // Força o alinhamento com a face mais próxima
+        const nearestMultiple = Math.round(rollAngle / 90) * 90;
+        rollAngle = nearestMultiple;
+        currentRotation.x = nearestMultiple;
+        currentRotation.y = 0; // Reseta rotação Y para garantir face plana
+        currentRotation.z = 0; // Reseta rotação Z para garantir face plana
+        
+        // Calcula o índice da face final
+        const finalFaceIndex = Math.abs(Math.floor(nearestMultiple / 90) % 4);
+        
+        // Ajusta o índice com base na direção final
+        const adjustedFaceIndex = velocityX < 0 ? 
+            (4 - finalFaceIndex) % 4 : 
+            finalFaceIndex;
+        
+        resultDisplay.textContent = `Resultado: ${faceSequence[adjustedFaceIndex]}`;
+        rollButton.disabled = false;
+    } else {
+        // Durante o movimento, mantém a rotação alinhada com múltiplos de 90
+        currentRotation.x = Math.round(rollAngle / 90) * 90;
+    }
+    break;
     }
 
     updateDiceVisual();
