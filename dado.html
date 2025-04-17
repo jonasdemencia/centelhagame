@@ -171,12 +171,6 @@ const diceElement = document.getElementById("dice");
 const diceContainer = document.getElementById("dice-visual-container");
 const rollButton = document.getElementById("roll-button");
 const resultDisplay = document.getElementById("result-display");
-const SCREEN_BOUNDS = {
-    TOP: DICE_SIZE,
-    BOTTOM: window.innerHeight - DICE_SIZE,
-    LEFT: DICE_SIZE,
-    RIGHT: window.innerWidth - DICE_SIZE
-};
 
 // Configurações
 const MAX_PRESS_DURATION = 4000;
@@ -187,12 +181,20 @@ const WALL_BOUNCE_DAMPENING = 0.5;
 const INITIAL_FORCE_MULTIPLIER = 20;
 const LATERAL_FORCE_RANGE = 8;
 
+// Definição dos limites da tela (agora DEPOIS de definir DICE_SIZE)
+const SCREEN_BOUNDS = {
+    TOP: DICE_SIZE,
+    BOTTOM: window.innerHeight - DICE_SIZE,
+    LEFT: DICE_SIZE,
+    RIGHT: window.innerWidth - DICE_SIZE
+};
+
 // Configurações de escala para simular altura
 const SCALE = {
     MIN: 0.8,
-    MAX: 1.8,    // Reduzido um pouco
-    FLIGHT: 1.4, // Reduzido um pouco
-    BOUNCE: 1.2  // Reduzido um pouco
+    MAX: 1.8,    
+    FLIGHT: 1.4, 
+    BOUNCE: 1.2  
 };
 
 // Estado do dado
