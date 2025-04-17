@@ -174,15 +174,16 @@ rollButton.addEventListener("mouseup", () => {
     rollButton.style.transform = "";
     if (isRolling) return;
 
-    const pressDuration = Date.now() - pressStartTime;
-    const force = Math.min(pressDuration / 100, 10); // Força máxima limitada a 10
+    const pressDuration = Math.min(Date.now() - pressStartTime, 4000); // Pressão máxima limitada a 4 segundos
+    const force = Math.min(pressDuration / 400, 10); // Força máxima limitada a 10
 
     isRolling = true;
 
     let rotX = 0;
+    let currentForce = force;
 
     const interval = setInterval(() => {
-        if (force <= 0 || posY <= 0) {
+        if (currentForce <= 0 || posY >= window.innerHeight - 33) {
             clearInterval(interval);
             isRolling = false;
             resultDisplay.textContent = "Dado parou!";
@@ -191,13 +192,14 @@ rollButton.addEventListener("mouseup", () => {
 
         // Simula o movimento e quiques
         rotX += 90;
-        posY -= step * (force / 10); // Movimento proporcional à força
+        posY -= step * (currentForce / 10); // Movimento proporcional à força
 
         if (posY <= 0) {
-            posY = 0;
-            force *= 0.5; // Reduz a força após bater no topo
+            posY = 1; // Evita ultrapassar o topo
+            currentForce *= 0.6; // Reduz a força após cada quique
         }
 
+        posY += step * 0.2; // Efeito de gravidade
         updateDicePositionAndRotation(rotX, 0);
 
         // Simula o efeito de tamanho durante o quique
