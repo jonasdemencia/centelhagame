@@ -493,13 +493,18 @@ const diceElement = document.getElementById("dice");
 
      const magnitude = Math.max(1, Math.sqrt(dirX * dirX + dirY * dirY)); // Evita divisão por zero
 
+     // --- CORREÇÃO: Calcula a força ANTES de usá-la ---
+     // Aplica força (seu cálculo original mantido)
+     const force = INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5);
+     // ----------------------------------------------------
+
      // Normaliza e adiciona variação lateral (seu cálculo original mantido)
      // Nota: Seu dirX original era 0, então normalizedX dependia só da variação aleatória. Mantendo isso:
+     // Agora 'force' está definida e pode ser usada aqui.
      const normalizedX = (dirX / magnitude) + (Math.random() - 0.5) * (LATERAL_FORCE_RANGE / (force * 0.5 + 10)); // Variação lateral
      const normalizedY = (dirY / magnitude);
 
-     // Aplica força (seu cálculo original mantido)
-     const force = INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5);
+
      velocityX = normalizedX * force;
      velocityY = normalizedY * force;
 
