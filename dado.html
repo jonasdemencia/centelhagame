@@ -194,7 +194,7 @@ button#roll-button:hover {
 
     // Cria a engine de física
     const engine = Engine.create();
-    engine.world.gravity.y = 0; // Sem gravidade padrão (lançamento controlado)
+    engine.world.gravity.y = 1; // Sem gravidade padrão (lançamento controlado)
 
     // Obtém dimensões do container da simulação (tela inteira)
     const screenWidth = simulationContainer.clientWidth;
@@ -219,10 +219,10 @@ button#roll-button:hover {
     // Cria as paredes (corpos estáticos) ligeiramente fora da tela
     const wallThickness = 100; // Espessura grande para garantir colisão
     const wallOptions = {
-        isStatic: true,
-        restitution: 0.6, // Quão "elástico" é o quique
-        friction: 0.1
-    };
+    isStatic: true,
+    restitution: 0.8,  // Aumentado para mais quique
+    friction: 0.1
+};
     const wallTop = Bodies.rectangle(screenWidth / 2, -wallThickness / 2, screenWidth, wallThickness, wallOptions);
     const wallBottom = Bodies.rectangle(screenWidth / 2, screenHeight + wallThickness / 2, screenWidth, wallThickness, wallOptions);
     const wallLeft = Bodies.rectangle(-wallThickness / 2, screenHeight / 2, wallThickness, screenHeight, wallOptions);
@@ -232,12 +232,12 @@ button#roll-button:hover {
     const initialX = screenWidth / 2;
     const initialY = screenHeight - diceSize * 1.5; // Começa perto da parte inferior
     const diceBody = Bodies.rectangle(initialX, initialY, diceSize, diceSize, {
-        restitution: 0.5, // Elasticidade
-        friction: 0.01,    // Atrito com outras coisas (baixo)
-        frictionAir: 0.01, // Resistência do "ar" (desaceleração)
-        slop: 0.1, // Permite pequena sobreposição para estabilidade
-        density: 0.1 // Afeta massa e inércia
-    });
+    restitution: 0.6,     // Aumentado para mais quique
+    friction: 0.1,        // Aumentado para mais atrito
+    frictionAir: 0.005,   // Reduzido para menos resistência do ar
+    slop: 0.1,
+    density: 0.002        // Reduzido para menor massa
+});
 
     // Adiciona as paredes e o dado ao mundo
     Composite.add(engine.world, [diceBody, wallTop, wallBottom, wallLeft, wallRight]);
@@ -250,8 +250,8 @@ button#roll-button:hover {
 
     // --- Sincronização Física -> Visual e Detecção de Parada ---
     let stopCheckCounter = 0; // Contador para verificar se parou mesmo
-    const stopThreshold = 0.15; // Quão lento precisa estar para considerar parado
-    const stopCheckLimit = 15; // Quantos updates precisa ficar lento
+    const stopThreshold = 0.05; // Quão lento precisa estar para considerar parado
+    const stopCheckLimit = 30; // Quantos updates precisa ficar lento
 
     Events.on(engine, 'afterUpdate', () => {
         if (!isRolling) return; // Só atualiza se estiver rolando
@@ -383,14 +383,16 @@ button#roll-button:hover {
 
 
         // 3. Calcular Força e Torque baseado na duração
-        const forceFactor = Math.min(duration / maxPressDuration, 1); // Normaliza duração (0 a 1)
-        const baseForce = 0.15; // Força mínima para cima
-        const maxAddedForce = 0.25; // Força adicional máxima
-        const launchForceY = -(baseForce + forceFactor * maxAddedForce); // Força para CIMA (Y negativo)
+        const forceFactor = Math.min(duration / maxPressDuration, 1);
+    const baseForce = 0.02;          // Força base reduzida
+    const maxAddedForce = 0.04;      // Força adicional reduzida
+    const launchForceY = -(baseForce + forceFactor * maxAddedForce);
 
-        const launchForceX = (Math.random() - 0.5) * 0.1 * (1 + forceFactor); // Pequena força lateral aleatória, maior com mais força
-
-        const launchTorque = (Math.random() - 0.5) * 0.2 * (1 + forceFactor*2); // Torque inicial aleatório, maior com mais força
+    // Aumenta a força lateral
+    const launchForceX = (Math.random() - 0.5) * 0.03 * (1 + forceFactor);
+    
+    // Aumenta o torque
+    const launchTorque = (Math.random() - 0.5) * 0.1 * (1 + forceFactor);
 
         // 4. Aplicar Força e Torque no corpo físico
         // Aplicar no centro de massa (posição do corpo)
