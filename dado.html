@@ -254,16 +254,30 @@ button#roll-button:hover {
     const stopCheckLimit = 30; // Quantos updates precisa ficar lento
 
     Events.on(engine, 'afterUpdate', () => {
-        if (!isRolling) return; // Só atualiza se estiver rolando
+    if (!isRolling) return;
 
-        // Pega posição e ângulo do corpo físico
-        const pos = diceBody.position;
-        const angle = diceBody.angle;
+    const pos = diceBody.position;
+    const angle = diceBody.angle;
+    
+    // Atualiza posição
+    diceVisualContainer.style.left = `${pos.x}px`;
+    diceVisualContainer.style.top = `${pos.y}px`;
 
-        // Atualiza posição do container visual 3D
-        // Centraliza o container no ponto da física
-        diceVisualContainer.style.left = `${pos.x}px`;
-        diceVisualContainer.style.top = `${pos.y}px`;
+    // Calcula rotações baseadas na velocidade angular e linear
+    const speed = Vector.magnitude(diceBody.velocity);
+    const angularSpeed = Math.abs(diceBody.angularVelocity);
+
+    // Rotação contínua durante o movimento
+    if (speed > 0.1 || angularSpeed > 0.1) {
+        const rotX = angle * (180 / Math.PI); // Converte radianos para graus
+        const rotY = angularSpeed * 100; // Rotação Y baseada na velocidade angular
+        const rotZ = speed * 50; // Rotação Z baseada na velocidade linear
+
+        // Aplica rotações múltiplas durante o movimento
+        diceElement.style.transition = 'none'; // Remove transição para movimento suave
+        diceElement.style.transform = 
+            `rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`;
+    }
 
         // Atualiza a rotação VISUAL 3D
         // Opção 1: Rotação simples baseada no ângulo 2D (menos realista 3D)
@@ -385,25 +399,24 @@ button#roll-button:hover {
         // 3. Calcular Força e Torque baseado na duração
         const forceFactor = Math.min(duration / maxPressDuration, 1);
     
-    // Calcula um ângulo aleatório para a direção do lançamento
+    // Cálculo do ângulo de lançamento (aleatório)
     const angle = Math.random() * Math.PI * 2;
     
-    // Força base e adicional agora são aplicadas em uma direção aleatória
-    const baseForce = 0.05;
-    const maxAddedForce = 0.15;
-    const totalForce = baseForce + (forceFactor * maxAddedForce);
+    // Força total baseada na duração
+    const totalForce = 0.05 + (forceFactor * 0.15);
     
-    // Calcula as componentes X e Y da força baseado no ângulo
+    // Componentes da força em X e Y
     const launchForceX = Math.cos(angle) * totalForce;
     const launchForceY = Math.sin(angle) * totalForce;
 
-    // Torque para fazer o dado girar enquanto desliza
-    const launchTorque = (Math.random() - 0.5) * 0.2 * (1 + forceFactor);
+    // Torque mais significativo para simular rolagem real
+    const launchTorque = (Math.random() - 0.5) * 0.1 * (1 + forceFactor);
 
-    // Aplica a força e o torque
-    Body.applyForce(diceBody, diceBody.position, {
-        x: launchForceX,
-        y: launchForceY
+    // Aplica movimento inicial de rolagem
+    Body.setAngularVelocity(diceBody, launchTorque);
+    Body.applyForce(diceBody, diceBody.position, { 
+        x: launchForceX, 
+        y: launchForceY 
     });
     Body.setAngularVelocity(diceBody, launchTorque);
 
