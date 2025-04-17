@@ -33,12 +33,12 @@ body {
 /* Container da Perspectiva 3D */
 .dice-perspective-container {
     perspective: 1200px;
-    width: 100px;
-    height: 100px;
+    width: 33px; /* Reduzido para 1/3 do tamanho */
+    height: 33px;
     position: absolute;
-    top: 50%;
+    bottom: 0; /* Posição inicial na base da página */
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, 0);
 }
 
 /* Design do Dado */
@@ -62,7 +62,7 @@ body {
     justify-content: center;
     align-items: center;
     font-family: "Eagle Lake", cursive;
-    font-size: 3rem;
+    font-size: 1rem; /* Ajustado para combinar com o tamanho */
     font-weight: bold;
     color: rgba(0, 0, 0, 0.6);
     text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.3), -1px -1px 1px rgba(0, 0, 0, 0.4);
@@ -73,12 +73,12 @@ body {
     backface-visibility: hidden;
 }
 
-.face.front  { transform: rotateY(  0deg) translateZ(50px); }
-.face.back   { transform: rotateX(180deg) translateZ(50px); }
-.face.right  { transform: rotateY( 90deg) translateZ(50px); }
-.face.left   { transform: rotateY(-90deg) translateZ(50px); }
-.face.top    { transform: rotateX( 90deg) translateZ(50px); }
-.face.bottom { transform: rotateX(-90deg) translateZ(50px); }
+.face.front  { transform: rotateY(  0deg) translateZ(16.5px); }
+.face.back   { transform: rotateX(180deg) translateZ(16.5px); }
+.face.right  { transform: rotateY( 90deg) translateZ(16.5px); }
+.face.left   { transform: rotateY(-90deg) translateZ(16.5px); }
+.face.top    { transform: rotateX( 90deg) translateZ(16.5px); }
+.face.bottom { transform: rotateX(-90deg) translateZ(16.5px); }
 
 /* Controles */
 .controls {
@@ -154,8 +154,8 @@ const resultDisplay = document.getElementById("result-display");
 let pressStartTime = 0;
 let isRolling = false;
 let posX = window.innerWidth / 2;
-let posY = window.innerHeight / 2;
-const step = 100;
+let posY = window.innerHeight - 33; // Base da página
+const step = 33; // Reduzido junto com o tamanho do dado
 
 function updateDicePositionAndRotation(rotX, rotY) {
     diceContainer.style.left = `${posX}px`;
@@ -180,31 +180,32 @@ rollButton.addEventListener("mouseup", () => {
     isRolling = true;
 
     let rotX = 0;
-    let rotY = 0;
 
     const interval = setInterval(() => {
-        if (force <= 0) {
+        if (force <= 0 || posY <= 0) {
             clearInterval(interval);
             isRolling = false;
+            resultDisplay.textContent = "Dado parou!";
             return;
         }
 
-        // Simula o movimento
+        // Simula o movimento e quiques
         rotX += 90;
         posY -= step * (force / 10); // Movimento proporcional à força
 
         if (posY <= 0) {
-            posY = 0; // Bate no topo
+            posY = 0;
+            force *= 0.5; // Reduz a força após bater no topo
         }
 
-        updateDicePositionAndRotation(rotX, rotY);
+        updateDicePositionAndRotation(rotX, 0);
 
         // Simula o efeito de tamanho durante o quique
-        diceElement.style.width = "120px";
-        diceElement.style.height = "120px";
+        diceElement.style.width = "40px";
+        diceElement.style.height = "40px";
         setTimeout(() => {
-            diceElement.style.width = "100px";
-            diceElement.style.height = "100px";
+            diceElement.style.width = "33px";
+            diceElement.style.height = "33px";
         }, 100);
     }, 200);
 });
