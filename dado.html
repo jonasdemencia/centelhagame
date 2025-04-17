@@ -332,22 +332,24 @@ function animateDice() {
             
             // Parada mais suave
             if (Math.abs(velocityX) < 0.1) {
-                phase = 'stopped';
-                isRolling = false;
-                
-                // Garante que a face final corresponda à rotação visual
-                const finalRotation = Math.round(currentRotation.x / 90) * 90;
-                currentRotation.x = finalRotation;
-                const finalFaceIndex = Math.abs(finalRotation / 90) % 4;
-                
-                // Ajusta o índice com base na direção final
-                const adjustedFaceIndex = velocityX < 0 ? 
-                    (4 - finalFaceIndex) % 4 : 
-                    finalFaceIndex;
-                
-                resultDisplay.textContent = `Resultado: ${faceSequence[adjustedFaceIndex]}`;
-                rollButton.disabled = false;
-            }
+    phase = 'stopped';
+    isRolling = false;
+
+    // 🔧 FORÇA A ROTAÇÃO FINAL PARA MÚLTIPLOS DE 90
+    currentRotation.x = Math.round(currentRotation.x / 90) * 90;
+    currentRotation.y = Math.round(currentRotation.y / 90) * 90;
+    currentRotation.z = 0; // evita rotação diagonal inesperada
+
+    // Determina qual face está para cima (top-down sequence)
+    const finalFaceIndex = Math.abs(currentRotation.x / 90) % 4;
+    const adjustedFaceIndex = velocityX < 0 ?
+        (4 - finalFaceIndex) % 4 :
+        finalFaceIndex;
+
+    resultDisplay.textContent = `Resultado: ${faceSequence[adjustedFaceIndex]}`;
+    rollButton.disabled = false;
+}
+
             break;
     }
 
