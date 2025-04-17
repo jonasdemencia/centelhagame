@@ -1,418 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> <title>Dado Realista com Física 2D</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-<style>
-/* Estilos gerais */
-body {
-    display: flex; /* Mantém flex para centralizar o container geral */
-    flex-direction: column;
-    justify-content: flex-end; /* Alinha conteúdo (botão/resultado) na parte inferior */
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    background: radial-gradient(circle at center, #3a3a3a, #1a1a1a);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    overflow: hidden; /* ESSENCIAL para não ter barras de rolagem */
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-}
-
-/* Container para a Simulação Física e Controles */
-#simulation-container {
-    position: absolute; /* Ocupa a tela toda para a física */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden; /* Garante que nada saia */
-}
-
-/* Container da Perspectiva 3D (precisa ser filho do container da simulação) */
-.dice-perspective-container {
-    perspective: 1200px;
-    width: 100px; /* Mesmo tamanho do dado */
-    height: 100px;
-    position: absolute; /* Posição será controlada pelo JS */
-    top: 50%; /* Posição inicial (será sobrescrita) */
-    left: 50%;
-    transform: translate(-50%, -50%); /* Centraliza inicialmente */
-}
-
-/* Design do Dado */
-.dice {
-    width: 100%; /* Ocupa todo o container da perspectiva */
-    height: 100%;
-    position: relative; /* Mantém para as faces */
-    transform-style: preserve-3d;
-    /* Transição para o 'pouso' final do dado */
-    transition: transform 0.4s ease-out;
-}
-
-/* Faces do Dado - Estilos mantidos */
-.face {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 10px;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    box-shadow:
-        inset 0 0 8px rgba(0, 0, 0, 0.3),
-        0px 8px 15px rgba(0, 0, 0, 0.3);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-family: "Eagle Lake", cursive;
-    font-size: 3rem;
-    font-weight: bold;
-    color: rgba(0, 0, 0, 0.6);
-    text-shadow:
-        1px 1px 1px rgba(255, 255, 255, 0.3),
-        -1px -1px 1px rgba(0, 0, 0, 0.4);
-    background:
-        linear-gradient(rgba(255,255,255,0.03), rgba(0,0,0,0.03)),
-        repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(0,0,0,0.02) 1px, rgba(0,0,0,0.02) 2px),
-        linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.15)),
-        #6a7a7a;
-     box-sizing: border-box;
-     /* Adiciona backface visibility para melhor performance 3D */
-     backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-}
-
-/* Transformações das Faces (Mantido) */
-.face.front  { transform: rotateY(  0deg) translateZ(50px); }
-.face.back   { transform: rotateX(180deg) translateZ(50px); }
-.face.right  { transform: rotateY( 90deg) translateZ(50px); }
-.face.left   { transform: rotateY(-90deg) translateZ(50px); }
-.face.top    { transform: rotateX( 90deg) translateZ(50px); }
-.face.bottom { transform: rotateX(-90deg) translateZ(50px); }
-
-
-/* Controles - Posicionados fixos na parte inferior */
-.controls {
-    position: fixed; /* Fixo na tela */
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 20px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: linear-gradient(to top, rgba(26, 26, 26, 0.8), transparent); /* Fundo suave */
-    z-index: 10; /* Garante que fiquem sobre a simulação */
-}
-
-button#roll-button { /* Estilo específico para o botão */
-    padding: 12px 25px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    cursor: pointer;
-    background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
-    border: none;
-    border-radius: 8px;
-    color: #e0e0e0;
-    text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
-    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
-                inset 0px 1px 1px rgba(255,255,255,0.2);
-    transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.15s ease;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-}
-
-button#roll-button:hover {
-    transform: scale(1.05);
-    background: linear-gradient(145deg, #6a6a6a, #4a4a4a);
-}
-
-#result-display {
-    margin-top: 15px;
-    font-size: 1.5rem;
-    color: #fff;
-    min-height: 2rem;
-    font-weight: bold;
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-}
-
-</style>
-<link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dado Rolando Realista</title>
+  <style>
+    body {
+      margin: 0;
+      background: radial-gradient(circle at center, #3a3a3a, #1a1a1a);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #dado {
+      width: 100px;
+      height: 100px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+      position: absolute;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 48px;
+      transform-style: preserve-3d;
+      transform: translate(0px, 0px) rotateX(0deg) rotateY(0deg);
+      transition: transform 0.5s ease;
+    }
+  </style>
 </head>
 <body>
+  <div id="dado">🎲</div>
 
-<div id="simulation-container">
-    <div class="dice-perspective-container" id="dice-visual-container">
-        <div class="dice" id="dice">
-            <div class="face front">1</div>
-            <div class="face back">6</div>
-            <div class="face right">4</div>
-            <div class="face left">3</div>
-            <div class="face top">5</div>
-            <div class="face bottom">2</div>
-        </div>
-    </div>
-</div>
+  <script>
+    const dado = document.getElementById("dado");
+    let x = 0, y = 0;
+    let rotX = 0, rotY = 0;
 
-<div class="controls">
-     <button id="roll-button">Rolar Dado</button>
-     <p id="result-display"></p>
-</div>
-
-<script>
-    // Seletores DOM
-    const simulationContainer = document.getElementById('simulation-container');
-    const diceVisualContainer = document.getElementById('dice-visual-container'); // Container da perspectiva
-    const diceElement = document.getElementById('dice'); // O elemento visual 3D
-    const rollButton = document.getElementById('roll-button');
-    const resultDisplay = document.getElementById('result-display');
-
-    // Variáveis de controle
-    let isRolling = false;
-    let pressStartTime = 0;
-    let finalResult = 0; // Guarda o resultado numérico sorteado
-    const maxPressDuration = 2000; // Duração máxima para força total (2 segundos)
-    const diceSize = 100; // Mesmo tamanho definido no CSS
-
-    // Mapeamento Resultado -> Rotação Final CSS (Mantido)
-    const finalRotations = {
-        1: { x: 0, y: 0 },      // Front
-        6: { x: 180, y: 0 },    // Back (girando sobre X para mostrar oposto)
-        4: { x: 0, y: -90 },    // Right
-        3: { x: 0, y: 90 },     // Left
-        5: { x: -90, y: 0 },    // Top
-        2: { x: 90, y: 0 }      // Bottom
-    };
-
-    // --- Configuração do Matter.js ---
-    const { Engine, Render, Runner, Bodies, Composite, Events, Body, Vector } = Matter;
-
-    // Cria a engine de física
-    const engine = Engine.create();
-    engine.world.gravity.y = 0; // Sem gravidade padrão (lançamento controlado)
-
-    // Obtém dimensões do container da simulação (tela inteira)
-    const screenWidth = simulationContainer.clientWidth;
-    const screenHeight = simulationContainer.clientHeight;
-
-    // --- Renderizador Opcional (para Debug) ---
-    /* // Descomente para ver os corpos físicos
-    const render = Render.create({
-        element: simulationContainer,
-        engine: engine,
-        options: {
-            width: screenWidth,
-            height: screenHeight,
-            wireframes: true, // Mostra contornos
-            background: 'transparent' // Fundo transparente
-        }
+    document.addEventListener("keydown", (e) => {
+      switch (e.key) {
+        case "ArrowUp":
+          y -= 100;
+          rotX -= 90;
+          break;
+        case "ArrowDown":
+          y += 100;
+          rotX += 90;
+          break;
+        case "ArrowLeft":
+          x -= 100;
+          rotY -= 90;
+          break;
+        case "ArrowRight":
+          x += 100;
+          rotY += 90;
+          break;
+      }
+      dado.style.transform = `translate(${x}px, ${y}px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
     });
-    Render.run(render);
-    */
-    // --- Fim Renderizador Opcional ---
-
-    // Cria as paredes (corpos estáticos) ligeiramente fora da tela
-    const wallThickness = 100; // Espessura grande para garantir colisão
-    const wallOptions = {
-    isStatic: true,
-    restitution: 0.8,  // Aumentado para mais quique
-    friction: 0.1
-};
-    const wallTop = Bodies.rectangle(screenWidth / 2, -wallThickness / 2, screenWidth, wallThickness, wallOptions);
-    const wallBottom = Bodies.rectangle(screenWidth / 2, screenHeight + wallThickness / 2, screenWidth, wallThickness, wallOptions);
-    const wallLeft = Bodies.rectangle(-wallThickness / 2, screenHeight / 2, wallThickness, screenHeight, wallOptions);
-    const wallRight = Bodies.rectangle(screenWidth + wallThickness / 2, screenHeight / 2, wallThickness, screenHeight, wallOptions);
-
-    // Cria o corpo físico do dado (um quadrado para física 2D)
-    const initialX = screenWidth / 2;
-    const initialY = screenHeight - diceSize * 1.5; // Começa perto da parte inferior
-    // Modifique as propriedades do diceBody
-const diceBody = Bodies.rectangle(initialX, initialY, diceSize, diceSize, {
-    restitution: 0.7,    // Aumentado para mais quique
-    friction: 0.2,       // Reduzido para menos atrito
-    frictionAir: 0.001,  // Reduzido drasticamente para menos resistência
-    slop: 0.1,
-    density: 0.002      // Reduzido para movimento mais rápido
-});
-
-    // Adiciona as paredes e o dado ao mundo
-    Composite.add(engine.world, [diceBody, wallTop, wallBottom, wallLeft, wallRight]);
-
-    // Cria e roda o Runner (atualiza a engine)
-    const runner = Runner.create();
-    Runner.run(runner, engine);
-
-    console.log("Matter.js Engine e Runner iniciados.");
-
-    // --- Sincronização Física -> Visual e Detecção de Parada ---
-    let stopCheckCounter = 0; // Contador para verificar se parou mesmo
-    const stopThreshold = 0.1;    // Aumentado
-    const stopCheckLimit = 15;    // Reduzido para parar mais rápido
-
-    Events.on(engine, 'afterUpdate', () => {
-    if (!isRolling) return;
-
-    const pos = diceBody.position;
-    const angle = diceBody.angle;
-    const speed = Vector.magnitude(diceBody.velocity);
-    const angularSpeed = Math.abs(diceBody.angularVelocity);
-
-    // Atualiza posição
-    diceVisualContainer.style.left = `${pos.x}px`;
-    diceVisualContainer.style.top = `${pos.y}px`;
-
-    // Sistema de rotação melhorado
-    if (speed > 0.1 || angularSpeed > 0.1) {
-        // Base rotation from physics
-        const baseRotation = angle * (180 / Math.PI);
-        
-        // Adiciona rotações baseadas no movimento
-        const rotX = baseRotation + (speed * 60);   // Dobrado
-        const rotY = angularSpeed * 360;            // Dobrado
-        const rotZ = speed * 180;                   // Dobrado
-
-        // Aplica transformação composta
-        diceElement.style.transition = 'none';
-        diceElement.style.transform = `
-            translate(-50%, -50%)
-            rotateX(${rotX}deg)
-            rotateY(${rotY}deg)
-            rotateZ(${rotZ}deg)
-        `;
-    }
-    // Verifica se o dado parou
-    if (speed < stopThreshold && angularSpeed < stopThreshold) {
-        stopCheckCounter++;
-    } else {
-        stopCheckCounter = 0;
-    }
-
-    if (stopCheckCounter >= stopCheckLimit) {
-        console.log("Dado parou!");
-        isRolling = false;
-        stopCheckCounter = 0;
-
-        const finalRotation = finalRotations[finalResult];
-        diceElement.style.transition = 'transform 0.2s ease-out'; // 0.4s -> 0.2s
-        diceElement.style.transform = `rotateX(${finalRotation.x}deg) rotateY(${finalRotation.y}deg)`;
-
-        resultDisplay.textContent = `Resultado: ${finalResult}`;
-
-        setTimeout(() => {
-            if (rollButton) rollButton.disabled = false;
-        }, 500);
-    }
-});
-
-
-    // --- Funções de Evento de Clique/Toque (Adaptadas) ---
-
-    function handlePressStart(event) {
-        if (isRolling) return; // Não faz nada se já estiver rolando
-        event.preventDefault();
-        pressStartTime = Date.now();
-        console.log("Press Start");
-        rollButton.style.transform = 'scale(0.97)';
-        rollButton.style.boxShadow = '0px 2px 5px rgba(0, 0, 0, 0.6), inset 0px 1px 3px rgba(0,0,0,0.4)';
-    }
-
-    function handlePressEnd(event) {
-        rollButton.style.transform = '';
-        rollButton.style.boxShadow = '';
-
-        if (pressStartTime === 0 || isRolling) return;
-
-        const pressEndTime = Date.now();
-        let pressDuration = pressEndTime - pressStartTime;
-        pressDuration = Math.min(pressDuration, maxPressDuration); // Limita a duração máxima
-
-        console.log("Press End - Duration:", pressDuration, "ms");
-
-        // Chama a nova função que aplica a física
-        launchDice(pressDuration);
-
-        pressStartTime = 0;
-    }
-
-    function handlePressAbort(event) {
-        if (pressStartTime !== 0) {
-            console.log("Press Aborted");
-            pressStartTime = 0;
-            rollButton.style.transform = '';
-            rollButton.style.boxShadow = '';
-        }
-    }
-
-    // --- ADICIONA OS LISTENERS AO BOTÃO --- (Mantido)
-    if (rollButton) {
-        rollButton.addEventListener('mousedown', handlePressStart);
-        rollButton.addEventListener('mouseup', handlePressEnd);
-        rollButton.addEventListener('mouseleave', handlePressAbort);
-        rollButton.addEventListener('touchstart', handlePressStart);
-        rollButton.addEventListener('touchend', handlePressEnd);
-        rollButton.addEventListener('touchcancel', handlePressAbort);
-        console.log("Listeners de duração adicionados ao botão.");
-    } else {
-         console.error("Botão com id 'roll-button' não encontrado!");
-    }
-
-
-    // --- NOVA FUNÇÃO PARA LANÇAR O DADO COM FÍSICA ---
-    function launchDice(duration) {
-    if (isRolling) return;
-    isRolling = true;
-    rollButton.disabled = true;
-    resultDisplay.textContent = 'Rolando...';
-
-    finalResult = Math.floor(Math.random() * 6) + 1;
-
-    // Reseta o estado
-    Body.setStatic(diceBody, false);
-    Body.setPosition(diceBody, { x: initialX, y: initialY });
-    Body.setVelocity(diceBody, { x: 0, y: 0 });
-    Body.setAngularVelocity(diceBody, 0);
-
-    const forceFactor = Math.min(duration / maxPressDuration, 1);
-    
-    // Ângulo de lançamento mais natural
-    const angle = (Math.random() * Math.PI / 2) - (Math.PI / 4); // -45° a +45°
-    
-    // Força de lançamento mais realista
-    const baseSpeed = 0.5;  // 5x maior
-    const maxSpeed = 1.5;   // 5x maior
-    const throwSpeed = baseSpeed + (forceFactor * (maxSpeed - baseSpeed));
-    
-    // Componentes da força
-    const launchForceX = Math.cos(angle) * throwSpeed;
-    const launchForceY = Math.sin(angle) * throwSpeed;
-
-    // Torque inicial para começar a rolar
-    const initialTorque = (Math.random() - 0.5) * 0.2 * (1 + forceFactor);
-
-    // Aplica as forças
-    Body.applyForce(diceBody, diceBody.position, {
-        x: launchForceX,
-        y: launchForceY
-    });
-    
-    // Aplica torque inicial
-    Body.setAngularVelocity(diceBody, initialTorque);
-
-    // Reset visual
-    diceElement.style.transition = 'none';
-    diceElement.style.transform = 'rotateX(0deg) rotateY(0deg) rotateZ(0deg)';
-}
-
-    // Opcional: Adicionar listeners ao próprio dado para rolar ao clicar/tocar nele
-    // (Usaria as mesmas funções handlePressStart, handlePressEnd, handlePressAbort)
-    // diceVisualContainer.addEventListener('mousedown', handlePressStart);
-    // ... etc ...
-
-</script>
+  </script>
 </body>
 </html>
