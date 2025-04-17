@@ -194,7 +194,7 @@ button#roll-button:hover {
 
     // Cria a engine de física
     const engine = Engine.create();
-    engine.world.gravity.y = 1; // Sem gravidade padrão (lançamento controlado)
+    engine.world.gravity.y = 0; // Sem gravidade padrão (lançamento controlado)
 
     // Obtém dimensões do container da simulação (tela inteira)
     const screenWidth = simulationContainer.clientWidth;
@@ -232,11 +232,11 @@ button#roll-button:hover {
     const initialX = screenWidth / 2;
     const initialY = screenHeight - diceSize * 1.5; // Começa perto da parte inferior
     const diceBody = Bodies.rectangle(initialX, initialY, diceSize, diceSize, {
-    restitution: 0.6,     // Aumentado para mais quique
-    friction: 0.1,        // Aumentado para mais atrito
-    frictionAir: 0.005,   // Reduzido para menos resistência do ar
+    restitution: 0.3,    // Menos quique
+    friction: 0.1,       // Mais atrito com a superfície
+    frictionAir: 0.015,  // Resistência do ar moderada
     slop: 0.1,
-    density: 0.002        // Reduzido para menor massa
+    density: 0.001      // Massa menor para movimento mais suave
 });
 
     // Adiciona as paredes e o dado ao mundo
@@ -384,20 +384,28 @@ button#roll-button:hover {
 
         // 3. Calcular Força e Torque baseado na duração
         const forceFactor = Math.min(duration / maxPressDuration, 1);
-    const baseForce = 0.02;          // Força base reduzida
-    const maxAddedForce = 0.04;      // Força adicional reduzida
-    const launchForceY = -(baseForce + forceFactor * maxAddedForce);
-
-    // Aumenta a força lateral
-    const launchForceX = (Math.random() - 0.5) * 0.03 * (1 + forceFactor);
     
-    // Aumenta o torque
-    const launchTorque = (Math.random() - 0.5) * 0.1 * (1 + forceFactor);
+    // Calcula um ângulo aleatório para a direção do lançamento
+    const angle = Math.random() * Math.PI * 2;
+    
+    // Força base e adicional agora são aplicadas em uma direção aleatória
+    const baseForce = 0.05;
+    const maxAddedForce = 0.15;
+    const totalForce = baseForce + (forceFactor * maxAddedForce);
+    
+    // Calcula as componentes X e Y da força baseado no ângulo
+    const launchForceX = Math.cos(angle) * totalForce;
+    const launchForceY = Math.sin(angle) * totalForce;
 
-        // 4. Aplicar Força e Torque no corpo físico
-        // Aplicar no centro de massa (posição do corpo)
-        Body.applyForce(diceBody, diceBody.position, { x: launchForceX, y: launchForceY });
-        Body.setAngularVelocity(diceBody, launchTorque);
+    // Torque para fazer o dado girar enquanto desliza
+    const launchTorque = (Math.random() - 0.5) * 0.2 * (1 + forceFactor);
+
+    // Aplica a força e o torque
+    Body.applyForce(diceBody, diceBody.position, {
+        x: launchForceX,
+        y: launchForceY
+    });
+    Body.setAngularVelocity(diceBody, launchTorque);
 
         console.log(`Lançamento - Força: {x: ${launchForceX.toFixed(3)}, y: ${launchForceY.toFixed(3)}}, Torque: ${launchTorque.toFixed(3)}`);
 
