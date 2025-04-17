@@ -354,52 +354,43 @@ button#roll-button:hover {
 
     // --- NOVA FUNÇÃO PARA LANÇAR O DADO COM FÍSICA ---
     function launchDice(duration) {
-        if (isRolling) return;
-        isRolling = true;
-        rollButton.disabled = true; // Desabilita o botão enquanto rola
-        resultDisplay.textContent = 'Rolando...';
+    if (isRolling) return;
+    isRolling = true;
+    rollButton.disabled = true;
+    resultDisplay.textContent = 'Rolando...';
 
-        // 1. Sorteia o resultado final
-        finalResult = Math.floor(Math.random() * 6) + 1;
-        console.log("Resultado Sorteado:", finalResult);
+    finalResult = Math.floor(Math.random() * 6) + 1;
+    console.log("Resultado Sorteado:", finalResult);
 
-        // 2. Resetar estado do corpo físico e visual
-        Body.setStatic(diceBody, false); // Garante que não está estático
-        Body.setPosition(diceBody, { x: initialX, y: initialY }); // Volta para posição inicial
-        Body.setVelocity(diceBody, { x: 0, y: 0 }); // Zera velocidade
-        Body.setAngularVelocity(diceBody, 0); // Zera velocidade angular
-        diceElement.style.transition = 'none'; // Remove transição CSS para o lançamento
-        diceElement.style.transform = 'rotateX(0deg) rotateY(0deg) rotateZ(0deg)'; // Reseta rotação visual
+    Body.setStatic(diceBody, false);
+    Body.setPosition(diceBody, { x: initialX, y: initialY });
+    Body.setVelocity(diceBody, { x: 0, y: 0 });
+    Body.setAngularVelocity(diceBody, 0);
 
-
-        // 3. Calcular Força e Torque baseado na duração
-        const forceFactor = Math.min(duration / maxPressDuration, 1);
+    const forceFactor = Math.min(duration / maxPressDuration, 1);
     
-    // Cálculo do ângulo de lançamento (aleatório)
+    // Calcula ângulo aleatório para direção
     const angle = Math.random() * Math.PI * 2;
     
     // Força total baseada na duração
     const totalForce = 0.05 + (forceFactor * 0.15);
     
-    // Componentes da força em X e Y
+    // Aplica força em uma direção aleatória
     const launchForceX = Math.cos(angle) * totalForce;
     const launchForceY = Math.sin(angle) * totalForce;
 
-    // Torque mais significativo para simular rolagem real
-    const launchTorque = (Math.random() - 0.5) * 0.1 * (1 + forceFactor);
+    // Torque inicial mais significativo
+    const launchTorque = (Math.random() - 0.5) * 0.2 * (1 + forceFactor);
 
-    // Aplica movimento inicial de rolagem
-    Body.setAngularVelocity(diceBody, launchTorque);
     Body.applyForce(diceBody, diceBody.position, { 
         x: launchForceX, 
         y: launchForceY 
     });
     Body.setAngularVelocity(diceBody, launchTorque);
 
-        console.log(`Lançamento - Força: {x: ${launchForceX.toFixed(3)}, y: ${launchForceY.toFixed(3)}}, Torque: ${launchTorque.toFixed(3)}`);
-
-        // A sincronização no 'afterUpdate' cuidará do resto (movimento, rotação visual, parada)
-    }
+    diceElement.style.transition = 'none';
+    diceElement.style.transform = 'rotateX(0deg) rotateY(0deg) rotateZ(0deg)';
+}
 
     // Opcional: Adicionar listeners ao próprio dado para rolar ao clicar/tocar nele
     // (Usaria as mesmas funções handlePressStart, handlePressEnd, handlePressAbort)
