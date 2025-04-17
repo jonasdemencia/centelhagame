@@ -176,82 +176,44 @@ let rotX = 0, rotY = 0;
 let posX = window.innerWidth / 2;
 let posY = window.innerHeight / 2;
 const step = 100;
-let pressStart = 0;
-let isRolling = false;
 
-function updateDicePositionAndRotation(force = 1) {
-    const steps = Math.min(Math.floor(force * 3), 3); // até 3 passos
-    const direction = Math.floor(Math.random() * 4);
-
-    switch (direction) {
-        case 0: rotX += 90 * steps; posY += step * steps; break;
-        case 1: rotX -= 90 * steps; posY -= step * steps; break;
-        case 2: rotY += 90 * steps; posX += step * steps; break;
-        case 3: rotY -= 90 * steps; posX -= step * steps; break;
-    }
-
+function updateDicePositionAndRotation() {
     diceContainer.style.left = `${posX}px`;
     diceContainer.style.top = `${posY}px`;
-    diceElement.style.transition = "transform 0.6s ease-out";
+    diceElement.style.transition = "transform 0.5s ease-out";
     diceElement.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
-
-    const face = Math.floor(Math.random() * 6) + 1;
-    resultDisplay.textContent = "Resultado: " + face;
 }
 
-function launchDice(force) {
-    if (isRolling) return;
-    isRolling = true;
-    rollButton.disabled = true;
-    resultDisplay.textContent = "Rolando...";
-
-    setTimeout(() => {
-        updateDicePositionAndRotation(force);
-        isRolling = false;
-        rollButton.disabled = false;
-    }, 500);
-}
-
-rollButton.addEventListener("mousedown", () => {
-    pressStart = Date.now();
-    rollButton.style.transform = 'scale(0.97)';
+document.addEventListener("keydown", (e) => {
+    switch (e.key) {
+        case "ArrowUp":
+            rotX -= 90;
+            posY -= step;
+            break;
+        case "ArrowDown":
+            rotX += 90;
+            posY += step;
+            break;
+        case "ArrowLeft":
+            rotY -= 90;
+            posX -= step;
+            break;
+        case "ArrowRight":
+            rotY += 90;
+            posX += step;
+            break;
+        default:
+            return;
+    }
+    updateDicePositionAndRotation();
 });
 
-rollButton.addEventListener("mouseup", () => {
-    rollButton.style.transform = '';
-    const duration = Date.now() - pressStart;
-    const force = Math.min(duration / 2000, 1);
-    launchDice(force);
-});
-
-rollButton.addEventListener("mouseleave", () => {
-    rollButton.style.transform = '';
-    pressStart = 0;
-});
-
-rollButton.addEventListener("touchstart", (e) => {
-    e.preventDefault();
-    pressStart = Date.now();
-    rollButton.style.transform = 'scale(0.97)';
-});
-
-rollButton.addEventListener("touchend", (e) => {
-    e.preventDefault();
-    rollButton.style.transform = '';
-    const duration = Date.now() - pressStart;
-    const force = Math.min(duration / 2000, 1);
-    launchDice(force);
-});
-
-// Posição inicial
+// Inicializa a posição central
 window.addEventListener("load", () => {
-    diceContainer.style.left = `${posX}px`;
-    diceContainer.style.top = `${posY}px`;
-    diceElement.style.transform = `rotateX(0deg) rotateY(0deg)`;
-    resultDisplay.textContent = "Pressione e segure o botão para lançar.";
+    updateDicePositionAndRotation();
+    if (resultDisplay) resultDisplay.textContent = "Use as setas para mover o dado.";
 });
 </script>
-
 
 </body>
 </html>
