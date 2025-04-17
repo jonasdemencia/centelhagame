@@ -216,19 +216,19 @@ let rollAngle = 0;
 const faceSequence = [1, 2, 6, 5];
 
 function updateDiceVisual() {
-    diceContainer.style.left = ${posX}px;
-    diceContainer.style.top = ${posY}px;
+    diceContainer.style.left = `${posX}px`;
+    diceContainer.style.top = `${posY}px`;
     
     // Interpola suavemente a escala
     currentScale += (targetScale - currentScale) * 0.2;
     
     const { x, y, z } = currentRotation;
-    diceElement.style.transform = 
+    diceElement.style.transform = `
         scale(${currentScale})
         rotateX(${x}deg)
         rotateY(${y}deg)
         rotateZ(${z}deg)
-    ;
+    `;
 }
 
 function simulateHeight(time, initialVelocity) {
@@ -345,7 +345,7 @@ function animateDice() {
                     (4 - finalFaceIndex) % 4 : 
                     finalFaceIndex;
                 
-                resultDisplay.textContent = Resultado: ${faceSequence[adjustedFaceIndex]};
+                resultDisplay.textContent = `Resultado: ${faceSequence[adjustedFaceIndex]}`;
                 rollButton.disabled = false;
             }
             break;
@@ -408,6 +408,10 @@ window.addEventListener("load", () => {
     resultDisplay.textContent = "Pressione o botão para lançar o dado";
 });
 </script>
+
+
+</body>
+</html>
 
 </body>
 </html>
