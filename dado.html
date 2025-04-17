@@ -35,12 +35,12 @@ body {
 /* Container da Perspectiva 3D (precisa ser filho do container da simulação) */
 .dice-perspective-container {
     perspective: 1200px;
-    width: 50px; /* Mesmo tamanho do dado */
-    height: 100px;
-    position: absolute; /* Posição será controlada pelo JS */
-    top: 50%; /* Posição inicial (será sobrescrita) */
+    width: 50px; /* Reduzido para metade do tamanho original */
+    height: 50px;
+    position: absolute;
+    bottom: 120px; /* Posição inicial acima do botão */
     left: 50%;
-    transform: translate(-50%, -50%); /* Centraliza inicialmente */
+    transform: translate(-50%, 0);
 }
 
 /* Design do Dado */
@@ -85,12 +85,12 @@ body {
 }
 
 /* Transformações das Faces (Mantido) */
-.face.front  { transform: rotateY(  0deg) translateZ(50px); }
-.face.back   { transform: rotateX(180deg) translateZ(50px); }
-.face.right  { transform: rotateY( 90deg) translateZ(50px); }
-.face.left   { transform: rotateY(-90deg) translateZ(50px); }
-.face.top    { transform: rotateX( 90deg) translateZ(50px); }
-.face.bottom { transform: rotateX(-90deg) translateZ(50px); }
+.face.front  { transform: rotateY(  0deg) translateZ(25px); }
+.face.back   { transform: rotateX(180deg) translateZ(25px); }
+.face.right  { transform: rotateY( 90deg) translateZ(25px); }
+.face.left   { transform: rotateY(-90deg) translateZ(25px); }
+.face.top    { transform: rotateX( 90deg) translateZ(25px); }
+.face.bottom { transform: rotateX(-90deg) translateZ(25px); }
 
 
 /* Controles - Posicionados fixos na parte inferior */
