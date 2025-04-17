@@ -233,11 +233,11 @@ button#roll-button:hover {
     const initialY = screenHeight - diceSize * 1.5; // Começa perto da parte inferior
     // Modifique as propriedades do diceBody
 const diceBody = Bodies.rectangle(initialX, initialY, diceSize, diceSize, {
-    restitution: 0.5,    // Elasticidade moderada para quicar
-    friction: 0.8,       // Mais atrito para rolar de verdade
-    frictionAir: 0.001,  // Menos resistência do ar
-    density: 0.008,      // Massa mais significativa
-    chamfer: { radius: 5 }, // Adiciona pequenos chanfros nas bordas para melhor rolagem
+    restitution: 0.7,    // Aumentado para mais quique
+    friction: 0.2,       // Reduzido para menos atrito
+    frictionAir: 0.001,  // Reduzido drasticamente para menos resistência
+    slop: 0.1,
+    density: 0.002      // Reduzido para movimento mais rápido
 });
 
     // Adiciona as paredes e o dado ao mundo
@@ -251,8 +251,8 @@ const diceBody = Bodies.rectangle(initialX, initialY, diceSize, diceSize, {
 
     // --- Sincronização Física -> Visual e Detecção de Parada ---
     let stopCheckCounter = 0; // Contador para verificar se parou mesmo
-    const stopThreshold = 0.05; // Quão lento precisa estar para considerar parado
-    const stopCheckLimit = 30; // Quantos updates precisa ficar lento
+    const stopThreshold = 0.1;    // Aumentado
+    const stopCheckLimit = 15;    // Reduzido para parar mais rápido
 
     Events.on(engine, 'afterUpdate', () => {
     if (!isRolling) return;
@@ -272,9 +272,9 @@ const diceBody = Bodies.rectangle(initialX, initialY, diceSize, diceSize, {
         const baseRotation = angle * (180 / Math.PI);
         
         // Adiciona rotações baseadas no movimento
-        const rotX = baseRotation + (speed * 30);  // Rotação frontal
-        const rotY = angularSpeed * 180;           // Rotação lateral
-        const rotZ = speed * 90;                   // Rotação no eixo
+        const rotX = baseRotation + (speed * 60);   // Dobrado
+        const rotY = angularSpeed * 360;            // Dobrado
+        const rotZ = speed * 180;                   // Dobrado
 
         // Aplica transformação composta
         diceElement.style.transition = 'none';
@@ -298,7 +298,7 @@ const diceBody = Bodies.rectangle(initialX, initialY, diceSize, diceSize, {
         stopCheckCounter = 0;
 
         const finalRotation = finalRotations[finalResult];
-        diceElement.style.transition = 'transform 0.4s ease-out';
+        diceElement.style.transition = 'transform 0.2s ease-out'; // 0.4s -> 0.2s
         diceElement.style.transform = `rotateX(${finalRotation.x}deg) rotateY(${finalRotation.y}deg)`;
 
         resultDisplay.textContent = `Resultado: ${finalResult}`;
@@ -383,8 +383,8 @@ const diceBody = Bodies.rectangle(initialX, initialY, diceSize, diceSize, {
     const angle = (Math.random() * Math.PI / 2) - (Math.PI / 4); // -45° a +45°
     
     // Força de lançamento mais realista
-    const baseSpeed = 0.1;
-    const maxSpeed = 0.3;
+    const baseSpeed = 0.5;  // 5x maior
+    const maxSpeed = 1.5;   // 5x maior
     const throwSpeed = baseSpeed + (forceFactor * (maxSpeed - baseSpeed));
     
     // Componentes da força
@@ -392,7 +392,7 @@ const diceBody = Bodies.rectangle(initialX, initialY, diceSize, diceSize, {
     const launchForceY = Math.sin(angle) * throwSpeed;
 
     // Torque inicial para começar a rolar
-    const initialTorque = (Math.random() - 0.5) * 0.05 * (1 + forceFactor);
+    const initialTorque = (Math.random() - 0.5) * 0.2 * (1 + forceFactor);
 
     // Aplica as forças
     Body.applyForce(diceBody, diceBody.position, {
