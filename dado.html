@@ -226,16 +226,16 @@ function animateDice() {
             posY += velocityY;
             velocityY += GRAVITY;
             
-            // Aumenta tamanho durante lançamento inicial
+            // Ajuste de escala durante o lançamento inicial
             baseScale = 1.2;
 
-            // Colisões com paredes
+            // Colisões com as bordas
             if (posX <= DICE_SIZE || posX >= window.innerWidth - DICE_SIZE) {
                 posX = posX <= DICE_SIZE ? DICE_SIZE : window.innerWidth - DICE_SIZE;
                 velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
             }
 
-            // Chegada ao centro da tela
+            // Transição para a fase de quique
             if (posY <= targetY) {
                 phase = 'bouncing';
                 posY = targetY;
@@ -249,9 +249,9 @@ function animateDice() {
             posX += velocityX;
             posY += velocityY;
             velocityY += GRAVITY;
-            velocityX *= 0.98;
+            velocityX *= FRICTION;
 
-            // Colisões com paredes
+            // Colisões com as bordas
             if (posX <= DICE_SIZE || posX >= window.innerWidth - DICE_SIZE) {
                 posX = posX <= DICE_SIZE ? DICE_SIZE : window.innerWidth - DICE_SIZE;
                 velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
@@ -262,11 +262,13 @@ function animateDice() {
                 posY = targetY;
                 velocityY = -velocityY * BOUNCE_DAMPENING;
                 
+                // Ajuste de escala nos quiques
                 if (Math.abs(velocityY) > 2) {
                     baseScale = 1.1 + Math.abs(velocityY) * 0.03;
                     setTimeout(() => baseScale = 1.0, 100);
                 }
 
+                // Transição para a fase de rolagem
                 if (Math.abs(velocityY) < 3) {
                     phase = 'rolling';
                     velocityY = -ROLL_SPEED;
@@ -279,9 +281,9 @@ function animateDice() {
         case 'rolling':
             posY -= ROLL_SPEED;
             posX += velocityX;
-            velocityX *= 0.98;
+            velocityX *= FRICTION;
 
-            // Rotação precisa de 90 graus
+            // Rotação precisa de 90 graus por face
             if (rollsRemaining > 0) {
                 currentRotation.x += 90;
                 rollsRemaining--;
@@ -289,13 +291,13 @@ function animateDice() {
                 setTimeout(() => baseScale = 1.0, 50);
             }
 
-            // Colisões com paredes durante rolagem
+            // Colisões com as bordas durante a rolagem
             if (posX <= DICE_SIZE || posX >= window.innerWidth - DICE_SIZE) {
                 posX = posX <= DICE_SIZE ? DICE_SIZE : window.innerWidth - DICE_SIZE;
                 velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
             }
 
-            // Parada no topo ou quando terminar as rotações
+            // Parada final
             if (posY <= DICE_SIZE || rollsRemaining <= 0) {
                 phase = 'stopped';
                 isRolling = false;
@@ -317,13 +319,13 @@ function animateDice() {
     }
 }
 
-rollButton.addEventListener("mousedown", (e) => {
+rollButton.addEventListener("mousedown", () => {
     if (isRolling) return;
     pressStartTime = Date.now();
     rollButton.style.transform = 'scale(0.95)';
 });
 
-rollButton.addEventListener("mouseup", (e) => {
+rollButton.addEventListener("mouseup", () => {
     if (isRolling) return;
     
     const pressDuration = Math.min(Date.now() - pressStartTime, MAX_PRESS_DURATION);
@@ -333,12 +335,12 @@ rollButton.addEventListener("mouseup", (e) => {
     rollButton.disabled = true;
     phase = 'throwing';
     
-    // Velocidade inicial com componente lateral
+    // Velocidade inicial e força lateral
     const lateralForce = (Math.random() - 0.5) * LATERAL_FORCE_RANGE;
     velocityX = lateralForce;
     velocityY = -INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5);
     
-    // Reseta posição e rotação
+    // Reset de posição e rotação
     posX = window.innerWidth / 2;
     posY = window.innerHeight - 50;
     currentRotation = { x: 0, y: 0, z: 0 };
@@ -353,6 +355,7 @@ window.addEventListener("load", () => {
     updateDiceVisual();
     resultDisplay.textContent = "Pressione o botão para lançar o dado";
 });
+
 </script>
 
 </body>
