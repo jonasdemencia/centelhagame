@@ -171,8 +171,6 @@ const diceElement = document.getElementById("dice");
 const diceContainer = document.getElementById("dice-visual-container");
 const rollButton = document.getElementById("roll-button");
 const resultDisplay = document.getElementById("result-display");
-const COLLISION_PADDING = 30; // margem maior para o topo
-
 
 // Configurações
 const MAX_PRESS_DURATION = 4000;
@@ -298,18 +296,6 @@ function animateDice() {
             // Movimento de rolagem
             posX += velocityX;
             velocityX *= FRICTION;
-            posY += velocityY;
-velocityY *= FRICTION;
-
-// Colisão com bordas verticais
-if (posY <= DICE_SIZE || posY >= window.innerHeight - DICE_SIZE) {
-    posY = posY <= DICE_SIZE ? DICE_SIZE : window.innerHeight - DICE_SIZE;
-    velocityY = -velocityY * WALL_BOUNCE_DAMPENING;
-    // Adiciona variação lateral leve ao quicar verticalmente
-    velocityX += (Math.random() - 0.5) * 2;
-    currentRotation.y += 180; // simula inversão da rotação vertical
-}
-
             
             // Mantém o dado dentro da tela
             if (posY > window.innerHeight - DICE_SIZE) {
@@ -337,14 +323,7 @@ if (posY <= DICE_SIZE || posY >= window.innerHeight - DICE_SIZE) {
                 isRolling = false;
                 
                 // Mantém a direção final da face
-                const faceIndexX = Math.round(currentRotation.x / 90) % 4;
-const faceIndexY = Math.round(currentRotation.y / 90) % 4;
-
-// Combina os dois eixos para determinar a face de cima
-// (isso é uma simplificação: você pode expandir o `faceSequence` com uma matriz 3D mais tarde)
-const finalFaceIndex = (faceIndexX + faceIndexY) % 4;
-resultDisplay.textContent = `Resultado: ${faceSequence[Math.abs(finalFaceIndex)]}`;
-
+                const finalFaceIndex = Math.floor(Math.abs(rollAngle) / 90) % 4;
                 resultDisplay.textContent = `Resultado: ${faceSequence[finalFaceIndex]}`;
                 rollButton.disabled = false;
             }
@@ -386,7 +365,7 @@ rollButton.addEventListener("mouseup", () => {
     const normalizedY = (dirY / magnitude);
     
     // Aplica força baseada no tempo pressionado
-    const force = INITIAL_FORCE_MULTIPLIER * (1 + forceFactor); // Dobro do valor anterior
+    const force = INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5);
     velocityX = normalizedX * force;
     velocityY = normalizedY * force;
     
@@ -412,3 +391,4 @@ window.addEventListener("load", () => {
 
 </body>
 </html>
+
