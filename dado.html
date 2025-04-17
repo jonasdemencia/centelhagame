@@ -171,343 +171,379 @@ const diceElement = document.getElementById("dice");
  const diceContainer = document.getElementById("dice-visual-container");
  const rollButton = document.getElementById("roll-button");
  const resultDisplay = document.getElementById("result-display");
- 
- // --- Novas Configurações ---
- const TOP_OBSTACLE_Y = 60; // Posição Y (em pixels do topo) do obstáculo invisível
- const ANGULAR_FRICTION = 0.97; // Atrito rotacional
- const INITIAL_ROTATION_SPEED = 15; // Velocidade inicial de rotação aleatória
- // Mapeamento da rotação final para cada face (ajuste conforme a textura/modelo do seu dado)
- // Assume que a face '1' é visível com rotação (0, 0, 0)
+
+ // --- Novas Configurações e Constantes ---
+ const TOP_OBSTACLE_Y = 60; // Posição Y (pixels do topo) do obstáculo invisível
+ const ANGULAR_FRICTION = 0.975; // Atrito para diminuir a rotação (0 a 1)
+ const INITIAL_ROTATION_SPEED = 18; // Impulso inicial de rotação aleatória
+ const COLLISION_ROTATION_EFFECT = 1.2; // Quão forte a colisão afeta a rotação
+
+ // Mapeamento da rotação final para cada face (ajuste se necessário)
  const faceOrientations = {
-     1: { x: 0, y: 0, z: 0 },       // Face 1 para cima
-     2: { x: -90, y: 0, z: 0 },     // Face 2 para cima
-     3: { x: 0, y: 90, z: 0 },      // Face 3 para cima
-     4: { x: 0, y: -90, z: 0 },     // Face 4 para cima
-     5: { x: 90, y: 0, z: 0 },      // Face 5 para cima
-     6: { x: 180, y: 0, z: 0 }      // Face 6 para cima
+     1: { x: 0, y: 0, z: 0 },
+     2: { x: -90, y: 0, z: 0 },
+     3: { x: 0, y: 90, z: 0 },
+     4: { x: 0, y: -90, z: 0 },
+     5: { x: 90, y: 0, z: 0 },
+     6: { x: 180, y: 0, z: 0 }
  };
- // --------------------------
- 
- // Configurações Originais (ajustadas levemente para melhor sensação)
+ // --------------------------------------
+
+ // Configurações Originais (mantidas ou levemente ajustadas)
  const MAX_PRESS_DURATION = 4000;
- const DICE_SIZE = 50; // Metade do tamanho real para cálculos de colisão mais precisos
- const FRICTION = 0.98; // Levemente ajustado
- const BOUNCE_DAMPENING = 0.65; // Amortecimento ao quicar no "chão" (escala)
- const WALL_BOUNCE_DAMPENING = 0.7; // Amortecimento ao bater nas paredes/topo
- const INITIAL_FORCE_MULTIPLIER = 28; // Levemente ajustado
- const LATERAL_FORCE_RANGE = 8; // Define a intensidade da variação lateral inicial
- 
- // Configurações de escala para simular altura
+ const DICE_SIZE = 50; // Usado para limites de colisão (assumindo posX/Y é o canto superior esquerdo)
+ const FRICTION = 0.985; // Atrito linear
+ const BOUNCE_DAMPENING = 0.75; // Amortecimento na escala durante quique (já estava no seu)
+ const WALL_BOUNCE_DAMPENING = 0.65; // Amortecimento da velocidade linear na parede (levemente aumentado)
+ const INITIAL_FORCE_MULTIPLIER = 25;
+ const LATERAL_FORCE_RANGE = 8;
+
+ // Configurações de escala (mantidas)
  const SCALE = {
-     MIN: 0.8,    // Tamanho mínimo (dado no chão)
-     MAX: 1.8,    // Tamanho máximo (ponto mais alto) - reduzido um pouco
-     FLIGHT: 1.5, // Tamanho durante o voo
-     BOUNCE: 1.2  // Tamanho base para quiques - reduzido um pouco
+     MIN: 0.8,
+     MAX: 2.0,
+     FLIGHT: 1.5,
+     BOUNCE: 1.3
  };
- 
+
  // Estado do dado
  let isRolling = false;
  let pressStartTime = 0;
  let currentRotation = { x: 0, y: 0, z: 0 };
- let angularVelocity = { x: 0, y: 0, z: 0 }; // Velocidade de rotação
- let posX = window.innerWidth / 2;
- let posY = window.innerHeight - 50; // Posição inicial do botão
+ let angularVelocity = { x: 0, y: 0, z: 0 }; // <<< NOVO: Velocidade de rotação
+ let posX = window.innerWidth / 2 - DICE_SIZE / 2; // Ajustado para centro inicial
+ let posY = window.innerHeight - 50 - DICE_SIZE; // Ajustado para posição do botão
  let velocityX = 0;
  let velocityY = 0;
  let targetScale = 1.0;
  let currentScale = 1.0;
- let phase = 'ready'; // 'ready', 'throwing', 'bouncing', 'rolling', 'stopped'
+ let phase = 'ready';
  let flightTime = 0;
  let bounceCount = 0;
- let finalResultValue = 1; // Guarda o resultado numérico real
- 
+ // let rollAngle = 0; // <<< REMOVIDO: Não mais necessário com angularVelocity
+ let finalResultValue = 1; // <<< NOVO: Guarda o resultado numérico real
+
  function updateDiceVisual() {
-     // Centraliza o dado visualmente (offset pelo tamanho)
-     diceContainer.style.left = `${posX - diceElement.offsetWidth / 2}px`;
-     diceContainer.style.top = `${posY - diceElement.offsetHeight / 2}px`;
- 
-     // Interpola suavemente a escala
+     // Ajuste para centralizar o elemento visualmente se posX/Y for o centro
+     // Se posX/Y for top-left (como no seu original), mantenha como está:
+     diceContainer.style.left = `${posX}px`;
+     diceContainer.style.top = `${posY}px`;
+
+     // Interpola suavemente a escala (mantido)
      currentScale += (targetScale - currentScale) * 0.2;
- 
+
      const { x, y, z } = currentRotation;
      diceElement.style.transform = `
-         scale(<span class="math-inline">\{currentScale\}\)
-rotateX\(</span>{x}deg)
-         rotateY(<span class="math-inline">\{y\}deg\)
-rotateZ\(</span>{z}deg)
+         scale(${currentScale})
+         rotateX(${x}deg)
+         rotateY(${y}deg)
+         rotateZ(${z}deg)
      `;
  }
- 
- // Simula a "altura" através da escala usando uma curva senoidal
- function simulateHeight(time, initialVelocityFactor) {
-     // time vai de 0 a 1 para um arco completo
-     const height = Math.sin(time * Math.PI) * initialVelocityFactor;
+
+ // Função mantida
+ function simulateHeight(time, initialVelocity) {
+     const height = Math.sin(time * Math.PI) * initialVelocity;
      return Math.max(0, height);
  }
- 
+
  function animateDice() {
      if (!isRolling) return;
- 
+
+     // --- Atualização da Rotação ---
      // Aplica atrito angular
      angularVelocity.x *= ANGULAR_FRICTION;
      angularVelocity.y *= ANGULAR_FRICTION;
      angularVelocity.z *= ANGULAR_FRICTION;
- 
+
      // Atualiza rotação com base na velocidade angular
      currentRotation.x += angularVelocity.x;
      currentRotation.y += angularVelocity.y;
      currentRotation.z += angularVelocity.z;
- 
+     // --- Fim da Atualização da Rotação ---
+
+     // Movimento Linear Básico (igual ao seu original)
+     posX += velocityX;
+     posY += velocityY;
+     velocityX *= FRICTION; // Aplica atrito linear gradualmente
+     velocityY *= FRICTION;
+
      switch (phase) {
          case 'throwing':
-             // Movimento
-             posX += velocityX;
-             posY += velocityY;
- 
-             // Simulação de altura através da escala
-             flightTime += 0.03; // Ajuste a velocidade da animação de voo aqui
-             const heightFactor = Math.max(0.5, Math.sqrt(velocityX*velocityX + velocityY*velocityY) / INITIAL_FORCE_MULTIPLIER); // Fator de altura baseado na força
-             const height = simulateHeight(flightTime, heightFactor);
-             targetScale = SCALE.MIN + (height * (SCALE.MAX - SCALE.MIN));
- 
-             // Colisões com paredes laterais
-             if (posX <= DICE_SIZE / 2 || posX >= window.innerWidth - DICE_SIZE / 2) {
-                 posX = posX <= DICE_SIZE / 2 ? DICE_SIZE / 2 : window.innerWidth - DICE_SIZE / 2;
+             // Simulação de altura através da escala (mantida)
+             flightTime += 0.05;
+             const flightHeight = simulateHeight(flightTime, 1); // O fator 1 aqui pode ser ajustado
+             targetScale = SCALE.MIN + (flightHeight * (SCALE.MAX - SCALE.MIN));
+
+             // --- Colisões com Efeito na Rotação ---
+             let collided = false;
+
+             // Colisão Lateral (Paredes X)
+             if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
+                 posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
+                 const impactSpeed = Math.abs(velocityX);
                  velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
-                 angularVelocity.y *= -0.8; // Inverte e amortece rotação Y na colisão lateral
-                 angularVelocity.z += (Math.random() - 0.5) * 5; // Adiciona rotação Z
+                 // Efeito na Rotação: Afeta Y e Z
+                 angularVelocity.y *= -0.5 * WALL_BOUNCE_DAMPENING; // Inverte e amortece Y
+                 angularVelocity.z += (velocityX > 0 ? -1 : 1) * impactSpeed * COLLISION_ROTATION_EFFECT * (Math.random() * 0.5 + 0.5); // Adiciona Z baseado na direção e velocidade
+                 angularVelocity.x *= 0.9; // Leve amortecimento em X
+                 collided = true;
              }
- 
-             // Colisão com o chão (transição para quique)
-             if (posY >= window.innerHeight - DICE_SIZE / 2 && flightTime > 0.5) { // Só quica se estiver descendo
-                 posY = window.innerHeight - DICE_SIZE / 2;
-                 velocityY = -velocityY * BOUNCE_DAMPENING; // Quica no chão
-                 velocityX *= 0.9; // Atrito no quique
- 
-                 // Transição para fase de quique se ainda tiver energia vertical
-                 if (Math.abs(velocityY) > 1.5) {
-                    phase = 'bouncing';
-                    bounceCount = Math.floor(Math.abs(velocityY) * 0.3) + 2; // Número de quiques baseado na velocidade
-                    flightTime = 0; // Reseta tempo para animação de quique
-                    // Amortece rotação no impacto
-                    angularVelocity.x *= 0.7;
-                    angularVelocity.y *= 0.7;
-                    angularVelocity.z *= 0.7;
+
+             // Colisão com Obstáculo Superior
+             if (posY <= TOP_OBSTACLE_Y && velocityY < 0) {
+                 posY = TOP_OBSTACLE_Y;
+                 const impactSpeed = Math.abs(velocityY);
+                 velocityY = -velocityY * WALL_BOUNCE_DAMPENING;
+                 // Efeito na Rotação: Afeta X e Z
+                 angularVelocity.x *= -0.5 * WALL_BOUNCE_DAMPENING; // Inverte e amortece X
+                 angularVelocity.z += (Math.random() - 0.5) * 2 * impactSpeed * COLLISION_ROTATION_EFFECT; // Adiciona Z aleatório
+                 angularVelocity.y *= 0.9; // Leve amortecimento em Y
+                 collided = true;
+             }
+
+             // Colisão com Chão (Início do Quique)
+             // Transição para quique apenas se estiver descendo e tiver velocidade
+             if (posY >= window.innerHeight - DICE_SIZE && velocityY > 0) {
+                 posY = window.innerHeight - DICE_SIZE;
+                 const impactSpeed = Math.abs(velocityY);
+                 velocityY = -velocityY * BOUNCE_DAMPENING; // Usa o BOUNCE_DAMPENING do seu script para o quique vertical
+                 velocityX *= 0.95; // Atrito extra no chão
+
+                 // Efeito na Rotação ao bater no chão: Afeta X e Z
+                 angularVelocity.x *= -0.4 * BOUNCE_DAMPENING; // Inverte e amortece mais X
+                 angularVelocity.z += (Math.random() - 0.5) * 2 * impactSpeed * COLLISION_ROTATION_EFFECT * 0.8; // Adiciona Z aleatório
+                 angularVelocity.y *= 0.9; // Leve amortecimento em Y
+
+                 // Verifica se ainda tem energia para quicar
+                 if (Math.abs(velocityY) > 1.0) { // Limiar para quicar
+                     phase = 'bouncing';
+                     // Seu cálculo original de bounceCount, talvez precise de ajuste
+                     bounceCount = Math.max(1, Math.floor(impactSpeed * 0.5) + 1);
+                     flightTime = 0; // Reinicia tempo para animação do quique
                  } else {
-                     // Pouca energia vertical, transição direta para rolagem
-                     phase = 'rolling';
-                     velocityY = 0; // Para de mover verticalmente
-                     // Impulso final para rolagem baseado na velocidade restante
-                     velocityX *= (0.8 + Math.random() * 0.4);
-                     angularVelocity.x += velocityX * 0.1; // Adiciona rolagem baseada no movimento
-                     angularVelocity.y += (Math.random() - 0.5) * 5; // Pequena rotação lateral
-                 }
-             }
- 
-             // *** NOVA COLISÃO: Obstáculo Invisível no Topo ***
-             if (posY <= TOP_OBSTACLE_Y + DICE_SIZE / 2 && velocityY < 0) { // Só colide se estiver subindo
-                 posY = TOP_OBSTACLE_Y + DICE_SIZE / 2;
-                 velocityY = -velocityY * WALL_BOUNCE_DAMPENING; // Rebate no obstáculo
-                 // Altera um pouco a trajetória horizontal e a rotação para parecer natural
-                 velocityX += (Math.random() - 0.5) * 4;
-                 angularVelocity.x *= -0.5; // Inverte/Amortece rotação X
-                 angularVelocity.z += (Math.random() - 0.5) * 8; // Adiciona rotação Z
-             }
- 
-             break;
- 
-         case 'bouncing':
-             // Movimento com atrito
-             posX += velocityX;
-             posY += velocityY; // Simula pequenos saltos
-             velocityX *= FRICTION;
-             velocityY *= FRICTION; // Atrito também no ar/quique
- 
-             // Simulação de quiques (altura diminui)
-             flightTime += 0.15; // Velocidade da animação de quique
-             const bounceHeightFactor = Math.max(0, (SCALE.BOUNCE / (bounceCount + 1)) * (Math.abs(velocityY)/5)); // Altura do quique diminui
-             const bounceHeight = simulateHeight(flightTime, bounceHeightFactor);
-             targetScale = SCALE.MIN + bounceHeight;
- 
-             // Colisões laterais durante quique
-             if (posX <= DICE_SIZE / 2 || posX >= window.innerWidth - DICE_SIZE / 2) {
-                posX = posX <= DICE_SIZE / 2 ? DICE_SIZE / 2 : window.innerWidth - DICE_SIZE / 2;
-                velocityX = -velocityX * WALL_BOUNCE_DAMPENING * 0.8; // Mais amortecimento no quique
-                angularVelocity.y *= -0.6;
-             }
- 
-             // Fim de um quique (quando completa o arco senoidal)
-             if (flightTime >= 1) {
-                 flightTime = 0; // Reinicia a animação do próximo quique
-                 bounceCount--;
-                 posY = window.innerHeight - DICE_SIZE / 2; // Garante que está no chão
- 
-                 // Transição para rolagem se os quiques acabaram ou a velocidade está baixa
-                 if (bounceCount <= 0 || Math.abs(velocityX) < 1 && Math.abs(velocityY) < 1) {
+                     // Pouca energia, vai direto para rolagem
                      phase = 'rolling';
                      velocityY = 0; // Para movimento vertical
-                     targetScale = SCALE.MIN;
-                     // Impulso final para rolagem baseado na velocidade restante
-                     velocityX *= (0.8 + Math.random() * 0.4);
-                     angularVelocity.x += velocityX * 0.1;
-                     angularVelocity.y += (Math.random() - 0.5) * 5;
-                 } else {
-                     // Ainda tem quiques, recalcula velocidade vertical para o próximo
-                     velocityY = -velocityY * BOUNCE_DAMPENING * (0.5 + bounceCount * 0.1); // Próximo quique é menor
-                     velocityX *= 0.95; // Atrito no chão a cada quique
-                     // Amortece rotação no impacto
-                     angularVelocity.x *= 0.7;
-                     angularVelocity.y *= 0.7;
-                     angularVelocity.z *= 0.7;
                  }
+                 collided = true;
+             }
+             // Se não colidiu com o chão e o tempo de voo acabou (prevenção)
+             else if (!collided && flightTime >= 1) {
+                // Pode acontecer se a velocidade inicial for muito baixa
+                 phase = 'rolling'; // Vai direto para rolagem
+                 velocityY = 0;
+                 posY = window.innerHeight - DICE_SIZE; // Garante posição no chão
              }
              break;
- 
+
+         case 'bouncing':
+             // Simulação de quiques na escala (mantida)
+             flightTime += 0.1;
+             const bounceHeight = Math.sin(flightTime * Math.PI) * (SCALE.BOUNCE / (bounceCount + 1));
+             targetScale = SCALE.MIN + Math.max(0, bounceHeight); // Garante não ficar negativo
+
+             // Colisões laterais durante o quique (similar ao throwing)
+             if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
+                 posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
+                 const impactSpeed = Math.abs(velocityX);
+                 velocityX = -velocityX * WALL_BOUNCE_DAMPENING * 0.8; // Mais amortecimento no quique
+                 angularVelocity.y *= -0.4 * WALL_BOUNCE_DAMPENING;
+                 angularVelocity.z += (velocityX > 0 ? -1 : 1) * impactSpeed * COLLISION_ROTATION_EFFECT * 0.7;
+                 angularVelocity.x *= 0.95;
+             }
+
+             // Fim de um ciclo de quique (bateu no chão de novo)
+             if (flightTime >= 1) {
+                 flightTime = 0;
+                 bounceCount--;
+                 posY = window.innerHeight - DICE_SIZE; // Garante posição
+                 const impactSpeed = Math.abs(velocityY); // Usa velocidade antes de recalcular
+
+                 // Efeito de rotação ao bater no chão durante quique
+                  angularVelocity.x *= -0.4 * BOUNCE_DAMPENING;
+                  angularVelocity.z += (Math.random() - 0.5) * 2 * impactSpeed * COLLISION_ROTATION_EFFECT * 0.6;
+                  angularVelocity.y *= 0.9;
+
+                 if (bounceCount <= 0 || Math.abs(velocityY) < 1.0) {
+                     phase = 'rolling';
+                     velocityY = 0;
+                     targetScale = SCALE.MIN;
+                 } else {
+                     // Recalcula velocidade para próximo quique (menor)
+                     velocityY = -velocityY * BOUNCE_DAMPENING * (0.5 + bounceCount * 0.1);
+                     velocityX *= 0.95; // Atrito a cada quique
+                 }
+             }
+             // Prevenção: Se ficar preso no ar durante quique
+             if (Math.abs(velocityX) < 0.1 && Math.abs(velocityY) < 0.1 && bounceHeight < 0.01) {
+                 phase = 'rolling';
+                 velocityY = 0;
+                 targetScale = SCALE.MIN;
+             }
+             break;
+
          case 'rolling':
-             // Movimento de rolagem com atrito
-             posX += velocityX;
-             velocityX *= FRICTION;
-             // Adiciona um leve movimento lateral residual que também sofre atrito
-             posY += velocityY;
-             velocityY *= FRICTION;
- 
              // Garante que o dado fique no "chão" visualmente
-             if (posY > window.innerHeight - DICE_SIZE / 2) {
-                 posY = window.innerHeight - DICE_SIZE / 2;
+             if (posY > window.innerHeight - DICE_SIZE) {
+                 posY = window.innerHeight - DICE_SIZE;
+                 velocityY = 0; // Para qualquer movimento vertical residual
+             }
+              if (posY < TOP_OBSTACLE_Y) { // Segurança caso role para cima
+                 posY = TOP_OBSTACLE_Y;
                  velocityY = 0;
              }
-              if (posY < DICE_SIZE / 2) { // Caso role para cima (improvável mas possível)
-                 posY = DICE_SIZE / 2;
-                 velocityY = 0;
-             }
- 
+
              // Escala fixa durante rolagem
              targetScale = SCALE.MIN;
- 
-             // Colisões laterais durante rolagem
-             if (posX <= DICE_SIZE / 2 || posX >= window.innerWidth - DICE_SIZE / 2) {
-                 posX = posX <= DICE_SIZE / 2 ? DICE_SIZE / 2 : window.innerWidth - DICE_SIZE / 2;
-                 // Rebate e adiciona um pouco de movimento Y para naturalidade
-                 velocityX = -velocityX * WALL_BOUNCE_DAMPENING * 0.7;
-                 velocityY += (Math.random() - 0.5) * Math.abs(velocityX) * 0.5; // Movimento lateral pós-colisão
-                 angularVelocity.y *= -0.5; // Afeta rotação Y
-                 angularVelocity.z += (Math.random()-0.5)*3; // Adiciona rotação Z
+
+             // Colisões laterais durante rolagem (similar, mas talvez menos efeito na rotação)
+             if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
+                 posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
+                 const impactSpeed = Math.abs(velocityX);
+                 velocityX = -velocityX * WALL_BOUNCE_DAMPENING * 0.5; // Menos rebote na rolagem
+                 // Adiciona um pouco de movimento Y para naturalidade (como no seu original)
+                 velocityY += (Math.random() - 0.5) * impactSpeed * 0.1;
+                 // Efeito rotação
+                 angularVelocity.y *= -0.3 * WALL_BOUNCE_DAMPENING;
+                 angularVelocity.z += (velocityX > 0 ? -1 : 1) * impactSpeed * COLLISION_ROTATION_EFFECT * 0.5;
+                 angularVelocity.x *= 0.98;
              }
- 
-             // Condição de parada: velocidade linear e angular muito baixas
+
+             // --- Condição de Parada ---
              const linearSpeed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
              const angularSpeed = Math.sqrt(angularVelocity.x * angularVelocity.x + angularVelocity.y * angularVelocity.y + angularVelocity.z * angularVelocity.z);
- 
-             if (linearSpeed < 0.1 && angularSpeed < 1) {
+
+             // Para se o movimento linear E angular forem baixos
+             if (linearSpeed < 0.1 && angularSpeed < 1.0) { // Limiares ajustáveis
                  phase = 'stopped';
                  isRolling = false;
- 
-                 // *** CORREÇÃO: Define a rotação final para CORRESPONDER ao resultado numérico ***
+
+                 // --- CORREÇÃO: Define a rotação final para CORRESPONDER ao resultado numérico ---
                  const finalOrientation = faceOrientations[finalResultValue];
-                 currentRotation.x = finalOrientation.x;
-                 currentRotation.y = finalOrientation.y;
-                 currentRotation.z = finalOrientation.z;
- 
-                 // Ajusta posição final para garantir que está dentro da tela
-                 posX = Math.max(DICE_SIZE / 2, Math.min(window.innerWidth - DICE_SIZE / 2, posX));
-                 posY = window.innerHeight - DICE_SIZE / 2;
- 
+                 if (finalOrientation) {
+                    currentRotation.x = finalOrientation.x;
+                    currentRotation.y = finalOrientation.y;
+                    currentRotation.z = finalOrientation.z;
+                 } else {
+                    // Fallback se algo der errado
+                    console.error("Orientação final não encontrada para:", finalResultValue);
+                 }
+                 angularVelocity = { x: 0, y: 0, z: 0 }; // Zera a velocidade angular
+                 velocityX = 0; // Zera velocidade linear
+                 velocityY = 0;
+
+
+                 // Ajusta posição final para garantir que está dentro da tela e no chão
+                 posX = Math.max(0, Math.min(window.innerWidth - DICE_SIZE, posX));
+                 posY = window.innerHeight - DICE_SIZE;
+
                  // Atualiza visual final e mostra resultado
                  updateDiceVisual(); // Aplica a rotação final correta
-                 resultDisplay.textContent = `Resultado: ${finalResultValue}`;
+                 resultDisplay.textContent = `Resultado: ${finalResultValue}`; // Mostra o resultado REAL
                  rollButton.disabled = false;
-                 rollButton.style.transform = ''; // Garante que o botão volte ao normal
+                 rollButton.style.transform = '';
              }
              break;
      }
- 
+
      updateDiceVisual();
- 
+
      if (isRolling) {
          requestAnimationFrame(animateDice);
      }
  }
- 
+
+ // Event listener Mousedown (mantido)
  rollButton.addEventListener("mousedown", (e) => {
      if (isRolling) return;
-     // Evita selecionar texto enquanto segura o botão
-     e.preventDefault();
+     e.preventDefault(); // Previne seleção de texto
      pressStartTime = Date.now();
      rollButton.style.transform = 'scale(0.95)';
  });
- 
+
+ // Event listener Mouseup (modificado para nova física)
  rollButton.addEventListener("mouseup", () => {
      if (isRolling) return;
- 
+
      const pressDuration = Math.min(Date.now() - pressStartTime, MAX_PRESS_DURATION);
      const forceFactor = pressDuration / MAX_PRESS_DURATION; // 0 a 1
- 
+
      isRolling = true;
      rollButton.disabled = true;
      phase = 'throwing';
-     resultDisplay.textContent = "Lançando..."; // Feedback imediato
- 
-     // *** GERA O RESULTADO NUMÉRICO AQUI ***
-     // O resultado é decidido no momento do lançamento, a animação apenas o representa.
+     resultDisplay.textContent = "Lançando...";
+
+     // *** GERA O RESULTADO NUMÉRICO REAL AQUI ***
      finalResultValue = Math.floor(Math.random() * 6) + 1;
- 
-     // Calcula vetor direcionado um pouco acima do centro
-     const targetX = window.innerWidth / 2 + (Math.random() - 0.5) * (window.innerWidth * 0.3); // Alvo X com variação
-     const targetY = window.innerHeight * 0.35; // Alvo Y um pouco acima do centro
-     const startX = window.innerWidth / 2; // Posição inicial X (centro do botão)
-     const startY = window.innerHeight - 50; // Posição inicial Y (botão)
- 
+
+     // Posição inicial (considerando centro do botão talvez?)
+     // Ajuste se necessário - seu original parecia lançar do centro da tela
+     posX = window.innerWidth / 2 - DICE_SIZE / 2;
+     posY = window.innerHeight - 50 - DICE_SIZE; // Posição acima do botão
+
+     // Calcula vetor direcionado (seu cálculo original mantido)
+     const targetX = window.innerWidth / 2; // Direto para o centro X
+     const targetY = window.innerHeight * 0.4; // Ponto Y alvo
+     const startX = posX + DICE_SIZE / 2; // Centro X do dado
+     const startY = posY + DICE_SIZE / 2; // Centro Y do dado
+
      const dirX = targetX - startX;
      const dirY = targetY - startY;
- 
-     // Normaliza o vetor e aplica força
-     const magnitude = Math.sqrt(dirX * dirX + dirY * dirY);
-     // Força baseada no tempo pressionado (mínimo de 50% da força total)
+
+     const magnitude = Math.max(1, Math.sqrt(dirX * dirX + dirY * dirY)); // Evita divisão por zero
+
+     // Normaliza e adiciona variação lateral (seu cálculo original mantido)
+     // Nota: Seu dirX original era 0, então normalizedX dependia só da variação aleatória. Mantendo isso:
+     const normalizedX = (dirX / magnitude) + (Math.random() - 0.5) * (LATERAL_FORCE_RANGE / (force * 0.5 + 10)); // Variação lateral
+     const normalizedY = (dirY / magnitude);
+
+     // Aplica força (seu cálculo original mantido)
      const force = INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5);
- 
-     velocityX = (dirX / magnitude) * force;
-     velocityY = (dirY / magnitude) * force;
-     // Adiciona uma pequena variação aleatória extra na direção inicial
-     velocityX += (Math.random() - 0.5) * LATERAL_FORCE_RANGE * 0.5;
-     velocityY += (Math.random() - 0.5) * LATERAL_FORCE_RANGE * 0.2;
- 
-     // Reset da posição e estado da animação
-     posX = startX;
-     posY = startY;
+     velocityX = normalizedX * force;
+     velocityY = normalizedY * force;
+
+     // Reset estado da animação
      flightTime = 0;
-     currentScale = SCALE.MIN; // Começa pequeno no botão
-     targetScale = SCALE.FLIGHT; // Alvo inicial é o tamanho de voo
- 
+     currentScale = SCALE.MIN;
+     targetScale = SCALE.FLIGHT;
+
      // Reset da rotação e adiciona velocidade angular inicial aleatória
      currentRotation = { x: Math.random() * 360, y: Math.random() * 360, z: Math.random() * 360 };
+     const rotationBoost = 1 + forceFactor * 1.5; // Mais força = mais rotação inicial
      angularVelocity = {
-         x: (Math.random() - 0.5) * INITIAL_ROTATION_SPEED * (1 + forceFactor),
-         y: (Math.random() - 0.5) * INITIAL_ROTATION_SPEED * (1 + forceFactor),
-         z: (Math.random() - 0.5) * INITIAL_ROTATION_SPEED * (1 + forceFactor)
+         x: (Math.random() - 0.5) * INITIAL_ROTATION_SPEED * rotationBoost,
+         y: (Math.random() - 0.5) * INITIAL_ROTATION_SPEED * rotationBoost,
+         z: (Math.random() - 0.5) * INITIAL_ROTATION_SPEED * rotationBoost
      };
- 
+
      requestAnimationFrame(animateDice);
-     rollButton.style.transform = ''; // Remove o scale do botão
+     rollButton.style.transform = '';
  });
- 
- // Inicialização
+
+ // Inicialização (mantida, com verificação de elementos)
  window.addEventListener("load", () => {
-     // Define a posição inicial do container (considerando o tamanho do dado se já carregado)
-     posX = window.innerWidth / 2;
-     posY = window.innerHeight - 50; // Posição do botão
-     currentScale = SCALE.MIN; // Começa pequeno
-     targetScale = SCALE.MIN;
-     diceElement.style.opacity = 1; // Garante visibilidade
-     updateDiceVisual(); // Posiciona inicialmente
-     resultDisplay.textContent = "Pressione o botão para lançar o dado";
- });
- 
- // Ajusta a posição se a janela for redimensionada (opcional, mas bom ter)
- window.addEventListener("resize", () => {
-     if (!isRolling) {
-         posX = window.innerWidth / 2;
-         posY = window.innerHeight - 50;
+     if (diceElement && diceContainer && resultDisplay) {
+        // Ajuste da posição inicial para centro da tela, se preferir
+        // posX = window.innerWidth / 2 - DICE_SIZE / 2;
+        // posY = window.innerHeight / 2 - DICE_SIZE / 2;
          updateDiceVisual();
+         resultDisplay.textContent = "Pressione o botão para lançar o dado";
+     } else {
+         console.error("Um ou mais elementos do dado não foram encontrados!");
+     }
+ });
+
+ // Redimensionamento (mantido)
+ window.addEventListener("resize", () => {
+     // Reposiciona o dado se não estiver rolando? Ou só atualiza limites?
+     // O ideal seria atualizar os limites de colisão (window.innerWidth/Height)
+     // Mas vamos manter simples por ora.
+     if (!isRolling && diceElement) {
+         // Poderia centralizar de novo se quisesse:
+         // posX = window.innerWidth / 2 - DICE_SIZE / 2;
+         // posY = window.innerHeight - 50 - DICE_SIZE; // Ou outra posição inicial
+         // updateDiceVisual();
      }
  });
 </script>
