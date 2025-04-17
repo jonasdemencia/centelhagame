@@ -2,67 +2,62 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> <title>Dado Realista com Física 2D</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
+<title>Dado Realista com Física 2D</title>
 
 <style>
 /* Estilos gerais */
 body {
-    display: flex; /* Mantém flex para centralizar o container geral */
+    display: flex;
     flex-direction: column;
-    justify-content: flex-end; /* Alinha conteúdo (botão/resultado) na parte inferior */
+    justify-content: flex-end;
     align-items: center;
     height: 100vh;
     margin: 0;
     background: radial-gradient(circle at center, #3a3a3a, #1a1a1a);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    overflow: hidden; /* ESSENCIAL para não ter barras de rolagem */
+    overflow: hidden;
     user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
 }
 
 /* Container para a Simulação Física e Controles */
 #simulation-container {
-    position: absolute; /* Ocupa a tela toda para a física */
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden; /* Garante que nada saia */
+    overflow: hidden;
 }
 
-/* Container da Perspectiva 3D (precisa ser filho do container da simulação) */
+/* Container da Perspectiva 3D */
 .dice-perspective-container {
     perspective: 1200px;
-    width: 100px; /* Mesmo tamanho do dado */
+    width: 100px;
     height: 100px;
-    position: absolute; /* Posição será controlada pelo JS */
-    top: 50%; /* Posição inicial (será sobrescrita) */
+    position: absolute;
+    top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%); /* Centraliza inicialmente */
+    transform: translate(-50%, -50%);
 }
 
 /* Design do Dado */
 .dice {
-    width: 100%; /* Ocupa todo o container da perspectiva */
+    width: 100%;
     height: 100%;
-    position: relative; /* Mantém para as faces */
+    position: relative;
     transform-style: preserve-3d;
-    /* Transição para o 'pouso' final do dado */
-    transition: transform 0.4s ease-out;
+    transition: transform 0.4s ease-out, width 0.2s ease-out, height 0.2s ease-out;
 }
 
-/* Faces do Dado - Estilos mantidos */
+/* Faces do Dado */
 .face {
     position: absolute;
     width: 100%;
     height: 100%;
     border-radius: 10px;
     border: 1px solid rgba(0, 0, 0, 0.2);
-    box-shadow:
-        inset 0 0 8px rgba(0, 0, 0, 0.3),
-        0px 8px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3), 0px 8px 15px rgba(0, 0, 0, 0.3);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -70,21 +65,14 @@ body {
     font-size: 3rem;
     font-weight: bold;
     color: rgba(0, 0, 0, 0.6);
-    text-shadow:
-        1px 1px 1px rgba(255, 255, 255, 0.3),
-        -1px -1px 1px rgba(0, 0, 0, 0.4);
-    background:
-        linear-gradient(rgba(255,255,255,0.03), rgba(0,0,0,0.03)),
-        repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(0,0,0,0.02) 1px, rgba(0,0,0,0.02) 2px),
-        linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.15)),
-        #6a7a7a;
-     box-sizing: border-box;
-     /* Adiciona backface visibility para melhor performance 3D */
-     backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
+    text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.3), -1px -1px 1px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.03)),
+                repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(0, 0, 0, 0.02) 1px, rgba(0, 0, 0, 0.02) 2px),
+                linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.15)), #6a7a7a;
+    box-sizing: border-box;
+    backface-visibility: hidden;
 }
 
-/* Transformações das Faces (Mantido) */
 .face.front  { transform: rotateY(  0deg) translateZ(50px); }
 .face.back   { transform: rotateX(180deg) translateZ(50px); }
 .face.right  { transform: rotateY( 90deg) translateZ(50px); }
@@ -92,9 +80,9 @@ body {
 .face.top    { transform: rotateX( 90deg) translateZ(50px); }
 .face.bottom { transform: rotateX(-90deg) translateZ(50px); }
 
-/* Controles - Posicionados fixos na parte inferior */
+/* Controles */
 .controls {
-    position: fixed; /* Fixo na tela */
+    position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
@@ -103,11 +91,11 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: linear-gradient(to top, rgba(26, 26, 26, 0.8), transparent); /* Fundo suave */
-    z-index: 10; /* Garante que fiquem sobre a simulação */
+    background: linear-gradient(to top, rgba(26, 26, 26, 0.8), transparent);
+    z-index: 10;
 }
 
-button#roll-button { /* Estilo específico para o botão */
+button#roll-button {
     padding: 12px 25px;
     font-size: 1.1rem;
     font-weight: bold;
@@ -120,10 +108,6 @@ button#roll-button { /* Estilo específico para o botão */
     box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
                 inset 0px 1px 1px rgba(255,255,255,0.2);
     transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.15s ease;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
 }
 
 button#roll-button:hover {
@@ -167,30 +151,68 @@ const diceContainer = document.getElementById("dice-visual-container");
 const rollButton = document.getElementById("roll-button");
 const resultDisplay = document.getElementById("result-display");
 
-let rotX = 0, rotY = 0;
+let pressStartTime = 0;
+let isRolling = false;
 let posX = window.innerWidth / 2;
 let posY = window.innerHeight / 2;
 const step = 100;
 
-function updateDicePositionAndRotation() {
+function updateDicePositionAndRotation(rotX, rotY) {
     diceContainer.style.left = `${posX}px`;
     diceContainer.style.top = `${posY}px`;
-    diceElement.style.transition = "transform 0.5s ease-out";
+    diceElement.style.transition = "transform 0.5s ease-out, width 0.2s ease-out, height 0.2s ease-out";
     diceElement.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
 }
 
-// Função para lançar o dado no eixo Y
-rollButton.addEventListener("click", () => {
-    rotX -= 90; // Rola para frente sempre no eixo Y
-    posY -= step; // Move o dado para cima no eixo Y
-    updateDicePositionAndRotation();
-    resultDisplay.textContent = "Dado lançado!";
+// Adiciona evento de pressão longa no botão
+rollButton.addEventListener("mousedown", () => {
+    pressStartTime = Date.now();
+    rollButton.style.transform = "scale(0.95)";
 });
 
-// Inicializa a posição central
+rollButton.addEventListener("mouseup", () => {
+    rollButton.style.transform = "";
+    if (isRolling) return;
+
+    const pressDuration = Date.now() - pressStartTime;
+    const force = Math.min(pressDuration / 100, 10); // Força máxima limitada a 10
+
+    isRolling = true;
+
+    let rotX = 0;
+    let rotY = 0;
+
+    const interval = setInterval(() => {
+        if (force <= 0) {
+            clearInterval(interval);
+            isRolling = false;
+            return;
+        }
+
+        // Simula o movimento
+        rotX += 90;
+        posY -= step * (force / 10); // Movimento proporcional à força
+
+        if (posY <= 0) {
+            posY = 0; // Bate no topo
+        }
+
+        updateDicePositionAndRotation(rotX, rotY);
+
+        // Simula o efeito de tamanho durante o quique
+        diceElement.style.width = "120px";
+        diceElement.style.height = "120px";
+        setTimeout(() => {
+            diceElement.style.width = "100px";
+            diceElement.style.height = "100px";
+        }, 100);
+    }, 200);
+});
+
+// Inicializa a posição inicial
 window.addEventListener("load", () => {
-    updateDicePositionAndRotation();
-    if (resultDisplay) resultDisplay.textContent = "Clique no botão para lançar o dado.";
+    updateDicePositionAndRotation(0, 0);
+    resultDisplay.textContent = "Pressione o botão para lançar o dado.";
 });
 </script>
 
