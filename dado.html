@@ -180,8 +180,10 @@ const BOUNCE_DAMPENING = 0.75;
 const WALL_BOUNCE_DAMPENING = 0.5;
 const INITIAL_FORCE_MULTIPLIER = 20;
 const LATERAL_FORCE_RANGE = 8;
+const EDGE_THRESHOLD = 15; // Graus de tolerância para considerar que está em uma aresta
+const SETTLE_SPEED = 0.2; // Velocidade da rolagem final
 
-// Definição dos limites da tela (agora DEPOIS de definir DICE_SIZE)
+// Definição dos limites da tela
 const SCREEN_BOUNDS = {
     TOP: DICE_SIZE,
     BOTTOM: window.innerHeight - DICE_SIZE,
@@ -215,11 +217,20 @@ let rollAngle = 0;
 // Sequência de faces para visão top-down
 const faceSequence = [1, 2, 6, 5];
 
+function settleFromEdge(currentAngle) {
+    const remainder = ((currentAngle % 90) + 90) % 90; // Normaliza para 0-90
+    if (remainder < EDGE_THRESHOLD) {
+        return Math.floor(currentAngle / 90) * 90;
+    } else if (remainder > (90 - EDGE_THRESHOLD)) {
+        return Math.ceil(currentAngle / 90) * 90;
+    }
+    return null;
+}
+
 function updateDiceVisual() {
     diceContainer.style.left = `${posX}px`;
     diceContainer.style.top = `${posY}px`;
     
-    // Interpola suavemente a escala
     currentScale += (targetScale - currentScale) * 0.2;
     
     const { x, y, z } = currentRotation;
@@ -239,7 +250,7 @@ function simulateHeight(time, initialVelocity) {
 function animateDice() {
     if (!isRolling) return;
 
-    // Verificações de limites globais (aplicadas em todas as fases)
+    // Verificações de limites globais
     if (posY < SCREEN_BOUNDS.TOP) {
         posY = SCREEN_BOUNDS.TOP;
         velocityY = Math.abs(velocityY) * WALL_BOUNCE_DAMPENING;
@@ -259,20 +270,16 @@ function animateDice() {
 
     switch (phase) {
         case 'throwing':
-            // Movimento horizontal
             posX += velocityX;
             posY += velocityY;
             
-            // Simulação de altura através da escala
             flightTime += 0.05;
             const height = simulateHeight(flightTime, 1);
             targetScale = SCALE.MIN + (height * (SCALE.MAX - SCALE.MIN));
             
-            // Rotação durante o voo
             currentRotation.x += velocityX * 2;
             currentRotation.y += velocityY * 2;
             
-            // Transição para quique
             if (flightTime >= 1) {
                 phase = 'bouncing';
                 bounceCount = Math.floor(Math.abs(velocityX) * 2) + 3;
@@ -281,73 +288,69 @@ function animateDice() {
             break;
 
         case 'bouncing':
-            // Movimento com atrito
             posX += velocityX;
             posY += velocityY;
             velocityX *= FRICTION;
             velocityY *= FRICTION;
             
-            // Simulação de quiques
             flightTime += 0.1;
             const bounceHeight = Math.sin(flightTime * Math.PI) * (SCALE.BOUNCE / (bounceCount + 1));
             targetScale = SCALE.MIN + bounceHeight;
             
-            // Rotação durante quiques
             if (flightTime >= 1) {
                 bounceCount--;
                 flightTime = 0;
                 
-                // Assegura rotação consistente
                 const rotationDirection = velocityX > 0 ? 1 : -1;
                 currentRotation.x += 90 * rotationDirection;
                 
                 if (bounceCount <= 0) {
                     phase = 'rolling';
                     rollAngle = currentRotation.x;
-                    velocityX *= 1.5; // Reduzido o impulso final
+                    velocityX *= 1.5;
                 }
             }
             break;
 
         case 'rolling':
-            // Movimento de rolagem
             posX += velocityX;
             velocityX *= FRICTION;
             
-            // Rotação consistente com o movimento
             const rotationDirection = velocityX > 0 ? 1 : -1;
             rollAngle += rotationDirection * Math.abs(velocityX) * 15;
             
-            // Garante que a rotação seja sempre múltiplo de 90
-            currentRotation.x = Math.round(rollAngle / 90) * 90;
-            
-            // Mantém tracking da face atual durante a rolagem
-            let currentFaceIndex = Math.abs(Math.floor(currentRotation.x / 90) % 4);
-            if (velocityX < 0) {
-                currentFaceIndex = (4 - currentFaceIndex) % 4;
-            }
-            
-            // Escala fixa durante rolagem
-            targetScale = SCALE.MIN;
-            
-            // Parada mais suave
             if (Math.abs(velocityX) < 0.1) {
-                phase = 'stopped';
-                isRolling = false;
+                const targetAngle = settleFromEdge(rollAngle);
                 
-                // Garante que a face final corresponda à rotação visual
-                const finalRotation = Math.round(currentRotation.x / 90) * 90;
-                currentRotation.x = finalRotation;
-                const finalFaceIndex = Math.abs(finalRotation / 90) % 4;
-                
-                // Ajusta o índice com base na direção final
-                const adjustedFaceIndex = velocityX < 0 ? 
-                    (4 - finalFaceIndex) % 4 : 
-                    finalFaceIndex;
-                
-                resultDisplay.textContent = `Resultado: ${faceSequence[adjustedFaceIndex]}`;
-                rollButton.disabled = false;
+                if (targetAngle !== null) {
+                    // Está próximo de uma face, ajusta suavemente
+                    const angleDistance = targetAngle - rollAngle;
+                    rollAngle += angleDistance * SETTLE_SPEED;
+                    currentRotation.x = rollAngle;
+                    
+                    if (Math.abs(angleDistance) < 0.1) {
+                        phase = 'stopped';
+                        isRolling = false;
+                        rollAngle = targetAngle;
+                        currentRotation.x = targetAngle;
+                        
+                        const finalFaceIndex = Math.abs(Math.floor(targetAngle / 90) % 4);
+                        const adjustedFaceIndex = velocityX < 0 ? 
+                            (4 - finalFaceIndex) % 4 : 
+                            finalFaceIndex;
+                        
+                        resultDisplay.textContent = `Resultado: ${faceSequence[adjustedFaceIndex]}`;
+                        rollButton.disabled = false;
+                    }
+                } else {
+                    // Está em uma aresta, continua rolando suavemente
+                    velocityX = rotationDirection * 0.05;
+                }
+            } else {
+                currentRotation.x = rollAngle;
             }
+            
+            targetScale = SCALE.MIN;
             break;
     }
 
@@ -357,7 +360,7 @@ function animateDice() {
         requestAnimationFrame(animateDice);
     }
 }
-
+    
 rollButton.addEventListener("mousedown", () => {
     if (isRolling) return;
     pressStartTime = Date.now();
