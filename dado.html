@@ -258,70 +258,46 @@ button#roll-button:hover {
 
     const pos = diceBody.position;
     const angle = diceBody.angle;
-    
+    const speed = Vector.magnitude(diceBody.velocity);
+    const angularSpeed = Math.abs(diceBody.angularVelocity);
+
     // Atualiza posição
     diceVisualContainer.style.left = `${pos.x}px`;
     diceVisualContainer.style.top = `${pos.y}px`;
 
-    // Calcula rotações baseadas na velocidade angular e linear
-    const speed = Vector.magnitude(diceBody.velocity);
-    const angularSpeed = Math.abs(diceBody.angularVelocity);
-
     // Rotação contínua durante o movimento
     if (speed > 0.1 || angularSpeed > 0.1) {
-        const rotX = angle * (180 / Math.PI); // Converte radianos para graus
-        const rotY = angularSpeed * 100; // Rotação Y baseada na velocidade angular
-        const rotZ = speed * 50; // Rotação Z baseada na velocidade linear
+        const rotX = (angle * 180 / Math.PI) * 2;
+        const rotY = angularSpeed * 360;
+        const rotZ = speed * 180;
 
-        // Aplica rotações múltiplas durante o movimento
-        diceElement.style.transition = 'none'; // Remove transição para movimento suave
-        diceElement.style.transform = 
-            `rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`;
+        diceElement.style.transition = 'none';
+        diceElement.style.transform = `translate(-50%, -50%) rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`;
     }
 
-        // Atualiza a rotação VISUAL 3D
-        // Opção 1: Rotação simples baseada no ângulo 2D (menos realista 3D)
-        // diceElement.style.transform = `translate(-50%, -50%) rotate(${angle * (180 / Math.PI)}deg)`;
+    // Verifica se o dado parou
+    if (speed < stopThreshold && angularSpeed < stopThreshold) {
+        stopCheckCounter++;
+    } else {
+        stopCheckCounter = 0;
+    }
 
-        // Opção 2: Adicionar rotação 3D contínua enquanto se move (mais visual)
-        // Podemos pegar a rotação atual e adicionar um pouco baseado na velocidade angular
-        // Nota: Isso é apenas VISUAL, não representa a física 3D real.
-        // Vamos manter a rotação baseada no resultado final por enquanto
-        // A rotação de "tumble" já foi aplicada ao iniciar o rollDice
+    if (stopCheckCounter >= stopCheckLimit) {
+        console.log("Dado parou!");
+        isRolling = false;
+        stopCheckCounter = 0;
 
-        // --- Verifica se o dado parou ---
-        const speed = Vector.magnitude(diceBody.velocity);
-        const angularSpeed = Math.abs(diceBody.angularVelocity);
+        const finalRotation = finalRotations[finalResult];
+        diceElement.style.transition = 'transform 0.4s ease-out';
+        diceElement.style.transform = `rotateX(${finalRotation.x}deg) rotateY(${finalRotation.y}deg)`;
 
-        if (speed < stopThreshold && angularSpeed < stopThreshold) {
-            stopCheckCounter++;
-        } else {
-            stopCheckCounter = 0; // Reseta se mover de novo
-        }
+        resultDisplay.textContent = `Resultado: ${finalResult}`;
 
-        // Se ficou parado por N updates consecutivos
-        if (stopCheckCounter >= stopCheckLimit) {
-            console.log("Dado parou!");
-            isRolling = false; // Para de atualizar
-            stopCheckCounter = 0; // Reseta contador
-
-            // Opcional: Torna o corpo estático para economizar processamento
-            // Body.setStatic(diceBody, true);
-
-            // Aplica a rotação 3D final correspondente ao resultado sorteado
-            const finalRotation = finalRotations[finalResult];
-            diceElement.style.transition = 'transform 0.4s ease-out'; // Transição suave para o resultado
-            diceElement.style.transform = `rotateX(${finalRotation.x}deg) rotateY(${finalRotation.y}deg)`;
-
-            // Mostra o resultado numérico
-            resultDisplay.textContent = `Resultado: ${finalResult}`;
-
-            // Reabilita o botão após um pequeno delay
-            setTimeout(() => {
-                if (rollButton) rollButton.disabled = false;
-            }, 500);
-        }
-    });
+        setTimeout(() => {
+            if (rollButton) rollButton.disabled = false;
+        }, 500);
+    }
+});
 
 
     // --- Funções de Evento de Clique/Toque (Adaptadas) ---
