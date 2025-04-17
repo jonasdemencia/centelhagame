@@ -173,8 +173,11 @@ const rollButton = document.getElementById("roll-button");
 const resultDisplay = document.getElementById("result-display");
 
 // Configurações
-const MAX_PRESS_DURATION = 4000; // 4 segundos máximo
+const MAX_PRESS_DURATION = 4000;
 const DICE_SIZE = 50;
+const GRAVITY = 0.5;
+const FRICTION = 0.98;
+const BOUNCE_DAMPENING = 0.65;
 
 // Estado do dado
 let isRolling = false;
@@ -184,8 +187,9 @@ let posY = window.innerHeight - 120;
 let velocityY = 0;
 let rollsRemaining = 0;
 let baseScale = 1.0;
+let phase = 'ready'; // ready, throwing, bouncing, rolling, stopped
 
-// Sequência de faces para rotação realista
+// Sequência de faces
 const faceSequence = [
     { face: 1, rotation: { x: 0, y: 0, z: 0 } },
     { face: 2, rotation: { x: 90, y: 0, z: 0 } },
@@ -205,30 +209,81 @@ function updateDiceVisual() {
     `;
 }
 
-function rollDice() {
-    if (rollsRemaining > 0) {
-        // Rotaciona para próxima face
-        currentRotation.x += 90;
-        rollsRemaining--;
-        
-        // Efeito de quique
-        baseScale = 1.2;
-        setTimeout(() => baseScale = 1.0, 100);
-        
-        updateDiceVisual();
-        
-        // Continua rolando
-        if (rollsRemaining > 0) {
-            setTimeout(rollDice, 200);
-        } else {
-            // Finaliza o lançamento
-            isRolling = false;
-            rollButton.disabled = false;
-            
-            // Determina face final
-            const finalFace = faceSequence[Math.floor(currentRotation.x / 90) % 4].face;
-            resultDisplay.textContent = `Resultado: ${finalFace}`;
-        }
+function animateDice() {
+    if (!isRolling) return;
+
+    switch (phase) {
+        case 'throwing':
+            // Movimento inicial para cima
+            posY += velocityY;
+            velocityY += GRAVITY;
+
+            // Verifica se atingiu o ponto mais alto
+            if (velocityY >= 0) {
+                phase = 'bouncing';
+                velocityY *= 0.5; // Reduz velocidade para iniciar quiques
+            }
+            break;
+
+        case 'bouncing':
+            // Aplica gravidade e move
+            velocityY += GRAVITY;
+            posY += velocityY;
+
+            // Verifica colisão com o chão
+            if (posY >= window.innerHeight - 120) {
+                posY = window.innerHeight - 120;
+                velocityY = -velocityY * BOUNCE_DAMPENING;
+
+                // Efeito de escala no quique
+                baseScale = 1.2 + Math.abs(velocityY) * 0.1;
+                setTimeout(() => baseScale = 1.0, 100);
+
+                // Verifica se deve passar para fase de rolagem
+                if (Math.abs(velocityY) < 5) {
+                    phase = 'rolling';
+                    velocityY = -5; // Velocidade inicial de rolagem
+                    rollsRemaining = Math.floor(Math.random() * 4) + 3;
+                }
+            }
+            break;
+
+        case 'rolling':
+            // Move o dado para cima enquanto rola
+            posY += velocityY;
+            velocityY *= FRICTION;
+
+            // Rotaciona o dado
+            if (Math.abs(velocityY) > 0.1) {
+                currentRotation.x += 10;
+                
+                // Efeito de quique leve durante rolagem
+                if (currentRotation.x % 90 < 10) {
+                    baseScale = 1.1;
+                    setTimeout(() => baseScale = 1.0, 50);
+                }
+            }
+
+            // Verifica se deve parar
+            if (Math.abs(velocityY) < 0.1) {
+                phase = 'stopped';
+                isRolling = false;
+                
+                // Ajusta para face final
+                const finalFaceIndex = Math.floor((currentRotation.x / 90)) % 4;
+                const finalFace = faceSequence[finalFaceIndex];
+                currentRotation = { ...finalFace.rotation };
+                
+                resultDisplay.textContent = `Resultado: ${finalFace.face}`;
+                rollButton.disabled = false;
+            }
+            break;
+    }
+
+    updateDiceVisual();
+
+    if (isRolling) {
+        requestAnimationFrame(animateDice);
     }
 }
 
@@ -244,19 +299,20 @@ rollButton.addEventListener("mouseup", (e) => {
     const pressDuration = Math.min(Date.now() - pressStartTime, MAX_PRESS_DURATION);
     const forceFactor = pressDuration / MAX_PRESS_DURATION;
     
-    // Número de rotações baseado na força
-    rollsRemaining = Math.floor(3 + forceFactor * 8); // 3 a 11 rotações
-    
     isRolling = true;
     rollButton.disabled = true;
+    phase = 'throwing';
     
-    // Efeito inicial de "levantamento"
-    baseScale = 1.5; // Aumenta tamanho inicialmente
-    setTimeout(() => {
-        baseScale = 1.0;
-        rollDice(); // Inicia sequência de rotações
-    }, 200);
+    // Velocidade inicial baseada na força
+    velocityY = -20 - (forceFactor * 15);
     
+    // Reseta posição e rotação
+    posY = window.innerHeight - 120;
+    currentRotation = { x: 0, y: 0, z: 0 };
+    baseScale = 1.0;
+    
+    // Inicia animação
+    requestAnimationFrame(animateDice);
     rollButton.style.transform = '';
 });
 
