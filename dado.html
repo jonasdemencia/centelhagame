@@ -227,6 +227,38 @@ let currentFaceSequence = [...faceSequence];
 let lastCollisionTime = 0;
 
 
+function isEdgePosition(x, y, z) {
+    // Normaliza ângulos
+    const normX = (x % 360 + 360) % 360;
+    const normY = (y % 360 + 360) % 360;
+    const normZ = (z % 360 + 360) % 360;
+    
+    // Exemplos de posições conhecidas de aresta
+    const edgePositions = [
+        {x: 180, y: 270, z: 90},  // Uma posição que sabemos que é aresta
+        // Podemos adicionar mais conforme identificamos
+    ];
+    
+    return edgePositions.some(pos => 
+        pos.x === normX && 
+        pos.y === normY && 
+        pos.z === normZ
+    );
+}
+
+
+function correctEdgePosition(x, y, z) {
+    if (isEdgePosition(x, y, z)) {
+        // Ajusta levemente a rotação para a face mais próxima
+        return {
+            x: Math.round(x / 90) * 90,
+            y: y,
+            z: z
+        };
+    }
+    return {x, y, z};
+}
+
 function getTopFaceFromRotation(x, y, z) {
     // Normaliza ângulos para 0, 90, 180, 270
     const normX = (x % 360 + 360) % 360;
@@ -469,29 +501,41 @@ function animateDice() {
     // Verifica se o dado parou
       // Verifica se o dado parou
       if (Math.abs(velocityX) < MIN_VELOCITY) {
-          // ---> NENHUMA ALTERAÇÃO NA ANIMAÇÃO ACONTECE A PARTIR DAQUI <---
+        // Completa a última rotação
+        currentRotation.x = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+        
+        // NOVO: Verifica e corrige posição de aresta
+        if (isEdgePosition(currentRotation.x, currentRotation.y, currentRotation.z)) {
+            const correctedRotation = correctEdgePosition(
+                currentRotation.x, 
+                currentRotation.y, 
+                currentRotation.z
+            );
+            
+            // Aplica a correção
+            currentRotation.x = correctedRotation.x;
+            currentRotation.y = correctedRotation.y;
+            currentRotation.z = correctedRotation.z;
+            
+            // Atualiza o visual uma última vez
+            updateDiceVisual();
+        }
 
-          // Arredonda TODOS os ângulos FINAIS (APÓS a parada da animação)
-          const finalX = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
-          const finalY = Math.round(currentRotation.y / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
-          const finalZ = Math.round(currentRotation.z / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
-
-          // Interrompe o estado da animação (já estava assim)
-          velocityX = 0;
-          phase = 'stopped';
-          isRolling = false; // <-- Loop de animação para aqui
-
-          // CALCULA o resultado baseado nos ângulos finais (nova interpretação)
-          const finalResult = getTopFaceFromRotation(finalX, finalY, finalZ);
-
-          // ATUALIZA O TEXTO (não afeta o visual do dado)
-          resultDisplay.textContent = `Resultado: ${finalResult}`;
-
-          // Log para ajudar a calibrar a função getTopFaceFromRotation
-          console.log(`ANGULOS FINAIS -> X: ${finalX}, Y: ${finalY}, Z: ${finalZ} --- RESULTADO VISUAL ESPERADO: ? --- RESULTADO CALCULADO: ${finalResult}`);
-
-          rollButton.disabled = false; // Libera o botão (já estava assim)
-      }
+        // Finaliza a animação
+        velocityX = 0;
+        phase = 'stopped';
+        isRolling = false;
+        
+        // Calcula o resultado final com a rotação corrigida
+        const finalResult = getTopFaceFromRotation(
+            currentRotation.x,
+            currentRotation.y,
+            currentRotation.z
+        );
+        
+        resultDisplay.textContent = `Resultado: ${finalResult}`;
+        rollButton.disabled = false;
+    }
     break;
     }
 
