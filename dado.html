@@ -183,7 +183,6 @@ const INITIAL_FORCE_MULTIPLIER = 25;
 const LATERAL_FORCE_RANGE = 8;
 const ROTATION_CHANGE_ANGLE = 45;
 const EDGE_BOUNCE_MULTIPLIER = 1.2;
-const ROTATION_VELOCITY_MULTIPLIER = 2;
 
 // Configurações de escala para simular altura
 const SCALE = {
@@ -207,29 +206,14 @@ let phase = 'ready';
 let flightTime = 0;
 let bounceCount = 0;
 let rollAngle = 0;
-let rotationDirection = 1; // 1 para frente, -1 para trás
 
 // Sequência de faces para visão top-down
 const faceSequence = [1, 2, 6, 5];
 
-function changeRotationOnCollision(isVerticalCollision) {
-    if (isVerticalCollision) {
-        // Inverte a direção da rotação
-        rotationDirection *= -1;
-        
-        // Ajusta a velocidade de rotação baseado na velocidade do movimento
-        const rotationSpeed = Math.abs(velocityY) * ROTATION_VELOCITY_MULTIPLIER;
-        currentRotation.x = rotationDirection * rotationSpeed;
-        
-        // Garante que o dado se afaste do obstáculo
-        velocityY = -velocityY * WALL_BOUNCE_DAMPENING * EDGE_BOUNCE_MULTIPLIER;
-        velocityX += (Math.random() - 0.5) * EDGE_BOUNCE_MULTIPLIER * 2;
-    } else {
-        // Colisões horizontais
-        const rotationSpeed = Math.abs(velocityX) * ROTATION_VELOCITY_MULTIPLIER;
-        currentRotation.z = (velocityX > 0 ? -1 : 1) * rotationSpeed;
-        velocityX = -velocityX * WALL_BOUNCE_DAMPENING * EDGE_BOUNCE_MULTIPLIER;
-    }
+function changeRotationOnCollision() {
+    currentRotation.x += (Math.random() - 0.5) * ROTATION_CHANGE_ANGLE;
+    currentRotation.y += (Math.random() - 0.5) * ROTATION_CHANGE_ANGLE;
+    currentRotation.z += (Math.random() - 0.5) * ROTATION_CHANGE_ANGLE;
 }
 
 function updateDiceVisual() {
@@ -264,18 +248,19 @@ function animateDice() {
             const height = simulateHeight(flightTime, 1);
             targetScale = SCALE.MIN + (height * (SCALE.MAX - SCALE.MIN));
             
-            // Rotação baseada na direção do movimento
-            currentRotation.x += velocityX * 2 * rotationDirection;
+            currentRotation.x += velocityX * 2;
+            currentRotation.y += velocityY * 2;
             
-            // Colisões
             if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
                 posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
-                changeRotationOnCollision(false);
+                velocityX = -velocityX * WALL_BOUNCE_DAMPENING * EDGE_BOUNCE_MULTIPLIER;
+                changeRotationOnCollision();
             }
             
             if (posY <= 0 || posY >= window.innerHeight - DICE_SIZE) {
                 posY = posY <= 0 ? 0 : window.innerHeight - DICE_SIZE;
-                changeRotationOnCollision(true);
+                velocityY = -velocityY * WALL_BOUNCE_DAMPENING * EDGE_BOUNCE_MULTIPLIER;
+                changeRotationOnCollision();
             }
             
             if (flightTime >= 1) {
@@ -295,21 +280,22 @@ function animateDice() {
             const bounceHeight = Math.sin(flightTime * Math.PI) * (SCALE.BOUNCE / (bounceCount + 1));
             targetScale = SCALE.MIN + bounceHeight;
             
-            // Colisões durante quiques
             if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
                 posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
-                changeRotationOnCollision(false);
+                velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
+                changeRotationOnCollision();
             }
             
             if (posY <= 0 || posY >= window.innerHeight - DICE_SIZE) {
                 posY = posY <= 0 ? 0 : window.innerHeight - DICE_SIZE;
-                changeRotationOnCollision(true);
+                velocityY = -velocityY * WALL_BOUNCE_DAMPENING;
+                changeRotationOnCollision();
             }
             
             if (flightTime >= 1) {
                 bounceCount--;
                 flightTime = 0;
-                currentRotation.x += 90 * rotationDirection;
+                currentRotation.x += 90;
                 
                 if (bounceCount <= 0) {
                     phase = 'rolling';
@@ -327,16 +313,16 @@ function animateDice() {
                 posY = window.innerHeight - DICE_SIZE;
             }
             
-            rollAngle += (velocityX > 0 ? Math.abs(velocityX) : -Math.abs(velocityX)) * 15 * rotationDirection;
+            rollAngle += velocityX > 0 ? Math.abs(velocityX) * 15 : -Math.abs(velocityX) * 15;
             currentRotation.x = Math.floor(rollAngle / 90) * 90;
             
             targetScale = SCALE.MIN;
             
             if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
                 posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
-                rotationDirection *= -1; // Inverte a direção da rotação
                 velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
-                velocityX *= 1.2; // Adiciona um pouco de energia para garantir o movimento
+                velocityY += (Math.random() - 0.5) * 2;
+                changeRotationOnCollision();
             }
             
             if (Math.abs(velocityX) < 0.1) {
@@ -357,7 +343,6 @@ function animateDice() {
     }
 }
 
-// Event Listeners permanecem os mesmos
 rollButton.addEventListener("mousedown", () => {
     if (isRolling) return;
     pressStartTime = Date.now();
@@ -390,7 +375,6 @@ rollButton.addEventListener("mouseup", () => {
     posX = window.innerWidth / 2;
     posY = window.innerHeight - 50;
     currentRotation = { x: 0, y: 0, z: 0 };
-    rotationDirection = 1;
     flightTime = 0;
     currentScale = SCALE.MIN;
     targetScale = SCALE.FLIGHT;
