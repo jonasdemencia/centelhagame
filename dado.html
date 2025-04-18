@@ -226,6 +226,13 @@ let rotationDirection = 1;
 let currentFaceSequence = [...faceSequence];
 let lastCollisionTime = 0;
 
+
+// Chance igual para cada eixo
+function determineRotationAxis() {
+    // 50% de chance para cada eixo
+    return Math.random() < 0.5 ? 'z' : 'x';
+}
+
 // Chance igual para cada eixo
 function changeRotationOnCollision(isVerticalCollision) {
     const currentTime = Date.now();
