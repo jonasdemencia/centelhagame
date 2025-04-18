@@ -172,9 +172,9 @@ const diceElement = document.getElementById("dice");
 const diceContainer = document.getElementById("dice-visual-container");
 const rollButton = document.getElementById("roll-button");
 const resultDisplay = document.getElementById("result-display");
-const ROTATION_SPEED = 2;
-const REBOUND_FORCE = 1.5;
-const PRECISE_ROTATION_ANGLE = 90;
+
+// Sequência de faces para visão top-down
+const faceSequence = [1, 2, 6, 5];
 
 // Configurações
 const MAX_PRESS_DURATION = 4000;
@@ -186,6 +186,9 @@ const INITIAL_FORCE_MULTIPLIER = 25;
 const LATERAL_FORCE_RANGE = 8;
 const ROTATION_CHANGE_ANGLE = 45;
 const EDGE_BOUNCE_MULTIPLIER = 1.2;
+const ROTATION_SPEED = 2;
+const REBOUND_FORCE = 1.5;
+const PRECISE_ROTATION_ANGLE = 90;
 
 // Configurações de escala para simular altura
 const SCALE = {
@@ -211,9 +214,6 @@ let bounceCount = 0;
 let rollAngle = 0;
 let rotationDirection = 1;
 let currentFaceSequence = [...faceSequence];
-
-// Sequência de faces para visão top-down
-const faceSequence = [1, 2, 6, 5];
 
 function changeRotationOnCollision(isVerticalCollision) {
     // Inverte a direção da rotação
@@ -293,14 +293,12 @@ function animateDice() {
             
             if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
                 posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
-                velocityX = -velocityX * WALL_BOUNCE_DAMPENING * EDGE_BOUNCE_MULTIPLIER;
-                changeRotationOnCollision();
+                changeRotationOnCollision(false);
             }
             
             if (posY <= 0 || posY >= window.innerHeight - DICE_SIZE) {
                 posY = posY <= 0 ? 0 : window.innerHeight - DICE_SIZE;
-                velocityY = -velocityY * WALL_BOUNCE_DAMPENING * EDGE_BOUNCE_MULTIPLIER;
-                changeRotationOnCollision();
+                changeRotationOnCollision(true);
             }
             
             if (flightTime >= 1) {
@@ -322,20 +320,18 @@ function animateDice() {
             
             if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
                 posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
-                velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
-                changeRotationOnCollision();
+                changeRotationOnCollision(false);
             }
             
             if (posY <= 0 || posY >= window.innerHeight - DICE_SIZE) {
                 posY = posY <= 0 ? 0 : window.innerHeight - DICE_SIZE;
-                velocityY = -velocityY * WALL_BOUNCE_DAMPENING;
-                changeRotationOnCollision();
+                changeRotationOnCollision(true);
             }
             
             if (flightTime >= 1) {
                 bounceCount--;
                 flightTime = 0;
-                currentRotation.x += 90;
+                currentRotation.x += 90 * rotationDirection;
                 
                 if (bounceCount <= 0) {
                     phase = 'rolling';
@@ -346,43 +342,39 @@ function animateDice() {
             break;
 
         case 'rolling':
-    posX += velocityX;
-    velocityX *= FRICTION;
-    
-    if (posY > window.innerHeight - DICE_SIZE) {
-        posY = window.innerHeight - DICE_SIZE;
+            posX += velocityX;
+            velocityX *= FRICTION;
+            
+            if (posY > window.innerHeight - DICE_SIZE) {
+                posY = window.innerHeight - DICE_SIZE;
+            }
+            
+            rollAngle += velocityX * 15 * rotationDirection;
+            currentRotation.x = Math.floor(rollAngle / PRECISE_ROTATION_ANGLE) * PRECISE_ROTATION_ANGLE;
+            
+            targetScale = SCALE.MIN;
+            
+            if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
+                posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
+                changeRotationOnCollision(false);
+                
+                if (Math.abs(velocityX) < 1) {
+                    velocityX = rotationDirection * REBOUND_FORCE;
+                }
+                
+                velocityY += (Math.random() - 0.5) * 2;
+            }
+            
+            if (Math.abs(velocityX) < 0.1) {
+                phase = 'stopped';
+                isRolling = false;
+                
+                const finalFaceIndex = Math.floor(Math.abs(rollAngle) / PRECISE_ROTATION_ANGLE) % 4;
+                resultDisplay.textContent = `Resultado: ${currentFaceSequence[finalFaceIndex]}`;
+                rollButton.disabled = false;
+            }
+            break;
     }
-    
-    // Atualiza o ângulo de rolagem baseado na direção
-    rollAngle += velocityX * 15 * rotationDirection;
-    currentRotation.x = Math.floor(rollAngle / PRECISE_ROTATION_ANGLE) * PRECISE_ROTATION_ANGLE;
-    
-    targetScale = SCALE.MIN;
-    
-    if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
-        posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
-        
-        // Chama changeRotationOnCollision antes de ajustar velocidades
-        changeRotationOnCollision(false);
-        
-        // Garante movimento após colisão
-        if (Math.abs(velocityX) < 1) {
-            velocityX = rotationDirection * REBOUND_FORCE;
-        }
-        
-        // Adiciona variação no movimento
-        velocityY += (Math.random() - 0.5) * 2;
-    }
-    
-    if (Math.abs(velocityX) < 0.1) {
-        phase = 'stopped';
-        isRolling = false;
-        
-        const finalFaceIndex = Math.floor(Math.abs(rollAngle) / PRECISE_ROTATION_ANGLE) % 4;
-        resultDisplay.textContent = `Resultado: ${currentFaceSequence[finalFaceIndex]}`;
-        rollButton.disabled = false;
-    }
-    break;
 
     updateDiceVisual();
 
@@ -426,8 +418,6 @@ rollButton.addEventListener("mouseup", () => {
     flightTime = 0;
     currentScale = SCALE.MIN;
     targetScale = SCALE.FLIGHT;
-
-    // Adicione estas duas linhas aqui:
     rotationDirection = 1;
     currentFaceSequence = [...faceSequence];
     
