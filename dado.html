@@ -401,17 +401,34 @@ function animateDice() {
     velocityX = Math.sign(velocityX) * Math.min(Math.abs(velocityX), MAX_VELOCITY);
     
     // Verifica se o dado parou
-    if (Math.abs(velocityX) < MIN_VELOCITY) {
-        // Completa a última rotação
-        currentRotation.x = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
-        velocityX = 0;
-        phase = 'stopped';
-        isRolling = false;
-        
-        const finalFaceIndex = Math.floor(Math.abs(currentRotation.x) / ROLL_STEP_SIZE) % 4;
-        resultDisplay.textContent = `Resultado: ${currentFaceSequence[finalFaceIndex]}`;
-        rollButton.disabled = false;
-    }
+    // Verifica se o dado parou
+      if (Math.abs(velocityX) < MIN_VELOCITY) {
+          // Completa a última rotação principal (assumindo X como primário no final)
+          currentRotation.x = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+          velocityX = 0;
+          phase = 'stopped';
+          isRolling = false;
+
+          // --- INÍCIO DA ALTERAÇÃO ---
+          // Garante que o ângulo final esteja entre 0 e 359 graus
+          const normalizedAngle = (currentRotation.x % 360 + 360) % 360;
+
+          // Calcula o índice arredondando para o passo de 90 graus mais próximo
+          // e usa o tamanho atual da sequência (pode ser 4)
+          const finalFaceIndex = Math.round(normalizedAngle / ROLL_STEP_SIZE) % currentFaceSequence.length;
+
+          // Pega o resultado da sequência ativa no momento
+          const finalResult = currentFaceSequence[finalFaceIndex];
+
+          // Exibe o resultado
+          resultDisplay.textContent = `Resultado: ${finalResult}`;
+
+          // Adiciona um log para depuração (opcional, pode remover depois)
+          console.log(`Final Angle X: ${currentRotation.x}, Normalized: ${normalizedAngle}, Index: ${finalFaceIndex}, Sequence: ${currentFaceSequence}, Result: ${finalResult}`);
+          // --- FIM DA ALTERAÇÃO ---
+
+          rollButton.disabled = false;
+      }
     break;
     }
 
