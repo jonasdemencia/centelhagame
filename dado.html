@@ -336,15 +336,19 @@ function animateDice() {
 
             
             if (Math.abs(velocityX) < 0.1) {
-                phase = 'stopped';
-                isRolling = false;
-                
-                let finalFaceIndex = Math.floor(Math.abs(rollAngle) / 90) % 4;
-if (rollAngle < 0) {
-    finalFaceIndex = 3 - finalFaceIndex;
-}
-            break;
+    phase = 'stopped';
+    isRolling = false;
+
+    let finalFaceIndex = Math.floor(Math.abs(rollAngle) / 90) % 4;
+    if (rollAngle < 0) {
+        finalFaceIndex = 3 - finalFaceIndex;
     }
+
+    resultDisplay.textContent = `Resultado: ${faceSequence[finalFaceIndex]}`;
+    rollButton.disabled = false;
+}
+break;
+
 
     updateDiceVisual();
 
