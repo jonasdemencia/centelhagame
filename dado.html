@@ -168,31 +168,35 @@ button#roll-button:hover {
 
 <script>
 // Elementos do DOM
+// Elementos do DOM
 const diceElement = document.getElementById("dice");
 const diceContainer = document.getElementById("dice-visual-container");
 const rollButton = document.getElementById("roll-button");
 const resultDisplay = document.getElementById("result-display");
-const ROLL_STEP_SIZE = 90; // Tamanho de cada passo de rotação em graus
-const MOVEMENT_PER_ROTATION = 50; // Distância percorrida por rotação completa
-const MIN_VELOCITY = 0.1; // Velocidade mínima para manter o movimento
-
 
 // Sequência de faces para visão top-down
 const faceSequence = [1, 2, 6, 5];
 
-// Configurações
-const MAX_PRESS_DURATION = 4000;
-const DICE_SIZE = 50;
+// Configurações de Movimento e Rotação
+const ROLL_STEP_SIZE = 90;        // Tamanho de cada passo de rotação em graus
+const MOVEMENT_PER_ROTATION = 50;  // Distância percorrida por rotação completa
+const MIN_VELOCITY = 0.1;         // Velocidade mínima para manter o movimento
+const ROTATION_SPEED = 2;
+const PRECISE_ROTATION_ANGLE = 90;
+
+// Configurações de Física
 const FRICTION = 0.985;
 const BOUNCE_DAMPENING = 0.75;
 const WALL_BOUNCE_DAMPENING = 0.6;
+const EDGE_BOUNCE_MULTIPLIER = 1.2;
+const REBOUND_FORCE = 1.5;
+
+// Configurações de Interface
+const MAX_PRESS_DURATION = 4000;
+const DICE_SIZE = 50;
 const INITIAL_FORCE_MULTIPLIER = 25;
 const LATERAL_FORCE_RANGE = 8;
 const ROTATION_CHANGE_ANGLE = 45;
-const EDGE_BOUNCE_MULTIPLIER = 1.2;
-const ROTATION_SPEED = 2;
-const REBOUND_FORCE = 1.5;
-const PRECISE_ROTATION_ANGLE = 90;
 
 // Configurações de escala para simular altura
 const SCALE = {
