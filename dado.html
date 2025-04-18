@@ -235,26 +235,44 @@ function getTopFaceFromRotation(x, y, z) {
 
     console.log(`getTopFace input (norm): X=${normX}, Y=${normY}, Z=${normZ}`);
 
-    // *** IMPORTANTE: PREENCHER ESTA LÓGICA COM BASE NA OBSERVAÇÃO ***
-    // Use os logs "ANGULOS FINAIS" e o resultado visual para criar as regras:
-    // if (normX === A && normY === B && normZ === C) return FACE_VISTA;
-    // Exemplos (precisam de confirmação/ajuste):
-    if (normX === 0 && normZ === 0) return 1;
-    if (normY === 0 && normZ === 0) {
-        if (normX === 90) return 2;
-        if (normX === 180) return 6;
-        if (normX === 270) return 5;
-    }
-    if (normX === 0 && normY === 0) {
-         if (normZ === 90) return 3;
-         if (normZ === 180) return 6; // CONFIRMAR!
-         if (normZ === 270) return 4;
-     }
-    // Adicionar combinações observadas...
-    // if (normX === 270 && normY === 0 && normZ === 90) return 4; // Exemplo, verificar!
+    // --- REGRAS ATUALIZADAS BASEADAS NOS SEUS LOGS ---
 
-    console.warn(`Combinacao de angulos nao mapeada: X=${normX}, Y=${normY}, Z=${normZ}. Retornando 1.`);
-    return 1; // Padrão
+    // Casos base e Rotações Puras em X (Confirmados nos logs)
+    if (normY === 0 && normZ === 0) {
+        if (normX === 0) return 1;   // (0,0,0) -> Visual 1
+        if (normX === 90) return 2;  // (90,0,0) -> Visual 2
+        if (normX === 180) return 6; // (180,0,0) -> Visual 6
+        if (normX === 270) return 5; // (270,0,0) -> Visual 5
+    }
+
+    // Rotação Pura em Z (Regra corrigida pelo log)
+    if (normX === 0 && normY === 0 && normZ === 90) {
+        return 1; // (0,0,90) -> Visual 1 (Seu log mostrou isso)
+    }
+    // OBS: Adicionar if's para Z=180 e Z=270 (com X=0, Y=0) se você observá-los nos logs
+
+    // Combinações observadas nos logs:
+    if (normX === 180 && normY === 0 && normZ === 90) {
+        return 6; // (180,0,90) -> Visual 6
+    }
+    if (normX === 270 && normY === 0 && normZ === 90) {
+        return 3; // (270,0,90) -> Visual 3
+    }
+     if (normX === 90 && normY === 180 && normZ === 90) {
+         return 4; // (90,180,90) -> Visual 4
+     }
+
+    // Caso de Parada na Aresta (Opcional - baseado no seu log)
+    if (normX === 180 && normY === 270 && normZ === 90) {
+        console.warn("Parada na aresta detectada (180, 270, 90). Retornando 2.");
+        return 2; // Mapeado para o visual "2 (meio aresta)"
+    }
+
+    // Adicione mais combinações 'if' aqui conforme observa outros resultados incorretos nos logs
+
+    // Se nenhuma regra específica for encontrada ainda
+    console.warn(`Combinacao de angulos nao mapeada: X=${normX}, Y=${normY}, Z=${normZ}. Retornando 1 como padrao.`);
+    return 1; // Retorna um padrão (você pode mudar se quiser)
 }
     
 // Chance igual para cada eixo
