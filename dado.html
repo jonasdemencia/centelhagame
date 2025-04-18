@@ -242,6 +242,8 @@ function changeRotationOnCollision(isVerticalCollision) {
         velocityX *= 0.8;
     } else {
         velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
+        // Garante velocidade mínima após colisão
+        velocityX = Math.sign(velocityX) * Math.max(Math.abs(velocityX), MIN_VELOCITY * 2);
     }
     
     // Limita a velocidade após a colisão
