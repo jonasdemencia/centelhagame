@@ -185,11 +185,14 @@ const ROTATION_SPEED = 2;
 const PRECISE_ROTATION_ANGLE = 90;
 
 // Configurações de Física
-const FRICTION = 0.985;
+const FRICTION = 0.98; // Aumentado levemente para uma desaceleração mais suave
 const BOUNCE_DAMPENING = 0.75;
-const WALL_BOUNCE_DAMPENING = 0.6;
-const EDGE_BOUNCE_MULTIPLIER = 1.2;
-const REBOUND_FORCE = 1.5;
+const WALL_BOUNCE_DAMPENING = 0.4; // Reduzido de 0.6 para diminuir o rebote
+const EDGE_BOUNCE_MULTIPLIER = 1.0; // Reduzido de 1.2 para diminuir o efeito da colisão
+const REBOUND_FORCE = 0.8; // Reduzido de 1.5 para um movimento mais suave
+const MAX_VELOCITY = 15; // Velocidade máxima permitida
+const COLLISION_COOLDOWN = 500; // Tempo mínimo entre colisões em millisegundos
+
 
 // Configurações de Interface
 const MAX_PRESS_DURATION = 4000;
@@ -222,45 +225,45 @@ let bounceCount = 0;
 let rollAngle = 0;
 let rotationDirection = 1;
 let currentFaceSequence = [...faceSequence];
+let lastCollisionTime = 0;
 
 function changeRotationOnCollision(isVerticalCollision) {
-    // Inverte a direção da rotação
-    rotationDirection *= -1;
+    const currentTime = Date.now();
     
-    // Inverte a sequência de faces
+    // Verifica se já passou tempo suficiente desde a última colisão
+    if (currentTime - lastCollisionTime < COLLISION_COOLDOWN) {
+        return;
+    }
+    
+    lastCollisionTime = currentTime;
+    rotationDirection *= -1;
     currentFaceSequence = rotationDirection > 0 ? [...faceSequence] : [...faceSequence].reverse();
 
     if (isVerticalCollision) {
-        // Colisão vertical
-        velocityY = -velocityY * WALL_BOUNCE_DAMPENING * EDGE_BOUNCE_MULTIPLIER;
+        velocityY = -velocityY * WALL_BOUNCE_DAMPENING;
         
-        // Garante movimento mínimo após colisão
         if (Math.abs(velocityY) < 2) {
             velocityY = rotationDirection * REBOUND_FORCE;
         }
         
-        // Ajusta a rotação para a nova direção
         currentRotation.x = rotationDirection * Math.abs(currentRotation.x);
-        
-        // Adiciona força lateral para movimento mais natural
-        velocityX += (Math.random() - 0.5) * REBOUND_FORCE;
+        velocityX *= 0.8; // Reduz a velocidade lateral na colisão vertical
     } else {
-        // Colisão horizontal
-        velocityX = -velocityX * WALL_BOUNCE_DAMPENING * EDGE_BOUNCE_MULTIPLIER;
+        velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
         
-        // Garante movimento mínimo após colisão
+        // Limita a velocidade após a colisão
+        velocityX = Math.sign(velocityX) * Math.min(Math.abs(velocityX), MAX_VELOCITY);
+        
         if (Math.abs(velocityX) < 2) {
             velocityX = rotationDirection * REBOUND_FORCE;
         }
         
-        // Ajusta rotação para a nova direção
         currentRotation.x = rotationDirection * Math.abs(currentRotation.x);
-        
-        // Força adicional para garantir que o dado se afaste
-        velocityX += rotationDirection * REBOUND_FORCE;
     }
     
-    // Arredonda a rotação para múltiplos de 90 graus
+    // Remove a força adicional que estava causando aceleração extra
+    // velocityX += rotationDirection * REBOUND_FORCE;
+    
     currentRotation.x = Math.round(currentRotation.x / PRECISE_ROTATION_ANGLE) * PRECISE_ROTATION_ANGLE;
 }
 
@@ -389,13 +392,23 @@ function animateDice() {
     // Colisão com as paredes
     if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
         posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
-        changeRotationOnCollision(false);
         
-        // Garante movimento após colisão
-        if (Math.abs(velocityX) < REBOUND_FORCE) {
-            velocityX = rotationDirection * REBOUND_FORCE;
+        // Adiciona verificação de velocidade antes da colisão
+        if (Math.abs(velocityX) > MIN_VELOCITY) {
+            changeRotationOnCollision(false);
+            
+            // Limita a velocidade após a colisão
+            velocityX = Math.sign(velocityX) * Math.min(Math.abs(velocityX), MAX_VELOCITY);
+        } else {
+            // Se a velocidade for muito baixa, apenas para o dado
+            velocityX = 0;
+            phase = 'stopped';
+            isRolling = false;
         }
     }
+
+    // Aplica um limite máximo à velocidade em qualquer momento
+    velocityX = Math.sign(velocityX) * Math.min(Math.abs(velocityX), MAX_VELOCITY);
     
     // Verifica se o dado parou
     if (Math.abs(velocityX) < MIN_VELOCITY) {
