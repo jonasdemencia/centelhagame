@@ -244,8 +244,6 @@ function changeRotationOnCollision(isVerticalCollision) {
     } else {
         currentRotation = { x: 0, y: 0, z: 0 };
         currentFaceSequence = [1, 2, 6, 5]; // Sequência para o eixo X
-    }
-    } else {
         currentFaceSequence = rotationDirection > 0 ? [...faceSequence] : [...faceSequence].reverse();
     }
 
