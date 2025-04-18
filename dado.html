@@ -403,18 +403,13 @@ function animateDice() {
     // Verifica se o dado parou
     // Dentro do case 'rolling', quando o dado para:
 if (Math.abs(velocityX) < MIN_VELOCITY) {
-    // Completa a última rotação
     currentRotation.x = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
     velocityX = 0;
     phase = 'stopped';
     isRolling = false;
     
-    // Registra o resultado baseado na sequência atual e rotação
-    const rotationIndex = Math.floor(Math.abs(currentRotation.x) / ROLL_STEP_SIZE) % 4;
-    const result = currentFaceSequence[rotationIndex];
-    
-    // Atualiza o display (pode ser removido posteriormente)
-    resultDisplay.textContent = `Resultado: ${result}`;
+    const finalFaceIndex = Math.floor(Math.abs(currentRotation.x) / ROLL_STEP_SIZE) % 4;
+    resultDisplay.textContent = `Resultado: ${currentFaceSequence[finalFaceIndex]}`;
     rollButton.disabled = false;
 }
     break;
