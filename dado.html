@@ -220,7 +220,8 @@ function changeRotationOnCollision(isVerticalCollision) {
 
     if (isVerticalCollision) {
         const currentSpeed = Math.abs(velocityY);
-        velocityY = -velocityY * WALL_BOUNCE_DAMPENING * EDGE_BOUNCE_MULTIPLIER;
+        rotationDirection *= -1; // Reverte o sentido
+currentFaceSequence.reverse(); // Atualiza sequência das faces
         
         if (Math.abs(velocityY) < 2) {
             velocityY = rotationDirection * REBOUND_FORCE;
@@ -228,7 +229,8 @@ function changeRotationOnCollision(isVerticalCollision) {
         currentRotation.x = rotationDirection * Math.abs(currentRotation.x);
     } else {
         const currentSpeed = Math.abs(velocityX);
-        velocityX = -velocityX * WALL_BOUNCE_DAMPENING * EDGE_BOUNCE_MULTIPLIER;
+        rotationDirection *= -1; // Reverte o sentido
+currentFaceSequence.reverse(); // Atualiza sequência das faces
         
         if (Math.abs(velocityX) < 2) {
             velocityX = rotationDirection * REBOUND_FORCE;
@@ -269,8 +271,7 @@ function animateDice() {
             const height = simulateHeight(flightTime, 1);
             targetScale = SCALE.MIN + (height * (SCALE.MAX - SCALE.MIN));
             
-            currentRotation.x += velocityX * ROTATION_SPEED * rotationDirection;
-            currentRotation.y += velocityY * ROTATION_SPEED * rotationDirection;
+            currentRotation.x += 90 * rotationDirection; // Alternância da face
             
             if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
                 posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
@@ -308,6 +309,13 @@ function animateDice() {
                 posY = posY <= 0 ? 0 : window.innerHeight - DICE_SIZE;
                 changeRotationOnCollision(true);
             }
+
+            if (bounceCount > 0) {
+    const nextFace = currentFaceSequence[bounceCount % currentFaceSequence.length];
+    velocityX += nextFace * 0.1 * rotationDirection; // Direção baseada na face
+    velocityY += nextFace * 0.1 * rotationDirection;
+}
+
             
             if (flightTime >= 1) {
                 bounceCount--;
@@ -331,7 +339,9 @@ function animateDice() {
             }
             
             rollAngle += velocityX * 15 * rotationDirection;
-            currentRotation.x = Math.floor(rollAngle / 90) * 90;
+            rollAngle += velocityX * rotationDirection * ROTATION_SPEED;
+const nextFace = currentFaceSequence[Math.floor(rollAngle / 90) % currentFaceSequence.length];
+currentRotation.x = nextFace * 90; // Alternância precisa das faces
             
             targetScale = SCALE.MIN;
             
@@ -348,8 +358,8 @@ function animateDice() {
                 phase = 'stopped';
                 isRolling = false;
                 
-                const finalFaceIndex = Math.floor(Math.abs(rollAngle) / 90) % 4;
-                resultDisplay.textContent = `Resultado: ${currentFaceSequence[finalFaceIndex]}`;
+                const finalFaceIndex = Math.floor(Math.abs(currentRotation.x) / 90) % currentFaceSequence.length;
+resultDisplay.textContent = `Resultado: Face ${currentFaceSequence[finalFaceIndex]}`;
                 rollButton.disabled = false;
             }
             break;
