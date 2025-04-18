@@ -172,6 +172,10 @@ const diceElement = document.getElementById("dice");
 const diceContainer = document.getElementById("dice-visual-container");
 const rollButton = document.getElementById("roll-button");
 const resultDisplay = document.getElementById("result-display");
+const ROLL_STEP_SIZE = 90; // Tamanho de cada passo de rotação em graus
+const MOVEMENT_PER_ROTATION = 50; // Distância percorrida por rotação completa
+const MIN_VELOCITY = 0.1; // Velocidade mínima para manter o movimento
+
 
 // Sequência de faces para visão top-down
 const faceSequence = [1, 2, 6, 5];
@@ -342,38 +346,66 @@ function animateDice() {
             break;
 
         case 'rolling':
-            posX += velocityX;
-            velocityX *= FRICTION;
-            
-            if (posY > window.innerHeight - DICE_SIZE) {
-                posY = window.innerHeight - DICE_SIZE;
-            }
-            
-            rollAngle += velocityX * 15 * rotationDirection;
-            currentRotation.x = Math.floor(rollAngle / PRECISE_ROTATION_ANGLE) * PRECISE_ROTATION_ANGLE;
-            
-            targetScale = SCALE.MIN;
-            
-            if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
-                posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
-                changeRotationOnCollision(false);
-                
-                if (Math.abs(velocityX) < 1) {
-                    velocityX = rotationDirection * REBOUND_FORCE;
-                }
-                
-                velocityY += (Math.random() - 0.5) * 2;
-            }
-            
-            if (Math.abs(velocityX) < 0.1) {
-                phase = 'stopped';
-                isRolling = false;
-                
-                const finalFaceIndex = Math.floor(Math.abs(rollAngle) / PRECISE_ROTATION_ANGLE) % 4;
-                resultDisplay.textContent = `Resultado: ${currentFaceSequence[finalFaceIndex]}`;
-                rollButton.disabled = false;
-            }
-            break;
+    // Calcula a rotação baseada no movimento
+    const previousAngle = currentRotation.x;
+    const rotationStep = ROLL_STEP_SIZE * rotationDirection;
+    
+    // Atualiza a posição baseada na velocidade
+    posX += velocityX;
+    
+    // Calcula quantas rotações completas devem ocorrer baseado no movimento
+    const distanceMoved = Math.abs(velocityX);
+    const rotationProgress = (distanceMoved / MOVEMENT_PER_ROTATION) * ROLL_STEP_SIZE;
+    
+    // Atualiza o ângulo de rotação
+    rollAngle += rotationProgress * rotationDirection;
+    
+    // Arredonda para o próximo múltiplo de 90 graus
+    currentRotation.x = Math.round(rollAngle / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+    
+    // Verifica se houve mudança de face
+    const faceChanged = previousAngle !== currentRotation.x;
+    
+    if (faceChanged) {
+        // Ajusta a velocidade para corresponder à mudança de face
+        const rotationDiff = Math.abs(currentRotation.x - previousAngle);
+        velocityX = (rotationDiff / ROLL_STEP_SIZE) * MOVEMENT_PER_ROTATION * Math.sign(velocityX);
+    }
+    
+    // Aplica fricção
+    velocityX *= FRICTION;
+    
+    // Mantém o dado no chão
+    if (posY > window.innerHeight - DICE_SIZE) {
+        posY = window.innerHeight - DICE_SIZE;
+    }
+    
+    targetScale = SCALE.MIN;
+    
+    // Colisão com as paredes
+    if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
+        posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
+        changeRotationOnCollision(false);
+        
+        // Garante movimento após colisão
+        if (Math.abs(velocityX) < REBOUND_FORCE) {
+            velocityX = rotationDirection * REBOUND_FORCE;
+        }
+    }
+    
+    // Verifica se o dado parou
+    if (Math.abs(velocityX) < MIN_VELOCITY) {
+        // Completa a rotação atual
+        currentRotation.x = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+        
+        phase = 'stopped';
+        isRolling = false;
+        
+        const finalFaceIndex = Math.floor(Math.abs(currentRotation.x) / ROLL_STEP_SIZE) % 4;
+        resultDisplay.textContent = `Resultado: ${currentFaceSequence[finalFaceIndex]}`;
+        rollButton.disabled = false;
+    }
+    break;
     }
 
     updateDiceVisual();
