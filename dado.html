@@ -227,6 +227,36 @@ let currentFaceSequence = [...faceSequence];
 let lastCollisionTime = 0;
 
 
+function getTopFaceFromRotation(x, y, z) {
+    // Normaliza ângulos para 0, 90, 180, 270
+    const normX = (x % 360 + 360) % 360;
+    const normY = (y % 360 + 360) % 360;
+    const normZ = (z % 360 + 360) % 360;
+
+    console.log(`getTopFace input (norm): X=${normX}, Y=${normY}, Z=${normZ}`);
+
+    // *** IMPORTANTE: PREENCHER ESTA LÓGICA COM BASE NA OBSERVAÇÃO ***
+    // Use os logs "ANGULOS FINAIS" e o resultado visual para criar as regras:
+    // if (normX === A && normY === B && normZ === C) return FACE_VISTA;
+    // Exemplos (precisam de confirmação/ajuste):
+    if (normX === 0 && normZ === 0) return 1;
+    if (normY === 0 && normZ === 0) {
+        if (normX === 90) return 2;
+        if (normX === 180) return 6;
+        if (normX === 270) return 5;
+    }
+    if (normX === 0 && normY === 0) {
+         if (normZ === 90) return 3;
+         if (normZ === 180) return 6; // CONFIRMAR!
+         if (normZ === 270) return 4;
+     }
+    // Adicionar combinações observadas...
+    // if (normX === 270 && normY === 0 && normZ === 90) return 4; // Exemplo, verificar!
+
+    console.warn(`Combinacao de angulos nao mapeada: X=${normX}, Y=${normY}, Z=${normZ}. Retornando 1.`);
+    return 1; // Padrão
+}
+    
 // Chance igual para cada eixo
 function determineRotationAxis() {
     // 50% de chance para cada eixo
@@ -401,33 +431,30 @@ function animateDice() {
     velocityX = Math.sign(velocityX) * Math.min(Math.abs(velocityX), MAX_VELOCITY);
     
     // Verifica se o dado parou
-    // Verifica se o dado parou
+      // Verifica se o dado parou
       if (Math.abs(velocityX) < MIN_VELOCITY) {
-          // Completa a última rotação principal (assumindo X como primário no final)
-          currentRotation.x = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+          // ---> NENHUMA ALTERAÇÃO NA ANIMAÇÃO ACONTECE A PARTIR DAQUI <---
+
+          // Arredonda TODOS os ângulos FINAIS (APÓS a parada da animação)
+          const finalX = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+          const finalY = Math.round(currentRotation.y / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+          const finalZ = Math.round(currentRotation.z / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+
+          // Interrompe o estado da animação (já estava assim)
           velocityX = 0;
           phase = 'stopped';
-          isRolling = false;
+          isRolling = false; // <-- Loop de animação para aqui
 
-          // --- INÍCIO DA ALTERAÇÃO ---
-          // Garante que o ângulo final esteja entre 0 e 359 graus
-          const normalizedAngle = (currentRotation.x % 360 + 360) % 360;
+          // CALCULA o resultado baseado nos ângulos finais (nova interpretação)
+          const finalResult = getTopFaceFromRotation(finalX, finalY, finalZ);
 
-          // Calcula o índice arredondando para o passo de 90 graus mais próximo
-          // e usa o tamanho atual da sequência (pode ser 4)
-          const finalFaceIndex = Math.round(normalizedAngle / ROLL_STEP_SIZE) % currentFaceSequence.length;
-
-          // Pega o resultado da sequência ativa no momento
-          const finalResult = currentFaceSequence[finalFaceIndex];
-
-          // Exibe o resultado
+          // ATUALIZA O TEXTO (não afeta o visual do dado)
           resultDisplay.textContent = `Resultado: ${finalResult}`;
 
-          // Adiciona um log para depuração (opcional, pode remover depois)
-          console.log(`Final Angle X: ${currentRotation.x}, Normalized: ${normalizedAngle}, Index: ${finalFaceIndex}, Sequence: ${currentFaceSequence}, Result: ${finalResult}`);
-          // --- FIM DA ALTERAÇÃO ---
+          // Log para ajudar a calibrar a função getTopFaceFromRotation
+          console.log(`ANGULOS FINAIS -> X: ${finalX}, Y: ${finalY}, Z: ${finalZ} --- RESULTADO VISUAL ESPERADO: ? --- RESULTADO CALCULADO: ${finalResult}`);
 
-          rollButton.disabled = false;
+          rollButton.disabled = false; // Libera o botão (já estava assim)
       }
     break;
     }
