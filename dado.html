@@ -239,15 +239,12 @@ function changeRotationOnCollision(isVerticalCollision) {
     
     // 50% de chance de mudar o eixo de rotação
     if (Math.random() < 0.5) {
-        if (currentRotation.z === 0) {
-            currentRotation.z = 90;
-            currentRotation.x = 0;
-            currentFaceSequence = [3, 2, 4, 5]; // Sequência para o eixo Z
-        } else {
-            currentRotation.z = 0;
-            currentRotation.x = 0;
-            currentFaceSequence = [1, 2, 6, 5]; // Sequência para o eixo X
-        }
+        currentRotation = { x: 0, y: 0, z: 90 };
+        currentFaceSequence = [3, 2, 4, 5]; // Sequência para o eixo Z
+    } else {
+        currentRotation = { x: 0, y: 0, z: 0 };
+        currentFaceSequence = [1, 2, 6, 5]; // Sequência para o eixo X
+    }
     } else {
         currentFaceSequence = rotationDirection > 0 ? [...faceSequence] : [...faceSequence].reverse();
     }
