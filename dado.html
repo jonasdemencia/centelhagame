@@ -401,26 +401,20 @@ function animateDice() {
     velocityX = Math.sign(velocityX) * Math.min(Math.abs(velocityX), MAX_VELOCITY);
     
     // Verifica se o dado parou
-    if (Math.abs(velocityX) < MIN_VELOCITY) {
+    // Dentro do case 'rolling', quando o dado para:
+if (Math.abs(velocityX) < MIN_VELOCITY) {
     // Completa a última rotação
     currentRotation.x = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
     velocityX = 0;
     phase = 'stopped';
     isRolling = false;
     
-    // Determina qual face está para cima baseado na rotação atual
-    let visibleFace;
-    if (currentRotation.z === 90) {
-        // Se estiver no eixo Z, usa a sequência [3, 2, 4, 5]
-        const zIndex = Math.floor(Math.abs(currentRotation.x) / ROLL_STEP_SIZE) % 4;
-        visibleFace = currentFaceSequence[zIndex];
-    } else {
-        // Se estiver no eixo X, usa a sequência [1, 2, 6, 5]
-        const xIndex = Math.floor(Math.abs(currentRotation.x) / ROLL_STEP_SIZE) % 4;
-        visibleFace = currentFaceSequence[xIndex];
-    }
+    // Registra o resultado baseado na sequência atual e rotação
+    const rotationIndex = Math.floor(Math.abs(currentRotation.x) / ROLL_STEP_SIZE) % 4;
+    const result = currentFaceSequence[rotationIndex];
     
-    resultDisplay.textContent = `Resultado: ${visibleFace}`;
+    // Atualiza o display (pode ser removido posteriormente)
+    resultDisplay.textContent = `Resultado: ${result}`;
     rollButton.disabled = false;
 }
     break;
