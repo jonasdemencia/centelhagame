@@ -172,6 +172,9 @@ const diceElement = document.getElementById("dice");
 const diceContainer = document.getElementById("dice-visual-container");
 const rollButton = document.getElementById("roll-button");
 const resultDisplay = document.getElementById("result-display");
+const ROTATION_SPEED = 2;
+const REBOUND_FORCE = 1.5;
+const PRECISE_ROTATION_ANGLE = 90;
 
 // Configurações
 const MAX_PRESS_DURATION = 4000;
@@ -206,14 +209,51 @@ let phase = 'ready';
 let flightTime = 0;
 let bounceCount = 0;
 let rollAngle = 0;
+let rotationDirection = 1;
+let currentFaceSequence = [...faceSequence];
 
 // Sequência de faces para visão top-down
 const faceSequence = [1, 2, 6, 5];
 
-function changeRotationOnCollision() {
-    currentRotation.x += (Math.random() - 0.5) * ROTATION_CHANGE_ANGLE;
-    currentRotation.y += (Math.random() - 0.5) * ROTATION_CHANGE_ANGLE;
-    currentRotation.z += (Math.random() - 0.5) * ROTATION_CHANGE_ANGLE;
+function changeRotationOnCollision(isVerticalCollision) {
+    // Inverte a direção da rotação
+    rotationDirection *= -1;
+    
+    // Inverte a sequência de faces
+    currentFaceSequence = rotationDirection > 0 ? [...faceSequence] : [...faceSequence].reverse();
+
+    if (isVerticalCollision) {
+        // Colisão vertical
+        velocityY = -velocityY * WALL_BOUNCE_DAMPENING * EDGE_BOUNCE_MULTIPLIER;
+        
+        // Garante movimento mínimo após colisão
+        if (Math.abs(velocityY) < 2) {
+            velocityY = rotationDirection * REBOUND_FORCE;
+        }
+        
+        // Ajusta a rotação para a nova direção
+        currentRotation.x = rotationDirection * Math.abs(currentRotation.x);
+        
+        // Adiciona força lateral para movimento mais natural
+        velocityX += (Math.random() - 0.5) * REBOUND_FORCE;
+    } else {
+        // Colisão horizontal
+        velocityX = -velocityX * WALL_BOUNCE_DAMPENING * EDGE_BOUNCE_MULTIPLIER;
+        
+        // Garante movimento mínimo após colisão
+        if (Math.abs(velocityX) < 2) {
+            velocityX = rotationDirection * REBOUND_FORCE;
+        }
+        
+        // Ajusta rotação para a nova direção
+        currentRotation.x = rotationDirection * Math.abs(currentRotation.x);
+        
+        // Força adicional para garantir que o dado se afaste
+        velocityX += rotationDirection * REBOUND_FORCE;
+    }
+    
+    // Arredonda a rotação para múltiplos de 90 graus
+    currentRotation.x = Math.round(currentRotation.x / PRECISE_ROTATION_ANGLE) * PRECISE_ROTATION_ANGLE;
 }
 
 function updateDiceVisual() {
@@ -248,8 +288,8 @@ function animateDice() {
             const height = simulateHeight(flightTime, 1);
             targetScale = SCALE.MIN + (height * (SCALE.MAX - SCALE.MIN));
             
-            currentRotation.x += velocityX * 2;
-            currentRotation.y += velocityY * 2;
+            currentRotation.x += velocityX * ROTATION_SPEED * rotationDirection;
+            currentRotation.y += velocityY * ROTATION_SPEED * rotationDirection;
             
             if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
                 posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
@@ -306,35 +346,43 @@ function animateDice() {
             break;
 
         case 'rolling':
-            posX += velocityX;
-            velocityX *= FRICTION;
-            
-            if (posY > window.innerHeight - DICE_SIZE) {
-                posY = window.innerHeight - DICE_SIZE;
-            }
-            
-            rollAngle += velocityX > 0 ? Math.abs(velocityX) * 15 : -Math.abs(velocityX) * 15;
-            currentRotation.x = Math.floor(rollAngle / 90) * 90;
-            
-            targetScale = SCALE.MIN;
-            
-            if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
-                posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
-                velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
-                velocityY += (Math.random() - 0.5) * 2;
-                changeRotationOnCollision();
-            }
-            
-            if (Math.abs(velocityX) < 0.1) {
-                phase = 'stopped';
-                isRolling = false;
-                
-                const finalFaceIndex = Math.floor(Math.abs(rollAngle) / 90) % 4;
-                resultDisplay.textContent = `Resultado: ${faceSequence[finalFaceIndex]}`;
-                rollButton.disabled = false;
-            }
-            break;
+    posX += velocityX;
+    velocityX *= FRICTION;
+    
+    if (posY > window.innerHeight - DICE_SIZE) {
+        posY = window.innerHeight - DICE_SIZE;
     }
+    
+    // Atualiza o ângulo de rolagem baseado na direção
+    rollAngle += velocityX * 15 * rotationDirection;
+    currentRotation.x = Math.floor(rollAngle / PRECISE_ROTATION_ANGLE) * PRECISE_ROTATION_ANGLE;
+    
+    targetScale = SCALE.MIN;
+    
+    if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
+        posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
+        
+        // Chama changeRotationOnCollision antes de ajustar velocidades
+        changeRotationOnCollision(false);
+        
+        // Garante movimento após colisão
+        if (Math.abs(velocityX) < 1) {
+            velocityX = rotationDirection * REBOUND_FORCE;
+        }
+        
+        // Adiciona variação no movimento
+        velocityY += (Math.random() - 0.5) * 2;
+    }
+    
+    if (Math.abs(velocityX) < 0.1) {
+        phase = 'stopped';
+        isRolling = false;
+        
+        const finalFaceIndex = Math.floor(Math.abs(rollAngle) / PRECISE_ROTATION_ANGLE) % 4;
+        resultDisplay.textContent = `Resultado: ${currentFaceSequence[finalFaceIndex]}`;
+        rollButton.disabled = false;
+    }
+    break;
 
     updateDiceVisual();
 
@@ -378,6 +426,10 @@ rollButton.addEventListener("mouseup", () => {
     flightTime = 0;
     currentScale = SCALE.MIN;
     targetScale = SCALE.FLIGHT;
+
+    // Adicione estas duas linhas aqui:
+    rotationDirection = 1;
+    currentFaceSequence = [...faceSequence];
     
     requestAnimationFrame(animateDice);
     rollButton.style.transform = '';
