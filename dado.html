@@ -179,18 +179,18 @@ const faceSequence = [1, 2, 6, 5];
 
 // Configurações de Movimento e Rotação
 const ROLL_STEP_SIZE = 90;        // Tamanho de cada passo de rotação em graus
-const MOVEMENT_PER_ROTATION = 350; // Aumentar a distância por rotação
-const MIN_VELOCITY = 2.0;         // Aumentar a velocidade mínima
-const ROTATION_SPEED = 3;
+const MOVEMENT_PER_ROTATION = 100; // Reduzido para criar uma relação mais direta entre movimento e rotação
+const MIN_VELOCITY = 3.0;         // Aumentado para manter o movimento por mais tempo
+const ROTATION_SPEED = 2;
 const PRECISE_ROTATION_ANGLE = 90;
 
 // Configurações de Física
-const FRICTION = 0.95;            // Aumentar a fricção
-const WALL_BOUNCE_DAMPENING = 0.3; // Reduzir ainda mais o rebote
-const EDGE_BOUNCE_MULTIPLIER = 1.0; // Reduzido de 1.2 para diminuir o efeito da colisão
-const REBOUND_FORCE = 0.5;        // Reduzir a força de rebote
-const MAX_VELOCITY = 8;           // Reduzir a velocidade máxima
-const COLLISION_COOLDOWN = 500; // Tempo mínimo entre colisões em millisegundos
+const FRICTION = 0.98;            // Reduzido para desacelerar mais lentamente
+const WALL_BOUNCE_DAMPENING = 0.5; // Aumentado para manter mais momentum após colisão
+const EDGE_BOUNCE_MULTIPLIER = 1.0;
+const REBOUND_FORCE = 1.0;        // Aumentado para mais força após colisão
+const MAX_VELOCITY = 15;          // Aumentado para permitir movimento mais rápido
+const COLLISION_COOLDOWN = 300;    // Reduzido para permitir colisões mais frequentes
 
 
 // Configurações de Interface
