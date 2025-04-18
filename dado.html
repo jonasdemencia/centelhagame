@@ -237,22 +237,23 @@ function getTopFaceFromRotation(x, y, z) {
 
     // Casos com Z=90
     if (normZ === 90) {
-        if (normX === 90 && normY === 0) return 4;   // Resultado da animação: 4
-        if (normX === 270 && normY === 270) return 3; // Resultado da animação: 3
-        if (normX === 180 && normY === 90) return 5;  // Resultado da animação: 5
-        if (normX === 270 && normY === 90) return 3;  // Resultado da animação: 3
-        if (normX === 90 && normY === 270) return 4;  // Resultado da animação: 4
-        if (normX === 0 && normY === 180) return 6;   // Resultado da animação: 6
+        // Novas regras para Z=90
+        if (normX === 0 && normY === 270) return 5;   // Confirmado duas vezes nos logs
+        if (normX === 270 && normY === 180) return 3;
+        if (normX === 90 && normY === 180) return 4;
+        if (normX === 270 && normY === 0) return 3;
+        if (normX === 180 && normY === 0) return 6;
     }
 
     // Casos com Z=0
     if (normZ === 0) {
-        if (normX === 90 && normY === 270) return 2; // Resultado da animação: 2
-        if (normX === 90 && normY === 90) return 2;  // Resultado da animação: 2
-        if (normX === 270 && normY === 90) return 5; // Resultado da animação: 5
+        // Novas regras para Z=0
+        if (normX === 90 && normY === 180) return 2;
+        if (normX === 0 && normY === 270) return 4;   // Confirmado duas vezes nos logs
+        if (normX === 270 && normY === 180) return 5;
     }
 
-    // Casos base (rotações puras em X)
+    // Mantém os casos base existentes
     if (normY === 0 && normZ === 0) {
         if (normX === 0) return 1;
         if (normX === 90) return 2;
@@ -260,7 +261,6 @@ function getTopFaceFromRotation(x, y, z) {
         if (normX === 270) return 5;
     }
 
-    // Se nenhuma regra específica for encontrada
     console.warn(`Combinacao de angulos nao mapeada: X=${normX}, Y=${normY}, Z=${normZ}. Retornando 1 como padrao.`);
     return 1;
 }
