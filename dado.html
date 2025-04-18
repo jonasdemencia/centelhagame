@@ -211,10 +211,12 @@ let rollAngle = 0;
 const faceSequence = [1, 2, 6, 5];
 
 function changeRotationOnCollision() {
-    currentRotation.x += (Math.random() - 0.5) * ROTATION_CHANGE_ANGLE;
-    currentRotation.y += (Math.random() - 0.5) * ROTATION_CHANGE_ANGLE;
-    currentRotation.z += (Math.random() - 0.5) * ROTATION_CHANGE_ANGLE;
+    velocityX = -velocityX;
+    velocityY = -velocityY;
+    currentRotation.x = -currentRotation.x + (Math.random() - 0.5) * 10;
+    currentRotation.y = -currentRotation.y + (Math.random() - 0.5) * 10;
 }
+
 
 function updateDiceVisual() {
     diceContainer.style.left = `${posX}px`;
@@ -319,20 +321,28 @@ function animateDice() {
             targetScale = SCALE.MIN;
             
             if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
-                posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
-                velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
-                velocityY += (Math.random() - 0.5) * 2;
-                changeRotationOnCollision();
-            }
+    posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
+
+    // Inverte e reforça a velocidade
+    velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
+
+    // Adiciona força extra para garantir afastamento da parede
+    velocityX += (posX === 0 ? 1 : -1) * 2;
+
+    velocityY += (Math.random() - 0.5) * 2;
+
+    changeRotationOnCollision();
+}
+
             
             if (Math.abs(velocityX) < 0.1) {
                 phase = 'stopped';
                 isRolling = false;
                 
-                const finalFaceIndex = Math.floor(Math.abs(rollAngle) / 90) % 4;
-                resultDisplay.textContent = `Resultado: ${faceSequence[finalFaceIndex]}`;
-                rollButton.disabled = false;
-            }
+                let finalFaceIndex = Math.floor(Math.abs(rollAngle) / 90) % 4;
+if (rollAngle < 0) {
+    finalFaceIndex = 3 - finalFaceIndex;
+}
             break;
     }
 
