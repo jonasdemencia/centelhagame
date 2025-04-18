@@ -237,27 +237,51 @@ function getTopFaceFromRotation(x, y, z) {
 
     // Casos com Z=90
     if (normZ === 90) {
-        if (normX === 0 && normY === 270) return 5;
-        if (normX === 270 && normY === 180) return 3;
-        if (normX === 90 && normY === 180) return 4;
-        if (normX === 270 && normY === 0) return 3;
-        if (normX === 180 && normY === 0) return 6;
-        if (normX === 90 && normY === 270) return 4;  // Confirmado várias vezes
-        if (normX === 90 && normY === 0) return 4;    // Confirmado duas vezes
-        if (normX === 180 && normY === 270) return 2;
+        if (normX === 0) {
+            if (normY === 270) return 5;
+            if (normY === 180) return 6;
+            if (normY === 90) return 2;
+        }
+        if (normX === 90) {
+            if (normY === 180) return 4;
+            if (normY === 270) return 4;
+            if (normY === 0) return 4;
+        }
+        if (normX === 180) {
+            if (normY === 0) return 6;
+            if (normY === 270) return 2;
+        }
+        if (normX === 270) {
+            if (normY === 180) return 3;
+            if (normY === 0) return 3;
+            if (normY === 270) return 3;
+        }
     }
 
     // Casos com Z=0
     if (normZ === 0) {
-        if (normX === 180 && normY === 180) return 1;
-        if (normX === 90 && normY === 270) return 2;  // Confirmado várias vezes
-        if (normX === 270 && normY === 270) return 5; // Confirmado três vezes
-        if (normX === 180 && normY === 90) return 4;
-        if (normX === 90 && normY === 90) return 2;   // Confirmado duas vezes
-        if (normX === 180 && normY === 270) return 3;
+        if (normX === 0) {
+            if (normY === 270) return 4;
+            if (normY === 180) return 6;
+            if (normY === 90) return 3;
+        }
+        if (normX === 90) {
+            if (normY === 270) return 2;
+            if (normY === 180) return 2;
+            if (normY === 90) return 2;
+        }
+        if (normX === 180) {
+            if (normY === 180) return 1;
+            if (normY === 90) return 4;
+        }
+        if (normX === 270) {
+            if (normY === 270) return 5;
+            if (normY === 180) return 5;
+            if (normY === 90) return 5;
+        }
     }
 
-    // Mantém os casos base existentes
+    // Casos base (quando Y=0 e Z=0)
     if (normY === 0 && normZ === 0) {
         if (normX === 0) return 1;
         if (normX === 90) return 2;
