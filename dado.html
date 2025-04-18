@@ -177,19 +177,19 @@ const resultDisplay = document.getElementById("result-display");
 const MAX_PRESS_DURATION = 4000;
 const DICE_SIZE = 50;
 const FRICTION = 0.985;
-const BOUNCE_DAMPENING = 0.75;
-const WALL_BOUNCE_DAMPENING = 0.6;
+const BOUNCE_DAMPENING = 0.75; // Amortecimento em quiques no chão
+const WALL_BOUNCE_DAMPENING = 0.6; // Amortecimento em colisões nas paredes
 const INITIAL_FORCE_MULTIPLIER = 25;
-const LATERAL_FORCE_RANGE = 8;
-const ROTATION_CHANGE_ANGLE = 45;
+// const LATERAL_FORCE_RANGE = 8; // Removida pois não está sendo usada
+// const ROTATION_CHANGE_ANGLE = 45; // Removida pois a função changeRotationOnCollision foi removida
 const EDGE_BOUNCE_MULTIPLIER = 1.2;
 
 // Configurações de escala para simular altura
 const SCALE = {
-    MIN: 0.8,    // Tamanho mínimo (dado no chão)
-    MAX: 2.0,    // Tamanho máximo (dado no ponto mais alto)
+    MIN: 0.8,	 // Tamanho mínimo (dado no chão)
+    MAX: 2.0,	 // Tamanho máximo (dado no ponto mais alto)
     FLIGHT: 1.5, // Tamanho durante o voo
-    BOUNCE: 1.3  // Tamanho base para quiques
+    BOUNCE: 1.3	 // Tamanho base para quiques
 };
 
 // Estado do dado
@@ -207,14 +207,20 @@ let flightTime = 0;
 let bounceCount = 0;
 let rollAngle = 0;
 
-// Sequência de faces para visão top-down
-const faceSequence = [1, 2, 6, 5];
+// Sequência de faces para visão top-down (considerando a rotação em X)
+// Esta sequência mapeia o número da face visível quando o dado gira em torno do eixo X
+// partindo da face 1 para cima. Pode precisar de ajustes dependendo do modelo 3D do dado.
+const faceSequence = [1, 5, 6, 2]; // Exemplo: 1 (topo) -> gira 90 deg X -> 5 (topo) -> gira 90 deg X -> 6 (topo) -> gira 90 deg X -> 2 (topo)
 
+
+// Função removida pois a rotação será tratada pela inversão da velocidade e ajustes na colisão
+/*
 function changeRotationOnCollision() {
     currentRotation.x += (Math.random() - 0.5) * ROTATION_CHANGE_ANGLE;
     currentRotation.y += (Math.random() - 0.5) * ROTATION_CHANGE_ANGLE;
     currentRotation.z += (Math.random() - 0.5) * ROTATION_CHANGE_ANGLE;
 }
+*/
 
 function updateDiceVisual() {
     diceContainer.style.left = `${posX}px`;
@@ -232,8 +238,9 @@ function updateDiceVisual() {
 }
 
 function simulateHeight(time, initialVelocity) {
+    // Esta função simula a altura em um arco, initialVelocity afeta a "amplitude" do arco
     const height = Math.sin(time * Math.PI) * initialVelocity;
-    return Math.max(0, height);
+    return Math.max(0, height); // Garante que a altura não seja negativa
 }
 
 function animateDice() {
@@ -244,93 +251,162 @@ function animateDice() {
             posX += velocityX;
             posY += velocityY;
             
+            // Atualiza rotação com base na velocidade (antes de verificar colisões)
+            // Ajuste: velocidade vertical (Y) afeta rotação em X (cambalhota)
+            // Ajuste: velocidade horizontal (X) afeta rotação em Y (girar para o lado)
+            currentRotation.x += velocityY * 2;
+            currentRotation.y += velocityX * 2;
+
             flightTime += 0.05;
-            const height = simulateHeight(flightTime, 1);
+            // A altura é simulada, a velocidade vertical real não altera posY neste modelo
+            const height = simulateHeight(flightTime, 1); // O '1' aqui é um fator de amplitude para a simulação de altura
             targetScale = SCALE.MIN + (height * (SCALE.MAX - SCALE.MIN));
             
-            currentRotation.x += velocityX * 2;
-            currentRotation.y += velocityY * 2;
-            
+            // Colisões nas paredes
             if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
                 posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
+                // Inverte e amortece a velocidade horizontal
                 velocityX = -velocityX * WALL_BOUNCE_DAMPENING * EDGE_BOUNCE_MULTIPLIER;
-                changeRotationOnCollision();
+                // NOVO: Inversão IMEDIATA da rotação no eixo Y na colisão horizontal
+                currentRotation.y *= -1;
             }
             
             if (posY <= 0 || posY >= window.innerHeight - DICE_SIZE) {
                 posY = posY <= 0 ? 0 : window.innerHeight - DICE_SIZE;
+                 // Inverte e amortece a velocidade vertical
                 velocityY = -velocityY * WALL_BOUNCE_DAMPENING * EDGE_BOUNCE_MULTIPLIER;
-                changeRotationOnCollision();
+                // NOVO: Inversão IMEDIATA da rotação no eixo X na colisão vertical
+                currentRotation.x *= -1;
             }
             
+            // Transição para a fase de quique
             if (flightTime >= 1) {
                 phase = 'bouncing';
-                bounceCount = Math.floor(Math.abs(velocityX) * 2) + 3;
-                flightTime = 0;
+                // O número de quiques pode depender da magnitude da velocidade horizontal restante
+                bounceCount = Math.floor(Math.abs(velocityX) * 2) + 3; // Garante pelo menos 3 quiques base
+                flightTime = 0; // Reseta o tempo para a simulação de quique
             }
             break;
 
         case 'bouncing':
             posX += velocityX;
             posY += velocityY;
-            velocityX *= FRICTION;
-            velocityY *= FRICTION;
             
-            flightTime += 0.1;
-            const bounceHeight = Math.sin(flightTime * Math.PI) * (SCALE.BOUNCE / (bounceCount + 1));
-            targetScale = SCALE.MIN + bounceHeight;
-            
+            // Atualiza rotação com base na velocidade (antes de verificar colisões)
+            // Ajuste: velocidade vertical (Y) afeta rotação em X (cambalhota)
+            // Ajuste: velocidade horizontal (X) afeta rotação em Y (girar para o lado)
+            currentRotation.x += velocityY * 2;
+            currentRotation.y += velocityX * 2;
+
+            // Colisões nas paredes
             if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
                 posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
+                // Inverte e amortece a velocidade horizontal
                 velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
-                changeRotationOnCollision();
+                 // NOVO: Inversão IMEDIATA da rotação no eixo Y na colisão horizontal
+                currentRotation.y *= -1;
             }
             
             if (posY <= 0 || posY >= window.innerHeight - DICE_SIZE) {
                 posY = posY <= 0 ? 0 : window.innerHeight - DICE_SIZE;
+                // Inverte e amortece a velocidade vertical
                 velocityY = -velocityY * WALL_BOUNCE_DAMPENING;
-                changeRotationOnCollision();
+                // NOVO: Inversão IMEDIATA da rotação no eixo X na colisão vertical
+                currentRotation.x *= -1;
             }
+
+             // Aplica atrito APÓS a verificação de colisão para não reduzir a velocidade invertida imediatamente
+            velocityX *= FRICTION;
+            velocityY *= FRICTION;
             
+            flightTime += 0.1;
+            // Simula a altura do quique, reduzindo a amplitude a cada quique
+            const bounceHeight = Math.sin(flightTime * Math.PI) * (SCALE.BOUNCE / (bounceCount + 1));
+            targetScale = SCALE.MIN + bounceHeight;
+            
+            // Fim do quique
             if (flightTime >= 1) {
                 bounceCount--;
                 flightTime = 0;
-                currentRotation.x += 90;
-                
+
+                // Transição para a fase de rolamento ou parada
                 if (bounceCount <= 0) {
                     phase = 'rolling';
-                    rollAngle = currentRotation.x;
-                    velocityX *= 2;
+                    // Mantém a rotação atual para o início do rolamento
                 }
             }
             break;
 
         case 'rolling':
-            posX += velocityX;
+            // Aplica atrito antes do movimento para simular resistência
             velocityX *= FRICTION;
-            
+
+            posX += velocityX;
+            // Garante que o dado fique na parte inferior da tela durante o rolamento
             if (posY > window.innerHeight - DICE_SIZE) {
-                posY = window.innerHeight - DICE_SIZE;
+                 posY = window.innerHeight - DICE_SIZE;
             }
             
-            rollAngle += velocityX > 0 ? Math.abs(velocityX) * 15 : -Math.abs(velocityX) * 15;
-            currentRotation.x = Math.floor(rollAngle / 90) * 90;
-            
-            targetScale = SCALE.MIN;
-            
+            // Colisão nas paredes (somente horizontal na fase de rolamento)
             if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
                 posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
+                // Inverte e amortece a velocidade horizontal
                 velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
-                velocityY += (Math.random() - 0.5) * 2;
-                changeRotationOnCollision();
+                // Adiciona um pequeno impulso vertical aleatório na colisão de parede durante o rolamento
+                velocityY += (Math.random() - 0.5) * 2; // Mantido, simula um pequeno ressalto na parede
+                // Na fase de rolamento, a rotação em X é baseada no movimento horizontal.
+                // Inverter velocityX já inverte a direção do rolamento naturalmente.
+                // Não é necessária uma inversão imediata da rotação aqui.
             }
             
-            if (Math.abs(velocityX) < 0.1) {
+            // Aplica um pequeno atrito vertical para estabilizar ressaltos na parede durante o rolamento
+             velocityY *= FRICTION;
+
+
+            // Atualiza a rotação de rolamento com base na velocidade horizontal (em X)
+            // Ajuste o multiplicador (5) para controlar a velocidade de rotação do rolamento
+             currentRotation.x += velocityX * 5; 
+            
+            targetScale = SCALE.MIN; // Garante que a escala retorne ao mínimo
+
+            // Condição de parada do rolamento
+            if (Math.abs(velocityX) < 0.1 && Math.abs(velocityY) < 0.1) { // Adiciona verificação de velocidade vertical também
                 phase = 'stopped';
                 isRolling = false;
                 
-                const finalFaceIndex = Math.floor(Math.abs(rollAngle) / 90) % 4;
-                resultDisplay.textContent = `Resultado: ${faceSequence[finalFaceIndex]}`;
+                // Calcula o resultado final
+                // Encontra a face virada para cima. Isso depende do modelo 3D do dado e da orientação inicial.
+                // A lógica abaixo tenta mapear a rotação final em X e Y para uma face.
+                // Pode ser necessário ajustar esta lógica dependendo do seu CSS/modelo 3D.
+                
+                // Normaliza as rotações para o intervalo [0, 360)
+                const normalizedRotX = (currentRotation.x % 360 + 360) % 360;
+                const normalizedRotY = (currentRotation.y % 360 + 360) % 360;
+
+                // Lógica simplificada para determinar a face superior baseada nas rotações X e Y
+                // Esta é uma aproximação e pode precisar de ajuste fino.
+                let resultFace = 1; // Default
+
+                const quantizedRotX = Math.round(normalizedRotX / 90) * 90;
+                 if (quantizedRotX === 90 || quantizedRotX === -270) resultFace = 5;
+                 else if (quantizedRotX === 180 || quantizedRotX === -180) resultFace = 6;
+                 else if (quantizedRotX === 270 || quantizedRotX === -90) resultFace = 2;
+                 else { // Rotations close to 0 or 180 on X axis
+                    const quantizedRotY = Math.round(normalizedRotY / 90) * 90;
+                    if (quantizedRotY === 90 || quantizedRotY === -270) resultFace = 4;
+                    else if (quantizedRotY === 270 || quantizedRotY === -90) resultFace = 3;
+                    else if (quantizedRotY === 180 || quantizedRotY === -180) resultFace = 6; // Opposite of 1
+                    else resultFace = 1; // 0 or 360 on Y
+                 }
+                
+                // Note: The logic above is a conjecture based on standard dice orientation.
+                // A proper 3D orientation calculation would be more robust.
+                // For simplicity, you could also just use a random result.
+                // resultDisplay.textContent = `Resultado: ${Math.floor(Math.random() * 6) + 1}`;
+
+                resultDisplay.textContent = `Resultado: ${resultFace}`;
+
+
                 rollButton.disabled = false;
             }
             break;
@@ -343,6 +419,7 @@ function animateDice() {
     }
 }
 
+// Event listeners (mantidos)
 rollButton.addEventListener("mousedown", () => {
     if (isRolling) return;
     pressStartTime = Date.now();
@@ -359,22 +436,26 @@ rollButton.addEventListener("mouseup", () => {
     rollButton.disabled = true;
     phase = 'throwing';
     
+    // Cálculo da força e direção iniciais (mantido)
     const centerX = window.innerWidth / 2;
-    const centerY = window.innerHeight * 0.4;
-    const dirX = centerX - window.innerWidth / 2;
-    const dirY = centerY - (window.innerHeight - 50);
+    const centerY = window.innerHeight * 0.4; // Lançamento para cima e para o centro
+    const dirX = centerX - window.innerWidth / 2; // Direção X é 0 a partir do centro horizontal
+    const dirY = centerY - (window.innerHeight - 50); // Direção Y é para cima
     
     const magnitude = Math.sqrt(dirX * dirX + dirY * dirY);
-    const normalizedX = (dirX / magnitude) + (Math.random() - 0.5) * 0.3;
+    // Normaliza a direção e adiciona um pequeno desvio lateral aleatório
+    const normalizedX = (dirX / magnitude) + (Math.random() - 0.5) * 0.6; // Aumentado o range de desvio lateral
     const normalizedY = (dirY / magnitude);
     
-    const force = INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5);
+    const force = INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5); // Força baseada na duração do clique
     velocityX = normalizedX * force;
-    velocityY = normalizedY * force;
+    velocityY = normalizedY * force; // velocityY será negativo, indicando movimento para cima
     
+    // Posição e estado iniciais (mantidos)
     posX = window.innerWidth / 2;
     posY = window.innerHeight - 50;
     currentRotation = { x: 0, y: 0, z: 0 };
+    rollAngle = 0; // Reseta o rollAngle no início do lançamento
     flightTime = 0;
     currentScale = SCALE.MIN;
     targetScale = SCALE.FLIGHT;
@@ -383,6 +464,7 @@ rollButton.addEventListener("mouseup", () => {
     rollButton.style.transform = '';
 });
 
+// Inicialização
 window.addEventListener("load", () => {
     updateDiceVisual();
     resultDisplay.textContent = "Pressione o botão para lançar o dado";
