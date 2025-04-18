@@ -179,18 +179,18 @@ const faceSequence = [1, 2, 6, 5];
 
 // Configurações de Movimento e Rotação
 const ROLL_STEP_SIZE = 90;        // Tamanho de cada passo de rotação em graus
-const MOVEMENT_PER_ROTATION = 50;  // Distância percorrida por rotação completa
-const MIN_VELOCITY = 0.1;         // Velocidade mínima para manter o movimento
+const MOVEMENT_PER_ROTATION = 100; // Aumentar a distância por rotação
+const MIN_VELOCITY = 0.5;         // Aumentar a velocidade mínima
 const ROTATION_SPEED = 2;
 const PRECISE_ROTATION_ANGLE = 90;
 
 // Configurações de Física
-const FRICTION = 0.98; // Aumentado levemente para uma desaceleração mais suave
-const BOUNCE_DAMPENING = 0.75;
+const FRICTION = 0.95;            // Aumentar a fricção
+const WALL_BOUNCE_DAMPENING = 0.3; // Reduzir ainda mais o rebote
 const WALL_BOUNCE_DAMPENING = 0.4; // Reduzido de 0.6 para diminuir o rebote
 const EDGE_BOUNCE_MULTIPLIER = 1.0; // Reduzido de 1.2 para diminuir o efeito da colisão
-const REBOUND_FORCE = 0.8; // Reduzido de 1.5 para um movimento mais suave
-const MAX_VELOCITY = 15; // Velocidade máxima permitida
+const REBOUND_FORCE = 0.5;        // Reduzir a força de rebote
+const MAX_VELOCITY = 8;           // Reduzir a velocidade máxima
 const COLLISION_COOLDOWN = 500; // Tempo mínimo entre colisões em millisegundos
 
 
@@ -230,7 +230,6 @@ let lastCollisionTime = 0;
 function changeRotationOnCollision(isVerticalCollision) {
     const currentTime = Date.now();
     
-    // Verifica se já passou tempo suficiente desde a última colisão
     if (currentTime - lastCollisionTime < COLLISION_COOLDOWN) {
         return;
     }
@@ -241,32 +240,18 @@ function changeRotationOnCollision(isVerticalCollision) {
 
     if (isVerticalCollision) {
         velocityY = -velocityY * WALL_BOUNCE_DAMPENING;
-        
-        if (Math.abs(velocityY) < 2) {
-            velocityY = rotationDirection * REBOUND_FORCE;
-        }
-        
-        currentRotation.x = rotationDirection * Math.abs(currentRotation.x);
-        velocityX *= 0.8; // Reduz a velocidade lateral na colisão vertical
+        velocityX *= 0.8;
     } else {
         velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
-        
-        // Limita a velocidade após a colisão
-        velocityX = Math.sign(velocityX) * Math.min(Math.abs(velocityX), MAX_VELOCITY);
-        
-        if (Math.abs(velocityX) < 2) {
-            velocityX = rotationDirection * REBOUND_FORCE;
-        }
-        
-        currentRotation.x = rotationDirection * Math.abs(currentRotation.x);
     }
     
-    // Remove a força adicional que estava causando aceleração extra
-    // velocityX += rotationDirection * REBOUND_FORCE;
+    // Limita a velocidade após a colisão
+    velocityX = Math.sign(velocityX) * Math.min(Math.abs(velocityX), MAX_VELOCITY);
     
+    currentRotation.x = rotationDirection * Math.abs(currentRotation.x);
     currentRotation.x = Math.round(currentRotation.x / PRECISE_ROTATION_ANGLE) * PRECISE_ROTATION_ANGLE;
 }
-
+    
 function updateDiceVisual() {
     diceContainer.style.left = `${posX}px`;
     diceContainer.style.top = `${posY}px`;
@@ -353,34 +338,19 @@ function animateDice() {
             break;
 
         case 'rolling':
-    // Calcula a rotação baseada no movimento
-    const previousAngle = currentRotation.x;
-    const rotationStep = ROLL_STEP_SIZE * rotationDirection;
-    
     // Atualiza a posição baseada na velocidade
     posX += velocityX;
     
-    // Calcula quantas rotações completas devem ocorrer baseado no movimento
+    // Aplica fricção primeiro
+    velocityX *= FRICTION;
+    
+    // Calcula a rotação baseada no movimento
     const distanceMoved = Math.abs(velocityX);
     const rotationProgress = (distanceMoved / MOVEMENT_PER_ROTATION) * ROLL_STEP_SIZE;
-    
-    // Atualiza o ângulo de rotação
     rollAngle += rotationProgress * rotationDirection;
     
     // Arredonda para o próximo múltiplo de 90 graus
     currentRotation.x = Math.round(rollAngle / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
-    
-    // Verifica se houve mudança de face
-    const faceChanged = previousAngle !== currentRotation.x;
-    
-    if (faceChanged) {
-        // Ajusta a velocidade para corresponder à mudança de face
-        const rotationDiff = Math.abs(currentRotation.x - previousAngle);
-        velocityX = (rotationDiff / ROLL_STEP_SIZE) * MOVEMENT_PER_ROTATION * Math.sign(velocityX);
-    }
-    
-    // Aplica fricção
-    velocityX *= FRICTION;
     
     // Mantém o dado no chão
     if (posY > window.innerHeight - DICE_SIZE) {
@@ -393,28 +363,25 @@ function animateDice() {
     if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
         posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
         
-        // Adiciona verificação de velocidade antes da colisão
-        if (Math.abs(velocityX) > MIN_VELOCITY) {
+        if (Math.abs(velocityX) > MIN_VELOCITY * 2) {
             changeRotationOnCollision(false);
-            
-            // Limita a velocidade após a colisão
-            velocityX = Math.sign(velocityX) * Math.min(Math.abs(velocityX), MAX_VELOCITY);
+            velocityX *= WALL_BOUNCE_DAMPENING;
         } else {
-            // Se a velocidade for muito baixa, apenas para o dado
+            // Se a velocidade for muito baixa após a colisão, para o dado
             velocityX = 0;
             phase = 'stopped';
             isRolling = false;
         }
     }
-
-    // Aplica um limite máximo à velocidade em qualquer momento
+    
+    // Limita a velocidade máxima
     velocityX = Math.sign(velocityX) * Math.min(Math.abs(velocityX), MAX_VELOCITY);
     
     // Verifica se o dado parou
     if (Math.abs(velocityX) < MIN_VELOCITY) {
-        // Completa a rotação atual
+        // Completa a última rotação
         currentRotation.x = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
-        
+        velocityX = 0;
         phase = 'stopped';
         isRolling = false;
         
