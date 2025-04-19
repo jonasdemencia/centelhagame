@@ -2,100 +2,100 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> <title>Dado Realista com Física 2D</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Dado Realista com Física 2D</title>
 
 <style>
 /* Estilos gerais */
 body {
-    display: flex; /* Mantém flex para centralizar o container geral */
+    display: flex;
     flex-direction: column;
-    justify-content: flex-end; /* Alinha conteúdo (botão/resultado) na parte inferior */
+    justify-content: flex-end;
     align-items: center;
     height: 100vh;
     margin: 0;
     background: radial-gradient(circle at center, #3a3a3a, #1a1a1a);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    overflow: hidden; /* ESSENCIAL para não ter barras de rolagem */
+    overflow: hidden;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
 }
 
-/* Container para a Simulação Física e Controles */
 #simulation-container {
-    position: absolute; /* Ocupa a tela toda para a física */
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden; /* Garante que nada saia */
+    overflow: hidden;
 }
 
-/* Container da Perspectiva 3D (precisa ser filho do container da simulação) */
+/* Container de perspectiva 3D */
 .dice-perspective-container {
     perspective: 1200px;
-    width: 50px; /* Reduzido para metade do tamanho original */
-    height: 50px;
+    width: 60px;
+    height: 60px;
     position: absolute;
-    bottom: 120px; /* Posição inicial acima do botão */
+    bottom: 120px;
     left: 50%;
-    transform: translate(-50%, 0);
+    transform: translateX(-50%);
 }
 
-/* Design do Dado */
+/* Dado (Tetraedro) */
 .dice {
-    width: 100%; /* Ocupa todo o container da perspectiva */
+    width: 100%;
     height: 100%;
-    position: relative; /* Mantém para as faces */
+    position: relative;
     transform-style: preserve-3d;
-    /* Transição para o 'pouso' final do dado */
     transition: transform 0.4s ease-out;
 }
 
-/* Faces do Dado - Estilos mantidos */
-.face {
+.tetrahedron .face {
+    width: 0;
+    height: 0;
     position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 10px;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    box-shadow:
-        inset 0 0 8px rgba(0, 0, 0, 0.3),
-        0px 8px 15px rgba(0, 0, 0, 0.3);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-family: "Eagle Lake", cursive;
-    font-size: 1.5rem;
+    border-left: 30px solid transparent;
+    border-right: 30px solid transparent;
+    border-bottom: 52px solid #6a7a7a;
+    text-align: center;
+    font-size: 1.2rem;
     font-weight: bold;
+    font-family: "Eagle Lake", cursive;
     color: rgba(0, 0, 0, 0.6);
     text-shadow:
         1px 1px 1px rgba(255, 255, 255, 0.3),
         -1px -1px 1px rgba(0, 0, 0, 0.4);
-    background:
-        linear-gradient(rgba(255,255,255,0.03), rgba(0,0,0,0.03)),
-        repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(0,0,0,0.02) 1px, rgba(0,0,0,0.02) 2px),
-        linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.15)),
-        #6a7a7a;
-     box-sizing: border-box;
-     /* Adiciona backface visibility para melhor performance 3D */
-     backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+    transform-origin: 50% 100%;
 }
 
-/* Transformações das Faces (Mantido) */
-.face.front  { transform: rotateY(  0deg) translateZ(25px); }
-.face.back   { transform: rotateX(180deg) translateZ(25px); }
-.face.right  { transform: rotateY( 90deg) translateZ(25px); }
-.face.left   { transform: rotateY(-90deg) translateZ(25px); }
-.face.top    { transform: rotateX( 90deg) translateZ(25px); }
-.face.bottom { transform: rotateX(-90deg) translateZ(25px); }
+.tetrahedron .face1 {
+    transform: rotateY(0deg) translateZ(26px) rotateX(0deg);
+    top: 0;
+    left: 0;
+}
+.tetrahedron .face2 {
+    transform: rotateY(120deg) translateZ(26px) rotateX(0deg);
+    top: 0;
+    left: 0;
+}
+.tetrahedron .face3 {
+    transform: rotateY(240deg) translateZ(26px) rotateX(0deg);
+    top: 0;
+    left: 0;
+}
+.tetrahedron .face4 {
+    transform: rotateX(-90deg) translateY(-26px) translateZ(-15px);
+    top: 0;
+    left: 0;
+    border-bottom-color: #7a8a8a;
+}
 
-
-/* Controles - Posicionados fixos na parte inferior */
+/* Controles */
 .controls {
-    position: fixed; /* Fixo na tela */
+    position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
@@ -104,11 +104,11 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: linear-gradient(to top, rgba(26, 26, 26, 0.8), transparent); /* Fundo suave */
-    z-index: 10; /* Garante que fiquem sobre a simulação */
+    background: linear-gradient(to top, rgba(26, 26, 26, 0.8), transparent);
+    z-index: 10;
 }
 
-button#roll-button { /* Estilo específico para o botão */
+button#roll-button {
     padding: 12px 25px;
     font-size: 1.1rem;
     font-weight: bold;
@@ -140,21 +140,19 @@ button#roll-button:hover {
     font-weight: bold;
     text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
 }
-
 </style>
+
 <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <div id="simulation-container">
     <div class="dice-perspective-container" id="dice-visual-container">
-        <div class="dice" id="dice">
-            <div class="face front">1</div>
-            <div class="face back">6</div>
-            <div class="face right">4</div>
-            <div class="face left">3</div>
-            <div class="face top">5</div>
-            <div class="face bottom">2</div>
+        <div class="dice tetrahedron" id="dice">
+            <div class="face face1">1</div>
+            <div class="face face2">2</div>
+            <div class="face face3">3</div>
+            <div class="face face4">4</div>
         </div>
     </div>
 </div>
