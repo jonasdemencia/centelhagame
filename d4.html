@@ -337,7 +337,7 @@ function setInitialDicePosition() {
     dice.position.set(
         0,     // eixo X central
         0,     // no chão
-        5.5    // eixo Z "mais próximo da câmera" = base inferior da tela
+        -5.5    // eixo Z "mais próximo da câmera" = base inferior da tela
     );
 }
 
@@ -372,7 +372,7 @@ rollButton.addEventListener("mouseup", () => {
     dice.position.set(
     0,
     0,
-    5.5 // mesma base inferior da tela
+    -5.5 // mesma base inferior da tela
 );
     
     // Movimento para cima (direção negativa em Z)
