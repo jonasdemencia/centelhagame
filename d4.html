@@ -1,136 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>D4 Realista</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>D4 Realista com Física 2D</title>
 
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      background: radial-gradient(circle at center, #3a3a3a, #1a1a1a);
-      display: flex;
-      justify-content: center;
-      align-items: flex-end;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      overflow: hidden;
-      user-select: none;
-    }
+<style>
+/* Estilos gerais */
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background: radial-gradient(circle at center, #3a3a3a, #1a1a1a);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
 
-    .dice-perspective-container {
-      perspective: 1000px;
-      position: absolute;
-      bottom: 150px;
-      width: 0;
-      height: 0;
-    }
+/* Container para a Simulação Física e Controles */
+#simulation-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
 
-    .tetrahedron {
-      position: relative;
-      width: 0;
-      height: 0;
-      transform-style: preserve-3d;
-      transform: rotateX(-20deg) rotateY(30deg);
-    }
+/* Container da Perspectiva 3D */
+.dice-perspective-container {
+    perspective: 1200px;
+    width: 70px; /* Aumentado para o d4 */
+    height: 70px;
+    position: absolute;
+    bottom: 120px;
+    left: 50%;
+    transform: translate(-50%, 0);
+}
 
-    .face {
-      position: absolute;
-      width: 0;
-      height: 0;
-      border-left: 60px solid transparent;
-      border-right: 60px solid transparent;
-      border-bottom: 104px solid #6a7a7a;
-      opacity: 0.95;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #111;
-      font-size: 1.2rem;
-      font-family: "Eagle Lake", cursive;
-      font-weight: bold;
-      text-shadow: 0 1px 2px #fff;
-    }
+/* Design do Dado d4 */
+.dice {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.4s ease-out;
+}
 
-    .face1 {
-      transform: rotateY(0deg) rotateX(0deg) translateZ(60px);
-    }
+/* Faces do d4 */
+.face {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 35px solid transparent;
+    border-right: 35px solid transparent;
+    border-bottom: 60px solid transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* Textura marmorizada azul escuro */
+    background: linear-gradient(145deg, 
+        rgba(25, 45, 155, 0.8),
+        rgba(15, 25, 85, 0.9)
+    );
+    /* Efeito mármore */
+    background-image: 
+        linear-gradient(145deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.2) 100%),
+        repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.1) 5px, rgba(0,0,0,0.1) 10px);
+    box-shadow: 
+        inset 0 0 15px rgba(0, 0, 0, 0.4),
+        0 0 10px rgba(0, 0, 0, 0.3);
+}
 
-    .face2 {
-      transform: rotateY(120deg) rotateX(0deg) translateZ(60px);
-    }
+/* Posicionamento específico das faces do d4 */
+.face-1 {
+    transform: rotateX(19.47deg) translateY(-18px);
+    border-bottom-color: #1a237e;
+}
 
-    .face3 {
-      transform: rotateY(240deg) rotateX(0deg) translateZ(60px);
-    }
+.face-2 {
+    transform: rotateX(19.47deg) rotateY(120deg) translateY(-18px);
+    border-bottom-color: #1a237e;
+}
 
-    .face4 {
-      transform: rotateX(90deg) translateY(-30px) translateZ(-30px);
-      border-bottom-color: #7a8a8a;
-    }
+.face-3 {
+    transform: rotateX(19.47deg) rotateY(240deg) translateY(-18px);
+    border-bottom-color: #1a237e;
+}
 
-    .controls {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      padding: 20px;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: linear-gradient(to top, rgba(26, 26, 26, 0.8), transparent);
-      z-index: 10;
-    }
+.face-4 {
+    transform: rotateX(-109.47deg) translateY(-18px);
+    border-bottom-color: #1a237e;
+}
 
-    button#roll-button {
-      padding: 12px 25px;
-      font-size: 1.1rem;
-      font-weight: bold;
-      cursor: pointer;
-      background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
-      border: none;
-      border-radius: 8px;
-      color: #e0e0e0;
-      text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
-      box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
-                  inset 0px 1px 1px rgba(255,255,255,0.2);
-      transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.15s ease;
-    }
+/* Números nas faces */
+.face::after {
+    content: attr(data-number);
+    position: absolute;
+    bottom: -40px;
+    left: -35px;
+    width: 70px;
+    text-align: center;
+    color: white;
+    font-family: "Eagle Lake", cursive;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-shadow: 
+        0 0 3px rgba(255,255,255,0.5),
+        0 0 5px rgba(0,0,0,0.5);
+}
 
-    button#roll-button:hover {
-      transform: scale(1.05);
-      background: linear-gradient(145deg, #6a6a6a, #4a4a4a);
-    }
+/* Efeitos de brilho nas faces */
+.face::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -35px;
+    width: 70px;
+    height: 60px;
+    background: linear-gradient(
+        145deg,
+        rgba(255,255,255,0.2) 0%,
+        transparent 50%,
+        rgba(0,0,0,0.1) 100%
+    );
+    pointer-events: none;
+}
 
-    #result-display {
-      margin-top: 15px;
-      font-size: 1.5rem;
-      color: #fff;
-      font-weight: bold;
-      text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-    }
-  </style>
+/* Controles - Mantido do original */
+.controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(to top, rgba(26, 26, 26, 0.8), transparent);
+    z-index: 10;
+}
 
-  <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet">
+button#roll-button {
+    padding: 12px 25px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
+    border: none;
+    border-radius: 8px;
+    color: #e0e0e0;
+    text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
+                inset 0px 1px 1px rgba(255,255,255,0.2);
+    transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.15s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+button#roll-button:hover {
+    transform: scale(1.05);
+    background: linear-gradient(145deg, #6a6a6a, #4a4a4a);
+}
+
+#result-display {
+    margin-top: 15px;
+    font-size: 1.5rem;
+    color: #fff;
+    min-height: 2rem;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <div id="simulation-container">
+<div id="simulation-container">
     <div class="dice-perspective-container" id="dice-visual-container">
-      <div class="dice tetrahedron" id="dice">
-        <div class="face face1">1</div>
-        <div class="face face2">2</div>
-        <div class="face face3">3</div>
-        <div class="face face4">4</div>
-      </div>
+        <div class="dice" id="dice">
+            <div class="face face-1" data-number="4"></div>
+            <div class="face face-2" data-number="3"></div>
+            <div class="face face-3" data-number="2"></div>
+            <div class="face face-4" data-number="1"></div>
+        </div>
     </div>
-  </div>
+</div>
 
-  <div class="controls">
+<div class="controls">
     <button id="roll-button">Rolar Dado</button>
     <p id="result-display"></p>
-  </div>
-
+</div>
 
 
 <script>
