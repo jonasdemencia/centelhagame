@@ -58,187 +58,186 @@
         <div id="result-display">Pressione o botão para rolar</div>
     </div>
 
+    <!-- Three.js importmap -->
     <script type="importmap">
     {
         "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
         }
     }
+    </script>
+
+    <!-- Nosso script -->
     <script type="module">
-    import * as THREE from 'three';
+        import * as THREE from 'three';
 
-    // Informações do sistema
-    const currentDateTime = "2025-04-19 19:09:01";
-    const currentUser = "jonasdemencia";
-
-    // Setup básico
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById('dice-container').appendChild(renderer.domElement);
-
-    // Criar geometria do tetraedro
-    const geometry = new THREE.TetrahedronGeometry(1);
-    const material = new THREE.MeshPhongMaterial({
-        color: 0x1a237e,
-        shininess: 100,
-        specular: 0x444444
-    });
-    const dice = new THREE.Mesh(geometry, material);
-    scene.add(dice);
-
-    // Iluminação
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 5, 5);
-    scene.add(light);
-    scene.add(new THREE.AmbientLight(0x404040));
-
-    // Posicionamento da câmera
-    camera.position.z = 5;
-
-    // Configurações de física
-    const FRICTION = 0.98;
-    const GRAVITY = 0.01;
-    const BOUNCE_DAMPING = 0.7;
-    const ROTATION_SPEED = 0.2;
-
-    // Estado do dado
-    let isRolling = false;
-    let velocity = new THREE.Vector3();
-    let angularVelocity = new THREE.Vector3();
-    let lastTime = 0;
-
-    // Função para gerar um número aleatório dentro de um intervalo
-    function random(min, max) {
-        return Math.random() * (max - min) + min;
-    }
-
-    // Função para rolar o dado
-    function rollDice() {
-        if (isRolling) return;
-        
-        isRolling = true;
-        rollButton.disabled = true;
-        
-        // Velocidade inicial aleatória
-        velocity.set(
-            random(-0.1, 0.1),
-            random(0.1, 0.2),
-            random(-0.1, 0.1)
-        );
-        
-        // Rotação inicial aleatória
-        angularVelocity.set(
-            random(-0.2, 0.2),
-            random(-0.2, 0.2),
-            random(-0.2, 0.2)
-        );
-        
-        // Posição inicial
-        dice.position.set(0, 2, 0);
-        
-        // Log da rolagem
-        console.log(`[${currentDateTime}] User ${currentUser} rolled the dice`);
-        
-        animate();
-    }
-
-    // Função para determinar qual face está para cima
-    function getTopFace() {
-        const normalMatrix = new THREE.Matrix3();
-        normalMatrix.setFromMatrix4(dice.matrixWorld);
-        
-        const upVector = new THREE.Vector3(0, 1, 0);
-        const faces = [
-            new THREE.Vector3(0, 0, 1),  // 1
-            new THREE.Vector3(1, 0, 0),  // 2
-            new THREE.Vector3(0, 1, 0),  // 3
-            new THREE.Vector3(-1, 0, 0)  // 4
-        ];
-        
-        let maxDot = -1;
-        let result = 1;
-        
-        faces.forEach((normal, index) => {
-            normal.applyMatrix3(normalMatrix);
-            const dot = normal.dot(upVector);
-            if (dot > maxDot) {
-                maxDot = dot;
-                result = index + 1;
-            }
-        });
-        
-        return result;
-    }
-
-    // Função de animação
-    function animate(currentTime = 0) {
-        const deltaTime = currentTime - lastTime;
-        lastTime = currentTime;
-
-        if (isRolling) {
-            // Atualiza posição
-            dice.position.add(velocity);
-            
-            // Aplica gravidade
-            velocity.y -= GRAVITY;
-            
-            // Atualiza rotação
-            dice.rotation.x += angularVelocity.x;
-            dice.rotation.y += angularVelocity.y;
-            dice.rotation.z += angularVelocity.z;
-            
-            // Colisão com o chão
-            if (dice.position.y < -2) {
-                dice.position.y = -2;
-                velocity.y = -velocity.y * BOUNCE_DAMPING;
-                
-                // Reduz velocidade horizontal após quique
-                velocity.x *= FRICTION;
-                velocity.z *= FRICTION;
-                
-                // Reduz velocidade angular
-                angularVelocity.multiplyScalar(FRICTION);
-            }
-            
-            // Verifica se o dado parou
-            if (Math.abs(velocity.y) < 0.01 && 
-                dice.position.y <= -1.99 &&
-                angularVelocity.length() < 0.01) {
-                
-                isRolling = false;
-                rollButton.disabled = false;
-                
-                // Determina qual face está para cima
-                const result = getTopFace();
-                resultDisplay.textContent = `Resultado: ${result}`;
-                
-                // Log do resultado
-                console.log(`[${currentDateTime}] User ${currentUser} got result: ${result}`);
-            }
-        }
-        
-        renderer.render(scene, camera);
-        requestAnimationFrame(animate);
-    }
-
-    // Event Listeners
-    rollButton.addEventListener('click', rollDice);
-
-    // Ajuste de redimensionamento
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
+        // Setup básico
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+        document.getElementById('dice-container').appendChild(renderer.domElement);
 
-    // Inicia a animação
-    animate();
+        // Criar geometria do tetraedro
+        const geometry = new THREE.TetrahedronGeometry(1);
+        const material = new THREE.MeshPhongMaterial({
+            color: 0x1a237e,
+            shininess: 100,
+            specular: 0x444444
+        });
+        const dice = new THREE.Mesh(geometry, material);
+        scene.add(dice);
 
-    // Log inicial
-    console.log(`[${currentDateTime}] D4 initialized by user ${currentUser}`);
-</script>
+        // Iluminação
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(5, 5, 5);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x404040));
+
+        // Posicionamento da câmera
+        camera.position.z = 5;
+
+        // Configurações de física
+        const FRICTION = 0.98;
+        const GRAVITY = 0.01;
+        const BOUNCE_DAMPING = 0.7;
+        const ROTATION_SPEED = 0.2;
+
+        // Estado do dado
+        let isRolling = false;
+        let velocity = new THREE.Vector3();
+        let angularVelocity = new THREE.Vector3();
+        let lastTime = 0;
+
+        // Função para gerar um número aleatório dentro de um intervalo
+        function random(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        // Função para rolar o dado
+        function rollDice() {
+            if (isRolling) return;
+            
+            isRolling = true;
+            rollButton.disabled = true;
+            
+            // Velocidade inicial aleatória
+            velocity.set(
+                random(-0.1, 0.1),
+                random(0.1, 0.2),
+                random(-0.1, 0.1)
+            );
+            
+            // Rotação inicial aleatória
+            angularVelocity.set(
+                random(-0.2, 0.2),
+                random(-0.2, 0.2),
+                random(-0.2, 0.2)
+            );
+            
+            // Posição inicial
+            dice.position.set(0, 2, 0);
+            
+            // Log da rolagem
+            console.log(`[2025-04-19 19:12:41] User jonasdemencia rolled the dice`);
+        }
+
+        // Função para determinar qual face está para cima
+        function getTopFace() {
+            const normalMatrix = new THREE.Matrix3();
+            normalMatrix.setFromMatrix4(dice.matrixWorld);
+            
+            const upVector = new THREE.Vector3(0, 1, 0);
+            const faces = [
+                new THREE.Vector3(0, 0, 1),  // 1
+                new THREE.Vector3(1, 0, 0),  // 2
+                new THREE.Vector3(0, 1, 0),  // 3
+                new THREE.Vector3(-1, 0, 0)  // 4
+            ];
+            
+            let maxDot = -1;
+            let result = 1;
+            
+            faces.forEach((normal, index) => {
+                normal.applyMatrix3(normalMatrix);
+                const dot = normal.dot(upVector);
+                if (dot > maxDot) {
+                    maxDot = dot;
+                    result = index + 1;
+                }
+            });
+            
+            return result;
+        }
+
+        // Função de animação
+        function animate(currentTime = 0) {
+            const deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+
+            if (isRolling) {
+                // Atualiza posição
+                dice.position.add(velocity);
+                
+                // Aplica gravidade
+                velocity.y -= GRAVITY;
+                
+                // Atualiza rotação
+                dice.rotation.x += angularVelocity.x;
+                dice.rotation.y += angularVelocity.y;
+                dice.rotation.z += angularVelocity.z;
+                
+                // Colisão com o chão
+                if (dice.position.y < -2) {
+                    dice.position.y = -2;
+                    velocity.y = -velocity.y * BOUNCE_DAMPING;
+                    
+                    // Reduz velocidade horizontal após quique
+                    velocity.x *= FRICTION;
+                    velocity.z *= FRICTION;
+                    
+                    // Reduz velocidade angular
+                    angularVelocity.multiplyScalar(FRICTION);
+                }
+                
+                // Verifica se o dado parou
+                if (Math.abs(velocity.y) < 0.01 && 
+                    dice.position.y <= -1.99 &&
+                    angularVelocity.length() < 0.01) {
+                    
+                    isRolling = false;
+                    rollButton.disabled = false;
+                    
+                    // Determina qual face está para cima
+                    const result = getTopFace();
+                    resultDisplay.textContent = `Resultado: ${result}`;
+                    
+                    // Log do resultado
+                    console.log(`[2025-04-19 19:12:41] User jonasdemencia got result: ${result}`);
+                }
+            }
+            
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+
+        // Event Listeners
+        const rollButton = document.getElementById('roll-button');
+        const resultDisplay = document.getElementById('result-display');
+        rollButton.addEventListener('click', rollDice);
+
+        // Ajuste de redimensionamento
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Inicia a animação
+        animate();
+
+        // Log inicial
+        console.log(`[2025-04-19 19:12:41] D4 initialized by user jonasdemencia`);
+    </script>
 </body>
 </html>
