@@ -75,33 +75,32 @@ body {
 
 /* Face 4 (será a base inferior, paralela ao chão) */
 /* Altura do tetraedro H ≈ 57.15px. Distância centro->base r = H/4 ≈ 14.3px */
+/* Face 4 (Base) - Manter como antes, funcionou bem */
 .face-4 {
-    transform: rotateX(90deg) translateZ(14.3px);
-    /* border-bottom-color: yellow; */ /* Debug */
+    transform: rotateX(90deg) translateZ(14.29px); /* Usando r = H/4 com mais precisão */
+    /* border-bottom-color: yellow; */
 }
 
 /* Faces Laterais (1, 2, 3) */
-/* Precisam ser rotacionadas em Y, inclinadas e transladadas para encontrar a base e o ápice */
-/* A inclinação em relação à vertical é 70.53deg. */
-/* A translação Z necessária para posicionar corretamente a partir da origem 50% 50% */
-/* é frequentemente relacionada à altura do triângulo (h_tri ≈ 60.62px) */
-/* Vamos usar h_tri / 3 ≈ 20.2px como translação Z */
-/* E a translação Y para ajustar a altura (metade da altura do tetraedro?) */
-/* H/2 ≈ 28.6px */
-
+/* 1. Rotacionar em Y para posicionar a face */
+/* 2. Rotacionar em X (19.47deg) para inclinar a face */
+/* 3. Aplicar UMA translação 3D para mover a face para sua posição final */
+/* - Eixo Y: Mover para baixo por H/2 ≈ -28.58px */
+/* - Eixo Z: Mover para fora por r ≈ 14.29px */
+/* - Eixo X: Sem translação (0) */
 .face-1 {
-    transform: rotateY(0deg) translateY(-28.6px) rotateX(19.47deg) translateZ(14.3px); /* Z = r */
-    /* border-bottom-color: red; */ /* Debug */
+    transform: rotateY(0deg) rotateX(19.47deg) translate3d(0, -28.58px, 14.29px);
+    /* border-bottom-color: red; */
 }
 
 .face-2 {
-    transform: rotateY(120deg) translateY(-28.6px) rotateX(19.47deg) translateZ(14.3px); /* Z = r */
-    /* border-bottom-color: green; */ /* Debug */
+    transform: rotateY(120deg) rotateX(19.47deg) translate3d(0, -28.58px, 14.29px);
+    /* border-bottom-color: green; */
 }
 
 .face-3 {
-    transform: rotateY(240deg) translateY(-28.6px) rotateX(19.47deg) translateZ(14.3px); /* Z = r */
-    /* border-bottom-color: blue; */ /* Debug */
+    transform: rotateY(240deg) rotateX(19.47deg) translate3d(0, -28.58px, 14.29px);
+    /* border-bottom-color: blue; */
 }
     
 /* ---- FIM DAS NOVAS TRANSFORMAÇÕES ---- */
