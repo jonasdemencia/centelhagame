@@ -335,9 +335,9 @@ const resultDisplay = document.getElementById('result-display');
 
 function setInitialDicePosition() {
     dice.position.set(
-        0,
-        0,
-        4.5 // Mais próximo da câmera, lançando do canto inferior da cena
+        0,     // eixo X central
+        0,     // no chão
+        5.5    // eixo Z "mais próximo da câmera" = base inferior da tela
     );
 }
 
@@ -370,10 +370,10 @@ rollButton.addEventListener("mouseup", () => {
     const buttonBottomWorld = (buttonRect.bottom / window.innerHeight) * 10 - 4;
     
     dice.position.set(
-        0,                // Centro horizontal
-        0,                // No chão
-        buttonBottomWorld // Posição Z baseada na posição do botão
-    );
+    0,
+    0,
+    5.5 // mesma base inferior da tela
+);
     
     // Movimento para cima (direção negativa em Z)
     velocity.set(
