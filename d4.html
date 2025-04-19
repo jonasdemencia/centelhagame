@@ -90,7 +90,7 @@ const FRICTION = 0.98;
 const WALL_BOUNCE_DAMPENING = 0.7; // Aumentado para mais quiques
 const MIN_VELOCITY = 2.5; // Reduzido para permitir mais quiques
 const MAX_VELOCITY = 25;
-const INITIAL_FORCE_MULTIPLIER = 25; // Aumentado para mais força inicial
+const INITIAL_FORCE_MULTIPLIER = 15; // Aumentado para mais força inicial
 const COLLISION_COOLDOWN = 300;
 const DICE_SIZE = 50;
 const ROTATION_SPEED = 2;
@@ -319,8 +319,8 @@ rollButton.addEventListener("mouseup", () => {
     // Direção sempre para cima (como no d6)
     const force = INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5);
     velocity.set(
-        random(-0.3, 0.3), // Pequena variação lateral
-        -force * 0.8 // Força principal para cima (negativo pois Z é profundidade)
+        random(-0.2, 0.2), // Pequena variação lateral
+        -force * 0.5 // Força principal para cima (negativo pois Z é profundidade)
     );
     
     angularVelocity.set(
