@@ -33,10 +33,10 @@ body {
     overflow: hidden;
 }
 
-/* Container da Perspectiva 3D */
+/* Perspectiva ajustada */
 .dice-perspective-container {
-    perspective: 1200px;
-    width: 70px; /* Aumentado para o d4 */
+    perspective: 800px; /* Reduzido para melhor visualização 3D */
+    width: 70px;
     height: 70px;
     position: absolute;
     bottom: 120px;
@@ -44,83 +44,86 @@ body {
     transform: translate(-50%, 0);
 }
 
-/* Ajuste o CSS do dado */
 .dice {
     width: 70px;
     height: 70px;
     position: relative;
     transform-style: preserve-3d;
-    /* Manter a origem do container do dado no centro */
-    transform-origin: 50% 50%;
+    transform-origin: center center;
 }
 
 .face {
     position: absolute;
     width: 0;
     height: 0;
-    /* Triângulos equiláteros */
+    /* Tamanho do triângulo equilátero */
     border-left: 35px solid transparent;
     border-right: 35px solid transparent;
-    border-bottom: 60.62px solid #1a237e; /* Cor original */
-    /* Mudar origem da face para o CENTRO do elemento (mais fácil de raciocinar) */
-    transform-origin: 50% 50%;
+    border-bottom: 60.62px solid #1a237e;
+    transform-origin: center center;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    /* Adicionar position top/left para garantir que comecem no mesmo lugar */
-    top: 0;
-    left: 0;
 }
 
-/* ---- NOVAS TRANSFORMAÇÕES ---- */
-
-/* Face 4 (será a base inferior, paralela ao chão) */
-/* Altura do tetraedro H ≈ 57.15px. Distância centro->base r = H/4 ≈ 14.3px */
-/* Face 4 (Base) - Manter como antes, funcionou bem */
-/* Exemplo de ajuste mínimo (APENAS se a versão acima ainda tiver frestas): */
-.face-4 {
-    transform: rotateX(90deg) translateZ(14.6px); /* Aumentado */
-}
+/* Novo posicionamento das faces usando o ângulo tetraédrico (109.47°) */
 .face-1 {
-    transform: rotateY(0deg) rotateX(19.47deg) translate3d(0, -28.58px, 14.6px); /* Aumentado */
+    /* Face frontal */
+    transform: 
+        translateZ(20.207px)
+        rotateX(-19.471deg);
 }
+
 .face-2 {
-    transform: rotateY(120deg) rotateX(19.47deg) translate3d(0, -28.58px, 14.6px); /* Aumentado */
+    /* Face direita */
+    transform: 
+        rotateY(120deg)
+        translateZ(20.207px)
+        rotateX(-19.471deg);
 }
+
 .face-3 {
-    transform: rotateY(240deg) rotateX(19.47deg) translate3d(0, -28.58px, 14.6px); /* Aumentado */
+    /* Face esquerda */
+    transform: 
+        rotateY(-120deg)
+        translateZ(20.207px)
+        rotateX(-19.471deg);
 }
-    
-/* ---- FIM DAS NOVAS TRANSFORMAÇÕES ---- */
 
+.face-4 {
+    /* Face base */
+    transform:
+        rotateX(109.471deg)
+        translateY(-20.207px);
+}
 
-/* Ajuste na textura das faces (manter como está) */
+/* Textura marmorizada melhorada */
 .face::before {
     content: '';
     position: absolute;
-    top: 1px;
-    left: -34px;
-    width: 68px;
-    height: 59px;
-    background: linear-gradient(145deg,
+    top: 0;
+    left: -35px;
+    width: 70px;
+    height: 60.62px;
+    background: linear-gradient(145deg, 
         rgba(25, 45, 155, 0.8),
         rgba(15, 25, 85, 0.9)
     );
+    /* Usar clipping mais preciso */
     clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 }
 
-/* Números nas faces (manter como está) */
+/* Ajuste dos números */
 .face::after {
     content: attr(data-number);
     position: absolute;
-    bottom: 5px; /* Ajuste fino da posição vertical do número se necessário */
+    bottom: 10px;
     left: -35px;
     width: 70px;
     text-align: center;
     color: white;
     font-size: 1.5rem;
     font-weight: bold;
-    /* A rotação do número pode precisar de ajuste dependendo da orientação final da face */
-    transform: rotateX(180deg) rotateZ(0deg); /* Verificar se precisa de rotateZ */
+    transform: rotateX(180deg);
 }
 
 /* Controles - Mantido do original */
