@@ -130,15 +130,6 @@ const material = new THREE.MeshPhongMaterial({
 const dice = new THREE.Mesh(geometry, material);
 scene.add(dice);
 
-// Posicionar o dado inicialmente abaixo do botão
-function setInitialDicePosition() {
-    const buttonRect = rollButton.getBoundingClientRect();
-    const buttonBottomWorld = (buttonRect.bottom / window.innerHeight) * 10 - 4;
-    dice.position.set(0, 0, buttonBottomWorld);
-}
-
-// Chamar após a definição do rollButton
-setInitialDicePosition();
 
 // Iluminação ajustada
 const light = new THREE.DirectionalLight(0xffffff, 1.2);
@@ -342,6 +333,13 @@ function animate() {
 const rollButton = document.getElementById('roll-button');
 const resultDisplay = document.getElementById('result-display');
 
+function setInitialDicePosition() {
+    const buttonRect = rollButton.getBoundingClientRect();
+    const buttonBottomWorld = (buttonRect.bottom / window.innerHeight) * 10 - 4;
+    dice.position.set(0, 0, buttonBottomWorld);
+}
+setInitialDicePosition();
+        
 rollButton.addEventListener("mousedown", () => {
     if (isRolling) return;
     pressStartTime = Date.now();
