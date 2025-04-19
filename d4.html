@@ -375,11 +375,12 @@ rollButton.addEventListener("mouseup", () => {
     -5.5 // mesma base inferior da tela
 );
     
-    // Movimento para cima (direção negativa em Z)
-    velocity.set(
-        random(-0.05, 0.05),
-        -force * 0.2
-    );
+    // Movimento para cima na tela (Z positivo, pois a câmera olha de cima)
+velocity.set(
+    random(-0.05, 0.05),   // leve variação lateral
+    force * 1.5            // força forte no eixo Z para subir até o topo
+);
+
     
     dice.rotation.set(
         random(-Math.PI/4, Math.PI/4),
