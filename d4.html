@@ -257,7 +257,7 @@ function animate() {
     // Colisões mais suaves
     if (dice.position.x <= -5 || dice.position.x >= 5) {
         dice.position.x = dice.position.x <= -5 ? -5 : 5;
-        velocity.x *= -WALL_BOUNCE_DAMPENING * 1.2; // Reduzido o bounce
+        velocity.x *= -WALL_BOUNCE_DAMPENING * 1.7; // Reduzido o bounce
         if (handleVertexImpact()) {
             velocity.y += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
         }
@@ -265,7 +265,7 @@ function animate() {
     
     if (dice.position.z <= -5 || dice.position.z >= 5) {
         dice.position.z = dice.position.z <= -5 ? -5 : 5;
-        velocity.y *= -WALL_BOUNCE_DAMPENING * 1.2;
+        velocity.y *= -WALL_BOUNCE_DAMPENING * 1.7;
         if (handleVertexImpact()) {
             velocity.x += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
         }
