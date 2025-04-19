@@ -86,14 +86,14 @@
         import * as THREE from 'three';
 
 // Configurações de física ajustadas para comportamento de tetraedro
-const FRICTION = 0.95;                    // Reduzido para mais atrito
-const WALL_BOUNCE_DAMPENING = 0.8;        // Aumentado para quiques mais energéticos
-const MIN_VELOCITY = 1.5;                 // Reduzido para parar mais rápido
-const MAX_VELOCITY = 20;                  // Reduzido para controle
-const INITIAL_FORCE_MULTIPLIER = 12;      // Reduzido para lançamento mais controlado
+const FRICTION = 0.90;                    // Aumentado para parar mais rápido
+const WALL_BOUNCE_DAMPENING = 0.5;        // Reduzido para perder mais energia nas colisões
+const MIN_VELOCITY = 0.1;                 // Reduzido para parar mais facilmente
+const MAX_VELOCITY = 8;                   // Reduzido significativamente
+const INITIAL_FORCE_MULTIPLIER = 4;       // Reduzido drasticamente
 const COLLISION_COOLDOWN = 150;           // Reduzido para permitir colisões mais frequentes
-const ROTATION_SPEED = 3;                 // Aumentado para rotações mais rápidas
-const BOUNCE_HEIGHT_MULTIPLIER = 1.8;     // Ajustado para quiques realistas
+const ROTATION_SPEED = 2;                 // Reduzido para rotações mais controladas
+const BOUNCE_HEIGHT_MULTIPLIER = 1.2;     // Reduzido para quiques mais baixos
 const INITIAL_BOUNCE_COUNT = 6;           // Mais quiques iniciais
 const TUMBLE_FACTOR = 0.4;               // Novo: controla o "tumbling"
 const VERTEX_IMPACT_CHANCE = 0.7;         // Novo: chance de impacto no vértice
@@ -285,16 +285,50 @@ function animate() {
             }
             
             if (velocity.length() < MIN_VELOCITY && angularVelocity.length() < 0.01) {
-                const result = getTopFace();
-                resultDisplay.textContent = `Resultado: ${result}`;
+        // Garantir que uma ponta fique para cima
+        const alignToVertex = () => {
+            // Ângulos para alinhar com os vértices do tetraedro
+            const targetAngles = [
+                new THREE.Vector3(0.61, 0, 0),      // ~35 graus
+                new THREE.Vector3(-0.61, 0, 0),     // ~-35 graus
+                new THREE.Vector3(0, 0.61, 0),      // vértice para cima
+                new THREE.Vector3(0, -0.61, 0)      // vértice para baixo
+            ];
+            
+            // Encontrar o ângulo mais próximo
+            let minDist = Infinity;
+            let bestAngle = null;
+            
+            targetAngles.forEach(angle => {
+                const dist = new THREE.Vector3(
+                    dice.rotation.x % (Math.PI * 2),
+                    dice.rotation.y % (Math.PI * 2),
+                    dice.rotation.z % (Math.PI * 2)
+                ).distanceTo(angle);
                 
-                isRolling = false;
-                phase = 'ready';
-                rollButton.disabled = false;
-                
-                console.log(`[2025-04-19 20:00:41] User jonasdemencia got result: ${result}`);
-            }
-            break;
+                if (dist < minDist) {
+                    minDist = dist;
+                    bestAngle = angle;
+                }
+            });
+            
+            // Aplicar o alinhamento
+            dice.rotation.x = bestAngle.x;
+            dice.rotation.y = bestAngle.y;
+            dice.rotation.z = bestAngle.z;
+        };
+        
+        alignToVertex();
+        const result = getTopFace();
+        resultDisplay.textContent = `Resultado: ${result}`;
+        
+        isRolling = false;
+        phase = 'ready';
+        rollButton.disabled = false;
+        
+        console.log(`[2025-04-19 20:10:17] User jonasdemencia got result: ${result}`);
+    }
+    break;
     }
 
     renderer.render(scene, camera);
@@ -321,17 +355,17 @@ rollButton.addEventListener("mouseup", () => {
     phase = 'throwing';
     
     // Lançamento mais controlado
-    const force = INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5);
+    const force = INITIAL_FORCE_MULTIPLIER * (0.3 + forceFactor * 0.3);
     velocity.set(
-        random(-0.2, 0.2),
-        -force * 0.5 // Reduzido para lançamento mais controlado
+        random(-0.1, 0.1),
+        -force * 0.3 // Reduzido para lançamento mais controlado
     );
     
     // Rotação inicial mais variada
     angularVelocity.set(
-        random(-0.4, 0.4) * ROTATION_SPEED,
-        random(-0.4, 0.4) * ROTATION_SPEED,
-        random(-0.4, 0.4) * ROTATION_SPEED
+        random(-0.2, 0.2) * ROTATION_SPEED,
+        random(-0.2, 0.2) * ROTATION_SPEED,
+        random(-0.2, 0.2) * ROTATION_SPEED
     );
     
     // Posição inicial
