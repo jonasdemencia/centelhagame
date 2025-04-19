@@ -44,79 +44,83 @@ body {
     transform: translate(-50%, 0);
 }
 
-/* Substitua o CSS atual do dado por este */
+/* Ajuste o CSS do dado */
 .dice {
     width: 70px;
     height: 70px;
     position: relative;
     transform-style: preserve-3d;
-    transform-origin: center 60%;
+    transform-origin: center 50%;
 }
 
 .face {
     position: absolute;
     width: 0;
     height: 0;
-    /* Ajuste no tamanho dos triângulos */
-    border-left: 40px solid transparent;
-    border-right: 40px solid transparent;
-    border-bottom: 69.28px solid #1a237e; /* altura = lado * √3/2 */
-    transform-origin: 50% 66.67%;
+    /* Triângulos equiláteros para formar o tetraedro */
+    border-left: 35px solid transparent;
+    border-right: 35px solid transparent;
+    border-bottom: 60.62px solid #1a237e;
+    transform-origin: 50% 33.33%; /* Ajuste do ponto de origem para o centro do tetraedro */
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    background: none;
 }
 
-/* Posicionamento correto das faces para formar um tetraedro regular */
+/* Posicionamento correto formando um tetraedro onde a ponta fica para cima */
 .face-1 {
-    transform: translate3d(0, -20px, 0) rotateX(19.471deg);
+    transform: 
+        translate3d(0, 20px, 0)
+        rotateX(-70.53deg)
+        rotateY(0deg);
 }
 
 .face-2 {
-    transform: translate3d(0, -20px, 0) 
-               rotateY(120deg) 
-               rotateX(19.471deg);
+    transform: 
+        translate3d(0, 20px, 0)
+        rotateX(-70.53deg)
+        rotateY(120deg);
 }
 
 .face-3 {
-    transform: translate3d(0, -20px, 0) 
-               rotateY(240deg) 
-               rotateX(19.471deg);
+    transform: 
+        translate3d(0, 20px, 0)
+        rotateX(-70.53deg)
+        rotateY(240deg);
 }
 
 .face-4 {
-    transform: translate3d(0, 40px, 0) 
-               rotateX(-109.471deg);
+    transform: 
+        translate3d(0, -20px, 0)
+        rotateX(180deg);
 }
 
 /* Ajuste na textura das faces */
-.face::after {
-    content: attr(data-number);
-    position: absolute;
-    bottom: -45px;
-    left: -40px;
-    width: 80px;
-    text-align: center;
-    color: white;
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-shadow: 0 0 3px rgba(0,0,0,0.5);
-}
-
-/* Textura marmorizada */
 .face::before {
     content: '';
     position: absolute;
-    top: 1px;  /* Ajustado para cobrir a borda */
-    left: -39px; /* Ajustado para cobrir a borda */
-    width: 78px;
-    height: 67.28px;
+    top: 1px;
+    left: -34px;
+    width: 68px;
+    height: 59px;
     background: linear-gradient(145deg, 
         rgba(25, 45, 155, 0.8),
         rgba(15, 25, 85, 0.9)
     );
     clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-    border-radius: 2px;
+}
+
+/* Números nas faces */
+.face::after {
+    content: attr(data-number);
+    position: absolute;
+    bottom: 5px;
+    left: -35px;
+    width: 70px;
+    text-align: center;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    transform: rotateX(180deg); /* Inverte o número para ficar legível */
 }
 
 /* Controles - Mantido do original */
