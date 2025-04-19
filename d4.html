@@ -336,8 +336,11 @@ const resultDisplay = document.getElementById('result-display');
 function setInitialDicePosition() {
     const buttonRect = rollButton.getBoundingClientRect();
     const buttonBottomWorld = (buttonRect.bottom / window.innerHeight) * 10 - 4;
-    dice.position.set(0, 0, buttonBottomWorld);
-}
+    dice.position.set(
+    0,
+    0,
+    4.5 // Mais próximo da câmera, lançando do canto inferior da cena
+);
 setInitialDicePosition();
         
 rollButton.addEventListener("mousedown", () => {
