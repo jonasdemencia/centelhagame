@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> <title>Dado Realista com Física 2D</title>
+
+<style>
+/* Estilos gerais */
+body {
+    display: flex; /* Mantém flex para centralizar o container geral */
+    flex-direction: column;
+    justify-content: flex-end; /* Alinha conteúdo (botão/resultado) na parte inferior */
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background: radial-gradient(circle at center, #3a3a3a, #1a1a1a);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden; /* ESSENCIAL para não ter barras de rolagem */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Container para a Simulação Física e Controles */
+#simulation-container {
+    position: absolute; /* Ocupa a tela toda para a física */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Garante que nada saia */
+}
+
+/* Container da Perspectiva 3D (precisa ser filho do container da simulação) */
+.dice-perspective-container {
+    perspective: 1200px;
+    width: 50px; /* Reduzido para metade do tamanho original */
+    height: 50px;
+    position: absolute;
+    bottom: 120px; /* Posição inicial acima do botão */
+    left: 50%;
+    transform: translate(-50%, 0);
+}
+
+/* Design do Dado */
+.dice {
+    width: 100%; /* Ocupa todo o container da perspectiva */
+    height: 100%;
+    position: relative; /* Mantém para as faces */
+    transform-style: preserve-3d;
+    /* Transição para o 'pouso' final do dado */
+    transition: transform 0.4s ease-out;
+}
+
+/* Faces do Dado - Estilos mantidos */
+.face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    box-shadow:
+        inset 0 0 8px rgba(0, 0, 0, 0.3),
+        0px 8px 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Eagle Lake", cursive;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: rgba(0, 0, 0, 0.6);
+    text-shadow:
+        1px 1px 1px rgba(255, 255, 255, 0.3),
+        -1px -1px 1px rgba(0, 0, 0, 0.4);
+    background:
+        linear-gradient(rgba(255,255,255,0.03), rgba(0,0,0,0.03)),
+        repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(0,0,0,0.02) 1px, rgba(0,0,0,0.02) 2px),
+        linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.15)),
+        #6a7a7a;
+     box-sizing: border-box;
+     /* Adiciona backface visibility para melhor performance 3D */
+     backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* Transformações das Faces (Mantido) */
+.face.front  { transform: rotateY(  0deg) translateZ(25px); }
+.face.back   { transform: rotateX(180deg) translateZ(25px); }
+.face.right  { transform: rotateY( 90deg) translateZ(25px); }
+.face.left   { transform: rotateY(-90deg) translateZ(25px); }
+.face.top    { transform: rotateX( 90deg) translateZ(25px); }
+.face.bottom { transform: rotateX(-90deg) translateZ(25px); }
+
+
+/* Controles - Posicionados fixos na parte inferior */
+.controls {
+    position: fixed; /* Fixo na tela */
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(to top, rgba(26, 26, 26, 0.8), transparent); /* Fundo suave */
+    z-index: 10; /* Garante que fiquem sobre a simulação */
+}
+
+button#roll-button { /* Estilo específico para o botão */
+    padding: 12px 25px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
+    border: none;
+    border-radius: 8px;
+    color: #e0e0e0;
+    text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
+                inset 0px 1px 1px rgba(255,255,255,0.2);
+    transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.15s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+button#roll-button:hover {
+    transform: scale(1.05);
+    background: linear-gradient(145deg, #6a6a6a, #4a4a4a);
+}
+
+#result-display {
+    margin-top: 15px;
+    font-size: 1.5rem;
+    color: #fff;
+    min-height: 2rem;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div id="simulation-container">
+    <div class="dice-perspective-container" id="dice-visual-container">
+        <div class="dice" id="dice">
+            <div class="face front">1</div>
+            <div class="face back">6</div>
+            <div class="face right">4</div>
+            <div class="face left">3</div>
+            <div class="face top">5</div>
+            <div class="face bottom">2</div>
+        </div>
+    </div>
+</div>
+
+<div class="controls">
+     <button id="roll-button">Rolar Dado</button>
+     <p id="result-display"></p>
+</div>
+
+
+
+<script>
+// Elementos do DOM
+// Elementos do DOM
+const diceElement = document.getElementById("dice");
+const diceContainer = document.getElementById("dice-visual-container");
+const rollButton = document.getElementById("roll-button");
+const resultDisplay = document.getElementById("result-display");
+
+// Sequência de faces para visão top-down
+const faceSequence = [1, 2, 6, 5];
+
+// Configurações de Movimento e Rotação
+const ROLL_STEP_SIZE = 90;        // Tamanho de cada passo de rotação em graus
+const MOVEMENT_PER_ROTATION = 100; // Reduzido para criar uma relação mais direta entre movimento e rotação
+const MIN_VELOCITY = 3.5;         // Aumentado para manter o movimento por mais tempo
+const ROTATION_SPEED = 2;
+const PRECISE_ROTATION_ANGLE = 90;
+
+// Configurações de Física
+const FRICTION = 0.98;            // Reduzido para desacelerar mais lentamente
+const WALL_BOUNCE_DAMPENING = 0.5; // Aumentado para manter mais momentum após colisão
+const EDGE_BOUNCE_MULTIPLIER = 1.0;
+const REBOUND_FORCE = 1.5;        // Aumentado para mais força após colisão
+const MAX_VELOCITY = 25;          // Aumentado para permitir movimento mais rápido
+const COLLISION_COOLDOWN = 300;    // Reduzido para permitir colisões mais frequentes
+
+
+// Configurações de Interface
+const MAX_PRESS_DURATION = 4000;
+const DICE_SIZE = 50;
+const INITIAL_FORCE_MULTIPLIER = 35;
+const LATERAL_FORCE_RANGE = 8;
+const ROTATION_CHANGE_ANGLE = 45;
+
+// Configurações de escala para simular altura
+const SCALE = {
+    MIN: 0.8,    // Tamanho mínimo (dado no chão)
+    MAX: 2.0,    // Tamanho máximo (dado no ponto mais alto)
+    FLIGHT: 1.5, // Tamanho durante o voo
+    BOUNCE: 1.3  // Tamanho base para quiques
+};
+
+// Estado do dado
+let isRolling = false;
+let pressStartTime = 0;
+let currentRotation = { x: 0, y: 0, z: 0 };
+let posX = window.innerWidth / 2;
+let posY = window.innerHeight - 50;
+let velocityX = 0;
+let velocityY = 0;
+let targetScale = 1.0;
+let currentScale = 1.0;
+let phase = 'ready';
+let flightTime = 0;
+let bounceCount = 0;
+let rollAngle = 0;
+let rotationDirection = 1;
+let currentFaceSequence = [...faceSequence];
+let lastCollisionTime = 0;
+
+
+function getTopFaceFromRotation(x, y, z) {
+    // Normaliza ângulos para 0, 90, 180, 270
+    const normX = (x % 360 + 360) % 360;
+    const normY = (y % 360 + 360) % 360;
+    const normZ = (z % 360 + 360) % 360;
+
+    console.log(`getTopFace input (norm): X=${normX}, Y=${normY}, Z=${normZ}`);
+
+    // Casos com Z=90
+    if (normZ === 90) {
+        if (normX === 0) {
+            if (normY === 270) return 5;
+            if (normY === 180) return 6;
+            if (normY === 90) return 2;
+        }
+        if (normX === 90) {
+            if (normY === 180) return 4;
+            if (normY === 270) return 4;
+            if (normY === 0) return 4;
+        }
+        if (normX === 180) {
+            if (normY === 0) return 6;
+            if (normY === 270) return 2;
+        }
+        if (normX === 270) {
+            if (normY === 180) return 3;
+            if (normY === 0) return 3;
+            if (normY === 270) return 3;
+        }
+    }
+
+    // Casos com Z=0
+    if (normZ === 0) {
+        if (normX === 0) {
+            if (normY === 270) return 4;
+            if (normY === 180) return 6;
+            if (normY === 90) return 3;
+        }
+        if (normX === 90) {
+            if (normY === 270) return 2;
+            if (normY === 180) return 2;
+            if (normY === 90) return 2;
+        }
+        if (normX === 180) {
+            if (normY === 180) return 1;
+            if (normY === 90) return 4;
+        }
+        if (normX === 270) {
+            if (normY === 270) return 5;
+            if (normY === 180) return 5;
+            if (normY === 90) return 5;
+        }
+    }
+
+    // Casos base (quando Y=0 e Z=0)
+    if (normY === 0 && normZ === 0) {
+        if (normX === 0) return 1;
+        if (normX === 90) return 2;
+        if (normX === 180) return 6;
+        if (normX === 270) return 5;
+    }
+
+    console.warn(`Combinacao de angulos nao mapeada: X=${normX}, Y=${normY}, Z=${normZ}. Retornando 1 como padrao.`);
+    return 1;
+}
+    
+// Chance igual para cada eixo
+function determineRotationAxis() {
+    // 50% de chance para cada eixo
+    return Math.random() < 0.5 ? 'z' : 'x';
+}
+
+// Chance igual para cada eixo
+function changeRotationOnCollision(isVerticalCollision) {
+    const currentTime = Date.now();
+    
+    if (currentTime - lastCollisionTime < COLLISION_COOLDOWN) {
+        return;
+    }
+    
+    lastCollisionTime = currentTime;
+    rotationDirection *= -1;
+    
+    // 50% de chance de mudar o eixo de rotação
+    if (Math.random() < 0.5) {
+        if (currentRotation.z === 0) {
+            currentRotation.z = 90;
+            currentRotation.x = 0;
+            currentFaceSequence = [3, 2, 4, 5]; // Sequência para o eixo Z
+        } else {
+            currentRotation.z = 0;
+            currentRotation.x = 0;
+            currentFaceSequence = [1, 2, 6, 5]; // Sequência para o eixo X
+        }
+    } else {
+        currentFaceSequence = rotationDirection > 0 ? [...faceSequence] : [...faceSequence].reverse();
+    }
+
+    if (isVerticalCollision) {
+        velocityY = -velocityY * WALL_BOUNCE_DAMPENING;
+        velocityX *= 0.8;
+    } else {
+        velocityX = -velocityX * WALL_BOUNCE_DAMPENING;
+        // Garante velocidade mínima após colisão
+        velocityX = Math.sign(velocityX) * Math.max(Math.abs(velocityX), MIN_VELOCITY * 3);
+    }
+    
+    // Limita a velocidade após a colisão
+    velocityX = Math.sign(velocityX) * Math.min(Math.abs(velocityX), MAX_VELOCITY);
+    
+    currentRotation.x = rotationDirection * Math.abs(currentRotation.x);
+    currentRotation.x = Math.round(currentRotation.x / PRECISE_ROTATION_ANGLE) * PRECISE_ROTATION_ANGLE;
+}
+    
+function updateDiceVisual() {
+    diceContainer.style.left = `${posX}px`;
+    diceContainer.style.top = `${posY}px`;
+    
+    currentScale += (targetScale - currentScale) * 0.2;
+    
+    const { x, y, z } = currentRotation;
+    diceElement.style.transform = `
+        scale(${currentScale})
+        rotateX(${x}deg)
+        rotateY(${y}deg)
+        rotateZ(${z}deg)
+    `;
+}
+
+function simulateHeight(time, initialVelocity) {
+    const height = Math.sin(time * Math.PI) * initialVelocity;
+    return Math.max(0, height);
+}
+
+function animateDice() {
+    if (!isRolling) return;
+
+    switch (phase) {
+        case 'throwing':
+            posX += velocityX;
+            posY += velocityY;
+            
+            flightTime += 0.05;
+            const height = simulateHeight(flightTime, 1);
+            targetScale = SCALE.MIN + (height * (SCALE.MAX - SCALE.MIN));
+            
+            currentRotation.x += velocityX * ROTATION_SPEED * rotationDirection;
+            currentRotation.y += velocityY * ROTATION_SPEED * rotationDirection;
+            
+            if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
+                posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
+                changeRotationOnCollision(false);
+            }
+            
+            if (posY <= 0 || posY >= window.innerHeight - DICE_SIZE) {
+                posY = posY <= 0 ? 0 : window.innerHeight - DICE_SIZE;
+                changeRotationOnCollision(true);
+            }
+            
+            if (flightTime >= 1) {
+                phase = 'bouncing';
+                bounceCount = Math.floor(Math.abs(velocityX) * 2) + 3;
+                flightTime = 0;
+            }
+            break;
+
+        case 'bouncing':
+            posX += velocityX;
+            posY += velocityY;
+            velocityX *= FRICTION;
+            velocityY *= FRICTION;
+            
+            flightTime += 0.1;
+            const bounceHeight = Math.sin(flightTime * Math.PI) * (SCALE.BOUNCE / (bounceCount + 1));
+            targetScale = SCALE.MIN + bounceHeight;
+            
+            if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
+                posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
+                changeRotationOnCollision(false);
+            }
+            
+            if (posY <= 0 || posY >= window.innerHeight - DICE_SIZE) {
+                posY = posY <= 0 ? 0 : window.innerHeight - DICE_SIZE;
+                changeRotationOnCollision(true);
+            }
+            
+            if (flightTime >= 1) {
+                bounceCount--;
+                flightTime = 0;
+                currentRotation.x += 90 * rotationDirection;
+                
+                if (bounceCount <= 0) {
+                    phase = 'rolling';
+                    rollAngle = currentRotation.x;
+                    velocityX *= 2;
+                }
+            }
+            break;
+
+        case 'rolling':
+    // Atualiza a posição baseada na velocidade
+    posX += velocityX;
+    
+    // Aplica fricção primeiro
+    velocityX *= FRICTION;
+    
+    // Calcula a rotação baseada no movimento
+    const distanceMoved = Math.abs(velocityX);
+    const rotationProgress = (distanceMoved / MOVEMENT_PER_ROTATION) * ROLL_STEP_SIZE;
+    rollAngle += rotationProgress * rotationDirection;
+    
+    // Arredonda para o próximo múltiplo de 90 graus
+    currentRotation.x = Math.round(rollAngle / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+    
+    // Mantém o dado no chão
+    if (posY > window.innerHeight - DICE_SIZE) {
+        posY = window.innerHeight - DICE_SIZE;
+    }
+    
+    targetScale = SCALE.MIN;
+    
+    // Colisão com as paredes
+    if (posX <= 0 || posX >= window.innerWidth - DICE_SIZE) {
+        posX = posX <= 0 ? 0 : window.innerWidth - DICE_SIZE;
+        
+        if (Math.abs(velocityX) > MIN_VELOCITY * 2) {
+            changeRotationOnCollision(false);
+            velocityX *= WALL_BOUNCE_DAMPENING;
+        } else {
+            // Se a velocidade for muito baixa após a colisão, para o dado
+            velocityX = 0;
+            phase = 'stopped';
+            isRolling = false;
+        }
+    }
+    
+    // Limita a velocidade máxima
+    velocityX = Math.sign(velocityX) * Math.min(Math.abs(velocityX), MAX_VELOCITY);
+    
+    // Verifica se o dado parou
+      // Verifica se o dado parou
+      if (Math.abs(velocityX) < MIN_VELOCITY) {
+    // Verifica desalinhamento nos ângulos finais (arestas)
+    const misalignedX = currentRotation.x % 90;
+    const misalignedY = currentRotation.y % 90;
+    const misalignedZ = currentRotation.z % 90;
+
+    const isMisaligned = (
+        (misalignedX > 2 && misalignedX < 88) ||
+        (misalignedY > 2 && misalignedY < 88) ||
+        (misalignedZ > 2 && misalignedZ < 88)
+    );
+
+    if (isMisaligned) {
+        // Simula último impulso suave (quique final com leve rotação)
+        bounceCount = 1;
+        velocityX = MIN_VELOCITY * (Math.random() < 0.5 ? 1 : -1);
+        velocityY = -MIN_VELOCITY * 0.5; // pequena elevação para simular queda
+        flightTime = 0;
+        phase = 'bouncing';
+        return;
+    }
+
+    // Se alinhado, pode parar normalmente
+    const finalX = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+    const finalY = Math.round(currentRotation.y / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+    const finalZ = Math.round(currentRotation.z / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+
+    currentRotation.x = finalX;
+    currentRotation.y = finalY;
+    currentRotation.z = finalZ;
+
+    velocityX = 0;
+    phase = 'stopped';
+    isRolling = false;
+
+    const finalResult = getTopFaceFromRotation(finalX, finalY, finalZ);
+    resultDisplay.textContent = `Resultado: ${finalResult}`;
+
+    console.log(`ANGULOS FINAIS -> X: ${finalX}, Y: ${finalY}, Z: ${finalZ} --- RESULTADO CALCULADO: ${finalResult}`);
+    rollButton.disabled = false;
+}
+    break;
+    }
+
+    updateDiceVisual();
+
+    if (isRolling) {
+        requestAnimationFrame(animateDice);
+    }
+}
+
+rollButton.addEventListener("mousedown", () => {
+    if (isRolling) return;
+    pressStartTime = Date.now();
+    rollButton.style.transform = 'scale(0.95)';
+});
+
+rollButton.addEventListener("mouseup", () => {
+    if (isRolling) return;
+    
+    const pressDuration = Math.min(Date.now() - pressStartTime, MAX_PRESS_DURATION);
+    const forceFactor = pressDuration / MAX_PRESS_DURATION;
+    
+    isRolling = true;
+    rollButton.disabled = true;
+    phase = 'throwing';
+    
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight * 0.4;
+    const dirX = centerX - window.innerWidth / 2;
+    const dirY = centerY - (window.innerHeight - 50);
+    
+    const magnitude = Math.sqrt(dirX * dirX + dirY * dirY);
+    const normalizedX = (dirX / magnitude) + (Math.random() - 0.5) * 0.3;
+    const normalizedY = (dirY / magnitude);
+    
+    const force = INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5);
+    velocityX = normalizedX * force;
+    velocityY = normalizedY * force;
+    
+    posX = window.innerWidth / 2;
+    posY = window.innerHeight - 50;
+    currentRotation = { x: 0, y: 0, z: 0 };
+    flightTime = 0;
+    currentScale = SCALE.MIN;
+    targetScale = SCALE.FLIGHT;
+    rotationDirection = 1;
+    currentFaceSequence = [...faceSequence];
+    
+    requestAnimationFrame(animateDice);
+    rollButton.style.transform = '';
+});
+
+window.addEventListener("load", () => {
+    updateDiceVisual();
+    resultDisplay.textContent = "Pressione o botão para lançar o dado";
+});
+</script>
+
+
+</body>
+</html>
