@@ -2,24 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>D4 3D</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>D4 Realista com Física 2D</title>
+
     <style>
         body {
-            margin: 0;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            justify-content: flex-end;
             align-items: center;
             height: 100vh;
+            margin: 0;
             background: radial-gradient(circle at center, #3a3a3a, #1a1a1a);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
+            user-select: none;
         }
 
         #dice-container {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            position: absolute;
+            overflow: hidden;
         }
 
         .controls {
@@ -28,7 +34,10 @@
             left: 0;
             width: 100%;
             padding: 20px;
-            text-align: center;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             background: linear-gradient(to top, rgba(26, 26, 26, 0.8), transparent);
             z-index: 10;
         }
@@ -42,12 +51,19 @@
             border: none;
             border-radius: 8px;
             color: #e0e0e0;
+            text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
+                        inset 0px 1px 1px rgba(255,255,255,0.2);
+            transition: transform 0.15s ease;
         }
 
         #result-display {
-            color: white;
-            font-size: 1.5rem;
             margin-top: 15px;
+            font-size: 1.5rem;
+            color: #fff;
+            min-height: 2rem;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
         }
     </style>
 </head>
@@ -58,7 +74,6 @@
         <div id="result-display">Pressione o botão para rolar</div>
     </div>
 
-    <!-- Three.js importmap -->
     <script type="importmap">
     {
         "imports": {
@@ -67,18 +82,40 @@
     }
     </script>
 
-    <!-- Nosso script -->
     <script type="module">
         import * as THREE from 'three';
 
-        // Setup básico
+        // Configurações de física (mantidas do seu código original)
+        const FRICTION = 0.98;
+        const WALL_BOUNCE_DAMPENING = 0.5;
+        const MIN_VELOCITY = 3.5;
+        const MAX_VELOCITY = 25;
+        const INITIAL_FORCE_MULTIPLIER = 35;
+        const COLLISION_COOLDOWN = 300;
+        const DICE_SIZE = 50;
+        const ROTATION_SPEED = 2;
+
+        // Configurações de escala
+        const SCALE = {
+            MIN: 0.8,
+            MAX: 2.0,
+            FLIGHT: 1.5,
+            BOUNCE: 1.3
+        };
+
+        // Setup Three.js
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('dice-container').appendChild(renderer.domElement);
 
-        // Criar geometria do tetraedro
+        // Configurar câmera para visão top-down
+        camera.position.set(0, 10, 0);
+        camera.lookAt(0, 0, 0);
+        camera.rotation.z = Math.PI; // Ajuste para manter orientação consistente
+
+        // Criar tetraedro
         const geometry = new THREE.TetrahedronGeometry(1);
         const material = new THREE.MeshPhongMaterial({
             color: 0x1a237e,
@@ -94,55 +131,22 @@
         scene.add(light);
         scene.add(new THREE.AmbientLight(0x404040));
 
-        // Posicionamento da câmera
-        camera.position.z = 5;
-
-        // Configurações de física
-        const FRICTION = 0.98;
-        const GRAVITY = 0.01;
-        const BOUNCE_DAMPING = 0.7;
-        const ROTATION_SPEED = 0.2;
-
         // Estado do dado
         let isRolling = false;
-        let velocity = new THREE.Vector3();
+        let pressStartTime = 0;
+        let velocity = new THREE.Vector2();
         let angularVelocity = new THREE.Vector3();
-        let lastTime = 0;
+        let phase = 'ready';
+        let flightTime = 0;
+        let bounceCount = 0;
+        let lastCollisionTime = 0;
 
-        // Função para gerar um número aleatório dentro de um intervalo
+        // Função para gerar número aleatório
         function random(min, max) {
             return Math.random() * (max - min) + min;
         }
 
-        // Função para rolar o dado
-        function rollDice() {
-            if (isRolling) return;
-            
-            isRolling = true;
-            rollButton.disabled = true;
-            
-            // Velocidade inicial aleatória
-            velocity.set(
-                random(-0.1, 0.1),
-                random(0.1, 0.2),
-                random(-0.1, 0.1)
-            );
-            
-            // Rotação inicial aleatória
-            angularVelocity.set(
-                random(-0.2, 0.2),
-                random(-0.2, 0.2),
-                random(-0.2, 0.2)
-            );
-            
-            // Posição inicial
-            dice.position.set(0, 2, 0);
-            
-            // Log da rolagem
-            console.log(`[2025-04-19 19:12:41] User jonasdemencia rolled the dice`);
-        }
-
-        // Função para determinar qual face está para cima
+        // Função para determinar face superior
         function getTopFace() {
             const normalMatrix = new THREE.Matrix3();
             normalMatrix.setFromMatrix4(dice.matrixWorld);
@@ -171,60 +175,168 @@
         }
 
         // Função de animação
-        function animate(currentTime = 0) {
-            const deltaTime = currentTime - lastTime;
-            lastTime = currentTime;
-
-            if (isRolling) {
-                // Atualiza posição
-                dice.position.add(velocity);
-                
-                // Aplica gravidade
-                velocity.y -= GRAVITY;
-                
-                // Atualiza rotação
-                dice.rotation.x += angularVelocity.x;
-                dice.rotation.y += angularVelocity.y;
-                dice.rotation.z += angularVelocity.z;
-                
-                // Colisão com o chão
-                if (dice.position.y < -2) {
-                    dice.position.y = -2;
-                    velocity.y = -velocity.y * BOUNCE_DAMPING;
-                    
-                    // Reduz velocidade horizontal após quique
-                    velocity.x *= FRICTION;
-                    velocity.z *= FRICTION;
-                    
-                    // Reduz velocidade angular
-                    angularVelocity.multiplyScalar(FRICTION);
-                }
-                
-                // Verifica se o dado parou
-                if (Math.abs(velocity.y) < 0.01 && 
-                    dice.position.y <= -1.99 &&
-                    angularVelocity.length() < 0.01) {
-                    
-                    isRolling = false;
-                    rollButton.disabled = false;
-                    
-                    // Determina qual face está para cima
-                    const result = getTopFace();
-                    resultDisplay.textContent = `Resultado: ${result}`;
-                    
-                    // Log do resultado
-                    console.log(`[2025-04-19 19:12:41] User jonasdemencia got result: ${result}`);
-                }
+        function animate() {
+            if (!isRolling) {
+                renderer.render(scene, camera);
+                return;
             }
-            
-            renderer.render(scene, camera);
+
             requestAnimationFrame(animate);
+
+            switch (phase) {
+                case 'throwing':
+                    // Código de lançamento
+                    dice.position.x += velocity.x;
+                    dice.position.z += velocity.y;
+                    
+                    flightTime += 0.05;
+                    const height = Math.sin(flightTime * Math.PI);
+                    dice.position.y = height * 2;
+                    
+                    dice.rotation.x += angularVelocity.x;
+                    dice.rotation.y += angularVelocity.y;
+                    dice.rotation.z += angularVelocity.z;
+                    
+                    if (flightTime >= 1) {
+                        phase = 'bouncing';
+                        bounceCount = 3;
+                        flightTime = 0;
+                    }
+                    break;
+
+                            case 'bouncing':
+                    dice.position.x += velocity.x;
+                    dice.position.z += velocity.y;
+                    velocity.x *= FRICTION;
+                    velocity.y *= FRICTION;
+                    
+                    flightTime += 0.1;
+                    const bounceHeight = Math.sin(flightTime * Math.PI) * (SCALE.BOUNCE / (bounceCount + 1));
+                    dice.position.y = bounceHeight;
+                    
+                    // Colisões com as bordas da tela
+                    if (dice.position.x <= -5 || dice.position.x >= 5) {
+                        dice.position.x = dice.position.x <= -5 ? -5 : 5;
+                        velocity.x *= -WALL_BOUNCE_DAMPENING;
+                        
+                        // Rotação na colisão
+                        angularVelocity.z = random(-0.2, 0.2);
+                        angularVelocity.y = random(-0.2, 0.2);
+                    }
+                    
+                    if (dice.position.z <= -5 || dice.position.z >= 5) {
+                        dice.position.z = dice.position.z <= -5 ? -5 : 5;
+                        velocity.y *= -WALL_BOUNCE_DAMPENING;
+                        
+                        // Rotação na colisão
+                        angularVelocity.x = random(-0.2, 0.2);
+                        angularVelocity.y = random(-0.2, 0.2);
+                    }
+                    
+                    if (flightTime >= 1) {
+                        bounceCount--;
+                        flightTime = 0;
+                        
+                        if (bounceCount <= 0) {
+                            phase = 'rolling';
+                            velocity.multiplyScalar(0.5);
+                        }
+                    }
+                    break;
+
+                case 'rolling':
+                    // Movimento final
+                    dice.position.x += velocity.x;
+                    dice.position.z += velocity.y;
+                    
+                    // Aplicar fricção
+                    velocity.multiplyScalar(FRICTION);
+                    angularVelocity.multiplyScalar(FRICTION);
+                    
+                    // Manter o dado no chão
+                    dice.position.y = 0;
+                    
+                    // Rotação durante o rolamento
+                    dice.rotation.x += angularVelocity.x;
+                    dice.rotation.y += angularVelocity.y;
+                    dice.rotation.z += angularVelocity.z;
+                    
+                    // Colisões com as bordas
+                    if (dice.position.x <= -5 || dice.position.x >= 5) {
+                        dice.position.x = dice.position.x <= -5 ? -5 : 5;
+                        velocity.x *= -WALL_BOUNCE_DAMPENING;
+                        angularVelocity.z = random(-0.1, 0.1);
+                    }
+                    
+                    if (dice.position.z <= -5 || dice.position.z >= 5) {
+                        dice.position.z = dice.position.z <= -5 ? -5 : 5;
+                        velocity.y *= -WALL_BOUNCE_DAMPENING;
+                        angularVelocity.x = random(-0.1, 0.1);
+                    }
+                    
+                    // Verificar se o dado parou
+                    if (velocity.length() < MIN_VELOCITY && 
+                        angularVelocity.length() < 0.01) {
+                        
+                        // Alinhar com a face mais próxima
+                        const result = getTopFace();
+                        resultDisplay.textContent = `Resultado: ${result}`;
+                        
+                        isRolling = false;
+                        phase = 'ready';
+                        rollButton.disabled = false;
+                        
+                        console.log(`[2025-04-19 19:23:54] User jonasdemencia got result: ${result}`);
+                    }
+                    break;
+            }
+
+            renderer.render(scene, camera);
         }
 
-        // Event Listeners
+        // Event Listeners para o botão
         const rollButton = document.getElementById('roll-button');
         const resultDisplay = document.getElementById('result-display');
-        rollButton.addEventListener('click', rollDice);
+
+        rollButton.addEventListener("mousedown", () => {
+            if (isRolling) return;
+            pressStartTime = Date.now();
+            rollButton.style.transform = 'scale(0.95)';
+        });
+
+        rollButton.addEventListener("mouseup", () => {
+            if (isRolling) return;
+            
+            const pressDuration = Math.min(Date.now() - pressStartTime, 4000);
+            const forceFactor = pressDuration / 4000;
+            
+            isRolling = true;
+            rollButton.disabled = true;
+            phase = 'throwing';
+            
+            // Configurar velocidades iniciais
+            velocity.set(
+                random(-0.1, 0.1) * INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5),
+                random(-0.1, 0.1) * INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5)
+            );
+            
+            angularVelocity.set(
+                random(-0.2, 0.2),
+                random(-0.2, 0.2),
+                random(-0.2, 0.2)
+            );
+            
+            // Resetar posição e rotação
+            dice.position.set(0, 0, 0);
+            dice.rotation.set(0, 0, 0);
+            flightTime = 0;
+            
+            // Iniciar animação
+            requestAnimationFrame(animate);
+            rollButton.style.transform = '';
+            
+            console.log(`[2025-04-19 19:23:54] User jonasdemencia rolled the dice`);
+        });
 
         // Ajuste de redimensionamento
         window.addEventListener('resize', () => {
@@ -233,11 +345,9 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // Inicia a animação
-        animate();
-
-        // Log inicial
-        console.log(`[2025-04-19 19:12:41] D4 initialized by user jonasdemencia`);
+        // Renderização inicial
+        renderer.render(scene, camera);
+        console.log(`[2025-04-19 19:23:54] D4 initialized by user jonasdemencia`);
     </script>
 </body>
 </html>
