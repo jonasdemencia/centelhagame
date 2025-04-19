@@ -167,6 +167,34 @@ function random(min, max) {
     return Math.random() * (max - min) + min;
 }
 
+// Adicionar logo após a função random:
+function getTopFace() {
+    const normalMatrix = new THREE.Matrix3();
+    normalMatrix.setFromMatrix4(dice.matrixWorld);
+    
+    const upVector = new THREE.Vector3(0, 1, 0);
+    const faces = [
+        new THREE.Vector3(0, 0, 1),  // 1
+        new THREE.Vector3(1, 0, 0),  // 2
+        new THREE.Vector3(0, 1, 0),  // 3
+        new THREE.Vector3(-1, 0, 0)  // 4
+    ];
+    
+    let maxDot = -1;
+    let result = 1;
+    
+    faces.forEach((normal, index) => {
+        normal.applyMatrix3(normalMatrix);
+        const dot = normal.dot(upVector);
+        if (dot > maxDot) {
+            maxDot = dot;
+            result = index + 1;
+        }
+    });
+    
+    return result;
+}
+
 // Função de animação ajustada para comportamento de tetraedro
 function animate() {
     if (!isRolling) {
@@ -334,14 +362,17 @@ rollButton.addEventListener("mouseup", () => {
     );
     
     // Posição inicial abaixo do botão
+    const buttonRect = rollButton.getBoundingClientRect();
+    const buttonBottomWorld = (buttonRect.bottom / window.innerHeight * 10) - 5;
+    
     dice.position.set(
-        0,                    // Centro horizontal
-        0,                    // No chão
-        window.innerHeight * 0.01  // Próximo à parte inferior
+        0,              // Centro horizontal
+        0,              // No chão
+        buttonBottomWorld  // Posição Z baseada na posição do botão
     );
     
     dice.rotation.set(
-        random(-Math.PI/4, Math.PI/4),  // Rotações iniciais mais limitadas
+        random(-Math.PI/4, Math.PI/4),
         random(-Math.PI/4, Math.PI/4),
         random(-Math.PI/4, Math.PI/4)
     );
@@ -349,7 +380,7 @@ rollButton.addEventListener("mouseup", () => {
     flightTime = 0;
     bounceCount = INITIAL_BOUNCE_COUNT;
     
-    console.log(`[2025-04-19 21:59:31] User jonasdemencia rolled the dice`);
+    console.log(`[2025-04-19 22:17:11] User jonasdemencia rolled the dice`);
     requestAnimationFrame(animate);
     rollButton.style.transform = '';
 });
