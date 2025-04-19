@@ -131,6 +131,42 @@ const material = new THREE.MeshPhongMaterial({
 const dice = new THREE.Mesh(geometry, material);
 scene.add(dice);
 
+// Carregar fonte padrão do Three.js
+const loader = new THREE.FontLoader();
+loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
+    const labels = ['1', '2', '3', '4'];
+
+    // Usar os vértices do tetraedro
+    const positions = geometry.vertices;
+
+    labels.forEach((text, i) => {
+        const textGeometry = new THREE.TextGeometry(text, {
+            font: font,
+            size: 0.3,
+            height: 0.02,
+            curveSegments: 4
+        });
+
+        const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+
+        // Centralizar o texto
+        textGeometry.computeBoundingBox();
+        const centerOffsetX = -0.5 * (textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x);
+        const centerOffsetY = -0.5 * (textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y);
+
+        // Posicionar o texto na ponta
+        const vertex = geometry.vertices[i];
+        textMesh.position.set(vertex.x + centerOffsetX, vertex.y + centerOffsetY, vertex.z);
+
+        // Girar o texto para que ele fique virado pra cima
+        textMesh.lookAt(new THREE.Vector3(0, 1, 0));
+
+        scene.add(textMesh);
+    });
+});
+
+
 
 // Iluminação ajustada
 const light = new THREE.DirectionalLight(0xffffff, 1.2);
