@@ -50,62 +50,64 @@ body {
     height: 70px;
     position: relative;
     transform-style: preserve-3d;
-    transform-origin: center 50%;
+    /* Manter a origem do container do dado no centro */
+    transform-origin: 50% 50%;
 }
 
 .face {
     position: absolute;
     width: 0;
     height: 0;
-    /* Triângulos equiláteros para formar o tetraedro */
+    /* Triângulos equiláteros */
     border-left: 35px solid transparent;
     border-right: 35px solid transparent;
-    border-bottom: 60.62px solid #1a237e;
-    transform-origin: 50% 33.33%; /* Ajuste do ponto de origem para o centro do tetraedro */
+    border-bottom: 60.62px solid #1a237e; /* Cor original */
+    /* Mudar origem da face para o CENTRO do elemento (mais fácil de raciocinar) */
+    transform-origin: 50% 50%;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
+    /* Adicionar position top/left para garantir que comecem no mesmo lugar */
+    top: 0;
+    left: 0;
 }
 
-/* Posicionamento corrigido das faces */
+/* ---- NOVAS TRANSFORMAÇÕES ---- */
+
+/* Face 4 (será a base inferior, paralela ao chão) */
+/* Altura do tetraedro H ≈ 57.15px. Distância centro->base r = H/4 ≈ 14.3px */
+.face-4 {
+    transform: rotateX(90deg) translateZ(14.3px);
+    /* border-bottom-color: yellow; */ /* Debug */
+}
+
+/* Faces Laterais (1, 2, 3) */
+/* Precisam ser rotacionadas em Y, inclinadas e transladadas para encontrar a base e o ápice */
+/* A inclinação em relação à vertical é 70.53deg. */
+/* A translação Z necessária para posicionar corretamente a partir da origem 50% 50% */
+/* é frequentemente relacionada à altura do triângulo (h_tri ≈ 60.62px) */
+/* Vamos usar h_tri / 3 ≈ 20.2px como translação Z */
+/* E a translação Y para ajustar a altura (metade da altura do tetraedro?) */
+/* H/2 ≈ 28.6px */
+
 .face-1 {
-    transform:
-        /* Empurra a face para fora do centro */
-        translateZ(14.3px)
-        /* Inclina a face (ângulo entre normal da face e eixo Y vertical = 70.53°) */
-        rotateX(-70.53deg)
-        /* Rotação em torno do eixo Y para posicionar a primeira face lateral */
-        rotateY(0deg);
-    /* border-bottom-color: red; */ /* Descomente para debugar a face */
+    transform: rotateY(0deg) translateY(-28.6px) rotateX(19.47deg) translateZ(20.2px);
+    /* border-bottom-color: red; */ /* Debug */
 }
 
 .face-2 {
-    transform:
-        translateZ(14.3px)
-        rotateX(-70.53deg)
-        /* Rotaciona 120 graus para a segunda face lateral */
-        rotateY(120deg);
-     /* border-bottom-color: green; */ /* Descomente para debugar a face */
+    transform: rotateY(120deg) translateY(-28.6px) rotateX(19.47deg) translateZ(20.2px);
+    /* border-bottom-color: green; */ /* Debug */
 }
 
 .face-3 {
-    transform:
-        translateZ(14.3px)
-        rotateX(-70.53deg)
-        /* Rotaciona 240 graus para a terceira face lateral */
-        rotateY(240deg);
-    /* border-bottom-color: blue; */ /* Descomente para debugar a face */
+    transform: rotateY(240deg) translateY(-28.6px) rotateX(19.47deg) translateZ(20.2px);
+    /* border-bottom-color: blue; */ /* Debug */
 }
 
-.face-4 {
-    transform:
-         /* Vira a face para baixo */
-        rotateX(180deg)
-         /* Empurra a face para "trás" (ou "baixo" relativo ao centro) */
-        translateZ(-14.3px);
-    /* border-bottom-color: yellow; */ /* Descomente para debugar a face */
-}
+/* ---- FIM DAS NOVAS TRANSFORMAÇÕES ---- */
 
-/* Ajuste na textura das faces */
+
+/* Ajuste na textura das faces (manter como está) */
 .face::before {
     content: '';
     position: absolute;
@@ -113,25 +115,26 @@ body {
     left: -34px;
     width: 68px;
     height: 59px;
-    background: linear-gradient(145deg, 
+    background: linear-gradient(145deg,
         rgba(25, 45, 155, 0.8),
         rgba(15, 25, 85, 0.9)
     );
     clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 }
 
-/* Números nas faces */
+/* Números nas faces (manter como está) */
 .face::after {
     content: attr(data-number);
     position: absolute;
-    bottom: 5px;
+    bottom: 5px; /* Ajuste fino da posição vertical do número se necessário */
     left: -35px;
     width: 70px;
     text-align: center;
     color: white;
     font-size: 1.5rem;
     font-weight: bold;
-    transform: rotateX(180deg); /* Inverte o número para ficar legível */
+    /* A rotação do número pode precisar de ajuste dependendo da orientação final da face */
+    transform: rotateX(180deg) rotateZ(0deg); /* Verificar se precisa de rotateZ */
 }
 
 /* Controles - Mantido do original */
