@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Dado Realista com Física 2D</title>
+<title>Dado D4 com Física 3D</title>
 
 <style>
-/* Estilos gerais */
 body {
     display: flex;
     flex-direction: column;
@@ -18,9 +17,6 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
     user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
 }
 
 #simulation-container {
@@ -32,65 +28,61 @@ body {
     overflow: hidden;
 }
 
-/* Container de perspectiva 3D */
 .dice-perspective-container {
     perspective: 1200px;
-    width: 60px;
-    height: 60px;
+    width: 120px;
+    height: 120px;
     position: absolute;
     bottom: 120px;
     left: 50%;
     transform: translateX(-50%);
 }
 
-/* Dado (Tetraedro) */
-.dice {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    transform-style: preserve-3d;
-    transition: transform 0.4s ease-out;
-}
-
-.tetrahedron .face {
+.dice.tetrahedron {
     width: 0;
     height: 0;
-    position: absolute;
-    border-left: 30px solid transparent;
-    border-right: 30px solid transparent;
-    border-bottom: 52px solid #6a7a7a;
-    text-align: center;
-    font-size: 1.2rem;
-    font-weight: bold;
-    font-family: "Eagle Lake", cursive;
-    color: rgba(0, 0, 0, 0.6);
-    text-shadow:
-        1px 1px 1px rgba(255, 255, 255, 0.3),
-        -1px -1px 1px rgba(0, 0, 0, 0.4);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
-    transform-origin: 50% 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transform: rotateX(20deg) rotateY(45deg);
+    animation: spin 10s infinite linear;
 }
 
-.tetrahedron .face1 {
-    transform: rotateY(0deg) translateZ(26px) rotateX(0deg);
-    top: 0;
-    left: 0;
+@keyframes spin {
+    0%   { transform: rotateX(0deg) rotateY(0deg); }
+    100% { transform: rotateX(360deg) rotateY(360deg); }
 }
-.tetrahedron .face2 {
-    transform: rotateY(120deg) translateZ(26px) rotateX(0deg);
-    top: 0;
-    left: 0;
+
+/* Triângulo equilátero usando clip-path */
+.face {
+    width: 100px;
+    height: 87px; /* altura aproximada de triângulo equilátero */
+    position: absolute;
+    background: #6a7a7a;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Eagle Lake", cursive;
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: rgba(0, 0, 0, 0.7);
+    text-shadow: 1px 1px 2px rgba(255,255,255,0.2);
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3), 0 10px 15px rgba(0, 0, 0, 0.3);
 }
-.tetrahedron .face3 {
-    transform: rotateY(240deg) translateZ(26px) rotateX(0deg);
-    top: 0;
-    left: 0;
+
+/* Posicionamento 3D das 4 faces de um tetraedro */
+.face1 {
+    transform: rotateY(0deg) rotateX(0deg) translateZ(50px);
 }
-.tetrahedron .face4 {
-    transform: rotateX(-90deg) translateY(-26px) translateZ(-15px);
-    top: 0;
-    left: 0;
-    border-bottom-color: #7a8a8a;
+.face2 {
+    transform: rotateY(120deg) rotateX(0deg) translateZ(50px);
+}
+.face3 {
+    transform: rotateY(240deg) rotateX(0deg) translateZ(50px);
+}
+.face4 {
+    transform: rotateX(-90deg) translateY(-43px) translateZ(-25px);
+    background: #7a8a8a;
 }
 
 /* Controles */
@@ -121,10 +113,6 @@ button#roll-button {
     box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
                 inset 0px 1px 1px rgba(255,255,255,0.2);
     transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.15s ease;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
 }
 
 button#roll-button:hover {
@@ -158,8 +146,8 @@ button#roll-button:hover {
 </div>
 
 <div class="controls">
-     <button id="roll-button">Rolar Dado</button>
-     <p id="result-display"></p>
+    <button id="roll-button">Rolar Dado</button>
+    <p id="result-display"></p>
 </div>
 
 
