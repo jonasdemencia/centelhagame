@@ -35,7 +35,7 @@ body {
 
 /* Perspectiva ajustada */
 .dice-perspective-container {
-    perspective: 800px; /* Reduzido para melhor visualização 3D */
+    perspective: 600px; /* Reduzido para melhor visualização 3D */
     width: 70px;
     height: 70px;
     position: absolute;
@@ -45,57 +45,43 @@ body {
 }
 
 .dice {
-    width: 70px;
-    height: 70px;
+    width: 60px;
+    height: 60px;
     position: relative;
     transform-style: preserve-3d;
     transform-origin: center center;
 }
 
+/* Simplifique as faces */
 .face {
     position: absolute;
     width: 0;
     height: 0;
-    /* Tamanho do triângulo equilátero */
-    border-left: 35px solid transparent;
-    border-right: 35px solid transparent;
-    border-bottom: 60.62px solid #1a237e;
+    /* Triângulo equilátero simples */
+    border-left: 30px solid transparent;
+    border-right: 30px solid transparent;
+    border-bottom: 52px solid #1a237e;
     transform-origin: center center;
     backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
 }
 
-/* Novo posicionamento das faces usando o ângulo tetraédrico (109.47°) */
+/* Posicionamento simples das faces */
 .face-1 {
-    /* Face frontal */
-    transform: 
-        translateZ(20.207px)
-        rotateX(-19.471deg);
+    transform: translateY(-15px) rotateX(30deg);
 }
 
 .face-2 {
-    /* Face direita */
-    transform: 
-        rotateY(120deg)
-        translateZ(20.207px)
-        rotateX(-19.471deg);
+    transform: translateY(-15px) rotateY(120deg) rotateX(30deg);
 }
 
 .face-3 {
-    /* Face esquerda */
-    transform: 
-        rotateY(-120deg)
-        translateZ(20.207px)
-        rotateX(-19.471deg);
+    transform: translateY(-15px) rotateY(240deg) rotateX(30deg);
 }
 
 .face-4 {
-    /* Face base */
-    transform:
-        rotateX(109.471deg)
-        translateY(-20.207px);
+    transform: translateY(15px) rotateX(-30deg) rotateY(180deg);
 }
-
+    
 /* Textura marmorizada melhorada */
 .face::before {
     content: '';
