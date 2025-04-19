@@ -46,59 +46,41 @@ body {
 
 /* Design do Dado d4 */
 .dice {
-    width: 100%;
-    height: 100%;
+    width: 70px;
+    height: 70px;
     position: relative;
     transform-style: preserve-3d;
-    transition: transform 0.4s ease-out;
+    transform-origin: center center;
 }
 
-/* Faces do d4 */
 .face {
     position: absolute;
     width: 0;
     height: 0;
     border-left: 35px solid transparent;
     border-right: 35px solid transparent;
-    border-bottom: 60px solid transparent;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    border-bottom: 60.62px solid #1a237e;
+    transform-origin: 50% 66.67%;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    /* Textura marmorizada azul escuro */
     background: linear-gradient(145deg, 
         rgba(25, 45, 155, 0.8),
         rgba(15, 25, 85, 0.9)
     );
-    /* Efeito mármore */
-    background-image: 
-        linear-gradient(145deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.2) 100%),
-        repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.1) 5px, rgba(0,0,0,0.1) 10px);
-    box-shadow: 
-        inset 0 0 15px rgba(0, 0, 0, 0.4),
-        0 0 10px rgba(0, 0, 0, 0.3);
 }
 
-/* Posicionamento específico das faces do d4 */
+/* Posicionamento preciso das faces do tetraedro */
 .face-1 {
-    transform: rotateX(19.47deg) translateY(-18px);
-    border-bottom-color: #1a237e;
+    transform: rotateX(19.471deg) translateZ(20.207px);
 }
-
 .face-2 {
-    transform: rotateX(19.47deg) rotateY(120deg) translateY(-18px);
-    border-bottom-color: #1a237e;
+    transform: rotateX(19.471deg) rotateY(120deg) translateZ(20.207px);
 }
-
 .face-3 {
-    transform: rotateX(19.47deg) rotateY(240deg) translateY(-18px);
-    border-bottom-color: #1a237e;
+    transform: rotateX(19.471deg) rotateY(240deg) translateZ(20.207px);
 }
-
 .face-4 {
-    transform: rotateX(-109.47deg) translateY(-18px);
-    border-bottom-color: #1a237e;
+    transform: rotateX(-109.471deg) translateY(20.207px);
 }
 
 /* Números nas faces */
@@ -213,14 +195,21 @@ const rollButton = document.getElementById("roll-button");
 const resultDisplay = document.getElementById("result-display");
 
 // Sequência de faces para visão top-down
-const faceSequence = [1, 2, 6, 5];
+const faceSequence = [1, 2, 3, 4];
+
+// Ângulos do tetraedro
+const TETRAHEDRON_ANGLES = {
+    FACE_ANGLE: 109.47, // Ângulo entre faces do tetraedro
+    ROTATION_STEP: 120,  // Rotação entre faces adjacentes
+    DIHEDRAL_ANGLE: 70.53 // Ângulo entre arestas
+};
 
 // Configurações de Movimento e Rotação
-const ROLL_STEP_SIZE = 90;        // Tamanho de cada passo de rotação em graus
+const ROLL_STEP_SIZE = 120;        // Tamanho de cada passo de rotação em graus
 const MOVEMENT_PER_ROTATION = 100; // Reduzido para criar uma relação mais direta entre movimento e rotação
 const MIN_VELOCITY = 3.5;         // Aumentado para manter o movimento por mais tempo
 const ROTATION_SPEED = 2;
-const PRECISE_ROTATION_ANGLE = 90;
+const PRECISE_ROTATION_ANGLE = 120;
 
 // Configurações de Física
 const FRICTION = 0.98;            // Reduzido para desacelerar mais lentamente
@@ -266,68 +255,40 @@ let lastCollisionTime = 0;
 
 
 function getTopFaceFromRotation(x, y, z) {
-    // Normaliza ângulos para 0, 90, 180, 270
+    // Normaliza ângulos para 0, 120, 240
     const normX = (x % 360 + 360) % 360;
     const normY = (y % 360 + 360) % 360;
     const normZ = (z % 360 + 360) % 360;
 
     console.log(`getTopFace input (norm): X=${normX}, Y=${normY}, Z=${normZ}`);
 
-    // Casos com Z=90
-    if (normZ === 90) {
-        if (normX === 0) {
-            if (normY === 270) return 5;
-            if (normY === 180) return 6;
-            if (normY === 90) return 2;
-        }
-        if (normX === 90) {
-            if (normY === 180) return 4;
-            if (normY === 270) return 4;
-            if (normY === 0) return 4;
-        }
-        if (normX === 180) {
-            if (normY === 0) return 6;
-            if (normY === 270) return 2;
-        }
-        if (normX === 270) {
-            if (normY === 180) return 3;
-            if (normY === 0) return 3;
-            if (normY === 270) return 3;
-        }
-    }
+    // Mapeamento das faces do tetraedro
+    // Face 1: base
+    // Face 2, 3, 4: faces laterais
 
-    // Casos com Z=0
-    if (normZ === 0) {
-        if (normX === 0) {
-            if (normY === 270) return 4;
-            if (normY === 180) return 6;
-            if (normY === 90) return 3;
-        }
-        if (normX === 90) {
-            if (normY === 270) return 2;
-            if (normY === 180) return 2;
-            if (normY === 90) return 2;
-        }
-        if (normX === 180) {
-            if (normY === 180) return 1;
-            if (normY === 90) return 4;
-        }
-        if (normX === 270) {
-            if (normY === 270) return 5;
-            if (normY === 180) return 5;
-            if (normY === 90) return 5;
-        }
-    }
-
-    // Casos base (quando Y=0 e Z=0)
+    // Caso base (posição inicial)
     if (normY === 0 && normZ === 0) {
         if (normX === 0) return 1;
-        if (normX === 90) return 2;
-        if (normX === 180) return 6;
-        if (normX === 270) return 5;
+        if (normX === 120) return 2;
+        if (normX === 240) return 3;
     }
 
-    console.warn(`Combinacao de angulos nao mapeada: X=${normX}, Y=${normY}, Z=${normZ}. Retornando 1 como padrao.`);
+    // Casos com rotação Y
+    if (normZ === 0) {
+        if (normY === 120) {
+            if (normX < 120) return 2;
+            if (normX < 240) return 3;
+            return 4;
+        }
+        if (normY === 240) {
+            if (normX < 120) return 3;
+            if (normX < 240) return 4;
+            return 2;
+        }
+    }
+
+    // Se nenhum caso foi encontrado, retorna o padrão
+    console.warn(`Combinação de ângulos não mapeada: X=${normX}, Y=${normY}, Z=${normZ}`);
     return 1;
 }
     
