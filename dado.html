@@ -468,30 +468,55 @@ function animateDice() {
     
     // Verifica se o dado parou
       // Verifica se o dado parou
-      if (Math.abs(velocityX) < MIN_VELOCITY) {
-          // ---> NENHUMA ALTERAÇÃO NA ANIMAÇÃO ACONTECE A PARTIR DAQUI <---
+      // Verifica se o dado parou
+if (Math.abs(velocityX) < MIN_VELOCITY) {
+    // Arredonda os ângulos iniciais
+    let finalX = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+    let finalY = Math.round(currentRotation.y / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+    let finalZ = Math.round(currentRotation.z / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
 
-          // Arredonda TODOS os ângulos FINAIS (APÓS a parada da animação)
-          const finalX = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
-          const finalY = Math.round(currentRotation.y / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
-          const finalZ = Math.round(currentRotation.z / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+    // Verifica se está em uma posição de aresta
+    const isXEdge = Math.abs((finalX % 90) / 90) > 0.1 && Math.abs((finalX % 90) / 90) < 0.9;
+    const isYEdge = Math.abs((finalY % 90) / 90) > 0.1 && Math.abs((finalY % 90) / 90) < 0.9;
 
-          // Interrompe o estado da animação (já estava assim)
-          velocityX = 0;
-          phase = 'stopped';
-          isRolling = false; // <-- Loop de animação para aqui
+    if (isXEdge || isYEdge) {
+        console.log("Dado parou em aresta - ajustando para face mais próxima");
+        
+        // Ajusta para a face mais próxima
+        if (isXEdge) {
+            const remainder = finalX % 90;
+            finalX = remainder < 45 ? finalX - remainder : finalX + (90 - remainder);
+        }
+        if (isYEdge) {
+            const remainder = finalY % 90;
+            finalY = remainder < 45 ? finalY - remainder : finalY + (90 - remainder);
+        }
 
-          // CALCULA o resultado baseado nos ângulos finais (nova interpretação)
-          const finalResult = getTopFaceFromRotation(finalX, finalY, finalZ);
+        // Aplica os ajustes suavemente
+        currentRotation.x = finalX;
+        currentRotation.y = finalY;
+        currentRotation.z = finalZ;
 
-          // ATUALIZA O TEXTO (não afeta o visual do dado)
-          resultDisplay.textContent = `Resultado: ${finalResult}`;
+        // Força uma atualização visual
+        updateDiceVisual();
+    }
 
-          // Log para ajudar a calibrar a função getTopFaceFromRotation
-          console.log(`ANGULOS FINAIS -> X: ${finalX}, Y: ${finalY}, Z: ${finalZ} --- RESULTADO VISUAL ESPERADO: ? --- RESULTADO CALCULADO: ${finalResult}`);
+    // Interrompe o estado da animação
+    velocityX = 0;
+    phase = 'stopped';
+    isRolling = false;
 
-          rollButton.disabled = false; // Libera o botão (já estava assim)
-      }
+    // Calcula o resultado com os ângulos ajustados
+    const finalResult = getTopFaceFromRotation(finalX, finalY, finalZ);
+
+    // Atualiza o texto
+    resultDisplay.textContent = `Resultado: ${finalResult}`;
+
+    // Log para debug
+    console.log(`ANGULOS FINAIS -> X: ${finalX}, Y: ${finalY}, Z: ${finalZ} --- RESULTADO VISUAL ESPERADO: ? --- RESULTADO CALCULADO: ${finalResult}`);
+
+    rollButton.disabled = false;
+}
     break;
     }
 
