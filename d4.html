@@ -108,6 +108,7 @@ const SCALE = {
 
 // Setup Three.js (mantido como estava)
 const scene = new THREE.Scene();
+scene.background = new THREE.Color('#3a3a3a'); // fundo cinza escuro igual ao d6
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -256,7 +257,7 @@ function animate() {
     // Colisões mais suaves
     if (dice.position.x <= -5 || dice.position.x >= 5) {
         dice.position.x = dice.position.x <= -5 ? -5 : 5;
-        velocity.x *= -WALL_BOUNCE_DAMPENING * 0.8; // Reduzido o bounce
+        velocity.x *= -WALL_BOUNCE_DAMPENING * 1.2; // Reduzido o bounce
         if (handleVertexImpact()) {
             velocity.y += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
         }
@@ -264,7 +265,7 @@ function animate() {
     
     if (dice.position.z <= -5 || dice.position.z >= 5) {
         dice.position.z = dice.position.z <= -5 ? -5 : 5;
-        velocity.y *= -WALL_BOUNCE_DAMPENING * 0.8;
+        velocity.y *= -WALL_BOUNCE_DAMPENING * 1.2;
         if (handleVertexImpact()) {
             velocity.x += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
         }
