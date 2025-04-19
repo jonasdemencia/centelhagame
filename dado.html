@@ -469,29 +469,46 @@ function animateDice() {
     // Verifica se o dado parou
       // Verifica se o dado parou
       if (Math.abs(velocityX) < MIN_VELOCITY) {
-          // ---> NENHUMA ALTERAÇÃO NA ANIMAÇÃO ACONTECE A PARTIR DAQUI <---
+    // Verifica desalinhamento nos ângulos finais (arestas)
+    const misalignedX = currentRotation.x % 90;
+    const misalignedY = currentRotation.y % 90;
+    const misalignedZ = currentRotation.z % 90;
 
-          // Arredonda TODOS os ângulos FINAIS (APÓS a parada da animação)
-          const finalX = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
-          const finalY = Math.round(currentRotation.y / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
-          const finalZ = Math.round(currentRotation.z / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+    const isMisaligned = (
+        (misalignedX > 2 && misalignedX < 88) ||
+        (misalignedY > 2 && misalignedY < 88) ||
+        (misalignedZ > 2 && misalignedZ < 88)
+    );
 
-          // Interrompe o estado da animação (já estava assim)
-          velocityX = 0;
-          phase = 'stopped';
-          isRolling = false; // <-- Loop de animação para aqui
+    if (isMisaligned) {
+        // Simula último impulso suave (quique final com leve rotação)
+        bounceCount = 1;
+        velocityX = MIN_VELOCITY * (Math.random() < 0.5 ? 1 : -1);
+        velocityY = -MIN_VELOCITY * 0.5; // pequena elevação para simular queda
+        flightTime = 0;
+        phase = 'bouncing';
+        return;
+    }
 
-          // CALCULA o resultado baseado nos ângulos finais (nova interpretação)
-          const finalResult = getTopFaceFromRotation(finalX, finalY, finalZ);
+    // Se alinhado, pode parar normalmente
+    const finalX = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+    const finalY = Math.round(currentRotation.y / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+    const finalZ = Math.round(currentRotation.z / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
 
-          // ATUALIZA O TEXTO (não afeta o visual do dado)
-          resultDisplay.textContent = `Resultado: ${finalResult}`;
+    currentRotation.x = finalX;
+    currentRotation.y = finalY;
+    currentRotation.z = finalZ;
 
-          // Log para ajudar a calibrar a função getTopFaceFromRotation
-          console.log(`ANGULOS FINAIS -> X: ${finalX}, Y: ${finalY}, Z: ${finalZ} --- RESULTADO VISUAL ESPERADO: ? --- RESULTADO CALCULADO: ${finalResult}`);
+    velocityX = 0;
+    phase = 'stopped';
+    isRolling = false;
 
-          rollButton.disabled = false; // Libera o botão (já estava assim)
-      }
+    const finalResult = getTopFaceFromRotation(finalX, finalY, finalZ);
+    resultDisplay.textContent = `Resultado: ${finalResult}`;
+
+    console.log(`ANGULOS FINAIS -> X: ${finalX}, Y: ${finalY}, Z: ${finalZ} --- RESULTADO CALCULADO: ${finalResult}`);
+    rollButton.disabled = false;
+}
     break;
     }
 
