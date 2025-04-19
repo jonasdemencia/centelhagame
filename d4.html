@@ -76,31 +76,18 @@ body {
 /* Face 4 (será a base inferior, paralela ao chão) */
 /* Altura do tetraedro H ≈ 57.15px. Distância centro->base r = H/4 ≈ 14.3px */
 /* Face 4 (Base) - Manter como antes, funcionou bem */
+/* Exemplo de ajuste mínimo (APENAS se a versão acima ainda tiver frestas): */
 .face-4 {
-    transform: rotateX(90deg) translateZ(14.29px); /* Usando r = H/4 com mais precisão */
-    /* border-bottom-color: yellow; */
+    transform: rotateX(90deg) translateZ(14.6px); /* Aumentado */
 }
-
-/* Faces Laterais (1, 2, 3) */
-/* 1. Rotacionar em Y para posicionar a face */
-/* 2. Rotacionar em X (19.47deg) para inclinar a face */
-/* 3. Aplicar UMA translação 3D para mover a face para sua posição final */
-/* - Eixo Y: Mover para baixo por H/2 ≈ -28.58px */
-/* - Eixo Z: Mover para fora por r ≈ 14.29px */
-/* - Eixo X: Sem translação (0) */
 .face-1 {
-    transform: rotateY(0deg) rotateX(19.47deg) translate3d(0, -28.58px, 14.29px);
-    /* border-bottom-color: red; */
+    transform: rotateY(0deg) rotateX(19.47deg) translate3d(0, -28.58px, 14.6px); /* Aumentado */
 }
-
 .face-2 {
-    transform: rotateY(120deg) rotateX(19.47deg) translate3d(0, -28.58px, 14.29px);
-    /* border-bottom-color: green; */
+    transform: rotateY(120deg) rotateX(19.47deg) translate3d(0, -28.58px, 14.6px); /* Aumentado */
 }
-
 .face-3 {
-    transform: rotateY(240deg) rotateX(19.47deg) translate3d(0, -28.58px, 14.29px);
-    /* border-bottom-color: blue; */
+    transform: rotateY(240deg) rotateX(19.47deg) translate3d(0, -28.58px, 14.6px); /* Aumentado */
 }
     
 /* ---- FIM DAS NOVAS TRANSFORMAÇÕES ---- */
