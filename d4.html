@@ -66,32 +66,43 @@ body {
     -webkit-backface-visibility: hidden;
 }
 
-/* Posicionamento correto formando um tetraedro onde a ponta fica para cima */
+/* Posicionamento corrigido das faces */
 .face-1 {
-    transform: 
-        translate3d(0, 20px, 0)
+    transform:
+        /* Empurra a face para fora do centro */
+        translateZ(14.3px)
+        /* Inclina a face (ângulo entre normal da face e eixo Y vertical = 70.53°) */
         rotateX(-70.53deg)
+        /* Rotação em torno do eixo Y para posicionar a primeira face lateral */
         rotateY(0deg);
+    /* border-bottom-color: red; */ /* Descomente para debugar a face */
 }
 
 .face-2 {
-    transform: 
-        translate3d(0, 20px, 0)
+    transform:
+        translateZ(14.3px)
         rotateX(-70.53deg)
+        /* Rotaciona 120 graus para a segunda face lateral */
         rotateY(120deg);
+     /* border-bottom-color: green; */ /* Descomente para debugar a face */
 }
 
 .face-3 {
-    transform: 
-        translate3d(0, 20px, 0)
+    transform:
+        translateZ(14.3px)
         rotateX(-70.53deg)
+        /* Rotaciona 240 graus para a terceira face lateral */
         rotateY(240deg);
+    /* border-bottom-color: blue; */ /* Descomente para debugar a face */
 }
 
 .face-4 {
-    transform: 
-        translate3d(0, -20px, 0)
-        rotateX(180deg);
+    transform:
+         /* Vira a face para baixo */
+        rotateX(180deg)
+         /* Empurra a face para "trás" (ou "baixo" relativo ao centro) */
+        translateZ(-14.3px);
+    /* border-bottom-color: yellow; */ /* Descomente para debugar a face */
 }
 
 /* Ajuste na textura das faces */
