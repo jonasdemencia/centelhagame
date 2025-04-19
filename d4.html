@@ -126,8 +126,19 @@ const material = new THREE.MeshPhongMaterial({
     specular: 0x333333,
     flatShading: true
 });
+// Logo após criar o dado, definir sua posição inicial
 const dice = new THREE.Mesh(geometry, material);
 scene.add(dice);
+
+// Posicionar o dado inicialmente abaixo do botão
+function setInitialDicePosition() {
+    const buttonRect = rollButton.getBoundingClientRect();
+    const buttonBottomWorld = (buttonRect.bottom / window.innerHeight) * 10 - 4;
+    dice.position.set(0, 0, buttonBottomWorld);
+}
+
+// Chamar após a definição do rollButton
+setInitialDicePosition();
 
 // Iluminação ajustada
 const light = new THREE.DirectionalLight(0xffffff, 1.2);
@@ -337,6 +348,7 @@ rollButton.addEventListener("mousedown", () => {
     rollButton.style.transform = 'scale(0.95)';
 });
 
+// No evento mouseup, ajustar o cálculo da posição
 rollButton.addEventListener("mouseup", () => {
     if (isRolling) return;
     
@@ -349,26 +361,21 @@ rollButton.addEventListener("mouseup", () => {
     
     // Força muito mais suave
     const force = INITIAL_FORCE_MULTIPLIER * (0.2 + forceFactor * 0.2);
-    velocity.set(
-        random(-0.05, 0.05),  // Variação lateral mínima
-        -force * 0.2          // Força principal muito reduzida
-    );
-    
-    // Rotações iniciais mais suaves
-    angularVelocity.set(
-        random(-0.1, 0.1) * ROTATION_SPEED,
-        random(-0.1, 0.1) * ROTATION_SPEED,
-        random(-0.1, 0.1) * ROTATION_SPEED
-    );
     
     // Posição inicial abaixo do botão
     const buttonRect = rollButton.getBoundingClientRect();
-    const buttonBottomWorld = (buttonRect.bottom / window.innerHeight * 10) - 5;
+    const buttonBottomWorld = (buttonRect.bottom / window.innerHeight) * 10 - 4;
     
     dice.position.set(
-        0,              // Centro horizontal
-        0,              // No chão
-        buttonBottomWorld  // Posição Z baseada na posição do botão
+        0,                // Centro horizontal
+        0,                // No chão
+        buttonBottomWorld // Posição Z baseada na posição do botão
+    );
+    
+    // Movimento para cima (direção negativa em Z)
+    velocity.set(
+        random(-0.05, 0.05),
+        -force * 0.2
     );
     
     dice.rotation.set(
@@ -390,11 +397,12 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    setInitialDicePosition(); // Adicionar esta linha
 });
 
 // Renderização inicial
 renderer.render(scene, camera);
-console.log(`[2025-04-19 20:00:41] D4 initialized by user jonasdemencia`);
+console.log(`[2025-04-19 22:26:19] D4 initialized by user jonasdemencia`);
     </script>
 
     
