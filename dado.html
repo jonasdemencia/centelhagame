@@ -292,77 +292,6 @@ function getTopFaceFromRotation(x, y, z) {
     console.warn(`Combinacao de angulos nao mapeada: X=${normX}, Y=${normY}, Z=${normZ}. Retornando 1 como padrao.`);
     return 1;
 }
-
-function getHigherFaceDirection(x, y, z) {
-    // Normaliza ângulos
-    const normX = (x % 360 + 360) % 360;
-    const normY = (y % 360 + 360) % 360;
-    const normZ = (z % 360 + 360) % 360;
-
-    // Mapa de direções para cada aresta conhecida
-    const edgeDirections = {
-        // Aresta 1/4 (vamos para 4)
-        "0,270,0": { x: 0, y: 1, z: 0 },
-        // Aresta 1/3 (vamos para 3)
-        "180,180,0": { x: 0, y: -1, z: 0 },
-        // Aresta 3/6 (vamos para 6)
-        "180,0,0": { x: 1, y: 0, z: 0 },
-        // Aresta 2/6 (vamos para 6)
-        "180,270,90": { x: 0, y: -1, z: 0 }
-    };
-
-    const key = `${normX},${normY},${normZ}`;
-    return edgeDirections[key];
-}
-
-function isEdgePosition(x, y, z) {
-    // Normaliza ângulos
-    const normX = (x % 360 + 360) % 360;
-    const normY = (y % 360 + 360) % 360;
-    const normZ = (z % 360 + 360) % 360;
-
-    // Lista de posições de aresta conhecidas
-    const edgePositions = [
-        // Aresta 1/4
-        { x: 0, y: 270, z: 0 },
-        // Aresta 1/3
-        { x: 180, y: 180, z: 0 },
-        // Aresta 3/6
-        { x: 180, y: 0, z: 0 },
-        // Aresta 2/6
-        { x: 180, y: 270, z: 90 }
-    ];
-
-    // Verifica se está em uma posição de aresta conhecida
-    return edgePositions.some(pos => 
-        pos.x === normX && 
-        pos.y === normY && 
-        pos.z === normZ
-    );
-}
-
-function correctEdgePosition(x, y, z) {
-    // Normaliza ângulos
-    const normX = (x % 360 + 360) % 360;
-    const normY = (y % 360 + 360) % 360;
-    const normZ = (z % 360 + 360) % 360;
-
-    // Mapa de correções para cada aresta
-    const edgeCorrections = {
-        // Para aresta 1/4 (X=0, Y=270, Z=0)
-        "0,270,0": { x: 0, y: 225, z: 0 },  // Ajusta para face 4
-        // Para aresta 1/3 (X=180, Y=180, Z=0)
-        "180,180,0": { x: 180, y: 135, z: 0 },  // Ajusta para face 3
-        // Para aresta 3/6 (X=180, Y=0, Z=0)
-        "180,0,0": { x: 225, y: 0, z: 0 },  // Ajusta para face 6
-        // Para aresta 2/6 (X=180, Y=270, Z=90)
-        "180,270,90": { x: 180, y: 225, z: 90 }  // Ajusta para face 6
-    };
-
-    const key = `${normX},${normY},${normZ}`;
-    return edgeCorrections[key] || { x, y, z };
-}
-    
     
 // Chance igual para cada eixo
 function determineRotationAxis() {
@@ -539,52 +468,30 @@ function animateDice() {
     
     // Verifica se o dado parou
       // Verifica se o dado parou
-      // Verifica se o dado parou
-// Verifica se o dado parou
-// Verifica se o dado parou
-if (Math.abs(velocityX) < MIN_VELOCITY) {
-    // Arredonda os ângulos iniciais
-    let finalX = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
-    let finalY = Math.round(currentRotation.y / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
-    let finalZ = Math.round(currentRotation.z / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+      if (Math.abs(velocityX) < MIN_VELOCITY) {
+          // ---> NENHUMA ALTERAÇÃO NA ANIMAÇÃO ACONTECE A PARTIR DAQUI <---
 
-    // Verifica se está em uma das posições de aresta conhecidas
-    const direction = getHigherFaceDirection(finalX, finalY, finalZ);
-    
-    if (direction) {
-        console.log("Dado parou em aresta - aplicando rolagem suave");
-        
-        // Aplica um impulso muito suave na direção do número maior
-        const SUBTLE_FORCE = 0.1;
-        
-        // Reinicia a animação com força mínima
-        velocityX = direction.x * SUBTLE_FORCE;
-        velocityY = direction.y * SUBTLE_FORCE;
-        
-        // Mantém o dado rolando
-        isRolling = true;
-        phase = 'rolling';
-        
-        // Força uma atualização visual
-        updateDiceVisual();
-        
-        // Continue a animação
-        requestAnimationFrame(animateDice);
-        return;
-    }
+          // Arredonda TODOS os ângulos FINAIS (APÓS a parada da animação)
+          const finalX = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+          const finalY = Math.round(currentRotation.y / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
+          const finalZ = Math.round(currentRotation.z / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
 
-    // Se não está em uma aresta, finaliza normalmente
-    velocityX = 0;
-    phase = 'stopped';
-    isRolling = false;
+          // Interrompe o estado da animação (já estava assim)
+          velocityX = 0;
+          phase = 'stopped';
+          isRolling = false; // <-- Loop de animação para aqui
 
-    // Calcula e mostra o resultado
-    const finalResult = getTopFaceFromRotation(finalX, finalY, finalZ);
-    resultDisplay.textContent = `Resultado: ${finalResult}`;
-    console.log(`ANGULOS FINAIS -> X: ${finalX}, Y: ${finalY}, Z: ${finalZ} --- RESULTADO CALCULADO: ${finalResult}`);
-    
-    rollButton.disabled = false;
-}
+          // CALCULA o resultado baseado nos ângulos finais (nova interpretação)
+          const finalResult = getTopFaceFromRotation(finalX, finalY, finalZ);
+
+          // ATUALIZA O TEXTO (não afeta o visual do dado)
+          resultDisplay.textContent = `Resultado: ${finalResult}`;
+
+          // Log para ajudar a calibrar a função getTopFaceFromRotation
+          console.log(`ANGULOS FINAIS -> X: ${finalX}, Y: ${finalY}, Z: ${finalZ} --- RESULTADO VISUAL ESPERADO: ? --- RESULTADO CALCULADO: ${finalResult}`);
+
+          rollButton.disabled = false; // Libera o botão (já estava assim)
+      }
     break;
     }
 
