@@ -44,77 +44,79 @@ body {
     transform: translate(-50%, 0);
 }
 
-/* Design do Dado d4 */
+/* Substitua o CSS atual do dado por este */
 .dice {
     width: 70px;
     height: 70px;
     position: relative;
     transform-style: preserve-3d;
-    transform-origin: center center;
+    transform-origin: center 60%;
 }
 
 .face {
     position: absolute;
     width: 0;
     height: 0;
-    border-left: 35px solid transparent;
-    border-right: 35px solid transparent;
-    border-bottom: 60.62px solid #1a237e;
+    /* Ajuste no tamanho dos triângulos */
+    border-left: 40px solid transparent;
+    border-right: 40px solid transparent;
+    border-bottom: 69.28px solid #1a237e; /* altura = lado * √3/2 */
     transform-origin: 50% 66.67%;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
+    background: none;
+}
+
+/* Posicionamento correto das faces para formar um tetraedro regular */
+.face-1 {
+    transform: translate3d(0, -20px, 0) rotateX(19.471deg);
+}
+
+.face-2 {
+    transform: translate3d(0, -20px, 0) 
+               rotateY(120deg) 
+               rotateX(19.471deg);
+}
+
+.face-3 {
+    transform: translate3d(0, -20px, 0) 
+               rotateY(240deg) 
+               rotateX(19.471deg);
+}
+
+.face-4 {
+    transform: translate3d(0, 40px, 0) 
+               rotateX(-109.471deg);
+}
+
+/* Ajuste na textura das faces */
+.face::after {
+    content: attr(data-number);
+    position: absolute;
+    bottom: -45px;
+    left: -40px;
+    width: 80px;
+    text-align: center;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-shadow: 0 0 3px rgba(0,0,0,0.5);
+}
+
+/* Textura marmorizada */
+.face::before {
+    content: '';
+    position: absolute;
+    top: 1px;  /* Ajustado para cobrir a borda */
+    left: -39px; /* Ajustado para cobrir a borda */
+    width: 78px;
+    height: 67.28px;
     background: linear-gradient(145deg, 
         rgba(25, 45, 155, 0.8),
         rgba(15, 25, 85, 0.9)
     );
-}
-
-/* Posicionamento preciso das faces do tetraedro */
-.face-1 {
-    transform: rotateX(19.471deg) translateZ(20.207px);
-}
-.face-2 {
-    transform: rotateX(19.471deg) rotateY(120deg) translateZ(20.207px);
-}
-.face-3 {
-    transform: rotateX(19.471deg) rotateY(240deg) translateZ(20.207px);
-}
-.face-4 {
-    transform: rotateX(-109.471deg) translateY(20.207px);
-}
-
-/* Números nas faces */
-.face::after {
-    content: attr(data-number);
-    position: absolute;
-    bottom: -40px;
-    left: -35px;
-    width: 70px;
-    text-align: center;
-    color: white;
-    font-family: "Eagle Lake", cursive;
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-shadow: 
-        0 0 3px rgba(255,255,255,0.5),
-        0 0 5px rgba(0,0,0,0.5);
-}
-
-/* Efeitos de brilho nas faces */
-.face::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -35px;
-    width: 70px;
-    height: 60px;
-    background: linear-gradient(
-        145deg,
-        rgba(255,255,255,0.2) 0%,
-        transparent 50%,
-        rgba(0,0,0,0.1) 100%
-    );
-    pointer-events: none;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    border-radius: 2px;
 }
 
 /* Controles - Mantido do original */
