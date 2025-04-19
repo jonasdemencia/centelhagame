@@ -1,154 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Dado D4 com Física 3D</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>D4 Realista</title>
 
-<style>
-body {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    background: radial-gradient(circle at center, #3a3a3a, #1a1a1a);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    overflow: hidden;
-    user-select: none;
-}
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: radial-gradient(circle at center, #3a3a3a, #1a1a1a);
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+      user-select: none;
+    }
 
-#simulation-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
+    .dice-perspective-container {
+      perspective: 1000px;
+      position: absolute;
+      bottom: 150px;
+      width: 0;
+      height: 0;
+    }
 
-.dice-perspective-container {
-    perspective: 1200px;
-    width: 120px;
-    height: 120px;
-    position: absolute;
-    bottom: 120px;
-    left: 50%;
-    transform: translateX(-50%);
-}
+    .tetrahedron {
+      position: relative;
+      width: 0;
+      height: 0;
+      transform-style: preserve-3d;
+      transform: rotateX(-20deg) rotateY(30deg);
+    }
 
-.dice.tetrahedron {
-    width: 0;
-    height: 0;
-    position: relative;
-    transform-style: preserve-3d;
-    transform: rotateX(20deg) rotateY(45deg);
-    animation: spin 10s infinite linear;
-}
+    .face {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-left: 60px solid transparent;
+      border-right: 60px solid transparent;
+      border-bottom: 104px solid #6a7a7a;
+      opacity: 0.95;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #111;
+      font-size: 1.2rem;
+      font-family: "Eagle Lake", cursive;
+      font-weight: bold;
+      text-shadow: 0 1px 2px #fff;
+    }
 
-@keyframes spin {
-    0%   { transform: rotateX(0deg) rotateY(0deg); }
-    100% { transform: rotateX(360deg) rotateY(360deg); }
-}
+    .face1 {
+      transform: rotateY(0deg) rotateX(0deg) translateZ(60px);
+    }
 
-/* Triângulo equilátero usando clip-path */
-.face {
-    width: 100px;
-    height: 87px; /* altura aproximada de triângulo equilátero */
-    position: absolute;
-    background: #6a7a7a;
-    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: "Eagle Lake", cursive;
-    font-size: 1.4rem;
-    font-weight: bold;
-    color: rgba(0, 0, 0, 0.7);
-    text-shadow: 1px 1px 2px rgba(255,255,255,0.2);
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3), 0 10px 15px rgba(0, 0, 0, 0.3);
-}
+    .face2 {
+      transform: rotateY(120deg) rotateX(0deg) translateZ(60px);
+    }
 
-/* Posicionamento 3D das 4 faces de um tetraedro */
-.face1 {
-    transform: rotateY(0deg) rotateX(0deg) translateZ(50px);
-}
-.face2 {
-    transform: rotateY(120deg) rotateX(0deg) translateZ(50px);
-}
-.face3 {
-    transform: rotateY(240deg) rotateX(0deg) translateZ(50px);
-}
-.face4 {
-    transform: rotateX(-90deg) translateY(-43px) translateZ(-25px);
-    background: #7a8a8a;
-}
+    .face3 {
+      transform: rotateY(240deg) rotateX(0deg) translateZ(60px);
+    }
 
-/* Controles */
-.controls {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 20px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: linear-gradient(to top, rgba(26, 26, 26, 0.8), transparent);
-    z-index: 10;
-}
+    .face4 {
+      transform: rotateX(90deg) translateY(-30px) translateZ(-30px);
+      border-bottom-color: #7a8a8a;
+    }
 
-button#roll-button {
-    padding: 12px 25px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    cursor: pointer;
-    background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
-    border: none;
-    border-radius: 8px;
-    color: #e0e0e0;
-    text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
-    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
-                inset 0px 1px 1px rgba(255,255,255,0.2);
-    transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.15s ease;
-}
+    .controls {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: linear-gradient(to top, rgba(26, 26, 26, 0.8), transparent);
+      z-index: 10;
+    }
 
-button#roll-button:hover {
-    transform: scale(1.05);
-    background: linear-gradient(145deg, #6a6a6a, #4a4a4a);
-}
+    button#roll-button {
+      padding: 12px 25px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
+      border: none;
+      border-radius: 8px;
+      color: #e0e0e0;
+      text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+      box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
+                  inset 0px 1px 1px rgba(255,255,255,0.2);
+      transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.15s ease;
+    }
 
-#result-display {
-    margin-top: 15px;
-    font-size: 1.5rem;
-    color: #fff;
-    min-height: 2rem;
-    font-weight: bold;
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-}
-</style>
+    button#roll-button:hover {
+      transform: scale(1.05);
+      background: linear-gradient(145deg, #6a6a6a, #4a4a4a);
+    }
 
-<link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet">
+    #result-display {
+      margin-top: 15px;
+      font-size: 1.5rem;
+      color: #fff;
+      font-weight: bold;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    }
+  </style>
+
+  <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<div id="simulation-container">
+  <div id="simulation-container">
     <div class="dice-perspective-container" id="dice-visual-container">
-        <div class="dice tetrahedron" id="dice">
-            <div class="face face1">1</div>
-            <div class="face face2">2</div>
-            <div class="face face3">3</div>
-            <div class="face face4">4</div>
-        </div>
+      <div class="dice tetrahedron" id="dice">
+        <div class="face face1">1</div>
+        <div class="face face2">2</div>
+        <div class="face face3">3</div>
+        <div class="face face4">4</div>
+      </div>
     </div>
-</div>
+  </div>
 
-<div class="controls">
+  <div class="controls">
     <button id="roll-button">Rolar Dado</button>
     <p id="result-display"></p>
-</div>
+  </div>
 
 
 
