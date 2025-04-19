@@ -469,37 +469,38 @@ function animateDice() {
     // Verifica se o dado parou
       // Verifica se o dado parou
       if (Math.abs(velocityX) < MIN_VELOCITY) {
-    // Verifica se os ângulos atuais estão fora de alinhamento com múltiplos de 90
-    const remainderX = currentRotation.x % ROLL_STEP_SIZE;
-    const remainderY = currentRotation.y % ROLL_STEP_SIZE;
-    const remainderZ = currentRotation.z % ROLL_STEP_SIZE;
+    const remainderX = currentRotation.x % 90;
+    const remainderY = currentRotation.y % 90;
+    const remainderZ = currentRotation.z % 90;
 
     const misaligned = (
-        Math.abs(remainderX) > 5 &&
-        Math.abs(remainderX) < 85 ||
-        Math.abs(remainderY) > 5 &&
-        Math.abs(remainderY) < 85 ||
-        Math.abs(remainderZ) > 5 &&
-        Math.abs(remainderZ) < 85
+        Math.abs(remainderX) > 2 &&
+        Math.abs(remainderX) < 88 ||
+        Math.abs(remainderY) > 2 &&
+        Math.abs(remainderY) < 88 ||
+        Math.abs(remainderZ) > 2 &&
+        Math.abs(remainderZ) < 88
     );
 
     if (misaligned) {
-        // Aplica um pequeno impulso rotacional, simulando um "último giro"
-        velocityX = MIN_VELOCITY * 1.5 * (Math.random() < 0.5 ? 1 : -1);
+        // Pequeno empurrão para corrigir naturalmente (simula mais uma quicada)
+        velocityX = MIN_VELOCITY * 1.1 * (Math.random() < 0.5 ? 1 : -1);
         bounceCount = 1;
-        phase = 'bouncing';
         flightTime = 0;
+        phase = 'bouncing';
         return;
     }
 
-    // Se está bem alinhado, pode parar normalmente
+    // Agora sim, pode finalizar
     const finalX = Math.round(currentRotation.x / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
     const finalY = Math.round(currentRotation.y / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
     const finalZ = Math.round(currentRotation.z / ROLL_STEP_SIZE) * ROLL_STEP_SIZE;
 
+    // Corrige visualmente também!
     currentRotation.x = finalX;
     currentRotation.y = finalY;
     currentRotation.z = finalZ;
+    updateDiceVisual();
 
     velocityX = 0;
     phase = 'stopped';
