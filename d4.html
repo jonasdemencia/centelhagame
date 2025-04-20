@@ -258,16 +258,46 @@
     return topVertexIndex + 1;
 }
 
-    function getTargetQuaternionForVertex(vertexIndex) {
-    const rotations = [
-        new THREE.Euler(0, 0, 0),                        // Vértice 0 → resultado 1
-        new THREE.Euler(Math.PI / 2, 0, 0),              // Vértice 1 → resultado 2
-        new THREE.Euler(0, 0, Math.PI / 2),              // Vértice 2 → resultado 3
-        new THREE.Euler(-Math.PI / 2, 0, Math.PI / 4),   // Vértice 3 → resultado 4
-    ];
-    const targetEuler = rotations[vertexIndex];
-    return new THREE.Quaternion().setFromEuler(targetEuler);
+    function getTargetQuaternionFromBottomFace() {
+    const position = geometry.getAttribute("position");
+    const index = geometry.index.array;
+    const matrix = dice.matrixWorld;
+
+    let lowestFaceIndex = -1;
+    let lowestY = Infinity;
+
+    for (let i = 0; i < index.length; i += 3) {
+        const a = new THREE.Vector3().fromBufferAttribute(position, index[i]);
+        const b = new THREE.Vector3().fromBufferAttribute(position, index[i + 1]);
+        const c = new THREE.Vector3().fromBufferAttribute(position, index[i + 2]);
+
+        a.applyMatrix4(matrix);
+        b.applyMatrix4(matrix);
+        c.applyMatrix4(matrix);
+
+        const centroid = new THREE.Vector3().addVectors(a, b).add(c).divideScalar(3);
+        if (centroid.y < lowestY) {
+            lowestY = centroid.y;
+            lowestFaceIndex = i;
+        }
+    }
+
+    // Pega a face mais baixa
+    const a = new THREE.Vector3().fromBufferAttribute(position, index[lowestFaceIndex]);
+    const b = new THREE.Vector3().fromBufferAttribute(position, index[lowestFaceIndex + 1]);
+    const c = new THREE.Vector3().fromBufferAttribute(position, index[lowestFaceIndex + 2]);
+
+    const ab = new THREE.Vector3().subVectors(b, a);
+    const ac = new THREE.Vector3().subVectors(c, a);
+    const normal = new THREE.Vector3().crossVectors(ab, ac).normalize();
+
+    // Precisamos da rotação que alinha a normal da face com o eixo Y
+    const up = new THREE.Vector3(0, 1, 0);
+    const quaternion = new THREE.Quaternion().setFromUnitVectors(normal, up);
+
+    return quaternion;
 }
+
 
 
  // Adicionar logo após a função random:
@@ -407,8 +437,7 @@
         const result = getTopVertexResult();
         resultDisplay.textContent = `Resultado: ${result}`;
 
-        const targetVertex = result - 1;
-        targetQuaternion = getTargetQuaternionForVertex(targetVertex);
+        targetQuaternion = getTargetQuaternionFromBottomFace();
         aligning = true;
     }
 
