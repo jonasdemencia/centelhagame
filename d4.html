@@ -91,6 +91,7 @@
         import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 
 
+
 // Configurações de física ajustadas para comportamento de tetraedro
 const FRICTION = 0.85;                    // Aumentado para parar mais rápido
 const WALL_BOUNCE_DAMPENING = 0.4;        // Reduzido para perder mais energia
@@ -138,37 +139,42 @@ const dice = new THREE.Mesh(geometry, material);
 scene.add(dice);
 
 // Carregar fonte padrão do Three.js
-const loader = new THREE.FontLoader();
+const loader = new FontLoader();
 loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-    const labels = ['1', '2', '3', '4'];
+    const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const numberPositions = [
+        { pos: new THREE.Vector3(0, 0.7, 0), text: '1' },
+        { pos: new THREE.Vector3(-0.7, -0.4, 0), text: '2' },
+        { pos: new THREE.Vector3(0.7, -0.4, 0), text: '3' },
+        { pos: new THREE.Vector3(0, -0.4, 0.7), text: '4' }
+    ];
 
-    // Usar os vértices do tetraedro
-    const positions = geometry.vertices;
-
-    labels.forEach((text, i) => {
-        const textGeometry = new TextGeometry(text, {
+    numberPositions.forEach(({ pos, text }) => {
+        const textGeo = new TextGeometry(text, {
             font: font,
-            size: 0.3,
-            height: 0.02,
-            curveSegments: 4
+            size: 0.2,
+            height: 0.01,
+            curveSegments: 12,
+            bevelEnabled: false
         });
 
-        const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-
         // Centralizar o texto
-        textGeometry.computeBoundingBox();
-        const centerOffsetX = -0.5 * (textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x);
-        const centerOffsetY = -0.5 * (textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y);
+        textGeo.computeBoundingBox();
+        const centerOffset = new THREE.Vector3(
+            -(textGeo.boundingBox.max.x - textGeo.boundingBox.min.x) / 2,
+            -(textGeo.boundingBox.max.y - textGeo.boundingBox.min.y) / 2,
+            -(textGeo.boundingBox.max.z - textGeo.boundingBox.min.z) / 2
+        );
 
-        // Posicionar o texto na ponta
-        const vertex = geometry.vertices[i];
-        textMesh.position.set(vertex.x + centerOffsetX, vertex.y + centerOffsetY, vertex.z);
-
-        // Girar o texto para que ele fique virado pra cima
-        textMesh.lookAt(new THREE.Vector3(0, 1, 0));
-
-        scene.add(textMesh);
+        const textMesh = new THREE.Mesh(textGeo, textMaterial);
+        textMesh.position.copy(pos).add(centerOffset);
+        
+        // Criar um grupo para cada número
+        const numberGroup = new THREE.Group();
+        numberGroup.add(textMesh);
+        
+        // Adicionar o grupo ao dado
+        dice.add(numberGroup);
     });
 });
 
