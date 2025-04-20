@@ -349,43 +349,54 @@
      break;
  
          case 'rolling':
-     dice.position.x += velocity.x * 0.5;  // Reduz o movimento horizontal
-     dice.position.z += velocity.y * 0.5;
- 
-     velocity.multiplyScalar(0.85);        // Mais atrito
-     angularVelocity.multiplyScalar(0.85);
- 
-     dice.position.y = 0;  // Mantém no chão
- 
-     // Rotação final muito mais suave
-     dice.rotation.x += angularVelocity.x * 0.5;
-     dice.rotation.y += angularVelocity.y * 0.5;
-     dice.rotation.z += angularVelocity.z * 0.5;
- 
-     // Para o dado mais rapidamente
-     if (velocity.length() < MIN_VELOCITY || angularVelocity.length() < 0.01) {
-         // Força o alinhamento com uma ponta para cima
-         const finalRotation = new THREE.Euler(
-             Math.PI / 4,  // 45 graus em X
-             0,           // 0 em Y
-             0            // 0 em Z
-         );
- 
-         dice.rotation.copy(finalRotation);
- 
-         const result = getTopFace();
-         resultDisplay.textContent = `Resultado: ${result}`;
- 
-         isRolling = false;
-         phase = 'ready';
-         rollButton.disabled = false;
- 
-         velocity.set(0, 0);
-         angularVelocity.set(0, 0, 0);
- 
-         console.log(`[2025-04-19 21:59:31] User jonasdemencia got result: ${result}`);
-     }
-     break;
+    dice.position.x += velocity.x * 0.5;
+    dice.position.z += velocity.y * 0.5;
+    
+    velocity.multiplyScalar(0.85);
+    angularVelocity.multiplyScalar(0.85);
+    
+    dice.position.y = 0;
+    
+    // Rotação durante o rolamento
+    dice.rotation.x += angularVelocity.x * 0.5;
+    dice.rotation.y += angularVelocity.y * 0.5;
+    dice.rotation.z += angularVelocity.z * 0.5;
+    
+    if (velocity.length() < MIN_VELOCITY && angularVelocity.length() < 0.01) {
+        // Rotações finais para cada resultado possível
+        // Estas rotações garantem que uma face fique perfeitamente plana no chão
+        const finalRotations = [
+            // Resultado 1: face 234 no chão, vértice 1 para cima
+            new THREE.Euler(0.6154, 0, 0),
+            // Resultado 2: face 134 no chão, vértice 2 para cima
+            new THREE.Euler(0.6154, 2.0944, 0),
+            // Resultado 3: face 124 no chão, vértice 3 para cima
+            new THREE.Euler(0.6154, 4.1888, 0),
+            // Resultado 4: face 123 no chão, vértice 4 para cima
+            new THREE.Euler(-0.6154, Math.PI, 0)
+        ];
+        
+        // Escolhe uma rotação final aleatória
+        const finalRotationIndex = Math.floor(Math.random() * 4);
+        const finalRotation = finalRotations[finalRotationIndex];
+        
+        // Aplica a rotação final instantaneamente
+        dice.rotation.copy(finalRotation);
+        
+        // Define o resultado com base na rotação escolhida
+        const result = finalRotationIndex + 1;
+        resultDisplay.textContent = `Resultado: ${result}`;
+        
+        isRolling = false;
+        phase = 'ready';
+        rollButton.disabled = false;
+        
+        velocity.set(0, 0);
+        angularVelocity.set(0, 0, 0);
+        
+        console.log(`[2025-04-20 16:12:50] User jonasdemencia got result: ${result}`);
+    }
+    break;
      }
  
      renderer.render(scene, camera);
