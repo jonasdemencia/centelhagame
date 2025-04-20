@@ -76,22 +76,21 @@
     </div>
 
     <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-        "three/examples/jsm/loaders/FontLoader.js": "https://unpkg.com/three@0.160.0/examples/jsm/loaders/FontLoader.js",
-        "three/examples/jsm/geometries/TextGeometry.js": "https://unpkg.com/three@0.160.0/examples/jsm/geometries/TextGeometry.js",
-        "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.mjs" // <-- Adicionado Cannon-es
-      }
-    }
-    </script>
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+    "cannon-es": "https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js"
+  }
+}
+</script>
 
 
     <script type="module">
-        import * as THREE from 'three';
-        import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-        import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
-        import * as CANNON from 'cannon-es'; // <-- Importa Cannon-es
+    import * as THREE from 'three';
+    import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+    import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+    import * as CANNON from 'cannon-es';
 
         // --- Configurações Globais ---
         const scene = new THREE.Scene();
