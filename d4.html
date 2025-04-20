@@ -102,7 +102,7 @@
  const ROTATION_SPEED = 1.8;               // Rotação mais lenta
  const BOUNCE_HEIGHT_MULTIPLIER = 2;     // Aumentado para quiques mais altos
  const INITIAL_BOUNCE_COUNT = 5;           // Menos quiques
- const TUMBLE_FACTOR = 1.2;               // Aumentado para mais movimento após colisão
+ const TUMBLE_FACTOR = 0.6;               // Aumentado para mais movimento após colisão
  const VERTEX_IMPACT_CHANCE = 0.7;         // Novo: chance de impacto no vértice
  
  // Configurações de escala para visual mais realista
@@ -349,51 +349,43 @@
      break;
  
          case 'rolling':
-    dice.position.x += velocity.x * 0.5;
-    dice.position.z += velocity.y * 0.5;
-    
-    velocity.multiplyScalar(0.95);
-    angularVelocity.multiplyScalar(0.95);
-    
-    dice.position.y = 0;
-    
-    // Rotação durante o rolamento
-    dice.rotation.x += angularVelocity.x * 0.5;
-    dice.rotation.y += angularVelocity.y * 0.5;
-    dice.rotation.z += angularVelocity.z * 0.5;
-    
-    if (velocity.length() < MIN_VELOCITY && angularVelocity.length() < 0.01) {
-        // Ângulos corretos para um tetraedro regular com uma face no chão
-        const tetrahedralAngle = Math.acos(-1/3); // aproximadamente 109.47 graus
-        const faceAngle = Math.PI - tetrahedralAngle; // ângulo para face plana no chão
-        
-        // Rotações para cada resultado possível com face plana no chão
-        const finalRotations = [
-            new THREE.Euler(faceAngle, 0, 0),             // Face 1 no chão
-            new THREE.Euler(faceAngle, 2*Math.PI/3, 0),   // Face 2 no chão
-            new THREE.Euler(faceAngle, 4*Math.PI/3, 0),   // Face 3 no chão
-            new THREE.Euler(-faceAngle, Math.PI, 0)       // Face 4 no chão
-        ];
-        
-        // Escolhe aleatoriamente uma das faces para ficar no chão
-        const finalRotation = finalRotations[Math.floor(Math.random() * 4)];
-        
-        // Aplica a rotação final de uma vez
-        dice.rotation.copy(finalRotation);
-        
-        const result = getTopFace();
-        resultDisplay.textContent = `Resultado: ${result}`;
-        
-        isRolling = false;
-        phase = 'ready';
-        rollButton.disabled = false;
-        
-        velocity.set(0, 0);
-        angularVelocity.set(0, 0, 0);
-        
-        console.log(`[2025-04-20 16:27:37] User jonasdemencia got result: ${result}`);
-    }
-    break;
+     dice.position.x += velocity.x * 0.5;  // Reduz o movimento horizontal
+     dice.position.z += velocity.y * 0.5;
+ 
+     velocity.multiplyScalar(0.85);        // Mais atrito
+     angularVelocity.multiplyScalar(0.85);
+ 
+     dice.position.y = 0;  // Mantém no chão
+ 
+     // Rotação final muito mais suave
+     dice.rotation.x += angularVelocity.x * 0.5;
+     dice.rotation.y += angularVelocity.y * 0.5;
+     dice.rotation.z += angularVelocity.z * 0.5;
+ 
+     // Para o dado mais rapidamente
+     if (velocity.length() < MIN_VELOCITY || angularVelocity.length() < 0.01) {
+         // Força o alinhamento com uma ponta para cima
+         const finalRotation = new THREE.Euler(
+             Math.PI / 4,  // 45 graus em X
+             0,           // 0 em Y
+             0            // 0 em Z
+         );
+ 
+         dice.rotation.copy(finalRotation);
+ 
+         const result = getTopFace();
+         resultDisplay.textContent = `Resultado: ${result}`;
+ 
+         isRolling = false;
+         phase = 'ready';
+         rollButton.disabled = false;
+ 
+         velocity.set(0, 0);
+         angularVelocity.set(0, 0, 0);
+ 
+         console.log(`[2025-04-19 21:59:31] User jonasdemencia got result: ${result}`);
+     }
+     break;
      }
  
      renderer.render(scene, camera);
