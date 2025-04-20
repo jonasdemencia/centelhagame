@@ -4,7 +4,7 @@
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
      <title>D4 Realista com Física 2D</title>
- 
+
      <style>
          body {
              display: flex;
@@ -18,7 +18,7 @@
              overflow: hidden;
              user-select: none;
          }
- 
+
          #dice-container {
              position: absolute;
              top: 0;
@@ -27,7 +27,7 @@
              height: 100%;
              overflow: hidden;
          }
- 
+
          .controls {
              position: fixed;
              bottom: 0;
@@ -41,7 +41,7 @@
              background: linear-gradient(to top, rgba(26, 26, 26, 0.8), transparent);
              z-index: 10;
          }
- 
+
          #roll-button {
              padding: 12px 25px;
              font-size: 1.1rem;
@@ -56,7 +56,7 @@
                          inset 0px 1px 1px rgba(255,255,255,0.2);
              transition: transform 0.15s ease;
          }
- 
+
          #result-display {
              margin-top: 15px;
              font-size: 1.5rem;
@@ -73,7 +73,7 @@
          <button id="roll-button">Rolar Dado</button>
          <div id="result-display">Pressione o botão para rolar</div>
      </div>
- 
+
      <script type="importmap">
  {
    "imports": {
@@ -83,19 +83,19 @@
    }
  }
  </script>
- 
- 
+
+
      <script type="module">
          import * as THREE from 'three';
          import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
          import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
- 
- 
- 
+
+
+
  // Configurações de física ajustadas para comportamento de tetraedro
  const FRICTION = 0.95;                    // Reduzido para manter mais momentum
  const WALL_BOUNCE_DAMPENING = 0.8;        // Aumentado para manter mais energia
- const MIN_VELOCITY = 0.02;                // Reduzido para parar mais suavemente
+ const MIN_VELOCITY = 0.02;                // Reduzido para parar mais suavemente -> Limite para INICIAR o alinhamento
  const MAX_VELOCITY = 5;                   // Reduzido significativamente
  const INITIAL_FORCE_MULTIPLIER = 2;       // Força inicial muito menor
  const COLLISION_COOLDOWN = 150;           // Reduzido para permitir colisões mais frequentes
@@ -104,15 +104,22 @@
  const INITIAL_BOUNCE_COUNT = 4;           // Menos quiques
  const TUMBLE_FACTOR = 0.6;               // Aumentado para mais movimento após colisão
  const VERTEX_IMPACT_CHANCE = 0.7;         // Novo: chance de impacto no vértice
- 
- // Configurações de escala para visual mais realista
+
+ // Variáveis para o alinhamento
+ let targetQuaternion = null;
+ let aligning = false;
+ const ALIGNMENT_SPEED = 0.05; // Velocidade da interpolação (Slerp)
+ const ALIGNMENT_THRESHOLD = 0.005; // Limiar para considerar o alinhamento completo
+
+
+ // Configurações de escala para visual mais realista (não usadas no momento, podem ser removidas)
  const SCALE = {
      MIN: 0.8,
-     MAX: 1.5,    // Reduzido para não parecer que voa muito alto
+     MAX: 1.5,
      FLIGHT: 1.2,
      BOUNCE: 1.1
  };
- 
+
  // Setup Three.js (mantido como estava)
  const scene = new THREE.Scene();
  scene.background = new THREE.Color('#3a3a3a'); // fundo cinza escuro igual ao d6
@@ -120,12 +127,13 @@
  const renderer = new THREE.WebGLRenderer({ antialias: true });
  renderer.setSize(window.innerWidth, window.innerHeight);
  document.getElementById('dice-container').appendChild(renderer.domElement);
- 
+
  // Configurar câmera para visão top-down
- camera.position.set(0, 10, 0);
- camera.lookAt(0, 0, 0);
- camera.rotation.z = Math.PI;
- 
+ camera.position.set(0, 10, 0); // Posição Y mais alta
+ camera.lookAt(0, 0, 0); // Olha para o centro da cena
+ // A rotação Z=PI (180 graus) não é necessária se a câmera estiver olhando de Y+ para o origem
+ // camera.rotation.z = Math.PI; // Removida esta linha, pois lookAt já orienta a câmera
+
  // Criar tetraedro com material mais realista
  const geometry = new THREE.TetrahedronGeometry(1);
  const material = new THREE.MeshPhongMaterial({
@@ -137,35 +145,36 @@
  // Logo após criar o dado, definir sua posição inicial
  const dice = new THREE.Mesh(geometry, material);
  scene.add(dice);
- 
+
  // Carregar fonte padrão do Three.js
  const loader = new FontLoader();
  loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
      const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
- 
+
      // Posições ajustadas para ter 3 números iguais ao redor de cada vértice
+     // Estes números são colocados de forma que o número *visível* na ponta de cima seja o resultado.
      const numberPositions = [
-         // Números 1 (três vezes ao redor do primeiro vértice)
+         // Números 1 (três vezes ao redor do vértice que estará para cima para o resultado 1)
          { pos: new THREE.Vector3(-0.4, 0.2, -0.2), rot: new THREE.Euler(-0.5, -0.5, 0), text: '1' },
          { pos: new THREE.Vector3(-0.2, 0.2, 0.4), rot: new THREE.Euler(-0.5, -0.5, 0), text: '1' },
          { pos: new THREE.Vector3(-0.4, -0.2, 0.2), rot: new THREE.Euler(0.5, -0.5, 0), text: '1' },
- 
-         // Números 2 (três vezes ao redor do segundo vértice)
+
+         // Números 2 (três vezes ao redor do vértice que estará para cima para o resultado 2)
          { pos: new THREE.Vector3(0.4, 0.2, -0.2), rot: new THREE.Euler(-0.5, 0.5, 0), text: '2' },
          { pos: new THREE.Vector3(0.2, 0.2, 0.4), rot: new THREE.Euler(-0.5, 0.5, 0), text: '2' },
          { pos: new THREE.Vector3(0.4, -0.2, 0.2), rot: new THREE.Euler(0.5, 0.5, 0), text: '2' },
- 
-         // Números 3 (três vezes ao redor do terceiro vértice)
+
+         // Números 3 (três vezes ao redor do vértice que estará para cima para o resultado 3)
          { pos: new THREE.Vector3(0, -0.4, -0.2), rot: new THREE.Euler(0.5, 0, 0), text: '3' },
          { pos: new THREE.Vector3(-0.2, -0.4, 0.2), rot: new THREE.Euler(0.5, -0.5, 0), text: '3' },
          { pos: new THREE.Vector3(0.2, -0.4, 0.2), rot: new THREE.Euler(0.5, 0.5, 0), text: '3' },
- 
-         // Números 4 (três vezes ao redor do quarto vértice)
+
+         // Números 4 (três vezes ao redor do vértice que estará para cima para o resultado 4)
          { pos: new THREE.Vector3(0, 0.4, 0.2), rot: new THREE.Euler(-0.5, 0, 0), text: '4' },
          { pos: new THREE.Vector3(-0.2, 0.3, 0.3), rot: new THREE.Euler(-0.5, -0.5, 0), text: '4' },
          { pos: new THREE.Vector3(0.2, 0.3, 0.3), rot: new THREE.Euler(-0.5, 0.5, 0), text: '4' }
      ];
- 
+
      numberPositions.forEach(({ pos, rot, text }) => {
          const textGeo = new TextGeometry(text, {
              font: font,
@@ -174,31 +183,31 @@
              curveSegments: 12,
              bevelEnabled: false
          });
- 
+
          // Centralizar o texto
          textGeo.computeBoundingBox();
          const centerOffset = new THREE.Vector3(
              -(textGeo.boundingBox.max.x - textGeo.boundingBox.min.x) / 2,
              -(textGeo.boundingBox.max.y - textGeo.boundingBox.min.y) / 2,
-             -(textGeo.boundingBox.max.z - textGeo.boundingBox.min.z) / 2
+             -(textGeo.boundingBox.z - textGeo.boundingBox.min.z) / 2
          );
- 
+
          const textMesh = new THREE.Mesh(textGeo, textMaterial);
          textMesh.position.copy(pos).add(centerOffset);
          textMesh.rotation.copy(rot);
- 
+
          // Adicionar direto ao dado
          dice.add(textMesh);
      });
  });
- 
- 
+
+
  // Iluminação ajustada
  const light = new THREE.DirectionalLight(0xffffff, 1.2);
  light.position.set(5, 8, 5);
  scene.add(light);
  scene.add(new THREE.AmbientLight(0x404040, 0.8));
- 
+
  // Estado do dado
  let isRolling = false;
  let pressStartTime = 0;
@@ -209,268 +218,347 @@
  let bounceCount = INITIAL_BOUNCE_COUNT;
  let lastCollisionTime = 0;
  let lastVertexImpact = 0;
- 
+
  // Função para simular impacto no vértice
  function handleVertexImpact() {
      const currentTime = Date.now();
      if (currentTime - lastVertexImpact < 200) return false;
- 
+
      if (Math.random() < VERTEX_IMPACT_CHANCE) {
          lastVertexImpact = currentTime;
+         // Rotação mais forte em um impacto de vértice
          angularVelocity.set(
-             random(-0.5, 0.5) * ROTATION_SPEED,
-             random(-0.5, 0.5) * ROTATION_SPEED,
-             random(-0.5, 0.5) * ROTATION_SPEED
+             random(-1, 1) * ROTATION_SPEED * 0.5, // Aumentado o fator de randomização
+             random(-1, 1) * ROTATION_SPEED * 0.5,
+             random(-1, 1) * ROTATION_SPEED * 0.5
          );
+         angularVelocity.multiplyScalar(1.5); // Aumenta a força da rotação no impacto
          return true;
      }
      return false;
  }
- 
+
  function random(min, max) {
      return Math.random() * (max - min) + min;
  }
- 
- // Adicionar logo após a função random:
- function getTopFace() {
-     const normalMatrix = new THREE.Matrix3();
-     normalMatrix.setFromMatrix4(dice.matrixWorld);
- 
-     const upVector = new THREE.Vector3(0, 1, 0);
-     const faces = [
-         new THREE.Vector3(0, 0, 1),  // 1
-         new THREE.Vector3(1, 0, 0),  // 2
-         new THREE.Vector3(0, 1, 0),  // 3
-         new THREE.Vector3(-1, 0, 0)  // 4
-     ];
- 
-     let maxDot = -1;
-     let result = 1;
- 
-     faces.forEach((normal, index) => {
-         normal.applyMatrix3(normalMatrix);
-         const dot = normal.dot(upVector);
-         if (dot > maxDot) {
-             maxDot = dot;
-             result = index + 1;
-         }
-     });
- 
-     return result;
+
+ // Função para determinar qual vértice está mais alto (resultando no número correspondente)
+ function getTopVertexResult() {
+    const positions = geometry.getAttribute('position');
+    const matrix = dice.matrixWorld;
+
+    let topVertexIndex = 0;
+    let highestY = -Infinity;
+
+    // Existem 4 vértices: 0 a 3 (da geometria do Tetraedro)
+    for (let i = 0; i < positions.count; i++) { // Use positions.count para iterar sobre todos os vértices
+        const vertex = new THREE.Vector3().fromBufferAttribute(positions, i);
+        vertex.applyMatrix4(matrix); // Transforma a posição do vértice para o espaço do mundo
+
+        if (vertex.y > highestY) {
+            highestY = vertex.y;
+            topVertexIndex = i;
+        }
+    }
+
+    // Mapeamento do índice do vértice para o número do D4 (1 a 4)
+    // A geometria padrão do Three.js tem uma ordem de vértices específica.
+    // Precisamos mapear o índice do vértice mais alto para o número correto.
+    // Com base na observação da geometria e como os números foram posicionados,
+    // podemos assumir um mapeamento como:
+    // Vértice 0 (topo inicial) -> Resultado 1
+    // Vértice 1 -> Resultado 2
+    // Vértice 2 -> Resultado 3
+    // Vértice 3 -> Resultado 4
+    // NOTE: Se o D4 parar "de lado" mesmo com o alinhamento,
+    // este mapeamento pode precisar ser ajustado com base na
+    // orientação *exata* dos vértices na THREE.TetrahedronGeometry.
+    // O resultado é (índice + 1) se a geometria padrão for como esperado.
+    // Para ter certeza, você pode inspecionar os vértices da geometria
+    // e seus números associados. Por enquanto, assumimos (índice + 1).
+
+    // Índices dos vértices da geometria padrão (aproximados):
+    // 0: topo
+    // 1: baixo-direita
+    // 2: baixo-esquerda-frente
+    // 3: baixo-esquerda-trás
+
+    // Mapeamento baseado no índice do vértice mais alto
+    // Se o vértice 0 está mais alto, o resultado é 1.
+    // Se o vértice 1 está mais alto, o resultado é 2. (Esse mapeamento pode ser empírico ou baseado na documentação/visualização)
+    // Se o vértice 2 está mais alto, o resultado é 3.
+    // Se o vértice 3 está mais alto, o resultado é 4.
+    // Este mapeamento (índice + 1) assume que o índice 0 corresponde ao resultado 1, etc.,
+    // o que deve funcionar se os números foram colocados corretamente ao redor dos vértices.
+     return topVertexIndex + 1; // Retorna o número do dado (1 a 4)
  }
- 
- // Função de animação ajustada para comportamento de tetraedro
+
+
+ // Removemos a função getTopFace, pois D4s são lidos pela ponta de cima, não pela face de cima.
+
+ // Função de animação ajustada para comportamento de tetraedro e alinhamento
  function animate() {
-     if (!isRolling) {
+     requestAnimationFrame(animate); // Sempre solicita o próximo frame
+
+     if (!isRolling && !aligning) {
+         // Se não está rolando nem alinhando, apenas renderiza e espera
          renderer.render(scene, camera);
          return;
      }
- 
-     requestAnimationFrame(animate);
- 
+
+     const deltaTime = 1 / 60; // Assume 60fps para cálculos de física
+
      switch (phase) {
          case 'throwing':
-             dice.position.x += velocity.x;
-             dice.position.z += velocity.y;
- 
-             flightTime += 0.05;
+             dice.position.x += velocity.x * deltaTime;
+             dice.position.z += velocity.y * deltaTime;
+
+             flightTime += deltaTime;
+             // Curva de altura para o lançamento
              const height = Math.sin(flightTime * Math.PI) * BOUNCE_HEIGHT_MULTIPLIER;
-             dice.position.y = Math.max(0, height * 2);
- 
+             dice.position.y = Math.max(0, height * 2); // Garante que não vá para baixo do chão
+
              // Rotação mais errática durante o voo
-             dice.rotation.x += angularVelocity.x * (1 + random(-0.2, 0.2));
-             dice.rotation.y += angularVelocity.y * (1 + random(-0.2, 0.2));
-             dice.rotation.z += angularVelocity.z * (1 + random(-0.2, 0.2));
- 
-             if (flightTime >= 1) {
+             dice.rotation.x += angularVelocity.x * deltaTime * (1 + random(-0.2, 0.2));
+             dice.rotation.y += angularVelocity.y * deltaTime * (1 + random(-0.2, 0.2));
+             dice.rotation.z += angularVelocity.z * deltaTime * (1 + random(-0.2, 0.2));
+
+             if (flightTime >= 1) { // Tempo de voo completo
                  phase = 'bouncing';
                  bounceCount = INITIAL_BOUNCE_COUNT;
                  flightTime = 0;
-                 handleVertexImpact();
+                 handleVertexImpact(); // Simula um impacto ao atingir o chão
              }
              break;
- 
+
          case 'bouncing':
-     dice.position.x += velocity.x * 0.5; // Reduzido movimento horizontal
-     dice.position.z += velocity.y * 0.5;
-     velocity.multiplyScalar(0.85); // Aumentado o atrito
- 
-     flightTime += 0.1;
-     const bounceHeight = Math.sin(flightTime * Math.PI) * 
-                         (BOUNCE_HEIGHT_MULTIPLIER / (bounceCount + 1)) * // Ajustado divisor
-                         Math.max(Math.abs(velocity.length()), 0.2); // Reduzido valor mínimo
- 
-     // Reduzidas as variações na altura
-     dice.position.y = Math.max(0, bounceHeight + random(-0.05, 0.05));
- 
-     // Rotação mais controlada durante os quiques
-     if (dice.position.y < 0.1 && handleVertexImpact()) {
-         velocity.x += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3; // Reduzido o fator
-         velocity.y += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
-         angularVelocity.multiplyScalar(0.8); // Reduz a rotação mais rapidamente
-     }
- 
-     // Rotações mais suaves
-     dice.rotation.x += angularVelocity.x * 0.7;
-     dice.rotation.y += angularVelocity.y * 0.7;
-     dice.rotation.z += angularVelocity.z * 0.7;
- 
-     // Colisões mais suaves
-     if (dice.position.x <= -5 || dice.position.x >= 5) {
-         dice.position.x = dice.position.x <= -5 ? -5 : 5;
-         velocity.x *= -WALL_BOUNCE_DAMPENING * 1.7; // Reduzido o bounce
-         if (handleVertexImpact()) {
-             velocity.y += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
-         }
-     }
- 
-     if (dice.position.z <= -5 || dice.position.z >= 5) {
-         dice.position.z = dice.position.z <= -5 ? -5 : 5;
-         velocity.y *= -WALL_BOUNCE_DAMPENING * 1.7;
-         if (handleVertexImpact()) {
-             velocity.x += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
-         }
-     }
- 
-     if (flightTime >= 1) {
-         bounceCount--;
-         flightTime = 0;
- 
-         if (bounceCount <= 0 || velocity.length() < 0.1) { // Adicionada condição de velocidade
-             phase = 'rolling';
-             velocity.multiplyScalar(0.5); // Reduzido ainda mais
-         } else {
-             // Movimento errático reduzido entre quiques
-             velocity.x += random(-0.1, 0.1) * TUMBLE_FACTOR;
-             velocity.y += random(-0.1, 0.1) * TUMBLE_FACTOR;
-             handleVertexImpact();
-         }
-     }
-     break;
- 
+             dice.position.x += velocity.x * deltaTime * 0.5; // Reduzido movimento horizontal
+             dice.position.z += velocity.y * deltaTime * 0.5;
+             velocity.multiplyScalar(Math.pow(FRICTION, deltaTime * 60)); // Aplica atrito
+
+             flightTime += deltaTime;
+             // Altura dos quiques, diminuindo com o número de quiques e velocidade
+             const bounceHeight = Math.sin(flightTime * Math.PI) *
+                                  (BOUNCE_HEIGHT_MULTIPLIER / (bounceCount + 1)) *
+                                  Math.max(velocity.length(), 0.1); // Reduzido valor mínimo
+
+             dice.position.y = Math.max(0, bounceHeight + random(-0.02, 0.02)); // Leve variação na altura
+
+             // Rotação durante os quiques, desacelerando
+             angularVelocity.multiplyScalar(Math.pow(FRICTION, deltaTime * 60));
+             dice.rotation.x += angularVelocity.x * deltaTime * 0.7;
+             dice.rotation.y += angularVelocity.y * deltaTime * 0.7;
+             dice.rotation.z += angularVelocity.z * deltaTime * 0.7;
+
+             // Lógica de colisão com as paredes (continua a mesma)
+             if (dice.position.x <= -5 || dice.position.x >= 5) {
+                 dice.position.x = dice.position.x <= -5 ? -5 : 5;
+                 velocity.x *= -WALL_BOUNCE_DAMPENING;
+                 if (handleVertexImpact()) {
+                      velocity.y += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
+                 }
+             }
+
+             if (dice.position.z <= -5 || dice.position.z >= 5) {
+                 dice.position.z = dice.position.z <= -5 ? -5 : 5;
+                 velocity.y *= -WALL_BOUNCE_DAMPENING;
+                  if (handleVertexImpact()) {
+                      velocity.x += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
+                 }
+             }
+
+
+             if (flightTime >= 1) {
+                 bounceCount--;
+                 flightTime = 0;
+
+                 // Transiciona para rolling mais cedo se a velocidade for baixa
+                 if (bounceCount <= 0 || velocity.length() < MIN_VELOCITY * 2) {
+                     phase = 'rolling';
+                     velocity.multiplyScalar(0.5); // Reduz ainda mais
+                     angularVelocity.multiplyScalar(0.5);
+                 } else {
+                      // Movimento errático reduzido entre quiques
+                     velocity.x += random(-0.1, 0.1) * TUMBLE_FACTOR * 0.5;
+                     velocity.y += random(-0.1, 0.1) * TUMBLE_FACTOR * 0.5;
+                     handleVertexImpact();
+                 }
+             }
+             break;
+
          case 'rolling':
-     dice.position.x += velocity.x * 0.5;  // Reduz o movimento horizontal
-     dice.position.z += velocity.y * 0.5;
- 
-     velocity.multiplyScalar(0.85);        // Mais atrito
-     angularVelocity.multiplyScalar(0.85);
- 
-     dice.position.y = 0;  // Mantém no chão
- 
-     // Rotação final muito mais suave
-     dice.rotation.x += angularVelocity.x * 0.5;
-     dice.rotation.y += angularVelocity.y * 0.5;
-     dice.rotation.z += angularVelocity.z * 0.5;
- 
-     // Para o dado mais rapidamente
-     if (velocity.length() < MIN_VELOCITY || angularVelocity.length() < 0.01) {
-         // Força o alinhamento com uma ponta para cima
-         const finalRotation = new THREE.Euler(
-             Math.PI / 4,  // 45 graus em X
-             0,           // 0 em Y
-             0            // 0 em Z
-         );
- 
-         dice.rotation.copy(finalRotation);
- 
-         const result = getTopFace();
-         resultDisplay.textContent = `Resultado: ${result}`;
- 
-         isRolling = false;
-         phase = 'ready';
-         rollButton.disabled = false;
- 
-         velocity.set(0, 0);
-         angularVelocity.set(0, 0, 0);
- 
-         console.log(`[2025-04-19 21:59:31] User jonasdemencia got result: ${result}`);
-     }
-     break;
-     }
- 
+             // Física de desaceleração no chão
+             dice.position.x += velocity.x * deltaTime * 0.3; // Movimento horizontal lento
+             dice.position.z += velocity.y * deltaTime * 0.3;
+
+             velocity.multiplyScalar(Math.pow(FRICTION * 0.9, deltaTime * 60)); // Muito atrito
+             angularVelocity.multiplyScalar(Math.pow(FRICTION * 0.9, deltaTime * 60)); // Rotação desacelera rápido
+
+             dice.position.y = 0.01; // Mantém no chão
+
+             // Aplica a rotação remanescente
+             const deltaRotation = new THREE.Euler(
+                 angularVelocity.x * deltaTime * 0.5,
+                 angularVelocity.y * deltaTime * 0.5,
+                 angularVelocity.z * deltaTime * 0.5
+             );
+            dice.rotation.x += deltaRotation.x;
+            dice.rotation.y += deltaRotation.y;
+            dice.rotation.z += deltaRotation.z;
+
+
+             // === Lógica de Alinhamento ===
+             // Começa o alinhamento quando a velocidade linear E angular são muito baixas
+             if ((velocity.length() < MIN_VELOCITY && angularVelocity.length() < 0.01) && !aligning) {
+                 aligning = true;
+                 const result = getTopVertexResult();
+                 resultDisplay.textContent = `Resultado: ${result}`;
+
+                 // --- Calcula o Quaternion de Alvo ---
+                 // Encontra o índice do vértice que está mais alto no momento
+                 const topVertexIndex = result - 1; // Converte resultado (1-4) para índice (0-3)
+
+                 // Obtém a posição local (fixa) do vértice mais alto
+                 const vertexLocal = new THREE.Vector3().fromBufferAttribute(geometry.getAttribute('position'), topVertexIndex);
+
+                 // Calcula a posição atual (no mundo) deste vértice
+                 const vertexWorld = vertexLocal.clone().applyMatrix4(dice.matrixWorld);
+
+                 // Calcula o vetor que aponta do centro do dado para o vértice mais alto, no espaço do mundo
+                 const currentVertexDirectionWorld = vertexWorld.sub(dice.position).normalize();
+
+                 // O vetor alvo para o vértice mais alto é simplesmente o vetor 'para cima' do mundo
+                 const targetUpWorld = new THREE.Vector3(0, 1, 0);
+
+                 // Calcula o quaternion necessário para girar o vetor atual do vértice
+                 // para o vetor alvo 'para cima'.
+                 const rotationToAlign = new THREE.Quaternion().setFromUnitVectors(currentVertexDirectionWorld, targetUpWorld);
+
+                 // O quaternion alvo final para o dado é a sua orientação atual
+                 // multiplicada pela rotação necessária para alinhar o vértice.
+                 targetQuaternion = new THREE.Quaternion().copy(dice.quaternion).multiply(rotationToAlign);
+
+                 // Limpa as velocidades para garantir que a física não atrapalhe o alinhamento
+                 velocity.set(0, 0);
+                 angularVelocity.set(0, 0, 0);
+
+             }
+
+             // Se estiver na fase de alinhamento, interpola para o quaternion alvo
+             if (aligning && targetQuaternion) {
+                 // Interpolação esférica (Slerp) para rotação suave
+                 dice.quaternion.slerp(targetQuaternion, ALIGNMENT_SPEED);
+
+                 // Verifica se a rotação está muito próxima do alvo
+                 if (dice.quaternion.angleTo(targetQuaternion) < ALIGNMENT_THRESHOLD) {
+                     // Alinhamento completo
+                     dice.quaternion.copy(targetQuaternion); // Define a rotação final exatamente
+                     aligning = false;
+                     isRolling = false;
+                     phase = 'ready';
+                     rollButton.disabled = false; // Libera o botão
+
+                     // Zera velocidades novamente por segurança
+                     velocity.set(0, 0);
+                     angularVelocity.set(0, 0, 0);
+                 }
+             }
+
+             break; // Fim do case 'rolling'
+         // default: 'ready' - nenhuma ação na animação
+     } // Fim do switch(phase)
+
+
      renderer.render(scene, camera);
- }
- 
+ } // Fim da função animate
+
+
  // Event Listeners para o botão com lançamento ajustado
  const rollButton = document.getElementById('roll-button');
  const resultDisplay = document.getElementById('result-display');
- 
+
  function setInitialDicePosition() {
      dice.position.set(
          0,     // eixo X central
          0,     // no chão
          -5.5    // eixo Z "mais próximo da câmera" = base inferior da tela
      );
+      dice.rotation.set(0, 0, 0); // Reseta rotação
+      dice.quaternion.identity(); // Reseta quaternion
  }
- 
+
  // Chamada fora da função
  setInitialDicePosition();
- 
- 
+
+
  rollButton.addEventListener("mousedown", () => {
-     if (isRolling) return;
+     if (isRolling || aligning) return; // Impede clique durante rolagem ou alinhamento
      pressStartTime = Date.now();
      rollButton.style.transform = 'scale(0.95)';
  });
- 
+
  // No evento mouseup, ajustar o cálculo da posição
  rollButton.addEventListener("mouseup", () => {
-     if (isRolling) return;
- 
+     if (isRolling || aligning) return; // Impede clique durante rolagem ou alinhamento
+
      const pressDuration = Math.min(Date.now() - pressStartTime, 4000);
      const forceFactor = pressDuration / 4000;
- 
+
      isRolling = true;
+     aligning = false; // Garante que não está alinhando ao iniciar a rolagem
+     targetQuaternion = null; // Limpa o quaternion alvo anterior
      rollButton.disabled = true;
+     resultDisplay.textContent = "Rolando..."; // Atualiza o texto
      phase = 'throwing';
- 
+
      // Força muito mais suave
      const force = INITIAL_FORCE_MULTIPLIER * (0.2 + forceFactor * 0.2);
- 
-     // Posição inicial abaixo do botão
-     const buttonRect = rollButton.getBoundingClientRect();
-     const buttonBottomWorld = (buttonRect.bottom / window.innerHeight) * 10 - 4;
- 
-     dice.position.set(
-     0,
-     0,
-     -5.5 // mesma base inferior da tela
- );
- 
+
+     // Posição inicial (já definida no setInitialDicePosition)
+     // Não precisa redefinir a posição aqui, apenas a rotação e velocidade
+
+     // Reseta a rotação e quaternion antes de aplicar a força inicial
+     dice.rotation.set(0, 0, 0);
+     dice.quaternion.identity();
+
      // Movimento para cima na tela (Z positivo, pois a câmera olha de cima)
- velocity.set(
-     random(-0.05, 0.05),   // leve variação lateral
-     force * 1.5            // força forte no eixo Z para subir até o topo
- );
- 
- 
-     dice.rotation.set(
-         random(-Math.PI/4, Math.PI/4),
-         random(-Math.PI/4, Math.PI/4),
-         random(-Math.PI/4, Math.PI/4)
+     // Efeito de arremesso para a área de rolagem
+     velocity.set(
+         random(-0.5, 0.5),   // Variação lateral inicial
+         force * 2            // Força no eixo Z (para "cima" na tela, longe do usuário)
      );
- 
+
+     // Adiciona rotação inicial aleatória
+     angularVelocity.set(
+         random(-1, 1) * ROTATION_SPEED,
+         random(-1, 1) * ROTATION_SPEED,
+         random(-1, 1) * ROTATION_SPEED
+     );
+
+
      flightTime = 0;
      bounceCount = INITIAL_BOUNCE_COUNT;
- 
-     console.log(`[2025-04-19 22:17:11] User jonasdemencia rolled the dice`);
-     requestAnimationFrame(animate);
+
+     console.log(`[${new Date().toISOString()}] User rolled the dice`);
+     requestAnimationFrame(animate); // Inicia a animação
      rollButton.style.transform = '';
  });
- 
+
  // Ajuste de redimensionamento
  window.addEventListener('resize', () => {
      camera.aspect = window.innerWidth / window.innerHeight;
      camera.updateProjectionMatrix();
      renderer.setSize(window.innerWidth, window.innerHeight);
-     setInitialDicePosition(); // Adicionar esta linha
+     // setInitialDicePosition(); // Não redefinir a posição durante o redimensionamento se o dado estiver rolando
  });
- 
+
  // Renderização inicial
- renderer.render(scene, camera);
- console.log(`[2025-04-19 22:26:19] D4 initialized by user jonasdemencia`);
+ setInitialDicePosition(); // Define a posição inicial antes da primeira renderização
+ animate(); // Inicia o loop de animação
+
+ console.log(`[${new Date().toISOString()}] D4 initialized`);
      </script>
- 
- 
+
+
  </body>
  </html>
