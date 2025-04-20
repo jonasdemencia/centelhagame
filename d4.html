@@ -365,13 +365,18 @@
      // Para o dado mais rapidamente
      if (velocity.length() < MIN_VELOCITY || angularVelocity.length() < 0.01) {
          // Força o alinhamento com uma ponta para cima
-         const finalRotation = new THREE.Euler(
-             Math.PI / 4,  // 45 graus em X
-             0,           // 0 em Y
-             0            // 0 em Z
-         );
- 
-         dice.rotation.copy(finalRotation);
+         // Define rotações para que uma das faces esteja apoiada no chão
+const faceRotations = [
+    new THREE.Euler(0, 0, 0),
+    new THREE.Euler(Math.PI / 2, 0, 0),
+    new THREE.Euler(0, Math.PI / 2, 0),
+    new THREE.Euler(-Math.PI / 2, 0, 0)
+];
+
+// Escolhe aleatoriamente uma das 4 rotações válidas
+const chosenRotation = faceRotations[Math.floor(Math.random() * faceRotations.length)];
+dice.rotation.copy(chosenRotation);
+
  
          const result = getTopFace();
          resultDisplay.textContent = `Resultado: ${result}`;
