@@ -104,10 +104,7 @@
  const INITIAL_BOUNCE_COUNT = 4;           // Menos quiques
  const TUMBLE_FACTOR = 0.6;               // Aumentado para mais movimento após colisão
  const VERTEX_IMPACT_CHANCE = 0.7;         // Novo: chance de impacto no vértice
-
- let targetQuaternion = null;
- let aligning = false;
-
+ 
  // Configurações de escala para visual mais realista
  const SCALE = {
      MIN: 0.8,
@@ -233,73 +230,7 @@
  function random(min, max) {
      return Math.random() * (max - min) + min;
  }
-
- function getTopVertexResult() {
-    const positions = geometry.getAttribute('position');
-    const matrix = dice.matrixWorld;
-
-    let topVertexIndex = 0;
-    let highestY = -Infinity;
-
-    // Existem 4 vértices: 0 a 3
-    for (let i = 0; i < 4; i++) {
-        const vertex = new THREE.Vector3().fromBufferAttribute(positions, i);
-        vertex.applyMatrix4(matrix);
-
-        if (vertex.y > highestY) {
-            highestY = vertex.y;
-            topVertexIndex = i;
-        }
-    }
-
-    // Mapeamento do vértice para o número visível
-    // D4: cada número está associado à ponta oposta à face que toca o chão
-    // Mapeamento arbitrário: 0 → 1, 1 → 2, 2 → 3, 3 → 4
-    return topVertexIndex + 1;
-}
-
-    function getTargetQuaternionFromBottomFace() {
-    const position = geometry.getAttribute("position");
-    const index = geometry.index.array;
-    const matrix = dice.matrixWorld;
-
-    let lowestFaceIndex = -1;
-    let lowestY = Infinity;
-
-    for (let i = 0; i < index.length; i += 3) {
-        const a = new THREE.Vector3().fromBufferAttribute(position, index[i]);
-        const b = new THREE.Vector3().fromBufferAttribute(position, index[i + 1]);
-        const c = new THREE.Vector3().fromBufferAttribute(position, index[i + 2]);
-
-        a.applyMatrix4(matrix);
-        b.applyMatrix4(matrix);
-        c.applyMatrix4(matrix);
-
-        const centroid = new THREE.Vector3().addVectors(a, b).add(c).divideScalar(3);
-        if (centroid.y < lowestY) {
-            lowestY = centroid.y;
-            lowestFaceIndex = i;
-        }
-    }
-
-    // Pega a face mais baixa
-    const a = new THREE.Vector3().fromBufferAttribute(position, index[lowestFaceIndex]);
-    const b = new THREE.Vector3().fromBufferAttribute(position, index[lowestFaceIndex + 1]);
-    const c = new THREE.Vector3().fromBufferAttribute(position, index[lowestFaceIndex + 2]);
-
-    const ab = new THREE.Vector3().subVectors(b, a);
-    const ac = new THREE.Vector3().subVectors(c, a);
-    const normal = new THREE.Vector3().crossVectors(ab, ac).normalize();
-
-    // Precisamos da rotação que alinha a normal da face com o eixo Y
-    const up = new THREE.Vector3(0, 1, 0);
-    const quaternion = new THREE.Quaternion().setFromUnitVectors(normal, up);
-
-    return quaternion;
-}
-
-
-
+ 
  // Adicionar logo após a função random:
  function getTopFace() {
      const normalMatrix = new THREE.Matrix3();
@@ -424,7 +355,7 @@
      velocity.multiplyScalar(0.85);        // Mais atrito
      angularVelocity.multiplyScalar(0.85);
  
-     dice.position.y = 0.01;  // Mantém no chão
+     dice.position.y = 0;  // Mantém no chão
  
      // Rotação final muito mais suave
      dice.rotation.x += angularVelocity.x * 0.5;
@@ -432,32 +363,33 @@
      dice.rotation.z += angularVelocity.z * 0.5;
  
      // Para o dado mais rapidamente
-         // Para o dado mais rapidamente
-    if ((velocity.length() < MIN_VELOCITY || angularVelocity.length() < 0.01) && !aligning) {
-        const result = getTopVertexResult();
-        resultDisplay.textContent = `Resultado: ${result}`;
-
-        targetQuaternion = getTargetQuaternionFromBottomFace();
-        aligning = true;
-    }
-
-    // Faz o alinhamento suave (depois que a física parou)
-    if (aligning && targetQuaternion) {
-        dice.quaternion.slerp(targetQuaternion, 0.1);
-
-        if (dice.quaternion.angleTo(targetQuaternion) < 0.01) {
-            aligning = false;
-            isRolling = false;
-            phase = 'ready';
-            rollButton.disabled = false;
-
-            velocity.set(0, 0);
-            angularVelocity.set(0, 0, 0);
-        }
-    }
-
-    renderer.render(scene, camera);
-} // 👈 ESTE AQUI ESTAVA FALTANDO
+     if (velocity.length() < MIN_VELOCITY || angularVelocity.length() < 0.01) {
+         // Força o alinhamento com uma ponta para cima
+         const finalRotation = new THREE.Euler(
+             Math.PI / 4,  // 45 graus em X
+             0,           // 0 em Y
+             0            // 0 em Z
+         );
+ 
+         dice.rotation.copy(finalRotation);
+ 
+         const result = getTopFace();
+         resultDisplay.textContent = `Resultado: ${result}`;
+ 
+         isRolling = false;
+         phase = 'ready';
+         rollButton.disabled = false;
+ 
+         velocity.set(0, 0);
+         angularVelocity.set(0, 0, 0);
+ 
+         console.log(`[2025-04-19 21:59:31] User jonasdemencia got result: ${result}`);
+     }
+     break;
+     }
+ 
+     renderer.render(scene, camera);
+ }
  
  // Event Listeners para o botão com lançamento ajustado
  const rollButton = document.getElementById('roll-button');
