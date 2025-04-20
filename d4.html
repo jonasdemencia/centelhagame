@@ -156,36 +156,47 @@
         for (let i = 0; i < vertices.length; i += 3) {
             cannonVertices.push(new CANNON.Vec3(vertices[i], vertices[i + 1], vertices[i + 2]));
         }
-        // --- Criação do Corpo Físico do Dado (Cannon-es) ---
-// Extrair vértices da geometria não indexada do Three.js
-const vertices = geometry.attributes.position.array;
+
+        
+       // --- Criação do Corpo Físico do Dado (Cannon-es) ---
+const positionAttribute = geometry.attributes.position;
+const vertexArray = positionAttribute.array;
 const cannonVertices = [];
-for (let i = 0; i < vertices.length; i += 3) {
-    cannonVertices.push(new CANNON.Vec3(vertices[i], vertices[i + 1], vertices[i + 2]));
+
+// Converter vértices do Three.js para Cannon.js
+for (let i = 0; i < vertexArray.length; i += 3) {
+    cannonVertices.push(new CANNON.Vec3(
+        vertexArray[i],
+        vertexArray[i + 1],
+        vertexArray[i + 2]
+    ));
 }
 
-// Definir as faces manualmente para geometria não indexada
-// Um tetraedro tem 4 faces, e a geometria não indexada lista os 3 vértices de cada face.
-// O array 'vertices' acima terá 12 entradas (4 faces * 3 vértices/face).
-// As faces referenciam os índices DENTRO do array cannonVertices (0 a 11).
+// Definir faces do tetraedro manualmente
 const cannonFaces = [
-    [0, 1, 2],  // Face 1 (usa os 3 primeiros vértices do array)
-    [3, 4, 5],  // Face 2 (usa os 3 próximos vértices)
-    [6, 7, 8],  // Face 3
-    [9, 10, 11] // Face 4
+    [0, 1, 2],  // Face 0
+    [0, 2, 3],  // Face 1
+    [0, 3, 1],  // Face 2
+    [1, 3, 2]   // Face 3
 ];
 
-// Cria a forma convexa usando os vértices e as faces definidas
-const diceShape = new CANNON.ConvexPolyhedron({ vertices: cannonVertices, faces: cannonFaces });
+// Criar forma e corpo físico
+const diceShape = new CANNON.ConvexPolyhedron({
+    vertices: cannonVertices,
+    faces: cannonFaces
+});
 
-// Cria o corpo físico (o restante do código do diceBody continua igual)
 const diceBody = new CANNON.Body({
     mass: 1.5,
     shape: diceShape,
     material: diceMaterial,
     angularDamping: 0.4,
-    linearDamping: 0.2
+    linearDamping: 0.2,
+    allowSleep: true,
+    sleepSpeedLimit: 0.1,
+    sleepTimeLimit: 0.1
 });
+
 diceBody.position.set(0, 5, 0);
 world.addBody(diceBody);
 
