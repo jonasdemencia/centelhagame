@@ -104,10 +104,7 @@
  const INITIAL_BOUNCE_COUNT = 4;           // Menos quiques
  const TUMBLE_FACTOR = 0.6;               // Aumentado para mais movimento após colisão
  const VERTEX_IMPACT_CHANCE = 0.7;         // Novo: chance de impacto no vértice
-
- let targetQuaternion = null;
- let aligning = false;
-
+ 
  // Configurações de escala para visual mais realista
  const SCALE = {
      MIN: 0.8,
@@ -233,43 +230,7 @@
  function random(min, max) {
      return Math.random() * (max - min) + min;
  }
-
- function getTopVertexResult() {
-    const positions = geometry.getAttribute('position');
-    const matrix = dice.matrixWorld;
-
-    let topVertexIndex = 0;
-    let highestY = -Infinity;
-
-    // Existem 4 vértices: 0 a 3
-    for (let i = 0; i < 4; i++) {
-        const vertex = new THREE.Vector3().fromBufferAttribute(positions, i);
-        vertex.applyMatrix4(matrix);
-
-        if (vertex.y > highestY) {
-            highestY = vertex.y;
-            topVertexIndex = i;
-        }
-    }
-
-    // Mapeamento do vértice para o número visível
-    // D4: cada número está associado à ponta oposta à face que toca o chão
-    // Mapeamento arbitrário: 0 → 1, 1 → 2, 2 → 3, 3 → 4
-    return topVertexIndex + 1;
-}
-
-    function getTargetQuaternionForVertex(vertexIndex) {
-    const rotations = [
-        new THREE.Euler(0, 0, 0),                        // Vértice 0 → resultado 1
-        new THREE.Euler(Math.PI / 2, 0, 0),              // Vértice 1 → resultado 2
-        new THREE.Euler(0, 0, Math.PI / 2),              // Vértice 2 → resultado 3
-        new THREE.Euler(-Math.PI / 2, 0, Math.PI / 4),   // Vértice 3 → resultado 4
-    ];
-    const targetEuler = rotations[vertexIndex];
-    return new THREE.Quaternion().setFromEuler(targetEuler);
-}
-
-
+ 
  // Adicionar logo após a função random:
  function getTopFace() {
      const normalMatrix = new THREE.Matrix3();
@@ -394,7 +355,7 @@
      velocity.multiplyScalar(0.85);        // Mais atrito
      angularVelocity.multiplyScalar(0.85);
  
-     dice.position.y = 0.01;  // Mantém no chão
+     dice.position.y = 0;  // Mantém no chão
  
      // Rotação final muito mais suave
      dice.rotation.x += angularVelocity.x * 0.5;
@@ -402,32 +363,32 @@
      dice.rotation.z += angularVelocity.z * 0.5;
  
      // Para o dado mais rapidamente
-         // Para o dado mais rapidamente
-    if ((velocity.length() < MIN_VELOCITY || angularVelocity.length() < 0.01) && !aligning) {
-        const result = getTopVertexResult();
-        resultDisplay.textContent = Resultado: ${result};
-
-        const targetVertex = result - 1;
-        targetQuaternion = getTargetQuaternionForVertex(targetVertex);
-        aligning = true;
-    }
-
-    // Faz o alinhamento suave (depois que a física parou)
-    if (aligning && targetQuaternion) {
-        dice.quaternion.slerp(targetQuaternion, 0.1);
-
-        if (dice.quaternion.angleTo(targetQuaternion) < 0.01) {
-            aligning = false;
-            isRolling = false;
-            phase = 'ready';
-            rollButton.disabled = false;
-
-            velocity.set(0, 0);
-            angularVelocity.set(0, 0, 0);
-        }
-    }
-
-    renderer.render(scene, camera);
+     if (velocity.length() < MIN_VELOCITY || angularVelocity.length() < 0.01) {
+         // Força o alinhamento com uma ponta para cima
+         const finalRotation = new THREE.Euler(
+             Math.PI / 4,  // 45 graus em X
+             0,           // 0 em Y
+             0            // 0 em Z
+         );
+ 
+         dice.rotation.copy(finalRotation);
+ 
+         const result = getTopFace();
+         resultDisplay.textContent = `Resultado: ${result}`;
+ 
+         isRolling = false;
+         phase = 'ready';
+         rollButton.disabled = false;
+ 
+         velocity.set(0, 0);
+         angularVelocity.set(0, 0, 0);
+ 
+         console.log(`[2025-04-19 21:59:31] User jonasdemencia got result: ${result}`);
+     }
+     break;
+     }
+ 
+     renderer.render(scene, camera);
  }
  
  // Event Listeners para o botão com lançamento ajustado
@@ -492,7 +453,7 @@
      flightTime = 0;
      bounceCount = INITIAL_BOUNCE_COUNT;
  
-     console.log([2025-04-19 22:17:11] User jonasdemencia rolled the dice);
+     console.log(`[2025-04-19 22:17:11] User jonasdemencia rolled the dice`);
      requestAnimationFrame(animate);
      rollButton.style.transform = '';
  });
@@ -507,7 +468,7 @@
  
  // Renderização inicial
  renderer.render(scene, camera);
- console.log([2025-04-19 22:26:19] D4 initialized by user jonasdemencia);
+ console.log(`[2025-04-19 22:26:19] D4 initialized by user jonasdemencia`);
      </script>
  
  
