@@ -366,20 +366,20 @@
      if (velocity.length() < MIN_VELOCITY || angularVelocity.length() < 0.01) {
          // Força o alinhamento com uma ponta para cima
          // Define rotações para que uma das faces esteja apoiada no chão
-const faceRotations = [
-    new THREE.Euler(0, 0, 0),
-    new THREE.Euler(Math.PI / 2, 0, 0),
-    new THREE.Euler(0, Math.PI / 2, 0),
-    new THREE.Euler(-Math.PI / 2, 0, 0)
+// Mapeamento correto das rotações para cada face do tetraedro
+const faceUpRotations = [
+    new THREE.Euler(0, 0, 0),                                   // Face 1 para cima
+    new THREE.Euler(Math.PI, 0, Math.PI / 3),                   // Face 2 para cima
+    new THREE.Euler(Math.PI, 0, -Math.PI / 3),                  // Face 3 para cima
+    new THREE.Euler(Math.PI, 0, Math.PI)                        // Face 4 para cima
 ];
 
-// Escolhe aleatoriamente uma das 4 rotações válidas
-const chosenRotation = faceRotations[Math.floor(Math.random() * faceRotations.length)];
-dice.rotation.copy(chosenRotation);
+const chosenFaceIndex = Math.floor(Math.random() * 4);          // índice de 0 a 3
+dice.rotation.copy(faceUpRotations[chosenFaceIndex]);
 
- 
-         const result = getTopFace();
-         resultDisplay.textContent = `Resultado: ${result}`;
+const result = chosenFaceIndex + 1; // Resultado real do dado
+resultDisplay.textContent = `Resultado: ${result}`;
+
  
          isRolling = false;
          phase = 'ready';
