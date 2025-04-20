@@ -158,32 +158,32 @@
         }
 
         
-       // --- Criação do Corpo Físico do Dado (Cannon-es) ---
+// --- Criação do Corpo Físico do Dado (Cannon-es) ---
 const positionAttribute = geometry.attributes.position;
 const vertexArray = positionAttribute.array;
-const cannonVertices = [];
+const diceVertices = [];
 
 // Converter vértices do Three.js para Cannon.js
 for (let i = 0; i < vertexArray.length; i += 3) {
-    cannonVertices.push(new CANNON.Vec3(
+    diceVertices.push(new CANNON.Vec3(
         vertexArray[i],
         vertexArray[i + 1],
         vertexArray[i + 2]
     ));
 }
 
-// Definir faces do tetraedro manualmente
-const cannonFaces = [
-    [0, 1, 2],  // Face 0
-    [0, 2, 3],  // Face 1
-    [0, 3, 1],  // Face 2
-    [1, 3, 2]   // Face 3
+// Definir faces do tetraedro manualmente (ordem correta para física)
+const diceFaces = [
+    [0, 1, 2],  // Face 1
+    [0, 2, 3],  // Face 2
+    [0, 3, 1],  // Face 3
+    [1, 3, 2]   // Face 4
 ];
 
 // Criar forma e corpo físico
 const diceShape = new CANNON.ConvexPolyhedron({
-    vertices: cannonVertices,
-    faces: cannonFaces
+    vertices: diceVertices,
+    faces: diceFaces
 });
 
 const diceBody = new CANNON.Body({
