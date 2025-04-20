@@ -79,6 +79,8 @@
     {
       "imports": {
         "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/examples/jsm/loaders/FontLoader.js": "https://unpkg.com/three@0.160.0/examples/jsm/loaders/FontLoader.js",
+        "three/examples/jsm/geometries/TextGeometry.js": "https://unpkg.com/three@0.160.0/examples/jsm/geometries/TextGeometry.js",
         "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.mjs" // <-- Adicionado Cannon-es
       }
     }
@@ -148,31 +150,20 @@
         const dice = new THREE.Mesh(geometry, material);
         scene.add(dice);
 
+        // --- Criação do Corpo Físico do Dado (Cannon-es) ---
+        // Extrair vértices e faces da geometria do Three.js
+        const vertices = geometry.attributes.position.array;
+        const cannonVertices = [];
+        for (let i = 0; i < vertices.length; i += 3) {
+            cannonVertices.push(new CANNON.Vec3(vertices[i], vertices[i + 1], vertices[i + 2]));
+        }
+        const indices = geometry.index.array;
+        const cannonFaces = [];
+        for (let i = 0; i < indices.length; i += 3) {
+            // Cannon espera a ordem dos vértices da face
+            cannonFaces.push([indices[i], indices[i + 1], indices[i + 2]]);
+        }
 
-
-// --- Criação do Corpo Físico do Dado (Cannon-es) ---
-const diceVertices = [];
-const positionAttribute = geometry.attributes.position;
-
-// Extrair vértices da geometria do Three.js
-for (let i = 0; i < positionAttribute.array.length; i += 3) {
-    diceVertices.push(new CANNON.Vec3(
-        positionAttribute.array[i],
-        positionAttribute.array[i + 1],
-        positionAttribute.array[i + 2]
-    ));
-}
-
-// Definir faces do tetraedro manualmente
-const diceFaces = [
-    [0, 1, 2],  // Face 1
-    [0, 2, 3],  // Face 2
-    [0, 3, 1],  // Face 3
-    [1, 3, 2]   // Face 4
-];
-
-
-        
         const diceShape = new CANNON.ConvexPolyhedron({ vertices: cannonVertices, faces: cannonFaces });
         const diceBody = new CANNON.Body({
             mass: 1.5, // Massa do dado (afeta impulsos)
@@ -250,29 +241,30 @@ const diceFaces = [
 
         // Função para obter resultado (lê orientação do MESH Three.js)
         function getResultFromTopVertex() {
-    const tetrahedronVertices = [
-        new THREE.Vector3(1, 1, 1),      // Vértice para número 1
-        new THREE.Vector3(-1, -1, 1),    // Vértice para número 2
-        new THREE.Vector3(-1, 1, -1),    // Vértice para número 3
-        new THREE.Vector3(1, -1, -1)     // Vértice para número 4
-    ].map(v => v.normalize());
+            // Vértices locais da THREE.TetrahedronGeometry(1)
+            // Importante: A ordem aqui DEVE corresponder ao resultado desejado
+            const vertices = [
+                 // Ordem baseada na documentação/experimento com THREE.TetrahedronGeometry:
+                 new THREE.Vector3(1, 1, 1),    // Vértice 0 (resultado esperado: 1 ? verificar!)
+                 new THREE.Vector3(-1, -1, 1),  // Vértice 1 (resultado esperado: 2 ?)
+                 new THREE.Vector3(-1, 1, -1),  // Vértice 2 (resultado esperado: 3 ?)
+                 new THREE.Vector3(1, -1, -1)   // Vértice 3 (resultado esperado: 4 ?)
+            ];
 
-    const worldVerts = tetrahedronVertices.map(v => {
-        return v.clone().applyMatrix4(dice.matrixWorld);
-    });
+             // Precisamos normalizar para que a escala não afete qual é o "mais alto" relativo à orientação
+             // Mas a função original não normalizava. Vamos manter assim por enquanto.
+             // A matriz world já contém a escala, rotação e posição.
 
-    let highestVertex = 0;
-    let maxY = worldVerts[0].y;
+             const worldVertices = vertices.map(v => v.clone().applyMatrix4(dice.matrixWorld));
 
-    for (let i = 1; i < worldVerts.length; i++) {
-        if (worldVerts[i].y > maxY) {
-            maxY = worldVerts[i].y;
-            highestVertex = i;
-        }
-    }
+             let highestVertexIndex = -1;
+             let maxY = -Infinity;
 
-    return highestVertex + 1; // Retorna 1, 2, 3 ou 4
-}
+             for (let i = 0; i < worldVertices.length; i++) {
+                 if (worldVertices[i].y > maxY) {
+                     maxY = worldVertices[i].y;
+                     highestVertexIndex = i;
+                 }
              }
 
              // Mapeia o índice do vértice mais alto para o resultado (1 a 4)
