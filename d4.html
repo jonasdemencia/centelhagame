@@ -104,7 +104,10 @@
  const INITIAL_BOUNCE_COUNT = 4;           // Menos quiques
  const TUMBLE_FACTOR = 0.6;               // Aumentado para mais movimento após colisão
  const VERTEX_IMPACT_CHANCE = 0.7;         // Novo: chance de impacto no vértice
- 
+
+ let targetQuaternion = null;
+ let aligning = false;
+
  // Configurações de escala para visual mais realista
  const SCALE = {
      MIN: 0.8,
@@ -255,6 +258,18 @@
     return topVertexIndex + 1;
 }
 
+    function getTargetQuaternionForVertex(vertexIndex) {
+    const rotations = [
+        new THREE.Euler(0, 0, 0),                        // Vértice 0 → resultado 1
+        new THREE.Euler(Math.PI / 2, 0, 0),              // Vértice 1 → resultado 2
+        new THREE.Euler(0, 0, Math.PI / 2),              // Vértice 2 → resultado 3
+        new THREE.Euler(-Math.PI / 2, 0, Math.PI / 4),   // Vértice 3 → resultado 4
+    ];
+    const targetEuler = rotations[vertexIndex];
+    return new THREE.Quaternion().setFromEuler(targetEuler);
+}
+
+
  // Adicionar logo após a função random:
  function getTopFace() {
      const normalMatrix = new THREE.Matrix3();
@@ -387,24 +402,32 @@
      dice.rotation.z += angularVelocity.z * 0.5;
  
      // Para o dado mais rapidamente
-     if (velocity.length() < MIN_VELOCITY || angularVelocity.length() < 0.01) {
-         
-         const result = getTopVertexResult();
-         resultDisplay.textContent = `Resultado: ${result}`;
- 
-         isRolling = false;
-         phase = 'ready';
-         rollButton.disabled = false;
- 
-         velocity.set(0, 0);
-         angularVelocity.set(0, 0, 0);
- 
-         console.log(`[2025-04-19 21:59:31] User jonasdemencia got result: ${result}`);
-     }
-     break;
-     }
- 
-     renderer.render(scene, camera);
+         // Para o dado mais rapidamente
+    if ((velocity.length() < MIN_VELOCITY || angularVelocity.length() < 0.01) && !aligning) {
+        const result = getTopVertexResult();
+        resultDisplay.textContent = `Resultado: ${result}`;
+
+        const targetVertex = result - 1;
+        targetQuaternion = getTargetQuaternionForVertex(targetVertex);
+        aligning = true;
+    }
+
+    // Faz o alinhamento suave (depois que a física parou)
+    if (aligning && targetQuaternion) {
+        dice.quaternion.slerp(targetQuaternion, 0.1);
+
+        if (dice.quaternion.angleTo(targetQuaternion) < 0.01) {
+            aligning = false;
+            isRolling = false;
+            phase = 'ready';
+            rollButton.disabled = false;
+
+            velocity.set(0, 0);
+            angularVelocity.set(0, 0, 0);
+        }
+    }
+
+    renderer.render(scene, camera);
  }
  
  // Event Listeners para o botão com lançamento ajustado
