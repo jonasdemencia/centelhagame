@@ -258,6 +258,33 @@
  
      return result;
  }
+
+      function getResultFromTopVertex() {
+    // Coordenadas locais dos 4 vértices do tetraedro (Three.js usa padrão)
+    const localVertices = geometry.vertices || [
+        new THREE.Vector3(1, 1, 1),
+        new THREE.Vector3(-1, -1, 1),
+        new THREE.Vector3(-1, 1, -1),
+        new THREE.Vector3(1, -1, -1)
+    ];
+
+    // Transforma para coordenadas globais
+    const globalVertices = localVertices.map(v => v.clone().applyMatrix4(dice.matrixWorld));
+
+    // Acha o índice do vértice mais alto (maior Y)
+    let highestIndex = 0;
+    for (let i = 1; i < globalVertices.length; i++) {
+        if (globalVertices[i].y > globalVertices[highestIndex].y) {
+            highestIndex = i;
+        }
+    }
+
+    // Mapeamento direto: índice do vértice → número
+    // Garantido pela forma que você posicionou os textos (3 textos iguais por vértice)
+    const vertexToNumber = [1, 2, 3, 4];
+    return vertexToNumber[highestIndex];
+}
+
  
  // Função de animação ajustada para comportamento de tetraedro
  function animate() {
@@ -364,31 +391,20 @@
  
      // Para o dado mais rapidamente
      if (velocity.length() < MIN_VELOCITY || angularVelocity.length() < 0.01) {
-         // Força o alinhamento com uma ponta para cima
-         // Define rotações para que uma das faces esteja apoiada no chão
-// Mapeamento correto das rotações para cada face do tetraedro
-const faceUpRotations = [
-    new THREE.Euler(0, 0, 0),                                   // Face 1 para cima
-    new THREE.Euler(Math.PI, 0, Math.PI / 3),                   // Face 2 para cima
-    new THREE.Euler(Math.PI, 0, -Math.PI / 3),                  // Face 3 para cima
-    new THREE.Euler(Math.PI, 0, Math.PI)                        // Face 4 para cima
-];
+    // Alinha suavemente ao parar
+    angularVelocity.set(0, 0, 0);
+    velocity.set(0, 0);
 
-const chosenFaceIndex = Math.floor(Math.random() * 4);          // índice de 0 a 3
-dice.rotation.copy(faceUpRotations[chosenFaceIndex]);
+    // Calcula o resultado real com base no vértice mais alto
+    const result = getResultFromTopVertex();
+    resultDisplay.textContent = `Resultado: ${result}`;
+    
+    isRolling = false;
+    phase = 'ready';
+    rollButton.disabled = false;
 
-const result = chosenFaceIndex + 1; // Resultado real do dado
-resultDisplay.textContent = `Resultado: ${result}`;
-
+    console.log(`[${new Date().toISOString()}] User jonasdemencia got result: ${result}`);
  
-         isRolling = false;
-         phase = 'ready';
-         rollButton.disabled = false;
- 
-         velocity.set(0, 0);
-         angularVelocity.set(0, 0, 0);
- 
-         console.log(`[2025-04-19 21:59:31] User jonasdemencia got result: ${result}`);
      }
      break;
      }
