@@ -143,30 +143,34 @@ const loader = new FontLoader();
 loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
     const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
     
-    // Posições ajustadas para as faces do tetraedro, com números repetidos
+    // Posições ajustadas para ter 3 números iguais ao redor de cada vértice
     const numberPositions = [
-        // Face 1-2-3
-        { pos: new THREE.Vector3(-0.3, 0.2, -0.2), rot: new THREE.Euler(-0.5, -0.5, 0), text: '1' },
-        { pos: new THREE.Vector3(0.3, 0.2, -0.2), rot: new THREE.Euler(-0.5, 0.5, 0), text: '2' },
-        { pos: new THREE.Vector3(0, -0.3, -0.2), rot: new THREE.Euler(0.5, 0, 0), text: '3' },
-        
-        // Face 1-2-4
-        { pos: new THREE.Vector3(-0.2, 0.2, 0.3), rot: new THREE.Euler(-0.5, -0.5, 0), text: '4' },
-        { pos: new THREE.Vector3(0.2, 0.2, 0.3), rot: new THREE.Euler(-0.5, 0.5, 0), text: '4' },
-        
-        // Face 2-3-4
-        { pos: new THREE.Vector3(0.3, -0.2, 0.2), rot: new THREE.Euler(0.5, 0.5, 0), text: '2' },
-        { pos: new THREE.Vector3(0, 0.3, 0.2), rot: new THREE.Euler(-0.5, 0, 0), text: '3' },
-        
-        // Face 1-3-4
-        { pos: new THREE.Vector3(-0.3, -0.2, 0.2), rot: new THREE.Euler(0.5, -0.5, 0), text: '1' }
+        // Números 1 (três vezes ao redor do primeiro vértice)
+        { pos: new THREE.Vector3(-0.4, 0.2, -0.2), rot: new THREE.Euler(-0.5, -0.5, 0), text: '1' },
+        { pos: new THREE.Vector3(-0.2, 0.2, 0.4), rot: new THREE.Euler(-0.5, -0.5, 0), text: '1' },
+        { pos: new THREE.Vector3(-0.4, -0.2, 0.2), rot: new THREE.Euler(0.5, -0.5, 0), text: '1' },
+
+        // Números 2 (três vezes ao redor do segundo vértice)
+        { pos: new THREE.Vector3(0.4, 0.2, -0.2), rot: new THREE.Euler(-0.5, 0.5, 0), text: '2' },
+        { pos: new THREE.Vector3(0.2, 0.2, 0.4), rot: new THREE.Euler(-0.5, 0.5, 0), text: '2' },
+        { pos: new THREE.Vector3(0.4, -0.2, 0.2), rot: new THREE.Euler(0.5, 0.5, 0), text: '2' },
+
+        // Números 3 (três vezes ao redor do terceiro vértice)
+        { pos: new THREE.Vector3(0, -0.4, -0.2), rot: new THREE.Euler(0.5, 0, 0), text: '3' },
+        { pos: new THREE.Vector3(-0.2, -0.4, 0.2), rot: new THREE.Euler(0.5, -0.5, 0), text: '3' },
+        { pos: new THREE.Vector3(0.2, -0.4, 0.2), rot: new THREE.Euler(0.5, 0.5, 0), text: '3' },
+
+        // Números 4 (três vezes ao redor do quarto vértice)
+        { pos: new THREE.Vector3(0, 0.4, 0.2), rot: new THREE.Euler(-0.5, 0, 0), text: '4' },
+        { pos: new THREE.Vector3(-0.2, 0.3, 0.3), rot: new THREE.Euler(-0.5, -0.5, 0), text: '4' },
+        { pos: new THREE.Vector3(0.2, 0.3, 0.3), rot: new THREE.Euler(-0.5, 0.5, 0), text: '4' }
     ];
 
     numberPositions.forEach(({ pos, rot, text }) => {
         const textGeo = new TextGeometry(text, {
             font: font,
-            size: 0.25,        // Tamanho ajustado
-            height: 0.01,      // Espessura reduzida
+            size: 0.2,         // Tamanho reduzido para caber três números
+            height: 0.01,      // Mantém fino
             curveSegments: 12,
             bevelEnabled: false
         });
