@@ -423,10 +423,10 @@ function animate() {
         dice.rotation.y += angularVelocity.y * 0.5;
         dice.rotation.z += angularVelocity.z * 0.5;
     }
-    break;
+   break;
+} // fecha o switch
 
-    renderer.render(scene, camera);
-}
+renderer.render(scene, camera);
 
 // Event Listeners para o botão com lançamento ajustado
 const rollButton = document.getElementById('roll-button');
