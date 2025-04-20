@@ -94,14 +94,14 @@
 
 // Configurações de física ajustadas para comportamento de tetraedro
 const FRICTION = 0.85;                    // Aumentado para parar mais rápido
-const WALL_BOUNCE_DAMPENING = 0.4;        // Reduzido para perder mais energia
+const WALL_BOUNCE_DAMPENING = 0.7;        // Aumentado para ter mais energia no quique
 const MIN_VELOCITY = 0.05;                // Reduzido para parar mais facilmente
 const MAX_VELOCITY = 5;                   // Reduzido significativamente
 const INITIAL_FORCE_MULTIPLIER = 2;       // Força inicial muito menor
 const COLLISION_COOLDOWN = 150;           // Reduzido para permitir colisões mais frequentes
 const ROTATION_SPEED = 1.5;               // Rotação mais lenta
-const BOUNCE_HEIGHT_MULTIPLIER = 1;       // Quiques mais baixos
-const INITIAL_BOUNCE_COUNT = 4;           // Menos quiques
+const BOUNCE_HEIGHT_MULTIPLIER = 1.5;      // Aumentado para quiques mais altos
+const INITIAL_BOUNCE_COUNT = 5;            // Reduzido para menos quiques, mas mais evidentes
 const TUMBLE_FACTOR = 0.4;               // Novo: controla o "tumbling"
 const VERTEX_IMPACT_CHANCE = 0.7;         // Novo: chance de impacto no vértice
 
@@ -317,20 +317,26 @@ function animate() {
     
     // Colisões mais suaves
     if (dice.position.x <= -5 || dice.position.x >= 5) {
-        dice.position.x = dice.position.x <= -5 ? -5 : 5;
-        velocity.x *= -WALL_BOUNCE_DAMPENING * 1.7; // Reduzido o bounce
-        if (handleVertexImpact()) {
-            velocity.y += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
-        }
-    }
+    dice.position.x = dice.position.x <= -5 ? -5 : 5;
+    velocity.x *= -WALL_BOUNCE_DAMPENING; // Removido o multiplicador 1.7
+    bounceCount = Math.max(1, bounceCount); // Garante pelo menos mais um quique
     
-    if (dice.position.z <= -5 || dice.position.z >= 5) {
-        dice.position.z = dice.position.z <= -5 ? -5 : 5;
-        velocity.y *= -WALL_BOUNCE_DAMPENING * 1.7;
-        if (handleVertexImpact()) {
-            velocity.x += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
-        }
+    if (handleVertexImpact()) {
+        velocity.y += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.5;
+        flightTime = 0; // Reinicia o ciclo de quique
     }
+}
+
+if (dice.position.z <= -5 || dice.position.z >= 5) {
+    dice.position.z = dice.position.z <= -5 ? -5 : 5;
+    velocity.y *= -WALL_BOUNCE_DAMPENING; // Removido o multiplicador 1.7
+    bounceCount = Math.max(1, bounceCount); // Garante pelo menos mais um quique
+    
+    if (handleVertexImpact()) {
+        velocity.x += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.5;
+        flightTime = 0; // Reinicia o ciclo de quique
+    }
+}
     
     if (flightTime >= 1) {
         bounceCount--;
