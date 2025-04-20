@@ -76,21 +76,22 @@
     </div>
 
     <script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-    "cannon-es": "https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js"
-  }
-}
-</script>
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/examples/jsm/loaders/FontLoader.js": "https://unpkg.com/three@0.160.0/examples/jsm/loaders/FontLoader.js",
+        "three/examples/jsm/geometries/TextGeometry.js": "https://unpkg.com/three@0.160.0/examples/jsm/geometries/TextGeometry.js",
+        "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.mjs" // <-- Adicionado Cannon-es
+      }
+    }
+    </script>
 
 
     <script type="module">
-    import * as THREE from 'three';
-    import { FontLoader } from 'three/addons/loaders/FontLoader.js';
-    import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
-    import * as CANNON from 'cannon-es';
+        import * as THREE from 'three';
+        import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+        import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+        import * as CANNON from 'cannon-es'; // <-- Importa Cannon-es
 
         // --- Configurações Globais ---
         const scene = new THREE.Scene();
@@ -138,49 +139,50 @@
         groundBody.position.set(0, -0.1, 0); // Um pouco abaixo da origem visual
         world.addBody(groundBody);
 
-        // --- Criação do Corpo Físico do Dado (Cannon-es) ---
-const diceVertices = [];
-const positionAttribute = geometry.attributes.position;
+        // --- Criação do Dado (Three.js) ---
+        const geometry = new THREE.TetrahedronGeometry(1); // Tamanho 1
+        const material = new THREE.MeshPhongMaterial({
+            color: 0x1a237e, // Azul escuro
+            shininess: 80,
+            specular: 0xaaaaaa,
+            flatShading: false // Shading suave fica melhor com Phong
+        });
+        const dice = new THREE.Mesh(geometry, material);
+        scene.add(dice);
 
-// Extrair vértices da geometria do Three.js
-for (let i = 0; i < positionAttribute.array.length; i += 3) {
-    diceVertices.push(new CANNON.Vec3(
-        positionAttribute.array[i],
-        positionAttribute.array[i + 1],
-        positionAttribute.array[i + 2]
-    ));
+       // --- Criação do Corpo Físico do Dado (Cannon-es) ---
+// Extrair vértices da geometria não indexada do Three.js
+const vertices = geometry.attributes.position.array;
+const cannonVertices = [];
+for (let i = 0; i < vertices.length; i += 3) {
+    cannonVertices.push(new CANNON.Vec3(vertices[i], vertices[i + 1], vertices[i + 2]));
 }
 
-// Definir faces do tetraedro
-const diceFaces = [
-    [0, 1, 2],  // Face 1
-    [0, 2, 3],  // Face 2
-    [0, 3, 1],  // Face 3
-    [1, 3, 2]   // Face 4
+// Definir as faces manualmente para geometria não indexada
+// Um tetraedro tem 4 faces, e a geometria não indexada lista os 3 vértices de cada face.
+// O array 'vertices' acima terá 12 entradas (4 faces * 3 vértices/face).
+// As faces referenciam os índices DENTRO do array cannonVertices (0 a 11).
+const cannonFaces = [
+    [0, 1, 2],  // Face 1 (usa os 3 primeiros vértices do array)
+    [3, 4, 5],  // Face 2 (usa os 3 próximos vértices)
+    [6, 7, 8],  // Face 3
+    [9, 10, 11] // Face 4
 ];
 
-// Criar forma física
-const diceShape = new CANNON.ConvexPolyhedron({
-    vertices: diceVertices,
-    faces: diceFaces
-});
+// Cria a forma convexa usando os vértices e as faces definidas
+const diceShape = new CANNON.ConvexPolyhedron({ vertices: cannonVertices, faces: cannonFaces });
 
-// Criar corpo físico
+// Cria o corpo físico (o restante do código do diceBody continua igual)
 const diceBody = new CANNON.Body({
     mass: 1.5,
     shape: diceShape,
     material: diceMaterial,
     angularDamping: 0.4,
-    linearDamping: 0.2,
-    allowSleep: true,
-    sleepSpeedLimit: 0.1,
-    sleepTimeLimit: 0.1
+    linearDamping: 0.2
 });
-
 diceBody.position.set(0, 5, 0);
 world.addBody(diceBody);
 
-    
 
         // Carregar Fonte e Adicionar Números (igual antes, mas adicionados ao 'dice' mesh)
         const loader = new FontLoader();
