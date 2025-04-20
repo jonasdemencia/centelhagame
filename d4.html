@@ -156,12 +156,38 @@
         for (let i = 0; i < vertices.length; i += 3) {
             cannonVertices.push(new CANNON.Vec3(vertices[i], vertices[i + 1], vertices[i + 2]));
         }
-        const indices = geometry.index.array;
-        const cannonFaces = [];
-        for (let i = 0; i < indices.length; i += 3) {
-            // Cannon espera a ordem dos vértices da face
-            cannonFaces.push([indices[i], indices[i + 1], indices[i + 2]]);
-        }
+        // --- Criação do Corpo Físico do Dado (Cannon-es) ---
+// Extrair vértices da geometria não indexada do Three.js
+const vertices = geometry.attributes.position.array;
+const cannonVertices = [];
+for (let i = 0; i < vertices.length; i += 3) {
+    cannonVertices.push(new CANNON.Vec3(vertices[i], vertices[i + 1], vertices[i + 2]));
+}
+
+// Definir as faces manualmente para geometria não indexada
+// Um tetraedro tem 4 faces, e a geometria não indexada lista os 3 vértices de cada face.
+// O array 'vertices' acima terá 12 entradas (4 faces * 3 vértices/face).
+// As faces referenciam os índices DENTRO do array cannonVertices (0 a 11).
+const cannonFaces = [
+    [0, 1, 2],  // Face 1 (usa os 3 primeiros vértices do array)
+    [3, 4, 5],  // Face 2 (usa os 3 próximos vértices)
+    [6, 7, 8],  // Face 3
+    [9, 10, 11] // Face 4
+];
+
+// Cria a forma convexa usando os vértices e as faces definidas
+const diceShape = new CANNON.ConvexPolyhedron({ vertices: cannonVertices, faces: cannonFaces });
+
+// Cria o corpo físico (o restante do código do diceBody continua igual)
+const diceBody = new CANNON.Body({
+    mass: 1.5,
+    shape: diceShape,
+    material: diceMaterial,
+    angularDamping: 0.4,
+    linearDamping: 0.2
+});
+diceBody.position.set(0, 5, 0);
+world.addBody(diceBody);
 
         const diceShape = new CANNON.ConvexPolyhedron({ vertices: cannonVertices, faces: cannonFaces });
         const diceBody = new CANNON.Body({
