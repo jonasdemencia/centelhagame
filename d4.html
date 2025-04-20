@@ -381,58 +381,50 @@
      break;
  
          case 'rolling':
-    dice.position.x += velocity.x * 0.5;
-    dice.position.z += velocity.y * 0.5;
-    
-    velocity.multiplyScalar(0.85);
-    angularVelocity.multiplyScalar(0.85);
-    
-    dice.position.y = 0;
-    
-    // Rotação durante o rolamento
-    dice.rotation.x += angularVelocity.x * 0.5;
-    dice.rotation.y += angularVelocity.y * 0.5;
-    dice.rotation.z += angularVelocity.z * 0.5;
-    
-    if (velocity.length() < MIN_VELOCITY && angularVelocity.length() < 0.01) {
-        // Ângulo tetraédrico (aproximadamente 109.47 graus)
-        const tetrahedralAngle = Math.acos(-1/3);
-        
-        // Rotações para cada face plana no chão
-        const finalRotations = [
-            new THREE.Euler(Math.PI - tetrahedralAngle, 0, 0),           // Face 1
-            new THREE.Euler(Math.PI - tetrahedralAngle, 2*Math.PI/3, 0), // Face 2
-            new THREE.Euler(Math.PI - tetrahedralAngle, 4*Math.PI/3, 0), // Face 3
-            new THREE.Euler(tetrahedralAngle, Math.PI, 0)                // Face 4
-        ];
-        
-        // Encontra a rotação atual mais próxima
-        let minAngleDiff = Infinity;
-        let bestRotation = 0;
-        
-        finalRotations.forEach((rotation, index) => {
-            const diff = Math.abs(dice.rotation.x % (2*Math.PI) - rotation.x) +
-                        Math.abs(dice.rotation.y % (2*Math.PI) - rotation.y);
-            if (diff < minAngleDiff) {
-                minAngleDiff = diff;
-                bestRotation = index;
+            dice.position.x += velocity.x * 0.5;
+            dice.position.z += velocity.y * 0.5;
+
+            // Aumentar um pouco o atrito/damping pode ajudar a parar mais rápido
+            velocity.multiplyScalar(0.80); // Era 0.85
+            angularVelocity.multiplyScalar(0.80); // Era 0.85
+
+            dice.position.y = 0; // Garante que está no chão
+
+            // Rotação durante o rolamento (pode reduzir a multiplicação aqui também)
+            dice.rotation.x += angularVelocity.x * 0.4; // Era 0.5
+            dice.rotation.y += angularVelocity.y * 0.4; // Era 0.5
+            dice.rotation.z += angularVelocity.z * 0.4; // Era 0.5
+
+            // Condição de parada
+            if (velocity.length() < MIN_VELOCITY && angularVelocity.length() < 0.01) {
+
+                // --- INÍCIO DA MODIFICAÇÃO ---
+
+                // NÃO TENTAR MAIS FORÇAR UMA ROTAÇÃO FINAL ESPECÍFICA
+                /*
+                // Bloco de código removido/comentado:
+                const tetrahedralAngle = Math.acos(-1/3);
+                const finalRotations = [ ... ]; // Definição removida
+                let minAngleDiff = Infinity;
+                let bestRotation = 0;
+                finalRotations.forEach((rotation, index) => { ... }); // Lógica removida
+                dice.rotation.copy(finalRotations[bestRotation]); // Aplicação removida
+                */
+
+                // APENAS DETERMINE O RESULTADO BASEADO NA ORIENTAÇÃO ATUAL E PARE TUDO
+
+                const result = getResultFromTopVertex(); // Usa a função que já identifica o vértice mais alto
+                resultDisplay.textContent = `Resultado: ${result}`;
+
+                isRolling = false;
+                phase = 'ready';
+                rollButton.disabled = false;
+
+                console.log(`[${new Date().toISOString()}] User jonasdemencia got result: ${result}`); // Use data/hora real
+
+                // --- FIM DA MODIFICAÇÃO ---
             }
-        });
-        
-        // Aplica a rotação final diretamente
-        dice.rotation.copy(finalRotations[bestRotation]);
-        
-        // Obtém o resultado baseado no vértice mais alto
-        const result = getResultFromTopVertex();
-        resultDisplay.textContent = `Resultado: ${result}`;
-        
-        isRolling = false;
-        phase = 'ready';
-        rollButton.disabled = false;
-        
-        console.log(`[2025-04-20 19:20:05] User jonasdemencia got result: ${result}`);
-    }
-    break;
+            break;
      }
  
      renderer.render(scene, camera);
