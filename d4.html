@@ -93,17 +93,17 @@
  
  
  // Configurações de física ajustadas para comportamento de tetraedro
- const FRICTION = 0.95;                    // Reduzido para manter mais momentum
- const WALL_BOUNCE_DAMPENING = 0.8;        // Aumentado para manter mais energia
+ const FRICTION = 0.90;                    // Reduzido para manter mais momentum
+ const WALL_BOUNCE_DAMPENING = 1.0;        // Aumentado para manter mais energia
  const MIN_VELOCITY = 0.02;                // Reduzido para parar mais suavemente
- const MAX_VELOCITY = 5;                   // Reduzido significativamente
+ const MAX_VELOCITY = 7;                   // Reduzido significativamente
  const INITIAL_FORCE_MULTIPLIER = 2;       // Força inicial muito menor
- const COLLISION_COOLDOWN = 150;           // Reduzido para permitir colisões mais frequentes
- const ROTATION_SPEED = 1.5;               // Rotação mais lenta
- const BOUNCE_HEIGHT_MULTIPLIER = 2.0;     // Aumentado para quiques mais altos
- const INITIAL_BOUNCE_COUNT = 4;           // Menos quiques
- const TUMBLE_FACTOR = 0.6;               // Aumentado para mais movimento após colisão
- const VERTEX_IMPACT_CHANCE = 0.7;         // Novo: chance de impacto no vértice
+ const COLLISION_COOLDOWN = 140;           // Reduzido para permitir colisões mais frequentes
+ const ROTATION_SPEED = 1.8;               // Rotação mais lenta
+ const BOUNCE_HEIGHT_MULTIPLIER = 3.0;     // Aumentado para quiques mais altos
+ const INITIAL_BOUNCE_COUNT = 7;           // Menos quiques
+ const TUMBLE_FACTOR = 0.8;               // Aumentado para mais movimento após colisão
+ const VERTEX_IMPACT_CHANCE = 0.9;         // Novo: chance de impacto no vértice
  
  // Configurações de escala para visual mais realista
  const SCALE = {
