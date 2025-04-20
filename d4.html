@@ -355,7 +355,7 @@
      velocity.multiplyScalar(0.85);        // Mais atrito
      angularVelocity.multiplyScalar(0.85);
  
-     dice.position.y = 0;  // Mantém no chão
+     dice.position.y = 0.01;  // Mantém no chão
  
      // Rotação final muito mais suave
      dice.rotation.x += angularVelocity.x * 0.5;
@@ -364,15 +364,7 @@
  
      // Para o dado mais rapidamente
      if (velocity.length() < MIN_VELOCITY || angularVelocity.length() < 0.01) {
-         // Força o alinhamento com uma ponta para cima
-         const finalRotation = new THREE.Euler(
-             Math.PI / 4,  // 45 graus em X
-             0,           // 0 em Y
-             0            // 0 em Z
-         );
- 
-         dice.rotation.copy(finalRotation);
- 
+         
          const result = getTopFace();
          resultDisplay.textContent = `Resultado: ${result}`;
  
