@@ -75,15 +75,21 @@
     </div>
 
     <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
-        }
-    }
-    </script>
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/examples/jsm/loaders/FontLoader.js": "https://unpkg.com/three@0.160.0/examples/jsm/loaders/FontLoader.js",
+    "three/examples/jsm/geometries/TextGeometry.js": "https://unpkg.com/three@0.160.0/examples/jsm/geometries/TextGeometry.js"
+  }
+}
+</script>
+
 
     <script type="module">
         import * as THREE from 'three';
+        import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+        import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+
 
 // Configurações de física ajustadas para comportamento de tetraedro
 const FRICTION = 0.85;                    // Aumentado para parar mais rápido
@@ -140,7 +146,7 @@ loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json
     const positions = geometry.vertices;
 
     labels.forEach((text, i) => {
-        const textGeometry = new THREE.TextGeometry(text, {
+        const textGeometry = new TextGeometry(text, {
             font: font,
             size: 0.3,
             height: 0.02,
