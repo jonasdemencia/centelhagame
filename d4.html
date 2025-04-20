@@ -230,7 +230,31 @@
  function random(min, max) {
      return Math.random() * (max - min) + min;
  }
- 
+
+ function getTopVertexResult() {
+    const positions = geometry.getAttribute('position');
+    const matrix = dice.matrixWorld;
+
+    let topVertexIndex = 0;
+    let highestY = -Infinity;
+
+    // Existem 4 vértices: 0 a 3
+    for (let i = 0; i < 4; i++) {
+        const vertex = new THREE.Vector3().fromBufferAttribute(positions, i);
+        vertex.applyMatrix4(matrix);
+
+        if (vertex.y > highestY) {
+            highestY = vertex.y;
+            topVertexIndex = i;
+        }
+    }
+
+    // Mapeamento do vértice para o número visível
+    // D4: cada número está associado à ponta oposta à face que toca o chão
+    // Mapeamento arbitrário: 0 → 1, 1 → 2, 2 → 3, 3 → 4
+    return topVertexIndex + 1;
+}
+
  // Adicionar logo após a função random:
  function getTopFace() {
      const normalMatrix = new THREE.Matrix3();
@@ -365,7 +389,7 @@
      // Para o dado mais rapidamente
      if (velocity.length() < MIN_VELOCITY || angularVelocity.length() < 0.01) {
          
-         const result = getTopFace();
+         const result = getTopVertexResult();
          resultDisplay.textContent = `Resultado: ${result}`;
  
          isRolling = false;
