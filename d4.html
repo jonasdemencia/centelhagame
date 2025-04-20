@@ -1,517 +1,482 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>D4 Realista com Física 2D</title>
-
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background: radial-gradient(circle at center, #3a3a3a, #1a1a1a);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-            user-select: none;
-        }
-
-        #dice-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        .controls {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            padding: 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: linear-gradient(to top, rgba(26, 26, 26, 0.8), transparent);
-            z-index: 10;
-        }
-
-        #roll-button {
-            padding: 12px 25px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
-            border: none;
-            border-radius: 8px;
-            color: #e0e0e0;
-            text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
-            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
-                        inset 0px 1px 1px rgba(255,255,255,0.2);
-            transition: transform 0.15s ease;
-        }
-
-        #result-display {
-            margin-top: 15px;
-            font-size: 1.5rem;
-            color: #fff;
-            min-height: 2rem;
-            font-weight: bold;
-            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-        }
-    </style>
-</head>
-<body>
-    <div id="dice-container"></div>
-    <div class="controls">
-        <button id="roll-button">Rolar Dado</button>
-        <div id="result-display">Pressione o botão para rolar</div>
-    </div>
-
-    <script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/examples/jsm/loaders/FontLoader.js": "https://unpkg.com/three@0.160.0/examples/jsm/loaders/FontLoader.js",
-    "three/examples/jsm/geometries/TextGeometry.js": "https://unpkg.com/three@0.160.0/examples/jsm/geometries/TextGeometry.js"
-  }
-}
-</script>
-
-
-    <script type="module">
-        import * as THREE from 'three';
-        import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-        import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
-
-
-
-// Configurações de física ajustadas para comportamento de tetraedro
-const FRICTION = 0.95;                    // Reduzido para manter mais momentum
-const WALL_BOUNCE_DAMPENING = 0.8;        // Aumentado para manter mais energia
-const MIN_VELOCITY = 0.02;                // Reduzido para parar mais suavemente
-const MAX_VELOCITY = 5;                   // Reduzido significativamente
-const INITIAL_FORCE_MULTIPLIER = 2;       // Força inicial muito menor
-const COLLISION_COOLDOWN = 150;           // Reduzido para permitir colisões mais frequentes
-const ROTATION_SPEED = 1.2;               // Ajustado para rotação mais controlada
-const BOUNCE_HEIGHT_MULTIPLIER = 2.0;     // Aumentado para quiques mais altos
-const INITIAL_BOUNCE_COUNT = 4;           // Menos quiques
-const TUMBLE_FACTOR = 0.6;               // Aumentado para mais movimento após colisão
-const VERTEX_IMPACT_CHANCE = 0.7;         // Novo: chance de impacto no vértice
-
-// Configurações de escala para visual mais realista
-const SCALE = {
-    MIN: 0.8,
-    MAX: 1.5,    // Reduzido para não parecer que voa muito alto
-    FLIGHT: 1.2,
-    BOUNCE: 1.1
-};
-
-// Setup Three.js (mantido como estava)
-const scene = new THREE.Scene();
-scene.background = new THREE.Color('#3a3a3a'); // fundo cinza escuro igual ao d6
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.getElementById('dice-container').appendChild(renderer.domElement);
-
-// Configurar câmera para visão top-down
-camera.position.set(0, 10, 0);
-camera.lookAt(0, 0, 0);
-camera.rotation.z = Math.PI;
-
-// Criar tetraedro com material mais realista
-const geometry = new THREE.TetrahedronGeometry(1);
-const material = new THREE.MeshPhongMaterial({
-    color: 0x1a237e,
-    shininess: 70,
-    specular: 0x333333,
-    flatShading: true
-});
-// Logo após criar o dado, definir sua posição inicial
-const dice = new THREE.Mesh(geometry, material);
-scene.add(dice);
-
-// Carregar fonte padrão do Three.js
-const loader = new FontLoader();
-loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-    const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    
-    // Posições ajustadas para ter 3 números iguais ao redor de cada vértice
-    const numberPositions = [
-        // Números 1 (três vezes ao redor do primeiro vértice)
-        { pos: new THREE.Vector3(-0.4, 0.2, -0.2), rot: new THREE.Euler(-0.5, -0.5, 0), text: '1' },
-        { pos: new THREE.Vector3(-0.2, 0.2, 0.4), rot: new THREE.Euler(-0.5, -0.5, 0), text: '1' },
-        { pos: new THREE.Vector3(-0.4, -0.2, 0.2), rot: new THREE.Euler(0.5, -0.5, 0), text: '1' },
-
-        // Números 2 (três vezes ao redor do segundo vértice)
-        { pos: new THREE.Vector3(0.4, 0.2, -0.2), rot: new THREE.Euler(-0.5, 0.5, 0), text: '2' },
-        { pos: new THREE.Vector3(0.2, 0.2, 0.4), rot: new THREE.Euler(-0.5, 0.5, 0), text: '2' },
-        { pos: new THREE.Vector3(0.4, -0.2, 0.2), rot: new THREE.Euler(0.5, 0.5, 0), text: '2' },
-
-        // Números 3 (três vezes ao redor do terceiro vértice)
-        { pos: new THREE.Vector3(0, -0.4, -0.2), rot: new THREE.Euler(0.5, 0, 0), text: '3' },
-        { pos: new THREE.Vector3(-0.2, -0.4, 0.2), rot: new THREE.Euler(0.5, -0.5, 0), text: '3' },
-        { pos: new THREE.Vector3(0.2, -0.4, 0.2), rot: new THREE.Euler(0.5, 0.5, 0), text: '3' },
-
-        // Números 4 (três vezes ao redor do quarto vértice)
-        { pos: new THREE.Vector3(0, 0.4, 0.2), rot: new THREE.Euler(-0.5, 0, 0), text: '4' },
-        { pos: new THREE.Vector3(-0.2, 0.3, 0.3), rot: new THREE.Euler(-0.5, -0.5, 0), text: '4' },
-        { pos: new THREE.Vector3(0.2, 0.3, 0.3), rot: new THREE.Euler(-0.5, 0.5, 0), text: '4' }
-    ];
-
-    numberPositions.forEach(({ pos, rot, text }) => {
-        const textGeo = new TextGeometry(text, {
-            font: font,
-            size: 0.2,         // Tamanho reduzido para caber três números
-            height: 0.01,      // Mantém fino
-            curveSegments: 12,
-            bevelEnabled: false
-        });
-
-        // Centralizar o texto
-        textGeo.computeBoundingBox();
-        const centerOffset = new THREE.Vector3(
-            -(textGeo.boundingBox.max.x - textGeo.boundingBox.min.x) / 2,
-            -(textGeo.boundingBox.max.y - textGeo.boundingBox.min.y) / 2,
-            -(textGeo.boundingBox.max.z - textGeo.boundingBox.min.z) / 2
-        );
-
-        const textMesh = new THREE.Mesh(textGeo, textMaterial);
-        textMesh.position.copy(pos).add(centerOffset);
-        textMesh.rotation.copy(rot);
-        
-        // Adicionar direto ao dado
-        dice.add(textMesh);
-    });
-});
-
-
-// Iluminação ajustada
-const light = new THREE.DirectionalLight(0xffffff, 1.2);
-light.position.set(5, 8, 5);
-scene.add(light);
-scene.add(new THREE.AmbientLight(0x404040, 0.8));
-
-// Estado do dado
-let isRolling = false;
-let pressStartTime = 0;
-let velocity = new THREE.Vector2();
-let angularVelocity = new THREE.Vector3();
-let phase = 'ready';
-let flightTime = 0;
-let bounceCount = INITIAL_BOUNCE_COUNT;
-let lastCollisionTime = 0;
-let lastVertexImpact = 0;
-
-// Função para simular impacto no vértice
-function handleVertexImpact() {
-    const currentTime = Date.now();
-    if (currentTime - lastVertexImpact < 200) return false;
-    
-    if (Math.random() < VERTEX_IMPACT_CHANCE) {
-        lastVertexImpact = currentTime;
-        angularVelocity.set(
-            random(-0.5, 0.5) * ROTATION_SPEED,
-            random(-0.5, 0.5) * ROTATION_SPEED,
-            random(-0.5, 0.5) * ROTATION_SPEED
-        );
-        return true;
-    }
-    return false;
-}
-
-function random(min, max) {
-    return Math.random() * (max - min) + min;
-}
-
-// Adicionar logo após a função random:
-function getTopFace() {
-    const normalMatrix = new THREE.Matrix3();
-    normalMatrix.setFromMatrix4(dice.matrixWorld);
-    
-    const upVector = new THREE.Vector3(0, 1, 0);
-    const faces = [
-        new THREE.Vector3(0, 0, 1),  // 1
-        new THREE.Vector3(1, 0, 0),  // 2
-        new THREE.Vector3(0, 1, 0),  // 3
-        new THREE.Vector3(-1, 0, 0)  // 4
-    ];
-    
-    let maxDot = -1;
-    let result = 1;
-    
-    faces.forEach((normal, index) => {
-        normal.applyMatrix3(normalMatrix);
-        const dot = normal.dot(upVector);
-        if (dot > maxDot) {
-            maxDot = dot;
-            result = index + 1;
-        }
-    });
-    
-    return result;
-}
-
-// Função de animação ajustada para comportamento de tetraedro
-function animate() {
-    if (!isRolling) {
-        renderer.render(scene, camera);
-        return;
-    }
-
-    requestAnimationFrame(animate);
-
-    switch (phase) {
-        case 'throwing':
-            dice.position.x += velocity.x;
-            dice.position.z += velocity.y;
-            
-            flightTime += 0.05;
-            const height = Math.sin(flightTime * Math.PI) * BOUNCE_HEIGHT_MULTIPLIER;
-            dice.position.y = Math.max(0, height * 2);
-            
-            // Rotação mais errática durante o voo
-            dice.rotation.x += angularVelocity.x * (1 + random(-0.2, 0.2));
-            dice.rotation.y += angularVelocity.y * (1 + random(-0.2, 0.2));
-            dice.rotation.z += angularVelocity.z * (1 + random(-0.2, 0.2));
-            
-            if (flightTime >= 1) {
-                phase = 'bouncing';
-                bounceCount = INITIAL_BOUNCE_COUNT;
-                flightTime = 0;
-                handleVertexImpact();
-            }
-            break;
-
-        case 'bouncing':
-    dice.position.x += velocity.x * 0.5; // Reduzido movimento horizontal
-    dice.position.z += velocity.y * 0.5;
-    velocity.multiplyScalar(0.85); // Aumentado o atrito
-    
-    flightTime += 0.1;
-    const bounceHeight = Math.sin(flightTime * Math.PI) * 
-                        (BOUNCE_HEIGHT_MULTIPLIER / (bounceCount + 1)) * // Ajustado divisor
-                        Math.max(Math.abs(velocity.length()), 0.2); // Reduzido valor mínimo
-    
-    // Reduzidas as variações na altura
-    dice.position.y = Math.max(0, bounceHeight + random(-0.05, 0.05));
-    
-    // Rotação mais controlada durante os quiques
-    if (dice.position.y < 0.1 && handleVertexImpact()) {
-        velocity.x += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3; // Reduzido o fator
-        velocity.y += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
-        angularVelocity.multiplyScalar(0.8); // Reduz a rotação mais rapidamente
-    }
-    
-    // Rotações mais suaves
-    dice.rotation.x += angularVelocity.x * 0.7;
-    dice.rotation.y += angularVelocity.y * 0.7;
-    dice.rotation.z += angularVelocity.z * 0.7;
-    
-    // Colisões mais suaves
-    if (dice.position.x <= -5 || dice.position.x >= 5) {
-        dice.position.x = dice.position.x <= -5 ? -5 : 5;
-        velocity.x *= -WALL_BOUNCE_DAMPENING * 1.7; // Reduzido o bounce
-        if (handleVertexImpact()) {
-            velocity.y += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
-        }
-    }
-    
-    if (dice.position.z <= -5 || dice.position.z >= 5) {
-        dice.position.z = dice.position.z <= -5 ? -5 : 5;
-        velocity.y *= -WALL_BOUNCE_DAMPENING * 1.7;
-        if (handleVertexImpact()) {
-            velocity.x += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
-        }
-    }
-    
-    if (flightTime >= 1) {
-        bounceCount--;
-        flightTime = 0;
-        
-        if (bounceCount <= 0 || velocity.length() < 0.1) { // Adicionada condição de velocidade
-            phase = 'rolling';
-            velocity.multiplyScalar(0.5); // Reduzido ainda mais
-        } else {
-            // Movimento errático reduzido entre quiques
-            velocity.x += random(-0.1, 0.1) * TUMBLE_FACTOR;
-            velocity.y += random(-0.1, 0.1) * TUMBLE_FACTOR;
-            handleVertexImpact();
-        }
-    }
-    break;
-
-        case 'rolling':
-    dice.position.x += velocity.x * 0.5;
-    dice.position.z += velocity.y * 0.5;
-    
-    velocity.multiplyScalar(0.95);
-    angularVelocity.multiplyScalar(0.95);
-    
-    dice.position.y = 0;
-    
-    // Define as rotações finais possíveis para cada resultado
-    const finalRotations = [
-        // Resultado 1
-        new THREE.Euler(-Math.PI/3, 0, 0),
-        // Resultado 2
-        new THREE.Euler(Math.PI/3, 0, Math.PI),
-        // Resultado 3
-        new THREE.Euler(Math.PI/3, 2*Math.PI/3, 0),
-        // Resultado 4
-        new THREE.Euler(Math.PI/3, -2*Math.PI/3, 0)
-    ];
-    
-    if (velocity.length() < MIN_VELOCITY && angularVelocity.length() < 0.01) {
-        // Determina qual face está mais próxima do chão
-        const normalMatrix = new THREE.Matrix3();
-        normalMatrix.setFromMatrix4(dice.matrixWorld);
-        
-        const downVector = new THREE.Vector3(0, -1, 0);
-        let maxDot = -1;
-        let bestFace = 0;
-        
-        // Vetores normais das faces
-        const faceNormals = [
-            new THREE.Vector3(0, -1/Math.sqrt(3), Math.sqrt(2/3)),  // Face 1
-            new THREE.Vector3(-Math.sqrt(2/3), -1/Math.sqrt(3), -1/Math.sqrt(3)),  // Face 2
-            new THREE.Vector3(0, -1/Math.sqrt(3), -Math.sqrt(2/3)),  // Face 3
-            new THREE.Vector3(Math.sqrt(2/3), -1/Math.sqrt(3), -1/Math.sqrt(3))   // Face 4
-        ];
-        
-        faceNormals.forEach((normal, index) => {
-            normal.applyMatrix3(normalMatrix);
-            const dot = normal.dot(downVector);
-            if (dot > maxDot) {
-                maxDot = dot;
-                bestFace = index;
-            }
-        });
-        
-        // Aplica a rotação final correspondente
-        const targetRotation = finalRotations[bestFace];
-        
-        // Interpolação suave para a rotação final
-        dice.rotation.x += (targetRotation.x - dice.rotation.x) * 0.2;
-        dice.rotation.y += (targetRotation.y - dice.rotation.y) * 0.2;
-        dice.rotation.z += (targetRotation.z - dice.rotation.z) * 0.2;
-        
-        // Verifica se chegou próximo o suficiente da rotação final
-        if (Math.abs(dice.rotation.x - targetRotation.x) < 0.01 &&
-            Math.abs(dice.rotation.y - targetRotation.y) < 0.01 &&
-            Math.abs(dice.rotation.z - targetRotation.z) < 0.01) {
-            
-            dice.rotation.copy(targetRotation);
-            const result = getTopFace();
-            resultDisplay.textContent = `Resultado: ${result}`;
-            
-            isRolling = false;
-            phase = 'ready';
-            rollButton.disabled = false;
-            
-            velocity.set(0, 0);
-            angularVelocity.set(0, 0, 0);
-            
-            console.log(`[2025-04-20 14:09:22] User jonasdemencia got result: ${result}`);
-        }
-    } else {
-        dice.rotation.x += angularVelocity.x * 0.5;
-        dice.rotation.y += angularVelocity.y * 0.5;
-        dice.rotation.z += angularVelocity.z * 0.5;
-    }
-    break;
-    }
-
-    renderer.render(scene, camera);
-}
-
-// Event Listeners para o botão com lançamento ajustado
-const rollButton = document.getElementById('roll-button');
-const resultDisplay = document.getElementById('result-display');
-
-function setInitialDicePosition() {
-    dice.position.set(
-        0,     // eixo X central
-        0,     // no chão
-        -5.5    // eixo Z "mais próximo da câmera" = base inferior da tela
-    );
-}
-
-// Chamada fora da função
-setInitialDicePosition();
-
-        
-rollButton.addEventListener("mousedown", () => {
-    if (isRolling) return;
-    pressStartTime = Date.now();
-    rollButton.style.transform = 'scale(0.95)';
-});
-
-// No evento mouseup, ajustar o cálculo da posição
-rollButton.addEventListener("mouseup", () => {
-    if (isRolling) return;
-    
-    const pressDuration = Math.min(Date.now() - pressStartTime, 4000);
-    const forceFactor = pressDuration / 4000;
-    
-    isRolling = true;
-    rollButton.disabled = true;
-    phase = 'throwing';
-    
-    // Força muito mais suave
-    const force = INITIAL_FORCE_MULTIPLIER * (0.2 + forceFactor * 0.2);
-    
-    // Posição inicial abaixo do botão
-    const buttonRect = rollButton.getBoundingClientRect();
-    const buttonBottomWorld = (buttonRect.bottom / window.innerHeight) * 10 - 4;
-    
-    dice.position.set(
-    0,
-    0,
-    -5.5 // mesma base inferior da tela
-);
-    
-    // Movimento para cima na tela (Z positivo, pois a câmera olha de cima)
-velocity.set(
-    random(-0.05, 0.05),   // leve variação lateral
-    force * 1.5            // força forte no eixo Z para subir até o topo
-);
-
-    
-    dice.rotation.set(
-        random(-Math.PI/4, Math.PI/4),
-        random(-Math.PI/4, Math.PI/4),
-        random(-Math.PI/4, Math.PI/4)
-    );
-    
-    flightTime = 0;
-    bounceCount = INITIAL_BOUNCE_COUNT;
-    
-    console.log(`[2025-04-19 22:17:11] User jonasdemencia rolled the dice`);
-    requestAnimationFrame(animate);
-    rollButton.style.transform = '';
-});
-
-// Ajuste de redimensionamento
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    setInitialDicePosition(); // Adicionar esta linha
-});
-
-// Renderização inicial
-renderer.render(scene, camera);
-console.log(`[2025-04-19 22:26:19] D4 initialized by user jonasdemencia`);
-    </script>
-
-    
-</body>
-</html>
+ <html lang="en">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+     <title>D4 Realista com Física 2D</title>
+ 
+     <style>
+         body {
+             display: flex;
+             flex-direction: column;
+             justify-content: flex-end;
+             align-items: center;
+             height: 100vh;
+             margin: 0;
+             background: radial-gradient(circle at center, #3a3a3a, #1a1a1a);
+             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+             overflow: hidden;
+             user-select: none;
+         }
+ 
+         #dice-container {
+             position: absolute;
+             top: 0;
+             left: 0;
+             width: 100%;
+             height: 100%;
+             overflow: hidden;
+         }
+ 
+         .controls {
+             position: fixed;
+             bottom: 0;
+             left: 0;
+             width: 100%;
+             padding: 20px;
+             box-sizing: border-box;
+             display: flex;
+             flex-direction: column;
+             align-items: center;
+             background: linear-gradient(to top, rgba(26, 26, 26, 0.8), transparent);
+             z-index: 10;
+         }
+ 
+         #roll-button {
+             padding: 12px 25px;
+             font-size: 1.1rem;
+             font-weight: bold;
+             cursor: pointer;
+             background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
+             border: none;
+             border-radius: 8px;
+             color: #e0e0e0;
+             text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+             box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
+                         inset 0px 1px 1px rgba(255,255,255,0.2);
+             transition: transform 0.15s ease;
+         }
+ 
+         #result-display {
+             margin-top: 15px;
+             font-size: 1.5rem;
+             color: #fff;
+             min-height: 2rem;
+             font-weight: bold;
+             text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+         }
+     </style>
+ </head>
+ <body>
+     <div id="dice-container"></div>
+     <div class="controls">
+         <button id="roll-button">Rolar Dado</button>
+         <div id="result-display">Pressione o botão para rolar</div>
+     </div>
+ 
+     <script type="importmap">
+ {
+   "imports": {
+     "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+     "three/examples/jsm/loaders/FontLoader.js": "https://unpkg.com/three@0.160.0/examples/jsm/loaders/FontLoader.js",
+     "three/examples/jsm/geometries/TextGeometry.js": "https://unpkg.com/three@0.160.0/examples/jsm/geometries/TextGeometry.js"
+   }
+ }
+ </script>
+ 
+ 
+     <script type="module">
+         import * as THREE from 'three';
+         import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+         import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+ 
+ 
+ 
+ // Configurações de física ajustadas para comportamento de tetraedro
+ const FRICTION = 0.85;                    // Aumentado para parar mais rápido
+ const WALL_BOUNCE_DAMPENING = 0.4;        // Reduzido para perder mais energia
+ const MIN_VELOCITY = 0.05;                // Reduzido para parar mais facilmente
+ const FRICTION = 0.95;                    // Reduzido para manter mais momentum
+ const WALL_BOUNCE_DAMPENING = 0.8;        // Aumentado para manter mais energia
+ const MIN_VELOCITY = 0.02;                // Reduzido para parar mais suavemente
+ const MAX_VELOCITY = 5;                   // Reduzido significativamente
+ const INITIAL_FORCE_MULTIPLIER = 2;       // Força inicial muito menor
+ const COLLISION_COOLDOWN = 150;           // Reduzido para permitir colisões mais frequentes
+ const ROTATION_SPEED = 1.5;               // Rotação mais lenta
+ const BOUNCE_HEIGHT_MULTIPLIER = 1;       // Quiques mais baixos
+ const ROTATION_SPEED = 1.2;               // Ajustado para rotação mais controlada
+ const BOUNCE_HEIGHT_MULTIPLIER = 2.0;     // Aumentado para quiques mais altos
+ const INITIAL_BOUNCE_COUNT = 4;           // Menos quiques
+ const TUMBLE_FACTOR = 0.4;               // Novo: controla o "tumbling"
+ const TUMBLE_FACTOR = 0.6;               // Aumentado para mais movimento após colisão
+ const VERTEX_IMPACT_CHANCE = 0.7;         // Novo: chance de impacto no vértice
+ 
+ // Configurações de escala para visual mais realista
+ const SCALE = {
+     MIN: 0.8,
+     MAX: 1.5,    // Reduzido para não parecer que voa muito alto
+     FLIGHT: 1.2,
+     BOUNCE: 1.1
+ };
+ 
+ // Setup Three.js (mantido como estava)
+ const scene = new THREE.Scene();
+ scene.background = new THREE.Color('#3a3a3a'); // fundo cinza escuro igual ao d6
+ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+ const renderer = new THREE.WebGLRenderer({ antialias: true });
+ renderer.setSize(window.innerWidth, window.innerHeight);
+ document.getElementById('dice-container').appendChild(renderer.domElement);
+ 
+ // Configurar câmera para visão top-down
+ camera.position.set(0, 10, 0);
+ camera.lookAt(0, 0, 0);
+ camera.rotation.z = Math.PI;
+ 
+ // Criar tetraedro com material mais realista
+ const geometry = new THREE.TetrahedronGeometry(1);
+ const material = new THREE.MeshPhongMaterial({
+     color: 0x1a237e,
+     shininess: 70,
+     specular: 0x333333,
+     flatShading: true
+ });
+ // Logo após criar o dado, definir sua posição inicial
+ const dice = new THREE.Mesh(geometry, material);
+ scene.add(dice);
+ 
+ // Carregar fonte padrão do Three.js
+ const loader = new FontLoader();
+ loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
+     const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+ 
+     // Posições ajustadas para ter 3 números iguais ao redor de cada vértice
+     const numberPositions = [
+         // Números 1 (três vezes ao redor do primeiro vértice)
+         { pos: new THREE.Vector3(-0.4, 0.2, -0.2), rot: new THREE.Euler(-0.5, -0.5, 0), text: '1' },
+         { pos: new THREE.Vector3(-0.2, 0.2, 0.4), rot: new THREE.Euler(-0.5, -0.5, 0), text: '1' },
+         { pos: new THREE.Vector3(-0.4, -0.2, 0.2), rot: new THREE.Euler(0.5, -0.5, 0), text: '1' },
+ 
+         // Números 2 (três vezes ao redor do segundo vértice)
+         { pos: new THREE.Vector3(0.4, 0.2, -0.2), rot: new THREE.Euler(-0.5, 0.5, 0), text: '2' },
+         { pos: new THREE.Vector3(0.2, 0.2, 0.4), rot: new THREE.Euler(-0.5, 0.5, 0), text: '2' },
+         { pos: new THREE.Vector3(0.4, -0.2, 0.2), rot: new THREE.Euler(0.5, 0.5, 0), text: '2' },
+ 
+         // Números 3 (três vezes ao redor do terceiro vértice)
+         { pos: new THREE.Vector3(0, -0.4, -0.2), rot: new THREE.Euler(0.5, 0, 0), text: '3' },
+         { pos: new THREE.Vector3(-0.2, -0.4, 0.2), rot: new THREE.Euler(0.5, -0.5, 0), text: '3' },
+         { pos: new THREE.Vector3(0.2, -0.4, 0.2), rot: new THREE.Euler(0.5, 0.5, 0), text: '3' },
+ 
+         // Números 4 (três vezes ao redor do quarto vértice)
+         { pos: new THREE.Vector3(0, 0.4, 0.2), rot: new THREE.Euler(-0.5, 0, 0), text: '4' },
+         { pos: new THREE.Vector3(-0.2, 0.3, 0.3), rot: new THREE.Euler(-0.5, -0.5, 0), text: '4' },
+         { pos: new THREE.Vector3(0.2, 0.3, 0.3), rot: new THREE.Euler(-0.5, 0.5, 0), text: '4' }
+     ];
+ 
+     numberPositions.forEach(({ pos, rot, text }) => {
+         const textGeo = new TextGeometry(text, {
+             font: font,
+             size: 0.2,         // Tamanho reduzido para caber três números
+             height: 0.01,      // Mantém fino
+             curveSegments: 12,
+             bevelEnabled: false
+         });
+ 
+         // Centralizar o texto
+         textGeo.computeBoundingBox();
+         const centerOffset = new THREE.Vector3(
+             -(textGeo.boundingBox.max.x - textGeo.boundingBox.min.x) / 2,
+             -(textGeo.boundingBox.max.y - textGeo.boundingBox.min.y) / 2,
+             -(textGeo.boundingBox.max.z - textGeo.boundingBox.min.z) / 2
+         );
+ 
+         const textMesh = new THREE.Mesh(textGeo, textMaterial);
+         textMesh.position.copy(pos).add(centerOffset);
+         textMesh.rotation.copy(rot);
+ 
+         // Adicionar direto ao dado
+         dice.add(textMesh);
+     });
+ });
+ 
+ 
+ // Iluminação ajustada
+ const light = new THREE.DirectionalLight(0xffffff, 1.2);
+ light.position.set(5, 8, 5);
+ scene.add(light);
+ scene.add(new THREE.AmbientLight(0x404040, 0.8));
+ 
+ // Estado do dado
+ let isRolling = false;
+ let pressStartTime = 0;
+ let velocity = new THREE.Vector2();
+ let angularVelocity = new THREE.Vector3();
+ let phase = 'ready';
+ let flightTime = 0;
+ let bounceCount = INITIAL_BOUNCE_COUNT;
+ let lastCollisionTime = 0;
+ let lastVertexImpact = 0;
+ 
+ // Função para simular impacto no vértice
+ function handleVertexImpact() {
+     const currentTime = Date.now();
+     if (currentTime - lastVertexImpact < 200) return false;
+ 
+     if (Math.random() < VERTEX_IMPACT_CHANCE) {
+         lastVertexImpact = currentTime;
+         angularVelocity.set(
+             random(-0.5, 0.5) * ROTATION_SPEED,
+             random(-0.5, 0.5) * ROTATION_SPEED,
+             random(-0.5, 0.5) * ROTATION_SPEED
+         );
+         return true;
+     }
+     return false;
+ }
+ 
+ function random(min, max) {
+     return Math.random() * (max - min) + min;
+ }
+ 
+ // Adicionar logo após a função random:
+ function getTopFace() {
+     const normalMatrix = new THREE.Matrix3();
+     normalMatrix.setFromMatrix4(dice.matrixWorld);
+ 
+     const upVector = new THREE.Vector3(0, 1, 0);
+     const faces = [
+         new THREE.Vector3(0, 0, 1),  // 1
+         new THREE.Vector3(1, 0, 0),  // 2
+         new THREE.Vector3(0, 1, 0),  // 3
+         new THREE.Vector3(-1, 0, 0)  // 4
+     ];
+ 
+     let maxDot = -1;
+     let result = 1;
+ 
+     faces.forEach((normal, index) => {
+         normal.applyMatrix3(normalMatrix);
+         const dot = normal.dot(upVector);
+         if (dot > maxDot) {
+             maxDot = dot;
+             result = index + 1;
+         }
+     });
+ 
+     return result;
+ }
+ 
+ // Função de animação ajustada para comportamento de tetraedro
+ function animate() {
+     if (!isRolling) {
+         renderer.render(scene, camera);
+         return;
+     }
+ 
+     requestAnimationFrame(animate);
+ 
+     switch (phase) {
+         case 'throwing':
+             dice.position.x += velocity.x;
+             dice.position.z += velocity.y;
+ 
+             flightTime += 0.05;
+             const height = Math.sin(flightTime * Math.PI) * BOUNCE_HEIGHT_MULTIPLIER;
+             dice.position.y = Math.max(0, height * 2);
+ 
+             // Rotação mais errática durante o voo
+             dice.rotation.x += angularVelocity.x * (1 + random(-0.2, 0.2));
+             dice.rotation.y += angularVelocity.y * (1 + random(-0.2, 0.2));
+             dice.rotation.z += angularVelocity.z * (1 + random(-0.2, 0.2));
+ 
+             if (flightTime >= 1) {
+                 phase = 'bouncing';
+                 bounceCount = INITIAL_BOUNCE_COUNT;
+                 flightTime = 0;
+                 handleVertexImpact();
+             }
+             break;
+ 
+         case 'bouncing':
+     dice.position.x += velocity.x * 0.5; // Reduzido movimento horizontal
+     dice.position.z += velocity.y * 0.5;
+     velocity.multiplyScalar(0.85); // Aumentado o atrito
+ 
+     flightTime += 0.1;
+     const bounceHeight = Math.sin(flightTime * Math.PI) * 
+                         (BOUNCE_HEIGHT_MULTIPLIER / (bounceCount + 1)) * // Ajustado divisor
+                         Math.max(Math.abs(velocity.length()), 0.2); // Reduzido valor mínimo
+ 
+     // Reduzidas as variações na altura
+     dice.position.y = Math.max(0, bounceHeight + random(-0.05, 0.05));
+ 
+     // Rotação mais controlada durante os quiques
+     if (dice.position.y < 0.1 && handleVertexImpact()) {
+         velocity.x += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3; // Reduzido o fator
+         velocity.y += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
+         angularVelocity.multiplyScalar(0.8); // Reduz a rotação mais rapidamente
+     }
+ 
+     // Rotações mais suaves
+     dice.rotation.x += angularVelocity.x * 0.7;
+     dice.rotation.y += angularVelocity.y * 0.7;
+     dice.rotation.z += angularVelocity.z * 0.7;
+ 
+     // Colisões mais suaves
+     if (dice.position.x <= -5 || dice.position.x >= 5) {
+         dice.position.x = dice.position.x <= -5 ? -5 : 5;
+         velocity.x *= -WALL_BOUNCE_DAMPENING * 1.7; // Reduzido o bounce
+         if (handleVertexImpact()) {
+             velocity.y += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
+         }
+     }
+ 
+     if (dice.position.z <= -5 || dice.position.z >= 5) {
+         dice.position.z = dice.position.z <= -5 ? -5 : 5;
+         velocity.y *= -WALL_BOUNCE_DAMPENING * 1.7;
+         if (handleVertexImpact()) {
+             velocity.x += random(-TUMBLE_FACTOR, TUMBLE_FACTOR) * 0.3;
+         }
+     }
+ 
+     if (flightTime >= 1) {
+         bounceCount--;
+         flightTime = 0;
+ 
+         if (bounceCount <= 0 || velocity.length() < 0.1) { // Adicionada condição de velocidade
+             phase = 'rolling';
+             velocity.multiplyScalar(0.5); // Reduzido ainda mais
+         } else {
+             // Movimento errático reduzido entre quiques
+             velocity.x += random(-0.1, 0.1) * TUMBLE_FACTOR;
+             velocity.y += random(-0.1, 0.1) * TUMBLE_FACTOR;
+             handleVertexImpact();
+         }
+     }
+     break;
+ 
+         case 'rolling':
+     dice.position.x += velocity.x * 0.5;  // Reduz o movimento horizontal
+     dice.position.z += velocity.y * 0.5;
+ 
+     velocity.multiplyScalar(0.85);        // Mais atrito
+     angularVelocity.multiplyScalar(0.85);
+ 
+     dice.position.y = 0;  // Mantém no chão
+ 
+     // Rotação final muito mais suave
+     dice.rotation.x += angularVelocity.x * 0.5;
+     dice.rotation.y += angularVelocity.y * 0.5;
+     dice.rotation.z += angularVelocity.z * 0.5;
+ 
+     // Para o dado mais rapidamente
+     if (velocity.length() < MIN_VELOCITY || angularVelocity.length() < 0.01) {
+         // Força o alinhamento com uma ponta para cima
+         const finalRotation = new THREE.Euler(
+             Math.PI / 4,  // 45 graus em X
+             0,           // 0 em Y
+             0            // 0 em Z
+         );
+ 
+         dice.rotation.copy(finalRotation);
+ 
+         const result = getTopFace();
+         resultDisplay.textContent = `Resultado: ${result}`;
+ 
+         isRolling = false;
+         phase = 'ready';
+         rollButton.disabled = false;
+ 
+         velocity.set(0, 0);
+         angularVelocity.set(0, 0, 0);
+ 
+         console.log(`[2025-04-19 21:59:31] User jonasdemencia got result: ${result}`);
+     }
+     break;
+     }
+ 
+     renderer.render(scene, camera);
+ }
+ 
+ // Event Listeners para o botão com lançamento ajustado
+ const rollButton = document.getElementById('roll-button');
+ const resultDisplay = document.getElementById('result-display');
+ 
+ function setInitialDicePosition() {
+     dice.position.set(
+         0,     // eixo X central
+         0,     // no chão
+         -5.5    // eixo Z "mais próximo da câmera" = base inferior da tela
+     );
+ }
+ 
+ // Chamada fora da função
+ setInitialDicePosition();
+ 
+ 
+ rollButton.addEventListener("mousedown", () => {
+     if (isRolling) return;
+     pressStartTime = Date.now();
+     rollButton.style.transform = 'scale(0.95)';
+ });
+ 
+ // No evento mouseup, ajustar o cálculo da posição
+ rollButton.addEventListener("mouseup", () => {
+     if (isRolling) return;
+ 
+     const pressDuration = Math.min(Date.now() - pressStartTime, 4000);
+     const forceFactor = pressDuration / 4000;
+ 
+     isRolling = true;
+     rollButton.disabled = true;
+     phase = 'throwing';
+ 
+     // Força muito mais suave
+     const force = INITIAL_FORCE_MULTIPLIER * (0.2 + forceFactor * 0.2);
+ 
+     // Posição inicial abaixo do botão
+     const buttonRect = rollButton.getBoundingClientRect();
+     const buttonBottomWorld = (buttonRect.bottom / window.innerHeight) * 10 - 4;
+ 
+     dice.position.set(
+     0,
+     0,
+     -5.5 // mesma base inferior da tela
+ );
+ 
+     // Movimento para cima na tela (Z positivo, pois a câmera olha de cima)
+ velocity.set(
+     random(-0.05, 0.05),   // leve variação lateral
+     force * 1.5            // força forte no eixo Z para subir até o topo
+ );
+ 
+ 
+     dice.rotation.set(
+         random(-Math.PI/4, Math.PI/4),
+         random(-Math.PI/4, Math.PI/4),
+         random(-Math.PI/4, Math.PI/4)
+     );
+ 
+     flightTime = 0;
+     bounceCount = INITIAL_BOUNCE_COUNT;
+ 
+     console.log(`[2025-04-19 22:17:11] User jonasdemencia rolled the dice`);
+     requestAnimationFrame(animate);
+     rollButton.style.transform = '';
+ });
+ 
+ // Ajuste de redimensionamento
+ window.addEventListener('resize', () => {
+     camera.aspect = window.innerWidth / window.innerHeight;
+     camera.updateProjectionMatrix();
+     renderer.setSize(window.innerWidth, window.innerHeight);
+     setInitialDicePosition(); // Adicionar esta linha
+ });
+ 
+ // Renderização inicial
+ renderer.render(scene, camera);
+ console.log(`[2025-04-19 22:26:19] D4 initialized by user jonasdemencia`);
+     </script>
+ 
+ 
+ </body>
+ </html>
