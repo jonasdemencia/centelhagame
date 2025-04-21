@@ -121,6 +121,34 @@ import * as CANNON from 'cannon-es';
         groundBody.position.set(0, -0.1, 0);
         world.addBody(groundBody);
 
+        // Criar paredes físicas
+const wallShape = new CANNON.Plane();
+const wallMaterial = new CANNON.Material('wall');
+
+// Parede superior (Z positivo)
+const topWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
+topWall.quaternion.setFromEuler(Math.PI, 0, 0);
+topWall.position.set(0, 0, 5);
+world.addBody(topWall);
+
+// Paredes laterais
+const leftWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
+leftWall.quaternion.setFromEuler(0, Math.PI/2, 0);
+leftWall.position.set(-5, 0, 0);
+world.addBody(leftWall);
+
+const rightWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
+rightWall.quaternion.setFromEuler(0, -Math.PI/2, 0);
+rightWall.position.set(5, 0, 0);
+world.addBody(rightWall);
+
+// Material de contato para as paredes
+const wallDiceContact = new CANNON.ContactMaterial(wallMaterial, diceMaterial, {
+    friction: 0.0,
+    restitution: 0.6  // Aumentar para mais quiques
+});
+world.addContactMaterial(wallDiceContact);
+
         // --- Criação do Dado (Three.js) ---
         const geometry = new THREE.TetrahedronGeometry(1);
         const material = new THREE.MeshPhongMaterial({ color: 0x1a237e, shininess: 80, specular: 0xaaaaaa, flatShading: false });
@@ -217,27 +245,57 @@ import * as CANNON from 'cannon-es';
         // --- Lógica de Rolagem (Physics Based) ---
         rollButton.addEventListener("mousedown", () => { /* ...código igual... */ });
         rollButton.addEventListener("mouseup", () => {
-            // ... (código igual ao anterior para iniciar a rolagem) ...
-            if (isRolling) return;
-            isRolling = true;
-            rollButton.disabled = true;
-            resultDisplay.textContent = "Rolando...";
-            rollButton.style.transform = '';
-            diceBody.wakeUp();
-            const startX = random(-1.5, 1.5);
-            const startZ = random(-1.5, 1.5);
-            diceBody.position.set(startX, 5, startZ);
-            diceBody.quaternion.setFromEuler(random(0, Math.PI * 2), random(0, Math.PI * 2), random(0, Math.PI * 2));
-            diceBody.velocity.set(0, 0, 0);
-            diceBody.angularVelocity.set(0, 0, 0);
-            const impulseMagnitude = 7 + random(0, 3);
-            const impulseDirection = new CANNON.Vec3(random(-1, 1), 0.5, random(-1, 1)).normalize();
-            diceBody.applyImpulse(impulseDirection.scale(impulseMagnitude), new CANNON.Vec3(0,0,0));
-            const torqueMagnitude = 8 + random(0, 4);
-            const torqueAxis = new CANNON.Vec3(random(-1, 1), random(-1, 1), random(-1, 1)).normalize();
-            diceBody.applyTorque(torqueAxis.scale(torqueMagnitude));
-            console.log(`[${new Date().toISOString()}] Dice Roll Triggered (Physics)`);
-        });
+    if (isRolling) return;
+    isRolling = true;
+    rollButton.disabled = true;
+    resultDisplay.textContent = "Rolando...";
+    rollButton.style.transform = '';
+    
+    diceBody.wakeUp();
+    
+    // Posição inicial próxima ao botão
+    diceBody.position.set(0, 1, -4); // Z negativo = parte inferior da tela
+    
+    // Rotação inicial aleatória
+    diceBody.quaternion.setFromEuler(
+        random(0, Math.PI * 2),
+        random(0, Math.PI * 2),
+        random(0, Math.PI * 2)
+    );
+    
+    // Zerar velocidades anteriores
+    diceBody.velocity.set(0, 0, 0);
+    diceBody.angularVelocity.set(0, 0, 0);
+    
+    // Lançamento em direção ao topo da tela
+    const speed = 15; // Velocidade do lançamento
+    const upwardAngle = random(Math.PI/6, Math.PI/4); // Ângulo de 30-45 graus
+    const lateralSpread = random(-0.3, 0.3); // Pequena variação lateral
+    
+    const impulseDirection = new CANNON.Vec3(
+        lateralSpread,    // Pequeno desvio lateral
+        Math.sin(upwardAngle) * 0.5,  // Componente vertical reduzida
+        Math.cos(upwardAngle)         // Componente para frente (Z positivo)
+    ).normalize();
+    
+    // Aplicar impulso forte para cima
+    const impulseMagnitude = speed + random(0, 2);
+    diceBody.applyImpulse(
+        impulseDirection.scale(impulseMagnitude),
+        new CANNON.Vec3(0, 0, 0)
+    );
+    
+    // Torque para rotação
+    const torqueMagnitude = 5 + random(0, 2);
+    const torqueAxis = new CANNON.Vec3(
+        random(-1, 1),
+        random(-1, 1),
+        random(-1, 1)
+    ).normalize();
+    diceBody.applyTorque(torqueAxis.scale(torqueMagnitude));
+
+    console.log(`[${new Date().toISOString()}] Dice Roll Triggered (Physics)`);
+});
 
         // --- Evento de Repouso (Sleep) ---
         diceBody.addEventListener('sleep', () => {
