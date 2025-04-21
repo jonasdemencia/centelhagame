@@ -224,6 +224,12 @@ world.addContactMaterial(wallDiceContact);
         const rollButton = document.getElementById('roll-button');
         const resultDisplay = document.getElementById('result-display');
 
+        // Variáveis para controle de força
+let pressStartTime = 0;
+let maxPressTime = 2000; // 2 segundos para força máxima
+let minForce = 15;
+let maxForce = 40;
+
         function random(min, max) {
             return Math.random() * (max - min) + min;
         }
@@ -250,18 +256,32 @@ world.addContactMaterial(wallDiceContact);
         }
 
         // --- Lógica de Rolagem (Physics Based) ---
-        rollButton.addEventListener("mousedown", () => { /* ...código igual... */ });
-        rollButton.addEventListener("mouseup", () => {
+        // Event listeners do botão
+rollButton.addEventListener("mousedown", () => {
     if (isRolling) return;
+    pressStartTime = Date.now();
+    // Adiciona feedback visual
+    rollButton.style.transform = 'scale(0.95)';
+    resultDisplay.textContent = "Segure para aumentar a força...";
+});
+
+rollButton.addEventListener("mouseup", () => {
+    if (isRolling) return;
+    
+    // Calcula a força baseada no tempo pressionado
+    const pressDuration = Date.now() - pressStartTime;
+    const forcePercent = Math.min(pressDuration / maxPressTime, 1);
+    const throwSpeed = minForce + (maxForce - minForce) * forcePercent;
+    
     isRolling = true;
     rollButton.disabled = true;
-    resultDisplay.textContent = "Rolando...";
+    resultDisplay.textContent = `Rolando com ${Math.round(forcePercent * 100)}% de força!`;
     rollButton.style.transform = '';
     
     diceBody.wakeUp();
 
-    // ⬇️ Posição logo abaixo do botão (parte inferior da tela)
-    diceBody.position.set(0, DICE_START_Y, BASE_Z); // Define a POSIÇÃO DE LANÇAMENTO na base da tela
+    // Posição inicial
+    diceBody.position.set(0, DICE_START_Y, BASE_Z);
     diceBody.velocity.set(0, 0, 0);
     diceBody.angularVelocity.set(0, 0, 0);
 
@@ -272,31 +292,30 @@ world.addContactMaterial(wallDiceContact);
         random(0, Math.PI * 2)
     );
 
-    // Direção do impulso em direção ao topo da tela
-    const speed = 15;
-    const upwardAngle = random(Math.PI / 7, Math.PI / 4);
-    const lateralSpread = random(-0.2, 0.2);
-
+    // Direção do impulso com força variável
     const impulseDirection = new CANNON.Vec3(
-    lateralSpread,
-    0.3 + Math.random() * 0.4,
-    -10
-);
-impulseDirection.normalize(); // Modifica o vetor diretamente
+        random(-0.2, 0.2),
+        0.3 + Math.random() * 0.4,
+        -5 * (forcePercent + 0.5) // Força aumenta com o tempo pressionado
+    );
+    impulseDirection.normalize();
 
-
+    // Aplica o impulso com a força calculada
     diceBody.applyImpulse(
-    impulseDirection.scale(speed),
-    new CANNON.Vec3(0, 0, 0)
-);
+        impulseDirection.scale(throwSpeed),
+        new CANNON.Vec3(0, 0, 0)
+    );
 
-    // Adiciona torque aleatório
-    const torqueAxis = new CANNON.Vec3(random(-1, 1), random(-1, 1), random(-1, 1)).normalize();
-    diceBody.applyTorque(torqueAxis.scale(5 + random(0, 2)));
+    // Torque também aumenta com a força
+    const torqueAxis = new CANNON.Vec3(
+        random(-1, 1),
+        random(-1, 1),
+        random(-1, 1)
+    ).normalize();
+    diceBody.applyTorque(torqueAxis.scale(5 + random(0, 2) * forcePercent * 3));
 
-    console.log(`[${new Date().toISOString()}] Dice Roll Triggered`);
+    console.log(`[${new Date().toISOString()}] Dice Roll Triggered with ${Math.round(forcePercent * 100)}% force`);
 });
-
 
         // --- Evento de Repouso (Sleep) ---
         diceBody.addEventListener('sleep', () => {
