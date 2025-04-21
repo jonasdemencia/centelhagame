@@ -144,8 +144,8 @@ world.addBody(rightWall);
 
 // Material de contato para as paredes
 const wallDiceContact = new CANNON.ContactMaterial(wallMaterial, diceMaterial, {
-    friction: 0.0,
-    restitution: 0.6  // Aumentar para mais quiques
+    friction: 0.3,
+    restitution: 0.8  // Aumentar para mais quiques
 });
 world.addContactMaterial(wallDiceContact);
 
@@ -254,7 +254,7 @@ world.addContactMaterial(wallDiceContact);
     diceBody.wakeUp();
 
     // ⬇️ Posição logo abaixo do botão (parte inferior da tela)
-    diceBody.position.set(0, 0.8, -5);
+    diceBody.position.set(0, 0.8, -7);
     diceBody.velocity.set(0, 0, 0);
     diceBody.angularVelocity.set(0, 0, 0);
 
@@ -271,10 +271,11 @@ world.addContactMaterial(wallDiceContact);
     const lateralSpread = random(-0.2, 0.2);
 
     const impulseDirection = new CANNON.Vec3(
-        lateralSpread,
-        Math.sin(upwardAngle) * 1.5,
-        Math.cos(upwardAngle)
-    ).normalize();
+    lateralSpread,
+    0.3 + Math.random() * 0.4, // altura menor que antes
+    1                          // direto para o topo da tela
+).normalize();
+
 
     diceBody.applyImpulse(
         impulseDirection.scale(speed),
