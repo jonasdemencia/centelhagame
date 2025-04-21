@@ -184,19 +184,9 @@ world.addContactMaterial(wallDiceContact);
             angularDamping: 0.4, // Amortecimento rotacional (ajuda a parar de girar)
             linearDamping: 0.2   // Amortecimento linear (ajuda a parar de deslizar)
         });
+        diceBody.position.set(0, 5, 0); // Posição inicial (acima do chão)
         world.addBody(diceBody);
         // --- [FIM DA SEÇÃO CORRIGIDA E LIMPA] ---
-
-        // Inicialização da posição do dado
-        const initializeDicePosition = () => {
-            const startZ = -4; // Posição mais próxima do botão
-            const startY = 0.8; // Ligeiramente acima do chão
-            diceBody.position.set(0, startY, startZ);
-            diceBody.quaternion.setFromEuler(0, 0, 0); // Orientação inicial
-            dice.position.copy(diceBody.position);
-            dice.quaternion.copy(diceBody.quaternion);
-        };
-
 
         // Carregar Fonte e Adicionar Números
         const loader = new FontLoader();
@@ -253,6 +243,7 @@ world.addContactMaterial(wallDiceContact);
         }
 
         // --- Lógica de Rolagem (Physics Based) ---
+        rollButton.addEventListener("mousedown", () => { /* ...código igual... */ });
         rollButton.addEventListener("mouseup", () => {
     if (isRolling) return;
     isRolling = true;
@@ -262,32 +253,41 @@ world.addContactMaterial(wallDiceContact);
     
     diceBody.wakeUp();
 
-    // Reseta a posição inicial
-    initializeDicePosition();
+    // ⬇️ Posição logo abaixo do botão (parte inferior da tela)
+    diceBody.position.set(0, 0.8, -7);
+    diceBody.velocity.set(0, 0, 0);
+    diceBody.angularVelocity.set(0, 0, 0);
 
-    // Aplica impulso em direção ao topo da tela
-    const speed = 15;
-    const impulseDirection = new CANNON.Vec3(
-        random(-0.2, 0.2),    // Pequeno desvio lateral
-        0.3,                  // Componente vertical
-        1                     // Direção principal (para o topo da tela)
-    ).normalize();
-
-    // Aplica o impulso
-    diceBody.applyImpulse(
-        impulseDirection.scale(speed),
-        new CANNON.Vec3(0, 0, 0)
+    // Rotação inicial aleatória
+    diceBody.quaternion.setFromEuler(
+        random(0, Math.PI * 2),
+        random(0, Math.PI * 2),
+        random(0, Math.PI * 2)
     );
 
-    // Rotação aleatória
-    const torqueAxis = new CANNON.Vec3(
-        random(-1, 1),
-        random(-1, 1),
-        random(-1, 1)
-    ).normalize();
-    diceBody.applyTorque(torqueAxis.scale(5));
+    // Direção do impulso em direção ao topo da tela
+    const speed = 15;
+    const upwardAngle = random(Math.PI / 7, Math.PI / 4);
+    const lateralSpread = random(-0.2, 0.2);
 
-    console.log(`[2025-04-21 21:31:45] Dice Roll Triggered from bottom position`);
+    const impulseDirection = new CANNON.Vec3(
+    lateralSpread,
+    0.3 + Math.random() * 0.4,
+    1
+);
+impulseDirection.normalize(); // Modifica o vetor diretamente
+
+
+    diceBody.applyImpulse(
+    impulseDirection.scale(speed),
+    new CANNON.Vec3(0, 0, 0)
+);
+
+    // Adiciona torque aleatório
+    const torqueAxis = new CANNON.Vec3(random(-1, 1), random(-1, 1), random(-1, 1)).normalize();
+    diceBody.applyTorque(torqueAxis.scale(5 + random(0, 2)));
+
+    console.log(`[${new Date().toISOString()}] Dice Roll Triggered`);
 });
 
 
