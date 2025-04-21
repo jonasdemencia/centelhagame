@@ -130,8 +130,8 @@ const wallMaterial = new CANNON.Material('wall');
 
 // Parede superior (Z positivo)
 const topWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
-topWall.quaternion.setFromEuler(0, Math.PI, 0); // Rotaciona 180 graus em Y para a normal apontar para -Z
-topWall.position.set(0, 0, 5);
+topWall.quaternion.setFromEuler(Math.PI, 0, 0); // MUDOU AQUI - era 0, Math.PI, 0
+topWall.position.set(0, 0, 7); // Movido mais para cima
 world.addBody(topWall);
 
 // Paredes laterais
@@ -145,10 +145,10 @@ rightWall.quaternion.setFromEuler(0, -Math.PI/2, 0);
 rightWall.position.set(5, 0, 0);
 world.addBody(rightWall);
 
-// Parede INFERIOR (Z negativo = BASE da visão da câmera)
+// Parede INFERIOR
 const bottomWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
-// Nenhuma rotação necessária se a normal padrão do Plane for (0,0,1), pois ela apontará para +Z (para dentro da área)
-bottomWall.position.set(0, 0, BASE_Z - 0.1); // Posiciona a parede um pouco atrás da posição inicial/lançamento
+bottomWall.quaternion.setFromEuler(0, 0, 0); // Mantém normal apontando para +Z
+bottomWall.position.set(0, 0, BASE_Z);
 world.addBody(bottomWall);
 
 // Material de contato para as paredes
