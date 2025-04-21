@@ -188,6 +188,11 @@ world.addContactMaterial(wallDiceContact);
         world.addBody(diceBody);
         // --- [FIM DA SEÇÃO CORRIGIDA E LIMPA] ---
 
+        // 🟡 POSIÇÃO INICIAL VISUALIZÁVEL
+diceBody.position.set(0, 0.8, -5); // parte inferior da tela
+dice.position.copy(diceBody.position);
+dice.quaternion.copy(diceBody.quaternion);
+
         // Carregar Fonte e Adicionar Números
         const loader = new FontLoader();
         loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
