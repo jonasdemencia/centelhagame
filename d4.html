@@ -309,16 +309,21 @@ rollButton.addEventListener("mouseup", () => {
     );
 
     // Torque também aumenta com a força
-    const torqueAxis = new CANNON.Vec3(
-        random(-1, 1),
-        random(-1, 1),
-        random(-1, 1)
-    ).normalize();
-    diceBody.applyTorque(torqueAxis.scale(5 + random(0, 2) * forcePercent * 3));
+const torqueAxis = new CANNON.Vec3(
+    random(-1, 1),
+    random(-1, 1),
+    random(-1, 1)
+).normalize();
 
-    console.log(`[${new Date().toISOString()}] Dice Roll Triggered with ${Math.round(forcePercent * 100)}% force`);
-});
+// Calcula a magnitude do torque
+const torqueMagnitude = 5 + random(0, 2) * forcePercent * 3;
 
+// Aplica o torque multiplicando o vetor pela magnitude
+diceBody.applyTorque(new CANNON.Vec3(
+    torqueAxis.x * torqueMagnitude,
+    torqueAxis.y * torqueMagnitude,
+    torqueAxis.z * torqueMagnitude
+));
         // --- Evento de Repouso (Sleep) ---
         diceBody.addEventListener('sleep', () => {
             // ... (código igual ao anterior para detectar parada e mostrar resultado) ...
