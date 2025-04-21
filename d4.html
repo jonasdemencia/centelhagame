@@ -130,9 +130,8 @@ const wallMaterial = new CANNON.Material('wall');
 
 // Parede superior (Z positivo)
 const topWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
-topWall.quaternion.setFromEuler(Math.PI, 0, 0); // MUDOU AQUI - era 0, Math.PI, 0
-topWall.position.set(0, 0, 7); // Movido mais para cima
-world.addBody(topWall);
+topWall.quaternion.setFromEuler(Math.PI, 0, 0);
+topWall.position.set(0, 0, 7); // Mova mais para cima para dar espaço ao dado
 
 // Paredes laterais
 const leftWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
@@ -147,9 +146,8 @@ world.addBody(rightWall);
 
 // Parede INFERIOR
 const bottomWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
-bottomWall.quaternion.setFromEuler(0, 0, 0); // Mantém normal apontando para +Z
-bottomWall.position.set(0, 0, BASE_Z);
-world.addBody(bottomWall);
+bottomWall.quaternion.setFromEuler(0, 0, 0);
+bottomWall.position.set(0, 0, BASE_Z - 0.1);
 
 // Material de contato para as paredes
 const wallDiceContact = new CANNON.ContactMaterial(wallMaterial, diceMaterial, {
