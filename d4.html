@@ -252,50 +252,42 @@ world.addContactMaterial(wallDiceContact);
     rollButton.style.transform = '';
     
     diceBody.wakeUp();
-    
-    // Posição inicial próxima ao botão
-    diceBody.position.set(0, 1, -4); // Z negativo = parte inferior da tela
-    
+
+    // ⬇️ Posição logo abaixo do botão (parte inferior da tela)
+    diceBody.position.set(0, 0.8, -5);
+    diceBody.velocity.set(0, 0, 0);
+    diceBody.angularVelocity.set(0, 0, 0);
+
     // Rotação inicial aleatória
     diceBody.quaternion.setFromEuler(
         random(0, Math.PI * 2),
         random(0, Math.PI * 2),
         random(0, Math.PI * 2)
     );
-    
-    // Zerar velocidades anteriores
-    diceBody.velocity.set(0, 0, 0);
-    diceBody.angularVelocity.set(0, 0, 0);
-    
-    // Lançamento em direção ao topo da tela
-    const speed = 15; // Velocidade do lançamento
-    const upwardAngle = random(Math.PI/6, Math.PI/4); // Ângulo de 30-45 graus
-    const lateralSpread = random(-0.3, 0.3); // Pequena variação lateral
-    
+
+    // Direção do impulso em direção ao topo da tela
+    const speed = 15;
+    const upwardAngle = random(Math.PI / 7, Math.PI / 4);
+    const lateralSpread = random(-0.2, 0.2);
+
     const impulseDirection = new CANNON.Vec3(
-        lateralSpread,    // Pequeno desvio lateral
-        Math.sin(upwardAngle) * 0.5,  // Componente vertical reduzida
-        Math.cos(upwardAngle)         // Componente para frente (Z positivo)
+        lateralSpread,
+        Math.sin(upwardAngle) * 1.5,
+        Math.cos(upwardAngle)
     ).normalize();
-    
-    // Aplicar impulso forte para cima
-    const impulseMagnitude = speed + random(0, 2);
+
     diceBody.applyImpulse(
-        impulseDirection.scale(impulseMagnitude),
+        impulseDirection.scale(speed),
         new CANNON.Vec3(0, 0, 0)
     );
-    
-    // Torque para rotação
-    const torqueMagnitude = 5 + random(0, 2);
-    const torqueAxis = new CANNON.Vec3(
-        random(-1, 1),
-        random(-1, 1),
-        random(-1, 1)
-    ).normalize();
-    diceBody.applyTorque(torqueAxis.scale(torqueMagnitude));
 
-    console.log(`[${new Date().toISOString()}] Dice Roll Triggered (Physics)`);
+    // Adiciona torque aleatório
+    const torqueAxis = new CANNON.Vec3(random(-1, 1), random(-1, 1), random(-1, 1)).normalize();
+    diceBody.applyTorque(torqueAxis.scale(5 + random(0, 2)));
+
+    console.log(`[${new Date().toISOString()}] Dice Roll Triggered`);
 });
+
 
         // --- Evento de Repouso (Sleep) ---
         diceBody.addEventListener('sleep', () => {
