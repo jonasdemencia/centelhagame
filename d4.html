@@ -94,6 +94,9 @@ import * as CANNON from 'cannon-es';
 
         // --- Configurações Globais ---
         // ... (código igual até a criação do mesh 'dice') ...
+        // --- Constantes para Posição ---
+const BASE_Z = -7; // Coordenada Z para a base/fundo da tela
+const DICE_START_Y = 0.8; // Altura inicial/lançamento logo acima do chão
         const scene = new THREE.Scene();
         scene.background = new THREE.Color('#3a3a3a');
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -127,7 +130,7 @@ const wallMaterial = new CANNON.Material('wall');
 
 // Parede superior (Z positivo)
 const topWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
-topWall.quaternion.setFromEuler(Math.PI, 0, 0);
+topWall.quaternion.setFromEuler(0, Math.PI, 0); // Rotaciona 180 graus em Y para a normal apontar para -Z
 topWall.position.set(0, 0, 5);
 world.addBody(topWall);
 
@@ -141,6 +144,12 @@ const rightWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMat
 rightWall.quaternion.setFromEuler(0, -Math.PI/2, 0);
 rightWall.position.set(5, 0, 0);
 world.addBody(rightWall);
+
+// Parede INFERIOR (Z negativo = BASE da visão da câmera)
+const bottomWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
+// Nenhuma rotação necessária se a normal padrão do Plane for (0,0,1), pois ela apontará para +Z (para dentro da área)
+bottomWall.position.set(0, 0, BASE_Z - 0.1); // Posiciona a parede um pouco atrás da posição inicial/lançamento
+world.addBody(bottomWall);
 
 // Material de contato para as paredes
 const wallDiceContact = new CANNON.ContactMaterial(wallMaterial, diceMaterial, {
@@ -184,7 +193,7 @@ world.addContactMaterial(wallDiceContact);
             angularDamping: 0.4, // Amortecimento rotacional (ajuda a parar de girar)
             linearDamping: 0.2   // Amortecimento linear (ajuda a parar de deslizar)
         });
-        diceBody.position.set(0, 5, 0); // Posição inicial (acima do chão)
+        diceBody.position.set(0, DICE_START_Y, BASE_Z); // Define a POSIÇÃO INICIAL na base da tela
         world.addBody(diceBody);
         // --- [FIM DA SEÇÃO CORRIGIDA E LIMPA] ---
 
@@ -254,7 +263,7 @@ world.addContactMaterial(wallDiceContact);
     diceBody.wakeUp();
 
     // ⬇️ Posição logo abaixo do botão (parte inferior da tela)
-    diceBody.position.set(0, 0.8, -7);
+    diceBody.position.set(0, DICE_START_Y, BASE_Z); // Define a POSIÇÃO DE LANÇAMENTO na base da tela
     diceBody.velocity.set(0, 0, 0);
     diceBody.angularVelocity.set(0, 0, 0);
 
