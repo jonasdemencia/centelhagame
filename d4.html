@@ -131,7 +131,7 @@ const wallMaterial = new CANNON.Material('wall');
 // Parede superior (Z positivo)
 const topWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 topWall.quaternion.setFromEuler(Math.PI, 0, 0);
-topWall.position.set(0, 0, -3); // Mudou de 7 para -3 (mais próximo)
+topWall.position.set(0, 0, -7); // Mudou de 7 para -3 (mais próximo)
 world.addBody(topWall); // IMPORTANTE: Adicionar ao mundo!
 
 // Paredes laterais (mantém como está)
@@ -229,8 +229,8 @@ world.addContactMaterial(wallDiceContact);
         // Variáveis para controle de força
 let pressStartTime = 0;
 let maxPressTime = 2000; // 2 segundos para força máxima
-let minForce = 15;
-let maxForce = 40;
+let minForce = 8;
+let maxForce = 20;
 
         function random(min, max) {
             return Math.random() * (max - min) + min;
@@ -298,7 +298,7 @@ rollButton.addEventListener("mouseup", () => {
     const impulseDirection = new CANNON.Vec3(
         random(-0.2, 0.2),
         0.3 + Math.random() * 0.4,
-        -5 * (forcePercent + 0.5) // Força aumenta com o tempo pressionado
+        -3 * (forcePercent + 0.5) // Força aumenta com o tempo pressionado
     );
     impulseDirection.normalize();
 
