@@ -272,15 +272,16 @@ world.addContactMaterial(wallDiceContact);
 
     const impulseDirection = new CANNON.Vec3(
     lateralSpread,
-    0.3 + Math.random() * 0.4, // altura menor que antes
-    1                          // direto para o topo da tela
-).normalize();
+    0.3 + Math.random() * 0.4,
+    1
+);
+impulseDirection.normalize(); // Modifica o vetor diretamente
 
 
     diceBody.applyImpulse(
-        impulseDirection.scale(speed),
-        new CANNON.Vec3(0, 0, 0)
-    );
+    impulseDirection.scale(speed),
+    new CANNON.Vec3(0, 0, 0)
+);
 
     // Adiciona torque aleatório
     const torqueAxis = new CANNON.Vec3(random(-1, 1), random(-1, 1), random(-1, 1)).normalize();
