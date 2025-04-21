@@ -128,7 +128,7 @@ const wallMaterial = new CANNON.Material('wall');
 // Parede superior (Z positivo)
 const topWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 topWall.quaternion.setFromEuler(Math.PI, 0, 0);
-topWall.position.set(0, 0, 5);
+topWall.position.set(0, 0, 6.5);
 world.addBody(topWall);
 
 // Paredes laterais
@@ -189,7 +189,7 @@ world.addContactMaterial(wallDiceContact);
         // --- [FIM DA SEÇÃO CORRIGIDA E LIMPA] ---
 
         // 🟡 POSIÇÃO INICIAL VISUALIZÁVEL
-diceBody.position.set(0, 0.8, -5); // parte inferior da tela
+diceBody.position.set(0, 0.8, -6.5); // parte inferior da tela
 dice.position.copy(diceBody.position);
 dice.quaternion.copy(diceBody.quaternion);
 
