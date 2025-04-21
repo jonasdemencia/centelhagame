@@ -131,10 +131,9 @@ const wallMaterial = new CANNON.Material('wall');
 // Parede superior (Z positivo)
 const topWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 topWall.quaternion.setFromEuler(Math.PI, 0, 0);
-topWall.position.set(0, 0, -7); // Mudou de 7 para -3 (mais próximo)
-world.addBody(topWall); // IMPORTANTE: Adicionar ao mundo!
+topWall.position.set(0, 0, 7); // Mova mais para cima para dar espaço ao dado
 
-// Paredes laterais (mantém como está)
+// Paredes laterais
 const leftWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 leftWall.quaternion.setFromEuler(0, Math.PI/2, 0);
 leftWall.position.set(-5, 0, 0);
@@ -149,7 +148,6 @@ world.addBody(rightWall);
 const bottomWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 bottomWall.quaternion.setFromEuler(0, 0, 0);
 bottomWall.position.set(0, 0, BASE_Z - 0.1);
-world.addBody(bottomWall); // IMPORTANTE: Adicionar ao mundo!
 
 // Material de contato para as paredes
 const wallDiceContact = new CANNON.ContactMaterial(wallMaterial, diceMaterial, {
@@ -229,8 +227,8 @@ world.addContactMaterial(wallDiceContact);
         // Variáveis para controle de força
 let pressStartTime = 0;
 let maxPressTime = 2000; // 2 segundos para força máxima
-let minForce = 8;
-let maxForce = 20;
+let minForce = 15;
+let maxForce = 40;
 
         function random(min, max) {
             return Math.random() * (max - min) + min;
@@ -298,7 +296,7 @@ rollButton.addEventListener("mouseup", () => {
     const impulseDirection = new CANNON.Vec3(
         random(-0.2, 0.2),
         0.3 + Math.random() * 0.4,
-        -3 * (forcePercent + 0.5) // Força aumenta com o tempo pressionado
+        -5 * (forcePercent + 0.5) // Força aumenta com o tempo pressionado
     );
     impulseDirection.normalize();
 
@@ -308,26 +306,17 @@ rollButton.addEventListener("mouseup", () => {
         new CANNON.Vec3(0, 0, 0)
     );
 
-        // Torque também aumenta com a força
+    // Torque também aumenta com a força
     const torqueAxis = new CANNON.Vec3(
         random(-1, 1),
         random(-1, 1),
         random(-1, 1)
     ).normalize();
-
-    // Calcula a magnitude do torque
-    const torqueMagnitude = 5 + random(0, 2) * forcePercent * 3;
-
-    // Aplica o torque multiplicando o vetor pela magnitude
-    diceBody.applyTorque(new CANNON.Vec3(
-        torqueAxis.x * torqueMagnitude,
-        torqueAxis.y * torqueMagnitude,
-        torqueAxis.z * torqueMagnitude
-    ));
+    diceBody.applyTorque(torqueAxis.scale(5 + random(0, 2) * forcePercent * 3));
 
     console.log(`[${new Date().toISOString()}] Dice Roll Triggered with ${Math.round(forcePercent * 100)}% force`);
 });
-        
+
         // --- Evento de Repouso (Sleep) ---
         diceBody.addEventListener('sleep', () => {
             // ... (código igual ao anterior para detectar parada e mostrar resultado) ...
