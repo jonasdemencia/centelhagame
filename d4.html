@@ -198,9 +198,9 @@ world.addContactMaterial(wallDiceContact);
 
     
 // Carregar Fonte e Adicionar Números
+// Carregar Fonte e Adicionar Números
 const loader = new FontLoader();
 loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-    // Material brilhante para os números
     const textMaterial = new THREE.MeshPhongMaterial({ 
         color: 0xffffff,
         emissive: 0x444444,
@@ -209,17 +209,17 @@ loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json
     });
 
     const tempPositions = [
-        { text: '1', pos: new THREE.Vector3(0.25, 0.25, 0.25) },
-        { text: '2', pos: new THREE.Vector3(-0.25, -0.25, 0.25) },
-        { text: '3', pos: new THREE.Vector3(-0.25, 0.25, -0.25) },
-        { text: '4', pos: new THREE.Vector3(0.25, -0.25, -0.25) }
+        { text: '1', pos: new THREE.Vector3(0.25, 0.25, 0.25), normal: new THREE.Vector3(1, 1, 1) },
+        { text: '2', pos: new THREE.Vector3(-0.25, -0.25, 0.25), normal: new THREE.Vector3(-1, -1, 1) },
+        { text: '3', pos: new THREE.Vector3(-0.25, 0.25, -0.25), normal: new THREE.Vector3(-1, 1, -1) },
+        { text: '4', pos: new THREE.Vector3(0.25, -0.25, -0.25), normal: new THREE.Vector3(1, -1, -1) }
     ];
 
-    tempPositions.forEach(({ text, pos }) => {
+    tempPositions.forEach(({ text, pos, normal }) => {
         const textGeo = new TextGeometry(text, { 
             font: font, 
-            size: 0.25,      // Aumentado significativamente
-            height: 0.05,    // Mais profundidade
+            size: 0.2,      // Reduzido um pouco
+            height: 0.03,   // Reduzido um pouco
             curveSegments: 12,
             bevelEnabled: true,
             bevelThickness: 0.01,
@@ -236,9 +236,19 @@ loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json
 
         const textMesh = new THREE.Mesh(textGeo, textMaterial);
         textMesh.position.copy(pos).add(centerOffset);
+
+        // Alinhamento correto com as faces
+        normal.normalize();
+        textMesh.quaternion.setFromUnitVectors(
+            new THREE.Vector3(0, 1, 0), // vetor up padrão
+            normal
+        );
         
-        // Rotação para alinhar com as faces
-        textMesh.lookAt(new THREE.Vector3(0, 0, 0));
+        // Rotação adicional para alinhar o texto com a face
+        textMesh.rotateZ(Math.PI); // Gira 180 graus para corrigir a orientação
+
+        // Pequeno ajuste para mover o texto ligeiramente para fora da face
+        textMesh.position.add(normal.multiplyScalar(0.02));
         
         dice.add(textMesh);
     });
