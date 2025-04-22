@@ -156,42 +156,8 @@ const wallDiceContact = new CANNON.ContactMaterial(wallMaterial, diceMaterial, {
 });
 world.addContactMaterial(wallDiceContact);
 
-        
 
-        // --- Criação do Corpo Físico do Dado (Cannon-es) --- [INÍCIO DA SEÇÃO CORRIGIDA E LIMPA]
-        // Extrair vértices da geometria não indexada do Three.js
-        const vertices = geometry.attributes.position.array;
-        const cannonVertices = [];
-        for (let i = 0; i < vertices.length; i += 3) {
-            cannonVertices.push(new CANNON.Vec3(vertices[i], vertices[i + 1], vertices[i + 2]));
-        }
-
-        // Definir as faces manualmente para geometria não indexada
-        // O array 'vertices' acima terá 12 entradas (4 faces * 3 vértices/face).
-        // As faces referenciam os índices DENTRO do array cannonVertices (0 a 11).
-        const cannonFaces = [
-            [0, 1, 2],  // Face 1 (usa os 3 primeiros vértices do array)
-            [3, 4, 5],  // Face 2 (usa os 3 próximos vértices)
-            [6, 7, 8],  // Face 3
-            [9, 10, 11] // Face 4
-        ];
-
-        // Cria a forma convexa usando os vértices e as faces definidas
-        const diceShape = new CANNON.ConvexPolyhedron({ vertices: cannonVertices, faces: cannonFaces });
-
-        // Cria o corpo físico
-        const diceBody = new CANNON.Body({
-            mass: 1.5, // Massa do dado (afeta impulsos)
-            shape: diceShape,
-            material: diceMaterial,
-            angularDamping: 0.4, // Amortecimento rotacional (ajuda a parar de girar)
-            linearDamping: 0.2   // Amortecimento linear (ajuda a parar de deslizar)
-        });
-        diceBody.position.set(0, DICE_START_Y, BASE_Z); // Define a POSIÇÃO INICIAL na base da tela
-        world.addBody(diceBody);
-        // --- [FIM DA SEÇÃO CORRIGIDA E LIMPA] ---
-
-       // --- Criação do Dado (Three.js) ---
+         // --- Criação do Dado (Three.js) ---
 function createDiceTexture() {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
@@ -259,6 +225,41 @@ const material = new THREE.MeshStandardMaterial({
 
 const dice = new THREE.Mesh(geometry, material);
 scene.add(dice);
+        
+
+        // --- Criação do Corpo Físico do Dado (Cannon-es) --- [INÍCIO DA SEÇÃO CORRIGIDA E LIMPA]
+        // Extrair vértices da geometria não indexada do Three.js
+        const vertices = geometry.attributes.position.array;
+        const cannonVertices = [];
+        for (let i = 0; i < vertices.length; i += 3) {
+            cannonVertices.push(new CANNON.Vec3(vertices[i], vertices[i + 1], vertices[i + 2]));
+        }
+
+        // Definir as faces manualmente para geometria não indexada
+        // O array 'vertices' acima terá 12 entradas (4 faces * 3 vértices/face).
+        // As faces referenciam os índices DENTRO do array cannonVertices (0 a 11).
+        const cannonFaces = [
+            [0, 1, 2],  // Face 1 (usa os 3 primeiros vértices do array)
+            [3, 4, 5],  // Face 2 (usa os 3 próximos vértices)
+            [6, 7, 8],  // Face 3
+            [9, 10, 11] // Face 4
+        ];
+
+        // Cria a forma convexa usando os vértices e as faces definidas
+        const diceShape = new CANNON.ConvexPolyhedron({ vertices: cannonVertices, faces: cannonFaces });
+
+        // Cria o corpo físico
+        const diceBody = new CANNON.Body({
+            mass: 1.5, // Massa do dado (afeta impulsos)
+            shape: diceShape,
+            material: diceMaterial,
+            angularDamping: 0.4, // Amortecimento rotacional (ajuda a parar de girar)
+            linearDamping: 0.2   // Amortecimento linear (ajuda a parar de deslizar)
+        });
+        diceBody.position.set(0, DICE_START_Y, BASE_Z); // Define a POSIÇÃO INICIAL na base da tela
+        world.addBody(diceBody);
+        // --- [FIM DA SEÇÃO CORRIGIDA E LIMPA] ---
+
 
 
         // --- Estado e Controles ---
