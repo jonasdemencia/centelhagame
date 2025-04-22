@@ -198,7 +198,6 @@ world.addContactMaterial(wallDiceContact);
 
     
 // Carregar Fonte e Adicionar Números
-// Carregar Fonte e Adicionar Números
 const loader = new FontLoader();
 loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
     const textMaterial = new THREE.MeshPhongMaterial({ 
@@ -208,49 +207,59 @@ loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json
         specular: 0xffffff
     });
 
-    const tempPositions = [
-        { text: '1', pos: new THREE.Vector3(0.25, 0.25, 0.25), normal: new THREE.Vector3(1, 1, 1) },
-        { text: '2', pos: new THREE.Vector3(-0.25, -0.25, 0.25), normal: new THREE.Vector3(-1, -1, 1) },
-        { text: '3', pos: new THREE.Vector3(-0.25, 0.25, -0.25), normal: new THREE.Vector3(-1, 1, -1) },
-        { text: '4', pos: new THREE.Vector3(0.25, -0.25, -0.25), normal: new THREE.Vector3(1, -1, -1) }
+    // Definição das faces do D4 com seus três números
+    const faces = [
+        { normal: new THREE.Vector3(1, 1, 1), numbers: ['1', '2', '3'] },
+        { normal: new THREE.Vector3(-1, -1, 1), numbers: ['1', '3', '4'] },
+        { normal: new THREE.Vector3(-1, 1, -1), numbers: ['2', '3', '4'] },
+        { normal: new THREE.Vector3(1, -1, -1), numbers: ['1', '2', '4'] }
     ];
 
-    tempPositions.forEach(({ text, pos, normal }) => {
-        const textGeo = new TextGeometry(text, { 
-            font: font, 
-            size: 0.2,      // Reduzido um pouco
-            height: 0.03,   // Reduzido um pouco
-            curveSegments: 12,
-            bevelEnabled: true,
-            bevelThickness: 0.01,
-            bevelSize: 0.01,
-            bevelSegments: 5
+    faces.forEach(face => {
+        const normal = face.normal.normalize();
+        // Criar três posições distribuídas na face
+        const positions = [
+            new THREE.Vector3(0.2, 0.2, 0),  // Topo
+            new THREE.Vector3(-0.2, -0.1, 0), // Baixo esquerda
+            new THREE.Vector3(0.2, -0.1, 0)   // Baixo direita
+        ];
+
+        face.numbers.forEach((number, index) => {
+            const textGeo = new TextGeometry(number, { 
+                font: font, 
+                size: 0.15,     // Tamanho reduzido
+                height: 0.02,   // Profundidade reduzida
+                curveSegments: 12,
+                bevelEnabled: false
+            });
+
+            textGeo.computeBoundingBox();
+            const centerOffset = new THREE.Vector3(
+                -(textGeo.boundingBox.max.x - textGeo.boundingBox.min.x) / 2,
+                -(textGeo.boundingBox.max.y - textGeo.boundingBox.min.y) / 2,
+                -(textGeo.boundingBox.max.z - textGeo.boundingBox.min.z) / 2
+            );
+
+            const textMesh = new THREE.Mesh(textGeo, textMaterial);
+            
+            // Posicionar o número na face
+            textMesh.position.copy(positions[index]);
+            
+            // Criar um grupo para rotacionar corretamente
+            const numberGroup = new THREE.Group();
+            numberGroup.add(textMesh);
+            
+            // Alinhar com a face
+            numberGroup.quaternion.setFromUnitVectors(
+                new THREE.Vector3(0, 0, 1),
+                normal
+            );
+            
+            // Ajustar a posição final
+            numberGroup.position.copy(normal.multiplyScalar(0.5));
+            
+            dice.add(numberGroup);
         });
-
-        textGeo.computeBoundingBox();
-        const centerOffset = new THREE.Vector3(
-            -(textGeo.boundingBox.max.x - textGeo.boundingBox.min.x) / 2,
-            -(textGeo.boundingBox.max.y - textGeo.boundingBox.min.y) / 2,
-            -(textGeo.boundingBox.max.z - textGeo.boundingBox.min.z) / 2
-        );
-
-        const textMesh = new THREE.Mesh(textGeo, textMaterial);
-        textMesh.position.copy(pos).add(centerOffset);
-
-        // Alinhamento correto com as faces
-        normal.normalize();
-        textMesh.quaternion.setFromUnitVectors(
-            new THREE.Vector3(0, 1, 0), // vetor up padrão
-            normal
-        );
-        
-        // Rotação adicional para alinhar o texto com a face
-        textMesh.rotateZ(Math.PI); // Gira 180 graus para corrigir a orientação
-
-        // Pequeno ajuste para mover o texto ligeiramente para fora da face
-        textMesh.position.add(normal.multiplyScalar(0.02));
-        
-        dice.add(textMesh);
     });
 });
 
