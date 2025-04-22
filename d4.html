@@ -210,7 +210,7 @@ world.addContactMaterial(wallDiceContact);
                 { text: '4', pos: new THREE.Vector3(0.3, -0.3, -0.3) },
             ];
             tempPositions.forEach(({ text, pos }) => {
-                 const textGeo = new TextGeometry(text, { font: font, size: 0.2, height: 0.01, curveSegments: 6, bevelEnabled: false });
+                 const textGeo = new TextGeometry(text, { font: font, size: 0.3, height: 0.02, curveSegments: 6, bevelEnabled: false });
                  textGeo.computeBoundingBox();
                  const centerOffset = new THREE.Vector3(-(textGeo.boundingBox.max.x - textGeo.boundingBox.min.x) / 2, -(textGeo.boundingBox.max.y - textGeo.boundingBox.min.y) / 2, -(textGeo.boundingBox.max.z - textGeo.boundingBox.min.z) / 2);
                  const textMesh = new THREE.Mesh(textGeo, textMaterial);
