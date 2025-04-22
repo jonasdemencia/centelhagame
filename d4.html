@@ -200,22 +200,31 @@ world.addContactMaterial(wallDiceContact);
 // Carregar Fonte e Adicionar Números
 const loader = new FontLoader();
 loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-    const textMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff }); // Mudado para MeshPhongMaterial
+    // Material brilhante para os números
+    const textMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0xffffff,
+        emissive: 0x444444,
+        shininess: 100,
+        specular: 0xffffff
+    });
 
     const tempPositions = [
-        { text: '1', pos: new THREE.Vector3(0.21, 0.21, 0.21) },
-        { text: '2', pos: new THREE.Vector3(-0.21, -0.21, 0.21) },
-        { text: '3', pos: new THREE.Vector3(-0.21, 0.21, -0.21) },
-        { text: '4', pos: new THREE.Vector3(0.21, -0.21, -0.21) }
+        { text: '1', pos: new THREE.Vector3(0.25, 0.25, 0.25) },
+        { text: '2', pos: new THREE.Vector3(-0.25, -0.25, 0.25) },
+        { text: '3', pos: new THREE.Vector3(-0.25, 0.25, -0.25) },
+        { text: '4', pos: new THREE.Vector3(0.25, -0.25, -0.25) }
     ];
 
     tempPositions.forEach(({ text, pos }) => {
         const textGeo = new TextGeometry(text, { 
             font: font, 
-            size: 0.18,     // Aumentado um pouco
-            height: 0.03,   // Aumentado para ser mais visível
-            curveSegments: 4,
-            bevelEnabled: false 
+            size: 0.25,      // Aumentado significativamente
+            height: 0.05,    // Mais profundidade
+            curveSegments: 12,
+            bevelEnabled: true,
+            bevelThickness: 0.01,
+            bevelSize: 0.01,
+            bevelSegments: 5
         });
 
         textGeo.computeBoundingBox();
@@ -227,7 +236,10 @@ loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json
 
         const textMesh = new THREE.Mesh(textGeo, textMaterial);
         textMesh.position.copy(pos).add(centerOffset);
-
+        
+        // Rotação para alinhar com as faces
+        textMesh.lookAt(new THREE.Vector3(0, 0, 0));
+        
         dice.add(textMesh);
     });
 });
