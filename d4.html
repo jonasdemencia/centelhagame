@@ -201,50 +201,68 @@ world.addContactMaterial(wallDiceContact);
         world.addBody(diceBody);
         // --- [FIM DA SEÇÃO CORRIGIDA E LIMPA] ---
 
-        // Carregar Fonte e Adicionar um "X" no centro de cada face
-// Carregar fonte e adicionar "X" perfeitamente centrado em cada face
+        // Adicionar números nas faces
 const loader = new FontLoader();
 loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
     const textMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
-    const textGeo = new TextGeometry('X', {
-        font: font,
-        size: 0.28,
-        height: 0.01,
-        curveSegments: 4,
-        bevelEnabled: false
-    });
-
-    // Calcular offset central do texto
-    textGeo.computeBoundingBox();
-    const bbox = textGeo.boundingBox;
-    const centerOffset = new THREE.Vector3(
-        (bbox.max.x + bbox.min.x) / 2,
-        (bbox.max.y + bbox.min.y) / 2,
-        (bbox.max.z + bbox.min.z) / 2
-    );
-
+    
+    // Obter os centros e normais das faces
     const positionAttr = geometry.getAttribute('position');
     const indexAttr = geometry.getIndex();
+    
+    // Configuração dos números para cada face
+    const faceNumbers = [
+        ['1', '2', '3'],
+        ['1', '3', '4'],
+        ['2', '3', '4'],
+        ['1', '2', '4']
+    ];
 
-    for (let i = 0; i < indexAttr.count; i += 3) {
+    for (let faceIndex = 0; faceIndex < 4; faceIndex++) {
+        // Calcular o centro e normal da face atual
+        const i = faceIndex * 3;
         const a = new THREE.Vector3().fromBufferAttribute(positionAttr, indexAttr.getX(i));
         const b = new THREE.Vector3().fromBufferAttribute(positionAttr, indexAttr.getX(i + 1));
         const c = new THREE.Vector3().fromBufferAttribute(positionAttr, indexAttr.getX(i + 2));
-
+        
         const center = new THREE.Vector3().addVectors(a, b).add(c).divideScalar(3);
-        const normal = new THREE.Vector3()
-            .crossVectors(b.clone().sub(a), c.clone().sub(a))
-            .normalize();
+        const normal = new THREE.Vector3().crossVectors(
+            b.clone().sub(a),
+            c.clone().sub(a)
+        ).normalize();
 
-        const textMesh = new THREE.Mesh(textGeo.clone(), textMaterial);
-        textMesh.position.copy(center.clone().add(normal.clone().multiplyScalar(0.01)));
-        textMesh.geometry.translate(-centerOffset.x, -centerOffset.y, -centerOffset.z);
+        // Calcular pontos para os três números
+        const points = [
+            a.clone().lerp(center, 0.3),  // Próximo ao primeiro vértice
+            b.clone().lerp(center, 0.3),  // Próximo ao segundo vértice
+            c.clone().lerp(center, 0.3)   // Próximo ao terceiro vértice
+        ];
 
-        const lookTarget = center.clone().add(normal);
-        textMesh.lookAt(lookTarget);
-        textMesh.rotateX(Math.PI); // Corrige orientação do "X"
+        // Adicionar os três números
+        faceNumbers[faceIndex].forEach((number, numIndex) => {
+            const textGeo = new TextGeometry(number, {
+                font: font,
+                size: 0.15,
+                height: 0.001,
+                curveSegments: 4,
+                bevelEnabled: false
+            });
 
-        dice.add(textMesh);
+            textGeo.computeBoundingBox();
+            const textMesh = new THREE.Mesh(textGeo, textMaterial);
+            
+            // Posicionar o número
+            textMesh.position.copy(points[numIndex]);
+            
+            // Orientar para a face
+            textMesh.lookAt(points[numIndex].clone().add(normal));
+            textMesh.rotateX(Math.PI);
+            
+            // Ajuste fino da posição
+            textMesh.position.add(normal.clone().multiplyScalar(0.001));
+            
+            dice.add(textMesh);
+        });
     }
 });
 
