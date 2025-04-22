@@ -196,123 +196,97 @@ world.addContactMaterial(wallDiceContact);
         world.addBody(diceBody);
         // --- [FIM DA SEÇÃO CORRIGIDA E LIMPA] ---
 
-        // --- Carregar Fonte e Adicionar Números ---
+        // Carregar Fonte e Adicionar Números
 const loader = new FontLoader();
 loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-  const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  
-  // Configuração de cada face: para cada face, definimos três posições (e rotações) para os números.
-  const faces = [
-    {
-      // Face 1: Aresta de cima: 1, Base direita: 2, Base esquerda: 3
-      texts: [
-        {
-          text: '1',
-          pos: new THREE.Vector3(0.35, 0.35, 0.35), // posição para a aresta de cima
-          rotation: { x: 0, y: Math.PI / 4, z: 0 }
-        },
-        {
-          text: '2',
-          pos: new THREE.Vector3(0.45, 0.20, 0.35), // posição para a aresta base direita
-          rotation: { x: 0, y: Math.PI / 4, z: 0 }
-        },
-        {
-          text: '3',
-          pos: new THREE.Vector3(0.25, 0.20, 0.35), // posição para a aresta base esquerda
-          rotation: { x: 0, y: Math.PI / 4, z: 0 }
-        }
-      ]
-    },
-    {
-      // Face 2: Aresta de cima: 1, Base direita: 4, Base esquerda: 2
-      texts: [
-        {
-          text: '1',
-          pos: new THREE.Vector3(-0.35, 0.35, 0.35),
-          rotation: { x: 0, y: -Math.PI / 4, z: 0 }
-        },
-        {
-          text: '4',
-          pos: new THREE.Vector3(-0.25, 0.20, 0.35),
-          rotation: { x: 0, y: -Math.PI / 4, z: 0 }
-        },
-        {
-          text: '2',
-          pos: new THREE.Vector3(-0.45, 0.20, 0.35),
-          rotation: { x: 0, y: -Math.PI / 4, z: 0 }
-        }
-      ]
-    },
-    {
-      // Face 3: Aresta de cima: 1, Base direita: 3, Base esquerda: 4
-      texts: [
-        {
-          text: '1',
-          pos: new THREE.Vector3(-0.35, -0.35, -0.35),
-          rotation: { x: 0, y: Math.PI / 2, z: 0 }
-        },
-        {
-          text: '3',
-          pos: new THREE.Vector3(-0.25, -0.20, -0.35),
-          rotation: { x: 0, y: Math.PI / 2, z: 0 }
-        },
-        {
-          text: '4',
-          pos: new THREE.Vector3(-0.45, -0.20, -0.35),
-          rotation: { x: 0, y: Math.PI / 2, z: 0 }
-        }
-      ]
-    },
-    {
-      // Face 4: Aresta de cima: 3, Base direita: 2, Base esquerda: 4
-      texts: [
-        {
-          text: '3',
-          pos: new THREE.Vector3(0.35, -0.35, -0.35),
-          rotation: { x: 0, y: 0, z: 0 }
-        },
-        {
-          text: '2',
-          pos: new THREE.Vector3(0.45, -0.20, -0.35),
-          rotation: { x: 0, y: 0, z: 0 }
-        },
-        {
-          text: '4',
-          pos: new THREE.Vector3(0.25, -0.20, -0.35),
-          rotation: { x: 0, y: 0, z: 0 }
-        }
-      ]
-    }
-  ];
-  
-  // Iterar sobre cada face e cada posição para criar os meshes de texto
-  faces.forEach(face => {
-    face.texts.forEach(item => {
-      const { text, pos, rotation } = item;
-      const textGeo = new TextGeometry(text, {
-        font: font,
-        size: 0.3,
-        height: 0.010,
-        curveSegments: 6,
-        bevelEnabled: false
-      });
-      textGeo.computeBoundingBox();
-      
-      const centerOffset = new THREE.Vector3(
-        -(textGeo.boundingBox.max.x - textGeo.boundingBox.min.x) / 2,
-        -(textGeo.boundingBox.max.y - textGeo.boundingBox.min.y) / 2,
-        -(textGeo.boundingBox.max.z - textGeo.boundingBox.min.z) / 2
-      );
-      const textMesh = new THREE.Mesh(textGeo, textMaterial);
-      textMesh.position.copy(pos).add(centerOffset);
-      textMesh.rotation.set(rotation.x, rotation.y, rotation.z);
-      
-      // Adiciona o mesh de texto ao objeto 'dice'
-      dice.add(textMesh);
+    const textMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0xffffff,
+        emissive: 0x444444,
+        shininess: 100,
+        specular: 0xffffff
     });
-  });
-});
 
+    // Obter os vértices do tetraedro
+    const positions = geometry.attributes.position;
+    
+    // Definição das faces com seus números nos vértices
+    const faces = [
+        {
+            vertices: [
+                new THREE.Vector3(positions.getX(0), positions.getY(0), positions.getZ(0)),
+                new THREE.Vector3(positions.getX(1), positions.getY(1), positions.getZ(1)),
+                new THREE.Vector3(positions.getX(2), positions.getY(2), positions.getZ(2))
+            ],
+            numbers: ['1', '2', '3']
+        },
+        {
+            vertices: [
+                new THREE.Vector3(positions.getX(3), positions.getY(3), positions.getZ(3)),
+                new THREE.Vector3(positions.getX(4), positions.getY(4), positions.getZ(4)),
+                new THREE.Vector3(positions.getX(5), positions.getY(5), positions.getZ(5))
+            ],
+            numbers: ['1', '3', '4']
+        },
+        {
+            vertices: [
+                new THREE.Vector3(positions.getX(6), positions.getY(6), positions.getZ(6)),
+                new THREE.Vector3(positions.getX(7), positions.getY(7), positions.getZ(7)),
+                new THREE.Vector3(positions.getX(8), positions.getY(8), positions.getZ(8))
+            ],
+            numbers: ['2', '3', '4']
+        },
+        {
+            vertices: [
+                new THREE.Vector3(positions.getX(9), positions.getY(9), positions.getZ(9)),
+                new THREE.Vector3(positions.getX(10), positions.getY(10), positions.getZ(10)),
+                new THREE.Vector3(positions.getX(11), positions.getY(11), positions.getZ(11))
+            ],
+            numbers: ['1', '2', '4']
+        }
+    ];
+
+    faces.forEach(face => {
+        // Calcular normal da face para orientação
+        const normal = new THREE.Vector3()
+            .crossVectors(
+                face.vertices[1].clone().sub(face.vertices[0]),
+                face.vertices[2].clone().sub(face.vertices[0])
+            ).normalize();
+
+        face.numbers.forEach((number, i) => {
+            const textGeo = new TextGeometry(number, {
+                font: font,
+                size: 0.2,
+                height: 0.01,
+                curveSegments: 12,
+                bevelEnabled: false
+            });
+
+            textGeo.computeBoundingBox();
+            const centerOffset = new THREE.Vector3(
+                -(textGeo.boundingBox.max.x - textGeo.boundingBox.min.x) / 2,
+                -(textGeo.boundingBox.max.y - textGeo.boundingBox.min.y) / 2,
+                -(textGeo.boundingBox.max.z - textGeo.boundingBox.min.z) / 2
+            );
+
+            const textMesh = new THREE.Mesh(textGeo, textMaterial);
+            
+            // Posicionar número próximo ao vértice
+            textMesh.position.copy(face.vertices[i]).multiplyScalar(0.8); // Ajuste 0.8 para mover um pouco para dentro
+            
+            // Alinhar com a face
+            textMesh.quaternion.setFromUnitVectors(
+                new THREE.Vector3(0, 0, 1),
+                normal
+            );
+            
+            // Ajustar a rotação para ficar legível
+            textMesh.rotateZ(Math.PI * 2 * i / 3);
+            
+            dice.add(textMesh);
+        });
+    });
+});
 
         // --- Estado e Controles ---
         let isRolling = false;
