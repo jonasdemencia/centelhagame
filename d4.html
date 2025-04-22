@@ -158,10 +158,58 @@ const wallDiceContact = new CANNON.ContactMaterial(wallMaterial, diceMaterial, {
 world.addContactMaterial(wallDiceContact);
 
         // --- Criação do Dado (Three.js) ---
-        const geometry = new THREE.TetrahedronGeometry(0.8);
-        const material = new THREE.MeshPhongMaterial({ color: 0x1a237e, shininess: 80, specular: 0xaaaaaa, flatShading: false });
-        const dice = new THREE.Mesh(geometry, material);
-        scene.add(dice);
+const geometry = new THREE.TetrahedronGeometry(0.8);
+
+// Criar canvas para textura
+function createNumberTexture(numbers) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    
+    // Fundo transparente
+    ctx.clearRect(0, 0, 256, 256);
+    
+    // Configurar texto
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 64px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Posicionar os três números em triângulo
+    const positions = [
+        {x: 128, y: 64},  // Topo
+        {x: 64, y: 192},  // Baixo esquerda
+        {x: 192, y: 192}  // Baixo direita
+    ];
+    
+    numbers.forEach((num, i) => {
+        ctx.fillText(num, positions[i].x, positions[i].y);
+    });
+    
+    return new THREE.CanvasTexture(canvas);
+}
+
+// Criar texturas para cada face
+const textures = [
+    createNumberTexture(['1', '2', '3']),
+    createNumberTexture(['1', '3', '4']),
+    createNumberTexture(['2', '3', '4']),
+    createNumberTexture(['1', '2', '4'])
+];
+
+// Aplicar texturas nas faces
+const materials = textures.map(texture => new THREE.MeshPhongMaterial({
+    color: 0x1a237e,
+    shininess: 80,
+    specular: 0xaaaaaa,
+    map: texture,
+    transparent: true,
+    opacity: 1
+}));
+
+const dice = new THREE.Mesh(geometry, materials);
+scene.add(dice);
 
         // --- Criação do Corpo Físico do Dado (Cannon-es) --- [INÍCIO DA SEÇÃO CORRIGIDA E LIMPA]
         // Extrair vértices da geometria não indexada do Three.js
@@ -196,84 +244,7 @@ world.addContactMaterial(wallDiceContact);
         world.addBody(diceBody);
         // --- [FIM DA SEÇÃO CORRIGIDA E LIMPA] ---
 
-        // Carregar Fonte e Adicionar Números
-const loader = new FontLoader();
-loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-    const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff }); // Material básico branco
-
-    // Configuração das faces com os números
-    const faceConfigs = [
-        {
-            normal: new THREE.Vector3(0, 1, 0),
-            numbers: ['1', '2', '3'],
-            positions: [
-                new THREE.Vector3(0.4, 0.4, 0.4),
-                new THREE.Vector3(-0.4, 0.4, -0.4),
-                new THREE.Vector3(0.4, 0.4, -0.4)
-            ]
-        },
-        {
-            normal: new THREE.Vector3(1, 0, 0),
-            numbers: ['1', '3', '4'],
-            positions: [
-                new THREE.Vector3(0.4, 0.4, -0.4),
-                new THREE.Vector3(0.4, -0.4, 0.4),
-                new THREE.Vector3(0.4, -0.4, -0.4)
-            ]
-        },
-        {
-            normal: new THREE.Vector3(0, 0, 1),
-            numbers: ['2', '3', '4'],
-            positions: [
-                new THREE.Vector3(-0.4, -0.4, 0.4),
-                new THREE.Vector3(0.4, -0.4, 0.4),
-                new THREE.Vector3(0, 0.4, 0.4)
-            ]
-        },
-        {
-            normal: new THREE.Vector3(-1, -1, -1).normalize(),
-            numbers: ['1', '2', '4'],
-            positions: [
-                new THREE.Vector3(-0.4, 0.4, -0.4),
-                new THREE.Vector3(-0.4, -0.4, -0.4),
-                new THREE.Vector3(0.4, -0.4, -0.4)
-            ]
-        }
-    ];
-
-    faceConfigs.forEach(face => {
-        face.numbers.forEach((number, index) => {
-            const textGeo = new TextGeometry(number, {
-                font: font,
-                size: 0.2,
-                height: 0.001, // Muito fino para parecer "impresso"
-                curveSegments: 4,
-                bevelEnabled: false
-            });
-
-            textGeo.computeBoundingBox();
-            const centerOffset = new THREE.Vector3(
-                -(textGeo.boundingBox.max.x - textGeo.boundingBox.min.x) / 2,
-                -(textGeo.boundingBox.max.y - textGeo.boundingBox.min.y) / 2,
-                -(textGeo.boundingBox.max.z - textGeo.boundingBox.min.z) / 2
-            );
-
-            const textMesh = new THREE.Mesh(textGeo, textMaterial);
-            
-            // Posicionar o número
-            textMesh.position.copy(face.positions[index]);
-            
-            // Rotacionar para alinhar com a face
-            textMesh.lookAt(textMesh.position.clone().add(face.normal));
-            textMesh.rotateX(Math.PI); // Corrige a orientação
-            
-            // Mover levemente para fora da face
-            textMesh.position.add(face.normal.clone().multiplyScalar(0.001));
-            
-            dice.add(textMesh);
-        });
-    });
-});
+        
 
         // --- Estado e Controles ---
         let isRolling = false;
