@@ -131,7 +131,7 @@ const wallMaterial = new CANNON.Material('wall');
 // Parede superior (Z positivo)
 const topWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 topWall.quaternion.setFromEuler(Math.PI, 0, 0);
-topWall.position.set(0, 0, 10); // Mova mais para cima para dar espaço ao dado
+topWall.position.set(0, 0, -5); // Mova mais para cima para dar espaço ao dado
 
 // Paredes laterais
 const leftWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
