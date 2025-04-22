@@ -157,85 +157,12 @@ const wallDiceContact = new CANNON.ContactMaterial(wallMaterial, diceMaterial, {
 });
 world.addContactMaterial(wallDiceContact);
 
-       // --- Criação do Dado (Three.js) ---
-const geometry = new THREE.TetrahedronGeometry(0.8);
+        // --- Criação do Dado (Three.js) ---
+        const geometry = new THREE.TetrahedronGeometry(1);
+        const material = new THREE.MeshPhongMaterial({ color: 0x1a237e, shininess: 80, specular: 0xaaaaaa, flatShading: false });
+        const dice = new THREE.Mesh(geometry, material);
+        scene.add(dice);
 
-// Criar canvas para textura
-function createNumberTexture(numbers) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
-    const ctx = canvas.getContext('2d');
-    
-    // Fundo azul escuro (cor do dado)
-    ctx.fillStyle = '#1a237e';
-    ctx.fillRect(0, 0, 256, 256);
-    
-    // Configurar texto
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 64px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    // Posicionar os três números em triângulo
-    const positions = [
-        {x: 128, y: 64},  // Topo
-        {x: 64, y: 192},  // Baixo esquerda
-        {x: 192, y: 192}  // Baixo direita
-    ];
-    
-    numbers.forEach((num, i) => {
-        ctx.fillText(num, positions[i].x, positions[i].y);
-    });
-    
-    return new THREE.CanvasTexture(canvas);
-}
-
-// Criar texturas para cada face
-const textures = [
-    createNumberTexture(['1', '2', '3']),
-    createNumberTexture(['1', '3', '4']),
-    createNumberTexture(['2', '3', '4']),
-    createNumberTexture(['1', '2', '4'])
-];
-
-// Criar materiais para cada face
-const materials = textures.map(texture => new THREE.MeshPhongMaterial({
-    color: 0x1a237e,
-    shininess: 80,
-    specular: 0xaaaaaa,
-    map: texture
-}));
-
-// Criar o dado com os materiais
-const dice = new THREE.Mesh(geometry, materials);
-scene.add(dice);
-
-// Mantenha o código da física como está
-const vertices = geometry.attributes.position.array;
-const cannonVertices = [];
-for (let i = 0; i < vertices.length; i += 3) {
-    cannonVertices.push(new CANNON.Vec3(vertices[i], vertices[i + 1], vertices[i + 2]));
-}
-
-const cannonFaces = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [9, 10, 11]
-];
-
-const diceShape = new CANNON.ConvexPolyhedron({ vertices: cannonVertices, faces: cannonFaces });
-const diceBody = new CANNON.Body({
-    mass: 1.5,
-    shape: diceShape,
-    material: diceMaterial,
-    angularDamping: 0.4,
-    linearDamping: 0.2
-});
-
-diceBody.position.set(0, DICE_START_Y, BASE_Z);
-world.addBody(diceBody);
         // --- Criação do Corpo Físico do Dado (Cannon-es) --- [INÍCIO DA SEÇÃO CORRIGIDA E LIMPA]
         // Extrair vértices da geometria não indexada do Three.js
         const vertices = geometry.attributes.position.array;
@@ -269,7 +196,29 @@ world.addBody(diceBody);
         world.addBody(diceBody);
         // --- [FIM DA SEÇÃO CORRIGIDA E LIMPA] ---
 
-        
+        // Carregar Fonte e Adicionar Números
+        const loader = new FontLoader();
+        loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
+            // ... (código para adicionar os números ao mesh 'dice' - igual ao anterior) ...
+             const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+             const numberPositions = [ /* ... definir posições corretas ... */ ];
+             // Exemplo temporário (precisa ser melhorado):
+            const tempPositions = [
+                { text: '1', pos: new THREE.Vector3(0.3, 0.3, 0.3) },
+                { text: '2', pos: new THREE.Vector3(-0.3, -0.3, 0.3) },
+                { text: '3', pos: new THREE.Vector3(-0.3, 0.3, -0.3) },
+                { text: '4', pos: new THREE.Vector3(0.3, -0.3, -0.3) },
+            ];
+            tempPositions.forEach(({ text, pos }) => {
+                 const textGeo = new TextGeometry(text, { font: font, size: 0.2, height: 0.01, curveSegments: 6, bevelEnabled: false });
+                 textGeo.computeBoundingBox();
+                 const centerOffset = new THREE.Vector3(-(textGeo.boundingBox.max.x - textGeo.boundingBox.min.x) / 2, -(textGeo.boundingBox.max.y - textGeo.boundingBox.min.y) / 2, -(textGeo.boundingBox.max.z - textGeo.boundingBox.min.z) / 2);
+                 const textMesh = new THREE.Mesh(textGeo, textMaterial);
+                 textMesh.position.copy(pos).add(centerOffset);
+                 // A rotação do texto também precisa ser ajustada para ficar alinhada à face
+                 dice.add(textMesh);
+             });
+        });
 
         // --- Estado e Controles ---
         let isRolling = false;
