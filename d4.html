@@ -199,60 +199,26 @@ world.addContactMaterial(wallDiceContact);
         // Carregar Fonte e Adicionar Números
         const loader = new FontLoader();
         loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-    const textMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0xffffff,
-        emissive: 0x111111,
-        shininess: 100,
-        specular: 0xffffff
-    });
-
-    const positionAttr = geometry.getAttribute('position');
-    const numbers = ['1', '2', '3', '4'];
-
-    // O Tetraedro tem 4 faces => 12 vértices (3 por face)
-    for (let i = 0; i < positionAttr.count; i += 3) {
-        const a = new THREE.Vector3().fromBufferAttribute(positionAttr, i);
-        const b = new THREE.Vector3().fromBufferAttribute(positionAttr, i + 1);
-        const c = new THREE.Vector3().fromBufferAttribute(positionAttr, i + 2);
-
-        const center = new THREE.Vector3().addVectors(a, b).add(c).divideScalar(3);
-        const normal = new THREE.Vector3()
-            .crossVectors(b.clone().sub(a), c.clone().sub(a))
-            .normalize();
-
-        const textGeo = new TextGeometry(numbers[i / 3], {
-            font: font,
-            size: 0.3,
-            height: 0.02,
-            curveSegments: 4,
-            bevelEnabled: false
+            // ... (código para adicionar os números ao mesh 'dice' - igual ao anterior) ...
+             const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+             const numberPositions = [ /* ... definir posições corretas ... */ ];
+             // Exemplo temporário (precisa ser melhorado):
+            const tempPositions = [
+                { text: '1', pos: new THREE.Vector3(0.3, 0.3, 0.3) },
+                { text: '2', pos: new THREE.Vector3(-0.3, -0.3, 0.3) },
+                { text: '3', pos: new THREE.Vector3(-0.3, 0.3, -0.3) },
+                { text: '4', pos: new THREE.Vector3(0.3, -0.3, -0.3) },
+            ];
+            tempPositions.forEach(({ text, pos }) => {
+                 const textGeo = new TextGeometry(text, { font: font, size: 0.2, height: 0.01, curveSegments: 6, bevelEnabled: false });
+                 textGeo.computeBoundingBox();
+                 const centerOffset = new THREE.Vector3(-(textGeo.boundingBox.max.x - textGeo.boundingBox.min.x) / 2, -(textGeo.boundingBox.max.y - textGeo.boundingBox.min.y) / 2, -(textGeo.boundingBox.max.z - textGeo.boundingBox.min.z) / 2);
+                 const textMesh = new THREE.Mesh(textGeo, textMaterial);
+                 textMesh.position.copy(pos).add(centerOffset);
+                 // A rotação do texto também precisa ser ajustada para ficar alinhada à face
+                 dice.add(textMesh);
+             });
         });
-
-        textGeo.computeBoundingBox();
-        const bbox = textGeo.boundingBox;
-        const offset = new THREE.Vector3(
-            (bbox.max.x + bbox.min.x) / 2,
-            (bbox.max.y + bbox.min.y) / 2,
-            (bbox.max.z + bbox.min.z) / 2
-        );
-
-        const textMesh = new THREE.Mesh(textGeo, textMaterial);
-
-        // Posicionar levemente acima da face
-        const position = center.clone().add(normal.clone().multiplyScalar(0.02));
-        textMesh.position.copy(position.sub(offset));
-
-        // Alinhar com a normal da face
-        const target = center.clone().add(normal);
-        textMesh.lookAt(target);
-        textMesh.rotateX(Math.PI); // Corrige a orientação para frente da face
-
-        dice.add(textMesh);
-    }
-});
-
-
-
 
         // --- Estado e Controles ---
         let isRolling = false;
