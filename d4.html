@@ -184,7 +184,7 @@ function createDiceTexture() {
 
     faces.forEach(face => {
         // Desenhar os números em um padrão triangular
-        const radius = 80;
+        const radius = 60;
         face.numbers.forEach((num, i) => {
             const angle = (i * 2 * Math.PI / 3);
             const x = face.x + Math.cos(angle) * radius;
