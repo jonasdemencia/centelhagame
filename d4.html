@@ -158,15 +158,15 @@ const wallDiceContact = new CANNON.ContactMaterial(wallMaterial, diceMaterial, {
 world.addContactMaterial(wallDiceContact);
 
         // --- Criação do Dado (Three.js) ---
-        const geometry = new THREE.TetrahedronGeometry(1);
-        const material = new THREE.MeshStandardMaterial({
-    color: 0x444444,
-    roughness: 0.85,
-    metalness: 0.05
+        // --- Criação do Dado (Three.js) ---
+const geometry = new THREE.TetrahedronGeometry(0.8);
+const material = new THREE.MeshStandardMaterial({
+    color: 0x1a237e,
+    roughness: 0.3,
+    metalness: 0.2
 });
-
-        const dice = new THREE.Mesh(geometry, material);
-        scene.add(dice);
+const dice = new THREE.Mesh(geometry, material);
+scene.add(dice);
 
         // --- Criação do Corpo Físico do Dado (Cannon-es) --- [INÍCIO DA SEÇÃO CORRIGIDA E LIMPA]
         // Extrair vértices da geometria não indexada do Three.js
