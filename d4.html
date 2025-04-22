@@ -158,7 +158,7 @@ const wallDiceContact = new CANNON.ContactMaterial(wallMaterial, diceMaterial, {
 world.addContactMaterial(wallDiceContact);
 
         // --- Criação do Dado (Three.js) ---
-        const geometry = new THREE.TetrahedronGeometry(1);
+        const geometry = new THREE.TetrahedronGeometry(0.8);
         const material = new THREE.MeshPhongMaterial({ color: 0x1a237e, shininess: 80, specular: 0xaaaaaa, flatShading: false });
         const dice = new THREE.Mesh(geometry, material);
         scene.add(dice);
