@@ -206,28 +206,30 @@ world.addContactMaterial(wallDiceContact);
         specular: 0xffffff
     });
 
-    const positions = geometry.attributes.position;
-    const faces = [];
+    // Usar geometria indexada pra garantir faces únicas
+    const indexedGeometry = new THREE.TetrahedronGeometry(1); // já vem indexada
+    const positionAttr = indexedGeometry.getAttribute('position');
+    const indexAttr = indexedGeometry.getIndex();
 
-    // Coletar as 4 faces do tetraedro
-    for (let i = 0; i < positions.count; i += 3) {
-        const a = new THREE.Vector3(positions.getX(i), positions.getY(i), positions.getZ(i));
-        const b = new THREE.Vector3(positions.getX(i+1), positions.getY(i+1), positions.getZ(i+1));
-        const c = new THREE.Vector3(positions.getX(i+2), positions.getY(i+2), positions.getZ(i+2));
+    const numbers = ['1', '2', '3', '4']; // Um número por face
+
+    for (let i = 0; i < indexAttr.count; i += 3) {
+        const aIndex = indexAttr.getX(i);
+        const bIndex = indexAttr.getX(i + 1);
+        const cIndex = indexAttr.getX(i + 2);
+
+        const a = new THREE.Vector3().fromBufferAttribute(positionAttr, aIndex);
+        const b = new THREE.Vector3().fromBufferAttribute(positionAttr, bIndex);
+        const c = new THREE.Vector3().fromBufferAttribute(positionAttr, cIndex);
 
         const center = new THREE.Vector3().addVectors(a, b).add(c).divideScalar(3);
         const normal = new THREE.Vector3()
             .crossVectors(b.clone().sub(a), c.clone().sub(a))
             .normalize();
 
-        faces.push({ center, normal });
-    }
+        const number = numbers[i / 3]; // 0 a 3
 
-    // Os 4 números, um por face
-    const numbers = ['1', '2', '3', '4'];
-
-    faces.forEach((face, index) => {
-        const textGeo = new TextGeometry(numbers[index], {
+        const textGeo = new TextGeometry(number, {
             font: font,
             size: 0.3,
             height: 0.02,
@@ -245,18 +247,20 @@ world.addContactMaterial(wallDiceContact);
 
         const textMesh = new THREE.Mesh(textGeo, textMaterial);
 
-        // Posicionar no centro da face, levemente acima
-        const position = face.center.clone().add(face.normal.clone().multiplyScalar(0.01));
+        // Posicionar levemente acima da face
+        const position = center.clone().add(normal.clone().multiplyScalar(0.01));
         textMesh.position.copy(position.sub(offset.multiplyScalar(0.5)));
 
-        // Orientar o texto para "colar" na face
-        const target = face.center.clone().add(face.normal);
+        // Olhar para fora da face (perpendicular)
+        const target = center.clone().add(normal);
         textMesh.lookAt(target);
-        textMesh.rotateX(Math.PI); // Ajuste fino, necessário para facear corretamente
+        textMesh.rotateX(Math.PI); // inverter texto para frente correta
 
+        // Vincular ao dado
         dice.add(textMesh);
-    });
+    }
 });
+
 
 
         // --- Estado e Controles ---
