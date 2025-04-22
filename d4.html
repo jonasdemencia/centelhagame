@@ -207,58 +207,66 @@ loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json
         specular: 0xffffff
     });
 
-    // Definição das faces do D4 com seus três números
-    const faces = [
-        { normal: new THREE.Vector3(1, 1, 1), numbers: ['1', '2', '3'] },
-        { normal: new THREE.Vector3(-1, -1, 1), numbers: ['1', '3', '4'] },
-        { normal: new THREE.Vector3(-1, 1, -1), numbers: ['2', '3', '4'] },
-        { normal: new THREE.Vector3(1, -1, -1), numbers: ['1', '2', '4'] }
+    // Obter a geometria real do tetraedro
+    const positions = geometry.attributes.position;
+    const faces = [];
+    
+    // Coletar as faces do tetraedro
+    for (let i = 0; i < positions.count; i += 3) {
+        const vertices = [
+            new THREE.Vector3(positions.getX(i), positions.getY(i), positions.getZ(i)),
+            new THREE.Vector3(positions.getX(i+1), positions.getY(i+1), positions.getZ(i+1)),
+            new THREE.Vector3(positions.getX(i+2), positions.getY(i+2), positions.getZ(i+2))
+        ];
+        
+        // Calcular o centro e a normal da face
+        const center = new THREE.Vector3().addVectors(vertices[0], vertices[1]).add(vertices[2]).multiplyScalar(1/3);
+        const normal = new THREE.Vector3()
+            .crossVectors(
+                vertices[1].clone().sub(vertices[0]),
+                vertices[2].clone().sub(vertices[0])
+            ).normalize();
+        
+        faces.push({ vertices, center, normal });
+    }
+
+    // Números para cada face
+    const faceNumbers = [
+        ['1', '2', '3'],
+        ['1', '3', '4'],
+        ['2', '3', '4'],
+        ['1', '2', '4']
     ];
 
-    faces.forEach(face => {
-        const normal = face.normal.normalize();
-        // Criar três posições distribuídas na face
-        const positions = [
-            new THREE.Vector3(0.2, 0.2, 0),  // Topo
-            new THREE.Vector3(-0.2, -0.1, 0), // Baixo esquerda
-            new THREE.Vector3(0.2, -0.1, 0)   // Baixo direita
-        ];
-
-        face.numbers.forEach((number, index) => {
+    faces.forEach((face, faceIndex) => {
+        const numbers = faceNumbers[faceIndex];
+        
+        // Criar três posições triangulares na face
+        const radius = 0.25; // Distância do centro
+        const angles = [0, 2*Math.PI/3, 4*Math.PI/3];
+        
+        numbers.forEach((number, i) => {
             const textGeo = new TextGeometry(number, { 
                 font: font, 
-                size: 0.15,     // Tamanho reduzido
-                height: 0.02,   // Profundidade reduzida
-                curveSegments: 12,
+                size: 0.15,
+                height: 0.01,
+                curveSegments: 4,
                 bevelEnabled: false
             });
 
             textGeo.computeBoundingBox();
-            const centerOffset = new THREE.Vector3(
-                -(textGeo.boundingBox.max.x - textGeo.boundingBox.min.x) / 2,
-                -(textGeo.boundingBox.max.y - textGeo.boundingBox.min.y) / 2,
-                -(textGeo.boundingBox.max.z - textGeo.boundingBox.min.z) / 2
-            );
-
             const textMesh = new THREE.Mesh(textGeo, textMaterial);
             
-            // Posicionar o número na face
-            textMesh.position.copy(positions[index]);
-            
-            // Criar um grupo para rotacionar corretamente
-            const numberGroup = new THREE.Group();
-            numberGroup.add(textMesh);
+            // Posicionar em um triângulo ao redor do centro da face
+            const x = face.center.x + radius * Math.cos(angles[i]);
+            const y = face.center.y + radius * Math.sin(angles[i]);
+            textMesh.position.set(x, y, face.center.z);
             
             // Alinhar com a face
-            numberGroup.quaternion.setFromUnitVectors(
-                new THREE.Vector3(0, 0, 1),
-                normal
-            );
+            textMesh.lookAt(face.center.clone().add(face.normal));
+            textMesh.rotateZ(Math.PI); // Corrigir orientação
             
-            // Ajustar a posição final
-            numberGroup.position.copy(normal.multiplyScalar(0.5));
-            
-            dice.add(numberGroup);
+            dice.add(textMesh);
         });
     });
 });
