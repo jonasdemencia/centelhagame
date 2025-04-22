@@ -202,53 +202,47 @@ world.addContactMaterial(wallDiceContact);
         // --- [FIM DA SEÇÃO CORRIGIDA E LIMPA] ---
 
         // Carregar Fonte e Adicionar um "X" no centro de cada face
+// Carregar fonte e adicionar "X" perfeitamente centrado em cada face
 const loader = new FontLoader();
 loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
     const textMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+    const textGeo = new TextGeometry('X', {
+        font: font,
+        size: 0.28,
+        height: 0.01,
+        curveSegments: 4,
+        bevelEnabled: false
+    });
+
+    // Calcular offset central do texto
+    textGeo.computeBoundingBox();
+    const bbox = textGeo.boundingBox;
+    const centerOffset = new THREE.Vector3(
+        (bbox.max.x + bbox.min.x) / 2,
+        (bbox.max.y + bbox.min.y) / 2,
+        (bbox.max.z + bbox.min.z) / 2
+    );
 
     const positionAttr = geometry.getAttribute('position');
+    const indexAttr = geometry.getIndex();
 
-    for (let i = 0; i < positionAttr.count; i += 3) {
-        // Pegar os 3 vértices da face
-        const a = new THREE.Vector3().fromBufferAttribute(positionAttr, i);
-        const b = new THREE.Vector3().fromBufferAttribute(positionAttr, i + 1);
-        const c = new THREE.Vector3().fromBufferAttribute(positionAttr, i + 2);
+    for (let i = 0; i < indexAttr.count; i += 3) {
+        const a = new THREE.Vector3().fromBufferAttribute(positionAttr, indexAttr.getX(i));
+        const b = new THREE.Vector3().fromBufferAttribute(positionAttr, indexAttr.getX(i + 1));
+        const c = new THREE.Vector3().fromBufferAttribute(positionAttr, indexAttr.getX(i + 2));
 
-        // Calcular o centro da face
         const center = new THREE.Vector3().addVectors(a, b).add(c).divideScalar(3);
-
-        // Calcular a normal da face
         const normal = new THREE.Vector3()
             .crossVectors(b.clone().sub(a), c.clone().sub(a))
             .normalize();
 
-        // Criar o "X"
-        const textGeo = new TextGeometry('X', {
-            font: font,
-            size: 0.28,
-            height: 0.01,
-            curveSegments: 6,
-            bevelEnabled: false
-        });
+        const textMesh = new THREE.Mesh(textGeo.clone(), textMaterial);
+        textMesh.position.copy(center.clone().add(normal.clone().multiplyScalar(0.01)));
+        textMesh.geometry.translate(-centerOffset.x, -centerOffset.y, -centerOffset.z);
 
-        textGeo.computeBoundingBox();
-        const bbox = textGeo.boundingBox;
-        const offset = new THREE.Vector3(
-            (bbox.max.x - bbox.min.x) / 2,
-            (bbox.max.y - bbox.min.y) / 2,
-            (bbox.max.z - bbox.min.z) / 2
-        );
-
-        const textMesh = new THREE.Mesh(textGeo, textMaterial);
-
-        // Posicionar "colado" no centro da face
-        const finalPos = center.clone().add(normal.clone().multiplyScalar(0.005));
-        textMesh.position.copy(finalPos.sub(offset.multiplyScalar(0.5)));
-
-        // Orientar o "X" para a face
         const lookTarget = center.clone().add(normal);
         textMesh.lookAt(lookTarget);
-        textMesh.rotateX(Math.PI); // Correção da rotação
+        textMesh.rotateX(Math.PI); // Corrige orientação do "X"
 
         dice.add(textMesh);
     }
