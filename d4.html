@@ -206,30 +206,21 @@ world.addContactMaterial(wallDiceContact);
         specular: 0xffffff
     });
 
-    // Usar geometria indexada pra garantir faces únicas
-    const indexedGeometry = new THREE.TetrahedronGeometry(1); // já vem indexada
-    const positionAttr = indexedGeometry.getAttribute('position');
-    const indexAttr = indexedGeometry.getIndex();
+    const positionAttr = geometry.getAttribute('position');
+    const numbers = ['1', '2', '3', '4'];
 
-    const numbers = ['1', '2', '3', '4']; // Um número por face
-
-    for (let i = 0; i < indexAttr.count; i += 3) {
-        const aIndex = indexAttr.getX(i);
-        const bIndex = indexAttr.getX(i + 1);
-        const cIndex = indexAttr.getX(i + 2);
-
-        const a = new THREE.Vector3().fromBufferAttribute(positionAttr, aIndex);
-        const b = new THREE.Vector3().fromBufferAttribute(positionAttr, bIndex);
-        const c = new THREE.Vector3().fromBufferAttribute(positionAttr, cIndex);
+    // O Tetraedro tem 4 faces => 12 vértices (3 por face)
+    for (let i = 0; i < positionAttr.count; i += 3) {
+        const a = new THREE.Vector3().fromBufferAttribute(positionAttr, i);
+        const b = new THREE.Vector3().fromBufferAttribute(positionAttr, i + 1);
+        const c = new THREE.Vector3().fromBufferAttribute(positionAttr, i + 2);
 
         const center = new THREE.Vector3().addVectors(a, b).add(c).divideScalar(3);
         const normal = new THREE.Vector3()
             .crossVectors(b.clone().sub(a), c.clone().sub(a))
             .normalize();
 
-        const number = numbers[i / 3]; // 0 a 3
-
-        const textGeo = new TextGeometry(number, {
+        const textGeo = new TextGeometry(numbers[i / 3], {
             font: font,
             size: 0.3,
             height: 0.02,
@@ -240,26 +231,26 @@ world.addContactMaterial(wallDiceContact);
         textGeo.computeBoundingBox();
         const bbox = textGeo.boundingBox;
         const offset = new THREE.Vector3(
-            (bbox.max.x - bbox.min.x) / 2,
-            (bbox.max.y - bbox.min.y) / 2,
-            (bbox.max.z - bbox.min.z) / 2
+            (bbox.max.x + bbox.min.x) / 2,
+            (bbox.max.y + bbox.min.y) / 2,
+            (bbox.max.z + bbox.min.z) / 2
         );
 
         const textMesh = new THREE.Mesh(textGeo, textMaterial);
 
         // Posicionar levemente acima da face
-        const position = center.clone().add(normal.clone().multiplyScalar(0.01));
-        textMesh.position.copy(position.sub(offset.multiplyScalar(0.5)));
+        const position = center.clone().add(normal.clone().multiplyScalar(0.02));
+        textMesh.position.copy(position.sub(offset));
 
-        // Olhar para fora da face (perpendicular)
+        // Alinhar com a normal da face
         const target = center.clone().add(normal);
         textMesh.lookAt(target);
-        textMesh.rotateX(Math.PI); // inverter texto para frente correta
+        textMesh.rotateX(Math.PI); // Corrige a orientação para frente da face
 
-        // Vincular ao dado
         dice.add(textMesh);
     }
 });
+
 
 
 
