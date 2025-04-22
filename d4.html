@@ -170,8 +170,8 @@ function createDiceTexture() {
 
     // Configuração do texto
     ctx.fillStyle = 'white';
-    ctx.font = 'bold 80px Arial';
-    ctx.textBaseline = 'top';
+    ctx.font = 'bold 70px Arial';
+    ctx.textBaseline = 'center';
     ctx.textBaseline = 'middle';
 
     // Desenhar os números em cada quadrante
@@ -184,7 +184,7 @@ function createDiceTexture() {
 
     faces.forEach(face => {
         // Desenhar os números em um padrão triangular
-        const radius = 60;
+        const radius = 50;
         face.numbers.forEach((num, i) => {
             const angle = (i * 2 * Math.PI / 3);
             const x = face.x + Math.cos(angle) * radius;
