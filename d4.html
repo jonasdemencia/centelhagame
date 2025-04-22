@@ -132,6 +132,7 @@ const wallMaterial = new CANNON.Material('wall');
 const topWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 topWall.quaternion.setFromEuler(0, 0, Math.PI); // Mudança crucial na orientação
 topWall.position.set(0, 0, -5); // Posição mais próxima
+world.addBody(topWall);
 
 // Paredes laterais
 const leftWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
