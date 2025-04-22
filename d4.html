@@ -196,15 +196,14 @@ world.addContactMaterial(wallDiceContact);
         world.addBody(diceBody);
         // --- [FIM DA SEÇÃO CORRIGIDA E LIMPA] ---
 
-        // Carregar Fonte e Adicionar Números
-        // Carregar Fonte e Adicionar Números
+    
+// Carregar Fonte e Adicionar Números
 const loader = new FontLoader();
 loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-    const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    
-    // Ajuste as posições proporcionalmente ao tamanho do dado (0.7)
+    const textMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff }); // Mudado para MeshPhongMaterial
+
     const tempPositions = [
-        { text: '1', pos: new THREE.Vector3(0.21, 0.21, 0.21) },  // 0.3 * 0.7
+        { text: '1', pos: new THREE.Vector3(0.21, 0.21, 0.21) },
         { text: '2', pos: new THREE.Vector3(-0.21, -0.21, 0.21) },
         { text: '3', pos: new THREE.Vector3(-0.21, 0.21, -0.21) },
         { text: '4', pos: new THREE.Vector3(0.21, -0.21, -0.21) }
@@ -213,26 +212,22 @@ loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json
     tempPositions.forEach(({ text, pos }) => {
         const textGeo = new TextGeometry(text, { 
             font: font, 
-            size: 0.15,     // Ajustado para proporção do dado
-            height: 0.02,   // Aumentado para melhor visibilidade
-            curveSegments: 12, // Aumentado para melhor qualidade
+            size: 0.18,     // Aumentado um pouco
+            height: 0.03,   // Aumentado para ser mais visível
+            curveSegments: 4,
             bevelEnabled: false 
         });
-        
+
         textGeo.computeBoundingBox();
         const centerOffset = new THREE.Vector3(
             -(textGeo.boundingBox.max.x - textGeo.boundingBox.min.x) / 2,
             -(textGeo.boundingBox.max.y - textGeo.boundingBox.min.y) / 2,
             -(textGeo.boundingBox.max.z - textGeo.boundingBox.min.z) / 2
         );
-        
+
         const textMesh = new THREE.Mesh(textGeo, textMaterial);
         textMesh.position.copy(pos).add(centerOffset);
-        
-        // Adiciona um pequeno deslocamento para fora da face
-        const direction = pos.clone().normalize();
-        textMesh.position.add(direction.multiplyScalar(0.01));
-        
+
         dice.add(textMesh);
     });
 });
