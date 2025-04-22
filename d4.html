@@ -197,28 +197,61 @@ world.addContactMaterial(wallDiceContact);
         // --- [FIM DA SEÇÃO CORRIGIDA E LIMPA] ---
 
         // Carregar Fonte e Adicionar Números
-        const loader = new FontLoader();
-        loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-            // ... (código para adicionar os números ao mesh 'dice' - igual ao anterior) ...
-             const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-             const numberPositions = [ /* ... definir posições corretas ... */ ];
-             // Exemplo temporário (precisa ser melhorado):
-            const tempPositions = [
-                { text: '1', pos: new THREE.Vector3(0.3, 0.3, 0.3) },
-                { text: '2', pos: new THREE.Vector3(-0.3, -0.3, 0.3) },
-                { text: '3', pos: new THREE.Vector3(-0.3, 0.3, -0.3) },
-                { text: '4', pos: new THREE.Vector3(0.3, -0.3, -0.3) },
-            ];
-            tempPositions.forEach(({ text, pos }) => {
-                 const textGeo = new TextGeometry(text, { font: font, size: 0.4, height: 0.01, curveSegments: 7, bevelEnabled: false });
-                 textGeo.computeBoundingBox();
-                 const centerOffset = new THREE.Vector3(-(textGeo.boundingBox.max.x - textGeo.boundingBox.min.x) / 2, -(textGeo.boundingBox.max.y - textGeo.boundingBox.min.y) / 2, -(textGeo.boundingBox.max.z - textGeo.boundingBox.min.z) / 2);
-                 const textMesh = new THREE.Mesh(textGeo, textMaterial);
-                 textMesh.position.copy(pos).add(centerOffset);
-                 // A rotação do texto também precisa ser ajustada para ficar alinhada à face
-                 dice.add(textMesh);
-             });
+const loader = new FontLoader();
+loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
+    const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    
+    // Exemplo temporário com posições e rotações ajustadas:
+    const tempPositions = [
+        {
+            text: '1',
+            pos: new THREE.Vector3(0.3, 0.3, 0.3),
+            rotation: { x: 0, y: Math.PI / 4, z: 0 } // Ajuste para alinhar o número conforme necessário
+        },
+        {
+            text: '2',
+            pos: new THREE.Vector3(-0.3, -0.3, 0.3),
+            rotation: { x: 0, y: -Math.PI / 4, z: 0 }
+        },
+        {
+            text: '3',
+            pos: new THREE.Vector3(-0.3, 0.3, -0.3),
+            rotation: { x: 0, y: Math.PI / 2, z: 0 }
+        },
+        {
+            text: '4',
+            pos: new THREE.Vector3(0.3, -0.3, -0.3),
+            rotation: { x: 0, y: 0, z: 0 }
+        },
+    ];
+
+    tempPositions.forEach(({ text, pos, rotation }) => {
+        const textGeo = new TextGeometry(text, {
+            font: font,
+            size: 0.3,
+            height: 0.01,
+            curveSegments: 6,
+            bevelEnabled: false
         });
+        textGeo.computeBoundingBox();
+        const centerOffset = new THREE.Vector3(
+            -(textGeo.boundingBox.max.x - textGeo.boundingBox.min.x) / 2,
+            -(textGeo.boundingBox.max.y - textGeo.boundingBox.min.y) / 2,
+            -(textGeo.boundingBox.max.z - textGeo.boundingBox.min.z) / 2
+        );
+        const textMesh = new THREE.Mesh(textGeo, textMaterial);
+        textMesh.position.copy(pos).add(centerOffset);
+
+        // Aplicar rotação customizada para alinhamento correto
+        if (rotation) {
+            textMesh.rotation.set(rotation.x, rotation.y, rotation.z);
+        }
+        
+        // Adiciona o mesh de texto ao objeto 'dice'
+        dice.add(textMesh);
+    });
+});
+
 
         // --- Estado e Controles ---
         let isRolling = false;
