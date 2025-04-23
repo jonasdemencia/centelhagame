@@ -174,6 +174,23 @@ function createDiceTexture() {
     ctx.textBaseline = 'center';
     ctx.textBaseline = 'middle';
 
+    // Adicionar rotações específicas para cada número (em radianos)
+    const numberRotations = {
+        '1': 0,      // sem rotação
+        '2': 0,      // sem rotação
+        '3': 0,      // sem rotação
+        '4': 0       // sem rotação
+    };
+
+    // Função auxiliar para desenhar texto rotacionado
+    function drawRotatedText(text, x, y, rotation) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
+        ctx.fillText(text, 0, 0);
+        ctx.restore();
+    }
+
     // Desenhar os números em cada quadrante
     const faces = [
         { numbers: ['1', '2', '3'], x: 128, y: 128 },
@@ -183,36 +200,32 @@ function createDiceTexture() {
     ];
 
     faces.forEach(face => {
-    const radius = 65;
-    // Ângulos customizados: topo, inferior-esquerdo e inferior-direito
-    const customAngles = [ -Math.PI/2 - 0.4, 5*Math.PI/6 + 0.2, Math.PI/6 ];
-    const offsetY = 10;
+        const radius = 65;
+        const customAngles = [ -Math.PI/2 - 0.4, 5*Math.PI/6 + 0.2, Math.PI/6 ];
+        const offsetY = 10;
 
-    face.numbers.forEach((num, i) => {
-        const angle = customAngles[i];
-        let x = face.x + Math.cos(angle) * radius;
-        let y = face.y + Math.sin(angle) * radius - offsetY;
-        
-        // Número inferior esquerdo (índice 1): deslocar para a esquerda e ajustar Y
-        if (i === 1) {
-            const extraXOffset = 15;
-            const extraYOffset = 65; // Aumentado para descer mais o número da esquerda
-            x -= extraXOffset;
-            y += extraYOffset;
-        }
-        // Número inferior direito (índice 2): deslocar mais para a esquerda
-        else if (i === 2) {
-            const extraXOffset = 15; // Aumentado de 5 para 15 para mover mais para a esquerda
-            const extraYOffset = 60;
-            x -= extraXOffset; // Agora usando -= para mover para a esquerda
-            y += extraYOffset;
-        }
-        
-        ctx.fillText(num, x, y);
+        face.numbers.forEach((num, i) => {
+            const angle = customAngles[i];
+            let x = face.x + Math.cos(angle) * radius;
+            let y = face.y + Math.sin(angle) * radius - offsetY;
+            
+            if (i === 1) {
+                const extraXOffset = 15;
+                const extraYOffset = 65;
+                x -= extraXOffset;
+                y += extraYOffset;
+            }
+            else if (i === 2) {
+                const extraXOffset = 15;
+                const extraYOffset = 60;
+                x -= extraXOffset;
+                y += extraYOffset;
+            }
+            
+            // Usar a função de desenho rotacionado
+            drawRotatedText(num, x, y, numberRotations[num]);
+        });
     });
-});
-
-
 
     return new THREE.CanvasTexture(canvas);
 }
