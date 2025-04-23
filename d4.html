@@ -175,11 +175,11 @@ function createDiceTexture() {
     ctx.textBaseline = 'middle';
 
     // Definir rotações para cada posição (em radianos)
-    const rotations = {
-        top: 0,            // Rotação do número do topo (0 = sem rotação)
-        bottomLeft: 0,     // Rotação do número inferior esquerdo
-        bottomRight: 0     // Rotação do número inferior direito
-    };
+   const rotations = {
+    top: 0,                    // Número do topo sem rotação
+    bottomLeft: -Math.PI/1.9,  // Aproximadamente 95 graus anti-horário
+    bottomRight: Math.PI/1.9   // Aproximadamente 95 graus horário
+};
 
     // Função para desenhar texto rotacionado
     function drawRotatedText(text, x, y, rotation) {
