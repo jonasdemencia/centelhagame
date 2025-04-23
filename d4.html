@@ -196,7 +196,7 @@ function createDiceTexture() {
     const x = face.x + Math.cos(angle) * radius;
     let extraOffset = 0;
     if (i > 0) { 
-        extraOffset = 30; // aumente esse valor para empurrar os números inferiores para baixo
+        extraOffset = 50; // aumente esse valor para empurrar os números inferiores para baixo
     }
     // Note que agora, ao invés de subtrair extraOffset, nós o somamos.
     const y = face.y + Math.sin(angle) * radius - offsetY + extraOffset;
