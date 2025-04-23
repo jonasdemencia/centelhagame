@@ -184,13 +184,13 @@ function createDiceTexture() {
 
     faces.forEach(face => {
     // Desenhar os números com posicionamento customizado
-    const radius = 40;
+    const radius = 60;
 
     // Define os ângulos customizados: topo, inferior-esquerdo, inferior-direito
     const customAngles = [ -Math.PI/2, 5*Math.PI/6, Math.PI/6 ];
 
     // Define o offset vertical para ajustar a posição (tente alterar esse valor conforme necessário)
-    const offsetY = 30;
+    const offsetY = 10;
 
     face.numbers.forEach((num, i) => {
         const angle = customAngles[i]; // usa os ângulos definidos
