@@ -200,7 +200,7 @@ function createDiceTexture() {
 
     faces.forEach(face => {
         const radius = 60;
-        const customAngles = [ -Math.PI/2 - 0.4, 5*Math.PI/6, Math.PI/6 ];
+        const customAngles = [ -Math.PI/2 - 0.4, 5*Math.PI/6 + 0.2, Math.PI/6 ];
         const offsetY = 10;
 
         face.numbers.forEach((num, i) => {
@@ -209,15 +209,15 @@ function createDiceTexture() {
             let y = face.y + Math.sin(angle) * radius - offsetY;
             
             if (i === 1) {
-                const extraXOffset = 15;
-                const extraYOffset = 65;
+                const extraXOffset = 5;  // Reduzido de 15 para 5 (move mais para direita)
+                const extraYOffset = 65; // Mantido igual
                 x -= extraXOffset;
                 y += extraYOffset;
                 drawRotatedText(num, x, y, rotations.bottomLeft);
             }
             else if (i === 2) {
-                const extraXOffset = 15;
-                const extraYOffset = 65;
+                const extraXOffset = 15;  // Mantido igual
+                const extraYOffset = 45;  // Reduzido de 65 para 45 (move mais para cima)
                 x -= extraXOffset;
                 y += extraYOffset;
                 drawRotatedText(num, x, y, rotations.bottomRight);
