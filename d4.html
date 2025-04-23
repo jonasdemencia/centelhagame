@@ -160,69 +160,59 @@ world.addContactMaterial(wallDiceContact);
          // --- Criação do Dado (Three.js) ---
 function createDiceTexture() {
     const canvas = document.createElement('canvas');
-    canvas.width = 1024;  // Aumentado para melhor resolução
-    canvas.height = 1024; // Aumentado para melhor resolução
+    canvas.width = 512;
+    canvas.height = 512;
     const ctx = canvas.getContext('2d');
 
     // Cor de fundo do dado
     ctx.fillStyle = '#1a237e';
-    ctx.fillRect(0, 0, 1024, 1024);
+    ctx.fillRect(0, 0, 512, 512);
 
     // Configuração do texto
-    ctx.textAlign = 'center';
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 70px Arial';
+    ctx.textBaseline = 'center';
     ctx.textBaseline = 'middle';
-
-    // Função para desenhar texto com efeito de baixo relevo
-    function drawEmbossedNumber(num, x, y) {
-        // Sombra
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.font = 'bold 70px Arial';
-        ctx.fillText(num, x + 2, y + 2);
-
-        // Texto principal
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 70px Arial';
-        ctx.fillText(num, x, y);
-
-        // Brilho
-        ctx.fillStyle = 'rgba(255,255,255,0.5)';
-        ctx.fillText(num, x - 1, y - 1);
-    }
 
     // Desenhar os números em cada quadrante
     const faces = [
-        { numbers: ['1', '2', '3'], x: 256, y: 256 },
-        { numbers: ['1', '3', '4'], x: 768, y: 256 },
-        { numbers: ['2', '3', '4'], x: 256, y: 768 },
-        { numbers: ['1', '2', '4'], x: 768, y: 768 }
+        { numbers: ['1', '2', '3'], x: 128, y: 128 },
+        { numbers: ['1', '3', '4'], x: 384, y: 128 },
+        { numbers: ['2', '3', '4'], x: 128, y: 384 },
+        { numbers: ['1', '2', '4'], x: 384, y: 384 }
     ];
 
     faces.forEach(face => {
-        const radius = 130; // Ajustado para a nova resolução
-        const customAngles = [ -Math.PI/2 - 0.4, 5*Math.PI/6 + 0.2, Math.PI/6 ];
-        const offsetY = 20;
+    const radius = 65;
+    // Ângulos customizados: topo, inferior-esquerdo e inferior-direito
+    const customAngles = [ -Math.PI/2 - 0.4, 5*Math.PI/6 + 0.2, Math.PI/6 ];
+    const offsetY = 10;
 
-        face.numbers.forEach((num, i) => {
-            const angle = customAngles[i];
-            let x = face.x + Math.cos(angle) * radius;
-            let y = face.y + Math.sin(angle) * radius - offsetY;
-            
-            if (i === 1) {
-                const extraXOffset = 30;
-                const extraYOffset = 130;
-                x -= extraXOffset;
-                y += extraYOffset;
-            }
-            else if (i === 2) {
-                const extraXOffset = 30;
-                const extraYOffset = 120;
-                x -= extraXOffset;
-                y += extraYOffset;
-            }
-            
-            drawEmbossedNumber(num, x, y);
-        });
+    face.numbers.forEach((num, i) => {
+        const angle = customAngles[i];
+        let x = face.x + Math.cos(angle) * radius;
+        let y = face.y + Math.sin(angle) * radius - offsetY;
+        
+        // Número inferior esquerdo (índice 1): deslocar para a esquerda e ajustar Y
+        if (i === 1) {
+            const extraXOffset = 15;
+            const extraYOffset = 65; // Aumentado para descer mais o número da esquerda
+            x -= extraXOffset;
+            y += extraYOffset;
+        }
+        // Número inferior direito (índice 2): deslocar mais para a esquerda
+        else if (i === 2) {
+            const extraXOffset = 15; // Aumentado de 5 para 15 para mover mais para a esquerda
+            const extraYOffset = 60;
+            x -= extraXOffset; // Agora usando -= para mover para a esquerda
+            y += extraYOffset;
+        }
+        
+        ctx.fillText(num, x, y);
     });
+});
+
+
 
     return new THREE.CanvasTexture(canvas);
 }
