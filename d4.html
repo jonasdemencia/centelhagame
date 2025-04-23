@@ -192,17 +192,15 @@ function createDiceTexture() {
     const offsetY = 10;
     
     face.numbers.forEach((num, i) => {
-        const angle = customAngles[i];
-        const x = face.x + Math.cos(angle) * radius;
-        
-        // Para os números inferiores (índices 1 e 2), aumente o offset para empurrá-los mais para baixo
-        let extraOffset = 0;
-        if (i > 0) { 
-            extraOffset = 2; // você pode ajustar esse valor conforme o desejado
-        }
-        
-        const y = face.y + Math.sin(angle) * radius - offsetY - extraOffset;
-        ctx.fillText(num, x, y);
+    const angle = customAngles[i];
+    const x = face.x + Math.cos(angle) * radius;
+    let extraOffset = 0;
+    if (i > 0) { 
+        extraOffset = 30; // aumente esse valor para empurrar os números inferiores para baixo
+    }
+    // Note que agora, ao invés de subtrair extraOffset, nós o somamos.
+    const y = face.y + Math.sin(angle) * radius - offsetY + extraOffset;
+    ctx.fillText(num, x, y);
     });
 });
 
