@@ -174,15 +174,14 @@ function createDiceTexture() {
     ctx.textBaseline = 'center';
     ctx.textBaseline = 'middle';
 
-    // Adicionar rotações específicas para cada número (em radianos)
-    const numberRotations = {
-        '1': 0,      // sem rotação
-        '2': 0,      // sem rotação
-        '3': 0,      // sem rotação
-        '4': 0       // sem rotação
+    // Definir rotações para cada posição (em radianos)
+    const rotations = {
+        top: 0,            // Rotação do número do topo (0 = sem rotação)
+        bottomLeft: 0,     // Rotação do número inferior esquerdo
+        bottomRight: 0     // Rotação do número inferior direito
     };
 
-    // Função auxiliar para desenhar texto rotacionado
+    // Função para desenhar texto rotacionado
     function drawRotatedText(text, x, y, rotation) {
         ctx.save();
         ctx.translate(x, y);
@@ -214,16 +213,19 @@ function createDiceTexture() {
                 const extraYOffset = 65;
                 x -= extraXOffset;
                 y += extraYOffset;
+                drawRotatedText(num, x, y, rotations.bottomLeft);
             }
             else if (i === 2) {
                 const extraXOffset = 15;
                 const extraYOffset = 60;
                 x -= extraXOffset;
                 y += extraYOffset;
+                drawRotatedText(num, x, y, rotations.bottomRight);
             }
-            
-            // Usar a função de desenho rotacionado
-            drawRotatedText(num, x, y, numberRotations[num]);
+            else {
+                // Número do topo (i === 0)
+                drawRotatedText(num, x, y, rotations.top);
+            }
         });
     });
 
