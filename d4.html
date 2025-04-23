@@ -158,35 +158,24 @@ world.addContactMaterial(wallDiceContact);
 
 
          // --- Criação do Dado (Three.js) ---
-// --- Criação do Dado (Three.js) ---
 function createDiceTexture() {
-    // Criar canvas com tamanho 512x512 pixels
+    // Criação e configuração do canvas
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 512;
     const ctx = canvas.getContext('2d');
 
-    // Define a cor de fundo do dado (azul escuro)
+    // Cor de fundo do dado
     ctx.fillStyle = '#1a237e';
     ctx.fillRect(0, 0, 512, 512);
 
-    // Configuração do texto (cor branca, fonte Arial negrito tamanho 95px)
+    // Configuração do texto
     ctx.fillStyle = 'white';
     ctx.font = 'bold 95px Arial';
-    ctx.textBaseline = 'center';
-    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';     // Centraliza o texto horizontalmente
+    ctx.textBaseline = 'middle';  // Centraliza o texto verticalmente
 
-    // Define o ângulo de rotação para cada número
-    // Para ajustar a rotação dos números, modifique estes valores:
-    // - Aumentar o divisor (1.7) diminui o ângulo
-    // - Diminuir o divisor aumenta o ângulo
-    const rotations = {
-        top: 0,                    // Número do topo permanece sem rotação
-        bottomLeft: -Math.PI/1.9,  // Aproximadamente 95 graus anti-horário
-        bottomRight: Math.PI/1.9   // Aproximadamente 95 graus horário
-    };
-
-    // Função auxiliar para desenhar texto rotacionado
+    // Função para desenhar texto rotacionado
     function drawRotatedText(text, x, y, rotation) {
         ctx.save();
         ctx.translate(x, y);
@@ -195,51 +184,73 @@ function createDiceTexture() {
         ctx.restore();
     }
 
-    // Define os números para cada face do dado
-    // x e y são as coordenadas centrais de cada face no canvas
+    // Função para calcular posição dos números em relação ao centro da face
+    function calculateNumberPosition(centerX, centerY, angle, distance) {
+        return {
+            x: centerX + Math.cos(angle) * distance,
+            y: centerY + Math.sin(angle) * distance
+        };
+    }
+
+    // Define os centros exatos de cada face no canvas
     const faces = [
-        { numbers: ['1', '2', '3'], x: 128, y: 128 },
-        { numbers: ['1', '3', '4'], x: 384, y: 128 },
-        { numbers: ['2', '3', '4'], x: 128, y: 384 },
-        { numbers: ['1', '2', '4'], x: 384, y: 384 }
+        { numbers: ['1', '2', '3'], centerX: 128, centerY: 128 },
+        { numbers: ['1', '3', '4'], centerX: 384, centerY: 128 },
+        { numbers: ['2', '3', '4'], centerX: 128, centerY: 384 },
+        { numbers: ['1', '2', '4'], centerX: 384, centerY: 384 }
     ];
 
-    faces.forEach(face => {
-        // Ajuste do raio para posicionamento mais preciso
-        const radius = 65;  // Aumentado ligeiramente para melhor distribuição
-        
-        // Ângulos refinados para alinhamento com os vértices
-        const customAngles = [ 
-            -Math.PI/2 - 0.35,  // Ajuste fino do ângulo do topo
-            5*Math.PI/6 + 0.15, // Ajuste fino do ângulo inferior esquerdo
-            Math.PI/6 - 0.15    // Ajuste fino do ângulo inferior direito
-        ];
-        const offsetY = 8;  // Reduzido ligeiramente para ajuste vertical global
+    // Configurações precisas para distribuição dos números
+    const numberConfig = {
+        distance: 70,           // Distância do centro até cada número
+        angleTop: -Math.PI/2,   // Ângulo para o número do topo (270 graus)
+        angleLeft: Math.PI*5/6, // Ângulo para o número inferior esquerdo (150 graus)
+        angleRight: Math.PI/6,  // Ângulo para o número inferior direito (30 graus)
+        rotations: {
+            top: 0,
+            bottomLeft: -Math.PI/2,  // 90 graus anti-horário
+            bottomRight: Math.PI/2   // 90 graus horário
+        }
+    };
 
+    faces.forEach(face => {
         face.numbers.forEach((num, i) => {
-            const angle = customAngles[i];
-            let x = face.x + Math.cos(angle) * radius;
-            let y = face.y + Math.sin(angle) * radius - offsetY;
-            
-            if (i === 1) {  // Número inferior esquerdo
-                const extraXOffset = -5;    // Ajustado para mover ligeiramente para direita
-                const extraYOffset = 80;    // Ajustado para posição vertical ideal
-                x -= extraXOffset;
-                y += extraYOffset;
-                drawRotatedText(num, x, y, rotations.bottomLeft);
+            let angle, rotation, pos;
+
+            // Determina ângulo e rotação baseado na posição
+            switch(i) {
+                case 0: // Número do topo
+                    pos = calculateNumberPosition(
+                        face.centerX, 
+                        face.centerY, 
+                        numberConfig.angleTop, 
+                        numberConfig.distance
+                    );
+                    rotation = numberConfig.rotations.top;
+                    break;
+
+                case 1: // Número inferior esquerdo
+                    pos = calculateNumberPosition(
+                        face.centerX, 
+                        face.centerY, 
+                        numberConfig.angleLeft, 
+                        numberConfig.distance
+                    );
+                    rotation = numberConfig.rotations.bottomLeft;
+                    break;
+
+                case 2: // Número inferior direito
+                    pos = calculateNumberPosition(
+                        face.centerX, 
+                        face.centerY, 
+                        numberConfig.angleRight, 
+                        numberConfig.distance
+                    );
+                    rotation = numberConfig.rotations.bottomRight;
+                    break;
             }
-            else if (i === 2) {  // Número inferior direito
-                const extraXOffset = 10;    // Ajustado para alinhamento horizontal
-                const extraYOffset = 80;    // Igualado ao número esquerdo para simetria
-                x -= extraXOffset;
-                y += extraYOffset;
-                drawRotatedText(num, x, y, rotations.bottomRight);
-            }
-            else {  // Número do topo
-                // Pequeno ajuste na posição do número do topo
-                y -= 5; // Move ligeiramente para cima
-                drawRotatedText(num, x, y, rotations.top);
-            }
+
+            drawRotatedText(num, pos.x, pos.y, rotation);
         });
     });
 
