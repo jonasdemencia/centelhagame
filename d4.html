@@ -230,33 +230,51 @@ function createDiceTexture() {
 
     // Configurações de rotação dos números
     const rotations = {
-        top: 0,               // Número do topo sem rotação
-        bottomLeft: -Math.PI/2,  // 90 graus anti-horário
-        bottomRight: Math.PI/2   // 90 graus horário
+        top: 0,
+        bottomLeft: -Math.PI/2,
+        bottomRight: Math.PI/2
+    };
+
+    // Configurações de ajuste fino para cada posição
+    const adjustments = {
+        top: {
+            x: 0,      // Sem ajuste horizontal para o número do topo
+            y: 25      // Move para baixo do vértice
+        },
+        bottomLeft: {
+            x: 25,     // Move para direita do vértice
+            y: -25     // Move para cima do vértice
+        },
+        bottomRight: {
+            x: -25,    // Move para esquerda do vértice
+            y: -25     // Move para cima do vértice
+        }
     };
 
     // Desenha os números em cada face
     faces.forEach(face => {
         face.numbers.forEach((num, i) => {
-            // Posiciona cada número próximo ao seu vértice correspondente
             const vertex = face.vertices[i];
             let x = vertex.x;
             let y = vertex.y;
             
-            // Ajusta a posição para que o topo do número fique no vértice
+            // Aplica ajustes precisos baseados na posição
             switch(i) {
                 case 0: // Número do topo
-                    y += 20; // Move um pouco para baixo do vértice
+                    x += adjustments.top.x;
+                    y += adjustments.top.y;
                     drawRotatedText(num, x, y, rotations.top);
                     break;
+                    
                 case 1: // Número inferior esquerdo
-                    x += 20; // Move um pouco para direita do vértice
-                    y -= 20; // Move um pouco para cima do vértice
+                    x += adjustments.bottomLeft.x;
+                    y += adjustments.bottomLeft.y;
                     drawRotatedText(num, x, y, rotations.bottomLeft);
                     break;
+                    
                 case 2: // Número inferior direito
-                    x -= 20; // Move um pouco para esquerda do vértice
-                    y -= 20; // Move um pouco para cima do vértice
+                    x += adjustments.bottomRight.x;
+                    y += adjustments.bottomRight.y;
                     drawRotatedText(num, x, y, rotations.bottomRight);
                     break;
             }
