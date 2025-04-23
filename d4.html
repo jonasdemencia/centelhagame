@@ -158,30 +158,35 @@ world.addContactMaterial(wallDiceContact);
 
 
          // --- Criação do Dado (Three.js) ---
+// --- Criação do Dado (Three.js) ---
 function createDiceTexture() {
+    // Criar canvas com tamanho 512x512 pixels
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 512;
     const ctx = canvas.getContext('2d');
 
-    // Cor de fundo do dado
+    // Define a cor de fundo do dado (azul escuro)
     ctx.fillStyle = '#1a237e';
     ctx.fillRect(0, 0, 512, 512);
 
-    // Configuração do texto
+    // Configuração do texto (cor branca, fonte Arial negrito tamanho 95px)
     ctx.fillStyle = 'white';
     ctx.font = 'bold 95px Arial';
     ctx.textBaseline = 'center';
     ctx.textBaseline = 'middle';
 
-    // Definir rotações para cada posição (em radianos)
-   const rotations = {
+    // Define o ângulo de rotação para cada número
+    // Para ajustar a rotação dos números, modifique estes valores:
+    // - Aumentar o divisor (1.7) diminui o ângulo
+    // - Diminuir o divisor aumenta o ângulo
+    const rotations = {
         top: 0,                    // Número do topo sem rotação
         bottomLeft: -Math.PI/1.7,  // 105 graus anti-horário
         bottomRight: Math.PI/1.7   // 105 graus horário
     };
 
-    // Função para desenhar texto rotacionado
+    // Função auxiliar para desenhar texto rotacionado
     function drawRotatedText(text, x, y, rotation) {
         ctx.save();
         ctx.translate(x, y);
@@ -190,7 +195,8 @@ function createDiceTexture() {
         ctx.restore();
     }
 
-    // Desenhar os números em cada quadrante
+    // Define os números para cada face do dado
+    // x e y são as coordenadas centrais de cada face no canvas
     const faces = [
         { numbers: ['1', '2', '3'], x: 128, y: 128 },
         { numbers: ['1', '3', '4'], x: 384, y: 128 },
@@ -199,31 +205,36 @@ function createDiceTexture() {
     ];
 
     faces.forEach(face => {
-        const radius = 60;
+        // Define o raio do círculo imaginário onde os números são posicionados
+        const radius = 60;  // Aumentar/diminuir para espaçar mais/menos os números
+        
+        // Ângulos base para posicionamento dos números em cada face
+        // Ajuste estes valores para mudar a posição angular dos números
         const customAngles = [ -Math.PI/2 - 0.4, 5*Math.PI/6 + 0.2, Math.PI/6 ];
-        const offsetY = 10;
+        const offsetY = 10;  // Deslocamento vertical global dos números
 
         face.numbers.forEach((num, i) => {
             const angle = customAngles[i];
             let x = face.x + Math.cos(angle) * radius;
             let y = face.y + Math.sin(angle) * radius - offsetY;
             
-            if (i === 1) {
-                const extraXOffset = 0;     // Mantido em 0
-                const extraYOffset = 85;    // Aumentado de 65 para 85 (move mais para baixo)
+            if (i === 1) {  // Número inferior esquerdo
+                // Ajuste estas variáveis para mover o número inferior esquerdo:
+                const extraXOffset = 0;     // Mover horizontalmente (- = esquerda, + = direita)
+                const extraYOffset = 90;    // Mover verticalmente (+ = baixo, - = cima)
                 x -= extraXOffset;
                 y += extraYOffset;
                 drawRotatedText(num, x, y, rotations.bottomLeft);
             }
-            else if (i === 2) {
-                const extraXOffset = 15;    // Mantido igual
-                const extraYOffset = 25;    // Reduzido de 35 para 25 (move ainda mais para cima)
+            else if (i === 2) {  // Número inferior direito
+                // Ajuste estas variáveis para mover o número inferior direito:
+                const extraXOffset = 15;    // Mover horizontalmente (- = esquerda, + = direita)
+                const extraYOffset = 25;    // Mover verticalmente (+ = baixo, - = cima)
                 x -= extraXOffset;
                 y += extraYOffset;
                 drawRotatedText(num, x, y, rotations.bottomRight);
             }
-            else {
-                // Número do topo (i === 0)
+            else {  // Número do topo (i === 0)
                 drawRotatedText(num, x, y, rotations.top);
             }
         });
@@ -232,12 +243,13 @@ function createDiceTexture() {
     return new THREE.CanvasTexture(canvas);
 }
 
+// Criar geometria do tetraedro com tamanho 0.8
 const geometry = new THREE.TetrahedronGeometry(0.8);
 
-// Definir UVs personalizados
+// Define as coordenadas UV para mapeamento da textura
+// Isso controla como a textura é aplicada em cada face
 const uvs = [];
 for (let i = 0; i < 4; i++) { // 4 faces
-    // UV para cada vértice do triângulo
     const u = i % 2 === 0 ? 0 : 0.5;
     const v = i < 2 ? 0 : 0.5;
     
@@ -248,17 +260,18 @@ for (let i = 0; i < 4; i++) { // 4 faces
     );
 }
 
-// Aplicar os UVs à geometria
+// Aplica as coordenadas UV à geometria
 geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
 
 // Criar material com a textura
 const texture = createDiceTexture();
 const material = new THREE.MeshStandardMaterial({
     map: texture,
-    roughness: 0.3,
-    metalness: 0.2
+    roughness: 0.3,  // Controla o quão fosco é o material
+    metalness: 0.2   // Controla o aspecto metálico do material
 });
 
+// Criar o dado e adicionar à cena
 const dice = new THREE.Mesh(geometry, material);
 scene.add(dice);
         
