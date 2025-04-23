@@ -191,22 +191,21 @@ function createDiceTexture() {
     face.numbers.forEach((num, i) => {
         const angle = customAngles[i];
         let x = face.x + Math.cos(angle) * radius;
-        let y = face.y + Math.sin(angle) * radius - offsetY; // Vamos modificar esta linha
+        let y = face.y + Math.sin(angle) * radius - offsetY;
         
-        // Número inferior esquerdo (índice 1) e direito (índice 2)
-        if (i === 1 || i === 2) {
-            const extraYOffset = 40; // Adicione este valor para mover para baixo
-            y += extraYOffset; // Adiciona o offset vertical
-        }
-        
-        // Ajustes horizontais existentes
+        // Número inferior esquerdo (índice 1): deslocar para a esquerda e ajustar Y
         if (i === 1) {
             const extraXOffset = 15;
+            const extraYOffset = 35; // Aumentado para descer mais o número da esquerda
             x -= extraXOffset;
+            y += extraYOffset;
         }
+        // Número inferior direito (índice 2): deslocar mais para a esquerda
         else if (i === 2) {
-            const extraXOffset = 5;
-            x += extraXOffset;
+            const extraXOffset = 15; // Aumentado de 5 para 15 para mover mais para a esquerda
+            const extraYOffset = 30;
+            x -= extraXOffset; // Agora usando -= para mover para a esquerda
+            y += extraYOffset;
         }
         
         ctx.fillText(num, x, y);
