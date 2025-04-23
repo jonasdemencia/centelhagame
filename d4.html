@@ -176,10 +176,10 @@ function createDiceTexture() {
 
     // Definir rotações para cada posição (em radianos)
    const rotations = {
-    top: 0,                    // Número do topo sem rotação
-    bottomLeft: -Math.PI/1.9,  // Aproximadamente 95 graus anti-horário
-    bottomRight: Math.PI/1.9   // Aproximadamente 95 graus horário
-};
+        top: 0,                    // Número do topo sem rotação
+        bottomLeft: -Math.PI/1.7,  // 105 graus anti-horário
+        bottomRight: Math.PI/1.7   // 105 graus horário
+    };
 
     // Função para desenhar texto rotacionado
     function drawRotatedText(text, x, y, rotation) {
@@ -199,7 +199,7 @@ function createDiceTexture() {
     ];
 
     faces.forEach(face => {
-        const radius = 65;
+        const radius = 60;
         const customAngles = [ -Math.PI/2 - 0.4, 5*Math.PI/6, Math.PI/6 ];
         const offsetY = 10;
 
