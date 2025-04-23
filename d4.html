@@ -181,9 +181,9 @@ function createDiceTexture() {
     // - Aumentar o divisor (1.7) diminui o ângulo
     // - Diminuir o divisor aumenta o ângulo
     const rotations = {
-        top: 0,                    // Número do topo sem rotação
-        bottomLeft: -Math.PI/1.7,  // 105 graus anti-horário
-        bottomRight: Math.PI/1.7   // 105 graus horário
+        top: 0,                    // Número do topo permanece sem rotação
+        bottomLeft: -Math.PI/1.9,  // Aproximadamente 95 graus anti-horário
+        bottomRight: Math.PI/1.9   // Aproximadamente 95 graus horário
     };
 
     // Função auxiliar para desenhar texto rotacionado
@@ -205,13 +205,16 @@ function createDiceTexture() {
     ];
 
     faces.forEach(face => {
-        // Define o raio do círculo imaginário onde os números são posicionados
-        const radius = 60;  // Aumentar/diminuir para espaçar mais/menos os números
+        // Ajuste do raio para posicionamento mais preciso
+        const radius = 65;  // Aumentado ligeiramente para melhor distribuição
         
-        // Ângulos base para posicionamento dos números em cada face
-        // Ajuste estes valores para mudar a posição angular dos números
-        const customAngles = [ -Math.PI/2 - 0.4, 5*Math.PI/6 + 0.2, Math.PI/6 ];
-        const offsetY = 10;  // Deslocamento vertical global dos números
+        // Ângulos refinados para alinhamento com os vértices
+        const customAngles = [ 
+            -Math.PI/2 - 0.35,  // Ajuste fino do ângulo do topo
+            5*Math.PI/6 + 0.15, // Ajuste fino do ângulo inferior esquerdo
+            Math.PI/6 - 0.15    // Ajuste fino do ângulo inferior direito
+        ];
+        const offsetY = 8;  // Reduzido ligeiramente para ajuste vertical global
 
         face.numbers.forEach((num, i) => {
             const angle = customAngles[i];
@@ -219,22 +222,22 @@ function createDiceTexture() {
             let y = face.y + Math.sin(angle) * radius - offsetY;
             
             if (i === 1) {  // Número inferior esquerdo
-                // Ajuste estas variáveis para mover o número inferior esquerdo:
-                const extraXOffset = 0;     // Mover horizontalmente (- = esquerda, + = direita)
-                const extraYOffset = 95;    // Mover verticalmente (+ = baixo, - = cima)
+                const extraXOffset = -5;    // Ajustado para mover ligeiramente para direita
+                const extraYOffset = 80;    // Ajustado para posição vertical ideal
                 x -= extraXOffset;
                 y += extraYOffset;
                 drawRotatedText(num, x, y, rotations.bottomLeft);
             }
             else if (i === 2) {  // Número inferior direito
-                // Ajuste estas variáveis para mover o número inferior direito:
-                const extraXOffset = 5;    // Mover horizontalmente (- = esquerda, + = direita)
-                const extraYOffset = 25;    // Mover verticalmente (+ = baixo, - = cima)
+                const extraXOffset = 10;    // Ajustado para alinhamento horizontal
+                const extraYOffset = 80;    // Igualado ao número esquerdo para simetria
                 x -= extraXOffset;
                 y += extraYOffset;
                 drawRotatedText(num, x, y, rotations.bottomRight);
             }
-            else {  // Número do topo (i === 0)
+            else {  // Número do topo
+                // Pequeno ajuste na posição do número do topo
+                y -= 5; // Move ligeiramente para cima
                 drawRotatedText(num, x, y, rotations.top);
             }
         });
