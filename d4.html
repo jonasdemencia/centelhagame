@@ -159,7 +159,6 @@ world.addContactMaterial(wallDiceContact);
 
          // --- Criação do Dado (Three.js) ---
 function createDiceTexture() {
-    // Criação e configuração do canvas
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 512;
@@ -172,8 +171,8 @@ function createDiceTexture() {
     // Configuração do texto
     ctx.fillStyle = 'white';
     ctx.font = 'bold 95px Arial';
-    ctx.textAlign = 'center';     // Centraliza o texto horizontalmente
-    ctx.textBaseline = 'middle';  // Centraliza o texto verticalmente
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
 
     // Função para desenhar texto rotacionado
     function drawRotatedText(text, x, y, rotation) {
@@ -184,73 +183,83 @@ function createDiceTexture() {
         ctx.restore();
     }
 
-    // Função para calcular posição dos números em relação ao centro da face
-    function calculateNumberPosition(centerX, centerY, angle, distance) {
-        return {
-            x: centerX + Math.cos(angle) * distance,
-            y: centerY + Math.sin(angle) * distance
-        };
-    }
-
-    // Define os centros exatos de cada face no canvas
+    // Define os vértices e centros de cada face triangular
     const faces = [
-        { numbers: ['1', '2', '3'], centerX: 128, centerY: 128 },
-        { numbers: ['1', '3', '4'], centerX: 384, centerY: 128 },
-        { numbers: ['2', '3', '4'], centerX: 128, centerY: 384 },
-        { numbers: ['1', '2', '4'], centerX: 384, centerY: 384 }
+        {
+            numbers: ['1', '2', '3'],
+            // Definindo os três vértices do triângulo
+            vertices: [
+                { x: 128, y: 78 },  // Topo
+                { x: 78, y: 178 },  // Esquerda
+                { x: 178, y: 178 }  // Direita
+            ],
+            centerX: 128,
+            centerY: 128
+        },
+        {
+            numbers: ['1', '3', '4'],
+            vertices: [
+                { x: 384, y: 78 },
+                { x: 334, y: 178 },
+                { x: 434, y: 178 }
+            ],
+            centerX: 384,
+            centerY: 128
+        },
+        {
+            numbers: ['2', '3', '4'],
+            vertices: [
+                { x: 128, y: 334 },
+                { x: 78, y: 434 },
+                { x: 178, y: 434 }
+            ],
+            centerX: 128,
+            centerY: 384
+        },
+        {
+            numbers: ['1', '2', '4'],
+            vertices: [
+                { x: 384, y: 334 },
+                { x: 334, y: 434 },
+                { x: 434, y: 434 }
+            ],
+            centerX: 384,
+            centerY: 384
+        }
     ];
 
-    // Configurações precisas para distribuição dos números
-    const numberConfig = {
-        distance: 70,           // Distância do centro até cada número
-        angleTop: -Math.PI/2,   // Ângulo para o número do topo (270 graus)
-        angleLeft: Math.PI*5/6, // Ângulo para o número inferior esquerdo (150 graus)
-        angleRight: Math.PI/6,  // Ângulo para o número inferior direito (30 graus)
-        rotations: {
-            top: 0,
-            bottomLeft: -Math.PI/2,  // 90 graus anti-horário
-            bottomRight: Math.PI/2   // 90 graus horário
-        }
+    // Configurações de rotação dos números
+    const rotations = {
+        top: 0,               // Número do topo sem rotação
+        bottomLeft: -Math.PI/2,  // 90 graus anti-horário
+        bottomRight: Math.PI/2   // 90 graus horário
     };
 
+    // Desenha os números em cada face
     faces.forEach(face => {
         face.numbers.forEach((num, i) => {
-            let angle, rotation, pos;
-
-            // Determina ângulo e rotação baseado na posição
+            // Posiciona cada número próximo ao seu vértice correspondente
+            const vertex = face.vertices[i];
+            let x = vertex.x;
+            let y = vertex.y;
+            
+            // Ajusta a posição para que o topo do número fique no vértice
             switch(i) {
                 case 0: // Número do topo
-                    pos = calculateNumberPosition(
-                        face.centerX, 
-                        face.centerY, 
-                        numberConfig.angleTop, 
-                        numberConfig.distance
-                    );
-                    rotation = numberConfig.rotations.top;
+                    y += 20; // Move um pouco para baixo do vértice
+                    drawRotatedText(num, x, y, rotations.top);
                     break;
-
                 case 1: // Número inferior esquerdo
-                    pos = calculateNumberPosition(
-                        face.centerX, 
-                        face.centerY, 
-                        numberConfig.angleLeft, 
-                        numberConfig.distance
-                    );
-                    rotation = numberConfig.rotations.bottomLeft;
+                    x += 20; // Move um pouco para direita do vértice
+                    y -= 20; // Move um pouco para cima do vértice
+                    drawRotatedText(num, x, y, rotations.bottomLeft);
                     break;
-
                 case 2: // Número inferior direito
-                    pos = calculateNumberPosition(
-                        face.centerX, 
-                        face.centerY, 
-                        numberConfig.angleRight, 
-                        numberConfig.distance
-                    );
-                    rotation = numberConfig.rotations.bottomRight;
+                    x -= 20; // Move um pouco para esquerda do vértice
+                    y -= 20; // Move um pouco para cima do vértice
+                    drawRotatedText(num, x, y, rotations.bottomRight);
                     break;
             }
-
-            drawRotatedText(num, pos.x, pos.y, rotation);
         });
     });
 
