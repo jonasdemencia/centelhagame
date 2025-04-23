@@ -184,25 +184,30 @@ function createDiceTexture() {
 
     faces.forEach(face => {
     const radius = 40;
-    
-    // Define os ângulos customizados: topo, inferior-esquerdo e inferior-direito
-    const customAngles = [ -Math.PI/2 - 0.4, 5*Math.PI/6 + 0.9, Math.PI/6 ];
-    
-    // Offset padrão para todos os números
+    // Ângulos customizados: topo, inferior-esquerdo e inferior-direito
+    const customAngles = [ -Math.PI/2 - 0.4, 5*Math.PI/6 + 0.2, Math.PI/6 ];
     const offsetY = 10;
-    
+
     face.numbers.forEach((num, i) => {
-    const angle = customAngles[i];
-    const x = face.x + Math.cos(angle) * radius;
-    let extraOffset = 0;
-    if (i > 0) { 
-        extraOffset = 65; // aumente esse valor para empurrar os números inferiores para baixo
-    }
-    // Note que agora, ao invés de subtrair extraOffset, nós o somamos.
-    const y = face.y + Math.sin(angle) * radius - offsetY + extraOffset;
-    ctx.fillText(num, x, y);
+        const angle = customAngles[i];
+        let x = face.x + Math.cos(angle) * radius;
+        const y = face.y + Math.sin(angle) * radius - offsetY;
+        
+        // Número inferior esquerdo (índice 1): deslocar para a esquerda
+        if (i === 1) {
+            const extraXOffset = 15; // desloca mais para a esquerda (x diminui)
+            x -= extraXOffset;
+        }
+        // Número inferior direito (índice 2): deslocar para a direita com ajuste menor
+        else if (i === 2) {
+            const extraXOffset = 5; // ajuste menor para mover levemente para a direita (x aumenta)
+            x += extraXOffset;
+        }
+        
+        ctx.fillText(num, x, y);
     });
 });
+
 
 
     return new THREE.CanvasTexture(canvas);
