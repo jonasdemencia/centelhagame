@@ -183,7 +183,7 @@ function createDiceTexture() {
     ];
 
     faces.forEach(face => {
-    const radius = 60;
+    const radius = 65;
     // Ângulos customizados: topo, inferior-esquerdo e inferior-direito
     const customAngles = [ -Math.PI/2 - 0.4, 5*Math.PI/6 + 0.2, Math.PI/6 ];
     const offsetY = 10;
@@ -196,7 +196,7 @@ function createDiceTexture() {
         // Número inferior esquerdo (índice 1): deslocar para a esquerda e ajustar Y
         if (i === 1) {
             const extraXOffset = 15;
-            const extraYOffset = 60; // Aumentado para descer mais o número da esquerda
+            const extraYOffset = 65; // Aumentado para descer mais o número da esquerda
             x -= extraXOffset;
             y += extraYOffset;
         }
