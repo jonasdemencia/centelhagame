@@ -126,7 +126,7 @@ scene.add(gridHelper);
         world.addContactMaterial(groundDiceContact);
         const groundShape = new CANNON.Plane();
         const groundBody = new CANNON.Body({ mass: 0, shape: groundShape, material: groundMaterial });
-        groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+        groundBody.quaternion.setFromEuler(Math.PI / 2, 0, 0);
         groundBody.position.set(0, -0.01, 0); // Reduzido de -0.1 para -0.01
         world.addBody(groundBody);
 
