@@ -219,17 +219,17 @@ function createDiceTexture() {
 
     //    Vamos definir o mapeamento explicitamente:
     const vertexMap = [
-    // Vértice lógico 0 → Resultado 1 → aparece no topo da face 0 (Q0), face 1 (Q1), face 3 (Q3)
-    [ { quadrant: 0, corner: 0 }, { quadrant: 1, corner: 0 }, { quadrant: 3, corner: 0 } ],
+    // V0 → Resultado 1 → Topo da face 0, canto 0 em Q0; face 1, canto 0 em Q1; face 2, canto 1 em Q2
+    [ { quadrant: 0, corner: 0 }, { quadrant: 1, corner: 0 }, { quadrant: 2, corner: 1 } ],
 
-    // Vértice lógico 1 → Resultado 2 → aparece no topo da face 1 (Q1), face 2 (Q2), face 3 (Q3)
-    [ { quadrant: 1, corner: 0 }, { quadrant: 2, corner: 0 }, { quadrant: 3, corner: 0 } ],
+    // V1 → Resultado 2 → Topo da face 1, canto 1 em Q1; face 2, canto 0 em Q2; face 3, canto 0 em Q3
+    [ { quadrant: 1, corner: 1 }, { quadrant: 2, corner: 0 }, { quadrant: 3, corner: 0 } ],
 
-    // Vértice lógico 2 → Resultado 3 → aparece no topo da face 2 (Q2), face 0 (Q0), face 1 (Q1)
-    [ { quadrant: 2, corner: 0 }, { quadrant: 0, corner: 0 }, { quadrant: 1, corner: 0 } ],
+    // V2 → Resultado 3 → Topo da face 2, canto 2 em Q2; face 3, canto 1 em Q3; face 0, canto 1 em Q0
+    [ { quadrant: 2, corner: 2 }, { quadrant: 3, corner: 1 }, { quadrant: 0, corner: 1 } ],
 
-    // Vértice lógico 3 → Resultado 4 → aparece no topo da face 3 (Q3), face 2 (Q2), face 0 (Q0)
-    [ { quadrant: 3, corner: 0 }, { quadrant: 2, corner: 0 }, { quadrant: 0, corner: 0 } ]
+    // V3 → Resultado 4 → Topo da face 3, canto 2 em Q3; face 0, canto 2 em Q0; face 1, canto 2 em Q1
+    [ { quadrant: 3, corner: 2 }, { quadrant: 0, corner: 2 }, { quadrant: 1, corner: 2 } ]
 ];
 
      // 3. Desenhar os números
