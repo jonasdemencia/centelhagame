@@ -94,7 +94,7 @@ import * as CANNON from 'cannon-es';
         // --- Configurações Globais ---
         // ... (código igual até a criação do mesh 'dice') ...
         // --- Constantes para Posição ---
-const BASE_Z = 2;  // Aumentado de 0.3 para 1.5
+const BASE_Z = -4;  // Aumentado de 0.3 para 1.5
 const DICE_START_Y = 0.5; // Aumentado de 0.08 para 0.2
         const scene = new THREE.Scene();
         scene.background = new THREE.Color('#3a3a3a');
@@ -138,7 +138,8 @@ const wallMaterial = new CANNON.Material('wall');
 const topWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 topWall.quaternion.setFromEuler(0, 0, Math.PI);
 //topWall.position.set(0, 0, 5); // Aumentado de -0.5 para -2
-world.addBody(topWall);
+//world.addBody(topWall);
+console.log('topWall.position:', topWall.position);
 
 // Paredes laterais
 const rightWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
