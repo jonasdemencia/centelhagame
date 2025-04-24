@@ -160,23 +160,18 @@ world.addContactMaterial(wallDiceContact);
          // --- Criação do Dado (Three.js) ---
 function createDiceTexture() {
     const canvas = document.createElement('canvas');
-    canvas.width = 512; // Largura da textura
-    canvas.height = 512; // Altura da textura
+    canvas.width = 512;
+    canvas.height = 512;
     const ctx = canvas.getContext('2d');
-    const halfWidth = canvas.width / 2;
-    const halfHeight = canvas.height / 2;
 
-    // Limpa e preenche o fundo
-    ctx.fillStyle = '#1a237e'; // Cor de fundo do dado
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#1a237e';
+    ctx.fillRect(0, 0, 512, 512);
 
-    // Configurações de texto
-    ctx.fillStyle = 'white'; // Cor dos números
-    ctx.font = 'bold 90px Arial'; // Tamanho da fonte (ajuste se necessário)
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 95px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Função auxiliar para desenhar texto rotacionado
     function drawRotatedText(text, x, y, rotation) {
         ctx.save();
         ctx.translate(x, y);
@@ -185,127 +180,70 @@ function createDiceTexture() {
         ctx.restore();
     }
 
-    // --- Lógica de Desenho CORRETA para "Top Vertex" ---
-
-    // 1. Definir as posições dos cantos DENTRO de cada quadrante da textura.
-    //    Estes são os pontos onde os números serão desenhados.
-    //    (Aproximações visuais, podem precisar de ajuste fino).
-    //    Formato: [ [canto0_xy, canto1_xy, canto2_xy], ... ] para cada quadrante
-    const quadrantCornerPositions = [
-        // Quadrante 0 (Top-Left)
-        [ { x: 128, y: 58, angle: 0 }, { x: 58, y: 198, angle: -Math.PI / 3 }, { x: 198, y: 198, angle: Math.PI / 3 } ],
-        // Quadrante 1 (Top-Right)
-        [ { x: 384, y: 58, angle: 0 }, { x: 314, y: 198, angle: -Math.PI / 3 }, { x: 454, y: 198, angle: Math.PI / 3 } ],
-        // Quadrante 2 (Bottom-Left)
-        [ { x: 128, y: 314+58, angle: 0 }, { x: 58, y: 314+198, angle: -Math.PI / 3 }, { x: 198, y: 314+198, angle: Math.PI / 3 } ], // Ajustado Y para quadrante inferior
-        // Quadrante 3 (Bottom-Right)
-        [ { x: 384, y: 314+58, angle: 0 }, { x: 314, y: 314+198, angle: -Math.PI / 3 }, { x: 454, y: 314+198, angle: Math.PI / 3 } ] // Ajustado Y para quadrante inferior
+    // Definição precisa dos vértices de cada triângulo
+    const faces = [
+        {
+            numbers: ['1', '2', '3'],
+            vertices: [
+                { x: 128, y: 58 },    // Vértice superior
+                { x: 58, y: 198 },    // Vértice inferior esquerdo
+                { x: 198, y: 198 }    // Vértice inferior direito
+            ]
+        },
+        {
+            numbers: ['1', '3', '4'],
+            vertices: [
+                { x: 384, y: 58 },
+                { x: 314, y: 198 },
+                { x: 454, y: 198 }
+            ]
+        },
+        {
+            numbers: ['2', '3', '4'],
+            vertices: [
+                { x: 128, y: 314 },
+                { x: 58, y: 454 },
+                { x: 198, y: 454 }
+            ]
+        },
+        {
+            numbers: ['1', '2', '4'],
+            vertices: [
+                { x: 384, y: 314 },
+                { x: 314, y: 454 },
+                { x: 454, y: 454 }
+            ]
+        }
     ];
-    // Offset para desenhar um pouco para dentro do canto
-    const offsetFromCorner = 15;
 
-    // 2. Mapeamento CRUCIAL: Qual vértice lógico (V0-V3, resultado 1-4) corresponde
-    //    a qual canto (índice 0, 1 ou 2) em qual quadrante da textura (índice 0, 1, 2 ou 3)?
-    //    Este mapeamento DEPENDE da forma como a THREE.TetrahedronGeometry e o loop UV
-    //    mapeiam a geometria 3D para a textura 2D.
-    //    --- ESTA É A PARTE MAIS DIFÍCIL E PROPENSA A ERROS ---
-    //    Formato: vertexMap[vertexIndex] = [ { quadrant: qIdx, corner: cIdx }, ... ] (3 entradas por vértice)
-
-    //    TENTATIVA DE MAPEAMENTO (BASEADA EM UMA POSSÍVEL DESMONTAGEM PADRÃO - PRECISA SER VALIDADA):
-    //    V0 (Res 1) -> Canto 0 do Q0, Canto 0 do Q1, Canto 0 do Q3 ??
-    //    V1 (Res 2) -> Canto 1 do Q0, Canto 1 do Q2, Canto 2 do Q3 ??
-    //    V2 (Res 3) -> Canto 2 do Q0, Canto 0 do Q2, Canto 1 do Q1 ??
-    //    V3 (Res 4) -> Canto 2 do Q1, Canto 2 do Q2, Canto 1 do Q3 ??
-
-    //    Vamos definir o mapeamento explicitamente:
-    const vertexMap = [
-    // V0 → Resultado 1 → Topo da face 0, canto 0 em Q0; face 1, canto 0 em Q1; face 2, canto 1 em Q2
-    [ { quadrant: 0, corner: 0 }, { quadrant: 1, corner: 0 }, { quadrant: 2, corner: 1 } ],
-
-    // V1 → Resultado 2 → Topo da face 1, canto 1 em Q1; face 2, canto 0 em Q2; face 3, canto 0 em Q3
-    [ { quadrant: 1, corner: 1 }, { quadrant: 2, corner: 0 }, { quadrant: 3, corner: 0 } ],
-
-    // V2 → Resultado 3 → Topo da face 2, canto 2 em Q2; face 3, canto 1 em Q3; face 0, canto 1 em Q0
-    [ { quadrant: 2, corner: 2 }, { quadrant: 3, corner: 1 }, { quadrant: 0, corner: 1 } ],
-
-    // V3 → Resultado 4 → Topo da face 3, canto 2 em Q3; face 0, canto 2 em Q0; face 1, canto 2 em Q1
-    [ { quadrant: 3, corner: 2 }, { quadrant: 0, corner: 2 }, { quadrant: 1, corner: 2 } ]
-];
-
-     // 3. Desenhar os números
-     for (let vertexIndex = 0; vertexIndex < 4; vertexIndex++) {
-         const resultText = String(vertexIndex + 1); // O número a ser desenhado (1, 2, 3 ou 4)
-         const placements = vertexMap[vertexIndex]; // Onde este número deve ser desenhado
-
-         placements.forEach(placement => {
-             const quadrantIdx = placement.quadrant;
-             const cornerIdx = placement.corner;
-
-             // Pega a posição e ângulo definidos para este canto neste quadrante
-             const cornerData = quadrantCornerPositions[quadrantIdx][cornerIdx];
-             const cornerX = cornerData.x;
-             const cornerY = cornerData.y;
-             // Usar um ângulo fixo pré-definido ou calcular dinamicamente? Vamos usar o pré-definido.
-             const angle = cornerData.angle;
-
-             // Calcular posição de desenho (offset para dentro) - Simplificado
-             let drawX = cornerX;
-             let drawY = cornerY;
-             // Ajusta a posição para afastar do canto na direção aproximada do ângulo
-             drawX += Math.sin(angle) * offsetFromCorner; // sen(0)=0, sen(+-pi/3)=+-0.86
-             drawY -= Math.cos(angle) * offsetFromCorner; // cos(0)=1, cos(+-pi/3)=0.5
-
-            // --- AJUSTE MANUAL DE POSIÇÃO (SE NECESSÁRIO) ---
-            // Se a lógica acima não ficar boa, descomente e ajuste manualmente:
-            // if (quadrantIdx === 0 && cornerIdx === 0) { drawX=...; drawY=...; angle=...; }
-            // else if (quadrantIdx === 0 && cornerIdx === 1) { drawX=...; drawY=...; angle=...; }
-            // ... etc para todas as 12 posições ...
-            // --- FIM AJUSTE MANUAL ---
-
-             drawRotatedText(resultText, drawX, drawY, angle);
-         });
-     }
-
-    // Linhas de grade para ajudar a visualizar os quadrantes e cantos (REMOVER para produção)
-    
-    ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(halfWidth, 0); ctx.lineTo(halfWidth, canvas.height);
-    ctx.moveTo(0, halfHeight); ctx.lineTo(canvas.width, halfHeight);
-    ctx.stroke();
-    quadrantCornerPositions.forEach(quad => {
-        quad.forEach(corner => {
-            ctx.fillStyle = 'red';
-            ctx.beginPath();
-            ctx.arc(corner.x, corner.y, 10, 0, Math.PI*2);
-            ctx.fill();
+    faces.forEach(face => {
+        face.numbers.forEach((num, i) => {
+            const vertex = face.vertices[i];
+            
+            // Calculando a posição para que o TOPO do número fique no vértice
+            switch(i) {
+                case 0: // Número superior
+                    drawRotatedText(num, vertex.x, vertex.y + 40, 0);
+                    break;
+                    
+                case 1: // Número inferior esquerdo
+                    // Move o ponto de desenho para que o TOPO do número rotacionado fique no vértice
+                    drawRotatedText(num, vertex.x + 40, vertex.y, -Math.PI/2);
+                    break;
+                    
+                case 2: // Número inferior direito
+                    // Move o ponto de desenho para que o TOPO do número rotacionado fique no vértice
+                    drawRotatedText(num, vertex.x - 40, vertex.y, Math.PI/2);
+                    break;
+            }
         });
     });
-    
 
     return new THREE.CanvasTexture(canvas);
 }
 
-
 // Criar geometria do tetraedro com tamanho 0.8
 const geometry = new THREE.TetrahedronGeometry(0.8);
-
-// Verifica se existe índice
-if (geometry.index) {
-    console.log('--- Índices das faces (cada trio = uma face) ---');
-    console.log(geometry.index.array);
-} else {
-    console.log('Essa geometria não tem índice (faces são definidas diretamente pela posição dos vértices).');
-}
-
-// Mostra posições dos vértices
-console.log('--- Posições dos vértices (x, y, z) ---');
-const positions = geometry.attributes.position.array;
-for (let i = 0; i < positions.length; i += 3) {
-    console.log(`Vértice ${i / 3}: x=${positions[i].toFixed(2)}, y=${positions[i + 1].toFixed(2)}, z=${positions[i + 2].toFixed(2)}`);
-}
-
 
 // Define as coordenadas UV para mapeamento da textura
 // Isso controla como a textura é aplicada em cada face
