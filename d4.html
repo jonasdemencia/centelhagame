@@ -164,8 +164,18 @@ const wallDiceContact = new CANNON.ContactMaterial(wallMaterial, diceMaterial, {
 });
 world.addContactMaterial(wallDiceContact);
 
+// Mova estas declarações para ANTES do loader
+let dice, diceBody;
+let isRolling = false;
+const rollButton = document.getElementById('roll-button');
+const resultDisplay = document.getElementById('result-display');
 
-         let dice, diceBody;
+// Variáveis para controle de força
+let pressStartTime = 0;
+let maxPressTime = 2000;
+let minForce = 15;
+let maxForce = 40;
+        
 
 const loader = new FBXLoader();
 resultDisplay.textContent = "Carregando modelo...";
@@ -273,19 +283,6 @@ loader.load(
 );
         
 
-
-
-
-        // --- Estado e Controles ---
-        let isRolling = false;
-        const rollButton = document.getElementById('roll-button');
-        const resultDisplay = document.getElementById('result-display');
-
-        // Variáveis para controle de força
-let pressStartTime = 0;
-let maxPressTime = 2000; // 2 segundos para força máxima
-let minForce = 15;
-let maxForce = 40;
 
         function random(min, max) {
             return Math.random() * (max - min) + min;
