@@ -192,6 +192,7 @@ loader.load(
 
         
         scene.add(dice);
+        console.log('➡️ Modelo D4 adicionado. POSIÇÃO inicial (dice.position):', dice.position);
         console.log('Dado adicionado à cena na posição:', dice.position);
 
         // Criar corpo físico
@@ -269,6 +270,7 @@ dice.traverse((child) => {
         // Posiciona o corpo físico
         diceBody.position.copy(dice.position);
         world.addBody(diceBody);
+        console.log('🧱 Corpo físico criado. POSIÇÃO física inicial (diceBody.position):', diceBody.position);
 
         // Adiciona evento sleep
         diceBody.addEventListener('sleep', () => {
@@ -375,6 +377,11 @@ rollButton.addEventListener("mouseup", () => {
     -4 * (forcePercent + 0.5) // Aumentado de -2 para -4 para usar mais espaço
 );
     impulseDirection.normalize();
+
+    / ADICIONE OS LOGS AQUI
+    console.log('💥 IMPULSO APLICADO');
+    console.log('➡️ POSIÇÃO antes do lançamento:', diceBody.position);
+    console.log('➡️ DIREÇÃO do impulso:', impulseDirection);
 
     // Aplica o impulso com a força calculada
     diceBody.applyImpulse(
