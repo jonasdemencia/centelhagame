@@ -88,8 +88,7 @@
 
     <script type="module">
        import * as THREE from 'three';
-       import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
-
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import * as CANNON from 'cannon-es';
 
         // --- Configurações Globais ---
@@ -196,7 +195,6 @@ loader.load(
 
         // Criar corpo físico
         const vertices = [];
-        const textureLoader = new TextureLoader();
 
         // Dentro do loader, na parte de criação do corpo físico
 dice.traverse((child) => {
@@ -204,22 +202,22 @@ dice.traverse((child) => {
         console.log('Mesh encontrado:', child);
         const material = new THREE.MeshStandardMaterial({
             // Albedo é o mapa de cor base (equivalente ao diffuse)
-            map: textureLoader.load('https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/Dice_d4_Albedo.png'),
+            map: new THREE.TextureLoader().load('https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/Dice_d4_Albedo.png'),
             
             // Normal map para detalhes de relevo
-            normalMap: textureLoader.load('https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/Dice_d4_Normal.png'),
+            normalMap: new THREE.TextureLoader().load('https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/Dice_d4_Normal.png'),
             
             // Roughness map para controle do brilho
-            roughnessMap: textureLoader.load('https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/Dice_d4_Roughness.png'),
+            roughnessMap: new THREE.TextureLoader().load('https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/Dice_d4_Roughness.png'),
             
             // Metallic map para controle do aspecto metálico
-            metalnessMap: textureLoader.load('https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/Dice_d4_Metallic.png'),
+            metalnessMap: new THREE.TextureLoader().load('https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/Dice_d4_Metallic.png'),
             
             // AO (Ambient Occlusion) para sombras sutis
-            aoMap: textureLoader.load('https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/Dice_d4_AO.png'),
+            aoMap: new THREE.TextureLoader().load('https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/Dice_d4_AO.png'),
             
             // Height/Displacement map para relevo adicional
-            displacementMap: textureLoader.load('https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/Dice_d4_Height.png'),
+            displacementMap: new THREE.TextureLoader().load('https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/Dice_d4_Height.png'),
             displacementScale: 0.001,
             
             // Configurações base do material
@@ -232,6 +230,16 @@ dice.traverse((child) => {
         child.material = material;
         child.castShadow = true;
         child.receiveShadow = true;
+
+        // Adicione os vértices para a física
+        const position = child.geometry.attributes.position.array;
+        for (let i = 0; i < position.length; i += 3) {
+            vertices.push(new CANNON.Vec3(
+                position[i] * 0.008,      // Escala ajustada
+                position[i + 1] * 0.008,
+                position[i + 2] * 0.008
+            ));
+        }
     }
 });
 
