@@ -173,8 +173,8 @@ const resultDisplay = document.getElementById('result-display');
 // Variáveis para controle de força
 let pressStartTime = 0;
 let maxPressTime = 2000;
-let minForce = 15;
-let maxForce = 40;
+let minForce = 5;
+let maxForce = 15;
         
 
 const loader = new FBXLoader();
@@ -258,12 +258,12 @@ dice.traverse((child) => {
 
         // Cria corpo físico
         diceBody = new CANNON.Body({
-            mass: 1.5,
-            shape: diceShape,
-            material: diceMaterial,
-            angularDamping: 0.4,
-            linearDamping: 0.2
-        });
+    mass: 1.5,
+    shape: diceShape,
+    material: diceMaterial,
+    angularDamping: 0.6,  // Aumentado de 0.4 para 0.6
+    linearDamping: 0.4    // Aumentado de 0.2 para 0.4
+});
 
         // Posiciona o corpo físico
         diceBody.position.copy(dice.position);
@@ -369,10 +369,10 @@ rollButton.addEventListener("mouseup", () => {
 
     // Direção do impulso com força variável
     const impulseDirection = new CANNON.Vec3(
-        random(-0.2, 0.2),
-        0.3 + Math.random() * 0.4,
-        -5 * (forcePercent + 0.5) // Força aumenta com o tempo pressionado
-    );
+    random(-0.2, 0.2),
+    0.3 + Math.random() * 0.4,
+    -2 * (forcePercent + 0.5) // Reduzido de -5 para -2
+);
     impulseDirection.normalize();
 
     // Aplica o impulso com a força calculada
