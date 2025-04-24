@@ -94,15 +94,15 @@ import * as CANNON from 'cannon-es';
         // --- Configurações Globais ---
         // ... (código igual até a criação do mesh 'dice') ...
         // --- Constantes para Posição ---
-const BASE_Z = 0.3; // Reduzido de 3 para 0.3
-const DICE_START_Y = 0.08; // Reduzido de 0.8 para 0.08
+const BASE_Z = 1.5;  // Aumentado de 0.3 para 1.5
+const DICE_START_Y = 0.2; // Aumentado de 0.08 para 0.2
         const scene = new THREE.Scene();
         scene.background = new THREE.Color('#3a3a3a');
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('dice-container').appendChild(renderer.domElement);
-        camera.position.set(0, 2, 5); // Mais próxima e mais baixa
+        camera.position.set(0, 2, 0); // Posiciona a câmera diretamente acima
         camera.lookAt(0, 0, 0);
         const light = new THREE.DirectionalLight(0xffffff, 1.2);
         light.position.set(5, 8, 5);
@@ -113,7 +113,7 @@ const DICE_START_Y = 0.08; // Reduzido de 0.8 para 0.08
 const axesHelper = new THREE.AxesHelper(0.5); // Reduzido de 2 para 0.5
 scene.add(axesHelper);
 
-const gridHelper = new THREE.GridHelper(2, 20); // Reduzido de 10 para 2, mas com mais divisões
+const gridHelper = new THREE.GridHelper(4, 40); // Aumentado de 2 para 4
 scene.add(gridHelper);
 
         // --- Setup da Física (Cannon-es) ---
@@ -137,24 +137,24 @@ const wallMaterial = new CANNON.Material('wall');
 // Parede superior (Z positivo)
 const topWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 topWall.quaternion.setFromEuler(0, 0, Math.PI);
-topWall.position.set(0, 0, -0.5);
+topWall.position.set(0, 0, -2); // Aumentado de -0.5 para -2
 world.addBody(topWall);
 
 // Paredes laterais
 const rightWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 rightWall.quaternion.setFromEuler(0, -Math.PI/2, 0);
-rightWall.position.set(0.5, 0, 0);
+rightWall.position.set(2, 0, 0); // Aumentado de 0.5 para 2
 world.addBody(rightWall);
 
 const leftWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 leftWall.quaternion.setFromEuler(0, Math.PI/2, 0);
-leftWall.position.set(-0.5, 0, 0);
+leftWall.position.set(-2, 0, 0); // Aumentado de -0.5 para -2
 world.addBody(leftWall);
 
 // Parede INFERIOR
 const bottomWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 bottomWall.quaternion.setFromEuler(0, 0, 0);
-bottomWall.position.set(0, 0, BASE_Z - 0.01); // Ajustado para a nova escala
+bottomWall.position.set(0, 0, 2); // Aumentado para 2
 world.addBody(bottomWall); // Adicionar ao mundo
 
 // Material de contato para as paredes
