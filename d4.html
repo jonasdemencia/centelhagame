@@ -103,12 +103,19 @@ const DICE_START_Y = 0.8; // Altura inicial/lançamento logo acima do chão
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('dice-container').appendChild(renderer.domElement);
-        camera.position.set(0, 7, 0);
+        camera.position.set(0, 2, 5); // Mais próxima e mais baixa
         camera.lookAt(0, 0, 0);
         const light = new THREE.DirectionalLight(0xffffff, 1.2);
         light.position.set(5, 8, 5);
         scene.add(light);
         scene.add(new THREE.AmbientLight(0xcccccc, 0.8));
+
+        // ADICIONE OS HELPERS AQUI:
+const axesHelper = new THREE.AxesHelper(2);
+scene.add(axesHelper);
+
+const gridHelper = new THREE.GridHelper(10, 10);
+scene.add(gridHelper);
 
         // --- Setup da Física (Cannon-es) ---
         const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82 * 2, 0) });
@@ -161,58 +168,109 @@ world.addContactMaterial(wallDiceContact);
          let dice, diceBody;
 
 const loader = new FBXLoader();
-loader.load('Dice_d4.fbx', (fbxModel) => {
-    dice = fbxModel;
-    dice.scale.set(0.8, 0.8, 0.8);
-    scene.add(dice);
+resultDisplay.textContent = "Carregando modelo...";
 
-    // Criar corpo físico após carregar o modelo
-    const vertices = [];
-    dice.traverse((child) => {
-        if (child.isMesh) {
-            const position = child.geometry.attributes.position.array;
-            for (let i = 0; i < position.length; i += 3) {
-                vertices.push(new CANNON.Vec3(position[i], position[i + 1], position[i + 2]));
+loader.load(
+    'https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/Dice_d4.fbx',
+    (fbxModel) => {
+        console.log('Modelo FBX carregado:', fbxModel);
+        dice = fbxModel;
+        
+        // Ajusta escala e posição inicial
+        dice.scale.set(0.08, 0.08, 0.08); // Escala menor
+        dice.position.set(0, DICE_START_Y, BASE_Z);
+        
+        // Aplica material e ajustes em cada mesh do modelo
+        dice.traverse((child) => {
+            if (child.isMesh) {
+                console.log('Mesh encontrado:', child);
+                child.material = new THREE.MeshStandardMaterial({
+                    color: 0x1a237e,
+                    metalness: 0.5,
+                    roughness: 0.2
+                });
+                child.castShadow = true;
+                child.receiveShadow = true;
             }
-        }
-    });
+        });
+        
+        scene.add(dice);
+        console.log('Dado adicionado à cena na posição:', dice.position);
 
-    const cannonFaces = [];
-    for (let i = 0; i < vertices.length; i += 3) {
-        cannonFaces.push([i, i + 1, i + 2]);
+        // Criar corpo físico
+        const vertices = [];
+        dice.traverse((child) => {
+            if (child.isMesh) {
+                const position = child.geometry.attributes.position.array;
+                for (let i = 0; i < position.length; i += 3) {
+                    vertices.push(new CANNON.Vec3(
+                        position[i] * 0.08, // Aplica a mesma escala do modelo
+                        position[i + 1] * 0.08,
+                        position[i + 2] * 0.08
+                    ));
+                }
+            }
+        });
+
+        // Cria faces para o corpo físico
+        const cannonFaces = [];
+        const verticesCount = vertices.length;
+        for (let i = 0; i < verticesCount; i += 3) {
+            cannonFaces.push([i, i + 1, i + 2]);
+        }
+
+        // Cria forma física
+        const diceShape = new CANNON.ConvexPolyhedron({
+            vertices: vertices,
+            faces: cannonFaces
+        });
+
+        // Cria corpo físico
+        diceBody = new CANNON.Body({
+            mass: 1.5,
+            shape: diceShape,
+            material: diceMaterial,
+            angularDamping: 0.4,
+            linearDamping: 0.2
+        });
+
+        // Posiciona o corpo físico
+        diceBody.position.copy(dice.position);
+        world.addBody(diceBody);
+
+        // Adiciona evento sleep
+        diceBody.addEventListener('sleep', () => {
+            console.log("Dado parou de se mover");
+            if (isRolling) {
+                isRolling = false;
+                rollButton.disabled = false;
+                diceBody.velocity.set(0, 0, 0);
+                diceBody.angularVelocity.set(0, 0, 0);
+                dice.position.copy(diceBody.position);
+                dice.quaternion.copy(diceBody.quaternion);
+                const result = getResultFromTopVertex();
+                resultDisplay.textContent = `Resultado: ${result}`;
+                console.log(`Resultado do lançamento: ${result}`);
+            }
+        });
+
+        // Habilita o botão após carregar
+        rollButton.disabled = false;
+        resultDisplay.textContent = "Pressione o botão para rolar";
+
+        // Inicia a animação
+        animate();
+    },
+    (progress) => {
+        const percent = (progress.loaded / progress.total * 100);
+        console.log(`Carregando: ${percent.toFixed(2)}%`);
+        resultDisplay.textContent = `Carregando: ${percent.toFixed(0)}%`;
+    },
+    (error) => {
+        console.error('Erro ao carregar o modelo:', error);
+        resultDisplay.textContent = "Erro ao carregar o modelo!";
     }
-
-    const diceShape = new CANNON.ConvexPolyhedron({ vertices, faces: cannonFaces });
-    diceBody = new CANNON.Body({
-        mass: 1.5,
-        shape: diceShape,
-        material: diceMaterial,
-        angularDamping: 0.4,
-        linearDamping: 0.2
-    });
-
-    diceBody.position.set(0, DICE_START_Y, BASE_Z);
-    world.addBody(diceBody);
-
-    // Adiciona o evento sleep
-    diceBody.addEventListener('sleep', () => {
-        console.log("Dice physics body has fallen asleep.");
-        if (isRolling) {
-            isRolling = false;
-            rollButton.disabled = false;
-            diceBody.velocity.set(0, 0, 0);
-            diceBody.angularVelocity.set(0, 0, 0);
-            dice.position.copy(diceBody.position);
-            dice.quaternion.copy(diceBody.quaternion);
-            const result = getResultFromTopVertex();
-            resultDisplay.textContent = `Resultado: ${result}`;
-            console.log(`[${new Date().toISOString()}] Result Determined (Physics Sleep): ${result}`);
-        }
-    });
-
-    // Inicia a animação APÓS o carregamento do modelo
-    animate();
-});
+);
         
 
 
