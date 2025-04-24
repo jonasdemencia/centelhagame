@@ -88,6 +88,7 @@
 
     <script type="module">
        import * as THREE from 'three';
+       import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 
 import * as CANNON from 'cannon-es';
 
@@ -157,122 +158,43 @@ const wallDiceContact = new CANNON.ContactMaterial(wallMaterial, diceMaterial, {
 world.addContactMaterial(wallDiceContact);
 
 
-         // --- Criação do Dado (Three.js) ---
-function createDiceTexture() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
-    const ctx = canvas.getContext('2d');
+         let dice, diceBody;
 
-    ctx.fillStyle = '#1a237e';
-    ctx.fillRect(0, 0, 512, 512);
+const loader = new FBXLoader();
+loader.load('Dice_d4.fbx', (fbxModel) => {
+    dice = fbxModel;
+    dice.scale.set(0.8, 0.8, 0.8); // Ajuste a escala conforme necessário
+    scene.add(dice);
 
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 95px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    function drawRotatedText(text, x, y, rotation) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(rotation);
-        ctx.fillText(text, 0, 0);
-        ctx.restore();
-    }
-
-    // Definição precisa dos vértices de cada triângulo
-    const faces = [
-        {
-            numbers: ['4', '3', '2'],
-            vertices: [
-                { x: 128, y: 58 },    // Vértice superior
-                { x: 58, y: 198 },    // Vértice inferior esquerdo
-                { x: 198, y: 198 }    // Vértice inferior direito
-            ]
-        },
-        {
-            numbers: ['4', '3', '1'],
-            vertices: [
-                { x: 384, y: 58 },
-                { x: 314, y: 198 },
-                { x: 454, y: 198 }
-            ]
-        },
-        {
-            numbers: ['2', '4', '1'],
-            vertices: [
-                { x: 128, y: 314 },
-                { x: 58, y: 454 },
-                { x: 198, y: 454 }
-            ]
-        },
-        {
-            numbers: ['1', '3', '2'],
-            vertices: [
-                { x: 384, y: 314 },
-                { x: 314, y: 454 },
-                { x: 454, y: 454 }
-            ]
-        }
-    ];
-
-    faces.forEach(face => {
-        face.numbers.forEach((num, i) => {
-            const vertex = face.vertices[i];
-            
-            // Calculando a posição para que o TOPO do número fique no vértice
-            switch(i) {
-                case 0: // Número superior
-                    drawRotatedText(num, vertex.x, vertex.y + 40, 0);
-                    break;
-                    
-                case 1: // Número inferior esquerdo
-                    // Move o ponto de desenho para que o TOPO do número rotacionado fique no vértice
-                    drawRotatedText(num, vertex.x + 40, vertex.y, -Math.PI/2);
-                    break;
-                    
-                case 2: // Número inferior direito
-                    // Move o ponto de desenho para que o TOPO do número rotacionado fique no vértice
-                    drawRotatedText(num, vertex.x - 40, vertex.y, Math.PI/2);
-                    break;
+    // Criar corpo físico após carregar o modelo
+    const vertices = [];
+    dice.traverse((child) => {
+        if (child.isMesh) {
+            const position = child.geometry.attributes.position.array;
+            for (let i = 0; i < position.length; i += 3) {
+                vertices.push(new CANNON.Vec3(position[i], position[i + 1], position[i + 2]));
             }
-        });
+        }
     });
 
-    return new THREE.CanvasTexture(canvas);
-}
+    const cannonFaces = [];
+    // Adicionar faces baseado no modelo carregado (você precisa verificar a ordem correta)
+    for (let i = 0; i < vertices.length; i += 3) {
+        cannonFaces.push([i, i + 1, i + 2]);
+    }
 
-// Criar geometria do tetraedro com tamanho 0.8
-const geometry = new THREE.TetrahedronGeometry(0.8);
+    const diceShape = new CANNON.ConvexPolyhedron({ vertices, faces: cannonFaces });
+    diceBody = new CANNON.Body({
+        mass: 1.5,
+        shape: diceShape,
+        material: diceMaterial,
+        angularDamping: 0.4,
+        linearDamping: 0.2
+    });
 
-// Define as coordenadas UV para mapeamento da textura
-// Isso controla como a textura é aplicada em cada face
-const uvs = [];
-for (let i = 0; i < 4; i++) { // 4 faces
-    const u = i % 2 === 0 ? 0 : 0.5;
-    const v = i < 2 ? 0 : 0.5;
-    
-    uvs.push(
-        u, v,           // Primeiro vértice
-        u + 0.5, v,     // Segundo vértice
-        u + 0.25, v + 0.5 // Terceiro vértice
-    );
-}
-
-// Aplica as coordenadas UV à geometria
-geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-
-// Criar material com a textura
-const texture = createDiceTexture();
-const material = new THREE.MeshStandardMaterial({
-    map: texture,
-    roughness: 0.3,  // Controla o quão fosco é o material
-    metalness: 0.2   // Controla o aspecto metálico do material
+    diceBody.position.set(0, DICE_START_Y, BASE_Z);
+    world.addBody(diceBody);
 });
-
-// Criar o dado e adicionar à cena
-const dice = new THREE.Mesh(geometry, material);
-scene.add(dice);
         
 
         // --- Criação do Corpo Físico do Dado (Cannon-es) --- [INÍCIO DA SEÇÃO CORRIGIDA E LIMPA]
@@ -349,7 +271,7 @@ let maxForce = 40;
         // --- Lógica de Rolagem (Physics Based) ---
         // Event listeners do botão
 rollButton.addEventListener("mousedown", () => {
-    if (isRolling) return;
+    if (!dice || !diceBody || isRolling) return;
     pressStartTime = Date.now();
     // Adiciona feedback visual
     rollButton.style.transform = 'scale(0.95)';
@@ -357,7 +279,7 @@ rollButton.addEventListener("mousedown", () => {
 });
 
 rollButton.addEventListener("mouseup", () => {
-    if (isRolling) return;
+    if (!dice || !diceBody || isRolling) return;
     
     // Calcula a força baseada no tempo pressionado
     const pressDuration = Date.now() - pressStartTime;
@@ -429,19 +351,23 @@ rollButton.addEventListener("mouseup", () => {
         const clock = new THREE.Clock();
         let lastTime = 0;
         function animate() {
-            // ... (código igual ao anterior) ...
-            requestAnimationFrame(animate);
-            const time = performance.now() / 1000;
-            const deltaTime = time - lastTime;
-            lastTime = time;
-            if (deltaTime > 0) {
-                 // world.step(1/60, deltaTime); // Opção de timestep fixo
-                 world.step(deltaTime); // Timestep variável
-            }
-            dice.position.copy(diceBody.position);
-            dice.quaternion.copy(diceBody.quaternion);
-            renderer.render(scene, camera);
-        }
+    requestAnimationFrame(animate);
+    const time = performance.now() / 1000;
+    const deltaTime = time - lastTime;
+    lastTime = time;
+
+    if (deltaTime > 0) {
+        world.step(deltaTime);
+    }
+
+    // Só atualiza se o modelo estiver carregado
+    if (dice && diceBody) {
+        dice.position.copy(diceBody.position);
+        dice.quaternion.copy(diceBody.quaternion);
+    }
+
+    renderer.render(scene, camera);
+}
 
         // --- Inicialização ---
         window.addEventListener('resize', () => { /* ...código igual... */ });
