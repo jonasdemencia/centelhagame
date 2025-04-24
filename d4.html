@@ -102,7 +102,7 @@ const DICE_START_Y = 0.08; // Aumentado de 0.08 para 0.2
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('dice-container').appendChild(renderer.domElement);
-        camera.position.set(0, 2, 0); // Posiciona a câmera diretamente acima
+        camera.position.set(0, 6, 0); // Posiciona a câmera diretamente acima
         camera.lookAt(0, 0, 0);
         const light = new THREE.DirectionalLight(0xffffff, 1.2);
         light.position.set(5, 8, 5);
@@ -137,24 +137,24 @@ const wallMaterial = new CANNON.Material('wall');
 // Parede superior (Z positivo)
 const topWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 topWall.quaternion.setFromEuler(0, 0, Math.PI);
-topWall.position.set(0, 0, -2); // Aumentado de -0.5 para -2
+topWall.position.set(0, 0, -6); // Aumentado de -0.5 para -2
 world.addBody(topWall);
 
 // Paredes laterais
 const rightWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 rightWall.quaternion.setFromEuler(0, -Math.PI/2, 0);
-rightWall.position.set(2, 0, 0); // Aumentado de 0.5 para 2
+rightWall.position.set(6, 0, 0);  // Aumentado de 2 para 4
 world.addBody(rightWall);
 
 const leftWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 leftWall.quaternion.setFromEuler(0, Math.PI/2, 0);
-leftWall.position.set(-2, 0, 0); // Aumentado de -0.5 para -2
+leftWall.position.set(-6, 0, 0); // Aumentado de -0.5 para -2
 world.addBody(leftWall);
 
 // Parede INFERIOR
 const bottomWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 bottomWall.quaternion.setFromEuler(0, 0, 0);
-bottomWall.position.set(0, 0, 2); // Aumentado para 2
+bottomWall.position.set(0, 0, 6); // Aumentado para 2
 world.addBody(bottomWall); // Adicionar ao mundo
 
 // Material de contato para as paredes
