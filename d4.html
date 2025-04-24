@@ -163,7 +163,7 @@ world.addContactMaterial(wallDiceContact);
 const loader = new FBXLoader();
 loader.load('Dice_d4.fbx', (fbxModel) => {
     dice = fbxModel;
-    dice.scale.set(0.8, 0.8, 0.8); // Ajuste a escala conforme necessário
+    dice.scale.set(0.8, 0.8, 0.8);
     scene.add(dice);
 
     // Criar corpo físico após carregar o modelo
@@ -178,7 +178,6 @@ loader.load('Dice_d4.fbx', (fbxModel) => {
     });
 
     const cannonFaces = [];
-    // Adicionar faces baseado no modelo carregado (você precisa verificar a ordem correta)
     for (let i = 0; i < vertices.length; i += 3) {
         cannonFaces.push([i, i + 1, i + 2]);
     }
@@ -194,10 +193,8 @@ loader.load('Dice_d4.fbx', (fbxModel) => {
 
     diceBody.position.set(0, DICE_START_Y, BASE_Z);
     world.addBody(diceBody);
-});
-        
 
-        // Seu evento de sleep, exatamente como estava, mas movido para aqui
+    // Adicionar o evento sleep AQUI dentro do loader
     diceBody.addEventListener('sleep', () => {
         console.log("Dice physics body has fallen asleep.");
         if (isRolling) {
@@ -212,7 +209,9 @@ loader.load('Dice_d4.fbx', (fbxModel) => {
             console.log(`[${new Date().toISOString()}] Result Determined (Physics Sleep): ${result}`);
         }
     });
-});
+}); 
+        
+
 
 
 
