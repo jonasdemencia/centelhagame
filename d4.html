@@ -137,30 +137,31 @@ const wallMaterial = new CANNON.Material('wall');
 
 // Parede superior (Z positivo)
 const topWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
-topWall.quaternion.setFromEuler(0, 0, Math.PI); // Mudança crucial na orientação
-topWall.position.set(0, 0, -0.5);    // Reduzido de -5 para -0.5
+topWall.quaternion.setFromEuler(0, 0, Math.PI);
+topWall.position.set(0, 0, -0.5);
 world.addBody(topWall);
 
 // Paredes laterais
-const leftWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
-leftWall.quaternion.setFromEuler(0, Math.PI/2, 0);
-rightWall.position.set(0.5, 0, 0);   // Reduzido de 5 para 0.5
-world.addBody(leftWall);
-
 const rightWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 rightWall.quaternion.setFromEuler(0, -Math.PI/2, 0);
-rightWall.position.set(5, 0, 0);
+rightWall.position.set(0.5, 0, 0);
 world.addBody(rightWall);
+
+const leftWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
+leftWall.quaternion.setFromEuler(0, Math.PI/2, 0);
+leftWall.position.set(-0.5, 0, 0);
+world.addBody(leftWall);
 
 // Parede INFERIOR
 const bottomWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 bottomWall.quaternion.setFromEuler(0, 0, 0);
-bottomWall.position.set(0, 0, BASE_Z - 0.1);
+bottomWall.position.set(0, 0, BASE_Z - 0.01); // Ajustado para a nova escala
+world.addBody(bottomWall); // Adicionar ao mundo
 
 // Material de contato para as paredes
 const wallDiceContact = new CANNON.ContactMaterial(wallMaterial, diceMaterial, {
     friction: 0.3,
-    restitution: 0.8  // Aumentar para mais quiques
+    restitution: 0.8
 });
 world.addContactMaterial(wallDiceContact);
 
@@ -189,12 +190,6 @@ loader.load(
         // Ajusta escala e posição inicial
         dice.scale.set(0.008, 0.008, 0.008); // Reduzido 10x
 
-// E também ajuste a escala dos vértices físicos
-vertices.push(new CANNON.Vec3(
-    position[i] * 0.008,     // Mesma escala do modelo visual
-    position[i + 1] * 0.008,
-    position[i + 2] * 0.008
-));
         
         // Aplica material e ajustes em cada mesh do modelo
         dice.traverse((child) => {
@@ -215,18 +210,19 @@ vertices.push(new CANNON.Vec3(
 
         // Criar corpo físico
         const vertices = [];
-        dice.traverse((child) => {
-            if (child.isMesh) {
-                const position = child.geometry.attributes.position.array;
-                for (let i = 0; i < position.length; i += 3) {
-                    vertices.push(new CANNON.Vec3(
-                        position[i] * 0.08, // Aplica a mesma escala do modelo
-                        position[i + 1] * 0.08,
-                        position[i + 2] * 0.08
-                    ));
-                }
-            }
-        });
+        // Dentro do loader, na parte de criação do corpo físico
+dice.traverse((child) => {
+    if (child.isMesh) {
+        const position = child.geometry.attributes.position.array;
+        for (let i = 0; i < position.length; i += 3) {
+            vertices.push(new CANNON.Vec3(
+                position[i] * 0.008,      // Escala ajustada
+                position[i + 1] * 0.008,
+                position[i + 2] * 0.008
+            ));
+        }
+    }
+});
 
         // Cria faces para o corpo físico
         const cannonFaces = [];
