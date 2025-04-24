@@ -194,7 +194,7 @@ loader.load('Dice_d4.fbx', (fbxModel) => {
     diceBody.position.set(0, DICE_START_Y, BASE_Z);
     world.addBody(diceBody);
 
-    // Adicionar o evento sleep AQUI dentro do loader
+    // Adiciona o evento sleep
     diceBody.addEventListener('sleep', () => {
         console.log("Dice physics body has fallen asleep.");
         if (isRolling) {
@@ -209,7 +209,10 @@ loader.load('Dice_d4.fbx', (fbxModel) => {
             console.log(`[${new Date().toISOString()}] Result Determined (Physics Sleep): ${result}`);
         }
     });
-}); 
+
+    // Inicia a animação APÓS o carregamento do modelo
+    animate();
+});
         
 
 
@@ -338,12 +341,11 @@ rollButton.addEventListener("mouseup", () => {
 }
 
         // --- Inicialização ---
-        window.addEventListener('resize', () => { /* ...código igual... */ });
-        dice.position.copy(diceBody.position); // Sinc inicial (opcional)
-        dice.quaternion.copy(diceBody.quaternion); // Sinc inicial (opcional)
-        animate(); // Inicia o loop
-        console.log(`[${new Date().toISOString()}] D4 Initialized with Cannon-es`);
-
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
     </script>
     
 </body>
