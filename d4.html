@@ -288,6 +288,19 @@ function createDiceTexture() {
 // Criar geometria do tetraedro com tamanho 0.8
 const geometry = new THREE.TetrahedronGeometry(0.8);
 
+console.log('--- Índices das faces (cada trio = uma face) ---');
+console.log(geometry.index.array); // Índices dos vértices nas faces
+
+console.log('--- Posições dos vértices (x, y, z) ---');
+console.log(geometry.attributes.position.array); // Array de posições dos vértices
+
+// Se quiser ver bonitinho, agrupa por 3 coords (x, y, z)
+const positions = geometry.attributes.position.array;
+for (let i = 0; i < positions.length; i += 3) {
+    console.log(`Vértice ${i / 3}: x=${positions[i].toFixed(2)}, y=${positions[i + 1].toFixed(2)}, z=${positions[i + 2].toFixed(2)}`);
+}
+
+
 // Define as coordenadas UV para mapeamento da textura
 // Isso controla como a textura é aplicada em cada face
 const uvs = [];
