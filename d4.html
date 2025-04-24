@@ -314,22 +314,7 @@ rollButton.addEventListener("mouseup", () => {
     console.log(`[${new Date().toISOString()}] Dice Roll Triggered with ${Math.round(forcePercent * 100)}% force`);
 });
 
-        // --- Evento de Repouso (Sleep) ---
-        diceBody.addEventListener('sleep', () => {
-            // ... (código igual ao anterior para detectar parada e mostrar resultado) ...
-             console.log("Dice physics body has fallen asleep.");
-             if (isRolling) {
-                 isRolling = false;
-                 rollButton.disabled = false;
-                 diceBody.velocity.set(0, 0, 0);
-                 diceBody.angularVelocity.set(0, 0, 0);
-                 dice.position.copy(diceBody.position);
-                 dice.quaternion.copy(diceBody.quaternion);
-                 const result = getResultFromTopVertex();
-                 resultDisplay.textContent = `Resultado: ${result}`;
-                 console.log(`[${new Date().toISOString()}] Result Determined (Physics Sleep): ${result}`);
-             }
-        });
+    
 
         // --- Loop de Animação ---
         const clock = new THREE.Clock();
@@ -346,6 +331,8 @@ rollButton.addEventListener("mouseup", () => {
 
     // Só atualiza se o modelo estiver carregado
     if (dice && diceBody) {
+        dice.position.copy(diceBody.position);
+        dice.quaternion.copy(diceBody.quaternion);
     }
 
     renderer.render(scene, camera);
