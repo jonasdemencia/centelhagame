@@ -95,8 +95,8 @@ import * as CANNON from 'cannon-es';
         // --- Configurações Globais ---
         // ... (código igual até a criação do mesh 'dice') ...
         // --- Constantes para Posição ---
-const BASE_Z = 3; // Coordenada Z para a base/fundo da tela
-const DICE_START_Y = 0.8; // Altura inicial/lançamento logo acima do chão
+const BASE_Z = 0.3; // Reduzido de 3 para 0.3
+const DICE_START_Y = 0.08; // Reduzido de 0.8 para 0.08
         const scene = new THREE.Scene();
         scene.background = new THREE.Color('#3a3a3a');
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -111,10 +111,10 @@ const DICE_START_Y = 0.8; // Altura inicial/lançamento logo acima do chão
         scene.add(new THREE.AmbientLight(0xcccccc, 0.8));
 
         // ADICIONE OS HELPERS AQUI:
-const axesHelper = new THREE.AxesHelper(2);
+const axesHelper = new THREE.AxesHelper(0.5); // Reduzido de 2 para 0.5
 scene.add(axesHelper);
 
-const gridHelper = new THREE.GridHelper(10, 10);
+const gridHelper = new THREE.GridHelper(2, 20); // Reduzido de 10 para 2, mas com mais divisões
 scene.add(gridHelper);
 
         // --- Setup da Física (Cannon-es) ---
@@ -128,7 +128,7 @@ scene.add(gridHelper);
         const groundShape = new CANNON.Plane();
         const groundBody = new CANNON.Body({ mass: 0, shape: groundShape, material: groundMaterial });
         groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
-        groundBody.position.set(0, -0.1, 0);
+        groundBody.position.set(0, -0.01, 0); // Reduzido de -0.1 para -0.01
         world.addBody(groundBody);
 
         // Criar paredes físicas
@@ -138,13 +138,13 @@ const wallMaterial = new CANNON.Material('wall');
 // Parede superior (Z positivo)
 const topWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 topWall.quaternion.setFromEuler(0, 0, Math.PI); // Mudança crucial na orientação
-topWall.position.set(0, 0, -5); // Posição mais próxima
+topWall.position.set(0, 0, -0.5);    // Reduzido de -5 para -0.5
 world.addBody(topWall);
 
 // Paredes laterais
 const leftWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 leftWall.quaternion.setFromEuler(0, Math.PI/2, 0);
-leftWall.position.set(-5, 0, 0);
+rightWall.position.set(0.5, 0, 0);   // Reduzido de 5 para 0.5
 world.addBody(leftWall);
 
 const rightWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
@@ -187,8 +187,14 @@ loader.load(
         dice = fbxModel;
         
         // Ajusta escala e posição inicial
-        dice.scale.set(0.08, 0.08, 0.08); // Escala menor
-        dice.position.set(0, DICE_START_Y, BASE_Z);
+        dice.scale.set(0.008, 0.008, 0.008); // Reduzido 10x
+
+// E também ajuste a escala dos vértices físicos
+vertices.push(new CANNON.Vec3(
+    position[i] * 0.008,     // Mesma escala do modelo visual
+    position[i + 1] * 0.008,
+    position[i + 2] * 0.008
+));
         
         // Aplica material e ajustes em cada mesh do modelo
         dice.traverse((child) => {
