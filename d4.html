@@ -94,8 +94,8 @@ import * as CANNON from 'cannon-es';
         // --- Configurações Globais ---
         // ... (código igual até a criação do mesh 'dice') ...
         // --- Constantes para Posição ---
-const BASE_Z = 4;  // Aumentado de 0.3 para 1.5
-const DICE_START_Y = 0.2; // Aumentado de 0.08 para 0.2
+const BASE_Z = 2;  // Aumentado de 0.3 para 1.5
+const DICE_START_Y = 0.5; // Aumentado de 0.08 para 0.2
         const scene = new THREE.Scene();
         scene.background = new THREE.Color('#3a3a3a');
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -113,7 +113,7 @@ const DICE_START_Y = 0.2; // Aumentado de 0.08 para 0.2
 const axesHelper = new THREE.AxesHelper(0.5); // Reduzido de 2 para 0.5
 scene.add(axesHelper);
 
-const gridHelper = new THREE.GridHelper(4, 40); // Aumentado de 2 para 4
+const gridHelper = new THREE.GridHelper(8, 80); // Aumentado de 2 para 4
 scene.add(gridHelper);
 
         // --- Setup da Física (Cannon-es) ---
@@ -137,7 +137,7 @@ const wallMaterial = new CANNON.Material('wall');
 // Parede superior (Z positivo)
 const topWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
 topWall.quaternion.setFromEuler(0, 0, Math.PI);
-topWall.position.set(0, 0, -2); // Aumentado de -0.5 para -2
+topWall.position.set(0, 0, -8); // Aumentado de -0.5 para -2
 world.addBody(topWall);
 
 // Paredes laterais
@@ -370,8 +370,8 @@ rollButton.addEventListener("mouseup", () => {
     // Direção do impulso com força variável
     const impulseDirection = new CANNON.Vec3(
     random(-0.2, 0.2),
-    0.3 + Math.random() * 0.4,
-    -2 * (forcePercent + 0.5) // Reduzido de -5 para -2
+    0.4 + Math.random() * 0.4,
+    -4 * (forcePercent + 0.5) // Aumentado de -2 para -4 para usar mais espaço
 );
     impulseDirection.normalize();
 
