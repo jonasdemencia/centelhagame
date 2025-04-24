@@ -219,15 +219,18 @@ function createDiceTexture() {
 
     //    Vamos definir o mapeamento explicitamente:
     const vertexMap = [
-        // Vértice 0 (Resultado '1') - Onde o '1' deve aparecer?
-        [ { quadrant: 0, corner: 0 }, { quadrant: 1, corner: 0 }, { quadrant: 3, corner: 0 } ], // Suposição: V0 é o canto 0 em 3 quadrantes
-        // Vértice 1 (Resultado '2') - Onde o '2' deve aparecer?
-        [ { quadrant: 0, corner: 1 }, { quadrant: 2, corner: 1 }, { quadrant: 3, corner: 2 } ], // Suposição
-        // Vértice 2 (Resultado '3') - Onde o '3' deve aparecer?
-        [ { quadrant: 0, corner: 2 }, { quadrant: 1, corner: 1 }, { quadrant: 2, corner: 0 } ], // Suposição
-        // Vértice 3 (Resultado '4') - Onde o '4' deve aparecer?
-        [ { quadrant: 1, corner: 2 }, { quadrant: 2, corner: 2 }, { quadrant: 3, corner: 1 } ]  // Suposição
-    ];
+    // Vértice lógico 0 → Resultado 1 → aparece no topo da face 0 (Q0), face 1 (Q1), face 3 (Q3)
+    [ { quadrant: 0, corner: 0 }, { quadrant: 1, corner: 0 }, { quadrant: 3, corner: 0 } ],
+
+    // Vértice lógico 1 → Resultado 2 → aparece no topo da face 1 (Q1), face 2 (Q2), face 3 (Q3)
+    [ { quadrant: 1, corner: 0 }, { quadrant: 2, corner: 0 }, { quadrant: 3, corner: 0 } ],
+
+    // Vértice lógico 2 → Resultado 3 → aparece no topo da face 2 (Q2), face 0 (Q0), face 1 (Q1)
+    [ { quadrant: 2, corner: 0 }, { quadrant: 0, corner: 0 }, { quadrant: 1, corner: 0 } ],
+
+    // Vértice lógico 3 → Resultado 4 → aparece no topo da face 3 (Q3), face 2 (Q2), face 0 (Q0)
+    [ { quadrant: 3, corner: 0 }, { quadrant: 2, corner: 0 }, { quadrant: 0, corner: 0 } ]
+];
 
      // 3. Desenhar os números
      for (let vertexIndex = 0; vertexIndex < 4; vertexIndex++) {
@@ -264,7 +267,7 @@ function createDiceTexture() {
      }
 
     // Linhas de grade para ajudar a visualizar os quadrantes e cantos (REMOVER para produção)
-    /*
+    
     ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -279,7 +282,7 @@ function createDiceTexture() {
             ctx.fill();
         });
     });
-    */
+    
 
     return new THREE.CanvasTexture(canvas);
 }
