@@ -373,10 +373,10 @@ diceBody.shapeOffsets[0].copy(centerOfMass.negate());
 
     // Mapeamento de qual resultado deve ser mostrado quando cada vértice está no topo
     const vertexToResult = {
-        0: 1,  // Quando o vértice 0 está no topo, mostra 1
-        1: 2,  // Quando o vértice 1 está no topo, mostra 2
-        2: 3,  // Quando o vértice 2 está no topo, mostra 3
-        3: 4   // Quando o vértice 3 está no topo, mostra 4
+        0: 3,  // Quando o vértice 0 está no topo, mostra 1
+        1: 4,  // Quando o vértice 1 está no topo, mostra 2
+        2: 1,  // Quando o vértice 2 está no topo, mostra 3
+        3: 2   // Quando o vértice 3 está no topo, mostra 4
     };
 
     const result = vertexToResult[highestVertex];
