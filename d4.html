@@ -134,10 +134,11 @@ scene.add(gridHelper);
 const wallShape = new CANNON.Plane();
 const wallMaterial = new CANNON.Material('wall');
 
-// Parede superior (Z positivo)
+// Parede superior (Z negativo = TOPO visual)
 const topWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
-topWall.quaternion.setFromEuler(0, 0, Math.PI);
-topWall.position.set(0, 0, -5);  // Use -5 como no código antigo
+// NENHUMA ROTAÇÃO NECESSÁRIA - A normal padrão (0,0,1) está correta para a posição Z=-5
+// topWall.quaternion.setFromEuler(0, Math.PI, 0); // Remover linha anterior incorreta também
+topWall.position.set(0, 0, -5); // Posição no "topo" visual
 world.addBody(topWall);
 console.log('topWall.position:', topWall.position);
 
@@ -154,7 +155,7 @@ world.addBody(leftWall);
 
 // Parede INFERIOR
 const bottomWall = new CANNON.Body({ mass: 0, shape: wallShape, material: wallMaterial });
-bottomWall.quaternion.setFromEuler(0, 0, 0);
+bottomWall.quaternion.setFromEuler(0, Math.PI, 0); // Rotaciona 180 graus em Y para a normal apontar para -Z
 bottomWall.position.set(0, 0, 6); // Aumentado para 2
 world.addBody(bottomWall); // Adicionar ao mundo
 
