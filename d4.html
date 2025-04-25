@@ -385,18 +385,20 @@ rollButton.addEventListener("mouseup", () => {
     console.log('➡️ DIREÇÃO do impulso:', impulseDirection);
 
     // Aplica o impulso com a força calculada
-    diceBody.applyImpulse(
-        impulseDirection.scale(throwSpeed),
-        new CANNON.Vec3(0, 0, 0)
-    );
-
+   diceBody.applyImpulse(
+    impulseDirection.scale(throwSpeed),
+    // Aplica impulso um pouco fora do centro para induzir mais rotação
+    new CANNON.Vec3(random(-0.1, 0.1), random(-0.1, 0.1), random(-0.1, 0.1))
+);
+    
     // Torque também aumenta com a força
  const torqueAxis = new CANNON.Vec3(
         random(-1, 1),
         random(-1, 1),
         random(-1, 1)
     ).normalize();
-    diceBody.applyTorque(torqueAxis.scale(5 + random(0, 2) * forcePercent * 3));
+    diceBody.applyTorque(torqueAxis.scale(12 + random(0, 5) * forcePercent * 3));
+
     
     console.log(`[${new Date().toISOString()}] Dice Roll Triggered with ${Math.round(forcePercent * 100)}% force`);
 });
