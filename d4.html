@@ -395,60 +395,35 @@ rollButton.addEventListener("mouseup", () => {
     diceBody.velocity.set(0, 0, 0);
     diceBody.angularVelocity.set(0, 0, 0);
 
-    // Rotação inicial aleatória
+    // Apenas uma rotação inicial aleatória
     diceBody.quaternion.setFromEuler(
         random(0, Math.PI * 2),
         random(0, Math.PI * 2),
         random(0, Math.PI * 2)
     );
 
-    // Rotação inicial verdadeiramente aleatória
-const randomRotation = new CANNON.Quaternion();
-randomRotation.setFromEuler(
-    random(0, Math.PI * 2),
-    random(0, Math.PI * 2),
-    random(0, Math.PI * 2)
-);
-diceBody.quaternion = randomRotation;
+    // Impulso mais controlado
+    const impulseDirection = new CANNON.Vec3(
+        random(-0.3, 0.3),    // Movimento lateral moderado
+        0.5,                  // Sempre alguma elevação
+        -2                    // Movimento para "cima" da tela
+    );
+    
+    // Aplicar o impulso de forma mais controlada
+    const force = impulseDirection.scale(throwSpeed);
+    diceBody.applyImpulse(force, new CANNON.Vec3(0, 0, 0));
 
-    // Direção do impulso com força variável
-   // Impulso mais aleatório
-const impulseDirection = new CANNON.Vec3(
-    random(-1, 1),  // Mais variação em X
-    random(0.5, 1.5),  // Mais variação em Y
-    random(-6, -4)  // Mais variação em Z
-);
-impulseDirection.normalize();
-const throwForce = impulseDirection.scale(throwSpeed);
+    // Torque mais suave
+    const torqueForce = 5 * forcePercent;
+    diceBody.angularVelocity.set(
+        random(-1, 1) * torqueForce,
+        random(-1, 1) * torqueForce,
+        random(-1, 1) * torqueForce
+    );
 
-  
     console.log('💥 IMPULSO APLICADO');
     console.log('➡️ POSIÇÃO antes do lançamento:', diceBody.position);
     console.log('➡️ DIREÇÃO do impulso:', impulseDirection);
-
-   // Aplica o impulso em um ponto aleatório do dado
-const offsetPoint = new CANNON.Vec3(
-    random(-0.2, 0.2),
-    random(-0.2, 0.2),
-    random(-0.2, 0.2)
-);
-diceBody.applyImpulse(throwForce, offsetPoint);
-
-// Aplica torque mais forte e aleatório
-const torqueAxis = new CANNON.Vec3(
-    random(-1, 1),
-    random(-1, 1),
-    random(-1, 1)
-).normalize();
-const torqueForce = 15 + random(0, 10) * forcePercent;
-diceBody.angularVelocity.set(
-    torqueAxis.x * torqueForce,
-    torqueAxis.y * torqueForce,
-    torqueAxis.z * torqueForce
-);
-
-    
-    console.log(`[${new Date().toISOString()}] Dice Roll Triggered with ${Math.round(forcePercent * 100)}% force`);
 });
 
     
