@@ -358,45 +358,31 @@ diceBody.shapeOffsets[0].copy(centerOfMass.negate());
     // Transforma os vértices para o espaço mundial
     const worldVertices = diceVertices.map(v => v.clone().applyMatrix4(dice.matrixWorld));
 
-    // Define as faces e seus números correspondentes
-    const faces = [
-        { vertices: [0, 1, 2], value: 4 },  // Face superior
-        { vertices: [0, 1, 3], value: 3 },  // Face lateral 1
-        { vertices: [1, 2, 3], value: 2 },  // Face lateral 2
-        { vertices: [0, 2, 3], value: 1 }   // Face lateral 3
-    ];
+    // Encontra o vértice mais alto
+    let highestVertex = -1;
+    let maxY = -Infinity;
 
-    // Para cada face, calcula seu centro e normal
-    let highestFace = null;
-    let maxHeight = -Infinity;
-
-    faces.forEach(face => {
-        // Calcula o centro da face
-        const center = new THREE.Vector3()
-            .add(worldVertices[face.vertices[0]])
-            .add(worldVertices[face.vertices[1]])
-            .add(worldVertices[face.vertices[2]])
-            .multiplyScalar(1/3);
-
-        // Calcula a normal da face
-        const v1 = worldVertices[face.vertices[1]].clone()
-            .sub(worldVertices[face.vertices[0]]);
-        const v2 = worldVertices[face.vertices[2]].clone()
-            .sub(worldVertices[face.vertices[0]]);
-        const normal = v1.cross(v2).normalize();
-
-        // Se a normal aponta "mais para cima" que as outras, esta é a face superior
-        const upAlignment = normal.dot(new THREE.Vector3(0, 1, 0));
-
-        console.log(`Face ${face.value}: altura=${center.y}, alinhamento=${upAlignment}`);
-
-        if (upAlignment > maxHeight) {
-            maxHeight = upAlignment;
-            highestFace = face;
+    worldVertices.forEach((vertex, index) => {
+        if (vertex.y > maxY) {
+            maxY = vertex.y;
+            highestVertex = index;
         }
     });
 
-    return highestFace ? highestFace.value : 'Erro';
+    console.log(`Vértice mais alto: ${highestVertex} (Y = ${maxY})`);
+
+    // Mapeamento de qual resultado deve ser mostrado quando cada vértice está no topo
+    const vertexToResult = {
+        0: 1,  // Quando o vértice 0 está no topo, mostra 1
+        1: 2,  // Quando o vértice 1 está no topo, mostra 2
+        2: 3,  // Quando o vértice 2 está no topo, mostra 3
+        3: 4   // Quando o vértice 3 está no topo, mostra 4
+    };
+
+    const result = vertexToResult[highestVertex];
+    console.log(`Vértice ${highestVertex} no topo -> Resultado: ${result}`);
+
+    return result || 'Erro';
 }
 
         
