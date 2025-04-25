@@ -377,7 +377,6 @@ diceBody.addEventListener('sleep', () => {
             new THREE.Vector3(-59.4391, 5.6382, 39.0128).multiplyScalar(0.008)
         ];
 
-        // Transforma os vértices para o espaço mundial
         const worldVertices = diceVertices.map(v => v.clone().applyMatrix4(dice.matrixWorld));
 
         // Verifica movimento
@@ -387,49 +386,59 @@ diceBody.addEventListener('sleep', () => {
             return null;
         }
 
-        // Encontra o vértice mais alto
-        let highestVertex = 0; // Inicializa com 0 em vez de -1
-        let maxY = worldVertices[0].y; // Inicializa com o primeiro vértice
+        // Encontra o vértice mais alto e calcula diferenças relativas
+        let highestY = -Infinity;
+        let secondHighestY = -Infinity;
+        let highestVertex = -1;
 
-        // Log dos vértices para debug
         worldVertices.forEach((vertex, index) => {
-            console.log(`Vértice ${index} Y: ${vertex.y.toFixed(6)}`);
-            if (vertex.y > maxY) {
-                maxY = vertex.y;
+            const y = vertex.y;
+            console.log(`Vértice ${index} Y: ${y.toFixed(6)}`);
+            
+            if (y > highestY) {
+                secondHighestY = highestY;
+                highestY = y;
                 highestVertex = index;
+            } else if (y > secondHighestY) {
+                secondHighestY = y;
             }
         });
 
-        // Obtém a rotação atual do dado
-        const rotation = new THREE.Euler().setFromQuaternion(dice.quaternion);
-        const rotDegrees = {
-            x: THREE.MathUtils.radToDeg(rotation.x),
-            y: THREE.MathUtils.radToDeg(rotation.y),
-            z: THREE.MathUtils.radToDeg(rotation.z)
-        };
+        // Calcula a diferença entre o mais alto e o segundo mais alto
+        const heightDifference = highestY - secondHighestY;
+        console.log(`Diferença de altura: ${heightDifference.toFixed(6)}`);
 
-        // Normaliza os ângulos para 0-360
-        rotDegrees.x = ((rotDegrees.x % 360) + 360) % 360;
-        rotDegrees.y = ((rotDegrees.y % 360) + 360) % 360;
-        rotDegrees.z = ((rotDegrees.z % 360) + 360) % 360;
+        // Se a diferença for muito pequena, precisamos verificar a rotação
+        const THRESHOLD = 0.0001;
+        
+        if (Math.abs(heightDifference) < THRESHOLD) {
+            // Usa a rotação para determinar o resultado
+            const rotation = new THREE.Euler().setFromQuaternion(dice.quaternion);
+            const rotY = THREE.MathUtils.radToDeg(rotation.y);
+            const normalizedRotY = ((rotY % 360) + 360) % 360;
+            console.log(`Rotação Y normalizada: ${normalizedRotY.toFixed(2)}`);
+            
+            // Define resultado baseado na rotação quando os vértices têm altura similar
+            if (normalizedRotY >= 0 && normalizedRotY < 90) {
+                return 4;
+            } else if (normalizedRotY >= 90 && normalizedRotY < 180) {
+                return 3;
+            } else if (normalizedRotY >= 180 && normalizedRotY < 270) {
+                return 2;
+            } else {
+                return 1;
+            }
+        }
 
-        // Cria uma chave de estado mais simples
-        const stateKey = `${highestVertex}_${Math.round(rotDegrees.y/90)}`;
-        console.log(`Vértice mais alto: ${highestVertex}, Rotação Y: ${rotDegrees.y.toFixed(2)}`);
-        console.log(`Estado do dado: ${stateKey}`);
-
-        // Baseado nos seus testes:
+        // Mapeamento direto quando há um vértice claramente mais alto
         const resultMap = {
-            '0_0': 2, '0_1': 2, '0_2': 2, '0_3': 2,
-            '1_0': 4, '1_1': 4, '1_2': 4, '1_3': 4,
-            '2_0': 1, '2_1': 1, '2_2': 1, '2_3': 1,
-            '3_0': 3, '3_1': 3, '3_2': 3, '3_3': 3
+            0: 3,
+            1: 4,
+            2: 1,
+            3: 2
         };
 
-        const result = resultMap[stateKey];
-        console.log(`Mapeamento de resultado: ${result}`);
-
-        return result !== undefined ? result : highestVertex;
+        return resultMap[highestVertex];
 
     } catch (error) {
         console.error("Erro ao calcular resultado:", error);
