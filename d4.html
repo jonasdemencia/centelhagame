@@ -368,69 +368,54 @@ diceBody.addEventListener('sleep', () => {
 
     try {
         dice.updateMatrixWorld(true);
-
-        // Define os vértices baseados no modelo real
-        const diceVertices = [
-            new THREE.Vector3(-3.4881, 99.9758, -1.4099).multiplyScalar(0.008),
-            new THREE.Vector3(0.0039, 99.9758, 4.6267).multiplyScalar(0.008),
-            new THREE.Vector3(3.4857, 99.9758, -1.4157).multiplyScalar(0.008),
-            new THREE.Vector3(-59.4391, 5.6382, 39.0128).multiplyScalar(0.008)
-        ];
-
-        const worldVertices = diceVertices.map(v => v.clone().applyMatrix4(dice.matrixWorld));
-
-        // Verifica movimento
-        const velocity = diceBody.velocity.length();
-        const angularVel = diceBody.angularVelocity.length();
-        if (velocity > 0.01 || angularVel > 0.01) {
-            return null;
-        }
-
+        
         // Obtém a rotação atual do dado
-        const diceRotation = new THREE.Euler().setFromQuaternion(dice.quaternion);
-        console.log('Rotação do dado (em radianos):', {
-            x: diceRotation.x,
-            y: diceRotation.y,
-            z: diceRotation.z
-        });
+        const rotation = new THREE.Euler().setFromQuaternion(dice.quaternion);
+        
+        // Converte rotação para graus
+        const rotDegrees = {
+            x: THREE.MathUtils.radToDeg(rotation.x),
+            y: THREE.MathUtils.radToDeg(rotation.y),
+            z: THREE.MathUtils.radToDeg(rotation.z)
+        };
 
-        // Encontra o vértice mais alto e sua orientação
+        // Normaliza os ângulos para 0-360
+        rotDegrees.x = ((rotDegrees.x % 360) + 360) % 360;
+        rotDegrees.y = ((rotDegrees.y % 360) + 360) % 360;
+        rotDegrees.z = ((rotDegrees.z % 360) + 360) % 360;
+
+        // Define os vértices e calcula o mais alto
+        const worldVertices = [/* ... seu código atual dos vértices ... */];
         let highestVertex = -1;
         let maxY = -Infinity;
 
         worldVertices.forEach((vertex, index) => {
-            const y = vertex.y;
-            if (y > maxY) {
-                maxY = y;
+            if (vertex.y > maxY) {
+                maxY = vertex.y;
                 highestVertex = index;
             }
         });
 
-        // Calcula a direção "para cima" do dado
-        const up = new THREE.Vector3(0, 1, 0);
-        const diceUp = up.clone().applyQuaternion(dice.quaternion);
-        console.log('Direção "para cima" do dado:', diceUp);
+        // Cria uma chave composta do vértice e quadrante de rotação
+        const xQuad = Math.floor(rotDegrees.x / 90);
+        const yQuad = Math.floor(rotDegrees.y / 90);
+        const zQuad = Math.floor(rotDegrees.z / 90);
+        
+        const stateKey = `${highestVertex}_${xQuad}_${yQuad}_${zQuad}`;
+        console.log('Estado do dado:', stateKey);
 
-        // Calcula o ângulo entre a direção "para cima" do dado e o eixo Y mundial
-        const angle = up.angleTo(diceUp);
-        console.log('Ângulo com eixo Y:', THREE.MathUtils.radToDeg(angle));
+        // Mapa de estados para resultados
+        // Este mapa precisa ser preenchido com base em observações
+        const resultMap = {
+            // Exemplo: "1_2_0_1": 3 significa que quando
+            // - highestVertex é 1
+            // - x está no quadrante 2 (180-270)
+            // - y está no quadrante 0 (0-90)
+            // - z está no quadrante 1 (90-180)
+            // O resultado é 3
+        };
 
-        // Combina o vértice mais alto com a orientação para determinar o resultado
-        const orientationKey = `${highestVertex}_${Math.round(angle * 100)}`;
-        console.log('Chave de orientação:', orientationKey);
-
-        // Agora vamos registrar todos os dados relevantes para debug
-        console.log({
-            highestVertex,
-            vertexY: maxY,
-            rotationX: THREE.MathUtils.radToDeg(diceRotation.x),
-            rotationY: THREE.MathUtils.radToDeg(diceRotation.y),
-            rotationZ: THREE.MathUtils.radToDeg(diceRotation.z),
-            angle: THREE.MathUtils.radToDeg(angle)
-        });
-
-        return highestVertex; // Por enquanto, retorna apenas o índice do vértice para debug
-
+        return resultMap[stateKey] || highestVertex;
     } catch (error) {
         console.error("Erro ao calcular resultado:", error);
         return 'Erro';
