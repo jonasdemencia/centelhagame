@@ -203,6 +203,21 @@ loader.load(
 dice.traverse((child) => {
     if (child.isMesh) {
         console.log('Mesh encontrado:', child);
+        
+        // ADICIONE O CÓDIGO DE DEBUG AQUI
+        const geometry = child.geometry;
+        console.log("=== Geometria do D4 ===");
+        console.log("Vértices:", geometry.attributes.position);
+        // Mostra os primeiros 4 vértices para entendermos a orientação
+        for(let i = 0; i < 12; i += 3) {
+            console.log(`Vértice ${i/3}:`, 
+                geometry.attributes.position.array[i],
+                geometry.attributes.position.array[i+1],
+                geometry.attributes.position.array[i+2]
+            );
+        }
+        
+        console.log('Mesh encontrado:', child);
         const material = new THREE.MeshStandardMaterial({
             // Albedo é o mapa de cor base (equivalente ao diffuse)
             map: new THREE.TextureLoader().load('https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/Dice_d4_Albedo.png'),
