@@ -442,19 +442,21 @@ rollButton.addEventListener("mouseup", () => {
     random(-0.2, 0.2),   // Pequeno desvio lateral
     0.2,                 // Pouca força para cima (Y)
     -1.0                 // Foco no Z negativo
-).normalize();
+);
 
+// Normaliza manualmente
+const length = Math.sqrt(
+    impulseDirection.x * impulseDirection.x +
+    impulseDirection.y * impulseDirection.y +
+    impulseDirection.z * impulseDirection.z
+);
 
-    const force = impulseDirection.scale(throwSpeed * 8);
-    
-    // Aplica o impulso com um pequeno offset para rotação
-    const offset = new CANNON.Vec3(
-        random(-0.05, 0.05),
-        random(-0.05, 0.05),
-        random(-0.05, 0.05)
-    );
+impulseDirection.x /= length;
+impulseDirection.y /= length;
+impulseDirection.z /= length;
 
-    diceBody.applyImpulse(force, offset);
+const force = impulseDirection.scale(throwSpeed * 8);
+diceBody.applyImpulse(force, offset);
 
     console.log('💥 IMPULSO APLICADO');
     console.log('➡️ POSIÇÃO antes do lançamento:', diceBody.position);
