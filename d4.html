@@ -313,58 +313,49 @@ dice.traverse((child) => {
             return Math.random() * (max - min) + min;
         }
 
-        // Função para obter resultado (lê orientação do MESH Three.js)
-    function getResultFromTopVertex() {
-        if (!dice) return null; // Se o dado não foi carregado ainda
+        function getResultFromTopVertex() {
+    if (!dice) return null;
 
-        // 1. Definir os vetores de DIREÇÃO LOCAL do centro para os 4 vértices lógicos.
-        //    A ordem DEVE ser consistente com o mapeamento final (vertexIndexToResultMap).
-        //    Usamos os vetores (+-1, +-1, +-1) normalizados apenas pela direção.
-        const localVertexDirections = [
-            new THREE.Vector3(1, 1, 1).normalize(),    // Direção para Vértice 0 (associado ao resultado 1 no mapa)
-            new THREE.Vector3(-1, -1, 1).normalize(),  // Direção para Vértice 1 (associado ao resultado 2 no mapa)
-            new THREE.Vector3(-1, 1, -1).normalize(),  // Direção para Vértice 2 (associado ao resultado 3 no mapa)
-            new THREE.Vector3(1, -1, -1).normalize()   // Direção para Vértice 3 (associado ao resultado 4 no mapa)
-        ];
+    // Log a orientação atual do dado
+    console.log("--- DEBUG: Quaternion atual do dado ---");
+    const worldQuat = dice.quaternion;
+    console.log(`Quaternion: x=${worldQuat.x.toFixed(3)}, y=${worldQuat.y.toFixed(3)}, z=${worldQuat.z.toFixed(3)}, w=${worldQuat.w.toFixed(3)}`);
 
-        // 2. Obter a orientação ATUAL do dado no mundo (Quaternion)
-        const worldQuaternion = dice.getWorldQuaternion(new THREE.Quaternion()); // Usar o quaternion do mesh visual
+    // Definir vetores de direção para cada face (não vértices)
+    // Estes vetores devem apontar para o centro de cada face
+    const faceDirections = [
+        new THREE.Vector3(0, 1, 0).normalize(),    // Face 1
+        new THREE.Vector3(-0.577, -0.577, 0.577).normalize(),  // Face 2
+        new THREE.Vector3(0.577, -0.577, -0.577).normalize(),  // Face 3
+        new THREE.Vector3(-0.577, -0.577, -0.577).normalize()  // Face 4
+    ];
 
-        let highestVertexIndex = -1;
-        let maxWorldY = -Infinity;
+    let highestFaceIndex = -1;
+    let maxUpComponent = -Infinity;
 
-        // console.log("--- Checking Top Vertex ---");
-        // console.log("World Quaternion:", worldQuaternion.x.toFixed(2), worldQuaternion.y.toFixed(2), worldQuaternion.z.toFixed(2), worldQuaternion.w.toFixed(2));
-
-        // 3. Rotacionar cada vetor de direção local para o espaço mundial
-        for (let i = 0; i < localVertexDirections.length; i++) {
-            const localDir = localVertexDirections[i];
-            const worldDir = localDir.clone().applyQuaternion(worldQuaternion); // Aplica a rotação mundial
-
-            // 4. Verificar qual vetor de direção mundial tem o maior componente Y (aponta mais para cima)
-            // console.log(`Index ${i}: World Direction Y = ${worldDir.y.toFixed(3)}`);
-            if (worldDir.y > maxWorldY) {
-                maxWorldY = worldDir.y;
-                highestVertexIndex = i;
-            }
+    // Para cada face, verifique qual está mais voltada para cima
+    faceDirections.forEach((direction, index) => {
+        const worldDir = direction.clone().applyQuaternion(dice.quaternion);
+        const upComponent = worldDir.y;
+        
+        console.log(`Face ${index + 1}: Componente Y = ${upComponent.toFixed(3)}`);
+        
+        if (upComponent > maxUpComponent) {
+            maxUpComponent = upComponent;
+            highestFaceIndex = index;
         }
+    });
 
-        // console.log(`Highest Vertex Index: ${highestVertexIndex}, Max Y: ${maxWorldY.toFixed(3)}`);
+    console.log(`Face mais alta: ${highestFaceIndex + 1}, Valor Y: ${maxUpComponent.toFixed(3)}`);
 
-        // 5. Mapear o índice do vértice cuja direção é mais alta para o resultado (1 a 4)
-        //    !! ESTE MAPEAMENTO AINDA PRECISA SER VALIDADO VISUALMENTE !!
-        //    Significa: se o vetor para o vértice de índice 0 aponta mais para cima, o resultado é 1.
-        const vertexIndexToResultMap = [1, 2, 3, 4]; // Mapeamento: Índice 0->Res 1, Índice 1->Res 2, etc.
-        const result = vertexIndexToResultMap[highestVertexIndex];
+    // O resultado é o oposto da face voltada para cima
+    // Se a face 1 está para cima, o resultado é 4, e vice-versa
+    const faceToResultMap = [4, 3, 2, 1]; // Mapeamento invertido
+    const result = faceToResultMap[highestFaceIndex];
 
-        // console.log(`Mapped Result: ${result}`);
-        if (result === undefined) {
-             console.error("Erro ao determinar o vértice mais alto ou mapeamento inválido.", highestVertexIndex);
-             return "Erro";
-        }
-
-        return result;
-    }
+    console.log(`Resultado final: ${result}`);
+    return result || 'Erro';
+}
         // --- Lógica de Rolagem (Physics Based) ---
         // Event listeners do botão
 rollButton.addEventListener("mousedown", () => {
