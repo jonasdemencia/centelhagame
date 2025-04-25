@@ -314,26 +314,57 @@ dice.traverse((child) => {
         }
 
         // Função para obter resultado (lê orientação do MESH Three.js)
-        function getResultFromTopVertex() {
-            // ... (código da função igual ao anterior) ...
-             const vertices = [
-                 new THREE.Vector3(1, 1, 1), new THREE.Vector3(-1, -1, 1),
-                 new THREE.Vector3(-1, 1, -1), new THREE.Vector3(1, -1, -1)
-             ];
-             const worldVertices = vertices.map(v => v.clone().applyMatrix4(dice.matrixWorld));
-             let highestVertexIndex = -1;
-             let maxY = -Infinity;
-             for (let i = 0; i < worldVertices.length; i++) {
-                 if (worldVertices[i].y > maxY) {
-                     maxY = worldVertices[i].y;
-                     highestVertexIndex = i;
-                 }
-             }
-             // !! IMPORTANTE: VERIFICAR ESTE MAPEAMENTO !!
-             const vertexIndexToResultMap = [1, 2, 3, 4]; // Suposição inicial
-             return vertexIndexToResultMap[highestVertexIndex] || 'Erro';
+    function getResultFromTopVertex() {
+        if (!dice) return null; // Se o dado não foi carregado ainda
+
+        // 1. Definir os vetores de DIREÇÃO LOCAL do centro para os 4 vértices lógicos.
+        //    A ordem DEVE ser consistente com o mapeamento final (vertexIndexToResultMap).
+        //    Usamos os vetores (+-1, +-1, +-1) normalizados apenas pela direção.
+        const localVertexDirections = [
+            new THREE.Vector3(1, 1, 1).normalize(),    // Direção para Vértice 0 (associado ao resultado 1 no mapa)
+            new THREE.Vector3(-1, -1, 1).normalize(),  // Direção para Vértice 1 (associado ao resultado 2 no mapa)
+            new THREE.Vector3(-1, 1, -1).normalize(),  // Direção para Vértice 2 (associado ao resultado 3 no mapa)
+            new THREE.Vector3(1, -1, -1).normalize()   // Direção para Vértice 3 (associado ao resultado 4 no mapa)
+        ];
+
+        // 2. Obter a orientação ATUAL do dado no mundo (Quaternion)
+        const worldQuaternion = dice.getWorldQuaternion(new THREE.Quaternion()); // Usar o quaternion do mesh visual
+
+        let highestVertexIndex = -1;
+        let maxWorldY = -Infinity;
+
+        // console.log("--- Checking Top Vertex ---");
+        // console.log("World Quaternion:", worldQuaternion.x.toFixed(2), worldQuaternion.y.toFixed(2), worldQuaternion.z.toFixed(2), worldQuaternion.w.toFixed(2));
+
+        // 3. Rotacionar cada vetor de direção local para o espaço mundial
+        for (let i = 0; i < localVertexDirections.length; i++) {
+            const localDir = localVertexDirections[i];
+            const worldDir = localDir.clone().applyQuaternion(worldQuaternion); // Aplica a rotação mundial
+
+            // 4. Verificar qual vetor de direção mundial tem o maior componente Y (aponta mais para cima)
+            // console.log(`Index ${i}: World Direction Y = ${worldDir.y.toFixed(3)}`);
+            if (worldDir.y > maxWorldY) {
+                maxWorldY = worldDir.y;
+                highestVertexIndex = i;
+            }
         }
 
+        // console.log(`Highest Vertex Index: ${highestVertexIndex}, Max Y: ${maxWorldY.toFixed(3)}`);
+
+        // 5. Mapear o índice do vértice cuja direção é mais alta para o resultado (1 a 4)
+        //    !! ESTE MAPEAMENTO AINDA PRECISA SER VALIDADO VISUALMENTE !!
+        //    Significa: se o vetor para o vértice de índice 0 aponta mais para cima, o resultado é 1.
+        const vertexIndexToResultMap = [1, 2, 3, 4]; // Mapeamento: Índice 0->Res 1, Índice 1->Res 2, etc.
+        const result = vertexIndexToResultMap[highestVertexIndex];
+
+        // console.log(`Mapped Result: ${result}`);
+        if (result === undefined) {
+             console.error("Erro ao determinar o vértice mais alto ou mapeamento inválido.", highestVertexIndex);
+             return "Erro";
+        }
+
+        return result;
+    }
         // --- Lógica de Rolagem (Physics Based) ---
         // Event listeners do botão
 rollButton.addEventListener("mousedown", () => {
