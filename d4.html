@@ -367,10 +367,9 @@ diceBody.addEventListener('sleep', () => {
     if (!dice || !diceBody) return null;
 
     try {
-        // Atualiza a matriz mundial do dado
         dice.updateMatrixWorld(true);
 
-        // Define os vértices baseados no modelo real (convertidos para a escala correta)
+        // Define os vértices baseados no modelo real
         const diceVertices = [
             new THREE.Vector3(-3.4881, 99.9758, -1.4099).multiplyScalar(0.008),
             new THREE.Vector3(0.0039, 99.9758, 4.6267).multiplyScalar(0.008),
@@ -378,69 +377,53 @@ diceBody.addEventListener('sleep', () => {
             new THREE.Vector3(-59.4391, 5.6382, 39.0128).multiplyScalar(0.008)
         ];
 
-        // Transforma os vértices para o espaço mundial
-        const worldVertices = diceVertices.map(v => {
-            const worldVertex = v.clone().applyMatrix4(dice.matrixWorld);
-            // Adiciona verificação para valores inválidos
-            if (isNaN(worldVertex.y)) {
-                throw new Error("Invalid vertex position");
-            }
-            return worldVertex;
-        });
+        const worldVertices = diceVertices.map(v => v.clone().applyMatrix4(dice.matrixWorld));
 
-        // Encontra o vértice mais alto com tolerância
+        // Verifica movimento
+        const velocity = diceBody.velocity.length();
+        const angularVel = diceBody.angularVelocity.length();
+        if (velocity > 0.01 || angularVel > 0.01) {
+            return null;
+        }
+
+        // Calcula o centro do dado
+        const center = new THREE.Vector3();
+        worldVertices.forEach(v => center.add(v));
+        center.multiplyScalar(1 / worldVertices.length);
+
+        // Para cada vértice, calcula sua altura relativa ao centro e distância do eixo Y
         let highestVertex = -1;
-        let maxY = -Infinity;
-        const tolerance = 0.001; // Tolerância para comparação de altura
+        let maxScore = -Infinity;
 
         worldVertices.forEach((vertex, index) => {
-            // Log para debug
-            console.log(`Vértice ${index}: Y = ${vertex.y.toFixed(6)}`);
+            // Altura relativa ao centro
+            const heightFromCenter = vertex.y - center.y;
             
-            if (vertex.y > maxY + tolerance) {
-                maxY = vertex.y;
+            // Distância do eixo Y (quanto menor, melhor)
+            const distanceFromYAxis = Math.sqrt(vertex.x * vertex.x + vertex.z * vertex.z);
+            
+            // Score combina altura e centralização
+            const score = heightFromCenter - (distanceFromYAxis * 0.5);
+            
+            console.log(`Vértice ${index}: altura=${heightFromCenter.toFixed(6)}, distância=${distanceFromYAxis.toFixed(6)}, score=${score.toFixed(6)}`);
+            
+            if (score > maxScore) {
+                maxScore = score;
                 highestVertex = index;
             }
         });
 
-        // Verificação adicional de movimento
-        const velocity = diceBody.velocity.length();
-        const angularVel = diceBody.angularVelocity.length();
-        
-        console.log(`Velocidade: ${velocity.toFixed(6)}, Angular: ${angularVel.toFixed(6)}`);
-        
-        // Se ainda estiver em movimento significativo, aguarde
-        if (velocity > 0.01 || angularVel > 0.01) {
-            console.log("Dado ainda em movimento, aguardando...");
-            return null;
-        }
-
-        // Verifica se encontrou um vértice válido
-        if (highestVertex === -1) {
-            console.error("Não foi possível determinar o vértice mais alto");
-            return 'Erro';
-        }
-
-        // Double-check se o vértice está realmente acima dos outros
-        const isDefinitelyHighest = worldVertices.every((vertex, index) => 
-            index === highestVertex || vertex.y < maxY - tolerance
-        );
-
-        if (!isDefinitelyHighest) {
-            console.log("Resultado ambíguo, aguardando estabilização...");
-            return null;
-        }
-
-        // Mapeamento vértice -> resultado (ajuste conforme necessário)
+        // Mapeamento dos vértices para resultados
+        // Ajustado baseado na sua descrição do D4
         const vertexToResult = {
-            0: 3,
-            1: 4,
-            2: 1,
-            3: 2
+            0: 3, // Vértice frontal superior
+            1: 4, // Vértice direito superior
+            2: 1, // Vértice esquerdo superior
+            3: 2  // Vértice base
         };
 
         const result = vertexToResult[highestVertex];
-        console.log(`Vértice mais alto: ${highestVertex} (Y = ${maxY.toFixed(6)}) -> Resultado: ${result}`);
+        console.log(`Vértice escolhido: ${highestVertex} -> Resultado: ${result}`);
 
         return result || 'Erro';
 
