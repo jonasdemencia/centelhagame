@@ -380,52 +380,53 @@ diceBody.addEventListener('sleep', () => {
         const worldVertices = diceVertices.map(v => v.clone().applyMatrix4(dice.matrixWorld));
 
         // Verifica movimento
-        const velocity = diceBody.velocity.length();
-        const angularVel = diceBody.angularVelocity.length();
-        if (velocity > 0.01 || angularVel > 0.01) {
+        if (diceBody.velocity.length() > 0.01 || diceBody.angularVelocity.length() > 0.01) {
             return null;
         }
 
-        // Calcula o centro do dado
-        const center = new THREE.Vector3();
-        worldVertices.forEach(v => center.add(v));
-        center.multiplyScalar(1 / worldVertices.length);
+        // Define as faces do D4 e seus números correspondentes
+        const faces = [
+            { vertices: [0, 1, 2], number: 1 }, // Face superior
+            { vertices: [0, 1, 3], number: 2 }, // Face frontal
+            { vertices: [1, 2, 3], number: 3 }, // Face direita
+            { vertices: [0, 2, 3], number: 4 }  // Face esquerda
+        ];
 
-        // Para cada vértice, calcula sua altura relativa ao centro e distância do eixo Y
-        let highestVertex = -1;
-        let maxScore = -Infinity;
+        // Para cada face, calcula sua normal no espaço mundial
+        let highestFace = null;
+        let maxUpwardAlignment = -Infinity;
 
-        worldVertices.forEach((vertex, index) => {
-            // Altura relativa ao centro
-            const heightFromCenter = vertex.y - center.y;
-            
-            // Distância do eixo Y (quanto menor, melhor)
-            const distanceFromYAxis = Math.sqrt(vertex.x * vertex.x + vertex.z * vertex.z);
-            
-            // Score combina altura e centralização
-            const score = heightFromCenter - (distanceFromYAxis * 0.5);
-            
-            console.log(`Vértice ${index}: altura=${heightFromCenter.toFixed(6)}, distância=${distanceFromYAxis.toFixed(6)}, score=${score.toFixed(6)}`);
-            
-            if (score > maxScore) {
-                maxScore = score;
-                highestVertex = index;
+        faces.forEach(face => {
+            const v0 = worldVertices[face.vertices[0]];
+            const v1 = worldVertices[face.vertices[1]];
+            const v2 = worldVertices[face.vertices[2]];
+
+            // Calcula a normal da face
+            const edge1 = new THREE.Vector3().subVectors(v1, v0);
+            const edge2 = new THREE.Vector3().subVectors(v2, v0);
+            const normal = new THREE.Vector3().crossVectors(edge1, edge2).normalize();
+
+            // Verifica o alinhamento com o vetor para cima (0, 1, 0)
+            const upwardAlignment = normal.dot(new THREE.Vector3(0, 1, 0));
+
+            console.log(`Face ${face.number}: alinhamento = ${upwardAlignment}`);
+
+            if (upwardAlignment > maxUpwardAlignment) {
+                maxUpwardAlignment = upwardAlignment;
+                highestFace = face;
             }
         });
 
-        // Mapeamento dos vértices para resultados
-        // Ajustado baseado na sua descrição do D4
-        const vertexToResult = {
-    0: 2,  // Quando o vértice 0 está no topo, as faces mostram 2
-    1: 3,  // Quando o vértice 1 está no topo, as faces mostram 3
-    2: 4,  // Quando o vértice 2 está no topo, as faces mostram 4
-    3: 1   // Quando o vértice 3 está no topo, as faces mostram 1
-};
+        if (!highestFace) {
+            return 'Erro';
+        }
 
-        const result = vertexToResult[highestVertex];
-        console.log(`Vértice escolhido: ${highestVertex} -> Resultado: ${result}`);
+        // A face que está mais voltada para baixo (maior alinhamento negativo com Y)
+        // é a que está em contato com o chão, e seu número oposto é o resultado
+        const result = 5 - highestFace.number; // Assumindo que faces opostas somam 5
 
-        return result || 'Erro';
+        console.log(`Face mais alta: ${highestFace.number}, Resultado: ${result}`);
+        return result;
 
     } catch (error) {
         console.error("Erro ao calcular resultado:", error);
