@@ -368,11 +368,40 @@ diceBody.addEventListener('sleep', () => {
 
     try {
         dice.updateMatrixWorld(true);
-        
+
+        // Define os vértices baseados no modelo real
+        const diceVertices = [
+            new THREE.Vector3(-3.4881, 99.9758, -1.4099).multiplyScalar(0.008),
+            new THREE.Vector3(0.0039, 99.9758, 4.6267).multiplyScalar(0.008),
+            new THREE.Vector3(3.4857, 99.9758, -1.4157).multiplyScalar(0.008),
+            new THREE.Vector3(-59.4391, 5.6382, 39.0128).multiplyScalar(0.008)
+        ];
+
+        // Transforma os vértices para o espaço mundial
+        const worldVertices = diceVertices.map(v => v.clone().applyMatrix4(dice.matrixWorld));
+
+        // Verifica movimento
+        const velocity = diceBody.velocity.length();
+        const angularVel = diceBody.angularVelocity.length();
+        if (velocity > 0.01 || angularVel > 0.01) {
+            return null;
+        }
+
+        // Encontra o vértice mais alto
+        let highestVertex = 0; // Inicializa com 0 em vez de -1
+        let maxY = worldVertices[0].y; // Inicializa com o primeiro vértice
+
+        // Log dos vértices para debug
+        worldVertices.forEach((vertex, index) => {
+            console.log(`Vértice ${index} Y: ${vertex.y.toFixed(6)}`);
+            if (vertex.y > maxY) {
+                maxY = vertex.y;
+                highestVertex = index;
+            }
+        });
+
         // Obtém a rotação atual do dado
         const rotation = new THREE.Euler().setFromQuaternion(dice.quaternion);
-        
-        // Converte rotação para graus
         const rotDegrees = {
             x: THREE.MathUtils.radToDeg(rotation.x),
             y: THREE.MathUtils.radToDeg(rotation.y),
@@ -384,38 +413,24 @@ diceBody.addEventListener('sleep', () => {
         rotDegrees.y = ((rotDegrees.y % 360) + 360) % 360;
         rotDegrees.z = ((rotDegrees.z % 360) + 360) % 360;
 
-        // Define os vértices e calcula o mais alto
-        const worldVertices = [/* ... seu código atual dos vértices ... */];
-        let highestVertex = -1;
-        let maxY = -Infinity;
+        // Cria uma chave de estado mais simples
+        const stateKey = `${highestVertex}_${Math.round(rotDegrees.y/90)}`;
+        console.log(`Vértice mais alto: ${highestVertex}, Rotação Y: ${rotDegrees.y.toFixed(2)}`);
+        console.log(`Estado do dado: ${stateKey}`);
 
-        worldVertices.forEach((vertex, index) => {
-            if (vertex.y > maxY) {
-                maxY = vertex.y;
-                highestVertex = index;
-            }
-        });
-
-        // Cria uma chave composta do vértice e quadrante de rotação
-        const xQuad = Math.floor(rotDegrees.x / 90);
-        const yQuad = Math.floor(rotDegrees.y / 90);
-        const zQuad = Math.floor(rotDegrees.z / 90);
-        
-        const stateKey = `${highestVertex}_${xQuad}_${yQuad}_${zQuad}`;
-        console.log('Estado do dado:', stateKey);
-
-        // Mapa de estados para resultados
-        // Este mapa precisa ser preenchido com base em observações
+        // Baseado nos seus testes:
         const resultMap = {
-            // Exemplo: "1_2_0_1": 3 significa que quando
-            // - highestVertex é 1
-            // - x está no quadrante 2 (180-270)
-            // - y está no quadrante 0 (0-90)
-            // - z está no quadrante 1 (90-180)
-            // O resultado é 3
+            '0_0': 2, '0_1': 2, '0_2': 2, '0_3': 2,
+            '1_0': 4, '1_1': 4, '1_2': 4, '1_3': 4,
+            '2_0': 1, '2_1': 1, '2_2': 1, '2_3': 1,
+            '3_0': 3, '3_1': 3, '3_2': 3, '3_3': 3
         };
 
-        return resultMap[stateKey] || highestVertex;
+        const result = resultMap[stateKey];
+        console.log(`Mapeamento de resultado: ${result}`);
+
+        return result !== undefined ? result : highestVertex;
+
     } catch (error) {
         console.error("Erro ao calcular resultado:", error);
         return 'Erro';
