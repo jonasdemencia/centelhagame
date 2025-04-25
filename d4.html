@@ -430,28 +430,28 @@ rollButton.addEventListener("mouseup", () => {
     diceBody.velocity.set(0, 0, 0);
     diceBody.angularVelocity.set(0, 0, 0);
 
-    /// Rotação inicial mais forte
-const rotationSpeed = 15; // Aumentado significativamente
+// Rotação inicial mais forte (mantenha isso)
+const rotationSpeed = 15;
 diceBody.angularVelocity.set(
     random(-1, 1) * rotationSpeed,
     random(-1, 1) * rotationSpeed,
     random(-1, 1) * rotationSpeed
 );
 
-// Impulso mais forte e aleatório
+// Novo impulso direcionado ao topWall
 const impulseDirection = new CANNON.Vec3(
-    random(-1, 1),     // Movimento lateral mais forte
-    random(1, 2),      // Força vertical aumentada
-    random(-3, -1)     // Força para "cima" da tela variável
+    random(-0.3, 0.3),    // Pequena variação lateral
+    random(0.5, 1),       // Componente vertical moderada
+    -2                    // Sempre para o topo (Z negativo)
 ).normalize();
 
-const force = impulseDirection.scale(throwSpeed * 2); // Dobro da força
+const force = impulseDirection.scale(throwSpeed * 1.5); // Aumentamos um pouco a força
 
-// Aplica o impulso em um ponto fora do centro para gerar mais rotação
+// Aplica o impulso com um pequeno offset para manter a rotação
 const offset = new CANNON.Vec3(
-    random(-0.1, 0.1),
-    random(-0.1, 0.1),
-    random(-0.1, 0.1)
+    random(-0.05, 0.05),
+    random(-0.05, 0.05),
+    random(-0.05, 0.05)
 );
 
 diceBody.applyImpulse(force, offset);
