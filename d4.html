@@ -416,11 +416,11 @@ diceBody.addEventListener('sleep', () => {
         // Mapeamento dos vértices para resultados
         // Ajustado baseado na sua descrição do D4
         const vertexToResult = {
-            0: 3, // Vértice frontal superior
-            1: 4, // Vértice direito superior
-            2: 1, // Vértice esquerdo superior
-            3: 2  // Vértice base
-        };
+    0: 2,  // Quando o vértice 0 está no topo, as faces mostram 2
+    1: 3,  // Quando o vértice 1 está no topo, as faces mostram 3
+    2: 4,  // Quando o vértice 2 está no topo, as faces mostram 4
+    3: 1   // Quando o vértice 3 está no topo, as faces mostram 1
+};
 
         const result = vertexToResult[highestVertex];
         console.log(`Vértice escolhido: ${highestVertex} -> Resultado: ${result}`);
