@@ -275,13 +275,26 @@ dice.traverse((child) => {
         });
 
         // Cria corpo físico
-        diceBody = new CANNON.Body({
+        // Modifique a criação do diceBody:
+diceBody = new CANNON.Body({
     mass: 1.5,
     shape: diceShape,
     material: diceMaterial,
-    angularDamping: 0.1,  // Reduzido para permitir mais rotação
-    linearDamping: 0.1    // Reduzido para permitir mais movimento
+    angularDamping: 0.1,
+    linearDamping: 0.1,
+    // Adicione estas propriedades:
+    fixedRotation: false,
+    allowSleep: true,
+    sleepTimeLimit: 1.0,
+    sleepSpeedLimit: 0.1,
 });
+
+// Ajuste o centro de massa para corresponder ao centro geométrico do dado
+const centerOfMass = new CANNON.Vec3();
+vertices.forEach(v => centerOfMass.vadd(v, centerOfMass));
+centerOfMass.scale(1.0 / vertices.length, centerOfMass);
+diceBody.shapeOffsets[0].copy(centerOfMass.negate());
+
 
         // Posiciona o corpo físico
         diceBody.position.copy(dice.position);
