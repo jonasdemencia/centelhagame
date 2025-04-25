@@ -363,7 +363,7 @@ diceBody.addEventListener('sleep', () => {
             return Math.random() * (max - min) + min;
         }
 
-        function getResultFromTopVertex() {
+       function getResultFromTopVertex() {
     if (!dice || !diceBody) return null;
 
     try {
@@ -380,34 +380,56 @@ diceBody.addEventListener('sleep', () => {
         const worldVertices = diceVertices.map(v => v.clone().applyMatrix4(dice.matrixWorld));
 
         // Verifica movimento
-        if (diceBody.velocity.length() > 0.01 || diceBody.angularVelocity.length() > 0.01) {
+        const velocity = diceBody.velocity.length();
+        const angularVel = diceBody.angularVelocity.length();
+        if (velocity > 0.01 || angularVel > 0.01) {
             return null;
         }
 
-        // Encontra o vértice mais alto
+        // Obtém a rotação atual do dado
+        const diceRotation = new THREE.Euler().setFromQuaternion(dice.quaternion);
+        console.log('Rotação do dado (em radianos):', {
+            x: diceRotation.x,
+            y: diceRotation.y,
+            z: diceRotation.z
+        });
+
+        // Encontra o vértice mais alto e sua orientação
         let highestVertex = -1;
         let maxY = -Infinity;
 
         worldVertices.forEach((vertex, index) => {
-            console.log(`Vértice ${index}: Y = ${vertex.y.toFixed(6)}`);
-            if (vertex.y > maxY) {
-                maxY = vertex.y;
+            const y = vertex.y;
+            if (y > maxY) {
+                maxY = y;
                 highestVertex = index;
             }
         });
 
-        // Define quais faces compartilham cada vértice e qual número elas mostram
-        const vertexFaces = {
-            0: 3, // Quando o vértice 0 é o mais alto, as três faces que se encontram nele mostram 3
-            1: 1, // Quando o vértice 1 é o mais alto, as três faces que se encontram nele mostram 1
-            2: 2, // Quando o vértice 2 é o mais alto, as três faces que se encontram nele mostram 2
-            3: 4  // Quando o vértice 3 é o mais alto, as três faces que se encontram nele mostram 4
-        };
+        // Calcula a direção "para cima" do dado
+        const up = new THREE.Vector3(0, 1, 0);
+        const diceUp = up.clone().applyQuaternion(dice.quaternion);
+        console.log('Direção "para cima" do dado:', diceUp);
 
-        const result = vertexFaces[highestVertex];
-        console.log(`Vértice mais alto: ${highestVertex} (Y = ${maxY.toFixed(6)}) -> Mostra o número ${result} nas três faces`);
+        // Calcula o ângulo entre a direção "para cima" do dado e o eixo Y mundial
+        const angle = up.angleTo(diceUp);
+        console.log('Ângulo com eixo Y:', THREE.MathUtils.radToDeg(angle));
 
-        return result || 'Erro';
+        // Combina o vértice mais alto com a orientação para determinar o resultado
+        const orientationKey = `${highestVertex}_${Math.round(angle * 100)}`;
+        console.log('Chave de orientação:', orientationKey);
+
+        // Agora vamos registrar todos os dados relevantes para debug
+        console.log({
+            highestVertex,
+            vertexY: maxY,
+            rotationX: THREE.MathUtils.radToDeg(diceRotation.x),
+            rotationY: THREE.MathUtils.radToDeg(diceRotation.y),
+            rotationZ: THREE.MathUtils.radToDeg(diceRotation.z),
+            angle: THREE.MathUtils.radToDeg(angle)
+        });
+
+        return highestVertex; // Por enquanto, retorna apenas o índice do vértice para debug
 
     } catch (error) {
         console.error("Erro ao calcular resultado:", error);
