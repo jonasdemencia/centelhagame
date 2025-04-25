@@ -439,12 +439,13 @@ rollButton.addEventListener("mouseup", () => {
 
     // Direção do impulso SEMPRE para o topWall
     const impulseDirection = new CANNON.Vec3(
-        random(-0.2, 0.2),    // Pequena variação lateral
-        1.5,                  // Força para cima significativa
-        -5                    // Força forte em direção ao topWall
-    ).normalize();
+    random(-0.2, 0.2),   // Pequeno desvio lateral
+    0.2,                 // Pouca força para cima (Y)
+    -1.0                 // Foco no Z negativo
+).normalize();
 
-    const force = impulseDirection.scale(throwSpeed * 2);
+
+    const force = impulseDirection.scale(throwSpeed * 8);
     
     // Aplica o impulso com um pequeno offset para rotação
     const offset = new CANNON.Vec3(
