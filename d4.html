@@ -462,7 +462,7 @@ rollButton.addEventListener("mouseup", () => {
     impulseDirection.y /= length;
     impulseDirection.z /= length;
 
-    const force = impulseDirection.scale(throwSpeed * 8);
+    const force = impulseDirection.scale(throwSpeed * 2);
     diceBody.applyImpulse(force, offset);
 
     console.log('💥 IMPULSO APLICADO');
