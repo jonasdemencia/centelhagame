@@ -413,7 +413,6 @@ rollButton.addEventListener("mousedown", () => {
 rollButton.addEventListener("mouseup", () => {
     if (!dice || !diceBody || isRolling) return;
     
-    // Calcula a força baseada no tempo pressionado
     const pressDuration = Date.now() - pressStartTime;
     const forcePercent = Math.min(pressDuration / maxPressTime, 1);
     const throwSpeed = minForce + (maxForce - minForce) * forcePercent;
@@ -430,37 +429,36 @@ rollButton.addEventListener("mouseup", () => {
     diceBody.velocity.set(0, 0, 0);
     diceBody.angularVelocity.set(0, 0, 0);
 
-// Rotação inicial mais forte (mantenha isso)
-const rotationSpeed = 15;
-diceBody.angularVelocity.set(
-    random(-1, 1) * rotationSpeed,
-    random(-1, 1) * rotationSpeed,
-    random(-1, 1) * rotationSpeed
-);
+    // Rotação inicial mais forte
+    const rotationSpeed = 15;
+    diceBody.angularVelocity.set(
+        random(-1, 1) * rotationSpeed,
+        random(-1, 1) * rotationSpeed,
+        random(-1, 1) * rotationSpeed
+    );
 
-// Novo impulso direcionado ao topWall
-const impulseDirection = new CANNON.Vec3(
-    random(-0.3, 0.3),    // Pequena variação lateral
-    random(0.5, 1),       // Componente vertical moderada
-    -2                    // Sempre para o topo (Z negativo)
-).normalize();
+    // Direção do impulso SEMPRE para o topWall
+    const impulseDirection = new CANNON.Vec3(
+        random(-0.2, 0.2),    // Pequena variação lateral
+        1.5,                  // Força para cima significativa
+        -5                    // Força forte em direção ao topWall
+    ).normalize();
 
-const force = impulseDirection.scale(throwSpeed * 1.5); // Aumentamos um pouco a força
+    const force = impulseDirection.scale(throwSpeed * 2);
+    
+    // Aplica o impulso com um pequeno offset para rotação
+    const offset = new CANNON.Vec3(
+        random(-0.05, 0.05),
+        random(-0.05, 0.05),
+        random(-0.05, 0.05)
+    );
 
-// Aplica o impulso com um pequeno offset para manter a rotação
-const offset = new CANNON.Vec3(
-    random(-0.05, 0.05),
-    random(-0.05, 0.05),
-    random(-0.05, 0.05)
-);
-
-diceBody.applyImpulse(force, offset);
+    diceBody.applyImpulse(force, offset);
 
     console.log('💥 IMPULSO APLICADO');
     console.log('➡️ POSIÇÃO antes do lançamento:', diceBody.position);
     console.log('➡️ DIREÇÃO do impulso:', impulseDirection);
 });
-
     
 
         // --- Loop de Animação ---
