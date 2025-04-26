@@ -324,7 +324,7 @@ diceBody.addEventListener('sleep', () => {
         let attempts = 0;
         const maxAttempts = 3;
         const tryGetResult = () => {
-            const result = getResultFromTopVertex();
+            const result = getResultFromBottomFace(); // Chama a nova função baseada na face
             if (result !== null) {
                 resultDisplay.textContent = `Resultado: ${result}`;
                 console.log(`Resultado final: ${result}`);
@@ -364,83 +364,84 @@ diceBody.addEventListener('sleep', () => {
         }
 
        // Função para obter resultado (CORRIGIDA - usa direções e quaternion)
-    function getResultFromTopVertex() {
-        if (!dice || !diceBody) {
-             console.warn("Tentando obter resultado antes do dado carregar.");
-             return null;
-        }
-
-        try {
-            // Garante que a matriz mundial está atualizada
-            dice.updateMatrixWorld(true);
-
-            // Opcional: Verificar se está parado (já tratado no evento 'sleep')
-            // const velocity = diceBody.velocity.length();
-            // const angularVel = diceBody.angularVelocity.length();
-            // if (velocity > 0.01 || angularVel > 0.01) {
-            //     console.log("Ainda se movendo, resultado não final.");
-            //     return null; // Ainda não está parado
-            // }
-
-            // 1. Definir os vetores de DIREÇÃO LOCAL do centro para os 4 vértices lógicos.
-            //    A ordem é importante e deve corresponder ao mapa final.
-            const localVertexDirections = [
-                new THREE.Vector3(1, 1, 1).normalize(),    // Direção para Vértice Lógico 0
-                new THREE.Vector3(-1, -1, 1).normalize(),  // Direção para Vértice Lógico 1
-                new THREE.Vector3(-1, 1, -1).normalize(),  // Direção para Vértice Lógico 2
-                new THREE.Vector3(1, -1, -1).normalize()   // Direção para Vértice Lógico 3
-            ];
-
-            // 2. Obter a orientação ATUAL do dado no mundo (Quaternion)
-            const worldQuaternion = dice.getWorldQuaternion(new THREE.Quaternion());
-
-            let highestVertexIndex = -1;
-            let maxWorldY = -Infinity;
-
-            // console.log("--- Checking Top Vertex ---"); // Descomente para debug detalhado
-
-            // 3. Rotacionar cada vetor de direção local para o espaço mundial
-            for (let i = 0; i < localVertexDirections.length; i++) {
-                const localDir = localVertexDirections[i];
-                // Aplica a rotação mundial para obter a direção no mundo
-                const worldDir = localDir.clone().applyQuaternion(worldQuaternion);
-
-                // 4. Verificar qual vetor de direção mundial tem o maior componente Y
-                // console.log(`Índice ${i}: Direção Mundial Y = ${worldDir.y.toFixed(3)}`); // Descomente para debug
-                if (worldDir.y > maxWorldY) {
-                    maxWorldY = worldDir.y;
-                    highestVertexIndex = i; // Guarda o ÍNDICE (0, 1, 2 ou 3) do vértice mais alto
-                }
-            }
-
-            // Adiciona o Log para verificar o índice calculado:
-            console.log(`>>> Índice do Vértice Mais Alto Calculado: ${highestVertexIndex}`);
-
-            // 5. Mapear o índice (0-3) para o resultado (1-4)
-            //    !!! ESTE MAPA [1, 2, 3, 4] É UMA SUPOSIÇÃO INICIAL !!!
-            //    !!! VOCÊ PRECISA AJUSTÁ-LO BASEADO NA OBSERVAÇÃO VISUAL !!!
-            const vertexIndexToResultMap = [1, 2, 3, 4]; // <-- AJUSTE A ORDEM AQUI CONFORME PASSO 6
-            //                                ^  ^  ^  ^
-            //                                |  |  |  Resultado se índice for 3
-            //                                |  |  Resultado se índice for 2
-            //                                |  Resultado se índice for 1
-            //                                Resultado se índice for 0
-
-            const result = vertexIndexToResultMap[highestVertexIndex];
-
-            if (result === undefined) {
-                 console.error("Erro: highestVertexIndex inválido ou mapa incorreto.", highestVertexIndex);
-                 return "Erro";
-            }
-
-            // console.log(`Resultado Mapeado: ${result}`); // Descomente para debug
-            return result;
-
-        } catch (error) {
-            console.error("Erro dentro de getResultFromTopVertex:", error);
-            return 'Erro';
-        }
+   // Função para obter resultado (CORRIGIDA - usa normais das faces)
+function getResultFromBottomFace() { // Renomeei para clareza da nova lógica
+    if (!dice || !diceBody) {
+         console.warn("Tentando obter resultado antes do dado carregar.");
+         return null;
     }
+
+    try {
+        // Garante que a matriz mundial está atualizada
+        dice.updateMatrixWorld(true);
+
+        // Opcional: Verificar se está parado (já tratado no evento 'sleep')
+        // ...
+
+        // 1. Definir os vetores NORMAIS LOCAIS das 4 faces (apontando PARA FORA)
+        //    A ordem (índice 0, 1, 2, 3) DEVE corresponder ao mapa final.
+        //    Estes vetores são derivados da geometria de um tetraedro regular.
+        const localFaceNormals = [
+            new THREE.Vector3(-1, -1, -1).normalize(), // Normal da Face 0 (OPOSTA ao Vértice 0 -> Resultado 1?)
+            new THREE.Vector3( 1,  1, -1).normalize(), // Normal da Face 1 (OPOSTA ao Vértice 1 -> Resultado 2?)
+            new THREE.Vector3( 1, -1,  1).normalize(), // Normal da Face 2 (OPOSTA ao Vértice 2 -> Resultado 3?)
+            new THREE.Vector3(-1,  1,  1).normalize()  // Normal da Face 3 (OPOSTA ao Vértice 3 -> Resultado 4?)
+            // Atenção: A associação entre índice da normal/face e resultado do vértice oposto DEPENDE da geometria exata.
+        ];
+
+        // 2. Obter a orientação ATUAL do dado no mundo (Quaternion)
+        const worldQuaternion = dice.getWorldQuaternion(new THREE.Quaternion());
+
+        let lowestFaceIndex = -1;
+        let minWorldY = Infinity; // Procuramos o Y mais negativo (apontando mais para baixo)
+
+        // console.log("--- Checking Bottom Face ---"); // Descomente para debug
+
+        // 3. Rotacionar cada vetor normal local para o espaço mundial
+        for (let i = 0; i < localFaceNormals.length; i++) {
+            const localNormal = localFaceNormals[i];
+            // Aplica a rotação mundial para obter a normal no mundo
+            const worldNormal = localNormal.clone().applyQuaternion(worldQuaternion);
+
+            // 4. Verificar qual vetor normal mundial tem o menor componente Y
+            // console.log(`Índice Face ${i}: Normal Mundial Y = ${worldNormal.y.toFixed(3)}`); // Descomente para debug
+            if (worldNormal.y < minWorldY) {
+                minWorldY = worldNormal.y;
+                lowestFaceIndex = i; // Guarda o ÍNDICE (0, 1, 2 ou 3) da face que está mais para baixo
+            }
+        }
+
+        // Adiciona o Log para verificar o índice calculado:
+        console.log(`>>> Índice da Face Inferior Calculado: ${lowestFaceIndex}`);
+
+        // 5. Mapear o índice da face inferior (0-3) para o resultado (1-4)
+        //    O resultado é o número associado ao VÉRTICE OPOSTO à face inferior.
+        //    !!! ESTE MAPA [1, 2, 3, 4] É UMA SUPOSIÇÃO INICIAL !!!
+        //    Se a face 0 está em baixo, o V0 (Res 1) está em cima?
+        //    Se a face 1 está em baixo, o V1 (Res 2) está em cima? Etc.
+        //    !!! VOCÊ PRECISA AJUSTÁ-LO BASEADO NA OBSERVAÇÃO VISUAL !!!
+        const faceIndexToResultMap = [1, 2, 3, 4]; // <-- AJUSTE A ORDEM AQUI CONFORME PASSO 3
+        //                              ^  ^  ^  ^
+        //                              |  |  |  Resultado se face 3 está em baixo
+        //                              |  |  Resultado se face 2 está em baixo
+        //                              |  Resultado se face 1 está em baixo
+        //                              Resultado se face 0 está em baixo
+
+        const result = faceIndexToResultMap[lowestFaceIndex];
+
+        if (result === undefined) {
+             console.error("Erro: lowestFaceIndex inválido ou mapa incorreto.", lowestFaceIndex);
+             return "Erro";
+        }
+
+        // console.log(`Resultado Mapeado: ${result}`); // Descomente para debug
+        return result;
+
+    } catch (error) {
+        console.error("Erro dentro de getResultFromBottomFace:", error);
+        return 'Erro';
+    }
+}
         
         // --- Lógica de Rolagem (Physics Based) ---
         // Event listeners do botão
