@@ -363,60 +363,84 @@ diceBody.addEventListener('sleep', () => {
             return Math.random() * (max - min) + min;
         }
 
-       function getResultFromTopVertex() {
-    if (!dice || !diceBody) return null;
-
-    try {
-        dice.updateMatrixWorld(true);
-
-        // Verifica movimento
-        const velocity = diceBody.velocity.length();
-        const angularVel = diceBody.angularVelocity.length();
-        if (velocity > 0.01 || angularVel > 0.01) {
-            return null;
+       // Função para obter resultado (CORRIGIDA - usa direções e quaternion)
+    function getResultFromTopVertex() {
+        if (!dice || !diceBody) {
+             console.warn("Tentando obter resultado antes do dado carregar.");
+             return null;
         }
 
-        // Obtém a rotação do dado
-        const rotation = new THREE.Euler().setFromQuaternion(dice.quaternion);
-        const rotY = THREE.MathUtils.radToDeg(rotation.y);
-        const rotX = THREE.MathUtils.radToDeg(rotation.x);
-        const rotZ = THREE.MathUtils.radToDeg(rotation.z);
+        try {
+            // Garante que a matriz mundial está atualizada
+            dice.updateMatrixWorld(true);
 
-        // Normaliza os ângulos para 0-360
-        const normalizedRotY = ((rotY % 360) + 360) % 360;
-        const normalizedRotX = ((rotX % 360) + 360) % 360;
-        const normalizedRotZ = ((rotZ % 360) + 360) % 360;
+            // Opcional: Verificar se está parado (já tratado no evento 'sleep')
+            // const velocity = diceBody.velocity.length();
+            // const angularVel = diceBody.angularVelocity.length();
+            // if (velocity > 0.01 || angularVel > 0.01) {
+            //     console.log("Ainda se movendo, resultado não final.");
+            //     return null; // Ainda não está parado
+            // }
 
-        console.log('Rotações normalizadas:', {
-            x: normalizedRotX.toFixed(2),
-            y: normalizedRotY.toFixed(2),
-            z: normalizedRotZ.toFixed(2)
-        });
+            // 1. Definir os vetores de DIREÇÃO LOCAL do centro para os 4 vértices lógicos.
+            //    A ordem é importante e deve corresponder ao mapa final.
+            const localVertexDirections = [
+                new THREE.Vector3(1, 1, 1).normalize(),    // Direção para Vértice Lógico 0
+                new THREE.Vector3(-1, -1, 1).normalize(),  // Direção para Vértice Lógico 1
+                new THREE.Vector3(-1, 1, -1).normalize(),  // Direção para Vértice Lógico 2
+                new THREE.Vector3(1, -1, -1).normalize()   // Direção para Vértice Lógico 3
+            ];
 
-        // Baseado nos seus últimos testes:
-        // A1 R3 -> rotY ≈ 10°
-        // A2 R2 -> Vértice 3 mais alto
-        // A3 R3 -> rotY ≈ 15°
-        // A4 R4 -> rotY ≈ 58°
-        // A5 R1 -> rotY ≈ 27°
-        // etc.
+            // 2. Obter a orientação ATUAL do dado no mundo (Quaternion)
+            const worldQuaternion = dice.getWorldQuaternion(new THREE.Quaternion());
 
-        // Determina o resultado baseado nos quadrantes de rotação
-        if (normalizedRotY >= 315 || normalizedRotY < 45) {
-            return 3;
-        } else if (normalizedRotY >= 45 && normalizedRotY < 135) {
-            return 4;
-        } else if (normalizedRotY >= 135 && normalizedRotY < 225) {
-            return 1;
-        } else {
-            return 2;
+            let highestVertexIndex = -1;
+            let maxWorldY = -Infinity;
+
+            // console.log("--- Checking Top Vertex ---"); // Descomente para debug detalhado
+
+            // 3. Rotacionar cada vetor de direção local para o espaço mundial
+            for (let i = 0; i < localVertexDirections.length; i++) {
+                const localDir = localVertexDirections[i];
+                // Aplica a rotação mundial para obter a direção no mundo
+                const worldDir = localDir.clone().applyQuaternion(worldQuaternion);
+
+                // 4. Verificar qual vetor de direção mundial tem o maior componente Y
+                // console.log(`Índice ${i}: Direção Mundial Y = ${worldDir.y.toFixed(3)}`); // Descomente para debug
+                if (worldDir.y > maxWorldY) {
+                    maxWorldY = worldDir.y;
+                    highestVertexIndex = i; // Guarda o ÍNDICE (0, 1, 2 ou 3) do vértice mais alto
+                }
+            }
+
+            // Adiciona o Log para verificar o índice calculado:
+            console.log(`>>> Índice do Vértice Mais Alto Calculado: ${highestVertexIndex}`);
+
+            // 5. Mapear o índice (0-3) para o resultado (1-4)
+            //    !!! ESTE MAPA [1, 2, 3, 4] É UMA SUPOSIÇÃO INICIAL !!!
+            //    !!! VOCÊ PRECISA AJUSTÁ-LO BASEADO NA OBSERVAÇÃO VISUAL !!!
+            const vertexIndexToResultMap = [1, 2, 3, 4]; // <-- AJUSTE A ORDEM AQUI CONFORME PASSO 6
+            //                                ^  ^  ^  ^
+            //                                |  |  |  Resultado se índice for 3
+            //                                |  |  Resultado se índice for 2
+            //                                |  Resultado se índice for 1
+            //                                Resultado se índice for 0
+
+            const result = vertexIndexToResultMap[highestVertexIndex];
+
+            if (result === undefined) {
+                 console.error("Erro: highestVertexIndex inválido ou mapa incorreto.", highestVertexIndex);
+                 return "Erro";
+            }
+
+            // console.log(`Resultado Mapeado: ${result}`); // Descomente para debug
+            return result;
+
+        } catch (error) {
+            console.error("Erro dentro de getResultFromTopVertex:", error);
+            return 'Erro';
         }
-
-    } catch (error) {
-        console.error("Erro ao calcular resultado:", error);
-        return 'Erro';
     }
-}
         
         // --- Lógica de Rolagem (Physics Based) ---
         // Event listeners do botão
