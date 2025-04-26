@@ -363,64 +363,84 @@ diceBody.addEventListener('sleep', () => {
             return Math.random() * (max - min) + min;
         }
 
-       // Função para obter resultado (CORRIGIDA - usa direções e quaternion)
-   // Função para obter resultado (CORRIGIDA - usa normais das faces)
-function getResultFromBottomFace() { // Renomeei para clareza da nova lógica
-    if (!dice || !diceBody) {
-         console.warn("Tentando obter resultado antes do dado carregar.");
-         return null;
+       // Função para obter resultado (CORRIGIDA v3 - calcula normais da forma física)
+function getResultFromBottomFace() {
+    // Verifica se o dado e o corpo físico existem
+    if (!dice || !diceBody || !diceBody.shapes.length) {
+        // console.warn("Tentando obter resultado - dado/corpo físico ausente.");
+        return null;
     }
 
     try {
-        // Garante que a matriz mundial está atualizada
+        // Garante que a matriz mundial do objeto visual está atualizada
         dice.updateMatrixWorld(true);
 
         // Opcional: Verificar se está parado (já tratado no evento 'sleep')
         // ...
 
-        // 1. Definir os vetores NORMAIS LOCAIS das 4 faces (apontando PARA FORA)
-        //    A ordem (índice 0, 1, 2, 3) DEVE corresponder ao mapa final.
-        //    Estes vetores são derivados da geometria de um tetraedro regular.
-        const localFaceNormals = [
-            new THREE.Vector3(-1, -1, -1).normalize(), // Normal da Face 0 (OPOSTA ao Vértice 0 -> Resultado 1?)
-            new THREE.Vector3( 1,  1, -1).normalize(), // Normal da Face 1 (OPOSTA ao Vértice 1 -> Resultado 2?)
-            new THREE.Vector3( 1, -1,  1).normalize(), // Normal da Face 2 (OPOSTA ao Vértice 2 -> Resultado 3?)
-            new THREE.Vector3(-1,  1,  1).normalize()  // Normal da Face 3 (OPOSTA ao Vértice 3 -> Resultado 4?)
-            // Atenção: A associação entre índice da normal/face e resultado do vértice oposto DEPENDE da geometria exata.
-        ];
+        // 1. Obter a forma física real (ConvexPolyhedron) do corpo
+        const diceShape = diceBody.shapes[0]; // Assumindo que a forma está no índice 0
+        if (!(diceShape instanceof CANNON.ConvexPolyhedron)) {
+             console.error("Erro: A forma física do corpo não é um ConvexPolyhedron.");
+             return "Erro";
+        }
 
-        // 2. Obter a orientação ATUAL do dado no mundo (Quaternion)
-        const worldQuaternion = dice.getWorldQuaternion(new THREE.Quaternion());
+        // 2. Obter a orientação ATUAL do corpo físico no mundo (Quaternion)
+        //    É mais robusto usar a orientação do corpo físico diretamente
+        const worldQuaternion = diceBody.quaternion;
 
         let lowestFaceIndex = -1;
-        let minWorldY = Infinity; // Procuramos o Y mais negativo (apontando mais para baixo)
+        let minWorldY = Infinity; // Procuramos o Y mais negativo
 
-        // console.log("--- Checking Bottom Face ---"); // Descomente para debug
+        // Adiciona logging detalhado DENTRO do loop
+        // console.log("--- Checking Bottom Face (Normals from Shape) ---");
+        // let yValues = []; // Para ver todos os Ys calculados
 
-        // 3. Rotacionar cada vetor normal local para o espaço mundial
-        for (let i = 0; i < localFaceNormals.length; i++) {
-            const localNormal = localFaceNormals[i];
-            // Aplica a rotação mundial para obter a normal no mundo
-            const worldNormal = localNormal.clone().applyQuaternion(worldQuaternion);
+        // 3. Iterar pelas FACES da forma física ConvexPolyhedron
+        for (let i = 0; i < diceShape.faces.length; i++) {
+            const faceIndices = diceShape.faces[i]; // Índices dos vértices que formam a face [idxA, idxB, idxC]
 
-            // 4. Verificar qual vetor normal mundial tem o menor componente Y
-            // console.log(`Índice Face ${i}: Normal Mundial Y = ${worldNormal.y.toFixed(3)}`); // Descomente para debug
+            // Verificar se temos 3 índices para formar a face
+            if (faceIndices.length < 3) continue;
+
+            // Obter os vértices LOCAIS da forma física para esta face
+            const vA = diceShape.vertices[faceIndices[0]];
+            const vB = diceShape.vertices[faceIndices[1]];
+            const vC = diceShape.vertices[faceIndices[2]];
+
+            // Calcular a NORMAL LOCAL da face usando produto vetorial
+            // A ordem (B-A) x (C-A) geralmente dá a normal apontando para fora se os vértices da face estiverem em ordem anti-horária
+            const edge1 = new CANNON.Vec3();
+            const edge2 = new CANNON.Vec3();
+            const localNormal = new CANNON.Vec3();
+            vB.vsub(vA, edge1); // edge1 = vB - vA
+            vC.vsub(vA, edge2); // edge2 = vC - vA
+            edge1.cross(edge2, localNormal); // localNormal = edge1 x edge2
+            localNormal.normalize(); // Garante que é um vetor unitário
+
+            // Rotacionar a NORMAL LOCAL para obter a NORMAL MUNDIAL
+            const worldNormal = new CANNON.Vec3();
+            worldQuaternion.vmult(localNormal, worldNormal); // Rotaciona localNormal pelo quaternion
+
+            // yValues.push(worldNormal.y.toFixed(5)); // Guarda o valor Y para debug
+
+            // 4. Verificar qual normal mundial tem o menor componente Y
             if (worldNormal.y < minWorldY) {
                 minWorldY = worldNormal.y;
-                lowestFaceIndex = i; // Guarda o ÍNDICE (0, 1, 2 ou 3) da face que está mais para baixo
+                lowestFaceIndex = i; // Guarda o ÍNDICE (0, 1, 2 ou 3) da face física que está mais para baixo
             }
         }
 
+        // console.log("World Normal Y values:", yValues); // Mostra todos os Ys calculados
+
         // Adiciona o Log para verificar o índice calculado:
-        console.log(`>>> Índice da Face Inferior Calculado: ${lowestFaceIndex}`);
+        console.log(`>>> Índice da Face Inferior Calculado (Shape): ${lowestFaceIndex}`);
 
         // 5. Mapear o índice da face inferior (0-3) para o resultado (1-4)
         //    O resultado é o número associado ao VÉRTICE OPOSTO à face inferior.
-        //    !!! ESTE MAPA [1, 2, 3, 4] É UMA SUPOSIÇÃO INICIAL !!!
-        //    Se a face 0 está em baixo, o V0 (Res 1) está em cima?
-        //    Se a face 1 está em baixo, o V1 (Res 2) está em cima? Etc.
-        //    !!! VOCÊ PRECISA AJUSTÁ-LO BASEADO NA OBSERVAÇÃO VISUAL !!!
-        const faceIndexToResultMap = [1, 2, 3, 4]; // <-- AJUSTE A ORDEM AQUI CONFORME PASSO 3
+        //    !!! ESTE MAPA AINDA É UMA SUPOSIÇÃO E PRECISA SER CALIBRADO !!!
+        //    A ordem das faces (índice i) na ConvexPolyhedron pode não ser a mesma das normais idealizadas!
+        const faceIndexToResultMap = [1, 2, 3, 4]; // <-- AJUSTE A ORDEM AQUI CONFORME OBSERVAÇÃO
         //                              ^  ^  ^  ^
         //                              |  |  |  Resultado se face 3 está em baixo
         //                              |  |  Resultado se face 2 está em baixo
@@ -429,7 +449,7 @@ function getResultFromBottomFace() { // Renomeei para clareza da nova lógica
 
         const result = faceIndexToResultMap[lowestFaceIndex];
 
-        if (result === undefined) {
+        if (result === undefined || lowestFaceIndex < 0) { // Verifica se um índice válido foi encontrado
              console.error("Erro: lowestFaceIndex inválido ou mapa incorreto.", lowestFaceIndex);
              return "Erro";
         }
