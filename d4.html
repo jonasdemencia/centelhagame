@@ -391,11 +391,13 @@ diceBody.addEventListener('sleep', () => {
             //    A ordem é crucial e deve corresponder ao mapa final.
             //    Estes vetores definem as "pontas" do tetraedro ideal.
             const localVertexDirections = [
-                new THREE.Vector3( 1,  1,  1).normalize(),  // Direção para Vértice Lógico 0
-                new THREE.Vector3(-1, -1,  1).normalize(),  // Direção para Vértice Lógico 1
-                new THREE.Vector3(-1,  1, -1).normalize(),  // Direção para Vértice Lógico 2
-                new THREE.Vector3( 1, -1, -1).normalize()   // Direção para Vértice Lógico 3
-            ];
+    new THREE.Vector3( 0, 1, 0),      // Cima - eixo Y positivo (pontinha de cima)
+    new THREE.Vector3( 1, -1, 1),     // Base frente-direita
+    new THREE.Vector3(-1, -1, 1),     // Base frente-esquerda
+    new THREE.Vector3( 0, -1, -1)     // Base trás
+];
+localVertexDirections.forEach(v => v.normalize());
+
 
             // 2. Obter a orientação ATUAL do dado no mundo (Quaternion)
             //    Usamos o quaternion do MESH visual, pois ele é sincronizado com o físico.
