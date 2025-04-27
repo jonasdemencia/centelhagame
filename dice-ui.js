@@ -1,3 +1,14 @@
+// No início do arquivo, antes da classe DiceIcon
+function setupDiceUIToggle() {
+    const diceSection = document.getElementById('dice-section');
+    const toggleButton = document.getElementById('toggle-dice-ui');
+    
+    toggleButton.addEventListener('click', () => {
+        diceSection.classList.toggle('visible');
+        toggleButton.classList.toggle('active');
+    });
+}
+
 class DiceIcon extends HTMLElement {
     constructor() {
         super();
@@ -48,3 +59,7 @@ class DiceIcon extends HTMLElement {
 }
 
 customElements.define('dice-icon', DiceIcon);
+
+document.addEventListener('DOMContentLoaded', () => {
+    setupDiceUIToggle();
+});
