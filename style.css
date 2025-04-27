@@ -592,7 +592,7 @@ h1 {
 /* Seção de Dados */
 #dice-section {
     position: fixed;
-    bottom: 20px;
+    bottom: -200px; /* Começa escondido */
     left: 0;
     right: 0;
     display: flex;
@@ -601,6 +601,37 @@ h1 {
     gap: 24px;
     padding: 20px;
     background: rgba(29, 40, 66, 0.9);
+    transition: bottom 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+#dice-section.visible {
+    bottom: 0;
+}
+
+/* Adicione o estilo do botão toggle */
+#toggle-dice-ui {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #2f74d2;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 1001;
+    transition: transform 0.3s ease;
+}
+
+#toggle-dice-ui:hover {
+    transform: scale(1.1);
+}
+
+#toggle-dice-ui.active {
+    transform: rotate(180deg);
 }
 
 #table-top {
