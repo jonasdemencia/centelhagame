@@ -1,14 +1,21 @@
 class DiceIcon extends HTMLElement {
     constructor() {
         super();
+        this.setupElement();
+        this.setupListeners();
+    }
+
+    setupElement() {
         const sides = this.getAttribute('sides');
         this.innerHTML = `
             <button class="increment">+</button>
-            <div class="icon">${sides}</div>
+            <div class="icon">${sides}
+                <svg viewBox="0 0 12 12">
+                    <use xlink:href="#d${sides}-icon"></use>
+                </svg>
+            </div>
             <button class="decrement" disabled>-</button>
         `;
-        
-        this.setupListeners();
     }
 
     setupListeners() {
@@ -22,7 +29,7 @@ class DiceIcon extends HTMLElement {
             
             decrementBtn.disabled = false;
             
-            // Aqui você pode adicionar a lógica para carregar seu dado 3D
+            // Aqui você poderá adicionar a lógica para carregar seu dado 3D
             const sides = this.getAttribute('sides');
             console.log(`Dado D${sides} selecionado`);
         });
@@ -34,7 +41,7 @@ class DiceIcon extends HTMLElement {
             
             decrementBtn.disabled = true;
             
-            // Aqui você pode adicionar a lógica para remover seu dado 3D
+            // Aqui você poderá adicionar a lógica para remover seu dado 3D
             console.log('Dado removido');
         });
     }
