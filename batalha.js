@@ -2,6 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, collection } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { loadEquippedDice, initializeModule } from './dice-ui.js';
 
 // Adicione esta linha
 import { loadEquippedDice } from './dice-ui.js';
@@ -23,6 +24,7 @@ console.log("LOG: Inicializando Firebase.");
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+initializeModule(db); // Passa a instância do Firestore para o módulo dice-ui
 console.log("LOG: Firebase inicializado.");
 
 async function salvarDropsNoLoot(userId, drops) {
