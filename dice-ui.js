@@ -1,14 +1,8 @@
-// No início do arquivo, antes da classe DiceIcon
-function setupDiceUIToggle() {
-    const diceSection = document.getElementById('dice-section');
-    const toggleButton = document.getElementById('toggle-dice-ui');
-    
-    toggleButton.addEventListener('click', () => {
-        diceSection.classList.toggle('visible');
-        toggleButton.classList.toggle('active');
-    });
-}
+// Importações do Firebase necessárias
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+const db = getFirestore();
 
+// Classe DiceIcon
 class DiceIcon extends HTMLElement {
     constructor() {
         super();
@@ -28,50 +22,74 @@ class DiceIcon extends HTMLElement {
         this.setupListeners();
     }
 
-    setupElement() {
-        const sides = this.getAttribute('sides');
-        this.innerHTML = `
-            <button class="increment">+</button>
-            <div class="icon">${sides}
-                <svg viewBox="0 0 12 12">
-                    <use xlink:href="#d${sides}-icon"></use>
-                </svg>
-            </div>
-            <button class="decrement" disabled>-</button>
-        `;
-    }
-
     setupListeners() {
         const incrementBtn = this.querySelector('.increment');
         const decrementBtn = this.querySelector('.decrement');
         
         incrementBtn.addEventListener('click', () => {
-            // Desabilita todos os outros botões +
             document.querySelectorAll('dice-icon .increment')
                 .forEach(btn => btn.disabled = true);
             
             decrementBtn.disabled = false;
             
-            // Aqui você poderá adicionar a lógica para carregar seu dado 3D
             const sides = this.getAttribute('sides');
-            console.log(`Dado D${sides} selecionado`);
+            const name = this.getAttribute('name');
+            console.log(`Dado ${name} (D${sides}) selecionado`);
         });
 
         decrementBtn.addEventListener('click', () => {
-            // Reabilita todos os botões +
             document.querySelectorAll('dice-icon .increment')
                 .forEach(btn => btn.disabled = false);
             
             decrementBtn.disabled = true;
-            
-            // Aqui você poderá adicionar a lógica para remover seu dado 3D
             console.log('Dado removido');
         });
     }
 }
 
+// Função para carregar dados equipados
+async function loadEquippedDice(uid) {
+    try {
+        const playerRef = doc(db, "players", uid);
+        const playerSnap = await getDoc(playerRef);
+        
+        if (playerSnap.exists() && playerSnap.data().diceStorage) {
+            const diceState = playerSnap.data().diceStorage;
+            
+            if (diceState.equipped) {
+                const equippedDice = Object.values(diceState.equipped)
+                    .filter(dice => dice !== null);
+                
+                updateDiceUI(equippedDice);
+            }
+        }
+    } catch (error) {
+        console.error("Erro ao carregar dados equipados:", error);
+    }
+}
+
+// Função para atualizar a UI dos dados
+function updateDiceUI(equippedDice) {
+    const diceSection = document.getElementById('dice-section');
+    const tableTop = document.getElementById('table-top');
+    const controls = document.getElementById('controls');
+    
+    if (!controls) return;
+    
+    controls.innerHTML = '';
+    
+    equippedDice.forEach(dice => {
+        if (dice && dice.type && dice.name) {
+            const diceIcon = document.createElement('dice-icon');
+            diceIcon.setAttribute('sides', dice.type.replace('D', ''));
+            diceIcon.setAttribute('name', dice.name);
+            controls.appendChild(diceIcon);
+        }
+    });
+}
+
+// Registra o componente personalizado
 customElements.define('dice-icon', DiceIcon);
 
-document.addEventListener('DOMContentLoaded', () => {
-    setupDiceUIToggle();
-});
+// Exporta as funções que serão usadas em outros arquivos
+export { loadEquippedDice, updateDiceUI };
