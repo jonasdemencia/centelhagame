@@ -102,5 +102,4 @@ function updateDiceUI(equippedDice) {
 // Registra o componente personalizado
 customElements.define('dice-icon', DiceIcon);
 
-/ Exporta as funções que serão usadas em outros arquivos
 export { loadEquippedDice, updateDiceUI, initializeModule };
