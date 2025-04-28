@@ -694,3 +694,14 @@ dice-icon svg {
     width: 40px;
     z-index: -1;
 }
+
+.dice-name {
+    font-size: 0.8em;
+    color: #fff;
+    text-align: center;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80px;
+}
