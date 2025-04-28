@@ -151,4 +151,27 @@ async function loadEquippedDice(uid) {
     }
 }
 
-export { loadEquippedDice, initializeModule };
+// ADICIONE ESTA FUNÇÃO AQUI
+function setupDiceUIToggle() {
+    const diceSection = document.getElementById('dice-section');
+    const toggleButton = document.getElementById('toggle-dice-ui');
+    
+    if (diceSection && toggleButton) {
+        toggleButton.addEventListener('click', () => {
+            console.log("Toggle clicked"); // Para debug
+            diceSection.classList.toggle('visible');
+            toggleButton.classList.toggle('active');
+        });
+    } else {
+        console.error("Elementos não encontrados:", {
+            diceSection: !!diceSection,
+            toggleButton: !!toggleButton
+        });
+    }
+}
+
+// ADICIONE ESTE EVENT LISTENER
+document.addEventListener('DOMContentLoaded', setupDiceUIToggle);
+
+// MODIFIQUE O EXPORT PARA INCLUIR A NOVA FUNÇÃO
+export { loadEquippedDice, initializeModule, setupDiceUIToggle };
