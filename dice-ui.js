@@ -1,24 +1,16 @@
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+
 let db;
-let equippedDice = null;
 
 function initializeModule(firestoreInstance) {
     db = firestoreInstance;
-}
-
-function setupDiceUIToggle() {
-    const diceSection = document.getElementById('dice-section');
-    const toggleButton = document.getElementById('toggle-dice-ui');
-    
-    toggleButton?.addEventListener('click', () => {
-        diceSection.classList.toggle('visible');
-        toggleButton.classList.toggle('active');
-    });
 }
 
 class DiceIcon extends HTMLElement {
     constructor() {
         super();
         this.setupElement();
+        this.setupListeners();
     }
 
     setupElement() {
@@ -32,101 +24,104 @@ class DiceIcon extends HTMLElement {
             </div>
             <button class="decrement" disabled>-</button>
         `;
-
-        this.updateState();
-        this.setupListeners();
-    }
-
-    updateState() {
-        if (!equippedDice) return;
-
-        const sides = this.getAttribute('sides');
-        const diceType = `D${sides}`;
-        const diceEquipped = equippedDice[diceType];
-
-        const incrementBtn = this.querySelector('.increment');
-        const icon = this.querySelector('.icon');
-
-        if (!diceEquipped) {
-            // Dado não equipado
-            incrementBtn.disabled = true;
-            icon.classList.add('disabled');
-        } else {
-            // Dado equipado
-            incrementBtn.disabled = false;
-            icon.classList.remove('disabled');
-            // Adiciona o nome do dado como título
-            this.setAttribute('title', diceEquipped.name);
-        }
+        
+        // Estado inicial: desabilitado
+        this.setDisabled(true);
     }
 
     setupListeners() {
         const incrementBtn = this.querySelector('.increment');
-        const decrementBtn = this.querySelector('.decrementet');
+        const decrementBtn = this.querySelector('.decrement');
         
         incrementBtn?.addEventListener('click', () => {
-            if (!this.isEnabled()) return;
-
             document.querySelectorAll('dice-icon .increment')
                 .forEach(btn => btn.disabled = true);
             
             decrementBtn.disabled = false;
             
             const sides = this.getAttribute('sides');
-            const diceType = `D${sides}`;
-            const diceData = equippedDice[diceType];
-            
-            console.log(`Dado ${diceData.name} (D${sides}) selecionado`);
-            // Aqui você pode adicionar a lógica para carregar o dado 3D
+            const name = this.getAttribute('data-dice-name'); // Nome do dado equipado
+            console.log(`Dado ${name} (D${sides}) selecionado`);
         });
 
         decrementBtn?.addEventListener('click', () => {
             document.querySelectorAll('dice-icon .increment')
                 .forEach(btn => {
-                    // Só reabilita os botões de dados equipados
                     const diceIcon = btn.closest('dice-icon');
-                    const sides = diceIcon.getAttribute('sides');
-                    const diceType = `D${sides}`;
-                    if (equippedDice[diceType]) {
+                    if (diceIcon?.hasAttribute('data-equipped')) {
                         btn.disabled = false;
                     }
                 });
             
             decrementBtn.disabled = true;
             console.log('Dado removido');
-            // Aqui você pode adicionar a lógica para remover o dado 3D
         });
     }
 
-    isEnabled() {
-        const sides = this.getAttribute('sides');
-        const diceType = `D${sides}`;
-        return equippedDice && equippedDice[diceType];
+    setDisabled(disabled) {
+        const incrementBtn = this.querySelector('.increment');
+        const icon = this.querySelector('.icon');
+        
+        if (disabled) {
+            incrementBtn.disabled = true;
+            icon.classList.add('disabled');
+            this.removeAttribute('data-equipped');
+            this.removeAttribute('data-dice-name');
+        } else {
+            incrementBtn.disabled = false;
+            icon.classList.remove('disabled');
+            this.setAttribute('data-equipped', 'true');
+        }
     }
 }
 
-// Registra o componente
 customElements.define('dice-icon', DiceIcon);
 
-// Função para carregar dados equipados
 async function loadEquippedDice(uid) {
-    if (!db || !uid) return;
+    if (!db || !uid) {
+        console.error("Firestore não inicializado ou UID não fornecido");
+        return;
+    }
 
     try {
         const playerRef = doc(db, "players", uid);
         const playerSnap = await getDoc(playerRef);
         
-        if (playerSnap.exists() && playerSnap.data().diceStorage?.equipped) {
-            equippedDice = playerSnap.data().diceStorage.equipped;
-            
-            // Atualiza todos os ícones de dados
-            document.querySelectorAll('dice-icon').forEach(icon => {
-                icon.updateState();
-            });
+        if (!playerSnap.exists() || !playerSnap.data().diceStorage?.equipped) {
+            console.log("Nenhum dado equipado encontrado");
+            return;
         }
+
+        const equippedDice = playerSnap.data().diceStorage.equipped;
+        
+        // Atualiza cada ícone de dado
+        document.querySelectorAll('dice-icon').forEach(diceIcon => {
+            const sides = diceIcon.getAttribute('sides');
+            const diceType = `D${sides}`;
+            const equippedDie = equippedDice[diceType];
+
+            if (equippedDie) {
+                diceIcon.setDisabled(false);
+                diceIcon.setAttribute('data-dice-name', equippedDie.name);
+                diceIcon.setAttribute('title', equippedDie.name);
+            } else {
+                diceIcon.setDisabled(true);
+            }
+        });
+
     } catch (error) {
         console.error("Erro ao carregar dados equipados:", error);
     }
+}
+
+function setupDiceUIToggle() {
+    const diceSection = document.getElementById('dice-section');
+    const toggleButton = document.getElementById('toggle-dice-ui');
+    
+    toggleButton?.addEventListener('click', () => {
+        diceSection.classList.toggle('visible');
+        toggleButton.classList.toggle('active');
+    });
 }
 
 document.addEventListener('DOMContentLoaded', setupDiceUIToggle);
