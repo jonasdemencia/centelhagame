@@ -3,6 +3,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebas
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, collection } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
+// Adicione esta linha
+import { loadEquippedDice } from './dice-ui.js';
+
 console.log("LOG: batalha.js carregado.");
 
 // Configuração do Firebase (substitua com suas próprias configurações)
@@ -640,6 +643,10 @@ function endMonsterTurn() {
                         const playerDamage = playerData.dano ? playerData.dano : "1";
                         console.log("LOG: onAuthStateChanged - Dados do jogador carregados:", playerData);
                         console.log("LOG: onAuthStateChanged - Habilidade do jogador:", playerAbilityValue);
+
+
+                                    await loadEquippedDice(user.uid);
+
                         // ---------------------- MODIFICAÇÃO IMPORTANTE AQUI ----------------------
                         playerHealth = playerData.energy?.total ? parseInt(playerData.energy.total) : 8; // Lê a energia de playerData.energy.total
                         console.log("LOG: onAuthStateChanged - Energia do jogador carregada da ficha:", playerHealth);
