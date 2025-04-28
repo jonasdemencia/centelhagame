@@ -634,13 +634,21 @@ function endMonsterTurn() {
             }
 
             const playerDocRef = doc(db, "players", user.uid);
-            getDoc(playerDocRef)
-                .then(docSnap => {
-                    if (docSnap.exists()) {
-                        playerData = docSnap.data();
-                        playerAbilityValue = playerData.habilidade ? playerData.habilidade : 0;
-                        const playerDamage = playerData.dano ? playerData.dano : "1";
-                        console.log("LOG: onAuthStateChanged - Dados do jogador carregados:", playerData);
+getDoc(playerDocRef)
+    .then(async docSnap => {  // Adicione async aqui
+        if (docSnap.exists()) {
+            playerData = docSnap.data();
+            playerAbilityValue = playerData.habilidade ? playerData.habilidade : 0;
+            const playerDamage = playerData.dano ? playerData.dano : "1";
+            
+            // Carrega os dados equipados
+            try {
+                await loadEquippedDice(user.uid);
+            } catch (error) {
+                console.error("Erro ao carregar dados equipados:", error);
+            }
+            
+            console.log("LOG: onAuthStateChanged - Dados do jogador carregados:", playerData);
                         console.log("LOG: onAuthStateChanged - Habilidade do jogador:", playerAbilityValue);
 
 
