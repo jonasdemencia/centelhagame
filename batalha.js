@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, collection } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
-import { loadEquippedDice, initializeModule } from './dice-ui.js';  // Removido updateDiceUI
+
 console.log("LOG: batalha.js carregado.");
 
 // Configuração do Firebase (substitua com suas próprias configurações)
@@ -20,7 +20,6 @@ console.log("LOG: Inicializando Firebase.");
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-initializeModule(db); // Passa a instância do Firestore para o módulo dice-ui
 console.log("LOG: Firebase inicializado.");
 
 async function salvarDropsNoLoot(userId, drops) {
@@ -633,26 +632,14 @@ function endMonsterTurn() {
             }
 
             const playerDocRef = doc(db, "players", user.uid);
-getDoc(playerDocRef)
-    .then(async docSnap => {  // Adicione async aqui
-        if (docSnap.exists()) {
-            playerData = docSnap.data();
-            playerAbilityValue = playerData.habilidade ? playerData.habilidade : 0;
-            const playerDamage = playerData.dano ? playerData.dano : "1";
-            
-            // Carrega os dados equipados
-            try {
-                await loadEquippedDice(user.uid);
-            } catch (error) {
-                console.error("Erro ao carregar dados equipados:", error);
-            }
-            
-            console.log("LOG: onAuthStateChanged - Dados do jogador carregados:", playerData);
+            getDoc(playerDocRef)
+                .then(docSnap => {
+                    if (docSnap.exists()) {
+                        playerData = docSnap.data();
+                        playerAbilityValue = playerData.habilidade ? playerData.habilidade : 0;
+                        const playerDamage = playerData.dano ? playerData.dano : "1";
+                        console.log("LOG: onAuthStateChanged - Dados do jogador carregados:", playerData);
                         console.log("LOG: onAuthStateChanged - Habilidade do jogador:", playerAbilityValue);
-
-
-                                    await loadEquippedDice(user.uid);
-
                         // ---------------------- MODIFICAÇÃO IMPORTANTE AQUI ----------------------
                         playerHealth = playerData.energy?.total ? parseInt(playerData.energy.total) : 8; // Lê a energia de playerData.energy.total
                         console.log("LOG: onAuthStateChanged - Energia do jogador carregada da ficha:", playerHealth);
