@@ -1,7 +1,13 @@
 // Importações do Firebase necessárias
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
-const db = getFirestore();
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
+// Vamos criar uma variável para armazenar a instância do db
+let db;
+
+// Função para inicializar o módulo com a instância do Firestore
+function initializeModule(firestoreInstance) {
+    db = firestoreInstance;
+}
 // Classe DiceIcon
 class DiceIcon extends HTMLElement {
     constructor() {
@@ -49,6 +55,11 @@ class DiceIcon extends HTMLElement {
 
 // Função para carregar dados equipados
 async function loadEquippedDice(uid) {
+    if (!db) {
+        console.error("Firestore não foi inicializado. Chame initializeModule primeiro.");
+        return;
+    }
+
     try {
         const playerRef = doc(db, "players", uid);
         const playerSnap = await getDoc(playerRef);
@@ -91,5 +102,5 @@ function updateDiceUI(equippedDice) {
 // Registra o componente personalizado
 customElements.define('dice-icon', DiceIcon);
 
-// Exporta as funções que serão usadas em outros arquivos
-export { loadEquippedDice, updateDiceUI };
+/ Exporta as funções que serão usadas em outros arquivos
+export { loadEquippedDice, updateDiceUI, initializeModule };
