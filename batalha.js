@@ -2,6 +2,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, collection } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { loadEquippedDice, initializeModule } from './dice-ui.js';
+
 
 console.log("LOG: batalha.js carregado.");
 
@@ -20,6 +22,7 @@ console.log("LOG: Inicializando Firebase.");
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+initializeModule(db);  // Inicializa o módulo de dados
 console.log("LOG: Firebase inicializado.");
 
 async function salvarDropsNoLoot(userId, drops) {
@@ -591,6 +594,7 @@ function endMonsterTurn() {
         if (user) {
             // Usuário está logado!
             const userId = user.uid;
+                    await loadEquippedDice(userId);
             console.log("LOG: Usuário logado. ID:", userId);
             const monsterName = getUrlParameter('monstro');
 
