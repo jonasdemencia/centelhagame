@@ -12,7 +12,19 @@ function setupDiceUIToggle() {
 class DiceIcon extends HTMLElement {
     constructor() {
         super();
-        this.setupElement();
+        const sides = this.getAttribute('sides');
+        const name = this.getAttribute('name');
+        this.innerHTML = `
+            <button class="increment">+</button>
+            <div class="icon">${sides}
+                <svg viewBox="0 0 12 12">
+                    <use xlink:href="#d${sides}-icon"></use>
+                </svg>
+            </div>
+            <button class="decrement" disabled>-</button>
+            <div class="dice-name">${name}</div>
+        `;
+        
         this.setupListeners();
     }
 
