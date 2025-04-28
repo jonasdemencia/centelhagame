@@ -25,65 +25,76 @@ class DiceIcon extends HTMLElement {
             <button class="decrement" disabled>-</button>
         `;
         
-        // Estado inicial: desabilitado
         this.setDisabled(true);
     }
 
     setupListeners() {
-    const incrementBtn = this.querySelector('.increment');
-    const decrementBtn = this.querySelector('.decrement');
-    
-    incrementBtn?.addEventListener('click', () => {
-        if (!this.hasAttribute('data-equipped')) return;
+        const incrementBtn = this.querySelector('.increment');
+        const decrementBtn = this.querySelector('.decrement');
         
-        document.querySelectorAll('dice-icon .increment')
-            .forEach(btn => btn.disabled = true);
-        
-        decrementBtn.disabled = false;
-        
-        const sides = this.getAttribute('sides');
-        const name = this.getAttribute('data-dice-name');
-        
-        // Se for o D6 de Marfim
-        if (sides === '6' && name === 'Dado de Marfim (D6)') {
-            const tableTop = document.getElementById('table-top');
-            if (tableTop) {
-                // Cria o iframe com o dado
-                tableTop.innerHTML = `
-                    <iframe src="dado.html" 
-                            style="width: 100%; height: 100%; border: none;">
-                    </iframe>
-                `;
-                
-                // Adiciona o botão de rolar no UI
-                const controls = document.getElementById('controls');
-                const rollButton = document.createElement('button');
-                rollButton.id = 'roll-dice-button';
-                rollButton.textContent = 'Rolar Dado';
-                controls.appendChild(rollButton);
-            }
-        }
-    });
+        incrementBtn?.addEventListener('click', () => {
+            if (!this.hasAttribute('data-equipped')) return;
+            
+            document.querySelectorAll('dice-icon .increment')
+                .forEach(btn => btn.disabled = true);
+            
+            decrementBtn.disabled = false;
+            
+            const sides = this.getAttribute('sides');
+            const name = this.getAttribute('data-dice-name');
+            
+            if (sides === '6' && name === 'Dado de Marfim (D6)') {
+                const tableTop = document.getElementById('table-top');
+                if (tableTop) {
+                    tableTop.innerHTML = `
+                        <iframe src="dado.html" 
+                                style="width: 100%; height: 100%; border: none; position: absolute;">
+                        </iframe>
+                    `;
+                    
+                    const controls = document.getElementById('controls');
+                    const rollButton = document.createElement('button');
+                    rollButton.id = 'roll-dice-button';
+                    rollButton.textContent = 'Rolar Dado';
+                    controls.appendChild(rollButton);
 
-    decrementBtn?.addEventListener('click', () => {
-        document.querySelectorAll('dice-icon .increment')
-            .forEach(btn => {
-                const diceIcon = btn.closest('dice-icon');
-                if (diceIcon?.hasAttribute('data-equipped')) {
-                    btn.disabled = false;
+                    // Adiciona o estilo do botão igual ao do dado.html
+                    rollButton.style.cssText = `
+                        padding: 12px 25px;
+                        font-size: 1.1rem;
+                        font-weight: bold;
+                        cursor: pointer;
+                        background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
+                        border: none;
+                        border-radius: 8px;
+                        color: #e0e0e0;
+                        text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+                        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
+                                    inset 0px 1px 1px rgba(255,255,255,0.2);
+                        transition: transform 0.15s ease, background 0.2s ease;
+                    `;
                 }
-            });
-        
-        // Limpa o dado e remove o botão
-        const tableTop = document.getElementById('table-top');
-        if (tableTop) tableTop.innerHTML = '';
-        
-        const rollButton = document.getElementById('roll-dice-button');
-        if (rollButton) rollButton.remove();
-        
-        decrementBtn.disabled = true;
-    });
-}
+            }
+        });
+
+        decrementBtn?.addEventListener('click', () => {
+            document.querySelectorAll('dice-icon .increment')
+                .forEach(btn => {
+                    const diceIcon = btn.closest('dice-icon');
+                    if (diceIcon?.hasAttribute('data-equipped')) {
+                        btn.disabled = false;
+                    }
+                });
+            
+            const tableTop = document.getElementById('table-top');
+            if (tableTop) tableTop.innerHTML = '';
+            
+            const rollButton = document.getElementById('roll-dice-button');
+            if (rollButton) rollButton.remove();
+            
+            decrementBtn.disabled = true;
+        });
+    }
 
     setDisabled(disabled) {
         const incrementBtn = this.querySelector('.increment');
@@ -121,7 +132,6 @@ async function loadEquippedDice(uid) {
 
         const equippedDice = playerSnap.data().diceStorage.equipped;
         
-        // Atualiza cada ícone de dado
         document.querySelectorAll('dice-icon').forEach(diceIcon => {
             const sides = diceIcon.getAttribute('sides');
             const diceType = `D${sides}`;
@@ -140,17 +150,5 @@ async function loadEquippedDice(uid) {
         console.error("Erro ao carregar dados equipados:", error);
     }
 }
-
-function setupDiceUIToggle() {
-    const diceSection = document.getElementById('dice-section');
-    const toggleButton = document.getElementById('toggle-dice-ui');
-    
-    toggleButton?.addEventListener('click', () => {
-        diceSection.classList.toggle('visible');
-        toggleButton.classList.toggle('active');
-    });
-}
-
-document.addEventListener('DOMContentLoaded', setupDiceUIToggle);
 
 export { loadEquippedDice, initializeModule };
