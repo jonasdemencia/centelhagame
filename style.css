@@ -666,6 +666,37 @@ dice-icon .icon {
     font-weight: bold;
 }
 
+/* Adicione isto após dice-icon .icon */
+dice-icon .icon.disabled {
+    opacity: 0.3; /* Deixa o ícone mais escuro quando não está equipado */
+    filter: grayscale(100%); /* Remove a cor */
+}
+
+dice-icon .icon.disabled + button {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* Adicione isto para mostrar o nome do dado ao passar o mouse */
+dice-icon[title] {
+    position: relative;
+}
+
+dice-icon[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
 dice-icon button {
     width: 24px;
     height: 24px;
