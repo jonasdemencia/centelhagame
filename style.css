@@ -640,6 +640,8 @@ h1 {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 8px;
     margin-bottom: 10px;
+    position: relative; /* Adicionado para posicionar o iframe */
+    overflow: hidden;   /* Para manter o iframe dentro dos limites */
 }
 
 #controls {
