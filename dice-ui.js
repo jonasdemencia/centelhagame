@@ -83,6 +83,46 @@ function simulateHeight(time, initialVelocity) {
     return Math.max(0, height);
 }
 
+function rollDiceWithPhysics(diceContainer, diceElement, rollButton, resultDisplay = null) {
+    if (diceState.isRolling) return;
+
+    rollButton.disabled = true;
+    rollButton.style.transform = '';
+
+    const pressDuration = Math.min(Date.now() - diceState.pressStartTime, DICE_CONFIG.MAX_PRESS_DURATION);
+    const forceFactor = pressDuration / DICE_CONFIG.MAX_PRESS_DURATION;
+
+    diceState.isRolling = true;
+    diceState.phase = 'throwing';
+
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight * 0.4;
+    const dirX = centerX - window.innerWidth / 2;
+    const dirY = centerY - (window.innerHeight - 50);
+
+    const magnitude = Math.sqrt(dirX * dirX + dirY * dirY);
+    const normalizedX = (dirX / magnitude) + (Math.random() - 0.5) * 0.3;
+    const normalizedY = (dirY / magnitude);
+
+    const force = DICE_CONFIG.INITIAL_FORCE_MULTIPLIER * (0.5 + forceFactor * 0.5);
+    diceState.velocityX = normalizedX * force;
+    diceState.velocityY = normalizedY * force;
+
+    diceState.posX = window.innerWidth / 2;
+    diceState.posY = window.innerHeight - 50;
+    diceState.currentRotation = { x: 0, y: 0, z: 0 };
+    diceState.flightTime = 0;
+    diceState.currentScale = DICE_CONFIG.SCALE.MIN;
+    diceState.targetScale = DICE_CONFIG.SCALE.FLIGHT;
+    diceState.rotationDirection = 1;
+    diceState.currentFaceSequence = [...diceState.faceSequence];
+
+    requestAnimationFrame(() =>
+        animateDice(diceContainer, diceElement, resultDisplay, rollButton)
+    );
+}
+
+
 function animateDice(diceContainer, diceElement, resultDisplay, rollButton) {
     if (!diceState.isRolling) return;
 
@@ -405,21 +445,9 @@ class DiceIcon extends HTMLElement {
                 });
 
                 rollButton.addEventListener('mouseup', () => {
-                    if (diceState.isRolling) return;
-                    rollButton.style.transform = '';
-                    
-                    const pressDuration = Math.min(Date.now() - diceState.pressStartTime, DICE_CONFIG.MAX_PRESS_DURATION);
-                    const forceFactor = pressDuration / DICE_CONFIG.MAX_PRESS_DURATION;
-                    
-                    diceState.isRolling = true;
-                    rollButton.disabled = true;
-                    diceState.phase = 'throwing';
-                    
-                    // Iniciar animação
-                    animateDice(diceVisualContainer, diceElement, null, rollButton);
-                });
-            }
-        });
+    if (diceState.isRolling) return;
+    rollDiceWithPhysics(diceVisualContainer, diceElement, rollButton);
+});
 
         decrementBtn?.addEventListener('click', () => {
             document.querySelectorAll('dice-icon .increment')
