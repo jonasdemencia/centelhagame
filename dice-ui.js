@@ -355,6 +355,10 @@ async function loadEquippedDice(uid) {
     }
 }
 
+function initializeModule() {
+    console.warn("⚠️ initializeModule() foi chamado, mas ainda não está implementado.");
+}
+
 // ADICIONE ESTA FUNÇÃO AQUI
 function setupDiceUIToggle() {
     const diceSection = document.getElementById('dice-section');
