@@ -84,8 +84,31 @@ function simulateHeight(time, initialVelocity) {
 }
 
 function animateDice(diceContainer, diceElement, resultDisplay, rollButton) {
-    // Código adaptado da função original
+    if (!diceState.isRolling) return;
+
+    switch (diceState.phase) {
+        case 'throwing':
+            // ... (adicione toda a lógica do throwing da dado.html aqui)
+            break;
+
+        case 'bouncing':
+            // ... (lógica de bounce)
+            break;
+
+        case 'rolling':
+            // ... (lógica de rolling + parada + cálculo da face)
+            break;
+    }
+
+    updateDiceVisual(diceContainer, diceElement);
+
+    if (diceState.isRolling) {
+        requestAnimationFrame(() =>
+            animateDice(diceContainer, diceElement, resultDisplay, rollButton)
+        );
+    }
 }
+
 
 
 class DiceIcon extends HTMLElement {
