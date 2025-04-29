@@ -378,9 +378,8 @@ function setupDiceUIToggle() {
 // ADICIONE ESTE EVENT LISTENER
 document.addEventListener('DOMContentLoaded', setupDiceUIToggle);
 
-function initializeModule() {
-    // Placeholder por enquanto
-    // console.log("initializeModule chamado");
+function initializeModule(firebaseDb) {
+    db = firebaseDb; // isso resolve o problema
 }
 
 export { loadEquippedDice, initializeModule, setupDiceUIToggle };
