@@ -445,9 +445,21 @@ class DiceIcon extends HTMLElement {
                 });
 
                 rollButton.addEventListener('mouseup', () => {
-    if (diceState.isRolling) return;
-    rollDiceWithPhysics(diceVisualContainer, diceElement, rollButton);
-});
+                     if (diceState.isRolling) return;
+                     rollButton.style.transform = '';
+                     
+                     const pressDuration = Math.min(Date.now() - diceState.pressStartTime, DICE_CONFIG.MAX_PRESS_DURATION);
+                     const forceFactor = pressDuration / DICE_CONFIG.MAX_PRESS_DURATION;
+                     
+                     diceState.isRolling = true;
+                     rollButton.disabled = true;
+                     diceState.phase = 'throwing';
+                     
+                     // Iniciar animação
+                     animateDice(diceVisualContainer, diceElement, null, rollButton);
+                 });
+             }
+         });
 
         decrementBtn?.addEventListener('click', () => {
             document.querySelectorAll('dice-icon .increment')
