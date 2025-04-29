@@ -378,5 +378,9 @@ function setupDiceUIToggle() {
 // ADICIONE ESTE EVENT LISTENER
 document.addEventListener('DOMContentLoaded', setupDiceUIToggle);
 
-// MODIFIQUE O EXPORT PARA INCLUIR A NOVA FUNÇÃO
+function initializeModule() {
+    // Placeholder por enquanto
+    // console.log("initializeModule chamado");
+}
+
 export { loadEquippedDice, initializeModule, setupDiceUIToggle };
