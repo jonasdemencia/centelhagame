@@ -396,7 +396,14 @@ class DiceIcon extends HTMLElement {
                 document.body.appendChild(diceContainer);
                 
                 // Adicionar botão no UI
-                const controls = document.getElementById('controls');
+                const controls = document.querySelector('.controls');
+if (!controls) {
+    console.warn('Elemento ".controls" não encontrado. Botão será adicionado ao final do body.');
+    document.body.appendChild(rollButton);
+} else {
+    controls.appendChild(rollButton);
+}
+
                 const rollButton = document.createElement('button');
                 rollButton.id = 'roll-dice-button';
                 rollButton.textContent = 'Rolar Dado';
