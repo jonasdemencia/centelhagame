@@ -414,13 +414,23 @@ rollButton.style.cssText = `
     transition: transform 0.15s ease, background 0.2s ease;
 `;
 
-const controls = document.querySelector('.controls');
+// Verifica se o container existe, senão cria
+let controls = document.querySelector('.controls');
 if (!controls) {
-    console.warn('Elemento ".controls" não encontrado. Botão será adicionado ao final do body.');
-    document.body.appendChild(rollButton);
-} else {
-    controls.appendChild(rollButton);
+    console.warn('Elemento ".controls" não encontrado. Criando um automaticamente.');
+    controls = document.createElement('div');
+    controls.className = 'controls';
+    controls.style.position = 'fixed';
+    controls.style.bottom = '20px';
+    controls.style.left = '50%';
+    controls.style.transform = 'translateX(-50%)';
+    controls.style.zIndex = '1001';
+    document.body.appendChild(controls);
 }
+
+// Agora sim, adiciona o botão ao container garantido
+controls.appendChild(rollButton);
+
 
 
                 // Configurar eventos do dado
