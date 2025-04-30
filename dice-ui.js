@@ -302,120 +302,178 @@ class DiceIcon extends HTMLElement {
         const decrementBtn = this.querySelector('.decrement');
         
         incrementBtn?.addEventListener('click', () => {
-    if (!this.hasAttribute('data-equipped')) return;
+            if (!this.hasAttribute('data-equipped')) return;
+            
+            document.querySelectorAll('dice-icon .increment')
+                .forEach(btn => btn.disabled = true);
+            
+            decrementBtn.disabled = false;
+            
+            const sides = this.getAttribute('sides');
+            const name = this.getAttribute('data-dice-name');
+            
+            if (sides === '6' && name === 'Dado de Marfim (D6)') {
+                // Criar container do dado na página
+                const diceContainer = document.createElement('div');
+                diceContainer.id = 'simulation-container';
+                diceContainer.innerHTML = `
+                    <div class="dice-perspective-container" id="dice-visual-container">
+                        <div class="dice" id="dice">
+                            <div class="face front">1</div>
+                            <div class="face back">6</div>
+                            <div class="face right">4</div>
+                            <div class="face left">3</div>
+                            <div class="face top">5</div>
+                            <div class="face bottom">2</div>
+                        </div>
+                    </div>
+                `;
 
-    document.querySelectorAll('dice-icon .increment')
-        .forEach(btn => btn.disabled = true);
+                // Adicionar estilos do dado
+                const styleElement = document.createElement('style');
+                styleElement.setAttribute('data-dice-styles', '');
+                styleElement.textContent = `
+                    #simulation-container {
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        width: 300px;
+                        height: 300px;
+                        z-index: 1000;
+                    }
+                    
+                    .dice-perspective-container {
+                        perspective: 1200px;
+                        width: 50px;
+                        height: 50px;
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                    }
+                    
+                    .dice {
+                        width: 100%;
+                        height: 100%;
+                        position: relative;
+                        transform-style: preserve-3d;
+                        transition: transform 0.4s ease-out;
+                    }
+                    
+                    .face {
+                        position: absolute;
+                        width: 100%;
+                        height: 100%;
+                        border-radius: 10px;
+                        border: 1px solid rgba(0, 0, 0, 0.2);
+                        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3),
+                                   0px 8px 15px rgba(0, 0, 0, 0.3);
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        font-family: "Eagle Lake", cursive;
+                        font-size: 1.5rem;
+                        font-weight: bold;
+                        color: rgba(0, 0, 0, 0.6);
+                        text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.3),
+                                   -1px -1px 1px rgba(0, 0, 0, 0.4);
+                        background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.15)),
+                                  #6a7a7a;
+                        backface-visibility: hidden;
+                    }
+                    
+                    .face.front  { transform: rotateY(  0deg) translateZ(25px); }
+                    .face.back   { transform: rotateX(180deg) translateZ(25px); }
+                    .face.right  { transform: rotateY( 90deg) translateZ(25px); }
+                    .face.left   { transform: rotateY(-90deg) translateZ(25px); }
+                    .face.top    { transform: rotateX( 90deg) translateZ(25px); }
+                    .face.bottom { transform: rotateX(-90deg) translateZ(25px); }
+                `;
+                
+                document.head.appendChild(styleElement);
+                document.body.appendChild(diceContainer);
+                
+                // Adicionar botão no UI
+                const controls = document.getElementById('controls');
+                const rollButton = document.createElement('button');
+                rollButton.id = 'roll-dice-button';
+                rollButton.textContent = 'Rolar Dado';
+                rollButton.style.cssText = `
+                    padding: 12px 25px;
+                    font-size: 1.1rem;
+                    font-weight: bold;
+                    cursor: pointer;
+                    background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
+                    border: none;
+                    border-radius: 8px;
+                    color: #e0e0e0;
+                    text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+                    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
+                                inset 0px 1px 1px rgba(255,255,255,0.2);
+                    transition: transform 0.15s ease, background 0.2s ease;
+                `;
+                controls.appendChild(rollButton);
 
-    decrementBtn.disabled = false;
+                // Configurar eventos do dado
+                const diceElement = diceContainer.querySelector('#dice');
+                const diceVisualContainer = diceContainer.querySelector('#dice-visual-container');
+                
+                // Resetar estado do dado
+                Object.assign(diceState, {
+                    isRolling: false,
+                    pressStartTime: 0,
+                    currentRotation: { x: 0, y: 0, z: 0 },
+                    posX: window.innerWidth / 2,
+                    posY: window.innerHeight / 2,
+                    velocityX: 0,
+                    velocityY: 0,
+                    targetScale: 1.0,
+                    currentScale: 1.0,
+                    phase: 'ready',
+                    flightTime: 0,
+                    bounceCount: 0,
+                    rollAngle: 0,
+                    rotationDirection: 1
+                });
 
-    const sides = this.getAttribute('sides');
-    const name = this.getAttribute('data-dice-name');
+                // Configurar eventos do botão
+                rollButton.addEventListener('mousedown', () => {
+                    if (diceState.isRolling) return;
+                    diceState.pressStartTime = Date.now();
+                    rollButton.style.transform = 'scale(0.95)';
+                });
 
-    if (sides === '6' && name === 'Dado de Marfim (D6)') {
-        // Criar container do dado
-        const diceContainer = document.createElement('div');
-        diceContainer.id = 'simulation-container';
-        diceContainer.innerHTML = `
-            <div class="dice-perspective-container" id="dice-visual-container">
-                <div class="dice" id="dice">
-                    <div class="face front">1</div>
-                    <div class="face back">6</div>
-                    <div class="face right">4</div>
-                    <div class="face left">3</div>
-                    <div class="face top">5</div>
-                    <div class="face bottom">2</div>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(diceContainer);
+                rollButton.addEventListener('mouseup', () => {
+    if (diceState.isRolling) return;
+    rollDiceWithPhysics(diceVisualContainer, diceElement, rollButton);
+});
 
-        // Criar botão de rolagem
-        const rollButton = document.createElement('button');
-        rollButton.id = 'roll-dice-button';
-        rollButton.textContent = 'Rolar Dado';
-        rollButton.style.cssText = `
-            padding: 12px 25px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
-            border: none;
-            border-radius: 8px;
-            color: #e0e0e0;
-            text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
-            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
-                        inset 0px 1px 1px rgba(255,255,255,0.2);
-            transition: transform 0.15s ease, background 0.2s ease;
-        `;
+             }
+         });
 
-        // Adicionar o botão à .controls (se existir)
-        const controls = document.querySelector('.controls');
-        if (controls) {
-            controls.appendChild(rollButton);
-        } else {
-            console.warn('Elemento .controls não encontrado, adicionando ao body.');
-            rollButton.style.position = 'fixed';
-            rollButton.style.bottom = '20px';
-            rollButton.style.left = '50%';
-            rollButton.style.transform = 'translateX(-50%)';
-            document.body.appendChild(rollButton);
-        }
-
-        // Resetar estado
-        Object.assign(diceState, {
-            isRolling: false,
-            pressStartTime: 0,
-            currentRotation: { x: 0, y: 0, z: 0 },
-            posX: window.innerWidth / 2,
-            posY: window.innerHeight / 2,
-            velocityX: 0,
-            velocityY: 0,
-            targetScale: 1.0,
-            currentScale: 1.0,
-            phase: 'ready',
-            flightTime: 0,
-            bounceCount: 0,
-            rollAngle: 0,
-            rotationDirection: 1
-        });
-
-        const diceElement = diceContainer.querySelector('#dice');
-        const diceVisualContainer = diceContainer.querySelector('#dice-visual-container');
-
-        rollButton.addEventListener('mousedown', () => {
-            if (diceState.isRolling) return;
-            diceState.pressStartTime = Date.now();
-            rollButton.style.transform = 'scale(0.95)';
-        });
-
-        rollButton.addEventListener('mouseup', () => {
-            if (diceState.isRolling) return;
-            rollDiceWithPhysics(diceVisualContainer, diceElement, rollButton);
-        });
-
-        // Reuso para decrementar — escopo resolvido
-        decrementBtn.addEventListener('click', () => {
-            document.querySelectorAll('dice-icon .increment').forEach(btn => {
-                const diceIcon = btn.closest('dice-icon');
-                if (diceIcon?.hasAttribute('data-equipped')) {
-                    btn.disabled = false;
-                }
-            });
-
+        decrementBtn?.addEventListener('click', () => {
+            document.querySelectorAll('dice-icon .increment')
+                .forEach(btn => {
+                    const diceIcon = btn.closest('dice-icon');
+                    if (diceIcon?.hasAttribute('data-equipped')) {
+                        btn.disabled = false;
+                    }
+                });
+            
+            // Remove o dado e seus elementos
             const diceContainer = document.getElementById('simulation-container');
             if (diceContainer) diceContainer.remove();
-
+            
             const diceStyles = document.querySelector('style[data-dice-styles]');
             if (diceStyles) diceStyles.remove();
-
+            
+            const rollButton = document.getElementById('roll-dice-button');
             if (rollButton) rollButton.remove();
-
+            
             decrementBtn.disabled = true;
         });
     }
-});
-
 
     setDisabled(disabled) {
         const incrementBtn = this.querySelector('.increment');
