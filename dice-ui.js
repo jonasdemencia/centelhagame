@@ -396,7 +396,25 @@ class DiceIcon extends HTMLElement {
                 document.body.appendChild(diceContainer);
                 
                 // Adicionar botão no UI
-                const controls = document.querySelector('.controls');
+                const rollButton = document.createElement('button');
+rollButton.id = 'roll-dice-button';
+rollButton.textContent = 'Rolar Dado';
+rollButton.style.cssText = `
+    padding: 12px 25px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
+    border: none;
+    border-radius: 8px;
+    color: #e0e0e0;
+    text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
+                inset 0px 1px 1px rgba(255,255,255,0.2);
+    transition: transform 0.15s ease, background 0.2s ease;
+`;
+
+const controls = document.querySelector('.controls');
 if (!controls) {
     console.warn('Elemento ".controls" não encontrado. Botão será adicionado ao final do body.');
     document.body.appendChild(rollButton);
@@ -404,24 +422,6 @@ if (!controls) {
     controls.appendChild(rollButton);
 }
 
-                const rollButton = document.createElement('button');
-                rollButton.id = 'roll-dice-button';
-                rollButton.textContent = 'Rolar Dado';
-                rollButton.style.cssText = `
-                    padding: 12px 25px;
-                    font-size: 1.1rem;
-                    font-weight: bold;
-                    cursor: pointer;
-                    background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
-                    border: none;
-                    border-radius: 8px;
-                    color: #e0e0e0;
-                    text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
-                    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5),
-                                inset 0px 1px 1px rgba(255,255,255,0.2);
-                    transition: transform 0.15s ease, background 0.2s ease;
-                `;
-                controls.appendChild(rollButton);
 
                 // Configurar eventos do dado
                 const diceElement = diceContainer.querySelector('#dice');
