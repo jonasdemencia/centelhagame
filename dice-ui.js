@@ -334,14 +334,15 @@ class DiceIcon extends HTMLElement {
                 styleElement.setAttribute('data-dice-styles', '');
                 styleElement.textContent = `
                     #simulation-container {
-                        position: fixed;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        width: 300px;
-                        height: 300px;
-                        z-index: 1000;
-                    }
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    z-index: 1000;
+}
+
                     
                     .dice-perspective-container {
                         perspective: 1200px;
