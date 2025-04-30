@@ -12,7 +12,7 @@ const DICE_CONFIG = {
     FRICTION: 0.98,
     WALL_BOUNCE_DAMPENING: 0.5,
     EDGE_BOUNCE_MULTIPLIER: 1.0,
-    REBOUND_FORCE: 1.5,
+    REBOUND_FORCE: 2.0,
     MAX_VELOCITY: 25,
     COLLISION_COOLDOWN: 300,
     MAX_PRESS_DURATION: 4000,
@@ -59,7 +59,14 @@ function determineRotationAxis() {
 }
 
 function changeRotationOnCollision(isVerticalCollision) {
-    // Código da função original
+    if (isVerticalCollision) {
+    velocityY = -velocityY * DICE_CONFIG.WALL_BOUNCE_DAMPENING;
+    velocityX *= 0.8;
+}
+    if (posY <= 0) {
+    // Rebote extra ao colidir com o topo
+    velocityY = DICE_CONFIG.REBOUND_FORCE * 5;
+    posY = window.innerHeight / 2;
 }
 
 function updateDiceVisual(diceContainer, diceElement) {
@@ -333,15 +340,16 @@ class DiceIcon extends HTMLElement {
                 const styleElement = document.createElement('style');
                 styleElement.setAttribute('data-dice-styles', '');
                 styleElement.textContent = `
-                    #simulation-container {
-                        position: fixed;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        width: 300px;
-                        height: 300px;
-                        z-index: 1000;
-                    }
+    #simulation-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        z-index: 1000;
+    }
+
                     
                     .dice-perspective-container {
                         perspective: 1200px;
