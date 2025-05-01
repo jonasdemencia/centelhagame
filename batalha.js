@@ -273,9 +273,9 @@ document.addEventListener('DOMContentLoaded', () => {
         imagem: "https://via.placeholder.com/150",
         descricao: "Um lobo selvagem com presas afiadas.",
         habilidade: 5,
-        couraça: 10,
-        pontosDeEnergia: 25,
-        pontosDeEnergiaMax: 25,
+        couraça: 1,
+        pontosDeEnergia: 3,
+        pontosDeEnergiaMax: 3,
         experiencePoints: 50,  // XP que dá quando derrotado
         dano: "1D10",
         drops: [
@@ -300,9 +300,9 @@ document.addEventListener('DOMContentLoaded', () => {
         imagem: "https://via.placeholder.com/150",
         descricao: "Um pequeno goblin com olhos espertos.",
         habilidade: 2,
-        couraça: 2,
-        pontosDeEnergia: 15,
-        pontosDeEnergiaMax: 15,
+        couraça: 1,
+        pontosDeEnergia: 3,
+        pontosDeEnergiaMax: 3,
         experiencePoints: 40,  // XP que dá quando derrotado
         dano: "1D6"
     }
