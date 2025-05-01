@@ -364,14 +364,15 @@ class DiceIcon extends HTMLElement {
                 styleElement.setAttribute('data-dice-styles', '');
                 styleElement.textContent = `
                     #simulation-container {
-                        position: fixed;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        width: 300px;
-                        height: 300px;
-                        z-index: 1000;
-                    }
+    position: fixed;
+    top: 0;           // Mudando de 50% para 0
+    left: 50%;
+    transform: translateX(-50%);  // Removendo translateY
+    width: 300px;
+    height: 100vh;    // Mudando para altura total da viewport
+    z-index: 1000;
+}
+
                     
                     .dice-perspective-container {
                         perspective: 1200px;
