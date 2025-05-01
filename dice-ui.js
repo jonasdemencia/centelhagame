@@ -60,14 +60,16 @@ function determineRotationAxis() {
 
 function changeRotationOnCollision(isVerticalCollision) {
     if (isVerticalCollision) {
-    velocityY = -velocityY * DICE_CONFIG.WALL_BOUNCE_DAMPENING;
-    velocityX *= 0.8;
+        velocityY = -velocityY * DICE_CONFIG.WALL_BOUNCE_DAMPENING;
+        velocityX *= 0.8;
+    }
+
+    if (diceState.posY <= 0) {
+        diceState.velocityY = DICE_CONFIG.REBOUND_FORCE * 5;
+        diceState.posY = window.innerHeight / 2;
+    }
 }
-    if (posY <= 0) {
-    // Rebote extra ao colidir com o topo
-    velocityY = DICE_CONFIG.REBOUND_FORCE * 5;
-    posY = window.innerHeight / 2;
-}
+
 
 function updateDiceVisual(diceContainer, diceElement) {
     // Código adaptado da função original
