@@ -354,14 +354,12 @@ class DiceIcon extends HTMLElement {
 
                     
                     .dice-perspective-container {
-                        perspective: 1200px;
-                        width: 50px;
-                        height: 50px;
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                    }
+    perspective: 1200px;
+    width: 50px;
+    height: 50px;
+    position: absolute;
+}
+
                     
                     .dice {
                         width: 100%;
