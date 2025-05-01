@@ -27,6 +27,7 @@ const DICE_CONFIG = {
     INITIAL_FORCE_MULTIPLIER: 35,
     LATERAL_FORCE_RANGE: 8,
     ROTATION_CHANGE_ANGLE: 45,
+    GRAVITY: 0.5,
     SCALE: {
         MIN: 0.8,
         MAX: 2.0,
@@ -135,32 +136,49 @@ function animateDice(diceContainer, diceElement, resultDisplay, rollButton) {
 
     switch (diceState.phase) {
         case 'throwing':
-            diceState.posX += diceState.velocityX;
-            diceState.posY += diceState.velocityY;
+    diceState.posX += diceState.velocityX;
+    diceState.posY += diceState.velocityY;
 
-            diceState.flightTime += 0.05;
-            const height = simulateHeight(diceState.flightTime, 1);
-            diceState.targetScale = DICE_CONFIG.SCALE.MIN + (height * (DICE_CONFIG.SCALE.MAX - DICE_CONFIG.SCALE.MIN));
+    // Adicione gravidade
+    diceState.velocityY += 0.5; // Força da gravidade
 
-            diceState.currentRotation.x += diceState.velocityX * DICE_CONFIG.ROTATION_SPEED * diceState.rotationDirection;
-            diceState.currentRotation.y += diceState.velocityY * DICE_CONFIG.ROTATION_SPEED * diceState.rotationDirection;
+    diceState.flightTime += 0.05;
+    const height = simulateHeight(diceState.flightTime, 1);
+    diceState.targetScale = DICE_CONFIG.SCALE.MIN + (height * (DICE_CONFIG.SCALE.MAX - DICE_CONFIG.SCALE.MIN));
 
-            if (diceState.posX <= 0 || diceState.posX >= window.innerWidth - DICE_CONFIG.DICE_SIZE) {
-                diceState.posX = diceState.posX <= 0 ? 0 : window.innerWidth - DICE_CONFIG.DICE_SIZE;
-                changeRotationOnCollision(false);
-            }
+    diceState.currentRotation.x += diceState.velocityX * DICE_CONFIG.ROTATION_SPEED * diceState.rotationDirection;
+    diceState.currentRotation.y += diceState.velocityY * DICE_CONFIG.ROTATION_SPEED * diceState.rotationDirection;
 
-            if (diceState.posY <= 0 || diceState.posY >= window.innerHeight - DICE_CONFIG.DICE_SIZE) {
-                diceState.posY = diceState.posY <= 0 ? 0 : window.innerHeight - DICE_CONFIG.DICE_SIZE;
-                changeRotationOnCollision(true);
-            }
+    // Colisão com as paredes laterais
+    if (diceState.posX <= 0 || diceState.posX >= window.innerWidth - DICE_CONFIG.DICE_SIZE) {
+        diceState.posX = diceState.posX <= 0 ? 0 : window.innerWidth - DICE_CONFIG.DICE_SIZE;
+        diceState.velocityX = -diceState.velocityX * DICE_CONFIG.WALL_BOUNCE_DAMPENING;
+        changeRotationOnCollision(false);
+    }
 
-            if (diceState.flightTime >= 1) {
-                diceState.phase = 'bouncing';
-                diceState.bounceCount = Math.floor(Math.abs(diceState.velocityX) * 2) + 3;
-                diceState.flightTime = 0;
-            }
-            break;
+    // Colisão com teto e chão
+    if (diceState.posY <= 0 || diceState.posY >= window.innerHeight - DICE_CONFIG.DICE_SIZE) {
+        diceState.posY = diceState.posY <= 0 ? 0 : window.innerHeight - DICE_CONFIG.DICE_SIZE;
+        diceState.velocityY = -diceState.velocityY * DICE_CONFIG.WALL_BOUNCE_DAMPENING;
+        changeRotationOnCollision(true);
+    }
+
+    // Aplica fricção
+    diceState.velocityX *= DICE_CONFIG.FRICTION;
+    diceState.velocityY *= DICE_CONFIG.FRICTION;
+
+    // Limita a velocidade máxima
+    diceState.velocityX = Math.sign(diceState.velocityX) * 
+        Math.min(Math.abs(diceState.velocityX), DICE_CONFIG.MAX_VELOCITY);
+    diceState.velocityY = Math.sign(diceState.velocityY) * 
+        Math.min(Math.abs(diceState.velocityY), DICE_CONFIG.MAX_VELOCITY);
+
+    if (diceState.flightTime >= 1) {
+        diceState.phase = 'bouncing';
+        diceState.bounceCount = Math.floor(Math.abs(diceState.velocityX) * 2) + 3;
+        diceState.flightTime = 0;
+    }
+    break;
 
         case 'bouncing':
             diceState.posX += diceState.velocityX;
