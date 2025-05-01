@@ -170,7 +170,7 @@ function animateDice(diceContainer, diceElement, resultDisplay, rollButton) {
     }
 
     // Colisão com topo e base
-    const TOP_WALL_OFFSET = 10; // Adicione esta linha antes do if
+    const TOP_WALL_OFFSET = 1; // Adicione esta linha antes do if
 if (diceState.posY <= TOP_WALL_OFFSET || diceState.posY >= window.innerHeight - DICE_CONFIG.DICE_SIZE) {
     diceState.posY = diceState.posY <= TOP_WALL_OFFSET ? TOP_WALL_OFFSET : window.innerHeight - DICE_CONFIG.DICE_SIZE;
     changeRotationOnCollision(true);
