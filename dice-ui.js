@@ -2,6 +2,13 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-
 
 let db;
 
+// Adicione estas constantes
+const WALL_BOUNCE_DAMPENING = 0.5;
+const MIN_VELOCITY = 3.5;
+const MAX_VELOCITY = 25;
+const FRICTION = 0.98;
+const DICE_SIZE = 50; // tamanho do dado em pixels
+
 // Configurações do Dado
 const DICE_CONFIG = {
     ROLL_STEP_SIZE: 90,
