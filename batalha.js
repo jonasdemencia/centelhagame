@@ -168,8 +168,62 @@ function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
     }, { merge: true });
 }
 
+// Função para atualizar a experiência do jogador
+async function updatePlayerExperience(userId, xpToAdd) {
+    const playerDocRef = doc(db, "players", userId);
+    
+    try {
+        // Primeiro, pegamos os dados atuais do jogador
+        const playerDoc = await getDoc(playerDocRef);
+        const currentXP = playerDoc.data()?.experience || 0;
+        const newXP = currentXP + xpToAdd;
+        
+        // Atualiza a experiência no Firestore
+        await setDoc(playerDocRef, { 
+            experience: newXP 
+        }, { merge: true });
+
+        console.log(`XP atualizado: +${xpToAdd} XP (Total: ${newXP})`);
+        
+        // Adiciona mensagem no log de batalha
+        if (battleLogContent) {
+            startNewTurnBlock("Sistema");
+            addLogMessage(`Você ganhou ${xpToAdd} pontos de experiência!`);
+            addLogMessage(`Experiência total: ${newXP}`);
+        }
+
+        return newXP;
+    } catch (error) {
+        console.error("Erro ao atualizar experiência:", error);
+        throw error;
+    }
+}
+
+// Função para conceder XP quando o monstro é derrotado
+async function awardExperiencePoints(monsterName) {
+    const monster = monsterData[monsterName];
+    if (!monster || !monster.experiencePoints) {
+        console.error("Monstro não encontrado ou sem XP definido");
+        return;
+    }
+
+    const user = auth.currentUser;
+    if (!user) {
+        console.error("Usuário não está logado");
+        return;
+    }
+
+    return await updatePlayerExperience(user.uid, monster.experiencePoints);
+}
+
+
 function handlePostBattle() {
     console.log("handlePostBattle chamado.");
+    
+    // Concede XP ao jogador
+    if (currentMonster && currentMonster.pontosDeEnergia <= 0) {
+        awardExperiencePoints(monsterName);
+    }
     
     // Reativa o botão de inventário
     const inventarioButton = document.getElementById("abrir-inventario");
@@ -192,6 +246,7 @@ function handlePostBattle() {
     
     battleStarted = false; // Reset do estado da batalha
 }
+
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: DOMContentLoaded evento disparado.");
@@ -221,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
         couraça: 10,
         pontosDeEnergia: 25,
         pontosDeEnergiaMax: 25,
+        experiencePoints: 50,  // XP que dá quando derrotado
         dano: "1D10",
         drops: [
             {
@@ -247,6 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
         couraça: 2,
         pontosDeEnergia: 15,
         pontosDeEnergiaMax: 15,
+        experiencePoints: 40,  // XP que dá quando derrotado
         dano: "1D6"
     }
 };
@@ -670,6 +727,14 @@ if (inventarioButton) {
                             console.log("LOG: onAuthStateChanged - Energia inicial do jogador exibida.");
                         }
 
+                        // Atualiza o display de XP
+const xpDisplay = document.getElementById("player-xp");
+if (xpDisplay) {
+    xpDisplay.textContent = `XP: ${playerData.experience || 0}`;
+    console.log("LOG: onAuthStateChanged - XP do jogador exibido:", playerData.experience || 0);
+}
+
+
                         // Event listener para o botão "Lutar" (AGORA MOVIDO PARA DENTRO DO onAuthStateChanged APÓS CARREGAR OS DADOS)
                         if (lutarButton) {
     lutarButton.disabled = false;
@@ -945,6 +1010,10 @@ if (rollLocationBtn) {
         if (currentMonster.pontosDeEnergia <= 0) {
             console.log(`LOG: Monstro derrotado após ${isSiferDamage ? 'SIFER' : 'Dano Normal'}!`);
             await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+            
+            // Adicione esta linha para conceder XP
+            await awardExperiencePoints(monsterName);
+            
             isPlayerTurn = false; // Garante que o turno não continue
             // Chama handlePostBattle ou lógica similar
             if (typeof handlePostBattle === 'function') {
