@@ -226,11 +226,25 @@ async function updatePlayerExperience(userId, xpToAdd) {
 
         console.log(`XP atualizado: +${xpToAdd} XP (Total: ${newXP})`);
         
-        // Adiciona mensagem no log de batalha
-        if (battleLogContent) {
-            startNewTurnBlock("Sistema");
-            addLogMessage(`Você ganhou ${xpToAdd} pontos de experiência!`);
-            addLogMessage(`Experiência total: ${newXP}`);
+        // Busca o elemento battleLogContent diretamente do DOM
+        const logElement = document.getElementById("battle-log-content");
+        if (logElement) {
+            // Cria uma nova função para adicionar mensagens sem depender de startNewTurnBlock e addLogMessage
+            const div = document.createElement('div');
+            div.classList.add('turn-block');
+            const title = document.createElement('h4');
+            title.textContent = 'Experiência';
+            div.appendChild(title);
+            
+            const msg1 = document.createElement('p');
+            msg1.textContent = `Você ganhou ${xpToAdd} pontos de experiência!`;
+            div.appendChild(msg1);
+            
+            const msg2 = document.createElement('p');
+            msg2.textContent = `Experiência total: ${newXP}`;
+            div.appendChild(msg2);
+            
+            logElement.prepend(div);
         }
 
         return newXP;
@@ -239,6 +253,7 @@ async function updatePlayerExperience(userId, xpToAdd) {
         throw error;
     }
 }
+
 
 // Função para conceder XP quando o monstro é derrotado
 async function awardExperiencePoints(monsterName) {
