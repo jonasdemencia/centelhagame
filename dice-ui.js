@@ -473,8 +473,7 @@ class DiceIcon extends HTMLElement {
     if (diceContainer && diceEl) {
         rollDiceWithPhysics(diceContainer, diceEl, rollButton);
     }
-            }
-        }); // <-- FECHAMENTO CORRETO DO EVENTO DO BOTÃO "+"
+}); // ← ✅ FECHAMENTO CORRETO DA FUNÇÃO
 
 
         decrementBtn?.addEventListener('click', () => {
