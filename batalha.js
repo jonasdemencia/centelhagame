@@ -25,6 +25,47 @@ const db = getFirestore(app);
 initializeModule(db);  // Inicializa o módulo de dados
 console.log("LOG: Firebase inicializado.");
 
+const monsterData = {
+    "lobo": {
+        nome: "Lobo Faminto",
+        imagem: "https://via.placeholder.com/150",
+        descricao: "Um lobo selvagem com presas afiadas.",
+        habilidade: 5,
+        couraça: 1,
+        pontosDeEnergia: 3,
+        pontosDeEnergiaMax: 3,
+        experiencePoints: 50,  // XP que dá quando derrotado
+        dano: "1D10",
+        drops: [
+            {
+                id: "weapon",
+                content: "Espada de madeira",
+                description: "Uma espada de treinamento."
+            },
+            {
+                id: "pocao-cura-minima",
+                content: "Poção de Cura Minima",
+                consumable: true,
+                quantity: 2,
+                effect: "heal",
+                value: 2,
+                description: "Uma poção que restaura uma quantidade minima de energia vital."
+            }
+        ]
+    },
+    "goblin": {
+        nome: "Goblin Sorrateiro",
+        imagem: "https://via.placeholder.com/150",
+        descricao: "Um pequeno goblin com olhos espertos.",
+        habilidade: 2,
+        couraça: 1,
+        pontosDeEnergia: 3,
+        pontosDeEnergiaMax: 3,
+        experiencePoints: 40,  // XP que dá quando derrotado
+        dano: "1D6"
+    }
+};
+
 async function salvarDropsNoLoot(userId, drops) {
     const lootCollectionRef = collection(db, "users", userId, "loot");
 
@@ -267,46 +308,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let battleStarted = false; // Variável de controle para estado da batalha
     console.log("LOG: Variáveis iniciais declaradas.");
 
-    const monsterData = {
-    "lobo": {
-        nome: "Lobo Faminto",
-        imagem: "https://via.placeholder.com/150",
-        descricao: "Um lobo selvagem com presas afiadas.",
-        habilidade: 5,
-        couraça: 1,
-        pontosDeEnergia: 3,
-        pontosDeEnergiaMax: 3,
-        experiencePoints: 50,  // XP que dá quando derrotado
-        dano: "1D10",
-        drops: [
-            {
-                id: "weapon",
-                content: "Espada de madeira",
-                description: "Uma espada de treinamento."
-            },
-            {
-                id: "pocao-cura-minima",
-                content: "Poção de Cura Minima",
-                consumable: true,
-                quantity: 2,
-                effect: "heal",
-                value: 2,
-                description: "Uma poção que restaura uma quantidade minima de energia vital."
-            }
-        ]
-    },
-    "goblin": {
-        nome: "Goblin Sorrateiro",
-        imagem: "https://via.placeholder.com/150",
-        descricao: "Um pequeno goblin com olhos espertos.",
-        habilidade: 2,
-        couraça: 1,
-        pontosDeEnergia: 3,
-        pontosDeEnergiaMax: 3,
-        experiencePoints: 40,  // XP que dá quando derrotado
-        dano: "1D6"
-    }
-};
 
     currentMonster = monsterData[monsterName];
 console.log("LOG: Dados do monstro carregados:", currentMonster);
