@@ -1001,7 +1001,7 @@ if (playerHealth <= 0) {
         const playerAttackRollTotal = playerAttackRollRaw + playerAbilityValue;
         const monsterDefense = currentMonster.couraça || 0;
 
-        await addLogMessage(`Rolando ataque: ${playerAttackRollRaw} + ${playerAbilityValue} (Hab) = ${playerAttackRollTotal} vs Couraça ${monsterDefense}`, 1000);
+        await addLogMessage(`Rolando ataque: ${playerAttackRollRaw} em um d20 + ${playerAbilityValue} (Hab) = ${playerAttackRollTotal} vs Couraça ${monsterDefense}`, 1000);
 
         // *** LÓGICA SIFER (NATURAL 20) ***
         if (playerAttackRollRaw === 20) {
