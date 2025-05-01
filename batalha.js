@@ -330,34 +330,6 @@ async function awardExperiencePoints(monsterName) {
 }
 
 
-// Modifique a função handlePostBattle para receber o monstro como parâmetro
-function handlePostBattle(monster) {
-    console.log("handlePostBattle chamado.");
-    
-    // Reativa o botão de inventário
-    const inventarioButton = document.getElementById("abrir-inventario");
-    if (inventarioButton) {
-        inventarioButton.disabled = false;
-        inventarioButton.style.display = 'block';
-    }
-    
-    // Exibe o botão de loot
-    const lootButton = document.getElementById('loot-button');
-    if (lootButton) {
-        lootButton.style.display = 'block';
-        lootButton.addEventListener('click', () => {
-            console.log("Botão de loot clicado. Redirecionando para loot.html");
-            window.location.href = 'loot.html';
-        });
-    } else {
-        console.error("Erro: Botão de loot não encontrado no HTML.");
-    }
-    
-    battleStarted = false; // Reset do estado da batalha
-}
-
-
-
 document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: DOMContentLoaded evento disparado.");
     const lutarButton = document.getElementById("iniciar-luta");
@@ -376,6 +348,38 @@ document.addEventListener('DOMContentLoaded', () => {
     let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
     let battleStarted = false; // Variável de controle para estado da batalha
     console.log("LOG: Variáveis iniciais declaradas.");
+
+    // Adicione a função handlePostBattle aqui
+    function handlePostBattle() {
+        console.log("handlePostBattle chamado.");
+        
+        // Concede XP ao jogador se o monstro foi derrotado
+        if (currentMonster && currentMonster.pontosDeEnergia <= 0) {
+            // Aqui você pode adicionar a lógica para conceder XP
+            // Por exemplo: awardExperiencePoints(monsterName);
+        }
+        
+        // Reativa o botão de inventário
+        const inventarioButton = document.getElementById("abrir-inventario");
+        if (inventarioButton) {
+            inventarioButton.disabled = false;
+            inventarioButton.style.display = 'block';
+        }
+        
+        // Exibe o botão de loot
+        const lootButton = document.getElementById('loot-button');
+        if (lootButton) {
+            lootButton.style.display = 'block';
+            lootButton.addEventListener('click', () => {
+                console.log("Botão de loot clicado. Redirecionando para loot.html");
+                window.location.href = 'loot.html';
+            });
+        } else {
+            console.error("Erro: Botão de loot não encontrado no HTML.");
+        }
+        
+        battleStarted = false; // Reset do estado da batalha
+    }
 
 
     currentMonster = monsterData[monsterName];
