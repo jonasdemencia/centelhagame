@@ -60,15 +60,24 @@ function determineRotationAxis() {
 
 function changeRotationOnCollision(isVerticalCollision) {
     if (isVerticalCollision) {
-        velocityY = -velocityY * DICE_CONFIG.WALL_BOUNCE_DAMPENING;
-        velocityX *= 0.8;
+        diceState.velocityY = -diceState.velocityY * DICE_CONFIG.WALL_BOUNCE_DAMPENING;
+
+        if (diceState.posY <= 0) {
+            diceState.velocityY = DICE_CONFIG.REBOUND_FORCE * 10;
+            diceState.posY = window.innerHeight / 2;
+        }
+
+        diceState.velocityX *= 0.8;
+    } else {
+        diceState.velocityX = -diceState.velocityX * DICE_CONFIG.WALL_BOUNCE_DAMPENING;
+        diceState.velocityX = Math.sign(diceState.velocityX) *
+            Math.max(Math.abs(diceState.velocityX), DICE_CONFIG.MIN_VELOCITY * 3);
     }
 
-    if (diceState.posY <= 0) {
-        diceState.velocityY = DICE_CONFIG.REBOUND_FORCE * 5;
-        diceState.posY = window.innerHeight / 2;
-    }
+    diceState.velocityX = Math.sign(diceState.velocityX) *
+        Math.min(Math.abs(diceState.velocityX), DICE_CONFIG.MAX_VELOCITY);
 }
+
 
 
 function updateDiceVisual(diceContainer, diceElement) {
@@ -358,7 +367,10 @@ class DiceIcon extends HTMLElement {
     width: 50px;
     height: 50px;
     position: absolute;
+    left: 0;
+    top: 0;
 }
+
 
                     
                     .dice {
@@ -432,8 +444,8 @@ class DiceIcon extends HTMLElement {
                     isRolling: false,
                     pressStartTime: 0,
                     currentRotation: { x: 0, y: 0, z: 0 },
-                    posX: window.innerWidth / 2,
-                    posY: window.innerHeight / 2,
+                    posX: (window.innerWidth - DICE_CONFIG.DICE_SIZE) / 2,
+                    posY: window.innerHeight - DICE_CONFIG.DICE_SIZE - 100,
                     velocityX: 0,
                     velocityY: 0,
                     targetScale: 1.0,
@@ -454,11 +466,15 @@ class DiceIcon extends HTMLElement {
 
                 rollButton.addEventListener('mouseup', () => {
     if (diceState.isRolling) return;
-    rollDiceWithPhysics(diceVisualContainer, diceElement, rollButton);
+
+    const diceContainer = document.getElementById('dice-visual-container');
+    const diceEl = document.getElementById('dice');
+
+    if (diceContainer && diceEl) {
+        rollDiceWithPhysics(diceContainer, diceEl, rollButton);
+    }
 });
 
-             }
-         });
 
         decrementBtn?.addEventListener('click', () => {
             document.querySelectorAll('dice-icon .increment')
@@ -471,15 +487,14 @@ class DiceIcon extends HTMLElement {
             
             // Remove o dado e seus elementos
             const diceContainer = document.getElementById('simulation-container');
+const rollButton = document.getElementById('roll-dice-button');
+const diceStyles = document.querySelector('style[data-dice-styles]');
+
             if (diceContainer) diceContainer.remove();
-            
-            const diceStyles = document.querySelector('style[data-dice-styles]');
-            if (diceStyles) diceStyles.remove();
-            
-            const rollButton = document.getElementById('roll-dice-button');
-            if (rollButton) rollButton.remove();
-            
-            decrementBtn.disabled = true;
+if (rollButton) rollButton.remove();
+if (diceStyles) diceStyles.remove();
+decrementBtn.disabled = true;
+
         });
     }
 
