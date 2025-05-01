@@ -1081,14 +1081,15 @@ if (rollLocationBtn) {
 
 
         // Verifica derrota e passa o turno
-        if (currentMonster.pontosDeEnergia <= 0) {
+        // Verifica derrota e passa o turno
+if (currentMonster.pontosDeEnergia <= 0) {
     console.log(`LOG: Monstro derrotado após ${isSiferDamage ? 'SIFER' : 'Dano Normal'}!`);
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
     isPlayerTurn = false; // Garante que o turno não continue
     
-    // Chama handlePostBattle com o monstro atual
+    // Chama handlePostBattle sem parâmetros
     if (typeof handlePostBattle === 'function') {
-        handlePostBattle(currentMonster);
+        handlePostBattle();  // <-- CORRIGIDO: Não passa parâmetros
     } else {
         console.error("Função handlePostBattle não definida.");
         // Fallback simples
@@ -1099,6 +1100,7 @@ if (rollLocationBtn) {
         if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
     }
 }
+
         } else {
             // Passa o turno para o monstro
             console.log(`LOG: Monstro sobreviveu ao ${isSiferDamage ? 'SIFER' : 'Dano Normal'}. Passando turno.`);
