@@ -12,7 +12,7 @@ const DICE_CONFIG = {
     FRICTION: 0.98,
     WALL_BOUNCE_DAMPENING: 0.5,
     EDGE_BOUNCE_MULTIPLIER: 1.0,
-    REBOUND_FORCE: 2.0,
+    REBOUND_FORCE: 1.5,
     MAX_VELOCITY: 25,
     COLLISION_COOLDOWN: 300,
     MAX_PRESS_DURATION: 4000,
@@ -59,26 +59,8 @@ function determineRotationAxis() {
 }
 
 function changeRotationOnCollision(isVerticalCollision) {
-    if (isVerticalCollision) {
-        diceState.velocityY = -diceState.velocityY * DICE_CONFIG.WALL_BOUNCE_DAMPENING;
-
-        if (diceState.posY <= 0) {
-            diceState.velocityY = DICE_CONFIG.REBOUND_FORCE * 10;
-            diceState.posY = window.innerHeight / 2;
-        }
-
-        diceState.velocityX *= 0.8;
-    } else {
-        diceState.velocityX = -diceState.velocityX * DICE_CONFIG.WALL_BOUNCE_DAMPENING;
-        diceState.velocityX = Math.sign(diceState.velocityX) *
-            Math.max(Math.abs(diceState.velocityX), DICE_CONFIG.MIN_VELOCITY * 3);
-    }
-
-    diceState.velocityX = Math.sign(diceState.velocityX) *
-        Math.min(Math.abs(diceState.velocityX), DICE_CONFIG.MAX_VELOCITY);
+    // Código da função original
 }
-
-
 
 function updateDiceVisual(diceContainer, diceElement) {
     // Código adaptado da função original
@@ -351,27 +333,25 @@ class DiceIcon extends HTMLElement {
                 const styleElement = document.createElement('style');
                 styleElement.setAttribute('data-dice-styles', '');
                 styleElement.textContent = `
-    #simulation-container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-        z-index: 1000;
-    }
-
+                    #simulation-container {
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        width: 300px;
+                        height: 300px;
+                        z-index: 1000;
+                    }
                     
                     .dice-perspective-container {
-    perspective: 1200px;
-    width: 50px;
-    height: 50px;
-    position: absolute;
-    left: 0;
-    top: 0;
-}
-
-
+                        perspective: 1200px;
+                        width: 50px;
+                        height: 50px;
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                    }
                     
                     .dice {
                         width: 100%;
@@ -444,8 +424,8 @@ class DiceIcon extends HTMLElement {
                     isRolling: false,
                     pressStartTime: 0,
                     currentRotation: { x: 0, y: 0, z: 0 },
-                    posX: (window.innerWidth - DICE_CONFIG.DICE_SIZE) / 2,
-                    posY: window.innerHeight - DICE_CONFIG.DICE_SIZE - 100,
+                    posX: window.innerWidth / 2,
+                    posY: window.innerHeight / 2,
                     velocityX: 0,
                     velocityY: 0,
                     targetScale: 1.0,
@@ -466,15 +446,11 @@ class DiceIcon extends HTMLElement {
 
                 rollButton.addEventListener('mouseup', () => {
     if (diceState.isRolling) return;
-
-    const diceContainer = document.getElementById('dice-visual-container');
-    const diceEl = document.getElementById('dice');
-
-    if (diceContainer && diceEl) {
-        rollDiceWithPhysics(diceContainer, diceEl, rollButton);
-    }
+    rollDiceWithPhysics(diceVisualContainer, diceElement, rollButton);
 });
 
+             }
+         });
 
         decrementBtn?.addEventListener('click', () => {
             document.querySelectorAll('dice-icon .increment')
@@ -487,14 +463,15 @@ class DiceIcon extends HTMLElement {
             
             // Remove o dado e seus elementos
             const diceContainer = document.getElementById('simulation-container');
-const rollButton = document.getElementById('roll-dice-button');
-const diceStyles = document.querySelector('style[data-dice-styles]');
-
             if (diceContainer) diceContainer.remove();
-if (rollButton) rollButton.remove();
-if (diceStyles) diceStyles.remove();
-decrementBtn.disabled = true;
-
+            
+            const diceStyles = document.querySelector('style[data-dice-styles]');
+            if (diceStyles) diceStyles.remove();
+            
+            const rollButton = document.getElementById('roll-dice-button');
+            if (rollButton) rollButton.remove();
+            
+            decrementBtn.disabled = true;
         });
     }
 
