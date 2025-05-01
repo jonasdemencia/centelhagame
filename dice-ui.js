@@ -121,7 +121,7 @@ function rollDiceWithPhysics(diceContainer, diceElement, rollButton, resultDispl
     diceState.phase = 'throwing';
 
     const centerX = window.innerWidth / 2;
-    const centerY = window.innerHeight * 0.1;
+    const centerY = window.innerHeight * 0;
     const dirX = centerX - window.innerWidth / 2;
     const dirY = centerY - (window.innerHeight - 50);
 
