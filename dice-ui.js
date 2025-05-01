@@ -59,8 +59,71 @@ let diceState = {
 
 // Funções auxiliares do dado
 function getTopFaceFromRotation(x, y, z) {
-    // Código da função original
+    // Normaliza ângulos para 0, 90, 180, 270
+    const normX = (x % 360 + 360) % 360;
+    const normY = (y % 360 + 360) % 360;
+    const normZ = (z % 360 + 360) % 360;
+
+    console.log(`getTopFace input (norm): X=${normX}, Y=${normY}, Z=${normZ}`);
+
+    // Casos com Z=90
+    if (normZ === 90) {
+        if (normX === 0) {
+            if (normY === 270) return 5;
+            if (normY === 180) return 6;
+            if (normY === 90) return 2;
+        }
+        if (normX === 90) {
+            if (normY === 180) return 4;
+            if (normY === 270) return 4;
+            if (normY === 0) return 4;
+        }
+        if (normX === 180) {
+            if (normY === 0) return 6;
+            if (normY === 270) return 2;
+        }
+        if (normX === 270) {
+            if (normY === 180) return 3;
+            if (normY === 0) return 3;
+            if (normY === 270) return 3;
+        }
+    }
+
+    // Casos com Z=0
+    if (normZ === 0) {
+        if (normX === 0) {
+            if (normY === 270) return 4;
+            if (normY === 180) return 6;
+            if (normY === 90) return 3;
+        }
+        if (normX === 90) {
+            if (normY === 270) return 2;
+            if (normY === 180) return 2;
+            if (normY === 90) return 2;
+        }
+        if (normX === 180) {
+            if (normY === 180) return 1;
+            if (normY === 90) return 4;
+        }
+        if (normX === 270) {
+            if (normY === 270) return 5;
+            if (normY === 180) return 5;
+            if (normY === 90) return 5;
+        }
+    }
+
+    // Casos base (quando Y=0 e Z=0)
+    if (normY === 0 && normZ === 0) {
+        if (normX === 0) return 1;
+        if (normX === 90) return 2;
+        if (normX === 180) return 6;
+        if (normX === 270) return 5;
+    }
+
+    console.warn(`Combinacao de angulos nao mapeada: X=${normX}, Y=${normY}, Z=${normZ}. Retornando 1 como padrao.`);
+    return 1;
 }
+
 
 function determineRotationAxis() {
     return Math.random() < 0.5 ? 'z' : 'x';
