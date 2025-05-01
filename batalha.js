@@ -303,13 +303,9 @@ async function awardExperiencePoints(monsterName) {
 }
 
 
-function handlePostBattle() {
+// Modifique a função handlePostBattle para receber o monstro como parâmetro
+function handlePostBattle(monster) {
     console.log("handlePostBattle chamado.");
-    
-    // Concede XP ao jogador
-    if (currentMonster && currentMonster.pontosDeEnergia <= 0) {
-        awardExperiencePoints(monsterName);
-    }
     
     // Reativa o botão de inventário
     const inventarioButton = document.getElementById("abrir-inventario");
@@ -332,6 +328,7 @@ function handlePostBattle() {
     
     battleStarted = false; // Reset do estado da batalha
 }
+
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1054,25 +1051,23 @@ if (rollLocationBtn) {
 
         // Verifica derrota e passa o turno
         if (currentMonster.pontosDeEnergia <= 0) {
-            console.log(`LOG: Monstro derrotado após ${isSiferDamage ? 'SIFER' : 'Dano Normal'}!`);
-            await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-            
-            // Adicione esta linha para conceder XP
-            await awardExperiencePoints(monsterName);
-            
-            isPlayerTurn = false; // Garante que o turno não continue
-            // Chama handlePostBattle ou lógica similar
-            if (typeof handlePostBattle === 'function') {
-                 handlePostBattle();
-            } else {
-                console.error("Função handlePostBattle não definida.");
-                 // Fallback simples
-                 const lootBtn = document.getElementById('loot-button');
-                 const mapBtn = document.getElementById('back-to-map-button');
-                 if (lootBtn && currentMonster.drops?.length > 0) lootBtn.style.display = 'block';
-                 if (mapBtn) mapBtn.style.display = 'block';
-                 if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
-            }
+    console.log(`LOG: Monstro derrotado após ${isSiferDamage ? 'SIFER' : 'Dano Normal'}!`);
+    await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+    isPlayerTurn = false; // Garante que o turno não continue
+    
+    // Chama handlePostBattle com o monstro atual
+    if (typeof handlePostBattle === 'function') {
+        handlePostBattle(currentMonster);
+    } else {
+        console.error("Função handlePostBattle não definida.");
+        // Fallback simples
+        const lootBtn = document.getElementById('loot-button');
+        const mapBtn = document.getElementById('back-to-map-button');
+        if (lootBtn && currentMonster.drops?.length > 0) lootBtn.style.display = 'block';
+        if (mapBtn) mapBtn.style.display = 'block';
+        if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+    }
+}
         } else {
             // Passa o turno para o monstro
             console.log(`LOG: Monstro sobreviveu ao ${isSiferDamage ? 'SIFER' : 'Dano Normal'}. Passando turno.`);
