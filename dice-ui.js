@@ -170,10 +170,12 @@ function animateDice(diceContainer, diceElement, resultDisplay, rollButton) {
     }
 
     // Colisão com topo e base
-    if (diceState.posY <= 0 || diceState.posY >= window.innerHeight - DICE_CONFIG.DICE_SIZE) {
-        diceState.posY = diceState.posY <= 0 ? 0 : window.innerHeight - DICE_CONFIG.DICE_SIZE;
-        changeRotationOnCollision(true);
-    }
+    const TOP_WALL_OFFSET = 20; // Adicione esta linha antes do if
+if (diceState.posY <= TOP_WALL_OFFSET || diceState.posY >= window.innerHeight - DICE_CONFIG.DICE_SIZE) {
+    diceState.posY = diceState.posY <= TOP_WALL_OFFSET ? TOP_WALL_OFFSET : window.innerHeight - DICE_CONFIG.DICE_SIZE;
+    changeRotationOnCollision(true);
+}
+
 
     if (diceState.flightTime >= 1) {
         diceState.phase = 'bouncing';
