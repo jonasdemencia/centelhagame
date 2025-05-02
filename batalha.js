@@ -219,8 +219,8 @@ document.addEventListener('DOMContentLoaded', () => {
         descricao: "Um lobo selvagem com presas afiadas.",
         habilidade: 5,
         couraça: 10,
-        pontosDeEnergia: 25,
-        pontosDeEnergiaMax: 25,
+        pontosDeEnergia: 2,
+        pontosDeEnergiaMax: 2,
         dano: "1D10",
         drops: [
             {
@@ -245,8 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
         descricao: "Um pequeno goblin com olhos espertos.",
         habilidade: 2,
         couraça: 2,
-        pontosDeEnergia: 15,
-        pontosDeEnergiaMax: 15,
+        pontosDeEnergia: 1,
+        pontosDeEnergiaMax: 1,
         dano: "1D6"
     }
 };
