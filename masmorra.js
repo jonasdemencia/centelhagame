@@ -1,7 +1,7 @@
 // Importa os SDKs necessários do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 console.log("LOG: masmorra.js carregado.");
 
@@ -22,7 +22,12 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 console.log("LOG: Firebase inicializado.");
 
-// Dados da masmorra
+// Variáveis globais
+let currentLogBlock = null;
+let playerData = null;
+let userId = null;
+
+// Dados da masmorra - Definição das salas e corredores
 const dungeon = {
     name: "Ruínas de Undermountain",
     description: "Uma vasta masmorra sob a cidade de Águas Profundas.",
@@ -43,7 +48,7 @@ const dungeon = {
             width: 10, // Largura em unidades SVG
             height: 20, // Altura em unidades SVG
             events: [
-                { type: "first-visit", text: "O ar está frio e você sente um arrepio na espinha." }
+                { type: "first-visit", text: "O ar está frio e você sente um arrepio na espinha ao entrar neste lugar antigo." }
             ]
         },
         "room-2": {
@@ -63,7 +68,7 @@ const dungeon = {
             width: 20,
             height: 20,
             events: [
-                { type: "first-visit", text: "As estátuas parecem observar seus movimentos." }
+                { type: "first-visit", text: "As estátuas de pedra parecem observar seus movimentos com olhos vazios." }
             ]
         },
         "room-3": {
@@ -81,7 +86,10 @@ const dungeon = {
             width: 15,
             height: 15,
             events: [
-                { type: "first-visit", text: "Você vê um baú ornamentado no centro da sala." }
+                { type: "first-visit", text: "Você vê um baú ornamentado no centro da sala, coberto por uma fina camada de poeira." }
+            ],
+            items: [
+                { id: "gold-coins", name: "Moedas de Ouro", description: "Um punhado de moedas de ouro antigas.", quantity: 50 }
             ]
         },
         "room-4": {
@@ -90,7 +98,8 @@ const dungeon = {
             description: "Uma sala com armas antigas penduradas nas paredes.",
             type: "room",
             exits: [
-                { direction: "east", leadsTo: "room-2", type: "door", locked: false }
+                { direction: "east", leadsTo: "room-2", type: "door", locked: false },
+                { direction: "north", leadsTo: "room-5", type: "door", locked: false }
             ],
             visited: false,
             discovered: false,
@@ -99,7 +108,25 @@ const dungeon = {
             width: 15,
             height: 15,
             events: [
-                { type: "first-visit", text: "Armas antigas e enferrujadas decoram as paredes." }
+                { type: "first-visit", text: "Armas antigas e enferrujadas decoram as paredes. A maioria parece inútil após séculos de abandono." }
+            ]
+        },
+        "room-5": {
+            id: "room-5",
+            name: "Câmara Ritual",
+            description: "Uma sala circular com símbolos arcanos gravados no chão.",
+            type: "room",
+            exits: [
+                { direction: "south", leadsTo: "room-4", type: "door", locked: false }
+            ],
+            visited: false,
+            discovered: false,
+            x: 20,
+            y: 20,
+            width: 18,
+            height: 18,
+            events: [
+                { type: "first-visit", text: "Símbolos estranhos brilham levemente no chão. Você sente uma presença antiga neste lugar." }
             ]
         }
     }
@@ -114,29 +141,62 @@ let playerState = {
     health: 100
 };
 
-// Função para adicionar mensagem ao log de exploração
-function addLogMessage(message, delay = 0, typingSpeed = 30) {
+// Função para iniciar um novo bloco de log
+function startNewLogBlock(title) {
     const logContainer = document.getElementById("exploration-log-content");
+    
+    if (currentLogBlock) {
+        logContainer.appendChild(currentLogBlock);
+    }
+    
+    currentLogBlock = document.createElement('div');
+    currentLogBlock.classList.add('log-block');
+    
+    const blockTitle = document.createElement('h4');
+    blockTitle.textContent = title;
+    currentLogBlock.appendChild(blockTitle);
+    
+    logContainer.appendChild(currentLogBlock);
+    return currentLogBlock;
+}
+
+// Função para adicionar mensagem ao log de exploração
+async function addLogMessage(message, delay = 0, typingSpeed = 30) {
+    if (!currentLogBlock) {
+        startNewLogBlock("Exploração");
+    }
+    
     return new Promise((resolve) => {
-        const logEntry = document.createElement('div');
-        logEntry.classList.add('log-entry');
-        logContainer.appendChild(logEntry);
-        
+        const p = document.createElement('p');
+        currentLogBlock.appendChild(p);
         let index = 0;
-        const text = message;
 
         function typeWriter() {
-            if (index < text.length) {
-                logEntry.textContent += text.charAt(index);
-                index++;
+            if (index < message.length) {
+                if (message.charAt(index) === '<') {
+                    // Se encontrar uma tag HTML, adiciona a tag completa de uma vez
+                    const closeTagIndex = message.indexOf('>', index);
+                    if (closeTagIndex !== -1) {
+                        p.innerHTML += message.substring(index, closeTagIndex + 1);
+                        index = closeTagIndex + 1;
+                    } else {
+                        p.innerHTML += message.charAt(index);
+                        index++;
+                    }
+                } else {
+                    p.innerHTML += message.charAt(index);
+                    index++;
+                }
                 setTimeout(typeWriter, typingSpeed);
             } else {
                 if (delay > 0) {
                     setTimeout(() => {
+                        const logContainer = document.getElementById("exploration-log-content");
                         logContainer.scrollTop = logContainer.scrollHeight;
                         resolve();
                     }, delay);
                 } else {
+                    const logContainer = document.getElementById("exploration-log-content");
                     logContainer.scrollTop = logContainer.scrollHeight;
                     resolve();
                 }
@@ -146,7 +206,8 @@ function addLogMessage(message, delay = 0, typingSpeed = 30) {
         if (typingSpeed > 0) {
             typeWriter();
         } else {
-            logEntry.textContent = text;
+            p.innerHTML = message;
+            const logContainer = document.getElementById("exploration-log-content");
             logContainer.scrollTop = logContainer.scrollHeight;
             resolve();
         }
@@ -177,7 +238,7 @@ function drawMap() {
         roomElement.setAttribute("y", room.y - room.height/2);
         roomElement.setAttribute("width", room.width);
         roomElement.setAttribute("height", room.height);
-        roomElement.setAttribute("class", `room ${room.type} ${room.visited ? 'visited' : 'discovered'}`);
+        roomElement.setAttribute("class", `room ${room.type} ${playerState.visitedRooms.includes(room.id) ? 'visited' : 'discovered'}`);
         roomElement.setAttribute("data-room-id", room.id);
         
         mapRooms.appendChild(roomElement);
@@ -185,45 +246,48 @@ function drawMap() {
         // Desenha as portas
         if (room.exits) {
             room.exits.forEach(exit => {
-                if (exit.type === "door") {
-                    const doorX = room.x;
-                    const doorY = room.y;
-                    let doorWidth = 4;
-                    let doorHeight = 4;
-                    
-                    // Ajusta a posição da porta com base na direção
-                    switch (exit.direction) {
-                        case "north":
-                            doorX = room.x;
-                            doorY = room.y - room.height/2;
-                            break;
-                        case "south":
-                            doorX = room.x;
-                            doorY = room.y + room.height/2;
-                            break;
-                        case "east":
-                            doorX = room.x + room.width/2;
-                            doorY = room.y;
-                            doorWidth = 2;
-                            doorHeight = 6;
-                            break;
-                        case "west":
-                            doorX = room.x - room.width/2;
-                            doorY = room.y;
-                            doorWidth = 2;
-                            doorHeight = 6;
-                            break;
+                // Só desenha a porta se a sala de destino também estiver descoberta
+                if (playerState.discoveredRooms.includes(exit.leadsTo)) {
+                    if (exit.type === "door") {
+                        let doorX = room.x;
+                        let doorY = room.y;
+                        let doorWidth = 4;
+                        let doorHeight = 4;
+                        
+                        // Ajusta a posição da porta com base na direção
+                        switch (exit.direction) {
+                            case "north":
+                                doorX = room.x;
+                                doorY = room.y - room.height/2;
+                                break;
+                            case "south":
+                                doorX = room.x;
+                                doorY = room.y + room.height/2;
+                                break;
+                            case "east":
+                                doorX = room.x + room.width/2;
+                                doorY = room.y;
+                                doorWidth = 2;
+                                doorHeight = 6;
+                                break;
+                            case "west":
+                                doorX = room.x - room.width/2;
+                                doorY = room.y;
+                                doorWidth = 2;
+                                doorHeight = 6;
+                                break;
+                        }
+                        
+                        const doorElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        doorElement.setAttribute("x", doorX - doorWidth/2);
+                        doorElement.setAttribute("y", doorY - doorHeight/2);
+                        doorElement.setAttribute("width", doorWidth);
+                        doorElement.setAttribute("height", doorHeight);
+                        doorElement.setAttribute("class", `door ${exit.locked ? 'locked' : ''}`);
+                        doorElement.setAttribute("data-exit-to", exit.leadsTo);
+                        
+                        mapDoors.appendChild(doorElement);
                     }
-                    
-                    const doorElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                    doorElement.setAttribute("x", doorX - doorWidth/2);
-                    doorElement.setAttribute("y", doorY - doorHeight/2);
-                    doorElement.setAttribute("width", doorWidth);
-                    doorElement.setAttribute("height", doorHeight);
-                    doorElement.setAttribute("class", `door ${exit.locked ? 'locked' : ''}`);
-                    doorElement.setAttribute("data-exit-to", exit.leadsTo);
-                    
-                    mapDoors.appendChild(doorElement);
                 }
             });
         }
@@ -259,9 +323,9 @@ async function moveToRoom(roomId) {
     }
     
     // Marca a sala como visitada se ainda não estiver
-    if (!playerState.visitedRooms.includes(roomId)) {
+    const isFirstVisit = !playerState.visitedRooms.includes(roomId);
+    if (isFirstVisit) {
         playerState.visitedRooms.push(roomId);
-        room.visited = true;
         
         // Processa eventos de primeira visita
         const firstVisitEvents = room.events?.filter(event => event.type === "first-visit") || [];
@@ -271,7 +335,7 @@ async function moveToRoom(roomId) {
     }
     
     // Adiciona descrição da sala ao log
-    await addLogMessage(`Você está em: ${room.name}`, 500);
+    startNewLogBlock(room.name);
     await addLogMessage(room.description, 1000);
     
     // Atualiza o mapa
@@ -324,12 +388,139 @@ function updateDirectionButtons() {
     });
 }
 
+// Função para examinar a sala atual
+async function examineRoom() {
+    const currentRoom = dungeon.rooms[playerState.currentRoom];
+    if (!currentRoom) return;
+    
+    startNewLogBlock("Examinar");
+    await addLogMessage(`Você examina a ${currentRoom.name} com cuidado.`, 500);
+    
+    // Descrição detalhada com base no tipo de sala
+    let detailedDescription = "";
+    switch (currentRoom.type) {
+        case "corridor":
+            detailedDescription = "O corredor é estreito e úmido. Gotas de água escorrem pelas paredes de pedra.";
+            break;
+        case "room":
+            detailedDescription = "A sala tem um teto alto e paredes de pedra antiga. O chão está coberto por uma fina camada de poeira.";
+            break;
+        default:
+            detailedDescription = "Você não nota nada de especial.";
+    }
+    
+    await addLogMessage(detailedDescription, 1000);
+    
+    // Verifica se há itens na sala
+    if (currentRoom.items && currentRoom.items.length > 0) {
+        await addLogMessage("Você encontra algo interessante:", 800);
+        for (const item of currentRoom.items) {
+            await addLogMessage(`- ${item.name}: ${item.description}`, 500);
+        }
+    }
+}
+
+// Função para procurar na sala atual
+async function searchRoom() {
+    const currentRoom = dungeon.rooms[playerState.currentRoom];
+    if (!currentRoom) return;
+    
+    startNewLogBlock("Procurar");
+    await addLogMessage("Você procura cuidadosamente por itens ou passagens secretas...", 1000);
+    
+    // Chance de encontrar algo (50%)
+    const foundSomething = Math.random() > 0.5;
+    
+    if (foundSomething && currentRoom.items && currentRoom.items.length > 0) {
+        // Encontrou um item
+        const item = currentRoom.items[0]; // Pega o primeiro item
+        await addLogMessage(`Você encontrou: <strong>${item.name}</strong>!`, 800);
+        await addLogMessage(item.description, 500);
+        
+        // Adiciona o item ao inventário
+        playerState.inventory.push(item);
+        
+        // Remove o item da sala
+        currentRoom.items.splice(0, 1);
+        
+        // Salva o estado
+        savePlayerState();
+    } else {
+        await addLogMessage("Você não encontrou nada de interessante.", 800);
+    }
+}
+
+// Função para tentar abrir uma porta
+async function openDoor(direction) {
+    const currentRoom = dungeon.rooms[playerState.currentRoom];
+    if (!currentRoom || !currentRoom.exits) return;
+    
+    // Encontra a saída na direção especificada
+    const exit = currentRoom.exits.find(e => e.direction === direction);
+    if (!exit) {
+        await addLogMessage(`Não há saída na direção ${direction}.`, 500);
+        return;
+    }
+    
+    startNewLogBlock("Abrir Porta");
+    
+    if (exit.locked) {
+        await addLogMessage(`A porta está trancada.`, 500);
+        
+        // Verifica se o jogador tem a chave
+        const hasKey = playerState.inventory.some(item => item.id === exit.keyId);
+        if (hasKey) {
+            await addLogMessage(`Você usa a chave para destrancar a porta.`, 800);
+            exit.locked = false;
+            updateDirectionButtons();
+        } else {
+            await addLogMessage(`Você precisa de uma chave para abrir esta porta.`, 800);
+        }
+    } else {
+        await addLogMessage(`Você abre a porta.`, 500);
+        
+        // Descobre a sala do outro lado
+        if (!playerState.discoveredRooms.includes(exit.leadsTo)) {
+            playerState.discoveredRooms.push(exit.leadsTo);
+            await addLogMessage(`Você vê uma nova área além da porta.`, 800);
+            drawMap();
+        }
+        
+        // Pergunta se quer entrar
+        await addLogMessage(`Deseja entrar?`, 500);
+        
+        // Atualiza os botões de direção
+        updateDirectionButtons();
+    }
+}
+
+// Função para descansar
+async function rest() {
+    startNewLogBlock("Descansar");
+    await addLogMessage("Você decide descansar um pouco para recuperar suas forças...", 1000);
+    
+    // Recupera um pouco de saúde
+    const healthRecovered = Math.floor(Math.random() * 10) + 5; // 5-15 pontos
+    playerState.health = Math.min(100, playerState.health + healthRecovered);
+    
+    await addLogMessage(`Você recuperou ${healthRecovered} pontos de energia.`, 800);
+    await addLogMessage(`Energia atual: ${playerState.health}/100`, 500);
+    
+    // Chance de evento aleatório durante o descanso (20%)
+    const randomEvent = Math.random() < 0.2;
+    if (randomEvent) {
+        await addLogMessage("Durante seu descanso, você ouve sons estranhos ecoando pela masmorra...", 1000);
+    }
+    
+    // Salva o estado
+    savePlayerState();
+}
+
 // Função para salvar o estado do jogador no Firestore
 function savePlayerState() {
-    const user = auth.currentUser;
-    if (!user) return;
+    if (!userId) return;
     
-    const dungeonStateRef = doc(db, "dungeons", user.uid);
+    const dungeonStateRef = doc(db, "dungeons", userId);
     setDoc(dungeonStateRef, {
         currentRoom: playerState.currentRoom,
         discoveredRooms: playerState.discoveredRooms,
@@ -348,10 +539,9 @@ function savePlayerState() {
 
 // Função para carregar o estado do jogador do Firestore
 async function loadPlayerState() {
-    const user = auth.currentUser;
-    if (!user) return;
+    if (!userId) return;
     
-    const dungeonStateRef = doc(db, "dungeons", user.uid);
+    const dungeonStateRef = doc(db, "dungeons", userId);
     try {
         const docSnap = await getDoc(dungeonStateRef);
         if (docSnap.exists()) {
@@ -363,13 +553,6 @@ async function loadPlayerState() {
                 inventory: data.inventory || [],
                 health: data.health || 100
             };
-            
-            // Atualiza o estado das salas
-            playerState.visitedRooms.forEach(roomId => {
-                if (dungeon.rooms[roomId]) {
-                    dungeon.rooms[roomId].visited = true;
-                }
-            });
             
             console.log("Estado da masmorra carregado com sucesso!");
         } else {
@@ -401,33 +584,110 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Botões de direção
-    const directionButtons = document.querySelectorAll(".direction-btn");
-    directionButtons.forEach(button => {
-        button.addEventListener("click", () => {
-            const leadsTo = button.dataset.leadsTo;
-            if (leadsTo) {
-                moveToRoom(leadsTo);
-            }
-        });
+    const northBtn = document.getElementById("go-north");
+    const southBtn = document.getElementById("go-south");
+    const eastBtn = document.getElementById("go-east");
+    const westBtn = document.getElementById("go-west");
+    
+    if (northBtn) northBtn.addEventListener("click", () => {
+        const leadsTo = northBtn.dataset.leadsTo;
+        if (leadsTo) moveToRoom(leadsTo);
     });
     
-    // Botão de examinar sala
+    if (southBtn) southBtn.addEventListener("click", () => {
+        const leadsTo = southBtn.dataset.leadsTo;
+        if (leadsTo) moveToRoom(leadsTo);
+    });
+    
+    if (eastBtn) eastBtn.addEventListener("click", () => {
+        const leadsTo = eastBtn.dataset.leadsTo;
+        if (leadsTo) moveToRoom(leadsTo);
+    });
+    
+    if (westBtn) westBtn.addEventListener("click", () => {
+        const leadsTo = westBtn.dataset.leadsTo;
+        if (leadsTo) moveToRoom(leadsTo);
+    });
+    
+    // Botões de ação
     const examineRoomBtn = document.getElementById("examine-room");
     if (examineRoomBtn) {
-        examineRoomBtn.addEventListener("click", () => {
+        examineRoomBtn.addEventListener("click", examineRoom);
+    }
+    
+    const searchRoomBtn = document.getElementById("search-room");
+    if (searchRoomBtn) {
+        searchRoomBtn.addEventListener("click", searchRoom);
+    }
+    
+    const openDoorBtn = document.getElementById("open-door");
+    if (openDoorBtn) {
+        openDoorBtn.addEventListener("click", () => {
+            // Abre um menu para escolher a direção
             const currentRoom = dungeon.rooms[playerState.currentRoom];
-            if (currentRoom) {
-                addLogMessage(`Você examina a ${currentRoom.name} com cuidado.`, 500);
-                addLogMessage(currentRoom.description, 1000);
-            }
+            if (!currentRoom || !currentRoom.exits) return;
+            
+            // Cria um menu temporário para escolher a direção
+            const directionMenu = document.createElement('div');
+            directionMenu.classList.add('direction-menu');
+            directionMenu.innerHTML = '<p>Escolha uma direção:</p>';
+            
+            currentRoom.exits.forEach(exit => {
+                const dirBtn = document.createElement('button');
+                dirBtn.textContent = exit.direction.charAt(0).toUpperCase() + exit.direction.slice(1);
+                dirBtn.classList.add('direction-choice');
+                dirBtn.addEventListener('click', () => {
+                    openDoor(exit.direction);
+                    directionMenu.remove();
+                });
+                directionMenu.appendChild(dirBtn);
+            });
+            
+            // Adiciona botão para cancelar
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Cancelar';
+            cancelBtn.classList.add('direction-choice', 'cancel');
+            cancelBtn.addEventListener('click', () => {
+                directionMenu.remove();
+            });
+            directionMenu.appendChild(cancelBtn);
+            
+            document.querySelector('.player-actions').appendChild(directionMenu);
         });
+    }
+    
+    const restBtn = document.getElementById("rest");
+    if (restBtn) {
+        restBtn.addEventListener("click", rest);
     }
     
     // Verifica autenticação
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             console.log("LOG: Usuário logado. ID:", user.uid);
+            userId = user.uid;
+            
+            // Carrega os dados do jogador
+            const playerDocRef = doc(db, "players", userId);
+            try {
+                const docSnap = await getDoc(playerDocRef);
+                if (docSnap.exists()) {
+                    playerData = docSnap.data();
+                    console.log("Dados do jogador carregados:", playerData);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar dados do jogador:", error);
+            }
+            
+            // Carrega o estado da masmorra
             await loadPlayerState();
+            
+            // Inicia a exploração
+            startNewLogBlock("Bem-vindo");
+            await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
+            await addLogMessage(dungeon.description, 1000);
+            
+            // Move para a sala atual
             moveToRoom(playerState.currentRoom);
         } else {
             console.log("LOG: Nenhum usuário logado. Redirecionando para login...");
