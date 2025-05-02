@@ -171,6 +171,25 @@ function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
 function handlePostBattle() {
     console.log("handlePostBattle chamado.");
     
+    // Concede experiência ao jogador se o monstro foi derrotado
+    if (currentMonster && currentMonster.pontosDeEnergia <= 0) {
+        const xpToGain = currentMonster.experiencia || 0;
+        const user = auth.currentUser;
+        
+        if (user && xpToGain > 0) {
+            updatePlayerExperience(user.uid, xpToGain)
+                .then(newXP => {
+                    // Cria um novo bloco de log para a experiência
+                    startNewTurnBlock("Sistema");
+                    addLogMessage(`Você ganhou ${xpToGain} pontos de experiência!`, 1000);
+                    addLogMessage(`Experiência total: ${newXP}`, 1000);
+                })
+                .catch(error => {
+                    console.error("Erro ao conceder experiência:", error);
+                });
+        }
+    }
+    
     // Reativa o botão de inventário
     const inventarioButton = document.getElementById("abrir-inventario");
     if (inventarioButton) {
@@ -192,6 +211,7 @@ function handlePostBattle() {
     
     battleStarted = false; // Reset do estado da batalha
 }
+
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: DOMContentLoaded evento disparado.");
@@ -221,6 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
         couraça: 10,
         pontosDeEnergia: 2,
         pontosDeEnergiaMax: 2,
+        experiencia: 50, // Adicionando pontos de experiência
         dano: "1D10",
         drops: [
             {
@@ -247,6 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
         couraça: 2,
         pontosDeEnergia: 1,
         pontosDeEnergiaMax: 1,
+        experiencia: 40, // Adicionando pontos de experiência
         dano: "1D6"
     }
 };
@@ -278,6 +300,30 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
         document.getElementById("monster-name").innerText = "Monstro não encontrado";
         document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
     }
+
+    // Função para atualizar a experiência do jogador no Firestore
+async function updatePlayerExperience(userId, xpToAdd) {
+    console.log("LOG: updatePlayerExperience chamado com userId:", userId, "xpToAdd:", xpToAdd);
+    const playerDocRef = doc(db, "players", userId);
+    
+    try {
+        // Primeiro, pegamos os dados atuais do jogador
+        const playerDoc = await getDoc(playerDocRef);
+        const playerData = playerDoc.data();
+        const currentXP = playerData.experience || 0;
+        const newXP = currentXP + xpToAdd;
+        
+        // Atualiza a experiência no Firestore
+        await setDoc(playerDocRef, { experience: newXP }, { merge: true });
+        console.log("LOG: Experiência do jogador atualizada:", newXP);
+        
+        return newXP;
+    } catch (error) {
+        console.error("LOG: Erro ao atualizar experiência do jogador:", error);
+        throw error;
+    }
+}
+
 
     async function addLogMessage(message, delay = 0, typingSpeed = 30) {
     const logContainer = document.getElementById("battle-log-content");
