@@ -85,10 +85,19 @@
     font-size: 14px;
 }
 
-.log-entry {
-    margin-bottom: 10px;
-    padding: 5px;
+.log-block {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
     border-bottom: 1px solid #555;
+}
+
+.log-block h4 {
+    color: #aa6c39;
+    margin-bottom: 5px;
+}
+
+.log-block p {
+    margin: 5px 0;
 }
 
 /* Estilos para os botões de ação */
@@ -97,6 +106,7 @@
     flex-direction: column;
     gap: 15px;
     margin-top: 20px;
+    position: relative;
 }
 
 #direction-buttons {
@@ -139,4 +149,88 @@
     justify-content: center;
     gap: 10px;
     margin-top: 10px;
+}
+
+/* Menu de direções para abrir portas */
+.direction-menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #333;
+    border: 2px solid #aa6c39;
+    border-radius: 8px;
+    padding: 15px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 200px;
+}
+
+.direction-menu p {
+    color: #ddd;
+    text-align: center;
+    margin: 0 0 10px 0;
+}
+
+.direction-choice {
+    background-color: #8b5a2b;
+    color: white;
+    border: 1px solid #aa6c39;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-family: 'Eagle Lake', cursive;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.direction-choice:hover {
+    background-color: #aa6c39;
+}
+
+.direction-choice.cancel {
+    background-color: #a52a2a;
+    margin-top: 5px;
+}
+
+.direction-choice.cancel:hover {
+    background-color: #c53b3b;
+}
+
+/* Animações */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.player-marker {
+    animation: pulse 2s infinite;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .dungeon-container {
+        flex-direction: column;
+    }
+    
+    .map-container, .exploration-log {
+        height: 300px;
+    }
+    
+    .east-west-container {
+        gap: 20px;
+    }
+    
+    .direction-btn, .action-btn {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+    
+    #action-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
 }
