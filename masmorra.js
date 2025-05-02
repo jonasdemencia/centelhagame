@@ -141,6 +141,31 @@ let playerState = {
     health: 100
 };
 
+// Adicione esta função ao seu arquivo masmorra.js
+
+// Função para atualizar a barra de energia do jogador
+function updateHealthBar() {
+    const healthBar = document.getElementById("player-health-bar");
+    const healthValue = document.getElementById("player-health-value");
+    
+    if (healthBar && healthValue) {
+        const percentage = Math.max(0, Math.min(100, playerState.health));
+        healthBar.style.width = `${percentage}%`;
+        
+        // Muda a cor da barra com base na saúde
+        if (percentage <= 25) {
+            healthBar.style.backgroundColor = "#FF0000"; // Vermelho para saúde baixa
+        } else if (percentage <= 50) {
+            healthBar.style.backgroundColor = "#FFA500"; // Laranja para saúde média
+        } else {
+            healthBar.style.backgroundColor = "#4CAF50"; // Verde para saúde alta
+        }
+        
+        healthValue.textContent = `${playerState.health}/100`;
+    }
+}
+
+
 // Função para iniciar um novo bloco de log
 function startNewLogBlock(title) {
     const logContainer = document.getElementById("exploration-log-content");
