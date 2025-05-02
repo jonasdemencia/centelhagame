@@ -365,6 +365,9 @@ async function moveToRoom(roomId) {
     
     // Atualiza o mapa
     drawMap();
+
+// Atualiza a barra de energia
+    updateHealthBar();
     
     // Atualiza os botões de direção
     updateDirectionButtons();
@@ -527,6 +530,9 @@ async function rest() {
     // Recupera um pouco de saúde
     const healthRecovered = Math.floor(Math.random() * 10) + 5; // 5-15 pontos
     playerState.health = Math.min(100, playerState.health + healthRecovered);
+
+    // Atualiza a barra de energia
+    updateHealthBar();
     
     await addLogMessage(`Você recuperou ${healthRecovered} pontos de energia.`, 800);
     await addLogMessage(`Energia atual: ${playerState.health}/100`, 500);
@@ -706,6 +712,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Carrega o estado da masmorra
             await loadPlayerState();
+
+            // Atualiza a barra de energia
+        updateHealthBar();
             
             // Inicia a exploração
             startNewLogBlock("Bem-vindo");
