@@ -226,10 +226,25 @@ function handlePostBattle(monster) {
         if (user) {
             updatePlayerExperience(user.uid, xpToGain)
                 .then(newXP => {
-                    // Cria um novo bloco de log para a experiência
-                    startNewTurnBlock("Sistema");
-                    addLogMessage(`Você ganhou ${xpToGain} pontos de experiência!`, 1000);
-                    addLogMessage(`Experiência total: ${newXP}`, 1000);
+                    // Cria um elemento de experiência diretamente no battleLogContent
+                    const logContainer = document.getElementById("battle-log-content");
+                    if (logContainer) {
+                        const xpDiv = document.createElement('div');
+                        xpDiv.classList.add('turn-block');
+                        const xpTitle = document.createElement('h4');
+                        xpTitle.textContent = 'Experiência';
+                        xpDiv.appendChild(xpTitle);
+                        
+                        const xpMsg = document.createElement('p');
+                        xpMsg.textContent = `Você ganhou ${xpToGain} pontos de experiência!`;
+                        xpDiv.appendChild(xpMsg);
+                        
+                        const totalMsg = document.createElement('p');
+                        totalMsg.textContent = `Experiência total: ${newXP}`;
+                        xpDiv.appendChild(totalMsg);
+                        
+                        logContainer.prepend(xpDiv);
+                    }
                 })
                 .catch(error => {
                     console.error("Erro ao conceder experiência:", error);
@@ -256,8 +271,10 @@ function handlePostBattle(monster) {
         console.error("Erro: Botão de loot não encontrado no HTML.");
     }
     
-    battleStarted = false; // Reset do estado da batalha
+    // Declara a variável battleStarted no escopo global
+    window.battleStarted = false; // Reset do estado da batalha usando window para garantir escopo global
 }
+
 
 
 
