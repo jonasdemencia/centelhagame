@@ -60,6 +60,9 @@ function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
         return;
     }
 
+    // Verifica se é a barra do monstro
+    const isMonstro = idElemento === "barra-hp-monstro";
+
     // Novo cálculo de porcentagem considerando valores negativos
     let porcentagem;
     if (valorAtual > 0) {
@@ -73,10 +76,18 @@ function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
     barra.style.width = `${porcentagem}%`;
     
     // Define a cor da barra baseado no estado
-    if (valorAtual <= -10) {
-        barra.style.backgroundColor = '#000000'; // Preto para morto
-    } else if (valorAtual <= 0) {
-        barra.style.backgroundColor = '#8B0000'; // Vermelho escuro para inconsciente
+    if (valorAtual <= 0) {
+        // Para monstros, qualquer valor <= 0 significa morte
+        if (isMonstro) {
+            barra.style.backgroundColor = '#000000'; // Preto para morto
+        } else {
+            // Para o jogador, mantém a lógica original
+            if (valorAtual <= -10) {
+                barra.style.backgroundColor = '#000000'; // Preto para morto
+            } else {
+                barra.style.backgroundColor = '#8B0000'; // Vermelho escuro para inconsciente
+            }
+        }
     } else if (valorAtual <= valorMaximo * 0.3) {
         barra.style.backgroundColor = '#FF0000'; // Vermelho para baixa energia
     } else {
@@ -85,10 +96,18 @@ function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
     
     // Atualiza o texto
     if (valorSpan) {
-        if (valorAtual <= -10) {
-            valorSpan.innerHTML = `<span style="color: darkred">MORTO (${valorAtual}/${valorMaximo})</span>`;
-        } else if (valorAtual <= 0) {
-            valorSpan.innerHTML = `<span style="color: red">INCONSCIENTE (${valorAtual}/${valorMaximo})</span>`;
+        if (valorAtual <= 0) {
+            // Para monstros, qualquer valor <= 0 significa morte
+            if (isMonstro) {
+                valorSpan.innerHTML = `<span style="color: darkred">MORTO (${valorAtual}/${valorMaximo})</span>`;
+            } else {
+                // Para o jogador, mantém a lógica original
+                if (valorAtual <= -10) {
+                    valorSpan.innerHTML = `<span style="color: darkred">MORTO (${valorAtual}/${valorMaximo})</span>`;
+                } else {
+                    valorSpan.innerHTML = `<span style="color: red">INCONSCIENTE (${valorAtual}/${valorMaximo})</span>`;
+                }
+            }
         } else {
             valorSpan.textContent = `${valorAtual}/${valorMaximo}`;
         }
