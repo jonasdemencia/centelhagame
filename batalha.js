@@ -193,36 +193,43 @@ function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
 }
 
 function handlePostBattle(monster) {
-    console.log("handlePostBattle chamado.");
+    console.log("handlePostBattle chamado com monstro:", monster?.nome);
     
     // Concede experiência ao jogador se o monstro foi derrotado
     if (monster && monster.pontosDeEnergia <= 0) {
-        const xpToGain = monster.nome === "Lobo Faminto" ? 50 : 
-                         monster.nome === "Goblin Sorrateiro" ? 30 : 20;
+        // Define a experiência com base no nome do monstro
+        const xpToGain = 
+            monster.nome === "Lobo Faminto" ? 50 :
+            monster.nome === "Goblin Sorrateiro" ? 30 :
+            monster.nome === "Esqueleto Guerreiro" ? 60 :
+            monster.nome === "Rato Gigante" ? 20 :
+            monster.nome === "Ogro Brutamontes" ? 150 :
+            monster.nome === "Aranha Venenosa" ? 55 :
+            monster.nome === "Zumbi Cambaleante" ? 70 :
+            monster.nome === "Harpia Cruel" ? 80 :
+            monster.nome === "Verme Gigante da Terra" ? 90 :
+            monster.nome === "Bandido de Estrada" ? 60 :
+            monster.nome === "Morcego Sanguessuga" ? 35 :
+            monster.nome === "Elemental de Fogo" ? 100 :
+            monster.nome === "Espectro Sombrio" ? 90 :
+            monster.nome === "Mímico" ? 120 :
+            monster.nome === "Lobo Alfa" ? 80 :
+            monster.nome === "Escaravelho Explosivo" ? 45 :
+            monster.nome === "Necromante Aprendiz" ? 110 :
+            monster.nome === "Golem de Pedra" ? 150 :
+            monster.nome === "Serpente do Pântano" ? 70 :
+            monster.nome === "Árvore Viva" ? 130 :
+            monster.nome === "Rato Mutante" ? 60 :
+            20; // Valor padrão para monstros não listados
         
         const user = auth.currentUser;
         if (user) {
             updatePlayerExperience(user.uid, xpToGain)
                 .then(newXP => {
                     // Cria um novo bloco de log para a experiência
-                    const logContainer = document.getElementById("battle-log-content");
-                    if (logContainer) {
-                        const xpDiv = document.createElement('div');
-                        xpDiv.classList.add('turn-block');
-                        const xpTitle = document.createElement('h4');
-                        xpTitle.textContent = 'Experiência';
-                        xpDiv.appendChild(xpTitle);
-                        
-                        const xpMsg = document.createElement('p');
-                        xpMsg.textContent = `Você ganhou ${xpToGain} pontos de experiência!`;
-                        xpDiv.appendChild(xpMsg);
-                        
-                        const totalMsg = document.createElement('p');
-                        totalMsg.textContent = `Experiência total: ${newXP}`;
-                        xpDiv.appendChild(totalMsg);
-                        
-                        logContainer.prepend(xpDiv);
-                    }
+                    startNewTurnBlock("Sistema");
+                    addLogMessage(`Você ganhou ${xpToGain} pontos de experiência!`, 1000);
+                    addLogMessage(`Experiência total: ${newXP}`, 1000);
                 })
                 .catch(error => {
                     console.error("Erro ao conceder experiência:", error);
