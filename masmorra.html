@@ -6,6 +6,7 @@
     <title>Masmorra - CentelhaGame</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="masmorra.css">
+    <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet">
     <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
@@ -37,6 +38,17 @@
                 <div id="exploration-log-content">
                     <!-- Mensagens de exploração serão adicionadas aqui -->
                 </div>
+            </div>
+        </div>
+
+        <!-- Status do Jogador -->
+        <div class="player-status">
+            <div class="health-bar-container">
+                <span>Energia:</span>
+                <div class="health-bar-wrapper">
+                    <div id="player-health-bar" class="health-bar"></div>
+                </div>
+                <span id="player-health-value">100/100</span>
             </div>
         </div>
 
