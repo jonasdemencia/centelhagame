@@ -25,104 +25,6 @@ const db = getFirestore(app);
 initializeModule(db);  // Inicializa o módulo de dados
 console.log("LOG: Firebase inicializado.");
 
-const monsterData = {
-    "lobo": {
-        nome: "Lobo Faminto",
-        imagem: "https://via.placeholder.com/150",
-        descricao: "Um lobo selvagem com presas afiadas.",
-        habilidade: 5,
-        couraça: 1,
-        pontosDeEnergia: 3,
-        pontosDeEnergiaMax: 3,
-        experiencePoints: 50,  // XP que dá quando derrotado
-        dano: "1D10",
-        drops: [
-            {
-                id: "weapon",
-                content: "Espada de madeira",
-                description: "Uma espada de treinamento."
-            },
-            {
-                id: "pocao-cura-minima",
-                content: "Poção de Cura Minima",
-                consumable: true,
-                quantity: 2,
-                effect: "heal",
-                value: 2,
-                description: "Uma poção que restaura uma quantidade minima de energia vital."
-            }
-        ]
-    },
-
-"loboa": {
-        nome: "Lobo Faminto",
-        imagem: "https://via.placeholder.com/150",
-        descricao: "Um lobo selvagem com presas afiadas.",
-        habilidade: 5,
-        couraça: 1,
-        pontosDeEnergia: 3,
-        pontosDeEnergiaMax: 3,
-        experiencePoints: 50,  // XP que dá quando derrotado
-        dano: "1D10",
-        drops: [
-            {
-                id: "weapon",
-                content: "Espada de madeira",
-                description: "Uma espada de treinamento."
-            },
-            {
-                id: "pocao-cura-minima",
-                content: "Poção de Cura Minima",
-                consumable: true,
-                quantity: 2,
-                effect: "heal",
-                value: 2,
-                description: "Uma poção que restaura uma quantidade minima de energia vital."
-            }
-        ]
-    },
-
-    "lobob": {
-        nome: "Lobo Faminto",
-        imagem: "https://via.placeholder.com/150",
-        descricao: "Um lobo selvagem com presas afiadas.",
-        habilidade: 5,
-        couraça: 1,
-        pontosDeEnergia: 1,
-        pontosDeEnergiaMax: 1,
-        experiencePoints: 50,  // XP que dá quando derrotado
-        dano: "1D10",
-        drops: [
-            {
-                id: "weapon",
-                content: "Espada de madeira",
-                description: "Uma espada de treinamento."
-            },
-            {
-                id: "pocao-cura-minima",
-                content: "Poção de Cura Minima",
-                consumable: true,
-                quantity: 2,
-                effect: "heal",
-                value: 2,
-                description: "Uma poção que restaura uma quantidade minima de energia vital."
-            }
-        ]
-    },
-    
-    "goblin": {
-        nome: "Goblin Sorrateiro",
-        imagem: "https://via.placeholder.com/150",
-        descricao: "Um pequeno goblin com olhos espertos.",
-        habilidade: 2,
-        couraça: 1,
-        pontosDeEnergia: 3,
-        pontosDeEnergiaMax: 3,
-        experiencePoints: 40,  // XP que dá quando derrotado
-        dano: "1D6"
-    }
-};
-
 async function salvarDropsNoLoot(userId, drops) {
     const lootCollectionRef = collection(db, "users", userId, "loot");
 
@@ -266,69 +168,30 @@ function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
     }, { merge: true });
 }
 
-// Função para atualizar a experiência do jogador
-async function updatePlayerExperience(userId, xpToAdd) {
-    const playerDocRef = doc(db, "players", userId);
+function handlePostBattle() {
+    console.log("handlePostBattle chamado.");
     
-    try {
-        // Primeiro, pegamos os dados atuais do jogador
-        const playerDoc = await getDoc(playerDocRef);
-        const currentXP = playerDoc.data()?.experience || 0;
-        const newXP = currentXP + xpToAdd;
-        
-        // Atualiza a experiência no Firestore
-        await setDoc(playerDocRef, { 
-            experience: newXP 
-        }, { merge: true });
-
-        console.log(`XP atualizado: +${xpToAdd} XP (Total: ${newXP})`);
-        
-        // Busca o elemento battleLogContent diretamente do DOM
-        const logElement = document.getElementById("battle-log-content");
-        if (logElement) {
-            // Cria uma nova função para adicionar mensagens sem depender de startNewTurnBlock e addLogMessage
-            const div = document.createElement('div');
-            div.classList.add('turn-block');
-            const title = document.createElement('h4');
-            title.textContent = 'Experiência';
-            div.appendChild(title);
-            
-            const msg1 = document.createElement('p');
-            msg1.textContent = `Você ganhou ${xpToAdd} pontos de experiência!`;
-            div.appendChild(msg1);
-            
-            const msg2 = document.createElement('p');
-            msg2.textContent = `Experiência total: ${newXP}`;
-            div.appendChild(msg2);
-            
-            logElement.prepend(div);
-        }
-
-        return newXP;
-    } catch (error) {
-        console.error("Erro ao atualizar experiência:", error);
-        throw error;
+    // Reativa o botão de inventário
+    const inventarioButton = document.getElementById("abrir-inventario");
+    if (inventarioButton) {
+        inventarioButton.disabled = false;
+        inventarioButton.style.display = 'block';
     }
+    
+    // Exibe o botão de loot
+    const lootButton = document.getElementById('loot-button');
+    if (lootButton) {
+        lootButton.style.display = 'block';
+        lootButton.addEventListener('click', () => {
+            console.log("Botão de loot clicado. Redirecionando para loot.html");
+            window.location.href = 'loot.html';
+        });
+    } else {
+        console.error("Erro: Botão de loot não encontrado no HTML.");
+    }
+    
+    battleStarted = false; // Reset do estado da batalha
 }
-
-
-// Função para conceder XP quando o monstro é derrotado
-async function awardExperiencePoints(monsterName) {
-    const monster = monsterData[monsterName];
-    if (!monster || !monster.experiencePoints) {
-        console.error("Monstro não encontrado ou sem XP definido");
-        return;
-    }
-
-    const user = auth.currentUser;
-    if (!user) {
-        console.error("Usuário não está logado");
-        return;
-    }
-
-    return await updatePlayerExperience(user.uid, monster.experiencePoints);
-}
-
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: DOMContentLoaded evento disparado.");
@@ -349,38 +212,44 @@ document.addEventListener('DOMContentLoaded', () => {
     let battleStarted = false; // Variável de controle para estado da batalha
     console.log("LOG: Variáveis iniciais declaradas.");
 
-    // Adicione a função handlePostBattle aqui
-    function handlePostBattle() {
-        console.log("handlePostBattle chamado.");
-        
-        // Concede XP ao jogador se o monstro foi derrotado
-        if (currentMonster && currentMonster.pontosDeEnergia <= 0) {
-            // Aqui você pode adicionar a lógica para conceder XP
-            // Por exemplo: awardExperiencePoints(monsterName);
-        }
-        
-        // Reativa o botão de inventário
-        const inventarioButton = document.getElementById("abrir-inventario");
-        if (inventarioButton) {
-            inventarioButton.disabled = false;
-            inventarioButton.style.display = 'block';
-        }
-        
-        // Exibe o botão de loot
-        const lootButton = document.getElementById('loot-button');
-        if (lootButton) {
-            lootButton.style.display = 'block';
-            lootButton.addEventListener('click', () => {
-                console.log("Botão de loot clicado. Redirecionando para loot.html");
-                window.location.href = 'loot.html';
-            });
-        } else {
-            console.error("Erro: Botão de loot não encontrado no HTML.");
-        }
-        
-        battleStarted = false; // Reset do estado da batalha
+    const monsterData = {
+    "lobo": {
+        nome: "Lobo Faminto",
+        imagem: "https://via.placeholder.com/150",
+        descricao: "Um lobo selvagem com presas afiadas.",
+        habilidade: 5,
+        couraça: 10,
+        pontosDeEnergia: 25,
+        pontosDeEnergiaMax: 25,
+        dano: "1D10",
+        drops: [
+            {
+                id: "weapon",
+                content: "Espada de madeira",
+                description: "Uma espada de treinamento."
+            },
+            {
+                id: "pocao-cura-minima",
+                content: "Poção de Cura Minima",
+                consumable: true,
+                quantity: 2,
+                effect: "heal",
+                value: 2,
+                description: "Uma poção que restaura uma quantidade minima de energia vital."
+            }
+        ]
+    },
+    "goblin": {
+        nome: "Goblin Sorrateiro",
+        imagem: "https://via.placeholder.com/150",
+        descricao: "Um pequeno goblin com olhos espertos.",
+        habilidade: 2,
+        couraça: 2,
+        pontosDeEnergia: 15,
+        pontosDeEnergiaMax: 15,
+        dano: "1D6"
     }
-
+};
 
     currentMonster = monsterData[monsterName];
 console.log("LOG: Dados do monstro carregados:", currentMonster);
@@ -801,14 +670,6 @@ if (inventarioButton) {
                             console.log("LOG: onAuthStateChanged - Energia inicial do jogador exibida.");
                         }
 
-                        // Atualiza o display de XP
-const xpDisplay = document.getElementById("player-xp");
-if (xpDisplay) {
-    xpDisplay.textContent = `XP: ${playerData.experience || 0}`;
-    console.log("LOG: onAuthStateChanged - XP do jogador exibido:", playerData.experience || 0);
-}
-
-
                         // Event listener para o botão "Lutar" (AGORA MOVIDO PARA DENTRO DO onAuthStateChanged APÓS CARREGAR OS DADOS)
                         if (lutarButton) {
     lutarButton.disabled = false;
@@ -1081,26 +942,22 @@ if (rollLocationBtn) {
 
 
         // Verifica derrota e passa o turno
-        // Verifica derrota e passa o turno
-if (currentMonster.pontosDeEnergia <= 0) {
-    console.log(`LOG: Monstro derrotado após ${isSiferDamage ? 'SIFER' : 'Dano Normal'}!`);
-    await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-    isPlayerTurn = false; // Garante que o turno não continue
-    
-    // Chama handlePostBattle sem parâmetros
-    if (typeof handlePostBattle === 'function') {
-        handlePostBattle();  // <-- CORRIGIDO: Não passa parâmetros
-    } else {
-        console.error("Função handlePostBattle não definida.");
-        // Fallback simples
-        const lootBtn = document.getElementById('loot-button');
-        const mapBtn = document.getElementById('back-to-map-button');
-        if (lootBtn && currentMonster.drops?.length > 0) lootBtn.style.display = 'block';
-        if (mapBtn) mapBtn.style.display = 'block';
-        if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
-    }
-}
-
+        if (currentMonster.pontosDeEnergia <= 0) {
+            console.log(`LOG: Monstro derrotado após ${isSiferDamage ? 'SIFER' : 'Dano Normal'}!`);
+            await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+            isPlayerTurn = false; // Garante que o turno não continue
+            // Chama handlePostBattle ou lógica similar
+            if (typeof handlePostBattle === 'function') {
+                 handlePostBattle();
+            } else {
+                console.error("Função handlePostBattle não definida.");
+                 // Fallback simples
+                 const lootBtn = document.getElementById('loot-button');
+                 const mapBtn = document.getElementById('back-to-map-button');
+                 if (lootBtn && currentMonster.drops?.length > 0) lootBtn.style.display = 'block';
+                 if (mapBtn) mapBtn.style.display = 'block';
+                 if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+            }
         } else {
             // Passa o turno para o monstro
             console.log(`LOG: Monstro sobreviveu ao ${isSiferDamage ? 'SIFER' : 'Dano Normal'}. Passando turno.`);
