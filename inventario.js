@@ -837,6 +837,42 @@ async function updateCharacterDamage() {
     }
 }
 
+// Adicione esta função após a função updateCharacterDamage
+function calculateLevel(experience) {
+    // Base de experiência para cada nível (aumenta exponencialmente)
+    const baseXP = 100;
+    const exponent = 1.5;
+    
+    // Se não tiver experiência, é nível 1
+    if (!experience || experience <= 0) return { level: 1, currentXP: 0, nextLevelXP: baseXP };
+    
+    // Calcula o nível atual
+    let level = 1;
+    let xpForNextLevel = baseXP;
+    
+    while (experience >= xpForNextLevel) {
+        level++;
+        // Próximo nível requer mais XP
+        xpForNextLevel += Math.floor(baseXP * Math.pow(level, exponent));
+    }
+    
+    // Calcula XP para o próximo nível
+    const xpForCurrentLevel = xpForNextLevel - Math.floor(baseXP * Math.pow(level, exponent));
+    const currentLevelXP = experience - xpForCurrentLevel;
+    const xpNeeded = xpForNextLevel - xpForCurrentLevel;
+    const progress = currentLevelXP / xpNeeded;
+    
+    return {
+        level,
+        currentXP: experience,
+        nextLevelXP: xpForNextLevel,
+        currentLevelXP,
+        xpNeeded,
+        progress
+    };
+}
+
+
 
 // Inicializa e carrega o inventário ao iniciar
 document.addEventListener("DOMContentLoaded", () => {
@@ -909,6 +945,7 @@ async function updateGameDay(playerData) {
 }
 
 // 📌 Atualizar os dados da ficha de personagem ao carregar e barra de hp
+// Modifique a função updateCharacterSheet para incluir a experiência
 function updateCharacterSheet(playerData) {
     if (!playerData) return;
 
@@ -929,6 +966,19 @@ function updateCharacterSheet(playerData) {
     if (barraHP && energyInitial > 0) {
         const porcentagem = Math.max(0, (energyTotal / energyInitial) * 100);
         barraHP.style.width = `${porcentagem}%`;
+    }
+
+    // Atualiza a experiência e nível
+    const experience = playerData.experience || 0;
+    const levelInfo = calculateLevel(experience);
+    
+    document.getElementById("char-level").innerText = levelInfo.level;
+    document.getElementById("char-xp").innerText = `${experience}/${levelInfo.nextLevelXP}`;
+    
+    // Atualiza a barra de XP
+    const barraXP = document.getElementById("barra-xp-inventario");
+    if (barraXP) {
+        barraXP.style.width = `${levelInfo.progress * 100}%`;
     }
 
     // Restante dos atributos
