@@ -136,6 +136,30 @@ function updatePlayerEnergyInFirestore(userId, newEnergy) {
         });
 }
 
+// Adicione esta função logo após a função updatePlayerEnergyInFirestore
+async function updatePlayerExperience(userId, xpToAdd) {
+    console.log("LOG: updatePlayerExperience chamado com userId:", userId, "xpToAdd:", xpToAdd);
+    const playerDocRef = doc(db, "players", userId);
+    
+    try {
+        // Primeiro, pegamos os dados atuais do jogador
+        const playerDoc = await getDoc(playerDocRef);
+        const playerData = playerDoc.data();
+        const currentXP = playerData.experience || 0;
+        const newXP = currentXP + xpToAdd;
+        
+        // Atualiza a experiência no Firestore
+        await setDoc(playerDocRef, { experience: newXP }, { merge: true });
+        console.log("LOG: Experiência do jogador atualizada:", newXP);
+        
+        return newXP;
+    } catch (error) {
+        console.error("LOG: Erro ao atualizar experiência do jogador:", error);
+        throw error;
+    }
+}
+
+
 // Função para carregar o estado da batalha do Firestore (MOVIDA PARA O ESCOPO GLOBAL)
 function loadBattleState(userId, monsterName) {
     console.log("LOG: loadBattleState chamado com userId:", userId, "monsterName:", monsterName);
@@ -168,21 +192,37 @@ function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
     }, { merge: true });
 }
 
-function handlePostBattle() {
+function handlePostBattle(monster) {
     console.log("handlePostBattle chamado.");
     
     // Concede experiência ao jogador se o monstro foi derrotado
-    if (currentMonster && currentMonster.pontosDeEnergia <= 0) {
-        const xpToGain = currentMonster.experiencia || 0;
-        const user = auth.currentUser;
+    if (monster && monster.pontosDeEnergia <= 0) {
+        const xpToGain = monster.nome === "Lobo Faminto" ? 50 : 
+                         monster.nome === "Goblin Sorrateiro" ? 30 : 20;
         
-        if (user && xpToGain > 0) {
+        const user = auth.currentUser;
+        if (user) {
             updatePlayerExperience(user.uid, xpToGain)
                 .then(newXP => {
                     // Cria um novo bloco de log para a experiência
-                    startNewTurnBlock("Sistema");
-                    addLogMessage(`Você ganhou ${xpToGain} pontos de experiência!`, 1000);
-                    addLogMessage(`Experiência total: ${newXP}`, 1000);
+                    const logContainer = document.getElementById("battle-log-content");
+                    if (logContainer) {
+                        const xpDiv = document.createElement('div');
+                        xpDiv.classList.add('turn-block');
+                        const xpTitle = document.createElement('h4');
+                        xpTitle.textContent = 'Experiência';
+                        xpDiv.appendChild(xpTitle);
+                        
+                        const xpMsg = document.createElement('p');
+                        xpMsg.textContent = `Você ganhou ${xpToGain} pontos de experiência!`;
+                        xpDiv.appendChild(xpMsg);
+                        
+                        const totalMsg = document.createElement('p');
+                        totalMsg.textContent = `Experiência total: ${newXP}`;
+                        xpDiv.appendChild(totalMsg);
+                        
+                        logContainer.prepend(xpDiv);
+                    }
                 })
                 .catch(error => {
                     console.error("Erro ao conceder experiência:", error);
@@ -211,6 +251,7 @@ function handlePostBattle() {
     
     battleStarted = false; // Reset do estado da batalha
 }
+
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -989,20 +1030,21 @@ if (rollLocationBtn) {
 
         // Verifica derrota e passa o turno
         if (currentMonster.pontosDeEnergia <= 0) {
-            console.log(`LOG: Monstro derrotado após ${isSiferDamage ? 'SIFER' : 'Dano Normal'}!`);
-            await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-            isPlayerTurn = false; // Garante que o turno não continue
-            // Chama handlePostBattle ou lógica similar
-            if (typeof handlePostBattle === 'function') {
-                 handlePostBattle();
-            } else {
-                console.error("Função handlePostBattle não definida.");
-                 // Fallback simples
-                 const lootBtn = document.getElementById('loot-button');
-                 const mapBtn = document.getElementById('back-to-map-button');
-                 if (lootBtn && currentMonster.drops?.length > 0) lootBtn.style.display = 'block';
-                 if (mapBtn) mapBtn.style.display = 'block';
-                 if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+    console.log(`LOG: Monstro derrotado após ${isSiferDamage ? 'SIFER' : 'Dano Normal'}!`);
+    await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+    isPlayerTurn = false; // Garante que o turno não continue
+    
+    // Chama handlePostBattle passando o monstro atual
+    if (typeof handlePostBattle === 'function') {
+        handlePostBattle(currentMonster);
+    } else {
+        console.error("Função handlePostBattle não definida.");
+        // Fallback simples
+        const lootBtn = document.getElementById('loot-button');
+        const mapBtn = document.getElementById('back-to-map-button');
+        if (lootBtn && currentMonster.drops?.length > 0) lootBtn.style.display = 'block';
+        if (mapBtn) mapBtn.style.display = 'block';
+        if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
             }
         } else {
             // Passa o turno para o monstro
