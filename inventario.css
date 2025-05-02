@@ -594,3 +594,45 @@ p {
     justify-content: center; /* Centraliza horizontalmente */
     gap: 10px; /* Espaço entre os slots na mesma linha */
 }
+
+/* Estilo para o atributo de experiência */
+.xp-attribute {
+    width: auto !important;
+    height: auto !important;
+    padding: 5px !important;
+    background-color: #4b0082 !important; /* Roxo para diferenciar da energia */
+}
+
+.xp-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 2px;
+}
+
+#char-level {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #ffd700; /* Dourado para o nível */
+}
+
+#char-xp {
+    font-size: 0.7em;
+    white-space: nowrap;
+    margin-bottom: 2px;
+}
+
+.barra-xp-container {
+    width: 40px;
+    height: 4px;
+    background-color: #333;
+    border: 1px solid #555;
+    margin: 2px auto 0;
+}
+
+.barra-xp {
+    height: 100%;
+    background-color: #9370db; /* Roxo mais claro para a barra */
+    width: 0%; /* Começa vazio */
+    transition: width 0.3s ease;
+}
