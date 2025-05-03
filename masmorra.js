@@ -27,13 +27,6 @@ let currentLogBlock = null;
 let playerData = null;
 let userId = null;
 
-
-// Constantes para o sistema de grade
-const GRID_CELL_SIZE = 5; // Tamanho de cada célula da grade em unidades SVG
-const GRID_COLOR = "#222"; // Cor das linhas da grade
-
-
-// Dados da masmorra - Definição das salas e corredores
 // Dados da masmorra - Definição das salas e corredores
 const dungeon = {
     name: "Ruínas de Undermountain",
@@ -50,10 +43,10 @@ const dungeon = {
             ],
             visited: false,
             discovered: false,
-            gridX: 10, // Coordenada X na grade (em células)
-            gridY: 16, // Coordenada Y na grade (em células)
-            gridWidth: 3, // Largura em células da grade
-            gridHeight: 4, // Altura em células da grade
+            x: 50, // Coordenadas no SVG
+            y: 80,
+            width: 10, // Largura em unidades SVG
+            height: 20, // Altura em unidades SVG
             events: [
                 { type: "first-visit", text: "O ar está frio e você sente um arrepio na espinha ao entrar neste lugar antigo." }
             ]
@@ -70,10 +63,10 @@ const dungeon = {
             ],
             visited: false,
             discovered: false,
-            gridX: 10,
-            gridY: 10,
-            gridWidth: 4,
-            gridHeight: 4,
+            x: 50,
+            y: 50,
+            width: 20,
+            height: 20,
             events: [
                 { type: "first-visit", text: "As estátuas de pedra parecem observar seus movimentos com olhos vazios." }
             ]
@@ -88,10 +81,10 @@ const dungeon = {
             ],
             visited: false,
             discovered: false,
-            gridX: 16,
-            gridY: 10,
-            gridWidth: 3,
-            gridHeight: 3,
+            x: 80,
+            y: 50,
+            width: 15,
+            height: 15,
             events: [
                 { type: "first-visit", text: "Você vê um baú ornamentado no centro da sala, coberto por uma fina camada de poeira." }
             ],
@@ -110,10 +103,10 @@ const dungeon = {
             ],
             visited: false,
             discovered: false,
-            gridX: 4,
-            gridY: 10,
-            gridWidth: 3,
-            gridHeight: 3,
+            x: 20,
+            y: 50,
+            width: 15,
+            height: 15,
             events: [
                 { type: "first-visit", text: "Armas antigas e enferrujadas decoram as paredes. A maioria parece inútil após séculos de abandono." }
             ]
@@ -128,17 +121,16 @@ const dungeon = {
             ],
             visited: false,
             discovered: false,
-            gridX: 4,
-            gridY: 4,
-            gridWidth: 4,
-            gridHeight: 4,
+            x: 20,
+            y: 20,
+            width: 18,
+            height: 18,
             events: [
                 { type: "first-visit", text: "Símbolos estranhos brilham levemente no chão. Você sente uma presença antiga neste lugar." }
             ]
         }
     }
 };
-
 
 // Estado do jogador na masmorra
 let playerState = {
@@ -192,37 +184,6 @@ function startNewLogBlock(title) {
     logContainer.appendChild(currentLogBlock);
     return currentLogBlock;
 }
-
-// Função para desenhar a grade de fundo
-function drawGrid() {
-    const mapGrid = document.getElementById("map-grid");
-    mapGrid.innerHTML = '';
-    
-    // Desenha linhas horizontais
-    for (let y = 0; y <= 20; y++) {
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("x1", "0");
-        line.setAttribute("y1", y * GRID_CELL_SIZE);
-        line.setAttribute("x2", "100");
-        line.setAttribute("y2", y * GRID_CELL_SIZE);
-        line.setAttribute("stroke", GRID_COLOR);
-        line.setAttribute("stroke-width", "0.1");
-        mapGrid.appendChild(line);
-    }
-    
-    // Desenha linhas verticais
-    for (let x = 0; x <= 20; x++) {
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("x1", x * GRID_CELL_SIZE);
-        line.setAttribute("y1", "0");
-        line.setAttribute("x2", x * GRID_CELL_SIZE);
-        line.setAttribute("y2", "100");
-        line.setAttribute("stroke", GRID_COLOR);
-        line.setAttribute("stroke-width", "0.1");
-        mapGrid.appendChild(line);
-    }
-}
-
 
 // Função para adicionar mensagem ao log de exploração
 async function addLogMessage(message, delay = 0, typingSpeed = 30) {
@@ -291,40 +252,21 @@ function drawMap() {
     mapDoors.innerHTML = '';
     mapPlayer.innerHTML = '';
     
-    // Desenha a grade de fundo
-    drawGrid();
-    
     // Desenha as salas descobertas
     for (const roomId of playerState.discoveredRooms) {
         const room = dungeon.rooms[roomId];
         if (!room) continue;
         
-        // Calcula as coordenadas reais a partir das coordenadas da grade
-        const x = room.gridX * GRID_CELL_SIZE;
-        const y = room.gridY * GRID_CELL_SIZE;
-        const width = room.gridWidth * GRID_CELL_SIZE;
-        const height = room.gridHeight * GRID_CELL_SIZE;
+        // Cria o elemento da sala
+        const roomElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        roomElement.setAttribute("x", room.x - room.width/2);
+        roomElement.setAttribute("y", room.y - room.height/2);
+        roomElement.setAttribute("width", room.width);
+        roomElement.setAttribute("height", room.height);
+        roomElement.setAttribute("class", `room ${room.type} ${playerState.visitedRooms.includes(room.id) ? 'visited' : 'discovered'}`);
+        roomElement.setAttribute("data-room-id", room.id);
         
-        // Cria um grupo para a sala
-        const roomGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        roomGroup.setAttribute("class", `room-group ${room.type} ${playerState.visitedRooms.includes(room.id) ? 'visited' : 'discovered'}`);
-        roomGroup.setAttribute("data-room-id", room.id);
-        
-        // Desenha as células da grade para formar a sala
-        for (let cellY = 0; cellY < room.gridHeight; cellY++) {
-            for (let cellX = 0; cellX < room.gridWidth; cellX++) {
-                const cellRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                cellRect.setAttribute("x", x + (cellX * GRID_CELL_SIZE));
-                cellRect.setAttribute("y", y + (cellY * GRID_CELL_SIZE));
-                cellRect.setAttribute("width", GRID_CELL_SIZE);
-                cellRect.setAttribute("height", GRID_CELL_SIZE);
-                cellRect.setAttribute("class", `room ${room.type} ${playerState.visitedRooms.includes(room.id) ? 'visited' : 'discovered'}`);
-                
-                roomGroup.appendChild(cellRect);
-            }
-        }
-        
-        mapRooms.appendChild(roomGroup);
+        mapRooms.appendChild(roomElement);
         
         // Desenha as portas
         if (room.exits) {
@@ -332,38 +274,38 @@ function drawMap() {
                 // Só desenha a porta se a sala de destino também estiver descoberta
                 if (playerState.discoveredRooms.includes(exit.leadsTo)) {
                     if (exit.type === "door") {
-                        let doorX = x + (width / 2);
-                        let doorY = y + (height / 2);
-                        let doorWidth = GRID_CELL_SIZE * 0.8;
-                        let doorHeight = GRID_CELL_SIZE * 0.8;
+                        let doorX = room.x;
+                        let doorY = room.y;
+                        let doorWidth = 4;
+                        let doorHeight = 4;
                         
                         // Ajusta a posição da porta com base na direção
                         switch (exit.direction) {
                             case "north":
-                                doorX = x + (width / 2) - (doorWidth / 2);
-                                doorY = y - (doorHeight / 2);
+                                doorX = room.x;
+                                doorY = room.y - room.height/2;
                                 break;
                             case "south":
-                                doorX = x + (width / 2) - (doorWidth / 2);
-                                doorY = y + height - (doorHeight / 2);
+                                doorX = room.x;
+                                doorY = room.y + room.height/2;
                                 break;
                             case "east":
-                                doorX = x + width - (doorWidth / 2);
-                                doorY = y + (height / 2) - (doorHeight / 2);
-                                doorWidth = GRID_CELL_SIZE * 0.4;
-                                doorHeight = GRID_CELL_SIZE * 1.2;
+                                doorX = room.x + room.width/2;
+                                doorY = room.y;
+                                doorWidth = 2;
+                                doorHeight = 6;
                                 break;
                             case "west":
-                                doorX = x - (doorWidth / 2);
-                                doorY = y + (height / 2) - (doorHeight / 2);
-                                doorWidth = GRID_CELL_SIZE * 0.4;
-                                doorHeight = GRID_CELL_SIZE * 1.2;
+                                doorX = room.x - room.width/2;
+                                doorY = room.y;
+                                doorWidth = 2;
+                                doorHeight = 6;
                                 break;
                         }
                         
                         const doorElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                        doorElement.setAttribute("x", doorX);
-                        doorElement.setAttribute("y", doorY);
+                        doorElement.setAttribute("x", doorX - doorWidth/2);
+                        doorElement.setAttribute("y", doorY - doorHeight/2);
                         doorElement.setAttribute("width", doorWidth);
                         doorElement.setAttribute("height", doorHeight);
                         doorElement.setAttribute("class", `door ${exit.locked ? 'locked' : ''}`);
@@ -379,20 +321,15 @@ function drawMap() {
     // Desenha o marcador do jogador
     const currentRoom = dungeon.rooms[playerState.currentRoom];
     if (currentRoom) {
-        // Calcula o centro da sala atual
-        const centerX = (currentRoom.gridX * GRID_CELL_SIZE) + (currentRoom.gridWidth * GRID_CELL_SIZE / 2);
-        const centerY = (currentRoom.gridY * GRID_CELL_SIZE) + (currentRoom.gridHeight * GRID_CELL_SIZE / 2);
-        
         const playerMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        playerMarker.setAttribute("cx", centerX);
-        playerMarker.setAttribute("cy", centerY);
-        playerMarker.setAttribute("r", GRID_CELL_SIZE * 0.6);
+        playerMarker.setAttribute("cx", currentRoom.x);
+        playerMarker.setAttribute("cy", currentRoom.y);
+        playerMarker.setAttribute("r", 3);
         playerMarker.setAttribute("class", "player-marker");
         
         mapPlayer.appendChild(playerMarker);
     }
 }
-
 
 // Função para mover o jogador para uma sala
 async function moveToRoom(roomId) {
