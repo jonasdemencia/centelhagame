@@ -199,7 +199,6 @@
     background-color: #c53b3b;
 }
 
-/* Substitua a animação pulse existente por esta */
 @keyframes pulse {
     0% { opacity: 0.7; }
     50% { opacity: 1; }
@@ -211,8 +210,8 @@
     stroke: #f39c12;
     stroke-width: 0.5;
     animation: pulse 2s infinite;
-    /* Remova a transformação de escala */
 }
+
 
 /* Responsividade */
 @media (max-width: 768px) {
@@ -278,4 +277,13 @@
     min-width: 70px;
     text-align: right;
 }
+
+.room-group {
+    opacity: 1;
+}
+
+.room {
+    stroke-width: 0.2;
+}
+
 
