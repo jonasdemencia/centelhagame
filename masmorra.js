@@ -33,24 +33,26 @@ const dungeon = {
     description: "Uma vasta masmorra sob a cidade de Águas Profundas.",
     entrance: "room-1",
     rooms: {
-        "room-1": {
-            id: "room-1",
-            name: "Entrada da Masmorra",
-            description: "Um corredor frio e úmido se estende à sua frente. Há uma porta de madeira ao final.",
-            type: "corridor",
-            exits: [
-                { direction: "north", leadsTo: "room-2", type: "door", locked: false }
-            ],
-            visited: false,
-            discovered: false,
-            x: 50, // Coordenadas no SVG
-            y: 80,
-            width: 10, // Largura em unidades SVG
-            height: 20, // Altura em unidades SVG
-            events: [
-                { type: "first-visit", text: "O ar está frio e você sente um arrepio na espinha ao entrar neste lugar antigo." }
-            ]
-        },
+        // Para a entrada da masmorra (room-1), altere:
+"room-1": {
+    id: "room-1",
+    name: "Entrada da Masmorra",
+    description: "Um corredor frio e úmido se estende à sua frente. Há uma porta de madeira ao final.",
+    type: "corridor",
+    exits: [
+        { direction: "north", leadsTo: "room-2", type: "door", locked: false }
+    ],
+    visited: false,
+    discovered: false,
+    x: 50, // Coordenadas no SVG
+    y: 80,
+    width: 10, // Reduzido para 2x2 unidades (10x10)
+    height: 10, // Reduzido para 2x2 unidades (10x10)
+    events: [
+        { type: "first-visit", text: "O ar está frio e você sente um arrepio na espinha ao entrar neste lugar antigo." }
+    ]
+}
+
         "room-2": {
             id: "room-2",
             name: "Sala das Estátuas",
@@ -322,10 +324,10 @@ function drawMap() {
     const currentRoom = dungeon.rooms[playerState.currentRoom];
     if (currentRoom) {
         const playerMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        playerMarker.setAttribute("cx", currentRoom.x);
-        playerMarker.setAttribute("cy", currentRoom.y);
-        playerMarker.setAttribute("r", 3);
-        playerMarker.setAttribute("class", "player-marker");
+playerMarker.setAttribute("cx", currentRoom.x);
+playerMarker.setAttribute("cy", currentRoom.y);
+playerMarker.setAttribute("r", 2); // Reduzido de 3 para 2, menor que uma unidade mínima
+playerMarker.setAttribute("class", "player-marker");
         
         mapPlayer.appendChild(playerMarker);
     }
@@ -396,12 +398,51 @@ function updateDirectionButtons() {
     // Habilita os botões com base nas saídas disponíveis
     currentRoom.exits.forEach(exit => {
         let button;
-        switch (exit.direction) {
-            case "north": button = northBtn; break;
-            case "south": button = southBtn; break;
-            case "east": button = eastBtn; break;
-            case "west": button = westBtn; break;
+        // Para garantir que as portas conectem corretamente as salas, ajuste na função drawMap():
+// Ajusta a posição da porta com base na direção
+switch (exit.direction) {
+    case "north":
+        doorX = room.x;
+        doorY = room.y - room.height/2;
+        // Conecta diretamente com a sala de destino
+        const northRoom = dungeon.rooms[exit.leadsTo];
+        if (northRoom) {
+            doorY = (room.y - room.height/2 + northRoom.y + northRoom.height/2) / 2;
         }
+        break;
+    case "south":
+        doorX = room.x;
+        doorY = room.y + room.height/2;
+        // Conecta diretamente com a sala de destino
+        const southRoom = dungeon.rooms[exit.leadsTo];
+        if (southRoom) {
+            doorY = (room.y + room.height/2 + southRoom.y - southRoom.height/2) / 2;
+        }
+        break;
+    case "east":
+        doorX = room.x + room.width/2;
+        doorY = room.y;
+        doorWidth = 2;
+        doorHeight = 6;
+        // Conecta diretamente com a sala de destino
+        const eastRoom = dungeon.rooms[exit.leadsTo];
+        if (eastRoom) {
+            doorX = (room.x + room.width/2 + eastRoom.x - eastRoom.width/2) / 2;
+        }
+        break;
+    case "west":
+        doorX = room.x - room.width/2;
+        doorY = room.y;
+        doorWidth = 2;
+        doorHeight = 6;
+        // Conecta diretamente com a sala de destino
+        const westRoom = dungeon.rooms[exit.leadsTo];
+        if (westRoom) {
+            doorX = (room.x - room.width/2 + westRoom.x + westRoom.width/2) / 2;
+        }
+        break;
+}
+
         
         if (button) {
             if (exit.locked) {
