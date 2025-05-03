@@ -33,24 +33,26 @@ const dungeon = {
     description: "Uma vasta masmorra sob a cidade de Águas Profundas.",
     entrance: "room-1",
     rooms: {
-        "room-1": {
-            id: "room-1",
-            name: "Entrada da Masmorra",
-            description: "Um corredor frio e úmido se estende à sua frente. Há uma porta de madeira ao final.",
-            type: "corridor",
-            exits: [
-                { direction: "north", leadsTo: "room-2", type: "door", locked: false }
-            ],
-            visited: false,
-            discovered: false,
-            x: 50, // Coordenadas no SVG
-            y: 80,
-            width: 10, // Largura em unidades SVG
-            height: 20, // Altura em unidades SVG
-            events: [
-                { type: "first-visit", text: "O ar está frio e você sente um arrepio na espinha ao entrar neste lugar antigo." }
-            ]
-        },
+        // Modifique a sala "room-1" para usar apenas 4 unidades (2x2)
+"room-1": {
+    id: "room-1",
+    name: "Entrada da Masmorra",
+    description: "Um corredor frio e úmido se estende à sua frente. Há uma porta de madeira ao final.",
+    type: "corridor",
+    exits: [
+        { direction: "north", leadsTo: "room-2", type: "door", locked: false }
+    ],
+    visited: false,
+    discovered: false,
+    gridX: 10, // Coordenada X na grade (em células)
+    gridY: 16, // Coordenada Y na grade (em células)
+    gridWidth: 2, // Alterado de 3 para 2
+    gridHeight: 2, // Alterado de 4 para 2
+    events: [
+        { type: "first-visit", text: "O ar está frio e você sente um arrepio na espinha ao entrar neste lugar antigo." }
+    ]
+},
+
         "room-2": {
             id: "room-2",
             name: "Sala das Estátuas",
@@ -321,11 +323,13 @@ function drawMap() {
     // Desenha o marcador do jogador
     const currentRoom = dungeon.rooms[playerState.currentRoom];
     if (currentRoom) {
-        const playerMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        playerMarker.setAttribute("cx", currentRoom.x);
-        playerMarker.setAttribute("cy", currentRoom.y);
-        playerMarker.setAttribute("r", 3);
-        playerMarker.setAttribute("class", "player-marker");
+        // Na função drawMap(), modifique o tamanho do marcador do jogador
+const playerMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+playerMarker.setAttribute("cx", centerX);
+playerMarker.setAttribute("cy", centerY);
+playerMarker.setAttribute("r", GRID_CELL_SIZE * 0.4); // Alterado de 0.6 para 0.4
+playerMarker.setAttribute("class", "player-marker");
+
         
         mapPlayer.appendChild(playerMarker);
     }
