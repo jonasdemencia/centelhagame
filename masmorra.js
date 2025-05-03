@@ -27,6 +27,11 @@ let currentLogBlock = null;
 let playerData = null;
 let userId = null;
 
+// Constantes para o sistema de grade
+const GRID_CELL_SIZE = 5; // Tamanho de cada célula da grade em unidades SVG
+const GRID_COLOR = "#222"; // Cor das linhas da grade
+
+
 // Dados da masmorra - Definição das salas e corredores
 const dungeon = {
     name: "Ruínas de Undermountain",
