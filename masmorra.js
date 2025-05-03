@@ -51,7 +51,7 @@ const dungeon = {
     events: [
         { type: "first-visit", text: "O ar está frio e você sente um arrepio na espinha ao entrar neste lugar antigo." }
     ]
-}
+},
 
         "room-2": {
             id: "room-2",
