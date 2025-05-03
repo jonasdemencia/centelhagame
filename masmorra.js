@@ -53,6 +53,7 @@ const dungeon = {
     ]
 },
 
+
         "room-2": {
             id: "room-2",
             name: "Sala das Estátuas",
@@ -321,18 +322,22 @@ function drawMap() {
     }
     
     // Desenha o marcador do jogador
-    const currentRoom = dungeon.rooms[playerState.currentRoom];
-    if (currentRoom) {
-        // Na função drawMap(), modifique o tamanho do marcador do jogador
-const playerMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-playerMarker.setAttribute("cx", centerX);
-playerMarker.setAttribute("cy", centerY);
-playerMarker.setAttribute("r", GRID_CELL_SIZE * 0.4); // Alterado de 0.6 para 0.4
-playerMarker.setAttribute("class", "player-marker");
+    // Desenha o marcador do jogador
+const currentRoom = dungeon.rooms[playerState.currentRoom];
+if (currentRoom) {
+    // Calcula o centro da sala atual
+    const centerX = (currentRoom.gridX * GRID_CELL_SIZE) + (currentRoom.gridWidth * GRID_CELL_SIZE / 2);
+    const centerY = (currentRoom.gridY * GRID_CELL_SIZE) + (currentRoom.gridHeight * GRID_CELL_SIZE / 2);
+    
+    const playerMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    playerMarker.setAttribute("cx", centerX);
+    playerMarker.setAttribute("cy", centerY);
+    playerMarker.setAttribute("r", GRID_CELL_SIZE * 0.4); // Alterado de 0.6 para 0.4
+    playerMarker.setAttribute("class", "player-marker");
+    
+    mapPlayer.appendChild(playerMarker);
+}
 
-        
-        mapPlayer.appendChild(playerMarker);
-    }
 }
 
 // Função para mover o jogador para uma sala
@@ -400,12 +405,76 @@ function updateDirectionButtons() {
     // Habilita os botões com base nas saídas disponíveis
     currentRoom.exits.forEach(exit => {
         let button;
-        switch (exit.direction) {
-            case "north": button = northBtn; break;
-            case "south": button = southBtn; break;
-            case "east": button = eastBtn; break;
-            case "west": button = westBtn; break;
+        // Ajusta a posição da porta com base na direção
+switch (exit.direction) {
+    case "north": {
+        doorX = x + (width / 2) - (doorWidth / 2);
+        doorY = y - (doorHeight / 2);
+        
+        // Conecta com a sala de destino se ela estiver descoberta
+        const destRoom = dungeon.rooms[exit.leadsTo];
+        if (destRoom && playerState.discoveredRooms.includes(exit.leadsTo)) {
+            const destX = destRoom.gridX * GRID_CELL_SIZE;
+            const destY = destRoom.gridY * GRID_CELL_SIZE;
+            const destHeight = destRoom.gridHeight * GRID_CELL_SIZE;
+            
+            // Calcula a posição média entre as duas salas
+            doorY = (y + destY + destHeight) / 2 - doorHeight;
         }
+        break;
+    }
+    case "south": {
+        doorX = x + (width / 2) - (doorWidth / 2);
+        doorY = y + height - (doorHeight / 2);
+        
+        // Conecta com a sala de destino se ela estiver descoberta
+        const destRoom = dungeon.rooms[exit.leadsTo];
+        if (destRoom && playerState.discoveredRooms.includes(exit.leadsTo)) {
+            const destX = destRoom.gridX * GRID_CELL_SIZE;
+            const destY = destRoom.gridY * GRID_CELL_SIZE;
+            
+            // Calcula a posição média entre as duas salas
+            doorY = (y + height + destY) / 2 - doorHeight / 2;
+        }
+        break;
+    }
+    case "east": {
+        doorX = x + width - (doorWidth / 2);
+        doorY = y + (height / 2) - (doorHeight / 2);
+        doorWidth = GRID_CELL_SIZE * 0.4;
+        doorHeight = GRID_CELL_SIZE * 1.2;
+        
+        // Conecta com a sala de destino se ela estiver descoberta
+        const destRoom = dungeon.rooms[exit.leadsTo];
+        if (destRoom && playerState.discoveredRooms.includes(exit.leadsTo)) {
+            const destX = destRoom.gridX * GRID_CELL_SIZE;
+            const destY = destRoom.gridY * GRID_CELL_SIZE;
+            
+            // Calcula a posição média entre as duas salas
+            doorX = (x + width + destX) / 2 - doorWidth / 2;
+        }
+        break;
+    }
+    case "west": {
+        doorX = x - (doorWidth / 2);
+        doorY = y + (height / 2) - (doorHeight / 2);
+        doorWidth = GRID_CELL_SIZE * 0.4;
+        doorHeight = GRID_CELL_SIZE * 1.2;
+        
+        // Conecta com a sala de destino se ela estiver descoberta
+        const destRoom = dungeon.rooms[exit.leadsTo];
+        if (destRoom && playerState.discoveredRooms.includes(exit.leadsTo)) {
+            const destX = destRoom.gridX * GRID_CELL_SIZE;
+            const destY = destRoom.gridY * GRID_CELL_SIZE;
+            const destWidth = destRoom.gridWidth * GRID_CELL_SIZE;
+            
+            // Calcula a posição média entre as duas salas
+            doorX = (x + destX + destWidth) / 2 - doorWidth / 2;
+        }
+        break;
+    }
+}
+
         
         if (button) {
             if (exit.locked) {
