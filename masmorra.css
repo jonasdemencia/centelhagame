@@ -12,7 +12,7 @@
     }
 }
 
-/* ===== INÍCIO DOS AJUSTES DE ESTILO - MAPA ===== */
+/* ===== AJUSTES DE ESTILO v2 - MAPA UNDERMOUNTAIN ===== */
 
 /* Fundo geral da página */
 body {
@@ -22,8 +22,7 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
-    /* Fundo preto sólido para combinar com Undermountain */
-    background: #000000;
+    background: #000000; /* GARANTE FUNDO PRETO */
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
     user-select: none;
@@ -32,22 +31,25 @@ body {
 /* Container do mapa */
 .map-container {
     flex: 2;
-    /* Fundo cor de pergaminho movido para cá */
-    background-color: #f5e5c3; /* Cor de pergaminho */
-    /* Borda mais sutil ou temática */
-    border: 5px solid #2b1d0e; /* Borda marrom bem escura e grossa */
-    border-radius: 0; /* Sem borda arredondada para estilo antigo */
-    padding: 5px; /* Pequeno padding interno */
+    background-color: #111; /* Um cinza muito escuro para o container */
+    border: 4px solid #4b382a; /* Borda marrom escura */
+    border-radius: 0;
+    padding: 8px; /* Padding para espaço entre borda e mapa */
     height: 400px; /* Mantenha ou ajuste */
     position: relative;
-    box-shadow: inset 0 0 8px rgba(0,0,0,0.6); /* Sombra interna para dar profundidade */
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.7); /* Sombra interna */
 }
 
 /* Elemento SVG do Mapa */
 #dungeon-map {
     width: 100%;
     height: 100%;
-    background-color: transparent; /* Fundo transparente para mostrar o do container */
+    background-color: #000000; /* FUNDO DO MAPA PRETO */
+}
+
+/* Grade de fundo (desenhada pelo JS) - Esconder */
+#map-grid {
+    display: none; /* Esconde as linhas da grade */
 }
 
 /* Estilos unificados para Salas e Corredores */
@@ -55,35 +57,34 @@ body {
 .corridor,
 .room.discovered,
 .room.visited {
-    fill: #f5e5c3;       /* Cor de pergaminho para o chão/preenchimento */
-    stroke: #000000;       /* Paredes (contorno) PRETAS */
-    stroke-width: 1.5;     /* Espessura da parede - AJUSTE CONFORME NECESSÁRIO */
-    opacity: 1;            /* Garante opacidade total por padrão */
+    fill: #ece3c0;       /* Cor de pergaminho/Bege para o chão/preenchimento */
+    stroke: none;          /* SEM CONTORNO - paredes são o fundo preto */
+    /* stroke-width: 0; */ /* Garante sem contorno */
 }
 
-/* Opcional: Diferenciar levemente salas visitadas (se necessário) */
-/* .room.visited { */
-   /* fill: #ede3cd; */ /* Tom um pouco diferente */
-/* } */
+/* Opcional: Diferenciar levemente salas visitadas com opacidade */
+.room.visited {
+   /* fill: #dbd3b0; */ /* Tom um pouco mais escuro */
+   /* Ou usar opacidade */
+   /* opacity: 0.9; */
+}
 
-/* Estilos para Portas (simulando vãos) */
+/* Estilos para Portas (vãos pretos) */
 .door,
 .door.locked {
     fill: none;            /* Sem preenchimento */
     stroke: none;          /* Sem contorno */
-     /* O JS idealmente controlaria a visibilidade ou adicionaria um ícone para trancada */
 }
 
 /* Marcador do Jogador */
 .player-marker {
-    fill: #e74c3c;        /* Vermelho para bom contraste no pergaminho */
+    fill: #e74c3c;        /* Vermelho */
     stroke: #ffffff;      /* Contorno branco */
-    stroke-width: 0.6;    /* Contorno um pouco mais grosso */
-    /* Mantém a animação de pulso, mas pode ajustar */
+    stroke-width: 0.6;
+    /* Animação mantida */
     animation: pulse 1.8s infinite ease-in-out;
 }
 
-/* Animação de pulso ajustada */
 @keyframes pulse {
     0% { opacity: 0.7; transform: scale(0.95); }
     50% { opacity: 1; transform: scale(1.05); }
@@ -92,39 +93,40 @@ body {
 
 /* ===== FIM DOS AJUSTES DE ESTILO - MAPA ===== */
 
-/* Estilos para o log de exploração (ajustado para tema) */
+
+/* Estilos para o log de exploração (Mantendo tema escuro) */
 .exploration-log {
     flex: 1;
-    background-color: rgba(10, 5, 0, 0.75); /* Fundo marrom escuro semitransparente */
-    border: 3px solid #5d4037;           /* Borda marrom escura */
+    background-color: rgba(10, 5, 0, 0.75);
+    border: 3px solid #5d4037;
     border-radius: 10px;
-    padding: 15px; /* Aumentar padding */
+    padding: 15px;
     height: 400px;
     overflow-y: auto;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.5); /* Sombra interna */
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
 }
 
 #exploration-log-content {
-    height: calc(100% - 10px); /* Ajuste se padding mudou */
+    height: calc(100% - 10px);
     overflow-y: auto;
-    color: #e0d6c7; /* Cor de texto bege claro */
-    font-family: 'Eagle Lake', cursive; /* Mantido */
-    font-size: 15px; /* Levemente maior */
-    line-height: 1.5; /* Melhorar legibilidade */
+    color: #e0d6c7;
+    font-family: 'Eagle Lake', cursive;
+    font-size: 15px;
+    line-height: 1.5;
 }
 
 .log-block {
     margin-bottom: 15px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #5d4037; /* Linha separadora marrom escura */
+    border-bottom: 1px solid #5d4037;
 }
 
 .log-block:last-child {
-    border-bottom: none; /* Remove borda do último item */
+    border-bottom: none;
 }
 
 .log-block h4 {
-    color: #d4ac6e; /* Marrom mais claro / dourado para títulos */
+    color: #d4ac6e;
     margin-bottom: 8px;
     font-size: 1.1em;
 }
@@ -133,7 +135,7 @@ body {
     margin: 5px 0;
 }
 
-/* Estilos para os botões de ação (ajustado para tema) */
+/* Estilos para os botões de ação (Mantendo tema escuro) */
 .player-actions {
     display: flex;
     flex-direction: column;
@@ -151,29 +153,29 @@ body {
 
 .east-west-container {
     display: flex;
-    gap: 50px; /* Mantido */
+    gap: 50px;
 }
 
 .direction-btn, .action-btn {
-    background-color: #4b382a; /* Marrom escuro para botões */
-    color: #e0d6c7;          /* Texto bege claro */
-    border: 2px solid #8b5a2b; /* Borda marrom médio */
+    background-color: #4b382a;
+    color: #e0d6c7;
+    border: 2px solid #8b5a2b;
     border-radius: 5px;
     padding: 10px 15px;
-    font-family: 'Eagle Lake', cursive; /* Mantido */
+    font-family: 'Eagle Lake', cursive;
     font-size: 16px;
     cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s; /* Transição mais rápida */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3); /* Sombra sutil */
+    transition: background-color 0.2s, border-color 0.2s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
 .direction-btn:hover, .action-btn:hover {
-    background-color: #6b4a3a; /* Marrom um pouco mais claro no hover */
+    background-color: #6b4a3a;
     border-color: #aa6c39;
 }
 
 .direction-btn:disabled, .action-btn:disabled {
-    background-color: #444; /* Cinza escuro para desabilitado */
+    background-color: #444;
     border-color: #666;
     color: #888;
     cursor: not-allowed;
@@ -188,49 +190,49 @@ body {
     margin-top: 10px;
 }
 
-/* Menu de direções para abrir portas (ajustado para tema) */
+/* Menu de direções para abrir portas (Mantendo tema escuro) */
 .direction-menu {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: #2a1d10; /* Fundo marrom bem escuro */
-    border: 2px solid #8b5a2b; /* Borda marrom */
+    background-color: #2a1d10;
+    border: 2px solid #8b5a2b;
     border-radius: 8px;
-    padding: 20px; /* Mais padding */
+    padding: 20px;
     z-index: 100;
     display: flex;
     flex-direction: column;
     gap: 10px;
     min-width: 200px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5); /* Sombra mais forte */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
 }
 
 .direction-menu p {
-    color: #e0d6c7; /* Texto bege claro */
+    color: #e0d6c7;
     text-align: center;
     margin: 0 0 10px 0;
-    font-family: 'Eagle Lake', cursive; /* Manter fonte */
+    font-family: 'Eagle Lake', cursive;
 }
 
 .direction-choice {
-    background-color: #5d4037; /* Marrom escuro */
-    color: #e0d6c7; /* Texto bege claro */
+    background-color: #5d4037;
+    color: #e0d6c7;
     border: 1px solid #8b5a2b;
     border-radius: 4px;
     padding: 8px 12px;
-    font-family: 'Eagle Lake', cursive; /* Mantido */
+    font-family: 'Eagle Lake', cursive;
     font-size: 14px;
     cursor: pointer;
     transition: background-color 0.2s;
 }
 
 .direction-choice:hover {
-    background-color: #8b5a2b; /* Marrom médio no hover */
+    background-color: #8b5a2b;
 }
 
 .direction-choice.cancel {
-    background-color: #8c3838; /* Vermelho escuro para cancelar */
+    background-color: #8c3838;
     margin-top: 5px;
 }
 
@@ -259,12 +261,12 @@ body {
     }
 }
 
-/* Estilos para a barra de status do jogador (ajustado para tema) */
+/* Estilos para a barra de status do jogador (Mantendo tema escuro) */
 .player-status {
     margin: 15px 0;
     padding: 10px;
-    background-color: rgba(10, 5, 0, 0.7); /* Fundo marrom escuro semitransparente */
-    border: 2px solid #5d4037; /* Borda marrom escura */
+    background-color: rgba(10, 5, 0, 0.7);
+    border: 2px solid #5d4037;
     border-radius: 8px;
 }
 
@@ -272,14 +274,14 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #e0d6c7; /* Texto bege claro */
-    font-family: 'Eagle Lake', cursive; /* Mantido */
+    color: #e0d6c7;
+    font-family: 'Eagle Lake', cursive;
 }
 
 .health-bar-wrapper {
     flex: 1;
     height: 15px;
-    background-color: #333; /* Fundo da barra */
+    background-color: #333;
     border: 1px solid #555;
     border-radius: 4px;
     overflow: hidden;
@@ -287,7 +289,7 @@ body {
 
 .health-bar {
     height: 100%;
-    background-color: #8c3838; /* Cor da vida (vermelho escuro) */
+    background-color: #8c3838; /* Vermelho escuro para vida */
     width: 100%; /* Controlado via JS */
     transition: width 0.3s ease;
 }
@@ -296,7 +298,3 @@ body {
     min-width: 70px;
     text-align: right;
 }
-
-/* Removido .room-group e .room específicos que estavam no final */
-/* A estilização de .room agora está unificada acima */
-
