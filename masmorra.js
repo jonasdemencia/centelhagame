@@ -54,6 +54,7 @@ const dungeon = {
 },
 
 
+
         "room-2": {
             id: "room-2",
             name: "Sala das Estátuas",
@@ -243,6 +244,7 @@ async function addLogMessage(message, delay = 0, typingSpeed = 30) {
 }
 
 // Função para desenhar o mapa
+// Função para desenhar o mapa
 function drawMap() {
     const mapRooms = document.getElementById("map-rooms");
     const mapCorridors = document.getElementById("map-corridors");
@@ -255,21 +257,47 @@ function drawMap() {
     mapDoors.innerHTML = '';
     mapPlayer.innerHTML = '';
     
+    // Desenha a grade de fundo
+    drawGrid();
+    
     // Desenha as salas descobertas
     for (const roomId of playerState.discoveredRooms) {
         const room = dungeon.rooms[roomId];
         if (!room) continue;
         
-        // Cria o elemento da sala
-        const roomElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        roomElement.setAttribute("x", room.x - room.width/2);
-        roomElement.setAttribute("y", room.y - room.height/2);
-        roomElement.setAttribute("width", room.width);
-        roomElement.setAttribute("height", room.height);
-        roomElement.setAttribute("class", `room ${room.type} ${playerState.visitedRooms.includes(room.id) ? 'visited' : 'discovered'}`);
-        roomElement.setAttribute("data-room-id", room.id);
+        // Verifica se as propriedades necessárias existem
+        if (room.gridX === undefined || room.gridY === undefined || 
+            room.gridWidth === undefined || room.gridHeight === undefined) {
+            console.error(`Sala ${roomId} tem propriedades de grade indefinidas.`);
+            continue;
+        }
         
-        mapRooms.appendChild(roomElement);
+        // Calcula as coordenadas reais a partir das coordenadas da grade
+        const x = room.gridX * GRID_CELL_SIZE;
+        const y = room.gridY * GRID_CELL_SIZE;
+        const width = room.gridWidth * GRID_CELL_SIZE;
+        const height = room.gridHeight * GRID_CELL_SIZE;
+        
+        // Cria um grupo para a sala
+        const roomGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        roomGroup.setAttribute("class", `room-group ${room.type} ${playerState.visitedRooms.includes(room.id) ? 'visited' : 'discovered'}`);
+        roomGroup.setAttribute("data-room-id", room.id);
+        
+        // Desenha as células da grade para formar a sala
+        for (let cellY = 0; cellY < room.gridHeight; cellY++) {
+            for (let cellX = 0; cellX < room.gridWidth; cellX++) {
+                const cellRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                cellRect.setAttribute("x", x + (cellX * GRID_CELL_SIZE));
+                cellRect.setAttribute("y", y + (cellY * GRID_CELL_SIZE));
+                cellRect.setAttribute("width", GRID_CELL_SIZE);
+                cellRect.setAttribute("height", GRID_CELL_SIZE);
+                cellRect.setAttribute("class", `room ${room.type} ${playerState.visitedRooms.includes(room.id) ? 'visited' : 'discovered'}`);
+                
+                roomGroup.appendChild(cellRect);
+            }
+        }
+        
+        mapRooms.appendChild(roomGroup);
         
         // Desenha as portas
         if (room.exits) {
@@ -277,38 +305,49 @@ function drawMap() {
                 // Só desenha a porta se a sala de destino também estiver descoberta
                 if (playerState.discoveredRooms.includes(exit.leadsTo)) {
                     if (exit.type === "door") {
-                        let doorX = room.x;
-                        let doorY = room.y;
-                        let doorWidth = 4;
-                        let doorHeight = 4;
+                        let doorX = x + (width / 2);
+                        let doorY = y + (height / 2);
+                        let doorWidth = GRID_CELL_SIZE * 0.8;
+                        let doorHeight = GRID_CELL_SIZE * 0.8;
                         
                         // Ajusta a posição da porta com base na direção
                         switch (exit.direction) {
                             case "north":
-                                doorX = room.x;
-                                doorY = room.y - room.height/2;
+                                doorX = x + (width / 2) - (doorWidth / 2);
+                                doorY = y - (doorHeight / 2);
+                                
+                                // Conecta com a sala de destino se ela estiver descoberta
+                                const destRoomNorth = dungeon.rooms[exit.leadsTo];
+                                if (destRoomNorth) {
+                                    const destX = destRoomNorth.gridX * GRID_CELL_SIZE;
+                                    const destY = destRoomNorth.gridY * GRID_CELL_SIZE;
+                                    const destHeight = destRoomNorth.gridHeight * GRID_CELL_SIZE;
+                                    
+                                    // Ajusta a posição da porta para conectar as salas
+                                    doorY = (y + destY + destHeight) / 2 - doorHeight;
+                                }
                                 break;
                             case "south":
-                                doorX = room.x;
-                                doorY = room.y + room.height/2;
+                                doorX = x + (width / 2) - (doorWidth / 2);
+                                doorY = y + height - (doorHeight / 2);
                                 break;
                             case "east":
-                                doorX = room.x + room.width/2;
-                                doorY = room.y;
-                                doorWidth = 2;
-                                doorHeight = 6;
+                                doorX = x + width - (doorWidth / 2);
+                                doorY = y + (height / 2) - (doorHeight / 2);
+                                doorWidth = GRID_CELL_SIZE * 0.4;
+                                doorHeight = GRID_CELL_SIZE * 1.2;
                                 break;
                             case "west":
-                                doorX = room.x - room.width/2;
-                                doorY = room.y;
-                                doorWidth = 2;
-                                doorHeight = 6;
+                                doorX = x - (doorWidth / 2);
+                                doorY = y + (height / 2) - (doorHeight / 2);
+                                doorWidth = GRID_CELL_SIZE * 0.4;
+                                doorHeight = GRID_CELL_SIZE * 1.2;
                                 break;
                         }
                         
                         const doorElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                        doorElement.setAttribute("x", doorX - doorWidth/2);
-                        doorElement.setAttribute("y", doorY - doorHeight/2);
+                        doorElement.setAttribute("x", doorX);
+                        doorElement.setAttribute("y", doorY);
                         doorElement.setAttribute("width", doorWidth);
                         doorElement.setAttribute("height", doorHeight);
                         doorElement.setAttribute("class", `door ${exit.locked ? 'locked' : ''}`);
@@ -322,23 +361,29 @@ function drawMap() {
     }
     
     // Desenha o marcador do jogador
-    // Desenha o marcador do jogador
-const currentRoom = dungeon.rooms[playerState.currentRoom];
-if (currentRoom) {
-    // Calcula o centro da sala atual
-    const centerX = (currentRoom.gridX * GRID_CELL_SIZE) + (currentRoom.gridWidth * GRID_CELL_SIZE / 2);
-    const centerY = (currentRoom.gridY * GRID_CELL_SIZE) + (currentRoom.gridHeight * GRID_CELL_SIZE / 2);
-    
-    const playerMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    playerMarker.setAttribute("cx", centerX);
-    playerMarker.setAttribute("cy", centerY);
-    playerMarker.setAttribute("r", GRID_CELL_SIZE * 0.4); // Alterado de 0.6 para 0.4
-    playerMarker.setAttribute("class", "player-marker");
-    
-    mapPlayer.appendChild(playerMarker);
+    const currentRoom = dungeon.rooms[playerState.currentRoom];
+    if (currentRoom) {
+        // Verifica se as propriedades necessárias existem
+        if (currentRoom.gridX !== undefined && currentRoom.gridY !== undefined && 
+            currentRoom.gridWidth !== undefined && currentRoom.gridHeight !== undefined) {
+            
+            // Calcula o centro da sala atual
+            const centerX = (currentRoom.gridX * GRID_CELL_SIZE) + (currentRoom.gridWidth * GRID_CELL_SIZE / 2);
+            const centerY = (currentRoom.gridY * GRID_CELL_SIZE) + (currentRoom.gridHeight * GRID_CELL_SIZE / 2);
+            
+            const playerMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            playerMarker.setAttribute("cx", centerX);
+            playerMarker.setAttribute("cy", centerY);
+            playerMarker.setAttribute("r", GRID_CELL_SIZE * 0.4); // Alterado de 0.6 para 0.4
+            playerMarker.setAttribute("class", "player-marker");
+            
+            mapPlayer.appendChild(playerMarker);
+        } else {
+            console.error(`Sala atual ${currentRoom.id} tem propriedades de grade indefinidas.`);
+        }
+    }
 }
 
-}
 
 // Função para mover o jogador para uma sala
 async function moveToRoom(roomId) {
