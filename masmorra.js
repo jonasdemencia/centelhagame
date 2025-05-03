@@ -26,10 +26,7 @@ console.log("LOG: Firebase inicializado.");
 let currentLogBlock = null;
 let playerData = null;
 let userId = null;
-// Variáveis globais
-let currentLogBlock = null;
-let playerData = null;
-let userId = null;
+
 
 // Constantes para o sistema de grade
 const GRID_CELL_SIZE = 5; // Tamanho de cada célula da grade em unidades SVG
