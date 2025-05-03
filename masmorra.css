@@ -12,95 +12,128 @@
     }
 }
 
-/* Estilos para o mapa */
-.map-container {
-    flex: 2;
-    background-color: #222;
-    border: 3px solid #aa6c39;
-    border-radius: 10px;
-    padding: 10px;
-    height: 400px;
-    position: relative;
+/* ===== INÍCIO DOS AJUSTES DE ESTILO - MAPA ===== */
+
+/* Fundo geral da página */
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    /* Fundo preto sólido para combinar com Undermountain */
+    background: #000000;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    user-select: none;
 }
 
+/* Container do mapa */
+.map-container {
+    flex: 2;
+    /* Fundo cor de pergaminho movido para cá */
+    background-color: #f5e5c3; /* Cor de pergaminho */
+    /* Borda mais sutil ou temática */
+    border: 5px solid #2b1d0e; /* Borda marrom bem escura e grossa */
+    border-radius: 0; /* Sem borda arredondada para estilo antigo */
+    padding: 5px; /* Pequeno padding interno */
+    height: 400px; /* Mantenha ou ajuste */
+    position: relative;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.6); /* Sombra interna para dar profundidade */
+}
+
+/* Elemento SVG do Mapa */
 #dungeon-map {
     width: 100%;
     height: 100%;
-    background-color: #111;
+    background-color: transparent; /* Fundo transparente para mostrar o do container */
 }
 
-/* Estilos para os elementos do mapa */
-.room {
-    fill: #333;
-    stroke: #555;
-    stroke-width: 0.5;
-}
-
-.corridor {
-    fill: #2a2a2a;
-    stroke: #555;
-    stroke-width: 0.3;
-}
-
-.door {
-    fill: #8b5a2b;
-    stroke: #aa6c39;
-    stroke-width: 0.5;
-}
-
-.door.locked {
-    fill: #a52a2a;
-}
-
-.room.discovered {
-    fill: #3a3a3a;
-}
-
+/* Estilos unificados para Salas e Corredores */
+.room,
+.corridor,
+.room.discovered,
 .room.visited {
-    fill: #4a4a4a;
+    fill: #f5e5c3;       /* Cor de pergaminho para o chão/preenchimento */
+    stroke: #000000;       /* Paredes (contorno) PRETAS */
+    stroke-width: 1.5;     /* Espessura da parede - AJUSTE CONFORME NECESSÁRIO */
+    opacity: 1;            /* Garante opacidade total por padrão */
 }
 
+/* Opcional: Diferenciar levemente salas visitadas (se necessário) */
+/* .room.visited { */
+   /* fill: #ede3cd; */ /* Tom um pouco diferente */
+/* } */
+
+/* Estilos para Portas (simulando vãos) */
+.door,
+.door.locked {
+    fill: none;            /* Sem preenchimento */
+    stroke: none;          /* Sem contorno */
+     /* O JS idealmente controlaria a visibilidade ou adicionaria um ícone para trancada */
+}
+
+/* Marcador do Jogador */
 .player-marker {
-    fill: #f1c40f;
-    stroke: #f39c12;
-    stroke-width: 0.5;
+    fill: #e74c3c;        /* Vermelho para bom contraste no pergaminho */
+    stroke: #ffffff;      /* Contorno branco */
+    stroke-width: 0.6;    /* Contorno um pouco mais grosso */
+    /* Mantém a animação de pulso, mas pode ajustar */
+    animation: pulse 1.8s infinite ease-in-out;
 }
 
-/* Estilos para o log de exploração */
+/* Animação de pulso ajustada */
+@keyframes pulse {
+    0% { opacity: 0.7; transform: scale(0.95); }
+    50% { opacity: 1; transform: scale(1.05); }
+    100% { opacity: 0.7; transform: scale(0.95); }
+}
+
+/* ===== FIM DOS AJUSTES DE ESTILO - MAPA ===== */
+
+/* Estilos para o log de exploração (ajustado para tema) */
 .exploration-log {
     flex: 1;
-    background-color: rgba(0, 0, 0, 0.7);
-    border: 3px solid #aa6c39;
+    background-color: rgba(10, 5, 0, 0.75); /* Fundo marrom escuro semitransparente */
+    border: 3px solid #5d4037;           /* Borda marrom escura */
     border-radius: 10px;
-    padding: 10px;
+    padding: 15px; /* Aumentar padding */
     height: 400px;
     overflow-y: auto;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5); /* Sombra interna */
 }
 
 #exploration-log-content {
-    height: calc(100% - 40px);
+    height: calc(100% - 10px); /* Ajuste se padding mudou */
     overflow-y: auto;
-    color: #ddd;
-    font-family: 'Eagle Lake', cursive;
-    font-size: 14px;
+    color: #e0d6c7; /* Cor de texto bege claro */
+    font-family: 'Eagle Lake', cursive; /* Mantido */
+    font-size: 15px; /* Levemente maior */
+    line-height: 1.5; /* Melhorar legibilidade */
 }
 
 .log-block {
     margin-bottom: 15px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #555;
+    border-bottom: 1px solid #5d4037; /* Linha separadora marrom escura */
+}
+
+.log-block:last-child {
+    border-bottom: none; /* Remove borda do último item */
 }
 
 .log-block h4 {
-    color: #aa6c39;
-    margin-bottom: 5px;
+    color: #d4ac6e; /* Marrom mais claro / dourado para títulos */
+    margin-bottom: 8px;
+    font-size: 1.1em;
 }
 
 .log-block p {
     margin: 5px 0;
 }
 
-/* Estilos para os botões de ação */
+/* Estilos para os botões de ação (ajustado para tema) */
 .player-actions {
     display: flex;
     flex-direction: column;
@@ -118,29 +151,33 @@
 
 .east-west-container {
     display: flex;
-    gap: 50px;
+    gap: 50px; /* Mantido */
 }
 
 .direction-btn, .action-btn {
-    background-color: #8b5a2b;
-    color: white;
-    border: 2px solid #aa6c39;
+    background-color: #4b382a; /* Marrom escuro para botões */
+    color: #e0d6c7;          /* Texto bege claro */
+    border: 2px solid #8b5a2b; /* Borda marrom médio */
     border-radius: 5px;
     padding: 10px 15px;
-    font-family: 'Eagle Lake', cursive;
+    font-family: 'Eagle Lake', cursive; /* Mantido */
     font-size: 16px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.2s, border-color 0.2s; /* Transição mais rápida */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3); /* Sombra sutil */
 }
 
 .direction-btn:hover, .action-btn:hover {
-    background-color: #aa6c39;
+    background-color: #6b4a3a; /* Marrom um pouco mais claro no hover */
+    border-color: #aa6c39;
 }
 
 .direction-btn:disabled, .action-btn:disabled {
-    background-color: #555;
-    border-color: #777;
+    background-color: #444; /* Cinza escuro para desabilitado */
+    border-color: #666;
+    color: #888;
     cursor: not-allowed;
+    box-shadow: none;
 }
 
 #action-buttons {
@@ -151,101 +188,83 @@
     margin-top: 10px;
 }
 
-/* Menu de direções para abrir portas */
+/* Menu de direções para abrir portas (ajustado para tema) */
 .direction-menu {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: #333;
-    border: 2px solid #aa6c39;
+    background-color: #2a1d10; /* Fundo marrom bem escuro */
+    border: 2px solid #8b5a2b; /* Borda marrom */
     border-radius: 8px;
-    padding: 15px;
+    padding: 20px; /* Mais padding */
     z-index: 100;
     display: flex;
     flex-direction: column;
     gap: 10px;
     min-width: 200px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5); /* Sombra mais forte */
 }
 
 .direction-menu p {
-    color: #ddd;
+    color: #e0d6c7; /* Texto bege claro */
     text-align: center;
     margin: 0 0 10px 0;
+    font-family: 'Eagle Lake', cursive; /* Manter fonte */
 }
 
 .direction-choice {
-    background-color: #8b5a2b;
-    color: white;
-    border: 1px solid #aa6c39;
+    background-color: #5d4037; /* Marrom escuro */
+    color: #e0d6c7; /* Texto bege claro */
+    border: 1px solid #8b5a2b;
     border-radius: 4px;
     padding: 8px 12px;
-    font-family: 'Eagle Lake', cursive;
+    font-family: 'Eagle Lake', cursive; /* Mantido */
     font-size: 14px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.2s;
 }
 
 .direction-choice:hover {
-    background-color: #aa6c39;
+    background-color: #8b5a2b; /* Marrom médio no hover */
 }
 
 .direction-choice.cancel {
-    background-color: #a52a2a;
+    background-color: #8c3838; /* Vermelho escuro para cancelar */
     margin-top: 5px;
 }
 
 .direction-choice.cancel:hover {
-    background-color: #c53b3b;
+    background-color: #a54e4e;
 }
 
-@keyframes pulse {
-    0% { opacity: 0.7; }
-    50% { opacity: 1; }
-    100% { opacity: 0.7; }
-}
-
-.player-marker {
-    fill: #f1c40f;
-    stroke: #f39c12;
-    stroke-width: 0.5;
-    animation: pulse 2s infinite;
-}
-
-
-/* Responsividade */
+/* Responsividade (Mantida como estava) */
 @media (max-width: 768px) {
     .dungeon-container {
         flex-direction: column;
     }
-    
     .map-container, .exploration-log {
         height: 300px;
     }
-    
     .east-west-container {
         gap: 20px;
     }
-    
     .direction-btn, .action-btn {
         font-size: 14px;
         padding: 8px 12px;
     }
-    
     #action-buttons {
         flex-direction: column;
         align-items: center;
     }
 }
 
-/* Adicione isso ao seu arquivo masmorra.css */
-
-/* Estilos para a barra de status do jogador */
+/* Estilos para a barra de status do jogador (ajustado para tema) */
 .player-status {
     margin: 15px 0;
     padding: 10px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border: 2px solid #aa6c39;
+    background-color: rgba(10, 5, 0, 0.7); /* Fundo marrom escuro semitransparente */
+    border: 2px solid #5d4037; /* Borda marrom escura */
     border-radius: 8px;
 }
 
@@ -253,14 +272,14 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #ddd;
-    font-family: 'Eagle Lake', cursive;
+    color: #e0d6c7; /* Texto bege claro */
+    font-family: 'Eagle Lake', cursive; /* Mantido */
 }
 
 .health-bar-wrapper {
     flex: 1;
     height: 15px;
-    background-color: #333;
+    background-color: #333; /* Fundo da barra */
     border: 1px solid #555;
     border-radius: 4px;
     overflow: hidden;
@@ -268,8 +287,8 @@
 
 .health-bar {
     height: 100%;
-    background-color: #4CAF50;
-    width: 100%;
+    background-color: #8c3838; /* Cor da vida (vermelho escuro) */
+    width: 100%; /* Controlado via JS */
     transition: width 0.3s ease;
 }
 
@@ -278,12 +297,6 @@
     text-align: right;
 }
 
-.room-group {
-    opacity: 1;
-}
-
-.room {
-    stroke-width: 0.2;
-}
-
+/* Removido .room-group e .room específicos que estavam no final */
+/* A estilização de .room agora está unificada acima */
 
