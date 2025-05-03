@@ -243,7 +243,35 @@ async function addLogMessage(message, delay = 0, typingSpeed = 30) {
     });
 }
 
-// Função para desenhar o mapa
+function drawGrid() {
+    const mapGrid = document.getElementById("map-grid");
+    mapGrid.innerHTML = '';
+    
+    // Desenha linhas horizontais
+    for (let y = 0; y <= 20; y++) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", "0");
+        line.setAttribute("y1", y * GRID_CELL_SIZE);
+        line.setAttribute("x2", "100");
+        line.setAttribute("y2", y * GRID_CELL_SIZE);
+        line.setAttribute("stroke", GRID_COLOR);
+        line.setAttribute("stroke-width", "0.1");
+        mapGrid.appendChild(line);
+    }
+    
+    // Desenha linhas verticais
+    for (let x = 0; x <= 20; x++) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x * GRID_CELL_SIZE);
+        line.setAttribute("y1", "0");
+        line.setAttribute("x2", x * GRID_CELL_SIZE);
+        line.setAttribute("y2", "100");
+        line.setAttribute("stroke", GRID_COLOR);
+        line.setAttribute("stroke-width", "0.1");
+        mapGrid.appendChild(line);
+    }
+}
+
 // Função para desenhar o mapa
 function drawMap() {
     const mapRooms = document.getElementById("map-rooms");
