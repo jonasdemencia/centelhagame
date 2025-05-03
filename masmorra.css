@@ -199,15 +199,19 @@
     background-color: #c53b3b;
 }
 
-/* Animações */
+/* Substitua a animação pulse existente por esta */
 @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
 }
 
 .player-marker {
+    fill: #f1c40f;
+    stroke: #f39c12;
+    stroke-width: 0.5;
     animation: pulse 2s infinite;
+    /* Remova a transformação de escala */
 }
 
 /* Responsividade */
