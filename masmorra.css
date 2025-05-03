@@ -12,130 +12,95 @@
     }
 }
 
-/* ===== AJUSTES DE ESTILO v2 - MAPA UNDERMOUNTAIN ===== */
-
-/* Fundo geral da página */
-body {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    background: #000000; /* GARANTE FUNDO PRETO */
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    overflow: hidden;
-    user-select: none;
-}
-
-/* Container do mapa */
+/* Estilos para o mapa */
 .map-container {
     flex: 2;
-    background-color: #111; /* Um cinza muito escuro para o container */
-    border: 4px solid #4b382a; /* Borda marrom escura */
-    border-radius: 0;
-    padding: 8px; /* Padding para espaço entre borda e mapa */
-    height: 400px; /* Mantenha ou ajuste */
+    background-color: #222;
+    border: 3px solid #aa6c39;
+    border-radius: 10px;
+    padding: 10px;
+    height: 400px;
     position: relative;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.7); /* Sombra interna */
 }
 
-/* Elemento SVG do Mapa */
 #dungeon-map {
     width: 100%;
     height: 100%;
-    background-color: #000000; /* FUNDO DO MAPA PRETO */
+    background-color: #111;
 }
 
-/* Grade de fundo (desenhada pelo JS) - Esconder */
-#map-grid {
-    display: none; /* Esconde as linhas da grade */
+/* Estilos para os elementos do mapa */
+.room {
+    fill: #333;
+    stroke: #555;
+    stroke-width: 0.5;
 }
 
-/* Estilos unificados para Salas e Corredores */
-.room,
-.corridor,
-.room.discovered,
-.room.visited {
-    fill: #ece3c0;       /* Cor de pergaminho/Bege para o chão/preenchimento */
-    stroke: none;          /* SEM CONTORNO - paredes são o fundo preto */
-    /* stroke-width: 0; */ /* Garante sem contorno */
+.corridor {
+    fill: #2a2a2a;
+    stroke: #555;
+    stroke-width: 0.3;
 }
 
-/* Opcional: Diferenciar levemente salas visitadas com opacidade */
-.room.visited {
-   /* fill: #dbd3b0; */ /* Tom um pouco mais escuro */
-   /* Ou usar opacidade */
-   /* opacity: 0.9; */
+.door {
+    fill: #8b5a2b;
+    stroke: #aa6c39;
+    stroke-width: 0.5;
 }
 
-/* Estilos para Portas (vãos pretos) */
-.door,
 .door.locked {
-    fill: none;            /* Sem preenchimento */
-    stroke: none;          /* Sem contorno */
+    fill: #a52a2a;
 }
 
-/* Marcador do Jogador */
+.room.discovered {
+    fill: #3a3a3a;
+}
+
+.room.visited {
+    fill: #4a4a4a;
+}
+
 .player-marker {
-    fill: #e74c3c;        /* Vermelho */
-    stroke: #ffffff;      /* Contorno branco */
-    stroke-width: 0.6;
-    /* Animação mantida */
-    animation: pulse 1.8s infinite ease-in-out;
+    fill: #f1c40f;
+    stroke: #f39c12;
+    stroke-width: 0.5;
 }
 
-@keyframes pulse {
-    0% { opacity: 0.7; transform: scale(0.95); }
-    50% { opacity: 1; transform: scale(1.05); }
-    100% { opacity: 0.7; transform: scale(0.95); }
-}
-
-/* ===== FIM DOS AJUSTES DE ESTILO - MAPA ===== */
-
-
-/* Estilos para o log de exploração (Mantendo tema escuro) */
+/* Estilos para o log de exploração */
 .exploration-log {
     flex: 1;
-    background-color: rgba(10, 5, 0, 0.75);
-    border: 3px solid #5d4037;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 3px solid #aa6c39;
     border-radius: 10px;
-    padding: 15px;
+    padding: 10px;
     height: 400px;
     overflow-y: auto;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
 }
 
 #exploration-log-content {
-    height: calc(100% - 10px);
+    height: calc(100% - 40px);
     overflow-y: auto;
-    color: #e0d6c7;
+    color: #ddd;
     font-family: 'Eagle Lake', cursive;
-    font-size: 15px;
-    line-height: 1.5;
+    font-size: 14px;
 }
 
 .log-block {
     margin-bottom: 15px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #5d4037;
-}
-
-.log-block:last-child {
-    border-bottom: none;
+    border-bottom: 1px solid #555;
 }
 
 .log-block h4 {
-    color: #d4ac6e;
-    margin-bottom: 8px;
-    font-size: 1.1em;
+    color: #aa6c39;
+    margin-bottom: 5px;
 }
 
 .log-block p {
     margin: 5px 0;
 }
 
-/* Estilos para os botões de ação (Mantendo tema escuro) */
+/* Estilos para os botões de ação */
 .player-actions {
     display: flex;
     flex-direction: column;
@@ -157,29 +122,25 @@ body {
 }
 
 .direction-btn, .action-btn {
-    background-color: #4b382a;
-    color: #e0d6c7;
-    border: 2px solid #8b5a2b;
+    background-color: #8b5a2b;
+    color: white;
+    border: 2px solid #aa6c39;
     border-radius: 5px;
     padding: 10px 15px;
     font-family: 'Eagle Lake', cursive;
     font-size: 16px;
     cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    transition: background-color 0.3s;
 }
 
 .direction-btn:hover, .action-btn:hover {
-    background-color: #6b4a3a;
-    border-color: #aa6c39;
+    background-color: #aa6c39;
 }
 
 .direction-btn:disabled, .action-btn:disabled {
-    background-color: #444;
-    border-color: #666;
-    color: #888;
+    background-color: #555;
+    border-color: #777;
     cursor: not-allowed;
-    box-shadow: none;
 }
 
 #action-buttons {
@@ -190,83 +151,98 @@ body {
     margin-top: 10px;
 }
 
-/* Menu de direções para abrir portas (Mantendo tema escuro) */
+/* Menu de direções para abrir portas */
 .direction-menu {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: #2a1d10;
-    border: 2px solid #8b5a2b;
+    background-color: #333;
+    border: 2px solid #aa6c39;
     border-radius: 8px;
-    padding: 20px;
+    padding: 15px;
     z-index: 100;
     display: flex;
     flex-direction: column;
     gap: 10px;
     min-width: 200px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
 }
 
 .direction-menu p {
-    color: #e0d6c7;
+    color: #ddd;
     text-align: center;
     margin: 0 0 10px 0;
-    font-family: 'Eagle Lake', cursive;
 }
 
 .direction-choice {
-    background-color: #5d4037;
-    color: #e0d6c7;
-    border: 1px solid #8b5a2b;
+    background-color: #8b5a2b;
+    color: white;
+    border: 1px solid #aa6c39;
     border-radius: 4px;
     padding: 8px 12px;
     font-family: 'Eagle Lake', cursive;
     font-size: 14px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color 0.3s;
 }
 
 .direction-choice:hover {
-    background-color: #8b5a2b;
+    background-color: #aa6c39;
 }
 
 .direction-choice.cancel {
-    background-color: #8c3838;
+    background-color: #a52a2a;
     margin-top: 5px;
 }
 
 .direction-choice.cancel:hover {
-    background-color: #a54e4e;
+    background-color: #c53b3b;
 }
 
-/* Responsividade (Mantida como estava) */
+/* Animações */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.player-marker {
+    animation: pulse 2s infinite;
+}
+
+/* Responsividade */
 @media (max-width: 768px) {
     .dungeon-container {
         flex-direction: column;
     }
+    
     .map-container, .exploration-log {
         height: 300px;
     }
+    
     .east-west-container {
         gap: 20px;
     }
+    
     .direction-btn, .action-btn {
         font-size: 14px;
         padding: 8px 12px;
     }
+    
     #action-buttons {
         flex-direction: column;
         align-items: center;
     }
 }
 
-/* Estilos para a barra de status do jogador (Mantendo tema escuro) */
+/* Adicione isso ao seu arquivo masmorra.css */
+
+/* Estilos para a barra de status do jogador */
 .player-status {
     margin: 15px 0;
     padding: 10px;
-    background-color: rgba(10, 5, 0, 0.7);
-    border: 2px solid #5d4037;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 2px solid #aa6c39;
     border-radius: 8px;
 }
 
@@ -274,7 +250,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #e0d6c7;
+    color: #ddd;
     font-family: 'Eagle Lake', cursive;
 }
 
@@ -289,8 +265,8 @@ body {
 
 .health-bar {
     height: 100%;
-    background-color: #8c3838; /* Vermelho escuro para vida */
-    width: 100%; /* Controlado via JS */
+    background-color: #4CAF50;
+    width: 100%;
     transition: width 0.3s ease;
 }
 
@@ -298,3 +274,4 @@ body {
     min-width: 70px;
     text-align: right;
 }
+
