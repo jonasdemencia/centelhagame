@@ -404,7 +404,7 @@ function drawMap() {
             const playerMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             playerMarker.setAttribute("cx", centerX);
             playerMarker.setAttribute("cy", centerY);
-            playerMarker.setAttribute("r", GRID_CELL_SIZE * 0.4); // Alterado de 0.6 para 0.4
+            playerMarker.setAttribute("r", GRID_CELL_SIZE * 0.25); // Alterado de 0.6 para 0.4
             playerMarker.setAttribute("class", "player-marker");
             
             mapPlayer.appendChild(playerMarker);
