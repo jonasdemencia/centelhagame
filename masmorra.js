@@ -278,7 +278,6 @@ async function addLogMessage(message, delay = 0, typingSpeed = 30) {
 
 // Função para desenhar o mapa
 // Função para desenhar o mapa
-// Função para desenhar o mapa
 function drawMap() {
     const mapRooms = document.getElementById("map-rooms");
     const mapCorridors = document.getElementById("map-corridors");
@@ -391,41 +390,42 @@ function drawMap() {
     }
     
     // Desenha o marcador do jogador
-    // Desenha o marcador do jogador
-const currentRoom = dungeon.rooms[playerState.currentRoom];
-if (currentRoom) {
-    // Calcula o centro da sala atual
-    const centerX = (currentRoom.gridX * GRID_CELL_SIZE) + (currentRoom.gridWidth * GRID_CELL_SIZE / 2);
-    const centerY = (currentRoom.gridY * GRID_CELL_SIZE) + (currentRoom.gridHeight * GRID_CELL_SIZE / 2);
-    
-    // Cria um grupo para o marcador do jogador
-    const playerGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    
-    // Cria o círculo do marcador
-    const playerMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    playerMarker.setAttribute("cx", centerX);
-    playerMarker.setAttribute("cy", centerY);
-    playerMarker.setAttribute("r", GRID_CELL_SIZE * 0.3);
-    playerMarker.setAttribute("fill", "#f1c40f");
-    playerMarker.setAttribute("stroke", "#f39c12");
-    playerMarker.setAttribute("stroke-width", "0.5");
-    
-    // Cria a animação SVG
-    const animateOpacity = document.createElementNS("http://www.w3.org/2000/svg", "animate");
-    animateOpacity.setAttribute("attributeName", "opacity");
-    animateOpacity.setAttribute("values", "0.7;1;0.7");
-    animateOpacity.setAttribute("dur", "2s");
-    animateOpacity.setAttribute("repeatCount", "indefinite");
-    
-    // Adiciona a animação ao marcador
-    playerMarker.appendChild(animateOpacity);
-    
-    // Adiciona o marcador ao grupo
-    playerGroup.appendChild(playerMarker);
-    
-    // Adiciona o grupo ao mapa
-    mapPlayer.appendChild(playerGroup);
-}
+    const currentRoom = dungeon.rooms[playerState.currentRoom];
+    if (currentRoom) {
+        // Calcula o centro da sala atual
+        const centerX = (currentRoom.gridX * GRID_CELL_SIZE) + (currentRoom.gridWidth * GRID_CELL_SIZE / 2);
+        const centerY = (currentRoom.gridY * GRID_CELL_SIZE) + (currentRoom.gridHeight * GRID_CELL_SIZE / 2);
+        
+        // Cria um grupo para o marcador do jogador
+        const playerGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        
+        // Cria o círculo do marcador
+        const playerMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        playerMarker.setAttribute("cx", centerX);
+        playerMarker.setAttribute("cy", centerY);
+        playerMarker.setAttribute("r", GRID_CELL_SIZE * 0.3);
+        playerMarker.setAttribute("fill", "#f1c40f");
+        playerMarker.setAttribute("stroke", "#f39c12");
+        playerMarker.setAttribute("stroke-width", "0.5");
+        
+        // Cria a animação SVG
+        const animateOpacity = document.createElementNS("http://www.w3.org/2000/svg", "animate");
+        animateOpacity.setAttribute("attributeName", "opacity");
+        animateOpacity.setAttribute("values", "0.7;1;0.7");
+        animateOpacity.setAttribute("dur", "2s");
+        animateOpacity.setAttribute("repeatCount", "indefinite");
+        
+        // Adiciona a animação ao marcador
+        playerMarker.appendChild(animateOpacity);
+        
+        // Adiciona o marcador ao grupo
+        playerGroup.appendChild(playerMarker);
+        
+        // Adiciona o grupo ao mapa
+        mapPlayer.appendChild(playerGroup);
+    }
+} // <-- Esta chave de fechamento estava faltando
+
 
 
 
