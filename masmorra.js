@@ -38,28 +38,24 @@ const dungeon = {
     description: "Uma vasta masmorra sob a cidade de Águas Profundas.",
     entrance: "room-1",
     rooms: {
-        // Modifique a sala "room-1" para usar apenas 4 unidades (2x2)
-"room-1": {
-    id: "room-1",
-    name: "Entrada da Masmorra",
-    description: "Um corredor frio e úmido se estende à sua frente. Há uma porta de madeira ao final.",
-    type: "corridor",
-    exits: [
-        { direction: "north", leadsTo: "room-2", type: "door", locked: false }
-    ],
-    visited: false,
-    discovered: false,
-    gridX: 10, // Coordenada X na grade (em células)
-    gridY: 16, // Coordenada Y na grade (em células)
-    gridWidth: 2, // Alterado de 3 para 2
-    gridHeight: 2, // Alterado de 4 para 2
-    events: [
-        { type: "first-visit", text: "O ar está frio e você sente um arrepio na espinha ao entrar neste lugar antigo." }
-    ]
-},
-
-
-
+        "room-1": {
+            id: "room-1",
+            name: "Entrada da Masmorra",
+            description: "Um corredor frio e úmido se estende à sua frente. Há uma porta de madeira ao final.",
+            type: "corridor",
+            exits: [
+                { direction: "north", leadsTo: "room-2", type: "door", locked: false }
+            ],
+            visited: false,
+            discovered: false,
+            gridX: 10, // Coordenada X na grade (em células)
+            gridY: 16, // Coordenada Y na grade (em células)
+            gridWidth: 2, // Alterado de 3 para 2
+            gridHeight: 2, // Alterado de 4 para 2
+            events: [
+                { type: "first-visit", text: "O ar está frio e você sente um arrepio na espinha ao entrar neste lugar antigo." }
+            ]
+        },
         "room-2": {
             id: "room-2",
             name: "Sala das Estátuas",
@@ -72,10 +68,10 @@ const dungeon = {
             ],
             visited: false,
             discovered: false,
-            x: 50,
-            y: 50,
-            width: 20,
-            height: 20,
+            gridX: 10,
+            gridY: 10,
+            gridWidth: 4,
+            gridHeight: 4,
             events: [
                 { type: "first-visit", text: "As estátuas de pedra parecem observar seus movimentos com olhos vazios." }
             ]
@@ -90,10 +86,10 @@ const dungeon = {
             ],
             visited: false,
             discovered: false,
-            x: 80,
-            y: 50,
-            width: 15,
-            height: 15,
+            gridX: 16,
+            gridY: 10,
+            gridWidth: 3,
+            gridHeight: 3,
             events: [
                 { type: "first-visit", text: "Você vê um baú ornamentado no centro da sala, coberto por uma fina camada de poeira." }
             ],
@@ -112,10 +108,10 @@ const dungeon = {
             ],
             visited: false,
             discovered: false,
-            x: 20,
-            y: 50,
-            width: 15,
-            height: 15,
+            gridX: 4,
+            gridY: 10,
+            gridWidth: 3,
+            gridHeight: 3,
             events: [
                 { type: "first-visit", text: "Armas antigas e enferrujadas decoram as paredes. A maioria parece inútil após séculos de abandono." }
             ]
@@ -130,10 +126,10 @@ const dungeon = {
             ],
             visited: false,
             discovered: false,
-            x: 20,
-            y: 20,
-            width: 18,
-            height: 18,
+            gridX: 4,
+            gridY: 4,
+            gridWidth: 4,
+            gridHeight: 4,
             events: [
                 { type: "first-visit", text: "Símbolos estranhos brilham levemente no chão. Você sente uma presença antiga neste lugar." }
             ]
@@ -149,8 +145,6 @@ let playerState = {
     inventory: [],
     health: 100
 };
-
-// Adicione esta função ao seu arquivo masmorra.js
 
 // Função para atualizar a barra de energia do jogador
 function updateHealthBar() {
@@ -193,6 +187,37 @@ function startNewLogBlock(title) {
     logContainer.appendChild(currentLogBlock);
     return currentLogBlock;
 }
+
+// Função para desenhar a grade de fundo
+function drawGrid() {
+    const mapGrid = document.getElementById("map-grid");
+    mapGrid.innerHTML = '';
+    
+    // Desenha linhas horizontais
+    for (let y = 0; y <= 20; y++) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", "0");
+        line.setAttribute("y1", y * GRID_CELL_SIZE);
+        line.setAttribute("x2", "100");
+        line.setAttribute("y2", y * GRID_CELL_SIZE);
+        line.setAttribute("stroke", GRID_COLOR);
+        line.setAttribute("stroke-width", "0.1");
+        mapGrid.appendChild(line);
+    }
+    
+    // Desenha linhas verticais
+    for (let x = 0; x <= 20; x++) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x * GRID_CELL_SIZE);
+        line.setAttribute("y1", "0");
+        line.setAttribute("x2", x * GRID_CELL_SIZE);
+        line.setAttribute("y2", "100");
+        line.setAttribute("stroke", GRID_COLOR);
+        line.setAttribute("stroke-width", "0.1");
+        mapGrid.appendChild(line);
+    }
+}
+
 
 // Função para adicionar mensagem ao log de exploração
 async function addLogMessage(message, delay = 0, typingSpeed = 30) {
@@ -246,35 +271,6 @@ async function addLogMessage(message, delay = 0, typingSpeed = 30) {
             resolve();
         }
     });
-}
-
-function drawGrid() {
-    const mapGrid = document.getElementById("map-grid");
-    mapGrid.innerHTML = '';
-    
-    // Desenha linhas horizontais
-    for (let y = 0; y <= 20; y++) {
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("x1", "0");
-        line.setAttribute("y1", y * GRID_CELL_SIZE);
-        line.setAttribute("x2", "100");
-        line.setAttribute("y2", y * GRID_CELL_SIZE);
-        line.setAttribute("stroke", GRID_COLOR);
-        line.setAttribute("stroke-width", "0.1");
-        mapGrid.appendChild(line);
-    }
-    
-    // Desenha linhas verticais
-    for (let x = 0; x <= 20; x++) {
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("x1", x * GRID_CELL_SIZE);
-        line.setAttribute("y1", "0");
-        line.setAttribute("x2", x * GRID_CELL_SIZE);
-        line.setAttribute("y2", "100");
-        line.setAttribute("stroke", GRID_COLOR);
-        line.setAttribute("stroke-width", "0.1");
-        mapGrid.appendChild(line);
-    }
 }
 
 // Função para desenhar o mapa
@@ -351,7 +347,8 @@ function drawMap() {
                                 
                                 // Conecta com a sala de destino se ela estiver descoberta
                                 const destRoomNorth = dungeon.rooms[exit.leadsTo];
-                                if (destRoomNorth) {
+                                if (destRoomNorth && destRoomNorth.gridX !== undefined && 
+                                    destRoomNorth.gridY !== undefined && destRoomNorth.gridHeight !== undefined) {
                                     const destX = destRoomNorth.gridX * GRID_CELL_SIZE;
                                     const destY = destRoomNorth.gridY * GRID_CELL_SIZE;
                                     const destHeight = destRoomNorth.gridHeight * GRID_CELL_SIZE;
@@ -453,7 +450,7 @@ async function moveToRoom(roomId) {
     // Atualiza o mapa
     drawMap();
 
-// Atualiza a barra de energia
+    // Atualiza a barra de energia
     updateHealthBar();
     
     // Atualiza os botões de direção
@@ -483,76 +480,12 @@ function updateDirectionButtons() {
     // Habilita os botões com base nas saídas disponíveis
     currentRoom.exits.forEach(exit => {
         let button;
-        // Ajusta a posição da porta com base na direção
-switch (exit.direction) {
-    case "north": {
-        doorX = x + (width / 2) - (doorWidth / 2);
-        doorY = y - (doorHeight / 2);
-        
-        // Conecta com a sala de destino se ela estiver descoberta
-        const destRoom = dungeon.rooms[exit.leadsTo];
-        if (destRoom && playerState.discoveredRooms.includes(exit.leadsTo)) {
-            const destX = destRoom.gridX * GRID_CELL_SIZE;
-            const destY = destRoom.gridY * GRID_CELL_SIZE;
-            const destHeight = destRoom.gridHeight * GRID_CELL_SIZE;
-            
-            // Calcula a posição média entre as duas salas
-            doorY = (y + destY + destHeight) / 2 - doorHeight;
+        switch (exit.direction) {
+            case "north": button = northBtn; break;
+            case "south": button = southBtn; break;
+            case "east": button = eastBtn; break;
+            case "west": button = westBtn; break;
         }
-        break;
-    }
-    case "south": {
-        doorX = x + (width / 2) - (doorWidth / 2);
-        doorY = y + height - (doorHeight / 2);
-        
-        // Conecta com a sala de destino se ela estiver descoberta
-        const destRoom = dungeon.rooms[exit.leadsTo];
-        if (destRoom && playerState.discoveredRooms.includes(exit.leadsTo)) {
-            const destX = destRoom.gridX * GRID_CELL_SIZE;
-            const destY = destRoom.gridY * GRID_CELL_SIZE;
-            
-            // Calcula a posição média entre as duas salas
-            doorY = (y + height + destY) / 2 - doorHeight / 2;
-        }
-        break;
-    }
-    case "east": {
-        doorX = x + width - (doorWidth / 2);
-        doorY = y + (height / 2) - (doorHeight / 2);
-        doorWidth = GRID_CELL_SIZE * 0.4;
-        doorHeight = GRID_CELL_SIZE * 1.2;
-        
-        // Conecta com a sala de destino se ela estiver descoberta
-        const destRoom = dungeon.rooms[exit.leadsTo];
-        if (destRoom && playerState.discoveredRooms.includes(exit.leadsTo)) {
-            const destX = destRoom.gridX * GRID_CELL_SIZE;
-            const destY = destRoom.gridY * GRID_CELL_SIZE;
-            
-            // Calcula a posição média entre as duas salas
-            doorX = (x + width + destX) / 2 - doorWidth / 2;
-        }
-        break;
-    }
-    case "west": {
-        doorX = x - (doorWidth / 2);
-        doorY = y + (height / 2) - (doorHeight / 2);
-        doorWidth = GRID_CELL_SIZE * 0.4;
-        doorHeight = GRID_CELL_SIZE * 1.2;
-        
-        // Conecta com a sala de destino se ela estiver descoberta
-        const destRoom = dungeon.rooms[exit.leadsTo];
-        if (destRoom && playerState.discoveredRooms.includes(exit.leadsTo)) {
-            const destX = destRoom.gridX * GRID_CELL_SIZE;
-            const destY = destRoom.gridY * GRID_CELL_SIZE;
-            const destWidth = destRoom.gridWidth * GRID_CELL_SIZE;
-            
-            // Calcula a posição média entre as duas salas
-            doorX = (x + destX + destWidth) / 2 - doorWidth / 2;
-        }
-        break;
-    }
-}
-
         
         if (button) {
             if (exit.locked) {
@@ -865,7 +798,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadPlayerState();
 
             // Atualiza a barra de energia
-        updateHealthBar();
+            updateHealthBar();
             
             // Inicia a exploração
             startNewLogBlock("Bem-vindo");
