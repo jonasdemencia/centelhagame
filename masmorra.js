@@ -49,7 +49,7 @@ const dungeon = {
             visited: false,
             discovered: false,
             gridX: 10, // Coordenada X na grade (em células)
-            gridY: 16, // Coordenada Y na grade (em células)
+            gridY: 18, // Ajustado para ficar abaixo da room-2 sem sobreposição
             gridWidth: 2, // Alterado para 2x2
             gridHeight: 2, // Alterado para 2x2
             events: [
@@ -69,7 +69,7 @@ const dungeon = {
             visited: false,
             discovered: false,
             gridX: 9, // Ajustado para alinhar com room-1
-            gridY: 12, // Posicionado acima da room-1, mas adjacente
+            gridY: 12, // Posicionado acima da room-1, sem sobreposição
             gridWidth: 4,
             gridHeight: 4,
             events: [
@@ -86,7 +86,7 @@ const dungeon = {
             ],
             visited: false,
             discovered: false,
-            gridX: 13, // Ajustado para ficar adjacente à room-2 pelo leste
+            gridX: 14, // Ajustado para ficar adjacente à room-2 pelo leste, sem sobreposição
             gridY: 12, // Mesmo Y que room-2
             gridWidth: 3,
             gridHeight: 3,
@@ -108,7 +108,7 @@ const dungeon = {
             ],
             visited: false,
             discovered: false,
-            gridX: 6, // Ajustado para ficar adjacente à room-2 pelo oeste
+            gridX: 5, // Ajustado para ficar adjacente à room-2 pelo oeste, sem sobreposição
             gridY: 12, // Mesmo Y que room-2
             gridWidth: 3,
             gridHeight: 3,
@@ -126,8 +126,8 @@ const dungeon = {
             ],
             visited: false,
             discovered: false,
-            gridX: 6, // Mesmo X que room-4
-            gridY: 9, // Ajustado para ficar adjacente à room-4 pelo norte
+            gridX: 5, // Mesmo X que room-4
+            gridY: 8, // Ajustado para ficar adjacente à room-4 pelo norte, sem sobreposição
             gridWidth: 4,
             gridHeight: 3,
             events: [
@@ -136,6 +136,7 @@ const dungeon = {
         }
     }
 };
+
 
 
 
