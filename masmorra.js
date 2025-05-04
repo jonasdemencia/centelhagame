@@ -49,7 +49,7 @@ const dungeon = {
             visited: false,
             discovered: false,
             gridX: 10, // Coordenada X na grade (em células)
-            gridY: 14, // Ajustado para ficar adjacente à room-2
+            gridY: 16, // Coordenada Y na grade (em células)
             gridWidth: 2, // Alterado para 2x2
             gridHeight: 2, // Alterado para 2x2
             events: [
@@ -68,8 +68,8 @@ const dungeon = {
             ],
             visited: false,
             discovered: false,
-            gridX: 10, // Mantém o X alinhado com room-1
-            gridY: 10, // Posicionado acima da room-1
+            gridX: 9, // Ajustado para alinhar com room-1
+            gridY: 12, // Posicionado acima da room-1, mas adjacente
             gridWidth: 4,
             gridHeight: 4,
             events: [
@@ -86,8 +86,8 @@ const dungeon = {
             ],
             visited: false,
             discovered: false,
-            gridX: 14, // Ajustado para ficar adjacente à room-2 pelo leste
-            gridY: 10, // Mesmo Y que room-2
+            gridX: 13, // Ajustado para ficar adjacente à room-2 pelo leste
+            gridY: 12, // Mesmo Y que room-2
             gridWidth: 3,
             gridHeight: 3,
             events: [
@@ -108,8 +108,8 @@ const dungeon = {
             ],
             visited: false,
             discovered: false,
-            gridX: 7, // Ajustado para ficar adjacente à room-2 pelo oeste
-            gridY: 10, // Mesmo Y que room-2
+            gridX: 6, // Ajustado para ficar adjacente à room-2 pelo oeste
+            gridY: 12, // Mesmo Y que room-2
             gridWidth: 3,
             gridHeight: 3,
             events: [
@@ -126,8 +126,8 @@ const dungeon = {
             ],
             visited: false,
             discovered: false,
-            gridX: 7, // Mesmo X que room-4
-            gridY: 7, // Ajustado para ficar adjacente à room-4 pelo norte
+            gridX: 6, // Mesmo X que room-4
+            gridY: 9, // Ajustado para ficar adjacente à room-4 pelo norte
             gridWidth: 4,
             gridHeight: 3,
             events: [
@@ -136,6 +136,7 @@ const dungeon = {
         }
     }
 };
+
 
 
 // Estado do jogador na masmorra
@@ -276,6 +277,7 @@ async function addLogMessage(message, delay = 0, typingSpeed = 30) {
 
 // Função para desenhar o mapa
 // Função para desenhar o mapa
+// Função para desenhar o mapa
 function drawMap() {
     const mapRooms = document.getElementById("map-rooms");
     const mapCorridors = document.getElementById("map-corridors");
@@ -349,66 +351,26 @@ function drawMap() {
                             case "north":
                                 // Porta no meio da parede norte
                                 doorX = x + (width / 2) - (doorWidth / 2);
-                                
-                                // Se a sala de destino estiver descoberta, posiciona a porta na fronteira entre as salas
-                                if (destRoom && playerState.discoveredRooms.includes(exit.leadsTo)) {
-                                    const destX = destRoom.gridX * GRID_CELL_SIZE;
-                                    const destY = destRoom.gridY * GRID_CELL_SIZE;
-                                    const destHeight = destRoom.gridHeight * GRID_CELL_SIZE;
-                                    
-                                    // Posiciona a porta exatamente na fronteira entre as salas
-                                    doorY = y - (doorHeight / 2);
-                                } else {
-                                    doorY = y - (doorHeight / 2);
-                                }
+                                doorY = y - (doorHeight / 2);
                                 break;
                             case "south":
                                 // Porta no meio da parede sul
                                 doorX = x + (width / 2) - (doorWidth / 2);
-                                
-                                // Se a sala de destino estiver descoberta, posiciona a porta na fronteira entre as salas
-                                if (destRoom && playerState.discoveredRooms.includes(exit.leadsTo)) {
-                                    const destX = destRoom.gridX * GRID_CELL_SIZE;
-                                    const destY = destRoom.gridY * GRID_CELL_SIZE;
-                                    
-                                    // Posiciona a porta exatamente na fronteira entre as salas
-                                    doorY = y + height - (doorHeight / 2);
-                                } else {
-                                    doorY = y + height - (doorHeight / 2);
-                                }
+                                doorY = y + height - (doorHeight / 2);
                                 break;
                             case "east":
                                 // Porta no meio da parede leste
+                                doorX = x + width - (doorWidth / 2);
                                 doorY = y + (height / 2) - (doorHeight / 2);
                                 doorWidth = GRID_CELL_SIZE * 0.4;
                                 doorHeight = GRID_CELL_SIZE * 0.8;
-                                
-                                // Se a sala de destino estiver descoberta, posiciona a porta na fronteira entre as salas
-                                if (destRoom && playerState.discoveredRooms.includes(exit.leadsTo)) {
-                                    const destX = destRoom.gridX * GRID_CELL_SIZE;
-                                    
-                                    // Posiciona a porta exatamente na fronteira entre as salas
-                                    doorX = x + width - (doorWidth / 2);
-                                } else {
-                                    doorX = x + width - (doorWidth / 2);
-                                }
                                 break;
                             case "west":
                                 // Porta no meio da parede oeste
+                                doorX = x - (doorWidth / 2);
                                 doorY = y + (height / 2) - (doorHeight / 2);
                                 doorWidth = GRID_CELL_SIZE * 0.4;
                                 doorHeight = GRID_CELL_SIZE * 0.8;
-                                
-                                // Se a sala de destino estiver descoberta, posiciona a porta na fronteira entre as salas
-                                if (destRoom && playerState.discoveredRooms.includes(exit.leadsTo)) {
-                                    const destX = destRoom.gridX * GRID_CELL_SIZE;
-                                    const destWidth = destRoom.gridWidth * GRID_CELL_SIZE;
-                                    
-                                    // Posiciona a porta exatamente na fronteira entre as salas
-                                    doorX = x - (doorWidth / 2);
-                                } else {
-                                    doorX = x - (doorWidth / 2);
-                                }
                                 break;
                         }
                         
