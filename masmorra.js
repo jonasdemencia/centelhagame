@@ -289,6 +289,12 @@ function drawMap() {
     mapCorridors.innerHTML = '';
     mapDoors.innerHTML = '';
     mapPlayer.innerHTML = '';
+
+    // Adicione este log para depuração
+    console.log("Dimensões da sala room-1:", 
+        dungeon.rooms["room-1"].gridWidth, 
+        "x", 
+        dungeon.rooms["room-1"].gridHeight);
     
     // Desenha a grade de fundo
     drawGrid();
@@ -446,6 +452,9 @@ async function moveToRoom(roomId) {
         return;
     }
     
+    // Log para depuração
+    console.log(`Movendo para sala ${roomId} com dimensões ${room.gridWidth}x${room.gridHeight}`);
+    
     // Atualiza o estado do jogador
     playerState.currentRoom = roomId;
     
@@ -482,6 +491,7 @@ async function moveToRoom(roomId) {
     // Salva o estado do jogador
     savePlayerState();
 }
+
 
 // Função para atualizar os botões de direção
 function updateDirectionButtons() {
