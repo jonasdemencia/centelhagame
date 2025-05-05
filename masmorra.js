@@ -303,6 +303,9 @@ function drawMap() {
     for (const roomId of playerState.discoveredRooms) {
         const room = dungeon.rooms[roomId];
         if (!room) continue;
+
+        console.log(`Desenhando sala ${roomId} com dimensões ${room.gridWidth}x${room.gridHeight}`);
+    console.log(`Coordenadas: X=${room.gridX}, Y=${room.gridY}`);
         
         // Verifica se as propriedades necessárias existem
         if (room.gridX === undefined || room.gridY === undefined || 
