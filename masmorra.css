@@ -281,24 +281,5 @@
     text-align: right;
 }
 
-/* Adicione estes estilos ao seu arquivo masmorra.css */
 
-/* Estilos específicos para corredores */
-.corridor {
-    fill: #2a2a2a !important;
-    stroke: #555 !important;
-    stroke-width: 0.3 !important;
-}
-
-/* Garante que todos os retângulos sejam renderizados corretamente */
-svg rect.room {
-    shape-rendering: crispEdges;
-    width: 100% !important;
-    height: 100% !important;
-}
-
-/* Estilos específicos para a sala 1 */
-[data-room-id="room-1"] rect {
-    fill: #2a2a2a !important;
-}
 
