@@ -50,8 +50,8 @@ const dungeon = {
             discovered: false,
             gridX: 10, // Coordenada X na grade (em células)
             gridY: 18, // Ajustado para ficar abaixo da room-2 sem sobreposição
-            gridWidth: 1, // Alterado para 2x2
-            gridHeight: 8, // Alterado para 2x2
+            gridWidth: 2, // Alterado para 2x2
+            gridHeight: 2, // Alterado para 2x2
             events: [
                 { type: "first-visit", text: "O ar está frio e você sente um arrepio na espinha ao entrar neste lugar antigo." }
             ]
@@ -69,7 +69,7 @@ const dungeon = {
             visited: false,
             discovered: false,
             gridX: 9, // Ajustado para alinhar com room-1
-            gridY: 12, // Posicionado acima da room-1, sem sobreposição
+            gridY: 14, // Posicionado acima da room-1, sem sobreposição
             gridWidth: 4,
             gridHeight: 4,
             events: [
@@ -276,6 +276,8 @@ async function addLogMessage(message, delay = 0, typingSpeed = 30) {
     });
 }
 
+// Função para desenhar o mapa
+// Função para desenhar o mapa
 function drawMap() {
     const mapRooms = document.getElementById("map-rooms");
     const mapCorridors = document.getElementById("map-corridors");
@@ -287,12 +289,6 @@ function drawMap() {
     mapCorridors.innerHTML = '';
     mapDoors.innerHTML = '';
     mapPlayer.innerHTML = '';
-
-    // Log para depuração
-    console.log("Dimensões da sala room-1:", 
-        dungeon.rooms["room-1"].gridWidth, 
-        "x", 
-        dungeon.rooms["room-1"].gridHeight);
     
     // Desenha a grade de fundo
     drawGrid();
@@ -301,9 +297,6 @@ function drawMap() {
     for (const roomId of playerState.discoveredRooms) {
         const room = dungeon.rooms[roomId];
         if (!room) continue;
-
-        console.log(`Desenhando sala ${roomId} com dimensões ${room.gridWidth}x${room.gridHeight}`);
-        console.log(`Coordenadas: X=${room.gridX}, Y=${room.gridY}`);
         
         // Verifica se as propriedades necessárias existem
         if (room.gridX === undefined || room.gridY === undefined || 
@@ -315,6 +308,8 @@ function drawMap() {
         // Calcula as coordenadas reais a partir das coordenadas da grade
         const x = room.gridX * GRID_CELL_SIZE;
         const y = room.gridY * GRID_CELL_SIZE;
+        const width = room.gridWidth * GRID_CELL_SIZE;
+        const height = room.gridHeight * GRID_CELL_SIZE;
         
         // Cria um grupo para a sala
         const roomGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -335,12 +330,7 @@ function drawMap() {
             }
         }
         
-        // Adiciona o grupo ao mapa apropriado
-        if (room.type === "corridor") {
-            mapCorridors.appendChild(roomGroup);
-        } else {
-            mapRooms.appendChild(roomGroup);
-        }
+        mapRooms.appendChild(roomGroup);
         
         // Desenha as portas
         if (room.exits) {
@@ -348,8 +338,6 @@ function drawMap() {
                 // Só desenha a porta se a sala de destino também estiver descoberta
                 if (playerState.discoveredRooms.includes(exit.leadsTo)) {
                     if (exit.type === "door") {
-                        const width = room.gridWidth * GRID_CELL_SIZE;
-                        const height = room.gridHeight * GRID_CELL_SIZE;
                         let doorX = x + (width / 2);
                         let doorY = y + (height / 2);
                         let doorWidth = GRID_CELL_SIZE * 0.8;
@@ -420,23 +408,15 @@ function drawMap() {
         playerMarker.setAttribute("stroke", "#f39c12");
         playerMarker.setAttribute("stroke-width", "0.5");
         
-        // Cria a animação de opacidade (mais intensa)
+        // Cria a animação SVG
         const animateOpacity = document.createElementNS("http://www.w3.org/2000/svg", "animate");
         animateOpacity.setAttribute("attributeName", "opacity");
-        animateOpacity.setAttribute("values", "0.5;1;0.5"); // Maior contraste
-        animateOpacity.setAttribute("dur", "1.5s"); // Mais rápido
+        animateOpacity.setAttribute("values", "0.7;1;0.7");
+        animateOpacity.setAttribute("dur", "2s");
         animateOpacity.setAttribute("repeatCount", "indefinite");
         
-        // Cria a animação de escala (para pulsar)
-        const animateRadius = document.createElementNS("http://www.w3.org/2000/svg", "animate");
-        animateRadius.setAttribute("attributeName", "r");
-        animateRadius.setAttribute("values", `${GRID_CELL_SIZE * 0.2};${GRID_CELL_SIZE * 0.4};${GRID_CELL_SIZE * 0.2}`); // Pulsa entre 0.2 e 0.4
-        animateRadius.setAttribute("dur", "1.5s"); // Mesma duração que a opacidade
-        animateRadius.setAttribute("repeatCount", "indefinite");
-        
-        // Adiciona as animações ao marcador
+        // Adiciona a animação ao marcador
         playerMarker.appendChild(animateOpacity);
-        playerMarker.appendChild(animateRadius);
         
         // Adiciona o marcador ao grupo
         playerGroup.appendChild(playerMarker);
@@ -444,9 +424,7 @@ function drawMap() {
         // Adiciona o grupo ao mapa
         mapPlayer.appendChild(playerGroup);
     }
-}
-
-
+} // <-- Esta chave de fechamento estava faltando
 
 
 
@@ -458,9 +436,6 @@ async function moveToRoom(roomId) {
         console.error(`Sala ${roomId} não encontrada.`);
         return;
     }
-    
-    // Log para depuração
-    console.log(`Movendo para sala ${roomId} com dimensões ${room.gridWidth}x${room.gridHeight}`);
     
     // Atualiza o estado do jogador
     playerState.currentRoom = roomId;
@@ -498,7 +473,6 @@ async function moveToRoom(roomId) {
     // Salva o estado do jogador
     savePlayerState();
 }
-
 
 // Função para atualizar os botões de direção
 function updateDirectionButtons() {
@@ -675,18 +649,15 @@ async function rest() {
 function savePlayerState() {
     if (!userId) return;
     
-    // Cria uma cópia do estado do jogador sem as dimensões das salas
-    const stateToSave = {
+    const dungeonStateRef = doc(db, "dungeons", userId);
+    setDoc(dungeonStateRef, {
         currentRoom: playerState.currentRoom,
         discoveredRooms: playerState.discoveredRooms,
         visitedRooms: playerState.visitedRooms,
         inventory: playerState.inventory,
         health: playerState.health,
         lastUpdated: new Date().toISOString()
-    };
-    
-    const dungeonStateRef = doc(db, "dungeons", userId);
-    setDoc(dungeonStateRef, stateToSave, { merge: false }) // Usa merge: false para substituir completamente
+    }, { merge: true })
     .then(() => {
         console.log("Estado da masmorra salvo com sucesso!");
     })
@@ -694,7 +665,6 @@ function savePlayerState() {
         console.error("Erro ao salvar estado da masmorra:", error);
     });
 }
-
 
 // Função para carregar o estado do jogador do Firestore
 async function loadPlayerState() {
@@ -705,8 +675,6 @@ async function loadPlayerState() {
         const docSnap = await getDoc(dungeonStateRef);
         if (docSnap.exists()) {
             const data = docSnap.data();
-            
-            // Carrega apenas o estado do jogador, não as dimensões das salas
             playerState = {
                 currentRoom: data.currentRoom || "room-1",
                 discoveredRooms: data.discoveredRooms || ["room-1"],
@@ -727,22 +695,10 @@ async function loadPlayerState() {
                 health: 100
             };
         }
-        
-        // Força a redescoberta das salas para usar as novas dimensões
-        console.log("Atualizando dimensões das salas...");
-        
-        // Limpa o cache do navegador para forçar o redesenho
-        if (window.caches) {
-            caches.keys().then(function(names) {
-                for (let name of names) caches.delete(name);
-            });
-        }
-        
     } catch (error) {
         console.error("Erro ao carregar estado da masmorra:", error);
     }
 }
-
 
 // Inicialização quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
@@ -835,179 +791,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Verifica autenticação
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        console.log("LOG: Usuário logado. ID:", user.uid);
-        userId = user.uid;
-        
-        // Carrega os dados do jogador
-        const playerDocRef = doc(db, "players", userId);
-        try {
-            const docSnap = await getDoc(playerDocRef);
-            if (docSnap.exists()) {
-                playerData = docSnap.data();
-                console.log("Dados do jogador carregados:", playerData);
-            }
-        } catch (error) {
-            console.error("Erro ao carregar dados do jogador:", error);
-        }
-        
-        // Carrega o estado da masmorra
-        await loadPlayerState();
-
-        // Atualiza a barra de energia
-        updateHealthBar();
-        
-        // Inicia a exploração
-        startNewLogBlock("Bem-vindo");
-        await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
-        await addLogMessage(dungeon.description, 1000);
-        
-        // Move para a sala atual
-        moveToRoom(playerState.currentRoom);
-        
-        // Cria o botão de reset
-        const resetStateBtn = document.createElement('button');
-        resetStateBtn.id = "reset-state";
-        resetStateBtn.textContent = "Resetar Estado";
-        resetStateBtn.style.position = "fixed";
-        resetStateBtn.style.top = "10px";
-        resetStateBtn.style.right = "10px";
-        resetStateBtn.style.zIndex = "1000";
-        resetStateBtn.style.backgroundColor = "red";
-        resetStateBtn.style.color = "white";
-        resetStateBtn.style.padding = "5px 10px";
-        document.body.appendChild(resetStateBtn);
-
-        resetStateBtn.addEventListener("click", async () => {
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            console.log("LOG: Usuário logado. ID:", user.uid);
+            userId = user.uid;
+            
+            // Carrega os dados do jogador
+            const playerDocRef = doc(db, "players", userId);
             try {
-                // Limpa o estado no Firestore
-                const dungeonStateRef = doc(db, "dungeons", userId);
-                await setDoc(dungeonStateRef, {
-                    currentRoom: "room-1",
-                    discoveredRooms: ["room-1"],
-                    visitedRooms: [],
-                    inventory: [],
-                    health: 100,
-                    lastUpdated: new Date().toISOString()
-                }, { merge: false });
-                
-                console.log("Estado da masmorra resetado com sucesso!");
-                
-                // Recarrega a página
-                location.reload();
-            } catch (error) {
-                console.error("Erro ao resetar estado da masmorra:", error);
-            }
-        });
-        
-        // Cria o botão para redesenhar o mapa
-        const redrawMapBtn = document.createElement('button');
-        redrawMapBtn.id = "redraw-map";
-        redrawMapBtn.textContent = "Redesenhar Mapa";
-        redrawMapBtn.style.position = "fixed";
-        redrawMapBtn.style.top = "50px";
-        redrawMapBtn.style.right = "10px";
-        redrawMapBtn.style.zIndex = "1000";
-        redrawMapBtn.style.backgroundColor = "green";
-        redrawMapBtn.style.color = "white";
-        redrawMapBtn.style.padding = "5px 10px";
-        document.body.appendChild(redrawMapBtn);
-
-        redrawMapBtn.addEventListener("click", () => {
-            // Força o redesenho do mapa
-            drawMap();
-            console.log("Mapa redesenhado manualmente!");
-        });
-        
-        // Cria o botão para editar dimensões da sala atual
-        const editRoomBtn = document.createElement('button');
-        editRoomBtn.id = "edit-room";
-        editRoomBtn.textContent = "Editar Sala Atual";
-        editRoomBtn.style.position = "fixed";
-        editRoomBtn.style.top = "90px";
-        editRoomBtn.style.right = "10px";
-        editRoomBtn.style.zIndex = "1000";
-        editRoomBtn.style.backgroundColor = "blue";
-        editRoomBtn.style.color = "white";
-        editRoomBtn.style.padding = "5px 10px";
-        document.body.appendChild(editRoomBtn);
-
-        editRoomBtn.addEventListener("click", () => {
-            const currentRoom = dungeon.rooms[playerState.currentRoom];
-            if (!currentRoom) return;
-            
-            // Cria um formulário para editar as dimensões da sala
-            const editForm = document.createElement('div');
-            editForm.style.position = "fixed";
-            editForm.style.top = "50%";
-            editForm.style.left = "50%";
-            editForm.style.transform = "translate(-50%, -50%)";
-            editForm.style.backgroundColor = "#333";
-            editForm.style.padding = "20px";
-            editForm.style.borderRadius = "10px";
-            editForm.style.zIndex = "2000";
-            editForm.style.boxShadow = "0 0 10px rgba(0,0,0,0.5)";
-            
-            editForm.innerHTML = `
-                <h3 style="color: white; margin-top: 0;">Editar Sala: ${currentRoom.name}</h3>
-                <div style="margin-bottom: 10px;">
-                    <label style="color: white; display: block; margin-bottom: 5px;">Posição X:</label>
-                    <input type="number" id="edit-x" value="${currentRoom.gridX}" style="width: 100%; padding: 5px;">
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <label style="color: white; display: block; margin-bottom: 5px;">Posição Y:</label>
-                    <input type="number" id="edit-y" value="${currentRoom.gridY}" style="width: 100%; padding: 5px;">
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <label style="color: white; display: block; margin-bottom: 5px;">Largura:</label>
-                    <input type="number" id="edit-width" value="${currentRoom.gridWidth}" style="width: 100%; padding: 5px;">
-                </div>
-                <div style="margin-bottom: 20px;">
-                    <label style="color: white; display: block; margin-bottom: 5px;">Altura:</label>
-                    <input type="number" id="edit-height" value="${currentRoom.gridHeight}" style="width: 100%; padding: 5px;">
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <button id="save-room" style="background-color: green; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Salvar</button>
-                    <button id="cancel-edit" style="background-color: red; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Cancelar</button>
-                </div>
-            `;
-            
-            document.body.appendChild(editForm);
-            
-            // Adiciona eventos aos botões
-            document.getElementById("save-room").addEventListener("click", () => {
-                const x = parseInt(document.getElementById("edit-x").value);
-                const y = parseInt(document.getElementById("edit-y").value);
-                const width = parseInt(document.getElementById("edit-width").value);
-                const height = parseInt(document.getElementById("edit-height").value);
-                
-                if (isNaN(x) || isNaN(y) || isNaN(width) || isNaN(height)) {
-                    alert("Por favor, insira valores numéricos válidos.");
-                    return;
+                const docSnap = await getDoc(playerDocRef);
+                if (docSnap.exists()) {
+                    playerData = docSnap.data();
+                    console.log("Dados do jogador carregados:", playerData);
                 }
-                
-                // Atualiza as dimensões da sala
-                currentRoom.gridX = x;
-                currentRoom.gridY = y;
-                currentRoom.gridWidth = width;
-                currentRoom.gridHeight = height;
-                
-                // Redesenha o mapa
-                drawMap();
-                
-                // Remove o formulário
-                editForm.remove();
-                
-                console.log(`Sala ${currentRoom.id} atualizada para dimensões ${width}x${height} na posição (${x},${y})`);
-            });
+            } catch (error) {
+                console.error("Erro ao carregar dados do jogador:", error);
+            }
             
-            document.getElementById("cancel-edit").addEventListener("click", () => {
-                editForm.remove();
-            });
-        });
-    } else {
-        console.log("LOG: Nenhum usuário logado. Redirecionando para login...");
-        window.location.href = "index.html";
-    }
+            // Carrega o estado da masmorra
+            await loadPlayerState();
+
+            // Atualiza a barra de energia
+            updateHealthBar();
+            
+            // Inicia a exploração
+            startNewLogBlock("Bem-vindo");
+            await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
+            await addLogMessage(dungeon.description, 1000);
+            
+            // Move para a sala atual
+            moveToRoom(playerState.currentRoom);
+        } else {
+            console.log("LOG: Nenhum usuário logado. Redirecionando para login...");
+            window.location.href = "index.html";
+        }
+    });
 });
