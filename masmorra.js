@@ -288,7 +288,7 @@ function drawMap() {
     mapDoors.innerHTML = '';
     mapPlayer.innerHTML = '';
 
-    // Adicione este log para depuração
+    // Log para depuração
     console.log("Dimensões da sala room-1:", 
         dungeon.rooms["room-1"].gridWidth, 
         "x", 
@@ -315,25 +315,27 @@ function drawMap() {
         // Calcula as coordenadas reais a partir das coordenadas da grade
         const x = room.gridX * GRID_CELL_SIZE;
         const y = room.gridY * GRID_CELL_SIZE;
-        const width = room.gridWidth * GRID_CELL_SIZE;
-        const height = room.gridHeight * GRID_CELL_SIZE;
         
-        // SOLUÇÃO: Desenha a sala como um único retângulo em vez de células individuais
+        // Cria um grupo para a sala
         const roomGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
         roomGroup.setAttribute("class", `room-group ${room.type} ${playerState.visitedRooms.includes(room.id) ? 'visited' : 'discovered'}`);
         roomGroup.setAttribute("data-room-id", room.id);
         
-        // Cria um único retângulo para a sala inteira
-        const roomRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        roomRect.setAttribute("x", x);
-        roomRect.setAttribute("y", y);
-        roomRect.setAttribute("width", width);
-        roomRect.setAttribute("height", height);
-        roomRect.setAttribute("class", `room ${room.type} ${playerState.visitedRooms.includes(room.id) ? 'visited' : 'discovered'}`);
+        // Desenha as células da grade para formar a sala
+        for (let cellY = 0; cellY < room.gridHeight; cellY++) {
+            for (let cellX = 0; cellX < room.gridWidth; cellX++) {
+                const cellRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                cellRect.setAttribute("x", x + (cellX * GRID_CELL_SIZE));
+                cellRect.setAttribute("y", y + (cellY * GRID_CELL_SIZE));
+                cellRect.setAttribute("width", GRID_CELL_SIZE);
+                cellRect.setAttribute("height", GRID_CELL_SIZE);
+                cellRect.setAttribute("class", `room ${room.type} ${playerState.visitedRooms.includes(room.id) ? 'visited' : 'discovered'}`);
+                
+                roomGroup.appendChild(cellRect);
+            }
+        }
         
-        roomGroup.appendChild(roomRect);
-        
-        // Adiciona o grupo ao mapa
+        // Adiciona o grupo ao mapa apropriado
         if (room.type === "corridor") {
             mapCorridors.appendChild(roomGroup);
         } else {
@@ -346,6 +348,8 @@ function drawMap() {
                 // Só desenha a porta se a sala de destino também estiver descoberta
                 if (playerState.discoveredRooms.includes(exit.leadsTo)) {
                     if (exit.type === "door") {
+                        const width = room.gridWidth * GRID_CELL_SIZE;
+                        const height = room.gridHeight * GRID_CELL_SIZE;
                         let doorX = x + (width / 2);
                         let doorY = y + (height / 2);
                         let doorWidth = GRID_CELL_SIZE * 0.8;
@@ -441,6 +445,7 @@ function drawMap() {
         mapPlayer.appendChild(playerGroup);
     }
 }
+
 
 
 
@@ -895,9 +900,114 @@ onAuthStateChanged(auth, async (user) => {
                 console.error("Erro ao resetar estado da masmorra:", error);
             }
         });
+        
+        // Cria o botão para redesenhar o mapa
+        const redrawMapBtn = document.createElement('button');
+        redrawMapBtn.id = "redraw-map";
+        redrawMapBtn.textContent = "Redesenhar Mapa";
+        redrawMapBtn.style.position = "fixed";
+        redrawMapBtn.style.top = "50px";
+        redrawMapBtn.style.right = "10px";
+        redrawMapBtn.style.zIndex = "1000";
+        redrawMapBtn.style.backgroundColor = "green";
+        redrawMapBtn.style.color = "white";
+        redrawMapBtn.style.padding = "5px 10px";
+        document.body.appendChild(redrawMapBtn);
+
+        redrawMapBtn.addEventListener("click", () => {
+            // Força o redesenho do mapa
+            drawMap();
+            console.log("Mapa redesenhado manualmente!");
+        });
+        
+        // Cria o botão para editar dimensões da sala atual
+        const editRoomBtn = document.createElement('button');
+        editRoomBtn.id = "edit-room";
+        editRoomBtn.textContent = "Editar Sala Atual";
+        editRoomBtn.style.position = "fixed";
+        editRoomBtn.style.top = "90px";
+        editRoomBtn.style.right = "10px";
+        editRoomBtn.style.zIndex = "1000";
+        editRoomBtn.style.backgroundColor = "blue";
+        editRoomBtn.style.color = "white";
+        editRoomBtn.style.padding = "5px 10px";
+        document.body.appendChild(editRoomBtn);
+
+        editRoomBtn.addEventListener("click", () => {
+            const currentRoom = dungeon.rooms[playerState.currentRoom];
+            if (!currentRoom) return;
+            
+            // Cria um formulário para editar as dimensões da sala
+            const editForm = document.createElement('div');
+            editForm.style.position = "fixed";
+            editForm.style.top = "50%";
+            editForm.style.left = "50%";
+            editForm.style.transform = "translate(-50%, -50%)";
+            editForm.style.backgroundColor = "#333";
+            editForm.style.padding = "20px";
+            editForm.style.borderRadius = "10px";
+            editForm.style.zIndex = "2000";
+            editForm.style.boxShadow = "0 0 10px rgba(0,0,0,0.5)";
+            
+            editForm.innerHTML = `
+                <h3 style="color: white; margin-top: 0;">Editar Sala: ${currentRoom.name}</h3>
+                <div style="margin-bottom: 10px;">
+                    <label style="color: white; display: block; margin-bottom: 5px;">Posição X:</label>
+                    <input type="number" id="edit-x" value="${currentRoom.gridX}" style="width: 100%; padding: 5px;">
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="color: white; display: block; margin-bottom: 5px;">Posição Y:</label>
+                    <input type="number" id="edit-y" value="${currentRoom.gridY}" style="width: 100%; padding: 5px;">
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="color: white; display: block; margin-bottom: 5px;">Largura:</label>
+                    <input type="number" id="edit-width" value="${currentRoom.gridWidth}" style="width: 100%; padding: 5px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="color: white; display: block; margin-bottom: 5px;">Altura:</label>
+                    <input type="number" id="edit-height" value="${currentRoom.gridHeight}" style="width: 100%; padding: 5px;">
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <button id="save-room" style="background-color: green; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Salvar</button>
+                    <button id="cancel-edit" style="background-color: red; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Cancelar</button>
+                </div>
+            `;
+            
+            document.body.appendChild(editForm);
+            
+            // Adiciona eventos aos botões
+            document.getElementById("save-room").addEventListener("click", () => {
+                const x = parseInt(document.getElementById("edit-x").value);
+                const y = parseInt(document.getElementById("edit-y").value);
+                const width = parseInt(document.getElementById("edit-width").value);
+                const height = parseInt(document.getElementById("edit-height").value);
+                
+                if (isNaN(x) || isNaN(y) || isNaN(width) || isNaN(height)) {
+                    alert("Por favor, insira valores numéricos válidos.");
+                    return;
+                }
+                
+                // Atualiza as dimensões da sala
+                currentRoom.gridX = x;
+                currentRoom.gridY = y;
+                currentRoom.gridWidth = width;
+                currentRoom.gridHeight = height;
+                
+                // Redesenha o mapa
+                drawMap();
+                
+                // Remove o formulário
+                editForm.remove();
+                
+                console.log(`Sala ${currentRoom.id} atualizada para dimensões ${width}x${height} na posição (${x},${y})`);
+            });
+            
+            document.getElementById("cancel-edit").addEventListener("click", () => {
+                editForm.remove();
+            });
+        });
     } else {
         console.log("LOG: Nenhum usuário logado. Redirecionando para login...");
         window.location.href = "index.html";
     }
-});
 });
