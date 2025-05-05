@@ -668,15 +668,18 @@ async function rest() {
 function savePlayerState() {
     if (!userId) return;
     
-    const dungeonStateRef = doc(db, "dungeons", userId);
-    setDoc(dungeonStateRef, {
+    // Cria uma cópia do estado do jogador sem as dimensões das salas
+    const stateToSave = {
         currentRoom: playerState.currentRoom,
         discoveredRooms: playerState.discoveredRooms,
         visitedRooms: playerState.visitedRooms,
         inventory: playerState.inventory,
         health: playerState.health,
         lastUpdated: new Date().toISOString()
-    }, { merge: true })
+    };
+    
+    const dungeonStateRef = doc(db, "dungeons", userId);
+    setDoc(dungeonStateRef, stateToSave, { merge: false }) // Usa merge: false para substituir completamente
     .then(() => {
         console.log("Estado da masmorra salvo com sucesso!");
     })
@@ -684,6 +687,7 @@ function savePlayerState() {
         console.error("Erro ao salvar estado da masmorra:", error);
     });
 }
+
 
 // Função para carregar o estado do jogador do Firestore
 async function loadPlayerState() {
