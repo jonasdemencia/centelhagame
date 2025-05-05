@@ -69,7 +69,7 @@ const dungeon = {
             visited: false,
             discovered: false,
             gridX: 9, // Ajustado para alinhar com room-1
-            gridY: 14, // Posicionado acima da room-1, sem sobreposição
+            gridY: 13, // Posicionado acima da room-1, sem sobreposição
             gridWidth: 3,
             gridHeight: 5,
             events: [
