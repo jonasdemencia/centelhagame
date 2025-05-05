@@ -824,39 +824,74 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Verifica autenticação
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            console.log("LOG: Usuário logado. ID:", user.uid);
-            userId = user.uid;
-            
-            // Carrega os dados do jogador
-            const playerDocRef = doc(db, "players", userId);
-            try {
-                const docSnap = await getDoc(playerDocRef);
-                if (docSnap.exists()) {
-                    playerData = docSnap.data();
-                    console.log("Dados do jogador carregados:", playerData);
-                }
-            } catch (error) {
-                console.error("Erro ao carregar dados do jogador:", error);
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        console.log("LOG: Usuário logado. ID:", user.uid);
+        userId = user.uid;
+        
+        // Carrega os dados do jogador
+        const playerDocRef = doc(db, "players", userId);
+        try {
+            const docSnap = await getDoc(playerDocRef);
+            if (docSnap.exists()) {
+                playerData = docSnap.data();
+                console.log("Dados do jogador carregados:", playerData);
             }
-            
-            // Carrega o estado da masmorra
-            await loadPlayerState();
-
-            // Atualiza a barra de energia
-            updateHealthBar();
-            
-            // Inicia a exploração
-            startNewLogBlock("Bem-vindo");
-            await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
-            await addLogMessage(dungeon.description, 1000);
-            
-            // Move para a sala atual
-            moveToRoom(playerState.currentRoom);
-        } else {
-            console.log("LOG: Nenhum usuário logado. Redirecionando para login...");
-            window.location.href = "index.html";
+        } catch (error) {
+            console.error("Erro ao carregar dados do jogador:", error);
         }
-    });
+        
+        // Carrega o estado da masmorra
+        await loadPlayerState();
+
+        // Atualiza a barra de energia
+        updateHealthBar();
+        
+        // Inicia a exploração
+        startNewLogBlock("Bem-vindo");
+        await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
+        await addLogMessage(dungeon.description, 1000);
+        
+        // Move para a sala atual
+        moveToRoom(playerState.currentRoom);
+        
+        // Cria o botão de reset
+        const resetStateBtn = document.createElement('button');
+        resetStateBtn.id = "reset-state";
+        resetStateBtn.textContent = "Resetar Estado";
+        resetStateBtn.style.position = "fixed";
+        resetStateBtn.style.top = "10px";
+        resetStateBtn.style.right = "10px";
+        resetStateBtn.style.zIndex = "1000";
+        resetStateBtn.style.backgroundColor = "red";
+        resetStateBtn.style.color = "white";
+        resetStateBtn.style.padding = "5px 10px";
+        document.body.appendChild(resetStateBtn);
+
+        resetStateBtn.addEventListener("click", async () => {
+            try {
+                // Limpa o estado no Firestore
+                const dungeonStateRef = doc(db, "dungeons", userId);
+                await setDoc(dungeonStateRef, {
+                    currentRoom: "room-1",
+                    discoveredRooms: ["room-1"],
+                    visitedRooms: [],
+                    inventory: [],
+                    health: 100,
+                    lastUpdated: new Date().toISOString()
+                }, { merge: false });
+                
+                console.log("Estado da masmorra resetado com sucesso!");
+                
+                // Recarrega a página
+                location.reload();
+            } catch (error) {
+                console.error("Erro ao resetar estado da masmorra:", error);
+            }
+        });
+    } else {
+        console.log("LOG: Nenhum usuário logado. Redirecionando para login...");
+        window.location.href = "index.html";
+    }
+});
 });
