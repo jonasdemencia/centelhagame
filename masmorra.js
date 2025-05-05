@@ -684,6 +684,8 @@ async function loadPlayerState() {
         const docSnap = await getDoc(dungeonStateRef);
         if (docSnap.exists()) {
             const data = docSnap.data();
+            
+            // Carrega apenas o estado do jogador, não as dimensões das salas
             playerState = {
                 currentRoom: data.currentRoom || "room-1",
                 discoveredRooms: data.discoveredRooms || ["room-1"],
@@ -704,10 +706,22 @@ async function loadPlayerState() {
                 health: 100
             };
         }
+        
+        // Força a redescoberta das salas para usar as novas dimensões
+        console.log("Atualizando dimensões das salas...");
+        
+        // Limpa o cache do navegador para forçar o redesenho
+        if (window.caches) {
+            caches.keys().then(function(names) {
+                for (let name of names) caches.delete(name);
+            });
+        }
+        
     } catch (error) {
         console.error("Erro ao carregar estado da masmorra:", error);
     }
 }
+
 
 // Inicialização quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
