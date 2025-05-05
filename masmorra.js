@@ -50,7 +50,7 @@ const dungeon = {
             discovered: false,
             gridX: 10, // Coordenada X na grade (em células)
             gridY: 18, // Ajustado para ficar abaixo da room-2 sem sobreposição
-            gridWidth: 2, // Alterado para 2x2
+            gridWidth: 1, // Alterado para 2x2
             gridHeight: 4, // Alterado para 2x2
             events: [
                 { type: "first-visit", text: "O ar está frio e você sente um arrepio na espinha ao entrar neste lugar antigo." }
