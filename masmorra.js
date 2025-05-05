@@ -111,7 +111,7 @@ const dungeon = {
             gridX: 5, // Ajustado para ficar adjacente à room-2 pelo oeste, sem sobreposição
             gridY: 15, // Mesmo Y que room-2
             gridWidth: 3,
-            gridHeight: 3,
+            gridHeight: 5,
             events: [
                 { type: "first-visit", text: "Armas antigas e enferrujadas decoram as paredes. A maioria parece inútil após séculos de abandono." }
             ]
