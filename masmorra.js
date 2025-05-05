@@ -389,41 +389,50 @@ function drawMap() {
         }
     }
     
-    // Desenha o marcador do jogador
-    const currentRoom = dungeon.rooms[playerState.currentRoom];
-    if (currentRoom) {
-        // Calcula o centro da sala atual
-        const centerX = (currentRoom.gridX * GRID_CELL_SIZE) + (currentRoom.gridWidth * GRID_CELL_SIZE / 2);
-        const centerY = (currentRoom.gridY * GRID_CELL_SIZE) + (currentRoom.gridHeight * GRID_CELL_SIZE / 2);
-        
-        // Cria um grupo para o marcador do jogador
-        const playerGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        
-        // Cria o círculo do marcador
-        const playerMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        playerMarker.setAttribute("cx", centerX);
-        playerMarker.setAttribute("cy", centerY);
-        playerMarker.setAttribute("r", GRID_CELL_SIZE * 0.3);
-        playerMarker.setAttribute("fill", "#f1c40f");
-        playerMarker.setAttribute("stroke", "#f39c12");
-        playerMarker.setAttribute("stroke-width", "0.5");
-        
-        // Cria a animação SVG
-        const animateOpacity = document.createElementNS("http://www.w3.org/2000/svg", "animate");
-        animateOpacity.setAttribute("attributeName", "opacity");
-        animateOpacity.setAttribute("values", "0.7;1;0.7");
-        animateOpacity.setAttribute("dur", "2s");
-        animateOpacity.setAttribute("repeatCount", "indefinite");
-        
-        // Adiciona a animação ao marcador
-        playerMarker.appendChild(animateOpacity);
-        
-        // Adiciona o marcador ao grupo
-        playerGroup.appendChild(playerMarker);
-        
-        // Adiciona o grupo ao mapa
-        mapPlayer.appendChild(playerGroup);
-    }
+ // Desenha o marcador do jogador
+const currentRoom = dungeon.rooms[playerState.currentRoom];
+if (currentRoom) {
+    // Calcula o centro da sala atual
+    const centerX = (currentRoom.gridX * GRID_CELL_SIZE) + (currentRoom.gridWidth * GRID_CELL_SIZE / 2);
+    const centerY = (currentRoom.gridY * GRID_CELL_SIZE) + (currentRoom.gridHeight * GRID_CELL_SIZE / 2);
+    
+    // Cria um grupo para o marcador do jogador
+    const playerGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    
+    // Cria o círculo do marcador
+    const playerMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    playerMarker.setAttribute("cx", centerX);
+    playerMarker.setAttribute("cy", centerY);
+    playerMarker.setAttribute("r", GRID_CELL_SIZE * 0.3);
+    playerMarker.setAttribute("fill", "#f1c40f");
+    playerMarker.setAttribute("stroke", "#f39c12");
+    playerMarker.setAttribute("stroke-width", "0.5");
+    
+    // Cria a animação de opacidade (mais intensa)
+    const animateOpacity = document.createElementNS("http://www.w3.org/2000/svg", "animate");
+    animateOpacity.setAttribute("attributeName", "opacity");
+    animateOpacity.setAttribute("values", "0.5;1;0.5"); // Maior contraste
+    animateOpacity.setAttribute("dur", "1.5s"); // Mais rápido
+    animateOpacity.setAttribute("repeatCount", "indefinite");
+    
+    // Cria a animação de escala (para pulsar)
+    const animateRadius = document.createElementNS("http://www.w3.org/2000/svg", "animate");
+    animateRadius.setAttribute("attributeName", "r");
+    animateRadius.setAttribute("values", `${GRID_CELL_SIZE * 0.2};${GRID_CELL_SIZE * 0.4};${GRID_CELL_SIZE * 0.2}`); // Pulsa entre 0.2 e 0.4
+    animateRadius.setAttribute("dur", "1.5s"); // Mesma duração que a opacidade
+    animateRadius.setAttribute("repeatCount", "indefinite");
+    
+    // Adiciona as animações ao marcador
+    playerMarker.appendChild(animateOpacity);
+    playerMarker.appendChild(animateRadius);
+    
+    // Adiciona o marcador ao grupo
+    playerGroup.appendChild(playerMarker);
+    
+    // Adiciona o grupo ao mapa
+    mapPlayer.appendChild(playerGroup);
+}
+
 } // <-- Esta chave de fechamento estava faltando
 
 
