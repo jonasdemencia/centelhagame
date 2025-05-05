@@ -281,15 +281,3 @@
     text-align: right;
 }
 
-/* Estilos específicos para corredores */
-.corridor rect {
-    fill: #2a2a2a;
-    stroke: #555;
-    stroke-width: 0.3;
-}
-
-/* Adicione esta regra para garantir que as salas sejam renderizadas corretamente */
-svg rect {
-    shape-rendering: crispEdges;
-}
-
