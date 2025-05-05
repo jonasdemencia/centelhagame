@@ -277,6 +277,13 @@ async function addLogMessage(message, delay = 0, typingSpeed = 30) {
 }
 
 function drawMap() {
+    const mapSvg = document.getElementById("dungeon-map");
+    console.log("SVG viewBox:", mapSvg.getAttribute("viewBox"));
+    
+    // Ajusta o viewBox para garantir que todo o mapa seja visível
+    // Isso é importante para garantir que salas com altura maior sejam visíveis
+    mapSvg.setAttribute("viewBox", "0 0 100 120"); // Aumenta a altura do viewBox
+    
     const mapRooms = document.getElementById("map-rooms");
     const mapCorridors = document.getElementById("map-corridors");
     const mapDoors = document.getElementById("map-doors");
