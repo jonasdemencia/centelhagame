@@ -281,5 +281,10 @@
     text-align: right;
 }
 
+/* Adicione isso ao seu CSS */
+[data-room-id="room-1"] rect {
+    stroke: red;
+    stroke-width: 0.2;
+}
 
 
