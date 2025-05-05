@@ -71,7 +71,7 @@ const dungeon = {
             gridX: 9, // Ajustado para alinhar com room-1
             gridY: 12, // Posicionado acima da room-1, sem sobreposição
             gridWidth: 4,
-            gridHeight: 4,
+            gridHeight: 5,
             events: [
                 { type: "first-visit", text: "As estátuas de pedra parecem observar seus movimentos com olhos vazios." }
             ]
