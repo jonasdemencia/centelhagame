@@ -287,4 +287,17 @@
     stroke-width: 0.2;
 }
 
+/* Garante que o SVG ocupe todo o espaço disponível */
+#dungeon-map {
+    width: 100%;
+    height: 100%;
+    background-color: #111;
+    overflow: visible; /* Importante para garantir que elementos fora do viewBox sejam visíveis */
+}
+
+/* Garante que as células da sala 1 sejam visíveis */
+[data-room-id="room-1"] {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
 
