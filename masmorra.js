@@ -127,8 +127,8 @@ const dungeon = {
             visited: false,
             discovered: false,
             gridX: 5, // Mesmo X que room-4
-            gridY: 11, // Ajustado para ficar adjacente à room-4 pelo norte, sem sobreposição
-            gridWidth: 4,
+            gridY: 10, // Ajustado para ficar adjacente à room-4 pelo norte, sem sobreposição
+            gridWidth: 3,
             gridHeight: 3,
             events: [
                 { type: "first-visit", text: "Símbolos estranhos brilham levemente no chão. Você sente uma presença antiga neste lugar." }
