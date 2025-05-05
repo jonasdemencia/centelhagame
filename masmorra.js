@@ -276,8 +276,6 @@ async function addLogMessage(message, delay = 0, typingSpeed = 30) {
     });
 }
 
-// Função para desenhar o mapa
-// Função para desenhar o mapa
 function drawMap() {
     const mapRooms = document.getElementById("map-rooms");
     const mapCorridors = document.getElementById("map-corridors");
@@ -289,6 +287,12 @@ function drawMap() {
     mapCorridors.innerHTML = '';
     mapDoors.innerHTML = '';
     mapPlayer.innerHTML = '';
+
+    // Log para depuração
+    console.log("Dimensões da sala room-1:", 
+        dungeon.rooms["room-1"].gridWidth, 
+        "x", 
+        dungeon.rooms["room-1"].gridHeight);
     
     // Desenha a grade de fundo
     drawGrid();
@@ -297,6 +301,14 @@ function drawMap() {
     for (const roomId of playerState.discoveredRooms) {
         const room = dungeon.rooms[roomId];
         if (!room) continue;
+
+        // Depuração específica para a sala 1
+        if (roomId === "room-1") {
+            console.log("DEPURAÇÃO SALA 1:");
+            console.log("- Tipo:", room.type);
+            console.log("- Dimensões:", room.gridWidth, "x", room.gridHeight);
+            console.log("- Posição:", room.gridX, ",", room.gridY);
+        }
         
         // Verifica se as propriedades necessárias existem
         if (room.gridX === undefined || room.gridY === undefined || 
@@ -308,8 +320,6 @@ function drawMap() {
         // Calcula as coordenadas reais a partir das coordenadas da grade
         const x = room.gridX * GRID_CELL_SIZE;
         const y = room.gridY * GRID_CELL_SIZE;
-        const width = room.gridWidth * GRID_CELL_SIZE;
-        const height = room.gridHeight * GRID_CELL_SIZE;
         
         // Cria um grupo para a sala
         const roomGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -326,11 +336,22 @@ function drawMap() {
                 cellRect.setAttribute("height", GRID_CELL_SIZE);
                 cellRect.setAttribute("class", `room ${room.type} ${playerState.visitedRooms.includes(room.id) ? 'visited' : 'discovered'}`);
                 
+                // Depuração para a sala 1
+                if (roomId === "room-1") {
+                    cellRect.setAttribute("data-debug", `cell-${cellX}-${cellY}`);
+                    console.log(`Célula (${cellX},${cellY}) desenhada em (${x + (cellX * GRID_CELL_SIZE)},${y + (cellY * GRID_CELL_SIZE)})`);
+                }
+                
                 roomGroup.appendChild(cellRect);
             }
         }
         
-        mapRooms.appendChild(roomGroup);
+        // Adiciona o grupo ao mapa apropriado
+        if (room.type === "corridor") {
+            mapCorridors.appendChild(roomGroup);
+        } else {
+            mapRooms.appendChild(roomGroup);
+        }
         
         // Desenha as portas
         if (room.exits) {
@@ -338,6 +359,8 @@ function drawMap() {
                 // Só desenha a porta se a sala de destino também estiver descoberta
                 if (playerState.discoveredRooms.includes(exit.leadsTo)) {
                     if (exit.type === "door") {
+                        const width = room.gridWidth * GRID_CELL_SIZE;
+                        const height = room.gridHeight * GRID_CELL_SIZE;
                         let doorX = x + (width / 2);
                         let doorY = y + (height / 2);
                         let doorWidth = GRID_CELL_SIZE * 0.8;
@@ -408,15 +431,23 @@ function drawMap() {
         playerMarker.setAttribute("stroke", "#f39c12");
         playerMarker.setAttribute("stroke-width", "0.5");
         
-        // Cria a animação SVG
+        // Cria a animação de opacidade (mais intensa)
         const animateOpacity = document.createElementNS("http://www.w3.org/2000/svg", "animate");
         animateOpacity.setAttribute("attributeName", "opacity");
-        animateOpacity.setAttribute("values", "0.7;1;0.7");
-        animateOpacity.setAttribute("dur", "2s");
+        animateOpacity.setAttribute("values", "0.5;1;0.5"); // Maior contraste
+        animateOpacity.setAttribute("dur", "1.5s"); // Mais rápido
         animateOpacity.setAttribute("repeatCount", "indefinite");
         
-        // Adiciona a animação ao marcador
+        // Cria a animação de escala (para pulsar)
+        const animateRadius = document.createElementNS("http://www.w3.org/2000/svg", "animate");
+        animateRadius.setAttribute("attributeName", "r");
+        animateRadius.setAttribute("values", `${GRID_CELL_SIZE * 0.2};${GRID_CELL_SIZE * 0.4};${GRID_CELL_SIZE * 0.2}`); // Pulsa entre 0.2 e 0.4
+        animateRadius.setAttribute("dur", "1.5s"); // Mesma duração que a opacidade
+        animateRadius.setAttribute("repeatCount", "indefinite");
+        
+        // Adiciona as animações ao marcador
         playerMarker.appendChild(animateOpacity);
+        playerMarker.appendChild(animateRadius);
         
         // Adiciona o marcador ao grupo
         playerGroup.appendChild(playerMarker);
@@ -424,8 +455,7 @@ function drawMap() {
         // Adiciona o grupo ao mapa
         mapPlayer.appendChild(playerGroup);
     }
-} // <-- Esta chave de fechamento estava faltando
-
+}
 
 
 
