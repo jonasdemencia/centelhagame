@@ -377,32 +377,38 @@ function drawMap() {
                         const destRoom = dungeon.rooms[exit.leadsTo];
                         
                         // Ajusta a posição da porta com base na direção
-                        switch (exit.direction) {
-                            case "north":
-                                // Porta no meio da parede norte
-                                doorX = x + (width / 2) - (doorWidth / 2);
-                                doorY = y - (doorHeight / 2);
-                                break;
-                            case "south":
-                                // Porta no meio da parede sul
-                                doorX = x + (width / 2) - (doorWidth / 2);
-                                doorY = y + height - (doorHeight / 2);
-                                break;
-                            case "east":
-                                // Porta no meio da parede leste
-                                doorX = x + width - (doorWidth / 2);
-                                doorY = y + (height / 2) - (doorHeight / 2);
-                                doorWidth = GRID_CELL_SIZE * 0.4;
-                                doorHeight = GRID_CELL_SIZE * 0.8;
-                                break;
-                            case "west":
-                                // Porta no meio da parede oeste
-                                doorX = x - (doorWidth / 2);
-                                doorY = y + (height / 2) - (doorHeight / 2);
-                                doorWidth = GRID_CELL_SIZE * 0.4;
-                                doorHeight = GRID_CELL_SIZE * 0.8;
-                                break;
-                        }
+                        // Ajusta a posição da porta com base na direção
+switch (exit.direction) {
+    case "north":
+        // Porta no meio da parede norte
+        doorWidth = GRID_CELL_SIZE * 0.8;  // <-- Define a largura para portas norte
+        doorHeight = GRID_CELL_SIZE * 0.4; // <-- Define a altura para portas norte
+        doorX = x + (width / 2) - (doorWidth / 2);
+        doorY = y - (doorHeight / 2);
+        break;
+    case "south":
+        // Porta no meio da parede sul
+        doorWidth = GRID_CELL_SIZE * 0.8;  // <-- Define a largura para portas sul
+        doorHeight = GRID_CELL_SIZE * 0.4; // <-- Define a altura para portas sul
+        doorX = x + (width / 2) - (doorWidth / 2);
+        doorY = y + height - (doorHeight / 2);
+        break;
+    case "east":
+        // Porta no meio da parede leste
+        doorWidth = GRID_CELL_SIZE * 0.4;  // <-- Define a largura para portas leste
+        doorHeight = GRID_CELL_SIZE * 0.8; // <-- Define a altura para portas leste
+        doorX = x + width - (doorWidth / 2);
+        doorY = y + (height / 2) - (doorHeight / 2);
+        break;
+    case "west":
+        // Porta no meio da parede oeste
+        doorWidth = GRID_CELL_SIZE * 0.4;  // <-- Define a largura para portas oeste
+        doorHeight = GRID_CELL_SIZE * 0.8; // <-- Define a altura para portas oeste
+        doorX = x - (doorWidth / 2);
+        doorY = y + (height / 2) - (doorHeight / 2);
+        break;
+}
+
                         
                         const doorElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                         doorElement.setAttribute("x", doorX);
