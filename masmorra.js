@@ -536,7 +536,7 @@ function svgToGridCoords(clientX, clientY) {
     
     // Para X, compensamos o problema de preserveAspectRatio
     // Multiplicamos por um fator de correção
-    const correctionFactor = 0.5; // Ajuste este valor conforme necessário
+    const correctionFactor = 1; // Ajuste este valor conforme necessário
     const gridX = Math.floor((svgX * correctionFactor) / GRID_CELL_SIZE);
     
     return { gridX, gridY };
