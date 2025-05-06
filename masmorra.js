@@ -535,12 +535,18 @@ function drawMap() {
     const svgY = viewBox.height * ratioY;
     
     // Converte para coordenadas da grade
-    // Usa Math.round em vez de Math.floor para X
-    const gridX = Math.round(svgX / GRID_CELL_SIZE - 0.25);
+    // Multiplica por 2 para corrigir o problema de X mudar de 2 em 2
+    const gridX = Math.floor(svgX / GRID_CELL_SIZE * 2) / 2;
     const gridY = Math.floor(svgY / GRID_CELL_SIZE);
+    
+    // Logs para depuração
+    console.log("SVG coords:", svgX, svgY);
+    console.log("Grid coords (raw):", svgX / GRID_CELL_SIZE, svgY / GRID_CELL_SIZE);
+    console.log("Grid coords (adjusted):", gridX, gridY);
     
     return { gridX, gridY };
 }
+
 
 
 
