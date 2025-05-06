@@ -127,7 +127,7 @@ const dungeon = {
             visited: false,
             discovered: false,
             gridX: 5, // Mesmo X que room-4
-            gridY: 10, // Ajustado para ficar adjacente à room-4 pelo norte, sem sobreposição
+            gridY: 12, // Ajustado para ficar adjacente à room-4 pelo norte, sem sobreposição
             gridWidth: 3,
             gridHeight: 3,
             events: [
@@ -141,8 +141,7 @@ const dungeon = {
 const decorativeBlocks = [
     // Exemplo: corredor entre sala de armas e sala de estátuas
     { type: "corridor", gridX: 8, gridY: 15, gridWidth: 1, gridHeight: 1 },
-    { type: "corridor", gridX: 8, gridY: 14, gridWidth: 1, gridHeight: 1 },
-    { type: "corridor", gridX: 8, gridY: 13, gridWidth: 1, gridHeight: 1 }
+    { type: "corridor", gridX: 6, gridY: 12, gridWidth: 1, gridHeight: 1 }
 ];
 
 
