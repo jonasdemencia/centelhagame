@@ -137,6 +137,13 @@ const dungeon = {
     }
 };
 
+// Adicione isso após a definição do objeto dungeon
+const decorativeBlocks = [
+    // Exemplo: corredor entre sala de armas e sala de estátuas
+    { type: "corridor", gridX: 8, gridY: 15, gridWidth: 1, gridHeight: 1 },
+    { type: "corridor", gridX: 8, gridY: 14, gridWidth: 1, gridHeight: 1 },
+    { type: "corridor", gridX: 8, gridY: 13, gridWidth: 1, gridHeight: 1 }
+];
 
 
 
@@ -281,8 +288,7 @@ function drawMap() {
     console.log("SVG viewBox:", mapSvg.getAttribute("viewBox"));
     
     // Ajusta o viewBox para garantir que todo o mapa seja visível
-    // Isso é importante para garantir que salas com altura maior sejam visíveis
-    mapSvg.setAttribute("viewBox", "0 0 100 120"); // Aumenta a altura do viewBox
+    mapSvg.setAttribute("viewBox", "0 0 100 120");
     
     const mapRooms = document.getElementById("map-rooms");
     const mapCorridors = document.getElementById("map-corridors");
@@ -303,6 +309,26 @@ function drawMap() {
     
     // Desenha a grade de fundo
     drawGrid();
+    
+    // Desenha os blocos decorativos
+    for (const block of decorativeBlocks) {
+        const x = block.gridX * GRID_CELL_SIZE;
+        const y = block.gridY * GRID_CELL_SIZE;
+        
+        // Desenha as células da grade para formar o bloco
+        for (let cellY = 0; cellY < block.gridHeight; cellY++) {
+            for (let cellX = 0; cellX < block.gridWidth; cellX++) {
+                const cellRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                cellRect.setAttribute("x", x + (cellX * GRID_CELL_SIZE));
+                cellRect.setAttribute("y", y + (cellY * GRID_CELL_SIZE));
+                cellRect.setAttribute("width", GRID_CELL_SIZE);
+                cellRect.setAttribute("height", GRID_CELL_SIZE);
+                cellRect.setAttribute("class", `room ${block.type}`);
+                
+                mapCorridors.appendChild(cellRect);
+            }
+        }
+    }
     
     // Desenha as salas descobertas
     for (const roomId of playerState.discoveredRooms) {
