@@ -127,7 +127,7 @@ const dungeon = {
             visited: false,
             discovered: false,
             gridX: 5, // Mesmo X que room-4
-            gridY: 12, // Ajustado para ficar adjacente à room-4 pelo norte, sem sobreposição
+            gridY: 9, // Ajustado para ficar adjacente à room-4 pelo norte, sem sobreposição
             gridWidth: 3,
             gridHeight: 3,
             events: [
