@@ -301,3 +301,7 @@
     opacity: 1 !important;
 }
 
+.map-container {
+    /* Suas propriedades existentes */
+    aspect-ratio: 1 / 1; /* Isso garante que o contêiner seja quadrado */
+}
