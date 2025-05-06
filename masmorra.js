@@ -523,24 +523,18 @@ function drawMap() {
     const relativeX = clientX - svgRect.left;
     const relativeY = clientY - svgRect.top;
     
-    // Obtém o viewBox
-    const viewBox = mapSvg.viewBox.baseVal;
+    // Calcula a proporção do clique em relação ao tamanho do SVG
+    const ratioX = relativeX / svgRect.width;
+    const ratioY = relativeY / svgRect.height;
     
-    // Calcula a posição SVG baseada na proporção e no viewBox
-    const svgX = (relativeX / svgRect.width) * viewBox.width;
-    const svgY = (relativeY / svgRect.height) * viewBox.height;
-    
-    // Converte para coordenadas da grade
-    // Para Y, usamos Math.floor normalmente
-    const gridY = Math.floor(svgY / GRID_CELL_SIZE);
-    
-    // Para X, dividimos por 2 para compensar o problema
-    // Se svgX/GRID_CELL_SIZE está mudando de 2 em 2, então dividimos por 2
-    const rawGridX = svgX / GRID_CELL_SIZE;
-    const gridX = Math.floor(rawGridX / 2);
+    // Converte diretamente para coordenadas da grade
+    // Assumindo que temos 20 células no eixo X e 20 células no eixo Y
+    const gridX = Math.floor(ratioX * 20);
+    const gridY = Math.floor(ratioY * 24); // 24 para o viewBox de altura 120
     
     return { gridX, gridY };
 }
+
 
 
 
