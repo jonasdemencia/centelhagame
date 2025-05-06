@@ -534,12 +534,21 @@ function drawMap() {
     const svgX = viewBox.width * ratioX;
     const svgY = viewBox.height * ratioY;
     
+    // Função de mapeamento personalizada para X
+    // Esta função mapeia as coordenadas SVG para coordenadas de grade
+    // de forma mais precisa, considerando o problema de X mudar de 2 em 2
+    function mapToGridX(x) {
+        // Ajusta o valor de X para corresponder às células da grade
+        return Math.floor(x / (GRID_CELL_SIZE / 2)) / 2;
+    }
+    
     // Converte para coordenadas da grade
-    const gridX = Math.floor(svgX / GRID_CELL_SIZE);
+    const gridX = mapToGridX(svgX);
     const gridY = Math.floor(svgY / GRID_CELL_SIZE);
     
     return { gridX, gridY };
 }
+
 
 
     
