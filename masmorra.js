@@ -523,12 +523,17 @@ function drawMap() {
     const relativeX = clientX - svgRect.left;
     const relativeY = clientY - svgRect.top;
     
+    // Calcula o tamanho de cada célula da grade em pixels
+    const cellWidth = svgRect.width / 20;
+    const cellHeight = svgRect.height / 20;
+    
     // Converte para coordenadas da grade
-    const gridX = Math.floor(relativeX / (svgRect.width / 20));
-    const gridY = Math.floor(relativeY / (svgRect.height / 20));
+    const gridX = Math.floor(relativeX / cellWidth);
+    const gridY = Math.floor(relativeY / cellHeight);
     
     return { gridX, gridY };
 }
+
 
 
 
