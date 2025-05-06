@@ -287,6 +287,29 @@ function drawMap() {
     const mapSvg = document.getElementById("dungeon-map");
     console.log("SVG viewBox:", mapSvg.getAttribute("viewBox"));
     
+    // Cria ou atualiza o elemento de exibição de coordenadas
+    let coordsDisplay = document.getElementById("grid-coordinates");
+    if (!coordsDisplay) {
+        coordsDisplay = document.createElement("div");
+        coordsDisplay.id = "grid-coordinates";
+        coordsDisplay.style.position = "absolute";
+        coordsDisplay.style.bottom = "10px";
+        coordsDisplay.style.left = "10px";
+        coordsDisplay.style.backgroundColor = "rgba(0,0,0,0.7)";
+        coordsDisplay.style.color = "white";
+        coordsDisplay.style.padding = "5px";
+        coordsDisplay.style.borderRadius = "3px";
+        coordsDisplay.style.fontSize = "12px";
+        coordsDisplay.style.zIndex = "1000";
+        coordsDisplay.textContent = "X: -, Y: -";
+        
+        // Adiciona o elemento ao container do mapa
+        const mapContainer = document.querySelector(".map-container");
+        if (mapContainer) {
+            mapContainer.appendChild(coordsDisplay);
+        }
+    }
+    
     // Ajusta o viewBox para garantir que todo o mapa seja visível
     mapSvg.setAttribute("viewBox", "0 0 100 120");
     
@@ -403,38 +426,36 @@ function drawMap() {
                         const destRoom = dungeon.rooms[exit.leadsTo];
                         
                         // Ajusta a posição da porta com base na direção
-                        // Ajusta a posição da porta com base na direção
-switch (exit.direction) {
-    case "north":
-        // Porta no meio da parede norte
-        doorWidth = GRID_CELL_SIZE * 0.8;  // <-- Define a largura para portas norte
-        doorHeight = GRID_CELL_SIZE * 0.4; // <-- Define a altura para portas norte
-        doorX = x + (width / 2) - (doorWidth / 2);
-        doorY = y - (doorHeight / 2);
-        break;
-    case "south":
-        // Porta no meio da parede sul
-        doorWidth = GRID_CELL_SIZE * 0.8;  // <-- Define a largura para portas sul
-        doorHeight = GRID_CELL_SIZE * 0.4; // <-- Define a altura para portas sul
-        doorX = x + (width / 2) - (doorWidth / 2);
-        doorY = y + height - (doorHeight / 2);
-        break;
-    case "east":
-        // Porta no meio da parede leste
-        doorWidth = GRID_CELL_SIZE * 0.4;  // <-- Define a largura para portas leste
-        doorHeight = GRID_CELL_SIZE * 0.8; // <-- Define a altura para portas leste
-        doorX = x + width - (doorWidth / 2);
-        doorY = y + (height / 2) - (doorHeight / 2);
-        break;
-    case "west":
-        // Porta no meio da parede oeste
-        doorWidth = GRID_CELL_SIZE * 0.4;  // <-- Define a largura para portas oeste
-        doorHeight = GRID_CELL_SIZE * 0.8; // <-- Define a altura para portas oeste
-        doorX = x - (doorWidth / 2);
-        doorY = y + (height / 2) - (doorHeight / 2);
-        break;
-}
-
+                        switch (exit.direction) {
+                            case "north":
+                                // Porta no meio da parede norte
+                                doorWidth = GRID_CELL_SIZE * 0.8;  // <-- Define a largura para portas norte
+                                doorHeight = GRID_CELL_SIZE * 0.4; // <-- Define a altura para portas norte
+                                doorX = x + (width / 2) - (doorWidth / 2);
+                                doorY = y - (doorHeight / 2);
+                                break;
+                            case "south":
+                                // Porta no meio da parede sul
+                                doorWidth = GRID_CELL_SIZE * 0.8;  // <-- Define a largura para portas sul
+                                doorHeight = GRID_CELL_SIZE * 0.4; // <-- Define a altura para portas sul
+                                doorX = x + (width / 2) - (doorWidth / 2);
+                                doorY = y + height - (doorHeight / 2);
+                                break;
+                            case "east":
+                                // Porta no meio da parede leste
+                                doorWidth = GRID_CELL_SIZE * 0.4;  // <-- Define a largura para portas leste
+                                doorHeight = GRID_CELL_SIZE * 0.8; // <-- Define a altura para portas leste
+                                doorX = x + width - (doorWidth / 2);
+                                doorY = y + (height / 2) - (doorHeight / 2);
+                                break;
+                            case "west":
+                                // Porta no meio da parede oeste
+                                doorWidth = GRID_CELL_SIZE * 0.4;  // <-- Define a largura para portas oeste
+                                doorHeight = GRID_CELL_SIZE * 0.8; // <-- Define a altura para portas oeste
+                                doorX = x - (doorWidth / 2);
+                                doorY = y + (height / 2) - (doorHeight / 2);
+                                break;
+                        }
                         
                         const doorElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                         doorElement.setAttribute("x", doorX);
@@ -494,7 +515,63 @@ switch (exit.direction) {
         // Adiciona o grupo ao mapa
         mapPlayer.appendChild(playerGroup);
     }
+    
+    // Adiciona eventos para mostrar coordenadas e copiar ao clicar
+    function svgToGridCoords(svgX, svgY) {
+        // Obtém o viewBox do SVG
+        const viewBox = mapSvg.viewBox.baseVal;
+        
+        // Obtém as dimensões do elemento SVG
+        const rect = mapSvg.getBoundingClientRect();
+        
+        // Calcula a escala entre o viewBox e o tamanho real do elemento
+        const scaleX = viewBox.width / rect.width;
+        const scaleY = viewBox.height / rect.height;
+        
+        // Converte as coordenadas do mouse para coordenadas SVG
+        const svgRealX = (svgX - rect.left) * scaleX + viewBox.x;
+        const svgRealY = (svgY - rect.top) * scaleY + viewBox.y;
+        
+        // Converte para coordenadas da grade
+        const gridX = Math.floor(svgRealX / GRID_CELL_SIZE);
+        const gridY = Math.floor(svgRealY / GRID_CELL_SIZE);
+        
+        return { gridX, gridY };
+    }
+    
+    // Adiciona evento de mousemove ao SVG
+    mapSvg.addEventListener("mousemove", (event) => {
+        const { gridX, gridY } = svgToGridCoords(event.clientX, event.clientY);
+        coordsDisplay.textContent = `X: ${gridX}, Y: ${gridY}`;
+    });
+    
+    // Esconde as coordenadas quando o mouse sai do SVG
+    mapSvg.addEventListener("mouseout", () => {
+        coordsDisplay.textContent = "X: -, Y: -";
+    });
+    
+    // Adiciona evento de clique para copiar as coordenadas
+    mapSvg.addEventListener("click", (event) => {
+        const { gridX, gridY } = svgToGridCoords(event.clientX, event.clientY);
+        
+        // Cria uma string formatada para o bloco decorativo
+        const blockCode = `{ type: "corridor", gridX: ${gridX}, gridY: ${gridY}, gridWidth: 1, gridHeight: 1 },`;
+        
+        // Copia para a área de transferência
+        navigator.clipboard.writeText(blockCode).then(() => {
+            // Mostra uma mensagem temporária
+            const oldText = coordsDisplay.textContent;
+            coordsDisplay.textContent = "Copiado!";
+            setTimeout(() => {
+                coordsDisplay.textContent = oldText;
+            }, 1000);
+        });
+        
+        console.log(`Coordenadas clicadas: X=${gridX}, Y=${gridY}`);
+        console.log(`Código do bloco: ${blockCode}`);
+    });
 }
+
 
 
 
