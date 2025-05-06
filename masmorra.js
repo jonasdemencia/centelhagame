@@ -515,35 +515,32 @@ function drawMap() {
         mapPlayer.appendChild(playerGroup);
     }
     
-   function svgToGridCoords(svgX, svgY) {
-    // Obtém o viewBox do SVG
+   function svgToGridCoords(clientX, clientY) {
+    // Obtém o elemento SVG e suas dimensões
+    const svgRect = mapSvg.getBoundingClientRect();
+    
+    // Calcula a posição relativa do clique dentro do SVG
+    const relativeX = clientX - svgRect.left;
+    const relativeY = clientY - svgRect.top;
+    
+    // Calcula a proporção do clique em relação ao tamanho do SVG
+    const ratioX = relativeX / svgRect.width;
+    const ratioY = relativeY / svgRect.height;
+    
+    // Obtém o viewBox
     const viewBox = mapSvg.viewBox.baseVal;
     
-    // Obtém as dimensões do elemento SVG
-    const rect = mapSvg.getBoundingClientRect();
-    
-    // Calcula a escala entre o viewBox e o tamanho real do elemento
-    const scaleX = viewBox.width / rect.width;
-    const scaleY = viewBox.height / rect.height;
-    
-    // Converte as coordenadas do mouse para coordenadas SVG
-    const svgRealX = ((svgX - rect.left) * scaleX);
-    const svgRealY = ((svgY - rect.top) * scaleY);
+    // Calcula a posição SVG baseada na proporção e no viewBox
+    const svgX = viewBox.width * ratioX;
+    const svgY = viewBox.height * ratioY;
     
     // Converte para coordenadas da grade
-    const gridX = Math.floor(svgRealX / GRID_CELL_SIZE);
-    const gridY = Math.floor(svgRealY / GRID_CELL_SIZE);
-    
-    // Adiciona logs para depuração
-    console.log("Mouse coords:", svgX, svgY);
-    console.log("SVG rect:", rect.left, rect.top, rect.width, rect.height);
-    console.log("ViewBox:", viewBox.x, viewBox.y, viewBox.width, viewBox.height);
-    console.log("Scale:", scaleX, scaleY);
-    console.log("SVG coords:", svgRealX, svgRealY);
-    console.log("Grid coords:", gridX, gridY);
+    const gridX = Math.floor(svgX / GRID_CELL_SIZE);
+    const gridY = Math.floor(svgY / GRID_CELL_SIZE);
     
     return { gridX, gridY };
 }
+
 
     
     // Adiciona evento de mousemove ao SVG
