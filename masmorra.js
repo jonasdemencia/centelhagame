@@ -523,23 +523,25 @@ function svgToGridCoords(clientX, clientY) {
     const relativeX = clientX - svgRect.left;
     const relativeY = clientY - svgRect.top;
     
-    // Calcula a proporção do clique em relação ao tamanho do SVG
-    const ratioX = relativeX / svgRect.width;
-    const ratioY = relativeY / svgRect.height;
+    // Obtém o viewBox
+    const viewBox = mapSvg.viewBox.baseVal;
     
-    // Mapeia diretamente para coordenadas da grade
-    // Multiplica por 20 para X e 24 para Y
-    const gridX = Math.floor(ratioX * 20);
-    const gridY = Math.floor(ratioY * 24);
+    // Calcula a posição SVG baseada na proporção e no viewBox
+    const svgX = (relativeX / svgRect.width) * viewBox.width;
+    const svgY = (relativeY / svgRect.height) * viewBox.height;
     
-    // Adiciona logs para depuração
-    console.log("SVG rect:", svgRect.width, "x", svgRect.height);
-    console.log("Relative position:", relativeX, relativeY);
-    console.log("Ratio:", ratioX, ratioY);
-    console.log("Grid position:", gridX, gridY);
+    // Converte para coordenadas da grade
+    // Para Y, usamos Math.floor normalmente
+    const gridY = Math.floor(svgY / GRID_CELL_SIZE);
+    
+    // Para X, compensamos o problema de preserveAspectRatio
+    // Multiplicamos por um fator de correção
+    const correctionFactor = 0.5; // Ajuste este valor conforme necessário
+    const gridX = Math.floor((svgX * correctionFactor) / GRID_CELL_SIZE);
     
     return { gridX, gridY };
 }
+
 
 
 
