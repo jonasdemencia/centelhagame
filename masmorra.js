@@ -523,13 +523,24 @@ function drawMap() {
     const relativeX = clientX - svgRect.left;
     const relativeY = clientY - svgRect.top;
     
-    // Calcula o tamanho de cada célula da grade em pixels
-    const cellWidth = svgRect.width / 20;
-    const cellHeight = svgRect.height / 20;
+    // Obtém o viewBox
+    const viewBox = mapSvg.viewBox.baseVal;
+    
+    // Calcula a posição SVG baseada na proporção e no viewBox
+    const svgX = (relativeX / svgRect.width) * viewBox.width;
+    const svgY = (relativeY / svgRect.height) * viewBox.height;
     
     // Converte para coordenadas da grade
-    const gridX = Math.floor(relativeX / cellWidth);
-    const gridY = Math.floor(relativeY / cellHeight);
+    // Usa Math.floor para ambos X e Y para garantir consistência
+    const gridX = Math.floor(svgX / GRID_CELL_SIZE);
+    const gridY = Math.floor(svgY / GRID_CELL_SIZE);
+    
+    // Adiciona logs para depuração
+    console.log("Mouse position:", clientX, clientY);
+    console.log("SVG rect:", svgRect.left, svgRect.top, svgRect.width, svgRect.height);
+    console.log("Relative position:", relativeX, relativeY);
+    console.log("SVG position:", svgX, svgY);
+    console.log("Grid position:", gridX, gridY);
     
     return { gridX, gridY };
 }
