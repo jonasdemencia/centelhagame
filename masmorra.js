@@ -515,7 +515,7 @@ function drawMap() {
         mapPlayer.appendChild(playerGroup);
     }
     
-  function svgToGridCoords(clientX, clientY) {
+ function svgToGridCoords(clientX, clientY) {
     // Obtém o elemento SVG e suas dimensões
     const svgRect = mapSvg.getBoundingClientRect();
     
@@ -531,16 +531,13 @@ function drawMap() {
     const svgY = (relativeY / svgRect.height) * viewBox.height;
     
     // Converte para coordenadas da grade
-    // Usa Math.floor para ambos X e Y para garantir consistência
-    const gridX = Math.floor(svgX / GRID_CELL_SIZE);
+    // Para Y, usamos Math.floor normalmente
     const gridY = Math.floor(svgY / GRID_CELL_SIZE);
     
-    // Adiciona logs para depuração
-    console.log("Mouse position:", clientX, clientY);
-    console.log("SVG rect:", svgRect.left, svgRect.top, svgRect.width, svgRect.height);
-    console.log("Relative position:", relativeX, relativeY);
-    console.log("SVG position:", svgX, svgY);
-    console.log("Grid position:", gridX, gridY);
+    // Para X, dividimos por 2 para compensar o problema
+    // Se svgX/GRID_CELL_SIZE está mudando de 2 em 2, então dividimos por 2
+    const rawGridX = svgX / GRID_CELL_SIZE;
+    const gridX = Math.floor(rawGridX / 2);
     
     return { gridX, gridY };
 }
