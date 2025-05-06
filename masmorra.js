@@ -127,7 +127,7 @@ const dungeon = {
             visited: false,
             discovered: false,
             gridX: 5, // Mesmo X que room-4
-            gridY: 9, // Ajustado para ficar adjacente à room-4 pelo norte, sem sobreposição
+            gridY: 10, // Ajustado para ficar adjacente à room-4 pelo norte, sem sobreposição
             gridWidth: 3,
             gridHeight: 3,
             events: [
@@ -141,7 +141,8 @@ const dungeon = {
 const decorativeBlocks = [
     // Exemplo: corredor entre sala de armas e sala de estátuas
     { type: "corridor", gridX: 8, gridY: 15, gridWidth: 1, gridHeight: 1 },
-    { type: "corridor", gridX: 6, gridY: 12, gridWidth: 1, gridHeight: 1 },
+    { type: "corridor", gridX: 8, gridY: 14, gridWidth: 1, gridHeight: 1 },
+    { type: "corridor", gridX: 8, gridY: 13, gridWidth: 1, gridHeight: 1 }
 ];
 
 
@@ -515,42 +516,28 @@ function drawMap() {
         mapPlayer.appendChild(playerGroup);
     }
     
-   function svgToGridCoords(clientX, clientY) {
-    // Obtém o elemento SVG e suas dimensões
-    const svgRect = mapSvg.getBoundingClientRect();
-    
-    // Calcula a posição relativa do clique dentro do SVG
-    const relativeX = clientX - svgRect.left;
-    const relativeY = clientY - svgRect.top;
-    
-    // Calcula a proporção do clique em relação ao tamanho do SVG
-    const ratioX = relativeX / svgRect.width;
-    const ratioY = relativeY / svgRect.height;
-    
-    // Obtém o viewBox
-    const viewBox = mapSvg.viewBox.baseVal;
-    
-    // Calcula a posição SVG baseada na proporção e no viewBox
-    const svgX = viewBox.width * ratioX;
-    const svgY = viewBox.height * ratioY;
-    
-    // Converte para coordenadas da grade
-    // Multiplica por 2 para corrigir o problema de X mudar de 2 em 2
-    const gridX = Math.floor(svgX / GRID_CELL_SIZE * 2) / 2;
-    const gridY = Math.floor(svgY / GRID_CELL_SIZE);
-    
-    // Logs para depuração
-    console.log("SVG coords:", svgX, svgY);
-    console.log("Grid coords (raw):", svgX / GRID_CELL_SIZE, svgY / GRID_CELL_SIZE);
-    console.log("Grid coords (adjusted):", gridX, gridY);
-    
-    return { gridX, gridY };
-}
-
-
-
-
-
+    // Adiciona eventos para mostrar coordenadas e copiar ao clicar
+    function svgToGridCoords(svgX, svgY) {
+        // Obtém o viewBox do SVG
+        const viewBox = mapSvg.viewBox.baseVal;
+        
+        // Obtém as dimensões do elemento SVG
+        const rect = mapSvg.getBoundingClientRect();
+        
+        // Calcula a escala entre o viewBox e o tamanho real do elemento
+        const scaleX = viewBox.width / rect.width;
+        const scaleY = viewBox.height / rect.height;
+        
+        // Converte as coordenadas do mouse para coordenadas SVG
+        const svgRealX = (svgX - rect.left) * scaleX + viewBox.x;
+        const svgRealY = (svgY - rect.top) * scaleY + viewBox.y;
+        
+        // Converte para coordenadas da grade
+        const gridX = Math.floor(svgRealX / GRID_CELL_SIZE);
+        const gridY = Math.floor(svgRealY / GRID_CELL_SIZE);
+        
+        return { gridX, gridY };
+    }
     
     // Adiciona evento de mousemove ao SVG
     mapSvg.addEventListener("mousemove", (event) => {
