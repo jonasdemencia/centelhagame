@@ -515,28 +515,36 @@ function drawMap() {
         mapPlayer.appendChild(playerGroup);
     }
     
-    // Adiciona eventos para mostrar coordenadas e copiar ao clicar
-    function svgToGridCoords(svgX, svgY) {
-        // Obtém o viewBox do SVG
-        const viewBox = mapSvg.viewBox.baseVal;
-        
-        // Obtém as dimensões do elemento SVG
-        const rect = mapSvg.getBoundingClientRect();
-        
-        // Calcula a escala entre o viewBox e o tamanho real do elemento
-        const scaleX = viewBox.width / rect.width;
-        const scaleY = viewBox.height / rect.height;
-        
-        // Converte as coordenadas do mouse para coordenadas SVG
-        const svgRealX = (svgX - rect.left) * scaleX + viewBox.x;
-        const svgRealY = (svgY - rect.top) * scaleY + viewBox.y;
-        
-        // Converte para coordenadas da grade
-        const gridX = Math.floor(svgRealX / GRID_CELL_SIZE);
-        const gridY = Math.floor(svgRealY / GRID_CELL_SIZE);
-        
-        return { gridX, gridY };
-    }
+   function svgToGridCoords(svgX, svgY) {
+    // Obtém o viewBox do SVG
+    const viewBox = mapSvg.viewBox.baseVal;
+    
+    // Obtém as dimensões do elemento SVG
+    const rect = mapSvg.getBoundingClientRect();
+    
+    // Calcula a escala entre o viewBox e o tamanho real do elemento
+    const scaleX = viewBox.width / rect.width;
+    const scaleY = viewBox.height / rect.height;
+    
+    // Converte as coordenadas do mouse para coordenadas SVG
+    const svgRealX = ((svgX - rect.left) * scaleX);
+    const svgRealY = ((svgY - rect.top) * scaleY);
+    
+    // Converte para coordenadas da grade
+    const gridX = Math.floor(svgRealX / GRID_CELL_SIZE);
+    const gridY = Math.floor(svgRealY / GRID_CELL_SIZE);
+    
+    // Adiciona logs para depuração
+    console.log("Mouse coords:", svgX, svgY);
+    console.log("SVG rect:", rect.left, rect.top, rect.width, rect.height);
+    console.log("ViewBox:", viewBox.x, viewBox.y, viewBox.width, viewBox.height);
+    console.log("Scale:", scaleX, scaleY);
+    console.log("SVG coords:", svgRealX, svgRealY);
+    console.log("Grid coords:", gridX, gridY);
+    
+    return { gridX, gridY };
+}
+
     
     // Adiciona evento de mousemove ao SVG
     mapSvg.addEventListener("mousemove", (event) => {
