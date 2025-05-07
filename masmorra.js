@@ -89,7 +89,7 @@ const dungeon = {
             description: "Uma chave pesada feita de ferro enferrujado. Parece antiga."
         }
     ]
-}
+},
 
         "room-3": {
             id: "room-3",
