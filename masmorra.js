@@ -161,21 +161,45 @@ function updateHealthBar() {
     const healthValue = document.getElementById("player-health-value");
     
     if (healthBar && healthValue) {
-        const percentage = Math.max(0, Math.min(100, playerState.health));
-        healthBar.style.width = `${percentage}%`;
-        
-        // Muda a cor da barra com base na saúde
-        if (percentage <= 25) {
-            healthBar.style.backgroundColor = "#FF0000"; // Vermelho para saúde baixa
-        } else if (percentage <= 50) {
-            healthBar.style.backgroundColor = "#FFA500"; // Laranja para saúde média
+        if (playerData && playerData.energy && playerData.energy.total !== undefined) {
+            // Usa os dados de energia do jogador do Firestore
+            const currentEnergy = playerData.energy.total;
+            const maxEnergy = playerData.energy.total; // Valor máximo baseado no jogador atual
+            
+            // Calcula a porcentagem
+            const percentage = Math.max(0, Math.min(100, (playerState.health / maxEnergy) * 100));
+            healthBar.style.width = `${percentage}%`;
+            
+            // Muda a cor da barra com base na saúde
+            if (percentage <= 25) {
+                healthBar.style.backgroundColor = "#FF0000"; // Vermelho para saúde baixa
+            } else if (percentage <= 50) {
+                healthBar.style.backgroundColor = "#FFA500"; // Laranja para saúde média
+            } else {
+                healthBar.style.backgroundColor = "#4CAF50"; // Verde para saúde alta
+            }
+            
+            // Atualiza o texto com os valores reais
+            healthValue.textContent = `${playerState.health}/${maxEnergy}`;
         } else {
-            healthBar.style.backgroundColor = "#4CAF50"; // Verde para saúde alta
+            // Fallback para o valor de saúde do playerState
+            const percentage = Math.max(0, Math.min(100, playerState.health));
+            healthBar.style.width = `${percentage}%`;
+            
+            // Muda a cor da barra com base na saúde
+            if (percentage <= 25) {
+                healthBar.style.backgroundColor = "#FF0000"; // Vermelho para saúde baixa
+            } else if (percentage <= 50) {
+                healthBar.style.backgroundColor = "#FFA500"; // Laranja para saúde média
+            } else {
+                healthBar.style.backgroundColor = "#4CAF50"; // Verde para saúde alta
+            }
+            
+            healthValue.textContent = `${playerState.health}/100`;
         }
-        
-        healthValue.textContent = `${playerState.health}/100`;
     }
 }
+
 
 
 // Função para iniciar um novo bloco de log
@@ -812,6 +836,7 @@ function savePlayerState() {
 }
 
 // Função para carregar o estado do jogador do Firestore
+// Função para carregar o estado do jogador do Firestore
 async function loadPlayerState() {
     if (!userId) return;
     
@@ -820,30 +845,39 @@ async function loadPlayerState() {
         const docSnap = await getDoc(dungeonStateRef);
         if (docSnap.exists()) {
             const data = docSnap.data();
+            
+            // Se playerData estiver disponível, use a energia do jogador
+            const playerEnergy = playerData?.energy?.total || 100;
+            
             playerState = {
                 currentRoom: data.currentRoom || "room-1",
                 discoveredRooms: data.discoveredRooms || ["room-1"],
                 visitedRooms: data.visitedRooms || [],
                 inventory: data.inventory || [],
-                health: data.health || 100
+                health: data.health || playerEnergy // Usa a energia do jogador se disponível
             };
             
             console.log("Estado da masmorra carregado com sucesso!");
         } else {
             console.log("Nenhum estado de masmorra encontrado. Usando estado inicial.");
+            
+            // Se playerData estiver disponível, use a energia do jogador
+            const playerEnergy = playerData?.energy?.total || 100;
+            
             // Usa o estado inicial
             playerState = {
                 currentRoom: "room-1",
                 discoveredRooms: ["room-1"],
                 visitedRooms: [],
                 inventory: [],
-                health: 100
+                health: playerEnergy // Usa a energia do jogador se disponível
             };
         }
     } catch (error) {
         console.error("Erro ao carregar estado da masmorra:", error);
     }
 }
+
 
 // Inicialização quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
@@ -935,40 +969,48 @@ document.addEventListener('DOMContentLoaded', () => {
         restBtn.addEventListener("click", rest);
     }
     
-    // Verifica autenticação
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            console.log("LOG: Usuário logado. ID:", user.uid);
-            userId = user.uid;
-            
-            // Carrega os dados do jogador
-            const playerDocRef = doc(db, "players", userId);
-            try {
-                const docSnap = await getDoc(playerDocRef);
-                if (docSnap.exists()) {
-                    playerData = docSnap.data();
-                    console.log("Dados do jogador carregados:", playerData);
+   // Verifica autenticação
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        console.log("LOG: Usuário logado. ID:", user.uid);
+        userId = user.uid;
+        
+        // Carrega os dados do jogador
+        const playerDocRef = doc(db, "players", userId);
+        try {
+            const docSnap = await getDoc(playerDocRef);
+            if (docSnap.exists()) {
+                playerData = docSnap.data();
+                console.log("Dados do jogador carregados:", playerData);
+                
+                // Atualiza o estado do jogador com a energia correta
+                if (playerData.energy && playerData.energy.total !== undefined) {
+                    playerState.health = playerData.energy.total;
                 }
-            } catch (error) {
-                console.error("Erro ao carregar dados do jogador:", error);
+                
+                // Atualiza a barra de energia após carregar os dados do jogador
+                updateHealthBar();
             }
-            
-            // Carrega o estado da masmorra
-            await loadPlayerState();
-
-            // Atualiza a barra de energia
-            updateHealthBar();
-            
-            // Inicia a exploração
-            startNewLogBlock("Bem-vindo");
-            await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
-            await addLogMessage(dungeon.description, 1000);
-            
-            // Move para a sala atual
-            moveToRoom(playerState.currentRoom);
-        } else {
-            console.log("LOG: Nenhum usuário logado. Redirecionando para login...");
-            window.location.href = "index.html";
+        } catch (error) {
+            console.error("Erro ao carregar dados do jogador:", error);
         }
-    });
+        
+        // Carrega o estado da masmorra
+        await loadPlayerState();
+        
+        // Atualiza a barra de energia novamente após carregar o estado da masmorra
+        updateHealthBar();
+        
+        // Inicia a exploração
+        startNewLogBlock("Bem-vindo");
+        await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
+        await addLogMessage(dungeon.description, 1000);
+        
+        // Move para a sala atual
+        moveToRoom(playerState.currentRoom);
+    } else {
+        console.log("LOG: Nenhum usuário logado. Redirecionando para login...");
+        window.location.href = "index.html";
+    }
+});
 });
