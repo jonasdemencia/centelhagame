@@ -948,7 +948,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Verifica autenticação
-    // Verifica autenticação
+  // Verifica autenticação
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         console.log("LOG: Usuário logado. ID:", user.uid);
@@ -983,4 +983,4 @@ onAuthStateChanged(auth, async (user) => {
         console.log("LOG: Nenhum usuário logado. Redirecionando para login...");
         window.location.href = "index.html";
     }
-});
+}); // <-- Estava faltando este fechamento de chave e parêntese
