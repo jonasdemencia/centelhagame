@@ -156,6 +156,7 @@ const dungeon = {
 const decorativeBlocks = [
     // Exemplo: corredor entre sala de armas e sala de estátuas
     { type: "corridor", gridX: 8, gridY: 15, gridWidth: 1, gridHeight: 1 },
+    { type: "corridor", gridX: 12, gridY: 15, gridWidth: 1, gridHeight: 1 },
     { type: "corridor", gridX: 6, gridY: 12, gridWidth: 1, gridHeight: 1 }
 ];
 
