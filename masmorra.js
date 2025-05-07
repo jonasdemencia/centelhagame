@@ -160,26 +160,43 @@ function updateHealthBar() {
     const healthBar = document.getElementById("player-health-bar");
     const healthValue = document.getElementById("player-health-value");
     
-    if (healthBar && healthValue && playerData) {
-        // Usa os dados de energia do jogador do Firestore
-        const currentEnergy = playerData.energy.total || 100;
-        const maxEnergy = 210; // Valor máximo de energia
-        
-        // Calcula a porcentagem
-        const percentage = Math.max(0, Math.min(100, (currentEnergy / maxEnergy) * 100));
-        healthBar.style.width = `${percentage}%`;
-        
-        // Muda a cor da barra com base na saúde
-        if (percentage <= 25) {
-            healthBar.style.backgroundColor = "#FF0000"; // Vermelho para saúde baixa
-        } else if (percentage <= 50) {
-            healthBar.style.backgroundColor = "#FFA500"; // Laranja para saúde média
+    if (healthBar && healthValue) {
+        if (playerData && playerData.energy && playerData.energy.total) {
+            // Usa os dados de energia do jogador do Firestore
+            const currentEnergy = playerData.energy.total;
+            const maxEnergy = 210; // Valor máximo de energia
+            
+            // Calcula a porcentagem
+            const percentage = Math.max(0, Math.min(100, (currentEnergy / maxEnergy) * 100));
+            healthBar.style.width = `${percentage}%`;
+            
+            // Muda a cor da barra com base na saúde
+            if (percentage <= 25) {
+                healthBar.style.backgroundColor = "#FF0000"; // Vermelho para saúde baixa
+            } else if (percentage <= 50) {
+                healthBar.style.backgroundColor = "#FFA500"; // Laranja para saúde média
+            } else {
+                healthBar.style.backgroundColor = "#4CAF50"; // Verde para saúde alta
+            }
+            
+            // Atualiza o texto com os valores reais
+            healthValue.textContent = `${currentEnergy}/${maxEnergy}`;
         } else {
-            healthBar.style.backgroundColor = "#4CAF50"; // Verde para saúde alta
+            // Fallback para o valor de saúde do playerState
+            const percentage = Math.max(0, Math.min(100, playerState.health));
+            healthBar.style.width = `${percentage}%`;
+            
+            // Muda a cor da barra com base na saúde
+            if (percentage <= 25) {
+                healthBar.style.backgroundColor = "#FF0000"; // Vermelho para saúde baixa
+            } else if (percentage <= 50) {
+                healthBar.style.backgroundColor = "#FFA500"; // Laranja para saúde média
+            } else {
+                healthBar.style.backgroundColor = "#4CAF50"; // Verde para saúde alta
+            }
+            
+            healthValue.textContent = `${playerState.health}/100`;
         }
-        
-        // Atualiza o texto com os valores reais
-        healthValue.textContent = `${currentEnergy}/${maxEnergy}`;
     }
 }
 
