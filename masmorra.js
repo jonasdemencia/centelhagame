@@ -924,7 +924,48 @@ async function searchRoom() {
     if (!currentRoom) return;
     
     startNewLogBlock("Procurar");
-    await addLogMessage("Você procura cuidadosamente por itens ou passagens secretas...", 1000);
+    
+    // Caso especial para a Sala das Estátuas
+    if (currentRoom.id === "room-2" && 
+        currentRoom.explorationState && 
+        currentRoom.explorationState.specialStatueFound && 
+        !currentRoom.explorationState.keyFound) {
+        
+        await addLogMessage("Você procura cuidadosamente no alforge da estátua...", 1000);
+        await addLogMessage("Você encontra uma chave pesada de ferro!", 800);
+        
+        // Marca a chave como encontrada
+        currentRoom.explorationState.keyFound = true;
+        
+        // Cria o botão para recolher o item
+        const keyItem = {
+            id: "key-1", 
+            content: "Chave Pesada de Ferro", 
+            description: "Uma chave pesada feita de ferro enferrujado. Parece antiga."
+        };
+        createCollectButton(keyItem);
+        
+        savePlayerState(); // Salva o estado atualizado
+        return;
+    }
+    
+    // Se já encontrou a chave mas não recolheu
+    if (currentRoom.id === "room-2" && 
+        currentRoom.explorationState && 
+        currentRoom.explorationState.keyFound && 
+        !currentRoom.explorationState.keyCollected) {
+        
+        await addLogMessage("Você já encontrou uma chave pesada de ferro aqui.", 800);
+        
+        // Recria o botão para recolher o item caso tenha sido removido
+        const keyItem = {
+            id: "key-1", 
+            content: "Chave Pesada de Ferro", 
+            description: "Uma chave pesada feita de ferro enferrujado. Parece antiga."
+        };
+        createCollectButton(keyItem);
+        return;
+    }
     
     // Verifica se é a sala 5 (Câmara Ritual) para acionar a armadilha
     if (currentRoom.id === "room-5") {
@@ -966,6 +1007,7 @@ async function searchRoom() {
     }
     
     // Lógica original para outras salas
+    await addLogMessage("Você procura cuidadosamente por itens ou passagens secretas...", 1000);
     const foundSomething = Math.random() > 0.5;
     
     if (foundSomething && currentRoom.items && currentRoom.items.length > 0) {
@@ -986,6 +1028,127 @@ async function searchRoom() {
         await addLogMessage("Você não encontrou nada de interessante.", 800);
     }
 }
+
+// Função para criar o botão de recolher item
+function createCollectButton(item) {
+    // Remove qualquer botão existente primeiro
+    removeCollectButton();
+    
+    // Cria o botão
+    const collectButton = document.createElement('button');
+    collectButton.id = 'collect-item-button';
+    collectButton.textContent = 'Recolher Item';
+    collectButton.classList.add('action-btn', 'collect-btn');
+    
+    // Adiciona o evento de clique
+    collectButton.addEventListener('click', async () => {
+        // Adiciona o item ao inventário
+        const success = await addItemToInventory(item);
+        
+        if (success) {
+            // Marca o item como coletado
+            const currentRoom = dungeon.rooms[playerState.currentRoom];
+            if (currentRoom && currentRoom.id === "room-2") {
+                if (!currentRoom.explorationState) {
+                    currentRoom.explorationState = {};
+                }
+                currentRoom.explorationState.keyCollected = true;
+                savePlayerState();
+            }
+            
+            // Adiciona mensagem ao log
+            startNewLogBlock("Item Recolhido");
+            await addLogMessage(`Você recolheu: ${item.content}`, 800);
+            
+            // Remove o botão
+            removeCollectButton();
+        }
+    });
+    
+    // Adiciona o botão à interface
+    const actionButtons = document.getElementById('action-buttons');
+    if (actionButtons) {
+        actionButtons.appendChild(collectButton);
+    }
+    
+    // Adiciona eventos para remover o botão quando outros botões são clicados
+    const allButtons = document.querySelectorAll('.direction-btn, .action-btn:not(.collect-btn)');
+    allButtons.forEach(button => {
+        button.addEventListener('click', removeCollectButton);
+    });
+}
+
+// Função para remover o botão de recolher item
+function removeCollectButton() {
+    const collectButton = document.getElementById('collect-item-button');
+    if (collectButton) {
+        collectButton.remove();
+    }
+}
+
+// Função para adicionar um item ao inventário do jogador
+async function addItemToInventory(item) {
+    console.log("Adicionando ao inventário:", item);
+    if (!userId) {
+        console.error("Usuário não autenticado.");
+        return false;
+    }
+
+    const playerDocRef = doc(db, "players", userId);
+    const playerSnap = await getDoc(playerDocRef);
+
+    if (!playerSnap.exists()) {
+        console.error("Documento do jogador não encontrado.");
+        return false;
+    }
+
+    const playerData = playerSnap.data();
+    const inventory = playerData.inventory || {};
+    const chest = inventory.itemsInChest || [];
+
+    // Validação mínima
+    const itemName = item.content || item.name;
+    if (!itemName) {
+        console.error("Item sem nome ou content detectado:", item);
+        return false;
+    }
+
+    // Garante que exista um ID
+    const itemId = item.id || itemName.toLowerCase().replace(/\s+/g, '-');
+
+    // Verifica se item já existe no baú
+    const indexExistente = chest.findIndex(existing => existing.id === itemId);
+
+    if (indexExistente !== -1) {
+        if (item.quantity) {
+            chest[indexExistente].quantity = (chest[indexExistente].quantity || 1) + item.quantity;
+        }
+    } else {
+        const itemParaAdicionar = {
+            id: itemId,
+            content: itemName,
+            description: item.description || ""
+        };
+        if (typeof item.quantity === "number") itemParaAdicionar.quantity = item.quantity;
+        if (item.consumable) itemParaAdicionar.consumable = true;
+        if (item.effect) itemParaAdicionar.effect = item.effect;
+        if (item.value) itemParaAdicionar.value = item.value;
+
+        chest.push(itemParaAdicionar);
+    }
+
+    console.log("Salvando inventário com:", chest);
+    try {
+        await updateDoc(playerDocRef, {
+            "inventory.itemsInChest": chest
+        });
+        return true; // Indica sucesso
+    } catch (error) {
+        console.error("Erro ao salvar item no inventário:", error);
+        return false;
+    }
+}
+
 
 
 // Função para tentar abrir uma porta
