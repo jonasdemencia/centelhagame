@@ -57,25 +57,40 @@ const dungeon = {
             ]
         },
         "room-2": {
-            id: "room-2",
-            name: "Sala das Estátuas",
-            description: "Uma sala ampla com estátuas de guerreiros. Há portas a leste e oeste.",
-            type: "room",
-            exits: [
-                { direction: "south", leadsTo: "room-1", type: "door", locked: false },
-                { direction: "east", leadsTo: "room-3", type: "door", locked: true, keyId: "key-1" },
-                { direction: "west", leadsTo: "room-4", type: "door", locked: false }
-            ],
-            visited: false,
-            discovered: false,
-            gridX: 9, // Ajustado para alinhar com room-1
-            gridY: 13, // Posicionado acima da room-1, sem sobreposição
-            gridWidth: 3,
-            gridHeight: 5,
-            events: [
-                { type: "first-visit", text: "As estátuas de pedra parecem observar seus movimentos com olhos vazios." }
-            ]
-        },
+    id: "room-2",
+    name: "Sala das Estátuas",
+    description: "Uma sala ampla com estátuas de guerreiros. Há portas a leste e oeste.",
+    type: "room",
+    exits: [
+        { direction: "south", leadsTo: "room-1", type: "door", locked: false },
+        { direction: "east", leadsTo: "room-3", type: "door", locked: true, keyId: "key-1" },
+        { direction: "west", leadsTo: "room-4", type: "door", locked: false }
+    ],
+    visited: false,
+    discovered: false,
+    gridX: 9,
+    gridY: 13,
+    gridWidth: 3,
+    gridHeight: 5,
+    events: [
+        { type: "first-visit", text: "As estátuas de pedra parecem observar seus movimentos com olhos vazios." }
+    ],
+    // Adicionando estados de exploração
+    explorationState: {
+        examined: false,
+        specialStatueFound: false,
+        keyFound: false
+    },
+    // Item que pode ser encontrado
+    hiddenItems: [
+        { 
+            id: "key-1", 
+            content: "Chave Pesada de Ferro", 
+            description: "Uma chave pesada feita de ferro enferrujado. Parece antiga."
+        }
+    ]
+}
+
         "room-3": {
             id: "room-3",
             name: "Câmara do Tesouro",
@@ -292,6 +307,65 @@ function drawGrid() {
         line.setAttribute("stroke-width", "0.1");
         mapGrid.appendChild(line);
     }
+}
+
+// Função para adicionar um item ao inventário do jogador
+async function addItemToInventory(item) {
+    console.log("Adicionando ao inventário:", item);
+    if (!userId) {
+        console.error("Usuário não autenticado.");
+        return;
+    }
+
+    const playerDocRef = doc(db, "players", userId);
+    const playerSnap = await getDoc(playerDocRef);
+
+    if (!playerSnap.exists()) {
+        console.error("Documento do jogador não encontrado.");
+        return;
+    }
+
+    const playerData = playerSnap.data();
+    const inventory = playerData.inventory || {};
+    const chest = inventory.itemsInChest || [];
+
+    // Validação mínima
+    const itemName = item.content || item.name;
+    if (!itemName) {
+        console.error("Item sem nome ou content detectado:", item);
+        return;
+    }
+
+    // Garante que exista um ID
+    const itemId = item.id || itemName.toLowerCase().replace(/\s+/g, '-');
+
+    // Verifica se item já existe no baú
+    const indexExistente = chest.findIndex(existing => existing.id === itemId);
+
+    if (indexExistente !== -1) {
+        if (item.quantity) {
+            chest[indexExistente].quantity = (chest[indexExistente].quantity || 1) + item.quantity;
+        }
+    } else {
+        const itemParaAdicionar = {
+            id: itemId,
+            content: itemName,
+            description: item.description || ""
+        };
+        if (typeof item.quantity === "number") itemParaAdicionar.quantity = item.quantity;
+        if (item.consumable) itemParaAdicionar.consumable = true;
+        if (item.effect) itemParaAdicionar.effect = item.effect;
+        if (item.value) itemParaAdicionar.value = item.value;
+
+        chest.push(itemParaAdicionar);
+    }
+
+    console.log("Salvando inventário com:", chest);
+    await updateDoc(playerDocRef, {
+        "inventory.itemsInChest": chest
+    });
+    
+    return true; // Indica sucesso
 }
 
 
@@ -732,6 +806,36 @@ async function examineRoom() {
     if (!currentRoom) return;
     
     startNewLogBlock("Examinar");
+    
+    // Caso especial para a Sala das Estátuas
+    if (currentRoom.id === "room-2") {
+        // Primeira vez que examina a sala
+        if (!currentRoom.explorationState.examined) {
+            await addLogMessage(`Você examina a ${currentRoom.name} com cuidado.`, 500);
+            await addLogMessage("A sala tem um teto alto e paredes de pedra antiga. O chão está coberto por uma fina camada de poeira. Há uma estátua que parece diferente das demais.", 1000);
+            
+            currentRoom.explorationState.examined = true;
+            savePlayerState(); // Salva o estado atualizado
+            return;
+        }
+        
+        // Segunda vez que examina a sala (após já ter examinado uma vez)
+        if (currentRoom.explorationState.examined && !currentRoom.explorationState.specialStatueFound) {
+            await addLogMessage("A estátua diferente é a de uma criança elfo, feita de marfim, tampando com as mãos o rosto. No seu ombro direito, há um pequeno alforge de couro pendurado.", 1000);
+            
+            currentRoom.explorationState.specialStatueFound = true;
+            savePlayerState(); // Salva o estado atualizado
+            return;
+        }
+        
+        // Se já encontrou a estátua especial
+        if (currentRoom.explorationState.specialStatueFound) {
+            await addLogMessage("Você já examinou esta sala minuciosamente e encontrou a estátua diferente.", 800);
+            return;
+        }
+    }
+    
+    // Comportamento padrão para outras salas
     await addLogMessage(`Você examina a ${currentRoom.name} com cuidado.`, 500);
     
     // Descrição detalhada com base no tipo de sala
@@ -757,6 +861,61 @@ async function examineRoom() {
         }
     }
 }
+
+// Função para criar o botão de recolher item
+function createCollectButton(item) {
+    // Remove qualquer botão existente primeiro
+    removeCollectButton();
+    
+    // Cria o botão
+    const collectButton = document.createElement('button');
+    collectButton.id = 'collect-item-button';
+    collectButton.textContent = 'Recolher Item';
+    collectButton.classList.add('action-btn', 'collect-btn');
+    
+    // Adiciona o evento de clique
+    collectButton.addEventListener('click', async () => {
+        // Adiciona o item ao inventário
+        const success = await addItemToInventory(item);
+        
+        if (success) {
+            // Marca o item como coletado
+            const currentRoom = dungeon.rooms[playerState.currentRoom];
+            if (currentRoom && currentRoom.id === "room-2") {
+                currentRoom.explorationState.keyCollected = true;
+                savePlayerState();
+            }
+            
+            // Adiciona mensagem ao log
+            startNewLogBlock("Item Recolhido");
+            await addLogMessage(`Você recolheu: ${item.content}`, 800);
+            
+            // Remove o botão
+            removeCollectButton();
+        }
+    });
+    
+    // Adiciona o botão à interface
+    const actionButtons = document.getElementById('action-buttons');
+    if (actionButtons) {
+        actionButtons.appendChild(collectButton);
+    }
+    
+    // Adiciona eventos para remover o botão quando outros botões são clicados
+    const allButtons = document.querySelectorAll('.direction-btn, .action-btn:not(.collect-btn)');
+    allButtons.forEach(button => {
+        button.addEventListener('click', removeCollectButton);
+    });
+}
+
+// Função para remover o botão de recolher item
+function removeCollectButton() {
+    const collectButton = document.getElementById('collect-item-button');
+    if (collectButton) {
+        collectButton.remove();
+    }
+}
+
 
 // Função para procurar na sala atual
 // Função para procurar na sala atual
