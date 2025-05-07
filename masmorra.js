@@ -1029,62 +1029,8 @@ async function searchRoom() {
     }
 }
 
-// Função para criar o botão de recolher item
-function createCollectButton(item) {
-    // Remove qualquer botão existente primeiro
-    removeCollectButton();
-    
-    // Cria o botão
-    const collectButton = document.createElement('button');
-    collectButton.id = 'collect-item-button';
-    collectButton.textContent = 'Recolher Item';
-    collectButton.classList.add('action-btn', 'collect-btn');
-    
-    // Adiciona o evento de clique
-    collectButton.addEventListener('click', async () => {
-        // Adiciona o item ao inventário
-        const success = await addItemToInventory(item);
-        
-        if (success) {
-            // Marca o item como coletado
-            const currentRoom = dungeon.rooms[playerState.currentRoom];
-            if (currentRoom && currentRoom.id === "room-2") {
-                if (!currentRoom.explorationState) {
-                    currentRoom.explorationState = {};
-                }
-                currentRoom.explorationState.keyCollected = true;
-                savePlayerState();
-            }
-            
-            // Adiciona mensagem ao log
-            startNewLogBlock("Item Recolhido");
-            await addLogMessage(`Você recolheu: ${item.content}`, 800);
-            
-            // Remove o botão
-            removeCollectButton();
-        }
-    });
-    
-    // Adiciona o botão à interface
-    const actionButtons = document.getElementById('action-buttons');
-    if (actionButtons) {
-        actionButtons.appendChild(collectButton);
-    }
-    
-    // Adiciona eventos para remover o botão quando outros botões são clicados
-    const allButtons = document.querySelectorAll('.direction-btn, .action-btn:not(.collect-btn)');
-    allButtons.forEach(button => {
-        button.addEventListener('click', removeCollectButton);
-    });
-}
 
-// Função para remover o botão de recolher item
-function removeCollectButton() {
-    const collectButton = document.getElementById('collect-item-button');
-    if (collectButton) {
-        collectButton.remove();
-    }
-}
+
 
 // Função para adicionar um item ao inventário do jogador
 async function addItemToInventory(item) {
