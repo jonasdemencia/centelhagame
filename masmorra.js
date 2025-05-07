@@ -1047,11 +1047,23 @@ async function openDoor(direction) {
         await addLogMessage(`A porta está trancada.`, 500);
         
         // Verifica se o jogador tem a chave
-        const hasKey = playerState.inventory.some(item => item.id === exit.keyId);
+        // Verifica se o jogador tem a chave no inventário do Firestore
+let hasKey = false;
+
+// Primeiro verifica no playerState local (compatibilidade)
+hasKey = playerState.inventory.some(item => item.id === exit.keyId);
+
+// Se não encontrou, verifica no inventário do Firestore
+if (!hasKey && playerData && playerData.inventory && playerData.inventory.itemsInChest) {
+    hasKey = playerData.inventory.itemsInChest.some(item => item.id === exit.keyId);
+}
+
+
         if (hasKey) {
             await addLogMessage(`Você usa a chave para destrancar a porta.`, 800);
             exit.locked = false;
             updateDirectionButtons();
+            savePlayerState(); // Adicione esta linha para salvar o estado da porta destrancada
         } else {
             await addLogMessage(`Você precisa de uma chave para abrir esta porta.`, 800);
         }
