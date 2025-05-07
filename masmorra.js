@@ -203,6 +203,46 @@ function updateHealthBar() {
     }
 }
 
+// Função para rolar dados (ex: "1D6", "2D4")
+function rollDice(diceString) {
+    console.log("LOG: rollDice chamado com:", diceString);
+    const parts = diceString.toUpperCase().split('D');
+    if (parts.length === 1 && !isNaN(parseInt(parts[0]))) {
+        // Se for apenas um número, retorna esse número
+        const result = parseInt(parts[0]);
+        console.log("LOG: rollDice (número único) retornando:", result);
+        return result;
+    } else if (parts.length === 2) {
+        const numDice = parseInt(parts[0]);
+        const numSides = parseInt(parts[1]);
+        if (isNaN(numDice) || isNaN(numSides) || numDice <= 0 || numSides <= 0) {
+            console.error("LOG: rollDice - Valores de dado inválidos:", diceString);
+            return 0;
+        }
+        let totalRoll = 0;
+        for (let i = 0; i < numDice; i++) {
+            totalRoll += Math.floor(Math.random() * numSides) + 1;
+        }
+        console.log("LOG: rollDice (rolagem) retornando:", totalRoll);
+        return totalRoll;
+    } else {
+        console.error("LOG: rollDice - Formato de dado inválido:", diceString);
+        return 0;
+    }
+}
+
+// Função para atualizar a energia do jogador no Firestore
+function updatePlayerEnergyInFirestore(userId, newEnergy) {
+    console.log("LOG: updatePlayerEnergyInFirestore chamado com userId:", userId, "newEnergy:", newEnergy);
+    const playerDocRef = doc(db, "players", userId);
+    return setDoc(playerDocRef, { energy: { total: newEnergy } }, { merge: true }) // Atualiza o campo "energy.total"
+        .then(() => {
+            console.log("LOG: Energia do jogador atualizada na ficha:", newEnergy);
+        })
+        .catch((error) => {
+            console.error("LOG: Erro ao atualizar a energia do jogador na ficha:", error);
+        });
+}
 
 
 // Função para iniciar um novo bloco de log
@@ -719,6 +759,7 @@ async function examineRoom() {
 }
 
 // Função para procurar na sala atual
+// Função para procurar na sala atual
 async function searchRoom() {
     const currentRoom = dungeon.rooms[playerState.currentRoom];
     if (!currentRoom) return;
@@ -726,7 +767,46 @@ async function searchRoom() {
     startNewLogBlock("Procurar");
     await addLogMessage("Você procura cuidadosamente por itens ou passagens secretas...", 1000);
     
-    // Chance de encontrar algo (50%)
+    // Verifica se é a sala 5 (Câmara Ritual) para acionar a armadilha
+    if (currentRoom.id === "room-5") {
+        // Armadilha de flecha!
+        await addLogMessage("<strong style='color: red;'>CLIQUE!</strong> Você acionou uma armadilha!", 800);
+        await addLogMessage("Uma flecha dispara de uma fenda na parede!", 800);
+        
+        // Rola 1d10 de dano
+        const damage = rollDice("1D10");
+        
+        // Reduz a energia do jogador
+        const oldHealth = playerState.health;
+        playerState.health = Math.max(0, playerState.health - damage); // Não permite energia negativa
+        
+        // Atualiza a barra de energia
+        if (playerData && playerData.energy) {
+            playerData.energy.total = playerState.health;
+        }
+        updateHealthBar();
+        
+        // Atualiza a energia no Firestore
+        if (userId) {
+            await updatePlayerEnergyInFirestore(userId, playerState.health);
+        }
+        
+        // Mensagens de dano
+        await addLogMessage(`A flecha atinge você, causando <strong style='color: red;'>${damage}</strong> pontos de dano!`, 1000);
+        await addLogMessage(`Sua energia caiu de ${oldHealth} para ${playerState.health}.`, 800);
+        
+        if (playerState.health <= 0) {
+            await addLogMessage("<strong style='color: darkred;'>Você está inconsciente!</strong>", 1000);
+        } else if (playerState.health < 10) {
+            await addLogMessage("<strong style='color: orange;'>Você está gravemente ferido!</strong>", 1000);
+        }
+        
+        // Salva o estado do jogador
+        savePlayerState();
+        return;
+    }
+    
+    // Lógica original para outras salas
     const foundSomething = Math.random() > 0.5;
     
     if (foundSomething && currentRoom.items && currentRoom.items.length > 0) {
@@ -747,6 +827,7 @@ async function searchRoom() {
         await addLogMessage("Você não encontrou nada de interessante.", 800);
     }
 }
+
 
 // Função para tentar abrir uma porta
 async function openDoor(direction) {
