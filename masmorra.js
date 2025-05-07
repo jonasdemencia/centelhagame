@@ -161,13 +161,13 @@ function updateHealthBar() {
     const healthValue = document.getElementById("player-health-value");
     
     if (healthBar && healthValue) {
-        if (playerData && playerData.energy && playerData.energy.total !== undefined) {
-            // Usa os dados de energia do jogador do Firestore
-            const currentEnergy = playerData.energy.total;
-            const maxEnergy = playerData.energy.total; // Valor máximo baseado no jogador atual
+        if (playerData && playerData.energy) {
+            // Obtém a energia atual e máxima do jogador do Firestore
+            const currentEnergy = playerData.energy.total || 0;
+            const maxEnergy = playerData.energy.initial || currentEnergy;
             
             // Calcula a porcentagem
-            const percentage = Math.max(0, Math.min(100, (playerState.health / maxEnergy) * 100));
+            const percentage = Math.max(0, Math.min(100, (currentEnergy / maxEnergy) * 100));
             healthBar.style.width = `${percentage}%`;
             
             // Muda a cor da barra com base na saúde
@@ -180,7 +180,10 @@ function updateHealthBar() {
             }
             
             // Atualiza o texto com os valores reais
-            healthValue.textContent = `${playerState.health}/${maxEnergy}`;
+            healthValue.textContent = `${currentEnergy}/${maxEnergy}`;
+            
+            // Atualiza o estado do jogador para refletir a energia atual
+            playerState.health = currentEnergy;
         } else {
             // Fallback para o valor de saúde do playerState
             const percentage = Math.max(0, Math.min(100, playerState.health));
@@ -836,7 +839,6 @@ function savePlayerState() {
 }
 
 // Função para carregar o estado do jogador do Firestore
-// Função para carregar o estado do jogador do Firestore
 async function loadPlayerState() {
     if (!userId) return;
     
@@ -877,6 +879,7 @@ async function loadPlayerState() {
         console.error("Erro ao carregar estado da masmorra:", error);
     }
 }
+
 
 
 // Inicialização quando o DOM estiver carregado
@@ -970,6 +973,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
    // Verifica autenticação
+// Verifica autenticação
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         console.log("LOG: Usuário logado. ID:", user.uid);
