@@ -316,10 +316,18 @@ function createFightButton(enemy) {
 
 // Função para desabilitar todos os botões exceto o de lutar
 function disableAllButtonsExceptFight() {
-    // Desabilita botões de direção
-    const directionButtons = document.querySelectorAll('.direction-btn');
+    // Desabilita botões de direção específicos por ID
+    const directionButtons = [
+        document.getElementById("go-north"),
+        document.getElementById("go-south"),
+        document.getElementById("go-east"),
+        document.getElementById("go-west")
+    ];
+    
     directionButtons.forEach(button => {
-        button.disabled = true;
+        if (button) {
+            button.disabled = true;
+        }
     });
     
     // Desabilita botões de ação (exceto o de lutar)
@@ -333,7 +341,14 @@ function disableAllButtonsExceptFight() {
     if (inventarioButton) {
         inventarioButton.disabled = true;
     }
+    
+    // Desabilita também o botão de abrir porta
+    const openDoorBtn = document.getElementById("open-door");
+    if (openDoorBtn) {
+        openDoorBtn.disabled = true;
+    }
 }
+
 
 // Função para reabilitar todos os botões
 function enableAllButtons() {
