@@ -1267,6 +1267,33 @@ async function loadPlayerState() {
     }
 }
 
+// Função para verificar se um monstro foi derrotado
+async function checkDefeatedMonster(monsterId) {
+    if (!userId) return false;
+    
+    try {
+        // Referência para o documento de monstros derrotados do usuário
+        const defeatedMonstersRef = doc(db, "defeatedEnemies", userId);
+        
+        // Verifica se o documento existe
+        const docSnap = await getDoc(defeatedMonstersRef);
+        
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            const enemies = data.enemies || [];
+            
+            // Verifica se o monstro está na lista de derrotados
+            return enemies.includes(monsterId);
+        }
+        
+        return false;
+    } catch (error) {
+        console.error("LOG: Erro ao verificar monstro derrotado:", error);
+        return false;
+    }
+}
+
+
 // Função para mover o jogador para uma sala
 async function moveToRoom(roomId) {
     const room = dungeon.rooms[roomId];
