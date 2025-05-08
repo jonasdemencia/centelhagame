@@ -268,6 +268,19 @@ function handlePostBattle(monster) {
                 .catch(error => {
                     console.error("Erro ao conceder experiência:", error);
                 });
+            
+            // NOVA ADIÇÃO: Marca o monstro como derrotado
+            const monsterName = getUrlParameter('monstro');
+            if (monsterName) {
+                markMonsterAsDefeated(user.uid, monsterName)
+                    .then(success => {
+                        if (success) {
+                            console.log(`LOG: Monstro ${monsterName} marcado como derrotado para o usuário ${user.uid}`);
+                        } else {
+                            console.error(`LOG: Falha ao marcar monstro ${monsterName} como derrotado`);
+                        }
+                    });
+            }
         }
     }
     
@@ -293,7 +306,6 @@ function handlePostBattle(monster) {
     // Declara a variável battleStarted no escopo global
     window.battleStarted = false; // Reset do estado da batalha usando window para garantir escopo global
 }
-
 
 
 
