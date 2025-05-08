@@ -1295,6 +1295,7 @@ async function checkDefeatedMonster(monsterId) {
 
 
 // Função para mover o jogador para uma sala
+// Função para mover o jogador para uma sala
 async function moveToRoom(roomId) {
     const room = dungeon.rooms[roomId];
     if (!room) {
@@ -1325,9 +1326,21 @@ async function moveToRoom(roomId) {
         }
     }
     
+    // Verifica se a sala tem um inimigo e se ele já foi derrotado
+    let customDescription = room.description;
+    if (room.enemy) {
+        const isDefeated = await checkDefeatedMonster(room.enemy.id);
+        if (isDefeated) {
+            // Substitui a descrição original por uma que reflita que o monstro está morto
+            if (room.id === "room-6") { // Toca do Rato
+                customDescription = "Uma pequena sala escura e úmida. O chão está manchado de sangue seco.";
+            }
+        }
+    }
+    
     // Adiciona descrição da sala ao log
     startNewLogBlock(room.name);
-    await addLogMessage(room.description, 1000);
+    await addLogMessage(customDescription, 1000);
     
     // Atualiza o mapa
     drawMap();
@@ -1362,6 +1375,7 @@ async function moveToRoom(roomId) {
     // Salva o estado do jogador
     savePlayerState();
 }
+
 
 
 // Inicialização quando o DOM estiver carregado
