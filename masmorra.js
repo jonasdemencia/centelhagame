@@ -118,9 +118,11 @@ const dungeon = {
             description: "Uma sala com armas antigas penduradas nas paredes.",
             type: "room",
             exits: [
-                { direction: "east", leadsTo: "room-2", type: "door", locked: false },
-                { direction: "north", leadsTo: "room-5", type: "door", locked: false }
-            ],
+    { direction: "east", leadsTo: "room-2", type: "door", locked: false },
+    { direction: "north", leadsTo: "room-5", type: "door", locked: false },
+    { direction: "west", leadsTo: "room-6", type: "door", locked: false }
+],
+
             visited: false,
             discovered: false,
             gridX: 5, // Ajustado para ficar adjacente à room-2 pelo oeste, sem sobreposição
@@ -131,6 +133,30 @@ const dungeon = {
                 { type: "first-visit", text: "Armas antigas e enferrujadas decoram as paredes. A maioria parece inútil após séculos de abandono." }
             ]
         },
+        "room-6": {
+    id: "room-6",
+    name: "Toca do Rato",
+    description: "Uma pequena sala escura e úmida. Você ouve guinchos e vê olhos vermelhos brilhando na escuridão.",
+    type: "room",
+    exits: [
+        { direction: "east", leadsTo: "room-4", type: "door", locked: false }
+    ],
+    visited: false,
+    discovered: false,
+    gridX: 1,
+    gridY: 13,
+    gridWidth: 3,
+    gridHeight: 3,
+    events: [
+        { type: "first-visit", text: "Um enorme rato mutante se aproxima, mostrando dentes afiados e prontos para atacar!" }
+    ],
+    enemy: {
+        id: "rato-mutante",
+        name: "Rato Mutante",
+        description: "Um rato gigante com olhos vermelhos brilhantes e dentes afiados."
+    }
+},
+
         "room-5": {
             id: "room-5",
             name: "Câmara Ritual",
@@ -158,6 +184,7 @@ const decorativeBlocks = [
     { type: "corridor", gridX: 8, gridY: 15, gridWidth: 1, gridHeight: 1 },
     { type: "corridor", gridX: 12, gridY: 15, gridWidth: 1, gridHeight: 1 },
     { type: "corridor", gridX: 6, gridY: 12, gridWidth: 1, gridHeight: 1 }
+    { type: "corridor", gridX: 4, gridY: 15, gridWidth: 1, gridHeight: 1 },
 ];
 
 
@@ -258,6 +285,38 @@ function updatePlayerEnergyInFirestore(userId, newEnergy) {
         .catch((error) => {
             console.error("LOG: Erro ao atualizar a energia do jogador na ficha:", error);
         });
+}
+
+// Função para criar o botão de lutar
+function createFightButton(enemy) {
+    // Remove qualquer botão existente primeiro
+    removeFightButton();
+    
+    // Cria o botão
+    const fightButton = document.createElement('button');
+    fightButton.id = 'fight-enemy-button';
+    fightButton.textContent = 'Lutar!';
+    fightButton.classList.add('action-btn', 'fight-btn');
+    
+    // Adiciona o evento de clique
+    fightButton.addEventListener('click', () => {
+        // Redireciona para a página de batalha com o ID do inimigo
+        window.location.href = `https://jonasdemencia.github.io/centelhagame/batalha.html?monstro=${enemy.id}`;
+    });
+    
+    // Adiciona o botão à interface
+    const actionButtons = document.getElementById('action-buttons');
+    if (actionButtons) {
+        actionButtons.appendChild(fightButton);
+    }
+}
+
+// Função para remover o botão de lutar
+function removeFightButton() {
+    const fightButton = document.getElementById('fight-enemy-button');
+    if (fightButton) {
+        fightButton.remove();
+    }
 }
 
 
@@ -723,6 +782,9 @@ async function moveToRoom(roomId) {
         console.error(`Sala ${roomId} não encontrada.`);
         return;
     }
+
+    // Adicione esta linha aqui
+    removeFightButton();
     
     // Atualiza o estado do jogador
     playerState.currentRoom = roomId;
@@ -747,6 +809,17 @@ async function moveToRoom(roomId) {
     // Adiciona descrição da sala ao log
     startNewLogBlock(room.name);
     await addLogMessage(room.description, 1000);
+
+    // Adicione este trecho dentro da função moveToRoom, após a descrição da sala
+// Verifica se a sala atual tem um inimigo
+if (room.enemy) {
+    // Cria o botão de lutar
+    createFightButton(room.enemy);
+    
+    // Adiciona uma mensagem sobre o inimigo
+    await addLogMessage(`Um ${room.enemy.name} está pronto para atacar!`, 800);
+}
+
     
     // Atualiza o mapa
     drawMap();
