@@ -854,7 +854,7 @@ async function moveToRoom(roomId) {
         return;
     }
 
-    // Adicione esta linha aqui
+    // Remove o botão de lutar se existir
     removeFightButton();
     
     // Atualiza o estado do jogador
@@ -880,17 +880,6 @@ async function moveToRoom(roomId) {
     // Adiciona descrição da sala ao log
     startNewLogBlock(room.name);
     await addLogMessage(room.description, 1000);
-
-    // Adicione este trecho dentro da função moveToRoom, após a descrição da sala
-// Verifica se a sala atual tem um inimigo
-if (room.enemy) {
-    // Cria o botão de lutar
-    createFightButton(room.enemy);
-    
-    // Adiciona uma mensagem sobre o inimigo
-    await addLogMessage(`Um ${room.enemy.name} está pronto para atacar!`, 800);
-}
-
     
     // Atualiza o mapa
     drawMap();
@@ -898,8 +887,17 @@ if (room.enemy) {
     // Atualiza a barra de energia
     updateHealthBar();
     
-    // Atualiza os botões de direção
-    updateDirectionButtons();
+    // Verifica se a sala atual tem um inimigo
+    if (room.enemy) {
+        // Cria o botão de lutar
+        createFightButton(room.enemy);
+        
+        // Adiciona uma mensagem sobre o inimigo
+        await addLogMessage(`Um ${room.enemy.name} está pronto para atacar!`, 800);
+    } else {
+        // Só atualiza os botões de direção se não houver inimigo
+        updateDirectionButtons();
+    }
     
     // Salva o estado do jogador
     savePlayerState();
