@@ -211,6 +211,47 @@ function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
     }, { merge: true });
 }
 
+// Função para marcar um monstro como derrotado no Firestore
+async function markMonsterAsDefeated(userId, monsterId) {
+    console.log("LOG: markMonsterAsDefeated chamado com userId:", userId, "monsterId:", monsterId);
+    if (!userId || !monsterId) {
+        console.error("LOG: markMonsterAsDefeated - Parâmetros inválidos");
+        return false;
+    }
+    
+    try {
+        // Referência para o documento de monstros derrotados do usuário
+        const defeatedMonstersRef = doc(db, "defeatedEnemies", userId);
+        
+        // Verifica se o documento já existe
+        const docSnap = await getDoc(defeatedMonstersRef);
+        
+        if (docSnap.exists()) {
+            // Documento existe, adiciona o monstro à lista se ainda não estiver lá
+            const data = docSnap.data();
+            const enemies = data.enemies || [];
+            
+            if (!enemies.includes(monsterId)) {
+                enemies.push(monsterId);
+                await setDoc(defeatedMonstersRef, { enemies }, { merge: true });
+                console.log("LOG: Monstro adicionado à lista de derrotados");
+            } else {
+                console.log("LOG: Monstro já estava na lista de derrotados");
+            }
+        } else {
+            // Documento não existe, cria um novo
+            await setDoc(defeatedMonstersRef, { enemies: [monsterId] });
+            console.log("LOG: Criada nova lista de monstros derrotados");
+        }
+        
+        return true;
+    } catch (error) {
+        console.error("LOG: Erro ao marcar monstro como derrotado:", error);
+        return false;
+    }
+}
+
+
 function handlePostBattle(monster) {
     console.log("handlePostBattle chamado com monstro:", monster?.nome);
     
@@ -243,6 +284,7 @@ function handlePostBattle(monster) {
         
         const user = auth.currentUser;
         if (user) {
+            // Atualiza a experiência do jogador
             updatePlayerExperience(user.uid, xpToGain)
                 .then(newXP => {
                     // Cria um elemento de experiência diretamente no battleLogContent
@@ -268,6 +310,19 @@ function handlePostBattle(monster) {
                 .catch(error => {
                     console.error("Erro ao conceder experiência:", error);
                 });
+            
+            // NOVA ADIÇÃO: Marca o monstro como derrotado
+            const monsterName = getUrlParameter('monstro');
+            if (monsterName) {
+                markMonsterAsDefeated(user.uid, monsterName)
+                    .then(success => {
+                        if (success) {
+                            console.log(`LOG: Monstro ${monsterName} marcado como derrotado para o usuário ${user.uid}`);
+                        } else {
+                            console.error(`LOG: Falha ao marcar monstro ${monsterName} como derrotado`);
+                        }
+                    });
+            }
         }
     }
     
