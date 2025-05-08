@@ -309,6 +309,48 @@ function createFightButton(enemy) {
     if (actionButtons) {
         actionButtons.appendChild(fightButton);
     }
+    
+    // Desabilita todos os outros botões quando há um inimigo
+    disableAllButtonsExceptFight();
+}
+
+// Função para desabilitar todos os botões exceto o de lutar
+function disableAllButtonsExceptFight() {
+    // Desabilita botões de direção
+    const directionButtons = document.querySelectorAll('.direction-btn');
+    directionButtons.forEach(button => {
+        button.disabled = true;
+    });
+    
+    // Desabilita botões de ação (exceto o de lutar)
+    const actionButtons = document.querySelectorAll('.action-btn:not(.fight-btn)');
+    actionButtons.forEach(button => {
+        button.disabled = true;
+    });
+    
+    // Desabilita o botão de inventário
+    const inventarioButton = document.getElementById("abrir-inventario");
+    if (inventarioButton) {
+        inventarioButton.disabled = true;
+    }
+}
+
+// Função para reabilitar todos os botões
+function enableAllButtons() {
+    // Reabilita botões de ação
+    const actionButtons = document.querySelectorAll('.action-btn:not(.fight-btn)');
+    actionButtons.forEach(button => {
+        button.disabled = false;
+    });
+    
+    // Reabilita o botão de inventário
+    const inventarioButton = document.getElementById("abrir-inventario");
+    if (inventarioButton) {
+        inventarioButton.disabled = false;
+    }
+    
+    // Atualiza os botões de direção (isso vai reabilitar apenas os que devem estar habilitados)
+    updateDirectionButtons();
 }
 
 // Função para remover o botão de lutar
@@ -317,7 +359,11 @@ function removeFightButton() {
     if (fightButton) {
         fightButton.remove();
     }
+    
+    // Reabilita os botões quando o botão de lutar é removido
+    enableAllButtons();
 }
+
 
 
 // Função para iniciar um novo bloco de log
