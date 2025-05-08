@@ -268,19 +268,6 @@ function handlePostBattle(monster) {
                 .catch(error => {
                     console.error("Erro ao conceder experiência:", error);
                 });
-            
-            // NOVA ADIÇÃO: Marca o monstro como derrotado
-            const monsterName = getUrlParameter('monstro');
-            if (monsterName) {
-                markMonsterAsDefeated(user.uid, monsterName)
-                    .then(success => {
-                        if (success) {
-                            console.log(`LOG: Monstro ${monsterName} marcado como derrotado para o usuário ${user.uid}`);
-                        } else {
-                            console.error(`LOG: Falha ao marcar monstro ${monsterName} como derrotado`);
-                        }
-                    });
-            }
         }
     }
     
@@ -306,6 +293,7 @@ function handlePostBattle(monster) {
     // Declara a variável battleStarted no escopo global
     window.battleStarted = false; // Reset do estado da batalha usando window para garantir escopo global
 }
+
 
 
 
@@ -620,47 +608,6 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
         document.getElementById("monster-name").innerText = "Monstro não encontrado";
         document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
     }
-
-    // Função para marcar um monstro como derrotado no Firestore
-async function markMonsterAsDefeated(userId, monsterId) {
-    console.log("LOG: markMonsterAsDefeated chamado com userId:", userId, "monsterId:", monsterId);
-    if (!userId || !monsterId) {
-        console.error("LOG: markMonsterAsDefeated - Parâmetros inválidos");
-        return false;
-    }
-    
-    try {
-        // Referência para o documento de monstros derrotados do usuário
-        const defeatedMonstersRef = doc(db, "defeatedEnemies", userId);
-        
-        // Verifica se o documento já existe
-        const docSnap = await getDoc(defeatedMonstersRef);
-        
-        if (docSnap.exists()) {
-            // Documento existe, adiciona o monstro à lista se ainda não estiver lá
-            const data = docSnap.data();
-            const enemies = data.enemies || [];
-            
-            if (!enemies.includes(monsterId)) {
-                enemies.push(monsterId);
-                await setDoc(defeatedMonstersRef, { enemies }, { merge: true });
-                console.log("LOG: Monstro adicionado à lista de derrotados");
-            } else {
-                console.log("LOG: Monstro já estava na lista de derrotados");
-            }
-        } else {
-            // Documento não existe, cria um novo
-            await setDoc(defeatedMonstersRef, { enemies: [monsterId] });
-            console.log("LOG: Criada nova lista de monstros derrotados");
-        }
-        
-        return true;
-    } catch (error) {
-        console.error("LOG: Erro ao marcar monstro como derrotado:", error);
-        return false;
-    }
-}
-
 
     // Função para atualizar a experiência do jogador no Firestore
 async function updatePlayerExperience(userId, xpToAdd) {
