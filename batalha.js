@@ -609,6 +609,47 @@ atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMons
         document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
     }
 
+    // Função para marcar um monstro como derrotado no Firestore
+async function markMonsterAsDefeated(userId, monsterId) {
+    console.log("LOG: markMonsterAsDefeated chamado com userId:", userId, "monsterId:", monsterId);
+    if (!userId || !monsterId) {
+        console.error("LOG: markMonsterAsDefeated - Parâmetros inválidos");
+        return false;
+    }
+    
+    try {
+        // Referência para o documento de monstros derrotados do usuário
+        const defeatedMonstersRef = doc(db, "defeatedEnemies", userId);
+        
+        // Verifica se o documento já existe
+        const docSnap = await getDoc(defeatedMonstersRef);
+        
+        if (docSnap.exists()) {
+            // Documento existe, adiciona o monstro à lista se ainda não estiver lá
+            const data = docSnap.data();
+            const enemies = data.enemies || [];
+            
+            if (!enemies.includes(monsterId)) {
+                enemies.push(monsterId);
+                await setDoc(defeatedMonstersRef, { enemies }, { merge: true });
+                console.log("LOG: Monstro adicionado à lista de derrotados");
+            } else {
+                console.log("LOG: Monstro já estava na lista de derrotados");
+            }
+        } else {
+            // Documento não existe, cria um novo
+            await setDoc(defeatedMonstersRef, { enemies: [monsterId] });
+            console.log("LOG: Criada nova lista de monstros derrotados");
+        }
+        
+        return true;
+    } catch (error) {
+        console.error("LOG: Erro ao marcar monstro como derrotado:", error);
+        return false;
+    }
+}
+
+
     // Função para atualizar a experiência do jogador no Firestore
 async function updatePlayerExperience(userId, xpToAdd) {
     console.log("LOG: updatePlayerExperience chamado com userId:", userId, "xpToAdd:", xpToAdd);
