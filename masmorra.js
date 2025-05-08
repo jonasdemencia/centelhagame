@@ -312,23 +312,25 @@ function createFightButton(enemy) {
     
     // Desabilita todos os outros botões quando há um inimigo
     disableAllButtonsExceptFight();
+    
+    // Força a desabilitação do botão East diretamente
+    const eastBtn = document.getElementById("go-east");
+    if (eastBtn) {
+        eastBtn.disabled = true;
+        console.log("Botão East desabilitado diretamente:", eastBtn.disabled);
+    }
 }
+
 
 // Função para desabilitar todos os botões exceto o de lutar
 function disableAllButtonsExceptFight() {
-    // Desabilita botões de direção específicos por ID
-    const directionButtons = [
-        document.getElementById("go-north"),
-        document.getElementById("go-south"),
-        document.getElementById("go-east"),
-        document.getElementById("go-west")
-    ];
+    console.log("Desabilitando todos os botões exceto o de lutar");
     
-    directionButtons.forEach(button => {
-        if (button) {
-            button.disabled = true;
-        }
-    });
+    // Força a desabilitação direta dos botões de direção
+    document.getElementById("go-north").disabled = true;
+    document.getElementById("go-south").disabled = true;
+    document.getElementById("go-east").disabled = true;
+    document.getElementById("go-west").disabled = true;
     
     // Desabilita botões de ação (exceto o de lutar)
     const actionButtons = document.querySelectorAll('.action-btn:not(.fight-btn)');
@@ -347,7 +349,15 @@ function disableAllButtonsExceptFight() {
     if (openDoorBtn) {
         openDoorBtn.disabled = true;
     }
+    
+    // Adiciona um log para verificar se os botões foram desabilitados
+    console.log("Estado dos botões após desabilitar:");
+    console.log("North:", document.getElementById("go-north").disabled);
+    console.log("South:", document.getElementById("go-south").disabled);
+    console.log("East:", document.getElementById("go-east").disabled);
+    console.log("West:", document.getElementById("go-west").disabled);
 }
+
 
 
 // Função para reabilitar todos os botões
