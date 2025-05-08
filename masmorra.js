@@ -323,14 +323,29 @@ function createFightButton(enemy) {
 
 
 // Função para desabilitar todos os botões exceto o de lutar
+// Função para desabilitar todos os botões exceto o de lutar
 function disableAllButtonsExceptFight() {
     console.log("Desabilitando todos os botões exceto o de lutar");
     
     // Força a desabilitação direta dos botões de direção
-    document.getElementById("go-north").disabled = true;
-    document.getElementById("go-south").disabled = true;
-    document.getElementById("go-east").disabled = true;
-    document.getElementById("go-west").disabled = true;
+    setTimeout(() => {
+        // Usa setTimeout para garantir que isso seja executado após qualquer outra função
+        const northBtn = document.getElementById("go-north");
+        const southBtn = document.getElementById("go-south");
+        const eastBtn = document.getElementById("go-east");
+        const westBtn = document.getElementById("go-west");
+        
+        if (northBtn) northBtn.disabled = true;
+        if (southBtn) southBtn.disabled = true;
+        if (eastBtn) eastBtn.disabled = true;
+        if (westBtn) westBtn.disabled = true;
+        
+        console.log("Estado dos botões após desabilitar com timeout:");
+        console.log("North:", northBtn ? northBtn.disabled : "não encontrado");
+        console.log("South:", southBtn ? southBtn.disabled : "não encontrado");
+        console.log("East:", eastBtn ? eastBtn.disabled : "não encontrado");
+        console.log("West:", westBtn ? westBtn.disabled : "não encontrado");
+    }, 0);
     
     // Desabilita botões de ação (exceto o de lutar)
     const actionButtons = document.querySelectorAll('.action-btn:not(.fight-btn)');
@@ -349,14 +364,8 @@ function disableAllButtonsExceptFight() {
     if (openDoorBtn) {
         openDoorBtn.disabled = true;
     }
-    
-    // Adiciona um log para verificar se os botões foram desabilitados
-    console.log("Estado dos botões após desabilitar:");
-    console.log("North:", document.getElementById("go-north").disabled);
-    console.log("South:", document.getElementById("go-south").disabled);
-    console.log("East:", document.getElementById("go-east").disabled);
-    console.log("West:", document.getElementById("go-west").disabled);
 }
+
 
 
 
