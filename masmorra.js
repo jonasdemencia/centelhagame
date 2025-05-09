@@ -614,24 +614,28 @@ function drawMap() {
     drawGrid();
     
     // Desenha os blocos decorativos
-    for (const block of decorativeBlocks) {
-        const x = block.gridX * GRID_CELL_SIZE;
-        const y = block.gridY * GRID_CELL_SIZE;
-        
-        // Desenha as células da grade para formar o bloco
-        for (let cellY = 0; cellY < block.gridHeight; cellY++) {
-            for (let cellX = 0; cellX < block.gridWidth; cellX++) {
-                const cellRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                cellRect.setAttribute("x", x + (cellX * GRID_CELL_SIZE));
-                cellRect.setAttribute("y", y + (cellY * GRID_CELL_SIZE));
-                cellRect.setAttribute("width", GRID_CELL_SIZE);
-                cellRect.setAttribute("height", GRID_CELL_SIZE);
-                cellRect.setAttribute("class", `room ${block.type}`);
-                
-                mapCorridors.appendChild(cellRect);
-            }
+    // Desenha os blocos decorativos
+// Verifica se dungeon.decorativeBlocks existe, caso contrário usa a variável global
+const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
+for (const block of blocksToUse) {
+    const x = block.gridX * GRID_CELL_SIZE;
+    const y = block.gridY * GRID_CELL_SIZE;
+    
+    // Desenha as células da grade para formar o bloco
+    for (let cellY = 0; cellY < block.gridHeight; cellY++) {
+        for (let cellX = 0; cellX < block.gridWidth; cellX++) {
+            const cellRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            cellRect.setAttribute("x", x + (cellX * GRID_CELL_SIZE));
+            cellRect.setAttribute("y", y + (cellY * GRID_CELL_SIZE));
+            cellRect.setAttribute("width", GRID_CELL_SIZE);
+            cellRect.setAttribute("height", GRID_CELL_SIZE);
+            cellRect.setAttribute("class", `room ${block.type}`);
+            
+            mapCorridors.appendChild(cellRect);
         }
     }
+}
+
     
     // Desenha as salas descobertas
     for (const roomId of playerState.discoveredRooms) {
@@ -1630,19 +1634,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             await initializeDungeon(dungeonParam);
             
             // Lista masmorras disponíveis e cria o seletor
-            const availableDungeons = await listAvailableDungeons();
-            if (availableDungeons.length > 0) {
-                const dungeonSelector = createDungeonSelector(
-                    availableDungeons, 
-                    dungeonParam || 'default'
-                );
-                
-                // Adiciona o seletor à interface
-                const headerElement = document.querySelector('.game-header');
-                if (headerElement) {
-                    headerElement.appendChild(dungeonSelector);
-                }
-            }
+            // Lista masmorras disponíveis e cria o seletor
+const availableDungeons = await listAvailableDungeons();
+if (availableDungeons.length > 0) {
+    const dungeonSelector = createDungeonSelector(
+        availableDungeons, 
+        dungeonParam || 'default'
+    );
+    
+    // Adiciona o seletor à interface
+    const headerElement = document.querySelector('header');
+    if (headerElement) {
+        // Adiciona um estilo para posicionar o seletor
+        dungeonSelector.style.marginLeft = '10px';
+        headerElement.appendChild(dungeonSelector);
+    }
+}
+
             
             // Atualiza a barra de energia
             updateHealthBar();
