@@ -1011,7 +1011,132 @@ function removeCollectButton() {
 }
 
 
-// Função para procurar na sala atual
+// Função para carregar uma masmorra a partir de um arquivo JSON
+async function loadDungeonFromJSON(dungeonId) {
+    try {
+        console.log(`LOG: Carregando masmorra ${dungeonId} de arquivo JSON...`);
+        
+        // Caminho para o arquivo JSON da masmorra
+        const dungeonPath = `./dungeons/${dungeonId}.json`;
+        
+        // Carrega o arquivo JSON
+        const response = await fetch(dungeonPath);
+        if (!response.ok) {
+            throw new Error(`Erro ao carregar masmorra: ${response.status} ${response.statusText}`);
+        }
+        
+        // Converte o JSON para objeto
+        const dungeonData = await response.json();
+        console.log(`LOG: Masmorra ${dungeonId} carregada com sucesso!`);
+        
+        // Retorna os dados da masmorra
+        return dungeonData;
+    } catch (error) {
+        console.error(`LOG: Erro ao carregar masmorra ${dungeonId}:`, error);
+        
+        // Em caso de erro, retorna a masmorra padrão
+        console.log("LOG: Usando masmorra padrão como fallback.");
+        return dungeon;
+    }
+}
+
+// Função para inicializar a masmorra
+async function initializeDungeon(dungeonId = null) {
+    let currentDungeon;
+    
+    // Se um ID de masmorra foi especificado, tenta carregar do JSON
+    if (dungeonId) {
+        currentDungeon = await loadDungeonFromJSON(dungeonId);
+    } else {
+        // Caso contrário, usa a masmorra padrão definida no código
+        currentDungeon = dungeon;
+    }
+    
+    // Atualiza a variável global dungeon com os dados carregados
+    // Isso mantém a compatibilidade com o código existente
+    Object.assign(dungeon, currentDungeon);
+    
+    console.log("LOG: Masmorra inicializada:", dungeon.name);
+    
+    // Retorna a masmorra inicializada
+    return dungeon;
+}
+
+// Função para listar masmorras disponíveis
+async function listAvailableDungeons() {
+    try {
+        // Carrega o índice de masmorras disponíveis
+        const response = await fetch('./dungeons/index.json');
+        if (!response.ok) {
+            throw new Error(`Erro ao carregar índice de masmorras: ${response.status} ${response.statusText}`);
+        }
+        
+        // Converte o JSON para objeto
+        const dungeonIndex = await response.json();
+        console.log("LOG: Masmorras disponíveis:", dungeonIndex);
+        
+        return dungeonIndex;
+    } catch (error) {
+        console.error("LOG: Erro ao listar masmorras disponíveis:", error);
+        return [];
+    }
+}
+
+// Função para criar um seletor de masmorras
+function createDungeonSelector(dungeons, currentDungeonId) {
+    // Cria um elemento select
+    const selector = document.createElement('select');
+    selector.id = 'dungeon-selector';
+    selector.classList.add('dungeon-selector');
+    
+    // Adiciona as opções
+    dungeons.forEach(dungeon => {
+        const option = document.createElement('option');
+        option.value = dungeon.id;
+        option.textContent = dungeon.name;
+        option.selected = dungeon.id === currentDungeonId;
+        selector.appendChild(option);
+    });
+    
+    // Adiciona o evento de mudança
+    selector.addEventListener('change', async (event) => {
+        const newDungeonId = event.target.value;
+        console.log(`LOG: Mudando para masmorra ${newDungeonId}`);
+        
+        // Confirma com o usuário
+        if (confirm(`Deseja realmente mudar para a masmorra "${dungeons.find(d => d.id === newDungeonId).name}"? Seu progresso atual será salvo.`)) {
+            // Salva o estado atual
+            savePlayerState();
+            
+            // Redefine o estado do jogador para a nova masmorra
+            playerState = {
+                currentRoom: "room-1",
+                discoveredRooms: ["room-1"],
+                visitedRooms: [],
+                inventory: playerState.inventory, // Mantém o inventário
+                health: playerState.health // Mantém a saúde
+            };
+            
+            // Carrega a nova masmorra
+            await initializeDungeon(newDungeonId);
+            
+            // Atualiza a interface
+            startNewLogBlock("Mudança de Masmorra");
+            await addLogMessage(`Você entrou em ${dungeon.name}!`, 500);
+            await addLogMessage(dungeon.description, 1000);
+            
+            // Move para a sala inicial
+            moveToRoom(dungeon.entrance);
+        } else {
+            // Restaura a seleção anterior
+            selector.value = currentDungeonId;
+        }
+    });
+    
+    return selector;
+}
+
+
 // Função para procurar na sala atual
 async function searchRoom() {
     const currentRoom = dungeon.rooms[playerState.currentRoom];
@@ -1379,7 +1504,7 @@ async function moveToRoom(roomId) {
 
 
 // Inicialização quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     console.log("LOG: DOMContentLoaded evento disparado.");
     
     // Botão de inventário
@@ -1468,12 +1593,11 @@ document.addEventListener('DOMContentLoaded', () => {
         restBtn.addEventListener("click", rest);
     }
     
-   // Verifica autenticação
-// Verifica autenticação
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        console.log("LOG: Usuário logado. ID:", user.uid);
-        userId = user.uid;
+  // Verifica autenticação
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            console.log("LOG: Usuário logado. ID:", user.uid);
+            userId = user.uid;
         
         // Carrega os dados do jogador
         const playerDocRef = doc(db, "players", userId);
@@ -1496,21 +1620,43 @@ onAuthStateChanged(auth, async (user) => {
         }
         
         // Carrega o estado da masmorra
-        await loadPlayerState();
-        
-        // Atualiza a barra de energia novamente após carregar o estado da masmorra
-        updateHealthBar();
-        
-        // Inicia a exploração
-        startNewLogBlock("Bem-vindo");
-        await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
-        await addLogMessage(dungeon.description, 1000);
-        
-        // Move para a sala atual
-        moveToRoom(playerState.currentRoom);
-    } else {
-        console.log("LOG: Nenhum usuário logado. Redirecionando para login...");
-        window.location.href = "index.html";
-    }
-});
+            await loadPlayerState();
+            
+            // Verifica se há um parâmetro de masmorra na URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const dungeonParam = urlParams.get('dungeon');
+            
+            // Carrega a masmorra especificada ou a padrão
+            await initializeDungeon(dungeonParam);
+            
+            // Lista masmorras disponíveis e cria o seletor
+            const availableDungeons = await listAvailableDungeons();
+            if (availableDungeons.length > 0) {
+                const dungeonSelector = createDungeonSelector(
+                    availableDungeons, 
+                    dungeonParam || 'default'
+                );
+                
+                // Adiciona o seletor à interface
+                const headerElement = document.querySelector('.game-header');
+                if (headerElement) {
+                    headerElement.appendChild(dungeonSelector);
+                }
+            }
+            
+            // Atualiza a barra de energia
+            updateHealthBar();
+            
+            // Inicia a exploração
+            startNewLogBlock("Bem-vindo");
+            await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
+            await addLogMessage(dungeon.description, 1000);
+            
+            // Move para a sala atual
+            moveToRoom(playerState.currentRoom);
+        } else {
+            console.log("LOG: Nenhum usuário logado. Redirecionando para login...");
+            window.location.href = "index.html";
+        }
+    });
 });
