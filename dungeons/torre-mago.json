@@ -1,0 +1,101 @@
+{
+  "name": "Torre do Mago Louco",
+  "description": "Uma torre abandonada cheia de experimentos mágicos perigosos.",
+  "entrance": "room-1",
+  "rooms": {
+    "room-1": {
+      "id": "room-1",
+      "name": "Entrada da Torre",
+      "description": "Uma porta de madeira ornamentada leva ao interior da torre. O ar está carregado de energia mágica.",
+      "type": "room",
+      "exits": [
+        { "direction": "north", "leadsTo": "room-2", "type": "door", "locked": false }
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 10,
+      "gridY": 18,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "events": [
+        { "type": "first-visit", "text": "Ao entrar na torre, você sente uma estranha vibração mágica no ar. Algo não está certo neste lugar." }
+      ]
+    },
+    "room-2": {
+      "id": "room-2",
+      "name": "Sala de Estudos",
+      "description": "Uma sala repleta de livros e pergaminhos. Uma escrivaninha no centro está coberta de anotações.",
+      "type": "room",
+      "exits": [
+        { "direction": "south", "leadsTo": "room-1", "type": "door", "locked": false },
+        { "direction": "east", "leadsTo": "room-3", "type": "door", "locked": false },
+        { "direction": "north", "leadsTo": "room-4", "type": "door", "locked": true, "keyId": "key-mago" }
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 10,
+      "gridY": 14,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "events": [
+        { "type": "first-visit", "text": "Os livros na sala parecem se mover levemente, como se estivessem respirando. Você sente que está sendo observado." }
+      ],
+      "items": [
+        { "id": "pergaminho-magico", "name": "Pergaminho Mágico", "description": "Um pergaminho com símbolos arcanos que brilham suavemente.", "quantity": 1 }
+      ]
+    },
+    "room-3": {
+      "id": "room-3",
+      "name": "Laboratório Alquímico",
+      "description": "Um laboratório com diversos frascos e aparelhos estranhos. Líquidos borbulham em recipientes de vidro.",
+      "type": "room",
+      "exits": [
+        { "direction": "west", "leadsTo": "room-2", "type": "door", "locked": false }
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 14,
+      "gridY": 14,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "events": [
+        { "type": "first-visit", "text": "Um cheiro forte de produtos químicos e magia permeia o ar. Algo explode em um dos frascos quando você entra." }
+      ],
+      "enemy": {
+        "id": "golem-cristal",
+        "name": "Golem de Cristal",
+        "description": "Uma criatura feita de cristais mágicos que brilham com energia arcana."
+      }
+    },
+    "room-4": {
+      "id": "room-4",
+      "name": "Câmara do Mago",
+      "description": "Uma sala circular no topo da torre. Um grande círculo mágico está desenhado no chão.",
+      "type": "room",
+      "exits": [
+        { "direction": "south", "leadsTo": "room-2", "type": "door", "locked": false }
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 10,
+      "gridY": 10,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "events": [
+        { "type": "first-visit", "text": "O círculo mágico no chão começa a brilhar quando você entra. Uma figura espectral começa a se formar no centro." }
+      ],
+      "enemy": {
+        "id": "espectro-mago",
+        "name": "Espectro do Mago",
+        "description": "O fantasma do antigo mago que habitava esta torre, ainda realizando seus experimentos no além."
+      },
+      "items": [
+        { "id": "key-mago", "name": "Chave do Mago", "description": "Uma chave ornamentada com símbolos arcanos.", "quantity": 1 }
+      ]
+    }
+  },
+  "decorativeBlocks": [
+    { "type": "corridor", "gridX": 11, "gridY": 17, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 11, "gridY": 13, "gridWidth": 1, "gridHeight": 1 }
+  ]
+}

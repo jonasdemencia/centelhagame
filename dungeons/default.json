@@ -1,0 +1,145 @@
+{
+  "name": "Ruínas de Undermountain",
+  "description": "Uma vasta masmorra sob a cidade de Águas Profundas.",
+  "entrance": "room-1",
+  "rooms": {
+    "room-1": {
+      "id": "room-1",
+      "name": "Entrada da Masmorra",
+      "description": "Um corredor frio e úmido se estende à sua frente. Há uma porta de madeira ao final.",
+      "type": "corridor",
+      "exits": [
+        { "direction": "north", "leadsTo": "room-2", "type": "door", "locked": false }
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 10,
+      "gridY": 18,
+      "gridWidth": 1,
+      "gridHeight": 4,
+      "events": [
+        { "type": "first-visit", "text": "O ar está frio e você sente um arrepio na espinha ao entrar neste lugar antigo." }
+      ]
+    },
+    "room-2": {
+      "id": "room-2",
+      "name": "Sala das Estátuas",
+      "description": "Uma sala ampla com estátuas de guerreiros. Há portas a leste e oeste.",
+      "type": "room",
+      "exits": [
+        { "direction": "south", "leadsTo": "room-1", "type": "door", "locked": false },
+        { "direction": "east", "leadsTo": "room-3", "type": "door", "locked": true, "keyId": "key-1" },
+        { "direction": "west", "leadsTo": "room-4", "type": "door", "locked": false }
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 9,
+      "gridY": 13,
+      "gridWidth": 3,
+      "gridHeight": 5,
+      "events": [
+        { "type": "first-visit", "text": "As estátuas de pedra parecem observar seus movimentos com olhos vazios." }
+      ],
+      "explorationState": {
+        "examined": false,
+        "specialStatueFound": false,
+        "keyFound": false
+      },
+      "hiddenItems": [
+        { 
+          "id": "key-1", 
+          "content": "Chave Pesada de Ferro", 
+          "description": "Uma chave pesada feita de ferro enferrujado. Parece antiga."
+        }
+      ]
+    },
+    "room-3": {
+      "id": "room-3",
+      "name": "Câmara do Tesouro",
+      "description": "Uma pequena câmara com um baú no centro.",
+      "type": "room",
+      "exits": [
+        { "direction": "west", "leadsTo": "room-2", "type": "door", "locked": false }
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 13,
+      "gridY": 14,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "events": [
+        { "type": "first-visit", "text": "Você vê um baú ornamentado no centro da sala, coberto por uma fina camada de poeira." }
+      ],
+      "items": [
+        { "id": "gold-coins", "name": "Moedas de Ouro", "description": "Um punhado de moedas de ouro antigas.", "quantity": 50 }
+      ]
+    },
+    "room-4": {
+      "id": "room-4",
+      "name": "Sala de Armas",
+      "description": "Uma sala com armas antigas penduradas nas paredes.",
+      "type": "room",
+      "exits": [
+        { "direction": "east", "leadsTo": "room-2", "type": "door", "locked": false },
+        { "direction": "north", "leadsTo": "room-5", "type": "door", "locked": false },
+        { "direction": "west", "leadsTo": "room-6", "type": "door", "locked": false }
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 5,
+      "gridY": 13,
+      "gridWidth": 3,
+      "gridHeight": 5,
+      "events": [
+        { "type": "first-visit", "text": "Armas antigas e enferrujadas decoram as paredes. A maioria parece inútil após séculos de abandono." }
+      ]
+    },
+    "room-6": {
+      "id": "room-6",
+      "name": "Toca do Rato",
+      "description": "Uma pequena sala escura e úmida. Você ouve guinchos e vê olhos vermelhos brilhando na escuridão.",
+      "type": "room",
+      "exits": [
+        { "direction": "east", "leadsTo": "room-4", "type": "door", "locked": false }
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 1,
+      "gridY": 13,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "events": [
+        { "type": "first-visit", "text": "Um enorme rato mutante se aproxima, mostrando dentes afiados e prontos para atacar!" }
+      ],
+      "enemy": {
+        "id": "rato-mutante",
+        "name": "Rato Mutante",
+        "description": "Um rato gigante com olhos vermelhos brilhantes e dentes afiados."
+      }
+    },
+    "room-5": {
+      "id": "room-5",
+      "name": "Câmara Ritual",
+      "description": "Uma sala circular com símbolos arcanos gravados no chão.",
+      "type": "room",
+      "exits": [
+        { "direction": "south", "leadsTo": "room-4", "type": "door", "locked": false }
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 5,
+      "gridY": 9,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "events": [
+        { "type": "first-visit", "text": "Símbolos estranhos brilham levemente no chão. Você sente uma presença antiga neste lugar." }
+      ]
+    }
+  },
+  "decorativeBlocks": [
+    { "type": "corridor", "gridX": 8, "gridY": 15, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 12, "gridY": 15, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 6, "gridY": 12, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 4, "gridY": 15, "gridWidth": 1, "gridHeight": 1 }
+  ]
+}

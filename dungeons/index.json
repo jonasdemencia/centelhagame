@@ -1,0 +1,12 @@
+[
+  {
+    "id": "default",
+    "name": "Ruínas de Undermountain",
+    "description": "A masmorra padrão do jogo."
+  },
+  {
+    "id": "torre-mago",
+    "name": "Torre do Mago Louco",
+    "description": "Uma torre abandonada cheia de experimentos mágicos perigosos."
+  }
+]
