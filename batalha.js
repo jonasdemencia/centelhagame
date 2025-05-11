@@ -3,6 +3,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebas
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, collection } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 import { loadEquippedDice, initializeModule } from './dice-ui.js';
+import { getMonsterById } from './monstros.js';
+
 
 
 console.log("LOG: batalha.js carregado.");
