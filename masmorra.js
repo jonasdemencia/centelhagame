@@ -916,7 +916,7 @@ async function examineRoom() {
     startNewLogBlock("Examinar");
     
     // Caso especial para a Sala das Estátuas
-    if (currentRoom.id === "room-2") {
+    if (currentRoom.id === "room-2" && currentRoom.explorationState) {
         // Primeira vez que examina a sala
         if (!currentRoom.explorationState.examined) {
             await addLogMessage(`Você examina a ${currentRoom.name} com cuidado.`, 500);
@@ -969,6 +969,7 @@ async function examineRoom() {
         }
     }
 }
+
 
 // Função para criar o botão de recolher item
 function createCollectButton(item) {
