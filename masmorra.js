@@ -300,8 +300,23 @@ function createFightButton(enemy) {
     
     // Adiciona o evento de clique
     fightButton.addEventListener('click', () => {
-        // Armazena os dados do monstro no sessionStorage
-        sessionStorage.setItem('currentMonster', JSON.stringify(enemy));
+        // Certifique-se de que o objeto enemy tem todas as propriedades necessárias
+        // e com os nomes corretos antes de armazená-lo
+        const monsterData = {
+            id: enemy.id,
+            nome: enemy.name || enemy.nome,
+            descricao: enemy.description || enemy.descricao,
+            imagem: enemy.image || enemy.imagem || "https://via.placeholder.com/150",
+            habilidade: enemy.habilidade || 3,
+            couraça: enemy.couraça || 5,
+            pontosDeEnergia: enemy.pontosDeEnergia || 3,
+            pontosDeEnergiaMax: enemy.pontosDeEnergiaMax || 3,
+            dano: enemy.dano || "1D8",
+            drops: enemy.drops || []
+        };
+        
+        // Armazena os dados normalizados do monstro no sessionStorage
+        sessionStorage.setItem('currentMonster', JSON.stringify(monsterData));
         
         // Redireciona para a página de batalha com o ID do inimigo
         window.location.href = `https://jonasdemencia.github.io/centelhagame/batalha.html?monstro=${enemy.id}`;
@@ -315,6 +330,8 @@ function createFightButton(enemy) {
     
     // Desabilita todos os outros botões quando há um inimigo
     disableAllButtonsExceptFight();
+}
+
     
     // Força a desabilitação do botão East diretamente
     const eastBtn = document.getElementById("go-east");
