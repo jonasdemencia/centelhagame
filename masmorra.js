@@ -1230,26 +1230,31 @@ async function searchRoom() {
     }
     
     // Lógica original para outras salas
-    await addLogMessage("Você procura cuidadosamente por itens ou passagens secretas...", 1000);
-    const foundSomething = Math.random() > 0.5;
+await addLogMessage("Você procura cuidadosamente por itens ou passagens secretas...", 1000);
+const foundSomething = Math.random() > 0.5;
+
+if (foundSomething && currentRoom.items && currentRoom.items.length > 0) {
+    // Encontrou um item
+    const item = currentRoom.items[0]; // Pega o primeiro item
+    await addLogMessage(`Você encontrou: <strong>${item.name || item.content}</strong>!`, 800);
+    await addLogMessage(item.description, 500);
     
-    if (foundSomething && currentRoom.items && currentRoom.items.length > 0) {
-        // Encontrou um item
-        const item = currentRoom.items[0]; // Pega o primeiro item
-        await addLogMessage(`Você encontrou: <strong>${item.name}</strong>!`, 800);
-        await addLogMessage(item.description, 500);
-        
-        // Adiciona o item ao inventário
-        playerState.inventory.push(item);
-        
-        // Remove o item da sala
-        currentRoom.items.splice(0, 1);
-        
-        // Salva o estado
-        savePlayerState();
-    } else {
-        await addLogMessage("Você não encontrou nada de interessante.", 800);
-    }
+    // Cria o botão para recolher o item
+    const itemToCollect = {
+        id: item.id,
+        content: item.name || item.content,
+        description: item.description || "",
+        quantity: item.quantity || 1
+    };
+    createCollectButton(itemToCollect);
+    
+    // Não remove o item da sala ainda - isso será feito quando o jogador clicar em "Recolher"
+    
+    // Salva o estado
+    savePlayerState();
+} else {
+    await addLogMessage("Você não encontrou nada de interessante.", 800);
+}
 }
 
 // Função para tentar abrir uma porta
