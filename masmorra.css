@@ -349,3 +349,18 @@
     background-color: #1a252f;
 }
 
+
+.poi-btn.examined {
+    background-color: #34495e;
+    opacity: 0.7;
+    position: relative;
+}
+
+.poi-btn.examined::after {
+    content: "✓";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
