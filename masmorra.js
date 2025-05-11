@@ -275,6 +275,130 @@ function rollDice(diceString) {
     }
 }
 
+// Função para avaliar condições baseadas em estados
+function evaluateCondition(condition, states) {
+    if (!condition || condition === 'true') return true;
+    if (condition === 'false') return false;
+    
+    // Substitui referências a estados por seus valores reais
+    let evalString = condition.replace(/states\.(\w+)/g, (match, stateName) => {
+        return states[stateName] ? 'true' : 'false';
+    });
+    
+    // Substitui operadores lógicos por seus equivalentes em JavaScript
+    evalString = evalString.replace(/&&/g, '&&').replace(/\|\|/g, '||').replace(/!/g, '!');
+    
+    try {
+        // Avalia a expressão de forma segura
+        return Function('"use strict"; return (' + evalString + ')')();
+    } catch (error) {
+        console.error("Erro ao avaliar condição:", condition, error);
+        return false;
+    }
+}
+
+// Função para aplicar efeitos definidos no JSON
+async function applyEffects(effects, room) {
+    if (!effects) return;
+    
+    // Inicializa o estado de exploração se não existir
+    if (!room.explorationState) {
+        room.explorationState = {};
+    }
+    
+    // Processa cada efeito
+    for (const [key, value] of Object.entries(effects)) {
+        if (key.startsWith('states.')) {
+            // Altera um estado
+            const stateName = key.replace('states.', '');
+            room.explorationState[stateName] = value;
+        } else if (key === 'addExit') {
+            // Adiciona uma nova saída
+            if (!room.exits) room.exits = [];
+            room.exits.push(value);
+            // Atualiza os botões de direção
+            updateDirectionButtons();
+        } else if (key === 'removeItem') {
+            // Remove um item do inventário do jogador
+            removeItemFromInventory(value);
+        } else if (key === 'unlockExit') {
+            // Desbloqueia uma saída
+            const exit = room.exits.find(e => e.direction === value);
+            if (exit) {
+                exit.locked = false;
+                updateDirectionButtons();
+            }
+        }
+    }
+    
+    // Salva o estado atualizado
+    savePlayerState();
+}
+
+// Função para remover um item do inventário do jogador
+async function removeItemFromInventory(itemId) {
+    if (!userId) return false;
+    
+    // Primeiro remove do estado local
+    playerState.inventory = playerState.inventory.filter(item => item.id !== itemId);
+    
+    // Depois remove do Firestore
+    if (playerData && playerData.inventory && playerData.inventory.itemsInChest) {
+        const playerDocRef = doc(db, "players", userId);
+        const updatedChest = playerData.inventory.itemsInChest.filter(item => item.id !== itemId);
+        
+        await updateDoc(playerDocRef, {
+            "inventory.itemsInChest": updatedChest
+        });
+        
+        // Atualiza o playerData local
+        playerData.inventory.itemsInChest = updatedChest;
+    }
+    
+    return true;
+}
+
+// Função para processar dano ao jogador
+async function applyDamageToPlayer(damageInfo) {
+    if (!damageInfo || !damageInfo.amount) return;
+    
+    // Rola o dano
+    const damage = rollDice(damageInfo.amount);
+    
+    // Reduz a energia do jogador
+    const oldHealth = playerState.health;
+    playerState.health = Math.max(0, playerState.health - damage);
+    
+    // Atualiza a barra de energia
+    if (playerData && playerData.energy) {
+        playerData.energy.total = playerState.health;
+    }
+    updateHealthBar();
+    
+    // Atualiza a energia no Firestore
+    if (userId) {
+        await updatePlayerEnergyInFirestore(userId, playerState.health);
+    }
+    
+    // Mensagens de dano
+    if (damageInfo.message) {
+        await addLogMessage(damageInfo.message, 800);
+    }
+    
+    await addLogMessage(`Você sofreu <strong style='color: red;'>${damage}</strong> pontos de dano!`, 1000);
+    await addLogMessage(`Sua energia caiu de ${oldHealth} para ${playerState.health}.`, 800);
+    
+    if (playerState.health <= 0) {
+        await addLogMessage("<strong style='color: darkred;'>Você está inconsciente!</strong>", 1000);
+    } else if (playerState.health < 10) {
+        await addLogMessage("<strong style='color: orange;'>Você está gravemente ferido!</strong>", 1000);
+    }
+    
+    // Salva o estado do jogador
+    savePlayerState();
+}
+
+
 // Função para atualizar a energia do jogador no Firestore
 function updatePlayerEnergyInFirestore(userId, newEnergy) {
     console.log("LOG: updatePlayerEnergyInFirestore chamado com userId:", userId, "newEnergy:", newEnergy);
@@ -908,14 +1032,42 @@ function updateDirectionButtons() {
     });
 }
 
-// Função para examinar a sala atual
+// Função para examinar a sala atual (versão atualizada)
 async function examineRoom() {
     const currentRoom = dungeon.rooms[playerState.currentRoom];
     if (!currentRoom) return;
     
     startNewLogBlock("Examinar");
     
-    // Caso especial para a Sala das Estátuas
+    // Verifica se a sala tem configurações de exploração
+    if (currentRoom.exploration && currentRoom.exploration.examine) {
+        // Inicializa o estado de exploração se não existir
+        if (!currentRoom.explorationState) {
+            if (currentRoom.exploration.states && currentRoom.exploration.states.initial) {
+                currentRoom.explorationState = { ...currentRoom.exploration.states.initial };
+            } else {
+                currentRoom.explorationState = {};
+            }
+        }
+        
+        // Procura por um evento de exame que corresponda ao estado atual
+        for (const examineEvent of currentRoom.exploration.examine) {
+            if (evaluateCondition(examineEvent.condition, currentRoom.explorationState)) {
+                await addLogMessage(examineEvent.text, 1000);
+                
+                // Aplica efeitos, se houver
+                if (examineEvent.effect) {
+                    await applyEffects(examineEvent.effect, currentRoom);
+                }
+                
+                // Só processa o primeiro evento que corresponder
+                savePlayerState();
+                return;
+            }
+        }
+    }
+    
+    // Caso especial para a Sala das Estátuas (compatibilidade com código antigo)
     if (currentRoom.id === "room-2" && currentRoom.explorationState) {
         // Primeira vez que examina a sala
         if (!currentRoom.explorationState.examined) {
@@ -965,10 +1117,11 @@ async function examineRoom() {
     if (currentRoom.items && currentRoom.items.length > 0) {
         await addLogMessage("Você encontra algo interessante:", 800);
         for (const item of currentRoom.items) {
-            await addLogMessage(`- ${item.name}: ${item.description}`, 500);
+            await addLogMessage(`- ${item.name || item.content}: ${item.description}`, 500);
         }
     }
 }
+
 
 
 // Função para criar o botão de recolher item
@@ -1025,6 +1178,109 @@ function removeCollectButton() {
     }
 }
 
+// Função para criar botões de interação
+function createInteractionButtons(room) {
+    // Remove botões de interação existentes
+    removeInteractionButtons();
+    
+    // Verifica se a sala tem interações definidas
+    if (!room.exploration || !room.exploration.interactions) return;
+    
+    // Inicializa o estado de exploração se não existir
+    if (!room.explorationState) {
+        if (room.exploration.states && room.exploration.states.initial) {
+            room.explorationState = { ...room.exploration.states.initial };
+        } else {
+            room.explorationState = {};
+        }
+    }
+    
+    // Cria botões para interações disponíveis
+    const interactionsContainer = document.createElement('div');
+    interactionsContainer.id = 'interaction-buttons';
+    interactionsContainer.classList.add('interaction-buttons');
+    
+    let hasInteractions = false;
+    
+    for (const interaction of room.exploration.interactions) {
+        // Verifica se a condição é atendida
+        if (evaluateCondition(interaction.condition, room.explorationState)) {
+            // Verifica se o jogador tem os itens necessários
+            let hasRequiredItems = true;
+            if (interaction.requiredItems) {
+                for (const itemId of interaction.requiredItems) {
+                    // Verifica no inventário local
+                    let hasItem = playerState.inventory.some(item => item.id === itemId);
+                    
+                    // Se não encontrou, verifica no Firestore
+                    if (!hasItem && playerData && playerData.inventory && playerData.inventory.itemsInChest) {
+                        hasItem = playerData.inventory.itemsInChest.some(item => item.id === itemId);
+                    }
+                    
+                    if (!hasItem) {
+                        hasRequiredItems = false;
+                        break;
+                    }
+                }
+            }
+            
+            // Só cria o botão se o jogador tiver os itens necessários
+            if (hasRequiredItems) {
+                const interactionBtn = document.createElement('button');
+                interactionBtn.textContent = interaction.name;
+                interactionBtn.classList.add('action-btn', 'interaction-btn');
+                interactionBtn.dataset.interactionId = interaction.id;
+                
+                interactionBtn.addEventListener('click', () => handleInteraction(interaction, room));
+                
+                interactionsContainer.appendChild(interactionBtn);
+                hasInteractions = true;
+            }
+        }
+    }
+    
+    // Só adiciona o container se houver interações disponíveis
+    if (hasInteractions) {
+        const actionButtons = document.getElementById('action-buttons');
+        if (actionButtons) {
+            actionButtons.appendChild(interactionsContainer);
+        }
+    }
+}
+
+// Função para remover botões de interação
+function removeInteractionButtons() {
+    const interactionButtons = document.getElementById('interaction-buttons');
+    if (interactionButtons) {
+        interactionButtons.remove();
+    }
+}
+
+// Função para lidar com interações
+async function handleInteraction(interaction, room) {
+    startNewLogBlock(interaction.name);
+    
+    // Exibe o resultado da interação
+    await addLogMessage(interaction.result.text, 1000);
+    
+    // Aplica efeitos, se houver
+    if (interaction.result.effect) {
+        await applyEffects(interaction.result.effect, room);
+    }
+    
+    // Atualiza os botões de interação
+    createInteractionButtons(room);
+    
+    // Atualiza os botões de direção (caso uma nova saída tenha sido adicionada)
+    updateDirectionButtons();
+    
+    // Atualiza o mapa
+    drawMap();
+    
+    // Salva o estado
+    savePlayerState();
+}
+
 
 // Função para carregar uma masmorra a partir de um arquivo JSON
 async function loadDungeonFromJSON(dungeonId) {
@@ -1056,6 +1312,7 @@ async function loadDungeonFromJSON(dungeonId) {
 }
 
 // Função para inicializar a masmorra
+// Função para inicializar a masmorra (versão atualizada)
 async function initializeDungeon(dungeonId = null) {
     let currentDungeon;
     
@@ -1067,6 +1324,16 @@ async function initializeDungeon(dungeonId = null) {
         currentDungeon = dungeon;
     }
     
+    // Inicializa os estados de exploração para todas as salas
+    if (currentDungeon.rooms) {
+        for (const roomId in currentDungeon.rooms) {
+            const room = currentDungeon.rooms[roomId];
+            if (room.exploration && room.exploration.states && room.exploration.states.initial) {
+                room.explorationState = { ...room.exploration.states.initial };
+            }
+        }
+    }
+    
     // Atualiza a variável global dungeon com os dados carregados
     // Isso mantém a compatibilidade com o código existente
     Object.assign(dungeon, currentDungeon);
@@ -1076,6 +1343,7 @@ async function initializeDungeon(dungeonId = null) {
     // Retorna a masmorra inicializada
     return dungeon;
 }
+
 
 // Função para listar masmorras disponíveis
 async function listAvailableDungeons() {
@@ -1152,14 +1420,56 @@ function createDungeonSelector(dungeons, currentDungeonId) {
 }
 
 
-// Função para procurar na sala atual
+// Função para procurar na sala atual (versão atualizada)
 async function searchRoom() {
     const currentRoom = dungeon.rooms[playerState.currentRoom];
     if (!currentRoom) return;
     
     startNewLogBlock("Procurar");
     
-    // Caso especial para a Sala das Estátuas
+    // Verifica se a sala tem configurações de exploração
+    if (currentRoom.exploration && currentRoom.exploration.search) {
+        // Inicializa o estado de exploração se não existir
+        if (!currentRoom.explorationState) {
+            if (currentRoom.exploration.states && currentRoom.exploration.states.initial) {
+                currentRoom.explorationState = { ...currentRoom.exploration.states.initial };
+            } else {
+                currentRoom.explorationState = {};
+            }
+        }
+        
+        // Procura por um evento de busca que corresponda ao estado atual
+        for (const searchEvent of currentRoom.exploration.search) {
+            if (evaluateCondition(searchEvent.condition, currentRoom.explorationState)) {
+                // Verifica se há uma chance de encontrar algo
+                const chance = searchEvent.chance || 1.0;
+                if (Math.random() <= chance) {
+                    await addLogMessage(searchEvent.text, 1000);
+                    
+                    // Aplica efeitos, se houver
+                    if (searchEvent.effect) {
+                        await applyEffects(searchEvent.effect, currentRoom);
+                    }
+                    
+                    // Processa dano, se houver
+                    if (searchEvent.damage) {
+                        await applyDamageToPlayer(searchEvent.damage);
+                    }
+                    
+                    // Cria botões para itens encontrados
+                    if (searchEvent.items && searchEvent.items.length > 0) {
+                        createCollectButton(searchEvent.items[0]);
+                    }
+                    
+                    // Só processa o primeiro evento que corresponder
+                    savePlayerState();
+                    return;
+                }
+            }
+        }
+    }
+    
+    // Caso especial para a Sala das Estátuas (compatibilidade com código antigo)
     if (currentRoom.id === "room-2" && 
         currentRoom.explorationState && 
         currentRoom.explorationState.specialStatueFound && 
@@ -1241,32 +1551,31 @@ async function searchRoom() {
     }
     
     // Lógica original para outras salas
-await addLogMessage("Você procura cuidadosamente por itens ou passagens secretas...", 1000);
-const foundSomething = Math.random() > 0.5;
+    await addLogMessage("Você procura cuidadosamente por itens ou passagens secretas...", 1000);
+    const foundSomething = Math.random() > 0.5;
 
-if (foundSomething && currentRoom.items && currentRoom.items.length > 0) {
-    // Encontrou um item
-    const item = currentRoom.items[0]; // Pega o primeiro item
-    await addLogMessage(`Você encontrou: <strong>${item.name || item.content}</strong>!`, 800);
-    await addLogMessage(item.description, 500);
-    
-    // Cria o botão para recolher o item
-    const itemToCollect = {
-        id: item.id,
-        content: item.name || item.content,
-        description: item.description || "",
-        quantity: item.quantity || 1
-    };
-    createCollectButton(itemToCollect);
-    
-    // Não remove o item da sala ainda - isso será feito quando o jogador clicar em "Recolher"
-    
-    // Salva o estado
-    savePlayerState();
-} else {
-    await addLogMessage("Você não encontrou nada de interessante.", 800);
+    if (foundSomething && currentRoom.items && currentRoom.items.length > 0) {
+        // Encontrou um item
+        const item = currentRoom.items[0]; // Pega o primeiro item
+        await addLogMessage(`Você encontrou: <strong>${item.name || item.content}</strong>!`, 800);
+        await addLogMessage(item.description, 500);
+        
+        // Cria o botão para recolher o item
+        const itemToCollect = {
+            id: item.id,
+            content: item.name || item.content,
+            description: item.description || "",
+            quantity: item.quantity || 1
+        };
+        createCollectButton(itemToCollect);
+        
+        // Salva o estado
+        savePlayerState();
+    } else {
+        await addLogMessage("Você não encontrou nada de interessante.", 800);
+    }
 }
-}
+
 
 // Função para tentar abrir uma porta
 async function openDoor(direction) {
@@ -1349,9 +1658,20 @@ async function rest() {
     savePlayerState();
 }
 
-// Função para salvar o estado do jogador no Firestore
+// Função para salvar o estado do jogador no Firestore (versão atualizada)
 function savePlayerState() {
     if (!userId) return;
+    
+    // Prepara os dados para salvar
+    const roomStates = {};
+    
+    // Salva os estados de exploração de cada sala
+    for (const roomId in dungeon.rooms) {
+        const room = dungeon.rooms[roomId];
+        if (room.explorationState) {
+            roomStates[roomId] = room.explorationState;
+        }
+    }
     
     const dungeonStateRef = doc(db, "dungeons", userId);
     setDoc(dungeonStateRef, {
@@ -1360,6 +1680,7 @@ function savePlayerState() {
         visitedRooms: playerState.visitedRooms,
         inventory: playerState.inventory,
         health: playerState.health,
+        roomStates: roomStates,
         lastUpdated: new Date().toISOString()
     }, { merge: true })
     .then(() => {
@@ -1370,7 +1691,8 @@ function savePlayerState() {
     });
 }
 
-// Função para carregar o estado do jogador do Firestore
+
+// Função para carregar o estado do jogador do Firestore (versão atualizada)
 async function loadPlayerState() {
     if (!userId) return;
     
@@ -1391,6 +1713,15 @@ async function loadPlayerState() {
                 health: data.health || playerEnergy // Usa a energia do jogador se disponível
             };
             
+            // Carrega os estados de exploração das salas
+            if (data.roomStates) {
+                for (const roomId in data.roomStates) {
+                    if (dungeon.rooms[roomId]) {
+                        dungeon.rooms[roomId].explorationState = data.roomStates[roomId];
+                    }
+                }
+            }
+            
             console.log("Estado da masmorra carregado com sucesso!");
         } else {
             console.log("Nenhum estado de masmorra encontrado. Usando estado inicial.");
@@ -1406,11 +1737,20 @@ async function loadPlayerState() {
                 inventory: [],
                 health: playerEnergy // Usa a energia do jogador se disponível
             };
+            
+            // Inicializa os estados de exploração para todas as salas
+            for (const roomId in dungeon.rooms) {
+                const room = dungeon.rooms[roomId];
+                if (room.exploration && room.exploration.states && room.exploration.states.initial) {
+                    room.explorationState = { ...room.exploration.states.initial };
+                }
+            }
         }
     } catch (error) {
         console.error("Erro ao carregar estado da masmorra:", error);
     }
 }
+
 
 // Função para verificar se um monstro foi derrotado
 async function checkDefeatedMonster(monsterId) {
@@ -1439,8 +1779,7 @@ async function checkDefeatedMonster(monsterId) {
 }
 
 
-// Função para mover o jogador para uma sala
-// Função para mover o jogador para uma sala
+// Função para mover o jogador para uma sala (versão atualizada)
 async function moveToRoom(roomId) {
     const room = dungeon.rooms[roomId];
     if (!room) {
@@ -1450,6 +1789,9 @@ async function moveToRoom(roomId) {
 
     // Remove o botão de lutar se existir
     removeFightButton();
+    
+    // Remove botões de interação
+    removeInteractionButtons();
     
     // Atualiza o estado do jogador
     playerState.currentRoom = roomId;
@@ -1464,6 +1806,11 @@ async function moveToRoom(roomId) {
     if (isFirstVisit) {
         playerState.visitedRooms.push(roomId);
         
+        // Inicializa o estado de exploração se não existir
+        if (room.exploration && room.exploration.states && room.exploration.states.initial) {
+            room.explorationState = { ...room.exploration.states.initial };
+        }
+        
         // Processa eventos de primeira visita
         const firstVisitEvents = room.events?.filter(event => event.type === "first-visit") || [];
         for (const event of firstVisitEvents) {
@@ -1476,9 +1823,9 @@ async function moveToRoom(roomId) {
     if (room.enemy) {
         const isDefeated = await checkDefeatedMonster(room.enemy.id);
         if (isDefeated) {
-            // Substitui a descrição original por uma que reflita que o monstro está morto
-            if (room.id === "room-6") { // Toca do Rato
-                customDescription = "Uma pequena sala escura e úmida. O chão está manchado de sangue seco.";
+            // Usa descrição alternativa se disponível
+            if (room.enemy.defeatedDescription) {
+                customDescription = room.enemy.defeatedDescription;
             }
         }
     }
@@ -1493,33 +1840,63 @@ async function moveToRoom(roomId) {
     // Atualiza a barra de energia
     updateHealthBar();
     
-    // Verifica se a sala atual tem um inimigo
-    if (room.enemy) {
+    // Verifica se a sala tem um inimigo com gatilho
+    if (room.enemy && room.enemy.trigger) {
+        // Inicializa o estado de exploração se não existir
+        if (!room.explorationState) {
+            if (room.exploration && room.exploration.states && room.exploration.states.initial) {
+                room.explorationState = { ...room.exploration.states.initial };
+            } else {
+                room.explorationState = {};
+            }
+        }
+        
+        // Verifica se o gatilho deve ser acionado
+        const shouldTrigger = evaluateCondition(room.enemy.trigger.condition, room.explorationState);
+        const isDefeated = await checkDefeatedMonster(room.enemy.id);
+        
+        if (shouldTrigger && !isDefeated) {
+            // Exibe a mensagem do gatilho
+            await addLogMessage(room.enemy.trigger.message, 1000);
+            
+            // Cria o botão de lutar
+            createFightButton(room.enemy);
+        } else if (room.enemy && !isDefeated) {
+            // Inimigo normal (sem gatilho)
+            createFightButton(room.enemy);
+            await addLogMessage(`Um ${room.enemy.name} está pronto para atacar!`, 800);
+        } else if (isDefeated) {
+            // O inimigo já foi derrotado
+            await addLogMessage(`Você vê os restos do ${room.enemy.name} que você derrotou anteriormente.`, 800);
+            updateDirectionButtons();
+        }
+    } else if (room.enemy) {
         // Verifica se o inimigo já foi derrotado
         const isDefeated = await checkDefeatedMonster(room.enemy.id);
         
         if (isDefeated) {
             // O inimigo já foi derrotado
             await addLogMessage(`Você vê os restos do ${room.enemy.name} que você derrotou anteriormente.`, 800);
-            
-            // Atualiza os botões de direção normalmente
             updateDirectionButtons();
         } else {
             // O inimigo ainda está vivo
-            // Cria o botão de lutar
             createFightButton(room.enemy);
-            
-            // Adiciona uma mensagem sobre o inimigo
             await addLogMessage(`Um ${room.enemy.name} está pronto para atacar!`, 800);
         }
     } else {
-        // Só atualiza os botões de direção se não houver inimigo
+        // Atualiza os botões de direção
         updateDirectionButtons();
+    }
+    
+    // Cria botões de interação, se houver
+    if (room.exploration && room.exploration.interactions) {
+        createInteractionButtons(room);
     }
     
     // Salva o estado do jogador
     savePlayerState();
 }
+
 
 
 
