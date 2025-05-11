@@ -2,6 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getMonsterById } from './monstros.js';
 
 console.log("LOG: masmorra.js carregado.");
 
@@ -287,7 +288,6 @@ function updatePlayerEnergyInFirestore(userId, newEnergy) {
         });
 }
 
-// Função para criar o botão de lutar
 function createFightButton(enemy) {
     // Remove qualquer botão existente primeiro
     removeFightButton();
@@ -300,6 +300,9 @@ function createFightButton(enemy) {
     
     // Adiciona o evento de clique
     fightButton.addEventListener('click', () => {
+        // Armazena os dados do monstro no sessionStorage
+        sessionStorage.setItem('currentMonster', JSON.stringify(enemy));
+        
         // Redireciona para a página de batalha com o ID do inimigo
         window.location.href = `https://jonasdemencia.github.io/centelhagame/batalha.html?monstro=${enemy.id}`;
     });
