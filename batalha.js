@@ -639,7 +639,6 @@ document.addEventListener('DOMContentLoaded', () => {
 };
 
     // Carrega os dados do monstro
-const monsterName = getUrlParameter('monstro');
 let currentMonster;
 
 // Tenta carregar o monstro do sessionStorage primeiro
