@@ -332,17 +332,6 @@ function createFightButton(enemy) {
     disableAllButtonsExceptFight();
 }
 
-    
-    // Força a desabilitação do botão East diretamente
-    const eastBtn = document.getElementById("go-east");
-    if (eastBtn) {
-        eastBtn.disabled = true;
-        console.log("Botão East desabilitado diretamente:", eastBtn.disabled);
-    }
-}
-
-
-// Função para desabilitar todos os botões exceto o de lutar
 // Função para desabilitar todos os botões exceto o de lutar
 function disableAllButtonsExceptFight() {
     console.log("Desabilitando todos os botões exceto o de lutar");
@@ -385,6 +374,7 @@ function disableAllButtonsExceptFight() {
         openDoorBtn.disabled = true;
     }
 }
+
 
 
 
