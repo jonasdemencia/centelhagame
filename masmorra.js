@@ -1060,7 +1060,12 @@ async function examineRoom() {
                     await applyEffects(examineEvent.effect, currentRoom);
                 }
                 
-                // Só processa o primeiro evento que corresponder
+                // Cria botões para pontos de interesse, se houver
+                if (examineEvent.pointsOfInterest && examineEvent.pointsOfInterest.length > 0) {
+                    createPointsOfInterestButtons(examineEvent.pointsOfInterest, currentRoom);
+                }
+                
+                // Salva o estado atualizado
                 savePlayerState();
                 return;
             }
@@ -1124,6 +1129,7 @@ async function examineRoom() {
 
 
 
+
 // Função para criar o botão de recolher item
 function createCollectButton(item) {
     // Remove qualquer botão existente primeiro
@@ -1177,6 +1183,94 @@ function removeCollectButton() {
         collectButton.remove();
     }
 }
+
+// Função para criar botões de pontos de interesse
+function createPointsOfInterestButtons(pointsOfInterest, room) {
+    // Remove botões existentes primeiro
+    removePointsOfInterestButtons();
+    
+    // Verifica se há pontos de interesse
+    if (!pointsOfInterest || pointsOfInterest.length === 0) return;
+    
+    // Inicializa o estado de exploração se não existir
+    if (!room.explorationState) {
+        if (room.exploration && room.exploration.states && room.exploration.states.initial) {
+            room.explorationState = { ...room.exploration.states.initial };
+        } else {
+            room.explorationState = {};
+        }
+    }
+    
+    // Cria um container para os botões
+    const poiContainer = document.createElement('div');
+    poiContainer.id = 'points-of-interest-buttons';
+    poiContainer.classList.add('points-of-interest-buttons');
+    
+    // Adiciona um título
+    const poiTitle = document.createElement('p');
+    poiTitle.textContent = 'O que você deseja examinar?';
+    poiTitle.classList.add('poi-title');
+    poiContainer.appendChild(poiTitle);
+    
+    // Cria botões para cada ponto de interesse
+    for (const poi of pointsOfInterest) {
+        // Verifica se o ponto de interesse tem uma condição e se ela é atendida
+        if (poi.condition && !evaluateCondition(poi.condition, room.explorationState)) {
+            continue; // Pula este ponto de interesse se a condição não for atendida
+        }
+        
+        const poiBtn = document.createElement('button');
+        poiBtn.textContent = poi.name;
+        poiBtn.classList.add('poi-btn');
+        poiBtn.dataset.poiId = poi.id;
+        
+        // Adiciona o evento de clique
+        poiBtn.addEventListener('click', async () => {
+            await handlePointOfInterestClick(poi, room);
+        });
+        
+        poiContainer.appendChild(poiBtn);
+    }
+    
+    // Adiciona o container à interface
+    const actionButtons = document.getElementById('action-buttons');
+    if (actionButtons) {
+        actionButtons.appendChild(poiContainer);
+    }
+}
+
+// Função para remover botões de pontos de interesse
+function removePointsOfInterestButtons() {
+    const poiButtons = document.getElementById('points-of-interest-buttons');
+    if (poiButtons) {
+        poiButtons.remove();
+    }
+}
+
+// Função para lidar com o clique em um ponto de interesse
+async function handlePointOfInterestClick(poi, room) {
+    // Remove os botões de pontos de interesse
+    removePointsOfInterestButtons();
+    
+    // Adiciona a descrição do ponto de interesse ao log
+    startNewLogBlock(`Examinar ${poi.name}`);
+    await addLogMessage(poi.description, 1000);
+    
+    // Aplica efeitos, se houver
+    if (poi.effect) {
+        await applyEffects(poi.effect, room);
+    }
+    
+    // Salva o estado
+    savePlayerState();
+    
+    // Verifica se há itens para coletar
+    if (poi.items && poi.items.length > 0) {
+        createCollectButton(poi.items[0]);
+    }
+}
+
+
 
 // Função para criar botões de interação
 function createInteractionButtons(room) {
@@ -1792,6 +1886,9 @@ async function moveToRoom(roomId) {
     
     // Remove botões de interação
     removeInteractionButtons();
+    
+    // Remove botões de pontos de interesse
+    removePointsOfInterestButtons();
     
     // Atualiza o estado do jogador
     playerState.currentRoom = roomId;
