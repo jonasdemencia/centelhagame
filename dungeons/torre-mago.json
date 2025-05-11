@@ -1,101 +1,497 @@
 {
-  "name": "Torre do Mago Louco",
-  "description": "Uma torre abandonada cheia de experimentos mágicos perigosos.",
+  "id": "torre-dos-magos",
+  "name": "Torre dos Magos",
+  "description": "Uma torre antiga que já foi o lar de uma ordem de magos poderosos. Agora está abandonada, mas ainda guarda muitos segredos e perigos.",
   "entrance": "room-1",
+  "decorativeBlocks": [
+    { "type": "corridor", "gridX": 10, "gridY": 18, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 10, "gridY": 17, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 10, "gridY": 16, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 10, "gridY": 15, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 10, "gridY": 14, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 10, "gridY": 13, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 10, "gridY": 12, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 10, "gridY": 11, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 10, "gridY": 10, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 10, "gridY": 9, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 10, "gridY": 8, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 10, "gridY": 7, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 10, "gridY": 6, "gridWidth": 1, "gridHeight": 1 },
+    { "type": "corridor", "gridX": 10, "gridY": 5, "gridWidth": 1, "gridHeight": 1 }
+  ],
   "rooms": {
     "room-1": {
       "id": "room-1",
       "name": "Entrada da Torre",
-      "description": "Uma porta de madeira ornamentada leva ao interior da torre. O ar está carregado de energia mágica.",
+      "description": "Um saguão amplo com piso de mármore rachado. Pilares ornamentados sustentam o teto alto. Uma escadaria em espiral sobe para o próximo andar.",
       "type": "room",
+      "gridX": 8,
+      "gridY": 18,
+      "gridWidth": 5,
+      "gridHeight": 5,
       "exits": [
         { "direction": "north", "leadsTo": "room-2", "type": "door", "locked": false }
       ],
-      "visited": false,
-      "discovered": false,
-      "gridX": 10,
-      "gridY": 18,
-      "gridWidth": 3,
-      "gridHeight": 3,
       "events": [
-        { "type": "first-visit", "text": "Ao entrar na torre, você sente uma estranha vibração mágica no ar. Algo não está certo neste lugar." }
-      ]
+        { "type": "first-visit", "text": "Você adentra a Torre dos Magos. O ar está carregado de energia mágica residual, e você sente um leve formigamento na pele." }
+      ],
+      "exploration": {
+        "states": {
+          "initial": {
+            "examined": false,
+            "statueFound": false
+          }
+        },
+        "examine": [
+          {
+            "condition": "!states.examined",
+            "text": "Você examina o saguão com cuidado. O piso de mármore está rachado em vários lugares, e os pilares ornamentados mostram sinais de desgaste. No centro do saguão, há uma estátua de um mago segurando um livro.",
+            "effect": {"states.examined": true}
+          },
+          {
+            "condition": "states.examined && !states.statueFound",
+            "text": "Você examina a estátua do mago com mais atenção. Na base da estátua, há uma inscrição: 'O conhecimento é poder, mas a sabedoria é saber quando usá-lo.'",
+            "effect": {"states.statueFound": true}
+          },
+          {
+            "condition": "states.statueFound",
+            "text": "Você já examinou tudo o que havia para ver neste saguão."
+          }
+        ],
+        "search": [
+          {
+            "condition": "true",
+            "text": "Você procura por itens ou passagens secretas, mas não encontra nada de interesse no saguão.",
+            "chance": 1.0,
+            "results": []
+          }
+        ]
+      }
     },
     "room-2": {
       "id": "room-2",
-      "name": "Sala de Estudos",
-      "description": "Uma sala repleta de livros e pergaminhos. Uma escrivaninha no centro está coberta de anotações.",
+      "name": "Biblioteca Abandonada",
+      "description": "Uma vasta biblioteca com estantes altas cheias de livros empoeirados. Muitos tomos estão espalhados pelo chão.",
       "type": "room",
+      "gridX": 8,
+      "gridY": 12,
+      "gridWidth": 5,
+      "gridHeight": 5,
       "exits": [
         { "direction": "south", "leadsTo": "room-1", "type": "door", "locked": false },
-        { "direction": "east", "leadsTo": "room-3", "type": "door", "locked": false },
-        { "direction": "north", "leadsTo": "room-4", "type": "door", "locked": true, "keyId": "key-mago" }
+        { "direction": "east", "leadsTo": "room-3", "type": "door", "locked": true, "keyId": "key-biblioteca" },
+        { "direction": "north", "leadsTo": "room-4", "type": "door", "locked": false }
       ],
-      "visited": false,
-      "discovered": false,
-      "gridX": 10,
-      "gridY": 14,
-      "gridWidth": 3,
-      "gridHeight": 3,
       "events": [
-        { "type": "first-visit", "text": "Os livros na sala parecem se mover levemente, como se estivessem respirando. Você sente que está sendo observado." }
+        { "type": "first-visit", "text": "Ao entrar na biblioteca, você é recebido por uma nuvem de poeira. Os livros parecem ter sido deixados às pressas, com alguns ainda abertos sobre as mesas." }
       ],
-      "items": [
-        { "id": "pergaminho-magico", "name": "Pergaminho Mágico", "description": "Um pergaminho com símbolos arcanos que brilham suavemente.", "quantity": 1 }
-      ]
+      "exploration": {
+        "states": {
+          "initial": {
+            "examined": false,
+            "deskExamined": false,
+            "bookFound": false,
+            "keyFound": false,
+            "keyCollected": false,
+            "trapTriggered": false
+          }
+        },
+        "examine": [
+          {
+            "condition": "!states.examined",
+            "text": "Você examina a biblioteca com cuidado. As estantes estão cheias de livros sobre magia, alquimia e história arcana. Há uma mesa de estudo no centro da sala com vários livros abertos.",
+            "effect": {"states.examined": true}
+          },
+          {
+            "condition": "states.examined && !states.deskExamined",
+            "text": "Você examina a mesa de estudo. Entre os livros abertos, um em particular chama sua atenção - um tomo encadernado em couro vermelho com símbolos dourados.",
+            "effect": {"states.deskExamined": true}
+          },
+          {
+            "condition": "states.deskExamined && !states.bookFound",
+            "text": "Você examina o livro de capa vermelha. Ele contém diagramas complexos de círculos mágicos e fórmulas arcanas. Uma página está marcada com um pedaço de pergaminho.",
+            "effect": {"states.bookFound": true}
+          },
+          {
+            "condition": "states.bookFound",
+            "text": "Você já examinou todos os livros interessantes na biblioteca."
+          }
+        ],
+        "search": [
+          {
+            "condition": "states.bookFound && !states.keyFound && !states.trapTriggered",
+            "text": "Você procura entre as páginas do livro marcado e encontra uma pequena chave de prata escondida dentro da encadernação. No entanto, ao remover a chave, você aciona um mecanismo mágico de proteção!",
+            "effect": {"states.keyFound": true, "states.trapTriggered": true},
+            "items": [
+              {
+                "id": "key-biblioteca",
+                "content": "Chave de Prata",
+                "description": "Uma pequena chave de prata com símbolos arcanos gravados."
+              }
+            ],
+            "damage": {
+              "amount": "1D6",
+              "type": "magic",
+              "message": "Um raio de energia mágica dispara do livro, atingindo você no peito!"
+            }
+          },
+          {
+            "condition": "states.keyFound && !states.keyCollected",
+            "text": "Você já encontrou a chave de prata escondida no livro.",
+            "items": [
+              {
+                "id": "key-biblioteca",
+                "content": "Chave de Prata",
+                "description": "Uma pequena chave de prata com símbolos arcanos gravados."
+              }
+            ]
+          },
+          {
+            "condition": "!states.bookFound || states.keyCollected",
+            "text": "Você procura cuidadosamente entre os livros e estantes, mas não encontra nada de interesse.",
+            "chance": 1.0,
+            "results": []
+          }
+        ]
+      }
     },
     "room-3": {
       "id": "room-3",
-      "name": "Laboratório Alquímico",
-      "description": "Um laboratório com diversos frascos e aparelhos estranhos. Líquidos borbulham em recipientes de vidro.",
+      "name": "Laboratório Arcano",
+      "description": "Um laboratório cheio de equipamentos alquímicos, cristais e ingredientes mágicos. Mesas de trabalho estão cobertas de frascos e instrumentos estranhos.",
       "type": "room",
+      "gridX": 14,
+      "gridY": 12,
+      "gridWidth": 4,
+      "gridHeight": 5,
       "exits": [
         { "direction": "west", "leadsTo": "room-2", "type": "door", "locked": false }
       ],
-      "visited": false,
-      "discovered": false,
-      "gridX": 14,
-      "gridY": 14,
-      "gridWidth": 3,
-      "gridHeight": 3,
       "events": [
-        { "type": "first-visit", "text": "Um cheiro forte de produtos químicos e magia permeia o ar. Algo explode em um dos frascos quando você entra." }
+        { "type": "first-visit", "text": "O laboratório está surpreendentemente bem preservado. Alguns dos frascos ainda contêm líquidos borbulhantes, e cristais emitem um brilho fraco." }
       ],
-      "enemy": {
-        "id": "golem-cristal",
-        "name": "Golem de Cristal",
-        "description": "Uma criatura feita de cristais mágicos que brilham com energia arcana."
-      }
+      "exploration": {
+        "states": {
+          "initial": {
+            "examined": false,
+            "cauldronExamined": false,
+            "potionFound": false,
+            "potionCollected": false
+          }
+        },
+        "examine": [
+          {
+            "condition": "!states.examined",
+            "text": "Você examina o laboratório com cuidado. Há mesas de trabalho com equipamentos alquímicos, prateleiras com ingredientes mágicos e um grande caldeirão no centro da sala.",
+            "effect": {"states.examined": true}
+          },
+          {
+            "condition": "states.examined && !states.cauldronExamined",
+            "text": "Você examina o caldeirão. Ele contém um líquido azul brilhante que emite um leve vapor. O líquido parece ser uma poção mágica.",
+            "effect": {"states.cauldronExamined": true}
+          },
+          {
+            "condition": "states.cauldronExamined",
+            "text": "Você já examinou tudo o que havia para ver neste laboratório."
+          }
+        ],
+        "search": [
+          {
+            "condition": "states.cauldronExamined && !states.potionFound",
+            "text": "Você procura por algo útil no laboratório e encontra um frasco vazio. Você decide encher o frasco com a poção azul do caldeirão.",
+            "effect": {"states.potionFound": true},
+            "items": [
+              {
+                "id": "pocao-mana",
+                "content": "Poção de Mana",
+                "description": "Um frasco contendo um líquido azul brilhante que restaura energia mágica.",
+                "consumable": true,
+                "quantity": 1,
+                "effect": "mana",
+                "value": 10
+              }
+            ]
+          },
+          {
+            "condition": "states.potionFound && !states.potionCollected",
+            "text": "Você já encontrou a poção azul do caldeirão.",
+            "items": [
+              {
+                "id": "pocao-mana",
+                "content": "Poção de Mana",
+                "description": "Um frasco contendo um líquido azul brilhante que restaura energia mágica.",
+                "consumable": true,
+                "quantity": 1,
+                "effect": "mana",
+                "value": 10
+              }
+            ]
+          },
+          {
+            "condition": "!states.cauldronExamined || states.potionCollected",
+            "text": "Você procura cuidadosamente pelo laboratório, mas não encontra nada de interesse.",
+            "chance": 1.0,
+            "results": []
+          }
+        ]
+      },
+      "items": [
+        {
+          "id": "pergaminho-magico",
+          "name": "Pergaminho Mágico",
+          "description": "Um pergaminho com um feitiço de proteção contra fogo.",
+          "quantity": 1
+        }
+      ]
     },
     "room-4": {
       "id": "room-4",
-      "name": "Câmara do Mago",
-      "description": "Uma sala circular no topo da torre. Um grande círculo mágico está desenhado no chão.",
+      "name": "Sala do Conselho",
+      "description": "Uma sala circular com uma grande mesa redonda no centro. Cadeiras ornamentadas cercam a mesa, e tapeçarias desbotadas decoram as paredes.",
       "type": "room",
+      "gridX": 8,
+      "gridY": 6,
+      "gridWidth": 5,
+      "gridHeight": 5,
       "exits": [
-        { "direction": "south", "leadsTo": "room-2", "type": "door", "locked": false }
+        { "direction": "south", "leadsTo": "room-2", "type": "door", "locked": false },
+        { "direction": "north", "leadsTo": "room-5", "type": "door", "locked": false }
       ],
-      "visited": false,
-      "discovered": false,
-      "gridX": 10,
-      "gridY": 10,
-      "gridWidth": 3,
-      "gridHeight": 3,
       "events": [
-        { "type": "first-visit", "text": "O círculo mágico no chão começa a brilhar quando você entra. Uma figura espectral começa a se formar no centro." }
+        { "type": "first-visit", "text": "Esta deve ter sido a sala onde os magos se reuniam para discutir assuntos importantes. A atmosfera é solene e carregada de história." }
       ],
-      "enemy": {
-        "id": "espectro-mago",
-        "name": "Espectro do Mago",
-        "description": "O fantasma do antigo mago que habitava esta torre, ainda realizando seus experimentos no além."
-      },
-      "items": [
-        { "id": "key-mago", "name": "Chave do Mago", "description": "Uma chave ornamentada com símbolos arcanos.", "quantity": 1 }
-      ]
+      "exploration": {
+        "states": {
+          "initial": {
+            "examined": false,
+            "tableExamined": false,
+            "tapestryExamined": false,
+            "secretFound": false
+          }
+        },
+        "examine": [
+          {
+            "condition": "!states.examined",
+            "text": "Você examina a sala do conselho. A grande mesa redonda no centro é feita de madeira escura e tem símbolos arcanos entalhados em sua superfície. As tapeçarias nas paredes mostram cenas de magos realizando grandes feitos mágicos.",
+            "effect": {"states.examined": true}
+          },
+          {
+            "condition": "states.examined && !states.tableExamined",
+            "text": "Você examina a mesa com mais atenção. Os símbolos arcanos formam um círculo mágico complexo. No centro da mesa, há uma pequena depressão circular.",
+            "effect": {"states.tableExamined": true}
+          },
+          {
+            "condition": "states.tableExamined && !states.tapestryExamined",
+            "text": "Você examina as tapeçarias. Uma delas mostra um mago segurando um orbe de cristal sobre uma mesa idêntica à que está no centro da sala.",
+            "effect": {"states.tapestryExamined": true}
+          },
+          {
+            "condition": "states.tapestryExamined",
+            "text": "Você já examinou tudo o que havia para ver nesta sala."
+          }
+        ],
+        "search": [
+          {
+            "condition": "states.tapestryExamined && !states.secretFound",
+            "text": "Inspirado pela tapeçaria, você procura por algo semelhante a um orbe de cristal. Atrás de uma das cadeiras, você encontra um pequeno orbe de cristal empoeirado.",
+            "effect": {"states.secretFound": true},
+            "items": [
+              {
+                "id": "orbe-cristal",
+                "content": "Orbe de Cristal",
+                "description": "Um pequeno orbe de cristal que parece se encaixar na depressão no centro da mesa do conselho."
+              }
+            ]
+          },
+          {
+            "condition": "states.secretFound",
+            "text": "Você já encontrou o orbe de cristal nesta sala.",
+            "chance": 1.0,
+            "results": []
+          },
+          {
+            "condition": "!states.tapestryExamined",
+            "text": "Você procura pela sala, mas não encontra nada de interesse.",
+            "chance": 1.0,
+            "results": []
+          }
+        ],
+        "interactions": [
+          {
+            "id": "place-orb",
+            "name": "Colocar Orbe",
+            "description": "Colocar o orbe de cristal na depressão no centro da mesa.",
+            "requiredItems": ["orbe-cristal"],
+            "condition": "states.tableExamined && states.secretFound",
+            "result": {
+              "text": "Você coloca o orbe de cristal na depressão no centro da mesa. O orbe se encaixa perfeitamente e começa a brilhar. Os símbolos arcanos na mesa também começam a brilhar, e você sente uma onda de energia mágica percorrer a sala. Subitamente, uma passagem secreta se abre em uma das paredes!",
+              "effect": {
+                "addExit": {
+                  "direction": "east",
+                  "leadsTo": "room-6",
+                  "type": "door",
+                  "locked": false
+                },
+                "removeItem": "orbe-cristal"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "room-5": {
+      "id": "room-5",
+      "name": "Observatório",
+      "description": "Uma sala no topo da torre com um teto abobadado de vidro. Instrumentos astronômicos e mapas celestes cobrem as paredes.",
+      "type": "room",
+      "gridX": 8,
+      "gridY": 1,
+      "gridWidth": 5,
+      "gridHeight": 4,
+      "exits": [
+        { "direction": "south", "leadsTo": "room-4", "type": "door", "locked": false }
+      ],
+      "events": [
+        { "type": "first-visit", "text": "O observatório oferece uma vista impressionante do céu. Mesmo durante o dia, você pode ver algumas estrelas através do teto de vidro encantado." }
+      ],
+      "exploration": {
+        "states": {
+          "initial": {
+            "examined": false,
+            "telescopeExamined": false,
+            "mapExamined": false,
+            "trapTriggered": false
+          }
+        },
+        "examine": [
+          {
+            "condition": "!states.examined",
+            "text": "Você examina o observatório. Há um grande telescópio de bronze no centro da sala, apontado para o céu através do teto de vidro. Nas paredes, há mapas celestes detalhados e instrumentos astronômicos.",
+            "effect": {"states.examined": true}
+          },
+          {
+            "condition": "states.examined && !states.telescopeExamined",
+            "text": "Você examina o telescópio. É uma peça impressionante de engenharia mágica, com lentes encantadas que permitem ver muito além do que seria possível com um telescópio comum.",
+            "effect": {"states.telescopeExamined": true}
+          },
+          {
+            "condition": "states.telescopeExamined && !states.mapExamined",
+            "text": "Você examina os mapas celestes. Eles mostram constelações e corpos celestes que você nunca viu antes, alguns dos quais parecem se mover de maneira não natural.",
+            "effect": {"states.mapExamined": true}
+          },
+          {
+            "condition": "states.mapExamined",
+            "text": "Você já examinou tudo o que havia para ver neste observatório."
+          }
+        ],
+        "search": [
+          {
+            "condition": "!states.trapTriggered",
+            "text": "Ao procurar entre os instrumentos astronômicos, você acidentalmente ativa um mecanismo de defesa! Uma rajada de energia estelar dispara de um dos instrumentos!",
+            "effect": {"states.trapTriggered": true},
+            "damage": {
+              "amount": "2D6",
+              "type": "magic",
+              "message": "Uma rajada de energia estelar atinge você, causando uma dor intensa!"
+            }
+          },
+          {
+            "condition": "states.trapTriggered",
+            "text": "Você procura cuidadosamente pelo observatório, mas não encontra nada de interesse.",
+            "chance": 1.0,
+            "results": []
+          }
+        ]
+      }
+    },
+    "room-6": {
+      "id": "room-6",
+      "name": "Câmara do Arquimago",
+      "description": "Uma câmara secreta ricamente decorada. No centro, há um pedestal com um livro mágico brilhante.",
+      "type": "room",
+      "gridX": 14,
+      "gridY": 6,
+      "gridWidth": 4,
+      "gridHeight": 5,
+      "exits": [
+        { "direction": "west", "leadsTo": "room-4", "type": "door", "locked": false }
+      ],
+      "events": [
+        { "type": "first-visit", "text": "Você encontrou a câmara secreta do Arquimago! O ar aqui está saturado de magia, e você sente um poder antigo e poderoso emanando do livro no pedestal." }
+      ],
+      "exploration": {
+        "states": {
+          "initial": {
+            "examined": false,
+            "pedestalExamined": false,
+            "bookExamined": false
+          }
+        },
+        "examine": [
+          {
+            "condition": "!states.examined",
+            "text": "Você examina a câmara secreta. As paredes são decoradas com símbolos arcanos que brilham suavemente. No centro da sala, há um pedestal de mármore com um livro mágico.",
+            "effect": {"states.examined": true}
+          },
+          {
+            "condition": "states.examined && !states.pedestalExamined",
+            "text": "Você examina o pedestal. Ele é feito de mármore branco com veios dourados. Inscrições mágicas correm ao longo de sua superfície, formando um círculo de proteção ao redor do livro.",
+            "effect": {"states.pedestalExamined": true}
+          },
+          {
+            "condition": "states.pedestalExamined && !states.bookExamined",
+            "text": "Você examina o livro mágico. É o lendário Grimório do Arquimago, um dos artefatos mágicos mais poderosos já criados. Suas páginas brilham com energia arcana, e você sente que possui conhecimentos mágicos além da sua compreensão.",
+            "effect": {"states.bookExamined": true}
+          },
+          {
+            "condition": "states.bookExamined",
+            "text": "Você já examinou tudo o que havia para ver nesta câmara."
+          }
+        ],
+        "search": [
+          {
+            "condition": "states.bookExamined",
+            "text": "Você procura cuidadosamente pela câmara e encontra uma pequena gaveta escondida na base do pedestal. Dentro dela, há um amuleto mágico.",
+            "items": [
+              {
+                "id": "amuleto-arquimago",
+                "content": "Amuleto do Arquimago",
+                "description": "Um amuleto mágico que aumenta o poder dos feitiços do usuário.",
+                "type": "equipment",
+                "slot": "neck",
+                "effects": [
+                  {
+                    "type": "magic_power",
+                    "value": 5
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "enemy": {
+          "id": "espectro-mago",
+          "name": "Espectro do Mago",
+          "description": "O espírito vingativo de um mago antigo que protege o Grimório.",
+          "habilidade": 7,
+          "couraça": 4,
+          "pontosDeEnergia": 5,
+          "pontosDeEnergiaMax": 5,
+          "dano": "2D6",
+          "drops": [
+            {
+              "id": "essencia-magica",
+              "content": "Essência Mágica",
+              "description": "Uma essência brilhante que pode ser usada para encantar itens.",
+              "quantity": 3
+            }
+          ],
+          "trigger": {
+            "condition": "states.bookExamined",
+            "message": "Ao tentar tocar no Grimório, você desperta seu guardião! O espectro de um mago antigo se materializa diante de você, seus olhos brilhando com fúria arcana!"
+          }
+        }
+      }
     }
-  },
-  "decorativeBlocks": [
-    { "type": "corridor", "gridX": 11, "gridY": 17, "gridWidth": 1, "gridHeight": 1 },
-    { "type": "corridor", "gridX": 11, "gridY": 13, "gridWidth": 1, "gridHeight": 1 }
-  ]
+  }
 }
