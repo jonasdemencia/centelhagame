@@ -638,15 +638,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 };
 
-    currentMonster = monsterData[monsterName];
-console.log("LOG: Dados do monstro carregados:", currentMonster);
+    // Carrega os dados do monstro
+const monsterName = getUrlParameter('monstro');
+let currentMonster;
 
-const vidaMaximaMonstro = currentMonster.pontosDeEnergia;
+// Tenta carregar o monstro do sessionStorage primeiro
+const storedMonster = sessionStorage.getItem('currentMonster');
+if (storedMonster) {
+    currentMonster = JSON.parse(storedMonster);
+    console.log("LOG: Dados do monstro carregados do sessionStorage:", currentMonster);
+} else {
+    // Fallback para o monsterData importado
+    currentMonster = getMonsterById(monsterName) || monsterData[monsterName];
+    console.log("LOG: Dados do monstro carregados via getMonsterById ou monsterData:", currentMonster);
+}
 
-currentMonster.pontosDeEnergiaMax = vidaMaximaMonstro; // Salva para usar depois
+// Limpa o sessionStorage após carregar
+sessionStorage.removeItem('currentMonster');
 
-// Atualiza visualmente as barras no início do combate
-atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+// Se ainda não temos o monstro, mostra erro
+if (!currentMonster) {
+    console.error("LOG: Monstro não encontrado:", monsterName);
+    document.getElementById("monster-name").innerText = "Monstro não encontrado";
+    document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
+} else {
+    // Configura os valores máximos de energia
+    const vidaMaximaMonstro = currentMonster.pontosDeEnergia;
+    currentMonster.pontosDeEnergiaMax = vidaMaximaMonstro; // Salva para usar depois
+
+    // Atualiza visualmente as barras no início do combate
+    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+}
+
 
 
     if (currentMonster) {
