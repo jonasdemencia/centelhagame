@@ -1249,9 +1249,6 @@ function removePointsOfInterestButtons() {
 
 // Função para lidar com o clique em um ponto de interesse
 async function handlePointOfInterestClick(poi, room) {
-    // Remove os botões de pontos de interesse
-    removePointsOfInterestButtons();
-    
     // Adiciona a descrição do ponto de interesse ao log
     startNewLogBlock(`Examinar ${poi.name}`);
     await addLogMessage(poi.description, 1000);
@@ -1268,7 +1265,22 @@ async function handlePointOfInterestClick(poi, room) {
     if (poi.items && poi.items.length > 0) {
         createCollectButton(poi.items[0]);
     }
+    
+    // Importante: NÃO remove os botões de pontos de interesse
+    // Isso permite que o jogador continue explorando outros pontos de interesse
+    
+    // Opcionalmente, podemos atualizar os botões para refletir mudanças de estado
+    // Por exemplo, marcar visualmente os pontos já examinados
+    const poiButtons = document.querySelectorAll('.poi-btn');
+    poiButtons.forEach(button => {
+        if (button.dataset.poiId === poi.id) {
+            button.classList.add('examined');
+            // Opcionalmente, podemos desabilitar o botão ou apenas marcá-lo como examinado
+            // button.disabled = true;
+        }
+    });
 }
+
 
 
 
