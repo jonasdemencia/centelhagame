@@ -311,3 +311,41 @@
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
 }
+
+/* Estilos para os botões de pontos de interesse */
+.points-of-interest-buttons {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+.poi-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.poi-btn {
+    padding: 12px;
+    margin: 5px 0;
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.poi-btn:hover {
+    background-color: #34495e;
+}
+
+.poi-btn:active {
+    background-color: #1a252f;
+}
+
