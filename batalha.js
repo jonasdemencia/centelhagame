@@ -638,8 +638,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 };
 
-    // Carrega os dados do monstro
-let currentMonster;
 
 // Tenta carregar o monstro do sessionStorage primeiro
 const storedMonster = sessionStorage.getItem('currentMonster');
