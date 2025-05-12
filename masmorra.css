@@ -364,3 +364,42 @@
     transform: translateY(-50%);
 }
 
+/* Estilos para os botões de escolha */
+.choice-buttons {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+.choice-btn {
+    padding: 12px;
+    margin: 5px 0;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.test-btn {
+    background-color: #2980b9;
+    color: white;
+}
+
+.test-btn:hover {
+    background-color: #3498db;
+}
+
+.decline-btn {
+    background-color: #7f8c8d;
+    color: white;
+}
+
+.decline-btn:hover {
+    background-color: #95a5a6;
+}
+
