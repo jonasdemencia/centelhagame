@@ -1805,6 +1805,28 @@ async function loadPlayerState() {
     const dungeonStateRef = doc(db, "dungeons", userId);
     try {
         const docSnap = await getDoc(dungeonStateRef);
+        
+        // Valores padrão para os atributos
+        let attributes = {
+            luck: 7,
+            skill: 7,
+            charisma: 7
+        };
+        
+        // Se playerData estiver disponível, use os atributos do jogador
+        if (playerData) {
+            // Extrai os valores totais dos atributos do jogador
+            if (playerData.luck && playerData.luck.total !== undefined) {
+                attributes.luck = playerData.luck.total;
+            }
+            if (playerData.skill && playerData.skill.total !== undefined) {
+                attributes.skill = playerData.skill.total;
+            }
+            if (playerData.charisma && playerData.charisma.total !== undefined) {
+                attributes.charisma = playerData.charisma.total;
+            }
+        }
+        
         if (docSnap.exists()) {
             const data = docSnap.data();
             
@@ -1816,7 +1838,8 @@ async function loadPlayerState() {
                 discoveredRooms: data.discoveredRooms || ["room-1"],
                 visitedRooms: data.visitedRooms || [],
                 inventory: data.inventory || [],
-                health: data.health || playerEnergy // Usa a energia do jogador se disponível
+                health: data.health || playerEnergy, // Usa a energia do jogador se disponível
+                attributes: attributes // Usa os atributos do jogador
             };
             
             // Carrega os estados de exploração das salas
@@ -1829,6 +1852,7 @@ async function loadPlayerState() {
             }
             
             console.log("Estado da masmorra carregado com sucesso!");
+            console.log("Atributos carregados:", attributes);
         } else {
             console.log("Nenhum estado de masmorra encontrado. Usando estado inicial.");
             
@@ -1841,7 +1865,8 @@ async function loadPlayerState() {
                 discoveredRooms: ["room-1"],
                 visitedRooms: [],
                 inventory: [],
-                health: playerEnergy // Usa a energia do jogador se disponível
+                health: playerEnergy, // Usa a energia do jogador se disponível
+                attributes: attributes // Usa os atributos do jogador
             };
             
             // Inicializa os estados de exploração para todas as salas
@@ -1856,6 +1881,64 @@ async function loadPlayerState() {
         console.error("Erro ao carregar estado da masmorra:", error);
     }
 }
+
+
+// Função para atualizar o atributo de sorte do jogador no Firestore
+async function updatePlayerLuckInFirestore(newLuckValue) {
+    if (!userId) return;
+    
+    console.log(`LOG: Atualizando atributo de sorte para ${newLuckValue}`);
+    
+    const playerDocRef = doc(db, "players", userId);
+    
+    return setDoc(playerDocRef, { 
+        luck: { 
+            ...playerData.luck, // Mantém as outras propriedades do objeto luck
+            total: newLuckValue // Atualiza apenas o valor total
+        } 
+    }, { merge: true })
+        .then(() => {
+            console.log(`LOG: Atributo de sorte atualizado para ${newLuckValue}`);
+            
+            // Atualiza também o playerData local
+            if (playerData && playerData.luck) {
+                playerData.luck.total = newLuckValue;
+            }
+        })
+        .catch((error) => {
+            console.error(`LOG: Erro ao atualizar atributo de sorte:`, error);
+        });
+}
+
+
+// Função auxiliar para rolar o teste de sorte
+async function testLuckRoll(currentLuck) {
+    // Rola 2d6
+    const roll = rollDice("2D6");
+    await addLogMessage(`Você rolou 2D6 e obteve <strong>${roll}</strong>.`, 800);
+    
+    // Verifica se teve sorte (roll <= luck)
+    if (roll <= currentLuck) {
+        await addLogMessage(`<strong style='color: green;'>Você teve sorte!</strong> (${roll} ≤ ${currentLuck})`, 800);
+        
+        // Reduz o atributo de sorte
+        const newLuckValue = currentLuck - 1;
+        playerState.attributes.luck = newLuckValue;
+        await addLogMessage(`Seu atributo de Sorte foi reduzido para <strong>${newLuckValue}</strong>.`, 800);
+        
+        // Atualiza o atributo de sorte no Firestore
+        await updatePlayerLuckInFirestore(newLuckValue);
+        
+        // Salva o estado do jogador
+        savePlayerState();
+        
+        return true; // Indica que teve sorte
+    } else {
+        await addLogMessage(`<strong style='color: red;'>Você não teve sorte!</strong> (${roll} > ${currentLuck})`, 800);
+        return false; // Indica que não teve sorte
+    }
+}
+
 
 
 // Função para verificar se um monstro foi derrotado
