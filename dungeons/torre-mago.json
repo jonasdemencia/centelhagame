@@ -137,37 +137,37 @@
         ],
         "interactions": [
           {
-            "id": "teste-sorte",
-            "name": "Testar Sorte com Pedra Instável",
-            "condition": "!states.luckTestCompleted",
-            "description": "Você nota uma pedra instável no teto, logo acima de um pequeno pedestal com uma gema brilhante. A pedra parece que pode cair a qualquer momento.",
-            "result": {
-              "text": "Você decide arriscar e tentar pegar a gema antes que a pedra caia.",
-              "action": "testLuck",
-              "luckTest": {
-                "description": "Você precisa testar sua sorte para pegar a gema antes que a pedra caia.",
-                "success": {
-                  "text": "Com um movimento rápido, você consegue pegar a gema e se afastar antes que a pedra caia estrondosamente no chão!",
-                  "effect": {"states.luckTestCompleted": true},
-                  "items": [
-                    {
-                      "id": "gema-brilhante",
-                      "content": "Gema Arcana",
-                      "description": "Uma gema azul que pulsa com energia mágica.",
-                      "value": 50
-                    }
-                  ]
-                },
-                "failure": {
-                  "text": "Você tenta pegar a gema, mas a pedra se solta e cai antes que você consiga se afastar!",
-                  "effect": {"states.luckTestCompleted": true},
-                  "damage": {
-                    "amount": "2D6",
-                    "message": "A pedra atinge você com força!"
-                  }
-                }
-              }
-            }
+  "id": "teste-sorte",
+  "name": "Testar Sorte com Pedra Instável",
+  "condition": "states.examined && !states.luckTestCompleted",
+  "description": "Você nota uma pedra instável no teto, logo acima de um pequeno pedestal com uma gema brilhante. A pedra parece que pode cair a qualquer momento.",
+  "result": {
+    "text": "Você decide arriscar e tentar pegar a gema antes que a pedra caia.",
+    "action": "testLuck",
+    "luckTest": {
+      "description": "Você precisa testar sua sorte para pegar a gema antes que a pedra caia.",
+      "success": {
+        "text": "Com um movimento rápido, você consegue pegar a gema e se afastar antes que a pedra caia estrondosamente no chão!",
+        "effect": {"states.luckTestCompleted": true},
+        "items": [
+          {
+            "id": "gema-brilhante",
+            "content": "Gema Arcana",
+            "description": "Uma gema azul que pulsa com energia mágica.",
+            "value": 50
+          }
+        ]
+      },
+      "failure": {
+        "text": "Você tenta pegar a gema, mas a pedra se solta e cai antes que você consiga se afastar!",
+        "effect": {"states.luckTestCompleted": true},
+        "damage": {
+          "amount": "2D6",
+          "message": "A pedra atinge você com força!"
+        }
+      }
+    }
+  }
           },
           {
             "id": "teste-habilidade",
