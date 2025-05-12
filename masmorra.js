@@ -1618,14 +1618,16 @@ function createDungeonSelector(dungeons, currentDungeonId) {
             // Salva o estado atual
             savePlayerState();
             
-            // Redefine o estado do jogador para a nova masmorra
-            playerState = {
-                currentRoom: "room-1",
-                discoveredRooms: ["room-1"],
-                visitedRooms: [],
-                inventory: playerState.inventory, // Mantém o inventário
-                health: playerState.health // Mantém a saúde
-            };
+           // Redefine o estado do jogador para a nova masmorra
+playerState = {
+    currentRoom: "room-1",
+    discoveredRooms: ["room-1"],
+    visitedRooms: [],
+    inventory: playerState.inventory, // Mantém o inventário
+    health: playerState.health, // Mantém a saúde
+    attributes: playerState.attributes // Mantém os atributos
+};
+
             
             // Carrega a nova masmorra
             await initializeDungeon(newDungeonId);
