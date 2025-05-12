@@ -1060,10 +1060,14 @@ async function examineRoom() {
                     await applyEffects(examineEvent.effect, currentRoom);
                 }
                 
-                // Cria botões para pontos de interesse, se houver
-                if (examineEvent.pointsOfInterest && examineEvent.pointsOfInterest.length > 0) {
-                    createPointsOfInterestButtons(examineEvent.pointsOfInterest, currentRoom);
-                }
+                // Na função examineRoom, onde os pontos de interesse são processados
+if (examineEvent.pointsOfInterest && examineEvent.pointsOfInterest.length > 0) {
+    console.log("Pontos de interesse encontrados:", examineEvent.pointsOfInterest);
+    createPointsOfInterestButtons(examineEvent.pointsOfInterest, currentRoom);
+} else {
+    console.log("Nenhum ponto de interesse encontrado no evento de exame");
+}
+
                 
                 // Salva o estado atualizado
                 savePlayerState();
@@ -1186,11 +1190,16 @@ function removeCollectButton() {
 
 // Função para criar botões de pontos de interesse
 function createPointsOfInterestButtons(pointsOfInterest, room) {
+    console.log("Criando botões de pontos de interesse:", pointsOfInterest);
+    
     // Remove botões existentes primeiro
     removePointsOfInterestButtons();
     
     // Verifica se há pontos de interesse
-    if (!pointsOfInterest || pointsOfInterest.length === 0) return;
+    if (!pointsOfInterest || pointsOfInterest.length === 0) {
+        console.log("Nenhum ponto de interesse para mostrar");
+        return;
+    }
     
     // Inicializa o estado de exploração se não existir
     if (!room.explorationState) {
@@ -1232,11 +1241,15 @@ function createPointsOfInterestButtons(pointsOfInterest, room) {
         poiContainer.appendChild(poiBtn);
     }
     
-    // Adiciona o container à interface
-    const actionButtons = document.getElementById('action-buttons');
-    if (actionButtons) {
-        actionButtons.appendChild(poiContainer);
-    }
+    // No final da função createPointsOfInterestButtons
+const actionButtons = document.getElementById('action-buttons');
+if (actionButtons) {
+    console.log("Adicionando container de pontos de interesse ao DOM");
+    actionButtons.appendChild(poiContainer);
+} else {
+    console.error("Elemento 'action-buttons' não encontrado!");
+}
+
 }
 
 // Função para remover botões de pontos de interesse
