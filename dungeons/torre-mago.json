@@ -21,116 +21,200 @@
   ],
   "rooms": {
     "room-1": {
-      "id": "room-1",
-      "name": "Entrada da Torre",
-      "description": "Um saguão amplo com piso de mármore rachado. Pilares ornamentados sustentam o teto alto. Uma escadaria em espiral sobe para o próximo andar.",
-      "type": "room",
-      "gridX": 8,
-      "gridY": 18,
-      "gridWidth": 5,
-      "gridHeight": 5,
-      "exits": [
-        { "direction": "north", "leadsTo": "room-2", "type": "door", "locked": false }
-      ],
-      "events": [
-        { "type": "first-visit", "text": "Você adentra a Torre dos Magos. O ar está carregado de energia mágica residual, e você sente um leve formigamento na pele." }
-      ],
-      "exploration": {
-        "states": {
-          "initial": {
-            "examined": false,
-            "pillarExamined": false,
-            "floorExamined": false,
-            "statueExamined": false
+  "id": "room-1",
+  "name": "Entrada da Torre",
+  "description": "Um saguão amplo com piso de mármore rachado. Pilares ornamentados sustentam o teto alto. Uma escadaria em espiral sobe para o próximo andar.",
+  "type": "room",
+  "gridX": 8,
+  "gridY": 18,
+  "gridWidth": 5,
+  "gridHeight": 5,
+  "exits": [
+    { "direction": "north", "leadsTo": "room-2", "type": "door", "locked": false }
+  ],
+  "events": [
+    { "type": "first-visit", "text": "Você adentra a Torre dos Magos. O ar está carregado de energia mágica residual, e você sente um leve formigamento na pele." }
+  ],
+  "exploration": {
+    "states": {
+      "initial": {
+        "examined": false,
+        "pillarExamined": false,
+        "floorExamined": false,
+        "statueExamined": false,
+        "luckTestCompleted": false,
+        "skillTestCompleted": false,
+        "charismaTestCompleted": false
+      }
+    },
+    "examine": [
+      {
+        "condition": "!states.examined",
+        "text": "Você observa o saguão da torre. O piso de mármore está rachado em vários lugares, e os pilares ornamentados mostram sinais de desgaste. No centro do saguão, há uma estátua de um mago segurando um livro. O que você deseja examinar mais de perto?",
+        "effect": {"states.examined": true},
+        "pointsOfInterest": [
+          {
+            "id": "pilares",
+            "name": "Pilares Ornamentados",
+            "description": "Os pilares são feitos de mármore branco com veios dourados. Estão entalhados com símbolos arcanos que parecem brilhar levemente quando você os observa por muito tempo."
+          },
+          {
+            "id": "piso",
+            "name": "Piso Rachado",
+            "description": "O piso de mármore está rachado em vários lugares. Algumas rachaduras formam padrões que parecem quase intencionais, como se fossem parte de um grande círculo mágico."
+          },
+          {
+            "id": "estatua",
+            "name": "Estátua do Mago",
+            "description": "A estátua representa um mago idoso com barba longa, vestindo uma túnica com símbolos estelares. Ele segura um livro aberto em suas mãos. Na base da estátua, há uma inscrição: 'O conhecimento é poder, mas a sabedoria é saber quando usá-lo.'",
+            "effect": {"states.statueExamined": true}
           }
-        },
-        "examine": [
+        ]
+      },
+      {
+        "condition": "states.examined",
+        "text": "O que você deseja examinar no saguão?",
+        "pointsOfInterest": [
           {
-            "condition": "!states.examined",
-            "text": "Você observa o saguão da torre. O piso de mármore está rachado em vários lugares, e os pilares ornamentados mostram sinais de desgaste. No centro do saguão, há uma estátua de um mago segurando um livro. O que você deseja examinar mais de perto?",
-            "effect": {"states.examined": true},
-            "pointsOfInterest": [
-              {
-                "id": "pilares",
-                "name": "Pilares Ornamentados",
-                "description": "Os pilares são feitos de mármore branco com veios dourados. Estão entalhados com símbolos arcanos que parecem brilhar levemente quando você os observa por muito tempo."
-              },
-              {
-                "id": "piso",
-                "name": "Piso Rachado",
-                "description": "O piso de mármore está rachado em vários lugares. Algumas rachaduras formam padrões que parecem quase intencionais, como se fossem parte de um grande círculo mágico."
-              },
-              {
-                "id": "estatua",
-                "name": "Estátua do Mago",
-                "description": "A estátua representa um mago idoso com barba longa, vestindo uma túnica com símbolos estelares. Ele segura um livro aberto em suas mãos. Na base da estátua, há uma inscrição: 'O conhecimento é poder, mas a sabedoria é saber quando usá-lo.'",
-                "effect": {"states.statueExamined": true}
-              }
-            ]
+            "id": "pilares",
+            "name": "Pilares Ornamentados",
+            "description": "Os pilares são feitos de mármore branco com veios dourados. Estão entalhados com símbolos arcanos que parecem brilhar levemente quando você os observa por muito tempo.",
+            "effect": {"states.pillarExamined": true}
           },
           {
-            "condition": "states.examined",
-            "text": "O que você deseja examinar no saguão?",
-            "pointsOfInterest": [
-              {
-                "id": "pilares",
-                "name": "Pilares Ornamentados",
-                "description": "Os pilares são feitos de mármore branco com veios dourados. Estão entalhados com símbolos arcanos que parecem brilhar levemente quando você os observa por muito tempo.",
-                "effect": {"states.pillarExamined": true}
-              },
-              {
-                "id": "piso",
-                "name": "Piso Rachado",
-                "description": "O piso de mármore está rachado em vários lugares. Algumas rachaduras formam padrões que parecem quase intencionais, como se fossem parte de um grande círculo mágico.",
-                "effect": {"states.floorExamined": true}
-              },
-              {
-                "id": "estatua",
-                "name": "Estátua do Mago",
-                "description": "A estátua representa um mago idoso com barba longa, vestindo uma túnica com símbolos estelares. Ele segura um livro aberto em suas mãos. Na base da estátua, há uma inscrição: 'O conhecimento é poder, mas a sabedoria é saber quando usá-lo.'",
-                "effect": {"states.statueExamined": true}
-              }
-            ]
-          }
-        ],
-        "search": [
-          {
-            "condition": "states.statueExamined",
-            "text": "Você procura cuidadosamente ao redor da estátua e nota que o livro nas mãos do mago tem páginas que podem ser viradas. Ao folhear o livro de pedra, você encontra uma pequena moeda de ouro escondida entre as páginas.",
-            "chance": 1.0,
-            "items": [
-              {
-                "id": "moeda-ouro",
-                "content": "Moeda de Ouro Antiga",
-                "description": "Uma moeda de ouro antiga com o símbolo de uma torre em um lado e uma estrela no outro.",
-                "quantity": 1,
-                "value": 10
-              }
-            ]
+            "id": "piso",
+            "name": "Piso Rachado",
+            "description": "O piso de mármore está rachado em vários lugares. Algumas rachaduras formam padrões que parecem quase intencionais, como se fossem parte de um grande círculo mágico.",
+            "effect": {"states.floorExamined": true}
           },
           {
-            "condition": "states.pillarExamined && states.floorExamined",
-            "text": "Ao examinar mais atentamente as rachaduras no piso próximo aos pilares, você percebe que uma das lajes está solta. Ao movê-la, você descobre um pequeno compartimento contendo um pergaminho.",
-            "chance": 0.8,
-            "items": [
-              {
-                "id": "pergaminho-protecao",
-                "content": "Pergaminho de Proteção",
-                "description": "Um pergaminho com um encantamento de proteção contra fogo.",
-                "consumable": true,
-                "effect": "fire_protection"
-              }
-            ]
-          },
-          {
-            "condition": "!states.statueExamined && !states.pillarExamined",
-            "text": "Você procura pela sala, mas não encontra nada de interesse.",
-            "chance": 1.0,
-            "results": []
+            "id": "estatua",
+            "name": "Estátua do Mago",
+            "description": "A estátua representa um mago idoso com barba longa, vestindo uma túnica com símbolos estelares. Ele segura um livro aberto em suas mãos. Na base da estátua, há uma inscrição: 'O conhecimento é poder, mas a sabedoria é saber quando usá-lo.'",
+            "effect": {"states.statueExamined": true}
           }
         ]
       }
-    },
+    ],
+    "search": [
+      {
+        "condition": "states.statueExamined",
+        "text": "Você procura cuidadosamente ao redor da estátua e nota que o livro nas mãos do mago tem páginas que podem ser viradas. Ao folhear o livro de pedra, você encontra uma pequena moeda de ouro escondida entre as páginas.",
+        "chance": 1.0,
+        "items": [
+          {
+            "id": "moeda-ouro",
+            "content": "Moeda de Ouro Antiga",
+            "description": "Uma moeda de ouro antiga com o símbolo de uma torre em um lado e uma estrela no outro.",
+            "quantity": 1,
+            "value": 10
+          }
+        ]
+      },
+      {
+        "condition": "states.pillarExamined && states.floorExamined",
+        "text": "Ao examinar mais atentamente as rachaduras no piso próximo aos pilares, você percebe que uma das lajes está solta. Ao movê-la, você descobre um pequeno compartimento contendo um pergaminho.",
+        "chance": 0.8,
+        "items": [
+          {
+            "id": "pergaminho-protecao",
+            "content": "Pergaminho de Proteção",
+            "description": "Um pergaminho com um encantamento de proteção contra fogo.",
+            "consumable": true,
+            "effect": "fire_protection"
+          }
+        ]
+      },
+      {
+        "condition": "!states.statueExamined && !states.pillarExamined",
+        "text": "Você procura pela sala, mas não encontra nada de interesse.",
+        "chance": 1.0,
+        "results": []
+      }
+    ],
+    "interactions": [
+      {
+        "id": "teste-sorte",
+        "name": "Testar Sorte com Pedra Instável",
+        "condition": "!states.luckTestCompleted",
+        "description": "Você nota uma pedra instável no teto, logo acima de um pequeno pedestal com uma gema brilhante. A pedra parece que pode cair a qualquer momento.",
+        "result": {
+          "text": "Você decide arriscar e tentar pegar a gema antes que a pedra caia.",
+          "action": "testLuck",
+          "success": {
+            "text": "Com um movimento rápido, você consegue pegar a gema e se afastar antes que a pedra caia estrondosamente no chão!",
+            "effect": {"states.luckTestCompleted": true},
+            "items": [
+              {
+                "id": "gema-brilhante",
+                "content": "Gema Arcana",
+                "description": "Uma gema azul que pulsa com energia mágica.",
+                "value": 50
+              }
+            ]
+          },
+          "failure": {
+            "text": "Você tenta pegar a gema, mas a pedra se solta e cai antes que você consiga se afastar!",
+            "effect": {"states.luckTestCompleted": true},
+            "damage": {
+              "amount": "2D6",
+              "message": "A pedra atinge você com força!"
+            }
+          }
+        }
+      },
+      {
+        "id": "teste-habilidade",
+        "name": "Decifrar Símbolos Arcanos",
+        "condition": "states.pillarExamined && !states.skillTestCompleted",
+        "description": "Os símbolos arcanos nos pilares parecem formar algum tipo de código ou mensagem. Talvez você consiga decifrá-los com sua habilidade.",
+        "result": {
+          "text": "Você tenta decifrar os símbolos arcanos nos pilares...",
+          "action": "testSkill",
+          "difficulty": 15,
+          "success": {
+            "text": "Após alguns minutos de estudo, você consegue decifrar os símbolos! Eles revelam a localização de um compartimento secreto em um dos pilares. Dentro dele, você encontra um pequeno frasco.",
+            "effect": {"states.skillTestCompleted": true},
+            "items": [
+              {
+                "id": "pocao-mana",
+                "content": "Poção de Mana",
+                "description": "Um frasco contendo um líquido azul brilhante que restaura energia mágica.",
+                "consumable": true,
+                "effect": "restore_mana",
+                "value": 25
+              }
+            ]
+          },
+          "failure": {
+            "text": "Você tenta decifrar os símbolos, mas eles são complexos demais para seu conhecimento atual. Talvez com mais estudo...",
+            "effect": {"states.skillTestCompleted": true}
+          }
+        }
+      },
+      {
+        "id": "teste-carisma",
+        "name": "Comunicar com Espírito do Mago",
+        "condition": "states.statueExamined && !states.charismaTestCompleted",
+        "description": "Você sente uma presença etérea ao redor da estátua do mago. Talvez seja possível estabelecer algum tipo de comunicação.",
+        "result": {
+          "text": "Você tenta se comunicar com o espírito do mago que parece habitar a estátua...",
+          "action": "testCharisma",
+          "difficulty": 18,
+          "success": {
+            "text": "Surpreendentemente, uma voz etérea responde à sua tentativa de comunicação! 'Bem-vindo, buscador de conhecimento. Poucos conseguem me ouvir. Como recompensa por sua sensibilidade, deixo-lhe este conselho: Na biblioteca, procure pelo livro que não tem título, mas tem todas as respostas.' O espírito então desaparece.",
+            "effect": {"states.charismaTestCompleted": true, "states.receivedMagoTip": true}
+          },
+          "failure": {
+            "text": "Você tenta se comunicar, mas não recebe nenhuma resposta. Apenas o silêncio da torre abandonada.",
+            "effect": {"states.charismaTestCompleted": true}
+          }
+        }
+      }
+    ]
+  }
+}
+
     "room-2": {
       "id": "room-2",
       "name": "Biblioteca Abandonada",
