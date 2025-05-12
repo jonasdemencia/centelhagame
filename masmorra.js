@@ -1266,15 +1266,15 @@ async function handlePointOfInterestClick(poi, room) {
     startNewLogBlock(`Examinar ${poi.name}`);
     await addLogMessage(poi.description, 1000);
     
+    // Aplica efeitos, se houver - MOVA ISSO PARA ANTES DOS TESTES
+    if (poi.effect) {
+        await applyEffects(poi.effect, room);
+    }
+    
     // Verifica se há testes de atributos associados
     if (poi.luckTest || poi.skillTest || poi.charismaTest) {
         await handleAttributeTestEvent(poi, room);
     } else {
-        // Aplica efeitos, se houver
-        if (poi.effect) {
-            await applyEffects(poi.effect, room);
-        }
-        
         // Verifica se há itens para coletar
         if (poi.items && poi.items.length > 0) {
             createCollectButton(poi.items[0]);
@@ -1284,20 +1284,18 @@ async function handlePointOfInterestClick(poi, room) {
     // Salva o estado
     savePlayerState();
     
-    // Importante: NÃO remove os botões de pontos de interesse
-    // Isso permite que o jogador continue explorando outros pontos de interesse
+    // ADICIONE ESTA LINHA: Verifica se novos botões de interação devem ser mostrados
+    createInteractionButtons(room);
     
     // Opcionalmente, podemos atualizar os botões para refletir mudanças de estado
-    // Por exemplo, marcar visualmente os pontos já examinados
     const poiButtons = document.querySelectorAll('.poi-btn');
     poiButtons.forEach(button => {
         if (button.dataset.poiId === poi.id) {
             button.classList.add('examined');
-            // Opcionalmente, podemos desabilitar o botão ou apenas marcá-lo como examinado
-            // button.disabled = true;
         }
     });
 }
+
 
 
 
