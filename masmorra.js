@@ -1556,6 +1556,14 @@ async function searchRoom() {
                 // Verifica se há uma chance de encontrar algo
                 const chance = searchEvent.chance || 1.0;
                 if (Math.random() <= chance) {
+                    // Verifica se o evento tem testes de atributos associados
+                    if (searchEvent.luckTest || searchEvent.skillTest || searchEvent.charismaTest) {
+                        await handleAttributeTestEvent(searchEvent, currentRoom);
+                        savePlayerState();
+                        return;
+                    }
+                    
+                    // Código existente para processar o evento normal
                     await addLogMessage(searchEvent.text, 1000);
                     
                     // Aplica efeitos, se houver
@@ -1687,6 +1695,7 @@ async function searchRoom() {
         await addLogMessage("Você não encontrou nada de interessante.", 800);
     }
 }
+
 
 
 // Função para tentar abrir uma porta
