@@ -1253,18 +1253,23 @@ async function handlePointOfInterestClick(poi, room) {
     startNewLogBlock(`Examinar ${poi.name}`);
     await addLogMessage(poi.description, 1000);
     
-    // Aplica efeitos, se houver
-    if (poi.effect) {
-        await applyEffects(poi.effect, room);
+    // Verifica se há testes de atributos associados
+    if (poi.luckTest || poi.skillTest || poi.charismaTest) {
+        await handleAttributeTestEvent(poi, room);
+    } else {
+        // Aplica efeitos, se houver
+        if (poi.effect) {
+            await applyEffects(poi.effect, room);
+        }
+        
+        // Verifica se há itens para coletar
+        if (poi.items && poi.items.length > 0) {
+            createCollectButton(poi.items[0]);
+        }
     }
     
     // Salva o estado
     savePlayerState();
-    
-    // Verifica se há itens para coletar
-    if (poi.items && poi.items.length > 0) {
-        createCollectButton(poi.items[0]);
-    }
     
     // Importante: NÃO remove os botões de pontos de interesse
     // Isso permite que o jogador continue explorando outros pontos de interesse
@@ -1280,6 +1285,7 @@ async function handlePointOfInterestClick(poi, room) {
         }
     });
 }
+
 
 
 
@@ -1911,15 +1917,144 @@ async function updatePlayerLuckInFirestore(newLuckValue) {
 }
 
 
-// Função auxiliar para rolar o teste de sorte
-async function testLuckRoll(currentLuck) {
-    // Rola 2d6
-    const roll = rollDice("2D6");
-    await addLogMessage(`Você rolou 2D6 e obteve <strong>${roll}</strong>.`, 800);
+// Função para iniciar um teste de sorte
+async function startLuckTest(context) {
+    const currentLuck = playerState.attributes.luck;
+    
+    startNewLogBlock("Teste de Sorte");
+    await addLogMessage(context.description, 800);
+    await addLogMessage(`Seu atributo de Sorte atual é <strong>${currentLuck}</strong>.`, 500);
+    await addLogMessage("Deseja fazer um teste de sorte? Se sim, pressione o botão de teste de sorte. Se não, pressione qualquer outro botão.", 800);
+    
+    // Cria o botão para testar a sorte
+    const luckTestContainer = document.createElement('div');
+    luckTestContainer.id = 'luck-test-container';
+    luckTestContainer.classList.add('luck-test-container');
+    
+    const testLuckButton = document.createElement('button');
+    testLuckButton.id = 'test-luck-button';
+    testLuckButton.textContent = 'Testar Sorte';
+    testLuckButton.classList.add('action-btn', 'test-luck-btn');
+    
+    luckTestContainer.appendChild(testLuckButton);
+    
+    // Adiciona o container à interface
+    const actionButtons = document.getElementById('action-buttons');
+    if (actionButtons) {
+        actionButtons.appendChild(luckTestContainer);
+    }
+    
+    // Retorna uma promessa que será resolvida quando o jogador fizer uma escolha
+    return new Promise((resolve) => {
+        // Adiciona evento de clique ao botão de testar sorte
+        testLuckButton.addEventListener('click', async () => {
+            // Remove o botão de testar sorte
+            document.getElementById('luck-test-container').remove();
+            
+            // Inicia o processo de rolagem de dados
+            const result = await performLuckTest(currentLuck);
+            
+            // Processa o resultado do teste
+            if (result) {
+                // Sucesso - aplica o efeito positivo
+                await addLogMessage(context.success.text, 800);
+                
+                // Aplica efeitos, se houver
+                if (context.success.effect) {
+                    await applyEffects(context.success.effect, context.room);
+                }
+                
+                // Adiciona itens, se houver
+                if (context.success.items && context.success.items.length > 0) {
+                    createCollectButton(context.success.items[0]);
+                }
+                
+                resolve(true);
+            } else {
+                // Falha - aplica o efeito negativo
+                await addLogMessage(context.failure.text, 800);
+                
+                // Aplica efeitos, se houver
+                if (context.failure.effect) {
+                    await applyEffects(context.failure.effect, context.room);
+                }
+                
+                // Aplica dano, se houver
+                if (context.failure.damage) {
+                    await applyDamageToPlayer(context.failure.damage);
+                }
+                
+                resolve(false);
+            }
+        });
+        
+        // Adiciona evento de clique a todos os outros botões para cancelar o teste
+        const otherButtons = document.querySelectorAll('button:not(#test-luck-button)');
+        otherButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove o botão de testar sorte
+                const luckTestContainer = document.getElementById('luck-test-container');
+                if (luckTestContainer) {
+                    luckTestContainer.remove();
+                }
+                
+                // Informa que o jogador decidiu não testar a sorte
+                addLogMessage("Você decide não arriscar sua sorte.", 500);
+                resolve(false);
+            }, { once: true });
+        });
+    });
+}
+
+// Função para realizar o teste de sorte com rolagens individuais
+async function performLuckTest(currentLuck) {
+    // Cria o botão para rolar o primeiro dado
+    const rollContainer = document.createElement('div');
+    rollContainer.id = 'roll-dice-container';
+    rollContainer.classList.add('roll-dice-container');
+    
+    const rollButton = document.createElement('button');
+    rollButton.id = 'roll-dice-button';
+    rollButton.textContent = 'Rolar Dado';
+    rollButton.classList.add('action-btn', 'roll-btn');
+    
+    rollContainer.appendChild(rollButton);
+    
+    // Adiciona o container à interface
+    const actionButtons = document.getElementById('action-buttons');
+    if (actionButtons) {
+        actionButtons.appendChild(rollContainer);
+    }
+    
+    // Primeira rolagem
+    const firstRoll = await new Promise(resolve => {
+        rollButton.addEventListener('click', () => {
+            const roll = Math.floor(Math.random() * 6) + 1; // 1d6
+            addLogMessage(`Você rolou o primeiro dado e obteve: <strong>${roll}</strong>`, 500);
+            resolve(roll);
+        }, { once: true });
+    });
+    
+    // Segunda rolagem
+    const secondRoll = await new Promise(resolve => {
+        rollButton.textContent = 'Rolar Segundo Dado';
+        rollButton.addEventListener('click', () => {
+            const roll = Math.floor(Math.random() * 6) + 1; // 1d6
+            addLogMessage(`Você rolou o segundo dado e obteve: <strong>${roll}</strong>`, 500);
+            resolve(roll);
+        }, { once: true });
+    });
+    
+    // Remove o botão de rolagem
+    document.getElementById('roll-dice-container').remove();
+    
+    // Calcula o resultado total
+    const totalRoll = firstRoll + secondRoll;
+    await addLogMessage(`Total dos dados: <strong>${totalRoll}</strong>`, 500);
     
     // Verifica se teve sorte (roll <= luck)
-    if (roll <= currentLuck) {
-        await addLogMessage(`<strong style='color: green;'>Você teve sorte!</strong> (${roll} ≤ ${currentLuck})`, 800);
+    if (totalRoll <= currentLuck) {
+        await addLogMessage(`<strong style='color: green;'>Você teve sorte!</strong> (${totalRoll} ≤ ${currentLuck})`, 800);
         
         // Reduz o atributo de sorte
         const newLuckValue = currentLuck - 1;
@@ -1929,14 +2064,220 @@ async function testLuckRoll(currentLuck) {
         // Atualiza o atributo de sorte no Firestore
         await updatePlayerLuckInFirestore(newLuckValue);
         
-        // Salva o estado do jogador
-        savePlayerState();
-        
         return true; // Indica que teve sorte
     } else {
-        await addLogMessage(`<strong style='color: red;'>Você não teve sorte!</strong> (${roll} > ${currentLuck})`, 800);
+        await addLogMessage(`<strong style='color: red;'>Você não teve sorte!</strong> (${totalRoll} > ${currentLuck})`, 800);
         return false; // Indica que não teve sorte
     }
+}
+
+// Função para realizar teste de habilidade
+async function testSkill(difficulty) {
+    const currentSkill = playerState.attributes.skill;
+    
+    startNewLogBlock("Teste de Habilidade");
+    await addLogMessage(`Seu atributo de Habilidade é <strong>${currentSkill}</strong>.`, 500);
+    await addLogMessage(`Dificuldade do teste: <strong>${difficulty}</strong>`, 500);
+    
+    // Cria o botão para rolar o dado
+    const rollContainer = document.createElement('div');
+    rollContainer.id = 'roll-dice-container';
+    rollContainer.classList.add('roll-dice-container');
+    
+    const rollButton = document.createElement('button');
+    rollButton.id = 'roll-dice-button';
+    rollButton.textContent = 'Rolar D20';
+    rollButton.classList.add('action-btn', 'roll-btn');
+    
+    rollContainer.appendChild(rollButton);
+    
+    // Adiciona o container à interface
+    const actionButtons = document.getElementById('action-buttons');
+    if (actionButtons) {
+        actionButtons.appendChild(rollContainer);
+    }
+    
+    // Rolagem do d20
+    const diceRoll = await new Promise(resolve => {
+        rollButton.addEventListener('click', () => {
+            const roll = Math.floor(Math.random() * 20) + 1; // 1d20
+            addLogMessage(`Você rolou 1D20 e obteve: <strong>${roll}</strong>`, 500);
+            resolve(roll);
+        }, { once: true });
+    });
+    
+    // Remove o botão de rolagem
+    document.getElementById('roll-dice-container').remove();
+    
+    // Calcula o resultado total
+    const totalRoll = diceRoll + currentSkill;
+    await addLogMessage(`Total: ${diceRoll} + ${currentSkill} = <strong>${totalRoll}</strong>`, 800);
+    
+    // Verifica se passou no teste (totalRoll >= difficulty)
+    if (totalRoll >= difficulty) {
+        await addLogMessage(`<strong style='color: green;'>Sucesso!</strong> (${totalRoll} ≥ ${difficulty})`, 800);
+        return true; // Indica que passou no teste
+    } else {
+        await addLogMessage(`<strong style='color: red;'>Falha!</strong> (${totalRoll} < ${difficulty})`, 800);
+        return false; // Indica que falhou no teste
+    }
+}
+
+// Função para realizar teste de carisma
+async function testCharisma(difficulty) {
+    const currentCharisma = playerState.attributes.charisma;
+    
+    startNewLogBlock("Teste de Carisma");
+    await addLogMessage(`Seu atributo de Carisma é <strong>${currentCharisma}</strong>.`, 500);
+    await addLogMessage(`Dificuldade do teste: <strong>${difficulty}</strong>`, 500);
+    
+    // Cria o botão para rolar o dado
+    const rollContainer = document.createElement('div');
+    rollContainer.id = 'roll-dice-container';
+    rollContainer.classList.add('roll-dice-container');
+    
+    const rollButton = document.createElement('button');
+    rollButton.id = 'roll-dice-button';
+    rollButton.textContent = 'Rolar D20';
+    rollButton.classList.add('action-btn', 'roll-btn');
+    
+    rollContainer.appendChild(rollButton);
+    
+    // Adiciona o container à interface
+    const actionButtons = document.getElementById('action-buttons');
+    if (actionButtons) {
+        actionButtons.appendChild(rollContainer);
+    }
+    
+    // Rolagem do d20
+    const diceRoll = await new Promise(resolve => {
+        rollButton.addEventListener('click', () => {
+            const roll = Math.floor(Math.random() * 20) + 1; // 1d20
+            addLogMessage(`Você rolou 1D20 e obteve: <strong>${roll}</strong>`, 500);
+            resolve(roll);
+        }, { once: true });
+    });
+    
+    // Remove o botão de rolagem
+    document.getElementById('roll-dice-container').remove();
+    
+    // Calcula o resultado total
+    const totalRoll = diceRoll + currentCharisma;
+    await addLogMessage(`Total: ${diceRoll} + ${currentCharisma} = <strong>${totalRoll}</strong>`, 800);
+    
+    // Verifica se passou no teste (totalRoll >= difficulty)
+    if (totalRoll >= difficulty) {
+        await addLogMessage(`<strong style='color: green;'>Sucesso!</strong> (${totalRoll} ≥ ${difficulty})`, 800);
+        return true; // Indica que passou no teste
+    } else {
+        await addLogMessage(`<strong style='color: red;'>Falha!</strong> (${totalRoll} < ${difficulty})`, 800);
+        return false; // Indica que falhou no teste
+    }
+}
+
+// Função para processar eventos que podem acionar testes de atributos
+async function handleAttributeTestEvent(event, room) {
+    await addLogMessage(event.text, 1000);
+    
+    // Verifica se o evento tem um teste de sorte associado
+    if (event.luckTest) {
+        const context = {
+            description: event.luckTest.description || "Você precisa testar sua sorte para ver o que acontece.",
+            room: room,
+            success: event.luckTest.success,
+            failure: event.luckTest.failure
+        };
+        
+        // Inicia o teste de sorte
+        const result = await startLuckTest(context);
+        // O resultado já foi processado dentro da função startLuckTest
+    }
+    
+    // Verifica se o evento tem um teste de habilidade associado
+    else if (event.skillTest) {
+        await addLogMessage(event.skillTest.description || "Você precisa testar sua habilidade.", 800);
+        const result = await testSkill(event.skillTest.difficulty);
+        
+        if (result) {
+            // Sucesso
+            await addLogMessage(event.skillTest.success.text, 800);
+            
+            // Aplica efeitos, se houver
+            if (event.skillTest.success.effect) {
+                await applyEffects(event.skillTest.success.effect, room);
+            }
+            
+            // Adiciona itens, se houver
+            if (event.skillTest.success.items && event.skillTest.success.items.length > 0) {
+                createCollectButton(event.skillTest.success.items[0]);
+            }
+        } else {
+            // Falha
+            await addLogMessage(event.skillTest.failure.text, 800);
+            
+            // Aplica efeitos, se houver
+            if (event.skillTest.failure.effect) {
+                await applyEffects(event.skillTest.failure.effect, room);
+            }
+            
+            // Aplica dano, se houver
+            if (event.skillTest.failure.damage) {
+                await applyDamageToPlayer(event.skillTest.failure.damage);
+            }
+        }
+    }
+    
+    // Verifica se o evento tem um teste de carisma associado
+    else if (event.charismaTest) {
+        await addLogMessage(event.charismaTest.description || "Você precisa testar seu carisma.", 800);
+        const result = await testCharisma(event.charismaTest.difficulty);
+        
+        if (result) {
+            // Sucesso
+            await addLogMessage(event.charismaTest.success.text, 800);
+            
+            // Aplica efeitos, se houver
+            if (event.charismaTest.success.effect) {
+                await applyEffects(event.charismaTest.success.effect, room);
+            }
+            
+            // Adiciona itens, se houver
+            if (event.charismaTest.success.items && event.charismaTest.success.items.length > 0) {
+                createCollectButton(event.charismaTest.success.items[0]);
+            }
+        } else {
+            // Falha
+            await addLogMessage(event.charismaTest.failure.text, 800);
+            
+            // Aplica efeitos, se houver
+            if (event.charismaTest.failure.effect) {
+                await applyEffects(event.charismaTest.failure.effect, room);
+            }
+            
+            // Aplica dano, se houver
+            if (event.charismaTest.failure.damage) {
+                await applyDamageToPlayer(event.charismaTest.failure.damage);
+            }
+        }
+    }
+    
+    // Aplica efeitos gerais, se houver
+    if (event.effect) {
+        await applyEffects(event.effect, room);
+    }
+    
+    // Processa dano geral, se houver
+    if (event.damage) {
+        await applyDamageToPlayer(event.damage);
+    }
+    
+    // Cria botões para itens encontrados
+    if (event.items && event.items.length > 0) {
+        createCollectButton(event.items[0]);
+    }
+    
+    // Salva o estado
+    savePlayerState();
 }
 
 
