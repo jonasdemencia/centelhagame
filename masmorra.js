@@ -2045,12 +2045,28 @@ async function updatePlayerLuckInFirestore(newLuckValue) {
 
 // Função para iniciar um teste de sorte
 async function startLuckTest(context) {
+    // Garante que playerState.attributes existe
+    if (!playerState.attributes) {
+        console.warn("Atributos não definidos, usando valores padrão");
+        playerState.attributes = {
+            luck: playerData?.luck?.total || 7,
+            skill: playerData?.skill?.total || 7,
+            charisma: playerData?.charisma?.total || 7
+        };
+    }
+    
     const currentLuck = playerState.attributes.luck;
     
     startNewLogBlock("Teste de Sorte");
     await addLogMessage(context.description, 800);
     await addLogMessage(`Seu atributo de Sorte atual é <strong>${currentLuck}</strong>.`, 500);
     await addLogMessage("Deseja fazer um teste de sorte? Se sim, pressione o botão de teste de sorte. Se não, pressione qualquer outro botão.", 800);
+    
+    // Remove qualquer botão de teste de sorte existente para evitar duplicação
+    const existingLuckContainer = document.getElementById('luck-test-container');
+    if (existingLuckContainer) {
+        existingLuckContainer.remove();
+    }
     
     // Cria o botão para testar a sorte
     const luckTestContainer = document.createElement('div');
@@ -2076,6 +2092,9 @@ async function startLuckTest(context) {
         testLuckButton.addEventListener('click', async () => {
             // Remove o botão de testar sorte
             document.getElementById('luck-test-container').remove();
+            
+            // Remove também o botão de interação original
+            removeInteractionButtons();
             
             // Inicia o processo de rolagem de dados
             const result = await performLuckTest(currentLuck);
@@ -2132,8 +2151,16 @@ async function startLuckTest(context) {
     });
 }
 
+
+// Função para realizar o teste de sorte com rolagens individuais
 // Função para realizar o teste de sorte com rolagens individuais
 async function performLuckTest(currentLuck) {
+    // Remove qualquer botão de rolagem existente
+    const existingRollContainer = document.getElementById('roll-dice-container');
+    if (existingRollContainer) {
+        existingRollContainer.remove();
+    }
+    
     // Cria o botão para rolar o primeiro dado
     const rollContainer = document.createElement('div');
     rollContainer.id = 'roll-dice-container';
@@ -2172,7 +2199,10 @@ async function performLuckTest(currentLuck) {
     });
     
     // Remove o botão de rolagem
-    document.getElementById('roll-dice-container').remove();
+    const rollDiceContainer = document.getElementById('roll-dice-container');
+    if (rollDiceContainer) {
+        rollDiceContainer.remove();
+    }
     
     // Calcula o resultado total
     const totalRoll = firstRoll + secondRoll;
@@ -2197,13 +2227,30 @@ async function performLuckTest(currentLuck) {
     }
 }
 
+
 // Função para realizar teste de habilidade
 async function testSkill(difficulty) {
+    // Garante que playerState.attributes existe
+    if (!playerState.attributes) {
+        console.warn("Atributos não definidos, usando valores padrão");
+        playerState.attributes = {
+            luck: playerData?.luck?.total || 7,
+            skill: playerData?.skill?.total || 7,
+            charisma: playerData?.charisma?.total || 7
+        };
+    }
+    
     const currentSkill = playerState.attributes.skill;
     
     startNewLogBlock("Teste de Habilidade");
     await addLogMessage(`Seu atributo de Habilidade é <strong>${currentSkill}</strong>.`, 500);
     await addLogMessage(`Dificuldade do teste: <strong>${difficulty}</strong>`, 500);
+    
+    // Remove qualquer botão de rolagem existente
+    const existingRollContainer = document.getElementById('roll-dice-container');
+    if (existingRollContainer) {
+        existingRollContainer.remove();
+    }
     
     // Cria o botão para rolar o dado
     const rollContainer = document.createElement('div');
@@ -2234,6 +2281,9 @@ async function testSkill(difficulty) {
     
     // Remove o botão de rolagem
     document.getElementById('roll-dice-container').remove();
+    
+    // Remove também o botão de interação original
+    removeInteractionButtons();
     
     // Calcula o resultado total
     const totalRoll = diceRoll + currentSkill;
@@ -2249,13 +2299,30 @@ async function testSkill(difficulty) {
     }
 }
 
+
 // Função para realizar teste de carisma
 async function testCharisma(difficulty) {
+    // Garante que playerState.attributes existe
+    if (!playerState.attributes) {
+        console.warn("Atributos não definidos, usando valores padrão");
+        playerState.attributes = {
+            luck: playerData?.luck?.total || 7,
+            skill: playerData?.skill?.total || 7,
+            charisma: playerData?.charisma?.total || 7
+        };
+    }
+    
     const currentCharisma = playerState.attributes.charisma;
     
     startNewLogBlock("Teste de Carisma");
     await addLogMessage(`Seu atributo de Carisma é <strong>${currentCharisma}</strong>.`, 500);
     await addLogMessage(`Dificuldade do teste: <strong>${difficulty}</strong>`, 500);
+    
+    // Remove qualquer botão de rolagem existente
+    const existingRollContainer = document.getElementById('roll-dice-container');
+    if (existingRollContainer) {
+        existingRollContainer.remove();
+    }
     
     // Cria o botão para rolar o dado
     const rollContainer = document.createElement('div');
@@ -2287,6 +2354,9 @@ async function testCharisma(difficulty) {
     // Remove o botão de rolagem
     document.getElementById('roll-dice-container').remove();
     
+    // Remove também o botão de interação original
+    removeInteractionButtons();
+    
     // Calcula o resultado total
     const totalRoll = diceRoll + currentCharisma;
     await addLogMessage(`Total: ${diceRoll} + ${currentCharisma} = <strong>${totalRoll}</strong>`, 800);
@@ -2300,6 +2370,7 @@ async function testCharisma(difficulty) {
         return false; // Indica que falhou no teste
     }
 }
+
 
 // Função para processar eventos que podem acionar testes de atributos
 async function handleAttributeTestEvent(event, room) {
