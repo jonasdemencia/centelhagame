@@ -1287,8 +1287,8 @@ async function handlePointOfInterestClick(poi, room) {
     // Salva o estado
     savePlayerState();
     
-    // ADICIONE ESTA LINHA: Verifica se novos botões de interação devem ser mostrados
-    createInteractionButtons(room);
+    // REMOVA ESTA LINHA: Não crie botões de interação automaticamente
+    // createInteractionButtons(room);
     
     // Opcionalmente, podemos atualizar os botões para refletir mudanças de estado
     const poiButtons = document.querySelectorAll('.poi-btn');
@@ -1298,9 +1298,6 @@ async function handlePointOfInterestClick(poi, room) {
         }
     });
 }
-
-
-
 
 
 
