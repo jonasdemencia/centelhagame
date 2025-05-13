@@ -653,6 +653,7 @@ async function addLogMessage(message, delay = 0, typingSpeed = 30) {
         const p = document.createElement('p');
         currentLogBlock.appendChild(p);
         let index = 0;
+        const logContainer = document.getElementById("exploration-log-content");
 
         function typeWriter() {
             if (index < message.length) {
@@ -670,16 +671,18 @@ async function addLogMessage(message, delay = 0, typingSpeed = 30) {
                     p.innerHTML += message.charAt(index);
                     index++;
                 }
+                
+                // Faz o scroll para o final após cada caractere
+                logContainer.scrollTop = logContainer.scrollHeight;
+                
                 setTimeout(typeWriter, typingSpeed);
             } else {
                 if (delay > 0) {
                     setTimeout(() => {
-                        const logContainer = document.getElementById("exploration-log-content");
                         logContainer.scrollTop = logContainer.scrollHeight;
                         resolve();
                     }, delay);
                 } else {
-                    const logContainer = document.getElementById("exploration-log-content");
                     logContainer.scrollTop = logContainer.scrollHeight;
                     resolve();
                 }
@@ -690,12 +693,12 @@ async function addLogMessage(message, delay = 0, typingSpeed = 30) {
             typeWriter();
         } else {
             p.innerHTML = message;
-            const logContainer = document.getElementById("exploration-log-content");
             logContainer.scrollTop = logContainer.scrollHeight;
             resolve();
         }
     });
 }
+
 
 function drawMap() {
     const mapSvg = document.getElementById("dungeon-map");
