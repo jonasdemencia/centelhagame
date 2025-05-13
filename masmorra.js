@@ -2060,42 +2060,33 @@ async function startLuckTest(context) {
     startNewLogBlock("Teste de Sorte");
     await addLogMessage(context.description, 800);
     await addLogMessage(`Seu atributo de Sorte atual é <strong>${currentLuck}</strong>.`, 500);
-    await addLogMessage("Deseja fazer um teste de sorte? Se sim, pressione o botão de teste de sorte. Se não, pressione qualquer outro botão.", 800);
+    await addLogMessage("Deseja fazer um teste de sorte? Se sim, pressione o botão de rolar dado. Se não, pressione qualquer outro botão.", 800);
     
-    // Remove qualquer botão de teste de sorte existente para evitar duplicação
-    const existingLuckContainer = document.getElementById('luck-test-container');
-    if (existingLuckContainer) {
-        existingLuckContainer.remove();
-    }
+    // Remove o botão de interação original
+    removeInteractionButtons();
     
-    // Cria o botão para testar a sorte
-    const luckTestContainer = document.createElement('div');
-    luckTestContainer.id = 'luck-test-container';
-    luckTestContainer.classList.add('luck-test-container');
+    // Cria diretamente o botão para rolar o dado
+    const rollContainer = document.createElement('div');
+    rollContainer.id = 'roll-dice-container';
+    rollContainer.classList.add('roll-dice-container');
     
-    const testLuckButton = document.createElement('button');
-    testLuckButton.id = 'test-luck-button';
-    testLuckButton.textContent = 'Testar Sorte';
-    testLuckButton.classList.add('action-btn', 'test-luck-btn');
+    const rollButton = document.createElement('button');
+    rollButton.id = 'roll-dice-button';
+    rollButton.textContent = 'Rolar Dado';
+    rollButton.classList.add('action-btn', 'roll-btn');
     
-    luckTestContainer.appendChild(testLuckButton);
+    rollContainer.appendChild(rollButton);
     
     // Adiciona o container à interface
     const actionButtons = document.getElementById('action-buttons');
     if (actionButtons) {
-        actionButtons.appendChild(luckTestContainer);
+        actionButtons.appendChild(rollContainer);
     }
     
     // Retorna uma promessa que será resolvida quando o jogador fizer uma escolha
     return new Promise((resolve) => {
-        // Adiciona evento de clique ao botão de testar sorte
-        testLuckButton.addEventListener('click', async () => {
-            // Remove o botão de testar sorte
-            document.getElementById('luck-test-container').remove();
-            
-            // Remove também o botão de interação original
-            removeInteractionButtons();
-            
+        // Adiciona evento de clique ao botão de rolar dado
+        rollButton.addEventListener('click', async () => {
             // Inicia o processo de rolagem de dados
             const result = await performLuckTest(currentLuck);
             
@@ -2134,13 +2125,13 @@ async function startLuckTest(context) {
         });
         
         // Adiciona evento de clique a todos os outros botões para cancelar o teste
-        const otherButtons = document.querySelectorAll('button:not(#test-luck-button)');
+        const otherButtons = document.querySelectorAll('button:not(#roll-dice-button)');
         otherButtons.forEach(button => {
             button.addEventListener('click', () => {
-                // Remove o botão de testar sorte
-                const luckTestContainer = document.getElementById('luck-test-container');
-                if (luckTestContainer) {
-                    luckTestContainer.remove();
+                // Remove o botão de rolar dado
+                const rollDiceContainer = document.getElementById('roll-dice-container');
+                if (rollDiceContainer) {
+                    rollDiceContainer.remove();
                 }
                 
                 // Informa que o jogador decidiu não testar a sorte
