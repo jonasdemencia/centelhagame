@@ -1265,10 +1265,6 @@ function removePointsOfInterestButtons() {
 
 // Função para lidar com o clique em um ponto de interesse
 async function handlePointOfInterestClick(poi, room) {
-    // Adiciona log para depuração
-    console.log("POI clicado:", poi);
-    console.log("POI tem teste de carisma?", !!poi.charismaTest);
-    
     // Adiciona a descrição do ponto de interesse ao log
     startNewLogBlock(`Examinar ${poi.name}`);
     await addLogMessage(poi.description, 1000);
@@ -1278,69 +1274,21 @@ async function handlePointOfInterestClick(poi, room) {
         await applyEffects(poi.effect, room);
     }
     
-    // Verifica se há testes de atributos associados no ponto de interesse
-    if (poi.charismaTest) {
-        // Remove botões de interação existentes
-        removeInteractionButtons();
-        
-        // Cria container para os botões
-        const interactionsContainer = document.createElement('div');
-        interactionsContainer.id = 'interaction-buttons';
-        interactionsContainer.classList.add('interaction-buttons');
-        
-        // Adiciona botão de teste de carisma
-        const charismaBtn = document.createElement('button');
-        charismaBtn.textContent = 'Testar Carisma';
-        charismaBtn.classList.add('action-btn', 'interaction-btn', 'test-charisma-btn');
-        charismaBtn.addEventListener('click', async () => {
-            await addLogMessage(poi.charismaTest.description || "Você precisa testar seu carisma.", 800);
-            const result = await testCharisma(poi.charismaTest.difficulty);
-            
-            if (result) {
-                // Sucesso
-                await addLogMessage(poi.charismaTest.success.text, 800);
-                
-                // Aplica efeitos, se houver
-                if (poi.charismaTest.success.effect) {
-                    await applyEffects(poi.charismaTest.success.effect, room);
-                }
-                
-                // Adiciona itens, se houver
-                if (poi.charismaTest.success.items && poi.charismaTest.success.items.length > 0) {
-                    createCollectButton(poi.charismaTest.success.items[0]);
-                }
-            } else {
-                // Falha
-                await addLogMessage(poi.charismaTest.failure.text, 800);
-                
-                // Aplica efeitos, se houver
-                if (poi.charismaTest.failure.effect) {
-                    await applyEffects(poi.charismaTest.failure.effect, room);
-                }
-                
-                // Aplica dano, se houver
-                if (poi.charismaTest.failure.damage) {
-                    await applyDamageToPlayer(poi.charismaTest.failure.damage);
-                }
-            }
-            
-            // Remove os botões de interação após o teste
-            removeInteractionButtons();
-        });
-        interactionsContainer.appendChild(charismaBtn);
-        
-        // Adiciona o container à interface
-        const actionButtons = document.getElementById('action-buttons');
-        if (actionButtons) {
-            actionButtons.appendChild(interactionsContainer);
-        }
-    } else if (poi.items && poi.items.length > 0) {
+    // Verifica se há testes de atributos associados
+    if (poi.luckTest || poi.skillTest || poi.charismaTest) {
+        await handleAttributeTestEvent(poi, room);
+    } else {
         // Verifica se há itens para coletar
-        createCollectButton(poi.items[0]);
+        if (poi.items && poi.items.length > 0) {
+            createCollectButton(poi.items[0]);
+        }
     }
     
     // Salva o estado
     savePlayerState();
+    
+    // ADICIONE ESTA LINHA: Verifica se novos botões de interação devem ser mostrados
+    createInteractionButtons(room);
     
     // Opcionalmente, podemos atualizar os botões para refletir mudanças de estado
     const poiButtons = document.querySelectorAll('.poi-btn');
@@ -1350,6 +1298,8 @@ async function handlePointOfInterestClick(poi, room) {
         }
     });
 }
+
+
 
 
 
