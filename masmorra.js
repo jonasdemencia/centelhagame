@@ -1333,6 +1333,7 @@ function createInteractionButtons(room) {
     for (const interaction of room.exploration.interactions) {
         // Verifica se a condição é atendida
         if (evaluateCondition(interaction.condition, room.explorationState)) {
+            // Verifica apenas um tipo de teste por interação, baseado na ação definida
             if (interaction.result.action === "testLuck" && !needsLuckTest) {
                 needsLuckTest = true;
                 luckTestContext = {
@@ -1476,6 +1477,7 @@ function createInteractionButtons(room) {
         }
     }
 }
+
 
 
 // Função para remover botões de interação
