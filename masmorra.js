@@ -1269,12 +1269,12 @@ async function handlePointOfInterestClick(poi, room) {
     startNewLogBlock(`Examinar ${poi.name}`);
     await addLogMessage(poi.description, 1000);
     
-    // Aplica efeitos, se houver - MOVA ISSO PARA ANTES DOS TESTES
+    // Aplica efeitos, se houver
     if (poi.effect) {
         await applyEffects(poi.effect, room);
     }
     
-    // Verifica se há testes de atributos associados
+    // Verifica se há testes de atributos associados diretamente ao POI
     if (poi.luckTest || poi.skillTest || poi.charismaTest) {
         await handleAttributeTestEvent(poi, room);
     } else {
@@ -1282,13 +1282,14 @@ async function handlePointOfInterestClick(poi, room) {
         if (poi.items && poi.items.length > 0) {
             createCollectButton(poi.items[0]);
         }
+        
+        // ADICIONE ESTA LINHA: Cria botões de interação que podem ter sido desbloqueados
+        // pelo efeito do ponto de interesse (como o teste de carisma da estátua)
+        createInteractionButtons(room);
     }
     
     // Salva o estado
     savePlayerState();
-    
-    // REMOVA ESTA LINHA: Não chame createInteractionButtons aqui
-    // createInteractionButtons(room);
     
     // Opcionalmente, podemos atualizar os botões para refletir mudanças de estado
     const poiButtons = document.querySelectorAll('.poi-btn');
@@ -1298,6 +1299,7 @@ async function handlePointOfInterestClick(poi, room) {
         }
     });
 }
+
 
 
 
