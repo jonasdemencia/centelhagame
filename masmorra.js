@@ -1274,8 +1274,12 @@ async function handlePointOfInterestClick(poi, room) {
         await applyEffects(poi.effect, room);
     }
     
-    // Verifica se há testes de atributos associados
-    if (poi.luckTest || poi.skillTest || poi.charismaTest) {
+    // Verifica se há testes de atributos específicos associados
+    if (poi.luckTest) {
+        await handleAttributeTestEvent(poi, room);
+    } else if (poi.skillTest) {
+        await handleAttributeTestEvent(poi, room);
+    } else if (poi.charismaTest) {
         await handleAttributeTestEvent(poi, room);
     } else {
         // Verifica se há itens para coletar
@@ -1287,7 +1291,7 @@ async function handlePointOfInterestClick(poi, room) {
     // Salva o estado
     savePlayerState();
     
-    // ADICIONE ESTA LINHA: Verifica se novos botões de interação devem ser mostrados
+    // Verifica se novos botões de interação devem ser mostrados
     createInteractionButtons(room);
     
     // Opcionalmente, podemos atualizar os botões para refletir mudanças de estado
@@ -1298,6 +1302,7 @@ async function handlePointOfInterestClick(poi, room) {
         }
     });
 }
+
 
 
 
