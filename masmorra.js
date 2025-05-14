@@ -1309,14 +1309,13 @@ async function handlePointOfInterestClick(poi, room) {
 
 
 
-// Função para criar botões de interação
 function createInteractionButtons(room) {
     // Remove botões de interação existentes
     removeInteractionButtons();
-    
+
     // Verifica se a sala tem interações definidas
     if (!room.exploration || !room.exploration.interactions) return;
-    
+
     // Inicializa o estado de exploração se não existir
     if (!room.explorationState) {
         if (room.exploration.states && room.exploration.states.initial) {
@@ -1325,105 +1324,96 @@ function createInteractionButtons(room) {
             room.explorationState = {};
         }
     }
-    
-    // Verifica se há testes disponíveis com base no estado atual
-    let needsLuckTest = false;
-    let needsSkillTest = false;
-    let needsCharismaTest = false;
-    let luckTestContext = null;
-    let skillTestContext = null;
-    let charismaTestContext = null;
-    
-  // Procura a primeira interação válida, priorizando carisma > habilidade > sorte
-let selectedInteraction = null;
-for (const interaction of room.exploration.interactions) {
-    if (evaluateCondition(interaction.condition, room.explorationState)) {
-        if (interaction.result.action === "testCharisma") {
-            selectedInteraction = { type: "charisma", interaction };
-            break; // prioridade máxima
-        }
-        if (interaction.result.action === "testSkill" && !selectedInteraction) {
-            selectedInteraction = { type: "skill", interaction };
-            // Não faz break, pode aparecer um de carisma depois
-        }
-        if (interaction.result.action === "testLuck" && !selectedInteraction) {
-            selectedInteraction = { type: "luck", interaction };
-            // Não faz break, pode aparecer de skill ou carisma depois
+
+    // Procura a primeira interação válida, priorizando carisma > habilidade > sorte
+    let selectedInteraction = null;
+    for (const interaction of room.exploration.interactions) {
+        if (evaluateCondition(interaction.condition, room.explorationState)) {
+            if (interaction.result.action === "testCharisma") {
+                selectedInteraction = { type: "charisma", interaction };
+                break; // prioridade máxima
+            }
+            if (interaction.result.action === "testSkill" && !selectedInteraction) {
+                selectedInteraction = { type: "skill", interaction };
+            }
+            if (interaction.result.action === "testLuck" && !selectedInteraction) {
+                selectedInteraction = { type: "luck", interaction };
+            }
         }
     }
-}
 
-// Cria apenas o botão do teste com maior prioridade encontrado
-const interactionsContainer = document.createElement('div');
-interactionsContainer.id = 'interaction-buttons';
-interactionsContainer.classList.add('interaction-buttons');
-let hasInteractions = false;
+    // Cria apenas o botão do teste com maior prioridade encontrado
+    let hasInteractions = false;
+    const interactionsContainer = document.createElement('div');
+    interactionsContainer.id = 'interaction-buttons';
+    interactionsContainer.classList.add('interaction-buttons');
 
-if (selectedInteraction) {
-    if (selectedInteraction.type === "charisma") {
-        const charismaTest = selectedInteraction.interaction.result.charismaTest;
-        const charismaBtn = document.createElement('button');
-        charismaBtn.textContent = 'Testar Carisma';
-        charismaBtn.classList.add('action-btn', 'interaction-btn', 'test-charisma-btn');
-        charismaBtn.addEventListener('click', async () => {
-            await addLogMessage(charismaTest.description, 800);
-            const result = await testCharisma(charismaTest.difficulty);
+    if (selectedInteraction) {
+        if (selectedInteraction.type === "charisma") {
+            const charismaTest = selectedInteraction.interaction.result.charismaTest;
+            const charismaBtn = document.createElement('button');
+            charismaBtn.textContent = 'Testar Carisma';
+            charismaBtn.classList.add('action-btn', 'interaction-btn', 'test-charisma-btn');
+            charismaBtn.addEventListener('click', async () => {
+                await addLogMessage(charismaTest.description, 800);
+                const result = await testCharisma(charismaTest.difficulty);
 
-            if (result) {
-                await addLogMessage(charismaTest.success.text, 800);
-                if (charismaTest.success.effect) await applyEffects(charismaTest.success.effect, room);
-                if (charismaTest.success.items && charismaTest.success.items.length > 0) createCollectButton(charismaTest.success.items[0]);
-            } else {
-                await addLogMessage(charismaTest.failure.text, 800);
-                if (charismaTest.failure.effect) await applyEffects(charismaTest.failure.effect, room);
-                if (charismaTest.failure.damage) await applyDamageToPlayer(charismaTest.failure.damage);
-            }
-            createInteractionButtons(room);
-        });
-        interactionsContainer.appendChild(charismaBtn);
-        hasInteractions = true;
-    } else if (selectedInteraction.type === "skill") {
-        const skillTest = selectedInteraction.interaction.result.skillTest;
-        const skillBtn = document.createElement('button');
-        skillBtn.textContent = 'Testar Habilidade';
-        skillBtn.classList.add('action-btn', 'interaction-btn', 'test-skill-btn');
-        skillBtn.addEventListener('click', async () => {
-            await addLogMessage(skillTest.description, 800);
-            const result = await testSkill(skillTest.difficulty);
+                if (result) {
+                    await addLogMessage(charismaTest.success.text, 800);
+                    if (charismaTest.success.effect) await applyEffects(charismaTest.success.effect, room);
+                    if (charismaTest.success.items && charismaTest.success.items.length > 0) createCollectButton(charismaTest.success.items[0]);
+                } else {
+                    await addLogMessage(charismaTest.failure.text, 800);
+                    if (charismaTest.failure.effect) await applyEffects(charismaTest.failure.effect, room);
+                    if (charismaTest.failure.damage) await applyDamageToPlayer(charismaTest.failure.damage);
+                }
+                createInteractionButtons(room);
+            });
+            interactionsContainer.appendChild(charismaBtn);
+            hasInteractions = true;
+        } else if (selectedInteraction.type === "skill") {
+            const skillTest = selectedInteraction.interaction.result.skillTest;
+            const skillBtn = document.createElement('button');
+            skillBtn.textContent = 'Testar Habilidade';
+            skillBtn.classList.add('action-btn', 'interaction-btn', 'test-skill-btn');
+            skillBtn.addEventListener('click', async () => {
+                await addLogMessage(skillTest.description, 800);
+                const result = await testSkill(skillTest.difficulty);
 
-            if (result) {
-                await addLogMessage(skillTest.success.text, 800);
-                if (skillTest.success.effect) await applyEffects(skillTest.success.effect, room);
-                if (skillTest.success.items && skillTest.success.items.length > 0) createCollectButton(skillTest.success.items[0]);
-            } else {
-                await addLogMessage(skillTest.failure.text, 800);
-                if (skillTest.failure.effect) await applyEffects(skillTest.failure.effect, room);
-                if (skillTest.failure.damage) await applyDamageToPlayer(skillTest.failure.damage);
-            }
-            createInteractionButtons(room);
-        });
-        interactionsContainer.appendChild(skillBtn);
-        hasInteractions = true;
-    } else if (selectedInteraction.type === "luck") {
-        const luckTest = selectedInteraction.interaction.result.luckTest;
-        const luckBtn = document.createElement('button');
-        luckBtn.textContent = 'Testar Sorte';
-        luckBtn.classList.add('action-btn', 'interaction-btn', 'test-luck-btn');
-        luckBtn.addEventListener('click', () => startLuckTest({
-            description: luckTest.description,
-            room: room,
-            success: luckTest.success,
-            failure: luckTest.failure
-        }));
-        interactionsContainer.appendChild(luckBtn);
-        hasInteractions = true;
+                if (result) {
+                    await addLogMessage(skillTest.success.text, 800);
+                    if (skillTest.success.effect) await applyEffects(skillTest.success.effect, room);
+                    if (skillTest.success.items && skillTest.success.items.length > 0) createCollectButton(skillTest.success.items[0]);
+                } else {
+                    await addLogMessage(skillTest.failure.text, 800);
+                    if (skillTest.failure.effect) await applyEffects(skillTest.failure.effect, room);
+                    if (skillTest.failure.damage) await applyDamageToPlayer(skillTest.failure.damage);
+                }
+                createInteractionButtons(room);
+            });
+            interactionsContainer.appendChild(skillBtn);
+            hasInteractions = true;
+        } else if (selectedInteraction.type === "luck") {
+            const luckTest = selectedInteraction.interaction.result.luckTest;
+            const luckBtn = document.createElement('button');
+            luckBtn.textContent = 'Testar Sorte';
+            luckBtn.classList.add('action-btn', 'interaction-btn', 'test-luck-btn');
+            luckBtn.addEventListener('click', () => startLuckTest({
+                description: luckTest.description,
+                room: room,
+                success: luckTest.success,
+                failure: luckTest.failure
+            }));
+            interactionsContainer.appendChild(luckBtn);
+            hasInteractions = true;
+        }
     }
-}
 
-if (hasInteractions) {
-    const actionButtons = document.getElementById('action-buttons');
-    if (actionButtons) {
-        actionButtons.appendChild(interactionsContainer);
+    if (hasInteractions) {
+        const actionButtons = document.getElementById('action-buttons');
+        if (actionButtons) {
+            actionButtons.appendChild(interactionsContainer);
+        }
     }
 }
     
