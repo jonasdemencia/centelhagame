@@ -1334,39 +1334,43 @@ function createInteractionButtons(room) {
     let skillTestContext = null;
     let charismaTestContext = null;
     
-    // Verifica cada interação para determinar quais testes estão disponíveis
-    for (const interaction of room.exploration.interactions) {
-        // Verifica se a condição é atendida
-        if (evaluateCondition(interaction.condition, room.explorationState)) {
-            if (interaction.result.action === "testLuck" && !needsLuckTest) {
-                needsLuckTest = true;
-                luckTestContext = {
-                    description: interaction.result.luckTest.description,
-                    room: room,
-                    success: interaction.result.luckTest.success,
-                    failure: interaction.result.luckTest.failure
-                };
-            } else if (interaction.result.action === "testSkill" && !needsSkillTest) {
-                needsSkillTest = true;
-                skillTestContext = {
-                    description: interaction.result.skillTest.description,
-                    difficulty: interaction.result.skillTest.difficulty,
-                    room: room,
-                    success: interaction.result.skillTest.success,
-                    failure: interaction.result.skillTest.failure
-                };
-            } else if (interaction.result.action === "testCharisma" && !needsCharismaTest) {
-                needsCharismaTest = true;
-                charismaTestContext = {
-                    description: interaction.result.charismaTest.description,
-                    difficulty: interaction.result.charismaTest.difficulty,
-                    room: room,
-                    success: interaction.result.charismaTest.success,
-                    failure: interaction.result.charismaTest.failure
-                };
-            }
+   // Verifica cada interação para determinar quais testes estão disponíveis, priorizando carisma > habilidade > sorte
+for (const interaction of room.exploration.interactions) {
+    // Verifica se a condição é atendida
+    if (evaluateCondition(interaction.condition, room.explorationState)) {
+        if (interaction.result.action === "testCharisma") {
+            needsCharismaTest = true;
+            charismaTestContext = {
+                description: interaction.result.charismaTest.description,
+                difficulty: interaction.result.charismaTest.difficulty,
+                room: room,
+                success: interaction.result.charismaTest.success,
+                failure: interaction.result.charismaTest.failure
+            };
+            // Prioridade máxima: se houver teste de carisma, não verifica mais nada
+            break;
+        } else if (interaction.result.action === "testSkill" && !needsSkillTest && !needsCharismaTest) {
+            needsSkillTest = true;
+            skillTestContext = {
+                description: interaction.result.skillTest.description,
+                difficulty: interaction.result.skillTest.difficulty,
+                room: room,
+                success: interaction.result.skillTest.success,
+                failure: interaction.result.skillTest.failure
+            };
+            // Não faz break, pois pode haver um de carisma depois
+        } else if (interaction.result.action === "testLuck" && !needsLuckTest && !needsSkillTest && !needsCharismaTest) {
+            needsLuckTest = true;
+            luckTestContext = {
+                description: interaction.result.luckTest.description,
+                room: room,
+                success: interaction.result.luckTest.success,
+                failure: interaction.result.luckTest.failure
+            };
+            // Não faz break, pois pode haver de skill ou carisma depois
         }
     }
+}
     
     // Cria botões para os testes disponíveis
     const interactionsContainer = document.createElement('div');
