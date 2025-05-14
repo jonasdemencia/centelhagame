@@ -2370,56 +2370,8 @@ async function testCharisma(difficulty) {
 async function handleAttributeTestEvent(event, room) {
     await addLogMessage(event.text, 1000);
     
-    // Verifica se o evento tem um teste de sorte associado
-    if (event.luckTest) {
-        const context = {
-            description: event.luckTest.description || "Você precisa testar sua sorte para ver o que acontece.",
-            room: room,
-            success: event.luckTest.success,
-            failure: event.luckTest.failure
-        };
-        
-        // Inicia o teste de sorte
-        const result = await startLuckTest(context);
-        // O resultado já foi processado dentro da função startLuckTest
-    }
-    
-    // Verifica se o evento tem um teste de habilidade associado
-    else if (event.skillTest) {
-        await addLogMessage(event.skillTest.description || "Você precisa testar sua habilidade.", 800);
-        const result = await testSkill(event.skillTest.difficulty);
-        
-        if (result) {
-            // Sucesso
-            await addLogMessage(event.skillTest.success.text, 800);
-            
-            // Aplica efeitos, se houver
-            if (event.skillTest.success.effect) {
-                await applyEffects(event.skillTest.success.effect, room);
-            }
-            
-            // Adiciona itens, se houver
-            if (event.skillTest.success.items && event.skillTest.success.items.length > 0) {
-                createCollectButton(event.skillTest.success.items[0]);
-            }
-        } else {
-            // Falha
-            await addLogMessage(event.skillTest.failure.text, 800);
-            
-            // Aplica efeitos, se houver
-            if (event.skillTest.failure.effect) {
-                await applyEffects(event.skillTest.failure.effect, room);
-            }
-            
-            // Aplica dano, se houver
-            if (event.skillTest.failure.damage) {
-                await applyDamageToPlayer(event.skillTest.failure.damage);
-            }
-        }
-    }
-    
-    // Verifica se o evento tem um teste de carisma associado
-    else if (event.charismaTest) {
+    // Verifica qual tipo de teste está presente e processa apenas esse teste
+    if (event.charismaTest) {
         await addLogMessage(event.charismaTest.description || "Você precisa testar seu carisma.", 800);
         const result = await testCharisma(event.charismaTest.difficulty);
         
@@ -2450,6 +2402,47 @@ async function handleAttributeTestEvent(event, room) {
                 await applyDamageToPlayer(event.charismaTest.failure.damage);
             }
         }
+    } else if (event.skillTest) {
+        await addLogMessage(event.skillTest.description || "Você precisa testar sua habilidade.", 800);
+        const result = await testSkill(event.skillTest.difficulty);
+        
+        if (result) {
+            // Sucesso
+            await addLogMessage(event.skillTest.success.text, 800);
+            
+            // Aplica efeitos, se houver
+            if (event.skillTest.success.effect) {
+                await applyEffects(event.skillTest.success.effect, room);
+            }
+            
+            // Adiciona itens, se houver
+            if (event.skillTest.success.items && event.skillTest.success.items.length > 0) {
+                createCollectButton(event.skillTest.success.items[0]);
+            }
+        } else {
+            // Falha
+            await addLogMessage(event.skillTest.failure.text, 800);
+            
+            // Aplica efeitos, se houver
+            if (event.skillTest.failure.effect) {
+                await applyEffects(event.skillTest.failure.effect, room);
+            }
+            
+            // Aplica dano, se houver
+            if (event.skillTest.failure.damage) {
+                await applyDamageToPlayer(event.skillTest.failure.damage);
+            }
+        }
+    } else if (event.luckTest) {
+        const context = {
+            description: event.luckTest.description || "Você precisa testar sua sorte para ver o que acontece.",
+            room: room,
+            success: event.luckTest.success,
+            failure: event.luckTest.failure
+        };
+        
+        // Inicia o teste de sorte
+        const result = await startLuckTest(context);
     }
     
     // Aplica efeitos gerais, se houver
@@ -2470,6 +2463,7 @@ async function handleAttributeTestEvent(event, room) {
     // Salva o estado
     savePlayerState();
 }
+
 
 
 
