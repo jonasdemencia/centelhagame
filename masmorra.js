@@ -1274,12 +1274,8 @@ async function handlePointOfInterestClick(poi, room) {
         await applyEffects(poi.effect, room);
     }
     
-    // Verifica se há testes de atributos específicos associados
-    if (poi.luckTest) {
-        await handleAttributeTestEvent(poi, room);
-    } else if (poi.skillTest) {
-        await handleAttributeTestEvent(poi, room);
-    } else if (poi.charismaTest) {
+    // Verifica se há testes de atributos associados
+    if (poi.luckTest || poi.skillTest || poi.charismaTest) {
         await handleAttributeTestEvent(poi, room);
     } else {
         // Verifica se há itens para coletar
@@ -1291,7 +1287,7 @@ async function handlePointOfInterestClick(poi, room) {
     // Salva o estado
     savePlayerState();
     
-    // Verifica se novos botões de interação devem ser mostrados
+    // ADICIONE ESTA LINHA: Verifica se novos botões de interação devem ser mostrados
     createInteractionButtons(room);
     
     // Opcionalmente, podemos atualizar os botões para refletir mudanças de estado
@@ -1308,14 +1304,14 @@ async function handlePointOfInterestClick(poi, room) {
 
 
 
-
+// Função para criar botões de interação
 function createInteractionButtons(room) {
     // Remove botões de interação existentes
     removeInteractionButtons();
-
+    
     // Verifica se a sala tem interações definidas
     if (!room.exploration || !room.exploration.interactions) return;
-
+    
     // Inicializa o estado de exploração se não existir
     if (!room.explorationState) {
         if (room.exploration.states && room.exploration.states.initial) {
@@ -1324,98 +1320,48 @@ function createInteractionButtons(room) {
             room.explorationState = {};
         }
     }
-
-    // Procura a primeira interação válida, priorizando carisma > habilidade > sorte
-    let selectedInteraction = null;
+    
+    // Verifica se há testes disponíveis com base no estado atual
+    let needsLuckTest = false;
+    let needsSkillTest = false;
+    let needsCharismaTest = false;
+    let luckTestContext = null;
+    let skillTestContext = null;
+    let charismaTestContext = null;
+    
+    // Verifica cada interação para determinar quais testes estão disponíveis
     for (const interaction of room.exploration.interactions) {
+        // Verifica se a condição é atendida
         if (evaluateCondition(interaction.condition, room.explorationState)) {
-            if (interaction.result.action === "testCharisma") {
-                selectedInteraction = { type: "charisma", interaction };
-                break; // prioridade máxima
-            }
-            if (interaction.result.action === "testSkill" && !selectedInteraction) {
-                selectedInteraction = { type: "skill", interaction };
-            }
-            if (interaction.result.action === "testLuck" && !selectedInteraction) {
-                selectedInteraction = { type: "luck", interaction };
+            if (interaction.result.action === "testLuck" && !needsLuckTest) {
+                needsLuckTest = true;
+                luckTestContext = {
+                    description: interaction.result.luckTest.description,
+                    room: room,
+                    success: interaction.result.luckTest.success,
+                    failure: interaction.result.luckTest.failure
+                };
+            } else if (interaction.result.action === "testSkill" && !needsSkillTest) {
+                needsSkillTest = true;
+                skillTestContext = {
+                    description: interaction.result.skillTest.description,
+                    difficulty: interaction.result.skillTest.difficulty,
+                    room: room,
+                    success: interaction.result.skillTest.success,
+                    failure: interaction.result.skillTest.failure
+                };
+            } else if (interaction.result.action === "testCharisma" && !needsCharismaTest) {
+                needsCharismaTest = true;
+                charismaTestContext = {
+                    description: interaction.result.charismaTest.description,
+                    difficulty: interaction.result.charismaTest.difficulty,
+                    room: room,
+                    success: interaction.result.charismaTest.success,
+                    failure: interaction.result.charismaTest.failure
+                };
             }
         }
     }
-
-    // Cria apenas o botão do teste com maior prioridade encontrado
-    let hasInteractions = false;
-    const interactionsContainer = document.createElement('div');
-    interactionsContainer.id = 'interaction-buttons';
-    interactionsContainer.classList.add('interaction-buttons');
-
-    if (selectedInteraction) {
-        if (selectedInteraction.type === "charisma") {
-            const charismaTest = selectedInteraction.interaction.result.charismaTest;
-            const charismaBtn = document.createElement('button');
-            charismaBtn.textContent = 'Testar Carisma';
-            charismaBtn.classList.add('action-btn', 'interaction-btn', 'test-charisma-btn');
-            charismaBtn.addEventListener('click', async () => {
-                await addLogMessage(charismaTest.description, 800);
-                const result = await testCharisma(charismaTest.difficulty);
-
-                if (result) {
-                    await addLogMessage(charismaTest.success.text, 800);
-                    if (charismaTest.success.effect) await applyEffects(charismaTest.success.effect, room);
-                    if (charismaTest.success.items && charismaTest.success.items.length > 0) createCollectButton(charismaTest.success.items[0]);
-                } else {
-                    await addLogMessage(charismaTest.failure.text, 800);
-                    if (charismaTest.failure.effect) await applyEffects(charismaTest.failure.effect, room);
-                    if (charismaTest.failure.damage) await applyDamageToPlayer(charismaTest.failure.damage);
-                }
-                createInteractionButtons(room);
-            });
-            interactionsContainer.appendChild(charismaBtn);
-            hasInteractions = true;
-        } else if (selectedInteraction.type === "skill") {
-            const skillTest = selectedInteraction.interaction.result.skillTest;
-            const skillBtn = document.createElement('button');
-            skillBtn.textContent = 'Testar Habilidade';
-            skillBtn.classList.add('action-btn', 'interaction-btn', 'test-skill-btn');
-            skillBtn.addEventListener('click', async () => {
-                await addLogMessage(skillTest.description, 800);
-                const result = await testSkill(skillTest.difficulty);
-
-                if (result) {
-                    await addLogMessage(skillTest.success.text, 800);
-                    if (skillTest.success.effect) await applyEffects(skillTest.success.effect, room);
-                    if (skillTest.success.items && skillTest.success.items.length > 0) createCollectButton(skillTest.success.items[0]);
-                } else {
-                    await addLogMessage(skillTest.failure.text, 800);
-                    if (skillTest.failure.effect) await applyEffects(skillTest.failure.effect, room);
-                    if (skillTest.failure.damage) await applyDamageToPlayer(skillTest.failure.damage);
-                }
-                createInteractionButtons(room);
-            });
-            interactionsContainer.appendChild(skillBtn);
-            hasInteractions = true;
-        } else if (selectedInteraction.type === "luck") {
-            const luckTest = selectedInteraction.interaction.result.luckTest;
-            const luckBtn = document.createElement('button');
-            luckBtn.textContent = 'Testar Sorte';
-            luckBtn.classList.add('action-btn', 'interaction-btn', 'test-luck-btn');
-            luckBtn.addEventListener('click', () => startLuckTest({
-                description: luckTest.description,
-                room: room,
-                success: luckTest.success,
-                failure: luckTest.failure
-            }));
-            interactionsContainer.appendChild(luckBtn);
-            hasInteractions = true;
-        }
-    }
-
-    if (hasInteractions) {
-        const actionButtons = document.getElementById('action-buttons');
-        if (actionButtons) {
-            actionButtons.appendChild(interactionsContainer);
-        }
-    }
-}
     
     // Cria botões para os testes disponíveis
     const interactionsContainer = document.createElement('div');
@@ -2420,42 +2366,26 @@ async function testCharisma(difficulty) {
 }
 
 
+// Função para processar eventos que podem acionar testes de atributos
 async function handleAttributeTestEvent(event, room) {
     await addLogMessage(event.text, 1000);
     
-    // Verifica qual tipo de teste está presente no evento e processa apenas esse teste
-    if (event.charismaTest) {
-        await addLogMessage(event.charismaTest.description || "Você precisa testar seu carisma.", 800);
-        const result = await testCharisma(event.charismaTest.difficulty);
+    // Verifica se o evento tem um teste de sorte associado
+    if (event.luckTest) {
+        const context = {
+            description: event.luckTest.description || "Você precisa testar sua sorte para ver o que acontece.",
+            room: room,
+            success: event.luckTest.success,
+            failure: event.luckTest.failure
+        };
         
-        if (result) {
-            // Sucesso
-            await addLogMessage(event.charismaTest.success.text, 800);
-            
-            // Aplica efeitos, se houver
-            if (event.charismaTest.success.effect) {
-                await applyEffects(event.charismaTest.success.effect, room);
-            }
-            
-            // Adiciona itens, se houver
-            if (event.charismaTest.success.items && event.charismaTest.success.items.length > 0) {
-                createCollectButton(event.charismaTest.success.items[0]);
-            }
-        } else {
-            // Falha
-            await addLogMessage(event.charismaTest.failure.text, 800);
-            
-            // Aplica efeitos, se houver
-            if (event.charismaTest.failure.effect) {
-                await applyEffects(event.charismaTest.failure.effect, room);
-            }
-            
-            // Aplica dano, se houver
-            if (event.charismaTest.failure.damage) {
-                await applyDamageToPlayer(event.charismaTest.failure.damage);
-            }
-        }
-    } else if (event.skillTest) {
+        // Inicia o teste de sorte
+        const result = await startLuckTest(context);
+        // O resultado já foi processado dentro da função startLuckTest
+    }
+    
+    // Verifica se o evento tem um teste de habilidade associado
+    else if (event.skillTest) {
         await addLogMessage(event.skillTest.description || "Você precisa testar sua habilidade.", 800);
         const result = await testSkill(event.skillTest.difficulty);
         
@@ -2486,16 +2416,40 @@ async function handleAttributeTestEvent(event, room) {
                 await applyDamageToPlayer(event.skillTest.failure.damage);
             }
         }
-    } else if (event.luckTest) {
-        const context = {
-            description: event.luckTest.description || "Você precisa testar sua sorte para ver o que acontece.",
-            room: room,
-            success: event.luckTest.success,
-            failure: event.luckTest.failure
-        };
+    }
+    
+    // Verifica se o evento tem um teste de carisma associado
+    else if (event.charismaTest) {
+        await addLogMessage(event.charismaTest.description || "Você precisa testar seu carisma.", 800);
+        const result = await testCharisma(event.charismaTest.difficulty);
         
-        // Inicia o teste de sorte
-        const result = await startLuckTest(context);
+        if (result) {
+            // Sucesso
+            await addLogMessage(event.charismaTest.success.text, 800);
+            
+            // Aplica efeitos, se houver
+            if (event.charismaTest.success.effect) {
+                await applyEffects(event.charismaTest.success.effect, room);
+            }
+            
+            // Adiciona itens, se houver
+            if (event.charismaTest.success.items && event.charismaTest.success.items.length > 0) {
+                createCollectButton(event.charismaTest.success.items[0]);
+            }
+        } else {
+            // Falha
+            await addLogMessage(event.charismaTest.failure.text, 800);
+            
+            // Aplica efeitos, se houver
+            if (event.charismaTest.failure.effect) {
+                await applyEffects(event.charismaTest.failure.effect, room);
+            }
+            
+            // Aplica dano, se houver
+            if (event.charismaTest.failure.damage) {
+                await applyDamageToPlayer(event.charismaTest.failure.damage);
+            }
+        }
     }
     
     // Aplica efeitos gerais, se houver
@@ -2516,7 +2470,6 @@ async function handleAttributeTestEvent(event, room) {
     // Salva o estado
     savePlayerState();
 }
-
 
 
 
