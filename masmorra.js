@@ -1136,11 +1136,13 @@ if (examineEvent.pointsOfInterest && examineEvent.pointsOfInterest.length > 0) {
 
 
 
-
 // Função para criar o botão de recolher item
 function createCollectButton(item) {
     // Remove qualquer botão existente primeiro
     removeCollectButton();
+    
+    // Remove também os botões de interação para evitar que reapareçam
+    removeInteractionButtons();
     
     // Cria o botão
     const collectButton = document.createElement('button');
@@ -1182,6 +1184,7 @@ function createCollectButton(item) {
         button.addEventListener('click', removeCollectButton);
     });
 }
+
 
 // Função para remover o botão de recolher item
 function removeCollectButton() {
