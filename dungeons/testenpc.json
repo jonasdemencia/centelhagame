@@ -1,0 +1,298 @@
+{
+  "name": "Sala de Teste de Diálogo",
+  "description": "Uma pequena sala para testar diálogos com NPCs.",
+  "entrance": "room-1",
+  "rooms": {
+    "room-1": {
+      "id": "room-1",
+      "name": "Sala de Teste",
+      "description": "Uma sala simples com paredes de pedra. Há um homem velho sentado em um banco de madeira.",
+      "type": "room",
+      "exits": [],
+      "visited": false,
+      "discovered": false,
+      "gridX": 5,
+      "gridY": 5,
+      "gridWidth": 4,
+      "gridHeight": 4,
+      "events": [
+        { "type": "first-visit", "text": "Ao entrar na sala, você nota um senhor idoso que parece estar esperando por alguém." }
+      ],
+      "npcs": [
+        {
+          "id": "velho-sábio",
+          "name": "Velho Sábio",
+          "description": "Um homem idoso com barba branca e longa, vestindo uma túnica azul desbotada. Ele sorri ao vê-lo se aproximar.",
+          "dialogues": {
+            "initial": {
+              "text": "Ah, finalmente alguém chegou! Estou esperando há tanto tempo. Você veio buscar conhecimento ou apenas está de passagem?",
+              "options": [
+                {
+                  "text": "Vim buscar conhecimento, senhor.",
+                  "next": "conhecimento"
+                },
+                {
+                  "text": "Estou apenas explorando este lugar.",
+                  "next": "explorando"
+                },
+                {
+                  "text": "Quem é você?",
+                  "next": "identidade"
+                }
+              ]
+            },
+            "conhecimento": {
+              "text": "Excelente! O conhecimento é a maior riqueza que podemos possuir. Posso lhe ensinar sobre as antigas runas mágicas ou sobre as criaturas que habitam estas terras. O que prefere?",
+              "options": [
+                {
+                  "text": "Gostaria de aprender sobre as runas mágicas.",
+                  "next": "runas",
+                  "effect": {
+                    "states.aprendeuRunas": true
+                  }
+                },
+                {
+                  "text": "Me conte sobre as criaturas destas terras.",
+                  "next": "criaturas",
+                  "effect": {
+                    "states.aprendeuCriaturas": true
+                  }
+                },
+                {
+                  "text": "Na verdade, preciso ir agora.",
+                  "next": "despedida"
+                }
+              ]
+            },
+            "runas": {
+              "text": "As runas antigas são símbolos de poder que nossos ancestrais usavam para canalizar a magia. Cada runa representa um elemento ou conceito. A runa Algiz, por exemplo, oferece proteção. Tome, leve este pergaminho com você.",
+              "options": [
+                {
+                  "text": "Muito obrigado!",
+                  "next": "agradecimento",
+                  "items": [
+                    {
+                      "id": "pergaminho-runas",
+                      "content": "Pergaminho de Runas",
+                      "description": "Um pergaminho antigo com desenhos de runas mágicas e suas descrições."
+                    }
+                  ]
+                }
+              ]
+            },
+            "criaturas": {
+              "text": "Estas terras são habitadas por criaturas diversas. Nas florestas, cuidado com os Trolls da Floresta - eles são lentos mas muito fortes. Nas cavernas, os Ratos Gigantes podem parecer fracos, mas seu veneno é perigoso. E nos pântanos... bem, é melhor evitar os pântanos completamente.",
+              "options": [
+                {
+                  "text": "Alguma dica para enfrentar essas criaturas?",
+                  "next": "dicas_combate"
+                },
+                {
+                  "text": "Obrigado pela informação.",
+                  "next": "agradecimento"
+                }
+              ]
+            },
+            "dicas_combate": {
+              "text": "Contra Trolls, use fogo ou ácido. Contra Ratos Gigantes, mantenha distância e use armas de alcance. E sempre carregue antídotos. Tome, leve esta poção de cura, pode ser útil em suas jornadas.",
+              "options": [
+                {
+                  "text": "Muito obrigado pela ajuda!",
+                  "next": "agradecimento",
+                  "items": [
+                    {
+                      "id": "pocao-cura",
+                      "content": "Poção de Cura",
+                      "description": "Um frasco pequeno contendo um líquido vermelho brilhante que cura ferimentos.",
+                      "consumable": true,
+                      "effect": "heal"
+                    }
+                  ]
+                }
+              ]
+            },
+            "explorando": {
+              "text": "Ah, um explorador! Este lugar guarda muitos segredos. Já visitou as ruínas a leste daqui? Dizem que há um tesouro escondido lá, mas também muitos perigos.",
+              "options": [
+                {
+                  "text": "Pode me contar mais sobre essas ruínas?",
+                  "next": "ruinas_info"
+                },
+                {
+                  "text": "Não estou interessado em tesouros.",
+                  "next": "sem_interesse"
+                }
+              ]
+            },
+            "ruinas_info": {
+              "text": "As ruínas eram um antigo templo dedicado ao deus do conhecimento. Foi destruído durante a Grande Guerra, há séculos. O tesouro supostamente está em uma câmara secreta, protegida por armadilhas e guardiões. Muitos tentaram encontrá-lo, poucos retornaram.",
+              "options": [
+                {
+                  "text": "Como posso evitar as armadilhas?",
+                  "next": "armadilhas_dica"
+                },
+                {
+                  "text": "Obrigado pela informação.",
+                  "next": "agradecimento"
+                }
+              ]
+            },
+            "armadilhas_dica": {
+              "text": "As armadilhas são antigas, mas ainda funcionais. Procure por lajes soltas no chão e símbolos nas paredes. E leve isto com você, pode ajudar a detectar algumas armadilhas mágicas.",
+              "options": [
+                {
+                  "text": "Muito obrigado!",
+                  "next": "agradecimento",
+                  "items": [
+                    {
+                      "id": "amuleto-deteccao",
+                      "content": "Amuleto de Detecção",
+                      "description": "Um pequeno amuleto que brilha na presença de armadilhas mágicas."
+                    }
+                  ]
+                }
+              ]
+            },
+            "identidade": {
+              "text": "Eu? Sou apenas um velho que viveu o suficiente para acumular algumas histórias e conhecimentos. Alguns me chamam de Sábio, outros de Louco. Já fui aventureiro como você, até que uma flecha no joelho acabou com minha carreira.",
+              "options": [
+                {
+                  "text": "Que tipo de aventureiro você era?",
+                  "next": "passado_aventureiro"
+                },
+                {
+                  "text": "O que você faz aqui sozinho?",
+                  "next": "razao_presenca"
+                }
+              ]
+            },
+            "passado_aventureiro": {
+              "text": "Eu era um mago de batalha, especializado em feitiços de fogo e proteção. Viajei por todo o continente, enfrentei dragões, demônios e coisas piores. Aqueles eram tempos diferentes... o mundo era mais selvagem, mais mágico.",
+              "options": [
+                {
+                  "text": "Pode me ensinar alguma magia?",
+                  "next": "ensinar_magia"
+                },
+                {
+                  "text": "Impressionante! Obrigado por compartilhar sua história.",
+                  "next": "agradecimento"
+                }
+              ]
+            },
+            "ensinar_magia": {
+              "text": "A magia requer anos de estudo e prática, jovem. Mas posso lhe ensinar um pequeno truque. Observe bem...",
+              "options": [
+                {
+                  "text": "Observar atentamente",
+                  "next": "aprender_truque",
+                  "effect": {
+                    "states.aprendeuMagia": true
+                  }
+                }
+              ]
+            },
+            "aprender_truque": {
+              "text": "O velho faz um gesto com as mãos e uma pequena chama aparece flutuando sobre sua palma. 'Concentre-se na energia ao seu redor, visualize o calor, e canalize-o para suas mãos.' Após algumas tentativas, você consegue criar uma minúscula faísca.",
+              "options": [
+                {
+                  "text": "Incrível! Vou praticar mais.",
+                  "next": "agradecimento"
+                }
+              ]
+            },
+            "razao_presenca": {
+              "text": "Estou guardando este lugar. Ou talvez ele esteja me guardando. Às vezes é difícil dizer a diferença. O tempo passa de forma estranha aqui dentro, sabia? Lá fora podem ter se passado dias ou anos desde que você entrou.",
+              "options": [
+                {
+                  "text": "Isso é perturbador...",
+                  "next": "tempo_explicacao"
+                },
+                {
+                  "text": "Você parece confuso, velho.",
+                  "next": "ofensa"
+                }
+              ]
+            },
+            "tempo_explicacao": {
+              "text": "Não se preocupe. Quando sair daqui, o tempo terá passado normalmente para você. Mas tome cuidado com lugares antigos como este. Alguns são portais para outros reinos, outros são prisões para coisas que é melhor deixar esquecidas.",
+              "options": [
+                {
+                  "text": "Entendo. Serei cauteloso.",
+                  "next": "agradecimento"
+                }
+              ]
+            },
+            "ofensa": {
+              "text": "O velho franze a testa, visivelmente ofendido. 'A sabedoria muitas vezes soa como loucura para os ignorantes. Talvez seja melhor você seguir seu caminho agora.'",
+              "options": [
+                {
+                  "text": "Desculpe, não quis ofender.",
+                  "next": "desculpas"
+                },
+                {
+                  "text": "Sim, vou embora.",
+                  "next": "despedida"
+                }
+              ]
+            },
+            "desculpas": {
+              "text": "O velho suspira. 'Tudo bem. Juventude é sinônimo de impetuosidade. Aprenderá com o tempo, como todos nós.'",
+              "options": [
+                {
+                  "text": "Obrigado pela compreensão.",
+                  "next": "agradecimento"
+                }
+              ]
+            },
+            "sem_interesse": {
+              "text": "Nem todo tesouro é feito de ouro e joias, jovem. Às vezes, o conhecimento é a maior riqueza que podemos encontrar.",
+              "options": [
+                {
+                  "text": "Você tem razão. Me conte mais.",
+                  "next": "conhecimento"
+                },
+                {
+                  "text": "Prefiro tesouros que possam comprar uma boa refeição.",
+                  "next": "materialista"
+                }
+              ]
+            },
+            "materialista": {
+              "text": "O velho ri. 'Compreensível! O estômago vazio é um conselheiro barulhento. Tome, leve esta moeda de ouro. Não é muito, mas pode garantir algumas refeições.'",
+              "options": [
+                {
+                  "text": "Muito obrigado!",
+                  "next": "agradecimento",
+                  "items": [
+                    {
+                      "id": "moeda-ouro",
+                      "content": "Moeda de Ouro Antiga",
+                      "description": "Uma moeda de ouro antiga com inscrições estranhas. Parece valiosa.",
+                      "value": 50
+                    }
+                  ]
+                }
+              ]
+            },
+            "agradecimento": {
+              "text": "Não há de quê, jovem aventureiro. O mundo é vasto e cheio de maravilhas e perigos. Mantenha seus olhos abertos e sua mente mais ainda. E se precisar de mais conselhos, sabe onde me encontrar.",
+              "options": [
+                {
+                  "text": "Adeus, e obrigado por tudo.",
+                  "next": "despedida"
+                },
+                {
+                  "text": "Tenho mais algumas perguntas...",
+                  "next": "initial"
+                }
+              ]
+            },
+            "despedida": {
+              "text": "Vá com cuidado, aventureiro. Que os ventos soprem a seu favor e que encontre o que procura em suas jornadas."
+            }
+          }
+        }
+      ]
+    }
+  }
+}
