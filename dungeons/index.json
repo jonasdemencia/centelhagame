@@ -8,5 +8,10 @@
     "id": "torre-mago",
     "name": "Torre do Mago Louco",
     "description": "Uma torre abandonada cheia de experimentos mágicos perigosos."
+  },
+  {
+    "id": "sala-teste-dialogo",
+    "name": "Sala de Teste de Diálogo",
+    "description": "Uma sala simples para testar o sistema de diálogo com NPCs."
   }
 ]
