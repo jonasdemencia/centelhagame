@@ -391,7 +391,7 @@
       }
     }
   }
-},
+}
 
 // Adicione esta sala ao objeto dungeon.rooms
 "room-3": {
