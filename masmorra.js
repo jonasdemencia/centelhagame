@@ -1265,11 +1265,14 @@ function removePointsOfInterestButtons() {
 
 // Função para lidar com o clique em um ponto de interesse
 async function handlePointOfInterestClick(poi, room) {
+    // Remove botões de interação existentes primeiro
+    removeInteractionButtons();
+    
     // Adiciona a descrição do ponto de interesse ao log
     startNewLogBlock(`Examinar ${poi.name}`);
     await addLogMessage(poi.description, 1000);
     
-    // Aplica efeitos, se houver - MOVA ISSO PARA ANTES DOS TESTES
+    // Aplica efeitos, se houver
     if (poi.effect) {
         await applyEffects(poi.effect, room);
     }
@@ -1287,7 +1290,7 @@ async function handlePointOfInterestClick(poi, room) {
     // Salva o estado
     savePlayerState();
     
-    // ADICIONE ESTA LINHA: Verifica se novos botões de interação devem ser mostrados
+    // Cria botões de interação específicos para este ponto de interesse
     createInteractionButtons(room);
     
     // Opcionalmente, podemos atualizar os botões para refletir mudanças de estado
@@ -1298,6 +1301,7 @@ async function handlePointOfInterestClick(poi, room) {
         }
     });
 }
+
 
 
 
