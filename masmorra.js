@@ -2443,6 +2443,154 @@ async function handleAttributeTestEvent(event, room) {
     // createInteractionButtons(room, null);
 }
 
+// Adicione estas funções após a função handleAttributeTestEvent
+
+// Função para criar e exibir diálogo com NPC
+async function startDialogue(npc) {
+    // Remove botões existentes
+    removeInteractionButtons();
+    removePointsOfInterestButtons();
+    removeCollectButton();
+    
+    // Inicia um novo bloco de log para o diálogo
+    startNewLogBlock(`Conversa com ${npc.name}`);
+    
+    // Exibe a descrição do NPC
+    if (npc.description) {
+        await addLogMessage(npc.description, 800);
+    }
+    
+    // Inicia o diálogo com a primeira fala do NPC
+    await showNPCDialogue(npc, npc.dialogues.initial);
+}
+
+// Função para exibir a fala do NPC e as opções de resposta
+async function showNPCDialogue(npc, dialogueId) {
+    // Busca o diálogo atual
+    const dialogue = npc.dialogues[dialogueId];
+    if (!dialogue) {
+        console.error(`Diálogo ${dialogueId} não encontrado para o NPC ${npc.name}`);
+        return;
+    }
+    
+    // Exibe a fala do NPC
+    await addLogMessage(`<strong>${npc.name}:</strong> ${dialogue.text}`, 800);
+    
+    // Se não houver opções de resposta, encerra o diálogo
+    if (!dialogue.options || dialogue.options.length === 0) {
+        await addLogMessage("<em>Fim da conversa.</em>", 500);
+        return;
+    }
+    
+    // Cria o container para as opções de resposta
+    const responseContainer = document.createElement('div');
+    responseContainer.id = 'dialogue-options';
+    responseContainer.classList.add('dialogue-options');
+    
+    // Adiciona um título
+    const responseTitle = document.createElement('p');
+    responseTitle.textContent = 'Sua resposta:';
+    responseTitle.classList.add('dialogue-title');
+    responseContainer.appendChild(responseTitle);
+    
+    // Cria botões para cada opção de resposta
+    for (const option of dialogue.options) {
+        const responseBtn = document.createElement('button');
+        responseBtn.textContent = option.text;
+        responseBtn.classList.add('dialogue-option-btn');
+        
+        // Adiciona o evento de clique
+        responseBtn.addEventListener('click', async () => {
+            // Remove o container de opções
+            responseContainer.remove();
+            
+            // Exibe a resposta escolhida pelo jogador
+            await addLogMessage(`<strong>Você:</strong> ${option.text}`, 500);
+            
+            // Aplica efeitos, se houver
+            if (option.effect) {
+                const currentRoom = dungeon.rooms[playerState.currentRoom];
+                await applyEffects(option.effect, currentRoom);
+            }
+            
+            // Verifica se há itens para receber
+            if (option.items && option.items.length > 0) {
+                for (const item of option.items) {
+                    await addLogMessage(`${npc.name} entrega a você: ${item.content}`, 800);
+                    await addItemToInventory(item);
+                }
+            }
+            
+            // Continua o diálogo ou encerra
+            if (option.next) {
+                await showNPCDialogue(npc, option.next);
+            } else {
+                await addLogMessage("<em>Fim da conversa.</em>", 500);
+            }
+        });
+        
+        responseContainer.appendChild(responseBtn);
+    }
+    
+    // Adiciona o container à interface
+    const actionButtons = document.getElementById('action-buttons');
+    if (actionButtons) {
+        actionButtons.appendChild(responseContainer);
+    }
+}
+
+// Função para verificar se há NPCs na sala e criar botões para interagir com eles
+function createNPCButtons(room) {
+    // Remove botões existentes primeiro
+    removeNPCButtons();
+    
+    // Verifica se há NPCs na sala
+    if (!room.npcs || room.npcs.length === 0) return;
+    
+    // Cria um container para os botões
+    const npcContainer = document.createElement('div');
+    npcContainer.id = 'npc-buttons';
+    npcContainer.classList.add('npc-buttons');
+    
+    // Adiciona um título
+    const npcTitle = document.createElement('p');
+    npcTitle.textContent = 'Personagens na sala:';
+    npcTitle.classList.add('npc-title');
+    npcContainer.appendChild(npcTitle);
+    
+    // Cria botões para cada NPC
+    for (const npc of room.npcs) {
+        // Verifica se o NPC tem uma condição para aparecer
+        if (npc.condition && !evaluateCondition(npc.condition, room.explorationState)) {
+            continue; // Pula este NPC se a condição não for atendida
+        }
+        
+        const npcBtn = document.createElement('button');
+        npcBtn.textContent = `Falar com ${npc.name}`;
+        npcBtn.classList.add('npc-btn');
+        
+        // Adiciona o evento de clique
+        npcBtn.addEventListener('click', () => {
+            startDialogue(npc);
+        });
+        
+        npcContainer.appendChild(npcBtn);
+    }
+    
+    // Adiciona o container à interface
+    const actionButtons = document.getElementById('action-buttons');
+    if (actionButtons) {
+        actionButtons.appendChild(npcContainer);
+    }
+}
+
+// Função para remover botões de NPC
+function removeNPCButtons() {
+    const npcButtons = document.getElementById('npc-buttons');
+    if (npcButtons) {
+        npcButtons.remove();
+    }
+}
 
 
 
