@@ -1465,7 +1465,7 @@ async function handleInteraction(interaction, room) {
     }
     
     // Atualiza os botões de interação
-    createInteractionButtons(room);
+    createInteractionButtons(room, null);
     
     // Atualiza os botões de direção (caso uma nova saída tenha sido adicionada)
     updateDirectionButtons();
@@ -2580,7 +2580,7 @@ async function moveToRoom(roomId) {
     
     // Cria botões de interação, se houver
     if (room.exploration && room.exploration.interactions) {
-        createInteractionButtons(room);
+        createInteractionButtons(room, null);
     }
     
     // Salva o estado do jogador
