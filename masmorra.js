@@ -2507,13 +2507,10 @@ async function moveToRoom(roomId) {
         if (room.exploration && room.exploration.states && room.exploration.states.initial) {
             room.explorationState = { ...room.exploration.states.initial };
         }
-        
-        // Processa eventos de primeira visita
-        const firstVisitEvents = room.events?.filter(event => event.type === "first-visit") || [];
-        for (const event of firstVisitEvents) {
-            await addLogMessage(event.text, 1000);
-        }
     }
+    
+    // IMPORTANTE: Atualiza o mapa ANTES de exibir as mensagens
+    drawMap();
     
     // Verifica se a sala tem um inimigo e se ele já foi derrotado
     let customDescription = room.description;
@@ -2531,11 +2528,16 @@ async function moveToRoom(roomId) {
     startNewLogBlock(room.name);
     await addLogMessage(customDescription, 1000);
     
-    // Atualiza o mapa
-    drawMap();
-
     // Atualiza a barra de energia
     updateHealthBar();
+    
+    // Processa eventos de primeira visita após desenhar o mapa
+    if (isFirstVisit) {
+        const firstVisitEvents = room.events?.filter(event => event.type === "first-visit") || [];
+        for (const event of firstVisitEvents) {
+            await addLogMessage(event.text, 1000);
+        }
+    }
     
     // Verifica se a sala tem um inimigo com gatilho
     if (room.enemy && room.enemy.trigger) {
