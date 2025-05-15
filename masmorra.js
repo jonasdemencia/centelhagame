@@ -1291,7 +1291,7 @@ async function handlePointOfInterestClick(poi, room) {
     savePlayerState();
     
     // Cria botões de interação específicos para este ponto de interesse
-    createInteractionButtons(room);
+    createInteractionButtons(room, poi.id);
     
     // Opcionalmente, podemos atualizar os botões para refletir mudanças de estado
     const poiButtons = document.querySelectorAll('.poi-btn');
@@ -1308,8 +1308,9 @@ async function handlePointOfInterestClick(poi, room) {
 
 
 
+
 // Função para criar botões de interação
-function createInteractionButtons(room) {
+function createInteractionButtons(room, poiId) {
     // Remove botões de interação existentes
     removeInteractionButtons();
     
@@ -1325,13 +1326,27 @@ function createInteractionButtons(room) {
         }
     }
     
-    // Encontra a primeira interação válida para o estado atual
+    // Encontra a interação apropriada com base no ponto de interesse
     let activeInteraction = null;
     
     for (const interaction of room.exploration.interactions) {
+        // Verifica se a condição é atendida
         if (evaluateCondition(interaction.condition, room.explorationState)) {
-            activeInteraction = interaction;
-            break; // Usa apenas a primeira interação válida
+            // Mapeia pontos de interesse para interações específicas
+            if (poiId === 'pilares' && interaction.id === 'teste-sorte-pilar') {
+                activeInteraction = interaction;
+                break;
+            } else if (poiId === 'piso' && interaction.id === 'mecanismo-antigo') {
+                activeInteraction = interaction;
+                break;
+            } else if (poiId === 'estatua' && interaction.id === 'teste-carisma') {
+                activeInteraction = interaction;
+                break;
+            } else if (!poiId) {
+                // Se não houver poiId, usa a primeira interação válida (comportamento original)
+                activeInteraction = interaction;
+                break;
+            }
         }
     }
     
@@ -1425,6 +1440,7 @@ function createInteractionButtons(room) {
         actionButtons.appendChild(interactionsContainer);
     }
 }
+
 
 
 
