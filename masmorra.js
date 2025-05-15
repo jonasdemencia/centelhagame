@@ -2737,6 +2737,11 @@ async function moveToRoom(roomId) {
     if (room.exploration && room.exploration.interactions) {
         createInteractionButtons(room, null);
     }
+
+    // Verifica se há NPCs na sala
+if (room.npcs) {
+    createNPCButtons(room);
+}
     
     // Salva o estado do jogador
     savePlayerState();
