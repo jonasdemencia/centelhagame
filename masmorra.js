@@ -1285,7 +1285,7 @@ async function handlePointOfInterestClick(poi, room) {
             createCollectButton(poi.items[0]);
         }
         
-        // IMPORTANTE: Sempre criar botões de interação após clicar em um ponto de interesse
+        // IMPORTANTE: Criar botões de interação após aplicar os efeitos
         // Isso garante que o botão de teste de carisma apareça após clicar na estátua do mago
         createInteractionButtons(room);
     }
