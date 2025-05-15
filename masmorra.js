@@ -1263,13 +1263,15 @@ function removePointsOfInterestButtons() {
     }
 }
 
-// Função para lidar com o clique em um ponto de interesse
 async function handlePointOfInterestClick(poi, room) {
     // Adiciona a descrição do ponto de interesse ao log
     startNewLogBlock(`Examinar ${poi.name}`);
     await addLogMessage(poi.description, 1000);
     
-    // Aplica efeitos, se houver
+    // Remove interações existentes para evitar duplicação
+    removeInteractionButtons();
+    
+    // Aplica efeitos, se houver - IMPORTANTE: Isso deve vir antes de verificar os testes
     if (poi.effect) {
         await applyEffects(poi.effect, room);
     }
@@ -1283,8 +1285,8 @@ async function handlePointOfInterestClick(poi, room) {
             createCollectButton(poi.items[0]);
         }
         
-        // ADICIONE ESTA LINHA: Cria botões de interação que podem ter sido desbloqueados
-        // pelo efeito do ponto de interesse (como o teste de carisma da estátua)
+        // IMPORTANTE: Sempre criar botões de interação após clicar em um ponto de interesse
+        // Isso garante que o botão de teste de carisma apareça após clicar na estátua do mago
         createInteractionButtons(room);
     }
     
@@ -1299,6 +1301,7 @@ async function handlePointOfInterestClick(poi, room) {
         }
     });
 }
+
 
 
 
@@ -2549,10 +2552,6 @@ async function moveToRoom(roomId) {
         updateDirectionButtons();
     }
     
-    // Cria botões de interação, se houver
-    if (room.exploration && room.exploration.interactions) {
-        createInteractionButtons(room);
-    }
     
     // Salva o estado do jogador
     savePlayerState();
