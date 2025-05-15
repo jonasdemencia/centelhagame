@@ -391,4 +391,361 @@
       }
     }
   }
+},
+
+// Adicione esta sala ao objeto dungeon.rooms
+"room-3": {
+  "id": "room-3",
+  "name": "Laboratório Arcano",
+  "description": "Um laboratório com mesas de trabalho cobertas de equipamentos alquímicos. Frascos de vidro colorido e instrumentos estranhos estão espalhados por toda parte.",
+  "type": "room",
+  "gridX": 14,
+  "gridY": 12,
+  "gridWidth": 4,
+  "gridHeight": 5,
+  "exits": [
+    { "direction": "west", "leadsTo": "room-2", "type": "door", "locked": false }
+  ],
+  "events": [
+    { "type": "first-visit", "text": "Ao entrar no laboratório, você sente o cheiro de ervas e produtos químicos. Há um homem idoso trabalhando em uma das mesas." }
+  ],
+  "npcs": [
+    {
+      "id": "alquimista",
+      "name": "Alquimista Velho",
+      "description": "Um homem idoso com cabelos brancos desgrenhados e uma barba longa. Ele veste um avental manchado e óculos de lentes grossas.",
+      "dialogues": {
+        "initial": {
+          "text": "Hmm? Oh, um visitante! Não recebo muitos desses ultimamente. O que te traz ao meu laboratório?",
+          "options": [
+            {
+              "text": "Estou explorando a torre. O que você faz aqui?",
+              "next": "about_work"
+            },
+            {
+              "text": "Preciso de poções ou itens mágicos.",
+              "next": "potions"
+            },
+            {
+              "text": "Quem é você?",
+              "next": "identity"
+            }
+          ]
+        },
+        "about_work": {
+          "text": "Estou estudando as propriedades mágicas de várias substâncias. A torre pode estar abandonada, mas ainda contém conhecimentos valiosos. Estou tentando criar uma poção que possa neutralizar armadilhas mágicas.",
+          "options": [
+            {
+              "text": "Armadilhas mágicas? Há muitas nesta torre?",
+              "next": "traps"
+            },
+            {
+              "text": "Posso ajudar de alguma forma?",
+              "next": "help_offer"
+            }
+          ]
+        },
+        "potions": {
+          "text": "Ah, um cliente potencial! Tenho algumas poções disponíveis, mas meus ingredientes estão escassos. Posso oferecer uma poção de cura em troca de 20 moedas de ouro.",
+          "options": [
+            {
+              "text": "Aceito a oferta. Aqui estão 20 moedas.",
+              "next": "buy_potion",
+              "condition": "has_gold_20"
+            },
+            {
+              "text": "Não tenho moedas suficientes agora.",
+              "next": "no_money"
+            },
+            {
+              "text": "Talvez mais tarde.",
+              "next": "maybe_later"
+            }
+          ]
+        },
+        "identity": {
+          "text": "Meu nome é Elwin, último membro da Ordem dos Alquimistas Arcanos. Permaneci aqui quando os outros fugiram, há muitos anos. Há segredos nesta torre que não podem ser abandonados.",
+          "options": [
+            {
+              "text": "Por que os outros fugiram?",
+              "next": "why_fled"
+            },
+            {
+              "text": "Que tipo de segredos?",
+              "next": "secrets"
+            }
+          ]
+        },
+        "traps": {
+          "text": "Oh sim, muitas! Os magos que construíram esta torre eram paranóicos. Há armadilhas mágicas em quase todas as salas. Algumas são óbvias, outras... bem, digamos que você só percebe quando já é tarde demais.",
+          "options": [
+            {
+              "text": "Como posso identificar essas armadilhas?",
+              "next": "identify_traps"
+            },
+            {
+              "text": "Voltando ao seu trabalho...",
+              "next": "about_work"
+            }
+          ]
+        },
+        "help_offer": {
+          "text": "Na verdade, sim! Preciso de uma flor rara chamada 'Suspiro Lunar' que cresce apenas no topo da torre. Se você conseguir me trazer uma, posso recompensá-lo com uma poção especial.",
+          "options": [
+            {
+              "text": "Vou procurar essa flor para você.",
+              "next": "accept_quest",
+              "effect": {"states.acceptedFlowerQuest": true}
+            },
+            {
+              "text": "Parece perigoso. Talvez outra hora.",
+              "next": "reject_quest"
+            }
+          ]
+        },
+        "buy_potion": {
+          "text": "Excelente! Aqui está sua poção. Use-a com sabedoria, ela restaurará sua vitalidade quando estiver ferido.",
+          "options": [
+            {
+              "text": "Obrigado.",
+              "effect": {"states.boughtPotion": true},
+              "items": [
+                {
+                  "id": "strong-healing-potion",
+                  "content": "Poção de Cura Forte",
+                  "description": "Uma poção que restaura uma quantidade significativa de energia vital.",
+                  "consumable": true,
+                  "effect": "strong_healing",
+                  "value": 20
+                }
+              ]
+            }
+          ]
+        },
+        "no_money": {
+          "text": "Ah, que pena. Volte quando tiver moedas suficientes. Ou talvez possamos fazer uma troca por algum item interessante que você encontrar em suas explorações.",
+          "options": [
+            {
+              "text": "Vou procurar algo para trocar.",
+              "next": "maybe_later"
+            }
+          ]
+        },
+        "maybe_later": {
+          "text": "Como quiser. Estarei aqui se mudar de ideia. Não é como se eu tivesse outro lugar para ir, haha!",
+          "options": []
+        },
+        "why_fled": {
+          "text": "Houve um... incidente. Um dos experimentos deu errado e liberou uma entidade perigosa nos níveis superiores da torre. A maioria fugiu, mas eu fiquei para tentar consertar o erro.",
+          "options": [
+            {
+              "text": "Que tipo de entidade?",
+              "next": "entity"
+            },
+            {
+              "text": "Você conseguiu consertar o erro?",
+              "next": "fixed_error"
+            }
+          ]
+        },
+        "secrets": {
+          "text": "Conhecimentos arcanos que poderiam ser perigosos nas mãos erradas. Fórmulas para criar vida, alterar a realidade, abrir portais para outros planos... Coisas que a humanidade ainda não está pronta para conhecer.",
+          "options": [
+            {
+              "text": "Isso soa perigoso. Por que preservar esse conhecimento?",
+              "next": "why_preserve"
+            },
+            {
+              "text": "Interessante. Gostaria de aprender mais.",
+              "next": "learn_more"
+            }
+          ]
+        },
+        "identify_traps": {
+          "text": "Procure por símbolos arcanos no chão e nas paredes. Geralmente são sutis, mas estão lá. Também tenho este amuleto que pode ajudar. Ele brilha levemente na presença de magia hostil.",
+          "options": [
+            {
+              "text": "Posso ficar com o amuleto?",
+              "next": "request_amulet"
+            },
+            {
+              "text": "Obrigado pelo conselho.",
+              "effect": {"states.receivedTrapAdvice": true}
+            }
+          ]
+        },
+        "accept_quest": {
+          "text": "Maravilhoso! A flor tem pétalas azuis que brilham sob a luz da lua. Você a encontrará no jardim do observatório, no topo da torre. Tenha cuidado, o caminho até lá é perigoso.",
+          "options": [
+            {
+              "text": "Voltarei com a flor assim que possível.",
+              "effect": {"states.questActive": true}
+            }
+          ]
+        },
+        "reject_quest": {
+          "text": "Compreensível. É uma jornada perigosa. Se mudar de ideia, estarei aqui.",
+          "options": []
+        },
+        "entity": {
+          "text": "Um elemental de sombras. Uma criatura feita de pura escuridão que se alimenta de magia. Ela ainda está presa nos níveis superiores, mas temo que esteja ficando mais forte.",
+          "options": [
+            {
+              "text": "Isso é preocupante. Há algo que eu possa fazer?",
+              "next": "help_entity"
+            },
+            {
+              "text": "Vou me manter longe dos níveis superiores então.",
+              "effect": {"states.warnedAboutEntity": true}
+            }
+          ]
+        },
+        "fixed_error": {
+          "text": "Não completamente. Consegui contê-lo, mas não destruí-lo. É por isso que continuo aqui, estudando uma forma de banir a criatura de volta ao plano das sombras.",
+          "options": [
+            {
+              "text": "Espero que tenha sucesso.",
+              "effect": {"states.encouragedAlchemist": true}
+            }
+          ]
+        },
+        "why_preserve": {
+          "text": "Porque o conhecimento em si não é bom nem mau, é como ele é usado que importa. Destruir conhecimento é sempre uma perda para a humanidade. Meu dever é preservá-lo até que estejamos prontos para usá-lo com sabedoria.",
+          "options": [
+            {
+              "text": "Uma perspectiva nobre.",
+              "effect": {"states.respectAlchemist": true}
+            }
+          ]
+        },
+        "learn_more": {
+          "text": "Hmm, vejo curiosidade em seus olhos. Talvez, se você provar ser digno de confiança, eu possa compartilhar alguns conhecimentos básicos. Volte depois de explorar mais da torre.",
+          "options": [
+            {
+              "text": "Farei isso.",
+              "effect": {"states.interestedInKnowledge": true}
+            }
+          ]
+        },
+        "request_amulet": {
+          "text": "Este é meu único amuleto detector... mas vejo que você é um explorador corajoso. Talvez possa ser mais útil em suas mãos do que nas minhas. Tome, mas use-o com sabedoria.",
+          "options": [
+            {
+              "text": "Muito obrigado! Isso será muito útil.",
+              "effect": {"states.receivedAmulet": true},
+              "items": [
+                {
+                  "id": "trap-detector",
+                  "content": "Amuleto Detector",
+                  "description": "Um pequeno amuleto que brilha na presença de armadilhas mágicas.",
+                  "wearable": true,
+                  "effect": "detect_traps",
+                  "value": 50
+                }
+              ]
+            }
+          ]
+        },
+        "help_entity": {
+          "text": "Talvez... Estou desenvolvendo um artefato que pode conter a criatura, mas preciso de cristais de mana pura. Se encontrar algum em suas explorações, traga para mim.",
+          "options": [
+            {
+              "text": "Vou ficar atento a esses cristais.",
+              "effect": {"states.acceptedCrystalQuest": true}
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "exploration": {
+    "states": {
+      "initial": {
+        "examined": false,
+        "mesasExamined": false,
+        "estantesExamined": false,
+        "equipamentosExamined": false
+      }
+    },
+    "examine": [
+      {
+        "condition": "!states.examined",
+        "text": "O laboratório está cheio de equipamentos alquímicos e mágicos. Há várias mesas de trabalho com experimentos em andamento, estantes com ingredientes e equipamentos estranhos que você nunca viu antes.",
+        "effect": {"states.examined": true},
+        "pointsOfInterest": [
+          {
+            "id": "mesas",
+            "name": "Mesas de Trabalho",
+            "description": "As mesas estão cobertas de pergaminhos com anotações, frascos borbulhantes e instrumentos de medição. Um experimento parece estar em andamento, com um líquido azul sendo aquecido sobre uma chama mágica que não emite fumaça.",
+            "effect": {"states.mesasExamined": true}
+          },
+          {
+            "id": "estantes",
+            "name": "Estantes de Ingredientes",
+            "description": "As estantes contêm centenas de frascos rotulados com nomes estranhos: 'Lágrimas de Sereia', 'Pólen de Flor Noturna', 'Essência de Sombra Cristalizada'. Alguns frascos contêm substâncias que brilham ou se movem por conta própria.",
+            "effect": {"states.estantesExamined": true}
+          },
+          {
+            "id": "equipamentos",
+            "name": "Equipamentos Alquímicos",
+            "description": "Alambiques, cadinhos, balanças de precisão e outros equipamentos mais exóticos que você não consegue identificar. Um aparelho particularmente interessante parece medir algum tipo de energia mágica, com um ponteiro que oscila lentamente.",
+            "effect": {"states.equipamentosExamined": true}
+          }
+        ]
+      },
+      {
+        "condition": "states.examined",
+        "text": "O que você deseja examinar no laboratório?",
+        "pointsOfInterest": [
+          {
+            "id": "mesas",
+            "name": "Mesas de Trabalho",
+            "description": "As mesas estão cobertas de pergaminhos com anotações, frascos borbulhantes e instrumentos de medição. Um experimento parece estar em andamento, com um líquido azul sendo aquecido sobre uma chama mágica que não emite fumaça.",
+            "effect": {"states.mesasExamined": true}
+          },
+          {
+            "id": "estantes",
+            "name": "Estantes de Ingredientes",
+            "description": "As estantes contêm centenas de frascos rotulados com nomes estranhos: 'Lágrimas de Sereia', 'Pólen de Flor Noturna', 'Essência de Sombra Cristalizada'. Alguns frascos contêm substâncias que brilham ou se movem por conta própria.",
+            "effect": {"states.estantesExamined": true}
+          },
+          {
+            "id": "equipamentos",
+            "name": "Equipamentos Alquímicos",
+            "description": "Alambiques, cadinhos, balanças de precisão e outros equipamentos mais exóticos que você não consegue identificar. Um aparelho particularmente interessante parece medir algum tipo de energia mágica, com um ponteiro que oscila lentamente.",
+            "effect": {"states.equipamentosExamined": true}
+          }
+        ]
+      }
+    ],
+    "search": [
+      {
+        "condition": "states.mesasExamined",
+        "text": "Você procura entre os pergaminhos nas mesas de trabalho e encontra uma receita para uma poção de invisibilidade. Parece complexa, mas você consegue entender o suficiente para saber que é valiosa.",
+        "chance": 0.8,
+        "items": [
+          {
+            "id": "receita-invisibilidade",
+            "content": "Receita de Poção de Invisibilidade",
+            "description": "Um pergaminho detalhando como criar uma poção que torna o usuário invisível por um curto período.",
+            "value": 30
+          }
+        ]
+      },
+      {
+        "condition": "states.estantesExamined",
+        "text": "Enquanto examina as estantes, você encontra um pequeno frasco escondido atrás de outros maiores. Ele contém um líquido dourado brilhante.",
+        "chance": 0.7,
+        "items": [
+          {
+            "id": "essencia-dourada",
+            "content": "Essência Dourada",
+            "description": "Um líquido dourado que emite um brilho suave. Parece ser um ingrediente raro para poções avançadas.",
+            "value": 25
+          }
+        ]
+      }
+    ]
+  }
 }
+
