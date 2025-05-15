@@ -2461,7 +2461,8 @@ async function startDialogue(npc) {
     }
     
     // Inicia o diálogo com a primeira fala do NPC
-    await showNPCDialogue(npc, npc.dialogues.initial);
+    await showNPCDialogue(npc, "initial"); // Use a string "initial" em vez de npc.dialogues.initial
+
 }
 
 // Função para exibir a fala do NPC e as opções de resposta
