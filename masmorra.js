@@ -2435,7 +2435,11 @@ async function handleAttributeTestEvent(event, room) {
     
     // Salva o estado
     savePlayerState();
+    
+    // REMOVA ESTA LINHA: Não recrie botões de interação após os testes
+    // createInteractionButtons(room, null);
 }
+
 
 
 
