@@ -1321,107 +1321,161 @@ function createInteractionButtons(room) {
         }
     }
     
-    // Encontra a interação específica para o ponto de interesse atual
-    let activeInteraction = null;
+    // Verifica se há testes disponíveis com base no estado atual
+    let needsLuckTest = false;
+    let needsSkillTest = false;
+    let needsCharismaTest = false;
+    let luckTestContext = null;
+    let skillTestContext = null;
+    let charismaTestContext = null;
     
-    // Verifica cada interação para determinar qual é a correta para o estado atual
+    // Verifica cada interação para determinar quais testes estão disponíveis
     for (const interaction of room.exploration.interactions) {
+        // Verifica se a condição é atendida
         if (evaluateCondition(interaction.condition, room.explorationState)) {
-            // Encontrou uma interação válida
-            activeInteraction = interaction;
-            break; // Usa apenas a primeira interação válida
+            if (interaction.result.action === "testLuck" && !needsLuckTest) {
+                needsLuckTest = true;
+                luckTestContext = {
+                    description: interaction.result.luckTest.description,
+                    room: room,
+                    success: interaction.result.luckTest.success,
+                    failure: interaction.result.luckTest.failure
+                };
+            } else if (interaction.result.action === "testSkill" && !needsSkillTest) {
+                needsSkillTest = true;
+                skillTestContext = {
+                    description: interaction.result.skillTest.description,
+                    difficulty: interaction.result.skillTest.difficulty,
+                    room: room,
+                    success: interaction.result.skillTest.success,
+                    failure: interaction.result.skillTest.failure
+                };
+            } else if (interaction.result.action === "testCharisma" && !needsCharismaTest) {
+                needsCharismaTest = true;
+                charismaTestContext = {
+                    description: interaction.result.charismaTest.description,
+                    difficulty: interaction.result.charismaTest.difficulty,
+                    room: room,
+                    success: interaction.result.charismaTest.success,
+                    failure: interaction.result.charismaTest.failure
+                };
+            }
         }
     }
     
-    // Se não encontrou nenhuma interação válida, retorna
-    if (!activeInteraction) return;
-    
-    // Cria o container para o botão de interação
+    // Cria botões para os testes disponíveis
     const interactionsContainer = document.createElement('div');
     interactionsContainer.id = 'interaction-buttons';
     interactionsContainer.classList.add('interaction-buttons');
     
-    // Cria o botão apropriado com base na ação da interação
-    if (activeInteraction.result.action === "testLuck") {
+    let hasInteractions = false;
+    
+    // Cria botão de teste de sorte se necessário
+    if (needsLuckTest) {
         const luckBtn = document.createElement('button');
         luckBtn.textContent = 'Testar Sorte';
         luckBtn.classList.add('action-btn', 'interaction-btn', 'test-luck-btn');
-        luckBtn.addEventListener('click', () => startLuckTest({
-            description: activeInteraction.result.luckTest.description,
-            room: room,
-            success: activeInteraction.result.luckTest.success,
-            failure: activeInteraction.result.luckTest.failure
-        }));
+        luckBtn.addEventListener('click', () => startLuckTest(luckTestContext));
         interactionsContainer.appendChild(luckBtn);
-    } 
-    else if (activeInteraction.result.action === "testSkill") {
+        hasInteractions = true;
+    }
+    
+    // Cria botão de teste de habilidade se necessário
+    if (needsSkillTest) {
         const skillBtn = document.createElement('button');
         skillBtn.textContent = 'Testar Habilidade';
         skillBtn.classList.add('action-btn', 'interaction-btn', 'test-skill-btn');
         skillBtn.addEventListener('click', async () => {
-            await addLogMessage(activeInteraction.result.skillTest.description, 800);
-            const result = await testSkill(activeInteraction.result.skillTest.difficulty);
+            await addLogMessage(skillTestContext.description, 800);
+            const result = await testSkill(skillTestContext.difficulty);
             
             if (result) {
-                await addLogMessage(activeInteraction.result.skillTest.success.text, 800);
-                if (activeInteraction.result.skillTest.success.effect) {
-                    await applyEffects(activeInteraction.result.skillTest.success.effect, room);
+                // Sucesso
+                await addLogMessage(skillTestContext.success.text, 800);
+                
+                // Aplica efeitos, se houver
+                if (skillTestContext.success.effect) {
+                    await applyEffects(skillTestContext.success.effect, room);
                 }
-                if (activeInteraction.result.skillTest.success.items && activeInteraction.result.skillTest.success.items.length > 0) {
-                    createCollectButton(activeInteraction.result.skillTest.success.items[0]);
+                
+                // Adiciona itens, se houver
+                if (skillTestContext.success.items && skillTestContext.success.items.length > 0) {
+                    createCollectButton(skillTestContext.success.items[0]);
                 }
             } else {
-                await addLogMessage(activeInteraction.result.skillTest.failure.text, 800);
-                if (activeInteraction.result.skillTest.failure.effect) {
-                    await applyEffects(activeInteraction.result.skillTest.failure.effect, room);
+                // Falha
+                await addLogMessage(skillTestContext.failure.text, 800);
+                
+                // Aplica efeitos, se houver
+                if (skillTestContext.failure.effect) {
+                    await applyEffects(skillTestContext.failure.effect, room);
                 }
-                if (activeInteraction.result.skillTest.failure.damage) {
-                    await applyDamageToPlayer(activeInteraction.result.skillTest.failure.damage);
+                
+                // Aplica dano, se houver
+                if (skillTestContext.failure.damage) {
+                    await applyDamageToPlayer(skillTestContext.failure.damage);
                 }
             }
             
+            // Atualiza os botões de interação após o teste
             createInteractionButtons(room);
         });
         interactionsContainer.appendChild(skillBtn);
-    } 
-    else if (activeInteraction.result.action === "testCharisma") {
+        hasInteractions = true;
+    }
+    
+    // Cria botão de teste de carisma se necessário
+    if (needsCharismaTest) {
         const charismaBtn = document.createElement('button');
         charismaBtn.textContent = 'Testar Carisma';
         charismaBtn.classList.add('action-btn', 'interaction-btn', 'test-charisma-btn');
         charismaBtn.addEventListener('click', async () => {
-            await addLogMessage(activeInteraction.result.charismaTest.description, 800);
-            const result = await testCharisma(activeInteraction.result.charismaTest.difficulty);
+            await addLogMessage(charismaTestContext.description, 800);
+            const result = await testCharisma(charismaTestContext.difficulty);
             
             if (result) {
-                await addLogMessage(activeInteraction.result.charismaTest.success.text, 800);
-                if (activeInteraction.result.charismaTest.success.effect) {
-                    await applyEffects(activeInteraction.result.charismaTest.success.effect, room);
+                // Sucesso
+                await addLogMessage(charismaTestContext.success.text, 800);
+                
+                // Aplica efeitos, se houver
+                if (charismaTestContext.success.effect) {
+                    await applyEffects(charismaTestContext.success.effect, room);
                 }
-                if (activeInteraction.result.charismaTest.success.items && activeInteraction.result.charismaTest.success.items.length > 0) {
-                    createCollectButton(activeInteraction.result.charismaTest.success.items[0]);
+                
+                // Adiciona itens, se houver
+                if (charismaTestContext.success.items && charismaTestContext.success.items.length > 0) {
+                    createCollectButton(charismaTestContext.success.items[0]);
                 }
             } else {
-                await addLogMessage(activeInteraction.result.charismaTest.failure.text, 800);
-                if (activeInteraction.result.charismaTest.failure.effect) {
-                    await applyEffects(activeInteraction.result.charismaTest.failure.effect, room);
+                // Falha
+                await addLogMessage(charismaTestContext.failure.text, 800);
+                
+                // Aplica efeitos, se houver
+                if (charismaTestContext.failure.effect) {
+                    await applyEffects(charismaTestContext.failure.effect, room);
                 }
-                if (activeInteraction.result.charismaTest.failure.damage) {
-                    await applyDamageToPlayer(activeInteraction.result.charismaTest.failure.damage);
+                
+                // Aplica dano, se houver
+                if (charismaTestContext.failure.damage) {
+                    await applyDamageToPlayer(charismaTestContext.failure.damage);
                 }
             }
             
+            // Atualiza os botões de interação após o teste
             createInteractionButtons(room);
         });
         interactionsContainer.appendChild(charismaBtn);
+        hasInteractions = true;
     }
     
-    // Adiciona o container à interface
-    const actionButtons = document.getElementById('action-buttons');
-    if (actionButtons) {
-        actionButtons.appendChild(interactionsContainer);
+    // Só adiciona o container se houver interações disponíveis
+    if (hasInteractions) {
+        const actionButtons = document.getElementById('action-buttons');
+        if (actionButtons) {
+            actionButtons.appendChild(interactionsContainer);
+        }
     }
 }
-
 
 
 // Função para remover botões de interação
