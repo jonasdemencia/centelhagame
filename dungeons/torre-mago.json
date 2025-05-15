@@ -137,123 +137,123 @@
           }
         ],
         "interactions": [
-          {
-            "id": "teste-sorte-pilar",
-            "name": "Testar Sorte com Pedra Instável",
-            "condition": "states.pillarExamined && !states.luckTestCompleted",
-            "description": "Você nota uma pedra instável no teto, logo acima do pilar. A pedra parece que pode cair a qualquer momento.",
-            "result": {
-              "text": "Você ouve um ruído de rachadura vindo do teto. Uma pedra grande está se soltando acima de você!",
-              "action": "testLuck",
-              "luckTest": {
-                "description": "Uma pedra grande está se soltando do teto! Você precisa testar sua sorte para escapar antes que ela caia.",
-                "success": {
-                  "text": "Com um movimento rápido, você consegue se afastar antes que a pedra caia estrondosamente no chão!",
-                  "effect": {"states.luckTestCompleted": true}
-                },
-                "failure": {
-                  "text": "Você não consegue se afastar a tempo e a pedra cai sobre você!",
-                  "effect": {"states.luckTestCompleted": true},
-                  "damage": {
-                    "amount": "20",
-                    "message": "A pedra atinge você com força esmagadora!"
-                  }
-                }
-              }
-            }
-          },
-          {
-            "id": "teste-habilidade",
-            "name": "Decifrar Símbolos Arcanos",
-            "condition": "states.pillarExamined && !states.skillTestCompleted",
-            "description": "Os símbolos arcanos nos pilares parecem formar algum tipo de código ou mensagem. Talvez você consiga decifrá-los com sua habilidade.",
-            "result": {
-              "text": "Você tenta decifrar os símbolos arcanos nos pilares...",
-              "action": "testSkill",
-              "skillTest": {
-                "description": "Você precisa usar sua habilidade para decifrar os símbolos arcanos.",
-                "difficulty": 15,
-                "success": {
-                  "text": "Após alguns minutos de estudo, você consegue decifrar os símbolos! Eles revelam a localização de um compartimento secreto em um dos pilares. Dentro dele, você encontra um pequeno frasco.",
-                  "effect": {"states.skillTestCompleted": true},
-                  "items": [
-                    {
-                      "id": "pocao-mana",
-                      "content": "Poção de Mana",
-                      "description": "Um frasco contendo um líquido azul brilhante que restaura energia mágica.",
-                      "consumable": true,
-                      "effect": "restore_mana",
-                      "value": 25
-                    }
-                  ]
-                },
-                "failure": {
-                  "text": "Você tenta decifrar os símbolos, mas eles são complexos demais para seu conhecimento atual. Talvez com mais estudo...",
-                  "effect": {"states.skillTestCompleted": true}
-                }
-              }
-            }
-          },
-          {
-            "id": "teste-carisma",
-            "name": "Comunicar com Espírito do Mago",
-            "condition": "states.statueExamined && !states.charismaTestCompleted",
-            "description": "Você sente uma presença etérea ao redor da estátua do mago. Talvez seja possível estabelecer algum tipo de comunicação.",
-            "result": {
-              "text": "Você tenta se comunicar com o espírito do mago que parece habitar a estátua...",
-              "action": "testCharisma",
-              "charismaTest": {
-                "description": "Você tenta estabelecer uma conexão com a presença espiritual usando seu carisma.",
-                "difficulty": 18,
-                "success": {
-                  "text": "Surpreendentemente, uma voz etérea responde à sua tentativa de comunicação! 'Bem-vindo, buscador de conhecimento. Poucos conseguem me ouvir. Como recompensa por sua sensibilidade, deixo-lhe este conselho: Na biblioteca, procure pelo livro que não tem título, mas tem todas as respostas.' O espírito então desaparece.",
-                  "effect": {"states.charismaTestCompleted": true, "states.receivedMagoTip": true}
-                },
-                "failure": {
-                  "text": "Você tenta se comunicar, mas não recebe nenhuma resposta. Apenas o silêncio da torre abandonada.",
-                  "effect": {"states.charismaTestCompleted": true}
-                }
-              }
-            }
-          },
-          {
-            "id": "mecanismo-antigo",
-            "name": "Ativar Mecanismo Antigo",
-            "condition": "states.floorExamined && !states.mechanismActivated",
-            "description": "Entre as rachaduras do piso, você nota um padrão circular que parece ser um mecanismo antigo. Há uma série de símbolos que precisam ser alinhados na sequência correta para ativá-lo.",
-            "result": {
-              "text": "Você tenta decifrar a sequência correta para ativar o mecanismo...",
-              "action": "testSkill",
-              "skillTest": {
-                "description": "O mecanismo é complexo e requer precisão e conhecimento arcano para ser ativado. Você precisa alinhar os símbolos na sequência correta.",
-                "difficulty": 17,
-                "success": {
-                  "text": "Com habilidade e precisão, você consegue alinhar os símbolos na sequência correta! O mecanismo emite um suave clique e o chão treme levemente. Uma seção do piso desliza para o lado, revelando um compartimento secreto contendo um amuleto antigo.",
-                  "effect": {"states.mechanismActivated": true},
-                  "items": [
-                    {
-                      "id": "amuleto-protetor",
-                      "content": "Amuleto Protetor",
-                      "description": "Um amuleto de prata com uma pedra azul no centro. Quando usado, oferece proteção contra magias hostis.",
-                      "wearable": true,
-                      "effect": "magic_protection",
-                      "value": 75
-                    }
-                  ]
-                },
-                "failure": {
-                  "text": "Você tenta alinhar os símbolos, mas a sequência parece muito complexa. Subitamente, o mecanismo emite um som agudo e uma pequena explosão de energia arcana é liberada!",
-                  "effect": {"states.mechanismActivated": true, "states.mechanismFailed": true},
-                  "damage": {
-                    "amount": "1D8",
-                    "type": "magic",
-                    "message": "Uma explosão de energia arcana atinge você!"
-                  }
-                }
-              }
-            }
+  {
+    "id": "teste-sorte-pilar",
+    "name": "Testar Sorte com Pedra Instável",
+    "condition": "states.pillarExamined && !states.luckTestCompleted",
+    "description": "Você nota uma pedra instável no teto, logo acima do pilar. A pedra parece que pode cair a qualquer momento.",
+    "result": {
+      "text": "Você ouve um ruído de rachadura vindo do teto. Uma pedra grande está se soltando acima de você!",
+      "action": "testLuck",
+      "luckTest": {
+        "description": "Uma pedra grande está se soltando do teto! Você precisa testar sua sorte para escapar antes que ela caia.",
+        "success": {
+          "text": "Com um movimento rápido, você consegue se afastar antes que a pedra caia estrondosamente no chão!",
+          "effect": {"states.luckTestCompleted": true}
+        },
+        "failure": {
+          "text": "Você não consegue se afastar a tempo e a pedra cai sobre você!",
+          "effect": {"states.luckTestCompleted": true},
+          "damage": {
+            "amount": "20",
+            "message": "A pedra atinge você com força esmagadora!"
           }
-        ]
+        }
+      }
+    }
+  },
+  {
+    "id": "teste-habilidade",
+    "name": "Decifrar Símbolos Arcanos",
+    "condition": "states.floorExamined && !states.skillTestCompleted",
+    "description": "Os símbolos arcanos no piso rachado parecem formar algum tipo de código ou mensagem. Talvez você consiga decifrá-los com sua habilidade.",
+    "result": {
+      "text": "Você tenta decifrar os símbolos arcanos no piso...",
+      "action": "testSkill",
+      "skillTest": {
+        "description": "Você precisa usar sua habilidade para decifrar os símbolos arcanos.",
+        "difficulty": 15,
+        "success": {
+          "text": "Após alguns minutos de estudo, você consegue decifrar os símbolos! Eles revelam a localização de um compartimento secreto em um dos pilares. Dentro dele, você encontra um pequeno frasco.",
+          "effect": {"states.skillTestCompleted": true},
+          "items": [
+            {
+              "id": "pocao-mana",
+              "content": "Poção de Mana",
+              "description": "Um frasco contendo um líquido azul brilhante que restaura energia mágica.",
+              "consumable": true,
+              "effect": "restore_mana",
+              "value": 25
+            }
+          ]
+        },
+        "failure": {
+          "text": "Você tenta decifrar os símbolos, mas eles são complexos demais para seu conhecimento atual. Talvez com mais estudo...",
+          "effect": {"states.skillTestCompleted": true}
+        }
+      }
+    }
+  },
+  {
+    "id": "teste-carisma",
+    "name": "Comunicar com Espírito do Mago",
+    "condition": "states.statueExamined && !states.charismaTestCompleted",
+    "description": "Você sente uma presença etérea ao redor da estátua do mago. Talvez seja possível estabelecer algum tipo de comunicação.",
+    "result": {
+      "text": "Você tenta se comunicar com o espírito do mago que parece habitar a estátua...",
+      "action": "testCharisma",
+      "charismaTest": {
+        "description": "Você tenta estabelecer uma conexão com a presença espiritual usando seu carisma.",
+        "difficulty": 18,
+        "success": {
+          "text": "Surpreendentemente, uma voz etérea responde à sua tentativa de comunicação! 'Bem-vindo, buscador de conhecimento. Poucos conseguem me ouvir. Como recompensa por sua sensibilidade, deixo-lhe este conselho: Na biblioteca, procure pelo livro que não tem título, mas tem todas as respostas.' O espírito então desaparece.",
+          "effect": {"states.charismaTestCompleted": true, "states.receivedMagoTip": true}
+        },
+        "failure": {
+          "text": "Você tenta se comunicar, mas não recebe nenhuma resposta. Apenas o silêncio da torre abandonada.",
+          "effect": {"states.charismaTestCompleted": true}
+        }
+      }
+    }
+  },
+  {
+    "id": "mecanismo-antigo",
+    "name": "Ativar Mecanismo Antigo",
+    "condition": "states.floorExamined && !states.mechanismActivated",
+    "description": "Entre as rachaduras do piso, você nota um padrão circular que parece ser um mecanismo antigo. Há uma série de símbolos que precisam ser alinhados na sequência correta para ativá-lo.",
+    "result": {
+      "text": "Você tenta decifrar a sequência correta para ativar o mecanismo...",
+      "action": "testSkill",
+      "skillTest": {
+        "description": "O mecanismo é complexo e requer precisão e conhecimento arcano para ser ativado. Você precisa alinhar os símbolos na sequência correta.",
+        "difficulty": 17,
+        "success": {
+          "text": "Com habilidade e precisão, você consegue alinhar os símbolos na sequência correta! O mecanismo emite um suave clique e o chão treme levemente. Uma seção do piso desliza para o lado, revelando um compartimento secreto contendo um amuleto antigo.",
+          "effect": {"states.mechanismActivated": true},
+          "items": [
+            {
+              "id": "amuleto-protetor",
+              "content": "Amuleto Protetor",
+              "description": "Um amuleto de prata com uma pedra azul no centro. Quando usado, oferece proteção contra magias hostis.",
+              "wearable": true,
+              "effect": "magic_protection",
+              "value": 75
+            }
+          ]
+        },
+        "failure": {
+          "text": "Você tenta alinhar os símbolos, mas a sequência parece muito complexa. Subitamente, o mecanismo emite um som agudo e uma pequena explosão de energia arcana é liberada!",
+          "effect": {"states.mechanismActivated": true, "states.mechanismFailed": true},
+          "damage": {
+            "amount": "1D8",
+            "type": "magic",
+            "message": "Uma explosão de energia arcana atinge você!"
+          }
+        }
+      }
+    }
+  }
+]
       }
     },
     "room-2": {
