@@ -1398,7 +1398,7 @@ function createInteractionButtons(room, poiId) {
                 }
             }
             
-            createInteractionButtons(room);
+            createInteractionButtons(room, null);
         });
         interactionsContainer.appendChild(skillBtn);
     } 
@@ -1429,7 +1429,7 @@ function createInteractionButtons(room, poiId) {
                 }
             }
             
-            createInteractionButtons(room);
+            createInteractionButtons(room, null);
         });
         interactionsContainer.appendChild(charismaBtn);
     }
