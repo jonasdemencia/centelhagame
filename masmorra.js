@@ -196,7 +196,7 @@ let playerState = {
     discoveredRooms: ["room-1"],
     visitedRooms: [],
     inventory: [],
-    health: 100
+    health: 100,
     discoveredBlocks: [] // Adicione esta linha
 };
 
@@ -1950,7 +1950,7 @@ async function loadPlayerState() {
                 visitedRooms: data.visitedRooms || [],
                 inventory: data.inventory || [],
                 health: data.health || playerEnergy, // Usa a energia do jogador se disponível
-                discoveredBlocks: data.discoveredBlocks || [] // Adicione esta linha
+                discoveredBlocks: data.discoveredBlocks || [], // Adicione esta linha
                 attributes: attributes // Usa os atributos do jogador
             };
             
