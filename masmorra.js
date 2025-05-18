@@ -842,7 +842,8 @@ for (const block of blocksToUse) {
         if (room.exits) {
             room.exits.forEach(exit => {
                 // Só desenha a porta se a sala de destino também estiver descoberta
-                if (playerState.discoveredRooms.includes(exit.leadsTo)) {
+                        if (roomId === playerState.currentRoom || playerState.discoveredRooms.includes(exit.leadsTo)) {
+
                     if (exit.type === "door") {
                         const width = room.gridWidth * GRID_CELL_SIZE;
                         const height = room.gridHeight * GRID_CELL_SIZE;
