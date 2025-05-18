@@ -754,30 +754,45 @@ function drawMap() {
     
 // Na função drawMap(), substitua o código que desenha os blocos decorativos
 // Desenha os blocos decorativos
+// Verifica se há novos blocos decorativos para descobrir
 const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
 for (const block of blocksToUse) {
-    // Só desenha blocos que já foram descobertos
-    if (playerState.discoveredBlocks && playerState.discoveredBlocks.some(b => 
-        b.gridX === block.gridX && b.gridY === block.gridY)) {
+    // Só processa se o bloco ainda não foi descoberto
+    const alreadyDiscovered = playerState.discoveredBlocks && 
+        playerState.discoveredBlocks.some(b => b.gridX === block.gridX && b.gridY === block.gridY);
+    
+    if (!alreadyDiscovered) {
+        // Para cada bloco, verifica se ele conecta duas salas visitadas
+        // Primeiro, encontra todas as salas visitadas próximas ao bloco
+        const nearbyVisitedRooms = [];
         
-        const x = block.gridX * GRID_CELL_SIZE;
-        const y = block.gridY * GRID_CELL_SIZE;
-        
-        // Desenha as células da grade para formar o bloco
-        for (let cellY = 0; cellY < block.gridHeight; cellY++) {
-            for (let cellX = 0; cellX < block.gridWidth; cellX++) {
-                const cellRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                cellRect.setAttribute("x", x + (cellX * GRID_CELL_SIZE));
-                cellRect.setAttribute("y", y + (cellY * GRID_CELL_SIZE));
-                cellRect.setAttribute("width", GRID_CELL_SIZE);
-                cellRect.setAttribute("height", GRID_CELL_SIZE);
-                cellRect.setAttribute("class", `room ${block.type}`);
-                
-                mapCorridors.appendChild(cellRect);
+        for (const visitedRoomId of playerState.visitedRooms) {
+            const visitedRoom = dungeon.rooms[visitedRoomId];
+            if (!visitedRoom) continue;
+            
+            // Verifica se a sala está próxima ao bloco
+            const distX = Math.abs(block.gridX - visitedRoom.gridX);
+            const distY = Math.abs(block.gridY - visitedRoom.gridY);
+            
+            // Considera uma sala próxima se estiver a no máximo 1 célula de distância
+            if (distX <= 1 && distY <= 1) {
+                nearbyVisitedRooms.push(visitedRoom);
             }
+        }
+        
+        // Se há pelo menos 2 salas visitadas próximas ao bloco, adiciona o bloco
+        if (nearbyVisitedRooms.length >= 2) {
+            if (!playerState.discoveredBlocks) playerState.discoveredBlocks = [];
+            
+            console.log(`Descobrindo bloco em X:${block.gridX}, Y:${block.gridY}`);
+            playerState.discoveredBlocks.push({
+                gridX: block.gridX,
+                gridY: block.gridY
+            });
         }
     }
 }
+
 
 
     
