@@ -196,8 +196,10 @@ let playerState = {
     discoveredRooms: ["room-1"],
     visitedRooms: [],
     inventory: [],
-    health: 100
+    health: 100,
+    discoveredBlocks: [] // Adicione esta linha
 };
+
 
 // Função para atualizar a barra de energia do jogador
 function updateHealthBar() {
@@ -751,27 +753,33 @@ function drawMap() {
     drawGrid();
     
     // Desenha os blocos decorativos
-    // Desenha os blocos decorativos
 // Verifica se dungeon.decorativeBlocks existe, caso contrário usa a variável global
+// Desenha os blocos decorativos
 const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
 for (const block of blocksToUse) {
-    const x = block.gridX * GRID_CELL_SIZE;
-    const y = block.gridY * GRID_CELL_SIZE;
-    
-    // Desenha as células da grade para formar o bloco
-    for (let cellY = 0; cellY < block.gridHeight; cellY++) {
-        for (let cellX = 0; cellX < block.gridWidth; cellX++) {
-            const cellRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            cellRect.setAttribute("x", x + (cellX * GRID_CELL_SIZE));
-            cellRect.setAttribute("y", y + (cellY * GRID_CELL_SIZE));
-            cellRect.setAttribute("width", GRID_CELL_SIZE);
-            cellRect.setAttribute("height", GRID_CELL_SIZE);
-            cellRect.setAttribute("class", `room ${block.type}`);
-            
-            mapCorridors.appendChild(cellRect);
+    // Só desenha blocos que já foram descobertos
+    if (playerState.discoveredBlocks && playerState.discoveredBlocks.some(b => 
+        b.gridX === block.gridX && b.gridY === block.gridY)) {
+        
+        const x = block.gridX * GRID_CELL_SIZE;
+        const y = block.gridY * GRID_CELL_SIZE;
+        
+        // Desenha as células da grade para formar o bloco
+        for (let cellY = 0; cellY < block.gridHeight; cellY++) {
+            for (let cellX = 0; cellX < block.gridWidth; cellX++) {
+                const cellRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                cellRect.setAttribute("x", x + (cellX * GRID_CELL_SIZE));
+                cellRect.setAttribute("y", y + (cellY * GRID_CELL_SIZE));
+                cellRect.setAttribute("width", GRID_CELL_SIZE);
+                cellRect.setAttribute("height", GRID_CELL_SIZE);
+                cellRect.setAttribute("class", `room ${block.type}`);
+                
+                mapCorridors.appendChild(cellRect);
+            }
         }
     }
 }
+
 
     
     // Desenha as salas descobertas
@@ -2652,6 +2660,27 @@ async function moveToRoom(roomId) {
     if (isFirstVisit) {
         playerState.visitedRooms.push(roomId);
         
+        // Descobre blocos decorativos próximos à sala atual
+        const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
+        for (const block of blocksToUse) {
+            // Verifica se o bloco está próximo à sala atual
+            const distX = Math.abs(block.gridX - room.gridX);
+            const distY = Math.abs(block.gridY - room.gridY);
+            
+            // Se o bloco estiver adjacente à sala atual, adiciona à lista de descobertos
+            if (distX <= 1 && distY <= 1) {
+                // Verifica se o bloco já foi descoberto
+                if (!playerState.discoveredBlocks) playerState.discoveredBlocks = [];
+                if (!playerState.discoveredBlocks.some(b => 
+                    b.gridX === block.gridX && b.gridY === block.gridY)) {
+                    playerState.discoveredBlocks.push({
+                        gridX: block.gridX,
+                        gridY: block.gridY
+                    });
+                }
+            }
+        }
+        
         // Inicializa o estado de exploração se não existir
         if (room.exploration && room.exploration.states && room.exploration.states.initial) {
             room.explorationState = { ...room.exploration.states.initial };
@@ -2675,6 +2704,7 @@ async function moveToRoom(roomId) {
             }
         }
     }
+
     
     // Adiciona descrição da sala ao log
     startNewLogBlock(room.name);
