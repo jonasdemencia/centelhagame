@@ -2674,30 +2674,46 @@ async function moveToRoom(roomId) {
     if (isFirstVisit) {
         playerState.visitedRooms.push(roomId);
         
-        // Descobre blocos decorativos próximos à sala atual
-        const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
-        for (const block of blocksToUse) {
-            // Verifica se o bloco está próximo à sala atual
-            const distX = Math.abs(block.gridX - room.gridX);
-            const distY = Math.abs(block.gridY - room.gridY);
+        // Verifica se há novos blocos decorativos para descobrir
+const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
+for (const block of blocksToUse) {
+    // Só processa se o bloco ainda não foi descoberto
+    const alreadyDiscovered = playerState.discoveredBlocks && 
+        playerState.discoveredBlocks.some(b => b.gridX === block.gridX && b.gridY === block.gridY);
+    
+    if (!alreadyDiscovered) {
+        // Verifica se o bloco está entre duas salas visitadas
+        // Para cada sala visitada, verifica se há outra sala visitada próxima ao bloco
+        let connectedRooms = 0;
+        
+        for (const visitedRoomId of playerState.visitedRooms) {
+            const visitedRoom = dungeon.rooms[visitedRoomId];
+            if (!visitedRoom) continue;
             
-            // Se o bloco estiver próximo à sala atual, adiciona à lista de descobertos
+            // Verifica se a sala está próxima ao bloco
+            const distX = Math.abs(block.gridX - visitedRoom.gridX);
+            const distY = Math.abs(block.gridY - visitedRoom.gridY);
+            
             if (distX <= 2 && distY <= 2) {
-                if (!playerState.discoveredBlocks) playerState.discoveredBlocks = [];
+                connectedRooms++;
                 
-                // Verifica se o bloco já foi descoberto
-                const alreadyDiscovered = playerState.discoveredBlocks.some(b => 
-                    b.gridX === block.gridX && b.gridY === block.gridY);
+                // Se encontrou pelo menos duas salas visitadas próximas ao bloco, adiciona à lista
+                if (connectedRooms >= 2) {
+                    if (!playerState.discoveredBlocks) playerState.discoveredBlocks = [];
                     
-                if (!alreadyDiscovered) {
                     console.log(`Descobrindo bloco em X:${block.gridX}, Y:${block.gridY}`);
                     playerState.discoveredBlocks.push({
                         gridX: block.gridX,
                         gridY: block.gridY
                     });
+                    
+                    break; // Sai do loop interno
                 }
             }
         }
+    }
+}
+
         
         // Inicializa o estado de exploração se não existir
         if (room.exploration && room.exploration.states && room.exploration.states.initial) {
