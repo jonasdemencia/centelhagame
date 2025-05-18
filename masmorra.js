@@ -755,23 +755,9 @@ function drawMap() {
 // Desenha os blocos decorativos
 const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
 for (const block of blocksToUse) {
-    // Só desenha blocos decorativos que estão em áreas descobertas
-    // Verifica se o bloco está próximo a alguma sala descoberta
-    let shouldDraw = false;
-    
-    for (const roomId of playerState.discoveredRooms) {
-        const room = dungeon.rooms[roomId];
-        if (!room) continue;
-        
-        // Verifica se o bloco está próximo à sala (distância máxima de 2 células)
-        const distX = Math.abs(block.gridX - room.gridX);
-        const distY = Math.abs(block.gridY - room.gridY);
-        
-        if (distX <= 2 && distY <= 2) {
-            shouldDraw = true;
-            break;
-        }
-    }
+    // Só desenha blocos decorativos se o jogador já visitou a sala atual
+    // Isso garante que os corredores só aparecem depois que o jogador passa por eles
+    let shouldDraw = playerState.visitedRooms.includes(playerState.currentRoom);
     
     if (shouldDraw) {
         const x = block.gridX * GRID_CELL_SIZE;
@@ -792,6 +778,7 @@ for (const block of blocksToUse) {
         }
     }
 }
+
 
     
     // Desenha as salas descobertas
