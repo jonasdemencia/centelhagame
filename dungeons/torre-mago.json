@@ -1,197 +1,374 @@
 {
-  "titulo": "Torre dos Magos",
-  "descricao": "Uma aventura perigosa através de uma torre mágica antiga, onde cada decisão pode ser fatal.",
-  "andares": [
-    {
-      "id": 1,
-      "nome": "Entrada da Torre",
-      "descricao": "Um portal imponente de pedra negra com runas brilhantes. O ar vibra com energia mágica.",
-      "encontros": [
+  "name": "Torre dos Magos",
+  "description": "Uma aventura perigosa através de uma torre mágica antiga, onde cada decisão pode ser fatal.",
+  "entrance": "andar-1",
+  "rooms": {
+    "andar-1": {
+      "id": "andar-1",
+      "name": "Entrada da Torre",
+      "description": "Um portal imponente de pedra negra com runas brilhantes. O ar vibra com energia mágica.",
+      "type": "room",
+      "exits": [
+        {"direction": "norte", "target": "andar-2"}
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 5,
+      "gridY": 5,
+      "gridWidth": 4,
+      "gridHeight": 4,
+      "events": [
+        { "type": "first-visit", "text": "As portas da torre se fecham atrás de você com um estrondo. Não há volta." }
+      ],
+      "npcs": [
         {
-          "tipo": "dialogo",
-          "personagem": "Guardião da Torre",
-          "texto": "Poucos retornam desta torre com a mente intacta. Sua determinação será testada.",
-          "opcoes": [
-            {
-              "texto": "Seguir em frente com coragem",
-              "consequencia": {"destino": 2, "atributo": "coragem", "valor": 1}
+          "id": "guardiao-torre",
+          "name": "Guardião da Torre",
+          "description": "Um homem alto com vestes cinzentas e olhos que parecem ver através da sua alma.",
+          "dialogues": {
+            "initial": {
+              "text": "Poucos retornam desta torre com a mente intacta. Sua determinação será testada.",
+              "options": [
+                {
+                  "text": "Seguir em frente com coragem",
+                  "next": "coragem",
+                  "effect": {
+                    "states.coragem": 1
+                  }
+                },
+                {
+                  "text": "Perguntar sobre os perigos",
+                  "next": "perigos"
+                }
+              ]
             },
+            "coragem": {
+              "text": "Vejo que tem determinação. Isso será útil nos andares superiores. Tome este pergaminho, pode ajudá-lo.",
+              "options": [
+                {
+                  "text": "Agradecer e seguir em frente",
+                  "next": "despedida",
+                  "items": [
+                    {
+                      "id": "pergaminho-protecao",
+                      "content": "Pergaminho de Proteção",
+                      "description": "Um pergaminho com símbolos de proteção que brilham quando o perigo se aproxima."
+                    }
+                  ]
+                }
+              ]
+            },
+            "perigos": {
+              "text": "Os perigos são muitos, mas o maior deles é a ambição desmedida. Muitos entram buscando poder e encontram apenas a loucura.",
+              "options": [
+                {
+                  "text": "Entendo. Seguirei com cautela.",
+                  "next": "despedida"
+                }
+              ]
+            },
+            "despedida": {
+              "text": "Que a sabedoria guie seus passos. A torre revelará segredos diferentes para cada visitante."
+            }
+          }
+        }
+      ],
+      "items": []
+    },
+    "andar-2": {
+      "id": "andar-2",
+      "name": "Salão dos Espelhos",
+      "description": "Dezenas de espelhos refletem sua imagem, mas cada reflexo mostra uma versão ligeiramente diferente de você.",
+      "type": "room",
+      "exits": [
+        {"direction": "sul", "target": "andar-1"},
+        {"direction": "leste", "target": "andar-3"}
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 5,
+      "gridY": 2,
+      "gridWidth": 4,
+      "gridHeight": 4,
+      "events": [
+        { "type": "first-visit", "text": "Os espelhos parecem observá-lo. Um deles brilha intensamente quando você passa." }
+      ],
+      "traps": [
+        {
+          "id": "espelho-verdade",
+          "name": "Espelho da Verdade",
+          "description": "Um espelho que brilha intensamente, atraindo você para mais perto.",
+          "difficulty": 12,
+          "attribute": "sabedoria",
+          "success": {
+            "text": "Você resiste ao chamado do espelho e percebe uma pequena rachadura em sua superfície. Ao tocar nela, um fragmento se desprende.",
+            "items": [
+              {
+                "id": "fragmento-espelho",
+                "content": "Fragmento de Espelho",
+                "description": "Um pedaço de espelho mágico que mostra brevemente o futuro quando olhado sob a luz da lua."
+              }
+            ]
+          },
+          "failure": {
+            "text": "O espelho suga parte de sua energia vital. Você sente-se momentaneamente fraco.",
+            "damage": 2
+          }
+        }
+      ],
+      "items": []
+    },
+    "andar-3": {
+      "id": "andar-3",
+      "name": "Biblioteca Proibida",
+      "description": "Estantes infinitas de livros antigos. Alguns volumes parecem se mover por conta própria.",
+      "type": "room",
+      "exits": [
+        {"direction": "oeste", "target": "andar-2"},
+        {"direction": "norte", "target": "andar-4"}
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 9,
+      "gridY": 2,
+      "gridWidth": 4,
+      "gridHeight": 4,
+      "events": [
+        { "type": "first-visit", "text": "O cheiro de papel antigo e tinta enche o ar. Um livro cai de uma prateleira próxima." }
+      ],
+      "enemies": [
+        {
+          "id": "livro-demoniaco",
+          "name": "Livro Demoníaco",
+          "description": "Um tomo encadernado em couro que flutua no ar, suas páginas viram-se violentamente.",
+          "health": 5,
+          "attack": 3,
+          "loot": [
             {
-              "texto": "Perguntar sobre os perigos",
-              "consequencia": {"destino": 1, "dialogo": "Os perigos são muitos, mas o maior deles é a ambição desmedida."}
+              "id": "pagina-encantada",
+              "content": "Página Encantada",
+              "description": "Uma página que muda seu conteúdo conforme a necessidade do leitor."
             }
           ]
         }
       ],
-      "itens": [
-        {"nome": "Pergaminho de Proteção", "efeito": {"tipo": "defesa", "valor": 2}}
-      ]
-    },
-    {
-      "id": 2,
-      "nome": "Salão dos Espelhos",
-      "descricao": "Dezenas de espelhos refletem sua imagem, mas cada reflexo mostra uma versão ligeiramente diferente de você.",
-      "encontros": [
+      "npcs": [
         {
-          "tipo": "armadilha",
-          "nome": "Espelho da Verdade",
-          "descricao": "Um dos espelhos brilha intensamente quando você passa.",
-          "teste": {"atributo": "sabedoria", "dificuldade": 12},
-          "sucesso": {"texto": "Você resiste ao chamado do espelho.", "recompensa": {"item": "Fragmento de Espelho"}},
-          "falha": {"texto": "O espelho suga parte de sua energia vital.", "dano": 2}
-        }
-      ],
-      "itens": []
-    },
-    {
-      "id": 3,
-      "nome": "Biblioteca Proibida",
-      "descricao": "Estantes infinitas de livros antigos. Alguns volumes parecem se mover por conta própria.",
-      "encontros": [
-        {
-          "tipo": "combate",
-          "inimigo": "Livro Demoníaco",
-          "vida": 5,
-          "ataque": 3,
-          "recompensa": {"conhecimento": 1, "item": "Página Encantada"}
-        },
-        {
-          "tipo": "dialogo",
-          "personagem": "Bibliotecário Fantasma",
-          "texto": "O conhecimento tem seu preço. Está disposto a pagá-lo?",
-          "opcoes": [
-            {
-              "texto": "Sim, preciso desse conhecimento",
-              "consequencia": {"destino": 3, "atributo": "conhecimento", "valor": 2, "custo": {"vida": 1}}
+          "id": "bibliotecario-fantasma",
+          "name": "Bibliotecário Fantasma",
+          "description": "Uma figura translúcida com óculos antigos e mãos que nunca param de organizar livros.",
+          "dialogues": {
+            "initial": {
+              "text": "O conhecimento tem seu preço. Está disposto a pagá-lo?",
+              "options": [
+                {
+                  "text": "Sim, preciso desse conhecimento",
+                  "next": "aceita_conhecimento",
+                  "effect": {
+                    "states.conhecimento": 2,
+                    "states.vida": -1
+                  }
+                },
+                {
+                  "text": "Não, alguns segredos devem permanecer ocultos",
+                  "next": "recusa_conhecimento"
+                }
+              ]
             },
-            {
-              "texto": "Não, alguns segredos devem permanecer ocultos",
-              "consequencia": {"destino": 4}
+            "aceita_conhecimento": {
+              "text": "Sábio e tolo ao mesmo tempo. Tome este tomo, ele contém feitiços básicos que podem ajudá-lo. Mas lembre-se, cada página virada é um passo mais próximo do abismo.",
+              "options": [
+                {
+                  "text": "Agradecer e pegar o livro",
+                  "next": "despedida",
+                  "items": [
+                    {
+                      "id": "tomo-feiticos",
+                      "content": "Tomo de Feitiços",
+                      "description": "Um livro antigo contendo feitiços básicos de proteção e ataque."
+                    }
+                  ]
+                }
+              ]
+            },
+            "recusa_conhecimento": {
+              "text": "Prudência é uma virtude rara nestes tempos. Talvez você sobreviva à torre, afinal.",
+              "options": [
+                {
+                  "text": "Seguir em frente",
+                  "next": "despedida"
+                }
+              ]
+            },
+            "despedida": {
+              "text": "Os livros sempre estarão aqui, esperando. O conhecimento é paciente, mais paciente que qualquer mortal."
             }
-          ]
+          }
         }
       ],
-      "itens": [
-        {"nome": "Tomo de Feitiços", "efeito": {"tipo": "magia", "valor": 1}}
-      ]
+      "items": []
     },
-    {
-      "id": 4,
-      "nome": "Câmara Elemental",
-      "descricao": "Quatro pilares representando os elementos clássicos. O ar crepita com energia pura.",
-      "encontros": [
+    "andar-4": {
+      "id": "andar-4",
+      "name": "Câmara Elemental",
+      "description": "Quatro pilares representando os elementos clássicos. O ar crepita com energia pura.",
+      "type": "room",
+      "exits": [
+        {"direction": "sul", "target": "andar-3"},
+        {"direction": "leste", "target": "andar-5"}
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 9,
+      "gridY": -2,
+      "gridWidth": 4,
+      "gridHeight": 4,
+      "events": [
+        { "type": "first-visit", "text": "Os quatro pilares pulsam com energia elemental. Você sente que deve ativá-los em uma ordem específica." }
+      ],
+      "puzzles": [
         {
-          "tipo": "puzzle",
-          "nome": "Equilíbrio Elemental",
-          "descricao": "Os pilares devem ser ativados na sequência correta.",
-          "solucao": ["água", "terra", "ar", "fogo"],
-          "tentativas": 3,
-          "sucesso": {"texto": "Os pilares brilham em harmonia, revelando uma passagem.", "destino": 5},
-          "falha": {"texto": "Uma explosão de energia elemental o atinge.", "dano": 3, "destino": 4}
+          "id": "equilibrio-elemental",
+          "name": "Equilíbrio Elemental",
+          "description": "Quatro pilares representando água, terra, ar e fogo devem ser ativados na sequência correta.",
+          "solution": ["água", "terra", "ar", "fogo"],
+          "attempts": 3,
+          "success": {
+            "text": "Os pilares brilham em harmonia, revelando uma passagem secreta.",
+            "unlockExit": "leste"
+          },
+          "failure": {
+            "text": "Uma explosão de energia elemental o atinge.",
+            "damage": 3
+          }
         }
       ],
-      "itens": [
-        {"nome": "Amuleto Elemental", "efeito": {"tipo": "resistencia", "elementos": ["fogo", "gelo"], "valor": 2}}
+      "items": [
+        {
+          "id": "amuleto-elemental",
+          "content": "Amuleto Elemental",
+          "description": "Um amuleto que brilha quando exposto a energias elementais.",
+          "effect": {
+            "type": "resistencia",
+            "elements": ["fogo", "gelo"],
+            "value": 2
+          }
+        }
       ]
     },
-    {
-      "id": 5,
-      "nome": "Santuário do Arquimago",
-      "descricao": "Uma sala circular com um trono de cristal no centro. Símbolos arcanos cobrem as paredes.",
-      "encontros": [
+    "andar-5": {
+      "id": "andar-5",
+      "name": "Santuário do Arquimago",
+      "description": "Uma sala circular com um trono de cristal no centro. Símbolos arcanos cobrem as paredes.",
+      "type": "room",
+      "exits": [
+        {"direction": "oeste", "target": "andar-4"}
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 13,
+      "gridY": -2,
+      "gridWidth": 5,
+      "gridHeight": 5,
+      "events": [
+        { "type": "first-visit", "text": "O ar nesta sala é denso com magia. No centro, sentado em um trono de cristal, está um mago idoso que o observa com interesse." }
+      ],
+      "npcs": [
         {
-          "tipo": "dialogo",
-          "personagem": "Arquimago Zephyrus",
-          "texto": "Você chegou longe, mas sua jornada apenas começou. O que busca na minha torre?",
-          "opcoes": [
-            {
-              "texto": "Poder para proteger os inocentes",
-              "consequencia": {"destino": 5, "alinhamento": "luz", "recompensa": {"item": "Cajado da Proteção"}}
+          "id": "arquimago-zephyrus",
+          "name": "Arquimago Zephyrus",
+          "description": "Um mago idoso com barba prateada e olhos que brilham com poder arcano.",
+          "dialogues": {
+            "initial": {
+              "text": "Você chegou longe, mas sua jornada apenas começou. O que busca na minha torre?",
+              "options": [
+                {
+                  "text": "Poder para proteger os inocentes",
+                  "next": "luz",
+                  "effect": {
+                    "states.alinhamento": "luz"
+                  }
+                },
+                {
+                  "text": "Conhecimento proibido a qualquer custo",
+                  "next": "sombra",
+                  "effect": {
+                    "states.alinhamento": "sombra"
+                  }
+                },
+                {
+                  "text": "Compreensão dos mistérios arcanos",
+                  "next": "neutro",
+                  "effect": {
+                    "states.alinhamento": "neutro"
+                  }
+                }
+              ]
             },
-            {
-              "texto": "Conhecimento proibido a qualquer custo",
-              "consequencia": {"destino": 5, "alinhamento": "sombra", "recompensa": {"item": "Grimório das Sombras"}}
+            "luz": {
+              "text": "Nobre propósito. O poder sem sabedoria é perigoso, mas você parece ter ambos. Tome este cajado, ele amplificará sua capacidade de proteger aqueles que ama.",
+              "options": [
+                {
+                  "text": "Agradecer e aceitar o presente",
+                  "next": "conclusao",
+                  "items": [
+                    {
+                      "id": "cajado-protecao",
+                      "content": "Cajado da Proteção",
+                      "description": "Um cajado de madeira branca que fortalece feitiços defensivos."
+                    }
+                  ]
+                }
+              ]
             },
-            {
-              "texto": "Compreensão dos mistérios arcanos",
-              "consequencia": {"destino": 5, "alinhamento": "neutro", "recompensa": {"item": "Orbe da Sabedoria"}}
+            "sombra": {
+              "text": "Ambição perigosa, mas honesta. O conhecimento proibido tem seu preço, e nem todos estão dispostos a pagá-lo. Este grimório contém segredos que poucos ousaram explorar.",
+              "options": [
+                {
+                  "text": "Pegar o grimório ansiosamente",
+                  "next": "conclusao",
+                  "items": [
+                    {
+                      "id": "grimorio-sombras",
+                      "content": "Grimório das Sombras",
+                      "description": "Um livro encadernado em couro negro que sussurra segredos proibidos."
+                    }
+                  ]
+                }
+              ]
+            },
+            "neutro": {
+              "text": "O equilíbrio é o caminho mais difícil, mas também o mais sábio. A compreensão vem antes do poder ou da proteção. Este orbe ajudará a clarear sua mente e expandir sua percepção.",
+              "options": [
+                {
+                  "text": "Aceitar o orbe com reverência",
+                  "next": "conclusao",
+                  "items": [
+                    {
+                      "id": "orbe-sabedoria",
+                      "content": "Orbe da Sabedoria",
+                      "description": "Uma esfera de cristal que clareia a mente e aumenta a compreensão arcana."
+                    }
+                  ]
+                }
+              ]
+            },
+            "conclusao": {
+              "text": "Você completou apenas o primeiro teste. A torre tem muitos andares ainda por explorar, cada um com seus próprios desafios e recompensas. Volte quando estiver pronto para continuar sua jornada.",
+              "options": [
+                {
+                  "text": "Agradecer e prometer retornar",
+                  "next": "despedida"
+                }
+              ]
+            },
+            "despedida": {
+              "text": "Até nosso próximo encontro, aventureiro. Que a sabedoria guie seus passos."
             }
-          ]
+          }
         }
       ],
-      "itens": []
+      "items": []
     }
-  ],
-  "personagens": {
-    "Guardião da Torre": {
-      "descricao": "Um homem alto com vestes cinzentas e olhos que parecem ver através da sua alma.",
-      "motivacao": "Testar os visitantes e afastar os indignos."
-    },
-    "Bibliotecário Fantasma": {
-      "descricao": "Uma figura translúcida com óculos antigos e mãos que nunca param de organizar livros.",
-      "motivacao": "Proteger o conhecimento e garantir que caia em mãos responsáveis."
-    },
-    "Arquimago Zephyrus": {
-      "descricao": "Um mago idoso com barba prateada e olhos que brilham com poder arcano.",
-      "motivacao": "Encontrar um sucessor digno para seus conhecimentos."
-    }
-  },
-  "itens": {
-    "Pergaminho de Proteção": {
-      "descricao": "Um pergaminho com símbolos de proteção que brilham quando o perigo se aproxima.",
-      "uso_unico": true
-    },
-    "Fragmento de Espelho": {
-      "descricao": "Um pedaço de espelho mágico que mostra brevemente o futuro quando olhado sob a luz da lua.",
-      "uso_unico": false
-    },
-    "Tomo de Feitiços": {
-      "descricao": "Um livro antigo contendo feitiços básicos de proteção e ataque.",
-      "uso_unico": false
-    },
-    "Página Encantada": {
-      "descricao": "Uma página que muda seu conteúdo conforme a necessidade do leitor.",
-      "uso_unico": true
-    },
-    "Amuleto Elemental": {
-      "descricao": "Um amuleto que brilha quando exposto a energias elementais.",
-      "uso_unico": false
-    },
-    "Cajado da Proteção": {
-      "descricao": "Um cajado de madeira branca que fortalece feitiços defensivos.",
-      "uso_unico": false
-    },
-    "Grimório das Sombras": {
-      "descricao": "Um livro encadernado em couro negro que sussurra segredos proibidos.",
-      "uso_unico": false
-    },
-    "Orbe da Sabedoria": {
-      "descricao": "Uma esfera de cristal que clareia a mente e aumenta a compreensão arcana.",
-      "uso_unico": false
-    }
-  },
-  "atributos_jogador": {
-    "vida": 10,
-    "coragem": 0,
-    "sabedoria": 0,
-    "conhecimento": 0,
-    "alinhamento": "neutro"
-  },
-  "andares_futuros": [
-    {"id": 6, "nome": "Jardim Suspenso", "disponivel": false},
-    {"id": 7, "nome": "Laboratório Alquímico", "disponivel": false},
-    {"id": 8, "nome": "Câmara de Invocação", "disponivel": false},
-    {"id": 9, "nome": "Observatório Celestial", "disponivel": false},
-    {"id": 10, "nome": "Cripta dos Magos Antigos", "disponivel": false},
-    {"id": 11, "nome": "Sala das Ilusões", "disponivel": false},
-    {"id": 12, "nome": "Forja Arcana", "disponivel": false},
-    {"id": 13, "nome": "Câmara de Cristal", "disponivel": false},
-    {"id": 14, "nome": "Salão dos Elementais", "disponivel": false},
-    {"id": 15, "nome": "Ponte Dimensional", "disponivel": false},
-    {"id": 16, "nome": "Arquivo Proibido", "disponivel": false},
-    {"id": 17, "nome": "Sala do Tempo", "disponivel": false},
-    {"id": 18, "nome": "Câmara do Conselho", "disponivel": false},
-    {"id": 19, "nome": "Santuário Interior", "disponivel": false},
-    {"id": 20, "nome": "Pináculo da Torre", "disponivel": false}
-  ]
+  }
 }
