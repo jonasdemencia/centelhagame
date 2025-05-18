@@ -750,25 +750,45 @@ function drawMap() {
     // Desenha a grade de fundo
     drawGrid();
     
-    // Desenha os blocos decorativos
-    // Desenha os blocos decorativos
-// Verifica se dungeon.decorativeBlocks existe, caso contrário usa a variável global
+
+    
+// Desenha os blocos decorativos
 const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
 for (const block of blocksToUse) {
-    const x = block.gridX * GRID_CELL_SIZE;
-    const y = block.gridY * GRID_CELL_SIZE;
+    // Só desenha blocos decorativos que estão em áreas descobertas
+    // Verifica se o bloco está próximo a alguma sala descoberta
+    let shouldDraw = false;
     
-    // Desenha as células da grade para formar o bloco
-    for (let cellY = 0; cellY < block.gridHeight; cellY++) {
-        for (let cellX = 0; cellX < block.gridWidth; cellX++) {
-            const cellRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            cellRect.setAttribute("x", x + (cellX * GRID_CELL_SIZE));
-            cellRect.setAttribute("y", y + (cellY * GRID_CELL_SIZE));
-            cellRect.setAttribute("width", GRID_CELL_SIZE);
-            cellRect.setAttribute("height", GRID_CELL_SIZE);
-            cellRect.setAttribute("class", `room ${block.type}`);
-            
-            mapCorridors.appendChild(cellRect);
+    for (const roomId of playerState.discoveredRooms) {
+        const room = dungeon.rooms[roomId];
+        if (!room) continue;
+        
+        // Verifica se o bloco está próximo à sala (distância máxima de 2 células)
+        const distX = Math.abs(block.gridX - room.gridX);
+        const distY = Math.abs(block.gridY - room.gridY);
+        
+        if (distX <= 2 && distY <= 2) {
+            shouldDraw = true;
+            break;
+        }
+    }
+    
+    if (shouldDraw) {
+        const x = block.gridX * GRID_CELL_SIZE;
+        const y = block.gridY * GRID_CELL_SIZE;
+        
+        // Desenha as células da grade para formar o bloco
+        for (let cellY = 0; cellY < block.gridHeight; cellY++) {
+            for (let cellX = 0; cellX < block.gridWidth; cellX++) {
+                const cellRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                cellRect.setAttribute("x", x + (cellX * GRID_CELL_SIZE));
+                cellRect.setAttribute("y", y + (cellY * GRID_CELL_SIZE));
+                cellRect.setAttribute("width", GRID_CELL_SIZE);
+                cellRect.setAttribute("height", GRID_CELL_SIZE);
+                cellRect.setAttribute("class", `room ${block.type}`);
+                
+                mapCorridors.appendChild(cellRect);
+            }
         }
     }
 }
