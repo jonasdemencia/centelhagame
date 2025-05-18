@@ -838,7 +838,7 @@ for (const block of blocksToUse) {
             mapRooms.appendChild(roomGroup);
         }
         
-        // Desenha as portas
+        // Substitua o bloco de código que desenha as portas na função drawMap() com este código:
 if (room.exits) {
     room.exits.forEach(exit => {
         // Desenha a porta se esta é a sala atual OU se a sala de destino já foi descoberta
@@ -854,30 +854,26 @@ if (room.exits) {
                 // Ajusta a posição da porta com base na direção
                 switch (exit.direction) {
                     case "north":
-                        // Porta no meio da parede norte
-                        doorWidth = GRID_CELL_SIZE * 0.8;  // <-- Define a largura para portas norte
-                        doorHeight = GRID_CELL_SIZE * 0.4; // <-- Define a altura para portas norte
+                        doorWidth = GRID_CELL_SIZE * 0.8;
+                        doorHeight = GRID_CELL_SIZE * 0.4;
                         doorX = x + (width / 2) - (doorWidth / 2);
                         doorY = y - (doorHeight / 2);
                         break;
                     case "south":
-                        // Porta no meio da parede sul
-                        doorWidth = GRID_CELL_SIZE * 0.8;  // <-- Define a largura para portas sul
-                        doorHeight = GRID_CELL_SIZE * 0.4; // <-- Define a altura para portas sul
+                        doorWidth = GRID_CELL_SIZE * 0.8;
+                        doorHeight = GRID_CELL_SIZE * 0.4;
                         doorX = x + (width / 2) - (doorWidth / 2);
                         doorY = y + height - (doorHeight / 2);
                         break;
                     case "east":
-                        // Porta no meio da parede leste
-                        doorWidth = GRID_CELL_SIZE * 0.4;  // <-- Define a largura para portas leste
-                        doorHeight = GRID_CELL_SIZE * 0.8; // <-- Define a altura para portas leste
+                        doorWidth = GRID_CELL_SIZE * 0.4;
+                        doorHeight = GRID_CELL_SIZE * 0.8;
                         doorX = x + width - (doorWidth / 2);
                         doorY = y + (height / 2) - (doorHeight / 2);
                         break;
                     case "west":
-                        // Porta no meio da parede oeste
-                        doorWidth = GRID_CELL_SIZE * 0.4;  // <-- Define a largura para portas oeste
-                        doorHeight = GRID_CELL_SIZE * 0.8; // <-- Define a altura para portas oeste
+                        doorWidth = GRID_CELL_SIZE * 0.4;
+                        doorHeight = GRID_CELL_SIZE * 0.8;
                         doorX = x - (doorWidth / 2);
                         doorY = y + (height / 2) - (doorHeight / 2);
                         break;
@@ -896,6 +892,7 @@ if (room.exits) {
         }
     });
 }
+
 
 
     
