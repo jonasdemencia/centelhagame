@@ -197,6 +197,7 @@ let playerState = {
     visitedRooms: [],
     inventory: [],
     health: 100
+    discoveredBlocks: [] // Adicione esta linha
 };
 
 // Função para atualizar a barra de energia do jogador
@@ -1896,6 +1897,7 @@ function savePlayerState() {
         inventory: playerState.inventory,
         health: playerState.health,
         roomStates: roomStates,
+        discoveredBlocks: playerState.discoveredBlocks, // Adicione esta linha
         lastUpdated: new Date().toISOString()
     }, { merge: true })
     .then(() => {
@@ -1948,6 +1950,7 @@ async function loadPlayerState() {
                 visitedRooms: data.visitedRooms || [],
                 inventory: data.inventory || [],
                 health: data.health || playerEnergy, // Usa a energia do jogador se disponível
+                discoveredBlocks: data.discoveredBlocks || [] // Adicione esta linha
                 attributes: attributes // Usa os atributos do jogador
             };
             
