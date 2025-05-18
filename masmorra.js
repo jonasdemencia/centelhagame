@@ -1502,20 +1502,24 @@ async function loadDungeonFromJSON(dungeonId) {
             throw new Error(`Erro ao carregar masmorra: ${response.status} ${response.statusText}`);
         }
         
-        // Converte o JSON para objeto
-        const dungeonData = await response.json();
-        console.log(`LOG: Masmorra ${dungeonId} carregada com sucesso!`);
-        
-        // Retorna os dados da masmorra
-        return dungeonData;
+        // Tenta converter o JSON para objeto com tratamento de erro
+        try {
+            const dungeonData = await response.json();
+            console.log(`LOG: Masmorra ${dungeonId} carregada com sucesso!`);
+            return dungeonData;
+        } catch (jsonError) {
+            console.error(`LOG: Erro ao analisar JSON da masmorra ${dungeonId}:`, jsonError);
+            throw jsonError;
+        }
     } catch (error) {
         console.error(`LOG: Erro ao carregar masmorra ${dungeonId}:`, error);
         
-        // Em caso de erro, retorna a masmorra padrão
+        // Em caso de erro, retorna uma cópia da masmorra padrão
         console.log("LOG: Usando masmorra padrão como fallback.");
-        return dungeon;
+        return JSON.parse(JSON.stringify(dungeon));
     }
 }
+
 
 // Função para inicializar a masmorra
 // Função para inicializar a masmorra (versão atualizada)
@@ -2671,30 +2675,31 @@ if (isFirstVisit) {
     playerState.visitedRooms.push(roomId);
     
     // Descobre blocos decorativos conectados a salas visitadas
-    const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
-    for (const block of blocksToUse) {
-        // Verifica se o bloco está próximo à sala atual
-        const distX = Math.abs(block.gridX - room.gridX);
-        const distY = Math.abs(block.gridY - room.gridY);
+// Descobre blocos decorativos conectados a salas visitadas
+const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
+for (const block of blocksToUse) {
+    // Verifica se o bloco está próximo à sala atual
+    const distX = Math.abs(block.gridX - room.gridX);
+    const distY = Math.abs(block.gridY - room.gridY);
+    
+    // Se o bloco estiver próximo à sala atual, adiciona à lista de descobertos
+    if (distX <= 2 && distY <= 2) {
+        if (!playerState.discoveredBlocks) playerState.discoveredBlocks = [];
         
-        // Se o bloco estiver adjacente à sala atual, verifica se conecta com outra sala visitada
-        if (distX <= 1 && distY <= 1) {
-            // Verifica se alguma outra sala visitada está próxima a este bloco
-            let isConnector = false;
-            for (const visitedRoomId of playerState.visitedRooms) {
-                if (visitedRoomId === roomId) continue; // Pula a sala atual
-                
-                const otherRoom = dungeon.rooms[visitedRoomId];
-                if (otherRoom) {
-                    const otherDistX = Math.abs(block.gridX - otherRoom.gridX);
-                    const otherDistY = Math.abs(block.gridY - otherRoom.gridY);
-                    
-                    if (otherDistX <= 1 && otherDistY <= 1) {
-                        isConnector = true;
-                        break;
-                    }
-                }
-            }
+        // Verifica se o bloco já foi descoberto
+        const alreadyDiscovered = playerState.discoveredBlocks.some(b => 
+            b.gridX === block.gridX && b.gridY === block.gridY);
+            
+        if (!alreadyDiscovered) {
+            console.log(`Descobrindo bloco em X:${block.gridX}, Y:${block.gridY}`);
+            playerState.discoveredBlocks.push({
+                gridX: block.gridX,
+                gridY: block.gridY
+            });
+        }
+    }
+}
+
             
             // Se o bloco conecta duas salas visitadas, adiciona à lista de descobertos
             if (isConnector) {
