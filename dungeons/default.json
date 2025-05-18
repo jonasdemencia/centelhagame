@@ -117,128 +117,136 @@
         "description": "Um rato gigante com olhos vermelhos brilhantes e dentes afiados."
       }
     },
-   "room-5": {
-  "id": "room-5",
-  "name": "Câmara Ritual",
-  "description": "Uma sala circular com símbolos arcanos gravados no chão.",
-  "type": "room",
-  "exits": [
-    { "direction": "south", "leadsTo": "room-4", "type": "door", "locked": false }
-  ],
-  "visited": false,
-  "discovered": false,
-  "gridX": 5,
-  "gridY": 9,
-  "gridWidth": 3,
-  "gridHeight": 3,
-  "events": [
-    { "type": "first-visit", "text": "Símbolos estranhos brilham levemente no chão. Você sente uma presença antiga neste lugar." }
-  ],
-  "exploration": {
-    "states": {
-      "initial": {
-        "examined": false,
-        "symbolsExamined": false,
-        "pedestalExamined": false,
-        "luckTestCompleted": false
-      }
-    },
-    "examine": [
-      {
-        "condition": "!states.examined",
-        "text": "Você examina a câmara ritual com cuidado. No centro da sala há um círculo mágico gravado no chão, com símbolos arcanos brilhando levemente. Em um dos cantos, há um pedestal com uma gema flutuando acima dele.",
-        "effect": {"states.examined": true},
-        "pointsOfInterest": [
+    "room-5": {
+      "id": "room-5",
+      "name": "Câmara Ritual",
+      "description": "Uma sala circular com símbolos arcanos gravados no chão.",
+      "type": "room",
+      "exits": [
+        { "direction": "south", "leadsTo": "room-4", "type": "door", "locked": false }
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 5,
+      "gridY": 9,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "events": [
+        { "type": "first-visit", "text": "Símbolos estranhos brilham levemente no chão. Você sente uma presença antiga neste lugar." }
+      ],
+      "exploration": {
+        "states": {
+          "initial": {
+            "examined": false,
+            "symbolsExamined": false,
+            "pedestalExamined": false,
+            "luckTestCompleted": false
+          }
+        },
+        "examine": [
           {
-            "id": "simbolos",
-            "name": "Símbolos Arcanos",
-            "description": "Os símbolos arcanos no chão formam um padrão complexo. Você reconhece alguns deles como símbolos de proteção e invocação.",
-            "effect": {"states.symbolsExamined": true}
-          },
-          {
-            "id": "pedestal",
-            "name": "Pedestal com Gema",
-            "description": "Um pedestal de pedra com uma gema azul flutuando alguns centímetros acima. A gema emite uma luz suave e parece instável, como se pudesse cair a qualquer momento.",
-            "effect": {"states.pedestalExamined": true}
-          },
-          {
-            "id": "gema-instavel",
-            "name": "Gema Instável",
-            "condition": "states.pedestalExamined && !states.luckTestCompleted",
-            "description": "A gema azul flutua de forma instável. Você percebe que ela está prestes a cair, mas também nota que ela contém um poder mágico considerável. Talvez você consiga pegá-la antes que ela caia e se despedace.",
-            "luckTest": {
-              "description": "A gema está prestes a cair. Você pode tentar pegá-la rapidamente, mas isso é arriscado. Se você falhar, a gema pode explodir com energia mágica.",
-              "success": {
-                "text": "Com um movimento rápido e preciso, você consegue pegar a gema no ar antes que ela caia! Ela pulsa com energia mágica em sua mão.",
-                "effect": {"states.luckTestCompleted": true},
-                "items": [
-                  {
-                    "id": "gema-arcana",
-                    "content": "Gema Arcana",
-                    "description": "Uma gema azul que pulsa com energia mágica. Pode ser usada para potencializar feitiços.",
-                    "value": 50
-                  }
-                ]
+            "condition": "!states.examined",
+            "text": "Você examina a câmara ritual com cuidado. No centro da sala há um círculo mágico gravado no chão, com símbolos arcanos brilhando levemente. Em um dos cantos, há um pedestal com uma gema flutuando acima dele.",
+            "effect": {"states.examined": true},
+            "pointsOfInterest": [
+              {
+                "id": "simbolos",
+                "name": "Símbolos Arcanos",
+                "description": "Os símbolos arcanos no chão formam um padrão complexo. Você reconhece alguns deles como símbolos de proteção e invocação.",
+                "effect": {"states.symbolsExamined": true}
               },
-              "failure": {
-                "text": "Você tenta pegar a gema, mas ela escorrega de seus dedos e cai no chão! Ao tocar o solo, ela explode em uma onda de energia mágica que atinge você!",
-                "effect": {"states.luckTestCompleted": true},
-                "damage": {
-                  "amount": "2D6",
-                  "message": "A explosão de energia mágica atinge você com força!"
+              {
+                "id": "pedestal",
+                "name": "Pedestal com Gema",
+                "description": "Um pedestal de pedra com uma gema azul flutuando alguns centímetros acima. A gema emite uma luz suave e parece instável, como se pudesse cair a qualquer momento.",
+                "effect": {"states.pedestalExamined": true}
+              },
+              {
+                "id": "gema-instavel",
+                "name": "Gema Instável",
+                "condition": "states.pedestalExamined && !states.luckTestCompleted",
+                "description": "A gema azul flutua de forma instável. Você percebe que ela está prestes a cair, mas também nota que ela contém um poder mágico considerável. Talvez você consiga pegá-la antes que ela caia e se despedace.",
+                "luckTest": {
+                  "description": "A gema está prestes a cair. Você pode tentar pegá-la rapidamente, mas isso é arriscado. Se você falhar, a gema pode explodir com energia mágica.",
+                  "success": {
+                    "text": "Com um movimento rápido e preciso, você consegue pegar a gema no ar antes que ela caia! Ela pulsa com energia mágica em sua mão.",
+                    "effect": {"states.luckTestCompleted": true},
+                    "items": [
+                      {
+                        "id": "gema-arcana",
+                        "content": "Gema Arcana",
+                        "description": "Uma gema azul que pulsa com energia mágica. Pode ser usada para potencializar feitiços.",
+                        "value": 50
+                      }
+                    ]
+                  },
+                  "failure": {
+                    "text": "Você tenta pegar a gema, mas ela escorrega de seus dedos e cai no chão! Ao tocar o solo, ela explode em uma onda de energia mágica que atinge você!",
+                    "effect": {"states.luckTestCompleted": true},
+                    "damage": {
+                      "amount": "2D6",
+                      "message": "A explosão de energia mágica atinge você com força!"
+                    }
+                  }
                 }
               }
-            }
-          }
-        ]
-      },
-      {
-        "condition": "states.examined",
-        "text": "O que você deseja examinar na câmara ritual?",
-        "pointsOfInterest": [
-          {
-            "id": "simbolos",
-            "name": "Símbolos Arcanos",
-            "description": "Os símbolos arcanos no chão formam um padrão complexo. Você reconhece alguns deles como símbolos de proteção e invocação.",
-            "effect": {"states.symbolsExamined": true}
+            ]
           },
           {
-            "id": "pedestal",
-            "name": "Pedestal com Gema",
-            "description": "Um pedestal de pedra com uma gema azul flutuando alguns centímetros acima. A gema emite uma luz suave e parece instável, como se pudesse cair a qualquer momento.",
-            "effect": {"states.pedestalExamined": true}
-          },
-          {
-            "id": "gema-instavel",
-            "name": "Gema Instável",
-            "condition": "states.pedestalExamined && !states.luckTestCompleted",
-            "description": "A gema azul flutua de forma instável. Você percebe que ela está prestes a cair, mas também nota que ela contém um poder mágico considerável. Talvez você consiga pegá-la antes que ela caia e se despedace.",
-            "luckTest": {
-              "description": "A gema está prestes a cair. Você pode tentar pegá-la rapidamente, mas isso é arriscado. Se você falhar, a gema pode explodir com energia mágica.",
-              "success": {
-                "text": "Com um movimento rápido e preciso, você consegue pegar a gema no ar antes que ela caia! Ela pulsa com energia mágica em sua mão.",
-                "effect": {"states.luckTestCompleted": true},
-                "items": [
-                  {
-                    "id": "gema-arcana",
-                    "content": "Gema Arcana",
-                    "description": "Uma gema azul que pulsa com energia mágica. Pode ser usada para potencializar feitiços.",
-                    "value": 50
-                  }
-                ]
+            "condition": "states.examined",
+            "text": "O que você deseja examinar na câmara ritual?",
+            "pointsOfInterest": [
+              {
+                "id": "simbolos",
+                "name": "Símbolos Arcanos",
+                "description": "Os símbolos arcanos no chão formam um padrão complexo. Você reconhece alguns deles como símbolos de proteção e invocação.",
+                "effect": {"states.symbolsExamined": true}
               },
-              "failure": {
-                "text": "Você tenta pegar a gema, mas ela escorrega de seus dedos e cai no chão! Ao tocar o solo, ela explode em uma onda de energia mágica que atinge você!",
-                "effect": {"states.luckTestCompleted": true},
-                "damage": {
-                  "amount": "2D6",
-                  "message": "A explosão de energia mágica atinge você com força!"
+              {
+                "id": "pedestal",
+                "name": "Pedestal com Gema",
+                "description": "Um pedestal de pedra com uma gema azul flutuando alguns centímetros acima. A gema emite uma luz suave e parece instável, como se pudesse cair a qualquer momento.",
+                "effect": {"states.pedestalExamined": true}
+              },
+              {
+                "id": "gema-instavel",
+                "name": "Gema Instável",
+                "condition": "states.pedestalExamined && !states.luckTestCompleted",
+                "description": "A gema azul flutua de forma instável. Você percebe que ela está prestes a cair, mas também nota que ela contém um poder mágico considerável. Talvez você consiga pegá-la antes que ela caia e se despedace.",
+                "luckTest": {
+                  "description": "A gema está prestes a cair. Você pode tentar pegá-la rapidamente, mas isso é arriscado. Se você falhar, a gema pode explodir com energia mágica.",
+                  "success": {
+                    "text": "Com um movimento rápido e preciso, você consegue pegar a gema no ar antes que ela caia! Ela pulsa com energia mágica em sua mão.",
+                    "effect": {"states.luckTestCompleted": true},
+                    "items": [
+                      {
+                        "id": "gema-arcana",
+                        "content": "Gema Arcana",
+                        "description": "Uma gema azul que pulsa com energia mágica. Pode ser usada para potencializar feitiços.",
+                        "value": 50
+                      }
+                    ]
+                  },
+                  "failure": {
+                    "text": "Você tenta pegar a gema, mas ela escorrega de seus dedos e cai no chão! Ao tocar o solo, ela explode em uma onda de energia mágica que atinge você!",
+                    "effect": {"states.luckTestCompleted": true},
+                    "damage": {
+                      "amount": "2D6",
+                      "message": "A explosão de energia mágica atinge você com força!"
+                    }
+                  }
                 }
               }
-            }
+            ]
           }
         ]
       }
-    ]
-  }
+    }
+  },
+  "decorativeBlocks": [
+    { "type": "corridor", "gridX": 8, "gridY": 15, "gridWidth": 1, "gridHeight": 1, "connects": ["room-2", "room-4"] },
+    { "type": "corridor", "gridX": 12, "gridY": 15, "gridWidth": 1, "gridHeight": 1, "connects": ["room-2", "room-3"] },
+    { "type": "corridor", "gridX": 6, "gridY": 12, "gridWidth": 1, "gridHeight": 1, "connects": ["room-4", "room-5"] },
+    { "type": "corridor", "gridX": 4, "gridY": 15, "gridWidth": 1, "gridHeight": 1, "connects": ["room-4", "room-6"] }
+  ]
 }
