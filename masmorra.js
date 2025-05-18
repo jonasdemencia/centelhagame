@@ -2644,7 +2644,7 @@ async function checkDefeatedMonster(monsterId) {
 }
 
 
-// Função para mover o jogador para uma sala (versão atualizada)
+// Função para mover o jogador para uma sala (versão corrigida)
 async function moveToRoom(roomId) {
     const room = dungeon.rooms[roomId];
     if (!room) {
@@ -2669,43 +2669,28 @@ async function moveToRoom(roomId) {
         playerState.discoveredRooms.push(roomId);
     }
     
-// Marca a sala como visitada se ainda não estiver
-const isFirstVisit = !playerState.visitedRooms.includes(roomId);
-if (isFirstVisit) {
-    playerState.visitedRooms.push(roomId);
-    
-    // Descobre blocos decorativos conectados a salas visitadas
-// Descobre blocos decorativos conectados a salas visitadas
-const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
-for (const block of blocksToUse) {
-    // Verifica se o bloco está próximo à sala atual
-    const distX = Math.abs(block.gridX - room.gridX);
-    const distY = Math.abs(block.gridY - room.gridY);
-    
-    // Se o bloco estiver próximo à sala atual, adiciona à lista de descobertos
-    if (distX <= 2 && distY <= 2) {
-        if (!playerState.discoveredBlocks) playerState.discoveredBlocks = [];
+    // Marca a sala como visitada se ainda não estiver
+    const isFirstVisit = !playerState.visitedRooms.includes(roomId);
+    if (isFirstVisit) {
+        playerState.visitedRooms.push(roomId);
         
-        // Verifica se o bloco já foi descoberto
-        const alreadyDiscovered = playerState.discoveredBlocks.some(b => 
-            b.gridX === block.gridX && b.gridY === block.gridY);
+        // Descobre blocos decorativos próximos à sala atual
+        const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
+        for (const block of blocksToUse) {
+            // Verifica se o bloco está próximo à sala atual
+            const distX = Math.abs(block.gridX - room.gridX);
+            const distY = Math.abs(block.gridY - room.gridY);
             
-        if (!alreadyDiscovered) {
-            console.log(`Descobrindo bloco em X:${block.gridX}, Y:${block.gridY}`);
-            playerState.discoveredBlocks.push({
-                gridX: block.gridX,
-                gridY: block.gridY
-            });
-        }
-    }
-}
-
-            
-            // Se o bloco conecta duas salas visitadas, adiciona à lista de descobertos
-            if (isConnector) {
+            // Se o bloco estiver próximo à sala atual, adiciona à lista de descobertos
+            if (distX <= 2 && distY <= 2) {
                 if (!playerState.discoveredBlocks) playerState.discoveredBlocks = [];
-                if (!playerState.discoveredBlocks.some(b => 
-                    b.gridX === block.gridX && b.gridY === block.gridY)) {
+                
+                // Verifica se o bloco já foi descoberto
+                const alreadyDiscovered = playerState.discoveredBlocks.some(b => 
+                    b.gridX === block.gridX && b.gridY === block.gridY);
+                    
+                if (!alreadyDiscovered) {
+                    console.log(`Descobrindo bloco em X:${block.gridX}, Y:${block.gridY}`);
                     playerState.discoveredBlocks.push({
                         gridX: block.gridX,
                         gridY: block.gridY
@@ -2713,31 +2698,30 @@ for (const block of blocksToUse) {
                 }
             }
         }
-    }
-    
-    // Inicializa o estado de exploração se não existir
-    if (room.exploration && room.exploration.states && room.exploration.states.initial) {
-        room.explorationState = { ...room.exploration.states.initial };
-    }
-    
-    // Processa eventos de primeira visita
-    const firstVisitEvents = room.events?.filter(event => event.type === "first-visit") || [];
-    for (const event of firstVisitEvents) {
-        await addLogMessage(event.text, 1000);
-    }
-}
-
-// Verifica se a sala tem um inimigo e se ele já foi derrotado
-let customDescription = room.description;
-if (room.enemy) {
-    const isDefeated = await checkDefeatedMonster(room.enemy.id);
-    if (isDefeated) {
-        // Usa descrição alternativa se disponível
-        if (room.enemy.defeatedDescription) {
-            customDescription = room.enemy.defeatedDescription;
+        
+        // Inicializa o estado de exploração se não existir
+        if (room.exploration && room.exploration.states && room.exploration.states.initial) {
+            room.explorationState = { ...room.exploration.states.initial };
+        }
+        
+        // Processa eventos de primeira visita
+        const firstVisitEvents = room.events?.filter(event => event.type === "first-visit") || [];
+        for (const event of firstVisitEvents) {
+            await addLogMessage(event.text, 1000);
         }
     }
-}
+    
+    // Verifica se a sala tem um inimigo e se ele já foi derrotado
+    let customDescription = room.description;
+    if (room.enemy) {
+        const isDefeated = await checkDefeatedMonster(room.enemy.id);
+        if (isDefeated) {
+            // Usa descrição alternativa se disponível
+            if (room.enemy.defeatedDescription) {
+                customDescription = room.enemy.defeatedDescription;
+            }
+        }
+    }
 
     
     // Adiciona descrição da sala ao log
