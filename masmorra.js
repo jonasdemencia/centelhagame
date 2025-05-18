@@ -196,8 +196,10 @@ let playerState = {
     discoveredRooms: ["room-1"],
     visitedRooms: [],
     inventory: [],
-    health: 100
+    health: 100,
+    discoveredBlocks: [] // Adicione esta linha
 };
+
 
 // Função para atualizar a barra de energia do jogador
 function updateHealthBar() {
@@ -750,28 +752,33 @@ function drawMap() {
     // Desenha a grade de fundo
     drawGrid();
     
-    // Desenha os blocos decorativos
-    // Desenha os blocos decorativos
-// Verifica se dungeon.decorativeBlocks existe, caso contrário usa a variável global
+// Na função drawMap(), substitua o código que desenha os blocos decorativos
+// Desenha os blocos decorativos
 const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
 for (const block of blocksToUse) {
-    const x = block.gridX * GRID_CELL_SIZE;
-    const y = block.gridY * GRID_CELL_SIZE;
-    
-    // Desenha as células da grade para formar o bloco
-    for (let cellY = 0; cellY < block.gridHeight; cellY++) {
-        for (let cellX = 0; cellX < block.gridWidth; cellX++) {
-            const cellRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            cellRect.setAttribute("x", x + (cellX * GRID_CELL_SIZE));
-            cellRect.setAttribute("y", y + (cellY * GRID_CELL_SIZE));
-            cellRect.setAttribute("width", GRID_CELL_SIZE);
-            cellRect.setAttribute("height", GRID_CELL_SIZE);
-            cellRect.setAttribute("class", `room ${block.type}`);
-            
-            mapCorridors.appendChild(cellRect);
+    // Só desenha blocos que já foram descobertos
+    if (playerState.discoveredBlocks && playerState.discoveredBlocks.some(b => 
+        b.gridX === block.gridX && b.gridY === block.gridY)) {
+        
+        const x = block.gridX * GRID_CELL_SIZE;
+        const y = block.gridY * GRID_CELL_SIZE;
+        
+        // Desenha as células da grade para formar o bloco
+        for (let cellY = 0; cellY < block.gridHeight; cellY++) {
+            for (let cellX = 0; cellX < block.gridWidth; cellX++) {
+                const cellRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                cellRect.setAttribute("x", x + (cellX * GRID_CELL_SIZE));
+                cellRect.setAttribute("y", y + (cellY * GRID_CELL_SIZE));
+                cellRect.setAttribute("width", GRID_CELL_SIZE);
+                cellRect.setAttribute("height", GRID_CELL_SIZE);
+                cellRect.setAttribute("class", `room ${block.type}`);
+                
+                mapCorridors.appendChild(cellRect);
+            }
         }
     }
 }
+
 
     
     // Desenha as salas descobertas
@@ -1884,15 +1891,17 @@ function savePlayerState() {
     }
     
     const dungeonStateRef = doc(db, "dungeons", userId);
-    setDoc(dungeonStateRef, {
-        currentRoom: playerState.currentRoom,
-        discoveredRooms: playerState.discoveredRooms,
-        visitedRooms: playerState.visitedRooms,
-        inventory: playerState.inventory,
-        health: playerState.health,
-        roomStates: roomStates,
-        lastUpdated: new Date().toISOString()
-    }, { merge: true })
+    // Na função savePlayerState(), adicione discoveredBlocks aos dados salvos
+setDoc(dungeonStateRef, {
+    currentRoom: playerState.currentRoom,
+    discoveredRooms: playerState.discoveredRooms,
+    visitedRooms: playerState.visitedRooms,
+    inventory: playerState.inventory,
+    health: playerState.health,
+    roomStates: roomStates,
+    discoveredBlocks: playerState.discoveredBlocks, // Adicione esta linha
+    lastUpdated: new Date().toISOString()
+}, { merge: true })
     .then(() => {
         console.log("Estado da masmorra salvo com sucesso!");
     })
@@ -1937,14 +1946,17 @@ async function loadPlayerState() {
             // Se playerData estiver disponível, use a energia do jogador
             const playerEnergy = playerData?.energy?.total || 100;
             
-            playerState = {
-                currentRoom: data.currentRoom || "room-1",
-                discoveredRooms: data.discoveredRooms || ["room-1"],
-                visitedRooms: data.visitedRooms || [],
-                inventory: data.inventory || [],
-                health: data.health || playerEnergy, // Usa a energia do jogador se disponível
-                attributes: attributes // Usa os atributos do jogador
-            };
+            // Na função loadPlayerState(), adicione discoveredBlocks aos dados carregados
+playerState = {
+    currentRoom: data.currentRoom || "room-1",
+    discoveredRooms: data.discoveredRooms || ["room-1"],
+    visitedRooms: data.visitedRooms || [],
+    inventory: data.inventory || [],
+    health: data.health || playerEnergy,
+    discoveredBlocks: data.discoveredBlocks || [], // Adicione esta linha
+    attributes: attributes
+};
+
             
             // Carrega os estados de exploração das salas
             if (data.roomStates) {
@@ -2647,34 +2659,75 @@ async function moveToRoom(roomId) {
         playerState.discoveredRooms.push(roomId);
     }
     
-    // Marca a sala como visitada se ainda não estiver
-    const isFirstVisit = !playerState.visitedRooms.includes(roomId);
-    if (isFirstVisit) {
-        playerState.visitedRooms.push(roomId);
-        
-        // Inicializa o estado de exploração se não existir
-        if (room.exploration && room.exploration.states && room.exploration.states.initial) {
-            room.explorationState = { ...room.exploration.states.initial };
-        }
-        
-        // Processa eventos de primeira visita
-        const firstVisitEvents = room.events?.filter(event => event.type === "first-visit") || [];
-        for (const event of firstVisitEvents) {
-            await addLogMessage(event.text, 1000);
-        }
-    }
+// Marca a sala como visitada se ainda não estiver
+const isFirstVisit = !playerState.visitedRooms.includes(roomId);
+if (isFirstVisit) {
+    playerState.visitedRooms.push(roomId);
     
-    // Verifica se a sala tem um inimigo e se ele já foi derrotado
-    let customDescription = room.description;
-    if (room.enemy) {
-        const isDefeated = await checkDefeatedMonster(room.enemy.id);
-        if (isDefeated) {
-            // Usa descrição alternativa se disponível
-            if (room.enemy.defeatedDescription) {
-                customDescription = room.enemy.defeatedDescription;
+    // Descobre blocos decorativos conectados a salas visitadas
+    const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
+    for (const block of blocksToUse) {
+        // Verifica se o bloco está próximo à sala atual
+        const distX = Math.abs(block.gridX - room.gridX);
+        const distY = Math.abs(block.gridY - room.gridY);
+        
+        // Se o bloco estiver adjacente à sala atual, verifica se conecta com outra sala visitada
+        if (distX <= 1 && distY <= 1) {
+            // Verifica se alguma outra sala visitada está próxima a este bloco
+            let isConnector = false;
+            for (const visitedRoomId of playerState.visitedRooms) {
+                if (visitedRoomId === roomId) continue; // Pula a sala atual
+                
+                const otherRoom = dungeon.rooms[visitedRoomId];
+                if (otherRoom) {
+                    const otherDistX = Math.abs(block.gridX - otherRoom.gridX);
+                    const otherDistY = Math.abs(block.gridY - otherRoom.gridY);
+                    
+                    if (otherDistX <= 1 && otherDistY <= 1) {
+                        isConnector = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Se o bloco conecta duas salas visitadas, adiciona à lista de descobertos
+            if (isConnector) {
+                if (!playerState.discoveredBlocks) playerState.discoveredBlocks = [];
+                if (!playerState.discoveredBlocks.some(b => 
+                    b.gridX === block.gridX && b.gridY === block.gridY)) {
+                    playerState.discoveredBlocks.push({
+                        gridX: block.gridX,
+                        gridY: block.gridY
+                    });
+                }
             }
         }
     }
+    
+    // Inicializa o estado de exploração se não existir
+    if (room.exploration && room.exploration.states && room.exploration.states.initial) {
+        room.explorationState = { ...room.exploration.states.initial };
+    }
+    
+    // Processa eventos de primeira visita
+    const firstVisitEvents = room.events?.filter(event => event.type === "first-visit") || [];
+    for (const event of firstVisitEvents) {
+        await addLogMessage(event.text, 1000);
+    }
+}
+
+// Verifica se a sala tem um inimigo e se ele já foi derrotado
+let customDescription = room.description;
+if (room.enemy) {
+    const isDefeated = await checkDefeatedMonster(room.enemy.id);
+    if (isDefeated) {
+        // Usa descrição alternativa se disponível
+        if (room.enemy.defeatedDescription) {
+            customDescription = room.enemy.defeatedDescription;
+        }
+    }
+}
+
     
     // Adiciona descrição da sala ao log
     startNewLogBlock(room.name);
