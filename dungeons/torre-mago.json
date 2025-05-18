@@ -1,751 +1,197 @@
 {
-  "id": "torre-dos-magos",
-  "name": "Torre dos Magos",
-  "description": "Uma torre antiga que já foi o lar de uma ordem de magos poderosos. Agora está abandonada, mas ainda guarda muitos segredos e perigos.",
-  "entrance": "room-1",
-  "decorativeBlocks": [
-    { "type": "corridor", "gridX": 10, "gridY": 18, "gridWidth": 1, "gridHeight": 1 },
-    { "type": "corridor", "gridX": 10, "gridY": 17, "gridWidth": 1, "gridHeight": 1 },
-    { "type": "corridor", "gridX": 10, "gridY": 16, "gridWidth": 1, "gridHeight": 1 },
-    { "type": "corridor", "gridX": 10, "gridY": 15, "gridWidth": 1, "gridHeight": 1 },
-    { "type": "corridor", "gridX": 10, "gridY": 14, "gridWidth": 1, "gridHeight": 1 },
-    { "type": "corridor", "gridX": 10, "gridY": 13, "gridWidth": 1, "gridHeight": 1 },
-    { "type": "corridor", "gridX": 10, "gridY": 12, "gridWidth": 1, "gridHeight": 1 },
-    { "type": "corridor", "gridX": 10, "gridY": 11, "gridWidth": 1, "gridHeight": 1 },
-    { "type": "corridor", "gridX": 10, "gridY": 10, "gridWidth": 1, "gridHeight": 1 },
-    { "type": "corridor", "gridX": 10, "gridY": 9, "gridWidth": 1, "gridHeight": 1 },
-    { "type": "corridor", "gridX": 10, "gridY": 8, "gridWidth": 1, "gridHeight": 1 },
-    { "type": "corridor", "gridX": 10, "gridY": 7, "gridWidth": 1, "gridHeight": 1 },
-    { "type": "corridor", "gridX": 10, "gridY": 6, "gridWidth": 1, "gridHeight": 1 },
-    { "type": "corridor", "gridX": 10, "gridY": 5, "gridWidth": 1, "gridHeight": 1 }
-  ],
-  "rooms": {
-    "room-1": {
-      "id": "room-1",
-      "name": "Entrada da Torre",
-      "description": "Um saguão amplo com piso de mármore rachado. Pilares ornamentados sustentam o teto alto. Uma escadaria em espiral sobe para o próximo andar.",
-      "type": "room",
-      "gridX": 8,
-      "gridY": 18,
-      "gridWidth": 5,
-      "gridHeight": 5,
-      "exits": [
-        { "direction": "north", "leadsTo": "room-2", "type": "door", "locked": false }
-      ],
-      "events": [
-        { "type": "first-visit", "text": "Você adentra a Torre dos Magos. O ar está carregado de energia mágica residual, e você sente um leve formigamento na pele." }
-      ],
-      "exploration": {
-        "states": {
-          "initial": {
-            "examined": false,
-            "pillarExamined": false,
-            "floorExamined": false,
-            "statueExamined": false,
-            "luckTestCompleted": false,
-            "skillTestCompleted": false,
-            "charismaTestCompleted": false,
-            "mechanismActivated": false,
-            "mechanismFailed": false
-          }
-        },
-        "examine": [
-          {
-            "condition": "!states.examined",
-            "text": "Você observa o saguão da torre. O piso de mármore está rachado em vários lugares, e os pilares ornamentados mostram sinais de desgaste. No centro do saguão, há uma estátua de um mago segurando um livro. O que você deseja examinar mais de perto?",
-            "effect": {"states.examined": true},
-            "pointsOfInterest": [
-              {
-                "id": "pilares",
-                "name": "Pilares Ornamentados",
-                "description": "Os pilares são feitos de mármore branco com veios dourados. Estão entalhados com símbolos arcanos que parecem brilhar levemente quando você os observa por muito tempo. Ao se aproximar de um dos pilares, você ouve um ruído estranho vindo do teto acima.",
-                "effect": {"states.pillarExamined": true}
-              },
-              {
-                "id": "piso",
-                "name": "Piso Rachado",
-                "description": "O piso de mármore está rachado em vários lugares. Algumas rachaduras formam padrões que parecem quase intencionais, como se fossem parte de um grande círculo mágico.",
-                "effect": {"states.floorExamined": true}
-              },
-              {
-                "id": "estatua",
-                "name": "Estátua do Mago",
-                "description": "A estátua representa um mago idoso com barba longa, vestindo uma túnica com símbolos estelares. Ele segura um livro aberto em suas mãos. Na base da estátua, há uma inscrição: 'O conhecimento é poder, mas a sabedoria é saber quando usá-lo.'",
-                "effect": {"states.statueExamined": true}
-              }
-            ]
-          },
-          {
-            "condition": "states.examined",
-            "text": "O que você deseja examinar no saguão?",
-            "pointsOfInterest": [
-              {
-                "id": "pilares",
-                "name": "Pilares Ornamentados",
-                "description": "Os pilares são feitos de mármore branco com veios dourados. Estão entalhados com símbolos arcanos que parecem brilhar levemente quando você os observa por muito tempo. Ao se aproximar de um dos pilares, você ouve um ruído estranho vindo do teto acima.",
-                "effect": {"states.pillarExamined": true}
-              },
-              {
-                "id": "piso",
-                "name": "Piso Rachado",
-                "description": "O piso de mármore está rachado em vários lugares. Algumas rachaduras formam padrões que parecem quase intencionais, como se fossem parte de um grande círculo mágico.",
-                "effect": {"states.floorExamined": true}
-              },
-              {
-                "id": "estatua",
-                "name": "Estátua do Mago",
-                "description": "A estátua representa um mago idoso com barba longa, vestindo uma túnica com símbolos estelares. Ele segura um livro aberto em suas mãos. Na base da estátua, há uma inscrição: 'O conhecimento é poder, mas a sabedoria é saber quando usá-lo.'",
-                "effect": {"states.statueExamined": true}
-              }
-            ]
-          }
-        ],
-        "search": [
-          {
-            "condition": "states.statueExamined",
-            "text": "Você procura cuidadosamente ao redor da estátua e nota que o livro nas mãos do mago tem páginas que podem ser viradas. Ao folhear o livro de pedra, você encontra uma pequena moeda de ouro escondida entre as páginas.",
-            "chance": 1.0,
-            "items": [
-              {
-                "id": "moeda-ouro",
-                "content": "Moeda de Ouro Antiga",
-                "description": "Uma moeda de ouro antiga com o símbolo de uma torre em um lado e uma estrela no outro.",
-                "quantity": 1,
-                "value": 10
-              }
-            ]
-          },
-          {
-            "condition": "states.pillarExamined && states.floorExamined",
-            "text": "Ao examinar mais atentamente as rachaduras no piso próximo aos pilares, você percebe que uma das lajes está solta. Ao movê-la, você descobre um pequeno compartimento contendo um pergaminho.",
-            "chance": 0.8,
-            "items": [
-              {
-                "id": "pergaminho-protecao",
-                "content": "Pergaminho de Proteção",
-                "description": "Um pergaminho com um encantamento de proteção contra fogo.",
-                "consumable": true,
-                "effect": "fire_protection"
-              }
-            ]
-          },
-          {
-            "condition": "!states.statueExamined && !states.pillarExamined",
-            "text": "Você procura pela sala, mas não encontra nada de interesse.",
-            "chance": 1.0,
-            "results": []
-          }
-        ],
-        "interactions": [
-  {
-    "id": "teste-sorte-pilar",
-    "name": "Testar Sorte com Pedra Instável",
-    "condition": "states.pillarExamined && !states.luckTestCompleted",
-    "description": "Você nota uma pedra instável no teto, logo acima do pilar. A pedra parece que pode cair a qualquer momento.",
-    "result": {
-      "text": "Você ouve um ruído de rachadura vindo do teto. Uma pedra grande está se soltando acima de você!",
-      "action": "testLuck",
-      "luckTest": {
-        "description": "Uma pedra grande está se soltando do teto! Você precisa testar sua sorte para escapar antes que ela caia.",
-        "success": {
-          "text": "Com um movimento rápido, você consegue se afastar antes que a pedra caia estrondosamente no chão!",
-          "effect": {"states.luckTestCompleted": true}
-        },
-        "failure": {
-          "text": "Você não consegue se afastar a tempo e a pedra cai sobre você!",
-          "effect": {"states.luckTestCompleted": true},
-          "damage": {
-            "amount": "20",
-            "message": "A pedra atinge você com força esmagadora!"
-          }
-        }
-      }
-    }
-  },
-  {
-    "id": "teste-habilidade",
-    "name": "Decifrar Símbolos Arcanos",
-    "condition": "states.floorExamined && !states.skillTestCompleted",
-    "description": "Os símbolos arcanos no piso rachado parecem formar algum tipo de código ou mensagem. Talvez você consiga decifrá-los com sua habilidade.",
-    "result": {
-      "text": "Você tenta decifrar os símbolos arcanos no piso...",
-      "action": "testSkill",
-      "skillTest": {
-        "description": "Você precisa usar sua habilidade para decifrar os símbolos arcanos.",
-        "difficulty": 15,
-        "success": {
-          "text": "Após alguns minutos de estudo, você consegue decifrar os símbolos! Eles revelam a localização de um compartimento secreto em um dos pilares. Dentro dele, você encontra um pequeno frasco.",
-          "effect": {"states.skillTestCompleted": true},
-          "items": [
-            {
-              "id": "pocao-mana",
-              "content": "Poção de Mana",
-              "description": "Um frasco contendo um líquido azul brilhante que restaura energia mágica.",
-              "consumable": true,
-              "effect": "restore_mana",
-              "value": 25
-            }
-          ]
-        },
-        "failure": {
-          "text": "Você tenta decifrar os símbolos, mas eles são complexos demais para seu conhecimento atual. Talvez com mais estudo...",
-          "effect": {"states.skillTestCompleted": true}
-        }
-      }
-    }
-  },
-  {
-    "id": "teste-carisma",
-    "name": "Comunicar com Espírito do Mago",
-    "condition": "states.statueExamined && !states.charismaTestCompleted",
-    "description": "Você sente uma presença etérea ao redor da estátua do mago. Talvez seja possível estabelecer algum tipo de comunicação.",
-    "result": {
-      "text": "Você tenta se comunicar com o espírito do mago que parece habitar a estátua...",
-      "action": "testCharisma",
-      "charismaTest": {
-        "description": "Você tenta estabelecer uma conexão com a presença espiritual usando seu carisma.",
-        "difficulty": 18,
-        "success": {
-          "text": "Surpreendentemente, uma voz etérea responde à sua tentativa de comunicação! 'Bem-vindo, buscador de conhecimento. Poucos conseguem me ouvir. Como recompensa por sua sensibilidade, deixo-lhe este conselho: Na biblioteca, procure pelo livro que não tem título, mas tem todas as respostas.' O espírito então desaparece.",
-          "effect": {"states.charismaTestCompleted": true, "states.receivedMagoTip": true}
-        },
-        "failure": {
-          "text": "Você tenta se comunicar, mas não recebe nenhuma resposta. Apenas o silêncio da torre abandonada.",
-          "effect": {"states.charismaTestCompleted": true}
-        }
-      }
-    }
-  },
-  {
-    "id": "mecanismo-antigo",
-    "name": "Ativar Mecanismo Antigo",
-    "condition": "states.floorExamined && !states.mechanismActivated",
-    "description": "Entre as rachaduras do piso, você nota um padrão circular que parece ser um mecanismo antigo. Há uma série de símbolos que precisam ser alinhados na sequência correta para ativá-lo.",
-    "result": {
-      "text": "Você tenta decifrar a sequência correta para ativar o mecanismo...",
-      "action": "testSkill",
-      "skillTest": {
-        "description": "O mecanismo é complexo e requer precisão e conhecimento arcano para ser ativado. Você precisa alinhar os símbolos na sequência correta.",
-        "difficulty": 17,
-        "success": {
-          "text": "Com habilidade e precisão, você consegue alinhar os símbolos na sequência correta! O mecanismo emite um suave clique e o chão treme levemente. Uma seção do piso desliza para o lado, revelando um compartimento secreto contendo um amuleto antigo.",
-          "effect": {"states.mechanismActivated": true},
-          "items": [
-            {
-              "id": "amuleto-protetor",
-              "content": "Amuleto Protetor",
-              "description": "Um amuleto de prata com uma pedra azul no centro. Quando usado, oferece proteção contra magias hostis.",
-              "wearable": true,
-              "effect": "magic_protection",
-              "value": 75
-            }
-          ]
-        },
-        "failure": {
-          "text": "Você tenta alinhar os símbolos, mas a sequência parece muito complexa. Subitamente, o mecanismo emite um som agudo e uma pequena explosão de energia arcana é liberada!",
-          "effect": {"states.mechanismActivated": true, "states.mechanismFailed": true},
-          "damage": {
-            "amount": "1D8",
-            "type": "magic",
-            "message": "Uma explosão de energia arcana atinge você!"
-          }
-        }
-      }
-    }
-  }
-]
-      }
-    },
-    "room-2": {
-      "id": "room-2",
-      "name": "Biblioteca Abandonada",
-      "description": "Uma vasta biblioteca com estantes altas cheias de livros empoeirados. Muitos tomos estão espalhados pelo chão.",
-      "type": "room",
-      "gridX": 8,
-      "gridY": 12,
-      "gridWidth": 5,
-      "gridHeight": 5,
-      "exits": [
-        { "direction": "south", "leadsTo": "room-1", "type": "door", "locked": false },
-        { "direction": "east", "leadsTo": "room-3", "type": "door", "locked": true, "keyId": "key-biblioteca" },
-        { "direction": "north", "leadsTo": "room-4", "type": "door", "locked": false }
-      ],
-      "events": [
-        { "type": "first-visit", "text": "Ao entrar na biblioteca, você é recebido por uma nuvem de poeira. Os livros parecem ter sido deixados às pressas, com alguns ainda abertos sobre as mesas." }
-      ],
-      "exploration": {
-        "states": {
-          "initial": {
-            "examined": false,
-            "estantesExamined": false,
-            "mesaExamined": false,
-            "livroVermelhoExamined": false,
-            "keyFound": false,
-            "keyCollected": false,
-            "trapTriggered": false
-          }
-        },
-        "examine": [
-          {
-            "condition": "!states.examined",
-            "text": "Você observa a biblioteca abandonada. As estantes estão cheias de livros sobre magia, alquimia e história arcana. Há uma mesa de estudo no centro da sala com vários livros abertos. O que você deseja examinar mais de perto?",
-            "effect": {"states.examined": true},
-            "pointsOfInterest": [
-              {
-                "id": "estantes",
-                "name": "Estantes de Livros",
-                "description": "As estantes de madeira escura estão cheias de livros antigos. Muitos têm títulos em línguas que você não reconhece, mas alguns são sobre história da magia, alquimia e invocação de elementais."
-              },
-              {
-                "id": "mesa",
-                "name": "Mesa de Estudo",
-                "description": "Uma grande mesa de carvalho com vários livros abertos. Parece que alguém estava estudando aqui antes de partir às pressas. Entre os livros abertos, um em particular chama sua atenção - um tomo encadernado em couro vermelho com símbolos dourados.",
-                "effect": {"states.mesaExamined": true}
-              },
-              {
-                "id": "livro-vermelho",
-                "name": "Livro de Capa Vermelha",
-                "condition": "states.mesaExamined",
-                "description": "Você examina o livro de capa vermelha. Ele contém diagramas complexos de círculos mágicos e fórmulas arcanas. Uma página está marcada com um pedaço de pergaminho. Ao virar a página marcada, você nota que há algo escondido na encadernação do livro.",
-                "effect": {"states.livroVermelhoExamined": true}
-              }
-            ]
-          },
-          {
-            "condition": "states.examined",
-            "text": "O que você deseja examinar na biblioteca?",
-            "pointsOfInterest": [
-              {
-                "id": "estantes",
-                "name": "Estantes de Livros",
-                "description": "As estantes de madeira escura estão cheias de livros antigos. Muitos têm títulos em línguas que você não reconhece, mas alguns são sobre história da magia, alquimia e invocação de elementais.",
-                "effect": {"states.estantesExamined": true}
-              },
-              {
-                "id": "mesa",
-                "name": "Mesa de Estudo",
-                "description": "Uma grande mesa de carvalho com vários livros abertos. Parece que alguém estava estudando aqui antes de partir às pressas. Entre os livros abertos, um em particular chama sua atenção - um tomo encadernado em couro vermelho com símbolos dourados.",
-                "effect": {"states.mesaExamined": true}
-              },
-              {
-                "id": "livro-vermelho",
-                "name": "Livro de Capa Vermelha",
-                "condition": "states.mesaExamined",
-                "description": "Você examina o livro de capa vermelha. Ele contém diagramas complexos de círculos mágicos e fórmulas arcanas. Uma página está marcada com um pedaço de pergaminho. Ao virar a página marcada, você nota que há algo escondido na encadernação do livro.",
-                "effect": {"states.livroVermelhoExamined": true}
-              }
-            ]
-          }
-        ],
-        "search": [
-          {
-            "condition": "states.livroVermelhoExamined && !states.keyFound && !states.trapTriggered",
-            "text": "Você procura entre as páginas do livro marcado e encontra uma pequena chave de prata escondida dentro da encadernação. No entanto, ao remover a chave, você aciona um mecanismo mágico de proteção!",
-            "effect": {"states.keyFound": true, "states.trapTriggered": true},
-            "items": [
-              {
-                "id": "key-biblioteca",
-                "content": "Chave de Prata",
-                "description": "Uma pequena chave de prata com símbolos arcanos gravados."
-              }
-            ],
-            "damage": {
-              "amount": "1D6",
-              "type": "magic",
-              "message": "Um raio de energia mágica dispara do livro, atingindo você no peito!"
-            }
-          },
-          {
-            "condition": "states.keyFound && !states.keyCollected",
-            "text": "Você já encontrou a chave de prata escondida no livro.",
-            "items": [
-              {
-                "id": "key-biblioteca",
-                "content": "Chave de Prata",
-                "description": "Uma pequena chave de prata com símbolos arcanos gravados."
-              }
-            ]
-          },
-          {
-            "condition": "states.estantesExamined",
-            "text": "Você procura entre os livros nas estantes e encontra um pequeno frasco de poção escondido atrás de alguns tomos.",
-            "chance": 0.7,
-            "items": [
-              {
-                "id": "pocao-cura",
-                "content": "Poção de Cura",
-                "description": "Um frasco contendo um líquido vermelho brilhante que restaura energia vital.",
-                "consumable": true,
-                "effect": "healing",
-                "value": 15
-              }
-            ]
-          },
-          {
-            "condition": "!states.livroVermelhoExamined && !states.estantesExamined",
-            "text": "Você procura pela biblioteca, mas não encontra nada de interesse.",
-            "chance": 1.0,
-            "results": []
-          }
-        ]
-      }
-    }
-  }
-}
-
-// Adicione esta sala ao objeto dungeon.rooms
-"room-3": {
-  "id": "room-3",
-  "name": "Laboratório Arcano",
-  "description": "Um laboratório com mesas de trabalho cobertas de equipamentos alquímicos. Frascos de vidro colorido e instrumentos estranhos estão espalhados por toda parte.",
-  "type": "room",
-  "gridX": 14,
-  "gridY": 12,
-  "gridWidth": 4,
-  "gridHeight": 5,
-  "exits": [
-    { "direction": "west", "leadsTo": "room-2", "type": "door", "locked": false }
-  ],
-  "events": [
-    { "type": "first-visit", "text": "Ao entrar no laboratório, você sente o cheiro de ervas e produtos químicos. Há um homem idoso trabalhando em uma das mesas." }
-  ],
-  "npcs": [
+  "titulo": "Torre dos Magos",
+  "descricao": "Uma aventura perigosa através de uma torre mágica antiga, onde cada decisão pode ser fatal.",
+  "andares": [
     {
-      "id": "alquimista",
-      "name": "Alquimista Velho",
-      "description": "Um homem idoso com cabelos brancos desgrenhados e uma barba longa. Ele veste um avental manchado e óculos de lentes grossas.",
-      "dialogues": {
-        "initial": {
-          "text": "Hmm? Oh, um visitante! Não recebo muitos desses ultimamente. O que te traz ao meu laboratório?",
-          "options": [
+      "id": 1,
+      "nome": "Entrada da Torre",
+      "descricao": "Um portal imponente de pedra negra com runas brilhantes. O ar vibra com energia mágica.",
+      "encontros": [
+        {
+          "tipo": "dialogo",
+          "personagem": "Guardião da Torre",
+          "texto": "Poucos retornam desta torre com a mente intacta. Sua determinação será testada.",
+          "opcoes": [
             {
-              "text": "Estou explorando a torre. O que você faz aqui?",
-              "next": "about_work"
+              "texto": "Seguir em frente com coragem",
+              "consequencia": {"destino": 2, "atributo": "coragem", "valor": 1}
             },
             {
-              "text": "Preciso de poções ou itens mágicos.",
-              "next": "potions"
-            },
-            {
-              "text": "Quem é você?",
-              "next": "identity"
-            }
-          ]
-        },
-        "about_work": {
-          "text": "Estou estudando as propriedades mágicas de várias substâncias. A torre pode estar abandonada, mas ainda contém conhecimentos valiosos. Estou tentando criar uma poção que possa neutralizar armadilhas mágicas.",
-          "options": [
-            {
-              "text": "Armadilhas mágicas? Há muitas nesta torre?",
-              "next": "traps"
-            },
-            {
-              "text": "Posso ajudar de alguma forma?",
-              "next": "help_offer"
-            }
-          ]
-        },
-        "potions": {
-          "text": "Ah, um cliente potencial! Tenho algumas poções disponíveis, mas meus ingredientes estão escassos. Posso oferecer uma poção de cura em troca de 20 moedas de ouro.",
-          "options": [
-            {
-              "text": "Aceito a oferta. Aqui estão 20 moedas.",
-              "next": "buy_potion",
-              "condition": "has_gold_20"
-            },
-            {
-              "text": "Não tenho moedas suficientes agora.",
-              "next": "no_money"
-            },
-            {
-              "text": "Talvez mais tarde.",
-              "next": "maybe_later"
-            }
-          ]
-        },
-        "identity": {
-          "text": "Meu nome é Elwin, último membro da Ordem dos Alquimistas Arcanos. Permaneci aqui quando os outros fugiram, há muitos anos. Há segredos nesta torre que não podem ser abandonados.",
-          "options": [
-            {
-              "text": "Por que os outros fugiram?",
-              "next": "why_fled"
-            },
-            {
-              "text": "Que tipo de segredos?",
-              "next": "secrets"
-            }
-          ]
-        },
-        "traps": {
-          "text": "Oh sim, muitas! Os magos que construíram esta torre eram paranóicos. Há armadilhas mágicas em quase todas as salas. Algumas são óbvias, outras... bem, digamos que você só percebe quando já é tarde demais.",
-          "options": [
-            {
-              "text": "Como posso identificar essas armadilhas?",
-              "next": "identify_traps"
-            },
-            {
-              "text": "Voltando ao seu trabalho...",
-              "next": "about_work"
-            }
-          ]
-        },
-        "help_offer": {
-          "text": "Na verdade, sim! Preciso de uma flor rara chamada 'Suspiro Lunar' que cresce apenas no topo da torre. Se você conseguir me trazer uma, posso recompensá-lo com uma poção especial.",
-          "options": [
-            {
-              "text": "Vou procurar essa flor para você.",
-              "next": "accept_quest",
-              "effect": {"states.acceptedFlowerQuest": true}
-            },
-            {
-              "text": "Parece perigoso. Talvez outra hora.",
-              "next": "reject_quest"
-            }
-          ]
-        },
-        "buy_potion": {
-          "text": "Excelente! Aqui está sua poção. Use-a com sabedoria, ela restaurará sua vitalidade quando estiver ferido.",
-          "options": [
-            {
-              "text": "Obrigado.",
-              "effect": {"states.boughtPotion": true},
-              "items": [
-                {
-                  "id": "strong-healing-potion",
-                  "content": "Poção de Cura Forte",
-                  "description": "Uma poção que restaura uma quantidade significativa de energia vital.",
-                  "consumable": true,
-                  "effect": "strong_healing",
-                  "value": 20
-                }
-              ]
-            }
-          ]
-        },
-        "no_money": {
-          "text": "Ah, que pena. Volte quando tiver moedas suficientes. Ou talvez possamos fazer uma troca por algum item interessante que você encontrar em suas explorações.",
-          "options": [
-            {
-              "text": "Vou procurar algo para trocar.",
-              "next": "maybe_later"
-            }
-          ]
-        },
-        "maybe_later": {
-          "text": "Como quiser. Estarei aqui se mudar de ideia. Não é como se eu tivesse outro lugar para ir, haha!",
-          "options": []
-        },
-        "why_fled": {
-          "text": "Houve um... incidente. Um dos experimentos deu errado e liberou uma entidade perigosa nos níveis superiores da torre. A maioria fugiu, mas eu fiquei para tentar consertar o erro.",
-          "options": [
-            {
-              "text": "Que tipo de entidade?",
-              "next": "entity"
-            },
-            {
-              "text": "Você conseguiu consertar o erro?",
-              "next": "fixed_error"
-            }
-          ]
-        },
-        "secrets": {
-          "text": "Conhecimentos arcanos que poderiam ser perigosos nas mãos erradas. Fórmulas para criar vida, alterar a realidade, abrir portais para outros planos... Coisas que a humanidade ainda não está pronta para conhecer.",
-          "options": [
-            {
-              "text": "Isso soa perigoso. Por que preservar esse conhecimento?",
-              "next": "why_preserve"
-            },
-            {
-              "text": "Interessante. Gostaria de aprender mais.",
-              "next": "learn_more"
-            }
-          ]
-        },
-        "identify_traps": {
-          "text": "Procure por símbolos arcanos no chão e nas paredes. Geralmente são sutis, mas estão lá. Também tenho este amuleto que pode ajudar. Ele brilha levemente na presença de magia hostil.",
-          "options": [
-            {
-              "text": "Posso ficar com o amuleto?",
-              "next": "request_amulet"
-            },
-            {
-              "text": "Obrigado pelo conselho.",
-              "effect": {"states.receivedTrapAdvice": true}
-            }
-          ]
-        },
-        "accept_quest": {
-          "text": "Maravilhoso! A flor tem pétalas azuis que brilham sob a luz da lua. Você a encontrará no jardim do observatório, no topo da torre. Tenha cuidado, o caminho até lá é perigoso.",
-          "options": [
-            {
-              "text": "Voltarei com a flor assim que possível.",
-              "effect": {"states.questActive": true}
-            }
-          ]
-        },
-        "reject_quest": {
-          "text": "Compreensível. É uma jornada perigosa. Se mudar de ideia, estarei aqui.",
-          "options": []
-        },
-        "entity": {
-          "text": "Um elemental de sombras. Uma criatura feita de pura escuridão que se alimenta de magia. Ela ainda está presa nos níveis superiores, mas temo que esteja ficando mais forte.",
-          "options": [
-            {
-              "text": "Isso é preocupante. Há algo que eu possa fazer?",
-              "next": "help_entity"
-            },
-            {
-              "text": "Vou me manter longe dos níveis superiores então.",
-              "effect": {"states.warnedAboutEntity": true}
-            }
-          ]
-        },
-        "fixed_error": {
-          "text": "Não completamente. Consegui contê-lo, mas não destruí-lo. É por isso que continuo aqui, estudando uma forma de banir a criatura de volta ao plano das sombras.",
-          "options": [
-            {
-              "text": "Espero que tenha sucesso.",
-              "effect": {"states.encouragedAlchemist": true}
-            }
-          ]
-        },
-        "why_preserve": {
-          "text": "Porque o conhecimento em si não é bom nem mau, é como ele é usado que importa. Destruir conhecimento é sempre uma perda para a humanidade. Meu dever é preservá-lo até que estejamos prontos para usá-lo com sabedoria.",
-          "options": [
-            {
-              "text": "Uma perspectiva nobre.",
-              "effect": {"states.respectAlchemist": true}
-            }
-          ]
-        },
-        "learn_more": {
-          "text": "Hmm, vejo curiosidade em seus olhos. Talvez, se você provar ser digno de confiança, eu possa compartilhar alguns conhecimentos básicos. Volte depois de explorar mais da torre.",
-          "options": [
-            {
-              "text": "Farei isso.",
-              "effect": {"states.interestedInKnowledge": true}
-            }
-          ]
-        },
-        "request_amulet": {
-          "text": "Este é meu único amuleto detector... mas vejo que você é um explorador corajoso. Talvez possa ser mais útil em suas mãos do que nas minhas. Tome, mas use-o com sabedoria.",
-          "options": [
-            {
-              "text": "Muito obrigado! Isso será muito útil.",
-              "effect": {"states.receivedAmulet": true},
-              "items": [
-                {
-                  "id": "trap-detector",
-                  "content": "Amuleto Detector",
-                  "description": "Um pequeno amuleto que brilha na presença de armadilhas mágicas.",
-                  "wearable": true,
-                  "effect": "detect_traps",
-                  "value": 50
-                }
-              ]
-            }
-          ]
-        },
-        "help_entity": {
-          "text": "Talvez... Estou desenvolvendo um artefato que pode conter a criatura, mas preciso de cristais de mana pura. Se encontrar algum em suas explorações, traga para mim.",
-          "options": [
-            {
-              "text": "Vou ficar atento a esses cristais.",
-              "effect": {"states.acceptedCrystalQuest": true}
+              "texto": "Perguntar sobre os perigos",
+              "consequencia": {"destino": 1, "dialogo": "Os perigos são muitos, mas o maior deles é a ambição desmedida."}
             }
           ]
         }
-      }
+      ],
+      "itens": [
+        {"nome": "Pergaminho de Proteção", "efeito": {"tipo": "defesa", "valor": 2}}
+      ]
+    },
+    {
+      "id": 2,
+      "nome": "Salão dos Espelhos",
+      "descricao": "Dezenas de espelhos refletem sua imagem, mas cada reflexo mostra uma versão ligeiramente diferente de você.",
+      "encontros": [
+        {
+          "tipo": "armadilha",
+          "nome": "Espelho da Verdade",
+          "descricao": "Um dos espelhos brilha intensamente quando você passa.",
+          "teste": {"atributo": "sabedoria", "dificuldade": 12},
+          "sucesso": {"texto": "Você resiste ao chamado do espelho.", "recompensa": {"item": "Fragmento de Espelho"}},
+          "falha": {"texto": "O espelho suga parte de sua energia vital.", "dano": 2}
+        }
+      ],
+      "itens": []
+    },
+    {
+      "id": 3,
+      "nome": "Biblioteca Proibida",
+      "descricao": "Estantes infinitas de livros antigos. Alguns volumes parecem se mover por conta própria.",
+      "encontros": [
+        {
+          "tipo": "combate",
+          "inimigo": "Livro Demoníaco",
+          "vida": 5,
+          "ataque": 3,
+          "recompensa": {"conhecimento": 1, "item": "Página Encantada"}
+        },
+        {
+          "tipo": "dialogo",
+          "personagem": "Bibliotecário Fantasma",
+          "texto": "O conhecimento tem seu preço. Está disposto a pagá-lo?",
+          "opcoes": [
+            {
+              "texto": "Sim, preciso desse conhecimento",
+              "consequencia": {"destino": 3, "atributo": "conhecimento", "valor": 2, "custo": {"vida": 1}}
+            },
+            {
+              "texto": "Não, alguns segredos devem permanecer ocultos",
+              "consequencia": {"destino": 4}
+            }
+          ]
+        }
+      ],
+      "itens": [
+        {"nome": "Tomo de Feitiços", "efeito": {"tipo": "magia", "valor": 1}}
+      ]
+    },
+    {
+      "id": 4,
+      "nome": "Câmara Elemental",
+      "descricao": "Quatro pilares representando os elementos clássicos. O ar crepita com energia pura.",
+      "encontros": [
+        {
+          "tipo": "puzzle",
+          "nome": "Equilíbrio Elemental",
+          "descricao": "Os pilares devem ser ativados na sequência correta.",
+          "solucao": ["água", "terra", "ar", "fogo"],
+          "tentativas": 3,
+          "sucesso": {"texto": "Os pilares brilham em harmonia, revelando uma passagem.", "destino": 5},
+          "falha": {"texto": "Uma explosão de energia elemental o atinge.", "dano": 3, "destino": 4}
+        }
+      ],
+      "itens": [
+        {"nome": "Amuleto Elemental", "efeito": {"tipo": "resistencia", "elementos": ["fogo", "gelo"], "valor": 2}}
+      ]
+    },
+    {
+      "id": 5,
+      "nome": "Santuário do Arquimago",
+      "descricao": "Uma sala circular com um trono de cristal no centro. Símbolos arcanos cobrem as paredes.",
+      "encontros": [
+        {
+          "tipo": "dialogo",
+          "personagem": "Arquimago Zephyrus",
+          "texto": "Você chegou longe, mas sua jornada apenas começou. O que busca na minha torre?",
+          "opcoes": [
+            {
+              "texto": "Poder para proteger os inocentes",
+              "consequencia": {"destino": 5, "alinhamento": "luz", "recompensa": {"item": "Cajado da Proteção"}}
+            },
+            {
+              "texto": "Conhecimento proibido a qualquer custo",
+              "consequencia": {"destino": 5, "alinhamento": "sombra", "recompensa": {"item": "Grimório das Sombras"}}
+            },
+            {
+              "texto": "Compreensão dos mistérios arcanos",
+              "consequencia": {"destino": 5, "alinhamento": "neutro", "recompensa": {"item": "Orbe da Sabedoria"}}
+            }
+          ]
+        }
+      ],
+      "itens": []
     }
   ],
-  "exploration": {
-    "states": {
-      "initial": {
-        "examined": false,
-        "mesasExamined": false,
-        "estantesExamined": false,
-        "equipamentosExamined": false
-      }
+  "personagens": {
+    "Guardião da Torre": {
+      "descricao": "Um homem alto com vestes cinzentas e olhos que parecem ver através da sua alma.",
+      "motivacao": "Testar os visitantes e afastar os indignos."
     },
-    "examine": [
-      {
-        "condition": "!states.examined",
-        "text": "O laboratório está cheio de equipamentos alquímicos e mágicos. Há várias mesas de trabalho com experimentos em andamento, estantes com ingredientes e equipamentos estranhos que você nunca viu antes.",
-        "effect": {"states.examined": true},
-        "pointsOfInterest": [
-          {
-            "id": "mesas",
-            "name": "Mesas de Trabalho",
-            "description": "As mesas estão cobertas de pergaminhos com anotações, frascos borbulhantes e instrumentos de medição. Um experimento parece estar em andamento, com um líquido azul sendo aquecido sobre uma chama mágica que não emite fumaça.",
-            "effect": {"states.mesasExamined": true}
-          },
-          {
-            "id": "estantes",
-            "name": "Estantes de Ingredientes",
-            "description": "As estantes contêm centenas de frascos rotulados com nomes estranhos: 'Lágrimas de Sereia', 'Pólen de Flor Noturna', 'Essência de Sombra Cristalizada'. Alguns frascos contêm substâncias que brilham ou se movem por conta própria.",
-            "effect": {"states.estantesExamined": true}
-          },
-          {
-            "id": "equipamentos",
-            "name": "Equipamentos Alquímicos",
-            "description": "Alambiques, cadinhos, balanças de precisão e outros equipamentos mais exóticos que você não consegue identificar. Um aparelho particularmente interessante parece medir algum tipo de energia mágica, com um ponteiro que oscila lentamente.",
-            "effect": {"states.equipamentosExamined": true}
-          }
-        ]
-      },
-      {
-        "condition": "states.examined",
-        "text": "O que você deseja examinar no laboratório?",
-        "pointsOfInterest": [
-          {
-            "id": "mesas",
-            "name": "Mesas de Trabalho",
-            "description": "As mesas estão cobertas de pergaminhos com anotações, frascos borbulhantes e instrumentos de medição. Um experimento parece estar em andamento, com um líquido azul sendo aquecido sobre uma chama mágica que não emite fumaça.",
-            "effect": {"states.mesasExamined": true}
-          },
-          {
-            "id": "estantes",
-            "name": "Estantes de Ingredientes",
-            "description": "As estantes contêm centenas de frascos rotulados com nomes estranhos: 'Lágrimas de Sereia', 'Pólen de Flor Noturna', 'Essência de Sombra Cristalizada'. Alguns frascos contêm substâncias que brilham ou se movem por conta própria.",
-            "effect": {"states.estantesExamined": true}
-          },
-          {
-            "id": "equipamentos",
-            "name": "Equipamentos Alquímicos",
-            "description": "Alambiques, cadinhos, balanças de precisão e outros equipamentos mais exóticos que você não consegue identificar. Um aparelho particularmente interessante parece medir algum tipo de energia mágica, com um ponteiro que oscila lentamente.",
-            "effect": {"states.equipamentosExamined": true}
-          }
-        ]
-      }
-    ],
-    "search": [
-      {
-        "condition": "states.mesasExamined",
-        "text": "Você procura entre os pergaminhos nas mesas de trabalho e encontra uma receita para uma poção de invisibilidade. Parece complexa, mas você consegue entender o suficiente para saber que é valiosa.",
-        "chance": 0.8,
-        "items": [
-          {
-            "id": "receita-invisibilidade",
-            "content": "Receita de Poção de Invisibilidade",
-            "description": "Um pergaminho detalhando como criar uma poção que torna o usuário invisível por um curto período.",
-            "value": 30
-          }
-        ]
-      },
-      {
-        "condition": "states.estantesExamined",
-        "text": "Enquanto examina as estantes, você encontra um pequeno frasco escondido atrás de outros maiores. Ele contém um líquido dourado brilhante.",
-        "chance": 0.7,
-        "items": [
-          {
-            "id": "essencia-dourada",
-            "content": "Essência Dourada",
-            "description": "Um líquido dourado que emite um brilho suave. Parece ser um ingrediente raro para poções avançadas.",
-            "value": 25
-          }
-        ]
-      }
-    ]
-  }
+    "Bibliotecário Fantasma": {
+      "descricao": "Uma figura translúcida com óculos antigos e mãos que nunca param de organizar livros.",
+      "motivacao": "Proteger o conhecimento e garantir que caia em mãos responsáveis."
+    },
+    "Arquimago Zephyrus": {
+      "descricao": "Um mago idoso com barba prateada e olhos que brilham com poder arcano.",
+      "motivacao": "Encontrar um sucessor digno para seus conhecimentos."
+    }
+  },
+  "itens": {
+    "Pergaminho de Proteção": {
+      "descricao": "Um pergaminho com símbolos de proteção que brilham quando o perigo se aproxima.",
+      "uso_unico": true
+    },
+    "Fragmento de Espelho": {
+      "descricao": "Um pedaço de espelho mágico que mostra brevemente o futuro quando olhado sob a luz da lua.",
+      "uso_unico": false
+    },
+    "Tomo de Feitiços": {
+      "descricao": "Um livro antigo contendo feitiços básicos de proteção e ataque.",
+      "uso_unico": false
+    },
+    "Página Encantada": {
+      "descricao": "Uma página que muda seu conteúdo conforme a necessidade do leitor.",
+      "uso_unico": true
+    },
+    "Amuleto Elemental": {
+      "descricao": "Um amuleto que brilha quando exposto a energias elementais.",
+      "uso_unico": false
+    },
+    "Cajado da Proteção": {
+      "descricao": "Um cajado de madeira branca que fortalece feitiços defensivos.",
+      "uso_unico": false
+    },
+    "Grimório das Sombras": {
+      "descricao": "Um livro encadernado em couro negro que sussurra segredos proibidos.",
+      "uso_unico": false
+    },
+    "Orbe da Sabedoria": {
+      "descricao": "Uma esfera de cristal que clareia a mente e aumenta a compreensão arcana.",
+      "uso_unico": false
+    }
+  },
+  "atributos_jogador": {
+    "vida": 10,
+    "coragem": 0,
+    "sabedoria": 0,
+    "conhecimento": 0,
+    "alinhamento": "neutro"
+  },
+  "andares_futuros": [
+    {"id": 6, "nome": "Jardim Suspenso", "disponivel": false},
+    {"id": 7, "nome": "Laboratório Alquímico", "disponivel": false},
+    {"id": 8, "nome": "Câmara de Invocação", "disponivel": false},
+    {"id": 9, "nome": "Observatório Celestial", "disponivel": false},
+    {"id": 10, "nome": "Cripta dos Magos Antigos", "disponivel": false},
+    {"id": 11, "nome": "Sala das Ilusões", "disponivel": false},
+    {"id": 12, "nome": "Forja Arcana", "disponivel": false},
+    {"id": 13, "nome": "Câmara de Cristal", "disponivel": false},
+    {"id": 14, "nome": "Salão dos Elementais", "disponivel": false},
+    {"id": 15, "nome": "Ponte Dimensional", "disponivel": false},
+    {"id": 16, "nome": "Arquivo Proibido", "disponivel": false},
+    {"id": 17, "nome": "Sala do Tempo", "disponivel": false},
+    {"id": 18, "nome": "Câmara do Conselho", "disponivel": false},
+    {"id": 19, "nome": "Santuário Interior", "disponivel": false},
+    {"id": 20, "nome": "Pináculo da Torre", "disponivel": false}
+  ]
 }
-
