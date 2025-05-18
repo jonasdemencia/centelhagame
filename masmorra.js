@@ -752,15 +752,33 @@ function drawMap() {
     // Desenha a grade de fundo
     drawGrid();
     
-    // Desenha os blocos decorativos
-// Verifica se dungeon.decorativeBlocks existe, caso contrário usa a variável global
 // Desenha os blocos decorativos
 const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
 for (const block of blocksToUse) {
-    // Só desenha blocos que já foram descobertos
-    if (playerState.discoveredBlocks && playerState.discoveredBlocks.some(b => 
-        b.gridX === block.gridX && b.gridY === block.gridY)) {
-        
+    // Verifica se alguma sala visitada está próxima a este bloco
+    let shouldDraw = false;
+    
+    for (const roomId of playerState.visitedRooms) {
+        const room = dungeon.rooms[roomId];
+        if (room) {
+            const distX = Math.abs(block.gridX - room.gridX);
+            const distY = Math.abs(block.gridY - room.gridY);
+            
+            // Se o bloco estiver próximo a uma sala visitada, desenha-o
+            if (distX <= 2 && distY <= 2) {
+                shouldDraw = true;
+                break;
+            }
+        }
+    }
+    
+    // Também desenha se estiver explicitamente na lista de blocos descobertos
+    if (!shouldDraw && playerState.discoveredBlocks && 
+        playerState.discoveredBlocks.some(b => b.gridX === block.gridX && b.gridY === block.gridY)) {
+        shouldDraw = true;
+    }
+    
+    if (shouldDraw) {
         const x = block.gridX * GRID_CELL_SIZE;
         const y = block.gridY * GRID_CELL_SIZE;
         
@@ -779,6 +797,7 @@ for (const block of blocksToUse) {
         }
     }
 }
+
 
 
     
