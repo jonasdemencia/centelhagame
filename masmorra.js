@@ -2660,6 +2660,27 @@ async function moveToRoom(roomId) {
     if (isFirstVisit) {
         playerState.visitedRooms.push(roomId);
         
+        // Descobre blocos decorativos próximos à sala atual
+        const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
+        for (const block of blocksToUse) {
+            // Verifica se o bloco está próximo à sala atual
+            const distX = Math.abs(block.gridX - room.gridX);
+            const distY = Math.abs(block.gridY - room.gridY);
+            
+            // Se o bloco estiver adjacente à sala atual, adiciona à lista de descobertos
+            if (distX <= 1 && distY <= 1) {
+                // Verifica se o bloco já foi descoberto
+                if (!playerState.discoveredBlocks) playerState.discoveredBlocks = [];
+                if (!playerState.discoveredBlocks.some(b => 
+                    b.gridX === block.gridX && b.gridY === block.gridY)) {
+                    playerState.discoveredBlocks.push({
+                        gridX: block.gridX,
+                        gridY: block.gridY
+                    });
+                }
+            }
+        }
+        
         // Inicializa o estado de exploração se não existir
         if (room.exploration && room.exploration.states && room.exploration.states.initial) {
             room.explorationState = { ...room.exploration.states.initial };
@@ -2748,13 +2769,15 @@ async function moveToRoom(roomId) {
     }
 
     // Verifica se há NPCs na sala
-if (room.npcs) {
-    createNPCButtons(room);
-}
+    if (room.npcs) {
+        createNPCButtons(room);
+    }
     
     // Salva o estado do jogador
     savePlayerState();
 }
+
+
 
 
 
