@@ -1876,7 +1876,6 @@ async function rest() {
     savePlayerState();
 }
 
-// Função para salvar o estado do jogador no Firestore (versão atualizada)
 function savePlayerState() {
     if (!userId) return;
     
@@ -1899,6 +1898,7 @@ function savePlayerState() {
         inventory: playerState.inventory,
         health: playerState.health,
         roomStates: roomStates,
+        discoveredBlocks: playerState.discoveredBlocks, // Adicione esta linha
         lastUpdated: new Date().toISOString()
     }, { merge: true })
     .then(() => {
@@ -1908,6 +1908,8 @@ function savePlayerState() {
         console.error("Erro ao salvar estado da masmorra:", error);
     });
 }
+
+
 
 
 // Função para carregar o estado do jogador do Firestore (versão atualizada)
@@ -1940,19 +1942,21 @@ async function loadPlayerState() {
         }
         
         if (docSnap.exists()) {
-            const data = docSnap.data();
-            
-            // Se playerData estiver disponível, use a energia do jogador
-            const playerEnergy = playerData?.energy?.total || 100;
-            
-            playerState = {
-                currentRoom: data.currentRoom || "room-1",
-                discoveredRooms: data.discoveredRooms || ["room-1"],
-                visitedRooms: data.visitedRooms || [],
-                inventory: data.inventory || [],
-                health: data.health || playerEnergy, // Usa a energia do jogador se disponível
-                attributes: attributes // Usa os atributos do jogador
-            };
+    const data = docSnap.data();
+    
+    // Se playerData estiver disponível, use a energia do jogador
+    const playerEnergy = playerData?.energy?.total || 100;
+    
+    playerState = {
+        currentRoom: data.currentRoom || "room-1",
+        discoveredRooms: data.discoveredRooms || ["room-1"],
+        visitedRooms: data.visitedRooms || [],
+        inventory: data.inventory || [],
+        health: data.health || playerEnergy, // Usa a energia do jogador se disponível
+        discoveredBlocks: data.discoveredBlocks || [], // Adicione esta linha
+        attributes: attributes // Usa os atributos do jogador
+    };
+
             
             // Carrega os estados de exploração das salas
             if (data.roomStates) {
