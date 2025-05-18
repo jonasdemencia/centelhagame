@@ -1598,14 +1598,17 @@ function createDungeonSelector(dungeons, currentDungeonId) {
             savePlayerState();
             
            // Redefine o estado do jogador para a nova masmorra
+// Redefine o estado do jogador para a nova masmorra
 playerState = {
     currentRoom: "room-1",
     discoveredRooms: ["room-1"],
     visitedRooms: [],
     inventory: playerState.inventory, // Mantém o inventário
     health: playerState.health, // Mantém a saúde
-    attributes: playerState.attributes // Mantém os atributos
+    attributes: playerState.attributes, // Mantém os atributos
+    discoveredBlocks: [] // Inicializa como array vazio
 };
+
 
             
             // Carrega a nova masmorra
@@ -1875,7 +1878,6 @@ async function rest() {
     savePlayerState();
 }
 
-// Função para salvar o estado do jogador no Firestore (versão atualizada)
 function savePlayerState() {
     if (!userId) return;
     
@@ -1890,18 +1892,22 @@ function savePlayerState() {
         }
     }
     
+    // Garante que discoveredBlocks seja sempre um array
+    if (!playerState.discoveredBlocks) {
+        playerState.discoveredBlocks = [];
+    }
+    
     const dungeonStateRef = doc(db, "dungeons", userId);
-    // Na função savePlayerState(), adicione discoveredBlocks aos dados salvos
-setDoc(dungeonStateRef, {
-    currentRoom: playerState.currentRoom,
-    discoveredRooms: playerState.discoveredRooms,
-    visitedRooms: playerState.visitedRooms,
-    inventory: playerState.inventory,
-    health: playerState.health,
-    roomStates: roomStates,
-    discoveredBlocks: playerState.discoveredBlocks, // Adicione esta linha
-    lastUpdated: new Date().toISOString()
-}, { merge: true })
+    setDoc(dungeonStateRef, {
+        currentRoom: playerState.currentRoom,
+        discoveredRooms: playerState.discoveredRooms,
+        visitedRooms: playerState.visitedRooms,
+        inventory: playerState.inventory,
+        health: playerState.health,
+        roomStates: roomStates,
+        discoveredBlocks: playerState.discoveredBlocks,
+        lastUpdated: new Date().toISOString()
+    }, { merge: true })
     .then(() => {
         console.log("Estado da masmorra salvo com sucesso!");
     })
