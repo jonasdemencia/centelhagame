@@ -6,10 +6,10 @@
     "room-1": {
       "id": "room-1",
       "name": "Entrada da Torre",
-      "description": "O primeiro andar da torre é amplo, com paredes de pedra cobertas de musgo.",
+      "description": "O primeiro andar da torre é amplo, com paredes de pedra cobertas de musgo. Uma escadaria em espiral leva ao andar superior.",
       "type": "room",
       "exits": [
-        { "direction": "north", "leadsTo": "room-2", "type": "door", "locked": false }
+        { "direction": "north", "leadsTo": "room-2", "type": "stairs", "locked": false }
       ],
       "visited": false,
       "discovered": false,
@@ -18,16 +18,47 @@
       "gridWidth": 3,
       "gridHeight": 3,
       "events": [
-        { "type": "first-visit", "text": "Ao entrar na torre, você sente um arrepio percorrer sua espinha." }
-      ]
+        { "type": "first-visit", "text": "Ao entrar na torre, você sente um arrepio percorrer sua espinha. O ar está carregado de magia antiga." }
+      ],
+      "exploration": {
+        "states": {
+          "initial": {
+            "examined": false,
+            "symbolsExamined": false,
+            "pedestalExamined": false
+          }
+        },
+        "examine": [
+          {
+            "condition": "!states.examined",
+            "text": "Você examina o primeiro andar da torre. Há símbolos arcanos gravados no chão formando um círculo. No centro da sala, há um pedestal com uma inscrição.",
+            "effect": {"states.examined": true},
+            "pointsOfInterest": [
+              {
+                "id": "simbolos",
+                "name": "Símbolos Arcanos",
+                "description": "Os símbolos arcanos no chão formam um padrão circular. Você reconhece alguns deles como símbolos de proteção e aviso.",
+                "effect": {"states.symbolsExamined": true}
+              },
+              {
+                "id": "pedestal",
+                "name": "Pedestal com Inscrição",
+                "description": "No pedestal está escrito: 'Cinco desafios aguardam o aventureiro. Coragem, Sabedoria, Destreza, Força e Sorte serão testados.'",
+                "effect": {"states.pedestalExamined": true}
+              }
+            ]
+          }
+        ]
+      }
     },
     "room-2": {
       "id": "room-2",
       "name": "Sala do Guardião",
-      "description": "O segundo andar contém uma sala circular com uma estátua de guerreiro no centro.",
+      "description": "O segundo andar contém uma sala circular com uma estátua de guerreiro no centro. A escadaria continua para cima.",
       "type": "room",
       "exits": [
-        { "direction": "south", "leadsTo": "room-1", "type": "door", "locked": false }
+        { "direction": "south", "leadsTo": "room-1", "type": "stairs", "locked": false },
+        { "direction": "north", "leadsTo": "room-3", "type": "stairs", "locked": true, "keyId": "amuleto-guardiao" }
       ],
       "visited": false,
       "discovered": false,
@@ -36,11 +67,239 @@
       "gridWidth": 3,
       "gridHeight": 3,
       "events": [
-        { "type": "first-visit", "text": "A estátua do guerreiro parece observar seus movimentos." }
+        { "type": "first-visit", "text": "A estátua do guerreiro parece observar seus movimentos. Seus olhos de pedra brilham levemente com uma luz azulada." }
+      ],
+      "enemy": {
+        "id": "guardiao-pedra",
+        "name": "Guardião de Pedra",
+        "description": "Uma estátua de guerreiro que ganhou vida, empunhando uma espada de pedra."
+      },
+      "exploration": {
+        "states": {
+          "initial": {
+            "estatuaExaminada": false,
+            "amuletoEncontrado": false
+          }
+        },
+        "examine": [
+          {
+            "condition": "!states.estatuaExaminada",
+            "text": "Você examina a sala com cuidado. A estátua do guerreiro é imponente, feita de pedra cinzenta. Ela segura uma espada em posição de guarda.",
+            "effect": {"states.estatuaExaminada": true}
+          }
+        ],
+        "search": [
+          {
+            "condition": "states.estatuaExaminada && !states.amuletoEncontrado",
+            "text": "Após derrotar o Guardião de Pedra, você encontra um amuleto brilhante entre os destroços da estátua.",
+            "effect": {"states.amuletoEncontrado": true},
+            "items": [
+              {
+                "id": "amuleto-guardiao",
+                "content": "Amuleto do Guardião",
+                "description": "Um amuleto de pedra azul que brilha suavemente. Parece ser uma chave para prosseguir na torre."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "room-3": {
+      "id": "room-3",
+      "name": "Biblioteca Arcana",
+      "description": "O terceiro andar abriga uma vasta biblioteca com estantes cheias de livros antigos. A escadaria continua para cima.",
+      "type": "room",
+      "exits": [
+        { "direction": "south", "leadsTo": "room-2", "type": "stairs", "locked": false },
+        { "direction": "north", "leadsTo": "room-4", "type": "stairs", "locked": true, "keyId": "chave-arcana" }
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 10,
+      "gridY": 10,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "events": [
+        { "type": "first-visit", "text": "O ar está carregado de poeira e conhecimento antigo. Livros flutuam magicamente entre as estantes, reorganizando-se constantemente." }
+      ]
+    },
+    "room-4": {
+      "id": "room-4",
+      "name": "Câmara dos Elementos",
+      "description": "O quarto andar contém uma sala dividida em quatro seções, cada uma representando um elemento: fogo, água, terra e ar. A escadaria final leva ao topo da torre.",
+      "type": "room",
+      "exits": [
+        { "direction": "south", "leadsTo": "room-3", "type": "stairs", "locked": false },
+        { "direction": "north", "leadsTo": "room-5", "type": "stairs", "locked": true, "keyId": "orbe-elemental" }
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 10,
+      "gridY": 6,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "events": [
+        { "type": "first-visit", "text": "Ao entrar na sala, você sente as energias elementais pulsando. Cada seção da sala emite uma aura colorida correspondente ao seu elemento." }
+      ]
+    },
+    "room-5": {
+      "id": "room-5",
+      "name": "Observatório do Mago",
+      "description": "O quinto e último andar é um observatório circular com um teto abobadado de cristal que mostra as estrelas, mesmo durante o dia.",
+      "type": "room",
+      "exits": [
+        { "direction": "south", "leadsTo": "room-4", "type": "stairs", "locked": false }
+      ],
+      "visited": false,
+      "discovered": false,
+      "gridX": 10,
+      "gridY": 2,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "events": [
+        { "type": "first-visit", "text": "Você chegou ao topo da torre! O observatório é magnífico, com constelações mágicas dançando no teto de cristal." }
+      ],
+      "npcs": [
+        {
+          "id": "arquimago",
+          "name": "Arquimago Zephyrus",
+          "description": "Um mago idoso com longas barbas brancas e vestes estreladas. Seus olhos brilham com sabedoria e poder.",
+          "dialogues": {
+            "initial": {
+              "text": "Ah, finalmente alguém conseguiu superar todos os meus desafios! Bem-vindo ao meu observatório, aventureiro.",
+              "options": [
+                {
+                  "text": "Quem é você?",
+                  "next": "quem"
+                },
+                {
+                  "text": "Por que criou estes desafios?",
+                  "next": "desafios"
+                },
+                {
+                  "text": "Vim buscar o tesouro da torre.",
+                  "next": "tesouro"
+                }
+              ]
+            },
+            "quem": {
+              "text": "Eu sou Zephyrus, o Arquimago das Estrelas. Construí esta torre há séculos para estudar os céus e os mistérios arcanos.",
+              "options": [
+                {
+                  "text": "Por que criou estes desafios?",
+                  "next": "desafios"
+                },
+                {
+                  "text": "Vim buscar o tesouro da torre.",
+                  "next": "tesouro"
+                }
+              ]
+            },
+            "desafios": {
+              "text": "Os desafios servem para testar aqueles que buscam conhecimento. Apenas os dignos podem alcançar o topo desta torre e aprender os segredos que guardo.",
+              "options": [
+                {
+                  "text": "Quais segredos você guarda?",
+                  "next": "segredos"
+                },
+                {
+                  "text": "Vim buscar o tesouro da torre.",
+                  "next": "tesouro"
+                }
+              ]
+            },
+            "segredos": {
+              "text": "Conhecimento sobre as estrelas, sobre magia antiga, sobre a própria natureza da realidade. Mas também guardo algo mais tangível para aqueles que valorizam tais coisas.",
+              "options": [
+                {
+                  "text": "Vim buscar o tesouro da torre.",
+                  "next": "tesouro"
+                }
+              ]
+            },
+            "tesouro": {
+              "text": "Ah, sim, o tesouro. Você provou ser digno ao superar meus desafios. Tome este amuleto estelar, um artefato de grande poder que criei em minhas pesquisas.",
+              "options": [
+                {
+                  "text": "Agradecer e aceitar o amuleto",
+                  "next": "aceitar",
+                  "items": [
+                    {
+                      "id": "amuleto-estelar",
+                      "content": "Amuleto Estelar",
+                      "description": "Um amuleto de ouro com uma pedra que parece conter uma galáxia em miniatura. Concede ao portador proteção contra magias e aumenta seus poderes arcanos.",
+                      "value": 500
+                    }
+                  ]
+                },
+                {
+                  "text": "Perguntar se há mais tesouros",
+                  "next": "mais"
+                }
+              ]
+            },
+            "aceitar": {
+              "text": "Use-o com sabedoria. O amuleto contém parte do poder das estrelas. Agora você pode ir, ou ficar e aprender mais sobre os mistérios arcanos, se desejar.",
+              "options": [
+                {
+                  "text": "Gostaria de aprender mais",
+                  "next": "aprender"
+                },
+                {
+                  "text": "Agradecer e partir",
+                  "next": "partir"
+                }
+              ]
+            },
+            "mais": {
+              "text": "Você é ganancioso, aventureiro. O conhecimento é o verdadeiro tesouro. Mas sim, há ouro na arca ao lado da minha mesa de trabalho. Pode pegá-lo, se é isso que busca.",
+              "options": [
+                {
+                  "text": "Pegar o ouro e o amuleto",
+                  "next": "ouro",
+                  "items": [
+                    {
+                      "id": "amuleto-estelar",
+                      "content": "Amuleto Estelar",
+                      "description": "Um amuleto de ouro com uma pedra que parece conter uma galáxia em miniatura. Concede ao portador proteção contra magias e aumenta seus poderes arcanos.",
+                      "value": 500
+                    },
+                    {
+                      "id": "ouro",
+                      "content": "Moedas de Ouro",
+                      "description": "Uma bolsa cheia de moedas de ouro antigas.",
+                      "quantity": 200
+                    }
+                  ]
+                }
+              ]
+            },
+            "ouro": {
+              "text": "Espero que encontre valor nessas moedas. Lembre-se que o verdadeiro poder vem do conhecimento, não da riqueza material.",
+              "options": [
+                {
+                  "text": "Agradecer e partir",
+                  "next": "partir"
+                }
+              ]
+            },
+            "aprender": {
+              "text": "Sábio escolha. Fique quanto tempo desejar. Meus livros e instrumentos estão à sua disposição. Talvez um dia você mesmo se torne um grande mago.",
+              "options": []
+            },
+            "partir": {
+              "text": "Vá em paz, aventureiro. A torre estará sempre aqui para aqueles que buscam conhecimento e desafios.",
+              "options": []
+            }
+          }
+        }
       ]
     }
   },
   "decorativeBlocks": [
-    { "type": "corridor", "gridX": 10, "gridY": 17, "gridWidth": 1, "gridHeight": 1, "connects": ["room-1", "room-2"] }
+    { "type": "corridor", "gridX": 10, "gridY": 17, "gridWidth": 1, "gridHeight": 1, "connects": ["room-1", "room-2"] },
+    { "type": "corridor", "gridX": 10, "gridY": 13, "gridWidth": 1, "gridHeight": 1, "connects": ["room-2", "room-3"] },
+    { "type": "corridor", "gridX": 10, "gridY": 9, "gridWidth": 1, "gridHeight": 1, "connects": ["room-3", "room-4"] },
+    { "type": "corridor", "gridX": 10, "gridY": 5, "gridWidth": 1, "gridHeight": 1, "connects": ["room-4", "room-5"] }
   ]
 }
