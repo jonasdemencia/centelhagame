@@ -1044,7 +1044,7 @@ function updateDirectionButtons() {
     });
 }
 
-// Função para examinar a sala atual (versão atualizada)
+// Modifique a função examineRoom para verificar a qual masmorra a sala pertence
 async function examineRoom() {
     const currentRoom = dungeon.rooms[playerState.currentRoom];
     if (!currentRoom) return;
@@ -1072,14 +1072,13 @@ async function examineRoom() {
                     await applyEffects(examineEvent.effect, currentRoom);
                 }
                 
-                // Na função examineRoom, onde os pontos de interesse são processados
-if (examineEvent.pointsOfInterest && examineEvent.pointsOfInterest.length > 0) {
-    console.log("Pontos de interesse encontrados:", examineEvent.pointsOfInterest);
-    createPointsOfInterestButtons(examineEvent.pointsOfInterest, currentRoom);
-} else {
-    console.log("Nenhum ponto de interesse encontrado no evento de exame");
-}
-
+                // Processa pontos de interesse
+                if (examineEvent.pointsOfInterest && examineEvent.pointsOfInterest.length > 0) {
+                    console.log("Pontos de interesse encontrados:", examineEvent.pointsOfInterest);
+                    createPointsOfInterestButtons(examineEvent.pointsOfInterest, currentRoom);
+                } else {
+                    console.log("Nenhum ponto de interesse encontrado no evento de exame");
+                }
                 
                 // Salva o estado atualizado
                 savePlayerState();
@@ -1089,7 +1088,8 @@ if (examineEvent.pointsOfInterest && examineEvent.pointsOfInterest.length > 0) {
     }
     
     // Caso especial para a Sala das Estátuas (compatibilidade com código antigo)
-    if (currentRoom.id === "room-2" && currentRoom.explorationState) {
+    // Verifica se estamos na masmorra "Ruínas de Undermountain" e na sala "room-2"
+    if (dungeon.name === "Ruínas de Undermountain" && currentRoom.id === "room-2" && currentRoom.explorationState) {
         // Primeira vez que examina a sala
         if (!currentRoom.explorationState.examined) {
             await addLogMessage(`Você examina a ${currentRoom.name} com cuidado.`, 500);
@@ -1142,6 +1142,7 @@ if (examineEvent.pointsOfInterest && examineEvent.pointsOfInterest.length > 0) {
         }
     }
 }
+
 
 
 
@@ -1637,7 +1638,7 @@ playerState = {
 }
 
 
-// Função para procurar na sala atual (versão atualizada)
+// Modifique a função searchRoom para verificar a qual masmorra a sala pertence
 async function searchRoom() {
     const currentRoom = dungeon.rooms[playerState.currentRoom];
     if (!currentRoom) return;
@@ -1695,7 +1696,7 @@ async function searchRoom() {
     }
     
     // Caso especial para a Sala das Estátuas (compatibilidade com código antigo)
-    if (currentRoom.id === "room-2" && 
+    if (dungeon.name === "Ruínas de Undermountain" && currentRoom.id === "room-2" && 
         currentRoom.explorationState && 
         currentRoom.explorationState.specialStatueFound && 
         !currentRoom.explorationState.keyFound) {
@@ -1719,7 +1720,7 @@ async function searchRoom() {
     }
     
     // Se já encontrou a chave mas não recolheu
-    if (currentRoom.id === "room-2" && 
+    if (dungeon.name === "Ruínas de Undermountain" && currentRoom.id === "room-2" && 
         currentRoom.explorationState && 
         currentRoom.explorationState.keyFound && 
         !currentRoom.explorationState.keyCollected) {
@@ -1737,7 +1738,7 @@ async function searchRoom() {
     }
     
     // Verifica se é a sala 5 (Câmara Ritual) para acionar a armadilha
-    if (currentRoom.id === "room-5") {
+    if (dungeon.name === "Ruínas de Undermountain" && currentRoom.id === "room-5") {
         // Armadilha de flecha!
         await addLogMessage("<strong style='color: red;'>CLIQUE!</strong> Você acionou uma armadilha!", 800);
         await addLogMessage("Uma flecha dispara de uma fenda na parede!", 800);
@@ -1800,6 +1801,7 @@ async function searchRoom() {
         await addLogMessage("Você não encontrou nada de interessante.", 800);
     }
 }
+
 
 
 
