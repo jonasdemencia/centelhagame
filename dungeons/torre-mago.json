@@ -1,15 +1,15 @@
 {
   "name": "Torre dos Cinco Desafios",
   "description": "Uma torre antiga que se ergue acima da floresta, desafiando os aventureiros com cinco andares de perigos e mistérios.",
-  "entrance": "andar-1",
+  "entrance": "room-1",
   "rooms": {
-    "andar-1": {
-      "id": "andar-1",
+    "room-1": {
+      "id": "room-1",
       "name": "Entrada da Torre",
       "description": "O primeiro andar da torre é amplo, com paredes de pedra cobertas de musgo. Uma escadaria em espiral leva ao andar superior.",
       "type": "room",
       "exits": [
-        { "direction": "north", "leadsTo": "andar-2", "type": "stairs", "locked": false }
+        { "direction": "north", "leadsTo": "room-2", "type": "stairs", "locked": false }
       ],
       "visited": false,
       "discovered": false,
@@ -51,14 +51,14 @@
         ]
       }
     },
-    "andar-2": {
-      "id": "andar-2",
+    "room-2": {
+      "id": "room-2",
       "name": "Sala do Guardião",
       "description": "O segundo andar contém uma sala circular com uma estátua de guerreiro no centro. A escadaria continua para cima.",
       "type": "room",
       "exits": [
-        { "direction": "south", "leadsTo": "andar-1", "type": "stairs", "locked": false },
-        { "direction": "north", "leadsTo": "andar-3", "type": "stairs", "locked": true, "keyId": "amuleto-guardiao" }
+        { "direction": "south", "leadsTo": "room-1", "type": "stairs", "locked": false },
+        { "direction": "north", "leadsTo": "room-3", "type": "stairs", "locked": true, "keyId": "amuleto-guardiao" }
       ],
       "visited": false,
       "discovered": false,
@@ -108,14 +108,14 @@
         ]
       }
     },
-    "andar-3": {
-      "id": "andar-3",
+    "room-3": {
+      "id": "room-3",
       "name": "Biblioteca Arcana",
       "description": "O terceiro andar abriga uma vasta biblioteca com estantes cheias de livros antigos. A escadaria continua para cima.",
       "type": "room",
       "exits": [
-        { "direction": "south", "leadsTo": "andar-2", "type": "stairs", "locked": false },
-        { "direction": "north", "leadsTo": "andar-4", "type": "stairs", "locked": true, "keyId": "chave-arcana" }
+        { "direction": "south", "leadsTo": "room-2", "type": "stairs", "locked": false },
+        { "direction": "north", "leadsTo": "room-4", "type": "stairs", "locked": true, "keyId": "chave-arcana" }
       ],
       "visited": false,
       "discovered": false,
@@ -174,14 +174,14 @@
         ]
       }
     },
-    "andar-4": {
-      "id": "andar-4",
+    "room-4": {
+      "id": "room-4",
       "name": "Câmara dos Elementos",
       "description": "O quarto andar contém uma sala dividida em quatro seções, cada uma representando um elemento: fogo, água, terra e ar. A escadaria final leva ao topo da torre.",
       "type": "room",
       "exits": [
-        { "direction": "south", "leadsTo": "andar-3", "type": "stairs", "locked": false },
-        { "direction": "north", "leadsTo": "andar-5", "type": "stairs", "locked": true, "keyId": "orbe-elemental" }
+        { "direction": "south", "leadsTo": "room-3", "type": "stairs", "locked": false },
+        { "direction": "north", "leadsTo": "room-5", "type": "stairs", "locked": true, "keyId": "orbe-elemental" }
       ],
       "visited": false,
       "discovered": false,
@@ -263,13 +263,13 @@
         ]
       }
     },
-    "andar-5": {
-      "id": "andar-5",
+    "room-5": {
+      "id": "room-5",
       "name": "Observatório do Mago",
       "description": "O quinto e último andar é um observatório circular com um teto abobadado de cristal que mostra as estrelas, mesmo durante o dia.",
       "type": "room",
       "exits": [
-        { "direction": "south", "leadsTo": "andar-4", "type": "stairs", "locked": false }
+        { "direction": "south", "leadsTo": "room-4", "type": "stairs", "locked": false }
       ],
       "visited": false,
       "discovered": false,
@@ -448,9 +448,9 @@
     }
   },
   "decorativeBlocks": [
-    { "type": "corridor", "gridX": 10, "gridY": 17, "gridWidth": 1, "gridHeight": 1, "connects": ["andar-1", "andar-2"] },
-    { "type": "corridor", "gridX": 10, "gridY": 13, "gridWidth": 1, "gridHeight": 1, "connects": ["andar-2", "andar-3"] },
-    { "type": "corridor", "gridX": 10, "gridY": 9, "gridWidth": 1, "gridHeight": 1, "connects": ["andar-3", "andar-4"] },
-    { "type": "corridor", "gridX": 10, "gridY": 5, "gridWidth": 1, "gridHeight": 1, "connects": ["andar-4", "andar-5"] }
+    { "type": "corridor", "gridX": 10, "gridY": 17, "gridWidth": 1, "gridHeight": 1, "connects": ["room-1", "room-2"] },
+    { "type": "corridor", "gridX": 10, "gridY": 13, "gridWidth": 1, "gridHeight": 1, "connects": ["room-2", "room-3"] },
+    { "type": "corridor", "gridX": 10, "gridY": 9, "gridWidth": 1, "gridHeight": 1, "connects": ["room-3", "room-4"] },
+    { "type": "corridor", "gridX": 10, "gridY": 5, "gridWidth": 1, "gridHeight": 1, "connects": ["room-4", "room-5"] }
   ]
 }
