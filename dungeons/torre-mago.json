@@ -23,42 +23,26 @@
       "exploration": {
         "states": {
           "initial": {
-            "examined": false,
-            "symbolsExamined": false,
-            "pedestalExamined": false
+            "examined": false
           }
         },
         "examine": [
           {
             "condition": "!states.examined",
-            "text": "Você examina o primeiro andar da torre. Há símbolos arcanos gravados no chão formando um círculo. No centro da sala, há um pedestal com uma inscrição.",
-            "effect": {"states.examined": true},
-            "pointsOfInterest": [
-              {
-                "id": "simbolos",
-                "name": "Símbolos Arcanos",
-                "description": "Os símbolos arcanos no chão formam um padrão circular. Você reconhece alguns deles como símbolos de proteção e aviso.",
-                "effect": {"states.symbolsExamined": true}
-              },
-              {
-                "id": "pedestal",
-                "name": "Pedestal com Inscrição",
-                "description": "No pedestal está escrito: 'Cinco desafios aguardam o aventureiro. Coragem, Sabedoria, Destreza, Força e Sorte serão testados.'",
-                "effect": {"states.pedestalExamined": true}
-              }
-            ]
+            "text": "Você examina o primeiro andar da torre. Há símbolos arcanos gravados no chão e uma inscrição na parede que diz: 'Cada guardião possui uma chave. Derrote-os e use seus amuletos nos receptáculos correspondentes para avançar.'",
+            "effect": {"states.examined": true}
           }
         ]
       }
     },
     "room-2": {
       "id": "room-2",
-      "name": "Sala do Guardião",
-      "description": "O segundo andar contém uma sala circular com uma estátua de guerreiro no centro. A escadaria continua para cima.",
+      "name": "Sala do Guardião de Pedra",
+      "description": "O segundo andar contém uma sala circular com uma estátua de guerreiro no centro. Na parede norte há um receptáculo em forma de amuleto.",
       "type": "room",
       "exits": [
         { "direction": "south", "leadsTo": "room-1", "type": "stairs", "locked": false },
-        { "direction": "north", "leadsTo": "room-3", "type": "stairs", "locked": true, "keyId": "amuleto-guardiao" }
+        { "direction": "north", "leadsTo": "room-3", "type": "door", "locked": true, "keyId": "amuleto-guardiao" }
       ],
       "visited": false,
       "discovered": false,
@@ -72,20 +56,30 @@
       "enemy": {
         "id": "guardiao-pedra",
         "name": "Guardião de Pedra",
-        "description": "Uma estátua de guerreiro que ganhou vida, empunhando uma espada de pedra."
+        "description": "Uma estátua de guerreiro que ganhou vida, empunhando uma espada de pedra.",
+        "trigger": {
+          "condition": "states.estatuaExaminada",
+          "message": "A estátua range e se move! O Guardião de Pedra ganhou vida e avança em sua direção!"
+        }
       },
       "exploration": {
         "states": {
           "initial": {
             "estatuaExaminada": false,
-            "amuletoEncontrado": false
+            "amuletoEncontrado": false,
+            "receptaculoExaminado": false
           }
         },
         "examine": [
           {
             "condition": "!states.estatuaExaminada",
-            "text": "Você examina a sala com cuidado. A estátua do guerreiro é imponente, feita de pedra cinzenta. Ela segura uma espada em posição de guarda.",
+            "text": "Você examina a sala com cuidado. A estátua do guerreiro é imponente, feita de pedra cinzenta. Ela segura uma espada em posição de guarda e parece prestes a ganhar vida.",
             "effect": {"states.estatuaExaminada": true}
+          },
+          {
+            "condition": "!states.receptaculoExaminado",
+            "text": "Na parede norte, você nota um receptáculo em forma de amuleto. Há uma inscrição que diz: 'Apenas o amuleto do guardião abrirá o caminho.'",
+            "effect": {"states.receptaculoExaminado": true}
           }
         ],
         "search": [
@@ -97,9 +91,25 @@
               {
                 "id": "amuleto-guardiao",
                 "content": "Amuleto do Guardião",
-                "description": "Um amuleto de pedra azul que brilha suavemente. Parece ser uma chave para prosseguir na torre."
+                "description": "Um amuleto de pedra azul que brilha suavemente. Parece encaixar perfeitamente no receptáculo da parede norte."
               }
             ]
+          }
+        ],
+        "interactions": [
+          {
+            "id": "usar-amuleto",
+            "condition": "states.receptaculoExaminado && !states.portaAberta",
+            "name": "Usar Amuleto no Receptáculo",
+            "result": {
+              "text": "Você coloca o amuleto no receptáculo. Ele se encaixa perfeitamente e começa a brilhar. Com um estrondo, a porta norte se abre.",
+              "action": "unlockExit",
+              "effect": {
+                "states.portaAberta": true,
+                "unlockExit": "north",
+                "removeItem": "amuleto-guardiao"
+              }
+            }
           }
         ]
       }
@@ -110,8 +120,8 @@
       "description": "O terceiro andar abriga uma vasta biblioteca com estantes cheias de livros antigos. A escadaria continua para cima.",
       "type": "room",
       "exits": [
-        { "direction": "south", "leadsTo": "room-2", "type": "stairs", "locked": false },
-        { "direction": "north", "leadsTo": "room-4", "type": "stairs", "locked": true, "keyId": "chave-arcana" }
+        { "direction": "south", "leadsTo": "room-2", "type": "door", "locked": false },
+        { "direction": "north", "leadsTo": "room-4", "type": "door", "locked": false }
       ],
       "visited": false,
       "discovered": false,
@@ -126,11 +136,11 @@
     "room-4": {
       "id": "room-4",
       "name": "Câmara dos Elementos",
-      "description": "O quarto andar contém uma sala dividida em quatro seções, cada uma representando um elemento: fogo, água, terra e ar. A escadaria final leva ao topo da torre.",
+      "description": "O quarto andar contém uma sala dividida em quatro seções, cada uma representando um elemento: fogo, água, terra e ar.",
       "type": "room",
       "exits": [
-        { "direction": "south", "leadsTo": "room-3", "type": "stairs", "locked": false },
-        { "direction": "north", "leadsTo": "room-5", "type": "stairs", "locked": true, "keyId": "orbe-elemental" }
+        { "direction": "south", "leadsTo": "room-3", "type": "door", "locked": false },
+        { "direction": "north", "leadsTo": "room-5", "type": "door", "locked": false }
       ],
       "visited": false,
       "discovered": false,
@@ -148,7 +158,7 @@
       "description": "O quinto e último andar é um observatório circular com um teto abobadado de cristal que mostra as estrelas, mesmo durante o dia.",
       "type": "room",
       "exits": [
-        { "direction": "south", "leadsTo": "room-4", "type": "stairs", "locked": false }
+        { "direction": "south", "leadsTo": "room-4", "type": "door", "locked": false }
       ],
       "visited": false,
       "discovered": false,
