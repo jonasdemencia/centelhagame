@@ -109,51 +109,63 @@
             "id": "altar",
             "name": "Altar de Sangue",
             "description": "Na parede norte há um altar com uma bacia vazia e uma inscrição: 'Apenas o sangue do corajoso abrirá o caminho.'",
-            "effect": {"states.altarExamined": true}
+            "effect": {"states.altarExamined": true},
+            "interactions": [
+              {
+                "id": "blood-sacrifice",
+                "condition": "!states.sacrificeMade",
+                "name": "Fazer Sacrifício de Sangue",
+                "result": {
+                  "action": "testLuck",
+                  "luckTest": {
+                    "description": "O sacrifício de sangue é perigoso. Você precisa de sorte para não perder muito sangue.",
+                    "success": {
+                      "text": "Você consegue estancar o sangramento rapidamente. A chave de cristal vermelho está agora em suas mãos.",
+                      "effect": {"states.sacrificeMade": true},
+                      "items": [
+                        {
+                          "id": "blood-key",
+                          "content": "Chave de Sangue",
+                          "description": "Uma chave feita de cristal vermelho que pulsa como um coração."
+                        }
+                      ]
+                    },
+                    "failure": {
+                      "text": "O corte é mais profundo do que você pretendia! O sangramento é intenso e você se sente fraco.",
+                      "effect": {"states.sacrificeMade": true},
+                      "damage": {
+                        "amount": "2D6",
+                        "message": "Você perde muito sangue no sacrifício!"
+                      },
+                      "items": [
+                        {
+                          "id": "blood-key",
+                          "content": "Chave de Sangue",
+                          "description": "Uma chave feita de cristal vermelho que pulsa como um coração."
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
           }
         ]
       }
     ],
-    "interactions": [
+    "search": [
       {
-        "id": "blood-sacrifice",
-        "condition": "states.altarExamined && !states.sacrificeMade",
-        "name": "Fazer Sacrifício de Sangue",
-        "result": {
-          "text": "Você corta sua mão e deixa o sangue pingar na bacia. A dor é intensa, mas o altar começa a brilhar em vermelho. Uma chave de cristal vermelho se materializa na bacia.",
-          "action": "testLuck",
-          "luckTest": {
-            "description": "O sacrifício de sangue é perigoso. Você precisa de sorte para não perder muito sangue.",
-            "success": {
-              "text": "Você consegue estancar o sangramento rapidamente. A chave de cristal vermelho está agora em suas mãos.",
-              "effect": {"states.sacrificeMade": true},
-              "items": [
-                {
-                  "id": "blood-key",
-                  "content": "Chave de Sangue",
-                  "description": "Uma chave feita de cristal vermelho que pulsa como um coração."
-                }
-              ]
-            },
-            "failure": {
-              "text": "O corte é mais profundo do que você pretendia! O sangramento é intenso e você se sente fraco.",
-              "effect": {"states.sacrificeMade": true},
-              "damage": {
-                "amount": "2D6",
-                "message": "Você perde muito sangue no sacrifício!"
-              },
-              "items": [
-                {
-                  "id": "blood-key",
-                  "content": "Chave de Sangue",
-                  "description": "Uma chave feita de cristal vermelho que pulsa como um coração."
-                }
-              ]
-            }
-          }
+        "condition": "!states.sacrificeMade",
+        "text": "Ao procurar pela sala, os tentáculos de sangue se enrolam em seus tornozelos, causando dor!",
+        "damage": {
+          "amount": "1D4",
+          "message": "Os tentáculos de sangue queimam sua pele!"
         }
       }
-    ],
+    ]
+  }
+},
+
     "search": [
       {
         "condition": "!states.sacrificeMade",
