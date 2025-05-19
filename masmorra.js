@@ -2835,19 +2835,91 @@ if (room.npcs) {
 
 
 
-// Inicialização quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log("LOG: DOMContentLoaded evento disparado.");
+// Nova função para mostrar tela de seleção de masmorra
+function showDungeonSelectionScreen(dungeons) {
+    // Limpa o conteúdo principal
+    const mainContent = document.querySelector('main');
+    mainContent.innerHTML = '';
     
-    // Botão de inventário
-    const inventarioButton = document.getElementById("abrir-inventario");
-    if (inventarioButton) {
-        inventarioButton.addEventListener("click", () => {
-            window.location.href = "inventario.html";
+    // Cria o container de seleção
+    const selectionContainer = document.createElement('div');
+    selectionContainer.className = 'dungeon-selection';
+    selectionContainer.innerHTML = '<h2>Escolha uma Masmorra</h2>';
+    
+    // Cria a lista de masmorras
+    const dungeonList = document.createElement('div');
+    dungeonList.className = 'dungeon-list';
+    
+    // Adiciona cada masmorra como um card clicável
+    dungeons.forEach(dungeon => {
+        const dungeonCard = document.createElement('div');
+        dungeonCard.className = 'dungeon-card';
+        dungeonCard.innerHTML = `
+            <h3>${dungeon.name}</h3>
+            <p>${dungeon.description || 'Uma masmorra misteriosa aguarda...'}</p>
+        `;
+        
+        // Adiciona evento de clique para iniciar a masmorra
+        dungeonCard.addEventListener('click', () => {
+            loadAndStartDungeon(dungeon.id);
         });
-    }
+        
+        dungeonList.appendChild(dungeonCard);
+    });
     
-    // Botões de direção
+    selectionContainer.appendChild(dungeonList);
+    mainContent.appendChild(selectionContainer);
+}
+
+// Nova função para carregar e iniciar uma masmorra
+async function loadAndStartDungeon(dungeonId = null) {
+    // Restaura o layout original
+    const mainContent = document.querySelector('main');
+    mainContent.innerHTML = `
+        <div class="dungeon-container">
+            <div class="map-container">
+                <svg id="dungeon-map" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+                    <g id="map-grid"></g>
+                    <g id="map-rooms"></g>
+                    <g id="map-corridors"></g>
+                    <g id="map-doors"></g>
+                    <g id="map-items"></g>
+                    <g id="map-player"></g>
+                </svg>
+            </div>
+            <div class="exploration-log">
+                <h2>Exploração</h2>
+                <div id="exploration-log-content"></div>
+            </div>
+        </div>
+        <div class="player-status">
+            <div class="health-bar-container">
+                <span>Energia:</span>
+                <div class="health-bar-wrapper">
+                    <div id="player-health-bar" class="health-bar"></div>
+                </div>
+                <span id="player-health-value">100/100</span>
+            </div>
+        </div>
+        <div class="player-actions">
+            <div id="direction-buttons">
+                <button id="go-north" class="direction-btn">Norte</button>
+                <div class="east-west-container">
+                    <button id="go-west" class="direction-btn">Oeste</button>
+                    <button id="go-east" class="direction-btn">Leste</button>
+                </div>
+                <button id="go-south" class="direction-btn">Sul</button>
+            </div>
+            <div id="action-buttons">
+                <button id="examine-room" class="action-btn">Examinar Sala</button>
+                <button id="open-door" class="action-btn">Abrir Porta</button>
+                <button id="search-room" class="action-btn">Procurar</button>
+                <button id="rest" class="action-btn">Descansar</button>
+            </div>
+        </div>
+    `;
+    
+    // Reconecta os event listeners aos botões
     const northBtn = document.getElementById("go-north");
     const southBtn = document.getElementById("go-south");
     const eastBtn = document.getElementById("go-east");
@@ -2873,16 +2945,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (leadsTo) moveToRoom(leadsTo);
     });
     
-    // Botões de ação
     const examineRoomBtn = document.getElementById("examine-room");
-    if (examineRoomBtn) {
-        examineRoomBtn.addEventListener("click", examineRoom);
-    }
+    if (examineRoomBtn) examineRoomBtn.addEventListener("click", examineRoom);
     
     const searchRoomBtn = document.getElementById("search-room");
-    if (searchRoomBtn) {
-        searchRoomBtn.addEventListener("click", searchRoom);
-    }
+    if (searchRoomBtn) searchRoomBtn.addEventListener("click", searchRoom);
     
     const openDoorBtn = document.getElementById("open-door");
     if (openDoorBtn) {
@@ -2921,75 +2988,98 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     const restBtn = document.getElementById("rest");
-    if (restBtn) {
-        restBtn.addEventListener("click", rest);
+    if (restBtn) restBtn.addEventListener("click", rest);
+    
+    // Carrega o estado da masmorra
+    await loadPlayerState();
+    
+    // Carrega a masmorra especificada ou a padrão
+    await initializeDungeon(dungeonId);
+    
+    // Adiciona o seletor de masmorras
+    const availableDungeons = await listAvailableDungeons();
+    if (availableDungeons.length > 0) {
+        const dungeonSelector = createDungeonSelector(
+            availableDungeons, 
+            dungeonId || 'default'
+        );
+        
+        // Adiciona o seletor à interface
+        const headerElement = document.querySelector('header');
+        if (headerElement) {
+            dungeonSelector.style.marginLeft = '10px';
+            headerElement.appendChild(dungeonSelector);
+        }
     }
     
-  // Verifica autenticação
+    // Atualiza a barra de energia
+    updateHealthBar();
+    
+    // Inicia a exploração
+    startNewLogBlock("Bem-vindo");
+    await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
+    await addLogMessage(dungeon.description, 1000);
+    
+    // Move para a sala inicial
+    moveToRoom(playerState.currentRoom);
+}
+
+// Inicialização quando o DOM estiver carregado
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log("LOG: DOMContentLoaded evento disparado.");
+    
+    // Botão de inventário
+    const inventarioButton = document.getElementById("abrir-inventario");
+    if (inventarioButton) {
+        inventarioButton.addEventListener("click", () => {
+            window.location.href = "inventario.html";
+        });
+    }
+    
+    // Verifica autenticação
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             console.log("LOG: Usuário logado. ID:", user.uid);
             userId = user.uid;
         
-        // Carrega os dados do jogador
-        const playerDocRef = doc(db, "players", userId);
-        try {
-            const docSnap = await getDoc(playerDocRef);
-            if (docSnap.exists()) {
-                playerData = docSnap.data();
-                console.log("Dados do jogador carregados:", playerData);
-                
-                // Atualiza o estado do jogador com a energia correta
-                if (playerData.energy && playerData.energy.total !== undefined) {
-                    playerState.health = playerData.energy.total;
+            // Carrega os dados do jogador
+            const playerDocRef = doc(db, "players", userId);
+            try {
+                const docSnap = await getDoc(playerDocRef);
+                if (docSnap.exists()) {
+                    playerData = docSnap.data();
+                    console.log("Dados do jogador carregados:", playerData);
+                    
+                    // Atualiza o estado do jogador com a energia correta
+                    if (playerData.energy && playerData.energy.total !== undefined) {
+                        playerState.health = playerData.energy.total;
+                    }
+                    
+                    // Atualiza a barra de energia após carregar os dados do jogador
+                    updateHealthBar();
                 }
-                
-                // Atualiza a barra de energia após carregar os dados do jogador
-                updateHealthBar();
+            } catch (error) {
+                console.error("Erro ao carregar dados do jogador:", error);
             }
-        } catch (error) {
-            console.error("Erro ao carregar dados do jogador:", error);
-        }
-        
-        // Carrega o estado da masmorra
-            await loadPlayerState();
-            
-            // Verifica se há um parâmetro de masmorra na URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const dungeonParam = urlParams.get('dungeon');
-            
-            // Carrega a masmorra especificada ou a padrão
-            await initializeDungeon(dungeonParam);
             
             // Lista masmorras disponíveis e cria o seletor
-            // Lista masmorras disponíveis e cria o seletor
-const availableDungeons = await listAvailableDungeons();
-if (availableDungeons.length > 0) {
-    const dungeonSelector = createDungeonSelector(
-        availableDungeons, 
-        dungeonParam || 'default'
-    );
-    
-    // Adiciona o seletor à interface
-    const headerElement = document.querySelector('header');
-    if (headerElement) {
-        // Adiciona um estilo para posicionar o seletor
-        dungeonSelector.style.marginLeft = '10px';
-        headerElement.appendChild(dungeonSelector);
-    }
-}
-
-            
-            // Atualiza a barra de energia
-            updateHealthBar();
-            
-            // Inicia a exploração
-            startNewLogBlock("Bem-vindo");
-            await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
-            await addLogMessage(dungeon.description, 1000);
-            
-            // Move para a sala atual
-            moveToRoom(playerState.currentRoom);
+            const availableDungeons = await listAvailableDungeons();
+            if (availableDungeons.length > 0) {
+                // Verifica se há um parâmetro de masmorra na URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const dungeonParam = urlParams.get('dungeon');
+                
+                if (dungeonParam) {
+                    // Se há um parâmetro na URL, carrega diretamente essa masmorra
+                    await loadAndStartDungeon(dungeonParam);
+                } else {
+                    // Caso contrário, mostra uma tela de seleção
+                    showDungeonSelectionScreen(availableDungeons);
+                }
+            } else {
+                // Se não houver masmorras disponíveis, carrega a padrão
+                await loadAndStartDungeon();
+            }
         } else {
             console.log("LOG: Nenhum usuário logado. Redirecionando para login...");
             window.location.href = "index.html";
