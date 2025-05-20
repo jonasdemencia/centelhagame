@@ -495,9 +495,9 @@ function disableAllButtonsExceptFight() {
     }
     
     // Desabilita também o botão de abrir porta
-    const openDoorBtn = document.getElementById("open-door");
-    if (openDoorBtn) {
-        openDoorBtn.disabled = true;
+    const rBtn = document.getElementById("open-door");
+    if (rBtn) {
+        rBtn.disabled = true;
     }
 }
 
@@ -1877,9 +1877,21 @@ async function openDoor(direction) {
         if (!hasKey && playerData && playerData.inventory && playerData.inventory.itemsInChest) {
             hasKey = playerData.inventory.itemsInChest.some(item => {
                 if (!item) return false;
-                return item.id === exit.keyId || 
-                    (item.id && item.id.toLowerCase() === exit.keyId.toLowerCase()) ||
-                    (item.content && item.content.toLowerCase().includes(exit.keyId.replace('-', ' ').toLowerCase()));
+                
+                // Verifica pelo ID exato
+                if (item.id === exit.keyId) return true;
+                
+                // Verifica pelo ID em minúsculas
+                if (item.id && item.id.toLowerCase() === exit.keyId.toLowerCase()) return true;
+                
+                // Verifica pelo conteúdo (com verificação de segurança)
+                if (item.content && typeof item.content === 'string') {
+                    // Converte o keyId para um formato mais amigável para comparação
+                    const keyName = exit.keyId.replace(/-/g, ' ').toLowerCase();
+                    return item.content.toLowerCase().includes(keyName);
+                }
+                
+                return false;
             });
         }
         
@@ -1908,6 +1920,7 @@ async function openDoor(direction) {
         updateDirectionButtons();
     }
 }
+
 
 
 
