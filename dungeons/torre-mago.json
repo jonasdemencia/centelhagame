@@ -165,19 +165,6 @@
     ]
   }
 },
-
-    "search": [
-      {
-        "condition": "!states.sacrificeMade",
-        "text": "Ao procurar pela sala, os tentáculos de sangue se enrolam em seus tornozelos, causando dor!",
-        "damage": {
-          "amount": "1D4",
-          "message": "Os tentáculos de sangue queimam sua pele!"
-        }
-      }
-    ]
-  }
-},
     "room-3": {
       "id": "room-3",
       "name": "Fornalha Infernal",
