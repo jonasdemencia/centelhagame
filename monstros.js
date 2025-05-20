@@ -98,7 +98,7 @@ export const monsterData = {
         imagem: "https://via.placeholder.com/150",
         descricao: "Um morto-vivo lento, mas persistente.",
         habilidade: 1,
-        couraça: 6,
+        couraça: 1,
         pontosDeEnergia: 3,
         pontosDeEnergiaMax: 3,
         experiencia: 70,
