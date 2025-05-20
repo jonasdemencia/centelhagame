@@ -1303,8 +1303,47 @@ async function handlePointOfInterestClick(poi, room) {
     // Salva o estado
     savePlayerState();
     
-    // Cria botões de interação específicos para este ponto de interesse
-    createInteractionButtons(room, poi.id);
+    // NOVO: Verifica se o ponto de interesse tem interações próprias
+    if (poi.interactions && poi.interactions.length > 0) {
+        console.log("Encontradas interações no ponto de interesse:", poi.interactions);
+        
+        // Cria o container para o botão de interação
+        const interactionsContainer = document.createElement('div');
+        interactionsContainer.id = 'interaction-buttons';
+        interactionsContainer.classList.add('interaction-buttons');
+        
+        // Processa cada interação do ponto de interesse
+        for (const interaction of poi.interactions) {
+            // Verifica se a condição é atendida
+            if (evaluateCondition(interaction.condition, room.explorationState)) {
+                // Cria o botão apropriado com base na ação da interação
+                if (interaction.result.action === "testLuck") {
+                    const luckBtn = document.createElement('button');
+                    luckBtn.textContent = interaction.name;
+                    luckBtn.classList.add('action-btn', 'interaction-btn', 'test-luck-btn');
+                    luckBtn.addEventListener('click', () => startLuckTest({
+                        description: interaction.result.luckTest.description,
+                        room: room,
+                        success: interaction.result.luckTest.success,
+                        failure: interaction.result.luckTest.failure
+                    }));
+                    interactionsContainer.appendChild(luckBtn);
+                }
+                // Adicione outros tipos de ação conforme necessário
+            }
+        }
+        
+        // Adiciona o container à interface se houver botões
+        if (interactionsContainer.children.length > 0) {
+            const actionButtons = document.getElementById('action-buttons');
+            if (actionButtons) {
+                actionButtons.appendChild(interactionsContainer);
+            }
+        }
+    } else {
+        // Comportamento normal para outros pontos de interesse
+        createInteractionButtons(room, poi.id);
+    }
     
     // Opcionalmente, podemos atualizar os botões para refletir mudanças de estado
     const poiButtons = document.querySelectorAll('.poi-btn');
