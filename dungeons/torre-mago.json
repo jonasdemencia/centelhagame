@@ -61,204 +61,204 @@
       }
     },
     "room-2": {
-  "id": "room-2",
-  "name": "Câmara de Sangue",
-  "description": "Uma sala circular com paredes que parecem pulsar como veias. O chão está coberto por uma fina camada de sangue fresco que flui em direção ao centro.",
-  "type": "room",
-  "exits": [
-    { "direction": "south", "leadsTo": "room-1", "type": "stairs", "locked": false },
-    { "direction": "north", "leadsTo": "room-3", "type": "door", "locked": true, "keyId": "blood-key" }
-  ],
-  "gridX": 10,
-  "gridY": 14,
-  "gridWidth": 3,
-  "gridHeight": 3,
-  "events": [
-    { "type": "first-visit", "text": "O sangue no chão começa a se mover em sua direção, formando tentáculos que tentam agarrar seus tornozelos." }
-  ],
-  "enemy": {
-    "id": "blood-golem",
-    "name": "Golem de Sangue",
-    "description": "Uma criatura humanoide feita inteiramente de sangue coagulado, com olhos vermelhos brilhantes e garras afiadas.",
-    "trigger": {
-      "condition": "states.bloodPoolExamined",
-      "message": "O sangue no centro da sala se ergue, formando um golem monstruoso que avança em sua direção!"
-    }
-  },
-  "exploration": {
-    "states": {
-      "initial": {
-        "bloodPoolExamined": false,
-        "altarExamined": false,
-        "sacrificeMade": false
-      }
-    },
-    "examine": [
-      {
-        "condition": "!states.examined",
-        "text": "Você examina a Câmara de Sangue com cuidado. A sala tem um teto alto e paredes de pedra antiga que pulsam como veias. O chão está coberto por uma fina camada de sangue fresco que flui em direção ao centro.",
-        "effect": {"states.examined": true},
-        "pointsOfInterest": [
+      "id": "room-2",
+      "name": "Câmara de Sangue",
+      "description": "Uma sala circular com paredes que parecem pulsar como veias. O chão está coberto por uma fina camada de sangue fresco que flui em direção ao centro.",
+      "type": "room",
+      "exits": [
+        { "direction": "south", "leadsTo": "room-1", "type": "stairs", "locked": false },
+        { "direction": "north", "leadsTo": "room-3", "type": "door", "locked": true, "keyId": "blood-key" }
+      ],
+      "gridX": 10,
+      "gridY": 14,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "events": [
+        { "type": "first-visit", "text": "O sangue no chão começa a se mover em sua direção, formando tentáculos que tentam agarrar seus tornozelos." }
+      ],
+      "enemy": {
+        "id": "blood-golem",
+        "name": "Golem de Sangue",
+        "description": "Uma criatura humanoide feita inteiramente de sangue coagulado, com olhos vermelhos brilhantes e garras afiadas.",
+        "trigger": {
+          "condition": "states.bloodPoolExamined",
+          "message": "O sangue no centro da sala se ergue, formando um golem monstruoso que avança em sua direção!"
+        }
+      },
+      "exploration": {
+        "states": {
+          "initial": {
+            "bloodPoolExamined": false,
+            "altarExamined": false,
+            "sacrificeMade": false
+          }
+        },
+        "examine": [
           {
-            "id": "blood-pool",
-            "name": "Poça de Sangue",
-            "description": "No centro da sala há uma poça de sangue mais profunda, borbulhando como se estivesse viva.",
-            "effect": {"states.bloodPoolExamined": true}
-          },
-          {
-            "id": "altar",
-            "name": "Altar de Sangue",
-            "description": "Na parede norte há um altar com uma bacia vazia e uma inscrição: 'Apenas o sangue do corajoso abrirá o caminho.'",
-            "effect": {"states.altarExamined": true},
-            "interactions": [
+            "condition": "!states.examined",
+            "text": "Você examina a Câmara de Sangue com cuidado. A sala tem um teto alto e paredes de pedra antiga que pulsam como veias. O chão está coberto por uma fina camada de sangue fresco que flui em direção ao centro.",
+            "effect": {"states.examined": true},
+            "pointsOfInterest": [
               {
-                "id": "blood-sacrifice",
-                "condition": "!states.sacrificeMade",
-                "name": "Fazer Sacrifício de Sangue",
-                "result": {
-                  "action": "testLuck",
-                  "luckTest": {
-                    "description": "O sacrifício de sangue é perigoso. Você precisa de sorte para não perder muito sangue.",
-                    "success": {
-                      "text": "Você consegue estancar o sangramento rapidamente. A chave de cristal vermelho está agora em suas mãos.",
-                      "effect": {"states.sacrificeMade": true},
-                      "items": [
-                        {
-                          "id": "blood-key",
-                          "content": "Chave de Sangue",
-                          "description": "Uma chave feita de cristal vermelho que pulsa como um coração."
+                "id": "blood-pool",
+                "name": "Poça de Sangue",
+                "description": "No centro da sala há uma poça de sangue mais profunda, borbulhando como se estivesse viva.",
+                "effect": {"states.bloodPoolExamined": true}
+              },
+              {
+                "id": "altar",
+                "name": "Altar de Sangue",
+                "description": "Na parede norte há um altar com uma bacia vazia e uma inscrição: 'Apenas o sangue do corajoso abrirá o caminho.'",
+                "effect": {"states.altarExamined": true},
+                "interactions": [
+                  {
+                    "id": "blood-sacrifice",
+                    "condition": "!states.sacrificeMade",
+                    "name": "Fazer Sacrifício de Sangue",
+                    "result": {
+                      "action": "testLuck",
+                      "luckTest": {
+                        "description": "O sacrifício de sangue é perigoso. Você precisa de sorte para não perder muito sangue.",
+                        "success": {
+                          "text": "Você consegue estancar o sangramento rapidamente. A chave de cristal vermelho está agora em suas mãos.",
+                          "effect": {"states.sacrificeMade": true},
+                          "items": [
+                            {
+                              "id": "blood-key",
+                              "content": "Chave de Sangue",
+                              "description": "Uma chave feita de cristal vermelho que pulsa como um coração."
+                            }
+                          ]
+                        },
+                        "failure": {
+                          "text": "O corte é mais profundo do que você pretendia! O sangramento é intenso e você se sente fraco.",
+                          "effect": {"states.sacrificeMade": true},
+                          "damage": {
+                            "amount": "2D6",
+                            "message": "Você perde muito sangue no sacrifício!"
+                          },
+                          "items": [
+                            {
+                              "id": "blood-key",
+                              "content": "Chave de Sangue",
+                              "description": "Uma chave feita de cristal vermelho que pulsa como um coração."
+                            }
+                          ]
                         }
-                      ]
-                    },
-                    "failure": {
-                      "text": "O corte é mais profundo do que você pretendia! O sangramento é intenso e você se sente fraco.",
-                      "effect": {"states.sacrificeMade": true},
-                      "damage": {
-                        "amount": "2D6",
-                        "message": "Você perde muito sangue no sacrifício!"
-                      },
-                      "items": [
-                        {
-                          "id": "blood-key",
-                          "content": "Chave de Sangue",
-                          "description": "Uma chave feita de cristal vermelho que pulsa como um coração."
-                        }
-                      ]
+                      }
                     }
                   }
-                }
+                ]
               }
             ]
           }
-        ]
-      }
-    ],
-    "search": [
-      {
-        "condition": "!states.sacrificeMade",
-        "text": "Ao procurar pela sala, os tentáculos de sangue se enrolam em seus tornozelos, causando dor!",
-        "damage": {
-          "amount": "1D4",
-          "message": "Os tentáculos de sangue queimam sua pele!"
-        }
-      }
-    ]
-  }
-},
-    "room-3": {
-  "id": "room-3",
-  "name": "Câmara dos Elementos",
-  "description": "Uma sala circular com quatro pilares representando os elementos. No centro, há um pedestal com um receptáculo vazio.",
-  "type": "room",
-  "exits": [
-    { "direction": "west", "leadsTo": "room-2", "type": "door", "locked": false }
-  ],
-  "gridX": 13,
-  "gridY": 14,
-  "gridWidth": 3,
-  "gridHeight": 3,
-  "events": [
-    { "type": "first-visit", "text": "Ao entrar na sala, você sente a presença dos quatro elementos: terra, água, fogo e ar. Cada pilar emite uma energia diferente." }
-  ],
-  "exploration": {
-    "states": {
-      "initial": {
-        "examined": false,
-        "pilarsExamined": false,
-        "pedestalExamined": false,
-        "puzzleSolved": false
-      }
-    },
-    "examine": [
-      {
-        "condition": "!states.examined",
-        "text": "Você examina a Câmara dos Elementos com cuidado. Quatro pilares cercam um pedestal central. Cada pilar representa um elemento: terra, água, fogo e ar.",
-        "effect": {"states.examined": true},
-        "pointsOfInterest": [
+        ],
+        "search": [
           {
-            "id": "pilars",
-            "name": "Pilares Elementais",
-            "description": "Quatro pilares de pedra antiga, cada um decorado com símbolos de um elemento. Eles parecem reagir à sua presença, emitindo um brilho suave.",
-            "effect": {"states.pilarsExamined": true}
-          },
-          {
-            "id": "pedestal",
-            "name": "Pedestal Central",
-            "description": "Um pedestal de mármore com um receptáculo vazio. Inscrições ao redor sugerem que algo deve ser colocado aqui para abrir o caminho.",
-            "effect": {"states.pedestalExamined": true}
+            "condition": "!states.sacrificeMade",
+            "text": "Ao procurar pela sala, os tentáculos de sangue se enrolam em seus tornozelos, causando dor!",
+            "damage": {
+              "amount": "1D4",
+              "message": "Os tentáculos de sangue queimam sua pele!"
+            }
           }
         ]
       }
-    ],
-    "interactions": [
-      {
-        "id": "solve-elemental-puzzle",
-        "condition": "states.pilarsExamined && states.pedestalExamined && !states.puzzleSolved",
-        "name": "Ativar os Pilares",
-        "result": {
-          "action": "testSkill",
-          "skillTest": {
-            "description": "Você precisa ativar os pilares na sequência correta para canalizar a energia elemental para o pedestal.",
-            "difficulty": 15,
-            "success": {
-              "text": "Você ativa os pilares na sequência correta! A energia dos quatro elementos flui para o pedestal, criando uma chave cristalina.",
-              "effect": {"states.puzzleSolved": true},
-              "items": [
-                {
-                  "id": "elemental-key",
-                  "content": "Chave Elemental",
-                  "description": "Uma chave cristalina que contém a essência dos quatro elementos."
+    },
+    "room-3": {
+      "id": "room-3",
+      "name": "Câmara dos Elementos",
+      "description": "Uma sala circular com quatro pilares representando os elementos. No centro, há um pedestal com um receptáculo vazio.",
+      "type": "room",
+      "exits": [
+        { "direction": "south", "leadsTo": "room-2", "type": "door", "locked": false },
+        { "direction": "north", "leadsTo": "room-4", "type": "door", "locked": true, "keyId": "elemental-key" }
+      ],
+      "gridX": 10,
+      "gridY": 10,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "events": [
+        { "type": "first-visit", "text": "Ao entrar na sala, você sente a presença dos quatro elementos: terra, água, fogo e ar. Cada pilar emite uma energia diferente." }
+      ],
+      "exploration": {
+        "states": {
+          "initial": {
+            "examined": false,
+            "pilarsExamined": false,
+            "pedestalExamined": false,
+            "puzzleSolved": false
+          }
+        },
+        "examine": [
+          {
+            "condition": "!states.examined",
+            "text": "Você examina a Câmara dos Elementos com cuidado. Quatro pilares cercam um pedestal central. Cada pilar representa um elemento: terra, água, fogo e ar.",
+            "effect": {"states.examined": true},
+            "pointsOfInterest": [
+              {
+                "id": "pilars",
+                "name": "Pilares Elementais",
+                "description": "Quatro pilares de pedra antiga, cada um decorado com símbolos de um elemento. Eles parecem reagir à sua presença, emitindo um brilho suave.",
+                "effect": {"states.pilarsExamined": true}
+              },
+              {
+                "id": "pedestal",
+                "name": "Pedestal Central",
+                "description": "Um pedestal de mármore com um receptáculo vazio. Inscrições ao redor sugerem que algo deve ser colocado aqui para abrir o caminho.",
+                "effect": {"states.pedestalExamined": true}
+              }
+            ]
+          }
+        ],
+        "interactions": [
+          {
+            "id": "solve-elemental-puzzle",
+            "condition": "states.pilarsExamined && states.pedestalExamined && !states.puzzleSolved",
+            "name": "Ativar os Pilares",
+            "result": {
+              "action": "testSkill",
+              "skillTest": {
+                "description": "Você precisa ativar os pilares na sequência correta para canalizar a energia elemental para o pedestal.",
+                "difficulty": 15,
+                "success": {
+                  "text": "Você ativa os pilares na sequência correta! A energia dos quatro elementos flui para o pedestal, criando uma chave cristalina.",
+                  "effect": {"states.puzzleSolved": true},
+                  "items": [
+                    {
+                      "id": "elemental-key",
+                      "content": "Chave Elemental",
+                      "description": "Uma chave cristalina que contém a essência dos quatro elementos."
+                    }
+                  ]
+                },
+                "failure": {
+                  "text": "Você erra a sequência! Os pilares disparam rajadas de energia elemental em sua direção!",
+                  "damage": {
+                    "amount": "2D6",
+                    "message": "A energia elemental queima sua pele!"
+                  }
                 }
-              ]
-            },
-            "failure": {
-              "text": "Você erra a sequência! Os pilares disparam rajadas de energia elemental em sua direção!",
-              "damage": {
-                "amount": "2D6",
-                "message": "A energia elemental queima sua pele!"
               }
             }
           }
-        }
+        ],
+        "search": [
+          {
+            "text": "Você procura por pistas adicionais na sala, mas não encontra nada além dos pilares e do pedestal.",
+            "chance": 0.8
+          },
+          {
+            "text": "Ao tocar um dos pilares acidentalmente, uma faísca de energia salta e atinge você!",
+            "damage": {
+              "amount": "1D4",
+              "message": "A energia elemental queima sua pele!"
+            },
+            "chance": 0.2
+          }
+        ]
       }
-    ],
-    "search": [
-      {
-        "text": "Você procura por pistas adicionais na sala, mas não encontra nada além dos pilares e do pedestal.",
-        "chance": 0.8
-      },
-      {
-        "text": "Ao tocar um dos pilares acidentalmente, uma faísca de energia salta e atinge você!",
-        "damage": {
-          "amount": "1D4",
-          "message": "A energia elemental queima sua pele!"
-        },
-        "chance": 0.2
-      }
-    ]
-  }
-},
-
+    },
     "room-4": {
       "id": "room-4",
       "name": "Jardim Venenoso",
