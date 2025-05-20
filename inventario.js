@@ -29,6 +29,7 @@ const initialItems = [
     { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." }, // Adicionando efeito e valor para a poção
     { id: "pao", content: "Pão", consumable: true, quantity: 1, description: "Um pedaço de pão simples." },
     { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 5, description: "Um pedaço de pão velho e mofado. Estranhamente, parece ter um efeito... diferente." } // Quantidade aumentada para 20
+    { id: "elixir-poder", content: "Elixir do Poder Supremo", consumable: true, quantity: 5, effect: "boost_attributes", value: 100, description: "Um elixir mágico que aumenta temporariamente todos os seus atributos para 100." }
 ];
 
 // Variável global para armazenar o dado selecionado
@@ -359,25 +360,64 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Adiciona funcionalidade ao botão de usar
-    if (useButton) {
-        useButton.addEventListener("click", async () => { // Adicionando async para usar await
-            console.log("Botão 'Usar' clicado");
-            if (selectedItem && selectedItem.dataset.consumable === 'true') {
-                const itemId = selectedItem.dataset.item;
-                const itemName = selectedItem.innerHTML.split('<span')[0].trim(); // Obtém o nome do item sem a quantidade
-                console.log("Usando item consumível:", itemName, "ID:", itemId);
-                console.log("selectedItem:", selectedItem); // LOG
-                console.log("selectedItem.dataset.quantity:", selectedItem.dataset.quantity); // LOG
-                console.log("itemName:", itemName); // LOG
+if (useButton) {
+    useButton.addEventListener("click", async () => {
+        console.log("Botão 'Usar' clicado");
+        if (selectedItem && selectedItem.dataset.effect === "boost_attributes") {
+            // Aplica o boost de atributos
+            if (currentPlayerData) {
+                // Aplica o boost
+                const boostValue = parseInt(selectedItem.dataset.value) || 100;
+                currentPlayerData.luck = { total: boostValue, initial: boostValue };
+                currentPlayerData.skill = { total: boostValue, initial: boostValue };
+                currentPlayerData.charisma = { total: boostValue, initial: boostValue };
+                
+                // Salva no Firestore
+                await savePlayerData(auth.currentUser.uid, currentPlayerData);
+                
+                // Consome o item
                 let quantity = parseInt(selectedItem.dataset.quantity);
                 if (!isNaN(quantity) && quantity > 0) {
-                    // Aplica o efeito do item ANTES de decrementar a quantidade para a verificação
-                    if (selectedItem && selectedItem.dataset.effect) {
-                        const effect = selectedItem.dataset.effect;
-                        const value = parseInt(selectedItem.dataset.value);
-                        console.log("Aplicando efeito:", effect, "com valor:", value);
+                    quantity--;
+                    selectedItem.dataset.quantity = quantity;
+                    const quantitySpan = selectedItem.querySelector('.item-quantity');
+                    if (quantitySpan) {
+                        quantitySpan.textContent = quantity > 0 ? `(${quantity})` : '';
+                    } else if (quantity > 0) {
+                        selectedItem.innerHTML += ` <span class="item-quantity">(${quantity})</span>`;
+                    }
+                    
+                    if (quantity === 0) {
+                        selectedItem.remove();
+                        selectedItem = null;
+                        clearHighlights();
+                        toggleUseButton(false);
+                    }
+                    
+                    saveInventoryData(auth.currentUser.uid);
+                }
+                
+                alert("Seus atributos foram aumentados para 100!");
+                location.reload();
+                return;
+            }
+        } else if (selectedItem && selectedItem.dataset.consumable === 'true') {
+            const itemId = selectedItem.dataset.item;
+            const itemName = selectedItem.innerHTML.split('<span')[0].trim(); // Obtém o nome do item sem a quantidade
+            console.log("Usando item consumível:", itemName, "ID:", itemId);
+            console.log("selectedItem:", selectedItem); // LOG
+            console.log("selectedItem.dataset.quantity:", selectedItem.dataset.quantity); // LOG
+            console.log("itemName:", itemName); // LOG
+            let quantity = parseInt(selectedItem.dataset.quantity);
+            if (!isNaN(quantity) && quantity > 0) {
+                // Aplica o efeito do item ANTES de decrementar a quantidade para a verificação
+                if (selectedItem && selectedItem.dataset.effect) {
+                    const effect = selectedItem.dataset.effect;
+                    const value = parseInt(selectedItem.dataset.value);
+                    console.log("Aplicando efeito:", effect, "com valor:", value);
 
-                       if (effect === "damage" && itemName === "Pão Mofado") {
+                   if (effect === "damage" && itemName === "Pão Mofado") {
+
     if (currentPlayerData && currentPlayerData.energy && currentPlayerData.energy.total > 0) {
         currentPlayerData.energy.total -= value;
         // Atualiza o texto e a barra de HP
