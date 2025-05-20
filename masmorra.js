@@ -1844,7 +1844,7 @@ async function searchRoom() {
 
 
 
-// Função para tentar abrir uma porta
+// Modifique a função openDoor para verificar variações do ID da chave
 async function openDoor(direction) {
     const currentRoom = dungeon.rooms[playerState.currentRoom];
     if (!currentRoom || !currentRoom.exits) return;
@@ -1862,23 +1862,29 @@ async function openDoor(direction) {
         await addLogMessage(`A porta está trancada.`, 500);
         
         // Verifica se o jogador tem a chave
-        // Verifica se o jogador tem a chave no inventário do Firestore
-let hasKey = false;
-
-// Primeiro verifica no playerState local (compatibilidade)
-hasKey = playerState.inventory.some(item => item.id === exit.keyId);
-
-// Se não encontrou, verifica no inventário do Firestore
-if (!hasKey && playerData && playerData.inventory && playerData.inventory.itemsInChest) {
-    hasKey = playerData.inventory.itemsInChest.some(item => item.id === exit.keyId);
-}
-
-
+        let hasKey = false;
+        
+        // Primeiro verifica no playerState local (compatibilidade)
+        hasKey = playerState.inventory.some(item => 
+            item.id === exit.keyId || 
+            item.id.toLowerCase() === exit.keyId.toLowerCase() || 
+            item.content.toLowerCase().includes(exit.keyId.replace('-', ' ').toLowerCase())
+        );
+        
+        // Se não encontrou, verifica no inventário do Firestore
+        if (!hasKey && playerData && playerData.inventory && playerData.inventory.itemsInChest) {
+            hasKey = playerData.inventory.itemsInChest.some(item => 
+                item.id === exit.keyId || 
+                item.id.toLowerCase() === exit.keyId.toLowerCase() || 
+                (item.content && item.content.toLowerCase().includes(exit.keyId.replace('-', ' ').toLowerCase()))
+            );
+        }
+        
         if (hasKey) {
             await addLogMessage(`Você usa a chave para destrancar a porta.`, 800);
             exit.locked = false;
             updateDirectionButtons();
-            savePlayerState(); // Adicione esta linha para salvar o estado da porta destrancada
+            savePlayerState(); // Salva o estado da porta destrancada
         } else {
             await addLogMessage(`Você precisa de uma chave para abrir esta porta.`, 800);
         }
@@ -1899,6 +1905,7 @@ if (!hasKey && playerData && playerData.inventory && playerData.inventory.itemsI
         updateDirectionButtons();
     }
 }
+
 
 // Função para descansar
 async function rest() {
