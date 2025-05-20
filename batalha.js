@@ -355,16 +355,6 @@ function handlePostBattle(monster) {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Adicione este bloco aqui
-    if (!sessionStorage.getItem('luteButtonClicked')) {
-        // Se o botão "Lutar" ainda não foi clicado, limpa qualquer estado de iniciativa anterior
-        sessionStorage.removeItem('initiativeResult');
-        sessionStorage.removeItem('playerInitiativeRoll');
-        sessionStorage.removeItem('monsterInitiativeRoll');
-        sessionStorage.removeItem('playerAbility');
-        sessionStorage.removeItem('monsterAbility');
-    }
-    
     console.log("LOG: DOMContentLoaded evento disparado.");
     const lutarButton = document.getElementById("iniciar-luta");
     const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
