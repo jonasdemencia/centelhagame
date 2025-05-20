@@ -1044,7 +1044,6 @@ function updateDirectionButtons() {
     });
 }
 
-// Modifique a função examineRoom para verificar a qual masmorra a sala pertence
 async function examineRoom() {
     const currentRoom = dungeon.rooms[playerState.currentRoom];
     if (!currentRoom) return;
@@ -1052,7 +1051,7 @@ async function examineRoom() {
     startNewLogBlock("Examinar");
     
     // Verifica se a sala tem configurações de exploração
-    if (currentRoom.exploration && currentRoom.exploration.examine) {
+    if (currentRoom.exploration) {
         // Inicializa o estado de exploração se não existir
         if (!currentRoom.explorationState) {
             if (currentRoom.exploration.states && currentRoom.exploration.states.initial) {
@@ -1062,27 +1061,43 @@ async function examineRoom() {
             }
         }
         
-        // Procura por um evento de exame que corresponda ao estado atual
-        for (const examineEvent of currentRoom.exploration.examine) {
-            if (evaluateCondition(examineEvent.condition, currentRoom.explorationState)) {
-                await addLogMessage(examineEvent.text, 1000);
-                
-                // Aplica efeitos, se houver
-                if (examineEvent.effect) {
-                    await applyEffects(examineEvent.effect, currentRoom);
+        // NOVO: Verifica se há pontos de interesse no nível principal da exploração
+        if (currentRoom.exploration.pointsOfInterest && currentRoom.exploration.pointsOfInterest.length > 0) {
+            console.log("Pontos de interesse encontrados no nível principal:", currentRoom.exploration.pointsOfInterest);
+            
+            // Exibe a descrição padrão da sala
+            if (currentRoom.exploration.examine && currentRoom.exploration.examine.length > 0) {
+                await addLogMessage(currentRoom.exploration.examine[0].text, 1000);
+            } else {
+                await addLogMessage(`Você examina a ${currentRoom.name} com cuidado.`, 500);
+            }
+            
+            // Cria botões para os pontos de interesse
+            createPointsOfInterestButtons(currentRoom.exploration.pointsOfInterest, currentRoom);
+            savePlayerState();
+            return;
+        }
+        
+        // Código existente para processar eventos de exame
+        if (currentRoom.exploration.examine) {
+            for (const examineEvent of currentRoom.exploration.examine) {
+                if (evaluateCondition(examineEvent.condition, currentRoom.explorationState)) {
+                    await addLogMessage(examineEvent.text, 1000);
+                    
+                    if (examineEvent.effect) {
+                        await applyEffects(examineEvent.effect, currentRoom);
+                    }
+                    
+                    if (examineEvent.pointsOfInterest && examineEvent.pointsOfInterest.length > 0) {
+                        console.log("Pontos de interesse encontrados:", examineEvent.pointsOfInterest);
+                        createPointsOfInterestButtons(examineEvent.pointsOfInterest, currentRoom);
+                    } else {
+                        console.log("Nenhum ponto de interesse encontrado no evento de exame");
+                    }
+                    
+                    savePlayerState();
+                    return;
                 }
-                
-                // Processa pontos de interesse
-                if (examineEvent.pointsOfInterest && examineEvent.pointsOfInterest.length > 0) {
-                    console.log("Pontos de interesse encontrados:", examineEvent.pointsOfInterest);
-                    createPointsOfInterestButtons(examineEvent.pointsOfInterest, currentRoom);
-                } else {
-                    console.log("Nenhum ponto de interesse encontrado no evento de exame");
-                }
-                
-                // Salva o estado atualizado
-                savePlayerState();
-                return;
             }
         }
     }
