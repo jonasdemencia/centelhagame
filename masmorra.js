@@ -1844,7 +1844,7 @@ async function searchRoom() {
 
 
 
-// Modifique a função openDoor para verificar variações do ID da chave
+// Modifique a função openDoor para verificar corretamente a chave
 async function openDoor(direction) {
     const currentRoom = dungeon.rooms[playerState.currentRoom];
     if (!currentRoom || !currentRoom.exits) return;
@@ -1865,19 +1865,22 @@ async function openDoor(direction) {
         let hasKey = false;
         
         // Primeiro verifica no playerState local (compatibilidade)
-        hasKey = playerState.inventory.some(item => 
-            item.id === exit.keyId || 
-            item.id.toLowerCase() === exit.keyId.toLowerCase() || 
-            item.content.toLowerCase().includes(exit.keyId.replace('-', ' ').toLowerCase())
-        );
+        if (playerState.inventory && playerState.inventory.length > 0) {
+            hasKey = playerState.inventory.some(item => {
+                if (!item) return false;
+                return item.id === exit.keyId || 
+                    (item.id && item.id.toLowerCase() === exit.keyId.toLowerCase());
+            });
+        }
         
         // Se não encontrou, verifica no inventário do Firestore
         if (!hasKey && playerData && playerData.inventory && playerData.inventory.itemsInChest) {
-            hasKey = playerData.inventory.itemsInChest.some(item => 
-                item.id === exit.keyId || 
-                item.id.toLowerCase() === exit.keyId.toLowerCase() || 
-                (item.content && item.content.toLowerCase().includes(exit.keyId.replace('-', ' ').toLowerCase()))
-            );
+            hasKey = playerData.inventory.itemsInChest.some(item => {
+                if (!item) return false;
+                return item.id === exit.keyId || 
+                    (item.id && item.id.toLowerCase() === exit.keyId.toLowerCase()) ||
+                    (item.content && item.content.toLowerCase().includes(exit.keyId.replace('-', ' ').toLowerCase()));
+            });
         }
         
         if (hasKey) {
@@ -1905,6 +1908,7 @@ async function openDoor(direction) {
         updateDirectionButtons();
     }
 }
+
 
 
 // Função para descansar
