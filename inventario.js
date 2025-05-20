@@ -32,6 +32,33 @@ const initialItems = [
     { id: "elixir-poder", content: "Elixir do Poder Supremo", consumable: true, quantity: 5, effect: "boost_attributes", value: 100, description: "Um elixir mágico que aumenta temporariamente todos os seus atributos para 100." }
 ];
 
+// Função para reiniciar o inventário
+async function resetInventory() {
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+        console.error("Usuário não está logado!");
+        return;
+    }
+
+    try {
+        const playerRef = doc(db, "players", uid);
+        // Remove o inventário atual
+        await setDoc(playerRef, { 
+            inventory: {
+                itemsInChest: [],
+                equippedItems: {}
+            }
+        }, { merge: true });
+        
+        console.log("Inventário limpo. Recarregando...");
+        
+        // Recarrega a página para inicializar com os novos itens
+        window.location.reload();
+        
+    } catch (error) {
+        console.error("Erro ao resetar inventário:", error);
+    }
+}
 
 // Variável global para armazenar o dado selecionado
 let selectedDice = null;
