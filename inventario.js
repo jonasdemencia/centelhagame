@@ -19,16 +19,16 @@ const auth = getAuth(app);
 let selectedItem = null; // Armazena o item selecionado
 let currentPlayerData = null; // Armazena os dados do jogador
 
-// Itens iniciais que o jogador deve ter (adicionando descrições e propriedade de defesa)
+// Itens iniciais que o jogador deve ter (adicionando propriedade de dano)
 const initialItems = [
     { id: "bolsa-de-escriba", content: "Bolsa de escriba", description: "Uma bolsa para guardar pergaminhos e penas." },
-    { id: "weapon", content: "canivete", description: "Uma pequena lâmina afiada." }, // Mudando o id para corresponder ao slot
-    { id: "armor", content: "Hábito monástico", description: "Vestes simples que oferecem pouca proteção.", defense: 2 }, // Mudando o id para corresponder ao slot e adicionando defesa
+    { id: "weapon", content: "canivete", description: "Uma pequena lâmina afiada.", damage: "1D3" }, // Adicionando dano
+    { id: "armor", content: "Hábito monástico", description: "Vestes simples que oferecem pouca proteção.", defense: 2 },
     { id: "velas", content: "Velas", description: "Fontes de luz portáteis." },
-    { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2, description: "Um pequeno saco contendo ervas que podem curar ferimentos leves." }, // Adicionando efeito e valor
-    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." }, // Adicionando efeito e valor para a poção
+    { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2, description: "Um pequeno saco contendo ervas que podem curar ferimentos leves." },
+    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." },
     { id: "pao", content: "Pão", consumable: true, quantity: 1, description: "Um pedaço de pão simples." },
-    { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 5, description: "Um pedaço de pão velho e mofado. Estranhamente, parece ter um efeito... diferente." }, // Quantidade aumentada para 20
+    { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 5, description: "Um pedaço de pão velho e mofado. Estranhamente, parece ter um efeito... diferente." },
     { id: "elixir-poder", content: "Elixir do Poder Supremo", consumable: true, quantity: 5, effect: "boost_attributes", value: 100, description: "Um elixir mágico que aumenta temporariamente todos os seus atributos para 100." }
 ];
 
@@ -872,15 +872,22 @@ async function updateCharacterCouraca() {
 }
 
 async function updateCharacterDamage() {
-    const weaponSlot = document.querySelector(".slot[data-slot='weapon']"); // Certifique-se de que o dataset é correto
-    const damageDisplay = document.querySelector("#char-dano"); // O elemento onde o dano é exibido
-    const uid = auth.currentUser.uid; // Obtém o UID do usuário logado
+    const weaponSlot = document.querySelector(".slot[data-slot='weapon']");
+    const damageDisplay = document.querySelector("#char-dano");
+    const uid = auth.currentUser.uid;
 
     let newDamageValue = "1"; // Valor padrão
 
-    if (weaponSlot && weaponSlot.innerHTML.toLowerCase().includes("canivete")) {
-        newDamageValue = "1D3";
-        damageDisplay.textContent = "1D3";
+    if (weaponSlot && weaponSlot.innerHTML !== weaponSlot.dataset.slot) {
+        const equippedWeaponName = weaponSlot.innerHTML;
+        const weaponData = initialItems.find(item => item.content === equippedWeaponName);
+        
+        if (weaponData && weaponData.damage) {
+            newDamageValue = weaponData.damage;
+            damageDisplay.textContent = weaponData.damage;
+        } else {
+            damageDisplay.textContent = "1";
+        }
     } else {
         damageDisplay.textContent = "1";
     }
@@ -896,6 +903,7 @@ async function updateCharacterDamage() {
         }
     }
 }
+
 
 // Adicione esta função após a função updateCharacterDamage
 function calculateLevel(experience) {
