@@ -168,7 +168,7 @@
     "room-3": {
   "id": "room-3",
   "name": "Câmara dos Elementos",
-  "description": "Uma sala circular com quatro pilares representando os elementos. No centro, há um pedestal com um receptáculo vazio.",
+  "description": "Uma sala circular com quatro pilares representando os elementos.",
   "type": "room",
   "exits": [
     { "direction": "south", "leadsTo": "room-2", "type": "door", "locked": false },
@@ -179,7 +179,7 @@
   "gridWidth": 3,
   "gridHeight": 3,
   "events": [
-    { "type": "first-visit", "text": "Ao entrar na sala, você sente a presença dos quatro elementos: terra, água, fogo e ar. Cada pilar emite uma energia diferente." }
+    { "type": "first-visit", "text": "Ao entrar na sala, você sente a presença dos quatro elementos." }
   ],
   "exploration": {
     "states": {
@@ -191,20 +191,20 @@
     },
     "examine": [
       {
-        "text": "Você examina a Câmara dos Elementos com cuidado. Quatro pilares cercam um pedestal central. Cada pilar representa um elemento: terra, água, fogo e ar."
+        "text": "Você examina a sala com cuidado. Quatro pilares cercam um pedestal central."
       }
     ],
     "pointsOfInterest": [
       {
         "id": "pilars",
         "name": "Pilares Elementais",
-        "description": "Quatro pilares de pedra antiga, cada um decorado com símbolos de um elemento. Eles parecem reagir à sua presença, emitindo um brilho suave.",
+        "description": "Quatro pilares de pedra antiga, cada um decorado com símbolos de um elemento.",
         "effect": {"states.pilarsExamined": true}
       },
       {
         "id": "pedestal",
         "name": "Pedestal Central",
-        "description": "Um pedestal de mármore com um receptáculo vazio. Inscrições ao redor sugerem que algo deve ser colocado aqui para abrir o caminho.",
+        "description": "Um pedestal de mármore com um receptáculo vazio.",
         "effect": {"states.pedestalExamined": true}
       }
     ],
@@ -216,10 +216,10 @@
         "result": {
           "action": "testSkill",
           "skillTest": {
-            "description": "Você precisa ativar os pilares na sequência correta para canalizar a energia elemental para o pedestal.",
+            "description": "Você precisa ativar os pilares na sequência correta.",
             "difficulty": 15,
             "success": {
-              "text": "Você ativa os pilares na sequência correta! A energia dos quatro elementos flui para o pedestal, criando uma chave cristalina.",
+              "text": "Você ativa os pilares na sequência correta!",
               "effect": {"states.puzzleSolved": true},
               "items": [
                 {
@@ -230,7 +230,7 @@
               ]
             },
             "failure": {
-              "text": "Você erra a sequência! Os pilares disparam rajadas de energia elemental em sua direção!",
+              "text": "Você erra a sequência!",
               "damage": {
                 "amount": "2D6",
                 "message": "A energia elemental queima sua pele!"
@@ -242,20 +242,13 @@
     ],
     "search": [
       {
-        "text": "Você procura por pistas adicionais na sala, mas não encontra nada além dos pilares e do pedestal.",
+        "text": "Você procura por pistas adicionais na sala.",
         "chance": 0.8
-      },
-      {
-        "text": "Ao tocar um dos pilares acidentalmente, uma faísca de energia salta e atinge você!",
-        "damage": {
-          "amount": "1D4",
-          "message": "A energia elemental queima sua pele!"
-        },
-        "chance": 0.2
       }
     ]
   }
-},
+}
+,
 
     "room-4": {
       "id": "room-4",
