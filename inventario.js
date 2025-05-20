@@ -651,6 +651,24 @@ async function loadInventoryData(uid) {
             updateCharacterDamage(); // Atualiza o Dano ao carregar inicialmente
         } else {
             const inventoryData = playerSnap.data().inventory;
+            
+            // NOVO: Verifica se há novos itens em initialItems que não estão no inventário
+            let inventoryUpdated = false;
+            for (const initialItem of initialItems) {
+                const itemExists = inventoryData.itemsInChest.some(item => item.id === initialItem.id);
+                if (!itemExists) {
+                    // Adiciona o novo item ao inventário
+                    inventoryData.itemsInChest.push({...initialItem});
+                    inventoryUpdated = true;
+                }
+            }
+            
+            // Se o inventário foi atualizado, salva as alterações
+            if (inventoryUpdated) {
+                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+                console.log("Novos itens adicionados ao inventário.");
+            }
+            
             loadInventoryUI(inventoryData);
             updateCharacterCouraca(); // Atualiza a Couraça ao carregar inicialmente
             updateCharacterDamage(); // Atualiza o Dano ao carregar inicialmente
@@ -659,6 +677,7 @@ async function loadInventoryData(uid) {
         console.error("Erro ao carregar o inventário:", error);
     }
 }
+
 
 function loadInventoryUI(inventoryData) {
     console.log("Carregando UI do inventário:", inventoryData);
