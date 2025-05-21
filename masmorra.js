@@ -1291,7 +1291,6 @@ function removePointsOfInterestButtons() {
     }
 }
 
-// Função para lidar com o clique em um ponto de interesse
 async function handlePointOfInterestClick(poi, room) {
     // Remove botões de interação existentes primeiro
     removeInteractionButtons();
@@ -1317,6 +1316,8 @@ async function handlePointOfInterestClick(poi, room) {
     
     // Salva o estado
     savePlayerState();
+    
+    console.log("Estado da sala após examinar:", room.explorationState);
     
     // NOVO: Verifica se o ponto de interesse tem interações próprias
     if (poi.interactions && poi.interactions.length > 0) {
@@ -1344,7 +1345,6 @@ async function handlePointOfInterestClick(poi, room) {
                     }));
                     interactionsContainer.appendChild(luckBtn);
                 }
-                // Adicione outros tipos de ação conforme necessário
             }
         }
         
@@ -1355,9 +1355,23 @@ async function handlePointOfInterestClick(poi, room) {
                 actionButtons.appendChild(interactionsContainer);
             }
         }
-    } else {
-        // Comportamento normal para outros pontos de interesse
-        createInteractionButtons(room, poi.id);
+    } 
+    // Verifica se há interações disponíveis na sala
+    else if (room.exploration && room.exploration.interactions) {
+        let interactionFound = false;
+        for (const interaction of room.exploration.interactions) {
+            if (evaluateCondition(interaction.condition, room.explorationState)) {
+                console.log("Interação disponível:", interaction);
+                createInteractionButtons(room, null);
+                interactionFound = true;
+                break;
+            }
+        }
+        
+        // Se não encontrou interações gerais, tenta criar botões específicos para o ponto
+        if (!interactionFound) {
+            createInteractionButtons(room, poi.id);
+        }
     }
     
     // Opcionalmente, podemos atualizar os botões para refletir mudanças de estado
@@ -1368,12 +1382,6 @@ async function handlePointOfInterestClick(poi, room) {
         }
     });
 }
-
-
-
-
-
-
 
 
 // Função para criar botões de interação
