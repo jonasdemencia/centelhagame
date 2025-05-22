@@ -585,7 +585,6 @@ function drawGrid() {
     }
 }
 
-// Função para adicionar um item ao inventário do jogador
 async function addItemToInventory(item) {
     console.log("Adicionando ao inventário:", item);
     if (!userId) {
@@ -601,7 +600,8 @@ async function addItemToInventory(item) {
         return;
     }
 
-    const playerData = playerSnap.data();
+    // Atualiza o playerData local com os dados mais recentes
+    playerData = playerSnap.data();
     const inventory = playerData.inventory || {};
     const chest = inventory.itemsInChest || [];
 
@@ -637,11 +637,19 @@ async function addItemToInventory(item) {
     }
 
     console.log("Salvando inventário com:", chest);
+    
+    // Atualiza o Firestore
     await updateDoc(playerDocRef, {
         "inventory.itemsInChest": chest
     });
+
+    // Atualiza o playerData local
+    playerData.inventory = {
+        ...playerData.inventory,
+        itemsInChest: chest
+    };
     
-    return true; // Indica sucesso
+    return true;
 }
 
 
