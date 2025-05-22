@@ -1068,16 +1068,7 @@ async function examineRoom() {
     }
 }
 
-async function handlePointOfInterestClick(poi, room) {
-    removeInteractionButtons();
-    startNewLogBlock(`Examinar ${poi.name}`);
-    await addLogMessage(poi.description, 1000);
-    
-    if (poi.interactions && poi.interactions.length > 0) {
-        // Cria botões para cada interação possível
-        createInteractionButtonsFromPOI(poi.interactions, room);
-    }
-}
+
 
 function createInteractionButtonsFromPOI(interactions, room) {
     const container = document.createElement('div');
