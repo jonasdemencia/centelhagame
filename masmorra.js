@@ -1057,23 +1057,65 @@ async function examineRoom() {
     if (!currentRoom) return;
     
     startNewLogBlock("Examinar");
-
-    if (examineEvent.pointsOfInterest && examineEvent.pointsOfInterest.length > 0) {
-    console.log("Pontos de interesse encontrados:", examineEvent.pointsOfInterest);
-    createPointsOfInterestButtons(examineEvent.pointsOfInterest, currentRoom);
-} else {
-    console.log("Nenhum ponto de interesse encontrado no evento de exame");
-}
-
     
-    // Toda sala deve ter pontos de interesse
-    if (currentRoom.pointsOfInterest && currentRoom.pointsOfInterest.length > 0) {
-        createPointsOfInterestButtons(currentRoom.pointsOfInterest, currentRoom);
-    } else {
-        // Descrição padrão se não houver pontos de interesse
-        await addLogMessage(`Você examina a ${currentRoom.name} com cuidado.`, 500);
-        await addLogMessage("Não há nada de especial aqui.", 800);
+    // Verifica se a sala tem configurações de exploração
+    if (currentRoom.exploration && currentRoom.exploration.examine) {
+        // Inicializa o estado de exploração se não existir
+        if (!currentRoom.explorationState) {
+            if (currentRoom.exploration.states && currentRoom.exploration.states.initial) {
+                currentRoom.explorationState = { ...currentRoom.exploration.states.initial };
+            } else {
+                currentRoom.explorationState = {};
+            }
+        }
+        
+        // Procura por um evento de exame que corresponda ao estado atual
+        for (const examineEvent of currentRoom.exploration.examine) {
+            console.log("Verificando evento de exame:", examineEvent); // Log para depuração
+            
+            if (evaluateCondition(examineEvent.condition, currentRoom.explorationState)) {
+                console.log("Condição atendida para o evento:", examineEvent); // Log para depuração
+                
+                await addLogMessage(examineEvent.text, 1000);
+                
+                // Aplica efeitos, se houver
+                if (examineEvent.effect) {
+                    await applyEffects(examineEvent.effect, currentRoom);
+                }
+                
+                // Processa pontos de interesse
+                if (examineEvent.pointsOfInterest && examineEvent.pointsOfInterest.length > 0) {
+                    console.log("Pontos de interesse encontrados:", examineEvent.pointsOfInterest);
+                    createPointsOfInterestButtons(examineEvent.pointsOfInterest, currentRoom);
+                } else {
+                    console.log("Nenhum ponto de interesse encontrado no evento de exame");
+                }
+                
+                // Salva o estado atualizado
+                savePlayerState();
+                return;
+            }
+        }
     }
+    
+    // Se não encontrou nenhum evento de exame ou não há configurações de exploração,
+    // usa o comportamento padrão
+    await addLogMessage(`Você examina a ${currentRoom.name} com cuidado.`, 500);
+    
+    // Descrição detalhada com base no tipo de sala
+    let detailedDescription = "";
+    switch (currentRoom.type) {
+        case "corridor":
+            detailedDescription = "O corredor é estreito e úmido. Gotas de água escorrem pelas paredes de pedra.";
+            break;
+        case "room":
+            detailedDescription = "A sala tem um teto alto e paredes de pedra antiga. O chão está coberto por uma fina camada de poeira.";
+            break;
+        default:
+            detailedDescription = "Você não nota nada de especial.";
+    }
+    
+    await addLogMessage(detailedDescription, 1000);
 }
 
 
