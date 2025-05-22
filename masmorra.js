@@ -1294,7 +1294,8 @@ function removePointsOfInterestButtons() {
 
 async function handlePointOfInterestClick(poi, room) {
     console.log("Clique em ponto de interesse:", poi);
-console.log("Estado da sala no momento do clique:", room.explorationState);
+    console.log("Estado da sala no momento do clique:", room.explorationState);
+    
     // Remove botões de interação existentes primeiro
     removeInteractionButtons();
     
@@ -1307,16 +1308,118 @@ console.log("Estado da sala no momento do clique:", room.explorationState);
         await applyEffects(poi.effect, room);
     }
     
-    // Verifica se há testes de atributos associados
-    if (poi.luckTest || poi.skillTest || poi.charismaTest) {
-        await handleAttributeTestEvent(poi, room);
-    }
-    
     // Verifica se há interações
     if (poi.interactions && poi.interactions.length > 0) {
-        createInteractionButtonsFromPOI(poi.interactions, room);
+        console.log("Encontradas interações no ponto de interesse:", poi.interactions);
+        
+        // Cria o container para os botões de interação
+        const interactionsContainer = document.createElement('div');
+        interactionsContainer.id = 'interaction-buttons';
+        interactionsContainer.classList.add('interaction-buttons');
+        
+        // Processa cada interação do ponto de interesse
+        for (const interaction of poi.interactions) {
+            // Verifica se a condição é atendida
+            if (evaluateCondition(interaction.condition, room.explorationState)) {
+                // Cria o botão apropriado com base na ação da interação
+                if (interaction.result.action === "testSkill") {
+                    const skillBtn = document.createElement('button');
+                    skillBtn.textContent = interaction.name;
+                    skillBtn.classList.add('action-btn', 'interaction-btn', 'test-skill-btn');
+                    skillBtn.addEventListener('click', async () => {
+                        await addLogMessage(interaction.result.skillTest.description, 800);
+                        const result = await testSkill(interaction.result.skillTest.difficulty);
+                        
+                        if (result) {
+                            // Sucesso
+                            await addLogMessage(interaction.result.skillTest.success.text, 800);
+                            if (interaction.result.skillTest.success.effect) {
+                                await applyEffects(interaction.result.skillTest.success.effect, room);
+                            }
+                            if (interaction.result.skillTest.success.items && 
+                                interaction.result.skillTest.success.items.length > 0) {
+                                createCollectButton(interaction.result.skillTest.success.items[0]);
+                            }
+                        } else {
+                            // Falha
+                            await addLogMessage(interaction.result.skillTest.failure.text, 800);
+                            if (interaction.result.skillTest.failure.effect) {
+                                await applyEffects(interaction.result.skillTest.failure.effect, room);
+                            }
+                            if (interaction.result.skillTest.failure.damage) {
+                                await applyDamageToPlayer(interaction.result.skillTest.failure.damage);
+                            }
+                        }
+                        
+                        // Remove o botão após o teste
+                        removeInteractionButtons();
+                        // Salva o estado após a interação
+                        savePlayerState();
+                    });
+                    interactionsContainer.appendChild(skillBtn);
+                } else if (interaction.result.action === "testLuck") {
+                    const luckBtn = document.createElement('button');
+                    luckBtn.textContent = interaction.name;
+                    luckBtn.classList.add('action-btn', 'interaction-btn', 'test-luck-btn');
+                    luckBtn.addEventListener('click', async () => {
+                        const result = await startLuckTest({
+                            description: interaction.result.luckTest.description,
+                            room: room,
+                            success: interaction.result.luckTest.success,
+                            failure: interaction.result.luckTest.failure
+                        });
+                        // Remove o botão após o teste
+                        removeInteractionButtons();
+                        // Salva o estado após a interação
+                        savePlayerState();
+                    });
+                    interactionsContainer.appendChild(luckBtn);
+                } else if (interaction.result.action === "testCharisma") {
+                    const charismaBtn = document.createElement('button');
+                    charismaBtn.textContent = interaction.name;
+                    charismaBtn.classList.add('action-btn', 'interaction-btn', 'test-charisma-btn');
+                    charismaBtn.addEventListener('click', async () => {
+                        await addLogMessage(interaction.result.charismaTest.description, 800);
+                        const result = await testCharisma(interaction.result.charismaTest.difficulty);
+                        
+                        if (result) {
+                            await addLogMessage(interaction.result.charismaTest.success.text, 800);
+                            if (interaction.result.charismaTest.success.effect) {
+                                await applyEffects(interaction.result.charismaTest.success.effect, room);
+                            }
+                            if (interaction.result.charismaTest.success.items && 
+                                interaction.result.charismaTest.success.items.length > 0) {
+                                createCollectButton(interaction.result.charismaTest.success.items[0]);
+                            }
+                        } else {
+                            await addLogMessage(interaction.result.charismaTest.failure.text, 800);
+                            if (interaction.result.charismaTest.failure.effect) {
+                                await applyEffects(interaction.result.charismaTest.failure.effect, room);
+                            }
+                            if (interaction.result.charismaTest.failure.damage) {
+                                await applyDamageToPlayer(interaction.result.charismaTest.failure.damage);
+                            }
+                        }
+                        
+                        // Remove o botão após o teste
+                        removeInteractionButtons();
+                        // Salva o estado após a interação
+                        savePlayerState();
+                    });
+                    interactionsContainer.appendChild(charismaBtn);
+                }
+            }
+        }
+        
+        // Adiciona o container à interface se houver botões
+        if (interactionsContainer.children.length > 0) {
+            const actionButtons = document.getElementById('action-buttons');
+            if (actionButtons) {
+                actionButtons.appendChild(interactionsContainer);
+            }
+        }
     }
-
+    
     // Verifica se há itens para coletar
     if (poi.items && poi.items.length > 0) {
         createCollectButton(poi.items[0]);
