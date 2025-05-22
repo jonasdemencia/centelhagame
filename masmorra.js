@@ -1308,6 +1308,11 @@ async function handlePointOfInterestClick(poi, room) {
         await applyEffects(poi.effect, room);
     }
     
+    // Verifica se há testes de atributos associados
+    if (poi.luckTest || poi.skillTest || poi.charismaTest) {
+        await handleAttributeTestEvent(poi, room);
+    }
+    
     // Verifica se há interações
     if (poi.interactions && poi.interactions.length > 0) {
         console.log("Encontradas interações no ponto de interesse:", poi.interactions);
@@ -1331,7 +1336,6 @@ async function handlePointOfInterestClick(poi, room) {
                         const result = await testSkill(interaction.result.skillTest.difficulty);
                         
                         if (result) {
-                            // Sucesso
                             await addLogMessage(interaction.result.skillTest.success.text, 800);
                             if (interaction.result.skillTest.success.effect) {
                                 await applyEffects(interaction.result.skillTest.success.effect, room);
@@ -1341,7 +1345,6 @@ async function handlePointOfInterestClick(poi, room) {
                                 createCollectButton(interaction.result.skillTest.success.items[0]);
                             }
                         } else {
-                            // Falha
                             await addLogMessage(interaction.result.skillTest.failure.text, 800);
                             if (interaction.result.skillTest.failure.effect) {
                                 await applyEffects(interaction.result.skillTest.failure.effect, room);
@@ -1418,6 +1421,9 @@ async function handlePointOfInterestClick(poi, room) {
                 actionButtons.appendChild(interactionsContainer);
             }
         }
+    } else {
+        // Se não houver interações específicas, tenta interações gerais da sala
+        createInteractionButtons(room, poi.id);
     }
     
     // Verifica se há itens para coletar
@@ -1436,7 +1442,6 @@ async function handlePointOfInterestClick(poi, room) {
         }
     });
 }
-
 
 // Função para remover botões de interação
 function removeInteractionButtons() {
