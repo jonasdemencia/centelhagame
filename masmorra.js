@@ -1883,32 +1883,50 @@ async function openDoor(direction) {
     if (exit.locked) {
         await addLogMessage(`A porta está trancada.`, 500);
         
-        // Verifica se o jogador tem a chave
+        // Verifica se o jogador tem a chave - MÉTODO MELHORADO
         let hasKey = false;
+        let keyItem = null;
         
         // Adiciona log para depuração
         console.log("Verificando chave:", exit.keyId);
         
-        // Se não encontrou, verifica no inventário do Firestore
         if (playerData && playerData.inventory && playerData.inventory.itemsInChest) {
             console.log("Inventário do jogador:", playerData.inventory.itemsInChest);
             
-            hasKey = playerData.inventory.itemsInChest.some(item => {
-                if (!item) return false;
-                
-                // Verifica pelo ID exato (principal método)
-                const matches = item.id === exit.keyId;
-                console.log(`Comparando item ${item.id} com chave ${exit.keyId}: ${matches}`);
-                return matches;
-            });
+            // Método 1: Verificação exata por ID
+            keyItem = playerData.inventory.itemsInChest.find(item => 
+                item && item.id === exit.keyId
+            );
+            
+            // Método 2: Verificação por nome normalizado (sem espaços, minúsculas)
+            if (!keyItem) {
+                const normalizedKeyId = exit.keyId.toLowerCase().replace(/[-_\s]/g, '');
+                keyItem = playerData.inventory.itemsInChest.find(item => {
+                    if (!item) return false;
+                    const normalizedItemId = item.id.toLowerCase().replace(/[-_\s]/g, '');
+                    const normalizedContent = (item.content || "").toLowerCase().replace(/[-_\s]/g, '');
+                    return normalizedItemId === normalizedKeyId || normalizedContent === normalizedKeyId;
+                });
+            }
+            
+            // Método 3: Verificação por conteúdo parcial
+            if (!keyItem) {
+                const keyWords = exit.keyId.toLowerCase().split(/[-_\s]/);
+                keyItem = playerData.inventory.itemsInChest.find(item => {
+                    if (!item) return false;
+                    const itemContent = (item.content || "").toLowerCase();
+                    return keyWords.some(word => itemContent.includes(word));
+                });
+            }
+            
+            hasKey = !!keyItem;
         }
         
         if (hasKey) {
             // Obtém o nome do item para exibição
-            const keyItem = playerData.inventory.itemsInChest.find(item => item.id === exit.keyId);
             const keyName = keyItem ? keyItem.content : exit.keyId.replace(/-/g, ' ');
             
-            await addLogMessage(`Você usa o ${keyName} para destrancar a porta.`, 800);
+            await addLogMessage(`Você usa a ${keyName} para destrancar a porta.`, 800);
             exit.locked = false;
             updateDirectionButtons();
             savePlayerState(); // Salva o estado da porta destrancada
