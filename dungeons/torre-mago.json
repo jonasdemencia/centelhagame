@@ -88,6 +88,7 @@
       "exploration": {
         "states": {
           "initial": {
+            "examined": false,
             "bloodPoolExamined": false,
             "altarExamined": false,
             "sacrificeMade": false
@@ -167,201 +168,199 @@
     },
 
         "room-3": {
-  "id": "room-3",
-  "name": "Fornalha Infernal",
-  "description": "Uma sala escaldante com colunas de fogo que se erguem do chão. O ar é quase irrespirável devido ao calor extremo.",
-  "type": "room",
-  "exits": [
-    { "direction": "south", "leadsTo": "room-2", "type": "door", "locked": false },
-    { "direction": "north", "leadsTo": "room-4", "type": "door", "locked": true, "keyId": "fire-crystal" }
-  ],
-  "gridX": 10,
-  "gridY": 10,
-  "gridWidth": 3,
-  "gridHeight": 3,
-  "events": [
-    { "type": "first-visit", "text": "Ao entrar na sala, uma onda de calor atinge seu corpo. Sua pele começa a queimar e respirar é doloroso." }
-  ],
-  "enemy": {
-    "id": "fire-elemental",
-    "name": "Elemental do Fogo",
-    "description": "Uma criatura feita de chamas vivas, com um núcleo incandescente e braços que terminam em garras flamejantes."
-  },
-  "exploration": {
-    "states": {
-      "initial": {
-        "fireColumnsExamined": false,
-        "forgeExamined": false,
-        "puzzleSolved": false
-      }
-    },
-    "examine": [
-      {
-        "condition": "!states.examined",
-        "text": "O calor é quase insuportável. As colunas de fogo dançam em padrões estranhos, e uma antiga forja brilha no centro da sala.",
-        "effect": {"states.examined": true},
-        "pointsOfInterest": [
+      "id": "room-3",
+      "name": "Fornalha Infernal",
+      "description": "Uma sala escaldante com colunas de fogo que se erguem do chão. O ar é quase irrespirável devido ao calor extremo.",
+      "type": "room",
+      "exits": [
+        { "direction": "south", "leadsTo": "room-2", "type": "door", "locked": false },
+        { "direction": "north", "leadsTo": "room-4", "type": "door", "locked": true, "keyId": "fire-crystal" }
+      ],
+      "gridX": 10,
+      "gridY": 10,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "events": [
+        { "type": "first-visit", "text": "Ao entrar na sala, uma onda de calor atinge seu corpo. Sua pele começa a queimar e respirar é doloroso." }
+      ],
+      "enemy": {
+        "id": "fire-elemental",
+        "name": "Elemental do Fogo",
+        "description": "Uma criatura feita de chamas vivas, com um núcleo incandescente e braços que terminam em garras flamejantes."
+      },
+      "exploration": {
+        "states": {
+          "initial": {
+            "examined": false,
+            "fireColumnsExamined": false,
+            "forgeExamined": false,
+            "puzzleSolved": false
+          }
+        },
+        "examine": [
           {
-            "id": "fire-columns",
-            "name": "Colunas de Fogo",
-            "description": "As colunas de fogo seguem um padrão específico. Você nota que elas se movem em sequência, como se estivessem dançando.",
-            "effect": {"states.fireColumnsExamined": true}
-          },
-          {
-            "id": "forge",
-            "name": "Forja Antiga",
-            "description": "No centro da sala há uma forja antiga com símbolos arcanos. Um molde em forma de cristal está vazio no centro da forja.",
-            "effect": {"states.forgeExamined": true},
-            "interactions": [
+            "condition": "!states.examined",
+            "text": "O calor é quase insuportável. As colunas de fogo dançam em padrões estranhos, e uma antiga forja brilha no centro da sala.",
+            "effect": {"states.examined": true},
+            "pointsOfInterest": [
               {
-                "id": "solve-fire-puzzle",
-                "condition": "states.fireColumnsExamined && !states.puzzleSolved",
-                "name": "Resolver o Enigma do Fogo",
-                "result": {
-                  "action": "testSkill",
-                  "skillTest": {
-                    "description": "Você precisa decifrar o padrão das colunas de fogo e ativar a forja na sequência correta.",
-                    "difficulty": 15,
-                    "success": {
-                      "text": "Você decifra o padrão e ativa a forja na sequência correta! O metal derretido flui para o molde, formando um cristal de fogo.",
-                      "effect": {"states.puzzleSolved": true},
-                      "items": [
-                        {
-                          "id": "fire-crystal",
-                          "content": "Cristal de Fogo",
-                          "description": "Um cristal vermelho-alaranjado que queima com o calor de mil sóis."
+                "id": "fire-columns",
+                "name": "Colunas de Fogo",
+                "description": "As colunas de fogo seguem um padrão específico. Você nota que elas se movem em sequência, como se estivessem dançando.",
+                "effect": {"states.fireColumnsExamined": true}
+              },
+              {
+                "id": "forge",
+                "name": "Forja Antiga",
+                "description": "No centro da sala há uma forja antiga com símbolos arcanos. Um molde em forma de cristal está vazio no centro da forja.",
+                "effect": {"states.forgeExamined": true},
+                "interactions": [
+                  {
+                    "id": "solve-fire-puzzle",
+                    "condition": "states.fireColumnsExamined && !states.puzzleSolved",
+                    "name": "Resolver o Enigma do Fogo",
+                    "result": {
+                      "action": "testSkill",
+                      "skillTest": {
+                        "description": "Você precisa decifrar o padrão das colunas de fogo e ativar a forja na sequência correta.",
+                        "difficulty": 15,
+                        "success": {
+                          "text": "Você decifra o padrão e ativa a forja na sequência correta! O metal derretido flui para o molde, formando um cristal de fogo.",
+                          "effect": {"states.puzzleSolved": true},
+                          "items": [
+                            {
+                              "id": "fire-crystal",
+                              "content": "Cristal de Fogo",
+                              "description": "Um cristal vermelho-alaranjado que queima com o calor de mil sóis."
+                            }
+                          ]
+                        },
+                        "failure": {
+                          "text": "Você erra a sequência! As colunas de fogo explodem em sua direção!",
+                          "damage": {
+                            "amount": "3D6",
+                            "message": "As chamas queimam sua pele!"
+                          }
                         }
-                      ]
-                    },
-                    "failure": {
-                      "text": "Você erra a sequência! As colunas de fogo explodem em sua direção!",
-                      "damage": {
-                        "amount": "3D6",
-                        "message": "As chamas queimam sua pele!"
                       }
                     }
                   }
-                }
+                ]
               }
             ]
           }
+        ],
+        "search": [
+          {
+            "text": "O calor é tão intenso que sua pele queima ao tocar qualquer superfície!",
+            "damage": {
+              "amount": "1D4",
+              "message": "O calor extremo queima sua pele!"
+            }
+          }
         ]
       }
-    ],
-    "search": [
-      {
-        "text": "O calor é tão intenso que sua pele queima ao tocar qualquer superfície!",
-        "damage": {
-          "amount": "1D4",
-          "message": "O calor extremo queima sua pele!"
-        }
-      }
-    ]
-  }
-},
-  
-  "room-4": {
-  "id": "room-4",
-  "name": "Jardim Venenoso",
-  "description": "Uma sala repleta de vegetação exótica e colorida. Flores belas mas mortais exalam um perfume tóxico, e fungos luminescentes cobrem as paredes.",
-  "type": "room",
-  "exits": [
-    { "direction": "south", "leadsTo": "room-3", "type": "door", "locked": false },
-    { "direction": "north", "leadsTo": "room-5", "type": "door", "locked": true, "keyId": "poison-antidote" }
-  ],
-  "gridX": 10,
-  "gridY": 6,
-  "gridWidth": 3,
-  "gridHeight": 3,
-  "events": [
-    { 
-      "type": "first-visit", 
-      "text": "Ao respirar o ar da sala, você sente sua visão turvar e sua garganta queimar. O veneno já está em seu sistema." 
-    }
-  ],
-  "enemy": {
-    "id": "poison-guardian",
-    "name": "Guardião Venenoso",
-    "description": "Uma criatura humanoide feita de vinhas retorcidas e flores venenosas, com espinhos que gotejam toxinas mortais."
-  },
-  "exploration": {
-    "states": {
-      "initial": {
-        "examined": false,
-        "poisoned": true,
-        "plantsExamined": false,
-        "fountainExamined": false,
-        "antidoteCreated": false
-      }
     },
-    "examine": [
-      {
-        "condition": "!states.examined",
-        "text": "Através da névoa tóxica, você distingue plantas medicinais e uma fonte cristalina.",
-        "effect": {"states.examined": true},
-        "pointsOfInterest": [
+    "room-4": {
+      "id": "room-4",
+      "name": "Jardim Venenoso",
+      "description": "Uma sala repleta de vegetação exótica e colorida. Flores belas mas mortais exalam um perfume tóxico, e fungos luminescentes cobrem as paredes.",
+      "type": "room",
+      "exits": [
+        { "direction": "south", "leadsTo": "room-3", "type": "door", "locked": false },
+        { "direction": "north", "leadsTo": "room-5", "type": "door", "locked": true, "keyId": "poison-antidote" }
+      ],
+      "gridX": 10,
+      "gridY": 6,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "events": [
+        { "type": "first-visit", "text": "Ao respirar o ar da sala, você sente sua visão turvar e sua garganta queimar. O veneno já está em seu sistema." }
+      ],
+      "enemy": {
+        "id": "poison-guardian",
+        "name": "Guardião Venenoso",
+        "description": "Uma criatura humanoide feita de vinhas retorcidas e flores venenosas, com espinhos que gotejam toxinas mortais."
+      },
+      "exploration": {
+        "states": {
+          "initial": {
+            "examined": false,
+            "poisoned": true,
+            "plantsExamined": false,
+            "fountainExamined": false,
+            "antidoteCreated": false
+          }
+        },
+        "examine": [
           {
-            "id": "medicinal-plants",
-            "name": "Plantas Medicinais",
-            "description": "Entre as plantas venenosas, você nota algumas flores azuis que parecem ter propriedades medicinais.",
-            "effect": {"states.plantsExamined": true}
-          },
-          {
-            "id": "crystal-fountain",
-            "name": "Fonte Cristalina",
-            "description": "No centro do jardim há uma fonte com água cristalina. Uma inscrição diz: 'Misture o antídoto para purificar o caminho.'",
-            "effect": {"states.fountainExamined": true},
-            "interactions": [
+            "condition": "!states.examined",
+            "text": "Através da névoa tóxica, você distingue plantas medicinais e uma fonte cristalina.",
+            "effect": {"states.examined": true},
+            "pointsOfInterest": [
               {
-                "id": "create-antidote",
-                "condition": "states.plantsExamined && !states.antidoteCreated",
-                "name": "Criar Antídoto",
-                "result": {
-                  "action": "testLuck",
-                  "luckTest": {
-                    "description": "Você tenta criar um antídoto com as flores azuis e a água da fonte.",
-                    "success": {
-                      "text": "Você consegue criar um antídoto eficaz! Ao bebê-lo, o veneno deixa seu corpo e você se sente revigorado.",
-                      "effect": {
-                        "states.antidoteCreated": true,
-                        "states.poisoned": false
-                      },
-                      "items": [
-                        {
-                          "id": "poison-antidote",
-                          "content": "Antídoto Purificador",
-                          "description": "Um líquido azul brilhante que neutraliza qualquer veneno."
+                "id": "medicinal-plants",
+                "name": "Plantas Medicinais",
+                "description": "Entre as plantas venenosas, você nota algumas flores azuis que parecem ter propriedades medicinais.",
+                "effect": {"states.plantsExamined": true}
+              },
+              {
+                "id": "crystal-fountain",
+                "name": "Fonte Cristalina",
+                "description": "No centro do jardim há uma fonte com água cristalina. Uma inscrição diz: 'Misture o antídoto para purificar o caminho.'",
+                "effect": {"states.fountainExamined": true},
+                "interactions": [
+                  {
+                    "id": "create-antidote",
+                    "condition": "states.plantsExamined && !states.antidoteCreated",
+                    "name": "Criar Antídoto",
+                    "result": {
+                      "action": "testLuck",
+                      "luckTest": {
+                        "description": "Você tenta criar um antídoto com as flores azuis e a água da fonte.",
+                        "success": {
+                          "text": "Você consegue criar um antídoto eficaz! Ao bebê-lo, o veneno deixa seu corpo e você se sente revigorado.",
+                          "effect": {
+                            "states.antidoteCreated": true,
+                            "states.poisoned": false
+                          },
+                          "items": [
+                            {
+                              "id": "poison-antidote",
+                              "content": "Antídoto Purificador",
+                              "description": "Um líquido azul brilhante que neutraliza qualquer veneno."
+                            }
+                          ]
+                        },
+                        "failure": {
+                          "text": "Sua mistura está errada! O líquido borbulha e explode, espalhando ácido!",
+                          "damage": {
+                            "amount": "2D6",
+                            "message": "O ácido queima sua pele!"
+                          }
                         }
-                      ]
-                    },
-                    "failure": {
-                      "text": "Sua mistura está errada! O líquido borbulha e explode, espalhando ácido!",
-                      "damage": {
-                        "amount": "2D6",
-                        "message": "O ácido queima sua pele!"
                       }
                     }
                   }
-                }
+                ]
               }
             ]
           }
+        ],
+        "search": [
+          {
+            "condition": "states.poisoned",
+            "text": "O veneno em seu sistema enfraquece você a cada momento que passa nesta sala!",
+            "damage": {
+              "amount": "1D4",
+              "message": "O veneno corrói seu corpo por dentro!"
+            }
+          }
         ]
       }
-    ],
-    "search": [
-      {
-        "condition": "states.poisoned",
-        "text": "O veneno em seu sistema enfraquece você a cada momento que passa nesta sala!",
-        "damage": {
-          "amount": "1D4",
-          "message": "O veneno corrói seu corpo por dentro!"
-        }
-      }
-    ]
-  }
-},
-    "room-5": {
+    },
+
+        "room-5": {
       "id": "room-5",
       "name": "Câmara da Loucura",
       "description": "Uma sala que desafia a lógica e a sanidade. O chão, paredes e teto mudam constantemente de posição, e ilusões perturbadoras dançam no ar.",
@@ -380,6 +379,7 @@
       "exploration": {
         "states": {
           "initial": {
+            "examined": false,
             "mirrorsExamined": false,
             "voidExamined": false,
             "mindStable": false
@@ -493,6 +493,7 @@
       "exploration": {
         "states": {
           "initial": {
+            "examined": false,
             "throneExamined": false,
             "starsExamined": false
           }
