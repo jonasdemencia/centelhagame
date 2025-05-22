@@ -60,8 +60,7 @@
         ]
       }
     },
-
-      "room-2": {
+    "room-2": {
       "id": "room-2",
       "name": "Câmara de Sangue",
       "description": "Uma sala circular com paredes que parecem pulsar como veias. O chão está coberto por uma fina camada de sangue fresco que flui em direção ao centro.",
@@ -97,7 +96,7 @@
         "examine": [
           {
             "condition": "!states.examined",
-            "text": "Você examina a Câmara de Sangue com cuidado. A sala tem um teto alto e paredes de pedra antiga que pulsam como veias. O chão está coberto por uma fina camada de sangue fresco que flui em direção ao centro.",
+            "text": "Você examina a Câmara de Sangue com cuidado. A sala tem um teto alto e paredes de pedra antiga que pulsam como veias.",
             "effect": {"states.examined": true},
             "pointsOfInterest": [
               {
@@ -167,7 +166,7 @@
       }
     },
 
-            "room-3": {
+        "room-3": {
       "id": "room-3",
       "name": "Fornalha Infernal",
       "description": "Uma sala escaldante com colunas de fogo que se erguem do chão. O ar é quase irrespirável devido ao calor extremo.",
@@ -191,7 +190,6 @@
       "exploration": {
         "states": {
           "initial": {
-            "examined": false,
             "fireColumnsExamined": false,
             "forgeExamined": false,
             "puzzleSolved": false
@@ -200,25 +198,25 @@
         "examine": [
           {
             "condition": "!states.examined",
-            "text": "O calor intenso faz o ar tremer. Você nota vários elementos interessantes na sala.",
+            "text": "O calor é quase insuportável. Você nota padrões nas colunas de fogo e uma antiga forja no centro da sala.",
             "effect": {"states.examined": true},
             "pointsOfInterest": [
               {
                 "id": "fire-columns",
                 "name": "Colunas de Fogo",
-                "description": "Colunas de fogo mágico que se erguem do chão. Elas parecem se mover em um padrão específico, como uma dança sincronizada.",
+                "description": "As colunas de fogo seguem um padrão específico. Você nota que elas se movem em sequência, como se estivessem dançando.",
                 "effect": {"states.fireColumnsExamined": true}
               },
               {
                 "id": "forge",
                 "name": "Forja Antiga",
-                "description": "Uma forja ancestral coberta de símbolos arcanos. No centro, há um molde em forma de cristal, esperando para ser preenchido.",
+                "description": "No centro da sala há uma forja antiga com símbolos arcanos. Um molde em forma de cristal está vazio no centro da forja.",
                 "effect": {"states.forgeExamined": true},
                 "interactions": [
                   {
                     "id": "solve-fire-puzzle",
                     "condition": "states.fireColumnsExamined && !states.puzzleSolved",
-                    "name": "Ativar a Forja",
+                    "name": "Resolver o Enigma do Fogo",
                     "result": {
                       "action": "testSkill",
                       "skillTest": {
@@ -293,45 +291,54 @@
         },
         "examine": [
           {
-            "condition": "!states.plantsExamined",
-            "text": "Entre as plantas venenosas, você nota algumas flores azuis que parecem ter propriedades medicinais.",
-            "effect": {"states.plantsExamined": true}
-          },
-          {
-            "condition": "!states.fountainExamined",
-            "text": "No centro do jardim há uma fonte com água cristalina. Uma inscrição diz: 'Misture o antídoto para purificar o caminho.'",
-            "effect": {"states.fountainExamined": true}
-          }
-        ],
-        "interactions": [
-          {
-            "id": "create-antidote",
-            "condition": "states.plantsExamined && states.fountainExamined && !states.antidoteCreated",
-            "name": "Criar Antídoto",
-            "result": {
-              "action": "testLuck",
-              "luckTest": {
-                "description": "Você tenta criar um antídoto com as flores azuis e a água da fonte.",
-                "success": {
-                  "text": "Você consegue criar um antídoto eficaz! Ao bebê-lo, o veneno deixa seu corpo e você se sente revigorado.",
-                  "effect": {"states.antidoteCreated": true, "states.poisoned": false},
-                  "items": [
-                    {
-                      "id": "poison-antidote",
-                      "content": "Antídoto Purificador",
-                      "description": "Um líquido azul brilhante que neutraliza qualquer veneno."
+            "condition": "!states.examined",
+            "text": "Através da névoa tóxica, você distingue plantas medicinais e uma fonte cristalina.",
+            "effect": {"states.examined": true},
+            "pointsOfInterest": [
+              {
+                "id": "medicinal-plants",
+                "name": "Plantas Medicinais",
+                "description": "Entre as plantas venenosas, você nota algumas flores azuis que parecem ter propriedades medicinais.",
+                "effect": {"states.plantsExamined": true}
+              },
+              {
+                "id": "crystal-fountain",
+                "name": "Fonte Cristalina",
+                "description": "No centro do jardim há uma fonte com água cristalina. Uma inscrição diz: 'Misture o antídoto para purificar o caminho.'",
+                "effect": {"states.fountainExamined": true},
+                "interactions": [
+                  {
+                    "id": "create-antidote",
+                    "condition": "states.plantsExamined && !states.antidoteCreated",
+                    "name": "Criar Antídoto",
+                    "result": {
+                      "action": "testLuck",
+                      "luckTest": {
+                        "description": "Você tenta criar um antídoto com as flores azuis e a água da fonte.",
+                        "success": {
+                          "text": "Você consegue criar um antídoto eficaz! Ao bebê-lo, o veneno deixa seu corpo e você se sente revigorado.",
+                          "effect": {"states.antidoteCreated": true, "states.poisoned": false},
+                          "items": [
+                            {
+                              "id": "poison-antidote",
+                              "content": "Antídoto Purificador",
+                              "description": "Um líquido azul brilhante que neutraliza qualquer veneno."
+                            }
+                          ]
+                        },
+                        "failure": {
+                          "text": "Sua mistura está errada! O líquido borbulha e explode, espalhando ácido!",
+                          "damage": {
+                            "amount": "2D6",
+                            "message": "O ácido queima sua pele!"
+                          }
+                        }
+                      }
                     }
-                  ]
-                },
-                "failure": {
-                  "text": "Sua mistura está errada! O líquido borbulha e explode, espalhando ácido!",
-                  "damage": {
-                    "amount": "2D6",
-                    "message": "O ácido queima sua pele!"
                   }
-                }
+                ]
               }
-            }
+            ]
           }
         ],
         "search": [
@@ -372,46 +379,55 @@
         },
         "examine": [
           {
-            "condition": "!states.mirrorsExamined",
-            "text": "Espelhos flutuantes mostram reflexos distorcidos de você mesmo, alguns envelhecidos, outros deformados ou mortos.",
-            "effect": {"states.mirrorsExamined": true}
-          },
-          {
-            "condition": "!states.voidExamined",
-            "text": "No centro da sala há um vórtice de escuridão que parece sugar a luz e a sanidade.",
-            "effect": {"states.voidExamined": true}
-          }
-        ],
-        "interactions": [
-          {
-            "id": "face-madness",
-            "condition": "states.mirrorsExamined && states.voidExamined && !states.mindStable",
-            "name": "Enfrentar a Loucura",
-            "result": {
-              "action": "testCharisma",
-              "charismaTest": {
-                "description": "Você precisa enfrentar seus medos mais profundos e manter sua sanidade intacta.",
-                "difficulty": 16,
-                "success": {
-                  "text": "Você enfrenta seus demônios internos e mantém sua sanidade! O vórtice se acalma e uma gema cristalina flutua até você.",
-                  "effect": {"states.mindStable": true},
-                  "items": [
-                    {
-                      "id": "sanity-gem",
-                      "content": "Gema da Sanidade",
-                      "description": "Uma gema que brilha com luz própria, afastando as trevas da loucura."
+            "condition": "!states.examined",
+            "text": "Na sala distorcida, você distingue espelhos flutuantes e um vórtice de escuridão.",
+            "effect": {"states.examined": true},
+            "pointsOfInterest": [
+              {
+                "id": "floating-mirrors",
+                "name": "Espelhos Flutuantes",
+                "description": "Espelhos flutuantes mostram reflexos distorcidos de você mesmo, alguns envelhecidos, outros deformados ou mortos.",
+                "effect": {"states.mirrorsExamined": true}
+              },
+              {
+                "id": "void-vortex",
+                "name": "Vórtice do Vazio",
+                "description": "No centro da sala há um vórtice de escuridão que parece sugar a luz e a sanidade.",
+                "effect": {"states.voidExamined": true},
+                "interactions": [
+                  {
+                    "id": "face-madness",
+                    "condition": "states.mirrorsExamined && !states.mindStable",
+                    "name": "Enfrentar a Loucura",
+                    "result": {
+                      "action": "testCharisma",
+                      "charismaTest": {
+                        "description": "Você precisa enfrentar seus medos mais profundos e manter sua sanidade intacta.",
+                        "difficulty": 16,
+                        "success": {
+                          "text": "Você enfrenta seus demônios internos e mantém sua sanidade! O vórtice se acalma e uma gema cristalina flutua até você.",
+                          "effect": {"states.mindStable": true},
+                          "items": [
+                            {
+                              "id": "sanity-gem",
+                              "content": "Gema da Sanidade",
+                              "description": "Uma gema que brilha com luz própria, afastando as trevas da loucura."
+                            }
+                          ]
+                        },
+                        "failure": {
+                          "text": "As visões são demais para sua mente! Você grita em agonia enquanto pesadelos se tornam realidade ao seu redor!",
+                          "damage": {
+                            "amount": "3D6",
+                            "message": "Sua mente é dilacerada pela loucura!"
+                          }
+                        }
+                      }
                     }
-                  ]
-                },
-                "failure": {
-                  "text": "As visões são demais para sua mente! Você grita em agonia enquanto pesadelos se tornam realidade ao seu redor!",
-                  "damage": {
-                    "amount": "3D6",
-                    "message": "Sua mente é dilacerada pela loucura!"
                   }
-                }
+                ]
               }
-            }
+            ]
           }
         ],
         "search": [
@@ -462,92 +478,6 @@
                   "next": "recusar"
                 }
               ]
-            },
-            "desafio": {
-              "text": "Muito bem. O desafio final é simples: você deve morrer... e retornar. Beba da taça da morte e, se seu espírito for forte, você renascerá com poder além da imaginação.",
-              "options": [
-                {
-                  "text": "Beber da taça da morte",
-                  "next": "beber"
-                },
-                {
-                  "text": "Recusar a taça",
-                  "next": "recusar"
-                }
-              ]
-            },
-            "premio": {
-              "text": "O prêmio é o poder sobre a vida e a morte. Conhecimento proibido aos mortais. Imortalidade. Mas o preço é alto: você deve experimentar a morte primeiro.",
-              "options": [
-                {
-                  "text": "Estou pronto para o desafio final.",
-                  "next": "desafio"
-                },
-                {
-                  "text": "Posso recusar o desafio e voltar?",
-                  "next": "recusar"
-                }
-              ]
-            },
-            "recusar": {
-              "text": "Você pode recusar, mas sairá daqui de mãos vazias, tendo chegado tão perto da grandeza. A escolha é sua.",
-              "options": [
-                {
-                  "text": "Mudei de ideia, aceitarei o desafio.",
-                  "next": "desafio"
-                },
-                {
-                  "text": "Prefiro sair com vida.",
-                  "next": "partir"
-                }
-              ]
-            },
-            "beber": {
-              "text": "Você bebe o líquido negro da taça. A escuridão toma conta de sua visão e você sente sua alma deixando seu corpo...",
-              "options": [
-                {
-                  "text": "Lutar para retornar à vida",
-                  "next": "lutar"
-                }
-              ]
-            },
-            "lutar": {
-              "text": "Sua determinação é admirável. Seu espírito luta contra as correntes da morte e, com um esforço supremo, você retorna ao seu corpo, transformado pelo poder da morte.",
-              "options": [
-                {
-                  "text": "Aceitar o poder da morte",
-                  "next": "aceitar",
-                  "items": [
-                    {
-                      "id": "death-amulet",
-                      "content": "Amuleto da Morte",
-                      "description": "Um amuleto negro com uma caveira de cristal. Concede ao portador poder sobre a vida e a morte.",
-                      "value": 1000
-                    }
-                  ]
-                }
-              ]
-            },
-            "aceitar": {
-              "text": "Você agora carrega o poder da morte em suas veias. Use-o com sabedoria, pois com grande poder vem grande responsabilidade. Você é livre para partir ou ficar e aprender mais sobre os segredos da morte.",
-              "options": [
-                {
-                  "text": "Ficar e aprender mais",
-                  "next": "aprender"
-                },
-                {
-                  "text": "Partir com meu novo poder",
-                  "next": "partir"
-                }
-              ]
-            },
-            "aprender": {
-              "text": "Sábio escolha. Há muito a aprender sobre o equilíbrio entre vida e morte. Permaneça aqui o tempo que desejar, e eu compartilharei os segredos do cosmos com você.",
-              "options": []
-            },
-            "partir": {
-              "text": "Vá em paz, portador da morte. A torre estará sempre aqui se desejar retornar. Lembre-se: você não controla a morte, você apenas a empresta por um tempo.",
-              "options": []
             }
           }
         }
@@ -561,14 +491,23 @@
         },
         "examine": [
           {
-            "condition": "!states.throneExamined",
-            "text": "O trono de ossos é feito de esqueletos de criaturas desconhecidas. Runas de poder estão entalhadas em cada osso.",
-            "effect": {"states.throneExamined": true}
-          },
-          {
-            "condition": "!states.starsExamined",
-            "text": "As constelações acima mostram eventos do passado e do futuro. Você vê sua própria morte e renascimento entre as estrelas.",
-            "effect": {"states.starsExamined": true}
+            "condition": "!states.examined",
+            "text": "Neste observatório místico, você observa um trono de ossos e constelações estranhas.",
+            "effect": {"states.examined": true},
+            "pointsOfInterest": [
+              {
+                "id": "bone-throne",
+                "name": "Trono de Ossos",
+                "description": "O trono de ossos é feito de esqueletos de criaturas desconhecidas. Runas de poder estão entalhadas em cada osso.",
+                "effect": {"states.throneExamined": true}
+              },
+              {
+                "id": "cosmic-stars",
+                "name": "Constelações Místicas",
+                "description": "As constelações acima mostram eventos do passado e do futuro. Você vê sua própria morte e renascimento entre as estrelas.",
+                "effect": {"states.starsExamined": true}
+              }
+            ]
           }
         ]
       }
