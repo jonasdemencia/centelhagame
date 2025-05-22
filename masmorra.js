@@ -1242,25 +1242,37 @@ function removePointsOfInterestButtons() {
 }
 
 async function handlePointOfInterestClick(poi, room) {
+    // Remove botões de interação existentes primeiro
     removeInteractionButtons();
     
+    // Adiciona a descrição do ponto de interesse ao log
     startNewLogBlock(`Examinar ${poi.name}`);
     await addLogMessage(poi.description, 1000);
     
+    // Aplica efeitos, se houver
     if (poi.effect) {
         await applyEffects(poi.effect, room);
     }
     
+    // Verifica se há testes de atributos associados
+    if (poi.luckTest || poi.skillTest || poi.charismaTest) {
+        await handleAttributeTestEvent(poi, room);
+    }
+    
+    // Verifica se há interações
     if (poi.interactions && poi.interactions.length > 0) {
         createInteractionButtonsFromPOI(poi.interactions, room);
     }
 
+    // Verifica se há itens para coletar
     if (poi.items && poi.items.length > 0) {
         createCollectButton(poi.items[0]);
     }
     
+    // Salva o estado
     savePlayerState();
     
+    // Atualiza o estado visual dos botões
     const poiButtons = document.querySelectorAll('.poi-btn');
     poiButtons.forEach(button => {
         if (button.dataset.poiId === poi.id) {
