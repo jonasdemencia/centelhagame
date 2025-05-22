@@ -1058,113 +1058,47 @@ async function examineRoom() {
     
     startNewLogBlock("Examinar");
     
-    // Verifica se a sala tem configurações de exploração
-    if (currentRoom.exploration) {
-        // Inicializa o estado de exploração se não existir
-        if (!currentRoom.explorationState) {
-            if (currentRoom.exploration.states && currentRoom.exploration.states.initial) {
-                currentRoom.explorationState = { ...currentRoom.exploration.states.initial };
-            } else {
-                currentRoom.explorationState = {};
-            }
-        }
-        
-        // PRIMEIRO: Verifica se há pontos de interesse no nível principal da exploração
-        if (currentRoom.exploration.pointsOfInterest && currentRoom.exploration.pointsOfInterest.length > 0) {
-            console.log("Pontos de interesse encontrados no nível principal:", currentRoom.exploration.pointsOfInterest);
-            
-            // Exibe a descrição padrão da sala
-            if (currentRoom.exploration.examine && currentRoom.exploration.examine.length > 0) {
-                await addLogMessage(currentRoom.exploration.examine[0].text, 1000);
-            } else {
-                await addLogMessage(`Você examina a ${currentRoom.name} com cuidado.`, 500);
-            }
-            
-            // Cria botões para os pontos de interesse
-            createPointsOfInterestButtons(currentRoom.exploration.pointsOfInterest, currentRoom);
-            savePlayerState();
-            return;
-        }
-        
-        // SEGUNDO: Processa eventos de exame que podem conter pontos de interesse
-        if (currentRoom.exploration.examine) {
-            for (const examineEvent of currentRoom.exploration.examine) {
-                if (evaluateCondition(examineEvent.condition, currentRoom.explorationState)) {
-                    await addLogMessage(examineEvent.text, 1000);
-                    
-                    if (examineEvent.effect) {
-                        await applyEffects(examineEvent.effect, currentRoom);
-                    }
-                    
-                    if (examineEvent.pointsOfInterest && examineEvent.pointsOfInterest.length > 0) {
-                        console.log("Pontos de interesse encontrados em evento de exame:", examineEvent.pointsOfInterest);
-                        createPointsOfInterestButtons(examineEvent.pointsOfInterest, currentRoom);
-                    } else {
-                        console.log("Nenhum ponto de interesse encontrado no evento de exame");
-                    }
-                    
-                    savePlayerState();
-                    return;
-                }
-            }
-        }
-    }
-    
-    // Caso especial para a Sala das Estátuas (compatibilidade com código antigo)
-    if (dungeon.name === "Ruínas de Undermountain" && currentRoom.id === "room-2" && currentRoom.explorationState) {
-        // Primeira vez que examina a sala
-        if (!currentRoom.explorationState.examined) {
-            await addLogMessage(`Você examina a ${currentRoom.name} com cuidado.`, 500);
-            await addLogMessage("A sala tem um teto alto e paredes de pedra antiga. O chão está coberto por uma fina camada de poeira. Há uma estátua que parece diferente das demais.", 1000);
-            
-            currentRoom.explorationState.examined = true;
-            savePlayerState(); // Salva o estado atualizado
-            return;
-        }
-        
-        // Segunda vez que examina a sala (após já ter examinado uma vez)
-        if (currentRoom.explorationState.examined && !currentRoom.explorationState.specialStatueFound) {
-            await addLogMessage("A estátua diferente é a de uma criança elfo, feita de marfim, tampando com as mãos o rosto. No seu ombro direito, há um pequeno alforge de couro pendurado.", 1000);
-            
-            currentRoom.explorationState.specialStatueFound = true;
-            savePlayerState(); // Salva o estado atualizado
-            return;
-        }
-        
-        // Se já encontrou a estátua especial
-        if (currentRoom.explorationState.specialStatueFound) {
-            await addLogMessage("Você já examinou esta sala minuciosamente e encontrou a estátua diferente.", 800);
-            return;
-        }
-    }
-    
-    // Comportamento padrão para outras salas
-    await addLogMessage(`Você examina a ${currentRoom.name} com cuidado.`, 500);
-    
-    // Descrição detalhada com base no tipo de sala
-    let detailedDescription = "";
-    switch (currentRoom.type) {
-        case "corridor":
-            detailedDescription = "O corredor é estreito e úmido. Gotas de água escorrem pelas paredes de pedra.";
-            break;
-        case "room":
-            detailedDescription = "A sala tem um teto alto e paredes de pedra antiga. O chão está coberto por uma fina camada de poeira.";
-            break;
-        default:
-            detailedDescription = "Você não nota nada de especial.";
-    }
-    
-    await addLogMessage(detailedDescription, 1000);
-    
-    // Verifica se há itens na sala
-    if (currentRoom.items && currentRoom.items.length > 0) {
-        await addLogMessage("Você encontra algo interessante:", 800);
-        for (const item of currentRoom.items) {
-            await addLogMessage(`- ${item.name || item.content}: ${item.description}`, 500);
-        }
+    // Toda sala deve ter pontos de interesse
+    if (currentRoom.pointsOfInterest && currentRoom.pointsOfInterest.length > 0) {
+        createPointsOfInterestButtons(currentRoom.pointsOfInterest, currentRoom);
+    } else {
+        // Descrição padrão se não houver pontos de interesse
+        await addLogMessage(`Você examina a ${currentRoom.name} com cuidado.`, 500);
+        await addLogMessage("Não há nada de especial aqui.", 800);
     }
 }
 
+async function handlePointOfInterestClick(poi, room) {
+    removeInteractionButtons();
+    startNewLogBlock(`Examinar ${poi.name}`);
+    await addLogMessage(poi.description, 1000);
+    
+    if (poi.interactions && poi.interactions.length > 0) {
+        // Cria botões para cada interação possível
+        createInteractionButtonsFromPOI(poi.interactions, room);
+    }
+}
+
+function createInteractionButtonsFromPOI(interactions, room) {
+    const container = document.createElement('div');
+    container.id = 'interaction-buttons';
+    container.classList.add('interaction-buttons');
+    
+    interactions.forEach(interaction => {
+        if (evaluateCondition(interaction.condition, room.explorationState)) {
+            const btn = document.createElement('button');
+            btn.textContent = interaction.name;
+            btn.classList.add('action-btn', 'interaction-btn');
+            btn.addEventListener('click', () => handleInteraction(interaction, room));
+            container.appendChild(btn);
+        }
+    });
+    
+    const actionButtons = document.getElementById('action-buttons');
+    if (actionButtons && container.children.length > 0) {
+        actionButtons.appendChild(container);
+    }
+}
 
 
 
