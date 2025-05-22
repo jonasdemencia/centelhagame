@@ -1061,7 +1061,7 @@ async function examineRoom() {
             }
         }
         
-        // NOVO: Verifica se há pontos de interesse no nível principal da exploração
+        // PRIMEIRO: Verifica se há pontos de interesse no nível principal da exploração
         if (currentRoom.exploration.pointsOfInterest && currentRoom.exploration.pointsOfInterest.length > 0) {
             console.log("Pontos de interesse encontrados no nível principal:", currentRoom.exploration.pointsOfInterest);
             
@@ -1078,7 +1078,7 @@ async function examineRoom() {
             return;
         }
         
-        // Código existente para processar eventos de exame
+        // SEGUNDO: Processa eventos de exame que podem conter pontos de interesse
         if (currentRoom.exploration.examine) {
             for (const examineEvent of currentRoom.exploration.examine) {
                 if (evaluateCondition(examineEvent.condition, currentRoom.explorationState)) {
@@ -1089,7 +1089,7 @@ async function examineRoom() {
                     }
                     
                     if (examineEvent.pointsOfInterest && examineEvent.pointsOfInterest.length > 0) {
-                        console.log("Pontos de interesse encontrados:", examineEvent.pointsOfInterest);
+                        console.log("Pontos de interesse encontrados em evento de exame:", examineEvent.pointsOfInterest);
                         createPointsOfInterestButtons(examineEvent.pointsOfInterest, currentRoom);
                     } else {
                         console.log("Nenhum ponto de interesse encontrado no evento de exame");
@@ -1103,7 +1103,6 @@ async function examineRoom() {
     }
     
     // Caso especial para a Sala das Estátuas (compatibilidade com código antigo)
-    // Verifica se estamos na masmorra "Ruínas de Undermountain" e na sala "room-2"
     if (dungeon.name === "Ruínas de Undermountain" && currentRoom.id === "room-2" && currentRoom.explorationState) {
         // Primeira vez que examina a sala
         if (!currentRoom.explorationState.examined) {
@@ -1157,6 +1156,7 @@ async function examineRoom() {
         }
     }
 }
+
 
 
 
@@ -1319,7 +1319,10 @@ async function handlePointOfInterestClick(poi, room) {
     
     console.log("Estado da sala após examinar:", room.explorationState);
     
-    // NOVO: Verifica se o ponto de interesse tem interações próprias
+    // NOVO: Verifica se há interações disponíveis na sala após examinar os pontos
+    let interactionFound = false;
+    
+    // Verifica se o ponto de interesse tem interações próprias
     if (poi.interactions && poi.interactions.length > 0) {
         console.log("Encontradas interações no ponto de interesse:", poi.interactions);
         
@@ -1344,6 +1347,7 @@ async function handlePointOfInterestClick(poi, room) {
                         failure: interaction.result.luckTest.failure
                     }));
                     interactionsContainer.appendChild(luckBtn);
+                    interactionFound = true;
                 }
             }
         }
@@ -1355,22 +1359,17 @@ async function handlePointOfInterestClick(poi, room) {
                 actionButtons.appendChild(interactionsContainer);
             }
         }
-    } 
-    // Verifica se há interações disponíveis na sala
-    else if (room.exploration && room.exploration.interactions) {
-        let interactionFound = false;
+    }
+    
+    // Se não encontrou interações no ponto, verifica na sala
+    if (!interactionFound && room.exploration && room.exploration.interactions) {
         for (const interaction of room.exploration.interactions) {
             if (evaluateCondition(interaction.condition, room.explorationState)) {
-                console.log("Interação disponível:", interaction);
+                console.log("Interação disponível na sala:", interaction);
                 createInteractionButtons(room, null);
                 interactionFound = true;
                 break;
             }
-        }
-        
-        // Se não encontrou interações gerais, tenta criar botões específicos para o ponto
-        if (!interactionFound) {
-            createInteractionButtons(room, poi.id);
         }
     }
     
@@ -1382,6 +1381,7 @@ async function handlePointOfInterestClick(poi, room) {
         }
     });
 }
+
 
 
 // Função para criar botões de interação
@@ -1887,44 +1887,36 @@ async function openDoor(direction) {
         // Verifica se o jogador tem a chave
         let hasKey = false;
         
+        // NOVO: Adiciona log para depuração
+        console.log("Verificando chave:", exit.keyId);
+        
         // Primeiro verifica no playerState local (compatibilidade)
         if (playerState.inventory && playerState.inventory.length > 0) {
             hasKey = playerState.inventory.some(item => {
                 if (!item) return false;
-                return item.id === exit.keyId || 
-                    (item.id && item.id.toLowerCase() === exit.keyId.toLowerCase());
+                return item.id === exit.keyId;
             });
         }
         
         // Se não encontrou, verifica no inventário do Firestore
         if (!hasKey && playerData && playerData.inventory && playerData.inventory.itemsInChest) {
+            console.log("Inventário do jogador:", playerData.inventory.itemsInChest);
+            
             hasKey = playerData.inventory.itemsInChest.some(item => {
                 if (!item) return false;
                 
-                // Verifica pelo ID exato
-                if (item.id === exit.keyId) return true;
-                
-                // Verifica pelo ID em minúsculas
-                if (item.id && item.id.toLowerCase() === exit.keyId.toLowerCase()) return true;
-                
-                // Verifica pelo conteúdo (com verificação de segurança)
-                if (item.content && typeof item.content === 'string') {
-                    // Converte o keyId para um formato mais amigável para comparação
-                    const keyName = exit.keyId.replace(/-/g, ' ').toLowerCase();
-                    return item.content.toLowerCase().includes(keyName);
-                }
-                
-                return false;
+                // Verifica pelo ID exato (principal método)
+                return item.id === exit.keyId;
             });
         }
         
         if (hasKey) {
-            await addLogMessage(`Você usa a chave para destrancar a porta.`, 800);
+            await addLogMessage(`Você usa ${exit.keyId.includes('key') ? 'a chave' : 'o ' + exit.keyId.replace(/-/g, ' ')} para destrancar a porta.`, 800);
             exit.locked = false;
             updateDirectionButtons();
             savePlayerState(); // Salva o estado da porta destrancada
         } else {
-            await addLogMessage(`Você precisa de uma chave para abrir esta porta.`, 800);
+            await addLogMessage(`Você precisa de ${exit.keyId.includes('key') ? 'uma chave' : 'um ' + exit.keyId.replace(/-/g, ' ')} para abrir esta porta.`, 800);
         }
     } else {
         await addLogMessage(`Você abre a porta.`, 500);
@@ -1943,6 +1935,7 @@ async function openDoor(direction) {
         updateDirectionButtons();
     }
 }
+
 
 
 
