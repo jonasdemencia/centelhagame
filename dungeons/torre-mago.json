@@ -81,19 +81,6 @@
   }
 }
 ,
-        "search": [
-          {
-            "condition": "states.examined",
-            "text": "Ao revirar os ossos, uma armadilha é acionada! Lâminas afiadas cortam o ar!",
-            "damage": {
-              "amount": "1D6",
-              "message": "Lâminas afiadas cortam sua pele!"
-            },
-            "chance": 0.7
-          }
-        ]
-      }
-    },
     "room-2": {
       "id": "room-2",
       "name": "Câmara de Sangue",
