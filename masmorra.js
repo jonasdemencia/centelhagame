@@ -1089,7 +1089,24 @@ function createInteractionButtonsFromPOI(interactions, room) {
             const btn = document.createElement('button');
             btn.textContent = interaction.name;
             btn.classList.add('action-btn', 'interaction-btn');
-            btn.addEventListener('click', () => handleInteraction(interaction, room));
+            
+            // Adiciona classe específica baseada no tipo de teste
+            if (interaction.result.action === "testLuck") {
+                btn.classList.add('test-luck-btn');
+                btn.addEventListener('click', () => startLuckTest({
+                    description: interaction.result.luckTest.description,
+                    room: room,
+                    success: interaction.result.luckTest.success,
+                    failure: interaction.result.luckTest.failure
+                }));
+            } else if (interaction.result.action === "testSkill") {
+                btn.classList.add('test-skill-btn');
+                btn.addEventListener('click', () => testSkill(interaction.result.skillTest.difficulty));
+            } else if (interaction.result.action === "testCharisma") {
+                btn.classList.add('test-charisma-btn');
+                btn.addEventListener('click', () => testCharisma(interaction.result.charismaTest.difficulty));
+            }
+            
             container.appendChild(btn);
         }
     });
@@ -1234,88 +1251,25 @@ function removePointsOfInterestButtons() {
 }
 
 async function handlePointOfInterestClick(poi, room) {
-    // Remove botões de interação existentes primeiro
     removeInteractionButtons();
     
-    // Adiciona a descrição do ponto de interesse ao log
     startNewLogBlock(`Examinar ${poi.name}`);
     await addLogMessage(poi.description, 1000);
     
-    // Aplica efeitos, se houver
     if (poi.effect) {
         await applyEffects(poi.effect, room);
     }
     
-    // Verifica se há testes de atributos associados
-    if (poi.luckTest || poi.skillTest || poi.charismaTest) {
-        await handleAttributeTestEvent(poi, room);
-    } else {
-        // Verifica se há itens para coletar
-        if (poi.items && poi.items.length > 0) {
-            createCollectButton(poi.items[0]);
-        }
+    if (poi.interactions && poi.interactions.length > 0) {
+        createInteractionButtonsFromPOI(poi.interactions, room);
+    }
+
+    if (poi.items && poi.items.length > 0) {
+        createCollectButton(poi.items[0]);
     }
     
-    // Salva o estado
     savePlayerState();
     
-    console.log("Estado da sala após examinar:", room.explorationState);
-    
-    // NOVO: Verifica se há interações disponíveis na sala após examinar os pontos
-    let interactionFound = false;
-    
-    // Verifica se o ponto de interesse tem interações próprias
-    if (poi.interactions && poi.interactions.length > 0) {
-        console.log("Encontradas interações no ponto de interesse:", poi.interactions);
-        
-        // Cria o container para o botão de interação
-        const interactionsContainer = document.createElement('div');
-        interactionsContainer.id = 'interaction-buttons';
-        interactionsContainer.classList.add('interaction-buttons');
-        
-        // Processa cada interação do ponto de interesse
-        for (const interaction of poi.interactions) {
-            // Verifica se a condição é atendida
-            if (evaluateCondition(interaction.condition, room.explorationState)) {
-                // Cria o botão apropriado com base na ação da interação
-                if (interaction.result.action === "testLuck") {
-                    const luckBtn = document.createElement('button');
-                    luckBtn.textContent = interaction.name;
-                    luckBtn.classList.add('action-btn', 'interaction-btn', 'test-luck-btn');
-                    luckBtn.addEventListener('click', () => startLuckTest({
-                        description: interaction.result.luckTest.description,
-                        room: room,
-                        success: interaction.result.luckTest.success,
-                        failure: interaction.result.luckTest.failure
-                    }));
-                    interactionsContainer.appendChild(luckBtn);
-                    interactionFound = true;
-                }
-            }
-        }
-        
-        // Adiciona o container à interface se houver botões
-        if (interactionsContainer.children.length > 0) {
-            const actionButtons = document.getElementById('action-buttons');
-            if (actionButtons) {
-                actionButtons.appendChild(interactionsContainer);
-            }
-        }
-    }
-    
-    // Se não encontrou interações no ponto, verifica na sala
-    if (!interactionFound && room.exploration && room.exploration.interactions) {
-        for (const interaction of room.exploration.interactions) {
-            if (evaluateCondition(interaction.condition, room.explorationState)) {
-                console.log("Interação disponível na sala:", interaction);
-                createInteractionButtons(room, null);
-                interactionFound = true;
-                break;
-            }
-        }
-    }
-    
-    // Opcionalmente, podemos atualizar os botões para refletir mudanças de estado
     const poiButtons = document.querySelectorAll('.poi-btn');
     poiButtons.forEach(button => {
         if (button.dataset.poiId === poi.id) {
@@ -1323,7 +1277,6 @@ async function handlePointOfInterestClick(poi, room) {
         }
     });
 }
-
 
 
 // Função para criar botões de interação
