@@ -1057,6 +1057,14 @@ async function examineRoom() {
     if (!currentRoom) return;
     
     startNewLogBlock("Examinar");
+
+    if (examineEvent.pointsOfInterest && examineEvent.pointsOfInterest.length > 0) {
+    console.log("Pontos de interesse encontrados:", examineEvent.pointsOfInterest);
+    createPointsOfInterestButtons(examineEvent.pointsOfInterest, currentRoom);
+} else {
+    console.log("Nenhum ponto de interesse encontrado no evento de exame");
+}
+
     
     // Toda sala deve ter pontos de interesse
     if (currentRoom.pointsOfInterest && currentRoom.pointsOfInterest.length > 0) {
@@ -1171,7 +1179,8 @@ function removeCollectButton() {
 
 // Função para criar botões de pontos de interesse
 function createPointsOfInterestButtons(pointsOfInterest, room) {
-    console.log("Criando botões de pontos de interesse:", pointsOfInterest);
+    console.log("Criando botões para pontos de interesse:", pointsOfInterest);
+console.log("Estado atual da sala:", room.explorationState);
     
     // Remove botões existentes primeiro
     removePointsOfInterestButtons();
@@ -1242,6 +1251,8 @@ function removePointsOfInterestButtons() {
 }
 
 async function handlePointOfInterestClick(poi, room) {
+    console.log("Clique em ponto de interesse:", poi);
+console.log("Estado da sala no momento do clique:", room.explorationState);
     // Remove botões de interação existentes primeiro
     removeInteractionButtons();
     
