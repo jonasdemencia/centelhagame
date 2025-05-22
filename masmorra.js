@@ -1882,6 +1882,15 @@ async function openDoor(direction) {
     
     if (exit.locked) {
         await addLogMessage(`A porta está trancada.`, 500);
+
+        // Adicione estes logs de debug
+        console.log("Verificando chave:", exit.keyId);
+        console.log("Inventário do jogador:", playerData?.inventory?.itemsInChest);
+        console.log("Estado do inventário:", {
+            playerState: playerState.inventory,
+            firestore: playerData?.inventory?.itemsInChest,
+            keyNeeded: exit.keyId
+        });
         
         // Verifica se o jogador tem a chave - MÉTODO MELHORADO
         let hasKey = false;
