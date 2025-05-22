@@ -346,84 +346,92 @@
   }
 },
     "room-5": {
-      "id": "room-5",
-      "name": "Câmara da Loucura",
-      "description": "Uma sala que desafia a lógica e a sanidade. O chão, paredes e teto mudam constantemente de posição, e ilusões perturbadoras dançam no ar.",
-      "type": "room",
-      "exits": [
-        { "direction": "south", "leadsTo": "room-4", "type": "door", "locked": false },
-        { "direction": "north", "leadsTo": "room-6", "type": "portal", "locked": true, "keyId": "sanity-gem" }
-      ],
-      "gridX": 10,
-      "gridY": 2,
-      "gridWidth": 3,
-      "gridHeight": 3,
-      "events": [
-        { "type": "first-visit", "text": "Ao entrar na sala, sua mente é bombardeada por visões perturbadoras. Vozes sussurram em seus ouvidos e a realidade parece se dobrar." }
-      ],
-      "exploration": {
-        "states": {
-          "initial": {
-            "mirrorsExamined": false,
-            "voidExamined": false,
-            "mindStable": false
-          }
-        },
-        "examine": [
-          {
-            "condition": "!states.mirrorsExamined",
-            "text": "Espelhos flutuantes mostram reflexos distorcidos de você mesmo, alguns envelhecidos, outros deformados ou mortos.",
-            "effect": {"states.mirrorsExamined": true}
-          },
-          {
-            "condition": "!states.voidExamined",
-            "text": "No centro da sala há um vórtice de escuridão que parece sugar a luz e a sanidade.",
-            "effect": {"states.voidExamined": true}
-          }
-        ],
-        "interactions": [
-          {
-            "id": "face-madness",
-            "condition": "states.mirrorsExamined && states.voidExamined && !states.mindStable",
-            "name": "Enfrentar a Loucura",
-            "result": {
-              "action": "testCharisma",
-              "charismaTest": {
-                "description": "Você precisa enfrentar seus medos mais profundos e manter sua sanidade intacta.",
-                "difficulty": 16,
-                "success": {
-                  "text": "Você enfrenta seus demônios internos e mantém sua sanidade! O vórtice se acalma e uma gema cristalina flutua até você.",
-                  "effect": {"states.mindStable": true},
-                  "items": [
-                    {
-                      "id": "sanity-gem",
-                      "content": "Gema da Sanidade",
-                      "description": "Uma gema que brilha com luz própria, afastando as trevas da loucura."
-                    }
-                  ]
-                },
-                "failure": {
-                  "text": "As visões são demais para sua mente! Você grita em agonia enquanto pesadelos se tornam realidade ao seu redor!",
-                  "damage": {
-                    "amount": "3D6",
-                    "message": "Sua mente é dilacerada pela loucura!"
-                  }
+  "id": "room-5",
+  "name": "Câmara da Loucura",
+  "description": "Uma sala que desafia a lógica e a sanidade. O chão, paredes e teto mudam constantemente de posição, e ilusões perturbadoras dançam no ar.",
+  "type": "room",
+  "exits": [
+    { "direction": "south", "leadsTo": "room-4", "type": "door", "locked": false },
+    { "direction": "north", "leadsTo": "room-6", "type": "portal", "locked": true, "keyId": "sanity-gem" }
+  ],
+  "gridX": 10,
+  "gridY": 2,
+  "gridWidth": 3,
+  "gridHeight": 3,
+  "events": [
+    { "type": "first-visit", "text": "Ao entrar na sala, sua mente é bombardeada por visões perturbadoras. Vozes sussurram em seus ouvidos e a realidade parece se dobrar." }
+  ],
+  "exploration": {
+    "states": {
+      "initial": {
+        "mirrorsExamined": false,
+        "voidExamined": false,
+        "mindStable": false
+      }
+    },
+    "examine": [
+      {
+        "text": "Você examina a Câmara da Loucura com cuidado. A realidade parece distorcida e sua mente luta para compreender o que vê."
+      }
+    ],
+    "pointsOfInterest": [
+      {
+        "id": "mirrors",
+        "name": "Espelhos Flutuantes",
+        "description": "Espelhos flutuantes mostram reflexos distorcidos de você mesmo, alguns envelhecidos, outros deformados ou mortos.",
+        "effect": {"states.mirrorsExamined": true}
+      },
+      {
+        "id": "void",
+        "name": "Vórtice de Escuridão",
+        "description": "No centro da sala há um vórtice de escuridão que parece sugar a luz e a sanidade.",
+        "effect": {"states.voidExamined": true}
+      }
+    ],
+    "interactions": [
+      {
+        "id": "face-madness",
+        "condition": "states.mirrorsExamined && states.voidExamined && !states.mindStable",
+        "name": "Enfrentar a Loucura",
+        "result": {
+          "action": "testCharisma",
+          "charismaTest": {
+            "description": "Você precisa enfrentar seus medos mais profundos e manter sua sanidade intacta.",
+            "difficulty": 16,
+            "success": {
+              "text": "Você enfrenta seus demônios internos e mantém sua sanidade! O vórtice se acalma e uma gema cristalina flutua até você.",
+              "effect": {"states.mindStable": true},
+              "items": [
+                {
+                  "id": "sanity-gem",
+                  "content": "Chave da Sanidade",
+                  "description": "Uma gema que brilha com luz própria, afastando as trevas da loucura."
                 }
+              ]
+            },
+            "failure": {
+              "text": "As visões são demais para sua mente! Você grita em agonia enquanto pesadelos se tornam realidade ao seu redor!",
+              "damage": {
+                "amount": "3D6",
+                "message": "Sua mente é dilacerada pela loucura!"
               }
             }
           }
-        ],
-        "search": [
-          {
-            "text": "Ao procurar pela sala, as ilusões se intensificam, atacando sua mente!",
-            "damage": {
-              "amount": "1D6",
-              "message": "As ilusões causam dor psíquica!"
-            }
-          }
-        ]
+        }
       }
-    },
+    ],
+    "search": [
+      {
+        "text": "Ao procurar pela sala, as ilusões se intensificam, atacando sua mente!",
+        "damage": {
+          "amount": "1D6",
+          "message": "As ilusões causam dor psíquica!"
+        }
+      }
+    ]
+  }
+}
+,
     "room-6": {
       "id": "room-6",
       "name": "Observatório da Morte",
