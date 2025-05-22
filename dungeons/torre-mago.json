@@ -3,7 +3,7 @@
   "description": "Uma torre sinistra que se ergue das brumas, desafiando os mais corajosos com armadilhas letais e guardiões implacáveis.",
   "entrance": "room-1",
   "rooms": {
-    "room-1": {
+   "room-1": {
   "id": "room-1",
   "name": "Portal Sangrento",
   "description": "Um portal de pedra negra manchado de sangue seco. Ossos humanos estão espalhados pelo chão e uma escada em espiral ascende para a escuridão.",
