@@ -433,154 +433,181 @@
 }
 ,
     "room-6": {
-      "id": "room-6",
-      "name": "Observatório da Morte",
-      "description": "O último andar é um observatório circular onde o céu acima mostra constelações desconhecidas. No centro está um trono de ossos ocupado por uma figura encapuzada.",
-      "type": "room",
-      "exits": [
-        { "direction": "south", "leadsTo": "room-5", "type": "portal", "locked": false }
-      ],
-      "gridX": 10,
-      "gridY": 0,
-      "gridWidth": 4,
-      "gridHeight": 2,
-      "events": [
-        { "type": "first-visit", "text": "A figura no trono levanta a cabeça, revelando um crânio com olhos de estrelas. 'Você chegou longe, mortal. Mas a última provação é a mais difícil.'" }
-      ],
-      "npcs": [
-        {
-          "id": "death-lord",
-          "name": "Senhor da Morte",
-          "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
-          "dialogues": {
-            "initial": {
-              "text": "Poucos chegam tão longe. Você provou seu valor nas provações anteriores, mas a última é a mais difícil: enfrentar a própria morte.",
-              "options": [
-                {
-                  "text": "Estou pronto para o desafio final.",
-                  "next": "desafio"
-                },
-                {
-                  "text": "Qual é o prêmio por superar todas as provações?",
-                  "next": "premio"
-                },
-                {
-                  "text": "Posso recusar o desafio e voltar?",
-                  "next": "recusar"
-                }
-              ]
+  "id": "room-6",
+  "name": "Observatório da Morte",
+  "description": "O último andar é um observatório circular onde o céu acima mostra constelações desconhecidas. No centro está um trono de ossos ocupado por uma figura encapuzada.",
+  "type": "room",
+  "exits": [
+    { "direction": "south", "leadsTo": "room-5", "type": "portal", "locked": false }
+  ],
+  "gridX": 10,
+  "gridY": 0,
+  "gridWidth": 4,
+  "gridHeight": 2,
+  "events": [
+    { "type": "first-visit", "text": "A figura no trono levanta a cabeça, revelando um crânio com olhos de estrelas. 'Você chegou longe, mortal. Mas a última provação é a mais difícil.'" }
+  ],
+  "npcs": [
+    {
+      "id": "death-lord",
+      "name": "Senhor da Morte",
+      "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
+      "dialogues": {
+        "initial": {
+          "text": "Poucos chegam tão longe. Você provou seu valor nas provações anteriores, mas a última é a mais difícil: enfrentar a própria morte.",
+          "options": [
+            {
+              "text": "Estou pronto para o desafio final.",
+              "next": "desafio"
             },
-            "desafio": {
-              "text": "Muito bem. O desafio final é simples: você deve morrer... e retornar. Beba da taça da morte e, se seu espírito for forte, você renascerá com poder além da imaginação.",
-              "options": [
-                {
-                  "text": "Beber da taça da morte",
-                  "next": "beber"
-                },
-                {
-                  "text": "Recusar a taça",
-                  "next": "recusar"
-                }
-              ]
+            {
+              "text": "Qual é o prêmio por superar todas as provações?",
+              "next": "premio"
             },
-            "premio": {
-              "text": "O prêmio é o poder sobre a vida e a morte. Conhecimento proibido aos mortais. Imortalidade. Mas o preço é alto: você deve experimentar a morte primeiro.",
-              "options": [
-                {
-                  "text": "Estou pronto para o desafio final.",
-                  "next": "desafio"
-                },
-                {
-                  "text": "Posso recusar o desafio e voltar?",
-                  "next": "recusar"
-                }
-              ]
-            },
-            "recusar": {
-              "text": "Você pode recusar, mas sairá daqui de mãos vazias, tendo chegado tão perto da grandeza. A escolha é sua.",
-              "options": [
-                {
-                  "text": "Mudei de ideia, aceitarei o desafio.",
-                  "next": "desafio"
-                },
-                {
-                  "text": "Prefiro sair com vida.",
-                  "next": "partir"
-                }
-              ]
-            },
-            "beber": {
-              "text": "Você bebe o líquido negro da taça. A escuridão toma conta de sua visão e você sente sua alma deixando seu corpo...",
-              "options": [
-                {
-                  "text": "Lutar para retornar à vida",
-                  "next": "lutar"
-                }
-              ]
-            },
-            "lutar": {
-              "text": "Sua determinação é admirável. Seu espírito luta contra as correntes da morte e, com um esforço supremo, você retorna ao seu corpo, transformado pelo poder da morte.",
-              "options": [
-                {
-                  "text": "Aceitar o poder da morte",
-                  "next": "aceitar",
-                  "items": [
-                    {
-                      "id": "death-amulet",
-                      "content": "Amuleto da Morte",
-                      "description": "Um amuleto negro com uma caveira de cristal. Concede ao portador poder sobre a vida e a morte.",
-                      "value": 1000
-                    }
-                  ]
-                }
-              ]
-            },
-            "aceitar": {
-              "text": "Você agora carrega o poder da morte em suas veias. Use-o com sabedoria, pois com grande poder vem grande responsabilidade. Você é livre para partir ou ficar e aprender mais sobre seus novos poderes.",
-              "options": [
-                {
-                  "text": "Ficar e aprender mais",
-                  "next": "aprender"
-                },
-                {
-                  "text": "Partir com meu novo poder",
-                  "next": "partir"
-                }
-              ]
-            },
-            "aprender": {
-              "text": "Sábio escolha. Há muito a aprender sobre o equilíbrio entre vida e morte. Permaneça aqui o tempo que desejar, e eu compartilharei os segredos do cosmos com você.",
-              "options": []
-            },
-            "partir": {
-              "text": "Vá em paz, portador da morte. A torre estará sempre aqui se desejar retornar. Lembre-se: você não controla a morte, você apenas a empresta por um tempo.",
-              "options": []
+            {
+              "text": "Posso recusar o desafio e voltar?",
+              "next": "recusar"
             }
-          }
-        }
-      ],
-      "exploration": {
-        "states": {
-          "initial": {
-            "throneExamined": false,
-            "starsExamined": false
-          }
+          ]
         },
-        "examine": [
+        "desafio": {
+          "text": "Muito bem. O desafio final é simples: você deve morrer... e retornar. Beba da taça da morte e, se seu espírito for forte, você renascerá com poder além da imaginação.",
+          "options": [
+            {
+              "text": "Beber da taça da morte",
+              "next": "beber"
+            },
+            {
+              "text": "Recusar a taça",
+              "next": "recusar"
+            }
+          ]
+        },
+        "premio": {
+          "text": "O prêmio é o poder sobre a vida e a morte. Conhecimento proibido aos mortais. Imortalidade. Mas o preço é alto: você deve experimentar a morte primeiro.",
+          "options": [
+            {
+              "text": "Estou pronto para o desafio final.",
+              "next": "desafio"
+            },
+            {
+              "text": "Posso recusar o desafio e voltar?",
+              "next": "recusar"
+            }
+          ]
+        },
+        "recusar": {
+          "text": "Você pode recusar, mas sairá daqui de mãos vazias, tendo chegado tão perto da grandeza. A escolha é sua.",
+          "options": [
+            {
+              "text": "Mudei de ideia, aceitarei o desafio.",
+              "next": "desafio"
+            },
+            {
+              "text": "Prefiro sair com vida.",
+              "next": "partir"
+            }
+          ]
+        },
+        "beber": {
+          "text": "Você bebe o líquido negro da taça. A escuridão toma conta de sua visão e você sente sua alma deixando seu corpo...",
+          "options": [
+            {
+              "text": "Lutar para retornar à vida",
+              "next": "lutar"
+            }
+          ]
+        },
+        "lutar": {
+          "text": "Sua determinação é admirável. Seu espírito luta contra as correntes da morte e, com um esforço supremo, você retorna ao seu corpo, transformado pelo poder da morte.",
+          "options": [
+            {
+              "text": "Aceitar o poder da morte",
+              "next": "aceitar",
+              "items": [
+                {
+                  "id": "death-amulet",
+                  "content": "Amuleto da Morte",
+                  "description": "Um amuleto negro com uma caveira de cristal. Concede ao portador poder sobre a vida e a morte.",
+                  "value": 1000
+                }
+              ]
+            }
+          ]
+        },
+        "aceitar": {
+          "text": "Você agora carrega o poder da morte em suas veias. Use-o com sabedoria, pois com grande poder vem grande responsabilidade. Você é livre para partir ou ficar e aprender mais sobre seus novos poderes.",
+          "options": [
+            {
+              "text": "Ficar e aprender mais",
+              "next": "aprender"
+            },
+            {
+              "text": "Partir com meu novo poder",
+              "next": "partir"
+            }
+          ]
+        },
+        "aprender": {
+          "text": "Sábia escolha. Há muito a aprender sobre o equilíbrio entre vida e morte. Permaneça aqui o tempo que desejar, e eu compartilharei os segredos do cosmos com você.",
+          "options": []
+        },
+        "partir": {
+          "text": "Vá em paz, portador da morte. A torre estará sempre aqui se desejar retornar. Lembre-se: você não controla a morte, você apenas a empresta por um tempo.",
+          "options": []
+        }
+      }
+    }
+  ],
+  "exploration": {
+    "states": {
+      "initial": {
+        "throneExamined": false,
+        "starsExamined": false
+      }
+    },
+    "examine": [
+      {
+        "condition": "!states.throneExamined",
+        "text": "O trono de ossos é feito de esqueletos de criaturas desconhecidas. Runas de poder estão entalhadas em cada osso.",
+        "effect": {"states.throneExamined": true}
+      },
+      {
+        "condition": "!states.starsExamined",
+        "text": "As constelações acima mostram eventos do passado e do futuro. Você vê sua própria morte e renascimento entre as estrelas.",
+        "effect": {"states.starsExamined": true}
+      }
+    ],
+    "pointsOfInterest": [
+      {
+        "id": "throne",
+        "name": "Trono de Ossos",
+        "description": "Um trono majestoso feito de ossos de criaturas desconhecidas. Runas arcanas brilham levemente em sua superfície.",
+        "effect": {"states.throneExamined": true}
+      },
+      {
+        "id": "stars",
+        "name": "Constelações Místicas",
+        "description": "O céu acima mostra constelações nunca vistas, que parecem contar histórias de vida e morte através dos tempos.",
+        "effect": {"states.starsExamined": true}
+      }
+    ],
+    "search": [
+      {
+        "text": "Ao procurar pela sala, você sente a presença da morte observando cada movimento seu.",
+        "chance": 0.5,
+        "items": [
           {
-            "condition": "!states.throneExamined",
-            "text": "O trono de ossos é feito de esqueletos de criaturas desconhecidas. Runas de poder estão entalhadas em cada osso.",
-            "effect": {"states.throneExamined": true}
-          },
-          {
-            "condition": "!states.starsExamined",
-            "text": "As constelações acima mostram eventos do passado e do futuro. Você vê sua própria morte e renascimento entre as estrelas.",
-            "effect": {"states.starsExamined": true}
+            "id": "soul-fragment",
+            "content": "Fragmento de Alma",
+            "description": "Um pequeno cristal que contém a essência de uma alma. Brilha com uma luz etérea."
           }
         ]
       }
-    }
-  },
+    ]
+  }
+}
+,
   "decorativeBlocks": [
     { "type": "corridor", "gridX": 10, "gridY": 17, "gridWidth": 1, "gridHeight": 1, "connects": ["room-1", "room-2"] },
     { "type": "corridor", "gridX": 10, "gridY": 13, "gridWidth": 1, "gridHeight": 1, "connects": ["room-2", "room-3"] },
