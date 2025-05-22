@@ -1867,7 +1867,6 @@ async function searchRoom() {
 
 
 
-// Modifique a função openDoor para verificar corretamente a chave
 async function openDoor(direction) {
     const currentRoom = dungeon.rooms[playerState.currentRoom];
     if (!currentRoom || !currentRoom.exits) return;
@@ -1887,36 +1886,34 @@ async function openDoor(direction) {
         // Verifica se o jogador tem a chave
         let hasKey = false;
         
-        // NOVO: Adiciona log para depuração
+        // Adiciona log para depuração
         console.log("Verificando chave:", exit.keyId);
         
-        // Primeiro verifica no playerState local (compatibilidade)
-        if (playerState.inventory && playerState.inventory.length > 0) {
-            hasKey = playerState.inventory.some(item => {
-                if (!item) return false;
-                return item.id === exit.keyId;
-            });
-        }
-        
         // Se não encontrou, verifica no inventário do Firestore
-        if (!hasKey && playerData && playerData.inventory && playerData.inventory.itemsInChest) {
+        if (playerData && playerData.inventory && playerData.inventory.itemsInChest) {
             console.log("Inventário do jogador:", playerData.inventory.itemsInChest);
             
             hasKey = playerData.inventory.itemsInChest.some(item => {
                 if (!item) return false;
                 
                 // Verifica pelo ID exato (principal método)
-                return item.id === exit.keyId;
+                const matches = item.id === exit.keyId;
+                console.log(`Comparando item ${item.id} com chave ${exit.keyId}: ${matches}`);
+                return matches;
             });
         }
         
         if (hasKey) {
-            await addLogMessage(`Você usa ${exit.keyId.includes('key') ? 'a chave' : 'o ' + exit.keyId.replace(/-/g, ' ')} para destrancar a porta.`, 800);
+            // Obtém o nome do item para exibição
+            const keyItem = playerData.inventory.itemsInChest.find(item => item.id === exit.keyId);
+            const keyName = keyItem ? keyItem.content : exit.keyId.replace(/-/g, ' ');
+            
+            await addLogMessage(`Você usa o ${keyName} para destrancar a porta.`, 800);
             exit.locked = false;
             updateDirectionButtons();
             savePlayerState(); // Salva o estado da porta destrancada
         } else {
-            await addLogMessage(`Você precisa de ${exit.keyId.includes('key') ? 'uma chave' : 'um ' + exit.keyId.replace(/-/g, ' ')} para abrir esta porta.`, 800);
+            await addLogMessage(`Você precisa de um ${exit.keyId.replace(/-/g, ' ')} para abrir esta porta.`, 800);
         }
     } else {
         await addLogMessage(`Você abre a porta.`, 500);
@@ -1935,6 +1932,7 @@ async function openDoor(direction) {
         updateDirectionButtons();
     }
 }
+
 
 
 
