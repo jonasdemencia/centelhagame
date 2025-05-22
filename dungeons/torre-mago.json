@@ -60,7 +60,8 @@
         ]
       }
     },
-    "room-2": {
+
+      "room-2": {
       "id": "room-2",
       "name": "Câmara de Sangue",
       "description": "Uma sala circular com paredes que parecem pulsar como veias. O chão está coberto por uma fina camada de sangue fresco que flui em direção ao centro.",
@@ -165,101 +166,100 @@
         ]
       }
     },
-   
-  "room-3": {
-    "id": "room-3",
-    "name": "Fornalha Infernal",
-    "description": "Uma sala escaldante com colunas de fogo que se erguem do chão. O ar é quase irrespirável devido ao calor extremo.",
-    "type": "room",
-    "exits": [
-      { "direction": "south", "leadsTo": "room-2", "type": "door", "locked": false },
-      { "direction": "north", "leadsTo": "room-4", "type": "door", "locked": true, "keyId": "fire-crystal" }
-    ],
-    "gridX": 10,
-    "gridY": 10,
-    "gridWidth": 3,
-    "gridHeight": 3,
-    "events": [
-      { "type": "first-visit", "text": "Ao entrar na sala, uma onda de calor atinge seu corpo. Sua pele começa a queimar e respirar é doloroso." }
-    ],
-    "enemy": {
-      "id": "fire-elemental",
-      "name": "Elemental do Fogo",
-      "description": "Uma criatura feita de chamas vivas, com um núcleo incandescente e braços que terminam em garras flamejantes."
-    },
-    "exploration": {
-      "states": {
-        "initial": {
-          "fireColumnsExamined": false,
-          "forgeExamined": false,
-          "puzzleSolved": false
-        }
+
+        "room-3": {
+      "id": "room-3",
+      "name": "Fornalha Infernal",
+      "description": "Uma sala escaldante com colunas de fogo que se erguem do chão. O ar é quase irrespirável devido ao calor extremo.",
+      "type": "room",
+      "exits": [
+        { "direction": "south", "leadsTo": "room-2", "type": "door", "locked": false },
+        { "direction": "north", "leadsTo": "room-4", "type": "door", "locked": true, "keyId": "fire-crystal" }
+      ],
+      "gridX": 10,
+      "gridY": 10,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "events": [
+        { "type": "first-visit", "text": "Ao entrar na sala, uma onda de calor atinge seu corpo. Sua pele começa a queimar e respirar é doloroso." }
+      ],
+      "enemy": {
+        "id": "fire-elemental",
+        "name": "Elemental do Fogo",
+        "description": "Uma criatura feita de chamas vivas, com um núcleo incandescente e braços que terminam em garras flamejantes."
       },
-      "examine": [
-        {
-          "condition": "!states.examined",
-          "text": "O calor intenso faz o ar tremer. Você nota vários elementos interessantes na sala.",
-          "effect": {"states.examined": true},
-          "pointsOfInterest": [
-            {
-              "id": "fire-columns",
-              "name": "Colunas de Fogo",
-              "description": "Colunas de fogo mágico que se erguem do chão. Elas parecem se mover em um padrão específico, como uma dança sincronizada.",
-              "effect": {"states.fireColumnsExamined": true}
-            },
-            {
-              "id": "forge",
-              "name": "Forja Antiga",
-              "description": "Uma forja ancestral coberta de símbolos arcanos. No centro, há um molde em forma de cristal, esperando para ser preenchido.",
-              "effect": {"states.forgeExamined": true},
-              "interactions": [
-                {
-                  "id": "solve-fire-puzzle",
-                  "condition": "states.fireColumnsExamined && !states.puzzleSolved",
-                  "name": "Ativar a Forja",
-                  "result": {
-                    "action": "testSkill",
-                    "skillTest": {
-                      "description": "Você precisa decifrar o padrão das colunas de fogo e ativar a forja na sequência correta.",
-                      "difficulty": 15,
-                      "success": {
-                        "text": "Você decifra o padrão e ativa a forja na sequência correta! O metal derretido flui para o molde, formando um cristal de fogo.",
-                        "effect": {"states.puzzleSolved": true},
-                        "items": [
-                          {
-                            "id": "fire-crystal",
-                            "content": "Cristal de Fogo",
-                            "description": "Um cristal vermelho-alaranjado que queima com o calor de mil sóis."
+      "exploration": {
+        "states": {
+          "initial": {
+            "fireColumnsExamined": false,
+            "forgeExamined": false,
+            "puzzleSolved": false
+          }
+        },
+        "examine": [
+          {
+            "condition": "!states.examined",
+            "text": "O calor intenso faz o ar tremer. Você nota vários elementos interessantes na sala.",
+            "effect": {"states.examined": true},
+            "pointsOfInterest": [
+              {
+                "id": "fire-columns",
+                "name": "Colunas de Fogo",
+                "description": "Colunas de fogo mágico que se erguem do chão. Elas parecem se mover em um padrão específico, como uma dança sincronizada.",
+                "effect": {"states.fireColumnsExamined": true}
+              },
+              {
+                "id": "forge",
+                "name": "Forja Antiga",
+                "description": "Uma forja ancestral coberta de símbolos arcanos. No centro, há um molde em forma de cristal, esperando para ser preenchido.",
+                "effect": {"states.forgeExamined": true},
+                "interactions": [
+                  {
+                    "id": "solve-fire-puzzle",
+                    "condition": "states.fireColumnsExamined && !states.puzzleSolved",
+                    "name": "Ativar a Forja",
+                    "result": {
+                      "action": "testSkill",
+                      "skillTest": {
+                        "description": "Você precisa decifrar o padrão das colunas de fogo e ativar a forja na sequência correta.",
+                        "difficulty": 15,
+                        "success": {
+                          "text": "Você decifra o padrão e ativa a forja na sequência correta! O metal derretido flui para o molde, formando um cristal de fogo.",
+                          "effect": {"states.puzzleSolved": true},
+                          "items": [
+                            {
+                              "id": "fire-crystal",
+                              "content": "Cristal de Fogo",
+                              "description": "Um cristal vermelho-alaranjado que queima com o calor de mil sóis."
+                            }
+                          ]
+                        },
+                        "failure": {
+                          "text": "Você erra a sequência! As colunas de fogo explodem em sua direção!",
+                          "damage": {
+                            "amount": "3D6",
+                            "message": "As chamas queimam sua pele!"
                           }
-                        ]
-                      },
-                      "failure": {
-                        "text": "Você erra a sequência! As colunas de fogo explodem em sua direção!",
-                        "damage": {
-                          "amount": "3D6",
-                          "message": "As chamas queimam sua pele!"
                         }
                       }
                     }
                   }
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      "search": [
-        {
-          "text": "O calor é tão intenso que sua pele queima ao tocar qualquer superfície!",
-          "damage": {
-            "amount": "1D4",
-            "message": "O calor extremo queima sua pele!"
+                ]
+              }
+            ]
           }
-        }
-      ]
-    }
-  }
-},
+        ],
+        "search": [
+          {
+            "text": "O calor é tão intenso que sua pele queima ao tocar qualquer superfície!",
+            "damage": {
+              "amount": "1D4",
+              "message": "O calor extremo queima sua pele!"
+            }
+          }
+        ]
+      }
+    },
     "room-4": {
       "id": "room-4",
       "name": "Jardim Venenoso",
