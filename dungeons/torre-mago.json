@@ -167,7 +167,7 @@
       }
     },
 
-        "room-3": {
+            "room-3": {
       "id": "room-3",
       "name": "Fornalha Infernal",
       "description": "Uma sala escaldante com colunas de fogo que se erguem do chão. O ar é quase irrespirável devido ao calor extremo.",
@@ -191,6 +191,7 @@
       "exploration": {
         "states": {
           "initial": {
+            "examined": false,
             "fireColumnsExamined": false,
             "forgeExamined": false,
             "puzzleSolved": false
