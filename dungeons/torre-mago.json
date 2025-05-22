@@ -261,7 +261,7 @@
 },
   
   "room-4": {
-  "id": "room-4"
+  "id": "room-4",
   "name": "Jardim Venenoso",
   "description": "Uma sala repleta de vegetação exótica e colorida. Flores belas mas mortais exalam um perfume tóxico, e fungos luminescentes cobrem as paredes.",
   "type": "room",
