@@ -60,7 +60,8 @@
         ]
       }
     },
-    "room-2": {
+
+      "room-2": {
       "id": "room-2",
       "name": "Câmara de Sangue",
       "description": "Uma sala circular com paredes que parecem pulsar como veias. O chão está coberto por uma fina camada de sangue fresco que flui em direção ao centro.",
@@ -260,7 +261,8 @@
         ]
       }
     },
-    "room-4": {
+
+        "room-4": {
       "id": "room-4",
       "name": "Jardim Venenoso",
       "description": "Uma sala repleta de vegetação exótica e colorida. Flores belas mas mortais exalam um perfume tóxico, e fungos luminescentes cobrem as paredes.",
@@ -358,7 +360,8 @@
         ]
       }
     },
-    "room-5": {
+
+        "room-5": {
       "id": "room-5",
       "name": "Câmara da Loucura",
       "description": "Uma sala que desafia a lógica e a sanidade. O chão, paredes e teto mudam constantemente de posição, e ilusões perturbadoras dançam no ar.",
@@ -447,6 +450,7 @@
         ]
       }
     },
+
         "room-6": {
       "id": "room-6",
       "name": "Observatório da Morte",
@@ -599,7 +603,7 @@
         ]
       }
     }
-,
+  },
   "decorativeBlocks": [
     { "type": "corridor", "gridX": 10, "gridY": 17, "gridWidth": 1, "gridHeight": 1, "connects": ["room-1", "room-2"] },
     { "type": "corridor", "gridX": 10, "gridY": 13, "gridWidth": 1, "gridHeight": 1, "connects": ["room-2", "room-3"] },
@@ -608,3 +612,4 @@
     { "type": "corridor", "gridX": 10, "gridY": 1, "gridWidth": 1, "gridHeight": 1, "connects": ["room-5", "room-6"] }
   ]
 }
+    
