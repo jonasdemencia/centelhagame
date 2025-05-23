@@ -464,7 +464,7 @@
       "gridWidth": 4,
       "gridHeight": 2,
       "events": [
-        { "type": "first-visit", "text": "A figura no trono levanta a cabeça, revelando um crânio com olhos de estrelas. 'Você chegou longe, mortal. Mas a última provação é a mais difícil.'" }
+        { "type": "first-visit", "text": "A figura no trono levanta a cabeça, revelando um crânio com olhos de estrelas. 'ENCARE SEU DESTINO, MORTAL.'" }
       ],
       "npcs": [
         {
@@ -473,21 +473,40 @@
           "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
           "dialogues": {
             "initial": {
-              "text": "Poucos chegam tão longe. Você provou seu valor nas provações anteriores, mas a última é a mais difícil: enfrentar a própria morte.",
+              "text": "Escolha, mortal: Enfrentar a Morte ou se tornar parte dela.",
               "options": [
                 {
-                  "text": "Estou pronto para o desafio final.",
-                  "next": "desafio"
+                  "text": "Enfrentar a Morte",
+                  "next": "final_battle"
                 },
                 {
-                  "text": "Qual é o prêmio por superar todas as provações?",
-                  "next": "premio"
-                },
-                {
-                  "text": "Posso recusar o desafio e voltar?",
-                  "next": "recusar"
+                  "text": "Fugir",
+                  "next": "instant_death"
                 }
               ]
+            },
+            "final_battle": {
+              "text": "A figura se ergue do trono, sua foice cortando o ar. 'TESTE SEU VALOR!'",
+              "options": [
+                {
+                  "text": "Enfrentar em combate direto",
+                  "action": "combat",
+                  "combat": {
+                    "enemySkill": 12,
+                    "enemyStamina": 24,
+                    "special": "drainLife",
+                    "description": "O Senhor da Morte é um oponente formidável. Cada golpe dele drena 2 pontos extras de energia!"
+                  }
+                }
+              ]
+            },
+            "instant_death": {
+              "text": "'COVARDIA É MORTE.' A foice da morte corta seu corpo e alma simultaneamente.",
+              "effect": {"instant_death": true},
+              "damage": {
+                "amount": "999",
+                "message": "Sua existência é obliterada!"
+              }
             }
           }
         }
@@ -497,93 +516,28 @@
           "initial": {
             "examined": false,
             "throneExamined": false,
-            "starsExamined": false,
-            "conversationStarted": false,
-            "challengeAccepted": false,
-            "finalBattleComplete": false,
-            "destinyRead": false
+            "finalBattleComplete": false
           }
         },
         "examine": [
           {
             "condition": "!states.examined",
-            "text": "Neste observatório místico, você observa um trono de ossos e constelações estranhas.",
+            "text": "O ar aqui é pesado com a presença da morte. O próprio tempo parece congelar.",
             "effect": {"states.examined": true},
             "pointsOfInterest": [
               {
                 "id": "bone-throne",
                 "name": "Trono de Ossos",
-                "description": "O trono de ossos é feito de esqueletos de criaturas desconhecidas. Runas de poder estão entalhadas em cada osso.",
+                "description": "O trono é feito dos ossos de milhares de heróis fracassados.",
                 "effect": {"states.throneExamined": true},
                 "interactions": [
                   {
-                    "id": "talk-to-death-lord",
-                    "condition": "!states.conversationStarted",
-                    "name": "Falar com o Senhor da Morte",
+                    "id": "challenge-death",
+                    "condition": "!states.finalBattleComplete",
+                    "name": "Desafiar o Senhor da Morte",
                     "result": {
                       "action": "dialogue",
-                      "dialogueId": "initial",
-                      "effect": {"states.conversationStarted": true}
-                    }
-                  },
-                  {
-                    "id": "final-challenge",
-                    "condition": "states.conversationStarted && !states.finalBattleComplete",
-                    "name": "Aceitar o Desafio Final",
-                    "result": {
-                      "action": "testSkill",
-                      "skillTest": {
-                        "description": "Você enfrenta o Senhor da Morte em um duelo de vontades e habilidade.",
-                        "difficulty": 18,
-                        "success": {
-                          "text": "Você supera o Senhor da Morte em um duelo épico! Ele reconhece sua força e concede o poder supremo.",
-                          "effect": {"states.finalBattleComplete": true},
-                          "items": [
-                            {
-                              "id": "ultimate-power",
-                              "content": "Poder Supremo",
-                              "description": "Uma aura de poder divino que transcende a própria morte."
-                            }
-                          ]
-                        },
-                        "failure": {
-                          "text": "O poder do Senhor da Morte é avassalador! Você sente sua força vital sendo drenada!",
-                          "damage": {
-                            "amount": "4D6",
-                            "message": "A energia da morte dilacera sua alma!"
-                          }
-                        }
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "cosmic-stars",
-                "name": "Constelações Místicas",
-                "description": "As constelações acima mostram eventos do passado e do futuro. Você vê sua própria morte e renascimento entre as estrelas.",
-                "effect": {"states.starsExamined": true},
-                "interactions": [
-                  {
-                    "id": "read-destiny",
-                    "condition": "states.starsExamined && !states.destinyRead",
-                    "name": "Ler seu Destino",
-                    "result": {
-                      "action": "testLuck",
-                      "luckTest": {
-                        "description": "Você tenta interpretar os sinais nas estrelas sobre seu destino final.",
-                        "success": {
-                          "text": "As estrelas revelam seu destino glorioso! Você vê a vitória em seu futuro.",
-                          "effect": {"states.destinyRead": true}
-                        },
-                        "failure": {
-                          "text": "As visões são perturbadoras! Você vê sua própria morte de mil maneiras diferentes!",
-                          "damage": {
-                            "amount": "2D6",
-                            "message": "O conhecimento do futuro machuca sua mente!"
-                          }
-                        }
-                      }
+                      "dialogueId": "final_battle"
                     }
                   }
                 ]
@@ -594,10 +548,10 @@
         "search": [
           {
             "condition": "!states.finalBattleComplete",
-            "text": "A presença do Senhor da Morte drena sua energia vital!",
+            "text": "A mera presença do Senhor da Morte drena sua força vital!",
             "damage": {
-              "amount": "1D6",
-              "message": "A aura da morte consome sua força!"
+              "amount": "2D6",
+              "message": "Sua força vital é sugada!"
             }
           }
         ]
