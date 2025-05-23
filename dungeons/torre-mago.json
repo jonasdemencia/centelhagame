@@ -166,8 +166,7 @@
         ]
       }
     },
-
-        "room-3": {
+    "room-3": {
       "id": "room-3",
       "name": "Fornalha Infernal",
       "description": "Uma sala escaldante com colunas de fogo que se erguem do chão. O ar é quase irrespirável devido ao calor extremo.",
@@ -359,8 +358,7 @@
         ]
       }
     },
-
-        "room-5": {
+    "room-5": {
       "id": "room-5",
       "name": "Câmara da Loucura",
       "description": "Uma sala que desafia a lógica e a sanidade. O chão, paredes e teto mudam constantemente de posição, e ilusões perturbadoras dançam no ar.",
@@ -448,7 +446,7 @@
           }
         ]
       }
-        },
+    },
     "room-6": {
       "id": "room-6",
       "name": "Observatório da Morte",
