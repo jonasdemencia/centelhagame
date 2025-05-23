@@ -448,157 +448,196 @@
       }
     },
     "room-6": {
-      "id": "room-6",
-      "name": "Observatório da Morte",
-      "description": "O último andar é um observatório circular onde o céu acima mostra constelações desconhecidas. No centro está um trono de ossos ocupado por uma figura encapuzada.",
-      "type": "room",
-      "exits": [
-        { "direction": "south", "leadsTo": "room-5", "type": "portal", "locked": false }
-      ],
-      "gridX": 10,
-      "gridY": 0,
-      "gridWidth": 4,
-      "gridHeight": 2,
-      "events": [
-        { "type": "first-visit", "text": "A figura no trono levanta a cabeça, revelando um crânio com olhos de estrelas. 'Você chegou longe, mortal. Mas a última provação é a mais difícil.'" }
-      ],
-      "npcs": [
-        {
-          "id": "death-lord",
-          "name": "Senhor da Morte",
-          "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
-          "dialogues": {
-            "initial": {
-              "text": "Poucos chegam tão longe. Você provou seu valor nas provações anteriores, mas a última é a mais difícil: enfrentar a própria morte.",
-              "options": [
-                {
-                  "text": "Estou pronto para o desafio final.",
-                  "next": "desafio"
-                },
-                {
-                  "text": "Qual é o prêmio por superar todas as provações?",
-                  "next": "premio"
-                },
-                {
-                  "text": "Posso recusar o desafio e voltar?",
-                  "next": "recusar"
-                }
-              ]
+  "id": "room-6",
+  "name": "Observatório da Morte",
+  "description": "O último andar é um observatório circular onde o céu acima mostra constelações desconhecidas. No centro está um trono de ossos ocupado por uma figura encapuzada.",
+  "type": "room",
+  "exits": [
+    { "direction": "south", "leadsTo": "room-5", "type": "portal", "locked": false }
+  ],
+  "gridX": 10,
+  "gridY": 0,
+  "gridWidth": 4,
+  "gridHeight": 2,
+  "events": [
+    { "type": "first-visit", "text": "A figura no trono levanta a cabeça, revelando um crânio com olhos de estrelas. 'Você chegou longe, mortal. Mas a última provação é a mais difícil.'" }
+  ],
+  "npcs": [
+    {
+      "id": "death-lord",
+      "name": "Senhor da Morte",
+      "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
+      "dialogues": {
+        "initial": {
+          "text": "Poucos chegam tão longe. Você provou seu valor nas provações anteriores, mas a última é a mais difícil: enfrentar a própria morte.",
+          "options": [
+            {
+              "text": "Estou pronto para o desafio final.",
+              "next": "desafio"
+            },
+            {
+              "text": "Qual é o prêmio por superar todas as provações?",
+              "next": "premio"
+            },
+            {
+              "text": "Posso recusar o desafio e voltar?",
+              "next": "recusar"
             }
-          }
-        }
-      ],
-      "exploration": {
-        "states": {
-          "initial": {
-            "examined": false,
-            "throneExamined": false,
-            "starsExamined": false,
-            "conversationStarted": false,
-            "challengeAccepted": false,
-            "finalBattleComplete": false
-          }
+          ]
         },
-        "examine": [
+        "desafio": {
+          "text": "Muito bem. O desafio final é um duelo de vontades. Você deve enfrentar a própria morte e provar seu valor. Está preparado?",
+          "options": [
+            {
+              "text": "Sim, estou pronto.",
+              "action": "startChallenge"
+            },
+            {
+              "text": "Preciso me preparar melhor.",
+              "next": "initial"
+            }
+          ]
+        },
+        "premio": {
+          "text": "O prêmio é o poder supremo sobre a vida e a morte. Você poderá transcender a mortalidade e se tornar algo mais. Poucos mortais receberam tal dádiva.",
+          "options": [
+            {
+              "text": "Estou pronto para o desafio.",
+              "next": "desafio"
+            },
+            {
+              "text": "Preciso pensar mais sobre isso.",
+              "next": "initial"
+            }
+          ]
+        },
+        "recusar": {
+          "text": "Você pode recusar, mas jamais saberá o que poderia ter conquistado. A porta para o retorno está sempre aberta, mas a oportunidade pode não surgir novamente.",
+          "options": [
+            {
+              "text": "Mudei de ideia, quero enfrentar o desafio.",
+              "next": "desafio"
+            },
+            {
+              "text": "Vou voltar por onde vim.",
+              "action": "leaveRoom"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "exploration": {
+    "states": {
+      "initial": {
+        "examined": false,
+        "throneExamined": false,
+        "starsExamined": false,
+        "conversationStarted": false,
+        "challengeAccepted": false,
+        "finalBattleComplete": false
+      }
+    },
+    "examine": [
+      {
+        "condition": "!states.examined",
+        "text": "Neste observatório místico, você observa um trono de ossos e constelações estranhas.",
+        "effect": {"states.examined": true},
+        "pointsOfInterest": [
           {
-            "condition": "!states.examined",
-            "text": "Neste observatório místico, você observa um trono de ossos e constelações estranhas.",
-            "effect": {"states.examined": true},
-            "pointsOfInterest": [
+            "id": "bone-throne",
+            "name": "Trono de Ossos",
+            "description": "O trono de ossos é feito de esqueletos de criaturas desconhecidas. Runas de poder estão entalhadas em cada osso.",
+            "effect": {"states.throneExamined": true},
+            "interactions": [
               {
-                "id": "bone-throne",
-                "name": "Trono de Ossos",
-                "description": "O trono de ossos é feito de esqueletos de criaturas desconhecidas. Runas de poder estão entalhadas em cada osso.",
-                "effect": {"states.throneExamined": true},
-                "interactions": [
-                  {
-                    "id": "talk-to-death-lord",
-                    "condition": "!states.conversationStarted",
-                    "name": "Falar com o Senhor da Morte",
-                    "result": {
-                      "action": "dialogue",
-                      "dialogueId": "initial",
-                      "effect": {"states.conversationStarted": true}
-                    }
-                  },
-                  {
-                    "id": "final-challenge",
-                    "condition": "states.conversationStarted && !states.finalBattleComplete",
-                    "name": "Aceitar o Desafio Final",
-                    "result": {
-                      "action": "testSkill",
-                      "skillTest": {
-                        "description": "Você enfrenta o Senhor da Morte em um duelo de vontades e habilidade.",
-                        "difficulty": 18,
-                        "success": {
-                          "text": "Você supera o Senhor da Morte em um duelo épico! Ele reconhece sua força e concede o poder supremo.",
-                          "effect": {"states.finalBattleComplete": true},
-                          "items": [
-                            {
-                              "id": "ultimate-power",
-                              "content": "Poder Supremo",
-                              "description": "Uma aura de poder divino que transcende a própria morte."
-                            }
-                          ]
-                        },
-                        "failure": {
-                          "text": "O poder do Senhor da Morte é avassalador! Você sente sua força vital sendo drenada!",
-                          "damage": {
-                            "amount": "4D6",
-                            "message": "A energia da morte dilacera sua alma!"
-                          }
-                        }
-                      }
-                    }
-                  }
-                ]
+                "id": "talk-to-death-lord",
+                "condition": "!states.conversationStarted",
+                "name": "Falar com o Senhor da Morte",
+                "result": {
+                  "action": "dialogue",
+                  "dialogueId": "initial",
+                  "effect": {"states.conversationStarted": true}
+                }
               },
               {
-                "id": "cosmic-stars",
-                "name": "Constelações Místicas",
-                "description": "As constelações acima mostram eventos do passado e do futuro. Você vê sua própria morte e renascimento entre as estrelas.",
-                "effect": {"states.starsExamined": true},
-                "interactions": [
-                  {
-                    "id": "read-destiny",
-                    "condition": "states.starsExamined && !states.destinyRead",
-                    "name": "Ler seu Destino",
-                    "result": {
-                      "action": "testLuck",
-                      "luckTest": {
-                        "description": "Você tenta interpretar os sinais nas estrelas sobre seu destino final.",
-                        "success": {
-                          "text": "As estrelas revelam seu destino glorioso! Você vê a vitória em seu futuro.",
-                          "effect": {"states.destinyRead": true}
-                        },
-                        "failure": {
-                          "text": "As visões são perturbadoras! Você vê sua própria morte de mil maneiras diferentes!",
-                          "damage": {
-                            "amount": "2D6",
-                            "message": "O conhecimento do futuro machuca sua mente!"
-                          }
+                "id": "final-challenge",
+                "condition": "states.conversationStarted && !states.finalBattleComplete",
+                "name": "Aceitar o Desafio Final",
+                "result": {
+                  "action": "testSkill",
+                  "skillTest": {
+                    "description": "Você enfrenta o Senhor da Morte em um duelo de vontades e habilidade.",
+                    "difficulty": 18,
+                    "success": {
+                      "text": "Você supera o Senhor da Morte em um duelo épico! Ele reconhece sua força e concede o poder supremo.",
+                      "effect": {"states.finalBattleComplete": true},
+                      "items": [
+                        {
+                          "id": "ultimate-power",
+                          "content": "Poder Supremo",
+                          "description": "Uma aura de poder divino que transcende a própria morte."
                         }
+                      ]
+                    },
+                    "failure": {
+                      "text": "O poder do Senhor da Morte é avassalador! Você sente sua força vital sendo drenada!",
+                      "damage": {
+                        "amount": "4D6",
+                        "message": "A energia da morte dilacera sua alma!"
                       }
                     }
                   }
-                ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "cosmic-stars",
+            "name": "Constelações Místicas",
+            "description": "As constelações acima mostram eventos do passado e do futuro. Você vê sua própria morte e renascimento entre as estrelas.",
+            "effect": {"states.starsExamined": true},
+            "interactions": [
+              {
+                "id": "read-destiny",
+                "condition": "states.starsExamined && !states.destinyRead",
+                "name": "Ler seu Destino",
+                "result": {
+                  "action": "testLuck",
+                  "luckTest": {
+                    "description": "Você tenta interpretar os sinais nas estrelas sobre seu destino final.",
+                    "success": {
+                      "text": "As estrelas revelam seu destino glorioso! Você vê a vitória em seu futuro.",
+                      "effect": {"states.destinyRead": true}
+                    },
+                    "failure": {
+                      "text": "As visões são perturbadoras! Você vê sua própria morte de mil maneiras diferentes!",
+                      "damage": {
+                        "amount": "2D6",
+                        "message": "O conhecimento do futuro machuca sua mente!"
+                      }
+                    }
+                  }
+                }
               }
             ]
           }
-        ],
-        "search": [
-          {
-            "condition": "!states.finalBattleComplete",
-            "text": "A presença do Senhor da Morte drena sua energia vital!",
-            "damage": {
-              "amount": "1D6",
-              "message": "A aura da morte consome sua força!"
-            }
-          }
         ]
       }
-    }
-  },
+    ],
+    "search": [
+      {
+        "condition": "!states.finalBattleComplete",
+        "text": "A presença do Senhor da Morte drena sua energia vital!",
+        "damage": {
+          "amount": "1D6",
+          "message": "A aura da morte consome sua força!"
+        }
+      }
+    ]
+  }
+}
+,
   "decorativeBlocks": [
     { "type": "corridor", "gridX": 10, "gridY": 17, "gridWidth": 1, "gridHeight": 1, "connects": ["room-1", "room-2"] },
     { "type": "corridor", "gridX": 10, "gridY": 13, "gridWidth": 1, "gridHeight": 1, "connects": ["room-2", "room-3"] },
