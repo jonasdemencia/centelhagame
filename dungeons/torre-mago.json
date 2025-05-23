@@ -466,6 +466,15 @@
       "events": [
         { "type": "first-visit", "text": "A figura no trono levanta a cabeça, revelando um crânio com olhos de estrelas. 'ENCARE SEU DESTINO, MORTAL.'" }
       ],
+      "enemy": {
+        "id": "senhor-da-morte",
+        "name": "Senhor da Morte",
+        "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
+        "trigger": {
+            "condition": "states.throneExamined",
+            "message": "O Senhor da Morte se ergue do trono, sua foice cortando o ar em um arco mortal!"
+        }
+      },
       "npcs": [
         {
           "id": "death-lord",
@@ -473,40 +482,23 @@
           "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
           "dialogues": {
             "initial": {
-              "text": "Escolha, mortal: Enfrentar a Morte ou se tornar parte dela.",
+              "text": "'ENCARE SEU DESTINO OU MORRA COMO UM COVARDE.'",
               "options": [
                 {
                   "text": "Enfrentar a Morte",
-                  "next": "final_battle"
+                  "effect": {"states.conversationStarted": true}
                 },
                 {
-                  "text": "Fugir",
-                  "next": "instant_death"
-                }
-              ]
-            },
-            "final_battle": {
-              "text": "A figura se ergue do trono, sua foice cortando o ar. 'TESTE SEU VALOR!'",
-              "options": [
-                {
-                  "text": "Enfrentar em combate direto",
-                  "action": "combat",
-                  "combat": {
-                    "enemySkill": 12,
-                    "enemyStamina": 24,
-                    "special": "drainLife",
-                    "description": "O Senhor da Morte é um oponente formidável. Cada golpe dele drena 2 pontos extras de energia!"
+                  "text": "Tentar fugir",
+                  "result": {
+                    "text": "'COVARDIA É MORTE.' A foice da morte corta seu corpo e alma simultaneamente.",
+                    "damage": {
+                      "amount": "999",
+                      "message": "Sua existência é obliterada!"
+                    }
                   }
                 }
               ]
-            },
-            "instant_death": {
-              "text": "'COVARDIA É MORTE.' A foice da morte corta seu corpo e alma simultaneamente.",
-              "effect": {"instant_death": true},
-              "damage": {
-                "amount": "999",
-                "message": "Sua existência é obliterada!"
-              }
             }
           }
         }
@@ -537,7 +529,7 @@
                     "name": "Desafiar o Senhor da Morte",
                     "result": {
                       "action": "dialogue",
-                      "dialogueId": "final_battle"
+                      "dialogueId": "initial"
                     }
                   }
                 ]
