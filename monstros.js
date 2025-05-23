@@ -49,6 +49,39 @@ export const monsterData = {
         ]
     },
 
+
+    "senhor-da-morte": {
+    nome: "Senhor da Morte",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
+    habilidade: 12,
+    couraça: 15,
+    pontosDeEnergia: 24,
+    pontosDeEnergiaMax: 24,
+    experiencia: 1000,
+    dano: "3D6",
+    efeito_especial: {
+        nome: "Dreno Vital",
+        descricao: "Cada ataque bem sucedido drena 2 pontos extras de energia vital",
+        dano_adicional: 2
+    },
+    drops: [
+        {
+            id: "death-power",
+            content: "Poder da Morte",
+            description: "O poder absoluto sobre a vida e a morte. Você se torna um novo Senhor da Morte."
+        },
+        {
+            id: "soul-reaper",
+            content: "Foice Ceifadora de Almas",
+            description: "Uma foice de energia cósmica que drena a força vital dos inimigos.",
+            weapon: true,
+            damage: "2D6",
+            special: "drain"
+        }
+    ]
+},
+
     "rato-gigante": {
         nome: "Rato Gigante",
         imagem: "https://via.placeholder.com/150",
