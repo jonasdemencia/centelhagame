@@ -2676,6 +2676,7 @@ async function checkDefeatedMonster(monsterId) {
 }
 
 
+// Função para mover o jogador para uma sala (versão corrigida)
 async function moveToRoom(roomId) {
     const room = dungeon.rooms[roomId];
     if (!room) {
@@ -2706,50 +2707,63 @@ async function moveToRoom(roomId) {
         playerState.visitedRooms.push(roomId);
         
         // Verifica se há novos blocos decorativos para descobrir
-        const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
-        for (const block of blocksToUse) {
-            // Só processa se o bloco ainda não foi descoberto
-            const alreadyDiscovered = playerState.discoveredBlocks && 
-                playerState.discoveredBlocks.some(b => b.gridX === block.gridX && b.gridY === block.gridY);
+const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
+for (const block of blocksToUse) {
+    // Só processa se o bloco ainda não foi descoberto
+    const alreadyDiscovered = playerState.discoveredBlocks && 
+        playerState.discoveredBlocks.some(b => b.gridX === block.gridX && b.gridY === block.gridY);
+    
+    if (!alreadyDiscovered) {
+        // Se o bloco tem a propriedade "connects", verifica se todas as salas conectadas foram visitadas
+        if (block.connects) {
+            const allConnectedRoomsVisited = block.connects.every(roomId => 
+                playerState.visitedRooms.includes(roomId));
             
-            if (!alreadyDiscovered) {
-                // Se o bloco tem a propriedade "connects", verifica se todas as salas conectadas foram visitadas
-                if (block.connects) {
-                    const allConnectedRoomsVisited = block.connects.every(roomId => 
-                        playerState.visitedRooms.includes(roomId));
+            if (allConnectedRoomsVisited) {
+                if (!playerState.discoveredBlocks) playerState.discoveredBlocks = [];
+                
+                console.log(`Descobrindo bloco em X:${block.gridX}, Y:${block.gridY}`);
+                playerState.discoveredBlocks.push({
+                    gridX: block.gridX,
+                    gridY: block.gridY
+                });
+            }
+        } 
+        // Caso contrário, usa a lógica antiga de proximidade
+        else {
+            // Para cada sala visitada, verifica se há outra sala visitada próxima ao bloco
+            let connectedRooms = 0;
+            
+            for (const visitedRoomId of playerState.visitedRooms) {
+                const visitedRoom = dungeon.rooms[visitedRoomId];
+                if (!visitedRoom) continue;
+                
+                // Verifica se a sala está próxima ao bloco
+                const distX = Math.abs(block.gridX - visitedRoom.gridX);
+                const distY = Math.abs(block.gridY - visitedRoom.gridY);
+                
+                if (distX <= 2 && distY <= 2) {
+                    connectedRooms++;
                     
-                    if (allConnectedRoomsVisited) {
+                    // Se encontrou pelo menos duas salas visitadas próximas ao bloco, adiciona à lista
+                    if (connectedRooms >= 2) {
                         if (!playerState.discoveredBlocks) playerState.discoveredBlocks = [];
+                        
+                        console.log(`Descobrindo bloco em X:${block.gridX}, Y:${block.gridY}`);
                         playerState.discoveredBlocks.push({
                             gridX: block.gridX,
                             gridY: block.gridY
                         });
-                    }
-                } else {
-                    // Lógica antiga de proximidade
-                    let connectedRooms = 0;
-                    for (const visitedRoomId of playerState.visitedRooms) {
-                        const visitedRoom = dungeon.rooms[visitedRoomId];
-                        if (!visitedRoom) continue;
                         
-                        const distX = Math.abs(block.gridX - visitedRoom.gridX);
-                        const distY = Math.abs(block.gridY - visitedRoom.gridY);
-                        
-                        if (distX <= 2 && distY <= 2) {
-                            connectedRooms++;
-                            if (connectedRooms >= 2) {
-                                if (!playerState.discoveredBlocks) playerState.discoveredBlocks = [];
-                                playerState.discoveredBlocks.push({
-                                    gridX: block.gridX,
-                                    gridY: block.gridY
-                                });
-                                break;
-                            }
-                        }
+                        break; // Sai do loop interno
                     }
                 }
             }
         }
+    }
+}
+
+
         
         // Inicializa o estado de exploração se não existir
         if (room.exploration && room.exploration.states && room.exploration.states.initial) {
@@ -2762,18 +2776,20 @@ async function moveToRoom(roomId) {
             await addLogMessage(event.text, 1000);
         }
     }
-
+    
     // Verifica se a sala tem um inimigo e se ele já foi derrotado
     let customDescription = room.description;
     if (room.enemy) {
         const isDefeated = await checkDefeatedMonster(room.enemy.id);
         if (isDefeated) {
+            // Usa descrição alternativa se disponível
             if (room.enemy.defeatedDescription) {
                 customDescription = room.enemy.defeatedDescription;
             }
         }
     }
 
+    
     // Adiciona descrição da sala ao log
     startNewLogBlock(room.name);
     await addLogMessage(customDescription, 1000);
@@ -2783,86 +2799,69 @@ async function moveToRoom(roomId) {
 
     // Atualiza a barra de energia
     updateHealthBar();
-
-    // Lógica de inimigos
-    if (room.enemies) {
-        // Suporte para múltiplos inimigos
-        for (const enemy of room.enemies) {
-            const isDefeated = await checkDefeatedMonster(enemy.id);
-            
-            if (isDefeated) {
-                await addLogMessage(`Você vê os restos do ${enemy.name} que você derrotou anteriormente.`, 800);
-            } else if (enemy.trigger) {
-                // Inicializa o estado de exploração se não existir
-                if (!room.explorationState) {
-                    if (room.exploration && room.exploration.states && room.exploration.states.initial) {
-                        room.explorationState = { ...room.exploration.states.initial };
-                    } else {
-                        room.explorationState = {};
-                    }
-                }
-                
-                const shouldTrigger = evaluateCondition(enemy.trigger.condition, room.explorationState);
-                if (shouldTrigger) {
-                    await addLogMessage(enemy.trigger.message, 1000);
-                    createFightButton(enemy);
-                    return; // Retorna para não atualizar os botões de direção
-                }
-            } else if (!enemy.delayedCombat) {
-                // Inimigo normal - combate imediato
-                createFightButton(enemy);
-                await addLogMessage(`Um ${enemy.name} está pronto para atacar!`, 800);
-                return; // Retorna para não atualizar os botões de direção
+    
+    // Verifica se a sala tem um inimigo com gatilho
+    if (room.enemy && room.enemy.trigger) {
+        // Inicializa o estado de exploração se não existir
+        if (!room.explorationState) {
+            if (room.exploration && room.exploration.states && room.exploration.states.initial) {
+                room.explorationState = { ...room.exploration.states.initial };
+            } else {
+                room.explorationState = {};
             }
         }
-        // Se chegou aqui, não há inimigos ativos
-        updateDirectionButtons();
+        
+        // Verifica se o gatilho deve ser acionado
+        const shouldTrigger = evaluateCondition(room.enemy.trigger.condition, room.explorationState);
+        const isDefeated = await checkDefeatedMonster(room.enemy.id);
+        
+        if (shouldTrigger && !isDefeated) {
+            // Exibe a mensagem do gatilho
+            await addLogMessage(room.enemy.trigger.message, 1000);
+            
+            // Cria o botão de lutar
+            createFightButton(room.enemy);
+        } else if (room.enemy && !isDefeated) {
+            // Inimigo normal (sem gatilho)
+            createFightButton(room.enemy);
+            await addLogMessage(`Um ${room.enemy.name} está pronto para atacar!`, 800);
+        } else if (isDefeated) {
+            // O inimigo já foi derrotado
+            await addLogMessage(`Você vê os restos do ${room.enemy.name} que você derrotou anteriormente.`, 800);
+            updateDirectionButtons();
+        }
     } else if (room.enemy) {
-        // Mantém o código existente para compatibilidade com salas antigas
+        // Verifica se o inimigo já foi derrotado
         const isDefeated = await checkDefeatedMonster(room.enemy.id);
         
         if (isDefeated) {
+            // O inimigo já foi derrotado
             await addLogMessage(`Você vê os restos do ${room.enemy.name} que você derrotou anteriormente.`, 800);
             updateDirectionButtons();
-        } else if (room.enemy.trigger) {
-            if (!room.explorationState) {
-                if (room.exploration && room.exploration.states && room.exploration.states.initial) {
-                    room.explorationState = { ...room.exploration.states.initial };
-                } else {
-                    room.explorationState = {};
-                }
-            }
-            
-            const shouldTrigger = evaluateCondition(room.enemy.trigger.condition, room.explorationState);
-            if (shouldTrigger) {
-                await addLogMessage(room.enemy.trigger.message, 1000);
-                createFightButton(room.enemy);
-            } else {
-                updateDirectionButtons();
-            }
-        } else if (room.enemy.delayedCombat) {
-            updateDirectionButtons();
         } else {
+            // O inimigo ainda está vivo
             createFightButton(room.enemy);
             await addLogMessage(`Um ${room.enemy.name} está pronto para atacar!`, 800);
         }
     } else {
+        // Atualiza os botões de direção
         updateDirectionButtons();
     }
-
+    
     // Cria botões de interação para pontos de interesse, se houver
-    if (room.pointsOfInterest) {
-        createPointsOfInterestButtons(room.pointsOfInterest, room);
-    }
+if (room.pointsOfInterest) {
+    createPointsOfInterestButtons(room.pointsOfInterest, room);
+}
 
     // Verifica se há NPCs na sala
-    if (room.npcs) {
-        createNPCButtons(room);
-    }
+if (room.npcs) {
+    createNPCButtons(room);
+}
     
     // Salva o estado do jogador
     savePlayerState();
 }
+
 
     
 
