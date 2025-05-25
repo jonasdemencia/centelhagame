@@ -548,119 +548,115 @@
             }
         },
         "room-6": {
-            "id": "room-6",
-            "name": "Observatório da Morte",
-            "description": "O último andar é um observatório circular onde o céu acima mostra constelações desconhecidas. No centro está um trono de ossos ocupado por uma figura encapuzada.",
-            "type": "room",
-            "exits": [
-                {
-                    "direction": "south",
-                    "leadsTo": "room-5",
-                    "type": "portal",
-                    "locked": false
-                }
-            ],
-            "gridX": 10,
-            "gridY": 0,
-            "gridWidth": 4,
-            "gridHeight": 2,
-            "events": [
-                {
-                    "type": "first-visit",
-                    "text": "A figura no trono levanta a cabeça, revelando um crânio com olhos de estrelas. 'ENCARE SEU DESTINO, MORTAL.'"
-                }
-            ],
-            "enemy": {
-                "id": "senhor-da-morte",
-                "name": "Senhor da Morte",
-                "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
-                "delayedCombat": true,
-                "trigger": {
-                    "condition": "states.readyToFight",
-                    "message": "O Senhor da Morte se ergue do trono, sua foice cortando o ar em um arco mortal!"
-                }
-            },
-            "npcs": [
-                {
-                    "id": "death-lord",
-                    "name": "Senhor da Morte",
-                    "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
-                    "dialogues": {
-                        "initial": {
-                            "text": "'ENCARE SEU DESTINO OU MORRA COMO UM COVARDE.'",
-                            "options": [
-                                {
-                                    "text": "Enfrentar a Morte",
-                                    "effect": {
-                                        "states.readyToFight": true
-                                    }
-                                },
-                                {
-                                    "text": "Tentar fugir",
-                                    "result": {
-                                        "text": "'COVARDIA É MORTE.' A foice da morte corta seu corpo e alma simultaneamente.",
-                                        "damage": {
-                                            "amount": "999",
-                                            "message": "Sua existência é obliterada!"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            ],
-            "exploration": {
-                "states": {
-                    "initial": {
-                        "examined": false,
-                        "throneExamined": false,
-                        "finalBattleComplete": false,
-                        "readyToFight": false
-                    }
-                },
-                "examine": [
-                    {
-                        "condition": "!states.examined",
-                        "text": "O ar aqui é pesado com a presença da morte. O próprio tempo parece congelar.",
-                        "effect": {
-                            "states.examined": true
+    "id": "room-6",
+    "name": "Observatório da Morte",
+    "description": "O último andar é um observatório circular onde o céu acima mostra constelações desconhecidas. No centro está um trono de ossos ocupado por uma figura encapuzada.",
+    "type": "room",
+    "exits": [
+        { "direction": "south", "leadsTo": "room-5", "type": "portal", "locked": false }
+    ],
+    "gridX": 10,
+    "gridY": 0,
+    "gridWidth": 4,
+    "gridHeight": 2,
+    "events": [
+        { "type": "first-visit", "text": "A figura no trono levanta a cabeça, revelando um crânio com olhos de estrelas. 'ENCARE SEU DESTINO, MORTAL.'" }
+    ],
+    "enemies": [
+        {
+            "id": "esqueleto-guardiao",
+            "name": "Esqueleto Guardião",
+            "description": "Um esqueleto guerreiro empunhando uma espada enferrujada.",
+            "delayedCombat": false  // Este atacará imediatamente
+        },
+        {
+            "id": "senhor-da-morte",
+            "name": "Senhor da Morte",
+            "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica.",
+            "delayedCombat": true,  // Este só atacará após o diálogo
+            "trigger": {
+                "condition": "states.readyToFight",
+                "message": "O Senhor da Morte se ergue do trono, sua foice cortando o ar em um arco mortal!"
+            }
+        }
+    ],
+    "npcs": [
+        {
+            "id": "death-lord",
+            "name": "Senhor da Morte",
+            "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica.",
+            "dialogues": {
+                "initial": {
+                    "text": "'ENCARE SEU DESTINO OU MORRA COMO UM COVARDE.'",
+                    "options": [
+                        {
+                            "text": "Enfrentar a Morte",
+                            "effect": {
+                                "states.readyToFight": true
+                            }
                         },
-                        "pointsOfInterest": [
+                        {
+                            "text": "Tentar fugir",
+                            "result": {
+                                "text": "'COVARDIA É MORTE.' A foice da morte corta seu corpo e alma simultaneamente.",
+                                "damage": {
+                                    "amount": "999",
+                                    "message": "Sua existência é obliterada!"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "exploration": {
+        "states": {
+            "initial": {
+                "examined": false,
+                "throneExamined": false,
+                "finalBattleComplete": false,
+                "readyToFight": false
+            }
+        },
+        "examine": [
+            {
+                "condition": "!states.examined",
+                "text": "O ar aqui é pesado com a presença da morte. O próprio tempo parece congelar.",
+                "effect": {"states.examined": true},
+                "pointsOfInterest": [
+                    {
+                        "id": "bone-throne",
+                        "name": "Trono de Ossos",
+                        "description": "O trono é feito dos ossos de milhares de heróis fracassados.",
+                        "effect": {"states.throneExamined": true},
+                        "interactions": [
                             {
-                                "id": "bone-throne",
-                                "name": "Trono de Ossos",
-                                "description": "O trono é feito dos ossos de milhares de heróis fracassados.",
-                                "effect": {
-                                    "states.throneExamined": true
-                                },
-                                "interactions": [
-                                    {
-                                        "id": "challenge-death",
-                                        "condition": "!states.finalBattleComplete",
-                                        "name": "Desafiar o Senhor da Morte",
-                                        "result": {
-                                            "action": "dialogue",
-                                            "dialogueId": "initial"
-                                        }
-                                    }
-                                ]
+                                "id": "challenge-death",
+                                "condition": "!states.finalBattleComplete",
+                                "name": "Desafiar o Senhor da Morte",
+                                "result": {
+                                    "action": "dialogue",
+                                    "dialogueId": "initial"
+                                }
                             }
                         ]
                     }
-                ],
-                "search": [
-                    {
-                        "condition": "!states.finalBattleComplete",
-                        "text": "A mera presença do Senhor da Morte drena sua força vital!",
-                        "damage": {
-                            "amount": "2D6",
-                            "message": "Sua força vital é sugada!"
-                        }
-                    }
                 ]
             }
-        }
+        ],
+        "search": [
+            {
+                "condition": "!states.finalBattleComplete",
+                "text": "A mera presença do Senhor da Morte drena sua força vital!",
+                "damage": {
+                    "amount": "2D6",
+                    "message": "Sua força vital é sugada!"
+                }
+            }
+        ]
+    }
+}
     },
     "decorativeBlocks": [
         {
