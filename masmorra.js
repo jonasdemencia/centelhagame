@@ -2780,6 +2780,7 @@ for (const block of blocksToUse) {
     // Verifica se a sala tem um inimigo e se ele já foi derrotado
     let customDescription = room.description;
     // Verifica se a sala tem um inimigo e como ele deve ser tratado
+// Verifica se a sala tem um inimigo
 if (room.enemy) {
     const isDefeated = await checkDefeatedMonster(room.enemy.id);
     
@@ -2788,7 +2789,7 @@ if (room.enemy) {
         await addLogMessage(`Você vê os restos do ${room.enemy.name} que você derrotou anteriormente.`, 800);
         updateDirectionButtons();
     } else if (room.enemy.trigger) {
-        // Inimigo com trigger (precisa de condição especial para aparecer)
+        // Inicializa o estado de exploração se não existir
         if (!room.explorationState) {
             if (room.exploration && room.exploration.states && room.exploration.states.initial) {
                 room.explorationState = { ...room.exploration.states.initial };
@@ -2797,22 +2798,26 @@ if (room.enemy) {
             }
         }
         
+        // Verifica se o gatilho deve ser acionado
         const shouldTrigger = evaluateCondition(room.enemy.trigger.condition, room.explorationState);
         
         if (shouldTrigger) {
             await addLogMessage(room.enemy.trigger.message, 1000);
             createFightButton(room.enemy);
+        } else {
+            // Inimigo tem trigger mas ainda não foi ativado
+            updateDirectionButtons();
         }
     } else if (room.enemy.delayedCombat) {
-        // Inimigo com combate atrasado (não faz nada, espera o trigger)
-        // Isso é para inimigos que não devem aparecer imediatamente
+        // Inimigo com combate atrasado - não faz nada até o trigger
+        updateDirectionButtons();
     } else {
         // Inimigo normal - combate imediato
         createFightButton(room.enemy);
         await addLogMessage(`Um ${room.enemy.name} está pronto para atacar!`, 800);
     }
 } else {
-    // Atualiza os botões de direção se não houver inimigo
+    // Sem inimigo - atualiza os botões de direção normalmente
     updateDirectionButtons();
 }
     } else if (room.enemy) {
