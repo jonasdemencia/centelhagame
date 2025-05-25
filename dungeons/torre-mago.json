@@ -562,17 +562,16 @@
   "events": [
     { "type": "first-visit", "text": "A figura no trono levanta a cabeça, revelando um crânio com olhos de estrelas. 'ENCARE SEU DESTINO, MORTAL.'" }
   ],
-  "enemy": {
-    "id": "esqueleto-guardiao",
-    "name": "Esqueleto Guardião",
-    "description": "Um esqueleto guerreiro empunhando uma espada enferrujada."
-  },
   "enemies": [
+    {
+      "id": "esqueleto-guardiao",
+      "name": "Esqueleto Guardião",
+      "description": "Um esqueleto guerreiro empunhando uma espada enferrujada."
+    },
     {
       "id": "senhor-da-morte",
       "name": "Senhor da Morte",
       "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica.",
-      "delayedCombat": true,
       "trigger": {
         "condition": "states.readyToFight",
         "message": "O Senhor da Morte se ergue do trono, sua foice cortando o ar em um arco mortal!"
@@ -656,6 +655,7 @@
     ]
   }
 }
+
 
 
     },
