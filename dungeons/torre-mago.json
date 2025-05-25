@@ -566,14 +566,14 @@
     "id": "esqueleto-guardiao",
     "name": "Esqueleto Guardião",
     "description": "Um esqueleto guerreiro empunhando uma espada enferrujada.",
-    "aggressive": true
+    "delayedCombat": false
   },
   "enemies": [
     {
       "id": "senhor-da-morte",
       "name": "Senhor da Morte",
       "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica.",
-      "aggressive": false,
+      "delayedCombat": true,
       "trigger": {
         "condition": "states.readyToFight",
         "message": "O Senhor da Morte se ergue do trono, sua foice cortando o ar em um arco mortal!"
@@ -593,7 +593,8 @@
               "text": "Enfrentar a Morte",
               "effect": {
                 "states.readyToFight": true
-              }
+              },
+              "next": "fight_chosen"
             },
             {
               "text": "Tentar fugir",
@@ -604,6 +605,15 @@
                   "message": "Sua existência é obliterada!"
                 }
               }
+            }
+          ]
+        },
+        "fight_chosen": {
+          "text": "'ENTÃO ASSIM SERÁ!' O Senhor da Morte se levanta do trono, sua foice brilhando com energia sombria.",
+          "options": [
+            {
+              "text": "Preparar-se para o combate",
+              "action": "startChallenge"
             }
           ]
         }
