@@ -30,6 +30,26 @@ export const monsterData = {
             }
         ]
     },
+
+    "esqueleto-guardiao": {
+    nome: "Esqueleto Guardião",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um esqueleto guerreiro empunhando uma espada enferrujada.",
+    habilidade: 5,
+    couraça: 6,
+    pontosDeEnergia: 3,
+    pontosDeEnergiaMax: 3,
+    experiencia: 80,
+    dano: "1D8",
+    drops: [
+        {
+            id: "espada-enferrujada",
+            content: "Espada Enferrujada",
+            description: "Uma espada antiga e enferrujada, mas ainda utilizável."
+        }
+    ]
+},
+    
     "esqueleto": {
         nome: "Esqueleto Guerreiro",
         imagem: "https://via.placeholder.com/150",
