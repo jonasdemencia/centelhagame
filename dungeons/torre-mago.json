@@ -471,7 +471,7 @@
         "name": "Senhor da Morte",
         "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
         "trigger": {
-            "condition": "states.conversationStarted && states.readyToFight",
+            "condition": "states.readyToFight",
             "message": "O Senhor da Morte se ergue do trono, sua foice cortando o ar em um arco mortal!"
         }
       },
@@ -480,6 +480,7 @@
           "id": "death-lord",
           "name": "Senhor da Morte",
           "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
+          "condition": "!states.readyToFight",
           "dialogues": {
             "initial": {
               "text": "'ENCARE SEU DESTINO OU MORRA COMO UM COVARDE.'",
@@ -487,7 +488,6 @@
                 {
                   "text": "Enfrentar a Morte",
                   "effect": {
-                    "states.conversationStarted": true,
                     "states.readyToFight": true
                   }
                 },
@@ -512,7 +512,6 @@
             "examined": false,
             "throneExamined": false,
             "finalBattleComplete": false,
-            "conversationStarted": false,
             "readyToFight": false
           }
         },
@@ -530,7 +529,7 @@
                 "interactions": [
                   {
                     "id": "challenge-death",
-                    "condition": "!states.finalBattleComplete",
+                    "condition": "!states.finalBattleComplete && !states.readyToFight",
                     "name": "Desafiar o Senhor da Morte",
                     "result": {
                       "action": "dialogue",
