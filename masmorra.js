@@ -2779,30 +2779,16 @@ for (const block of blocksToUse) {
     
     // Verifica se a sala tem um inimigo e se ele já foi derrotado
     let customDescription = room.description;
-    if (room.enemy) {
-        const isDefeated = await checkDefeatedMonster(room.enemy.id);
-        if (isDefeated) {
-            // Usa descrição alternativa se disponível
-            if (room.enemy.defeatedDescription) {
-                customDescription = room.enemy.defeatedDescription;
-            }
-        }
-    }
-
+    // Verifica se a sala tem um inimigo e como ele deve ser tratado
+if (room.enemy) {
+    const isDefeated = await checkDefeatedMonster(room.enemy.id);
     
-    // Adiciona descrição da sala ao log
-    startNewLogBlock(room.name);
-    await addLogMessage(customDescription, 1000);
-    
-    // Atualiza o mapa
-    drawMap();
-
-    // Atualiza a barra de energia
-    updateHealthBar();
-    
-    // Verifica se a sala tem um inimigo com gatilho
-    if (room.enemy && room.enemy.trigger) {
-        // Inicializa o estado de exploração se não existir
+    if (isDefeated) {
+        // O inimigo já foi derrotado
+        await addLogMessage(`Você vê os restos do ${room.enemy.name} que você derrotou anteriormente.`, 800);
+        updateDirectionButtons();
+    } else if (room.enemy.trigger) {
+        // Inimigo com trigger (precisa de condição especial para aparecer)
         if (!room.explorationState) {
             if (room.exploration && room.exploration.states && room.exploration.states.initial) {
                 room.explorationState = { ...room.exploration.states.initial };
@@ -2811,25 +2797,24 @@ for (const block of blocksToUse) {
             }
         }
         
-        // Verifica se o gatilho deve ser acionado
         const shouldTrigger = evaluateCondition(room.enemy.trigger.condition, room.explorationState);
-        const isDefeated = await checkDefeatedMonster(room.enemy.id);
         
-        if (shouldTrigger && !isDefeated) {
-            // Exibe a mensagem do gatilho
+        if (shouldTrigger) {
             await addLogMessage(room.enemy.trigger.message, 1000);
-            
-            // Cria o botão de lutar
             createFightButton(room.enemy);
-        } else if (room.enemy && !isDefeated) {
-            // Inimigo normal (sem gatilho)
-            createFightButton(room.enemy);
-            await addLogMessage(`Um ${room.enemy.name} está pronto para atacar!`, 800);
-        } else if (isDefeated) {
-            // O inimigo já foi derrotado
-            await addLogMessage(`Você vê os restos do ${room.enemy.name} que você derrotou anteriormente.`, 800);
-            updateDirectionButtons();
         }
+    } else if (room.enemy.delayedCombat) {
+        // Inimigo com combate atrasado (não faz nada, espera o trigger)
+        // Isso é para inimigos que não devem aparecer imediatamente
+    } else {
+        // Inimigo normal - combate imediato
+        createFightButton(room.enemy);
+        await addLogMessage(`Um ${room.enemy.name} está pronto para atacar!`, 800);
+    }
+} else {
+    // Atualiza os botões de direção se não houver inimigo
+    updateDirectionButtons();
+}
     } else if (room.enemy) {
         // Verifica se o inimigo já foi derrotado
         const isDefeated = await checkDefeatedMonster(room.enemy.id);
