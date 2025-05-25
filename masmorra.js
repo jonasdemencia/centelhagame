@@ -2785,15 +2785,46 @@ async function moveToRoom(roomId) {
     updateHealthBar();
 
     // Lógica de inimigos
-    if (room.enemy) {
+    if (room.enemies) {
+        // Suporte para múltiplos inimigos
+        for (const enemy of room.enemies) {
+            const isDefeated = await checkDefeatedMonster(enemy.id);
+            
+            if (isDefeated) {
+                await addLogMessage(`Você vê os restos do ${enemy.name} que você derrotou anteriormente.`, 800);
+            } else if (enemy.trigger) {
+                // Inicializa o estado de exploração se não existir
+                if (!room.explorationState) {
+                    if (room.exploration && room.exploration.states && room.exploration.states.initial) {
+                        room.explorationState = { ...room.exploration.states.initial };
+                    } else {
+                        room.explorationState = {};
+                    }
+                }
+                
+                const shouldTrigger = evaluateCondition(enemy.trigger.condition, room.explorationState);
+                if (shouldTrigger) {
+                    await addLogMessage(enemy.trigger.message, 1000);
+                    createFightButton(enemy);
+                    return; // Retorna para não atualizar os botões de direção
+                }
+            } else if (!enemy.delayedCombat) {
+                // Inimigo normal - combate imediato
+                createFightButton(enemy);
+                await addLogMessage(`Um ${enemy.name} está pronto para atacar!`, 800);
+                return; // Retorna para não atualizar os botões de direção
+            }
+        }
+        // Se chegou aqui, não há inimigos ativos
+        updateDirectionButtons();
+    } else if (room.enemy) {
+        // Mantém o código existente para compatibilidade com salas antigas
         const isDefeated = await checkDefeatedMonster(room.enemy.id);
         
         if (isDefeated) {
-            // O inimigo já foi derrotado
             await addLogMessage(`Você vê os restos do ${room.enemy.name} que você derrotou anteriormente.`, 800);
             updateDirectionButtons();
         } else if (room.enemy.trigger) {
-            // Inicializa o estado de exploração se não existir
             if (!room.explorationState) {
                 if (room.exploration && room.exploration.states && room.exploration.states.initial) {
                     room.explorationState = { ...room.exploration.states.initial };
@@ -2802,26 +2833,20 @@ async function moveToRoom(roomId) {
                 }
             }
             
-            // Verifica se o gatilho deve ser acionado
             const shouldTrigger = evaluateCondition(room.enemy.trigger.condition, room.explorationState);
-            
             if (shouldTrigger) {
                 await addLogMessage(room.enemy.trigger.message, 1000);
                 createFightButton(room.enemy);
             } else {
-                // Inimigo tem trigger mas ainda não foi ativado
                 updateDirectionButtons();
             }
         } else if (room.enemy.delayedCombat) {
-            // Inimigo com combate atrasado - não faz nada até o trigger
             updateDirectionButtons();
         } else {
-            // Inimigo normal - combate imediato
             createFightButton(room.enemy);
             await addLogMessage(`Um ${room.enemy.name} está pronto para atacar!`, 800);
         }
     } else {
-        // Sem inimigo - atualiza os botões de direção normalmente
         updateDirectionButtons();
     }
 
@@ -2838,7 +2863,6 @@ async function moveToRoom(roomId) {
     // Salva o estado do jogador
     savePlayerState();
 }
-
 
     
 
