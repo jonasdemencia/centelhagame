@@ -565,8 +565,7 @@
   "enemy": {
     "id": "esqueleto-guardiao",
     "name": "Esqueleto Guardião",
-    "description": "Um esqueleto guerreiro empunhando uma espada enferrujada.",
-    "delayedCombat": false
+    "description": "Um esqueleto guerreiro empunhando uma espada enferrujada."
   },
   "enemies": [
     {
@@ -593,8 +592,7 @@
               "text": "Enfrentar a Morte",
               "effect": {
                 "states.readyToFight": true
-              },
-              "next": "fight_chosen"
+              }
             },
             {
               "text": "Tentar fugir",
@@ -605,15 +603,6 @@
                   "message": "Sua existência é obliterada!"
                 }
               }
-            }
-          ]
-        },
-        "fight_chosen": {
-          "text": "'ENTÃO ASSIM SERÁ!' O Senhor da Morte se levanta do trono, sua foice brilhando com energia sombria.",
-          "options": [
-            {
-              "text": "Preparar-se para o combate",
-              "action": "startChallenge"
             }
           ]
         }
@@ -667,6 +656,7 @@
     ]
   }
 }
+
 
     },
     "decorativeBlocks": [
