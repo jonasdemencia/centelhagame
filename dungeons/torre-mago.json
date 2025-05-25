@@ -573,7 +573,8 @@
             "enemy": {
                 "id": "esqueleto-guardiao",
                 "name": "Esqueleto Guardião",
-                "description": "Um esqueleto guerreiro empunhando uma espada enferrujada."
+                "description": "Um esqueleto guerreiro empunhando uma espada enferrujada.",
+                "delayedCombat": false
             },
             "enemies": [
                 {
