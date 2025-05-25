@@ -1,565 +1,722 @@
 {
-  "name": "Torre das Provações Mortais",
-  "description": "Uma torre sinistra que se ergue das brumas, desafiando os mais corajosos com armadilhas letais e guardiões implacáveis.",
-  "entrance": "room-1",
-  "rooms": {
-    "room-1": {
-      "id": "room-1",
-      "name": "Portal Sangrento",
-      "description": "Um portal de pedra negra manchado de sangue seco. Ossos humanos estão espalhados pelo chão e uma escada em espiral ascende para a escuridão.",
-      "type": "room",
-      "exits": [
-        { "direction": "north", "leadsTo": "room-2", "type": "stairs", "locked": false }
-      ],
-      "gridX": 10,
-      "gridY": 18,
-      "gridWidth": 3,
-      "gridHeight": 3,
-      "events": [
-        { "type": "first-visit", "text": "Ao cruzar o portal, você ouve sussurros agonizantes. Uma voz sepulcral ecoa: 'Apenas os dignos sobreviverão às cinco provações...'" }
-      ],
-      "exploration": {
-        "states": {
-          "initial": {
-            "examined": false,
-            "skullExamined": false
-          }
-        },
-        "examine": [
-          {
-            "condition": "!states.examined",
-            "text": "Entre os ossos, você nota um crânio humano com runas gravadas e um pergaminho enrolado em suas órbitas vazias.",
-            "effect": {"states.examined": true},
-            "pointsOfInterest": [
-              {
-                "id": "skull",
-                "name": "Crânio com Runas",
-                "description": "Um crânio humano com runas arcanas entalhadas na testa. Um pergaminho amarelado está enfiado em uma das órbitas.",
-                "effect": {"states.skullExamined": true},
-                "items": [
-                  {
-                    "id": "warning-scroll",
-                    "content": "Pergaminho de Aviso",
-                    "description": "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'"
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        "search": [
-          {
-            "condition": "states.examined",
-            "text": "Ao revirar os ossos, uma armadilha é acionada! Lâminas afiadas cortam o ar!",
-            "damage": {
-              "amount": "1D6",
-              "message": "Lâminas afiadas cortam sua pele!"
-            },
-            "chance": 0.7
-          }
-        ]
-      }
-    },
-
-      "room-2": {
-      "id": "room-2",
-      "name": "Câmara de Sangue",
-      "description": "Uma sala circular com paredes que parecem pulsar como veias. O chão está coberto por uma fina camada de sangue fresco que flui em direção ao centro.",
-      "type": "room",
-      "exits": [
-        { "direction": "south", "leadsTo": "room-1", "type": "stairs", "locked": false },
-        { "direction": "north", "leadsTo": "room-3", "type": "door", "locked": true, "keyId": "blood-key" }
-      ],
-      "gridX": 10,
-      "gridY": 14,
-      "gridWidth": 3,
-      "gridHeight": 3,
-      "events": [
-        { "type": "first-visit", "text": "O sangue no chão começa a se mover em sua direção, formando tentáculos que tentam agarrar seus tornozelos." }
-      ],
-      "enemy": {
-        "id": "blood-golem",
-        "name": "Golem de Sangue",
-        "description": "Uma criatura humanoide feita inteiramente de sangue coagulado, com olhos vermelhos brilhantes e garras afiadas.",
-        "trigger": {
-          "condition": "states.bloodPoolExamined",
-          "message": "O sangue no centro da sala se ergue, formando um golem monstruoso que avança em sua direção!"
-        }
-      },
-      "exploration": {
-        "states": {
-          "initial": {
-            "examined": false,
-            "bloodPoolExamined": false,
-            "altarExamined": false,
-            "sacrificeMade": false
-          }
-        },
-        "examine": [
-          {
-            "condition": "!states.examined",
-            "text": "Você examina a Câmara de Sangue com cuidado. A sala tem um teto alto e paredes de pedra antiga que pulsam como veias.",
-            "effect": {"states.examined": true},
-            "pointsOfInterest": [
-              {
-                "id": "blood-pool",
-                "name": "Poça de Sangue",
-                "description": "No centro da sala há uma poça de sangue mais profunda, borbulhando como se estivesse viva.",
-                "effect": {"states.bloodPoolExamined": true}
-              },
-              {
-                "id": "altar",
-                "name": "Altar de Sangue",
-                "description": "Na parede norte há um altar com uma bacia vazia e uma inscrição: 'Apenas o sangue do corajoso abrirá o caminho.'",
-                "effect": {"states.altarExamined": true},
-                "interactions": [
-                  {
-                    "id": "blood-sacrifice",
-                    "condition": "!states.sacrificeMade",
-                    "name": "Fazer Sacrifício de Sangue",
-                    "result": {
-                      "action": "testLuck",
-                      "luckTest": {
-                        "description": "O sacrifício de sangue é perigoso. Você precisa de sorte para não perder muito sangue.",
-                        "success": {
-                          "text": "Você consegue estancar o sangramento rapidamente. A chave de cristal vermelho está agora em suas mãos.",
-                          "effect": {"states.sacrificeMade": true},
-                          "items": [
-                            {
-                              "id": "blood-key",
-                              "content": "Chave de Sangue",
-                              "description": "Uma chave feita de cristal vermelho que pulsa como um coração."
-                            }
-                          ]
-                        },
-                        "failure": {
-                          "text": "O corte é mais profundo do que você pretendia! O sangramento é intenso e você se sente fraco.",
-                          "effect": {"states.sacrificeMade": true},
-                          "damage": {
-                            "amount": "2D6",
-                            "message": "Você perde muito sangue no sacrifício!"
-                          },
-                          "items": [
-                            {
-                              "id": "blood-key",
-                              "content": "Chave de Sangue",
-                              "description": "Uma chave feita de cristal vermelho que pulsa como um coração."
-                            }
-                          ]
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        "search": [
-          {
-            "condition": "!states.sacrificeMade",
-            "text": "Ao procurar pela sala, os tentáculos de sangue se enrolam em seus tornozelos, causando dor!",
-            "damage": {
-              "amount": "1D4",
-              "message": "Os tentáculos de sangue queimam sua pele!"
-            }
-          }
-        ]
-      }
-    },
-    "room-3": {
-      "id": "room-3",
-      "name": "Fornalha Infernal",
-      "description": "Uma sala escaldante com colunas de fogo que se erguem do chão. O ar é quase irrespirável devido ao calor extremo.",
-      "type": "room",
-      "exits": [
-        { "direction": "south", "leadsTo": "room-2", "type": "door", "locked": false },
-        { "direction": "north", "leadsTo": "room-4", "type": "door", "locked": true, "keyId": "fire-crystal" }
-      ],
-      "gridX": 10,
-      "gridY": 10,
-      "gridWidth": 3,
-      "gridHeight": 3,
-      "events": [
-        { "type": "first-visit", "text": "Ao entrar na sala, uma onda de calor atinge seu corpo. Sua pele começa a queimar e respirar é doloroso." }
-      ],
-      "enemy": {
-        "id": "fire-elemental",
-        "name": "Elemental do Fogo",
-        "description": "Uma criatura feita de chamas vivas, com um núcleo incandescente e braços que terminam em garras flamejantes."
-      },
-      "exploration": {
-        "states": {
-          "initial": {
-            "examined": false,
-            "fireColumnsExamined": false,
-            "forgeExamined": false,
-            "puzzleSolved": false
-          }
-        },
-        "examine": [
-          {
-            "condition": "!states.examined",
-            "text": "O calor é quase insuportável. As colunas de fogo dançam em padrões estranhos, e uma antiga forja brilha no centro da sala.",
-            "effect": {"states.examined": true},
-            "pointsOfInterest": [
-              {
-                "id": "fire-columns",
-                "name": "Colunas de Fogo",
-                "description": "As colunas de fogo seguem um padrão específico. Você nota que elas se movem em sequência, como se estivessem dançando.",
-                "effect": {"states.fireColumnsExamined": true}
-              },
-              {
-                "id": "forge",
-                "name": "Forja Antiga",
-                "description": "No centro da sala há uma forja antiga com símbolos arcanos. Um molde em forma de cristal está vazio no centro da forja.",
-                "effect": {"states.forgeExamined": true},
-                "interactions": [
-                  {
-                    "id": "solve-fire-puzzle",
-                    "condition": "states.fireColumnsExamined && !states.puzzleSolved",
-                    "name": "Resolver o Enigma do Fogo",
-                    "result": {
-                      "action": "testSkill",
-                      "skillTest": {
-                        "description": "Você precisa decifrar o padrão das colunas de fogo e ativar a forja na sequência correta.",
-                        "difficulty": 15,
-                        "success": {
-                          "text": "Você decifra o padrão e ativa a forja na sequência correta! O metal derretido flui para o molde, formando um cristal de fogo.",
-                          "effect": {"states.puzzleSolved": true},
-                          "items": [
-                            {
-                              "id": "fire-crystal",
-                              "content": "Cristal de Fogo",
-                              "description": "Um cristal vermelho-alaranjado que queima com o calor de mil sóis."
-                            }
-                          ]
-                        },
-                        "failure": {
-                          "text": "Você erra a sequência! As colunas de fogo explodem em sua direção!",
-                          "damage": {
-                            "amount": "3D6",
-                            "message": "As chamas queimam sua pele!"
-                          }
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        "search": [
-          {
-            "text": "O calor é tão intenso que sua pele queima ao tocar qualquer superfície!",
-            "damage": {
-              "amount": "1D4",
-              "message": "O calor extremo queima sua pele!"
-            }
-          }
-        ]
-      }
-    },
-
-        "room-4": {
-      "id": "room-4",
-      "name": "Jardim Venenoso",
-      "description": "Uma sala repleta de vegetação exótica e colorida. Flores belas mas mortais exalam um perfume tóxico, e fungos luminescentes cobrem as paredes.",
-      "type": "room",
-      "exits": [
-        { "direction": "south", "leadsTo": "room-3", "type": "door", "locked": false },
-        { "direction": "north", "leadsTo": "room-5", "type": "door", "locked": true, "keyId": "poison-antidote" }
-      ],
-      "gridX": 10,
-      "gridY": 6,
-      "gridWidth": 3,
-      "gridHeight": 3,
-      "events": [
-        { "type": "first-visit", "text": "Ao respirar o ar da sala, você sente sua visão turvar e sua garganta queimar. O veneno já está em seu sistema." }
-      ],
-      "enemy": {
-        "id": "poison-guardian",
-        "name": "Guardião Venenoso",
-        "description": "Uma criatura humanoide feita de vinhas retorcidas e flores venenosas, com espinhos que gotejam toxinas mortais."
-      },
-      "exploration": {
-        "states": {
-          "initial": {
-            "examined": false,
-            "poisoned": true,
-            "plantsExamined": false,
-            "fountainExamined": false,
-            "antidoteCreated": false
-          }
-        },
-        "examine": [
-          {
-            "condition": "!states.examined",
-            "text": "Através da névoa tóxica, você distingue plantas medicinais e uma fonte cristalina.",
-            "effect": {"states.examined": true},
-            "pointsOfInterest": [
-              {
-                "id": "medicinal-plants",
-                "name": "Plantas Medicinais",
-                "description": "Entre as plantas venenosas, você nota algumas flores azuis que parecem ter propriedades medicinais.",
-                "effect": {"states.plantsExamined": true}
-              },
-              {
-                "id": "crystal-fountain",
-                "name": "Fonte Cristalina",
-                "description": "No centro do jardim há uma fonte com água cristalina. Uma inscrição diz: 'Misture o antídoto para purificar o caminho.'",
-                "effect": {"states.fountainExamined": true},
-                "interactions": [
-                  {
-                    "id": "create-antidote",
-                    "condition": "states.plantsExamined && !states.antidoteCreated",
-                    "name": "Criar Antídoto",
-                    "result": {
-                      "action": "testLuck",
-                      "luckTest": {
-                        "description": "Você tenta criar um antídoto com as flores azuis e a água da fonte.",
-                        "success": {
-                          "text": "Você consegue criar um antídoto eficaz! Ao bebê-lo, o veneno deixa seu corpo e você se sente revigorado.",
-                          "effect": {
-                            "states.antidoteCreated": true,
-                            "states.poisoned": false
-                          },
-                          "items": [
-                            {
-                              "id": "poison-antidote",
-                              "content": "Antídoto Purificador",
-                              "description": "Um líquido azul brilhante que neutraliza qualquer veneno."
-                            }
-                          ]
-                        },
-                        "failure": {
-                          "text": "Sua mistura está errada! O líquido borbulha e explode, espalhando ácido!",
-                          "damage": {
-                            "amount": "2D6",
-                            "message": "O ácido queima sua pele!"
-                          }
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        "search": [
-          {
-            "condition": "states.poisoned",
-            "text": "O veneno em seu sistema enfraquece você a cada momento que passa nesta sala!",
-            "damage": {
-              "amount": "1D4",
-              "message": "O veneno corrói seu corpo por dentro!"
-            }
-          }
-        ]
-      }
-    },
-
-        "room-5": {
-      "id": "room-5",
-      "name": "Câmara da Loucura",
-      "description": "Uma sala que desafia a lógica e a sanidade. O chão, paredes e teto mudam constantemente de posição, e ilusões perturbadoras dançam no ar.",
-      "type": "room",
-      "exits": [
-        { "direction": "south", "leadsTo": "room-4", "type": "door", "locked": false },
-        { "direction": "north", "leadsTo": "room-6", "type": "portal", "locked": true, "keyId": "sanity-gem" }
-      ],
-      "gridX": 10,
-      "gridY": 2,
-      "gridWidth": 3,
-      "gridHeight": 3,
-      "events": [
-        { "type": "first-visit", "text": "Ao entrar na sala, sua mente é bombardeada por visões perturbadoras. Vozes sussurram em seus ouvidos e a realidade parece se dobrar." }
-      ],
-      "exploration": {
-        "states": {
-          "initial": {
-            "examined": false,
-            "mirrorsExamined": false,
-            "voidExamined": false,
-            "mindStable": false
-          }
-        },
-        "examine": [
-          {
-            "condition": "!states.examined",
-            "text": "Na sala distorcida, você distingue espelhos flutuantes e um vórtice de escuridão.",
-            "effect": {"states.examined": true},
-            "pointsOfInterest": [
-              {
-                "id": "floating-mirrors",
-                "name": "Espelhos Flutuantes",
-                "description": "Espelhos flutuantes mostram reflexos distorcidos de você mesmo, alguns envelhecidos, outros deformados ou mortos.",
-                "effect": {"states.mirrorsExamined": true}
-              },
-              {
-                "id": "void-vortex",
-                "name": "Vórtice do Vazio",
-                "description": "No centro da sala há um vórtice de escuridão que parece sugar a luz e a sanidade.",
-                "effect": {"states.voidExamined": true},
-                "interactions": [
-                  {
-                    "id": "face-madness",
-                    "condition": "states.mirrorsExamined && !states.mindStable",
-                    "name": "Enfrentar a Loucura",
-                    "result": {
-                      "action": "testCharisma",
-                      "charismaTest": {
-                        "description": "Você precisa enfrentar seus medos mais profundos e manter sua sanidade intacta.",
-                        "difficulty": 16,
-                        "success": {
-                          "text": "Você enfrenta seus demônios internos e mantém sua sanidade! O vórtice se acalma e uma gema cristalina flutua até você.",
-                          "effect": {"states.mindStable": true},
-                          "items": [
-                            {
-                              "id": "sanity-gem",
-                              "content": "Gema da Sanidade",
-                              "description": "Uma gema que brilha com luz própria, afastando as trevas da loucura."
-                            }
-                          ]
-                        },
-                        "failure": {
-                          "text": "As visões são demais para sua mente! Você grita em agonia enquanto pesadelos se tornam realidade ao seu redor!",
-                          "damage": {
-                            "amount": "3D6",
-                            "message": "Sua mente é dilacerada pela loucura!"
-                          }
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        "search": [
-          {
-            "text": "Ao procurar pela sala, as ilusões se intensificam, atacando sua mente!",
-            "damage": {
-              "amount": "1D6",
-              "message": "As ilusões causam dor psíquica!"
-            }
-          }
-        ]
-      }
-    },
-
-            "room-6": {
-    "id": "room-6",
-    "name": "Observatório da Morte",
-    "description": "O último andar é um observatório circular onde o céu acima mostra constelações desconhecidas. No centro está um trono de ossos ocupado por uma figura encapuzada.",
-    "type": "room",
-    "exits": [
-        { "direction": "south", "leadsTo": "room-5", "type": "portal", "locked": false }
-    ],
-    "gridX": 10,
-    "gridY": 0,
-    "gridWidth": 4,
-    "gridHeight": 2,
-    "events": [
-        { "type": "first-visit", "text": "A figura no trono levanta a cabeça, revelando um crânio com olhos de estrelas. 'ENCARE SEU DESTINO, MORTAL.'" }
-    ],
-    "enemy": {
-        "id": "senhor-da-morte",
-        "name": "Senhor da Morte",
-        "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
-        "delayedCombat": true,
-        "trigger": {
-            "condition": "states.readyToFight",
-            "message": "O Senhor da Morte se ergue do trono, sua foice cortando o ar em um arco mortal!"
-        }
-    },
-    "npcs": [
-        {
-            "id": "death-lord",
-            "name": "Senhor da Morte",
-            "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
-            "dialogues": {
-                "initial": {
-                    "text": "'ENCARE SEU DESTINO OU MORRA COMO UM COVARDE.'",
-                    "options": [
-                        {
-                            "text": "Enfrentar a Morte",
-                            "effect": {
-                                "states.readyToFight": true
-                            }
-                        },
-                        {
-                            "text": "Tentar fugir",
-                            "result": {
-                                "text": "'COVARDIA É MORTE.' A foice da morte corta seu corpo e alma simultaneamente.",
-                                "damage": {
-                                    "amount": "999",
-                                    "message": "Sua existência é obliterada!"
-                                }
-                            }
-                        }
-                    ]
+    "name": "Torre das Provações Mortais",
+    "description": "Uma torre sinistra que se ergue das brumas, desafiando os mais corajosos com armadilhas letais e guardiões implacáveis.",
+    "entrance": "room-1",
+    "rooms": {
+        "room-1": {
+            "id": "room-1",
+            "name": "Portal Sangrento",
+            "description": "Um portal de pedra negra manchado de sangue seco. Ossos humanos estão espalhados pelo chão e uma escada em espiral ascende para a escuridão.",
+            "type": "room",
+            "exits": [
+                {
+                    "direction": "north",
+                    "leadsTo": "room-2",
+                    "type": "stairs",
+                    "locked": false
                 }
-            }
-        }
-    ],
-    "exploration": {
-        "states": {
-            "initial": {
-                "examined": false,
-                "throneExamined": false,
-                "finalBattleComplete": false,
-                "readyToFight": false
-            }
-        },
-        "examine": [
-            {
-                "condition": "!states.examined",
-                "text": "O ar aqui é pesado com a presença da morte. O próprio tempo parece congelar.",
-                "effect": {"states.examined": true},
-                "pointsOfInterest": [
+            ],
+            "gridX": 10,
+            "gridY": 18,
+            "gridWidth": 3,
+            "gridHeight": 3,
+            "events": [
+                {
+                    "type": "first-visit",
+                    "text": "Ao cruzar o portal, você ouve sussurros agonizantes. Uma voz sepulcral ecoa: 'Apenas os dignos sobreviverão às cinco provações...'"
+                }
+            ],
+            "exploration": {
+                "states": {
+                    "initial": {
+                        "examined": false,
+                        "skullExamined": false
+                    }
+                },
+                "examine": [
                     {
-                        "id": "bone-throne",
-                        "name": "Trono de Ossos",
-                        "description": "O trono é feito dos ossos de milhares de heróis fracassados.",
-                        "effect": {"states.throneExamined": true},
-                        "interactions": [
+                        "condition": "!states.examined",
+                        "text": "Entre os ossos, você nota um crânio humano com runas gravadas e um pergaminho enrolado em suas órbitas vazias.",
+                        "effect": {
+                            "states.examined": true
+                        },
+                        "pointsOfInterest": [
                             {
-                                "id": "challenge-death",
-                                "condition": "!states.finalBattleComplete",
-                                "name": "Desafiar o Senhor da Morte",
-                                "result": {
-                                    "action": "dialogue",
-                                    "dialogueId": "initial"
-                                }
+                                "id": "skull",
+                                "name": "Crânio com Runas",
+                                "description": "Um crânio humano com runas arcanas entalhadas na testa. Um pergaminho amarelado está enfiado em uma das órbitas.",
+                                "effect": {
+                                    "states.skullExamined": true
+                                },
+                                "items": [
+                                    {
+                                        "id": "warning-scroll",
+                                        "content": "Pergaminho de Aviso",
+                                        "description": "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'"
+                                    }
+                                ]
                             }
                         ]
                     }
+                ],
+                "search": [
+                    {
+                        "condition": "states.examined",
+                        "text": "Ao revirar os ossos, uma armadilha é acionada! Lâminas afiadas cortam o ar!",
+                        "damage": {
+                            "amount": "1D6",
+                            "message": "Lâminas afiadas cortam sua pele!"
+                        },
+                        "chance": 0.7
+                    }
                 ]
             }
-        ],
-        "search": [
-            {
-                "condition": "!states.finalBattleComplete",
-                "text": "A mera presença do Senhor da Morte drena sua força vital!",
-                "damage": {
-                    "amount": "2D6",
-                    "message": "Sua força vital é sugada!"
+        },
+        "room-2": {
+            "id": "room-2",
+            "name": "Câmara de Sangue",
+            "description": "Uma sala circular com paredes que parecem pulsar como veias. O chão está coberto por uma fina camada de sangue fresco que flui em direção ao centro.",
+            "type": "room",
+            "exits": [
+                {
+                    "direction": "south",
+                    "leadsTo": "room-1",
+                    "type": "stairs",
+                    "locked": false
+                },
+                {
+                    "direction": "north",
+                    "leadsTo": "room-3",
+                    "type": "door",
+                    "locked": true,
+                    "keyId": "blood-key"
                 }
+            ],
+            "gridX": 10,
+            "gridY": 14,
+            "gridWidth": 3,
+            "gridHeight": 3,
+            "events": [
+                {
+                    "type": "first-visit",
+                    "text": "O sangue no chão começa a se mover em sua direção, formando tentáculos que tentam agarrar seus tornozelos."
+                }
+            ],
+            "enemy": {
+                "id": "blood-golem",
+                "name": "Golem de Sangue",
+                "description": "Uma criatura humanoide feita inteiramente de sangue coagulado, com olhos vermelhos brilhantes e garras afiadas.",
+                "trigger": {
+                    "condition": "states.bloodPoolExamined",
+                    "message": "O sangue no centro da sala se ergue, formando um golem monstruoso que avança em sua direção!"
+                }
+            },
+            "exploration": {
+                "states": {
+                    "initial": {
+                        "examined": false,
+                        "bloodPoolExamined": false,
+                        "altarExamined": false,
+                        "sacrificeMade": false
+                    }
+                },
+                "examine": [
+                    {
+                        "condition": "!states.examined",
+                        "text": "Você examina a Câmara de Sangue com cuidado. A sala tem um teto alto e paredes de pedra antiga que pulsam como veias.",
+                        "effect": {
+                            "states.examined": true
+                        },
+                        "pointsOfInterest": [
+                            {
+                                "id": "blood-pool",
+                                "name": "Poça de Sangue",
+                                "description": "No centro da sala há uma poça de sangue mais profunda, borbulhando como se estivesse viva.",
+                                "effect": {
+                                    "states.bloodPoolExamined": true
+                                }
+                            },
+                            {
+                                "id": "altar",
+                                "name": "Altar de Sangue",
+                                "description": "Na parede norte há um altar com uma bacia vazia e uma inscrição: 'Apenas o sangue do corajoso abrirá o caminho.'",
+                                "effect": {
+                                    "states.altarExamined": true
+                                },
+                                "interactions": [
+                                    {
+                                        "id": "blood-sacrifice",
+                                        "condition": "!states.sacrificeMade",
+                                        "name": "Fazer Sacrifício de Sangue",
+                                        "result": {
+                                            "action": "testLuck",
+                                            "luckTest": {
+                                                "description": "O sacrifício de sangue é perigoso. Você precisa de sorte para não perder muito sangue.",
+                                                "success": {
+                                                    "text": "Você consegue estancar o sangramento rapidamente. A chave de cristal vermelho está agora em suas mãos.",
+                                                    "effect": {
+                                                        "states.sacrificeMade": true
+                                                    },
+                                                    "items": [
+                                                        {
+                                                            "id": "blood-key",
+                                                            "content": "Chave de Sangue",
+                                                            "description": "Uma chave feita de cristal vermelho que pulsa como um coração."
+                                                        }
+                                                    ]
+                                                },
+                                                "failure": {
+                                                    "text": "O corte é mais profundo do que você pretendia! O sangramento é intenso e você se sente fraco.",
+                                                    "effect": {
+                                                        "states.sacrificeMade": true
+                                                    },
+                                                    "damage": {
+                                                        "amount": "2D6",
+                                                        "message": "Você perde muito sangue no sacrifício!"
+                                                    },
+                                                    "items": [
+                                                        {
+                                                            "id": "blood-key",
+                                                            "content": "Chave de Sangue",
+                                                            "description": "Uma chave feita de cristal vermelho que pulsa como um coração."
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "search": [
+                    {
+                        "condition": "!states.sacrificeMade",
+                        "text": "Ao procurar pela sala, os tentáculos de sangue se enrolam em seus tornozelos, causando dor!",
+                        "damage": {
+                            "amount": "1D4",
+                            "message": "Os tentáculos de sangue queimam sua pele!"
+                        }
+                    }
+                ]
             }
-        ]
-    }
+        },
+        "room-3": {
+            "id": "room-3",
+            "name": "Fornalha Infernal",
+            "description": "Uma sala escaldante com colunas de fogo que se erguem do chão. O ar é quase irrespirável devido ao calor extremo.",
+            "type": "room",
+            "exits": [
+                {
+                    "direction": "south",
+                    "leadsTo": "room-2",
+                    "type": "door",
+                    "locked": false
+                },
+                {
+                    "direction": "north",
+                    "leadsTo": "room-4",
+                    "type": "door",
+                    "locked": true,
+                    "keyId": "fire-crystal"
+                }
+            ],
+            "gridX": 10,
+            "gridY": 10,
+            "gridWidth": 3,
+            "gridHeight": 3,
+            "events": [
+                {
+                    "type": "first-visit",
+                    "text": "Ao entrar na sala, uma onda de calor atinge seu corpo. Sua pele começa a queimar e respirar é doloroso."
+                }
+            ],
+            "enemy": {
+                "id": "fire-elemental",
+                "name": "Elemental do Fogo",
+                "description": "Uma criatura feita de chamas vivas, com um núcleo incandescente e braços que terminam em garras flamejantes."
+            },
+            "exploration": {
+                "states": {
+                    "initial": {
+                        "examined": false,
+                        "fireColumnsExamined": false,
+                        "forgeExamined": false,
+                        "puzzleSolved": false
+                    }
+                },
+                "examine": [
+                    {
+                        "condition": "!states.examined",
+                        "text": "O calor é quase insuportável. As colunas de fogo dançam em padrões estranhos, e uma antiga forja brilha no centro da sala.",
+                        "effect": {
+                            "states.examined": true
+                        },
+                        "pointsOfInterest": [
+                            {
+                                "id": "fire-columns",
+                                "name": "Colunas de Fogo",
+                                "description": "As colunas de fogo seguem um padrão específico. Você nota que elas se movem em sequência, como se estivessem dançando.",
+                                "effect": {
+                                    "states.fireColumnsExamined": true
+                                }
+                            },
+                            {
+                                "id": "forge",
+                                "name": "Forja Antiga",
+                                "description": "No centro da sala há uma forja antiga com símbolos arcanos. Um molde em forma de cristal está vazio no centro da forja.",
+                                "effect": {
+                                    "states.forgeExamined": true
+                                },
+                                "interactions": [
+                                    {
+                                        "id": "solve-fire-puzzle",
+                                        "condition": "states.fireColumnsExamined && !states.puzzleSolved",
+                                        "name": "Resolver o Enigma do Fogo",
+                                        "result": {
+                                            "action": "testSkill",
+                                            "skillTest": {
+                                                "description": "Você precisa decifrar o padrão das colunas de fogo e ativar a forja na sequência correta.",
+                                                "difficulty": 15,
+                                                "success": {
+                                                    "text": "Você decifra o padrão e ativa a forja na sequência correta! O metal derretido flui para o molde, formando um cristal de fogo.",
+                                                    "effect": {
+                                                        "states.puzzleSolved": true
+                                                    },
+                                                    "items": [
+                                                        {
+                                                            "id": "fire-crystal",
+                                                            "content": "Cristal de Fogo",
+                                                            "description": "Um cristal vermelho-alaranjado que queima com o calor de mil sóis."
+                                                        }
+                                                    ]
+                                                },
+                                                "failure": {
+                                                    "text": "Você erra a sequência! As colunas de fogo explodem em sua direção!",
+                                                    "damage": {
+                                                        "amount": "3D6",
+                                                        "message": "As chamas queimam sua pele!"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "search": [
+                    {
+                        "text": "O calor é tão intenso que sua pele queima ao tocar qualquer superfície!",
+                        "damage": {
+                            "amount": "1D4",
+                            "message": "O calor extremo queima sua pele!"
+                        }
+                    }
+                ]
+            }
+        },
+        "room-4": {
+            "id": "room-4",
+            "name": "Jardim Venenoso",
+            "description": "Uma sala repleta de vegetação exótica e colorida. Flores belas mas mortais exalam um perfume tóxico, e fungos luminescentes cobrem as paredes.",
+            "type": "room",
+            "exits": [
+                {
+                    "direction": "south",
+                    "leadsTo": "room-3",
+                    "type": "door",
+                    "locked": false
+                },
+                {
+                    "direction": "north",
+                    "leadsTo": "room-5",
+                    "type": "door",
+                    "locked": true,
+                    "keyId": "poison-antidote"
+                }
+            ],
+            "gridX": 10,
+            "gridY": 6,
+            "gridWidth": 3,
+            "gridHeight": 3,
+            "events": [
+                {
+                    "type": "first-visit",
+                    "text": "Ao respirar o ar da sala, você sente sua visão turvar e sua garganta queimar. O veneno já está em seu sistema."
+                }
+            ],
+            "enemy": {
+                "id": "poison-guardian",
+                "name": "Guardião Venenoso",
+                "description": "Uma criatura humanoide feita de vinhas retorcidas e flores venenosas, com espinhos que gotejam toxinas mortais."
+            },
+            "exploration": {
+                "states": {
+                    "initial": {
+                        "examined": false,
+                        "poisoned": true,
+                        "plantsExamined": false,
+                        "fountainExamined": false,
+                        "antidoteCreated": false
+                    }
+                },
+                "examine": [
+                    {
+                        "condition": "!states.examined",
+                        "text": "Através da névoa tóxica, você distingue plantas medicinais e uma fonte cristalina.",
+                        "effect": {
+                            "states.examined": true
+                        },
+                        "pointsOfInterest": [
+                            {
+                                "id": "medicinal-plants",
+                                "name": "Plantas Medicinais",
+                                "description": "Entre as plantas venenosas, você nota algumas flores azuis que parecem ter propriedades medicinais.",
+                                "effect": {
+                                    "states.plantsExamined": true
+                                }
+                            },
+                            {
+                                "id": "crystal-fountain",
+                                "name": "Fonte Cristalina",
+                                "description": "No centro do jardim há uma fonte com água cristalina. Uma inscrição diz: 'Misture o antídoto para purificar o caminho.'",
+                                "effect": {
+                                    "states.fountainExamined": true
+                                },
+                                "interactions": [
+                                    {
+                                        "id": "create-antidote",
+                                        "condition": "states.plantsExamined && !states.antidoteCreated",
+                                        "name": "Criar Antídoto",
+                                        "result": {
+                                            "action": "testLuck",
+                                            "luckTest": {
+                                                "description": "Você tenta criar um antídoto com as flores azuis e a água da fonte.",
+                                                "success": {
+                                                    "text": "Você consegue criar um antídoto eficaz! Ao bebê-lo, o veneno deixa seu corpo e você se sente revigorado.",
+                                                    "effect": {
+                                                        "states.antidoteCreated": true,
+                                                        "states.poisoned": false
+                                                    },
+                                                    "items": [
+                                                        {
+                                                            "id": "poison-antidote",
+                                                            "content": "Antídoto Purificador",
+                                                            "description": "Um líquido azul brilhante que neutraliza qualquer veneno."
+                                                        }
+                                                    ]
+                                                },
+                                                "failure": {
+                                                    "text": "Sua mistura está errada! O líquido borbulha e explode, espalhando ácido!",
+                                                    "damage": {
+                                                        "amount": "2D6",
+                                                        "message": "O ácido queima sua pele!"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "search": [
+                    {
+                        "condition": "states.poisoned",
+                        "text": "O veneno em seu sistema enfraquece você a cada momento que passa nesta sala!",
+                        "damage": {
+                            "amount": "1D4",
+                            "message": "O veneno corrói seu corpo por dentro!"
+                        }
+                    }
+                ]
+            }
+        },
+        "room-5": {
+            "id": "room-5",
+            "name": "Câmara da Loucura",
+            "description": "Uma sala que desafia a lógica e a sanidade. O chão, paredes e teto mudam constantemente de posição, e ilusões perturbadoras dançam no ar.",
+            "type": "room",
+            "exits": [
+                {
+                    "direction": "south",
+                    "leadsTo": "room-4",
+                    "type": "door",
+                    "locked": false
+                },
+                {
+                    "direction": "north",
+                    "leadsTo": "room-6",
+                    "type": "portal",
+                    "locked": true,
+                    "keyId": "sanity-gem"
+                }
+            ],
+            "gridX": 10,
+            "gridY": 2,
+            "gridWidth": 3,
+            "gridHeight": 3,
+            "events": [
+                {
+                    "type": "first-visit",
+                    "text": "Ao entrar na sala, sua mente é bombardeada por visões perturbadoras. Vozes sussurram em seus ouvidos e a realidade parece se dobrar."
+                }
+            ],
+            "exploration": {
+                "states": {
+                    "initial": {
+                        "examined": false,
+                        "mirrorsExamined": false,
+                        "voidExamined": false,
+                        "mindStable": false
+                    }
+                },
+                "examine": [
+                    {
+                        "condition": "!states.examined",
+                        "text": "Na sala distorcida, você distingue espelhos flutuantes e um vórtice de escuridão.",
+                        "effect": {
+                            "states.examined": true
+                        },
+                        "pointsOfInterest": [
+                            {
+                                "id": "floating-mirrors",
+                                "name": "Espelhos Flutuantes",
+                                "description": "Espelhos flutuantes mostram reflexos distorcidos de você mesmo, alguns envelhecidos, outros deformados ou mortos.",
+                                "effect": {
+                                    "states.mirrorsExamined": true
+                                }
+                            },
+                            {
+                                "id": "void-vortex",
+                                "name": "Vórtice do Vazio",
+                                "description": "No centro da sala há um vórtice de escuridão que parece sugar a luz e a sanidade.",
+                                "effect": {
+                                    "states.voidExamined": true
+                                },
+                                "interactions": [
+                                    {
+                                        "id": "face-madness",
+                                        "condition": "states.mirrorsExamined && !states.mindStable",
+                                        "name": "Enfrentar a Loucura",
+                                        "result": {
+                                            "action": "testCharisma",
+                                            "charismaTest": {
+                                                "description": "Você precisa enfrentar seus medos mais profundos e manter sua sanidade intacta.",
+                                                "difficulty": 16,
+                                                "success": {
+                                                    "text": "Você enfrenta seus demônios internos e mantém sua sanidade! O vórtice se acalma e uma gema cristalina flutua até você.",
+                                                    "effect": {
+                                                        "states.mindStable": true
+                                                    },
+                                                    "items": [
+                                                        {
+                                                            "id": "sanity-gem",
+                                                            "content": "Gema da Sanidade",
+                                                            "description": "Uma gema que brilha com luz própria, afastando as trevas da loucura."
+                                                        }
+                                                    ]
+                                                },
+                                                "failure": {
+                                                    "text": "As visões são demais para sua mente! Você grita em agonia enquanto pesadelos se tornam realidade ao seu redor!",
+                                                    "damage": {
+                                                        "amount": "3D6",
+                                                        "message": "Sua mente é dilacerada pela loucura!"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "search": [
+                    {
+                        "text": "Ao procurar pela sala, as ilusões se intensificam, atacando sua mente!",
+                        "damage": {
+                            "amount": "1D6",
+                            "message": "As ilusões causam dor psíquica!"
+                        }
+                    }
+                ]
+            }
+        },
+        "room-6": {
+            "id": "room-6",
+            "name": "Observatório da Morte",
+            "description": "O último andar é um observatório circular onde o céu acima mostra constelações desconhecidas. No centro está um trono de ossos ocupado por uma figura encapuzada.",
+            "type": "room",
+            "exits": [
+                {
+                    "direction": "south",
+                    "leadsTo": "room-5",
+                    "type": "portal",
+                    "locked": false
+                }
+            ],
+            "gridX": 10,
+            "gridY": 0,
+            "gridWidth": 4,
+            "gridHeight": 2,
+            "events": [
+                {
+                    "type": "first-visit",
+                    "text": "A figura no trono levanta a cabeça, revelando um crânio com olhos de estrelas. 'ENCARE SEU DESTINO, MORTAL.'"
+                }
+            ],
+            "enemy": {
+                "id": "senhor-da-morte",
+                "name": "Senhor da Morte",
+                "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
+                "delayedCombat": true,
+                "trigger": {
+                    "condition": "states.readyToFight",
+                    "message": "O Senhor da Morte se ergue do trono, sua foice cortando o ar em um arco mortal!"
+                }
+            },
+            "npcs": [
+                {
+                    "id": "death-lord",
+                    "name": "Senhor da Morte",
+                    "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
+                    "dialogues": {
+                        "initial": {
+                            "text": "'ENCARE SEU DESTINO OU MORRA COMO UM COVARDE.'",
+                            "options": [
+                                {
+                                    "text": "Enfrentar a Morte",
+                                    "effect": {
+                                        "states.readyToFight": true
+                                    }
+                                },
+                                {
+                                    "text": "Tentar fugir",
+                                    "result": {
+                                        "text": "'COVARDIA É MORTE.' A foice da morte corta seu corpo e alma simultaneamente.",
+                                        "damage": {
+                                            "amount": "999",
+                                            "message": "Sua existência é obliterada!"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            "exploration": {
+                "states": {
+                    "initial": {
+                        "examined": false,
+                        "throneExamined": false,
+                        "finalBattleComplete": false,
+                        "readyToFight": false
+                    }
+                },
+                "examine": [
+                    {
+                        "condition": "!states.examined",
+                        "text": "O ar aqui é pesado com a presença da morte. O próprio tempo parece congelar.",
+                        "effect": {
+                            "states.examined": true
+                        },
+                        "pointsOfInterest": [
+                            {
+                                "id": "bone-throne",
+                                "name": "Trono de Ossos",
+                                "description": "O trono é feito dos ossos de milhares de heróis fracassados.",
+                                "effect": {
+                                    "states.throneExamined": true
+                                },
+                                "interactions": [
+                                    {
+                                        "id": "challenge-death",
+                                        "condition": "!states.finalBattleComplete",
+                                        "name": "Desafiar o Senhor da Morte",
+                                        "result": {
+                                            "action": "dialogue",
+                                            "dialogueId": "initial"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "search": [
+                    {
+                        "condition": "!states.finalBattleComplete",
+                        "text": "A mera presença do Senhor da Morte drena sua força vital!",
+                        "damage": {
+                            "amount": "2D6",
+                            "message": "Sua força vital é sugada!"
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "decorativeBlocks": [
+        {
+            "type": "corridor",
+            "gridX": 10,
+            "gridY": 17,
+            "gridWidth": 1,
+            "gridHeight": 1,
+            "connects": [
+                "room-1",
+                "room-2"
+            ]
+        },
+        {
+            "type": "corridor",
+            "gridX": 10,
+            "gridY": 13,
+            "gridWidth": 1,
+            "gridHeight": 1,
+            "connects": [
+                "room-2",
+                "room-3"
+            ]
+        },
+        {
+            "type": "corridor",
+            "gridX": 10,
+            "gridY": 9,
+            "gridWidth": 1,
+            "gridHeight": 1,
+            "connects": [
+                "room-3",
+                "room-4"
+            ]
+        },
+        {
+            "type": "corridor",
+            "gridX": 10,
+            "gridY": 5,
+            "gridWidth": 1,
+            "gridHeight": 1,
+            "connects": [
+                "room-4",
+                "room-5"
+            ]
+        },
+        {
+            "type": "corridor",
+            "gridX": 10,
+            "gridY": 1,
+            "gridWidth": 1,
+            "gridHeight": 1,
+            "connects": [
+                "room-5",
+                "room-6"
+            ]
+        }
+    ]
 }
-  },
-  "decorativeBlocks": [
-    { "type": "corridor", "gridX": 10, "gridY": 17, "gridWidth": 1, "gridHeight": 1, "connects": ["room-1", "room-2"] },
-    { "type": "corridor", "gridX": 10, "gridY": 13, "gridWidth": 1, "gridHeight": 1, "connects": ["room-2", "room-3"] },
-    { "type": "corridor", "gridX": 10, "gridY": 9, "gridWidth": 1, "gridHeight": 1, "connects": ["room-3", "room-4"] },
-    { "type": "corridor", "gridX": 10, "gridY": 5, "gridWidth": 1, "gridHeight": 1, "connects": ["room-4", "room-5"] },
-    { "type": "corridor", "gridX": 10, "gridY": 1, "gridWidth": 1, "gridHeight": 1, "connects": ["room-5", "room-6"] }
-  ]
-}
-    
