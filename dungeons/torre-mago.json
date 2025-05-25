@@ -466,24 +466,16 @@
     "events": [
         { "type": "first-visit", "text": "A figura no trono levanta a cabeça, revelando um crânio com olhos de estrelas. 'ENCARE SEU DESTINO, MORTAL.'" }
     ],
-    "enemies": [
-        {
-            "id": "guarda-esqueleto",
-            "name": "Guarda Esqueleto",
-            "description": "Um esqueleto guerreiro que protege a entrada do salão.",
-            "delayedCombat": false  // Este vai atacar imediatamente ao entrar na sala
-        },
-        {
-            "id": "senhor-da-morte",
-            "name": "Senhor da Morte",
-            "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
-            "delayedCombat": true,  // Este só atacará após o diálogo
-            "trigger": {
-                "condition": "states.readyToFight",
-                "message": "O Senhor da Morte se ergue do trono, sua foice cortando o ar em um arco mortal!"
-            }
+    "enemy": {
+        "id": "senhor-da-morte",
+        "name": "Senhor da Morte",
+        "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica. Seus olhos são estrelas brilhantes em órbitas vazias.",
+        "delayedCombat": true,
+        "trigger": {
+            "condition": "states.readyToFight",
+            "message": "O Senhor da Morte se ergue do trono, sua foice cortando o ar em um arco mortal!"
         }
-    ],
+    },
     "npcs": [
         {
             "id": "death-lord",
