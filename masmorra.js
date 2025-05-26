@@ -249,34 +249,6 @@ function updateHealthBar() {
     }
 }
 
-// Função para criar o botão de lutar
-function createFightButton(enemy) {
-    console.log("LOG: Criando botão de luta para inimigo:", enemy);
-    
-    // Cria o botão
-    const fightButton = document.createElement('button');
-    fightButton.id = 'fight-enemy-button';
-    fightButton.textContent = 'Lutar!';
-    fightButton.classList.add('action-btn', 'fight-btn');
-    
-    // Adiciona o evento de clique
-    fightButton.addEventListener('click', () => {
-        console.log("LOG: Botão de luta clicado, redirecionando para batalha com:", enemy.id);
-        window.location.href = `batalha.html?monstro=${enemy.id}`;
-    });
-    
-    // Adiciona o botão à interface
-    const actionButtons = document.getElementById('action-buttons');
-    if (actionButtons) {
-        actionButtons.appendChild(fightButton);
-        console.log("LOG: Botão de luta adicionado ao DOM");
-    } else {
-        console.error("LOG: Elemento 'action-buttons' não encontrado!");
-    }
-    
-    // Desabilita os botões de direção
-    disableDirectionButtons();
-}
 
 // Função para desabilitar os botões de direção
 function disableDirectionButtons() {
