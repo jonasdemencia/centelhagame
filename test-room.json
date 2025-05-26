@@ -1,0 +1,27 @@
+{
+    "id": "test-room-1",
+    "name": "Sala de Teste",
+    "description": "Uma sala simples para testar o novo processador.",
+    "type": "room",
+    "types": ["basic"],
+    "exits": [
+        {
+            "direction": "north",
+            "leadsTo": "room-2",
+            "type": "door",
+            "locked": false
+        }
+    ],
+    "events": [
+        {
+            "type": "first-visit",
+            "text": "Você entra na sala de teste."
+        }
+    ],
+    "states": {
+        "initial": {
+            "examined": false,
+            "searchComplete": false
+        }
+    }
+}
