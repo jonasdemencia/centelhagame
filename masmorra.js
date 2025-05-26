@@ -3152,3 +3152,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 });
+
+// Crie um novo arquivo chamado dungeon-tester.js
+import { DungeonTester } from './dungeon-tester.js';
+
+// Adiciona o botão de teste
+document.addEventListener('DOMContentLoaded', () => {
+  const header = document.querySelector('header');
+  if (header) {
+    const testButton = document.createElement('button');
+    testButton.id = 'test-dungeons-button';
+    testButton.textContent = 'Testar Todas Masmorras';
+    testButton.style.marginLeft = '10px';
+    
+    testButton.addEventListener('click', async () => {
+      console.log("Iniciando testes de todas as masmorras...");
+      
+      // Carrega a lista de masmorras
+      try {
+        const response = await fetch('./dungeons/index.json');
+        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+        const dungeonsList = await response.json();
+        
+        // Executa os testes
+        const results = await DungeonTester.testAllDungeons(dungeonsList);
+        
+        // Mostra resultado final
+        if (results.failed.length === 0) {
+          alert(`✅ Todas as ${results.passed.length} masmorras passaram nos testes!`);
+        } else {
+          alert(`❌ ${results.failed.length} masmorras falharam nos testes. Veja o console para detalhes.`);
+        }
+      } catch (error) {
+        console.error("Erro ao testar masmorras:", error);
+        alert("❌ Erro ao testar masmorras. Veja o console para detalhes.");
+      }
+    });
+    
+    header.appendChild(testButton);
+  }
+});
