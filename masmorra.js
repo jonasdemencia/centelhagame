@@ -1327,6 +1327,11 @@ async function handlePointOfInterestClick(poi, room) {
         await applyEffects(poi.effect, room);
     }
     
+    // MOVIDO PARA AQUI: Verifica se há itens para coletar
+    if (poi.items && poi.items.length > 0) {
+        createCollectButton(poi.items[0]);
+    }
+    
     // Verifica se há testes de atributos associados
     if (poi.luckTest || poi.skillTest || poi.charismaTest) {
         await handleAttributeTestEvent(poi, room);
@@ -1445,10 +1450,10 @@ async function handlePointOfInterestClick(poi, room) {
         createInteractionButtons(room, poi.id);
     }
     
-    // Verifica se há itens para coletar
-    if (poi.items && poi.items.length > 0) {
-        createCollectButton(poi.items[0]);
-    }
+    // REMOVER ESTA LINHA, pois já foi movida para cima
+    // if (poi.items && poi.items.length > 0) {
+    //     createCollectButton(poi.items[0]);
+    // }
     
     // Salva o estado
     savePlayerState();
@@ -1462,6 +1467,7 @@ async function handlePointOfInterestClick(poi, room) {
     });
 }
 
+
 // Função para remover botões de interação
 function removeInteractionButtons() {
     const interactionButtons = document.getElementById('interaction-buttons');
@@ -1469,6 +1475,13 @@ function removeInteractionButtons() {
         interactionButtons.remove();
     }
 }
+
+// Adicione esta função aqui
+function createInteractionButtons(room, poiId) {
+    // Função vazia para evitar o erro
+    console.log("createInteractionButtons chamada para sala:", room.id, "POI:", poiId);
+}
+
 
 // Função para lidar com interações
 async function handleInteraction(interaction, room) {
