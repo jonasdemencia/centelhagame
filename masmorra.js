@@ -2538,7 +2538,7 @@ async function startDialogue(npc) {
 
 }
 
-// Função para exibir a fala do NPC e as opções de resposta
+// Modifique a função showNPCDialogue para aplicar corretamente os efeitos
 async function showNPCDialogue(npc, dialogueId) {
     // Busca o diálogo atual
     const dialogue = npc.dialogues[dialogueId];
@@ -2584,7 +2584,25 @@ async function showNPCDialogue(npc, dialogueId) {
             // Aplica efeitos, se houver
             if (option.effect) {
                 const currentRoom = dungeon.rooms[playerState.currentRoom];
+                console.log("Aplicando efeito:", option.effect);
+                console.log("Estado da sala antes:", currentRoom.explorationState);
                 await applyEffects(option.effect, currentRoom);
+                console.log("Estado da sala depois:", currentRoom.explorationState);
+                
+                // Salva o estado após aplicar os efeitos
+                savePlayerState();
+                
+                // Verifica se o efeito ativou o trigger de algum inimigo
+                if (currentRoom.enemies) {
+                    for (const enemy of currentRoom.enemies) {
+                        if (enemy.trigger && evaluateCondition(enemy.trigger.condition, currentRoom.explorationState)) {
+                            console.log("Trigger de inimigo ativado:", enemy);
+                            await addLogMessage(enemy.trigger.message, 1000);
+                            createFightButton(enemy);
+                            return; // Sai da função para não continuar o diálogo
+                        }
+                    }
+                }
             }
             
             // Verifica se há itens para receber
@@ -2612,6 +2630,7 @@ async function showNPCDialogue(npc, dialogueId) {
         actionButtons.appendChild(responseContainer);
     }
 }
+
 
 // Função para verificar se há NPCs na sala e criar botões para interagir com eles
 function createNPCButtons(room) {
