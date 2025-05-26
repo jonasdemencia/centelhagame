@@ -2702,8 +2702,15 @@ async function moveToRoom(roomId) {
         console.error(`Sala ${roomId} não encontrada.`);
         return;
     }
+
+    // Remove o botão de lutar se existir
+    removeFightButton();
     
-    console.log("LOG: Movendo para sala:", roomId);
+    // Remove botões de interação
+    removeInteractionButtons();
+    
+    // Remove botões de pontos de interesse
+    removePointsOfInterestButtons();
     
     // Atualiza o estado do jogador
     playerState.currentRoom = roomId;
@@ -2718,16 +2725,78 @@ async function moveToRoom(roomId) {
     if (isFirstVisit) {
         playerState.visitedRooms.push(roomId);
         
+        // Verifica se há novos blocos decorativos para descobrir
+        const blocksToUse = dungeon.decorativeBlocks || decorativeBlocks;
+        for (const block of blocksToUse) {
+            // Só processa se o bloco ainda não foi descoberto
+            const alreadyDiscovered = playerState.discoveredBlocks && 
+                playerState.discoveredBlocks.some(b => b.gridX === block.gridX && b.gridY === block.gridY);
+            
+            if (!alreadyDiscovered) {
+                // Se o bloco tem a propriedade "connects", verifica se todas as salas conectadas foram visitadas
+                if (block.connects) {
+                    const allConnectedRoomsVisited = block.connects.every(roomId => 
+                        playerState.visitedRooms.includes(roomId));
+                    
+                    if (allConnectedRoomsVisited) {
+                        if (!playerState.discoveredBlocks) playerState.discoveredBlocks = [];
+                        playerState.discoveredBlocks.push({
+                            gridX: block.gridX,
+                            gridY: block.gridY
+                        });
+                    }
+                } else {
+                    // Lógica antiga de proximidade
+                    let connectedRooms = 0;
+                    for (const visitedRoomId of playerState.visitedRooms) {
+                        const visitedRoom = dungeon.rooms[visitedRoomId];
+                        if (!visitedRoom) continue;
+                        
+                        const distX = Math.abs(block.gridX - visitedRoom.gridX);
+                        const distY = Math.abs(block.gridY - visitedRoom.gridY);
+                        
+                        if (distX <= 2 && distY <= 2) {
+                            connectedRooms++;
+                            if (connectedRooms >= 2) {
+                                if (!playerState.discoveredBlocks) playerState.discoveredBlocks = [];
+                                playerState.discoveredBlocks.push({
+                                    gridX: block.gridX,
+                                    gridY: block.gridY
+                                });
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Inicializa o estado de exploração se não existir
+        if (room.exploration && room.exploration.states && room.exploration.states.initial) {
+            room.explorationState = { ...room.exploration.states.initial };
+        }
+        
         // Processa eventos de primeira visita
         const firstVisitEvents = room.events?.filter(event => event.type === "first-visit") || [];
         for (const event of firstVisitEvents) {
             await addLogMessage(event.text, 1000);
         }
     }
+
+    // Verifica se a sala tem um inimigo e se ele já foi derrotado
+    let customDescription = room.description;
+    if (room.enemy) {
+        const isDefeated = await checkDefeatedMonster(room.enemy.id);
+        if (isDefeated) {
+            if (room.enemy.defeatedDescription) {
+                customDescription = room.enemy.defeatedDescription;
+            }
+        }
+    }
     
     // Adiciona descrição da sala ao log
     startNewLogBlock(room.name);
-    await addLogMessage(room.description, 1000);
+    await addLogMessage(customDescription, 1000);
     
     // Atualiza o mapa
     drawMap();
@@ -2735,42 +2804,33 @@ async function moveToRoom(roomId) {
     // Atualiza a barra de energia
     updateHealthBar();
     
-    // VERIFICAÇÃO DE INIMIGOS - PARTE CRÍTICA
     console.log("LOG: Verificando inimigos na sala:", room);
-    
-    // Verifica se há um inimigo na sala
-    if (room.enemy) {
-        console.log("LOG: Inimigo encontrado na sala:", room.enemy);
-        createFightButton(room.enemy);
-        await addLogMessage(`Um ${room.enemy.name} está pronto para atacar!`, 800);
-        return; // Importante: sai da função para não atualizar os botões de direção
-    }
     
     // Verifica se há múltiplos inimigos na sala
     if (room.enemies && room.enemies.length > 0) {
-        console.log("LOG: Múltiplos inimigos encontrados na sala:", room.enemies);
+        console.log("LOG: Múltiplos inimigos encontrados:", room.enemies);
         
         // Verifica cada inimigo
         for (const enemy of room.enemies) {
-            // Verifica se o inimigo tem um trigger
+            const isDefeated = await checkDefeatedMonster(enemy.id);
+            if (isDefeated) {
+                await addLogMessage(`Você vê os restos do ${enemy.name} que você derrotou anteriormente.`, 800);
+                continue;
+            }
+            
             if (enemy.trigger) {
-                console.log("LOG: Inimigo com trigger encontrado:", enemy);
+                console.log("LOG: Inimigo com trigger:", enemy);
                 
                 // Inicializa o estado de exploração se não existir
                 if (!room.explorationState) {
                     room.explorationState = {};
                 }
                 
-                // Verifica se a condição do trigger é atendida
-                const condition = enemy.trigger.condition;
-                console.log("LOG: Verificando condição do trigger:", condition);
-                console.log("LOG: Estado atual da sala:", room.explorationState);
-                
-                // Extrai o nome do estado da condição (ex: "states.readyToFight" -> "readyToFight")
-                const stateName = condition.replace('states.', '');
-                const shouldTrigger = room.explorationState[stateName] === true;
-                
-                console.log("LOG: Condição atendida?", shouldTrigger);
+                // Verifica se a condição do trigger é atendida usando evaluateCondition
+                const shouldTrigger = evaluateCondition(enemy.trigger.condition, room.explorationState);
+                console.log("LOG: Condição do trigger:", enemy.trigger.condition);
+                console.log("LOG: Estado da sala:", room.explorationState);
+                console.log("LOG: Trigger ativado?", shouldTrigger);
                 
                 if (shouldTrigger) {
                     await addLogMessage(enemy.trigger.message, 1000);
@@ -2785,10 +2845,33 @@ async function moveToRoom(roomId) {
                 return; // Sai da função para não atualizar os botões de direção
             }
         }
+    } 
+    // Verifica se há um inimigo único na sala
+    else if (room.enemy) {
+        console.log("LOG: Inimigo único encontrado:", room.enemy);
+        const isDefeated = await checkDefeatedMonster(room.enemy.id);
+        
+        if (isDefeated) {
+            await addLogMessage(`Você vê os restos do ${room.enemy.name} que você derrotou anteriormente.`, 800);
+        } else {
+            createFightButton(room.enemy);
+            await addLogMessage(`Um ${room.enemy.name} está pronto para atacar!`, 800);
+            return; // Sai da função para não atualizar os botões de direção
+        }
     }
     
-    // Se não houver inimigos, atualiza os botões de direção normalmente
+    // Atualiza os botões de direção
     updateDirectionButtons();
+    
+    // Cria botões de interação para pontos de interesse, se houver
+    if (room.pointsOfInterest) {
+        createPointsOfInterestButtons(room.pointsOfInterest, room);
+    }
+
+    // Verifica se há NPCs na sala
+    if (room.npcs) {
+        createNPCButtons(room);
+    }
     
     // Salva o estado do jogador
     savePlayerState();
