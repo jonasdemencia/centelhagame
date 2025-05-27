@@ -3,6 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebas
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 import { getMonsterById } from './monstros.js';
+import { getRoomBehavior } from './rooms/registry.js';
 
 console.log("LOG: masmorra.js carregado.");
 
@@ -1680,6 +1681,29 @@ async function searchRoom() {
     if (!currentRoom) return;
     
     startNewLogBlock("Procurar");
+
+        // Tenta usar o behavior primeiro
+    const behavior = getRoomBehavior(currentRoom.id);
+    if (behavior?.handlers?.onSearch) {
+        const handled = await behavior.handlers.onSearch({
+            room: currentRoom,
+            addLogMessage,
+            createCollectButton,
+            evaluateCondition,
+            applyEffects,
+            applyDamage: applyDamageToPlayer,
+            rollDice,
+            playerState
+        });
+        
+        if (handled) {
+            savePlayerState();
+            return;
+        }
+    }
+
+    // Se não tem behavior ou o behavior não tratou, usa código existente
+    // [resto do código atual do searchRoom]
     
     // Verifica se a sala tem configurações de exploração
     if (currentRoom.exploration && currentRoom.exploration.search) {
@@ -2745,7 +2769,6 @@ async function checkDefeatedMonster(monsterId) {
 }
 
 
-// Função para mover o jogador para uma sala
 async function moveToRoom(roomId) {
     const room = dungeon.rooms[roomId];
     if (!room) {
@@ -2820,16 +2843,26 @@ async function moveToRoom(roomId) {
                 }
             }
         }
-        
-        // Inicializa o estado de exploração se não existir
-        if (room.exploration && room.exploration.states && room.exploration.states.initial) {
-            room.explorationState = { ...room.exploration.states.initial };
-        }
-        
-        // Processa eventos de primeira visita
-        const firstVisitEvents = room.events?.filter(event => event.type === "first-visit") || [];
-        for (const event of firstVisitEvents) {
-            await addLogMessage(event.text, 1000);
+
+        // Tenta usar o behavior primeiro
+        const behavior = getRoomBehavior(room.id);
+        if (behavior?.handlers?.onFirstVisit) {
+            await behavior.handlers.onFirstVisit({
+                room,
+                addLogMessage,
+                playerState
+            });
+        } else {
+            // Inicializa o estado de exploração se não existir
+            if (room.exploration && room.exploration.states && room.exploration.states.initial) {
+                room.explorationState = { ...room.exploration.states.initial };
+            }
+            
+            // Processa eventos de primeira visita
+            const firstVisitEvents = room.events?.filter(event => event.type === "first-visit") || [];
+            for (const event of firstVisitEvents) {
+                await addLogMessage(event.text, 1000);
+            }
         }
     }
 
@@ -2926,7 +2959,6 @@ async function moveToRoom(roomId) {
     // Salva o estado do jogador
     savePlayerState();
 }
-
 
 
     
