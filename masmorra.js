@@ -1076,6 +1076,24 @@ async function examineRoom() {
     if (!currentRoom) return;
     
     startNewLogBlock("Examinar");
+
+       // Tenta usar o behavior primeiro
+    const behavior = getRoomBehavior(currentRoom.id);
+    if (behavior?.handlers?.onExamine) {
+        const handled = await behavior.handlers.onExamine({
+            room: currentRoom,
+            addLogMessage,
+            createPointsOfInterest: createPointsOfInterestButtons,
+            evaluateCondition,
+            applyEffects,
+            playerState
+        });
+        
+        if (handled) {
+            savePlayerState();
+            return;
+        }
+    }
     
     // Verifica se a sala tem configurações de exploração
     if (currentRoom.exploration && currentRoom.exploration.examine) {
