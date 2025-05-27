@@ -38,7 +38,7 @@ export const Room1Behavior = {
                             description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'"
                         }]
                     }
-                ]);
+                ], room); // Adicionado o parâmetro room aqui
 
                 return true; // Indica que processou um evento
             }
@@ -50,15 +50,14 @@ export const Room1Behavior = {
 
         // Manipula ação de procurar
         async onSearch(context) {
-            const { room, addLogMessage, rollDice, applyDamage } = context;
+            const { room, addLogMessage, applyDamage } = context;
 
             if (room.explorationState.examined) {
                 const trapTriggered = Math.random() <= 0.7; // 70% de chance
                 if (trapTriggered) {
                     await addLogMessage("Ao revirar os ossos, uma armadilha é acionada! Lâminas afiadas cortam o ar!");
-                    const damage = rollDice("1D6");
                     await applyDamage({
-                        amount: damage,
+                        amount: "1D6", // Corrigido para string
                         message: "Lâminas afiadas cortam sua pele!"
                     });
                     return true; // Indica que processou um evento
