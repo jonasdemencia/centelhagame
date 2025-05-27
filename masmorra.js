@@ -1078,6 +1078,11 @@ async function examineRoom() {
     
     startNewLogBlock("Examinar");
 
+     // Adicione este log
+    console.log("Verificando behavior para sala:", currentRoom.id);
+    const behavior = getRoomBehavior(currentRoom.id);
+    console.log("Behavior encontrado:", behavior);
+
        // Tenta usar o behavior primeiro
     const behavior = getRoomBehavior(currentRoom.id);
     if (behavior?.handlers?.onExamine) {
