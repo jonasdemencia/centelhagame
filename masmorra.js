@@ -1078,10 +1078,14 @@ async function examineRoom() {
     
     startNewLogBlock("Examinar");
 
-
-       // Tenta usar o behavior primeiro
+    // Adiciona logs para debugging do behavior
+    console.log("Verificando behavior para sala:", currentRoom.id);
     const behavior = getRoomBehavior(currentRoom.id);
+    console.log("Behavior encontrado:", behavior);
+
+    // Tenta usar o behavior primeiro
     if (behavior?.handlers?.onExamine) {
+        console.log("Executando handler onExamine do behavior");
         const handled = await behavior.handlers.onExamine({
             room: currentRoom,
             addLogMessage,
@@ -1091,10 +1095,15 @@ async function examineRoom() {
             playerState
         });
         
+        console.log("Resultado do handler:", handled ? "Evento tratado" : "Evento não tratado");
+        
         if (handled) {
+            console.log("Salvando estado e finalizando execução do examine");
             savePlayerState();
             return;
         }
+    } else {
+        console.log("Nenhum handler onExamine encontrado, usando comportamento padrão");
     }
     
     // Verifica se a sala tem configurações de exploração
@@ -1137,6 +1146,8 @@ async function examineRoom() {
         }
     }
     
+    console.log("Nenhum evento de exploração encontrado, usando descrição padrão");
+    
     // Se não encontrou nenhum evento de exame ou não há configurações de exploração,
     // usa o comportamento padrão
     await addLogMessage(`Você examina a ${currentRoom.name} com cuidado.`, 500);
@@ -1156,7 +1167,6 @@ async function examineRoom() {
     
     await addLogMessage(detailedDescription, 1000);
 }
-
 
 
 function createInteractionButtonsFromPOI(interactions, room) {
