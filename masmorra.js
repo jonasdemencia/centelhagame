@@ -1211,6 +1211,7 @@ function createInteractionButtonsFromPOI(interactions, room) {
 
 
 // Função para criar o botão de recolher item
+// Função para criar o botão de recolher item
 function createCollectButton(item) {
     // Remove qualquer botão existente primeiro
     removeCollectButton();
@@ -1226,33 +1227,45 @@ function createCollectButton(item) {
     
     // Adiciona o evento de clique
     collectButton.addEventListener('click', async () => {
-        // Verifica e executa o handler onCollectItem se existir
         const currentRoom = dungeon.rooms[playerState.currentRoom];
-        if (currentRoom && currentRoom.behavior && currentRoom.behavior.handlers && currentRoom.behavior.handlers.onCollectItem) {
-            await currentRoom.behavior.handlers.onCollectItem({
-                item,
-                addLogMessage,
-                room: currentRoom
-            });
-        }
-
-        // Adiciona o item ao inventário
-        const success = await addItemToInventory(item);
         
-        if (success) {
-            // Marca o item como coletado
-            const currentRoom = dungeon.rooms[playerState.currentRoom];
-            if (currentRoom && currentRoom.id === "room-2") {
-                currentRoom.explorationState.keyCollected = true;
-                savePlayerState();
+        try {
+            // 1. Primeiro tenta chamar onCollect do próprio item se existir
+            if (item.onCollect) {
+                await item.onCollect({
+                    addLogMessage,
+                    room: currentRoom
+                });
             }
             
-            // Adiciona mensagem ao log
-            startNewLogBlock("Item Recolhido");
-            await addLogMessage(`Você recolheu: ${item.content}`, 800);
+            // 2. Depois tenta chamar onCollectItem do behavior da sala
+            if (currentRoom && currentRoom.behavior && currentRoom.behavior.handlers && currentRoom.behavior.handlers.onCollectItem) {
+                await currentRoom.behavior.handlers.onCollectItem({
+                    item,
+                    addLogMessage,
+                    room: currentRoom
+                });
+            }
+
+            // 3. Finalmente adiciona o item ao inventário
+            const success = await addItemToInventory(item);
             
-            // Remove o botão
-            removeCollectButton();
+            if (success) {
+                // Marca o item como coletado
+                if (currentRoom && currentRoom.id === "room-2") {
+                    currentRoom.explorationState.keyCollected = true;
+                    savePlayerState();
+                }
+                
+                // Adiciona mensagem ao log
+                startNewLogBlock("Item Recolhido");
+                await addLogMessage(`Você recolheu: ${item.content}`, 800);
+                
+                // Remove o botão
+                removeCollectButton();
+            }
+        } catch (error) {
+            console.error("Erro ao coletar item:", error);
         }
     });
     
