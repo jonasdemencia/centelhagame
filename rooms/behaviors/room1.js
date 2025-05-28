@@ -34,7 +34,11 @@ export const Room1Behavior = {
                         items: [{
                             id: "warning-scroll",
                             content: "Pergaminho de Aviso",
-                            description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'"
+                            description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'",
+                            onCollect: async (context) => {
+                                await context.addLogMessage("Você desenrola cuidadosamente o pergaminho amarelado, revelando um aviso sombrio sobre as provações que aguardam.");
+                                return true;
+                            }
                         }]
                     }
                 ], room);
@@ -73,7 +77,17 @@ export const Room1Behavior = {
             if (poi.id === "skull" && !room.explorationState.skullExamined) {
                 room.explorationState.skullExamined = true;
                 await addLogMessage("Você remove cuidadosamente o pergaminho da órbita do crânio. As runas parecem pulsar levemente à luz das tochas.");
-                return true;
+                return {
+                    item: {
+                        id: "warning-scroll",
+                        content: "Pergaminho de Aviso",
+                        description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'",
+                        onCollect: async (context) => {
+                            await context.addLogMessage("Você desenrola cuidadosamente o pergaminho amarelado, revelando um aviso sombrio sobre as provações que aguardam.");
+                            return true;
+                        }
+                    }
+                };
             }
 
             return false;
