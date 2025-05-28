@@ -1,0 +1,126 @@
+export const Room2Behavior = {
+    // Estado inicial da sala
+    initialState: {
+        examined: false,
+        bloodPoolExamined: false,
+        altarExamined: false,
+        sacrificeMade: false
+    },
+
+    // Handlers para eventos da sala
+    handlers: {
+        // Manipula primeira visita
+        async onFirstVisit(context) {
+            const { addLogMessage } = context;
+            await addLogMessage("O sangue no chão começa a se mover em sua direção, formando tentáculos que tentam agarrar seus tornozelos.");
+            return true;
+        },
+
+        // Manipula ação de examinar
+        async onExamine(context) {
+            const { room, addLogMessage, createPointsOfInterest } = context;
+
+            // Inicializa o estado se necessário
+            if (!room.explorationState) {
+                room.explorationState = { ...this.initialState };
+            }
+
+            if (!room.explorationState.examined) {
+                await addLogMessage("Você examina a Câmara de Sangue com cuidado. A sala tem um teto alto e paredes de pedra antiga que pulsam como veias.");
+                room.explorationState.examined = true;
+
+                createPointsOfInterest([
+                    {
+                        id: "blood-pool",
+                        name: "Poça de Sangue",
+                        description: "No centro da sala há uma poça de sangue mais profunda, borbulhando como se estivesse viva."
+                    },
+                    {
+                        id: "altar",
+                        name: "Altar de Sangue",
+                        description: "Na parede norte há um altar com uma bacia vazia e uma inscrição: 'Apenas o sangue do corajoso abrirá o caminho.'",
+                        interactions: [
+                            {
+                                id: "blood-sacrifice",
+                                condition: "!states.sacrificeMade",
+                                name: "Fazer Sacrifício de Sangue",
+                                result: {
+                                    action: "testLuck",
+                                    luckTest: {
+                                        description: "O sacrifício de sangue é perigoso. Você precisa de sorte para não perder muito sangue.",
+                                        success: {
+                                            text: "Você consegue estancar o sangramento rapidamente. A chave de cristal vermelho está agora em suas mãos.",
+                                            effect: {"states.sacrificeMade": true},
+                                            items: [
+                                                {
+                                                    id: "blood-key",
+                                                    content: "Chave de Sangue",
+                                                    description: "Uma chave feita de cristal vermelho que pulsa como um coração."
+                                                }
+                                            ]
+                                        },
+                                        failure: {
+                                            text: "O corte é mais profundo do que você pretendia! O sangramento é intenso e você se sente fraco.",
+                                            effect: {"states.sacrificeMade": true},
+                                            damage: {
+                                                amount: "2D6",
+                                                message: "Você perde muito sangue no sacrifício!"
+                                            },
+                                            items: [
+                                                {
+                                                    id: "blood-key",
+                                                    content: "Chave de Sangue",
+                                                    description: "Uma chave feita de cristal vermelho que pulsa como um coração."
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ], room);
+
+                return true;
+            }
+
+            return false;
+        },
+
+        // Manipula ação de procurar
+        async onSearch(context) {
+            const { room, addLogMessage, applyDamage } = context;
+
+            if (!room.explorationState.sacrificeMade) {
+                await addLogMessage("Ao procurar pela sala, os tentáculos de sangue se enrolam em seus tornozelos, causando dor!");
+                await applyDamage({
+                    amount: "1D4",
+                    message: "Os tentáculos de sangue queimam sua pele!"
+                });
+                return true;
+            }
+
+            await addLogMessage("Você procura pela sala, mas o sangue permanece calmo após o sacrifício.");
+            return false;
+        },
+
+        // Manipula interação com pontos de interesse
+        async onInteractWithPOI(context) {
+            const { poi, room, addLogMessage } = context;
+            
+            if (poi.id === "blood-pool") {
+                room.explorationState.bloodPoolExamined = true;
+                await addLogMessage("A poça de sangue borbulha ameaçadoramente. Algo parece se mover nas profundezas.");
+                return true;
+            }
+
+            if (poi.id === "altar") {
+                room.explorationState.altarExamined = true;
+                await addLogMessage("O altar parece antigo e manchado de sangue seco. A bacia espera por um sacrifício.");
+                return true;
+            }
+
+            return false;
+        }
+    }
+};
