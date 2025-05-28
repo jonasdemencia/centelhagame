@@ -5,11 +5,23 @@ export const Room2Behavior = {
         bloodPoolExamined: false,
         altarExamined: false,
         sacrificeMade: false,
-        golemTriggered: false  // Novo estado para controlar o Golem
+        golemTriggered: false  // Estado para controlar o Golem
     },
 
     // Handlers para eventos da sala
     handlers: {
+        // Novo handler para controlar o estado inicial ao entrar na sala
+        async onRoomEnter(context) {
+            const { room } = context;
+            if (!room.explorationState) {
+                room.explorationState = { ...this.initialState };
+            }
+            // Garante que o Golem não seja ativado imediatamente
+            return {
+                suppressEnemy: true
+            };
+        },
+
         // Manipula primeira visita
         async onFirstVisit(context) {
             const { addLogMessage } = context;
@@ -114,12 +126,11 @@ export const Room2Behavior = {
                     room.explorationState.bloodPoolExamined = true;
                     await addLogMessage("A poça de sangue borbulha ameaçadoramente. Algo parece se mover nas profundezas.");
                     
-                    // Trigger do Golem movido para aqui
                     if (!room.explorationState.golemTriggered) {
                         room.explorationState.golemTriggered = true;
                         await addLogMessage("O sangue no centro da sala se ergue, formando um golem monstruoso que avança em sua direção!");
                         return {
-                            triggerEnemy: true  // Sinaliza para o motor que deve ativar o inimigo
+                            triggerEnemy: true
                         };
                     }
                 }
@@ -140,8 +151,10 @@ export const Room2Behavior = {
         // Handler para verificar se o inimigo deve ser ativado
         shouldTriggerEnemy(context) {
             const { room } = context;
-            // Só ativa o Golem se a poça foi examinada E o trigger ainda não aconteceu
-            return room.explorationState.bloodPoolExamined && !room.explorationState.golemTriggered;
+            // Só ativa o Golem se a poça foi examinada E o trigger aconteceu
+            return room.explorationState && 
+                   room.explorationState.bloodPoolExamined && 
+                   room.explorationState.golemTriggered;
         },
 
         // Handler para coletar itens
