@@ -107,7 +107,7 @@
     "name": "Golem de Sangue",
     "description": "Uma criatura humanoide feita inteiramente de sangue coagulado, com olhos vermelhos brilhantes e garras afiadas.",
     "trigger": {
-        "condition": "states.golemTriggered",  // Mudamos para o novo estado
+        "condition": "states.golemTriggered",  
         "message": "O sangue no centro da sala se ergue, formando um golem monstruoso que avança em sua direção!"
     }
 },
