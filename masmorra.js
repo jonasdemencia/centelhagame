@@ -1226,6 +1226,16 @@ function createCollectButton(item) {
     
     // Adiciona o evento de clique
     collectButton.addEventListener('click', async () => {
+        // Verifica e executa o handler onCollectItem se existir
+        const currentRoom = dungeon.rooms[playerState.currentRoom];
+        if (currentRoom && currentRoom.behavior && currentRoom.behavior.handlers && currentRoom.behavior.handlers.onCollectItem) {
+            await currentRoom.behavior.handlers.onCollectItem({
+                item,
+                addLogMessage,
+                room: currentRoom
+            });
+        }
+
         // Adiciona o item ao inventário
         const success = await addItemToInventory(item);
         
