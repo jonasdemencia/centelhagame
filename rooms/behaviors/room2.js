@@ -4,7 +4,8 @@ export const Room2Behavior = {
         examined: false,
         bloodPoolExamined: false,
         altarExamined: false,
-        sacrificeMade: false
+        sacrificeMade: false,
+        golemTriggered: false  // Novo estado para controlar o Golem
     },
 
     // Handlers para eventos da sala
@@ -109,14 +110,46 @@ export const Room2Behavior = {
             const { poi, room, addLogMessage } = context;
             
             if (poi.id === "blood-pool") {
-                room.explorationState.bloodPoolExamined = true;
-                await addLogMessage("A poça de sangue borbulha ameaçadoramente. Algo parece se mover nas profundezas.");
+                if (!room.explorationState.bloodPoolExamined) {
+                    room.explorationState.bloodPoolExamined = true;
+                    await addLogMessage("A poça de sangue borbulha ameaçadoramente. Algo parece se mover nas profundezas.");
+                    
+                    // Trigger do Golem movido para aqui
+                    if (!room.explorationState.golemTriggered) {
+                        room.explorationState.golemTriggered = true;
+                        await addLogMessage("O sangue no centro da sala se ergue, formando um golem monstruoso que avança em sua direção!");
+                        return {
+                            triggerEnemy: true  // Sinaliza para o motor que deve ativar o inimigo
+                        };
+                    }
+                }
                 return true;
             }
 
             if (poi.id === "altar") {
-                room.explorationState.altarExamined = true;
-                await addLogMessage("O altar parece antigo e manchado de sangue seco. A bacia espera por um sacrifício.");
+                if (!room.explorationState.altarExamined) {
+                    room.explorationState.altarExamined = true;
+                    await addLogMessage("O altar parece antigo e manchado de sangue seco. A bacia espera por um sacrifício.");
+                }
+                return true;
+            }
+
+            return false;
+        },
+
+        // Handler para verificar se o inimigo deve ser ativado
+        shouldTriggerEnemy(context) {
+            const { room } = context;
+            // Só ativa o Golem se a poça foi examinada E o trigger ainda não aconteceu
+            return room.explorationState.bloodPoolExamined && !room.explorationState.golemTriggered;
+        },
+
+        // Handler para coletar itens
+        async onCollectItem(context) {
+            const { item, addLogMessage } = context;
+            
+            if (item.id === "blood-key") {
+                await addLogMessage("O cristal pulsa em suas mãos como um coração vivo, irradiando um brilho vermelho-sangue.");
                 return true;
             }
 
