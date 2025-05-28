@@ -2,8 +2,7 @@ export const Room1Behavior = {
     // Estado inicial da sala
     initialState: {
         examined: false,
-        skullExamined: false,
-        scrollCollected: false
+        skullExamined: false
     },
 
     // Handlers para eventos da sala
@@ -32,9 +31,6 @@ export const Room1Behavior = {
                         id: "skull",
                         name: "Crânio com Runas",
                         description: "Um crânio humano com runas arcanas entalhadas na testa. Um pergaminho amarelado está enfiado em uma das órbitas.",
-                        onCollect: async () => {
-                            await addLogMessage("Você desenrola cuidadosamente o pergaminho amarelado, revelando um aviso sombrio sobre as provações que aguardam.");
-                        },
                         items: [{
                             id: "warning-scroll",
                             content: "Pergaminho de Aviso",
@@ -77,23 +73,19 @@ export const Room1Behavior = {
             if (poi.id === "skull" && !room.explorationState.skullExamined) {
                 room.explorationState.skullExamined = true;
                 await addLogMessage("Você remove cuidadosamente o pergaminho da órbita do crânio. As runas parecem pulsar levemente à luz das tochas.");
-                
-                if (!room.explorationState.scrollCollected) {
-                    room.explorationState.scrollCollected = true;
-                    await addLogMessage("Você desenrola cuidadosamente o pergaminho amarelado, revelando um aviso sombrio sobre as provações que aguardam.");
-                }
-                
-                return {
-                    item: {
-                        id: "warning-scroll",
-                        content: "Pergaminho de Aviso",
-                        description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'",
-                        onCollect: async () => {
-                            await addLogMessage("Você desenrola cuidadosamente o pergaminho amarelado, revelando um aviso sombrio sobre as provações que aguardam.");
-                            return true;
-                        }
-                    }
-                };
+                return true;
+            }
+
+            return false;
+        },
+
+        // Manipula coleta de itens
+        async onCollectItem(context) {
+            const { item, addLogMessage } = context;
+            
+            if (item.id === "warning-scroll") {
+                await addLogMessage("Você desenrola cuidadosamente o pergaminho amarelado, revelando um aviso sombrio sobre as provações que aguardam.");
+                return true;
             }
 
             return false;
