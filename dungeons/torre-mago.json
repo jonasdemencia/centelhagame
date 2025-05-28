@@ -102,21 +102,23 @@
                     "text": "O sangue no chão começa a se mover em sua direção, formando tentáculos que tentam agarrar seus tornozelos."
                 }
             ],
-                       ],
-            "enemy": {
-                "id": "blood-golem",
-                "name": "Golem de Sangue",
-                "description": "Uma criatura humanoide feita inteiramente de sangue coagulado, com olhos vermelhos brilhantes e garras afiadas."
-            },
-            "exploration": {
-                "states": {
-                    "initial": {
-                        "examined": false,
-                        "bloodPoolExamined": false,
-                        "altarExamined": false,
-                        "sacrificeMade": false
-                    }
-                },
+"enemies": [
+    {
+        "id": "blood-golem",
+        "name": "Golem de Sangue",
+        "description": "Uma criatura humanoide feita inteiramente de sangue coagulado, com olhos vermelhos brilhantes e garras afiadas."
+    }
+],
+"exploration": {
+    "states": {
+        "initial": {
+            "examined": false,
+            "bloodPoolExamined": false,
+            "altarExamined": false,
+            "sacrificeMade": false,
+            "golemTriggered": false
+        }
+    },
                 "examine": [
                     {
                         "condition": "!states.examined",
