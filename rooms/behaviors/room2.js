@@ -5,21 +5,17 @@ export const Room2Behavior = {
         bloodPoolExamined: false,
         altarExamined: false,
         sacrificeMade: false,
-        golemTriggered: false  // Estado para controlar o Golem
+        golemTriggered: false
     },
 
-    // Handlers para eventos da sala
     handlers: {
-        // Novo handler para controlar o estado inicial ao entrar na sala
-        async onRoomEnter(context) {
+        // Handler específico para controlar a visibilidade do inimigo
+        shouldShowEnemy(context) {
             const { room } = context;
             if (!room.explorationState) {
                 room.explorationState = { ...this.initialState };
             }
-            // Garante que o Golem não seja ativado imediatamente
-            return {
-                suppressEnemy: true
-            };
+            return false;
         },
 
         // Manipula primeira visita
@@ -33,7 +29,6 @@ export const Room2Behavior = {
         async onExamine(context) {
             const { room, addLogMessage, createPointsOfInterest } = context;
 
-            // Inicializa o estado se necessário
             if (!room.explorationState) {
                 room.explorationState = { ...this.initialState };
             }
@@ -119,7 +114,7 @@ export const Room2Behavior = {
 
         // Manipula interação com pontos de interesse
         async onInteractWithPOI(context) {
-            const { poi, room, addLogMessage } = context;
+            const { poi, room, addLogMessage, showEnemy } = context;
             
             if (poi.id === "blood-pool") {
                 if (!room.explorationState.bloodPoolExamined) {
@@ -129,9 +124,10 @@ export const Room2Behavior = {
                     if (!room.explorationState.golemTriggered) {
                         room.explorationState.golemTriggered = true;
                         await addLogMessage("O sangue no centro da sala se ergue, formando um golem monstruoso que avança em sua direção!");
-                        return {
-                            triggerEnemy: true
-                        };
+                        if (showEnemy) {
+                            showEnemy("blood-golem");
+                        }
+                        return true;
                     }
                 }
                 return true;
@@ -146,15 +142,6 @@ export const Room2Behavior = {
             }
 
             return false;
-        },
-
-        // Handler para verificar se o inimigo deve ser ativado
-        shouldTriggerEnemy(context) {
-            const { room } = context;
-            // Só ativa o Golem se a poça foi examinada E o trigger aconteceu
-            return room.explorationState && 
-                   room.explorationState.bloodPoolExamined && 
-                   room.explorationState.golemTriggered;
         },
 
         // Handler para coletar itens
