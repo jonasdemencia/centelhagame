@@ -31,6 +31,25 @@ export const monsterData = {
         ]
     },
 
+    "blood-golem": {
+    nome: "Golem de Sangue",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Uma criatura humanoide feita inteiramente de sangue coagulado, com olhos vermelhos brilhantes e garras afiadas.",
+    habilidade: 6,
+    couraça: 2,
+    pontosDeEnergia: 3,
+    pontosDeEnergiaMax: 3,
+    experiencia: 250,
+    dano: "2D6",
+    drops: [
+        {
+            id: "blood-core",
+            content: "Núcleo de Sangue",
+            description: "Um cristal pulsante retirado do peito do golem."
+        }
+    ]
+},
+
     "esqueleto-guardiao": {
     nome: "Esqueleto Guardião",
     imagem: "https://via.placeholder.com/150",
