@@ -1,5 +1,5 @@
 export const Room2Behavior = {
-    // Estado inicial da sala
+    // Estado inicial da sala permanece igual
     initialState: {
         examined: false,
         bloodPoolExamined: false,
@@ -9,23 +9,23 @@ export const Room2Behavior = {
     },
 
     handlers: {
-        // Handler específico para controlar a visibilidade do inimigo
+        // Handler ajustado para controlar a visibilidade do inimigo
         shouldShowEnemy(context) {
             const { room } = context;
             if (!room.explorationState) {
                 room.explorationState = { ...this.initialState };
             }
-            return false;
+            // Mostra o inimigo apenas se a poça foi examinada E o golem foi ativado
+            return room.explorationState.bloodPoolExamined && room.explorationState.golemTriggered;
         },
 
-        // Manipula primeira visita
+        // Todo o resto do código permanece EXATAMENTE igual
         async onFirstVisit(context) {
             const { addLogMessage } = context;
             await addLogMessage("O sangue no chão começa a se mover em sua direção, formando tentáculos que tentam agarrar seus tornozelos.");
             return true;
         },
 
-        // Manipula ação de examinar
         async onExamine(context) {
             const { room, addLogMessage, createPointsOfInterest } = context;
 
@@ -95,7 +95,6 @@ export const Room2Behavior = {
             return false;
         },
 
-        // Manipula ação de procurar
         async onSearch(context) {
             const { room, addLogMessage, applyDamage } = context;
 
@@ -112,7 +111,6 @@ export const Room2Behavior = {
             return false;
         },
 
-        // Manipula interação com pontos de interesse
         async onInteractWithPOI(context) {
             const { poi, room, addLogMessage, showEnemy } = context;
             
@@ -144,7 +142,6 @@ export const Room2Behavior = {
             return false;
         },
 
-        // Handler para coletar itens
         async onCollectItem(context) {
             const { item, addLogMessage } = context;
             
