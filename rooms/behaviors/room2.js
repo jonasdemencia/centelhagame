@@ -9,34 +9,30 @@ export const Room2Behavior = {
     },
 
     handlers: {
-        // Mudança aqui: de shouldShowEnemy para shouldTriggerEnemy
+        // O motor deve procurar por shouldTriggerEnemy
         shouldTriggerEnemy(context) {
             const { room } = context;
             if (!room.explorationState) {
                 room.explorationState = { ...this.initialState };
             }
-            return false;
+            // Só ativa o inimigo se bloodPoolExamined && golemTriggered
+            return !!(room.explorationState.bloodPoolExamined && room.explorationState.golemTriggered);
         },
 
-        // Manipula primeira visita
-        async onFirstVisit(context) {
-            const { addLogMessage } = context;
+        // Primeira visita
+        async onFirstVisit({ addLogMessage }) {
             await addLogMessage("O sangue no chão começa a se mover em sua direção, formando tentáculos que tentam agarrar seus tornozelos.");
             return true;
         },
 
-        // Manipula ação de examinar
-        async onExamine(context) {
-            const { room, addLogMessage, createPointsOfInterest } = context;
-
+        // Examinar sala
+        async onExamine({ room, addLogMessage, createPointsOfInterest }) {
             if (!room.explorationState) {
                 room.explorationState = { ...this.initialState };
             }
-
             if (!room.explorationState.examined) {
                 await addLogMessage("Você examina a Câmara de Sangue com cuidado. A sala tem um teto alto e paredes de pedra antiga que pulsam como veias.");
                 room.explorationState.examined = true;
-
                 createPointsOfInterest([
                     {
                         id: "blood-pool",
@@ -91,14 +87,11 @@ export const Room2Behavior = {
 
                 return true;
             }
-
             return false;
         },
 
-        // Manipula ação de procurar
-        async onSearch(context) {
-            const { room, addLogMessage, applyDamage } = context;
-
+        // Procurar
+        async onSearch({ room, addLogMessage, applyDamage }) {
             if (!room.explorationState.sacrificeMade) {
                 await addLogMessage("Ao procurar pela sala, os tentáculos de sangue se enrolam em seus tornozelos, causando dor!");
                 await applyDamage({
@@ -107,32 +100,26 @@ export const Room2Behavior = {
                 });
                 return true;
             }
-
             await addLogMessage("Você procura pela sala, mas o sangue permanece calmo após o sacrifício.");
             return false;
         },
 
-        // Manipula interação com pontos de interesse
-        async onInteractWithPOI(context) {
-            const { poi, room, addLogMessage, showEnemy } = context;
-            
+        // Interagir com POIs
+        async onInteractWithPOI({ poi, room, addLogMessage, showEnemy }) {
             if (poi.id === "blood-pool") {
                 if (!room.explorationState.bloodPoolExamined) {
                     room.explorationState.bloodPoolExamined = true;
                     await addLogMessage("A poça de sangue borbulha ameaçadoramente. Algo parece se mover nas profundezas.");
-                    
                     if (!room.explorationState.golemTriggered) {
                         room.explorationState.golemTriggered = true;
                         await addLogMessage("O sangue no centro da sala se ergue, formando um golem monstruoso que avança em sua direção!");
-                        if (showEnemy) {
-                            showEnemy("blood-golem");
-                        }
+                        // O motor deve chamar shouldTriggerEnemy após isso e mostrar o botão de lutar
+                        if (showEnemy) showEnemy("blood-golem");
                         return true;
                     }
                 }
                 return true;
             }
-
             if (poi.id === "altar") {
                 if (!room.explorationState.altarExamined) {
                     room.explorationState.altarExamined = true;
@@ -140,19 +127,15 @@ export const Room2Behavior = {
                 }
                 return true;
             }
-
             return false;
         },
 
-        // Handler para coletar itens
-        async onCollectItem(context) {
-            const { item, addLogMessage } = context;
-            
+        // Coletar item
+        async onCollectItem({ item, addLogMessage }) {
             if (item.id === "blood-key") {
                 await addLogMessage("O cristal pulsa em suas mãos como um coração vivo, irradiando um brilho vermelho-sangue.");
                 return true;
             }
-
             return false;
         }
     }
