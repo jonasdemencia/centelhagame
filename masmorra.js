@@ -2840,11 +2840,9 @@ async function moveToRoom(roomId) {
                 playerState.discoveredBlocks.some(b => b.gridX === block.gridX && b.gridY === block.gridY);
             
             if (!alreadyDiscovered) {
-                // Se o bloco tem a propriedade "connects", verifica se todas as salas conectadas foram visitadas
                 if (block.connects) {
                     const allConnectedRoomsVisited = block.connects.every(roomId => 
                         playerState.visitedRooms.includes(roomId));
-                    
                     if (allConnectedRoomsVisited) {
                         if (!playerState.discoveredBlocks) playerState.discoveredBlocks = [];
                         playerState.discoveredBlocks.push({
@@ -2858,10 +2856,8 @@ async function moveToRoom(roomId) {
                     for (const visitedRoomId of playerState.visitedRooms) {
                         const visitedRoom = dungeon.rooms[visitedRoomId];
                         if (!visitedRoom) continue;
-                        
                         const distX = Math.abs(block.gridX - visitedRoom.gridX);
                         const distY = Math.abs(block.gridY - visitedRoom.gridY);
-                        
                         if (distX <= 2 && distY <= 2) {
                             connectedRooms++;
                             if (connectedRooms >= 2) {
@@ -2879,7 +2875,7 @@ async function moveToRoom(roomId) {
         }
 
         // Tenta usar o behavior primeiro
-        const behavior = getRoomBehavior(room.id);
+        const behavior = getRoomBehavior ? getRoomBehavior(room.id) : undefined;
         if (behavior?.handlers?.onFirstVisit) {
             await behavior.handlers.onFirstVisit({
                 room,
@@ -2891,7 +2887,6 @@ async function moveToRoom(roomId) {
             if (room.exploration && room.exploration.states && room.exploration.states.initial) {
                 room.explorationState = { ...room.exploration.states.initial };
             }
-            
             // Processa eventos de primeira visita
             const firstVisitEvents = room.events?.filter(event => event.type === "first-visit") || [];
             for (const event of firstVisitEvents) {
@@ -2900,7 +2895,7 @@ async function moveToRoom(roomId) {
         }
     }
 
-        // Verifica se a sala tem um inimigo e se ele já foi derrotado
+    // Verifica se a sala tem um inimigo e se ele já foi derrotado
     let customDescription = room.description;
     if (room.enemy) {
         const isDefeated = await checkDefeatedMonster(room.enemy.id);
@@ -2910,89 +2905,60 @@ async function moveToRoom(roomId) {
             }
         }
     }
-    
+
     // Adiciona descrição da sala ao log
     startNewLogBlock(room.name);
     await addLogMessage(customDescription, 1000);
-    
+
     // Atualiza o mapa
     drawMap();
 
     // Atualiza a barra de energia
     updateHealthBar();
-    
-    console.log("LOG: Verificando inimigos na sala:", room);
 
-    // Obtém o behavior da sala (NOVA LINHA)
-    const behavior = window[`Room${roomId.charAt(0).toUpperCase() + roomId.slice(1)}Behavior`];
-    
-    // Verifica se há múltiplos inimigos na sala
+    // --- AJUSTE: Prioridade para behavior controlar inimigo ---
+    const behavior =
+        (typeof getRoomBehavior === "function" && getRoomBehavior(room.id)) ||
+        (window && window[`Room${roomId.charAt(0).toUpperCase() + roomId.slice(1)}Behavior`]);
+
+    // Se há múltiplos inimigos
     if (room.enemies && room.enemies.length > 0) {
-        console.log("LOG: Múltiplos inimigos encontrados:", room.enemies);
-        
-        // Verifica cada inimigo
         for (const enemy of room.enemies) {
             const isDefeated = await checkDefeatedMonster(enemy.id);
             if (isDefeated) {
                 await addLogMessage(`Você vê os restos do ${enemy.name} que você derrotou anteriormente.`, 800);
                 continue;
             }
-
-            // Verifica se o behavior deve controlar este inimigo (NOVA SEÇÃO)
+            // Prioriza handler de behavior se existir
             if (behavior?.handlers?.shouldTriggerEnemy) {
                 const shouldShow = behavior.handlers.shouldTriggerEnemy({ room, enemy });
-                if (!shouldShow) {
-                    continue; // Pula este inimigo se o behavior diz para não mostrar
-                }
+                if (!shouldShow) continue;
             }
-            
             if (enemy.trigger) {
-                console.log("LOG: Inimigo com trigger:", enemy);
-                
-                // Inicializa o estado de exploração se não existir
-                if (!room.explorationState) {
-                    room.explorationState = {};
-                }
-                
-                // Verifica se a condição do trigger é atendida usando evaluateCondition
+                if (!room.explorationState) room.explorationState = {};
                 const shouldTrigger = evaluateCondition(enemy.trigger.condition, room.explorationState);
-                console.log("LOG: Condição do trigger:", enemy.trigger.condition);
-                console.log("LOG: Estado da sala:", room.explorationState);
-                console.log("LOG: Trigger ativado?", shouldTrigger);
-                
                 if (shouldTrigger) {
                     await addLogMessage(enemy.trigger.message, 1000);
                     createFightButton(enemy);
-                    return; // Sai da função para não atualizar os botões de direção
+                    return;
                 }
             } else {
-                // Inimigo sem trigger - verifica behavior primeiro (MODIFICADO)
-                if (behavior?.handlers?.shouldTriggerEnemy) {
-                    const shouldShow = behavior.handlers.shouldTriggerEnemy({ room, enemy });
-                    if (!shouldShow) {
-                        continue;
-                    }
-                }
-                console.log("LOG: Inimigo sem trigger encontrado:", enemy);
                 createFightButton(enemy);
                 await addLogMessage(`Um ${enemy.name} está pronto para atacar!`, 800);
-                return; // Sai da função para não atualizar os botões de direção
+                return;
             }
         }
-    } 
-    // Verifica se há um inimigo único na sala
+    }
+    // Se há um inimigo único
     else if (room.enemy) {
-        console.log("LOG: Inimigo único encontrado:", room.enemy);
         const isDefeated = await checkDefeatedMonster(room.enemy.id);
-        
         if (isDefeated) {
             await addLogMessage(`Você vê os restos do ${room.enemy.name} que você derrotou anteriormente.`, 800);
         }
-        // Verifica o behavior antes de mostrar o inimigo (NOVA SEÇÃO)
+        // Se behavior controla, só ativa se ele permitir
         else if (behavior?.handlers?.shouldTriggerEnemy) {
             const shouldShow = behavior.handlers.shouldTriggerEnemy({ room });
             if (!shouldShow) {
-                // Se o behavior diz para não mostrar, apenas atualiza a interface
                 updateDirectionButtons();
             } else {
                 createFightButton(room.enemy);
@@ -3000,17 +2966,28 @@ async function moveToRoom(roomId) {
                 return;
             }
         }
-        // Se não há behavior controlando, usa a lógica original
+        // Se não, segue lógica trigger JSON
+        else if (room.enemy.trigger) {
+            if (!room.explorationState) room.explorationState = {};
+            const shouldTrigger = evaluateCondition(room.enemy.trigger.condition, room.explorationState);
+            if (shouldTrigger) {
+                await addLogMessage(room.enemy.trigger.message, 1000);
+                createFightButton(room.enemy);
+                return;
+            }
+            updateDirectionButtons();
+        }
+        // Se não há trigger nem behavior, mostra sempre
         else {
             createFightButton(room.enemy);
             await addLogMessage(`Um ${room.enemy.name} está pronto para atacar!`, 800);
             return;
         }
     }
-    
+
     // Atualiza os botões de direção
     updateDirectionButtons();
-    
+
     // Cria botões de interação para pontos de interesse, se houver
     if (room.pointsOfInterest) {
         createPointsOfInterestButtons(room.pointsOfInterest, room);
@@ -3020,7 +2997,7 @@ async function moveToRoom(roomId) {
     if (room.npcs) {
         createNPCButtons(room);
     }
-    
+
     // Salva o estado do jogador
     savePlayerState();
 }
