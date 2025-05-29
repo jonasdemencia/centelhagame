@@ -436,6 +436,8 @@ function updatePlayerEnergyInFirestore(userId, newEnergy) {
 
 
 
+import { getMonsterById } from './monstros.js';
+
 function createFightButton(enemy) {
     // Remove qualquer botão existente primeiro
     removeFightButton();
@@ -449,20 +451,17 @@ function createFightButton(enemy) {
             return;
         }
     } else if (enemy && !enemy.nome && enemy.id) {
-        // Caso seja objeto mas só tem id, busca o completo
         monsterObj = getMonsterById(enemy.id) || enemy;
     } else {
         monsterObj = enemy;
     }
 
-    // Garante que sempre temos um id para a URL
     const monsterId = monsterObj.id || enemy.id || enemy;
     if (!monsterId) {
         console.error("O monstro passado para createFightButton não possui id!");
         return;
     }
 
-    // Monta o objeto que será salvo no sessionStorage
     const monsterData = {
         id: monsterId,
         nome: monsterObj.name || monsterObj.nome || "Monstro Desconhecido",
@@ -476,13 +475,18 @@ function createFightButton(enemy) {
         drops: monsterObj.drops || []
     };
 
-    // Armazena os dados normalizados do monstro no sessionStorage
-    sessionStorage.setItem('currentMonster', JSON.stringify(monsterData));
+    // Cria o botão (tudo até aqui NÃO faz redirecionamento!)
+    const fightButton = document.createElement('button');
+    fightButton.id = 'fight-enemy-button';
+    fightButton.textContent = 'Lutar!';
+    fightButton.classList.add('action-btn', 'fight-btn');
 
-    // Redireciona para a página de batalha com o ID do inimigo
-    window.location.href = `https://jonasdemencia.github.io/centelhagame/batalha.html?monstro=${monsterId}`;
-    
-    // Resto igual...
+    // Redireciona só no click do botão!
+    fightButton.addEventListener('click', () => {
+        sessionStorage.setItem('currentMonster', JSON.stringify(monsterData));
+        window.location.href = `https://jonasdemencia.github.io/centelhagame/batalha.html?monstro=${monsterId}`;
+    });
+
     // Adiciona o botão à interface
     const actionButtons = document.getElementById('action-buttons');
     if (actionButtons) {
