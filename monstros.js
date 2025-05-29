@@ -32,6 +32,7 @@ export const monsterData = {
     },
 
     "blood-golem": {
+    id: "blood-golem",
     nome: "Golem de Sangue",
     imagem: "https://via.placeholder.com/150",
     descricao: "Uma criatura humanoide feita inteiramente de sangue coagulado, com olhos vermelhos brilhantes e garras afiadas.",
