@@ -215,33 +215,41 @@ inventarioButton.addEventListener("click", () => {
     }
 });
 
-// Simula o recebimento de novos itens (com ID fixo)
-async function simularRecebimentoDeItens(novosItens) {
-    const userId = getLoggedInUserId();
-    if (!userId) return;
+// --- REMOVA OU COMENTE ESTE BLOCO DE SIMULAÇÃO ---
+// async function simularRecebimentoDeItens(novosItens) {
+//     const userId = getLoggedInUserId();
+//     if (!userId) return;
 
-    for (const item of novosItens) {
-        const lootCollectionRef = collection(db, "users", userId, "loot");
-        const itemRef = doc(lootCollectionRef, item.id); // <-- AQUI
-        await setDoc(itemRef, item);
-    }
+//     for (const item of novosItens) {
+//         const lootCollectionRef = collection(db, "users", userId, "loot");
+//         const itemRef = doc(lootCollectionRef, item.id);
+//         await setDoc(itemRef, item);
+//     }
 
-    exibirItens(); // Atualiza a exibição
-}
+//     exibirItens(); // Atualiza a exibição
+// }
 
-// Dados de exemplo dos itens obtidos (para simulação)
-const itensDeExemplo = [
-    { id: "weapon", content: "Espada de madeira", description: "Uma espada de treinamento." }, // Mudando o id para corresponder ao slot
-    { id: "pocao-cura-minima", content: "Poção de Cura Minima", consumable: true, quantity: 2, effect: "heal", value: 2, description: "Uma poção que restaura uma quantidade minima de energia vital." }, // Adicionando efeito e valor para a poção
-];
+// const itensDeExemplo = [
+//     { id: "weapon", content: "Espada de madeira", description: "Uma espada de treinamento." },
+//     { id: "pocao-cura-minima", content: "Poção de Cura Minima", consumable: true, quantity: 2, effect: "heal", value: 2, description: "Uma poção que restaura uma quantidade minima de energia vital." },
+// ];
 
+// document.addEventListener('DOMContentLoaded', () => {
+//     onAuthStateChanged(auth, (user) => {
+//         if (user) {
+//             simularRecebimentoDeItens(itensDeExemplo);
+//         } else {
+//             mensagemDiv.textContent = "Faça login para ver os itens.";
+//         }
+//     });
+// });
 
-// Simula o recebimento de itens ao carregar a página (apenas para demonstração)
+// --- USE APENAS ISSO NO FINAL DO ARQUIVO ---
+// Carrega e exibe apenas o loot real do usuário
 document.addEventListener('DOMContentLoaded', () => {
-    // Verifica se o usuário está logado antes de tentar exibir os itens
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            simularRecebimentoDeItens(itensDeExemplo);
+            exibirItens(); // Exibe só os itens reais do loot no Firestore
         } else {
             mensagemDiv.textContent = "Faça login para ver os itens.";
         }
