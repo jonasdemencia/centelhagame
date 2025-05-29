@@ -113,11 +113,15 @@ export const Room2Behavior = {
                     if (!room.explorationState.golemTriggered) {
                         room.explorationState.golemTriggered = true;
                         await addLogMessage("O sangue no centro da sala se ergue, formando um golem monstruoso que avança em sua direção!");
-                        // O motor deve chamar shouldTriggerEnemy após isso e mostrar o botão de lutar
                         if (showEnemy) showEnemy("blood-golem");
+                        // Força o motor a reavaliar a sala e exibir o botão de lutar
+                        if (typeof moveToRoom === "function") {
+                            moveToRoom(room.id);
+                        }
                         return true;
                     }
                 }
+                // Mesmo que já tenha examinado, marca como true para garantir consistência
                 return true;
             }
             if (poi.id === "altar") {
