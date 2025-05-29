@@ -434,40 +434,55 @@ function updatePlayerEnergyInFirestore(userId, newEnergy) {
         });
 }
 
+
+
 function createFightButton(enemy) {
     // Remove qualquer botão existente primeiro
     removeFightButton();
 
-    // Cria o botão
-    const fightButton = document.createElement('button');
-    fightButton.id = 'fight-enemy-button';
-    fightButton.textContent = 'Lutar!';
-    fightButton.classList.add('action-btn', 'fight-btn');
+    // Permite receber tanto string quanto objeto
+    let monsterObj;
+    if (typeof enemy === "string") {
+        monsterObj = getMonsterById(enemy);
+        if (!monsterObj) {
+            console.error("Monstro não encontrado em monstros.js para o id:", enemy);
+            return;
+        }
+    } else if (enemy && !enemy.nome && enemy.id) {
+        // Caso seja objeto mas só tem id, busca o completo
+        monsterObj = getMonsterById(enemy.id) || enemy;
+    } else {
+        monsterObj = enemy;
+    }
 
-    // Adiciona o evento de clique
-    fightButton.addEventListener('click', () => {
-        // Certifique-se de que o objeto enemy tem todas as propriedades necessárias
-        // e com os nomes corretos antes de armazená-lo
-        const monsterData = {
-            id: enemy.id,
-            nome: enemy.name || enemy.nome,
-            descricao: enemy.description || enemy.descricao,
-            imagem: enemy.image || enemy.imagem || "https://via.placeholder.com/150",
-            habilidade: enemy.habilidade || 3,
-            couraça: enemy.couraça || 5,
-            pontosDeEnergia: enemy.pontosDeEnergia || 3,
-            pontosDeEnergiaMax: enemy.pontosDeEnergiaMax || 3,
-            dano: enemy.dano || "1D8",
-            drops: enemy.drops || []
-        };
+    // Garante que sempre temos um id para a URL
+    const monsterId = monsterObj.id || enemy.id || enemy;
+    if (!monsterId) {
+        console.error("O monstro passado para createFightButton não possui id!");
+        return;
+    }
 
-        // Armazena os dados normalizados do monstro no sessionStorage
-        sessionStorage.setItem('currentMonster', JSON.stringify(monsterData));
+    // Monta o objeto que será salvo no sessionStorage
+    const monsterData = {
+        id: monsterId,
+        nome: monsterObj.name || monsterObj.nome || "Monstro Desconhecido",
+        descricao: monsterObj.description || monsterObj.descricao || "Sem descrição.",
+        imagem: monsterObj.image || monsterObj.imagem || "https://via.placeholder.com/150",
+        habilidade: monsterObj.habilidade || 3,
+        couraça: monsterObj.couraça || 5,
+        pontosDeEnergia: monsterObj.pontosDeEnergia || 3,
+        pontosDeEnergiaMax: monsterObj.pontosDeEnergiaMax || monsterObj.pontosDeEnergia || 3,
+        dano: monsterObj.dano || "1D8",
+        drops: monsterObj.drops || []
+    };
 
-        // Redireciona para a página de batalha com o ID do inimigo
-        window.location.href = `https://jonasdemencia.github.io/centelhagame/batalha.html?monstro=${enemy.id}`;
-    });
+    // Armazena os dados normalizados do monstro no sessionStorage
+    sessionStorage.setItem('currentMonster', JSON.stringify(monsterData));
 
+    // Redireciona para a página de batalha com o ID do inimigo
+    window.location.href = `https://jonasdemencia.github.io/centelhagame/batalha.html?monstro=${monsterId}`;
+    
+    // Resto igual...
     // Adiciona o botão à interface
     const actionButtons = document.getElementById('action-buttons');
     if (actionButtons) {
@@ -477,6 +492,8 @@ function createFightButton(enemy) {
     // Desabilita todos os outros botões quando há um inimigo
     disableAllButtonsExceptFight();
 }
+
+
 
 // Função para desabilitar todos os botões exceto o de lutar
 function disableAllButtonsExceptFight() {
