@@ -1367,6 +1367,27 @@ function removePointsOfInterestButtons() {
 async function handlePointOfInterestClick(poi, room) {
     console.log("Clique em ponto de interesse:", poi);
     console.log("Estado da sala no momento do clique:", room.explorationState);
+
+    // --- INÍCIO DO AJUSTE: chama o behavior, se existir ---
+    let behavior;
+    if (typeof getRoomBehavior === "function") {
+        behavior = getRoomBehavior(room.id);
+    } else if (window && window[`Room${room.id.charAt(0).toUpperCase() + room.id.slice(1)}Behavior`]) {
+        behavior = window[`Room${room.id.charAt(0).toUpperCase() + room.id.slice(1)}Behavior`];
+    }
+
+    if (behavior && behavior.handlers && typeof behavior.handlers.onInteractWithPOI === "function") {
+        // Se o handler do behavior tratar, ele retorna true e a execução padrão é interrompida
+        const result = await behavior.handlers.onInteractWithPOI({
+            poi,
+            room,
+            addLogMessage,
+            showEnemy: createFightButton, // Para compatibilidade
+            moveToRoom
+        });
+        if (result) return;
+    }
+    // --- FIM DO AJUSTE ---
     
     // Remove botões de interação existentes primeiro
     removeInteractionButtons();
