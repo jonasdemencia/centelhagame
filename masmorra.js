@@ -436,8 +436,6 @@ function updatePlayerEnergyInFirestore(userId, newEnergy) {
 
 
 
-import { getMonsterById } from './monstros.js';
-
 function createFightButton(enemy) {
     // Remove qualquer botão existente primeiro
     removeFightButton();
