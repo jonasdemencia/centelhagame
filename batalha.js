@@ -254,9 +254,10 @@ async function markMonsterAsDefeated(userId, monsterId) {
 }
 
 
+
 function handlePostBattle(monster) {
     console.log("handlePostBattle chamado com monstro:", monster?.nome);
-    
+
     // Concede experiência ao jogador se o monstro foi derrotado
     if (monster && monster.pontosDeEnergia <= 0) {
         // Define a experiência com base no nome do monstro
@@ -283,7 +284,7 @@ function handlePostBattle(monster) {
             monster.nome === "Árvore Viva" ? 130 :
             monster.nome === "Rato Mutante" ? 60 :
             20; // Valor padrão para monstros não listados
-        
+
         const user = auth.currentUser;
         if (user) {
             // Atualiza a experiência do jogador
@@ -297,23 +298,23 @@ function handlePostBattle(monster) {
                         const xpTitle = document.createElement('h4');
                         xpTitle.textContent = 'Experiência';
                         xpDiv.appendChild(xpTitle);
-                        
+
                         const xpMsg = document.createElement('p');
                         xpMsg.textContent = `Você ganhou ${xpToGain} pontos de experiência!`;
                         xpDiv.appendChild(xpMsg);
-                        
+
                         const totalMsg = document.createElement('p');
                         totalMsg.textContent = `Experiência total: ${newXP}`;
                         xpDiv.appendChild(totalMsg);
-                        
+
                         logContainer.prepend(xpDiv);
                     }
                 })
                 .catch(error => {
                     console.error("Erro ao conceder experiência:", error);
                 });
-            
-            // NOVA ADIÇÃO: Marca o monstro como derrotado
+
+            // Marca o monstro como derrotado
             const monsterName = getUrlParameter('monstro');
             if (monsterName) {
                 markMonsterAsDefeated(user.uid, monsterName)
@@ -321,32 +322,69 @@ function handlePostBattle(monster) {
                         if (success) {
                             console.log(`LOG: Monstro ${monsterName} marcado como derrotado para o usuário ${user.uid}`);
                         } else {
-                            console.error(`LOG: Falha ao marcar monstro ${monsterName} como derrotado`);
+                            console.error(`LOG: Falha ao marcar monstro como derrotado`);
                         }
                     });
             }
         }
     }
-    
+
+    // ----------- SISTEMA DE DROPS FLEXÍVEL -----------
+    let lootItems = [];
+    // 1. Prioridade: Loot customizado definido pelo behavior/sala, via sessionStorage
+    const customLootStr = sessionStorage.getItem('customLoot');
+    if (customLootStr) {
+        try {
+            lootItems = JSON.parse(customLootStr);
+            if (!Array.isArray(lootItems)) lootItems = [];
+        } catch (e) {
+            lootItems = [];
+        }
+        sessionStorage.removeItem('customLoot'); // Limpa após uso
+    }
+
+    // 2. Se não existe customLoot, usa os drops do monstro
+    if (!lootItems || lootItems.length === 0) {
+        lootItems = Array.isArray(monster.drops) ? monster.drops : [];
+    }
+
+    // 3. Se ainda não tem loot, usa fallback genérico
+    if (!lootItems || lootItems.length === 0) {
+        if (typeof getDefaultLoot === "function") {
+            lootItems = getDefaultLoot(monster);
+        } else {
+            lootItems = []; // fallback vazio
+        }
+    }
+
+    // Salva loot para a tela de loot
+    sessionStorage.setItem('lootItems', JSON.stringify(lootItems));
+
+    // --------------------------------------------------
+
     // Reativa o botão de inventário
     const inventarioButton = document.getElementById("abrir-inventario");
     if (inventarioButton) {
         inventarioButton.disabled = false;
         inventarioButton.style.display = 'block';
     }
-    
+
     // Exibe o botão de loot
     const lootButton = document.getElementById('loot-button');
     if (lootButton) {
         lootButton.style.display = 'block';
-        lootButton.addEventListener('click', () => {
+        // Remove listeners antigos para evitar múltiplos redirecionamentos
+        lootButton.replaceWith(lootButton.cloneNode(true));
+        const newLootButton = document.getElementById('loot-button');
+        newLootButton.style.display = 'block';
+        newLootButton.addEventListener('click', () => {
             console.log("Botão de loot clicado. Redirecionando para loot.html");
             window.location.href = 'loot.html';
         });
     } else {
         console.error("Erro: Botão de loot não encontrado no HTML.");
     }
-    
+
     // Declara a variável battleStarted no escopo global
     window.battleStarted = false; // Reset do estado da batalha usando window para garantir escopo global
 }
