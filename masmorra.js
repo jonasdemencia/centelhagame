@@ -2900,7 +2900,7 @@ async function moveToRoom(roomId) {
         }
     }
 
-    // Verifica se a sala tem um inimigo e se ele já foi derrotado
+        // Verifica se a sala tem um inimigo e se ele já foi derrotado
     let customDescription = room.description;
     if (room.enemy) {
         const isDefeated = await checkDefeatedMonster(room.enemy.id);
@@ -2922,6 +2922,9 @@ async function moveToRoom(roomId) {
     updateHealthBar();
     
     console.log("LOG: Verificando inimigos na sala:", room);
+
+    // Obtém o behavior da sala (NOVA LINHA)
+    const behavior = window[`Room${roomId.charAt(0).toUpperCase() + roomId.slice(1)}Behavior`];
     
     // Verifica se há múltiplos inimigos na sala
     if (room.enemies && room.enemies.length > 0) {
@@ -2933,6 +2936,14 @@ async function moveToRoom(roomId) {
             if (isDefeated) {
                 await addLogMessage(`Você vê os restos do ${enemy.name} que você derrotou anteriormente.`, 800);
                 continue;
+            }
+
+            // Verifica se o behavior deve controlar este inimigo (NOVA SEÇÃO)
+            if (behavior?.handlers?.shouldTriggerEnemy) {
+                const shouldShow = behavior.handlers.shouldTriggerEnemy({ room, enemy });
+                if (!shouldShow) {
+                    continue; // Pula este inimigo se o behavior diz para não mostrar
+                }
             }
             
             if (enemy.trigger) {
@@ -2955,7 +2966,13 @@ async function moveToRoom(roomId) {
                     return; // Sai da função para não atualizar os botões de direção
                 }
             } else {
-                // Inimigo sem trigger - combate imediato
+                // Inimigo sem trigger - verifica behavior primeiro (MODIFICADO)
+                if (behavior?.handlers?.shouldTriggerEnemy) {
+                    const shouldShow = behavior.handlers.shouldTriggerEnemy({ room, enemy });
+                    if (!shouldShow) {
+                        continue;
+                    }
+                }
                 console.log("LOG: Inimigo sem trigger encontrado:", enemy);
                 createFightButton(enemy);
                 await addLogMessage(`Um ${enemy.name} está pronto para atacar!`, 800);
@@ -2970,10 +2987,24 @@ async function moveToRoom(roomId) {
         
         if (isDefeated) {
             await addLogMessage(`Você vê os restos do ${room.enemy.name} que você derrotou anteriormente.`, 800);
-        } else {
+        }
+        // Verifica o behavior antes de mostrar o inimigo (NOVA SEÇÃO)
+        else if (behavior?.handlers?.shouldTriggerEnemy) {
+            const shouldShow = behavior.handlers.shouldTriggerEnemy({ room });
+            if (!shouldShow) {
+                // Se o behavior diz para não mostrar, apenas atualiza a interface
+                updateDirectionButtons();
+            } else {
+                createFightButton(room.enemy);
+                await addLogMessage(`Um ${room.enemy.name} está pronto para atacar!`, 800);
+                return;
+            }
+        }
+        // Se não há behavior controlando, usa a lógica original
+        else {
             createFightButton(room.enemy);
             await addLogMessage(`Um ${room.enemy.name} está pronto para atacar!`, 800);
-            return; // Sai da função para não atualizar os botões de direção
+            return;
         }
     }
     
