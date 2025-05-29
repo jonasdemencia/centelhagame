@@ -290,7 +290,6 @@ function handlePostBattle(monster) {
             // Atualiza a experiência do jogador
             updatePlayerExperience(user.uid, xpToGain)
                 .then(newXP => {
-                    // Cria um elemento de experiência diretamente no battleLogContent
                     const logContainer = document.getElementById("battle-log-content");
                     if (logContainer) {
                         const xpDiv = document.createElement('div');
@@ -360,6 +359,22 @@ function handlePostBattle(monster) {
     // Salva loot para a tela de loot
     sessionStorage.setItem('lootItems', JSON.stringify(lootItems));
 
+    // ------------ NOVO: SALVAR NO FIRESTORE -------------
+    const user = auth.currentUser;
+    if (user && lootItems.length > 0) {
+        console.log("Salvando loot no Firestore:", lootItems);
+        salvarDropsNoLoot(user.uid, lootItems)
+            .then(() => {
+                console.log("Loot salvo no Firestore com sucesso.");
+            })
+            .catch((error) => {
+                console.error("Erro ao salvar loot no Firestore:", error);
+            });
+    } else {
+        if (!user) console.log("Usuário não autenticado (loot não salvo).");
+        if (!lootItems.length) console.log("Loot vazio, nada a salvar.");
+    }
+
     // --------------------------------------------------
 
     // Reativa o botão de inventário
@@ -373,7 +388,6 @@ function handlePostBattle(monster) {
     const lootButton = document.getElementById('loot-button');
     if (lootButton) {
         lootButton.style.display = 'block';
-        // Remove listeners antigos para evitar múltiplos redirecionamentos
         lootButton.replaceWith(lootButton.cloneNode(true));
         const newLootButton = document.getElementById('loot-button');
         newLootButton.style.display = 'block';
@@ -385,11 +399,8 @@ function handlePostBattle(monster) {
         console.error("Erro: Botão de loot não encontrado no HTML.");
     }
 
-    // Declara a variável battleStarted no escopo global
     window.battleStarted = false; // Reset do estado da batalha usando window para garantir escopo global
 }
-
-
 
 
 document.addEventListener('DOMContentLoaded', () => {
