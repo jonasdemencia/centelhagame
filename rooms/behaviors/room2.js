@@ -1,3 +1,6 @@
+// room2.js -- Behavior para a Câmara de Sangue (room-2)
+// Ajustado para NÃO bloquear o motor de criar o botão de sorte no altar
+
 export const Room2Behavior = {
     // Estado inicial da sala
     initialState: {
@@ -54,7 +57,7 @@ export const Room2Behavior = {
                                         description: "O sacrifício de sangue é perigoso. Você precisa de sorte para não perder muito sangue.",
                                         success: {
                                             text: "Você consegue estancar o sangramento rapidamente. A chave de cristal vermelho está agora em suas mãos.",
-                                            effect: {"states.sacrificeMade": true},
+                                            effect: { "states.sacrificeMade": true },
                                             items: [
                                                 {
                                                     id: "blood-key",
@@ -65,7 +68,7 @@ export const Room2Behavior = {
                                         },
                                         failure: {
                                             text: "O corte é mais profundo do que você pretendia! O sangramento é intenso e você se sente fraco.",
-                                            effect: {"states.sacrificeMade": true},
+                                            effect: { "states.sacrificeMade": true },
                                             damage: {
                                                 amount: "2D6",
                                                 message: "Você perde muito sangue no sacrifício!"
@@ -129,7 +132,8 @@ export const Room2Behavior = {
                     room.explorationState.altarExamined = true;
                     await addLogMessage("O altar parece antigo e manchado de sangue seco. A bacia espera por um sacrifício.");
                 }
-                return true;
+                // NÃO bloqueie o fluxo padrão: deixe o motor criar o botão normalmente!
+                return false;
             }
             return false;
         },
