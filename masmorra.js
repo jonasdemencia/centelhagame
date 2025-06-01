@@ -2318,7 +2318,6 @@ async function startLuckTest(context) {
 
 
 // Função para realizar o teste de sorte com rolagens individuais
-// Função para realizar o teste de sorte com rolagens individuais
 async function performLuckTest(currentLuck) {
     // Remove qualquer botão de rolagem existente
     const existingRollContainer = document.getElementById('roll-dice-container');
@@ -2373,18 +2372,15 @@ async function performLuckTest(currentLuck) {
     const totalRoll = firstRoll + secondRoll;
     await addLogMessage(`Total dos dados: <strong>${totalRoll}</strong>`, 500);
 
+    // Reduz o atributo de sorte SEMPRE que testar (independente do resultado)
+    const newLuckValue = Math.max(0, currentLuck - 1);
+    playerState.attributes.luck = newLuckValue;
+    await addLogMessage(`Seu atributo de Sorte foi reduzido para <strong>${newLuckValue}</strong>.`, 800);
+    await updatePlayerLuckInFirestore(newLuckValue);
+
     // Verifica se teve sorte (roll <= luck)
     if (totalRoll <= currentLuck) {
         await addLogMessage(`<strong style='color: green;'>Você teve sorte!</strong> (${totalRoll} ≤ ${currentLuck})`, 800);
-
-        // Reduz o atributo de sorte
-        const newLuckValue = currentLuck - 1;
-        playerState.attributes.luck = newLuckValue;
-        await addLogMessage(`Seu atributo de Sorte foi reduzido para <strong>${newLuckValue}</strong>.`, 800);
-
-        // Atualiza o atributo de sorte no Firestore
-        await updatePlayerLuckInFirestore(newLuckValue);
-
         return true; // Indica que teve sorte
     } else {
         await addLogMessage(`<strong style='color: red;'>Você não teve sorte!</strong> (${totalRoll} > ${currentLuck})`, 800);
