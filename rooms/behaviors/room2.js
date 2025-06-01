@@ -1,5 +1,5 @@
 // room2.js -- Behavior para a Câmara de Sangue (room-2)
-// Ajustado para NÃO bloquear o motor de criar o botão de sorte no altar
+// Permite múltiplas tentativas de sacrifício: só bloqueia após sucesso.
 
 export const Room2Behavior = {
     // Estado inicial da sala
@@ -49,6 +49,7 @@ export const Room2Behavior = {
                         interactions: [
                             {
                                 id: "blood-sacrifice",
+                                // Permite nova tentativa enquanto NÃO teve sucesso
                                 condition: "!states.sacrificeMade",
                                 name: "Fazer Sacrifício de Sangue",
                                 result: {
@@ -68,18 +69,11 @@ export const Room2Behavior = {
                                         },
                                         failure: {
                                             text: "O corte é mais profundo do que você pretendia! O sangramento é intenso e você se sente fraco.",
-                                            effect: { "states.sacrificeMade": true },
+                                            // Não define sacrificeMade: permite tentar novamente!
                                             damage: {
                                                 amount: "2D6",
                                                 message: "Você perde muito sangue no sacrifício!"
-                                            },
-                                            items: [
-                                                {
-                                                    id: "blood-key",
-                                                    content: "Chave de Sangue",
-                                                    description: "Uma chave feita de cristal vermelho que pulsa como um coração."
-                                                }
-                                            ]
+                                            }
                                         }
                                     }
                                 }
