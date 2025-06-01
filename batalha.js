@@ -404,6 +404,17 @@ function handlePostBattle(monster) {
 
 
 document.addEventListener('DOMContentLoaded', () => {
+
+     // --- Limpeza dos dados de iniciativa ANTES de qualquer lógica de batalha ---
+    sessionStorage.removeItem('initiativeResult');
+    sessionStorage.removeItem('playerInitiativeRoll');
+    sessionStorage.removeItem('monsterInitiativeRoll');
+    sessionStorage.removeItem('playerAbility');
+    sessionStorage.removeItem('monsterAbility');
+    sessionStorage.removeItem('luteButtonClicked');
+    // ---------------------------------------------------------------------------
+
+    
     console.log("LOG: DOMContentLoaded evento disparado.");
     const lutarButton = document.getElementById("iniciar-luta");
     const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
