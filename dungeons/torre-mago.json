@@ -317,7 +317,7 @@
                 ]
             }
         },
-        "room-4": {
+                "room-4": {
             "id": "room-4",
             "name": "Jardim Venenoso",
             "description": "Uma sala repleta de vegetação exótica e colorida. Flores belas mas mortais exalam um perfume tóxico, e fungos luminescentes cobrem as paredes.",
@@ -344,7 +344,11 @@
             "events": [
                 {
                     "type": "first-visit",
-                    "text": "Ao respirar o ar da sala, você sente sua visão turvar e sua garganta queimar. O veneno já está em seu sistema."
+                    "text": "Ao respirar o ar da sala, você sente sua visão turvar e sua garganta queimar. O veneno já está em seu sistema.",
+                    "damage": {
+                        "amount": "1D6",
+                        "message": "O veneno invade seu corpo imediatamente!"
+                    }
                 }
             ],
             "enemy": {
@@ -428,8 +432,8 @@
                         "condition": "states.poisoned",
                         "text": "O veneno em seu sistema enfraquece você a cada momento que passa nesta sala!",
                         "damage": {
-                            "amount": "1D4",
-                            "message": "O veneno corrói seu corpo por dentro!"
+                            "amount": "1",
+                            "message": "O veneno corrói seu corpo lentamente!"
                         }
                     }
                 ]
