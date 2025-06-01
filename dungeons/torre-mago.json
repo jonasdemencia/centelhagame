@@ -271,7 +271,7 @@
                                 "interactions": [
                                     {
                                         "id": "solve-fire-puzzle",
-                                        "condition": "states.fireColumnsExamined && !states.puzzleSolved",
+                                        "condition": "!states.puzzleSolved",
                                         "name": "Resolver o Enigma do Fogo",
                                         "result": {
                                             "action": "testSkill",
