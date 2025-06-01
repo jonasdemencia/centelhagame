@@ -404,95 +404,78 @@ function handlePostBattle(monster) {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("LOG: DOMContentLoaded evento disparado.");
-    const lutarButton = document.getElementById("iniciar-luta");
-    const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
-    const battleLogContent = document.getElementById("battle-log-content");
-    const attackOptionsDiv = document.getElementById("attack-options");
-    const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
-    const rolarDanoButton = document.getElementById("rolar-dano");
-    const monsterName = getUrlParameter('monstro');
-    let currentMonster; // Declara currentMonster no escopo superior
-    let playerData; // Para armazenar os dados do jogador
+    console.log("LOG: DOMContentLoaded evento disparado.");
+    const lutarButton = document.getElementById("iniciar-luta");
+    const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
+    const battleLogContent = document.getElementById("battle-log-content");
+    const attackOptionsDiv = document.getElementById("attack-options");
+    const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
+    const rolarDanoButton = document.getElementById("rolar-dano");
+    const monsterName = getUrlParameter('monstro');
+    let currentMonster; // Declara currentMonster no escopo superior
+    let playerData; // Para armazenar os dados do jogador
     let playerHealth = 0;
     let playerMaxHealth = playerHealth; // ✅ AQUI! Esta linha é o que você precisava
-    let isPlayerTurn = false; // Variável para controlar o turno
-    let currentTurnBlock = null; // Para armazenar o bloco do turno atual
-    let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
+    let isPlayerTurn = false; // Variável para controlar o turno
+    let currentTurnBlock = null; // Para armazenar o bloco do turno atual
+    let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
     let battleStarted = false; // Variável de controle para estado da batalha
-    console.log("LOG: Variáveis iniciais declaradas.");
+    console.log("LOG: Variáveis iniciais declaradas.");
 
- 
+    // --- AJUSTE: Limpa completamente todos os dados de iniciativa ao carregar a tela ---
+    sessionStorage.removeItem('initiativeResult');
+    sessionStorage.removeItem('playerInitiativeRoll');
+    sessionStorage.removeItem('monsterInitiativeRoll');
+    sessionStorage.removeItem('playerAbility');
+    sessionStorage.removeItem('monsterAbility');
+    sessionStorage.removeItem('luteButtonClicked');
+    // ----------------------------------------------------------
 
-// Tenta carregar o monstro do sessionStorage primeiro
-const storedMonster = sessionStorage.getItem('currentMonster');
-if (storedMonster) {
-    currentMonster = JSON.parse(storedMonster);
-    console.log("LOG: Dados do monstro carregados do sessionStorage:", currentMonster);
-} else {
-    // Fallback para o monsterData importado
-    currentMonster = getMonsterById(monsterName) || monsterData[monsterName];
-    console.log("LOG: Dados do monstro carregados via getMonsterById ou monsterData:", currentMonster);
-}
-
-// Limpa o sessionStorage após carregar
-sessionStorage.removeItem('currentMonster');
-
-// Se ainda não temos o monstro, mostra erro
-if (!currentMonster) {
-    console.error("LOG: Monstro não encontrado:", monsterName);
-    document.getElementById("monster-name").innerText = "Monstro não encontrado";
-    document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
-} else {
-    // Configura os valores máximos de energia
-    const vidaMaximaMonstro = currentMonster.pontosDeEnergia;
-    currentMonster.pontosDeEnergiaMax = vidaMaximaMonstro; // Salva para usar depois
-
-    // Atualiza visualmente as barras no início do combate
-    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
-}
-
-
-
-    if (currentMonster) {
-        console.log("LOG: Dados do monstro (carregamento inicial):", currentMonster);
-        document.getElementById("monster-name").innerText = currentMonster.nome;
-        document.getElementById("monster-description").innerText = currentMonster.descricao;
-        const monsterImageElement = document.getElementById("monster-image");
-        if (monsterImageElement) {
-            monsterImageElement.src = currentMonster.imagem;
-            console.log("LOG: Imagem do monstro carregada.");
-        } else {
-            console.error("LOG: Elemento de imagem do monstro não encontrado (ID: monster-image)");
-        }
-    } else {
-        console.error("LOG: Monstro não encontrado:", monsterName);
-        document.getElementById("monster-name").innerText = "Monstro não encontrado";
-        document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
-    }
-
-    // Função para atualizar a experiência do jogador no Firestore
-async function updatePlayerExperience(userId, xpToAdd) {
-    console.log("LOG: updatePlayerExperience chamado com userId:", userId, "xpToAdd:", xpToAdd);
-    const playerDocRef = doc(db, "players", userId);
-    
-    try {
-        // Primeiro, pegamos os dados atuais do jogador
-        const playerDoc = await getDoc(playerDocRef);
-        const playerData = playerDoc.data();
-        const currentXP = playerData.experience || 0;
-        const newXP = currentXP + xpToAdd;
-        
-        // Atualiza a experiência no Firestore
-        await setDoc(playerDocRef, { experience: newXP }, { merge: true });
-        console.log("LOG: Experiência do jogador atualizada:", newXP);
-        
-        return newXP;
-    } catch (error) {
-        console.error("LOG: Erro ao atualizar experiência do jogador:", error);
-        throw error;
+    // Tenta carregar o monstro do sessionStorage primeiro
+    const storedMonster = sessionStorage.getItem('currentMonster');
+    if (storedMonster) {
+        currentMonster = JSON.parse(storedMonster);
+        console.log("LOG: Dados do monstro carregados do sessionStorage:", currentMonster);
+    } else {
+        // Fallback para o monsterData importado
+        currentMonster = getMonsterById(monsterName) || monsterData[monsterName];
+        console.log("LOG: Dados do monstro carregados via getMonsterById ou monsterData:", currentMonster);
     }
-}
+
+    // Limpa o sessionStorage após carregar o monstro (para garantir que não fique lixo)
+    sessionStorage.removeItem('currentMonster');
+
+    // Se ainda não temos o monstro, mostra erro
+    if (!currentMonster) {
+        console.error("LOG: Monstro não encontrado:", monsterName);
+        document.getElementById("monster-name").innerText = "Monstro não encontrado";
+        document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
+    } else {
+        // Configura os valores máximos de energia
+        const vidaMaximaMonstro = currentMonster.pontosDeEnergia;
+        currentMonster.pontosDeEnergiaMax = vidaMaximaMonstro; // Salva para usar depois
+
+        // Atualiza visualmente as barras no início do combate
+        atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+    }
+
+    if (currentMonster) {
+        console.log("LOG: Dados do monstro (carregamento inicial):", currentMonster);
+        document.getElementById("monster-name").innerText = currentMonster.nome;
+        document.getElementById("monster-description").innerText = currentMonster.descricao;
+        const monsterImageElement = document.getElementById("monster-image");
+        if (monsterImageElement) {
+            monsterImageElement.src = currentMonster.imagem;
+            console.log("LOG: Imagem do monstro carregada.");
+        } else {
+            console.error("LOG: Elemento de imagem do monstro não encontrado (ID: monster-image)");
+        }
+    } else {
+        console.error("LOG: Monstro não encontrado:", monsterName);
+        document.getElementById("monster-name").innerText = "Monstro não encontrado";
+        document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
+    }
+});
 
 
     async function addLogMessage(message, delay = 0, typingSpeed = 30) {
