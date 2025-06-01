@@ -442,7 +442,7 @@ if (storedMonster) {
     console.log("LOG: Dados do monstro carregados do sessionStorage:", currentMonster);
 } else {
     // Fallback para o monsterData importado
-    currentMonster = getMonsterById(monsterName) || monsterData[monsterName];
+    currentMonster = getMonsterById(monsterName);
     console.log("LOG: Dados do monstro carregados via getMonsterById ou monsterData:", currentMonster);
 }
 
