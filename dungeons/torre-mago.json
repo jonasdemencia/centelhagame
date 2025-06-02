@@ -392,7 +392,7 @@
                                 "interactions": [
                                     {
                                         "id": "create-antidote",
-                                        "condition": "states.plantsExamined && !states.antidoteCreated",
+                                        "condition": "!states.antidoteCreated",
                                         "name": "Criar Antídoto",
                                         "result": {
                                             "action": "testLuck",
