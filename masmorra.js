@@ -2710,9 +2710,22 @@ async function showNPCDialogue(npc, dialogueId) {
             // Exibe a resposta escolhida pelo jogador
             await addLogMessage(`<strong>Você:</strong> ${option.text}`, 500);
 
+            // PATCH PARA SUPORTE AO BEHAVIOR
+            const currentRoom = dungeon.rooms[playerState.currentRoom];
+            const behavior = currentRoom && currentRoom.behavior;
+            if (behavior && behavior.handlers && typeof behavior.handlers.onDialogueOption === "function") {
+                await behavior.handlers.onDialogueOption({
+                    room: currentRoom,
+                    option: option,
+                    playerState,
+                    applyDamageToPlayer,
+                    addLogMessage
+                });
+            }
+            // FIM DO PATCH
+
             // Aplica efeitos, se houver
             if (option.effect) {
-                const currentRoom = dungeon.rooms[playerState.currentRoom];
                 console.log("Aplicando efeito:", option.effect);
                 console.log("Estado da sala antes:", currentRoom.explorationState);
                 await applyEffects(option.effect, currentRoom);
