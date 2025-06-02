@@ -21,14 +21,15 @@ export const Room6Behavior = {
             return false;
         },
 
-        // Handler de opção de diálogo, retorna TRUE se tratar tudo (impede engine de seguir)
         async onDialogueOption({ option, applyDamageToPlayer, addLogMessage }) {
-            if (option.text === "Tentar fugir") {
-                await addLogMessage("'COVARDIA É MORTE.' A foice da morte corta seu corpo e alma simultaneamente.", 800);
-                await applyDamageToPlayer({ amount: "2D6", message: "A foice da morte fere profundamente sua alma!" });
-                return true; // Impede o engine de executar efeitos/itens/etc para essa opção
-            }
-            return false; // Permite o engine seguir normalmente para outras opções
-        }
+    console.log("[DEBUG BEHAVIOR] Entrou no handler onDialogueOption");
+    if (option.text.trim() === "Tentar fugir") {
+        console.log("[DEBUG BEHAVIOR] Opção é Tentar fugir, vai aplicar dano!");
+        await addLogMessage("'COVARDIA É MORTE.' A foice da morte corta seu corpo e alma simultaneamente.", 800);
+        await applyDamageToPlayer({ amount: "2D6", message: "A foice da morte fere profundamente sua alma!" });
+        return true;
+    }
+    return false;
+}
     }
 };
