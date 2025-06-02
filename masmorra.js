@@ -2667,7 +2667,6 @@ async function startDialogue(npc) {
 
 }
 
-// Modifique a função showNPCDialogue para aplicar corretamente os efeitos
 async function showNPCDialogue(npc, dialogueId) {
     // Busca o diálogo atual
     const dialogue = npc.dialogues[dialogueId];
@@ -2710,11 +2709,10 @@ async function showNPCDialogue(npc, dialogueId) {
             // Exibe a resposta escolhida pelo jogador
             await addLogMessage(`<strong>Você:</strong> ${option.text}`, 500);
 
-            // PATCH: Dá precedência ao behavior
+            // --- PATCH: Behavior tem prioridade, mas só se retornar true ---
             const currentRoom = dungeon.rooms[playerState.currentRoom];
             const behavior = currentRoom && currentRoom.behavior;
             if (behavior && behavior.handlers && typeof behavior.handlers.onDialogueOption === "function") {
-                // Se o behavior retornar true, ele tratou tudo e o engine NÃO executa mais nada (efeitos, itens, etc)
                 const handled = await behavior.handlers.onDialogueOption({
                     room: currentRoom,
                     option: option,
@@ -2726,14 +2724,11 @@ async function showNPCDialogue(npc, dialogueId) {
                 });
                 if (handled) return;
             }
-            // FIM DO PATCH
+            // --- FIM DO PATCH ---
 
             // Aplica efeitos, se houver
             if (option.effect) {
-                console.log("Aplicando efeito:", option.effect);
-                console.log("Estado da sala antes:", currentRoom.explorationState);
                 await applyEffects(option.effect, currentRoom);
-                console.log("Estado da sala depois:", currentRoom.explorationState);
 
                 // Salva o estado após aplicar os efeitos
                 savePlayerState();
@@ -2742,10 +2737,9 @@ async function showNPCDialogue(npc, dialogueId) {
                 if (currentRoom.enemies) {
                     for (const enemy of currentRoom.enemies) {
                         if (enemy.trigger && evaluateCondition(enemy.trigger.condition, currentRoom.explorationState)) {
-                            console.log("Trigger de inimigo ativado:", enemy);
                             await addLogMessage(enemy.trigger.message, 1000);
                             createFightButton(enemy);
-                            return; // Sai da função para não continuar o diálogo
+                            return;
                         }
                     }
                 }
@@ -2776,6 +2770,8 @@ async function showNPCDialogue(npc, dialogueId) {
         actionButtons.appendChild(responseContainer);
     }
 }
+
+
 
 // Função para verificar se há NPCs na sala e criar botões para interagir com eles
 function createNPCButtons(room) {
