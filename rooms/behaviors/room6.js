@@ -21,6 +21,16 @@ export const Room6Behavior = {
             }
             // NÃO cria o boss por padrão, impede trigger precoce
             return false;
+        },
+
+        // Novo handler: aplica dano se o jogador tenta fugir do Senhor da Morte
+        async onDialogueOption({ option, applyDamageToPlayer, addLogMessage }) {
+            if (option.text === "Tentar fugir") {
+                // Mensagem customizada (opcional)
+                await addLogMessage("A foice da morte fere profundamente sua alma!", 800);
+                // Aplica o dano de 2D6
+                await applyDamageToPlayer({ amount: "2D6", message: null });
+            }
         }
     }
 };
