@@ -2719,7 +2719,10 @@ async function showNPCDialogue(npc, dialogueId) {
                     option: option,
                     playerState,
                     applyDamageToPlayer,
-                    addLogMessage
+                    addLogMessage,
+                    // Adicionado: permite pegar o resultado também
+                    npc,
+                    dialogueId
                 });
             }
             // FIM DO PATCH
