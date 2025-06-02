@@ -3246,6 +3246,14 @@ async function loadAndStartDungeon(dungeonId = null) {
     // Carrega a masmorra especificada ou a padrão
     await initializeDungeon(dungeonId);
 
+    // <-- INSTALE AQUI!
+for (const roomId in dungeon.rooms) {
+    dungeon.rooms[roomId].behavior = getRoomBehavior(roomId);
+}
+
+    // INCLUA O LOG AQUI:
+console.log("Behaviors associados a todas as salas:", dungeon.rooms);
+
     // Adiciona o seletor de masmorras
     const availableDungeons = await listAvailableDungeons();
     if (availableDungeons.length > 0) {
