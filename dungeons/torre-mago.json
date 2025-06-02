@@ -562,9 +562,7 @@
   "gridY": 0,
   "gridWidth": 4,
   "gridHeight": 2,
-  "events": [
-    { "type": "first-visit", "text": "A figura no trono levanta a cabeça, revelando um crânio com olhos de estrelas. 'ENCARE SEU DESTINO, MORTAL.'" }
-  ],
+  "events": [],
   "enemies": [
     {
       "id": "senhor-da-morte",
