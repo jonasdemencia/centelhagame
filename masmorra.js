@@ -2957,9 +2957,31 @@ async function moveToRoom(roomId) {
     updateHealthBar();
 
     // --- AJUSTE: Prioridade para behavior controlar inimigo ---
+    // Recupera o behavior da sala se existir
     const behavior =
         (typeof getRoomBehavior === "function" && getRoomBehavior(room.id)) ||
         (window && window[`Room${roomId.charAt(0).toUpperCase() + roomId.slice(1)}Behavior`]);
+
+    // ---- INÍCIO DO AJUSTE ESSENCIAL: handler onBossTrigger ----
+    if (behavior?.handlers?.onBossTrigger) {
+        // Permite que o behavior controle o boss, por padrão só para rooms que precisam desse controle
+        const bossTriggerResult = await behavior.handlers.onBossTrigger({
+            room,
+            playerState,
+            addLogMessage,
+            createFightButton,
+        });
+        if (bossTriggerResult === true) {
+            // Se o behavior já tratou o boss, encerra aqui (não mostra mais inimigos)
+            updateDirectionButtons();
+            if (room.pointsOfInterest) createPointsOfInterestButtons(room.pointsOfInterest, room);
+            if (room.npcs) createNPCButtons(room);
+            savePlayerState();
+            return;
+        }
+        // Se retornou false, segue lógica padrão abaixo (para inimigos normais)
+    }
+    // ---- FIM DO AJUSTE ESSENCIAL ----
 
     // Se há múltiplos inimigos
     if (room.enemies && room.enemies.length > 0) {
