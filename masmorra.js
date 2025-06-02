@@ -2710,20 +2710,21 @@ async function showNPCDialogue(npc, dialogueId) {
             // Exibe a resposta escolhida pelo jogador
             await addLogMessage(`<strong>Você:</strong> ${option.text}`, 500);
 
-            // PATCH PARA SUPORTE AO BEHAVIOR
+            // PATCH: Dá precedência ao behavior
             const currentRoom = dungeon.rooms[playerState.currentRoom];
             const behavior = currentRoom && currentRoom.behavior;
             if (behavior && behavior.handlers && typeof behavior.handlers.onDialogueOption === "function") {
-                await behavior.handlers.onDialogueOption({
+                // Se o behavior retornar true, ele tratou tudo e o engine NÃO executa mais nada (efeitos, itens, etc)
+                const handled = await behavior.handlers.onDialogueOption({
                     room: currentRoom,
                     option: option,
                     playerState,
                     applyDamageToPlayer,
                     addLogMessage,
-                    // Adicionado: permite pegar o resultado também
                     npc,
                     dialogueId
                 });
+                if (handled) return;
             }
             // FIM DO PATCH
 
