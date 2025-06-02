@@ -580,28 +580,28 @@
       "name": "Senhor da Morte",
       "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica.",
       "dialogues": {
-        "initial": {
-          "text": "'ENCARE SEU DESTINO OU MORRA COMO UM COVARDE.'",
-          "options": [
-            {
-              "text": "Enfrentar a Morte",
-              "effect": {
-                "states.readyToFight": true
-              }
-            },
-            {
-              "text": "Tentar fugir",
-              "result": {
-                "text": "'COVARDIA É MORTE.' A foice da morte corta seu corpo e alma simultaneamente.",
-                "damage": {
-                  "amount": "999",
-                  "message": "Sua existência é obliterada!"
-                }
-              }
-            }
-          ]
+  "initial": {
+    "text": "'ENCARE SEU DESTINO OU MORRA COMO UM COVARDE.'",
+    "options": [
+      {
+        "text": "Enfrentar a Morte",
+        "effect": {
+          "states.readyToFight": true
+        }
+      },
+      {
+        "text": "Tentar fugir",
+        "result": {
+          "text": "'COVARDIA É MORTE.' A foice da morte corta seu corpo e alma simultaneamente.",
+          "damage": {
+            "amount": "2D6",
+            "message": "A foice da morte fere profundamente sua alma!"
+          }
         }
       }
+    ]
+  }
+}
     }
   ],
   "exploration": {
