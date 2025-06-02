@@ -2777,7 +2777,6 @@ async function showNPCDialogue(npc, dialogueId) {
     }
 }
 
-
 // Função para verificar se há NPCs na sala e criar botões para interagir com eles
 function createNPCButtons(room) {
     // Remove botões existentes primeiro
