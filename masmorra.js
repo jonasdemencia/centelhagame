@@ -2712,6 +2712,11 @@ async function showNPCDialogue(npc, dialogueId) {
             // --- PATCH: Behavior tem prioridade, mas só se retornar true ---
             const currentRoom = dungeon.rooms[playerState.currentRoom];
             const behavior = currentRoom && currentRoom.behavior;
+
+console.log("[DEBUG] currentRoom:", currentRoom);
+console.log("[DEBUG] behavior:", behavior);
+console.log("[DEBUG] option.text:", option.text);
+            
             if (behavior && behavior.handlers && typeof behavior.handlers.onDialogueOption === "function") {
                 const handled = await behavior.handlers.onDialogueOption({
                     room: currentRoom,
