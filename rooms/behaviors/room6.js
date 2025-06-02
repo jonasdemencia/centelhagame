@@ -10,7 +10,6 @@ export const Room6Behavior = {
         // Handler chamado pelo engine para decidir se o boss aparece
         async onBossTrigger(context) {
             const { room, createFightButton, addLogMessage } = context;
-            // Só ativa o boss se estiver pronto para lutar e não finalizou a batalha
             if (room.explorationState?.readyToFight && !room.explorationState?.finalBattleComplete) {
                 const boss = room.enemies?.find(e => e.id === "senhor-da-morte");
                 if (boss) {
@@ -19,18 +18,17 @@ export const Room6Behavior = {
                     return true;
                 }
             }
-            // NÃO cria o boss por padrão, impede trigger precoce
             return false;
         },
 
-        // Novo handler: aplica dano se o jogador tenta fugir do Senhor da Morte
+        // Handler de opção de diálogo, retorna TRUE se tratar tudo (impede engine de seguir)
         async onDialogueOption({ option, applyDamageToPlayer, addLogMessage }) {
             if (option.text === "Tentar fugir") {
-                // Mensagem customizada (opcional)
-                await addLogMessage("A foice da morte fere profundamente sua alma!", 800);
-                // Aplica o dano de 2D6
-                await applyDamageToPlayer({ amount: "2D6", message: null });
+                await addLogMessage("'COVARDIA É MORTE.' A foice da morte corta seu corpo e alma simultaneamente.", 800);
+                await applyDamageToPlayer({ amount: "2D6", message: "A foice da morte fere profundamente sua alma!" });
+                return true; // Impede o engine de executar efeitos/itens/etc para essa opção
             }
+            return false; // Permite o engine seguir normalmente para outras opções
         }
     }
 };
