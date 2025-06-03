@@ -3,7 +3,6 @@ export const Room1Behavior = {
         examined: false,
         skullExamined: false
     },
-
     handlers: {
         async onFirstVisit(context) {
             const { addLogMessage } = context;
@@ -58,39 +57,14 @@ export const Room1Behavior = {
             return false;
         },
 
-        async onSearch(context) {
-            const { room, addLogMessage, applyDamage } = context;
-
-            if (room.explorationState.examined) {
-                const trapTriggered = Math.random() <= 0.7;
-                if (trapTriggered) {
-                    await addLogMessage(
-                        "Ao revirar os ossos, uma armadilha é acionada! Lâminas afiadas cortam o ar!"
-                    );
-                    await applyDamage?.({
-                        amount: "1D6",
-                        message: "Lâminas afiadas cortam sua pele!"
-                    });
-                    return true;
-                }
-            }
-
-            await addLogMessage(
-                "Você procura cuidadosamente entre os ossos espalhados, mas não encontra nada de interessante."
-            );
-            return false;
-        },
-
-        // Este handler é opcional! Só inclua se PRECISA garantir o botão de coleta via behavior.
         async onInteractWithPOI(context) {
             const { poi, room, addLogMessage } = context;
-            // Pega helper global
             const createCollectButton =
                 context.createCollectButton ||
                 window.createCollectButton ||
                 (window.CentelhaAPI && window.CentelhaAPI.createCollectButton);
 
-            if (poi.id === "skull" && !room.explorationState.skullExamined) {
+            if (poi.id === "skull") {
                 room.explorationState.skullExamined = true;
                 await addLogMessage(
                     "Você remove cuidadosamente o pergaminho da órbita do crânio. As runas parecem pulsar levemente à luz das tochas."
@@ -111,7 +85,6 @@ export const Room1Behavior = {
                 }
                 return true;
             }
-
             return false;
         },
 
