@@ -1,20 +1,16 @@
 export const Room1Behavior = {
-    // Estado inicial da sala
     initialState: {
         examined: false,
         skullExamined: false
     },
 
-    // Handlers para eventos da sala
     handlers: {
-        // Manipula primeira visita
         async onFirstVisit(context) {
             const { addLogMessage } = context;
             await addLogMessage("Ao cruzar o portal, você ouve sussurros agonizantes. Uma voz sepulcral ecoa: 'Apenas os dignos sobreviverão às cinco provações...'");
             return true;
         },
 
-        // Manipula ação de examinar
         async onExamine(context) {
             const { room, addLogMessage, createPointsOfInterest } = context;
 
@@ -50,7 +46,6 @@ export const Room1Behavior = {
             return false;
         },
 
-        // Manipula ação de procurar
         async onSearch(context) {
             const { room, addLogMessage, applyDamage } = context;
 
@@ -70,38 +65,33 @@ export const Room1Behavior = {
             return false;
         },
 
-        // Manipula interação com pontos de interesse
         async onInteractWithPOI(context) {
-            const { poi, room, addLogMessage } = context;
+            const { poi, room, addLogMessage, createCollectButton } = context;
             
             if (poi.id === "skull" && !room.explorationState.skullExamined) {
                 room.explorationState.skullExamined = true;
                 await addLogMessage("Você remove cuidadosamente o pergaminho da órbita do crânio. As runas parecem pulsar levemente à luz das tochas.");
-                return {
-                    item: {
-                        id: "warning-scroll",
-                        content: "Pergaminho de Aviso",
-                        description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'",
-                        onCollect: async (context) => {
-                            await context.addLogMessage("Você desenrola cuidadosamente o pergaminho amarelado, revelando um aviso sombrio sobre as provações que aguardam.");
-                            return true;
-                        }
+                createCollectButton({
+                    id: "warning-scroll",
+                    content: "Pergaminho de Aviso",
+                    description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'",
+                    onCollect: async (context) => {
+                        await context.addLogMessage("Você desenrola cuidadosamente o pergaminho amarelado, revelando um aviso sombrio sobre as provações que aguardam.");
+                        return true;
                     }
-                };
+                });
+                return true;
             }
 
             return false;
         },
 
-        // Manipula coleta de itens
         async onCollectItem(context) {
             const { item, addLogMessage } = context;
-            
             if (item.id === "warning-scroll") {
                 await addLogMessage("Você desenrola cuidadosamente o pergaminho amarelado, revelando um aviso sombrio sobre as provações que aguardam.");
                 return true;
             }
-
             return false;
         }
     }
