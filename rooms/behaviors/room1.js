@@ -5,7 +5,6 @@ export const Room1Behavior = {
     },
 
     handlers: {
-        // Primeira visita à sala
         async onFirstVisit(context) {
             const { addLogMessage } = context;
             await addLogMessage(
@@ -14,7 +13,6 @@ export const Room1Behavior = {
             return true;
         },
 
-        // Examinar a sala
         async onExamine(context) {
             const { room, addLogMessage, createPointsOfInterest } = context;
 
@@ -28,33 +26,28 @@ export const Room1Behavior = {
                 );
                 room.explorationState.examined = true;
 
-                // Mostra botão do ponto de interesse
-                createPointsOfInterest(
-                    [
-                        {
-                            id: "skull",
-                            name: "Crânio com Runas",
-                            description:
-                                "Um crânio humano com runas arcanas entalhadas na testa. Um pergaminho amarelado está enfiado em uma das órbitas.",
-                            // O item é referenciado aqui, mas o botão de coleta será criado no handler abaixo!
-                            items: [
-                                {
-                                    id: "warning-scroll",
-                                    content: "Pergaminho de Aviso",
-                                    description:
-                                        "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'",
-                                    onCollect: async (context) => {
-                                        await context.addLogMessage(
-                                            "Você desenrola cuidadosamente o pergaminho amarelado, revelando um aviso sombrio sobre as provações que aguardam."
-                                        );
-                                        return true;
-                                    }
+                createPointsOfInterest([
+                    {
+                        id: "skull",
+                        name: "Crânio com Runas",
+                        description:
+                            "Um crânio humano com runas arcanas entalhadas na testa. Um pergaminho amarelado está enfiado em uma das órbitas.",
+                        items: [
+                            {
+                                id: "warning-scroll",
+                                content: "Pergaminho de Aviso",
+                                description:
+                                    "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'",
+                                onCollect: async (context) => {
+                                    await context.addLogMessage(
+                                        "Você desenrola cuidadosamente o pergaminho amarelado, revelando um aviso sombrio sobre as provações que aguardam."
+                                    );
+                                    return true;
                                 }
-                            ]
-                        }
-                    ],
-                    room
-                );
+                            }
+                        ]
+                    }
+                ], room);
 
                 return true;
             }
@@ -65,7 +58,6 @@ export const Room1Behavior = {
             return false;
         },
 
-        // Procurar na sala (com chance de armadilha)
         async onSearch(context) {
             const { room, addLogMessage, applyDamage } = context;
 
@@ -89,11 +81,10 @@ export const Room1Behavior = {
             return false;
         },
 
-        // Interação com o ponto de interesse ("Crânio com Runas")
+        // Este handler é opcional! Só inclua se PRECISA garantir o botão de coleta via behavior.
         async onInteractWithPOI(context) {
             const { poi, room, addLogMessage } = context;
-
-            // Helper seguro para criar o botão (funciona mesmo que não venha no contexto)
+            // Pega helper global
             const createCollectButton =
                 context.createCollectButton ||
                 window.createCollectButton ||
@@ -124,7 +115,6 @@ export const Room1Behavior = {
             return false;
         },
 
-        // Quando o jogador recolher o pergaminho
         async onCollectItem(context) {
             const { item, addLogMessage } = context;
             if (item.id === "warning-scroll") {
