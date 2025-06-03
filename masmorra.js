@@ -202,61 +202,134 @@ let playerState = {
 };
 
 
-// INICIO DO PATCH DE PODER TOTAL AOS BEHAVIORS ----------------------
+// INÍCIO DO PATCH SUPREMO DE LIBERDADE PARA BEHAVIORS
 
-window.CentelhaAPI = window.CentelhaAPI || {
-    // Exponha tudo que for útil do engine
-    dungeon,
-    playerState,
-    addLogMessage,
-    moveToRoom,
-    openDoor,
-    rest,
-    savePlayerState,
-    // Adicione aqui qualquer helper necessário
+(function(){
+    // 1. Exponha tudo do escopo global e engine em um namespace unificado
+    window.CentelhaPower = {
+        // Engine e DOM inteiro
+        engine: window,
+        dom: document,
+        // Facilidade para monkey-patch e restore
+        patch(name, fn) {
+            if (!this._originals) this._originals = {};
+            if (!this._originals[name] && window[name]) this._originals[name] = window[name];
+            window[name] = fn;
+        },
+        restore(name) {
+            if (this._originals && this._originals[name]) window[name] = this._originals[name];
+        },
+        // Adiciona qualquer elemento em qualquer lugar do DOM (default: #action-buttons ou body)
+        addUI({id, html, parent="#action-buttons", events={}}) {
+            let el = document.getElementById(id);
+            if (el) el.remove();
+            const container = document.querySelector(parent) || document.body;
+            const temp = document.createElement("div");
+            temp.innerHTML = html;
+            el = temp.firstElementChild;
+            el.id = id;
+            for (const [ev, fn] of Object.entries(events)) el.addEventListener(ev, fn);
+            container.appendChild(el);
+            return el;
+        },
+        // Remove UI pelo id
+        removeUI(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        },
+        // Cria hooks dinâmicos para qualquer evento
+        hooks: {},
+        hook(event, fn) {
+            if (!this.hooks[event]) this.hooks[event] = [];
+            this.hooks[event].push(fn);
+        },
+        runHook(event, ...args) {
+            (this.hooks[event] || []).forEach(fn => fn(...args));
+        },
+        // Acesso global seguro a helpers, API, engine e playerState
+        get api() {
+            return window.CentelhaAPI || {};
+        },
+        // Monkey-patch de QUALQUER método/objeto
+        deepPatch(obj, fnmap) {
+            for (const [key, fn] of Object.entries(fnmap)) {
+                if (!obj[`__original_${key}`]) obj[`__original_${key}`] = obj[key];
+                obj[key] = fn;
+            }
+        },
+        // Observador de DOM para UI dinâmica ou triggers
+        observe(selector, cb, opts={childList:true,subtree:true}) {
+            const observer = new MutationObserver(mutations => {
+                mutations.forEach(m => {
+                    m.addedNodes.forEach(node => {
+                        if (node.nodeType === 1 && node.matches(selector)) cb(node);
+                    });
+                });
+            });
+            observer.observe(document.body, opts);
+            return observer;
+        },
+        // Facilita timers globais
+        setTimeout: window.setTimeout.bind(window),
+        setInterval: window.setInterval.bind(window),
+        clearTimeout: window.clearTimeout.bind(window),
+        clearInterval: window.clearInterval.bind(window),
+        // Facilita listeners globais
+        on(event, selector, fn) {
+            document.addEventListener(event, e => {
+                if (e.target && e.target.matches(selector)) fn(e);
+            });
+        },
+        // Permite behaviors salvar/ler dados customizados
+        storage: {
+            set(key, val) { localStorage.setItem("centelha_"+key, JSON.stringify(val)); },
+            get(key) { try { return JSON.parse(localStorage.getItem("centelha_"+key)); } catch { return null; } },
+            remove(key) { localStorage.removeItem("centelha_"+key); }
+        }
+    };
 
-    // Permita behaviors criarem comandos e funções novas
-    commands: {},
-    registerCommand(name, fn) {
-        this.commands[name] = fn;
-    },
+    // 2. Exponha helpers globais de UI para conveniência (botão, overlay, etc)
+    window.createUIButton = function({id, label, onClick, parent="#action-buttons", className=""}) {
+        window.CentelhaPower.addUI({
+            id,
+            html: `<button class="${className}">${label}</button>`,
+            parent,
+            events: {click:onClick}
+        });
+    };
+    window.removeUIButton = function(id) {
+        window.CentelhaPower.removeUI(id);
+    };
 
-    // Permita criar botões/UI customizada
-    addUIButton(id, label, onClick) {
-        const btn = document.createElement('button');
-        btn.id = id;
-        btn.classList.add('custom-ui-btn');
-        btn.textContent = label;
-        btn.onclick = onClick;
-        document.body.appendChild(btn);
-    },
+    // 3. Exponha patch fácil para qualquer função global
+    window.patchEngine = (name, fn) => window.CentelhaPower.patch(name, fn);
+    window.restoreEngine = (name) => window.CentelhaPower.restore(name);
 
-    // Eventos/hooks dinâmicos
-    hooks: {},
-    registerHook(hookName, fn) {
-        if (!this.hooks[hookName]) this.hooks[hookName] = [];
-        this.hooks[hookName].push(fn);
-    },
-    runHook(hookName, ...args) {
-        (this.hooks[hookName] || []).forEach(fn => fn(...args));
-    },
+    // 4. Exemplo: hook para behaviors serem notificados de eventos custom
+    // (o engine pode disparar window.CentelhaPower.runHook('room-enter', roomId), etc)
 
-    // Permita monkey-patch e extensão total
-    extend(obj) {
-        Object.assign(this, obj);
-    }
-};
+    // 5. Exemplo: para behaviors criarem overlays, tooltips, etc
+    window.createOverlay = function({id, html, onClose}) {
+        window.CentelhaPower.addUI({
+            id,
+            html: `<div class="centelha-overlay">${html}<button id="${id}-close">Fechar</button></div>`,
+            parent: "body",
+            events: {}
+        });
+        document.getElementById(`${id}-close`).onclick = () => {
+            window.CentelhaPower.removeUI(id);
+            if (onClose) onClose();
+        };
+    };
 
-// Permita behaviors sobrescreverem funções do engine facilmente
-window.patchEngine = function(name, fn) {
-    // Se função já existe, guarda referência antiga
-    if (!window.__originalEngineFns) window.__originalEngineFns = {};
-    if (!window.__originalEngineFns[name]) window.__originalEngineFns[name] = window[name];
-    window[name] = fn;
-};
+    // 6. Facilita patch profundo em objetos/classes do engine
+    window.deepPatch = window.CentelhaPower.deepPatch.bind(window.CentelhaPower);
 
-// FIM DO PATCH DE PODER TOTAL AOS BEHAVIORS ------------------
+    // 7. Facilita behaviors interceptarem qualquer coisa via MutationObserver, timer, hooks, etc
+    // (exemplo de uso no behavior: window.CentelhaPower.observe('.meu-elemento', node => { ... }))
+})();
 
+// FIM DO PATCH SUPREMO
 
 // Função para atualizar a barra de energia do jogador
 function updateHealthBar() {
