@@ -5,7 +5,6 @@ export const Room1Behavior = {
     },
     handlers: {
         async onFirstVisit(context) {
-            // Mensagem de ambientação
             (window.addLogMessage || context.addLogMessage)(
                 "Ao cruzar o portal, você ouve sussurros agonizantes. Uma voz sepulcral ecoa: 'Apenas os dignos sobreviverão às cinco provações...'"
             );
@@ -13,13 +12,11 @@ export const Room1Behavior = {
         },
 
         async onExamine(context) {
-            // Mensagem de exame
             (window.addLogMessage || context.addLogMessage)(
                 "Entre os ossos, você nota um crânio humano com runas gravadas e um pergaminho enrolado em suas órbitas vazias."
             );
             // Cria botão do POI usando DOM puro
             setTimeout(() => {
-                // Remove botão antigo se existir
                 const oldBtn = document.getElementById("poi-skull-btn");
                 if (oldBtn) oldBtn.remove();
                 const parent = document.getElementById("action-buttons") || document.body;
