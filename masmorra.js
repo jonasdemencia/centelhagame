@@ -202,6 +202,62 @@ let playerState = {
 };
 
 
+// INICIO DO PATCH DE PODER TOTAL AOS BEHAVIORS ----------------------
+
+window.CentelhaAPI = window.CentelhaAPI || {
+    // Exponha tudo que for útil do engine
+    dungeon,
+    playerState,
+    addLogMessage,
+    moveToRoom,
+    openDoor,
+    rest,
+    savePlayerState,
+    // Adicione aqui qualquer helper necessário
+
+    // Permita behaviors criarem comandos e funções novas
+    commands: {},
+    registerCommand(name, fn) {
+        this.commands[name] = fn;
+    },
+
+    // Permita criar botões/UI customizada
+    addUIButton(id, label, onClick) {
+        const btn = document.createElement('button');
+        btn.id = id;
+        btn.classList.add('custom-ui-btn');
+        btn.textContent = label;
+        btn.onclick = onClick;
+        document.body.appendChild(btn);
+    },
+
+    // Eventos/hooks dinâmicos
+    hooks: {},
+    registerHook(hookName, fn) {
+        if (!this.hooks[hookName]) this.hooks[hookName] = [];
+        this.hooks[hookName].push(fn);
+    },
+    runHook(hookName, ...args) {
+        (this.hooks[hookName] || []).forEach(fn => fn(...args));
+    },
+
+    // Permita monkey-patch e extensão total
+    extend(obj) {
+        Object.assign(this, obj);
+    }
+};
+
+// Permita behaviors sobrescreverem funções do engine facilmente
+window.patchEngine = function(name, fn) {
+    // Se função já existe, guarda referência antiga
+    if (!window.__originalEngineFns) window.__originalEngineFns = {};
+    if (!window.__originalEngineFns[name]) window.__originalEngineFns[name] = window[name];
+    window[name] = fn;
+};
+
+// FIM DO PATCH DE PODER TOTAL AOS BEHAVIORS ------------------
+
+
 // Função para atualizar a barra de energia do jogador
 function updateHealthBar() {
     const healthBar = document.getElementById("player-health-bar");
