@@ -3175,6 +3175,35 @@ async function loadAndStartDungeon(dungeonId = null) {
         </div>
     `;
 
+
+    // --- ADICIONE O BOTÃO DE NARRAÇÃO NOVAMENTE ---
+    const explorationLogDiv = mainContent.querySelector('.exploration-log');
+    if (explorationLogDiv && !explorationLogDiv.querySelector('#toggle-tts')) {
+        const ttsBtn = document.createElement('button');
+        ttsBtn.id = 'toggle-tts';
+        ttsBtn.textContent = '🔇 Narração desativada';
+        ttsBtn.style.marginBottom = "8px";
+        explorationLogDiv.insertBefore(ttsBtn, explorationLogDiv.querySelector('#exploration-log-content'));
+        console.log("LOG: Botão de narração (toggle-tts) reinserido no DOM após reset do main.");
+    }
+
+    // --- REATRIBUA O EVENTO ---
+    const ttsBtn = document.getElementById('toggle-tts');
+    if (ttsBtn) {
+        ttsBtn.onclick = function() {
+            window.ttsEnabled = !window.ttsEnabled;
+            this.textContent = window.ttsEnabled ? '🔊 Narração ativada' : '🔇 Narração desativada';
+            console.log("LOG: Narração ativada?", window.ttsEnabled);
+        };
+        // Se quiser garantir estado inicial:
+        window.ttsEnabled = false;
+    } else {
+        console.log("LOG: Botão de narração NÃO encontrado após reset do main!");
+    }
+
+
+    
+
     // Reconecta os event listeners aos botões
     const northBtn = document.getElementById("go-north");
     const southBtn = document.getElementById("go-south");
