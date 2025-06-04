@@ -4,94 +4,73 @@
     "entrance": "room-1",
     "rooms": {
         "room-1": {
-        "id": "room-1",
-        "name": "Portal Sangrento",
-        "description": "Um portal de pedra negra manchado de sangue seco. Ossos humanos estão espalhados pelo chão e uma escada em espiral ascende para a escuridão.",
-        "type": "room",
-        "exits": [
-            {
-                "direction": "north",
-                "leadsTo": "room-2",
-                "type": "stairs",
-                "locked": false
-            }
-        ],
-        "gridX": 10,
-        "gridY": 18,
-        "gridWidth": 3,
-        "gridHeight": 3,
-        "events": [
-            {
-                "type": "first-visit",
-                "text": "Ao cruzar o portal, você ouve sussurros agonizantes. Uma voz sepulcral ecoa: 'Apenas os dignos sobreviverão às cinco provações...'"
-            }
-        ],
-        "exploration": {
-            "states": {
-                "initial": {
-                    "examined": false,
-                    "skullExamined": false,
-                    "scrollCollected": false
-                }
-            },
-            "examine": [
+            "id": "room-1",
+            "name": "Portal Sangrento",
+            "description": "Um portal de pedra negra manchado de sangue seco. Ossos humanos estão espalhados pelo chão e uma escada em espiral ascende para a escuridão.",
+            "type": "room",
+            "exits": [
                 {
-                    "condition": "!states.examined",
-                    "text": "Entre os ossos, você nota um crânio humano com runas gravadas e um pergaminho enrolado em suas órbitas vazias.",
-                    "effect": {
-                        "states.examined": true
-                    },
-                    "pointsOfInterest": [
-                        {
-                            "id": "skull",
-                            "name": "Crânio com Runas",
-                            "description": "Um crânio humano com runas arcanas entalhadas na testa. Um pergaminho amarelado está enfiado em uma das órbitas.",
-                            "condition": "!states.scrollCollected",
-                            "effect": {
-                                "states.skullExamined": true,
-                                "states.scrollAvailable": true
-                            },
-                            "onExamine": {
-                                "text": "Você examina o crânio de perto. O pergaminho parece fácil de alcançar.",
+                    "direction": "north",
+                    "leadsTo": "room-2",
+                    "type": "stairs",
+                    "locked": false
+                }
+            ],
+            "gridX": 10,
+            "gridY": 18,
+            "gridWidth": 3,
+            "gridHeight": 3,
+            "events": [
+                {
+                    "type": "first-visit",
+                    "text": "Ao cruzar o portal, você ouve sussurros agonizantes. Uma voz sepulcral ecoa: 'Apenas os dignos sobreviverão às cinco provações...'"
+                }
+            ],
+            "exploration": {
+                "states": {
+                    "initial": {
+                        "examined": false,
+                        "skullExamined": false
+                    }
+                },
+                "examine": [
+                    {
+                        "condition": "!states.examined",
+                        "text": "Entre os ossos, você nota um crânio humano com runas gravadas e um pergaminho enrolado em suas órbitas vazias.",
+                        "effect": {
+                            "states.examined": true
+                        },
+                        "pointsOfInterest": [
+                            {
+                                "id": "skull",
+                                "name": "Crânio com Runas",
+                                "description": "Um crânio humano com runas arcanas entalhadas na testa. Um pergaminho amarelado está enfiado em uma das órbitas.",
+                                "effect": {
+                                    "states.skullExamined": true
+                                },
                                 "items": [
                                     {
                                         "id": "warning-scroll",
                                         "content": "Pergaminho de Aviso",
-                                        "description": "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'",
-                                        "onCollect": {
-                                            "effect": {
-                                                "states.scrollCollected": true
-                                            },
-                                            "text": "Você remove cuidadosamente o pergaminho da órbita do crânio."
-                                        }
+                                        "description": "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'"
                                     }
                                 ]
                             }
-                        }
-                    ]
-                },
-                {
-                    "condition": "states.examined && states.scrollCollected",
-                    "text": "O crânio com runas repousa silenciosamente entre os outros ossos, suas órbitas agora vazias.",
-                    "effect": {
-                        "states.examined": true
+                        ]
                     }
-                }
-            ],
-            "search": [
-                {
-                    "condition": "states.examined",
-                    "text": "Ao revirar os ossos, uma armadilha é acionada! Lâminas afiadas cortam o ar!",
-                    "damage": {
-                        "amount": "1D6",
-                        "message": "Lâminas afiadas cortam sua pele!"
-                    },
-                    "chance": 0.7
-                }
-            ]
-        }
-    }
-}
+                ],
+                "search": [
+                    {
+                        "condition": "states.examined",
+                        "text": "Ao revirar os ossos, uma armadilha é acionada! Lâminas afiadas cortam o ar!",
+                        "damage": {
+                            "amount": "1D6",
+                            "message": "Lâminas afiadas cortam sua pele!"
+                        },
+                        "chance": 0.7
+                    }
+                ]
+            }
         },
         "room-2": {
             "id": "room-2",
@@ -123,23 +102,23 @@
                     "text": "O sangue no chão começa a se mover em sua direção, formando tentáculos que tentam agarrar seus tornozelos."
                 }
             ],
-"enemies": [
-    {
-        "id": "blood-golem",
-        "name": "Golem de Sangue",
-        "description": "Uma criatura humanoide feita inteiramente de sangue coagulado, com olhos vermelhos brilhantes e garras afiadas."
-    }
-],
-"exploration": {
-    "states": {
-        "initial": {
-            "examined": false,
-            "bloodPoolExamined": false,
-            "altarExamined": false,
-            "sacrificeMade": false,
-            "golemTriggered": false
-        }
-    },
+            "enemies": [
+                {
+                    "id": "blood-golem",
+                    "name": "Golem de Sangue",
+                    "description": "Uma criatura humanoide feita inteiramente de sangue coagulado, com olhos vermelhos brilhantes e garras afiadas."
+                }
+            ],
+            "exploration": {
+                "states": {
+                    "initial": {
+                        "examined": false,
+                        "bloodPoolExamined": false,
+                        "altarExamined": false,
+                        "sacrificeMade": false,
+                        "golemTriggered": false
+                    }
+                },
                 "examine": [
                     {
                         "condition": "!states.examined",
@@ -338,7 +317,7 @@
                 ]
             }
         },
-                "room-4": {
+        "room-4": {
             "id": "room-4",
             "name": "Jardim Venenoso",
             "description": "Uma sala repleta de vegetação exótica e colorida. Flores belas mas mortais exalam um perfume tóxico, e fungos luminescentes cobrem as paredes.",
@@ -571,109 +550,116 @@
                 ]
             }
         },
-       "room-6": {
-  "id": "room-6",
-  "name": "Observatório da Morte",
-  "description": "O último andar é um observatório circular onde o céu acima mostra constelações desconhecidas. No centro está um trono de ossos ocupado por uma figura encapuzada.",
-  "type": "room",
-  "exits": [
-    { "direction": "south", "leadsTo": "room-5", "type": "portal", "locked": false }
-  ],
-  "gridX": 10,
-  "gridY": 0,
-  "gridWidth": 4,
-  "gridHeight": 2,
-  "events": [],
-  "enemies": [
-    {
-      "id": "senhor-da-morte",
-      "name": "Senhor da Morte",
-      "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica.",
-      "trigger": {
-        "condition": "states.readyToFight",
-        "message": "O Senhor da Morte se ergue do trono, sua foice cortando o ar em um arco mortal!"
-      }
-    }
-  ],
-  "npcs": [
-    {
-      "id": "death-lord",
-      "name": "Senhor da Morte",
-      "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica.",
-      "dialogues": {
-        "initial": {
-          "text": "'ENCARE SEU DESTINO OU MORRA COMO UM COVARDE.'",
-          "options": [
-            {
-              "text": "Enfrentar a Morte",
-              "effect": {
-                "states.readyToFight": true
-              }
-            },
-            {
-              "text": "Tentar fugir",
-              "result": {
-                "text": "'COVARDIA É MORTE.' A foice da morte corta seu corpo e alma simultaneamente.",
-                "damage": {
-                  "amount": "2D6",
-                  "message": "A foice da morte fere profundamente sua alma!"
+        "room-6": {
+            "id": "room-6",
+            "name": "Observatório da Morte",
+            "description": "O último andar é um observatório circular onde o céu acima mostra constelações desconhecidas. No centro está um trono de ossos ocupado por uma figura encapuzada.",
+            "type": "room",
+            "exits": [
+                {
+                    "direction": "south",
+                    "leadsTo": "room-5",
+                    "type": "portal",
+                    "locked": false
                 }
-              }
+            ],
+            "gridX": 10,
+            "gridY": 0,
+            "gridWidth": 4,
+            "gridHeight": 2,
+            "events": [],
+            "enemies": [
+                {
+                    "id": "senhor-da-morte",
+                    "name": "Senhor da Morte",
+                    "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica.",
+                    "trigger": {
+                        "condition": "states.readyToFight",
+                        "message": "O Senhor da Morte se ergue do trono, sua foice cortando o ar em um arco mortal!"
+                    }
+                }
+            ],
+            "npcs": [
+                {
+                    "id": "death-lord",
+                    "name": "Senhor da Morte",
+                    "description": "Uma entidade esquelética com vestes negras e uma foice de energia cósmica.",
+                    "dialogues": {
+                        "initial": {
+                            "text": "'ENCARE SEU DESTINO OU MORRA COMO UM COVARDE.'",
+                            "options": [
+                                {
+                                    "text": "Enfrentar a Morte",
+                                    "effect": {
+                                        "states.readyToFight": true
+                                    }
+                                },
+                                {
+                                    "text": "Tentar fugir",
+                                    "result": {
+                                        "text": "'COVARDIA É MORTE.' A foice da morte corta seu corpo e alma simultaneamente.",
+                                        "damage": {
+                                            "amount": "2D6",
+                                            "message": "A foice da morte fere profundamente sua alma!"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            "exploration": {
+                "states": {
+                    "initial": {
+                        "examined": false,
+                        "throneExamined": false,
+                        "finalBattleComplete": false,
+                        "readyToFight": false
+                    }
+                },
+                "examine": [
+                    {
+                        "condition": "!states.examined",
+                        "text": "O ar aqui é pesado com a presença da morte. O próprio tempo parece congelar.",
+                        "effect": {
+                            "states.examined": true
+                        },
+                        "pointsOfInterest": [
+                            {
+                                "id": "bone-throne",
+                                "name": "Trono de Ossos",
+                                "description": "O trono é feito dos ossos de milhares de heróis fracassados.",
+                                "effect": {
+                                    "states.throneExamined": true
+                                },
+                                "interactions": [
+                                    {
+                                        "id": "challenge-death",
+                                        "condition": "!states.finalBattleComplete",
+                                        "name": "Desafiar o Senhor da Morte",
+                                        "result": {
+                                            "action": "dialogue",
+                                            "dialogueId": "initial"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "search": [
+                    {
+                        "condition": "!states.finalBattleComplete",
+                        "text": "A mera presença do Senhor da Morte drena sua força vital!",
+                        "damage": {
+                            "amount": "2D6",
+                            "message": "Sua força vital é sugada!"
+                        }
+                    }
+                ]
             }
-          ]
         }
-      }
-    }
-  ],
-  "exploration": {
-    "states": {
-      "initial": {
-        "examined": false,
-        "throneExamined": false,
-        "finalBattleComplete": false,
-        "readyToFight": false
-      }
-    },
-    "examine": [
-      {
-        "condition": "!states.examined",
-        "text": "O ar aqui é pesado com a presença da morte. O próprio tempo parece congelar.",
-        "effect": {"states.examined": true},
-        "pointsOfInterest": [
-          {
-            "id": "bone-throne",
-            "name": "Trono de Ossos",
-            "description": "O trono é feito dos ossos de milhares de heróis fracassados.",
-            "effect": {"states.throneExamined": true},
-            "interactions": [
-              {
-                "id": "challenge-death",
-                "condition": "!states.finalBattleComplete",
-                "name": "Desafiar o Senhor da Morte",
-                "result": {
-                  "action": "dialogue",
-                  "dialogueId": "initial"
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "search": [
-      {
-        "condition": "!states.finalBattleComplete",
-        "text": "A mera presença do Senhor da Morte drena sua força vital!",
-        "damage": {
-          "amount": "2D6",
-          "message": "Sua força vital é sugada!"
-        }
-      }
-    ]
-  }
-}
-
-
     },
     "decorativeBlocks": [
         {
