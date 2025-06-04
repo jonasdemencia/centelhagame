@@ -3226,6 +3226,7 @@ async function loadAndStartDungeon(dungeonId = null) {
                 <button id="go-south" class="direction-btn">Sul</button>
             </div>
             <div id="action-buttons">
+                <button id="voice-command-btn" class="action-btn" style="margin-bottom: 8px;">🎤 Falar Comando</button>
                 <button id="examine-room" class="action-btn">Examinar Sala</button>
                 <button id="open-door" class="action-btn">Abrir Porta</button>
                 <button id="search-room" class="action-btn">Procurar</button>
