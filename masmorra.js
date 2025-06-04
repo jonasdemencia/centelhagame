@@ -1403,6 +1403,7 @@ async function handlePointOfInterestClick(poi, room) {
             addLogMessage,
             showEnemy: createFightButton, // Para compatibilidade
             moveToRoom
+            createCollectButton // Adiciona esta função ao contexto
         });
         if (result) return;
     }
