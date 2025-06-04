@@ -1,4 +1,4 @@
-const Room1Behavior = {
+export const Room1Behavior = {
     initialState: {
         examined: false,
         skullExamined: false
@@ -19,10 +19,11 @@ const Room1Behavior = {
             }
 
             // Primeira vez examinando a sala
+            await addLogMessage("Entre os ossos, você nota um crânio humano com runas gravadas e um pergaminho enrolado em suas órbitas vazias.");
+            
             if (!room.explorationState.examined) {
-                await addLogMessage("Entre os ossos, você nota um crânio humano com runas gravadas e um pergaminho enrolado em suas órbitas vazias.");
                 room.explorationState.examined = true;
-
+                
                 // Cria o ponto de interesse do crânio
                 createPointsOfInterest([
                     {
@@ -32,20 +33,15 @@ const Room1Behavior = {
                         items: [{
                             id: "warning-scroll",
                             content: "Pergaminho de Aviso",
-                            description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'",
-                            onCollect: async (context) => {
-                                await context.addLogMessage("Você desenrola cuidadosamente o pergaminho amarelado, revelando um aviso sombrio sobre as provações que aguardam.");
-                                return true;
-                            }
+                            description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'"
                         }]
                     }
                 ]);
-
+                
                 return true;
-            } else {
-                await addLogMessage("Um portal de pedra negra manchado de sangue seco. Ossos humanos estão espalhados pelo chão e uma escada em espiral ascende para a escuridão.");
-                return false;
             }
+            
+            return false;
         },
 
         async onSearch(context) {
@@ -81,6 +77,7 @@ const Room1Behavior = {
                     }
                 };
             }
+            
             return false;
         }
     }
