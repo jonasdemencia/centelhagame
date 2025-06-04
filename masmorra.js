@@ -3382,6 +3382,8 @@ if (voiceBtn) {
     voiceBtn.onclick = iniciarReconhecimentoVoz;
     console.log("LOG: Botão de reconhecimento de voz pronto.");
 }
+}
+    
 
 
 // Inicialização quando o DOM estiver carregado
