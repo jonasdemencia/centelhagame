@@ -1,16 +1,21 @@
 // Comportamento da Sala 1 - Portal Sangrento
 export const Room1Behavior = {
+    // Estado inicial da sala
     initialState: {
         examined: false,
         skullExamined: false
     },
 
+    // Handlers para eventos da sala
     handlers: {
+        // Manipula primeira visita
         async onFirstVisit(context) {
-            await context.addLogMessage("Ao cruzar o portal, você ouve sussurros agonizantes. Uma voz sepulcral ecoa: 'Apenas os dignos sobreviverão às cinco provações...'");
+            const { addLogMessage } = context;
+            await addLogMessage("Ao cruzar o portal, você ouve sussurros agonizantes. Uma voz sepulcral ecoa: 'Apenas os dignos sobreviverão às cinco provações...'");
             return true;
         },
 
+        // Manipula ação de examinar
         async onExamine(context) {
             const { room, addLogMessage, createPointsOfInterest } = context;
 
@@ -27,7 +32,6 @@ export const Room1Behavior = {
                         id: "skull",
                         name: "Crânio com Runas",
                         description: "Um crânio humano com runas arcanas entalhadas na testa. Um pergaminho amarelado está enfiado em uma das órbitas.",
-                        // Remova o effect para que o sistema não marque automaticamente como examinado
                         items: [{
                             id: "warning-scroll",
                             content: "Pergaminho de Aviso",
@@ -43,6 +47,7 @@ export const Room1Behavior = {
             return false;
         },
 
+        // Manipula ação de procurar
         async onSearch(context) {
             const { room, addLogMessage, applyDamage } = context;
 
@@ -62,8 +67,9 @@ export const Room1Behavior = {
             return false;
         },
 
+        // Manipula interação com pontos de interesse
         async onInteractWithPOI(context) {
-            const { poi, room, addLogMessage, showItemCollectionButton } = context;
+            const { poi, room, addLogMessage } = context;
             
             if (poi.id === "skull") {
                 if (!room.explorationState.skullExamined) {
@@ -71,30 +77,14 @@ export const Room1Behavior = {
                     await addLogMessage("Você remove cuidadosamente o pergaminho da órbita do crânio. As runas parecem pulsar levemente à luz das tochas.");
                 }
                 
-                // Tente usar a função showItemCollectionButton se disponível
-                if (showItemCollectionButton) {
-                    showItemCollectionButton({
-                        id: "warning-scroll",
-                        content: "Pergaminho de Aviso",
-                        description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'"
-                    });
-                }
-                
-                // Sempre retorne um objeto com o item
-                return {
-                    item: {
-                        id: "warning-scroll",
-                        content: "Pergaminho de Aviso",
-                        description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'"
-                    },
-                    // Adicione uma flag para forçar a exibição do botão
-                    showCollectButton: true
-                };
+                // Sempre retorna o item para mostrar o botão de recolher
+                return poi.items[0];
             }
 
             return false;
         },
 
+        // Manipula coleta de itens
         async onCollectItem(context) {
             const { item, addLogMessage } = context;
             
