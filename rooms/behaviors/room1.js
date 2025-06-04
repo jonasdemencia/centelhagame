@@ -32,14 +32,13 @@ export const Room1Behavior = {
                         id: "skull",
                         name: "Crânio com Runas",
                         description: "Um crânio humano com runas arcanas entalhadas na testa. Um pergaminho amarelado está enfiado em uma das órbitas.",
+                        effect: {
+                            "skullExamined": true
+                        },
                         items: [{
                             id: "warning-scroll",
                             content: "Pergaminho de Aviso",
-                            description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'",
-                            onCollect: async (context) => {
-                                await context.addLogMessage("Você desenrola cuidadosamente o pergaminho amarelado, revelando um aviso sombrio sobre as provações que aguardam.");
-                                return true;
-                            }
+                            description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'"
                         }]
                     }
                 ], room);
@@ -76,22 +75,17 @@ export const Room1Behavior = {
             const { poi, room, addLogMessage } = context;
             
             if (poi.id === "skull") {
-                // Se for a primeira interação, mostra a mensagem
                 if (!room.explorationState.skullExamined) {
                     room.explorationState.skullExamined = true;
                     await addLogMessage("Você remove cuidadosamente o pergaminho da órbita do crânio. As runas parecem pulsar levemente à luz das tochas.");
                 }
                 
-                // Sempre retorna o item, independente se já examinou antes
+                // Sempre retorna o item para mostrar o botão de recolher
                 return {
                     item: {
                         id: "warning-scroll",
                         content: "Pergaminho de Aviso",
-                        description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'",
-                        onCollect: async (context) => {
-                            await context.addLogMessage("Você desenrola cuidadosamente o pergaminho amarelado, revelando um aviso sombrio sobre as provações que aguardam.");
-                            return true;
-                        }
+                        description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'"
                     }
                 };
             }
