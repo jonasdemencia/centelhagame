@@ -1,3 +1,4 @@
+// Comportamento da Sala 1 - Portal Sangrento
 export const Room1Behavior = {
     // Estado inicial da sala
     initialState: {
@@ -74,9 +75,14 @@ export const Room1Behavior = {
         async onInteractWithPOI(context) {
             const { poi, room, addLogMessage } = context;
             
-            if (poi.id === "skull" && !room.explorationState.skullExamined) {
-                room.explorationState.skullExamined = true;
-                await addLogMessage("Você remove cuidadosamente o pergaminho da órbita do crânio. As runas parecem pulsar levemente à luz das tochas.");
+            if (poi.id === "skull") {
+                // Se for a primeira interação, mostra a mensagem
+                if (!room.explorationState.skullExamined) {
+                    room.explorationState.skullExamined = true;
+                    await addLogMessage("Você remove cuidadosamente o pergaminho da órbita do crânio. As runas parecem pulsar levemente à luz das tochas.");
+                }
+                
+                // Sempre retorna o item, independente se já examinou antes
                 return {
                     item: {
                         id: "warning-scroll",
