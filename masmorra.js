@@ -3291,7 +3291,15 @@ console.log("Behaviors associados a todas as salas:", dungeon.rooms);
 // Inicialização quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', async () => {
     console.log("LOG: DOMContentLoaded evento disparado.");
+    
+// --- Adicione aqui o botão de narração ---
+document.getElementById('toggle-tts').onclick = function() {
+    window.ttsEnabled = !window.ttsEnabled;
+    this.textContent = window.ttsEnabled ? '🔊 Narração ativada' : '🔇 Narração desativada';
+};
+window.ttsEnabled = false;
 
+    
     // Botão de inventário
     const inventarioButton = document.getElementById("abrir-inventario");
     if (inventarioButton) {
