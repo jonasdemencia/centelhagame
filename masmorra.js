@@ -693,8 +693,13 @@ async function addItemToInventory(item) {
 }
 
 
-// Função para adicionar mensagem ao log de exploração
+// Função para adicionar mensagem ao log de exploração, agora com narração opcional via Web Speech API
 async function addLogMessage(message, delay = 0, typingSpeed = 30) {
+    // Narração automática se o usuário ativar
+    if (window.ttsEnabled && typeof narrate === "function") {
+        narrate(message);
+    }
+
     if (!currentLogBlock) {
         startNewLogBlock("Exploração");
     }
@@ -748,7 +753,6 @@ async function addLogMessage(message, delay = 0, typingSpeed = 30) {
         }
     });
 }
-
 
 function drawMap() {
     const mapSvg = document.getElementById("dungeon-map");
