@@ -77,56 +77,43 @@ export const Room1Behavior = {
                     await addLogMessage("Você remove cuidadosamente o pergaminho da órbita do crânio. As runas parecem pulsar levemente à luz das tochas.");
                 }
                 
-                // Cria o botão de recolher item com acesso direto ao addItemToInventory
-                setTimeout(() => {
-                    const scrollItem = {
-                        id: "warning-scroll",
-                        content: "Pergaminho de Aviso",
-                        description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'"
-                    };
-                    
-                    // Remove botão existente
-                    const existingButton = document.getElementById('collect-item-button');
-                    if (existingButton) existingButton.remove();
-                    
-                    // Cria o botão
-                    const collectButton = document.createElement('button');
-                    collectButton.id = 'collect-item-button';
-                    collectButton.textContent = 'Recolher Item';
-                    collectButton.classList.add('action-btn', 'collect-btn');
-                    
-                    // Adiciona evento de clique que usa window.addItemToInventory para garantir acesso global
-                    collectButton.addEventListener('click', async () => {
-                        // Usa window para garantir acesso à função global
-                        if (typeof window.addItemToInventory === 'function') {
-                            await window.addItemToInventory(scrollItem);
-                            
-                            // Adiciona mensagem ao log
-                            if (typeof window.startNewLogBlock === 'function') {
-                                window.startNewLogBlock("Item Recolhido");
-                            }
-                            await window.addLogMessage(`Você recolheu: ${scrollItem.content}`, 800);
-                            
-                            // Remove o botão
-                            collectButton.remove();
-                        }
-                    });
-                    
-                    // Adiciona o botão à interface
-                    const actionButtons = document.getElementById('action-buttons');
-                    if (actionButtons) {
-                        actionButtons.appendChild(collectButton);
-                    }
-                }, 100);
-                
-                // Retorna o item para compatibilidade
-                return {
-                    item: {
-                        id: "warning-scroll",
-                        content: "Pergaminho de Aviso",
-                        description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'"
-                    }
+                // Cria o botão de recolher item diretamente
+                const scrollItem = {
+                    id: "warning-scroll",
+                    content: "Pergaminho de Aviso",
+                    description: "Um pergaminho que diz: 'Cinco provações aguardam: Sangue, Fogo, Veneno, Loucura e Morte. Apenas os que superarem todas receberão o poder supremo.'"
                 };
+                
+                // Remove botão existente
+                const existingButton = document.getElementById('collect-item-button');
+                if (existingButton) existingButton.remove();
+                
+                // Cria o botão
+                const collectButton = document.createElement('button');
+                collectButton.id = 'collect-item-button';
+                collectButton.textContent = 'Recolher Item';
+                collectButton.classList.add('action-btn', 'collect-btn');
+                
+                // Adiciona evento de clique
+                collectButton.addEventListener('click', async () => {
+                    // Usa a função global diretamente
+                    await addItemToInventory(scrollItem);
+                    
+                    // Adiciona mensagem ao log
+                    startNewLogBlock("Item Recolhido");
+                    await addLogMessage(`Você recolheu: ${scrollItem.content}`, 800);
+                    
+                    // Remove o botão
+                    collectButton.remove();
+                });
+                
+                // Adiciona o botão à interface
+                const actionButtons = document.getElementById('action-buttons');
+                if (actionButtons) {
+                    actionButtons.appendChild(collectButton);
+                }
+                
+                return true;
             }
 
             return false;
