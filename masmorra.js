@@ -203,6 +203,65 @@ let playerState = {
 };
 
 
+
+// --- Reconhecimento de Voz: Funções globais ---
+function iniciarReconhecimentoVoz() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        alert("Reconhecimento de voz não suportado neste navegador.");
+        return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'pt-BR';
+    recognition.start();
+
+    recognition.onstart = function() {
+        const btn = document.getElementById("voice-command-btn");
+        if (btn) btn.textContent = "🎤 Ouvindo...";
+    };
+    recognition.onend = function() {
+        const btn = document.getElementById("voice-command-btn");
+        if (btn) btn.textContent = "🎤 Falar Comando";
+    };
+    recognition.onresult = function(event) {
+        const texto = event.results[0][0].transcript.toLowerCase();
+        console.log("Voz reconhecida:", texto);
+        processarComandoVoz(texto);
+    };
+    recognition.onerror = function(event) {
+        console.error("Erro de reconhecimento de voz:", event.error);
+        const btn = document.getElementById("voice-command-btn");
+        if (btn) btn.textContent = "🎤 Falar Comando";
+    };
+}
+
+function processarComandoVoz(texto) {
+    if (texto.includes("buscar") || texto.includes("procurar")) {
+        const btn = document.getElementById("search-room");
+        if (btn) btn.click();
+        return;
+    }
+    if (texto.includes("examinar")) {
+        const btn = document.getElementById("examine-room");
+        if (btn) btn.click();
+        return;
+    }
+    if (texto.includes("descansar")) {
+        const btn = document.getElementById("rest");
+        if (btn) btn.click();
+        return;
+    }
+    if (texto.includes("porta") || texto.includes("abrir")) {
+        const btn = document.getElementById("open-door");
+        if (btn) btn.click();
+        return;
+    }
+    // Adapte/adicione outros comandos!
+    // Dê feedback se não entendeu:
+    addLogMessage("Comando de voz não reconhecido: " + texto, 1000, 0);
+}
+
+
 // Função para atualizar a barra de energia do jogador
 function updateHealthBar() {
     const healthBar = document.getElementById("player-health-bar");
@@ -3308,14 +3367,21 @@ console.log("Behaviors associados a todas as salas:", dungeon.rooms);
     // Atualiza a barra de energia
     updateHealthBar();
 
-    // Inicia a exploração
-    startNewLogBlock("Bem-vindo");
-    await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
-    await addLogMessage(dungeon.description, 1000);
+   // Inicia a exploração
+startNewLogBlock("Bem-vindo");
+await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
+await addLogMessage(dungeon.description, 1000);
 
-    // Move para a sala inicial
-    moveToRoom(playerState.currentRoom);
+// Move para a sala inicial
+moveToRoom(playerState.currentRoom);
+
+// Reatribua o evento de voz após reconstruir a tela
+const voiceBtn = document.getElementById("voice-command-btn");
+if (voiceBtn) {
+    voiceBtn.onclick = iniciarReconhecimentoVoz;
+    console.log("LOG: Botão de reconhecimento de voz pronto.");
 }
+
 
 // Inicialização quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', async () => {
