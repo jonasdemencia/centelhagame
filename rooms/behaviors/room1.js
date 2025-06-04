@@ -77,8 +77,10 @@ export const Room1Behavior = {
                     await addLogMessage("Você remove cuidadosamente o pergaminho da órbita do crânio. As runas parecem pulsar levemente à luz das tochas.");
                 }
                 
-                // Sempre retorna o item para mostrar o botão de recolher
-                return poi.items[0];
+                // Retorna o item diretamente do POI
+                if (poi.items && poi.items.length > 0) {
+                    return poi.items[0];
+                }
             }
 
             return false;
