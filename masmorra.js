@@ -265,7 +265,6 @@ function processarComandoVoz(texto) {
         const poiElement = document.querySelector('[data-poi-id="fire-columns"]');
         if (poiElement) {
             poiElement.click();
-            addLogMessage("Examinando as colunas de fogo...", 1000, 0);
             return;
         }
     }
@@ -275,7 +274,6 @@ function processarComandoVoz(texto) {
         const poiElement = document.querySelector('[data-poi-id="forge"]');
         if (poiElement) {
             poiElement.click();
-            addLogMessage("Examinando a forja antiga...", 1000, 0);
             return;
         }
     }
