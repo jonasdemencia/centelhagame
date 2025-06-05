@@ -235,6 +235,7 @@ function iniciarReconhecimentoVoz() {
     };
 }
 
+
 function processarComandoVoz(texto) {
     // Comandos básicos existentes
     if (texto.includes("buscar") || texto.includes("procurar")) {
@@ -258,26 +259,22 @@ function processarComandoVoz(texto) {
         return;
     }
     
-    // Comandos específicos para a sala 3
-    const currentRoom = window.playerState?.currentRoom;
-    if (currentRoom === "room-3") {
-        // Comando para colunas de fogo
-        if (texto.includes("coluna") || texto.includes("fogo") || texto.includes("colunas de fogo")) {
-            // Simula um clique em um elemento com ID específico ou dispara uma função
-            const event = new CustomEvent("interact-poi", { 
-                detail: { poiId: "colunas-de-fogo" } 
-            });
-            document.dispatchEvent(event);
+    // Comandos específicos para pontos de interesse
+    if (texto.includes("coluna") || texto.includes("fogo") || texto.includes("colunas")) {
+        // Procura pelo elemento do ponto de interesse das colunas de fogo
+        const poiElement = document.querySelector('[data-poi-id="fire-columns"]');
+        if (poiElement) {
+            poiElement.click();
             addLogMessage("Examinando as colunas de fogo...", 1000, 0);
             return;
         }
-        
-        // Comando para forja antiga
-        if (texto.includes("forja") || texto.includes("antiga") || texto.includes("forja antiga")) {
-            const event = new CustomEvent("interact-poi", { 
-                detail: { poiId: "forja-antiga" } 
-            });
-            document.dispatchEvent(event);
+    }
+    
+    if (texto.includes("forja") || texto.includes("antiga")) {
+        // Procura pelo elemento do ponto de interesse da forja antiga
+        const poiElement = document.querySelector('[data-poi-id="forge"]');
+        if (poiElement) {
+            poiElement.click();
             addLogMessage("Examinando a forja antiga...", 1000, 0);
             return;
         }
@@ -286,6 +283,7 @@ function processarComandoVoz(texto) {
     // Dê feedback se não entendeu
     addLogMessage("Comando de voz não reconhecido: " + texto, 1000, 0);
 }
+
 
 
 // Função para atualizar a barra de energia do jogador
