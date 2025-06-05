@@ -291,6 +291,7 @@ function processarComandoVoz(texto) {
 
 
 
+
 // Função para atualizar a barra de energia do jogador
 function updateHealthBar() {
     const healthBar = document.getElementById("player-health-bar");
