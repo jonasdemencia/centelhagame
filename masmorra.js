@@ -236,6 +236,7 @@ function iniciarReconhecimentoVoz() {
 }
 
 function processarComandoVoz(texto) {
+    // Comandos básicos existentes
     if (texto.includes("buscar") || texto.includes("procurar")) {
         const btn = document.getElementById("search-room");
         if (btn) btn.click();
@@ -256,8 +257,33 @@ function processarComandoVoz(texto) {
         if (btn) btn.click();
         return;
     }
-    // Adapte/adicione outros comandos!
-    // Dê feedback se não entendeu:
+    
+    // Comandos específicos para a sala 3
+    const currentRoom = window.playerState?.currentRoom;
+    if (currentRoom === "room-3") {
+        // Comando para colunas de fogo
+        if (texto.includes("coluna") || texto.includes("fogo") || texto.includes("colunas de fogo")) {
+            // Simula um clique em um elemento com ID específico ou dispara uma função
+            const event = new CustomEvent("interact-poi", { 
+                detail: { poiId: "colunas-de-fogo" } 
+            });
+            document.dispatchEvent(event);
+            addLogMessage("Examinando as colunas de fogo...", 1000, 0);
+            return;
+        }
+        
+        // Comando para forja antiga
+        if (texto.includes("forja") || texto.includes("antiga") || texto.includes("forja antiga")) {
+            const event = new CustomEvent("interact-poi", { 
+                detail: { poiId: "forja-antiga" } 
+            });
+            document.dispatchEvent(event);
+            addLogMessage("Examinando a forja antiga...", 1000, 0);
+            return;
+        }
+    }
+    
+    // Dê feedback se não entendeu
     addLogMessage("Comando de voz não reconhecido: " + texto, 1000, 0);
 }
 
