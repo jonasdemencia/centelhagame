@@ -261,7 +261,6 @@ function processarComandoVoz(texto) {
     
     // Comandos específicos para pontos de interesse
     if (texto.includes("coluna") || texto.includes("fogo") || texto.includes("colunas")) {
-        // Procura pelo elemento do ponto de interesse das colunas de fogo
         const poiElement = document.querySelector('[data-poi-id="fire-columns"]');
         if (poiElement) {
             poiElement.click();
@@ -270,10 +269,18 @@ function processarComandoVoz(texto) {
     }
     
     if (texto.includes("forja") || texto.includes("antiga")) {
-        // Procura pelo elemento do ponto de interesse da forja antiga
         const poiElement = document.querySelector('[data-poi-id="forge"]');
         if (poiElement) {
             poiElement.click();
+            return;
+        }
+    }
+    
+    // Comando para resolver o enigma do fogo
+    if (texto.includes("resolver") || texto.includes("enigma") || texto.includes("puzzle")) {
+        const solveButton = document.querySelector('[data-interaction-id="solve-fire-puzzle"]');
+        if (solveButton) {
+            solveButton.click();
             return;
         }
     }
