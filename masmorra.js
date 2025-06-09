@@ -1387,8 +1387,7 @@ function createInteractionButtonsFromPOI(interactions, room) {
 
 
 
-// Função para criar o botão de recolher item
-// Função para criar o botão de recolher item
+// Modifique a função createCollectButton para não remover o botão quando o botão de voz é clicado
 function createCollectButton(item) {
     // Remove qualquer botão existente primeiro
     removeCollectButton();
@@ -1453,7 +1452,8 @@ function createCollectButton(item) {
     }
 
     // Adiciona eventos para remover o botão quando outros botões são clicados
-    const allButtons = document.querySelectorAll('.direction-btn, .action-btn:not(.collect-btn)');
+    // EXCETO o botão de falar comando
+    const allButtons = document.querySelectorAll('.direction-btn, .action-btn:not(.collect-btn):not(#voice-command-btn)');
     allButtons.forEach(button => {
         button.addEventListener('click', removeCollectButton);
     });
