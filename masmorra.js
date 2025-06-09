@@ -276,9 +276,16 @@ function processarComandoVoz(texto) {
         }
     }
     
-    // Comando para resolver o enigma do fogo
+    // Comando para resolver o enigma do fogo - usando seletor mais genérico
     if (texto.includes("resolver") || texto.includes("enigma") || texto.includes("puzzle")) {
-        const solveButton = document.querySelector('[data-interaction-id="solve-fire-puzzle"]');
+        // Procura por qualquer botão que contenha o texto "Resolver o Enigma do Fogo"
+        const buttons = Array.from(document.querySelectorAll('button'));
+        const solveButton = buttons.find(btn => 
+            btn.textContent.includes("Resolver o Enigma do Fogo") || 
+            btn.textContent.includes("enigma") || 
+            btn.textContent.includes("Resolver")
+        );
+        
         if (solveButton) {
             solveButton.click();
             return;
