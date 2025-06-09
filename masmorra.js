@@ -264,6 +264,38 @@ function iniciarReconhecimentoVoz() {
 
 
 function processarComandoVoz(texto) {
+    // Comandos de direção
+    if (texto.includes("norte")) {
+        const btn = document.getElementById("go-north");
+        if (btn && !btn.disabled) btn.click();
+        return;
+    }
+    if (texto.includes("sul")) {
+        const btn = document.getElementById("go-south");
+        if (btn && !btn.disabled) btn.click();
+        return;
+    }
+    if (texto.includes("leste")) {
+        const btn = document.getElementById("go-east");
+        if (btn && !btn.disabled) btn.click();
+        return;
+    }
+    if (texto.includes("oeste")) {
+        const btn = document.getElementById("go-west");
+        if (btn && !btn.disabled) btn.click();
+        return;
+    }
+    
+    // Comando para cancelar (fecha menus abertos)
+    if (texto.includes("cancelar") || texto.includes("fechar") || texto.includes("voltar")) {
+        const cancelBtn = document.querySelector('.direction-choice.cancel');
+        if (cancelBtn) {
+            cancelBtn.click();
+            return;
+        }
+    }
+    
+    // Comandos existentes
     if (texto.includes("buscar") || texto.includes("procurar")) {
         const btn = document.getElementById("search-room");
         if (btn) btn.click();
