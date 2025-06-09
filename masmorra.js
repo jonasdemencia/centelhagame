@@ -205,58 +205,67 @@ let playerState = {
 
 
 function iniciarReconhecimentoVoz() {
-    // Não modifique o DOM antes de iniciar o reconhecimento
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
         alert("Reconhecimento de voz não suportado neste navegador.");
         return;
     }
-    
-    // Guarda uma referência ao botão de coleta antes de iniciar
+
     const collectButton = document.getElementById('collect-item-button');
-    
+
     const recognition = new SpeechRecognition();
     recognition.lang = 'pt-BR';
-    
-    // Configura para não ser contínuo para evitar problemas
     recognition.continuous = false;
-    
-    recognition.onstart = function() {
+
+    recognition.onstart = function () {
         const btn = document.getElementById("voice-command-btn");
         if (btn) btn.textContent = "🎤 Ouvindo...";
+
+        // Força visibilidade do botão de coleta
+        const collectBtn = document.getElementById('collect-item-button');
+        if (collectBtn) {
+            collectBtn.style.display = 'inline-block'; // ajuste se usar flex/grid
+            collectBtn.style.visibility = 'visible';
+        }
     };
-    
-    recognition.onend = function() {
+
+    recognition.onend = function () {
         const btn = document.getElementById("voice-command-btn");
         if (btn) btn.textContent = "🎤 Falar Comando";
-        
-        // Verifica se o botão de coleta desapareceu e o restaura se necessário
+
+        // Restaura botão se tiver sido removido
         if (collectButton && !document.getElementById('collect-item-button')) {
             const actionButtons = document.getElementById('action-buttons');
             if (actionButtons) actionButtons.appendChild(collectButton);
         }
+
+        // Reforça visibilidade
+        const collectBtn = document.getElementById('collect-item-button');
+        if (collectBtn) {
+            collectBtn.style.display = 'inline-block';
+            collectBtn.style.visibility = 'visible';
+        }
     };
-    
-    recognition.onresult = function(event) {
+
+    recognition.onresult = function (event) {
         const texto = event.results[0][0].transcript.toLowerCase();
         console.log("Voz reconhecida:", texto);
         processarComandoVoz(texto);
     };
-    
-    recognition.onerror = function(event) {
+
+    recognition.onerror = function (event) {
         console.error("Erro de reconhecimento de voz:", event.error);
         const btn = document.getElementById("voice-command-btn");
         if (btn) btn.textContent = "🎤 Falar Comando";
     };
-    
-    // Inicia o reconhecimento
+
     recognition.start();
 }
 
 
 
+
 function processarComandoVoz(texto) {
-    // Comandos básicos existentes
     if (texto.includes("buscar") || texto.includes("procurar")) {
         const btn = document.getElementById("search-room");
         if (btn) btn.click();
@@ -277,8 +286,7 @@ function processarComandoVoz(texto) {
         if (btn) btn.click();
         return;
     }
-    
-    // Comandos específicos para pontos de interesse
+
     if (texto.includes("coluna") || texto.includes("fogo") || texto.includes("colunas")) {
         const poiElement = document.querySelector('[data-poi-id="fire-columns"]');
         if (poiElement) {
@@ -286,7 +294,7 @@ function processarComandoVoz(texto) {
             return;
         }
     }
-    
+
     if (texto.includes("forja") || texto.includes("antiga")) {
         const poiElement = document.querySelector('[data-poi-id="forge"]');
         if (poiElement) {
@@ -294,59 +302,57 @@ function processarComandoVoz(texto) {
             return;
         }
     }
-    
-    // Comando para resolver o enigma do fogo
+
     if (texto.includes("resolver") || texto.includes("enigma") || texto.includes("puzzle")) {
         const buttons = Array.from(document.querySelectorAll('button'));
-        const solveButton = buttons.find(btn => 
-            btn.textContent.includes("Resolver o Enigma do Fogo") || 
-            btn.textContent.includes("enigma") || 
+        const solveButton = buttons.find(btn =>
+            btn.textContent.includes("Resolver o Enigma do Fogo") ||
+            btn.textContent.includes("enigma") ||
             btn.textContent.includes("Resolver")
         );
-        
         if (solveButton) {
             solveButton.click();
             return;
         }
     }
-    
-    // Comando para rolar o dado
-    if (texto.includes("rolar") || texto.includes("dado") || texto.includes("d20") || 
+
+    if (texto.includes("rolar") || texto.includes("dado") || texto.includes("d20") ||
         texto.includes("jogar") || texto.includes("lançar")) {
-        
         const buttons = Array.from(document.querySelectorAll('button'));
-        const rollButton = buttons.find(btn => 
-            btn.textContent.includes("Rolar") || 
-            btn.textContent.includes("D20") || 
+        const rollButton = buttons.find(btn =>
+            btn.textContent.includes("Rolar") ||
+            btn.textContent.includes("D20") ||
             btn.textContent.includes("dado") ||
             btn.classList.contains('roll-button')
         );
-        
         if (rollButton) {
             rollButton.click();
             return;
         }
     }
-    
-    // Comando para recolher/coletar item
-    if (texto.includes("recolher") || texto.includes("coletar") || texto.includes("pegar") || 
+
+    if (texto.includes("recolher") || texto.includes("coletar") || texto.includes("pegar") ||
         texto.includes("item") || texto.includes("cristal")) {
-        
         const buttons = Array.from(document.querySelectorAll('button'));
-        const collectButton = buttons.find(btn => 
-            btn.textContent.includes("Recolher") || 
+        const collectButton = buttons.find(btn =>
+            btn.textContent.includes("Recolher") ||
             btn.textContent.includes("Coletar") ||
             btn.classList.contains('collect-button')
         );
-        
         if (collectButton) {
             collectButton.click();
             return;
         }
     }
-    
-    // Dê feedback se não entendeu
+
     addLogMessage("Comando de voz não reconhecido: " + texto, 1000, 0);
+
+    // Reforça visibilidade do botão de coleta no final da função
+    const collectBtn = document.getElementById('collect-item-button');
+    if (collectBtn) {
+        collectBtn.style.display = 'inline-block';
+        collectBtn.style.visibility = 'visible';
+    }
 }
 
 
