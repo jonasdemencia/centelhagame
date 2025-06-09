@@ -204,8 +204,14 @@ let playerState = {
 
 
 
-// --- Reconhecimento de Voz: Funções globais ---
 function iniciarReconhecimentoVoz() {
+    // Salva referências aos botões de coleta antes de iniciar o reconhecimento
+    const collectButtons = Array.from(document.querySelectorAll('button')).filter(btn => 
+        btn.textContent.includes("Recolher") || 
+        btn.textContent.includes("Coletar") ||
+        btn.classList.contains('collect-button')
+    );
+    
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
         alert("Reconhecimento de voz não suportado neste navegador.");
@@ -234,7 +240,6 @@ function iniciarReconhecimentoVoz() {
         if (btn) btn.textContent = "🎤 Falar Comando";
     };
 }
-
 
 function processarComandoVoz(texto) {
     // Comandos básicos existentes
@@ -295,7 +300,6 @@ function processarComandoVoz(texto) {
     if (texto.includes("rolar") || texto.includes("dado") || texto.includes("d20") || 
         texto.includes("jogar") || texto.includes("lançar")) {
         
-        // Procura por botões de rolagem de dados
         const buttons = Array.from(document.querySelectorAll('button'));
         const rollButton = buttons.find(btn => 
             btn.textContent.includes("Rolar") || 
@@ -306,6 +310,23 @@ function processarComandoVoz(texto) {
         
         if (rollButton) {
             rollButton.click();
+            return;
+        }
+    }
+    
+    // Comando para recolher/coletar item
+    if (texto.includes("recolher") || texto.includes("coletar") || texto.includes("pegar") || 
+        texto.includes("item") || texto.includes("cristal")) {
+        
+        const buttons = Array.from(document.querySelectorAll('button'));
+        const collectButton = buttons.find(btn => 
+            btn.textContent.includes("Recolher") || 
+            btn.textContent.includes("Coletar") ||
+            btn.classList.contains('collect-button')
+        );
+        
+        if (collectButton) {
+            collectButton.click();
             return;
         }
     }
