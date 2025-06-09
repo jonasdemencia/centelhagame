@@ -211,13 +211,11 @@ function iniciarReconhecimentoVoz() {
     const collectButton = document.getElementById('collect-item-button');
     console.log("Botão de coleta antes de iniciar:", collectButton ? "existe" : "não existe");
     
-    // Salva o HTML do botão de coleta se ele existir
-    let collectButtonHTML = '';
-    let collectButtonParent = null;
+    // Cria uma cópia do botão se ele existir
+    let collectButtonClone = null;
     if (collectButton) {
-        collectButtonHTML = collectButton.outerHTML;
-        collectButtonParent = collectButton.parentNode;
-        console.log("HTML do botão de coleta salvo:", collectButtonHTML);
+        collectButtonClone = collectButton.cloneNode(true);
+        console.log("Botão de coleta clonado");
     }
     
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -230,62 +228,62 @@ function iniciarReconhecimentoVoz() {
     recognition.lang = 'pt-BR';
     recognition.continuous = false;
     
-    // Previne que o reconhecimento modifique o DOM
-    document.body.addEventListener('DOMNodeRemoved', function checkCollectButton(e) {
-        if (e.target.id === 'collect-item-button') {
-            console.log("ALERTA: Botão de coleta foi removido do DOM!");
-            // Não tenta restaurar aqui para evitar loops
-        }
-    }, { once: true });
+    // Desabilita temporariamente o botão de voz para evitar cliques múltiplos
+    const voiceBtn = document.getElementById("voice-command-btn");
+    if (voiceBtn) voiceBtn.disabled = true;
     
     recognition.onstart = function() {
         console.log("Reconhecimento iniciado");
-        const btn = document.getElementById("voice-command-btn");
-        if (btn) btn.textContent = "🎤 Ouvindo...";
+        if (voiceBtn) {
+            voiceBtn.textContent = "🎤 Ouvindo...";
+            voiceBtn.disabled = true;
+        }
     };
     
     recognition.onend = function() {
         console.log("Reconhecimento finalizado");
-        const btn = document.getElementById("voice-command-btn");
-        if (btn) btn.textContent = "🎤 Falar Comando";
+        if (voiceBtn) {
+            voiceBtn.textContent = "🎤 Falar Comando";
+            voiceBtn.disabled = false;
+        }
         
         // Verifica se o botão de coleta ainda existe
         const collectButtonAfter = document.getElementById('collect-item-button');
         console.log("Botão de coleta após reconhecimento:", collectButtonAfter ? "existe" : "não existe");
         
-        // Se o botão foi removido e temos o HTML salvo, restaura-o
-        if (!collectButtonAfter && collectButtonHTML && collectButtonParent) {
-            console.log("Tentando restaurar o botão de coleta...");
+        // Se o botão foi removido e temos o clone, restaura-o
+        if (!collectButtonAfter && collectButtonClone) {
+            console.log("Restaurando o botão de coleta clonado...");
             const actionButtons = document.getElementById('action-buttons');
             if (actionButtons) {
-                actionButtons.insertAdjacentHTML('beforeend', collectButtonHTML);
+                // Adiciona o clone ao DOM
+                actionButtons.appendChild(collectButtonClone);
                 console.log("Botão de coleta restaurado no DOM");
                 
-                // Restaura o evento de clique
-                const newCollectButton = document.getElementById('collect-item-button');
-                if (newCollectButton) {
-                    // Recria o evento de clique para o botão restaurado
-                    newCollectButton.addEventListener('click', async () => {
-                        console.log("Botão de coleta restaurado clicado");
-                        // Tenta encontrar o item atual para coletar
-                        const currentRoom = dungeon.rooms[playerState.currentRoom];
-                        if (currentRoom && currentRoom.exploration) {
-                            for (const examineEvent of currentRoom.exploration.examine || []) {
-                                if (examineEvent.pointsOfInterest) {
-                                    for (const poi of examineEvent.pointsOfInterest) {
-                                        if (poi.items && poi.items.length > 0) {
-                                            await addItemToInventory(poi.items[0]);
-                                            startNewLogBlock("Item Recolhido");
-                                            await addLogMessage(`Você recolheu: ${poi.items[0].content}`, 800);
-                                            newCollectButton.remove();
-                                            return;
-                                        }
+                // Restaura o evento de clique original
+                collectButtonClone.onclick = function() {
+                    console.log("Botão de coleta clonado clicado");
+                    // Obtém o item atual da sala
+                    const currentRoom = dungeon.rooms[playerState.currentRoom];
+                    
+                    // Procura por pontos de interesse com itens
+                    if (currentRoom && currentRoom.exploration && currentRoom.exploration.examine) {
+                        for (const examineEvent of currentRoom.exploration.examine) {
+                            if (examineEvent.pointsOfInterest) {
+                                for (const poi of examineEvent.pointsOfInterest) {
+                                    if (poi.items && poi.items.length > 0) {
+                                        // Adiciona o item ao inventário
+                                        addItemToInventory(poi.items[0]);
+                                        startNewLogBlock("Item Recolhido");
+                                        addLogMessage(`Você recolheu: ${poi.items[0].content}`, 800);
+                                        collectButtonClone.remove();
+                                        break;
                                     }
                                 }
                             }
                         }
-                    });
-                }
+                    }
+                };
             }
         }
     };
@@ -298,8 +296,19 @@ function iniciarReconhecimentoVoz() {
     
     recognition.onerror = function(event) {
         console.error("Erro de reconhecimento de voz:", event.error);
-        const btn = document.getElementById("voice-command-btn");
-        if (btn) btn.textContent = "🎤 Falar Comando";
+        if (voiceBtn) {
+            voiceBtn.textContent = "🎤 Falar Comando";
+            voiceBtn.disabled = false;
+        }
+        
+        // Também restaura o botão de coleta em caso de erro
+        if (collectButtonClone && !document.getElementById('collect-item-button')) {
+            const actionButtons = document.getElementById('action-buttons');
+            if (actionButtons) {
+                actionButtons.appendChild(collectButtonClone);
+                console.log("Botão de coleta restaurado após erro");
+            }
+        }
     };
     
     // Inicia o reconhecimento
