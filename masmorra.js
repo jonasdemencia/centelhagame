@@ -205,14 +205,33 @@ let playerState = {
 
 
 function iniciarReconhecimentoVoz() {
-    // Salva referência ao botão de coleta antes de iniciar o reconhecimento
+    // Salva uma cópia do botão de coleta antes de iniciar o reconhecimento
     const collectButton = document.getElementById('collect-item-button');
+    let collectButtonClone = null;
+    
+    if (collectButton) {
+        // Clona o botão com todos os seus eventos
+        collectButtonClone = collectButton.cloneNode(true);
+        // Adiciona os mesmos event listeners
+        collectButtonClone.addEventListener('click', collectButton.onclick);
+    }
     
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
         alert("Reconhecimento de voz não suportado neste navegador.");
         return;
     }
+    
+    // Preserva o botão de coleta durante todo o processo
+    document.addEventListener('DOMNodeRemoved', function preserveCollectButton(e) {
+        if (e.target === collectButton && collectButtonClone) {
+            const actionButtons = document.getElementById('action-buttons');
+            if (actionButtons && !document.getElementById('collect-item-button')) {
+                actionButtons.appendChild(collectButtonClone);
+            }
+        }
+    }, true);
+    
     const recognition = new SpeechRecognition();
     recognition.lang = 'pt-BR';
     recognition.start();
@@ -221,23 +240,18 @@ function iniciarReconhecimentoVoz() {
         const btn = document.getElementById("voice-command-btn");
         if (btn) btn.textContent = "🎤 Ouvindo...";
     };
+    
     recognition.onend = function() {
         const btn = document.getElementById("voice-command-btn");
         if (btn) btn.textContent = "🎤 Falar Comando";
-        
-        // Restaura o botão de coleta se ele existia antes
-        if (collectButton && !document.getElementById('collect-item-button')) {
-            const actionButtons = document.getElementById('action-buttons');
-            if (actionButtons) {
-                actionButtons.appendChild(collectButton);
-            }
-        }
     };
+    
     recognition.onresult = function(event) {
         const texto = event.results[0][0].transcript.toLowerCase();
         console.log("Voz reconhecida:", texto);
         processarComandoVoz(texto);
     };
+    
     recognition.onerror = function(event) {
         console.error("Erro de reconhecimento de voz:", event.error);
         const btn = document.getElementById("voice-command-btn");
