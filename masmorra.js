@@ -205,28 +205,21 @@ let playerState = {
 
 
 function iniciarReconhecimentoVoz() {
-    // Salva uma cópia do HTML do botão de coleta
-    const collectButton = document.getElementById('collect-item-button');
-    let collectButtonHTML = '';
-    let collectButtonOnClick = null;
-    
-    if (collectButton) {
-        collectButtonHTML = collectButton.outerHTML;
-        collectButtonOnClick = collectButton.onclick;
-    }
-    
+    // Não modifique o DOM antes de iniciar o reconhecimento
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
         alert("Reconhecimento de voz não suportado neste navegador.");
         return;
     }
     
+    // Guarda uma referência ao botão de coleta antes de iniciar
+    const collectButton = document.getElementById('collect-item-button');
+    
     const recognition = new SpeechRecognition();
     recognition.lang = 'pt-BR';
     
-    // Configura o reconhecimento para não modificar o DOM
+    // Configura para não ser contínuo para evitar problemas
     recognition.continuous = false;
-    recognition.interimResults = false;
     
     recognition.onstart = function() {
         const btn = document.getElementById("voice-command-btn");
@@ -237,19 +230,10 @@ function iniciarReconhecimentoVoz() {
         const btn = document.getElementById("voice-command-btn");
         if (btn) btn.textContent = "🎤 Falar Comando";
         
-        // Restaura o botão de coleta se ele existia antes e agora não existe
-        if (collectButtonHTML && !document.getElementById('collect-item-button')) {
+        // Verifica se o botão de coleta desapareceu e o restaura se necessário
+        if (collectButton && !document.getElementById('collect-item-button')) {
             const actionButtons = document.getElementById('action-buttons');
-            if (actionButtons) {
-                // Insere o botão de volta
-                actionButtons.insertAdjacentHTML('beforeend', collectButtonHTML);
-                
-                // Restaura o evento de clique
-                const restoredButton = document.getElementById('collect-item-button');
-                if (restoredButton && collectButtonOnClick) {
-                    restoredButton.onclick = collectButtonOnClick;
-                }
-            }
+            if (actionButtons) actionButtons.appendChild(collectButton);
         }
     };
     
