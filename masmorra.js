@@ -205,15 +205,14 @@ let playerState = {
 
 
 function iniciarReconhecimentoVoz() {
-    // Salva uma cópia do botão de coleta antes de iniciar o reconhecimento
+    // Salva uma cópia do HTML do botão de coleta
     const collectButton = document.getElementById('collect-item-button');
-    let collectButtonClone = null;
+    let collectButtonHTML = '';
+    let collectButtonOnClick = null;
     
     if (collectButton) {
-        // Clona o botão com todos os seus eventos
-        collectButtonClone = collectButton.cloneNode(true);
-        // Adiciona os mesmos event listeners
-        collectButtonClone.addEventListener('click', collectButton.onclick);
+        collectButtonHTML = collectButton.outerHTML;
+        collectButtonOnClick = collectButton.onclick;
     }
     
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -222,20 +221,13 @@ function iniciarReconhecimentoVoz() {
         return;
     }
     
-    // Preserva o botão de coleta durante todo o processo
-    document.addEventListener('DOMNodeRemoved', function preserveCollectButton(e) {
-        if (e.target === collectButton && collectButtonClone) {
-            const actionButtons = document.getElementById('action-buttons');
-            if (actionButtons && !document.getElementById('collect-item-button')) {
-                actionButtons.appendChild(collectButtonClone);
-            }
-        }
-    }, true);
-    
     const recognition = new SpeechRecognition();
     recognition.lang = 'pt-BR';
-    recognition.start();
-
+    
+    // Configura o reconhecimento para não modificar o DOM
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    
     recognition.onstart = function() {
         const btn = document.getElementById("voice-command-btn");
         if (btn) btn.textContent = "🎤 Ouvindo...";
@@ -244,6 +236,21 @@ function iniciarReconhecimentoVoz() {
     recognition.onend = function() {
         const btn = document.getElementById("voice-command-btn");
         if (btn) btn.textContent = "🎤 Falar Comando";
+        
+        // Restaura o botão de coleta se ele existia antes e agora não existe
+        if (collectButtonHTML && !document.getElementById('collect-item-button')) {
+            const actionButtons = document.getElementById('action-buttons');
+            if (actionButtons) {
+                // Insere o botão de volta
+                actionButtons.insertAdjacentHTML('beforeend', collectButtonHTML);
+                
+                // Restaura o evento de clique
+                const restoredButton = document.getElementById('collect-item-button');
+                if (restoredButton && collectButtonOnClick) {
+                    restoredButton.onclick = collectButtonOnClick;
+                }
+            }
+        }
     };
     
     recognition.onresult = function(event) {
@@ -257,7 +264,11 @@ function iniciarReconhecimentoVoz() {
         const btn = document.getElementById("voice-command-btn");
         if (btn) btn.textContent = "🎤 Falar Comando";
     };
+    
+    // Inicia o reconhecimento
+    recognition.start();
 }
+
 
 
 function processarComandoVoz(texto) {
