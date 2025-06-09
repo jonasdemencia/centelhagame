@@ -205,12 +205,8 @@ let playerState = {
 
 
 function iniciarReconhecimentoVoz() {
-    // Salva referências aos botões de coleta antes de iniciar o reconhecimento
-    const collectButtons = Array.from(document.querySelectorAll('button')).filter(btn => 
-        btn.textContent.includes("Recolher") || 
-        btn.textContent.includes("Coletar") ||
-        btn.classList.contains('collect-button')
-    );
+    // Salva referência ao botão de coleta antes de iniciar o reconhecimento
+    const collectButton = document.getElementById('collect-item-button');
     
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -228,6 +224,14 @@ function iniciarReconhecimentoVoz() {
     recognition.onend = function() {
         const btn = document.getElementById("voice-command-btn");
         if (btn) btn.textContent = "🎤 Falar Comando";
+        
+        // Restaura o botão de coleta se ele existia antes
+        if (collectButton && !document.getElementById('collect-item-button')) {
+            const actionButtons = document.getElementById('action-buttons');
+            if (actionButtons) {
+                actionButtons.appendChild(collectButton);
+            }
+        }
     };
     recognition.onresult = function(event) {
         const texto = event.results[0][0].transcript.toLowerCase();
@@ -240,6 +244,7 @@ function iniciarReconhecimentoVoz() {
         if (btn) btn.textContent = "🎤 Falar Comando";
     };
 }
+
 
 function processarComandoVoz(texto) {
     // Comandos básicos existentes
