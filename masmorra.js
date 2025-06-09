@@ -276,9 +276,8 @@ function processarComandoVoz(texto) {
         }
     }
     
-    // Comando para resolver o enigma do fogo - usando seletor mais genérico
+    // Comando para resolver o enigma do fogo
     if (texto.includes("resolver") || texto.includes("enigma") || texto.includes("puzzle")) {
-        // Procura por qualquer botão que contenha o texto "Resolver o Enigma do Fogo"
         const buttons = Array.from(document.querySelectorAll('button'));
         const solveButton = buttons.find(btn => 
             btn.textContent.includes("Resolver o Enigma do Fogo") || 
@@ -288,6 +287,25 @@ function processarComandoVoz(texto) {
         
         if (solveButton) {
             solveButton.click();
+            return;
+        }
+    }
+    
+    // Comando para rolar o dado
+    if (texto.includes("rolar") || texto.includes("dado") || texto.includes("d20") || 
+        texto.includes("jogar") || texto.includes("lançar")) {
+        
+        // Procura por botões de rolagem de dados
+        const buttons = Array.from(document.querySelectorAll('button'));
+        const rollButton = buttons.find(btn => 
+            btn.textContent.includes("Rolar") || 
+            btn.textContent.includes("D20") || 
+            btn.textContent.includes("dado") ||
+            btn.classList.contains('roll-button')
+        );
+        
+        if (rollButton) {
+            rollButton.click();
             return;
         }
     }
