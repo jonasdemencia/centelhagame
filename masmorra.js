@@ -205,18 +205,8 @@ let playerState = {
 
 
 function iniciarReconhecimentoVoz() {
-    console.log("Iniciando reconhecimento de voz...");
-    
-    // Verifica se existe um botão de coleta antes de iniciar
-    const collectButton = document.getElementById('collect-item-button');
-    console.log("Botão de coleta antes de iniciar:", collectButton ? "existe" : "não existe");
-    
-    // Cria uma cópia do botão se ele existir
-    let collectButtonClone = null;
-    if (collectButton) {
-        collectButtonClone = collectButton.cloneNode(true);
-        console.log("Botão de coleta clonado");
-    }
+    // Não faça nada se já estiver reconhecendo
+    if (window.isRecognizing) return;
     
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -224,95 +214,106 @@ function iniciarReconhecimentoVoz() {
         return;
     }
     
+    // Marca que está reconhecendo
+    window.isRecognizing = true;
+    
+    // Cria uma instância separada do reconhecimento
     const recognition = new SpeechRecognition();
     recognition.lang = 'pt-BR';
     recognition.continuous = false;
+    recognition.interimResults = false;
     
-    // Desabilita temporariamente o botão de voz para evitar cliques múltiplos
+    // Apenas muda o texto do botão
     const voiceBtn = document.getElementById("voice-command-btn");
-    if (voiceBtn) voiceBtn.disabled = true;
-    
-    recognition.onstart = function() {
-        console.log("Reconhecimento iniciado");
-        if (voiceBtn) {
-            voiceBtn.textContent = "🎤 Ouvindo...";
-            voiceBtn.disabled = true;
-        }
-    };
-    
-    recognition.onend = function() {
-        console.log("Reconhecimento finalizado");
-        if (voiceBtn) {
-            voiceBtn.textContent = "🎤 Falar Comando";
-            voiceBtn.disabled = false;
-        }
-        
-        // Verifica se o botão de coleta ainda existe
-        const collectButtonAfter = document.getElementById('collect-item-button');
-        console.log("Botão de coleta após reconhecimento:", collectButtonAfter ? "existe" : "não existe");
-        
-        // Se o botão foi removido e temos o clone, restaura-o
-        if (!collectButtonAfter && collectButtonClone) {
-            console.log("Restaurando o botão de coleta clonado...");
-            const actionButtons = document.getElementById('action-buttons');
-            if (actionButtons) {
-                // Adiciona o clone ao DOM
-                actionButtons.appendChild(collectButtonClone);
-                console.log("Botão de coleta restaurado no DOM");
-                
-                // Restaura o evento de clique original
-                collectButtonClone.onclick = function() {
-                    console.log("Botão de coleta clonado clicado");
-                    // Obtém o item atual da sala
-                    const currentRoom = dungeon.rooms[playerState.currentRoom];
-                    
-                    // Procura por pontos de interesse com itens
-                    if (currentRoom && currentRoom.exploration && currentRoom.exploration.examine) {
-                        for (const examineEvent of currentRoom.exploration.examine) {
-                            if (examineEvent.pointsOfInterest) {
-                                for (const poi of examineEvent.pointsOfInterest) {
-                                    if (poi.items && poi.items.length > 0) {
-                                        // Adiciona o item ao inventário
-                                        addItemToInventory(poi.items[0]);
-                                        startNewLogBlock("Item Recolhido");
-                                        addLogMessage(`Você recolheu: ${poi.items[0].content}`, 800);
-                                        collectButtonClone.remove();
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                };
-            }
-        }
-    };
+    if (voiceBtn) voiceBtn.textContent = "🎤 Ouvindo...";
     
     recognition.onresult = function(event) {
         const texto = event.results[0][0].transcript.toLowerCase();
         console.log("Voz reconhecida:", texto);
-        processarComandoVoz(texto);
+        
+        // Processa o comando sem modificar o DOM
+        if (texto.includes("buscar") || texto.includes("procurar")) {
+            const btn = document.getElementById("search-room");
+            if (btn) btn.click();
+        }
+        else if (texto.includes("examinar")) {
+            const btn = document.getElementById("examine-room");
+            if (btn) btn.click();
+        }
+        else if (texto.includes("descansar")) {
+            const btn = document.getElementById("rest");
+            if (btn) btn.click();
+        }
+        else if (texto.includes("porta") || texto.includes("abrir")) {
+            const btn = document.getElementById("open-door");
+            if (btn) btn.click();
+        }
+        else if (texto.includes("coluna") || texto.includes("fogo") || texto.includes("colunas")) {
+            const poiElement = document.querySelector('[data-poi-id="fire-columns"]');
+            if (poiElement) poiElement.click();
+        }
+        else if (texto.includes("forja") || texto.includes("antiga")) {
+            const poiElement = document.querySelector('[data-poi-id="forge"]');
+            if (poiElement) poiElement.click();
+        }
+        else if (texto.includes("resolver") || texto.includes("enigma") || texto.includes("puzzle")) {
+            const buttons = Array.from(document.querySelectorAll('button'));
+            const solveButton = buttons.find(btn => 
+                btn.textContent.includes("Resolver o Enigma do Fogo") || 
+                btn.textContent.includes("enigma") || 
+                btn.textContent.includes("Resolver")
+            );
+            if (solveButton) solveButton.click();
+        }
+        else if (texto.includes("rolar") || texto.includes("dado") || texto.includes("d20") || 
+                texto.includes("jogar") || texto.includes("lançar")) {
+            const buttons = Array.from(document.querySelectorAll('button'));
+            const rollButton = buttons.find(btn => 
+                btn.textContent.includes("Rolar") || 
+                btn.textContent.includes("D20") || 
+                btn.textContent.includes("dado") ||
+                btn.classList.contains('roll-button')
+            );
+            if (rollButton) rollButton.click();
+        }
+        else if (texto.includes("recolher") || texto.includes("coletar") || texto.includes("pegar") || 
+                texto.includes("item") || texto.includes("cristal")) {
+            const buttons = Array.from(document.querySelectorAll('button'));
+            const collectButton = buttons.find(btn => 
+                btn.textContent.includes("Recolher") || 
+                btn.textContent.includes("Coletar") ||
+                btn.classList.contains('collect-button')
+            );
+            if (collectButton) collectButton.click();
+        }
+        else {
+            addLogMessage("Comando de voz não reconhecido: " + texto, 1000, 0);
+        }
+    };
+    
+    recognition.onend = function() {
+        // Restaura o texto do botão
+        if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
+        // Marca que não está mais reconhecendo
+        window.isRecognizing = false;
     };
     
     recognition.onerror = function(event) {
         console.error("Erro de reconhecimento de voz:", event.error);
-        if (voiceBtn) {
-            voiceBtn.textContent = "🎤 Falar Comando";
-            voiceBtn.disabled = false;
-        }
-        
-        // Também restaura o botão de coleta em caso de erro
-        if (collectButtonClone && !document.getElementById('collect-item-button')) {
-            const actionButtons = document.getElementById('action-buttons');
-            if (actionButtons) {
-                actionButtons.appendChild(collectButtonClone);
-                console.log("Botão de coleta restaurado após erro");
-            }
-        }
+        // Restaura o texto do botão
+        if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
+        // Marca que não está mais reconhecendo
+        window.isRecognizing = false;
     };
     
     // Inicia o reconhecimento
-    recognition.start();
+    try {
+        recognition.start();
+    } catch (e) {
+        console.error("Erro ao iniciar reconhecimento:", e);
+        window.isRecognizing = false;
+        if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
+    }
 }
 
 
