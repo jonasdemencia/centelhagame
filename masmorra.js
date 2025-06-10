@@ -318,6 +318,56 @@ function iniciarReconhecimentoVoz() {
 
 
 function processarComandoVoz(texto) {
+    // Verifica se o menu de direções está aberto
+    const directionMenu = document.querySelector('.direction-menu');
+    if (directionMenu) {
+        // Se o menu de direções está aberto, procura pelo botão correspondente
+        if (texto.includes("norte")) {
+            const dirBtn = Array.from(directionMenu.querySelectorAll('.direction-choice:not(.cancel)')).find(
+                btn => btn.textContent.toLowerCase().includes("norte")
+            );
+            if (dirBtn) {
+                dirBtn.click();
+                return;
+            }
+        }
+        if (texto.includes("sul")) {
+            const dirBtn = Array.from(directionMenu.querySelectorAll('.direction-choice:not(.cancel)')).find(
+                btn => btn.textContent.toLowerCase().includes("sul")
+            );
+            if (dirBtn) {
+                dirBtn.click();
+                return;
+            }
+        }
+        if (texto.includes("leste")) {
+            const dirBtn = Array.from(directionMenu.querySelectorAll('.direction-choice:not(.cancel)')).find(
+                btn => btn.textContent.toLowerCase().includes("leste")
+            );
+            if (dirBtn) {
+                dirBtn.click();
+                return;
+            }
+        }
+        if (texto.includes("oeste")) {
+            const dirBtn = Array.from(directionMenu.querySelectorAll('.direction-choice:not(.cancel)')).find(
+                btn => btn.textContent.toLowerCase().includes("oeste")
+            );
+            if (dirBtn) {
+                dirBtn.click();
+                return;
+            }
+        }
+        if (texto.includes("cancelar") || texto.includes("fechar") || texto.includes("voltar")) {
+            const cancelBtn = directionMenu.querySelector('.cancel');
+            if (cancelBtn) {
+                cancelBtn.click();
+                return;
+            }
+        }
+        return; // Se o menu está aberto mas nenhum comando correspondeu, não continua
+    }
+
     // Comandos de direção
     if (texto.includes("norte")) {
         const btn = document.getElementById("go-north");
@@ -438,6 +488,7 @@ function processarComandoVoz(texto) {
         collectBtn.style.visibility = 'visible';
     }
 }
+
 
 
 
