@@ -204,6 +204,8 @@ let playerState = {
 
 
 
+
+
 function iniciarReconhecimentoVoz() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -211,53 +213,100 @@ function iniciarReconhecimentoVoz() {
         return;
     }
     
-    // Obtém a sala atual e seu behavior
-    const currentRoom = dungeon.rooms[playerState.currentRoom];
-    const behavior = currentRoom && getRoomBehavior(currentRoom.id);
+    const voiceBtn = document.getElementById("voice-command-btn");
     
-    const recognition = new SpeechRecognition();
+    // Se já estiver ativo, desativa
+    if (voiceRecognitionActive && recognition) {
+        voiceRecognitionActive = false;
+        recognition.stop();
+        if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
+        return;
+    }
+    
+    // Cria uma nova instância de reconhecimento
+    recognition = new SpeechRecognition();
     recognition.lang = 'pt-BR';
-    recognition.continuous = false;
+    recognition.continuous = true;  // Modo contínuo
+    recognition.interimResults = false;
+    
+    // Marca como ativo
+    voiceRecognitionActive = true;
     
     recognition.onstart = function() {
-        const btn = document.getElementById("voice-command-btn");
-        if (btn) btn.textContent = "🎤 Ouvindo...";
+        if (voiceBtn) voiceBtn.textContent = "🎤 Ouvindo... (Clique para parar)";
     };
     
     recognition.onend = function() {
-        const btn = document.getElementById("voice-command-btn");
-        if (btn) btn.textContent = "🎤 Falar Comando";
-        
-        // Restaura o botão de coleta se necessário
-        if (behavior && behavior.handlers && typeof behavior.handlers.preserveCollectButton === "function") {
-            behavior.handlers.preserveCollectButton({
-                room: currentRoom,
-                createCollectButton: createCollectButton
-            });
+        // Se ainda estiver marcado como ativo mas o reconhecimento parou, reinicia
+        if (voiceRecognitionActive) {
+            try {
+                recognition.start();
+            } catch (e) {
+                console.error("Erro ao reiniciar reconhecimento:", e);
+                voiceRecognitionActive = false;
+                if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
+            }
+        } else {
+            if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
         }
     };
     
     recognition.onresult = function(event) {
-        const texto = event.results[0][0].transcript.toLowerCase();
+        const texto = event.results[event.results.length - 1][0].transcript.toLowerCase();
         console.log("Voz reconhecida:", texto);
-        processarComandoVoz(texto);
+        
+        // Verifica se o comando começa com a palavra-chave
+        if (texto.includes(activationKeyword)) {
+            // Remove a palavra-chave e espaços extras
+            const comando = texto.replace(activationKeyword, "").trim();
+            console.log("Comando processado:", comando);
+            
+            // Processa o comando
+            processarComandoVoz(comando);
+            
+            // Feedback visual temporário
+            if (voiceBtn) {
+                const originalText = voiceBtn.textContent;
+                voiceBtn.textContent = "✓ Comando reconhecido";
+                setTimeout(() => {
+                    if (voiceRecognitionActive) {
+                        voiceBtn.textContent = "🎤 Ouvindo... (Clique para parar)";
+                    } else {
+                        voiceBtn.textContent = originalText;
+                    }
+                }, 1500);
+            }
+        }
     };
     
     recognition.onerror = function(event) {
         console.error("Erro de reconhecimento de voz:", event.error);
-        const btn = document.getElementById("voice-command-btn");
-        if (btn) btn.textContent = "🎤 Falar Comando";
         
-        // Também tenta restaurar o botão em caso de erro
-        if (behavior && behavior.handlers && typeof behavior.handlers.preserveCollectButton === "function") {
-            behavior.handlers.preserveCollectButton({
-                room: currentRoom,
-                createCollectButton: createCollectButton
-            });
+        // Em caso de erro, tenta reiniciar se ainda estiver ativo
+        if (voiceRecognitionActive) {
+            try {
+                recognition.stop();
+                setTimeout(() => {
+                    if (voiceRecognitionActive) {
+                        recognition.start();
+                    }
+                }, 1000);
+            } catch (e) {
+                console.error("Erro ao reiniciar após erro:", e);
+                voiceRecognitionActive = false;
+                if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
+            }
         }
     };
     
-    recognition.start();
+    // Inicia o reconhecimento
+    try {
+        recognition.start();
+    } catch (e) {
+        console.error("Erro ao iniciar reconhecimento:", e);
+        voiceRecognitionActive = false;
+        if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
+    }
 }
 
 
