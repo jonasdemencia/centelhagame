@@ -30,6 +30,11 @@ let currentLogBlock = null;
 let playerData = null;
 let userId = null;
 
+// Variáveis para controlar o estado do reconhecimento de voz
+let voiceRecognitionActive = false;
+let recognition = null;
+const activationKeyword = "jogo";
+
 // Constantes para o sistema de grade
 const GRID_CELL_SIZE = 5; // Tamanho de cada célula da grade em unidades SVG
 const GRID_COLOR = "#222"; // Cor das linhas da grade
