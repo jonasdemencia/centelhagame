@@ -365,7 +365,10 @@ function processarComandoVoz(texto) {
                 return;
             }
         }
-        return; // Se o menu está aberto mas nenhum comando correspondeu, não continua
+        
+        // Se chegou aqui, não encontrou um comando válido para o menu de direções
+        addLogMessage("Comando não reconhecido para escolha de direção.", 1000, 0);
+        return;
     }
 
     // Comandos de direção
@@ -488,7 +491,6 @@ function processarComandoVoz(texto) {
         collectBtn.style.visibility = 'visible';
     }
 }
-
 
 
 
