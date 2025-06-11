@@ -14,17 +14,35 @@ Mantenha suas respostas concisas (máximo 3 parágrafos) mas ricas em detalhes s
 Adapte seu tom conforme a situação: tenso em combates, misterioso em exploração, amigável em diálogos.
 `;
 
-// Função para enviar requisição para a API de IA
+// Função para enviar requisição para a API de IA (versão simulada para desenvolvimento)
 async function queryAI(prompt, systemMessage = NARRATOR_PERSONA) {
     try {
-        const response = await fetch('https://sua-api-de-ia/completions', {
+        // Versão simulada para desenvolvimento - não faz chamada de API real
+        console.log("Simulando chamada de IA com prompt:", prompt);
+        
+        // Simula uma resposta da IA
+        const simulatedResponse = "Você está em uma sala escura e úmida. As paredes de pedra parecem contar histórias antigas através de suas rachaduras. [EXAMINE]";
+        
+        // Atualiza o histórico de conversação
+        conversationHistory.push({ role: "user", content: prompt });
+        conversationHistory.push({ role: "assistant", content: simulatedResponse });
+        
+        // Limita o tamanho do histórico
+        if (conversationHistory.length > MAX_HISTORY_LENGTH * 2) {
+            conversationHistory = conversationHistory.slice(-MAX_HISTORY_LENGTH * 2);
+        }
+        
+        return simulatedResponse;
+        
+        /* Código para API real - comentado durante desenvolvimento
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer YOUR_API_KEY' // Substitua por sua chave de API
+                'Authorization': 'Bearer YOUR_API_KEY'
             },
             body: JSON.stringify({
-                model: "gpt-3.5-turbo", // ou outro modelo de sua preferência
+                model: "gpt-3.5-turbo",
                 messages: [
                     { role: "system", content: systemMessage },
                     ...conversationHistory,
@@ -54,11 +72,13 @@ async function queryAI(prompt, systemMessage = NARRATOR_PERSONA) {
             console.error("Resposta da IA não contém escolhas:", data);
             return "Não consigo processar sua solicitação no momento.";
         }
+        */
     } catch (error) {
         console.error("Erro ao consultar a IA:", error);
         return "Ocorreu um erro ao processar sua solicitação.";
     }
 }
+
 
 // Função para extrair comandos de uma resposta da IA
 function extractCommands(aiResponse) {
@@ -88,7 +108,7 @@ CONTEXTO DO JOGO:
 Sala atual: ${gameContext.currentRoom.name}
 Descrição: ${gameContext.currentRoom.description}
 Saúde do jogador: ${gameContext.playerHealth}/100
-Inventário: ${gameContext.inventory.map(item => item.content).join(', ')}
+Inventário: ${gameContext.inventory.map(item => item.content || item.name || "Item desconhecido").join(', ')}
 
 O jogador disse: "${text}"
 
@@ -104,22 +124,35 @@ Responda como narrador e inclua comandos entre colchetes se necessário:
 Exemplo: "Você caminha cautelosamente pelo corredor escuro. [MOVE:norte]"
 `;
 
-    // Consulta a IA
-    const aiResponse = await queryAI(contextPrompt);
-    
-    // Extrai comandos e texto limpo
-    const { text: narrativeText, commands } = extractCommands(aiResponse);
-    
-    // Exibe a narrativa
-    await addLogMessage(narrativeText, 1000);
-    
-    // Executa os comandos extraídos
-    for (const cmd of commands) {
-        await executeAICommand(cmd, gameContext);
+    try {
+        // Consulta a IA
+        const aiResponse = await queryAI(contextPrompt);
+        
+        // Extrai comandos e texto limpo
+        const { text: narrativeText, commands } = extractCommands(aiResponse);
+        
+        // Exibe a narrativa usando a função global addLogMessage
+        if (typeof window.addLogMessage === 'function') {
+            await window.addLogMessage(narrativeText, 1000);
+        } else {
+            console.log("Narrador:", narrativeText);
+        }
+        
+        // Executa os comandos extraídos
+        for (const cmd of commands) {
+            await executeAICommand(cmd, gameContext);
+        }
+        
+        return true;
+    } catch (error) {
+        console.error("Erro ao processar linguagem natural:", error);
+        if (typeof window.addLogMessage === 'function') {
+            await window.addLogMessage("Desculpe, não consegui entender seu comando.", 1000);
+        }
+        return false;
     }
-    
-    return true;
 }
+
 
 // Função para executar comandos extraídos da resposta da IA
 async function executeAICommand(command, gameContext) {
@@ -184,21 +217,15 @@ async function executeAICommand(command, gameContext) {
 // Função para obter o contexto atual do jogo
 function getCurrentGameContext() {
     try {
-        // Acessa a variável dungeon do escopo global (window)
-        const dungeonObj = window.dungeon;
-        if (!dungeonObj) {
+        // Verifica se as variáveis globais estão disponíveis
+        if (typeof window.dungeon === 'undefined' || 
+            typeof window.playerState === 'undefined') {
+            console.error("Variáveis globais necessárias não encontradas");
             throw new Error("Objeto dungeon não encontrado no escopo global");
         }
         
-        const currentRoomId = window.playerState?.currentRoom;
-        if (!currentRoomId) {
-            throw new Error("ID da sala atual não encontrado");
-        }
-        
-        const currentRoom = dungeonObj.rooms[currentRoomId];
-        if (!currentRoom) {
-            throw new Error(`Sala ${currentRoomId} não encontrada`);
-        }
+        const currentRoomId = window.playerState.currentRoom;
+        const currentRoom = window.dungeon.rooms[currentRoomId];
         
         // Prepara o inventário para o contexto
         let inventory = [];
@@ -208,10 +235,10 @@ function getCurrentGameContext() {
         
         return {
             currentRoom,
-            playerHealth: window.playerState?.health || 100,
+            playerHealth: window.playerState.health,
             inventory,
-            visitedRooms: window.playerState?.visitedRooms || [],
-            discoveredRooms: window.playerState?.discoveredRooms || []
+            visitedRooms: window.playerState.visitedRooms || [],
+            discoveredRooms: window.playerState.discoveredRooms || []
         };
     } catch (error) {
         console.error("Erro ao obter contexto do jogo:", error);
