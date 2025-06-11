@@ -408,9 +408,8 @@ function processarComandoVoz(texto) {
 
     // Verifica se o modo IA está ativado
     if (window.aiModeEnabled) {
-        // Processa o comando via IA
-        const gameContext = getCurrentGameContext();
-        processNaturalLanguage(texto, gameContext);
+        // Processa o comando via IA usando o objeto global AINarrator
+        window.AINarrator.processNaturalLanguage(texto);
         return;
     }
 
@@ -527,8 +526,7 @@ function processarComandoVoz(texto) {
 
     // Se chegou aqui e o modo IA está ativado, tenta processar como linguagem natural
     if (window.aiModeEnabled) {
-        const gameContext = getCurrentGameContext();
-        processNaturalLanguage(texto, gameContext);
+        window.AINarrator.processNaturalLanguage(texto);
         return;
     }
 
@@ -541,6 +539,7 @@ function processarComandoVoz(texto) {
         collectBtn.style.visibility = 'visible';
     }
 }
+
 
 
 
