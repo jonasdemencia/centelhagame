@@ -210,3 +210,6 @@ async function processNaturalLanguage(text, addLogMessageFn) {
 
 // Expõe a função para o escopo global
 window.processNaturalLanguage = processNaturalLanguage;
+
+// Ativa o processamento de linguagem natural por padrão
+window.aiModeEnabled = true;
