@@ -318,46 +318,33 @@ function iniciarReconhecimentoVoz() {
 
 
 function processarComandoVoz(texto) {
+    console.log("Processando comando de voz:", texto);
+    
     // Verifica se o menu de direções está aberto
     const directionMenu = document.querySelector('.direction-menu');
     if (directionMenu) {
+        console.log("Menu de direções detectado");
+        
         // Se o menu de direções está aberto, procura pelo botão correspondente
-        if (texto.includes("norte")) {
-            const dirBtn = Array.from(directionMenu.querySelectorAll('.direction-choice:not(.cancel)')).find(
-                btn => btn.textContent.toLowerCase().includes("norte")
-            );
-            if (dirBtn) {
-                dirBtn.click();
-                return;
+        const directions = ["norte", "sul", "leste", "oeste"];
+        for (const dir of directions) {
+            if (texto.includes(dir)) {
+                console.log(`Direção detectada: ${dir}`);
+                const dirBtns = Array.from(directionMenu.querySelectorAll('.direction-choice:not(.cancel)'));
+                console.log("Botões disponíveis:", dirBtns.map(b => b.textContent));
+                
+                const dirBtn = dirBtns.find(btn => 
+                    btn.textContent.toLowerCase().includes(dir)
+                );
+                
+                if (dirBtn) {
+                    console.log("Clicando no botão de direção:", dirBtn.textContent);
+                    dirBtn.click();
+                    return;
+                }
             }
         }
-        if (texto.includes("sul")) {
-            const dirBtn = Array.from(directionMenu.querySelectorAll('.direction-choice:not(.cancel)')).find(
-                btn => btn.textContent.toLowerCase().includes("sul")
-            );
-            if (dirBtn) {
-                dirBtn.click();
-                return;
-            }
-        }
-        if (texto.includes("leste")) {
-            const dirBtn = Array.from(directionMenu.querySelectorAll('.direction-choice:not(.cancel)')).find(
-                btn => btn.textContent.toLowerCase().includes("leste")
-            );
-            if (dirBtn) {
-                dirBtn.click();
-                return;
-            }
-        }
-        if (texto.includes("oeste")) {
-            const dirBtn = Array.from(directionMenu.querySelectorAll('.direction-choice:not(.cancel)')).find(
-                btn => btn.textContent.toLowerCase().includes("oeste")
-            );
-            if (dirBtn) {
-                dirBtn.click();
-                return;
-            }
-        }
+        
         if (texto.includes("cancelar") || texto.includes("fechar") || texto.includes("voltar")) {
             const cancelBtn = directionMenu.querySelector('.cancel');
             if (cancelBtn) {
