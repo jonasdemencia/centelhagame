@@ -326,29 +326,55 @@ function processarComandoVoz(texto) {
         console.log("Menu de direções detectado");
         
         // Se o menu de direções está aberto, procura pelo botão correspondente
-        const directions = ["norte", "sul", "leste", "oeste"];
-        for (const dir of directions) {
-            if (texto.includes(dir)) {
-                console.log(`Direção detectada: ${dir}`);
-                const dirBtns = Array.from(directionMenu.querySelectorAll('.direction-choice:not(.cancel)'));
-                console.log("Botões disponíveis:", dirBtns.map(b => b.textContent));
-                
-                const dirBtn = dirBtns.find(btn => 
-                    btn.textContent.toLowerCase().includes(dir)
-                );
-                
-                if (dirBtn) {
-                    console.log("Clicando no botão de direção:", dirBtn.textContent);
-                    dirBtn.click();
-                    return;
-                }
+        if (texto.includes("norte")) {
+            const northBtn = Array.from(directionMenu.querySelectorAll('.direction-choice')).find(
+                btn => btn.textContent.toLowerCase().includes("north") || 
+                       btn.textContent.toLowerCase().includes("norte")
+            );
+            if (northBtn) {
+                console.log("Clicando no botão Norte:", northBtn);
+                setTimeout(() => northBtn.click(), 100);
+                return;
+            }
+        }
+        if (texto.includes("sul")) {
+            const southBtn = Array.from(directionMenu.querySelectorAll('.direction-choice')).find(
+                btn => btn.textContent.toLowerCase().includes("south") || 
+                       btn.textContent.toLowerCase().includes("sul")
+            );
+            if (southBtn) {
+                console.log("Clicando no botão Sul:", southBtn);
+                setTimeout(() => southBtn.click(), 100);
+                return;
+            }
+        }
+        if (texto.includes("leste")) {
+            const eastBtn = Array.from(directionMenu.querySelectorAll('.direction-choice')).find(
+                btn => btn.textContent.toLowerCase().includes("east") || 
+                       btn.textContent.toLowerCase().includes("leste")
+            );
+            if (eastBtn) {
+                console.log("Clicando no botão Leste:", eastBtn);
+                setTimeout(() => eastBtn.click(), 100);
+                return;
+            }
+        }
+        if (texto.includes("oeste")) {
+            const westBtn = Array.from(directionMenu.querySelectorAll('.direction-choice')).find(
+                btn => btn.textContent.toLowerCase().includes("west") || 
+                       btn.textContent.toLowerCase().includes("oeste")
+            );
+            if (westBtn) {
+                console.log("Clicando no botão Oeste:", westBtn);
+                setTimeout(() => westBtn.click(), 100);
+                return;
             }
         }
         
         if (texto.includes("cancelar") || texto.includes("fechar") || texto.includes("voltar")) {
             const cancelBtn = directionMenu.querySelector('.cancel');
             if (cancelBtn) {
-                cancelBtn.click();
+                setTimeout(() => cancelBtn.click(), 100);
                 return;
             }
         }
