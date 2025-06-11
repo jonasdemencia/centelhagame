@@ -4,7 +4,7 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 import { getMonsterById } from './monstros.js';
 import { narrate } from './speech.js'; // ajuste o caminho se necessário
-import { processNaturalLanguage, getCurrentGameContext } from './ai-narrator.js';
+import './ai-narrator.js'; // Importa o módulo para registrar o objeto global AINarrator
 import { getRoomBehavior } from './rooms/registry.js';
 
 console.log("LOG: masmorra.js carregado.");
