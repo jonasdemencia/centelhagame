@@ -183,22 +183,49 @@ async function executeAICommand(command, gameContext) {
 
 // Função para obter o contexto atual do jogo
 function getCurrentGameContext() {
-    const currentRoom = dungeon.rooms[playerState.currentRoom];
-    
-    // Prepara o inventário para o contexto
-    let inventory = [];
-    if (playerData && playerData.inventory && playerData.inventory.itemsInChest) {
-        inventory = playerData.inventory.itemsInChest;
+    try {
+        // Acessa a variável dungeon do escopo global (window)
+        const dungeonObj = window.dungeon;
+        if (!dungeonObj) {
+            throw new Error("Objeto dungeon não encontrado no escopo global");
+        }
+        
+        const currentRoomId = window.playerState?.currentRoom;
+        if (!currentRoomId) {
+            throw new Error("ID da sala atual não encontrado");
+        }
+        
+        const currentRoom = dungeonObj.rooms[currentRoomId];
+        if (!currentRoom) {
+            throw new Error(`Sala ${currentRoomId} não encontrada`);
+        }
+        
+        // Prepara o inventário para o contexto
+        let inventory = [];
+        if (window.playerData && window.playerData.inventory && window.playerData.inventory.itemsInChest) {
+            inventory = window.playerData.inventory.itemsInChest;
+        }
+        
+        return {
+            currentRoom,
+            playerHealth: window.playerState?.health || 100,
+            inventory,
+            visitedRooms: window.playerState?.visitedRooms || [],
+            discoveredRooms: window.playerState?.discoveredRooms || []
+        };
+    } catch (error) {
+        console.error("Erro ao obter contexto do jogo:", error);
+        // Retorna um contexto mínimo para evitar erros
+        return {
+            currentRoom: { name: "Sala desconhecida", description: "Não foi possível determinar sua localização." },
+            playerHealth: 100,
+            inventory: [],
+            visitedRooms: [],
+            discoveredRooms: []
+        };
     }
-    
-    return {
-        currentRoom,
-        playerHealth: playerState.health,
-        inventory,
-        visitedRooms: playerState.visitedRooms,
-        discoveredRooms: playerState.discoveredRooms
-    };
 }
+
 
 // Exporta as funções principais
 export { processNaturalLanguage, getCurrentGameContext };
