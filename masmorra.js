@@ -3449,7 +3449,6 @@ function showDungeonSelectionScreen(dungeons) {
     mainContent.appendChild(selectionContainer);
 }
 
-// Nova função para carregar e iniciar uma masmorra
 async function loadAndStartDungeon(dungeonId = null) {
     // Restaura o layout original
     const mainContent = document.querySelector('main');
@@ -3524,8 +3523,34 @@ async function loadAndStartDungeon(dungeonId = null) {
         console.log("LOG: Botão de narração NÃO encontrado após reset do main!");
     }
 
-
-    
+    // Adiciona botão para alternar modo IA
+    const actionButtons = document.getElementById('action-buttons');
+    if (actionButtons) {
+        const aiModeBtn = document.createElement('button');
+        aiModeBtn.id = 'ai-mode-btn';
+        aiModeBtn.textContent = '🤖 Modo IA: Desativado';
+        aiModeBtn.classList.add('action-btn');
+        aiModeBtn.style.marginBottom = "8px";
+        
+        // Estado inicial
+        window.aiModeEnabled = false;
+        
+        // Evento de clique
+        aiModeBtn.addEventListener('click', () => {
+            window.aiModeEnabled = !window.aiModeEnabled;
+            aiModeBtn.textContent = window.aiModeEnabled ? 
+                '🧠 Modo IA: Ativado' : 
+                '🤖 Modo IA: Desativado';
+                
+            // Feedback ao usuário
+            addLogMessage(window.aiModeEnabled ? 
+                "O narrador inteligente está agora ouvindo seus comandos em linguagem natural." : 
+                "Voltando ao modo de comandos diretos.", 800);
+        });
+        
+        // Insere o botão no início dos botões de ação
+        actionButtons.insertBefore(aiModeBtn, actionButtons.firstChild);
+    }
 
     // Reconecta os event listeners aos botões
     const northBtn = document.getElementById("go-north");
@@ -3605,12 +3630,12 @@ async function loadAndStartDungeon(dungeonId = null) {
     await initializeDungeon(dungeonId);
 
     // <-- INSTALE AQUI!
-for (const roomId in dungeon.rooms) {
-    dungeon.rooms[roomId].behavior = getRoomBehavior(roomId);
-}
+    for (const roomId in dungeon.rooms) {
+        dungeon.rooms[roomId].behavior = getRoomBehavior(roomId);
+    }
 
     // INCLUA O LOG AQUI:
-console.log("Behaviors associados a todas as salas:", dungeon.rooms);
+    console.log("Behaviors associados a todas as salas:", dungeon.rooms);
 
     // Adiciona o seletor de masmorras
     const availableDungeons = await listAvailableDungeons();
@@ -3631,21 +3656,22 @@ console.log("Behaviors associados a todas as salas:", dungeon.rooms);
     // Atualiza a barra de energia
     updateHealthBar();
 
-   // Inicia a exploração
-startNewLogBlock("Bem-vindo");
-await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
-await addLogMessage(dungeon.description, 1000);
+    // Inicia a exploração
+    startNewLogBlock("Bem-vindo");
+    await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
+    await addLogMessage(dungeon.description, 1000);
 
-// Move para a sala inicial
-moveToRoom(playerState.currentRoom);
+    // Move para a sala inicial
+    moveToRoom(playerState.currentRoom);
 
-// Reatribua o evento de voz após reconstruir a tela
-const voiceBtn = document.getElementById("voice-command-btn");
-if (voiceBtn) {
-    voiceBtn.onclick = iniciarReconhecimentoVoz;
-    console.log("LOG: Botão de reconhecimento de voz pronto.");
+    // Reatribua o evento de voz após reconstruir a tela
+    const voiceBtn = document.getElementById("voice-command-btn");
+    if (voiceBtn) {
+        voiceBtn.onclick = iniciarReconhecimentoVoz;
+        console.log("LOG: Botão de reconhecimento de voz pronto.");
+    }
 }
-}
+
     
 
 
