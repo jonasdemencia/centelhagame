@@ -408,8 +408,8 @@ function processarComandoVoz(texto) {
 
     // Verifica se o modo IA está ativado
     if (window.aiModeEnabled) {
-        // Processa o comando via IA usando o objeto global AINarrator
-        window.AINarrator.processNaturalLanguage(texto);
+        // Processa o comando via IA, passando a função addLogMessage diretamente
+        processNaturalLanguage(texto, addLogMessage);
         return;
     }
 
@@ -526,7 +526,7 @@ function processarComandoVoz(texto) {
 
     // Se chegou aqui e o modo IA está ativado, tenta processar como linguagem natural
     if (window.aiModeEnabled) {
-        window.AINarrator.processNaturalLanguage(texto);
+        processNaturalLanguage(texto, addLogMessage);
         return;
     }
 
@@ -539,6 +539,7 @@ function processarComandoVoz(texto) {
         collectBtn.style.visibility = 'visible';
     }
 }
+
 
 
 
