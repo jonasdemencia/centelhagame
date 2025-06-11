@@ -4,6 +4,7 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 import { getMonsterById } from './monstros.js';
 import { narrate } from './speech.js'; // ajuste o caminho se necessário
+import { processNaturalLanguage, getCurrentGameContext } from './ai-narrator.js';
 import { getRoomBehavior } from './rooms/registry.js';
 
 console.log("LOG: masmorra.js carregado.");
@@ -384,6 +385,14 @@ function processarComandoVoz(texto) {
         return;
     }
 
+    // Verifica se o modo IA está ativado
+    if (window.aiModeEnabled) {
+        // Processa o comando via IA
+        const gameContext = getCurrentGameContext();
+        processNaturalLanguage(texto, gameContext);
+        return;
+    }
+
     // Comandos de direção
     if (texto.includes("norte")) {
         const btn = document.getElementById("go-north");
@@ -495,6 +504,13 @@ function processarComandoVoz(texto) {
         }
     }
 
+    // Se chegou aqui e o modo IA está ativado, tenta processar como linguagem natural
+    if (window.aiModeEnabled) {
+        const gameContext = getCurrentGameContext();
+        processNaturalLanguage(texto, gameContext);
+        return;
+    }
+
     addLogMessage("Comando de voz não reconhecido: " + texto, 1000, 0);
 
     // Reforça visibilidade do botão de coleta no final da função
@@ -504,6 +520,7 @@ function processarComandoVoz(texto) {
         collectBtn.style.visibility = 'visible';
     }
 }
+
 
 
 
