@@ -261,3 +261,72 @@ playerData: Dados do jogador do Firestore
 dungeon: Definição da masmorra atual
 
 userId: ID do usuário autenticado
+
+
+Parte 5: Sistema de Comandos de Voz
+O sistema de comandos de voz permite interação por fala com o jogo, criando uma experiência mais imersiva e acessível.
+
+Componentes Principais:
+Inicialização e Controle
+iniciarReconhecimentoVoz(): Configura e gerencia o ciclo de vida do reconhecimento de voz
+
+Utiliza a Web Speech API (SpeechRecognition)
+
+Implementa modo contínuo para escuta permanente
+
+Gerencia estados de ativação/desativação
+
+Processamento de Comandos
+processarComandoVoz(texto): Interpreta o texto reconhecido e executa ações correspondentes
+
+Detecta palavras-chave para acionar comportamentos específicos
+
+Manipula diferentes contextos de interface (menus, diálogos)
+
+Fornece feedback visual e textual ao jogador
+
+Fluxo de Processamento:
+Captura de áudio → Conversão para texto
+
+Filtragem por palavra-chave de ativação ("jogo")
+
+Extração do comando principal
+
+Detecção de contexto da interface (menu aberto, diálogo ativo)
+
+Mapeamento para ação correspondente
+
+Execução da ação via simulação de clique
+
+Feedback ao usuário
+
+Limitações Atuais:
+Reconhecimento baseado em palavras-chave simples
+
+Sem compreensão de linguagem natural complexa
+
+Sem memória de contexto conversacional
+
+Respostas pré-definidas e mecânicas
+
+Sem adaptação ao estilo de fala do jogador
+
+Oportunidades de Melhoria:
+Integração com IA generativa para processamento de linguagem natural
+
+Narração dinâmica e contextual
+
+Memória de interações anteriores
+
+Diálogos mais naturais e variados
+
+Personalização da experiência baseada no jogador
+
+Dependências Técnicas:
+Web Speech API do navegador
+
+Estrutura DOM do jogo para manipulação de elementos
+
+Sistema de log para feedback textual
+
+Mapeamento entre comandos de voz e elementos de interface
