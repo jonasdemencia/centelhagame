@@ -261,7 +261,27 @@ function iniciarReconhecimentoVoz() {
         const texto = event.results[event.results.length - 1][0].transcript.toLowerCase();
         console.log("Voz reconhecida:", texto);
         
-        // Verifica se o comando começa com a palavra-chave
+        // Se o modo IA estiver ativado, processa qualquer comando sem palavra-chave
+        if (window.aiModeEnabled) {
+            console.log("Modo IA ativado, processando comando direto:", texto);
+            processarComandoVoz(texto);
+            
+            // Feedback visual temporário
+            if (voiceBtn) {
+                const originalText = voiceBtn.textContent;
+                voiceBtn.textContent = "✓ Comando processado";
+                setTimeout(() => {
+                    if (voiceRecognitionActive) {
+                        voiceBtn.textContent = "🎤 Ouvindo... (Clique para parar)";
+                    } else {
+                        voiceBtn.textContent = originalText;
+                    }
+                }, 1500);
+            }
+            return;
+        }
+        
+        // Modo normal com palavra-chave
         if (texto.includes(activationKeyword)) {
             // Remove a palavra-chave e espaços extras
             const comando = texto.replace(activationKeyword, "").trim();
@@ -314,6 +334,7 @@ function iniciarReconhecimentoVoz() {
         if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
     }
 }
+
 
 
 
