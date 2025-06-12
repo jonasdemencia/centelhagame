@@ -568,3 +568,31 @@
     color: #ecf0f1;
     font-size: 14px;
 }
+
+/* Estilos para o botão de voz */
+#voice-command-btn {
+    font-size: 1.2em;
+    padding: 15px;
+    border-radius: 50px;
+    transition: all 0.3s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+#voice-command-btn.listening {
+    background-color: #ff5722;
+    color: white;
+    animation: pulse 1.5s infinite;
+}
+
+#voice-command-btn.success {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#voice-command-btn.error {
+    background-color: #f44336;
+    color: white;
+}
+
