@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebas
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 import { getMonsterById } from './monstros.js';
-import { narrate, isSpeaking } from './speech.js';
+import { narrate } from './speech.js'; // ajuste o caminho se necessário
 import { getRoomBehavior } from './rooms/registry.js';
 
 console.log("LOG: masmorra.js carregado.");
@@ -212,89 +212,107 @@ let playerState = {
 
 
 function iniciarReconhecimentoVoz() {
-    const voiceBtn = document.getElementById("voice-command-btn");
-    
-    // Se já estiver ativo, apenas cancela
-    if (voiceRecognitionActive) {
-        if (recognition) {
-            recognition.abort(); // Força o cancelamento imediato
-            recognition = null;
-        }
-        voiceRecognitionActive = false;
-        voiceBtn.textContent = "🎤 Falar Comando";
-        voiceBtn.style.backgroundColor = "";
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        alert("Reconhecimento de voz não suportado neste navegador.");
         return;
     }
     
-    // Marca como ativo imediatamente
-    voiceRecognitionActive = true;
-    voiceBtn.textContent = "🎤 Ouvindo...";
-    voiceBtn.style.backgroundColor = "#ff5722";
-    voiceBtn.style.color = "white";
+    const voiceBtn = document.getElementById("voice-command-btn");
     
-    // Cria uma nova instância limpa
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    // Se já estiver ativo, desativa
+    if (voiceRecognitionActive && recognition) {
+        voiceRecognitionActive = false;
+        recognition.stop();
+        if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
+        return;
+    }
+    
+    // Cria uma nova instância de reconhecimento
     recognition = new SpeechRecognition();
     recognition.lang = 'pt-BR';
+    recognition.continuous = true;  // Modo contínuo
     recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
     
-    // Manipuladores de eventos simplificados
-    recognition.onresult = function(event) {
-        const comando = event.results[0][0].transcript.toLowerCase();
-        console.log("Comando reconhecido:", comando);
-        
-        // Feedback visual imediato
-        voiceBtn.textContent = "✓ Processando...";
-        
-        // Processa o comando com um pequeno atraso para permitir o feedback visual
-        setTimeout(() => {
-            processarComandoVoz(comando);
-            
-            // Restaura o botão
-            voiceBtn.textContent = "🎤 Falar Comando";
-            voiceBtn.style.backgroundColor = "";
-            voiceBtn.style.color = "";
-            voiceRecognitionActive = false;
-        }, 200);
-    };
+    // Marca como ativo
+    voiceRecognitionActive = true;
     
-    recognition.onerror = function(event) {
-        console.error("Erro:", event.error);
-        voiceBtn.textContent = "❌ Erro";
-        
-        setTimeout(() => {
-            voiceBtn.textContent = "🎤 Falar Comando";
-            voiceBtn.style.backgroundColor = "";
-            voiceBtn.style.color = "";
-            voiceRecognitionActive = false;
-        }, 1500);
+    recognition.onstart = function() {
+        if (voiceBtn) voiceBtn.textContent = "🎤 Ouvindo... (Clique para parar)";
     };
     
     recognition.onend = function() {
-        // Se ainda estiver marcado como ativo, foi um fim inesperado
+        // Se ainda estiver marcado como ativo mas o reconhecimento parou, reinicia
         if (voiceRecognitionActive) {
-            voiceBtn.textContent = "🎤 Falar Comando";
-            voiceBtn.style.backgroundColor = "";
-            voiceBtn.style.color = "";
-            voiceRecognitionActive = false;
+            try {
+                recognition.start();
+            } catch (e) {
+                console.error("Erro ao reiniciar reconhecimento:", e);
+                voiceRecognitionActive = false;
+                if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
+            }
+        } else {
+            if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
         }
     };
     
-    // Inicia o reconhecimento com tratamento de erro
+    recognition.onresult = function(event) {
+        const texto = event.results[event.results.length - 1][0].transcript.toLowerCase();
+        console.log("Voz reconhecida:", texto);
+        
+        // Verifica se o comando começa com a palavra-chave
+        if (texto.includes(activationKeyword)) {
+            // Remove a palavra-chave e espaços extras
+            const comando = texto.replace(activationKeyword, "").trim();
+            console.log("Comando processado:", comando);
+            
+            // Processa o comando
+            processarComandoVoz(comando);
+            
+            // Feedback visual temporário
+            if (voiceBtn) {
+                const originalText = voiceBtn.textContent;
+                voiceBtn.textContent = "✓ Comando reconhecido";
+                setTimeout(() => {
+                    if (voiceRecognitionActive) {
+                        voiceBtn.textContent = "🎤 Ouvindo... (Clique para parar)";
+                    } else {
+                        voiceBtn.textContent = originalText;
+                    }
+                }, 1500);
+            }
+        }
+    };
+    
+    recognition.onerror = function(event) {
+        console.error("Erro de reconhecimento de voz:", event.error);
+        
+        // Em caso de erro, tenta reiniciar se ainda estiver ativo
+        if (voiceRecognitionActive) {
+            try {
+                recognition.stop();
+                setTimeout(() => {
+                    if (voiceRecognitionActive) {
+                        recognition.start();
+                    }
+                }, 1000);
+            } catch (e) {
+                console.error("Erro ao reiniciar após erro:", e);
+                voiceRecognitionActive = false;
+                if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
+            }
+        }
+    };
+    
+    // Inicia o reconhecimento
     try {
         recognition.start();
     } catch (e) {
-        console.error("Falha ao iniciar:", e);
-        voiceBtn.textContent = "🎤 Falar Comando";
-        voiceBtn.style.backgroundColor = "";
-        voiceBtn.style.color = "";
+        console.error("Erro ao iniciar reconhecimento:", e);
         voiceRecognitionActive = false;
+        if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
     }
 }
-
-
-
 
 
 
