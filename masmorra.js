@@ -3518,7 +3518,6 @@ async function loadAndStartDungeon(dungeonId = null) {
         </div>
     `;
 
-
     // --- ADICIONE O BOTÃO DE NARRAÇÃO NOVAMENTE ---
     const explorationLogDiv = mainContent.querySelector('.exploration-log');
     if (explorationLogDiv && !explorationLogDiv.querySelector('#toggle-tts')) {
@@ -3544,34 +3543,8 @@ async function loadAndStartDungeon(dungeonId = null) {
         console.log("LOG: Botão de narração NÃO encontrado após reset do main!");
     }
 
-    // Adiciona botão para alternar modo IA
-    const actionButtons = document.getElementById('action-buttons');
-    if (actionButtons) {
-        const aiModeBtn = document.createElement('button');
-        aiModeBtn.id = 'ai-mode-btn';
-        aiModeBtn.textContent = '🤖 Modo IA: Desativado';
-        aiModeBtn.classList.add('action-btn');
-        aiModeBtn.style.marginBottom = "8px";
-        
-        // Estado inicial
-        window.aiModeEnabled = false;
-        
-        // Evento de clique
-        aiModeBtn.addEventListener('click', () => {
-            window.aiModeEnabled = !window.aiModeEnabled;
-            aiModeBtn.textContent = window.aiModeEnabled ? 
-                '🧠 Modo IA: Ativado' : 
-                '🤖 Modo IA: Desativado';
-                
-            // Feedback ao usuário
-            addLogMessage(window.aiModeEnabled ? 
-                "O narrador inteligente está agora ouvindo seus comandos em linguagem natural." : 
-                "Voltando ao modo de comandos diretos.", 800);
-        });
-        
-        // Insere o botão no início dos botões de ação
-        actionButtons.insertBefore(aiModeBtn, actionButtons.firstChild);
-    }
+    // Ativa o processamento de linguagem natural por padrão (sem botão)
+    window.aiModeEnabled = true;
 
     // Reconecta os event listeners aos botões
     const northBtn = document.getElementById("go-north");
@@ -3692,6 +3665,7 @@ async function loadAndStartDungeon(dungeonId = null) {
         console.log("LOG: Botão de reconhecimento de voz pronto.");
     }
 }
+
 
     
 
