@@ -211,12 +211,17 @@ let playerState = {
 
 
 
+// Modificação para masmorra.js - função de reconhecimento de voz
 function iniciarReconhecimentoVoz() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+    if (!SpeechRecognition) {
+        alert("Reconhecimento de voz não suportado neste navegador.");
+        return;
+    }
     
     const voiceBtn = document.getElementById("voice-command-btn");
     
+    // Se já estiver em modo de escuta, cancela
     if (voiceRecognitionActive && recognition) {
         voiceRecognitionActive = false;
         recognition.stop();
@@ -224,53 +229,116 @@ function iniciarReconhecimentoVoz() {
         return;
     }
     
+    // Toca som de ativação
+    playActivationSound();
+    
+    // Cria uma nova instância de reconhecimento otimizada para comandos
     recognition = new SpeechRecognition();
     recognition.lang = 'pt-BR';
-    recognition.continuous = false;
+    recognition.continuous = false;  // Modo de comando único
     recognition.interimResults = false;
+    recognition.maxAlternatives = 3; // Aumenta chances de reconhecimento correto
     
+    // Marca como ativo
     voiceRecognitionActive = true;
     
-    recognition.onstart = () => {
-        if (voiceBtn) voiceBtn.textContent = "🎤 Ouvindo...";
-    };
+    // Feedback visual
+    if (voiceBtn) {
+        voiceBtn.textContent = "🎤 Ouvindo... (10s)";
+        voiceBtn.classList.add("listening");
+    }
     
-    recognition.onend = () => {
-        if (voiceRecognitionActive) {
-            try {
-                recognition.start();
-            } catch (e) {
-                voiceRecognitionActive = false;
-                if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
-            }
-        } else {
-            if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
+    // Contador regressivo
+    let timeLeft = 10;
+    const countdownInterval = setInterval(() => {
+        timeLeft--;
+        if (voiceBtn && voiceRecognitionActive) {
+            voiceBtn.textContent = `🎤 Ouvindo... (${timeLeft}s)`;
         }
+        if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+        }
+    }, 1000);
+    
+    recognition.onresult = function(event) {
+        const texto = event.results[0][0].transcript.toLowerCase();
+        console.log("Voz reconhecida:", texto);
+        
+        // Processa o comando diretamente (sem necessidade da palavra "jogo")
+        processarComandoVoz(texto);
+        
+        // Feedback de sucesso
+        playSuccessSound();
+        
+        if (voiceBtn) {
+            voiceBtn.textContent = "✓ Comando reconhecido";
+            voiceBtn.classList.remove("listening");
+            voiceBtn.classList.add("success");
+            
+            setTimeout(() => {
+                voiceBtn.textContent = "🎤 Falar Comando";
+                voiceBtn.classList.remove("success");
+            }, 2000);
+        }
+        
+        clearInterval(countdownInterval);
     };
     
-    recognition.onresult = (event) => {
-        const texto = event.results[0][0].transcript.toLowerCase();
+    recognition.onerror = function(event) {
+        console.error("Erro de reconhecimento de voz:", event.error);
         
-        if (texto.includes(activationKeyword)) {
-            const comando = texto.replace(activationKeyword, "").trim();
-            processarComandoVoz(comando);
+        if (voiceBtn) {
+            voiceBtn.textContent = "❌ Erro - Tente novamente";
+            voiceBtn.classList.remove("listening");
+            voiceBtn.classList.add("error");
+            
+            setTimeout(() => {
+                voiceBtn.textContent = "🎤 Falar Comando";
+                voiceBtn.classList.remove("error");
+            }, 2000);
+        }
+        
+        clearInterval(countdownInterval);
+        voiceRecognitionActive = false;
+    };
+    
+    recognition.onend = function() {
+        // Se não houve resultado nem erro, o tempo acabou
+        if (voiceRecognitionActive) {
+            voiceRecognitionActive = false;
             
             if (voiceBtn) {
-                voiceBtn.textContent = "✓ Comando reconhecido";
+                voiceBtn.textContent = "⏱️ Tempo esgotado";
+                voiceBtn.classList.remove("listening");
+                
                 setTimeout(() => {
-                    if (voiceRecognitionActive) voiceBtn.textContent = "🎤 Ouvindo...";
-                }, 1000);
+                    voiceBtn.textContent = "🎤 Falar Comando";
+                }, 2000);
             }
+            
+            clearInterval(countdownInterval);
         }
     };
     
+    // Inicia o reconhecimento
     try {
         recognition.start();
+        
+        // Define um timeout de segurança (10 segundos)
+        setTimeout(() => {
+            if (voiceRecognitionActive) {
+                recognition.stop();
+                voiceRecognitionActive = false;
+            }
+        }, 10000);
     } catch (e) {
+        console.error("Erro ao iniciar reconhecimento:", e);
         voiceRecognitionActive = false;
         if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
+        clearInterval(countdownInterval);
     }
 }
+
 
 
 
