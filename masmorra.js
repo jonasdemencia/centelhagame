@@ -245,7 +245,21 @@ function iniciarReconhecimentoVoz() {
         // Se ainda estiver marcado como ativo mas o reconhecimento parou, reinicia
         if (voiceRecognitionActive) {
             try {
-                recognition.start();
+                // Verifica se deve pausar o reconhecimento durante a narração
+                if (typeof shouldPauseRecognition === 'function' && shouldPauseRecognition()) {
+                    console.log("Pausando reconhecimento durante narração");
+                    setTimeout(() => {
+                        if (voiceRecognitionActive) {
+                            try {
+                                recognition.start();
+                            } catch (e) {
+                                console.error("Erro ao reiniciar após pausa:", e);
+                            }
+                        }
+                    }, 1000);
+                } else {
+                    recognition.start();
+                }
             } catch (e) {
                 console.error("Erro ao reiniciar reconhecimento:", e);
                 voiceRecognitionActive = false;
@@ -313,6 +327,7 @@ function iniciarReconhecimentoVoz() {
         if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
     }
 }
+
 
 
 
