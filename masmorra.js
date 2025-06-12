@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebas
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 import { getMonsterById } from './monstros.js';
-import { narrate, isSpeaking, playActivationSound, playSuccessSound } from './speech.js';
+import { narrate, isSpeaking } from './speech.js';
 import { getRoomBehavior } from './rooms/registry.js';
 
 console.log("LOG: masmorra.js carregado.");
