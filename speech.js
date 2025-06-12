@@ -1,4 +1,4 @@
-// speech.js - versão otimizada com modo de atenção
+// Sistema de narração e reconhecimento de voz
 export function narrate(text, lang = 'pt-BR') {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
@@ -16,13 +16,46 @@ export function isSpeaking() {
     return window.speechSynthesis.speaking;
 }
 
-// Sons de feedback
+// Funções de feedback sonoro simplificadas
 export function playActivationSound() {
-    const audio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAbAAkJCQkJCQkJCQkJCQkJCQwMDAwMDAwMDAwMDAwMDA4ODg4ODg4ODg4ODg4ODg4P//////////////////////////AAAAAExhdmM1OC4xMwAAAAAAAAAAAAAAACQCkAAAAAAAAAGwxaDPiTEAAAAAAAAAAAAAAAAAAP/jOMAAAAAAAAAAAABJbmZvAAAADwAAAAMAAAGwAJCQkJCQkJCQkJCQkJCQkMDAwMDAwMDAwMDAwMDAwODg4ODg4ODg4ODg4ODg4OD//////////////////////////wAAAABMYXZjNTguMTMAAAAAAAAAAAAAAACQAlAAAAAAAAABsMWgz4kxAAAAAAAAAAAAAAAAAAAAAAD/4zjMAAAAAAAAAAAASW5mbwAAAA8AAAADAAABsACQkJCQkJCQkJCQkJCQkJDAwMDAwMDAwMDAwMDAwMDg4ODg4ODg4ODg4ODg4ODg//////////////////////////8AAAAALAV2YzU4LjEzAAAAAAAAAAAAAAAAkAJQAAAAAAAAABDFoM+JMQAAAAAAAAAAAAAAAAAAAAA=');
-    audio.play();
+    // Som simples usando AudioContext
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.value = 880; // Nota A5
+        gainNode.gain.value = 0.1;
+        
+        oscillator.start();
+        setTimeout(() => oscillator.stop(), 200);
+    } catch (e) {
+        console.log("Feedback sonoro não disponível");
+    }
 }
 
 export function playSuccessSound() {
-    const audio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAABwAUFBQUFBQUFBQUFBQUFBQgICAgICAgICAgICAgICAsMDAwMDAwMDAwMDAwMDAwP//////////////////////////AAAAAExhdmM1OC4xMwAAAAAAAAAAAAAAACQEkAAAAAAAAAEcxUhqiTEAAAAAAAAAAAAAAAAAAP/jOMAAAAAAAAAAAABJbmZvAAAADwAAAAMAAABwAFBQUFBQUFBQUFBQUFBQUICAgICAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAwMD//////////////////////////wAAAABMYXZjNTguMTMAAAAAAAAAAAAAAACQBJAAAAAAAAABHMVIaokxAAAAAAAAAAAAAAAAAAAAAAD/4zjMAAAAAAAAAAAASW5mbwAAAA8AAAADAAABsABQUFBQUFBQUFBQUFBQUFCAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwMDA//////////////////////////8AAAAALAV2YzU4LjEzAAAAAAAAAAAAAAAAkASQAAAAAAAAABzFSGqJMQAAAAAAAAAAAAAAAAAAAAAA');
-    audio.play();
+    // Som simples usando AudioContext
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Nota D5
+        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // Nota A5
+        gainNode.gain.value = 0.1;
+        
+        oscillator.start();
+        setTimeout(() => oscillator.stop(), 300);
+    } catch (e) {
+        console.log("Feedback sonoro não disponível");
+    }
 }
