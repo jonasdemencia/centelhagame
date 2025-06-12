@@ -228,11 +228,12 @@ function iniciarReconhecimentoVoz() {
         return;
     }
     
-    // Cria uma nova instância de reconhecimento
+    // Cria uma nova instância de reconhecimento com configurações otimizadas
     recognition = new SpeechRecognition();
     recognition.lang = 'pt-BR';
-    recognition.continuous = true;  // Modo contínuo
-    recognition.interimResults = false;
+    recognition.continuous = false;  // Mudado para false para melhor responsividade
+    recognition.interimResults = true; // Ativa resultados intermediários
+    recognition.maxAlternatives = 1;
     
     // Marca como ativo
     voiceRecognitionActive = true;
@@ -242,27 +243,14 @@ function iniciarReconhecimentoVoz() {
     };
     
     recognition.onend = function() {
-        // Se ainda estiver marcado como ativo mas o reconhecimento parou, reinicia
+        // Reinicia imediatamente se ainda estiver ativo
         if (voiceRecognitionActive) {
             try {
-                // Verifica se deve pausar o reconhecimento durante a narração
-                if (typeof shouldPauseRecognition === 'function' && shouldPauseRecognition()) {
-                    console.log("Pausando reconhecimento durante narração");
-                    setTimeout(() => {
-                        if (voiceRecognitionActive) {
-                            try {
-                                recognition.start();
-                            } catch (e) {
-                                console.error("Erro ao reiniciar após pausa:", e);
-                            }
-                        }
-                    }, 1000);
-                } else {
-                    recognition.start();
-                }
+                setTimeout(() => {
+                    if (voiceRecognitionActive) recognition.start();
+                }, 100); // Reinicia rapidamente
             } catch (e) {
                 console.error("Erro ao reiniciar reconhecimento:", e);
-                voiceRecognitionActive = false;
                 if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
             }
         } else {
@@ -271,49 +259,41 @@ function iniciarReconhecimentoVoz() {
     };
     
     recognition.onresult = function(event) {
-        const texto = event.results[event.results.length - 1][0].transcript.toLowerCase();
-        console.log("Voz reconhecida:", texto);
-        
-        // Verifica se o comando começa com a palavra-chave
-        if (texto.includes(activationKeyword)) {
-            // Remove a palavra-chave e espaços extras
-            const comando = texto.replace(activationKeyword, "").trim();
-            console.log("Comando processado:", comando);
-            
-            // Processa o comando
-            processarComandoVoz(comando);
-            
-            // Feedback visual temporário
-            if (voiceBtn) {
-                const originalText = voiceBtn.textContent;
-                voiceBtn.textContent = "✓ Comando reconhecido";
-                setTimeout(() => {
-                    if (voiceRecognitionActive) {
-                        voiceBtn.textContent = "🎤 Ouvindo... (Clique para parar)";
-                    } else {
-                        voiceBtn.textContent = originalText;
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const result = event.results[i];
+            if (result.isFinal) {
+                const texto = result[0].transcript.toLowerCase();
+                console.log("Voz reconhecida:", texto);
+                
+                if (texto.includes(activationKeyword)) {
+                    const comando = texto.replace(activationKeyword, "").trim();
+                    console.log("Comando processado:", comando);
+                    processarComandoVoz(comando);
+                    
+                    if (voiceBtn) {
+                        voiceBtn.textContent = "✓ Comando reconhecido";
+                        setTimeout(() => {
+                            if (voiceRecognitionActive) {
+                                voiceBtn.textContent = "🎤 Ouvindo... (Clique para parar)";
+                            }
+                        }, 1000);
                     }
-                }, 1500);
+                }
             }
         }
     };
     
     recognition.onerror = function(event) {
-        console.error("Erro de reconhecimento de voz:", event.error);
-        
-        // Em caso de erro, tenta reiniciar se ainda estiver ativo
-        if (voiceRecognitionActive) {
-            try {
-                recognition.stop();
-                setTimeout(() => {
-                    if (voiceRecognitionActive) {
-                        recognition.start();
-                    }
-                }, 1000);
-            } catch (e) {
-                console.error("Erro ao reiniciar após erro:", e);
-                voiceRecognitionActive = false;
-                if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
+        console.error("Erro de reconhecimento:", event.error);
+        if (event.error === 'no-speech' || event.error === 'audio-capture') {
+            // Reinicia rapidamente em caso de erros comuns
+            if (voiceRecognitionActive) {
+                try {
+                    recognition.stop();
+                    setTimeout(() => {
+                        if (voiceRecognitionActive) recognition.start();
+                    }, 100);
+                } catch (e) {}
             }
         }
     };
