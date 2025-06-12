@@ -231,77 +231,45 @@ function iniciarReconhecimentoVoz() {
     // Cria uma nova instância de reconhecimento
     recognition = new SpeechRecognition();
     recognition.lang = 'pt-BR';
-    recognition.continuous = true;  // Modo contínuo
+    recognition.continuous = false;  // Mudado para false para desativar após um comando
     recognition.interimResults = false;
     
     // Marca como ativo
     voiceRecognitionActive = true;
     
     recognition.onstart = function() {
-        if (voiceBtn) voiceBtn.textContent = "🎤 Ouvindo... (Clique para parar)";
+        if (voiceBtn) voiceBtn.textContent = "🎤 Ouvindo...";
     };
     
     recognition.onend = function() {
-        // Se ainda estiver marcado como ativo mas o reconhecimento parou, reinicia
-        if (voiceRecognitionActive) {
-            try {
-                recognition.start();
-            } catch (e) {
-                console.error("Erro ao reiniciar reconhecimento:", e);
-                voiceRecognitionActive = false;
-                if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
-            }
-        } else {
-            if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
-        }
+        // Sempre desativa quando termina
+        voiceRecognitionActive = false;
+        if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
     };
     
     recognition.onresult = function(event) {
-        const texto = event.results[event.results.length - 1][0].transcript.toLowerCase();
+        const texto = event.results[0][0].transcript.toLowerCase();
         console.log("Voz reconhecida:", texto);
         
-        // Verifica se o comando começa com a palavra-chave
-        if (texto.includes(activationKeyword)) {
-            // Remove a palavra-chave e espaços extras
-            const comando = texto.replace(activationKeyword, "").trim();
-            console.log("Comando processado:", comando);
-            
-            // Processa o comando
-            processarComandoVoz(comando);
-            
-            // Feedback visual temporário
-            if (voiceBtn) {
-                const originalText = voiceBtn.textContent;
-                voiceBtn.textContent = "✓ Comando reconhecido";
-                setTimeout(() => {
-                    if (voiceRecognitionActive) {
-                        voiceBtn.textContent = "🎤 Ouvindo... (Clique para parar)";
-                    } else {
-                        voiceBtn.textContent = originalText;
-                    }
-                }, 1500);
-            }
+        // Processa o comando
+        processarComandoVoz(texto);
+        
+        // Feedback visual temporário
+        if (voiceBtn) {
+            voiceBtn.textContent = "✓ Comando reconhecido";
+            setTimeout(() => {
+                voiceBtn.textContent = "🎤 Falar Comando";
+            }, 1500);
         }
+        
+        // Desativa automaticamente
+        voiceRecognitionActive = false;
     };
     
     recognition.onerror = function(event) {
         console.error("Erro de reconhecimento de voz:", event.error);
-        
-        // Em caso de erro, tenta reiniciar se ainda estiver ativo
-        if (voiceRecognitionActive) {
-            try {
-                recognition.stop();
-                setTimeout(() => {
-                    if (voiceRecognitionActive) {
-                        recognition.start();
-                    }
-                }, 1000);
-            } catch (e) {
-                console.error("Erro ao reiniciar após erro:", e);
-                voiceRecognitionActive = false;
-                if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
-            }
-        }
+        voiceRecognitionActive = false;
+        if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
     };
     
     // Inicia o reconhecimento
@@ -313,6 +281,7 @@ function iniciarReconhecimentoVoz() {
         if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
     }
 }
+
 
 
 
