@@ -212,127 +212,87 @@ let playerState = {
 
 
 function iniciarReconhecimentoVoz() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        alert("Reconhecimento de voz não suportado neste navegador.");
-        return;
-    }
-    
     const voiceBtn = document.getElementById("voice-command-btn");
     
-    // Se já estiver ativo, desativa
-    if (voiceRecognitionActive && recognition) {
+    // Se já estiver ativo, apenas cancela
+    if (voiceRecognitionActive) {
+        if (recognition) {
+            recognition.abort(); // Força o cancelamento imediato
+            recognition = null;
+        }
         voiceRecognitionActive = false;
-        recognition.stop();
-        if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
+        voiceBtn.textContent = "🎤 Falar Comando";
+        voiceBtn.style.backgroundColor = "";
         return;
     }
     
-    // Cria uma nova instância de reconhecimento
+    // Marca como ativo imediatamente
+    voiceRecognitionActive = true;
+    voiceBtn.textContent = "🎤 Ouvindo...";
+    voiceBtn.style.backgroundColor = "#ff5722";
+    voiceBtn.style.color = "white";
+    
+    // Cria uma nova instância limpa
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRecognition();
     recognition.lang = 'pt-BR';
-    recognition.continuous = false;
     recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
     
-    // Marca como ativo
-    voiceRecognitionActive = true;
-    
-    // Feedback visual
-    if (voiceBtn) {
-        voiceBtn.textContent = "🎤 Ouvindo... (10s)";
-        voiceBtn.style.backgroundColor = "#ff5722";
-        voiceBtn.style.color = "white";
-    }
-    
-    // Contador regressivo
-    let timeLeft = 10;
-    const countdownInterval = setInterval(() => {
-        timeLeft--;
-        if (voiceBtn && voiceRecognitionActive) {
-            voiceBtn.textContent = `🎤 Ouvindo... (${timeLeft}s)`;
-        }
-        if (timeLeft <= 0) {
-            clearInterval(countdownInterval);
-        }
-    }, 1000);
-    
+    // Manipuladores de eventos simplificados
     recognition.onresult = function(event) {
-        const texto = event.results[0][0].transcript.toLowerCase();
-        console.log("Voz reconhecida:", texto);
+        const comando = event.results[0][0].transcript.toLowerCase();
+        console.log("Comando reconhecido:", comando);
         
-        // Processa o comando diretamente (sem necessidade da palavra "jogo")
-        processarComandoVoz(texto);
+        // Feedback visual imediato
+        voiceBtn.textContent = "✓ Processando...";
         
-        if (voiceBtn) {
-            voiceBtn.textContent = "✓ Comando reconhecido";
-            voiceBtn.style.backgroundColor = "#4CAF50";
+        // Processa o comando com um pequeno atraso para permitir o feedback visual
+        setTimeout(() => {
+            processarComandoVoz(comando);
             
-            setTimeout(() => {
-                voiceBtn.textContent = "🎤 Falar Comando";
-                voiceBtn.style.backgroundColor = "";
-                voiceBtn.style.color = "";
-            }, 2000);
-        }
-        
-        clearInterval(countdownInterval);
+            // Restaura o botão
+            voiceBtn.textContent = "🎤 Falar Comando";
+            voiceBtn.style.backgroundColor = "";
+            voiceBtn.style.color = "";
+            voiceRecognitionActive = false;
+        }, 200);
     };
     
     recognition.onerror = function(event) {
-        console.error("Erro de reconhecimento de voz:", event.error);
+        console.error("Erro:", event.error);
+        voiceBtn.textContent = "❌ Erro";
         
-        if (voiceBtn) {
-            voiceBtn.textContent = "❌ Erro - Tente novamente";
-            voiceBtn.style.backgroundColor = "#f44336";
-            voiceBtn.style.color = "white";
-            
-            setTimeout(() => {
-                voiceBtn.textContent = "🎤 Falar Comando";
-                voiceBtn.style.backgroundColor = "";
-                voiceBtn.style.color = "";
-            }, 2000);
-        }
-        
-        clearInterval(countdownInterval);
-        voiceRecognitionActive = false;
+        setTimeout(() => {
+            voiceBtn.textContent = "🎤 Falar Comando";
+            voiceBtn.style.backgroundColor = "";
+            voiceBtn.style.color = "";
+            voiceRecognitionActive = false;
+        }, 1500);
     };
     
     recognition.onend = function() {
-        // Se não houve resultado nem erro, o tempo acabou
+        // Se ainda estiver marcado como ativo, foi um fim inesperado
         if (voiceRecognitionActive) {
+            voiceBtn.textContent = "🎤 Falar Comando";
+            voiceBtn.style.backgroundColor = "";
+            voiceBtn.style.color = "";
             voiceRecognitionActive = false;
-            
-            if (voiceBtn) {
-                voiceBtn.textContent = "⏱️ Tempo esgotado";
-                voiceBtn.style.backgroundColor = "";
-                voiceBtn.style.color = "";
-                
-                setTimeout(() => {
-                    voiceBtn.textContent = "🎤 Falar Comando";
-                }, 2000);
-            }
-            
-            clearInterval(countdownInterval);
         }
     };
     
-    // Inicia o reconhecimento
+    // Inicia o reconhecimento com tratamento de erro
     try {
         recognition.start();
-        
-        // Define um timeout de segurança (10 segundos)
-        setTimeout(() => {
-            if (voiceRecognitionActive) {
-                recognition.stop();
-                voiceRecognitionActive = false;
-            }
-        }, 10000);
     } catch (e) {
-        console.error("Erro ao iniciar reconhecimento:", e);
+        console.error("Falha ao iniciar:", e);
+        voiceBtn.textContent = "🎤 Falar Comando";
+        voiceBtn.style.backgroundColor = "";
+        voiceBtn.style.color = "";
         voiceRecognitionActive = false;
-        if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
-        clearInterval(countdownInterval);
     }
 }
+
 
 
 
