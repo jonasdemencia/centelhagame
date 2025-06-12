@@ -14,7 +14,7 @@
 
 /* Estilos para o mapa */
 .map-container {
-    flex: 2;
+    flex: 1;
     background-color: #222;
     border: 3px solid #aa6c39;
     border-radius: 10px;
@@ -68,7 +68,7 @@
 
 /* Estilos para o log de exploração */
 .exploration-log {
-    flex: 1;
+    flex: 2;
     background-color: rgba(0, 0, 0, 0.7);
     border: 3px solid #aa6c39;
     border-radius: 10px;
