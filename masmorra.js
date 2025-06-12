@@ -213,14 +213,10 @@ let playerState = {
 
 function iniciarReconhecimentoVoz() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        alert("Reconhecimento de voz não suportado neste navegador.");
-        return;
-    }
+    if (!SpeechRecognition) return;
     
     const voiceBtn = document.getElementById("voice-command-btn");
     
-    // Se já estiver ativo, desativa
     if (voiceRecognitionActive && recognition) {
         voiceRecognitionActive = false;
         recognition.stop();
@@ -228,29 +224,23 @@ function iniciarReconhecimentoVoz() {
         return;
     }
     
-    // Cria uma nova instância de reconhecimento com configurações otimizadas
     recognition = new SpeechRecognition();
     recognition.lang = 'pt-BR';
-    recognition.continuous = false;  // Mudado para false para melhor responsividade
-    recognition.interimResults = true; // Ativa resultados intermediários
-    recognition.maxAlternatives = 1;
+    recognition.continuous = false;
+    recognition.interimResults = false;
     
-    // Marca como ativo
     voiceRecognitionActive = true;
     
-    recognition.onstart = function() {
-        if (voiceBtn) voiceBtn.textContent = "🎤 Ouvindo... (Clique para parar)";
+    recognition.onstart = () => {
+        if (voiceBtn) voiceBtn.textContent = "🎤 Ouvindo...";
     };
     
-    recognition.onend = function() {
-        // Reinicia imediatamente se ainda estiver ativo
+    recognition.onend = () => {
         if (voiceRecognitionActive) {
             try {
-                setTimeout(() => {
-                    if (voiceRecognitionActive) recognition.start();
-                }, 100); // Reinicia rapidamente
+                recognition.start();
             } catch (e) {
-                console.error("Erro ao reiniciar reconhecimento:", e);
+                voiceRecognitionActive = false;
                 if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
             }
         } else {
@@ -258,51 +248,25 @@ function iniciarReconhecimentoVoz() {
         }
     };
     
-    recognition.onresult = function(event) {
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            const result = event.results[i];
-            if (result.isFinal) {
-                const texto = result[0].transcript.toLowerCase();
-                console.log("Voz reconhecida:", texto);
-                
-                if (texto.includes(activationKeyword)) {
-                    const comando = texto.replace(activationKeyword, "").trim();
-                    console.log("Comando processado:", comando);
-                    processarComandoVoz(comando);
-                    
-                    if (voiceBtn) {
-                        voiceBtn.textContent = "✓ Comando reconhecido";
-                        setTimeout(() => {
-                            if (voiceRecognitionActive) {
-                                voiceBtn.textContent = "🎤 Ouvindo... (Clique para parar)";
-                            }
-                        }, 1000);
-                    }
-                }
+    recognition.onresult = (event) => {
+        const texto = event.results[0][0].transcript.toLowerCase();
+        
+        if (texto.includes(activationKeyword)) {
+            const comando = texto.replace(activationKeyword, "").trim();
+            processarComandoVoz(comando);
+            
+            if (voiceBtn) {
+                voiceBtn.textContent = "✓ Comando reconhecido";
+                setTimeout(() => {
+                    if (voiceRecognitionActive) voiceBtn.textContent = "🎤 Ouvindo...";
+                }, 1000);
             }
         }
     };
     
-    recognition.onerror = function(event) {
-        console.error("Erro de reconhecimento:", event.error);
-        if (event.error === 'no-speech' || event.error === 'audio-capture') {
-            // Reinicia rapidamente em caso de erros comuns
-            if (voiceRecognitionActive) {
-                try {
-                    recognition.stop();
-                    setTimeout(() => {
-                        if (voiceRecognitionActive) recognition.start();
-                    }, 100);
-                } catch (e) {}
-            }
-        }
-    };
-    
-    // Inicia o reconhecimento
     try {
         recognition.start();
     } catch (e) {
-        console.error("Erro ao iniciar reconhecimento:", e);
         voiceRecognitionActive = false;
         if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
     }
