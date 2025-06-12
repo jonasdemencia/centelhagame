@@ -212,8 +212,13 @@ let playerState = {
 
 
 function iniciarReconhecimentoVoz() {
+    console.log("=== INICIANDO RECONHECIMENTO DE VOZ ===");
+    console.log("Estado atual: voiceRecognitionActive =", voiceRecognitionActive);
+    console.log("Instância recognition existe?", !!recognition);
+    
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
+        console.error("API de reconhecimento não suportada neste navegador");
         alert("Reconhecimento de voz não suportado neste navegador.");
         return;
     }
@@ -222,34 +227,65 @@ function iniciarReconhecimentoVoz() {
     
     // Se já estiver ativo, desativa
     if (voiceRecognitionActive && recognition) {
+        console.log("Desativando reconhecimento existente");
         voiceRecognitionActive = false;
-        recognition.stop();
+        try {
+            recognition.stop();
+            console.log("Recognition.stop() chamado com sucesso");
+        } catch (e) {
+            console.error("Erro ao parar reconhecimento:", e);
+        }
         if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
         return;
     }
     
+    // Limpa qualquer instância anterior
+    if (recognition) {
+        console.log("Limpando instância anterior de recognition");
+        try {
+            recognition.abort();
+        } catch (e) {
+            console.error("Erro ao abortar recognition anterior:", e);
+        }
+        recognition = null;
+    }
+    
+    console.log("Criando nova instância de SpeechRecognition");
     // Cria uma nova instância de reconhecimento
     recognition = new SpeechRecognition();
     recognition.lang = 'pt-BR';
-    recognition.continuous = false;  // Mudado para false para desativar após um comando
+    recognition.continuous = false;  // Modo não contínuo
     recognition.interimResults = false;
     
     // Marca como ativo
     voiceRecognitionActive = true;
+    console.log("voiceRecognitionActive definido como true");
     
     recognition.onstart = function() {
+        console.log("Evento onstart disparado");
         if (voiceBtn) voiceBtn.textContent = "🎤 Ouvindo...";
     };
     
     recognition.onend = function() {
+        console.log("Evento onend disparado");
+        console.log("Estado ao finalizar: voiceRecognitionActive =", voiceRecognitionActive);
+        
         // Sempre desativa quando termina
         voiceRecognitionActive = false;
         if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
+        
+        // Limpa a referência
+        console.log("Limpando referência à instância de recognition");
+        recognition = null;
     };
     
     recognition.onresult = function(event) {
+        console.log("Evento onresult disparado");
+        console.log("Resultados:", event.results);
+        
         const texto = event.results[0][0].transcript.toLowerCase();
-        console.log("Voz reconhecida:", texto);
+        console.log("Texto reconhecido:", texto);
+        console.log("Confiança:", event.results[0][0].confidence);
         
         // Processa o comando
         processarComandoVoz(texto);
@@ -263,24 +299,63 @@ function iniciarReconhecimentoVoz() {
         }
         
         // Desativa automaticamente
+        console.log("Desativando após reconhecimento bem-sucedido");
         voiceRecognitionActive = false;
     };
     
     recognition.onerror = function(event) {
-        console.error("Erro de reconhecimento de voz:", event.error);
+        console.error("Evento onerror disparado:", event.error);
+        console.error("Detalhes do erro:", event);
+        
         voiceRecognitionActive = false;
-        if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
+        if (voiceBtn) {
+            voiceBtn.textContent = "❌ Erro: " + event.error;
+            setTimeout(() => {
+                voiceBtn.textContent = "🎤 Falar Comando";
+            }, 2000);
+        }
+    };
+    
+    recognition.onnomatch = function() {
+        console.log("Evento onnomatch disparado - nenhuma correspondência encontrada");
+    };
+    
+    recognition.onaudiostart = function() {
+        console.log("Evento onaudiostart disparado - captura de áudio iniciada");
+    };
+    
+    recognition.onaudioend = function() {
+        console.log("Evento onaudioend disparado - captura de áudio finalizada");
+    };
+    
+    recognition.onsoundstart = function() {
+        console.log("Evento onsoundstart disparado - som detectado");
+    };
+    
+    recognition.onsoundend = function() {
+        console.log("Evento onsoundend disparado - som finalizado");
+    };
+    
+    recognition.onspeechstart = function() {
+        console.log("Evento onspeechstart disparado - fala detectada");
+    };
+    
+    recognition.onspeechend = function() {
+        console.log("Evento onspeechend disparado - fala finalizada");
     };
     
     // Inicia o reconhecimento
     try {
+        console.log("Chamando recognition.start()");
         recognition.start();
+        console.log("recognition.start() chamado com sucesso");
     } catch (e) {
         console.error("Erro ao iniciar reconhecimento:", e);
         voiceRecognitionActive = false;
         if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
     }
 }
+
 
 
 
