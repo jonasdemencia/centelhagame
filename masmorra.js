@@ -4,7 +4,6 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 import { getMonsterById } from './monstros.js';
 import { narrate } from './speech.js'; // ajuste o caminho se necessário
-import './ai-narrator.js'; // Importa o módulo para registrar o objeto global AINarrator
 import { getRoomBehavior } from './rooms/registry.js';
 
 console.log("LOG: masmorra.js carregado.");
@@ -261,27 +260,7 @@ function iniciarReconhecimentoVoz() {
         const texto = event.results[event.results.length - 1][0].transcript.toLowerCase();
         console.log("Voz reconhecida:", texto);
         
-        // Se o modo IA estiver ativado, processa qualquer comando sem palavra-chave
-        if (window.aiModeEnabled) {
-            console.log("Modo IA ativado, processando comando direto:", texto);
-            processarComandoVoz(texto);
-            
-            // Feedback visual temporário
-            if (voiceBtn) {
-                const originalText = voiceBtn.textContent;
-                voiceBtn.textContent = "✓ Comando processado";
-                setTimeout(() => {
-                    if (voiceRecognitionActive) {
-                        voiceBtn.textContent = "🎤 Ouvindo... (Clique para parar)";
-                    } else {
-                        voiceBtn.textContent = originalText;
-                    }
-                }, 1500);
-            }
-            return;
-        }
-        
-        // Modo normal com palavra-chave
+        // Verifica se o comando começa com a palavra-chave
         if (texto.includes(activationKeyword)) {
             // Remove a palavra-chave e espaços extras
             const comando = texto.replace(activationKeyword, "").trim();
@@ -334,7 +313,6 @@ function iniciarReconhecimentoVoz() {
         if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
     }
 }
-
 
 
 
@@ -403,13 +381,6 @@ function processarComandoVoz(texto) {
         
         // Se chegou aqui, não encontrou um comando válido para o menu de direções
         addLogMessage("Comando não reconhecido para escolha de direção.", 1000, 0);
-        return;
-    }
-
-    // Verifica se o modo IA está ativado
-    if (window.aiModeEnabled) {
-        // Processa o comando via IA, passando a função addLogMessage diretamente
-        processNaturalLanguage(texto, addLogMessage);
         return;
     }
 
@@ -524,12 +495,6 @@ function processarComandoVoz(texto) {
         }
     }
 
-    // Se chegou aqui e o modo IA está ativado, tenta processar como linguagem natural
-    if (window.aiModeEnabled) {
-        processNaturalLanguage(texto, addLogMessage);
-        return;
-    }
-
     addLogMessage("Comando de voz não reconhecido: " + texto, 1000, 0);
 
     // Reforça visibilidade do botão de coleta no final da função
@@ -539,9 +504,6 @@ function processarComandoVoz(texto) {
         collectBtn.style.visibility = 'visible';
     }
 }
-
-
-
 
 
 
@@ -3470,6 +3432,7 @@ function showDungeonSelectionScreen(dungeons) {
     mainContent.appendChild(selectionContainer);
 }
 
+// Nova função para carregar e iniciar uma masmorra
 async function loadAndStartDungeon(dungeonId = null) {
     // Restaura o layout original
     const mainContent = document.querySelector('main');
@@ -3518,6 +3481,7 @@ async function loadAndStartDungeon(dungeonId = null) {
         </div>
     `;
 
+
     // --- ADICIONE O BOTÃO DE NARRAÇÃO NOVAMENTE ---
     const explorationLogDiv = mainContent.querySelector('.exploration-log');
     if (explorationLogDiv && !explorationLogDiv.querySelector('#toggle-tts')) {
@@ -3543,8 +3507,8 @@ async function loadAndStartDungeon(dungeonId = null) {
         console.log("LOG: Botão de narração NÃO encontrado após reset do main!");
     }
 
-    // Ativa o processamento de linguagem natural por padrão (sem botão)
-    window.aiModeEnabled = true;
+
+    
 
     // Reconecta os event listeners aos botões
     const northBtn = document.getElementById("go-north");
@@ -3624,12 +3588,12 @@ async function loadAndStartDungeon(dungeonId = null) {
     await initializeDungeon(dungeonId);
 
     // <-- INSTALE AQUI!
-    for (const roomId in dungeon.rooms) {
-        dungeon.rooms[roomId].behavior = getRoomBehavior(roomId);
-    }
+for (const roomId in dungeon.rooms) {
+    dungeon.rooms[roomId].behavior = getRoomBehavior(roomId);
+}
 
     // INCLUA O LOG AQUI:
-    console.log("Behaviors associados a todas as salas:", dungeon.rooms);
+console.log("Behaviors associados a todas as salas:", dungeon.rooms);
 
     // Adiciona o seletor de masmorras
     const availableDungeons = await listAvailableDungeons();
@@ -3650,23 +3614,21 @@ async function loadAndStartDungeon(dungeonId = null) {
     // Atualiza a barra de energia
     updateHealthBar();
 
-    // Inicia a exploração
-    startNewLogBlock("Bem-vindo");
-    await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
-    await addLogMessage(dungeon.description, 1000);
+   // Inicia a exploração
+startNewLogBlock("Bem-vindo");
+await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
+await addLogMessage(dungeon.description, 1000);
 
-    // Move para a sala inicial
-    moveToRoom(playerState.currentRoom);
+// Move para a sala inicial
+moveToRoom(playerState.currentRoom);
 
-    // Reatribua o evento de voz após reconstruir a tela
-    const voiceBtn = document.getElementById("voice-command-btn");
-    if (voiceBtn) {
-        voiceBtn.onclick = iniciarReconhecimentoVoz;
-        console.log("LOG: Botão de reconhecimento de voz pronto.");
-    }
+// Reatribua o evento de voz após reconstruir a tela
+const voiceBtn = document.getElementById("voice-command-btn");
+if (voiceBtn) {
+    voiceBtn.onclick = iniciarReconhecimentoVoz;
+    console.log("LOG: Botão de reconhecimento de voz pronto.");
 }
-
-
+}
     
 
 
