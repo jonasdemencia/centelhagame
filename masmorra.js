@@ -211,7 +211,6 @@ let playerState = {
 
 
 
-// Modificação para masmorra.js - função de reconhecimento de voz
 function iniciarReconhecimentoVoz() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -221,7 +220,7 @@ function iniciarReconhecimentoVoz() {
     
     const voiceBtn = document.getElementById("voice-command-btn");
     
-    // Se já estiver em modo de escuta, cancela
+    // Se já estiver ativo, desativa
     if (voiceRecognitionActive && recognition) {
         voiceRecognitionActive = false;
         recognition.stop();
@@ -229,15 +228,11 @@ function iniciarReconhecimentoVoz() {
         return;
     }
     
-    // Toca som de ativação
-    playActivationSound();
-    
-    // Cria uma nova instância de reconhecimento otimizada para comandos
+    // Cria uma nova instância de reconhecimento
     recognition = new SpeechRecognition();
     recognition.lang = 'pt-BR';
-    recognition.continuous = false;  // Modo de comando único
+    recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.maxAlternatives = 3; // Aumenta chances de reconhecimento correto
     
     // Marca como ativo
     voiceRecognitionActive = true;
@@ -245,7 +240,8 @@ function iniciarReconhecimentoVoz() {
     // Feedback visual
     if (voiceBtn) {
         voiceBtn.textContent = "🎤 Ouvindo... (10s)";
-        voiceBtn.classList.add("listening");
+        voiceBtn.style.backgroundColor = "#ff5722";
+        voiceBtn.style.color = "white";
     }
     
     // Contador regressivo
@@ -267,17 +263,14 @@ function iniciarReconhecimentoVoz() {
         // Processa o comando diretamente (sem necessidade da palavra "jogo")
         processarComandoVoz(texto);
         
-        // Feedback de sucesso
-        playSuccessSound();
-        
         if (voiceBtn) {
             voiceBtn.textContent = "✓ Comando reconhecido";
-            voiceBtn.classList.remove("listening");
-            voiceBtn.classList.add("success");
+            voiceBtn.style.backgroundColor = "#4CAF50";
             
             setTimeout(() => {
                 voiceBtn.textContent = "🎤 Falar Comando";
-                voiceBtn.classList.remove("success");
+                voiceBtn.style.backgroundColor = "";
+                voiceBtn.style.color = "";
             }, 2000);
         }
         
@@ -289,12 +282,13 @@ function iniciarReconhecimentoVoz() {
         
         if (voiceBtn) {
             voiceBtn.textContent = "❌ Erro - Tente novamente";
-            voiceBtn.classList.remove("listening");
-            voiceBtn.classList.add("error");
+            voiceBtn.style.backgroundColor = "#f44336";
+            voiceBtn.style.color = "white";
             
             setTimeout(() => {
                 voiceBtn.textContent = "🎤 Falar Comando";
-                voiceBtn.classList.remove("error");
+                voiceBtn.style.backgroundColor = "";
+                voiceBtn.style.color = "";
             }, 2000);
         }
         
@@ -309,7 +303,8 @@ function iniciarReconhecimentoVoz() {
             
             if (voiceBtn) {
                 voiceBtn.textContent = "⏱️ Tempo esgotado";
-                voiceBtn.classList.remove("listening");
+                voiceBtn.style.backgroundColor = "";
+                voiceBtn.style.color = "";
                 
                 setTimeout(() => {
                     voiceBtn.textContent = "🎤 Falar Comando";
