@@ -18,7 +18,7 @@ const firebaseConfig = {
     appId: "1:700809803145:web:bff4c6a751ec9389919d58"
 };
 
-// Inicializaaa o Firebase
+// Inicializa o Firebase
 console.log("LOG: Inicializando Firebase.");
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -29,11 +29,6 @@ console.log("LOG: Firebase inicializado.");
 let currentLogBlock = null;
 let playerData = null;
 let userId = null;
-
-// Variáveis para controlar o estado do reconhecimento de voz
-let voiceRecognitionActive = false;
-let recognition = null;
-const activationKeyword = "jogo";
 
 // Constantes para o sistema de grade
 const GRID_CELL_SIZE = 5; // Tamanho de cada célula da grade em unidades SVG
@@ -206,350 +201,6 @@ let playerState = {
     health: 100,
     discoveredBlocks: [] // Adicione esta linha
 };
-
-
-
-
-
-function iniciarReconhecimentoVoz() {
-    console.log("=== INICIANDO RECONHECIMENTO DE VOZ ===");
-    console.log("Estado atual: voiceRecognitionActive =", voiceRecognitionActive);
-    console.log("Instância recognition existe?", !!recognition);
-    
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        console.error("API de reconhecimento não suportada neste navegador");
-        alert("Reconhecimento de voz não suportado neste navegador.");
-        return;
-    }
-    
-    const voiceBtn = document.getElementById("voice-command-btn");
-    
-    // Se já estiver ativo, desativa
-    if (voiceRecognitionActive && recognition) {
-        console.log("Desativando reconhecimento existente");
-        voiceRecognitionActive = false;
-        try {
-            recognition.stop();
-            console.log("Recognition.stop() chamado com sucesso");
-        } catch (e) {
-            console.error("Erro ao parar reconhecimento:", e);
-        }
-        if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
-        return;
-    }
-    
-    // Limpa qualquer instância anterior
-    if (recognition) {
-        console.log("Limpando instância anterior de recognition");
-        try {
-            recognition.abort();
-        } catch (e) {
-            console.error("Erro ao abortar recognition anterior:", e);
-        }
-        recognition = null;
-    }
-    
-    console.log("Criando nova instância de SpeechRecognition");
-    // Cria uma nova instância de reconhecimento
-    recognition = new SpeechRecognition();
-    recognition.lang = 'pt-BR';
-    recognition.continuous = false;  // Modo não contínuo
-    recognition.interimResults = false;
-    
-    // Marca como ativo
-    voiceRecognitionActive = true;
-    console.log("voiceRecognitionActive definido como true");
-    
-    recognition.onstart = function() {
-        console.log("Evento onstart disparado");
-        if (voiceBtn) voiceBtn.textContent = "🎤 Ouvindo...";
-    };
-    
-    recognition.onend = function() {
-        console.log("Evento onend disparado");
-        console.log("Estado ao finalizar: voiceRecognitionActive =", voiceRecognitionActive);
-        
-        // Sempre desativa quando termina
-        voiceRecognitionActive = false;
-        if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
-        
-        // Limpa a referência
-        console.log("Limpando referência à instância de recognition");
-        recognition = null;
-    };
-    
-    recognition.onresult = function(event) {
-        console.log("Evento onresult disparado");
-        console.log("Resultados:", event.results);
-        
-        const texto = event.results[0][0].transcript.toLowerCase();
-        console.log("Texto reconhecido:", texto);
-        console.log("Confiança:", event.results[0][0].confidence);
-        
-        // Processa o comando
-        processarComandoVoz(texto);
-        
-        // Feedback visual temporário
-        if (voiceBtn) {
-            voiceBtn.textContent = "✓ Comando reconhecido";
-            setTimeout(() => {
-                voiceBtn.textContent = "🎤 Falar Comando";
-            }, 1500);
-        }
-        
-        // Desativa automaticamente
-        console.log("Desativando após reconhecimento bem-sucedido");
-        voiceRecognitionActive = false;
-    };
-    
-    recognition.onerror = function(event) {
-        console.error("Evento onerror disparado:", event.error);
-        console.error("Detalhes do erro:", event);
-        
-        voiceRecognitionActive = false;
-        if (voiceBtn) {
-            voiceBtn.textContent = "❌ Erro: " + event.error;
-            setTimeout(() => {
-                voiceBtn.textContent = "🎤 Falar Comando";
-            }, 2000);
-        }
-    };
-    
-    recognition.onnomatch = function() {
-        console.log("Evento onnomatch disparado - nenhuma correspondência encontrada");
-    };
-    
-    recognition.onaudiostart = function() {
-        console.log("Evento onaudiostart disparado - captura de áudio iniciada");
-    };
-    
-    recognition.onaudioend = function() {
-        console.log("Evento onaudioend disparado - captura de áudio finalizada");
-    };
-    
-    recognition.onsoundstart = function() {
-        console.log("Evento onsoundstart disparado - som detectado");
-    };
-    
-    recognition.onsoundend = function() {
-        console.log("Evento onsoundend disparado - som finalizado");
-    };
-    
-    recognition.onspeechstart = function() {
-        console.log("Evento onspeechstart disparado - fala detectada");
-    };
-    
-    recognition.onspeechend = function() {
-        console.log("Evento onspeechend disparado - fala finalizada");
-    };
-    
-    // Inicia o reconhecimento
-    try {
-        console.log("Chamando recognition.start()");
-        recognition.start();
-        console.log("recognition.start() chamado com sucesso");
-    } catch (e) {
-        console.error("Erro ao iniciar reconhecimento:", e);
-        voiceRecognitionActive = false;
-        if (voiceBtn) voiceBtn.textContent = "🎤 Falar Comando";
-    }
-}
-
-
-
-
-
-
-function processarComandoVoz(texto) {
-    console.log("Processando comando de voz:", texto);
-    
-    // Verifica se o menu de direções está aberto
-    const directionMenu = document.querySelector('.direction-menu');
-    if (directionMenu) {
-        console.log("Menu de direções detectado");
-        
-        // Se o menu de direções está aberto, procura pelo botão correspondente
-        if (texto.includes("norte")) {
-            const northBtn = Array.from(directionMenu.querySelectorAll('.direction-choice')).find(
-                btn => btn.textContent.toLowerCase().includes("north") || 
-                       btn.textContent.toLowerCase().includes("norte")
-            );
-            if (northBtn) {
-                console.log("Clicando no botão Norte:", northBtn);
-                setTimeout(() => northBtn.click(), 100);
-                return;
-            }
-        }
-        if (texto.includes("sul")) {
-            const southBtn = Array.from(directionMenu.querySelectorAll('.direction-choice')).find(
-                btn => btn.textContent.toLowerCase().includes("south") || 
-                       btn.textContent.toLowerCase().includes("sul")
-            );
-            if (southBtn) {
-                console.log("Clicando no botão Sul:", southBtn);
-                setTimeout(() => southBtn.click(), 100);
-                return;
-            }
-        }
-        if (texto.includes("leste")) {
-            const eastBtn = Array.from(directionMenu.querySelectorAll('.direction-choice')).find(
-                btn => btn.textContent.toLowerCase().includes("east") || 
-                       btn.textContent.toLowerCase().includes("leste")
-            );
-            if (eastBtn) {
-                console.log("Clicando no botão Leste:", eastBtn);
-                setTimeout(() => eastBtn.click(), 100);
-                return;
-            }
-        }
-        if (texto.includes("oeste")) {
-            const westBtn = Array.from(directionMenu.querySelectorAll('.direction-choice')).find(
-                btn => btn.textContent.toLowerCase().includes("west") || 
-                       btn.textContent.toLowerCase().includes("oeste")
-            );
-            if (westBtn) {
-                console.log("Clicando no botão Oeste:", westBtn);
-                setTimeout(() => westBtn.click(), 100);
-                return;
-            }
-        }
-        
-        if (texto.includes("cancelar") || texto.includes("fechar") || texto.includes("voltar")) {
-            const cancelBtn = directionMenu.querySelector('.cancel');
-            if (cancelBtn) {
-                setTimeout(() => cancelBtn.click(), 100);
-                return;
-            }
-        }
-        
-        // Se chegou aqui, não encontrou um comando válido para o menu de direções
-        addLogMessage("Comando não reconhecido para escolha de direção.", 1000, 0);
-        return;
-    }
-
-    // Comandos de direção
-    if (texto.includes("norte")) {
-        const btn = document.getElementById("go-north");
-        if (btn && !btn.disabled) btn.click();
-        return;
-    }
-    if (texto.includes("sul")) {
-        const btn = document.getElementById("go-south");
-        if (btn && !btn.disabled) btn.click();
-        return;
-    }
-    if (texto.includes("leste")) {
-        const btn = document.getElementById("go-east");
-        if (btn && !btn.disabled) btn.click();
-        return;
-    }
-    if (texto.includes("oeste")) {
-        const btn = document.getElementById("go-west");
-        if (btn && !btn.disabled) btn.click();
-        return;
-    }
-    
-    // Comando para cancelar (fecha menus abertos)
-    if (texto.includes("cancelar") || texto.includes("fechar") || texto.includes("voltar")) {
-        const cancelBtn = document.querySelector('.direction-choice.cancel');
-        if (cancelBtn) {
-            cancelBtn.click();
-            return;
-        }
-    }
-    
-    // Comandos existentes
-    if (texto.includes("buscar") || texto.includes("procurar")) {
-        const btn = document.getElementById("search-room");
-        if (btn) btn.click();
-        return;
-    }
-    if (texto.includes("examinar")) {
-        const btn = document.getElementById("examine-room");
-        if (btn) btn.click();
-        return;
-    }
-    if (texto.includes("descansar")) {
-        const btn = document.getElementById("rest");
-        if (btn) btn.click();
-        return;
-    }
-    if (texto.includes("porta") || texto.includes("abrir")) {
-        const btn = document.getElementById("open-door");
-        if (btn) btn.click();
-        return;
-    }
-
-    if (texto.includes("coluna") || texto.includes("fogo") || texto.includes("colunas")) {
-        const poiElement = document.querySelector('[data-poi-id="fire-columns"]');
-        if (poiElement) {
-            poiElement.click();
-            return;
-        }
-    }
-
-    if (texto.includes("forja") || texto.includes("antiga")) {
-        const poiElement = document.querySelector('[data-poi-id="forge"]');
-        if (poiElement) {
-            poiElement.click();
-            return;
-        }
-    }
-
-    if (texto.includes("resolver") || texto.includes("enigma") || texto.includes("puzzle")) {
-        const buttons = Array.from(document.querySelectorAll('button'));
-        const solveButton = buttons.find(btn =>
-            btn.textContent.includes("Resolver o Enigma do Fogo") ||
-            btn.textContent.includes("enigma") ||
-            btn.textContent.includes("Resolver")
-        );
-        if (solveButton) {
-            solveButton.click();
-            return;
-        }
-    }
-
-    if (texto.includes("rolar") || texto.includes("dado") || texto.includes("d20") ||
-        texto.includes("jogar") || texto.includes("lançar")) {
-        const buttons = Array.from(document.querySelectorAll('button'));
-        const rollButton = buttons.find(btn =>
-            btn.textContent.includes("Rolar") ||
-            btn.textContent.includes("D20") ||
-            btn.textContent.includes("dado") ||
-            btn.classList.contains('roll-button')
-        );
-        if (rollButton) {
-            rollButton.click();
-            return;
-        }
-    }
-
-    if (texto.includes("recolher") || texto.includes("coletar") || texto.includes("pegar") ||
-        texto.includes("item") || texto.includes("cristal")) {
-        const buttons = Array.from(document.querySelectorAll('button'));
-        const collectButton = buttons.find(btn =>
-            btn.textContent.includes("Recolher") ||
-            btn.textContent.includes("Coletar") ||
-            btn.classList.contains('collect-button')
-        );
-        if (collectButton) {
-            collectButton.click();
-            return;
-        }
-    }
-
-    addLogMessage("Comando de voz não reconhecido: " + texto, 1000, 0);
-
-    // Reforça visibilidade do botão de coleta no final da função
-    const collectBtn = document.getElementById('collect-item-button');
-    if (collectBtn) {
-        collectBtn.style.display = 'inline-block';
-        collectBtn.style.visibility = 'visible';
-    }
-}
-
-
 
 
 // Função para atualizar a barra de energia do jogador
@@ -1583,7 +1234,8 @@ function createInteractionButtonsFromPOI(interactions, room) {
 
 
 
-// Modifique a função createCollectButton para não remover o botão quando o botão de voz é clicado
+// Função para criar o botão de recolher item
+// Função para criar o botão de recolher item
 function createCollectButton(item) {
     // Remove qualquer botão existente primeiro
     removeCollectButton();
@@ -1648,8 +1300,7 @@ function createCollectButton(item) {
     }
 
     // Adiciona eventos para remover o botão quando outros botões são clicados
-    // EXCETO o botão de falar comando
-    const allButtons = document.querySelectorAll('.direction-btn, .action-btn:not(.collect-btn):not(#voice-command-btn)');
+    const allButtons = document.querySelectorAll('.direction-btn, .action-btn:not(.collect-btn)');
     allButtons.forEach(button => {
         button.addEventListener('click', removeCollectButton);
     });
@@ -3516,7 +3167,6 @@ async function loadAndStartDungeon(dungeonId = null) {
                 <button id="go-south" class="direction-btn">Sul</button>
             </div>
             <div id="action-buttons">
-                <button id="voice-command-btn" class="action-btn" style="margin-bottom: 8px;">🎤 Falar Comando</button>
                 <button id="examine-room" class="action-btn">Examinar Sala</button>
                 <button id="open-door" class="action-btn">Abrir Porta</button>
                 <button id="search-room" class="action-btn">Procurar</button>
@@ -3658,23 +3308,14 @@ console.log("Behaviors associados a todas as salas:", dungeon.rooms);
     // Atualiza a barra de energia
     updateHealthBar();
 
-   // Inicia a exploração
-startNewLogBlock("Bem-vindo");
-await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
-await addLogMessage(dungeon.description, 1000);
+    // Inicia a exploração
+    startNewLogBlock("Bem-vindo");
+    await addLogMessage(`Bem-vindo às ${dungeon.name}!`, 500);
+    await addLogMessage(dungeon.description, 1000);
 
-// Move para a sala inicial
-moveToRoom(playerState.currentRoom);
-
-// Reatribua o evento de voz após reconstruir a tela
-const voiceBtn = document.getElementById("voice-command-btn");
-if (voiceBtn) {
-    voiceBtn.onclick = iniciarReconhecimentoVoz;
-    console.log("LOG: Botão de reconhecimento de voz pronto.");
+    // Move para a sala inicial
+    moveToRoom(playerState.currentRoom);
 }
-}
-    
-
 
 // Inicialização quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', async () => {
