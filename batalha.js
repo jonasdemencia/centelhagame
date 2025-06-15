@@ -9,6 +9,14 @@ import { getMonsterById } from './monstros.js';
 
 console.log("LOG: batalha.js carregado.");
 
+// Falhas críticas (rolar 1 no d20 ao atacar)
+const falhasCriticas = [
+  { mensagem: "Você escorrega e cai de bunda no chão. Que vergonha! Você perde o turno atual.", efeito: "perdeTurno" },
+  { mensagem: "Você se machuca de leve com seu próprio ataque (sofre 1d4 de dano).", efeito: "autoDano" },
+  { mensagem: "Você tenta ser mais expressivo no ataque do que realmente é. O monstro zomba de você. Nada acontece, só humilhação.", efeito: "nada" }
+];
+
+
 // Configuração do Firebase (substitua com suas próprias configurações)
 const firebaseConfig = {
     apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
@@ -1230,6 +1238,29 @@ if (playerHealth <= 0) {
         const monsterDefense = currentMonster.couraça || 0;
 
         await addLogMessage(`Rolando ataque: ${playerAttackRollRaw} em um d20 + ${playerAbilityValue} (Hab) = ${playerAttackRollTotal} vs Couraça ${monsterDefense}`, 1000);
+
+        // --- Falha crítica: 1 natural no d20 ---
+if (playerAttackRollRaw === 1) {
+    // Sorteia uma falha crítica
+    const sorteio = falhasCriticas[Math.floor(Math.random() * falhasCriticas.length)];
+    await addLogMessage(`😱 Falha Crítica! ${sorteio.mensagem}`, 1200);
+
+    if (sorteio.efeito === "autoDano") {
+        const autoDano = rollDice("1D4");
+        playerHealth -= autoDano;
+        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+        await addLogMessage(`Você sofre ${autoDano} de dano!`, 800);
+    }
+    // Não faz nada no caso "nada" ou "perdeTurno" (ambos só perdem o turno)
+    // Passa imediatamente o turno para o monstro
+    if (typeof endPlayerTurn === 'function') {
+        endPlayerTurn();
+    } else {
+        isPlayerTurn = false;
+        setTimeout(() => monsterAttack(), 1500);
+    }
+    return; // NÃO CONTINUA O FLUXO NORMAL
+}
 
         // *** LÓGICA SIFER (NATURAL 20) ***
         if (playerAttackRollRaw === 20) {
