@@ -1,119 +1,129 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Batalha - CentelhaGame</title>
-    <link rel="stylesheet" href="style.css">
-    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batalha - CentelhaGame</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
 </head>
 <body>
-    <header>
-        <h1>Batalha</h1>
-    </header>
+    <header>
+        <h1>Batalha</h1>
+    </header>
 
-    <main>
+    <main>
 
-        <!-- ✅ BARRAS DE HP -->
-<section id="barras-hp" style="margin-bottom: 20px;">
-    <div>
-        <strong>Jogador</strong>
-        <div class="barra-hp-container">
-            <div id="barra-hp-jogador" class="barra-hp"></div>
-            <span id="hp-jogador-valor" class="hp-valor">0/0</span>
-        </div>
-    </div>
-    <div>
-        <strong>Monstro</strong>
-        <div class="barra-hp-container">
-            <div id="barra-hp-monstro" class="barra-hp"></div>
-            <span id="hp-monstro-valor" class="hp-valor">0/0</span>
-        </div>
-    </div>
-</section>
-<!-- FIM DAS BARRAS DE HP -->
+        <!-- ✅ BARRAS DE HP -->
+        <section id="barras-hp" style="margin-bottom: 20px;">
+            <div>
+                <strong>Jogador</strong>
+                <div class="barra-hp-container">
+                    <div id="barra-hp-jogador" class="barra-hp"></div>
+                    <span id="hp-jogador-valor" class="hp-valor">0/0</span>
+                </div>
+            </div>
+            <div>
+                <strong>Monstro</strong>
+                <div class="barra-hp-container">
+                    <div id="barra-hp-monstro" class="barra-hp"></div>
+                    <span id="hp-monstro-valor" class="hp-valor">0/0</span>
+                </div>
+            </div>
+        </section>
+        <!-- FIM DAS BARRAS DE HP -->
 
-        <section id="monster-area">
-            <img id="monster-image" src="https://via.placeholder.com/150" alt="Imagem do Monstro">
-            <h2 id="monster-name">Nome do Monstro</h2>
-            <p id="monster-description">Descrição do Monstro aparecerá aqui.</p>
-        </section>
+        <section id="monster-area">
+            <img id="monster-image" src="https://via.placeholder.com/150" alt="Imagem do Monstro">
+            <h2 id="monster-name">Nome do Monstro</h2>
+            <p id="monster-description">Descrição do Monstro aparecerá aqui.</p>
+        </section>
 
-        <section id="player-info">
-            <div id="player-health"></div>
-        </section>
+        <section id="player-info">
+            <div id="player-health"></div>
+        </section>
 
-        <section id="player-actions">
-            <button id="abrir-inventario" disabled>Inventário</button>
-            <button id="iniciar-luta">Lutar</button>
-            <button id="correr-batalha" style="display:none;">Correr</button>
-            <div id="attack-options" style="display:none;">
-                <button id="atacar-corpo-a-corpo">Atacar</button>
-                <button id="atacar-a-distancia">Magia</button>
+        <section id="player-actions">
+            <button id="abrir-inventario" disabled>Inventário</button>
+            <button id="iniciar-luta">Lutar</button>
+            <button id="correr-batalha" style="display:none;">Correr</button>
+            <div id="attack-options" style="display:none;">
+                <button id="atacar-corpo-a-corpo">Atacar</button>
+                <button id="habilidade-classe" class="button">Habilidade</button>
+                <button id="atacar-a-distancia">Magia</button>
                 <button id="rolar-localizacao" class="button" style="display: none;">Rolar Localização SIFER</button>
-            </div>
-            <button id="rolar-iniciativa" style="display:none;">Rolar Iniciativa</button>
-            <button id="atacar-monstro" style="display:none;">Rolar Ataque</button>
-            <button id="rolar-dano" style="display:none;">DANO</button>
-            <button id="loot-button" style="display: none;">Coletar Recompensas</button>
-        </section>
+            </div>
+            <button id="rolar-iniciativa" style="display:none;">Rolar Iniciativa</button>
+            <button id="atacar-monstro" style="display:none;">Rolar Ataque</button>
+            <button id="rolar-dano" style="display:none;">DANO</button>
+            <button id="loot-button" style="display: none;">Coletar Recompensas</button>
+        </section>
+
+        <!-- Painel de habilidades (inicialmente oculto) -->
+        <div id="painel-habilidades" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7);">
+            <div style="background:white; margin:10vh auto; padding:30px; max-width:350px; border-radius:12px; box-shadow:0 4px 32px #222;">
+                <h3>Habilidades do Jogador</h3>
+                <div id="lista-habilidades"></div>
+                <button id="fechar-painel-habilidades" style="margin-top:15px;">Fechar</button>
+            </div>
+        </div>
 
         <!-- Seção de Dados -->
-<section id="dice-section">
-    <div id="table-top">
-        <!-- Área onde o dado selecionado será exibido -->
-    </div>
-    <div id="controls">
-        <!-- Ícones dos dados com botões +/- -->
-        <dice-icon sides="20"></dice-icon>
-        <dice-icon sides="12"></dice-icon>
-        <dice-icon sides="10"></dice-icon>
-        <dice-icon sides="8"></dice-icon>
-        <dice-icon sides="6"></dice-icon>
-        <dice-icon sides="4"></dice-icon>
-    </div>
-</section>
+        <section id="dice-section">
+            <div id="table-top">
+                <!-- Área onde o dado selecionado será exibido -->
+            </div>
+            <div id="controls">
+                <!-- Ícones dos dados com botões +/- -->
+                <dice-icon sides="20"></dice-icon>
+                <dice-icon sides="12"></dice-icon>
+                <dice-icon sides="10"></dice-icon>
+                <dice-icon sides="8"></dice-icon>
+                <dice-icon sides="6"></dice-icon>
+                <dice-icon sides="4"></dice-icon>
+            </div>
+        </section>
 
         <!-- Adicione os SVGs logo após o <main> e antes do <footer> -->
-<svg style="display: none;">
-    <defs>
-        <!-- Dados -->
-        <g id="d20-icon">            
-            <polygon fill="#2f74d2" points="10.39 9 10.39 3 5.2 0 0 3 0 9 5.2 12 10.39 9" />
-        </g>
-        <g id="d12-icon">
-            <polygon fill="#da312e" points="11.41 7.85 11.41 4.15 9.23 1.15 5.71 0 2.18 1.15 0 4.15 0 7.85 2.18 10.85 5.71 12 9.23 10.85 11.41 7.85" />
-        </g>
-        <g id="d10-icon">
-            <rect fill="#e97a26" x="1.76" y="1.76" width="8.49" height="8.49" transform="translate(-2.49 6) rotate(-45)" />
-        </g>
-        <g id="d8-icon">
-            <polygon fill="#604896" points="10.39 9 10.39 3 5.2 0 0 3 0 9 5.2 12 10.39 9" />
-        </g>
-        <g id="d6-icon">
-            <polygon fill="#3f9554" points="10.39 9 10.39 3 5.2 0 0 3 0 9 5.2 12 10.39 9" />
-        </g>
-        <g id="d4-icon">
-            <polygon fill="#cd3624" points="6 0 0 10.39 12 10.39 6 0" />
-        </g>
-    </defs>
-</svg>
+        <svg style="display: none;">
+            <defs>
+                <!-- Dados -->
+                <g id="d20-icon">            
+                    <polygon fill="#2f74d2" points="10.39 9 10.39 3 5.2 0 0 3 0 9 5.2 12 10.39 9" />
+                </g>
+                <g id="d12-icon">
+                    <polygon fill="#da312e" points="11.41 7.85 11.41 4.15 9.23 1.15 5.71 0 2.18 1.15 0 4.15 0 7.85 2.18 10.85 5.71 12 9.23 10.85 11.41 7.85" />
+                </g>
+                <g id="d10-icon">
+                    <rect fill="#e97a26" x="1.76" y="1.76" width="8.49" height="8.49" transform="translate(-2.49 6) rotate(-45)" />
+                </g>
+                <g id="d8-icon">
+                    <polygon fill="#604896" points="10.39 9 10.39 3 5.2 0 0 3 0 9 5.2 12 10.39 9" />
+                </g>
+                <g id="d6-icon">
+                    <polygon fill="#3f9554" points="10.39 9 10.39 3 5.2 0 0 3 0 9 5.2 12 10.39 9" />
+                </g>
+                <g id="d4-icon">
+                    <polygon fill="#cd3624" points="6 0 0 10.39 12 10.39 6 0" />
+                </g>
+            </defs>
+        </svg>
 
         <button id="toggle-dice-ui" aria-label="Toggle Dice UI">▼</button>
 
-        <section id="battle-log">
-            <h2>Registro de Batalha</h2>
-            <div id="battle-log-content">
-            </div>
-        </section>
-    </main>
+        <section id="battle-log">
+            <h2>Registro de Batalha</h2>
+            <div id="battle-log-content">
+            </div>
+        </section>
+    </main>
 
-    <footer>
-        <p>&copy; 2025 CentelhaGame</p>
-    </footer>
-    <script type="module" src="dice-ui.js"></script>     <!-- Adicione aqui -->
-    <script type="module" src="batalha.js"></script>
+    <footer>
+        <p>&copy; 2025 CentelhaGame</p>
+    </footer>
+    <script type="module" src="dice-ui.js"></script>
+    <script type="module" src="batalha.js"></script>
 </body>
 </html>
