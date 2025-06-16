@@ -442,13 +442,13 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: Variáveis iniciais declaradas.");
 
 
-  // --- INÍCIO DO BLOCO DE HABILIDADES ---
-const habilidadeClasseButton = document.getElementById("habilidade-classe");
-const painelHabilidades = document.getElementById("painel-habilidades");
-const listaHabilidades = document.getElementById("lista-habilidades");
-const fecharPainelHabilidades = document.getElementById("fechar-painel-habilidades");
+  // --- INÍCIO DO BLOCO DE ATOS ---
+const atoClasseButton = document.getElementById("ato-classe");
+const painelAtos = document.getElementById("painel-ato");
+const listaAtos = document.getElementById("lista-atos");
+const fecharPainelAtos = document.getElementById("fechar-painel-atos");
 
-let habilidadesDoJogador = [
+let atosDoJogador = [
     {
         id: "olhar-inventario",
         nome: "Olhar de Inventário",
@@ -461,35 +461,35 @@ let habilidadesDoJogador = [
     }
 ];
 
-if (habilidadeClasseButton) {
-    habilidadeClasseButton.addEventListener("click", () => {
-        listaHabilidades.innerHTML = "";
-        habilidadesDoJogador.forEach(hab => {
+if (atoClasseButton) {
+    atoClasseButton.addEventListener("click", () => {
+        listaAtos.innerHTML = "";
+        atosDoJogador.forEach(hab => {
             const div = document.createElement("div");
-            div.className = "habilidade-item";
+            div.className = "ato-item";
             div.style.marginBottom = "16px";
             div.innerHTML = `<strong>${hab.nome}</strong><br><span style="font-size:0.95em">${hab.descricao}</span><br>`;
             const btn = document.createElement("button");
             btn.textContent = "Usar";
             btn.onclick = async () => {
                 await addLogMessage(`Você usou <strong>${hab.nome}</strong>!`, 600);
-                painelHabilidades.style.display = "none";
-                // Aqui você chama o efeito da habilidade (implementar depois)
+                painelAtos.style.display = "none";
+                // Aqui você chama o efeito do ato (implementar depois)
                 endPlayerTurn();
             };
             div.appendChild(btn);
-            listaHabilidades.appendChild(div);
+            listaAtos.appendChild(div);
         });
-        painelHabilidades.style.display = "block";
+        painelAtos.style.display = "block";
     });
 }
 
-if (fecharPainelHabilidades) {
-    fecharPainelHabilidades.addEventListener("click", () => {
-        painelHabilidades.style.display = "none";
+if (fecharPainelAtos) {
+    fecharPainelAtos.addEventListener("click", () => {
+        painelAtos.style.display = "none";
     });
 }
-// --- FIM DO BLOCO DE HABILIDADES ---
+// --- FIM DO BLOCO DE ATOS ---
 
  
 
@@ -726,21 +726,21 @@ function endMonsterTurn() {
         attackOptionsDiv.style.display = 'block'; // Exibe as opções de ataque do jogador
 
         const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
-        const habilidadeClasseButton = document.getElementById("habilidade-classe");
+        const atoClasseButton = document.getElementById("ato-classe");
         if (atacarCorpoACorpoButton) {
             atacarCorpoACorpoButton.disabled = false;
             atacarCorpoACorpoButton.style.display = 'inline-block';
         }
-        if (habilidadeClasseButton) {
-            habilidadeClasseButton.disabled = false;
-            habilidadeClasseButton.style.display = 'inline-block';
+        if (atoClasseButton) {
+            atoClasseButton.disabled = false;
+            atoClasseButton.style.display = 'inline-block';
         }
 
         // Reseta o estado dos botões
         const buttons = attackOptionsDiv.querySelectorAll('.button');
         buttons.forEach(button => {
             button.disabled = false;
-            if (button.id === 'atacar-corpo-a-corpo' || button.id === 'habilidade-classe') {
+            if (button.id === 'atacar-corpo-a-corpo' || button.id === 'ato-classe') {
                 button.style.display = 'inline-block';
             } else {
                 button.style.display = 'none';
@@ -758,7 +758,7 @@ function endMonsterTurn() {
         const buttons = attackOptionsDiv.querySelectorAll('button');
         buttons.forEach(button => {
             button.disabled = false;
-            if (button.id === 'atacar-corpo-a-corpo' || button.id === 'habilidade-classe') {
+            if (button.id === 'atacar-corpo-a-corpo' || button.id === 'ato-classe') {
                 button.style.display = 'inline-block';
             } else {
                 button.style.display = 'none';
