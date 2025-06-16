@@ -444,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- INÍCIO DO BLOCO DE ATOS ---
 const atoClasseButton = document.getElementById("ato-classe");
-const painelAtos = document.getElementById("painel-ato");
+const painelAtos = document.getElementById("painel-atos");
 const listaAtos = document.getElementById("lista-atos");
 const fecharPainelAtos = document.getElementById("fechar-painel-atos");
 
@@ -464,17 +464,16 @@ let atosDoJogador = [
 if (atoClasseButton) {
     atoClasseButton.addEventListener("click", () => {
         listaAtos.innerHTML = "";
-        atosDoJogador.forEach(hab => {
+        atosDoJogador.forEach(ato => {
             const div = document.createElement("div");
             div.className = "ato-item";
             div.style.marginBottom = "16px";
-            div.innerHTML = `<strong>${hab.nome}</strong><br><span style="font-size:0.95em">${hab.descricao}</span><br>`;
+            div.innerHTML = `<strong>${ato.nome}</strong><br><span style="font-size:0.95em">${ato.descricao}</span><br>`;
             const btn = document.createElement("button");
             btn.textContent = "Usar";
             btn.onclick = async () => {
-                await addLogMessage(`Você usou <strong>${hab.nome}</strong>!`, 600);
+                await addLogMessage(`Você usou <strong>${ato.nome}</strong>!`, 600);
                 painelAtos.style.display = "none";
-                // Aqui você chama o efeito do ato (implementar depois)
                 endPlayerTurn();
             };
             div.appendChild(btn);
@@ -753,7 +752,8 @@ function endMonsterTurn() {
 }
   
 
-    function resetActionButtons() {
+    // Exemplo para resetActionButtons
+function resetActionButtons() {
     if (attackOptionsDiv) {
         const buttons = attackOptionsDiv.querySelectorAll('button');
         buttons.forEach(button => {
