@@ -753,7 +753,7 @@ async function monsterAttack() {
     await addLogMessage(`${currentMonster.nome} rolou ${monsterAttackRoll} em um D20 para atacar.`, 1000);
     console.log("LOG: monsterAttack - Rolagem de ataque do monstro:", monsterAttackRoll);
 
-    const playerDefense = playerData?.couraca ? parseInt(playerData.couraca) : 10;
+    const playerDefense = playerData?.couraca ? parseInt(playerData.couraca) : 0;
     await addLogMessage(`Sua Couraça é ${playerDefense}.`, 1000);
     console.log("LOG: monsterAttack - Defesa do jogador:", playerDefense);
 
