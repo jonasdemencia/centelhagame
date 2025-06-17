@@ -254,19 +254,21 @@ function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
     const playerAbility = sessionStorage.getItem('playerAbility');
     const monsterAbility = sessionStorage.getItem('monsterAbility');
     
+    // Usa a variável global window.isPlayerTurn em vez de isPlayerTurn
     return setDoc(battleDocRef, { 
         monsterHealth: monsterHealth, 
         playerHealth: playerHealth,
-        isPlayerTurn: isPlayerTurn, // Salva de quem é o turno atual
+        isPlayerTurn: window.isPlayerTurn, // Usa window.isPlayerTurn em vez de isPlayerTurn
         initiativeResult: initiativeResult || null,
         playerInitiativeRoll: playerInitiativeRoll || null,
         monsterInitiativeRoll: monsterInitiativeRoll || null,
         playerAbility: playerAbility || null,
         monsterAbility: monsterAbility || null,
-        battleStarted: window.battleStarted || false, // Se a batalha já começou
+        battleStarted: window.battleStarted || false,
         lastUpdated: new Date().toISOString()
     }, { merge: true });
 }
+
 
 // Função para limpar o estado da batalha quando ela termina
 function clearBattleState(userId, monsterName) {
