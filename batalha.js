@@ -5,7 +5,9 @@ import { getFirestore, doc, getDoc, setDoc, collection, deleteDoc } from "https:
 import { loadEquippedDice, initializeModule } from './dice-ui.js';
 import { getMonsterById } from './monstros.js';
 
-
+// Variáveis globais para estado da batalha
+window.isPlayerTurn = false;
+window.battleStarted = false;
 
 console.log("LOG: batalha.js carregado.");
 
@@ -223,6 +225,7 @@ function loadBattleState(userId, monsterName) {
                 
                 // Define as variáveis globais
                 window.isPlayerTurn = data.isPlayerTurn;
+                isPlayerTurn = data.isPlayerTurn; // Sincroniza a variável local
                 window.battleStarted = data.battleStarted || false;
                 
                 return data;
@@ -713,6 +716,8 @@ function endPlayerTurn() {
     }
 
     isPlayerTurn = false; // Marca que o turno do jogador acabou
+    window.isPlayerTurn = false; // Atualiza a variável global
+
 
     if (attackOptionsDiv) {
         attackOptionsDiv.style.display = 'none'; // Esconde as opções de ataque do jogador
@@ -811,6 +816,8 @@ function endMonsterTurn() {
     }
 
     isPlayerTurn = true; // Marca que é o turno do jogador
+    window.isPlayerTurn = true; // Atualiza a variável global
+
 
     if (attackOptionsDiv) {
         attackOptionsDiv.style.display = 'block'; // Exibe as opções de ataque do jogador
@@ -1114,6 +1121,8 @@ if (inventarioButton) {
                                         }
                                         initiativeWinner = 'player';
                                         isPlayerTurn = true;
+                                        window.isPlayerTurn = true;
+
                                         console.log("LOG: onAuthStateChanged - Jogador venceu a iniciativa! initiativeWinner =", initiativeWinner, "isPlayerTurn =", isPlayerTurn);
                                         sessionStorage.setItem('initiativeResult', initiativeWinner);
                                         console.log("LOG: onAuthStateChanged - initiativeResult salvo no Session Storage:", sessionStorage.getItem('initiativeResult'));
