@@ -815,9 +815,23 @@ function endMonsterTurn() {
         return;
     }
 
+    // Verifica se o jogador está inconsciente (energia entre 0 e -9)
+    if (playerHealth <= 0 && playerHealth > -10) {
+        console.log("LOG: Jogador inconsciente, o monstro continua atacando.");
+        startNewTurnBlock("Estado");
+        addLogMessage(`<p style="color: red; font-weight: bold;">Você está inconsciente e indefeso!</p>`, 1000);
+        addLogMessage(`O ${currentMonster.nome} continua atacando seu corpo inerte...`, 1000);
+        
+        // Não passa o turno para o jogador, inicia outro turno do monstro
+        setTimeout(() => {
+            monsterAttack();
+        }, 2000);
+        return;
+    }
+
+    // Se o jogador não estiver inconsciente, continua normalmente
     isPlayerTurn = true; // Marca que é o turno do jogador
     window.isPlayerTurn = true; // Atualiza a variável global
-
 
     if (attackOptionsDiv) {
         attackOptionsDiv.style.display = 'block'; // Exibe as opções de ataque do jogador
@@ -855,6 +869,7 @@ function endMonsterTurn() {
         saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
     }
 }
+
 
   
 
