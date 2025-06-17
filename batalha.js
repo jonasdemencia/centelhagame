@@ -1,7 +1,7 @@
 // Importa os SDKs necessários do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 import { loadEquippedDice, initializeModule } from './dice-ui.js';
 import { getMonsterById } from './monstros.js';
 
@@ -189,37 +189,115 @@ async function updatePlayerExperience(userId, xpToAdd) {
 }
 
 
-// Função para carregar o estado da batalha do Firestore (MOVIDA PARA O ESCOPO GLOBAL)
+// Função para carregar o estado da batalha do Firestore
 function loadBattleState(userId, monsterName) {
-    console.log("LOG: loadBattleState chamado com userId:", userId, "monsterName:", monsterName);
-    const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
-    return getDoc(battleDocRef)
-        .then(docSnap => {
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                console.log("LOG: Estado da batalha carregado do Firestore:", data);
-                return data;
-            } else {
-                console.log("LOG: Nenhum estado de batalha encontrado para este monstro.");
-                return null;
-            }
-        })
-        .catch((error) => {
-            console.error("LOG: Erro ao carregar o estado da batalha:", error);
-            return null;
-        });
+    console.log("LOG: loadBattleState chamado com userId:", userId, "monsterName:", monsterName);
+    if (!userId || !monsterName) {
+        console.error("LOG: loadBattleState - Parâmetros inválidos");
+        return Promise.resolve(null);
+    }
+    
+    const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
+    return getDoc(battleDocRef)
+        .then(docSnap => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                console.log("LOG: Estado da batalha carregado do Firestore:", data);
+                
+                // Restaura o estado da iniciativa no sessionStorage
+                if (data.initiativeResult) {
+                    sessionStorage.setItem('initiativeResult', data.initiativeResult);
+                }
+                if (data.playerInitiativeRoll) {
+                    sessionStorage.setItem('playerInitiativeRoll', data.playerInitiativeRoll);
+                }
+                if (data.monsterInitiativeRoll) {
+                    sessionStorage.setItem('monsterInitiativeRoll', data.monsterInitiativeRoll);
+                }
+                if (data.playerAbility) {
+                    sessionStorage.setItem('playerAbility', data.playerAbility);
+                }
+                if (data.monsterAbility) {
+                    sessionStorage.setItem('monsterAbility', data.monsterAbility);
+                }
+                
+                // Define as variáveis globais
+                window.isPlayerTurn = data.isPlayerTurn;
+                window.battleStarted = data.battleStarted || false;
+                
+                return data;
+            } else {
+                console.log("LOG: Nenhum estado de batalha encontrado para este monstro.");
+                return null;
+            }
+        })
+        .catch((error) => {
+            console.error("LOG: Erro ao carregar o estado da batalha:", error);
+            return null;
+        });
 }
 
 // Função para salvar o estado da batalha no Firestore
 function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
     console.log("LOG: saveBattleState chamado com:", {userId, monsterName, monsterHealth, playerHealth});
+    if (!userId || !monsterName) {
+        console.error("LOG: saveBattleState - Parâmetros inválidos");
+        return Promise.resolve();
+    }
+    
     const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
+    
+    // Obtém o estado atual da iniciativa do sessionStorage
+    const initiativeResult = sessionStorage.getItem('initiativeResult');
+    const playerInitiativeRoll = sessionStorage.getItem('playerInitiativeRoll');
+    const monsterInitiativeRoll = sessionStorage.getItem('monsterInitiativeRoll');
+    const playerAbility = sessionStorage.getItem('playerAbility');
+    const monsterAbility = sessionStorage.getItem('monsterAbility');
+    
     return setDoc(battleDocRef, { 
         monsterHealth: monsterHealth, 
         playerHealth: playerHealth,
-        lastUpdated: new Date().toISOString() // Adiciona timestamp
+        isPlayerTurn: isPlayerTurn, // Salva de quem é o turno atual
+        initiativeResult: initiativeResult || null,
+        playerInitiativeRoll: playerInitiativeRoll || null,
+        monsterInitiativeRoll: monsterInitiativeRoll || null,
+        playerAbility: playerAbility || null,
+        monsterAbility: monsterAbility || null,
+        battleStarted: window.battleStarted || false, // Se a batalha já começou
+        lastUpdated: new Date().toISOString()
     }, { merge: true });
 }
+
+// Função para limpar o estado da batalha quando ela termina
+function clearBattleState(userId, monsterName) {
+    console.log("LOG: clearBattleState chamado com userId:", userId, "monsterName:", monsterName);
+    if (!userId || !monsterName) {
+        console.error("LOG: clearBattleState - Parâmetros inválidos");
+        return Promise.resolve(false);
+    }
+    
+    const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
+    
+    return deleteDoc(battleDocRef)
+        .then(() => {
+            console.log("LOG: Estado da batalha removido com sucesso.");
+            
+            // Limpa também o sessionStorage
+            sessionStorage.removeItem('initiativeResult');
+            sessionStorage.removeItem('playerInitiativeRoll');
+            sessionStorage.removeItem('monsterInitiativeRoll');
+            sessionStorage.removeItem('playerAbility');
+            sessionStorage.removeItem('monsterAbility');
+            sessionStorage.removeItem('luteButtonClicked');
+            
+            return true;
+        })
+        .catch(error => {
+            console.error("LOG: Erro ao limpar o estado da batalha:", error);
+            return false;
+        });
+}
+
 
 // Função para marcar um monstro como derrotado no Firestore
 async function markMonsterAsDefeated(userId, monsterId) {
@@ -405,6 +483,17 @@ function handlePostBattle(monster) {
         });
     } else {
         console.error("Erro: Botão de loot não encontrado no HTML.");
+    }
+
+    // Limpa o estado da batalha quando o monstro é derrotado
+    if (user && monster) {
+        const monsterName = getUrlParameter('monstro') || monster.id;
+        clearBattleState(user.uid, monsterName)
+            .then(success => {
+                if (success) {
+                    console.log("LOG: Estado da batalha limpo após vitória.");
+                }
+            });
     }
 
     window.battleStarted = false; // Reset do estado da batalha usando window para garantir escopo global
