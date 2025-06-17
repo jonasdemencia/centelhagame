@@ -210,19 +210,16 @@ function loadBattleState(userId, monsterName) {
         });
 }
 
-function saveBattleState(userId, monsterName, monsterHealth, playerHealth, turnoAtual = null, etapaAtual = null) {
-    console.log("LOG: saveBattleState chamado com:", {userId, monsterName, monsterHealth, playerHealth, turnoAtual, etapaAtual});
+// Função para salvar o estado da batalha no Firestore
+function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
+    console.log("LOG: saveBattleState chamado com:", {userId, monsterName, monsterHealth, playerHealth});
     const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
-    const payload = {
-        monsterHealth: monsterHealth,
+    return setDoc(battleDocRef, { 
+        monsterHealth: monsterHealth, 
         playerHealth: playerHealth,
-        lastUpdated: new Date().toISOString()
-    };
-    if (turnoAtual) payload.turnoAtual = turnoAtual;
-    if (etapaAtual) payload.etapaAtual = etapaAtual;
-    return setDoc(battleDocRef, payload, { merge: true });
+        lastUpdated: new Date().toISOString() // Adiciona timestamp
+    }, { merge: true });
 }
-
 
 // Função para marcar um monstro como derrotado no Firestore
 async function markMonsterAsDefeated(userId, monsterId) {
@@ -637,11 +634,6 @@ function endPlayerTurn() {
         }
     }
 
-  const user = auth.currentUser;
-if (user) {
-    saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth, "monster", "aguardandoAtaque");
-}
-
     setTimeout(() => {
         console.log("LOG: Chamando monsterAttack após fim do turno do jogador.");
         monsterAttack();
@@ -754,11 +746,6 @@ function endMonsterTurn() {
             }
         });
     }
-
-  const user = auth.currentUser;
-if (user) {
-    saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth, "player", "aguardandoAtaque");
-}
 
     startNewTurnBlock("Jogador");
     addLogMessage(`Turno do Jogador`, 1000);
@@ -903,32 +890,21 @@ function resetActionButtons() {
             const monsterName = getUrlParameter('monstro');
 
             // Carregar o estado da batalha ao carregar a página
-if (currentMonster) {
-    loadBattleState(userId, monsterName)
-        .then(savedState => {
-            if (savedState) {
-                currentMonster.pontosDeEnergia = savedState.monsterHealth;
-                playerHealth = savedState.playerHealth;
-
-                // RESTAURAR TURNO E ETAPA!
-                if (savedState.turnoAtual) {
-                    isPlayerTurn = savedState.turnoAtual === "player";
-                    console.log("LOG: Turno restaurado do Firestore:", savedState.turnoAtual);
-                }
-                if (savedState.etapaAtual) {
-                    console.log("LOG: Etapa restaurada do Firestore:", savedState.etapaAtual);
-                    // Aqui você pode adicionar código para ajustar interface depois!
-                }
-
-                console.log("LOG: onAuthStateChanged - Estado da batalha carregado do Firestore:", savedState);
-                console.log("LOG: onAuthStateChanged - Pontos de Energia do monstro carregados:", currentMonster.pontosDeEnergia);
-                console.log("LOG: onAuthStateChanged - Energia do jogador carregada (do estado da batalha):", playerHealth); // Atualiza a mensagem para "energia"
-                // Atualizar a interface com a energia do jogador (se houver um elemento para isso)
-                const playerHealthDisplay = document.getElementById("player-health");
-                if (playerHealthDisplay) {
-                    playerHealthDisplay.innerText = playerHealth;
-                    console.log("LOG: onAuthStateChanged - Energia do jogador exibida na interface.");
-                }
+            if (currentMonster) {
+                loadBattleState(userId, monsterName)
+                    .then(savedState => {
+                        if (savedState) {
+                            currentMonster.pontosDeEnergia = savedState.monsterHealth;
+                            playerHealth = savedState.playerHealth;
+                            console.log("LOG: onAuthStateChanged - Estado da batalha carregado do Firestore:", savedState);
+                            console.log("LOG: onAuthStateChanged - Pontos de Energia do monstro carregados:", currentMonster.pontosDeEnergia);
+                            console.log("LOG: onAuthStateChanged - Energia do jogador carregada (do estado da batalha):", playerHealth); // Atualiza a mensagem para "energia"
+                            // Atualizar a interface com a energia do jogador (se houver um elemento para isso)
+                            const playerHealthDisplay = document.getElementById("player-health");
+                            if (playerHealthDisplay) {
+                                playerHealthDisplay.innerText = playerHealth;
+                                console.log("LOG: onAuthStateChanged - Energia do jogador exibida na interface.");
+                            }
                             // Se a vida do monstro for <= 0 ou a vida do jogador for <= 0, a batalha acabou
                             if (currentMonster.pontosDeEnergia <= 0) {
                                 addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1500);
@@ -1359,14 +1335,6 @@ if (playerAttackRollRaw === 1) {
 
                 // Apenas inicia/limpa o contexto SIFER para indicar o fluxo crítico
 window.siferContext = {};
-
-              // ADICIONE AQUI:
-        const user = auth.currentUser;
-        if (user) {
-            saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth, "player", "aguardandoLocalizacaoSIFER");
-        }
-    }
-          
 console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.");
 
             } else {
@@ -1445,3 +1413,4 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
 });
 
 console.log("LOG: Fim do script batalha.js");
+
