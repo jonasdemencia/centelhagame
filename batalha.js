@@ -875,25 +875,6 @@ function resetActionButtons() {
     });
 }
 
-    function endPlayerTurn() {
-    console.log("LOG: Finalizando turno do jogador e iniciando turno do monstro.");
-    if (!isPlayerTurn) {
-        console.error("LOG: endPlayerTurn chamado fora do turno do jogador. Abortando.");
-        return;
-    }
-
-    isPlayerTurn = false; // Marca que o turno do jogador acabou
-
-    if (attackOptionsDiv) {
-        attackOptionsDiv.style.display = 'none'; // Esconde as opções de ataque do jogador
-    }
-
-    setTimeout(() => {
-        console.log("LOG: Chamando monsterAttack após fim do turno do jogador.");
-        monsterAttack();
-    }, 1500); // Delay para iniciar o turno do monstro
-}
-
     
     // Verifica o estado da batalha no Session Storage
     const initiativeResult = sessionStorage.getItem('initiativeResult');
