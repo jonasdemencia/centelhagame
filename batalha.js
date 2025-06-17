@@ -847,7 +847,15 @@ function endMonsterTurn() {
 
     startNewTurnBlock("Jogador");
     addLogMessage(`Turno do Jogador`, 1000);
+    
+    // Salva o estado após mudar o turno para o jogador
+    const user = auth.currentUser;
+    const monsterName = getUrlParameter('monstro');
+    if (user && monsterName) {
+        saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+    }
 }
+
   
 
     // Exemplo para resetActionButtons
