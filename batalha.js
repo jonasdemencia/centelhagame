@@ -211,20 +211,15 @@ function loadBattleState(userId, monsterName) {
 }
 
 // Função para salvar o estado da batalha no Firestore
-function saveBattleState(userId, monsterName, monsterHealth, playerHealth, turnoAtual = null, etapaAtual = null) {
-    console.log("LOG: saveBattleState chamado com:", {userId, monsterName, monsterHealth, playerHealth, turnoAtual, etapaAtual});
+function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
+    console.log("LOG: saveBattleState chamado com:", {userId, monsterName, monsterHealth, playerHealth});
     const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
-    const payload = {
-        monsterHealth: monsterHealth,
+    return setDoc(battleDocRef, { 
+        monsterHealth: monsterHealth, 
         playerHealth: playerHealth,
         lastUpdated: new Date().toISOString() // Adiciona timestamp
-    };
-    if (turnoAtual) payload.turnoAtual = turnoAtual;
-    if (etapaAtual) payload.etapaAtual = etapaAtual;
-
-    return setDoc(battleDocRef, payload, { merge: true });
+    }, { merge: true });
 }
-
 
 // Função para marcar um monstro como derrotado no Firestore
 async function markMonsterAsDefeated(userId, monsterId) {
@@ -752,13 +747,6 @@ function endMonsterTurn() {
         });
     }
 
-
-// ADICIONE ISTO ANTES DE TERMINAR A FUNÇÃO:
-    const user = auth.currentUser;
-    if (user) {
-        saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth, "player", "aguardandoAtaque");
-    }
-  
     startNewTurnBlock("Jogador");
     addLogMessage(`Turno do Jogador`, 1000);
 }
@@ -801,14 +789,6 @@ function resetActionButtons() {
     if (attackOptionsDiv) {
         attackOptionsDiv.style.display = 'none'; // Esconde as opções de ataque do jogador
     }
-
-
-// ADICIONE ISTO AQUI:
-    const user = auth.currentUser;
-    if (user) {
-        saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth, "monster", "aguardandoAtaque");
-    }
-      
 
     setTimeout(() => {
         console.log("LOG: Chamando monsterAttack após fim do turno do jogador.");
@@ -919,54 +899,6 @@ function resetActionButtons() {
                             console.log("LOG: onAuthStateChanged - Estado da batalha carregado do Firestore:", savedState);
                             console.log("LOG: onAuthStateChanged - Pontos de Energia do monstro carregados:", currentMonster.pontosDeEnergia);
                             console.log("LOG: onAuthStateChanged - Energia do jogador carregada (do estado da batalha):", playerHealth); // Atualiza a mensagem para "energia"
-
-
-// COLE AQUI ESTE BLOCO:
-            if (savedState.turnoAtual) {
-                isPlayerTurn = savedState.turnoAtual === "player";
-            }
-            if (savedState.etapaAtual) {
-                if (attackOptionsDiv) {
-                    const buttons = attackOptionsDiv.querySelectorAll('button');
-                    buttons.forEach(btn => {
-                        btn.style.display = "none";
-                        btn.disabled = true;
-                    });
-                }
-
-                switch (savedState.etapaAtual) {
-                    case "aguardandoAtaque":
-                        if (attackOptionsDiv) attackOptionsDiv.style.display = 'block';
-                        if (isPlayerTurn) {
-                            const atacarBtn = document.getElementById("atacar-corpo-a-corpo");
-                            if (atacarBtn) {
-                                atacarBtn.style.display = "inline-block";
-                                atacarBtn.disabled = false;
-                            }
-                        }
-                        break;
-                    case "aguardandoLocalizacaoSIFER":
-                        if (attackOptionsDiv) attackOptionsDiv.style.display = 'block';
-                        const btnLoc = document.getElementById("rolar-localizacao");
-                        if (btnLoc) {
-                            btnLoc.style.display = "inline-block";
-                            btnLoc.disabled = false;
-                        }
-                        break;
-                    case "aguardandoDanoSIFER":
-                    case "aguardandoDanoNormal":
-                        if (attackOptionsDiv) attackOptionsDiv.style.display = 'block';
-                        const btnDano = document.getElementById("rolar-dano");
-                        if (btnDano) {
-                            btnDano.style.display = "inline-block";
-                            btnDano.disabled = false;
-                        }
-                        break;
-                }
-            }
-
-
-                          
                             // Atualizar a interface com a energia do jogador (se houver um elemento para isso)
                             const playerHealthDisplay = document.getElementById("player-health");
                             if (playerHealthDisplay) {
@@ -1403,14 +1335,6 @@ if (playerAttackRollRaw === 1) {
 
                 // Apenas inicia/limpa o contexto SIFER para indicar o fluxo crítico
 window.siferContext = {};
-
-// ADICIONE ISTO AQUI:
-        const user = auth.currentUser;
-        if (user) {
-            saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth, "player", "aguardandoLocalizacaoSIFER");
-        }
-    }
-              
 console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.");
 
             } else {
