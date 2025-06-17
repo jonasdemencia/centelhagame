@@ -1410,8 +1410,8 @@ if (playerHealth <= 0) {
         const actionButtons = document.querySelectorAll('#attack-options button');
         actionButtons.forEach(button => button.disabled = true);
 
-        const playerAttackRollRaw =  1; // PARA TESTE DE FALHA CRÍTICA
-        //const playerAttackRollRaw = Math.floor(Math.random() * 20) + 1; // ALEATÓRIO NORMAL
+        //const playerAttackRollRaw =  1; // PARA TESTE DE FALHA CRÍTICA
+        const playerAttackRollRaw = Math.floor(Math.random() * 20) + 1; // ALEATÓRIO NORMAL
         const playerAttackRollTotal = playerAttackRollRaw + playerAbilityValue;
         const monsterDefense = currentMonster.couraça || 0;
 
