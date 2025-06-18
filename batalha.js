@@ -892,7 +892,6 @@ async function monsterAttack() {
 }
 
     
-// Modifique a função endMonsterTurn para mostrar o botão de itens e ferramentas
 function endMonsterTurn() {
     console.log("LOG: Finalizando turno do monstro e iniciando turno do jogador.");
     if (isPlayerTurn) {
@@ -921,18 +920,11 @@ function endMonsterTurn() {
     if (attackOptionsDiv) {
         attackOptionsDiv.style.display = 'block'; // Exibe as opções de ataque do jogador
 
-      // Adiciona o botão de fuga junto com os outros
-        const correrButton = document.getElementById("correr-batalha");
-        if (correrButton) {
-            correrButton.style.display = 'inline-block';
-            correrButton.disabled = false;
-            // Adiciona o evento de clique
-            correrButton.onclick = attemptEscape;
-        }
-
+        // Exibe e habilita todos os botões principais
         const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
         const atoClasseButton = document.getElementById("ato-classe");
         const itensFerramentasButton = document.getElementById("itens-ferramentas");
+        const correrButton = document.getElementById("correr-batalha");
         
         if (atacarCorpoACorpoButton) {
             atacarCorpoACorpoButton.disabled = false;
@@ -946,17 +938,16 @@ function endMonsterTurn() {
             itensFerramentasButton.disabled = false;
             itensFerramentasButton.style.display = 'inline-block';
         }
-
-        // Reseta o estado dos botões
-        const buttons = attackOptionsDiv.querySelectorAll('.button');
-        buttons.forEach(button => {
-            button.disabled = false;
-            if (button.id === 'atacar-corpo-a-corpo' || button.id === 'ato-classe' || button.id === 'itens-ferramentas') {
-                button.style.display = 'inline-block';
-            } else {
-                button.style.display = 'none';
-            }
-        });
+        
+        // IMPORTANTE: Garantir que o botão de fuga esteja visível e com evento
+        if (correrButton) {
+            correrButton.disabled = false;
+            correrButton.style.display = 'inline-block';
+            correrButton.onclick = attemptEscape;
+            console.log("LOG: Botão 'Correr' exibido e configurado no turno do jogador");
+        } else {
+            console.error("LOG: Botão 'Correr' não encontrado em endMonsterTurn");
+        }
     }
 
     startNewTurnBlock("Jogador");
@@ -969,6 +960,7 @@ function endMonsterTurn() {
         saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
     }
 }
+
 
 
 
