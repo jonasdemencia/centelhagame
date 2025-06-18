@@ -18,7 +18,6 @@ export const monsterData = {
             id: "mordida",
             nome: "Mordida Rápida",
             dano: "1d6",
-            precisao: 15,
             peso: 70,
             pesoHPBaixo: 40,
             telegrafado: false
@@ -27,7 +26,6 @@ export const monsterData = {
             id: "investida",
             nome: "Investida Devastadora",
             dano: "1d10+2", 
-            precisao: 12,
             peso: 30,
             pesoHPBaixo: 60,
             telegrafado: true,
