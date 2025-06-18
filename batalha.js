@@ -1013,7 +1013,7 @@ function selecionarItem(itemElement) {
     }
 }
 
-// Função para usar um item
+// Função para usar um item - versão modificada
 async function usarItem(itemId, effect, value) {
     const userId = auth.currentUser.uid;
     
@@ -1045,6 +1045,9 @@ async function usarItem(itemId, effect, value) {
             console.error("Item não encontrado no inventário");
             return;
         }
+        
+        // Fechar a janela de itens imediatamente
+        document.getElementById("itens-modal").style.display = "none";
         
         // Criar um novo bloco de turno para o item
         startNewTurnBlock("Item");
@@ -1111,16 +1114,16 @@ async function usarItem(itemId, effect, value) {
             await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerData.energy.total);
         }
         
-        // Fecha o modal e passa o turno
-        document.getElementById("itens-modal").style.display = "none";
-        
         // Passa o turno para o monstro
         endPlayerTurn();
         
     } catch (error) {
         console.error("Erro ao usar item:", error);
+        // Garantir que a janela feche mesmo em caso de erro
+        document.getElementById("itens-modal").style.display = "none";
     }
 }
+
 
   
     
