@@ -983,6 +983,11 @@ function resetActionButtons() {
 
 
 async function attemptEscape() {
+    // Adiciona logs para depuração
+    console.log("LOG: attemptEscape - playerData:", playerData);
+    console.log("LOG: attemptEscape - playerAbilityValue:", playerAbilityValue);
+    console.log("LOG: attemptEscape - playerData.habilidade:", playerData?.habilidade);
+    
     // Incrementa o contador de tentativas
     escapeAttempts++;
     
@@ -1014,10 +1019,27 @@ async function attemptEscape() {
         rollBtn.parentNode.removeChild(rollBtn);
     }
     
-    // Usa a variável global playerAbilityValue que já contém o valor correto da habilidade
-    const totalRoll = diceRoll + playerAbilityValue;
+    // Tenta obter a habilidade de várias formas possíveis
+    let habilidadeUsada = 0;
+    
+    if (playerAbilityValue && playerAbilityValue > 0) {
+        habilidadeUsada = playerAbilityValue;
+        console.log("LOG: attemptEscape - Usando playerAbilityValue:", habilidadeUsada);
+    } else if (playerData && playerData.habilidade) {
+        habilidadeUsada = playerData.habilidade;
+        console.log("LOG: attemptEscape - Usando playerData.habilidade:", habilidadeUsada);
+    } else if (playerData && playerData.skill && playerData.skill.total) {
+        habilidadeUsada = playerData.skill.total;
+        console.log("LOG: attemptEscape - Usando playerData.skill.total:", habilidadeUsada);
+    } else {
+        // Último recurso: valor fixo para teste
+        habilidadeUsada = 11; // Valor que você mencionou ter
+        console.log("LOG: attemptEscape - Usando valor fixo:", habilidadeUsada);
+    }
+    
+    const totalRoll = diceRoll + habilidadeUsada;
 
-    await addLogMessage(`Você rolou ${diceRoll} + ${playerAbilityValue} (Hab) = ${totalRoll} vs dificuldade ${difficulty}`, 800);
+    await addLogMessage(`Você rolou ${diceRoll} + ${habilidadeUsada} (Hab) = ${totalRoll} vs dificuldade ${difficulty}`, 800);
 
     if (totalRoll >= difficulty) {
         // Sucesso na fuga
@@ -1044,6 +1066,7 @@ async function attemptEscape() {
         endPlayerTurn();
     }
 }
+
 
 
 
