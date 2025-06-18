@@ -792,7 +792,9 @@ async function monsterAttack() {
     await addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
 
     // Separar o valor bruto do d20 e o valor total com bônus
-    const monsterRollRaw = Math.floor(Math.random() * 20) + 1;
+     // const monsterRollRaw = Math.floor(Math.random() * 20) + 1;
+   // acerto sempre obter 20:
+    const monsterRollRaw = 20; // Forçando crítico para teste
     const monsterAttackRoll = monsterRollRaw + currentMonster.habilidade;
     
     await addLogMessage(`${currentMonster.nome} rolou ${monsterRollRaw} em um D20 + ${currentMonster.habilidade} = ${monsterAttackRoll} para atacar.`, 1000);
