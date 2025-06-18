@@ -982,14 +982,9 @@ function resetActionButtons() {
 }
 
 
- async function attemptEscape() {
+async function attemptEscape() {
     // Incrementa o contador de tentativas
     escapeAttempts++;
-    
-    // Acessa a habilidade diretamente do objeto playerData
-    // Importante: playerData.habilidade é o valor correto, não playerData.skill.total
-    const playerHabilidade = parseInt(playerData.habilidade || 0);
-    console.log("LOG: Tentativa de fuga - Habilidade do jogador:", playerHabilidade);
     
     // Calcula a dificuldade base (10 + habilidade do monstro)
     const baseDifficulty = 10 + currentMonster.habilidade;
@@ -1019,10 +1014,10 @@ function resetActionButtons() {
         rollBtn.parentNode.removeChild(rollBtn);
     }
     
-    // Usa a habilidade correta do jogador
-    const totalRoll = diceRoll + playerHabilidade;
+    // Usa a variável global playerAbilityValue que já contém o valor correto da habilidade
+    const totalRoll = diceRoll + playerAbilityValue;
 
-    await addLogMessage(`Você rolou ${diceRoll} + ${playerHabilidade} (Hab) = ${totalRoll} vs dificuldade ${difficulty}`, 800);
+    await addLogMessage(`Você rolou ${diceRoll} + ${playerAbilityValue} (Hab) = ${totalRoll} vs dificuldade ${difficulty}`, 800);
 
     if (totalRoll >= difficulty) {
         // Sucesso na fuga
