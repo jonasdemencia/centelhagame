@@ -106,6 +106,38 @@
         .usar-item-btn:hover {
           background-color: #5a7751;
         }
+        
+        /* Estilo para o botão de fuga */
+        #correr-batalha {
+          background-color: #8B0000;
+          color: white;
+          border: none;
+          padding: 8px 15px;
+          border-radius: 4px;
+          cursor: pointer;
+          margin-right: 10px;
+          transition: background-color 0.3s;
+        }
+        
+        #correr-batalha:hover {
+          background-color: #A52A2A;
+        }
+        
+        /* Estilo para o botão de rolagem de dados na fuga */
+        .roll-btn {
+          background-color: #4169E1;
+          color: white;
+          border: none;
+          padding: 8px 15px;
+          border-radius: 4px;
+          cursor: pointer;
+          margin-top: 10px;
+          transition: background-color 0.3s;
+        }
+        
+        .roll-btn:hover {
+          background-color: #6495ED;
+        }
     </style>
 </head>
 <body>
@@ -147,12 +179,12 @@
         <section id="player-actions">
             <button id="abrir-inventario" disabled>Inventário</button>
             <button id="iniciar-luta">Lutar</button>
-            <button id="correr-batalha" style="display:none;">Correr</button>
             <div id="attack-options" style="display:none;">
                 <button id="atacar-corpo-a-corpo">Atacar</button>
                 <button id="ato-classe" class="button">Ato</button>
                 <button id="itens-ferramentas" class="button">Itens e Ferramentas</button>
                 <button id="atacar-a-distancia">Magia</button>
+                <button id="correr-batalha" class="button">Correr</button>
                 <button id="rolar-localizacao" class="button" style="display: none;">Rolar Localização SIFER</button>
             </div>
             <button id="rolar-iniciativa" style="display:none;">Rolar Iniciativa</button>
