@@ -4,16 +4,37 @@
 export const monsterData = {
     // Monstros originais
     "lobo": {
-        nome: "Lobo Faminto",
-        imagem: "https://via.placeholder.com/150",
-        descricao: "Um lobo selvagem com presas afiadas.",
-        habilidade: 5,
-        couraça: 10,
-        pontosDeEnergia: 2,
-        pontosDeEnergiaMax: 2,
-        experiencia: 50,
-        dano: "1D10",
-        drops: [
+    nome: "Lobo Faminto",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um lobo selvagem com presas afiadas.",
+    habilidade: 5,
+    couraça: 10,
+    pontosDeEnergia: 2,
+    pontosDeEnergiaMax: 2,
+    experiencia: 50,
+    dano: "1D10", // Mantido para compatibilidade
+    ataques: [
+        {
+            id: "mordida",
+            nome: "Mordida Rápida",
+            dano: "1d6",
+            precisao: 15,
+            peso: 70,
+            pesoHPBaixo: 40,
+            telegrafado: false
+        },
+        {
+            id: "investida",
+            nome: "Investida Devastadora",
+            dano: "1d10+2", 
+            precisao: 12,
+            peso: 30,
+            pesoHPBaixo: 60,
+            telegrafado: true,
+            mensagemTelegraf: "O lobo recua e seus olhos brilham com fúria selvagem..."
+        }
+    ],
+    drops: [
             {
                 id: "weapon",
                 content: "Espada de madeira",
