@@ -989,7 +989,7 @@ async function attemptEscape() {
     // Obtém a habilidade do local correto
     const habilidadeUsada = playerData?.skill?.total || 0;
     
-    // Calcula a dificuldade base (10 + habilidade do monstro)
+    // Calcula a dificuldade base (25 + habilidade do monstro)
     const baseDifficulty = 25 + currentMonster.habilidade;
     // Adiciona penalidade por tentativas (+2 por tentativa)
     const difficulty = baseDifficulty + ((escapeAttempts - 1) * 2);
