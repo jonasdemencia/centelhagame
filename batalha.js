@@ -538,14 +538,17 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: Variáveis iniciais declaradas.");
 
 
-  // Inicializar o botão de fuga
-    const correrButton = document.getElementById("correr-batalha");
-    if (correrButton) {
-        correrButton.addEventListener('click', attemptEscape);
-        console.log("LOG: Evento de clique adicionado ao botão 'Correr'");
-    } else {
-        console.error("LOG: Botão 'Correr' não encontrado (ID: correr-batalha)");
-    }
+  // Inicializar o botão de fuga (substitua o código existente)
+const correrButton = document.getElementById("correr-batalha");
+if (correrButton) {
+    // Remove qualquer listener existente antes de adicionar um novo
+    correrButton.removeEventListener('click', attemptEscape);
+    correrButton.addEventListener('click', attemptEscape);
+    console.log("LOG: Evento de clique adicionado ao botão 'Correr'");
+} else {
+    console.error("LOG: Botão 'Correr' não encontrado (ID: correr-batalha)");
+}
+
 
 
 // Configurar evento do botão de itens e ferramentas
@@ -983,6 +986,12 @@ function resetActionButtons() {
 
 
 async function attemptEscape() {
+    // Verifica se já está em uma tentativa de fuga para evitar duplicação
+    if (window.escapingInProgress) {
+        return;
+    }
+    window.escapingInProgress = true;
+
     // Incrementa o contador de tentativas
     escapeAttempts++;
     
@@ -996,6 +1005,12 @@ async function attemptEscape() {
 
     startNewTurnBlock("Tentativa de Fuga");
     await addLogMessage(`Você tenta escapar do combate...`, 800);
+    
+    // Remove qualquer botão de rolagem existente antes de criar um novo
+    const existingRollBtn = currentTurnBlock.querySelector('.roll-btn');
+    if (existingRollBtn) {
+        existingRollBtn.remove();
+    }
     
     // Cria o botão de rolagem de forma mais segura
     const rollBtn = document.createElement('button');
@@ -1024,6 +1039,7 @@ async function attemptEscape() {
     if (totalRoll >= difficulty) {
         // Sucesso na fuga
         await addLogMessage(`<strong style="color: green;">Você consegue escapar do combate!</strong>`, 1000);
+        window.escapingInProgress = false;
         window.location.href = 'masmorra.html';
     } else {
         // Falha na fuga - monstro ganha ataque gratuito com dano reduzido
@@ -1042,10 +1058,12 @@ async function attemptEscape() {
             await saveBattleState(auth.currentUser.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         }
 
+        window.escapingInProgress = false;
         // Passa o turno
         endPlayerTurn();
     }
 }
+
 
 
 
