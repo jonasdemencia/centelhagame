@@ -536,6 +536,48 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: Variáveis iniciais declaradas.");
 
 
+// Configurar evento do botão de itens e ferramentas
+const itensBtn = document.getElementById("itens-ferramentas");
+if (itensBtn) {
+    itensBtn.addEventListener("click", () => {
+        if (isPlayerTurn) {
+            carregarItensConsumiveis(auth.currentUser.uid);
+            document.getElementById("itens-modal").style.display = "block";
+        }
+    });
+}
+
+// Configurar eventos do modal de itens
+const itensModal = document.getElementById("itens-modal");
+if (itensModal) {
+    const closeModal = itensModal.querySelector(".close-modal");
+    if (closeModal) {
+        closeModal.addEventListener("click", () => {
+            itensModal.style.display = "none";
+        });
+    }
+    
+    const usarBtn = itensModal.querySelector(".usar-item-btn");
+    if (usarBtn) {
+        usarBtn.addEventListener("click", () => {
+            const itemId = usarBtn.dataset.itemId;
+            const effect = usarBtn.dataset.effect;
+            const value = usarBtn.dataset.value;
+            usarItem(itemId, effect, value);
+        });
+    }
+    
+    // Fechar o modal ao clicar fora dele
+    window.addEventListener("click", (event) => {
+        if (event.target === itensModal) {
+            itensModal.style.display = "none";
+        }
+    });
+}
+
+
+  
+
   // --- INÍCIO DO BLOCO DE ATOS ---
 const atoClasseButton = document.getElementById("ato-classe");
 const painelAtos = document.getElementById("painel-atos");
@@ -887,6 +929,185 @@ function resetActionButtons() {
         });
     }
 }
+
+
+// Função para carregar itens consumíveis do inventário
+async function carregarItensConsumiveis(userId) {
+    try {
+        const playerRef = doc(db, "players", userId);
+        const playerSnap = await getDoc(playerRef);
+        
+        if (playerSnap.exists() && playerSnap.data().inventory) {
+            const inventoryData = playerSnap.data().inventory;
+            const itensContainer = document.getElementById("itens-container");
+            itensContainer.innerHTML = "";
+            
+            // Filtrar apenas itens consumíveis
+            const itensConsumiveis = [];
+            
+            // Verificar itens no baú
+            if (inventoryData.itemsInChest && Array.isArray(inventoryData.itemsInChest)) {
+                inventoryData.itemsInChest.forEach(item => {
+                    if (item.consumable && item.quantity > 0) {
+                        itensConsumiveis.push(item);
+                    }
+                });
+            }
+            
+            // Se não houver itens consumíveis
+            if (itensConsumiveis.length === 0) {
+                itensContainer.innerHTML = "<p>Você não possui itens consumíveis.</p>";
+                return;
+            }
+            
+            // Criar elementos para cada item consumível
+            itensConsumiveis.forEach(item => {
+                const itemElement = document.createElement("div");
+                itemElement.className = "item-consumivel";
+                itemElement.dataset.itemId = item.id;
+                itemElement.dataset.effect = item.effect || "";
+                itemElement.dataset.value = item.value || 0;
+                
+                itemElement.innerHTML = `
+                    <div class="item-nome">${item.content}</div>
+                    <div class="item-quantidade">Quantidade: ${item.quantity}</div>
+                    <div class="item-descricao">${item.description || ""}</div>
+                `;
+                
+                itemElement.addEventListener("click", () => selecionarItem(itemElement));
+                itensContainer.appendChild(itemElement);
+            });
+        } else {
+            console.log("Inventário não encontrado para o usuário");
+        }
+    } catch (error) {
+        console.error("Erro ao carregar itens consumíveis:", error);
+    }
+}
+
+// Função para selecionar um item
+function selecionarItem(itemElement) {
+    // Limpa seleção anterior
+    document.querySelectorAll(".item-consumivel").forEach(el => {
+        el.classList.remove("selected");
+    });
+    
+    // Seleciona o novo item
+    itemElement.classList.add("selected");
+    
+    // Mostra o botão de usar
+    const usarBtn = document.querySelector(".usar-item-btn");
+    if (usarBtn) {
+        usarBtn.style.display = "block";
+        usarBtn.dataset.itemId = itemElement.dataset.itemId;
+        usarBtn.dataset.effect = itemElement.dataset.effect;
+        usarBtn.dataset.value = itemElement.dataset.value;
+    }
+}
+
+// Função para usar um item
+async function usarItem(itemId, effect, value) {
+    const userId = auth.currentUser.uid;
+    
+    try {
+        // Buscar dados do jogador e inventário
+        const playerRef = doc(db, "players", userId);
+        const playerSnap = await getDoc(playerRef);
+        
+        if (!playerSnap.exists()) {
+            console.error("Dados do jogador não encontrados");
+            return;
+        }
+        
+        const playerData = playerSnap.data();
+        const inventoryData = playerData.inventory;
+        
+        // Encontrar o item no inventário
+        let itemIndex = -1;
+        let item = null;
+        
+        if (inventoryData.itemsInChest && Array.isArray(inventoryData.itemsInChest)) {
+            itemIndex = inventoryData.itemsInChest.findIndex(i => i.id === itemId);
+            if (itemIndex !== -1) {
+                item = inventoryData.itemsInChest[itemIndex];
+            }
+        }
+        
+        if (!item) {
+            console.error("Item não encontrado no inventário");
+            return;
+        }
+        
+        // Aplicar efeito do item
+        if (effect === "heal" && value > 0) {
+            // Cura o jogador
+            const energyTotal = playerData.energy?.total || 0;
+            const energyInitial = playerData.energy?.initial || 0;
+            const newEnergy = Math.min(energyTotal + parseInt(value), energyInitial);
+            
+            // Atualiza a energia do jogador
+            playerData.energy.total = newEnergy;
+            playerHealth = newEnergy; // Atualiza a variável global
+            
+            // Atualiza a barra de HP
+            atualizarBarraHP("barra-hp-jogador", newEnergy, energyInitial);
+            
+            // Adiciona mensagem ao log
+            startNewTurnBlock("Item");
+            await addLogMessage(`Você usou ${item.content} e recuperou ${value} pontos de energia.`, 1000);
+            
+        } else if (effect === "damage" && value > 0) {
+            // Causa dano ao monstro
+            if (currentMonster) {
+                currentMonster.pontosDeEnergia -= parseInt(value);
+                currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+                
+                // Atualiza a barra de HP do monstro
+                atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+                
+                // Adiciona mensagem ao log
+                startNewTurnBlock("Item");
+                await addLogMessage(`Você usou ${item.content} e causou ${value} pontos de dano ao ${currentMonster.nome}.`, 1000);
+                
+                // Verifica se o monstro morreu
+                if (currentMonster.pontosDeEnergia <= 0) {
+                    await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+                    handlePostBattle(currentMonster);
+                    return;
+                }
+            }
+        }
+        
+        // Reduz a quantidade do item
+        item.quantity--;
+        
+        // Remove o item se a quantidade chegar a zero
+        if (item.quantity <= 0) {
+            inventoryData.itemsInChest.splice(itemIndex, 1);
+        }
+        
+        // Salva as alterações no Firestore
+        await setDoc(playerRef, { 
+            energy: playerData.energy,
+            inventory: inventoryData 
+        }, { merge: true });
+        
+        // Atualiza o estado da batalha
+        if (currentMonster) {
+            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerData.energy.total);
+        }
+        
+        // Fecha o modal e passa o turno
+        document.getElementById("itens-modal").style.display = "none";
+        
+        // Passa o turno para o monstro
+        endPlayerTurn();
+        
+    } catch (error) {
+        console.error("Erro ao usar item:", error);
+    }
+}
+  
     
     const botaoInventario = document.getElementById("abrir-inventario");
     const botaoIniciativa = document.getElementById("rolar-iniciativa");
