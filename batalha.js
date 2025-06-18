@@ -538,6 +538,16 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: Variáveis iniciais declaradas.");
 
 
+  // Inicializar o botão de fuga
+    const correrButton = document.getElementById("correr-batalha");
+    if (correrButton) {
+        correrButton.addEventListener('click', attemptEscape);
+        console.log("LOG: Evento de clique adicionado ao botão 'Correr'");
+    } else {
+        console.error("LOG: Botão 'Correr' não encontrado (ID: correr-batalha)");
+    }
+
+
 // Configurar evento do botão de itens e ferramentas
 const itensBtn = document.getElementById("itens-ferramentas");
 if (itensBtn) {
