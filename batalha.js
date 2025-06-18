@@ -849,7 +849,7 @@ async function monsterAttack() {
     }
 }
     
-// Finaliza o turno do monstro e inicia o turno do jogador
+// Modifique a função endMonsterTurn para mostrar o botão de itens e ferramentas
 function endMonsterTurn() {
     console.log("LOG: Finalizando turno do monstro e iniciando turno do jogador.");
     if (isPlayerTurn) {
@@ -880,6 +880,8 @@ function endMonsterTurn() {
 
         const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
         const atoClasseButton = document.getElementById("ato-classe");
+        const itensFerramentasButton = document.getElementById("itens-ferramentas");
+        
         if (atacarCorpoACorpoButton) {
             atacarCorpoACorpoButton.disabled = false;
             atacarCorpoACorpoButton.style.display = 'inline-block';
@@ -888,12 +890,16 @@ function endMonsterTurn() {
             atoClasseButton.disabled = false;
             atoClasseButton.style.display = 'inline-block';
         }
+        if (itensFerramentasButton) {
+            itensFerramentasButton.disabled = false;
+            itensFerramentasButton.style.display = 'inline-block';
+        }
 
         // Reseta o estado dos botões
         const buttons = attackOptionsDiv.querySelectorAll('.button');
         buttons.forEach(button => {
             button.disabled = false;
-            if (button.id === 'atacar-corpo-a-corpo' || button.id === 'ato-classe') {
+            if (button.id === 'atacar-corpo-a-corpo' || button.id === 'ato-classe' || button.id === 'itens-ferramentas') {
                 button.style.display = 'inline-block';
             } else {
                 button.style.display = 'none';
@@ -913,6 +919,7 @@ function endMonsterTurn() {
 }
 
 
+
   
 
     // Exemplo para resetActionButtons
@@ -921,7 +928,7 @@ function resetActionButtons() {
         const buttons = attackOptionsDiv.querySelectorAll('button');
         buttons.forEach(button => {
             button.disabled = false;
-            if (button.id === 'atacar-corpo-a-corpo' || button.id === 'ato-classe') {
+            if (button.id === 'atacar-corpo-a-corpo' || button.id === 'ato-classe' || button.id === 'itens-ferramentas') {
                 button.style.display = 'inline-block';
             } else {
                 button.style.display = 'none';
@@ -929,6 +936,7 @@ function resetActionButtons() {
         });
     }
 }
+
 
 
 // Função para carregar itens consumíveis do inventário
@@ -1038,6 +1046,9 @@ async function usarItem(itemId, effect, value) {
             return;
         }
         
+        // Criar um novo bloco de turno para o item
+        startNewTurnBlock("Item");
+        
         // Aplicar efeito do item
         if (effect === "heal" && value > 0) {
             // Cura o jogador
@@ -1053,8 +1064,8 @@ async function usarItem(itemId, effect, value) {
             atualizarBarraHP("barra-hp-jogador", newEnergy, energyInitial);
             
             // Adiciona mensagem ao log
-            startNewTurnBlock("Item");
             await addLogMessage(`Você usou ${item.content} e recuperou ${value} pontos de energia.`, 1000);
+            await addLogMessage(`Sua energia atual: ${newEnergy}/${energyInitial}`, 800);
             
         } else if (effect === "damage" && value > 0) {
             // Causa dano ao monstro
@@ -1066,8 +1077,8 @@ async function usarItem(itemId, effect, value) {
                 atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
                 
                 // Adiciona mensagem ao log
-                startNewTurnBlock("Item");
                 await addLogMessage(`Você usou ${item.content} e causou ${value} pontos de dano ao ${currentMonster.nome}.`, 1000);
+                await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}/${currentMonster.pontosDeEnergiaMax}`, 800);
                 
                 // Verifica se o monstro morreu
                 if (currentMonster.pontosDeEnergia <= 0) {
@@ -1076,6 +1087,9 @@ async function usarItem(itemId, effect, value) {
                     return;
                 }
             }
+        } else {
+            // Item sem efeito específico
+            await addLogMessage(`Você usou ${item.content}.`, 1000);
         }
         
         // Reduz a quantidade do item
@@ -1107,6 +1121,7 @@ async function usarItem(itemId, effect, value) {
         console.error("Erro ao usar item:", error);
     }
 }
+
   
     
     const botaoInventario = document.getElementById("abrir-inventario");
