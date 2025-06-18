@@ -815,7 +815,6 @@ function chooseMonsterAttack(monster) {
         return {
             nome: "Ataque",
             dano: monster.dano,
-            precisao: monster.habilidade,
             telegrafado: false
         };
     }
@@ -870,9 +869,11 @@ async function monsterAttack() {
 
     // Rolagem de ataque
     const monsterRollRaw = Math.floor(Math.random() * 20) + 1;
-    const monsterAttackRoll = monsterRollRaw + (selectedAttack.precisao || currentMonster.habilidade);
+    const monsterAttackRoll = monsterRollRaw;
+
     
-    await addLogMessage(`${currentMonster.nome} rolou ${monsterRollRaw} em um D20 + ${selectedAttack.precisao || currentMonster.habilidade} = ${monsterAttackRoll} para atacar.`, 1000);
+await addLogMessage(`${currentMonster.nome} rolou ${monsterRollRaw} em um D20 para atacar.`, 1000);
+
 
     const playerDefense = playerData?.couraca ? parseInt(playerData.couraca) : 0;
     await addLogMessage(`Sua Couraça é ${playerDefense}.`, 1000);
