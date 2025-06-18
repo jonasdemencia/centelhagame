@@ -999,6 +999,26 @@ function resetActionButtons() {
 }
 
 
+  // Função para ataque de oportunidade do monstro
+async function monsterOpportunityAttack(damageMultiplier = 0.8) {
+    await addLogMessage(`${currentMonster.nome} aproveita sua distração para atacar!`, 800);
+    
+    const damage = Math.floor(rollDice(currentMonster.dano) * damageMultiplier);
+    playerHealth -= damage;
+    atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+    
+    await addLogMessage(`Você sofre ${damage} de dano!`, 800);
+    
+    // Atualiza estado
+    if (auth.currentUser) {
+        await updatePlayerEnergyInFirestore(auth.currentUser.uid, playerHealth);
+        await saveBattleState(auth.currentUser.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+    }
+}
+
+  
+
+
 async function attemptEscape() {
     // Verifica se já está em uma tentativa de fuga para evitar duplicação
     if (window.escapingInProgress) {
@@ -1058,19 +1078,7 @@ async function attemptEscape() {
     } else {
         // Falha na fuga - monstro ganha ataque gratuito com dano reduzido
         await addLogMessage(`<strong style="color: red;">Você não consegue escapar!</strong>`, 800);
-        await addLogMessage(`${currentMonster.nome} aproveita sua distração para atacar!`, 800);
-        
-        const damage = Math.floor(rollDice(currentMonster.dano) * 0.8);
-        playerHealth -= damage;
-        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-        
-        await addLogMessage(`Você sofre ${damage} de dano ao tentar fugir!`, 800);
-        
-        // Atualiza estado
-        if (auth.currentUser) {
-            await updatePlayerEnergyInFirestore(auth.currentUser.uid, playerHealth);
-            await saveBattleState(auth.currentUser.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-        }
+        await monsterOpportunityAttack(0.8);
 
         window.escapingInProgress = false;
         // Passa o turno
@@ -1259,8 +1267,11 @@ async function usarItem(itemId, effect, value) {
             await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerData.energy.total);
         }
         
-        // Passa o turno para o monstro
-        endPlayerTurn();
+       // Monstro faz ataque de oportunidade antes de passar o turno
+await monsterOpportunityAttack(0.8);
+// Passa o turno para o monstro
+endPlayerTurn();
+
         
     } catch (error) {
         console.error("Erro ao usar item:", error);
