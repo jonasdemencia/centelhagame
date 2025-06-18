@@ -8,6 +8,8 @@ import { getMonsterById } from './monstros.js';
 // Variáveis globais para estado da batalha
 window.isPlayerTurn = false;
 window.battleStarted = false;
+let escapeAttempts = 0; // Contador de tentativas de fuga
+
 
 console.log("LOG: batalha.js carregado.");
 
@@ -909,6 +911,15 @@ function endMonsterTurn() {
     if (attackOptionsDiv) {
         attackOptionsDiv.style.display = 'block'; // Exibe as opções de ataque do jogador
 
+      // Adiciona o botão de fuga junto com os outros
+        const correrButton = document.getElementById("correr-batalha");
+        if (correrButton) {
+            correrButton.style.display = 'inline-block';
+            correrButton.disabled = false;
+            // Adiciona o evento de clique
+            correrButton.onclick = attemptEscape;
+        }
+
         const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
         const atoClasseButton = document.getElementById("ato-classe");
         const itensFerramentasButton = document.getElementById("itens-ferramentas");
@@ -968,6 +979,63 @@ function resetActionButtons() {
     }
 }
 
+
+  // Adicione esta função após a função resetActionButtons
+async function attemptEscape() {
+    // Incrementa o contador de tentativas
+    escapeAttempts++;
+    
+    // Calcula a dificuldade base (10 + habilidade do monstro)
+    const baseDifficulty = 10 + currentMonster.habilidade;
+    // Adiciona penalidade por tentativas (+2 por tentativa)
+    const difficulty = baseDifficulty + ((escapeAttempts - 1) * 2);
+
+    startNewTurnBlock("Tentativa de Fuga");
+    await addLogMessage(`Você tenta escapar do combate...`, 800);
+    
+    // Rola o teste de habilidade
+    const rollBtn = document.createElement('button');
+    rollBtn.textContent = 'Rolar D20';
+    rollBtn.classList.add('action-btn', 'roll-btn');
+    document.getElementById('action-buttons').appendChild(rollBtn);
+
+    const diceRoll = await new Promise(resolve => {
+        rollBtn.addEventListener('click', () => {
+            const roll = Math.floor(Math.random() * 20) + 1;
+            resolve(roll);
+        }, { once: true });
+    });
+
+    rollBtn.remove();
+    const totalRoll = diceRoll + playerAbilityValue;
+
+    await addLogMessage(`Você rolou ${diceRoll} + ${playerAbilityValue} (Hab) = ${totalRoll} vs dificuldade ${difficulty}`, 800);
+
+    if (totalRoll >= difficulty) {
+        // Sucesso na fuga
+        await addLogMessage(`<strong style="color: green;">Você consegue escapar do combate!</strong>`, 1000);
+        window.location.href = 'masmorra.html';
+    } else {
+        // Falha na fuga - monstro ganha ataque gratuito com dano reduzido
+        await addLogMessage(`<strong style="color: red;">Você não consegue escapar!</strong>`, 800);
+        await addLogMessage(`${currentMonster.nome} aproveita sua distração para atacar!`, 800);
+        
+        const damage = Math.floor(rollDice(currentMonster.dano) * 0.8);
+        playerHealth -= damage;
+        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+        
+        await addLogMessage(`Você sofre ${damage} de dano ao tentar fugir!`, 800);
+        
+        // Atualiza estado
+        if (auth.currentUser) {
+            await updatePlayerEnergyInFirestore(auth.currentUser.uid, playerHealth);
+            await saveBattleState(auth.currentUser.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        }
+
+        // Passa o turno
+        endPlayerTurn();
+    }
+}
 
 
 // Função para carregar itens consumíveis do inventário
