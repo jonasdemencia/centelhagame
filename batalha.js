@@ -714,12 +714,6 @@ async function updatePlayerExperience(userId, xpToAdd) {
 }
 
 
-    async function addLogMessage(message, delay = 0, typingSpeed = 30) {
-    const logContainer = document.getElementById("battle-log-content");
-    return new Promise((resolve) => {
-        const p = document.createElement('p');
-        currentTurnBlock.appendChild(p); // Adiciona a mensagem ao bloco atual
-        let index = 0;
 
         async function addLogMessage(message, delay = 0, typingSpeed = 30) {
     const logContainer = document.getElementById("battle-log-content");
