@@ -986,6 +986,9 @@ function resetActionButtons() {
     // Incrementa o contador de tentativas
     escapeAttempts++;
     
+    // Usa a habilidade atual do jogador da ficha
+    const playerAbility = playerData?.habilidade || playerAbilityValue || 0;
+    
     // Calcula a dificuldade base (10 + habilidade do monstro)
     const baseDifficulty = 10 + currentMonster.habilidade;
     // Adiciona penalidade por tentativas (+2 por tentativa)
@@ -1014,9 +1017,10 @@ function resetActionButtons() {
         rollBtn.parentNode.removeChild(rollBtn);
     }
     
-    const totalRoll = diceRoll + playerAbilityValue;
+    // Usa a habilidade correta do jogador
+    const totalRoll = diceRoll + playerAbility;
 
-    await addLogMessage(`Você rolou ${diceRoll} + ${playerAbilityValue} (Hab) = ${totalRoll} vs dificuldade ${difficulty}`, 800);
+    await addLogMessage(`Você rolou ${diceRoll} + ${playerAbility} (Hab) = ${totalRoll} vs dificuldade ${difficulty}`, 800);
 
     if (totalRoll >= difficulty) {
         // Sucesso na fuga
@@ -1043,6 +1047,7 @@ function resetActionButtons() {
         endPlayerTurn();
     }
 }
+
 
 
 
