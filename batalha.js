@@ -791,25 +791,53 @@ async function monsterAttack() {
     startNewTurnBlock(currentMonster.nome);
     await addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
 
-    const monsterAttackRoll = Math.floor(Math.random() * 20) + 1 + currentMonster.habilidade;
-    await addLogMessage(`${currentMonster.nome} rolou ${monsterAttackRoll} em um D20 para atacar.`, 1000);
+    // Separar o valor bruto do d20 e o valor total com bônus
+    const monsterRollRaw = Math.floor(Math.random() * 20) + 1;
+    const monsterAttackRoll = monsterRollRaw + currentMonster.habilidade;
+    
+    await addLogMessage(`${currentMonster.nome} rolou ${monsterRollRaw} em um D20 + ${currentMonster.habilidade} = ${monsterAttackRoll} para atacar.`, 1000);
     console.log("LOG: monsterAttack - Rolagem de ataque do monstro:", monsterAttackRoll);
 
     const playerDefense = playerData?.couraca ? parseInt(playerData.couraca) : 0;
     await addLogMessage(`Sua Couraça é ${playerDefense}.`, 1000);
     console.log("LOG: monsterAttack - Defesa do jogador:", playerDefense);
 
+    // Verifica se o ataque acertou
     if (monsterAttackRoll >= playerDefense) {
-        await addLogMessage(`O ataque do ${currentMonster.nome} acertou!`, 1000);
+        // Verifica se foi um acerto crítico (20 natural no d20)
+        const isCriticalHit = monsterRollRaw === 20;
+        
+        if (isCriticalHit) {
+            await addLogMessage(`<strong style="color: red;">ACERTO CRÍTICO!</strong> O ataque do ${currentMonster.nome} atinge um ponto vital!`, 1000);
+        } else {
+            await addLogMessage(`O ataque do ${currentMonster.nome} acertou!`, 1000);
+        }
 
-        const monsterDamageRoll = rollDice(currentMonster.dano);
-        console.log("LOG: monsterAttack - Dano rolado pelo monstro:", monsterDamageRoll);
+        // Calcula o dano base
+        let monsterDamageRoll = rollDice(currentMonster.dano);
+        
+        // Se for crítico, aumenta o dano em 50%
+        if (isCriticalHit) {
+            monsterDamageRoll = Math.floor(monsterDamageRoll * 1.5);
+            
+            // Efeitos adicionais do crítico (escolhe um aleatoriamente)
+            const criticalEffects = [
+                "O golpe te deixa atordoado!",
+                "Você sente suas forças se esvaindo!",
+                "O impacto te faz perder o equilíbrio!",
+                "Um golpe certeiro que te faz recuar!"
+            ];
+            
+            const randomEffect = criticalEffects[Math.floor(Math.random() * criticalEffects.length)];
+            await addLogMessage(`<em>${randomEffect}</em>`, 800);
+        }
+        
+        console.log("LOG: monsterAttack - Dano rolado pelo monstro:", monsterDamageRoll, isCriticalHit ? "(crítico)" : "");
 
         playerHealth -= monsterDamageRoll;
-        // Removido o Math.max para permitir valores negativos
 
         atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-        await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano.`, 1000);
+        await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano${isCriticalHit ? " crítico" : ""}.`, 1000);
 
         // Salva o estado ANTES de verificar a morte/inconsciência
         const user = auth.currentUser;
@@ -848,6 +876,7 @@ async function monsterAttack() {
         endMonsterTurn(); // Passa o turno para o jogador
     }
 }
+
     
 // Modifique a função endMonsterTurn para mostrar o botão de itens e ferramentas
 function endMonsterTurn() {
