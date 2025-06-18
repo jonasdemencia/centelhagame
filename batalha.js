@@ -990,8 +990,7 @@ function resetActionButtons() {
 }
 
 
-  // Adicione esta função após a função resetActionButtons
-async function attemptEscape() {
+  async function attemptEscape() {
     // Incrementa o contador de tentativas
     escapeAttempts++;
     
@@ -1003,11 +1002,13 @@ async function attemptEscape() {
     startNewTurnBlock("Tentativa de Fuga");
     await addLogMessage(`Você tenta escapar do combate...`, 800);
     
-    // Rola o teste de habilidade
+    // Cria o botão de rolagem de forma mais segura
     const rollBtn = document.createElement('button');
     rollBtn.textContent = 'Rolar D20';
     rollBtn.classList.add('action-btn', 'roll-btn');
-    document.getElementById('action-buttons').appendChild(rollBtn);
+    
+    // Adiciona o botão ao bloco de turno atual em vez de action-buttons
+    currentTurnBlock.appendChild(rollBtn);
 
     const diceRoll = await new Promise(resolve => {
         rollBtn.addEventListener('click', () => {
@@ -1016,7 +1017,11 @@ async function attemptEscape() {
         }, { once: true });
     });
 
-    rollBtn.remove();
+    // Remove o botão após o clique
+    if (rollBtn.parentNode) {
+        rollBtn.parentNode.removeChild(rollBtn);
+    }
+    
     const totalRoll = diceRoll + playerAbilityValue;
 
     await addLogMessage(`Você rolou ${diceRoll} + ${playerAbilityValue} (Hab) = ${totalRoll} vs dificuldade ${difficulty}`, 800);
@@ -1046,6 +1051,7 @@ async function attemptEscape() {
         endPlayerTurn();
     }
 }
+
 
 
 // Função para carregar itens consumíveis do inventário
