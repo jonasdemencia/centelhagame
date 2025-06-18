@@ -727,3 +727,102 @@ dice-icon svg {
     width: 40px;
     z-index: -1;
 }
+
+/* Estilo para o modal de itens */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.modal-content {
+  background-color: #1a1a1a;
+  margin: 10% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 600px;
+  border-radius: 5px;
+  color: #ddd;
+}
+
+.close-modal {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close-modal:hover {
+  color: #fff;
+}
+
+.itens-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.item-consumivel {
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.item-consumivel:hover {
+  background-color: #3a3a3a;
+  transform: translateY(-2px);
+}
+
+.item-consumivel.selected {
+  border: 2px solid #ffd700;
+  background-color: #3a3a3a;
+}
+
+.item-nome {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.item-quantidade {
+  font-size: 0.8em;
+  color: #aaa;
+}
+
+.item-descricao {
+  font-size: 0.8em;
+  margin-top: 5px;
+  color: #999;
+  display: none;
+}
+
+.item-consumivel:hover .item-descricao {
+  display: block;
+}
+
+.usar-item-btn {
+  display: none;
+  margin-top: 15px;
+  padding: 8px 15px;
+  background-color: #4a6741;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.usar-item-btn:hover {
+  background-color: #5a7751;
+}
+
