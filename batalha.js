@@ -21,6 +21,35 @@ const falhasCriticas = [
   { mensagem: "Você tenta ser mais expressivo no ataque do que realmente é. O monstro zomba de você. Nada acontece, só humilhação.", efeito: "nada" }
 ];
 
+// Lista de magias disponíveis
+const magiasDisponiveis = [
+    {
+        id: "cura-menor",
+        nome: "Cura Menor",
+        descricao: "Restaura pequena quantidade de energia",
+        custo: 2,
+        efeito: "heal",
+        valor: 3
+    },
+    {
+        id: "missil-magico",
+        nome: "Míssil Mágico", 
+        descricao: "Projétil mágico que sempre acerta",
+        custo: 1,
+        efeito: "damage",
+        valor: 2
+    },
+    {
+        id: "escudo-arcano",
+        nome: "Escudo Arcano",
+        descricao: "Aumenta temporariamente a defesa",
+        custo: 3,
+        efeito: "shield",
+        valor: 2
+    }
+];
+
+
 
 // Configuração do Firebase (substitua com suas próprias configurações)
 const firebaseConfig = {
@@ -196,6 +225,20 @@ function updatePlayerEnergyInFirestore(userId, newEnergy) {
             console.error("LOG: Erro ao atualizar a energia do jogador na ficha:", error);
         });
 }
+
+// Função para atualizar magia do jogador no Firestore
+async function updatePlayerMagicInFirestore(userId, newMagic) {
+    console.log("LOG: updatePlayerMagicInFirestore chamado com userId:", userId, "newMagic:", newMagic);
+    const playerDocRef = doc(db, "players", userId);
+    return setDoc(playerDocRef, { magic: { total: newMagic } }, { merge: true })
+        .then(() => {
+            console.log("LOG: Magia do jogador atualizada na ficha:", newMagic);
+        })
+        .catch((error) => {
+            console.error("LOG: Erro ao atualizar a magia do jogador na ficha:", error);
+        });
+}
+
 
 // Adicione esta função logo após a função updatePlayerEnergyInFirestore
 async function updatePlayerExperience(userId, xpToAdd) {
@@ -621,6 +664,47 @@ if (itensModal) {
 }
 
 
+  // Configurar evento do botão de magia
+const magiaBtn = document.getElementById("atacar-a-distancia");
+if (magiaBtn) {
+    magiaBtn.addEventListener("click", () => {
+        if (isPlayerTurn) {
+            carregarMagiasDisponiveis();
+            document.getElementById("magias-modal").style.display = "block";
+        }
+    });
+}
+
+// Configurar eventos do modal de magias
+const magiasModal = document.getElementById("magias-modal");
+if (magiasModal) {
+    const closeModal = magiasModal.querySelector(".close-modal-magia");
+    if (closeModal) {
+        closeModal.addEventListener("click", () => {
+            magiasModal.style.display = "none";
+        });
+    }
+    
+    const usarBtn = magiasModal.querySelector(".usar-magia-btn");
+    if (usarBtn) {
+        usarBtn.addEventListener("click", () => {
+            const magiaId = usarBtn.dataset.magiaId;
+            const efeito = usarBtn.dataset.efeito;
+            const valor = usarBtn.dataset.valor;
+            const custo = usarBtn.dataset.custo;
+            usarMagia(magiaId, efeito, valor, custo);
+        });
+    }
+    
+    // Fechar o modal ao clicar fora dele
+    window.addEventListener("click", (event) => {
+        if (event.target === magiasModal) {
+            magiasModal.style.display = "none";
+        }
+    });
+}
+
+  
   
 
   // --- INÍCIO DO BLOCO DE ATOS ---
@@ -1344,6 +1428,127 @@ endPlayerTurn();
         // Garantir que a janela feche mesmo em caso de erro
         document.getElementById("itens-modal").style.display = "none";
     }
+}
+
+
+  // Função para carregar magias disponíveis
+function carregarMagiasDisponiveis() {
+    const magiasContainer = document.getElementById("magias-container");
+    magiasContainer.innerHTML = "";
+    
+    magiasDisponiveis.forEach(magia => {
+        const magiaElement = document.createElement("div");
+        magiaElement.className = "item-consumivel";
+        magiaElement.dataset.magiaId = magia.id;
+        magiaElement.dataset.efeito = magia.efeito;
+        magiaElement.dataset.valor = magia.valor;
+        magiaElement.dataset.custo = magia.custo;
+        
+        // Verifica se tem magia suficiente
+        const temMagiaSuficiente = playerMagic >= magia.custo;
+        if (!temMagiaSuficiente) {
+            magiaElement.classList.add("disabled");
+            magiaElement.style.opacity = "0.5";
+        }
+        
+        magiaElement.innerHTML = `
+            <div class="item-nome">${magia.nome}</div>
+            <div class="item-quantidade">Custo: ${magia.custo} PM</div>
+            <div class="item-descricao">${magia.descricao}</div>
+        `;
+        
+        if (temMagiaSuficiente) {
+            magiaElement.addEventListener("click", () => selecionarMagia(magiaElement));
+        }
+        magiasContainer.appendChild(magiaElement);
+    });
+}
+
+// Função para selecionar uma magia
+function selecionarMagia(magiaElement) {
+    // Limpa seleção anterior
+    document.querySelectorAll(".item-consumivel").forEach(el => {
+        el.classList.remove("selected");
+    });
+    
+    // Seleciona a nova magia
+    magiaElement.classList.add("selected");
+    
+    // Mostra o botão de usar
+    const usarBtn = document.querySelector(".usar-magia-btn");
+    if (usarBtn) {
+        usarBtn.style.display = "block";
+        usarBtn.dataset.magiaId = magiaElement.dataset.magiaId;
+        usarBtn.dataset.efeito = magiaElement.dataset.efeito;
+        usarBtn.dataset.valor = magiaElement.dataset.valor;
+        usarBtn.dataset.custo = magiaElement.dataset.custo;
+    }
+}
+
+// Função para usar uma magia
+async function usarMagia(magiaId, efeito, valor, custo) {
+    const userId = auth.currentUser.uid;
+    const custoNum = parseInt(custo);
+    
+    // Verifica se tem magia suficiente
+    if (playerMagic < custoNum) {
+        await addLogMessage(`Você não tem magia suficiente! (${playerMagic}/${custoNum})`, 1000);
+        return;
+    }
+    
+    // Encontra a magia
+    const magia = magiasDisponiveis.find(m => m.id === magiaId);
+    if (!magia) return;
+    
+    // Fechar modal
+    document.getElementById("magias-modal").style.display = "none";
+    
+    // Reduz magia
+    playerMagic -= custoNum;
+    atualizarBarraMagia(playerMagic, playerMaxMagic);
+    
+    // Criar bloco de turno
+    startNewTurnBlock("Magia");
+    await addLogMessage(`Você lança ${magia.nome}!`, 800);
+    
+    // Teste de resistência do monstro
+    const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+    const resistanceTotal = resistanceRoll + currentMonster.habilidade;
+    const difficulty = 15;
+    
+    await addLogMessage(`${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
+    
+    if (resistanceTotal >= difficulty) {
+        await addLogMessage(`${currentMonster.nome} resistiu à magia!`, 1000);
+    } else {
+        await addLogMessage(`A magia afeta ${currentMonster.nome}!`, 800);
+        
+        // Aplica efeito
+        if (efeito === "heal") {
+            const newEnergy = Math.min(playerHealth + parseInt(valor), playerMaxHealth);
+            playerHealth = newEnergy;
+            atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+            await addLogMessage(`Você recuperou ${valor} pontos de energia.`, 800);
+        } else if (efeito === "damage") {
+            currentMonster.pontosDeEnergia -= parseInt(valor);
+            currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+            atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+            await addLogMessage(`${currentMonster.nome} sofreu ${valor} de dano mágico.`, 800);
+            
+            if (currentMonster.pontosDeEnergia <= 0) {
+                await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+                handlePostBattle(currentMonster);
+                return;
+            }
+        }
+    }
+    
+    // Salva estado
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+    
+    // Passa turno
+    endPlayerTurn();
 }
 
 
