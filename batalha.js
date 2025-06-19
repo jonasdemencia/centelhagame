@@ -37,7 +37,7 @@ const magiasDisponiveis = [
         descricao: "Projétil mágico que sempre acerta",
         custo: 1,
         efeito: "damage",
-        valor: 2
+        valor: "1d4"
     },
     {
         id: "escudo-arcano",
@@ -1530,10 +1530,12 @@ async function usarMagia(magiaId, efeito, valor, custo) {
             atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
             await addLogMessage(`Você recuperou ${valor} pontos de energia.`, 800);
         } else if (efeito === "damage") {
-            currentMonster.pontosDeEnergia -= parseInt(valor);
-            currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
-            atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
-            await addLogMessage(`${currentMonster.nome} sofreu ${valor} de dano mágico.`, 800);
+    const danoRolado = rollDice(valor);
+    currentMonster.pontosDeEnergia -= danoRolado;
+    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+    await addLogMessage(`${currentMonster.nome} sofreu ${danoRolado} de dano mágico (${valor}).`, 800);
+
             
             if (currentMonster.pontosDeEnergia <= 0) {
                 await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
