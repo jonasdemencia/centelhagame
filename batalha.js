@@ -37,7 +37,7 @@ const magiasDisponiveis = [
         descricao: "Projétil mágico que sempre acerta",
         custo: 1,
         efeito: "damage",
-        valor: "1d4"
+        valor: 2
     },
     {
         id: "escudo-arcano",
@@ -1519,42 +1519,36 @@ async function usarMagia(magiaId, efeito, valor, custo) {
     await addLogMessage(`${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
     
     if (resistanceTotal >= difficulty) {
-    await addLogMessage(`${currentMonster.nome} resistiu à magia!`, 1000);
-    // Salva estado e passa turno
-    await updatePlayerMagicInFirestore(userId, playerMagic);
-    await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-    endPlayerTurn();
-} else {
-    await addLogMessage(`A magia afeta ${currentMonster.nome}!`, 800);
-    
-    if (efeito === "heal") {
-        const newEnergy = Math.min(playerHealth + parseInt(valor), playerMaxHealth);
-        playerHealth = newEnergy;
-        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-        await addLogMessage(`Você recuperou ${valor} pontos de energia.`, 800);
+        await addLogMessage(`${currentMonster.nome} resistiu à magia!`, 1000);
+    } else {
+        await addLogMessage(`A magia afeta ${currentMonster.nome}!`, 800);
         
-        // Salva estado e passa turno
-        await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-        endPlayerTurn();
-        
-    } else if (efeito === "damage") {
-        await addLogMessage(`Role o dano da magia!`, 800);
-        
-        // Salva dados da magia para usar no botão de dano
-        window.magicContext = {
-            dano: valor,
-            userId: userId,
-            monsterName: monsterName
-        };
-        
-        // Mostra botão de dano
-        const rolarDanoButton = document.getElementById("rolar-dano");
-        if (rolarDanoButton) {
-            rolarDanoButton.style.display = 'inline-block';
-            rolarDanoButton.disabled = false;
+        // Aplica efeito
+        if (efeito === "heal") {
+            const newEnergy = Math.min(playerHealth + parseInt(valor), playerMaxHealth);
+            playerHealth = newEnergy;
+            atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+            await addLogMessage(`Você recuperou ${valor} pontos de energia.`, 800);
+        } else if (efeito === "damage") {
+            currentMonster.pontosDeEnergia -= parseInt(valor);
+            currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+            atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+            await addLogMessage(`${currentMonster.nome} sofreu ${valor} de dano mágico.`, 800);
+            
+            if (currentMonster.pontosDeEnergia <= 0) {
+                await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+                handlePostBattle(currentMonster);
+                return;
+            }
         }
     }
+    
+    // Salva estado
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+    
+    // Passa turno
+    endPlayerTurn();
 }
 
 
@@ -1956,54 +1950,28 @@ if (rollLocationBtn) {
 
 // Listener para o botão "Rolar Dano"
 // --- INÍCIO: NOVO CÓDIGO PARA O LISTENER 'rolar-dano' ---
-rolarDanoButton.addEventListener('click', async () => { // Adicionado async
-    console.log("LOG: Botão 'DANO' clicado.");
-    if (!isPlayerTurn) {
-        await addLogMessage(`<p>Não é seu turno!</p>`, 1000);
-        return;
-    }
-
-    // NOVA VERIFICAÇÃO PARA MAGIA
-    if (window.magicContext) {
-        // É dano de magia
-        const danoRolado = rollDice(window.magicContext.dano);
-        currentMonster.pontosDeEnergia -= danoRolado;
-        currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
-        atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
-        await addLogMessage(`${currentMonster.nome} sofreu ${danoRolado} de dano mágico (${window.magicContext.dano}).`, 800);
-        
-        // Limpa contexto
-        window.magicContext = null;
-        rolarDanoButton.style.display = 'none';
-        
-        // Verifica se morreu
-        if (currentMonster.pontosDeEnergia <= 0) {
-            await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-            handlePostBattle(currentMonster);
+    rolarDanoButton.addEventListener('click', async () => { // Adicionado async
+        console.log("LOG: Botão 'DANO' clicado.");
+        if (!isPlayerTurn) {
+            await addLogMessage(`<p>Não é seu turno!</p>`, 1000);
             return;
         }
-        
-        // Salva e passa turno
-        await updatePlayerMagicInFirestore(window.magicContext.userId, playerMagic);
-        await saveBattleState(window.magicContext.userId, window.magicContext.monsterName, currentMonster.pontosDeEnergia, playerHealth);
-        endPlayerTurn();
-        return;
-    }
 
-    // Desabilita todos botões durante o processamento do dano
-    const actionButtons = document.querySelectorAll('#attack-options button');
-    actionButtons.forEach(button => button.disabled = true);
-    rolarDanoButton.style.display = 'none'; // Esconde o próprio botão de dano
+        // Desabilita todos botões durante o processamento do dano
+        const actionButtons = document.querySelectorAll('#attack-options button');
+        actionButtons.forEach(button => button.disabled = true);
+        rolarDanoButton.style.display = 'none'; // Esconde o próprio botão de dano
 
-    let totalDamage = 0;
-    let baseDamageRoll = 0;
-    let siferBonusDamage = 0;
-    let isSiferDamage = false; // Flag para saber se é dano SIFER
-    const playerDamageDice = playerData?.dano || "1"; // Pega o dado de dano do jogador
+        let totalDamage = 0;
+        let baseDamageRoll = 0;
+        let siferBonusDamage = 0;
+        let isSiferDamage = false; // Flag para saber se é dano SIFER
+        const playerDamageDice = playerData?.dano || "1"; // Pega o dado de dano do jogador
 
-    // Verifica se estamos no contexto SIFER (definido pelo botão de localização)
-    if (window.siferContext && window.siferContext.bonusType) {
-        const { bonusType, locationName, damageStage } = window.siferContext;
+        // Verifica se estamos no contexto SIFER (definido pelo botão de localização)
+
+        if (window.siferContext && window.siferContext.bonusType) {
+    const { bonusType, locationName, damageStage } = window.siferContext;
 
     if (!damageStage || damageStage === 'base') {
         // Rolar apenas o dano base
