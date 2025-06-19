@@ -129,6 +129,33 @@ function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
     }
 }
 
+
+// Função para barra de Magia
+function atualizarBarraMagia(valorAtual, valorMaximo) {
+    const barra = document.getElementById("barra-magia-jogador");
+    const valorSpan = document.getElementById("magia-jogador-valor");
+    
+    if (!barra || !valorSpan) return;
+    if (!valorMaximo || valorMaximo <= 0) return;
+
+    const porcentagem = (valorAtual / valorMaximo) * 100;
+    barra.style.width = `${porcentagem}%`;
+    
+    // Cores da barra de magia
+    if (valorAtual <= 0) {
+        barra.style.backgroundColor = '#000080'; // Azul escuro para vazia
+    } else if (valorAtual <= valorMaximo * 0.3) {
+        barra.style.backgroundColor = '#4169E1'; // Azul médio para baixa
+    } else {
+        barra.style.backgroundColor = '#0000FF'; // Azul para normal
+    }
+    
+    valorSpan.textContent = `${valorAtual}/${valorMaximo}`;
+}
+
+
+
+
 // Função para rolar dados (ex: "1D6", "2D4")
 function rollDice(diceString) {
     console.log("LOG: rollDice chamado com:", diceString);
@@ -532,6 +559,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let playerData; // Para armazenar os dados do jogador
     let playerHealth = 0;
     let playerMaxHealth = playerHealth; // ✅ AQUI! Esta linha é o que você precisava
+    let playerMagic = 0;
+    let playerMaxMagic = 0;
     let isPlayerTurn = false; // Variável para controlar o turno
     let currentTurnBlock = null; // Para armazenar o bloco do turno atual
     let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
@@ -1510,6 +1539,14 @@ endPlayerTurn();
                         playerMaxHealth = playerData.energy?.initial ? parseInt(playerData.energy.initial) : playerHealth;
                         atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
                         // ******************************************
+
+                        // Carrega dados de magia
+playerMagic = playerData.magic?.total ? parseInt(playerData.magic.total) : 0;
+playerMaxMagic = playerMagic; // Magia máxima é igual ao total atual
+atualizarBarraMagia(playerMagic, playerMaxMagic);
+console.log("LOG: Magia do jogador carregada:", playerMagic, "/", playerMaxMagic);
+
+                      
                         
                         const inventarioButton = document.getElementById("abrir-inventario");
 const playerHealthDisplay = document.getElementById("player-health");
