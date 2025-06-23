@@ -262,9 +262,13 @@ function processBuffs() {
     
     // Processa mensagens de buffs expirados sequencialmente
     return expiredBuffs.reduce((promise, buff) => {
-        return promise.then(() => addLogMessage(`${buff.nome} se dissipou.`, 800));
-    }, Promise.resolve());
-}
+    return promise.then(() => {
+        if (typeof addLogMessage === 'function') {
+            return addLogMessage(`${buff.nome} se dissipou.`, 800);
+        }
+        return Promise.resolve();
+    });
+}, Promise.resolve());
 
 
 
