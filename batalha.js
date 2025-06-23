@@ -228,8 +228,8 @@ function getPlayerDefense() {
 
 
 // Função para processar buffs no início do turno do jogador
-async function processBuffs() {
-    if (activeBuffs.length === 0) return;
+function processBuffs() {
+    if (activeBuffs.length === 0) return Promise.resolve();
     
     // Reduz duração de todos os buffs
     activeBuffs.forEach(buff => buff.turnos--);
@@ -238,9 +238,10 @@ async function processBuffs() {
     const expiredBuffs = activeBuffs.filter(buff => buff.turnos <= 0);
     activeBuffs = activeBuffs.filter(buff => buff.turnos > 0);
     
-    for (const buff of expiredBuffs) {
-        await addLogMessage(`${buff.nome} se dissipou.`, 800);
-    }
+    // Processa mensagens de buffs expirados sequencialmente
+    return expiredBuffs.reduce((promise, buff) => {
+        return promise.then(() => addLogMessage(`${buff.nome} se dissipou.`, 800));
+    }, Promise.resolve());
 }
 
 
@@ -1155,9 +1156,9 @@ function endMonsterTurn() {
     }
 
     startNewTurnBlock("Jogador");
-processBuffs().then(() => {
-    addLogMessage(`Turno do Jogador`, 1000);
-});
+await processBuffs();
+addLogMessage(`Turno do Jogador`, 1000);
+
 
     
     // Salva o estado após mudar o turno para o jogador
