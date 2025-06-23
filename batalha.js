@@ -10,6 +10,7 @@ window.isPlayerTurn = false;
 window.battleStarted = false;
 let escapeAttempts = 0; // Contador de tentativas de fuga
 let nextTelegraphedAttack = null; // Próximo ataque telegrafado
+let activeBuffs = []; // Sistema de buffs temporários
 
 
 console.log("LOG: batalha.js carregado.");
@@ -213,6 +214,34 @@ function rollDice(diceString) {
     }
 }
 
+// Função para calcular couraça total (base + buffs)
+function getPlayerDefense() {
+    const baseDefense = playerData?.couraca ? parseInt(playerData.couraca) : 0;
+    const buffBonus = activeBuffs
+        .filter(buff => buff.tipo === "couraca")
+        .reduce((total, buff) => total + buff.valor, 0);
+    return baseDefense + buffBonus;
+}
+
+
+// Função para processar buffs no início do turno do jogador
+async function processBuffs() {
+    if (activeBuffs.length === 0) return;
+    
+    // Reduz duração de todos os buffs
+    activeBuffs.forEach(buff => buff.turnos--);
+    
+    // Remove buffs expirados e mostra mensagem
+    const expiredBuffs = activeBuffs.filter(buff => buff.turnos <= 0);
+    activeBuffs = activeBuffs.filter(buff => buff.turnos > 0);
+    
+    for (const buff of expiredBuffs) {
+        await addLogMessage(`${buff.nome} se dissipou.`, 800);
+    }
+}
+
+
+
 // Função para atualizar a energia do jogador na ficha do Firestore
 function updatePlayerEnergyInFirestore(userId, newEnergy) {
     console.log("LOG: updatePlayerEnergyInFirestore chamado com userId:", userId, "newEnergy:", newEnergy);
@@ -300,7 +329,10 @@ function loadBattleState(userId, monsterName) {
                 window.isPlayerTurn = data.isPlayerTurn;
                 isPlayerTurn = data.isPlayerTurn; // Sincroniza a variável local
                 window.battleStarted = data.battleStarted || false;
-                
+              
+              // Restaura buffs ativos
+activeBuffs = data.activeBuffs || [];
+  
                 return data;
             } else {
                 console.log("LOG: Nenhum estado de batalha encontrado para este monstro.");
@@ -332,17 +364,18 @@ function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
     
     // Usa a variável global window.isPlayerTurn em vez de isPlayerTurn
     return setDoc(battleDocRef, { 
-        monsterHealth: monsterHealth, 
-        playerHealth: playerHealth,
-        isPlayerTurn: window.isPlayerTurn, // Usa window.isPlayerTurn em vez de isPlayerTurn
-        initiativeResult: initiativeResult || null,
-        playerInitiativeRoll: playerInitiativeRoll || null,
-        monsterInitiativeRoll: monsterInitiativeRoll || null,
-        playerAbility: playerAbility || null,
-        monsterAbility: monsterAbility || null,
-        battleStarted: window.battleStarted || false,
-        lastUpdated: new Date().toISOString()
-    }, { merge: true });
+    monsterHealth: monsterHealth, 
+    playerHealth: playerHealth,
+    isPlayerTurn: window.isPlayerTurn,
+    initiativeResult: initiativeResult || null,
+    playerInitiativeRoll: playerInitiativeRoll || null,
+    monsterInitiativeRoll: monsterInitiativeRoll || null,
+    playerAbility: playerAbility || null,
+    monsterAbility: monsterAbility || null,
+    battleStarted: window.battleStarted || false,
+    activeBuffs: activeBuffs || [],
+    lastUpdated: new Date().toISOString()
+}, { merge: true });
 }
 
 
@@ -988,7 +1021,7 @@ async function monsterAttack() {
 await addLogMessage(`${currentMonster.nome} rolou ${monsterRollRaw} em um D20 para atacar.`, 1000);
 
 
-    const playerDefense = playerData?.couraca ? parseInt(playerData.couraca) : 0;
+    const playerDefense = getPlayerDefense();
     await addLogMessage(`Sua Couraça é ${playerDefense}.`, 1000);
 
     // Verifica se o ataque acertou
@@ -1118,7 +1151,9 @@ function endMonsterTurn() {
     }
 
     startNewTurnBlock("Jogador");
-    addLogMessage(`Turno do Jogador`, 1000);
+await processBuffs();
+addLogMessage(`Turno do Jogador`, 1000);
+
     
     // Salva o estado após mudar o turno para o jogador
     const user = auth.currentUser;
@@ -1554,6 +1589,28 @@ async function usarMagia(magiaId, efeito, valor, custo) {
                 rolarDanoButton.style.display = 'inline-block';
                 rolarDanoButton.disabled = false;
             }
+        } else if (efeito === "shield") {
+            // Aplica buff de escudo
+            const buffValue = parseInt(valor);
+            const buffDuration = 3;
+            
+            // Remove buff anterior do mesmo tipo se existir
+            activeBuffs = activeBuffs.filter(buff => buff.tipo !== "couraca");
+            
+            // Adiciona novo buff
+            activeBuffs.push({
+                tipo: "couraca",
+                valor: buffValue,
+                turnos: buffDuration,
+                nome: magia.nome
+            });
+            
+            await addLogMessage(`${magia.nome} ativo! Sua couraça aumentou em +${buffValue} por ${buffDuration} turnos.`, 800);
+            
+            // Salva estado e passa turno
+            await updatePlayerMagicInFirestore(userId, playerMagic);
+            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+            endPlayerTurn();
         }
     }
 }
