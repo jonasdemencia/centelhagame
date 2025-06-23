@@ -226,6 +226,25 @@ function getPlayerDefense() {
 }
 
 
+// Função para atualizar display de buffs
+function updateBuffsDisplay() {
+    const container = document.getElementById('buffs-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    activeBuffs.forEach(buff => {
+        const buffElement = document.createElement('div');
+        buffElement.className = 'buff-item';
+        buffElement.innerHTML = `
+            <span>${buff.nome}</span>
+            <span class="buff-turns">${buff.turnos}</span>
+        `;
+        container.appendChild(buffElement);
+    });
+}
+
+
 
 // Função para processar buffs no início do turno do jogador
 function processBuffs() {
@@ -237,6 +256,9 @@ function processBuffs() {
     // Remove buffs expirados e mostra mensagem
     const expiredBuffs = activeBuffs.filter(buff => buff.turnos <= 0);
     activeBuffs = activeBuffs.filter(buff => buff.turnos > 0);
+      // Atualiza display
+    updateBuffsDisplay();
+
     
     // Processa mensagens de buffs expirados sequencialmente
     return expiredBuffs.reduce((promise, buff) => {
@@ -1569,6 +1591,9 @@ if (efeito === "shield") {
         turnos: buffDuration,
         nome: magia.nome
     });
+
+  // ADICIONE AQUI:
+    updateBuffsDisplay();
     
     await addLogMessage(`${magia.nome} ativo! Sua couraça aumentou em +${buffValue} por ${buffDuration} turnos.`, 800);
     
@@ -1638,6 +1663,9 @@ if (resistanceTotal >= difficulty) {
                 turnos: buffDuration,
                 nome: magia.nome
             });
+
+          // ADICIONE AQUI:
+    updateBuffsDisplay();
             
             await addLogMessage(`${magia.nome} ativo! Sua couraça aumentou em +${buffValue} por ${buffDuration} turnos.`, 800);
             
