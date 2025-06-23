@@ -826,3 +826,24 @@ dice-icon svg {
   background-color: #5a7751;
 }
 
+/* Estilo para buffs */
+.buff-item {
+  background-color: #2a4a2a;
+  border: 1px solid #4a7a4a;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 0.8em;
+  color: #90ee90;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.buff-turns {
+  background-color: #1a3a1a;
+  border-radius: 2px;
+  padding: 1px 4px;
+  font-size: 0.7em;
+  min-width: 12px;
+  text-align: center;
+}
