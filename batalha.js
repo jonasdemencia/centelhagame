@@ -216,12 +216,15 @@ function rollDice(diceString) {
 
 // Função para calcular couraça total (base + buffs)
 function getPlayerDefense() {
-    const baseDefense = playerData?.couraca ? parseInt(playerData.couraca) : 0;
+    // Declara playerData como global ou busca do escopo correto
+    const currentPlayerData = window.playerData || playerData;
+    const baseDefense = currentPlayerData?.couraca ? parseInt(currentPlayerData.couraca) : 0;
     const buffBonus = activeBuffs
         .filter(buff => buff.tipo === "couraca")
         .reduce((total, buff) => total + buff.valor, 0);
     return baseDefense + buffBonus;
 }
+
 
 
 // Função para processar buffs no início do turno do jogador
@@ -632,8 +635,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const rolarDanoButton = document.getElementById("rolar-dano");
     const monsterName = getUrlParameter('monstro');
     let currentMonster; // Declara currentMonster no escopo superior
-    let playerData; // Para armazenar os dados do jogador
-    let playerHealth = 0;
+let playerData; // Para armazenar os dados do jogador
+window.playerData = null; // Variável global para playerData
+let playerHealth = 0;
     let playerMaxHealth = playerHealth; // ✅ AQUI! Esta linha é o que você precisava
     let playerMagic = 0;
     let playerMaxMagic = 0;
@@ -1547,14 +1551,41 @@ async function usarMagia(magiaId, efeito, valor, custo) {
     startNewTurnBlock("Magia");
     await addLogMessage(`Você lança ${magia.nome}!`, 800);
     
-    // Teste de resistência do monstro
-    const resistanceRoll = Math.floor(Math.random() * 20) + 1;
-    const resistanceTotal = resistanceRoll + currentMonster.habilidade;
-    const difficulty = 15;
+    // Magias de escudo não fazem teste de resistência
+if (efeito === "shield") {
+    // Aplica buff de escudo
+    const buffValue = parseInt(valor);
+    const buffDuration = 3;
     
-    await addLogMessage(`${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
+    // Remove buff anterior do mesmo tipo se existir
+    activeBuffs = activeBuffs.filter(buff => buff.tipo !== "couraca");
     
-    if (resistanceTotal >= difficulty) {
+    // Adiciona novo buff
+    activeBuffs.push({
+        tipo: "couraca",
+        valor: buffValue,
+        turnos: buffDuration,
+        nome: magia.nome
+    });
+    
+    await addLogMessage(`${magia.nome} ativo! Sua couraça aumentou em +${buffValue} por ${buffDuration} turnos.`, 800);
+    
+    // Salva estado e passa turno
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+    endPlayerTurn();
+    return;
+}
+
+// Teste de resistência do monstro (para outras magias)
+const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+const resistanceTotal = resistanceRoll + currentMonster.habilidade;
+const difficulty = 15;
+
+await addLogMessage(`${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
+
+if (resistanceTotal >= difficulty) {
+
         await addLogMessage(`${currentMonster.nome} resistiu à magia!`, 1000);
         // Salva estado e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
@@ -1797,8 +1828,10 @@ async function usarMagia(magiaId, efeito, valor, custo) {
             getDoc(playerDocRef)
                 .then(docSnap => {
                     if (docSnap.exists()) {
-                        playerData = docSnap.data();
-                        playerAbilityValue = playerData.habilidade ? playerData.habilidade : 0;
+    playerData = docSnap.data();
+    window.playerData = playerData; // Salva globalmente
+    playerAbilityValue = playerData.habilidade ? playerData.habilidade : 0;
+
                         const playerDamage = playerData.dano ? playerData.dano : "1";
                         console.log("LOG: onAuthStateChanged - Dados do jogador carregados:", playerData);
                         console.log("LOG: onAuthStateChanged - Habilidade do jogador:", playerAbilityValue);
