@@ -1151,8 +1151,9 @@ function endMonsterTurn() {
     }
 
     startNewTurnBlock("Jogador");
-await processBuffs();
-addLogMessage(`Turno do Jogador`, 1000);
+processBuffs().then(() => {
+    addLogMessage(`Turno do Jogador`, 1000);
+});
 
     
     // Salva o estado após mudar o turno para o jogador
