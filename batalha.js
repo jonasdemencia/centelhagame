@@ -1097,7 +1097,8 @@ await addLogMessage(`${currentMonster.nome} rolou ${monsterRollRaw} em um D20 pa
 
 
     
-function endMonsterTurn() {
+async function endMonsterTurn() {
+
     console.log("LOG: Finalizando turno do monstro e iniciando turno do jogador.");
     if (isPlayerTurn) {
         console.error("LOG: endMonsterTurn chamado fora do turno do monstro. Abortando.");
