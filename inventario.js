@@ -392,13 +392,15 @@ if (useButton) {
     useButton.addEventListener("click", async () => {
         console.log("Botão 'Usar' clicado");
         if (selectedItem && selectedItem.dataset.effect === "boost_attributes") {
-            // Aplica o boost de atributos
-            if (currentPlayerData) {
-                // Aplica o boost
-                const boostValue = parseInt(selectedItem.dataset.value) || 100;
-                currentPlayerData.luck = { total: boostValue, initial: boostValue };
-                currentPlayerData.skill = { total: boostValue, initial: boostValue };
-                currentPlayerData.charisma = { total: boostValue, initial: boostValue };
+    // Aplica o boost de atributos
+    if (currentPlayerData) {
+        // Aplica o boost
+        const boostValue = parseInt(selectedItem.dataset.value) || 100;
+        currentPlayerData.luck = { total: boostValue, initial: boostValue };
+        currentPlayerData.skill = { total: boostValue, initial: boostValue };
+        currentPlayerData.charisma = { total: boostValue, initial: boostValue };
+        currentPlayerData.magic = { total: boostValue, initial: boostValue };
+
                 
                 // Salva no Firestore
                 await savePlayerData(auth.currentUser.uid, currentPlayerData);
