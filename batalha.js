@@ -13,6 +13,11 @@ let nextTelegraphedAttack = null; // Próximo ataque telegrafado
 let activeBuffs = []; // Sistema de buffs temporários
 let activeMonsterDebuffs = []; // Sistema de debuffs do monstro
 
+// Variáveis globais para batalha
+let battleLogContent;
+let currentTurnBlock = null;
+
+
 
 console.log("LOG: batalha.js carregado.");
 
@@ -746,7 +751,8 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: DOMContentLoaded evento disparado.");
     const lutarButton = document.getElementById("iniciar-luta");
     const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
-    const battleLogContent = document.getElementById("battle-log-content");
+        battleLogContent = document.getElementById("battle-log-content");
+
     const attackOptionsDiv = document.getElementById("attack-options");
     const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
     const rolarDanoButton = document.getElementById("rolar-dano");
@@ -759,7 +765,7 @@ let playerHealth = 0;
     let playerMagic = 0;
     let playerMaxMagic = 0;
     let isPlayerTurn = false; // Variável para controlar o turno
-    let currentTurnBlock = null; // Para armazenar o bloco do turno atual
+   
     let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
     let battleStarted = false; // Variável de controle para estado da batalha
     console.log("LOG: Variáveis iniciais declaradas.");
