@@ -160,6 +160,36 @@
           min-width: 12px;
           text-align: center;
         }
+
+        /* Estilo para debuffs */
+        .debuff-item {
+            background-color: #4a2a2a;
+            border: 1px solid #7a4a4a;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-size: 0.8em;
+            color: #ff9090;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .debuff-turns {
+            background-color: #3a1a1a;
+            border-radius: 2px;
+            padding: 1px 4px;
+            font-size: 0.7em;
+            min-width: 12px;
+            text-align: center;
+        }
+
+        .debuffs-container {
+            margin-top: 5px;
+            min-height: 20px;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
     </style>
 </head>
 <body>
@@ -193,6 +223,8 @@
             <div id="barra-hp-monstro" class="barra-hp"></div>
             <span id="hp-monstro-valor" class="hp-valor">0/0</span>
         </div>
+        <!-- DEBUFFS DO MONSTRO -->
+        <div id="monster-debuffs-container" class="debuffs-container"></div>
     </div>
 </section>
 <!-- FIM DAS BARRAS DE HP -->
