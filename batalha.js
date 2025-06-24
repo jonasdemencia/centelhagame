@@ -1234,11 +1234,12 @@ async function endMonsterTurn() {
     if (attackOptionsDiv) {
         attackOptionsDiv.style.display = 'block'; // Exibe as opções de ataque do jogador
 
-        // Exibe e habilita todos os botões principais
+                // Exibe e habilita todos os botões principais
         const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
         const atoClasseButton = document.getElementById("ato-classe");
         const itensFerramentasButton = document.getElementById("itens-ferramentas");
         const correrButton = document.getElementById("correr-batalha");
+        const magiaButton = document.getElementById("atacar-a-distancia");
         
         if (atacarCorpoACorpoButton) {
             atacarCorpoACorpoButton.disabled = false;
@@ -1252,6 +1253,11 @@ async function endMonsterTurn() {
             itensFerramentasButton.disabled = false;
             itensFerramentasButton.style.display = 'inline-block';
         }
+        if (magiaButton) {
+            magiaButton.disabled = false;
+            magiaButton.style.display = 'inline-block';
+        }
+
         
         // IMPORTANTE: Garantir que o botão de fuga esteja visível e com evento
         if (correrButton) {
