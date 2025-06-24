@@ -154,8 +154,53 @@ function initArcanumPanel() {
     setInterval(updateArcanumPanel, 60000);
 }
 
+// Função para criar modal de conjuração
+function createConjurationModal() {
+    const modal = document.createElement('div');
+    modal.id = 'arcanum-conjuration-modal';
+    modal.innerHTML = `
+        <div class="modal-overlay">
+            <div class="conjuration-container">
+                <div class="conjuration-header">
+                    <h2>⚡ CONJURAÇÃO - TOQUE CHOCANTE</h2>
+                    <button class="close-conjuration" id="close-conjuration">×</button>
+                </div>
+                
+                <div class="conjuration-info">
+                    <div class="spell-info">
+                        <p><strong>Palavra Base:</strong> FULGOR</p>
+                        <p><strong>Sequência:</strong> ↑↑↑↓</p>
+                    </div>
+                </div>
+                
+                <div class="conjuration-input">
+                    <div class="directional-input">
+                        <label>Sequência Direcional:</label>
+                        <input type="text" id="directional-sequence" placeholder="↑↑↑↓" maxlength="10">
+                    </div>
+                    
+                    <div class="word-input">
+                        <label>Palavra Modificada:</label>
+                        <input type="text" id="conjuration-word" placeholder="Digite a palavra..." maxlength="50">
+                    </div>
+                </div>
+                
+                <div class="conjuration-actions">
+                    <button id="conjure-spell" class="conjure-btn">🔮 CONJURAR</button>
+                    <button id="cancel-conjuration" class="cancel-btn">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    return modal;
+}
+
+
 // Exporta as funções para uso global
 window.ArcanumUI = {
     initPanel: initArcanumPanel,
-    updatePanel: updateArcanumPanel
+    updatePanel: updateArcanumPanel,
+    createConjurationModal: createConjurationModal
 };
+
