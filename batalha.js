@@ -1676,12 +1676,31 @@ async function usarMagia(magiaId, efeito, valor, custo) {
     const magia = magiasDisponiveis.find(m => m.id === magiaId);
     if (!magia) return;
     
-    // Fechar modal
+    // SISTEMA ARCANUM VERBIS - Detecta Toque Chocante
+if (magiaId === "toque-chocante") {
+    // Fechar modal de magias
     document.getElementById("magias-modal").style.display = "none";
+    
+    // Criar e mostrar modal de conjuração
+    const conjurationModal = window.ArcanumUI.createConjurationModal();
+    document.body.appendChild(conjurationModal);
+    document.getElementById("arcanum-conjuration-modal").style.display = "block";
     
     // Reduz magia
     playerMagic -= custoNum;
     atualizarBarraMagia(playerMagic, playerMaxMagic);
+    
+    // TODO: Implementar lógica de conjuração
+    return;
+}
+
+// Fechar modal (para outras magias)
+document.getElementById("magias-modal").style.display = "none";
+
+// Reduz magia
+playerMagic -= custoNum;
+atualizarBarraMagia(playerMagic, playerMaxMagic);
+
     
     // Criar bloco de turno
     startNewTurnBlock("Magia");
