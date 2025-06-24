@@ -269,6 +269,9 @@ function processBuffs() {
         return Promise.resolve();
     });
 }, Promise.resolve());
+  } // <- ADICIONE ESTA CHAVE AQUI
+
+
 
 
 
