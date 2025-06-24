@@ -65,6 +65,49 @@ function getConditionIcon(tipo, valor) {
     return icones[tipo]?.[valor] || '❓';
 }
 
+// Função para aplicar modificadores gramaticais
+function applyArcanumModifiers(palavraBase, conditions) {
+    let palavra = palavraBase.toUpperCase();
+    
+    // 1. PERÍODOS DO DIA
+    switch(conditions.periodo) {
+        case 'manha':
+            palavra = palavra.replace(/[AEIOU]/, 'I'); // Primeira vogal → I
+            break;
+        case 'tarde':
+            palavra = palavra.replace(/A/g, 'Y'); // A → Y
+            break;
+        case 'noite':
+            const ultimaConsoante = palavra.match(/[BCDFGHJKLMNPQRSTVWXYZ](?=[BCDFGHJKLMNPQRSTVWXYZ]*$)/);
+            if (ultimaConsoante) {
+                palavra = palavra.replace(ultimaConsoante[0], ultimaConsoante[0] + ultimaConsoante[0]);
+            }
+            break;
+        case 'madrugada':
+            palavra += 'MAD';
+            break;
+    }
+    
+    // 2. ESTAÇÕES
+    switch(conditions.estacao) {
+        case 'primavera':
+            palavra += 'PRI';
+            break;
+        case 'verao':
+            palavra = palavra.replace(/E/g, 'A');
+            break;
+        case 'outono':
+            palavra += 'OUT';
+            break;
+        case 'inverno':
+            palavra = palavra.replace(/O/g, 'U');
+            break;
+    }
+    
+    return palavra;
+}
+
+
 // Exporta as funções para uso global
 window.ArcanumConditions = {
     getConditions: getArcanumConditions,
