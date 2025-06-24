@@ -1583,56 +1583,54 @@ async function usarMagia(magiaId, efeito, valor, custo) {
     await addLogMessage(`Você lança ${magia.nome}!`, 800);
     
     // Magias de escudo não fazem teste de resistência
-if (efeito === "shield") {
-    // Aplica buff de escudo
-    const buffValue = parseInt(valor);
-    const buffDuration = 3;
-    
-    // Remove buff anterior do mesmo tipo se existir
-    activeBuffs = activeBuffs.filter(buff => buff.tipo !== "couraca");
-    
-    // Adiciona novo buff
-    activeBuffs.push({
-        tipo: "couraca",
-        valor: buffValue,
-        turnos: buffDuration,
-        nome: magia.nome
-    });
+    if (efeito === "shield") {
+        // Aplica buff de escudo
+        const buffValue = parseInt(valor);
+        const buffDuration = 3;
+        
+        // Remove buff anterior do mesmo tipo se existir
+        activeBuffs = activeBuffs.filter(buff => buff.tipo !== "couraca");
+        
+        // Adiciona novo buff
+        activeBuffs.push({
+            tipo: "couraca",
+            valor: buffValue,
+            turnos: buffDuration,
+            nome: magia.nome
+        });
 
-  // ADICIONE AQUI:
-    updateBuffsDisplay();
-    
-    await addLogMessage(`${magia.nome} ativo! Sua couraça aumentou em +${buffValue} por ${buffDuration} turnos.`, 800);
-    
-    // Salva estado e passa turno
-    await updatePlayerMagicInFirestore(userId, playerMagic);
-    await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-    endPlayerTurn();
-    return;
-}
+        updateBuffsDisplay();
+        
+        await addLogMessage(`${magia.nome} ativo! Sua couraça aumentou em +${buffValue} por ${buffDuration} turnos.`, 800);
+        
+        // Salva estado e passa turno
+        await updatePlayerMagicInFirestore(userId, playerMagic);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        endPlayerTurn();
+        return;
+    }
 
-  if (efeito === "heal") {
-    const newEnergy = Math.min(playerHealth + parseInt(valor), playerMaxHealth);
-    playerHealth = newEnergy;
-    atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-    await addLogMessage(`Você recuperou ${valor} pontos de energia.`, 800);
-    
-    // Salva estado e passa turno
-    await updatePlayerMagicInFirestore(userId, playerMagic);
-    await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-    endPlayerTurn();
-    return; // ADICIONE ESTA LINHA
-}
+    if (efeito === "heal") {
+        const newEnergy = Math.min(playerHealth + parseInt(valor), playerMaxHealth);
+        playerHealth = newEnergy;
+        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+        await addLogMessage(`Você recuperou ${valor} pontos de energia.`, 800);
+        
+        // Salva estado e passa turno
+        await updatePlayerMagicInFirestore(userId, playerMagic);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        endPlayerTurn();
+        return;
+    }
 
-// Teste de resistência do monstro (para outras magias)
-const resistanceRoll = Math.floor(Math.random() * 20) + 1;
-const resistanceTotal = resistanceRoll + currentMonster.habilidade;
-const difficulty = 15;
+    // Teste de resistência do monstro (para outras magias)
+    const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+    const resistanceTotal = resistanceRoll + currentMonster.habilidade;
+    const difficulty = 15;
 
-await addLogMessage(`${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
+    await addLogMessage(`${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
 
-if (resistanceTotal >= difficulty) {
-
+    if (resistanceTotal >= difficulty) {
         await addLogMessage(`${currentMonster.nome} resistiu à magia!`, 1000);
         // Salva estado e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
@@ -1641,8 +1639,7 @@ if (resistanceTotal >= difficulty) {
     } else {
         await addLogMessage(`A magia afeta ${currentMonster.nome}!`, 800);
         
-            
-        } else if (efeito === "damage") {
+        if (efeito === "damage") {
             await addLogMessage(`Role o dano da magia!`, 800);
             
             // Salva dados da magia para usar no botão de dano
@@ -1658,31 +1655,6 @@ if (resistanceTotal >= difficulty) {
                 rolarDanoButton.style.display = 'inline-block';
                 rolarDanoButton.disabled = false;
             }
-        } else if (efeito === "shield") {
-            // Aplica buff de escudo
-            const buffValue = parseInt(valor);
-            const buffDuration = 3;
-            
-            // Remove buff anterior do mesmo tipo se existir
-            activeBuffs = activeBuffs.filter(buff => buff.tipo !== "couraca");
-            
-            // Adiciona novo buff
-            activeBuffs.push({
-                tipo: "couraca",
-                valor: buffValue,
-                turnos: buffDuration,
-                nome: magia.nome
-            });
-
-          // ADICIONE AQUI:
-    updateBuffsDisplay();
-            
-            await addLogMessage(`${magia.nome} ativo! Sua couraça aumentou em +${buffValue} por ${buffDuration} turnos.`, 800);
-            
-            // Salva estado e passa turno
-            await updatePlayerMagicInFirestore(userId, playerMagic);
-            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-            endPlayerTurn();
         }
     }
 }
