@@ -1723,7 +1723,6 @@ if (efeito !== "touch_attack") {
 }
 
 if (efeito === "damage") {
-
             await addLogMessage(`Role o dano da magia!`, 800);
             
             // Salva dados da magia para usar no botão de dano
@@ -1732,8 +1731,16 @@ if (efeito === "damage") {
                 userId: userId,
                 monsterName: monsterName
             };
+            
+            // Mostra botão de dano
+            const rolarDanoButton = document.getElementById("rolar-dano");
+            if (rolarDanoButton) {
+                rolarDanoButton.style.display = 'inline-block';
+                rolarDanoButton.disabled = false;
+            }
+            
+        } else if (efeito === "dazzle") {
 
-          } else if (efeito === "dazzle") {
     // Aplica debuff de ofuscamento
     const debuffValue = parseInt(valor);
     const debuffDuration = 3;
