@@ -1611,6 +1611,17 @@ if (efeito === "shield") {
     return;
 }
 
+  if (efeito === "heal") {
+            const newEnergy = Math.min(playerHealth + parseInt(valor), playerMaxHealth);
+            playerHealth = newEnergy;
+            atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+            await addLogMessage(`Você recuperou ${valor} pontos de energia.`, 800);
+            
+            // Salva estado e passa turno
+            await updatePlayerMagicInFirestore(userId, playerMagic);
+            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+            endPlayerTurn();
+
 // Teste de resistência do monstro (para outras magias)
 const resistanceRoll = Math.floor(Math.random() * 20) + 1;
 const resistanceTotal = resistanceRoll + currentMonster.habilidade;
@@ -1628,16 +1639,6 @@ if (resistanceTotal >= difficulty) {
     } else {
         await addLogMessage(`A magia afeta ${currentMonster.nome}!`, 800);
         
-        if (efeito === "heal") {
-            const newEnergy = Math.min(playerHealth + parseInt(valor), playerMaxHealth);
-            playerHealth = newEnergy;
-            atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-            await addLogMessage(`Você recuperou ${valor} pontos de energia.`, 800);
-            
-            // Salva estado e passa turno
-            await updatePlayerMagicInFirestore(userId, playerMagic);
-            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-            endPlayerTurn();
             
         } else if (efeito === "damage") {
             await addLogMessage(`Role o dano da magia!`, 800);
