@@ -2308,7 +2308,7 @@ if (window.touchDebuffContext) {
     // Teste de resistência para o debuff
     const resistanceRoll = Math.floor(Math.random() * 20) + 1;
     const resistanceTotal = resistanceRoll + currentMonster.habilidade;
-    const difficulty = 15;
+    const difficulty = 20;
     
     await addLogMessage(`${currentMonster.nome} tenta resistir ao debuff: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
     
