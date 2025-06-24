@@ -192,6 +192,108 @@ function createConjurationModal() {
             </div>
         </div>
     `;
+
+        // CSS para o modal
+    const modalStyle = document.createElement('style');
+    modalStyle.textContent = `
+        #arcanum-conjuration-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .conjuration-container {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 2px solid #4a90e2;
+            border-radius: 15px;
+            padding: 20px;
+            max-width: 400px;
+            width: 90%;
+            color: white;
+            box-shadow: 0 10px 30px rgba(74, 144, 226, 0.3);
+        }
+        
+        .conjuration-header {
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #4a90e2;
+            padding-bottom: 10px;
+        }
+        
+        .conjuration-header h2 {
+            margin: 0;
+            color: #4a90e2;
+            font-size: 18px;
+        }
+        
+        .close-conjuration {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .conjuration-input {
+            margin: 15px 0;
+        }
+        
+        .conjuration-input label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4a90e2;
+            font-weight: bold;
+        }
+        
+        .conjuration-input input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #4a90e2;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+        }
+        
+        .conjuration-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .conjure-btn, .cancel-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .conjure-btn {
+            background: linear-gradient(45deg, #4a90e2, #357abd);
+            color: white;
+        }
+        
+        .cancel-btn {
+            background: #6c757d;
+            color: white;
+        }
+    `;
+    document.head.appendChild(modalStyle);
+
     
     return modal;
 }
