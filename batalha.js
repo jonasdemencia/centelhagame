@@ -2645,7 +2645,13 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
             console.log("LOG: onAuthStateChanged - Nenhum usuário logado, redirecionando para login.");
         }
     });
-    console.log("LOG: Event listener para DOMContentLoaded finalizado.");
+        // Inicializa o painel Arcanum Verbis
+    if (window.ArcanumUI) {
+        window.ArcanumUI.initPanel();
+    }
+    
+    console.log("LOG: Event listener para DOMContentLoaded finalizado.");
 });
+
 
 console.log("LOG: Fim do script batalha.js");
