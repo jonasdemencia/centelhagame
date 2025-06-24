@@ -2496,8 +2496,10 @@ const isTouchSpell = (window.touchSpellContext !== null && window.touchSpellCont
 
 
 if (isTouchSpell) {
-    await addLogMessage(`Tentando tocar ${currentMonster.nome} com ${window.touchSpellContext.nome}...`, 800);
+    const spellName = window.touchSpellContext?.nome || window.touchDebuffContext?.nome;
+    await addLogMessage(`Tentando tocar ${currentMonster.nome} com ${spellName}...`, 800);
 }
+
 
         console.log("LOG: Botão 'Atacar Corpo a Corpo' clicado.");
 
