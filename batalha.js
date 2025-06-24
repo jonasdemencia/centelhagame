@@ -1612,15 +1612,17 @@ if (efeito === "shield") {
 }
 
   if (efeito === "heal") {
-            const newEnergy = Math.min(playerHealth + parseInt(valor), playerMaxHealth);
-            playerHealth = newEnergy;
-            atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-            await addLogMessage(`Você recuperou ${valor} pontos de energia.`, 800);
-            
-            // Salva estado e passa turno
-            await updatePlayerMagicInFirestore(userId, playerMagic);
-            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-            endPlayerTurn();
+    const newEnergy = Math.min(playerHealth + parseInt(valor), playerMaxHealth);
+    playerHealth = newEnergy;
+    atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+    await addLogMessage(`Você recuperou ${valor} pontos de energia.`, 800);
+    
+    // Salva estado e passa turno
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+    endPlayerTurn();
+    return; // ADICIONE ESTA LINHA
+}
 
 // Teste de resistência do monstro (para outras magias)
 const resistanceRoll = Math.floor(Math.random() * 20) + 1;
