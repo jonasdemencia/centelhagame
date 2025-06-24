@@ -61,6 +61,15 @@ const magiasDisponiveis = [
 },
 
     {
+    id: "toque-macabro",
+    nome: "Toque Macabro",
+    descricao: "Toque que causa dano e enfraquece os ataques do inimigo",
+    custo: 3,
+    efeito: "touch_debuff",
+    valor: "1d4+1"
+},
+
+    {
         id: "escudo-arcano",
         nome: "Escudo Arcano",
         descricao: "Aumenta temporariamente a couraça",
@@ -1149,6 +1158,17 @@ await addLogMessage(`${currentMonster.nome} rolou ${monsterRollRaw} em um D20 pa
 
         // Calcula o dano
         let monsterDamageRoll = rollDice(selectedAttack.dano);
+
+// Aplica redução de dano por debuffs
+const damageReduction = activeMonsterDebuffs
+    .filter(debuff => debuff.tipo === "damage_reduction")
+    .reduce((total, debuff) => total + debuff.valor, 0);
+
+if (damageReduction > 0) {
+    monsterDamageRoll = Math.max(0, monsterDamageRoll - damageReduction);
+    await addLogMessage(`Dano reduzido em ${damageReduction} por debuffs (${monsterDamageRoll + damageReduction} → ${monsterDamageRoll}).`, 800);
+}
+
         
         if (isCriticalHit) {
             monsterDamageRoll = Math.floor(monsterDamageRoll * 1.5);
@@ -1787,6 +1807,25 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         
         // Não passa o turno, aguarda rolagem de ataque
         return;
+    
+
+      } else if (efeito === "touch_debuff") {
+        // Salva contexto da magia de toque com debuff
+        window.touchDebuffContext = {
+            dano: valor,
+            nome: magia.nome,
+            userId: userId,
+            monsterName: monsterName
+        };
+        
+        await addLogMessage(`Você canaliza ${magia.nome}! Clique no botão "Atacar" para tentar tocar o inimigo.`, 800);
+        
+        // Salva estado da magia
+        await updatePlayerMagicInFirestore(userId, playerMagic);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        
+        // Não passa o turno, aguarda rolagem de ataque
+        return;
     }
 }
 
@@ -2258,6 +2297,61 @@ if (window.touchSpellContext) {
     return;
 }
 
+      // VERIFICAÇÃO PARA TOQUE MACABRO
+if (window.touchDebuffContext) {
+    const danoRolado = rollDice(window.touchDebuffContext.dano);
+    currentMonster.pontosDeEnergia -= danoRolado;
+    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+    await addLogMessage(`${currentMonster.nome} sofreu ${danoRolado} de dano necrótico (${window.touchDebuffContext.dano}).`, 800);
+    
+    // Teste de resistência para o debuff
+    const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+    const resistanceTotal = resistanceRoll + currentMonster.habilidade;
+    const difficulty = 15;
+    
+    await addLogMessage(`${currentMonster.nome} tenta resistir ao debuff: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
+    
+    if (resistanceTotal >= difficulty) {
+        await addLogMessage(`${currentMonster.nome} resistiu ao enfraquecimento!`, 800);
+    } else {
+        await addLogMessage(`${currentMonster.nome} foi enfraquecido! Seus ataques causarão menos dano.`, 800);
+        
+        // Remove debuff anterior do mesmo tipo se existir
+        activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "damage_reduction");
+        
+        // Adiciona novo debuff
+        activeMonsterDebuffs.push({
+            tipo: "damage_reduction",
+            valor: 3,
+            turnos: 3,
+            nome: "Toque Macabro"
+        });
+        
+        updateMonsterDebuffsDisplay();
+    }
+    
+    // Limpa contexto
+    window.touchDebuffContext = null;
+    rolarDanoButton.style.display = 'none';
+    
+    // Verifica se morreu
+    if (currentMonster.pontosDeEnergia <= 0) {
+        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+        handlePostBattle(currentMonster);
+        return;
+    }
+    
+    // Salva e passa turno
+    const user = auth.currentUser;
+    if (user) {
+        await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+    }
+    endPlayerTurn();
+    return;
+}
+
+
 
         // Desabilita todos botões durante o processamento do dano
         const actionButtons = document.querySelectorAll('#attack-options button');
@@ -2397,7 +2491,9 @@ if (playerHealth <= 0) {
 }
 
       // Verifica se é um ataque de toque mágico
-const isTouchSpell = window.touchSpellContext !== null && window.touchSpellContext !== undefined;
+const isTouchSpell = (window.touchSpellContext !== null && window.touchSpellContext !== undefined) || 
+                     (window.touchDebuffContext !== null && window.touchDebuffContext !== undefined);
+
 
 if (isTouchSpell) {
     await addLogMessage(`Tentando tocar ${currentMonster.nome} com ${window.touchSpellContext.nome}...`, 800);
@@ -2503,9 +2599,11 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
                   if (isTouchSpell) {
     await addLogMessage(`Seu toque não consegue alcançar ${currentMonster.nome}.`, 1000);
     window.touchSpellContext = null; // Limpa contexto
+    window.touchDebuffContext = null; // Limpa contexto debuff
 } else {
     await addLogMessage(`Seu ataque passa de raspão no ${currentMonster.nome}.`, 1000);
 }
+
 
 
                    // Passa o turno para o monstro
