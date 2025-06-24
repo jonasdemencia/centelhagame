@@ -68,5 +68,7 @@ function getConditionIcon(tipo, valor) {
 // Exporta as funções para uso global
 window.ArcanumConditions = {
     getConditions: getArcanumConditions,
-    getIcon: getConditionIcon
+    getIcon: getConditionIcon,
+    applyModifiers: applyArcanumModifiers
 };
+
