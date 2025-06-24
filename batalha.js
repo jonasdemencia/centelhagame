@@ -50,6 +50,16 @@ const magiasDisponiveis = [
     efeito: "dazzle",
     valor: 3
 },  
+
+  {
+    id: "toque-chocante",
+    nome: "Toque Chocante",
+    descricao: "Ataque mágico de toque que causa dano elétrico",
+    custo: 2,
+    efeito: "touch_attack",
+    valor: "1d8"
+},
+
     {
         id: "escudo-arcano",
         nome: "Escudo Arcano",
@@ -1743,6 +1753,26 @@ async function usarMagia(magiaId, efeito, valor, custo) {
     await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
     endPlayerTurn();
 
+
+          } else if (efeito === "touch_attack") {
+    // Salva contexto da magia de toque
+    window.touchSpellContext = {
+        dano: valor,
+        nome: magia.nome,
+        userId: userId,
+        monsterName: monsterName
+    };
+    
+    await addLogMessage(`Você canaliza ${magia.nome}! Role para acertar o toque.`, 800);
+    
+    // Salva estado da magia
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+    
+    // Não passa o turno, aguarda rolagem de ataque
+    return;
+
+
             
             // Mostra botão de dano
             const rolarDanoButton = document.getElementById("rolar-dano");
@@ -2193,6 +2223,35 @@ if (rollLocationBtn) {
     }
 
 
+      // VERIFICAÇÃO PARA TOQUE CHOCANTE
+if (window.touchSpellContext) {
+    const danoRolado = rollDice(window.touchSpellContext.dano);
+    currentMonster.pontosDeEnergia -= danoRolado;
+    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+    await addLogMessage(`${currentMonster.nome} sofreu ${danoRolado} de dano elétrico (${window.touchSpellContext.dano}).`, 800);
+    
+    // Limpa contexto
+    window.touchSpellContext = null;
+    rolarDanoButton.style.display = 'none';
+    
+    // Verifica se morreu
+    if (currentMonster.pontosDeEnergia <= 0) {
+        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+        handlePostBattle(currentMonster);
+        return;
+    }
+    
+    // Salva e passa turno
+    const user = auth.currentUser;
+    if (user) {
+        await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+    }
+    endPlayerTurn();
+    return;
+}
+
+
         // Desabilita todos botões durante o processamento do dano
         const actionButtons = document.querySelectorAll('#attack-options button');
         actionButtons.forEach(button => button.disabled = true);
@@ -2329,6 +2388,14 @@ if (playerHealth <= 0) {
     await addLogMessage(`<p style="color: red;">Você está inconsciente e não pode atacar!</p>`, 1000);
     return;
 }
+
+      // Verifica se é um ataque de toque mágico
+const isTouchSpell = window.touchSpellContext !== null && window.touchSpellContext !== undefined;
+
+if (isTouchSpell) {
+    await addLogMessage(`Tentando tocar ${currentMonster.nome} com ${window.touchSpellContext.nome}...`, 800);
+}
+
         console.log("LOG: Botão 'Atacar Corpo a Corpo' clicado.");
 
         // Desabilita TODOS os botões de ação inicialmente
@@ -2340,10 +2407,15 @@ if (playerHealth <= 0) {
         const playerAttackRollTotal = playerAttackRollRaw + playerAbilityValue;
         const monsterDefense = currentMonster.couraça || 0;
 
-        await addLogMessage(`Rolando ataque: ${playerAttackRollRaw} em um d20 + ${playerAbilityValue} (Hab) = ${playerAttackRollTotal} vs Couraça ${monsterDefense}`, 1000);
+        if (isTouchSpell) {
+    await addLogMessage(`Rolando toque mágico: ${playerAttackRollRaw} em um d20 + ${playerAbilityValue} (Hab) = ${playerAttackRollTotal} vs Couraça ${monsterDefense}`, 1000);
+} else {
+    await addLogMessage(`Rolando ataque: ${playerAttackRollRaw} em um d20 + ${playerAbilityValue} (Hab) = ${playerAttackRollTotal} vs Couraça ${monsterDefense}`, 1000);
+}
+
 
         // --- Falha crítica: 1 natural no d20 ---
-if (playerAttackRollRaw === 1) {
+if (playerAttackRollRaw === 1 && !isTouchSpell) {
     // Sorteia uma falha crítica
     const sorteio = falhasCriticas[Math.floor(Math.random() * falhasCriticas.length)];
     await addLogMessage(`😱 Falha Crítica! ${sorteio.mensagem}`, 1200);
@@ -2366,7 +2438,7 @@ if (playerAttackRollRaw === 1) {
 }
 
         // *** LÓGICA SIFER (NATURAL 20) ***
-        if (playerAttackRollRaw === 20) {
+        if (playerAttackRollRaw === 20 && !isTouchSpell) {
             console.log("LOG: SIFER - Acerto Crítico! Aguardando rolagem de localização.");
             await addLogMessage(`<strong style="color: orange;">ACERTO CRÍTICO (SIFER)!</strong> Role a localização!`, 500);
 
@@ -2406,7 +2478,11 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
                  atacarCorpoACorpoButton.disabled = true; // Também desabilita o botão
                  if(rolarDanoButton) rolarDanoButton.style.display = 'inline-block'; // Mostra o de dano
 
-                 await addLogMessage(`Seu golpe atinge em cheio o ${currentMonster.nome}! Role o dano.`, 1000);
+                 if (isTouchSpell) {
+    await addLogMessage(`Seu toque mágico atinge ${currentMonster.nome}! Role o dano.`, 1000);
+} else {
+    await addLogMessage(`Seu golpe atinge em cheio o ${currentMonster.nome}! Role o dano.`, 1000);
+}
 
                  window.siferContext = null; // Garante que não estamos em fluxo SIFER
 
@@ -2417,7 +2493,13 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
              } else {
                   // LÓGICA ORIGINAL DE ERRO
                   console.log("LOG: Ataque normal errou.");
-                  await addLogMessage(`Seu ataque passa de raspão no ${currentMonster.nome}.`, 1000);
+                  if (isTouchSpell) {
+    await addLogMessage(`Seu toque não consegue alcançar ${currentMonster.nome}.`, 1000);
+    window.touchSpellContext = null; // Limpa contexto
+} else {
+    await addLogMessage(`Seu ataque passa de raspão no ${currentMonster.nome}.`, 1000);
+}
+
 
                    // Passa o turno para o monstro
                    if (typeof endPlayerTurn === 'function') {
