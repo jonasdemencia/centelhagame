@@ -1702,100 +1702,88 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         return;
     }
 
-   // Teste de resistência do monstro (apenas para magias que não são touch_attack)
-if (efeito !== "touch_attack") {
-    const resistanceRoll = Math.floor(Math.random() * 20) + 1;
-    const resistanceTotal = resistanceRoll + currentMonster.habilidade;
-    const difficulty = 15;
+    // Teste de resistência do monstro (apenas para magias que não são touch_attack)
+    if (efeito !== "touch_attack") {
+        const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+        const resistanceTotal = resistanceRoll + currentMonster.habilidade;
+        const difficulty = 15;
 
-    await addLogMessage(`${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
+        await addLogMessage(`${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
 
-    if (resistanceTotal >= difficulty) {
-        await addLogMessage(`${currentMonster.nome} resistiu à magia!`, 1000);
+        if (resistanceTotal >= difficulty) {
+            await addLogMessage(`${currentMonster.nome} resistiu à magia!`, 1000);
+            // Salva estado e passa turno
+            await updatePlayerMagicInFirestore(userId, playerMagic);
+            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+            endPlayerTurn();
+            return;
+        } else {
+            await addLogMessage(`A magia afeta ${currentMonster.nome}!`, 800);
+        }
+    }
+
+    if (efeito === "damage") {
+        await addLogMessage(`Role o dano da magia!`, 800);
+        
+        // Salva dados da magia para usar no botão de dano
+        window.magicContext = {
+            dano: valor,
+            userId: userId,
+            monsterName: monsterName
+        };
+        
+        // Mostra botão de dano
+        const rolarDanoButton = document.getElementById("rolar-dano");
+        if (rolarDanoButton) {
+            rolarDanoButton.style.display = 'inline-block';
+            rolarDanoButton.disabled = false;
+        }
+        
+    } else if (efeito === "dazzle") {
+        // Aplica debuff de ofuscamento
+        const debuffValue = parseInt(valor);
+        const debuffDuration = 3;
+        
+        // Remove debuff anterior do mesmo tipo se existir
+        activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "accuracy");
+        
+        // Adiciona novo debuff
+        activeMonsterDebuffs.push({
+            tipo: "accuracy",
+            valor: debuffValue,
+            turnos: debuffDuration,
+            nome: magia.nome
+        });
+        
+        updateMonsterDebuffsDisplay();
+        
+        await addLogMessage(`${currentMonster.nome} está ofuscado! Sua precisão diminuiu em -${debuffValue} por ${debuffDuration} turnos.`, 800);
+        
         // Salva estado e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
         await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         endPlayerTurn();
+
+    } else if (efeito === "touch_attack") {
+        // Salva contexto da magia de toque
+        window.touchSpellContext = {
+            dano: valor,
+            nome: magia.nome,
+            userId: userId,
+            monsterName: monsterName
+        };
+        
+        await addLogMessage(`Você canaliza ${magia.nome}! Clique no botão "Atacar" para tentar tocar o inimigo.`, 800);
+        
+        // Salva estado da magia
+        await updatePlayerMagicInFirestore(userId, playerMagic);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        
+        // Não passa o turno, aguarda rolagem de ataque
         return;
-    } else {
-        await addLogMessage(`A magia afeta ${currentMonster.nome}!`, 800);
     }
 }
 
-if (efeito === "damage") {
-            await addLogMessage(`Role o dano da magia!`, 800);
-            
-            // Salva dados da magia para usar no botão de dano
-            window.magicContext = {
-                dano: valor,
-                userId: userId,
-                monsterName: monsterName
-            };
-            
-            // Mostra botão de dano
-            const rolarDanoButton = document.getElementById("rolar-dano");
-            if (rolarDanoButton) {
-                rolarDanoButton.style.display = 'inline-block';
-                rolarDanoButton.disabled = false;
-            }
-            
-        } else if (efeito === "dazzle") {
-
-    // Aplica debuff de ofuscamento
-    const debuffValue = parseInt(valor);
-    const debuffDuration = 3;
-    
-    // Remove debuff anterior do mesmo tipo se existir
-    activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "accuracy");
-    
-    // Adiciona novo debuff
-    activeMonsterDebuffs.push({
-        tipo: "accuracy",
-        valor: debuffValue,
-        turnos: debuffDuration,
-        nome: magia.nome
-    });
-    
-    updateMonsterDebuffsDisplay();
-    
-    await addLogMessage(`${currentMonster.nome} está ofuscado! Sua precisão diminuiu em -${debuffValue} por ${debuffDuration} turnos.`, 800);
-    
-    // Salva estado e passa turno
-    await updatePlayerMagicInFirestore(userId, playerMagic);
-    await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-    endPlayerTurn();
-
-
-          } else if (efeito === "touch_attack") {
-    // Salva contexto da magia de toque
-    window.touchSpellContext = {
-        dano: valor,
-        nome: magia.nome,
-        userId: userId,
-        monsterName: monsterName
-    };
-    
-    await addLogMessage(`Você canaliza ${magia.nome}! Clique no botão "Atacar" para tentar tocar o inimigo.`, 800);
-
-    
-    // Salva estado da magia
-    await updatePlayerMagicInFirestore(userId, playerMagic);
-    await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-    
-    // Não passa o turno, aguarda rolagem de ataque
-    return;
-
-
-            
-            // Mostra botão de dano
-            const rolarDanoButton = document.getElementById("rolar-dano");
-            if (rolarDanoButton) {
-                rolarDanoButton.style.display = 'inline-block';
-                rolarDanoButton.disabled = false;
-            }
-        }
-    }
-}
 
 
 
