@@ -11,6 +11,7 @@ window.battleStarted = false;
 let escapeAttempts = 0; // Contador de tentativas de fuga
 let nextTelegraphedAttack = null; // Próximo ataque telegrafado
 let activeBuffs = []; // Sistema de buffs temporários
+let activeMonsterDebuffs = []; // Sistema de debuffs do monstro
 
 
 console.log("LOG: batalha.js carregado.");
@@ -40,6 +41,15 @@ const magiasDisponiveis = [
         efeito: "damage",
         valor: "1d4"
     },
+
+{
+    id: "luz",
+    nome: "Luz",
+    descricao: "Cria luz ofuscante que reduz a precisão do inimigo",
+    custo: 2,
+    efeito: "dazzle",
+    valor: 3
+},  
     {
         id: "escudo-arcano",
         nome: "Escudo Arcano",
@@ -244,6 +254,24 @@ function updateBuffsDisplay() {
     });
 }
 
+// Função para atualizar display de debuffs do monstro
+function updateMonsterDebuffsDisplay() {
+    const container = document.getElementById('monster-debuffs-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    activeMonsterDebuffs.forEach(debuff => {
+        const debuffElement = document.createElement('div');
+        debuffElement.className = 'debuff-item';
+        debuffElement.innerHTML = `
+            <span>${debuff.nome}</span>
+            <span class="debuff-turns">${debuff.turnos}</span>
+        `;
+        container.appendChild(debuffElement);
+    });
+}
+
 
 
 // Função para processar buffs no início do turno do jogador
@@ -272,6 +300,30 @@ function processBuffs() {
   } // <- ADICIONE ESTA CHAVE AQUI
 
 
+// Função para processar debuffs do monstro no início do seu turno
+function processMonsterDebuffs() {
+    if (activeMonsterDebuffs.length === 0) return Promise.resolve();
+    
+    // Reduz duração de todos os debuffs
+    activeMonsterDebuffs.forEach(debuff => debuff.turnos--);
+    
+    // Remove debuffs expirados e mostra mensagem
+    const expiredDebuffs = activeMonsterDebuffs.filter(debuff => debuff.turnos <= 0);
+    activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.turnos > 0);
+    
+    // Atualiza display
+    updateMonsterDebuffsDisplay();
+    
+    // Processa mensagens de debuffs expirados sequencialmente
+    return expiredDebuffs.reduce((promise, debuff) => {
+        return promise.then(() => {
+            if (typeof addLogMessage === 'function') {
+                return addLogMessage(`${debuff.nome} se dissipou do ${currentMonster.nome}.`, 800);
+            }
+            return Promise.resolve();
+        });
+    }, Promise.resolve());
+}
 
 
 
@@ -365,6 +417,8 @@ function loadBattleState(userId, monsterName) {
               
               // Restaura buffs ativos
 activeBuffs = data.activeBuffs || [];
+              activeMonsterDebuffs = data.activeMonsterDebuffs || [];
+
   
                 return data;
             } else {
@@ -407,6 +461,7 @@ function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
     monsterAbility: monsterAbility || null,
     battleStarted: window.battleStarted || false,
     activeBuffs: activeBuffs || [],
+    activeMonsterDebuffs: activeMonsterDebuffs || [],
     lastUpdated: new Date().toISOString()
 }, { merge: true });
 }
@@ -1036,6 +1091,10 @@ async function monsterAttack() {
     startNewTurnBlock(currentMonster.nome);
     await addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
 
+  // Processa debuffs do monstro
+await processMonsterDebuffs();
+
+
     // Escolhe o ataque (telegrafado ou novo)
     let selectedAttack;
     if (nextTelegraphedAttack) {
@@ -1049,7 +1108,17 @@ async function monsterAttack() {
 
     // Rolagem de ataque
     const monsterRollRaw = Math.floor(Math.random() * 20) + 1;
-    const monsterAttackRoll = monsterRollRaw;
+    // Aplica penalidade de debuffs de precisão
+const accuracyPenalty = activeMonsterDebuffs
+    .filter(debuff => debuff.tipo === "accuracy")
+    .reduce((total, debuff) => total + debuff.valor, 0);
+
+const monsterAttackRoll = monsterRollRaw - accuracyPenalty;
+
+if (accuracyPenalty > 0) {
+    await addLogMessage(`${currentMonster.nome} sofre -${accuracyPenalty} de penalidade por debuffs.`, 800);
+}
+
 
     
 await addLogMessage(`${currentMonster.nome} rolou ${monsterRollRaw} em um D20 para atacar.`, 1000);
@@ -1648,6 +1717,32 @@ async function usarMagia(magiaId, efeito, valor, custo) {
                 userId: userId,
                 monsterName: monsterName
             };
+
+          } else if (efeito === "dazzle") {
+    // Aplica debuff de ofuscamento
+    const debuffValue = parseInt(valor);
+    const debuffDuration = 3;
+    
+    // Remove debuff anterior do mesmo tipo se existir
+    activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "accuracy");
+    
+    // Adiciona novo debuff
+    activeMonsterDebuffs.push({
+        tipo: "accuracy",
+        valor: debuffValue,
+        turnos: debuffDuration,
+        nome: magia.nome
+    });
+    
+    updateMonsterDebuffsDisplay();
+    
+    await addLogMessage(`${currentMonster.nome} está ofuscado! Sua precisão diminuiu em -${debuffValue} por ${debuffDuration} turnos.`, 800);
+    
+    // Salva estado e passa turno
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+    endPlayerTurn();
+
             
             // Mostra botão de dano
             const rolarDanoButton = document.getElementById("rolar-dano");
