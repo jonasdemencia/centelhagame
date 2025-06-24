@@ -1728,8 +1728,8 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         return;
     }
 
-    // Teste de resistência do monstro (apenas para magias que não são touch_attack)
-    if (efeito !== "touch_attack") {
+   // Teste de resistência do monstro (apenas para magias que não são touch_attack ou touch_debuff)
+if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
         const resistanceRoll = Math.floor(Math.random() * 20) + 1;
         const resistanceTotal = resistanceRoll + currentMonster.habilidade;
         const difficulty = 15;
