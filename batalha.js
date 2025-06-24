@@ -2673,6 +2673,21 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
     console.log("LOG: Event listener para DOMContentLoaded finalizado.");
 });
 
+// Função para validar a conjuração
+function validateConjuration(sequence, word) {
+    const correctSequence = "↑↑↑↓";
+    const conditions = window.ArcanumConditions.getConditions();
+    const correctWord = window.ArcanumConditions.applyModifiers("FULGOR", conditions);
+    
+    console.log('Sequência correta:', correctSequence);
+    console.log('Palavra correta:', correctWord);
+    console.log('Jogador digitou - Sequência:', sequence, 'Palavra:', word);
+    
+    return sequence === correctSequence && word.toUpperCase() === correctWord;
+}
+
+
+
 // Função para configurar o modal de conjuração
 function setupConjurationModal(magia, userId, monsterName) {
     const modal = document.getElementById('arcanum-conjuration-modal');
@@ -2696,12 +2711,30 @@ function setupConjurationModal(magia, userId, monsterName) {
         const sequence = document.getElementById('directional-sequence').value;
         const word = document.getElementById('conjuration-word').value;
         
-        // TODO: Validar conjuração
-        console.log('Sequência:', sequence);
-        console.log('Palavra:', word);
+                // Validar conjuração
+        const isValid = validateConjuration(sequence, word);
+        
+        if (isValid) {
+            // Sucesso - continua com o toque chocante
+            window.touchSpellContext = {
+                dano: magia.valor,
+                nome: magia.nome,
+                userId: userId,
+                monsterName: monsterName
+            };
+            
+            startNewTurnBlock("Magia");
+            addLogMessage(`Conjuração bem-sucedida! Você canaliza ${magia.nome}! Clique no botão "Atacar" para tentar tocar o inimigo.`, 800);
+        } else {
+            // Falha - perde a magia e o turno
+            startNewTurnBlock("Magia");
+            addLogMessage(`Conjuração falhou! A magia se dissipa e você perde o turno.`, 800);
+            endPlayerTurn();
+        }
         
         modal.style.display = 'none';
         modal.remove();
+
     });
 }
 
