@@ -1690,7 +1690,8 @@ if (magiaId === "toque-chocante") {
     playerMagic -= custoNum;
     atualizarBarraMagia(playerMagic, playerMaxMagic);
     
-    // TODO: Implementar lógica de conjuração
+        // Adicionar event listeners ao modal
+    setupConjurationModal(magia, userId, monsterName);
     return;
 }
 
@@ -2671,6 +2672,38 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
     
     console.log("LOG: Event listener para DOMContentLoaded finalizado.");
 });
+
+// Função para configurar o modal de conjuração
+function setupConjurationModal(magia, userId, monsterName) {
+    const modal = document.getElementById('arcanum-conjuration-modal');
+    const closeBtn = document.getElementById('close-conjuration');
+    const cancelBtn = document.getElementById('cancel-conjuration');
+    const conjureBtn = document.getElementById('conjure-spell');
+    
+    // Fechar modal
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+        modal.remove();
+    });
+    
+    cancelBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+        modal.remove();
+    });
+    
+    // Conjurar magia
+    conjureBtn.addEventListener('click', () => {
+        const sequence = document.getElementById('directional-sequence').value;
+        const word = document.getElementById('conjuration-word').value;
+        
+        // TODO: Validar conjuração
+        console.log('Sequência:', sequence);
+        console.log('Palavra:', word);
+        
+        modal.style.display = 'none';
+        modal.remove();
+    });
+}
 
 
 console.log("LOG: Fim do script batalha.js");
