@@ -1702,7 +1702,8 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         return;
     }
 
-    // Teste de resistência do monstro (para outras magias)
+   // Teste de resistência do monstro (apenas para magias que não são touch_attack)
+if (efeito !== "touch_attack") {
     const resistanceRoll = Math.floor(Math.random() * 20) + 1;
     const resistanceTotal = resistanceRoll + currentMonster.habilidade;
     const difficulty = 15;
@@ -1715,10 +1716,14 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         await updatePlayerMagicInFirestore(userId, playerMagic);
         await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         endPlayerTurn();
+        return;
     } else {
         await addLogMessage(`A magia afeta ${currentMonster.nome}!`, 800);
-        
-        if (efeito === "damage") {
+    }
+}
+
+if (efeito === "damage") {
+
             await addLogMessage(`Role o dano da magia!`, 800);
             
             // Salva dados da magia para usar no botão de dano
@@ -1763,7 +1768,8 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         monsterName: monsterName
     };
     
-    await addLogMessage(`Você canaliza ${magia.nome}! Role para acertar o toque.`, 800);
+    await addLogMessage(`Você canaliza ${magia.nome}! Clique no botão "Atacar" para tentar tocar o inimigo.`, 800);
+
     
     // Salva estado da magia
     await updatePlayerMagicInFirestore(userId, playerMagic);
