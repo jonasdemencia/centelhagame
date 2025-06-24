@@ -34,8 +34,8 @@ const magiasDisponiveis = [
     },
     {
         id: "missil-magico",
-        nome: "Míssil Mágico", 
-        descricao: "Projétil mágico que sempre acerta",
+        nome: "Dardos Místicos", 
+        descricao: "Projétil mágico",
         custo: 1,
         efeito: "damage",
         valor: "1d4"
@@ -43,7 +43,7 @@ const magiasDisponiveis = [
     {
         id: "escudo-arcano",
         nome: "Escudo Arcano",
-        descricao: "Aumenta temporariamente a defesa",
+        descricao: "Aumenta temporariamente a couraça",
         custo: 3,
         efeito: "shield",
         valor: 2
