@@ -17,7 +17,16 @@ let activeMonsterDebuffs = []; // Sistema de debuffs do monstro
 let currentTurnBlock = null;
 let attackOptionsDiv = null;
 
-
+let playerData; // Para armazenar os dados do jogador
+window.playerData = null; // Variável global para playerData
+let playerHealth = 0;
+    let playerMaxHealth = playerHealth; // ✅ AQUI! Esta linha é o que você precisava
+    let playerMagic = 0;
+    let playerMaxMagic = 0;
+    let isPlayerTurn = false; // Variável para controlar o turno
+    //let currentTurnBlock = null; // Para armazenar o bloco do turno atual
+    let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
+    let battleStarted = false; // Variável de controle para estado da batalha
 
 
 console.log("LOG: batalha.js carregado.");
@@ -953,16 +962,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const monsterName = getUrlParameter('monstro');
     let currentMonster; // Declara currentMonster no escopo superior
 
-let playerData; // Para armazenar os dados do jogador
-window.playerData = null; // Variável global para playerData
-let playerHealth = 0;
-    let playerMaxHealth = playerHealth; // ✅ AQUI! Esta linha é o que você precisava
-    let playerMagic = 0;
-    let playerMaxMagic = 0;
-    let isPlayerTurn = false; // Variável para controlar o turno
-    //let currentTurnBlock = null; // Para armazenar o bloco do turno atual
-    let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
-    let battleStarted = false; // Variável de controle para estado da batalha
+
     console.log("LOG: Variáveis iniciais declaradas.");
 
 
