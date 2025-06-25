@@ -13,6 +13,8 @@ let escapeAttempts = 0; // Contador de tentativas de fuga
 let nextTelegraphedAttack = null; // Próximo ataque telegrafado
 let activeBuffs = []; // Sistema de buffs temporários
 let activeMonsterDebuffs = []; // Sistema de debuffs do monstro
+let currentTurnBlock = null;
+
 
 
 console.log("LOG: batalha.js carregado.");
@@ -794,7 +796,7 @@ let playerHealth = 0;
     let playerMagic = 0;
     let playerMaxMagic = 0;
     let isPlayerTurn = false; // Variável para controlar o turno
-    let currentTurnBlock = null; // Para armazenar o bloco do turno atual
+    //let currentTurnBlock = null; // Para armazenar o bloco do turno atual
     let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
     let battleStarted = false; // Variável de controle para estado da batalha
     console.log("LOG: Variáveis iniciais declaradas.");
