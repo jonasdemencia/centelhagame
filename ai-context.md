@@ -370,4 +370,54 @@ Guia Completo do Sistema de Masmorras
 
 ---
 
+### Sistema Arcanum Verbis — Condições Ambientais Globais e Interface
+
+**Visão Geral:**  
+O sistema Arcanum Verbis adiciona ao jogo um painel visual e um sistema global de condições ambientais mágicas, que podem influenciar eventos, efeitos mágicos, narrativa e lógica de scripts. Ele é dividido em dois módulos principais:  
+- **arcanum-conditions.js**: gera as condições ambientais globais dinâmicas do mundo.
+- **arcanum-ui.js**: exibe essas condições no painel da interface de jogo.
+
+#### arcanum-conditions.js
+
+- **Marco Zero:**  
+  - Data de início fixa (ARCANUM_LAUNCH_DATE, ex: 2024-01-01), usada para calcular o ciclo das condições.
+- **Função principal:**  
+  - `getArcanumConditions()`: retorna um objeto com as condições globais atuais, determinadas a partir da data e hora reais do sistema do jogador, incluindo:
+    - `periodo`: período do dia (madrugada, manhã, tarde, noite) — baseado na hora local.
+    - `estacao`: estação do ano (primavera, verão, outono, inverno) — muda a cada 30 dias desde o marco.
+    - `vento`: direção do vento — muda a cada 3 dias.
+    - `clima`: condições climáticas (sol, chuva, tempestade etc) — muda a cada 2 dias.
+    - `lua`: fase da lua (nova, crescente, cheia, minguante) — muda a cada 7 dias.
+    - `temperatura`: muito-frio, frio, ameno, quente, muito-quente — muda a cada 5 dias.
+    - `pressao`: pressão atmosférica (alta, normal, baixa) — muda a cada 4 dias.
+    - `energiaMagica`: nível de energia mágica global (alta, normal, baixa, interferência) — muda a cada 10 dias.
+    - `eventoEspecial`: retorna strings como 'eclipse-solar', 'aurora-boreal', 'chuva-meteoros', 'solsticio', 'eclipse-lunar', em dias específicos (ex: a cada 30, 50, 77, 91, 100 dias).
+- **Função auxiliar:**  
+  - `getConditionIcon(tipo, valor)`: retorna um emoji/icon apropriado para cada condição (ex: ☀️ para sol, 🌌 para madrugada, ⚡ para energia alta, etc).
+- **Exportação global:**  
+  - `window.ArcanumConditions`: objeto global com métodos `getConditions()` e `getIcon()` para uso fácil em outros módulos.
+
+#### arcanum-ui.js
+
+- **Painel de interface:**  
+  - Função `createArcanumPanel()`: cria o painel visual flutuante, com título, lista de condições e estilos CSS próprios (azul, fundo com gradiente, ícones, etc).
+- **Atualização dinâmica:**  
+  - Função `updateArcanumPanel()`: busca as condições atuais via `window.ArcanumConditions.getConditions()` e popula a lista visual, usando também os ícones via `getIcon`. Mostra todas as condições relevantes do momento, e destaca eventos especiais com cor diferente/animação.
+- **Inicialização:**  
+  - Função `initArcanumPanel()`: adiciona o painel ao DOM e programa atualização a cada minuto.
+- **Exportação global:**  
+  - `window.ArcanumUI`: objeto global com métodos `initPanel()` e `updatePanel()` para uso em outras páginas (ex: inicializado ao carregar a batalha).
+
+#### Regras e Interações
+
+- O sistema é totalmente independente do backend (só depende do relógio do usuário).
+- Pode ser consultado a qualquer momento por qualquer parte do código, para lógica de efeitos, scripts, magias, eventos, etc.
+- Permite customização de efeitos conforme clima, lua, energia mágica, etc.
+- O painel é visualmente destacado, responsivo e pode ser atualizado manualmente ou automaticamente.
+
+---
+
+**Resumo:**  
+O Arcanum Verbis é o sistema central para condições ambientais mágicas dinâmicas do mundo de jogo, oferecendo tanto dados globais (status mágicos, clima, eventos) quanto uma interface de usuário (painel) para consulta visual e integração com outras mecânicas e scripts.
+
 **FIM DO ARQUIVO AI CONTEXT ATUALIZADO E EXPANDIDO**
