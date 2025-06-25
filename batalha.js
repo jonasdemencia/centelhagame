@@ -2669,18 +2669,9 @@ function setupArcanumConjurationModal() {
     document.body.appendChild(modal);
     modal.style.display = 'block';
 
-    let selectedLevel = 1;
     let typingStart = 0;
     let typingEnd = 0;
     let errors = 0;
-
-    modal.querySelectorAll('.level-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            modal.querySelectorAll('.level-btn').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            selectedLevel = parseInt(btn.dataset.level, 10);
-        });
-    });
 
     const input = modal.querySelector('#conjuration-word');
     input.value = '';
@@ -2705,7 +2696,7 @@ function setupArcanumConjurationModal() {
         typingEnd = performance.now();
         const inputWord = input.value.trim().toUpperCase();
         const totalTime = ((typingEnd > typingStart ? typingEnd : performance.now()) - typingStart) / 1000;
-        const result = window.ArcanumSpells.validateConjuration(inputWord, correctWord, selectedLevel, totalTime, errors);
+        const result = window.ArcanumSpells.validateConjuration(inputWord, correctWord, totalTime, errors);
 
         modal.remove();
 
@@ -2730,7 +2721,6 @@ function setupArcanumConjurationModal() {
                 }
             }
         } else {
-            // FALHA - Consome metade do MP, sem efeito
             const halfCost = Math.ceil(magia.custo / 2);
             playerMagic -= halfCost;
             atualizarBarraMagia(playerMagic, playerMaxMagic);
@@ -2738,7 +2728,6 @@ function setupArcanumConjurationModal() {
             msg = `<span style="color:red;">Falha na conjuração (${result.accuracy.toFixed(1)}% precisão)! Você perdeu controle da magia e consumiu ${halfCost} PM.</span>`;
             addLogMessage(msg, 500);
             
-            // Salva o estado
             const user = auth.currentUser;
             if (user) {
                 updatePlayerMagicInFirestore(user.uid, playerMagic);
@@ -2752,6 +2741,7 @@ function setupArcanumConjurationModal() {
     modal.querySelector('#cancel-conjuration').onclick = () => { modal.remove(); };
     modal.querySelector('#close-conjuration').onclick = () => { modal.remove(); };
 }
+
 
 
 console.log("LOG: Fim do script batalha.js");
