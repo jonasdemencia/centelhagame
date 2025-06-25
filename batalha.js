@@ -15,6 +15,8 @@ let nextTelegraphedAttack = null; // Próximo ataque telegrafado
 let activeBuffs = []; // Sistema de buffs temporários
 let activeMonsterDebuffs = []; // Sistema de debuffs do monstro
 let currentTurnBlock = null;
+let attackOptionsDiv = null;
+
 
 
 
