@@ -69,6 +69,136 @@ async function addLogMessage(message, delay = 0, typingSpeed = 30) {
     });
 }
 
+
+
+// Lógica do turno do monstro
+async function monsterAttack() {
+    console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
+
+    // Verifica se o jogador já está morto
+    if (isPlayerTurn || playerHealth <= -10 || !currentMonster) {
+        console.log("LOG: monsterAttack - Turno inválido ou jogador morto. Retornando.");
+        return;
+    }
+
+    startNewTurnBlock(currentMonster.nome);
+    await addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
+
+  // Processa debuffs do monstro
+await processMonsterDebuffs();
+
+
+    // Escolhe o ataque (telegrafado ou novo)
+    let selectedAttack;
+    if (nextTelegraphedAttack) {
+        selectedAttack = nextTelegraphedAttack;
+        nextTelegraphedAttack = null;
+        await addLogMessage(`<strong style="color: orange;">${selectedAttack.nome}!</strong>`, 800);
+    } else {
+        selectedAttack = chooseMonsterAttack(currentMonster);
+        await addLogMessage(`${currentMonster.nome} usa ${selectedAttack.nome}.`, 800);
+    }
+
+    // Rolagem de ataque
+    const monsterRollRaw = Math.floor(Math.random() * 20) + 1;
+    // Aplica penalidade de debuffs de precisão
+const accuracyPenalty = activeMonsterDebuffs
+    .filter(debuff => debuff.tipo === "accuracy")
+    .reduce((total, debuff) => total + debuff.valor, 0);
+
+const monsterAttackRoll = monsterRollRaw - accuracyPenalty;
+
+if (accuracyPenalty > 0) {
+    await addLogMessage(`${currentMonster.nome} sofre -${accuracyPenalty} de penalidade por debuffs.`, 800);
+}
+
+
+    
+await addLogMessage(`${currentMonster.nome} rolou ${monsterRollRaw} em um D20 para atacar.`, 1000);
+
+
+    const playerDefense = getPlayerDefense();
+    await addLogMessage(`Sua Couraça é ${playerDefense}.`, 1000);
+
+    // Verifica se o ataque acertou
+    if (monsterAttackRoll >= playerDefense) {
+        const isCriticalHit = monsterRollRaw === 20;
+        
+        if (isCriticalHit) {
+            await addLogMessage(`<strong style="color: red;">ACERTO CRÍTICO!</strong> O ataque atinge um ponto vital!`, 1000);
+        } else {
+            await addLogMessage(`O ataque acertou!`, 1000);
+        }
+
+        // Calcula o dano
+        let monsterDamageRoll = rollDice(selectedAttack.dano);
+
+// Aplica redução de dano por debuffs
+const damageReduction = activeMonsterDebuffs
+    .filter(debuff => debuff.tipo === "damage_reduction")
+    .reduce((total, debuff) => total + debuff.valor, 0);
+
+if (damageReduction > 0) {
+    monsterDamageRoll = Math.max(0, monsterDamageRoll - damageReduction);
+    await addLogMessage(`Dano reduzido em ${damageReduction} por debuffs (${monsterDamageRoll + damageReduction} → ${monsterDamageRoll}).`, 800);
+}
+
+        
+        if (isCriticalHit) {
+            monsterDamageRoll = Math.floor(monsterDamageRoll * 1.5);
+            const criticalEffects = [
+                "O golpe te deixa atordoado!",
+                "Você sente suas forças se esvaindo!",
+                "O impacto te faz perder o equilíbrio!",
+                "Um golpe certeiro que te faz recuar!"
+            ];
+            const randomEffect = criticalEffects[Math.floor(Math.random() * criticalEffects.length)];
+            await addLogMessage(`<em>${randomEffect}</em>`, 800);
+        }
+
+        playerHealth -= monsterDamageRoll;
+        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+        await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano${isCriticalHit ? " crítico" : ""}.`, 1000);
+
+        // Salva o estado
+        const user = auth.currentUser;
+        if (user) {
+            await updatePlayerEnergyInFirestore(user.uid, playerHealth);
+            await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        }
+
+        // Verifica morte/inconsciência
+        if (playerHealth <= -10) {
+            await addLogMessage(`<p style="color: darkred;">Você morreu!</p>`, 1000);
+            if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+            return;
+        } else if (playerHealth <= 0) {
+            await addLogMessage(`<p style="color: red;">Você está inconsciente!</p>`, 1000);
+            if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+        }
+
+        await addLogMessage(`Sua energia: ${playerHealth}.`, 1000);
+    } else {
+        await addLogMessage(`O ataque errou.`, 1000);
+    }
+
+    // Telegrafação após o ataque (se não foi um ataque telegrafado)
+    if (!nextTelegraphedAttack && currentMonster.ataques) {
+        const nextAttack = chooseMonsterAttack(currentMonster);
+        if (nextAttack.telegrafado) {
+            nextTelegraphedAttack = nextAttack;
+            await addLogMessage(`<em style="color: yellow;">${nextAttack.mensagemTelegraf}</em>`, 1200);
+        }
+    }
+
+    // Continua o jogo se o jogador não estiver morto
+    if (playerHealth > -10) {
+        endMonsterTurn();
+    }
+}
+
+
+
 // Finaliza o turno do jogador e inicia o turno do monstro
 function endPlayerTurn() {
     console.log("LOG: Finalizando turno do jogador e iniciando turno do monstro.");
@@ -1107,133 +1237,6 @@ function chooseMonsterAttack(monster) {
     
     return weightedAttacks[0]; // Fallback
 }
-
-// Lógica do turno do monstro
-async function monsterAttack() {
-    console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
-
-    // Verifica se o jogador já está morto
-    if (isPlayerTurn || playerHealth <= -10 || !currentMonster) {
-        console.log("LOG: monsterAttack - Turno inválido ou jogador morto. Retornando.");
-        return;
-    }
-
-    startNewTurnBlock(currentMonster.nome);
-    await addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
-
-  // Processa debuffs do monstro
-await processMonsterDebuffs();
-
-
-    // Escolhe o ataque (telegrafado ou novo)
-    let selectedAttack;
-    if (nextTelegraphedAttack) {
-        selectedAttack = nextTelegraphedAttack;
-        nextTelegraphedAttack = null;
-        await addLogMessage(`<strong style="color: orange;">${selectedAttack.nome}!</strong>`, 800);
-    } else {
-        selectedAttack = chooseMonsterAttack(currentMonster);
-        await addLogMessage(`${currentMonster.nome} usa ${selectedAttack.nome}.`, 800);
-    }
-
-    // Rolagem de ataque
-    const monsterRollRaw = Math.floor(Math.random() * 20) + 1;
-    // Aplica penalidade de debuffs de precisão
-const accuracyPenalty = activeMonsterDebuffs
-    .filter(debuff => debuff.tipo === "accuracy")
-    .reduce((total, debuff) => total + debuff.valor, 0);
-
-const monsterAttackRoll = monsterRollRaw - accuracyPenalty;
-
-if (accuracyPenalty > 0) {
-    await addLogMessage(`${currentMonster.nome} sofre -${accuracyPenalty} de penalidade por debuffs.`, 800);
-}
-
-
-    
-await addLogMessage(`${currentMonster.nome} rolou ${monsterRollRaw} em um D20 para atacar.`, 1000);
-
-
-    const playerDefense = getPlayerDefense();
-    await addLogMessage(`Sua Couraça é ${playerDefense}.`, 1000);
-
-    // Verifica se o ataque acertou
-    if (monsterAttackRoll >= playerDefense) {
-        const isCriticalHit = monsterRollRaw === 20;
-        
-        if (isCriticalHit) {
-            await addLogMessage(`<strong style="color: red;">ACERTO CRÍTICO!</strong> O ataque atinge um ponto vital!`, 1000);
-        } else {
-            await addLogMessage(`O ataque acertou!`, 1000);
-        }
-
-        // Calcula o dano
-        let monsterDamageRoll = rollDice(selectedAttack.dano);
-
-// Aplica redução de dano por debuffs
-const damageReduction = activeMonsterDebuffs
-    .filter(debuff => debuff.tipo === "damage_reduction")
-    .reduce((total, debuff) => total + debuff.valor, 0);
-
-if (damageReduction > 0) {
-    monsterDamageRoll = Math.max(0, monsterDamageRoll - damageReduction);
-    await addLogMessage(`Dano reduzido em ${damageReduction} por debuffs (${monsterDamageRoll + damageReduction} → ${monsterDamageRoll}).`, 800);
-}
-
-        
-        if (isCriticalHit) {
-            monsterDamageRoll = Math.floor(monsterDamageRoll * 1.5);
-            const criticalEffects = [
-                "O golpe te deixa atordoado!",
-                "Você sente suas forças se esvaindo!",
-                "O impacto te faz perder o equilíbrio!",
-                "Um golpe certeiro que te faz recuar!"
-            ];
-            const randomEffect = criticalEffects[Math.floor(Math.random() * criticalEffects.length)];
-            await addLogMessage(`<em>${randomEffect}</em>`, 800);
-        }
-
-        playerHealth -= monsterDamageRoll;
-        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-        await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano${isCriticalHit ? " crítico" : ""}.`, 1000);
-
-        // Salva o estado
-        const user = auth.currentUser;
-        if (user) {
-            await updatePlayerEnergyInFirestore(user.uid, playerHealth);
-            await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-        }
-
-        // Verifica morte/inconsciência
-        if (playerHealth <= -10) {
-            await addLogMessage(`<p style="color: darkred;">Você morreu!</p>`, 1000);
-            if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
-            return;
-        } else if (playerHealth <= 0) {
-            await addLogMessage(`<p style="color: red;">Você está inconsciente!</p>`, 1000);
-            if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
-        }
-
-        await addLogMessage(`Sua energia: ${playerHealth}.`, 1000);
-    } else {
-        await addLogMessage(`O ataque errou.`, 1000);
-    }
-
-    // Telegrafação após o ataque (se não foi um ataque telegrafado)
-    if (!nextTelegraphedAttack && currentMonster.ataques) {
-        const nextAttack = chooseMonsterAttack(currentMonster);
-        if (nextAttack.telegrafado) {
-            nextTelegraphedAttack = nextAttack;
-            await addLogMessage(`<em style="color: yellow;">${nextAttack.mensagemTelegraf}</em>`, 1200);
-        }
-    }
-
-    // Continua o jogo se o jogador não estiver morto
-    if (playerHealth > -10) {
-        endMonsterTurn();
-    }
-}
-
 
     
 async function endMonsterTurn() {
