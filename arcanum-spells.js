@@ -199,30 +199,37 @@ function createArcanumConjurationModal(spell) {
     return {modal, correctWord, conditions};
 }
 
-function validateConjuration(inputWord, correctWord, level, typingTime, errors) {
+function validateConjuration(inputWord, correctWord, typingTime, errors) {
     const accuracy = calculateAccuracy(inputWord, correctWord);
     const fluency = calculateFluency(typingTime, errors, correctWord.length);
     
-    // Requisitos por nível - AUMENTADOS
+    // Requisitos por nível
     const requirements = {
-        1: {accuracy: 90, fluency: 0},    // Era 95, agora 90
-        2: {accuracy: 92, fluency: 60},   // Era 90, agora 92
-        3: {accuracy: 94, fluency: 70},   // Era 92, agora 94
-        4: {accuracy: 96, fluency: 80},   // Era 95, agora 96
-        5: {accuracy: 98, fluency: 90}    // Mantém 98
+        5: {accuracy: 98, fluency: 90},
+        4: {accuracy: 96, fluency: 80},
+        3: {accuracy: 94, fluency: 70},
+        2: {accuracy: 92, fluency: 60},
+        1: {accuracy: 90, fluency: 0}
     };
     
-    const req = requirements[level];
-    const success = accuracy >= req.accuracy && fluency >= req.fluency;
+    // Encontra o maior nível que o jogador consegue atingir
+    let achievedLevel = 0;
+    for (let level = 5; level >= 1; level--) {
+        const req = requirements[level];
+        if (accuracy >= req.accuracy && fluency >= req.fluency) {
+            achievedLevel = level;
+            break;
+        }
+    }
     
     return {
-        success,
+        success: achievedLevel > 0,
         accuracy,
         fluency,
-        level: success ? level : 0,  // MUDANÇA: 0 em vez de fallback
-        damage: success ? level : 0  // MUDANÇA: 0 em vez de 1
+        level: achievedLevel
     };
 }
+
 
 
 function calculateAccuracy(input, correct) {
