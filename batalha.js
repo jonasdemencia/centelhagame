@@ -13,11 +13,6 @@ let nextTelegraphedAttack = null; // Próximo ataque telegrafado
 let activeBuffs = []; // Sistema de buffs temporários
 let activeMonsterDebuffs = []; // Sistema de debuffs do monstro
 
-// Variáveis globais para batalha
-let battleLogContent;
-let currentTurnBlock = null;
-
-
 
 console.log("LOG: batalha.js carregado.");
 
@@ -321,7 +316,8 @@ function processBuffs() {
         return Promise.resolve();
     });
 }, Promise.resolve());
-}
+  } // <- ADICIONE ESTA CHAVE AQUI
+
 
 // Função para processar debuffs do monstro no início do seu turno
 function processMonsterDebuffs() {
@@ -721,65 +717,6 @@ function handlePostBattle(monster) {
     window.battleStarted = false; // Reset do estado da batalha usando window para garantir escopo global
 }
 
-    function startNewTurnBlock(turnName) {
-    if (currentTurnBlock) {
-        battleLogContent.prepend(currentTurnBlock);
-    }
-    currentTurnBlock = document.createElement('div');
-    currentTurnBlock.classList.add('turn-block');
-    const turnTitle = document.createElement('h4');
-    turnTitle.textContent = `Turno do ${turnName}`;
-    currentTurnBlock.appendChild(turnTitle);
-    battleLogContent.prepend(currentTurnBlock); // Adiciona o novo bloco no topo
-}
-
-// Função global para log de mensagens
-async function addLogMessage(message, delay = 0, typingSpeed = 30) {
-    const logContainer = document.getElementById("battle-log-content");
-    return new Promise((resolve) => {
-        const p = document.createElement('p');
-        currentTurnBlock.appendChild(p);
-        let index = 0;
-
-        function typeWriter() {
-            if (index < message.length) {
-                if (message.charAt(index) === '<') {
-                    const closeTagIndex = message.indexOf('>', index);
-                    if (closeTagIndex !== -1) {
-                        p.innerHTML += message.substring(index, closeTagIndex + 1);
-                        index = closeTagIndex + 1;
-                    } else {
-                        p.innerHTML += message.charAt(index);
-                        index++;
-                    }
-                } else {
-                    p.innerHTML += message.charAt(index);
-                    index++;
-                }
-                setTimeout(typeWriter, typingSpeed);
-            } else {
-                if (delay > 0) {
-                    setTimeout(() => {
-                        logContainer.scrollTop = logContainer.scrollHeight;
-                        resolve();
-                    }, delay);
-                } else {
-                    logContainer.scrollTop = logContainer.scrollHeight;
-                    resolve();
-                }
-            }
-        }
-
-        if (typingSpeed > 0) {
-            typeWriter();
-        } else {
-            p.innerHTML = message;
-            logContainer.scrollTop = logContainer.scrollHeight;
-            resolve();
-        }
-    });
-}
-
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -796,8 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: DOMContentLoaded evento disparado.");
     const lutarButton = document.getElementById("iniciar-luta");
     const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
-    battleLogContent = document.getElementById("battle-log-content");
-
+    const battleLogContent = document.getElementById("battle-log-content");
     const attackOptionsDiv = document.getElementById("attack-options");
     const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
     const rolarDanoButton = document.getElementById("rolar-dano");
@@ -810,7 +746,7 @@ let playerHealth = 0;
     let playerMagic = 0;
     let playerMaxMagic = 0;
     let isPlayerTurn = false; // Variável para controlar o turno
-   
+    let currentTurnBlock = null; // Para armazenar o bloco do turno atual
     let playerAbilityValue = 0; // Para armazenar a habilidade do jogador
     let battleStarted = false; // Variável de controle para estado da batalha
     console.log("LOG: Variáveis iniciais declaradas.");
@@ -1032,7 +968,67 @@ async function updatePlayerExperience(userId, xpToAdd) {
     }
 }
 
-    
+
+
+        async function addLogMessage(message, delay = 0, typingSpeed = 30) {
+    const logContainer = document.getElementById("battle-log-content");
+    return new Promise((resolve) => {
+        const p = document.createElement('p');
+        currentTurnBlock.appendChild(p); // Adiciona a mensagem ao bloco atual
+        let index = 0;
+
+        function typeWriter() {
+            if (index < message.length) {
+                if (message.charAt(index) === '<') {
+                    // Se encontrar uma tag HTML, adiciona a tag completa de uma vez
+                    const closeTagIndex = message.indexOf('>', index);
+                    if (closeTagIndex !== -1) {
+                        p.innerHTML += message.substring(index, closeTagIndex + 1);
+                        index = closeTagIndex + 1;
+                    } else {
+                        p.innerHTML += message.charAt(index);
+                        index++;
+                    }
+                } else {
+                    p.innerHTML += message.charAt(index);
+                    index++;
+                }
+                setTimeout(typeWriter, typingSpeed);
+            } else {
+                if (delay > 0) {
+                    setTimeout(() => {
+                        logContainer.scrollTop = logContainer.scrollHeight; // Rola para o final após o delay
+                        resolve();
+                    }, delay);
+                } else {
+                    logContainer.scrollTop = logContainer.scrollHeight; // Rola para o final imediatamente
+                    resolve();
+                }
+            }
+        }
+
+        if (typingSpeed > 0) {
+            typeWriter();
+        } else {
+            p.innerHTML = message;
+            logContainer.scrollTop = logContainer.scrollHeight;
+            resolve();
+        }
+    });
+}
+
+    
+    function startNewTurnBlock(turnName) {
+    if (currentTurnBlock) {
+        battleLogContent.prepend(currentTurnBlock);
+    }
+    currentTurnBlock = document.createElement('div');
+    currentTurnBlock.classList.add('turn-block');
+    const turnTitle = document.createElement('h4');
+    turnTitle.textContent = `Turno do ${turnName}`;
+    currentTurnBlock.appendChild(turnTitle);
+    battleLogContent.prepend(currentTurnBlock); // Adiciona o novo bloco no topo
+}
 
     // Variável de controle para evitar chamadas repetitivas
 let isMonsterTurnRunning = false;
@@ -1680,32 +1676,12 @@ async function usarMagia(magiaId, efeito, valor, custo) {
     const magia = magiasDisponiveis.find(m => m.id === magiaId);
     if (!magia) return;
     
-    // SISTEMA ARCANUM VERBIS - Detecta Toque Chocante
-if (magiaId === "toque-chocante") {
-    // Fechar modal de magias
+    // Fechar modal
     document.getElementById("magias-modal").style.display = "none";
-    
-    // Criar e mostrar modal de conjuração
-    const conjurationModal = window.ArcanumUI.createConjurationModal();
-    document.body.appendChild(conjurationModal);
-    document.getElementById("arcanum-conjuration-modal").style.display = "block";
     
     // Reduz magia
     playerMagic -= custoNum;
     atualizarBarraMagia(playerMagic, playerMaxMagic);
-    
-        // Adicionar event listeners ao modal
-    setupConjurationModal(magia, userId, monsterName);
-    return;
-}
-
-// Fechar modal (para outras magias)
-document.getElementById("magias-modal").style.display = "none";
-
-// Reduz magia
-playerMagic -= custoNum;
-atualizarBarraMagia(playerMagic, playerMaxMagic);
-
     
     // Criar bloco de turno
     startNewTurnBlock("Magia");
@@ -2677,73 +2653,5 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
     console.log("LOG: Event listener para DOMContentLoaded finalizado.");
 });
 
-// Função para validar a conjuração
-function validateConjuration(sequence, word) {
-    const correctSequence = "↑↑↑↓";
-    const conditions = window.ArcanumConditions.getConditions();
-    const correctWord = window.ArcanumConditions.applyModifiers("FULGOR", conditions);
-    
-    console.log('Sequência correta:', correctSequence);
-    console.log('Palavra correta:', correctWord);
-    console.log('Jogador digitou - Sequência:', sequence, 'Palavra:', word);
-    
-    return sequence === correctSequence && word.toUpperCase() === correctWord;
-}
-
-
-
-// Função para configurar o modal de conjuração
-function setupConjurationModal(magia, userId, monsterName) {
-    const modal = document.getElementById('arcanum-conjuration-modal');
-    const closeBtn = document.getElementById('close-conjuration');
-    const cancelBtn = document.getElementById('cancel-conjuration');
-    const conjureBtn = document.getElementById('conjure-spell');
-    
-    // Fechar modal
-    closeBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-        modal.remove();
-    });
-    
-    cancelBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-        modal.remove();
-    });
-    
-    // Conjurar magia
-    conjureBtn.addEventListener('click', () => {
-        const sequence = document.getElementById('directional-sequence').value;
-        const word = document.getElementById('conjuration-word').value;
-        
-                // Validar conjuração
-        const isValid = validateConjuration(sequence, word);
-        
-        if (isValid) {
-            // Sucesso - continua com o toque chocante
-            window.touchSpellContext = {
-                dano: magia.valor,
-                nome: magia.nome,
-                userId: userId,
-                monsterName: monsterName
-            };
-            
-            startNewTurnBlock("Magia");
-            addLogMessage(`Conjuração bem-sucedida! Você canaliza ${magia.nome}! Clique no botão "Atacar" para tentar tocar o inimigo.`, 800);
-        } else {
-            // Falha - perde a magia e o turno
-            startNewTurnBlock("Magia");
-            addLogMessage(`Conjuração falhou! A magia se dissipa e você perde o turno.`, 800);
-            endPlayerTurn();
-        }
-        
-        modal.style.display = 'none';
-        modal.remove();
-
-    });
-}
-
 
 console.log("LOG: Fim do script batalha.js");
-});
-
-
