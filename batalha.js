@@ -4,6 +4,7 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { getFirestore, doc, getDoc, setDoc, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 import { loadEquippedDice, initializeModule } from './dice-ui.js';
 import { getMonsterById } from './monstros.js';
+import './arcanum-spells.js';
 
 // Variáveis globais para estado da batalha
 window.isPlayerTurn = false;
@@ -1663,6 +1664,12 @@ function selecionarMagia(magiaElement) {
 
 // Função para usar uma magia
 async function usarMagia(magiaId, efeito, valor, custo) {
+  // --- INÍCIO INTEGRAÇÃO ARCANUM ---
+if (magiaId === 'missil-magico') {
+    setupArcanumConjurationModal();
+    return;
+}
+// --- FIM INTEGRAÇÃO ARCANUM ---
     const userId = auth.currentUser.uid;
     const custoNum = parseInt(custo);
     
@@ -2653,5 +2660,86 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
     console.log("LOG: Event listener para DOMContentLoaded finalizado.");
 });
 
+function setupArcanumConjurationModal() {
+    const magia = magiasDisponiveis.find(m => m.id === 'missil-magico');
+    if (!magia) return;
+
+    const {modal, correctWord, conditions} = window.ArcanumSpells.createArcanumConjurationModal(magia);
+
+    const oldModal = document.getElementById('arcanum-conjuration-modal');
+    if (oldModal) oldModal.remove();
+
+    document.body.appendChild(modal);
+    modal.style.display = 'block';
+
+    let selectedLevel = 1;
+    let typingStart = 0;
+    let typingEnd = 0;
+    let errors = 0;
+
+    modal.querySelectorAll('.level-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            modal.querySelectorAll('.level-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedLevel = parseInt(btn.dataset.level, 10);
+        });
+    });
+
+    const input = modal.querySelector('#conjuration-word');
+    input.value = '';
+    input.focus();
+    errors = 0;
+    typingStart = 0;
+    typingEnd = 0;
+
+    input.addEventListener('keydown', e => {
+        if (typingStart === 0) typingStart = performance.now();
+        if (e.key === 'Backspace' || e.key === 'Delete') errors++;
+    });
+    input.addEventListener('blur', () => { typingEnd = performance.now(); });
+    input.addEventListener('input', () => {
+        if (typingStart === 0) typingStart = performance.now();
+        const now = performance.now();
+        const elapsed = ((now - typingStart) / 1000).toFixed(1);
+        modal.querySelector('#conjuration-timer').textContent = `${elapsed}s`;
+    });
+
+    modal.querySelector('#conjure-spell').onclick = () => {
+        typingEnd = performance.now();
+        const inputWord = input.value.trim().toUpperCase();
+        const totalTime = ((typingEnd > typingStart ? typingEnd : performance.now()) - typingStart) / 1000;
+        const result = window.ArcanumSpells.validateConjuration(inputWord, correctWord, selectedLevel, totalTime, errors);
+
+        modal.remove();
+
+        let msg = '';
+        if (result.success) {
+            msg = `<span style="color:lime;">Conjuração bem-sucedida! <b>${result.level} dardo(s)</b> lançado(s)! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
+        } else {
+            msg = `<span style="color:red;">Falha ou potência reduzida! Só 1 dardo lançado. (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
+        }
+
+        addLogMessage(msg, 500);
+
+        let totalDamage = 0;
+        for (let i = 0; i < result.level; i++) {
+            totalDamage += rollDice('1d4') + 1;
+        }
+        if (currentMonster) {
+            currentMonster.pontosDeEnergia -= totalDamage;
+            atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+            addLogMessage(`Dardos Místicos causaram <b>${totalDamage}</b> de dano!`, 1000);
+            if (currentMonster.pontosDeEnergia <= 0) {
+                addLogMessage(`<span style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</span>`, 1000);
+                handlePostBattle(currentMonster);
+                return;
+            }
+        }
+        endPlayerTurn();
+    };
+
+    modal.querySelector('#cancel-conjuration').onclick = () => { modal.remove(); };
+    modal.querySelector('#close-conjuration').onclick = () => { modal.remove(); };
+}
 
 console.log("LOG: Fim do script batalha.js");
