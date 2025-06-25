@@ -16,6 +16,11 @@ let activeBuffs = []; // Sistema de buffs temporários
 let activeMonsterDebuffs = []; // Sistema de debuffs do monstro
 let currentTurnBlock = null;
 let attackOptionsDiv = null;
+let monsterName = null; // Adicionar esta linha
+let currentMonster = null; // Já existe como window.currentMonster, mas adicione esta também
+let userId = null;
+
+
 
 let playerData; // Para armazenar os dados do jogador
 window.playerData = null; // Variável global para playerData
@@ -1011,7 +1016,7 @@ document.addEventListener('DOMContentLoaded', () => {
     attackOptionsDiv = document.getElementById("attack-options");
     const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
     const rolarDanoButton = document.getElementById("rolar-dano");
-    const monsterName = getUrlParameter('monstro');
+    monsterName = getUrlParameter('monstro'); // Remove 'const', usa a variável global
     
 
 
@@ -1946,7 +1951,7 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
         console.log("LOG: onAuthStateChanged chamado.");
         if (user) {
             // Usuário está logado!
-            const userId = user.uid;
+            userId = user.uid; // Remove 'const', usa a variável global
                     await loadEquippedDice(userId);
             console.log("LOG: Usuário logado. ID:", userId);
             const monsterName = getUrlParameter('monstro');
