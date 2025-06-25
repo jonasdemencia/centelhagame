@@ -336,6 +336,42 @@ function startNewTurnBlock(turnName) {
 }
 
 
+// Função para escolher ataque do monstro
+function chooseMonsterAttack(monster) {
+    // Se não tem sistema de ataques, usa o sistema antigo
+    if (!monster.ataques || !Array.isArray(monster.ataques)) {
+        return {
+            nome: "Ataque",
+            dano: monster.dano,
+            telegrafado: false
+        };
+    }
+
+    // Calcula porcentagem de HP
+    const hpPercent = monster.pontosDeEnergia / monster.pontosDeEnergiaMax;
+    const isLowHP = hpPercent <= 0.5;
+
+    // Cria array de pesos baseado no HP
+    const weightedAttacks = monster.ataques.map(attack => ({
+        ...attack,
+        currentWeight: isLowHP ? attack.pesoHPBaixo : attack.peso
+    }));
+
+    // Seleciona ataque baseado nos pesos
+    const totalWeight = weightedAttacks.reduce((sum, attack) => sum + attack.currentWeight, 0);
+    let random = Math.random() * totalWeight;
+    
+    for (const attack of weightedAttacks) {
+        random -= attack.currentWeight;
+        if (random <= 0) {
+            return attack;
+        }
+    }
+    
+    return weightedAttacks[0]; // Fallback
+}
+
+
 
 async function salvarDropsNoLoot(userId, drops) {
     const lootCollectionRef = collection(db, "users", userId, "loot");
@@ -1195,41 +1231,6 @@ async function updatePlayerExperience(userId, xpToAdd) {
     }
 }
 
-
-// Função para escolher ataque do monstro
-function chooseMonsterAttack(monster) {
-    // Se não tem sistema de ataques, usa o sistema antigo
-    if (!monster.ataques || !Array.isArray(monster.ataques)) {
-        return {
-            nome: "Ataque",
-            dano: monster.dano,
-            telegrafado: false
-        };
-    }
-
-    // Calcula porcentagem de HP
-    const hpPercent = monster.pontosDeEnergia / monster.pontosDeEnergiaMax;
-    const isLowHP = hpPercent <= 0.5;
-
-    // Cria array de pesos baseado no HP
-    const weightedAttacks = monster.ataques.map(attack => ({
-        ...attack,
-        currentWeight: isLowHP ? attack.pesoHPBaixo : attack.peso
-    }));
-
-    // Seleciona ataque baseado nos pesos
-    const totalWeight = weightedAttacks.reduce((sum, attack) => sum + attack.currentWeight, 0);
-    let random = Math.random() * totalWeight;
-    
-    for (const attack of weightedAttacks) {
-        random -= attack.currentWeight;
-        if (random <= 0) {
-            return attack;
-        }
-    }
-    
-    return weightedAttacks[0]; // Fallback
-}
 
     
 async function endMonsterTurn() {
