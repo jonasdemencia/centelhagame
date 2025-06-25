@@ -2709,31 +2709,46 @@ function setupArcanumConjurationModal() {
         let msg = '';
         if (result.success) {
             msg = `<span style="color:lime;">Conjuração bem-sucedida! <b>${result.level} dardo(s)</b> lançado(s)! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
+            
+            addLogMessage(msg, 500);
+
+            let totalDamage = 0;
+            for (let i = 0; i < result.level; i++) {
+                totalDamage += rollDice('1d4') + 1;
+            }
+            if (currentMonster) {
+                currentMonster.pontosDeEnergia -= totalDamage;
+                atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+                addLogMessage(`Dardos Místicos causaram <b>${totalDamage}</b> de dano!`, 1000);
+                if (currentMonster.pontosDeEnergia <= 0) {
+                    addLogMessage(`<span style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</span>`, 1000);
+                    handlePostBattle(currentMonster);
+                    return;
+                }
+            }
         } else {
-            msg = `<span style="color:red;">Falha ou potência reduzida! Só 1 dardo lançado. (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
-        }
-
-        addLogMessage(msg, 500);
-
-        let totalDamage = 0;
-        for (let i = 0; i < result.level; i++) {
-            totalDamage += rollDice('1d4') + 1;
-        }
-        if (currentMonster) {
-            currentMonster.pontosDeEnergia -= totalDamage;
-            atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
-            addLogMessage(`Dardos Místicos causaram <b>${totalDamage}</b> de dano!`, 1000);
-            if (currentMonster.pontosDeEnergia <= 0) {
-                addLogMessage(`<span style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</span>`, 1000);
-                handlePostBattle(currentMonster);
-                return;
+            // FALHA - Consome metade do MP, sem efeito
+            const halfCost = Math.ceil(magia.custo / 2);
+            playerMagic -= halfCost;
+            atualizarBarraMagia(playerMagic, playerMaxMagic);
+            
+            msg = `<span style="color:red;">Falha na conjuração (${result.accuracy.toFixed(1)}% precisão)! Você perdeu controle da magia e consumiu ${halfCost} PM.</span>`;
+            addLogMessage(msg, 500);
+            
+            // Salva o estado
+            const user = auth.currentUser;
+            if (user) {
+                updatePlayerMagicInFirestore(user.uid, playerMagic);
+                saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
             }
         }
+        
         endPlayerTurn();
     };
 
     modal.querySelector('#cancel-conjuration').onclick = () => { modal.remove(); };
     modal.querySelector('#close-conjuration').onclick = () => { modal.remove(); };
 }
+
 
 console.log("LOG: Fim do script batalha.js");
