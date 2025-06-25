@@ -611,6 +611,371 @@ async function carregarItensConsumiveis(userId) {
     }
 }
 
+// Função para selecionar um item
+function selecionarItem(itemElement) {
+    // Limpa seleção anterior
+    document.querySelectorAll(".item-consumivel").forEach(el => {
+        el.classList.remove("selected");
+    });
+    
+    // Seleciona o novo item
+    itemElement.classList.add("selected");
+    
+    // Mostra o botão de usar
+    const usarBtn = document.querySelector(".usar-item-btn");
+    if (usarBtn) {
+        usarBtn.style.display = "block";
+        usarBtn.dataset.itemId = itemElement.dataset.itemId;
+        usarBtn.dataset.effect = itemElement.dataset.effect;
+        usarBtn.dataset.value = itemElement.dataset.value;
+    }
+}
+
+// Função para usar um item - versão modificada
+async function usarItem(itemId, effect, value) {
+    const userId = auth.currentUser.uid;
+    
+    try {
+        // Buscar dados do jogador e inventário
+        const playerRef = doc(db, "players", userId);
+        const playerSnap = await getDoc(playerRef);
+        
+        if (!playerSnap.exists()) {
+            console.error("Dados do jogador não encontrados");
+            return;
+        }
+        
+        const playerData = playerSnap.data();
+        const inventoryData = playerData.inventory;
+        
+        // Encontrar o item no inventário
+        let itemIndex = -1;
+        let item = null;
+        
+        if (inventoryData.itemsInChest && Array.isArray(inventoryData.itemsInChest)) {
+            itemIndex = inventoryData.itemsInChest.findIndex(i => i.id === itemId);
+            if (itemIndex !== -1) {
+                item = inventoryData.itemsInChest[itemIndex];
+            }
+        }
+        
+        if (!item) {
+            console.error("Item não encontrado no inventário");
+            return;
+        }
+        
+        // Fechar a janela de itens imediatamente
+        document.getElementById("itens-modal").style.display = "none";
+        
+        // Criar um novo bloco de turno para o item
+        startNewTurnBlock("Item");
+        
+        // Aplicar efeito do item
+        if (effect === "heal" && value > 0) {
+            // Cura o jogador
+            const energyTotal = playerData.energy?.total || 0;
+            const energyInitial = playerData.energy?.initial || 0;
+            const newEnergy = Math.min(energyTotal + parseInt(value), energyInitial);
+            
+            // Atualiza a energia do jogador
+            playerData.energy.total = newEnergy;
+            playerHealth = newEnergy; // Atualiza a variável global
+            
+            // Atualiza a barra de HP
+            atualizarBarraHP("barra-hp-jogador", newEnergy, energyInitial);
+            
+            // Adiciona mensagem ao log
+            await addLogMessage(`Você usou ${item.content} e recuperou ${value} pontos de energia.`, 1000);
+            await addLogMessage(`Sua energia atual: ${newEnergy}/${energyInitial}`, 800);
+            
+        } else if (effect === "damage" && value > 0) {
+            // Causa dano ao monstro
+            if (currentMonster) {
+                currentMonster.pontosDeEnergia -= parseInt(value);
+                currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+                
+                // Atualiza a barra de HP do monstro
+                atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+                
+                // Adiciona mensagem ao log
+                await addLogMessage(`Você usou ${item.content} e causou ${value} pontos de dano ao ${currentMonster.nome}.`, 1000);
+                await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}/${currentMonster.pontosDeEnergiaMax}`, 800);
+                
+                // Verifica se o monstro morreu
+                if (currentMonster.pontosDeEnergia <= 0) {
+                    await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+                    handlePostBattle(currentMonster);
+                    return;
+                }
+            }
+        } else {
+            // Item sem efeito específico
+            await addLogMessage(`Você usou ${item.content}.`, 1000);
+        }
+        
+        // Reduz a quantidade do item
+        item.quantity--;
+        
+        // Remove o item se a quantidade chegar a zero
+        if (item.quantity <= 0) {
+            inventoryData.itemsInChest.splice(itemIndex, 1);
+        }
+        
+        // Salva as alterações no Firestore
+        await setDoc(playerRef, { 
+            energy: playerData.energy,
+            inventory: inventoryData 
+        }, { merge: true });
+        
+        // Atualiza o estado da batalha
+        if (currentMonster) {
+            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerData.energy.total);
+        }
+        
+       // Monstro faz ataque de oportunidade antes de passar o turno
+await monsterOpportunityAttack(0.8);
+// Passa o turno para o monstro
+endPlayerTurn();
+
+        
+    } catch (error) {
+        console.error("Erro ao usar item:", error);
+        // Garantir que a janela feche mesmo em caso de erro
+        document.getElementById("itens-modal").style.display = "none";
+    }
+}
+
+
+// Função para carregar magias disponíveis
+function carregarMagiasDisponiveis() {
+    const magiasContainer = document.getElementById("magias-container");
+    magiasContainer.innerHTML = "";
+    
+    magiasDisponiveis.forEach(magia => {
+        const magiaElement = document.createElement("div");
+        magiaElement.className = "item-consumivel";
+        magiaElement.dataset.magiaId = magia.id;
+        magiaElement.dataset.efeito = magia.efeito;
+        magiaElement.dataset.valor = magia.valor;
+        magiaElement.dataset.custo = magia.custo;
+        
+        // Verifica se tem magia suficiente
+        const temMagiaSuficiente = playerMagic >= magia.custo;
+        if (!temMagiaSuficiente) {
+            magiaElement.classList.add("disabled");
+            magiaElement.style.opacity = "0.5";
+        }
+        
+        magiaElement.innerHTML = `
+            <div class="item-nome">${magia.nome}</div>
+            <div class="item-quantidade">Custo: ${magia.custo} PM</div>
+            <div class="item-descricao">${magia.descricao}</div>
+        `;
+        
+        if (temMagiaSuficiente) {
+            magiaElement.addEventListener("click", () => selecionarMagia(magiaElement));
+        }
+        magiasContainer.appendChild(magiaElement);
+    });
+}
+
+
+// Função para selecionar uma magia
+function selecionarMagia(magiaElement) {
+    // Limpa seleção anterior
+    document.querySelectorAll(".item-consumivel").forEach(el => {
+        el.classList.remove("selected");
+    });
+    
+    // Seleciona a nova magia
+    magiaElement.classList.add("selected");
+    
+    // Mostra o botão de usar
+    const usarBtn = document.querySelector(".usar-magia-btn");
+    if (usarBtn) {
+        usarBtn.style.display = "block";
+        usarBtn.dataset.magiaId = magiaElement.dataset.magiaId;
+        usarBtn.dataset.efeito = magiaElement.dataset.efeito;
+        usarBtn.dataset.valor = magiaElement.dataset.valor;
+        usarBtn.dataset.custo = magiaElement.dataset.custo;
+    }
+}
+
+
+// Função para usar uma magia
+async function usarMagia(magiaId, efeito, valor, custo) {
+  // --- INÍCIO INTEGRAÇÃO ARCANUM ---
+if (magiaId === 'missil-magico') {
+    setupArcanumConjurationModal();
+    return;
+}
+// --- FIM INTEGRAÇÃO ARCANUM ---
+    const userId = auth.currentUser.uid;
+    const custoNum = parseInt(custo);
+    
+    // Verifica se tem magia suficiente
+    if (playerMagic < custoNum) {
+        await addLogMessage(`Você não tem magia suficiente! (${playerMagic}/${custoNum})`, 1000);
+        return;
+    }
+    
+    // Encontra a magia
+    const magia = magiasDisponiveis.find(m => m.id === magiaId);
+    if (!magia) return;
+    
+    // Fechar modal
+    document.getElementById("magias-modal").style.display = "none";
+    
+    // Reduz magia
+    playerMagic -= custoNum;
+    atualizarBarraMagia(playerMagic, playerMaxMagic);
+    
+    // Criar bloco de turno
+    startNewTurnBlock("Magia");
+    await addLogMessage(`Você lança ${magia.nome}!`, 800);
+    
+    // Magias de escudo não fazem teste de resistência
+    if (efeito === "shield") {
+        // Aplica buff de escudo
+        const buffValue = parseInt(valor);
+        const buffDuration = 3;
+        
+        // Remove buff anterior do mesmo tipo se existir
+        activeBuffs = activeBuffs.filter(buff => buff.tipo !== "couraca");
+        
+        // Adiciona novo buff
+        activeBuffs.push({
+            tipo: "couraca",
+            valor: buffValue,
+            turnos: buffDuration,
+            nome: magia.nome
+        });
+
+        updateBuffsDisplay();
+        
+        await addLogMessage(`${magia.nome} ativo! Sua couraça aumentou em +${buffValue} por ${buffDuration} turnos.`, 800);
+        
+        // Salva estado e passa turno
+        await updatePlayerMagicInFirestore(userId, playerMagic);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        endPlayerTurn();
+        return;
+    }
+
+    if (efeito === "heal") {
+        const newEnergy = Math.min(playerHealth + parseInt(valor), playerMaxHealth);
+        playerHealth = newEnergy;
+        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+        await addLogMessage(`Você recuperou ${valor} pontos de energia.`, 800);
+        
+        // Salva estado e passa turno
+        await updatePlayerMagicInFirestore(userId, playerMagic);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        endPlayerTurn();
+        return;
+    }
+
+   // Teste de resistência do monstro (apenas para magias que não são touch_attack ou touch_debuff)
+if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
+        const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+        const resistanceTotal = resistanceRoll + currentMonster.habilidade;
+        const difficulty = 15;
+
+        await addLogMessage(`${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
+
+        if (resistanceTotal >= difficulty) {
+            await addLogMessage(`${currentMonster.nome} resistiu à magia!`, 1000);
+            // Salva estado e passa turno
+            await updatePlayerMagicInFirestore(userId, playerMagic);
+            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+            endPlayerTurn();
+            return;
+        } else {
+            await addLogMessage(`A magia afeta ${currentMonster.nome}!`, 800);
+        }
+    }
+
+    if (efeito === "damage") {
+        await addLogMessage(`Role o dano da magia!`, 800);
+        
+        // Salva dados da magia para usar no botão de dano
+        window.magicContext = {
+            dano: valor,
+            userId: userId,
+            monsterName: monsterName
+        };
+        
+        // Mostra botão de dano
+        const rolarDanoButton = document.getElementById("rolar-dano");
+        if (rolarDanoButton) {
+            rolarDanoButton.style.display = 'inline-block';
+            rolarDanoButton.disabled = false;
+        }
+        
+    } else if (efeito === "dazzle") {
+        // Aplica debuff de ofuscamento
+        const debuffValue = parseInt(valor);
+        const debuffDuration = 3;
+        
+        // Remove debuff anterior do mesmo tipo se existir
+        activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "accuracy");
+        
+        // Adiciona novo debuff
+        activeMonsterDebuffs.push({
+            tipo: "accuracy",
+            valor: debuffValue,
+            turnos: debuffDuration,
+            nome: magia.nome
+        });
+        
+        updateMonsterDebuffsDisplay();
+        
+        await addLogMessage(`${currentMonster.nome} está ofuscado! Sua precisão diminuiu em -${debuffValue} por ${debuffDuration} turnos.`, 800);
+        
+        // Salva estado e passa turno
+        await updatePlayerMagicInFirestore(userId, playerMagic);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        endPlayerTurn();
+
+    } else if (efeito === "touch_attack") {
+        // Salva contexto da magia de toque
+        window.touchSpellContext = {
+            dano: valor,
+            nome: magia.nome,
+            userId: userId,
+            monsterName: monsterName
+        };
+        
+        await addLogMessage(`Você canaliza ${magia.nome}! Clique no botão "Atacar" para tentar tocar o inimigo.`, 800);
+        
+        // Salva estado da magia
+        await updatePlayerMagicInFirestore(userId, playerMagic);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        
+        // Não passa o turno, aguarda rolagem de ataque
+        return;
+    
+
+      } else if (efeito === "touch_debuff") {
+        // Salva contexto da magia de toque com debuff
+        window.touchDebuffContext = {
+            dano: valor,
+            nome: magia.nome,
+            userId: userId,
+            monsterName: monsterName
+        };
+        
+        await addLogMessage(`Você canaliza ${magia.nome}! Clique no botão "Atacar" para tentar tocar o inimigo.`, 800);
+        
+        // Salva estado da magia
+        await updatePlayerMagicInFirestore(userId, playerMagic);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        
+        // Não passa o turno, aguarda rolagem de ataque
+        return;
+    }
+}
+
 async function salvarDropsNoLoot(userId, drops) {
     const lootCollectionRef = collection(db, "users", userId, "loot");
 
@@ -1468,375 +1833,6 @@ async function updatePlayerExperience(userId, xpToAdd) {
         throw error;
     }
 }
-
-
-
-// Função para selecionar um item
-function selecionarItem(itemElement) {
-    // Limpa seleção anterior
-    document.querySelectorAll(".item-consumivel").forEach(el => {
-        el.classList.remove("selected");
-    });
-    
-    // Seleciona o novo item
-    itemElement.classList.add("selected");
-    
-    // Mostra o botão de usar
-    const usarBtn = document.querySelector(".usar-item-btn");
-    if (usarBtn) {
-        usarBtn.style.display = "block";
-        usarBtn.dataset.itemId = itemElement.dataset.itemId;
-        usarBtn.dataset.effect = itemElement.dataset.effect;
-        usarBtn.dataset.value = itemElement.dataset.value;
-    }
-}
-
-// Função para usar um item - versão modificada
-async function usarItem(itemId, effect, value) {
-    const userId = auth.currentUser.uid;
-    
-    try {
-        // Buscar dados do jogador e inventário
-        const playerRef = doc(db, "players", userId);
-        const playerSnap = await getDoc(playerRef);
-        
-        if (!playerSnap.exists()) {
-            console.error("Dados do jogador não encontrados");
-            return;
-        }
-        
-        const playerData = playerSnap.data();
-        const inventoryData = playerData.inventory;
-        
-        // Encontrar o item no inventário
-        let itemIndex = -1;
-        let item = null;
-        
-        if (inventoryData.itemsInChest && Array.isArray(inventoryData.itemsInChest)) {
-            itemIndex = inventoryData.itemsInChest.findIndex(i => i.id === itemId);
-            if (itemIndex !== -1) {
-                item = inventoryData.itemsInChest[itemIndex];
-            }
-        }
-        
-        if (!item) {
-            console.error("Item não encontrado no inventário");
-            return;
-        }
-        
-        // Fechar a janela de itens imediatamente
-        document.getElementById("itens-modal").style.display = "none";
-        
-        // Criar um novo bloco de turno para o item
-        startNewTurnBlock("Item");
-        
-        // Aplicar efeito do item
-        if (effect === "heal" && value > 0) {
-            // Cura o jogador
-            const energyTotal = playerData.energy?.total || 0;
-            const energyInitial = playerData.energy?.initial || 0;
-            const newEnergy = Math.min(energyTotal + parseInt(value), energyInitial);
-            
-            // Atualiza a energia do jogador
-            playerData.energy.total = newEnergy;
-            playerHealth = newEnergy; // Atualiza a variável global
-            
-            // Atualiza a barra de HP
-            atualizarBarraHP("barra-hp-jogador", newEnergy, energyInitial);
-            
-            // Adiciona mensagem ao log
-            await addLogMessage(`Você usou ${item.content} e recuperou ${value} pontos de energia.`, 1000);
-            await addLogMessage(`Sua energia atual: ${newEnergy}/${energyInitial}`, 800);
-            
-        } else if (effect === "damage" && value > 0) {
-            // Causa dano ao monstro
-            if (currentMonster) {
-                currentMonster.pontosDeEnergia -= parseInt(value);
-                currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
-                
-                // Atualiza a barra de HP do monstro
-                atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
-                
-                // Adiciona mensagem ao log
-                await addLogMessage(`Você usou ${item.content} e causou ${value} pontos de dano ao ${currentMonster.nome}.`, 1000);
-                await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}/${currentMonster.pontosDeEnergiaMax}`, 800);
-                
-                // Verifica se o monstro morreu
-                if (currentMonster.pontosDeEnergia <= 0) {
-                    await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-                    handlePostBattle(currentMonster);
-                    return;
-                }
-            }
-        } else {
-            // Item sem efeito específico
-            await addLogMessage(`Você usou ${item.content}.`, 1000);
-        }
-        
-        // Reduz a quantidade do item
-        item.quantity--;
-        
-        // Remove o item se a quantidade chegar a zero
-        if (item.quantity <= 0) {
-            inventoryData.itemsInChest.splice(itemIndex, 1);
-        }
-        
-        // Salva as alterações no Firestore
-        await setDoc(playerRef, { 
-            energy: playerData.energy,
-            inventory: inventoryData 
-        }, { merge: true });
-        
-        // Atualiza o estado da batalha
-        if (currentMonster) {
-            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerData.energy.total);
-        }
-        
-       // Monstro faz ataque de oportunidade antes de passar o turno
-await monsterOpportunityAttack(0.8);
-// Passa o turno para o monstro
-endPlayerTurn();
-
-        
-    } catch (error) {
-        console.error("Erro ao usar item:", error);
-        // Garantir que a janela feche mesmo em caso de erro
-        document.getElementById("itens-modal").style.display = "none";
-    }
-}
-
-
-  // Função para carregar magias disponíveis
-function carregarMagiasDisponiveis() {
-    const magiasContainer = document.getElementById("magias-container");
-    magiasContainer.innerHTML = "";
-    
-    magiasDisponiveis.forEach(magia => {
-        const magiaElement = document.createElement("div");
-        magiaElement.className = "item-consumivel";
-        magiaElement.dataset.magiaId = magia.id;
-        magiaElement.dataset.efeito = magia.efeito;
-        magiaElement.dataset.valor = magia.valor;
-        magiaElement.dataset.custo = magia.custo;
-        
-        // Verifica se tem magia suficiente
-        const temMagiaSuficiente = playerMagic >= magia.custo;
-        if (!temMagiaSuficiente) {
-            magiaElement.classList.add("disabled");
-            magiaElement.style.opacity = "0.5";
-        }
-        
-        magiaElement.innerHTML = `
-            <div class="item-nome">${magia.nome}</div>
-            <div class="item-quantidade">Custo: ${magia.custo} PM</div>
-            <div class="item-descricao">${magia.descricao}</div>
-        `;
-        
-        if (temMagiaSuficiente) {
-            magiaElement.addEventListener("click", () => selecionarMagia(magiaElement));
-        }
-        magiasContainer.appendChild(magiaElement);
-    });
-}
-
-// Função para selecionar uma magia
-function selecionarMagia(magiaElement) {
-    // Limpa seleção anterior
-    document.querySelectorAll(".item-consumivel").forEach(el => {
-        el.classList.remove("selected");
-    });
-    
-    // Seleciona a nova magia
-    magiaElement.classList.add("selected");
-    
-    // Mostra o botão de usar
-    const usarBtn = document.querySelector(".usar-magia-btn");
-    if (usarBtn) {
-        usarBtn.style.display = "block";
-        usarBtn.dataset.magiaId = magiaElement.dataset.magiaId;
-        usarBtn.dataset.efeito = magiaElement.dataset.efeito;
-        usarBtn.dataset.valor = magiaElement.dataset.valor;
-        usarBtn.dataset.custo = magiaElement.dataset.custo;
-    }
-}
-
-// Função para usar uma magia
-async function usarMagia(magiaId, efeito, valor, custo) {
-  // --- INÍCIO INTEGRAÇÃO ARCANUM ---
-if (magiaId === 'missil-magico') {
-    setupArcanumConjurationModal();
-    return;
-}
-// --- FIM INTEGRAÇÃO ARCANUM ---
-    const userId = auth.currentUser.uid;
-    const custoNum = parseInt(custo);
-    
-    // Verifica se tem magia suficiente
-    if (playerMagic < custoNum) {
-        await addLogMessage(`Você não tem magia suficiente! (${playerMagic}/${custoNum})`, 1000);
-        return;
-    }
-    
-    // Encontra a magia
-    const magia = magiasDisponiveis.find(m => m.id === magiaId);
-    if (!magia) return;
-    
-    // Fechar modal
-    document.getElementById("magias-modal").style.display = "none";
-    
-    // Reduz magia
-    playerMagic -= custoNum;
-    atualizarBarraMagia(playerMagic, playerMaxMagic);
-    
-    // Criar bloco de turno
-    startNewTurnBlock("Magia");
-    await addLogMessage(`Você lança ${magia.nome}!`, 800);
-    
-    // Magias de escudo não fazem teste de resistência
-    if (efeito === "shield") {
-        // Aplica buff de escudo
-        const buffValue = parseInt(valor);
-        const buffDuration = 3;
-        
-        // Remove buff anterior do mesmo tipo se existir
-        activeBuffs = activeBuffs.filter(buff => buff.tipo !== "couraca");
-        
-        // Adiciona novo buff
-        activeBuffs.push({
-            tipo: "couraca",
-            valor: buffValue,
-            turnos: buffDuration,
-            nome: magia.nome
-        });
-
-        updateBuffsDisplay();
-        
-        await addLogMessage(`${magia.nome} ativo! Sua couraça aumentou em +${buffValue} por ${buffDuration} turnos.`, 800);
-        
-        // Salva estado e passa turno
-        await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-        endPlayerTurn();
-        return;
-    }
-
-    if (efeito === "heal") {
-        const newEnergy = Math.min(playerHealth + parseInt(valor), playerMaxHealth);
-        playerHealth = newEnergy;
-        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-        await addLogMessage(`Você recuperou ${valor} pontos de energia.`, 800);
-        
-        // Salva estado e passa turno
-        await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-        endPlayerTurn();
-        return;
-    }
-
-   // Teste de resistência do monstro (apenas para magias que não são touch_attack ou touch_debuff)
-if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
-        const resistanceRoll = Math.floor(Math.random() * 20) + 1;
-        const resistanceTotal = resistanceRoll + currentMonster.habilidade;
-        const difficulty = 15;
-
-        await addLogMessage(`${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
-
-        if (resistanceTotal >= difficulty) {
-            await addLogMessage(`${currentMonster.nome} resistiu à magia!`, 1000);
-            // Salva estado e passa turno
-            await updatePlayerMagicInFirestore(userId, playerMagic);
-            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-            endPlayerTurn();
-            return;
-        } else {
-            await addLogMessage(`A magia afeta ${currentMonster.nome}!`, 800);
-        }
-    }
-
-    if (efeito === "damage") {
-        await addLogMessage(`Role o dano da magia!`, 800);
-        
-        // Salva dados da magia para usar no botão de dano
-        window.magicContext = {
-            dano: valor,
-            userId: userId,
-            monsterName: monsterName
-        };
-        
-        // Mostra botão de dano
-        const rolarDanoButton = document.getElementById("rolar-dano");
-        if (rolarDanoButton) {
-            rolarDanoButton.style.display = 'inline-block';
-            rolarDanoButton.disabled = false;
-        }
-        
-    } else if (efeito === "dazzle") {
-        // Aplica debuff de ofuscamento
-        const debuffValue = parseInt(valor);
-        const debuffDuration = 3;
-        
-        // Remove debuff anterior do mesmo tipo se existir
-        activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "accuracy");
-        
-        // Adiciona novo debuff
-        activeMonsterDebuffs.push({
-            tipo: "accuracy",
-            valor: debuffValue,
-            turnos: debuffDuration,
-            nome: magia.nome
-        });
-        
-        updateMonsterDebuffsDisplay();
-        
-        await addLogMessage(`${currentMonster.nome} está ofuscado! Sua precisão diminuiu em -${debuffValue} por ${debuffDuration} turnos.`, 800);
-        
-        // Salva estado e passa turno
-        await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-        endPlayerTurn();
-
-    } else if (efeito === "touch_attack") {
-        // Salva contexto da magia de toque
-        window.touchSpellContext = {
-            dano: valor,
-            nome: magia.nome,
-            userId: userId,
-            monsterName: monsterName
-        };
-        
-        await addLogMessage(`Você canaliza ${magia.nome}! Clique no botão "Atacar" para tentar tocar o inimigo.`, 800);
-        
-        // Salva estado da magia
-        await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-        
-        // Não passa o turno, aguarda rolagem de ataque
-        return;
-    
-
-      } else if (efeito === "touch_debuff") {
-        // Salva contexto da magia de toque com debuff
-        window.touchDebuffContext = {
-            dano: valor,
-            nome: magia.nome,
-            userId: userId,
-            monsterName: monsterName
-        };
-        
-        await addLogMessage(`Você canaliza ${magia.nome}! Clique no botão "Atacar" para tentar tocar o inimigo.`, 800);
-        
-        // Salva estado da magia
-        await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-        
-        // Não passa o turno, aguarda rolagem de ataque
-        return;
-    }
-}
-
-
-
-
   
     
     const botaoInventario = document.getElementById("abrir-inventario");
