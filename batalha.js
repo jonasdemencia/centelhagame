@@ -822,7 +822,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const rolarDanoButton = document.getElementById("rolar-dano");
     const monsterName = getUrlParameter('monstro');
     let currentMonster; // Declara currentMonster no escopo superior
-    let attackOptionsDiv; // Declara attackOptionsDiv no escopo superior
 
 let playerData; // Para armazenar os dados do jogador
 window.playerData = null; // Variável global para playerData
