@@ -17,6 +17,53 @@ let activeMonsterDebuffs = []; // Sistema de debuffs do monstro
 
 console.log("LOG: batalha.js carregado.");
 
+async function addLogMessage(message, delay = 0, typingSpeed = 30) {
+    const logContainer = document.getElementById("battle-log-content");
+    return new Promise((resolve) => {
+        const p = document.createElement('p');
+        currentTurnBlock.appendChild(p); // Adiciona a mensagem ao bloco atual
+        let index = 0;
+
+        function typeWriter() {
+            if (index < message.length) {
+                if (message.charAt(index) === '<') {
+                    // Se encontrar uma tag HTML, adiciona a tag completa de uma vez
+                    const closeTagIndex = message.indexOf('>', index);
+                    if (closeTagIndex !== -1) {
+                        p.innerHTML += message.substring(index, closeTagIndex + 1);
+                        index = closeTagIndex + 1;
+                    } else {
+                        p.innerHTML += message.charAt(index);
+                        index++;
+                    }
+                } else {
+                    p.innerHTML += message.charAt(index);
+                    index++;
+                }
+                setTimeout(typeWriter, typingSpeed);
+            } else {
+                if (delay > 0) {
+                    setTimeout(() => {
+                        logContainer.scrollTop = logContainer.scrollHeight; // Rola para o final após o delay
+                        resolve();
+                    }, delay);
+                } else {
+                    logContainer.scrollTop = logContainer.scrollHeight; // Rola para o final imediatamente
+                    resolve();
+                }
+            }
+        }
+
+        if (typingSpeed > 0) {
+            typeWriter();
+        } else {
+            p.innerHTML = message;
+            logContainer.scrollTop = logContainer.scrollHeight;
+            resolve();
+        }
+    });
+}
+
 // Falhas críticas (rolar 1 no d20 ao atacar)
 const falhasCriticas = [
   { mensagem: "Você escorrega e cai de bunda no chão. Que vergonha! Você perde o turno atual.", efeito: "perdeTurno" },
@@ -971,52 +1018,7 @@ async function updatePlayerExperience(userId, xpToAdd) {
 
 
 
-        async function addLogMessage(message, delay = 0, typingSpeed = 30) {
-    const logContainer = document.getElementById("battle-log-content");
-    return new Promise((resolve) => {
-        const p = document.createElement('p');
-        currentTurnBlock.appendChild(p); // Adiciona a mensagem ao bloco atual
-        let index = 0;
-
-        function typeWriter() {
-            if (index < message.length) {
-                if (message.charAt(index) === '<') {
-                    // Se encontrar uma tag HTML, adiciona a tag completa de uma vez
-                    const closeTagIndex = message.indexOf('>', index);
-                    if (closeTagIndex !== -1) {
-                        p.innerHTML += message.substring(index, closeTagIndex + 1);
-                        index = closeTagIndex + 1;
-                    } else {
-                        p.innerHTML += message.charAt(index);
-                        index++;
-                    }
-                } else {
-                    p.innerHTML += message.charAt(index);
-                    index++;
-                }
-                setTimeout(typeWriter, typingSpeed);
-            } else {
-                if (delay > 0) {
-                    setTimeout(() => {
-                        logContainer.scrollTop = logContainer.scrollHeight; // Rola para o final após o delay
-                        resolve();
-                    }, delay);
-                } else {
-                    logContainer.scrollTop = logContainer.scrollHeight; // Rola para o final imediatamente
-                    resolve();
-                }
-            }
-        }
-
-        if (typingSpeed > 0) {
-            typeWriter();
-        } else {
-            p.innerHTML = message;
-            logContainer.scrollTop = logContainer.scrollHeight;
-            resolve();
-        }
-    });
-}
+        
 
     
     function startNewTurnBlock(turnName) {
