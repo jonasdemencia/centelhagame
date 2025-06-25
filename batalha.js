@@ -377,6 +377,239 @@ function chooseMonsterAttack(monster) {
 }
 
 
+async function endMonsterTurn() {
+
+    console.log("LOG: Finalizando turno do monstro e iniciando turno do jogador.");
+    if (isPlayerTurn) {
+        console.error("LOG: endMonsterTurn chamado fora do turno do monstro. Abortando.");
+        return;
+    }
+
+    // Verifica se o jogador está inconsciente (energia entre 0 e -9)
+    if (playerHealth <= 0 && playerHealth > -10) {
+        console.log("LOG: Jogador inconsciente, o monstro continua atacando.");
+        startNewTurnBlock("Estado");
+        addLogMessage(`<p style="color: red; font-weight: bold;">Você está inconsciente e indefeso!</p>`, 1000);
+        addLogMessage(`O ${currentMonster.nome} continua atacando seu corpo inerte...`, 1000);
+        
+        // Não passa o turno para o jogador, inicia outro turno do monstro
+        setTimeout(() => {
+            monsterAttack();
+        }, 2000);
+        return;
+    }
+
+    // Se o jogador não estiver inconsciente, continua normalmente
+    isPlayerTurn = true; // Marca que é o turno do jogador
+    window.isPlayerTurn = true; // Atualiza a variável global
+
+    if (attackOptionsDiv) {
+        attackOptionsDiv.style.display = 'block'; // Exibe as opções de ataque do jogador
+
+                // Exibe e habilita todos os botões principais
+        const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
+        const atoClasseButton = document.getElementById("ato-classe");
+        const itensFerramentasButton = document.getElementById("itens-ferramentas");
+        const correrButton = document.getElementById("correr-batalha");
+        const magiaButton = document.getElementById("atacar-a-distancia");
+        
+        if (atacarCorpoACorpoButton) {
+            atacarCorpoACorpoButton.disabled = false;
+            atacarCorpoACorpoButton.style.display = 'inline-block';
+        }
+        if (atoClasseButton) {
+            atoClasseButton.disabled = false;
+            atoClasseButton.style.display = 'inline-block';
+        }
+        if (itensFerramentasButton) {
+            itensFerramentasButton.disabled = false;
+            itensFerramentasButton.style.display = 'inline-block';
+        }
+        if (magiaButton) {
+            magiaButton.disabled = false;
+            magiaButton.style.display = 'inline-block';
+        }
+
+        
+        // IMPORTANTE: Garantir que o botão de fuga esteja visível e com evento
+        if (correrButton) {
+            correrButton.disabled = false;
+            correrButton.style.display = 'inline-block';
+            correrButton.onclick = attemptEscape;
+            console.log("LOG: Botão 'Correr' exibido e configurado no turno do jogador");
+        } else {
+            console.error("LOG: Botão 'Correr' não encontrado em endMonsterTurn");
+        }
+    }
+
+    startNewTurnBlock("Jogador");
+await processBuffs();
+addLogMessage(`Turno do Jogador`, 1000);
+
+
+    
+    // Salva o estado após mudar o turno para o jogador
+    const user = auth.currentUser;
+    const monsterName = getUrlParameter('monstro');
+    if (user && monsterName) {
+        saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+    }
+}
+
+
+// Exemplo para resetActionButtons
+function resetActionButtons() {
+    if (attackOptionsDiv) {
+        const buttons = attackOptionsDiv.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.disabled = false;
+            if (button.id === 'atacar-corpo-a-corpo' || button.id === 'ato-classe' || button.id === 'itens-ferramentas') {
+                button.style.display = 'inline-block';
+            } else {
+                button.style.display = 'none';
+            }
+        });
+    }
+}
+
+// Função para ataque de oportunidade do monstro
+async function monsterOpportunityAttack(damageMultiplier = 0.8) {
+    await addLogMessage(`${currentMonster.nome} aproveita sua distração para atacar!`, 800);
+    
+    const damage = Math.floor(rollDice(currentMonster.dano) * damageMultiplier);
+    playerHealth -= damage;
+    atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+    
+    await addLogMessage(`Você sofre ${damage} de dano!`, 800);
+    
+    // Atualiza estado
+    if (auth.currentUser) {
+        await updatePlayerEnergyInFirestore(auth.currentUser.uid, playerHealth);
+        await saveBattleState(auth.currentUser.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+    }
+}
+
+
+async function attemptEscape() {
+    // Verifica se já está em uma tentativa de fuga para evitar duplicação
+    if (window.escapingInProgress) {
+        return;
+    }
+    window.escapingInProgress = true;
+
+    // Incrementa o contador de tentativas
+    escapeAttempts++;
+    
+    // Obtém a habilidade do local correto
+    const habilidadeUsada = playerData?.skill?.total || 0;
+    
+    // Calcula a dificuldade base (25 + habilidade do monstro)
+    const baseDifficulty = 25 + currentMonster.habilidade;
+    // Adiciona penalidade por tentativas (+2 por tentativa)
+    const difficulty = baseDifficulty + ((escapeAttempts - 1) * 2);
+
+    startNewTurnBlock("Tentativa de Fuga");
+    await addLogMessage(`Você tenta escapar do combate...`, 800);
+    
+    // Remove qualquer botão de rolagem existente antes de criar um novo
+    const existingRollBtn = currentTurnBlock.querySelector('.roll-btn');
+    if (existingRollBtn) {
+        existingRollBtn.remove();
+    }
+    
+    // Cria o botão de rolagem de forma mais segura
+    const rollBtn = document.createElement('button');
+    rollBtn.textContent = 'Rolar D20';
+    rollBtn.classList.add('action-btn', 'roll-btn');
+    
+    // Adiciona o botão ao bloco de turno atual
+    currentTurnBlock.appendChild(rollBtn);
+
+    const diceRoll = await new Promise(resolve => {
+        rollBtn.addEventListener('click', () => {
+            const roll = Math.floor(Math.random() * 20) + 1;
+            resolve(roll);
+        }, { once: true });
+    });
+
+    // Remove o botão após o clique
+    if (rollBtn.parentNode) {
+        rollBtn.parentNode.removeChild(rollBtn);
+    }
+    
+    const totalRoll = diceRoll + habilidadeUsada;
+
+    await addLogMessage(`Você rolou ${diceRoll} + ${habilidadeUsada} (Hab) = ${totalRoll} vs dificuldade ${difficulty}`, 800);
+
+    if (totalRoll >= difficulty) {
+        // Sucesso na fuga
+        await addLogMessage(`<strong style="color: green;">Você consegue escapar do combate!</strong>`, 1000);
+        window.escapingInProgress = false;
+        window.location.href = 'masmorra.html';
+    } else {
+        // Falha na fuga - monstro ganha ataque gratuito com dano reduzido
+        await addLogMessage(`<strong style="color: red;">Você não consegue escapar!</strong>`, 800);
+        await monsterOpportunityAttack(0.8);
+
+        window.escapingInProgress = false;
+        // Passa o turno
+        endPlayerTurn();
+    }
+}
+
+// Função para carregar itens consumíveis do inventário
+async function carregarItensConsumiveis(userId) {
+    try {
+        const playerRef = doc(db, "players", userId);
+        const playerSnap = await getDoc(playerRef);
+        
+        if (playerSnap.exists() && playerSnap.data().inventory) {
+            const inventoryData = playerSnap.data().inventory;
+            const itensContainer = document.getElementById("itens-container");
+            itensContainer.innerHTML = "";
+            
+            // Filtrar apenas itens consumíveis
+            const itensConsumiveis = [];
+            
+            // Verificar itens no baú
+            if (inventoryData.itemsInChest && Array.isArray(inventoryData.itemsInChest)) {
+                inventoryData.itemsInChest.forEach(item => {
+                    if (item.consumable && item.quantity > 0) {
+                        itensConsumiveis.push(item);
+                    }
+                });
+            }
+            
+            // Se não houver itens consumíveis
+            if (itensConsumiveis.length === 0) {
+                itensContainer.innerHTML = "<p>Você não possui itens consumíveis.</p>";
+                return;
+            }
+            
+            // Criar elementos para cada item consumível
+            itensConsumiveis.forEach(item => {
+                const itemElement = document.createElement("div");
+                itemElement.className = "item-consumivel";
+                itemElement.dataset.itemId = item.id;
+                itemElement.dataset.effect = item.effect || "";
+                itemElement.dataset.value = item.value || 0;
+                
+                itemElement.innerHTML = `
+                    <div class="item-nome">${item.content}</div>
+                    <div class="item-quantidade">Quantidade: ${item.quantity}</div>
+                    <div class="item-descricao">${item.description || ""}</div>
+                `;
+                
+                itemElement.addEventListener("click", () => selecionarItem(itemElement));
+                itensContainer.appendChild(itemElement);
+            });
+        } else {
+            console.log("Inventário não encontrado para o usuário");
+        }
+    } catch (error) {
+        console.error("Erro ao carregar itens consumíveis:", error);
+    }
+}
 
 async function salvarDropsNoLoot(userId, drops) {
     const lootCollectionRef = collection(db, "users", userId, "loot");
@@ -1237,253 +1470,6 @@ async function updatePlayerExperience(userId, xpToAdd) {
 }
 
 
-    
-async function endMonsterTurn() {
-
-    console.log("LOG: Finalizando turno do monstro e iniciando turno do jogador.");
-    if (isPlayerTurn) {
-        console.error("LOG: endMonsterTurn chamado fora do turno do monstro. Abortando.");
-        return;
-    }
-
-    // Verifica se o jogador está inconsciente (energia entre 0 e -9)
-    if (playerHealth <= 0 && playerHealth > -10) {
-        console.log("LOG: Jogador inconsciente, o monstro continua atacando.");
-        startNewTurnBlock("Estado");
-        addLogMessage(`<p style="color: red; font-weight: bold;">Você está inconsciente e indefeso!</p>`, 1000);
-        addLogMessage(`O ${currentMonster.nome} continua atacando seu corpo inerte...`, 1000);
-        
-        // Não passa o turno para o jogador, inicia outro turno do monstro
-        setTimeout(() => {
-            monsterAttack();
-        }, 2000);
-        return;
-    }
-
-    // Se o jogador não estiver inconsciente, continua normalmente
-    isPlayerTurn = true; // Marca que é o turno do jogador
-    window.isPlayerTurn = true; // Atualiza a variável global
-
-    if (attackOptionsDiv) {
-        attackOptionsDiv.style.display = 'block'; // Exibe as opções de ataque do jogador
-
-                // Exibe e habilita todos os botões principais
-        const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
-        const atoClasseButton = document.getElementById("ato-classe");
-        const itensFerramentasButton = document.getElementById("itens-ferramentas");
-        const correrButton = document.getElementById("correr-batalha");
-        const magiaButton = document.getElementById("atacar-a-distancia");
-        
-        if (atacarCorpoACorpoButton) {
-            atacarCorpoACorpoButton.disabled = false;
-            atacarCorpoACorpoButton.style.display = 'inline-block';
-        }
-        if (atoClasseButton) {
-            atoClasseButton.disabled = false;
-            atoClasseButton.style.display = 'inline-block';
-        }
-        if (itensFerramentasButton) {
-            itensFerramentasButton.disabled = false;
-            itensFerramentasButton.style.display = 'inline-block';
-        }
-        if (magiaButton) {
-            magiaButton.disabled = false;
-            magiaButton.style.display = 'inline-block';
-        }
-
-        
-        // IMPORTANTE: Garantir que o botão de fuga esteja visível e com evento
-        if (correrButton) {
-            correrButton.disabled = false;
-            correrButton.style.display = 'inline-block';
-            correrButton.onclick = attemptEscape;
-            console.log("LOG: Botão 'Correr' exibido e configurado no turno do jogador");
-        } else {
-            console.error("LOG: Botão 'Correr' não encontrado em endMonsterTurn");
-        }
-    }
-
-    startNewTurnBlock("Jogador");
-await processBuffs();
-addLogMessage(`Turno do Jogador`, 1000);
-
-
-    
-    // Salva o estado após mudar o turno para o jogador
-    const user = auth.currentUser;
-    const monsterName = getUrlParameter('monstro');
-    if (user && monsterName) {
-        saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-    }
-}
-
-
-
-
-  
-
-    // Exemplo para resetActionButtons
-function resetActionButtons() {
-    if (attackOptionsDiv) {
-        const buttons = attackOptionsDiv.querySelectorAll('button');
-        buttons.forEach(button => {
-            button.disabled = false;
-            if (button.id === 'atacar-corpo-a-corpo' || button.id === 'ato-classe' || button.id === 'itens-ferramentas') {
-                button.style.display = 'inline-block';
-            } else {
-                button.style.display = 'none';
-            }
-        });
-    }
-}
-
-
-  // Função para ataque de oportunidade do monstro
-async function monsterOpportunityAttack(damageMultiplier = 0.8) {
-    await addLogMessage(`${currentMonster.nome} aproveita sua distração para atacar!`, 800);
-    
-    const damage = Math.floor(rollDice(currentMonster.dano) * damageMultiplier);
-    playerHealth -= damage;
-    atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-    
-    await addLogMessage(`Você sofre ${damage} de dano!`, 800);
-    
-    // Atualiza estado
-    if (auth.currentUser) {
-        await updatePlayerEnergyInFirestore(auth.currentUser.uid, playerHealth);
-        await saveBattleState(auth.currentUser.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-    }
-}
-
-  
-
-
-async function attemptEscape() {
-    // Verifica se já está em uma tentativa de fuga para evitar duplicação
-    if (window.escapingInProgress) {
-        return;
-    }
-    window.escapingInProgress = true;
-
-    // Incrementa o contador de tentativas
-    escapeAttempts++;
-    
-    // Obtém a habilidade do local correto
-    const habilidadeUsada = playerData?.skill?.total || 0;
-    
-    // Calcula a dificuldade base (25 + habilidade do monstro)
-    const baseDifficulty = 25 + currentMonster.habilidade;
-    // Adiciona penalidade por tentativas (+2 por tentativa)
-    const difficulty = baseDifficulty + ((escapeAttempts - 1) * 2);
-
-    startNewTurnBlock("Tentativa de Fuga");
-    await addLogMessage(`Você tenta escapar do combate...`, 800);
-    
-    // Remove qualquer botão de rolagem existente antes de criar um novo
-    const existingRollBtn = currentTurnBlock.querySelector('.roll-btn');
-    if (existingRollBtn) {
-        existingRollBtn.remove();
-    }
-    
-    // Cria o botão de rolagem de forma mais segura
-    const rollBtn = document.createElement('button');
-    rollBtn.textContent = 'Rolar D20';
-    rollBtn.classList.add('action-btn', 'roll-btn');
-    
-    // Adiciona o botão ao bloco de turno atual
-    currentTurnBlock.appendChild(rollBtn);
-
-    const diceRoll = await new Promise(resolve => {
-        rollBtn.addEventListener('click', () => {
-            const roll = Math.floor(Math.random() * 20) + 1;
-            resolve(roll);
-        }, { once: true });
-    });
-
-    // Remove o botão após o clique
-    if (rollBtn.parentNode) {
-        rollBtn.parentNode.removeChild(rollBtn);
-    }
-    
-    const totalRoll = diceRoll + habilidadeUsada;
-
-    await addLogMessage(`Você rolou ${diceRoll} + ${habilidadeUsada} (Hab) = ${totalRoll} vs dificuldade ${difficulty}`, 800);
-
-    if (totalRoll >= difficulty) {
-        // Sucesso na fuga
-        await addLogMessage(`<strong style="color: green;">Você consegue escapar do combate!</strong>`, 1000);
-        window.escapingInProgress = false;
-        window.location.href = 'masmorra.html';
-    } else {
-        // Falha na fuga - monstro ganha ataque gratuito com dano reduzido
-        await addLogMessage(`<strong style="color: red;">Você não consegue escapar!</strong>`, 800);
-        await monsterOpportunityAttack(0.8);
-
-        window.escapingInProgress = false;
-        // Passa o turno
-        endPlayerTurn();
-    }
-}
-
-
-
-
-
-
-
-// Função para carregar itens consumíveis do inventário
-async function carregarItensConsumiveis(userId) {
-    try {
-        const playerRef = doc(db, "players", userId);
-        const playerSnap = await getDoc(playerRef);
-        
-        if (playerSnap.exists() && playerSnap.data().inventory) {
-            const inventoryData = playerSnap.data().inventory;
-            const itensContainer = document.getElementById("itens-container");
-            itensContainer.innerHTML = "";
-            
-            // Filtrar apenas itens consumíveis
-            const itensConsumiveis = [];
-            
-            // Verificar itens no baú
-            if (inventoryData.itemsInChest && Array.isArray(inventoryData.itemsInChest)) {
-                inventoryData.itemsInChest.forEach(item => {
-                    if (item.consumable && item.quantity > 0) {
-                        itensConsumiveis.push(item);
-                    }
-                });
-            }
-            
-            // Se não houver itens consumíveis
-            if (itensConsumiveis.length === 0) {
-                itensContainer.innerHTML = "<p>Você não possui itens consumíveis.</p>";
-                return;
-            }
-            
-            // Criar elementos para cada item consumível
-            itensConsumiveis.forEach(item => {
-                const itemElement = document.createElement("div");
-                itemElement.className = "item-consumivel";
-                itemElement.dataset.itemId = item.id;
-                itemElement.dataset.effect = item.effect || "";
-                itemElement.dataset.value = item.value || 0;
-                
-                itemElement.innerHTML = `
-                    <div class="item-nome">${item.content}</div>
-                    <div class="item-quantidade">Quantidade: ${item.quantity}</div>
-                    <div class="item-descricao">${item.description || ""}</div>
-                `;
-                
-                itemElement.addEventListener("click", () => selecionarItem(itemElement));
-                itensContainer.appendChild(itemElement);
-            });
-        } else {
-            console.log("Inventário não encontrado para o usuário");
-        }
-    } catch (error) {
-        console.error("Erro ao carregar itens consumíveis:", error);
-    }
-}
 
 // Função para selecionar um item
 function selecionarItem(itemElement) {
