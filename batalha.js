@@ -321,7 +321,6 @@ function processBuffs() {
         return Promise.resolve();
     });
 }, Promise.resolve());
-  } // <- ADICIONE ESTA CHAVE AQUI
 
 
 // Função para processar debuffs do monstro no início do seu turno
@@ -797,7 +796,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("LOG: DOMContentLoaded evento disparado.");
     const lutarButton = document.getElementById("iniciar-luta");
     const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
-        battleLogContent = document.getElementById("battle-log-content");
+    battleLogContent = document.getElementById("battle-log-content");
 
     const attackOptionsDiv = document.getElementById("attack-options");
     const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
