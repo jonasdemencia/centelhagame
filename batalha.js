@@ -321,6 +321,22 @@ const db = getFirestore(app);
 initializeModule(db);  // Inicializa o módulo de dados
 console.log("LOG: Firebase inicializado.");
 
+
+function startNewTurnBlock(turnName) {
+    const battleLogContent = document.getElementById("battle-log-content");
+    if (currentTurnBlock) {
+        battleLogContent.prepend(currentTurnBlock);
+    }
+    currentTurnBlock = document.createElement('div');
+    currentTurnBlock.classList.add('turn-block');
+    const turnTitle = document.createElement('h4');
+    turnTitle.textContent = `Turno do ${turnName}`;
+    currentTurnBlock.appendChild(turnTitle);
+    battleLogContent.prepend(currentTurnBlock); // Adiciona o novo bloco no topo
+}
+
+
+
 async function salvarDropsNoLoot(userId, drops) {
     const lootCollectionRef = collection(db, "users", userId, "loot");
 
@@ -1178,26 +1194,6 @@ async function updatePlayerExperience(userId, xpToAdd) {
         throw error;
     }
 }
-
-
-
-        
-
-    
-    function startNewTurnBlock(turnName) {
-    if (currentTurnBlock) {
-        battleLogContent.prepend(currentTurnBlock);
-    }
-    currentTurnBlock = document.createElement('div');
-    currentTurnBlock.classList.add('turn-block');
-    const turnTitle = document.createElement('h4');
-    turnTitle.textContent = `Turno do ${turnName}`;
-    currentTurnBlock.appendChild(turnTitle);
-    battleLogContent.prepend(currentTurnBlock); // Adiciona o novo bloco no topo
-}
-
-    // Variável de controle para evitar chamadas repetitivas
-let isMonsterTurnRunning = false;
 
 
 // Função para escolher ataque do monstro
