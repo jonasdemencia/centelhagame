@@ -781,8 +781,6 @@ async function addLogMessage(message, delay = 0, typingSpeed = 30) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -2747,3 +2745,6 @@ function setupConjurationModal(magia, userId, monsterName) {
 
 
 console.log("LOG: Fim do script batalha.js");
+});
+
+
