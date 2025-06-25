@@ -9,6 +9,7 @@ import './arcanum-spells.js';
 // Variáveis globais para estado da batalha
 window.isPlayerTurn = false;
 window.battleStarted = false;
+window.currentMonster = null;
 let escapeAttempts = 0; // Contador de tentativas de fuga
 let nextTelegraphedAttack = null; // Próximo ataque telegrafado
 let activeBuffs = []; // Sistema de buffs temporários
@@ -788,7 +789,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
     const rolarDanoButton = document.getElementById("rolar-dano");
     const monsterName = getUrlParameter('monstro');
-    let currentMonster; // Declara currentMonster no escopo superior
+    currentMonster; // Declara currentMonster no escopo superior
 let playerData; // Para armazenar os dados do jogador
 window.playerData = null; // Variável global para playerData
 let playerHealth = 0;
