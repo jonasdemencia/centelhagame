@@ -815,11 +815,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const lutarButton = document.getElementById("iniciar-luta");
     const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
     const battleLogContent = document.getElementById("battle-log-content");
-    const attackOptionsDiv = document.getElementById("attack-options");
+    attackOptionsDiv = document.getElementById("attack-options");
     const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
     const rolarDanoButton = document.getElementById("rolar-dano");
     const monsterName = getUrlParameter('monstro');
-    currentMonster; // Declara currentMonster no escopo superior
+    let currentMonster; // Declara currentMonster no escopo superior
+    let attackOptionsDiv; // Declara attackOptionsDiv no escopo superior
+
 let playerData; // Para armazenar os dados do jogador
 window.playerData = null; // Variável global para playerData
 let playerHealth = 0;
