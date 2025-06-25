@@ -960,10 +960,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
     const rolarDanoButton = document.getElementById("rolar-dano");
     const monsterName = getUrlParameter('monstro');
-    let currentMonster; // Declara currentMonster no escopo superior
-
-
-    console.log("LOG: Variáveis iniciais declaradas.");
+    
 
 
   // Inicializar o botão de fuga (substitua o código existente)
