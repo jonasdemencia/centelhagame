@@ -734,6 +734,54 @@ function handlePostBattle(monster) {
     battleLogContent.prepend(currentTurnBlock); // Adiciona o novo bloco no topo
 }
 
+// Função global para log de mensagens
+async function addLogMessage(message, delay = 0, typingSpeed = 30) {
+    const logContainer = document.getElementById("battle-log-content");
+    return new Promise((resolve) => {
+        const p = document.createElement('p');
+        currentTurnBlock.appendChild(p);
+        let index = 0;
+
+        function typeWriter() {
+            if (index < message.length) {
+                if (message.charAt(index) === '<') {
+                    const closeTagIndex = message.indexOf('>', index);
+                    if (closeTagIndex !== -1) {
+                        p.innerHTML += message.substring(index, closeTagIndex + 1);
+                        index = closeTagIndex + 1;
+                    } else {
+                        p.innerHTML += message.charAt(index);
+                        index++;
+                    }
+                } else {
+                    p.innerHTML += message.charAt(index);
+                    index++;
+                }
+                setTimeout(typeWriter, typingSpeed);
+            } else {
+                if (delay > 0) {
+                    setTimeout(() => {
+                        logContainer.scrollTop = logContainer.scrollHeight;
+                        resolve();
+                    }, delay);
+                } else {
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                    resolve();
+                }
+            }
+        }
+
+        if (typingSpeed > 0) {
+            typeWriter();
+        } else {
+            p.innerHTML = message;
+            logContainer.scrollTop = logContainer.scrollHeight;
+            resolve();
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
 
 
 document.addEventListener('DOMContentLoaded', () => {
