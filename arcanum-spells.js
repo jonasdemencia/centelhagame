@@ -199,18 +199,17 @@ function createArcanumConjurationModal(spell) {
     return {modal, correctWord, conditions};
 }
 
-// Validar conjuração e determinar nível de sucesso
 function validateConjuration(inputWord, correctWord, level, typingTime, errors) {
     const accuracy = calculateAccuracy(inputWord, correctWord);
     const fluency = calculateFluency(typingTime, errors, correctWord.length);
     
-    // Requisitos por nível
+    // Requisitos por nível - AUMENTADOS
     const requirements = {
-        1: {accuracy: 95, fluency: 0},    // Simples
-        2: {accuracy: 90, fluency: 60},   // Nível 2
-        3: {accuracy: 92, fluency: 70},   // Nível 3
-        4: {accuracy: 95, fluency: 80},   // Nível 4
-        5: {accuracy: 98, fluency: 90}    // Extraordinário
+        1: {accuracy: 90, fluency: 0},    // Era 95, agora 90
+        2: {accuracy: 92, fluency: 60},   // Era 90, agora 92
+        3: {accuracy: 94, fluency: 70},   // Era 92, agora 94
+        4: {accuracy: 96, fluency: 80},   // Era 95, agora 96
+        5: {accuracy: 98, fluency: 90}    // Mantém 98
     };
     
     const req = requirements[level];
@@ -220,10 +219,11 @@ function validateConjuration(inputWord, correctWord, level, typingTime, errors) 
         success,
         accuracy,
         fluency,
-        level: success ? level : Math.max(1, level - 1),
-        damage: success ? level : 1
+        level: success ? level : 0,  // MUDANÇA: 0 em vez de fallback
+        damage: success ? level : 0  // MUDANÇA: 0 em vez de 1
     };
 }
+
 
 function calculateAccuracy(input, correct) {
     if (input === correct) return 100;
