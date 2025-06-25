@@ -321,7 +321,7 @@ function processBuffs() {
         return Promise.resolve();
     });
 }, Promise.resolve());
-
+}
 
 // Função para processar debuffs do monstro no início do seu turno
 function processMonsterDebuffs() {
