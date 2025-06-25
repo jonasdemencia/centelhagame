@@ -258,7 +258,7 @@ const magiasDisponiveis = [
         descricao: "Restaura pequena quantidade de energia",
         custo: 2,
         efeito: "heal",
-        valor: 3
+        valor: 30
     },
     {
         id: "missil-magico",
