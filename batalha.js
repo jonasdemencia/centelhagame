@@ -806,9 +806,12 @@ function selecionarMagia(magiaElement) {
 async function usarMagia(magiaId, efeito, valor, custo) {
   // --- INÍCIO INTEGRAÇÃO ARCANUM ---
 if (magiaId === 'missil-magico') {
+    // Fechar modal de magias ANTES de abrir Arcanum
+    document.getElementById("magias-modal").style.display = "none";
     setupArcanumConjurationModal();
     return;
 }
+
 // --- FIM INTEGRAÇÃO ARCANUM ---
     const userId = auth.currentUser.uid;
     const custoNum = parseInt(custo);
