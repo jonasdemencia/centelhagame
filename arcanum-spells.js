@@ -79,13 +79,7 @@ function createArcanumConjurationModal(spell) {
                     value ? `<span class="condition">${window.ArcanumConditions.getIcon(key, value)} ${value.replace('-', ' ').toUpperCase()}</span>` : ''
                 ).join('')}
             </div>
-            <div class="spell-levels">
-                <button class="level-btn" data-level="1">Simples (1 dardo)</button>
-                <button class="level-btn" data-level="2">Nível 2 (2 dardos)</button>
-                <button class="level-btn" data-level="3">Nível 3 (3 dardos)</button>
-                <button class="level-btn" data-level="4">Nível 4 (4 dardos)</button>
-                <button class="level-btn" data-level="5">Extraordinário (5 dardos)</button>
-            </div>
+            
             <div class="conjuration-input">
                 <input type="text" id="conjuration-word" placeholder="Digite a palavra mágica..." maxlength="50">
                 <div class="time-display">Tempo: <span id="conjuration-timer">0.0s</span></div>
