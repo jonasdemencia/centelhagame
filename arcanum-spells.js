@@ -247,7 +247,7 @@ function createArcanumConjurationModal(spell) {
     return {modal, correctWord, conditions};
 }
 
-function validateConjuration(inputWord, correctWord, typingTime, errors) {
+function validateConjuration(inputWord, correctWord, typingTime, errors, conditions, baseWord) {
     const fluency = calculateFluency(typingTime, errors, correctWord.length);
     
     // Detectar modificadores aplicados corretamente
