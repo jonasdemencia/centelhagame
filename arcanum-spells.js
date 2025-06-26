@@ -251,7 +251,7 @@ function validateConjuration(inputWord, correctWord, typingTime, errors) {
     const fluency = calculateFluency(typingTime, errors, correctWord.length);
     
     // Detectar modificadores aplicados corretamente
-    const modifiersApplied = detectAppliedModifiers(inputWord, correctWord);
+    const modifiersApplied = detectAppliedModifiers(inputWord, conditions, baseWord);
     
     // Calcular multiplicador de fluidez
     let fluencyMultiplier = 1.0;
