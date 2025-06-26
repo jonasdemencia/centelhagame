@@ -12,30 +12,87 @@ function getSpellBaseWord(spellId) {
     return baseWords[spellId] || 'ARCANUM';
 }
 
-// Aplicar modificadores à palavra base
+// Aplica TODOS os modificadores possíveis à palavra base, na ordem correta e de acordo com as condições
 function applyArcanumModifiers(baseWord, conditions) {
     let modifiedWord = baseWord;
-    
-    // Aplicar modificadores em ordem alfabética
     const modifiers = [];
-    
-    // Coletar todos os modificadores aplicáveis
-    if (conditions.clima === 'sol-forte') modifiers.push({type: 'duplicate-first', order: 1});
-    if (conditions.periodo === 'tarde') modifiers.push({type: 'a-to-y', order: 2});
-    if (conditions.estacao === 'outono') modifiers.push({type: 'add-out', order: 3});
-    if (conditions.energiaMagica === 'baixa') modifiers.push({type: 'remove-last', order: 4});
-    if (conditions.vento === 'sul') modifiers.push({type: 'add-s', order: 5});
-    if (conditions.lua === 'crescente') modifiers.push({type: 'add-c', order: 6});
+
+    // PERÍODOS DO DIA
+    if (conditions.periodo === 'manha') modifiers.push({type: 'first-vowel-to-i', order: 1});
+    if (conditions.periodo === 'tarde') modifiers.push({type: 'a-to-y', order: 1});
+    if (conditions.periodo === 'noite') modifiers.push({type: 'duplicate-last-consonant', order: 1});
+    if (conditions.periodo === 'madrugada') modifiers.push({type: 'add-mad', order: 1});
+
+    // ESTAÇÕES
+    if (conditions.estacao === 'primavera') modifiers.push({type: 'add-pri', order: 2});
+    if (conditions.estacao === 'verao') modifiers.push({type: 'e-to-a', order: 2});
+    if (conditions.estacao === 'outono') modifiers.push({type: 'add-out', order: 2});
+    if (conditions.estacao === 'inverno') modifiers.push({type: 'o-to-u', order: 2});
+
+    // DIREÇÃO DO VENTO
+    if (conditions.vento === 'norte') modifiers.push({type: 'add-n', order: 3});
+    if (conditions.vento === 'sul') modifiers.push({type: 'add-s', order: 3});
+    if (conditions.vento === 'leste') modifiers.push({type: 'add-l', order: 3});
+    if (conditions.vento === 'oeste') modifiers.push({type: 'add-o', order: 3});
+    if (conditions.vento === 'nordeste') modifiers.push({type: 'add-ne', order: 3});
+    if (conditions.vento === 'noroeste') modifiers.push({type: 'add-no', order: 3});
+    if (conditions.vento === 'sudeste') modifiers.push({type: 'add-se', order: 3});
+    if (conditions.vento === 'sudoeste') modifiers.push({type: 'add-so', order: 3});
+
+    // CLIMAS
+    if (conditions.clima === 'sol-forte') modifiers.push({type: 'duplicate-first', order: 4});
+    if (conditions.clima === 'sol-fraco') modifiers.push({type: 'remove-first-vowel', order: 4});
+    if (conditions.clima === 'nublado') modifiers.push({type: 'add-nub-middle', order: 4});
+    if (conditions.clima === 'chuva-leve') modifiers.push({type: 'add-plu', order: 4});
+    if (conditions.clima === 'chuva-forte') modifiers.push({type: 'vowels-to-u', order: 4});
+    if (conditions.clima === 'tempestade') modifiers.push({type: 'reverse-word', order: 4});
+    if (conditions.clima === 'neblina') modifiers.push({type: 'add-neb', order: 4});
+    if (conditions.clima === 'nevoa') modifiers.push({type: 'add-nev', order: 4});
+    if (conditions.clima === 'neve') modifiers.push({type: 'add-niv', order: 4});
+    if (conditions.clima === 'granizo') modifiers.push({type: 'add-gra', order: 4});
+    if (conditions.clima === 'seco') modifiers.push({type: 'remove-duplicate-vowels', order: 4});
+    if (conditions.clima === 'umido') modifiers.push({type: 'duplicate-vowels', order: 4});
+
+    // LUAS
+    if (conditions.lua === 'nova') modifiers.push({type: 'add-x', order: 5});
+    if (conditions.lua === 'crescente') modifiers.push({type: 'add-c', order: 5});
+    if (conditions.lua === 'cheia') modifiers.push({type: 'add-f', order: 5});
+    if (conditions.lua === 'minguante') modifiers.push({type: 'add-m', order: 5});
+
+    // TEMPERATURA
+    if (conditions.temperatura === 'muito-frio') modifiers.push({type: 'all-upper', order: 6});
+    if (conditions.temperatura === 'frio') modifiers.push({type: 'consonants-upper', order: 6});
+    if (conditions.temperatura === 'quente') modifiers.push({type: 'vowels-upper', order: 6});
+    if (conditions.temperatura === 'muito-quente') modifiers.push({type: 'i-to-y-e-to-a', order: 6});
+
+    // PRESSÃO ATMOSFÉRICA
     if (conditions.pressao === 'alta') modifiers.push({type: 'add-alt', order: 7});
-    if (conditions.temperatura === 'quente') modifiers.push({type: 'vowels-upper', order: 8});
-    
-    // Aplicar modificadores em ordem
+    if (conditions.pressao === 'baixa') modifiers.push({type: 'add-bai', order: 7});
+
+    // EVENTOS ESPECIAIS
+    if (conditions.eventoEspecial === 'eclipse-solar') modifiers.push({type: 'reverse-word', order: 8});
+    if (conditions.eventoEspecial === 'eclipse-lunar') modifiers.push({type: 'add-ecl', order: 8});
+    if (conditions.eventoEspecial === 'chuva-meteoros') modifiers.push({type: 'add-met', order: 8});
+    if (conditions.eventoEspecial === 'aurora-boreal') modifiers.push({type: 'add-aur', order: 8});
+    if (conditions.eventoEspecial === 'solsticio') modifiers.push({type: 'add-sol', order: 8});
+    if (conditions.eventoEspecial === 'equinocio') modifiers.push({type: 'add-equ', order: 8});
+
+    // ENERGIA MÁGICA
+    if (conditions.energiaMagica === 'alta') modifiers.push({type: 'duplicate-word', order: 9});
+    if (conditions.energiaMagica === 'baixa') modifiers.push({type: 'remove-last', order: 9});
+    if (conditions.energiaMagica === 'interferencia') modifiers.push({type: 'vowels-to-numbers', order: 9});
+
+    // Ordena e aplica
     modifiers.sort((a, b) => a.order - b.order);
-    
+
     for (const modifier of modifiers) {
         modifiedWord = applyModifier(modifiedWord, modifier.type);
     }
-    
+
+    // Regras especiais: +R (>10 letras), +EX (<5 letras)
+    if (modifiedWord.length > 10) modifiedWord += "R";
+    if (modifiedWord.length < 5) modifiedWord += "EX";
+
     return modifiedWord;
 }
 
