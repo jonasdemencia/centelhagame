@@ -32,6 +32,50 @@
  * - validateConjuration: valida a palavra digitada, calcula fluidez e precisão.
  */
 
+
+/**
+ * Log detalhado da conjuração de palavras mágicas.
+ * Pode ser adaptado para enviar para backend, armazenar em arquivo, etc.
+ */
+function logArcanumConjuration({
+    spellId,
+    spellName,
+    baseWord,
+    correctWord,
+    inputWord,
+    typingTime,
+    errors,
+    conditions,
+    fluency,
+    accuracy,
+    modifiersDetected,
+    finalDarts,
+    success,
+    detalhes
+}) {
+    const log = {
+        timestamp: new Date().toISOString(),
+        spellId,
+        spellName,
+        baseWord,
+        correctWord,
+        inputWord,
+        typingTime,
+        errors,
+        conditions: {...conditions},
+        fluency,
+        accuracy,
+        modifiersDetected,
+        finalDarts,
+        success,
+        detalhes
+    };
+    // Exemplo: enviar para o console. Substitua por fetch/POST para backend se quiser.
+    console.log("Arcanum Log:", log);
+    // window.__arcanumLogs = window.__arcanumLogs || []; window.__arcanumLogs.push(log); // se quiser histórico em memória
+}
+
+
 // Palavras base das magias
 function getSpellBaseWord(spellId) {
     const baseWords = {
@@ -336,7 +380,7 @@ function createArcanumConjurationModal(spell) {
     return {modal, correctWord, conditions};
 }
 
-function validateConjuration(inputWord, correctWord, typingTime, errors, conditions, baseWord) {
+function validateConjuration(inputWord, correctWord, typingTime, errors, conditions, baseWord, spellId = "", spellName = "") {
     const fluency = calculateFluency(typingTime, errors, correctWord.length);
 
     // Detectar modificadores aplicados corretamente
@@ -354,12 +398,48 @@ function validateConjuration(inputWord, correctWord, typingTime, errors, conditi
     const baseDarts = modifiersApplied;
     const finalDarts = Math.max(0, Math.floor(baseDarts * fluencyMultiplier));
 
+    let detalhes = {};
+
+    // Detalhamento da análise
+    if (modifiersApplied === 0) {
+        detalhes.erro = "Nenhum modificador correto aplicado ou palavra mágica incorreta.";
+        detalhes.correto = correctWord;
+        detalhes.modificadores_esperados = getActiveModifiers(conditions).map(m => m.type);
+    } else {
+        detalhes.sucesso = "Modificadores aplicados corretamente.";
+        detalhes.modificadores_esperados = getActiveModifiers(conditions).map(m => m.type);
+        detalhes.modificadores_que_bati = modifiersApplied;
+    }
+
+    // Adicione detalhes de precisão e fluidez
+    detalhes.accuracy = modifiersApplied > 0 ? 100 : 0;
+    detalhes.fluency = fluency;
+
+    // LOG!
+    logArcanumConjuration({
+        spellId,
+        spellName,
+        baseWord,
+        correctWord,
+        inputWord,
+        typingTime,
+        errors,
+        conditions,
+        fluency,
+        accuracy: detalhes.accuracy,
+        modifiersDetected: modifiersApplied,
+        finalDarts,
+        success: finalDarts > 0,
+        detalhes
+    });
+
     return {
         success: finalDarts > 0,
-        accuracy: modifiersApplied > 0 ? 100 : 0, // Para display
+        accuracy: detalhes.accuracy,
         fluency: fluency,
         level: finalDarts,
-        modifiersDetected: modifiersApplied
+        modifiersDetected: modifiersApplied,
+        detalhes
     };
 }
 
