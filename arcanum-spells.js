@@ -274,198 +274,115 @@ function validateConjuration(inputWord, correctWord, typingTime, errors, conditi
     };
 }
 
-/**
- * Detecta quantos modificadores corretos o jogador aplicou na palavra digitada,
- * considerando sensibilidade a maiúsculas/minúsculas APENAS nos modificadores que exigem isso.
- * 
- * @param {string} inputWord Palavra digitada pelo jogador (como está no input)
- * @param {object} conditions Objeto com as condições ambientais/atuais
- * @param {string} baseWord Palavra base da magia (ex: "FULMEN")
- * @returns {number} Quantidade de modificadores corretos aplicados
- */
-function detectAppliedModifiers(inputWord, conditions, baseWord = 'FULMEN') {
-    let count = 0;
-    const inputUpper = inputWord.toUpperCase();
-    const baseUpper = baseWord.toUpperCase();
-    const baseLower = baseWord.toLowerCase();
-
-    // 1. PERÍODOS DO DIA
-    if (conditions.periodo === 'manha') {
-        // Primeira vogal -> I (case-insensitive)
-        let mod = baseUpper.replace(/[AEIOU]/, 'I');
-        if (inputUpper.includes(mod)) count++;
-    }
-    if (conditions.periodo === 'tarde') {
-        // A -> Y (case-insensitive)
-        let mod = baseUpper.replace(/A/g, 'Y');
-        if (inputUpper.includes(mod)) count++;
-    }
-    if (conditions.periodo === 'noite') {
-        // Duplica última consoante (case-insensitive)
-        let last = baseUpper.match(/[^AEIOU]$/i);
-        let mod = last ? baseUpper + last[0] : baseUpper;
-        if (inputUpper.includes(mod)) count++;
-    }
-    if (conditions.periodo === 'madrugada') {
-        // +MAD no final (case-insensitive)
-        if (inputUpper.endsWith('MAD')) count++;
-    }
-
-    // 2. ESTAÇÕES
-    if (conditions.estacao === 'primavera') {
-        if (inputUpper.endsWith('PRI')) count++;
-    }
-    if (conditions.estacao === 'verao') {
-        // E -> A (case-insensitive)
-        let mod = baseUpper.replace(/E/g, 'A');
-        if (inputUpper.includes(mod)) count++;
-    }
-    if (conditions.estacao === 'outono') {
-        if (inputUpper.endsWith('OUT')) count++;
-    }
-    if (conditions.estacao === 'inverno') {
-        // O -> U (case-insensitive)
-        let mod = baseUpper.replace(/O/g, 'U');
-        if (inputUpper.includes(mod)) count++;
-    }
-
-    // 3. DIREÇÃO DO VENTO (case-insensitive)
-    if (conditions.vento === 'norte' && inputUpper.endsWith('N')) count++;
-    if (conditions.vento === 'sul' && inputUpper.endsWith('S')) count++;
-    if (conditions.vento === 'leste' && inputUpper.endsWith('L')) count++;
-    if (conditions.vento === 'oeste' && inputUpper.endsWith('O')) count++;
-    if (conditions.vento === 'nordeste' && inputUpper.endsWith('NE')) count++;
-    if (conditions.vento === 'noroeste' && inputUpper.endsWith('NO')) count++;
-    if (conditions.vento === 'sudeste' && inputUpper.endsWith('SE')) count++;
-    if (conditions.vento === 'sudoeste' && inputUpper.endsWith('SO')) count++;
-
-    // 4. CONDIÇÕES CLIMÁTICAS
-    if (conditions.clima === 'sol-forte') {
-        // Duplica primeira letra (case-insensitive)
-        if (inputUpper.startsWith(baseUpper[0] + baseUpper)) count++;
-    }
-    if (conditions.clima === 'sol-fraco') {
-        // Remove primeira vogal (case-insensitive)
-        let mod = baseUpper.replace(/[AEIOU]/, '');
-        if (inputUpper.includes(mod)) count++;
-    }
-    if (conditions.clima === 'nublado') {
-        // +NUB no meio (case-insensitive)
-        let mid = Math.floor(baseUpper.length / 2);
-        let mod = baseUpper.slice(0, mid) + 'NUB' + baseUpper.slice(mid);
-        if (inputUpper.includes('NUB')) count++;
-    }
-    if (conditions.clima === 'chuva-leve') {
-        if (inputUpper.endsWith('PLU')) count++;
-    }
-    if (conditions.clima === 'chuva-forte') {
-        // Todas vogais -> U (case-insensitive)
-        let mod = baseUpper.replace(/[AEIOU]/g, 'U');
-        if (inputUpper.includes(mod)) count++;
-    }
-    if (conditions.clima === 'tempestade') {
-        // Palavra invertida (case-insensitive)
-        let mod = baseUpper.split('').reverse().join('');
-        if (inputUpper.includes(mod)) count++;
-    }
-    if (conditions.clima === 'neblina' && inputUpper.endsWith('NEB')) count++;
-    if (conditions.clima === 'nevoa' && inputUpper.endsWith('NEV')) count++;
-    if (conditions.clima === 'neve' && inputUpper.endsWith('NIV')) count++;
-    if (conditions.clima === 'granizo' && inputUpper.endsWith('GRA')) count++;
-    if (conditions.clima === 'seco') {
-        // Remove todas vogais duplicadas (ex: AA -> A) (case-insensitive)
-        let mod = baseUpper.replace(/([AEIOU])\1+/g, '$1');
-        if (inputUpper.includes(mod)) count++;
-    }
-    if (conditions.clima === 'umido') {
-        // Duplica todas vogais (case-insensitive)
-        let mod = baseUpper.replace(/[AEIOU]/g, v => v + v);
-        if (inputUpper.includes(mod)) count++;
-    }
-
-    // 5. FASES DA LUA (case-insensitive)
-    if (conditions.lua === 'nova' && inputUpper.endsWith('X')) count++;
-    if (conditions.lua === 'crescente' && inputUpper.endsWith('C')) count++;
-    if (conditions.lua === 'cheia' && inputUpper.endsWith('F')) count++;
-    if (conditions.lua === 'minguante' && inputUpper.endsWith('M')) count++;
-
-    // 6. TEMPERATURA (SENSÍVEL A MAIÚSCULAS/MINÚSCULAS)
-    if (conditions.temperatura === 'muito-frio') {
-        // Todas letras maiúsculas (não aceitar tudo minúsculo!)
-        if (inputWord === inputWord.toUpperCase() && inputWord !== inputWord.toLowerCase()) count++;
-    }
-    if (conditions.temperatura === 'frio') {
-        // Consoantes maiúsculas, vogais minúsculas
-        let esperado = '';
-        for (const l of baseWord) {
-            if ('bcdfghjklmnpqrstvwxyz'.includes(l.toLowerCase())) {
-                esperado += l.toUpperCase();
-            } else if ('aeiou'.includes(l.toLowerCase())) {
-                esperado += l.toLowerCase();
-            } else {
-                esperado += l;
-            }
-        }
-        if (inputWord === esperado) count++;
-    }
-    if (conditions.temperatura === 'quente') {
-        // Vogais maiúsculas, consoantes minúsculas
-        let esperado = '';
-        for (const l of baseWord) {
-            if ('aeiou'.includes(l.toLowerCase())) {
-                esperado += l.toUpperCase();
-            } else if ('bcdfghjklmnpqrstvwxyz'.includes(l.toLowerCase())) {
-                esperado += l.toLowerCase();
-            } else {
-                esperado += l;
-            }
-        }
-        if (inputWord === esperado) count++;
-    }
-    if (conditions.temperatura === 'muito-quente') {
-        // I -> Y, E -> A (case-insensitive)
-        let mod = baseUpper.replace(/I/g, 'Y').replace(/E/g, 'A');
-        if (inputUpper.includes(mod)) count++;
-    }
-
-    // 7. PRESSÃO ATMOSFÉRICA (case-insensitive)
-    if (conditions.pressao === 'alta' && inputUpper.endsWith('ALT')) count++;
-    if (conditions.pressao === 'baixa' && inputUpper.endsWith('BAI')) count++;
-
-    // 8. EVENTOS ESPECIAIS (case-insensitive)
-    if (conditions.eventoEspecial === 'eclipse-solar') {
-        let mod = baseUpper.split('').reverse().join('');
-        if (inputUpper.includes(mod)) count++;
-    }
-    if (conditions.eventoEspecial === 'eclipse-lunar' && inputUpper.endsWith('ECL')) count++;
-    if (conditions.eventoEspecial === 'chuva-meteoros' && inputUpper.endsWith('MET')) count++;
-    if (conditions.eventoEspecial === 'aurora-boreal' && inputUpper.endsWith('AUR')) count++;
-    if (conditions.eventoEspecial === 'solsticio' && inputUpper.endsWith('SOL')) count++;
-    if (conditions.eventoEspecial === 'equinocio' && inputUpper.endsWith('EQU')) count++;
-
-    // 9. ENERGIA MÁGICA AMBIENTE
-    if (conditions.energiaMagica === 'alta') {
-        let mod = baseUpper + baseUpper;
-        if (inputUpper.includes(mod)) count++;
-    }
-    if (conditions.energiaMagica === 'baixa') {
-        let mod = baseUpper.slice(0, -1);
-        if (inputUpper.includes(mod)) count++;
-    }
-    if (conditions.energiaMagica === 'interferencia') {
-        // Substitui vogais por números (A=1, E=2, I=3, O=4, U=5) (case-insensitive)
-        let mod = baseUpper.replace(/A/gi, '1').replace(/E/gi, '2').replace(/I/gi, '3').replace(/O/gi, '4').replace(/U/gi, '5');
-        if (inputUpper.includes(mod)) count++;
-    }
-
-    // 10. LOCALIZAÇÃO/AMBIENTE (implemente conforme necessário)
-
-    // REGRAS ESPECIAIS (case-insensitive)
-    if (inputUpper.length > 10 && inputUpper.endsWith('R')) count++;
-    if (inputUpper.length < 5 && inputUpper.endsWith('EX')) count++;
-
-    return count;
+// Lista todos os modificadores possíveis do sistema Arcanum Verbis, com suas condições.
+function getActiveModifiers(conditions) {
+    const mods = [
+        // PERÍODOS DO DIA
+        { type: 'first-vowel-to-i', order: 1, cond: c => c.periodo === 'manha' },
+        { type: 'a-to-y', order: 1, cond: c => c.periodo === 'tarde' },
+        { type: 'duplicate-last-consonant', order: 1, cond: c => c.periodo === 'noite' },
+        { type: 'add-mad', order: 1, cond: c => c.periodo === 'madrugada' },
+        // ESTAÇÕES
+        { type: 'add-pri', order: 2, cond: c => c.estacao === 'primavera' },
+        { type: 'e-to-a', order: 2, cond: c => c.estacao === 'verao' },
+        { type: 'add-out', order: 2, cond: c => c.estacao === 'outono' },
+        { type: 'o-to-u', order: 2, cond: c => c.estacao === 'inverno' },
+        // VENTOS
+        { type: 'add-n', order: 3, cond: c => c.vento === 'norte' },
+        { type: 'add-s', order: 3, cond: c => c.vento === 'sul' },
+        { type: 'add-l', order: 3, cond: c => c.vento === 'leste' },
+        { type: 'add-o', order: 3, cond: c => c.vento === 'oeste' },
+        { type: 'add-ne', order: 3, cond: c => c.vento === 'nordeste' },
+        { type: 'add-no', order: 3, cond: c => c.vento === 'noroeste' },
+        { type: 'add-se', order: 3, cond: c => c.vento === 'sudeste' },
+        { type: 'add-so', order: 3, cond: c => c.vento === 'sudoeste' },
+        // CLIMAS
+        { type: 'duplicate-first', order: 4, cond: c => c.clima === 'sol-forte' },
+        { type: 'remove-first-vowel', order: 4, cond: c => c.clima === 'sol-fraco' },
+        { type: 'add-nub-middle', order: 4, cond: c => c.clima === 'nublado' },
+        { type: 'add-plu', order: 4, cond: c => c.clima === 'chuva-leve' },
+        { type: 'vowels-to-u', order: 4, cond: c => c.clima === 'chuva-forte' },
+        { type: 'reverse-word', order: 4, cond: c => c.clima === 'tempestade' },
+        { type: 'add-neb', order: 4, cond: c => c.clima === 'neblina' },
+        { type: 'add-nev', order: 4, cond: c => c.clima === 'nevoa' },
+        { type: 'add-niv', order: 4, cond: c => c.clima === 'neve' },
+        { type: 'add-gra', order: 4, cond: c => c.clima === 'granizo' },
+        { type: 'remove-duplicate-vowels', order: 4, cond: c => c.clima === 'seco' },
+        { type: 'duplicate-vowels', order: 4, cond: c => c.clima === 'umido' },
+        // LUAS
+        { type: 'add-x', order: 5, cond: c => c.lua === 'nova' },
+        { type: 'add-c', order: 5, cond: c => c.lua === 'crescente' },
+        { type: 'add-f', order: 5, cond: c => c.lua === 'cheia' },
+        { type: 'add-m', order: 5, cond: c => c.lua === 'minguante' },
+        // TEMPERATURA
+        { type: 'all-upper', order: 6, cond: c => c.temperatura === 'muito-frio' },
+        { type: 'consonants-upper', order: 6, cond: c => c.temperatura === 'frio' },
+        { type: 'vowels-upper', order: 6, cond: c => c.temperatura === 'quente' },
+        { type: 'i-to-y-e-to-a', order: 6, cond: c => c.temperatura === 'muito-quente' },
+        // PRESSÃO
+        { type: 'add-alt', order: 7, cond: c => c.pressao === 'alta' },
+        { type: 'add-bai', order: 7, cond: c => c.pressao === 'baixa' },
+        // EVENTOS ESPECIAIS
+        { type: 'reverse-word', order: 8, cond: c => c.eventoEspecial === 'eclipse-solar' },
+        { type: 'add-ecl', order: 8, cond: c => c.eventoEspecial === 'eclipse-lunar' },
+        { type: 'add-met', order: 8, cond: c => c.eventoEspecial === 'chuva-meteoros' },
+        { type: 'add-aur', order: 8, cond: c => c.eventoEspecial === 'aurora-boreal' },
+        { type: 'add-sol', order: 8, cond: c => c.eventoEspecial === 'solsticio' },
+        { type: 'add-equ', order: 8, cond: c => c.eventoEspecial === 'equinocio' },
+        // ENERGIA MÁGICA
+        { type: 'duplicate-word', order: 9, cond: c => c.energiaMagica === 'alta' },
+        { type: 'remove-last', order: 9, cond: c => c.energiaMagica === 'baixa' },
+        { type: 'vowels-to-numbers', order: 9, cond: c => c.energiaMagica === 'interferencia' },
+    ];
+    return mods.filter(m => m.cond(conditions)).sort((a, b) => a.order - b.order);
 }
+
+// Gera todas as combinações possíveis de modificadores ativos
+function getAllModifierCombinations(modifiers) {
+    const result = [];
+    const n = modifiers.length;
+    for (let k = 1; k <= n; k++) {
+        combineHelper([], 0, k);
+    }
+    function combineHelper(current, start, k) {
+        if (current.length === k) {
+            result.push([...current]);
+            return;
+        }
+        for (let i = start; i < n; i++) {
+            current.push(modifiers[i]);
+            combineHelper(current, i + 1, k);
+            current.pop();
+        }
+    }
+    return result;
+}
+
+// Detecta a quantidade EXATA de modificadores aplicados corretamente
+function detectAppliedModifiers(inputWord, conditions, baseWord = 'FULMEN') {
+    inputWord = inputWord.trim();
+    const activeMods = getActiveModifiers(conditions);
+
+    // Testa todas as combinações (1..n mods ativos), na ordem correta
+    const combos = getAllModifierCombinations(activeMods);
+
+    for (const combo of combos) {
+        let palavra = baseWord;
+        for (const mod of combo) {
+            palavra = applyModifier(palavra, mod.type);
+        }
+        // REGRAS ESPECIAIS
+        let palavraFinal = palavra;
+        if (palavraFinal.length > 10) palavraFinal += "R";
+        if (palavraFinal.length < 5) palavraFinal += "EX";
+        if (palavraFinal === inputWord) {
+            return combo.length;
+        }
+    }
+    return 0;
+}
+
+
 
 function generateModifierSteps(baseWord, conditions) {
     const steps = [baseWord];
