@@ -223,6 +223,9 @@ function validateConjuration(inputWord, correctWord, typingTime, errors) {
 function detectAppliedModifiers(inputWord, correctWord) {
     // Pega as condições atuais
     const conditions = window.ArcanumConditions.getConditions();
+    console.log("Condições:", conditions); // DEBUG
+    console.log("Palavra digitada:", inputWord); // DEBUG
+    console.log("Palavra esperada:", correctWord); // DEBUG
     const baseWord = 'FULMEN';
     
     // Gera sequência de palavras com modificadores aplicados progressivamente
