@@ -41,6 +41,9 @@ function applyArcanumModifiers(baseWord, conditions) {
 
 function applyModifier(word, type) {
     switch(type) {
+
+        case 'remove-first-vowel':
+            return word.replace(/[aeiou]/i, '');
         case 'duplicate-first':
             return word.charAt(0) + word;
         case 'a-to-y':
@@ -249,6 +252,7 @@ function generateModifierSteps(baseWord, conditions) {
     const modifiers = [];
     
     // Coletar todos os modificadores aplicáveis (usa sua lógica existente)
+    if (conditions.clima === 'sol-fraco') modifiers.push({type: 'remove-first-vowel', order: 1});
     if (conditions.clima === 'sol-forte') modifiers.push({type: 'duplicate-first', order: 1});
     if (conditions.periodo === 'tarde') modifiers.push({type: 'a-to-y', order: 2});
     if (conditions.estacao === 'outono') modifiers.push({type: 'add-out', order: 3});
