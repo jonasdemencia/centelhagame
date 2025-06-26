@@ -275,25 +275,83 @@ function validateConjuration(inputWord, correctWord, typingTime, errors) {
 }
 
 function detectAppliedModifiers(inputWord, correctWord) {
-    // Pega as condições atuais
     const conditions = window.ArcanumConditions.getConditions();
-    console.log("Condições:", conditions); // DEBUG
-    console.log("Palavra digitada:", inputWord); // DEBUG
-    console.log("Palavra esperada:", correctWord); // DEBUG
+    console.log("Condições:", conditions);
+    console.log("Palavra digitada:", inputWord);
+    console.log("Palavra esperada:", correctWord);
+    
     const baseWord = 'FULMEN';
+    let modifiersCount = 0;
     
-    // Gera sequência de palavras com modificadores aplicados progressivamente
-    const modifierSteps = generateModifierSteps(baseWord, conditions);
+    // Lista de todos os modificadores possíveis
+    const allPossibleModifiers = [];
     
-    // Testa qual é o maior número de modificadores que o jogador aplicou corretamente
-    for (let i = modifierSteps.length - 1; i >= 0; i--) {
-        if (inputWord === modifierSteps[i]) {
-            return i + 1; // Retorna número de modificadores aplicados
+    // PERÍODOS DO DIA
+    if (conditions.periodo === 'manha') allPossibleModifiers.push({type: 'first-vowel-to-i', result: applyModifier(baseWord, 'first-vowel-to-i')});
+    if (conditions.periodo === 'tarde') allPossibleModifiers.push({type: 'a-to-y', result: applyModifier(baseWord, 'a-to-y')});
+    if (conditions.periodo === 'noite') allPossibleModifiers.push({type: 'duplicate-last-consonant', result: applyModifier(baseWord, 'duplicate-last-consonant')});
+    if (conditions.periodo === 'madrugada') allPossibleModifiers.push({type: 'add-mad', result: applyModifier(baseWord, 'add-mad')});
+    
+    // ESTAÇÕES
+    if (conditions.estacao === 'primavera') allPossibleModifiers.push({type: 'add-pri', result: applyModifier(baseWord, 'add-pri')});
+    if (conditions.estacao === 'verao') allPossibleModifiers.push({type: 'e-to-a', result: applyModifier(baseWord, 'e-to-a')});
+    if (conditions.estacao === 'outono') allPossibleModifiers.push({type: 'add-out', result: applyModifier(baseWord, 'add-out')});
+    if (conditions.estacao === 'inverno') allPossibleModifiers.push({type: 'o-to-u', result: applyModifier(baseWord, 'o-to-u')});
+    
+    // DIREÇÃO DO VENTO
+    if (conditions.vento === 'norte') allPossibleModifiers.push({type: 'add-n', result: applyModifier(baseWord, 'add-n')});
+    if (conditions.vento === 'sul') allPossibleModifiers.push({type: 'add-s', result: applyModifier(baseWord, 'add-s')});
+    if (conditions.vento === 'leste') allPossibleModifiers.push({type: 'add-l', result: applyModifier(baseWord, 'add-l')});
+    if (conditions.vento === 'oeste') allPossibleModifiers.push({type: 'add-o', result: applyModifier(baseWord, 'add-o')});
+    
+    // CONDIÇÕES CLIMÁTICAS
+    if (conditions.clima === 'sol-forte') allPossibleModifiers.push({type: 'duplicate-first', result: applyModifier(baseWord, 'duplicate-first')});
+    if (conditions.clima === 'sol-fraco') allPossibleModifiers.push({type: 'remove-first-vowel', result: applyModifier(baseWord, 'remove-first-vowel')});
+    if (conditions.clima === 'nublado') allPossibleModifiers.push({type: 'add-nub-middle', result: applyModifier(baseWord, 'add-nub-middle')});
+    if (conditions.clima === 'chuva-leve') allPossibleModifiers.push({type: 'add-plu', result: applyModifier(baseWord, 'add-plu')});
+    if (conditions.clima === 'chuva-forte') allPossibleModifiers.push({type: 'vowels-to-u', result: applyModifier(baseWord, 'vowels-to-u')});
+    if (conditions.clima === 'tempestade') allPossibleModifiers.push({type: 'reverse-word', result: applyModifier(baseWord, 'reverse-word')});
+    
+    // FASES DA LUA
+    if (conditions.lua === 'nova') allPossibleModifiers.push({type: 'add-x', result: applyModifier(baseWord, 'add-x')});
+    if (conditions.lua === 'crescente') allPossibleModifiers.push({type: 'add-c', result: applyModifier(baseWord, 'add-c')});
+    if (conditions.lua === 'cheia') allPossibleModifiers.push({type: 'add-f', result: applyModifier(baseWord, 'add-f')});
+    if (conditions.lua === 'minguante') allPossibleModifiers.push({type: 'add-m', result: applyModifier(baseWord, 'add-m')});
+    
+    // TEMPERATURA
+    if (conditions.temperatura === 'muito-frio') allPossibleModifiers.push({type: 'all-upper', result: applyModifier(baseWord, 'all-upper')});
+    if (conditions.temperatura === 'frio') allPossibleModifiers.push({type: 'consonants-upper', result: applyModifier(baseWord, 'consonants-upper')});
+    if (conditions.temperatura === 'quente') allPossibleModifiers.push({type: 'vowels-upper', result: applyModifier(baseWord, 'vowels-upper')});
+    if (conditions.temperatura === 'muito-quente') allPossibleModifiers.push({type: 'i-to-y-e-to-a', result: applyModifier(baseWord, 'i-to-y-e-to-a')});
+    
+    // PRESSÃO ATMOSFÉRICA
+    if (conditions.pressao === 'alta') allPossibleModifiers.push({type: 'add-alt', result: applyModifier(baseWord, 'add-alt')});
+    if (conditions.pressao === 'baixa') allPossibleModifiers.push({type: 'add-bai', result: applyModifier(baseWord, 'add-bai')});
+    
+    // ENERGIA MÁGICA AMBIENTE
+    if (conditions.energiaMagica === 'alta') allPossibleModifiers.push({type: 'duplicate-word', result: applyModifier(baseWord, 'duplicate-word')});
+    if (conditions.energiaMagica === 'baixa') allPossibleModifiers.push({type: 'remove-last', result: applyModifier(baseWord, 'remove-last')});
+    if (conditions.energiaMagica === 'interferencia') allPossibleModifiers.push({type: 'vowels-to-numbers', result: applyModifier(baseWord, 'vowels-to-numbers')});
+    
+    // Verificar se a palavra digitada corresponde a algum modificador individual
+    for (const modifier of allPossibleModifiers) {
+        if (inputWord === modifier.result) {
+            console.log(`Modificador detectado: ${modifier.type}`);
+            return 1; // Aplicou 1 modificador corretamente
         }
     }
     
-    return 0; // Nenhum modificador reconhecido
+    // Se não encontrou modificador individual, verificar combinações (código existente)
+    const modifierSteps = generateModifierSteps(baseWord, conditions);
+    for (let i = modifierSteps.length - 1; i >= 0; i--) {
+        if (inputWord === modifierSteps[i]) {
+            return i + 1;
+        }
+    }
+    
+    return 0;
 }
+
 
 function generateModifierSteps(baseWord, conditions) {
     const steps = [baseWord];
