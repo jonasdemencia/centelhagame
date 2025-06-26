@@ -1,4 +1,36 @@
-// Sistema Arcanum Verbis - Modificadores de Palavras Mágicas
+
+/*
+ * Sistema Arcanum Verbis - Modificadores de Palavras Mágicas
+ *
+ * Como adicionar novos modificadores:
+ * 1. Adicione a regra na função applyModifier.
+ * 2. Adicione o tipo e condição nas funções getActiveModifiers e applyArcanumModifiers.
+ * 3. Siga sempre o padrão de 'type' (string única), 'order' (número), e 'cond' (função que recebe as condições do turno).
+ *
+ * Ordem dos modificadores:
+ * 1. Período do dia
+ * 2. Estação do ano
+ * 3. Direção do vento
+ * 4. Clima
+ * 5. Fase da lua
+ * 6. Temperatura
+ * 7. Pressão atmosférica
+ * 8. Evento especial
+ * 9. Energia mágica ambiente
+ *
+ * Regras Especiais:
+ * - Se a palavra resultante tiver mais de 10 letras, acrescente 'R' ao final.
+ * - Se tiver menos de 5 letras, acrescente 'EX' ao final.
+ *
+ * Funções principais:
+ * - getSpellBaseWord: retorna a palavra base de uma magia.
+ * - applyArcanumModifiers: aplica todos os modificadores nas condições do turno, na ordem correta.
+ * - applyModifier: aplica a transformação de um modificador na palavra.
+ * - getActiveModifiers: retorna todos os modificadores ativos para as condições do turno.
+ * - getAllModifierCombinations: gera todas as combinações possíveis de modificadores ativos.
+ * - detectAppliedModifiers: conta quantos modificadores o jogador aplicou corretamente, na ordem.
+ * - validateConjuration: valida a palavra digitada, calcula fluidez e precisão.
+ */
 
 // Palavras base das magias
 function getSpellBaseWord(spellId) {
@@ -574,3 +606,11 @@ window.ArcanumSpells = {
     createArcanumConjurationModal,
     validateConjuration
 };
+
+/*
+ * Exemplo de uso:
+ * const conditions = { periodo: 'manha', estacao: 'inverno', vento: 'sul', clima: 'sol-forte', ... };
+ * const base = getSpellBaseWord('missil-magico');
+ * const palavraFinal = applyArcanumModifiers(base, conditions);
+ * // Jogador digita a palavra: resultado = validateConjuration(input, palavraFinal, tempo, erros, conditions, base);
+ */
