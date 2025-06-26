@@ -274,82 +274,169 @@ function validateConjuration(inputWord, correctWord, typingTime, errors) {
     };
 }
 
-function detectAppliedModifiers(inputWord, correctWord) {
-    const conditions = window.ArcanumConditions.getConditions();
-    console.log("Condições:", conditions);
-    console.log("Palavra digitada:", inputWord);
-    console.log("Palavra esperada:", correctWord);
-    
-    const baseWord = 'FULMEN';
-    let modifiersCount = 0;
-    
-    // Lista de todos os modificadores possíveis
-    const allPossibleModifiers = [];
-    
-    // PERÍODOS DO DIA
-    if (conditions.periodo === 'manha') allPossibleModifiers.push({type: 'first-vowel-to-i', result: applyModifier(baseWord, 'first-vowel-to-i')});
-    if (conditions.periodo === 'tarde') allPossibleModifiers.push({type: 'a-to-y', result: applyModifier(baseWord, 'a-to-y')});
-    if (conditions.periodo === 'noite') allPossibleModifiers.push({type: 'duplicate-last-consonant', result: applyModifier(baseWord, 'duplicate-last-consonant')});
-    if (conditions.periodo === 'madrugada') allPossibleModifiers.push({type: 'add-mad', result: applyModifier(baseWord, 'add-mad')});
-    
-    // ESTAÇÕES
-    if (conditions.estacao === 'primavera') allPossibleModifiers.push({type: 'add-pri', result: applyModifier(baseWord, 'add-pri')});
-    if (conditions.estacao === 'verao') allPossibleModifiers.push({type: 'e-to-a', result: applyModifier(baseWord, 'e-to-a')});
-    if (conditions.estacao === 'outono') allPossibleModifiers.push({type: 'add-out', result: applyModifier(baseWord, 'add-out')});
-    if (conditions.estacao === 'inverno') allPossibleModifiers.push({type: 'o-to-u', result: applyModifier(baseWord, 'o-to-u')});
-    
-    // DIREÇÃO DO VENTO
-    if (conditions.vento === 'norte') allPossibleModifiers.push({type: 'add-n', result: applyModifier(baseWord, 'add-n')});
-    if (conditions.vento === 'sul') allPossibleModifiers.push({type: 'add-s', result: applyModifier(baseWord, 'add-s')});
-    if (conditions.vento === 'leste') allPossibleModifiers.push({type: 'add-l', result: applyModifier(baseWord, 'add-l')});
-    if (conditions.vento === 'oeste') allPossibleModifiers.push({type: 'add-o', result: applyModifier(baseWord, 'add-o')});
-    
-    // CONDIÇÕES CLIMÁTICAS
-    if (conditions.clima === 'sol-forte') allPossibleModifiers.push({type: 'duplicate-first', result: applyModifier(baseWord, 'duplicate-first')});
-    if (conditions.clima === 'sol-fraco') allPossibleModifiers.push({type: 'remove-first-vowel', result: applyModifier(baseWord, 'remove-first-vowel')});
-    if (conditions.clima === 'nublado') allPossibleModifiers.push({type: 'add-nub-middle', result: applyModifier(baseWord, 'add-nub-middle')});
-    if (conditions.clima === 'chuva-leve') allPossibleModifiers.push({type: 'add-plu', result: applyModifier(baseWord, 'add-plu')});
-    if (conditions.clima === 'chuva-forte') allPossibleModifiers.push({type: 'vowels-to-u', result: applyModifier(baseWord, 'vowels-to-u')});
-    if (conditions.clima === 'tempestade') allPossibleModifiers.push({type: 'reverse-word', result: applyModifier(baseWord, 'reverse-word')});
-    
-    // FASES DA LUA
-    if (conditions.lua === 'nova') allPossibleModifiers.push({type: 'add-x', result: applyModifier(baseWord, 'add-x')});
-    if (conditions.lua === 'crescente') allPossibleModifiers.push({type: 'add-c', result: applyModifier(baseWord, 'add-c')});
-    if (conditions.lua === 'cheia') allPossibleModifiers.push({type: 'add-f', result: applyModifier(baseWord, 'add-f')});
-    if (conditions.lua === 'minguante') allPossibleModifiers.push({type: 'add-m', result: applyModifier(baseWord, 'add-m')});
-    
-    // TEMPERATURA
-    if (conditions.temperatura === 'muito-frio') allPossibleModifiers.push({type: 'all-upper', result: applyModifier(baseWord, 'all-upper')});
-    if (conditions.temperatura === 'frio') allPossibleModifiers.push({type: 'consonants-upper', result: applyModifier(baseWord, 'consonants-upper')});
-    if (conditions.temperatura === 'quente') allPossibleModifiers.push({type: 'vowels-upper', result: applyModifier(baseWord, 'vowels-upper')});
-    if (conditions.temperatura === 'muito-quente') allPossibleModifiers.push({type: 'i-to-y-e-to-a', result: applyModifier(baseWord, 'i-to-y-e-to-a')});
-    
-    // PRESSÃO ATMOSFÉRICA
-    if (conditions.pressao === 'alta') allPossibleModifiers.push({type: 'add-alt', result: applyModifier(baseWord, 'add-alt')});
-    if (conditions.pressao === 'baixa') allPossibleModifiers.push({type: 'add-bai', result: applyModifier(baseWord, 'add-bai')});
-    
-    // ENERGIA MÁGICA AMBIENTE
-    if (conditions.energiaMagica === 'alta') allPossibleModifiers.push({type: 'duplicate-word', result: applyModifier(baseWord, 'duplicate-word')});
-    if (conditions.energiaMagica === 'baixa') allPossibleModifiers.push({type: 'remove-last', result: applyModifier(baseWord, 'remove-last')});
-    if (conditions.energiaMagica === 'interferencia') allPossibleModifiers.push({type: 'vowels-to-numbers', result: applyModifier(baseWord, 'vowels-to-numbers')});
-    
-    // Verificar se a palavra digitada corresponde a algum modificador individual
-    for (const modifier of allPossibleModifiers) {
-        if (inputWord === modifier.result) {
-            console.log(`Modificador detectado: ${modifier.type}`);
-            return 1; // Aplicou 1 modificador corretamente
-        }
+function detectAppliedModifiers(inputWord, conditions, baseWord = 'FULMEN') {
+    inputWord = inputWord.toUpperCase();
+    baseWord = baseWord.toUpperCase();
+    let count = 0;
+
+    // 1. PERÍODOS DO DIA
+    if (conditions.periodo === 'manha') {
+        // Primeira vogal -> I
+        let mod = baseWord.replace(/[AEIOU]/, 'I');
+        if (inputWord.includes(mod)) count++;
     }
-    
-    // Se não encontrou modificador individual, verificar combinações (código existente)
-    const modifierSteps = generateModifierSteps(baseWord, conditions);
-    for (let i = modifierSteps.length - 1; i >= 0; i--) {
-        if (inputWord === modifierSteps[i]) {
-            return i + 1;
-        }
+    if (conditions.periodo === 'tarde') {
+        // A -> Y
+        let mod = baseWord.replace(/A/g, 'Y');
+        if (inputWord.includes(mod)) count++;
     }
-    
-    return 0;
+    if (conditions.periodo === 'noite') {
+        // Duplica última consoante
+        let last = baseWord.match(/[^AEIOU]$/i);
+        let mod = last ? baseWord + last[0] : baseWord;
+        if (inputWord.includes(mod)) count++;
+    }
+    if (conditions.periodo === 'madrugada') {
+        // +MAD no final
+        if (inputWord.endsWith('MAD')) count++;
+    }
+
+    // 2. ESTAÇÕES
+    if (conditions.estacao === 'primavera') {
+        if (inputWord.endsWith('PRI')) count++;
+    }
+    if (conditions.estacao === 'verao') {
+        // E -> A
+        let mod = baseWord.replace(/E/g, 'A');
+        if (inputWord.includes(mod)) count++;
+    }
+    if (conditions.estacao === 'outono') {
+        if (inputWord.endsWith('OUT')) count++;
+    }
+    if (conditions.estacao === 'inverno') {
+        // O -> U
+        let mod = baseWord.replace(/O/g, 'U');
+        if (inputWord.includes(mod)) count++;
+    }
+
+    // 3. DIREÇÃO DO VENTO
+    if (conditions.vento === 'norte' && inputWord.endsWith('N')) count++;
+    if (conditions.vento === 'sul' && inputWord.endsWith('S')) count++;
+    if (conditions.vento === 'leste' && inputWord.endsWith('L')) count++;
+    if (conditions.vento === 'oeste' && inputWord.endsWith('O')) count++;
+    if (conditions.vento === 'nordeste' && inputWord.endsWith('NE')) count++;
+    if (conditions.vento === 'noroeste' && inputWord.endsWith('NO')) count++;
+    if (conditions.vento === 'sudeste' && inputWord.endsWith('SE')) count++;
+    if (conditions.vento === 'sudoeste' && inputWord.endsWith('SO')) count++;
+
+    // 4. CONDIÇÕES CLIMÁTICAS
+    if (conditions.clima === 'sol-forte') {
+        // Duplica primeira letra
+        if (inputWord.startsWith(baseWord[0] + baseWord)) count++;
+    }
+    if (conditions.clima === 'sol-fraco') {
+        // Remove primeira vogal
+        let mod = baseWord.replace(/[AEIOU]/, '');
+        if (inputWord.includes(mod)) count++;
+    }
+    if (conditions.clima === 'nublado') {
+        // +NUB no meio
+        let mid = Math.floor(baseWord.length / 2);
+        let mod = baseWord.slice(0, mid) + 'NUB' + baseWord.slice(mid);
+        if (inputWord.includes('NUB')) count++;
+    }
+    if (conditions.clima === 'chuva-leve') {
+        if (inputWord.endsWith('PLU')) count++;
+    }
+    if (conditions.clima === 'chuva-forte') {
+        // Todas vogais -> U
+        let mod = baseWord.replace(/[AEIOU]/g, 'U');
+        if (inputWord.includes(mod)) count++;
+    }
+    if (conditions.clima === 'tempestade') {
+        // Palavra invertida
+        let mod = baseWord.split('').reverse().join('');
+        if (inputWord.includes(mod)) count++;
+    }
+    if (conditions.clima === 'neblina' && inputWord.endsWith('NEB')) count++;
+    if (conditions.clima === 'nevoa' && inputWord.endsWith('NEV')) count++;
+    if (conditions.clima === 'neve' && inputWord.endsWith('NIV')) count++;
+    if (conditions.clima === 'granizo' && inputWord.endsWith('GRA')) count++;
+    if (conditions.clima === 'seco') {
+        // Remove todas vogais duplicadas (ex: AA -> A)
+        let mod = baseWord.replace(/([AEIOU])\1+/g, '$1');
+        if (inputWord.includes(mod)) count++;
+    }
+    if (conditions.clima === 'umido') {
+        // Duplica todas vogais
+        let mod = baseWord.replace(/[AEIOU]/g, v => v + v);
+        if (inputWord.includes(mod)) count++;
+    }
+
+    // 5. FASES DA LUA
+    if (conditions.lua === 'nova' && inputWord.endsWith('X')) count++;
+    if (conditions.lua === 'crescente' && inputWord.endsWith('C')) count++;
+    if (conditions.lua === 'cheia' && inputWord.endsWith('F')) count++;
+    if (conditions.lua === 'minguante' && inputWord.endsWith('M')) count++;
+
+    // 6. TEMPERATURA
+    if (conditions.temperatura === 'muito-frio') {
+        if (inputWord === inputWord.toUpperCase()) count++;
+    }
+    if (conditions.temperatura === 'frio') {
+        // Consoantes maiúsculas
+        let mod = baseWord.replace(/[BCDFGHJKLMNPQRSTVWXYZ]/g, c => c.toUpperCase());
+        if (inputWord.includes(mod)) count++;
+    }
+    if (conditions.temperatura === 'quente') {
+        // Vogais maiúsculas
+        let mod = baseWord.replace(/[AEIOU]/g, v => v.toUpperCase());
+        if (inputWord.includes(mod)) count++;
+    }
+    if (conditions.temperatura === 'muito-quente') {
+        // I -> Y, E -> A
+        let mod = baseWord.replace(/I/g, 'Y').replace(/E/g, 'A');
+        if (inputWord.includes(mod)) count++;
+    }
+
+    // 7. PRESSÃO ATMOSFÉRICA
+    if (conditions.pressao === 'alta' && inputWord.endsWith('ALT')) count++;
+    if (conditions.pressao === 'baixa' && inputWord.endsWith('BAI')) count++;
+
+    // 8. EVENTOS ESPECIAIS
+    if (conditions.eventoEspecial === 'eclipse-solar') {
+        let mod = baseWord.split('').reverse().join('');
+        if (inputWord.includes(mod)) count++;
+    }
+    if (conditions.eventoEspecial === 'eclipse-lunar' && inputWord.endsWith('ECL')) count++;
+    if (conditions.eventoEspecial === 'chuva-meteoros' && inputWord.endsWith('MET')) count++;
+    if (conditions.eventoEspecial === 'aurora-boreal' && inputWord.endsWith('AUR')) count++;
+    if (conditions.eventoEspecial === 'solsticio' && inputWord.endsWith('SOL')) count++;
+    if (conditions.eventoEspecial === 'equinocio' && inputWord.endsWith('EQU')) count++;
+
+    // 9. ENERGIA MÁGICA AMBIENTE
+    if (conditions.energiaMagica === 'alta') {
+        let mod = baseWord + baseWord;
+        if (inputWord.includes(mod)) count++;
+    }
+    if (conditions.energiaMagica === 'baixa') {
+        let mod = baseWord.slice(0, -1);
+        if (inputWord.includes(mod)) count++;
+    }
+    if (conditions.energiaMagica === 'interferencia') {
+        // Substitui vogais por números (A=1, E=2, I=3, O=4, U=5)
+        let mod = baseWord.replace(/A/gi, '1').replace(/E/gi, '2').replace(/I/gi, '3').replace(/O/gi, '4').replace(/U/gi, '5');
+        if (inputWord.includes(mod)) count++;
+    }
+
+    // 10. LOCALIZAÇÃO/AMBIENTE (se for usar depois)
+    // if (conditions.localizacao === 'subterraneo' && ...) { ... }
+
+    // REGRAS ESPECIAIS
+    if (inputWord.length > 10 && inputWord.endsWith('R')) count++;
+    if (inputWord.length < 5 && inputWord.endsWith('EX')) count++;
+
+    return count;
 }
 
 
