@@ -194,36 +194,78 @@ function createArcanumConjurationModal(spell) {
 }
 
 function validateConjuration(inputWord, correctWord, typingTime, errors) {
-    const accuracy = calculateAccuracy(inputWord, correctWord);
     const fluency = calculateFluency(typingTime, errors, correctWord.length);
     
-    // Requisitos por nível
-    const requirements = {
-        5: {accuracy: 98, fluency: 90},
-        4: {accuracy: 96, fluency: 80},
-        3: {accuracy: 94, fluency: 70},
-        2: {accuracy: 92, fluency: 60},
-        1: {accuracy: 90, fluency: 0}
-    };
+    // Detectar modificadores aplicados corretamente
+    const modifiersApplied = detectAppliedModifiers(inputWord, correctWord);
     
-    // Encontra o maior nível que o jogador consegue atingir
-    let achievedLevel = 0;
-    for (let level = 5; level >= 1; level--) {
-        const req = requirements[level];
-        if (accuracy >= req.accuracy && fluency >= req.fluency) {
-            achievedLevel = level;
-            break;
-        }
-    }
+    // Calcular multiplicador de fluidez
+    let fluencyMultiplier = 1.0;
+    if (fluency >= 95) fluencyMultiplier = 1.2;
+    else if (fluency >= 80) fluencyMultiplier = 1.1;
+    else if (fluency >= 60) fluencyMultiplier = 1.0;
+    else if (fluency >= 40) fluencyMultiplier = 0.9;
+    else fluencyMultiplier = 0.8;
+    
+    // Calcular dardos finais
+    const baseDarts = modifiersApplied;
+    const finalDarts = Math.max(0, Math.floor(baseDarts * fluencyMultiplier));
     
     return {
-        success: achievedLevel > 0,
-        accuracy,
-        fluency,
-        level: achievedLevel
+        success: finalDarts > 0,
+        accuracy: modifiersApplied > 0 ? 100 : 0, // Para display
+        fluency: fluency,
+        level: finalDarts,
+        modifiersDetected: modifiersApplied
     };
 }
 
+function detectAppliedModifiers(inputWord, correctWord) {
+    // Pega as condições atuais
+    const conditions = window.ArcanumConditions.getConditions();
+    const baseWord = 'FULMEN';
+    
+    // Gera sequência de palavras com modificadores aplicados progressivamente
+    const modifierSteps = generateModifierSteps(baseWord, conditions);
+    
+    // Testa qual é o maior número de modificadores que o jogador aplicou corretamente
+    for (let i = modifierSteps.length - 1; i >= 0; i--) {
+        if (inputWord === modifierSteps[i]) {
+            return i + 1; // Retorna número de modificadores aplicados
+        }
+    }
+    
+    return 0; // Nenhum modificador reconhecido
+}
+
+function generateModifierSteps(baseWord, conditions) {
+    const steps = [baseWord]; // Passo 0: palavra base
+    let currentWord = baseWord;
+    
+    // Lista de modificadores em ordem alfabética
+    const modifiers = [];
+    
+    // Coletar todos os modificadores aplicáveis (usa sua lógica existente)
+    if (conditions.clima === 'sol-forte') modifiers.push({type: 'duplicate-first', order: 1});
+    if (conditions.periodo === 'tarde') modifiers.push({type: 'a-to-y', order: 2});
+    if (conditions.estacao === 'outono') modifiers.push({type: 'add-out', order: 3});
+    if (conditions.energiaMagica === 'baixa') modifiers.push({type: 'remove-last', order: 4});
+    if (conditions.vento === 'sul') modifiers.push({type: 'add-s', order: 5});
+    if (conditions.lua === 'crescente') modifiers.push({type: 'add-c', order: 6});
+    if (conditions.pressao === 'alta') modifiers.push({type: 'add-alt', order: 7});
+    if (conditions.temperatura === 'quente') modifiers.push({type: 'vowels-upper', order: 8});
+    
+    // Ordenar modificadores
+    modifiers.sort((a, b) => a.order - b.order);
+    
+    // Aplicar modificadores um por vez e salvar cada passo
+    for (const modifier of modifiers) {
+        currentWord = applyModifier(currentWord, modifier.type);
+        steps.push(currentWord);
+    }
+    
+    return steps;
+}
 
 
 function calculateAccuracy(input, correct) {
