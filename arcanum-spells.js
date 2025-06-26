@@ -249,10 +249,10 @@ function createArcanumConjurationModal(spell) {
 
 function validateConjuration(inputWord, correctWord, typingTime, errors, conditions, baseWord) {
     const fluency = calculateFluency(typingTime, errors, correctWord.length);
-    
+
     // Detectar modificadores aplicados corretamente
     const modifiersApplied = detectAppliedModifiers(inputWord, conditions, baseWord);
-    
+
     // Calcular multiplicador de fluidez
     let fluencyMultiplier = 1.0;
     if (fluency >= 95) fluencyMultiplier = 1.2;
@@ -260,11 +260,11 @@ function validateConjuration(inputWord, correctWord, typingTime, errors, conditi
     else if (fluency >= 60) fluencyMultiplier = 1.0;
     else if (fluency >= 40) fluencyMultiplier = 0.9;
     else fluencyMultiplier = 0.8;
-    
+
     // Calcular dardos finais
     const baseDarts = modifiersApplied;
     const finalDarts = Math.max(0, Math.floor(baseDarts * fluencyMultiplier));
-    
+
     return {
         success: finalDarts > 0,
         accuracy: modifiersApplied > 0 ? 100 : 0, // Para display
