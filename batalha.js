@@ -2696,7 +2696,9 @@ function setupArcanumConjurationModal() {
         typingEnd = performance.now();
         const inputWord = input.value.trim().toUpperCase();
         const totalTime = ((typingEnd > typingStart ? typingEnd : performance.now()) - typingStart) / 1000;
-        const result = window.ArcanumSpells.validateConjuration(inputWord, correctWord, totalTime, errors, baseWord, conditions);
+        const baseWord = window.ArcanumSpells.getSpellBaseWord(magia.id);
+        const result = window.ArcanumSpells.validateConjuration(inputWord, correctWord, totalTime, errors, conditions, baseWord);
+
 
         modal.remove();
 
