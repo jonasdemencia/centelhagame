@@ -41,27 +41,78 @@ function applyArcanumModifiers(baseWord, conditions) {
 
 function applyModifier(word, type) {
     switch(type) {
-
-        case 'remove-first-vowel':
-            return word.replace(/[aeiou]/i, '');
-        case 'duplicate-first':
-            return word.charAt(0) + word;
-        case 'a-to-y':
-            return word.replace(/A/gi, 'Y');
-        case 'add-out':
-            return word + 'OUT';
-        case 'remove-last':
-            return word.slice(0, -1);
-        case 'add-s':
-            return word + 'S';
-        case 'add-c':
-            return word + 'C';
-        case 'add-alt':
-            return word + 'ALT';
-        case 'vowels-upper':
-            return word.replace(/[aeiou]/gi, match => match.toUpperCase());
-        default:
-            return word;
+        // PERÍODOS
+        case 'first-vowel-to-i': return word.replace(/[aeiou]/i, 'I');
+        case 'a-to-y': return word.replace(/A/gi, 'Y');
+        case 'duplicate-last-consonant': 
+            const lastChar = word.charAt(word.length - 1);
+            return !/[aeiou]/i.test(lastChar) ? word + lastChar : word;
+        case 'add-mad': return word + 'MAD';
+        
+        // ESTAÇÕES
+        case 'add-pri': return word + 'PRI';
+        case 'e-to-a': return word.replace(/E/gi, 'A');
+        case 'add-out': return word + 'OUT';
+        case 'o-to-u': return word.replace(/O/gi, 'U');
+        
+        // VENTOS
+        case 'add-n': return word + 'N';
+        case 'add-s': return word + 'S';
+        case 'add-l': return word + 'L';
+        case 'add-o': return word + 'O';
+        case 'add-ne': return word + 'NE';
+        case 'add-no': return word + 'NO';
+        case 'add-se': return word + 'SE';
+        case 'add-so': return word + 'SO';
+        
+        // CLIMAS
+        case 'duplicate-first': return word.charAt(0) + word;
+        case 'remove-first-vowel': return word.replace(/[aeiou]/i, '');
+        case 'add-nub-middle': 
+            const mid = Math.floor(word.length / 2);
+            return word.slice(0, mid) + 'NUB' + word.slice(mid);
+        case 'add-plu': return word + 'PLU';
+        case 'vowels-to-u': return word.replace(/[aeiou]/gi, 'U');
+        case 'reverse-word': return word.split('').reverse().join('');
+        case 'add-neb': return word + 'NEB';
+        case 'add-nev': return word + 'NEV';
+        case 'add-niv': return word + 'NIV';
+        case 'add-gra': return word + 'GRA';
+        case 'remove-duplicate-vowels': return word.replace(/([aeiou])\1+/gi, '$1');
+        case 'duplicate-vowels': return word.replace(/[aeiou]/gi, match => match + match);
+        
+        // LUAS
+        case 'add-x': return word + 'X';
+        case 'add-c': return word + 'C';
+        case 'add-f': return word + 'F';
+        case 'add-m': return word + 'M';
+        
+        // TEMPERATURAS
+        case 'all-upper': return word.toUpperCase();
+        case 'consonants-upper': return word.replace(/[bcdfghjklmnpqrstvwxyz]/gi, match => match.toUpperCase());
+        case 'vowels-upper': return word.replace(/[aeiou]/gi, match => match.toUpperCase());
+        case 'i-to-y-e-to-a': return word.replace(/I/gi, 'Y').replace(/E/gi, 'A');
+        
+        // PRESSÃO
+        case 'add-alt': return word + 'ALT';
+        case 'add-bai': return word + 'BAI';
+        
+        // EVENTOS
+        case 'add-ecl': return word + 'ECL';
+        case 'add-met': return word + 'MET';
+        case 'add-aur': return word + 'AUR';
+        case 'add-sol': return word + 'SOL';
+        case 'add-equ': return word + 'EQU';
+        
+        // ENERGIA MÁGICA
+        case 'duplicate-word': return word + word;
+        case 'remove-last': return word.slice(0, -1);
+        case 'vowels-to-numbers': return word.replace(/[aeiou]/gi, match => {
+            const map = {'A': '1', 'E': '2', 'I': '3', 'O': '4', 'U': '5'};
+            return map[match.toUpperCase()] || match;
+        });
+        
+        default: return word;
     }
 }
 
@@ -245,30 +296,86 @@ function detectAppliedModifiers(inputWord, correctWord) {
 }
 
 function generateModifierSteps(baseWord, conditions) {
-    const steps = [baseWord]; // Passo 0: palavra base
+    const steps = [baseWord];
     let currentWord = baseWord;
     
-    // Lista de modificadores em ordem alfabética
     const modifiers = [];
     
-    // Coletar todos os modificadores aplicáveis (usa sua lógica existente)
-    if (conditions.clima === 'sol-fraco') modifiers.push({type: 'remove-first-vowel', order: 1});
-    if (conditions.clima === 'sol-forte') modifiers.push({type: 'duplicate-first', order: 1});
-    if (conditions.periodo === 'tarde') modifiers.push({type: 'a-to-y', order: 2});
-    if (conditions.estacao === 'outono') modifiers.push({type: 'add-out', order: 3});
-    if (conditions.energiaMagica === 'baixa') modifiers.push({type: 'remove-last', order: 4});
-    if (conditions.vento === 'sul') modifiers.push({type: 'add-s', order: 5});
-    if (conditions.lua === 'crescente') modifiers.push({type: 'add-c', order: 6});
-    if (conditions.pressao === 'alta') modifiers.push({type: 'add-alt', order: 7});
-    if (conditions.temperatura === 'quente') modifiers.push({type: 'vowels-upper', order: 8});
+    // PERÍODOS DO DIA
+    if (conditions.periodo === 'manha') modifiers.push({type: 'first-vowel-to-i', order: 1});
+    if (conditions.periodo === 'tarde') modifiers.push({type: 'a-to-y', order: 1});
+    if (conditions.periodo === 'noite') modifiers.push({type: 'duplicate-last-consonant', order: 1});
+    if (conditions.periodo === 'madrugada') modifiers.push({type: 'add-mad', order: 1});
     
-    // Ordenar modificadores
+    // ESTAÇÕES
+    if (conditions.estacao === 'primavera') modifiers.push({type: 'add-pri', order: 2});
+    if (conditions.estacao === 'verao') modifiers.push({type: 'e-to-a', order: 2});
+    if (conditions.estacao === 'outono') modifiers.push({type: 'add-out', order: 2});
+    if (conditions.estacao === 'inverno') modifiers.push({type: 'o-to-u', order: 2});
+    
+    // DIREÇÃO DO VENTO
+    if (conditions.vento === 'norte') modifiers.push({type: 'add-n', order: 3});
+    if (conditions.vento === 'sul') modifiers.push({type: 'add-s', order: 3});
+    if (conditions.vento === 'leste') modifiers.push({type: 'add-l', order: 3});
+    if (conditions.vento === 'oeste') modifiers.push({type: 'add-o', order: 3});
+    if (conditions.vento === 'nordeste') modifiers.push({type: 'add-ne', order: 3});
+    if (conditions.vento === 'noroeste') modifiers.push({type: 'add-no', order: 3});
+    if (conditions.vento === 'sudeste') modifiers.push({type: 'add-se', order: 3});
+    if (conditions.vento === 'sudoeste') modifiers.push({type: 'add-so', order: 3});
+    
+    // CONDIÇÕES CLIMÁTICAS
+    if (conditions.clima === 'sol-forte') modifiers.push({type: 'duplicate-first', order: 4});
+    if (conditions.clima === 'sol-fraco') modifiers.push({type: 'remove-first-vowel', order: 4});
+    if (conditions.clima === 'nublado') modifiers.push({type: 'add-nub-middle', order: 4});
+    if (conditions.clima === 'chuva-leve') modifiers.push({type: 'add-plu', order: 4});
+    if (conditions.clima === 'chuva-forte') modifiers.push({type: 'vowels-to-u', order: 4});
+    if (conditions.clima === 'tempestade') modifiers.push({type: 'reverse-word', order: 4});
+    if (conditions.clima === 'neblina') modifiers.push({type: 'add-neb', order: 4});
+    if (conditions.clima === 'nevoa') modifiers.push({type: 'add-nev', order: 4});
+    if (conditions.clima === 'neve') modifiers.push({type: 'add-niv', order: 4});
+    if (conditions.clima === 'granizo') modifiers.push({type: 'add-gra', order: 4});
+    if (conditions.clima === 'seco') modifiers.push({type: 'remove-duplicate-vowels', order: 4});
+    if (conditions.clima === 'umido') modifiers.push({type: 'duplicate-vowels', order: 4});
+    
+    // FASES DA LUA
+    if (conditions.lua === 'nova') modifiers.push({type: 'add-x', order: 5});
+    if (conditions.lua === 'crescente') modifiers.push({type: 'add-c', order: 5});
+    if (conditions.lua === 'cheia') modifiers.push({type: 'add-f', order: 5});
+    if (conditions.lua === 'minguante') modifiers.push({type: 'add-m', order: 5});
+    
+    // TEMPERATURA
+    if (conditions.temperatura === 'muito-frio') modifiers.push({type: 'all-upper', order: 6});
+    if (conditions.temperatura === 'frio') modifiers.push({type: 'consonants-upper', order: 6});
+    if (conditions.temperatura === 'quente') modifiers.push({type: 'vowels-upper', order: 6});
+    if (conditions.temperatura === 'muito-quente') modifiers.push({type: 'i-to-y-e-to-a', order: 6});
+    
+    // PRESSÃO ATMOSFÉRICA
+    if (conditions.pressao === 'alta') modifiers.push({type: 'add-alt', order: 7});
+    if (conditions.pressao === 'baixa') modifiers.push({type: 'add-bai', order: 7});
+    
+    // EVENTOS ESPECIAIS
+    if (conditions.eventoEspecial === 'eclipse-solar') modifiers.push({type: 'reverse-word', order: 8});
+    if (conditions.eventoEspecial === 'eclipse-lunar') modifiers.push({type: 'add-ecl', order: 8});
+    if (conditions.eventoEspecial === 'chuva-meteoros') modifiers.push({type: 'add-met', order: 8});
+    if (conditions.eventoEspecial === 'aurora-boreal') modifiers.push({type: 'add-aur', order: 8});
+    if (conditions.eventoEspecial === 'solsticio') modifiers.push({type: 'add-sol', order: 8});
+    if (conditions.eventoEspecial === 'equinocio') modifiers.push({type: 'add-equ', order: 8});
+    
+    // ENERGIA MÁGICA AMBIENTE
+    if (conditions.energiaMagica === 'alta') modifiers.push({type: 'duplicate-word', order: 9});
+    if (conditions.energiaMagica === 'baixa') modifiers.push({type: 'remove-last', order: 9});
+    if (conditions.energiaMagica === 'interferencia') modifiers.push({type: 'vowels-to-numbers', order: 9});
+    
+    // Ordenar e aplicar
     modifiers.sort((a, b) => a.order - b.order);
     
-    // Aplicar modificadores um por vez e salvar cada passo
     for (const modifier of modifiers) {
         currentWord = applyModifier(currentWord, modifier.type);
         steps.push(currentWord);
+        
+        // REGRAS ESPECIAIS
+        if (currentWord.length > 10) currentWord += 'R';
+        if (currentWord.length < 5) currentWord += 'EX';
     }
     
     return steps;
