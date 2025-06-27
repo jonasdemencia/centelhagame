@@ -532,6 +532,9 @@ function getAllModifierCombinations(modifiers) {
  * permitindo qualquer ordem, qualquer subconjunto dos modificadores ativos, e
  * considerando as regras especiais (+R, +EX) como modificadores bônus opcionais.
  * 
+ * Esta versão considera o MENOR subconjunto de modificadores possível que gera
+ * a palavra digitada, evitando "inflar" a quantidade de dardos por mods neutros.
+ * 
  * @param {string} inputWord Palavra digitada pelo jogador
  * @param {object} conditions Objeto com as condições ambientais/atuais
  * @param {string} baseWord Palavra base da magia (ex: "FULMEN")
@@ -543,7 +546,7 @@ function detectAppliedModifiers(inputWord, conditions, baseWord = 'FULMEN') {
     // 1. Pegue todos os modificadores ativos do turno
     const activeMods = getActiveModifiers(conditions);
 
-    // 2. Gera TODOS os subconjuntos possíveis dos modificadores ativos (do maior para o menor)
+    // 2. Gera TODOS os subconjuntos possíveis dos modificadores ativos (menor para maior)
     function getAllSubsets(array) {
         const result = [];
         const total = 1 << array.length;
@@ -554,8 +557,8 @@ function detectAppliedModifiers(inputWord, conditions, baseWord = 'FULMEN') {
             }
             result.push(subset);
         }
-        // Ordena do maior para o menor subconjunto
-        result.sort((a, b) => b.length - a.length);
+        // Ordena do menor para o maior subconjunto
+        result.sort((a, b) => a.length - b.length);
         return result;
     }
 
@@ -574,7 +577,8 @@ function detectAppliedModifiers(inputWord, conditions, baseWord = 'FULMEN') {
     }
 
     // 4. Testa se alguma permutação de algum subconjunto chega à palavra digitada,
-    //    considerando as regras especiais como modificadores opcionais
+    //    considerando as regras especiais como modificadores opcionais.
+    //    Retorna o MENOR subconjunto possível.
     const subsets = getAllSubsets(activeMods);
 
     for (const subset of subsets) {
@@ -585,9 +589,7 @@ function detectAppliedModifiers(inputWord, conditions, baseWord = 'FULMEN') {
                 palavra = applyModifier(palavra, mod.type);
             }
             let palavraFinal = palavra;
-            let extraMod = 0;
 
-            // Regras especiais como bônus
             const addR = (palavraFinal.length > 10);
             const addEX = (palavraFinal.length < 5);
 
@@ -607,7 +609,6 @@ function detectAppliedModifiers(inputWord, conditions, baseWord = 'FULMEN') {
     }
     return 0;
 }
-
 
 
 function generateModifierSteps(baseWord, conditions) {
