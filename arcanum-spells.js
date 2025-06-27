@@ -527,25 +527,72 @@ function getAllModifierCombinations(modifiers) {
     return result;
 }
 
-// Detecta a quantidade EXATA de modificadores aplicados corretamente
+/**
+ * Detecta quantos modificadores corretos o jogador aplicou na palavra digitada,
+ * permitindo qualquer ordem e qualquer subconjunto dos modificadores ativos.
+ * Retorna o máximo número de modificadores aplicados corretamente para chegar à palavra digitada.
+ * 
+ * @param {string} inputWord Palavra digitada pelo jogador
+ * @param {object} conditions Objeto com as condições ambientais/atuais
+ * @param {string} baseWord Palavra base da magia (ex: "FULMEN")
+ * @returns {number} Quantidade de modificadores corretos aplicados (em qualquer ordem)
+ */
 function detectAppliedModifiers(inputWord, conditions, baseWord = 'FULMEN') {
     inputWord = inputWord.trim();
+
+    // 1. Pegue todos os modificadores ativos do turno
     const activeMods = getActiveModifiers(conditions);
+    const n = activeMods.length;
 
-    // Testa todas as combinações (1..n mods ativos), na ordem correta
-    const combos = getAllModifierCombinations(activeMods);
-
-    for (const combo of combos) {
-        let palavra = baseWord;
-        for (const mod of combo) {
-            palavra = applyModifier(palavra, mod.type);
+    // 2. Gera TODOS os subconjuntos possíveis dos modificadores ativos (do maior para o menor)
+    // (Exemplo: [A,B,C] => [A,B,C], [A,B], [A,C], [B,C], [A], [B], [C])
+    function getAllSubsets(array) {
+        const result = [];
+        const total = 1 << array.length; // 2^n subconjuntos
+        for (let i = 1; i < total; i++) {
+            const subset = [];
+            for (let j = 0; j < array.length; j++) {
+                if (i & (1 << j)) subset.push(array[j]);
+            }
+            result.push(subset);
         }
-        // REGRAS ESPECIAIS
-        let palavraFinal = palavra;
-        if (palavraFinal.length > 10) palavraFinal += "R";
-        if (palavraFinal.length < 5) palavraFinal += "EX";
-        if (palavraFinal === inputWord) {
-            return combo.length;
+        // Ordena do maior para o menor subconjunto
+        result.sort((a, b) => b.length - a.length);
+        return result;
+    }
+
+    // 3. Para cada subconjunto, teste todas as permutações (todas as ordens possíveis)
+    function permute(array) {
+        if (array.length <= 1) return [array];
+        const result = [];
+        for (let i = 0; i < array.length; i++) {
+            const current = array[i];
+            const remaining = array.slice(0, i).concat(array.slice(i + 1));
+            for (const perm of permute(remaining)) {
+                result.push([current].concat(perm));
+            }
+        }
+        return result;
+    }
+
+    // 4. Testa se alguma permutação de algum subconjunto chega à palavra digitada
+    const subsets = getAllSubsets(activeMods);
+
+    for (const subset of subsets) {
+        const perms = permute(subset);
+        for (const order of perms) {
+            let palavra = baseWord;
+            for (const mod of order) {
+                palavra = applyModifier(palavra, mod.type);
+            }
+            // Regras especiais
+            let palavraFinal = palavra;
+            if (palavraFinal.length > 10) palavraFinal += "R";
+            if (palavraFinal.length < 5) palavraFinal += "EX";
+            if (palavraFinal === inputWord) {
+                // Retorna o número de modificadores usados nesta sequência
+                return order.length;
+            }
         }
     }
     return 0;
