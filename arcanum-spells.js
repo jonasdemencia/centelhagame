@@ -529,26 +529,24 @@ function getAllModifierCombinations(modifiers) {
 
 /**
  * Detecta quantos modificadores corretos o jogador aplicou na palavra digitada,
- * permitindo qualquer ordem e qualquer subconjunto dos modificadores ativos.
- * Retorna o máximo número de modificadores aplicados corretamente para chegar à palavra digitada.
+ * permitindo qualquer ordem, qualquer subconjunto dos modificadores ativos, e
+ * considerando as regras especiais (+R, +EX) como modificadores bônus opcionais.
  * 
  * @param {string} inputWord Palavra digitada pelo jogador
  * @param {object} conditions Objeto com as condições ambientais/atuais
  * @param {string} baseWord Palavra base da magia (ex: "FULMEN")
- * @returns {number} Quantidade de modificadores corretos aplicados (em qualquer ordem)
+ * @returns {number} Quantidade de modificadores corretos aplicados (incluindo regra especial, se usada)
  */
 function detectAppliedModifiers(inputWord, conditions, baseWord = 'FULMEN') {
     inputWord = inputWord.trim();
 
     // 1. Pegue todos os modificadores ativos do turno
     const activeMods = getActiveModifiers(conditions);
-    const n = activeMods.length;
 
     // 2. Gera TODOS os subconjuntos possíveis dos modificadores ativos (do maior para o menor)
-    // (Exemplo: [A,B,C] => [A,B,C], [A,B], [A,C], [B,C], [A], [B], [C])
     function getAllSubsets(array) {
         const result = [];
-        const total = 1 << array.length; // 2^n subconjuntos
+        const total = 1 << array.length;
         for (let i = 1; i < total; i++) {
             const subset = [];
             for (let j = 0; j < array.length; j++) {
@@ -575,7 +573,8 @@ function detectAppliedModifiers(inputWord, conditions, baseWord = 'FULMEN') {
         return result;
     }
 
-    // 4. Testa se alguma permutação de algum subconjunto chega à palavra digitada
+    // 4. Testa se alguma permutação de algum subconjunto chega à palavra digitada,
+    //    considerando as regras especiais como modificadores opcionais
     const subsets = getAllSubsets(activeMods);
 
     for (const subset of subsets) {
@@ -585,12 +584,23 @@ function detectAppliedModifiers(inputWord, conditions, baseWord = 'FULMEN') {
             for (const mod of order) {
                 palavra = applyModifier(palavra, mod.type);
             }
-            // Regras especiais
             let palavraFinal = palavra;
-            if (palavraFinal.length > 10) palavraFinal += "R";
-            if (palavraFinal.length < 5) palavraFinal += "EX";
-            if (palavraFinal === inputWord) {
-                // Retorna o número de modificadores usados nesta sequência
+            let extraMod = 0;
+
+            // Regras especiais como bônus
+            const addR = (palavraFinal.length > 10);
+            const addEX = (palavraFinal.length < 5);
+
+            // Se o jogador digitou a palavra com R (e caberia R), conta como extra
+            if (addR && inputWord === palavraFinal + "R") {
+                return order.length + 1;
+            }
+            // Se o jogador digitou a palavra com EX (e caberia EX), conta como extra
+            if (addEX && inputWord === palavraFinal + "EX") {
+                return order.length + 1;
+            }
+            // Se o jogador digitou a palavra sem as regras especiais, aceita normalmente
+            if (inputWord === palavraFinal) {
                 return order.length;
             }
         }
