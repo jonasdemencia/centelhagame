@@ -532,19 +532,21 @@ function getAllModifierCombinations(modifiers) {
  * permitindo qualquer ordem, qualquer subconjunto dos modificadores ativos, e
  * considerando as regras especiais (+R, +EX) como modificadores bônus opcionais.
  * 
- * Retorna um objeto avançado:
- * { count: número de mods, mods: [tipos], regraEspecial: "R"|"EX"|null }
- *
+ * Esta versão considera o MENOR subconjunto de modificadores possível que gera
+ * a palavra digitada, evitando "inflar" a quantidade de dardos por mods neutros.
+ * 
  * @param {string} inputWord Palavra digitada pelo jogador
  * @param {object} conditions Objeto com as condições ambientais/atuais
  * @param {string} baseWord Palavra base da magia (ex: "FULMEN")
- * @returns {object} { count, mods, regraEspecial }
+ * @returns {number} Quantidade de modificadores corretos aplicados (incluindo regra especial, se usada)
  */
 function detectAppliedModifiers(inputWord, conditions, baseWord = 'FULMEN') {
     inputWord = inputWord.trim();
+
+    // 1. Pegue todos os modificadores ativos do turno
     const activeMods = getActiveModifiers(conditions);
 
-    // Gera todos os subconjuntos possíveis dos modificadores ativos (menor para maior)
+    // 2. Gera TODOS os subconjuntos possíveis dos modificadores ativos (menor para maior)
     function getAllSubsets(array) {
         const result = [];
         const total = 1 << array.length;
@@ -555,12 +557,12 @@ function detectAppliedModifiers(inputWord, conditions, baseWord = 'FULMEN') {
             }
             result.push(subset);
         }
-        // Ordena do menor para o maior subconjunto (prioriza menos modificadores)
+        // Ordena do menor para o maior subconjunto
         result.sort((a, b) => a.length - b.length);
         return result;
     }
 
-    // Todas as permutações possíveis de um array
+    // 3. Para cada subconjunto, teste todas as permutações (todas as ordens possíveis)
     function permute(array) {
         if (array.length <= 1) return [array];
         const result = [];
@@ -574,7 +576,9 @@ function detectAppliedModifiers(inputWord, conditions, baseWord = 'FULMEN') {
         return result;
     }
 
-    // Busca pelo menor subconjunto de mods que chega ao resultado do jogador
+    // 4. Testa se alguma permutação de algum subconjunto chega à palavra digitada,
+    //    considerando as regras especiais como modificadores opcionais.
+    //    Retorna o MENOR subconjunto possível.
     const subsets = getAllSubsets(activeMods);
 
     for (const subset of subsets) {
@@ -591,32 +595,19 @@ function detectAppliedModifiers(inputWord, conditions, baseWord = 'FULMEN') {
 
             // Se o jogador digitou a palavra com R (e caberia R), conta como extra
             if (addR && inputWord === palavraFinal + "R") {
-                return { 
-                    count: order.length + 1, 
-                    mods: order.map(m => m.type), 
-                    regraEspecial: "R" 
-                };
+                return order.length + 1;
             }
             // Se o jogador digitou a palavra com EX (e caberia EX), conta como extra
             if (addEX && inputWord === palavraFinal + "EX") {
-                return { 
-                    count: order.length + 1, 
-                    mods: order.map(m => m.type), 
-                    regraEspecial: "EX" 
-                };
+                return order.length + 1;
             }
             // Se o jogador digitou a palavra sem as regras especiais, aceita normalmente
             if (inputWord === palavraFinal) {
-                return { 
-                    count: order.length, 
-                    mods: order.map(m => m.type), 
-                    regraEspecial: null 
-                };
+                return order.length;
             }
         }
     }
-    // Nenhuma combinação bateu
-    return { count: 0, mods: [], regraEspecial: null };
+    return 0;
 }
 
 
