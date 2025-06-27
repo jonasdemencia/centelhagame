@@ -1,6 +1,7 @@
-
 /*
  * Sistema Arcanum Verbis - Modificadores de Palavras Mágicas
+ *
+ * Sistema avançado e robusto para conjuração dinâmica de palavras mágicas!
  *
  * Como adicionar novos modificadores:
  * 1. Adicione a regra na função applyModifier.
@@ -18,9 +19,16 @@
  * 8. Evento especial
  * 9. Energia mágica ambiente
  *
- * Regras Especiais:
- * - Se a palavra resultante tiver mais de 10 letras, acrescente 'R' ao final.
- * - Se tiver menos de 5 letras, acrescente 'EX' ao final.
+ * Sobre as regras especiais:
+ * - Se a palavra resultante tiver mais de 10 letras, acrescente 'R' ao final (bônus).
+ * - Se tiver menos de 5 letras, acrescente 'EX' ao final (bônus).
+ * - Essas regras são opcionais, contam como um modificador extra se aplicadas corretamente!
+ *
+ * Fluxo do sistema:
+ * - O jogador pode aplicar qualquer subconjunto dos modificadores ativos, em qualquer ordem.
+ * - O sistema detecta o menor subconjunto de modificadores necessários para obter a palavra digitada.
+ * - Não há "dardos grátis" por modificadores neutros/inócuos.
+ * - Regras especiais são bônus opcionais.
  *
  * Funções principais:
  * - getSpellBaseWord: retorna a palavra base de uma magia.
@@ -28,8 +36,23 @@
  * - applyModifier: aplica a transformação de um modificador na palavra.
  * - getActiveModifiers: retorna todos os modificadores ativos para as condições do turno.
  * - getAllModifierCombinations: gera todas as combinações possíveis de modificadores ativos.
- * - detectAppliedModifiers: conta quantos modificadores o jogador aplicou corretamente, na ordem.
+ * - detectAppliedModifiers: retorna quantos modificadores o jogador aplicou (mínimo necessário), quais foram e se regra especial foi usada.
  * - validateConjuration: valida a palavra digitada, calcula fluidez e precisão.
+ *
+ * Exemplo de uso:
+ *
+ * const conditions = {
+ *   periodo: 'manha', estacao: 'inverno', vento: 'sul', clima: 'sol-forte', 
+ *   lua: 'cheia', temperatura: 'quente', pressao: 'alta', eventoEspecial: null, energiaMagica: 'alta'
+ * };
+ * const base = getSpellBaseWord('missil-magico');
+ * const palavraFinal = applyArcanumModifiers(base, conditions);
+ *
+ * // Verificação da palavra mágica digitada pelo jogador:
+ * const resultado = detectAppliedModifiers('FULMENSOLPLU', conditions, base);
+ * // resultado.count => número de modificadores necessários (mínimo)
+ * // resultado.mods => array com os tipos de modificadores usados (em ordem)
+ * // resultado.regraEspecial => "R", "EX" ou null se nenhuma
  */
 
 
@@ -745,10 +768,4 @@ window.ArcanumSpells = {
     validateConjuration
 };
 
-/*
- * Exemplo de uso:
- * const conditions = { periodo: 'manha', estacao: 'inverno', vento: 'sul', clima: 'sol-forte', ... };
- * const base = getSpellBaseWord('missil-magico');
- * const palavraFinal = applyArcanumModifiers(base, conditions);
- * // Jogador digita a palavra: resultado = validateConjuration(input, palavraFinal, tempo, erros, conditions, base);
- */
+
