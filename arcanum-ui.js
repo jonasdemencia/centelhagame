@@ -87,16 +87,85 @@ function createArcanumPanel() {
     return panel;
 }
 
-// Função para atualizar o painel com as condições atuais
+// Função para atualizar o painel com as condições atuais + modificador ao lado
 function updateArcanumPanel() {
     const panel = document.getElementById('arcanum-conditions-panel');
     if (!panel) return;
-    
+
     const conditions = window.ArcanumConditions.getConditions();
     const conditionsList = document.getElementById('arcanum-conditions-list');
-    
+
     conditionsList.innerHTML = '';
-    
+
+    // Mapeamento de condição para modificador
+    const modifierMap = {
+        // PERÍODOS DO DIA
+        periodo: {
+            manha: 'first-vowel-to-i',
+            tarde: 'a-to-y',
+            noite: 'duplicate-last-consonant',
+            madrugada: 'add-mad'
+        },
+        // ESTAÇÕES
+        estacao: {
+            primavera: 'add-pri',
+            verao: 'e-to-a',
+            outono: 'add-out',
+            inverno: 'o-to-u'
+        },
+        // VENTOS
+        vento: {
+            norte: 'add-n',
+            sul: 'add-s',
+            leste: 'add-l',
+            oeste: 'add-o',
+            nordeste: 'add-ne',
+            noroeste: 'add-no',
+            sudeste: 'add-se',
+            sudoeste: 'add-so'
+        },
+        // CLIMAS
+        clima: {
+            'sol-forte': 'duplicate-first',
+            'sol-fraco': 'remove-first-vowel',
+            nublado: 'add-nub-middle',
+            'chuva-leve': 'add-plu',
+            'chuva-forte': 'vowels-to-u',
+            tempestade: 'reverse-word',
+            neblina: 'add-neb',
+            nevoa: 'add-nev',
+            neve: 'add-niv',
+            granizo: 'add-gra',
+            seco: 'remove-duplicate-vowels',
+            umido: 'duplicate-vowels'
+        },
+        // LUAS
+        lua: {
+            nova: 'add-x',
+            crescente: 'add-c',
+            cheia: 'add-f',
+            minguante: 'add-m'
+        },
+        // TEMPERATURA
+        temperatura: {
+            'muito-frio': 'all-upper',
+            frio: 'consonants-upper',
+            quente: 'vowels-upper',
+            'muito-quente': 'i-to-y-e-to-a'
+        },
+        // PRESSÃO
+        pressao: {
+            alta: 'add-alt',
+            baixa: 'add-bai'
+        },
+        // ENERGIA MÁGICA
+        energiaMagica: {
+            alta: 'duplicate-word',
+            baixa: 'remove-last',
+            interferencia: 'vowels-to-numbers'
+        }
+    };
+
     // Adiciona cada condição ao painel
     const conditionsToShow = [
         { key: 'periodo', label: 'PERÍODO', value: conditions.periodo },
@@ -108,29 +177,49 @@ function updateArcanumPanel() {
         { key: 'pressao', label: 'PRESSÃO', value: conditions.pressao },
         { key: 'energiaMagica', label: 'ENERGIA', value: conditions.energiaMagica }
     ];
-    
+
     conditionsToShow.forEach(condition => {
         const conditionDiv = document.createElement('div');
         conditionDiv.className = 'arcanum-condition';
-        
+
         const icon = window.ArcanumConditions.getIcon(condition.key, condition.value);
         const text = condition.value.replace('-', ' ').toUpperCase();
-        
+
+        // Descobre o modificador para aquele valor (se existir)
+        let mod = '';
+        if (
+            modifierMap[condition.key] &&
+            typeof modifierMap[condition.key][condition.value] === "string"
+        ) {
+            mod = modifierMap[condition.key][condition.value];
+        }
+
+        // Mostra o modificador ao lado do valor (só para teste/debug)
         conditionDiv.innerHTML = `
             <span class="condition-icon">${icon}</span>
-            <span class="condition-text">${text}</span>
+            <span class="condition-text">${text}${mod ? ` <span style="color:#feca57;font-size:10px; font-weight:normal;">[${mod}]</span>` : ''}</span>
         `;
-        
+
         conditionsList.appendChild(conditionDiv);
     });
-    
+
     // Adiciona evento especial se existir
     if (conditions.eventoEspecial) {
+        // Mapeamento de eventos para modificadores
+        const eventModifierMap = {
+            'eclipse-solar': 'reverse-word',
+            'eclipse-lunar': 'add-ecl',
+            'chuva-meteoros': 'add-met',
+            'aurora-boreal': 'add-aur',
+            'solsticio': 'add-sol',
+            'equinocio': 'add-equ'
+        };
+        const mod = eventModifierMap[conditions.eventoEspecial] || '';
         const specialDiv = document.createElement('div');
         specialDiv.className = 'arcanum-condition condition-special';
         specialDiv.innerHTML = `
             <span class="condition-icon">🌟</span>
-            <span class="condition-text">${conditions.eventoEspecial.replace('-', ' ').toUpperCase()}</span>
+            <span class="condition-text">${conditions.eventoEspecial.replace('-', ' ').toUpperCase()}${mod ? ` <span style="color:#feca57;font-size:10px; font-weight:normal;">[${mod}]</span>` : ''}</span>
         `;
         conditionsList.appendChild(specialDiv);
     }
