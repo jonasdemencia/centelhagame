@@ -2750,12 +2750,20 @@ const modifierMap = {
     energiaMagica: { alta: 'duplicate-word', baixa: 'remove-last', interferencia: 'vowels-to-numbers' }
 };
 
+// Adiciona pulsação no modal também
+const isChanging = window.arcanumTurnCounter % 3 === 2;
 modal.querySelector('.conditions-display').innerHTML = Object.entries(dynamicConditions).map(([key, value]) => {
     if (!value) return '';
     const modifier = modifierMap[key] && modifierMap[key][value] ? modifierMap[key][value] : '';
     const modifierText = modifier ? ` <span style="color:#feca57;font-size:10px;">[${modifier}]</span>` : '';
-    return `<span class="condition">🔮 ${value.replace('-', ' ').toUpperCase()}${modifierText}</span>`;
+    
+    // Adiciona classe de mudança se necessário
+    const changeChance = CONDITION_STABILITY[key]?.changeChance || 0;
+    const pulseClass = (isChanging && changeChance > 0.20) ? ' condition-changing' : '';
+    
+    return `<span class="condition${pulseClass}">🔮 ${value.replace('-', ' ').toUpperCase()}${modifierText}</span>`;
 }).join('');
+
 
     const oldModal = document.getElementById('arcanum-conjuration-modal');
     if (oldModal) oldModal.remove();
