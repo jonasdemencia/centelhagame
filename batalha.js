@@ -2127,10 +2127,11 @@ if (inventarioButton) {
                             console.log("LOG: onAuthStateChanged - Energia inicial do jogador exibida.");
                         }
 
-                        // Event listener para o botão "Lutar" (AGORA MOVIDO PARA DENTRO DO onAuthStateChanged APÓS CARREGAR OS DADOS)
-                        if (lutarButton) {
+                       // Event listener para o botão "Lutar" (AGORA MOVIDO PARA DENTRO DO onAuthStateChanged APÓS CARREGAR OS DADOS)
+if (lutarButton) {
     lutarButton.disabled = false;
     lutarButton.addEventListener('click', () => {
+        resetDynamicConditions(); // ADICIONAR ESTA LINHA
         console.log("LOG: Botão 'Lutar' clicado.");
         lutarButton.style.display = 'none';
         battleStarted = true; // Marca que a batalha começou
