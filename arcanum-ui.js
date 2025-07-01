@@ -30,29 +30,15 @@ function randomChoice(array) {
     return array[Math.floor(Math.random() * array.length)];
 }
 
-function getDynamicConditions() {
-    window.arcanumTurnCounter++;
+// Função que APENAS LÊ as condições sem incrementar contador
+function getCurrentConditions() {
+    // Se não há condições, retorna condições padrão
     if (!window.arcanumBaseConditions) {
         const conditions = {};
         for (const [key, options] of Object.entries(CONDITION_OPTIONS)) {
             conditions[key] = randomChoice(options);
         }
         window.arcanumBaseConditions = conditions;
-        return window.arcanumBaseConditions;
-    }
-    if (window.arcanumTurnCounter % 3 === 0) {
-        const newConditions = {...window.arcanumBaseConditions};
-        for (const [conditionName, config] of Object.entries(CONDITION_STABILITY)) {
-            if (Math.random() < config.changeChance) {
-                const options = CONDITION_OPTIONS[conditionName];
-                const currentValue = newConditions[conditionName];
-                const availableOptions = options.filter(opt => opt !== currentValue);
-                if (availableOptions.length > 0) {
-                    newConditions[conditionName] = randomChoice(availableOptions);
-                }
-            }
-        }
-        window.arcanumBaseConditions = newConditions;
     }
     return window.arcanumBaseConditions;
 }
@@ -152,7 +138,7 @@ function updateArcanumPanel() {
     const panel = document.getElementById('arcanum-conditions-panel');
     if (!panel) return;
 
-    const conditions = getDynamicConditions(); // USA AS CONDIÇÕES DINÂMICAS
+    const conditions = getCurrentConditions(); // LÊ AS CONDIÇÕES SEM INCREMENTAR
     const conditionsList = document.getElementById('arcanum-conditions-list');
 
     conditionsList.innerHTML = '';
