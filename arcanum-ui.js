@@ -92,7 +92,7 @@ function updateArcanumPanel() {
     const panel = document.getElementById('arcanum-conditions-panel');
     if (!panel) return;
 
-    const conditions = window.ArcanumConditions.getConditions();
+    const conditions = getDynamicConditions(); // USA AS CONDIÇÕES DINÂMICAS
     const conditionsList = document.getElementById('arcanum-conditions-list');
 
     conditionsList.innerHTML = '';
@@ -239,8 +239,8 @@ function initArcanumPanel() {
     // Atualiza o painel imediatamente
     updateArcanumPanel();
     
-    // Atualiza o painel a cada minuto
-    setInterval(updateArcanumPanel, 60000);
+    // Atualiza o painel a cada 5 segundos para capturar mudanças de turno
+setInterval(updateArcanumPanel, 5000);
 }
 
 // Exporta as funções para uso global
