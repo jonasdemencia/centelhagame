@@ -2738,10 +2738,25 @@ function setupArcanumConjurationModal() {
     // SUBSTITUA POR:
 const dynamicConditions = getDynamicConditions();
 const {modal, correctWord, conditions} = window.ArcanumSpells.createArcanumConjurationModal(magia);
-// Sobrescreve as condições com as dinâmicas
-modal.querySelector('.conditions-display').innerHTML = Object.entries(dynamicConditions).map(([key, value]) => 
-    value ? `<span class="condition">🔮 ${value.replace('-', ' ').toUpperCase()}</span>` : ''
-).join('');
+// Sobrescreve as condições com as dinâmicas + modificadores
+const modifierMap = {
+    periodo: { manha: 'first-vowel-to-i', tarde: 'a-to-y', noite: 'duplicate-last-consonant', madrugada: 'add-mad' },
+    estacao: { primavera: 'add-pri', verao: 'e-to-a', outono: 'add-out', inverno: 'o-to-u' },
+    vento: { norte: 'add-n', sul: 'add-s', leste: 'add-l', oeste: 'add-o', nordeste: 'add-ne', noroeste: 'add-no', sudeste: 'add-se', sudoeste: 'add-so' },
+    clima: { 'sol-forte': 'duplicate-first', 'sol-fraco': 'remove-first-vowel', nublado: 'add-nub-middle', 'chuva-leve': 'add-plu', 'chuva-forte': 'vowels-to-u', tempestade: 'reverse-word', neblina: 'add-neb', nevoa: 'add-nev', neve: 'add-niv', granizo: 'add-gra', seco: 'remove-duplicate-vowels', umido: 'duplicate-vowels' },
+    lua: { nova: 'add-x', crescente: 'add-c', cheia: 'add-f', minguante: 'add-m' },
+    temperatura: { 'muito-frio': 'all-upper', frio: 'consonants-upper', quente: 'vowels-upper', 'muito-quente': 'i-to-y-e-to-a' },
+    pressao: { alta: 'add-alt', baixa: 'add-bai' },
+    energiaMagica: { alta: 'duplicate-word', baixa: 'remove-last', interferencia: 'vowels-to-numbers' }
+};
+
+modal.querySelector('.conditions-display').innerHTML = Object.entries(dynamicConditions).map(([key, value]) => {
+    if (!value) return '';
+    const modifier = modifierMap[key] && modifierMap[key][value] ? modifierMap[key][value] : '';
+    const modifierText = modifier ? ` <span style="color:#feca57;font-size:10px;">[${modifier}]</span>` : '';
+    return `<span class="condition">🔮 ${value.replace('-', ' ').toUpperCase()}${modifierText}</span>`;
+}).join('');
+
     const oldModal = document.getElementById('arcanum-conjuration-modal');
     if (oldModal) oldModal.remove();
 
