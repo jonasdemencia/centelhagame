@@ -1,4 +1,64 @@
 // Interface do Sistema Arcanum Verbis
+
+// Sistema de Condições Dinâmicas - ADICIONAR NO INÍCIO DO ARQUIVO
+window.arcanumTurnCounter = window.arcanumTurnCounter || 0;
+window.arcanumBaseConditions = window.arcanumBaseConditions || null;
+
+const CONDITION_STABILITY = {
+    periodo: { changeChance: 0.05 },
+    estacao: { changeChance: 0.02 },
+    vento: { changeChance: 0.30 },
+    clima: { changeChance: 0.25 },
+    energiaMagica: { changeChance: 0.35 },
+    temperatura: { changeChance: 0.15 },
+    pressao: { changeChance: 0.20 },
+    lua: { changeChance: 0.10 }
+};
+
+const CONDITION_OPTIONS = {
+    periodo: ['manha', 'tarde', 'noite', 'madrugada'],
+    estacao: ['primavera', 'verao', 'outono', 'inverno'],
+    vento: ['norte', 'sul', 'leste', 'oeste'],
+    clima: ['sol-forte', 'sol-fraco', 'nublado', 'chuva-leve'],
+    temperatura: ['muito-frio', 'frio', 'quente', 'muito-quente'],
+    pressao: ['alta', 'baixa'],
+    lua: ['nova', 'crescente', 'cheia', 'minguante'],
+    energiaMagica: ['alta', 'baixa', 'interferencia']
+};
+
+function randomChoice(array) {
+    return array[Math.floor(Math.random() * array.length)];
+}
+
+function getDynamicConditions() {
+    window.arcanumTurnCounter++;
+    if (!window.arcanumBaseConditions) {
+        const conditions = {};
+        for (const [key, options] of Object.entries(CONDITION_OPTIONS)) {
+            conditions[key] = randomChoice(options);
+        }
+        window.arcanumBaseConditions = conditions;
+        return window.arcanumBaseConditions;
+    }
+    if (window.arcanumTurnCounter % 3 === 0) {
+        const newConditions = {...window.arcanumBaseConditions};
+        for (const [conditionName, config] of Object.entries(CONDITION_STABILITY)) {
+            if (Math.random() < config.changeChance) {
+                const options = CONDITION_OPTIONS[conditionName];
+                const currentValue = newConditions[conditionName];
+                const availableOptions = options.filter(opt => opt !== currentValue);
+                if (availableOptions.length > 0) {
+                    newConditions[conditionName] = randomChoice(availableOptions);
+                }
+            }
+        }
+        window.arcanumBaseConditions = newConditions;
+    }
+    return window.arcanumBaseConditions;
+}
+
+
+
 // Função para criar o painel de condições ambientais
 function createArcanumPanel() {
     const panel = document.createElement('div');
