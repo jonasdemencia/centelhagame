@@ -2721,10 +2721,11 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
             console.log("LOG: onAuthStateChanged - Nenhum usuário logado, redirecionando para login.");
         }
     });
-        // Inicializa o painel Arcanum Verbis
-    if (window.ArcanumUI) {
-        window.ArcanumUI.initPanel();
-    }
+       // Painel removido - condições mostradas apenas no modal de conjuração
+// if (window.ArcanumUI) {
+//     window.ArcanumUI.initPanel();
+// }
+
     
     console.log("LOG: Event listener para DOMContentLoaded finalizado.");
 });
