@@ -6,6 +6,77 @@ import { loadEquippedDice, initializeModule } from './dice-ui.js';
 import { getMonsterById } from './monstros.js';
 import './arcanum-spells.js';
 
+// Sistema de Condições Dinâmicas - ADICIONAR APÓS AS IMPORTAÇÕES
+window.arcanumTurnCounter = window.arcanumTurnCounter || 0;
+window.arcanumBaseConditions = window.arcanumBaseConditions || null;
+
+const CONDITION_STABILITY = {
+    periodo: { changeChance: 0.05 },
+    estacao: { changeChance: 0.02 },
+    vento: { changeChance: 0.30 },
+    clima: { changeChance: 0.25 },
+    energiaMagica: { changeChance: 0.35 },
+    temperatura: { changeChance: 0.15 },
+    pressao: { changeChance: 0.20 },
+    lua: { changeChance: 0.10 }
+};
+
+const CONDITION_OPTIONS = {
+    periodo: ['manha', 'tarde', 'noite', 'madrugada'],
+    estacao: ['primavera', 'verao', 'outono', 'inverno'],
+    vento: ['norte', 'sul', 'leste', 'oeste'],
+    clima: ['sol-forte', 'sol-fraco', 'nublado', 'chuva-leve'],
+    temperatura: ['muito-frio', 'frio', 'quente', 'muito-quente'],
+    pressao: ['alta', 'baixa'],
+    lua: ['nova', 'crescente', 'cheia', 'minguante'],
+    energiaMagica: ['alta', 'baixa', 'interferencia']
+};
+
+function randomChoice(array) {
+    return array[Math.floor(Math.random() * array.length)];
+}
+
+function generateInitialConditions() {
+    const conditions = {};
+    for (const [key, options] of Object.entries(CONDITION_OPTIONS)) {
+        conditions[key] = randomChoice(options);
+    }
+    return conditions;
+}
+
+function evolveConditions(currentConditions) {
+    const newConditions = {...currentConditions};
+    for (const [conditionName, config] of Object.entries(CONDITION_STABILITY)) {
+        if (Math.random() < config.changeChance) {
+            const options = CONDITION_OPTIONS[conditionName];
+            const currentValue = newConditions[conditionName];
+            const availableOptions = options.filter(opt => opt !== currentValue);
+            if (availableOptions.length > 0) {
+                newConditions[conditionName] = randomChoice(availableOptions);
+            }
+        }
+    }
+    return newConditions;
+}
+
+function getDynamicConditions() {
+    window.arcanumTurnCounter++;
+    if (!window.arcanumBaseConditions) {
+        window.arcanumBaseConditions = generateInitialConditions();
+        return window.arcanumBaseConditions;
+    }
+    if (window.arcanumTurnCounter % 3 === 0) {
+        window.arcanumBaseConditions = evolveConditions(window.arcanumBaseConditions);
+    }
+    return window.arcanumBaseConditions;
+}
+
+function resetDynamicConditions() {
+    window.arcanumTurnCounter = 0;
+    window.arcanumBaseConditions = null;
+}
+
+
 // Variáveis globais para estado da batalha
 window.isPlayerTurn = false;
 window.battleStarted = false;
@@ -2661,8 +2732,13 @@ function setupArcanumConjurationModal() {
     const magia = magiasDisponiveis.find(m => m.id === 'missil-magico');
     if (!magia) return;
 
-    const {modal, correctWord, conditions} = window.ArcanumSpells.createArcanumConjurationModal(magia);
-
+    // SUBSTITUA POR:
+const dynamicConditions = getDynamicConditions();
+const {modal, correctWord, conditions} = window.ArcanumSpells.createArcanumConjurationModal(magia);
+// Sobrescreve as condições com as dinâmicas
+modal.querySelector('.conditions-display').innerHTML = Object.entries(dynamicConditions).map(([key, value]) => 
+    value ? `<span class="condition">🔮 ${value.replace('-', ' ').toUpperCase()}</span>` : ''
+).join('');
     const oldModal = document.getElementById('arcanum-conjuration-modal');
     if (oldModal) oldModal.remove();
 
