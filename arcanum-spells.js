@@ -60,6 +60,38 @@
  * Log detalhado da conjuração de palavras mágicas.
  * Pode ser adaptado para enviar para backend, armazenar em arquivo, etc.
  */
+
+// Sistema de Condições Dinâmicas
+window.arcanumTurnCounter = window.arcanumTurnCounter || 0;
+window.arcanumBaseConditions = window.arcanumBaseConditions || null;
+
+const CONDITION_STABILITY = {
+    // ESTÁVEIS (mudam raramente)
+    periodo: { changeChance: 0.05 },
+    estacao: { changeChance: 0.02 },
+    
+    // DINÂMICAS (mudam frequentemente)
+    vento: { changeChance: 0.30 },
+    clima: { changeChance: 0.25 },
+    energiaMagica: { changeChance: 0.35 },
+    temperatura: { changeChance: 0.15 },
+    pressao: { changeChance: 0.20 },
+    lua: { changeChance: 0.10 }
+};
+
+const CONDITION_OPTIONS = {
+    periodo: ['manha', 'tarde', 'noite', 'madrugada'],
+    estacao: ['primavera', 'verao', 'outono', 'inverno'],
+    vento: ['norte', 'sul', 'leste', 'oeste'],
+    clima: ['sol-forte', 'sol-fraco', 'nublado', 'chuva-leve'],
+    temperatura: ['muito-frio', 'frio', 'quente', 'muito-quente'],
+    pressao: ['alta', 'baixa'],
+    lua: ['nova', 'crescente', 'cheia', 'minguante'],
+    energiaMagica: ['alta', 'baixa', 'interferencia']
+};
+
+
+
 function logArcanumConjuration({
     spellId,
     spellName,
@@ -272,9 +304,60 @@ function applyModifier(word, type) {
     }
 }
 
+function randomChoice(array) {
+    return array[Math.floor(Math.random() * array.length)];
+}
+
+function generateInitialConditions() {
+    const conditions = {};
+    for (const [key, options] of Object.entries(CONDITION_OPTIONS)) {
+        conditions[key] = randomChoice(options);
+    }
+    return conditions;
+}
+
+function evolveConditions(currentConditions) {
+    const newConditions = {...currentConditions};
+    
+    for (const [conditionName, config] of Object.entries(CONDITION_STABILITY)) {
+        if (Math.random() < config.changeChance) {
+            const options = CONDITION_OPTIONS[conditionName];
+            const currentValue = newConditions[conditionName];
+            const availableOptions = options.filter(opt => opt !== currentValue);
+            if (availableOptions.length > 0) {
+                newConditions[conditionName] = randomChoice(availableOptions);
+            }
+        }
+    }
+    return newConditions;
+}
+
+function getDynamicConditions() {
+    window.arcanumTurnCounter++;
+    
+    if (!window.arcanumBaseConditions) {
+        window.arcanumBaseConditions = generateInitialConditions();
+        return window.arcanumBaseConditions;
+    }
+    
+    if (window.arcanumTurnCounter % 3 === 0) {
+        window.arcanumBaseConditions = evolveConditions(window.arcanumBaseConditions);
+    }
+    
+    return window.arcanumBaseConditions;
+}
+
+function resetDynamicConditions() {
+    window.arcanumTurnCounter = 0;
+    window.arcanumBaseConditions = null;
+}
+
+
+
+
 // Criar modal de conjuração Arcanum
 function createArcanumConjurationModal(spell) {
-    const conditions = window.ArcanumConditions.getConditions();
+    const conditions = getDynamicConditions();
     const baseWord = getSpellBaseWord(spell.id);
     const correctWord = applyArcanumModifiers(baseWord, conditions);
     
@@ -760,12 +843,22 @@ function levenshteinDistance(str1, str2) {
     return matrix[str2.length][str1.length];
 }
 
+// Reset no início de cada batalha
+function resetArcanumBattle() {
+    resetDynamicConditions();
+    window.arcanumUsageCount = 0; // Se usando custo progressivo
+}
+
+
 // Exportar funções globalmente
 window.ArcanumSpells = {
     getSpellBaseWord,
     applyArcanumModifiers,
     createArcanumConjurationModal,
-    validateConjuration
+    validateConjuration,
+    resetArcanumBattle,
+    getDynamicConditions
 };
+
 
 
