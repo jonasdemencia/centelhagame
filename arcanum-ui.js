@@ -43,6 +43,21 @@ function getCurrentConditions() {
     return window.arcanumBaseConditions;
 }
 
+// Verifica se estamos próximos de uma mudança (turno 2 de 3)
+function isNearChange() {
+    return window.arcanumTurnCounter % 3 === 2;
+}
+
+// Adiciona classe de pulsação para condições que podem mudar
+function addPulseToChangingConditions(conditionDiv, conditionKey) {
+    if (isNearChange()) {
+        const changeChance = CONDITION_STABILITY[conditionKey]?.changeChance || 0;
+        // Se a chance de mudança for > 20%, adiciona pulsação
+        if (changeChance > 0.20) {
+            conditionDiv.classList.add('condition-changing');
+        }
+    }
+}
 
 
 // Função para criar o painel de condições ambientais
@@ -225,29 +240,33 @@ function updateArcanumPanel() {
     ];
 
     conditionsToShow.forEach(condition => {
-        const conditionDiv = document.createElement('div');
-        conditionDiv.className = 'arcanum-condition';
+    const conditionDiv = document.createElement('div');
+    conditionDiv.className = 'arcanum-condition';
 
-        const icon = window.ArcanumConditions.getIcon(condition.key, condition.value);
-        const text = condition.value.replace('-', ' ').toUpperCase();
+    const icon = window.ArcanumConditions.getIcon(condition.key, condition.value);
+    const text = condition.value.replace('-', ' ').toUpperCase();
 
-        // Descobre o modificador para aquele valor (se existir)
-        let mod = '';
-        if (
-            modifierMap[condition.key] &&
-            typeof modifierMap[condition.key][condition.value] === "string"
-        ) {
-            mod = modifierMap[condition.key][condition.value];
-        }
+    // Descobre o modificador para aquele valor (se existir)
+    let mod = '';
+    if (
+        modifierMap[condition.key] &&
+        typeof modifierMap[condition.key][condition.value] === "string"
+    ) {
+        mod = modifierMap[condition.key][condition.value];
+    }
 
-        // Mostra o modificador ao lado do valor (só para teste/debug)
-        conditionDiv.innerHTML = `
-            <span class="condition-icon">${icon}</span>
-            <span class="condition-text">${text}${mod ? ` <span style="color:#feca57;font-size:10px; font-weight:normal;">[${mod}]</span>` : ''}</span>
-        `;
+    // Mostra o modificador ao lado do valor
+    conditionDiv.innerHTML = `
+        <span class="condition-icon">${icon}</span>
+        <span class="condition-text">${text}${mod ? ` <span style="color:#feca57;font-size:10px; font-weight:normal;">[${mod}]</span>` : ''}</span>
+    `;
 
-        conditionsList.appendChild(conditionDiv);
-    });
+    // ADICIONE ESTA LINHA:
+    addPulseToChangingConditions(conditionDiv, condition.key);
+
+    conditionsList.appendChild(conditionDiv);
+});
+
 
     // Adiciona evento especial se existir
     if (conditions.eventoEspecial) {
