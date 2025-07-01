@@ -59,7 +59,6 @@ function addPulseToChangingConditions(conditionDiv, conditionKey) {
     }
 }
 
-
 // Função para criar o painel de condições ambientais
 function createArcanumPanel() {
     const panel = document.createElement('div');
@@ -141,6 +140,22 @@ function createArcanumPanel() {
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
+        }
+        
+        .condition-changing {
+            animation: changePulse 1s ease-in-out 2;
+            border: 1px solid #ff6b6b !important;
+        }
+        
+        @keyframes changePulse {
+            0%, 100% { 
+                background: rgba(255, 255, 255, 0.1);
+                box-shadow: 0 0 5px rgba(255, 107, 107, 0.3);
+            }
+            50% { 
+                background: rgba(255, 107, 107, 0.3);
+                box-shadow: 0 0 15px rgba(255, 107, 107, 0.6);
+            }
         }
     `;
     document.head.appendChild(style);
@@ -240,33 +255,32 @@ function updateArcanumPanel() {
     ];
 
     conditionsToShow.forEach(condition => {
-    const conditionDiv = document.createElement('div');
-    conditionDiv.className = 'arcanum-condition';
+        const conditionDiv = document.createElement('div');
+        conditionDiv.className = 'arcanum-condition';
 
-    const icon = window.ArcanumConditions.getIcon(condition.key, condition.value);
-    const text = condition.value.replace('-', ' ').toUpperCase();
+        const icon = window.ArcanumConditions.getIcon(condition.key, condition.value);
+        const text = condition.value.replace('-', ' ').toUpperCase();
 
-    // Descobre o modificador para aquele valor (se existir)
-    let mod = '';
-    if (
-        modifierMap[condition.key] &&
-        typeof modifierMap[condition.key][condition.value] === "string"
-    ) {
-        mod = modifierMap[condition.key][condition.value];
-    }
+        // Descobre o modificador para aquele valor (se existir)
+        let mod = '';
+        if (
+            modifierMap[condition.key] &&
+            typeof modifierMap[condition.key][condition.value] === "string"
+        ) {
+            mod = modifierMap[condition.key][condition.value];
+        }
 
-    // Mostra o modificador ao lado do valor
-    conditionDiv.innerHTML = `
-        <span class="condition-icon">${icon}</span>
-        <span class="condition-text">${text}${mod ? ` <span style="color:#feca57;font-size:10px; font-weight:normal;">[${mod}]</span>` : ''}</span>
-    `;
+        // Mostra o modificador ao lado do valor
+        conditionDiv.innerHTML = `
+            <span class="condition-icon">${icon}</span>
+            <span class="condition-text">${text}${mod ? ` <span style="color:#feca57;font-size:10px; font-weight:normal;">[${mod}]</span>` : ''}</span>
+        `;
 
-    // ADICIONE ESTA LINHA:
-    addPulseToChangingConditions(conditionDiv, condition.key);
+        // Adiciona pulsação se a condição está para mudar
+        addPulseToChangingConditions(conditionDiv, condition.key);
 
-    conditionsList.appendChild(conditionDiv);
-});
-
+        conditionsList.appendChild(conditionDiv);
+    });
 
     // Adiciona evento especial se existir
     if (conditions.eventoEspecial) {
@@ -305,7 +319,7 @@ function initArcanumPanel() {
     updateArcanumPanel();
     
     // Atualiza o painel a cada 5 segundos para capturar mudanças de turno
-setInterval(updateArcanumPanel, 5000);
+    setInterval(updateArcanumPanel, 5000);
 }
 
 // Exporta as funções para uso global
