@@ -1,13 +1,32 @@
-/* Aplicação da fonte Eagle Lake */
+/* Fonte pixelada Eagle Lake */
+@import url('https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap');
+
 body {
     font-family: 'Eagle Lake', cursive;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    text-rendering: optimizeSpeed;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
     text-align: center;
     margin: 0;
     padding: 5px;
-    background-color: #333; /* Cinza escuro para o fundo do body */
-    color: #f0f0f0; /* Branco acinzentado para o texto geral */
-    font-size: 14px; /* Diminuindo o tamanho da fonte padrão */
+    background-color: #333;
+    color: #f0f0f0;
+    font-size: 14px;
 }
+
+/* Força pixelização em todos os textos */
+* {
+    font-family: 'Eagle Lake', cursive !important;
+    -webkit-font-smoothing: none !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    font-smooth: never !important;
+    text-rendering: optimizeSpeed !important;
+}
+
 
 /* Estilo para ocultar a página com a classe hidden */
 .hidden {
