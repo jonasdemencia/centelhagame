@@ -9,8 +9,8 @@ export const monsterData = {
     descricao: "Um lobo selvagem com presas afiadas.",
     habilidade: 5,
     couraça: 10,
-    pontosDeEnergia: 25,
-    pontosDeEnergiaMax: 25,
+    pontosDeEnergia: 60,
+    pontosDeEnergiaMax: 60,
     experiencia: 50,
     dano: "1D10", // Mantido para compatibilidade
     ataques: [
