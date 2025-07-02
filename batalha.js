@@ -2806,9 +2806,17 @@ modal.querySelector('.conditions-display').innerHTML = Object.entries(dynamicCon
 
         let msg = '';
         if (result.success) {
-            msg = `<span style="color:lime;">Conjuração bem-sucedida! <b>${result.level} dardo(s)</b> lançado(s)! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
-            
-            addLogMessage(msg, 500);
+    msg = `<span style="color:lime;">Conjuração bem-sucedida! <b>${result.level} dardo(s)</b> lançado(s)! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
+    
+    // Toca risada se conseguiu 5 dardos
+    if (result.level >= 5) {
+        const audio = new Audio('risada1.wav'); // SUBSTITUA PELO CAMINHO DO SEU ÁUDIO
+        audio.volume = 0.7; // Volume 70%
+        audio.play().catch(e => console.log('Erro ao tocar áudio:', e));
+    }
+    
+    addLogMessage(msg, 500);
+
 
             let totalDamage = 0;
             for (let i = 0; i < result.level; i++) {
