@@ -1,8 +1,10 @@
-/* Fonte pixelada Eagle Lake */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+/* Fonte pixelada customizada */
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
 body {
-    font-family: 'Orbitron', monospace;
+    font-family: 'VT323', monospace;
+    font-size: 11px; /* Menor */
+    letter-spacing: 1.5px; /* Espaçamento maior entre letras */
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
@@ -15,17 +17,18 @@ body {
     padding: 5px;
     background-color: #333;
     color: #f0f0f0;
-    font-size: 14px;
 }
 
 /* Força pixelização em todos os textos */
 * {
-    font-family: 'Orbitron', monospace !important;
+    font-family: 'VT323', monospace !important;
+    letter-spacing: 1.5px !important;
     -webkit-font-smoothing: none !important;
     -moz-osx-font-smoothing: grayscale !important;
     font-smooth: never !important;
     text-rendering: optimizeSpeed !important;
 }
+
 
 
 /* Estilo para ocultar a página com a classe hidden */
