@@ -994,7 +994,7 @@ if (magiaId === 'missil-magico') {
 if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
         const resistanceRoll = Math.floor(Math.random() * 20) + 1;
         const resistanceTotal = resistanceRoll + currentMonster.habilidade;
-        const difficulty = 15;
+        const difficulty = 20;
 
         await addLogMessage(`${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
 
