@@ -276,19 +276,31 @@ button, .button {
 
     <main>
 
-        <!-- ✅ BARRAS DE HP -->
+        <!-- ✅ BARRAS -->
 <section id="barras-hp" style="margin-bottom: 20px;">
     <div>
         <strong>Jogador</strong>
+        
+        <!-- ENERGIA -->
+        <div style="font-size: 12px; margin-bottom: 2px; color: #f0f0f0;">ENERGIA</div>
         <div class="barra-hp-container">
             <div id="barra-hp-jogador" class="barra-hp"></div>
             <span id="hp-jogador-valor" class="hp-valor">0/0</span>
         </div>
-        <!-- BARRA DE MAGIA -->
-        <div class="barra-hp-container" style="margin-top: 5px;">
+        
+        <!-- MAGIA -->
+        <div style="font-size: 12px; margin-bottom: 2px; margin-top: 8px; color: #f0f0f0;">MAGIA</div>
+        <div class="barra-hp-container" style="margin-top: 2px;">
             <div id="barra-magia-jogador" class="barra-hp" style="background-color: #4169E1;"></div>
             <span id="magia-jogador-valor" class="hp-valor">0/0</span>
         </div>
+        
+        <!-- COURAÇA -->
+        <div style="font-size: 11px; margin-top: 5px; color: #f0f0f0; display: flex; align-items: center; gap: 3px;">
+            <span style="font-size: 14px;">🛡️</span>
+            <span>CO: <span id="player-couraca-valor">0</span></span>
+        </div>
+        
         <!-- STATUS/BUFFS -->
         <div id="player-buffs" style="margin-top: 8px; min-height: 20px;">
             <div id="buffs-container" style="display: flex; gap: 5px; flex-wrap: wrap;"></div>
@@ -304,7 +316,7 @@ button, .button {
         <div id="monster-debuffs-container" class="debuffs-container"></div>
     </div>
 </section>
-<!-- FIM DAS BARRAS DE HP -->
+<!-- FIM DAS BARRAS -->
 
 
         <section id="monster-area">
