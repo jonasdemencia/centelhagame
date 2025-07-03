@@ -181,15 +181,7 @@ if (stunDebuff) {
 // Processa debuffs do monstro
 await processMonsterDebuffs();
 
-
-    // Verifica se está atordoado
-const stunDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "stun");
-if (stunDebuff) {
-    await addLogMessage(`${currentMonster.nome} está pasmado e perde o turno!`, 1000);
-    endMonsterTurn();
-    return;
-}
-
+    
     // Escolhe o ataque (telegrafado ou novo)
     let selectedAttack;
     if (nextTelegraphedAttack) {
