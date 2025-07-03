@@ -886,3 +886,9 @@ dice-icon svg {
     min-height: 20px;
 }
 
+#barras-hp > div > div {
+    color: #ff00ff !important;
+    background: #222 !important;
+    z-index: 100;
+    position: relative;
+}
