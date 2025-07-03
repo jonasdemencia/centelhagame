@@ -190,6 +190,78 @@
             gap: 5px;
             flex-wrap: wrap;
         }
+        /* Estilo pixelado quadrado - sem bordas arredondadas */
+body {
+    background-color: #000 !important; /* Fundo preto */
+}
+
+/* Remove todos os border-radius */
+* {
+    border-radius: 0 !important;
+}
+
+/* Battle log e turn blocks pretos */
+#battle-log {
+    background-color: #000 !important;
+    border: 1px solid #555;
+}
+
+#battle-log-content {
+    background-color: #000 !important;
+    border: 1px solid #555;
+}
+
+.turn-block {
+    background-color: #000 !important;
+    border: 1px solid #555;
+}
+
+/* Botões quadrados */
+button, .button {
+    border-radius: 0 !important;
+    border: 1px solid #555;
+}
+
+/* Modais quadrados */
+.modal-content {
+    border-radius: 0 !important;
+    background-color: #1a1a1a;
+    border: 1px solid #888;
+}
+
+.item-consumivel {
+    border-radius: 0 !important;
+    border: 1px solid #444;
+}
+
+/* Barras de HP quadradas */
+.barra-hp-container {
+    border-radius: 0 !important;
+    border: 1px solid #333;
+}
+
+/* Buffs e debuffs quadrados */
+.buff-item, .debuff-item {
+    border-radius: 0 !important;
+    border: 1px solid #555;
+}
+
+.buff-turns, .debuff-turns {
+    border-radius: 0 !important;
+    border: 1px solid #333;
+}
+
+/* Seção de dados quadrada */
+#table-top {
+    border-radius: 0 !important;
+    border: 1px solid #555;
+}
+
+#toggle-dice-ui {
+    border-radius: 0 !important;
+    border: 1px solid #555;
+}
+
     </style>
 </head>
 <body>
