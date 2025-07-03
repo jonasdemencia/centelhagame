@@ -172,6 +172,13 @@ async function monsterAttack() {
   // Processa debuffs do monstro
 await processMonsterDebuffs();
 
+    // Verifica se está atordoado
+const stunDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "stun");
+if (stunDebuff) {
+    await addLogMessage(`${currentMonster.nome} está pasmado e perde o turno!`, 1000);
+    endMonsterTurn();
+    return;
+}
 
     // Escolhe o ataque (telegrafado ou novo)
     let selectedAttack;
@@ -376,6 +383,16 @@ const magiasDisponiveis = [
     efeito: "touch_debuff",
     valor: "1d4+1"
 },
+
+    {
+    id: "pasmar",
+    nome: "Pasmar",
+    descricao: "Faz o monstro perder o próximo turno (apenas monstros com energia < 50)",
+    custo: 3,
+    efeito: "stun",
+    valor: 1
+},
+
 
     {
         id: "escudo-arcano",
@@ -1032,6 +1049,35 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
         await updatePlayerMagicInFirestore(userId, playerMagic);
         await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         endPlayerTurn();
+
+        } else if (efeito === "stun") {
+    // Verifica se o monstro tem energia menor que 50
+    if (currentMonster.pontosDeEnergiaMax >= 50) {
+        await addLogMessage(`${magia.nome} não funciona em monstros com muita energia!`, 1000);
+        // Salva estado e passa turno
+        await updatePlayerMagicInFirestore(userId, playerMagic);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        endPlayerTurn();
+        return;
+    }
+    
+    // Adiciona debuff de atordoamento
+    activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "stun");
+    activeMonsterDebuffs.push({
+        tipo: "stun",
+        valor: 1,
+        turnos: 1,
+        nome: magia.nome
+    });
+    
+    updateMonsterDebuffsDisplay();
+    await addLogMessage(`${currentMonster.nome} está pasmado! Perderá o próximo turno.`, 800);
+    
+    // Salva estado e passa turno
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+    endPlayerTurn();
+
 
     } else if (efeito === "touch_attack") {
         // Salva contexto da magia de toque
