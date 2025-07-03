@@ -886,3 +886,11 @@ dice-icon svg {
     min-height: 20px;
 }
 
+.barra-label {
+    font-size: 14px;
+    color: #fff;
+    background: rgba(0,0,0,0.6);
+    padding: 2px 0;
+    letter-spacing: 1px;
+    text-align: left;
+}
