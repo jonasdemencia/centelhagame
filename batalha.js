@@ -933,8 +933,9 @@ if (magiaId === 'missil-magico') {
         const buffValue = parseInt(valor);
         const buffDuration = 3;
         
-        // Remove buff anterior do mesmo tipo se existir
-        activeBuffs = activeBuffs.filter(buff => buff.tipo !== "couraca");
+        // Remove buff anterior da mesma magia se existir
+        activeBuffs = activeBuffs.filter(buff => buff.nome !== magia.nome);
+
         
         // Adiciona novo buff
         activeBuffs.push({
