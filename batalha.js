@@ -1242,6 +1242,15 @@ function getPlayerDefense() {
     return baseDefense + buffBonus;
 }
 
+// Adicione esta função após getPlayerDefense()
+function updatePlayerCouracaDisplay() {
+    const couracaSpan = document.getElementById('player-couraca-valor');
+    if (couracaSpan) {
+        const totalCouraca = getPlayerDefense();
+        couracaSpan.textContent = totalCouraca;
+    }
+}
+
 
 // Função para atualizar display de buffs
 function updateBuffsDisplay() {
