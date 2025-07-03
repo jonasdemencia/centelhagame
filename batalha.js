@@ -167,10 +167,20 @@ async function monsterAttack() {
     }
 
     startNewTurnBlock(currentMonster.nome);
-    await addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
+await addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
 
-  // Processa debuffs do monstro
+// Verifica se está atordoado ANTES de processar debuffs
+const stunDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "stun");
+if (stunDebuff) {
+    await addLogMessage(`${currentMonster.nome} está pasmado e perde o turno!`, 1000);
+    await processMonsterDebuffs(); // Remove o stun
+    endMonsterTurn();
+    return;
+}
+
+// Processa debuffs do monstro
 await processMonsterDebuffs();
+
 
     // Verifica se está atordoado
 const stunDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "stun");
