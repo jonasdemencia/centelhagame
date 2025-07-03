@@ -1,8 +1,8 @@
 /* Fonte pixelada Eagle Lake */
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
 
 body {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Orbitron', monospace;
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
@@ -20,7 +20,7 @@ body {
 
 /* Força pixelização em todos os textos */
 * {
-    font-family: 'Press Start 2P', monospace !important;
+    font-family: 'Orbitron', monospace !important;
     -webkit-font-smoothing: none !important;
     -moz-osx-font-smoothing: grayscale !important;
     font-smooth: never !important;
