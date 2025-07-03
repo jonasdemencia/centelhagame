@@ -947,10 +947,12 @@ if (magiaId === 'missil-magico') {
     }
 
     if (efeito === "heal") {
-        const newEnergy = Math.min(playerHealth + parseInt(valor), playerMaxHealth);
-        playerHealth = newEnergy;
-        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-        await addLogMessage(`Você recuperou ${valor} pontos de energia.`, 800);
+    const healAmount = rollDice(valor); // ROLA OS DADOS
+    const newEnergy = Math.min(playerHealth + healAmount, playerMaxHealth);
+    playerHealth = newEnergy;
+    atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+    await addLogMessage(`Você recuperou ${healAmount} pontos de energia (${valor}).`, 800);
+
         
         // Salva estado e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
