@@ -1178,33 +1178,49 @@ function atualizarBarraMagia(valorAtual, valorMaximo) {
 
 
 
-// Função para rolar dados (ex: "1D6", "2D4")
 function rollDice(diceString) {
-    console.log("LOG: rollDice chamado com:", diceString);
-    const parts = diceString.toUpperCase().split('D');
-    if (parts.length === 1 && !isNaN(parseInt(parts[0]))) {
-        // Se for apenas um número, retorna esse número
-        const result = parseInt(parts[0]);
-        console.log("LOG: rollDice (número único) retornando:", result);
-        return result;
-    } else if (parts.length === 2) {
-        const numDice = parseInt(parts[0]);
-        const numSides = parseInt(parts[1]);
-        if (isNaN(numDice) || isNaN(numSides) || numDice <= 0 || numSides <= 0) {
-            console.error("LOG: rollDice - Valores de dado inválidos:", diceString);
-            return 0;
-        }
-        let totalRoll = 0;
-        for (let i = 0; i < numDice; i++) {
-            totalRoll += Math.floor(Math.random() * numSides) + 1;
-        }
-        console.log("LOG: rollDice (rolagem) retornando:", totalRoll);
-        return totalRoll;
-    } else {
-        console.error("LOG: rollDice - Formato de dado inválido:", diceString);
-        return 0;
-    }
+    console.log("LOG: rollDice chamado com:", diceString);
+    
+    // Separa modificadores (+1, -2, etc.)
+    let modifier = 0;
+    let cleanDiceString = diceString;
+    
+    if (diceString.includes('+')) {
+        const parts = diceString.split('+');
+        cleanDiceString = parts[0];
+        modifier = parseInt(parts[1]) || 0;
+    } else if (diceString.includes('-')) {
+        const parts = diceString.split('-');
+        cleanDiceString = parts[0];
+        modifier = -(parseInt(parts[1]) || 0);
+    }
+    
+    const parts = cleanDiceString.toUpperCase().split('D');
+    if (parts.length === 1 && !isNaN(parseInt(parts[0]))) {
+        // Se for apenas um número, retorna esse número + modificador
+        const result = parseInt(parts[0]) + modifier;
+        console.log("LOG: rollDice (número único) retornando:", result);
+        return result;
+    } else if (parts.length === 2) {
+        const numDice = parseInt(parts[0]);
+        const numSides = parseInt(parts[1]);
+        if (isNaN(numDice) || isNaN(numSides) || numDice <= 0 || numSides <= 0) {
+            console.error("LOG: rollDice - Valores de dado inválidos:", diceString);
+            return 0;
+        }
+        let totalRoll = 0;
+        for (let i = 0; i < numDice; i++) {
+            totalRoll += Math.floor(Math.random() * numSides) + 1;
+        }
+        totalRoll += modifier; // Adiciona o modificador
+        console.log("LOG: rollDice (rolagem) retornando:", totalRoll);
+        return totalRoll;
+    } else {
+        console.error("LOG: rollDice - Formato de dado inválido:", diceString);
+        return 0;
+    }
 }
+
 
 // Função para calcular couraça total (base + buffs)
 function getPlayerDefense() {
