@@ -1436,6 +1436,11 @@ function loadBattleState(userId, monsterName) {
               // Restaura buffs ativos
 activeBuffs = data.activeBuffs || [];
               activeMonsterDebuffs = data.activeMonsterDebuffs || [];
+                // Atualiza displays dos buffs
+updateBuffsDisplay();
+updateMonsterDebuffsDisplay();
+updatePlayerCouracaDisplay();
+
 
   
                 return data;
