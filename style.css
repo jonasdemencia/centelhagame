@@ -1,8 +1,8 @@
 /* Fonte pixelada Eagle Lake */
-@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
 
 body {
-    font-family: 'VT323', monospace;
+    font-family: 'Orbitron', monospace;
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
@@ -20,7 +20,7 @@ body {
 
 /* Força pixelização em todos os textos */
 * {
-    font-family: 'VT323', monospace !important;
+    font-family: 'Orbitron', monospace !important;
     -webkit-font-smoothing: none !important;
     -moz-osx-font-smoothing: grayscale !important;
     font-smooth: never !important;
