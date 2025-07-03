@@ -1268,6 +1268,7 @@ function updateBuffsDisplay() {
         `;
         container.appendChild(buffElement);
     });
+    updatePlayerCouracaDisplay();
 }
 
 // Função para atualizar display de debuffs do monstro
@@ -2153,6 +2154,7 @@ playerMagic = playerData.magic?.total ? parseInt(playerData.magic.total) : 0;
 playerMaxMagic = playerMagic; // Magia máxima é igual ao total atual
 atualizarBarraMagia(playerMagic, playerMaxMagic);
 console.log("LOG: Magia do jogador carregada:", playerMagic, "/", playerMaxMagic);
+updatePlayerCouracaDisplay();
 
                       
                         
