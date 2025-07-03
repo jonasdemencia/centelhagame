@@ -329,8 +329,18 @@ const magiasDisponiveis = [
         descricao: "Restaura pequena quantidade de energia",
         custo: 2,
         efeito: "heal",
-        valor: 30
+        valor: "1d8"
     },
+
+    {
+        id: "cura-maior",
+        nome: "Cura Maior",
+        descricao: "Restaura uma grande quantidade de energia",
+        custo: 2,
+        efeito: "heal",
+        valor: "2d8+1"
+    },
+    
     {
         id: "missil-magico",
         nome: "Dardos Místicos", 
