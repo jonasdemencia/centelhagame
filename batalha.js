@@ -383,8 +383,17 @@ const magiasDisponiveis = [
         descricao: "Aumenta temporariamente a couraça",
         custo: 3,
         efeito: "shield",
-        valor: 2
+        valor: 4
+    },
+{
+        id: "armadura-arcana",
+        nome: "Armadura Arcana",
+        descricao: "Aumenta temporariamente a couraça",
+        custo: 3,
+        efeito: "shield",
+        valor: 4
     }
+    
 ];
 
 
