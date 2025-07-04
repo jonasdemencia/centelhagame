@@ -87,7 +87,7 @@ function createArcanumPanel() {
             box-shadow: 0 4px 20px rgba(74, 144, 226, 0.3);
             font-family: 'Arial', sans-serif;
             color: #ffffff;
-            z-index: 1000;
+            z-index: 500;
             max-height: 400px;
             overflow-y: auto;
         }
