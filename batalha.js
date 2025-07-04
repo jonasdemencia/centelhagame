@@ -393,7 +393,8 @@ const magiasDisponiveis = [
     descricao: "Faz o monstro dormir e garante crítico no próximo ataque (apenas monstros com energia < 50)",
     custo: 5,
     efeito: "sleep",
-    valor: 1
+    valor: 1,
+    componentes: ["grilo"] // ADICIONE ESTA LINHA
 },
 
 
@@ -435,6 +436,18 @@ const magiasDisponiveis = [
     
 ];
 
+// Função para verificar se o jogador possui todos os componentes necessários
+function hasRequiredComponents(componentes) {
+    if (!componentes || componentes.length === 0) return true;
+    
+    const userId = auth.currentUser?.uid;
+    if (!userId) return false;
+    
+    // Busca no inventário do jogador
+    const inventoryItems = Array.from(document.querySelectorAll('.item')).map(item => item.dataset.item);
+    
+    return componentes.every(componente => inventoryItems.includes(componente));
+}
 
 
 // Configuração do Firebase (substitua com suas próprias configurações)
@@ -875,7 +888,6 @@ endPlayerTurn();
 }
 
 
-// Função para carregar magias disponíveis
 function carregarMagiasDisponiveis() {
     const magiasContainer = document.getElementById("magias-container");
     magiasContainer.innerHTML = "";
@@ -888,25 +900,39 @@ function carregarMagiasDisponiveis() {
         magiaElement.dataset.valor = magia.valor;
         magiaElement.dataset.custo = magia.custo;
         
-        // Verifica se tem magia suficiente
+        // Verifica se tem magia suficiente E componentes necessários
         const temMagiaSuficiente = playerMagic >= magia.custo;
-        if (!temMagiaSuficiente) {
+        const temComponentes = hasRequiredComponents(magia.componentes);
+        const podeUsar = temMagiaSuficiente && temComponentes;
+        
+        if (!podeUsar) {
             magiaElement.classList.add("disabled");
             magiaElement.style.opacity = "0.5";
+        }
+        
+        // Adiciona informação sobre componentes na descrição
+        let componentesTexto = "";
+        if (magia.componentes && magia.componentes.length > 0) {
+            const componentesStatus = magia.componentes.map(comp => {
+                const possui = hasRequiredComponents([comp]);
+                return `${comp} ${possui ? '✓' : '✗'}`;
+            }).join(', ');
+            componentesTexto = `<br><small>Componentes: ${componentesStatus}</small>`;
         }
         
         magiaElement.innerHTML = `
             <div class="item-nome">${magia.nome}</div>
             <div class="item-quantidade">Custo: ${magia.custo} PM</div>
-            <div class="item-descricao">${magia.descricao}</div>
+            <div class="item-descricao">${magia.descricao}${componentesTexto}</div>
         `;
         
-        if (temMagiaSuficiente) {
+        if (podeUsar) {
             magiaElement.addEventListener("click", () => selecionarMagia(magiaElement));
         }
         magiasContainer.appendChild(magiaElement);
     });
 }
+
 
 
 // Função para selecionar uma magia
@@ -931,8 +957,18 @@ function selecionarMagia(magiaElement) {
 }
 
 
-// Função para usar uma magia
 async function usarMagia(magiaId, efeito, valor, custo) {
+    // Encontra a magia
+    const magia = magiasDisponiveis.find(m => m.id === magiaId);
+    if (!magia) return;
+    
+    // Verifica componentes necessários
+    if (!hasRequiredComponents(magia.componentes)) {
+        await addLogMessage(`Você não possui os componentes necessários para esta magia!`, 1000);
+        document.getElementById("magias-modal").style.display = "none";
+        return;
+    }
+
  // --- INÍCIO INTEGRAÇÃO ARCANUM ---
 if (magiaId === 'missil-magico' || magiaId === 'toque-chocante') {
     document.getElementById("magias-modal").style.display = "none";
@@ -949,10 +985,7 @@ if (magiaId === 'missil-magico' || magiaId === 'toque-chocante') {
         await addLogMessage(`Você não tem magia suficiente! (${playerMagic}/${custoNum})`, 1000);
         return;
     }
-    
-    // Encontra a magia
-    const magia = magiasDisponiveis.find(m => m.id === magiaId);
-    if (!magia) return;
+
     
     // Fechar modal
     document.getElementById("magias-modal").style.display = "none";
