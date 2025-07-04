@@ -913,15 +913,14 @@ function selecionarMagia(magiaElement) {
 
 // Função para usar uma magia
 async function usarMagia(magiaId, efeito, valor, custo) {
-  // --- INÍCIO INTEGRAÇÃO ARCANUM ---
-if (magiaId === 'missil-magico') {
-    // Fechar modal de magias ANTES de abrir Arcanum
+ // --- INÍCIO INTEGRAÇÃO ARCANUM ---
+if (magiaId === 'missil-magico' || magiaId === 'toque-chocante') {
     document.getElementById("magias-modal").style.display = "none";
-    setupArcanumConjurationModal();
+    setupArcanumConjurationModal(magiaId);
     return;
 }
-
 // --- FIM INTEGRAÇÃO ARCANUM ---
+
     const userId = auth.currentUser.uid;
     const custoNum = parseInt(custo);
     
@@ -2449,11 +2448,18 @@ if (rollLocationBtn) {
 
       // VERIFICAÇÃO PARA TOQUE CHOCANTE
 if (window.touchSpellContext) {
-    const danoRolado = rollDice(window.touchSpellContext.dano);
-    currentMonster.pontosDeEnergia -= danoRolado;
+    let totalDamage = 0;
+    const toques = window.touchSpellContext.toques || 1;
+    
+    for (let i = 0; i < toques; i++) {
+        totalDamage += rollDice('1d6');
+    }
+    
+    currentMonster.pontosDeEnergia -= totalDamage;
     currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
     atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
-    await addLogMessage(`${currentMonster.nome} sofreu ${danoRolado} de dano elétrico (${window.touchSpellContext.dano}).`, 800);
+    await addLogMessage(`${toques} descarga(s) elétrica(s) causaram ${totalDamage} de dano total!`, 800);
+
     
     // Limpa contexto
     window.touchSpellContext = null;
@@ -2833,39 +2839,35 @@ if (window.ArcanumUI) {
     console.log("LOG: Event listener para DOMContentLoaded finalizado.");
 });
 
-function setupArcanumConjurationModal() {
-    const magia = magiasDisponiveis.find(m => m.id === 'missil-magico');
+function setupArcanumConjurationModal(magiaId) {
+    const magia = magiasDisponiveis.find(m => m.id === magiaId);
     if (!magia) return;
 
-    // SUBSTITUA POR:
-const dynamicConditions = getDynamicConditions();
-const {modal, correctWord, conditions} = window.ArcanumSpells.createArcanumConjurationModal(magia);
-// Sobrescreve as condições com as dinâmicas + modificadores
-const modifierMap = {
-    periodo: { manha: 'first-vowel-to-i', tarde: 'a-to-y', noite: 'duplicate-last-consonant', madrugada: 'add-mad' },
-    estacao: { primavera: 'add-pri', verao: 'e-to-a', outono: 'add-out', inverno: 'o-to-u' },
-    vento: { norte: 'add-n', sul: 'add-s', leste: 'add-l', oeste: 'add-o', nordeste: 'add-ne', noroeste: 'add-no', sudeste: 'add-se', sudoeste: 'add-so' },
-    clima: { 'sol-forte': 'duplicate-first', 'sol-fraco': 'remove-first-vowel', nublado: 'add-nub-middle', 'chuva-leve': 'add-plu', 'chuva-forte': 'vowels-to-u', tempestade: 'reverse-word', neblina: 'add-neb', nevoa: 'add-nev', neve: 'add-niv', granizo: 'add-gra', seco: 'remove-duplicate-vowels', umido: 'duplicate-vowels' },
-    lua: { nova: 'add-x', crescente: 'add-c', cheia: 'add-f', minguante: 'add-m' },
-    temperatura: { 'muito-frio': 'all-upper', frio: 'consonants-upper', quente: 'vowels-upper', 'muito-quente': 'i-to-y-e-to-a' },
-    pressao: { alta: 'add-alt', baixa: 'add-bai' },
-    energiaMagica: { alta: 'duplicate-word', baixa: 'remove-last', interferencia: 'vowels-to-numbers' }
-};
-
-// Adiciona pulsação no modal também
-const isChanging = window.arcanumTurnCounter % 3 === 2;
-modal.querySelector('.conditions-display').innerHTML = Object.entries(dynamicConditions).map(([key, value]) => {
-    if (!value) return '';
-    const modifier = modifierMap[key] && modifierMap[key][value] ? modifierMap[key][value] : '';
-    const modifierText = modifier ? ` <span style="color:#feca57;font-size:10px;">[${modifier}]</span>` : '';
+    const dynamicConditions = getDynamicConditions();
+    const {modal, correctWord, conditions} = window.ArcanumSpells.createArcanumConjurationModal(magia);
     
-    // Adiciona classe de mudança se necessário
-    const changeChance = CONDITION_STABILITY[key]?.changeChance || 0;
-    const pulseClass = (isChanging && changeChance > 0.20) ? ' condition-changing' : '';
-    
-    return `<span class="condition${pulseClass}">🔮 ${value.replace('-', ' ').toUpperCase()}${modifierText}</span>`;
-}).join('');
+    const modifierMap = {
+        periodo: { manha: 'first-vowel-to-i', tarde: 'a-to-y', noite: 'duplicate-last-consonant', madrugada: 'add-mad' },
+        estacao: { primavera: 'add-pri', verao: 'e-to-a', outono: 'add-out', inverno: 'o-to-u' },
+        vento: { norte: 'add-n', sul: 'add-s', leste: 'add-l', oeste: 'add-o', nordeste: 'add-ne', noroeste: 'add-no', sudeste: 'add-se', sudoeste: 'add-so' },
+        clima: { 'sol-forte': 'duplicate-first', 'sol-fraco': 'remove-first-vowel', nublado: 'add-nub-middle', 'chuva-leve': 'add-plu', 'chuva-forte': 'vowels-to-u', tempestade: 'reverse-word', neblina: 'add-neb', nevoa: 'add-nev', neve: 'add-niv', granizo: 'add-gra', seco: 'remove-duplicate-vowels', umido: 'duplicate-vowels' },
+        lua: { nova: 'add-x', crescente: 'add-c', cheia: 'add-f', minguante: 'add-m' },
+        temperatura: { 'muito-frio': 'all-upper', frio: 'consonants-upper', quente: 'vowels-upper', 'muito-quente': 'i-to-y-e-to-a' },
+        pressao: { alta: 'add-alt', baixa: 'add-bai' },
+        energiaMagica: { alta: 'duplicate-word', baixa: 'remove-last', interferencia: 'vowels-to-numbers' }
+    };
 
+    const isChanging = window.arcanumTurnCounter % 3 === 2;
+    modal.querySelector('.conditions-display').innerHTML = Object.entries(dynamicConditions).map(([key, value]) => {
+        if (!value) return '';
+        const modifier = modifierMap[key] && modifierMap[key][value] ? modifierMap[key][value] : '';
+        const modifierText = modifier ? ` <span style="color:#feca57;font-size:10px;">[${modifier}]</span>` : '';
+        
+        const changeChance = CONDITION_STABILITY[key]?.changeChance || 0;
+        const pulseClass = (isChanging && changeChance > 0.20) ? ' condition-changing' : '';
+        
+        return `<span class="condition${pulseClass}">🔮 ${value.replace('-', ' ').toUpperCase()}${modifierText}</span>`;
+    }).join('');
 
     const oldModal = document.getElementById('arcanum-conjuration-modal');
     if (oldModal) oldModal.remove();
@@ -2903,36 +2905,52 @@ modal.querySelector('.conditions-display').innerHTML = Object.entries(dynamicCon
         const baseWord = window.ArcanumSpells.getSpellBaseWord(magia.id);
         const result = window.ArcanumSpells.validateConjuration(inputWord, correctWord, totalTime, errors, conditions, baseWord);
 
-
         modal.remove();
 
         let msg = '';
         if (result.success) {
-    msg = `<span style="color:lime;">Conjuração bem-sucedida! <b>${result.level} dardo(s)</b> lançado(s)! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
-    
-    // Toca risada se conseguiu 5 dardos
-    if (result.level >= 5) {
-        const audio = new Audio('risada1.wav'); // SUBSTITUA PELO CAMINHO DO SEU ÁUDIO
-        audio.volume = 0.7; // Volume 70%
-        audio.play().catch(e => console.log('Erro ao tocar áudio:', e));
-    }
-    
-    addLogMessage(msg, 500);
+            switch(magiaId) {
+                case 'missil-magico':
+                    msg = `<span style="color:lime;">Conjuração bem-sucedida! <b>${result.level} dardo(s)</b> lançado(s)! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
+                    
+                    if (result.level >= 5) {
+                        const audio = new Audio('risada1.wav');
+                        audio.volume = 0.7;
+                        audio.play().catch(e => console.log('Erro ao tocar áudio:', e));
+                    }
+                    
+                    addLogMessage(msg, 500);
 
-
-            let totalDamage = 0;
-            for (let i = 0; i < result.level; i++) {
-                totalDamage += rollDice('1d4') + 1;
-            }
-            if (currentMonster) {
-                currentMonster.pontosDeEnergia -= totalDamage;
-                atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
-                addLogMessage(`Dardos Místicos causaram <b>${totalDamage}</b> de dano!`, 1000);
-                if (currentMonster.pontosDeEnergia <= 0) {
-                    addLogMessage(`<span style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</span>`, 1000);
-                    handlePostBattle(currentMonster);
-                    return;
-                }
+                    let totalDamage = 0;
+                    for (let i = 0; i < result.level; i++) {
+                        totalDamage += rollDice('1d4') + 1;
+                    }
+                    if (currentMonster) {
+                        currentMonster.pontosDeEnergia -= totalDamage;
+                        atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+                        addLogMessage(`Dardos Místicos causaram <b>${totalDamage}</b> de dano!`, 1000);
+                        if (currentMonster.pontosDeEnergia <= 0) {
+                            addLogMessage(`<span style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</span>`, 1000);
+                            handlePostBattle(currentMonster);
+                            return;
+                        }
+                    }
+                    break;
+                    
+                case 'toque-chocante':
+                    msg = `<span style="color:lime;">Conjuração bem-sucedida! <b>${result.level} toque(s)</b> canalizados! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
+                    addLogMessage(msg, 500);
+                    
+                    window.touchSpellContext = {
+                        dano: '1d6',
+                        nome: magia.nome,
+                        toques: result.level,
+                        userId: auth.currentUser.uid,
+                        monsterName: getUrlParameter('monstro')
+                    };
+                    
+                    addLogMessage(`Clique em "Atacar" para tocar o inimigo com ${result.level} descarga(s) elétrica(s).`, 800);
+                    break;
             }
         } else {
             const halfCost = Math.ceil(magia.custo / 2);
