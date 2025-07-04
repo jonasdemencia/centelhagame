@@ -1409,20 +1409,6 @@ activeBuffs = activeBuffs.filter(buff => buff.turnos > 0);
 // Atualiza display
 updateBuffsDisplay();
 
-// Remove buffs críticos expirados sem usar ataque
-const criticalBuffsExpired = expiredBuffs.filter(buff => buff.tipo === "critical_guaranteed");
-if (criticalBuffsExpired.length > 0) {
-    return criticalBuffsExpired.reduce((promise, buff) => {
-        return promise.then(() => {
-            if (typeof addLogMessage === 'function') {
-                return addLogMessage(`${buff.nome} se dissipou (não foi usado).`, 800);
-            }
-            return Promise.resolve();
-        });
-    }, Promise.resolve());
-}
-
-
     
     // Processa mensagens de buffs expirados sequencialmente
     return expiredBuffs.reduce((promise, buff) => {
