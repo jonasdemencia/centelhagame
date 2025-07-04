@@ -347,7 +347,7 @@ const magiasDisponiveis = [
         descricao: "Restaura uma grande quantidade de energia",
         custo: 2,
         efeito: "heal",
-        valor: "2d8+1"
+        valor: "10d8+1" // apenas para testar
     },
     
     {
