@@ -1121,11 +1121,12 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
     // Adiciona buff crítico no jogador
     activeBuffs = activeBuffs.filter(buff => buff.tipo !== "critical_guaranteed");
     activeBuffs.push({
-        tipo: "critical_guaranteed",
-        valor: 1,
-        turnos: 1,
-        nome: "Sono - Crítico Garantido"
-    });
+    tipo: "critical_guaranteed",
+    valor: 1,
+    turnos: 2,  // <-- MUDE PARA 2
+    nome: "Sono - Crítico Garantido"
+});
+
     
     updateMonsterDebuffsDisplay();
     updateBuffsDisplay();
