@@ -178,6 +178,16 @@ if (stunDebuff) {
     return;
 }
 
+    // Verifica se está dormindo ANTES de processar outros debuffs
+const sleepDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "sleep");
+if (sleepDebuff) {
+    await addLogMessage(`${currentMonster.nome} está dormindo e perde o turno!`, 1000);
+    await processMonsterDebuffs(); // Remove o sono
+    endMonsterTurn();
+    return;
+}
+
+
 // Processa debuffs do monstro
 await processMonsterDebuffs();
 
@@ -376,6 +386,16 @@ const magiasDisponiveis = [
     efeito: "touch_attack",
     valor: "1d8"
 },
+
+    {
+    id: "sono",
+    nome: "Sono",
+    descricao: "Faz o monstro dormir e garante crítico no próximo ataque (apenas monstros com energia < 50)",
+    custo: 5,
+    efeito: "sleep",
+    valor: 1
+},
+
 
     {
     id: "toque-macabro",
@@ -1079,6 +1099,43 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
     await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
     endPlayerTurn();
 
+        } else if (efeito === "sleep") {
+    // Verifica se o monstro tem energia menor que 50
+    if (currentMonster.pontosDeEnergiaMax >= 50) {
+        await addLogMessage(`${magia.nome} não funciona em monstros com muita energia!`, 1000);
+        await updatePlayerMagicInFirestore(userId, playerMagic);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        endPlayerTurn();
+        return;
+    }
+    
+    // Adiciona debuff de sono no monstro
+    activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "sleep");
+    activeMonsterDebuffs.push({
+        tipo: "sleep",
+        valor: 1,
+        turnos: 1,
+        nome: magia.nome
+    });
+    
+    // Adiciona buff crítico no jogador
+    activeBuffs = activeBuffs.filter(buff => buff.tipo !== "critical_guaranteed");
+    activeBuffs.push({
+        tipo: "critical_guaranteed",
+        valor: 1,
+        turnos: 1,
+        nome: "Sono - Crítico Garantido"
+    });
+    
+    updateMonsterDebuffsDisplay();
+    updateBuffsDisplay();
+    await addLogMessage(`${currentMonster.nome} está dormindo! Perderá o próximo turno e seu próximo ataque corpo a corpo será crítico!`, 800);
+    
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+    endPlayerTurn();
+
+
 
     } else if (efeito === "touch_attack") {
         // Salva contexto da magia de toque
@@ -1347,10 +1404,24 @@ function processBuffs() {
     activeBuffs.forEach(buff => buff.turnos--);
     
     // Remove buffs expirados e mostra mensagem
-    const expiredBuffs = activeBuffs.filter(buff => buff.turnos <= 0);
-    activeBuffs = activeBuffs.filter(buff => buff.turnos > 0);
-      // Atualiza display
-    updateBuffsDisplay();
+const expiredBuffs = activeBuffs.filter(buff => buff.turnos <= 0);
+activeBuffs = activeBuffs.filter(buff => buff.turnos > 0);
+// Atualiza display
+updateBuffsDisplay();
+
+// Remove buffs críticos expirados sem usar ataque
+const criticalBuffsExpired = expiredBuffs.filter(buff => buff.tipo === "critical_guaranteed");
+if (criticalBuffsExpired.length > 0) {
+    return criticalBuffsExpired.reduce((promise, buff) => {
+        return promise.then(() => {
+            if (typeof addLogMessage === 'function') {
+                return addLogMessage(`${buff.nome} se dissipou (não foi usado).`, 800);
+            }
+            return Promise.resolve();
+        });
+    }, Promise.resolve());
+}
+
 
     
     // Processa mensagens de buffs expirados sequencialmente
@@ -2688,11 +2759,23 @@ if (isTouchSpell) {
         console.log("LOG: Botão 'Atacar Corpo a Corpo' clicado.");
 
         // Desabilita TODOS os botões de ação inicialmente
-        const actionButtons = document.querySelectorAll('#attack-options button');
-        actionButtons.forEach(button => button.disabled = true);
+const actionButtons = document.querySelectorAll('#attack-options button');
+actionButtons.forEach(button => button.disabled = true);
 
-        //const playerAttackRollRaw =  1; // PARA TESTE DE FALHA CRÍTICA
-        const playerAttackRollRaw = Math.floor(Math.random() * 20) + 1; // ALEATÓRIO NORMAL
+// Verifica se tem buff crítico garantido
+const criticalBuff = activeBuffs.find(buff => buff.tipo === "critical_guaranteed");
+let playerAttackRollRaw;
+
+if (criticalBuff && !isTouchSpell) {
+    playerAttackRollRaw = 20; // Força crítico
+    // Remove o buff após usar
+    activeBuffs = activeBuffs.filter(buff => buff.tipo !== "critical_guaranteed");
+    updateBuffsDisplay();
+    await addLogMessage(`Crítico garantido ativado! O monstro está dormindo e vulnerável!`, 800);
+} else {
+    playerAttackRollRaw = Math.floor(Math.random() * 20) + 1; // Normal
+}
+
         const playerAttackRollTotal = playerAttackRollRaw + playerAbilityValue;
         const monsterDefense = currentMonster.couraça || 0;
 
