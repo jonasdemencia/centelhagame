@@ -2965,10 +2965,14 @@ function setupArcanumConjurationModal(magiaId) {
                 updatePlayerMagicInFirestore(user.uid, playerMagic);
                 saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
             }
-        }
+                }
         
-        endPlayerTurn();
+        // Só passa o turno se não for toque chocante bem-sucedido
+        if (!(result.success && magiaId === 'toque-chocante')) {
+            endPlayerTurn();
+        }
     };
+
 
     modal.querySelector('#cancel-conjuration').onclick = () => { modal.remove(); };
     modal.querySelector('#close-conjuration').onclick = () => { modal.remove(); };
