@@ -436,18 +436,39 @@ const magiasDisponiveis = [
     
 ];
 
-// Função para verificar se o jogador possui todos os componentes necessários
-function hasRequiredComponents(componentes) {
+/// Função para verificar se o jogador possui todos os componentes necessários
+async function hasRequiredComponents(componentes) {
     if (!componentes || componentes.length === 0) return true;
     
     const userId = auth.currentUser?.uid;
     if (!userId) return false;
     
-    // Busca no inventário do jogador
-    const inventoryItems = Array.from(document.querySelectorAll('.item')).map(item => item.dataset.item);
-    
-    return componentes.every(componente => inventoryItems.includes(componente));
+    try {
+        // Busca no Firestore em vez do DOM
+        const playerRef = doc(db, "players", userId);
+        const playerSnap = await getDoc(playerRef);
+        
+        if (!playerSnap.exists() || !playerSnap.data().inventory) {
+            return false;
+        }
+        
+        const inventoryData = playerSnap.data().inventory;
+        const inventoryItems = [];
+        
+        // Coleta todos os IDs dos itens no inventário
+        if (inventoryData.itemsInChest && Array.isArray(inventoryData.itemsInChest)) {
+            inventoryData.itemsInChest.forEach(item => {
+                inventoryItems.push(item.id);
+            });
+        }
+        
+        return componentes.every(componente => inventoryItems.includes(componente));
+    } catch (error) {
+        console.error("Erro ao verificar componentes:", error);
+        return false;
+    }
 }
+
 
 
 // Configuração do Firebase (substitua com suas próprias configurações)
@@ -888,11 +909,11 @@ endPlayerTurn();
 }
 
 
-function carregarMagiasDisponiveis() {
+async function carregarMagiasDisponiveis() {
     const magiasContainer = document.getElementById("magias-container");
     magiasContainer.innerHTML = "";
     
-    magiasDisponiveis.forEach(magia => {
+    for (const magia of magiasDisponiveis) {
         const magiaElement = document.createElement("div");
         magiaElement.className = "item-consumivel";
         magiaElement.dataset.magiaId = magia.id;
@@ -902,7 +923,7 @@ function carregarMagiasDisponiveis() {
         
         // Verifica se tem magia suficiente E componentes necessários
         const temMagiaSuficiente = playerMagic >= magia.custo;
-        const temComponentes = hasRequiredComponents(magia.componentes);
+        const temComponentes = await hasRequiredComponents(magia.componentes);
         const podeUsar = temMagiaSuficiente && temComponentes;
         
         if (!podeUsar) {
@@ -913,11 +934,12 @@ function carregarMagiasDisponiveis() {
         // Adiciona informação sobre componentes na descrição
         let componentesTexto = "";
         if (magia.componentes && magia.componentes.length > 0) {
-            const componentesStatus = magia.componentes.map(comp => {
-                const possui = hasRequiredComponents([comp]);
-                return `${comp} ${possui ? '✓' : '✗'}`;
-            }).join(', ');
-            componentesTexto = `<br><small>Componentes: ${componentesStatus}</small>`;
+            const componentesStatus = [];
+            for (const comp of magia.componentes) {
+                const possui = await hasRequiredComponents([comp]);
+                componentesStatus.push(`${comp} ${possui ? '✓' : '✗'}`);
+            }
+            componentesTexto = `<br><small>Componentes: ${componentesStatus.join(', ')}</small>`;
         }
         
         magiaElement.innerHTML = `
@@ -930,9 +952,8 @@ function carregarMagiasDisponiveis() {
             magiaElement.addEventListener("click", () => selecionarMagia(magiaElement));
         }
         magiasContainer.appendChild(magiaElement);
-    });
+    }
 }
-
 
 
 // Função para selecionar uma magia
@@ -1939,13 +1960,14 @@ if (itensModal) {
   // Configurar evento do botão de magia
 const magiaBtn = document.getElementById("atacar-a-distancia");
 if (magiaBtn) {
-    magiaBtn.addEventListener("click", () => {
+    magiaBtn.addEventListener("click", async () => {
         if (isPlayerTurn) {
-            carregarMagiasDisponiveis();
+            await carregarMagiasDisponiveis();
             document.getElementById("magias-modal").style.display = "block";
         }
     });
 }
+
 
 // Configurar eventos do modal de magias
 const magiasModal = document.getElementById("magias-modal");
