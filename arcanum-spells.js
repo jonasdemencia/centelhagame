@@ -388,15 +388,16 @@ function createArcanumConjurationModal(spell) {
     const style = document.createElement('style');
     style.textContent = `
         #arcanum-conjuration-modal {
-            display: none;
-            position: fixed;
-            z-index: 2000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.8);
-        }
+    display: none;
+    position: fixed;
+    z-index: 500;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+}
+
         .arcanum-modal {
             background: linear-gradient(135deg, #1a1a2e, #16213e);
             margin: 5% auto;
