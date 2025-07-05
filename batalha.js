@@ -1500,7 +1500,7 @@ async function verificarFugaAnimais() {
         if (griloIndex === -1) return; // Não tem grilo ou grilo sem energia
         
         // Rola 1d3 para chance de fuga (TESTE)
-        const roll = Math.floor(Math.random() * 3) + 1;
+        const roll = Math.floor(Math.random() * 1) + 1;
         
         if (roll === 1) {
             console.log("GRILO FUGINDO - Antes:", inventoryData.itemsInChest.length);
