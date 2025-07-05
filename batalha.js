@@ -1498,15 +1498,22 @@ async function verificarFugaAnimais() {
         
         if (griloIndex === -1) return; // Não tem grilo ou grilo sem energia
         
-        // Rola 1d30 para chance de fuga
-        const roll = Math.floor(Math.random() * 2) + 1; // para teste, o original estava * 30) + 1;
+        // Rola 1d3 para chance de fuga (TESTE)
+        const roll = Math.floor(Math.random() * 3) + 1;
         
         if (roll === 1) {
+            console.log("GRILO FUGINDO - Antes:", inventoryData.itemsInChest.length);
+            
             // Grilo foge!
             inventoryData.itemsInChest.splice(griloIndex, 1);
             
+            console.log("GRILO FUGINDO - Depois:", inventoryData.itemsInChest.length);
+            console.log("GRILO FUGINDO - Salvando no Firestore...");
+            
             // Atualiza no Firestore
             await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+            
+            console.log("GRILO FUGINDO - Salvo!");
             
             // Mostra popup
             alert("O grilo saltou do seu alforge e desapareceu entre as pedras.");
@@ -1515,6 +1522,7 @@ async function verificarFugaAnimais() {
         console.error("Erro ao verificar fuga de animais:", error);
     }
 }
+
 
 
 
