@@ -62,6 +62,9 @@ async function resetInventory() {
     }
 }
 
+// Adicione esta linha após a função resetInventory
+window.resetInventory = resetInventory;
+
 // Variável global para armazenar o dado selecionado
 let selectedDice = null;
 
