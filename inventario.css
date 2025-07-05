@@ -636,3 +636,21 @@ p {
     width: 0%; /* Começa vazio */
     transition: width 0.3s ease;
 }
+
+/* Barra de energia para itens vivos */
+.item-energy-bar {
+    position: absolute;
+    bottom: 25px;
+    left: 5px;
+    right: 25px;
+    height: 4px;
+    background-color: #333;
+    border: 1px solid #555;
+    border-radius: 2px;
+}
+
+.item-energy-fill {
+    height: 100%;
+    border-radius: 1px;
+    transition: width 0.3s ease;
+}
