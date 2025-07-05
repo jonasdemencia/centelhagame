@@ -1480,6 +1480,7 @@ updateBuffsDisplay();
 
 // Função para verificar se animais fogem
 async function verificarFugaAnimais() {
+        console.log("VERIFICANDO FUGA DE ANIMAIS - FUNÇÃO CHAMADA");
     const userId = auth.currentUser?.uid;
     if (!userId) return;
     
