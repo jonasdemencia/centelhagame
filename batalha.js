@@ -607,6 +607,8 @@ async function endMonsterTurn() {
 
     startNewTurnBlock("Jogador");
 await processBuffs();
+    // Verificação de fuga de animais
+await verificarFugaAnimais();
 addLogMessage(`Turno do Jogador`, 1000);
 
 
@@ -1475,6 +1477,45 @@ updateBuffsDisplay();
     });
 }, Promise.resolve());
   } // <- ADICIONE ESTA CHAVE AQUI
+
+// Função para verificar se animais fogem
+async function verificarFugaAnimais() {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+    
+    try {
+        const playerRef = doc(db, "players", userId);
+        const playerSnap = await getDoc(playerRef);
+        
+        if (!playerSnap.exists() || !playerSnap.data().inventory) return;
+        
+        const inventoryData = playerSnap.data().inventory;
+        
+        // Procura o grilo no inventário
+        const griloIndex = inventoryData.itemsInChest.findIndex(item => 
+            item.id === "grilo" && item.energia && item.energia.total > 0
+        );
+        
+        if (griloIndex === -1) return; // Não tem grilo ou grilo sem energia
+        
+        // Rola 1d30 para chance de fuga
+        const roll = Math.floor(Math.random() * 30) + 1;
+        
+        if (roll === 1) {
+            // Grilo foge!
+            inventoryData.itemsInChest.splice(griloIndex, 1);
+            
+            // Atualiza no Firestore
+            await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+            
+            // Mostra popup
+            alert("O grilo saltou do seu alforge e desapareceu entre as pedras.");
+        }
+    } catch (error) {
+        console.error("Erro ao verificar fuga de animais:", error);
+    }
+}
+
 
 
 // Função para processar debuffs do monstro no início do seu turno
