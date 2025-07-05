@@ -30,7 +30,7 @@ const initialItems = [
     { id: "pao", content: "Pão", consumable: true, quantity: 1, description: "Um pedaço de pão simples." },
     { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 5, description: "Um pedaço de pão velho e mofado. Estranhamente, parece ter um efeito... diferente." },
     { id: "elixir-poder", content: "Elixir do Poder Supremo", consumable: true, quantity: 5, effect: "boost_attributes", value: 100, description: "Um elixir mágico que aumenta temporariamente todos os seus atributos para 100." },
-    { id: "grilo", content: "Grilo", description: "Um pequeno grilo usado como componente mágico para magias de sono.", componente: true }
+    { id: "grilo", content: "Grilo", description: "Um pequeno grilo usado como componente mágico para magias de sono.", componente: true, energia: { total: 1, inicial: 1 } }
 
 ];
 
@@ -557,9 +557,13 @@ async function saveInventoryData(uid) {
     console.log("Salvando dados do inventário para o usuário:", uid);
     const itemsInChest = Array.from(document.querySelectorAll('.item')).map(item => {
         const data = {
-            id: item.dataset.item,
-            content: item.innerHTML.split('<span class="item-expand-toggle">')[0].trim() // Remove o botão de expandir ao salvar
-        };
+    id: item.dataset.item,
+    content: item.innerHTML.split('<span class="item-expand-toggle">')[0].split('<span class="item-energia">')[0].trim()
+};
+if (item.dataset.energia) {
+    data.energia = JSON.parse(item.dataset.energia);
+}
+
         if (item.dataset.consumable === 'true') {
             data.consumable = true;
             data.quantity = parseInt(item.dataset.quantity);
@@ -719,13 +723,24 @@ function loadInventoryUI(inventoryData) {
         const newItem = document.createElement('div');
         newItem.classList.add('item');
         newItem.dataset.item = item.id;
+        
+        if (item.energia) {
+            newItem.dataset.energia = JSON.stringify(item.energia);
+        }
+        
+        let energiaTexto = "";
+        if (item.energia) {
+            energiaTexto = ` <span class="item-energia">(${item.energia.total}/${item.energia.inicial})</span>`;
+        }
+
         newItem.innerHTML = `
-            ${item.content}
+            ${item.content}${energiaTexto}
             <span class="item-expand-toggle">+</span>
             <div class="item-description" style="display: none;">
                 ${item.description || 'Descrição do item.'}
             </div>
         `;
+
         if (item.consumable) {
             newItem.dataset.consumable = 'true';
             newItem.dataset.quantity = item.quantity;
