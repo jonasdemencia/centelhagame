@@ -740,10 +740,11 @@ if (item.energia) {
     if (porcentagem <= 25) cor = "#FF0000"; // Vermelho
     
     energiaHTML = `
-        <div class="item-energy-bar">
-            <div class="item-energy-fill" style="width: ${porcentagem}%; background-color: ${cor};"></div>
-        </div>
-    `;
+    <div class="item-energy-bar">
+        <div class="item-energy-fill" style="width: ${porcentagem}%; background-color: ${cor};"></div>
+        ${item.energia.total}/${item.energia.inicial}
+    </div>
+`;
 }
 
 newItem.innerHTML = `
