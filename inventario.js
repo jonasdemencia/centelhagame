@@ -742,7 +742,7 @@ if (item.energia) {
     energiaHTML = `
     <div class="item-energy-bar">
         <div class="item-energy-fill" style="width: ${porcentagem}%; background-color: ${cor};"></div>
-        ${item.energia.total}/${item.energia.inicial}
+        <span class="item-energy-text">${item.energia.total}/${item.energia.inicial}</span>
     </div>
 `;
 }
