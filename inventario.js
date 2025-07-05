@@ -728,18 +728,30 @@ function loadInventoryUI(inventoryData) {
             newItem.dataset.energia = JSON.stringify(item.energia);
         }
         
-        let energiaTexto = "";
-        if (item.energia) {
-            energiaTexto = ` <span class="item-energia">(${item.energia.total}/${item.energia.inicial})</span>`;
-        }
+        
+       let energiaHTML = "";
+if (item.energia) {
+    const porcentagem = (item.energia.total / item.energia.inicial) * 100;
+    let cor = "#4CAF50"; // Verde
+    if (porcentagem <= 50) cor = "#FFA500"; // Amarelo
+    if (porcentagem <= 25) cor = "#FF0000"; // Vermelho
+    
+    energiaHTML = `
+        <div class="item-energy-bar">
+            <div class="item-energy-fill" style="width: ${porcentagem}%; background-color: ${cor};"></div>
+        </div>
+    `;
+}
 
-        newItem.innerHTML = `
-            ${item.content}${energiaTexto}
-            <span class="item-expand-toggle">+</span>
-            <div class="item-description" style="display: none;">
-                ${item.description || 'Descrição do item.'}
-            </div>
-        `;
+newItem.innerHTML = `
+    ${item.content}
+    <span class="item-expand-toggle">+</span>
+    <div class="item-description" style="display: none;">
+        ${item.description || 'Descrição do item.'}
+    </div>
+    ${energiaHTML}
+`;
+
 
         if (item.consumable) {
             newItem.dataset.consumable = 'true';
