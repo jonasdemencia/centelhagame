@@ -1497,31 +1497,28 @@ async function verificarFugaAnimais() {
             item.id === "grilo" && item.energia && item.energia.total > 0
         );
         
-        if (griloIndex === -1) return; // Não tem grilo ou grilo sem energia
+        if (griloIndex === -1) return;
         
-        // Rola 1d1 para chance de fuga (100% para teste)
-        const roll = 1;
+        // Rola 1d30 para chance de fuga
+        const roll = Math.floor(Math.random() * 30) + 1;
         
         if (roll === 1) {
             console.log("GRILO FUGINDO - Removendo do inventário");
             
-            // Remove o grilo do array
+            // Remove o grilo
             inventoryData.itemsInChest.splice(griloIndex, 1);
             
-            // Usa updateDoc em vez de setDoc
-            await updateDoc(playerRef, {
-                'inventory.itemsInChest': inventoryData.itemsInChest
-            });
+            // USA SETDOC EM VEZ DE UPDATEDOC
+            await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
             
             console.log("GRILO FUGINDO - Removido com sucesso!");
-            
-            // Mostra popup
             alert("O grilo saltou do seu alforge e desapareceu entre as pedras.");
         }
     } catch (error) {
         console.error("Erro ao verificar fuga de animais:", error);
     }
 }
+
 
 
 
