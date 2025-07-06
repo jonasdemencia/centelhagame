@@ -606,20 +606,20 @@ async function endMonsterTurn() {
     }
 
     startNewTurnBlock("Jogador");
-await processBuffs();
-    // Verificação de fuga de animais
-await verificarFugaAnimais();
-addLogMessage(`Turno do Jogador`, 1000);
+    await processBuffs();
+    addLogMessage(`Turno do Jogador`, 1000);
 
-
-    
-    // Salva o estado após mudar o turno para o jogador
+    // Salva o estado ANTES da verificação de fuga
     const user = auth.currentUser;
     const monsterName = getUrlParameter('monstro');
     if (user && monsterName) {
-        saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
     }
+
+    // Verificação de fuga de animais DEPOIS
+    await verificarFugaAnimais();
 }
+
 
 
 // Exemplo para resetActionButtons
