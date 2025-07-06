@@ -1500,7 +1500,7 @@ async function verificarFugaAnimais() {
         if (griloIndex === -1) return;
         
         // Rola 1d30 para chance de fuga
-        const roll = Math.floor(Math.random() * 30) + 1;
+        const roll = Math.floor(Math.random() * 1) + 1;
         
         if (roll === 1) {
             console.log("GRILO FUGINDO - Removendo do inventário");
