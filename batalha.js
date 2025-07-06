@@ -1484,37 +1484,56 @@ async function verificarFugaAnimais() {
     if (!userId) return;
     
     try {
+        // BUSCA DADOS FRESCOS DO FIRESTORE
         const playerRef = doc(db, "players", userId);
         const playerSnap = await getDoc(playerRef);
         
-        if (!playerSnap.exists() || !playerSnap.data().inventory) return;
+        if (!playerSnap.exists()) {
+            console.log("Jogador não existe no Firestore");
+            return;
+        }
         
         const playerData = playerSnap.data();
-        const inventoryData = playerData.inventory;
-        const itemsInChest = inventoryData.itemsInChest || [];
+        if (!playerData.inventory || !playerData.inventory.itemsInChest) {
+            console.log("Inventário não existe");
+            return;
+        }
         
-        // Remove grilos com energia > 0
-        const newItems = itemsInChest.filter(item => 
-            !(item.id === "grilo" && item.energia && item.energia.total > 0)
+        const itemsInChest = playerData.inventory.itemsInChest;
+        console.log("ITENS NO BAÚ ANTES:", itemsInChest.length);
+        
+        // ENCONTRA E REMOVE O GRILO
+        const griloIndex = itemsInChest.findIndex(item => 
+            item.id === "grilo" && item.energia && item.energia.total > 0
         );
         
-        if (newItems.length !== itemsInChest.length) {
-            // Rola 1d30 para chance de fuga
-            const roll = Math.floor(Math.random() * 1) + 1;
-            
-            if (roll === 1) {
-                console.log("GRILO FUGINDO - Removendo do inventário");
-                inventoryData.itemsInChest = newItems;
-                
-                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-                console.log("GRILO FUGINDO - Removido com sucesso do Firestore!");
-                alert("O grilo saltou do seu alforge e desapareceu entre as pedras.");
-            }
+        if (griloIndex === -1) {
+            console.log("Nenhum grilo encontrado");
+            return;
         }
+        
+        console.log("GRILO ENCONTRADO NO ÍNDICE:", griloIndex);
+        
+        // REMOVE O GRILO
+        itemsInChest.splice(griloIndex, 1);
+        console.log("ITENS NO BAÚ DEPOIS:", itemsInChest.length);
+        
+        // SALVA NO FIRESTORE
+        await setDoc(playerRef, {
+            inventory: {
+                ...playerData.inventory,
+                itemsInChest: itemsInChest
+            }
+        }, { merge: true });
+        
+        console.log("GRILO REMOVIDO COM SUCESSO DO FIRESTORE!");
+        alert("O grilo saltou do seu alforge e desapareceu entre as pedras.");
+        
     } catch (error) {
-        console.error("Erro ao verificar fuga de animais:", error);
+        console.error("ERRO AO REMOVER GRILO:", error);
     }
 }
+
 
 
 // Função para processar debuffs do monstro no início do seu turno
