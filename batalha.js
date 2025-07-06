@@ -1541,8 +1541,6 @@ async function verificarFugaAnimais() {
 }
 
 
-
-
 // Função para processar debuffs do monstro no início do seu turno
 function processMonsterDebuffs() {
     if (activeMonsterDebuffs.length === 0) return Promise.resolve();
