@@ -1480,6 +1480,7 @@ updateBuffsDisplay();
 
 // Função para verificar se animais fogem
 async function verificarFugaAnimais() {
+    console.log("VERIFICANDO FUGA DE ANIMAIS - FUNÇÃO CHAMADA");
     const userId = auth.currentUser?.uid;
     if (!userId) return;
     
@@ -1498,47 +1499,30 @@ async function verificarFugaAnimais() {
         
         if (griloIndex === -1) return; // Não tem grilo ou grilo sem energia
         
-        // Rola 1d3 para chance de fuga (TESTE)
-        const roll = Math.floor(Math.random() * 1) + 1;
+        // Rola 1d1 para chance de fuga (100% para teste)
+        const roll = 1;
         
         if (roll === 1) {
-            console.log("GRILO FUGINDO - Antes:", inventoryData.itemsInChest.length);
+            console.log("GRILO FUGINDO - Removendo do inventário");
             
-            // Grilo foge!
+            // Remove o grilo do array
             inventoryData.itemsInChest.splice(griloIndex, 1);
             
-            console.log("GRILO FUGINDO - Depois:", inventoryData.itemsInChest.length);
-            console.log("GRILO FUGINDO - Salvando no Firestore...");
+            // Usa updateDoc em vez de setDoc
+            await updateDoc(playerRef, {
+                'inventory.itemsInChest': inventoryData.itemsInChest
+            });
             
-            // Atualiza no Firestore com retry
-            let tentativas = 0;
-            let sucesso = false;
+            console.log("GRILO FUGINDO - Removido com sucesso!");
             
-            while (tentativas < 3 && !sucesso) {
-                try {
-                    await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-                    console.log("GRILO FUGINDO - Salvo com sucesso!");
-                    sucesso = true;
-                } catch (error) {
-                    tentativas++;
-                    console.error(`GRILO FUGINDO - Erro tentativa ${tentativas}:`, error);
-                    if (tentativas < 3) {
-                        await new Promise(resolve => setTimeout(resolve, 1000)); // Espera 1s
-                    }
-                }
-            }
-            
-            if (sucesso) {
-                // Mostra popup
-                alert("O grilo saltou do seu alforge e desapareceu entre as pedras.");
-            } else {
-                console.error("GRILO FUGINDO - Falha ao salvar após 3 tentativas");
-            }
+            // Mostra popup
+            alert("O grilo saltou do seu alforge e desapareceu entre as pedras.");
         }
     } catch (error) {
         console.error("Erro ao verificar fuga de animais:", error);
     }
 }
+
 
 
 // Função para processar debuffs do monstro no início do seu turno
