@@ -1478,7 +1478,6 @@ updateBuffsDisplay();
 }, Promise.resolve());
   } // <- ADICIONE ESTA CHAVE AQUI
 
-// Função para verificar se animais fogem
 async function verificarFugaAnimais() {
     console.log("VERIFICANDO FUGA DE ANIMAIS - FUNÇÃO CHAMADA");
     const userId = auth.currentUser?.uid;
@@ -1490,36 +1489,32 @@ async function verificarFugaAnimais() {
         
         if (!playerSnap.exists() || !playerSnap.data().inventory) return;
         
-        const inventoryData = playerSnap.data().inventory;
+        const playerData = playerSnap.data();
+        const inventoryData = playerData.inventory;
+        const itemsInChest = inventoryData.itemsInChest || [];
         
-        // Procura o grilo no inventário
-        const griloIndex = inventoryData.itemsInChest.findIndex(item => 
-            item.id === "grilo" && item.energia && item.energia.total > 0
+        // Remove grilos com energia > 0
+        const newItems = itemsInChest.filter(item => 
+            !(item.id === "grilo" && item.energia && item.energia.total > 0)
         );
         
-        if (griloIndex === -1) return;
-        
-        // Rola 1d30 para chance de fuga
-        const roll = Math.floor(Math.random() * 1) + 1;
-        
-        if (roll === 1) {
-            console.log("GRILO FUGINDO - Removendo do inventário");
+        if (newItems.length !== itemsInChest.length) {
+            // Rola 1d30 para chance de fuga
+            const roll = Math.floor(Math.random() * 30) + 1;
             
-            // Remove o grilo
-            inventoryData.itemsInChest.splice(griloIndex, 1);
-            
-            // USA SETDOC EM VEZ DE UPDATEDOC
-            await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-            
-            console.log("GRILO FUGINDO - Removido com sucesso!");
-            alert("O grilo saltou do seu alforge e desapareceu entre as pedras.");
+            if (roll === 1) {
+                console.log("GRILO FUGINDO - Removendo do inventário");
+                inventoryData.itemsInChest = newItems;
+                
+                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+                console.log("GRILO FUGINDO - Removido com sucesso do Firestore!");
+                alert("O grilo saltou do seu alforge e desapareceu entre as pedras.");
+            }
         }
     } catch (error) {
         console.error("Erro ao verificar fuga de animais:", error);
     }
 }
-
-
 
 
 // Função para processar debuffs do monstro no início do seu turno
