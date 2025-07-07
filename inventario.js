@@ -419,7 +419,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-   // Adiciona funcionalidade ao botão de descarte
+  // Adiciona funcionalidade ao botão de descarte
 if (discardSlot) {
     discardSlot.addEventListener("click", async () => {
         console.log("Botão de descarte clicado");
@@ -445,11 +445,13 @@ if (discardSlot) {
             selectedItem = null;
             clearHighlights();
             toggleUseButton(false);
+            saveInventoryData(auth.currentUser.uid); // ← ADICIONE ESTA LINHA
         }
     });
 } else {
     console.warn("Slot de descarte não encontrado no HTML.");
 }
+
 
 
     // Adiciona funcionalidade ao botão de usar
