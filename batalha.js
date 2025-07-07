@@ -1484,7 +1484,6 @@ async function verificarFugaAnimais() {
     if (!userId) return;
     
     try {
-        // BUSCA DADOS FRESCOS DO FIRESTORE
         const playerRef = doc(db, "players", userId);
         const playerSnap = await getDoc(playerRef);
         
@@ -1514,25 +1513,34 @@ async function verificarFugaAnimais() {
         
         console.log("GRILO ENCONTRADO NO ÍNDICE:", griloIndex);
         
-        // REMOVE O GRILO
+        // REMOVE O GRILO DO INVENTÁRIO
         itemsInChest.splice(griloIndex, 1);
+        
+        // ADICIONA O GRILO À LISTA DE DESCARTADOS
+        const discardedItems = playerData.inventory.discardedItems || [];
+        if (!discardedItems.includes("grilo")) {
+            discardedItems.push("grilo");
+        }
+        
         console.log("ITENS NO BAÚ DEPOIS:", itemsInChest.length);
         
         // SALVA NO FIRESTORE
         await setDoc(playerRef, {
             inventory: {
                 ...playerData.inventory,
-                itemsInChest: itemsInChest
+                itemsInChest: itemsInChest,
+                discardedItems: discardedItems // ← ADICIONA ESTA LINHA
             }
         }, { merge: true });
         
-        console.log("GRILO REMOVIDO COM SUCESSO DO FIRESTORE!");
+        console.log("GRILO REMOVIDO E ADICIONADO À LISTA DE DESCARTADOS!");
         alert("O grilo saltou do seu alforge e desapareceu entre as pedras.");
         
     } catch (error) {
         console.error("ERRO AO REMOVER GRILO:", error);
     }
 }
+
 
 
 
