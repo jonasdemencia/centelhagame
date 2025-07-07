@@ -1214,6 +1214,7 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
         } else if (efeito === "fear") {
     // Verifica se o monstro tem energia menor que 40
     if (currentMonster.pontosDeEnergiaMax >= 40) {
+
         await addLogMessage(`${magia.nome} não funciona em monstros poderosos!`, 1000);
         // Salva estado e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
