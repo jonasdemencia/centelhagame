@@ -432,9 +432,9 @@ const magiasDisponiveis = [
     descricao: "Faz o monstro perder o próximo turno (apenas monstros com energia < 50)",
     custo: 3,
     efeito: "stun",
-    valor: 1
+    valor: 1,
+    componentes: ["la"] // ← ADICIONE ESTA LINHA
 },
-
 
     {
         id: "escudo-arcano",
