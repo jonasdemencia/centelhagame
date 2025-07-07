@@ -617,18 +617,23 @@ function clearHighlights() {
     document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
 }
 
-// Função para salvar dados do inventário no Firestore
 async function saveInventoryData(uid) {
     console.log("Salvando dados do inventário para o usuário:", uid);
+    
+    // Busca a lista de descartados do Firestore
+    const playerRef = doc(db, "players", uid);
+    const playerSnap = await getDoc(playerRef);
+    const currentInventoryData = playerSnap.data()?.inventory || {};
+    const discardedItems = currentInventoryData.discardedItems || [];
+    
     const itemsInChest = Array.from(document.querySelectorAll('.item')).map(item => {
         const data = {
-    id: item.dataset.item,
-    content: item.innerHTML.split('<span class="item-expand-toggle">')[0].split('<span class="item-energia">')[0].trim()
-};
-if (item.dataset.energia) {
-    data.energia = JSON.parse(item.dataset.energia);
-}
-
+            id: item.dataset.item,
+            content: item.innerHTML.split('<span class="item-expand-toggle">')[0].split('<span class="item-energia">')[0].trim()
+        };
+        if (item.dataset.energia) {
+            data.energia = JSON.parse(item.dataset.energia);
+        }
         if (item.dataset.consumable === 'true') {
             data.consumable = true;
             data.quantity = parseInt(item.dataset.quantity);
@@ -640,7 +645,9 @@ if (item.dataset.energia) {
             }
         }
         return data;
-    });
+    })
+    // FILTRA OS DESCARTADOS
+    .filter(item => !discardedItems.includes(item.id));
 
     const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
         const itemName = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
@@ -662,18 +669,18 @@ if (item.dataset.energia) {
 
     const inventoryData = {
         itemsInChest: itemsInChest,
-        equippedItems: equippedItems
+        equippedItems: equippedItems,
+        discardedItems: discardedItems // Mantém a lista de descartados
     };
 
     try {
-        const playerRef = doc(db, "players", uid);
         await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
         console.log("Inventário salvo com sucesso!");
-        // A atualização da Couraça agora é feita diretamente no evento de clique
     } catch (error) {
         console.error("Erro ao salvar o inventário:", error);
     }
 }
+
 
 // ADICIONE A FUNÇÃO saveDiceState AQUI, com a correção do parêntese
 async function saveDiceState(uid) {
