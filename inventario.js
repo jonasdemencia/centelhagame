@@ -74,6 +74,7 @@ const initialItems = [
 const extraItems = [
     { id: "grilo", content: "Grilo", description: "Um pequeno grilo usado como componente mágico para magias de sono.", componente: true, energia: { total: 1, inicial: 1 } },
     { id: "espada-ferro", content: "Espada de Ferro", description: "Uma espada comum de ferro.", damage: "1d8" },
+    { id: "la", content: "Lã", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true }, // ← ADICIONE ESTA LINHA
     // Adicione mais itens aqui conforme necessário
 ];
 
