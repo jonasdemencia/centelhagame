@@ -1501,7 +1501,7 @@ async function verificarFugaAnimais() {
         const itemsInChest = playerData.inventory.itemsInChest;
         console.log("ITENS NO BAÚ ANTES:", itemsInChest.length);
         
-        // ENCONTRA E REMOVE O GRILO
+        // ENCONTRA O GRILO
         const griloIndex = itemsInChest.findIndex(item => 
             item.id === "grilo" && item.energia && item.energia.total > 0
         );
@@ -1512,6 +1512,15 @@ async function verificarFugaAnimais() {
         }
         
         console.log("GRILO ENCONTRADO NO ÍNDICE:", griloIndex);
+        
+        // VERIFICA CHANCE DE FUGA (1 em 30)
+        const chanceRoll = Math.floor(Math.random() * 30) + 1;
+        if (chanceRoll !== 1) {
+            console.log(`GRILO NÃO FUGIU (rolou ${chanceRoll}/30)`);
+            return;
+        }
+        
+        console.log("GRILO FUGIU! (rolou 1/30)");
         
         // REMOVE O GRILO DO INVENTÁRIO
         itemsInChest.splice(griloIndex, 1);
@@ -1529,7 +1538,7 @@ async function verificarFugaAnimais() {
             inventory: {
                 ...playerData.inventory,
                 itemsInChest: itemsInChest,
-                discardedItems: discardedItems // ← ADICIONA ESTA LINHA
+                discardedItems: discardedItems
             }
         }, { merge: true });
         
@@ -1540,6 +1549,7 @@ async function verificarFugaAnimais() {
         console.error("ERRO AO REMOVER GRILO:", error);
     }
 }
+
 
 
 
