@@ -369,6 +369,15 @@ const magiasDisponiveis = [
         valor: "1d4"
     },
 
+    {
+    id: "raio-acido",
+    nome: "Raio de Ácido",
+    descricao: "Projétil ácido que corrói o alvo",
+    custo: 1,
+    efeito: "damage",
+    valor: "1d3"
+},
+
 {
     id: "luz",
     nome: "Luz",
