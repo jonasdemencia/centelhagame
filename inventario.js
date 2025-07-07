@@ -419,22 +419,38 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Adiciona funcionalidade ao botão de descarte
-    if (discardSlot) {
-        discardSlot.addEventListener("click", () => {
-            console.log("Botão de descarte clicado");
-            if (selectedItem) {
-                console.log("Item descartado:", selectedItem.innerHTML);
-                selectedItem.remove();
-                selectedItem = null;
-                clearHighlights();
-                toggleUseButton(false);
-                saveInventoryData(auth.currentUser.uid);
+   // Adiciona funcionalidade ao botão de descarte
+if (discardSlot) {
+    discardSlot.addEventListener("click", async () => {
+        console.log("Botão de descarte clicado");
+        if (selectedItem) {
+            console.log("Item descartado:", selectedItem.innerHTML);
+            
+            // Adiciona à lista de descartados
+            const uid = auth.currentUser?.uid;
+            if (uid) {
+                const playerRef = doc(db, "players", uid);
+                const playerSnap = await getDoc(playerRef);
+                const inventoryData = playerSnap.data().inventory;
+                
+                if (!inventoryData.discardedItems) {
+                    inventoryData.discardedItems = [];
+                }
+                inventoryData.discardedItems.push(selectedItem.dataset.item);
+                
+                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
             }
-        });
-    } else {
-        console.warn("Slot de descarte não encontrado no HTML.");
-    }
+            
+            selectedItem.remove();
+            selectedItem = null;
+            clearHighlights();
+            toggleUseButton(false);
+        }
+    });
+} else {
+    console.warn("Slot de descarte não encontrado no HTML.");
+}
+
 
     // Adiciona funcionalidade ao botão de usar
 if (useButton) {
@@ -741,14 +757,17 @@ async function loadInventoryData(uid) {
                 }
             }
             
-            // Verifica itens extras
-            for (const extraItem of extraItems) {
-                const itemExists = inventoryData.itemsInChest.some(item => item.id === extraItem.id);
-                if (!itemExists) {
-                    inventoryData.itemsInChest.push({...extraItem});
-                    inventoryUpdated = true;
-                }
-            }
+           // Verifica itens extras (mas não os já descartados)
+for (const extraItem of extraItems) {
+    const itemExists = inventoryData.itemsInChest.some(item => item.id === extraItem.id);
+    const wasDiscarded = inventoryData.discardedItems && inventoryData.discardedItems.includes(extraItem.id);
+    
+    if (!itemExists && !wasDiscarded) {
+        inventoryData.itemsInChest.push({...extraItem});
+        inventoryUpdated = true;
+    }
+}
+
             
             // Se o inventário foi atualizado, salva as alterações
             if (inventoryUpdated) {
