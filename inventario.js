@@ -20,6 +20,40 @@ let selectedItem = null; // Armazena o item selecionado
 let currentPlayerData = null; // Armazena os dados do jogador
 // Variável global para o listener
 let inventoryListener = null;
+// Variável global para o listener do jogador
+let playerDataListener = null;
+
+// Função para configurar listener dos dados do jogador
+async function setupPlayerDataListener(uid) {
+    console.log("Configurando listener dos dados do jogador:", uid);
+    try {
+        const playerRef = doc(db, "players", uid);
+        
+        // Remove listener anterior se existir
+        if (playerDataListener) {
+            playerDataListener();
+        }
+        
+        // Configura listener em tempo real para TODOS os dados do jogador
+        playerDataListener = onSnapshot(playerRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const playerData = docSnap.data();
+                console.log("DADOS DO JOGADOR ATUALIZADOS EM TEMPO REAL!");
+                
+                // Atualiza dados globais
+                currentPlayerData = playerData;
+                
+                // Atualiza a interface
+                updateCharacterSheet(playerData);
+            }
+        }, (error) => {
+            console.error("Erro no listener dos dados do jogador:", error);
+        });
+        
+    } catch (error) {
+        console.error("Erro ao configurar listener dos dados do jogador:", error);
+    }
+}
 
 // Itens iniciais que o jogador deve ter (adicionando propriedade de dano)
 const initialItems = [
@@ -1015,19 +1049,19 @@ document.addEventListener("DOMContentLoaded", () => {
             currentPlayerData = await getPlayerData(user.uid);
             if (currentPlayerData) {
                 updateCharacterSheet(currentPlayerData);
-                initializeGameTime(currentPlayerData); // Inicializa o sistema de tempo
+                initializeGameTime(currentPlayerData);
             }
 
+            // CONFIGURA OS DOIS LISTENERS
+            await setupPlayerDataListener(user.uid);  // ← NOVO
             await loadInventoryData(user.uid);
-            await loadDiceState(user.uid); // Adicione esta linha aqui
+            await loadDiceState(user.uid);
         } else {
             console.log("Nenhum usuário autenticado. Redirecionando para a página inicial...");
             window.location.href = "index.html";
         }
     });
 });
-
-
 
 
 // Função para inicializar o sistema de tempo
