@@ -370,6 +370,16 @@ const magiasDisponiveis = [
     },
 
     {
+    id: "causar-medo",
+    nome: "Causar Medo",
+    descricao: "Faz o monstro fugir de terror (apenas monstros com energia < 40)",
+    custo: 3,
+    efeito: "fear",
+    valor: 1
+},
+
+
+    {
     id: "raio-acido",
     nome: "Raio de Ácido",
     descricao: "Projétil ácido que corrói o alvo",
@@ -1197,6 +1207,52 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
     updateBuffsDisplay();
     await addLogMessage(`${currentMonster.nome} está dormindo! Perderá o próximo turno e seu próximo ataque corpo a corpo será crítico!`, 800);
     
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+    endPlayerTurn();
+
+        } else if (efeito === "fear") {
+    // Verifica se o monstro tem energia menor que 40
+    if (currentMonster.pontosDeEnergiaMax >= 40) {
+        await addLogMessage(`${magia.nome} não funciona em monstros poderosos!`, 1000);
+        // Salva estado e passa turno
+        await updatePlayerMagicInFirestore(userId, playerMagic);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        endPlayerTurn();
+        return;
+    }
+    
+    // Teste de resistência
+    const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+    const resistanceTotal = resistanceRoll + currentMonster.habilidade;
+    const difficulty = 20;
+    
+    await addLogMessage(`${currentMonster.nome} tenta resistir ao medo: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
+    
+    if (resistanceTotal >= difficulty) {
+        await addLogMessage(`${currentMonster.nome} supera o medo!`, 1000);
+    } else {
+        await addLogMessage(`${currentMonster.nome} foge aterrorizado da batalha!`, 1000);
+        
+        // Limpa estado da batalha
+        const user = auth.currentUser;
+        if (user) {
+            await clearBattleState(user.uid, monsterName);
+        }
+        
+        // Esconde opções de ataque
+        if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+        
+        // Mostra botão para voltar ao mapa
+        const backButton = document.getElementById('back-to-map-button');
+        if (backButton) {
+            backButton.style.display = 'block';
+        }
+        
+        return; // Não passa turno, batalha acabou
+    }
+    
+    // Se resistiu, salva estado e passa turno
     await updatePlayerMagicInFirestore(userId, playerMagic);
     await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
     endPlayerTurn();
