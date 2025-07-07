@@ -70,6 +70,14 @@ const initialItems = [
 
 ];
 
+// Lista de itens que podem ser adicionados dinamicamente (não iniciais)
+const extraItems = [
+    { id: "grilo", content: "Grilo", description: "Um pequeno grilo usado como componente mágico para magias de sono.", componente: true, energia: { total: 1, inicial: 1 } },
+    { id: "espada-ferro", content: "Espada de Ferro", description: "Uma espada comum de ferro.", damage: "1d8" },
+    // Adicione mais itens aqui conforme necessário
+];
+
+
 // Função para reiniciar o inventário
 async function resetInventory() {
     const uid = auth.currentUser?.uid;
@@ -733,6 +741,15 @@ async function loadInventoryData(uid) {
                 }
             }
             
+            // Verifica itens extras
+            for (const extraItem of extraItems) {
+                const itemExists = inventoryData.itemsInChest.some(item => item.id === extraItem.id);
+                if (!itemExists) {
+                    inventoryData.itemsInChest.push({...extraItem});
+                    inventoryUpdated = true;
+                }
+            }
+            
             // Se o inventário foi atualizado, salva as alterações
             if (inventoryUpdated) {
                 await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
@@ -751,7 +768,6 @@ async function loadInventoryData(uid) {
         console.error("Erro ao configurar listener do inventário:", error);
     }
 }
-
 
 function loadInventoryUI(inventoryData) {
     console.log("Carregando UI do inventário:", inventoryData);
