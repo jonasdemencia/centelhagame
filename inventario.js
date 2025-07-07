@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
 // Configuração Firebase
@@ -18,6 +18,8 @@ const auth = getAuth(app);
 
 let selectedItem = null; // Armazena o item selecionado
 let currentPlayerData = null; // Armazena os dados do jogador
+// Variável global para o listener
+let inventoryListener = null;
 
 // Itens iniciais que o jogador deve ter (adicionando propriedade de dano)
 const initialItems = [
@@ -657,45 +659,41 @@ async function loadDiceState(uid) {
     }
 }
 
-// Função para carregar dados do Firestore
+
+// Função para carregar dados do Firestore COM LISTENER EM TEMPO REAL
 async function loadInventoryData(uid) {
-    console.log("Carregando dados do inventário para o usuário:", uid);
+    console.log("Configurando listener em tempo real para o inventário:", uid);
     try {
         const playerRef = doc(db, "players", uid);
-        const playerSnap = await getDoc(playerRef);
+        
+        // Remove listener anterior se existir
+        if (inventoryListener) {
+            inventoryListener();
+        }
+        
+        // Configura listener em tempo real
+        inventoryListener = onSnapshot(playerRef, async (docSnap) => {
+            if (!docSnap.exists() || !docSnap.data().inventory) {
+                // Se o inventário não existir, inicializa com os itens iniciais
+                const initialInventoryData = {
+                    itemsInChest: initialItems.map(item => ({ ...item })),
+                    equippedItems: {
+                        weapon: null, armor: null, helmet: null, amulet: null,
+                        shield: null, gloves: null, ring: null, boots: null
+                    }
+                };
+                await setDoc(playerRef, { inventory: initialInventoryData }, { merge: true });
+                console.log("Inventário inicializado com os itens padrão.");
+                return;
+            }
 
-        if (!playerSnap.exists() || !playerSnap.data().inventory) {
-            // Se o inventário não existir, inicializa com os itens iniciais
-            const initialInventoryData = {
-                itemsInChest: initialItems.map(item => ({ ...item })), // Cria uma cópia para não alterar o original
-                equippedItems: {
-                    weapon: null, // Slot para arma
-                    armor: null,  // Slot para armadura
-                    helmet: null,
-                    amulet: null,
-                    shield: null,
-                    gloves: null,
-                    ring: null,
-                    boots: null
-                }
-            };
-            await setDoc(playerRef, { inventory: initialInventoryData }, { merge: true });
-            console.log("Inventário inicializado com os itens padrão.");
-            // Agora que o inventário inicial foi salvo, vamos carregá-lo
-            const updatedPlayerSnap = await getDoc(playerRef);
-            const inventoryData = updatedPlayerSnap.data().inventory;
-            loadInventoryUI(inventoryData);
-            updateCharacterCouraca(); // Atualiza a Couraça ao carregar inicialmente
-            updateCharacterDamage(); // Atualiza o Dano ao carregar inicialmente
-        } else {
-            const inventoryData = playerSnap.data().inventory;
+            const inventoryData = docSnap.data().inventory;
             
-            // NOVO: Verifica se há novos itens em initialItems que não estão no inventário
+            // Verifica se há novos itens em initialItems que não estão no inventário
             let inventoryUpdated = false;
             for (const initialItem of initialItems) {
                 const itemExists = inventoryData.itemsInChest.some(item => item.id === initialItem.id);
                 if (!itemExists) {
-                    // Adiciona o novo item ao inventário
                     inventoryData.itemsInChest.push({...initialItem});
                     inventoryUpdated = true;
                 }
@@ -707,12 +705,16 @@ async function loadInventoryData(uid) {
                 console.log("Novos itens adicionados ao inventário.");
             }
             
+            console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
             loadInventoryUI(inventoryData);
-            updateCharacterCouraca(); // Atualiza a Couraça ao carregar inicialmente
-            updateCharacterDamage(); // Atualiza o Dano ao carregar inicialmente
-        }
+            updateCharacterCouraca();
+            updateCharacterDamage();
+        }, (error) => {
+            console.error("Erro no listener do inventário:", error);
+        });
+        
     } catch (error) {
-        console.error("Erro ao carregar o inventário:", error);
+        console.error("Erro ao configurar listener do inventário:", error);
     }
 }
 
