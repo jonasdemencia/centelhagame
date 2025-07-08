@@ -450,7 +450,7 @@ const magiasDisponiveis = [
         descricao: "Aumenta temporariamente a couraça",
         custo: 3,
         efeito: "shield",
-        valor: 4
+        valor: 4,
         componentes: ["pedaco-couro"]
     }
     
