@@ -207,6 +207,16 @@ if (bleedingDebuff) {
     }
 }
 
+// Processa amputação de pernas (chance de perder turno)
+const legsDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "amputation_legs");
+if (legsDebuff) {
+    const chancePerderTurno = Math.random();
+    if (chancePerderTurno < 0.3) { // 30% chance
+        await addLogMessage(`${currentMonster.nome} se debate no chão e perde o turno!`, 1000);
+        endMonsterTurn();
+        return;
+    }
+}
 
     
     // Escolhe o ataque (telegrafado ou novo)
@@ -262,6 +272,14 @@ const damageReduction = activeMonsterDebuffs
 if (damageReduction > 0) {
     monsterDamageRoll = Math.max(0, monsterDamageRoll - damageReduction);
     await addLogMessage(`Dano reduzido em ${damageReduction} por debuffs (${monsterDamageRoll + damageReduction} → ${monsterDamageRoll}).`, 800);
+}
+
+        // Aplica redução de dano por amputação de braços
+const armsDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "amputation_arms");
+if (armsDebuff) {
+    const originalDamage = monsterDamageRoll;
+    monsterDamageRoll = Math.max(1, Math.floor(monsterDamageRoll * 0.3));
+    await addLogMessage(`Dano reduzido por amputação (${originalDamage} → ${monsterDamageRoll}).`, 800);
 }
 
         
@@ -1481,6 +1499,16 @@ function updatePlayerCouracaDisplay() {
     }
 }
 
+// Função para calcular couraça total do monstro (base - penalidades)
+function getMonsterDefense() {
+    const baseDefense = currentMonster.couraça || 0;
+    const legsPenalty = activeMonsterDebuffs
+        .filter(debuff => debuff.tipo === "amputation_legs")
+        .reduce((total, debuff) => total + debuff.valor, 0);
+    return Math.max(0, baseDefense - legsPenalty);
+}
+
+
 
 // Função para atualizar display de buffs
 function updateBuffsDisplay() {
@@ -1512,7 +1540,7 @@ function updateMonsterDebuffsDisplay() {
         const debuffElement = document.createElement('div');
         debuffElement.className = 'debuff-item';
         debuffElement.innerHTML = `
-    <span>${debuff.nome}${debuff.tipo === "bleeding" ? ` (-${debuff.valor} HP/turno)` : ""}${debuff.tipo === "accuracy" ? ` (-${debuff.valor} precisão)` : ""}</span>
+    <span>${debuff.nome}${debuff.tipo === "bleeding" ? ` (-${debuff.valor} HP/turno)` : ""}${debuff.tipo === "accuracy" ? ` (-${debuff.valor} precisão)` : ""}${debuff.tipo === "amputation_legs" ? ` (-${debuff.valor} couraça)` : ""}${debuff.tipo === "amputation_arms" ? ` (-70% dano)` : ""}</span>
     <span class="debuff-turns">${debuff.turnos === 999 ? "∞" : debuff.turnos}</span>
 `;
 
@@ -2611,7 +2639,7 @@ if (rollLocationBtn) {
     }
 
         // const locationRoll = Math.floor(Math.random() * 20) + 1; // localização normal
-        const locationRoll = 18; // TESTE: sempre 18 (teste)
+        const locationRoll = 10; // TESTE: sempre 10 (teste)
         console.log("LOG: SIFER - Jogador rolou localização:", locationRoll);
         await addLogMessage(`Rolando um D20 para localização... <strong style="color: yellow;">${locationRoll}</strong>!`, 800);
 
@@ -2912,6 +2940,41 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 18) {
     }
 }
 
+        // VERIFICAÇÃO DE AMPUTAÇÃO SIFER
+if (energiaApos < limiar10Porcento) {
+    const locationRoll = window.siferContext.locationRoll;
+    
+    // Amputação de Membros Inferiores (1-5)
+    if (locationRoll >= 1 && locationRoll <= 5) {
+        const jaTemPernas = activeMonsterDebuffs.find(debuff => debuff.tipo === "amputation_legs");
+        if (!jaTemPernas) {
+            activeMonsterDebuffs.push({
+                tipo: "amputation_legs",
+                valor: Math.floor(currentMonster.couraça / 2),
+                turnos: 999,
+                nome: "Amputação (Pernas)"
+            });
+            updateMonsterDebuffsDisplay();
+            await addLogMessage(`<strong style="color: darkred;">AMPUTAÇÃO!</strong> Você amputa o ${currentMonster.nome}! Ele se arrasta vulnerável.`, 1200);
+        }
+    }
+    
+    // Amputação de Membros Ofensivos (7-10)
+    if (locationRoll >= 7 && locationRoll <= 10) {
+        const jaTemBracos = activeMonsterDebuffs.find(debuff => debuff.tipo === "amputation_arms");
+        if (!jaTemBracos) {
+            activeMonsterDebuffs.push({
+                tipo: "amputation_arms",
+                valor: 70, // 70% de redução (30% restante)
+                turnos: 999,
+                nome: "Amputação (Braços)"
+            });
+            updateMonsterDebuffsDisplay();
+            await addLogMessage(`<strong style="color: darkred;">AMPUTAÇÃO!</strong> Você amputa o ${currentMonster.nome}! Seus ataques ficam fracos.`, 1200);
+        }
+    }
+}
+
 
     window.siferContext = null; // Limpa contexto
 
@@ -3038,7 +3101,7 @@ if (criticalBuff && !isTouchSpell) {
 }
 
         const playerAttackRollTotal = playerAttackRollRaw + playerAbilityValue;
-        const monsterDefense = currentMonster.couraça || 0;
+        const monsterDefense = getMonsterDefense();
 
         if (isTouchSpell) {
     await addLogMessage(`Rolando toque mágico: ${playerAttackRollRaw} em um d20 + ${playerAbilityValue} (Hab) = ${playerAttackRollTotal} vs Couraça ${monsterDefense}`, 1000);
