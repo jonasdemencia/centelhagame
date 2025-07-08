@@ -2639,7 +2639,7 @@ if (rollLocationBtn) {
     }
 
         // const locationRoll = Math.floor(Math.random() * 20) + 1; // localização normal
-        const locationRoll = 5; // TESTE: sempre 5 (teste)
+        const locationRoll = 6; // TESTE: sempre 6 (teste)
         console.log("LOG: SIFER - Jogador rolou localização:", locationRoll);
         await addLogMessage(`Rolando um D20 para localização... <strong style="color: yellow;">${locationRoll}</strong>!`, 800);
 
@@ -2973,6 +2973,33 @@ if (energiaApos < limiar10Porcento) {
             await addLogMessage(`<strong style="color: darkred;">AMPUTAÇÃO!</strong> Você amputa o ${currentMonster.nome}! Seus ataques ficam fracos.`, 1200);
         }
     }
+}
+
+        // VERIFICAÇÃO DE HEMORRAGIA INTERNA SIFER
+if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 6) {
+    // Calcula dano por turno (2% da energia máxima, mínimo 1)
+    const danoPerTurno = Math.max(1, Math.ceil(currentMonster.pontosDeEnergiaMax * 0.02));
+    
+    // Verifica se já tem sangramento
+    const sangramentoExistente = activeMonsterDebuffs.find(debuff => debuff.tipo === "bleeding");
+    
+    if (sangramentoExistente) {
+        // Acumula com sangramento existente
+        sangramentoExistente.valor += danoPerTurno;
+        sangramentoExistente.nome = "Sangramento Múltiplo";
+        await addLogMessage(`<strong style="color: darkred;">HEMORRAGIA INTERNA!</strong> Você perfura órgãos vitais pelas costas de ${currentMonster.nome}! Sangramento aumenta para ${sangramentoExistente.valor} HP/turno!`, 1200);
+    } else {
+        // Adiciona novo debuff de hemorragia
+        activeMonsterDebuffs.push({
+            tipo: "bleeding",
+            valor: danoPerTurno,
+            turnos: 999,
+            nome: "Hemorragia Interna"
+        });
+        await addLogMessage(`<strong style="color: darkred;">HEMORRAGIA INTERNA!</strong> Você perfura órgãos vitais pelas costas de ${currentMonster.nome}! Ele sangrará ${danoPerTurno} HP por turno!`, 1200);
+    }
+    
+    updateMonsterDebuffsDisplay();
 }
 
 
