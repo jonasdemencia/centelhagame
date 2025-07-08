@@ -2824,7 +2824,33 @@ if (window.touchDebuffContext) {
         await addLogMessage(`Rolou bônus SIFER (${locationName}): ${siferBonusDamage}.`, 800);
         await addLogMessage(`Dano total: <strong style="color:yellow;">${totalDamage}</strong>.`, 1000);
 
-        window.siferContext = null; // Limpa contexto
+            // VERIFICAÇÃO DE MORTE INSTANTÂNEA SIFER
+    const energiaApos = currentMonster.pontosDeEnergia - totalDamage;
+    const limiar10Porcento = currentMonster.pontosDeEnergiaMax * 0.1;
+    
+    if (energiaApos < limiar10Porcento && (window.siferContext.locationRoll === 19 || window.siferContext.locationRoll === 20)) {
+        // Morte instantânea para Pescoço/Cabeça
+        const tipoMorte = window.siferContext.locationRoll === 19 ? "degolamento" : "decapitação";
+        await addLogMessage(`<strong style="color: darkred;">MORTE INSTANTÂNEA!</strong> ${tipoMorte.toUpperCase()}!`, 1200);
+        
+        // Força morte independente da energia
+        currentMonster.pontosDeEnergia = 0;
+        atualizarBarraHP("barra-hp-monstro", 0, currentMonster.pontosDeEnergiaMax);
+        
+        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi executado!</p>`, 1000);
+        
+        // Salva estado e chama pós-batalha
+        const user = auth.currentUser;
+        if (user) {
+            await saveBattleState(userId, monsterName, 0, playerHealth);
+        }
+        
+        handlePostBattle(currentMonster);
+        return;
+    }
+
+    window.siferContext = null; // Limpa contexto
+
     }
 
         } else {
