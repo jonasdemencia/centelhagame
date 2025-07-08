@@ -191,6 +191,23 @@ if (sleepDebuff) {
 // Processa debuffs do monstro
 await processMonsterDebuffs();
 
+    // Processa sangramento de evisceração
+const bleedingDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "bleeding");
+if (bleedingDebuff) {
+    currentMonster.pontosDeEnergia -= bleedingDebuff.valor;
+    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+    await addLogMessage(`${currentMonster.nome} perde ${bleedingDebuff.valor} HP por evisceração.`, 800);
+    
+    // Verifica se morreu por sangramento
+    if (currentMonster.pontosDeEnergia <= 0) {
+        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} morreu por perda de sangue!</p>`, 1000);
+        handlePostBattle(currentMonster);
+        return;
+    }
+}
+
+
     
     // Escolhe o ataque (telegrafado ou novo)
     let selectedAttack;
@@ -1495,9 +1512,9 @@ function updateMonsterDebuffsDisplay() {
         const debuffElement = document.createElement('div');
         debuffElement.className = 'debuff-item';
         debuffElement.innerHTML = `
-            <span>${debuff.nome}</span>
-            <span class="debuff-turns">${debuff.turnos}</span>
-        `;
+    <span>${debuff.nome}${debuff.tipo === "bleeding" ? ` (-${debuff.valor} HP/turno)` : ""}</span>
+    <span class="debuff-turns">${debuff.turnos === 999 ? "∞" : debuff.turnos}</span>
+`;
         container.appendChild(debuffElement);
     });
 }
@@ -2593,7 +2610,7 @@ if (rollLocationBtn) {
     }
 
         // const locationRoll = Math.floor(Math.random() * 20) + 1; // localização normal
-        const locationRoll = 20; // TESTE: sempre 20 (cabeça)
+        const locationRoll = 16; // TESTE: sempre 16 (teste evisceraçao)
         console.log("LOG: SIFER - Jogador rolou localização:", locationRoll);
         await addLogMessage(`Rolando um D20 para localização... <strong style="color: yellow;">${locationRoll}</strong>!`, 800);
 
@@ -2849,6 +2866,29 @@ if (window.touchDebuffContext) {
         handlePostBattle(currentMonster);
         return;
     }
+
+        // VERIFICAÇÃO DE EVISCERAÇÃO SIFER
+if (energiaApos < limiar10Porcento && window.siferContext.locationRoll >= 11 && window.siferContext.locationRoll <= 16) {
+    // Verifica se já tem evisceração
+    const jaTemEvisceração = activeMonsterDebuffs.find(debuff => debuff.tipo === "bleeding");
+    
+    if (!jaTemEvisceração) {
+        // Calcula dano por turno (1% da energia máxima, mínimo 1)
+        const danoPerTurno = Math.max(1, Math.ceil(currentMonster.pontosDeEnergiaMax * 0.01));
+        
+        // Adiciona debuff de evisceração
+        activeMonsterDebuffs.push({
+            tipo: "bleeding",
+            valor: danoPerTurno,
+            turnos: 999, // Permanente até morrer
+            nome: "Evisceração"
+        });
+        
+        updateMonsterDebuffsDisplay();
+        await addLogMessage(`<strong style="color: darkred;">EVISCERAÇÃO!</strong> ${currentMonster.nome} sangra ${danoPerTurno} HP por turno!`, 1200);
+    }
+}
+
 
     window.siferContext = null; // Limpa contexto
 
