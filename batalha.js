@@ -1512,9 +1512,10 @@ function updateMonsterDebuffsDisplay() {
         const debuffElement = document.createElement('div');
         debuffElement.className = 'debuff-item';
         debuffElement.innerHTML = `
-    <span>${debuff.nome}${debuff.tipo === "bleeding" ? ` (-${debuff.valor} HP/turno)` : ""}</span>
+    <span>${debuff.nome}${debuff.tipo === "bleeding" ? ` (-${debuff.valor} HP/turno)` : ""}${debuff.tipo === "accuracy" ? ` (-${debuff.valor} precisão)` : ""}</span>
     <span class="debuff-turns">${debuff.turnos === 999 ? "∞" : debuff.turnos}</span>
 `;
+
         container.appendChild(debuffElement);
     });
 }
@@ -2610,7 +2611,7 @@ if (rollLocationBtn) {
     }
 
         // const locationRoll = Math.floor(Math.random() * 20) + 1; // localização normal
-        const locationRoll = 16; // TESTE: sempre 16 (teste evisceraçao)
+        const locationRoll = 18; // TESTE: sempre 18 (teste)
         console.log("LOG: SIFER - Jogador rolou localização:", locationRoll);
         await addLogMessage(`Rolando um D20 para localização... <strong style="color: yellow;">${locationRoll}</strong>!`, 800);
 
@@ -2886,6 +2887,28 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll >= 11 && 
         
         updateMonsterDebuffsDisplay();
         await addLogMessage(`<strong style="color: darkred;">EVISCERAÇÃO!</strong> Você abre totalmente o abdômen de ${currentMonster.nome} e ele sangrará ${danoPerTurno} Energia por turno!`, 1200);
+    }
+}
+
+        // VERIFICAÇÃO DE ENUCLEAÇÃO SIFER
+if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 18) {
+    // Verifica se já tem cegueira
+    const jaTemCegueira = activeMonsterDebuffs.find(debuff => debuff.tipo === "accuracy" && debuff.nome === "Enucleação");
+    
+    if (!jaTemCegueira) {
+        // Remove qualquer debuff de accuracy anterior
+        activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "accuracy");
+        
+        // Adiciona debuff de enucleação
+        activeMonsterDebuffs.push({
+            tipo: "accuracy",
+            valor: 10,
+            turnos: 999, // Permanente até morrer
+            nome: "Enucleação"
+        });
+        
+        updateMonsterDebuffsDisplay();
+        await addLogMessage(`<strong style="color: darkred;">ENUCLEAÇÃO!</strong> Você arranca os olhos de ${currentMonster.nome}!`, 1200);
     }
 }
 
