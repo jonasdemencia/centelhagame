@@ -2987,7 +2987,7 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 6) {
         // Acumula com sangramento existente
         sangramentoExistente.valor += danoPerTurno;
         sangramentoExistente.nome = "Sangramento Múltiplo";
-        await addLogMessage(`<strong style="color: darkred;">HEMORRAGIA INTERNA!</strong> Você perfura órgãos vitais pelas costas de ${currentMonster.nome}! Sangramento aumenta para ${sangramentoExistente.valor} HP/turno!`, 1200);
+        await addLogMessage(`<strong style="color: darkred;">HEMORRAGIA INTERNA!</strong> Você perfura órgãos vitais pelas costas de ${currentMonster.nome}! Sangramento aumenta para ${sangramentoExistente.valor} energia/turno!`, 1200);
     } else {
         // Adiciona novo debuff de hemorragia
         activeMonsterDebuffs.push({
@@ -2996,7 +2996,7 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 6) {
             turnos: 999,
             nome: "Hemorragia Interna"
         });
-        await addLogMessage(`<strong style="color: darkred;">HEMORRAGIA INTERNA!</strong> Você perfura órgãos vitais pelas costas de ${currentMonster.nome}! Ele sangrará ${danoPerTurno} HP por turno!`, 1200);
+        await addLogMessage(`<strong style="color: darkred;">HEMORRAGIA INTERNA!</strong> Você perfura órgãos vitais pelas costas de ${currentMonster.nome}! Ele sangrará ${danoPerTurno} energia por turno!`, 1200);
     }
     
     updateMonsterDebuffsDisplay();
