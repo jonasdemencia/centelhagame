@@ -451,6 +451,7 @@ const magiasDisponiveis = [
         custo: 3,
         efeito: "shield",
         valor: 4
+        componentes: ["pedaco-couro"]
     }
     
 ];
