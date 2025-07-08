@@ -2652,7 +2652,7 @@ if (rollLocationBtn) {
     console.log("LOG: Contexto SIFER atualizado para rolagem de dano:", window.siferContext);
 
         console.log(`LOG: Localização: ${locationName}, Bônus: ${siferBonusDamage}`);
-        await addLogMessage(`Alvo: ${locationName}. Bônus SIFER: ${siferBonusDamage}.`, 800);
+       // await addLogMessage(`Alvo: ${locationName}. Bônus SIFER: ${siferBonusDamage}.`, 800);
 
 
         // Exibe o botão para rolar o dano
@@ -2885,7 +2885,7 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll >= 11 && 
         });
         
         updateMonsterDebuffsDisplay();
-        await addLogMessage(`<strong style="color: darkred;">EVISCERAÇÃO!</strong> ${currentMonster.nome} sangra ${danoPerTurno} HP por turno!`, 1200);
+        await addLogMessage(`<strong style="color: darkred;">EVISCERAÇÃO!</strong> Você abre totalmente o abdômen de ${currentMonster.nome} e ele sangrará ${danoPerTurno} Energia por turno!`, 1200);
     }
 }
 
