@@ -2639,7 +2639,7 @@ if (rollLocationBtn) {
     }
 
         // const locationRoll = Math.floor(Math.random() * 20) + 1; // localização normal
-        const locationRoll = 10; // TESTE: sempre 10 (teste)
+        const locationRoll = 5; // TESTE: sempre 5 (teste)
         console.log("LOG: SIFER - Jogador rolou localização:", locationRoll);
         await addLogMessage(`Rolando um D20 para localização... <strong style="color: yellow;">${locationRoll}</strong>!`, 800);
 
