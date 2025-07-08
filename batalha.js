@@ -2592,7 +2592,8 @@ if (rollLocationBtn) {
          return;
     }
 
-        const locationRoll = Math.floor(Math.random() * 20) + 1;
+        // const locationRoll = Math.floor(Math.random() * 20) + 1; // localização normal
+        const locationRoll = 20; // TESTE: sempre 20 (cabeça)
         console.log("LOG: SIFER - Jogador rolou localização:", locationRoll);
         await addLogMessage(`Rolando um D20 para localização... <strong style="color: yellow;">${locationRoll}</strong>!`, 800);
 
@@ -2969,7 +2970,8 @@ if (criticalBuff && !isTouchSpell) {
     updateBuffsDisplay();
     await addLogMessage(`Crítico garantido ativado! O monstro está dormindo e vulnerável!`, 800);
 } else {
-    playerAttackRollRaw = Math.floor(Math.random() * 20) + 1; // Normal
+    // playerAttackRollRaw = Math.floor(Math.random() * 20) + 1; // Normal
+    playerAttackRollRaw = 20; // TESTE: sempre 20
 }
 
         const playerAttackRollTotal = playerAttackRollRaw + playerAbilityValue;
