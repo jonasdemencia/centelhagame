@@ -136,7 +136,7 @@ function criarPaginaMagia(index) {
     const magia = magias[index];
     return `
         <div class="magia-page active">
-            <div class="magia-titulo">✴️ ${magia.nome}</div>
+            <div class="magia-titulo">${magia.nome}</div>
             <div class="magia-nome-verdadeiro">"${magia.nomeVerdadeiro}"</div>
             <div class="magia-divisor">═══════════════════════════════</div>
             <div class="magia-descricao">${magia.descricao.replace(/\n/g, '<br><br>')}</div>
