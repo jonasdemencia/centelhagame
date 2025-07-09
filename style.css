@@ -963,7 +963,6 @@ dice-icon svg {
     opacity: 0;
     transform: rotateY(-90deg);
     transition: all 0.6s ease;
-    animation: pulse 3s infinite ease-in-out;
 }
 
 .magia-page.active {
@@ -993,7 +992,7 @@ dice-icon svg {
     margin: 15px 0;
     line-height: 1.4;
     font-size: 13px;
-    animation: pulsar-leve 4s infinite ease-in-out;
+    animation: pulsar-leve 6s infinite ease-in-out;
 }
 
 .magia-stats {
