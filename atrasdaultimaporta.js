@@ -32,7 +32,7 @@ const magias = [
         componente: null
     },
     {
-        nome: "Dardos Místicos",
+        nome: "Dardos Místicos (FULMEN)",
         nomeVerdadeiro: "Olhar Afiado do Inominado",
         descricao: "As linhas saltam da página como farpas etéreas. Cada letra se torna uma lança de pensamento puro.\nNão mira a carne, mas a hesitação entre as costelas.",
         custo: 1,
