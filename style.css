@@ -896,13 +896,17 @@ dice-icon svg {
 }
 
 /* Estilos para a página Atrás da Última Porta */
-.container {
-    display: flex;
-    height: 100vh;
-    background-color: black;
+.pagina-descanso body {
+    background-color: black !important;
+    color: white !important;
 }
 
-.sidebar {
+.pagina-descanso .container {
+    display: flex;
+    height: 100vh;
+}
+
+.pagina-descanso .sidebar {
     width: 250px;
     padding: 20px;
     display: flex;
@@ -911,7 +915,7 @@ dice-icon svg {
     background-color: black;
 }
 
-.menu-btn {
+.pagina-descanso .menu-btn {
     background-color: black;
     color: white;
     border: 1px solid white;
@@ -922,18 +926,18 @@ dice-icon svg {
     transition: none;
 }
 
-.menu-btn:hover {
+.pagina-descanso .menu-btn:hover {
     background-color: white;
     color: black;
 }
 
-.content {
+.pagina-descanso .content {
     flex: 1;
     padding: 20px;
     background-color: black;
 }
 
-#content-area {
+.pagina-descanso #content-area {
     border: 1px solid white;
     padding: 20px;
     height: calc(100vh - 40px);
