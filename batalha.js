@@ -385,6 +385,7 @@ function endPlayerTurn() {
 
     setTimeout(() => {
         console.log("LOG: Chamando monsterAttack após fim do turno do jogador.");
+        console.log(`Eficiência Arcanum Iudicium: ${window.arcanumIudicium.getEficiencia()}%`); // ADICIONAR AQUI
         monsterAttack();
     }, 1500); // Delay para iniciar o turno do monstro
 }
