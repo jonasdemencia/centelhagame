@@ -114,8 +114,20 @@ const contentData = {
 };
 
 function criarGrimorio() {
+    const eficiencia = parseFloat(window.arcanumIudicium.getEficiencia());
+    let classeEficiencia = '';
+    
+    if (eficiencia >= 80) {
+        classeEficiencia = 'grimorio-alta';
+    } else if (eficiencia < 30) {
+        classeEficiencia = 'grimorio-muito-baixa';
+    } else {
+        classeEficiencia = 'grimorio-baixa';
+    }
+    
     return `
-        <div class="grimorio-container">
+        <div class="grimorio-container ${classeEficiencia}">
+
             <div id="magia-content">
                 ${criarPaginaMagia(paginaAtual)}
             </div>
@@ -134,7 +146,12 @@ function criarGrimorio() {
 
 function criarPaginaMagia(index) {
     const magia = magias[index];
+    
+    // Aplica efeitos aleatórios baseados na eficiência
+    setTimeout(() => aplicarEfeitosAleatorios(), 100);
+    
     return `
+
         <div class="magia-page active">
             <div class="magia-titulo">${magia.nome}</div>
             <div class="magia-nome-verdadeiro">"${magia.nomeVerdadeiro}"</div>
@@ -192,3 +209,35 @@ document.querySelectorAll('.menu-btn').forEach(button => {
         }
     });
 });
+
+function aplicarEfeitosAleatorios() {
+    const eficiencia = parseFloat(window.arcanumIudicium.getEficiencia());
+    
+    if (Math.random() < 0.3) { // 30% chance
+        const elementos = document.querySelectorAll('.magia-titulo, .magia-nome-verdadeiro, .magia-descricao, .magia-stats div');
+        const elementoAleatorio = elementos[Math.floor(Math.random() * elementos.length)];
+        
+        if (eficiencia >= 80) {
+            // Palavra aleatória em itálico
+            const texto = elementoAleatorio.innerHTML;
+            const palavras = texto.split(' ');
+            const palavraAleatoria = Math.floor(Math.random() * palavras.length);
+            palavras[palavraAleatoria] = `<em>${palavras[palavraAleatoria]}</em>`;
+            elementoAleatorio.innerHTML = palavras.join(' ');
+            
+        } else if (eficiencia < 30) {
+            // Efeitos muito baixa eficiência
+            const efeito = Math.random();
+            if (efeito < 0.33) {
+                elementoAleatorio.style.animation = 'piscar 0.3s ease-in-out 3';
+            } else if (efeito < 0.66) {
+                elementoAleatorio.style.animation = 'desaparecer 0.6s ease-in-out';
+            }
+            
+        } else {
+            // Tremular para eficiência baixa
+            elementoAleatorio.style.animation = 'tremular 0.5s ease-in-out 2';
+        }
+    }
+}
+
