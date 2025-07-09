@@ -1086,3 +1086,34 @@ dice-icon svg {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.85; }
 }
+
+/* Arcanum Iudicium - Efeitos Sutis */
+.grimorio-alta .magia-page {
+    filter: brightness(1.05);
+    transition: all 0.5s ease;
+}
+
+.grimorio-baixa .magia-page {
+    transition: all 0.7s ease;
+}
+
+.grimorio-muito-baixa .magia-page {
+    transition: all 0.7s ease;
+}
+
+@keyframes tremular {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-1px); }
+    75% { transform: translateX(1px); }
+}
+
+@keyframes piscar {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+@keyframes desaparecer {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
