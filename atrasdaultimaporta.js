@@ -8,7 +8,7 @@ const magias = [
         componente: "pedaco-couro → retalho da pele de quem já sobreviveu a mais de uma sentença"
     },
     {
-        nome: "Causar Medo",
+        nome: "Causar Medo (TIMORIS)",
         nomeVerdadeiro: "Eco do Berro Não Nascido",
         descricao: "A página emite um som que não se ouve.\nAqueles que têm pouco sangue para perder sentem sua espinha entortar sob o peso do \"e se\".",
         custo: 3,
@@ -24,7 +24,7 @@ const magias = [
         componente: null
     },
     {
-        nome: "Cura Menor",
+        nome: "Cura Menor (SANITAS)",
         nomeVerdadeiro: "Murmúrio do Sangue Quieto",
         descricao: "Uma prece curta inscrita nas margens da página, ativada por compaixão ou temor.\nO grimório sussurra memórias de infância, quando dor era cuidada com mãos e lágrimas.",
         custo: 2,
@@ -40,7 +40,7 @@ const magias = [
         componente: null
     },
     {
-        nome: "Escudo Arcano",
+        nome: "Escudo Arcano (AEGIS)",
         nomeVerdadeiro: "Círculo do Não-Tocar",
         descricao: "Linhas em espiral giram na página como se gravadas à unha.\nProtege não com força, mas com intenção perfeita.",
         custo: 3,
@@ -48,7 +48,7 @@ const magias = [
         componente: null
     },
     {
-        nome: "Luz",
+        nome: "Luz (LUMINA)",
         nomeVerdadeiro: "Vislumbre da Aurora que Queima",
         descricao: "A tinta brilha no escuro da página, irradiando luz branca.\nNão ilumina o caminho — apenas o erro dos olhos alheios.",
         custo: 2,
@@ -56,7 +56,7 @@ const magias = [
         componente: null
     },
     {
-        nome: "Pasmar",
+        nome: "Pasmar (OBSTUPRA)",
         nomeVerdadeiro: "Silêncio do Instante Rachado",
         descricao: "Ao pronunciar essa palavra, o tempo hesita.\nO inimigo sente que algo o observava antes dele existir.",
         custo: 3,
@@ -64,7 +64,7 @@ const magias = [
         componente: "la → o resíduo de uma nota que foi tocada para ninguém ouvir"
     },
     {
-        nome: "Raio de Ácido",
+        nome: "Raio de Ácido (CORRODO)",
         nomeVerdadeiro: "Chuva da Boca Amarga",
         descricao: "Cada gota conjurada contém o azedume de uma palavra não dita.\nO papel escorre enquanto você lê — e quem vê, sente arder.",
         custo: 1,
@@ -72,7 +72,7 @@ const magias = [
         componente: null
     },
     {
-        nome: "Sono",
+        nome: "Sono (QUIESCAS)",
         nomeVerdadeiro: "Cântico da Pálpebra Frágil",
         descricao: "Cada linha é um sussurro que pesa nas têmporas.\nO grimório exige um fragmento do sono alheio —",
         custo: 5,
@@ -80,7 +80,7 @@ const magias = [
         componente: "grilo → a canção de quem canta mesmo sabendo que será esmagado"
     },
     {
-        nome: "Toque Chocante",
+        nome: "Toque Chocante (FULGOR)",
         nomeVerdadeiro: "Dedos da Tempestade Guardada",
         descricao: "O conjurador não conjura — apenas empresta sua mão ao trovão.\nA página pulsa como um músculo elétrico.",
         custo: 2,
@@ -88,7 +88,7 @@ const magias = [
         componente: null
     },
     {
-        nome: "Toque Macabro",
+        nome: "Toque Macabro (EXSANGUO)",
         nomeVerdadeiro: "Frieza que Suga a Cor",
         descricao: "O toque rouba mais do que calor — leva intenção.\nA página fica cinza por alguns segundos após o uso.",
         custo: 3,
