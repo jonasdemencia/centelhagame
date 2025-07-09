@@ -21,6 +21,28 @@ const CONDITION_STABILITY = {
     lua: { changeChance: 0.10 }
 };
 
+// Sistema Arcanum Iudicium
+window.arcanumIudicium = {
+    sucessos: 0,
+    falhas: 0,
+    
+    sucesso() { 
+        this.sucessos++; 
+        console.log(`Arcanum Iudicium: Sucesso (${this.sucessos}/${this.sucessos + this.falhas})`);
+    },
+    
+    falha() { 
+        this.falhas++; 
+        console.log(`Arcanum Iudicium: Falha (${this.sucessos}/${this.sucessos + this.falhas})`);
+    },
+    
+    getEficiencia() {
+        const total = this.sucessos + this.falhas;
+        return total > 0 ? (this.sucessos / total * 100).toFixed(1) : 0;
+    }
+};
+
+
 const CONDITION_OPTIONS = {
     periodo: ['manha', 'tarde', 'noite', 'madrugada'],
     estacao: ['primavera', 'verao', 'outono', 'inverno'],
@@ -1097,6 +1119,7 @@ if (magiaId === 'missil-magico' || magiaId === 'toque-chocante') {
         updateBuffsDisplay();
         
         await addLogMessage(`${magia.nome} ativo! Sua couraça aumentou em +${buffValue} por ${buffDuration} turnos.`, 800);
+        window.arcanumIudicium.sucesso(); // ADICIONAR AQUI
         
         // Salva estado e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
@@ -1111,6 +1134,7 @@ if (magiaId === 'missil-magico' || magiaId === 'toque-chocante') {
     playerHealth = newEnergy;
     atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
     await addLogMessage(`Você recuperou ${healAmount} pontos de energia (${valor}).`, 800);
+    window.arcanumIudicium.sucesso(); // ADICIONAR AQUI
 
         
         // Salva estado e passa turno
@@ -1130,6 +1154,7 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
 
         if (resistanceTotal >= difficulty) {
             await addLogMessage(`${currentMonster.nome} resistiu à magia!`, 1000);
+            window.arcanumIudicium.falha(); // ADICIONAR AQUI
             // Salva estado e passa turno
             await updatePlayerMagicInFirestore(userId, playerMagic);
             await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
@@ -1154,6 +1179,7 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
         const rolarDanoButton = document.getElementById("rolar-dano");
         if (rolarDanoButton) {
             rolarDanoButton.style.display = 'inline-block';
+            window.arcanumIudicium.sucesso(); // ADICIONAR AQUI
             rolarDanoButton.disabled = false;
         }
         
@@ -1176,6 +1202,8 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
         updateMonsterDebuffsDisplay();
         
         await addLogMessage(`${currentMonster.nome} está ofuscado! Sua precisão diminuiu em -${debuffValue} por ${debuffDuration} turnos.`, 800);
+        window.arcanumIudicium.sucesso(); // ADICIONAR AQUI
+
         
         // Salva estado e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
@@ -3343,6 +3371,7 @@ function setupArcanumConjurationModal(magiaId) {
 
         let msg = '';
         if (result.success) {
+            window.arcanumIudicium.sucesso(); // ADICIONAR AQUI
             switch(magiaId) {
                 case 'missil-magico':
                     msg = `<span style="color:lime;">Conjuração bem-sucedida! <b>${result.level} dardo(s)</b> lançado(s)! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
@@ -3387,6 +3416,7 @@ function setupArcanumConjurationModal(magiaId) {
                     break;
             }
         } else {
+            window.arcanumIudicium.falha(); // ADICIONAR AQUI
             const halfCost = Math.ceil(magia.custo / 2);
             playerMagic -= halfCost;
             atualizarBarraMagia(playerMagic, playerMaxMagic);
