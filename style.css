@@ -1072,3 +1072,19 @@ dice-icon svg {
     transform: scale(1);
   }
 }
+
+.label {
+    font-weight: bold;
+    color: white;
+}
+
+.valor {
+    animation: pulsar 2.5s infinite ease-in-out;
+    color: #c5bebe;
+}
+
+@keyframes pulsar {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
