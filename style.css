@@ -945,3 +945,110 @@ dice-icon svg {
     background-color: black;
     color: white;
 }
+
+/* Grimório */
+.grimorio-container {
+    text-align: center;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.magia-page {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    opacity: 0;
+    transform: rotateY(-90deg);
+    transition: all 0.6s ease;
+}
+
+.magia-page.active {
+    opacity: 1;
+    transform: rotateY(0deg);
+}
+
+.magia-titulo {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.magia-nome-verdadeiro {
+    font-style: italic;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.magia-divisor {
+    margin: 15px 0;
+    font-size: 12px;
+}
+
+.magia-descricao {
+    margin: 15px 0;
+    line-height: 1.4;
+    font-size: 13px;
+}
+
+.magia-stats {
+    margin: 15px 0;
+    font-size: 13px;
+}
+
+.magia-stats div {
+    margin: 5px 0;
+}
+
+.grimorio-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0;
+}
+
+.nav-btn {
+    background: black;
+    color: white;
+    border: 1px solid white;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.nav-btn:hover {
+    background: white;
+    color: black;
+}
+
+.nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.page-number {
+    font-size: 12px;
+}
+
+.grimorio-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.action-btn {
+    background: black;
+    color: white;
+    border: 1px solid white;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.action-btn:hover {
+    background: white;
+    color: black;
+}
+
