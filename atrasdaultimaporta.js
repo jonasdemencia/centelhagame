@@ -137,6 +137,7 @@ const contentData = {
 
 function criarGrimorio() {
     const eficiencia = parseFloat(window.arcanumIudicium.getEficiencia());
+    console.log(`Eficiência atual do Arcanum Iudicium: ${eficiencia}%`);
     let classeEficiencia = '';
     
     if (eficiencia >= 80) {
