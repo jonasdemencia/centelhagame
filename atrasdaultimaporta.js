@@ -5,7 +5,7 @@ const magias = [
         descricao: "O conjurador se cobre de memória sólida, de palavras que nunca deixaram o papel.\nA página se dobra, formando um molde invisível ao redor do corpo.",
         custo: 3,
         efeito: "+4 Couraça",
-        componente: "pedaco-couro → retalho da pele de quem já sobreviveu a mais de uma sentença"
+        componente: "Retalho da pele de quem já sobreviveu a mais de uma sentença"
     },
     {
         nome: "Causar Medo (TIMORIS)",
@@ -61,7 +61,7 @@ const magias = [
         descricao: "Ao pronunciar essa palavra, o tempo hesita.\nO inimigo sente que algo o observava antes dele existir.",
         custo: 3,
         efeito: "Perda de turno (alvos com < 50 HP)",
-        componente: "la → o resíduo de uma nota que foi tocada para ninguém ouvir"
+        componente: "O resíduo macio de uma nota que foi tocada para ninguém ouvir"
     },
     {
         nome: "Raio de Ácido (CORRODO)",
@@ -77,7 +77,7 @@ const magias = [
         descricao: "Cada linha é um sussurro que pesa nas têmporas.\nO grimório exige um fragmento do sono alheio —",
         custo: 5,
         efeito: "Sono (alvos com < 50 HP)",
-        componente: "grilo → a canção de quem canta mesmo sabendo que será esmagado"
+        componente: "A canção de quem canta mesmo sabendo que será esmagado"
     },
     {
         nome: "Toque Chocante (FULGOR)",
