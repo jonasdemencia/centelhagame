@@ -986,11 +986,12 @@ dice-icon svg {
     font-size: 12px;
 }
 
+/* Só a descrição geral pulsa */
 .magia-descricao {
     margin: 15px 0;
     line-height: 1.4;
     font-size: 13px;
-    animation: pulse 3s infinite ease-in-out;
+    animation: pulsar-leve 4s infinite ease-in-out;
 }
 
 .magia-stats {
@@ -1002,14 +1003,20 @@ dice-icon svg {
     margin: 5px 0;
 }
 
+/* Apenas os rótulos pulsando */
 .magia-stats span.label {
-    animation: pulse 3s infinite ease-in-out;
+    font-weight: bold;
+    color: white;
+    animation: pulse 2.5s infinite ease-in-out;
 }
 
+/* Apenas os valores pulsando */
 .magia-stats span.valor {
-    animation: pulse 3s infinite ease-in-out;
+    animation: pulsar 3s infinite ease-in-out;
+    color: #c5bebe;
 }
 
+/* Navegação */
 .grimorio-nav {
     display: flex;
     justify-content: space-between;
@@ -1040,6 +1047,7 @@ dice-icon svg {
     font-size: 12px;
 }
 
+/* Ações */
 .grimorio-actions {
     display: flex;
     gap: 10px;
@@ -1061,26 +1069,11 @@ dice-icon svg {
     color: black;
 }
 
+/* Animações */
 @keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.01);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.label {
-    font-weight: bold;
-    color: white;
-}
-
-.valor {
-    animation: pulsar 2.5s infinite ease-in-out;
-    color: #c5bebe;
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
 }
 
 @keyframes pulsar {
@@ -1088,3 +1081,7 @@ dice-icon svg {
     50% { opacity: 0.6; }
 }
 
+@keyframes pulsar-leve {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+}
