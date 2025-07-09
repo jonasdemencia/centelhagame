@@ -1,3 +1,25 @@
+// Sistema Arcanum Iudicium
+window.arcanumIudicium = {
+    sucessos: 0,
+    falhas: 0,
+    
+    sucesso() { 
+        this.sucessos++; 
+        console.log(`Arcanum Iudicium: Sucesso (${this.sucessos}/${this.sucessos + this.falhas})`);
+    },
+    
+    falha() { 
+        this.falhas++; 
+        console.log(`Arcanum Iudicium: Falha (${this.sucessos}/${this.sucessos + this.falhas})`);
+    },
+    
+    getEficiencia() {
+        const total = this.sucessos + this.falhas;
+        return total > 0 ? (this.sucessos / total * 100).toFixed(1) : 0;
+    }
+};
+
+
 const magias = [
     {
         nome: "Armadura Arcana",
