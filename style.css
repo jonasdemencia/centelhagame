@@ -961,14 +961,14 @@ dice-icon svg {
     flex-direction: column;
     justify-content: center;
     opacity: 0;
-    transform: perspective(800px) rotateY(-90deg);
-    transform-origin: left center;
-    transition: transform 0.6s ease, opacity 0.6s ease;
+    transform: rotateY(-90deg);
+    transition: all 0.6s ease;
+    animation: pulse 3s infinite ease-in-out;
 }
 
 .magia-page.active {
     opacity: 1;
-    transform: perspective(800px) rotateY(0deg);
+    transform: rotateY(0deg);
 }
 
 
