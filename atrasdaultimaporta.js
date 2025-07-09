@@ -141,9 +141,9 @@ function criarPaginaMagia(index) {
             <div class="magia-divisor">═══════════════════════════════</div>
             <div class="magia-descricao">${magia.descricao.replace(/\n/g, '<br><br>')}</div>
             <div class="magia-stats">
-                <div>📖 Custo: ${magia.custo}</div>
-                <div>🌀 Efeito: ${magia.efeito}</div>
-                ${magia.componente ? `<div>🕯️ Componente: ${magia.componente}</div>` : '<div>🕯️ Componente: Nenhum</div>'}
+                <div>📖 <span class="label">Custo:</span> <span class="valor">${magia.custo}</span></div>
+                <div>🌀 <span class="label">Efeito:</span> <span class="valor">${magia.efeito}</span></div>
+                <div>🕯️ <span class="label">Componente:</span> <span class="valor">${magia.componente || 'Nenhum'}</span></div>
             </div>
             <div class="magia-divisor">═══════════════════════════════</div>
         </div>
@@ -153,12 +153,12 @@ function criarPaginaMagia(index) {
 function mudarPagina(direcao) {
     const novaPagina = paginaAtual + direcao;
     if (novaPagina < 0 || novaPagina >= magias.length) return;
-    
+
     const magiaContent = document.getElementById('magia-content');
     const paginaAtiva = magiaContent.querySelector('.magia-page');
-    
+
     paginaAtiva.classList.remove('active');
-    
+
     setTimeout(() => {
         paginaAtual = novaPagina;
         magiaContent.innerHTML = criarPaginaMagia(paginaAtual);
@@ -181,11 +181,11 @@ function memorizarMagia() {
 }
 
 document.querySelectorAll('.menu-btn').forEach(button => {
-    button.addEventListener('click', function() {
+    button.addEventListener('click', function () {
         const content = this.getAttribute('data-content');
         const resultado = typeof contentData[content] === 'function' ? contentData[content]() : contentData[content];
         document.getElementById('content-area').innerHTML = resultado;
-        
+
         if (content === 'grimorio') {
             paginaAtual = 0;
             atualizarBotoes();
