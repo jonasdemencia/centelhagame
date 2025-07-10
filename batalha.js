@@ -1048,6 +1048,8 @@ endPlayerTurn();
 
 
 async function carregarMagiasDisponiveis() {
+    // CARREGAR DADOS ATUALIZADOS DO FIRESTORE
+    await window.arcanumIudicium.carregarFirestore();
     const magiasContainer = document.getElementById("magias-container");
     magiasContainer.innerHTML = "";
     
