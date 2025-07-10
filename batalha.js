@@ -1054,9 +1054,9 @@ async function carregarMagiasDisponiveis() {
     magiasContainer.innerHTML = "";
     
     // Filtrar apenas magias memorizadas
-    const magiasMemorizadas = magiasDisponiveis.filter(magia => 
-        window.arcanumIudicium.isMagiaMemorizada(magia.nome)
-    );
+   const magiasMemorizadas = magiasDisponiveis.filter(magia => 
+    window.arcanumIudicium.isMagiaMemorizada(magia.id)
+);
     
     if (magiasMemorizadas.length === 0) {
         magiasContainer.innerHTML = "<p>Você não possui magias memorizadas.</p>";
