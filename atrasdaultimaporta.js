@@ -188,36 +188,42 @@ async function exibirJulgamentoGrimorio(categoria) {
             const mensagem = mensagens[Math.floor(Math.random() * mensagens.length)];
             
             // Digitar mensagem
-let index = 0;
-const digitar = () => {
-    if (index < mensagem.length) {
-        messageContainer.textContent += mensagem.charAt(index);
-        index++;
-        setTimeout(digitar, 50); // 50ms por caractere
-    } else {
-        // Verificar se é alta eficiência e sortear desconto
-        if (categoria === 'alta' && Math.random() < 0.33) {
-            // Filtrar magias elegíveis (custo > 1)
-            const magiasElegiveis = magias.filter(magia => magia.custo > 1);
-            if (magiasElegiveis.length > 0) {
-                const magiaEscolhida = magiasElegiveis[Math.floor(Math.random() * magiasElegiveis.length)];
-                window.arcanumIudicium.magiaComDesconto = magiaEscolhida.nome;
-                console.log(`Desconto aplicado à magia: ${magiaEscolhida.nome}`);
-            }
-        }
-        
-        // Aguardar 2s e fazer fade out
-        setTimeout(() => {
-            overlay.style.opacity = '0';
-            setTimeout(() => {
-                document.body.removeChild(overlay);
-                // Reabilitar botões
-                botoes.forEach(btn => btn.disabled = false);
-                resolve();
-            }, 300);
-        }, 2000);
-    }
-};
+            let index = 0;
+            const digitar = () => {
+                if (index < mensagem.length) {
+                    messageContainer.textContent += mensagem.charAt(index);
+                    index++;
+                    setTimeout(digitar, 50); // 50ms por caractere
+                } else {
+                    // Verificar se é alta eficiência e sortear desconto
+                    if (categoria === 'alta' && Math.random() < 0.33) {
+                        // Filtrar magias elegíveis (custo > 1)
+                        const magiasElegiveis = magias.filter(magia => magia.custo > 1);
+                        if (magiasElegiveis.length > 0) {
+                            const magiaEscolhida = magiasElegiveis[Math.floor(Math.random() * magiasElegiveis.length)];
+                            window.arcanumIudicium.magiaComDesconto = magiaEscolhida.nome;
+                            console.log(`Desconto aplicado à magia: ${magiaEscolhida.nome}`);
+                        }
+                    }
+                    
+                    // Aguardar 2s e fazer fade out
+                    setTimeout(() => {
+                        overlay.style.opacity = '0';
+                        setTimeout(() => {
+                            document.body.removeChild(overlay);
+                            // Reabilitar botões
+                            botoes.forEach(btn => btn.disabled = false);
+                            resolve();
+                        }, 300);
+                    }, 2000);
+                }
+            };
+            
+            digitar(); // ESTA LINHA ESTAVA FALTANDO
+        }, 300);
+    });
+}
+
 
 
 
