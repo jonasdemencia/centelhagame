@@ -82,8 +82,7 @@ window.arcanumIudicium = {
         console.error("Erro ao carregar Arcanum Iudicium:", error);
     }
 }
-
-
+}; // ← ADICIONE ESTA LINHA AQUI
 
 
 const magias = [
