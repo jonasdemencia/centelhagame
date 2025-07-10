@@ -1043,7 +1043,17 @@ async function carregarMagiasDisponiveis() {
     const magiasContainer = document.getElementById("magias-container");
     magiasContainer.innerHTML = "";
     
-    for (const magia of magiasDisponiveis) {
+    // Filtrar apenas magias memorizadas
+    const magiasMemorizadas = magiasDisponiveis.filter(magia => 
+        window.arcanumIudicium.isMagiaMemorizada(magia.nome)
+    );
+    
+    if (magiasMemorizadas.length === 0) {
+        magiasContainer.innerHTML = "<p>Você não possui magias memorizadas.</p>";
+        return;
+    }
+    
+    for (const magia of magiasMemorizadas) {
         const magiaElement = document.createElement("div");
         magiaElement.className = "item-consumivel";
         magiaElement.dataset.magiaId = magia.id;
@@ -1090,7 +1100,6 @@ async function carregarMagiasDisponiveis() {
         magiasContainer.appendChild(magiaElement);
     }
 }
-
 
 
 // Função para selecionar uma magia
