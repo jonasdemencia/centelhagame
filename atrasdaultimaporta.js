@@ -59,23 +59,30 @@ window.arcanumIudicium = {
     },
     
     async carregarFirestore() {
-        try {
-            const user = auth?.currentUser;
-            if (!user) return;
-            
-            const playerRef = doc(db, "players", user.uid);
-            const playerSnap = await getDoc(playerRef);
-            
-            if (playerSnap.exists() && playerSnap.data().arcanumIudicium) {
-                const data = playerSnap.data().arcanumIudicium;
-                this.sucessos = data.sucessos || 0;
-                this.falhas = data.falhas || 0;
-            }
-        } catch (error) {
-            console.error("Erro ao carregar Arcanum Iudicium:", error);
+    try {
+        const user = auth?.currentUser;
+        if (!user) {
+            console.log("Arcanum Iudicium: Usuário não logado");
+            return;
         }
+        
+        console.log("Arcanum Iudicium: Carregando dados do Firestore...");
+        const playerRef = doc(db, "players", user.uid);
+        const playerSnap = await getDoc(playerRef);
+        
+        if (playerSnap.exists() && playerSnap.data().arcanumIudicium) {
+            const data = playerSnap.data().arcanumIudicium;
+            this.sucessos = data.sucessos || 0;
+            this.falhas = data.falhas || 0;
+            console.log(`Arcanum Iudicium carregado: ${this.sucessos} sucessos, ${this.falhas} falhas`);
+        } else {
+            console.log("Arcanum Iudicium: Nenhum dado encontrado no Firestore - iniciando com valores zerados");
+        }
+    } catch (error) {
+        console.error("Erro ao carregar Arcanum Iudicium:", error);
     }
-};
+}
+
 
 
 
