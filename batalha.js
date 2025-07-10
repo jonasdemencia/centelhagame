@@ -27,6 +27,7 @@ window.arcanumIudicium = {
     falhas: 0,
     ultimaCategoria: null,
     magiaComDesconto: null,
+    magiasMemorizadas: [],
     
     async sucesso() { 
         this.sucessos++; 
@@ -63,7 +64,8 @@ window.arcanumIudicium = {
                     sucessos: this.sucessos,
                     falhas: this.falhas,
                     ultimaCategoria: this.ultimaCategoria,
-                    magiaComDesconto: this.magiaComDesconto
+                    magiaComDesconto: this.magiaComDesconto,
+                    magiasMemorizadas: this.magiasMemorizadas
                 }
             }, { merge: true });
         } catch (error) {
@@ -85,12 +87,18 @@ window.arcanumIudicium = {
                 this.falhas = data.falhas || 0;
                 this.ultimaCategoria = data.ultimaCategoria || null;
                 this.magiaComDesconto = data.magiaComDesconto || null;
+                this.magiasMemorizadas = data.magiasMemorizadas || [];
             }
         } catch (error) {
             console.error("Erro ao carregar Arcanum Iudicium:", error);
         }
+    },
+    
+    isMagiaMemorizada(nomeMagia) {
+        return this.magiasMemorizadas.includes(nomeMagia);
     }
 };
+
 
 
 const CONDITION_OPTIONS = {
