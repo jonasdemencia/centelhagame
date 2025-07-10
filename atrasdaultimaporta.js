@@ -3,21 +3,59 @@ window.arcanumIudicium = {
     sucessos: 0,
     falhas: 0,
     
-    sucesso() { 
+    async sucesso() { 
         this.sucessos++; 
         console.log(`Arcanum Iudicium: Sucesso (${this.sucessos}/${this.sucessos + this.falhas})`);
+        await this.salvarFirestore();
     },
     
-    falha() { 
+    async falha() { 
         this.falhas++; 
         console.log(`Arcanum Iudicium: Falha (${this.sucessos}/${this.sucessos + this.falhas})`);
+        await this.salvarFirestore();
     },
     
     getEficiencia() {
         const total = this.sucessos + this.falhas;
         return total > 0 ? (this.sucessos / total * 100).toFixed(1) : 0;
+    },
+    
+    async salvarFirestore() {
+        try {
+            const user = auth?.currentUser;
+            if (!user) return;
+            
+            const playerRef = doc(db, "players", user.uid);
+            await setDoc(playerRef, { 
+                arcanumIudicium: {
+                    sucessos: this.sucessos,
+                    falhas: this.falhas
+                }
+            }, { merge: true });
+        } catch (error) {
+            console.error("Erro ao salvar Arcanum Iudicium:", error);
+        }
+    },
+    
+    async carregarFirestore() {
+        try {
+            const user = auth?.currentUser;
+            if (!user) return;
+            
+            const playerRef = doc(db, "players", user.uid);
+            const playerSnap = await getDoc(playerRef);
+            
+            if (playerSnap.exists() && playerSnap.data().arcanumIudicium) {
+                const data = playerSnap.data().arcanumIudicium;
+                this.sucessos = data.sucessos || 0;
+                this.falhas = data.falhas || 0;
+            }
+        } catch (error) {
+            console.error("Erro ao carregar Arcanum Iudicium:", error);
+        }
     }
 };
+
 
 
 const magias = [
