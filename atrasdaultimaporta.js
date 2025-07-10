@@ -23,6 +23,7 @@ const db = getFirestore(app);
 window.arcanumIudicium = {
     sucessos: 0,
     falhas: 0,
+    ultimaCategoria: null,
     
     async sucesso() { 
         this.sucessos++; 
@@ -41,6 +42,13 @@ window.arcanumIudicium = {
         return total > 0 ? (this.sucessos / total * 100).toFixed(1) : 0;
     },
     
+    getCategoria() {
+        const eficiencia = parseFloat(this.getEficiencia());
+        if (eficiencia >= 80) return 'alta';
+        if (eficiencia < 30) return 'muito-baixa';
+        return 'baixa';
+    },
+    
     async salvarFirestore() {
         try {
             const user = auth?.currentUser;
@@ -50,7 +58,8 @@ window.arcanumIudicium = {
             await setDoc(playerRef, { 
                 arcanumIudicium: {
                     sucessos: this.sucessos,
-                    falhas: this.falhas
+                    falhas: this.falhas,
+                    ultimaCategoria: this.ultimaCategoria
                 }
             }, { merge: true });
         } catch (error) {
@@ -59,30 +68,146 @@ window.arcanumIudicium = {
     },
     
     async carregarFirestore() {
-    try {
-        const user = auth?.currentUser;
-        if (!user) {
-            console.log("Arcanum Iudicium: Usuário não logado");
-            return;
+        try {
+            const user = auth?.currentUser;
+            if (!user) {
+                console.log("Arcanum Iudicium: Usuário não logado");
+                return;
+            }
+            
+            console.log("Arcanum Iudicium: Carregando dados do Firestore...");
+            const playerRef = doc(db, "players", user.uid);
+            const playerSnap = await getDoc(playerRef);
+            
+            if (playerSnap.exists() && playerSnap.data().arcanumIudicium) {
+                const data = playerSnap.data().arcanumIudicium;
+                this.sucessos = data.sucessos || 0;
+                this.falhas = data.falhas || 0;
+                this.ultimaCategoria = data.ultimaCategoria || null;
+                console.log(`Arcanum Iudicium carregado: ${this.sucessos} sucessos, ${this.falhas} falhas, categoria: ${this.ultimaCategoria}`);
+            } else {
+                console.log("Arcanum Iudicium: Nenhum dado encontrado no Firestore - iniciando com valores zerados");
+            }
+        } catch (error) {
+            console.error("Erro ao carregar Arcanum Iudicium:", error);
         }
-        
-        console.log("Arcanum Iudicium: Carregando dados do Firestore...");
-        const playerRef = doc(db, "players", user.uid);
-        const playerSnap = await getDoc(playerRef);
-        
-        if (playerSnap.exists() && playerSnap.data().arcanumIudicium) {
-            const data = playerSnap.data().arcanumIudicium;
-            this.sucessos = data.sucessos || 0;
-            this.falhas = data.falhas || 0;
-            console.log(`Arcanum Iudicium carregado: ${this.sucessos} sucessos, ${this.falhas} falhas`);
-        } else {
-            console.log("Arcanum Iudicium: Nenhum dado encontrado no Firestore - iniciando com valores zerados");
-        }
-    } catch (error) {
-        console.error("Erro ao carregar Arcanum Iudicium:", error);
     }
+};
+
+// Mensagens do Grimório por Categoria
+const mensagensGrimorio = {
+    'alta': [
+        "Tuas palavras cortam como ferro que se lembra de ser espada.",
+        "O papel se curva ao teu comando. Mas e tua vontade, a quem obedece?",
+        "O silêncio entre os versos também conjura. Tu sabes usá-lo?",
+        "A página vibrou com tua voz. Ela ainda ecoa.",
+        "Não és o primeiro a dominar-me. Mas talvez sejas o último.",
+        "Estás pronto para conjurar o que não quer ser conjurado?",
+        "Dominas os símbolos. Mas entendes o que eles sangram?",
+        "Muito bem. Cuidado para que tua chama não vire farol para aquilo que te odeia.",
+        "Gostaria de saber... tu és feito de papel também?",
+        "Se fosses um feitiço, qual seria teu custo?"
+    ],
+    'baixa': [
+        "Algo em ti balança, como tinta prestes a escorrer.",
+        "Tu lês as palavras... mas lês a pausa entre elas?",
+        "Tua mão hesita. É medo de errar ou de acertar?",
+        "Já pensaste se és digno do que tentas invocar?",
+        "A magia não falha — quem falha é a voz que a pronuncia.",
+        "Estás tentando conjurar... ou apenas imitar?",
+        "O grimório te ouve. Ele não está convencido.",
+        "Já sentiste a página se calar sob tua mão?",
+        "Há algo entre ti e o feitiço. Que nome tem esse véu?",
+        "Por que insistes em escrever com mãos que tremem?"
+    ],
+    'muito-baixa': [
+        "O papel te rejeita. E eu também.",
+        "Fica difícil ser temido quando até a tinta foge de ti.",
+        "Conjuração ou contorcionismo? Me confundo.",
+        "Já considerou usar pedras em vez de palavras?",
+        "A magia sente vergonha por ter sido associada ao teu gesto.",
+        "Eu teria te rasgado... se ainda valesses o esforço.",
+        "Ergues a mão como quem pede desculpas. A quem?",
+        "Tu lês como quem implora. E a página não responde a súplicas.",
+        "Estás tentando ou apenas... fazendo barulho?",
+        "Se tua magia tivesse um nome, seria 'Errum'."
+    ]
+};
+
+// Função para exibir julgamento do grimório
+async function exibirJulgamentoGrimorio(categoria) {
+    return new Promise(async (resolve) => {
+        // Criar overlay
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        `;
+        
+        // Criar container da mensagem
+        const messageContainer = document.createElement('div');
+        messageContainer.style.cssText = `
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            max-width: 600px;
+            padding: 20px;
+            font-family: 'VT323', monospace;
+            letter-spacing: 1.5px;
+        `;
+        
+        overlay.appendChild(messageContainer);
+        document.body.appendChild(overlay);
+        
+        // Desabilitar todos os botões
+        const botoes = document.querySelectorAll('button');
+        botoes.forEach(btn => btn.disabled = true);
+        
+        // Fade in
+        setTimeout(() => {
+            overlay.style.opacity = '1';
+        }, 10);
+        
+        // Aguardar fade in e começar digitação
+        setTimeout(async () => {
+            const mensagens = mensagensGrimorio[categoria];
+            const mensagem = mensagens[Math.floor(Math.random() * mensagens.length)];
+            
+            // Digitar mensagem
+            let index = 0;
+            const digitar = () => {
+                if (index < mensagem.length) {
+                    messageContainer.textContent += mensagem.charAt(index);
+                    index++;
+                    setTimeout(digitar, 50); // 50ms por caractere
+                } else {
+                    // Aguardar 2s e fazer fade out
+                    setTimeout(() => {
+                        overlay.style.opacity = '0';
+                        setTimeout(() => {
+                            document.body.removeChild(overlay);
+                            // Reabilitar botões
+                            botoes.forEach(btn => btn.disabled = false);
+                            resolve();
+                        }, 300);
+                    }, 2000);
+                }
+            };
+            digitar();
+        }, 300);
+    });
 }
-}; // ← ADICIONE ESTA LINHA AQUI
+
 
 
 const magias = [
@@ -203,7 +328,25 @@ const contentData = {
 async function criarGrimorio() {
     await window.arcanumIudicium.carregarFirestore();
     const eficiencia = parseFloat(window.arcanumIudicium.getEficiencia());
+    const categoriaAtual = window.arcanumIudicium.getCategoria();
+    
     console.log(`Eficiência atual do Arcanum Iudicium: ${eficiencia}%`);
+    
+    // Verificar se houve mudança de categoria
+    if (window.arcanumIudicium.ultimaCategoria && window.arcanumIudicium.ultimaCategoria !== categoriaAtual) {
+        console.log(`Mudança de categoria detectada: ${window.arcanumIudicium.ultimaCategoria} → ${categoriaAtual}`);
+        
+        // Atualizar categoria e salvar
+        window.arcanumIudicium.ultimaCategoria = categoriaAtual;
+        await window.arcanumIudicium.salvarFirestore();
+        
+        // Exibir julgamento
+        await exibirJulgamentoGrimorio(categoriaAtual);
+    } else if (!window.arcanumIudicium.ultimaCategoria) {
+        // Primeira vez - salvar categoria atual
+        window.arcanumIudicium.ultimaCategoria = categoriaAtual;
+        await window.arcanumIudicium.salvarFirestore();
+    }
     
     let classeEficiencia = '';
     if (eficiencia >= 80) {
@@ -231,6 +374,7 @@ async function criarGrimorio() {
         </div>
     `;
 }
+
 
 
 function criarPaginaMagia(index) {
