@@ -25,6 +25,7 @@ window.arcanumIudicium = {
     falhas: 0,
     ultimaCategoria: null,
     magiaComDesconto: null,
+    magiasMemorizadas: [],
     
     async sucesso() { 
         this.sucessos++; 
@@ -61,7 +62,8 @@ window.arcanumIudicium = {
                     sucessos: this.sucessos,
                     falhas: this.falhas,
                     ultimaCategoria: this.ultimaCategoria,
-                    magiaComDesconto: this.magiaComDesconto
+                    magiaComDesconto: this.magiaComDesconto,
+                    magiasMemorizadas: this.magiasMemorizadas
                 }
             }, { merge: true });
         } catch (error) {
@@ -87,15 +89,29 @@ window.arcanumIudicium = {
                 this.falhas = data.falhas || 0;
                 this.ultimaCategoria = data.ultimaCategoria || null;
                 this.magiaComDesconto = data.magiaComDesconto || null;
-                console.log(`Arcanum Iudicium carregado: ${this.sucessos} sucessos, ${this.falhas} falhas, categoria: ${this.ultimaCategoria}, desconto: ${this.magiaComDesconto}`);
+                this.magiasMemorizadas = data.magiasMemorizadas || [];
+                console.log(`Arcanum Iudicium carregado: ${this.sucessos} sucessos, ${this.falhas} falhas, categoria: ${this.ultimaCategoria}, desconto: ${this.magiaComDesconto}, memorizadas: ${this.magiasMemorizadas.length}`);
             } else {
                 console.log("Arcanum Iudicium: Nenhum dado encontrado no Firestore - iniciando com valores zerados");
             }
         } catch (error) {
             console.error("Erro ao carregar Arcanum Iudicium:", error);
         }
+    },
+    
+    async memorizarMagia(nomeMagia) {
+        if (!this.magiasMemorizadas.includes(nomeMagia)) {
+            this.magiasMemorizadas.push(nomeMagia);
+            await this.salvarFirestore();
+            console.log(`Magia memorizada: ${nomeMagia}`);
+        }
+    },
+    
+    isMagiaMemorizada(nomeMagia) {
+        return this.magiasMemorizadas.includes(nomeMagia);
     }
 };
+
 
 
 // Mensagens do Grimório por Categoria
@@ -422,6 +438,11 @@ async function criarGrimorio() {
         classeEficiencia = 'grimorio-baixa';
     }
     
+    // Verificar se magia atual está memorizada
+    const magiaAtual = magias[paginaAtual];
+    const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.nome);
+    const botaoMemorizar = jaMemorizada ? '' : '<button class="action-btn" onclick="memorizarMagia()">Memorizar</button>';
+    
     return `
         <div class="grimorio-container ${classeEficiencia}">
             <div id="magia-content">
@@ -434,12 +455,11 @@ async function criarGrimorio() {
             </div>
             <div class="grimorio-actions">
                 <button class="action-btn" onclick="estudarMagia()">Estudar</button>
-                <button class="action-btn" onclick="memorizarMagia()">Memorizar</button>
+                ${botaoMemorizar}
             </div>
         </div>
     `;
 }
-
 
 
 
@@ -454,9 +474,13 @@ function criarPaginaMagia(index) {
     const custoFinal = temDesconto ? Math.max(1, magia.custo - 1) : magia.custo;
     const textoDesconto = temDesconto ? ` <span style="color: #00ff00;">-1</span>` : '';
     
+    // Verificar se magia está memorizada
+    const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magia.nome);
+    const statusMemorizada = jaMemorizada ? ' <span style="color: #ffd700;">✓ Memorizada</span>' : '';
+    
     return `
         <div class="magia-page active">
-            <div class="magia-titulo">${magia.nome}</div>
+            <div class="magia-titulo">${magia.nome}${statusMemorizada}</div>
             <div class="magia-nome-verdadeiro">"${magia.nomeVerdadeiro}"</div>
             <div class="magia-divisor">═══════════════════════════════</div>
             <div class="magia-descricao">${magia.descricao.replace(/\n/g, '<br><br>')}</div>
@@ -473,7 +497,8 @@ function criarPaginaMagia(index) {
     `;
 }
 
-function mudarPagina(direcao) {
+
+async function mudarPagina(direcao) {
     const novaPagina = paginaAtual + direcao;
     if (novaPagina < 0 || novaPagina >= magias.length) return;
 
@@ -482,13 +507,31 @@ function mudarPagina(direcao) {
 
     paginaAtiva.classList.remove('active');
 
-    setTimeout(() => {
+    setTimeout(async () => {
         paginaAtual = novaPagina;
         magiaContent.innerHTML = criarPaginaMagia(paginaAtual);
         document.querySelector('.page-number').textContent = `Página ${paginaAtual + 1}`;
+        
+        // Atualizar botão memorizar
+        const magiaAtual = magias[paginaAtual];
+        const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.nome);
+        const actionsDiv = document.querySelector('.grimorio-actions');
+        const botaoMemorizar = actionsDiv.querySelector('button[onclick="memorizarMagia()"]');
+        
+        if (jaMemorizada && botaoMemorizar) {
+            botaoMemorizar.remove();
+        } else if (!jaMemorizada && !botaoMemorizar) {
+            const novoBotao = document.createElement('button');
+            novoBotao.className = 'action-btn';
+            novoBotao.onclick = memorizarMagia;
+            novoBotao.textContent = 'Memorizar';
+            actionsDiv.appendChild(novoBotao);
+        }
+        
         atualizarBotoes();
     }, 300);
 }
+
 
 function atualizarBotoes() {
     document.getElementById('prev-btn').disabled = paginaAtual === 0;
@@ -499,9 +542,21 @@ function estudarMagia() {
     alert(`Estudando: ${magias[paginaAtual].nome}`);
 }
 
-function memorizarMagia() {
-    alert(`Memorizando: ${magias[paginaAtual].nome}`);
+async function memorizarMagia() {
+    const magiaAtual = magias[paginaAtual];
+    
+    if (!window.arcanumIudicium.isMagiaMemorizada(magiaAtual.nome)) {
+        await window.arcanumIudicium.memorizarMagia(magiaAtual.nome);
+        
+        // Recarregar grimório para atualizar interface
+        const resultado = await criarGrimorio();
+        document.getElementById('content-area').innerHTML = resultado;
+        atualizarBotoes();
+        
+        alert(`${magiaAtual.nome} foi memorizada!`);
+    }
 }
+
 
 document.querySelectorAll('.menu-btn').forEach(button => {
     button.addEventListener('click', async function () {
