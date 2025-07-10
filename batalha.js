@@ -25,6 +25,8 @@ const CONDITION_STABILITY = {
 window.arcanumIudicium = {
     sucessos: 0,
     falhas: 0,
+    ultimaCategoria: null,
+    magiaComDesconto: null,
     
     async sucesso() { 
         this.sucessos++; 
@@ -43,6 +45,13 @@ window.arcanumIudicium = {
         return total > 0 ? (this.sucessos / total * 100).toFixed(1) : 0;
     },
     
+    getCategoria() {
+        const eficiencia = parseFloat(this.getEficiencia());
+        if (eficiencia >= 80) return 'alta';
+        if (eficiencia < 30) return 'muito-baixa';
+        return 'baixa';
+    },
+    
     async salvarFirestore() {
         try {
             const user = auth?.currentUser;
@@ -52,7 +61,9 @@ window.arcanumIudicium = {
             await setDoc(playerRef, { 
                 arcanumIudicium: {
                     sucessos: this.sucessos,
-                    falhas: this.falhas
+                    falhas: this.falhas,
+                    ultimaCategoria: this.ultimaCategoria,
+                    magiaComDesconto: this.magiaComDesconto
                 }
             }, { merge: true });
         } catch (error) {
@@ -72,6 +83,8 @@ window.arcanumIudicium = {
                 const data = playerSnap.data().arcanumIudicium;
                 this.sucessos = data.sucessos || 0;
                 this.falhas = data.falhas || 0;
+                this.ultimaCategoria = data.ultimaCategoria || null;
+                this.magiaComDesconto = data.magiaComDesconto || null;
             }
         } catch (error) {
             console.error("Erro ao carregar Arcanum Iudicium:", error);
@@ -1036,10 +1049,16 @@ async function carregarMagiasDisponiveis() {
         magiaElement.dataset.magiaId = magia.id;
         magiaElement.dataset.efeito = magia.efeito;
         magiaElement.dataset.valor = magia.valor;
-        magiaElement.dataset.custo = magia.custo;
+        
+        // Calcular custo com desconto
+        const temDesconto = window.arcanumIudicium.magiaComDesconto === magia.nome;
+        const custoFinal = temDesconto ? Math.max(1, magia.custo - 1) : magia.custo;
+        const textoDesconto = temDesconto ? ` <span style="color: #00ff00;">-1</span>` : '';
+        
+        magiaElement.dataset.custo = custoFinal; // Usar custo final
         
         // Verifica se tem magia suficiente E componentes necessários
-        const temMagiaSuficiente = playerMagic >= magia.custo;
+        const temMagiaSuficiente = playerMagic >= custoFinal; // Usar custo final
         const temComponentes = await hasRequiredComponents(magia.componentes);
         const podeUsar = temMagiaSuficiente && temComponentes;
         
@@ -1061,7 +1080,7 @@ async function carregarMagiasDisponiveis() {
         
         magiaElement.innerHTML = `
             <div class="item-nome">${magia.nome}</div>
-            <div class="item-quantidade">Custo: ${magia.custo} PM</div>
+            <div class="item-quantidade">Custo: ${custoFinal}${textoDesconto} PM</div>
             <div class="item-descricao">${magia.descricao}${componentesTexto}</div>
         `;
         
@@ -1071,6 +1090,7 @@ async function carregarMagiasDisponiveis() {
         magiasContainer.appendChild(magiaElement);
     }
 }
+
 
 
 // Função para selecionar uma magia
@@ -1107,29 +1127,31 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         return;
     }
 
- // --- INÍCIO INTEGRAÇÃO ARCANUM ---
-if (magiaId === 'missil-magico' || magiaId === 'toque-chocante') {
-    document.getElementById("magias-modal").style.display = "none";
-    setupArcanumConjurationModal(magiaId);
-    return;
-}
-// --- FIM INTEGRAÇÃO ARCANUM ---
+    // --- INÍCIO INTEGRAÇÃO ARCANUM ---
+    if (magiaId === 'missil-magico' || magiaId === 'toque-chocante') {
+        document.getElementById("magias-modal").style.display = "none";
+        setupArcanumConjurationModal(magiaId);
+        return;
+    }
+    // --- FIM INTEGRAÇÃO ARCANUM ---
 
     const userId = auth.currentUser.uid;
-    const custoNum = parseInt(custo);
     
-    // Verifica se tem magia suficiente
-    if (playerMagic < custoNum) {
-        await addLogMessage(`Você não tem magia suficiente! (${playerMagic}/${custoNum})`, 1000);
+    // RECALCULAR CUSTO COM DESCONTO
+    const temDesconto = window.arcanumIudicium.magiaComDesconto === magia.nome;
+    const custoFinal = temDesconto ? Math.max(1, magia.custo - 1) : magia.custo;
+    
+    // Verifica se tem magia suficiente (usar custo final)
+    if (playerMagic < custoFinal) {
+        await addLogMessage(`Você não tem magia suficiente! (${playerMagic}/${custoFinal})`, 1000);
         return;
     }
 
-    
     // Fechar modal
     document.getElementById("magias-modal").style.display = "none";
     
-    // Reduz magia
-    playerMagic -= custoNum;
+    // Reduz magia (usar custo final)
+    playerMagic -= custoFinal;
     atualizarBarraMagia(playerMagic, playerMaxMagic);
     
     // Criar bloco de turno
@@ -1167,12 +1189,12 @@ if (magiaId === 'missil-magico' || magiaId === 'toque-chocante') {
     }
 
     if (efeito === "heal") {
-    const healAmount = rollDice(valor); // ROLA OS DADOS
-    const newEnergy = Math.min(playerHealth + healAmount, playerMaxHealth);
-    playerHealth = newEnergy;
-    atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-    await addLogMessage(`Você recuperou ${healAmount} pontos de energia (${valor}).`, 800);
-    window.arcanumIudicium.sucesso(); // ADICIONAR AQUI
+        const healAmount = rollDice(valor); // ROLA OS DADOS
+        const newEnergy = Math.min(playerHealth + healAmount, playerMaxHealth);
+        playerHealth = newEnergy;
+        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+        await addLogMessage(`Você recuperou ${healAmount} pontos de energia (${valor}).`, 800);
+        window.arcanumIudicium.sucesso(); // ADICIONAR AQUI
 
         
         // Salva estado e passa turno
@@ -1182,8 +1204,8 @@ if (magiaId === 'missil-magico' || magiaId === 'toque-chocante') {
         return;
     }
 
-   // Teste de resistência do monstro (apenas para magias que não são touch_attack ou touch_debuff)
-if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
+    // Teste de resistência do monstro (apenas para magias que não são touch_attack ou touch_debuff)
+    if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
         const resistanceRoll = Math.floor(Math.random() * 20) + 1;
         const resistanceTotal = resistanceRoll + currentMonster.habilidade;
         const difficulty = 20;
@@ -1248,103 +1270,100 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
         await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         endPlayerTurn();
 
-        } else if (efeito === "stun") {
-    // Verifica se o monstro tem energia menor que 50
-    if (currentMonster.pontosDeEnergiaMax >= 50) {
-        await addLogMessage(`${magia.nome} não funciona em monstros com muita energia!`, 1000);
+    } else if (efeito === "stun") {
+        // Verifica se o monstro tem energia menor que 50
+        if (currentMonster.pontosDeEnergiaMax >= 50) {
+            await addLogMessage(`${magia.nome} não funciona em monstros com muita energia!`, 1000);
+            // Salva estado e passa turno
+            await updatePlayerMagicInFirestore(userId, playerMagic);
+            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+            endPlayerTurn();
+            return;
+        }
+        
+        // Adiciona debuff de atordoamento
+        activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "stun");
+        activeMonsterDebuffs.push({
+            tipo: "stun",
+            valor: 1,
+            turnos: 1,
+            nome: magia.nome
+        });
+        
+        updateMonsterDebuffsDisplay();
+        await addLogMessage(`${currentMonster.nome} está pasmado! Perderá o próximo turno.`, 800);
+        
         // Salva estado e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
         await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         endPlayerTurn();
-        return;
-    }
-    
-    // Adiciona debuff de atordoamento
-    activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "stun");
-    activeMonsterDebuffs.push({
-        tipo: "stun",
-        valor: 1,
-        turnos: 1,
-        nome: magia.nome
-    });
-    
-    updateMonsterDebuffsDisplay();
-    await addLogMessage(`${currentMonster.nome} está pasmado! Perderá o próximo turno.`, 800);
-    
-    // Salva estado e passa turno
-    await updatePlayerMagicInFirestore(userId, playerMagic);
-    await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-    endPlayerTurn();
 
-        } else if (efeito === "sleep") {
-    // Verifica se o monstro tem energia menor que 50
-    if (currentMonster.pontosDeEnergiaMax >= 50) {
-        await addLogMessage(`${magia.nome} não funciona em monstros com muita energia!`, 1000);
+    } else if (efeito === "sleep") {
+        // Verifica se o monstro tem energia menor que 50
+        if (currentMonster.pontosDeEnergiaMax >= 50) {
+            await addLogMessage(`${magia.nome} não funciona em monstros com muita energia!`, 1000);
+            await updatePlayerMagicInFirestore(userId, playerMagic);
+            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+            endPlayerTurn();
+            return;
+        }
+        
+        // Adiciona debuff de sono no monstro
+        activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "sleep");
+        activeMonsterDebuffs.push({
+            tipo: "sleep",
+            valor: 1,
+            turnos: 1,
+            nome: magia.nome
+        });
+        
+        // Adiciona buff crítico no jogador
+        activeBuffs = activeBuffs.filter(buff => buff.tipo !== "critical_guaranteed");
+        activeBuffs.push({
+            tipo: "critical_guaranteed",
+            valor: 1,
+            turnos: 2,  // <-- MUDE PARA 2
+            nome: "Sono - Crítico Garantido"
+        });
+
+        
+        updateMonsterDebuffsDisplay();
+        updateBuffsDisplay();
+        await addLogMessage(`${currentMonster.nome} está dormindo! Perderá o próximo turno e seu próximo ataque corpo a corpo será crítico!`, 800);
+        
         await updatePlayerMagicInFirestore(userId, playerMagic);
         await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         endPlayerTurn();
-        return;
-    }
-    
-    // Adiciona debuff de sono no monstro
-    activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "sleep");
-    activeMonsterDebuffs.push({
-        tipo: "sleep",
-        valor: 1,
-        turnos: 1,
-        nome: magia.nome
-    });
-    
-    // Adiciona buff crítico no jogador
-    activeBuffs = activeBuffs.filter(buff => buff.tipo !== "critical_guaranteed");
-    activeBuffs.push({
-    tipo: "critical_guaranteed",
-    valor: 1,
-    turnos: 2,  // <-- MUDE PARA 2
-    nome: "Sono - Crítico Garantido"
-});
 
-    
-    updateMonsterDebuffsDisplay();
-    updateBuffsDisplay();
-    await addLogMessage(`${currentMonster.nome} está dormindo! Perderá o próximo turno e seu próximo ataque corpo a corpo será crítico!`, 800);
-    
-    await updatePlayerMagicInFirestore(userId, playerMagic);
-    await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-    endPlayerTurn();
-
-        } else if (efeito === "fear") {
-    // Verifica se o monstro tem energia menor que 40
-    if (currentMonster.pontosDeEnergiaMax > 40) {
-        await addLogMessage(`${magia.nome} não funciona em monstros poderosos!`, 1000);
-        await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-        endPlayerTurn();
-        return;
-    }
-    
-    // Se chegou aqui, o monstro falhou no teste geral de resistência
-    await addLogMessage(`${currentMonster.nome} foge aterrorizado da batalha!`, 1000);
-    
-    // Limpa estado da batalha
-    const user = auth.currentUser;
-    if (user) {
-        await clearBattleState(user.uid, monsterName);
-    }
-    
-    // Esconde opções de ataque
-    if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
-    
-    // Mostra botão para voltar ao mapa
-    const backButton = document.getElementById('back-to-map-button');
-    if (backButton) {
-        backButton.style.display = 'block';
-    }
-    
-    return; // Não passa turno, batalha acabou
-
-
-
+    } else if (efeito === "fear") {
+        // Verifica se o monstro tem energia menor que 40
+        if (currentMonster.pontosDeEnergiaMax > 40) {
+            await addLogMessage(`${magia.nome} não funciona em monstros poderosos!`, 1000);
+            await updatePlayerMagicInFirestore(userId, playerMagic);
+            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+            endPlayerTurn();
+            return;
+        }
+        
+        // Se chegou aqui, o monstro falhou no teste geral de resistência
+        await addLogMessage(`${currentMonster.nome} foge aterrorizado da batalha!`, 1000);
+        
+        // Limpa estado da batalha
+        const user = auth.currentUser;
+        if (user) {
+            await clearBattleState(user.uid, monsterName);
+        }
+        
+        // Esconde opções de ataque
+        if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+        
+        // Mostra botão para voltar ao mapa
+        const backButton = document.getElementById('back-to-map-button');
+        if (backButton) {
+            backButton.style.display = 'block';
+        }
+        
+        return; // Não passa turno, batalha acabou
 
     } else if (efeito === "touch_attack") {
         // Salva contexto da magia de toque
@@ -1363,9 +1382,8 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
         
         // Não passa o turno, aguarda rolagem de ataque
         return;
-    
 
-      } else if (efeito === "touch_debuff") {
+    } else if (efeito === "touch_debuff") {
         // Salva contexto da magia de toque com debuff
         window.touchDebuffContext = {
             dano: valor,
@@ -1384,6 +1402,7 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
         return;
     }
 }
+
 
 async function salvarDropsNoLoot(userId, drops) {
     const lootCollectionRef = collection(db, "users", userId, "loot");
