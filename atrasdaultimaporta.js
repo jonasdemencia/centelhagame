@@ -99,19 +99,18 @@ window.arcanumIudicium = {
         }
     },
     
-    async memorizarMagia(nomeMagia) {
-        if (!this.magiasMemorizadas.includes(nomeMagia)) {
-            this.magiasMemorizadas.push(nomeMagia);
+    async memorizarMagia(idMagia) {
+        if (!this.magiasMemorizadas.includes(idMagia)) {
+            this.magiasMemorizadas.push(idMagia);
             await this.salvarFirestore();
-            console.log(`Magia memorizada: ${nomeMagia}`);
+            console.log(`Magia memorizada: ${idMagia}`);
         }
     },
     
-    isMagiaMemorizada(nomeMagia) {
-        return this.magiasMemorizadas.includes(nomeMagia);
+    isMagiaMemorizada(idMagia) {
+        return this.magiasMemorizadas.includes(idMagia);
     }
 };
-
 
 
 // Mensagens do Grimório por Categoria
