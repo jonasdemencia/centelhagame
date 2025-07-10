@@ -1090,7 +1090,7 @@ dice-icon svg {
 /* Arcanum Iudicium - Efeitos Sutis */
 .grimorio-alta .magia-page {
     filter: brightness(1.05);
-    transition: all 0.5s ease;
+    transition: all 0.5s ease; /* Era 0.5s, mantém */
 }
 
 .grimorio-baixa .magia-page {
