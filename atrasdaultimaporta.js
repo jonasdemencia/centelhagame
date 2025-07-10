@@ -24,6 +24,7 @@ window.arcanumIudicium = {
     sucessos: 0,
     falhas: 0,
     ultimaCategoria: null,
+    magiaComDesconto: null,
     
     async sucesso() { 
         this.sucessos++; 
@@ -59,7 +60,8 @@ window.arcanumIudicium = {
                 arcanumIudicium: {
                     sucessos: this.sucessos,
                     falhas: this.falhas,
-                    ultimaCategoria: this.ultimaCategoria
+                    ultimaCategoria: this.ultimaCategoria,
+                    magiaComDesconto: this.magiaComDesconto
                 }
             }, { merge: true });
         } catch (error) {
@@ -84,7 +86,8 @@ window.arcanumIudicium = {
                 this.sucessos = data.sucessos || 0;
                 this.falhas = data.falhas || 0;
                 this.ultimaCategoria = data.ultimaCategoria || null;
-                console.log(`Arcanum Iudicium carregado: ${this.sucessos} sucessos, ${this.falhas} falhas, categoria: ${this.ultimaCategoria}`);
+                this.magiaComDesconto = data.magiaComDesconto || null;
+                console.log(`Arcanum Iudicium carregado: ${this.sucessos} sucessos, ${this.falhas} falhas, categoria: ${this.ultimaCategoria}, desconto: ${this.magiaComDesconto}`);
             } else {
                 console.log("Arcanum Iudicium: Nenhum dado encontrado no Firestore - iniciando com valores zerados");
             }
@@ -93,6 +96,7 @@ window.arcanumIudicium = {
         }
     }
 };
+
 
 // Mensagens do Grimório por Categoria
 const mensagensGrimorio = {
@@ -184,29 +188,37 @@ async function exibirJulgamentoGrimorio(categoria) {
             const mensagem = mensagens[Math.floor(Math.random() * mensagens.length)];
             
             // Digitar mensagem
-            let index = 0;
-            const digitar = () => {
-                if (index < mensagem.length) {
-                    messageContainer.textContent += mensagem.charAt(index);
-                    index++;
-                    setTimeout(digitar, 50); // 50ms por caractere
-                } else {
-                    // Aguardar 2s e fazer fade out
-                    setTimeout(() => {
-                        overlay.style.opacity = '0';
-                        setTimeout(() => {
-                            document.body.removeChild(overlay);
-                            // Reabilitar botões
-                            botoes.forEach(btn => btn.disabled = false);
-                            resolve();
-                        }, 300);
-                    }, 2000);
-                }
-            };
-            digitar();
-        }, 300);
-    });
-}
+let index = 0;
+const digitar = () => {
+    if (index < mensagem.length) {
+        messageContainer.textContent += mensagem.charAt(index);
+        index++;
+        setTimeout(digitar, 50); // 50ms por caractere
+    } else {
+        // Verificar se é alta eficiência e sortear desconto
+        if (categoria === 'alta' && Math.random() < 0.33) {
+            // Filtrar magias elegíveis (custo > 1)
+            const magiasElegiveis = magias.filter(magia => magia.custo > 1);
+            if (magiasElegiveis.length > 0) {
+                const magiaEscolhida = magiasElegiveis[Math.floor(Math.random() * magiasElegiveis.length)];
+                window.arcanumIudicium.magiaComDesconto = magiaEscolhida.nome;
+                console.log(`Desconto aplicado à magia: ${magiaEscolhida.nome}`);
+            }
+        }
+        
+        // Aguardar 2s e fazer fade out
+        setTimeout(() => {
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+                // Reabilitar botões
+                botoes.forEach(btn => btn.disabled = false);
+                resolve();
+            }, 300);
+        }, 2000);
+    }
+};
+
 
 
 
@@ -336,6 +348,11 @@ async function criarGrimorio() {
     if (window.arcanumIudicium.ultimaCategoria && window.arcanumIudicium.ultimaCategoria !== categoriaAtual) {
         console.log(`Mudança de categoria detectada: ${window.arcanumIudicium.ultimaCategoria} → ${categoriaAtual}`);
         
+        // Se saiu da alta eficiência, remove desconto
+        if (categoriaAtual !== 'alta') {
+            window.arcanumIudicium.magiaComDesconto = null;
+        }
+        
         // Atualizar categoria e salvar
         window.arcanumIudicium.ultimaCategoria = categoriaAtual;
         await window.arcanumIudicium.salvarFirestore();
@@ -346,6 +363,11 @@ async function criarGrimorio() {
         // Primeira vez - salvar categoria atual
         window.arcanumIudicium.ultimaCategoria = categoriaAtual;
         await window.arcanumIudicium.salvarFirestore();
+    }
+    
+    // Se não está em alta eficiência, garantir que não há desconto
+    if (categoriaAtual !== 'alta') {
+        window.arcanumIudicium.magiaComDesconto = null;
     }
     
     let classeEficiencia = '';
@@ -377,21 +399,26 @@ async function criarGrimorio() {
 
 
 
+
 function criarPaginaMagia(index) {
     const magia = magias[index];
     
     // Aplica efeitos aleatórios baseados na eficiência
     setTimeout(() => aplicarEfeitosAleatorios(), 100);
     
+    // Verificar se esta magia tem desconto
+    const temDesconto = window.arcanumIudicium.magiaComDesconto === magia.nome;
+    const custoFinal = temDesconto ? Math.max(1, magia.custo - 1) : magia.custo;
+    const textoDesconto = temDesconto ? ` <span style="color: #00ff00;">-1</span>` : '';
+    
     return `
-
         <div class="magia-page active">
             <div class="magia-titulo">${magia.nome}</div>
             <div class="magia-nome-verdadeiro">"${magia.nomeVerdadeiro}"</div>
             <div class="magia-divisor">═══════════════════════════════</div>
             <div class="magia-descricao">${magia.descricao.replace(/\n/g, '<br><br>')}</div>
             <div class="magia-stats">
-                <div>📖 <span class="label">Custo:</span> <span class="valor">${magia.custo}</span></div>
+                <div>📖 <span class="label">Custo:</span> <span class="valor">${custoFinal}${textoDesconto}</span></div>
                 <div>🌀 <span class="label">Efeito:</span> <span class="valor">${magia.efeito}</span></div>
                 <div>🕯️ <span class="label">Componente:</span> <span class="valor">${magia.componente || 'Nenhum'}</span></div>
             </div>
