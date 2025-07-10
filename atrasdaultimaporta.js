@@ -296,6 +296,12 @@ document.querySelectorAll('.menu-btn').forEach(button => {
     });
 });
 
+// Torna funções acessíveis globalmente para onclick
+window.mudarPagina = mudarPagina;
+window.estudarMagia = estudarMagia;
+window.memorizarMagia = memorizarMagia;
+
+
 
 function aplicarEfeitosAleatorios() {
     const eficiencia = parseFloat(window.arcanumIudicium.getEficiencia());
