@@ -246,6 +246,7 @@ async function exibirJulgamentoGrimorio(categoria) {
 
 const magias = [
     {
+        id: "armadura-arcana",
         nome: "Armadura Arcana",
         nomeVerdadeiro: "Vestes de Recusa",
         descricao: "O conjurador se cobre de memória sólida, de palavras que nunca deixaram o papel.\nA página se dobra, formando um molde invisível ao redor do corpo.",
@@ -257,6 +258,7 @@ const magias = [
         duracao: "3 turnos"
     },
     {
+        id: "causar-medo",
         nome: "Causar Medo (TIMORIS)",
         nomeVerdadeiro: "Eco do Berro Não Nascido",
         descricao: "A página emite um som que não se ouve.\nAqueles que têm pouco sangue para perder sentem sua espinha entortar sob o peso do \"e se\".",
@@ -268,6 +270,7 @@ const magias = [
         duracao: "Até o fim do combate"
     },
     {
+        id: "cura-maior",
         nome: "Cura Maior",
         nomeVerdadeiro: "Cântico do Coração que Teima",
         descricao: "Um poema partido em três partes, lido em silêncio. O papel absorve o desespero e o transforma em sopro vital.\nExige do conjurador fé em algo que talvez já tenha morrido.",
@@ -279,6 +282,7 @@ const magias = [
         duracao: "Instantânea"
     },
     {
+        id: "cura-menor",
         nome: "Cura Menor (SANITAS)",
         nomeVerdadeiro: "Murmúrio do Sangue Quieto",
         descricao: "Uma prece curta inscrita nas margens da página, ativada por compaixão ou temor.\nO grimório sussurra memórias de infância, quando dor era cuidada com mãos e lágrimas.",
@@ -290,6 +294,7 @@ const magias = [
         duracao: "Instantânea"
     },
     {
+        id: "missil-magico",
         nome: "Dardos Místicos (FULMEN)",
         nomeVerdadeiro: "Olhar Afiado do Inominado",
         descricao: "As linhas saltam da página como farpas etéreas. Cada letra se torna uma lança de pensamento puro.\nNão mira a carne, mas a hesitação entre as costelas.",
@@ -301,6 +306,7 @@ const magias = [
         duracao: "Instantânea"
     },
     {
+        id: "escudo-arcano",
         nome: "Escudo Arcano (AEGIS)",
         nomeVerdadeiro: "Círculo do Não-Tocar",
         descricao: "Linhas em espiral giram na página como se gravadas à unha.\nProtege não com força, mas com intenção perfeita.",
@@ -312,6 +318,7 @@ const magias = [
         duracao: "3 turnos"
     },
     {
+        id: "luz",
         nome: "Luz (LUMINA)",
         nomeVerdadeiro: "Vislumbre da Aurora que Queima",
         descricao: "A tinta brilha no escuro da página, irradiando luz branca.\nNão ilumina o caminho — apenas o erro dos olhos alheios.",
@@ -323,6 +330,7 @@ const magias = [
         duracao: "3 turnos"
     },
     {
+        id: "pasmar",
         nome: "Pasmar (OBSTUPRA)",
         nomeVerdadeiro: "Silêncio do Instante Rachado",
         descricao: "Ao pronunciar essa palavra, o tempo hesita.\nO inimigo sente que algo o observava antes dele existir.",
@@ -334,6 +342,7 @@ const magias = [
         duracao: "1 turno"
     },
     {
+        id: "raio-acido",
         nome: "Raio de Ácido (CORRODO)",
         nomeVerdadeiro: "Chuva da Boca Amarga",
         descricao: "Cada gota conjurada contém o azedume de uma palavra não dita.\nO papel escorre enquanto você lê — e quem vê, sente arder.",
@@ -345,6 +354,7 @@ const magias = [
         duracao: "Instantânea"
     },
     {
+        id: "sono",
         nome: "Sono (QUIESCAS)",
         nomeVerdadeiro: "Cântico da Pálpebra Frágil",
         descricao: "Cada linha é um sussurro que pesa nas têmporas.\nO grimório exige um fragmento do sono alheio —",
@@ -356,6 +366,7 @@ const magias = [
         duracao: "1 turno"
     },
     {
+        id: "toque-chocante",
         nome: "Toque Chocante (FULGOR)",
         nomeVerdadeiro: "Dedos da Tempestade Guardada",
         descricao: "O conjurador não conjura — apenas empresta sua mão ao trovão.\nA página pulsa como um músculo elétrico.",
@@ -367,6 +378,7 @@ const magias = [
         duracao: "Instantânea"
     },
     {
+        id: "toque-macabro",
         nome: "Toque Macabro (EXSANGUO)",
         nomeVerdadeiro: "Frieza que Suga a Cor",
         descricao: "O toque rouba mais do que calor — leva intenção.\nA página fica cinza por alguns segundos após o uso.",
@@ -378,6 +390,7 @@ const magias = [
         duracao: "3 turnos"
     }
 ];
+
 
 
 let paginaAtual = 0;
@@ -440,7 +453,7 @@ async function criarGrimorio() {
     
     // Verificar se magia atual está memorizada
     const magiaAtual = magias[paginaAtual];
-    const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.nome);
+    const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
     const botaoMemorizar = jaMemorizada ? '' : '<button class="action-btn" onclick="memorizarMagia()">Memorizar</button>';
     
     return `
@@ -475,7 +488,7 @@ function criarPaginaMagia(index) {
     const textoDesconto = temDesconto ? ` <span style="color: #00ff00;">-1</span>` : '';
     
     // Verificar se magia está memorizada
-    const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magia.nome);
+    const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magia.id);
     const statusMemorizada = jaMemorizada ? ' <span style="color: #ffd700;">✓ Memorizada</span>' : '';
     
     return `
@@ -514,7 +527,7 @@ async function mudarPagina(direcao) {
         
         // Atualizar botão memorizar
         const magiaAtual = magias[paginaAtual];
-        const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.nome);
+        const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
         const actionsDiv = document.querySelector('.grimorio-actions');
         const botaoMemorizar = actionsDiv.querySelector('button[onclick="memorizarMagia()"]');
         
@@ -545,8 +558,8 @@ function estudarMagia() {
 async function memorizarMagia() {
     const magiaAtual = magias[paginaAtual];
     
-    if (!window.arcanumIudicium.isMagiaMemorizada(magiaAtual.nome)) {
-        await window.arcanumIudicium.memorizarMagia(magiaAtual.nome);
+    if (!window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id)) {
+    await window.arcanumIudicium.memorizarMagia(magiaAtual.id);
         
         // Recarregar grimório para atualizar interface
         const resultado = await criarGrimorio();
