@@ -312,31 +312,41 @@ window.memorizarMagia = memorizarMagia;
 function aplicarEfeitosAleatorios() {
     const eficiencia = parseFloat(window.arcanumIudicium.getEficiencia());
     
-    if (Math.random() < 0.3) { // 30% chance
-        const elementos = document.querySelectorAll('.magia-titulo, .magia-nome-verdadeiro, .magia-descricao, .magia-stats div');
-        const elementoAleatorio = elementos[Math.floor(Math.random() * elementos.length)];
-        
-        if (eficiencia >= 80) {
-            // Palavra aleatória em itálico
+    if (eficiencia >= 80) {
+        // 70% chance para itálico
+        if (Math.random() < 0.7) {
+            const elementos = document.querySelectorAll('.magia-descricao, .magia-stats div');
+            const elementoAleatorio = elementos[Math.floor(Math.random() * elementos.length)];
+            
             const texto = elementoAleatorio.innerHTML;
             const palavras = texto.split(' ');
             const palavraAleatoria = Math.floor(Math.random() * palavras.length);
             palavras[palavraAleatoria] = `<em>${palavras[palavraAleatoria]}</em>`;
             elementoAleatorio.innerHTML = palavras.join(' ');
-            
-        } else if (eficiencia < 30) {
-            // Efeitos muito baixa eficiência
-            const efeito = Math.random();
-            if (efeito < 0.33) {
-                elementoAleatorio.style.animation = 'piscar 0.3s ease-in-out 3';
-            } else if (efeito < 0.66) {
-                elementoAleatorio.style.animation = 'desaparecer 0.6s ease-in-out';
-            }
-            
-        } else {
-            // Tremular para eficiência baixa
+        }
+        
+    } else if (eficiencia < 30) {
+        // 40% chance para piscar
+        if (Math.random() < 0.4) {
+            const elementos = document.querySelectorAll('.magia-descricao, .magia-stats div');
+            const elementoAleatorio = elementos[Math.floor(Math.random() * elementos.length)];
+            elementoAleatorio.style.animation = 'piscar 0.3s ease-in-out 3';
+        }
+        // 30% chance para desaparecer
+        else if (Math.random() < 0.3) {
+            const elementos = document.querySelectorAll('.magia-descricao, .magia-stats div');
+            const elementoAleatorio = elementos[Math.floor(Math.random() * elementos.length)];
+            elementoAleatorio.style.animation = 'desaparecer 0.6s ease-in-out';
+        }
+        
+    } else {
+        // 60% chance para tremular (eficiência baixa)
+        if (Math.random() < 0.6) {
+            const elementos = document.querySelectorAll('.magia-descricao, .magia-stats div');
+            const elementoAleatorio = elementos[Math.floor(Math.random() * elementos.length)];
             elementoAleatorio.style.animation = 'tremular 0.5s ease-in-out 2';
         }
     }
 }
+
 
