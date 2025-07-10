@@ -459,14 +459,21 @@ function aplicarEfeitosAleatorios() {
     if (eficiencia >= 80) {
         // 70% chance para itálico
         if (Math.random() < 0.7) {
-            const elementos = document.querySelectorAll('.magia-descricao, .magia-stats div');
-            const elementoAleatorio = elementos[Math.floor(Math.random() * elementos.length)];
-            
-            const texto = elementoAleatorio.innerHTML;
-            const palavras = texto.split(' ');
-            const palavraAleatoria = Math.floor(Math.random() * palavras.length);
-            palavras[palavraAleatoria] = `<em>${palavras[palavraAleatoria]}</em>`;
-            elementoAleatorio.innerHTML = palavras.join(' ');
+            // Só aplica em descrição, não em stats que têm HTML complexo
+            const elementos = document.querySelectorAll('.magia-descricao');
+            if (elementos.length > 0) {
+                const elementoAleatorio = elementos[Math.floor(Math.random() * elementos.length)];
+                
+                const texto = elementoAleatorio.innerHTML;
+                const palavras = texto.split(' ');
+                const palavraAleatoria = Math.floor(Math.random() * palavras.length);
+                
+                // Só aplica se a palavra não contém HTML
+                if (!palavras[palavraAleatoria].includes('<') && !palavras[palavraAleatoria].includes('>')) {
+                    palavras[palavraAleatoria] = `<em>${palavras[palavraAleatoria]}</em>`;
+                    elementoAleatorio.innerHTML = palavras.join(' ');
+                }
+            }
         }
         
     } else if (eficiencia < 30) {
@@ -492,5 +499,6 @@ function aplicarEfeitosAleatorios() {
         }
     }
 }
+
 
 
