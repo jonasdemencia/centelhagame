@@ -173,11 +173,12 @@ const contentData = {
     sangue: "Sangue Recursivo (para depois)"
 };
 
-function criarGrimorio() {
+async function criarGrimorio() {
+    await window.arcanumIudicium.carregarFirestore();
     const eficiencia = parseFloat(window.arcanumIudicium.getEficiencia());
     console.log(`Eficiência atual do Arcanum Iudicium: ${eficiencia}%`);
-    let classeEficiencia = '';
     
+    let classeEficiencia = '';
     if (eficiencia >= 80) {
         classeEficiencia = 'grimorio-alta';
     } else if (eficiencia < 30) {
@@ -188,7 +189,6 @@ function criarGrimorio() {
     
     return `
         <div class="grimorio-container ${classeEficiencia}">
-
             <div id="magia-content">
                 ${criarPaginaMagia(paginaAtual)}
             </div>
@@ -204,6 +204,7 @@ function criarGrimorio() {
         </div>
     `;
 }
+
 
 function criarPaginaMagia(index) {
     const magia = magias[index];
@@ -259,17 +260,21 @@ function memorizarMagia() {
 }
 
 document.querySelectorAll('.menu-btn').forEach(button => {
-    button.addEventListener('click', function () {
+    button.addEventListener('click', async function () {
         const content = this.getAttribute('data-content');
-        const resultado = typeof contentData[content] === 'function' ? contentData[content]() : contentData[content];
-        document.getElementById('content-area').innerHTML = resultado;
-
+        
         if (content === 'grimorio') {
+            const resultado = await contentData[content]();
+            document.getElementById('content-area').innerHTML = resultado;
             paginaAtual = 0;
             atualizarBotoes();
+        } else {
+            const resultado = typeof contentData[content] === 'function' ? contentData[content]() : contentData[content];
+            document.getElementById('content-area').innerHTML = resultado;
         }
     });
 });
+
 
 function aplicarEfeitosAleatorios() {
     const eficiencia = parseFloat(window.arcanumIudicium.getEficiencia());
