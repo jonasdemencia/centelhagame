@@ -756,20 +756,8 @@ async function estudarMagia() {
     const magiaContent = document.getElementById('magia-content');
     magiaContent.innerHTML = criarPaginaMagia(paginaAtual);
     
-    // Atualizar botões
-    const actionsDiv = document.querySelector('.grimorio-actions');
-    const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
-    const jaEstudada = window.arcanumIudicium.isMagiaEstudada(magiaAtual.id);
-    
-    actionsDiv.innerHTML = jaEstudada ? '' : '<button class="action-btn" onclick="estudarMagia()">Estudar</button>';
-    
-    if (!jaMemorizada) {
-        const novoBotao = document.createElement('button');
-        novoBotao.className = 'action-btn';
-        novoBotao.onclick = memorizarMagia;
-        novoBotao.textContent = 'Memorizar';
-        actionsDiv.appendChild(novoBotao);
-    }
+    // Usar função centralizada
+    renderizarAcoesGrimorio();
     
     // Aplicar efeito visual na intenção
     setTimeout(() => {
@@ -830,19 +818,10 @@ async function responderMentalmente() {
     const magiaContent = document.getElementById('magia-content');
     magiaContent.innerHTML = criarPaginaMagia(paginaAtual);
     
-    // Atualizar botões
-    const actionsDiv = document.querySelector('.grimorio-actions');
-    const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
-    
-    actionsDiv.innerHTML = '';
-    if (!jaMemorizada) {
-        const novoBotao = document.createElement('button');
-        novoBotao.className = 'action-btn';
-        novoBotao.onclick = memorizarMagia;
-        novoBotao.textContent = 'Memorizar';
-        actionsDiv.appendChild(novoBotao);
-    }
+    // Usar função centralizada
+    renderizarAcoesGrimorio();
 }
+
 
 async function fecharOlhos() {
     const magiaAtual = magias[paginaAtual];
@@ -883,18 +862,8 @@ async function fecharOlhos() {
             const magiaContent = document.getElementById('magia-content');
             magiaContent.innerHTML = criarPaginaMagia(paginaAtual);
             
-            // Atualizar botões
-            const actionsDiv = document.querySelector('.grimorio-actions');
-            const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
-            
-            actionsDiv.innerHTML = '';
-            if (!jaMemorizada) {
-                const novoBotao = document.createElement('button');
-                novoBotao.className = 'action-btn';
-                novoBotao.onclick = memorizarMagia;
-                novoBotao.textContent = 'Memorizar';
-                actionsDiv.appendChild(novoBotao);
-            }
+            // Usar função centralizada
+            renderizarAcoesGrimorio();
         }, 300);
     }, 1000);
 }
