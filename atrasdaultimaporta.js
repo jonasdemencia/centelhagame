@@ -26,6 +26,8 @@ window.arcanumIudicium = {
     ultimaCategoria: null,
     magiaComDesconto: null,
     magiasMemorizadas: [],
+    magiasEstudadas: [],
+
     
     async sucesso() { 
         this.sucessos++; 
@@ -63,7 +65,9 @@ window.arcanumIudicium = {
                     falhas: this.falhas,
                     ultimaCategoria: this.ultimaCategoria,
                     magiaComDesconto: this.magiaComDesconto,
-                    magiasMemorizadas: this.magiasMemorizadas
+                    magiasMemorizadas: this.magiasMemorizadas,
+                    magiasEstudadas: this.magiasEstudadas
+
                 }
             }, { merge: true });
         } catch (error) {
@@ -90,6 +94,8 @@ window.arcanumIudicium = {
                 this.ultimaCategoria = data.ultimaCategoria || null;
                 this.magiaComDesconto = data.magiaComDesconto || null;
                 this.magiasMemorizadas = data.magiasMemorizadas || [];
+                this.magiasEstudadas = data.magiasEstudadas || [];
+
                 console.log(`Arcanum Iudicium carregado: ${this.sucessos} sucessos, ${this.falhas} falhas, categoria: ${this.ultimaCategoria}, desconto: ${this.magiaComDesconto}, memorizadas: ${this.magiasMemorizadas.length}`);
             } else {
                 console.log("Arcanum Iudicium: Nenhum dado encontrado no Firestore - iniciando com valores zerados");
@@ -108,8 +114,20 @@ window.arcanumIudicium = {
     },
     
     isMagiaMemorizada(idMagia) {
-        return this.magiasMemorizadas.includes(idMagia);
+    return this.magiasMemorizadas.includes(idMagia);
+},
+
+async estudarMagia(idMagia) {
+    if (!this.magiasEstudadas.includes(idMagia)) {
+        this.magiasEstudadas.push(idMagia);
+        await this.salvarFirestore();
     }
+},
+
+isMagiaEstudada(idMagia) {
+    return this.magiasEstudadas.includes(idMagia);
+}
+
 };
 
 
@@ -503,6 +521,9 @@ function criarPaginaMagia(index) {
     // Verificar se magia está memorizada
     const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magia.id);
     const statusMemorizada = jaMemorizada ? ' <span style="color: #ffd700;">✓ Memorizada</span>' : '';
+    const jaEstudada = window.arcanumIudicium.isMagiaEstudada(magia.id);
+const intencaoHtml = jaEstudada ? `<div class="magia-intencao" style="margin: 15px 0; font-size: 13px; color: #c5bebe; font-weight: bold;"><strong>Intenção:</strong> ${intencoesMagias[magia.id]}</div>` : '';
+
     
     return `
         <div class="magia-page active">
@@ -510,6 +531,7 @@ function criarPaginaMagia(index) {
             <div class="magia-nome-verdadeiro">"${magia.nomeVerdadeiro}"</div>
             <div class="magia-divisor">═══════════════════════════════</div>
             <div class="magia-descricao">${magia.descricao.replace(/\n/g, '<br><br>')}</div>
+            ${intencaoHtml}
             <div class="magia-stats">
                 <div>📖 <span class="label">Custo:</span> <span class="valor">${custoFinal}${textoDesconto}</span></div>
                 <div>🌀 <span class="label">Efeito:</span> <span class="valor">${magia.efeito}</span></div>
@@ -543,7 +565,12 @@ async function mudarPagina(direcao) {
         const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
         const actionsDiv = document.querySelector('.grimorio-actions');
 
-        actionsDiv.innerHTML = '<button class="action-btn" onclick="estudarMagia()">Estudar</button>';
+        // Verificar se foi estudada
+const jaEstudada = window.arcanumIudicium.isMagiaEstudada(magiaAtual.id);
+
+// Limpa e recria botões
+actionsDiv.innerHTML = jaEstudada ? '' : '<button class="action-btn" onclick="estudarMagia()">Estudar</button>';
+
 
         // Adiciona botão "Memorizar" se necessário
         if (!jaMemorizada) {
