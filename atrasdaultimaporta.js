@@ -945,13 +945,31 @@ document.querySelectorAll('.menu-btn').forEach(button => {
             const resultado = await contentData[content]();
             document.getElementById('content-area').innerHTML = resultado;
             paginaAtual = 0;
-            atualizarBotoes();
+            
+            // Aguardar o DOM ser atualizado antes de chamar atualizarBotoes
+            setTimeout(() => {
+                atualizarBotoes();
+                
+                // Adicionar botão memorizar se necessário
+                const magiaAtual = magias[paginaAtual];
+                const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
+                const actionsDiv = document.querySelector('.grimorio-actions');
+                
+                if (!jaMemorizada && actionsDiv) {
+                    const novoBotao = document.createElement('button');
+                    novoBotao.className = 'action-btn';
+                    novoBotao.onclick = memorizarMagia;
+                    novoBotao.textContent = 'Memorizar';
+                    actionsDiv.appendChild(novoBotao);
+                }
+            }, 10);
         } else {
             const resultado = typeof contentData[content] === 'function' ? contentData[content]() : contentData[content];
             document.getElementById('content-area').innerHTML = resultado;
         }
     });
 });
+
 
 // Torna funções acessíveis globalmente para onclick
 window.mudarPagina = mudarPagina;
