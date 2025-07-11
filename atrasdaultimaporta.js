@@ -757,6 +757,26 @@ function atualizarBotoes() {
     document.getElementById('next-btn').disabled = paginaAtual === magias.length - 1;
 }
 
+function renderizarAcoesGrimorio() {
+    const magiaAtual = magias[paginaAtual];
+    const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
+    const jaEstudada = window.arcanumIudicium.isMagiaEstudada(magiaAtual.id);
+    const jaReflexao = window.arcanumIudicium.isMagiaReflexao(magiaAtual.id);
+    const mostrarEstudarNovamente = jaEstudada && !jaReflexao && Math.random() < 0.33;
+    const actionsDiv = document.querySelector('.grimorio-actions');
+    if (!actionsDiv) return;
+
+    actionsDiv.innerHTML = mostrarEstudarNovamente ? '<button class="action-btn" onclick="estudarProfundamente()">Estudar</button>' : (jaEstudada ? '' : '<button class="action-btn" onclick="estudarMagia()">Estudar</button>');
+
+    if (!jaMemorizada) {
+        const novoBotao = document.createElement('button');
+        novoBotao.className = 'action-btn';
+        novoBotao.onclick = memorizarMagia;
+        novoBotao.textContent = 'Memorizar';
+        actionsDiv.appendChild(novoBotao);
+    }
+}
+
 
 async function estudarMagia() {
     const magiaAtual = magias[paginaAtual];
