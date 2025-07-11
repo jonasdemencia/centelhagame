@@ -576,7 +576,7 @@ let paginaAtual = 0;
 
 const contentData = {
     grimorio: () => criarGrimorio(),
-    cruzar: "Cruzar animais",
+    cruzar: () => criarCruzarAnimais(), // ADICIONAR ESTA LINHA
     sacrificar: "Sacrificar animais (Berço e Lâmina)",
     silencio: "Silêncio (entrecorda)",
     dormir: "Dormir para dentro - não existe sono, a pessoa dorme se quiser",
