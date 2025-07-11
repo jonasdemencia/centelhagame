@@ -232,7 +232,7 @@ async function exibirJulgamentoGrimorio(categoria) {
         // Fade in
         setTimeout(() => {
             overlay.style.opacity = '1';
-        }, 10);
+        }, 50);
         
         // Aguardar fade in e começar digitação
         setTimeout(async () => {
@@ -726,12 +726,16 @@ function atualizarBotoes() {
 }
 
 function renderizarAcoesGrimorio() {
+    console.log('Renderizando ações...');
     const magiaAtual = magias[paginaAtual];
     const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
     const jaEstudada = window.arcanumIudicium.isMagiaEstudada(magiaAtual.id);
     const jaReflexao = window.arcanumIudicium.isMagiaReflexao(magiaAtual.id);
     const mostrarEstudarNovamente = jaEstudada && !jaReflexao && Math.random() < 0.33;
     const actionsDiv = document.querySelector('.grimorio-actions');
+    
+    console.log('Estados:', { jaMemorizada, jaEstudada, jaReflexao, actionsDiv });
+    
     if (!actionsDiv) return;
 
     actionsDiv.innerHTML = mostrarEstudarNovamente ? '<button class="action-btn" onclick="estudarProfundamente()">Estudar</button>' : (jaEstudada ? '' : '<button class="action-btn" onclick="estudarMagia()">Estudar</button>');
