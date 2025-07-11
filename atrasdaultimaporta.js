@@ -523,29 +523,27 @@ async function mudarPagina(direcao) {
         magiaContent.innerHTML = criarPaginaMagia(paginaAtual);
         document.querySelector('.page-number').textContent = `Página ${paginaAtual + 1}`;
         
-        // Atualizar botão memorizar
-const magiaAtual = magias[paginaAtual];
-const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
-const actionsDiv = document.querySelector('.grimorio-actions');
+        // Atualizar botão memorizar (CORRIGIDO)
+        const magiaAtual = magias[paginaAtual];
+        const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
+        const actionsDiv = document.querySelector('.grimorio-actions');
 
-// Remove TODOS os botões memorizar existentes
-const botoesExistentes = actionsDiv.querySelectorAll('button[onclick="memorizarMagia()"]');
-botoesExistentes.forEach(botao => botao.remove());
+        // CORRIGIDO: Limpa toda a área de ações antes de adicionar o botão
+        actionsDiv.innerHTML = '';
 
-// Adiciona botão se necessário
-if (!jaMemorizada) {
-    const novoBotao = document.createElement('button');
-    novoBotao.className = 'action-btn';
-    novoBotao.onclick = memorizarMagia;
-    novoBotao.textContent = 'Memorizar';
-    actionsDiv.appendChild(novoBotao);
-}
+        // Adiciona botão se necessário
+        if (!jaMemorizada) {
+            const novoBotao = document.createElement('button');
+            novoBotao.className = 'action-btn';
+            novoBotao.onclick = memorizarMagia;
+            novoBotao.textContent = 'Memorizar';
+            actionsDiv.appendChild(novoBotao);
+        }
 
-
-        
         atualizarBotoes();
     }, 300);
 }
+
 
 
 function atualizarBotoes() {
