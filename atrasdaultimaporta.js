@@ -453,7 +453,6 @@ async function criarGrimorio() {
     // Verificar se magia atual está memorizada
     const magiaAtual = magias[paginaAtual];
     const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
-    const botaoMemorizar = jaMemorizada ? '' : '<button class="action-btn" onclick="memorizarMagia()">Memorizar</button>';
     
     return `
         <div class="grimorio-container ${classeEficiencia}">
@@ -466,9 +465,9 @@ async function criarGrimorio() {
                 <button class="nav-btn" id="next-btn" onclick="mudarPagina(1)">Próxima Página →</button>
             </div>
             <div class="grimorio-actions">
-                <button class="action-btn" onclick="estudarMagia()">Estudar</button>
-                ${botaoMemorizar}
-            </div>
+    <button class="action-btn" onclick="estudarMagia()">Estudar</button>
+</div>
+
         </div>
     `;
 }
@@ -525,20 +524,25 @@ async function mudarPagina(direcao) {
         document.querySelector('.page-number').textContent = `Página ${paginaAtual + 1}`;
         
         // Atualizar botão memorizar
-        const magiaAtual = magias[paginaAtual];
-        const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
-        const actionsDiv = document.querySelector('.grimorio-actions');
-        const botaoMemorizar = actionsDiv.querySelector('button[onclick="memorizarMagia()"]');
-        
-        if (jaMemorizada && botaoMemorizar) {
-            botaoMemorizar.remove();
-        } else if (!jaMemorizada && !botaoMemorizar) {
-            const novoBotao = document.createElement('button');
-            novoBotao.className = 'action-btn';
-            novoBotao.onclick = memorizarMagia;
-            novoBotao.textContent = 'Memorizar';
-            actionsDiv.appendChild(novoBotao);
-        }
+const magiaAtual = magias[paginaAtual];
+const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
+const actionsDiv = document.querySelector('.grimorio-actions');
+
+// Remove botão existente se houver
+const botaoExistente = actionsDiv.querySelector('button[onclick="memorizarMagia()"]');
+if (botaoExistente) {
+    botaoExistente.remove();
+}
+
+// Adiciona botão se necessário
+if (!jaMemorizada) {
+    const novoBotao = document.createElement('button');
+    novoBotao.className = 'action-btn';
+    novoBotao.onclick = memorizarMagia;
+    novoBotao.textContent = 'Memorizar';
+    actionsDiv.appendChild(novoBotao);
+}
+
         
         atualizarBotoes();
     }, 300);
