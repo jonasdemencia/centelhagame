@@ -528,11 +528,9 @@ const magiaAtual = magias[paginaAtual];
 const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
 const actionsDiv = document.querySelector('.grimorio-actions');
 
-// Remove botão existente se houver
-const botaoExistente = actionsDiv.querySelector('button[onclick="memorizarMagia()"]');
-if (botaoExistente) {
-    botaoExistente.remove();
-}
+// Remove TODOS os botões memorizar existentes
+const botoesExistentes = actionsDiv.querySelectorAll('button[onclick="memorizarMagia()"]');
+botoesExistentes.forEach(botao => botao.remove());
 
 // Adiciona botão se necessário
 if (!jaMemorizada) {
@@ -542,6 +540,7 @@ if (!jaMemorizada) {
     novoBotao.textContent = 'Memorizar';
     actionsDiv.appendChild(novoBotao);
 }
+
 
         
         atualizarBotoes();
