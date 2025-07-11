@@ -804,11 +804,42 @@ function responderMentalmente() {
 }
 
 function fecharOlhos() {
-    const reflexaoDiv = document.querySelector('.magia-reflexao');
-    if (reflexaoDiv) {
-        reflexaoDiv.remove();
-    }
+    // Criar overlay escuro
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: black;
+        z-index: 10000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Fade in para preto
+    setTimeout(() => {
+        overlay.style.opacity = '1';
+    }, 10);
+    
+    // Após 1 segundo, fade out e remover
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            document.body.removeChild(overlay);
+            
+            // Remover reflexão após o efeito
+            const reflexaoDiv = document.querySelector('.magia-reflexao');
+            if (reflexaoDiv) {
+                reflexaoDiv.remove();
+            }
+        }, 300);
+    }, 1000);
 }
+
 
 
 async function memorizarMagia() {
