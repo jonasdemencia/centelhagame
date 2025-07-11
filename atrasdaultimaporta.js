@@ -916,6 +916,75 @@ document.querySelectorAll('.menu-btn').forEach(button => {
     });
 });
 
+// Função para cruzar animais
+function criarCruzarAnimais() {
+    setTimeout(() => {
+        document.getElementById('slot-1').addEventListener('click', () => removerAnimal('slot-1'));
+        document.getElementById('slot-2').addEventListener('click', () => removerAnimal('slot-2'));
+    }, 100);
+    
+    return `
+        <div class="cruzar-container">
+            <div class="espaco-central" id="espaco-central">
+                <div class="animal-slot" id="slot-1">Vazio</div>
+                <div class="animal-slot" id="slot-2">Vazio</div>
+            </div>
+            <button class="cantar-btn" id="cantar-btn" onclick="cantarAnimais()">CANTAR</button>
+            <div class="lista-animais" id="lista-animais">
+                ${obterListaAnimais()}
+            </div>
+        </div>
+    `;
+}
+
+function obterListaAnimais() {
+    const inventario = [
+        { nome: "Lobo Sombrio", vida: 85 },
+        { nome: "Corvo Ancestral", vida: 120 },
+        { nome: "Serpente de Ferro", vida: 95 }
+    ];
+    
+    const animais = inventario.filter(item => item.vida > 0);
+    
+    if (animais.length === 0) {
+        return '<div class="sem-animais">Não pode ofertar descendência sem ter exemplares para cruzar.</div>';
+    }
+    
+    return animais.map(animal => 
+        `<div class="animal-item" onclick="selecionarAnimal('${animal.nome}', ${animal.vida})">${animal.nome} - ${animal.vida} HP</div>`
+    ).join('');
+}
+
+function selecionarAnimal(nome, vida) {
+    const slot1 = document.getElementById('slot-1');
+    const slot2 = document.getElementById('slot-2');
+    
+    if (slot1.textContent === 'Vazio') {
+        slot1.textContent = `${nome} - ${vida} HP`;
+        slot1.dataset.nome = nome;
+    } else if (slot2.textContent === 'Vazio') {
+        slot2.textContent = `${nome} - ${vida} HP`;
+        slot2.dataset.nome = nome;
+    }
+}
+
+function removerAnimal(slotId) {
+    const slot = document.getElementById(slotId);
+    slot.textContent = 'Vazio';
+    delete slot.dataset.nome;
+}
+
+function cantarAnimais() {
+    const slot1 = document.getElementById('slot-1');
+    const slot2 = document.getElementById('slot-2');
+    
+    if (slot1.textContent !== 'Vazio' && slot2.textContent !== 'Vazio') {
+        alert(`Cruzando ${slot1.dataset.nome} com ${slot2.dataset.nome}!`);
+    } else {
+        alert('Selecione dois animais para cruzar.');
+    }
+}
+
 
 // Torna funções acessíveis globalmente para onclick
 window.mudarPagina = mudarPagina;
@@ -924,6 +993,9 @@ window.memorizarMagia = memorizarMagia;
 window.estudarProfundamente = estudarProfundamente;
 window.responderMentalmente = responderMentalmente;
 window.fecharOlhos = fecharOlhos;
+window.selecionarAnimal = selecionarAnimal;
+window.cantarAnimais = cantarAnimais;
+
 
 
 function aplicarEfeitosAleatorios() {
