@@ -998,13 +998,15 @@ function cantarAnimais() {
         const primeiroNome2 = slot2.dataset.nome.split(' ')[0];
         
         if (primeiroNome1 === primeiroNome2) {
-            alert(`Cruzando ${slot1.dataset.nome} com ${slot2.dataset.nome}!`);
-            mensagem.style.display = 'none';
+            mensagem.textContent = `Cruzando ${slot1.dataset.nome} com ${slot2.dataset.nome}!`;
+            mensagem.style.display = 'block';
         } else {
+            mensagem.textContent = 'Animais assim não geram descendência.';
             mensagem.style.display = 'block';
         }
     } else {
-        alert('Selecione dois animais para cruzar.');
+        mensagem.textContent = 'Selecione dois animais para cruzar.';
+        mensagem.style.display = 'block';
     }
 }
 
