@@ -633,6 +633,11 @@ async function criarGrimorio() {
     // Verificar se magia atual está memorizada
     const magiaAtual = magias[paginaAtual];
     const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
+    const jaEstudada = window.arcanumIudicium.isMagiaEstudada(magiaAtual.id);
+const jaReflexao = window.arcanumIudicium.isMagiaReflexao(magiaAtual.id);
+const mostrarEstudar = !jaEstudada;
+const mostrarEstudarNovamente = jaEstudada && !jaReflexao && Math.random() < 0.33;
+
     
     return `
         <div class="grimorio-container ${classeEficiencia}">
@@ -645,8 +650,8 @@ async function criarGrimorio() {
                 <button class="nav-btn" id="next-btn" onclick="mudarPagina(1)">Próxima Página →</button>
             </div>
             <div class="grimorio-actions">
-    <button class="action-btn" onclick="estudarMagia()">Estudar</button>
 </div>
+
 
         </div>
     `;
