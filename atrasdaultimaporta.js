@@ -27,8 +27,9 @@ window.arcanumIudicium = {
     magiaComDesconto: null,
     magiasMemorizadas: [],
     magiasEstudadas: [],
+    magiasReflexao: [],
 
-    
+
     async sucesso() { 
         this.sucessos++; 
         console.log(`Arcanum Iudicium: Sucesso (${this.sucessos}/${this.sucessos + this.falhas})`);
@@ -66,7 +67,8 @@ window.arcanumIudicium = {
                     ultimaCategoria: this.ultimaCategoria,
                     magiaComDesconto: this.magiaComDesconto,
                     magiasMemorizadas: this.magiasMemorizadas,
-                    magiasEstudadas: this.magiasEstudadas
+                    magiasEstudadas: this.magiasEstudadas,
+                    magiasReflexao: this.magiasReflexao
 
                 }
             }, { merge: true });
@@ -95,6 +97,7 @@ window.arcanumIudicium = {
                 this.magiaComDesconto = data.magiaComDesconto || null;
                 this.magiasMemorizadas = data.magiasMemorizadas || [];
                 this.magiasEstudadas = data.magiasEstudadas || [];
+                this.magiasReflexao = data.magiasReflexao || [];
 
                 console.log(`Arcanum Iudicium carregado: ${this.sucessos} sucessos, ${this.falhas} falhas, categoria: ${this.ultimaCategoria}, desconto: ${this.magiaComDesconto}, memorizadas: ${this.magiasMemorizadas.length}`);
             } else {
@@ -126,6 +129,17 @@ async estudarMagia(idMagia) {
 
 isMagiaEstudada(idMagia) {
     return this.magiasEstudadas.includes(idMagia);
+},
+
+    async reflexaoMagia(idMagia) {
+    if (!this.magiasReflexao.includes(idMagia)) {
+        this.magiasReflexao.push(idMagia);
+        await this.salvarFirestore();
+    }
+},
+
+isMagiaReflexao(idMagia) {
+    return this.magiasReflexao.includes(idMagia);
 }
 
 };
@@ -651,7 +665,9 @@ function criarPaginaMagia(index) {
     const statusMemorizada = jaMemorizada ? ' <span style="color: #ffd700;">✓ Memorizada</span>' : '';
     const jaEstudada = window.arcanumIudicium.isMagiaEstudada(magia.id);
 const intencaoHtml = jaEstudada ? `<div class="magia-intencao" style="margin: 15px 0; font-size: 13px; color: #c5bebe; font-weight: bold;"><strong>Intenção:</strong> ${intencoesMagias[magia.id]}</div>` : '';
-const mostrarEstudarNovamente = jaEstudada && Math.random() < 0.33;
+const jaReflexao = window.arcanumIudicium.isMagiaReflexao(magia.id);
+const mostrarEstudarNovamente = jaEstudada && !jaReflexao && Math.random() < 0.33;
+
 
 
     
@@ -697,7 +713,9 @@ async function mudarPagina(direcao) {
 
        // Verificar se foi estudada
 const jaEstudada = window.arcanumIudicium.isMagiaEstudada(magiaAtual.id);
-const mostrarEstudarNovamente = jaEstudada && Math.random() < 0.33;
+const jaReflexao = window.arcanumIudicium.isMagiaReflexao(magiaAtual.id);
+const mostrarEstudarNovamente = jaEstudada && !jaReflexao && Math.random() < 0.33;
+
 
 // Limpa e recria botões
 actionsDiv.innerHTML = mostrarEstudarNovamente ? '<button class="action-btn" onclick="estudarProfundamente()">Estudar</button>' : (jaEstudada ? '' : '<button class="action-btn" onclick="estudarMagia()">Estudar</button>');
@@ -796,14 +814,20 @@ function estudarProfundamente() {
     }
 }
 
-function responderMentalmente() {
+async function responderMentalmente() {
+    const magiaAtual = magias[paginaAtual];
+    await window.arcanumIudicium.reflexaoMagia(magiaAtual.id);
+    
     const reflexaoDiv = document.querySelector('.magia-reflexao');
     if (reflexaoDiv) {
         reflexaoDiv.remove();
     }
 }
 
-function fecharOlhos() {
+async function fecharOlhos() {
+    const magiaAtual = magias[paginaAtual];
+    await window.arcanumIudicium.reflexaoMagia(magiaAtual.id);
+    
     // Criar overlay escuro
     const overlay = document.createElement('div');
     overlay.style.cssText = `
@@ -839,7 +863,6 @@ function fecharOlhos() {
         }, 300);
     }, 1000);
 }
-
 
 
 async function memorizarMagia() {
