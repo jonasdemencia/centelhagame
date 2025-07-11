@@ -633,11 +633,6 @@ async function criarGrimorio() {
     // Verificar se magia atual está memorizada
     const magiaAtual = magias[paginaAtual];
     const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
-    const jaEstudada = window.arcanumIudicium.isMagiaEstudada(magiaAtual.id);
-const jaReflexao = window.arcanumIudicium.isMagiaReflexao(magiaAtual.id);
-const mostrarEstudar = !jaEstudada;
-const mostrarEstudarNovamente = jaEstudada && !jaReflexao && Math.random() < 0.33;
-
     
     return `
         <div class="grimorio-container ${classeEficiencia}">
@@ -649,10 +644,7 @@ const mostrarEstudarNovamente = jaEstudada && !jaReflexao && Math.random() < 0.3
                 <span class="page-number">Página ${paginaAtual + 1}</span>
                 <button class="nav-btn" id="next-btn" onclick="mudarPagina(1)">Próxima Página →</button>
             </div>
-            <div class="grimorio-actions">
-    ${mostrarEstudar ? '<button class="action-btn" onclick="estudarMagia()">Estudar</button>' : ''}
-    ${mostrarEstudarNovamente ? '<button class="action-btn" onclick="estudarProfundamente()">Estudar</button>' : ''}
-</div>
+            <div class="grimorio-actions"></div>
 
 
 
@@ -944,7 +936,7 @@ document.querySelectorAll('.menu-btn').forEach(button => {
             setTimeout(() => {
                 atualizarBotoes();
                 renderizarAcoesGrimorio();
-            }, 10);
+            }, 0);
         } else {
             const resultado = typeof contentData[content] === 'function' ? contentData[content]() : contentData[content];
             document.getElementById('content-area').innerHTML = resultado;
