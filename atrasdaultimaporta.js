@@ -592,43 +592,43 @@ function atualizarBotoes() {
 }
 
 
-function estudarMagia() {
+async function estudarMagia() {
     const magiaAtual = magias[paginaAtual];
-    const intencao = intencoesMagias[magiaAtual.id];
     
-    // Criar elemento da intenção
-    const intencaoDiv = document.createElement('div');
-    intencaoDiv.className = 'magia-intencao';
-    intencaoDiv.innerHTML = `<strong>Intenção:</strong> ${intencao}`;
-    intencaoDiv.style.cssText = `
-        margin: 15px 0;
-        font-size: 13px;
-        color: #8B4513;
-        font-weight: bold;
-        opacity: 0;
-        transition: all 2s ease;
-    `;
+    // Salvar no Firestore
+    await window.arcanumIudicium.estudarMagia(magiaAtual.id);
     
-    // Inserir após a descrição
-    const descricao = document.querySelector('.magia-descricao');
-    descricao.parentNode.insertBefore(intencaoDiv, descricao.nextSibling);
+    // Recarregar a página atual para mostrar a intenção
+    const magiaContent = document.getElementById('magia-content');
+    magiaContent.innerHTML = criarPaginaMagia(paginaAtual);
     
-    // Remover botão estudar
-    const botaoEstudar = document.querySelector('button[onclick="estudarMagia()"]');
-    if (botaoEstudar) {
-        botaoEstudar.remove();
+    // Atualizar botões
+    const actionsDiv = document.querySelector('.grimorio-actions');
+    const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
+    const jaEstudada = window.arcanumIudicium.isMagiaEstudada(magiaAtual.id);
+    
+    actionsDiv.innerHTML = jaEstudada ? '' : '<button class="action-btn" onclick="estudarMagia()">Estudar</button>';
+    
+    if (!jaMemorizada) {
+        const novoBotao = document.createElement('button');
+        novoBotao.className = 'action-btn';
+        novoBotao.onclick = memorizarMagia;
+        novoBotao.textContent = 'Memorizar';
+        actionsDiv.appendChild(novoBotao);
     }
     
-    // Animar aparição
+    // Aplicar efeito visual na intenção
     setTimeout(() => {
-        intencaoDiv.style.opacity = '1';
-        
-        // Após 3s, mudar para cor normal
-        setTimeout(() => {
-            intencaoDiv.style.color = '#c5bebe';
-        }, 3000);
+        const intencaoDiv = document.querySelector('.magia-intencao');
+        if (intencaoDiv) {
+            intencaoDiv.style.color = '#8B4513';
+            setTimeout(() => {
+                intencaoDiv.style.color = '#c5bebe';
+            }, 3000);
+        }
     }, 100);
 }
+
 
 
 async function memorizarMagia() {
