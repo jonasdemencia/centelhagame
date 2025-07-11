@@ -562,16 +562,24 @@ async function memorizarMagia() {
     const magiaAtual = magias[paginaAtual];
     
     if (!window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id)) {
-    await window.arcanumIudicium.memorizarMagia(magiaAtual.id);
+        await window.arcanumIudicium.memorizarMagia(magiaAtual.id);
         
-        // Recarregar grimório para atualizar interface
-        const resultado = await criarGrimorio();
-        document.getElementById('content-area').innerHTML = resultado;
-        atualizarBotoes();
+        // Remove apenas o botão memorizar
+        const botaoMemorizar = document.querySelector('button[onclick="memorizarMagia()"]');
+        if (botaoMemorizar) {
+            botaoMemorizar.remove();
+        }
+        
+        // Atualiza o status na página
+        const titulo = document.querySelector('.magia-titulo');
+        if (titulo && !titulo.innerHTML.includes('✓ Memorizada')) {
+            titulo.innerHTML += ' <span style="color: #ffd700;">✓ Memorizada</span>';
+        }
         
         alert(`${magiaAtual.nome} foi memorizada!`);
     }
 }
+
 
 
 document.querySelectorAll('.menu-btn').forEach(button => {
