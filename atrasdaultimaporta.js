@@ -650,7 +650,10 @@ const mostrarEstudarNovamente = jaEstudada && !jaReflexao && Math.random() < 0.3
                 <button class="nav-btn" id="next-btn" onclick="mudarPagina(1)">Próxima Página →</button>
             </div>
             <div class="grimorio-actions">
+    ${mostrarEstudar ? '<button class="action-btn" onclick="estudarMagia()">Estudar</button>' : ''}
+    ${mostrarEstudarNovamente ? '<button class="action-btn" onclick="estudarProfundamente()">Estudar</button>' : ''}
 </div>
+
 
 
         </div>
