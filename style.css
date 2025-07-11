@@ -1117,3 +1117,77 @@ dice-icon svg {
     50% { opacity: 0; }
 }
 
+/* Cruzar Animais */
+.cruzar-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    height: 100%;
+    justify-content: center;
+}
+
+.espaco-central {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.animal-slot {
+    width: 200px;
+    height: 80px;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: black;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.animal-slot:hover {
+    background-color: #333;
+}
+
+.cantar-btn {
+    background-color: black;
+    color: white;
+    border: 2px solid white;
+    padding: 15px 30px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.cantar-btn:hover {
+    background-color: white;
+    color: black;
+}
+
+.lista-animais {
+    width: 100%;
+    max-width: 500px;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid white;
+    padding: 10px;
+}
+
+.animal-item {
+    padding: 10px;
+    border-bottom: 1px solid #333;
+    cursor: pointer;
+    color: white;
+}
+
+.animal-item:hover {
+    background-color: #333;
+}
+
+.sem-animais {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 20px;
+}
