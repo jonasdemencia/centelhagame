@@ -909,12 +909,16 @@ document.querySelectorAll('.menu-btn').forEach(button => {
                 atualizarBotoes();
                 renderizarAcoesGrimorio();
             }, 0);
+        } else if (content === 'cruzar') {
+            const resultado = contentData[content]();
+            document.getElementById('content-area').innerHTML = resultado;
         } else {
             const resultado = typeof contentData[content] === 'function' ? contentData[content]() : contentData[content];
             document.getElementById('content-area').innerHTML = resultado;
         }
     });
 });
+
 
 // Função para cruzar animais
 function criarCruzarAnimais() {
