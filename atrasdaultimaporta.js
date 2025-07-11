@@ -978,13 +978,15 @@ function removerAnimal(slotId) {
     const slot = document.getElementById(slotId);
     slot.textContent = 'Vazio';
     delete slot.dataset.nome;
-    delete slot.dataset.primeiroNome;
 }
 
 
 function cantarAnimais() {
+    console.log('Botão cantar clicado');
     const slot1 = document.getElementById('slot-1');
     const slot2 = document.getElementById('slot-2');
+    
+    console.log('Slot1:', slot1.textContent, 'Slot2:', slot2.textContent);
     
     if (slot1.textContent !== 'Vazio' && slot2.textContent !== 'Vazio') {
         const primeiroNome1 = slot1.dataset.nome.split(' ')[0];
@@ -999,7 +1001,6 @@ function cantarAnimais() {
         alert('Selecione dois animais para cruzar.');
     }
 }
-
 
 
 // Torna funções acessíveis globalmente para onclick
