@@ -232,7 +232,7 @@ async function exibirJulgamentoGrimorio(categoria) {
         // Fade in
         setTimeout(() => {
             overlay.style.opacity = '1';
-        }, 50);
+        }, 100);
         
         // Aguardar fade in e começar digitação
         setTimeout(async () => {
