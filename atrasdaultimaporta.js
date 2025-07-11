@@ -963,23 +963,15 @@ function selecionarAnimal(nome, vida) {
     const slot1 = document.getElementById('slot-1');
     const slot2 = document.getElementById('slot-2');
     
-    const primeiroNome = nome.split(' ')[0];
-    
     if (slot1.textContent === 'Vazio') {
         slot1.textContent = `${nome} - ${vida} HP`;
         slot1.dataset.nome = nome;
-        slot1.dataset.primeiroNome = primeiroNome;
     } else if (slot2.textContent === 'Vazio') {
-        const primeiroNomeSlot1 = slot1.dataset.primeiroNome;
-        if (primeiroNome === primeiroNomeSlot1) {
-            slot2.textContent = `${nome} - ${vida} HP`;
-            slot2.dataset.nome = nome;
-            slot2.dataset.primeiroNome = primeiroNome;
-        } else {
-            alert(`${nome} não pode cruzar com ${slot1.dataset.nome}. Apenas animais da mesma espécie podem cruzar.`);
-        }
+        slot2.textContent = `${nome} - ${vida} HP`;
+        slot2.dataset.nome = nome;
     }
 }
+
 
 
 function removerAnimal(slotId) {
@@ -995,11 +987,19 @@ function cantarAnimais() {
     const slot2 = document.getElementById('slot-2');
     
     if (slot1.textContent !== 'Vazio' && slot2.textContent !== 'Vazio') {
-        alert(`Cruzando ${slot1.dataset.nome} com ${slot2.dataset.nome}!`);
+        const primeiroNome1 = slot1.dataset.nome.split(' ')[0];
+        const primeiroNome2 = slot2.dataset.nome.split(' ')[0];
+        
+        if (primeiroNome1 === primeiroNome2) {
+            alert(`Cruzando ${slot1.dataset.nome} com ${slot2.dataset.nome}!`);
+        } else {
+            document.getElementById('content-area').innerHTML += '<div style="color: red; text-align: center; margin-top: 20px;">Animais assim não podem ter descendência.</div>';
+        }
     } else {
         alert('Selecione dois animais para cruzar.');
     }
 }
+
 
 
 // Torna funções acessíveis globalmente para onclick
