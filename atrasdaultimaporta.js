@@ -390,6 +390,21 @@ const magias = [
     }
 ];
 
+// Intenções das magias
+const intencoesMagias = {
+    "armadura-arcana": "Permanecer. Não ser desfeito. Guardar a forma mesmo sob ameaça.",
+    "causar-medo": "Afastar. Evocar o pânico primordial. Despertar a memória do que foi temido antes mesmo de se nascer.",
+    "cura-maior": "Restaurar o que se partiu. Lembrar o corpo de quem ele já foi — inteiro.",
+    "cura-menor": "Acalmar. Lamber feridas pequenas com mãos invisíveis. Fazer o tempo cuidar mais rápido.",
+    "missil-magico": "Ferir sem hesitar. Encontrar a dúvida no peito do outro e transformá-la em dor certeira.",
+    "escudo-arcano": "Proteger sem barganha. Ser negação pura ao toque. Delimitar o sagrado.",
+    "luz": "Revelar. Obrigar olhos a verem o que fingem não estar lá.",
+    "pasmar": "Silenciar o instante. Suspender a vontade alheia. Fazer o tempo tropeçar.",
+    "raio-acido": "Corrói por justiça. Dissolver o que finge firmeza. Desfazer verdades falsas.",
+    "sono": "Fechar olhos para evitar o pior. Conceder esquecimento temporário. Esconder do mundo por um instante.",
+    "toque-chocante": "Despertar com violência. Lembrar que há pulsos elétricos até nos corpos que desistem.",
+    "toque-macabro": "Enfraquecer. Fazer a alma esquecer como se mantém firme. Roubar a última chama."
+};
 
 
 let paginaAtual = 0;
@@ -549,9 +564,45 @@ function atualizarBotoes() {
     document.getElementById('next-btn').disabled = paginaAtual === magias.length - 1;
 }
 
+
 function estudarMagia() {
-    alert(`Estudando: ${magias[paginaAtual].nome}`);
+    const magiaAtual = magias[paginaAtual];
+    const intencao = intencoesMagias[magiaAtual.id];
+    
+    // Criar elemento da intenção
+    const intencaoDiv = document.createElement('div');
+    intencaoDiv.className = 'magia-intencao';
+    intencaoDiv.innerHTML = `<strong>Intenção:</strong> ${intencao}`;
+    intencaoDiv.style.cssText = `
+        margin: 15px 0;
+        font-size: 13px;
+        color: #8B4513;
+        font-weight: bold;
+        opacity: 0;
+        transition: all 2s ease;
+    `;
+    
+    // Inserir após a descrição
+    const descricao = document.querySelector('.magia-descricao');
+    descricao.parentNode.insertBefore(intencaoDiv, descricao.nextSibling);
+    
+    // Remover botão estudar
+    const botaoEstudar = document.querySelector('button[onclick="estudarMagia()"]');
+    if (botaoEstudar) {
+        botaoEstudar.remove();
+    }
+    
+    // Animar aparição
+    setTimeout(() => {
+        intencaoDiv.style.opacity = '1';
+        
+        // Após 3s, mudar para cor normal
+        setTimeout(() => {
+            intencaoDiv.style.color = '#c5bebe';
+        }, 3000);
+    }, 100);
 }
+
 
 async function memorizarMagia() {
     const magiaAtual = magias[paginaAtual];
