@@ -920,7 +920,6 @@ document.querySelectorAll('.menu-btn').forEach(button => {
 });
 
 
-// Função para cruzar animais
 function criarCruzarAnimais() {
     setTimeout(() => {
         document.getElementById('slot-1').addEventListener('click', () => removerAnimal('slot-1'));
@@ -929,6 +928,7 @@ function criarCruzarAnimais() {
     
     return `
         <div class="cruzar-container">
+            <div id="mensagem-erro" style="color: red; text-align: center; margin-bottom: 10px; display: none;">Animais assim não geram descendência.</div>
             <div class="espaco-central" id="espaco-central">
                 <div class="animal-slot" id="slot-1">Vazio</div>
                 <div class="animal-slot" id="slot-2">Vazio</div>
@@ -940,6 +940,7 @@ function criarCruzarAnimais() {
         </div>
     `;
 }
+
 
 function obterListaAnimais() {
     const inventario = [
@@ -978,15 +979,19 @@ function removerAnimal(slotId) {
     const slot = document.getElementById(slotId);
     slot.textContent = 'Vazio';
     delete slot.dataset.nome;
+    
+    // Esconder mensagem de erro quando remover animal
+    const mensagem = document.getElementById('mensagem-erro');
+    if (mensagem) {
+        mensagem.style.display = 'none';
+    }
 }
 
 
 function cantarAnimais() {
-    console.log('Botão cantar clicado');
     const slot1 = document.getElementById('slot-1');
     const slot2 = document.getElementById('slot-2');
-    
-    console.log('Slot1:', slot1.textContent, 'Slot2:', slot2.textContent);
+    const mensagem = document.getElementById('mensagem-erro');
     
     if (slot1.textContent !== 'Vazio' && slot2.textContent !== 'Vazio') {
         const primeiroNome1 = slot1.dataset.nome.split(' ')[0];
@@ -994,8 +999,9 @@ function cantarAnimais() {
         
         if (primeiroNome1 === primeiroNome2) {
             alert(`Cruzando ${slot1.dataset.nome} com ${slot2.dataset.nome}!`);
+            mensagem.style.display = 'none';
         } else {
-            document.getElementById('content-area').innerHTML += '<div style="color: red; text-align: center; margin-top: 20px;">Animais assim não podem ter descendência.</div>';
+            mensagem.style.display = 'block';
         }
     } else {
         alert('Selecione dois animais para cruzar.');
