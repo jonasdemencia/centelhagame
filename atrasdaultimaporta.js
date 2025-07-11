@@ -424,6 +424,134 @@ const intencoesMagias = {
     "toque-macabro": "Enfraquecer. Fazer a alma esquecer como se mantém firme. Roubar a última chama."
 };
 
+// Julgamentos pessoais das magias
+const julgamentosMagias = {
+    "armadura-arcana": [
+        "Você se cobre de palavras, mas nenhuma delas é sua.",
+        "Parece que confia mais na página do que em si mesmo.",
+        "Você luta para não ser tocado, mas já foi ferido por dentro."
+    ],
+    "causar-medo": [
+        "Você gosta de ver o pavor nos outros porque reconhece o seu.",
+        "Teme ser fraco, então usa o medo como disfarce.",
+        "Sua voz não grita — geme."
+    ],
+    "cura-maior": [
+        "Seu desespero é um pedido disfarçado.",
+        "Você cura os outros para não encarar suas próprias feridas.",
+        "Há fé em você… mas ela cambaleia."
+    ],
+    "cura-menor": [
+        "Suas mãos tremem ao cuidar — você não aprendeu a ser gentil.",
+        "Cada toque seu parece pedir desculpas.",
+        "Você não crê no remédio, apenas no ritual."
+    ],
+    "missil-magico": [
+        "Seu olhar é mais cruel do que sua magia.",
+        "Você prefere atacar a ouvir.",
+        "Sua pontaria nasce do rancor."
+    ],
+    "escudo-arcano": [
+        "Você não quer ser tocado porque teme se desfazer.",
+        "Confia mais em barreiras do que em palavras.",
+        "Seu escudo é feito de ressentimento."
+    ],
+    "luz": [
+        "Você ilumina para cegar, não para guiar.",
+        "Seus olhos queimam, mas seu coração permanece escuro.",
+        "A luz que você conjura não aquece ninguém."
+    ],
+    "pasmar": [
+        "Você congela o mundo porque não sabe avançar.",
+        "Vive pausando o tempo… mas nunca olha pra trás.",
+        "Você não interrompe o inimigo — interrompe a si mesmo."
+    ],
+    "raio-acido": [
+        "Sua boca é ácida porque seu silêncio já apodreceu.",
+        "Você não digere o mundo — o vomita.",
+        "A mágoa transbordou. E você chama isso de feitiço."
+    ],
+    "sono": [
+        "Você põe os outros pra dormir, mas nunca descansa.",
+        "Sua fadiga é culpa disfarçada.",
+        "Seu canto embala os outros, mas ninguém canta pra você."
+    ],
+    "toque-chocante": [
+        "Sua eletricidade não é poder — é pânico.",
+        "Você nunca segura… apenas descarrega.",
+        "Seus dedos tremem mesmo antes do feitiço."
+    ],
+    "toque-macabro": [
+        "Você é frio porque o calor te abandonou.",
+        "O toque que você oferece é ausência.",
+        "Você não enfraquece o inimigo — apenas compartilha sua apatia."
+    ]
+};
+
+// Perguntas existenciais das magias
+const perguntasMagias = {
+    "armadura-arcana": [
+        "De que realmente você tenta se proteger?",
+        "Você resistiria ao mundo se não tivesse pele?",
+        "A recusa é defesa… ou medo?"
+    ],
+    "causar-medo": [
+        "O que você teme quando está sozinho?",
+        "Já sentiu medo de quem está se tornando?",
+        "Existe algo mais assustador que seu próprio silêncio?"
+    ],
+    "cura-maior": [
+        "Ainda acredita que merece ser curado?",
+        "Já perdoou aquilo que partiu seu coração?",
+        "O que você faz com a dor que não cicatriza?"
+    ],
+    "cura-menor": [
+        "Quando foi a última vez que você chorou por si mesmo?",
+        "Qual ferida nunca recebeu um gesto de cuidado?",
+        "Você se cura… ou apenas ignora a dor?"
+    ],
+    "missil-magico": [
+        "O que você fere quando pensa em atacar?",
+        "Já destruiu algo só por medo de que te destruísse antes?",
+        "Você sabe mirar... mas por quê?"
+    ],
+    "escudo-arcano": [
+        "Quem você não permite mais se aproximar?",
+        "O que há dentro do seu círculo que não suporta luz?",
+        "A proteção é escolha... ou prisão?"
+    ],
+    "luz": [
+        "O que você espera ver quando tudo estiver iluminado?",
+        "Existe algo em você que a luz não alcança?",
+        "Quando a verdade brilha, o que você desvia o olhar para não ver?"
+    ],
+    "pasmar": [
+        "Já foi paralisado por algo que não compreendeu?",
+        "O tempo te respeita… ou te ignora?",
+        "Em que instante sua história rachou?"
+    ],
+    "raio-acido": [
+        "Qual palavra engolida ainda corrói sua garganta?",
+        "Você cospe dor… ou apenas recicla a que recebeu?",
+        "É mais fácil destruir ou dizer o que sente?"
+    ],
+    "sono": [
+        "O que você teme sonhar se adormecer?",
+        "Qual vigília você se recusa a abandonar?",
+        "Se dormisse agora… o que deixaria de existir?"
+    ],
+    "toque-chocante": [
+        "O que em você ainda espera explodir?",
+        "Já se arrependeu depois de ferir?",
+        "Você toca com raiva... ou por desespero?"
+    ],
+    "toque-macabro": [
+        "Já sentiu sua própria vida se esvaziando?",
+        "A que custo você se torna intocável?",
+        "O que ainda te dá cor?"
+    ]
+};
+
 
 let paginaAtual = 0;
 
@@ -523,6 +651,8 @@ function criarPaginaMagia(index) {
     const statusMemorizada = jaMemorizada ? ' <span style="color: #ffd700;">✓ Memorizada</span>' : '';
     const jaEstudada = window.arcanumIudicium.isMagiaEstudada(magia.id);
 const intencaoHtml = jaEstudada ? `<div class="magia-intencao" style="margin: 15px 0; font-size: 13px; color: #c5bebe; font-weight: bold;"><strong>Intenção:</strong> ${intencoesMagias[magia.id]}</div>` : '';
+const mostrarEstudarNovamente = jaEstudada && Math.random() < 0.33;
+
 
     
     return `
@@ -565,11 +695,13 @@ async function mudarPagina(direcao) {
         const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
         const actionsDiv = document.querySelector('.grimorio-actions');
 
-        // Verificar se foi estudada
+       // Verificar se foi estudada
 const jaEstudada = window.arcanumIudicium.isMagiaEstudada(magiaAtual.id);
+const mostrarEstudarNovamente = jaEstudada && Math.random() < 0.33;
 
 // Limpa e recria botões
-actionsDiv.innerHTML = jaEstudada ? '' : '<button class="action-btn" onclick="estudarMagia()">Estudar</button>';
+actionsDiv.innerHTML = mostrarEstudarNovamente ? '<button class="action-btn" onclick="estudarProfundamente()">Estudar</button>' : (jaEstudada ? '' : '<button class="action-btn" onclick="estudarMagia()">Estudar</button>');
+
 
 
         // Adiciona botão "Memorizar" se necessário
@@ -629,6 +761,54 @@ async function estudarMagia() {
     }, 100);
 }
 
+function estudarProfundamente() {
+    const magiaAtual = magias[paginaAtual];
+    const julgamentos = julgamentosMagias[magiaAtual.id];
+    const perguntas = perguntasMagias[magiaAtual.id];
+    
+    const julgamentoAleatorio = julgamentos[Math.floor(Math.random() * julgamentos.length)];
+    const perguntaAleatoria = perguntas[Math.floor(Math.random() * perguntas.length)];
+    
+    // Criar elementos
+    const reflexaoDiv = document.createElement('div');
+    reflexaoDiv.className = 'magia-reflexao';
+    reflexaoDiv.innerHTML = `
+        <div style="margin: 15px 0; font-size: 13px; color: #8B4513; font-weight: bold; font-style: italic;">
+            ${julgamentoAleatorio}
+        </div>
+        <div style="margin: 15px 0; font-size: 13px; color: #c5bebe; font-weight: bold;">
+            ${perguntaAleatoria}
+        </div>
+        <div style="margin: 15px 0; display: flex; gap: 10px; justify-content: center;">
+            <button class="action-btn" onclick="responderMentalmente()">Responder Mentalmente</button>
+            <button class="action-btn" onclick="fecharOlhos()">Fechar os Olhos</button>
+        </div>
+    `;
+    
+    // Inserir após a intenção
+    const intencao = document.querySelector('.magia-intencao');
+    intencao.parentNode.insertBefore(reflexaoDiv, intencao.nextSibling);
+    
+    // Remover botão estudar
+    const botaoEstudar = document.querySelector('button[onclick="estudarProfundamente()"]');
+    if (botaoEstudar) {
+        botaoEstudar.remove();
+    }
+}
+
+function responderMentalmente() {
+    const reflexaoDiv = document.querySelector('.magia-reflexao');
+    if (reflexaoDiv) {
+        reflexaoDiv.remove();
+    }
+}
+
+function fecharOlhos() {
+    const reflexaoDiv = document.querySelector('.magia-reflexao');
+    if (reflexaoDiv) {
+        reflexaoDiv.remove();
+    }
+}
 
 
 async function memorizarMagia() {
@@ -675,7 +855,9 @@ document.querySelectorAll('.menu-btn').forEach(button => {
 window.mudarPagina = mudarPagina;
 window.estudarMagia = estudarMagia;
 window.memorizarMagia = memorizarMagia;
-
+window.estudarProfundamente = estudarProfundamente;
+window.responderMentalmente = responderMentalmente;
+window.fecharOlhos = fecharOlhos;
 
 
 function aplicarEfeitosAleatorios() {
