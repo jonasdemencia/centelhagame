@@ -28,6 +28,8 @@ window.arcanumIudicium = {
     magiasMemorizadas: [],
     magiasEstudadas: [],
     magiasReflexao: [],
+    reflexoesSalvas: {},
+
 
 
     async sucesso() { 
@@ -68,7 +70,8 @@ window.arcanumIudicium = {
                     magiaComDesconto: this.magiaComDesconto,
                     magiasMemorizadas: this.magiasMemorizadas,
                     magiasEstudadas: this.magiasEstudadas,
-                    magiasReflexao: this.magiasReflexao
+                    magiasReflexao: this.magiasReflexao,
+                    reflexoesSalvas: this.reflexoesSalvas
 
                 }
             }, { merge: true });
@@ -98,6 +101,8 @@ window.arcanumIudicium = {
                 this.magiasMemorizadas = data.magiasMemorizadas || [];
                 this.magiasEstudadas = data.magiasEstudadas || [];
                 this.magiasReflexao = data.magiasReflexao || [];
+                this.reflexoesSalvas = data.reflexoesSalvas || {};
+
 
                 console.log(`Arcanum Iudicium carregado: ${this.sucessos} sucessos, ${this.falhas} falhas, categoria: ${this.ultimaCategoria}, desconto: ${this.magiaComDesconto}, memorizadas: ${this.magiasMemorizadas.length}`);
             } else {
@@ -665,6 +670,8 @@ function criarPaginaMagia(index) {
     const statusMemorizada = jaMemorizada ? ' <span style="color: #ffd700;">✓ Memorizada</span>' : '';
     const jaEstudada = window.arcanumIudicium.isMagiaEstudada(magia.id);
 const intencaoHtml = jaEstudada ? `<div class="magia-intencao" style="margin: 15px 0; font-size: 13px; color: #c5bebe; font-weight: bold;"><strong>Intenção:</strong> ${intencoesMagias[magia.id]}</div>` : '';
+    const reflexaoSalva = window.arcanumIudicium.reflexoesSalvas[magia.id];
+const reflexaoHtml = reflexaoSalva ? `<div class="magia-julgamento" style="margin: 15px 0; font-size: 13px; color: #8B4513; font-weight: bold; font-style: italic;">${reflexaoSalva}</div>` : '';
 const jaReflexao = window.arcanumIudicium.isMagiaReflexao(magia.id);
 const mostrarEstudarNovamente = jaEstudada && !jaReflexao && Math.random() < 0.33;
 
@@ -678,6 +685,7 @@ const mostrarEstudarNovamente = jaEstudada && !jaReflexao && Math.random() < 0.3
             <div class="magia-divisor">═══════════════════════════════</div>
             <div class="magia-descricao">${magia.descricao.replace(/\n/g, '<br><br>')}</div>
             ${intencaoHtml}
+            ${reflexaoHtml}
             <div class="magia-stats">
                 <div>📖 <span class="label">Custo:</span> <span class="valor">${custoFinal}${textoDesconto}</span></div>
                 <div>🌀 <span class="label">Efeito:</span> <span class="valor">${magia.efeito}</span></div>
@@ -816,16 +824,36 @@ function estudarProfundamente() {
 
 async function responderMentalmente() {
     const magiaAtual = magias[paginaAtual];
+    const julgamento = document.querySelector('.magia-reflexao div:first-child').textContent;
+    
+    // Salvar julgamento
+    window.arcanumIudicium.reflexoesSalvas[magiaAtual.id] = julgamento;
     await window.arcanumIudicium.reflexaoMagia(magiaAtual.id);
     
-    const reflexaoDiv = document.querySelector('.magia-reflexao');
-    if (reflexaoDiv) {
-        reflexaoDiv.remove();
+    // Recarregar página para mostrar julgamento permanente
+    const magiaContent = document.getElementById('magia-content');
+    magiaContent.innerHTML = criarPaginaMagia(paginaAtual);
+    
+    // Atualizar botões
+    const actionsDiv = document.querySelector('.grimorio-actions');
+    const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
+    
+    actionsDiv.innerHTML = '';
+    if (!jaMemorizada) {
+        const novoBotao = document.createElement('button');
+        novoBotao.className = 'action-btn';
+        novoBotao.onclick = memorizarMagia;
+        novoBotao.textContent = 'Memorizar';
+        actionsDiv.appendChild(novoBotao);
     }
 }
 
 async function fecharOlhos() {
     const magiaAtual = magias[paginaAtual];
+    const julgamento = document.querySelector('.magia-reflexao div:first-child').textContent;
+    
+    // Salvar julgamento
+    window.arcanumIudicium.reflexoesSalvas[magiaAtual.id] = julgamento;
     await window.arcanumIudicium.reflexaoMagia(magiaAtual.id);
     
     // Criar overlay escuro
@@ -855,14 +883,26 @@ async function fecharOlhos() {
         setTimeout(() => {
             document.body.removeChild(overlay);
             
-            // Remover reflexão após o efeito
-            const reflexaoDiv = document.querySelector('.magia-reflexao');
-            if (reflexaoDiv) {
-                reflexaoDiv.remove();
+            // Recarregar página para mostrar julgamento permanente
+            const magiaContent = document.getElementById('magia-content');
+            magiaContent.innerHTML = criarPaginaMagia(paginaAtual);
+            
+            // Atualizar botões
+            const actionsDiv = document.querySelector('.grimorio-actions');
+            const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
+            
+            actionsDiv.innerHTML = '';
+            if (!jaMemorizada) {
+                const novoBotao = document.createElement('button');
+                novoBotao.className = 'action-btn';
+                novoBotao.onclick = memorizarMagia;
+                novoBotao.textContent = 'Memorizar';
+                actionsDiv.appendChild(novoBotao);
             }
         }, 300);
     }, 1000);
 }
+
 
 
 async function memorizarMagia() {
