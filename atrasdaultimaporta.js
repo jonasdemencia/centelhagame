@@ -905,7 +905,6 @@ document.querySelectorAll('.menu-btn').forEach(button => {
         if (content === 'grimorio') {
             const resultado = await contentData[content]();
             document.getElementById('content-area').innerHTML = resultado;
-            paginaAtual = 0;
             setTimeout(() => {
                 atualizarBotoes();
                 renderizarAcoesGrimorio();
