@@ -963,20 +963,32 @@ function selecionarAnimal(nome, vida) {
     const slot1 = document.getElementById('slot-1');
     const slot2 = document.getElementById('slot-2');
     
+    const primeiroNome = nome.split(' ')[0];
+    
     if (slot1.textContent === 'Vazio') {
         slot1.textContent = `${nome} - ${vida} HP`;
         slot1.dataset.nome = nome;
+        slot1.dataset.primeiroNome = primeiroNome;
     } else if (slot2.textContent === 'Vazio') {
-        slot2.textContent = `${nome} - ${vida} HP`;
-        slot2.dataset.nome = nome;
+        const primeiroNomeSlot1 = slot1.dataset.primeiroNome;
+        if (primeiroNome === primeiroNomeSlot1) {
+            slot2.textContent = `${nome} - ${vida} HP`;
+            slot2.dataset.nome = nome;
+            slot2.dataset.primeiroNome = primeiroNome;
+        } else {
+            alert(`${nome} não pode cruzar com ${slot1.dataset.nome}. Apenas animais da mesma espécie podem cruzar.`);
+        }
     }
 }
+
 
 function removerAnimal(slotId) {
     const slot = document.getElementById(slotId);
     slot.textContent = 'Vazio';
     delete slot.dataset.nome;
+    delete slot.dataset.primeiroNome;
 }
+
 
 function cantarAnimais() {
     const slot1 = document.getElementById('slot-1');
