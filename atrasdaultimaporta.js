@@ -1128,7 +1128,7 @@ async function recolherDescendencia() {
             description: "Um pequeno grilo saltitante",
             energia: {
                 total: 1,
-                initial: 1
+                inicial: 1
             }
         };
         
