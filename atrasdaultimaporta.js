@@ -990,7 +990,13 @@ async function criarCruzarAnimais() {
         const changeChance = CONDITION_STABILITY[key]?.changeChance || 0;
         const isChanging = window.arcanumTurnCounter % 3 === 2;
         const pulseClass = (isChanging && changeChance > 0.20) ? ' condition-changing' : '';
-        return `<span class="condition${pulseClass}">🔮 ${value.replace('-', ' ').toUpperCase()}</span>`;
+        const emojiMap = {
+    periodo: '🌅', estacao: '🍂', vento: '💨', clima: '☀️',
+    temperatura: '🌡️', pressao: '📊', lua: '🌙', energiaMagica: '⚡'
+};
+const emoji = emojiMap[key] || '🔮';
+return `<span class="condition${pulseClass}">${emoji} ${value.replace('-', ' ').toUpperCase()}</span>`;
+
     }).join('');
     
     setTimeout(() => {
