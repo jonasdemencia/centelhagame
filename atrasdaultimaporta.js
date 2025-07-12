@@ -922,6 +922,15 @@ document.querySelectorAll('.menu-btn').forEach(button => {
 
 async function criarCruzarAnimais() {
     const listaAnimaisHtml = await obterListaAnimais();
+    const dynamicConditions = getDynamicConditions();
+    
+    const conditionsHtml = Object.entries(dynamicConditions).map(([key, value]) => {
+        if (!value) return '';
+        const changeChance = CONDITION_STABILITY[key]?.changeChance || 0;
+        const isChanging = window.arcanumTurnCounter % 3 === 2;
+        const pulseClass = (isChanging && changeChance > 0.20) ? ' condition-changing' : '';
+        return `<span class="condition${pulseClass}">🔮 ${value.replace('-', ' ').toUpperCase()}</span>`;
+    }).join('');
     
     setTimeout(() => {
         document.getElementById('slot-1').addEventListener('click', () => removerAnimal('slot-1'));
@@ -930,6 +939,9 @@ async function criarCruzarAnimais() {
     
     return `
         <div class="cruzar-container">
+            <div class="conditions-display" style="margin-bottom: 20px; text-align: center; font-size: 12px; color: #feca57;">
+                ${conditionsHtml}
+            </div>
             <div id="mensagem-erro" style="color: red; text-align: center; margin-bottom: 10px; display: none;">Animais assim não geram descendência.</div>
             <div class="espaco-central" id="espaco-central">
                 <div class="animal-slot" id="slot-1">Vazio</div>
@@ -942,6 +954,7 @@ async function criarCruzarAnimais() {
         </div>
     `;
 }
+
 
 
 
