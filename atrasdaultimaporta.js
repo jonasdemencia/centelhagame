@@ -910,9 +910,9 @@ document.querySelectorAll('.menu-btn').forEach(button => {
                 renderizarAcoesGrimorio();
             }, 0);
         } else if (content === 'cruzar') {
-            const resultado = contentData[content]();
-            document.getElementById('content-area').innerHTML = resultado;
-        } else {
+    const resultado = await contentData[content]();
+    document.getElementById('content-area').innerHTML = resultado;
+} else {
             const resultado = typeof contentData[content] === 'function' ? contentData[content]() : contentData[content];
             document.getElementById('content-area').innerHTML = resultado;
         }
@@ -920,7 +920,9 @@ document.querySelectorAll('.menu-btn').forEach(button => {
 });
 
 
-function criarCruzarAnimais() {
+async function criarCruzarAnimais() {
+    const listaAnimaisHtml = await obterListaAnimais();
+    
     setTimeout(() => {
         document.getElementById('slot-1').addEventListener('click', () => removerAnimal('slot-1'));
         document.getElementById('slot-2').addEventListener('click', () => removerAnimal('slot-2'));
@@ -935,30 +937,53 @@ function criarCruzarAnimais() {
             </div>
             <button class="cantar-btn" id="cantar-btn" onclick="cantarAnimais()">CANTAR</button>
             <div class="lista-animais" id="lista-animais">
-                ${obterListaAnimais()}
+                ${listaAnimaisHtml}
             </div>
         </div>
     `;
 }
 
 
-function obterListaAnimais() {
-    const inventario = [
-        { nome: "Lobo Sombrio", vida: 85 },
-        { nome: "Corvo Ancestral", vida: 120 },
-        { nome: "Serpente de Ferro", vida: 95 }
-    ];
-    
-    const animais = inventario.filter(item => item.vida > 0);
-    
-    if (animais.length === 0) {
-        return '<div class="sem-animais">Não pode ofertar descendência sem ter exemplares para cruzar.</div>';
+
+async function obterListaAnimais() {
+    const userId = auth.currentUser?.uid;
+    if (!userId) {
+        return '<div class="sem-animais">Usuário não autenticado.</div>';
     }
     
-    return animais.map(animal => 
-        `<div class="animal-item" onclick="selecionarAnimal('${animal.nome}', ${animal.vida})">${animal.nome} - ${animal.vida} HP</div>`
-    ).join('');
+    try {
+        const playerRef = doc(db, "players", userId);
+        const playerSnap = await getDoc(playerRef);
+        
+        if (!playerSnap.exists() || !playerSnap.data().inventory?.itemsInChest) {
+            return '<div class="sem-animais">Não pode ofertar descendência sem ter exemplares para cruzar.</div>';
+        }
+        
+        const itemsInChest = playerSnap.data().inventory.itemsInChest;
+        
+        // Filtra apenas animais vivos (têm energia e energia.total > 0)
+        const animais = itemsInChest.filter(item => 
+            item.energia && 
+            item.energia.total > 0
+        );
+        
+        if (animais.length === 0) {
+            return '<div class="sem-animais">Não pode ofertar descendência sem ter exemplares para cruzar.</div>';
+        }
+        
+        // Testa ambas as propriedades para ver qual existe
+        return animais.map(animal => {
+            const nomeAnimal = animal.content || animal.nome || 'Animal sem nome';
+            const vidaAnimal = animal.energia.total;
+            return `<div class="animal-item" onclick="selecionarAnimal('${nomeAnimal}', ${vidaAnimal})">${nomeAnimal} - ${vidaAnimal} HP</div>`;
+        }).join('');
+        
+    } catch (error) {
+        console.error("Erro ao carregar animais:", error);
+        return '<div class="sem-animais">Erro ao carregar animais.</div>';
+    }
 }
+
 
 function selecionarAnimal(nome, vida) {
     const slot1 = document.getElementById('slot-1');
