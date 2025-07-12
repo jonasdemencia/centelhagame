@@ -1226,3 +1226,20 @@ dice-icon svg {
     color: black;
 }
 
+.condition {
+    display: inline-block;
+    margin: 2px 5px;
+    padding: 2px 6px;
+    background-color: rgba(254, 202, 87, 0.1);
+    border-radius: 3px;
+    font-size: 10px;
+}
+
+.condition-changing {
+    animation: pulse-condition 1s ease-in-out infinite;
+}
+
+@keyframes pulse-condition {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
