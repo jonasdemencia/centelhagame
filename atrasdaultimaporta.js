@@ -998,8 +998,7 @@ function cantarAnimais() {
         const primeiroNome2 = slot2.dataset.nome.split(' ')[0];
         
         if (primeiroNome1 === primeiroNome2) {
-            mensagem.textContent = `Cruzando ${slot1.dataset.nome} com ${slot2.dataset.nome}!`;
-            mensagem.style.display = 'block';
+            iniciarCruzamento(slot1.dataset.nome, slot2.dataset.nome);
         } else {
             mensagem.textContent = 'Animais assim não geram descendência.';
             mensagem.style.display = 'block';
@@ -1008,6 +1007,73 @@ function cantarAnimais() {
         mensagem.textContent = 'Selecione dois animais para cruzar.';
         mensagem.style.display = 'block';
     }
+}
+
+function iniciarCruzamento(animal1, animal2) {
+    const mensagem = document.getElementById('mensagem-erro');
+    const numerosRomanos = ['X', 'IX', 'VIII', 'VII', 'VI', 'V', 'IV', 'III', 'II', 'I'];
+    let contador = 0;
+    
+    // Desabilitar botões
+    desabilitarBotoesCruzar(true);
+    
+    // Mostrar mensagem inicial
+    mensagem.innerHTML = `
+        <div class="contagem-container">
+            <span>Cruzando ${animal1} com ${animal2}!</span>
+            <span id="contador-romano">${numerosRomanos[contador]}</span>
+            <span class="ampulheta">⧗</span>
+        </div>
+    `;
+    mensagem.style.display = 'block';
+    
+    // Iniciar contagem
+    const intervalo = setInterval(() => {
+        contador++;
+        if (contador < numerosRomanos.length) {
+            document.getElementById('contador-romano').textContent = numerosRomanos[contador];
+        } else {
+            clearInterval(intervalo);
+            finalizarCruzamento();
+        }
+    }, 1000);
+}
+
+function finalizarCruzamento() {
+    const mensagem = document.getElementById('mensagem-erro');
+    
+    mensagem.innerHTML = `
+        <div class="contagem-container">
+            <span>Descendência gerada!</span>
+            <button class="botao-recolher" onclick="recolherDescendencia()">Recolher</button>
+        </div>
+    `;
+    
+    // Reabilitar botões
+    desabilitarBotoesCruzar(false);
+}
+
+function desabilitarBotoesCruzar(desabilitar) {
+    const botaoCantar = document.getElementById('cantar-btn');
+    const slots = document.querySelectorAll('.animal-slot');
+    const animaisLista = document.querySelectorAll('.animal-item');
+    
+    if (botaoCantar) botaoCantar.disabled = desabilitar;
+    
+    slots.forEach(slot => {
+        slot.style.pointerEvents = desabilitar ? 'none' : 'auto';
+        slot.style.opacity = desabilitar ? '0.5' : '1';
+    });
+    
+    animaisLista.forEach(item => {
+        item.style.pointerEvents = desabilitar ? 'none' : 'auto';
+        item.style.opacity = desabilitar ? '0.5' : '1';
+    });
+}
+
+function recolherDescendencia() {
+    // Implementar depois
+    console.log('Recolher descendência clicado');
 }
 
 
@@ -1020,7 +1086,7 @@ window.responderMentalmente = responderMentalmente;
 window.fecharOlhos = fecharOlhos;
 window.selecionarAnimal = selecionarAnimal;
 window.cantarAnimais = cantarAnimais;
-
+window.recolherDescendencia = recolherDescendencia;
 
 
 function aplicarEfeitosAleatorios() {
