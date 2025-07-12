@@ -1191,3 +1191,38 @@ dice-icon svg {
     font-style: italic;
     padding: 20px;
 }
+
+.ampulheta {
+    display: inline-block;
+    font-size: 16px;
+    animation: girar 1s linear infinite;
+    margin-left: 10px;
+}
+
+@keyframes girar {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.contagem-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.botao-recolher {
+    background-color: black;
+    color: white;
+    border: 1px solid white;
+    padding: 5px 15px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
+.botao-recolher:hover {
+    background-color: white;
+    color: black;
+}
+
