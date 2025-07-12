@@ -1058,7 +1058,11 @@ function desabilitarBotoesCruzar(desabilitar) {
     const slots = document.querySelectorAll('.animal-slot');
     const animaisLista = document.querySelectorAll('.animal-item');
     
-    if (botaoCantar) botaoCantar.disabled = desabilitar;
+    if (botaoCantar) {
+        botaoCantar.disabled = desabilitar;
+        botaoCantar.style.opacity = desabilitar ? '0.5' : '1';
+        botaoCantar.style.cursor = desabilitar ? 'not-allowed' : 'pointer';
+    }
     
     slots.forEach(slot => {
         slot.style.pointerEvents = desabilitar ? 'none' : 'auto';
@@ -1070,6 +1074,7 @@ function desabilitarBotoesCruzar(desabilitar) {
         item.style.opacity = desabilitar ? '0.5' : '1';
     });
 }
+
 
 function recolherDescendencia() {
     // Implementar depois
