@@ -18,6 +18,17 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+const CONDITION_STABILITY = {
+    periodo: { changeChance: 0.05 },
+    estacao: { changeChance: 0.02 },
+    vento: { changeChance: 0.30 },
+    clima: { changeChance: 0.25 },
+    energiaMagica: { changeChance: 0.35 },
+    temperatura: { changeChance: 0.15 },
+    pressao: { changeChance: 0.20 },
+    lua: { changeChance: 0.10 }
+};
+
 const CONDITION_OPTIONS = {
     periodo: ['manha', 'tarde', 'noite', 'madrugada'],
     estacao: ['primavera', 'verao', 'outono', 'inverno'],
