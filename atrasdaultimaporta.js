@@ -1101,10 +1101,65 @@ function desabilitarBotoesCruzar(desabilitar) {
 }
 
 
-function recolherDescendencia() {
-    // Implementar depois
-    console.log('Recolher descendência clicado');
+async function recolherDescendencia() {
+    const userId = auth.currentUser?.uid;
+    if (!userId) {
+        console.error('Usuário não autenticado');
+        return;
+    }
+    
+    try {
+        const playerRef = doc(db, "players", userId);
+        const playerSnap = await getDoc(playerRef);
+        
+        if (!playerSnap.exists()) {
+            console.error('Dados do jogador não encontrados');
+            return;
+        }
+        
+        const playerData = playerSnap.data();
+        const inventory = playerData.inventory || {};
+        const itemsInChest = inventory.itemsInChest || [];
+        
+        // Cria o grilo
+        const novoGrilo = {
+            id: "grilo",
+            content: "Grilo",
+            description: "Um pequeno grilo saltitante",
+            energia: {
+                total: 1,
+                initial: 1
+            }
+        };
+        
+        // Adiciona ao inventário
+        itemsInChest.push(novoGrilo);
+        
+        // Salva no Firestore
+        await setDoc(playerRef, {
+            inventory: {
+                ...inventory,
+                itemsInChest: itemsInChest
+            }
+        }, { merge: true });
+        
+        // Remove a mensagem e limpa os slots
+        const mensagem = document.getElementById('mensagem-erro');
+        if (mensagem) {
+            mensagem.style.display = 'none';
+        }
+        
+        removerAnimal('slot-1');
+        removerAnimal('slot-2');
+        
+        alert('Grilo adicionado ao inventário!');
+        
+    } catch (error) {
+        console.error('Erro ao adicionar grilo:', error);
+        alert('Erro ao recolher descendência');
+    }
 }
+
 
 
 // Torna funções acessíveis globalmente para onclick
