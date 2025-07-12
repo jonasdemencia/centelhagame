@@ -18,6 +18,56 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+const CONDITION_OPTIONS = {
+    periodo: ['manha', 'tarde', 'noite', 'madrugada'],
+    estacao: ['primavera', 'verao', 'outono', 'inverno'],
+    vento: ['norte', 'sul', 'leste', 'oeste'],
+    clima: ['sol-forte', 'sol-fraco', 'nublado', 'chuva-leve'],
+    temperatura: ['muito-frio', 'frio', 'quente', 'muito-quente'],
+    pressao: ['alta', 'baixa'],
+    lua: ['nova', 'crescente', 'cheia', 'minguante'],
+    energiaMagica: ['alta', 'baixa', 'interferencia']
+};
+
+function randomChoice(array) {
+    return array[Math.floor(Math.random() * array.length)];
+}
+
+function generateInitialConditions() {
+    const conditions = {};
+    for (const [key, options] of Object.entries(CONDITION_OPTIONS)) {
+        conditions[key] = randomChoice(options);
+    }
+    return conditions;
+}
+
+function evolveConditions(currentConditions) {
+    const newConditions = {...currentConditions};
+    for (const [conditionName, config] of Object.entries(CONDITION_STABILITY)) {
+        if (Math.random() < config.changeChance) {
+            const options = CONDITION_OPTIONS[conditionName];
+            const currentValue = newConditions[conditionName];
+            const availableOptions = options.filter(opt => opt !== currentValue);
+            if (availableOptions.length > 0) {
+                newConditions[conditionName] = randomChoice(availableOptions);
+            }
+        }
+    }
+    return newConditions;
+}
+
+function getDynamicConditions() {
+    window.arcanumTurnCounter++;
+    if (!window.arcanumBaseConditions) {
+        window.arcanumBaseConditions = generateInitialConditions();
+        return window.arcanumBaseConditions;
+    }
+    if (window.arcanumTurnCounter % 3 === 0) {
+        window.arcanumBaseConditions = evolveConditions(window.arcanumBaseConditions);
+    }
+    return window.arcanumBaseConditions;
+}
+
 
 // Sistema Arcanum Iudicium
 window.arcanumIudicium = {
