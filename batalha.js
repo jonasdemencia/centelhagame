@@ -6,20 +6,6 @@ import { loadEquippedDice, initializeModule } from './dice-ui.js';
 import { getMonsterById } from './monstros.js';
 import './arcanum-spells.js';
 
-// Sistema de Condições Dinâmicas - ADICIONAR APÓS AS IMPORTAÇÕES
-window.arcanumTurnCounter = window.arcanumTurnCounter || 0;
-window.arcanumBaseConditions = window.arcanumBaseConditions || null;
-
-const CONDITION_STABILITY = {
-    periodo: { changeChance: 0.05 },
-    estacao: { changeChance: 0.02 },
-    vento: { changeChance: 0.30 },
-    clima: { changeChance: 0.25 },
-    energiaMagica: { changeChance: 0.35 },
-    temperatura: { changeChance: 0.15 },
-    pressao: { changeChance: 0.20 },
-    lua: { changeChance: 0.10 }
-};
 
 // Sistema Arcanum Iudicium
 window.arcanumIudicium = {
@@ -99,62 +85,50 @@ window.arcanumIudicium = {
     }
 };
 
+// Sistema de Condições Ambientais Globais - Arcanum Verbis
+const ARCANUM_LAUNCH_DATE = new Date('2024-01-01T00:00:00Z');
 
-
-const CONDITION_OPTIONS = {
-    periodo: ['manha', 'tarde', 'noite', 'madrugada'],
-    estacao: ['primavera', 'verao', 'outono', 'inverno'],
-    vento: ['norte', 'sul', 'leste', 'oeste'],
-    clima: ['sol-forte', 'sol-fraco', 'nublado', 'chuva-leve'],
-    temperatura: ['muito-frio', 'frio', 'quente', 'muito-quente'],
-    pressao: ['alta', 'baixa'],
-    lua: ['nova', 'crescente', 'cheia', 'minguante'],
-    energiaMagica: ['alta', 'baixa', 'interferencia']
-};
-
-function randomChoice(array) {
-    return array[Math.floor(Math.random() * array.length)];
+function getArcanumConditions() {
+    const agora = new Date();
+    const diasDesdeInicio = Math.floor((agora - ARCANUM_LAUNCH_DATE) / (1000 * 60 * 60 * 24));
+    const horaAtual = agora.getHours();
+    
+    return {
+        periodo: horaAtual < 6 ? 'madrugada' : 
+                horaAtual < 12 ? 'manha' :
+                horaAtual < 18 ? 'tarde' : 'noite',
+        estacao: ['primavera', 'verao', 'outono', 'inverno'][Math.floor(diasDesdeInicio / 30) % 4],
+        vento: ['norte', 'nordeste', 'leste', 'sudeste', 'sul', 'sudoeste', 'oeste', 'noroeste'][Math.floor(diasDesdeInicio / 3) % 8],
+        clima: ['sol-forte', 'sol-fraco', 'nublado', 'chuva-leve', 'neblina', 'tempestade'][Math.floor(diasDesdeInicio / 2) % 6],
+        lua: ['nova', 'crescente', 'cheia', 'minguante'][Math.floor(diasDesdeInicio / 7) % 4],
+        temperatura: ['muito-frio', 'frio', 'ameno', 'quente', 'muito-quente'][Math.floor(diasDesdeInicio / 5) % 5],
+        pressao: ['alta', 'normal', 'baixa'][Math.floor(diasDesdeInicio / 4) % 3],
+        energiaMagica: ['alta', 'normal', 'baixa', 'interferencia'][Math.floor(diasDesdeInicio / 10) % 4]
+    };
 }
 
-function generateInitialConditions() {
-    const conditions = {};
-    for (const [key, options] of Object.entries(CONDITION_OPTIONS)) {
-        conditions[key] = randomChoice(options);
-    }
-    return conditions;
-}
-
-function evolveConditions(currentConditions) {
-    const newConditions = {...currentConditions};
-    for (const [conditionName, config] of Object.entries(CONDITION_STABILITY)) {
-        if (Math.random() < config.changeChance) {
-            const options = CONDITION_OPTIONS[conditionName];
-            const currentValue = newConditions[conditionName];
-            const availableOptions = options.filter(opt => opt !== currentValue);
-            if (availableOptions.length > 0) {
-                newConditions[conditionName] = randomChoice(availableOptions);
-            }
-        }
-    }
-    return newConditions;
+function getConditionIcon(tipo, valor) {
+    const icones = {
+        periodo: { manha: '🌅', tarde: '☀️', noite: '🌙', madrugada: '🌌' },
+        estacao: { primavera: '🌸', verao: '🌞', outono: '🍂', inverno: '❄️' },
+        vento: { norte: '⬆️💨', sul: '⬇️💨', leste: '➡️💨', oeste: '⬅️💨', nordeste: '↗️💨', noroeste: '↖️💨', sudeste: '↘️💨', sudoeste: '↙️💨' },
+        clima: { 'sol-forte': '☀️', 'sol-fraco': '🌤️', nublado: '☁️', 'chuva-leve': '🌦️', neblina: '🌫️', tempestade: '⛈️' },
+        lua: { nova: '🌑', crescente: '🌓', cheia: '🌕', minguante: '🌗' },
+        temperatura: { 'muito-frio': '🥶', frio: '❄️', ameno: '🌡️', quente: '🔥', 'muito-quente': '🌋' },
+        pressao: { alta: '📈', normal: '📊', baixa: '📉' },
+        energiaMagica: { alta: '⚡', normal: '✨', baixa: '💫', interferencia: '🌀' }
+    };
+    return icones[tipo]?.[valor] || '❓';
 }
 
 function getDynamicConditions() {
-    window.arcanumTurnCounter++;
-    if (!window.arcanumBaseConditions) {
-        window.arcanumBaseConditions = generateInitialConditions();
-        return window.arcanumBaseConditions;
-    }
-    if (window.arcanumTurnCounter % 3 === 0) {
-        window.arcanumBaseConditions = evolveConditions(window.arcanumBaseConditions);
-    }
-    return window.arcanumBaseConditions;
+    return getArcanumConditions();
 }
 
 function resetDynamicConditions() {
-    window.arcanumTurnCounter = 0;
-    window.arcanumBaseConditions = null;
+    // Não faz nada no sistema temporal
 }
+
 
 
 // Variáveis globais para estado da batalha
@@ -3383,7 +3357,7 @@ function setupArcanumConjurationModal(magiaId) {
     const magia = magiasDisponiveis.find(m => m.id === magiaId);
     if (!magia) return;
 
-    const dynamicConditions = getDynamicConditions();
+    const dynamicConditions = getArcanumConditions();
     const {modal, correctWord, conditions} = window.ArcanumSpells.createArcanumConjurationModal(magia);
     
     const modifierMap = {
