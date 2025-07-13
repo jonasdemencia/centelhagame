@@ -3380,7 +3380,6 @@ function setupArcanumConjurationModal(magiaId) {
     return `<span class="condition">${icon}<br>${value.replace('-', ' ').toUpperCase()}${modifierText}</span>`;
 }).join('');
 
-
     const oldModal = document.getElementById('arcanum-conjuration-modal');
     if (oldModal) oldModal.remove();
 
