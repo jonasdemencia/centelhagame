@@ -858,13 +858,18 @@ inventoryListener = onSnapshot(playerRef, async (docSnap) => {
             // Verifica se há novos itens em initialItems que não estão no inventário
             // Só executa verificações na primeira carga
 if (isInitialLoad) {
+    console.log("🔍 VERIFICANDO ITENS INICIAIS - Estado atual do inventário:", inventoryData.itemsInChest.length, "itens");
+    
     // Verifica se há novos itens em initialItems que não estão no inventário
     let inventoryUpdated = false;
     for (const initialItem of initialItems) {
         const itemExists = inventoryData.itemsInChest.some(item => item.id === initialItem.id);
         if (!itemExists) {
+            console.log("⚠️ ADICIONANDO ITEM INICIAL FALTANTE:", initialItem.id, initialItem.content);
             inventoryData.itemsInChest.push({...initialItem});
             inventoryUpdated = true;
+        } else {
+            console.log("✅ Item inicial já existe:", initialItem.id, initialItem.content);
         }
     }
     
@@ -876,30 +881,40 @@ if (isInitialLoad) {
                 inventoryData.discardedItems.some(discarded => discarded.startsWith(extraItem.id));
             
             if (!hasAnyOfType && !allDiscarded) {
+                console.log("⚠️ ADICIONANDO ITEM EXTRA COMPONENTE:", extraItem.id);
                 const newItem = {...extraItem};
                 newItem.id = `${extraItem.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 inventoryData.itemsInChest.push(newItem);
                 inventoryUpdated = true;
+            } else {
+                console.log("✅ Item extra componente já existe ou foi descartado:", extraItem.id);
             }
         } else {
             const itemExists = inventoryData.itemsInChest.some(item => item.id === extraItem.id);
             const wasDiscarded = inventoryData.discardedItems && inventoryData.discardedItems.includes(extraItem.id);
             
             if (!itemExists && !wasDiscarded) {
+                console.log("⚠️ ADICIONANDO ITEM EXTRA:", extraItem.id, extraItem.content);
                 inventoryData.itemsInChest.push({...extraItem});
                 inventoryUpdated = true;
+            } else {
+                console.log("✅ Item extra já existe ou foi descartado:", extraItem.id);
             }
         }
     }
     
     // Se o inventário foi atualizado, salva as alterações
     if (inventoryUpdated) {
+        console.log("💾 SALVANDO ITENS ADICIONADOS");
         await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
         console.log("Novos itens adicionados ao inventário.");
+    } else {
+        console.log("✅ Nenhum item precisou ser adicionado");
     }
     
-        isInitialLoad = false;
+    isInitialLoad = false;
 }
+
 
 // Verifica se algum grilo foi removido dos descartados
 const currentDiscarded = inventoryData.discardedItems || [];
@@ -952,11 +967,15 @@ localStorage.setItem('previousDiscarded', JSON.stringify(currentDiscarded));
 }
 
 function loadInventoryUI(inventoryData) {
-    console.log("Carregando UI do inventário:", inventoryData);
+    console.log("🎨 CARREGANDO UI - Itens no baú:", inventoryData.itemsInChest.length);
+    console.log("🎨 ITENS EQUIPADOS:", inventoryData.equippedItems);
+    
     // Carrega itens no baú
     const chestElement = document.querySelector('.items');
     chestElement.innerHTML = ""; // Limpa o conteúdo atual
-    inventoryData.itemsInChest.forEach(item => {
+    
+    inventoryData.itemsInChest.forEach((item, index) => {
+        console.log(`📦 Carregando item ${index + 1}:`, item.id, item.content);
         const newItem = document.createElement('div');
         newItem.classList.add('item');
         newItem.dataset.item = item.id;
