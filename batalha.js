@@ -637,6 +637,14 @@ initializeModule(db);  // Inicializa o módulo de dados
 console.log("LOG: Firebase inicializado.");
 
 
+// Torna as funções Firebase disponíveis globalmente
+window.db = db;
+window.doc = doc;
+window.getDoc = getDoc;
+window.setDoc = setDoc;
+
+
+
 function startNewTurnBlock(turnName) {
     const battleLogContent = document.getElementById("battle-log-content");
     if (currentTurnBlock) {
