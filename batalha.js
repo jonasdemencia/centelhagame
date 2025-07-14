@@ -88,70 +88,6 @@ window.arcanumIudicium = {
 // Sistema de Condições Ambientais Globais - Arcanum Verbis
 const ARCANUM_LAUNCH_DATE = new Date('2024-01-01T00:00:00Z');
 
-async function getArcanumConditions() {
-    console.log("🔍 CONDIÇÕES DEBUG - Função chamada");
-    
-    try {
-        console.log("🔍 CONDIÇÕES DEBUG - Tentando conectar ao Firestore");
-        const conditionsRef = doc(db, "gameConditions", "current");
-        const conditionsSnap = await getDoc(conditionsRef);
-        
-        const hoje = new Date().toDateString();
-        console.log("🔍 CONDIÇÕES DEBUG - Data de hoje:", hoje);
-        
-        if (conditionsSnap.exists()) {
-            const firestoreData = conditionsSnap.data();
-            console.log("🔍 CONDIÇÕES DEBUG - Dados do Firestore:", firestoreData);
-            console.log("🔍 CONDIÇÕES DEBUG - Data salva:", firestoreData.date);
-            console.log("🔍 CONDIÇÕES DEBUG - Datas coincidem?", firestoreData.date === hoje);
-            
-            if (firestoreData.date === hoje) {
-                console.log("🔍 CONDIÇÕES DEBUG - USANDO dados do Firestore:", firestoreData.conditions);
-                return firestoreData.conditions;
-            }
-        } else {
-            console.log("🔍 CONDIÇÕES DEBUG - Documento não existe no Firestore");
-        }
-        
-        console.log("🔍 CONDIÇÕES DEBUG - CALCULANDO novas condições");
-        const agora = new Date();
-        const diasDesdeInicio = Math.floor((agora - new Date('2024-01-01T00:00:00Z')) / (1000 * 60 * 60 * 24));
-        const horaAtual = agora.getHours();
-        
-        console.log("🔍 CONDIÇÕES DEBUG - Dias desde início:", diasDesdeInicio);
-        console.log("🔍 CONDIÇÕES DEBUG - Hora atual:", horaAtual);
-        
-        const conditions = {
-            periodo: horaAtual < 6 ? 'madrugada' : horaAtual < 12 ? 'manha' : horaAtual < 18 ? 'tarde' : 'noite',
-            estacao: ['primavera', 'verao', 'outono', 'inverno'][Math.floor(diasDesdeInicio / 30) % 4],
-            vento: ['norte', 'nordeste', 'leste', 'sudeste', 'sul', 'sudoeste', 'oeste', 'noroeste'][Math.floor(diasDesdeInicio / 3) % 8],
-            clima: ['sol-forte', 'sol-fraco', 'nublado', 'chuva-leve', 'neblina', 'tempestade'][Math.floor(diasDesdeInicio / 2) % 6],
-            lua: ['nova', 'crescente', 'cheia', 'minguante'][Math.floor(diasDesdeInicio / 7) % 4],
-            temperatura: ['muito-frio', 'frio', 'ameno', 'quente', 'muito-quente'][Math.floor(diasDesdeInicio / 5) % 5],
-            pressao: ['alta', 'normal', 'baixa'][Math.floor(diasDesdeInicio / 4) % 3],
-            energiaMagica: ['alta', 'normal', 'baixa', 'interferencia'][Math.floor(diasDesdeInicio / 10) % 4]
-        };
-        
-        console.log("🔍 CONDIÇÕES DEBUG - Condições calculadas:", conditions);
-        console.log("🔍 CONDIÇÕES DEBUG - SALVANDO no Firestore");
-        
-        await setDoc(conditionsRef, { conditions, date: hoje });
-        console.log("🔍 CONDIÇÕES DEBUG - SALVO com sucesso");
-        
-        return conditions;
-        
-    } catch (error) {
-        console.error("🔍 CONDIÇÕES DEBUG - ERRO:", error);
-        const fallback = {
-            periodo: 'tarde', estacao: 'inverno', vento: 'norte', clima: 'nublado',
-            lua: 'cheia', temperatura: 'frio', pressao: 'alta', energiaMagica: 'normal'
-        };
-        console.log("🔍 CONDIÇÕES DEBUG - USANDO fallback:", fallback);
-        return fallback;
-    }
-}
-
-
 
 function getConditionIcon(tipo, valor) {
     const icones = {
@@ -3400,9 +3336,10 @@ async function setupArcanumConjurationModal(magiaId) {
     const magia = magiasDisponiveis.find(m => m.id === magiaId);
     if (!magia) return;
 
-    const dynamicConditions = await getArcanumConditions();
-    const modalData = await window.ArcanumSpells.createArcanumConjurationModal(magia); // ADICIONAR AWAIT
-    const {modal, correctWord, conditions} = modalData; // USAR modalData
+    // USAR A FUNÇÃO GLOBAL EM VEZ DA LOCAL
+    const dynamicConditions = await window.ArcanumConditions.getConditions();
+    const modalData = await window.ArcanumSpells.createArcanumConjurationModal(magia);
+    const {modal, correctWord, conditions} = modalData;
     
     const modifierMap = {
         periodo: { manha: 'first-vowel-to-i', tarde: 'a-to-y', noite: 'duplicate-last-consonant', madrugada: 'add-mad' },
@@ -3464,7 +3401,7 @@ async function setupArcanumConjurationModal(magiaId) {
 
         let msg = '';
         if (result.success) {
-            window.arcanumIudicium.sucesso(); // ADICIONAR AQUI
+            window.arcanumIudicium.sucesso();
             switch(magiaId) {
                 case 'missil-magico':
                     msg = `<span style="color:lime;">Conjuração bem-sucedida! <b>${result.level} dardo(s)</b> lançado(s)! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
@@ -3509,7 +3446,7 @@ async function setupArcanumConjurationModal(magiaId) {
                     break;
             }
         } else {
-            window.arcanumIudicium.falha(); // ADICIONAR AQUI
+            window.arcanumIudicium.falha();
             const halfCost = Math.ceil(magia.custo / 2);
             playerMagic -= halfCost;
             atualizarBarraMagia(playerMagic, playerMaxMagic);
@@ -3522,7 +3459,7 @@ async function setupArcanumConjurationModal(magiaId) {
                 updatePlayerMagicInFirestore(user.uid, playerMagic);
                 saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
             }
-                }
+        }
         
         // Só passa o turno se não for toque chocante bem-sucedido
         if (!(result.success && magiaId === 'toque-chocante')) {
@@ -3530,11 +3467,8 @@ async function setupArcanumConjurationModal(magiaId) {
         }
     };
 
-
     modal.querySelector('#cancel-conjuration').onclick = () => { modal.remove(); };
     modal.querySelector('#close-conjuration').onclick = () => { modal.remove(); };
 }
-
-
 
 console.log("LOG: Fim do script batalha.js");
