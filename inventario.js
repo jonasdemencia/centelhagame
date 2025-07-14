@@ -818,6 +818,8 @@ async function loadInventoryData(uid) {
         }
         
         let isInitialLoad = true;
+        let isProcessingDiscarded = false;
+
 inventoryListener = onSnapshot(playerRef, async (docSnap) => {
 
             if (!docSnap.exists() || !docSnap.data().inventory) {
@@ -886,7 +888,9 @@ if (isInitialLoad) {
 const currentDiscarded = inventoryData.discardedItems || [];
 const previousDiscarded = JSON.parse(localStorage.getItem('previousDiscarded') || '[]');
 
-if (previousDiscarded.length > currentDiscarded.length) {
+if (!isProcessingDiscarded && previousDiscarded.length > currentDiscarded.length) {
+    isProcessingDiscarded = true;
+
     const removedItems = previousDiscarded.filter(item => !currentDiscarded.includes(item));
     let shouldAddGrilo = false;
     
@@ -906,12 +910,14 @@ if (previousDiscarded.length > currentDiscarded.length) {
             energia: { total: 1, inicial: 1 }
         };
         inventoryData.itemsInChest.push(newGrilo);
-        await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+               await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
     }
+    
+    setTimeout(() => { isProcessingDiscarded = false; }, 1000);
 }
 
-
 localStorage.setItem('previousDiscarded', JSON.stringify(currentDiscarded));
+
 
 
             
