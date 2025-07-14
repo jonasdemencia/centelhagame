@@ -2642,7 +2642,7 @@ if (inventarioButton) {
 if (lutarButton) {
     lutarButton.disabled = false;
     lutarButton.addEventListener('click', () => {
-        resetDynamicConditions(); // ADICIONAR ESTA LINHA
+// resetDynamicConditions(); // REMOVER ESTA LINHA
         console.log("LOG: Botão 'Lutar' clicado.");
         lutarButton.style.display = 'none';
         battleStarted = true; // Marca que a batalha começou
@@ -3387,9 +3387,9 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
         }
     });
        // Inicializa o painel Arcanum Verbis com condições dinâmicas
-if (window.ArcanumUI) {
-    window.ArcanumUI.initPanel();
-}
+// if (window.ArcanumUI) {
+//     window.ArcanumUI.initPanel();
+// }
 
 
     
