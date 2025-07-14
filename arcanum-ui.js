@@ -180,11 +180,11 @@ function createArcanumPanel() {
 }
 
 // Função para atualizar o painel com as condições atuais + modificador ao lado
-function updateArcanumPanel() {
+async function updateArcanumPanel() {
     const panel = document.getElementById('arcanum-conditions-panel');
     if (!panel) return;
 
-    const conditions = getCurrentConditions(); // LÊ AS CONDIÇÕES SEM INCREMENTAR
+    const conditions = await getCurrentConditions(); // ADICIONAR AWAIT AQUI
     const conditionsList = document.getElementById('arcanum-conditions-list');
 
     conditionsList.innerHTML = '';
@@ -271,10 +271,12 @@ function updateArcanumPanel() {
     ];
 
     conditionsToShow.forEach(condition => {
+        if (!condition.value) return; // PULA SE VALOR FOR UNDEFINED
+        
         const conditionDiv = document.createElement('div');
         conditionDiv.className = 'arcanum-condition';
 
-const icon = getConditionIcon(condition.key, condition.value);
+        const icon = getConditionIcon(condition.key, condition.value);
         const text = condition.value.replace('-', ' ').toUpperCase();
 
         // Descobre o modificador para aquele valor (se existir)
@@ -321,7 +323,7 @@ const icon = getConditionIcon(condition.key, condition.value);
 }
 
 // Função para inicializar o painel na página de batalha
-function initArcanumPanel() {
+async function initArcanumPanel() {
     // Verifica se já existe um painel
     if (document.getElementById('arcanum-conditions-panel')) {
         return;
@@ -332,10 +334,12 @@ function initArcanumPanel() {
     document.body.appendChild(panel);
     
     // Atualiza o painel imediatamente
-    updateArcanumPanel();
+    await updateArcanumPanel();
     
     // Atualiza o painel a cada 5 segundos para capturar mudanças de turno
-    setInterval(updateArcanumPanel, 5000);
+    setInterval(async () => {
+        await updateArcanumPanel();
+    }, 5000);
 }
 
 // Exporta as funções para uso global
@@ -343,3 +347,4 @@ window.ArcanumUI = {
     initPanel: initArcanumPanel,
     updatePanel: updateArcanumPanel
 };
+
