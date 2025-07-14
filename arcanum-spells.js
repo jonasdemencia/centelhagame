@@ -356,8 +356,9 @@ function resetDynamicConditions() {
 
 
 // Criar modal de conjuração Arcanum
-function createArcanumConjurationModal(spell) {
-    const conditions = getDynamicConditions();
+async function createArcanumConjurationModal(spell) {
+    // MUDANÇA: Usar condições globais em vez de dinâmicas
+    const conditions = await getArcanumConditions(); // USAR FUNÇÃO GLOBAL
     const baseWord = getSpellBaseWord(spell.id);
     const correctWord = applyArcanumModifiers(baseWord, conditions);
     
@@ -369,7 +370,7 @@ function createArcanumConjurationModal(spell) {
             <h3>Conjuração Arcanum: ${spell.nome}</h3>
             <div class="conditions-display">
                 ${Object.entries(conditions).map(([key, value]) => 
-                    value ? `<span class="condition">${window.ArcanumConditions.getIcon(key, value)} ${value.replace('-', ' ').toUpperCase()}</span>` : ''
+                    value ? `<span class="condition">${getConditionIcon(key, value)} ${value.replace('-', ' ').toUpperCase()}</span>` : ''
                 ).join('')}
             </div>
             
@@ -384,7 +385,7 @@ function createArcanumConjurationModal(spell) {
         </div>
     `;
     
-    // CSS para o modal
+    // CSS permanece igual...
     const style = document.createElement('style');
     style.textContent = `
         #arcanum-conjuration-modal {
@@ -486,6 +487,7 @@ function createArcanumConjurationModal(spell) {
     
     return {modal, correctWord, conditions};
 }
+
 
 function validateConjuration(inputWord, correctWord, typingTime, errors, conditions, baseWord, spellId = "", spellName = "") {
     const fluency = calculateFluency(typingTime, errors, correctWord.length);
