@@ -381,9 +381,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 delete slot.dataset.consumable; // Remove a propriedade consumable do slot
                 delete slot.dataset.quantity;
                 delete slot.dataset.effect;
-                delete slot.dataset.value;
+               delete slot.dataset.value;
 
-                const newItem = document.createElement("div");
+// Verifica se o item já existe no baú
+const existingItem = Array.from(document.querySelectorAll('.item')).find(item => 
+    item.innerHTML.includes(itemText) && !item.classList.contains('selected')
+);
+
+if (existingItem) {
+    console.log("Item já existe no baú, não criando duplicata");
+    return;
+}
+
+const newItem = document.createElement("div");
+
                 newItem.classList.add("item");
                 newItem.dataset.item = slotType;
 
