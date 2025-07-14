@@ -712,36 +712,36 @@ function clearHighlights() {
 
 async function saveInventoryData(uid) {
     console.log("Salvando dados do inventário para o usuário:", uid);
-    
+
     // Busca a lista de descartados do Firestore
     const playerRef = doc(db, "players", uid);
     const playerSnap = await getDoc(playerRef);
     const currentInventoryData = playerSnap.data()?.inventory || {};
     const discardedItems = currentInventoryData.discardedItems || [];
-    
-    // Primeiro, coleta os itens equipados
-    const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
-        const itemName = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
-        acc[slot.dataset.slot] = itemName;
-        if (itemName) {
-            if (slot.dataset.consumable === 'true') {
-                acc[slot.dataset.slot + '_consumable'] = true;
-                acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity);
-                if (slot.dataset.effect) {
-                    acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
-                }
-                if (slot.dataset.value) {
-                    acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value);
-                }
-            }
-        }
-        return acc;
-    }, {});
-    
+
+    // 1. Carrega itens no baú e REMOVE itens que estejam equipados
+    // 2. Não duplica itens equipados no baú
+    // 3. Filtra os descartados
+
+    // Lista de nomes dos itens equipados (ex: "canivete", "Hábito monástico")
+    const equippedNames = Object.values(document.querySelectorAll('.slot')).map(slot => {
+        // Só pega names que não são nulos e não são o nome do slot
+        return slot.innerHTML !== slot.dataset.slot ? slot.innerHTML.trim() : null;
+    }).filter(Boolean);
+
     const itemsInChest = Array.from(document.querySelectorAll('.item')).map(item => {
+        // Nome do item mostrado (ex: "canivete")
+        const itemName = item.innerHTML.split('<span')[0].split('<div')[0].trim();
+
+        // Se o item está equipado, não salva no baú
+        if (equippedNames.includes(itemName)) {
+            return null;
+        }
+
+        // Monta os dados normalmente
         const data = {
             id: item.dataset.item,
-            content: item.innerHTML.split('<span class="item-expand-toggle">')[0].split('<span class="item-energia">')[0].trim()
+            content: itemName
         };
         if (item.dataset.energia) {
             data.energia = JSON.parse(item.dataset.energia);
@@ -758,27 +758,30 @@ async function saveInventoryData(uid) {
         }
         return data;
     })
-    // FILTRA OS DESCARTADOS
-    .filter(item => {
-        return !discardedItems.includes(item.id);
-        });
+    // Remove nulos
+    .filter(item => item && !discardedItems.includes(item.id));
 
-    console.log("🔍 ITENS EQUIPADOS PARA COMPARAÇÃO:", Object.values(equippedItems).filter(item => item !== null));
-
-    const finalItemsInChest = itemsInChest.filter(item => {
-
-    const isEquipped = Object.values(equippedItems).includes(item.content);
-    if (isEquipped) {
-        console.log("🚫 REMOVENDO DUPLICATA EQUIPADA:", item.id, item.content);
-    } else {
-        console.log("✅ MANTENDO NO BAÚ:", item.id, item.content);
-    }
-    return !isEquipped;
-});
-
+    // Equipados
+    const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
+        const itemName = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML.trim() : null;
+        acc[slot.dataset.slot] = itemName;
+        if (itemName) {
+            if (slot.dataset.consumable === 'true') {
+                acc[slot.dataset.slot + '_consumable'] = true;
+                acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity);
+                if (slot.dataset.effect) {
+                    acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
+                }
+                if (slot.dataset.value) {
+                    acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value);
+                }
+            }
+        }
+        return acc;
+    }, {});
 
     const inventoryData = {
-        itemsInChest: finalItemsInChest,
+        itemsInChest: itemsInChest,
         equippedItems: equippedItems,
         discardedItems: discardedItems // Mantém a lista de descartados
     };
@@ -790,7 +793,6 @@ async function saveInventoryData(uid) {
         console.error("Erro ao salvar o inventário:", error);
     }
 }
-
 
 
 // ADICIONE A FUNÇÃO saveDiceState AQUI, com a correção do parêntese
