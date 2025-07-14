@@ -1318,6 +1318,68 @@ function desabilitarBotoesCruzar(desabilitar) {
     });
 }
 
+function criarGriloVariant(condicoes, especiais) {
+    // Verificar condições especiais em ordem de prioridade
+    
+    // Combinação especial: Lua Cheia + Primavera + Madrugada
+    if (especiais.includes('Ninhada Lunar')) {
+        return {
+            id: "grilo-lunar",
+            content: "Grilo Lunar",
+            description: "Um grilo místico que brilha suavemente no escuro com luz prateada",
+            energia: { total: 1, inicial: 1 }
+        };
+    }
+    
+    // Neblina = Grilo Albino
+    if (condicoes.clima === 'neblina') {
+        return {
+            id: "grilo-albino",
+            content: "Grilo Albino",
+            description: "Um raro grilo de cor branca pura, quase translúcido",
+            energia: { total: 1, inicial: 1 }
+        };
+    }
+    
+    // Energia Alta = Grilo Elétrico
+    if (condicoes.energiaMagica === 'alta') {
+        return {
+            id: "grilo-eletrico",
+            content: "Grilo Elétrico",
+            description: "Um grilo que crepita com pequenas faíscas elétricas",
+            energia: { total: 1, inicial: 1 }
+        };
+    }
+    
+    // Sol Forte = Grilo Dourado
+    if (condicoes.clima === 'sol-forte') {
+        return {
+            id: "grilo-dourado",
+            content: "Grilo Dourado",
+            description: "Um grilo com exoesqueleto dourado e resistência superior",
+            energia: { total: 2, inicial: 2 }
+        };
+    }
+    
+    // Interferência Mágica = Grilo Mutante
+    if (condicoes.energiaMagica === 'interferencia') {
+        return {
+            id: "grilo-mutante",
+            content: "Grilo Mutante",
+            description: "Um grilo com características bizarras e habilidades imprevisíveis",
+            energia: { total: 1, inicial: 1 }
+        };
+    }
+    
+    // Grilo básico (padrão)
+    return {
+        id: "grilo",
+        content: "Grilo",
+        description: "Um pequeno grilo saltitante",
+        energia: { total: 1, inicial: 1 }
+    };
+}
+
 
 async function recolherDescendencia() {
     const userId = auth.currentUser?.uid;
@@ -1339,19 +1401,13 @@ async function recolherDescendencia() {
         const inventory = playerData.inventory || {};
         const itemsInChest = inventory.itemsInChest || [];
         
-        // Cria o grilo
-        const novoGrilo = {
-            id: "grilo",
-            content: "Grilo",
-            description: "Um pequeno grilo saltitante",
-            energia: {
-                total: 1,
-                inicial: 1
-            }
-        };
+        // Determinar tipo de grilo baseado nas condições
+        const resultado = window.resultadoCruzamento;
+        const condicoes = resultado.condicoes;
+        let griloGerado = criarGriloVariant(condicoes, resultado.especiais);
         
         // Adiciona ao inventário
-        itemsInChest.push(novoGrilo);
+        itemsInChest.push(griloGerado);
         
         // Salva no Firestore
         await setDoc(playerRef, {
@@ -1370,7 +1426,7 @@ async function recolherDescendencia() {
         removerAnimal('slot-1');
         removerAnimal('slot-2');
         
-        alert('Grilo adicionado ao inventário!');
+        alert(`${griloGerado.content} adicionado ao inventário!`);
         
     } catch (error) {
         console.error('Erro ao adicionar grilo:', error);
