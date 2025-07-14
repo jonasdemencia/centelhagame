@@ -90,6 +90,20 @@ const CONDITION_OPTIONS = {
     energiaMagica: ['alta', 'baixa', 'interferencia']
 };
 
+// Adicione esta função após a linha 46
+function getConditionIcon(tipo, valor) {
+    const icones = {
+        periodo: { manha: '🌅', tarde: '☀️', noite: '🌙', madrugada: '🌌' },
+        estacao: { primavera: '🌸', verao: '🌞', outono: '🍂', inverno: '❄️' },
+        vento: { norte: '⬆️💨', sul: '⬇️💨', leste: '➡️💨', oeste: '⬅️💨', nordeste: '↗️💨', noroeste: '↖️💨', sudeste: '↘️💨', sudoeste: '↙️💨' },
+        clima: { 'sol-forte': '☀️', 'sol-fraco': '🌤️', nublado: '☁️', 'chuva-leve': '🌦️', neblina: '🌫️', tempestade: '⛈️' },
+        lua: { nova: '🌑', crescente: '🌓', cheia: '🌕', minguante: '🌗' },
+        temperatura: { 'muito-frio': '🥶', frio: '❄️', ameno: '🌡️', quente: '🔥', 'muito-quente': '🌋' },
+        pressao: { alta: '📈', normal: '📊', baixa: '📉' },
+        energiaMagica: { alta: '⚡', normal: '✨', baixa: '💫', interferencia: '🌀' }
+    };
+    return icones[tipo]?.[valor] || '❓';
+}
 
 
 function logArcanumConjuration({
@@ -306,30 +320,6 @@ function applyModifier(word, type) {
 
 function randomChoice(array) {
     return array[Math.floor(Math.random() * array.length)];
-}
-
-function generateInitialConditions() {
-    const conditions = {};
-    for (const [key, options] of Object.entries(CONDITION_OPTIONS)) {
-        conditions[key] = randomChoice(options);
-    }
-    return conditions;
-}
-
-function evolveConditions(currentConditions) {
-    const newConditions = {...currentConditions};
-    
-    for (const [conditionName, config] of Object.entries(CONDITION_STABILITY)) {
-        if (Math.random() < config.changeChance) {
-            const options = CONDITION_OPTIONS[conditionName];
-            const currentValue = newConditions[conditionName];
-            const availableOptions = options.filter(opt => opt !== currentValue);
-            if (availableOptions.length > 0) {
-                newConditions[conditionName] = randomChoice(availableOptions);
-            }
-        }
-    }
-    return newConditions;
 }
 
 
@@ -838,7 +828,6 @@ window.ArcanumSpells = {
     createArcanumConjurationModal,
     validateConjuration,
     resetArcanumBattle,
-    getDynamicConditions
 };
 
 
