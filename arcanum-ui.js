@@ -46,17 +46,17 @@ function randomChoice(array) {
     return array[Math.floor(Math.random() * array.length)];
 }
 
-// Função que APENAS LÊ as condições sem incrementar contador
-function getCurrentConditions() {
-    // Se não há condições, retorna condições padrão
-    if (!window.arcanumBaseConditions) {
-        const conditions = {};
-        for (const [key, options] of Object.entries(CONDITION_OPTIONS)) {
-            conditions[key] = randomChoice(options);
-        }
-        window.arcanumBaseConditions = conditions;
+async function getCurrentConditions() {
+    // Usa as condições globais do sistema Arcanum
+    if (typeof getArcanumConditions === 'function') {
+        return await getArcanumConditions();
     }
-    return window.arcanumBaseConditions;
+    
+    // Fallback se não conseguir carregar
+    return {
+        periodo: 'tarde', estacao: 'inverno', vento: 'norte', clima: 'nublado',
+        lua: 'cheia', temperatura: 'frio', pressao: 'alta', energiaMagica: 'normal'
+    };
 }
 
 // Verifica se estamos próximos de uma mudança (turno 2 de 3)
