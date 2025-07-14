@@ -3378,11 +3378,11 @@ if (window.ArcanumUI) {
     console.log("LOG: Event listener para DOMContentLoaded finalizado.");
 });
 
-function setupArcanumConjurationModal(magiaId) {
+async function setupArcanumConjurationModal(magiaId) {
     const magia = magiasDisponiveis.find(m => m.id === magiaId);
     if (!magia) return;
 
-const dynamicConditions = await getDynamicConditions();
+const dynamicConditions = await getArcanumConditions();
     const {modal, correctWord, conditions} = window.ArcanumSpells.createArcanumConjurationModal(magia);
     
     const modifierMap = {
