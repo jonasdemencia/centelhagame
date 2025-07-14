@@ -635,6 +635,9 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 initializeModule(db);  // Inicializa o módulo de dados
 console.log("LOG: Firebase inicializado.");
+// ADICIONE ESTA LINHA PARA TESTAR:
+window.ArcanumConditions.getConditions().then(result => console.log("🔍 TESTE - Condições:", result));
+
 
 
 // Torna as funções Firebase disponíveis globalmente
