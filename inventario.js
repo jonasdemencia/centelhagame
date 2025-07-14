@@ -231,6 +231,28 @@ function toggleUseButton(show) {
     }
 }
 
+function handleItemClick(item) {
+        console.log("Item clicado:", item);
+        clearHighlights();
+        selectedItem = item;
+        item.classList.add('selected');
+
+        // Destaca os slots compatíveis
+        slots.forEach(slot => {
+            if (slot.dataset.slot === item.dataset.item) {
+                slot.classList.add('highlight'); // Adiciona o destaque
+            }
+        });
+
+        // Verifica se o item é consumível e mostra/oculta o botão "Usar"
+        if (selectedItem.dataset.consumable === 'true') {
+            toggleUseButton(true);
+        } else {
+            toggleUseButton(false);
+        }
+    }
+
+
 // Seleciona os itens clicados no baú
 document.addEventListener("DOMContentLoaded", () => {
     // Sistema de Carrossel
@@ -294,27 +316,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const discardSlot = document.getElementById("discard-slot");
     const useButton = document.getElementById("useBtn"); // Obtém a referência do botão
 
-    function handleItemClick(item) {
-        console.log("Item clicado:", item);
-        clearHighlights();
-        selectedItem = item;
-        item.classList.add('selected');
-
-        // Destaca os slots compatíveis
-        slots.forEach(slot => {
-            if (slot.dataset.slot === item.dataset.item) {
-                slot.classList.add('highlight'); // Adiciona o destaque
-            }
-        });
-
-        // Verifica se o item é consumível e mostra/oculta o botão "Usar"
-        if (selectedItem.dataset.consumable === 'true') {
-            toggleUseButton(true);
-        } else {
-            toggleUseButton(false);
-        }
-    }
-
+    
     // Adiciona evento de clique aos itens iniciais
     if (itemsContainer) {
         itemsContainer.querySelectorAll('.item').forEach(item => {
