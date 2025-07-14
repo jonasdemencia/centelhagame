@@ -641,6 +641,7 @@ window.doc = doc;
 window.getDoc = getDoc;
 window.setDoc = setDoc;
 console.log("LOG: Funções Firebase disponibilizadas globalmente.");
+getArcanumConditions().then(result => console.log("🔍 TESTE DIRETO - Condições:", result));
 
 
 function startNewTurnBlock(turnName) {
