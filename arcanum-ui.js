@@ -4,6 +4,22 @@
 window.arcanumTurnCounter = window.arcanumTurnCounter || 0;
 window.arcanumBaseConditions = window.arcanumBaseConditions || null;
 
+// Função para obter ícones das condições (cópia local)
+function getConditionIcon(tipo, valor) {
+    const icones = {
+        periodo: { manha: '🌅', tarde: '☀️', noite: '🌙', madrugada: '🌌' },
+        estacao: { primavera: '🌸', verao: '🌞', outono: '🍂', inverno: '❄️' },
+        vento: { norte: '⬆️💨', sul: '⬇️💨', leste: '➡️💨', oeste: '⬅️💨', nordeste: '↗️💨', noroeste: '↖️💨', sudeste: '↘️💨', sudoeste: '↙️💨' },
+        clima: { 'sol-forte': '☀️', 'sol-fraco': '🌤️', nublado: '☁️', 'chuva-leve': '🌦️', neblina: '🌫️', tempestade: '⛈️' },
+        lua: { nova: '🌑', crescente: '🌓', cheia: '🌕', minguante: '🌗' },
+        temperatura: { 'muito-frio': '🥶', frio: '❄️', ameno: '🌡️', quente: '🔥', 'muito-quente': '🌋' },
+        pressao: { alta: '📈', normal: '📊', baixa: '📉' },
+        energiaMagica: { alta: '⚡', normal: '✨', baixa: '💫', interferencia: '🌀' }
+    };
+    return icones[tipo]?.[valor] || '❓';
+}
+
+
 const CONDITION_STABILITY = {
     periodo: { changeChance: 0.05 },
     estacao: { changeChance: 0.02 },
@@ -258,7 +274,7 @@ function updateArcanumPanel() {
         const conditionDiv = document.createElement('div');
         conditionDiv.className = 'arcanum-condition';
 
-        const icon = window.ArcanumConditions.getIcon(condition.key, condition.value);
+const icon = getConditionIcon(condition.key, condition.value);
         const text = condition.value.replace('-', ' ').toUpperCase();
 
         // Descobre o modificador para aquele valor (se existir)
