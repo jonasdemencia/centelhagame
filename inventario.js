@@ -595,28 +595,97 @@ if (useButton) {
 // Adiciona evento de clique aos novos itens do baú
 function addItemClickListener(item) {
     item.addEventListener('click', (event) => {
-        // Verifica se o clique foi no botão de expandir
         if (!event.target.classList.contains('item-expand-toggle')) {
-            console.log("Novo item clicado no baú:", item);
-            clearHighlights();
-            selectedItem = item;
-            item.classList.add('selected');
-
-            document.querySelectorAll('.slot').forEach(slot => {
-                if (slot.dataset.slot === item.dataset.item) {
-                    slot.classList.add('highlight');
+            if (multiSelectMode) {
+                if (selectedItems.has(item)) {
+                    selectedItems.delete(item);
+                    item.classList.remove('multi-selected');
+                } else {
+                    selectedItems.add(item);
+                    item.classList.add('multi-selected');
                 }
-            });
-
-            // Verifica se o item é consumível e mostra/oculta o botão "Usar"
-            if (selectedItem.dataset.consumable === 'true') {
-                toggleUseButton(true);
+                document.getElementById('selectedCount').textContent = `${selectedItems.size} selecionados`;
             } else {
-                toggleUseButton(false);
+                handleItemClick(item);
             }
         }
     });
 }
+
+
+let multiSelectMode = false;
+let selectedItems = new Set();
+
+// Controles de seleção múltipla
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('toggleMultiSelect');
+    const selectAllBtn = document.getElementById('selectAllGrilos');
+    const discardBtn = document.getElementById('discardSelected');
+    const countSpan = document.getElementById('selectedCount');
+
+    toggleBtn.addEventListener('click', () => {
+        multiSelectMode = !multiSelectMode;
+        selectedItems.clear();
+        
+        if (multiSelectMode) {
+            toggleBtn.textContent = 'Sair da Seleção Múltipla';
+            selectAllBtn.style.display = 'inline-block';
+            discardBtn.style.display = 'inline-block';
+            countSpan.style.display = 'inline';
+            document.querySelectorAll('.item').forEach(item => item.classList.remove('multi-selected'));
+        } else {
+            toggleBtn.textContent = 'Seleção Múltipla';
+            selectAllBtn.style.display = 'none';
+            discardBtn.style.display = 'none';
+            countSpan.style.display = 'none';
+            document.querySelectorAll('.item').forEach(item => item.classList.remove('multi-selected'));
+        }
+        updateSelectedCount();
+    });
+
+    selectAllBtn.addEventListener('click', () => {
+        document.querySelectorAll('.item').forEach(item => {
+            if (item.innerHTML.includes('Grilo')) {
+                selectedItems.add(item);
+                item.classList.add('multi-selected');
+            }
+        });
+        updateSelectedCount();
+    });
+
+    discardBtn.addEventListener('click', async () => {
+        if (selectedItems.size === 0) return;
+        
+        if (confirm(`Descartar ${selectedItems.size} itens selecionados?`)) {
+            const uid = auth.currentUser?.uid;
+            if (uid) {
+                const playerRef = doc(db, "players", uid);
+                const playerSnap = await getDoc(playerRef);
+                const inventoryData = playerSnap.data().inventory;
+                
+                if (!inventoryData.discardedItems) {
+                    inventoryData.discardedItems = [];
+                }
+                
+                selectedItems.forEach(item => {
+                    inventoryData.discardedItems.push(item.dataset.item);
+                    item.remove();
+                });
+                
+                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+                saveInventoryData(uid);
+            }
+            
+            selectedItems.clear();
+            updateSelectedCount();
+        }
+    });
+
+    function updateSelectedCount() {
+        countSpan.textContent = `${selectedItems.size} selecionados`;
+    }
+});
+
 
 // Função para limpar destaques visuais
 function clearHighlights() {
