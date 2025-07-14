@@ -817,8 +817,9 @@ async function loadInventoryData(uid) {
             inventoryListener();
         }
         
-        // Configura listener em tempo real
-        inventoryListener = onSnapshot(playerRef, async (docSnap) => {
+        let isInitialLoad = true;
+inventoryListener = onSnapshot(playerRef, async (docSnap) => {
+
             if (!docSnap.exists() || !docSnap.data().inventory) {
                 // Se o inventário não existir, inicializa com os itens iniciais
                 const initialInventoryData = {
@@ -836,50 +837,51 @@ async function loadInventoryData(uid) {
             const inventoryData = docSnap.data().inventory;
             
             // Verifica se há novos itens em initialItems que não estão no inventário
-            let inventoryUpdated = false;
-            for (const initialItem of initialItems) {
-                const itemExists = inventoryData.itemsInChest.some(item => item.id === initialItem.id);
-                if (!itemExists) {
-                    inventoryData.itemsInChest.push({...initialItem});
-                    inventoryUpdated = true;
-                }
-            }
-            
-           // Verifica se algum item foi removido da lista de descartados e deve ser readicionado
-// Verifica itens extras apenas se não existirem E não estão descartados
-for (const extraItem of extraItems) {
-    // Para itens com componente, só adiciona se não houver NENHUM do tipo base
-    if (extraItem.componente) {
-        const hasAnyOfType = inventoryData.itemsInChest.some(item => item.id.startsWith(extraItem.id));
-        const allDiscarded = inventoryData.discardedItems && 
-            inventoryData.discardedItems.some(discarded => discarded.startsWith(extraItem.id));
-        
-        // Só adiciona se não tem nenhum E não tem nenhum descartado
-        if (!hasAnyOfType && !allDiscarded) {
-            const newItem = {...extraItem};
-            newItem.id = `${extraItem.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            inventoryData.itemsInChest.push(newItem);
-            inventoryUpdated = true;
-        }
-    } else {
-        // Para itens normais, lógica original
-        const itemExists = inventoryData.itemsInChest.some(item => item.id === extraItem.id);
-        const wasDiscarded = inventoryData.discardedItems && inventoryData.discardedItems.includes(extraItem.id);
-        
-        if (!itemExists && !wasDiscarded) {
-            inventoryData.itemsInChest.push({...extraItem});
+            // Só executa verificações na primeira carga
+if (isInitialLoad) {
+    // Verifica se há novos itens em initialItems que não estão no inventário
+    let inventoryUpdated = false;
+    for (const initialItem of initialItems) {
+        const itemExists = inventoryData.itemsInChest.some(item => item.id === initialItem.id);
+        if (!itemExists) {
+            inventoryData.itemsInChest.push({...initialItem});
             inventoryUpdated = true;
         }
     }
+    
+    // Verifica itens extras apenas uma vez
+    for (const extraItem of extraItems) {
+        if (extraItem.componente) {
+            const hasAnyOfType = inventoryData.itemsInChest.some(item => item.id.startsWith(extraItem.id));
+            const allDiscarded = inventoryData.discardedItems && 
+                inventoryData.discardedItems.some(discarded => discarded.startsWith(extraItem.id));
+            
+            if (!hasAnyOfType && !allDiscarded) {
+                const newItem = {...extraItem};
+                newItem.id = `${extraItem.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                inventoryData.itemsInChest.push(newItem);
+                inventoryUpdated = true;
+            }
+        } else {
+            const itemExists = inventoryData.itemsInChest.some(item => item.id === extraItem.id);
+            const wasDiscarded = inventoryData.discardedItems && inventoryData.discardedItems.includes(extraItem.id);
+            
+            if (!itemExists && !wasDiscarded) {
+                inventoryData.itemsInChest.push({...extraItem});
+                inventoryUpdated = true;
+            }
+        }
+    }
+    
+    // Se o inventário foi atualizado, salva as alterações
+    if (inventoryUpdated) {
+        await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+        console.log("Novos itens adicionados ao inventário.");
+    }
+    
+    isInitialLoad = false;
 }
 
-
-            
-            // Se o inventário foi atualizado, salva as alterações
-            if (inventoryUpdated) {
-                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-                console.log("Novos itens adicionados ao inventário.");
-            }
             
             console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
             loadInventoryUI(inventoryData);
