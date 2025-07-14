@@ -719,6 +719,25 @@ async function saveInventoryData(uid) {
     const currentInventoryData = playerSnap.data()?.inventory || {};
     const discardedItems = currentInventoryData.discardedItems || [];
     
+    // Primeiro, coleta os itens equipados
+    const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
+        const itemName = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
+        acc[slot.dataset.slot] = itemName;
+        if (itemName) {
+            if (slot.dataset.consumable === 'true') {
+                acc[slot.dataset.slot + '_consumable'] = true;
+                acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity);
+                if (slot.dataset.effect) {
+                    acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
+                }
+                if (slot.dataset.value) {
+                    acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value);
+                }
+            }
+        }
+        return acc;
+    }, {});
+    
     const itemsInChest = Array.from(document.querySelectorAll('.item')).map(item => {
         const data = {
             id: item.dataset.item,
@@ -740,28 +759,17 @@ async function saveInventoryData(uid) {
         return data;
     })
     // FILTRA OS DESCARTADOS
-.filter(item => {
-    // Para itens com componente, verifica ID exato; para outros, verifica ID base
-    return !discardedItems.includes(item.id);
-});
-
-    const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
-        const itemName = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
-        acc[slot.dataset.slot] = itemName;
-        if (itemName) {
-            if (slot.dataset.consumable === 'true') {
-                acc[slot.dataset.slot + '_consumable'] = true;
-                acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity);
-                if (slot.dataset.effect) {
-                    acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
-                }
-                if (slot.dataset.value) {
-                    acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value);
-                }
-            }
+    .filter(item => {
+        return !discardedItems.includes(item.id);
+    })
+    // REMOVE DUPLICATAS EQUIPADAS
+    .filter(item => {
+        const isEquipped = Object.values(equippedItems).includes(item.content);
+        if (isEquipped) {
+            console.log("🚫 REMOVENDO DUPLICATA EQUIPADA:", item.id, item.content);
         }
-        return acc;
-    }, {});
+        return !isEquipped;
+    });
 
     const inventoryData = {
         itemsInChest: itemsInChest,
@@ -776,6 +784,7 @@ async function saveInventoryData(uid) {
         console.error("Erro ao salvar o inventário:", error);
     }
 }
+
 
 
 // ADICIONE A FUNÇÃO saveDiceState AQUI, com a correção do parêntese
