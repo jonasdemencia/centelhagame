@@ -337,7 +337,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const slotType = slot.dataset.slot;
             const currentEquippedItem = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
 
-            if (selectedItem && slotType === selectedItem.dataset.item) {
+            if (selectedItem && selectedItem.classList.contains('selected') && 
+    document.querySelector(`.slot[data-slot="${slotType}"]`).classList.contains('highlight')) {
+
                 console.log("Equipando item:", selectedItem.innerHTML, "no slot:", slotType);
                 // Equipa um novo item
                 if (currentEquippedItem) {
