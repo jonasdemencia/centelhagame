@@ -439,7 +439,11 @@ if (discardSlot) {
                 if (!inventoryData.discardedItems) {
                     inventoryData.discardedItems = [];
                 }
-                inventoryData.discardedItems.push(selectedItem.dataset.item);
+// Para itens com componente, usa ID único; para outros, usa ID base
+const itemToDiscard = selectedItem.dataset.componente === 'true' 
+    ? selectedItem.dataset.item 
+    : selectedItem.dataset.item.split('_')[0];
+inventoryData.discardedItems.push(selectedItem.dataset.item);
                 
                 await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
             }
@@ -650,7 +654,10 @@ async function saveInventoryData(uid) {
         return data;
     })
     // FILTRA OS DESCARTADOS
-    .filter(item => !discardedItems.includes(item.id));
+.filter(item => {
+    // Para itens com componente, verifica ID exato; para outros, verifica ID base
+    return !discardedItems.includes(item.id);
+});
 
     const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
         const itemName = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
@@ -775,9 +782,15 @@ for (const extraItem of extraItems) {
     const wasDiscarded = inventoryData.discardedItems && inventoryData.discardedItems.includes(extraItem.id);
     
     if (!itemExists && !wasDiscarded) {
-        inventoryData.itemsInChest.push({...extraItem});
-        inventoryUpdated = true;
+    const newItem = {...extraItem};
+    // Para itens que precisam de ID único (animais/componentes)
+    if (extraItem.componente) {
+        newItem.id = `${extraItem.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     }
+    inventoryData.itemsInChest.push(newItem);
+    inventoryUpdated = true;
+}
+
 }
 
             
@@ -809,6 +822,10 @@ function loadInventoryUI(inventoryData) {
         const newItem = document.createElement('div');
         newItem.classList.add('item');
         newItem.dataset.item = item.id;
+        if (item.componente) {
+    newItem.dataset.componente = 'true';
+}
+
         
         if (item.energia) {
             newItem.dataset.energia = JSON.stringify(item.energia);
