@@ -3357,7 +3357,7 @@ function setupArcanumConjurationModal(magiaId) {
     const magia = magiasDisponiveis.find(m => m.id === magiaId);
     if (!magia) return;
 
-    const dynamicConditions = getArcanumConditions();
+const dynamicConditions = getDynamicConditions();
     const {modal, correctWord, conditions} = window.ArcanumSpells.createArcanumConjurationModal(magia);
     
     const modifierMap = {
