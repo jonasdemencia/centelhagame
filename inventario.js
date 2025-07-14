@@ -58,8 +58,8 @@ async function setupPlayerDataListener(uid) {
 // Itens iniciais que o jogador deve ter (adicionando propriedade de dano)
 const initialItems = [
     { id: "bolsa-de-escriba", content: "Bolsa de escriba", description: "Uma bolsa para guardar pergaminhos e penas." },
-    { id: "weapon", content: "canivete", description: "Uma pequena lâmina afiada.", damage: "1D10" }, // Adicionando dano
-    { id: "armor", content: "Hábito monástico", description: "Vestes simples que oferecem pouca proteção.", defense: 2 },
+    { id: "canivete", content: "Canivete", description: "Uma pequena lâmina afiada.", damage: "1D10" }, // CORRIGIDO!
+    { id: "habito-monastico", content: "Hábito monástico", description: "Vestes simples que oferecem pouca proteção.", defense: 2 }, // CORRIGIDO!
     { id: "velas", content: "Velas", description: "Fontes de luz portáteis." },
     { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2, description: "Um pequeno saco contendo ervas que podem curar ferimentos leves." },
     { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." },
