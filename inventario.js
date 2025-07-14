@@ -845,8 +845,8 @@ async function loadInventoryData(uid) {
                 }
             }
             
-           for (const extraItem of extraItems) {
-    // Para itens com componente, verifica se já existe pelo menos um do tipo base
+           // Verifica se algum item foi removido da lista de descartados e deve ser readicionado
+for (const extraItem of extraItems) {
     const itemExists = extraItem.componente 
         ? inventoryData.itemsInChest.some(item => item.id.startsWith(extraItem.id))
         : inventoryData.itemsInChest.some(item => item.id === extraItem.id);
@@ -855,16 +855,18 @@ async function loadInventoryData(uid) {
         extraItem.componente ? discarded.startsWith(extraItem.id) : discarded === extraItem.id
     );
     
+    // Se não existe no inventário E não está mais na lista de descartados, adiciona
     if (!itemExists && !wasDiscarded) {
         const newItem = {...extraItem};
-        // Para itens que precisam de ID único (animais/componentes)
         if (extraItem.componente) {
             newItem.id = `${extraItem.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         }
         inventoryData.itemsInChest.push(newItem);
         inventoryUpdated = true;
+        console.log(`Item ${extraItem.content} readicionado após remoção dos descartados`);
     }
 }
+
 
 
             
