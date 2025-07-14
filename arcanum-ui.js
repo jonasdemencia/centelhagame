@@ -336,10 +336,11 @@ async function initArcanumPanel() {
     // Atualiza o painel imediatamente
     await updateArcanumPanel();
     
-    // Atualiza o painel a cada 5 segundos para capturar mudanças de turno
-    setInterval(async () => {
-        await updateArcanumPanel();
-    }, 5000);
+    // Atualiza o painel a cada 30 segundos para capturar mudanças mais rápidas
+setInterval(async () => {
+    await updateArcanumPanel();
+}, 30000); // 30 segundos em vez de 5 segundos
+
 }
 
 // Exporta as funções para uso global
