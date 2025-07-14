@@ -121,15 +121,6 @@ function getConditionIcon(tipo, valor) {
     return icones[tipo]?.[valor] || '❓';
 }
 
-function getDynamicConditions() {
-    return getArcanumConditions();
-}
-
-function resetDynamicConditions() {
-    // Não faz nada no sistema temporal
-}
-
-
 
 // Variáveis globais para estado da batalha
 window.isPlayerTurn = false;
@@ -3357,7 +3348,7 @@ function setupArcanumConjurationModal(magiaId) {
     const magia = magiasDisponiveis.find(m => m.id === magiaId);
     if (!magia) return;
 
-const dynamicConditions = getDynamicConditions();
+const dynamicConditions = getArcanumConditions();
     const {modal, correctWord, conditions} = window.ArcanumSpells.createArcanumConjurationModal(magia);
     
     const modifierMap = {
