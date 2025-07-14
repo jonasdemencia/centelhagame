@@ -370,54 +370,111 @@ Guia Completo do Sistema de Masmorras
 
 ---
 
-### Sistema Arcanum Verbis — Condições Ambientais Globais e Interface
+Sistema Arcanum Verbis — Condições Ambientais Globais Sincronizadas
+Visão Geral:
+Sistema de condições ambientais globalmente sincronizadas e dinamicamente aceleradas que mantém consistência entre todas as páginas do jogo (batalha, conjuração, ofertar descendência). Utiliza Firestore para persistência e sincronização temporal.
 
-**Visão Geral:**  
-O sistema Arcanum Verbis adiciona ao jogo um painel visual e um sistema global de condições ambientais mágicas, que podem influenciar eventos, efeitos mágicos, narrativa e lógica de scripts. Ele é dividido em dois módulos principais:  
-- **arcanum-conditions.js**: gera as condições ambientais globais dinâmicas do mundo.
-- **arcanum-ui.js**: exibe essas condições no painel da interface de jogo.
+Arquivos do Sistema:
+1. arcanum-conditions.js - Motor Global Principal
 
-#### arcanum-conditions.js
+Função principal: getArcanumConditions() - sistema acelerado com cache inteligente
 
-- **Marco Zero:**  
-  - Data de início fixa (ARCANUM_LAUNCH_DATE, ex: 2024-01-01), usada para calcular o ciclo das condições.
-- **Função principal:**  
-  - `getArcanumConditions()`: retorna um objeto com as condições globais atuais, determinadas a partir da data e hora reais do sistema do jogador, incluindo:
-    - `periodo`: período do dia (madrugada, manhã, tarde, noite) — baseado na hora local.
-    - `estacao`: estação do ano (primavera, verão, outono, inverno) — muda a cada 30 dias desde o marco.
-    - `vento`: direção do vento — muda a cada 3 dias.
-    - `clima`: condições climáticas (sol, chuva, tempestade etc) — muda a cada 2 dias.
-    - `lua`: fase da lua (nova, crescente, cheia, minguante) — muda a cada 7 dias.
-    - `temperatura`: muito-frio, frio, ameno, quente, muito-quente — muda a cada 5 dias.
-    - `pressao`: pressão atmosférica (alta, normal, baixa) — muda a cada 4 dias.
-    - `energiaMagica`: nível de energia mágica global (alta, normal, baixa, interferência) — muda a cada 10 dias.
-    - `eventoEspecial`: retorna strings como 'eclipse-solar', 'aurora-boreal', 'chuva-meteoros', 'solsticio', 'eclipse-lunar', em dias específicos (ex: a cada 30, 50, 77, 91, 100 dias).
-- **Função auxiliar:**  
-  - `getConditionIcon(tipo, valor)`: retorna um emoji/icon apropriado para cada condição (ex: ☀️ para sol, 🌌 para madrugada, ⚡ para energia alta, etc).
-- **Exportação global:**  
-  - `window.ArcanumConditions`: objeto global com métodos `getConditions()` e `getIcon()` para uso fácil em outros módulos.
+Persistência: Salva no Firestore com chave temporal "Data - Hora:Minuto"
 
-#### arcanum-ui.js
+Velocidades de mudança:
 
-- **Painel de interface:**  
-  - Função `createArcanumPanel()`: cria o painel visual flutuante, com título, lista de condições e estilos CSS próprios (azul, fundo com gradiente, ícones, etc).
-- **Atualização dinâmica:**  
-  - Função `updateArcanumPanel()`: busca as condições atuais via `window.ArcanumConditions.getConditions()` e popula a lista visual, usando também os ícones via `getIcon`. Mostra todas as condições relevantes do momento, e destaca eventos especiais com cor diferente/animação.
-- **Inicialização:**  
-  - Função `initArcanumPanel()`: adiciona o painel ao DOM e programa atualização a cada minuto.
-- **Exportação global:**  
-  - `window.ArcanumUI`: objeto global com métodos `initPanel()` e `updatePanel()` para uso em outras páginas (ex: inicializado ao carregar a batalha).
+Período: A cada hora | Vento: A cada 30min | Clima: A cada 1h
 
-#### Regras e Interações
+Pressão: A cada 2h | Energia/Temperatura: A cada 1 dia
 
-- O sistema é totalmente independente do backend (só depende do relógio do usuário).
-- Pode ser consultado a qualquer momento por qualquer parte do código, para lógica de efeitos, scripts, magias, eventos, etc.
-- Permite customização de efeitos conforme clima, lua, energia mágica, etc.
-- O painel é visualmente destacado, responsivo e pode ser atualizado manualmente ou automaticamente.
+Lua: A cada 2 dias | Estação: A cada 5 dias
 
----
+Cálculos: Baseados em horas/meias-horas/dias desde 01/01/2024
 
-**Resumo:**  
-O Arcanum Verbis é o sistema central para condições ambientais mágicas dinâmicas do mundo de jogo, oferecendo tanto dados globais (status mágicos, clima, eventos) quanto uma interface de usuário (painel) para consulta visual e integração com outras mecânicas e scripts.
+Exportação: window.ArcanumConditions.getConditions()
 
-**FIM DO ARQUIVO AI CONTEXT ATUALIZADO E EXPANDIDO**
+2. arcanum-ui.js - Interface Visual
+
+Painel flutuante: Exibe condições com ícones e modificadores de conjuração
+
+Atualização: A cada 30 segundos para capturar mudanças rápidas
+
+Função principal: getCurrentConditions() usa sistema global
+
+Exportação: window.ArcanumUI.initPanel()
+
+3. batalha.js - Integração com Combate
+
+Painel sincronizado: Inicializado via window.ArcanumUI.initPanel()
+
+Conjuração: setupArcanumConjurationModal() usa window.ArcanumConditions.getConditions()
+
+Modificadores: Sistema de palavras mágicas baseado nas condições
+
+4. arcanum-spells.js - Sistema de Conjuração
+
+Modal de conjuração: createArcanumConjurationModal() usa await getArcanumConditions()
+
+Modificadores: Aplicação automática baseada nas condições globais
+
+Validação: Sistema de detecção de modificadores aplicados pelo jogador
+
+5. atrasdaultimaporta.js - Ofertar Descendência
+
+Função global: getArcanumConditions() com sistema acelerado idêntico
+
+Interface: criarCruzarAnimais() usa await getArcanumConditions()
+
+Sincronização: Condições idênticas às outras páginas
+
+Características Técnicas:
+Sincronização Global:
+
+Todas as páginas consultam a mesma fonte de dados
+
+Cache inteligente evita recálculos desnecessários
+
+Chave temporal garante consistência entre usuários
+
+Performance:
+
+Verificação de cache antes de calcular novas condições
+
+Atualização automática apenas quando necessário
+
+Persistência otimizada no Firestore
+
+Integração:
+
+Sistema de modificadores para conjuração de magias
+
+Ícones visuais para cada condição
+
+Interface responsiva e atualização em tempo real
+
+Fluxo de Funcionamento:
+Sistema verifica chave temporal atual (Data - Hora:Minuto)
+
+Consulta Firestore para dados existentes da chave
+
+Se dados existem e são atuais → retorna dados salvos
+
+Se não existem ou expiraram → calcula novas condições
+
+Salva novas condições no Firestore com chave temporal
+
+Retorna condições para interface
+
+Todas as páginas usam os mesmos dados sincronizados
+
+Status: ✅ TOTALMENTE FUNCIONAL E SINCRONIZADO
+
+Convenções:
+
+Todas as funções que usam condições devem usar await getArcanumConditions()
+
+Interfaces devem atualizar a cada 30 segundos para mudanças rápidas
+
+Modificadores de conjuração são aplicados automaticamente baseados nas condições
+
+Sistema é independente de backend (exceto para sincronização via Firestore)
