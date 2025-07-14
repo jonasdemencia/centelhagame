@@ -879,8 +879,10 @@ if (isInitialLoad) {
         console.log("Novos itens adicionados ao inventário.");
     }
     
-    isInitialLoad = false;
-    // Verifica se algum grilo foi removido dos descartados
+        isInitialLoad = false;
+}
+
+// Verifica se algum grilo foi removido dos descartados
 const currentDiscarded = inventoryData.discardedItems || [];
 const previousDiscarded = JSON.parse(localStorage.getItem('previousDiscarded') || '[]');
 
@@ -905,7 +907,6 @@ if (previousDiscarded.length > currentDiscarded.length) {
 
 localStorage.setItem('previousDiscarded', JSON.stringify(currentDiscarded));
 
-}
 
             
             console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
