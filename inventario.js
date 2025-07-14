@@ -762,17 +762,23 @@ async function saveInventoryData(uid) {
     .filter(item => {
         return !discardedItems.includes(item.id);
     })
+
+        console.log("🔍 ITENS EQUIPADOS PARA COMPARAÇÃO:", Object.values(equippedItems).filter(item => item !== null));
+
     // REMOVE DUPLICATAS EQUIPADAS
     .filter(item => {
-        const isEquipped = Object.values(equippedItems).includes(item.content);
-        if (isEquipped) {
-            console.log("🚫 REMOVENDO DUPLICATA EQUIPADA:", item.id, item.content);
-        }
-        return !isEquipped;
-    });
+    const isEquipped = Object.values(equippedItems).includes(item.content);
+    if (isEquipped) {
+        console.log("🚫 REMOVENDO DUPLICATA EQUIPADA:", item.id, item.content);
+    } else {
+        console.log("✅ MANTENDO NO BAÚ:", item.id, item.content);
+    }
+    return !isEquipped;
+});
+
 
     const inventoryData = {
-        itemsInChest: itemsInChest,
+        itemsInChest: finalItemsInChest,
         equippedItems: equippedItems,
         discardedItems: discardedItems // Mantém a lista de descartados
     };
