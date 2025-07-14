@@ -3400,8 +3400,9 @@ async function setupArcanumConjurationModal(magiaId) {
     const magia = magiasDisponiveis.find(m => m.id === magiaId);
     if (!magia) return;
 
-const dynamicConditions = await getArcanumConditions();
-    const {modal, correctWord, conditions} = window.ArcanumSpells.createArcanumConjurationModal(magia);
+    const dynamicConditions = await getArcanumConditions();
+    const modalData = await window.ArcanumSpells.createArcanumConjurationModal(magia); // ADICIONAR AWAIT
+    const {modal, correctWord, conditions} = modalData; // USAR modalData
     
     const modifierMap = {
         periodo: { manha: 'first-vowel-to-i', tarde: 'a-to-y', noite: 'duplicate-last-consonant', madrugada: 'add-mad' },
@@ -3415,13 +3416,13 @@ const dynamicConditions = await getArcanumConditions();
     };
 
     modal.querySelector('.conditions-display').innerHTML = Object.entries(dynamicConditions).map(([key, value]) => {
-    if (!value) return '';
-    const modifier = modifierMap[key] && modifierMap[key][value] ? modifierMap[key][value] : '';
-    const modifierText = modifier ? ` <span style="color:#feca57;font-size:10px;">[${modifier}]</span>` : '';
-    
-    const icon = getConditionIcon(key, value);
-    return `<span class="condition">${icon}<br>${value.replace('-', ' ').toUpperCase()}${modifierText}</span>`;
-}).join('');
+        if (!value) return '';
+        const modifier = modifierMap[key] && modifierMap[key][value] ? modifierMap[key][value] : '';
+        const modifierText = modifier ? ` <span style="color:#feca57;font-size:10px;">[${modifier}]</span>` : '';
+        
+        const icon = getConditionIcon(key, value);
+        return `<span class="condition">${icon}<br>${value.replace('-', ' ').toUpperCase()}${modifierText}</span>`;
+    }).join('');
 
     const oldModal = document.getElementById('arcanum-conjuration-modal');
     if (oldModal) oldModal.remove();
