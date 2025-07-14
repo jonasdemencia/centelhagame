@@ -761,12 +761,12 @@ async function saveInventoryData(uid) {
     // FILTRA OS DESCARTADOS
     .filter(item => {
         return !discardedItems.includes(item.id);
-    })
+        });
 
-        console.log("🔍 ITENS EQUIPADOS PARA COMPARAÇÃO:", Object.values(equippedItems).filter(item => item !== null));
+    console.log("🔍 ITENS EQUIPADOS PARA COMPARAÇÃO:", Object.values(equippedItems).filter(item => item !== null));
 
-    // REMOVE DUPLICATAS EQUIPADAS
-    .filter(item => {
+    const finalItemsInChest = itemsInChest.filter(item => {
+
     const isEquipped = Object.values(equippedItems).includes(item.content);
     if (isEquipped) {
         console.log("🚫 REMOVENDO DUPLICATA EQUIPADA:", item.id, item.content);
