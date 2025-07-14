@@ -332,28 +332,6 @@ function evolveConditions(currentConditions) {
     return newConditions;
 }
 
-function getDynamicConditions() {
-    window.arcanumTurnCounter++;
-    
-    if (!window.arcanumBaseConditions) {
-        window.arcanumBaseConditions = generateInitialConditions();
-        return window.arcanumBaseConditions;
-    }
-    
-    if (window.arcanumTurnCounter % 3 === 0) {
-        window.arcanumBaseConditions = evolveConditions(window.arcanumBaseConditions);
-    }
-    
-    return window.arcanumBaseConditions;
-}
-
-function resetDynamicConditions() {
-    window.arcanumTurnCounter = 0;
-    window.arcanumBaseConditions = null;
-}
-
-
-
 
 // Criar modal de conjuração Arcanum
 async function createArcanumConjurationModal(spell) {
