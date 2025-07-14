@@ -88,24 +88,58 @@ window.arcanumIudicium = {
 // Sistema de Condições Ambientais Globais - Arcanum Verbis
 const ARCANUM_LAUNCH_DATE = new Date('2024-01-01T00:00:00Z');
 
-function getArcanumConditions() {
-    const agora = new Date();
-    const diasDesdeInicio = Math.floor((agora - ARCANUM_LAUNCH_DATE) / (1000 * 60 * 60 * 24));
-    const horaAtual = agora.getHours();
-    
-    return {
-        periodo: horaAtual < 6 ? 'madrugada' : 
-                horaAtual < 12 ? 'manha' :
-                horaAtual < 18 ? 'tarde' : 'noite',
-        estacao: ['primavera', 'verao', 'outono', 'inverno'][Math.floor(diasDesdeInicio / 30) % 4],
-        vento: ['norte', 'nordeste', 'leste', 'sudeste', 'sul', 'sudoeste', 'oeste', 'noroeste'][Math.floor(diasDesdeInicio / 3) % 8],
-        clima: ['sol-forte', 'sol-fraco', 'nublado', 'chuva-leve', 'neblina', 'tempestade'][Math.floor(diasDesdeInicio / 2) % 6],
-        lua: ['nova', 'crescente', 'cheia', 'minguante'][Math.floor(diasDesdeInicio / 7) % 4],
-        temperatura: ['muito-frio', 'frio', 'ameno', 'quente', 'muito-quente'][Math.floor(diasDesdeInicio / 5) % 5],
-        pressao: ['alta', 'normal', 'baixa'][Math.floor(diasDesdeInicio / 4) % 3],
-        energiaMagica: ['alta', 'normal', 'baixa', 'interferencia'][Math.floor(diasDesdeInicio / 10) % 4]
-    };
+async function getArcanumConditions() {
+    try {
+        // Busca condições do Firestore primeiro
+        const conditionsRef = doc(db, "gameConditions", "current");
+        const conditionsSnap = await getDoc(conditionsRef);
+        
+        const hoje = new Date().toDateString(); // "Thu Dec 19 2024"
+        
+        if (conditionsSnap.exists() && conditionsSnap.data().date === hoje) {
+            // Usa condições já calculadas para hoje
+            return conditionsSnap.data().conditions;
+        } else {
+            // Calcula novas condições e salva
+            const agora = new Date();
+            const diasDesdeInicio = Math.floor((agora - new Date('2024-01-01T00:00:00Z')) / (1000 * 60 * 60 * 24));
+            const horaAtual = agora.getHours();
+            
+            const conditions = {
+                periodo: horaAtual < 6 ? 'madrugada' : horaAtual < 12 ? 'manha' : horaAtual < 18 ? 'tarde' : 'noite',
+                estacao: ['primavera', 'verao', 'outono', 'inverno'][Math.floor(diasDesdeInicio / 30) % 4],
+                vento: ['norte', 'nordeste', 'leste', 'sudeste', 'sul', 'sudoeste', 'oeste', 'noroeste'][Math.floor(diasDesdeInicio / 3) % 8],
+                clima: ['sol-forte', 'sol-fraco', 'nublado', 'chuva-leve', 'neblina', 'tempestade'][Math.floor(diasDesdeInicio / 2) % 6],
+                lua: ['nova', 'crescente', 'cheia', 'minguante'][Math.floor(diasDesdeInicio / 7) % 4],
+                temperatura: ['muito-frio', 'frio', 'ameno', 'quente', 'muito-quente'][Math.floor(diasDesdeInicio / 5) % 5],
+                pressao: ['alta', 'normal', 'baixa'][Math.floor(diasDesdeInicio / 4) % 3],
+                energiaMagica: ['alta', 'normal', 'baixa', 'interferencia'][Math.floor(diasDesdeInicio / 10) % 4]
+            };
+            
+            // Salva no Firestore
+            await setDoc(conditionsRef, { conditions, date: hoje });
+            return conditions;
+        }
+    } catch (error) {
+        console.error("Erro ao buscar condições:", error);
+        // Fallback local se Firestore falhar
+        const agora = new Date();
+        const diasDesdeInicio = Math.floor((agora - new Date('2024-01-01T00:00:00Z')) / (1000 * 60 * 60 * 24));
+        const horaAtual = agora.getHours();
+        
+        return {
+            periodo: horaAtual < 6 ? 'madrugada' : horaAtual < 12 ? 'manha' : horaAtual < 18 ? 'tarde' : 'noite',
+            estacao: ['primavera', 'verao', 'outono', 'inverno'][Math.floor(diasDesdeInicio / 30) % 4],
+            vento: ['norte', 'nordeste', 'leste', 'sudeste', 'sul', 'sudoeste', 'oeste', 'noroeste'][Math.floor(diasDesdeInicio / 3) % 8],
+            clima: ['sol-forte', 'sol-fraco', 'nublado', 'chuva-leve', 'neblina', 'tempestade'][Math.floor(diasDesdeInicio / 2) % 6],
+            lua: ['nova', 'crescente', 'cheia', 'minguante'][Math.floor(diasDesdeInicio / 7) % 4],
+            temperatura: ['muito-frio', 'frio', 'ameno', 'quente', 'muito-quente'][Math.floor(diasDesdeInicio / 5) % 5],
+            pressao: ['alta', 'normal', 'baixa'][Math.floor(diasDesdeInicio / 4) % 3],
+            energiaMagica: ['alta', 'normal', 'baixa', 'interferencia'][Math.floor(diasDesdeInicio / 10) % 4]
+        };
+    }
 }
+
 
 function getConditionIcon(tipo, valor) {
     const icones = {
@@ -3348,7 +3382,7 @@ function setupArcanumConjurationModal(magiaId) {
     const magia = magiasDisponiveis.find(m => m.id === magiaId);
     if (!magia) return;
 
-const dynamicConditions = getArcanumConditions();
+const dynamicConditions = await getDynamicConditions();
     const {modal, correctWord, conditions} = window.ArcanumSpells.createArcanumConjurationModal(magia);
     
     const modifierMap = {
