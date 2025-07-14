@@ -1,3 +1,6 @@
+// Importa funções do Firebase v9
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+
 // Sistema de Condições Ambientais Globais - Arcanum Verbis
 // Data de lançamento do jogo como marco zero
 const ARCANUM_LAUNCH_DATE = new Date('2024-01-01T00:00:00Z');
@@ -15,8 +18,10 @@ async function getArcanumConditions() {
             throw new Error("Firebase não disponível");
         }
         
-        const conditionsRef = window.db.collection("gameConditions").doc("current");
-        const conditionsSnap = await conditionsRef.get();
+        // Usa o db do batalha.js que já está disponível globalmente
+const conditionsRef = doc(window.db || db, "gameConditions", "current");
+const conditionsSnap = await getDoc(conditionsRef);
+
         
         const hoje = new Date().toDateString();
         console.log("🔍 CONDIÇÕES DEBUG - Data de hoje:", hoje);
@@ -77,7 +82,7 @@ async function getArcanumConditions() {
         console.log("🔍 CONDIÇÕES DEBUG - Condições calculadas:", conditions);
         console.log("🔍 CONDIÇÕES DEBUG - SALVANDO no Firestore");
         
-        await conditionsRef.set({ conditions, date: hoje });
+await setDoc(conditionsRef, { conditions, date: hoje });
         console.log("🔍 CONDIÇÕES DEBUG - SALVO com sucesso");
         
         return conditions;
