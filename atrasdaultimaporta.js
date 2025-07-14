@@ -1097,6 +1097,101 @@ function removerAnimal(slotId) {
     }
 }
 
+function calcularChanceCruzamento(condicoes) {
+    let chanceBase = 50;
+    let modificadores = [];
+    let especiais = [];
+    
+    // Lua (fator principal)
+    const fatorLua = {
+        'nova': 0.6,      // 30% chance
+        'crescente': 1.0,  // 50% chance  
+        'cheia': 1.7,     // 85% chance
+        'minguante': 0.8   // 40% chance
+    };
+    chanceBase *= fatorLua[condicoes.lua] || 1.0;
+    if (condicoes.lua === 'cheia') especiais.push('mutação rara');
+    
+    // Temperatura
+    const fatorTemp = {
+        'muito-frio': 0.5,  // 25%
+        'frio': 1.2,        // 60%
+        'ameno': 1.6,       // 80%
+        'quente': 1.4,      // 70%
+        'muito-quente': 0.7 // 35%
+    };
+    chanceBase *= fatorTemp[condicoes.temperatura] || 1.0;
+    if (condicoes.temperatura === 'ameno') especiais.push('condições ideais');
+    
+    // Clima
+    const fatorClima = {
+        'sol-forte': 1.5,    // 75% + filhotes fortes
+        'chuva-leve': 1.7,   // 85%
+        'tempestade': 0.4,   // 20%
+        'neblina': 1.3,      // 65% + albinismo
+        'nublado': 1.4       // 70%
+    };
+    chanceBase *= fatorClima[condicoes.clima] || 1.0;
+    if (condicoes.clima === 'sol-forte') especiais.push('filhote forte');
+    if (condicoes.clima === 'neblina') especiais.push('chance albinismo');
+    
+    // Estação (fator importante)
+    const fatorEstacao = {
+        'primavera': 1.8,  // 90%
+        'verao': 1.4,      // 70%
+        'outono': 1.2,     // 60%
+        'inverno': 0.6     // 30%
+    };
+    chanceBase *= fatorEstacao[condicoes.estacao] || 1.0;
+    
+    // Energia Mágica
+    const fatorEnergia = {
+        'alta': 1.4,          // 70% + habilidade especial
+        'normal': 1.5,        // 75%
+        'baixa': 1.1,         // 55%
+        'interferencia': 0.8  // 40% + mutação bizarra
+    };
+    chanceBase *= fatorEnergia[condicoes.energiaMagica] || 1.0;
+    if (condicoes.energiaMagica === 'alta') especiais.push('habilidade especial');
+    if (condicoes.energiaMagica === 'interferencia') especiais.push('mutação bizarra');
+    
+    // Período do Dia
+    const fatorPeriodo = {
+        'madrugada': 1.6,  // 80%
+        'manha': 1.5,      // 75%
+        'tarde': 1.3,      // 65%
+        'noite': 1.7       // 85%
+    };
+    chanceBase *= fatorPeriodo[condicoes.periodo] || 1.0;
+    
+    // Combinações especiais
+    if (condicoes.lua === 'cheia' && condicoes.estacao === 'primavera' && condicoes.periodo === 'madrugada') {
+        especiais.push('Ninhada Lunar');
+        chanceBase *= 1.2;
+    }
+    
+    if (condicoes.clima === 'tempestade' && condicoes.energiaMagica === 'alta') {
+        especiais.push('Filhote Tempestuoso');
+        chanceBase *= 1.1;
+    }
+    
+    // Combinações mortais
+    if ((condicoes.temperatura === 'muito-frio' && condicoes.clima === 'tempestade') ||
+        (condicoes.temperatura === 'muito-quente' && condicoes.pressao === 'baixa')) {
+        chanceBase = 0;
+        especiais = ['Impossível'];
+    }
+    
+    const chanceTotal = Math.min(100, Math.max(0, chanceBase));
+    
+    return {
+        chance: Math.round(chanceTotal),
+        especiais: especiais,
+        condicoes: condicoes
+    };
+}
+
+
 
 function cantarAnimais() {
     const slot1 = document.getElementById('slot-1');
@@ -1108,7 +1203,13 @@ function cantarAnimais() {
         const primeiroNome2 = slot2.dataset.nome.split(' ')[0];
         
         if (primeiroNome1 === primeiroNome2) {
-            iniciarCruzamento(slot1.dataset.nome, slot2.dataset.nome);
+            // Calcular chance de cruzamento baseada nas condições
+            const condicoes = getArcanumConditions();
+            const resultado = calcularChanceCruzamento(condicoes);
+            
+            console.log(`Chance de cruzamento: ${resultado.chance}%`, resultado);
+            
+            iniciarCruzamento(slot1.dataset.nome, slot2.dataset.nome, resultado);
         } else {
             mensagem.textContent = 'Animais assim não geram descendência.';
             mensagem.style.display = 'block';
@@ -1119,7 +1220,8 @@ function cantarAnimais() {
     }
 }
 
-function iniciarCruzamento(animal1, animal2) {
+
+function iniciarCruzamento(animal1, animal2, resultado) {
     const mensagem = document.getElementById('mensagem-erro');
     const numerosRomanos = ['X', 'IX', 'VIII', 'VII', 'VI', 'V', 'IV', 'III', 'II', 'I'];
     let contador = 0;
@@ -1127,15 +1229,21 @@ function iniciarCruzamento(animal1, animal2) {
     // Desabilitar botões
     desabilitarBotoesCruzar(true);
     
-    // Mostrar mensagem inicial
+    // Mostrar chance e condições
+    const especialTexto = resultado.especiais.length > 0 ? ` (${resultado.especiais.join(', ')})` : '';
+    
     mensagem.innerHTML = `
         <div class="contagem-container">
             <span>Cruzando ${animal1} com ${animal2}!</span>
+            <span style="color: #feca57;">Chance: ${resultado.chance}%${especialTexto}</span>
             <span id="contador-romano">${numerosRomanos[contador]}</span>
             <span class="ampulheta">⧗</span>
         </div>
     `;
     mensagem.style.display = 'block';
+    
+    // Salvar resultado para usar depois
+    window.resultadoCruzamento = resultado;
     
     // Iniciar contagem
     const intervalo = setInterval(() => {
@@ -1149,19 +1257,44 @@ function iniciarCruzamento(animal1, animal2) {
     }, 1000);
 }
 
+
 function finalizarCruzamento() {
     const mensagem = document.getElementById('mensagem-erro');
+    const resultado = window.resultadoCruzamento;
     
-    mensagem.innerHTML = `
-        <div class="contagem-container">
-            <span>Descendência gerada!</span>
-            <button class="botao-recolher" onclick="recolherDescendencia()">Recolher</button>
-        </div>
-    `;
+    // Rolar para ver se teve sucesso
+    const rolagem = Math.random() * 100;
+    const sucesso = rolagem <= resultado.chance;
+    
+    if (sucesso) {
+        const especialTexto = resultado.especiais.length > 0 ? ` ${resultado.especiais.join(' + ')}!` : '!';
+        
+        mensagem.innerHTML = `
+            <div class="contagem-container">
+                <span style="color: #00ff00;">Descendência gerada${especialTexto}</span>
+                <button class="botao-recolher" onclick="recolherDescendencia()">Recolher</button>
+            </div>
+        `;
+    } else {
+        mensagem.innerHTML = `
+            <div class="contagem-container">
+                <span style="color: #ff6b6b;">Cruzamento falhou (${Math.round(rolagem)}% vs ${resultado.chance}%)</span>
+                <button class="botao-recolher" onclick="limparCruzamento()">Tentar Novamente</button>
+            </div>
+        `;
+    }
     
     // Reabilitar botões
     desabilitarBotoesCruzar(false);
 }
+
+function limparCruzamento() {
+    const mensagem = document.getElementById('mensagem-erro');
+    mensagem.style.display = 'none';
+    removerAnimal('slot-1');
+    removerAnimal('slot-2');
+}
+
 
 function desabilitarBotoesCruzar(desabilitar) {
     const botaoCantar = document.getElementById('cantar-btn');
