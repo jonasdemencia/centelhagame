@@ -2,91 +2,64 @@
 // Data de lançamento do jogo como marco zero
 const ARCANUM_LAUNCH_DATE = new Date('2024-01-01T00:00:00Z');
 
-// Função para obter condições ambientais globais
 async function getArcanumConditions() {
     console.log("🔍 CONDIÇÕES DEBUG - Função chamada");
     
     try {
         console.log("🔍 CONDIÇÕES DEBUG - Tentando conectar ao Firestore");
-        
-        // Usa as funções globais do batalha.js
-        if (!window.db) {
-            console.log("🔍 CONDIÇÕES DEBUG - Firebase não disponível, usando fallback");
-            throw new Error("Firebase não disponível");
-        }
-        
-        // Usa as funções globais que já existem
         const conditionsRef = window.doc(window.db, "gameConditions", "current");
         const conditionsSnap = await window.getDoc(conditionsRef);
         
-        const hoje = new Date().toDateString();
-        console.log("🔍 CONDIÇÕES DEBUG - Data de hoje:", hoje);
+        const agora = new Date();
+        const chaveHora = `${agora.toDateString()} - ${agora.getHours()}:${Math.floor(agora.getMinutes()/30)*30}`;
+        console.log("🔍 CONDIÇÕES DEBUG - Chave atual:", chaveHora);
         
         if (conditionsSnap.exists()) {
             const firestoreData = conditionsSnap.data();
             console.log("🔍 CONDIÇÕES DEBUG - Dados do Firestore:", firestoreData);
-            console.log("🔍 CONDIÇÕES DEBUG - Data salva:", firestoreData.date);
-            console.log("🔍 CONDIÇÕES DEBUG - Datas coincidem?", firestoreData.date === hoje);
+            console.log("🔍 CONDIÇÕES DEBUG - Chave salva:", firestoreData.timeKey);
             
-            if (firestoreData.date === hoje) {
+            if (firestoreData.timeKey === chaveHora) {
                 console.log("🔍 CONDIÇÕES DEBUG - USANDO dados do Firestore:", firestoreData.conditions);
                 return firestoreData.conditions;
             }
-        } else {
-            console.log("🔍 CONDIÇÕES DEBUG - Documento não existe no Firestore");
         }
         
         console.log("🔍 CONDIÇÕES DEBUG - CALCULANDO novas condições");
-        const agora = new Date();
-        const diasDesdeInicio = Math.floor((agora - ARCANUM_LAUNCH_DATE) / (1000 * 60 * 60 * 24));
-        const horaAtual = agora.getHours();
-        
-        console.log("🔍 CONDIÇÕES DEBUG - Dias desde início:", diasDesdeInicio);
-        console.log("🔍 CONDIÇÕES DEBUG - Hora atual:", horaAtual);
+        const diasDesdeInicio = Math.floor((agora - new Date('2024-01-01T00:00:00Z')) / (1000 * 60 * 60 * 24));
+        const horasDesdeInicio = Math.floor((agora - new Date('2024-01-01T00:00:00Z')) / (1000 * 60 * 60));
+        const meiasHorasDesdeInicio = Math.floor((agora - new Date('2024-01-01T00:00:00Z')) / (1000 * 60 * 30));
         
         const conditions = {
-            periodo: horaAtual < 6 ? 'madrugada' : horaAtual < 12 ? 'manha' : horaAtual < 18 ? 'tarde' : 'noite',
-            estacao: ['primavera', 'verao', 'outono', 'inverno'][Math.floor(diasDesdeInicio / 30) % 4],
-            vento: ['norte', 'nordeste', 'leste', 'sudeste', 'sul', 'sudoeste', 'oeste', 'noroeste'][Math.floor(diasDesdeInicio / 3) % 8],
-            clima: ['sol-forte', 'sol-fraco', 'nublado', 'chuva-leve', 'neblina', 'tempestade'][Math.floor(diasDesdeInicio / 2) % 6],
-            lua: ['nova', 'crescente', 'cheia', 'minguante'][Math.floor(diasDesdeInicio / 7) % 4],
-            temperatura: ['muito-frio', 'frio', 'ameno', 'quente', 'muito-quente'][Math.floor(diasDesdeInicio / 5) % 5],
-            pressao: ['alta', 'normal', 'baixa'][Math.floor(diasDesdeInicio / 4) % 3],
-            eventoEspecial: getEventoEspecial(diasDesdeInicio),
-            energiaMagica: ['alta', 'normal', 'baixa', 'interferencia'][Math.floor(diasDesdeInicio / 10) % 4]
+            periodo: agora.getHours() < 6 ? 'madrugada' : agora.getHours() < 12 ? 'manha' : agora.getHours() < 18 ? 'tarde' : 'noite',
+            vento: ['norte', 'nordeste', 'leste', 'sudeste', 'sul', 'sudoeste', 'oeste', 'noroeste'][meiasHorasDesdeInicio % 8],
+            clima: ['sol-forte', 'sol-fraco', 'nublado', 'chuva-leve', 'neblina', 'tempestade'][horasDesdeInicio % 6],
+            pressao: ['alta', 'normal', 'baixa'][Math.floor(horasDesdeInicio / 2) % 3],
+            energiaMagica: ['alta', 'normal', 'baixa', 'interferencia'][diasDesdeInicio % 4],
+            temperatura: ['muito-frio', 'frio', 'ameno', 'quente', 'muito-quente'][diasDesdeInicio % 5],
+            lua: ['nova', 'crescente', 'cheia', 'minguante'][Math.floor(diasDesdeInicio / 2) % 4],
+            estacao: ['primavera', 'verao', 'outono', 'inverno'][Math.floor(diasDesdeInicio / 5) % 4]
         };
         
         console.log("🔍 CONDIÇÕES DEBUG - Condições calculadas:", conditions);
         console.log("🔍 CONDIÇÕES DEBUG - SALVANDO no Firestore");
         
-        await window.setDoc(conditionsRef, { conditions, date: hoje });
+        await window.setDoc(conditionsRef, { conditions, timeKey: chaveHora });
         console.log("🔍 CONDIÇÕES DEBUG - SALVO com sucesso");
         
         return conditions;
         
     } catch (error) {
         console.error("🔍 CONDIÇÕES DEBUG - ERRO:", error);
-        
-        const agora = new Date();
-        const diasDesdeInicio = Math.floor((agora - ARCANUM_LAUNCH_DATE) / (1000 * 60 * 60 * 24));
-        const horaAtual = agora.getHours();
-        
         const fallback = {
-            periodo: horaAtual < 6 ? 'madrugada' : horaAtual < 12 ? 'manha' : horaAtual < 18 ? 'tarde' : 'noite',
-            estacao: ['primavera', 'verao', 'outono', 'inverno'][Math.floor(diasDesdeInicio / 30) % 4],
-            vento: ['norte', 'nordeste', 'leste', 'sudeste', 'sul', 'sudoeste', 'oeste', 'noroeste'][Math.floor(diasDesdeInicio / 3) % 8],
-            clima: ['sol-forte', 'sol-fraco', 'nublado', 'chuva-leve', 'neblina', 'tempestade'][Math.floor(diasDesdeInicio / 2) % 6],
-            lua: ['nova', 'crescente', 'cheia', 'minguante'][Math.floor(diasDesdeInicio / 7) % 4],
-            temperatura: ['muito-frio', 'frio', 'ameno', 'quente', 'muito-quente'][Math.floor(diasDesdeInicio / 5) % 5],
-            pressao: ['alta', 'normal', 'baixa'][Math.floor(diasDesdeInicio / 4) % 3],
-            eventoEspecial: getEventoEspecial(diasDesdeInicio),
-            energiaMagica: ['alta', 'normal', 'baixa', 'interferencia'][Math.floor(diasDesdeInicio / 10) % 4]
+            periodo: 'tarde', estacao: 'inverno', vento: 'norte', clima: 'nublado',
+            lua: 'cheia', temperatura: 'frio', pressao: 'alta', energiaMagica: 'normal'
         };
-        
         console.log("🔍 CONDIÇÕES DEBUG - USANDO fallback:", fallback);
         return fallback;
     }
 }
+
 
 function getEventoEspecial(dia) {
     if (dia % 100 === 0) return 'eclipse-solar';
