@@ -640,7 +640,7 @@ window.db = db;
 window.doc = doc;
 window.getDoc = getDoc;
 window.setDoc = setDoc;
-
+console.log("LOG: Funções Firebase disponibilizadas globalmente.");
 
 
 function startNewTurnBlock(turnName) {
