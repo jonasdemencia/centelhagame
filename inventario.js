@@ -880,6 +880,31 @@ if (isInitialLoad) {
     }
     
     isInitialLoad = false;
+    // Verifica se algum grilo foi removido dos descartados
+const currentDiscarded = inventoryData.discardedItems || [];
+const previousDiscarded = JSON.parse(localStorage.getItem('previousDiscarded') || '[]');
+
+if (previousDiscarded.length > currentDiscarded.length) {
+    const removedItems = previousDiscarded.filter(item => !currentDiscarded.includes(item));
+    
+    for (const removedItem of removedItems) {
+        if (removedItem.startsWith('grilo')) {
+            const newGrilo = {
+                id: `grilo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                content: "Grilo",
+                description: "Um pequeno grilo saltitante.",
+                componente: true,
+                energia: { total: 1, inicial: 1 }
+            };
+            inventoryData.itemsInChest.push(newGrilo);
+            await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+            break;
+        }
+    }
+}
+
+localStorage.setItem('previousDiscarded', JSON.stringify(currentDiscarded));
+
 }
 
             
