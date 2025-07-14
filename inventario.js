@@ -846,28 +846,34 @@ async function loadInventoryData(uid) {
             }
             
            // Verifica se algum item foi removido da lista de descartados e deve ser readicionado
+// Verifica se algum item foi removido da lista de descartados e deve ser readicionado
 for (const extraItem of extraItems) {
-    const itemExists = extraItem.componente 
-        ? inventoryData.itemsInChest.some(item => item.id.startsWith(extraItem.id))
-        : inventoryData.itemsInChest.some(item => item.id === extraItem.id);
-    
-    const wasDiscarded = inventoryData.discardedItems && inventoryData.discardedItems.some(discarded => 
-        extraItem.componente ? discarded.startsWith(extraItem.id) : discarded === extraItem.id
-    );
-    
-    // Se não existe no inventário E não está mais na lista de descartados, adiciona
-    if (!itemExists && !wasDiscarded) {
-        const newItem = {...extraItem};
-        if (extraItem.componente) {
+    // Para itens com componente, verifica se o ID específico removido dos descartados deve retornar
+    if (extraItem.componente) {
+        // Verifica se algum ID específico foi removido dos descartados
+        const removedFromDiscarded = inventoryData.discardedItems && 
+            !inventoryData.discardedItems.some(discarded => discarded.startsWith(extraItem.id));
+        
+        // Se foi removido dos descartados, adiciona um novo
+        if (removedFromDiscarded) {
+            const newItem = {...extraItem};
             newItem.id = `${extraItem.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            inventoryData.itemsInChest.push(newItem);
+            inventoryUpdated = true;
+            console.log(`Item ${extraItem.content} readicionado após remoção dos descartados`);
         }
-        inventoryData.itemsInChest.push(newItem);
-        inventoryUpdated = true;
-        console.log(`Item ${extraItem.content} readicionado após remoção dos descartados`);
+    } else {
+        // Para itens normais, mantém a lógica original
+        const itemExists = inventoryData.itemsInChest.some(item => item.id === extraItem.id);
+        const wasDiscarded = inventoryData.discardedItems && inventoryData.discardedItems.includes(extraItem.id);
+        
+        if (!itemExists && !wasDiscarded) {
+            inventoryData.itemsInChest.push({...extraItem});
+            inventoryUpdated = true;
+            console.log(`Item ${extraItem.content} readicionado após remoção dos descartados`);
+        }
     }
 }
-
-
 
             
             // Se o inventário foi atualizado, salva as alterações
