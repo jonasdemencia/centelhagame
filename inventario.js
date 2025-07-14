@@ -776,22 +776,27 @@ async function loadInventoryData(uid) {
                 }
             }
             
-           // Verifica itens extras (mas não os já descartados)
-for (const extraItem of extraItems) {
-    const itemExists = inventoryData.itemsInChest.some(item => item.id === extraItem.id);
-    const wasDiscarded = inventoryData.discardedItems && inventoryData.discardedItems.includes(extraItem.id);
+           for (const extraItem of extraItems) {
+    // Para itens com componente, verifica se já existe pelo menos um do tipo base
+    const itemExists = extraItem.componente 
+        ? inventoryData.itemsInChest.some(item => item.id.startsWith(extraItem.id))
+        : inventoryData.itemsInChest.some(item => item.id === extraItem.id);
+    
+    const wasDiscarded = inventoryData.discardedItems && inventoryData.discardedItems.some(discarded => 
+        extraItem.componente ? discarded.startsWith(extraItem.id) : discarded === extraItem.id
+    );
     
     if (!itemExists && !wasDiscarded) {
-    const newItem = {...extraItem};
-    // Para itens que precisam de ID único (animais/componentes)
-    if (extraItem.componente) {
-        newItem.id = `${extraItem.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const newItem = {...extraItem};
+        // Para itens que precisam de ID único (animais/componentes)
+        if (extraItem.componente) {
+            newItem.id = `${extraItem.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
+        inventoryData.itemsInChest.push(newItem);
+        inventoryUpdated = true;
     }
-    inventoryData.itemsInChest.push(newItem);
-    inventoryUpdated = true;
 }
 
-}
 
             
             // Se o inventário foi atualizado, salva as alterações
