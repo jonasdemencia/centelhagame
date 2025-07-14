@@ -999,7 +999,7 @@ document.querySelectorAll('.menu-btn').forEach(button => {
 
 async function criarCruzarAnimais() {
     const listaAnimaisHtml = await obterListaAnimais();
-    const dynamicConditions = getArcanumConditions();
+    const dynamicConditions = await getArcanumConditions(); // ADICIONAR AWAIT AQUI
     
     const conditionsHtml = Object.entries(dynamicConditions).map(([key, value]) => {
         if (!value) return '';
@@ -1029,8 +1029,6 @@ async function criarCruzarAnimais() {
         </div>
     `;
 }
-
-
 
 async function obterListaAnimais() {
     const userId = auth.currentUser?.uid;
