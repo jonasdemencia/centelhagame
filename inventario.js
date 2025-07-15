@@ -1144,7 +1144,7 @@ async function updateCharacterCouraca() {
     const armorSlot = document.querySelector('.slot[data-slot="armor"]');
     if (armorSlot && armorSlot.innerHTML !== armorSlot.dataset.slot) {
         const equippedArmorName = armorSlot.innerHTML;
-        const armorData = initialItems.find(item => item.content === equippedArmorName);
+const armorData = [...initialItems, ...extraItems].find(item => item.content === equippedArmorName);
         if (armorData && armorData.defense) {
             bonusCouraca += armorData.defense;
         }
@@ -1196,7 +1196,7 @@ async function updateCharacterDamage() {
 
     if (weaponSlot && weaponSlot.innerHTML !== weaponSlot.dataset.slot) {
         const equippedWeaponName = weaponSlot.innerHTML;
-        const weaponData = initialItems.find(item => item.content === equippedWeaponName);
+const weaponData = [...initialItems, ...extraItems].find(item => item.content === equippedWeaponName);
         
         if (weaponData && weaponData.damage) {
             newDamageValue = weaponData.damage;
