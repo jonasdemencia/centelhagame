@@ -462,9 +462,10 @@ if (discardSlot) {
     discardSlot.addEventListener("click", async () => {
         console.log("Botão de descarte clicado");
         if (selectedItem) {
-            console.log("Item descartado:", selectedItem.innerHTML);
+            console.log("🗑️ DESCARTANDO ITEM:");
+            console.log("   - ID do item:", selectedItem.dataset.item);
+            console.log("   - Conteúdo:", selectedItem.innerHTML.split('<span')[0].trim());
             
-            // Adiciona à lista de descartados
             const uid = auth.currentUser?.uid;
             if (uid) {
                 const playerRef = doc(db, "players", uid);
@@ -474,16 +475,22 @@ if (discardSlot) {
                 if (!inventoryData.discardedItems) {
                     inventoryData.discardedItems = [];
                 }
-                inventoryData.discardedItems.push(selectedItem.dataset.item);
+                
+                // CORREÇÃO: Criar ID único para descarte baseado no elemento DOM
+                const uniqueDiscardId = selectedItem.dataset.item + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                console.log("   - ID único de descarte:", uniqueDiscardId);
+                
+                inventoryData.discardedItems.push(uniqueDiscardId);
                 
                 await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+                console.log("   - Item adicionado à lista de descartados");
             }
             
             selectedItem.remove();
             selectedItem = null;
             clearHighlights();
             toggleUseButton(false);
-            saveInventoryData(auth.currentUser.uid); // ← ADICIONE ESTA LINHA
+            saveInventoryData(auth.currentUser.uid);
         }
     });
 } else {
