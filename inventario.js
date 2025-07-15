@@ -349,6 +349,10 @@ document.addEventListener("DOMContentLoaded", () => {
             if (itemData && slotType === itemData.slot) {
                 // Se já há um item equipado, devolve para o baú
                 if (currentEquippedItem) {
+                    console.log("🔄 TROCANDO ITENS:");
+    console.log("   - Item atual equipado:", currentEquippedItem);
+    console.log("   - Item sendo equipado:", selectedItem.dataset.item);
+    console.log("   - São o mesmo item?", currentEquippedItem.trim() === selectedItem.innerHTML.split('<span')[0].trim());
                     const originalItemData = allItemsArr.find(i => i.content === currentEquippedItem.trim());
                     const newItem = document.createElement("div");
                     newItem.classList.add("item");
