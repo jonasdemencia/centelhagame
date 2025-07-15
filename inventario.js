@@ -349,37 +349,35 @@ document.addEventListener("DOMContentLoaded", () => {
     if (itemData && slotType === itemData.slot) {
         // Equipa um novo item
         if (currentEquippedItem) {
-            // Antes de criar no baú, verifica se já existe um item igual!
-            const alreadyInChest = Array.from(document.querySelectorAll('.item')).find(item =>
-                item.innerHTML.split('<span')[0].trim() === currentEquippedItem.trim()
-            );
-            if (!alreadyInChest) {
-                // Cria o item devolvido ao baú
-                // Descobre o objeto original pelo nome
-                const originalItemData = allItemsArr.find(i => i.content === currentEquippedItem.trim());
-                const newItem = document.createElement("div");
-                newItem.classList.add("item");
-                newItem.dataset.item = originalItemData ? originalItemData.id : currentEquippedItem.trim().toLowerCase().replace(/\s+/g, '-');
-                newItem.innerHTML = `
-                    ${currentEquippedItem}
-                    <span class="item-expand-toggle">+</span>
-                    <div class="item-description" style="display: none;">
-                        ${originalItemData ? originalItemData.description : 'Descrição do item.'}
-                    </div>
-                `;
-                if (originalItemData && originalItemData.consumable) {
-                    newItem.dataset.consumable = 'true';
-                    newItem.dataset.quantity = originalItemData.quantity;
-                    if (originalItemData.effect) newItem.dataset.effect = originalItemData.effect;
-                    if (originalItemData.value) newItem.dataset.value = originalItemData.value;
-                    if (originalItemData.quantity > 0) {
-                        newItem.innerHTML += ` <span class="item-quantity">(${originalItemData.quantity})</span>`;
-                    }
-                }
-                itemsContainer.appendChild(newItem);
-                addItemClickListener(newItem);
+    const originalItemData = allItemsArr.find(i => i.content === currentEquippedItem.trim());
+    const alreadyInChest = Array.from(document.querySelectorAll('.item')).find(item =>
+        item.dataset.item === (originalItemData ? originalItemData.id : currentEquippedItem.trim().toLowerCase().replace(/\s+/g, '-'))
+    );
+    if (!alreadyInChest) {
+        const newItem = document.createElement("div");
+        newItem.classList.add("item");
+        newItem.dataset.item = originalItemData ? originalItemData.id : currentEquippedItem.trim().toLowerCase().replace(/\s+/g, '-');
+        newItem.innerHTML = `
+            ${currentEquippedItem}
+            <span class="item-expand-toggle">+</span>
+            <div class="item-description" style="display: none;">
+                ${originalItemData ? originalItemData.description : 'Descrição do item.'}
+            </div>
+        `;
+        if (originalItemData && originalItemData.consumable) {
+            newItem.dataset.consumable = 'true';
+            newItem.dataset.quantity = originalItemData.quantity;
+            if (originalItemData.effect) newItem.dataset.effect = originalItemData.effect;
+            if (originalItemData.value) newItem.dataset.value = originalItemData.value;
+            if (originalItemData.quantity > 0) {
+                newItem.innerHTML += ` <span class="item-quantity">(${originalItemData.quantity})</span>`;
             }
         }
+        itemsContainer.appendChild(newItem);
+        addItemClickListener(newItem);
+    }
+}
+        
         // Equipar o item selecionado
         slot.innerHTML = selectedItem.innerHTML.split('<span class="item-expand-toggle">')[0].trim();
         slot.dataset.consumable = selectedItem.dataset.consumable;
