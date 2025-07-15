@@ -738,10 +738,7 @@ async function saveInventoryData(uid) {
         if (["weapon", "armor", "helmet", "amulet", "shield", "gloves", "ring", "boots"].includes(itemId)) {
             return null;
         }
-        // Remove do baú se está equipado (por nome)
-        if (equippedNames.includes(itemName)) {
-            return null;
-        }
+        
         // Monta o item normalmente
         const data = { id: itemId, content: itemName };
         if (item.dataset.energia) data.energia = JSON.parse(item.dataset.energia);
