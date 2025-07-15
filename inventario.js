@@ -58,8 +58,6 @@ async function setupPlayerDataListener(uid) {
 // Itens iniciais que o jogador deve ter (adicionando propriedade de dano)
 const initialItems = [
     { id: "bolsa-de-escriba", content: "Bolsa de escriba", description: "Uma bolsa para guardar pergaminhos e penas." },
-    { id: "weapon", content: "canivete", description: "Uma pequena lâmina afiada.", damage: "1D10" }, // Adicionando dano
-    { id: "armor", content: "Hábito monástico", description: "Vestes simples que oferecem pouca proteção.", defense: 2 },
     { id: "velas", content: "Velas", description: "Fontes de luz portáteis." },
     { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2, description: "Um pequeno saco contendo ervas que podem curar ferimentos leves." },
     { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." },
@@ -73,6 +71,8 @@ const initialItems = [
 // Lista de itens que podem ser adicionados dinamicamente (não iniciais)
 const extraItems = [
     { id: "grilo", content: "Grilo", description: "Um pequeno grilo saltitante.", componente: true, energia: { total: 1, inicial: 1 } },
+    { id: "canivete", content: "Canivete", description: "Uma pequena lâmina afiada.", damage: "1D10" }, // CORRIGIDO!
+    { id: "habito-monastico", content: "Hábito monástico", description: "Vestes simples que oferecem pouca proteção.", defense: 2 }, // CORRIGIDO!
     { id: "espada-ferro", content: "Espada de Ferro", description: "Uma espada comum de ferro.", damage: "1d8" },
     { id: "la", content: "Lã", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true }, // ← ADICIONE ESTA LINHA
     { id: "pedaco-couro", content: "Pedaço de couro", description: "tira de couro endurecido para magias.", componente: true }, // ← ADICIONE ESTA LINHA
