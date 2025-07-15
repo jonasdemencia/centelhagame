@@ -374,76 +374,67 @@ document.addEventListener("DOMContentLoaded", () => {
                 updateCharacterCouraca();
                 updateCharacterDamage();
             } else if (selectedItem === null && currentEquippedItem) {
-                console.log("Desequipando item:", currentEquippedItem, "do slot:", slotType);
-                // Desequipa um item existente
-                const itemText = slot.innerHTML;
-                const consumable = slot.dataset.consumable === 'true';
-                const quantity = slot.dataset.quantity;
-                const effect = slot.dataset.effect;
-                const value = slot.dataset.value;
-                slot.innerHTML = slot.dataset.slot;
-                delete slot.dataset.consumable; // Remove a propriedade consumable do slot
-                delete slot.dataset.quantity;
-                delete slot.dataset.effect;
-               delete slot.dataset.value;
+    // Desequipa o item do slot
+    const itemText = slot.innerHTML.trim();
+    const allItemsArr = [...initialItems, ...extraItems];
+    // Busca o objeto de dados REAL
+    const originalItemData = allItemsArr.find(item => item.content === itemText);
 
-// Verifica se o item já existe no baú
-const existingItem = Array.from(document.querySelectorAll('.item')).find(item => 
-    item.innerHTML.includes(itemText) && !item.classList.contains('selected')
-);
+    slot.innerHTML = slot.dataset.slot;
+    delete slot.dataset.consumable;
+    delete slot.dataset.quantity;
+    delete slot.dataset.effect;
+    delete slot.dataset.value;
 
-if (existingItem) {
-    console.log("Item já existe no baú, não criando duplicata");
-    return;
-}
+    // Verifica se já existe no baú um item com o id REAL
+    const alreadyInChest = Array.from(document.querySelectorAll('.item')).find(item =>
+        item.dataset.item === (originalItemData ? originalItemData.id : null)
+    );
+    if (alreadyInChest) {
+        console.log("Item já existe no baú, não criando duplicata");
+        return;
+    }
 
-const newItem = document.createElement("div");
+    const newItem = document.createElement("div");
+    newItem.classList.add("item");
+    // Usa o id REAL, nunca o nome do slot!
+    newItem.dataset.item = originalItemData ? originalItemData.id : itemText.toLowerCase().replace(/\s+/g, '-');
+    newItem.innerHTML = `
+        ${itemText}
+        <span class="item-expand-toggle">+</span>
+        <div class="item-description" style="display: none;">
+            ${originalItemData ? originalItemData.description : 'Descrição do item.'}
+        </div>
+    `;
 
-                newItem.classList.add("item");
-                const allItems = [...initialItems, ...extraItems];
-const originalItemData = allItems.find(item => item.content === itemText);
-newItem.dataset.item = originalItemData ? originalItemData.id : itemText.toLowerCase().replace(/\s+/g, '-');
+    if (originalItemData && originalItemData.consumable) {
+        newItem.dataset.consumable = 'true';
+        newItem.dataset.quantity = originalItemData.quantity;
+        if (originalItemData.effect) newItem.dataset.effect = originalItemData.effect;
+        if (originalItemData.value) newItem.dataset.value = originalItemData.value;
+        // Adiciona a quantidade visualmente
+        if (originalItemData.quantity > 0) {
+            newItem.innerHTML += ` <span class="item-quantity">(${originalItemData.quantity})</span>`;
+        }
+    }
 
-                // Encontra o item original na lista de itens iniciais para obter a descrição
-                const originalItem = initialItems.find(item => item.content === itemText);
-                newItem.innerHTML = `
-                    ${itemText}
-                    <span class="item-expand-toggle">+</span>
-                    <div class="item-description" style="display: none;">
-                        ${originalItem ? originalItem.description : 'Descrição do item.'}
-                    </div>
-                `;
-
-                if (consumable) {
-                    newItem.dataset.consumable = 'true';
-                    newItem.dataset.quantity = quantity;
-                    if (effect) newItem.dataset.effect = effect;
-                    if (value) newItem.dataset.value = value;
-                    // Adiciona a quantidade visualmente
-                    if (quantity > 0) {
-                        newItem.innerHTML += ` <span class="item-quantity">(${quantity})</span>`;
-                    }
-                }
-
-                itemsContainer.appendChild(newItem);
-                addItemClickListener(newItem);
-                // Adicionar o listener para o botão de expandir do novo item
-                const expandToggle = newItem.querySelector('.item-expand-toggle');
-                const descriptionDiv = newItem.querySelector('.item-description');
-                if (expandToggle && descriptionDiv) {
-                    expandToggle.addEventListener('click', (event) => {
-                        event.stopPropagation();
-                        descriptionDiv.style.display = descriptionDiv.style.display === 'none' ? 'block' : 'none';
-                        expandToggle.textContent = descriptionDiv.style.display === 'none' ? '+' : '-';
-                    });
-                }
-
-                updateCharacterCouraca();
-                updateCharacterDamage();
-                saveInventoryData(auth.currentUser.uid);
-            }
+    itemsContainer.appendChild(newItem);
+    addItemClickListener(newItem);
+    // Adicionar o listener para o botão de expandir do novo item
+    const expandToggle = newItem.querySelector('.item-expand-toggle');
+    const descriptionDiv = newItem.querySelector('.item-description');
+    if (expandToggle && descriptionDiv) {
+        expandToggle.addEventListener('click', (event) => {
+            event.stopPropagation();
+            descriptionDiv.style.display = descriptionDiv.style.display === 'none' ? 'block' : 'none';
+            expandToggle.textContent = descriptionDiv.style.display === 'none' ? '+' : '-';
         });
-    });
+    }
+
+    updateCharacterCouraca();
+    updateCharacterDamage();
+    saveInventoryData(auth.currentUser.uid);
+}
 
   // Adiciona funcionalidade ao botão de descarte
 if (discardSlot) {
