@@ -400,7 +400,9 @@ if (existingItem) {
 const newItem = document.createElement("div");
 
                 newItem.classList.add("item");
-                newItem.dataset.item = slotType;
+                const allItems = [...initialItems, ...extraItems];
+const originalItemData = allItems.find(item => item.content === itemText);
+newItem.dataset.item = originalItemData ? originalItemData.id : itemText.toLowerCase().replace(/\s+/g, '-');
 
                 // Encontra o item original na lista de itens iniciais para obter a descrição
                 const originalItem = initialItems.find(item => item.content === itemText);
