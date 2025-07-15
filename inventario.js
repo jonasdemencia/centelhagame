@@ -818,23 +818,6 @@ async function loadInventoryData(uid) {
 
             const inventoryData = docSnap.data().inventory;
             
-            // Verifica se há novos itens em initialItems que não estão no inventário
-            let inventoryUpdated = false;
-            for (const initialItem of initialItems) {
-                const itemExists = inventoryData.itemsInChest.some(item => item.id === initialItem.id);
-                if (!itemExists) {
-                    inventoryData.itemsInChest.push({...initialItem});
-                    inventoryUpdated = true;
-                }
-            }
-            
-            
-            // Se o inventário foi atualizado, salva as alterações
-            if (inventoryUpdated) {
-                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-                console.log("Novos itens adicionados ao inventário.");
-            }
-            
             console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
             loadInventoryUI(inventoryData);
             updateCharacterCouraca();
