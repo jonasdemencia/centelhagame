@@ -672,12 +672,22 @@ async function saveInventoryData(uid) {
     const currentInventoryData = playerSnap.data()?.inventory || {};
     const discardedItems = currentInventoryData.discardedItems || [];
 
-    // Pega todos os itens do baú - SEM filtrar por descartados aqui
+    // Pega todos os itens do baú - COM filtro para descartados
     const itemsInChest = Array.from(document.querySelectorAll('.item')).map(item => {
         const itemId = item.dataset.item;
         if (["weapon", "armor", "helmet", "amulet", "shield", "gloves", "ring", "boots"].includes(itemId)) {
             return null;
         }
+        
+        // IGNORA itens que já foram descartados
+        const isDiscarded = discardedItems.some(discardedId => 
+            discardedId === itemId || discardedId.startsWith(itemId + '_')
+        );
+        if (isDiscarded) {
+            console.log(`🗑️ IGNORANDO ITEM DESCARTADO: ${itemId}`);
+            return null;
+        }
+        
         console.log(`📦 PROCESSANDO ITEM: ${itemId} - Content: ${item.innerHTML.split('<span class="item-expand-toggle">')[0].trim()}`);
         
         const data = {
@@ -694,7 +704,7 @@ async function saveInventoryData(uid) {
             if (item.dataset.value) data.value = parseInt(item.dataset.value);
         }
         return data;
-    }).filter(item => item !== null); // Remove apenas nulls, não descartados
+    }).filter(item => item !== null);
 
     // Resto igual...
     const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
