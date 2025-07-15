@@ -690,9 +690,11 @@ if (isDiscarded) {
         console.log(`📦 PROCESSANDO ITEM: ${itemId} - Content: ${item.innerHTML.split('<span class="item-expand-toggle">')[0].trim()}`);
         
         const data = {
-            id: itemId,
-            content: item.innerHTML.split('<span class="item-expand-toggle">')[0].split('<span class="item-energia">')[0].trim()
-        };
+    id: itemId,
+    uuid: item.dataset.uuid, // ← ADICIONAR ESTA LINHA
+    content: item.innerHTML.split('<span class="item-expand-toggle">')[0].split('<span class="item-energia">')[0].trim()
+};
+
         if (item.dataset.energia) {
             data.energia = JSON.parse(item.dataset.energia);
         }
@@ -880,8 +882,7 @@ function loadInventoryUI(inventoryData) {
         const newItem = document.createElement('div');
         newItem.classList.add('item');
         newItem.dataset.item = item.id;
-            newItem.dataset.uuid = crypto.randomUUID(); // ← ADICIONAR ESTA LINHA
-
+            newItem.dataset.uuid = item.uuid || crypto.randomUUID(); // ← Usa o salvo, ou gera novo se não houver
         
         if (item.energia) {
             newItem.dataset.energia = JSON.stringify(item.energia);
