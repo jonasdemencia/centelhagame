@@ -357,6 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const newItem = document.createElement("div");
                     newItem.classList.add("item");
                     newItem.dataset.item = originalItemData ? originalItemData.id : currentEquippedItem.trim().toLowerCase().replace(/\s+/g, '-');
+                    newItem.dataset.uuid = crypto.randomUUID(); // ← ADICIONAR ESTA LINHA
                     newItem.innerHTML = `
                         ${currentEquippedItem}
                         <span class="item-expand-toggle">+</span>
@@ -418,6 +419,8 @@ document.addEventListener("DOMContentLoaded", () => {
 newItem.classList.add("item");
 // SEMPRE usa o ID original, nunca gera IDs únicos
 newItem.dataset.item = originalItemData ? originalItemData.id : currentEquippedItem.trim().toLowerCase().replace(/\s+/g, '-');
+            newItem.dataset.uuid = crypto.randomUUID(); // ← ADICIONAR ESTA LINHA
+
 
             newItem.innerHTML = `
                 ${itemText}
