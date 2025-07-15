@@ -670,14 +670,14 @@ async function saveInventoryData(uid) {
     const currentInventoryData = playerSnap.data()?.inventory || {};
     const discardedItems = currentInventoryData.discardedItems || [];
 
-    // Pega todos os itens do baú, mas REMOVE qualquer um com id igual ao nome de slot!
+    // Pega todos os itens do baú - SEM filtrar por descartados aqui
     const itemsInChest = Array.from(document.querySelectorAll('.item')).map(item => {
         const itemId = item.dataset.item;
-        // Filtra ids de slot, salva só itens reais!
         if (["weapon", "armor", "helmet", "amulet", "shield", "gloves", "ring", "boots"].includes(itemId)) {
             return null;
         }
         console.log(`📦 PROCESSANDO ITEM: ${itemId} - Content: ${item.innerHTML.split('<span class="item-expand-toggle">')[0].trim()}`);
+        
         const data = {
             id: itemId,
             content: item.innerHTML.split('<span class="item-expand-toggle">')[0].split('<span class="item-energia">')[0].trim()
@@ -692,9 +692,9 @@ async function saveInventoryData(uid) {
             if (item.dataset.value) data.value = parseInt(item.dataset.value);
         }
         return data;
-    }).filter(item => item && !discardedItems.includes(item.id));
+    }).filter(item => item !== null); // Remove apenas nulls, não descartados
 
-    // Equipados: igual ao seu, pode manter!
+    // Resto igual...
     const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
         const itemName = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
         acc[slot.dataset.slot] = itemName;
@@ -714,10 +714,10 @@ async function saveInventoryData(uid) {
         equippedItems,
         discardedItems
     };
-    // ADICIONE OS LOGS AQUI:
-console.log("🔍 SALVANDO INVENTÁRIO:");
-console.log("   - Itens no baú:", itemsInChest.map(item => item.id));
-console.log("   - Itens equipados:", equippedItems);
+
+    console.log("🔍 SALVANDO INVENTÁRIO:");
+    console.log("   - Itens no baú:", itemsInChest.map(item => item.id));
+    console.log("   - Itens equipados:", equippedItems);
 
     try {
         await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
