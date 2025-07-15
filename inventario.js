@@ -71,14 +71,13 @@ const initialItems = [
 // Lista de itens que podem ser adicionados dinamicamente (não iniciais)
 const extraItems = [
     { id: "grilo", content: "Grilo", description: "Um pequeno grilo saltitante.", componente: true, energia: { total: 1, inicial: 1 } },
-    { id: "canivete", content: "Canivete", description: "Uma pequena lâmina afiada.", damage: "1D10" }, // CORRIGIDO!
-    { id: "habito-monastico", content: "Hábito monástico", description: "Vestes simples que oferecem pouca proteção.", defense: 2 }, // CORRIGIDO!
-    { id: "espada-ferro", content: "Espada de Ferro", description: "Uma espada comum de ferro.", damage: "1d8" },
-    { id: "la", content: "Lã", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true }, // ← ADICIONE ESTA LINHA
-    { id: "pedaco-couro", content: "Pedaço de couro", description: "tira de couro endurecido para magias.", componente: true }, // ← ADICIONE ESTA LINHA
-
-    // Adicione mais itens aqui conforme necessário
+    { id: "canivete", content: "Canivete", slot: "weapon", description: "Uma pequena lâmina afiada.", damage: "1D10" },
+    { id: "habito-monastico", content: "Hábito monástico", slot: "armor", description: "Vestes simples que oferecem pouca proteção.", defense: 2 },
+    { id: "espada-ferro", content: "Espada de Ferro", slot: "weapon", description: "Uma espada comum de ferro.", damage: "1d8" },
+    { id: "la", content: "Lã", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true },
+    { id: "pedaco-couro", content: "Pedaço de couro", description: "tira de couro endurecido para magias.", componente: true },
 ];
+
 
 
 // Função para reiniciar o inventário
@@ -238,12 +237,17 @@ function handleItemClick(item) {
     item.classList.add('selected');
 
     // Destaca os slots compatíveis
-    const slots = document.querySelectorAll('.slot');
-    slots.forEach(slot => {
-        if (slot.dataset.slot === item.dataset.item) {
-            slot.classList.add('highlight');
-        }
-    });
+const slots = document.querySelectorAll('.slot');
+const allItems = [...initialItems, ...extraItems];
+const itemData = allItems.find(i => i.id === item.dataset.item);
+const targetSlot = itemData?.slot || item.dataset.item;
+
+slots.forEach(slot => {
+    if (slot.dataset.slot === targetSlot) {
+        slot.classList.add('highlight');
+    }
+});
+
 
     // Verifica se o item é consumível e mostra/oculta o botão "Usar"
     if (selectedItem.dataset.consumable === 'true') {
