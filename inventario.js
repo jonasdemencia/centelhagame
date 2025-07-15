@@ -411,8 +411,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const newItem = document.createElement("div");
-            newItem.classList.add("item");
-            newItem.dataset.item = originalItemData ? originalItemData.id : itemText.toLowerCase().replace(/\s+/g, '-');
+newItem.classList.add("item");
+// SEMPRE usa o ID original, nunca gera IDs únicos
+newItem.dataset.item = originalItemData ? originalItemData.id : currentEquippedItem.trim().toLowerCase().replace(/\s+/g, '-');
+
             newItem.innerHTML = `
                 ${itemText}
                 <span class="item-expand-toggle">+</span>
@@ -669,6 +671,7 @@ console.log("   - Itens equipados:", equippedItems);
         if (["weapon", "armor", "helmet", "amulet", "shield", "gloves", "ring", "boots"].includes(itemId)) {
             return null;
         }
+        console.log(`📦 PROCESSANDO ITEM: ${itemId} - Content: ${item.innerHTML.split('<span class="item-expand-toggle">')[0].trim()}`);
         const data = {
             id: itemId,
             content: item.innerHTML.split('<span class="item-expand-toggle">')[0].split('<span class="item-energia">')[0].trim()
