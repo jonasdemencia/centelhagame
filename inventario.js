@@ -58,6 +58,8 @@ async function setupPlayerDataListener(uid) {
 // Itens iniciais que o jogador deve ter (adicionando propriedade de dano)
 const initialItems = [
     { id: "bolsa-de-escriba", content: "Bolsa de escriba", description: "Uma bolsa para guardar pergaminhos e penas." },
+    { id: "weapon", content: "canivete", description: "Uma pequena lâmina afiada.", damage: "1D10" }, // Adicionando dano
+    { id: "armor", content: "Hábito monástico", description: "Vestes simples que oferecem pouca proteção.", defense: 2 },
     { id: "velas", content: "Velas", description: "Fontes de luz portáteis." },
     { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2, description: "Um pequeno saco contendo ervas que podem curar ferimentos leves." },
     { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." },
@@ -71,13 +73,12 @@ const initialItems = [
 // Lista de itens que podem ser adicionados dinamicamente (não iniciais)
 const extraItems = [
     { id: "grilo", content: "Grilo", description: "Um pequeno grilo saltitante.", componente: true, energia: { total: 1, inicial: 1 } },
-    { id: "canivete", content: "Canivete", slot: "weapon", description: "Uma pequena lâmina afiada.", damage: "1D10" },
-    { id: "habito-monastico", content: "Hábito monástico", slot: "armor", description: "Vestes simples que oferecem pouca proteção.", defense: 2 },
-    { id: "espada-ferro", content: "Espada de Ferro", slot: "weapon", description: "Uma espada comum de ferro.", damage: "1d8" },
-    { id: "la", content: "Lã", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true },
-    { id: "pedaco-couro", content: "Pedaço de couro", description: "tira de couro endurecido para magias.", componente: true },
-];
+    { id: "espada-ferro", content: "Espada de Ferro", description: "Uma espada comum de ferro.", damage: "1d8" },
+    { id: "la", content: "Lã", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true }, // ← ADICIONE ESTA LINHA
+    { id: "pedaco-couro", content: "Pedaço de couro", description: "tira de couro endurecido para magias.", componente: true }, // ← ADICIONE ESTA LINHA
 
+    // Adicione mais itens aqui conforme necessário
+];
 
 
 // Função para reiniciar o inventário
@@ -230,35 +231,6 @@ function toggleUseButton(show) {
     }
 }
 
-function handleItemClick(item) {
-    console.log("Item clicado:", item);
-    clearHighlights();
-    selectedItem = item;
-    item.classList.add('selected');
-
-    // Destaca os slots compatíveis
-const slots = document.querySelectorAll('.slot');
-const allItems = [...initialItems, ...extraItems];
-const itemData = allItems.find(i => i.id === item.dataset.item);
-const targetSlot = itemData?.slot || item.dataset.item;
-
-slots.forEach(slot => {
-    if (slot.dataset.slot === targetSlot) {
-        slot.classList.add('highlight');
-    }
-});
-
-
-    // Verifica se o item é consumível e mostra/oculta o botão "Usar"
-    if (selectedItem.dataset.consumable === 'true') {
-        toggleUseButton(true);
-    } else {
-        toggleUseButton(false);
-    }
-}
-
-
-
 // Seleciona os itens clicados no baú
 document.addEventListener("DOMContentLoaded", () => {
     // Sistema de Carrossel
@@ -322,125 +294,133 @@ document.addEventListener("DOMContentLoaded", () => {
     const discardSlot = document.getElementById("discard-slot");
     const useButton = document.getElementById("useBtn"); // Obtém a referência do botão
 
-    
-    // Adiciona evento de clique aos itens iniciais
-if (itemsContainer) {
-    itemsContainer.querySelectorAll('.item').forEach(item => {
-        item.addEventListener('click', () => {
-            // Verifica se o clique foi no botão de expandir
-            if (!item.classList.contains('item-expand-toggle')) {
-                handleItemClick(item);
+    function handleItemClick(item) {
+        console.log("Item clicado:", item);
+        clearHighlights();
+        selectedItem = item;
+        item.classList.add('selected');
+
+        // Destaca os slots compatíveis
+        slots.forEach(slot => {
+            if (slot.dataset.slot === item.dataset.item) {
+                slot.classList.add('highlight'); // Adiciona o destaque
             }
         });
-    });
-}
 
-slots.forEach(slot => {
-    slot.addEventListener('click', () => {
-        console.log("Slot clicado:", slot);
-        const slotType = slot.dataset.slot;
-        const currentEquippedItem = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
+        // Verifica se o item é consumível e mostra/oculta o botão "Usar"
+        if (selectedItem.dataset.consumable === 'true') {
+            toggleUseButton(true);
+        } else {
+            toggleUseButton(false);
+        }
+    }
 
-        if (selectedItem && selectedItem.classList.contains('selected') && 
-            document.querySelector(`.slot[data-slot="${slotType}"]`).classList.contains('highlight')) {
+    // Adiciona evento de clique aos itens iniciais
+    if (itemsContainer) {
+        itemsContainer.querySelectorAll('.item').forEach(item => {
+            item.addEventListener('click', () => {
+                // Verifica se o clique foi no botão de expandir
+                if (!item.classList.contains('item-expand-toggle')) {
+                    handleItemClick(item);
+                }
+            });
+        });
+    }
 
-            console.log("Equipando item:", selectedItem.innerHTML, "no slot:", slotType);
-            // Equipa um novo item
-            if (currentEquippedItem) {
-                // Desequipa o item atual e devolve ao baú
+    slots.forEach(slot => {
+        slot.addEventListener('click', () => {
+            console.log("Slot clicado:", slot);
+            const slotType = slot.dataset.slot;
+            const currentEquippedItem = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
+
+            if (selectedItem && slotType === selectedItem.dataset.item) {
+                console.log("Equipando item:", selectedItem.innerHTML, "no slot:", slotType);
+                // Equipa um novo item
+                if (currentEquippedItem) {
+                    // Desequipa o item atual e devolve ao baú
+                    const newItem = document.createElement("div");
+                    newItem.classList.add("item");
+                    newItem.dataset.item = slotType;
+                    newItem.dataset.consumable = slot.dataset.consumable; // Mantém a propriedade consumable
+                    newItem.dataset.quantity = slot.dataset.quantity;
+                    newItem.dataset.effect = slot.dataset.effect;
+                    newItem.dataset.value = slot.dataset.value;
+                    newItem.innerHTML = currentEquippedItem;
+                    itemsContainer.appendChild(newItem);
+                    addItemClickListener(newItem);
+                }
+
+                slot.innerHTML = selectedItem.innerHTML.split('<span class="item-expand-toggle">')[0].trim(); // MODIFICADO AQUI
+                slot.dataset.consumable = selectedItem.dataset.consumable; // Atualiza a propriedade consumable do slot
+                slot.dataset.quantity = selectedItem.dataset.quantity;
+                slot.dataset.effect = selectedItem.dataset.effect;
+                slot.dataset.value = selectedItem.dataset.value;
+                selectedItem.remove();
+                selectedItem = null;
+                clearHighlights();
+                toggleUseButton(false); // Oculta o botão após equipar
+
+                saveInventoryData(auth.currentUser.uid);
+                updateCharacterCouraca();
+                updateCharacterDamage();
+            } else if (selectedItem === null && currentEquippedItem) {
+                console.log("Desequipando item:", currentEquippedItem, "do slot:", slotType);
+                // Desequipa um item existente
+                const itemText = slot.innerHTML;
+                const consumable = slot.dataset.consumable === 'true';
+                const quantity = slot.dataset.quantity;
+                const effect = slot.dataset.effect;
+                const value = slot.dataset.value;
+                slot.innerHTML = slot.dataset.slot;
+                delete slot.dataset.consumable; // Remove a propriedade consumable do slot
+                delete slot.dataset.quantity;
+                delete slot.dataset.effect;
+                delete slot.dataset.value;
+
                 const newItem = document.createElement("div");
                 newItem.classList.add("item");
                 newItem.dataset.item = slotType;
-                newItem.dataset.consumable = slot.dataset.consumable; // Mantém a propriedade consumable
-                newItem.dataset.quantity = slot.dataset.quantity;
-                newItem.dataset.effect = slot.dataset.effect;
-                newItem.dataset.value = slot.dataset.value;
-                newItem.innerHTML = currentEquippedItem;
+
+                // Encontra o item original na lista de itens iniciais para obter a descrição
+                const originalItem = initialItems.find(item => item.content === itemText);
+                newItem.innerHTML = `
+                    ${itemText}
+                    <span class="item-expand-toggle">+</span>
+                    <div class="item-description" style="display: none;">
+                        ${originalItem ? originalItem.description : 'Descrição do item.'}
+                    </div>
+                `;
+
+                if (consumable) {
+                    newItem.dataset.consumable = 'true';
+                    newItem.dataset.quantity = quantity;
+                    if (effect) newItem.dataset.effect = effect;
+                    if (value) newItem.dataset.value = value;
+                    // Adiciona a quantidade visualmente
+                    if (quantity > 0) {
+                        newItem.innerHTML += ` <span class="item-quantity">(${quantity})</span>`;
+                    }
+                }
+
                 itemsContainer.appendChild(newItem);
                 addItemClickListener(newItem);
-            }
-
-            slot.innerHTML = selectedItem.innerHTML.split('<span class="item-expand-toggle">')[0].trim();
-            slot.dataset.consumable = selectedItem.dataset.consumable;
-            slot.dataset.quantity = selectedItem.dataset.quantity;
-            slot.dataset.effect = selectedItem.dataset.effect;
-            slot.dataset.value = selectedItem.dataset.value;
-            selectedItem.remove();
-            selectedItem = null;
-            clearHighlights();
-            toggleUseButton(false);
-
-            saveInventoryData(auth.currentUser.uid);
-            updateCharacterCouraca();
-            updateCharacterDamage();
-        } else if (selectedItem === null && currentEquippedItem) {
-            console.log("Desequipando item:", currentEquippedItem, "do slot:", slotType);
-            // Desequipa um item existente
-            const itemText = slot.innerHTML.trim();
-            const consumable = slot.dataset.consumable === 'true';
-            const quantity = slot.dataset.quantity;
-            const effect = slot.dataset.effect;
-            const value = slot.dataset.value;
-            slot.innerHTML = slot.dataset.slot;
-            delete slot.dataset.consumable;
-            delete slot.dataset.quantity;
-            delete slot.dataset.effect;
-            delete slot.dataset.value;
-
-            // Busca dados do item original
-            const allItemsArr = [...initialItems, ...extraItems];
-            const originalItemData = allItemsArr.find(item => item.content === itemText);
-
-            // Verifica se já existe no baú um item com o id REAL
-            const alreadyInChest = Array.from(document.querySelectorAll('.item')).find(item =>
-                item.dataset.item === (originalItemData ? originalItemData.id : null)
-            );
-            if (alreadyInChest) {
-                console.log("Item já existe no baú, não criando duplicata");
-                return;
-            }
-
-            const newItem = document.createElement("div");
-            newItem.classList.add("item");
-            newItem.dataset.item = originalItemData ? originalItemData.id : itemText.toLowerCase().replace(/\s+/g, '-');
-            newItem.innerHTML = `
-                ${itemText}
-                <span class="item-expand-toggle">+</span>
-                <div class="item-description" style="display: none;">
-                    ${originalItemData ? originalItemData.description : 'Descrição do item.'}
-                </div>
-            `;
-
-            if (originalItemData && originalItemData.consumable) {
-                newItem.dataset.consumable = 'true';
-                newItem.dataset.quantity = originalItemData.quantity;
-                if (originalItemData.effect) newItem.dataset.effect = originalItemData.effect;
-                if (originalItemData.value) newItem.dataset.value = originalItemData.value;
-                if (originalItemData.quantity > 0) {
-                    newItem.innerHTML += ` <span class="item-quantity">(${originalItemData.quantity})</span>`;
+                // Adicionar o listener para o botão de expandir do novo item
+                const expandToggle = newItem.querySelector('.item-expand-toggle');
+                const descriptionDiv = newItem.querySelector('.item-description');
+                if (expandToggle && descriptionDiv) {
+                    expandToggle.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        descriptionDiv.style.display = descriptionDiv.style.display === 'none' ? 'block' : 'none';
+                        expandToggle.textContent = descriptionDiv.style.display === 'none' ? '+' : '-';
+                    });
                 }
-            }
 
-            itemsContainer.appendChild(newItem);
-            addItemClickListener(newItem);
-            const expandToggle = newItem.querySelector('.item-expand-toggle');
-            const descriptionDiv = newItem.querySelector('.item-description');
-            if (expandToggle && descriptionDiv) {
-                expandToggle.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    descriptionDiv.style.display = descriptionDiv.style.display === 'none' ? 'block' : 'none';
-                    expandToggle.textContent = descriptionDiv.style.display === 'none' ? '+' : '-';
-                });
+                updateCharacterCouraca();
+                updateCharacterDamage();
+                saveInventoryData(auth.currentUser.uid);
             }
-
-            updateCharacterCouraca();
-            updateCharacterDamage();
-            saveInventoryData(auth.currentUser.uid);
-        }
+        });
     });
-}); // <-- Faltava esta chave
-
-}); // <-- Faltava esta chave para fechar o DOMContentLoaded listener
 
   // Adiciona funcionalidade ao botão de descarte
 if (discardSlot) {
@@ -459,11 +439,7 @@ if (discardSlot) {
                 if (!inventoryData.discardedItems) {
                     inventoryData.discardedItems = [];
                 }
-// Para itens com componente, usa ID único; para outros, usa ID base
-const itemToDiscard = selectedItem.dataset.componente === 'true' 
-    ? selectedItem.dataset.item 
-    : selectedItem.dataset.item.split('_')[0];
-inventoryData.discardedItems.push(selectedItem.dataset.item);
+                inventoryData.discardedItems.push(selectedItem.dataset.item);
                 
                 await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
             }
@@ -615,97 +591,28 @@ if (useButton) {
 // Adiciona evento de clique aos novos itens do baú
 function addItemClickListener(item) {
     item.addEventListener('click', (event) => {
+        // Verifica se o clique foi no botão de expandir
         if (!event.target.classList.contains('item-expand-toggle')) {
-            if (multiSelectMode) {
-                if (selectedItems.has(item)) {
-                    selectedItems.delete(item);
-                    item.classList.remove('multi-selected');
-                } else {
-                    selectedItems.add(item);
-                    item.classList.add('multi-selected');
+            console.log("Novo item clicado no baú:", item);
+            clearHighlights();
+            selectedItem = item;
+            item.classList.add('selected');
+
+            document.querySelectorAll('.slot').forEach(slot => {
+                if (slot.dataset.slot === item.dataset.item) {
+                    slot.classList.add('highlight');
                 }
-                document.getElementById('selectedCount').textContent = `${selectedItems.size} selecionados`;
+            });
+
+            // Verifica se o item é consumível e mostra/oculta o botão "Usar"
+            if (selectedItem.dataset.consumable === 'true') {
+                toggleUseButton(true);
             } else {
-                handleItemClick(item);
+                toggleUseButton(false);
             }
         }
     });
 }
-
-
-let multiSelectMode = false;
-let selectedItems = new Set();
-
-// Controles de seleção múltipla
-document.addEventListener('DOMContentLoaded', () => {
-    const toggleBtn = document.getElementById('toggleMultiSelect');
-    const selectAllBtn = document.getElementById('selectAllGrilos');
-    const discardBtn = document.getElementById('discardSelected');
-    const countSpan = document.getElementById('selectedCount');
-
-    toggleBtn.addEventListener('click', () => {
-        multiSelectMode = !multiSelectMode;
-        selectedItems.clear();
-        
-        if (multiSelectMode) {
-            toggleBtn.textContent = 'Sair da Seleção Múltipla';
-            selectAllBtn.style.display = 'inline-block';
-            discardBtn.style.display = 'inline-block';
-            countSpan.style.display = 'inline';
-            document.querySelectorAll('.item').forEach(item => item.classList.remove('multi-selected'));
-        } else {
-            toggleBtn.textContent = 'Seleção Múltipla';
-            selectAllBtn.style.display = 'none';
-            discardBtn.style.display = 'none';
-            countSpan.style.display = 'none';
-            document.querySelectorAll('.item').forEach(item => item.classList.remove('multi-selected'));
-        }
-        updateSelectedCount();
-    });
-
-    selectAllBtn.addEventListener('click', () => {
-        document.querySelectorAll('.item').forEach(item => {
-            if (item.innerHTML.includes('Grilo')) {
-                selectedItems.add(item);
-                item.classList.add('multi-selected');
-            }
-        });
-        updateSelectedCount();
-    });
-
-    discardBtn.addEventListener('click', async () => {
-        if (selectedItems.size === 0) return;
-        
-        if (confirm(`Descartar ${selectedItems.size} itens selecionados?`)) {
-            const uid = auth.currentUser?.uid;
-            if (uid) {
-                const playerRef = doc(db, "players", uid);
-                const playerSnap = await getDoc(playerRef);
-                const inventoryData = playerSnap.data().inventory;
-                
-                if (!inventoryData.discardedItems) {
-                    inventoryData.discardedItems = [];
-                }
-                
-                selectedItems.forEach(item => {
-                    inventoryData.discardedItems.push(item.dataset.item);
-                    item.remove();
-                });
-                
-                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-                saveInventoryData(uid);
-            }
-            
-            selectedItems.clear();
-            updateSelectedCount();
-        }
-    });
-
-    function updateSelectedCount() {
-        countSpan.textContent = `${selectedItems.size} selecionados`;
-    }
-});
-
 
 // Função para limpar destaques visuais
 function clearHighlights() {
@@ -715,56 +622,58 @@ function clearHighlights() {
 
 async function saveInventoryData(uid) {
     console.log("Salvando dados do inventário para o usuário:", uid);
-
+    
+    // Busca a lista de descartados do Firestore
     const playerRef = doc(db, "players", uid);
     const playerSnap = await getDoc(playerRef);
     const currentInventoryData = playerSnap.data()?.inventory || {};
     const discardedItems = currentInventoryData.discardedItems || [];
-
-    // Pega os nomes de todos os itens equipados
-    const equippedNames = Array.from(document.querySelectorAll('.slot'))
-        .map(slot => slot.innerHTML !== slot.dataset.slot ? slot.innerHTML.trim() : null)
-        .filter(Boolean);
-
-    // Só salva no baú: itens que NÃO estão equipados, NÃO são "weapon"/"armor"/slots, e NÃO são descartados
+    
     const itemsInChest = Array.from(document.querySelectorAll('.item')).map(item => {
-        const itemId = item.dataset.item;
-        const itemName = item.innerHTML.split('<span')[0].split('<div')[0].trim();
-
-        // Remove itens do tipo "weapon", "armor", etc (slots)
-        if (["weapon", "armor", "helmet", "amulet", "shield", "gloves", "ring", "boots"].includes(itemId)) {
-            return null;
+        const data = {
+            id: item.dataset.item,
+            content: item.innerHTML.split('<span class="item-expand-toggle">')[0].split('<span class="item-energia">')[0].trim()
+        };
+        if (item.dataset.energia) {
+            data.energia = JSON.parse(item.dataset.energia);
         }
-        
-        // Monta o item normalmente
-        const data = { id: itemId, content: itemName };
-        if (item.dataset.energia) data.energia = JSON.parse(item.dataset.energia);
         if (item.dataset.consumable === 'true') {
             data.consumable = true;
             data.quantity = parseInt(item.dataset.quantity);
-            if (item.dataset.effect) data.effect = item.dataset.effect;
-            if (item.dataset.value) data.value = parseInt(item.dataset.value);
+            if (item.dataset.effect) {
+                data.effect = item.dataset.effect;
+            }
+            if (item.dataset.value) {
+                data.value = parseInt(item.dataset.value);
+            }
         }
         return data;
-    }).filter(item => item && !discardedItems.includes(item.id));
+    })
+    // FILTRA OS DESCARTADOS
+    .filter(item => !discardedItems.includes(item.id));
 
-    // Itens equipados
     const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
-        const itemName = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML.trim() : null;
+        const itemName = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
         acc[slot.dataset.slot] = itemName;
-        if (itemName && slot.dataset.consumable === 'true') {
-            acc[slot.dataset.slot + '_consumable'] = true;
-            acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity);
-            if (slot.dataset.effect) acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
-            if (slot.dataset.value) acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value);
+        if (itemName) {
+            if (slot.dataset.consumable === 'true') {
+                acc[slot.dataset.slot + '_consumable'] = true;
+                acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity);
+                if (slot.dataset.effect) {
+                    acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
+                }
+                if (slot.dataset.value) {
+                    acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value);
+                }
+            }
         }
         return acc;
     }, {});
 
     const inventoryData = {
-        itemsInChest,
-        equippedItems,
-        discardedItems
+        itemsInChest: itemsInChest,
+        equippedItems: equippedItems,
+        discardedItems: discardedItems // Mantém a lista de descartados
     };
 
     try {
@@ -774,6 +683,7 @@ async function saveInventoryData(uid) {
         console.error("Erro ao salvar o inventário:", error);
     }
 }
+
 
 // ADICIONE A FUNÇÃO saveDiceState AQUI, com a correção do parêntese
 async function saveDiceState(uid) {
@@ -831,11 +741,8 @@ async function loadInventoryData(uid) {
             inventoryListener();
         }
         
-        let isInitialLoad = true;
-        let isProcessingDiscarded = false;
-
-inventoryListener = onSnapshot(playerRef, async (docSnap) => {
-
+        // Configura listener em tempo real
+        inventoryListener = onSnapshot(playerRef, async (docSnap) => {
             if (!docSnap.exists() || !docSnap.data().inventory) {
                 // Se o inventário não existir, inicializa com os itens iniciais
                 const initialInventoryData = {
@@ -853,102 +760,32 @@ inventoryListener = onSnapshot(playerRef, async (docSnap) => {
             const inventoryData = docSnap.data().inventory;
             
             // Verifica se há novos itens em initialItems que não estão no inventário
-            // Só executa verificações na primeira carga
-if (isInitialLoad) {
-    console.log("🔍 VERIFICANDO ITENS INICIAIS - Estado atual do inventário:", inventoryData.itemsInChest.length, "itens");
-    
-    // Verifica se há novos itens em initialItems que não estão no inventário
-    let inventoryUpdated = false;
-    for (const initialItem of initialItems) {
-        const itemExists = inventoryData.itemsInChest.some(item => item.id === initialItem.id);
-        if (!itemExists) {
-            console.log("⚠️ ADICIONANDO ITEM INICIAL FALTANTE:", initialItem.id, initialItem.content);
-            inventoryData.itemsInChest.push({...initialItem});
-            inventoryUpdated = true;
-        } else {
-            console.log("✅ Item inicial já existe:", initialItem.id, initialItem.content);
-        }
-    }
-    
-    // Verifica itens extras apenas uma vez
-    for (const extraItem of extraItems) {
-        if (extraItem.componente) {
-            const hasAnyOfType = inventoryData.itemsInChest.some(item => item.id.startsWith(extraItem.id));
-            const allDiscarded = inventoryData.discardedItems && 
-                inventoryData.discardedItems.some(discarded => discarded.startsWith(extraItem.id));
-            
-            if (!hasAnyOfType && !allDiscarded) {
-                console.log("⚠️ ADICIONANDO ITEM EXTRA COMPONENTE:", extraItem.id);
-                const newItem = {...extraItem};
-                newItem.id = `${extraItem.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                inventoryData.itemsInChest.push(newItem);
-                inventoryUpdated = true;
-            } else {
-                console.log("✅ Item extra componente já existe ou foi descartado:", extraItem.id);
+            let inventoryUpdated = false;
+            for (const initialItem of initialItems) {
+                const itemExists = inventoryData.itemsInChest.some(item => item.id === initialItem.id);
+                if (!itemExists) {
+                    inventoryData.itemsInChest.push({...initialItem});
+                    inventoryUpdated = true;
+                }
             }
-        } else {
-            const itemExists = inventoryData.itemsInChest.some(item => item.id === extraItem.id);
-            const wasDiscarded = inventoryData.discardedItems && inventoryData.discardedItems.includes(extraItem.id);
             
-            if (!itemExists && !wasDiscarded) {
-                console.log("⚠️ ADICIONANDO ITEM EXTRA:", extraItem.id, extraItem.content);
-                inventoryData.itemsInChest.push({...extraItem});
-                inventoryUpdated = true;
-            } else {
-                console.log("✅ Item extra já existe ou foi descartado:", extraItem.id);
-            }
-        }
-    }
+           // Verifica itens extras (mas não os já descartados)
+for (const extraItem of extraItems) {
+    const itemExists = inventoryData.itemsInChest.some(item => item.id === extraItem.id);
+    const wasDiscarded = inventoryData.discardedItems && inventoryData.discardedItems.includes(extraItem.id);
     
-    // Se o inventário foi atualizado, salva as alterações
-    if (inventoryUpdated) {
-        console.log("💾 SALVANDO ITENS ADICIONADOS");
-        await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-        console.log("Novos itens adicionados ao inventário.");
-    } else {
-        console.log("✅ Nenhum item precisou ser adicionado");
+    if (!itemExists && !wasDiscarded) {
+        inventoryData.itemsInChest.push({...extraItem});
+        inventoryUpdated = true;
     }
-    
-    isInitialLoad = false;
 }
 
-
-// Verifica se algum grilo foi removido dos descartados
-const currentDiscarded = inventoryData.discardedItems || [];
-const previousDiscarded = JSON.parse(localStorage.getItem('previousDiscarded') || '[]');
-
-if (!isProcessingDiscarded && previousDiscarded.length > currentDiscarded.length) {
-    isProcessingDiscarded = true;
-
-    const removedItems = previousDiscarded.filter(item => !currentDiscarded.includes(item));
-    let shouldAddGrilo = false;
-    
-    for (const removedItem of removedItems) {
-        if (removedItem.startsWith('grilo')) {
-            shouldAddGrilo = true;
-            break;
-        }
-    }
-    
-    if (shouldAddGrilo) {
-        const newGrilo = {
-            id: `grilo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            content: "Grilo",
-            description: "Um pequeno grilo saltitante.",
-            componente: true,
-            energia: { total: 1, inicial: 1 }
-        };
-        inventoryData.itemsInChest.push(newGrilo);
-               await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-    }
-    
-    setTimeout(() => { isProcessingDiscarded = false; }, 1000);
-}
-
-localStorage.setItem('previousDiscarded', JSON.stringify(currentDiscarded));
-
-
-
+            
+            // Se o inventário foi atualizado, salva as alterações
+            if (inventoryUpdated) {
+                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+                console.log("Novos itens adicionados ao inventário.");
+            }
             
             console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
             loadInventoryUI(inventoryData);
@@ -964,22 +801,14 @@ localStorage.setItem('previousDiscarded', JSON.stringify(currentDiscarded));
 }
 
 function loadInventoryUI(inventoryData) {
-    console.log("🎨 CARREGANDO UI - Itens no baú:", inventoryData.itemsInChest.length);
-    console.log("🎨 ITENS EQUIPADOS:", inventoryData.equippedItems);
-    
+    console.log("Carregando UI do inventário:", inventoryData);
     // Carrega itens no baú
     const chestElement = document.querySelector('.items');
     chestElement.innerHTML = ""; // Limpa o conteúdo atual
-    
-    inventoryData.itemsInChest.forEach((item, index) => {
-        console.log(`📦 Carregando item ${index + 1}:`, item.id, item.content);
+    inventoryData.itemsInChest.forEach(item => {
         const newItem = document.createElement('div');
         newItem.classList.add('item');
         newItem.dataset.item = item.id;
-        if (item.componente) {
-    newItem.dataset.componente = 'true';
-}
-
         
         if (item.energia) {
             newItem.dataset.energia = JSON.stringify(item.energia);
@@ -1144,7 +973,7 @@ async function updateCharacterCouraca() {
     const armorSlot = document.querySelector('.slot[data-slot="armor"]');
     if (armorSlot && armorSlot.innerHTML !== armorSlot.dataset.slot) {
         const equippedArmorName = armorSlot.innerHTML;
-const armorData = [...initialItems, ...extraItems].find(item => item.content === equippedArmorName);
+        const armorData = initialItems.find(item => item.content === equippedArmorName);
         if (armorData && armorData.defense) {
             bonusCouraca += armorData.defense;
         }
@@ -1196,7 +1025,7 @@ async function updateCharacterDamage() {
 
     if (weaponSlot && weaponSlot.innerHTML !== weaponSlot.dataset.slot) {
         const equippedWeaponName = weaponSlot.innerHTML;
-const weaponData = [...initialItems, ...extraItems].find(item => item.content === equippedWeaponName);
+        const weaponData = initialItems.find(item => item.content === equippedWeaponName);
         
         if (weaponData && weaponData.damage) {
             newDamageValue = weaponData.damage;
