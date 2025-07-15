@@ -810,18 +810,28 @@ for (const extraItem of extraItems) {
     const itemExists = inventoryData.itemsInChest.some(item => item.id === extraItem.id);
     const wasDiscarded = inventoryData.discardedItems && inventoryData.discardedItems.includes(extraItem.id);
     
+    // NOVA VERIFICAÇÃO: Verifica se o item está equipado
+    const isEquipped = Object.values(inventoryData.equippedItems).some(equippedItem => {
+        if (!equippedItem) return false;
+        const allItemsArr = [...initialItems, ...extraItems];
+        const itemData = allItemsArr.find(i => i.content === equippedItem.trim());
+        return itemData && itemData.id === extraItem.id;
+    });
+    
     console.log(`🔍 VERIFICANDO ITEM EXTRA: ${extraItem.id}`);
     console.log(`   - Existe no baú: ${itemExists}`);
     console.log(`   - Foi descartado: ${wasDiscarded}`);
+    console.log(`   - Está equipado: ${isEquipped}`);
     
-    if (!itemExists && !wasDiscarded) {
+    if (!itemExists && !wasDiscarded && !isEquipped) {
         console.log(`   ⚠️ ADICIONANDO ITEM: ${extraItem.id}`);
         inventoryData.itemsInChest.push({...extraItem});
         inventoryUpdated = true;
     } else {
-        console.log(`   ✅ ITEM JÁ EXISTE OU FOI DESCARTADO: ${extraItem.id}`);
+        console.log(`   ✅ ITEM JÁ EXISTE, FOI DESCARTADO OU ESTÁ EQUIPADO: ${extraItem.id}`);
     }
 }
+
 
             
             // Se o inventário foi atualizado, salva as alterações
