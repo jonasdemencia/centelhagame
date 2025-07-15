@@ -1023,14 +1023,17 @@ async function updateCharacterCouraca() {
     let bonusCouraca = 0;
 
     // Verifica o item equipado no slot de armadura
-    const armorSlot = document.querySelector('.slot[data-slot="armor"]');
-    if (armorSlot && armorSlot.innerHTML !== armorSlot.dataset.slot) {
-        const equippedArmorName = armorSlot.innerHTML;
-        const armorData = initialItems.find(item => item.content === equippedArmorName);
-        if (armorData && armorData.defense) {
-            bonusCouraca += armorData.defense;
-        }
+const armorSlot = document.querySelector('.slot[data-slot="armor"]');
+if (armorSlot && armorSlot.innerHTML !== armorSlot.dataset.slot) {
+    const equippedArmorName = armorSlot.innerHTML;
+    // BUSCA EM AMBOS OS ARRAYS
+    const allItemsArr = [...initialItems, ...extraItems];
+    const armorData = allItemsArr.find(item => item.content === equippedArmorName);
+    if (armorData && armorData.defense) {
+        bonusCouraca += armorData.defense;
     }
+}
+
 
     // Verifica o item equipado no slot de botas
     const bootsSlot = document.querySelector('.slot[data-slot="boots"]');
@@ -1077,18 +1080,21 @@ async function updateCharacterDamage() {
     let newDamageValue = "1"; // Valor padrão
 
     if (weaponSlot && weaponSlot.innerHTML !== weaponSlot.dataset.slot) {
-        const equippedWeaponName = weaponSlot.innerHTML;
-        const weaponData = initialItems.find(item => item.content === equippedWeaponName);
-        
-        if (weaponData && weaponData.damage) {
-            newDamageValue = weaponData.damage;
-            damageDisplay.textContent = weaponData.damage;
-        } else {
-            damageDisplay.textContent = "1";
-        }
+    const equippedWeaponName = weaponSlot.innerHTML;
+    // BUSCA EM AMBOS OS ARRAYS
+    const allItemsArr = [...initialItems, ...extraItems];
+    const weaponData = allItemsArr.find(item => item.content === equippedWeaponName);
+    
+    if (weaponData && weaponData.damage) {
+        newDamageValue = weaponData.damage;
+        damageDisplay.textContent = weaponData.damage;
     } else {
         damageDisplay.textContent = "1";
     }
+} else {
+    damageDisplay.textContent = "1";
+}
+
 
     // Atualiza o campo 'dano' no Firestore
     if (uid) {
