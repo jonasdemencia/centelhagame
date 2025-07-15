@@ -486,11 +486,13 @@ if (discardSlot) {
                 console.log("   - Item adicionado à lista de descartados");
             }
             
-            selectedItem.remove();
-            selectedItem = null;
-            clearHighlights();
-            toggleUseButton(false);
-            saveInventoryData(auth.currentUser.uid);
+            const itemToRemove = selectedItem;
+selectedItem = null;
+clearHighlights();
+toggleUseButton(false);
+itemToRemove.remove();
+saveInventoryData(auth.currentUser.uid);
+
         }
     });
 } else {
