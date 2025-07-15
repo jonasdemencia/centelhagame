@@ -342,18 +342,45 @@ document.addEventListener("DOMContentLoaded", () => {
         const slotType = slot.dataset.slot;
         const currentEquippedItem = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
 
-       if (selectedItem) {
-    const allItemsArr = [...initialItems, ...extraItems];
-    const itemData = allItemsArr.find(i => i.id === selectedItem.dataset.item);
-    if (itemData && slotType === itemData.slot) {
-            // EQUIPAR: igual ao seu, não precisa mexer aqui!
-            // (Se quiser, posso revisar para garantir que também não crie duplicidade, mas não é o foco do bug)
-        } else if (selectedItem === null && currentEquippedItem) {
-            // DESEQUIPAR: aqui está a correção!
-            // 1. Sempre cria o item no baú com o id REAL do item (do extraItems ou initialItems)
-            // 2. Nunca cria com o id do slot!
-            // 3. Nunca duplica se já existe!
-
+        const allItemsArr = [...initialItems, ...extraItems];
+        // EQUIPE
+        if (selectedItem) {
+            const itemData = allItemsArr.find(i => i.id === selectedItem.dataset.item);
+            if (itemData && slotType === itemData.slot) {
+                // bloco de equipar
+                // Equipa um novo item
+                if (currentEquippedItem) {
+                    // Desequipa o item atual e devolve ao baú
+                    const newItem = document.createElement("div");
+                    newItem.classList.add("item");
+                    newItem.dataset.item = itemData.id;
+                    newItem.innerHTML = `
+                        ${currentEquippedItem}
+                        <span class="item-expand-toggle">+</span>
+                        <div class="item-description" style="display: none;">
+                            ${itemData.description || 'Descrição do item.'}
+                        </div>
+                    `;
+                    itemsContainer.appendChild(newItem);
+                    addItemClickListener(newItem);
+                }
+                slot.innerHTML = selectedItem.innerHTML.split('<span class="item-expand-toggle">')[0].trim();
+                slot.dataset.consumable = selectedItem.dataset.consumable;
+                slot.dataset.quantity = selectedItem.dataset.quantity;
+                slot.dataset.effect = selectedItem.dataset.effect;
+                slot.dataset.value = selectedItem.dataset.value;
+                selectedItem.remove();
+                selectedItem = null;
+                clearHighlights();
+                toggleUseButton(false);
+                saveInventoryData(auth.currentUser.uid);
+                updateCharacterCouraca();
+                updateCharacterDamage();
+            }
+        }
+        // DESEQUIPE
+        else if (selectedItem === null && currentEquippedItem) {
+            // bloco de desequipar
             console.log("Desequipando item:", currentEquippedItem, "do slot:", slotType);
             const itemText = slot.innerHTML.trim();
             slot.innerHTML = slotType;
@@ -362,10 +389,7 @@ document.addEventListener("DOMContentLoaded", () => {
             delete slot.dataset.effect;
             delete slot.dataset.value;
 
-            // Busca o objeto "canivete" ou "habito-monastico" pelo content
-            const allItemsArr = [...initialItems, ...extraItems];
             const originalItemData = allItemsArr.find(item => item.content === itemText);
-
             // Não duplica: se já existe com id real no baú, não cria!
             const alreadyInChest = Array.from(document.querySelectorAll('.item')).find(item =>
                 item.dataset.item === (originalItemData ? originalItemData.id : null)
