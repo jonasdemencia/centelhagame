@@ -295,26 +295,35 @@ document.addEventListener("DOMContentLoaded", () => {
     const useButton = document.getElementById("useBtn"); // Obtém a referência do botão
 
     function handleItemClick(item) {
-        console.log("Item clicado:", item);
-        clearHighlights();
-        selectedItem = item;
-        item.classList.add('selected');
+    console.log("Item clicado:", item);
+    clearHighlights();
+    selectedItem = item;
+    item.classList.add('selected');
 
-        // Destaca os slots compatíveis
+    // Destaca os slots compatíveis usando a propriedade 'slot' do item
+    const allItemsArr = [...initialItems, ...extraItems];
+    const itemData = allItemsArr.find(i => i.id === item.dataset.item);
+
+    // Se o item tem 'slot', destaca apenas o slot correspondente
+    if (itemData && itemData.slot) {
         slots.forEach(slot => {
-            if (slot.dataset.slot === item.dataset.item) {
-                slot.classList.add('highlight'); // Adiciona o destaque
+            if (slot.dataset.slot === itemData.slot) {
+                slot.classList.add('highlight');
             }
         });
-
-        // Verifica se o item é consumível e mostra/oculta o botão "Usar"
-        if (selectedItem.dataset.consumable === 'true') {
-            toggleUseButton(true);
-        } else {
-            toggleUseButton(false);
-        }
+    } else {
+        // Se não tem slot, não destaca nenhum (ou destaca todos se quiser permitir equipar em qualquer lugar)
+        slots.forEach(slot => slot.classList.remove('highlight'));
     }
 
+    // Verifica se o item é consumível e mostra/oculta o botão "Usar"
+    if (selectedItem.dataset.consumable === 'true') {
+        toggleUseButton(true);
+    } else {
+        toggleUseButton(false);
+    }
+}
+    
     // Adiciona evento de clique aos itens iniciais
     if (itemsContainer) {
         itemsContainer.querySelectorAll('.item').forEach(item => {
@@ -333,7 +342,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const slotType = slot.dataset.slot;
         const currentEquippedItem = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
 
-        if (selectedItem && slotType === selectedItem.dataset.item) {
+       if (selectedItem) {
+    const allItemsArr = [...initialItems, ...extraItems];
+    const itemData = allItemsArr.find(i => i.id === selectedItem.dataset.item);
+    if (itemData && slotType === itemData.slot) {
             // EQUIPAR: igual ao seu, não precisa mexer aqui!
             // (Se quiser, posso revisar para garantir que também não crie duplicidade, mas não é o foco do bug)
         } else if (selectedItem === null && currentEquippedItem) {
