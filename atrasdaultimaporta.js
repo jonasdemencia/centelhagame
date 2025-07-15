@@ -1319,10 +1319,15 @@ function desabilitarBotoesCruzar(desabilitar) {
 }
 
 function criarGriloVariant(condicoes, especiais) {
+    console.log("🦗 ANÁLISE DE GRILO:");
+    console.log("   Condições:", condicoes);
+    console.log("   Especiais:", especiais);
+    
     // Verificar condições especiais em ordem de prioridade
     
     // Combinação especial: Lua Cheia + Primavera + Madrugada
     if (especiais.includes('Ninhada Lunar')) {
+        console.log("   ✅ GRILO LUNAR - Ninhada Lunar detectada");
         return {
             id: "grilo-lunar",
             content: "Grilo Lunar",
@@ -1333,6 +1338,7 @@ function criarGriloVariant(condicoes, especiais) {
     
     // Neblina = Grilo Albino
     if (condicoes.clima === 'neblina') {
+        console.log("   ✅ GRILO ALBINO - Clima neblina");
         return {
             id: "grilo-albino",
             content: "Grilo Albino",
@@ -1343,6 +1349,7 @@ function criarGriloVariant(condicoes, especiais) {
     
     // Energia Alta = Grilo Elétrico
     if (condicoes.energiaMagica === 'alta') {
+        console.log("   ✅ GRILO ELÉTRICO - Energia mágica alta");
         return {
             id: "grilo-eletrico",
             content: "Grilo Elétrico",
@@ -1353,6 +1360,7 @@ function criarGriloVariant(condicoes, especiais) {
     
     // Sol Forte = Grilo Dourado
     if (condicoes.clima === 'sol-forte') {
+        console.log("   ✅ GRILO DOURADO - Sol forte");
         return {
             id: "grilo-dourado",
             content: "Grilo Dourado",
@@ -1363,6 +1371,7 @@ function criarGriloVariant(condicoes, especiais) {
     
     // Interferência Mágica = Grilo Mutante
     if (condicoes.energiaMagica === 'interferencia') {
+        console.log("   ✅ GRILO MUTANTE - Interferência mágica");
         return {
             id: "grilo-mutante",
             content: "Grilo Mutante",
@@ -1372,6 +1381,7 @@ function criarGriloVariant(condicoes, especiais) {
     }
     
     // Grilo básico (padrão)
+    console.log("   ⚪ GRILO NORMAL - Nenhuma condição especial atendida");
     return {
         id: "grilo",
         content: "Grilo",
@@ -1379,6 +1389,7 @@ function criarGriloVariant(condicoes, especiais) {
         energia: { total: 1, inicial: 1 }
     };
 }
+
 
 
 async function recolherDescendencia() {
