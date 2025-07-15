@@ -477,9 +477,6 @@ if (discardSlot) {
                 }
                 
                 // CORREÇÃO: Criar ID único para descarte baseado no elemento DOM
-                const uniqueDiscardId = selectedItem.dataset.item + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                console.log("   - ID único de descarte:", uniqueDiscardId);
-                
 const uniqueDiscardId = selectedItem.dataset.uuid; // ← MUDAR ESTA LINHA
 console.log("   - UUID único de descarte:", uniqueDiscardId);
 
