@@ -653,11 +653,6 @@ function clearHighlights() {
 
 async function saveInventoryData(uid) {
     console.log("Salvando dados do inventário para o usuário:", uid);
-    console.log("Salvando dados do inventário para o usuário:", uid);
-console.log("🔍 SALVANDO INVENTÁRIO:");
-console.log("   - Itens no baú:", itemsInChest.map(item => item.id));
-console.log("   - Itens equipados:", equippedItems);
-
 
     const playerRef = doc(db, "players", uid);
     const playerSnap = await getDoc(playerRef);
@@ -708,6 +703,10 @@ console.log("   - Itens equipados:", equippedItems);
         equippedItems,
         discardedItems
     };
+    // ADICIONE OS LOGS AQUI:
+console.log("🔍 SALVANDO INVENTÁRIO:");
+console.log("   - Itens no baú:", itemsInChest.map(item => item.id));
+console.log("   - Itens equipados:", equippedItems);
 
     try {
         await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
