@@ -71,8 +71,8 @@ const initialItems = [
 // Lista de itens que podem ser adicionados dinamicamente (não iniciais)
 const extraItems = [
     { id: "grilo", content: "Grilo", description: "Um pequeno grilo saltitante.", componente: true, energia: { total: 1, inicial: 1 } },
-    { id: "faca", content: "Faca", slot: "weapon", description: "Uma pequena lâmina afiada.", damage: "1D4" }, // << CORRIGIDO!
-    { id: "manto", content: "Manto", slot: "armor", description: "Vestes simples que oferecem pouca proteção.", defense: 2 }, // << CORRIGIDO!
+    { id: "facao", content: "Facao", slot: "weapon", description: "Uma pequena lâmina afiada.", damage: "1D4" }, // << CORRIGIDO!
+    { id: "manta", content: "Manta", slot: "armor", description: "Vestes simples que oferecem pouca proteção.", defense: 2 }, // << CORRIGIDO!
     { id: "espada-ferro", content: "Espada de Ferro", description: "Uma espada comum de ferro.", damage: "1d8" },
     { id: "la", content: "Lã", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true }, // ← ADICIONE ESTA LINHA
     { id: "pedaco-couro", content: "Pedaço de couro", description: "tira de couro endurecido para magias.", componente: true }, // ← ADICIONE ESTA LINHA
