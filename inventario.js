@@ -651,6 +651,11 @@ function clearHighlights() {
 
 async function saveInventoryData(uid) {
     console.log("Salvando dados do inventário para o usuário:", uid);
+    console.log("Salvando dados do inventário para o usuário:", uid);
+console.log("🔍 SALVANDO INVENTÁRIO:");
+console.log("   - Itens no baú:", itemsInChest.map(item => item.id));
+console.log("   - Itens equipados:", equippedItems);
+
 
     const playerRef = doc(db, "players", uid);
     const playerSnap = await getDoc(playerRef);
@@ -799,9 +804,16 @@ for (const extraItem of extraItems) {
     const itemExists = inventoryData.itemsInChest.some(item => item.id === extraItem.id);
     const wasDiscarded = inventoryData.discardedItems && inventoryData.discardedItems.includes(extraItem.id);
     
+    console.log(`🔍 VERIFICANDO ITEM EXTRA: ${extraItem.id}`);
+    console.log(`   - Existe no baú: ${itemExists}`);
+    console.log(`   - Foi descartado: ${wasDiscarded}`);
+    
     if (!itemExists && !wasDiscarded) {
+        console.log(`   ⚠️ ADICIONANDO ITEM: ${extraItem.id}`);
         inventoryData.itemsInChest.push({...extraItem});
         inventoryUpdated = true;
+    } else {
+        console.log(`   ✅ ITEM JÁ EXISTE OU FOI DESCARTADO: ${extraItem.id}`);
     }
 }
 
