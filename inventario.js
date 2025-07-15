@@ -371,20 +371,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 toggleUseButton(false); // Oculta o botão após equipar
 
                 saveInventoryData(auth.currentUser.uid);
-                updateCharacterCouraca();
-                updateCharacterDamage();
-            } else if (selectedItem === null && currentEquippedItem) {
-    // Desequipa o item do slot
+updateCharacterCouraca();
+updateCharacterDamage();
+} else if (selectedItem === null && currentEquippedItem) {
+    console.log("Desequipando item:", currentEquippedItem, "do slot:", slotType);
+    // Desequipa um item existente
     const itemText = slot.innerHTML.trim();
-    const allItemsArr = [...initialItems, ...extraItems];
-    // Busca o objeto de dados REAL
-    const originalItemData = allItemsArr.find(item => item.content === itemText);
-
+    const consumable = slot.dataset.consumable === 'true';
+    const quantity = slot.dataset.quantity;
+    const effect = slot.dataset.effect;
+    const value = slot.dataset.value;
     slot.innerHTML = slot.dataset.slot;
     delete slot.dataset.consumable;
     delete slot.dataset.quantity;
     delete slot.dataset.effect;
     delete slot.dataset.value;
+
+    // Busca dados do item original
+    const allItemsArr = [...initialItems, ...extraItems];
+    const originalItemData = allItemsArr.find(item => item.content === itemText);
 
     // Verifica se já existe no baú um item com o id REAL
     const alreadyInChest = Array.from(document.querySelectorAll('.item')).find(item =>
