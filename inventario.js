@@ -480,7 +480,10 @@ if (discardSlot) {
                 const uniqueDiscardId = selectedItem.dataset.item + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 console.log("   - ID único de descarte:", uniqueDiscardId);
                 
-                inventoryData.discardedItems.push(uniqueDiscardId);
+const uniqueDiscardId = selectedItem.dataset.uuid; // ← MUDAR ESTA LINHA
+console.log("   - UUID único de descarte:", uniqueDiscardId);
+
+inventoryData.discardedItems.push(uniqueDiscardId);
                 
                 await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
                 console.log("   - Item adicionado à lista de descartados");
@@ -680,13 +683,12 @@ async function saveInventoryData(uid) {
         }
         
         // IGNORA itens que já foram descartados
-        const isDiscarded = discardedItems.some(discardedId => 
-            discardedId === itemId || discardedId.startsWith(itemId + '_')
-        );
-        if (isDiscarded) {
-            console.log(`🗑️ IGNORANDO ITEM DESCARTADO: ${itemId}`);
-            return null;
-        }
+const isDiscarded = discardedItems.includes(item.dataset.uuid); // ← MUDAR ESTA LINHA
+if (isDiscarded) {
+    console.log(`🗑️ IGNORANDO ITEM DESCARTADO: ${itemId}`);
+    return null;
+}
+
         
         console.log(`📦 PROCESSANDO ITEM: ${itemId} - Content: ${item.innerHTML.split('<span class="item-expand-toggle">')[0].trim()}`);
         
@@ -881,6 +883,8 @@ function loadInventoryUI(inventoryData) {
         const newItem = document.createElement('div');
         newItem.classList.add('item');
         newItem.dataset.item = item.id;
+            newItem.dataset.uuid = crypto.randomUUID(); // ← ADICIONAR ESTA LINHA
+
         
         if (item.energia) {
             newItem.dataset.energia = JSON.stringify(item.energia);
