@@ -468,9 +468,11 @@ if (discardSlot) {
             console.log("   - Conteúdo:", selectedItem.innerHTML.split('<span')[0].trim());
             
             const uid = auth.currentUser?.uid;
-            if (uid) {
-        
-                const playerSnap = await getDoc(playerRef);
+if (uid) {
+    const playerRef = doc(db, "players", uid);  // ✅ ADICIONE ESTA LINHA
+
+    const playerSnap = await getDoc(playerRef);
+
                 const inventoryData = playerSnap.data().inventory;
                 
                 if (!inventoryData.discardedItems) {
