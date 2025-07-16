@@ -88,7 +88,7 @@ async function resetInventory() {
     }
 
     try {
-        const playerRef = doc(db, "players", uid);
+
         // Remove o inventário atual
         await setDoc(playerRef, { 
             inventory: {
@@ -469,7 +469,7 @@ if (discardSlot) {
             
             const uid = auth.currentUser?.uid;
             if (uid) {
-                const playerRef = doc(db, "players", uid);
+        
                 const playerSnap = await getDoc(playerRef);
                 const inventoryData = playerSnap.data().inventory;
                 
@@ -792,16 +792,13 @@ async function loadInventoryData(uid) {
     console.log("Configurando listener em tempo real para o inventário:", uid);
     try {
         const playerRef = doc(db, "players", uid);
-        
-        // Remove listener anterior se existir
+
         if (inventoryListener) {
             inventoryListener();
         }
-        
-        // Configura listener em tempo real
+
         inventoryListener = onSnapshot(playerRef, async (docSnap) => {
             if (!docSnap.exists() || !docSnap.data().inventory) {
-                // Se o inventário não existir, inicializa com os itens iniciais
                 const initialInventoryData = {
                     itemsInChest: initialItems.map(item => ({ ...item })),
                     equippedItems: {
@@ -816,35 +813,38 @@ async function loadInventoryData(uid) {
 
             const inventoryData = docSnap.data().inventory;
 
-// ADICIONA ITENS EXTRAS NOVOS (SEM PROBLEMAS)
-let inventoryUpdated = false;
-for (const extraItem of extraItems) {
-    // Só adiciona se NÃO existe no baú E NÃO está equipado
-    const existsInChest = inventoryData.itemsInChest.some(item => item.uuid === extraItem.uuid);
-    const isEquipped = Object.values(inventoryData.equippedItems).includes(extraItem.content);
-    const wasDiscarded = inventoryData.discardedItems?.includes(extraItem.uuid);
+            // ADICIONA ITENS EXTRAS NOVOS
+            let inventoryUpdated = false;
+            for (const extraItem of extraItems) {
+                const existsInChest = inventoryData.itemsInChest.some(item => item.uuid === extraItem.uuid);
+                const isEquipped = Object.values(inventoryData.equippedItems).includes(extraItem.content);
+                const wasDiscarded = inventoryData.discardedItems?.includes(extraItem.uuid);
 
-    if (!existsInChest && !isEquipped && !wasDiscarded) {
-        console.log(`➕ ADICIONANDO NOVO ITEM EXTRA: ${extraItem.id}`);
-        inventoryData.itemsInChest.push({ ...extraItem }); // Usa uuid fixo já definido
-        inventoryUpdated = true;
+                if (!existsInChest && !isEquipped && !wasDiscarded) {
+                    console.log(`➕ ADICIONANDO NOVO ITEM EXTRA: ${extraItem.id}`);
+                    inventoryData.itemsInChest.push({ ...extraItem });
+                    inventoryUpdated = true;
+                }
+            }
+
+            if (inventoryUpdated) {
+                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+                console.log("Novos itens extras adicionados.");
+            }
+
+            console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
+            loadInventoryUI(inventoryData);
+            updateCharacterCouraca();
+            updateCharacterDamage();
+
+        }, (error) => {
+            console.error("Erro no listener do inventário:", error);
+        });
+
+    } catch (error) {
+        console.error("Erro ao configurar listener do inventário:", error);
     }
 }
-
-if (inventoryUpdated) {
-    await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-    console.log("Novos itens extras adicionados.");
-}
-
-console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
-loadInventoryUI(inventoryData);
-updateCharacterCouraca();
-updateCharacterDamage();
-
-}, (error) => {
-    console.error("Erro no listener do inventário:", error);
-});
-} // Fecha a função loadInventoryData
 
 
 function loadInventoryUI(inventoryData) {
