@@ -825,7 +825,11 @@ for (const extraItem of extraItems) {
     const existsInChest = inventoryData.itemsInChest.some(item => item.id === extraItem.id);
     const isEquipped = Object.values(inventoryData.equippedItems).includes(extraItem.content);
     
-    if (!existsInChest && !isEquipped) {
+    const wasDiscarded = inventoryData.discardedItems && 
+    inventoryData.discardedItems.some(uuid => uuid.startsWith(extraItem.id + '_'));
+
+if (!existsInChest && !isEquipped && !wasDiscarded) {
+
         console.log(`➕ ADICIONANDO NOVO ITEM EXTRA: ${extraItem.id}`);
         inventoryData.itemsInChest.push({...extraItem, uuid: crypto.randomUUID()});
         inventoryUpdated = true;
