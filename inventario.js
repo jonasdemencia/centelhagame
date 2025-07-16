@@ -844,6 +844,7 @@ updateCharacterDamage();
 }, (error) => {
     console.error("Erro no listener do inventário:", error);
 });
+} // Fecha a função loadInventoryData
 
 
 function loadInventoryUI(inventoryData) {
