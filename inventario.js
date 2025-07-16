@@ -70,14 +70,12 @@ const initialItems = [
 
 // Lista de itens que podem ser adicionados dinamicamente (não iniciais)
 const extraItems = [
-    { id: "grilo", content: "Grilo", description: "Um pequeno grilo saltitante.", componente: true, energia: { total: 1, inicial: 1 } },
-    { id: "facao", content: "Facao", slot: "weapon", description: "Uma pequena lâmina afiada.", damage: "1D4" }, // << CORRIGIDO!
-    { id: "coberta", content: "Coberta", slot: "armor", description: "Vestes simples que oferecem pouca proteção.", defense: 2 }, // << CORRIGIDO!
-    { id: "espada-ferro", content: "Espada de Ferro", description: "Uma espada comum de ferro.", damage: "1d8" },
-    { id: "la", content: "Lã", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true }, // ← ADICIONE ESTA LINHA
-    { id: "pedaco-couro", content: "Pedaço de couro", description: "tira de couro endurecido para magias.", componente: true }, // ← ADICIONE ESTA LINHA
-
-    // Adicione mais itens aqui conforme necessário
+    { id: "grilo", content: "Grilo", uuid: "extra-grilo", description: "Um pequeno grilo saltitante.", componente: true, energia: { total: 1, inicial: 1 } },
+    { id: "facao", content: "Facao", uuid: "extra-facao", slot: "weapon", description: "Uma pequena lâmina afiada.", damage: "1D4" },
+    { id: "coberta", content: "Coberta", uuid: "extra-coberta", slot: "armor", description: "Vestes simples que oferecem pouca proteção.", defense: 2 },
+    { id: "espada-ferro", content: "Espada de Ferro", uuid: "extra-espada-ferro", description: "Uma espada comum de ferro.", damage: "1d8" },
+    { id: "la", content: "Lã", uuid: "extra-la", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true },
+    { id: "pedaco-couro", content: "Pedaço de couro", uuid: "extra-pedaco-couro", description: "Tira de couro endurecido para magias.", componente: true },
 ];
 
 
@@ -822,16 +820,13 @@ async function loadInventoryData(uid) {
 let inventoryUpdated = false;
 for (const extraItem of extraItems) {
     // Só adiciona se NÃO existe no baú E NÃO está equipado
-    const existsInChest = inventoryData.itemsInChest.some(item => item.id === extraItem.id);
+    const existsInChest = inventoryData.itemsInChest.some(item => item.uuid === extraItem.uuid);
     const isEquipped = Object.values(inventoryData.equippedItems).includes(extraItem.content);
-    
-    const wasDiscarded = inventoryData.discardedItems && 
-    inventoryData.discardedItems.some(uuid => uuid.startsWith(extraItem.id + '_'));
+    const wasDiscarded = inventoryData.discardedItems?.includes(extraItem.uuid);
 
-if (!existsInChest && !isEquipped && !wasDiscarded) {
-
+    if (!existsInChest && !isEquipped && !wasDiscarded) {
         console.log(`➕ ADICIONANDO NOVO ITEM EXTRA: ${extraItem.id}`);
-        inventoryData.itemsInChest.push({...extraItem, uuid: crypto.randomUUID()});
+        inventoryData.itemsInChest.push({ ...extraItem }); // Usa uuid fixo já definido
         inventoryUpdated = true;
     }
 }
@@ -846,14 +841,10 @@ loadInventoryUI(inventoryData);
 updateCharacterCouraca();
 updateCharacterDamage();
 
-        }, (error) => {
-            console.error("Erro no listener do inventário:", error);
-        });
-        
-    } catch (error) {
-        console.error("Erro ao configurar listener do inventário:", error);
-    }
-}
+}, (error) => {
+    console.error("Erro no listener do inventário:", error);
+});
+
 
 function loadInventoryUI(inventoryData) {
     console.log("Carregando UI do inventário:", inventoryData);
