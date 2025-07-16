@@ -817,11 +817,31 @@ async function loadInventoryData(uid) {
             }
 
             const inventoryData = docSnap.data().inventory;
-            
-            console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
-            loadInventoryUI(inventoryData);
-            updateCharacterCouraca();
-            updateCharacterDamage();
+
+// ADICIONA ITENS EXTRAS NOVOS (SEM PROBLEMAS)
+let inventoryUpdated = false;
+for (const extraItem of extraItems) {
+    // Só adiciona se NÃO existe no baú E NÃO está equipado
+    const existsInChest = inventoryData.itemsInChest.some(item => item.id === extraItem.id);
+    const isEquipped = Object.values(inventoryData.equippedItems).includes(extraItem.content);
+    
+    if (!existsInChest && !isEquipped) {
+        console.log(`➕ ADICIONANDO NOVO ITEM EXTRA: ${extraItem.id}`);
+        inventoryData.itemsInChest.push({...extraItem, uuid: crypto.randomUUID()});
+        inventoryUpdated = true;
+    }
+}
+
+if (inventoryUpdated) {
+    await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+    console.log("Novos itens extras adicionados.");
+}
+
+console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
+loadInventoryUI(inventoryData);
+updateCharacterCouraca();
+updateCharacterDamage();
+
         }, (error) => {
             console.error("Erro no listener do inventário:", error);
         });
