@@ -1193,7 +1193,7 @@ function calcularChanceCruzamento(condicoes) {
 
 
 
-function cantarAnimais() {
+async function cantarAnimais() {
     const slot1 = document.getElementById('slot-1');
     const slot2 = document.getElementById('slot-2');
     const mensagem = document.getElementById('mensagem-erro');
@@ -1203,8 +1203,8 @@ function cantarAnimais() {
         const primeiroNome2 = slot2.dataset.nome.split(' ')[0];
         
         if (primeiroNome1 === primeiroNome2) {
-            // Calcular chance de cruzamento baseada nas condições
-            const condicoes = getArcanumConditions();
+            // ⬇️ Aqui está o ajuste importante
+            const condicoes = await getArcanumConditions();
             const resultado = calcularChanceCruzamento(condicoes);
             
             console.log(`Chance de cruzamento: ${resultado.chance}%`, resultado);
@@ -1219,6 +1219,7 @@ function cantarAnimais() {
         mensagem.style.display = 'block';
     }
 }
+
 
 
 function iniciarCruzamento(animal1, animal2, resultado) {
