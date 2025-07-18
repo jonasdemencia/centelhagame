@@ -1840,6 +1840,10 @@ const imagens = [
     
 ];
 
+const totalPesoComecos  = começos.reduce((sum, x) => sum + x.peso, 0);
+const totalPesoImagens = imagens.reduce((sum, x) => sum + x.peso, 0);
+
+// 2) Define limites mínimo/máximo (para classificar raridade)
 const minTotal = Math.min(...começos.map(x => x.peso))
                + Math.min(...imagens.map(x => x.peso));
 const maxTotal = Math.max(...começos.map(x => x.peso))
@@ -1858,12 +1862,12 @@ function classificarRaridade(total) {
 
 
 function sortearComPeso(array) {
-  const totalPeso = array.reduce((acc, item) => acc + item.peso, 0);
-  let sorteio = Math.random() * totalPeso;
+  const soma = array.reduce((acc, item) => acc + item.peso, 0);
+  let alea = Math.random() * soma;
 
   for (const item of array) {
-    if (sorteio < item.peso) return item;
-    sorteio -= item.peso;
+    if (alea < item.peso) return item;
+    alea -= item.peso;
   }
   return array[0];
 }
@@ -1871,10 +1875,20 @@ function sortearComPeso(array) {
 function gerarSonho() {
   const c = sortearComPeso(começos);
   const i = sortearComPeso(imagens);
-  const total     = c.peso + i.peso;
+  const total = c.peso + i.peso;
   const categoria = classificarRaridade(total);
 
-  console.log(`Raridade total do sonho: ${total} (categoria "${categoria}")`);
+  // Probabilidade daquele par específico: P(c) * P(i)
+  const prob = (c.peso / totalPesoComecos) * (i.peso / totalPesoImagens);
+  const percent = (prob * 100).toFixed(2) + '%';
+  const odds = Math.round(1 / prob);
+
+  console.log(
+    `Raridade total do sonho: ${total} ` +
+    `(categoria "${categoria}"), ` +
+    `Probabilidade: ${percent} (ou 1 em ${odds})`
+  );
+
   return `${c.texto}… ${i.texto}`;
 }
 
