@@ -1840,17 +1840,19 @@ const imagens = [
 ];
 
 
+// agora sortearComPeso retorna o próprio objeto { texto, peso }
 function sortearComPeso(array) {
   const totalPeso = array.reduce((acc, item) => acc + item.peso, 0);
   let sorteio = Math.random() * totalPeso;
 
   for (const item of array) {
-    if (sorteio < item.peso) return item.texto;
+    if (sorteio < item.peso) {
+      return item;
+    }
     sorteio -= item.peso;
   }
 
-  // fallback
-  return array[0].texto;
+  return array[0];
 }
 
 //GERAR SONHOgerarSonho agora recebe objetos, soma pesos e faz o log
