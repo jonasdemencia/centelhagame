@@ -1599,24 +1599,13 @@ const reações = [
 ];
 
 
-const diretas = [
-  "Por que você voltou aqui?",
-  "Você se lembra da escolha?",
-  "Isso não é mais um sonho, é memória.",
-  "Quem você acha que está dormindo?",
-  "O grimório escuta mesmo em silêncio.",
-  "Você não devia ter escutado isso.",
-  "Ainda está tentando fugir de si?",
-  "A porta nunca fechou."
-];
-
 function gerarSonho() {
   const c = começos[Math.floor(Math.random() * começos.length)];
   const i = imagens[Math.floor(Math.random() * imagens.length)];
   const r = reações[Math.floor(Math.random() * reações.length)];
   const d = diretas[Math.floor(Math.random() * diretas.length)];
 
-  return `${c}… ${i} ${d} ${r}`;
+  return `${c}… ${i} ${r}`;
 }
 
 
