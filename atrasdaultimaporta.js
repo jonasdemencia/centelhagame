@@ -1530,9 +1530,50 @@ window.cantarAnimais = cantarAnimais;
 window.recolherDescendencia = recolherDescendencia;
 window.dormirTelaPreta = dormirTelaPreta;
 
+const começos = [
+  "Você está", 
+  "Há um lugar onde", 
+  "No fundo de algo, você sente", 
+  "Uma voz que não é sua diz", 
+  "O mundo parece"
+];
+
+const imagens = [
+  "as janelas se fecham sozinhas.",
+  "as pedras flutuam em silêncio.",
+  "o tempo dobra sobre si mesmo.",
+  "um animal sem rosto te observa.",
+  "seu corpo está em pedaços, mas você respira.",
+  "a água sobe pelas paredes.",
+  "a lua sangra devagar.",
+  "tudo está do avesso, mas faz sentido.",
+  "as sombras riem em silêncio.",
+  "a memória de alguém tenta te vestir."
+];
+
+const reações = [
+  "Você continua esperando.",
+  "E nada muda.",
+  "Mas há paz.",
+  "Mesmo assim, dói.",
+  "Isso acontece toda noite.",
+  "Você sabe que está mentindo para si.",
+  "Seu nome não faz sentido agora.",
+  "Você aceita o que não entende.",
+  "Algo em você se parte.",
+  "Você lembra o que não viveu."
+];
+
+function gerarSonho() {
+  const c = começos[Math.floor(Math.random() * começos.length)];
+  const i = imagens[Math.floor(Math.random() * imagens.length)];
+  const r = reações[Math.floor(Math.random() * reações.length)];
+  return `${c}… ${i} ${r}`;
+}
+
+
 
 function dormirTelaPreta() {
-  // Cria overlay preto
   const overlay = document.createElement('div');
   overlay.style.cssText = `
     position: fixed;
@@ -1544,9 +1585,9 @@ function dormirTelaPreta() {
     align-items: center;
     justify-content: center;
     transition: opacity 2s ease;
+    flex-direction: column;
   `;
 
-  // Cria mensagem
   const mensagem = document.createElement('div');
   mensagem.textContent = 'Você adormece...';
   mensagem.style.cssText = `
@@ -1557,26 +1598,43 @@ function dormirTelaPreta() {
     font-family: 'VT323', monospace;
     text-align: center;
     max-width: 80vw;
+    margin-bottom: 3rem;
+  `;
+
+  const fraseSonho = document.createElement('div');
+  fraseSonho.textContent = ''; // vai receber depois
+  fraseSonho.style.cssText = `
+    color: #aaa;
+    font-size: 1.5rem;
+    opacity: 0;
+    transition: opacity 2s ease;
+    font-family: 'VT323', monospace;
+    text-align: center;
+    max-width: 80vw;
   `;
 
   overlay.appendChild(mensagem);
+  overlay.appendChild(fraseSonho);
   document.body.appendChild(overlay);
 
-  // Fade in do overlay
   setTimeout(() => {
     overlay.style.opacity = '1';
   }, 10);
 
-  // Fade in da mensagem (depois do overlay)
   setTimeout(() => {
     mensagem.style.opacity = '1';
   }, 2000);
 
-  // (Opcional) Remover overlay após alguns segundos
   setTimeout(() => {
-  overlay.style.opacity = '0';
-  setTimeout(() => document.body.removeChild(overlay), 2000);
-  }, 8000);
+    fraseSonho.textContent = gerarSonho();
+    fraseSonho.style.opacity = '1';
+  }, 5000);
+
+  // (Opcional: remove após alguns segundos ou com tecla)
+  setTimeout(() => {
+    overlay.style.opacity = '0';
+    setTimeout(() => document.body.removeChild(overlay), 2000);
+  }, 12000);
 }
 
 
