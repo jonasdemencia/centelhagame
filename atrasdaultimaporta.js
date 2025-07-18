@@ -1475,46 +1475,28 @@ async function recolherDescendencia() {
         // Adiciona ao inventário
         itemsInChest.push(griloGerado);
 
-        // Salvar proeza se for grilo raro
+// Salvar proeza se for grilo raro
+let proezaMsg = null;
 if (griloGerado.id === "grilo-albino") {
-  const dataAgora = new Date();
-  const dataFormatada = dataAgora.toLocaleDateString('pt-BR') + ' ' + dataAgora.toLocaleTimeString('pt-BR');
-  const mensagemProeza = `Obteve um Grilo Albino em ${dataFormatada}`;
-
-  // Recupera proezas já salvas (ou array vazio)
-  const proezas = playerData.proezas || [];
-  proezas.push(mensagemProeza);
-
-  // Salva no Firestore
-  await setDoc(playerRef, {
-    proezas: proezas
-  }, { merge: true });
+  proezaMsg = "Obteve um Grilo Albino";
 }
-
-        if (griloGerado.id === "grilo-mutante") {
-  const dataAgora = new Date();
-  const dataFormatada = dataAgora.toLocaleDateString('pt-BR') + ' ' + dataAgora.toLocaleTimeString('pt-BR');
-  const mensagemProeza = `Obteve um Grilo Mutante (Mutação Rara) em ${dataFormatada}`;
-  const proezas = playerData.proezas || [];
-  proezas.push(mensagemProeza);
-  await setDoc(playerRef, { proezas: proezas }, { merge: true });
+if (griloGerado.id === "grilo-mutante") {
+  proezaMsg = "Obteve um Grilo Mutante (Mutação Rara)";
 }
-        
-        // Salva no Firestore
-        await setDoc(playerRef, {
-            inventory: {
-                ...inventory,
-                itemsInChest: itemsInChest
-            }
-        }, { merge: true });
-
-        if (griloGerado.id === "grilo-eletrico") {
+if (griloGerado.id === "grilo-eletrico") {
+  proezaMsg = "Obteve um Grilo Elétrico (Mutação Rara)";
+}
+if (proezaMsg) {
   const dataAgora = new Date();
   const dataFormatada = dataAgora.toLocaleDateString('pt-BR') + ' ' + dataAgora.toLocaleTimeString('pt-BR');
-  const mensagemProeza = `Obteve um Grilo Elétrico (Mutação Rara) em ${dataFormatada}`;
-  const proezas = playerData.proezas || [];
-  proezas.push(mensagemProeza);
-  await setDoc(playerRef, { proezas: proezas }, { merge: true });
+  const mensagemProeza = `${proezaMsg} em ${dataFormatada}`;
+
+  // Sempre busque o array mais recente do Firestore
+  const playerSnapAtual = await getDoc(playerRef);
+  const proezasAtuais = playerSnapAtual.exists() && playerSnapAtual.data().proezas ? playerSnapAtual.data().proezas : [];
+  proezasAtuais.push(mensagemProeza);
+
+  await setDoc(playerRef, { proezas: proezasAtuais }, { merge: true });
 }
         
         // Remove a mensagem e limpa os slots
