@@ -1533,7 +1533,6 @@ window.dormirTelaPreta = dormirTelaPreta;
 const começos = [
 
 "Há um lugar onde",
-"Você caminha por",
 "Em um campo aberto,",
 "Ao lado de um rio,",
 "Numa rua que você acha que conhece,",
