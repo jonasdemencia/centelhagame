@@ -1530,12 +1530,17 @@ window.cantarAnimais = cantarAnimais;
 window.recolherDescendencia = recolherDescendencia;
 window.dormirTelaPreta = dormirTelaPreta;
 
-const começos = [
+const começos = [ 
   "Você está", 
   "Há um lugar onde", 
   "No fundo de algo, você sente", 
   "Uma voz que não é sua diz", 
-  "O mundo parece"
+  "O mundo parece",
+  "Tudo começou quando",
+  "Você acorda dentro de",
+  "O tempo não passou desde que",
+  "Você ouve seu nome vindo de",
+  "Algo que era você começa a"
 ];
 
 const imagens = [
@@ -1548,7 +1553,17 @@ const imagens = [
   "a lua sangra devagar.",
   "tudo está do avesso, mas faz sentido.",
   "as sombras riem em silêncio.",
-  "a memória de alguém tenta te vestir."
+  "a memória de alguém tenta te vestir.",
+  "mil olhos se abrem dentro de um espelho quebrado.",
+  "as portas respiram como feridas.",
+  "um céu sem cor gira lentamente.",
+  "seu reflexo olha primeiro.",
+  "uma criança feita de sal dorme sob a terra.",
+  "as árvores sussurram nomes que você esqueceu.",
+  "os pássaros voam para baixo.",
+  "o som do fogo é molhado.",
+  "um sino toca onde não há igreja.",
+  "alguém chora com sua voz atrás da parede."
 ];
 
 const reações = [
@@ -1561,7 +1576,17 @@ const reações = [
   "Seu nome não faz sentido agora.",
   "Você aceita o que não entende.",
   "Algo em você se parte.",
-  "Você lembra o que não viveu."
+  "Você lembra o que não viveu.",
+  "Você sonha que acordou, mas ainda sonha.",
+  "O silêncio responde com um arrepio.",
+  "Seu coração bate no ritmo de outra coisa.",
+  "Você sente pena do que era você.",
+  "Uma ausência te reconhece.",
+  "Você promete não falar disso.",
+  "Sua língua se recusa a nomear o que viu.",
+  "O medo agradece em voz baixa.",
+  "Você sente uma fome que não é sua.",
+  "Você não acorda. Você se esvazia."
 ];
 
 function gerarSonho() {
