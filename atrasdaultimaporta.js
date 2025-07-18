@@ -1530,17 +1530,27 @@ window.cantarAnimais = cantarAnimais;
 window.recolherDescendencia = recolherDescendencia;
 window.dormirTelaPreta = dormirTelaPreta;
 
-const começos = [ 
-  "Você está", 
-  "Há um lugar onde", 
-  "No fundo de algo, você sente", 
-  "Uma voz que não é sua diz", 
-  "O mundo parece",
-  "Tudo começou quando",
-  "Você acorda dentro de",
-  "O tempo não passou desde que",
-  "Você ouve seu nome vindo de",
-  "Algo que era você começa a"
+const começos = [
+  "Há um lugar onde", // seu já existente, ainda insuperável
+  "Algo continua acontecendo quando ninguém vê",
+  "Em algum momento entre agora e nunca,",
+  "Nada aconteceu, mas",
+  "Na dobra entre dois pensamentos,",
+  "Você já esteve aqui quando",
+  "Quando o tempo cochila,",
+  "No espaço que existe entre dois nomes,",
+  "Tudo que é esquecido vai para onde",
+  "Antes que qualquer coisa tivesse forma,",
+  "Na pausa entre dois passos,",
+  "O silêncio guarda o momento em que",
+  "Sem testemunhas,",
+  "O mundo segura o fôlego enquanto",
+  "Entre o fim e o começo,",
+  "Tudo permanece igual até que",
+  "Enquanto algo tenta lembrar,",
+  "No intervalo em que o olhar pisca,",
+  "Quando ninguém mais acredita,",
+  "Mesmo sem você notar,"
 ];
 
 const imagens = [
