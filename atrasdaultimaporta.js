@@ -1878,18 +1878,6 @@ function gerarSonho() {
 }
 
 
-//GERAR SONHOgerarSonho agora recebe objetos, soma pesos e faz o log
-function gerarSonho() {
-  const c = sortearComPeso(começos);
-  const i = sortearComPeso(imagens);
-
-  const raridadeTotal = c.peso + i.peso;
-  console.log(`Raridade total do sonho: ${raridadeTotal}`);
-
-  return `${c.texto}… ${i.texto}`;
-}
-
-
 function dormirTelaPreta() {
   const overlay = document.createElement('div');
   overlay.style.cssText = `
