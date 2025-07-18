@@ -1678,36 +1678,12 @@ const imagens = [
     
 ];
 
-const reações = [
-  "Você continua esperando.",
-  "E nada muda.",
-  "Mas há paz.",
-  "Mesmo assim, dói.",
-  "Isso acontece toda noite.",
-  "Você sabe que está mentindo para si.",
-  "Seu nome não faz sentido agora.",
-  "Você aceita o que não entende.",
-  "Algo em você se parte.",
-  "Você lembra o que não viveu.",
-  "Você sonha que acordou, mas ainda sonha.",
-  "O silêncio responde com um arrepio.",
-  "Seu coração bate no ritmo de outra coisa.",
-  "Você sente pena do que era você.",
-  "Uma ausência te reconhece.",
-  "Você promete não falar disso.",
-  "Sua língua se recusa a nomear o que viu.",
-  "O medo agradece em voz baixa.",
-  "Você sente uma fome que não é sua.",
-  "Você não acorda. Você se esvazia."
-];
-
 
 function gerarSonho() {
   const c = começos[Math.floor(Math.random() * começos.length)];
   const i = imagens[Math.floor(Math.random() * imagens.length)];
-  const r = reações[Math.floor(Math.random() * reações.length)];
 
-  return `${c}… ${i} ${r}`;
+  return `${c}… ${i}`;
 }
 
 
