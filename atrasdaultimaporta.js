@@ -666,68 +666,80 @@ const contentData = {
 };
 
 async function criarGrimorio() {
-    await window.arcanumIudicium.carregarFirestore();
-    const eficiencia = parseFloat(window.arcanumIudicium.getEficiencia());
-    const categoriaAtual = window.arcanumIudicium.getCategoria();
-    
-    console.log(`Eficiência atual do Arcanum Iudicium: ${eficiencia}%`);
-    
-    // Verificar se houve mudança de categoria
-    if (window.arcanumIudicium.ultimaCategoria && window.arcanumIudicium.ultimaCategoria !== categoriaAtual) {
-        console.log(`Mudança de categoria detectada: ${window.arcanumIudicium.ultimaCategoria} → ${categoriaAtual}`);
-        
-        // Se saiu da alta eficiência, remove desconto
-        if (categoriaAtual !== 'alta') {
-            window.arcanumIudicium.magiaComDesconto = null;
-        }
-        
-        // Atualizar categoria e salvar
-        window.arcanumIudicium.ultimaCategoria = categoriaAtual;
-        await window.arcanumIudicium.salvarFirestore();
-        
-        // Exibir julgamento
-        await exibirJulgamentoGrimorio(categoriaAtual);
-    } else if (!window.arcanumIudicium.ultimaCategoria) {
-        // Primeira vez - salvar categoria atual
-        window.arcanumIudicium.ultimaCategoria = categoriaAtual;
-        await window.arcanumIudicium.salvarFirestore();
-    }
-    
-    // Se não está em alta eficiência, garantir que não há desconto
+  await window.arcanumIudicium.carregarFirestore();
+  const eficiencia = parseFloat(window.arcanumIudicium.getEficiencia());
+  const categoriaAtual = window.arcanumIudicium.getCategoria();
+
+  console.log(`Eficiência atual do Arcanum Iudicium: ${eficiencia}%`);
+
+  // Verificar se houve mudança de categoria
+  if (window.arcanumIudicium.ultimaCategoria && window.arcanumIudicium.ultimaCategoria !== categoriaAtual) {
+    console.log(`Mudança de categoria detectada: ${window.arcanumIudicium.ultimaCategoria} → ${categoriaAtual}`);
+    // Se saiu da alta eficiência, remove desconto
     if (categoriaAtual !== 'alta') {
-        window.arcanumIudicium.magiaComDesconto = null;
+      window.arcanumIudicium.magiaComDesconto = null;
     }
-    
-    let classeEficiencia = '';
-    if (eficiencia >= 80) {
-        classeEficiencia = 'grimorio-alta';
-    } else if (eficiencia < 30) {
-        classeEficiencia = 'grimorio-muito-baixa';
-    } else {
-        classeEficiencia = 'grimorio-baixa';
-    }
-    
-    // Verificar se magia atual está memorizada
-    const magiaAtual = magias[paginaAtual];
-    const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
-    
+    // Atualizar categoria e salvar
+    window.arcanumIudicium.ultimaCategoria = categoriaAtual;
+    await window.arcanumIudicium.salvarFirestore();
+    // Exibir julgamento
+    await exibirJulgamentoGrimorio(categoriaAtual);
+  } else if (!window.arcanumIudicium.ultimaCategoria) {
+    // Primeira vez - salvar categoria atual
+    window.arcanumIudicium.ultimaCategoria = categoriaAtual;
+    await window.arcanumIudicium.salvarFirestore();
+  }
+
+  // Se não está em alta eficiência, garantir que não há desconto
+  if (categoriaAtual !== 'alta') {
+    window.arcanumIudicium.magiaComDesconto = null;
+  }
+
+  let classeEficiencia = '';
+  if (eficiencia >= 80) {
+    classeEficiencia = 'grimorio-alta';
+  } else if (eficiencia < 30) {
+    classeEficiencia = 'grimorio-muito-baixa';
+  } else {
+    classeEficiencia = 'grimorio-baixa';
+  }
+
+  // --- AJUSTE CRÍTICO: não tente acessar magias[paginaAtual] se estiver na Margem Viva ---
+  if (paginaAtual === magias.length) {
     return `
-        <div class="grimorio-container ${classeEficiencia}">
-            <div id="magia-content">
-                ${paginaAtual === magias.length ? await criarPaginaMargemViva() : criarPaginaMagia(paginaAtual)}
-            </div>
-            <div class="grimorio-nav">
-                <button class="nav-btn" id="prev-btn" onclick="mudarPagina(-1)">← Página Anterior</button>
-                <span class="page-number">Página ${paginaAtual + 1}</span>
-                <button class="nav-btn" id="next-btn" onclick="mudarPagina(1)">Próxima Página →</button>
-            </div>
-            <div class="grimorio-actions"></div>
-
-
-
+      <div class="grimorio-container ${classeEficiencia}">
+        <div id="magia-content">
+          ${await criarPaginaMargemViva()}
         </div>
+        <div class="grimorio-nav">
+          <button class="nav-btn" id="prev-btn" onclick="mudarPagina(-1)">← Página Anterior</button>
+          <span class="page-number">Página ${paginaAtual + 1}</span>
+          <button class="nav-btn" id="next-btn" onclick="mudarPagina(1)">Próxima Página →</button>
+        </div>
+        <div class="grimorio-actions"></div>
+      </div>
     `;
+  }
+
+  // Verificar se magia atual está memorizada (só se NÃO estiver na Margem Viva)
+  const magiaAtual = magias[paginaAtual];
+  const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magiaAtual.id);
+
+  return `
+    <div class="grimorio-container ${classeEficiencia}">
+      <div id="magia-content">
+        ${criarPaginaMagia(paginaAtual)}
+      </div>
+      <div class="grimorio-nav">
+        <button class="nav-btn" id="prev-btn" onclick="mudarPagina(-1)">← Página Anterior</button>
+        <span class="page-number">Página ${paginaAtual + 1}</span>
+        <button class="nav-btn" id="next-btn" onclick="mudarPagina(1)">Próxima Página →</button>
+      </div>
+      <div class="grimorio-actions"></div>
+    </div>
+  `;
 }
+
 
 async function criarPaginaMargemViva() {
   let proezasHtml = '<div style="color: #888; font-style: italic;">(Em branco... por enquanto)</div>';
