@@ -1601,7 +1601,25 @@ const começos = [
   "Num terraço coberto de hera,",
   "Perto de uma ponte quebrada,",
   "Em um campo onde as sombras dançam,",
-  "Num corredor iluminado por lâmpadas tremeluzentes,"
+  "Num corredor iluminado por lâmpadas tremeluzentes,",
+    
+//RAROS E PERTURBADORES
+    "No fundo de uma escola vazia,",
+  "Dentro de um castelo em ruínas,",
+  "Em uma estação de trem onde não há trilhos,",
+  "Num campo sem horizonte,",
+  "Atrás do espelho do seu antigo quarto,",
+  "Sob uma árvore que cresce ao contrário,",
+  "Num quarto idêntico ao seu, mas com móveis trocados,",
+  "Num porão onde todas as luzes estão acesas,",
+  "Dentro de um elevador que não para de subir,",
+  "Num corredor de hospital sem fim,",
+  "Numa cidade onde todas as casas são iguais,",
+  "Na sala onde você cresceu, mas tudo está molhado,",
+  "Num banheiro com dezenas de espelhos,",
+  "No silêncio entre dois trovões,",
+  "Num ônibus que só anda em marcha ré,",
+  "Na rua onde você morou, mas tudo está coberto de cinzas,"
  
 ];
 
@@ -1781,7 +1799,29 @@ const imagens = [
   "uma escultura de gelo não derrete, mesmo no fogo.",
   "os espelhos escondem lembranças antigas.",
   "um marinheiro chora lágrimas de tinta.",
-  "uma bota caminha até a porta e espera por você."
+  "uma bota caminha até a porta e espera por você.",
+
+    //RAROS E PERTURBADORES
+ "uma criança desenha você com uma exatidão impossível.",
+  "você vê um corpo vestido como você, mas o rosto está ausente.",
+  "todas as pessoas olham para você, mas com os olhos virados ao contrário.",
+  "alguém diz seu nome do jeito exato que você odeia ouvir.",
+  "um animal morto tenta entrar pela janela, com muito cuidado.",
+  "você ouve seus pais chorando embaixo do chão.",
+  "um telefone toca sem parar, mas quando você atende, está ouvindo sua própria voz pedindo socorro.",
+  "há fotos suas envelhecidas, como se você tivesse morrido há décadas.",
+  "sua mão está segurando algo que não consegue soltar, mas você não enxerga o que é.",
+  "alguém sussurra um segredo que você sente que sempre soube, mas não quer lembrar.",
+  "um espelho mostra alguém que copia seus movimentos com atraso.",
+  "você sente que algo foi arrancado de você, mas não sabe o quê.",
+  "um grupo de pessoas canta sua história em uma língua que você entende e esquece ao mesmo tempo.",
+  "uma criatura usa seu rosto para pedir perdão.",
+  "todos ao seu redor fingem que você não está ali ― até você parar de se mover.",
+  "você escreve uma carta para alguém que nunca vai existir.",
+  "uma versão sua menor está trancada num aquário, batendo nas paredes de vidro.",
+  "um buraco se abre na sua barriga e começa a contar os dias.",
+  "há dentes crescendo nas costas da sua língua.",
+  "uma gravação mostra você acordando todos os dias e esquecendo o mesmo crime."
     
 ];
 
