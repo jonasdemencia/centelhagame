@@ -714,7 +714,7 @@ async function criarGrimorio() {
     return `
         <div class="grimorio-container ${classeEficiencia}">
             <div id="magia-content">
-                ${criarPaginaMagia(paginaAtual)}
+                ${paginaAtual === magias.length ? await criarPaginaMargemViva() : criarPaginaMagia(paginaAtual)}
             </div>
             <div class="grimorio-nav">
                 <button class="nav-btn" id="prev-btn" onclick="mudarPagina(-1)">← Página Anterior</button>
@@ -729,7 +729,29 @@ async function criarGrimorio() {
     `;
 }
 
-
+async function criarPaginaMargemViva() {
+  let proezasHtml = '<div style="color: #888; font-style: italic;">(Em branco... por enquanto)</div>';
+  const user = auth.currentUser;
+  if (user) {
+    const playerRef = doc(db, "players", user.uid);
+    const playerSnap = await getDoc(playerRef);
+    if (playerSnap.exists() && playerSnap.data().proezas && playerSnap.data().proezas.length > 0) {
+      proezasHtml = playerSnap.data().proezas.map(msg =>
+        `<div style="margin-bottom: 8px; color: #feca57;">${msg}</div>`
+      ).join('');
+    }
+  }
+  return `
+    <div class="magia-page active">
+      <div class="magia-titulo">Margem Viva</div>
+      <div class="magia-divisor">═══════════════════════════════</div>
+      <div class="magia-descricao" style="font-style: italic; color: #888;">
+        ${proezasHtml}
+      </div>
+      <div class="magia-divisor">═══════════════════════════════</div>
+    </div>
+  `;
+}
 
 function criarPaginaMagia(index) {
     // 👉 Página extra no final do grimório
@@ -804,7 +826,9 @@ async function mudarPagina(direcao) {
 
     setTimeout(async () => {
         paginaAtual = novaPagina;
-        magiaContent.innerHTML = criarPaginaMagia(paginaAtual);
+       magiaContent.innerHTML = paginaAtual === magias.length
+  ? await criarPaginaMargemViva()
+  : criarPaginaMagia(paginaAtual);
        const numeroTotal = magias.length + 1;
 document.querySelector('.page-number').textContent = `Página ${paginaAtual + 1} de ${numeroTotal}`;
 
@@ -1438,6 +1462,22 @@ async function recolherDescendencia() {
         
         // Adiciona ao inventário
         itemsInChest.push(griloGerado);
+
+        // Salvar proeza se for grilo raro
+if (griloGerado.id === "grilo-albino") {
+  const dataAgora = new Date();
+  const dataFormatada = dataAgora.toLocaleDateString('pt-BR') + ' ' + dataAgora.toLocaleTimeString('pt-BR');
+  const mensagemProeza = `Obteve um Grilo Albino em ${dataFormatada}`;
+
+  // Recupera proezas já salvas (ou array vazio)
+  const proezas = playerData.proezas || [];
+  proezas.push(mensagemProeza);
+
+  // Salva no Firestore
+  await setDoc(playerRef, {
+    proezas: proezas
+  }, { merge: true });
+}
         
         // Salva no Firestore
         await setDoc(playerRef, {
