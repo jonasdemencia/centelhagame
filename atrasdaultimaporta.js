@@ -1589,11 +1589,36 @@ const reações = [
   "Você não acorda. Você se esvazia."
 ];
 
+const sensações = [
+  "Sua pele sente o peso do tempo.",
+  "Você ouve com os olhos.",
+  "Sua respiração se espalha pelo chão.",
+  "O frio vem de dentro.",
+  "Seu sangue canta um hino antigo.",
+  "Seus dedos esquecem o que são.",
+  "Você está com calor de neve.",
+  "Seu coração está batendo fora do corpo."
+];
+
+const diretas = [
+  "Por que você voltou aqui?",
+  "Você se lembra da escolha?",
+  "Isso não é mais um sonho, é memória.",
+  "Quem você acha que está dormindo?",
+  "O grimório escuta mesmo em silêncio.",
+  "Você não devia ter escutado aquilo.",
+  "Ainda está tentando fugir de si?",
+  "A porta nunca fechou."
+];
+
 function gerarSonho() {
   const c = começos[Math.floor(Math.random() * começos.length)];
   const i = imagens[Math.floor(Math.random() * imagens.length)];
   const r = reações[Math.floor(Math.random() * reações.length)];
-  return `${c}… ${i} ${r}`;
+  const s = sensações[Math.floor(Math.random() * sensações.length)];
+  const d = diretas[Math.floor(Math.random() * diretas.length)];
+
+  return `${c}… ${i} ${s} ${d} ${r}`;
 }
 
 
