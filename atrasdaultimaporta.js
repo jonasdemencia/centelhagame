@@ -1478,6 +1478,15 @@ if (griloGerado.id === "grilo-albino") {
     proezas: proezas
   }, { merge: true });
 }
+
+        if (griloGerado.id === "grilo-mutante") {
+  const dataAgora = new Date();
+  const dataFormatada = dataAgora.toLocaleDateString('pt-BR') + ' ' + dataAgora.toLocaleTimeString('pt-BR');
+  const mensagemProeza = `Obteve um Grilo Mutante (Mutação Rara) em ${dataFormatada}`;
+  const proezas = playerData.proezas || [];
+  proezas.push(mensagemProeza);
+  await setDoc(playerRef, { proezas: proezas }, { merge: true });
+}
         
         // Salva no Firestore
         await setDoc(playerRef, {
