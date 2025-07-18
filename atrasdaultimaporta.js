@@ -1478,13 +1478,13 @@ async function recolherDescendencia() {
 // Salvar proeza se for grilo raro
 let proezaMsg = null;
 if (griloGerado.id === "grilo-albino") {
-  proezaMsg = "Obteve um Grilo Albino";
+  proezaMsg = "ele trouxe música em miniatura. Um grilo. Raro. Vivo. Por quanto tempo? Ele obteve um Grilo Albino";
 }
 if (griloGerado.id === "grilo-mutante") {
-  proezaMsg = "Obteve um Grilo Mutante (Mutação Rara)";
+  proezaMsg = "Um presente? Um presságio? Anoto, mas não aprovo. Ele obteve um Grilo Mutante (Mutação Rara)";
 }
 if (griloGerado.id === "grilo-eletrico") {
-  proezaMsg = "Obteve um Grilo Elétrico (Mutação Rara)";
+  proezaMsg = "Anoto aqui com relutância: o tolo apanhou um grilo raro.";
 }
 if (proezaMsg) {
   const dataAgora = new Date();
