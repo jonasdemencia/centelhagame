@@ -1573,10 +1573,10 @@ function dormirTelaPreta() {
   }, 2000);
 
   // (Opcional) Remover overlay após alguns segundos
-  // setTimeout(() => {
-  //   overlay.style.opacity = '0';
-  //   setTimeout(() => document.body.removeChild(overlay), 2000);
-  // }, 8000);
+  setTimeout(() => {
+  overlay.style.opacity = '0';
+  setTimeout(() => document.body.removeChild(overlay), 2000);
+  }, 8000);
 }
 
 
