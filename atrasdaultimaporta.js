@@ -1528,6 +1528,56 @@ window.fecharOlhos = fecharOlhos;
 window.selecionarAnimal = selecionarAnimal;
 window.cantarAnimais = cantarAnimais;
 window.recolherDescendencia = recolherDescendencia;
+window.dormirTelaPreta = dormirTelaPreta;
+
+
+function dormirTelaPreta() {
+  // Cria overlay preto
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: black;
+    z-index: 99999;
+    opacity: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 2s ease;
+  `;
+
+  // Cria mensagem
+  const mensagem = document.createElement('div');
+  mensagem.textContent = 'Você adormece...';
+  mensagem.style.cssText = `
+    color: #fff;
+    font-size: 2rem;
+    opacity: 0;
+    transition: opacity 3s ease;
+    font-family: 'VT323', monospace;
+    text-align: center;
+    max-width: 80vw;
+  `;
+
+  overlay.appendChild(mensagem);
+  document.body.appendChild(overlay);
+
+  // Fade in do overlay
+  setTimeout(() => {
+    overlay.style.opacity = '1';
+  }, 10);
+
+  // Fade in da mensagem (depois do overlay)
+  setTimeout(() => {
+    mensagem.style.opacity = '1';
+  }, 2000);
+
+  // (Opcional) Remover overlay após alguns segundos
+  // setTimeout(() => {
+  //   overlay.style.opacity = '0';
+  //   setTimeout(() => document.body.removeChild(overlay), 2000);
+  // }, 8000);
+}
 
 
 function aplicarEfeitosAleatorios() {
