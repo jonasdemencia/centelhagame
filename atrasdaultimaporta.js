@@ -1531,49 +1531,48 @@ window.recolherDescendencia = recolherDescendencia;
 window.dormirTelaPreta = dormirTelaPreta;
 
 const começos = [
-  "Há um lugar onde", // seu já existente, ainda insuperável
-  "Algo continua acontecendo quando ninguém vê",
-  "Em algum momento entre agora e nunca,",
-  "Nada aconteceu, mas",
-  "Na dobra entre dois pensamentos,",
-  "Você já esteve aqui quando",
-  "Quando o tempo cochila,",
-  "No espaço que existe entre dois nomes,",
-  "Tudo que é esquecido vai para onde",
-  "Antes que qualquer coisa tivesse forma,",
-  "Na pausa entre dois passos,",
-  "O silêncio guarda o momento em que",
-  "Sem testemunhas,",
-  "O mundo segura o fôlego enquanto",
-  "Entre o fim e o começo,",
-  "Tudo permanece igual até que",
-  "Enquanto algo tenta lembrar,",
-  "No intervalo em que o olhar pisca,",
-  "Quando ninguém mais acredita,",
-  "Mesmo sem você notar,"
+
+"Há um lugar onde",
+"Você caminha por",
+"Em um campo aberto,",
+"Ao lado de um rio,",
+"Numa rua que você acha que conhece,",
+"Dentro de uma casa sem teto,",
+"Você vê pessoas esperando em silêncio",
+"Você entra em um lugar familiar",
+"Na margem de algo imenso,",
+"Alguém segura sua mão e",
+"Você volta a um lugar que nunca viu",
+"Na beira da floresta,",
+"Enquanto o sol se põe devagar,",
+"Debaixo de uma ponte,",
+"Em um corredor estreito,",
+"Você ouve passos e",
+"Dentro de uma estação vazia,",
+"Há um animal parado",
+"Num quintal sem portão,"
+
+ 
 ];
 
 const imagens = [
-  "as janelas se fecham sozinhas.",
-  "as pedras flutuam em silêncio.",
-  "o tempo dobra sobre si mesmo.",
-  "um animal sem rosto te observa.",
-  "seu corpo está em pedaços, mas você respira.",
-  "a água sobe pelas paredes.",
-  "a lua sangra devagar.",
-  "tudo está do avesso, mas faz sentido.",
-  "as sombras riem em silêncio.",
-  "a memória de alguém tenta te vestir.",
-  "mil olhos se abrem dentro de um espelho quebrado.",
-  "as portas respiram como feridas.",
-  "um céu sem cor gira lentamente.",
-  "seu reflexo olha primeiro.",
-  "uma criança feita de sal dorme sob a terra.",
-  "as árvores sussurram nomes que você esqueceu.",
-  "os pássaros voam para baixo.",
-  "o som do fogo é molhado.",
-  "um sino toca onde não há igreja.",
-  "alguém chora com sua voz atrás da parede."
+"um cachorro observa o rio como se esperasse algo.",
+"há crianças brincando com bonecas que parecem feitas de vidro.",
+"uma mulher acende velas para um pássaro morto.",
+"os peixes nadam no ar acima do lago.",
+"uma fila de pessoas espera diante de uma porta trancada.",
+"você encontra uma carta escrita por alguém que ainda não nasceu.",
+"uma bicicleta enferrujada se move sozinha pela estrada.",
+"os talheres flutuam em volta da mesa, mas ninguém repara.",
+"uma criança diz que o mundo acabou ontem.",
+"você encontra um armário cheio de seus próprios sapatos.",
+"há um mercado onde ninguém vende nada, mas todos estão comprando.",
+"uma fogueira arde dentro de uma pia.",
+"alguém sorri com seu rosto.",
+"há um animal deitado no sofá, como se fosse da família.",
+"o mar recua até sumir completamente.",
+"as nuvens formam letras que você tenta ler.",
+"alguém tenta te acordar, mas você não consegue lembrar quem é."
 ];
 
 const reações = [
@@ -1606,7 +1605,7 @@ const diretas = [
   "Isso não é mais um sonho, é memória.",
   "Quem você acha que está dormindo?",
   "O grimório escuta mesmo em silêncio.",
-  "Você não devia ter escutado aquilo.",
+  "Você não devia ter escutado isso.",
   "Ainda está tentando fugir de si?",
   "A porta nunca fechou."
 ];
