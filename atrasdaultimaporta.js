@@ -656,7 +656,7 @@ const contentData = {
     cruzar: () => criarCruzarAnimais(), // ADICIONAR ESTA LINHA
     sacrificar: "Sacrificar animais (Berço e Lâmina)",
     silencio: "Silêncio (entrecorda)",
-    dormir: "Dormir para dentro - não existe sono, a pessoa dorme se quiser",
+    dormir: () => { dormirTelaPreta(); return ""; },
     cagar: "Necessidades fisiológicas - caso coma, tem que cagar",
     comer: "Comer - não existe fome, a pessoa come se quiser",
     alambique: "Alambique",
