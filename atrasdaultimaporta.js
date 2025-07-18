@@ -1603,7 +1603,6 @@ function gerarSonho() {
   const c = começos[Math.floor(Math.random() * começos.length)];
   const i = imagens[Math.floor(Math.random() * imagens.length)];
   const r = reações[Math.floor(Math.random() * reações.length)];
-  const d = diretas[Math.floor(Math.random() * diretas.length)];
 
   return `${c}… ${i} ${r}`;
 }
