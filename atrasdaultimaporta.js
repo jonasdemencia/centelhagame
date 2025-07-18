@@ -1531,11 +1531,6 @@ window.recolherDescendencia = recolherDescendencia;
 window.dormirTelaPreta = dormirTelaPreta;
 
 
-const minTotal = Math.min(...começos.map(x => x.peso))
-               + Math.min(...imagens.map(x => x.peso));
-const maxTotal = Math.max(...começos.map(x => x.peso))
-               + Math.max(...imagens.map(x => x.peso));
-
 const começos = [
 
 { texto: "Dentro de um castelo em ruínas,", peso: 1 }, // RARO
@@ -1844,6 +1839,12 @@ const imagens = [
   { texto: "uma gravação mostra você acordando todos os dias e esquecendo o mesmo crime.", peso: 1 }
     
 ];
+
+const minTotal = Math.min(...começos.map(x => x.peso))
+               + Math.min(...imagens.map(x => x.peso));
+const maxTotal = Math.max(...começos.map(x => x.peso))
+               + Math.max(...imagens.map(x => x.peso));
+
 
 function classificarRaridade(total) {
   const intervalo   = maxTotal - minTotal;
