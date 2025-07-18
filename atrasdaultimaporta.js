@@ -1530,6 +1530,12 @@ window.cantarAnimais = cantarAnimais;
 window.recolherDescendencia = recolherDescendencia;
 window.dormirTelaPreta = dormirTelaPreta;
 
+
+const minTotal = Math.min(...começos.map(x => x.peso))
+               + Math.min(...imagens.map(x => x.peso));
+const maxTotal = Math.max(...começos.map(x => x.peso))
+               + Math.max(...imagens.map(x => x.peso));
+
 const começos = [
 
 { texto: "Dentro de um castelo em ruínas,", peso: 1 }, // RARO
@@ -1839,21 +1845,38 @@ const imagens = [
     
 ];
 
+function classificarRaridade(total) {
+  const intervalo   = maxTotal - minTotal;
+  const limiarRaro  = minTotal + intervalo / 3;
+  const limiarComum = minTotal + (2 * intervalo) / 3;
 
-// agora sortearComPeso retorna o próprio objeto { texto, peso }
+  if (total <= limiarRaro)  return 'Raro';
+  if (total <= limiarComum) return 'Incomum';
+  return 'Comum';
+}
+
+
 function sortearComPeso(array) {
   const totalPeso = array.reduce((acc, item) => acc + item.peso, 0);
   let sorteio = Math.random() * totalPeso;
 
   for (const item of array) {
-    if (sorteio < item.peso) {
-      return item;
-    }
+    if (sorteio < item.peso) return item;
     sorteio -= item.peso;
   }
-
   return array[0];
 }
+
+function gerarSonho() {
+  const c = sortearComPeso(começos);
+  const i = sortearComPeso(imagens);
+  const total     = c.peso + i.peso;
+  const categoria = classificarRaridade(total);
+
+  console.log(`Raridade total do sonho: ${total} (categoria "${categoria}")`);
+  return `${c.texto}… ${i.texto}`;
+}
+
 
 //GERAR SONHOgerarSonho agora recebe objetos, soma pesos e faz o log
 function gerarSonho() {
