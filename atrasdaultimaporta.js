@@ -1507,6 +1507,15 @@ if (griloGerado.id === "grilo-albino") {
                 itemsInChest: itemsInChest
             }
         }, { merge: true });
+
+        if (griloGerado.id === "grilo-eletrico") {
+  const dataAgora = new Date();
+  const dataFormatada = dataAgora.toLocaleDateString('pt-BR') + ' ' + dataAgora.toLocaleTimeString('pt-BR');
+  const mensagemProeza = `Obteve um Grilo Elétrico (Mutação Rara) em ${dataFormatada}`;
+  const proezas = playerData.proezas || [];
+  proezas.push(mensagemProeza);
+  await setDoc(playerRef, { proezas: proezas }, { merge: true });
+}
         
         // Remove a mensagem e limpa os slots
         const mensagem = document.getElementById('mensagem-erro');
