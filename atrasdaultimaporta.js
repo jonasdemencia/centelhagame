@@ -732,29 +732,44 @@ async function criarGrimorio() {
 
 
 function criarPaginaMagia(index) {
+    // 👉 Página extra no final do grimório
+    if (index === magias.length) {
+        return `
+            <div class="magia-page active">
+                <div class="magia-titulo">Margem Viva</div>
+                <div class="magia-divisor">═══════════════════════════════</div>
+                <div class="magia-descricao" style="font-style: italic; color: #888;">
+                    (Em branco... por enquanto)
+                </div>
+                <div class="magia-divisor">═══════════════════════════════</div>
+            </div>
+        `;
+    }
+
     const magia = magias[index];
-    
+
     // Aplica efeitos aleatórios baseados na eficiência
     setTimeout(() => aplicarEfeitosAleatorios(), 100);
-    
+
     // Verificar se esta magia tem desconto
     const temDesconto = window.arcanumIudicium.magiaComDesconto === magia.nome;
     const custoFinal = temDesconto ? Math.max(1, magia.custo - 1) : magia.custo;
     const textoDesconto = temDesconto ? ` <span style="color: #00ff00;">-1</span>` : '';
-    
+
     // Verificar se magia está memorizada
     const jaMemorizada = window.arcanumIudicium.isMagiaMemorizada(magia.id);
     const statusMemorizada = jaMemorizada ? ' <span style="color: #ffd700;">✓ Memorizada</span>' : '';
     const jaEstudada = window.arcanumIudicium.isMagiaEstudada(magia.id);
-const intencaoHtml = jaEstudada ? `<div class="magia-intencao" style="margin: 15px 0; font-size: 13px; color: #c5bebe; font-weight: bold;"><strong>Intenção:</strong> ${intencoesMagias[magia.id]}</div>` : '';
+    const intencaoHtml = jaEstudada
+        ? `<div class="magia-intencao" style="margin: 15px 0; font-size: 13px; color: #c5bebe; font-weight: bold;"><strong>Intenção:</strong> ${intencoesMagias[magia.id]}</div>`
+        : '';
     const reflexaoSalva = window.arcanumIudicium.reflexoesSalvas[magia.id];
-const reflexaoHtml = reflexaoSalva ? `<div class="magia-julgamento" style="margin: 15px 0; font-size: 13px; color: #8B4513; font-weight: bold; font-style: italic;">${reflexaoSalva}</div>` : '';
-const jaReflexao = window.arcanumIudicium.isMagiaReflexao(magia.id);
-const mostrarEstudarNovamente = jaEstudada && !jaReflexao && Math.random() < 0.33;
+    const reflexaoHtml = reflexaoSalva
+        ? `<div class="magia-julgamento" style="margin: 15px 0; font-size: 13px; color: #8B4513; font-weight: bold; font-style: italic;">${reflexaoSalva}</div>`
+        : '';
+    const jaReflexao = window.arcanumIudicium.isMagiaReflexao(magia.id);
+    const mostrarEstudarNovamente = jaEstudada && !jaReflexao && Math.random() < 0.33;
 
-
-
-    
     return `
         <div class="magia-page active">
             <div class="magia-titulo">${magia.nome}${statusMemorizada}</div>
@@ -777,9 +792,10 @@ const mostrarEstudarNovamente = jaEstudada && !jaReflexao && Math.random() < 0.3
 }
 
 
+
 async function mudarPagina(direcao) {
     const novaPagina = paginaAtual + direcao;
-    if (novaPagina < 0 || novaPagina >= magias.length) return;
+    if (novaPagina < 0 || novaPagina > magias.length) return;
 
     const magiaContent = document.getElementById('magia-content');
     const paginaAtiva = magiaContent.querySelector('.magia-page');
@@ -789,7 +805,9 @@ async function mudarPagina(direcao) {
     setTimeout(async () => {
         paginaAtual = novaPagina;
         magiaContent.innerHTML = criarPaginaMagia(paginaAtual);
-        document.querySelector('.page-number').textContent = `Página ${paginaAtual + 1}`;
+       const numeroTotal = magias.length + 1;
+document.querySelector('.page-number').textContent = `Página ${paginaAtual + 1} de ${numeroTotal}`;
+
         renderizarAcoesGrimorio();
         atualizarBotoes();
     }, 300);
