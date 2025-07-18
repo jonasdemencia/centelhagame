@@ -1549,7 +1549,7 @@ const começos = [
 "Você ouve passos e",
 "Dentro de uma estação vazia,",
 "Há um animal parado",
-"Num quintal sem portão,"
+"Num quintal sem portão,",
 // — Novos começos —
   "No topo de um morro isolado,",
   "Em um salão iluminado por velas,",
