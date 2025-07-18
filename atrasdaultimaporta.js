@@ -816,8 +816,8 @@ document.querySelector('.page-number').textContent = `Página ${paginaAtual + 1}
 
 
 function atualizarBotoes() {
-    document.getElementById('prev-btn').disabled = paginaAtual === 0;
-    document.getElementById('next-btn').disabled = paginaAtual === magias.length - 1;
+  document.getElementById('prev-btn').disabled = paginaAtual === 0;
+  document.getElementById('next-btn').disabled = paginaAtual === magias.length;
 }
 
 function renderizarAcoesGrimorio() {
