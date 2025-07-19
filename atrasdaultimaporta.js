@@ -1533,99 +1533,99 @@ window.dormirTelaPreta = dormirTelaPreta;
 
 const começos = [
 
-{ texto: "Dentro de um castelo em ruínas,", peso: 1 }, // RARO
-  { texto: "Numa rua familiar, mas deserta,", peso: 5 },
-  { texto: "Num campo silencioso ao entardecer,", peso: 10 },
-  { texto: "À beira de um rio onde a água corre para cima,", peso: 2 }, // incomum
+{ texto: "Dentro de um castelo em ruínas", peso: 1 }, // RARO
+  { texto: "Numa rua familiar, mas deserta", peso: 5 },
+  { texto: "Num campo silencioso ao entardecer", peso: 10 },
+  { texto: "À beira de um rio onde a água corre para cima", peso: 2 }, // incomum
     { texto: "Há um lugar onde", peso: 10 },
-  { texto: "Em um campo aberto,", peso: 10 },
-  { texto: "Ao lado de um rio,", peso: 10 },
-  { texto: "Numa rua que você acha que conhece,", peso: 8 },
-  { texto: "Dentro de uma casa sem teto,", peso: 7 },
-  { texto: "Você vê pessoas esperando em silêncio,", peso: 6 },
-  { texto: "Você entra em um lugar familiar,", peso: 8 },
-  { texto: "Na margem de algo imenso,", peso: 5 },
+  { texto: "Em um campo aberto", peso: 10 },
+  { texto: "Ao lado de um rio", peso: 10 },
+  { texto: "Numa rua que você acha que conhece", peso: 8 },
+  { texto: "Dentro de uma casa sem teto", peso: 7 },
+  { texto: "Você vê pessoas esperando em silêncio", peso: 6 },
+  { texto: "Você entra em um lugar familiar", peso: 8 },
+  { texto: "Na margem de algo imenso", peso: 5 },
   { texto: "Alguém segura sua mão e", peso: 6 },
-  { texto: "Você volta a um lugar que nunca viu,", peso: 4 },
-  { texto: "Na beira da floresta,", peso: 8 },
-  { texto: "Enquanto o sol se põe devagar,", peso: 9 },
-  { texto: "Debaixo de uma ponte,", peso: 7 },
-  { texto: "Em um corredor estreito,", peso: 6 },
+  { texto: "Você volta a um lugar que nunca viu", peso: 4 },
+  { texto: "Na beira da floresta", peso: 8 },
+  { texto: "Enquanto o sol se põe devagar", peso: 9 },
+  { texto: "Debaixo de uma ponte", peso: 7 },
+  { texto: "Em um corredor estreito", peso: 6 },
   { texto: "Você ouve passos e", peso: 5 },
-  { texto: "Dentro de uma estação vazia,", peso: 4 },
-  { texto: "Há um animal parado,", peso: 5 },
-  { texto: "Num quintal sem portão,", peso: 4 },
-  { texto: "No topo de um morro isolado,", peso: 5 },
-  { texto: "Em um salão iluminado por velas,", peso: 5 },
-  { texto: "Na praia onde as ondas não quebram,", peso: 3 },
-  { texto: "Em um vilarejo sem moradores,", peso: 2 },          // INCOMUM
-  { texto: "Em um trem que nunca chega,", peso: 3 },
-  { texto: "No silêncio de uma biblioteca vazia,", peso: 4 },
-  { texto: "Num celeiro esquecido,", peso: 3 },
-  { texto: "No fundo de um cais antigo,", peso: 3 },
-  { texto: "Em uma caverna escura,", peso: 5 },
-  { texto: "Na crista de uma montanha gelada,", peso: 2 },     // INCOMUM
-  { texto: "Nos escombros de uma cidade perdida,", peso: 2 },// INCOMUM
-  { texto: "Num labirinto de corredores brancos,", peso: 2 },// INCOMUM
-  { texto: "Em meio a estátuas sem rosto,", peso: 2 },       // INCOMUM
-  { texto: "Num teatro sem plateia,", peso: 2 },             // INCOMUM
-  { texto: "Na cozinha de uma casa intocada,", peso: 3 },
-  { texto: "Embaixo de uma árvore que não floresce,", peso: 2 }, // INCOMUM
-  { texto: "Na borda de um penhasco,", peso: 5 },
-  { texto: "Sobre um rio congelado,", peso: 3 },
-  { texto: "Num deserto coberto de neblina,", peso: 2 },     // INCOMUM
-  { texto: "Num navio fantasma ancorado,", peso: 2 },       // INCOMUM
-  { texto: "Num campo de girassóis murchos,", peso: 3 },
-  { texto: "Dentro de um castelo em ruínas,", peso: 1 },    // RARO
-  { texto: "Num asilo silencioso,", peso: 2 },              // INCOMUM
-  { texto: "Num altar sem oferenda,", peso: 2 },            // INCOMUM
-  { texto: "Em um beco sem saída,", peso: 4 },
-  { texto: "Num jardim sem flores,", peso: 3 },
-  { texto: "No salão de espelhos quebrados,", peso: 2 },    // INCOMUM
-  { texto: "Em meio a nuvens de poeira,", peso: 3 },
-  { texto: "Na sombra de um farol apagado,", peso: 3 },
-  { texto: "Na cratera de um vulcão adormecido,", peso: 2 },// INCOMUM
-  { texto: "Em um pátio cercado por muros altos,", peso: 3 },
-  { texto: "No túnel de um metrô desativado,", peso: 3 },
-  { texto: "Na cobertura de um prédio abandonado,", peso: 3 },
-  { texto: "Na sala de aula trancada,", peso: 4 },
-  { texto: "Num hospital inundado,", peso: 2 },               // INCOMUM
+  { texto: "Dentro de uma estação vazia", peso: 4 },
+  { texto: "Há um animal parado", peso: 5 },
+  { texto: "Num quintal sem portão", peso: 4 },
+  { texto: "No topo de um morro isolado", peso: 5 },
+  { texto: "Em um salão iluminado por velas", peso: 5 },
+  { texto: "Na praia onde as ondas não quebram", peso: 3 },
+  { texto: "Em um vilarejo sem moradores", peso: 2 },          // INCOMUM
+  { texto: "Em um trem que nunca chega", peso: 3 },
+  { texto: "No silêncio de uma biblioteca vazia", peso: 4 },
+  { texto: "Num celeiro esquecido", peso: 3 },
+  { texto: "No fundo de um cais antigo", peso: 3 },
+  { texto: "Em uma caverna escura", peso: 5 },
+  { texto: "Na crista de uma montanha gelada", peso: 2 },     // INCOMUM
+  { texto: "Nos escombros de uma cidade perdida", peso: 2 },// INCOMUM
+  { texto: "Num labirinto de corredores brancos", peso: 2 },// INCOMUM
+  { texto: "Em meio a estátuas sem rosto", peso: 2 },       // INCOMUM
+  { texto: "Num teatro sem plateia", peso: 2 },             // INCOMUM
+  { texto: "Na cozinha de uma casa intocada", peso: 3 },
+  { texto: "Embaixo de uma árvore que não floresce", peso: 2 }, // INCOMUM
+  { texto: "Na borda de um penhasco", peso: 5 },
+  { texto: "Sobre um rio congelado", peso: 3 },
+  { texto: "Num deserto coberto de neblina", peso: 2 },     // INCOMUM
+  { texto: "Num navio fantasma ancorado", peso: 2 },       // INCOMUM
+  { texto: "Num campo de girassóis murchos", peso: 3 },
+  { texto: "Dentro de um castelo em ruínas", peso: 1 },    // RARO
+  { texto: "Num asilo silencioso", peso: 2 },              // INCOMUM
+  { texto: "Num altar sem oferenda", peso: 2 },            // INCOMUM
+  { texto: "Em um beco sem saída", peso: 4 },
+  { texto: "Num jardim sem flores", peso: 3 },
+  { texto: "No salão de espelhos quebrados", peso: 2 },    // INCOMUM
+  { texto: "Em meio a nuvens de poeira", peso: 3 },
+  { texto: "Na sombra de um farol apagado", peso: 3 },
+  { texto: "Na cratera de um vulcão adormecido", peso: 2 },// INCOMUM
+  { texto: "Em um pátio cercado por muros altos", peso: 3 },
+  { texto: "No túnel de um metrô desativado", peso: 3 },
+  { texto: "Na cobertura de um prédio abandonado", peso: 3 },
+  { texto: "Na sala de aula trancada", peso: 4 },
+  { texto: "Num hospital inundado", peso: 2 },               // INCOMUM
 
     // comuns a moderados
-  { texto: "Na varanda de um casarão antigo,", peso: 6 },
-  { texto: "Em um circo sem palhaços,", peso: 5 },
-  { texto: "Em uma estação de rádio silenciosa,", peso: 6 },
-  { texto: "No centro de um labirinto de espinhos,", peso: 4 },
-  { texto: "Em um porão guardado pelo silêncio,", peso: 6 },
-  { texto: "Num portão rangendo ao vento,", peso: 7 },
-  { texto: "No cais onde navios já naufragaram,", peso: 5 },
-  { texto: "Na colina onde as árvores não crescem,", peso: 5 },
-  { texto: "Embaixo de um toldo rasgado,", peso: 6 },
-  { texto: "No meio de uma sala vazia,", peso: 8 },
-  { texto: "Perto de um relógio parado,", peso: 8 },
-  { texto: "Sobre trilhos que não conduzem a lugar algum,", peso: 4 },
-  { texto: "Num terraço coberto de hera,", peso: 6 },
-  { texto: "Perto de uma ponte quebrada,", peso: 7 },
-  { texto: "Em um campo onde as sombras dançam,", peso: 5 },
-  { texto: "Num corredor iluminado por lâmpadas tremeluzentes,", peso: 5 },
+  { texto: "Na varanda de um casarão antigo", peso: 6 },
+  { texto: "Em um circo sem palhaços", peso: 5 },
+  { texto: "Em uma estação de rádio silenciosa", peso: 6 },
+  { texto: "No centro de um labirinto de espinhos", peso: 4 },
+  { texto: "Em um porão guardado pelo silêncio", peso: 6 },
+  { texto: "Num portão rangendo ao vento", peso: 7 },
+  { texto: "No cais onde navios já naufragaram", peso: 5 },
+  { texto: "Na colina onde as árvores não crescem", peso: 5 },
+  { texto: "Embaixo de um toldo rasgado", peso: 6 },
+  { texto: "No meio de uma sala vazia", peso: 8 },
+  { texto: "Perto de um relógio parado", peso: 8 },
+  { texto: "Sobre trilhos que não conduzem a lugar algum", peso: 4 },
+  { texto: "Num terraço coberto de hera", peso: 6 },
+  { texto: "Perto de uma ponte quebrada", peso: 7 },
+  { texto: "Em um campo onde as sombras dançam", peso: 5 },
+  { texto: "Num corredor iluminado por lâmpadas tremeluzentes", peso: 5 },
 
   // raros e perturbadores
-  { texto: "No fundo de uma escola vazia,", peso: 2 },
-  { texto: "Dentro de um castelo em ruínas,", peso: 1 },
-  { texto: "Em uma estação de trem onde não há trilhos,", peso: 2 },
-  { texto: "Num campo sem horizonte,", peso: 2 },
-  { texto: "Atrás do espelho do seu antigo quarto,", peso: 1 },
-  { texto: "Sob uma árvore que cresce ao contrário,", peso: 1 },
-  { texto: "Num quarto idêntico ao seu, mas com móveis trocados,", peso: 1 },
-  { texto: "Num porão onde todas as luzes estão acesas,", peso: 2 },
-  { texto: "Dentro de um elevador que não para de subir,", peso: 2 },
-  { texto: "Num corredor de hospital sem fim,", peso: 2 },
-  { texto: "Numa cidade onde todas as casas são iguais,", peso: 2 },
-  { texto: "Na sala onde você cresceu, mas tudo está molhado,", peso: 2 },
-  { texto: "Num banheiro com dezenas de espelhos,", peso: 2 },
-  { texto: "No silêncio entre dois trovões,", peso: 1 },
-  { texto: "Num ônibus que só anda em marcha ré,", peso: 2 },
-  { texto: "Na rua onde você morou, mas tudo está coberto de cinzas,", peso: 1 }
+  { texto: "No fundo de uma escola vazia", peso: 2 },
+  { texto: "Dentro de um castelo em ruínas", peso: 1 },
+  { texto: "Em uma estação de trem onde não há trilhos", peso: 2 },
+  { texto: "Num campo sem horizonte", peso: 2 },
+  { texto: "Atrás do espelho do seu antigo quarto", peso: 1 },
+  { texto: "Sob uma árvore que cresce ao contrário", peso: 1 },
+  { texto: "Num quarto idêntico ao seu, mas com móveis trocados", peso: 1 },
+  { texto: "Num porão onde todas as luzes estão acesas", peso: 2 },
+  { texto: "Dentro de um elevador que não para de subir", peso: 2 },
+  { texto: "Num corredor de hospital sem fim", peso: 2 },
+  { texto: "Numa cidade onde todas as casas são iguais", peso: 2 },
+  { texto: "Na sala onde você cresceu, mas tudo está molhado", peso: 2 },
+  { texto: "Num banheiro com dezenas de espelhos", peso: 2 },
+  { texto: "No silêncio entre dois trovões", peso: 1 },
+  { texto: "Num ônibus que só anda em marcha ré", peso: 2 },
+  { texto: "Na rua onde você morou, mas tudo está coberto de cinzas", peso: 1 }
  
  
 ];
