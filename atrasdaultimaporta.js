@@ -1959,6 +1959,7 @@ function dormirTelaPreta() {
 
   const btnRecordar = document.createElement('button');
   btnRecordar.textContent = 'Recordar';
+
   const btnEsquecer = document.createElement('button');
   btnEsquecer.textContent = 'Esquecer';
 
@@ -1979,16 +1980,25 @@ function dormirTelaPreta() {
     btn.addEventListener('mouseout', () => {
       btn.style.background = 'none';
     });
-    btnEsquecer.addEventListener('click', async () => {
-  await registrarEsquecimento();
-  overlay.style.opacity = '0';
-  setTimeout(() => document.body.removeChild(overlay), 2000);
-});
+  });
 
-btnRecordar.addEventListener('click', () => {
-  overlay.style.opacity = '0';
-  setTimeout(() => document.body.removeChild(overlay), 2000);
-});
+  btnEsquecer.addEventListener('click', async () => {
+    await registrarEsquecimento();
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+      if (document.body.contains(overlay)) {
+        document.body.removeChild(overlay);
+      }
+    }, 2000);
+  });
+
+  btnRecordar.addEventListener('click', () => {
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+      if (document.body.contains(overlay)) {
+        document.body.removeChild(overlay);
+      }
+    }, 2000);
   });
 
   botoes.appendChild(btnRecordar);
@@ -1997,6 +2007,7 @@ btnRecordar.addEventListener('click', () => {
   overlay.appendChild(mensagem);
   overlay.appendChild(fraseSonho);
   overlay.appendChild(botoes);
+
   document.body.appendChild(overlay);
 
   setTimeout(() => {
