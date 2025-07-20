@@ -1864,10 +1864,12 @@ const maxTotal = Math.max(...começos.map(x => x.peso)) + Math.max(...imagens.ma
 const limiarRaro    = 4;
 const limiarIncomum = 7;
 
-if (total === 2) return 'profetico';
-if (total < limiarRaro) return 'raro';
-if (total < limiarIncomum) return 'incomum';
-return 'comum';
+function classificarRaridade(total) {
+  if (total === 2) return 'profetico';
+  if (total < limiarRaro) return 'raro';
+  if (total < limiarIncomum) return 'incomum';
+  return 'comum';
+}
 
 function sortearComPeso(array) {
   const soma = array.reduce((acc, item) => acc + item.peso, 0);
