@@ -1922,7 +1922,7 @@ function dormirTelaPreta() {
   `;
 
   const fraseSonho = document.createElement('div');
-  fraseSonho.textContent = '';
+  fraseSonho.textContent = ''; // Vai receber o sonho depois
   fraseSonho.style.cssText = `
     color: #aaa;
     font-size: 1.5rem;
@@ -1934,44 +1934,48 @@ function dormirTelaPreta() {
     margin-bottom: 2rem;
   `;
 
-  const botoesContainer = document.createElement('div');
-  botoesContainer.style.cssText = `
+  const botoes = document.createElement('div');
+  botoes.style.cssText = `
     display: flex;
     gap: 2rem;
     opacity: 0;
     transition: opacity 2s ease;
   `;
 
-  const btnEsquecer = document.createElement('button');
-  btnEsquecer.textContent = 'Esquecer';
-  btnEsquecer.style.cssText = `
-    background: #222;
-    color: #fff;
-    border: 1px solid #555;
-    padding: 0.5rem 1.5rem;
-    font-family: 'VT323', monospace;
-    font-size: 1.2rem;
-    cursor: pointer;
-  `;
-
   const btnRecordar = document.createElement('button');
   btnRecordar.textContent = 'Recordar';
-  btnRecordar.style.cssText = `
-    background: #222;
-    color: #fff;
-    border: 1px solid #555;
-    padding: 0.5rem 1.5rem;
-    font-family: 'VT323', monospace;
-    font-size: 1.2rem;
-    cursor: pointer;
-  `;
+  const btnEsquecer = document.createElement('button');
+  btnEsquecer.textContent = 'Esquecer';
 
-  botoesContainer.appendChild(btnEsquecer);
-  botoesContainer.appendChild(btnRecordar);
+  [btnRecordar, btnEsquecer].forEach(btn => {
+    btn.style.cssText = `
+      background: none;
+      border: 1px solid #555;
+      color: #ccc;
+      font-family: 'VT323', monospace;
+      font-size: 1.5rem;
+      padding: 0.5rem 1.5rem;
+      cursor: pointer;
+      transition: background 0.3s;
+    `;
+    btn.addEventListener('mouseover', () => {
+      btn.style.background = '#222';
+    });
+    btn.addEventListener('mouseout', () => {
+      btn.style.background = 'none';
+    });
+    btn.addEventListener('click', () => {
+      overlay.style.opacity = '0';
+      setTimeout(() => document.body.removeChild(overlay), 2000);
+    });
+  });
+
+  botoes.appendChild(btnRecordar);
+  botoes.appendChild(btnEsquecer);
 
   overlay.appendChild(mensagem);
   overlay.appendChild(fraseSonho);
-  overlay.appendChild(botoesContainer);
+  overlay.appendChild(botoes);
   document.body.appendChild(overlay);
 
   setTimeout(() => {
@@ -1988,16 +1992,9 @@ function dormirTelaPreta() {
   }, 5000);
 
   setTimeout(() => {
-    botoesContainer.style.opacity = '1';
+    botoes.style.opacity = '1';
   }, 7000);
-
-  // Remove após tempo total
-  setTimeout(() => {
-    overlay.style.opacity = '0';
-    setTimeout(() => document.body.removeChild(overlay), 2000);
-  }, 15000);
 }
-
 
 
 function aplicarEfeitosAleatorios() {
