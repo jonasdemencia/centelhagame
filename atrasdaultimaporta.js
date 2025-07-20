@@ -1533,10 +1533,10 @@ window.dormirTelaPreta = dormirTelaPreta;
 
 const começos = [
 
-{ texto: "Dentro de um castelo em ruínas", peso: 1 }, // RARO
+{ texto: "Dentro de um castelo em ruínas", peso: 5 }, // RARO
   { texto: "Numa rua familiar, mas deserta", peso: 5 },
   { texto: "Num campo silencioso ao entardecer", peso: 10 },
-  { texto: "À beira de um rio onde a água corre para cima", peso: 2 }, // incomum
+  { texto: "À beira de um rio onde a água corre para cima", peso: 5 }, // incomum
     { texto: "Há um lugar onde", peso: 10 },
   { texto: "Em um campo aberto", peso: 10 },
   { texto: "Ao lado de um rio", peso: 10 },
@@ -1558,38 +1558,38 @@ const começos = [
   { texto: "No topo de um morro isolado", peso: 5 },
   { texto: "Em um salão iluminado por velas", peso: 5 },
   { texto: "Na praia onde as ondas não quebram", peso: 3 },
-  { texto: "Em um vilarejo sem moradores", peso: 2 },          // INCOMUM
+  { texto: "Em um vilarejo sem moradores", peso: 3 },          
   { texto: "Em um trem que nunca chega", peso: 3 },
   { texto: "No silêncio de uma biblioteca vazia", peso: 4 },
   { texto: "Num celeiro esquecido", peso: 3 },
   { texto: "No fundo de um cais antigo", peso: 3 },
   { texto: "Em uma caverna escura", peso: 5 },
-  { texto: "Na crista de uma montanha gelada", peso: 2 },     // INCOMUM
-  { texto: "Nos escombros de uma cidade perdida", peso: 2 },// INCOMUM
-  { texto: "Num labirinto de corredores brancos", peso: 2 },// INCOMUM
-  { texto: "Em meio a estátuas sem rosto", peso: 2 },       // INCOMUM
-  { texto: "Num teatro sem plateia", peso: 2 },             // INCOMUM
-  { texto: "Na cozinha de uma casa intocada", peso: 3 },
-  { texto: "Embaixo de uma árvore que não floresce", peso: 2 }, // INCOMUM
+  { texto: "Na crista de uma montanha gelada", peso: 5 },     
+  { texto: "Nos escombros de uma cidade perdida", peso: 5 },
+  { texto: "Num labirinto de corredores brancos", peso: 5 },
+  { texto: "Em meio a estátuas sem rosto", peso: 2 },      
+  { texto: "Num teatro sem plateia", peso: 2 },             
+  { texto: "Na cozinha de uma casa intocada", peso: 5 },
+  { texto: "Embaixo de uma árvore que não floresce", peso: 5 }, 
   { texto: "Na borda de um penhasco", peso: 5 },
   { texto: "Sobre um rio congelado", peso: 3 },
-  { texto: "Num deserto coberto de neblina", peso: 2 },     // INCOMUM
-  { texto: "Num navio fantasma ancorado", peso: 2 },       // INCOMUM
+  { texto: "Num deserto coberto de neblina", peso: 5 },     
+  { texto: "Num navio fantasma ancorado", peso: 5 },       
   { texto: "Num campo de girassóis murchos", peso: 3 },
-  { texto: "Dentro de um castelo em ruínas", peso: 1 },    // RARO
-  { texto: "Num asilo silencioso", peso: 2 },              // INCOMUM
-  { texto: "Num altar sem oferenda", peso: 2 },            // INCOMUM
+  { texto: "Dentro de um castelo em ruínas", peso: 5 },    
+  { texto: "Num asilo silencioso", peso: 5 },              
+  { texto: "Num altar sem oferenda", peso: 5 },           
   { texto: "Em um beco sem saída", peso: 4 },
   { texto: "Num jardim sem flores", peso: 3 },
-  { texto: "No salão de espelhos quebrados", peso: 2 },    // INCOMUM
+  { texto: "No salão de espelhos quebrados", peso: 4 },    
   { texto: "Em meio a nuvens de poeira", peso: 3 },
   { texto: "Na sombra de um farol apagado", peso: 3 },
-  { texto: "Na cratera de um vulcão adormecido", peso: 2 },// INCOMUM
+  { texto: "Na cratera de um vulcão adormecido", peso: 4 },
   { texto: "Em um pátio cercado por muros altos", peso: 3 },
   { texto: "No túnel de um metrô desativado", peso: 3 },
   { texto: "Na cobertura de um prédio abandonado", peso: 3 },
   { texto: "Na sala de aula trancada", peso: 4 },
-  { texto: "Num hospital inundado", peso: 2 },               // INCOMUM
+  { texto: "Num hospital inundado", peso: 4 },               
 
     // comuns a moderados
   { texto: "Na varanda de um casarão antigo", peso: 6 },
