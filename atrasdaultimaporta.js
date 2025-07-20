@@ -27,7 +27,7 @@ async function registrarEsquecimento() {
     console.warn("Usuário não autenticado.");
     return;
   }
-  const userRef = doc(db, "jogadores", user.uid);
+  const userRef = doc(db, "players", user.uid);
   try {
     await setDoc(userRef, { esquecimentos: increment(1) }, { merge: true });
     console.log("Esquecimento registrado no Firestore.");
