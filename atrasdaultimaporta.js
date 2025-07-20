@@ -1858,22 +1858,20 @@ const imagens = [
 const totalPesoComecos  = começos.reduce((sum, x) => sum + x.peso, 0);
 const totalPesoImagens = imagens.reduce((sum, x) => sum + x.peso, 0);
 
-// limites automático, se quiser manter para Incomum/Comum:
+// limites automático (ainda disponíveis, se precisar)
 const minTotal = Math.min(...começos.map(x => x.peso))
                + Math.min(...imagens.map(x => x.peso));
 const maxTotal = Math.max(...começos.map(x => x.peso))
                + Math.max(...imagens.map(x => x.peso));
 
-// Limiar fixo para "Raro"
-const limiarRaro = 4;
-
-// opcional: definir também um limiar fixo para "Incomum"
-const limiarIncomum = minTotal + (2 * (maxTotal - minTotal)) / 3;
+// thresholds fixos para classificação
+const limiarRaro    = 4;  // total < 4  → “Raro”
+const limiarIncomum = 7;  // 4 ≤ total < 7 → “Incomum”
 
 function classificarRaridade(total) {
-  if (total < limiarRaro)         return 'Raro';      // agora raro = total < 4
-  if (total <= limiarIncomum)     return 'Incomum';   // Incomum entre [4..limiarIncomum]
-  return 'Comum';                                     // acima de limiarIncomum
+  if (total < limiarRaro)       return 'Raro';
+  if (total < limiarIncomum)    return 'Incomum';
+  return 'Comum';
 }
 
 
