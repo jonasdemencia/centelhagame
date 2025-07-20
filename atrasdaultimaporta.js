@@ -1625,21 +1625,21 @@ const começos = [
   { texto: "Num corredor iluminado por lâmpadas tremeluzentes", peso: 5 },
 
   // raros e perturbadores
-  { texto: "No fundo de uma escola vazia", peso: 2 },
+  { texto: "No fundo de uma escola vazia", peso: 1 },
   { texto: "Dentro de um castelo em ruínas", peso: 1 },
-  { texto: "Em uma estação de trem onde não há trilhos", peso: 2 },
-  { texto: "Num campo sem horizonte", peso: 2 },
+  { texto: "Em uma estação de trem onde não há trilhos", peso: 1 },
+  { texto: "Num campo sem horizonte", peso: 1 },
   { texto: "Atrás do espelho do seu antigo quarto", peso: 1 },
   { texto: "Sob uma árvore que cresce ao contrário", peso: 1 },
   { texto: "Num quarto idêntico ao seu, mas com móveis trocados", peso: 1 },
-  { texto: "Num porão onde todas as luzes estão acesas", peso: 2 },
-  { texto: "Dentro de um elevador que não para de subir", peso: 2 },
-  { texto: "Num corredor de hospital sem fim", peso: 2 },
-  { texto: "Numa cidade onde todas as casas são iguais", peso: 2 },
-  { texto: "Na sala onde você cresceu, mas tudo está molhado", peso: 2 },
-  { texto: "Num banheiro com dezenas de espelhos", peso: 2 },
+  { texto: "Num porão onde todas as luzes estão acesas", peso: 1 },
+  { texto: "Dentro de um elevador que não para de subir", peso: 1 },
+  { texto: "Num corredor de hospital sem fim", peso: 1 },
+  { texto: "Numa cidade onde todas as casas são iguais", peso: 1 },
+  { texto: "Na sala onde você cresceu, mas tudo está molhado", peso: 1 },
+  { texto: "Num banheiro com dezenas de espelhos", peso: 1 },
   { texto: "No silêncio entre dois trovões", peso: 1 },
-  { texto: "Num ônibus que só anda em marcha ré", peso: 2 },
+  { texto: "Num ônibus que só anda em marcha ré", peso: 1 },
   { texto: "Na rua onde você morou, mas tudo está coberto de cinzas", peso: 1 }
  
  
