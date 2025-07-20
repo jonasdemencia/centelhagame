@@ -1864,12 +1864,10 @@ const maxTotal = Math.max(...começos.map(x => x.peso)) + Math.max(...imagens.ma
 const limiarRaro    = 4;
 const limiarIncomum = 7;
 
-function classificarRaridade(total) {
-  if (total === 2) return 'Profético';
-  if (total < limiarRaro) return 'Raro';
-  if (total < limiarIncomum) return 'Incomum';
-  return 'Comum';
-}
+if (total === 2) return 'profetico';
+if (total < limiarRaro) return 'raro';
+if (total < limiarIncomum) return 'incomum';
+return 'comum';
 
 function sortearComPeso(array) {
   const soma = array.reduce((acc, item) => acc + item.peso, 0);
@@ -2028,15 +2026,14 @@ async function registrarSonho(categoria) {
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) return;
-
     const db = getFirestore();
     const ref = doc(db, 'players', user.uid);
     const snap = await getDoc(ref);
-
-    let dados = snap.exists() ? snap.data() : { comum: 0, incomum: 0, raro: 0, lendário: 0 };
-    dados[categoria] = (dados[categoria] || 0) + 1;
-
-    await setDoc(ref, dados);
+    let dados = snap.exists() ? snap.data() : {};
+    let sonhos = dados.sonhos || { comum: 0, incomum: 0, raro: 0, profetico: 0 };
+    sonhos[categoria] = (sonhos[categoria] || 0) + 1;
+    await setDoc(ref, { sonhos }, { merge: true });
+    console.log(`Sonho registrado: ${categoria}`);
   } catch (err) {
     console.error('Erro ao registrar sonho:', err);
   }
