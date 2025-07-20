@@ -1858,22 +1858,22 @@ const imagens = [
 const totalPesoComecos  = começos.reduce((sum, x) => sum + x.peso, 0);
 const totalPesoImagens = imagens.reduce((sum, x) => sum + x.peso, 0);
 
-// limites automático (ainda disponíveis, se precisar)
+// limites automático (mantidos caso precise)
 const minTotal = Math.min(...começos.map(x => x.peso))
                + Math.min(...imagens.map(x => x.peso));
 const maxTotal = Math.max(...começos.map(x => x.peso))
                + Math.max(...imagens.map(x => x.peso));
 
-// thresholds fixos para classificação
-const limiarRaro    = 4;  // total < 4  → “Raro”
+// thresholds fixos
+const limiarRaro    = 4;  // total < 4  → “Raro” (exceto soma 2)
 const limiarIncomum = 7;  // 4 ≤ total < 7 → “Incomum”
 
 function classificarRaridade(total) {
-  if (total < limiarRaro)       return 'Raro';
-  if (total < limiarIncomum)    return 'Incomum';
+  if (total === 2)            return 'Profético';   // soma 2 ganha categoria única
+  if (total < limiarRaro)     return 'Raro';
+  if (total < limiarIncomum)  return 'Incomum';
   return 'Comum';
 }
-
 
 
 function sortearComPeso(array) {
