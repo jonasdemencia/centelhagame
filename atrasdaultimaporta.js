@@ -1858,15 +1858,17 @@ const imagens = [
 const totalPesoComecos  = começos.reduce((sum, x) => sum + x.peso, 0);
 const totalPesoImagens = imagens.reduce((sum, x) => sum + x.peso, 0);
 
-const minTotal = Math.min(...começos.map(x => x.peso)) + Math.min(...imagens.map(x => x.peso));
-const maxTotal = Math.max(...começos.map(x => x.peso)) + Math.max(...imagens.map(x => x.peso));
+const minTotal = Math.min(...começos.map(x => x.peso))
+               + Math.min(...imagens.map(x => x.peso));
+const maxTotal = Math.max(...começos.map(x => x.peso))
+               + Math.max(...imagens.map(x => x.peso));
 
-const limiarRaro    = 4;
-const limiarIncomum = 7;
+const limiarRaro    = 4;  // total < 4  → “Raro” (exceto total === 2)
+const limiarIncomum = 7;  // 4 ≤ total < 7 → “Incomum”
 
 function classificarRaridade(total) {
-  if (total === 2) return 'profetico';
-  if (total < limiarRaro) return 'raro';
+  if (total === 2)           return 'profetico';
+  if (total < limiarRaro)    return 'raro';
   if (total < limiarIncomum) return 'incomum';
   return 'comum';
 }
@@ -1885,15 +1887,17 @@ function sortearComPeso(array) {
 function gerarSonho() {
   const c = sortearComPeso(começos);
   const i = sortearComPeso(imagens);
-  const total = c.peso + i.peso;
+  const total     = c.peso + i.peso;
   const categoria = classificarRaridade(total);
 
-  const prob = (c.peso / totalPesoComecos) * (i.peso / totalPesoImagens);
+  const prob    = (c.peso / totalPesoComecos) * (i.peso / totalPesoImagens);
   const percent = (prob * 100).toFixed(2) + '%';
-  const odds = Math.round(1 / prob);
+  const odds    = Math.round(1 / prob);
 
   console.log(
-    `Raridade total do sonho: ${total} (categoria "${categoria}"), Probabilidade: ${percent} (ou 1 em ${odds})`
+    `Raridade total do sonho: ${total} ` +
+    `(categoria "${categoria}"), ` +
+    `Probabilidade: ${percent} (ou 1 em ${odds})`
   );
 
   return { texto: `${c.texto}… ${i.texto}`, categoria };
@@ -1965,12 +1969,8 @@ async function dormirTelaPreta() {
       cursor: pointer;
       transition: background 0.3s;
     `;
-    btn.addEventListener('mouseover', () => {
-      btn.style.background = '#222';
-    });
-    btn.addEventListener('mouseout', () => {
-      btn.style.background = 'none';
-    });
+    btn.addEventListener('mouseover', () => btn.style.background = '#222');
+    btn.addEventListener('mouseout',  () => btn.style.background = 'none');
   });
 
   btnEsquecer.addEventListener('click', async () => {
@@ -1992,54 +1992,54 @@ async function dormirTelaPreta() {
     }, 2000);
   });
 
-  botoes.appendChild(btnRecordar);
-  botoes.appendChild(btnEsquecer);
-
-  overlay.appendChild(mensagem);
-  overlay.appendChild(fraseSonho);
-  overlay.appendChild(botoes);
-
+  botoes.append(btnRecordar, btnEsquecer);
+  overlay.append(mensagem, fraseSonho, botoes);
   document.body.appendChild(overlay);
 
-  setTimeout(() => {
-    overlay.style.opacity = '1';
-  }, 10);
-
-  setTimeout(() => {
-    mensagem.style.opacity = '1';
-  }, 2000);
-
+  setTimeout(() => overlay.style.opacity = '1', 10);
+  setTimeout(() => mensagem.style.opacity = '1', 2000);
   setTimeout(async () => {
     const resultado = gerarSonho();
     fraseSonho.textContent = resultado.texto;
     fraseSonho.style.opacity = '1';
-
-    // Registra raridade automaticamente
     await registrarSonho(resultado.categoria);
   }, 5000);
-
-  setTimeout(() => {
-    botoes.style.opacity = '1';
-  }, 7000);
+  setTimeout(() => botoes.style.opacity = '1', 7000);
 }
+
+// === A PARTIR DAQUI: ajuste para gravar "sonhos …" no Firestore ===
+
+// mapeamento categoria → label de campo
+const labelPorCategoria = {
+  comum:     'sonhos comuns',
+  incomum:   'sonhos incomuns',
+  raro:      'sonhos raros',
+  profetico: 'sonhos proféticos'
+};
 
 async function registrarSonho(categoria) {
   try {
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) return;
-    const db = getFirestore();
-    const ref = doc(db, 'players', user.uid);
+
+    const db   = getFirestore();
+    const ref  = doc(db, 'players', user.uid);
     const snap = await getDoc(ref);
-    let dados = snap.exists() ? snap.data() : {};
-    let sonhos = dados.sonhos || { comum: 0, incomum: 0, raro: 0, profetico: 0 };
-    sonhos[categoria] = (sonhos[categoria] || 0) + 1;
+    const dados  = snap.exists() ? snap.data() : {};
+    const sonhos = dados.sonhos || {};
+
+    // monta a chave usando o label certo
+    const chave = labelPorCategoria[categoria] || categoria;
+    sonhos[chave] = (sonhos[chave] || 0) + 1;
+
     await setDoc(ref, { sonhos }, { merge: true });
-    console.log(`Sonho registrado: ${categoria}`);
+    console.log(`Sonho registrado: ${chave}`);
   } catch (err) {
     console.error('Erro ao registrar sonho:', err);
   }
 }
+
 
 
 function aplicarEfeitosAleatorios() {
