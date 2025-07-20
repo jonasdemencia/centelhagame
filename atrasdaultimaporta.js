@@ -1,7 +1,7 @@
 // Importa os SDKs necessários do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 // Configuração do Firebase
 const firebaseConfig = {
@@ -20,6 +20,24 @@ const db = getFirestore(app);
 
 // Sistema de Condições Ambientais Globais - Arcanum Verbis
 const ARCANUM_LAUNCH_DATE = new Date('2024-01-01T00:00:00Z');
+
+async function registrarEsquecimento() {
+  const user = getAuth().currentUser;
+  if (!user) {
+    console.warn("Usuário não autenticado.");
+    return;
+  }
+
+  const userRef = doc(db, "jogadores", user.uid);
+  try {
+    await updateDoc(userRef, {
+      esquecimentos: increment(1)
+    });
+    console.log("Esquecimento registrado no Firestore.");
+  } catch (e) {
+    console.error("Erro ao registrar esquecimento:", e);
+  }
+}
 
 async function getArcanumConditions() {
     console.log("🔍 CONDIÇÕES DEBUG - Função chamada");
@@ -1964,10 +1982,16 @@ function dormirTelaPreta() {
     btn.addEventListener('mouseout', () => {
       btn.style.background = 'none';
     });
-    btn.addEventListener('click', () => {
-      overlay.style.opacity = '0';
-      setTimeout(() => document.body.removeChild(overlay), 2000);
-    });
+    btnEsquecer.addEventListener('click', async () => {
+  await registrarEsquecimento();
+  overlay.style.opacity = '0';
+  setTimeout(() => document.body.removeChild(overlay), 2000);
+});
+
+btnRecordar.addEventListener('click', () => {
+  overlay.style.opacity = '0';
+  setTimeout(() => document.body.removeChild(overlay), 2000);
+});
   });
 
   botoes.appendChild(btnRecordar);
