@@ -2030,7 +2030,7 @@ async function registrarSonho(categoria) {
     if (!user) return;
 
     const db = getFirestore();
-    const ref = doc(db, 'sonhos', user.uid);
+    const ref = doc(db, 'players', user.uid);
     const snap = await getDoc(ref);
 
     let dados = snap.exists() ? snap.data() : { comum: 0, incomum: 0, raro: 0, lendário: 0 };
