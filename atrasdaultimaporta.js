@@ -2009,11 +2009,11 @@ async function dormirTelaPreta() {
 
 // === A PARTIR DAQUI: ajuste para gravar "sonhos …" no Firestore ===
 
-// mapeamento categoria → label de campo
+// Mapeamento categoria → label de campo
 const labelPorCategoria = {
-  comum:     'sonhos comuns',
-  incomum:   'sonhos incomuns',
-  raro:      'sonhos raros',
+  comum: 'sonhos comuns',
+  incomum: 'sonhos incomuns',
+  raro: 'sonhos raros',
   profetico: 'sonhos proféticos'
 };
 
@@ -2022,17 +2022,15 @@ async function registrarSonho(categoria) {
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) return;
-
-    const db   = getFirestore();
-    const ref  = doc(db, 'players', user.uid);
+    const db = getFirestore();
+    const ref = doc(db, 'players', user.uid);
     const snap = await getDoc(ref);
-    const dados  = snap.exists() ? snap.data() : {};
+    const dados = snap.exists() ? snap.data() : {};
+    // Use apenas os campos com prefixo "sonhos "
     const sonhos = dados.sonhos || {};
-
-    // monta a chave usando o label certo
     const chave = labelPorCategoria[categoria] || categoria;
     sonhos[chave] = (sonhos[chave] || 0) + 1;
-
+    // Salva apenas o objeto "sonhos" com merge
     await setDoc(ref, { sonhos }, { merge: true });
     console.log(`Sonho registrado: ${chave}`);
   } catch (err) {
