@@ -397,68 +397,55 @@ document.addEventListener("DOMContentLoaded", () => {
             
         // DESEQUIPE
         else if (selectedItem === null && currentEquippedItem) {
-            // bloco de desequipar
-            console.log("Desequipando item:", currentEquippedItem, "do slot:", slotType);
-            const itemText = slot.innerHTML.trim();
-            slot.innerHTML = slotType;
-            delete slot.dataset.consumable;
-            delete slot.dataset.quantity;
-            delete slot.dataset.effect;
-            delete slot.dataset.value;
+    // Desequipar: remove do slot e adiciona ao inventário no Firestore
+    console.log("Desequipando item:", currentEquippedItem, "do slot:", slotType);
 
-            const originalItemData = allItemsArr.find(item => item.content === itemText);
-            // Não duplica: se já existe com id real no baú, não cria!
-            const alreadyInChest = Array.from(document.querySelectorAll('.item')).find(item =>
-                item.dataset.item === (originalItemData ? originalItemData.id : null)
-            );
-            if (alreadyInChest) {
-                console.log("Item já existe no baú, não criando duplicata");
-                return;
-            }
+    // Limpa o slot visualmente
+    slot.innerHTML = slotType;
+    delete slot.dataset.consumable;
+    delete slot.dataset.quantity;
+    delete slot.dataset.effect;
+    delete slot.dataset.value;
 
-            const newItem = document.createElement("div");
-newItem.classList.add("item");
-// SEMPRE usa o ID original, nunca gera IDs únicos
-newItem.dataset.item = originalItemData ? originalItemData.id : currentEquippedItem.trim().toLowerCase().replace(/\s+/g, '-');
-            newItem.dataset.uuid = crypto.randomUUID(); // ← ADICIONAR ESTA LINHA
+    // Busca o objeto do item original
+    const allItemsArr = [...initialItems, ...extraItems];
+    const originalItemData = allItemsArr.find(item => item.content === currentEquippedItem.trim());
 
+    if (!originalItemData) {
+        console.warn("Item original não encontrado para desequipar:", currentEquippedItem);
+        return;
+    }
 
-            newItem.innerHTML = `
-                ${itemText}
-                <span class="item-expand-toggle">+</span>
-                <div class="item-description" style="display: none;">
-                    ${originalItemData ? originalItemData.description : 'Descrição do item.'}
-                </div>
-            `;
-            if (originalItemData && originalItemData.consumable) {
-                newItem.dataset.consumable = 'true';
-                newItem.dataset.quantity = originalItemData.quantity;
-                if (originalItemData.effect) newItem.dataset.effect = originalItemData.effect;
-                if (originalItemData.value) newItem.dataset.value = originalItemData.value;
-                if (originalItemData.quantity > 0) {
-                    newItem.innerHTML += ` <span class="item-quantity">(${originalItemData.quantity})</span>`;
-                }
-            }
+    // Atualiza o inventário no Firestore
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+    const playerRef = doc(db, "players", uid);
 
-            itemsContainer.appendChild(newItem);
-            addItemClickListener(newItem);
+    getDoc(playerRef).then(playerSnap => {
+        if (!playerSnap.exists()) return;
+        const inventoryData = playerSnap.data().inventory;
 
-            const expandToggle = newItem.querySelector('.item-expand-toggle');
-            const descriptionDiv = newItem.querySelector('.item-description');
-            if (expandToggle && descriptionDiv) {
-                expandToggle.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    descriptionDiv.style.display = descriptionDiv.style.display === 'none' ? 'block' : 'none';
-                    expandToggle.textContent = descriptionDiv.style.display === 'none' ? '+' : '-';
-                });
-            }
+        // Verifica se já está no inventário
+        const alreadyInChest = inventoryData.itemsInChest.some(item => item.id === originalItemData.id);
 
-            updateCharacterCouraca();
-            updateCharacterDamage();
-            saveInventoryData(auth.currentUser.uid);
+        if (!alreadyInChest) {
+            // Adiciona ao inventário
+            inventoryData.itemsInChest.push({
+                ...originalItemData,
+                uuid: crypto.randomUUID()
+            });
+            setDoc(playerRef, { inventory: inventoryData }, { merge: true });
         }
     });
-});
+
+    // Não mexa no DOM do inventário manualmente!
+    // O listener onSnapshot vai atualizar a interface
+
+    clearHighlights();
+    toggleUseButton(false);
+    updateCharacterCouraca();
+    updateCharacterDamage();
+}
 
 
   // Adiciona funcionalidade ao botão de descarte
