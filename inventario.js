@@ -76,7 +76,7 @@ const extraItems = [
     { id: "espada-ferro", content: "Espada de Ferro", uuid: "extra-espada-ferro", description: "Uma espada comum de ferro.", damage: "1d8" },
     { id: "la", content: "Lã", uuid: "extra-la", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true },
     { id: "pedaco-couro", content: "Pedaço de couro", uuid: "extra-pedaco-couro", description: "Tira de couro endurecido para magias.", componente: true },
-    { id: "municao-38", content: "Munição de 38.", uuid: "extra-municao38", quantity: 6, description: "Projéteis letais calíbre 38." },
+    { id: "municao-38", content: "Munição de 38.", uuid: "extra-municao38", quantity: 6, projectile: true, description: "Projéteis letais calíbre 38." },
     { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, uuid: "extra-pocao-cura-menor", quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." },
 
 ];
@@ -893,21 +893,16 @@ newItem.innerHTML = `
 `;
 
 
-        if (item.consumable) {
-            newItem.dataset.consumable = 'true';
-            newItem.dataset.quantity = item.quantity;
-            if (item.effect) {
-                newItem.dataset.effect = item.effect;
-            }
-            if (item.value) {
-                newItem.dataset.value = item.value;
-            }
-            // Remove qualquer contador de quantidade existente antes de adicionar o novo
-            newItem.innerHTML = newItem.innerHTML.replace(/ <span class="item-quantity">\(\d+\)<\/span>/g, '');
-            if (item.quantity > 0) {
-                newItem.innerHTML += ` <span class="item-quantity">(${item.quantity})</span>`;
-            }
-        }
+        if (item.consumable || item.projectile) {
+    newItem.dataset.quantity = item.quantity;
+    if (item.consumable) newItem.dataset.consumable = 'true';
+    if (item.projectile) newItem.dataset.projectile = 'true';
+    // Remove qualquer contador de quantidade existente antes de adicionar o novo
+    newItem.innerHTML = newItem.innerHTML.replace(/ <span class="item-quantity">\(\d+\)<\/span>/g, '');
+    if (item.quantity > 0) {
+        newItem.innerHTML += `<span class="item-quantity">(${item.quantity})</span>`;
+    }
+}
 
         chestElement.appendChild(newItem);
         addItemClickListener(newItem); // Mantenha esta linha para a seleção do item
