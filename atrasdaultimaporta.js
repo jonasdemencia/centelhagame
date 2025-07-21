@@ -1903,6 +1903,7 @@ function gerarSonho() {
   return { texto: `${c.texto}… ${i.texto}`, categoria };
 }
 
+
 // chance de não sonhar (25%)
 const probNaoSonhar = 0.25;
 
@@ -1936,7 +1937,7 @@ async function dormirTelaPreta() {
     margin-bottom: 3rem;
   `;
 
-  // Aqui entraria o texto do sonho (ou ficaria em branco)
+  // Texto do sonho (ou em branco)
   const fraseSonho = document.createElement('div');
   fraseSonho.style.cssText = `
     color: #aaa;
@@ -1962,7 +1963,7 @@ async function dormirTelaPreta() {
   const btnEsquecer = document.createElement('button');
   btnEsquecer.textContent = 'Esquecer';
 
-  // Estilo e hover dos botões
+  // Estilo dos botões
   [btnRecordar, btnEsquecer].forEach(btn => {
     btn.style.cssText = `
       background: none;
@@ -1982,13 +1983,13 @@ async function dormirTelaPreta() {
   btnEsquecer.addEventListener('click', async () => {
     await registrarEsquecimento();
     overlay.style.opacity = '0';
-    setTimeout(() => document.body.removeChild(overlay), 2000);
+    setTimeout(() => overlay.remove(), 2000);
   });
 
   // Click Recordar
   btnRecordar.addEventListener('click', () => {
     overlay.style.opacity = '0';
-    setTimeout(() => document.body.removeChild(overlay), 2000);
+    setTimeout(() => overlay.remove(), 2000);
   });
 
   // Monta tudo
@@ -1997,26 +1998,28 @@ async function dormirTelaPreta() {
   document.body.appendChild(overlay);
 
   // Fade in do overlay e da mensagem
-  setTimeout(() => overlay.style.opacity     = '1',    10);
-  setTimeout(() => mensagem.style.opacity   = '1', 2000);
+  setTimeout(() => overlay.style.opacity   = '1',   10);
+  setTimeout(() => mensagem.style.opacity = '1', 2000);
 
   // Após 5s, decide aleatoriamente se sonha
   setTimeout(async () => {
     const vaiSonhar = Math.random() >= probNaoSonhar;
 
     if (vaiSonhar) {
+      // fluxo normal de sonho
       const resultado = gerarSonho();
-      fraseSonho.textContent = resultado.texto;
+      fraseSonho.textContent  = resultado.texto;
       fraseSonho.style.opacity = '1';
       await registrarSonho(resultado.categoria);
-    } else {
-      // não sonhou: frase em branco, mas mostrada
-      fraseSonho.textContent = '';
-      fraseSonho.style.opacity = '1';
-    }
 
-    // por fim, exibe os botões
-    setTimeout(() => botoes.style.opacity = '1', 500);
+      // só exibe botões após gerar o sonho
+      setTimeout(() => botoes.style.opacity = '1', 500);
+
+    } else {
+      // fluxo de "não sonhar": fade-out automático
+      setTimeout(() => overlay.style.opacity = '0', 2000);
+      setTimeout(() => overlay.remove(), 4000);
+    }
   }, 5000);
 }
 
