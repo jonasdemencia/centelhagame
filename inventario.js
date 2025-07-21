@@ -76,6 +76,8 @@ const extraItems = [
     { id: "espada-ferro", content: "Espada de Ferro", uuid: "extra-espada-ferro", description: "Uma espada comum de ferro.", damage: "1d8" },
     { id: "la", content: "Lã", uuid: "extra-la", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true },
     { id: "pedaco-couro", content: "Pedaço de couro", uuid: "extra-pedaco-couro", description: "Tira de couro endurecido para magias.", componente: true },
+    { id: "municao-38", content: "Munição de 38.", uuid: "extra-municao38", quantity: 6, description: "Projéteis letais calíbre 38." },
+
 ];
 
 
