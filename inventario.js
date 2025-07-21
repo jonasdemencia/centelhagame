@@ -174,13 +174,39 @@ async function carregarMunicaoNaArma() {
 
 
 const carregarBtn = document.getElementById("carregar-municao-btn");
-if (armaSelecionada && armaSelecionada.ammoType && temMuniçãoNoInventario) {
-    carregarBtn.style.display = "block";
-    carregarBtn.onclick = carregarMunicaoNaArma;
-} else {
-    carregarBtn.style.display = "none";
-}
 
+// Pegue o inventário atual do jogador
+const playerRef = doc(db, "players", auth.currentUser.uid);
+getDoc(playerRef).then(playerSnap => {
+    if (!playerSnap.exists()) return;
+    const inventoryData = playerSnap.data().inventory;
+
+    // Pegue o nome da arma equipada
+    const equippedWeaponName = inventoryData.equippedItems.weapon;
+    if (!equippedWeaponName) {
+        carregarBtn.style.display = "none";
+        return;
+    }
+
+    // Busque o objeto da arma equipada
+    const allItemsArr = [...initialItems, ...extraItems];
+    const weaponData = allItemsArr.find(item => item.content === equippedWeaponName && item.ammoType);
+
+    if (!weaponData) {
+        carregarBtn.style.display = "none";
+        return;
+    }
+
+    // Verifique se há munição compatível no inventário
+    const temMuniçãoNoInventario = inventoryData.itemsInChest.some(item => item.id === weaponData.ammoType && item.quantity > 0);
+
+    if (temMuniçãoNoInventario) {
+        carregarBtn.style.display = "block";
+        carregarBtn.onclick = carregarMunicaoNaArma;
+    } else {
+        carregarBtn.style.display = "none";
+    }
+});
 
 
 // Variável global para armazenar o dado selecionado
