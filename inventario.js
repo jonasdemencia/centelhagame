@@ -671,80 +671,103 @@ function clearHighlights() {
 }
 
 async function saveInventoryData(uid) {
-    console.log("Salvando dados do inventário para o usuário:", uid);
+  console.log("Salvando dados do inventário para o usuário:", uid);
 
-    const playerRef = doc(db, "players", uid);
-    const playerSnap = await getDoc(playerRef);
-    const currentInventoryData = playerSnap.data()?.inventory || {};
-    const discardedItems = currentInventoryData.discardedItems || [];
+  const playerRef = doc(db, "players", uid);
+  const playerSnap = await getDoc(playerRef);
+  const currentInventoryData = playerSnap.data()?.inventory || {};
+  const discardedItems = currentInventoryData.discardedItems || [];
 
-    // Pega todos os itens do baú - COM filtro para descartados
-    const itemsInChest = Array.from(document.querySelectorAll('.item')).map(item => {
-        const itemId = item.dataset.item;
-        if (["weapon", "armor", "helmet", "amulet", "shield", "gloves", "ring", "boots"].includes(itemId)) {
-            return null;
-        }
-        
-        // IGNORA itens que já foram descartados
-const isDiscarded = discardedItems.includes(item.dataset.uuid); // ← MUDAR ESTA LINHA
-if (isDiscarded) {
-    console.log(`🗑️ IGNORANDO ITEM DESCARTADO: ${itemId}`);
-    return null;
-}
+  // Pega todos os itens do baú - COM filtro para descartados
+  const itemsInChest = Array.from(document.querySelectorAll('.item'))
+    .map(item => {
+      const itemId = item.dataset.item;
+      if (["weapon", "armor", "helmet", "amulet", "shield", "gloves", "ring", "boots"]
+          .includes(itemId)) {
+        return null;
+      }
 
-        
-        console.log(`📦 PROCESSANDO ITEM: ${itemId} - Content: ${item.innerHTML.split('<span class="item-expand-toggle">')[0].trim()}`);
-        
-        const data = {
-    id: itemId,
-    uuid: item.dataset.uuid, // ← ADICIONAR ESTA LINHA
-    content: item.innerHTML.split('<span class="item-expand-toggle">')[0].split('<span class="item-energia">')[0].trim()
-};
+      // IGNORA itens que já foram descartados
+      const isDiscarded = discardedItems.includes(item.dataset.uuid);
+      if (isDiscarded) {
+        console.log(`🗑️ IGNORANDO ITEM DESCARTADO: ${itemId}`);
+        return null;
+      }
 
-        if (item.dataset.energia) {
-            data.energia = JSON.parse(item.dataset.energia);
-        }
-        if (item.dataset.consumable === 'true') {
-            data.consumable = true;
-            data.quantity = parseInt(item.dataset.quantity);
-            if (item.dataset.effect) data.effect = item.dataset.effect;
-            if (item.dataset.value) data.value = parseInt(item.dataset.value);
-        }
-        return data;
-    }).filter(item => item !== null);
+      console.log(
+        `📦 PROCESSANDO ITEM: ${itemId} - ` +
+        `Content: ${item.innerHTML
+                    .split('<span class="item-expand-toggle">')[0]
+                    .split('<span class="item-energia">')[0]
+                    .trim()}`
+      );
 
-    // Resto igual...
-    const equippedItems = Array.from(document.querySelectorAll('.slot')).reduce((acc, slot) => {
-        const itemName = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
-        acc[slot.dataset.slot] = itemName;
-        if (itemName) {
-            if (slot.dataset.consumable === 'true') {
-                acc[slot.dataset.slot + '_consumable'] = true;
-                acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity);
-                if (slot.dataset.effect) acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
-                if (slot.dataset.value) acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value);
-            }
-        }
-        return acc;
+      const data = {
+        id: itemId,
+        uuid: item.dataset.uuid,
+        content: item.innerHTML
+                   .split('<span class="item-expand-toggle">')[0]
+                   .split('<span class="item-energia">')[0]
+                   .trim()
+      };
+
+      if (item.dataset.energia) {
+        data.energia = JSON.parse(item.dataset.energia);
+      }
+
+      if (item.dataset.consumable === 'true') {
+        data.consumable = true;
+        data.quantity   = parseInt(item.dataset.quantity, 10);
+        if (item.dataset.effect) data.effect = item.dataset.effect;
+        if (item.dataset.value)  data.value  = parseInt(item.dataset.value, 10);
+      }
+
+      // === AQUI: trata projéteis ===
+      if (item.dataset.projectile === 'true') {
+        data.projectile = true;
+        data.quantity   = parseInt(item.dataset.quantity, 10);
+      }
+
+      return data;
+    })
+    .filter(item => item !== null);
+
+  // Resto igual...
+  const equippedItems = Array.from(document.querySelectorAll('.slot'))
+    .reduce((acc, slot) => {
+      const itemName = slot.innerHTML !== slot.dataset.slot
+                      ? slot.innerHTML
+                      : null;
+      acc[slot.dataset.slot] = itemName;
+
+      if (itemName && slot.dataset.consumable === 'true') {
+        acc[slot.dataset.slot + '_consumable'] = true;
+        acc[slot.dataset.slot + '_quantity']   = parseInt(slot.dataset.quantity, 10);
+        if (slot.dataset.effect) acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
+        if (slot.dataset.value)  acc[slot.dataset.slot + '_value']  = parseInt(slot.dataset.value, 10);
+      }
+
+      return acc;
     }, {});
 
-    const inventoryData = {
-        itemsInChest,
-        equippedItems,
-        discardedItems
-    };
+  const inventoryData = {
+    itemsInChest,
+    equippedItems,
+    discardedItems
+  };
 
-    console.log("🔍 SALVANDO INVENTÁRIO:");
-    console.log("   - Itens no baú:", itemsInChest.map(item => item.id));
-    console.log("   - Itens equipados:", equippedItems);
+  console.log("🔍 SALVANDO INVENTÁRIO:");
+  console.log("   - Itens no baú:", itemsInChest.map(i => i.id));
+  console.log("   - Itens equipados:", equippedItems);
 
-    try {
-        await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-        console.log("Inventário salvo com sucesso!");
-    } catch (error) {
-        console.error("Erro ao salvar o inventário:", error);
-    }
+  try {
+    await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+    console.log("Inventário salvo com sucesso!");
+  } catch (error) {
+    console.error("Erro ao salvar o inventário:", error);
+  }
 }
+
 
 
 // ADICIONE A FUNÇÃO saveDiceState AQUI, com a correção do parêntese
