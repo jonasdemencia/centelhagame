@@ -434,8 +434,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 ...originalItemData,
                 uuid: crypto.randomUUID()
             });
-            setDoc(playerRef, { inventory: inventoryData }, { merge: true });
         }
+
+        // LIMPA O SLOT NO FIRESTORE!
+        if (inventoryData.equippedItems && inventoryData.equippedItems[slotType]) {
+            inventoryData.equippedItems[slotType] = null;
+            // Limpa também os campos extras se existirem
+            delete inventoryData.equippedItems[slotType + '_consumable'];
+            delete inventoryData.equippedItems[slotType + '_quantity'];
+            delete inventoryData.equippedItems[slotType + '_effect'];
+            delete inventoryData.equippedItems[slotType + '_value'];
+        }
+
+        setDoc(playerRef, { inventory: inventoryData }, { merge: true });
     });
 
     // Não mexa no DOM do inventário manualmente!
