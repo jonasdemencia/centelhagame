@@ -114,13 +114,7 @@ async function resetInventory() {
 // Adicione esta linha após a função resetInventory
 window.resetInventory = resetInventory;
 
-const carregarBtn = document.getElementById("carregar-municao-btn");
-if (armaSelecionada && armaSelecionada.ammoType && temMuniçãoNoInventario) {
-    carregarBtn.style.display = "block";
-    carregarBtn.onclick = carregarMunicaoNaArma;
-} else {
-    carregarBtn.style.display = "none";
-}
+
 
 async function carregarMunicaoNaArma() {
     const uid = auth.currentUser?.uid;
@@ -176,6 +170,15 @@ async function carregarMunicaoNaArma() {
     await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
 
     alert(`Você carregou ${ammoToLoad} munição no seu ${weaponData.content}.`);
+}
+
+
+const carregarBtn = document.getElementById("carregar-municao-btn");
+if (armaSelecionada && armaSelecionada.ammoType && temMuniçãoNoInventario) {
+    carregarBtn.style.display = "block";
+    carregarBtn.onclick = carregarMunicaoNaArma;
+} else {
+    carregarBtn.style.display = "none";
 }
 
 
