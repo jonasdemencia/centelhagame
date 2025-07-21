@@ -181,6 +181,39 @@ async function addLogMessage(message, delay = 0, typingSpeed = 30) {
     });
 }
 
+function updatePlayerProjectilesDisplay() {
+    const container = document.getElementById('player-projectiles');
+    if (!container) return;
+
+    // Busca o inventário do jogador carregado (playerData)
+    const inventory = window.playerData?.inventory;
+    if (!inventory || !Array.isArray(inventory.itemsInChest)) {
+        container.innerHTML = '';
+        return;
+    }
+
+    // Filtra todos os itens que são projéteis e têm quantidade > 0
+    const projectiles = inventory.itemsInChest.filter(item => item.projectile && item.quantity > 0);
+
+    if (projectiles.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    // Exibe um ícone para cada projétil (exemplo: bala de revólver)
+    // Você pode trocar o emoji por um SVG se quiser algo mais customizado
+    let html = '';
+    projectiles.forEach(item => {
+        // Exemplo: 🔘 para cada munição
+        for (let i = 0; i < item.quantity; i++) {
+            html += '<span style="font-size:18px; margin-right:1px;">🔘</span>';
+        }
+        // Ou, se quiser mostrar o nome e a quantidade:
+        // html += `<span title="${item.content}" style="margin-right:4px;">${item.content}: </span>`;
+        // for (let i = 0; i < item.quantity; i++) html += '<span style="font-size:18px; margin-right:1px;">🔘</span>';
+    });
+    container.innerHTML = html;
+}
 
 
 // Lógica do turno do monstro
@@ -2555,7 +2588,7 @@ atualizarBarraMagia(playerMagic, playerMaxMagic);
 console.log("LOG: Magia do jogador carregada:", playerMagic, "/", playerMaxMagic);
 updatePlayerCouracaDisplay();
 
-                      
+                      updatePlayerProjectilesDisplay();
                         
                         const inventarioButton = document.getElementById("abrir-inventario");
 const playerHealthDisplay = document.getElementById("player-health");
