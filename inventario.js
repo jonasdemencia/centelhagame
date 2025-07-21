@@ -78,6 +78,7 @@ const extraItems = [
     { id: "pedaco-couro", content: "Pedaço de couro", uuid: "extra-pedaco-couro", description: "Tira de couro endurecido para magias.", componente: true },
     { id: "municao-38", content: "Munição de 38.", uuid: "extra-municao38", quantity: 6, projectile: true, description: "Projéteis letais calíbre 38." },
     { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, uuid: "extra-pocao-cura-menor", quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." },
+    { id: "revolver-38", content: "Revolver 38", uuid: "extra-revolver38", slot: "weapon", description: "Um revólver calibre 38.", damage: "1d8", ammoType: "municao-38", ammoCapacity: 6, loadedAmmo: 0 },
 
 ];
 
@@ -112,6 +113,72 @@ async function resetInventory() {
 
 // Adicione esta linha após a função resetInventory
 window.resetInventory = resetInventory;
+
+const carregarBtn = document.getElementById("carregar-municao-btn");
+if (armaSelecionada && armaSelecionada.ammoType && temMuniçãoNoInventario) {
+    carregarBtn.style.display = "block";
+    carregarBtn.onclick = carregarMunicaoNaArma;
+} else {
+    carregarBtn.style.display = "none";
+}
+
+async function carregarMunicaoNaArma() {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+
+    const playerRef = doc(db, "players", uid);
+    const playerSnap = await getDoc(playerRef);
+    if (!playerSnap.exists()) return;
+
+    const inventoryData = playerSnap.data().inventory;
+    const equippedWeaponName = inventoryData.equippedItems.weapon;
+    if (!equippedWeaponName) return;
+
+    // Busca o objeto da arma equipada
+    const allItemsArr = [...initialItems, ...extraItems];
+    const weaponData = allItemsArr.find(item => item.content === equippedWeaponName && item.ammoType);
+
+    if (!weaponData) {
+        alert("A arma equipada não suporta munição!");
+        return;
+    }
+
+    // Busca a munição compatível no inventário
+    const ammoItemIndex = inventoryData.itemsInChest.findIndex(item => item.id === weaponData.ammoType);
+    if (ammoItemIndex === -1) {
+        alert("Você não possui munição compatível!");
+        return;
+    }
+    const ammoItem = inventoryData.itemsInChest[ammoItemIndex];
+
+    // Descobre quanto pode carregar
+    const loadedAmmo = weaponData.loadedAmmo || 0;
+    const ammoToLoad = Math.min(weaponData.ammoCapacity - loadedAmmo, ammoItem.quantity);
+
+    if (ammoToLoad <= 0) {
+        alert("A arma já está carregada ou não há munição suficiente!");
+        return;
+    }
+
+    // Atualiza a arma equipada (arma deve ser salva no equippedItems como objeto, não só string)
+    weaponData.loadedAmmo = loadedAmmo + ammoToLoad;
+
+    // Atualiza munição no inventário
+    ammoItem.quantity -= ammoToLoad;
+    if (ammoItem.quantity <= 0) {
+        inventoryData.itemsInChest.splice(ammoItemIndex, 1);
+    }
+
+    // Salva a arma equipada como objeto (com loadedAmmo)
+    inventoryData.equippedItems.weapon = weaponData;
+
+    // Salva no Firestore
+    await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+
+    alert(`Você carregou ${ammoToLoad} munição no seu ${weaponData.content}.`);
+}
+
+
 
 // Variável global para armazenar o dado selecionado
 let selectedDice = null;
