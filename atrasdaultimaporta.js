@@ -1903,7 +1903,11 @@ function gerarSonho() {
   return { texto: `${c.texto}… ${i.texto}`, categoria };
 }
 
+// chance de não sonhar (25%)
+const probNaoSonhar = 0.25;
+
 async function dormirTelaPreta() {
+  // Cria o overlay
   const overlay = document.createElement('div');
   overlay.style.cssText = `
     position: fixed;
@@ -1918,6 +1922,7 @@ async function dormirTelaPreta() {
     flex-direction: column;
   `;
 
+  // "Você adormece..."
   const mensagem = document.createElement('div');
   mensagem.textContent = 'Você adormece...';
   mensagem.style.cssText = `
@@ -1931,8 +1936,8 @@ async function dormirTelaPreta() {
     margin-bottom: 3rem;
   `;
 
+  // Aqui entraria o texto do sonho (ou ficaria em branco)
   const fraseSonho = document.createElement('div');
-  fraseSonho.textContent = '';
   fraseSonho.style.cssText = `
     color: #aaa;
     font-size: 1.5rem;
@@ -1944,6 +1949,7 @@ async function dormirTelaPreta() {
     margin-bottom: 2rem;
   `;
 
+  // Botões Recordar / Esquecer
   const botoes = document.createElement('div');
   botoes.style.cssText = `
     display: flex;
@@ -1951,13 +1957,12 @@ async function dormirTelaPreta() {
     opacity: 0;
     transition: opacity 2s ease;
   `;
-
   const btnRecordar = document.createElement('button');
   btnRecordar.textContent = 'Recordar';
-
   const btnEsquecer = document.createElement('button');
   btnEsquecer.textContent = 'Esquecer';
 
+  // Estilo e hover dos botões
   [btnRecordar, btnEsquecer].forEach(btn => {
     btn.style.cssText = `
       background: none;
@@ -1973,38 +1978,46 @@ async function dormirTelaPreta() {
     btn.addEventListener('mouseout',  () => btn.style.background = 'none');
   });
 
+  // Click Esquecer
   btnEsquecer.addEventListener('click', async () => {
     await registrarEsquecimento();
     overlay.style.opacity = '0';
-    setTimeout(() => {
-      if (document.body.contains(overlay)) {
-        document.body.removeChild(overlay);
-      }
-    }, 2000);
+    setTimeout(() => document.body.removeChild(overlay), 2000);
   });
 
+  // Click Recordar
   btnRecordar.addEventListener('click', () => {
     overlay.style.opacity = '0';
-    setTimeout(() => {
-      if (document.body.contains(overlay)) {
-        document.body.removeChild(overlay);
-      }
-    }, 2000);
+    setTimeout(() => document.body.removeChild(overlay), 2000);
   });
 
+  // Monta tudo
   botoes.append(btnRecordar, btnEsquecer);
   overlay.append(mensagem, fraseSonho, botoes);
   document.body.appendChild(overlay);
 
-  setTimeout(() => overlay.style.opacity = '1', 10);
-  setTimeout(() => mensagem.style.opacity = '1', 2000);
+  // Fade in do overlay e da mensagem
+  setTimeout(() => overlay.style.opacity     = '1',    10);
+  setTimeout(() => mensagem.style.opacity   = '1', 2000);
+
+  // Após 5s, decide aleatoriamente se sonha
   setTimeout(async () => {
-    const resultado = gerarSonho();
-    fraseSonho.textContent = resultado.texto;
-    fraseSonho.style.opacity = '1';
-    await registrarSonho(resultado.categoria);
+    const vaiSonhar = Math.random() >= probNaoSonhar;
+
+    if (vaiSonhar) {
+      const resultado = gerarSonho();
+      fraseSonho.textContent = resultado.texto;
+      fraseSonho.style.opacity = '1';
+      await registrarSonho(resultado.categoria);
+    } else {
+      // não sonhou: frase em branco, mas mostrada
+      fraseSonho.textContent = '';
+      fraseSonho.style.opacity = '1';
+    }
+
+    // por fim, exibe os botões
+    setTimeout(() => botoes.style.opacity = '1', 500);
   }, 5000);
-  setTimeout(() => botoes.style.opacity = '1', 7000);
 }
 
 // === A PARTIR DAQUI: ajuste para gravar "sonhos …" no Firestore ===
