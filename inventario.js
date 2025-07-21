@@ -446,7 +446,8 @@ document.addEventListener("DOMContentLoaded", () => {
     updateCharacterCouraca();
     updateCharacterDamage();
 }
-
+}); // <--- ESTA CHAVE FECHA O addEventListener
+});   // <--- ESTA CHAVE FECHA O forEach
 
   // Adiciona funcionalidade ao botão de descarte
 if (discardSlot) {
