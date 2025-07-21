@@ -77,6 +77,7 @@ const extraItems = [
     { id: "la", content: "Lã", uuid: "extra-la", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true },
     { id: "pedaco-couro", content: "Pedaço de couro", uuid: "extra-pedaco-couro", description: "Tira de couro endurecido para magias.", componente: true },
     { id: "municao-38", content: "Munição de 38.", uuid: "extra-municao38", quantity: 6, description: "Projéteis letais calíbre 38." },
+    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, uuid: "extra-pocao-cura-menor", quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." },
 
 ];
 
