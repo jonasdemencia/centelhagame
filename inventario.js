@@ -1234,37 +1234,18 @@ if (armorSlot && armorSlot.innerHTML !== armorSlot.dataset.slot) {
 async function updateCharacterDamage() {
     const weaponSlot = document.querySelector(".slot[data-slot='weapon']");
     const damageDisplay = document.querySelector("#char-dano");
-    const uid = auth.currentUser.uid;
-
-    let newDamageValue = "1"; // Valor padrão
-
+    // Não atualize o campo 'dano' no Firestore aqui!
+    let newDamageValue = "1"; // Valor padrão desarmado
     if (weaponSlot && weaponSlot.innerHTML !== weaponSlot.dataset.slot) {
-    const equippedWeaponName = weaponSlot.innerHTML;
-    // BUSCA EM AMBOS OS ARRAYS
-    const allItemsArr = [...initialItems, ...extraItems];
-    const weaponData = allItemsArr.find(item => item.content === equippedWeaponName);
-    
-    if (weaponData && weaponData.damage) {
-        newDamageValue = weaponData.damage;
-        damageDisplay.textContent = weaponData.damage;
-    } else {
-        damageDisplay.textContent = "1";
-    }
-} else {
-    damageDisplay.textContent = "1";
-}
-
-
-    // Atualiza o campo 'dano' no Firestore
-    if (uid) {
-        const playerRef = doc(db, "players", uid);
-        try {
-            await updateDoc(playerRef, { dano: newDamageValue });
-            console.log("Campo 'dano' atualizado no Firestore para:", newDamageValue);
-        } catch (error) {
-            console.error("Erro ao atualizar o campo 'dano' no Firestore:", error);
+        const equippedWeaponName = weaponSlot.innerHTML.replace(/\s*\(\d+\/\d+\)$/, "");
+        const allItemsArr = [...initialItems, ...extraItems];
+        const weaponData = allItemsArr.find(item => item.content === equippedWeaponName);
+        if (weaponData && weaponData.damage) {
+            newDamageValue = weaponData.damage;
         }
     }
+    if (damageDisplay) damageDisplay.textContent = newDamageValue;
+    // NÃO atualize o campo 'dano' no Firestore!
 }
 
 
