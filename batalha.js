@@ -2952,8 +2952,16 @@ if (window.touchDebuffContext) {
         let baseDamageRoll = 0;
         let siferBonusDamage = 0;
         let isSiferDamage = false; // Flag para saber se é dano SIFER
-        const playerDamageDice = playerData?.dano || "1"; // Pega o dado de dano do jogador
-
+let playerDamageDice = playerData?.dano || "1"; // padrão
+const inventory = window.playerData?.inventory;
+if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
+  // Busca a arma equipada pelo nome
+  const allItemsArr = [...initialItems, ...extraItems];
+  const weaponObj = allItemsArr.find(item => item.content === inventory.equippedItems.weapon);
+  if (weaponObj && weaponObj.damage) {
+    playerDamageDice = weaponObj.damage;
+  }
+}
         // Verifica se estamos no contexto SIFER (definido pelo botão de localização)
 
         if (window.siferContext && window.siferContext.bonusType) {
