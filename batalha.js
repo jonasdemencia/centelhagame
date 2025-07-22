@@ -2967,7 +2967,6 @@ if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
 } else if (playerData?.dano) {
     playerDamageDice = playerData.dano;
 }
-}         // pode ser que de erro aqui, qualquer coisa remova
 
                                      
         // Verifica se estamos no contexto SIFER (definido pelo botão de localização)
