@@ -992,16 +992,28 @@ ${item.description || 'Descrição do item.'}
 ${energiaHTML}
 `;
 
-        if (item.consumable || item.projectile) {
-            newItem.dataset.quantity = item.quantity;
-            if (item.consumable) newItem.dataset.consumable = 'true';
-            if (item.projectile) newItem.dataset.projectile = 'true';
-            // Remove qualquer contador de quantidade existente antes de adicionar o novo
-            newItem.innerHTML = newItem.innerHTML.replace(/ <span class="item-quantity">\(\d+\)<\/span>/g, '');
-            if (item.quantity > 0) {
-                newItem.innerHTML += `<span class="item-quantity">(${item.quantity})</span>`;
-            }
-        }
+
+if (item.consumable || item.projectile) {
+    newItem.dataset.quantity = item.quantity;
+
+    if (item.consumable) {
+        newItem.dataset.consumable = 'true';
+        // CORREÇÃO: Adiciona os dados de efeito e valor ao elemento
+        if (item.effect) newItem.dataset.effect = item.effect;
+        if (item.value) newItem.dataset.value = item.value;
+    }
+
+    if (item.projectile) {
+        newItem.dataset.projectile = 'true';
+    }
+
+    // Remove qualquer contador de quantidade existente antes de adicionar o novo
+    newItem.innerHTML = newItem.innerHTML.replace(/ <span class="item-quantity">\(\d+\)<\/span>/g, '');
+    if (item.quantity > 0) {
+        newItem.innerHTML += `<span class="item-quantity">(${item.quantity})</span>`;
+    }
+}
+
 
         chestElement.appendChild(newItem);
         addItemClickListener(newItem);
