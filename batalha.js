@@ -3201,164 +3201,177 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 6) {
                     // Lógica para o botão "Corpo a Corpo"
                     // --- INÍCIO DO TRECHO 1: Substituir o listener de 'atacar-corpo-a-corpo' ---
 if (atacarCorpoACorpoButton) {
-    atacarCorpoACorpoButton.addEventListener('click', async () => { // Ou .onclick = async () => {
+    atacarCorpoACorpoButton.addEventListener('click', async () => {
         // Primeiro verifica se está morto (<=- 10)
-if (!isPlayerTurn || playerHealth <= -10 || !currentMonster || currentMonster.pontosDeEnergia <= 0) {
-    console.log("LOG: Ataque inválido (jogador morto ou batalha acabou). Retornando.");
-    return;
-}
+        if (!isPlayerTurn || playerHealth <= -10 || !currentMonster || currentMonster.pontosDeEnergia <= 0) {
+            console.log("LOG: Ataque inválido (jogador morto ou batalha acabou). Retornando.");
+            return;
+        }
 
-// Depois verifica se está inconsciente (entre 0 e -9)
-if (playerHealth <= 0) {
-    await addLogMessage(`<p style="color: red;">Você está inconsciente e não pode atacar!</p>`, 1000);
-    return;
-}
+        // Depois verifica se está inconsciente (entre 0 e -9)
+        if (playerHealth <= 0) {
+            await addLogMessage`<p style="color: red;">Você está inconsciente e não pode atacar!</p>`, 1000);
+            return;
+        }
 
-      // Verifica se é um ataque de toque mágico
-const isTouchSpell = (window.touchSpellContext !== null && window.touchSpellContext !== undefined) || 
-                     (window.touchDebuffContext !== null && window.touchDebuffContext !== undefined);
+        // Verifica se é um ataque de toque mágico
+        const isTouchSpell = (window.touchSpellContext !== null && window.touchSpellContext !== undefined) ||
+            (window.touchDebuffContext !== null && window.touchDebuffContext !== undefined);
 
-
-if (isTouchSpell) {
-    const spellName = window.touchSpellContext?.nome || window.touchDebuffContext?.nome;
-    await addLogMessage(`Tentando tocar ${currentMonster.nome} com ${spellName}...`, 800);
-}
-
+        if (isTouchSpell) {
+            const spellName = window.touchSpellContext?.nome || window.touchDebuffContext?.nome;
+            await addLogMessage`Tentando tocar ${currentMonster.nome} com ${spellName}...`, 800);
+        }
 
         console.log("LOG: Botão 'Atacar Corpo a Corpo' clicado.");
 
         // Desabilita TODOS os botões de ação inicialmente
-const actionButtons = document.querySelectorAll('#attack-options button');
-actionButtons.forEach(button => button.disabled = true);
+        const actionButtons = document.querySelectorAll('#attack-options button');
+        actionButtons.forEach(button => button.disabled = true);
 
-// Verifica se tem buff crítico garantido
-const criticalBuff = activeBuffs.find(buff => buff.tipo === "critical_guaranteed");
-let playerAttackRollRaw;
+        // Verifica se tem buff crítico garantido
+        const criticalBuff = activeBuffs.find(buff => buff.tipo === "critical_guaranteed");
+        let playerAttackRollRaw;
 
-if (criticalBuff && !isTouchSpell) {
-    playerAttackRollRaw = 20; // Força crítico
-    // Remove o buff após usar
-    activeBuffs = activeBuffs.filter(buff => buff.tipo !== "critical_guaranteed");
-    updateBuffsDisplay();
-    await addLogMessage(`Crítico garantido ativado! O monstro está dormindo e vulnerável!`, 800);
-} else {
-    playerAttackRollRaw = Math.floor(Math.random() * 20) + 1; // Normal
-   //  playerAttackRollRaw = 20; // TESTE: sempre 20
-}
+        if (criticalBuff && !isTouchSpell) {
+            playerAttackRollRaw = 20; // Força crítico
+            // Remove o buff após usar
+            activeBuffs = activeBuffs.filter(buff => buff.tipo !== "critical_guaranteed");
+            updateBuffsDisplay();
+            await addLogMessage`Crítico garantido ativado! O monstro está dormindo e vulnerável!`, 800);
+        } else {
+            playerAttackRollRaw = Math.floor(Math.random() * 20) + 1; // Normal
+            // playerAttackRollRaw = 20; // TESTE: sempre 20
+        }
 
         const playerAttackRollTotal = playerAttackRollRaw + playerAbilityValue;
         const monsterDefense = getMonsterDefense();
 
         if (isTouchSpell) {
-    await addLogMessage(`Rolando toque mágico: ${playerAttackRollRaw} em um d20 + ${playerAbilityValue} (Hab) = ${playerAttackRollTotal} vs Couraça ${monsterDefense}`, 1000);
-} else {
-    await addLogMessage(`Rolando ataque: ${playerAttackRollRaw} em um d20 + ${playerAbilityValue} (Hab) = ${playerAttackRollTotal} vs Couraça ${monsterDefense}`, 1000);
-}
-
+            await addLogMessage`Rolando toque mágico: ${playerAttackRollRaw} em um d20 + ${playerAbilityValue} (Hab) = ${playerAttackRollTotal} vs Couraça ${monsterDefense}`, 1000);
+        } else {
+            await addLogMessage`Rolando ataque: ${playerAttackRollRaw} em um d20 + ${playerAbilityValue} (Hab) = ${playerAttackRollTotal} vs Couraça ${monsterDefense}`, 1000);
+        }
 
         // --- Falha crítica: 1 natural no d20 ---
-if (playerAttackRollRaw === 1 && !isTouchSpell) {
-    // Sorteia uma falha crítica
-    const sorteio = falhasCriticas[Math.floor(Math.random() * falhasCriticas.length)];
-    await addLogMessage(`😱 Falha Crítica! ${sorteio.mensagem}`, 1200);
-
-    if (sorteio.efeito === "autoDano") {
-        const autoDano = rollDice("1D4");
-        playerHealth -= autoDano;
-        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-        await addLogMessage(`Você sofre ${autoDano} de dano!`, 800);
-    }
-    // Não faz nada no caso "nada" ou "perdeTurno" (ambos só perdem o turno)
-    // Passa imediatamente o turno para o monstro
-    if (typeof endPlayerTurn === 'function') {
-        endPlayerTurn();
-    } else {
-        isPlayerTurn = false;
-        setTimeout(() => monsterAttack(), 1500);
-    }
-    return; // NÃO CONTINUA O FLUXO NORMAL
-}
+        if (playerAttackRollRaw === 1 && !isTouchSpell) {
+            // Sorteia uma falha crítica
+            const sorteio = falhasCriticas[Math.floor(Math.random() * falhasCriticas.length)];
+            await addLogMessage`😱 Falha Crítica! ${sorteio.mensagem}`, 1200);
+            if (sorteio.efeito === "autoDano") {
+                const autoDano = rollDice("1D4");
+                playerHealth -= autoDano;
+                atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+                await addLogMessage`Você sofre ${autoDano} de dano!`, 800);
+            }
+            // Não faz nada no caso "nada" ou "perdeTurno" (ambos só perdem o turno)
+            // Passa imediatamente o turno para o monstro
+            if (typeof endPlayerTurn === 'function') {
+                endPlayerTurn();
+            } else {
+                isPlayerTurn = false;
+                setTimeout(() => monsterAttack(), 1500);
+            }
+            return; // NÃO CONTINUA O FLUXO NORMAL
+        }
 
         // *** LÓGICA SIFER (NATURAL 20) ***
         if (playerAttackRollRaw === 20 && !isTouchSpell) {
             console.log("LOG: SIFER - Acerto Crítico! Aguardando rolagem de localização.");
-            await addLogMessage(`<strong style="color: orange;">ACERTO CRÍTICO (SIFER)!</strong> Role a localização!`, 500);
-
+            await addLogMessage`<strong style="color: orange;">ACERTO CRÍTICO (SIFER)!</strong> Role a localização!`, 500);
             // Mostra botão para o jogador rolar a localização
             const rollLocationBtn = document.getElementById("rolar-localizacao");
             if (rollLocationBtn) {
-                rollLocationBtn.style.display = "inline-block"; // Torna o botão visível
-                rollLocationBtn.disabled = false; // Habilita o botão
-                rollLocationBtn.focus(); // Dá foco ao botão (opcional)
-
-                // Garante que o botão de ataque normal fique desabilitado
+                rollLocationBtn.style.display = "inline-block";
+                rollLocationBtn.disabled = false;
+                rollLocationBtn.focus();
                 atacarCorpoACorpoButton.disabled = true;
-
-                // Apenas inicia/limpa o contexto SIFER para indicar o fluxo crítico
-window.siferContext = {};
-console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.");
-
+                window.siferContext = {};
+                console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.");
             } else {
                 console.error("Botão 'rolar-localizacao' não encontrado no HTML!");
-                // O que fazer se o botão não existe? Talvez só passar o turno?
-                // Por segurança, vamos apenas logar o erro e não fazer nada.
-                // Considere adicionar o botão ao seu HTML.
-                 await addLogMessage(`Erro: Botão 'Rolar Localização' não encontrado. Não é possível continuar o crítico.`, 0);
-                 // Talvez chamar endPlayerTurn() aqui? Ou deixar o jogador "preso"?
-                 // Por ora, não faz nada.
+                await addLogMessage`Erro: Botão 'Rolar Localização' não encontrado. Não é possível continuar o crítico.`, 0);
             }
             // Importante: Não continua daqui, espera o clique no botão "rolar-localizacao"
-            // A função return; foi removida daqui de propósito, o fluxo espera
-
-        // --->>> *** ADICIONE A CHAVE DE FECHAMENTO AQUI *** <<<---
-        } else {
-             // *** LÓGICA ORIGINAL DE ACERTO/ERRO (se não for 20 natural) ***
-             if (playerAttackRollTotal >= monsterDefense) {
-                 // LÓGICA ORIGINAL DE ACERTO (mostra botão rolar-dano, etc.)
-                 console.log("LOG: Ataque normal acertou.");
-                 atacarCorpoACorpoButton.style.display = 'none'; // Esconde o botão de ataque
-                 atacarCorpoACorpoButton.disabled = true; // Também desabilita o botão
-                 if(rolarDanoButton) rolarDanoButton.style.display = 'inline-block'; // Mostra o de dano
-
-                 if (isTouchSpell) {
-    await addLogMessage(`Seu toque mágico atinge ${currentMonster.nome}! Role o dano.`, 1000);
-} else {
-    await addLogMessage(`Seu golpe atinge em cheio o ${currentMonster.nome}! Role o dano.`, 1000);
-}
-
-                 window.siferContext = null; // Garante que não estamos em fluxo SIFER
-
-                 // Habilita APENAS o botão de rolar dano
-                 // (actionButtons já estão desabilitados desde o início do listener)
-                 if(rolarDanoButton) rolarDanoButton.disabled = false;
-
-             } else {
-                  // LÓGICA ORIGINAL DE ERRO
-                  console.log("LOG: Ataque normal errou.");
-                  if (isTouchSpell) {
-    await addLogMessage(`Seu toque não consegue alcançar ${currentMonster.nome}.`, 1000);
-    window.touchSpellContext = null; // Limpa contexto
-    window.touchDebuffContext = null; // Limpa contexto debuff
-} else {
-    await addLogMessage(`Seu ataque passa de raspão no ${currentMonster.nome}.`, 1000);
-}
-
-
-
-                   // Passa o turno para o monstro
-                   if (typeof endPlayerTurn === 'function') {
-                        endPlayerTurn();
-                   } else {
-                        console.error("LOG: Função endPlayerTurn não encontrada após erro de ataque.");
-                        isPlayerTurn = false;
-                        setTimeout(() => monsterAttack(), 1500); // Fallback
-                   }
-             }
-             // *** FIM DA LÓGICA ORIGINAL DE ACERTO/ERRO ***
+            return;
         }
 
-        // A reabilitação dos botões ocorrerá em startPlayerTurn() ou após rolar dano/localização
+        // *** LÓGICA ORIGINAL DE ACERTO/ERRO (se não for 20 natural) ***
+        if (playerAttackRollTotal >= monsterDefense) {
+            // LÓGICA ORIGINAL DE ACERTO (mostra botão rolar-dano, etc.)
+            console.log("LOG: Ataque normal acertou.");
+            atacarCorpoACorpoButton.style.display = 'none';
+            atacarCorpoACorpoButton.disabled = true;
+            if (rolarDanoButton) rolarDanoButton.style.display = 'inline-block';
+            if (isTouchSpell) {
+                await addLogMessage`Seu toque mágico atinge ${currentMonster.nome}! Role o dano.`, 1000);
+            } else {
+                await addLogMessage`Seu golpe atinge em cheio o ${currentMonster.nome}! Role o dano.`, 1000);
+            }
+            window.siferContext = null;
+            if (rolarDanoButton) rolarDanoButton.disabled = false;
+        } else {
+            // LÓGICA ORIGINAL DE ERRO
+            console.log("LOG: Ataque normal errou.");
+            if (isTouchSpell) {
+                await addLogMessage`Seu toque não consegue alcançar ${currentMonster.nome}.`, 1000);
+                window.touchSpellContext = null;
+                window.touchDebuffContext = null;
+            } else {
+                await addLogMessage`Seu ataque passa de raspão no ${currentMonster.nome}.`, 1000);
+            }
+            // --- DECRÉSCIMO DE MUNIÇÃO CARREGADA NA ARMA DE FOGO (MESMO EM ERRO) ---
+            const inventory = window.playerData?.inventory;
+            if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
+                const equippedWeaponName = inventory.equippedItems.weapon;
+                const allItemsArr = [...initialItems, ...extraItems];
+                const weaponObj = allItemsArr.find(item => item.content === equippedWeaponName && item.ammoType);
+                if (weaponObj) {
+                    let loadedAmmo = inventory.equippedItems.weapon_loadedAmmo || 0;
+                    if (loadedAmmo > 0) {
+                        loadedAmmo--;
+                        inventory.equippedItems.weapon_loadedAmmo = loadedAmmo;
+                        const user = auth.currentUser;
+                        if (user) {
+                            const playerRef = doc(db, "players", user.uid);
+                            await setDoc(playerRef, { inventory: inventory }, { merge: true });
+                        }
+                        updatePlayerProjectilesDisplay();
+                    }
+                }
+            }
+            // Passa o turno para o monstro
+            if (typeof endPlayerTurn === 'function') {
+                endPlayerTurn();
+            } else {
+                console.error("LOG: Função endPlayerTurn não encontrada após erro de ataque.");
+                isPlayerTurn = false;
+                setTimeout(() => monsterAttack(), 1500);
+            }
+            return;
+        }
 
+        // --- DECRÉSCIMO DE MUNIÇÃO CARREGADA NA ARMA DE FOGO (APÓS ACERTO) ---
+        const inventory = window.playerData?.inventory;
+        if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
+            const equippedWeaponName = inventory.equippedItems.weapon;
+            const allItemsArr = [...initialItems, ...extraItems];
+            const weaponObj = allItemsArr.find(item => item.content === equippedWeaponName && item.ammoType);
+            if (weaponObj) {
+                let loadedAmmo = inventory.equippedItems.weapon_loadedAmmo || 0;
+                if (loadedAmmo > 0) {
+                    loadedAmmo--;
+                    inventory.equippedItems.weapon_loadedAmmo = loadedAmmo;
+                    const user = auth.currentUser;
+                    if (user) {
+                        const playerRef = doc(db, "players", user.uid);
+                        await setDoc(playerRef, { inventory: inventory }, { merge: true });
+                    }
+                    updatePlayerProjectilesDisplay();
+                }
+            }
+        }
+        // A reabilitação dos botões ocorrerá em startPlayerTurn() ou após rolar dano/localização
     });
     console.log("LOG: onAuthStateChanged - Event listener MODIFICADO adicionado ao botão 'Atacar Corpo a Corpo'.");
 } else {
