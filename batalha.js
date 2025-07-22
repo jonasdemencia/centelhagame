@@ -2952,10 +2952,9 @@ if (window.touchDebuffContext) {
         let baseDamageRoll = 0;
         let siferBonusDamage = 0;
         let isSiferDamage = false; // Flag para saber se é dano SIFER
-let playerDamageDice = playerData?.dano || "1"; // padrão
+let playerDamageDice = "1"; // padrão desarmado
 const inventory = window.playerData?.inventory;
 if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
-    // Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (0/6)" -> "Revolver 38")
     let equippedWeaponName = inventory.equippedItems.weapon;
     if (equippedWeaponName) {
         equippedWeaponName = equippedWeaponName.replace(/\s*\(\d+\/\d+\)$/, "");
@@ -2965,7 +2964,12 @@ if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
     if (weaponObj && weaponObj.damage) {
         playerDamageDice = weaponObj.damage;
     }
+} else if (playerData?.dano) {
+    playerDamageDice = playerData.dano;
 }
+}         // pode ser que de erro aqui, qualquer coisa remova
+
+                                     
         // Verifica se estamos no contexto SIFER (definido pelo botão de localização)
 
         if (window.siferContext && window.siferContext.bonusType) {
