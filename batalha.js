@@ -187,31 +187,35 @@ function updatePlayerProjectilesDisplay() {
 
     // Busca o inventário do jogador carregado (playerData)
     const inventory = window.playerData?.inventory;
-    if (!inventory || !Array.isArray(inventory.itemsInChest)) {
+    if (!inventory) {
         container.innerHTML = '';
         return;
     }
 
-    // Filtra todos os itens que são projéteis e têm quantidade > 0
-    const projectiles = inventory.itemsInChest.filter(item => item.projectile && item.quantity > 0);
-
-    if (projectiles.length === 0) {
+    // Busca a arma equipada
+    const equippedWeaponName = inventory.equippedItems?.weapon;
+    if (!equippedWeaponName) {
         container.innerHTML = '';
         return;
     }
 
-    // Exibe um ícone para cada projétil (exemplo: bala de revólver)
-    // Você pode trocar o emoji por um SVG se quiser algo mais customizado
+    // Busca o objeto da arma equipada
+    const allItemsArr = [...initialItems, ...extraItems];
+    const weaponObj = allItemsArr.find(item => item.content === equippedWeaponName && item.ammoType);
+
+    if (!weaponObj) {
+        container.innerHTML = '';
+        return;
+    }
+
+    // Busca a munição carregada
+    const loadedAmmo = inventory.equippedItems.weapon_loadedAmmo || 0;
+
+    // Exibe um ícone para cada munição carregada
     let html = '';
-    projectiles.forEach(item => {
-        // Exemplo: 🔘 para cada munição
-        for (let i = 0; i < item.quantity; i++) {
-            html += '<span style="font-size:18px; margin-right:1px;">🔘</span>';
-        }
-        // Ou, se quiser mostrar o nome e a quantidade:
-        // html += `<span title="${item.content}" style="margin-right:4px;">${item.content}: </span>`;
-        // for (let i = 0; i < item.quantity; i++) html += '<span style="font-size:18px; margin-right:1px;">🔘</span>';
-    });
+    for (let i = 0; i < loadedAmmo; i++) {
+        html += '<span style="font-size:18px; margin-right:1px;">🔘</span>';
+    }
     container.innerHTML = html;
 }
 
