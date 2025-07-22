@@ -3378,7 +3378,7 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
                  if (isTouchSpell) {
     await addLogMessage(`Seu toque mágico atinge ${currentMonster.nome}! Role o dano.`, 1000);
 } else {
-    await addLogMessage(`Seu golpe atinge em cheio o ${currentMonster.nome}! Role o dano.`, 1000);
+    await addLogMessage(`Seu ataque atinge em cheio o ${currentMonster.nome}! Role o dano.`, 1000);
 }
 
                  window.siferContext = null; // Garante que não estamos em fluxo SIFER
