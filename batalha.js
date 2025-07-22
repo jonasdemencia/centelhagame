@@ -2955,12 +2955,16 @@ if (window.touchDebuffContext) {
 let playerDamageDice = playerData?.dano || "1"; // padrão
 const inventory = window.playerData?.inventory;
 if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
-  // Busca a arma equipada pelo nome
-  const allItemsArr = [...initialItems, ...extraItems];
-  const weaponObj = allItemsArr.find(item => item.content === inventory.equippedItems.weapon);
-  if (weaponObj && weaponObj.damage) {
-    playerDamageDice = weaponObj.damage;
-  }
+    // Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (0/6)" -> "Revolver 38")
+    let equippedWeaponName = inventory.equippedItems.weapon;
+    if (equippedWeaponName) {
+        equippedWeaponName = equippedWeaponName.replace(/\s*\(\d+\/\d+\)$/, "");
+    }
+    const allItemsArr = [...initialItems, ...extraItems];
+    const weaponObj = allItemsArr.find(item => item.content === equippedWeaponName);
+    if (weaponObj && weaponObj.damage) {
+        playerDamageDice = weaponObj.damage;
+    }
 }
         // Verifica se estamos no contexto SIFER (definido pelo botão de localização)
 
