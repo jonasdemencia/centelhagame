@@ -3296,50 +3296,63 @@ if (atacarCorpoACorpoButton) {
             return;
         }
 
-        // *** LÓGICA ORIGINAL DE ACERTO/ERRO (se não for 20 natural) ***
-        if (playerAttackRollTotal >= monsterDefense) {
-            // LÓGICA ORIGINAL DE ACERTO (mostra botão rolar-dano, etc.)
-            console.log("LOG: Ataque normal acertou.");
-            atacarCorpoACorpoButton.style.display = 'none';
-            atacarCorpoACorpoButton.disabled = true;
-            if (rolarDanoButton) rolarDanoButton.style.display = 'inline-block';
-            if (isTouchSpell) {
-                await addLogMessage`Seu toque mágico atinge ${currentMonster.nome}! Role o dano.`, 1000);
-            } else {
-                await addLogMessage`Seu golpe atinge em cheio o ${currentMonster.nome}! Role o dano.`, 1000);
+       // *** LÓGICA ORIGINAL DE ACERTO/ERRO (se não for 20 natural) ***
+if (playerAttackRollTotal >= monsterDefense) {
+    // LÓGICA ORIGINAL DE ACERTO (mostra botão rolar-dano, etc.)
+    console.log("LOG: Ataque normal acertou.");
+    atacarCorpoACorpoButton.style.display = 'none';
+    atacarCorpoACorpoButton.disabled = true;
+    if (rolarDanoButton) rolarDanoButton.style.display = 'inline-block';
+    if (isTouchSpell) {
+        await addLogMessage`Seu toque mágico atinge ${currentMonster.nome}! Role o dano.`;
+    } else {
+        await addLogMessage`Seu golpe atinge em cheio o ${currentMonster.nome}! Role o dano.`;
+    }
+    window.siferContext = null;
+    if (rolarDanoButton) rolarDanoButton.disabled = false;
+} else {
+    // LÓGICA ORIGINAL DE ERRO
+    console.log("LOG: Ataque normal errou.");
+    if (isTouchSpell) {
+        await addLogMessage`Seu toque não consegue alcançar ${currentMonster.nome}.`;
+        window.touchSpellContext = null;
+        window.touchDebuffContext = null;
+    } else {
+        await addLogMessage`Seu ataque passa de raspão no ${currentMonster.nome}.`;
+    }
+    // Passa o turno para o monstro
+    if (typeof endPlayerTurn === 'function') {
+        endPlayerTurn();
+    } else {
+        console.error("LOG: Função endPlayerTurn não encontrada após erro de ataque.");
+        isPlayerTurn = false;
+        setTimeout(() => monsterAttack(), 1500);
+    }
+    // Decremento de munição também em erro, então NÃO retorne aqui!
+}
+
+// --- DECRÉSCIMO DE MUNIÇÃO CARREGADA NA ARMA DE FOGO (APÓS QUALQUER ATAQUE) ---
+const inventory = window.playerData?.inventory;
+if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
+    const equippedWeaponName = inventory.equippedItems.weapon;
+    const allItemsArr = [...initialItems, ...extraItems];
+    const weaponObj = allItemsArr.find(item => item.content === equippedWeaponName && item.ammoType);
+    if (weaponObj) {
+        let loadedAmmo = inventory.equippedItems.weapon_loadedAmmo || 0;
+        if (loadedAmmo > 0) {
+            loadedAmmo--;
+            inventory.equippedItems.weapon_loadedAmmo = loadedAmmo;
+            const user = auth.currentUser;
+            if (user) {
+                const playerRef = doc(db, "players", user.uid);
+                await setDoc(playerRef, { inventory: inventory }, { merge: true });
             }
-            window.siferContext = null;
-            if (rolarDanoButton) rolarDanoButton.disabled = false;
-        } else {
-            // LÓGICA ORIGINAL DE ERRO
-            console.log("LOG: Ataque normal errou.");
-            if (isTouchSpell) {
-                await addLogMessage`Seu toque não consegue alcançar ${currentMonster.nome}.`, 1000);
-                window.touchSpellContext = null;
-                window.touchDebuffContext = null;
-            } else {
-                await addLogMessage`Seu ataque passa de raspão no ${currentMonster.nome}.`, 1000);
-            }
-            // --- DECRÉSCIMO DE MUNIÇÃO CARREGADA NA ARMA DE FOGO (MESMO EM ERRO) ---
-            const inventory = window.playerData?.inventory;
-            if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
-                const equippedWeaponName = inventory.equippedItems.weapon;
-                const allItemsArr = [...initialItems, ...extraItems];
-                const weaponObj = allItemsArr.find(item => item.content === equippedWeaponName && item.ammoType);
-                if (weaponObj) {
-                    let loadedAmmo = inventory.equippedItems.weapon_loadedAmmo || 0;
-                    if (loadedAmmo > 0) {
-                        loadedAmmo--;
-                        inventory.equippedItems.weapon_loadedAmmo = loadedAmmo;
-                        const user = auth.currentUser;
-                        if (user) {
-                            const playerRef = doc(db, "players", user.uid);
-                            await setDoc(playerRef, { inventory: inventory }, { merge: true });
-                        }
-                        updatePlayerProjectilesDisplay();
-                    }
-                }
-            }
+            updatePlayerProjectilesDisplay();
+        }
+    }
+}
+
+// A reabilitação dos botões ocorrerá em startPlayerTurn() ou após rolar dano/localização
             // Passa o turno para o monstro
             if (typeof endPlayerTurn === 'function') {
                 endPlayerTurn();
