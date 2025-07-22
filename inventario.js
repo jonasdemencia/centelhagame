@@ -119,25 +119,20 @@ window.resetInventory = resetInventory;
 async function carregarMunicaoNaArma() {
     const uid = auth.currentUser?.uid;
     if (!uid) return;
-
     const playerRef = doc(db, "players", uid);
     const playerSnap = await getDoc(playerRef);
     if (!playerSnap.exists()) return;
-
     const inventoryData = playerSnap.data().inventory;
     const equippedWeaponName = inventoryData.equippedItems.weapon;
     if (!equippedWeaponName) return;
 
-    // Busca o objeto da arma equipada
     const allItemsArr = [...initialItems, ...extraItems];
     const weaponData = allItemsArr.find(item => item.content === equippedWeaponName && item.ammoType);
-
     if (!weaponData) {
         alert("A arma equipada não suporta munição!");
         return;
     }
 
-    // Busca a munição compatível no inventário
     const ammoItemIndex = inventoryData.itemsInChest.findIndex(item => item.id === weaponData.ammoType);
     if (ammoItemIndex === -1) {
         alert("Você não possui munição compatível!");
@@ -145,8 +140,8 @@ async function carregarMunicaoNaArma() {
     }
     const ammoItem = inventoryData.itemsInChest[ammoItemIndex];
 
-    // Descobre quanto pode carregar
-    const loadedAmmo = weaponData.loadedAmmo || 0;
+    // Use o campo separado para munição carregada
+    const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
     const ammoToLoad = Math.min(weaponData.ammoCapacity - loadedAmmo, ammoItem.quantity);
 
     if (ammoToLoad <= 0) {
@@ -154,8 +149,8 @@ async function carregarMunicaoNaArma() {
         return;
     }
 
-    // Atualiza a arma equipada (arma deve ser salva no equippedItems como objeto, não só string)
-    weaponData.loadedAmmo = loadedAmmo + ammoToLoad;
+    // Atualiza munição carregada
+    inventoryData.equippedItems.weapon_loadedAmmo = loadedAmmo + ammoToLoad;
 
     // Atualiza munição no inventário
     ammoItem.quantity -= ammoToLoad;
@@ -163,10 +158,9 @@ async function carregarMunicaoNaArma() {
         inventoryData.itemsInChest.splice(ammoItemIndex, 1);
     }
 
-    // Salva a arma equipada como objeto (com loadedAmmo)
-    inventoryData.equippedItems.weapon = weaponData;
+    // Salva apenas o nome da arma equipada
+    inventoryData.equippedItems.weapon = weaponData.content;
 
-    // Salva no Firestore
     await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
 
     alert(`Você carregou ${ammoToLoad} munição no seu ${weaponData.content}.`);
@@ -938,64 +932,64 @@ async function loadInventoryData(uid) {
 
 function loadInventoryUI(inventoryData) {
     console.log("Carregando UI do inventário:", inventoryData);
+
     // Carrega itens no baú
     const chestElement = document.querySelector('.items');
     chestElement.innerHTML = ""; // Limpa o conteúdo atual
+
     inventoryData.itemsInChest.forEach(item => {
         const newItem = document.createElement('div');
         newItem.classList.add('item');
         newItem.dataset.item = item.id;
-            newItem.dataset.uuid = item.uuid || crypto.randomUUID(); // ← Usa o salvo, ou gera novo se não houver
-        
+        newItem.dataset.uuid = item.uuid || crypto.randomUUID();
+
         if (item.energia) {
             newItem.dataset.energia = JSON.stringify(item.energia);
         }
-        
-        
-       let energiaHTML = "";
-if (item.energia) {
-    const porcentagem = (item.energia.total / item.energia.inicial) * 100;
-    let cor = "#4CAF50"; // Verde
-    if (porcentagem <= 50) cor = "#FFA500"; // Amarelo
-    if (porcentagem <= 25) cor = "#FF0000"; // Vermelho
-    
-    energiaHTML = `
-    <div class="item-energy-bar">
-        <div class="item-energy-fill" style="width: ${porcentagem}%; background-color: ${cor};"></div>
-        <span class="item-energy-text">${item.energia.total}/${item.energia.inicial}</span>
-    </div>
-`;
-}
 
-newItem.innerHTML = `
-    ${item.content}
-    <span class="item-expand-toggle">+</span>
-    <div class="item-description" style="display: none;">
-        ${item.description || 'Descrição do item.'}
-    </div>
-    ${energiaHTML}
+        let energiaHTML = "";
+        if (item.energia) {
+            const porcentagem = (item.energia.total / item.energia.inicial) * 100;
+            let cor = "#4CAF50";
+            if (porcentagem <= 50) cor = "#FFA500";
+            if (porcentagem <= 25) cor = "#FF0000";
+            energiaHTML = `
+<div class="item-energy-bar">
+<div class="item-energy-fill" style="width: ${porcentagem}%; background-color: ${cor};"></div>
+<span class="item-energy-text">${item.energia.total}/${item.energia.inicial}</span>
+</div>
 `;
+        }
 
+        newItem.innerHTML = `
+${item.content}
+<span class="item-expand-toggle">+</span>
+<div class="item-description" style="display: none;">
+${item.description || 'Descrição do item.'}
+</div>
+${energiaHTML}
+`;
 
         if (item.consumable || item.projectile) {
-    newItem.dataset.quantity = item.quantity;
-    if (item.consumable) newItem.dataset.consumable = 'true';
-    if (item.projectile) newItem.dataset.projectile = 'true';
-    // Remove qualquer contador de quantidade existente antes de adicionar o novo
-    newItem.innerHTML = newItem.innerHTML.replace(/ <span class="item-quantity">\(\d+\)<\/span>/g, '');
-    if (item.quantity > 0) {
-        newItem.innerHTML += `<span class="item-quantity">(${item.quantity})</span>`;
-    }
-}
+            newItem.dataset.quantity = item.quantity;
+            if (item.consumable) newItem.dataset.consumable = 'true';
+            if (item.projectile) newItem.dataset.projectile = 'true';
+            // Remove qualquer contador de quantidade existente antes de adicionar o novo
+            newItem.innerHTML = newItem.innerHTML.replace(/ <span class="item-quantity">\(\d+\)<\/span>/g, '');
+            if (item.quantity > 0) {
+                newItem.innerHTML += `<span class="item-quantity">(${item.quantity})</span>`;
+            }
+        }
 
         chestElement.appendChild(newItem);
-        addItemClickListener(newItem); // Mantenha esta linha para a seleção do item
-        // Adicionar o listener para o botão de expandir
+        addItemClickListener(newItem);
+
+        // Listener para expandir descrição
         const expandToggle = newItem.querySelector('.item-expand-toggle');
         const descriptionDiv = newItem.querySelector('.item-description');
         if (expandToggle && descriptionDiv) {
             expandToggle.addEventListener('click', (event) => {
-                event.stopPropagation(); // Impede que o clique no "+" selecione o item para equipar
+                event.stopPropagation();
                 descriptionDiv.style.display = descriptionDiv.style.display === 'none' ? 'block' : 'none';
                 expandToggle.textContent = descriptionDiv.style.display === 'none' ? '+' : '-';
             });
@@ -1005,7 +999,23 @@ newItem.innerHTML = `
     // Carrega itens equipados
     document.querySelectorAll('.slot').forEach(slot => {
         const equippedItem = inventoryData.equippedItems[slot.dataset.slot];
-        slot.innerHTML = equippedItem || slot.dataset.slot;
+
+        // Ajuste para arma de fogo: exibe munição carregada
+        if (slot.dataset.slot === "weapon" && equippedItem) {
+            // Busca o objeto da arma no catálogo
+            const allItemsArr = [...initialItems, ...extraItems];
+            const weaponObj = allItemsArr.find(i => i.content === equippedItem && i.ammoType);
+            if (weaponObj) {
+                // Se for arma de fogo, mostra munição carregada
+                const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
+                slot.innerHTML = `${equippedItem} (${loadedAmmo}/${weaponObj.ammoCapacity})`;
+            } else {
+                slot.innerHTML = equippedItem;
+            }
+        } else {
+            slot.innerHTML = equippedItem || slot.dataset.slot;
+        }
+
         if (equippedItem) {
             if (inventoryData.equippedItems[slot.dataset.slot + '_consumable']) {
                 slot.dataset.consumable = 'true';
