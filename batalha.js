@@ -3221,6 +3221,54 @@ if (playerHealth <= 0) {
     return;
 }
 
+        // ==================================================================
+// === INÍCIO: CÓDIGO A SER INSERIDO ================================
+// ==================================================================
+
+// --- LÓGICA DE GASTO DE MUNIÇÃO ---
+const inventory = window.playerData?.inventory;
+const equippedWeaponName = inventory?.equippedItems?.weapon;
+
+if (equippedWeaponName) {
+    const allItemsArr = [...initialItems, ...extraItems];
+    const weaponObject = allItemsArr.find(item => item.content === equippedWeaponName);
+
+    // Verifica se a arma equipada é uma arma de fogo (possui 'ammoType')
+    if (weaponObject && weaponObject.ammoType) {
+        let loadedAmmo = inventory.equippedItems.weapon_loadedAmmo || 0;
+
+        if (loadedAmmo > 0) {
+            // Se tem munição, gasta uma
+            loadedAmmo--;
+            inventory.equippedItems.weapon_loadedAmmo = loadedAmmo;
+
+            await addLogMessage(`Você gasta uma munição. (${loadedAmmo} restantes)`, 500);
+
+            // Atualiza a exibição visual da munição na tela
+            updatePlayerProjectilesDisplay();
+
+            // Salva a alteração no inventário do jogador no Firestore
+            try {
+                const playerDocRef = doc(db, "players", userId);
+                await setDoc(playerDocRef, { inventory: inventory }, { merge: true });
+                console.log("LOG: Munição atualizada no Firestore.");
+            } catch (error) {
+                console.error("LOG: Erro ao salvar munição no Firestore:", error);
+            }
+
+        } else {
+            // Se não tem munição, impede o ataque
+            await addLogMessage(`<strong style="color: red;">Sem munição!</strong> Você precisa recarregar.`, 1000);
+            return; // Impede a continuação do ataque
+        }
+    }
+}
+// --- FIM DA LÓGICA DE GASTO DE MUNIÇÃO ---
+
+// ==================================================================
+// === FIM: CÓDIGO A SER INSERIDO ===================================
+// ==================================================================
+        
       // Verifica se é um ataque de toque mágico
 const isTouchSpell = (window.touchSpellContext !== null && window.touchSpellContext !== undefined) || 
                      (window.touchDebuffContext !== null && window.touchDebuffContext !== undefined);
