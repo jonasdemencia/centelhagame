@@ -117,53 +117,72 @@ window.resetInventory = resetInventory;
 
 
 async function carregarMunicaoNaArma() {
-    const uid = auth.currentUser?.uid;
-    if (!uid) return;
-    const playerRef = doc(db, "players", uid);
-    const playerSnap = await getDoc(playerRef);
-    if (!playerSnap.exists()) return;
-    const inventoryData = playerSnap.data().inventory;
-    const equippedWeaponName = inventoryData.equippedItems.weapon;
-    if (!equippedWeaponName) return;
+  const uid = auth.currentUser?.uid;
+  if (!uid) return;
 
-    const allItemsArr = [...initialItems, ...extraItems];
-    const weaponData = allItemsArr.find(item => item.content === equippedWeaponName && item.ammoType);
-    if (!weaponData) {
-        alert("A arma equipada não suporta munição!");
-        return;
+  const playerRef = doc(db, "players", uid);
+  const playerSnap = await getDoc(playerRef);
+  if (!playerSnap.exists()) return;
+
+  const inventoryData = playerSnap.data().inventory;
+  const equippedWeaponName = inventoryData.equippedItems.weapon;
+  if (!equippedWeaponName) return;
+
+  const allItemsArr = [...initialItems, ...extraItems];
+  const weaponData = allItemsArr.find(item =>
+    item.content === equippedWeaponName && item.ammoType
+  );
+  if (!weaponData) {
+    alert("A arma equipada não suporta munição!");
+    return;
+  }
+
+  const ammoItemIndex = inventoryData.itemsInChest.findIndex(item =>
+    item.id === weaponData.ammoType
+  );
+  if (ammoItemIndex === -1) {
+    alert("Você não possui munição compatível!");
+    return;
+  }
+
+  const ammoItem = inventoryData.itemsInChest[ammoItemIndex];
+  const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
+  const ammoToLoad = Math.min(
+    weaponData.ammoCapacity - loadedAmmo,
+    ammoItem.quantity
+  );
+
+  if (ammoToLoad <= 0) {
+    alert("A arma já está carregada ou não há munição suficiente!");
+    return;
+  }
+
+  // Atualiza munição carregada
+  inventoryData.equippedItems.weapon_loadedAmmo = loadedAmmo + ammoToLoad;
+
+  // Atualiza munição no inventário
+  ammoItem.quantity -= ammoToLoad;
+
+  // Remove o item do baú se a quantidade ficar zero
+  if (ammoItem.quantity <= 0) {
+    inventoryData.itemsInChest.splice(ammoItemIndex, 1);
+  }
+
+  // Remover todos os itens de munição de 38 com quantidade <= 0 (caso haja duplicatas)
+  inventoryData.itemsInChest = inventoryData.itemsInChest.filter(item => {
+    if (item.id === weaponData.ammoType && item.quantity <= 0) {
+      return false;
     }
+    return true;
+  });
 
-    const ammoItemIndex = inventoryData.itemsInChest.findIndex(item => item.id === weaponData.ammoType);
-    if (ammoItemIndex === -1) {
-        alert("Você não possui munição compatível!");
-        return;
-    }
-    const ammoItem = inventoryData.itemsInChest[ammoItemIndex];
+  // Garante que o nome da arma equipada permaneça correto
+  inventoryData.equippedItems.weapon = weaponData.content;
 
-    // Use o campo separado para munição carregada
-    const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
-    const ammoToLoad = Math.min(weaponData.ammoCapacity - loadedAmmo, ammoItem.quantity);
+  // Salva no Firestore
+  await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
 
-    if (ammoToLoad <= 0) {
-        alert("A arma já está carregada ou não há munição suficiente!");
-        return;
-    }
-
-    // Atualiza munição carregada
-    inventoryData.equippedItems.weapon_loadedAmmo = loadedAmmo + ammoToLoad;
-
-    // Atualiza munição no inventário
-    ammoItem.quantity -= ammoToLoad;
-    if (ammoItem.quantity <= 0) {
-        inventoryData.itemsInChest.splice(ammoItemIndex, 1);
-    }
-
-    // Salva apenas o nome da arma equipada
-    inventoryData.equippedItems.weapon = weaponData.content;
-
-    await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-
-    alert(`Você carregou ${ammoToLoad} munição no seu ${weaponData.content}.`);
+  alert(`Você carregou ${ammoToLoad} munição no seu ${weaponData.content}.`);
 }
 
 
@@ -894,61 +913,83 @@ async function loadDiceState(uid) {
 
 // Função para carregar dados do Firestore COM LISTENER EM TEMPO REAL
 async function loadInventoryData(uid) {
-    console.log("Configurando listener em tempo real para o inventário:", uid);
-    try {
-        const playerRef = doc(db, "players", uid);
+  console.log("Configurando listener em tempo real para o inventário:", uid);
 
-        if (inventoryListener) {
-            inventoryListener();
-        }
+  try {
+    const playerRef = doc(db, "players", uid);
 
-        inventoryListener = onSnapshot(playerRef, async (docSnap) => {
-            if (!docSnap.exists() || !docSnap.data().inventory) {
-                const initialInventoryData = {
-                    itemsInChest: initialItems.map(item => ({ ...item })),
-                    equippedItems: {
-                        weapon: null, armor: null, helmet: null, amulet: null,
-                        shield: null, gloves: null, ring: null, boots: null
-                    }
-                };
-                await setDoc(playerRef, { inventory: initialInventoryData }, { merge: true });
-                console.log("Inventário inicializado com os itens padrão.");
-                return;
-            }
-
-            const inventoryData = docSnap.data().inventory;
-
-            // ADICIONA ITENS EXTRAS NOVOS
-            let inventoryUpdated = false;
-            for (const extraItem of extraItems) {
-                const existsInChest = inventoryData.itemsInChest.some(item => item.uuid === extraItem.uuid);
-                const isEquipped = Object.values(inventoryData.equippedItems).includes(extraItem.content);
-                const wasDiscarded = inventoryData.discardedItems?.includes(extraItem.uuid);
-
-                if (!existsInChest && !isEquipped && !wasDiscarded) {
-                    console.log(`➕ ADICIONANDO NOVO ITEM EXTRA: ${extraItem.id}`);
-                    inventoryData.itemsInChest.push({ ...extraItem });
-                    inventoryUpdated = true;
-                }
-            }
-
-            if (inventoryUpdated) {
-                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-                console.log("Novos itens extras adicionados.");
-            }
-
-            console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
-            loadInventoryUI(inventoryData);
-            updateCharacterCouraca();
-            updateCharacterDamage();
-
-        }, (error) => {
-            console.error("Erro no listener do inventário:", error);
-        });
-
-    } catch (error) {
-        console.error("Erro ao configurar listener do inventário:", error);
+    // cancela listener anterior, se existir
+    if (inventoryListener) {
+      inventoryListener();
     }
+
+    inventoryListener = onSnapshot(playerRef, async (docSnap) => {
+      // se não existir inventário, inicializa com padrão
+      if (!docSnap.exists() || !docSnap.data().inventory) {
+        const initialInventoryData = {
+          itemsInChest: initialItems.map(item => ({ ...item })),
+          equippedItems: {
+            weapon: null, armor: null, helmet: null, amulet: null,
+            shield: null, gloves: null, ring: null, boots: null
+          }
+        };
+        await setDoc(playerRef, { inventory: initialInventoryData }, { merge: true });
+        console.log("Inventário inicializado com os itens padrão.");
+        return;
+      }
+
+      const inventoryData = docSnap.data().inventory;
+
+      // ADICIONA ITENS EXTRAS NOVOS
+      let inventoryUpdated = false;
+      for (const extraItem of extraItems) {
+        const existsInChest = inventoryData.itemsInChest
+          .some(item => item.uuid === extraItem.uuid);
+        const isEquipped      = Object.values(inventoryData.equippedItems)
+          .includes(extraItem.content);
+        const wasDiscarded    = inventoryData.discardedItems
+          ?.includes(extraItem.uuid);
+
+        if (!existsInChest && !isEquipped && !wasDiscarded) {
+          console.log(`➕ ADICIONANDO NOVO ITEM EXTRA: ${extraItem.id}`);
+          inventoryData.itemsInChest.push({ ...extraItem });
+          inventoryUpdated = true;
+        }
+      }
+
+      if (inventoryUpdated) {
+        // ── AQUI: filtra munições 38 com quantidade <= 0 ──
+        const equippedWeaponName = inventoryData.equippedItems.weapon;
+        const weaponData = [...initialItems, ...extraItems].find(item =>
+          item.content === equippedWeaponName && item.ammoType
+        );
+
+        if (weaponData) {
+          inventoryData.itemsInChest = inventoryData.itemsInChest.filter(item => {
+            if (item.id === weaponData.ammoType && item.quantity <= 0) {
+              return false;
+            }
+            return true;
+          });
+        }
+        // ────────────────────────────────────────────────
+
+        await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+        console.log("Novos itens extras adicionados e munições zeradas filtradas.");
+      }
+
+      console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
+      loadInventoryUI(inventoryData);
+      updateCharacterCouraca();
+      updateCharacterDamage();
+
+    }, (error) => {
+      console.error("Erro no listener do inventário:", error);
+    });
+
+  } catch (error) {
+    console.error("Erro ao configurar listener do inventário:", error);
+  }
 }
 
 
