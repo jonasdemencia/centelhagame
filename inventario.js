@@ -465,7 +465,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Busca o objeto do item original
     const allItemsArr = [...initialItems, ...extraItems];
-    const originalItemData = allItemsArr.find(item => item.content === currentEquippedItem.trim());
+    let itemName = currentEquippedItem.trim();
+// Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (6/6)" -> "Revolver 38")
+itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
+const originalItemData = allItemsArr.find(item => item.content === itemName);
 
     if (!originalItemData) {
         console.warn("Item original não encontrado para desequipar:", currentEquippedItem);
