@@ -373,12 +373,27 @@ document.addEventListener("DOMContentLoaded", () => {
         slots.forEach(slot => slot.classList.remove('highlight'));
     }
 
-    // Verifica se o item é consumível e mostra/oculta o botão "Usar"
-    if (selectedItem.dataset.consumable === 'true') {
-        toggleUseButton(true);
-    } else {
-        toggleUseButton(false);
-    }
+    // --- INÍCIO DO AJUSTE DE BOTÕES DE USO E MUNIÇÃO ---
+
+const isProjectile = selectedItem.dataset.projectile === 'true';
+const equippedWeaponName = currentPlayerData?.inventory?.equippedItems?.weapon;
+const weaponObj = allItemsArr.find(i => i.content === equippedWeaponName && i.ammoType);
+
+const useBtn = document.getElementById("useBtn");
+const carregarBtn = document.getElementById("carregar-municao-btn");
+
+if (isProjectile && weaponObj && weaponObj.ammoType === selectedItem.dataset.item) {
+    if (carregarBtn) carregarBtn.style.display = "block";
+    if (useBtn) useBtn.style.display = "none";
+} else if (selectedItem.dataset.consumable === 'true') {
+    if (useBtn) useBtn.style.display = "block";
+    if (carregarBtn) carregarBtn.style.display = "none";
+} else {
+    if (useBtn) useBtn.style.display = "none";
+    if (carregarBtn) carregarBtn.style.display = "none";
+}
+
+// --- FIM DO AJUSTE DE BOTÕES DE USO E MUNIÇÃO ---
 }
     
     // Adiciona evento de clique aos itens iniciais
