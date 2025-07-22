@@ -6,6 +6,29 @@ import { loadEquippedDice, initializeModule } from './dice-ui.js';
 import { getMonsterById } from './monstros.js';
 import './arcanum-spells.js';
 
+// --- ITENS INICIAIS E EXTRAS (copiados do inventário) ---
+const initialItems = [
+    { id: "bolsa-de-escriba", content: "Bolsa de escriba", description: "Uma bolsa para guardar pergaminhos e penas." },
+    { id: "velas", content: "Velas", description: "Fontes de luz portáteis." },
+    { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2, description: "Um pequeno saco contendo ervas que podem curar ferimentos leves." },
+    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." },
+    { id: "pao", content: "Pão", consumable: true, quantity: 1, description: "Um pedaço de pão simples." },
+    { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 5, description: "Um pedaço de pão velho e mofado. Estranhamente, parece ter um efeito... diferente." },
+    { id: "elixir-poder", content: "Elixir do Poder Supremo", consumable: true, quantity: 5, effect: "boost_attributes", value: 100, description: "Um elixir mágico que aumenta temporariamente todos os seus atributos para 100." }
+];
+
+const extraItems = [
+    { id: "grilo", content: "Grilo", uuid: "extra-grilo", description: "Um pequeno grilo saltitante.", componente: true, energia: { total: 1, inicial: 1 } },
+    { id: "facao", content: "Facao", uuid: "extra-facao", slot: "weapon", description: "Uma pequena lâmina afiada.", damage: "1D4" },
+    { id: "coberta", content: "Coberta", uuid: "extra-coberta", slot: "armor", description: "Vestes simples que oferecem pouca proteção.", defense: 2 },
+    { id: "espada-ferro", content: "Espada de Ferro", uuid: "extra-espada-ferro", description: "Uma espada comum de ferro.", damage: "1d8" },
+    { id: "la", content: "Lã", uuid: "extra-la", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true },
+    { id: "pedaco-couro", content: "Pedaço de couro", uuid: "extra-pedaco-couro", description: "Tira de couro endurecido para magias.", componente: true },
+    { id: "municao-38", content: "Munição de 38.", uuid: "extra-municao38", quantity: 6, projectile: true, description: "Projéteis letais calíbre 38." },
+    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, uuid: "extra-pocao-cura-menor", quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." },
+    { id: "revolver-38", content: "Revolver 38", uuid: "extra-revolver38", slot: "weapon", description: "Um revólver calibre 38.", damage: "1d8", ammoType: "municao-38", ammoCapacity: 6, loadedAmmo: 0 }
+];
+
 
 // Sistema Arcanum Iudicium
 window.arcanumIudicium = {
@@ -187,34 +210,37 @@ function updatePlayerProjectilesDisplay() {
 
     // Busca o inventário do jogador carregado (playerData)
     const inventory = window.playerData?.inventory;
-    if (!inventory || !Array.isArray(inventory.itemsInChest)) {
+    if (!inventory) {
         container.innerHTML = '';
         return;
     }
 
-    // Filtra todos os itens que são projéteis e têm quantidade > 0
-    const projectiles = inventory.itemsInChest.filter(item => item.projectile && item.quantity > 0);
-
-    if (projectiles.length === 0) {
+    // Busca a arma equipada
+    const equippedWeaponName = inventory.equippedItems?.weapon;
+    if (!equippedWeaponName) {
         container.innerHTML = '';
         return;
     }
 
-    // Exibe um ícone para cada projétil (exemplo: bala de revólver)
-    // Você pode trocar o emoji por um SVG se quiser algo mais customizado
+    // Busca o objeto da arma equipada
+    const allItemsArr = [...initialItems, ...extraItems];
+    const weaponObj = allItemsArr.find(item => item.content === equippedWeaponName && item.ammoType);
+
+    if (!weaponObj) {
+        container.innerHTML = '';
+        return;
+    }
+
+    // Busca a munição carregada
+    const loadedAmmo = inventory.equippedItems.weapon_loadedAmmo || 0;
+
+    // Exibe um ícone para cada munição carregada
     let html = '';
-    projectiles.forEach(item => {
-        // Exemplo: 🔘 para cada munição
-        for (let i = 0; i < item.quantity; i++) {
-            html += '<span style="font-size:18px; margin-right:1px;">🔘</span>';
-        }
-        // Ou, se quiser mostrar o nome e a quantidade:
-        // html += `<span title="${item.content}" style="margin-right:4px;">${item.content}: </span>`;
-        // for (let i = 0; i < item.quantity; i++) html += '<span style="font-size:18px; margin-right:1px;">🔘</span>';
-    });
+    for (let i = 0; i < loadedAmmo; i++) {
+        html += '<span style="font-size:18px; margin-right:1px;">🔘</span>';
+    }
     container.innerHTML = html;
 }
-
 
 // Lógica do turno do monstro
 async function monsterAttack() {
