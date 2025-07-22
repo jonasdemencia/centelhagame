@@ -120,16 +120,16 @@ async function carregarMunicaoNaArma() {
   const uid = auth.currentUser?.uid;
   if (!uid) return;
 
-  const playerRef = doc(db, "players", uid);
+  const playerRef  = doc(db, "players", uid);
   const playerSnap = await getDoc(playerRef);
   if (!playerSnap.exists()) return;
 
-  const inventoryData = playerSnap.data().inventory;
-  const equippedWeaponName = inventoryData.equippedItems.weapon;
+  const inventoryData        = playerSnap.data().inventory;
+  const equippedWeaponName   = inventoryData.equippedItems.weapon;
   if (!equippedWeaponName) return;
 
   const allItemsArr = [...initialItems, ...extraItems];
-  const weaponData = allItemsArr.find(item =>
+  const weaponData  = allItemsArr.find(item =>
     item.content === equippedWeaponName && item.ammoType
   );
   if (!weaponData) {
@@ -145,7 +145,7 @@ async function carregarMunicaoNaArma() {
     return;
   }
 
-  const ammoItem = inventoryData.itemsInChest[ammoItemIndex];
+  const ammoItem   = inventoryData.itemsInChest[ammoItemIndex];
   const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
   const ammoToLoad = Math.min(
     weaponData.ammoCapacity - loadedAmmo,
@@ -166,9 +166,13 @@ async function carregarMunicaoNaArma() {
   // Remove o item do baú se a quantidade ficar zero
   if (ammoItem.quantity <= 0) {
     inventoryData.itemsInChest.splice(ammoItemIndex, 1);
+
+    // Marca esse UUID como descartado
+    if (!inventoryData.discardedItems) inventoryData.discardedItems = [];
+    inventoryData.discardedItems.push(ammoItem.uuid);
   }
 
-  // Remover todos os itens de munição de 38 com quantidade <= 0 (caso haja duplicatas)
+  // (Opcional) Remove eventuais duplicatas de munição com qty <= 0
   inventoryData.itemsInChest = inventoryData.itemsInChest.filter(item => {
     if (item.id === weaponData.ammoType && item.quantity <= 0) {
       return false;
