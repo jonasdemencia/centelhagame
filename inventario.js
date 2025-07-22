@@ -376,7 +376,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- INÍCIO DO AJUSTE DE BOTÕES DE USO E MUNIÇÃO ---
 
 const isProjectile = selectedItem.dataset.projectile === 'true';
-const equippedWeaponName = currentPlayerData?.inventory?.equippedItems?.weapon;
+let equippedWeaponName = currentPlayerData?.inventory?.equippedItems?.weapon;
+// Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (0/6)" -> "Revolver 38")
+if (equippedWeaponName) {
+    equippedWeaponName = equippedWeaponName.replace(/\s*\(\d+\/\d+\)$/, "");
+}
 const weaponObj = allItemsArr.find(i => i.content === equippedWeaponName && i.ammoType);
 
 const useBtn = document.getElementById("useBtn");
