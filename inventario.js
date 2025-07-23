@@ -737,11 +737,15 @@ function addItemClickListener(item) {
             selectedItem = item;
             item.classList.add('selected');
 
-            document.querySelectorAll('.slot').forEach(slot => {
-                if (slot.dataset.slot === item.dataset.item) {
-                    slot.classList.add('highlight');
-                }
-            });
+           const allItemsArr = [...initialItems, ...extraItems];
+const itemData = allItemsArr.find(i => i.id === item.dataset.item);
+if (itemData && itemData.slot) {
+    document.querySelectorAll('.slot').forEach(slot => {
+        if (slot.dataset.slot === itemData.slot) {
+            slot.classList.add('highlight');
+        }
+    });
+}
 
             // Verifica se o item é consumível e mostra/oculta o botão "Usar"
             if (selectedItem.dataset.consumable === 'true') {
