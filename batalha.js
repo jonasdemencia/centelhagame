@@ -3233,6 +3233,7 @@ if (playerHealth <= 0) {
 // ==================================================================
 
 // --- LÓGICA DE GASTO DE MUNIÇÃO ---
+
 const inventory = window.playerData?.inventory;
 const equippedWeaponName = inventory?.equippedItems?.weapon;
 const allItemsArr = [...initialItems, ...extraItems];
@@ -3272,7 +3273,7 @@ if (weaponObject && weaponObject.ammoType) {
         // Gasta uma munição normalmente
         loadedAmmo--;
         inventory.equippedItems.weapon_loadedAmmo = loadedAmmo;
-        await addLogMessage`Você gasta uma munição. (${loadedAmmo} restantes)`, 500);
+        await addLogMessage(`Você gasta uma munição. (${loadedAmmo} restantes)`, 500);
         updatePlayerProjectilesDisplay();
         try {
             const playerDocRef = doc(db, "players", userId);
