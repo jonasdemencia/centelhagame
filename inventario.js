@@ -379,20 +379,18 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedItem = item;
     item.classList.add('selected');
 
-    // Destaca os slots compatíveis usando a propriedade 'slot' do item
+    // --- DESTAQUE DE SLOT COMPATÍVEL ---
+    slots.forEach(slot => slot.classList.remove('highlight'));
     const allItemsArr = [...initialItems, ...extraItems];
     const itemData = allItemsArr.find(i => i.id === item.dataset.item);
-
-    // Se o item tem 'slot', destaca apenas o slot correspondente
-   // Limpa todos os destaques antes
-slots.forEach(slot => slot.classList.remove('highlight'));
-if (itemData && itemData.slot) {
-    slots.forEach(slot => {
-        if (slot.dataset.slot === itemData.slot) {
-            slot.classList.add('highlight');
-        }
-    });
-}
+    if (itemData && itemData.slot) {
+        slots.forEach(slot => {
+            if (slot.dataset.slot === itemData.slot) {
+                slot.classList.add('highlight');
+            }
+        });
+    }
+    
     // --- INÍCIO DO AJUSTE DE BOTÕES DE USO E MUNIÇÃO ---
 
 const isProjectile = selectedItem.dataset.projectile === 'true';
