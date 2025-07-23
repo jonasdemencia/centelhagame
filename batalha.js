@@ -260,7 +260,7 @@ async function monsterAttack() {
     startNewTurnBlock(currentMonster.nome);
 await addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
 
-// Verifica se está atordoado ANTES de processar debuffs
+// Verifica se está rdoado ANTES de processar debuffs
 const stunDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "stun");
 if (stunDebuff) {
     await addLogMessage(`${currentMonster.nome} está pasmado e perde o turno!`, 1000);
@@ -377,7 +377,7 @@ if (armsDebuff) {
         if (isCriticalHit) {
             monsterDamageRoll = Math.floor(monsterDamageRoll * 1.5);
             const criticalEffects = [
-                "O golpe te deixa atordoado!",
+                "O golpe te deixa rdoado!",
                 "Você sente suas forças se esvaindo!",
                 "O impacto te faz perder o equilíbrio!",
                 "Um golpe certeiro que te faz recuar!"
@@ -1621,11 +1621,15 @@ function updatePlayerCouracaDisplay() {
 
 // Função para calcular couraça total do monstro (base - penalidades)
 function getMonsterDefense() {
-    const baseDefense = currentMonster.couraça || 0;
-    const legsPenalty = activeMonsterDebuffs
-        .filter(debuff => debuff.tipo === "amputation_legs")
-        .reduce((total, debuff) => total + debuff.valor, 0);
-    return Math.max(0, baseDefense - legsPenalty);
+  const baseDefense = currentMonster.couraça || 0;
+  const legsPenalty = activeMonsterDebuffs
+    .filter(debuff => debuff.tipo === "amputation_legs")
+    .reduce((total, debuff) => total + debuff.valor, 0);
+  // NOVO: penalidade de debuff de couraça
+  const couracaPenalty = activeMonsterDebuffs
+    .filter(debuff => debuff.tipo === "couraca")
+    .reduce((total, debuff) => total + debuff.valor, 0);
+  return Math.max(0, baseDefense - legsPenalty - couracaPenalty);
 }
 
 
@@ -1660,7 +1664,13 @@ function updateMonsterDebuffsDisplay() {
         const debuffElement = document.createElement('div');
         debuffElement.className = 'debuff-item';
         debuffElement.innerHTML = `
-    <span>${debuff.nome}${debuff.tipo === "bleeding" ? ` (-${debuff.valor} HP/turno)` : ""}${debuff.tipo === "accuracy" ? ` (-${debuff.valor} precisão)` : ""}${debuff.tipo === "amputation_legs" ? ` (-${debuff.valor} couraça)` : ""}${debuff.tipo === "amputation_arms" ? ` (-70% dano)` : ""}</span>
+    <span>${debuff.nome}
+${debuff.tipo === "bleeding" ? `(-${debuff.valor} HP/turno)` : ""}
+${debuff.tipo === "accuracy" ? `(-${debuff.valor} precisão)` : ""}
+${debuff.tipo === "amputation_legs" ? `(-${debuff.valor} couraça)` : ""}
+${debuff.tipo === "amputation_arms" ? `(-70% dano)` : ""}
+${debuff.tipo === "couraca" ? `(-${debuff.valor} couraça)` : ""}
+</span>
     <span class="debuff-turns">${debuff.turnos === 999 ? "∞" : debuff.turnos}</span>
 `;
 
@@ -2307,6 +2317,12 @@ let atosDoJogador = [
         nome: "Olhar de Inventário",
         descricao: "Veja rapidamente o que o alvo carrega consigo."
     },
+
+    {
+  id: "truque-sujo",
+  nome: "Truque Sujo",
+  descricao: "Joga areia nos olhos do inimigo, impondo desvantagem (-2 ataque, -2 couraça por 2 turnos). O alvo pode tentar resistir."
+},
     {
         id: "roubo-destino",
         nome: "Roubo de Destino",
@@ -2325,10 +2341,47 @@ if (atoClasseButton) {
             const btn = document.createElement("button");
             btn.textContent = "Usar";
             btn.onclick = async () => {
-                await addLogMessage(`Você usou <strong>${ato.nome}</strong>!`, 600);
-                painelAtos.style.display = "none";
-                endPlayerTurn();
-            };
+  painelAtos.style.display = "none";
+  if (ato.id === "truque-sujo") {
+    await addLogMessage`Você tenta cegar o inimigo com um truque sujo!`, 600);
+
+    // Teste de resistência do monstro
+    const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+    const resistanceTotal = resistanceRoll + currentMonster.habilidade;
+    const difficulty = 20;
+    await addLogMessage`${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
+
+    if (resistanceTotal >= difficulty) {
+      await addLogMessage`${currentMonster.nome} resiste ao truque sujo!`, 1000);
+      endPlayerTurn();
+      return;
+    } else {
+      await addLogMessage`${currentMonster.nome} está momentaneamente cego! (-2 ataque, -2 couraça por 2 turnos)`, 1000);
+      // Remove debuffs anteriores do mesmo tipo
+      activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.nome !== "Truque Sujo");
+      // Aplica debuff de precisão
+      activeMonsterDebuffs.push({
+        tipo: "accuracy",
+        valor: 2,
+        turnos: 2,
+        nome: "Truque Sujo"
+      });
+      // Aplica debuff de couraça
+      activeMonsterDebuffs.push({
+        tipo: "couraca",
+        valor: 2,
+        turnos: 2,
+        nome: "Truque Sujo"
+      });
+      updateMonsterDebuffsDisplay();
+      endPlayerTurn();
+      return;
+    }
+  } else {
+    await addLogMessage`Você usou <strong>${ato.nome}</strong>!`, 600);
+    endPlayerTurn();
+  }
+};
             div.appendChild(btn);
             listaAtos.appendChild(div);
         });
