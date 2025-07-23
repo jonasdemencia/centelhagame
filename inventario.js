@@ -385,17 +385,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const itemData = allItemsArr.find(i => i.id === item.dataset.item);
 
     // Se o item tem 'slot', destaca apenas o slot correspondente
-    if (itemData && itemData.slot) {
-        slots.forEach(slot => {
-            if (slot.dataset.slot === itemData.slot) {
-                slot.classList.add('highlight');
-            }
-        });
-    } else {
-        // Se não tem slot, não destaca nenhum (ou destaca todos se quiser permitir equipar em qualquer lugar)
-        slots.forEach(slot => slot.classList.remove('highlight'));
-    }
-
+   // Limpa todos os destaques antes
+slots.forEach(slot => slot.classList.remove('highlight'));
+if (itemData && itemData.slot) {
+    slots.forEach(slot => {
+        if (slot.dataset.slot === itemData.slot) {
+            slot.classList.add('highlight');
+        }
+    });
+}
     // --- INÍCIO DO AJUSTE DE BOTÕES DE USO E MUNIÇÃO ---
 
 const isProjectile = selectedItem.dataset.projectile === 'true';
