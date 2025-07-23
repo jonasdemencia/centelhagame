@@ -2306,97 +2306,125 @@ if (magiasModal) {
   
 
   // --- INÍCIO DO BLOCO DE ATOS ---
-const atoClasseButton = document.getElementById("ato-classe");
-const painelAtos = document.getElementById("painel-atos");
-const listaAtos = document.getElementById("lista-atos");
-const fecharPainelAtos = document.getElementById("fechar-painel-atos");
+const atoClasseButton    = document.getElementById("ato-classe");
+const painelAtos         = document.getElementById("painel-atos");
+const listaAtos          = document.getElementById("lista-atos");
+const fecharPainelAtos   = document.getElementById("fechar-painel-atos");
 
 let atosDoJogador = [
-    {
-        id: "olhar-inventario",
-        nome: "Olhar de Inventário",
-        descricao: "Veja rapidamente o que o alvo carrega consigo."
-    },
-
-    {
-  id: "truque-sujo",
-  nome: "Truque Sujo",
-  descricao: "Joga areia nos olhos do inimigo, impondo desvantagem (-2 ataque, -2 couraça por 2 turnos). O alvo pode tentar resistir."
-},
-    {
-        id: "roubo-destino",
-        nome: "Roubo de Destino",
-        descricao: "Troca sua sorte com a de um inimigo, tornando o próximo teste dele um fracasso crítico e o seu um sucesso crítico."
-    }
+  {
+    id: "olhar-inventario",
+    nome: "Olhar de Inventário",
+    descricao: "Veja rapidamente o que o alvo carrega consigo."
+  },
+  {
+    id: "truque-sujo",
+    nome: "Truque Sujo",
+    descricao: "Joga areia nos olhos do inimigo, impondo desvantagem (-2 ataque, -2 couraça por 2 turnos). O alvo pode tentar resistir."
+  },
+  {
+    id: "roubo-destino",
+    nome: "Roubo de Destino",
+    descricao: "Troca sua sorte com a de um inimigo, tornando o próximo teste dele um fracasso crítico e o seu um sucesso crítico."
+  }
 ];
 
 if (atoClasseButton) {
-    atoClasseButton.addEventListener("click", () => {
-        listaAtos.innerHTML = "";
-        atosDoJogador.forEach(ato => {
-            const div = document.createElement("div");
-            div.className = "ato-item";
-            div.style.marginBottom = "16px";
-            div.innerHTML = `<strong>${ato.nome}</strong><br><span style="font-size:0.95em">${ato.descricao}</span><br>`;
-            const btn = document.createElement("button");
-            btn.textContent = "Usar";
-            btn.onclick = async () => {
-  painelAtos.style.display = "none";
-  if (ato.id === "truque-sujo") {
-    await addLogMessage`Você tenta cegar o inimigo com um truque sujo!`, 600);
+  atoClasseButton.addEventListener("click", () => {
+    listaAtos.innerHTML = "";
 
-    // Teste de resistência do monstro
-    const resistanceRoll = Math.floor(Math.random() * 20) + 1;
-    const resistanceTotal = resistanceRoll + currentMonster.habilidade;
-    const difficulty = 20;
-    await addLogMessage`${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
+    atosDoJogador.forEach(ato => {
+      const div = document.createElement("div");
+      div.className = "ato-item";
+      div.style.marginBottom = "16px";
+      div.innerHTML = `
+        <strong>${ato.nome}</strong><br>
+        <span style="font-size:0.95em">${ato.descricao}</span><br>
+      `;
 
-    if (resistanceTotal >= difficulty) {
-      await addLogMessage`${currentMonster.nome} resiste ao truque sujo!`, 1000);
-      endPlayerTurn();
-      return;
-    } else {
-      await addLogMessage`${currentMonster.nome} está momentaneamente cego! (-2 ataque, -2 couraça por 2 turnos)`, 1000);
-      // Remove debuffs anteriores do mesmo tipo
-      activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.nome !== "Truque Sujo");
-      // Aplica debuff de precisão
-      activeMonsterDebuffs.push({
-        tipo: "accuracy",
-        valor: 2,
-        turnos: 2,
-        nome: "Truque Sujo"
-      });
-      // Aplica debuff de couraça
-      activeMonsterDebuffs.push({
-        tipo: "couraca",
-        valor: 2,
-        turnos: 2,
-        nome: "Truque Sujo"
-      });
-      updateMonsterDebuffsDisplay();
-      endPlayerTurn();
-      return;
-    }
-  } else {
-    await addLogMessage`Você usou <strong>${ato.nome}</strong>!`, 600);
-    endPlayerTurn();
-  }
-};
-            div.appendChild(btn);
-            listaAtos.appendChild(div);
-        });
-        painelAtos.style.display = "block";
+      const btn = document.createElement("button");
+      btn.textContent = "Usar";
+      btn.onclick = async () => {
+        painelAtos.style.display = "none";
+
+        if (ato.id === "truque-sujo") {
+          await addLogMessage(
+            `Você tenta cegar o inimigo com um truque sujo!`,
+            600
+          );
+
+          // Teste de resistência do monstro
+          const resistanceRoll  = Math.floor(Math.random() * 20) + 1;
+          const resistanceTotal = resistanceRoll + currentMonster.habilidade;
+          const difficulty      = 20;
+
+          await addLogMessage(
+            `${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`,
+            1000
+          );
+
+          if (resistanceTotal >= difficulty) {
+            await addLogMessage(
+              `${currentMonster.nome} resiste ao truque sujo!`,
+              1000
+            );
+            endPlayerTurn();
+            return;
+          } else {
+            await addLogMessage(
+              `${currentMonster.nome} está momentaneamente cego! (-2 ataque, -2 couraça por 2 turnos)`,
+              1000
+            );
+
+            // Remove debuffs anteriores do mesmo tipo
+            activeMonsterDebuffs = activeMonsterDebuffs.filter(
+              debuff => debuff.nome !== "Truque Sujo"
+            );
+
+            // Aplica debuff de precisão
+            activeMonsterDebuffs.push({
+              tipo: "accuracy",
+              valor: 2,
+              turnos: 2,
+              nome: "Truque Sujo"
+            });
+
+            // Aplica debuff de couraça
+            activeMonsterDebuffs.push({
+              tipo: "couraca",
+              valor: 2,
+              turnos: 2,
+              nome: "Truque Sujo"
+            });
+
+            updateMonsterDebuffsDisplay();
+            endPlayerTurn();
+            return;
+          }
+        } else {
+          await addLogMessage(
+            `Você usou <strong>${ato.nome}</strong>!`,
+            600
+          );
+          endPlayerTurn();
+        }
+      };
+
+      div.appendChild(btn);
+      listaAtos.appendChild(div);
     });
+
+    painelAtos.style.display = "block";
+  });
 }
 
 if (fecharPainelAtos) {
-    fecharPainelAtos.addEventListener("click", () => {
-        painelAtos.style.display = "none";
-    });
+  fecharPainelAtos.addEventListener("click", () => {
+    painelAtos.style.display = "none";
+  });
 }
 // --- FIM DO BLOCO DE ATOS ---
 
- 
 
 // Tenta carregar o monstro do sessionStorage primeiro
 const storedMonster = sessionStorage.getItem('currentMonster');
