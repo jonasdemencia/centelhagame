@@ -3255,8 +3255,12 @@ if (weaponObject && weaponObject.ammoType) {
         inventory.equippedItems.weapon_loadedAmmo = ammoToLoad;
         ammoItem.quantity -= ammoToLoad;
         if (ammoItem.quantity <= 0) {
-            inventory.itemsInChest.splice(ammoItemIndex, 1);
-        }
+    // Remove do inventário
+    inventory.itemsInChest.splice(ammoItemIndex, 1);
+    // Marca como descartado para não ser readicionado
+    if (!inventory.discardedItems) inventory.discardedItems = [];
+    inventory.discardedItems.push(ammoItem.uuid);
+}
         // Atualiza no Firestore
         try {
             const playerDocRef = doc(db, "players", userId);
