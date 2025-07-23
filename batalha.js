@@ -1554,12 +1554,12 @@ function atualizarBarraMagia(valorAtual, valorMaximo) {
 }
 
 
-
-
 function rollDice(diceString) {
     console.log("LOG: rollDice chamado com:", diceString);
     
-    // Separa modificadores (+1, -2, etc.)
+    // Remove espaços para evitar erro no split e parse
+    diceString = diceString.replace(/\s+/g, '');
+
     let modifier = 0;
     let cleanDiceString = diceString;
     
@@ -1575,7 +1575,6 @@ function rollDice(diceString) {
     
     const parts = cleanDiceString.toUpperCase().split('D');
     if (parts.length === 1 && !isNaN(parseInt(parts[0]))) {
-        // Se for apenas um número, retorna esse número + modificador
         const result = parseInt(parts[0]) + modifier;
         console.log("LOG: rollDice (número único) retornando:", result);
         return result;
@@ -1590,7 +1589,7 @@ function rollDice(diceString) {
         for (let i = 0; i < numDice; i++) {
             totalRoll += Math.floor(Math.random() * numSides) + 1;
         }
-        totalRoll += modifier; // Adiciona o modificador
+        totalRoll += modifier;
         console.log("LOG: rollDice (rolagem) retornando:", totalRoll);
         return totalRoll;
     } else {
