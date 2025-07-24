@@ -2321,13 +2321,13 @@ let atosDoJogador = [
     id: "truque-sujo",
     nome: "Truque Sujo",
     descricao:
-      "Joga areia nos olhos do inimigo, impondo desvantagem (-2 ataque, -2 couraça por 2 turnos). O alvo pode tentar resistir."
+      "Joga areia nos olhos do inimigo, impondo desvantagem (-3 ataque, -3 couraça por 2 turnos). O alvo pode tentar resistir."
   },
   {
     id: "riso-escarnecedor",
     nome: "Riso Escarnecedor",
     descricao:
-      "Provoca o inimigo com insulto cortante. Se falhar no teste de habilidade, sofre -3 de couraça e -2 de ataque por 2 turnos."
+      "Provoca o inimigo com insulto cortante. Se falhar no teste de habilidade, sofre -1 de couraça e -1 de ataque por 6 turnos."
   },
   {
     id: "roubo-destino",
@@ -2380,7 +2380,7 @@ if (atoClasseButton) {
             return;
           } else {
             await addLogMessage(
-              `${currentMonster.nome} está momentaneamente cego! (-2 ataque, -2 couraça por 2 turnos)`,
+              `${currentMonster.nome} está momentaneamente cego! (-3 ataque, -3 couraça por 2 turnos)`,
               1000
             );
 
@@ -2392,7 +2392,7 @@ if (atoClasseButton) {
             // Aplica debuff de precisão
             activeMonsterDebuffs.push({
               tipo:   "accuracy",
-              valor:  2,
+              valor:  3,
               turnos: 2,
               nome:   "Truque Sujo"
             });
@@ -2400,7 +2400,7 @@ if (atoClasseButton) {
             // Aplica debuff de couraça
             activeMonsterDebuffs.push({
               tipo:   "couraca",
-              valor:  2,
+              valor:  3,
               turnos: 2,
               nome:   "Truque Sujo"
             });
@@ -2435,7 +2435,7 @@ if (atoClasseButton) {
             return;
           } else {
             await addLogMessage(
-              `${currentMonster.nome} fica confuso e vulnerável! (-2 ataque, -3 couraça por 2 turnos)`,
+              `${currentMonster.nome} fica confuso e vulnerável! (-1 ataque, -1 couraça por 6 turnos)`,
               1000
             );
 
@@ -2447,16 +2447,16 @@ if (atoClasseButton) {
             // Aplica debuff de precisão
             activeMonsterDebuffs.push({
               tipo:   "accuracy",
-              valor:  2,
-              turnos: 2,
+              valor:  1,
+              turnos: 6,
               nome:   "Riso Escarnecedor"
             });
 
             // Aplica debuff de couraça
             activeMonsterDebuffs.push({
               tipo:   "couraca",
-              valor:  3,
-              turnos: 2,
+              valor:  1,
+              turnos: 6,
               nome:   "Riso Escarnecedor"
             });
 
