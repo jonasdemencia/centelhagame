@@ -2306,10 +2306,10 @@ if (magiasModal) {
   
 
   // --- INÍCIO DO BLOCO DE ATOS ---
-const atoClasseButton    = document.getElementById("ato-classe");
-const painelAtos         = document.getElementById("painel-atos");
-const listaAtos          = document.getElementById("lista-atos");
-const fecharPainelAtos   = document.getElementById("fechar-painel-atos");
+const atoClasseButton  = document.getElementById("ato-classe");
+const painelAtos       = document.getElementById("painel-atos");
+const listaAtos        = document.getElementById("lista-atos");
+const fecharPainelAtos = document.getElementById("fechar-painel-atos");
 
 let atosDoJogador = [
   {
@@ -2320,12 +2320,20 @@ let atosDoJogador = [
   {
     id: "truque-sujo",
     nome: "Truque Sujo",
-    descricao: "Joga areia nos olhos do inimigo, impondo desvantagem (-2 ataque, -2 couraça por 2 turnos). O alvo pode tentar resistir."
+    descricao:
+      "Joga areia nos olhos do inimigo, impondo desvantagem (-2 ataque, -2 couraça por 2 turnos). O alvo pode tentar resistir."
+  },
+  {
+    id: "riso-escarnecedor",
+    nome: "Riso Escarnecedor",
+    descricao:
+      "Provoca o inimigo com insulto cortante. Se falhar no teste de habilidade, sofre -3 de couraça e -2 de ataque por 2 turnos."
   },
   {
     id: "roubo-destino",
     nome: "Roubo de Destino",
-    descricao: "Troca sua sorte com a de um inimigo, tornando o próximo teste dele um fracasso crítico e o seu um sucesso crítico."
+    descricao:
+      "Troca sua sorte com a de um inimigo, tornando o próximo teste dele um fracasso crítico e o seu um sucesso crítico."
   }
 ];
 
@@ -2348,12 +2356,12 @@ if (atoClasseButton) {
         painelAtos.style.display = "none";
 
         if (ato.id === "truque-sujo") {
+          // Truque Sujo
           await addLogMessage(
-            `Você tenta cegar o inimigo com um truque sujo!`,
+            "Você tenta cegar o inimigo com um truque sujo!",
             600
           );
 
-          // Teste de resistência do monstro
           const resistanceRoll  = Math.floor(Math.random() * 20) + 1;
           const resistanceTotal = resistanceRoll + currentMonster.habilidade;
           const difficulty      = 20;
@@ -2383,25 +2391,82 @@ if (atoClasseButton) {
 
             // Aplica debuff de precisão
             activeMonsterDebuffs.push({
-              tipo: "accuracy",
-              valor: 2,
+              tipo:   "accuracy",
+              valor:  2,
               turnos: 2,
-              nome: "Truque Sujo"
+              nome:   "Truque Sujo"
             });
 
             // Aplica debuff de couraça
             activeMonsterDebuffs.push({
-              tipo: "couraca",
-              valor: 2,
+              tipo:   "couraca",
+              valor:  2,
               turnos: 2,
-              nome: "Truque Sujo"
+              nome:   "Truque Sujo"
             });
 
             updateMonsterDebuffsDisplay();
             endPlayerTurn();
             return;
           }
-        } else {
+        }
+        else if (ato.id === "riso-escarnecedor") {
+          // Riso Escarnecedor
+          await addLogMessage(
+            "Você provoca o inimigo com um insulto cortante!",
+            600
+          );
+
+          const resistanceRoll  = Math.floor(Math.random() * 20) + 1;
+          const resistanceTotal = resistanceRoll + currentMonster.habilidade;
+          const difficulty      = 20;
+
+          await addLogMessage(
+            `${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`,
+            1000
+          );
+
+          if (resistanceTotal >= difficulty) {
+            await addLogMessage(
+              `${currentMonster.nome} resiste ao insulto!`,
+              1000
+            );
+            endPlayerTurn();
+            return;
+          } else {
+            await addLogMessage(
+              `${currentMonster.nome} fica confuso e vulnerável! (-2 ataque, -3 couraça por 2 turnos)`,
+              1000
+            );
+
+            // Remove debuffs anteriores do mesmo nome
+            activeMonsterDebuffs = activeMonsterDebuffs.filter(
+              debuff => debuff.nome !== "Riso Escarnecedor"
+            );
+
+            // Aplica debuff de precisão
+            activeMonsterDebuffs.push({
+              tipo:   "accuracy",
+              valor:  2,
+              turnos: 2,
+              nome:   "Riso Escarnecedor"
+            });
+
+            // Aplica debuff de couraça
+            activeMonsterDebuffs.push({
+              tipo:   "couraca",
+              valor:  3,
+              turnos: 2,
+              nome:   "Riso Escarnecedor"
+            });
+
+            updateMonsterDebuffsDisplay();
+            endPlayerTurn();
+            return;
+          }
+        }
+        else {
+          // Outros atos genéricos
           await addLogMessage(
             `Você usou <strong>${ato.nome}</strong>!`,
             600
@@ -2424,6 +2489,7 @@ if (fecharPainelAtos) {
   });
 }
 // --- FIM DO BLOCO DE ATOS ---
+
 
 
 // Tenta carregar o monstro do sessionStorage primeiro
