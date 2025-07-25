@@ -3649,7 +3649,6 @@ if (playerAttackRollRaw === 1 && !isTouchSpell) {
 // 1. Determinar o limiar do acerto crítico SIFER
 let criticalThreshold = 20; // Padrão é 20
 const levezAfiadaBuff = activeBuffs.find(buff => buff.tipo === 'critico_aprimorado');
-const equippedWeaponName = window.playerData?.inventory?.equippedItems?.weapon;
 if (
   levezAfiadaBuff &&
   equippedWeaponName &&
