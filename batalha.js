@@ -2526,7 +2526,7 @@ else if (ato.id === "levesa-afiada") {
         // Adiciona o novo buff
         activeBuffs.push({
             tipo: "critico_aprimorado",
-            valor: 5, // O valor mínimo para um acerto crítico SIFER
+            valor: 18, // O valor mínimo para um acerto crítico SIFER
             turnos: 7,
             nome: "Leveza Afiada"
         });
