@@ -299,6 +299,22 @@ if (bleedingDebuff) {
     }
 }
 
+    // Processa veneno
+const poisonDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "poison");
+if (poisonDebuff) {
+    currentMonster.pontosDeEnergia -= poisonDebuff.valor;
+    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+    await addLogMessage(`${currentMonster.nome} perde ${poisonDebuff.valor} de energia por veneno.`, 800);
+
+    // Verifica se morreu por veneno
+    if (currentMonster.pontosDeEnergia <= 0) {
+        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} sucumbiu ao veneno!</p>`, 1000);
+        handlePostBattle(currentMonster);
+        return;
+    }
+}
+
 // Processa amputação de pernas (chance de perder turno)
 const legsDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "amputation_legs");
 if (legsDebuff) {
@@ -1664,16 +1680,17 @@ function updateMonsterDebuffsDisplay() {
     activeMonsterDebuffs.forEach(debuff => {
         const debuffElement = document.createElement('div');
         debuffElement.className = 'debuff-item';
-        debuffElement.innerHTML = `
-    <span>${debuff.nome}
+        debuffElement.innerHTML = \`
+<span>${debuff.nome}
 ${debuff.tipo === "bleeding" ? `(-${debuff.valor} HP/turno)` : ""}
+${debuff.tipo === "poison" ? `(-${debuff.valor} HP/turno)` : ""}
 ${debuff.tipo === "accuracy" ? `(-${debuff.valor} precisão)` : ""}
 ${debuff.tipo === "amputation_legs" ? `(-${debuff.valor} couraça)` : ""}
 ${debuff.tipo === "amputation_arms" ? `(-70% dano)` : ""}
 ${debuff.tipo === "couraca" ? `(-${debuff.valor} couraça)` : ""}
 </span>
-    <span class="debuff-turns">${debuff.turnos === 999 ? "∞" : debuff.turnos}</span>
-`;
+<span class="debuff-turns">${debuff.turnos === 999 ? "∞" : debuff.turnos}</span>
+\`;
 
         container.appendChild(debuffElement);
     });
@@ -3640,11 +3657,11 @@ if (playerAttackRollTotal >= monsterDefense) {
                 debuff => debuff.nome !== "Veneno"
             );
             activeMonsterDebuffs.push({
-                tipo:   "damage_reduction",
-                valor:  1,
-                turnos: 6,
-                nome:   "Veneno"
-            });
+    tipo: "poison", // Novo tipo para dano de veneno por turno
+    valor: 1,
+    turnos: 6,
+    nome: "Veneno"
+});
             updateMonsterDebuffsDisplay();
         }
         // --- FIM: Efeito da Punhalada Venenosa ---
