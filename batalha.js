@@ -3641,39 +3641,62 @@ if (playerAttackRollRaw === 1 && !isTouchSpell) {
     return; // NÃO CONTINUA O FLUXO NORMAL
 }
 
-        // *** LÓGICA SIFER (NATURAL 20) ***
-        if (playerAttackRollRaw === 20 && !isTouchSpell) {
-            console.log("LOG: SIFER - Acerto Crítico! Aguardando rolagem de localização.");
-            await addLogMessage(`<strong style="color: orange;">ACERTO CRÍTICO (SIFER)!</strong> Role a localização!`, 500);
-
-            // Mostra botão para o jogador rolar a localização
-            const rollLocationBtn = document.getElementById("rolar-localizacao");
-            if (rollLocationBtn) {
-                rollLocationBtn.style.display = "inline-block"; // Torna o botão visível
-                rollLocationBtn.disabled = false; // Habilita o botão
-                rollLocationBtn.focus(); // Dá foco ao botão (opcional)
-
-                // Garante que o botão de ataque normal fique desabilitado
-                atacarCorpoACorpoButton.disabled = true;
-
-                // Apenas inicia/limpa o contexto SIFER para indicar o fluxo crítico
-window.siferContext = {};
-console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.");
-
-            } else {
-                console.error("Botão 'rolar-localizacao' não encontrado no HTML!");
-                // O que fazer se o botão não existe? Talvez só passar o turno?
-                // Por segurança, vamos apenas logar o erro e não fazer nada.
-                // Considere adicionar o botão ao seu HTML.
-                 await addLogMessage(`Erro: Botão 'Rolar Localização' não encontrado. Não é possível continuar o crítico.`, 0);
-                 // Talvez chamar endPlayerTurn() aqui? Ou deixar o jogador "preso"?
-                 // Por ora, não faz nada.
-            }
-            // Importante: Não continua daqui, espera o clique no botão "rolar-localizacao"
-            // A função return; foi removida daqui de propósito, o fluxo espera
-
-        // --->>> *** ADICIONE A CHAVE DE FECHAMENTO AQUI *** <<<---
-        } 
+       // --- NOVA LÓGICA UNIFICADA DE ACERTO E CRÍTICO SIFER ---
+// 1. Determinar o limiar do acerto crítico SIFER
+let criticalThreshold = 20; // Padrão é 20
+const levezAfiadaBuff = activeBuffs.find(buff => buff.tipo === 'critico_aprimorado');
+if (levezAfiadaBuff) {
+    const equippedWeaponName = window.playerData?.inventory?.equippedItems?.weapon;
+    if (equippedWeaponName && armasLeves.includes(equippedWeaponName)) {
+        criticalThreshold = levezAfiadaBuff.valor; // Buff ativo, limiar é 18
+    }
+}
+// 2. Checar os resultados do ataque
+if (playerAttackRollRaw >= criticalThreshold && !isTouchSpell) {
+    // ACERTO CRÍTICO SIFER (18, 19 ou 20 com buff, ou 20 sem buff)
+    console.log("LOG: SIFER - Acerto Crítico! Aguardando rolagem de localização.");
+    await addLogMessage`<strong style="color: orange;">ACERTO CRÍTICO (SIFER)!</strong> Role a localização!`, 500);
+    const rollLocationBtn = document.getElementById("rolar-localizacao");
+    if (rollLocationBtn) {
+        rollLocationBtn.style.display = "inline-block";
+        rollLocationBtn.disabled = false;
+        atacarCorpoACorpoButton.disabled = true;
+        window.siferContext = {}; // Inicia o contexto SIFER
+    } else {
+        console.error("Botão 'rolar-localizacao' não encontrado no HTML!");
+        await addLogMessage("Erro: Botão 'Rolar Localização' não encontrado.", 0);
+    }
+} else if (playerAttackRollTotal >= monsterDefense) {
+    // ACERTO NORMAL
+    console.log("LOG: Ataque normal acertou.");
+    atacarCorpoACorpoButton.style.display = 'none';
+    atacarCorpoACorpoButton.disabled = true;
+    if (rolarDanoButton) {
+        rolarDanoButton.style.display = 'inline-block';
+        rolarDanoButton.disabled = false;
+    }
+    if (isTouchSpell) {
+        await addLogMessage`Seu toque mágico atinge ${currentMonster.nome}! Role o dano.`, 1000);
+    } else {
+        await addLogMessage`Seu ataque atinge em cheio o ${currentMonster.nome}! Role o dano.`, 1000);
+    }
+} else {
+    // ERRO
+    console.log("LOG: Ataque normal errou.");
+    if (window.isPunhaladaVenenosaAttack) {
+        window.isPunhaladaVenenosaAttack = null;
+        window.punhaladaVenenosaExtraDano = null;
+        await addLogMessage`<span style='color:orange;'>Você erra a punhalada venenosa e desperdiça o veneno.</span>`, 1000);
+    }
+    if (isTouchSpell) {
+        await addLogMessage`Seu toque não consegue alcançar ${currentMonster.nome}.`, 1000);
+        window.touchSpellContext = null;
+        window.touchDebuffContext = null;
+    } else {
+        await addLogMessage`Seu ataque passa de raspão no ${currentMonster.nome}.`, 1000);
+    }
+    endPlayerTurn();
+}
         
         else {
 
