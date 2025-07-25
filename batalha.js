@@ -3537,6 +3537,21 @@ if (playerHealth <= 0) {
     return;
 }
 
+        // --- INÍCIO: Lógica de ataque pelas costas (Backstab) ---
+    const ocultoBuff = activeBuffs.find(buff => buff.tipo === "oculto");
+    let isBackstab = false;
+    if (ocultoBuff) {
+      isBackstab = true;
+      // Remove o buff após o ataque
+      activeBuffs = activeBuffs.filter(buff => buff.tipo !== "oculto");
+      updateBuffsDisplay();
+      await addLogMessage(`<span style="color:orange;">Você está oculto! Este ataque será um ataque pelas costas (Backstab).</span>`, 800);
+    }
+    if (isBackstab) {
+      window.isBackstabAttack = true;
+    }
+    // --- FIM: Lógica de ataque pelas costas (Backstab) ---
+        
         // ==================================================================
 // === INÍCIO: CÓDIGO A SER INSERIDO ================================
 // ==================================================================
