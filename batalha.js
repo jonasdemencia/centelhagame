@@ -2526,7 +2526,7 @@ else if (ato.id === "levesa-afiada") {
         // Adiciona o novo buff
         activeBuffs.push({
             tipo: "critico_aprimorado",
-            valor: 18, // O valor mínimo para um acerto crítico SIFER
+            valor: 5, // O valor mínimo para um acerto crítico SIFER
             turnos: 7,
             nome: "Leveza Afiada"
         });
@@ -3605,7 +3605,7 @@ if (criticalBuff && !isTouchSpell) {
     await addLogMessage(`Crítico garantido ativado! O monstro está dormindo e vulnerável!`, 800);
 } else {
     playerAttackRollRaw = Math.floor(Math.random() * 20) + 1; // Normal
-   //  playerAttackRollRaw = 20; // TESTE: sempre 20
+    // playerAttackRollRaw = 20; // TESTE: sempre 20
 }
 
         const playerAttackRollTotal = playerAttackRollRaw + playerAbilityValue;
