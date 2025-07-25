@@ -3690,7 +3690,7 @@ if (typeof endPlayerTurn === 'function') {
     setTimeout(() => monsterAttack(), 1500);
 }
 // *** FIM DA LÓGICA ORIGINAL DE ACERTO/ERRO ***
-
+} // <--- ADICIONE ESTA CHAVE DE FECHAMENTO AQUI
 
         // A reabilitação dos botões ocorrerá em startPlayerTurn() ou após rolar dano/localização
 
