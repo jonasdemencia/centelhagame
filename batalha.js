@@ -3602,7 +3602,9 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
             // A função return; foi removida daqui de propósito, o fluxo espera
 
         // --->>> *** ADICIONE A CHAVE DE FECHAMENTO AQUI *** <<<---
-        } else {
+        } 
+        
+        else {
 
 
 // *** LÓGICA ORIGINAL DE ACERTO/ERRO (se não for 20 natural) ***
