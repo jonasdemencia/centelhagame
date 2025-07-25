@@ -3604,8 +3604,8 @@ if (criticalBuff && !isTouchSpell) {
     updateBuffsDisplay();
     await addLogMessage(`Crítico garantido ativado! O monstro está dormindo e vulnerável!`, 800);
 } else {
-    playerAttackRollRaw = Math.floor(Math.random() * 20) + 1; // Normal
-    // playerAttackRollRaw = 20; // TESTE: sempre 20
+    // playerAttackRollRaw = Math.floor(Math.random() * 20) + 1; // Normal
+    playerAttackRollRaw = 20; // TESTE: sempre 20
 }
 
         const playerAttackRollTotal = playerAttackRollRaw + playerAbilityValue;
