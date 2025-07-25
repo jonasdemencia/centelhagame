@@ -80,6 +80,7 @@ const extraItems = [
     { id: "revolver-38", content: "Revolver 38", uuid: "extra-revolver38", slot: "weapon", description: "Um revólver calibre 38.", damage: "1d8", ammoType: "municao-38", ammoCapacity: 6, loadedAmmo: 0 },
     { id: "escopeta-12", content: "Escopeta 12", uuid: "extra-escopeta12", slot: "weapon", description: "Uma espingarda calibre 12.", damage: "1d12+2", ammoType: "municao-12", ammoCapacity: 5, loadedAmmo: 0 },
     { id: "municao-12", content: "Munição de 12.", uuid: "extra-municao12", quantity: 5, projectile: true, description: "Projéteis letais calíbre 12." },
+    { id: "Adaga", content: "Adaga", uuid: "extra-adaga", slot: "weapon", description: "Uma punhal afiado.", damage: "1D4" },
 
 ];
 
