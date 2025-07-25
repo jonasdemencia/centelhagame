@@ -3607,11 +3607,11 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
 
 // *** LÓGICA ORIGINAL DE ACERTO/ERRO (se não for 20 natural) ***
 if (playerAttackRollTotal >= monsterDefense) {
-    // LÓGICA ORIGINAL DE ACERTO (mostra botão rolar-dano, etc.)
+    // LÓGICA ORIGINAL DE ACERTO
     console.log("LOG: Ataque normal acertou.");
-    atacarCorpoACorpoButton.style.display = 'none'; // Esconde o botão de ataque
-    atacarCorpoACorpoButton.disabled = true;        // Também desabilita o botão
-    if (rolarDanoButton) rolarDanoButton.style.display = 'inline-block'; // Mostra o botão de dano
+    atacarCorpoACorpoButton.style.display = 'none';
+    atacarCorpoACorpoButton.disabled = true;
+    if (rolarDanoButton) rolarDanoButton.style.display = 'inline-block';
 
     if (isTouchSpell) {
         await addLogMessage(
@@ -3626,9 +3626,7 @@ if (playerAttackRollTotal >= monsterDefense) {
 
         // --- INÍCIO: Efeito da Punhalada Venenosa ---
         if (window.isPunhaladaVenenosaAttack) {
-            window.isPunhaladaVenenosaAttack = null; // Limpa o contexto
-
-            // Salva o extraDano para ser somado no cálculo de dano
+            window.isPunhaladaVenenosaAttack = null;
             window.punhaladaVenenosaExtraDano = rollDice("1d6");
 
             await addLogMessage(
@@ -3636,36 +3634,31 @@ if (playerAttackRollTotal >= monsterDefense) {
                 1000
             );
 
-            // Remove debuff anterior do mesmo tipo
             activeMonsterDebuffs = activeMonsterDebuffs.filter(
                 debuff => debuff.nome !== "Veneno"
             );
-
-            // Aplica debuff de veneno
             activeMonsterDebuffs.push({
                 tipo:   "damage_reduction",
                 valor:  1,
                 turnos: 6,
                 nome:   "Veneno"
             });
-
             updateMonsterDebuffsDisplay();
         }
         // --- FIM: Efeito da Punhalada Venenosa ---
     }
 
-    window.siferContext = null; // Garante que não estamos em fluxo SIFER
+    window.siferContext = null;
 
-    // Habilita APENAS o botão de rolar dano
     if (rolarDanoButton) rolarDanoButton.disabled = false;
 
 } else {
     // --- INÍCIO: Limpeza do contexto da Punhalada Venenosa em caso de erro ---
     if (window.isPunhaladaVenenosaAttack) {
-        window.isPunhaladaVenenosaAttack     = null;
-        window.punhaladaVenenosaExtraDano    = null;
+        window.isPunhaladaVenenosaAttack  = null;
+        window.punhaladaVenenosaExtraDano = null;
         await addLogMessage(
-            "<span style='color:orange;'>Você erra a punhalada venenosa e desperdiça o veneno.</span>",
+            `<span style="color:orange;">Você erra a punhalada venenosa e desperdiça o veneno.</span>`,
             1000
         );
     }
@@ -3676,8 +3669,8 @@ if (playerAttackRollTotal >= monsterDefense) {
             `Seu toque não consegue alcançar ${currentMonster.nome}.`,
             1000
         );
-        window.touchSpellContext = null; // Limpa contexto
-        window.touchDebuffContext = null; // Limpa contexto de debuff
+        window.touchSpellContext  = null;
+        window.touchDebuffContext = null;
     } else {
         await addLogMessage(
             `Seu ataque passa de raspão no ${currentMonster.nome}.`,
@@ -3686,20 +3679,16 @@ if (playerAttackRollTotal >= monsterDefense) {
     }
 }
 
+// Passa o turno para o monstro
+if (typeof endPlayerTurn === 'function') {
+    endPlayerTurn();
+} else {
+    console.error("LOG: Função endPlayerTurn não encontrada após erro de ataque.");
+    isPlayerTurn = false;
+    setTimeout(() => monsterAttack(), 1500);
+}
+// *** FIM DA LÓGICA ORIGINAL DE ACERTO/ERRO ***
 
-
-
-                   // Passa o turno para o monstro
-                   if (typeof endPlayerTurn === 'function') {
-                        endPlayerTurn();
-                   } else {
-                        console.error("LOG: Função endPlayerTurn não encontrada após erro de ataque.");
-                        isPlayerTurn = false;
-                        setTimeout(() => monsterAttack(), 1500); // Fallback
-                   }
-             }
-             // *** FIM DA LÓGICA ORIGINAL DE ACERTO/ERRO ***
-        }
 
         // A reabilitação dos botões ocorrerá em startPlayerTurn() ou após rolar dano/localização
 
