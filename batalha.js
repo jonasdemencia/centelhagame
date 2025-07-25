@@ -3325,6 +3325,16 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 6) {
              baseDamageRoll = rollDice(playerDamageDice); // Rola o dano normal
              totalDamage = baseDamageRoll; // Dano total é só o base
 
+            // --- INÍCIO: Soma do dano extra da Punhalada Venenosa ---
+if (window.punhaladaVenenosaExtraDano) {
+  totalDamage += window.punhaladaVenenosaExtraDano;
+  await addLogMessage(
+    `<span style="color:green;">Dano extra de veneno aplicado: ${window.punhaladaVenenosaExtraDano}.</span>`,
+    800
+  );
+  window.punhaladaVenenosaExtraDano = null;
+}
+
              console.log("LOG: Botão 'DANO' - Dano normal rolado:", totalDamage);
              await addLogMessage(`Você rolou ${totalDamage} de dano (${playerDamageDice})!`, 1000);
         }
@@ -3592,36 +3602,90 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
 
         // --->>> *** ADICIONE A CHAVE DE FECHAMENTO AQUI *** <<<---
         } else {
-             // *** LÓGICA ORIGINAL DE ACERTO/ERRO (se não for 20 natural) ***
-             if (playerAttackRollTotal >= monsterDefense) {
-                 // LÓGICA ORIGINAL DE ACERTO (mostra botão rolar-dano, etc.)
-                 console.log("LOG: Ataque normal acertou.");
-                 atacarCorpoACorpoButton.style.display = 'none'; // Esconde o botão de ataque
-                 atacarCorpoACorpoButton.disabled = true; // Também desabilita o botão
-                 if(rolarDanoButton) rolarDanoButton.style.display = 'inline-block'; // Mostra o de dano
+             Aqui está o trecho completo com o bloco de “Efeito da Punhalada Venenosa” inserido logo após a linha indicada:
 
-                 if (isTouchSpell) {
-    await addLogMessage(`Seu toque mágico atinge ${currentMonster.nome}! Role o dano.`, 1000);
+
+// *** LÓGICA ORIGINAL DE ACERTO/ERRO (se não for 20 natural) ***
+if (playerAttackRollTotal >= monsterDefense) {
+    // LÓGICA ORIGINAL DE ACERTO (mostra botão rolar-dano, etc.)
+    console.log("LOG: Ataque normal acertou.");
+    atacarCorpoACorpoButton.style.display = 'none'; // Esconde o botão de ataque
+    atacarCorpoACorpoButton.disabled = true;        // Também desabilita o botão
+    if (rolarDanoButton) rolarDanoButton.style.display = 'inline-block'; // Mostra o botão de dano
+
+    if (isTouchSpell) {
+        await addLogMessage(
+            `Seu toque mágico atinge ${currentMonster.nome}! Role o dano.`,
+            1000
+        );
+    } else {
+        await addLogMessage(
+            `Seu ataque atinge em cheio o ${currentMonster.nome}! Role o dano.`,
+            1000
+        );
+
+        // --- INÍCIO: Efeito da Punhalada Venenosa ---
+        if (window.isPunhaladaVenenosaAttack) {
+            window.isPunhaladaVenenosaAttack = null; // Limpa o contexto
+
+            // Salva o extraDano para ser somado no cálculo de dano
+            window.punhaladaVenenosaExtraDano = rollDice("1d6");
+
+            await addLogMessage(
+                `<span style="color:green;">O veneno faz efeito! Dano extra: ${window.punhaladaVenenosaExtraDano}. O inimigo sofrerá -1 de dano por 6 turnos se o ataque causar dano.</span>`,
+                1000
+            );
+
+            // Remove debuff anterior do mesmo tipo
+            activeMonsterDebuffs = activeMonsterDebuffs.filter(
+                debuff => debuff.nome !== "Veneno"
+            );
+
+            // Aplica debuff de veneno
+            activeMonsterDebuffs.push({
+                tipo:   "damage_reduction",
+                valor:  1,
+                turnos: 6,
+                nome:   "Veneno"
+            });
+
+            updateMonsterDebuffsDisplay();
+        }
+        // --- FIM: Efeito da Punhalada Venenosa ---
+    }
+
+    window.siferContext = null; // Garante que não estamos em fluxo SIFER
+
+    // Habilita APENAS o botão de rolar dano
+    if (rolarDanoButton) rolarDanoButton.disabled = false;
+
 } else {
-    await addLogMessage(`Seu ataque atinge em cheio o ${currentMonster.nome}! Role o dano.`, 1000);
+    // --- INÍCIO: Limpeza do contexto da Punhalada Venenosa em caso de erro ---
+    if (window.isPunhaladaVenenosaAttack) {
+        window.isPunhaladaVenenosaAttack     = null;
+        window.punhaladaVenenosaExtraDano    = null;
+        await addLogMessage(
+            "<span style='color:orange;'>Você erra a punhalada venenosa e desperdiça o veneno.</span>",
+            1000
+        );
+    }
+    // LÓGICA ORIGINAL DE ERRO
+    console.log("LOG: Ataque normal errou.");
+    if (isTouchSpell) {
+        await addLogMessage(
+            `Seu toque não consegue alcançar ${currentMonster.nome}.`,
+            1000
+        );
+        window.touchSpellContext = null; // Limpa contexto
+        window.touchDebuffContext = null; // Limpa contexto de debuff
+    } else {
+        await addLogMessage(
+            `Seu ataque passa de raspão no ${currentMonster.nome}.`,
+            1000
+        );
+    }
 }
 
-                 window.siferContext = null; // Garante que não estamos em fluxo SIFER
-
-                 // Habilita APENAS o botão de rolar dano
-                 // (actionButtons já estão desabilitados desde o início do listener)
-                 if(rolarDanoButton) rolarDanoButton.disabled = false;
-
-             } else {
-                  // LÓGICA ORIGINAL DE ERRO
-                  console.log("LOG: Ataque normal errou.");
-                  if (isTouchSpell) {
-    await addLogMessage(`Seu toque não consegue alcançar ${currentMonster.nome}.`, 1000);
-    window.touchSpellContext = null; // Limpa contexto
-    window.touchDebuffContext = null; // Limpa contexto debuff
-} else {
-    await addLogMessage(`Seu ataque passa de raspão no ${currentMonster.nome}.`, 1000);
-}
 
 
 
