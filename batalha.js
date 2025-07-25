@@ -3679,8 +3679,6 @@ if (playerAttackRollTotal >= monsterDefense) {
             1000
         );
     }
-}
-
 // Passa o turno para o monstro
 if (typeof endPlayerTurn === 'function') {
     endPlayerTurn();
@@ -3689,6 +3687,10 @@ if (typeof endPlayerTurn === 'function') {
     isPlayerTurn = false;
     setTimeout(() => monsterAttack(), 1500);
 }
+    
+}
+
+
 // *** FIM DA LÓGICA ORIGINAL DE ACERTO/ERRO ***
 } // <--- ADICIONE ESTA CHAVE DE FECHAMENTO AQUI
 
