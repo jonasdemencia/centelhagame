@@ -1670,32 +1670,48 @@ function updateBuffsDisplay() {
     updatePlayerCouracaDisplay();
 }
 
-// Função para atualizar display de debuffs do monstro
 function updateMonsterDebuffsDisplay() {
-    const container = document.getElementById('monster-debuffs-container');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    activeMonsterDebuffs.forEach(debuff => {
-        const debuffElement = document.createElement('div');
-        debuffElement.className = 'debuff-item';
-        debuffElement.innerHTML = \`
-<span>${debuff.nome}
-${debuff.tipo === "bleeding" ? `(-${debuff.valor} HP/turno)` : ""}
-${debuff.tipo === "poison" ? `(-${debuff.valor} HP/turno)` : ""}
-${debuff.tipo === "accuracy" ? `(-${debuff.valor} precisão)` : ""}
-${debuff.tipo === "amputation_legs" ? `(-${debuff.valor} couraça)` : ""}
-${debuff.tipo === "amputation_arms" ? `(-70% dano)` : ""}
-${debuff.tipo === "couraca" ? `(-${debuff.valor} couraça)` : ""}
-</span>
-<span class="debuff-turns">${debuff.turnos === 999 ? "∞" : debuff.turnos}</span>
-\`;
+  const container = document.getElementById('monster-debuffs-container');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  activeMonsterDebuffs.forEach(debuff => {
+    const debuffElement = document.createElement('div');
+    debuffElement.className = 'debuff-item';
 
-        container.appendChild(debuffElement);
-    });
+    // constrói o texto do debuff de forma isolada
+    let label = '';
+    switch (debuff.tipo) {
+      case 'bleeding':
+      case 'poison':
+        label = `(-${debuff.valor} HP/turno)`;
+        break;
+      case 'accuracy':
+        label = `(-${debuff.valor} precisão)`;
+        break;
+      case 'amputation_legs':
+      case 'couraca':
+        label = `(-${debuff.valor} couraça)`;
+        break;
+      case 'amputation_arms':
+        label = '(-70% dano)';
+        break;
+    }
+
+    // aqui usamos UM template literal sem nenhuma barra invertida extra
+    debuffElement.innerHTML = `
+      <span>
+        ${debuff.nome} ${label}
+      </span>
+      <span class="debuff-turns">
+        ${debuff.turnos === 999 ? '∞' : debuff.turnos}
+      </span>
+    `;
+
+    container.appendChild(debuffElement);
+  });
 }
-
 
 
 // Função para processar buffs no início do turno do jogador
