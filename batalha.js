@@ -35,6 +35,7 @@ const extraItems = [
 
 ];
 
+const armasLeves = ["Adaga"];
 
 // Sistema Arcanum Iudicium
 window.arcanumIudicium = {
@@ -2373,6 +2374,11 @@ let atosDoJogador = [
   id: "punhalada-venenosa",
   nome: "Punhalada Venenosa",
   descricao: "Ataque com lâmina embebida em veneno. Se acertar com uma Adaga, causa 1d6 de dano extra e o inimigo sofre -1 de dano por 6 turnos."
+},
+    {
+    id: "levesa-afiada",
+    nome: "Leveza Afiada",
+    descricao: "Aumenta a chance de acerto crítico SIFER (18-20) com armas leves por 7 turnos."
 }
 ];
 
@@ -2504,6 +2510,38 @@ if (atoClasseButton) {
             return;
           }
         }
+            
+else if (ato.id === "levesa-afiada") {
+    const inventory = window.playerData?.inventory;
+    const equippedWeaponName = inventory?.equippedItems?.weapon;
+
+    // Verifica se a arma equipada está na lista de armas leves
+    if (equippedWeaponName && armasLeves.includes(equippedWeaponName)) {
+        await addLogMessage(
+            "Você ativa Leveza Afiada! Seus ataques com armas leves têm chance de acerto crítico SIFER em 18-20 por 7 turnos.",
+            800
+        );
+        // Remove buff anterior para não acumular
+        activeBuffs = activeBuffs.filter(buff => buff.tipo !== "critico_aprimorado");
+        // Adiciona o novo buff
+        activeBuffs.push({
+            tipo: "critico_aprimorado",
+            valor: 18, // O valor mínimo para um acerto crítico SIFER
+            turnos: 7,
+            nome: "Leveza Afiada"
+        });
+        updateBuffsDisplay();
+        endPlayerTurn();
+    } else {
+        await addLogMessage(
+            "Você não está com uma arma leve equipada e perde o turno!",
+            1000
+        );
+        endPlayerTurn();
+    }
+    return;
+}
+            
         else if (ato.id === "punhalada-venenosa") {
           // Punhalada Venenosa
           // 1. Verifica se Adaga está equipada
