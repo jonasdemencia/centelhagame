@@ -2334,7 +2334,12 @@ let atosDoJogador = [
     nome: "Roubo de Destino",
     descricao:
       "Troca sua sorte com a de um inimigo, tornando o próximo teste dele um fracasso crítico e o seu um sucesso crítico."
-  }
+  },
+  {
+  id: "punhalada-venenosa",
+  nome: "Punhalada Venenosa",
+  descricao: "Ataque com lâmina embebida em veneno. Se acertar com uma Adaga, causa 1d6 de dano extra e o inimigo sofre -1 de dano por 6 turnos."
+}
 ];
 
 if (atoClasseButton) {
@@ -2465,6 +2470,26 @@ if (atoClasseButton) {
             return;
           }
         }
+        else if (ato.id === "punhalada-venenosa") {
+          // Punhalada Venenosa
+          // 1. Verifica se Adaga está equipada
+          const inventory = window.playerData?.inventory;
+          const equippedWeaponName = inventory?.equippedItems?.weapon;
+          if (!equippedWeaponName || !/adaga/i.test(equippedWeaponName)) {
+            await addLogMessage(
+              "Você precisa estar com uma Adaga equipada para usar Punhalada Venenosa!",
+              1000
+            );
+            return; // Não perde o turno
+          }
+          // 2. Seta contexto especial para o próximo ataque
+          window.punhaladaVenenosaContext = true;
+          await addLogMessage(
+            "Você prepara uma punhalada venenosa! Seu próximo ataque corpo a corpo tentará aplicar o veneno.",
+            800
+          );
+          return; // Jogador deve atacar normalmente
+        }
         else {
           // Outros atos genéricos
           await addLogMessage(
@@ -2489,6 +2514,7 @@ if (fecharPainelAtos) {
   });
 }
 // --- FIM DO BLOCO DE ATOS ---
+
 
 
 
@@ -3383,6 +3409,31 @@ if (playerHealth <= 0) {
 // === INÍCIO: CÓDIGO A SER INSERIDO ================================
 // ==================================================================
 
+// --- INÍCIO: Punhalada Venenosa ---
+if (window.punhaladaVenenosaContext) {
+  // Limpa o contexto para não aplicar múltiplas vezes
+  window.punhaladaVenenosaContext = null;
+  // Verifica novamente se Adaga está equipada (caso o jogador troque de arma entre o ato e o ataque)
+  const inventory = window.playerData?.inventory;
+  const equippedWeaponName = inventory?.equippedItems?.weapon;
+  if (!equippedWeaponName || !/adaga/i.test(equippedWeaponName)) {
+    await addLogMessage(
+      "Você não está mais com uma Adaga equipada. O veneno é desperdiçado.",
+      1000
+    );
+    // Não perde o turno, segue ataque normal
+  } else {
+    // Sinaliza que o ataque é venenoso para o cálculo de dano
+    window.isPunhaladaVenenosaAttack = true;
+    await addLogMessage(
+      "Você desfere uma punhalada venenosa!",
+      800
+    );
+  }
+}
+// --- FIM: Punhalada Venenosa ---
+        
+        
 // --- LÓGICA DE GASTO DE MUNIÇÃO ---
 
 const inventory = window.playerData?.inventory;
