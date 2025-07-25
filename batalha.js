@@ -3641,7 +3641,11 @@ if (playerAttackRollRaw === 1 && !isTouchSpell) {
     return; // NÃO CONTINUA O FLUXO NORMAL
 }
 
-       // --- NOVA LÓGICA UNIFICADA DE ACERTO E CRÍTICO SIFER ---
+      // ==================================================================
+// === INÍCIO: CÓDIGO CORRIGIDO A SER COLADO ========================
+// ==================================================================
+
+// --- NOVA LÓGICA UNIFICADA DE ACERTO E CRÍTICO SIFER ---
 // 1. Determinar o limiar do acerto crítico SIFER
 let criticalThreshold = 20; // Padrão é 20
 const levezAfiadaBuff = activeBuffs.find(buff => buff.tipo === 'critico_aprimorado');
@@ -3651,11 +3655,13 @@ if (levezAfiadaBuff) {
         criticalThreshold = levezAfiadaBuff.valor; // Buff ativo, limiar é 18
     }
 }
+
 // 2. Checar os resultados do ataque
 if (playerAttackRollRaw >= criticalThreshold && !isTouchSpell) {
     // ACERTO CRÍTICO SIFER (18, 19 ou 20 com buff, ou 20 sem buff)
     console.log("LOG: SIFER - Acerto Crítico! Aguardando rolagem de localização.");
-    await addLogMessage`<strong style="color: orange;">ACERTO CRÍTICO (SIFER)!</strong> Role a localização!`, 500);
+    // CORREÇÃO AQUI:
+    await addLogMessage(`<strong style="color: orange;">ACERTO CRÍTICO (SIFER)!</strong> Role a localização!`, 500);
     const rollLocationBtn = document.getElementById("rolar-localizacao");
     if (rollLocationBtn) {
         rollLocationBtn.style.display = "inline-block";
@@ -3676,9 +3682,11 @@ if (playerAttackRollRaw >= criticalThreshold && !isTouchSpell) {
         rolarDanoButton.disabled = false;
     }
     if (isTouchSpell) {
-        await addLogMessage`Seu toque mágico atinge ${currentMonster.nome}! Role o dano.`, 1000);
+        // CORREÇÃO AQUI:
+        await addLogMessage(`Seu toque mágico atinge ${currentMonster.nome}! Role o dano.`, 1000);
     } else {
-        await addLogMessage`Seu ataque atinge em cheio o ${currentMonster.nome}! Role o dano.`, 1000);
+        // CORREÇÃO AQUI:
+        await addLogMessage(`Seu ataque atinge em cheio o ${currentMonster.nome}! Role o dano.`, 1000);
     }
 } else {
     // ERRO
@@ -3686,17 +3694,24 @@ if (playerAttackRollRaw >= criticalThreshold && !isTouchSpell) {
     if (window.isPunhaladaVenenosaAttack) {
         window.isPunhaladaVenenosaAttack = null;
         window.punhaladaVenenosaExtraDano = null;
-        await addLogMessage`<span style='color:orange;'>Você erra a punhalada venenosa e desperdiça o veneno.</span>`, 1000);
+        // CORREÇÃO AQUI:
+        await addLogMessage(`<span style='color:orange;'>Você erra a punhalada venenosa e desperdiça o veneno.</span>`, 1000);
     }
     if (isTouchSpell) {
-        await addLogMessage`Seu toque não consegue alcançar ${currentMonster.nome}.`, 1000);
+        // CORREÇÃO AQUI:
+        await addLogMessage(`Seu toque não consegue alcançar ${currentMonster.nome}.`, 1000);
         window.touchSpellContext = null;
         window.touchDebuffContext = null;
     } else {
-        await addLogMessage`Seu ataque passa de raspão no ${currentMonster.nome}.`, 1000);
+        // CORREÇÃO AQUI:
+        await addLogMessage(`Seu ataque passa de raspão no ${currentMonster.nome}.`, 1000);
     }
     endPlayerTurn();
 }
+
+// ==================================================================
+// === FIM: DA SUBSTITUIÇÃO =========================================
+// ==================================================================
         
         // A reabilitação dos botões ocorrerá em startPlayerTurn() ou após rolar dano/localização
 
