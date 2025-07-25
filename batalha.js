@@ -2379,6 +2379,11 @@ let atosDoJogador = [
     id: "levesa-afiada",
     nome: "Leveza Afiada",
     descricao: "Aumenta a chance de acerto crítico SIFER (18-20) com armas leves por 7 turnos."
+},
+    {
+  id: "ocultar-se",
+  nome: "Ocultar-se",
+  descricao: "Tenta se esconder em combate. Se bem-sucedido, seu próximo ataque será um ataque pelas costas (Backstab)."
 }
 ];
 
@@ -2455,6 +2460,42 @@ if (atoClasseButton) {
             return;
           }
         }
+
+else if (ato.id === "ocultar-se") {
+  await addLogMessage("Você tenta se ocultar no meio do combate...", 600);
+
+  // Rolagem do jogador
+  const playerRoll = Math.floor(Math.random() * 20) + 1;
+  const playerTotal = playerRoll + (playerData?.skill?.total || 0);
+
+  // Rolagem do monstro
+  const monsterRoll = Math.floor(Math.random() * 20) + 1;
+  const monsterTotal = monsterRoll + (currentMonster.habilidade || 0);
+
+  await addLogMessage(`Você rolou ${playerRoll} + ${playerData?.skill?.total || 0} (Hab) = ${playerTotal}`, 800);
+  await addLogMessage(`${currentMonster.nome} rolou ${monsterRoll} + ${currentMonster.habilidade || 0} (Hab) = ${monsterTotal}`, 800);
+
+  if (playerTotal > monsterTotal) {
+    // Sucesso: aplica buff "oculto"
+    activeBuffs = activeBuffs.filter(buff => buff.tipo !== "oculto");
+    activeBuffs.push({
+      tipo: "oculto",
+      valor: 1, // não usado, mas pode ser útil
+      turnos: 2,
+      nome: "Oculto (Backstab)"
+    });
+    updateBuffsDisplay();
+    await addLogMessage(`<span style="color:green;">Você se escondeu com sucesso! Seu próximo ataque será um ataque pelas costas (Backstab).</span>`, 1000);
+    endPlayerTurn();
+  } else {
+    // Falha: monstro faz ataque de oportunidade
+    await addLogMessage(`<span style="color:red;">Você falha em se esconder! ${currentMonster.nome} percebe e ataca você!</span>`, 1000);
+    await monsterOpportunityAttack(1.0); // ataque de oportunidade com dano normal
+    endPlayerTurn();
+  }
+  return;
+}
+            
         else if (ato.id === "riso-escarnecedor") {
           // Riso Escarnecedor
           await addLogMessage(
@@ -3396,6 +3437,15 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 6) {
             await addLogMessage(`Rolagem de Dano Normal`, 1000);
              baseDamageRoll = rollDice(playerDamageDice); // Rola o dano normal
              totalDamage = baseDamageRoll; // Dano total é só o base
+
+            // --- INÍCIO: Dano extra de Backstab ---
+if (window.isBackstabAttack) {
+  const backstabBonus = rollDice("1d6");
+  totalDamage += backstabBonus;
+  await addLogMessage(`<span style="color:orange;">Backstab! Dano extra: ${backstabBonus} (1d6).</span>`, 800);
+  window.isBackstabAttack = false;
+}
+// --- FIM: Dano extra de Backstab ---
 
             // --- INÍCIO: Soma do dano extra da Punhalada Venenosa ---
 if (window.punhaladaVenenosaExtraDano) {
