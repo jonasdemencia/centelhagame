@@ -3603,7 +3603,6 @@ console.log("LOG: Contexto SIFER iniciado/limpo para rolagem de localização.")
 
         // --->>> *** ADICIONE A CHAVE DE FECHAMENTO AQUI *** <<<---
         } else {
-             Aqui está o trecho completo com o bloco de “Efeito da Punhalada Venenosa” inserido logo após a linha indicada:
 
 
 // *** LÓGICA ORIGINAL DE ACERTO/ERRO (se não for 20 natural) ***
