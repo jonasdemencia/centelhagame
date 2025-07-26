@@ -1640,6 +1640,9 @@ function getPlayerDefense() {
     return total;
   }, 0);
 
+    return baseDefense + buffBonus; // LINHA FALTANTE
+} // CHAVE DE FECHAMENTO '}' FALTANTE
+
 // Adicione esta função após getPlayerDefense()
 function updatePlayerCouracaDisplay() {
     const couracaSpan = document.getElementById('player-couraca-valor');
