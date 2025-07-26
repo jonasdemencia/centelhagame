@@ -2512,8 +2512,8 @@ else if (ato.id === "ocultar-se") {
   const monsterRoll = Math.floor(Math.random() * 20) + 1;
   const monsterTotal = monsterRoll + (currentMonster.habilidade || 0);
 
-  await addLogMessage`Você rolou ${playerRoll} + ${playerData?.skill?.total || 0}${bonusHab ? " " + bonusDesc : ""} (Hab) = ${playerTotal}`, 800);
-  await addLogMessage`${currentMonster.nome} rolou ${monsterRoll} + ${currentMonster.habilidade || 0} (Hab) = ${monsterTotal}`, 800);
+  await addLogMessage(`Você rolou ${playerRoll} + ${playerData?.skill?.total || 0}${bonusHab ? " " + bonusDesc : ""} (Hab) = ${playerTotal}`, 800);
+  await addLogMessage(`${currentMonster.nome} rolou ${monsterRoll} + ${currentMonster.habilidade || 0} (Hab) = ${monsterTotal}`, 800);
 
   if (playerTotal > monsterTotal) {
     // Sucesso: aplica buff "oculto" com +5 couraça
