@@ -3479,29 +3479,32 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 6) {
             isSiferDamage = false;
             console.log("LOG: Processando Dano Normal...");
             await addLogMessage(`Rolagem de Dano Normal`, 1000);
-             baseDamageRoll = rollDice(playerDamageDice); // Rola o dano normal
-             totalDamage = baseDamageRoll; // Dano total é só o base
-
-           // --- INÍCIO: Dano extra de Backstab ---
+            // --- INÍCIO: Dano extra de Backstab com dois cliques ---
 if (window.isBackstabAttack) {
-  // Rola o dano normal da arma
-  baseDamageRoll = rollDice(playerDamageDice);
-  totalDamage = baseDamageRoll;
-  await addLogMessage(`Dano da arma: ${baseDamageRoll} (${playerDamageDice})`, 800);
-
-  // Rola o bônus de backstab (1d6)
-  const backstabBonus = rollDice("1d6");
-  totalDamage += backstabBonus;
-  await addLogMessage(`<span style="color:orange;">Backstab! Dano extra: ${backstabBonus} (1d6).</span>`, 800);
-
-  window.isBackstabAttack = false; // Consome o direito ao backstab
+  if (!window.backstabContext) {
+    baseDamageRoll = rollDice(playerDamageDice);
+    totalDamage = baseDamageRoll;
+    window.backstabContext = { stage: 'backstab', base: baseDamageRoll };
+    await addLogMessage(`Dano da arma: ${baseDamageRoll} (${playerDamageDice})`, 800);
+    await addLogMessage(`Agora role o bônus de Backstab (1d6)! Clique novamente no botão de dano.`, 800);
+    rolarDanoButton.style.display = 'inline-block';
+    rolarDanoButton.disabled = false;
+    return;
+  } else if (window.backstabContext.stage === 'backstab') {
+    const backstabBonus = rollDice("1d6");
+    totalDamage = window.backstabContext.base + backstabBonus;
+    await addLogMessage(`<span style="color:orange;">Backstab! Dano extra: ${backstabBonus} (1d6).</span>`, 800);
+    await addLogMessage(`Dano total: <strong style="color:yellow;">${totalDamage}</strong>.`, 1000);
+    window.isBackstabAttack = false;
+    window.backstabContext = null;
+    // (segue o fluxo normal de aplicar o dano)
+  }
 } else {
-  // Dano normal (sem backstab)
   baseDamageRoll = rollDice(playerDamageDice);
   totalDamage = baseDamageRoll;
   await addLogMessage(`Você rolou ${totalDamage} de dano (${playerDamageDice})!`, 1000);
 }
-// --- FIM: Dano extra de Backstab ---
+// --- FIM: Dano extra de Backstab com dois cliques ---
             
 
             // --- INÍCIO: Soma do dano extra da Punhalada Venenosa ---
