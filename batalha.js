@@ -370,6 +370,16 @@ await addLogMessage(`${currentMonster.nome} rolou ${monsterRollRaw} em um D20 pa
             await addLogMessage(`O ataque acertou!`, 1000);
         }
 
+        // --- INÍCIO: Dissipar buff oculto se acertado ---
+const ocultoBuffIndex = activeBuffs.findIndex(buff => buff.tipo === "oculto");
+if (ocultoBuffIndex !== -1) {
+  activeBuffs.splice(ocultoBuffIndex, 1);
+  updateBuffsDisplay();
+  await addLogMessage(`<span style="color:red;">Você foi atingido enquanto estava oculto! Seu estado de ocultação se dissipa e você não poderá aplicar o Backstab.</span>`, 1000);
+  window.isBackstabAttack = false; // Garante que não aplicará o bônus
+}
+// --- FIM: Dissipar buff oculto se acertado ---
+
         // Calcula o dano
         let monsterDamageRoll = rollDice(selectedAttack.dano);
 
