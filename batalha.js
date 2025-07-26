@@ -3484,19 +3484,19 @@ if (window.isBackstabAttack) {
   // Rola o dano normal da arma
   baseDamageRoll = rollDice(playerDamageDice);
   totalDamage = baseDamageRoll;
-  await addLogMessage`Dano da arma: ${baseDamageRoll} (${playerDamageDice})`, 800);
+  await addLogMessage(`Dano da arma: ${baseDamageRoll} (${playerDamageDice})`, 800);
 
   // Rola o bônus de backstab (1d6)
   const backstabBonus = rollDice("1d6");
   totalDamage += backstabBonus;
-  await addLogMessage`<span style="color:orange;">Backstab! Dano extra: ${backstabBonus} (1d6).</span>`, 800);
+  await addLogMessage(`<span style="color:orange;">Backstab! Dano extra: ${backstabBonus} (1d6).</span>`, 800);
 
   window.isBackstabAttack = false; // Consome o direito ao backstab
 } else {
   // Dano normal (sem backstab)
   baseDamageRoll = rollDice(playerDamageDice);
   totalDamage = baseDamageRoll;
-  await addLogMessage`Você rolou ${totalDamage} de dano (${playerDamageDice})!`, 1000);
+  await addLogMessage(`Você rolou ${totalDamage} de dano (${playerDamageDice})!`, 1000);
 }
 // --- FIM: Dano extra de Backstab ---
             
