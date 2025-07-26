@@ -2526,7 +2526,7 @@ else if (ato.id === "ocultar-se") {
       valor: 1,
       turnos: 2,
       nome: "Oculto (Backstab)",
-      couracaBonus: 5 // NOVO: bônus de couraça
+      couracaBonus: 8 // NOVO: bônus de couraça
     });
     updateBuffsDisplay();
     await addLogMessage(`<span style="color:green;">Você se escondeu com sucesso! Seu próximo ataque será um ataque pelas costas (Backstab) e você recebe +5 de couraça enquanto estiver oculto.</span>`, 1000);
