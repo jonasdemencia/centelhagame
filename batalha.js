@@ -1623,10 +1623,12 @@ function getPlayerDefense() {
     const currentPlayerData = window.playerData || playerData;
     const baseDefense = currentPlayerData?.couraca ? parseInt(currentPlayerData.couraca) : 0;
     const buffBonus = activeBuffs
-        .filter(buff => buff.tipo === "couraca")
-        .reduce((total, buff) => total + buff.valor, 0);
-    return baseDefense + buffBonus;
-}
+  .filter(buff => buff.tipo === "couraca" || buff.couracaBonus)
+  .reduce((total, buff) => {
+    if (buff.tipo === "couraca") return total + (buff.valor || 0);
+    if (buff.couracaBonus) return total + buff.couracaBonus;
+    return total;
+  }, 0);
 
 // Adicione esta função após getPlayerDefense()
 function updatePlayerCouracaDisplay() {
@@ -2464,33 +2466,62 @@ if (atoClasseButton) {
 else if (ato.id === "ocultar-se") {
   await addLogMessage("Você tenta se ocultar no meio do combate...", 600);
 
+  // --- INÍCIO: Bônus de habilidade por condições ambientais ---
+  let bonusHab = 0;
+  let bonusDesc = "";
+  let conditions = {};
+  if (window.ArcanumConditions && typeof window.ArcanumConditions.getConditions === "function") {
+    conditions = await window.ArcanumConditions.getConditions();
+  }
+  // +3: noite, nublado, neblina, tempestade
+  if (
+    conditions.periodo === "noite" ||
+    conditions.clima === "nublado" ||
+    conditions.clima === "neblina" ||
+    conditions.clima === "tempestade"
+  ) {
+    bonusHab = 3;
+    bonusDesc = "+3 (condição ambiental favorável)";
+  }
+  // +5: lua nova, madrugada (prioridade)
+  if (
+    conditions.lua === "nova" ||
+    conditions.periodo === "madrugada"
+  ) {
+    bonusHab = 5;
+    bonusDesc = "+5 (condição ambiental muito favorável)";
+  }
+  // --- FIM: Bônus de habilidade por condições ambientais ---
+
   // Rolagem do jogador
   const playerRoll = Math.floor(Math.random() * 20) + 1;
-  const playerTotal = playerRoll + (playerData?.skill?.total || 0);
+  const playerHab = (playerData?.skill?.total || 0) + bonusHab;
+  const playerTotal = playerRoll + playerHab;
 
   // Rolagem do monstro
   const monsterRoll = Math.floor(Math.random() * 20) + 1;
   const monsterTotal = monsterRoll + (currentMonster.habilidade || 0);
 
-  await addLogMessage(`Você rolou ${playerRoll} + ${playerData?.skill?.total || 0} (Hab) = ${playerTotal}`, 800);
-  await addLogMessage(`${currentMonster.nome} rolou ${monsterRoll} + ${currentMonster.habilidade || 0} (Hab) = ${monsterTotal}`, 800);
+  await addLogMessage`Você rolou ${playerRoll} + ${playerData?.skill?.total || 0}${bonusHab ? " " + bonusDesc : ""} (Hab) = ${playerTotal}`, 800);
+  await addLogMessage`${currentMonster.nome} rolou ${monsterRoll} + ${currentMonster.habilidade || 0} (Hab) = ${monsterTotal}`, 800);
 
   if (playerTotal > monsterTotal) {
-    // Sucesso: aplica buff "oculto"
+    // Sucesso: aplica buff "oculto" com +5 couraça
     activeBuffs = activeBuffs.filter(buff => buff.tipo !== "oculto");
     activeBuffs.push({
       tipo: "oculto",
-      valor: 1, // não usado, mas pode ser útil
+      valor: 1,
       turnos: 2,
-      nome: "Oculto (Backstab)"
+      nome: "Oculto (Backstab)",
+      couracaBonus: 5 // NOVO: bônus de couraça
     });
     updateBuffsDisplay();
-    await addLogMessage(`<span style="color:green;">Você se escondeu com sucesso! Seu próximo ataque será um ataque pelas costas (Backstab).</span>`, 1000);
+    await addLogMessage`<span style="color:green;">Você se escondeu com sucesso! Seu próximo ataque será um ataque pelas costas (Backstab) e você recebe +5 de couraça enquanto estiver oculto.</span>`, 1000);
     endPlayerTurn();
   } else {
     // Falha: monstro faz ataque de oportunidade
-    await addLogMessage(`<span style="color:red;">Você falha em se esconder! ${currentMonster.nome} percebe e ataca você!</span>`, 1000);
-    await monsterOpportunityAttack(1.0); // ataque de oportunidade com dano normal
+    await addLogMessage`<span style="color:red;">Você falha em se esconder! ${currentMonster.nome} percebe e ataca você!</span>`, 1000);
+    await monsterOpportunityAttack(1.0);
     endPlayerTurn();
   }
   return;
@@ -3438,14 +3469,27 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 6) {
              baseDamageRoll = rollDice(playerDamageDice); // Rola o dano normal
              totalDamage = baseDamageRoll; // Dano total é só o base
 
-            // --- INÍCIO: Dano extra de Backstab ---
+           // --- INÍCIO: Dano extra de Backstab ---
 if (window.isBackstabAttack) {
+  // Rola o dano normal da arma
+  baseDamageRoll = rollDice(playerDamageDice);
+  totalDamage = baseDamageRoll;
+  await addLogMessage`Dano da arma: ${baseDamageRoll} (${playerDamageDice})`, 800);
+
+  // Rola o bônus de backstab (1d6)
   const backstabBonus = rollDice("1d6");
   totalDamage += backstabBonus;
-  await addLogMessage(`<span style="color:orange;">Backstab! Dano extra: ${backstabBonus} (1d6).</span>`, 800);
-  window.isBackstabAttack = false;
+  await addLogMessage`<span style="color:orange;">Backstab! Dano extra: ${backstabBonus} (1d6).</span>`, 800);
+
+  window.isBackstabAttack = false; // Consome o direito ao backstab
+} else {
+  // Dano normal (sem backstab)
+  baseDamageRoll = rollDice(playerDamageDice);
+  totalDamage = baseDamageRoll;
+  await addLogMessage`Você rolou ${totalDamage} de dano (${playerDamageDice})!`, 1000);
 }
 // --- FIM: Dano extra de Backstab ---
+            
 
             // --- INÍCIO: Soma do dano extra da Punhalada Venenosa ---
 if (window.punhaladaVenenosaExtraDano) {
@@ -3538,19 +3582,22 @@ if (playerHealth <= 0) {
 }
 
         // --- INÍCIO: Lógica de ataque pelas costas (Backstab) ---
-    const ocultoBuff = activeBuffs.find(buff => buff.tipo === "oculto");
-    let isBackstab = false;
-    if (ocultoBuff) {
-      isBackstab = true;
-      // Remove o buff após o ataque
-      activeBuffs = activeBuffs.filter(buff => buff.tipo !== "oculto");
-      updateBuffsDisplay();
-      await addLogMessage(`<span style="color:orange;">Você está oculto! Este ataque será um ataque pelas costas (Backstab).</span>`, 800);
-    }
-    if (isBackstab) {
-      window.isBackstabAttack = true;
-    }
-    // --- FIM: Lógica de ataque pelas costas (Backstab) ---
+const ocultoBuff = activeBuffs.find(buff => buff.tipo === "oculto");
+let isBackstab = false;
+if (ocultoBuff) {
+  isBackstab = true;
+  // Remove o buff após o ataque
+  activeBuffs = activeBuffs.filter(buff => buff.tipo !== "oculto");
+  updateBuffsDisplay();
+  await addLogMessage(`<span style="color:orange;">Você está oculto! Este ataque será um ataque pelas costas (Backstab).</span>`, 800);
+}
+if (isBackstab) {
+  window.isBackstabAttack = true;
+} else {
+  window.isBackstabAttack = false;
+}
+// --- FIM: Lógica de ataque pelas costas (Backstab) ---
+        
         
         // ==================================================================
 // === INÍCIO: CÓDIGO A SER INSERIDO ================================
