@@ -2526,11 +2526,11 @@ else if (ato.id === "ocultar-se") {
       couracaBonus: 5 // NOVO: bônus de couraça
     });
     updateBuffsDisplay();
-    await addLogMessage`<span style="color:green;">Você se escondeu com sucesso! Seu próximo ataque será um ataque pelas costas (Backstab) e você recebe +5 de couraça enquanto estiver oculto.</span>`, 1000);
+    await addLogMessage(`<span style="color:green;">Você se escondeu com sucesso! Seu próximo ataque será um ataque pelas costas (Backstab) e você recebe +5 de couraça enquanto estiver oculto.</span>`, 1000);
     endPlayerTurn();
   } else {
     // Falha: monstro faz ataque de oportunidade
-    await addLogMessage`<span style="color:red;">Você falha em se esconder! ${currentMonster.nome} percebe e ataca você!</span>`, 1000);
+    await addLogMessage(`<span style="color:red;">Você falha em se esconder! ${currentMonster.nome} percebe e ataca você!</span>`, 1000);
     await monsterOpportunityAttack(1.0);
     endPlayerTurn();
   }
