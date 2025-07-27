@@ -1066,6 +1066,15 @@ async function usarItem(itemId, effect, value) {
         if (item.quantity <= 0) {
             inventoryData.itemsInChest.splice(itemIndex, 1);
         }
+
+        // Se o item removido estava equipado, remove do slot equipado
+if (inventoryData.equippedItems) {
+  for (const slot in inventoryData.equippedItems) {
+    if (inventoryData.equippedItems[slot] === item.content) {
+      inventoryData.equippedItems[slot] = null;
+    }
+  }
+}
         
         // Salva as alterações no Firestore
         await setDoc(playerRef, { 
