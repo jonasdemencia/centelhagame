@@ -3542,6 +3542,28 @@ if (window.punhaladaVenenosaExtraDano) {
             atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
             await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}.`, 1000);
 
+            // --- INÍCIO: Redução da quantidade de granadas de mão ao usar em batalha ---
+if (weaponObj && weaponObj.id === "granada-mao") {
+  // Procura a granada no inventário
+  const grenadeIndex = inventory.itemsInChest.findIndex(item => item.id === "granada-mao");
+  if (grenadeIndex !== -1) {
+    inventory.itemsInChest[grenadeIndex].quantity--;
+    // Se acabou, remove do inventário
+    if (inventory.itemsInChest[grenadeIndex].quantity <= 0) {
+      inventory.itemsInChest.splice(grenadeIndex, 1);
+      // Se estava equipada, remove do slot
+      if (inventory.equippedItems.weapon === "Granada de Mão") {
+        inventory.equippedItems.weapon = null;
+      }
+    }
+  }
+  // Salva no Firestore
+  const userId = auth.currentUser.uid;
+  const playerRef = doc(db, "players", userId);
+  await setDoc(playerRef, { inventory: inventory }, { merge: true });
+}
+// --- FIM: Redução da quantidade de granadas de mão ao usar em batalha ---
+
             // Salva estado (precisa de userId e monsterName no escopo)
             const user = auth.currentUser; // Pega o usuário atual
             if (userId && monsterName && currentMonster) { // Verifica se as variáveis globais estão ok
