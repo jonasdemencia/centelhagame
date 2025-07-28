@@ -981,170 +981,118 @@ function selecionarItem(itemElement) {
 // Função para usar um item - versão modificada
 async function usarItem(itemId, effect, value) {
     const userId = auth.currentUser.uid;
-    
     try {
         // Buscar dados do jogador e inventário
         const playerRef = doc(db, "players", userId);
         const playerSnap = await getDoc(playerRef);
-        
         if (!playerSnap.exists()) {
             console.error("Dados do jogador não encontrados");
             return;
         }
-        
+
         const playerData = playerSnap.data();
         const inventoryData = playerData.inventory;
-        
+
         // Encontrar o item no inventário
         let itemIndex = -1;
         let item = null;
-        
         if (inventoryData.itemsInChest && Array.isArray(inventoryData.itemsInChest)) {
             itemIndex = inventoryData.itemsInChest.findIndex(i => i.id === itemId);
             if (itemIndex !== -1) {
                 item = inventoryData.itemsInChest[itemIndex];
             }
         }
-        
+
         if (!item) {
             console.error("Item não encontrado no inventário");
             return;
         }
-        
+
         // Fechar a janela de itens imediatamente
         document.getElementById("itens-modal").style.display = "none";
-        
+
         // Criar um novo bloco de turno para o item
         startNewTurnBlock("Item");
 
-        // --- GRANADA DE MÃO: ataque especial ---
-if (itemId === "granada-mao") {
-  // Role o dano da granada
-  const danoGranada = rollDice("3D8");
-  if (currentMonster) {
-    currentMonster.pontosDeEnergia -= danoGranada;
-    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+        // --- LÓGICA DE EFEITO DO ITEM ---
+        let monsterDefeated = false;
 
-    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
-
-    await addLogMessage(
-      `Você arremessa uma granada de mão! Ela explode e causa <b>${danoGranada}</b> de dano ao ${currentMonster.nome}.`,
-      1000
-    );
-    await addLogMessage(
-      `Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}/${currentMonster.pontosDeEnergiaMax}`,
-      800
-    );
-
-    // --- Reduz a quantidade da granada e remove do inventário se necessário ---
-    item.quantity--;
-    if (item.quantity <= 0) {
-      inventoryData.itemsInChest.splice(itemIndex, 1);
-    }
-
-    // Salva as alterações no Firestore
-    await setDoc(playerRef, {
-      energy: playerData.energy,
-      inventory: inventoryData
-    }, { merge: true });
-
-    // Atualiza o estado da batalha
-    if (currentMonster) {
-      await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerData.energy.total);
-    }
-
-    // Verifica se o monstro morreu
-    if (currentMonster.pontosDeEnergia <= 0) {
-      await addLogMessage(
-        `<p style="color: green; font-weight: bold;">${currentMonster.nome} foi destruído pela explosão!</p>`,
-        1000
-      );
-      handlePostBattle(currentMonster);
-      return; // <-- Agora pode retornar aqui!
-    }
-  }
-  // O fluxo continua normalmente para ataque de oportunidade, etc, se o monstro não morreu
-}
-// --- FIM GRANADA DE MÃO ---
-        
-        // Aplicar efeito do item
-        if (effect === "heal" && value > 0) {
-            // Cura o jogador
+        if (itemId === "granada-mao") {
+            const danoGranada = rollDice("3D8");
+            if (currentMonster) {
+                currentMonster.pontosDeEnergia -= danoGranada;
+                currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+                atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+                await addLogMessage(`Você arremessa uma granada de mão! Ela explode e causa <b>${danoGranada}</b> de dano ao ${currentMonster.nome}.`, 1000);
+                await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}/${currentMonster.pontosDeEnergiaMax}`, 800);
+                if (currentMonster.pontosDeEnergia <= 0) {
+                    await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi destruído pela explosão!</p>`, 1000);
+                    monsterDefeated = true;
+                }
+            }
+        } else if (effect === "heal" && value > 0) {
             const energyTotal = playerData.energy?.total || 0;
             const energyInitial = playerData.energy?.initial || 0;
             const newEnergy = Math.min(energyTotal + parseInt(value), energyInitial);
-            
-            // Atualiza a energia do jogador
             playerData.energy.total = newEnergy;
             playerHealth = newEnergy; // Atualiza a variável global
-            
-            // Atualiza a barra de HP
             atualizarBarraHP("barra-hp-jogador", newEnergy, energyInitial);
-            
-            // Adiciona mensagem ao log
             await addLogMessage(`Você usou ${item.content} e recuperou ${value} pontos de energia.`, 1000);
             await addLogMessage(`Sua energia atual: ${newEnergy}/${energyInitial}`, 800);
-            
         } else if (effect === "damage" && value > 0) {
-            // Causa dano ao monstro
             if (currentMonster) {
                 currentMonster.pontosDeEnergia -= parseInt(value);
                 currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
-                
-                // Atualiza a barra de HP do monstro
                 atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
-                
-                // Adiciona mensagem ao log
                 await addLogMessage(`Você usou ${item.content} e causou ${value} pontos de dano ao ${currentMonster.nome}.`, 1000);
                 await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}/${currentMonster.pontosDeEnergiaMax}`, 800);
-                
-                // Verifica se o monstro morreu
                 if (currentMonster.pontosDeEnergia <= 0) {
                     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-                    handlePostBattle(currentMonster);
-                    return;
+                    monsterDefeated = true;
                 }
             }
         } else {
-            // Item sem efeito específico
+            // Item sem efeito específico (ou efeito não listado como 'heal'/'damage')
             await addLogMessage(`Você usou ${item.content}.`, 1000);
         }
-        
-        // Reduz a quantidade do item
+
+        // --- LÓGICA DE CONSUMO DO ITEM (COMUM A TODOS) ---
         item.quantity--;
-        
-        // Remove o item se a quantidade chegar a zero
         if (item.quantity <= 0) {
             inventoryData.itemsInChest.splice(itemIndex, 1);
+            // Se o item removido estava equipado, remove do slot equipado
+            if (inventoryData.equippedItems) {
+                for (const slot in inventoryData.equippedItems) {
+                    if (inventoryData.equippedItems[slot] === item.content) {
+                        inventoryData.equippedItems[slot] = null;
+                    }
+                }
+            }
         }
 
-        // Se o item removido estava equipado, remove do slot equipado
-if (inventoryData.equippedItems) {
-  for (const slot in inventoryData.equippedItems) {
-    if (inventoryData.equippedItems[slot] === item.content) {
-      inventoryData.equippedItems[slot] = null;
-    }
-  }
-}
-        
-        // Salva as alterações no Firestore
-        await setDoc(playerRef, { 
+        // --- LÓGICA DE SALVAMENTO (COMUM A TODOS) ---
+        await setDoc(playerRef, {
             energy: playerData.energy,
-            inventory: inventoryData 
+            inventory: inventoryData
         }, { merge: true });
-        
-        // Atualiza o estado da batalha
+
         if (currentMonster) {
             await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerData.energy.total);
         }
-        
-       // Monstro faz ataque de oportunidade antes de passar o turno
-if (currentMonster && currentMonster.pontosDeEnergia > 0) {
-  await monsterOpportunityAttack(0.8);
-}
-endPlayerTurn();
 
-        
+        // --- LÓGICA DE FIM DE TURNO (COMUM A TODOS) ---
+        if (monsterDefeated) {
+            handlePostBattle(currentMonster);
+            return; // Fim da batalha
+        }
+
+        // Monstro faz ataque de oportunidade antes de passar o turno
+        if (currentMonster && currentMonster.pontosDeEnergia > 0) {
+            await monsterOpportunityAttack(0.8);
+        }
+
+        endPlayerTurn();
+
     } catch (error) {
         console.error("Erro ao usar item:", error);
         // Garantir que a janela feche mesmo em caso de erro
