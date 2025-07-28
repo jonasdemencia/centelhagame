@@ -3298,20 +3298,18 @@ if (window.touchDebuffContext) {
         let isSiferDamage = false; // Flag para saber se é dano SIFER
 let playerDamageDice = "1"; // padrão desarmado
 const inventory = window.playerData?.inventory;
-let weaponObj = null; // <-- Torna global no escopo do botão
-
 if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
-  let equippedWeaponName = inventory.equippedItems.weapon;
-  if (equippedWeaponName) {
-    equippedWeaponName = equippedWeaponName.replace(/\s*\(\d+\/\d+\)$/, "");
-  }
-  const allItemsArr = [...initialItems, ...extraItems];
-  weaponObj = allItemsArr.find(item => item.content === equippedWeaponName); // <-- Agora é global
-  if (weaponObj && weaponObj.damage) {
-    playerDamageDice = weaponObj.damage;
-  }
+    let equippedWeaponName = inventory.equippedItems.weapon;
+    if (equippedWeaponName) {
+        equippedWeaponName = equippedWeaponName.replace(/\s*\(\d+\/\d+\)$/, "");
+    }
+    const allItemsArr = [...initialItems, ...extraItems];
+    const weaponObj = allItemsArr.find(item => item.content === equippedWeaponName);
+    if (weaponObj && weaponObj.damage) {
+        playerDamageDice = weaponObj.damage;
+    }
 } else if (playerData?.dano) {
-  playerDamageDice = playerData.dano;
+    playerDamageDice = playerData.dano;
 }
 
                                      
@@ -3537,45 +3535,12 @@ if (window.punhaladaVenenosaExtraDano) {
         if (totalDamage > 0) { // Só aplica se houver dano
             console.log(`Aplicando ${totalDamage} de dano ao monstro.`);
             currentMonster.pontosDeEnergia -= totalDamage;
-
-            // --- CONSUMO DE GRANADA DE MÃO ---
-if (weaponObj && weaponObj.id === "granada-mao") {
-  // Procura a granada de mão no inventário
-  let grenade = null;
-  let grenadeIndex = -1;
-  if (inventory.itemsInChest && Array.isArray(inventory.itemsInChest)) {
-    grenadeIndex = inventory.itemsInChest.findIndex(item => item.id === "granada-mao");
-    if (grenadeIndex !== -1) {
-      grenade = inventory.itemsInChest[grenadeIndex];
-    }
-  }
-  if (grenade) {
-    grenade.quantity--;
-    if (grenade.quantity <= 0) {
-      inventory.itemsInChest.splice(grenadeIndex, 1);
-      // Se estava equipada, remove do slot
-      if (inventory.equippedItems.weapon === "Granada de Mão") {
-        inventory.equippedItems.weapon = null;
-      }
-    }
-  } else {
-    // Se não encontrou no inventário, pode ser a última equipada
-    if (inventory.equippedItems.weapon === "Granada de Mão") {
-      inventory.equippedItems.weapon = null;
-    }
-  }
-  // Salva no Firestore
-  const userId = auth.currentUser.uid;
-  const playerRef = doc(db, "players", userId);
-  await setDoc(playerRef, { inventory: inventory }, { merge: true });
-}
             currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia); // Garante não ficar negativo
 
             await addLogMessage(`${currentMonster.nome} sofreu ${totalDamage} de dano.`, 800);
 
             atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
             await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}.`, 1000);
-
 
             // Salva estado (precisa de userId e monsterName no escopo)
             const user = auth.currentUser; // Pega o usuário atual
