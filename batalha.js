@@ -1038,11 +1038,15 @@ await addLogMessage(
 
 
         // Verifica se o monstro morreu
-        if (currentMonster.pontosDeEnergia <= 0) {
-          await addLogMessage`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi destruído pela explosão!</p>`, 1000);
-          handlePostBattle(currentMonster);
-          return;
-        }
+       if (currentMonster.pontosDeEnergia <= 0) {
+  await addLogMessage(
+    `<p style="color: green; font-weight: bold;">${currentMonster.nome} foi destruído pela explosão!</p>`,
+    1000
+  );
+  handlePostBattle(currentMonster);
+  return;
+}
+
       }
       // Reduz a quantidade normalmente (o resto do fluxo já faz isso)
     }
