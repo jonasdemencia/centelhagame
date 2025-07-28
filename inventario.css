@@ -4,19 +4,21 @@ body {
     text-align: center;
     margin: 0;
     padding: 5px;
-    background-color: #1a1a1a;
+    background-color: #000; /* preto absoluto */
     color: white;
 }
+
 
 /* Container principal */
 .container {
     max-width: 900px;
     margin: auto;
-    background: rgba(0, 0, 0, 0.8);
+    background: #000; /* fundo preto sólido */
     padding: 20px;
-    border-radius: 10px;
-    border: 4px solid #aa6c39;
+    border-radius: 0; /* remove arredondamento */
+    border: 2px solid #ccc; /* cinza claro */
 }
+
 
 /* Títulos */
 h1 {
@@ -37,12 +39,13 @@ p {
 /* Seção do personagem */
 .character {
     padding: 20px;
-    background: rgba(0, 0, 0, 0.5);
-    border: 3px solid #aa6c39;
-    border-radius: 10px;
+    background: #000; /* preto sólido */
+    border: 2px solid #ccc; /* cinza claro */
+    border-radius: 0;
     width: 250px;
     margin: auto;
 }
+
 
 .equipment {
     display: flex;
@@ -60,14 +63,14 @@ p {
 
 /* Baú de itens */
 .chest {
-    display: block; /* Certifica que o baú esteja visível */
-    position: relative; /* Corrige posição */
+    display: block;
+    position: relative;
     margin-top: 20px;
-    padding: 15px; /* Espaço interno ajustado */
-    background: rgba(0, 0, 0, 0.5);
-    border: 3px solid #aa6c39;
-    border-radius: 10px;
-    min-height: 300px; /* Dobra o tamanho vertical (ajuste conforme necessário) */
+    padding: 15px;
+    background: #000;
+    border: 2px solid #ccc;
+    border-radius: 0;
+    min-height: 300px;
 }
 
 .items {
@@ -84,21 +87,23 @@ p {
 /* Estilo dos itens e slots */
 .slot, .item, .discard-slot {
     width: 100px;
-    height: 100px; /* Torna os itens quadrados */
-    background: #583101;
-    border: 2px solid #d4a373;
-    border-radius: 8px;
+    height: 100px;
+    background: #222; /* fundo escuro, mas não marrom */
+    border: 2px solid #ccc; /* borda cinza clara */
+    border-radius: 0; /* sem arredondamento */
     text-align: center;
-    line-height: 100px; /* Centraliza o texto verticalmente */
+    line-height: normal; /* para múltiplas linhas */
     cursor: pointer;
     font-size: 14px;
     font-weight: bold;
-    display: flex; /* Para centralizar o conteúdo */
-    justify-content: center; /* Centraliza o conteúdo horizontalmente */
-    align-items: center; /* Centraliza o conteúdo verticalmente */
-    white-space: normal; /* Permite que o texto quebre para caber no quadrado */
-    word-break: break-word; /* Força a quebra de palavras longas */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    white-space: normal;
+    word-break: break-word;
+    color: white;
 }
+
 
 .item {
     background: #8b5a2b;
@@ -108,7 +113,7 @@ p {
 }
 
 .slot {
-    background: rgba(100, 60, 30, 0.8);
+    background: #111; /* preto mais próximo e sólido */
 }
 
 /* Destaque do item selecionado */
@@ -153,18 +158,21 @@ p {
 }
 
 .button {
-    background-color: transparent;
-    color: white;
-    border: 1px solid white;
+    background-color: #111 !important; /* fundo escuro */
+    border: 1px solid #ccc !important; /* borda cinza claro */
+    color: white !important;
     padding: 6px 12px;
     font-family: 'Eagle Lake', cursive;
     cursor: pointer;
+    border-radius: 0 !important; /* remove arredondamento */
 }
 
 .button:hover {
-    background-color: white;
-    color: black;
+    background-color: #333 !important;
+    border-color: #eee !important;
+    color: white !important;
 }
+
 
 /* Valores */
 .stat-value {
@@ -429,18 +437,18 @@ p {
 }
 
 .item-description {
-    position: absolute; /* Permite o posicionamento exato */
-    top: calc(100% + 2px); /* Posiciona abaixo do item (100% da altura + uma pequena margem) */
-    left: 0; /* Alinha à esquerda do item */
-    width: 100%; /* Ocupa a largura total do item */
-    margin-top: 0; /* Remove a margem superior padrão */
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    width: 100%;
+    margin-top: 0;
     padding: 5px;
-    border: 1px solid #eee;
-    background-color: #f9f9f9;
+    border: 1px solid #555;
+    background-color: #222; /* fundo escuro */
     font-size: 0.9em;
-    color: black;
-    z-index: 10; /* Garante que a descrição fique sempre na frente de outros elementos */
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); /* Adiciona uma sombra para destacar ainda mais */
+    color: white;
+    z-index: 10;
+    box-shadow: none; /* para manter estilo quadrado */
 }
 
 #useBtn {
@@ -703,3 +711,6 @@ p {
     background: #da190b;
 }
 
+* {
+    border-radius: 0 !important;
+}
