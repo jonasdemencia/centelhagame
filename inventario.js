@@ -375,8 +375,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const itemsContainer = document.querySelector('.items');
     if (itemsContainer) {
   itemsContainer.addEventListener('click', function(event) {
-    // Se o clique for diretamente no container (e não em um item)
-    if (event.target === itemsContainer) {
+    // Se o clique NÃO foi em um .item nem em um filho de .item
+    if (!event.target.closest('.item')) {
       clearHighlights();
       selectedItem = null;
       toggleUseButton(false);
