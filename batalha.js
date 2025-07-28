@@ -1018,39 +1018,37 @@ async function usarItem(itemId, effect, value) {
         startNewTurnBlock("Item");
 
         // --- GRANADA DE MÃO: ataque especial ---
-    if (itemId === "granada-mao") {
-      // Role o dano da granada
-      const danoGranada = rollDice("3D8");
-      if (currentMonster) {
-        currentMonster.pontosDeEnergia -= danoGranada;
-        currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+if (itemId === "granada-mao") {
+  // Role o dano da granada
+  const danoGranada = rollDice("3D8");
+  if (currentMonster) {
+    currentMonster.pontosDeEnergia -= danoGranada;
+    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
 
-        atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
 
-        await addLogMessage(
-  `Você arremessa uma granada de mão! Ela explode e causa <b>${danoGranada}</b> de dano ao ${currentMonster.nome}.`,
-  1000
-);
-await addLogMessage(
-  `Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}/${currentMonster.pontosDeEnergiaMax}`,
-  800
-);
+    await addLogMessage(
+      `Você arremessa uma granada de mão! Ela explode e causa <b>${danoGranada}</b> de dano ao ${currentMonster.nome}.`,
+      1000
+    );
+    await addLogMessage(
+      `Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}/${currentMonster.pontosDeEnergiaMax}`,
+      800
+    );
 
-
-        // Verifica se o monstro morreu
-       if (currentMonster.pontosDeEnergia <= 0) {
-  await addLogMessage(
-    `<p style="color: green; font-weight: bold;">${currentMonster.nome} foi destruído pela explosão!</p>`,
-    1000
-  );
-  handlePostBattle(currentMonster);
-  return;
-}
-
-      }
-      // Reduz a quantidade normalmente (o resto do fluxo já faz isso)
+    // Verifica se o monstro morreu
+    if (currentMonster.pontosDeEnergia <= 0) {
+      await addLogMessage(
+        `<p style="color: green; font-weight: bold;">${currentMonster.nome} foi destruído pela explosão!</p>`,
+        1000
+      );
+      handlePostBattle(currentMonster);
+      // NÃO retorne aqui! Deixe o fluxo seguir para consumir a granada normalmente.
     }
-    // --- FIM GRANADA DE MÃO ---
+  }
+  // O fluxo continua normalmente para reduzir a quantidade e remover do inventário se necessário
+}
+// --- FIM GRANADA DE MÃO ---
         
         // Aplicar efeito do item
         if (effect === "heal" && value > 0) {
