@@ -3298,18 +3298,20 @@ if (window.touchDebuffContext) {
         let isSiferDamage = false; // Flag para saber se é dano SIFER
 let playerDamageDice = "1"; // padrão desarmado
 const inventory = window.playerData?.inventory;
+let weaponObj = null; // <-- Torna global no escopo do botão
+
 if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
-    let equippedWeaponName = inventory.equippedItems.weapon;
-    if (equippedWeaponName) {
-        equippedWeaponName = equippedWeaponName.replace(/\s*\(\d+\/\d+\)$/, "");
-    }
-    const allItemsArr = [...initialItems, ...extraItems];
-    const weaponObj = allItemsArr.find(item => item.content === equippedWeaponName);
-    if (weaponObj && weaponObj.damage) {
-        playerDamageDice = weaponObj.damage;
-    }
+  let equippedWeaponName = inventory.equippedItems.weapon;
+  if (equippedWeaponName) {
+    equippedWeaponName = equippedWeaponName.replace(/\s*\(\d+\/\d+\)$/, "");
+  }
+  const allItemsArr = [...initialItems, ...extraItems];
+  weaponObj = allItemsArr.find(item => item.content === equippedWeaponName); // <-- Agora é global
+  if (weaponObj && weaponObj.damage) {
+    playerDamageDice = weaponObj.damage;
+  }
 } else if (playerData?.dano) {
-    playerDamageDice = playerData.dano;
+  playerDamageDice = playerData.dano;
 }
 
                                      
