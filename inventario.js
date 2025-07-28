@@ -373,6 +373,16 @@ document.addEventListener("DOMContentLoaded", () => {
     
     
     const itemsContainer = document.querySelector('.items');
+    if (itemsContainer) {
+  itemsContainer.addEventListener('click', function(event) {
+    // Se o clique for diretamente no container (e não em um item)
+    if (event.target === itemsContainer) {
+      clearHighlights();
+      selectedItem = null;
+      toggleUseButton(false);
+    }
+  });
+}
     const slots = document.querySelectorAll('.slot');
     const discardSlot = document.getElementById("discard-slot");
     const useButton = document.getElementById("useBtn"); // Obtém a referência do botão
