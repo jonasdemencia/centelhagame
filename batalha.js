@@ -1020,52 +1020,85 @@ async function usarItem(itemId, effect, value) {
         // --- GRANADA DE MÃO: ataque especial ---
 
 if (itemId === "granada-mao") {
-    // Role o dano da granada
-    const danoGranada = rollDice("3D8");
 
-    if (currentMonster) {
-        currentMonster.pontosDeEnergia -= danoGranada;
-        currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
-        atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+// Role o dano da granada
 
-        await addLogMessage(
-            `Você arremessa uma granada de mão! Ela explode e causa <b>${danoGranada}</b> de dano ao ${currentMonster.nome}.`,
-            1000
-        );
-        await addLogMessage(
-            `Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}/${currentMonster.pontosDeEnergiaMax}`,
-            800
-        );
+const danoGranada = rollDice("3D8");
 
-        // --- Reduz a quantidade da granada e remove do inventário se necessário ---
-        item.quantity--;
-        if (item.quantity <= 0) {
-            inventoryData.itemsInChest.splice(itemIndex, 1);
-        }
+if (currentMonster) {
 
-        // Salva as alterações no Firestore
-        await setDoc(playerRef, {
-            energy: playerData.energy,
-            inventory: inventoryData
-        }, { merge: true });
+currentMonster.pontosDeEnergia -= danoGranada;
 
-        // Atualiza o estado da batalha
-        if (currentMonster) {
-            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerData.energy.total);
-        }
+currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
 
-        // Verifica se o monstro morreu
-        if (currentMonster.pontosDeEnergia <= 0) {
-            await addLogMessage(
-                `<p style="color: green; font-weight: bold;">${currentMonster.nome} foi destruído pela explosão!</p>`,
-                1000
-            );
-            handlePostBattle(currentMonster);
-            return; // <-- Retorna aqui se o monstro morreu
-        }
-    }
+atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
 
-    return; // <-- Retorna aqui SEMPRE após usar a granada, evitando duplicidade!
+await addLogMessage(
+
+Você arremessa uma granada de mão! Ela explode e causa <b>${danoGranada}</b> de dano ao ${currentMonster.nome}.,
+
+1000
+
+);
+
+await addLogMessage(
+
+Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}/${currentMonster.pontosDeEnergiaMax},
+
+800
+
+);
+
+// --- Reduz a quantidade da granada e remove do inventário se necessário ---
+
+item.quantity--;
+
+if (item.quantity <= 0) {
+
+inventoryData.itemsInChest.splice(itemIndex, 1);
+
+}
+
+// Salva as alterações no Firestore
+
+await setDoc(playerRef, {
+
+energy: playerData.energy,
+
+inventory: inventoryData
+
+}, { merge: true });
+
+// Atualiza o estado da batalha
+
+if (currentMonster) {
+
+await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerData.energy.total);
+
+}
+
+// Verifica se o monstro morreu
+
+if (currentMonster.pontosDeEnergia <= 0) {
+
+await addLogMessage(
+
+<p style="color: green; font-weight: bold;">${currentMonster.nome} foi destruído pela explosão!</p>,
+
+1000
+
+);
+
+handlePostBattle(currentMonster);
+
+return; // <-- Agora pode retornar aqui!
+
+}
+
+}
+
+// O fluxo continua normalmente para ataque de oportunidade, etc, se o monstro não morreu
+
 }
 
 // --- FIM GRANADA DE MÃO ---
