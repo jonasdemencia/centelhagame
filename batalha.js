@@ -1036,6 +1036,23 @@ if (itemId === "granada-mao") {
       800
     );
 
+    // --- Reduz a quantidade da granada e remove do inventário se necessário ---
+    item.quantity--;
+    if (item.quantity <= 0) {
+      inventoryData.itemsInChest.splice(itemIndex, 1);
+    }
+
+    // Salva as alterações no Firestore
+    await setDoc(playerRef, {
+      energy: playerData.energy,
+      inventory: inventoryData
+    }, { merge: true });
+
+    // Atualiza o estado da batalha
+    if (currentMonster) {
+      await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerData.energy.total);
+    }
+
     // Verifica se o monstro morreu
     if (currentMonster.pontosDeEnergia <= 0) {
       await addLogMessage(
@@ -1043,10 +1060,10 @@ if (itemId === "granada-mao") {
         1000
       );
       handlePostBattle(currentMonster);
-      // NÃO retorne aqui! Deixe o fluxo seguir para consumir a granada normalmente.
+      return; // <-- Agora pode retornar aqui!
     }
   }
-  // O fluxo continua normalmente para reduzir a quantidade e remover do inventário se necessário
+  // O fluxo continua normalmente para ataque de oportunidade, etc, se o monstro não morreu
 }
 // --- FIM GRANADA DE MÃO ---
         
