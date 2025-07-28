@@ -1761,76 +1761,71 @@ async function verificarFugaAnimais() {
     console.log("VERIFICANDO FUGA DE ANIMAIS - FUNÇÃO CHAMADA");
     const userId = auth.currentUser?.uid;
     if (!userId) return;
-    
+
     try {
         const playerRef = doc(db, "players", userId);
         const playerSnap = await getDoc(playerRef);
-        
         if (!playerSnap.exists()) {
             console.log("Jogador não existe no Firestore");
             return;
         }
-        
+
         const playerData = playerSnap.data();
         if (!playerData.inventory || !playerData.inventory.itemsInChest) {
             console.log("Inventário não existe");
             return;
         }
-        
+
         const itemsInChest = playerData.inventory.itemsInChest;
-        console.log("ITENS NO BAÚ ANTES:", itemsInChest.length);
-        
-        // ENCONTRA O GRILO
         const griloIndex = itemsInChest.findIndex(item => 
             item.id === "grilo" && item.energia && item.energia.total > 0
         );
-        
+
         if (griloIndex === -1) {
-            console.log("Nenhum grilo encontrado");
+            console.log("Nenhum grilo com energia encontrado para fugir.");
             return;
         }
-        
-        console.log("GRILO ENCONTRADO NO ÍNDICE:", griloIndex);
-        
-        // VERIFICA CHANCE DE FUGA (1 em 30)
+
         const chanceRoll = Math.floor(Math.random() * 30) + 1;
         if (chanceRoll !== 1) {
             console.log(`GRILO NÃO FUGIU (rolou ${chanceRoll}/30)`);
             return;
         }
-        
+
         console.log("GRILO FUGIU! (rolou 1/30)");
-        
-        // REMOVE O GRILO DO INVENTÁRIO
+
+        // Pega o UUID do grilo que vai fugir ANTES de removê-lo
+        const griloFugitivo = itemsInChest[griloIndex];
+        const griloUuid = griloFugitivo.uuid;
+
+        // Remove o grilo do inventário
         itemsInChest.splice(griloIndex, 1);
-        
-        // ADICIONA O GRILO À LISTA DE DESCARTADOS
-        const discardedItems = playerData.inventory.discardedItems || [];
-        if (!discardedItems.includes("grilo")) {
-            discardedItems.push("grilo");
+
+        // Adiciona o UUID do grilo à lista de descartados para não ser recriado
+        if (griloUuid) {
+            if (!playerData.inventory.discardedItems) {
+                playerData.inventory.discardedItems = [];
+            }
+            playerData.inventory.discardedItems.push(griloUuid);
+            console.log(`Grilo com UUID ${griloUuid} adicionado à lista de descarte.`);
         }
-        
-        console.log("ITENS NO BAÚ DEPOIS:", itemsInChest.length);
-        
-        // SALVA NO FIRESTORE
+
+        // Salva o inventário atualizado no Firestore
         await setDoc(playerRef, {
             inventory: {
                 ...playerData.inventory,
                 itemsInChest: itemsInChest,
-                discardedItems: discardedItems
+                discardedItems: playerData.inventory.discardedItems
             }
         }, { merge: true });
-        
+
         console.log("GRILO REMOVIDO E ADICIONADO À LISTA DE DESCARTADOS!");
         alert("O grilo saltou do seu alforge e desapareceu entre as pedras.");
-        
+
     } catch (error) {
         console.error("ERRO AO REMOVER GRILO:", error);
     }
 }
-
-
-
 
 
 // Função para processar debuffs do monstro no início do seu turno
