@@ -501,8 +501,10 @@ ${originalItemData.description || 'Descrição do item.'}
     // Busca o objeto do item original
     const allItemsArr = [...initialItems, ...extraItems];
     let itemName = currentEquippedItem.trim();
-// Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (6/6)" -> "Revolver 38")
+// Remove sufixo de munição carregada (ex: "Revolver 38 (6/6)" -> "Revolver 38")
 itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
+// Remove sufixo de quantidade (ex: "Granada de Mão (3)" -> "Granada de Mão")
+itemName = itemName.replace(/\s*\(\d+\)$/, "");
 const originalItemData = allItemsArr.find(item => item.content === itemName);
 
     if (!originalItemData) {
