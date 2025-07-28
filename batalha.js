@@ -1027,8 +1027,15 @@ async function usarItem(itemId, effect, value) {
 
         atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
 
-        await addLogMessage`Você arremessa uma granada de mão! Ela explode e causa <b>${danoGranada}</b> de dano ao ${currentMonster.nome}.`, 1000);
-        await addLogMessage`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}/${currentMonster.pontosDeEnergiaMax}`, 800);
+        await addLogMessage(
+  `Você arremessa uma granada de mão! Ela explode e causa <b>${danoGranada}</b> de dano ao ${currentMonster.nome}.`,
+  1000
+);
+await addLogMessage(
+  `Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}/${currentMonster.pontosDeEnergiaMax}`,
+  800
+);
+
 
         // Verifica se o monstro morreu
         if (currentMonster.pontosDeEnergia <= 0) {
