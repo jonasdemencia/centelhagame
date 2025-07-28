@@ -501,10 +501,8 @@ ${originalItemData.description || 'Descrição do item.'}
     // Busca o objeto do item original
     const allItemsArr = [...initialItems, ...extraItems];
     let itemName = currentEquippedItem.trim();
-// Remove sufixo de munição carregada (ex: "Revolver 38 (6/6)" -> "Revolver 38")
+// Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (6/6)" -> "Revolver 38")
 itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
-// Remove sufixo de quantidade (ex: "Granada de Mão (3)" -> "Granada de Mão")
-itemName = itemName.replace(/\s*\(\d+\)$/, "");
 const originalItemData = allItemsArr.find(item => item.content === itemName);
 
     if (!originalItemData) {
@@ -1069,37 +1067,21 @@ if (item.consumable || item.projectile) {
     document.querySelectorAll('.slot').forEach(slot => {
         const equippedItem = inventoryData.equippedItems[slot.dataset.slot];
 
+        // Ajuste para arma de fogo: exibe munição carregada
         if (slot.dataset.slot === "weapon" && equippedItem) {
-  const allItemsArr = [...initialItems, ...extraItems];
-  // Verifica se é arma de fogo
-  const weaponObj = allItemsArr.find(i => i.content === equippedItem && i.ammoType);
-  if (weaponObj) {
-    const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
-    slot.innerHTML = `${equippedItem} (${loadedAmmo}/${weaponObj.ammoCapacity})`;
-  } else {
-    // Verifica se é granada de mão
-    const grenadeObj = allItemsArr.find(i => i.content === equippedItem && i.id === "granada-mao");
-    if (grenadeObj) {
-      // Procura a granada no inventário para pegar a quantidade
-      let grenadeQuantity = 0;
-      // Procura no inventário
-      const invGrenade = inventoryData.itemsInChest.find(item => item.id === "granada-mao");
-      if (invGrenade) {
-        grenadeQuantity = invGrenade.quantity;
-      } else if (inventoryData.equippedItems.weapon === "Granada de Mão" && inventoryData.equippedItems.weapon_quantity) {
-        grenadeQuantity = inventoryData.equippedItems.weapon_quantity;
-      } else {
-        // fallback: pega do objeto base
-        grenadeQuantity = grenadeObj.quantity || 0;
-      }
-      slot.innerHTML = `${equippedItem} (${grenadeQuantity})`;
-    } else {
-      slot.innerHTML = equippedItem;
-    }
-  }
-} else {
-  slot.innerHTML = equippedItem || slot.dataset.slot;
-}
+            // Busca o objeto da arma no catálogo
+            const allItemsArr = [...initialItems, ...extraItems];
+            const weaponObj = allItemsArr.find(i => i.content === equippedItem && i.ammoType);
+            if (weaponObj) {
+                // Se for arma de fogo, mostra munição carregada
+                const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
+                slot.innerHTML = `${equippedItem} (${loadedAmmo}/${weaponObj.ammoCapacity})`;
+            } else {
+                slot.innerHTML = equippedItem;
+            }
+        } else {
+            slot.innerHTML = equippedItem || slot.dataset.slot;
+        }
 
         if (equippedItem) {
             if (inventoryData.equippedItems[slot.dataset.slot + '_consumable']) {
