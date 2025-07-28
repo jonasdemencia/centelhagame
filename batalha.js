@@ -3537,26 +3537,31 @@ if (window.punhaladaVenenosaExtraDano) {
         if (totalDamage > 0) { // Só aplica se houver dano
             console.log(`Aplicando ${totalDamage} de dano ao monstro.`);
             currentMonster.pontosDeEnergia -= totalDamage;
-            currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia); // Garante não ficar negativo
 
-            await addLogMessage(`${currentMonster.nome} sofreu ${totalDamage} de dano.`, 800);
-
-            atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
-            await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}.`, 1000);
-
-            // --- INÍCIO: Redução da quantidade de granadas de mão ao usar em batalha ---
+            // --- CONSUMO DE GRANADA DE MÃO ---
 if (weaponObj && weaponObj.id === "granada-mao") {
-  // Procura a granada no inventário
-  const grenadeIndex = inventory.itemsInChest.findIndex(item => item.id === "granada-mao");
-  if (grenadeIndex !== -1) {
-    inventory.itemsInChest[grenadeIndex].quantity--;
-    // Se acabou, remove do inventário
-    if (inventory.itemsInChest[grenadeIndex].quantity <= 0) {
+  // Procura a granada de mão no inventário
+  let grenade = null;
+  let grenadeIndex = -1;
+  if (inventory.itemsInChest && Array.isArray(inventory.itemsInChest)) {
+    grenadeIndex = inventory.itemsInChest.findIndex(item => item.id === "granada-mao");
+    if (grenadeIndex !== -1) {
+      grenade = inventory.itemsInChest[grenadeIndex];
+    }
+  }
+  if (grenade) {
+    grenade.quantity--;
+    if (grenade.quantity <= 0) {
       inventory.itemsInChest.splice(grenadeIndex, 1);
       // Se estava equipada, remove do slot
       if (inventory.equippedItems.weapon === "Granada de Mão") {
         inventory.equippedItems.weapon = null;
       }
+    }
+  } else {
+    // Se não encontrou no inventário, pode ser a última equipada
+    if (inventory.equippedItems.weapon === "Granada de Mão") {
+      inventory.equippedItems.weapon = null;
     }
   }
   // Salva no Firestore
@@ -3564,7 +3569,13 @@ if (weaponObj && weaponObj.id === "granada-mao") {
   const playerRef = doc(db, "players", userId);
   await setDoc(playerRef, { inventory: inventory }, { merge: true });
 }
-// --- FIM: Redução da quantidade de granadas de mão ao usar em batalha ---
+            currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia); // Garante não ficar negativo
+
+            await addLogMessage(`${currentMonster.nome} sofreu ${totalDamage} de dano.`, 800);
+
+            atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+            await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}.`, 1000);
+
 
             // Salva estado (precisa de userId e monsterName no escopo)
             const user = auth.currentUser; // Pega o usuário atual
