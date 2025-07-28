@@ -1122,8 +1122,9 @@ if (inventoryData.equippedItems) {
         }
         
        // Monstro faz ataque de oportunidade antes de passar o turno
-await monsterOpportunityAttack(0.8);
-// Passa o turno para o monstro
+if (currentMonster && currentMonster.pontosDeEnergia > 0) {
+  await monsterOpportunityAttack(0.8);
+}
 endPlayerTurn();
 
         
