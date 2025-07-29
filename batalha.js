@@ -527,12 +527,12 @@ if (armsDebuff) {
         await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano${isCriticalHit ? " crítico" : ""}.`, 1000);
 
         // Salva o estado
-        const user = auth.currentUser;
-        if (user) {
-            await updatePlayerEnergyInFirestore(user.uid, playerHealth);
-            await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-        }
-
+        // Salva o estado
+const user = auth.currentUser;
+if (user) {
+    await updatePlayerEnergyInFirestore(user.uid, playerHealth);
+    await saveBattleState(user.uid, battleId, playerHealth);
+}
         // Verifica morte/inconsciência
         if (playerHealth <= -10) {
             await addLogMessage(`<p style="color: darkred;">Você morreu!</p>`, 1000);
@@ -898,13 +898,6 @@ async function endMonsterTurn() {
     await processBuffs();
     addLogMessage(`Turno do Jogador`, 1000);
 
-    // Salva o estado ANTES da verificação de fuga
-    const user = auth.currentUser;
-    const monsterName = getUrlParameter('monstro');
-    if (user && monsterName) {
-        await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-    }
-
     // Verificação de fuga de animais DEPOIS
     await verificarFugaAnimais();
 }
@@ -1138,7 +1131,7 @@ async function usarItem(itemId, effect, value) {
 
             // Salva e finaliza o turno
             await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+            await saveBattleState(userId, battleId, playerHealth);
 
             if (currentMonster.pontosDeEnergia <= 0) {
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
@@ -1202,8 +1195,8 @@ async function usarItem(itemId, effect, value) {
             ...(effect === "heal" && { energy: playerData.energy })
         }, { merge: true });
         
-        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
-
+        await saveBattleState(userId, battleId, playerHealth);
+        
         if (monsterDefeated) {
             await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
             handlePostBattle(currentMonster);
@@ -1374,7 +1367,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         
         // Salva estado e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, battleId, playerHealth);
         endPlayerTurn();
         return;
     }
@@ -1390,7 +1383,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         
         // Salva estado e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, battleId, playerHealth);
         endPlayerTurn();
         return;
     }
@@ -1408,7 +1401,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
             window.arcanumIudicium.falha(); // ADICIONAR AQUI
             // Salva estado e passa turno
             await updatePlayerMagicInFirestore(userId, playerMagic);
-            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+            await saveBattleState(userId, battleId, playerHealth);
             endPlayerTurn();
             return;
         } else {
@@ -1458,7 +1451,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         
         // Salva estado e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, battleId, playerHealth);
         endPlayerTurn();
 
     } else if (efeito === "stun") {
@@ -1467,7 +1460,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
             await addLogMessage(`${magia.nome} não funciona em monstros com muita energia!`, 1000);
             // Salva estado e passa turno
             await updatePlayerMagicInFirestore(userId, playerMagic);
-            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+            await saveBattleState(userId, battleId, playerHealth);
             endPlayerTurn();
             return;
         }
@@ -1486,7 +1479,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         
         // Salva estado e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, battleId, playerHealth);
         endPlayerTurn();
 
     } else if (efeito === "sleep") {
@@ -1494,7 +1487,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         if (currentMonster.pontosDeEnergiaMax >= 50) {
             await addLogMessage(`${magia.nome} não funciona em monstros com muita energia!`, 1000);
             await updatePlayerMagicInFirestore(userId, playerMagic);
-            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+            await saveBattleState(userId, battleId, playerHealth);
             endPlayerTurn();
             return;
         }
@@ -1523,7 +1516,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         await addLogMessage(`${currentMonster.nome} está dormindo! Perderá o próximo turno e seu próximo ataque corpo a corpo será crítico!`, 800);
         
         await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, battleId, playerHealth);
         endPlayerTurn();
 
     } else if (efeito === "fear") {
@@ -1531,7 +1524,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         if (currentMonster.pontosDeEnergiaMax > 40) {
             await addLogMessage(`${magia.nome} não funciona em monstros poderosos!`, 1000);
             await updatePlayerMagicInFirestore(userId, playerMagic);
-            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+            await saveBattleState(userId, battleId, playerHealth);
             endPlayerTurn();
             return;
         }
@@ -1569,7 +1562,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         
         // Salva estado da magia
         await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, battleId, playerHealth);
         
         // Não passa o turno, aguarda rolagem de ataque
         return;
@@ -1587,7 +1580,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         
         // Salva estado da magia
         await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, battleId, playerHealth);
         
         // Não passa o turno, aguarda rolagem de ataque
         return;
@@ -3640,7 +3633,7 @@ if (window.punhaladaVenenosaExtraDano) {
             // Salva estado (precisa de userId e monsterName no escopo)
             const user = auth.currentUser; // Pega o usuário atual
             if (userId && monsterName && currentMonster) { // Verifica se as variáveis globais estão ok
-                 await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+                 await saveBattleState(userId, battleId, playerHealth);
             } else {
                  console.error("Erro ao salvar estado: userId, monsterName ou currentMonster não definidos.");
             }
