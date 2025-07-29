@@ -348,13 +348,14 @@ button, .button {
         </section>
 
         <!-- Painel de atos (inicialmente oculto) -->
-        <div id="painel-atos" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7);">
-            <div style="background:white; margin:10vh auto; padding:30px; max-width:350px; border-radius:12px; box-shadow:0 4px 32px #222;">
-                <h3>Atos do Jogador</h3>
-                <div id="lista-atos"></div>
-                <button id="fechar-painel-atos" style="margin-top:15px;">Fechar</button>
-            </div>
-        </div>
+       <div id="painel-atos" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span class="close-modal" id="fechar-painel-atos">&times;</span>
+    <h3>Atos do Jogador</h3>
+    <div id="lista-atos"></div>
+  </div>
+</div>
+
 
         <!-- Modal de Itens e Ferramentas -->
         <div id="itens-modal" class="modal">
