@@ -2089,15 +2089,15 @@ function saveBattleState(userId, bId, playerHealth) {
     // ... (o resto dos session storage items)
 
     return setDoc(battleDocRef, {
-        monsters: monstersState, // Salva o array de estados dos monstros
-        playerHealth: playerHealth,
-        isPlayerTurn: window.isPlayerTurn,
-        initiativeResult: initiativeResult || null,
-        // ... (o resto dos campos que você já tinha)
-        battleStarted: window.battleStarted || true,
-        activeBuffs: activeBuffs || \[\],
-        lastUpdated: new Date().toISOString()
-    }, { merge: true });
+  monsters: monstersState,
+  playerHealth: playerHealth,
+  isPlayerTurn: window.isPlayerTurn,
+  initiativeResult: initiativeResult || null,
+  battleStarted: window.battleStarted || true,
+  activeBuffs: activeBuffs || [],       // ← aqui
+  lastUpdated: new Date().toISOString()
+}, { merge: true });
+
 }
 
 
