@@ -138,7 +138,7 @@ function getConditionIcon(tipo, valor) {
 // Variáveis globais para estado da batalha
 window.isPlayerTurn = false;
 window.battleStarted = false;
-window.monsters[currentMonsterIndex] = null;
+window.currentMonster = null;
 let escapeAttempts = 0; // Contador de tentativas de fuga
 let nextTelegraphedAttack = null; // Próximo ataque telegrafado
 let activeBuffs = []; // Sistema de buffs temporários
@@ -146,8 +146,7 @@ let activeMonsterDebuffs = []; // Sistema de debuffs do monstro
 let currentTurnBlock = null;
 let attackOptionsDiv = null;
 let monsterName = null; // Adicionar esta linha
-let monsters = []; // Array de monstros ativos na batalha
-let monsters[currentMonsterIndex]Index = 0; // Índice do monstro atualmente alvo/atacando
+let currentMonster = null; // Já existe como window.currentMonster, mas adicione esta também
 let userId = null;
 
 
@@ -251,38 +250,23 @@ function updatePlayerProjectilesDisplay() {
     container.innerHTML = html;
 }
 
-async function monstersAttack() {
-  for (let i = 0; i < monsters.length; i++) {
-    if (monsters[i].pontosDeEnergia > 0) {
-      currentMonsterIndex = i;
-      await monsterAttack();
-      // Se o jogador morrer, interrompe o loop
-      if (playerHealth <= -10) break;
-    }
-  }
-  // Só chama endMonsterTurn se o jogador não morreu
-  //if (playerHealth > -10) {
-    //endMonsterTurn();
-  //}
-}
-
 // Lógica do turno do monstro
 async function monsterAttack() {
-    console.log("LOG: Iniciando monsterAttack. monsters[currentMonsterIndex]:", monsters[currentMonsterIndex], "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
+    console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
 
     // Verifica se o jogador já está morto
-    if (isPlayerTurn || playerHealth <= -10 || !monsters[currentMonsterIndex]) {
+    if (isPlayerTurn || playerHealth <= -10 || !currentMonster) {
         console.log("LOG: monsterAttack - Turno inválido ou jogador morto. Retornando.");
         return;
     }
 
-    startNewTurnBlock(monsters[currentMonsterIndex].nome);
-await addLogMessage(`Turno do ${monsters[currentMonsterIndex].nome}`, 1000);
+    startNewTurnBlock(currentMonster.nome);
+await addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
 
 // Verifica se está rdoado ANTES de processar debuffs
 const stunDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "stun");
 if (stunDebuff) {
-    await addLogMessage(`${monsters[currentMonsterIndex].nome} está pasmado e perde o turno!`, 1000);
+    await addLogMessage(`${currentMonster.nome} está pasmado e perde o turno!`, 1000);
     await processMonsterDebuffs(); // Remove o stun
     endMonsterTurn();
     return;
@@ -291,7 +275,7 @@ if (stunDebuff) {
     // Verifica se está dormindo ANTES de processar outros debuffs
 const sleepDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "sleep");
 if (sleepDebuff) {
-    await addLogMessage(`${monsters[currentMonsterIndex].nome} está dormindo e perde o turno!`, 1000);
+    await addLogMessage(`${currentMonster.nome} está dormindo e perde o turno!`, 1000);
     await processMonsterDebuffs(); // Remove o sono
     endMonsterTurn();
     return;
@@ -304,15 +288,15 @@ await processMonsterDebuffs();
     // Processa sangramento de evisceração
 const bleedingDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "bleeding");
 if (bleedingDebuff) {
-    monsters[currentMonsterIndex].pontosDeEnergia -= bleedingDebuff.valor;
-    monsters[currentMonsterIndex].pontosDeEnergia = Math.max(0, monsters[currentMonsterIndex].pontosDeEnergia);
-    atualizarBarraHP("barra-hp-monstro", monsters[currentMonsterIndex].pontosDeEnergia, monsters[currentMonsterIndex].pontosDeEnergiaMax);
-    await addLogMessage(`${monsters[currentMonsterIndex].nome} perde ${bleedingDebuff.valor} HP por evisceração.`, 800);
+    currentMonster.pontosDeEnergia -= bleedingDebuff.valor;
+    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+    await addLogMessage(`${currentMonster.nome} perde ${bleedingDebuff.valor} HP por evisceração.`, 800);
     
     // Verifica se morreu por sangramento
-    if (monsters[currentMonsterIndex].pontosDeEnergia <= 0) {
-        await addLogMessage(`<p style="color: green; font-weight: bold;">${monsters[currentMonsterIndex].nome} morreu por perda de sangue!</p>`, 1000);
-        handlePostBattle(monsters[currentMonsterIndex]);
+    if (currentMonster.pontosDeEnergia <= 0) {
+        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} morreu por perda de sangue!</p>`, 1000);
+        handlePostBattle(currentMonster);
         return;
     }
 }
@@ -320,15 +304,15 @@ if (bleedingDebuff) {
     // Processa veneno
 const poisonDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "poison");
 if (poisonDebuff) {
-    monsters[currentMonsterIndex].pontosDeEnergia -= poisonDebuff.valor;
-    monsters[currentMonsterIndex].pontosDeEnergia = Math.max(0, monsters[currentMonsterIndex].pontosDeEnergia);
-    atualizarBarraHP("barra-hp-monstro", monsters[currentMonsterIndex].pontosDeEnergia, monsters[currentMonsterIndex].pontosDeEnergiaMax);
-    await addLogMessage(`${monsters[currentMonsterIndex].nome} perde ${poisonDebuff.valor} de energia por veneno.`, 800);
+    currentMonster.pontosDeEnergia -= poisonDebuff.valor;
+    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+    await addLogMessage(`${currentMonster.nome} perde ${poisonDebuff.valor} de energia por veneno.`, 800);
 
     // Verifica se morreu por veneno
-    if (monsters[currentMonsterIndex].pontosDeEnergia <= 0) {
-        await addLogMessage(`<p style="color: green; font-weight: bold;">${monsters[currentMonsterIndex].nome} sucumbiu ao veneno!</p>`, 1000);
-        handlePostBattle(monsters[currentMonsterIndex]);
+    if (currentMonster.pontosDeEnergia <= 0) {
+        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} sucumbiu ao veneno!</p>`, 1000);
+        handlePostBattle(currentMonster);
         return;
     }
 }
@@ -338,7 +322,7 @@ const legsDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "amputati
 if (legsDebuff) {
     const chancePerderTurno = Math.random();
     if (chancePerderTurno < 0.3) { // 30% chance
-        await addLogMessage(`${monsters[currentMonsterIndex].nome} se debate no chão e perde o turno!`, 1000);
+        await addLogMessage(`${currentMonster.nome} se debate no chão e perde o turno!`, 1000);
         endMonsterTurn();
         return;
     }
@@ -352,8 +336,8 @@ if (legsDebuff) {
         nextTelegraphedAttack = null;
         await addLogMessage(`<strong style="color: orange;">${selectedAttack.nome}!</strong>`, 800);
     } else {
-        selectedAttack = chooseMonsterAttack(monsters[currentMonsterIndex]);
-        await addLogMessage(`${monsters[currentMonsterIndex].nome} usa ${selectedAttack.nome}.`, 800);
+        selectedAttack = chooseMonsterAttack(currentMonster);
+        await addLogMessage(`${currentMonster.nome} usa ${selectedAttack.nome}.`, 800);
     }
 
     // Rolagem de ataque
@@ -366,12 +350,12 @@ const accuracyPenalty = activeMonsterDebuffs
 const monsterAttackRoll = monsterRollRaw - accuracyPenalty;
 
 if (accuracyPenalty > 0) {
-    await addLogMessage(`${monsters[currentMonsterIndex].nome} sofre -${accuracyPenalty} de penalidade por debuffs.`, 800);
+    await addLogMessage(`${currentMonster.nome} sofre -${accuracyPenalty} de penalidade por debuffs.`, 800);
 }
 
 
     
-await addLogMessage(`${monsters[currentMonsterIndex].nome} rolou ${monsterRollRaw} em um D20 para atacar.`, 1000);
+await addLogMessage(`${currentMonster.nome} rolou ${monsterRollRaw} em um D20 para atacar.`, 1000);
 
 
     const playerDefense = getPlayerDefense();
@@ -433,13 +417,13 @@ if (armsDebuff) {
 
         playerHealth -= monsterDamageRoll;
         atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-        await addLogMessage(`${monsters[currentMonsterIndex].nome} causou ${monsterDamageRoll} de dano${isCriticalHit ? " crítico" : ""}.`, 1000);
+        await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano${isCriticalHit ? " crítico" : ""}.`, 1000);
 
         // Salva o estado
         const user = auth.currentUser;
         if (user) {
             await updatePlayerEnergyInFirestore(user.uid, playerHealth);
-            await saveBattleState(user.uid, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+            await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         }
 
         // Verifica morte/inconsciência
@@ -458,8 +442,8 @@ if (armsDebuff) {
     }
 
     // Telegrafação após o ataque (se não foi um ataque telegrafado)
-    if (!nextTelegraphedAttack && monsters[currentMonsterIndex].ataques) {
-        const nextAttack = chooseMonsterAttack(monsters[currentMonsterIndex]);
+    if (!nextTelegraphedAttack && currentMonster.ataques) {
+        const nextAttack = chooseMonsterAttack(currentMonster);
         if (nextAttack.telegrafado) {
             nextTelegraphedAttack = nextAttack;
             await addLogMessage(`<em style="color: yellow;">${nextAttack.mensagemTelegraf}</em>`, 1200);
@@ -500,7 +484,7 @@ function endPlayerTurn() {
     setTimeout(() => {
         console.log("LOG: Chamando monsterAttack após fim do turno do jogador.");
         console.log(`Eficiência Arcanum Iudicium: ${window.arcanumIudicium.getEficiencia()}%`); // ADICIONAR AQUI
-          monstersAttack();
+        monsterAttack();
     }, 1500); // Delay para iniciar o turno do monstro
 }
 
@@ -751,7 +735,7 @@ async function endMonsterTurn() {
         console.log("LOG: Jogador inconsciente, o monstro continua atacando.");
         startNewTurnBlock("Estado");
         addLogMessage(`<p style="color: red; font-weight: bold;">Você está inconsciente e indefeso!</p>`, 1000);
-        addLogMessage(`O ${monsters[currentMonsterIndex].nome} continua atacando seu corpo inerte...`, 1000);
+        addLogMessage(`O ${currentMonster.nome} continua atacando seu corpo inerte...`, 1000);
         
         // Não passa o turno para o jogador, inicia outro turno do monstro
         setTimeout(() => {
@@ -811,7 +795,7 @@ async function endMonsterTurn() {
     const user = auth.currentUser;
     const monsterName = getUrlParameter('monstro');
     if (user && monsterName) {
-        await saveBattleState(user.uid, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+        await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
     }
 
     // Verificação de fuga de animais DEPOIS
@@ -837,9 +821,9 @@ function resetActionButtons() {
 
 // Função para ataque de oportunidade do monstro
 async function monsterOpportunityAttack(damageMultiplier = 0.8) {
-    await addLogMessage(`${monsters[currentMonsterIndex].nome} aproveita sua distração para atacar!`, 800);
+    await addLogMessage(`${currentMonster.nome} aproveita sua distração para atacar!`, 800);
     
-    const damage = Math.floor(rollDice(monsters[currentMonsterIndex].dano) * damageMultiplier);
+    const damage = Math.floor(rollDice(currentMonster.dano) * damageMultiplier);
     playerHealth -= damage;
     atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
     
@@ -848,7 +832,7 @@ async function monsterOpportunityAttack(damageMultiplier = 0.8) {
     // Atualiza estado
     if (auth.currentUser) {
         await updatePlayerEnergyInFirestore(auth.currentUser.uid, playerHealth);
-        await saveBattleState(auth.currentUser.uid, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+        await saveBattleState(auth.currentUser.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
     }
 }
 
@@ -867,7 +851,7 @@ async function attemptEscape() {
     const habilidadeUsada = playerData?.skill?.total || 0;
     
     // Calcula a dificuldade base (25 + habilidade do monstro)
-    const baseDifficulty = 25 + monsters[currentMonsterIndex].habilidade;
+    const baseDifficulty = 25 + currentMonster.habilidade;
     // Adiciona penalidade por tentativas (+2 por tentativa)
     const difficulty = baseDifficulty + ((escapeAttempts - 1) * 2);
 
@@ -1028,11 +1012,11 @@ async function usarItem(itemId, effect, value) {
         // --- BLOCO DE LÓGICA ISOLADO PARA A GRANADA ---
         if (itemId === "granada-mao") {
             const danoGranada = rollDice(item.damage || "3D8");
-            if (monsters[currentMonsterIndex]) {
-                monsters[currentMonsterIndex].pontosDeEnergia -= danoGranada;
-                monsters[currentMonsterIndex].pontosDeEnergia = Math.max(0, monsters[currentMonsterIndex].pontosDeEnergia);
-                atualizarBarraHP("barra-hp-monstro", monsters[currentMonsterIndex].pontosDeEnergia, monsters[currentMonsterIndex].pontosDeEnergiaMax);
-                await addLogMessage(`Você arremessa uma granada de mão! Ela explode e causa <b>${danoGranada}</b> de dano ao ${monsters[currentMonsterIndex].nome}.`, 1000);
+            if (currentMonster) {
+                currentMonster.pontosDeEnergia -= danoGranada;
+                currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+                atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+                await addLogMessage(`Você arremessa uma granada de mão! Ela explode e causa <b>${danoGranada}</b> de dano ao ${currentMonster.nome}.`, 1000);
             }
 
             // Consumo da granada
@@ -1047,11 +1031,11 @@ async function usarItem(itemId, effect, value) {
 
             // Salva e finaliza o turno
             await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-            await saveBattleState(userId, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
 
-            if (monsters[currentMonsterIndex].pontosDeEnergia <= 0) {
-                await addLogMessage(`<p style="color: green; font-weight: bold;">${monsters[currentMonsterIndex].nome} foi destruído pela explosão!</p>`, 1000);
-                handlePostBattle(monsters[currentMonsterIndex]);
+            if (currentMonster.pontosDeEnergia <= 0) {
+                await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi destruído pela explosão!</p>`, 1000);
+                handlePostBattle(currentMonster);
             } else {
                 await monsterOpportunityAttack(0.8);
                 endPlayerTurn();
@@ -1070,12 +1054,12 @@ async function usarItem(itemId, effect, value) {
             atualizarBarraHP("barra-hp-jogador", newEnergy, energyInitial);
             await addLogMessage(`Você usou ${item.content} e recuperou ${value} pontos de energia.`, 1000);
         } else if (effect === "damage" && value > 0) {
-            if (monsters[currentMonsterIndex]) {
-                monsters[currentMonsterIndex].pontosDeEnergia -= parseInt(value);
-                monsters[currentMonsterIndex].pontosDeEnergia = Math.max(0, monsters[currentMonsterIndex].pontosDeEnergia);
-                atualizarBarraHP("barra-hp-monstro", monsters[currentMonsterIndex].pontosDeEnergia, monsters[currentMonsterIndex].pontosDeEnergiaMax);
+            if (currentMonster) {
+                currentMonster.pontosDeEnergia -= parseInt(value);
+                currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+                atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
                 await addLogMessage(`Você usou ${item.content} e causou ${value} de dano.`, 1000);
-                if (monsters[currentMonsterIndex].pontosDeEnergia <= 0) monsterDefeated = true;
+                if (currentMonster.pontosDeEnergia <= 0) monsterDefeated = true;
             }
         } else {
             await addLogMessage(`Você usou ${item.content}.`, 1000);
@@ -1093,11 +1077,11 @@ async function usarItem(itemId, effect, value) {
             ...(effect === "heal" && { energy: playerData.energy })
         }, { merge: true });
         
-        await saveBattleState(userId, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
 
         if (monsterDefeated) {
-            await addLogMessage(`<p style="color: green; font-weight: bold;">${monsters[currentMonsterIndex].nome} foi derrotado!</p>`, 1000);
-            handlePostBattle(monsters[currentMonsterIndex]);
+            await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+            handlePostBattle(currentMonster);
         } else {
             await monsterOpportunityAttack(0.8);
             endPlayerTurn();
@@ -1265,7 +1249,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         
         // Salva estado e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         endPlayerTurn();
         return;
     }
@@ -1281,7 +1265,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         
         // Salva estado e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         endPlayerTurn();
         return;
     }
@@ -1289,21 +1273,21 @@ async function usarMagia(magiaId, efeito, valor, custo) {
     // Teste de resistência do monstro (apenas para magias que não são touch_attack ou touch_debuff)
     if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
         const resistanceRoll = Math.floor(Math.random() * 20) + 1;
-        const resistanceTotal = resistanceRoll + monsters[currentMonsterIndex].habilidade;
+        const resistanceTotal = resistanceRoll + currentMonster.habilidade;
         const difficulty = 20;
 
-        await addLogMessage(`${monsters[currentMonsterIndex].nome} tenta resistir: ${resistanceRoll} + ${monsters[currentMonsterIndex].habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
+        await addLogMessage(`${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
 
         if (resistanceTotal >= difficulty) {
-            await addLogMessage(`${monsters[currentMonsterIndex].nome} resistiu à magia!`, 1000);
+            await addLogMessage(`${currentMonster.nome} resistiu à magia!`, 1000);
             window.arcanumIudicium.falha(); // ADICIONAR AQUI
             // Salva estado e passa turno
             await updatePlayerMagicInFirestore(userId, playerMagic);
-            await saveBattleState(userId, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
             endPlayerTurn();
             return;
         } else {
-            await addLogMessage(`A magia afeta ${monsters[currentMonsterIndex].nome}!`, 800);
+            await addLogMessage(`A magia afeta ${currentMonster.nome}!`, 800);
         }
     }
 
@@ -1343,22 +1327,22 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         
         updateMonsterDebuffsDisplay();
         
-        await addLogMessage(`${monsters[currentMonsterIndex].nome} está ofuscado! Sua precisão diminuiu em -${debuffValue} por ${debuffDuration} turnos.`, 800);
+        await addLogMessage(`${currentMonster.nome} está ofuscado! Sua precisão diminuiu em -${debuffValue} por ${debuffDuration} turnos.`, 800);
         window.arcanumIudicium.sucesso(); // ADICIONAR AQUI
 
         
         // Salva estado e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         endPlayerTurn();
 
     } else if (efeito === "stun") {
         // Verifica se o monstro tem energia menor que 50
-        if (monsters[currentMonsterIndex].pontosDeEnergiaMax >= 50) {
+        if (currentMonster.pontosDeEnergiaMax >= 50) {
             await addLogMessage(`${magia.nome} não funciona em monstros com muita energia!`, 1000);
             // Salva estado e passa turno
             await updatePlayerMagicInFirestore(userId, playerMagic);
-            await saveBattleState(userId, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
             endPlayerTurn();
             return;
         }
@@ -1373,19 +1357,19 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         });
         
         updateMonsterDebuffsDisplay();
-        await addLogMessage(`${monsters[currentMonsterIndex].nome} está pasmado! Perderá o próximo turno.`, 800);
+        await addLogMessage(`${currentMonster.nome} está pasmado! Perderá o próximo turno.`, 800);
         
         // Salva estado e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         endPlayerTurn();
 
     } else if (efeito === "sleep") {
         // Verifica se o monstro tem energia menor que 50
-        if (monsters[currentMonsterIndex].pontosDeEnergiaMax >= 50) {
+        if (currentMonster.pontosDeEnergiaMax >= 50) {
             await addLogMessage(`${magia.nome} não funciona em monstros com muita energia!`, 1000);
             await updatePlayerMagicInFirestore(userId, playerMagic);
-            await saveBattleState(userId, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
             endPlayerTurn();
             return;
         }
@@ -1411,24 +1395,24 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         
         updateMonsterDebuffsDisplay();
         updateBuffsDisplay();
-        await addLogMessage(`${monsters[currentMonsterIndex].nome} está dormindo! Perderá o próximo turno e seu próximo ataque corpo a corpo será crítico!`, 800);
+        await addLogMessage(`${currentMonster.nome} está dormindo! Perderá o próximo turno e seu próximo ataque corpo a corpo será crítico!`, 800);
         
         await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         endPlayerTurn();
 
     } else if (efeito === "fear") {
         // Verifica se o monstro tem energia menor que 40
-        if (monsters[currentMonsterIndex].pontosDeEnergiaMax > 40) {
+        if (currentMonster.pontosDeEnergiaMax > 40) {
             await addLogMessage(`${magia.nome} não funciona em monstros poderosos!`, 1000);
             await updatePlayerMagicInFirestore(userId, playerMagic);
-            await saveBattleState(userId, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+            await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
             endPlayerTurn();
             return;
         }
         
         // Se chegou aqui, o monstro falhou no teste geral de resistência
-        await addLogMessage(`${monsters[currentMonsterIndex].nome} foge aterrorizado da batalha!`, 1000);
+        await addLogMessage(`${currentMonster.nome} foge aterrorizado da batalha!`, 1000);
         
         // Limpa estado da batalha
         const user = auth.currentUser;
@@ -1460,7 +1444,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         
         // Salva estado da magia
         await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         
         // Não passa o turno, aguarda rolagem de ataque
         return;
@@ -1478,7 +1462,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         
         // Salva estado da magia
         await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         
         // Não passa o turno, aguarda rolagem de ataque
         return;
@@ -1668,7 +1652,7 @@ function updatePlayerCouracaDisplay() {
 
 // Função para calcular couraça total do monstro (base - penalidades)
 function getMonsterDefense() {
-  const baseDefense = monsters[currentMonsterIndex].couraça || 0;
+  const baseDefense = currentMonster.couraça || 0;
   const legsPenalty = activeMonsterDebuffs
     .filter(debuff => debuff.tipo === "amputation_legs")
     .reduce((total, debuff) => total + debuff.valor, 0);
@@ -1875,7 +1859,7 @@ function processMonsterDebuffs() {
     return expiredDebuffs.reduce((promise, debuff) => {
         return promise.then(() => {
             if (typeof addLogMessage === 'function') {
-                return addLogMessage(`${debuff.nome} se dissipou do ${monsters[currentMonsterIndex].nome}.`, 800);
+                return addLogMessage(`${debuff.nome} se dissipou do ${currentMonster.nome}.`, 800);
             }
             return Promise.resolve();
         });
@@ -2461,24 +2445,24 @@ if (atoClasseButton) {
           );
 
           const resistanceRoll  = Math.floor(Math.random() * 20) + 1;
-          const resistanceTotal = resistanceRoll + monsters[currentMonsterIndex].habilidade;
+          const resistanceTotal = resistanceRoll + currentMonster.habilidade;
           const difficulty      = 20;
 
           await addLogMessage(
-            `${monsters[currentMonsterIndex].nome} tenta resistir: ${resistanceRoll} + ${monsters[currentMonsterIndex].habilidade} = ${resistanceTotal} vs ${difficulty}`,
+            `${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`,
             1000
           );
 
           if (resistanceTotal >= difficulty) {
             await addLogMessage(
-              `${monsters[currentMonsterIndex].nome} resiste ao truque sujo!`,
+              `${currentMonster.nome} resiste ao truque sujo!`,
               1000
             );
             endPlayerTurn();
             return;
           } else {
             await addLogMessage(
-              `${monsters[currentMonsterIndex].nome} está momentaneamente cego! (-3 ataque, -3 couraça por 2 turnos)`,
+              `${currentMonster.nome} está momentaneamente cego! (-3 ataque, -3 couraça por 2 turnos)`,
               1000
             );
 
@@ -2546,10 +2530,10 @@ else if (ato.id === "ocultar-se") {
 
   // Rolagem do monstro
   const monsterRoll = Math.floor(Math.random() * 20) + 1;
-  const monsterTotal = monsterRoll + (monsters[currentMonsterIndex].habilidade || 0);
+  const monsterTotal = monsterRoll + (currentMonster.habilidade || 0);
 
   await addLogMessage(`Você rolou ${playerRoll} + ${playerData?.skill?.total || 0}${bonusHab ? " " + bonusDesc : ""} (Hab) = ${playerTotal}`, 800);
-  await addLogMessage(`${monsters[currentMonsterIndex].nome} rolou ${monsterRoll} + ${monsters[currentMonsterIndex].habilidade || 0} (Hab) = ${monsterTotal}`, 800);
+  await addLogMessage(`${currentMonster.nome} rolou ${monsterRoll} + ${currentMonster.habilidade || 0} (Hab) = ${monsterTotal}`, 800);
 
   if (playerTotal > monsterTotal) {
     // Sucesso: aplica buff "oculto" com +5 couraça
@@ -2566,7 +2550,7 @@ else if (ato.id === "ocultar-se") {
     endPlayerTurn();
   } else {
     // Falha: monstro faz ataque de oportunidade
-    await addLogMessage(`<span style="color:red;">Você falha em se esconder! ${monsters[currentMonsterIndex].nome} percebe e ataca você!</span>`, 1000);
+    await addLogMessage(`<span style="color:red;">Você falha em se esconder! ${currentMonster.nome} percebe e ataca você!</span>`, 1000);
     await monsterOpportunityAttack(1.0);
     endPlayerTurn();
   }
@@ -2597,24 +2581,24 @@ else if (ato.id === "ocultar-se") {
           );
 
           const resistanceRoll  = Math.floor(Math.random() * 20) + 1;
-          const resistanceTotal = resistanceRoll + monsters[currentMonsterIndex].habilidade;
+          const resistanceTotal = resistanceRoll + currentMonster.habilidade;
           const difficulty      = 20;
 
           await addLogMessage(
-            `${monsters[currentMonsterIndex].nome} tenta resistir: ${resistanceRoll} + ${monsters[currentMonsterIndex].habilidade} = ${resistanceTotal} vs ${difficulty}`,
+            `${currentMonster.nome} tenta resistir: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`,
             1000
           );
 
           if (resistanceTotal >= difficulty) {
             await addLogMessage(
-              `${monsters[currentMonsterIndex].nome} resiste ao insulto!`,
+              `${currentMonster.nome} resiste ao insulto!`,
               1000
             );
             endPlayerTurn();
             return;
           } else {
             await addLogMessage(
-              `${monsters[currentMonsterIndex].nome} fica confuso e vulnerável! (-1 ataque, -1 couraça por 6 turnos)`,
+              `${currentMonster.nome} fica confuso e vulnerável! (-1 ataque, -1 couraça por 6 turnos)`,
               1000
             );
 
@@ -2725,71 +2709,51 @@ if (fecharPainelAtos) {
 
 
 // Tenta carregar o monstro do sessionStorage primeiro
-const storedMonsters = sessionStorage.getItem('monsters[currentMonsterIndex]s');
-if (storedMonsters) {
-  monsters = JSON.parse(storedMonsters);
+const storedMonster = sessionStorage.getItem('currentMonster');
+if (storedMonster) {
+    currentMonster = JSON.parse(storedMonster);
+    console.log("LOG: Dados do monstro carregados do sessionStorage:", currentMonster);
 } else {
-  // Exemplo: dois monstros, pode ser dinâmico
-  monsters = [getMonsterById(monsterName), getMonsterById("lobo")];
+    // Fallback para o monsterData importado
+    currentMonster = getMonsterById(monsterName);
+    console.log("LOG: Dados do monstro carregados via getMonsterById ou monsterData:", currentMonster);
 }
-monsters[currentMonsterIndex]Index = 0;
 
 // Limpa o sessionStorage após carregar
-sessionStorage.removeItem('monsters[currentMonsterIndex]');
+sessionStorage.removeItem('currentMonster');
 
 // Se ainda não temos o monstro, mostra erro
-if (!monsters[currentMonsterIndex]) {
+if (!currentMonster) {
     console.error("LOG: Monstro não encontrado:", monsterName);
     document.getElementById("monster-name").innerText = "Monstro não encontrado";
     document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
 } else {
     // Configura os valores máximos de energia
-    const vidaMaximaMonstro = monsters[currentMonsterIndex].pontosDeEnergia;
-    monsters[currentMonsterIndex].pontosDeEnergiaMax = vidaMaximaMonstro; // Salva para usar depois
+    const vidaMaximaMonstro = currentMonster.pontosDeEnergia;
+    currentMonster.pontosDeEnergiaMax = vidaMaximaMonstro; // Salva para usar depois
 
     // Atualiza visualmente as barras no início do combate
-    atualizarBarraHP("barra-hp-monstro", monsters[currentMonsterIndex].pontosDeEnergia, monsters[currentMonsterIndex].pontosDeEnergiaMax);
+    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
 }
 
 
 
-    const monstersContainer = document.getElementById("monsters-container");
-if (monstersContainer) {
-  monstersContainer.innerHTML = "";
-  monsters.forEach((monster, idx) => {
-    const div = document.createElement("div");
-    div.className = "monster-card" + (idx === currentMonsterIndex ? " selected" : "");
-    div.innerHTML = `
-      <h3>${monster.nome}</h3>
-      <img src="${monster.imagem}" style="max-width:100px;max-height:100px;" />
-      <div>HP: <span id="monster-hp-${idx}">${monster.pontosDeEnergia}/${monster.pontosDeEnergiaMax}</span></div>
-      <div>${monster.descricao}</div>
-      <button onclick="selectMonster(${idx})"${idx === currentMonsterIndex ? ' disabled' : ''}>Alvo</button>
-    `;
-    monstersContainer.appendChild(div);
-  });
-} else {
-  // Fallback: mostra só o monstro atual se não houver container múltiplo
-  if (monsters[currentMonsterIndex]) {
-    document.getElementById("monster-name").innerText = monsters[currentMonsterIndex].nome;
-    document.getElementById("monster-description").innerText = monsters[currentMonsterIndex].descricao;
-    const monsterImageElement = document.getElementById("monster-image");
-    if (monsterImageElement) {
-      monsterImageElement.src = monsters[currentMonsterIndex].imagem;
+    if (currentMonster) {
+        console.log("LOG: Dados do monstro (carregamento inicial):", currentMonster);
+        document.getElementById("monster-name").innerText = currentMonster.nome;
+        document.getElementById("monster-description").innerText = currentMonster.descricao;
+        const monsterImageElement = document.getElementById("monster-image");
+        if (monsterImageElement) {
+            monsterImageElement.src = currentMonster.imagem;
+            console.log("LOG: Imagem do monstro carregada.");
+        } else {
+            console.error("LOG: Elemento de imagem do monstro não encontrado (ID: monster-image)");
+        }
+    } else {
+        console.error("LOG: Monstro não encontrado:", monsterName);
+        document.getElementById("monster-name").innerText = "Monstro não encontrado";
+        document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
     }
-  } else {
-    document.getElementById("monster-name").innerText = "Monstro não encontrado";
-    document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
-  }
-}
-    window.selectMonster = function(idx) {
-  currentMonsterIndex = idx;
-  // Chame a função de renderização dos monstros para atualizar o destaque
-  // Exemplo:
-  // renderMonsters(); // se você extrair o código acima para uma função
-  // Ou simplesmente reexecute o bloco acima
-  // (Recomendo extrair para uma função chamada renderMonsters e chamá-la aqui)
-};
 
     // Função para atualizar a experiência do jogador no Firestore
 async function updatePlayerExperience(userId, xpToAdd) {
@@ -2836,7 +2800,7 @@ async function updatePlayerExperience(userId, xpToAdd) {
 
     console.log("LOG: DOMContentLoaded - initiativeResult =", initiativeResult);
 
-    if (initiativeResult && monsters[currentMonsterIndex]) { // Garante que monsters[currentMonsterIndex] esteja definido
+    if (initiativeResult && currentMonster) { // Garante que currentMonster esteja definido
         console.log("LOG: DOMContentLoaded - initiativeResult encontrado:", initiativeResult);
         if (lutarButton) {
             lutarButton.style.display = 'none';
@@ -2851,7 +2815,7 @@ async function updatePlayerExperience(userId, xpToAdd) {
         if (playerInitiativeRoll && monsterInitiativeRoll && playerAbilityStored !== null && monsterAbilityStored !== null) {
             startNewTurnBlock("Iniciativa");
             addLogMessage(`Você rolou ${playerInitiativeRoll} em um d20 + ${playerAbilityStored} (Habilidade) = ${parseInt(playerInitiativeRoll) + parseInt(playerAbilityStored)} para Iniciativa.`, 1000);
-            addLogMessage(`${monsters[currentMonsterIndex].nome} rolou ${monsterInitiativeRoll} em um d20 + ${monsterAbilityStored} (Habilidade) = ${parseInt(monsterInitiativeRoll) + parseInt(monsterAbilityStored)} para Iniciativa.`, 1000);
+            addLogMessage(`${currentMonster.nome} rolou ${monsterInitiativeRoll} em um d20 + ${monsterAbilityStored} (Habilidade) = ${parseInt(monsterInitiativeRoll) + parseInt(monsterAbilityStored)} para Iniciativa.`, 1000);
             currentTurnBlock = null;
             console.log("LOG: DOMContentLoaded - Informações de iniciativa adicionadas ao log.");
         }
@@ -2874,8 +2838,8 @@ async function updatePlayerExperience(userId, xpToAdd) {
             }, 500);
         } else if (initiativeResult === 'monster') {
             setTimeout(() => {
-                startNewTurnBlock(monsters[currentMonsterIndex].nome);
-                addLogMessage(`<p>${monsters[currentMonsterIndex].nome} venceu a Iniciativa e atacará primeiro.</p>`, 1000);
+                startNewTurnBlock(currentMonster.nome);
+                addLogMessage(`<p>${currentMonster.nome} venceu a Iniciativa e atacará primeiro.</p>`, 1000);
                 if (attackOptionsDiv) {
                     attackOptionsDiv.style.display = 'none';
                     console.log("LOG: DOMContentLoaded - Iniciativa do monstro vencida. Escondendo opções de ataque.");
@@ -2921,12 +2885,12 @@ async function updatePlayerExperience(userId, xpToAdd) {
             const monsterName = getUrlParameter('monstro');
 
             // Carregar o estado da batalha ao carregar a página
-            if (monsters[currentMonsterIndex]) {
+            if (currentMonster) {
                 loadBattleState(userId, monsterName)
     .then(savedState => {
         if (savedState) {
             // Carrega os dados básicos
-            monsters[currentMonsterIndex].pontosDeEnergia = savedState.monsterHealth;
+            currentMonster.pontosDeEnergia = savedState.monsterHealth;
             playerHealth = savedState.playerHealth;
             isPlayerTurn = savedState.isPlayerTurn;
             window.isPlayerTurn = savedState.isPlayerTurn;
@@ -2934,7 +2898,7 @@ async function updatePlayerExperience(userId, xpToAdd) {
             window.battleStarted = savedState.battleStarted || true;
             
             console.log("LOG: onAuthStateChanged - Estado da batalha carregado do Firestore:", savedState);
-            console.log("LOG: onAuthStateChanged - Pontos de Energia do monstro carregados:", monsters[currentMonsterIndex].pontosDeEnergia);
+            console.log("LOG: onAuthStateChanged - Pontos de Energia do monstro carregados:", currentMonster.pontosDeEnergia);
             console.log("LOG: onAuthStateChanged - Energia do jogador carregada (do estado da batalha):", playerHealth);
             console.log("LOG: onAuthStateChanged - Turno atual:", isPlayerTurn ? "Jogador" : "Monstro");
             
@@ -2947,16 +2911,16 @@ async function updatePlayerExperience(userId, xpToAdd) {
             
             // Atualiza as barras de HP
             atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-            atualizarBarraHP("barra-hp-monstro", monsters[currentMonsterIndex].pontosDeEnergia, monsters[currentMonsterIndex].pontosDeEnergiaMax);
+            atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
             
             // Esconde o botão de lutar e mostra o estado correto da batalha
             if (lutarButton) lutarButton.style.display = 'none';
             if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'none';
             
             // Se a vida do monstro for <= 0 ou a vida do jogador for <= 0, a batalha acabou
-            if (monsters[currentMonsterIndex].pontosDeEnergia <= 0) {
+            if (currentMonster.pontosDeEnergia <= 0) {
                 startNewTurnBlock("Resultado");
-                addLogMessage(`<p style="color: green;">${monsters[currentMonsterIndex].nome} foi derrotado!</p>`, 1500);
+                addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1500);
                 attackOptionsDiv.style.display = 'none';
                 console.log("LOG: onAuthStateChanged - Monstro derrotado, escondendo opções de ataque.");
             } else if (playerHealth <= 0) {
@@ -2971,8 +2935,8 @@ async function updatePlayerExperience(userId, xpToAdd) {
                     addLogMessage(`Turno do Jogador`, 1000);
                     if (attackOptionsDiv) attackOptionsDiv.style.display = 'block';
                 } else {
-                    startNewTurnBlock(monsters[currentMonsterIndex].nome);
-                    addLogMessage(`Turno do ${monsters[currentMonsterIndex].nome}`, 1000);
+                    startNewTurnBlock(currentMonster.nome);
+                    addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
                     if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
                     // Inicia o turno do monstro após um pequeno delay
                     setTimeout(() => {
@@ -2984,7 +2948,7 @@ async function updatePlayerExperience(userId, xpToAdd) {
             // Se não houver estado salvo, usa os pontos de energia iniciais e define a energia do jogador
             console.log("LOG: onAuthStateChanged - Nenhum estado de batalha encontrado, carregando energia da ficha do jogador.");
         }
-        document.getElementById("monster-name").innerText = monsters[currentMonsterIndex].nome;
+        document.getElementById("monster-name").innerText = currentMonster.nome;
         console.log("LOG: onAuthStateChanged - Nome do monstro exibido.");
     });
 
@@ -3070,7 +3034,7 @@ if (lutarButton) {
                                 const playerRoll = Math.floor(Math.random() * 20) + 1;
                                 const monsterRoll = Math.floor(Math.random() * 20) + 1;
                                 const playerAbilityValue = playerData?.skill.total || 0;
-                                const monsterAbilityValue = monsters[currentMonsterIndex].habilidade;
+                                const monsterAbilityValue = currentMonster.habilidade;
                                 console.log("LOG: onAuthStateChanged - Rolagem de iniciativa do jogador:", playerRoll);
                                 console.log("LOG: onAuthStateChanged - Rolagem de iniciativa do monstro:", monsterRoll);
                                 console.log("LOG: onAuthStateChanged - Habilidade do monstro:", monsterAbilityValue);
@@ -3079,7 +3043,7 @@ if (lutarButton) {
                                 startNewTurnBlock("Iniciativa");
                                 await addLogMessage(`Turno de Iniciativa`, 1000); // Adicionado await aqui
                                 await addLogMessage(`Você rolou ${playerRoll} em um d20 + ${playerAbilityValue} (Habilidade) = ${playerRoll + playerAbilityValue} para Iniciativa.`, 1000);
-                                await addLogMessage(`${monsters[currentMonsterIndex].nome} rolou ${monsterRoll} em um d20 + ${monsterAbilityValue} (Habilidade) = ${monsterRoll + monsterAbilityValue} para Iniciativa.`, 1000);
+                                await addLogMessage(`${currentMonster.nome} rolou ${monsterRoll} em um d20 + ${monsterAbilityValue} (Habilidade) = ${monsterRoll + monsterAbilityValue} para Iniciativa.`, 1000);
                                 currentTurnBlock = null; // Reset current turn block
 
                                 let initiativeWinner = '';
@@ -3107,8 +3071,8 @@ if (lutarButton) {
                                     }, 500);
                                 } else if (monsterRoll + monsterAbilityValue > playerRoll + playerAbilityValue) {
                                     setTimeout(async () => {
-                                        startNewTurnBlock(monsters[currentMonsterIndex].nome);
-                                        await addLogMessage(`<p>${monsters[currentMonsterIndex].nome} venceu a Iniciativa e atacará primeiro.</p>`, 1000);
+                                        startNewTurnBlock(currentMonster.nome);
+                                        await addLogMessage(`<p>${currentMonster.nome} venceu a Iniciativa e atacará primeiro.</p>`, 1000);
                                         initiativeWinner = 'monster';
                                         isPlayerTurn = false;
                                         if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
@@ -3229,10 +3193,10 @@ if (rollLocationBtn) {
     if (window.magicContext) {
         // É dano de magia
         const danoRolado = rollDice(window.magicContext.dano);
-        monsters[currentMonsterIndex].pontosDeEnergia -= danoRolado;
-        monsters[currentMonsterIndex].pontosDeEnergia = Math.max(0, monsters[currentMonsterIndex].pontosDeEnergia);
-        atualizarBarraHP("barra-hp-monstro", monsters[currentMonsterIndex].pontosDeEnergia, monsters[currentMonsterIndex].pontosDeEnergiaMax);
-        await addLogMessage(`${monsters[currentMonsterIndex].nome} sofreu ${danoRolado} de dano mágico (${window.magicContext.dano}).`, 800);
+        currentMonster.pontosDeEnergia -= danoRolado;
+        currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+        atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+        await addLogMessage(`${currentMonster.nome} sofreu ${danoRolado} de dano mágico (${window.magicContext.dano}).`, 800);
         
         // Limpa contexto
         const userId = window.magicContext.userId;
@@ -3241,15 +3205,15 @@ if (rollLocationBtn) {
         rolarDanoButton.style.display = 'none';
         
         // Verifica se morreu
-        if (monsters[currentMonsterIndex].pontosDeEnergia <= 0) {
-            await addLogMessage(`<p style="color: green; font-weight: bold;">${monsters[currentMonsterIndex].nome} foi derrotado!</p>`, 1000);
-            handlePostBattle(monsters[currentMonsterIndex]);
+        if (currentMonster.pontosDeEnergia <= 0) {
+            await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+            handlePostBattle(currentMonster);
             return;
         }
         
         // Salva e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
         endPlayerTurn();
         return;
     }
@@ -3264,9 +3228,9 @@ if (window.touchSpellContext) {
         totalDamage += rollDice('1d6');
     }
     
-    monsters[currentMonsterIndex].pontosDeEnergia -= totalDamage;
-    monsters[currentMonsterIndex].pontosDeEnergia = Math.max(0, monsters[currentMonsterIndex].pontosDeEnergia);
-    atualizarBarraHP("barra-hp-monstro", monsters[currentMonsterIndex].pontosDeEnergia, monsters[currentMonsterIndex].pontosDeEnergiaMax);
+    currentMonster.pontosDeEnergia -= totalDamage;
+    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
     await addLogMessage(`${toques} descarga(s) elétrica(s) causaram ${totalDamage} de dano total!`, 800);
 
     
@@ -3275,16 +3239,16 @@ if (window.touchSpellContext) {
     rolarDanoButton.style.display = 'none';
     
     // Verifica se morreu
-    if (monsters[currentMonsterIndex].pontosDeEnergia <= 0) {
-        await addLogMessage(`<p style="color: green; font-weight: bold;">${monsters[currentMonsterIndex].nome} foi derrotado!</p>`, 1000);
-        handlePostBattle(monsters[currentMonsterIndex]);
+    if (currentMonster.pontosDeEnergia <= 0) {
+        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+        handlePostBattle(currentMonster);
         return;
     }
     
     // Salva e passa turno
     const user = auth.currentUser;
     if (user) {
-        await saveBattleState(user.uid, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+        await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
     }
     endPlayerTurn();
     return;
@@ -3293,22 +3257,22 @@ if (window.touchSpellContext) {
       // VERIFICAÇÃO PARA TOQUE MACABRO
 if (window.touchDebuffContext) {
     const danoRolado = rollDice(window.touchDebuffContext.dano);
-    monsters[currentMonsterIndex].pontosDeEnergia -= danoRolado;
-    monsters[currentMonsterIndex].pontosDeEnergia = Math.max(0, monsters[currentMonsterIndex].pontosDeEnergia);
-    atualizarBarraHP("barra-hp-monstro", monsters[currentMonsterIndex].pontosDeEnergia, monsters[currentMonsterIndex].pontosDeEnergiaMax);
-    await addLogMessage(`${monsters[currentMonsterIndex].nome} sofreu ${danoRolado} de dano necrótico (${window.touchDebuffContext.dano}).`, 800);
+    currentMonster.pontosDeEnergia -= danoRolado;
+    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+    await addLogMessage(`${currentMonster.nome} sofreu ${danoRolado} de dano necrótico (${window.touchDebuffContext.dano}).`, 800);
     
     // Teste de resistência para o debuff
     const resistanceRoll = Math.floor(Math.random() * 20) + 1;
-    const resistanceTotal = resistanceRoll + monsters[currentMonsterIndex].habilidade;
+    const resistanceTotal = resistanceRoll + currentMonster.habilidade;
     const difficulty = 20;
     
-    await addLogMessage(`${monsters[currentMonsterIndex].nome} tenta resistir ao debuff: ${resistanceRoll} + ${monsters[currentMonsterIndex].habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
+    await addLogMessage(`${currentMonster.nome} tenta resistir ao debuff: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
     
     if (resistanceTotal >= difficulty) {
-        await addLogMessage(`${monsters[currentMonsterIndex].nome} resistiu ao enfraquecimento!`, 800);
+        await addLogMessage(`${currentMonster.nome} resistiu ao enfraquecimento!`, 800);
     } else {
-        await addLogMessage(`${monsters[currentMonsterIndex].nome} foi enfraquecido! Seus ataques causarão menos dano.`, 800);
+        await addLogMessage(`${currentMonster.nome} foi enfraquecido! Seus ataques causarão menos dano.`, 800);
         
         // Remove debuff anterior do mesmo tipo se existir
         activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "damage_reduction");
@@ -3329,16 +3293,16 @@ if (window.touchDebuffContext) {
     rolarDanoButton.style.display = 'none';
     
     // Verifica se morreu
-    if (monsters[currentMonsterIndex].pontosDeEnergia <= 0) {
-        await addLogMessage(`<p style="color: green; font-weight: bold;">${monsters[currentMonsterIndex].nome} foi derrotado!</p>`, 1000);
-        handlePostBattle(monsters[currentMonsterIndex]);
+    if (currentMonster.pontosDeEnergia <= 0) {
+        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+        handlePostBattle(currentMonster);
         return;
     }
     
     // Salva e passa turno
     const user = auth.currentUser;
     if (user) {
-        await saveBattleState(user.uid, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+        await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
     }
     endPlayerTurn();
     return;
@@ -3408,8 +3372,8 @@ if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
         await addLogMessage(`Dano total: <strong style="color:yellow;">${totalDamage}</strong>.`, 1000);
 
             // VERIFICAÇÃO DE MORTE INSTANTÂNEA SIFER
-    const energiaApos = monsters[currentMonsterIndex].pontosDeEnergia - totalDamage;
-    const limiar10Porcento = monsters[currentMonsterIndex].pontosDeEnergiaMax * 0.1;
+    const energiaApos = currentMonster.pontosDeEnergia - totalDamage;
+    const limiar10Porcento = currentMonster.pontosDeEnergiaMax * 0.1;
     
     if (energiaApos < limiar10Porcento && (window.siferContext.locationRoll === 19 || window.siferContext.locationRoll === 20)) {
         // Morte instantânea para Pescoço/Cabeça
@@ -3417,10 +3381,10 @@ if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
         await addLogMessage(`<strong style="color: darkred;">MORTE INSTANTÂNEA!</strong> ${tipoMorte.toUpperCase()}!`, 1200);
         
         // Força morte independente da energia
-        monsters[currentMonsterIndex].pontosDeEnergia = 0;
-        atualizarBarraHP("barra-hp-monstro", 0, monsters[currentMonsterIndex].pontosDeEnergiaMax);
+        currentMonster.pontosDeEnergia = 0;
+        atualizarBarraHP("barra-hp-monstro", 0, currentMonster.pontosDeEnergiaMax);
         
-        await addLogMessage(`<p style="color: green; font-weight: bold;">${monsters[currentMonsterIndex].nome} foi executado!</p>`, 1000);
+        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi executado!</p>`, 1000);
         
         // Salva estado e chama pós-batalha
         const user = auth.currentUser;
@@ -3428,7 +3392,7 @@ if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
             await saveBattleState(userId, monsterName, 0, playerHealth);
         }
         
-        handlePostBattle(monsters[currentMonsterIndex]);
+        handlePostBattle(currentMonster);
         return;
     }
 
@@ -3439,7 +3403,7 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll >= 11 && 
     
     if (!jaTemEvisceração) {
         // Calcula dano por turno (1% da energia máxima, mínimo 1)
-        const danoPerTurno = Math.max(1, Math.ceil(monsters[currentMonsterIndex].pontosDeEnergiaMax * 0.01));
+        const danoPerTurno = Math.max(1, Math.ceil(currentMonster.pontosDeEnergiaMax * 0.01));
         
         // Adiciona debuff de evisceração
         activeMonsterDebuffs.push({
@@ -3450,7 +3414,7 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll >= 11 && 
         });
         
         updateMonsterDebuffsDisplay();
-        await addLogMessage(`<strong style="color: darkred;">EVISCERAÇÃO!</strong> Você abre totalmente o abdômen de ${monsters[currentMonsterIndex].nome} e ele sangrará ${danoPerTurno} Energia por turno!`, 1200);
+        await addLogMessage(`<strong style="color: darkred;">EVISCERAÇÃO!</strong> Você abre totalmente o abdômen de ${currentMonster.nome} e ele sangrará ${danoPerTurno} Energia por turno!`, 1200);
     }
 }
 
@@ -3472,7 +3436,7 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 18) {
         });
         
         updateMonsterDebuffsDisplay();
-        await addLogMessage(`<strong style="color: darkred;">ENUCLEAÇÃO!</strong> Você arranca os olhos de ${monsters[currentMonsterIndex].nome}!`, 1200);
+        await addLogMessage(`<strong style="color: darkred;">ENUCLEAÇÃO!</strong> Você arranca os olhos de ${currentMonster.nome}!`, 1200);
     }
 }
 
@@ -3486,12 +3450,12 @@ if (energiaApos < limiar10Porcento) {
         if (!jaTemPernas) {
             activeMonsterDebuffs.push({
                 tipo: "amputation_legs",
-                valor: Math.floor(monsters[currentMonsterIndex].couraça / 2),
+                valor: Math.floor(currentMonster.couraça / 2),
                 turnos: 999,
                 nome: "Amputação (Pernas)"
             });
             updateMonsterDebuffsDisplay();
-            await addLogMessage(`<strong style="color: darkred;">AMPUTAÇÃO!</strong> Você amputa o ${monsters[currentMonsterIndex].nome}! Ele se arrasta vulnerável.`, 1200);
+            await addLogMessage(`<strong style="color: darkred;">AMPUTAÇÃO!</strong> Você amputa o ${currentMonster.nome}! Ele se arrasta vulnerável.`, 1200);
         }
     }
     
@@ -3506,7 +3470,7 @@ if (energiaApos < limiar10Porcento) {
                 nome: "Amputação (Braços)"
             });
             updateMonsterDebuffsDisplay();
-            await addLogMessage(`<strong style="color: darkred;">AMPUTAÇÃO!</strong> Você amputa o ${monsters[currentMonsterIndex].nome}! Seus ataques ficam fracos.`, 1200);
+            await addLogMessage(`<strong style="color: darkred;">AMPUTAÇÃO!</strong> Você amputa o ${currentMonster.nome}! Seus ataques ficam fracos.`, 1200);
         }
     }
 }
@@ -3514,7 +3478,7 @@ if (energiaApos < limiar10Porcento) {
         // VERIFICAÇÃO DE HEMORRAGIA INTERNA SIFER
 if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 6) {
     // Calcula dano por turno (2% da energia máxima, mínimo 1)
-    const danoPerTurno = Math.max(1, Math.ceil(monsters[currentMonsterIndex].pontosDeEnergiaMax * 0.02));
+    const danoPerTurno = Math.max(1, Math.ceil(currentMonster.pontosDeEnergiaMax * 0.02));
     
     // Verifica se já tem sangramento
     const sangramentoExistente = activeMonsterDebuffs.find(debuff => debuff.tipo === "bleeding");
@@ -3523,7 +3487,7 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 6) {
         // Acumula com sangramento existente
         sangramentoExistente.valor += danoPerTurno;
         sangramentoExistente.nome = "Sangramento Múltiplo";
-        await addLogMessage(`<strong style="color: darkred;">HEMORRAGIA INTERNA!</strong> Você perfura órgãos vitais pelas costas de ${monsters[currentMonsterIndex].nome}! Sangramento aumenta para ${sangramentoExistente.valor} energia/turno!`, 1200);
+        await addLogMessage(`<strong style="color: darkred;">HEMORRAGIA INTERNA!</strong> Você perfura órgãos vitais pelas costas de ${currentMonster.nome}! Sangramento aumenta para ${sangramentoExistente.valor} energia/turno!`, 1200);
     } else {
         // Adiciona novo debuff de hemorragia
         activeMonsterDebuffs.push({
@@ -3532,7 +3496,7 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 6) {
             turnos: 999,
             nome: "Hemorragia Interna"
         });
-        await addLogMessage(`<strong style="color: darkred;">HEMORRAGIA INTERNA!</strong> Você perfura órgãos vitais pelas costas de ${monsters[currentMonsterIndex].nome}! Ele sangrará ${danoPerTurno} energia por turno!`, 1200);
+        await addLogMessage(`<strong style="color: darkred;">HEMORRAGIA INTERNA!</strong> Você perfura órgãos vitais pelas costas de ${currentMonster.nome}! Ele sangrará ${danoPerTurno} energia por turno!`, 1200);
     }
     
     updateMonsterDebuffsDisplay();
@@ -3593,20 +3557,20 @@ if (window.punhaladaVenenosaExtraDano) {
         // --- Aplicação do Dano e Fim do Turno (Comum a SIFER e Normal) ---
         if (totalDamage > 0) { // Só aplica se houver dano
             console.log(`Aplicando ${totalDamage} de dano ao monstro.`);
-            monsters[currentMonsterIndex].pontosDeEnergia -= totalDamage;
-            monsters[currentMonsterIndex].pontosDeEnergia = Math.max(0, monsters[currentMonsterIndex].pontosDeEnergia); // Garante não ficar negativo
+            currentMonster.pontosDeEnergia -= totalDamage;
+            currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia); // Garante não ficar negativo
 
-            await addLogMessage(`${monsters[currentMonsterIndex].nome} sofreu ${totalDamage} de dano.`, 800);
+            await addLogMessage(`${currentMonster.nome} sofreu ${totalDamage} de dano.`, 800);
 
-            atualizarBarraHP("barra-hp-monstro", monsters[currentMonsterIndex].pontosDeEnergia, monsters[currentMonsterIndex].pontosDeEnergiaMax);
-            await addLogMessage(`Energia restante do ${monsters[currentMonsterIndex].nome}: ${monsters[currentMonsterIndex].pontosDeEnergia}.`, 1000);
+            atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+            await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}.`, 1000);
 
             // Salva estado (precisa de userId e monsterName no escopo)
             const user = auth.currentUser; // Pega o usuário atual
-            if (userId && monsterName && monsters[currentMonsterIndex]) { // Verifica se as variáveis globais estão ok
-                 await saveBattleState(userId, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+            if (userId && monsterName && currentMonster) { // Verifica se as variáveis globais estão ok
+                 await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
             } else {
-                 console.error("Erro ao salvar estado: userId, monsterName ou monsters[currentMonsterIndex] não definidos.");
+                 console.error("Erro ao salvar estado: userId, monsterName ou currentMonster não definidos.");
             }
 
         } else {
@@ -3616,20 +3580,20 @@ if (window.punhaladaVenenosaExtraDano) {
 
 
         // Verifica derrota e passa o turno
-        if (monsters[currentMonsterIndex].pontosDeEnergia <= 0) {
+        if (currentMonster.pontosDeEnergia <= 0) {
     console.log(`LOG: Monstro derrotado após ${isSiferDamage ? 'SIFER' : 'Dano Normal'}!`);
-    await addLogMessage(`<p style="color: green; font-weight: bold;">${monsters[currentMonsterIndex].nome} foi derrotado!</p>`, 1000);
+    await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
     isPlayerTurn = false; // Garante que o turno não continue
     
     // Chama handlePostBattle passando o monstro atual
     if (typeof handlePostBattle === 'function') {
-        handlePostBattle(monsters[currentMonsterIndex]);
+        handlePostBattle(currentMonster);
     } else {
         console.error("Função handlePostBattle não definida.");
         // Fallback simples
         const lootBtn = document.getElementById('loot-button');
         const mapBtn = document.getElementById('back-to-map-button');
-        if (lootBtn && monsters[currentMonsterIndex].drops?.length > 0) lootBtn.style.display = 'block';
+        if (lootBtn && currentMonster.drops?.length > 0) lootBtn.style.display = 'block';
         if (mapBtn) mapBtn.style.display = 'block';
         if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
             }
@@ -3655,7 +3619,7 @@ if (window.punhaladaVenenosaExtraDano) {
 if (atacarCorpoACorpoButton) {
     atacarCorpoACorpoButton.addEventListener('click', async () => { // Ou .onclick = async () => {
         // Primeiro verifica se está morto (<=- 10)
-if (!isPlayerTurn || playerHealth <= -10 || !monsters[currentMonsterIndex] || monsters[currentMonsterIndex].pontosDeEnergia <= 0) {
+if (!isPlayerTurn || playerHealth <= -10 || !currentMonster || currentMonster.pontosDeEnergia <= 0) {
     console.log("LOG: Ataque inválido (jogador morto ou batalha acabou). Retornando.");
     return;
 }
@@ -3780,7 +3744,7 @@ const isTouchSpell = (window.touchSpellContext !== null && window.touchSpellCont
 
 if (isTouchSpell) {
     const spellName = window.touchSpellContext?.nome || window.touchDebuffContext?.nome;
-    await addLogMessage(`Tentando tocar ${monsters[currentMonsterIndex].nome} com ${spellName}...`, 800);
+    await addLogMessage(`Tentando tocar ${currentMonster.nome} com ${spellName}...`, 800);
 }
 
 
@@ -3895,10 +3859,10 @@ if (playerAttackRollRaw >= criticalThreshold && !isTouchSpell) {
     }
     if (isTouchSpell) {
         // CORREÇÃO AQUI:
-        await addLogMessage(`Seu toque mágico atinge ${monsters[currentMonsterIndex].nome}! Role o dano.`, 1000);
+        await addLogMessage(`Seu toque mágico atinge ${currentMonster.nome}! Role o dano.`, 1000);
     } else {
         // CORREÇÃO AQUI:
-        await addLogMessage(`Seu ataque atinge em cheio o ${monsters[currentMonsterIndex].nome}! Role o dano.`, 1000);
+        await addLogMessage(`Seu ataque atinge em cheio o ${currentMonster.nome}! Role o dano.`, 1000);
     }
 } else {
     // ERRO
@@ -3911,12 +3875,12 @@ if (playerAttackRollRaw >= criticalThreshold && !isTouchSpell) {
     }
     if (isTouchSpell) {
         // CORREÇÃO AQUI:
-        await addLogMessage(`Seu toque não consegue alcançar ${monsters[currentMonsterIndex].nome}.`, 1000);
+        await addLogMessage(`Seu toque não consegue alcançar ${currentMonster.nome}.`, 1000);
         window.touchSpellContext = null;
         window.touchDebuffContext = null;
     } else {
         // CORREÇÃO AQUI:
-        await addLogMessage(`Seu ataque passa de raspão no ${monsters[currentMonsterIndex].nome}.`, 1000);
+        await addLogMessage(`Seu ataque passa de raspão no ${currentMonster.nome}.`, 1000);
     }
     endPlayerTurn();
 }
@@ -4046,13 +4010,13 @@ async function setupArcanumConjurationModal(magiaId) {
                     for (let i = 0; i < result.level; i++) {
                         totalDamage += rollDice('1d4') + 1;
                     }
-                    if (monsters[currentMonsterIndex]) {
-                        monsters[currentMonsterIndex].pontosDeEnergia -= totalDamage;
-                        atualizarBarraHP("barra-hp-monstro", monsters[currentMonsterIndex].pontosDeEnergia, monsters[currentMonsterIndex].pontosDeEnergiaMax);
+                    if (currentMonster) {
+                        currentMonster.pontosDeEnergia -= totalDamage;
+                        atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
                         addLogMessage(`Dardos Místicos causaram <b>${totalDamage}</b> de dano!`, 1000);
-                        if (monsters[currentMonsterIndex].pontosDeEnergia <= 0) {
-                            addLogMessage(`<span style="color: green; font-weight: bold;">${monsters[currentMonsterIndex].nome} foi derrotado!</span>`, 1000);
-                            handlePostBattle(monsters[currentMonsterIndex]);
+                        if (currentMonster.pontosDeEnergia <= 0) {
+                            addLogMessage(`<span style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</span>`, 1000);
+                            handlePostBattle(currentMonster);
                             return;
                         }
                     }
@@ -4085,7 +4049,7 @@ async function setupArcanumConjurationModal(magiaId) {
             const user = auth.currentUser;
             if (user) {
                 updatePlayerMagicInFirestore(user.uid, playerMagic);
-                saveBattleState(user.uid, monsterName, monsters[currentMonsterIndex].pontosDeEnergia, playerHealth);
+                saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
             }
         }
         
