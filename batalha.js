@@ -196,6 +196,7 @@ let activeMonsterDebuffs = []; // IMPORTANTE: Será um "ponteiro" para os debuff
 let currentTurnBlock = null;
 let attackOptionsDiv = null;
 let monsterName = null; // Adicionar esta linha
+let userId = null; // ✅ ADICIONE ESTA LINHA AQUI
 let currentMonster = null; // Mantido para compatibilidade local
 
 
