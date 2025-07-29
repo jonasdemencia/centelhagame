@@ -2502,7 +2502,7 @@ if (atoClasseButton) {
             endPlayerTurn();
             return;
           }
-        }
+        
 
 else if (ato.id === "anartia") {
         await addLogMessage("Você começa a preparar o ato Anartia. Ele ativará no próximo turno.", 800);
@@ -2584,7 +2584,7 @@ else if (ato.id === "ocultar-se") {
   }
   return;
 }
-            
+ }           
         else if (ato.id === "riso-escarnecedor") {
           // Riso Escarnecedor
           await addLogMessage(
