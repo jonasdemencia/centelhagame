@@ -1739,23 +1739,48 @@ function processBuffs() {
     // Reduz duração de todos os buffs
     activeBuffs.forEach(buff => buff.turnos--);
     
-    // Remove buffs expirados e mostra mensagem
-const expiredBuffs = activeBuffs.filter(buff => buff.turnos <= 0);
-activeBuffs = activeBuffs.filter(buff => buff.turnos > 0);
-// Atualiza display
-updateBuffsDisplay();
-
+    // Remove buffs expirados e prepara lista para mensagens
+    const expiredBuffs = activeBuffs.filter(buff => buff.turnos <= 0);
+    activeBuffs = activeBuffs.filter(buff => buff.turnos > 0);
     
+    // Atualiza a exibição dos buffs no UI
+    updateBuffsDisplay();
+
+    // --- INÍCIO: Tratamento especial do buff preparando Anartia ---
+    const preparandoAnartiaIndex = activeBuffs.findIndex(buff => buff.tipo === "preparando_anartia");
+    if (preparandoAnartiaIndex !== -1 && activeBuffs[preparandoAnartiaIndex].turnos <= 0) {
+        // Remove o buff de preparo
+        activeBuffs.splice(preparandoAnartiaIndex, 1);
+
+        // Adiciona o debuff Anartia: -10 de couraça por 3 turnos
+        activeBuffs.push({
+            tipo: "couraca_anartia",
+            valor: -10,
+            turnos: 3,
+            nome: "Debuff Anartia"
+        });
+
+        updateBuffsDisplay();
+
+        // Mensagem no log informando a ativação do debuff Anartia
+        addLogMessage(
+          "O ato Anartia entrou em efeito! Você sofre -10 de couraça por 3 turnos e seus críticos SIFER agora começam a partir de 15.",
+          800
+        );
+    }
+    // --- FIM: Tratamento especial do buff preparando Anartia ---
+
     // Processa mensagens de buffs expirados sequencialmente
     return expiredBuffs.reduce((promise, buff) => {
-    return promise.then(() => {
-        if (typeof addLogMessage === 'function') {
-            return addLogMessage(`${buff.nome} se dissipou.`, 800);
-        }
-        return Promise.resolve();
-    });
-}, Promise.resolve());
-  } // <- ADICIONE ESTA CHAVE AQUI
+        return promise.then(() => {
+            if (typeof addLogMessage === 'function') {
+                return addLogMessage(`${buff.nome} se dissipou.`, 800);
+            }
+            return Promise.resolve();
+        });
+    }, Promise.resolve());
+} // <- CHAVE FINAL DA FUNÇÃO
+
 
 async function verificarFugaAnimais() {
     console.log("VERIFICANDO FUGA DE ANIMAIS - FUNÇÃO CHAMADA");
@@ -2392,6 +2417,12 @@ let atosDoJogador = [
     nome: "Leveza Afiada",
     descricao: "Aumenta a chance de acerto crítico SIFER (18-20) com armas leves por 7 turnos."
 },
+
+    {
+    id: "anartia",
+    nome: "Anartia",
+    descricao: "Perde 10 de couraça (debuff) por 3 turnos. O acerto crítico SIFER funciona a partir de 15 (15-20). Demora 1 turno para preparar."
+},
     {
   id: "ocultar-se",
   nome: "Ocultar-se",
@@ -2473,6 +2504,23 @@ if (atoClasseButton) {
           }
         }
 
+else if (ato.id === "anartia") {
+        await addLogMessage("Você começa a preparar o ato Anartia. Ele ativará no próximo turno.", 800);
+
+        // Adicionar buff temporário que indica preparo (turno de delay)
+        activeBuffs.push({
+            tipo: "preparando_anartia",
+            valor: 0,
+            turnos: 1,
+            nome: "Preparando Anartia"
+        });
+
+        updateBuffsDisplay();
+        endPlayerTurn();
+        return;
+    }
+}
+            
 else if (ato.id === "ocultar-se") {
   await addLogMessage("Você tenta se ocultar no meio do combate...", 600);
 
@@ -3772,15 +3820,24 @@ if (playerAttackRollRaw === 1 && !isTouchSpell) {
 
 // --- NOVA LÓGICA UNIFICADA DE ACERTO E CRÍTICO SIFER ---
 // 1. Determinar o limiar do acerto crítico SIFER
-let criticalThreshold = 20; // Padrão é 20
-const levezAfiadaBuff = activeBuffs.find(buff => buff.tipo === 'critico_aprimorado');
-if (
-  levezAfiadaBuff &&
-  equippedWeaponName &&
-  armasLeves.map(a => a.toLowerCase()).includes(equippedWeaponName.toLowerCase())
-) {
-  criticalThreshold = levezAfiadaBuff.valor;
+let criticalThreshold = 20;
+
+// Primeiro, verifica se o debuff Anartia está ativo para sobrepor o limiar
+const anartiaBuff = activeBuffs.find(buff => buff.tipo === "couraca_anartia");
+if (anartiaBuff) {
+    criticalThreshold = 15; // Limite crítico abaixado devido a Anartia
+} else {
+    // Se não tiver Anartia, aplica a lógica do Leveza Afiada normalmente
+    const levezAfiadaBuff = activeBuffs.find(buff => buff.tipo === 'critico_aprimorado');
+    if (
+      levezAfiadaBuff &&
+      equippedWeaponName &&
+      armasLeves.map(a => a.toLowerCase()).includes(equippedWeaponName.toLowerCase())
+    ) {
+      criticalThreshold = levezAfiadaBuff.valor;
+    }
 }
+
 console.log("DEBUG SIFER", {
   playerAttackRollRaw,
   criticalThreshold,
