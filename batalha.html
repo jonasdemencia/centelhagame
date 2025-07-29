@@ -262,7 +262,48 @@ button, .button {
     border: 1px solid #555;
 }
         
+/* ================================================== */
+/* ✅ ADICIONE ESTE CSS DENTRO DA SUA TAG <style> ✅ */
+/* ================================================== */
 
+#monster-group-container {
+    display: flex;
+    flex-direction: column; /* Organiza os monstros em uma coluna */
+    gap: 8px; /* Espaço entre as barras de vida */
+    padding: 10px;
+    border: 1px solid #333;
+    background-color: #111;
+}
+
+.monster-bar-item {
+    padding: 8px;
+    border: 2px solid #444; /* Borda padrão */
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.monster-bar-item:hover {
+    background-color: #2a2a2a;
+}
+
+.monster-bar-item.target {
+    border-color: #ffd700; /* Borda amarela para o alvo */
+    background-color: #22201a;
+}
+
+.health-bar-background {
+    background-color: #555;
+    border: 1px solid #222;
+    padding: 2px;
+    margin-top: 4px;
+}
+
+.health-bar {
+    height: 12px;
+    width: 100%;
+    background-color: #008000; /* Verde */
+    transition: width 0.5s;
+}
 
 
     </style>
@@ -326,6 +367,12 @@ button, .button {
             <p id="monster-description">Descrição do Monstro aparecerá aqui.</p>
         </section>
 
+<!-- ================================================== -->
+<!-- ✅ ADICIONE ESTE DIV EXATAMENTE AQUI ✅ -->
+<div id="monster-group-container" style="margin-bottom: 20px;"></div>
+<!-- ================================================== -->
+
+        
         <section id="player-info">
             <div id="player-health"></div>
         </section>
