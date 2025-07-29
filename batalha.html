@@ -346,17 +346,17 @@ button, .button {
             <div id="buffs-container" style="display: flex; gap: 5px; flex-wrap: wrap;"></div>
         </div>
     </div>
-    <div>
-        <strong>Monstro</strong>
-        <!-- ENERGIA MONSTRO -->
-        <div class="barra-label">ENERGIA</div>
-        <div class="barra-hp-container">
-            <div id="barra-hp-monstro" class="barra-hp"></div>
-            <span id="hp-monstro-valor" class="hp-valor">0/0</span>
-        </div>
-        <!-- DEBUFFS DO MONSTRO -->
-        <div id="monster-debuffs-container" class="debuffs-container"></div>
+   <div>
+    <strong>Oponentes</strong>
+    <!-- CONTAINER PARA AS BARRAS DE VIDA DOS MONSTROS -->
+    <div id="monster-bars-container" style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- O JavaScript irá preencher esta área -->
     </div>
+    
+    <!-- DEBUFFS DO MONSTRO (agora para o alvo) -->
+    <div class="barra-label" style="margin-top: 8px;">DEBUFFS NO ALVO</div>
+    <div id="monster-debuffs-container" class="debuffs-container"></div>
+</div>
 </section>
 <!-- FIM DAS BARRAS -->
 
@@ -366,11 +366,6 @@ button, .button {
             <h2 id="monster-name">Nome do Monstro</h2>
             <p id="monster-description">Descrição do Monstro aparecerá aqui.</p>
         </section>
-
-<!-- ================================================== -->
-<!-- ✅ ADICIONE ESTE DIV EXATAMENTE AQUI ✅ -->
-<div id="monster-group-container" style="margin-bottom: 20px;"></div>
-<!-- ================================================== -->
 
         
         <section id="player-info">
