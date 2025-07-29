@@ -38,6 +38,55 @@ const extraItems = [
 
 const armasLeves = ["Adaga"];
 
+function updateMonsterInfoUI() {
+    // Esta função atualiza a área de destaque do monstro (o alvo atual)
+    const target = window.currentMonster;
+    if (!target) {
+        document.getElementById("monster-name").innerText = "Nenhum alvo";
+        document.getElementById("monster-description").innerText = "";
+        document.getElementById("monster-image").src = "";
+        atualizarBarraHP("barra-hp-monstro", 0, 1);
+        return;
+    }
+
+    document.getElementById("monster-name").innerText = target.nome;
+    document.getElementById("monster-description").innerText = target.descricao;
+    document.getElementById("monster-image").src = target.imagem;
+    atualizarBarraHP("barra-hp-monstro", target.pontosDeEnergia, target.pontosDeEnergiaMax);
+    updateMonsterDebuffsDisplay(); // Garante que os debuffs do alvo certo são mostrados
+}
+
+function displayAllMonsterHealthBars() {
+    // Esta função cria as barras de vida para todos os oponentes
+    const container = document.getElementById('monster-group-container'); // Você precisa criar este div no seu HTML
+    if (!container) return;
+    
+    container.innerHTML = ''; // Limpa as barras antigas
+    window.currentMonsters.forEach(monster => {
+        const isTarget = (window.currentMonster && window.currentMonster.id === monster.id);
+        const borderColor = isTarget ? 'border: 2px solid yellow;' : 'border: 2px solid #333;';
+        const monsterDiv = document.createElement('div');
+        monsterDiv.style = `padding: 5px; margin-bottom: 5px; ${borderColor}`;
+        monsterDiv.innerHTML = `
+            <div>${monster.nome} (${monster.pontosDeEnergia}/${monster.pontosDeEnergiaMax})</div>
+            <div class="health-bar-background" style="background-color: #555; border-radius: 5px; padding: 2px;">
+                <div id="hp-bar-${monster.id}" class="health-bar" style="height: 10px; width: ${(monster.pontosDeEnergia / monster.pontosDeEnergiaMax) * 100}%; background-color: green; border-radius: 3px;"></div>
+            </div>
+        `;
+        // Adicionar um evento de clique para mudar de alvo
+        monsterDiv.addEventListener('click', () => {
+            if (monster.pontosDeEnergia > 0) {
+                window.currentMonster = monster;
+                currentMonster = monster;
+                console.log("Novo alvo selecionado:", monster.nome);
+                updateMonsterInfoUI();
+                displayAllMonsterHealthBars(); // Re-renderiza para mostrar o novo alvo
+            }
+        });
+        container.appendChild(monsterDiv);
+    });
+}
+
 // Sistema Arcanum Iudicium
 window.arcanumIudicium = {
     sucessos: 0,
@@ -138,16 +187,16 @@ function getConditionIcon(tipo, valor) {
 // Variáveis globais para estado da batalha
 window.isPlayerTurn = false;
 window.battleStarted = false;
-window.currentMonster = null;
+window.currentMonsters = []; // NOVO: Array para todos os monstros em combate.
+window.currentMonster = null; // IMPORTANTE: Agora representa o ALVO ATUAL do jogador.
 let escapeAttempts = 0; // Contador de tentativas de fuga
 let nextTelegraphedAttack = null; // Próximo ataque telegrafado
 let activeBuffs = []; // Sistema de buffs temporários
-let activeMonsterDebuffs = []; // Sistema de debuffs do monstro
+let activeMonsterDebuffs = []; // IMPORTANTE: Será um "ponteiro" para os debuffs do monstro ativo.
 let currentTurnBlock = null;
 let attackOptionsDiv = null;
 let monsterName = null; // Adicionar esta linha
-let currentMonster = null; // Já existe como window.currentMonster, mas adicione esta também
-let userId = null;
+let currentMonster = null; // Mantido para compatibilidade local
 
 
 
@@ -248,6 +297,49 @@ function updatePlayerProjectilesDisplay() {
         html += '<span style="font-size:18px; margin-right:1px;">🔘</span>';
     }
     container.innerHTML = html;
+}
+
+// Nova função para orquestrar o turno de múltiplos monstros
+async function monstersTurn() {
+    console.log("LOG: Iniciando monstersTurn para todos os oponentes.");
+    const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+
+    for (const monster of monstersAlive) {
+        if (playerHealth <= -10) {
+            console.log("LOG: Jogador morreu no meio do turno dos monstros. Interrompendo.");
+            break; 
+        }
+
+        // Define o monstro da vez como o 'currentMonster' global para a lógica de ataque
+        window.currentMonster = monster;
+        currentMonster = monster; // Atualiza a variável local também
+        
+        // Cada monstro agora tem sua própria lista de debuffs.
+        // Apontamos a variável global para a lista do monstro da vez.
+        if (!monster.activeMonsterDebuffs) {
+            monster.activeMonsterDebuffs = [];
+        }
+        activeMonsterDebuffs = monster.activeMonsterDebuffs;
+
+        // Chama a lógica de ataque individual para o monstro da vez
+        await monsterAttack(); 
+    }
+
+    // Após todos os monstros atacarem, se o jogador ainda estiver vivo, passa o turno.
+    if (playerHealth > -10) {
+        // Define o alvo do jogador como o primeiro monstro vivo na lista
+        window.currentMonster = window.currentMonsters.find(m => m.pontosDeEnergia > 0) || null;
+        currentMonster = window.currentMonster;
+        
+        // Atualiza a UI para refletir o alvo atual do jogador
+        if(currentMonster) {
+            if (!currentMonster.activeMonsterDebuffs) currentMonster.activeMonsterDebuffs = [];
+            activeMonsterDebuffs = currentMonster.activeMonsterDebuffs;
+            updateMonsterInfoUI(); // Função que atualiza nome, hp, etc. do monstro
+        }
+        
+        endMonsterTurn(); // Finalmente, passa o turno para o jogador
+    }
 }
 
 // Lógica do turno do monstro
@@ -451,9 +543,9 @@ if (armsDebuff) {
     }
 
     // Continua o jogo se o jogador não estiver morto
-    if (playerHealth > -10) {
+    //if (playerHealth > -10) {
         endMonsterTurn();
-    }
+   // }
 }
 
 
@@ -484,7 +576,7 @@ function endPlayerTurn() {
     setTimeout(() => {
         console.log("LOG: Chamando monsterAttack após fim do turno do jogador.");
         console.log(`Eficiência Arcanum Iudicium: ${window.arcanumIudicium.getEficiencia()}%`); // ADICIONAR AQUI
-        monsterAttack();
+        monstersTurn();
     }, 1500); // Delay para iniciar o turno do monstro
 }
 
@@ -1034,12 +1126,30 @@ async function usarItem(itemId, effect, value) {
             await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
 
             if (currentMonster.pontosDeEnergia <= 0) {
-                await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi destruído pela explosão!</p>`, 1000);
-                handlePostBattle(currentMonster);
-            } else {
-                await monsterOpportunityAttack(0.8);
-                endPlayerTurn();
-            }
+    await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+    
+    // Verifica se AINDA existem monstros vivos
+    const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+
+    if (monstersAlive.length === 0) {
+        // TODOS FORAM DERROTADOS! Fim da batalha.
+        console.log("LOG: Todos os monstros foram derrotados!");
+        handlePostBattle(currentMonster); // Pode passar o último monstro derrotado para os drops
+    } else {
+        // Ainda há monstros. Define o próximo como alvo e continua a batalha.
+        window.currentMonster = monstersAlive[0];
+        currentMonster = window.currentMonster;
+        await addLogMessage(`Próximo alvo: ${currentMonster.nome}.`, 800);
+        
+        // Atualiza a UI e passa o turno
+        updateMonsterInfoUI();
+        displayAllMonsterHealthBars();
+        endPlayerTurn();
+    }
+} else {
+    // O monstro sobreviveu, apenas passa o turno.
+    endPlayerTurn();
+}
             return; // Impede a execução da lógica genérica abaixo
         }
 
@@ -2264,7 +2374,8 @@ document.addEventListener('DOMContentLoaded', () => {
     attackOptionsDiv = document.getElementById("attack-options");
     const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
     const rolarDanoButton = document.getElementById("rolar-dano");
-    monsterName = getUrlParameter('monstro'); // Remove 'const', usa a variável global
+    const monsterNamesParam = getUrlParameter('monstros'); // Ex: "lobo,lobo" ou "lobo,esqueleto"
+    const monsterNames = monsterNamesParam ? monsterNamesParam.split(',') : ['lobo', 'lobo']; // Padrão: 2 lobos
     
 
 
@@ -2709,31 +2820,31 @@ if (fecharPainelAtos) {
 
 
 // Tenta carregar o monstro do sessionStorage primeiro
-const storedMonster = sessionStorage.getItem('currentMonster');
-if (storedMonster) {
-    currentMonster = JSON.parse(storedMonster);
-    console.log("LOG: Dados do monstro carregados do sessionStorage:", currentMonster);
+// Limpa monstros antigos e carrega os novos
+window.currentMonsters = [];
+monsterNames.forEach((name, index) => {
+    const monsterData = getMonsterById(name.trim());
+    if (monsterData) {
+        // Cria uma cópia "profunda" para que cada monstro seja uma instância única
+        const monsterInstance = JSON.parse(JSON.stringify(monsterData));
+        monsterInstance.id = `${monsterData.id}_${index}`; // ID único para cada instância
+        monsterInstance.pontosDeEnergiaMax = monsterInstance.pontosDeEnergia;
+        window.currentMonsters.push(monsterInstance);
+    }
+});
+
+// Define o alvo inicial do jogador
+window.currentMonster = window.currentMonsters[0] || null;
+currentMonster = window.currentMonster;
+
+if (window.currentMonsters.length === 0) {
+    console.error("LOG: Nenhum monstro foi carregado para a batalha.");
+    document.getElementById("monster-name").innerText = "Monstros não encontrados";
 } else {
-    // Fallback para o monsterData importado
-    currentMonster = getMonsterById(monsterName);
-    console.log("LOG: Dados do monstro carregados via getMonsterById ou monsterData:", currentMonster);
-}
-
-// Limpa o sessionStorage após carregar
-sessionStorage.removeItem('currentMonster');
-
-// Se ainda não temos o monstro, mostra erro
-if (!currentMonster) {
-    console.error("LOG: Monstro não encontrado:", monsterName);
-    document.getElementById("monster-name").innerText = "Monstro não encontrado";
-    document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
-} else {
-    // Configura os valores máximos de energia
-    const vidaMaximaMonstro = currentMonster.pontosDeEnergia;
-    currentMonster.pontosDeEnergiaMax = vidaMaximaMonstro; // Salva para usar depois
-
-    // Atualiza visualmente as barras no início do combate
-    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+    // A UI principal (por enquanto) mostrará o primeiro monstro como alvo
+    updateMonsterInfoUI();
+    // Você precisará criar uma função para exibir as barras de vida de todos os monstros
+    displayAllMonsterHealthBars(); 
 }
 
 
