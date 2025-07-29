@@ -3017,7 +3017,7 @@ if (window.currentMonsters.length > 0) { // Verifica se há monstros para a bata
                     if (attackOptionsDiv) attackOptionsDiv.style.display = 'block';
                 } else {
                     startNewTurnBlock("Oponentes");
-                    addLogMessage "Turno dos Oponentes", 1000);
+                    addLogMessage("Turno dos Oponentes", 1000);
                     if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
                     setTimeout(() => { monstersTurn(); }, 2000);
                 }
