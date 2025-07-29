@@ -1640,7 +1640,6 @@ function getPlayerDefense() {
   });
   return baseDefense + buffBonus;
 }
-} // CHAVE DE FECHAMENTO '}' FALTANTE
 
 // Adicione esta função após getPlayerDefense()
 function updatePlayerCouracaDisplay() {
