@@ -39,50 +39,63 @@ const extraItems = [
 const armasLeves = ["Adaga"];
 
 function updateMonsterInfoUI() {
-    // Esta função atualiza a área de destaque do monstro (o alvo atual)
     const target = window.currentMonster;
     if (!target) {
         document.getElementById("monster-name").innerText = "Nenhum alvo";
         document.getElementById("monster-description").innerText = "";
         document.getElementById("monster-image").src = "";
-        atualizarBarraHP("barra-hp-monstro", 0, 1);
+        // A barra de debuffs também deve ser limpa se não houver alvo
+        const debuffsContainer = document.getElementById('monster-debuffs-container');
+        if (debuffsContainer) debuffsContainer.innerHTML = '';
         return;
     }
 
     document.getElementById("monster-name").innerText = target.nome;
     document.getElementById("monster-description").innerText = target.descricao;
     document.getElementById("monster-image").src = target.imagem;
-    atualizarBarraHP("barra-hp-monstro", target.pontosDeEnergia, target.pontosDeEnergiaMax);
-    updateMonsterDebuffsDisplay(); // Garante que os debuffs do alvo certo são mostrados
+
+    // Garante que os debuffs do alvo certo são mostrados
+    if (!target.activeMonsterDebuffs) target.activeMonsterDebuffs = [];
+    activeMonsterDebuffs = target.activeMonsterDebuffs;
+    updateMonsterDebuffsDisplay();
 }
 
 function displayAllMonsterHealthBars() {
-    // Esta função cria as barras de vida para todos os oponentes
-    const container = document.getElementById('monster-group-container'); // Você precisa criar este div no seu HTML
+    const container = document.getElementById('monster-bars-container');
     if (!container) return;
-    
-    container.innerHTML = ''; // Limpa as barras antigas
+
+    container.innerHTML = ''; // Limpa as barras antigas para redesenhar
+
     window.currentMonsters.forEach(monster => {
         const isTarget = (window.currentMonster && window.currentMonster.id === monster.id);
-        const borderColor = isTarget ? 'border: 2px solid yellow;' : 'border: 2px solid #333;';
         const monsterDiv = document.createElement('div');
-        monsterDiv.style = `padding: 5px; margin-bottom: 5px; ${borderColor}`;
+        monsterDiv.className = 'monster-bar-item' + (isTarget ? ' target' : ''); // Usa as classes CSS que adicionamos
+        monsterDiv.style.cursor = 'pointer';
+
+        const healthPercentage = (monster.pontosDeEnergia / monster.pontosDeEnergiaMax) * 100;
+        const healthBarColor = monster.pontosDeEnergia <= 0 ? '#444' : '#b30000'; // Cinza se morto, vermelho se vivo
+
         monsterDiv.innerHTML = `
-            <div>${monster.nome} (${monster.pontosDeEnergia}/${monster.pontosDeEnergiaMax})</div>
-            <div class="health-bar-background" style="background-color: #555; border-radius: 5px; padding: 2px;">
-                <div id="hp-bar-${monster.id}" class="health-bar" style="height: 10px; width: ${(monster.pontosDeEnergia / monster.pontosDeEnergiaMax) * 100}%; background-color: green; border-radius: 3px;"></div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9em;">
+                <span>${monster.nome} ${isTarget ? '🎯' : ''}</span>
+                <span>${monster.pontosDeEnergia} / ${monster.pontosDeEnergiaMax}</span>
+            </div>
+            <div class="health-bar-background">
+                <div class="health-bar" style="width: ${healthPercentage}%; background-color: ${healthBarColor};"></div>
             </div>
         `;
-        // Adicionar um evento de clique para mudar de alvo
+
+        // Adiciona o evento de clique para mudar de alvo
         monsterDiv.addEventListener('click', () => {
             if (monster.pontosDeEnergia > 0) {
                 window.currentMonster = monster;
                 currentMonster = monster;
                 console.log("Novo alvo selecionado:", monster.nome);
-                updateMonsterInfoUI();
-                displayAllMonsterHealthBars(); // Re-renderiza para mostrar o novo alvo
+                updateMonsterInfoUI(); // Atualiza a imagem/descrição principal
+                displayAllMonsterHealthBars(); // Re-renderiza para mostrar o novo alvo destacado
             }
         });
+
         container.appendChild(monsterDiv);
     });
 }
@@ -383,7 +396,7 @@ const bleedingDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "blee
 if (bleedingDebuff) {
     currentMonster.pontosDeEnergia -= bleedingDebuff.valor;
     currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
-    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+    displayAllMonsterHealthBars();
     await addLogMessage(`${currentMonster.nome} perde ${bleedingDebuff.valor} HP por evisceração.`, 800);
     
     // Verifica se morreu por sangramento
@@ -399,7 +412,7 @@ const poisonDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "poison
 if (poisonDebuff) {
     currentMonster.pontosDeEnergia -= poisonDebuff.valor;
     currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
-    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+    displayAllMonsterHealthBars();
     await addLogMessage(`${currentMonster.nome} perde ${poisonDebuff.valor} de energia por veneno.`, 800);
 
     // Verifica se morreu por veneno
@@ -1108,7 +1121,7 @@ async function usarItem(itemId, effect, value) {
             if (currentMonster) {
                 currentMonster.pontosDeEnergia -= danoGranada;
                 currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
-                atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+                displayAllMonsterHealthBars();
                 await addLogMessage(`Você arremessa uma granada de mão! Ela explode e causa <b>${danoGranada}</b> de dano ao ${currentMonster.nome}.`, 1000);
             }
 
@@ -1168,7 +1181,7 @@ async function usarItem(itemId, effect, value) {
             if (currentMonster) {
                 currentMonster.pontosDeEnergia -= parseInt(value);
                 currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
-                atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+                displayAllMonsterHealthBars();
                 await addLogMessage(`Você usou ${item.content} e causou ${value} de dano.`, 1000);
                 if (currentMonster.pontosDeEnergia <= 0) monsterDefeated = true;
             }
@@ -3023,7 +3036,7 @@ async function updatePlayerExperience(userId, xpToAdd) {
             
             // Atualiza as barras de HP
             atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-            atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+            displayAllMonsterHealthBars();
             
             // Esconde o botão de lutar e mostra o estado correto da batalha
             if (lutarButton) lutarButton.style.display = 'none';
@@ -3307,7 +3320,7 @@ if (rollLocationBtn) {
         const danoRolado = rollDice(window.magicContext.dano);
         currentMonster.pontosDeEnergia -= danoRolado;
         currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
-        atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+        displayAllMonsterHealthBars();
         await addLogMessage(`${currentMonster.nome} sofreu ${danoRolado} de dano mágico (${window.magicContext.dano}).`, 800);
         
         // Limpa contexto
@@ -3342,7 +3355,7 @@ if (window.touchSpellContext) {
     
     currentMonster.pontosDeEnergia -= totalDamage;
     currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
-    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+    displayAllMonsterHealthBars();
     await addLogMessage(`${toques} descarga(s) elétrica(s) causaram ${totalDamage} de dano total!`, 800);
 
     
@@ -3371,7 +3384,7 @@ if (window.touchDebuffContext) {
     const danoRolado = rollDice(window.touchDebuffContext.dano);
     currentMonster.pontosDeEnergia -= danoRolado;
     currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
-    atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+    displayAllMonsterHealthBars();
     await addLogMessage(`${currentMonster.nome} sofreu ${danoRolado} de dano necrótico (${window.touchDebuffContext.dano}).`, 800);
     
     // Teste de resistência para o debuff
@@ -3494,7 +3507,8 @@ if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
         
         // Força morte independente da energia
         currentMonster.pontosDeEnergia = 0;
-        atualizarBarraHP("barra-hp-monstro", 0, currentMonster.pontosDeEnergiaMax);
+        displayAllMonsterHealthBars(); // <-- AQUI ESTÁ A MUDANÇA!
+
         
         await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi executado!</p>`, 1000);
         
@@ -3674,7 +3688,7 @@ if (window.punhaladaVenenosaExtraDano) {
 
             await addLogMessage(`${currentMonster.nome} sofreu ${totalDamage} de dano.`, 800);
 
-            atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+            displayAllMonsterHealthBars();
             await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}.`, 1000);
 
             // Salva estado (precisa de userId e monsterName no escopo)
@@ -4124,7 +4138,7 @@ async function setupArcanumConjurationModal(magiaId) {
                     }
                     if (currentMonster) {
                         currentMonster.pontosDeEnergia -= totalDamage;
-                        atualizarBarraHP("barra-hp-monstro", currentMonster.pontosDeEnergia, currentMonster.pontosDeEnergiaMax);
+                        displayAllMonsterHealthBars();
                         addLogMessage(`Dardos Místicos causaram <b>${totalDamage}</b> de dano!`, 1000);
                         if (currentMonster.pontosDeEnergia <= 0) {
                             addLogMessage(`<span style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</span>`, 1000);
