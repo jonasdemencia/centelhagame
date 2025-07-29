@@ -1631,18 +1631,15 @@ function rollDice(diceString) {
 
 // Função para calcular couraça total (base + buffs)
 function getPlayerDefense() {
-    // Declara playerData como global ou busca do escopo correto
-    const currentPlayerData = window.playerData || playerData;
-    const baseDefense = currentPlayerData?.couraca ? parseInt(currentPlayerData.couraca) : 0;
-    const buffBonus = activeBuffs
-  .filter(buff => buff.tipo === "couraca" || buff.couracaBonus)
-  .reduce((total, buff) => {
-    if (buff.tipo === "couraca") return total + (buff.valor || 0);
-    if (buff.couracaBonus) return total + buff.couracaBonus;
-    return total;
-  }, 0);
-
-    return baseDefense + buffBonus; // LINHA FALTANTE
+  const currentPlayerData = window.playerData || playerData;
+  const baseDefense = currentPlayerData?.couraca ? parseInt(currentPlayerData.couraca) : 0;
+  let buffBonus = 0;
+  activeBuffs.forEach(buff => {
+    if (buff.tipo === "couraca" || buff.couracaBonus) buffBonus += buff.valor || buff.couracaBonus;
+    if (buff.tipo === "anastia") buffBonus += buff.valor; // valor é -10
+  });
+  return baseDefense + buffBonus;
+}
 } // CHAVE DE FECHAMENTO '}' FALTANTE
 
 // Adicione esta função após getPlayerDefense()
@@ -1738,6 +1735,23 @@ function processBuffs() {
     
     // Reduz duração de todos os buffs
     activeBuffs.forEach(buff => buff.turnos--);
+
+    // Ativa Anastia após o carregamento
+const anastiaLoading = activeBuffs.find(buff => buff.tipo === "anastia_loading" && buff.turnos <= 0);
+if (anastiaLoading) {
+  // Remove buff de carregamento
+  activeBuffs = activeBuffs.filter(buff => buff.tipo !== "anastia_loading");
+  // Aplica o buff de Anastia (4 turnos)
+  activeBuffs.push({
+    tipo: "anastia",
+    valor: -10, // penalidade de couraça
+    turnos: 4,
+    nome: "Anastia (Modo de Mira)",
+    criticalThreshold: 15 // novo limiar de crítico
+  });
+  updateBuffsDisplay();
+  addLogMessage && addLogMessage("<span style='color:orange;'>Você entra em modo Anastia! Couraça -10, crítico SIFER em 15+ por 4 turnos.</span>", 1000);
+}
     
     // Remove buffs expirados e mostra mensagem
 const expiredBuffs = activeBuffs.filter(buff => buff.turnos <= 0);
@@ -2392,6 +2406,13 @@ let atosDoJogador = [
     nome: "Leveza Afiada",
     descricao: "Aumenta a chance de acerto crítico SIFER (18-20) com armas leves por 7 turnos."
 },
+
+    {
+  id: "anastia",
+  nome: "Anastia",
+  descricao: "Modo de mira extrema: perde 10 de couraça (pode ficar negativo), mas acerta crítico SIFER em 15+. Dura 4 turnos após 1 turno de carregamento."
+},
+    
     {
   id: "ocultar-se",
   nome: "Ocultar-se",
@@ -2534,6 +2555,22 @@ else if (ato.id === "ocultar-se") {
     await monsterOpportunityAttack(1.0);
     endPlayerTurn();
   }
+  return;
+}
+
+    else if (ato.id === "anastia") {
+  await addLogMessage("Você começa a mirar cuidadosamente... (carregando Anastia, 1 turno)", 800);
+
+  // Aplica buff de carregamento (1 turno)
+  activeBuffs = activeBuffs.filter(buff => buff.tipo !== "anastia_loading" && buff.tipo !== "anastia");
+  activeBuffs.push({
+    tipo: "anastia_loading",
+    valor: 0,
+    turnos: 1,
+    nome: "Anastia (Carregando)"
+  });
+  updateBuffsDisplay();
+  endPlayerTurn();
   return;
 }
             
@@ -3781,6 +3818,13 @@ if (
 ) {
   criticalThreshold = levezAfiadaBuff.valor;
 }
+
+        // Anastia: limiar de crítico SIFER em 15+
+const anastiaBuff = activeBuffs.find(buff => buff.tipo === "anastia");
+if (anastiaBuff) {
+  criticalThreshold = anastiaBuff.criticalThreshold;
+}
+        
 console.log("DEBUG SIFER", {
   playerAttackRollRaw,
   criticalThreshold,
