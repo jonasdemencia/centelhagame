@@ -211,6 +211,7 @@ let attackOptionsDiv = null;
 let monsterName = null; // Adicionar esta linha
 let userId = null; // ✅ ADICIONE ESTA LINHA AQUI
 let currentMonster = null; // Mantido para compatibilidade local
+let battleId = null; // ID único para o encontro
 
 
 
@@ -1541,7 +1542,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         // Limpa estado da batalha
         const user = auth.currentUser;
         if (user) {
-            await clearBattleState(user.uid, monsterName);
+            await clearBattleState(user.uid, battleId);
         }
         
         // Esconde opções de ataque
@@ -2044,55 +2045,21 @@ async function updatePlayerExperience(userId, xpToAdd) {
 
 
 // Função para carregar o estado da batalha do Firestore
-function loadBattleState(userId, monsterName) {
-    console.log("LOG: loadBattleState chamado com userId:", userId, "monsterName:", monsterName);
-    if (!userId || !monsterName) {
-        console.error("LOG: loadBattleState - Parâmetros inválidos");
+function loadBattleState(userId, bId) {
+    console.log("LOG: loadBattleState chamado com userId:", userId, "battleId:", bId);
+    if (!userId || !bId) {
+        console.error("LOG: loadBattleState - Parâmetros inválidos (userId ou battleId ausente)");
         return Promise.resolve(null);
     }
-    
-    const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
+    const battleDocRef = doc(db, "battles", `${userId}_${bId}`);
     return getDoc(battleDocRef)
         .then(docSnap => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 console.log("LOG: Estado da batalha carregado do Firestore:", data);
-                
-                // Restaura o estado da iniciativa no sessionStorage
-                if (data.initiativeResult) {
-                    sessionStorage.setItem('initiativeResult', data.initiativeResult);
-                }
-                if (data.playerInitiativeRoll) {
-                    sessionStorage.setItem('playerInitiativeRoll', data.playerInitiativeRoll);
-                }
-                if (data.monsterInitiativeRoll) {
-                    sessionStorage.setItem('monsterInitiativeRoll', data.monsterInitiativeRoll);
-                }
-                if (data.playerAbility) {
-                    sessionStorage.setItem('playerAbility', data.playerAbility);
-                }
-                if (data.monsterAbility) {
-                    sessionStorage.setItem('monsterAbility', data.monsterAbility);
-                }
-                
-                // Define as variáveis globais
-                window.isPlayerTurn = data.isPlayerTurn;
-                isPlayerTurn = data.isPlayerTurn; // Sincroniza a variável local
-                window.battleStarted = data.battleStarted || false;
-              
-              // Restaura buffs ativos
-activeBuffs = data.activeBuffs || [];
-              activeMonsterDebuffs = data.activeMonsterDebuffs || [];
-                // Atualiza displays dos buffs
-updateBuffsDisplay();
-updateMonsterDebuffsDisplay();
-updatePlayerCouracaDisplay();
-
-
-  
                 return data;
             } else {
-                console.log("LOG: Nenhum estado de batalha encontrado para este monstro.");
+                console.log("LOG: Nenhum estado de batalha encontrado para este encontro.");
                 return null;
             }
         })
@@ -2102,63 +2069,50 @@ updatePlayerCouracaDisplay();
         });
 }
 
+
 // Função para salvar o estado da batalha no Firestore
-function saveBattleState(userId, monsterName, monsterHealth, playerHealth) {
-    console.log("LOG: saveBattleState chamado com:", {userId, monsterName, monsterHealth, playerHealth});
-    if (!userId || !monsterName) {
-        console.error("LOG: saveBattleState - Parâmetros inválidos");
+function saveBattleState(userId, bId, playerHealth) {
+    const monstersState = window.currentMonsters.map(m => ({
+        id: m.id, // ex: "lobo_0", "lobo_1"
+        pontosDeEnergia: m.pontosDeEnergia,
+        activeMonsterDebuffs: m.activeMonsterDebuffs || []
+    }));
+
+    console.log("LOG: saveBattleState chamado com:", { userId, battleId: bId, monstersState, playerHealth });
+    if (!userId || !bId) {
+        console.error("LOG: saveBattleState - Parâmetros inválidos (userId ou battleId ausente)");
         return Promise.resolve();
     }
+    const battleDocRef = doc(db, "battles", `${userId}_${bId}`);
     
-    const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
-    
-    // Obtém o estado atual da iniciativa do sessionStorage
     const initiativeResult = sessionStorage.getItem('initiativeResult');
-    const playerInitiativeRoll = sessionStorage.getItem('playerInitiativeRoll');
-    const monsterInitiativeRoll = sessionStorage.getItem('monsterInitiativeRoll');
-    const playerAbility = sessionStorage.getItem('playerAbility');
-    const monsterAbility = sessionStorage.getItem('monsterAbility');
-    
-    // Usa a variável global window.isPlayerTurn em vez de isPlayerTurn
-    return setDoc(battleDocRef, { 
-    monsterHealth: monsterHealth, 
-    playerHealth: playerHealth,
-    isPlayerTurn: window.isPlayerTurn,
-    initiativeResult: initiativeResult || null,
-    playerInitiativeRoll: playerInitiativeRoll || null,
-    monsterInitiativeRoll: monsterInitiativeRoll || null,
-    playerAbility: playerAbility || null,
-    monsterAbility: monsterAbility || null,
-    battleStarted: window.battleStarted || false,
-    activeBuffs: activeBuffs || [],
-    activeMonsterDebuffs: activeMonsterDebuffs || [],
-    lastUpdated: new Date().toISOString()
-}, { merge: true });
+    // ... (o resto dos session storage items)
+
+    return setDoc(battleDocRef, {
+        monsters: monstersState, // Salva o array de estados dos monstros
+        playerHealth: playerHealth,
+        isPlayerTurn: window.isPlayerTurn,
+        initiativeResult: initiativeResult || null,
+        // ... (o resto dos campos que você já tinha)
+        battleStarted: window.battleStarted || true,
+        activeBuffs: activeBuffs || \[\],
+        lastUpdated: new Date().toISOString()
+    }, { merge: true });
 }
 
 
 // Função para limpar o estado da batalha quando ela termina
-function clearBattleState(userId, monsterName) {
-    console.log("LOG: clearBattleState chamado com userId:", userId, "monsterName:", monsterName);
-    if (!userId || !monsterName) {
+function clearBattleState(userId, bId) {
+    console.log("LOG: clearBattleState chamado com userId:", userId, "battleId:", bId);
+    if (!userId || !bId) {
         console.error("LOG: clearBattleState - Parâmetros inválidos");
         return Promise.resolve(false);
     }
-    
-    const battleDocRef = doc(db, "battles", `${userId}_${monsterName}`);
-    
+    const battleDocRef = doc(db, "battles", `${userId}_${bId}`);
     return deleteDoc(battleDocRef)
         .then(() => {
             console.log("LOG: Estado da batalha removido com sucesso.");
-            
-            // Limpa também o sessionStorage
-            sessionStorage.removeItem('initiativeResult');
-            sessionStorage.removeItem('playerInitiativeRoll');
-            sessionStorage.removeItem('monsterInitiativeRoll');
-            sessionStorage.removeItem('playerAbility');
-            sessionStorage.removeItem('monsterAbility');
-            sessionStorage.removeItem('luteButtonClicked');
-            
+            // ... (resto da função)
             return true;
         })
         .catch(error => {
@@ -2269,17 +2223,20 @@ function handlePostBattle(monster) {
                 });
 
             // Marca o monstro como derrotado
-            const monsterName = getUrlParameter('monstro');
-            if (monsterName) {
-                markMonsterAsDefeated(user.uid, monsterName)
-                    .then(success => {
-                        if (success) {
-                            console.log(`LOG: Monstro ${monsterName} marcado como derrotado para o usuário ${user.uid}`);
-                        } else {
-                            console.error(`LOG: Falha ao marcar monstro como derrotado`);
-                        }
-                    });
+           // NOVO CÓDIGO (PARA SUBSTITUIR O BLOCO ACIMA)
+
+// Marca todos os monstros do encontro como derrotados
+// A variável 'monsterNames' foi definida no início do script (em DOMContentLoaded)
+monsterNames.forEach(name => {
+    markMonsterAsDefeated(user.uid, name.trim())
+        .then(success => {
+            if (success) {
+                console.log(`LOG: Monstro ${name.trim()} marcado como derrotado.`);
+            } else {
+                console.error(`LOG: Falha ao marcar ${name.trim()} como derrotado.`);
             }
+        });
+});
         }
     }
 
@@ -2357,7 +2314,7 @@ function handlePostBattle(monster) {
     // Limpa o estado da batalha quando o monstro é derrotado
     if (user && monster) {
         const monsterName = getUrlParameter('monstro') || monster.id;
-        clearBattleState(user.uid, monsterName)
+        clearBattleState(user.uid, battleId)
             .then(success => {
                 if (success) {
                     console.log("LOG: Estado da batalha limpo após vitória.");
@@ -2390,6 +2347,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const rolarDanoButton = document.getElementById("rolar-dano");
     const monsterNamesParam = getUrlParameter('monstros'); // Ex: "lobo,lobo" ou "lobo,esqueleto"
     const monsterNames = monsterNamesParam ? monsterNamesParam.split(',') : ['lobo', 'lobo']; // Padrão: 2 lobos
+    // Cria um ID único e consistente para a batalha, independente da ordem dos monstros na URL
+    battleId = [...monsterNames].sort().join('_');
+    console.log("LOG: Battle ID gerado:", battleId);
     
 
 
@@ -3010,74 +2970,60 @@ async function updatePlayerExperience(userId, xpToAdd) {
             const monsterName = getUrlParameter('monstro');
 
             // Carregar o estado da batalha ao carregar a página
-            if (currentMonster) {
-                loadBattleState(userId, monsterName)
-    .then(savedState => {
-        if (savedState) {
-            // Carrega os dados básicos
-            currentMonster.pontosDeEnergia = savedState.monsterHealth;
-            playerHealth = savedState.playerHealth;
-            isPlayerTurn = savedState.isPlayerTurn;
-            window.isPlayerTurn = savedState.isPlayerTurn;
-            battleStarted = savedState.battleStarted || true; // Se há estado salvo, a batalha já começou
-            window.battleStarted = savedState.battleStarted || true;
-            
-            console.log("LOG: onAuthStateChanged - Estado da batalha carregado do Firestore:", savedState);
-            console.log("LOG: onAuthStateChanged - Pontos de Energia do monstro carregados:", currentMonster.pontosDeEnergia);
-            console.log("LOG: onAuthStateChanged - Energia do jogador carregada (do estado da batalha):", playerHealth);
-            console.log("LOG: onAuthStateChanged - Turno atual:", isPlayerTurn ? "Jogador" : "Monstro");
-            
-            // Atualiza a interface com a energia do jogador
-            const playerHealthDisplay = document.getElementById("player-health");
-            if (playerHealthDisplay) {
-                playerHealthDisplay.innerText = playerHealth;
-                console.log("LOG: onAuthStateChanged - Energia do jogador exibida na interface.");
-            }
-            
-            // Atualiza as barras de HP
-            atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-            displayAllMonsterHealthBars();
-            
-            // Esconde o botão de lutar e mostra o estado correto da batalha
-            if (lutarButton) lutarButton.style.display = 'none';
-            if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'none';
-            
-            // Se a vida do monstro for <= 0 ou a vida do jogador for <= 0, a batalha acabou
-            if (currentMonster.pontosDeEnergia <= 0) {
-                startNewTurnBlock("Resultado");
-                addLogMessage(`<p style="color: green;">${currentMonster.nome} foi derrotado!</p>`, 1500);
-                attackOptionsDiv.style.display = 'none';
-                console.log("LOG: onAuthStateChanged - Monstro derrotado, escondendo opções de ataque.");
-            } else if (playerHealth <= 0) {
-                startNewTurnBlock("Resultado");
-                addLogMessage(`<p style="color: red;">Você foi derrotado!</p>`, 1500);
-                attackOptionsDiv.style.display = 'none';
-                console.log("LOG: onAuthStateChanged - Jogador derrotado, escondendo opções de ataque.");
-            } else {
-                // Restaura o estado do turno atual
+if (window.currentMonsters.length > 0) { // Verifica se há monstros para a batalha
+    loadBattleState(userId, battleId)
+        .then(savedState => {
+            if (savedState) {
+                // Carrega os dados do jogador
+                playerHealth = savedState.playerHealth;
+                isPlayerTurn = savedState.isPlayerTurn;
+                window.isPlayerTurn = savedState.isPlayerTurn;
+                battleStarted = savedState.battleStarted || true;
+                window.battleStarted = savedState.battleStarted || true;
+                activeBuffs = savedState.activeBuffs || [];
+
+                // Carrega os dados de cada monstro
+                savedState.monsters.forEach(monsterData => {
+                    const monsterToUpdate = window.currentMonsters.find(m => m.id === monsterData.id);
+                    if (monsterToUpdate) {
+                        monsterToUpdate.pontosDeEnergia = monsterData.pontosDeEnergia;
+                        monsterToUpdate.activeMonsterDebuffs = monsterData.activeMonsterDebuffs || [];
+                    }
+                });
+
+                console.log("LOG: onAuthStateChanged - Estado da batalha carregado do Firestore:", savedState);
+
+                // Atualiza a UI
+                atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+                displayAllMonsterHealthBars();
+                updateBuffsDisplay();
+                updatePlayerCouracaDisplay();
+
+                // Define o alvo atual como o primeiro monstro vivo
+                window.currentMonster = window.currentMonsters.find(m => m.pontosDeEnergia > 0) || null;
+                currentMonster = window.currentMonster;
+                if(currentMonster) updateMonsterInfoUI();
+
+                // Esconde botões de início
+                const lutarButton = document.getElementById("iniciar-luta");
+                const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
+                if (lutarButton) lutarButton.style.display = 'none';
+                if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'none';
+
+                // Continua a batalha de onde parou
                 if (isPlayerTurn) {
                     startNewTurnBlock("Jogador");
-                    addLogMessage(`Turno do Jogador`, 1000);
+                    addLogMessage`Turno do Jogador`, 1000);
                     if (attackOptionsDiv) attackOptionsDiv.style.display = 'block';
                 } else {
-                    startNewTurnBlock(currentMonster.nome);
-                    addLogMessage(`Turno do ${currentMonster.nome}`, 1000);
+                    startNewTurnBlock("Oponentes");
+                    addLogMessage`Turno dos Oponentes`, 1000);
                     if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
-                    // Inicia o turno do monstro após um pequeno delay
-                    setTimeout(() => {
-                        monsterAttack();
-                    }, 2000);
+                    setTimeout(() => { monstersTurn(); }, 2000);
                 }
             }
-        } else {
-            // Se não houver estado salvo, usa os pontos de energia iniciais e define a energia do jogador
-            console.log("LOG: onAuthStateChanged - Nenhum estado de batalha encontrado, carregando energia da ficha do jogador.");
-        }
-        document.getElementById("monster-name").innerText = currentMonster.nome;
-        console.log("LOG: onAuthStateChanged - Nome do monstro exibido.");
-    });
-
-            }
+        });
+}
 
             const playerDocRef = doc(db, "players", user.uid);
             getDoc(playerDocRef)
@@ -3338,7 +3284,7 @@ if (rollLocationBtn) {
         
         // Salva e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, battleId, playerHealth);
         endPlayerTurn();
         return;
     }
@@ -3373,7 +3319,7 @@ if (window.touchSpellContext) {
     // Salva e passa turno
     const user = auth.currentUser;
     if (user) {
-        await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, battleId, playerHealth);
     }
     endPlayerTurn();
     return;
@@ -3427,7 +3373,7 @@ if (window.touchDebuffContext) {
     // Salva e passa turno
     const user = auth.currentUser;
     if (user) {
-        await saveBattleState(user.uid, monsterName, currentMonster.pontosDeEnergia, playerHealth);
+        await saveBattleState(userId, battleId, playerHealth);
     }
     endPlayerTurn();
     return;
@@ -3515,7 +3461,7 @@ if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
         // Salva estado e chama pós-batalha
         const user = auth.currentUser;
         if (user) {
-            await saveBattleState(userId, monsterName, 0, playerHealth);
+            await saveBattleState(userId, battleId, playerHealth);
         }
         
         handlePostBattle(currentMonster);
