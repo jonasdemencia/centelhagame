@@ -1739,23 +1739,48 @@ function processBuffs() {
     // Reduz duração de todos os buffs
     activeBuffs.forEach(buff => buff.turnos--);
     
-    // Remove buffs expirados e mostra mensagem
-const expiredBuffs = activeBuffs.filter(buff => buff.turnos <= 0);
-activeBuffs = activeBuffs.filter(buff => buff.turnos > 0);
-// Atualiza display
-updateBuffsDisplay();
-
+    // Remove buffs expirados e prepara lista para mensagens
+    const expiredBuffs = activeBuffs.filter(buff => buff.turnos <= 0);
+    activeBuffs = activeBuffs.filter(buff => buff.turnos > 0);
     
+    // Atualiza a exibição dos buffs no UI
+    updateBuffsDisplay();
+
+    // --- INÍCIO: Tratamento especial do buff preparando Anartia ---
+    const preparandoAnartiaIndex = activeBuffs.findIndex(buff => buff.tipo === "preparando_anartia");
+    if (preparandoAnartiaIndex !== -1 && activeBuffs[preparandoAnartiaIndex].turnos <= 0) {
+        // Remove o buff de preparo
+        activeBuffs.splice(preparandoAnartiaIndex, 1);
+
+        // Adiciona o debuff Anartia: -10 de couraça por 3 turnos
+        activeBuffs.push({
+            tipo: "couraca_anartia",
+            valor: -10,
+            turnos: 3,
+            nome: "Debuff Anartia"
+        });
+
+        updateBuffsDisplay();
+
+        // Mensagem no log informando a ativação do debuff Anartia
+        addLogMessage(
+          "O ato Anartia entrou em efeito! Você sofre -10 de couraça por 3 turnos e seus críticos SIFER agora começam a partir de 15.",
+          800
+        );
+    }
+    // --- FIM: Tratamento especial do buff preparando Anartia ---
+
     // Processa mensagens de buffs expirados sequencialmente
     return expiredBuffs.reduce((promise, buff) => {
-    return promise.then(() => {
-        if (typeof addLogMessage === 'function') {
-            return addLogMessage(`${buff.nome} se dissipou.`, 800);
-        }
-        return Promise.resolve();
-    });
-}, Promise.resolve());
-  } // <- ADICIONE ESTA CHAVE AQUI
+        return promise.then(() => {
+            if (typeof addLogMessage === 'function') {
+                return addLogMessage(`${buff.nome} se dissipou.`, 800);
+            }
+            return Promise.resolve();
+        });
+    }, Promise.resolve());
+} // <- CHAVE FINAL DA FUNÇÃO
+
 
 async function verificarFugaAnimais() {
     console.log("VERIFICANDO FUGA DE ANIMAIS - FUNÇÃO CHAMADA");
@@ -2392,6 +2417,12 @@ let atosDoJogador = [
     nome: "Leveza Afiada",
     descricao: "Aumenta a chance de acerto crítico SIFER (18-20) com armas leves por 7 turnos."
 },
+
+    {
+    id: "anartia",
+    nome: "Anartia",
+    descricao: "Perde 10 de couraça (debuff) por 3 turnos. O acerto crítico SIFER funciona a partir de 15 (15-20). Demora 1 turno para preparar."
+},
     {
   id: "ocultar-se",
   nome: "Ocultar-se",
@@ -2446,12 +2477,10 @@ if (atoClasseButton) {
               1000
             );
 
-            // Remove debuffs anteriores do mesmo tipo
             activeMonsterDebuffs = activeMonsterDebuffs.filter(
               debuff => debuff.nome !== "Truque Sujo"
             );
 
-            // Aplica debuff de precisão
             activeMonsterDebuffs.push({
               tipo:   "accuracy",
               valor:  3,
@@ -2459,7 +2488,6 @@ if (atoClasseButton) {
               nome:   "Truque Sujo"
             });
 
-            // Aplica debuff de couraça
             activeMonsterDebuffs.push({
               tipo:   "couraca",
               valor:  3,
@@ -2471,74 +2499,74 @@ if (atoClasseButton) {
             endPlayerTurn();
             return;
           }
-        }
+        } else if (ato.id === "anartia") {
+            await addLogMessage("Você começa a preparar o ato Anartia. Ele ativará no próximo turno.", 800);
 
-else if (ato.id === "ocultar-se") {
-  await addLogMessage("Você tenta se ocultar no meio do combate...", 600);
+            activeBuffs.push({
+                tipo: "preparando_anartia",
+                valor: 0,
+                turnos: 1,
+                nome: "Preparando Anartia"
+            });
 
-  // --- INÍCIO: Bônus de habilidade por condições ambientais ---
-  let bonusHab = 0;
-  let bonusDesc = "";
-  let conditions = {};
-  if (window.ArcanumConditions && typeof window.ArcanumConditions.getConditions === "function") {
-    conditions = await window.ArcanumConditions.getConditions();
-  }
-  // +3: noite, nublado, neblina, tempestade
-  if (
-    conditions.periodo === "noite" ||
-    conditions.clima === "nublado" ||
-    conditions.clima === "neblina" ||
-    conditions.clima === "tempestade"
-  ) {
-    bonusHab = 3;
-    bonusDesc = "+3 (condição ambiental favorável)";
-  }
-  // +5: lua nova, madrugada (prioridade)
-  if (
-    conditions.lua === "nova" ||
-    conditions.periodo === "madrugada"
-  ) {
-    bonusHab = 5;
-    bonusDesc = "+5 (condição ambiental muito favorável)";
-  }
-  // --- FIM: Bônus de habilidade por condições ambientais ---
+            updateBuffsDisplay();
+            endPlayerTurn();
+            return;
+        } else if (ato.id === "ocultar-se") {
+          await addLogMessage("Você tenta se ocultar no meio do combate...", 600);
 
-  // Rolagem do jogador
-  const playerRoll = Math.floor(Math.random() * 20) + 1;
-  const playerHab = (playerData?.skill?.total || 0) + bonusHab;
-  const playerTotal = playerRoll + playerHab;
+          let bonusHab = 0;
+          let bonusDesc = "";
+          let conditions = {};
+          if (window.ArcanumConditions && typeof window.ArcanumConditions.getConditions === "function") {
+            conditions = await window.ArcanumConditions.getConditions();
+          }
+          if (
+            conditions.periodo === "noite" ||
+            conditions.clima === "nublado" ||
+            conditions.clima === "neblina" ||
+            conditions.clima === "tempestade"
+          ) {
+            bonusHab = 3;
+            bonusDesc = "+3 (condição ambiental favorável)";
+          }
+          if (
+            conditions.lua === "nova" ||
+            conditions.periodo === "madrugada"
+          ) {
+            bonusHab = 5;
+            bonusDesc = "+5 (condição ambiental muito favorável)";
+          }
 
-  // Rolagem do monstro
-  const monsterRoll = Math.floor(Math.random() * 20) + 1;
-  const monsterTotal = monsterRoll + (currentMonster.habilidade || 0);
+          const playerRoll = Math.floor(Math.random() * 20) + 1;
+          const playerHab = (playerData?.skill?.total || 0) + bonusHab;
+          const playerTotal = playerRoll + playerHab;
 
-  await addLogMessage(`Você rolou ${playerRoll} + ${playerData?.skill?.total || 0}${bonusHab ? " " + bonusDesc : ""} (Hab) = ${playerTotal}`, 800);
-  await addLogMessage(`${currentMonster.nome} rolou ${monsterRoll} + ${currentMonster.habilidade || 0} (Hab) = ${monsterTotal}`, 800);
+          const monsterRoll = Math.floor(Math.random() * 20) + 1;
+          const monsterTotal = monsterRoll + (currentMonster.habilidade || 0);
 
-  if (playerTotal > monsterTotal) {
-    // Sucesso: aplica buff "oculto" com +5 couraça
-    activeBuffs = activeBuffs.filter(buff => buff.tipo !== "oculto");
-    activeBuffs.push({
-      tipo: "oculto",
-      valor: 1,
-      turnos: 2,
-      nome: "Oculto (Backstab)",
-      couracaBonus: 8 // NOVO: bônus de couraça
-    });
-    updateBuffsDisplay();
-    await addLogMessage(`<span style="color:green;">Você se escondeu com sucesso! Seu próximo ataque será um ataque pelas costas (Backstab) e você recebe +5 de couraça enquanto estiver oculto.</span>`, 1000);
-    endPlayerTurn();
-  } else {
-    // Falha: monstro faz ataque de oportunidade
-    await addLogMessage(`<span style="color:red;">Você falha em se esconder! ${currentMonster.nome} percebe e ataca você!</span>`, 1000);
-    await monsterOpportunityAttack(1.0);
-    endPlayerTurn();
-  }
-  return;
-}
-            
-        else if (ato.id === "riso-escarnecedor") {
-          // Riso Escarnecedor
+          await addLogMessage(`Você rolou ${playerRoll} + ${playerData?.skill?.total || 0}${bonusHab ? " " + bonusDesc : ""} (Hab) = ${playerTotal}`, 800);
+          await addLogMessage(`${currentMonster.nome} rolou ${monsterRoll} + ${currentMonster.habilidade || 0} (Hab) = ${monsterTotal}`, 800);
+
+          if (playerTotal > monsterTotal) {
+            activeBuffs = activeBuffs.filter(buff => buff.tipo !== "oculto");
+            activeBuffs.push({
+              tipo: "oculto",
+              valor: 1,
+              turnos: 2,
+              nome: "Oculto (Backstab)",
+              couracaBonus: 8 
+            });
+            updateBuffsDisplay();
+            await addLogMessage(`<span style="color:green;">Você se escondeu com sucesso! Seu próximo ataque será um ataque pelas costas (Backstab) e você recebe +5 de couraça enquanto estiver oculto.</span>`, 1000);
+            endPlayerTurn();
+          } else {
+            await addLogMessage(`<span style="color:red;">Você falha em se esconder! ${currentMonster.nome} percebe e ataca você!</span>`, 1000);
+            await monsterOpportunityAttack(1.0);
+            endPlayerTurn();
+          }
+          return;
+        } else if (ato.id === "riso-escarnecedor") {
           await addLogMessage(
             "Você provoca o inimigo com um insulto cortante!",
             600
@@ -2565,13 +2593,11 @@ else if (ato.id === "ocultar-se") {
               `${currentMonster.nome} fica confuso e vulnerável! (-1 ataque, -1 couraça por 6 turnos)`,
               1000
             );
-
-            // Remove debuffs anteriores do mesmo nome
+            
             activeMonsterDebuffs = activeMonsterDebuffs.filter(
               debuff => debuff.nome !== "Riso Escarnecedor"
             );
 
-            // Aplica debuff de precisão
             activeMonsterDebuffs.push({
               tipo:   "accuracy",
               valor:  1,
@@ -2579,7 +2605,6 @@ else if (ato.id === "ocultar-se") {
               nome:   "Riso Escarnecedor"
             });
 
-            // Aplica debuff de couraça
             activeMonsterDebuffs.push({
               tipo:   "couraca",
               valor:  1,
@@ -2591,42 +2616,33 @@ else if (ato.id === "ocultar-se") {
             endPlayerTurn();
             return;
           }
-        }
-            
-else if (ato.id === "levesa-afiada") {
-    const inventory = window.playerData?.inventory;
-    const equippedWeaponName = inventory?.equippedItems?.weapon;
+        } else if (ato.id === "levesa-afiada") {
+            const inventory = window.playerData?.inventory;
+            const equippedWeaponName = inventory?.equippedItems?.weapon;
 
-    // Verifica se a arma equipada está na lista de armas leves
-    if (equippedWeaponName && armasLeves.includes(equippedWeaponName)) {
-        await addLogMessage(
-            "Você ativa Leveza Afiada! Seus ataques com armas leves têm chance de acerto crítico SIFER em 18-20 por 7 turnos.",
-            800
-        );
-        // Remove buff anterior para não acumular
-        activeBuffs = activeBuffs.filter(buff => buff.tipo !== "critico_aprimorado");
-        // Adiciona o novo buff
-        activeBuffs.push({
-            tipo: "critico_aprimorado",
-            valor: 18, // O valor mínimo para um acerto crítico SIFER
-            turnos: 7,
-            nome: "Leveza Afiada"
-        });
-        updateBuffsDisplay();
-        endPlayerTurn();
-    } else {
-        await addLogMessage(
-            "Você não está com uma arma leve equipada e perde o turno!",
-            1000
-        );
-        endPlayerTurn();
-    }
-    return;
-}
-            
-        else if (ato.id === "punhalada-venenosa") {
-          // Punhalada Venenosa
-          // 1. Verifica se Adaga está equipada
+            if (equippedWeaponName && armasLeves.includes(equippedWeaponName)) {
+                await addLogMessage(
+                    "Você ativa Leveza Afiada! Seus ataques com armas leves têm chance de acerto crítico SIFER em 18-20 por 7 turnos.",
+                    800
+                );
+                activeBuffs = activeBuffs.filter(buff => buff.tipo !== "critico_aprimorado");
+                activeBuffs.push({
+                    tipo: "critico_aprimorado",
+                    valor: 18,
+                    turnos: 7,
+                    nome: "Leveza Afiada"
+                });
+                updateBuffsDisplay();
+                endPlayerTurn();
+            } else {
+                await addLogMessage(
+                    "Você não está com uma arma leve equipada e perde o turno!",
+                    1000
+                );
+                endPlayerTurn();
+            }
+            return;
+        } else if (ato.id === "punhalada-venenosa") {
           const inventory = window.playerData?.inventory;
           const equippedWeaponName = inventory?.equippedItems?.weapon;
           if (!equippedWeaponName || !/adaga/i.test(equippedWeaponName)) {
@@ -2634,17 +2650,15 @@ else if (ato.id === "levesa-afiada") {
               "Você precisa estar com uma Adaga equipada para usar Punhalada Venenosa!",
               1000
             );
-            return; // Não perde o turno
+            return; 
           }
-          // 2. Seta contexto especial para o próximo ataque
           window.punhaladaVenenosaContext = true;
           await addLogMessage(
             "Você prepara uma punhalada venenosa! Seu próximo ataque corpo a corpo tentará aplicar o veneno.",
             800
           );
-          return; // Jogador deve atacar normalmente
-        }
-        else {
+          return; 
+        } else {
           // Outros atos genéricos
           await addLogMessage(
             `Você usou <strong>${ato.nome}</strong>!`,
@@ -3772,15 +3786,24 @@ if (playerAttackRollRaw === 1 && !isTouchSpell) {
 
 // --- NOVA LÓGICA UNIFICADA DE ACERTO E CRÍTICO SIFER ---
 // 1. Determinar o limiar do acerto crítico SIFER
-let criticalThreshold = 20; // Padrão é 20
-const levezAfiadaBuff = activeBuffs.find(buff => buff.tipo === 'critico_aprimorado');
-if (
-  levezAfiadaBuff &&
-  equippedWeaponName &&
-  armasLeves.map(a => a.toLowerCase()).includes(equippedWeaponName.toLowerCase())
-) {
-  criticalThreshold = levezAfiadaBuff.valor;
+let criticalThreshold = 20;
+
+// Primeiro, verifica se o debuff Anartia está ativo para sobrepor o limiar
+const anartiaBuff = activeBuffs.find(buff => buff.tipo === "couraca_anartia");
+if (anartiaBuff) {
+    criticalThreshold = 15; // Limite crítico abaixado devido a Anartia
+} else {
+    // Se não tiver Anartia, aplica a lógica do Leveza Afiada normalmente
+    const levezAfiadaBuff = activeBuffs.find(buff => buff.tipo === 'critico_aprimorado');
+    if (
+      levezAfiadaBuff &&
+      equippedWeaponName &&
+      armasLeves.map(a => a.toLowerCase()).includes(equippedWeaponName.toLowerCase())
+    ) {
+      criticalThreshold = levezAfiadaBuff.valor;
+    }
 }
+
 console.log("DEBUG SIFER", {
   playerAttackRollRaw,
   criticalThreshold,
