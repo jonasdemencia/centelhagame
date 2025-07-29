@@ -3013,11 +3013,11 @@ if (window.currentMonsters.length > 0) { // Verifica se há monstros para a bata
                 // Continua a batalha de onde parou
                 if (isPlayerTurn) {
                     startNewTurnBlock("Jogador");
-                    addLogMessage`Turno do Jogador`, 1000);
+                    addLogMessage("Turno do Jogador", 1000);
                     if (attackOptionsDiv) attackOptionsDiv.style.display = 'block';
                 } else {
                     startNewTurnBlock("Oponentes");
-                    addLogMessage`Turno dos Oponentes`, 1000);
+                    addLogMessage "Turno dos Oponentes", 1000);
                     if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
                     setTimeout(() => { monstersTurn(); }, 2000);
                 }
