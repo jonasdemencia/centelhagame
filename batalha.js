@@ -54,60 +54,54 @@ function updateMonsterInfoUI() {
     document.getElementById("monster-description").innerText = target.descricao;
     document.getElementById("monster-image").src = target.imagem;
 
-    // Garante que os debuffs do alvo certo são mostrados
-    if (!target.activeMonsterDebuffs) target.activeMonsterDebuffs = [];
-    activeMonsterDebuffs = target.activeMonsterDebuffs;
-    updateMonsterDebuffsDisplay();
 }
 
 
 function displayAllMonsterHealthBars() {
-  const container = document.getElementById('monster-bars-container');
-  if (!container) return;
-  container.innerHTML = '';
+    const container = document.getElementById('monster-bars-container');
+    if (!container) return;
+    container.innerHTML = '';
 
-  window.currentMonsters.forEach(monster => {
-    const isTarget = (window.currentMonster && window.currentMonster.id === monster.id);
-    const monsterDiv = document.createElement('div');
-    monsterDiv.className = 'monster-bar-item' + (isTarget ? ' target' : '');
-    monsterDiv.style.cursor = 'pointer';
+    window.currentMonsters.forEach(monster => {
+        const isTarget = (window.currentMonster && window.currentMonster.id === monster.id);
+        const monsterDiv = document.createElement('div');
+        monsterDiv.className = 'monster-bar-item' + (isTarget ? ' target' : '');
+        monsterDiv.style.cursor = 'pointer';
 
-    const barraId   = `barra-hp-monstro-${monster.id}`;
-    const valorId   = `hp-monstro-${monster.id}-valor`;
-    const debuffsId = `monster-debuffs-${monster.id}`;
+        const barraId = `barra-hp-monstro-${monster.id}`;
+        const valorId = `hp-monstro-${monster.id}-valor`;
+        const debuffsId = `monster-debuffs-${monster.id}`; // ID único para os debuffs
 
-    monsterDiv.innerHTML = `
-      <div style="display: flex; justify-content: space-between; font-size: 0.9em;">
-        <span>${monster.nome} ${isTarget ? '🎯' : ''}</span>
-      </div>
-      <div class="barra-hp-container" style="position: relative;">
-        <div id="${barraId}" class="barra-hp"></div>
-        <span id="${valorId}" class="hp-valor"></span>
-      </div>
-      <div id="${debuffsId}" class="debuffs-container"></div>
-    `;
+        // Adiciona o container de debuffs abaixo da barra de HP
+        monsterDiv.innerHTML = `
+            <div style="display: flex; justify-content: space-between; font-size: 0.9em;">
+                <span>${monster.nome} ${isTarget ? '🎯' : ''}</span>
+            </div>
+            <div class="barra-hp-container" style="position: relative;">
+                <div id="${barraId}" class="barra-hp"></div>
+                <span id="${valorId}" class="hp-valor"></span>
+            </div>
+            <div id="${debuffsId}" class="debuffs-container"></div>
+        `;
 
-    monsterDiv.addEventListener('click', () => {
-      if (monster.pontosDeEnergia > 0) {
-        window.currentMonster = monster;
-        updateMonsterInfoUI();
-        displayAllMonsterHealthBars();
-      }
+        monsterDiv.addEventListener('click', () => {
+            if (monster.pontosDeEnergia > 0) {
+                window.currentMonster = monster;
+                currentMonster = monster;
+                updateMonsterInfoUI();
+                displayAllMonsterHealthBars();
+            }
+        });
+
+        container.appendChild(monsterDiv);
+
+        // Chama as funções para atualizar a barra e os debuffs deste monstro
+        atualizarBarraHP(barraId, monster.pontosDeEnergia, monster.pontosDeEnergiaMax);
+        renderMonsterDebuffs(monster); // Esta é a nova função que você vai criar
     });
-
-    container.appendChild(monsterDiv);
-
-    // 1) atualiza a barra de HP
-    atualizarBarraHP(barraId, monster.pontosDeEnergia, monster.pontosDeEnergiaMax);
-
-    // 2) renderiza os debuffs deste monstro
-    renderMonsterDebuffs(monster);
-  });
 }
 
-/**
- * Limpa e popula o container de debuffs para um monstro específico.
- */
+
 function renderMonsterDebuffs(monster) {
     const debuffsId = `monster-debuffs-${monster.id}`;
     const container = document.getElementById(debuffsId);
@@ -1479,18 +1473,24 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         const debuffValue = parseInt(valor);
         const debuffDuration = 3;
         
-        // Remove debuff anterior do mesmo tipo se existir
-        activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "accuracy");
-        
-        // Adiciona novo debuff
-        activeMonsterDebuffs.push({
+       // Garante que o array de debuffs do monstro alvo exista
+    if (!currentMonster.activeMonsterDebuffs) {
+        currentMonster.activeMonsterDebuffs = [];
+    }
+
+    // Remove debuff anterior do mesmo tipo DO MONSTRO ALVO
+    currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(debuff => debuff.tipo !== "accuracy");
+
+    // Adiciona novo debuff AO MONSTRO ALVO
+    currentMonster.activeMonsterDebuffs.push({
             tipo: "accuracy",
             valor: debuffValue,
             turnos: debuffDuration,
             nome: magia.nome
         });
         
-        updateMonsterDebuffsDisplay();
+        // Atualiza a UI de TODOS os monstros
+    displayAllMonsterHealthBars();
         
         await addLogMessage(`${currentMonster.nome} está ofuscado! Sua precisão diminuiu em -${debuffValue} por ${debuffDuration} turnos.`, 800);
         window.arcanumIudicium.sucesso(); // ADICIONAR AQUI
@@ -1511,9 +1511,14 @@ async function usarMagia(magiaId, efeito, valor, custo) {
             endPlayerTurn();
             return;
         }
+
+        // Garante que o array de debuffs do monstro alvo exista
+    if (!currentMonster.activeMonsterDebuffs) {
+        currentMonster.activeMonsterDebuffs = [];
+    }
         
         // Adiciona debuff de atordoamento
-        activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "stun");
+        currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(debuff => debuff.tipo !== "stun");
         activeMonsterDebuffs.push({
             tipo: "stun",
             valor: 1,
@@ -1521,7 +1526,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
             nome: magia.nome
         });
         
-        updateMonsterDebuffsDisplay();
+        displayAllMonsterHealthBars();
         await addLogMessage(`${currentMonster.nome} está pasmado! Perderá o próximo turno.`, 800);
         
         // Salva estado e passa turno
@@ -1538,9 +1543,14 @@ async function usarMagia(magiaId, efeito, valor, custo) {
             endPlayerTurn();
             return;
         }
-        
-        // Adiciona debuff de sono no monstro
-        activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "sleep");
+
+        // Garante que o array de debuffs do monstro alvo exista
+    if (!currentMonster.activeMonsterDebuffs) {
+        currentMonster.activeMonsterDebuffs = [];
+    }
+
+    // Remove debuff anterior do mesmo tipo DO MONSTRO ALVO
+    currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(debuff => debuff.tipo !== "sleep");
         activeMonsterDebuffs.push({
             tipo: "sleep",
             valor: 1,
@@ -1558,7 +1568,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         });
 
         
-        updateMonsterDebuffsDisplay();
+        displayAllMonsterHealthBars();
         updateBuffsDisplay();
         await addLogMessage(`${currentMonster.nome} está dormindo! Perderá o próximo turno e seu próximo ataque corpo a corpo será crítico!`, 800);
         
@@ -1849,47 +1859,50 @@ function updateBuffsDisplay() {
     updatePlayerCouracaDisplay();
 }
 
-function updateMonsterDebuffsDisplay() {
-  const container = document.getElementById('monster-debuffs-container');
-  if (!container) return;
-  
-  container.innerHTML = '';
-  
-  activeMonsterDebuffs.forEach(debuff => {
-    const debuffElement = document.createElement('div');
-    debuffElement.className = 'debuff-item';
+/**
+* Limpa e popula o container de debuffs para um monstro específico.
+*/
+function renderMonsterDebuffs(monster) {
+    const debuffsId = `monster-debuffs-${monster.id}`;
+    const container = document.getElementById(debuffsId);
+    if (!container) return;
 
-    // constrói o texto do debuff de forma isolada
-    let label = '';
-    switch (debuff.tipo) {
-      case 'bleeding':
-      case 'poison':
-        label = `(-${debuff.valor} HP/turno)`;
-        break;
-      case 'accuracy':
-        label = `(-${debuff.valor} precisão)`;
-        break;
-      case 'amputation_legs':
-      case 'couraca':
-        label = `(-${debuff.valor} couraça)`;
-        break;
-      case 'amputation_arms':
-        label = '(-70% dano)';
-        break;
+    container.innerHTML = ''; // Limpa debuffs antigos
+
+    // Garante que o array de debuffs exista
+    if (!monster.activeMonsterDebuffs) {
+        monster.activeMonsterDebuffs = [];
     }
 
-    // aqui usamos UM template literal sem nenhuma barra invertida extra
-    debuffElement.innerHTML = `
-      <span>
-        ${debuff.nome} ${label}
-      </span>
-      <span class="debuff-turns">
-        ${debuff.turnos === 999 ? '∞' : debuff.turnos}
-      </span>
-    `;
-
-    container.appendChild(debuffElement);
-  });
+    monster.activeMonsterDebuffs.forEach(debuff => {
+        const debuffElement = document.createElement('div');
+        debuffElement.className = 'debuff-item';
+        let label = '';
+        switch (debuff.tipo) {
+            case 'bleeding':
+            case 'poison':
+                label = `(-${debuff.valor} HP/turno)`;
+                break;
+            case 'accuracy':
+                label = `(-${debuff.valor} precisão)`;
+                break;
+            case 'couraca':
+                label = `(-${debuff.valor} couraça)`;
+                break;
+            case 'amputation_arms':
+                label = '(-70% dano)';
+                break;
+        }
+        debuffElement.innerHTML = `
+          <span>
+            ${debuff.nome} ${label}
+          </span>
+          <span class="debuff-turns">
+            ${debuff.turnos === 999 ? '∞' : debuff.turnos}
+          </span>
+        `;
+        container.appendChild(debuffElement);
+    });
 }
 
 
@@ -3384,6 +3397,8 @@ if (window.touchDebuffContext) {
         await addLogMessage(`${currentMonster.nome} resistiu ao enfraquecimento!`, 800);
     } else {
         await addLogMessage(`${currentMonster.nome} foi enfraquecido! Seus ataques causarão menos dano.`, 800);
+
+        
         
         // Remove debuff anterior do mesmo tipo se existir
         activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "damage_reduction");
