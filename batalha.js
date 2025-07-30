@@ -33,7 +33,7 @@ const extraItems = [
     { id: "municao-12", content: "Munição de 12.", uuid: "extra-municao12", quantity: 5, projectile: true, description: "Projéteis letais calíbre 12." },
     { id: "Adaga", content: "Adaga", uuid: "extra-adaga", slot: "weapon", description: "Uma punhal afiado.", damage: "1D4" },
     { id: "granada-mao", content: "Granada de Mão", uuid: "extra-granada-mao", consumable: true, quantity: 3, effect: "explosion", damage: "3D8", description: "Explosivo portátil. Pode ser lançada para causar dano em área. Some do inventário ao acabar." },
-    { id: "granada-de-concussao", content: "Granada de Concussão", uuid: "extra-granada-de-concussao", consumable: true, quantity: 3, effect: "explosion", damage: "3D6", description: "Explosivo de concussão portátil. Pode ser lançada para causar dano em área." },
+    { id: "granada-de-concussao", content: "Granada de Concussão", uuid: "extra-granada-de-concussao", consumable: true, quantity: 3, effect: "stun", damage: "3D6", description: "Explosivo de concussão portátil. Pode ser lançada para causar dano em área." },
 
 ];
 
@@ -1112,7 +1112,7 @@ async function usarItem(itemId, effect, value) {
         document.getElementById("itens-modal").style.display = "none";
         startNewTurnBlock("Item");
 
-        // --- BLOCO DE LÓGICA ISOLADO PARA A GRANADA ---
+        // --- BLOCO DE LÓGICA ISOLADO PARA A GRANADA DE MAO ---
         if (itemId === "granada-mao") {
             const danoGranada = rollDice(item.damage || "3D8");
             if (currentMonster) {
@@ -1163,6 +1163,63 @@ async function usarItem(itemId, effect, value) {
 }
             return; // Impede a execução da lógica genérica abaixo
         }
+
+        // Na função usarItem()
+if (itemId === "granada-de-concussao") {
+  const dano = rollDice(item.damage || "3d6");
+  if (currentMonster) {
+    // 1) Aplica dano
+    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia - dano);
+    displayAllMonsterHealthBars();
+    await addLogMessage(
+      `Você arremessa uma granada de concussão! Ela explode e causa <b>${dano}</b> de dano ao ${currentMonster.nome}.`,
+      1000
+    );
+
+    // 2) Verifica se pode stun (exemplo: maxEnergy < 50)
+    if (currentMonster.pontosDeEnergiaMax < 50) {
+      // Garante array de debuffs
+      currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs || [];
+
+      // Remove stun pré-existente e aplica o novo
+      currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(d => d.tipo !== "stun");
+      currentMonster.activeMonsterDebuffs.push({
+        tipo:   "stun",
+        valor:  1,
+        turnos: 1,
+        nome:   item.content
+      });
+
+      displayAllMonsterHealthBars();
+      await addLogMessage(
+        `${currentMonster.nome} foi atordoado pela explosão e perderá o próximo turno!`,
+        800
+      );
+    } else {
+      await addLogMessage(
+        `Granada de Concussão não afeta ${currentMonster.nome} por possuir muita energia!`,
+        800
+      );
+    }
+  }
+
+  // 3) Consome granada
+  item.quantity--;
+  if (item.quantity <= 0) {
+    inventoryData.itemsInChest.splice(itemIndex, 1);
+  }
+  await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+  await saveBattleState(userId, battleId, playerHealth);
+
+  // 4) Finaliza turno ou prossegue
+  if (currentMonster.pontosDeEnergia <= 0) {
+    await addLogMessage(`<p style="color:green">${currentMonster.nome} foi derrotado!</p>`, 1000);
+    handlePostBattle(currentMonster);
+  } else {
+    endPlayerTurn();
+  }
+  return;
+}
 
         // --- LÓGICA GENÉRICA PARA OUTROS ITENS CONSUMÍVEIS ---
         let monsterDefeated = false;
