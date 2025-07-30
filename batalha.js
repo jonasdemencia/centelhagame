@@ -102,45 +102,6 @@ function displayAllMonsterHealthBars() {
 }
 
 
-function renderMonsterDebuffs(monster) {
-    const debuffsId = `monster-debuffs-${monster.id}`;
-    const container = document.getElementById(debuffsId);
-    if (!container) return;
-    container.innerHTML = '';
-    (monster.activeMonsterDebuffs || []).forEach(debuff => {
-        const debuffElement = document.createElement('div');
-        debuffElement.className = 'debuff-item';
-        let label = '';
-        switch (debuff.tipo) {
-            case 'bleeding':
-            case 'poison':
-                label = `(-${debuff.valor} HP/turno)`;
-                break;
-            case 'accuracy':
-                label = `(-${debuff.valor} precisão)`;
-                break;
-            case 'amputation_legs':
-            case 'couraca':
-                label = `(-${debuff.valor} couraça)`;
-                break;
-            case 'amputation_arms':
-                label = '(-70% dano)';
-                break;
-        }
-        debuffElement.innerHTML = `
-          <span>
-            ${debuff.nome} ${label}
-          </span>
-          <span class="debuff-turns">
-            ${debuff.turnos === 999 ? '∞' : debuff.turnos}
-          </span>
-        `;
-        container.appendChild(debuffElement);
-    });
-}
-
-
-
 // Sistema Arcanum Iudicium
 window.arcanumIudicium = {
     sucessos: 0,
