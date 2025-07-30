@@ -2480,7 +2480,7 @@ let atosDoJogador = [
   {
   id: "punhalada-venenosa",
   nome: "Punhalada Venenosa",
-  descricao: "Ataque com lâmina embebida em veneno. Se acertar com uma Adaga, causa 1d6 de dano extra e o inimigo sofre -1 de dano por 6 turnos."
+  descricao: "Ataque com lâmina embebida em veneno. Se acertar com uma Adaga, causa o dano normal da arma e aplica um veneno que causa 2 de dano por 5 turnos."
 },
     {
     id: "levesa-afiada",
@@ -3599,22 +3599,28 @@ if (window.isBackstabAttack) {
 // --- FIM: Dano extra de Backstab com dois cliques ---
             
 
-            // --- INÍCIO: Lógica CORRIGIDA da Punhalada Venenosa ---
+           // --- INÍCIO: Lógica CORRIGIDA da Punhalada Venenosa ---
 if (window.isPunhaladaVenenosaAttack) {
-    const extraPoisonDamage = rollDice("1d6");
-    totalDamage += extraPoisonDamage;
-    await addLogMessage(`<span style="color:green;">Dano extra de veneno: ${extraPoisonDamage} (1d6).</span>`, 800);
+    // Não causa dano extra, apenas aplica o debuff de veneno.
+    await addLogMessage(`<span style="color:green;">A lâmina aplica um veneno potente!</span>`, 800);
 
-    // Aplica o debuff de redução de dano no alvo
-    if (!currentMonster.activeMonsterDebuffs) currentMonster.activeMonsterDebuffs = [];
+    // Garante que o array de debuffs do monstro alvo exista
+    if (!currentMonster.activeMonsterDebuffs) {
+        currentMonster.activeMonsterDebuffs = [];
+    }
+
+    // Remove qualquer veneno anterior para não acumular (opcional, mas bom)
+    currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(debuff => debuff.tipo !== 'poison');
+
+    // Aplica o debuff de veneno no alvo
     currentMonster.activeMonsterDebuffs.push({
-        tipo: "damage_reduction",
-        valor: 1, // O inimigo causa -1 de dano
-        turnos: 6,
-        nome: "Veneno (Punhalada)"
+        tipo: "poison", // Debuff de dano por turno
+        valor: 2,      // 2 de dano
+        turnos: 5,     // por 5 turnos
+        nome: "Punhalada Venenosa"
     });
-    displayAllMonsterHealthBars(); // Atualiza a UI para mostrar o novo debuff
 
+    displayAllMonsterHealthBars(); // Atualiza a UI para mostrar o novo debuff
     window.isPunhaladaVenenosaAttack = false; // Limpa a flag para o próximo ataque
 }
 // --- FIM: Lógica CORRIGIDA da Punhalada Venenosa ---
