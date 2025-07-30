@@ -2021,29 +2021,31 @@ async function verificarFugaAnimais() {
 
 // Função para processar debuffs do monstro no início do seu turno
 function processMonsterDebuffs() {
-    if (activeMonsterDebuffs.length === 0) return Promise.resolve();
-    
-    // Reduz duração de todos os debuffs
-    activeMonsterDebuffs.forEach(debuff => debuff.turnos--);
-    
-    // Remove debuffs expirados e mostra mensagem
-    const expiredDebuffs = activeMonsterDebuffs.filter(debuff => debuff.turnos <= 0);
-    activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.turnos > 0);
-    
-    // Atualiza display
-    updateMonsterDebuffsDisplay();
-    
+    // Garante que estamos processando o monstro correto do turno
+    const monster = currentMonster; 
+    if (!monster || !monster.activeMonsterDebuffs || monster.activeMonsterDebuffs.length === 0) {
+        return Promise.resolve();
+    }
+
+    // Reduz a duração dos debuffs APENAS do monstro atual
+    monster.activeMonsterDebuffs.forEach(debuff => debuff.turnos--);
+
+    const expiredDebuffs = monster.activeMonsterDebuffs.filter(debuff => debuff.turnos <= 0);
+    monster.activeMonsterDebuffs = monster.activeMonsterDebuffs.filter(debuff => debuff.turnos > 0);
+
+    // Redesenha TUDO para garantir que a UI reflita a remoção
+    displayAllMonsterHealthBars();
+
     // Processa mensagens de debuffs expirados sequencialmente
     return expiredDebuffs.reduce((promise, debuff) => {
         return promise.then(() => {
             if (typeof addLogMessage === 'function') {
-                return addLogMessage(`${debuff.nome} se dissipou do ${currentMonster.nome}.`, 800);
+                return addLogMessage(`${debuff.nome} se dissipou do ${monster.nome}.`, 800);
             }
             return Promise.resolve();
         });
     }, Promise.resolve());
 }
-
 
 
 // Função para atualizar a energia do jogador na ficha do Firestore
