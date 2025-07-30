@@ -3715,36 +3715,44 @@ if (window.punhaladaVenenosaExtraDano) {
         }
 
 
-        // Verifica derrota e passa o turno
-        if (currentMonster.pontosDeEnergia <= 0) {
+        // Verifica derrota e o estado da batalha
+if (currentMonster.pontosDeEnergia <= 0) {
     console.log(`LOG: Monstro derrotado após ${isSiferDamage ? 'SIFER' : 'Dano Normal'}!`);
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
     isPlayerTurn = false; // Garante que o turno não continue
-    
-    // Chama handlePostBattle passando o monstro atual
-    if (typeof handlePostBattle === 'function') {
-        handlePostBattle(currentMonster);
+
+    // **INÍCIO DA LÓGICA CORRIGIDA**
+    // Verifica se AINDA existem monstros vivos
+    const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+
+    if (monstersAlive.length === 0) {
+        // TODOS FORAM DERROTADOS! Fim da batalha.
+        console.log("LOG: Todos os monstros foram derrotados!");
+        handlePostBattle(currentMonster); // Chama a função de pós-batalha
     } else {
-        console.error("Função handlePostBattle não definida.");
-        // Fallback simples
-        const lootBtn = document.getElementById('loot-button');
-        const mapBtn = document.getElementById('back-to-map-button');
-        if (lootBtn && currentMonster.drops?.length > 0) lootBtn.style.display = 'block';
-        if (mapBtn) mapBtn.style.display = 'block';
-        if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
-            }
-        } else {
-            // Passa o turno para o monstro
-            console.log(`LOG: Monstro sobreviveu ao ${isSiferDamage ? 'SIFER' : 'Dano Normal'}. Passando turno.`);
-            // Usa a função endPlayerTurn para padronizar o fim do turno
-            if (typeof endPlayerTurn === 'function') {
-                endPlayerTurn();
-            } else {
-                 console.error(`LOG: Função endPlayerTurn não encontrada!`);
-                 isPlayerTurn = false;
-                 setTimeout(() => monsterAttack(), 1500); // Fallback
-            }
-        }
+        // Ainda há monstros. Define o próximo como alvo e continua a batalha.
+        window.currentMonster = monstersAlive[0];
+        currentMonster = window.currentMonster;
+        await addLogMessage(`Próximo alvo: ${currentMonster.nome}.`, 800);
+        
+        // Atualiza a UI e passa o turno para o monstro
+        updateMonsterInfoUI();
+        displayAllMonsterHealthBars();
+        endPlayerTurn();
+    }
+    // **FIM DA LÓGICA CORRIGIDA**
+
+} else {
+    // O monstro sobreviveu, apenas passa o turno para o inimigo.
+    console.log(`LOG: Monstro sobreviveu ao ${isSiferDamage ? 'SIFER' : 'Dano Normal'}. Passando turno.`);
+    if (typeof endPlayerTurn === 'function') {
+        endPlayerTurn();
+    } else {
+         console.error(`LOG: Função endPlayerTurn não encontrada!`);
+         isPlayerTurn = false;
+         setTimeout(() => monsterAttack(), 1500);
+    }
+}
         // --- Fim da Aplicação do Dano ---
     });
     // --- FIM: NOVO CÓDIGO PARA O LISTENER 'rolar-dano' ---
