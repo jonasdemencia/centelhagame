@@ -60,45 +60,108 @@ function updateMonsterInfoUI() {
     updateMonsterDebuffsDisplay();
 }
 
-function displayAllMonsterHealthBars() {
-    const container = document.getElementById('monster-bars-container');
+
+function renderMonsterDebuffs(monster) {
+    const debuffsId = `monster-debuffs-${monster.id}`;
+    const container = document.getElementById(debuffsId);
     if (!container) return;
     container.innerHTML = '';
-
-    window.currentMonsters.forEach(monster => {
-        const isTarget = (window.currentMonster && window.currentMonster.id === monster.id);
-        const monsterDiv = document.createElement('div');
-        monsterDiv.className = 'monster-bar-item' + (isTarget ? ' target' : '');
-        monsterDiv.style.cursor = 'pointer';
-
-        const barraId = `barra-hp-monstro-${monster.id}`;
-        const valorId = `hp-monstro-${monster.id}-valor`;
-
-        monsterDiv.innerHTML = `
-            <div style="display: flex; justify-content: space-between; font-size: 0.9em;">
-                <span>${monster.nome} ${isTarget ? '🎯' : ''}</span>
-            </div>
-            <div class="barra-hp-container" style="position: relative;">
-                <div id="${barraId}" class="barra-hp"></div>
-                <span id="${valorId}" class="hp-valor"></span>
-            </div>
+    (monster.activeMonsterDebuffs || []).forEach(debuff => {
+        const debuffElement = document.createElement('div');
+        debuffElement.className = 'debuff-item';
+        let label = '';
+        switch (debuff.tipo) {
+            case 'bleeding':
+            case 'poison':
+                label = `(-${debuff.valor} HP/turno)`;
+                break;
+            case 'accuracy':
+                label = `(-${debuff.valor} precisão)`;
+                break;
+            case 'amputation_legs':
+            case 'couraca':
+                label = `(-${debuff.valor} couraça)`;
+                break;
+            case 'amputation_arms':
+                label = '(-70% dano)';
+                break;
+        }
+        debuffElement.innerHTML = `
+          <span>
+            ${debuff.nome} ${label}
+          </span>
+          <span class="debuff-turns">
+            ${debuff.turnos === 999 ? '∞' : debuff.turnos}
+          </span>
         `;
-
-        monsterDiv.addEventListener('click', () => {
-            if (monster.pontosDeEnergia > 0) {
-                window.currentMonster = monster;
-                currentMonster = monster;
-                updateMonsterInfoUI();
-                displayAllMonsterHealthBars();
-            }
-        });
-
-        container.appendChild(monsterDiv);
-
-        // Atualiza a barra de HP do monstro usando a mesma função do jogador
-        atualizarBarraHP(barraId, monster.pontosDeEnergia, monster.pontosDeEnergiaMax);
+        container.appendChild(debuffElement);
     });
 }
+
+
+function displayAllMonsterHealthBars() {
+  const container = document.getElementById('monster-bars-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  window.currentMonsters.forEach(monster => {
+    const isTarget = (window.currentMonster && window.currentMonster.id === monster.id);
+    const monsterDiv = document.createElement('div');
+    monsterDiv.className = 'monster-bar-item' + (isTarget ? ' target' : '');
+    monsterDiv.style.cursor = 'pointer';
+
+    const barraId   = `barra-hp-monstro-${monster.id}`;
+    const valorId   = `hp-monstro-${monster.id}-valor`;
+    const debuffsId = `monster-debuffs-${monster.id}`;
+
+    monsterDiv.innerHTML = `
+      <div style="display: flex; justify-content: space-between; font-size: 0.9em;">
+        <span>${monster.nome} ${isTarget ? '🎯' : ''}</span>
+      </div>
+      <div class="barra-hp-container" style="position: relative;">
+        <div id="${barraId}" class="barra-hp"></div>
+        <span id="${valorId}" class="hp-valor"></span>
+      </div>
+      <div id="${debuffsId}" class="debuffs-container"></div>
+    `;
+
+    monsterDiv.addEventListener('click', () => {
+      if (monster.pontosDeEnergia > 0) {
+        window.currentMonster = monster;
+        updateMonsterInfoUI();
+        displayAllMonsterHealthBars();
+      }
+    });
+
+    container.appendChild(monsterDiv);
+
+    // 1) atualiza a barra de HP
+    atualizarBarraHP(barraId, monster.pontosDeEnergia, monster.pontosDeEnergiaMax);
+
+    // 2) renderiza os debuffs deste monstro
+    renderMonsterDebuffs(monster);
+  });
+}
+
+/**
+ * Limpa e popula o container de debuffs para um monstro específico.
+ */
+function renderMonsterDebuffs(monster) {
+  const debuffsContainer = document.getElementById(`monster-debuffs-${monster.id}`);
+  if (!debuffsContainer) return;
+
+  // Limpa antes de redesenhar
+  debuffsContainer.innerHTML = '';
+
+  // Para cada debuff ativo, cria e anexa um elemento
+  (monster.activeMonsterDebuffs || []).forEach(debuff => {
+    const div = document.createElement('div');
+    div.className = 'debuff-item';
+    div.textContent = `${debuff.nome} (${debuff.turnos} turnos)`;
+    debuffsContainer.appendChild(div);
+  });
+}
+
 
 // Sistema Arcanum Iudicium
 window.arcanumIudicium = {
