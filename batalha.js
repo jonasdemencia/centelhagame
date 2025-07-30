@@ -1480,7 +1480,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         
         // Adiciona debuff de atordoamento
         currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(debuff => debuff.tipo !== "stun");
-        activeMonsterDebuffs.push({
+        currentMonster.activeMonsterDebuffs.push({ // <--- CORRETO
             tipo: "stun",
             valor: 1,
             turnos: 1,
@@ -1512,7 +1512,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
 
     // Remove debuff anterior do mesmo tipo DO MONSTRO ALVO
     currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(debuff => debuff.tipo !== "sleep");
-        activeMonsterDebuffs.push({
+        currentMonster.activeMonsterDebuffs.push({ // <--- CORRETO
             tipo: "sleep",
             valor: 1,
             turnos: 1,
@@ -2567,28 +2567,22 @@ if (atoClasseButton) {
               1000
             );
 
-            // Remove debuffs anteriores do mesmo tipo
-            activeMonsterDebuffs = activeMonsterDebuffs.filter(
-              debuff => debuff.nome !== "Truque Sujo"
-            );
-
-            // Aplica debuff de precisão
-            activeMonsterDebuffs.push({
-              tipo:   "accuracy",
-              valor:  3,
-              turnos: 2,
-              nome:   "Truque Sujo"
-            });
-
-            // Aplica debuff de couraça
-            activeMonsterDebuffs.push({
-              tipo:   "couraca",
-              valor:  3,
-              turnos: 2,
-              nome:   "Truque Sujo"
-            });
-
-            updateMonsterDebuffsDisplay();
+           // Aplica debuffs ao monstro ALVO
+if (!currentMonster.activeMonsterDebuffs) currentMonster.activeMonsterDebuffs = [];
+currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(debuff => debuff.nome !== "Truque Sujo");
+currentMonster.activeMonsterDebuffs.push({
+  tipo:   "accuracy",
+  valor:  3,
+  turnos: 2,
+  nome:   "Truque Sujo"
+});
+currentMonster.activeMonsterDebuffs.push({
+  tipo:   "couraca",
+  valor:  3,
+  turnos: 2,
+  nome:   "Truque Sujo"
+});
+displayAllMonsterHealthBars(); // <--- CORRETO
             endPlayerTurn();
             return;
           }
@@ -2703,28 +2697,22 @@ else if (ato.id === "ocultar-se") {
               1000
             );
 
-            // Remove debuffs anteriores do mesmo nome
-            activeMonsterDebuffs = activeMonsterDebuffs.filter(
-              debuff => debuff.nome !== "Riso Escarnecedor"
-            );
-
-            // Aplica debuff de precisão
-            activeMonsterDebuffs.push({
-              tipo:   "accuracy",
-              valor:  1,
-              turnos: 6,
-              nome:   "Riso Escarnecedor"
-            });
-
-            // Aplica debuff de couraça
-            activeMonsterDebuffs.push({
-              tipo:   "couraca",
-              valor:  1,
-              turnos: 6,
-              nome:   "Riso Escarnecedor"
-            });
-
-            updateMonsterDebuffsDisplay();
+           // Aplica debuffs ao monstro ALVO
+if (!currentMonster.activeMonsterDebuffs) currentMonster.activeMonsterDebuffs = [];
+currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(debuff => debuff.nome !== "Riso Escarnecedor");
+currentMonster.activeMonsterDebuffs.push({
+  tipo:   "accuracy",
+  valor:  1,
+  turnos: 6,
+  nome:   "Riso Escarnecedor"
+});
+currentMonster.activeMonsterDebuffs.push({
+  tipo:   "couraca",
+  valor:  1,
+  turnos: 6,
+  nome:   "Riso Escarnecedor"
+});
+displayAllMonsterHealthBars(); // <--- CORRETO
             endPlayerTurn();
             return;
           }
@@ -3496,14 +3484,14 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll >= 11 && 
         const danoPerTurno = Math.max(1, Math.ceil(currentMonster.pontosDeEnergiaMax * 0.01));
         
         // Adiciona debuff de evisceração
-        activeMonsterDebuffs.push({
+        currentMonster.activeMonsterDebuffs.push({
             tipo: "bleeding",
             valor: danoPerTurno,
             turnos: 999, // Permanente até morrer
             nome: "Evisceração"
         });
         
-        updateMonsterDebuffsDisplay();
+        displayAllMonsterHealthBars();
         await addLogMessage(`<strong style="color: darkred;">EVISCERAÇÃO!</strong> Você abre totalmente o abdômen de ${currentMonster.nome} e ele sangrará ${danoPerTurno} Energia por turno!`, 1200);
     }
 }
@@ -3518,14 +3506,14 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 18) {
         activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "accuracy");
         
         // Adiciona debuff de enucleação
-        activeMonsterDebuffs.push({
+        currentMonster.activeMonsterDebuffs.push({
             tipo: "accuracy",
             valor: 10,
             turnos: 999, // Permanente até morrer
             nome: "Enucleação"
         });
         
-        updateMonsterDebuffsDisplay();
+        displayAllMonsterHealthBars();
         await addLogMessage(`<strong style="color: darkred;">ENUCLEAÇÃO!</strong> Você arranca os olhos de ${currentMonster.nome}!`, 1200);
     }
 }
@@ -3538,13 +3526,13 @@ if (energiaApos < limiar10Porcento) {
     if (locationRoll >= 1 && locationRoll <= 5) {
         const jaTemPernas = activeMonsterDebuffs.find(debuff => debuff.tipo === "amputation_legs");
         if (!jaTemPernas) {
-            activeMonsterDebuffs.push({
+            currentMonster.activeMonsterDebuffs.push({
                 tipo: "amputation_legs",
                 valor: Math.floor(currentMonster.couraça / 2),
                 turnos: 999,
                 nome: "Amputação (Pernas)"
             });
-            updateMonsterDebuffsDisplay();
+            displayAllMonsterHealthBars();
             await addLogMessage(`<strong style="color: darkred;">AMPUTAÇÃO!</strong> Você amputa o ${currentMonster.nome}! Ele se arrasta vulnerável.`, 1200);
         }
     }
@@ -3553,13 +3541,13 @@ if (energiaApos < limiar10Porcento) {
     if (locationRoll >= 7 && locationRoll <= 10) {
         const jaTemBracos = activeMonsterDebuffs.find(debuff => debuff.tipo === "amputation_arms");
         if (!jaTemBracos) {
-            activeMonsterDebuffs.push({
+            currentMonster.activeMonsterDebuffs.push({
                 tipo: "amputation_arms",
                 valor: 70, // 70% de redução (30% restante)
                 turnos: 999,
                 nome: "Amputação (Braços)"
             });
-            updateMonsterDebuffsDisplay();
+            displayAllMonsterHealthBars();
             await addLogMessage(`<strong style="color: darkred;">AMPUTAÇÃO!</strong> Você amputa o ${currentMonster.nome}! Seus ataques ficam fracos.`, 1200);
         }
     }
@@ -3580,7 +3568,7 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 6) {
         await addLogMessage(`<strong style="color: darkred;">HEMORRAGIA INTERNA!</strong> Você perfura órgãos vitais pelas costas de ${currentMonster.nome}! Sangramento aumenta para ${sangramentoExistente.valor} energia/turno!`, 1200);
     } else {
         // Adiciona novo debuff de hemorragia
-        activeMonsterDebuffs.push({
+        currentMonster.activeMonsterDebuffs.push({
             tipo: "bleeding",
             valor: danoPerTurno,
             turnos: 999,
@@ -3589,7 +3577,7 @@ if (energiaApos < limiar10Porcento && window.siferContext.locationRoll === 6) {
         await addLogMessage(`<strong style="color: darkred;">HEMORRAGIA INTERNA!</strong> Você perfura órgãos vitais pelas costas de ${currentMonster.nome}! Ele sangrará ${danoPerTurno} energia por turno!`, 1200);
     }
     
-    updateMonsterDebuffsDisplay();
+    displayAllMonsterHealthBars();
 }
 
 
