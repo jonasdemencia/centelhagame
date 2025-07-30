@@ -497,8 +497,7 @@ ${originalItemData.description || 'Descrição do item.'}
         updateCharacterDamage();
     }
 } else if (selectedItem === null && currentEquippedItem && currentEquippedItem !== slot.dataset.slot) {
-    
-            // Desequipar: remove do slot e adiciona ao inventário
+    // Desequipar: remove do slot e adiciona ao inventário
     console.log("Desequipando item:", currentEquippedItem, "do slot:", slotType);
 
     // Limpa o slot visualmente
@@ -511,9 +510,11 @@ ${originalItemData.description || 'Descrição do item.'}
     // Busca o objeto do item original
     const allItemsArr = [...initialItems, ...extraItems];
     let itemName = currentEquippedItem.trim();
-// Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (6/6)" -> "Revolver 38")
-itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
-const originalItemData = allItemsArr.find(item => item.content === itemName);
+
+    // Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (6/6)" -> "Revolver 38")
+    itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
+
+    const originalItemData = allItemsArr.find(item => item.content === itemName);
 
     if (!originalItemData) {
         console.warn("Item original não encontrado para desequipar:", currentEquippedItem);
