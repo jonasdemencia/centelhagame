@@ -380,7 +380,6 @@ const stunDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "stun");
 if (stunDebuff) {
     await addLogMessage(`${currentMonster.nome} está pasmado e perde o turno!`, 1000);
     await processMonsterDebuffs(); // Remove o stun
-    endMonsterTurn();
     return;
 }
 
@@ -389,7 +388,6 @@ const sleepDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "sleep")
 if (sleepDebuff) {
     await addLogMessage(`${currentMonster.nome} está dormindo e perde o turno!`, 1000);
     await processMonsterDebuffs(); // Remove o sono
-    endMonsterTurn();
     return;
 }
 
