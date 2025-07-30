@@ -1311,27 +1311,28 @@ document.addEventListener("DOMContentLoaded", () => {
       await loadInventoryData(user.uid);
 
       // ── AQUI: configurar exibição do botão "carregar munição" ──
-      const carregarBtn = document.getElementById("carregar-municao-btn");
-      const playerRef   = doc(db, "players", user.uid);
+const carregarBtn = document.getElementById("carregar-municao-btn");
+const playerRef = doc(db, "players", user.uid);
+getDoc(playerRef).then(playerSnap => {
+    if (!playerSnap.exists()) {
+        carregarBtn.style.display = "none";
+        return;
+    }
+    const inventoryData = playerSnap.data().inventory;
+    let equippedWeaponName = inventoryData.equippedItems.weapon; // Alterado para let
+    if (!equippedWeaponName) {
+        carregarBtn.style.display = "none";
+        return;
+    }
 
-      getDoc(playerRef).then(playerSnap => {
-        if (!playerSnap.exists()) {
-          carregarBtn.style.display = "none";
-          return;
-        }
+    // Remove o sufixo de munição para encontrar o item base
+    equippedWeaponName = equippedWeaponName.replace(/\s*\(\d+\/\d+\)$/, "");
 
-        const inventoryData        = playerSnap.data().inventory;
-        const equippedWeaponName   = inventoryData.equippedItems.weapon;
-        if (!equippedWeaponName) {
-          carregarBtn.style.display = "none";
-          return;
-        }
-
-        // encontra no catálogo o tipo de munição dessa arma
-        const allItemsArr = [...initialItems, ...extraItems];
-        const weaponData  = allItemsArr.find(item =>
-          item.content === equippedWeaponName && item.ammoType
-        );
+    // encontra no catálogo o tipo de munição dessa arma
+    const allItemsArr = [...initialItems, ...extraItems];
+    const weaponData = allItemsArr.find(item =>
+        item.content === equippedWeaponName && item.ammoType
+    );
 
         if (!weaponData) {
           carregarBtn.style.display = "none";
