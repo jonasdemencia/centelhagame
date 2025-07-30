@@ -63,40 +63,40 @@ function updateMonsterInfoUI() {
 function displayAllMonsterHealthBars() {
     const container = document.getElementById('monster-bars-container');
     if (!container) return;
-
-    container.innerHTML = ''; // Limpa as barras antigas para redesenhar
+    container.innerHTML = '';
 
     window.currentMonsters.forEach(monster => {
         const isTarget = (window.currentMonster && window.currentMonster.id === monster.id);
         const monsterDiv = document.createElement('div');
-        monsterDiv.className = 'monster-bar-item' + (isTarget ? ' target' : ''); // Usa as classes CSS que adicionamos
+        monsterDiv.className = 'monster-bar-item' + (isTarget ? ' target' : '');
         monsterDiv.style.cursor = 'pointer';
 
-        const healthPercentage = (monster.pontosDeEnergia / monster.pontosDeEnergiaMax) * 100;
-        const healthBarColor = monster.pontosDeEnergia <= 0 ? '#444' : '#b30000'; // Cinza se morto, vermelho se vivo
+        const barraId = `barra-hp-monstro-${monster.id}`;
+        const valorId = `hp-monstro-${monster.id}-valor`;
 
         monsterDiv.innerHTML = `
             <div style="display: flex; justify-content: space-between; font-size: 0.9em;">
                 <span>${monster.nome} ${isTarget ? '🎯' : ''}</span>
-                <span>${monster.pontosDeEnergia} / ${monster.pontosDeEnergiaMax}</span>
             </div>
-            <div class="health-bar-background">
-                <div class="health-bar" style="width: ${healthPercentage}%; background-color: ${healthBarColor};"></div>
+            <div class="barra-hp-container" style="position: relative;">
+                <div id="${barraId}" class="barra-hp"></div>
+                <span id="${valorId}" class="hp-valor"></span>
             </div>
         `;
 
-        // Adiciona o evento de clique para mudar de alvo
         monsterDiv.addEventListener('click', () => {
             if (monster.pontosDeEnergia > 0) {
                 window.currentMonster = monster;
                 currentMonster = monster;
-                console.log("Novo alvo selecionado:", monster.nome);
-                updateMonsterInfoUI(); // Atualiza a imagem/descrição principal
-                displayAllMonsterHealthBars(); // Re-renderiza para mostrar o novo alvo destacado
+                updateMonsterInfoUI();
+                displayAllMonsterHealthBars();
             }
         });
 
         container.appendChild(monsterDiv);
+
+        // Atualiza a barra de HP do monstro usando a mesma função do jogador
+        atualizarBarraHP(barraId, monster.pontosDeEnergia, monster.pontosDeEnergiaMax);
     });
 }
 
