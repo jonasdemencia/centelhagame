@@ -4059,7 +4059,7 @@ async function setupArcanumConjurationModal(magiaId) {
         modal.querySelector('#conjuration-timer').textContent = `${elapsed}s`;
     });
 
-    modal.querySelector('#conjure-spell').onclick = () => {
+    modal.querySelector('#conjure-spell').onclick = async () => {
         typingEnd = performance.now();
         const inputWord = input.value.trim().toUpperCase();
         const totalTime = ((typingEnd > typingStart ? typingEnd : performance.now()) - typingStart) / 1000;
