@@ -2791,10 +2791,10 @@ if (fecharPainelAtos) {
 window.currentMonsters = [];
 monsterNames.forEach((name, index) => {
     const monsterData = getMonsterById(name.trim());
+    console.log("Carregando monstro:", name.trim(), monsterData); // <-- AQUI!
     if (monsterData) {
-        // Cria uma cópia "profunda" para que cada monstro seja uma instância única
         const monsterInstance = JSON.parse(JSON.stringify(monsterData));
-        monsterInstance.id = `${monsterData.id}_${index}`; // ID único para cada instância
+        monsterInstance.id = `${monsterData.id || name.trim()}_${index}`; // Garante ID único
         monsterInstance.pontosDeEnergiaMax = monsterInstance.pontosDeEnergia;
         window.currentMonsters.push(monsterInstance);
     }
