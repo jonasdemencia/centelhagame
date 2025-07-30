@@ -3599,15 +3599,25 @@ if (window.isBackstabAttack) {
 // --- FIM: Dano extra de Backstab com dois cliques ---
             
 
-            // --- INÍCIO: Soma do dano extra da Punhalada Venenosa ---
-if (window.punhaladaVenenosaExtraDano) {
-  totalDamage += window.punhaladaVenenosaExtraDano;
-  await addLogMessage(
-    `<span style="color:green;">Dano extra de veneno aplicado: ${window.punhaladaVenenosaExtraDano}.</span>`,
-    800
-  );
-  window.punhaladaVenenosaExtraDano = null;
+            // --- INÍCIO: Lógica CORRIGIDA da Punhalada Venenosa ---
+if (window.isPunhaladaVenenosaAttack) {
+    const extraPoisonDamage = rollDice("1d6");
+    totalDamage += extraPoisonDamage;
+    await addLogMessage(`<span style="color:green;">Dano extra de veneno: ${extraPoisonDamage} (1d6).</span>`, 800);
+
+    // Aplica o debuff de redução de dano no alvo
+    if (!currentMonster.activeMonsterDebuffs) currentMonster.activeMonsterDebuffs = [];
+    currentMonster.activeMonsterDebuffs.push({
+        tipo: "damage_reduction",
+        valor: 1, // O inimigo causa -1 de dano
+        turnos: 6,
+        nome: "Veneno (Punhalada)"
+    });
+    displayAllMonsterHealthBars(); // Atualiza a UI para mostrar o novo debuff
+
+    window.isPunhaladaVenenosaAttack = false; // Limpa a flag para o próximo ataque
 }
+// --- FIM: Lógica CORRIGIDA da Punhalada Venenosa ---
 
              console.log("LOG: Botão 'DANO' - Dano normal rolado:", totalDamage);
              await addLogMessage(`Você rolou ${totalDamage} de dano (${playerDamageDice})!`, 1000);
@@ -4077,17 +4087,31 @@ async function setupArcanumConjurationModal(magiaId) {
                     for (let i = 0; i < result.level; i++) {
                         totalDamage += rollDice('1d4') + 1;
                     }
-                    if (currentMonster) {
-                        currentMonster.pontosDeEnergia -= totalDamage;
-                        displayAllMonsterHealthBars();
-                        addLogMessage(`Dardos Místicos causaram <b>${totalDamage}</b> de dano!`, 1000);
-                        if (currentMonster.pontosDeEnergia <= 0) {
-                            addLogMessage(`<span style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</span>`, 1000);
-                            handlePostBattle(currentMonster);
-                            return;
-                        }
-                    }
-                    break;
+                   if (currentMonster) {
+    currentMonster.pontosDeEnergia -= totalDamage;
+    displayAllMonsterHealthBars();
+    await addLogMessage(`Dardos Místicos causaram <b>${totalDamage}</b> de dano!`, 1000);
+
+    if (currentMonster.pontosDeEnergia <= 0) {
+        await addLogMessage(`<span style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</span>`, 1000);
+        
+        // **INÍCIO DA LÓGICA CORRIGIDA**
+        const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+        if (monstersAlive.length === 0) {
+            console.log("LOG: Todos os monstros foram derrotados por mísseis mágicos!");
+            handlePostBattle(currentMonster);
+            return; // Encerra a função aqui
+        } else {
+            window.currentMonster = monstersAlive[0];
+            currentMonster = window.currentMonster;
+            await addLogMessage(`Próximo alvo: ${currentMonster.nome}.`, 800);
+            updateMonsterInfoUI();
+            displayAllMonsterHealthBars();
+        }
+        // **FIM DA LÓGICA CORRIGIDA**
+    }
+}
+break;
                     
                 case 'toque-chocante':
                     msg = `<span style="color:lime;">Conjuração bem-sucedida! <b>${result.level} toque(s)</b> canalizados! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
