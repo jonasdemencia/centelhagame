@@ -551,19 +551,17 @@ if (user) {
     }
 
     // Telegrafação após o ataque (se não foi um ataque telegrafado)
-    if (!nextTelegraphedAttack && currentMonster.ataques) {
-        const nextAttack = chooseMonsterAttack(currentMonster);
-        if (nextAttack.telegrafado) {
-            nextTelegraphedAttack = nextAttack;
-            await addLogMessage(`<em style="color: yellow;">${nextAttack.mensagemTelegraf}</em>`, 1200);
+        if (!nextTelegraphedAttack && currentMonster.ataques) {
+            const nextAttack = chooseMonsterAttack(currentMonster);
+            if (nextAttack.telegrafado) {
+                nextTelegraphedAttack = nextAttack;
+                await addLogMessage(`<em style="color: yellow;">${nextAttack.mensagemTelegraf}</em>`, 1200);
+            }
         }
-    }
 
-    // Continua o jogo se o jogador não estiver morto
-    //if (playerHealth > -10) {
-        endMonsterTurn();
-   // }
-}
+        // A função monsterAttack agora termina aqui, sem passar o turno.
+        // A função monstersTurn() cuidará de passar o turno após o loop.
+    }
 
 
 
