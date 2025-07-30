@@ -61,44 +61,6 @@ function updateMonsterInfoUI() {
 }
 
 
-function renderMonsterDebuffs(monster) {
-    const debuffsId = `monster-debuffs-${monster.id}`;
-    const container = document.getElementById(debuffsId);
-    if (!container) return;
-    container.innerHTML = '';
-    (monster.activeMonsterDebuffs || []).forEach(debuff => {
-        const debuffElement = document.createElement('div');
-        debuffElement.className = 'debuff-item';
-        let label = '';
-        switch (debuff.tipo) {
-            case 'bleeding':
-            case 'poison':
-                label = `(-${debuff.valor} HP/turno)`;
-                break;
-            case 'accuracy':
-                label = `(-${debuff.valor} precisão)`;
-                break;
-            case 'amputation_legs':
-            case 'couraca':
-                label = `(-${debuff.valor} couraça)`;
-                break;
-            case 'amputation_arms':
-                label = '(-70% dano)';
-                break;
-        }
-        debuffElement.innerHTML = `
-          <span>
-            ${debuff.nome} ${label}
-          </span>
-          <span class="debuff-turns">
-            ${debuff.turnos === 999 ? '∞' : debuff.turnos}
-          </span>
-        `;
-        container.appendChild(debuffElement);
-    });
-}
-
-
 function displayAllMonsterHealthBars() {
   const container = document.getElementById('monster-bars-container');
   if (!container) return;
@@ -147,20 +109,42 @@ function displayAllMonsterHealthBars() {
  * Limpa e popula o container de debuffs para um monstro específico.
  */
 function renderMonsterDebuffs(monster) {
-  const debuffsContainer = document.getElementById(`monster-debuffs-${monster.id}`);
-  if (!debuffsContainer) return;
-
-  // Limpa antes de redesenhar
-  debuffsContainer.innerHTML = '';
-
-  // Para cada debuff ativo, cria e anexa um elemento
-  (monster.activeMonsterDebuffs || []).forEach(debuff => {
-    const div = document.createElement('div');
-    div.className = 'debuff-item';
-    div.textContent = `${debuff.nome} (${debuff.turnos} turnos)`;
-    debuffsContainer.appendChild(div);
-  });
+    const debuffsId = `monster-debuffs-${monster.id}`;
+    const container = document.getElementById(debuffsId);
+    if (!container) return;
+    container.innerHTML = '';
+    (monster.activeMonsterDebuffs || []).forEach(debuff => {
+        const debuffElement = document.createElement('div');
+        debuffElement.className = 'debuff-item';
+        let label = '';
+        switch (debuff.tipo) {
+            case 'bleeding':
+            case 'poison':
+                label = `(-${debuff.valor} HP/turno)`;
+                break;
+            case 'accuracy':
+                label = `(-${debuff.valor} precisão)`;
+                break;
+            case 'amputation_legs':
+            case 'couraca':
+                label = `(-${debuff.valor} couraça)`;
+                break;
+            case 'amputation_arms':
+                label = '(-70% dano)';
+                break;
+        }
+        debuffElement.innerHTML = `
+          <span>
+            ${debuff.nome} ${label}
+          </span>
+          <span class="debuff-turns">
+            ${debuff.turnos === 999 ? '∞' : debuff.turnos}
+          </span>
+        `;
+        container.appendChild(debuffElement);
+    });
 }
+
 
 
 // Sistema Arcanum Iudicium
