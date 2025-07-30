@@ -403,12 +403,15 @@ if (bleedingDebuff) {
     displayAllMonsterHealthBars();
     await addLogMessage(`${currentMonster.nome} perde ${bleedingDebuff.valor} HP por evisceração.`, 800);
     
-    // Verifica se morreu por sangramento
-    if (currentMonster.pontosDeEnergia <= 0) {
-        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} morreu por perda de sangue!</p>`, 1000);
+   // Verifica se morreu por sangramento
+if (currentMonster.pontosDeEnergia <= 0) {
+    await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} morreu por perda de sangue!</p>`, 1000);
+    const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+    if (monstersAlive.length === 0) {
         handlePostBattle(currentMonster);
-        return;
     }
+    return; // Retorna para que o monstro morto não ataque. O loop principal continua.
+}
 }
 
     // Processa veneno
@@ -420,11 +423,14 @@ if (poisonDebuff) {
     await addLogMessage(`${currentMonster.nome} perde ${poisonDebuff.valor} de energia por veneno.`, 800);
 
     // Verifica se morreu por veneno
-    if (currentMonster.pontosDeEnergia <= 0) {
-        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} sucumbiu ao veneno!</p>`, 1000);
+if (currentMonster.pontosDeEnergia <= 0) {
+    await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} sucumbiu ao veneno!</p>`, 1000);
+    const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+    if (monstersAlive.length === 0) {
         handlePostBattle(currentMonster);
-        return;
     }
+    return; // Retorna para que o monstro morto não ataque. O loop principal continua.
+}
 }
 
 // Processa amputação de pernas (chance de perder turno)
@@ -3261,11 +3267,21 @@ if (rollLocationBtn) {
         rolarDanoButton.style.display = 'none';
         
         // Verifica se morreu
-        if (currentMonster.pontosDeEnergia <= 0) {
-            await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-            handlePostBattle(currentMonster);
-            return;
-        }
+if (currentMonster.pontosDeEnergia <= 0) {
+    await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+    const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+    if (monstersAlive.length === 0) {
+        handlePostBattle(currentMonster);
+    } else {
+        window.currentMonster = monstersAlive[0];
+        currentMonster = window.currentMonster;
+        await addLogMessage(`Próximo alvo: ${currentMonster.nome}.`, 800);
+        updateMonsterInfoUI();
+        displayAllMonsterHealthBars();
+        endPlayerTurn();
+    }
+    return;
+}
         
         // Salva e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
@@ -3295,11 +3311,21 @@ if (window.touchSpellContext) {
     rolarDanoButton.style.display = 'none';
     
     // Verifica se morreu
-    if (currentMonster.pontosDeEnergia <= 0) {
-        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+if (currentMonster.pontosDeEnergia <= 0) {
+    await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+    const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+    if (monstersAlive.length === 0) {
         handlePostBattle(currentMonster);
-        return;
+    } else {
+        window.currentMonster = monstersAlive[0];
+        currentMonster = window.currentMonster;
+        await addLogMessage(`Próximo alvo: ${currentMonster.nome}.`, 800);
+        updateMonsterInfoUI();
+        displayAllMonsterHealthBars();
+        endPlayerTurn();
     }
+    return;
+}
     
     // Salva e passa turno
     const user = auth.currentUser;
@@ -3351,11 +3377,21 @@ if (window.touchDebuffContext) {
     rolarDanoButton.style.display = 'none';
     
     // Verifica se morreu
-    if (currentMonster.pontosDeEnergia <= 0) {
-        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+if (currentMonster.pontosDeEnergia <= 0) {
+    await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
+    const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+    if (monstersAlive.length === 0) {
         handlePostBattle(currentMonster);
-        return;
+    } else {
+        window.currentMonster = monstersAlive[0];
+        currentMonster = window.currentMonster;
+        await addLogMessage(`Próximo alvo: ${currentMonster.nome}.`, 800);
+        updateMonsterInfoUI();
+        displayAllMonsterHealthBars();
+        endPlayerTurn();
     }
+    return;
+}
     
     // Salva e passa turno
     const user = auth.currentUser;
@@ -3445,14 +3481,27 @@ if (inventory && inventory.equippedItems && inventory.equippedItems.weapon) {
         
         await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi executado!</p>`, 1000);
         
-        // Salva estado e chama pós-batalha
-        const user = auth.currentUser;
-        if (user) {
-            await saveBattleState(userId, battleId, playerHealth);
-        }
-        
-        handlePostBattle(currentMonster);
-        return;
+        // Salva estado
+const user = auth.currentUser;
+if (user) {
+    await saveBattleState(user.uid, battleId, playerHealth);
+}
+
+// Verifica se AINDA existem monstros vivos
+const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+if (monstersAlive.length === 0) {
+    // TODOS FORAM DERROTADOS! Fim da batalha.
+    handlePostBattle(currentMonster);
+} else {
+    // Ainda há monstros. Define o próximo como alvo e continua a batalha.
+    window.currentMonster = monstersAlive[0];
+    currentMonster = window.currentMonster;
+    await addLogMessage(`Próximo alvo: ${currentMonster.nome}.`, 800);
+    updateMonsterInfoUI();
+    displayAllMonsterHealthBars();
+    endPlayerTurn();
+}
+return;
     }
 
         // VERIFICAÇÃO DE EVISCERAÇÃO SIFER
