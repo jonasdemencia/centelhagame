@@ -1092,9 +1092,9 @@ async function usarItem(itemId, effect, value) {
 
         const playerData = playerSnap.data();
         const inventoryData = playerData.inventory;
-
         let itemIndex = -1;
         let item = null;
+
         if (inventoryData.itemsInChest && Array.isArray(inventoryData.itemsInChest)) {
             itemIndex = inventoryData.itemsInChest.findIndex(i => i.id === itemId);
             if (itemIndex !== -1) {
@@ -1110,118 +1110,24 @@ async function usarItem(itemId, effect, value) {
         document.getElementById("itens-modal").style.display = "none";
         startNewTurnBlock("Item");
 
-        // --- BLOCO DE LÓGICA ISOLADO PARA A GRANADA DE MAO ---
-        if (itemId === "granada-mao") {
-            const danoGranada = rollDice(item.damage || "3D8");
-            if (currentMonster) {
-                currentMonster.pontosDeEnergia -= danoGranada;
-                currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
-                displayAllMonsterHealthBars();
-                await addLogMessage(`Você arremessa uma granada de mão! Ela explode e causa <b>${danoGranada}</b> de dano ao ${currentMonster.nome}.`, 1000);
-            }
-
-            // Consumo da granada
-            item.quantity--;
-            if (item.quantity <= 0) {
-                if (item.uuid) {
-                    if (!inventoryData.discardedItems) inventoryData.discardedItems = [];
-                    inventoryData.discardedItems.push(item.uuid);
-                }
-                inventoryData.itemsInChest.splice(itemIndex, 1);
-            }
-
-            // Salva e finaliza o turno
-            await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-            await saveBattleState(userId, battleId, playerHealth);
-
-            if (currentMonster.pontosDeEnergia <= 0) {
-    await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-    
-    // Verifica se AINDA existem monstros vivos
-    const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
-
-    if (monstersAlive.length === 0) {
-        // TODOS FORAM DERROTADOS! Fim da batalha.
-        console.log("LOG: Todos os monstros foram derrotados!");
-        handlePostBattle(currentMonster); // Pode passar o último monstro derrotado para os drops
-    } else {
-        // Ainda há monstros. Define o próximo como alvo e continua a batalha.
-        window.currentMonster = monstersAlive[0];
-        currentMonster = window.currentMonster;
-        await addLogMessage(`Próximo alvo: ${currentMonster.nome}.`, 800);
-        
-        // Atualiza a UI e passa o turno
-        updateMonsterInfoUI();
-        displayAllMonsterHealthBars();
-        endPlayerTurn();
-    }
-} else {
-    // O monstro sobreviveu, apenas passa o turno.
-    endPlayerTurn();
-}
-            return; // Impede a execução da lógica genérica abaixo
-        }
-
-        // Na função usarItem()
-if (itemId === "granada-de-concussao") {
-  const dano = rollDice(item.damage || "3d6");
-  if (currentMonster) {
-    // 1) Aplica dano
-    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia - dano);
-    displayAllMonsterHealthBars();
-    await addLogMessage(
-      `Você arremessa uma granada de concussão! Ela explode e causa <b>${dano}</b> de dano ao ${currentMonster.nome}.`,
-      1000
-    );
-
-    // 2) Verifica se pode stun (exemplo: maxEnergy < 50)
-    if (currentMonster.pontosDeEnergiaMax < 50) {
-      // Garante array de debuffs
-      currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs || [];
-
-      // Remove stun pré-existente e aplica o novo
-      currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(d => d.tipo !== "stun");
-      currentMonster.activeMonsterDebuffs.push({
-        tipo:   "stun",
-        valor:  1,
-        turnos: 1,
-        nome:   item.content
-      });
-
-      displayAllMonsterHealthBars();
-      await addLogMessage(
-        `${currentMonster.nome} foi atordoado pela explosão e perderá o próximo turno!`,
-        800
-      );
-    } else {
-      await addLogMessage(
-        `Granada de Concussão não afeta ${currentMonster.nome} por possuir muita energia!`,
-        800
-      );
-    }
-  }
-
-  // 3) Consome granada
-  item.quantity--;
-  if (item.quantity <= 0) {
-    inventoryData.itemsInChest.splice(itemIndex, 1);
-  }
-  await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-  await saveBattleState(userId, battleId, playerHealth);
-
-  // 4) Finaliza turno ou prossegue
-  if (currentMonster.pontosDeEnergia <= 0) {
-    await addLogMessage(`<p style="color:green">${currentMonster.nome} foi derrotado!</p>`, 1000);
-    handlePostBattle(currentMonster);
-  } else {
-    endPlayerTurn();
-  }
-  return;
-}
-
-        // --- LÓGICA GENÉRICA PARA OUTROS ITENS CONSUMÍVEIS ---
         let monsterDefeated = false;
-        if (effect === "heal" && value > 0) {
+        let shouldEndTurn = true;
+
+        // --- LÓGICA DE DANO E EFEITOS ---
+        if (itemId === "granada-mao" || itemId === "granada-de-concussao") {
+            const dano = rollDice(item.damage);
+            if (currentMonster) {
+                currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia - dano);
+                await addLogMessage(`Você arremessa uma ${item.content}! Ela explode e causa <b>${dano}</b> de dano ao ${currentMonster.nome}.`, 1000);
+                if (itemId === "granada-de-concussao" && currentMonster.pontosDeEnergiaMax < 50) {
+                    if (!currentMonster.activeMonsterDebuffs) currentMonster.activeMonsterDebuffs = [];
+                    currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(d => d.tipo !== "stun");
+                    currentMonster.activeMonsterDebuffs.push({ tipo: "stun", valor: 1, turnos: 1, nome: item.content });
+                    await addLogMessage(`${currentMonster.nome} foi atordoado pela explosão!`, 800);
+                }
+                if (currentMonster.pontosDeEnergia <= 0) monsterDefeated = true;
+            }
+        } else if (effect === "heal" && value > 0) {
             const energyTotal = playerData.energy?.total || 0;
             const energyInitial = playerData.energy?.initial || 0;
             const newEnergy = Math.min(energyTotal + parseInt(value), energyInitial);
@@ -1233,7 +1139,6 @@ if (itemId === "granada-de-concussao") {
             if (currentMonster) {
                 currentMonster.pontosDeEnergia -= parseInt(value);
                 currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
-                displayAllMonsterHealthBars();
                 await addLogMessage(`Você usou ${item.content} e causou ${value} de dano.`, 1000);
                 if (currentMonster.pontosDeEnergia <= 0) monsterDefeated = true;
             }
@@ -1241,25 +1146,46 @@ if (itemId === "granada-de-concussao") {
             await addLogMessage(`Você usou ${item.content}.`, 1000);
         }
 
-        // Consumir item
+        // --- CONSUMIR ITEM ---
         item.quantity--;
         if (item.quantity <= 0) {
+            if (item.uuid) {
+                if (!inventoryData.discardedItems) inventoryData.discardedItems = [];
+                inventoryData.discardedItems.push(item.uuid);
+            }
             inventoryData.itemsInChest.splice(itemIndex, 1);
         }
+        
+        // Atualiza a UI de todos os monstros
+        displayAllMonsterHealthBars();
 
-        // Salvar e finalizar turno
+        // --- SALVAR ESTADO ---
         await setDoc(playerRef, {
             inventory: inventoryData,
             ...(effect === "heal" && { energy: playerData.energy })
         }, { merge: true });
-        
         await saveBattleState(userId, battleId, playerHealth);
-        
+
+        // --- VERIFICAÇÃO DE FIM DE BATALHA (LÓGICA UNIFICADA E CORRIGIDA) ---
         if (monsterDefeated) {
             await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-            handlePostBattle(currentMonster);
-        } else {
-            await monsterOpportunityAttack(0.8);
+            const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+
+            if (monstersAlive.length === 0) {
+                console.log("LOG: Todos os monstros foram derrotados!");
+                handlePostBattle(currentMonster);
+                shouldEndTurn = false; // A batalha acabou, não passa o turno.
+            } else {
+                window.currentMonster = monstersAlive[0];
+                currentMonster = window.currentMonster;
+                await addLogMessage(`Próximo alvo: ${currentMonster.nome}.`, 800);
+                updateMonsterInfoUI();
+                displayAllMonsterHealthBars();
+            }
+        }
+        
+        // --- FINALIZA O TURNO ---
+        if (shouldEndTurn) {
             endPlayerTurn();
         }
 
@@ -1268,7 +1194,6 @@ if (itemId === "granada-de-concussao") {
         document.getElementById("itens-modal").style.display = "none";
     }
 }
-
 
 async function carregarMagiasDisponiveis() {
     // CARREGAR DADOS ATUALIZADOS DO FIRESTORE
