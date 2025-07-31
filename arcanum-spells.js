@@ -152,8 +152,8 @@ function getSpellBaseWord(spellId) {
         'toque-chocante': 'FULGOR', 
         'luz': 'LUMINA',
         'cura-menor': 'SANITAS',
-        'escudo-arcano': 'AEGIS'
-        'flecha-acida-melf': 'SAGITTAMELFAX',
+        'escudo-arcano': 'AEGIS',
+        'flecha-acida-melf': 'SAGITTAMELFAX'
 
     };
     return baseWords[spellId] || 'ARCANUM';
