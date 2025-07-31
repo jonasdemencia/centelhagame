@@ -1703,9 +1703,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         
         // Não passa o turno, aguarda rolagem de ataque
         return;
-    }
-
-
+    
     } else if (efeito === "area_damage") {
         // Pula teste de resistência individual, faz para cada alvo
         const targets = selectAreaTargets(magia.areaRadius || 3);
