@@ -1178,7 +1178,8 @@ async function usarItem(itemId, effect, value) {
         if (itemId === "granada-mao" || itemId === "granada-de-concussao" || itemId === "granada-incendiaria") {
             const totalDamage = rollDice(item.damage);
             
-            if (item.areaEffect) {
+            // Verifica se tem propriedade de área, senão usa lógica padrão
+            if (item.areaEffect && item.areaRadius) {
                 const targets = selectAreaTargets(item.areaRadius);
                 const damageDistribution = distributeAreaDamage(totalDamage, targets);
                 
@@ -1203,6 +1204,27 @@ async function usarItem(itemId, effect, value) {
                     }
                     
                     if (monster.pontosDeEnergia <= 0) monsterDefeated = true;
+                }
+            } else {
+                // Fallback para lógica antiga caso não tenha propriedades de área
+                if (currentMonster) {
+                    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia - totalDamage);
+                    await addLogMessage(`Você arremessa uma ${item.content}! Ela explode e causa <b>${totalDamage}</b> de dano ao ${currentMonster.nome}.`, 1000);
+
+                    if (itemId === "granada-incendiaria") {
+                        if (!currentMonster.activeMonsterDebuffs) currentMonster.activeMonsterDebuffs = [];
+                        currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(d => d.tipo !== "burn");
+                        currentMonster.activeMonsterDebuffs.push({ tipo: "burn", valor: 3, turnos: 3, nome: "Queimadura" });
+                        await addLogMessage(`${currentMonster.nome} está em chamas! Sofrerá 3 de dano por 3 turnos.`, 800);
+                    }
+
+                    if (itemId === "granada-de-concussao" && currentMonster.pontosDeEnergiaMax < 50) {
+                        if (!currentMonster.activeMonsterDebuffs) currentMonster.activeMonsterDebuffs = [];
+                        currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(d => d.tipo !== "stun");
+                        currentMonster.activeMonsterDebuffs.push({ tipo: "stun", valor: 1, turnos: 1, nome: item.content });
+                        await addLogMessage(`${currentMonster.nome} foi atordoado pela explosão!`, 800);
+                    }
+                    if (currentMonster.pontosDeEnergia <= 0) monsterDefeated = true;
                 }
             }
         } else if (effect === "heal" && value > 0) {
