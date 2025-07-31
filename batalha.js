@@ -2095,7 +2095,7 @@ function processBuffs() {
     // Reduz duração de todos os buffs
     activeBuffs.forEach(buff => buff.turnos--);
 
-    // Processa preparação de Melf
+   // Processa preparação de Melf
 if (preparingSpells.length > 0) {
     const spell = preparingSpells[0];
     spell.turnosRestantes--;
@@ -2135,8 +2135,9 @@ if (preparingSpells.length > 0) {
             addLogMessage(`Preparando Flecha Ácida... (${3-spell.turnosRestantes}/2 turnos)`, 800);
         }
     }
-    return Promise.resolve();
-} // <- ADICIONE ESTA LINHA ANTES DESTA CHAVE
+    // REMOVA O "return Promise.resolve();" DAQUI
+}
+
 
 
     // Ativa Anastia após o carregamento
