@@ -1492,7 +1492,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
     }
 
     // Teste de resistência do monstro (apenas para magias que não são touch_attack ou touch_debuff)
-    if (efeito !== "touch_attack" && efeito !== "touch_debuff") {
+    if (efeito !== "touch_attack" && efeito !== "touch_debuff" && efeito !== "area_damage") {
         const resistanceRoll = Math.floor(Math.random() * 20) + 1;
         const resistanceTotal = resistanceRoll + currentMonster.habilidade;
         const difficulty = 20;
@@ -1704,13 +1704,12 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         // Não passa o turno, aguarda rolagem de ataque
         return;
     
-        } else if (efeito === "area_damage") {
-        // Pula teste de resistência individual, faz para cada alvo
+            } else if (efeito === "area_damage") {
         const targets = selectAreaTargets(magia.areaRadius || 3);
         const totalDamage = rollDice(valor);
         const damageDistribution = distributeAreaDamage(totalDamage, targets);
         
-        let monsterDefeated = false; // ADICIONAR ESTA LINHA
+        let monsterDefeated = false;
         
         await addLogMessage(`${magia.nome} explode atingindo ${targets.length} alvo(s)!`, 800);
         
@@ -1720,12 +1719,10 @@ async function usarMagia(magiaId, efeito, valor, custo) {
                 const resistanceTotal = resistanceRoll + monster.habilidade;
                 const difficulty = 20;
                 
-                await addLogMessage(`${monster.nome} tenta resistir: ${resistanceRoll} + ${monster.habilidade} = ${resistanceTotal} vs 20`, 800);
-                
                 if (resistanceTotal >= difficulty) {
                     const reducedDamage = Math.floor(damage / 2);
                     monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - reducedDamage);
-                    await addLogMessage(`${monster.nome} resiste parcialmente: ${reducedDamage} dano.`, 800);
+                    await addLogMessage(`${monster.nome} resiste: ${reducedDamage} dano.`, 800);
                 } else {
                     monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - damage);
                     await addLogMessage(`${monster.nome} sofre ${damage} de dano flamejante.`, 800);
@@ -1741,7 +1738,6 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         displayAllMonsterHealthBars();
         window.arcanumIudicium.sucesso();
         
-        // Verifica fim de batalha
         if (monsterDefeated) {
             const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
             if (monstersAlive.length === 0) {
