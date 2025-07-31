@@ -32,9 +32,10 @@ const extraItems = [
     { id: "escopeta-12", content: "Escopeta 12", uuid: "extra-escopeta12", slot: "weapon", description: "Uma espingarda calibre 12.", damage: "1d12+2", ammoType: "municao-12", ammoCapacity: 5, loadedAmmo: 0 },
     { id: "municao-12", content: "Munição de 12.", uuid: "extra-municao12", quantity: 5, projectile: true, description: "Projéteis letais calíbre 12." },
     { id: "Adaga", content: "Adaga", uuid: "extra-adaga", slot: "weapon", description: "Uma punhal afiado.", damage: "1D4" },
-    { id: "granada-mao", content: "Granada de Mão", uuid: "extra-granada-mao", consumable: true, quantity: 3, effect: "explosion", damage: "3D8", description: "Explosivo portátil. Pode ser lançada para causar dano em área." },
-    { id: "granada-de-concussao", content: "Granada de Concussão", uuid: "extra-granada-de-concussao", consumable: true, quantity: 3, effect: "stun", damage: "3D4", description: "Explosivo de concussão portátil. Pode ser lançada para causar dano em área." },
-    { id: "granada-incendiaria", content: "Granada Incendiária", uuid: "extra-granada-incendiaria", consumable: true, quantity: 3, effect: "explosion", damage: "2D6", description: "Explosivo incendiário portátil. Pode ser lançada para causar dano em área." },
+    { id: "granada-mao", content: "Granada de Mão", uuid: "extra-granada-mao", consumable: true, quantity: 3, effect: "explosion", damage: "3D8", description: "Explosivo portátil de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false },
+    { id: "granada-de-concussao", content: "Granada de Concussão", uuid: "extra-granada-de-concussao", consumable: true, quantity: 3, effect: "stun", damage: "3D4", description: "Explosivo de concussão de área (raio 2). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 2, allowsResistance: false },
+    { id: "granada-incendiaria", content: "Granada Incendiária", uuid: "extra-granada-incendiaria", consumable: true, quantity: 3, effect: "explosion", damage: "2D6", description: "Explosivo incendiário de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false },
+
 
 ];
 
@@ -1106,6 +1107,39 @@ function selecionarItem(itemElement) {
     }
 }
 
+// Função para selecionar alvos em área
+function selectAreaTargets(radius) {
+    const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+    if (monstersAlive.length <= radius) {
+        return monstersAlive;
+    }
+    
+    const targets = [window.currentMonster];
+    const otherMonsters = monstersAlive.filter(m => m.id !== window.currentMonster.id);
+    
+    for (let i = 0; i < Math.min(radius - 1, otherMonsters.length); i++) {
+        const randomIndex = Math.floor(Math.random() * otherMonsters.length);
+        targets.push(otherMonsters.splice(randomIndex, 1)[0]);
+    }
+    
+    return targets;
+}
+
+// Função para distribuir dano em área
+function distributeAreaDamage(totalDamage, targets) {
+    if (targets.length === 0) return [];
+    
+    const primaryDamage = Math.floor(totalDamage * 0.6);
+    const remainingDamage = totalDamage - primaryDamage;
+    const secondaryDamage = targets.length > 1 ? Math.floor(remainingDamage / (targets.length - 1)) : 0;
+    
+    return targets.map((target, index) => ({
+        monster: target,
+        damage: index === 0 ? primaryDamage : secondaryDamage
+    }));
+}
+
+
 // Função para usar um item - versão modificada
 async function usarItem(itemId, effect, value) {
     const userId = auth.currentUser.uid;
@@ -1142,26 +1176,34 @@ async function usarItem(itemId, effect, value) {
 
         // --- LÓGICA DE DANO E EFEITOS ---
         if (itemId === "granada-mao" || itemId === "granada-de-concussao" || itemId === "granada-incendiaria") {
-            const dano = rollDice(item.damage);
-            if (currentMonster) {
-                currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia - dano);
-                await addLogMessage(`Você arremessa uma ${item.content}! Ela explode e causa <b>${dano}</b> de dano ao ${currentMonster.nome}.`, 1000);
-
-                    if (itemId === "granada-incendiaria") {
-                    if (!currentMonster.activeMonsterDebuffs) currentMonster.activeMonsterDebuffs = [];
-                    currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(d => d.tipo !== "burn");
-                    currentMonster.activeMonsterDebuffs.push({ tipo: "burn", valor: 3, turnos: 3, nome: "Queimadura" });
-                    await addLogMessage(`${currentMonster.nome} está em chamas! Sofrerá 3 de dano por 3 turnos.`, 800);
-                }
-
+            const totalDamage = rollDice(item.damage);
+            
+            if (item.areaEffect) {
+                const targets = selectAreaTargets(item.areaRadius);
+                const damageDistribution = distributeAreaDamage(totalDamage, targets);
                 
-                if (itemId === "granada-de-concussao" && currentMonster.pontosDeEnergiaMax < 50) {
-                    if (!currentMonster.activeMonsterDebuffs) currentMonster.activeMonsterDebuffs = [];
-                    currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(d => d.tipo !== "stun");
-                    currentMonster.activeMonsterDebuffs.push({ tipo: "stun", valor: 1, turnos: 1, nome: item.content });
-                    await addLogMessage(`${currentMonster.nome} foi atordoado pela explosão!`, 800);
+                await addLogMessage(`Você arremessa uma ${item.content}! Ela explode atingindo ${targets.length} alvo(s)!`, 1000);
+                
+                for (const {monster, damage} of damageDistribution) {
+                    monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - damage);
+                    await addLogMessage(`${monster.nome} sofre <b>${damage}</b> de dano da explosão.`, 800);
+                    
+                    if (itemId === "granada-incendiaria") {
+                        if (!monster.activeMonsterDebuffs) monster.activeMonsterDebuffs = [];
+                        monster.activeMonsterDebuffs = monster.activeMonsterDebuffs.filter(d => d.tipo !== "burn");
+                        monster.activeMonsterDebuffs.push({ tipo: "burn", valor: 3, turnos: 3, nome: "Queimadura" });
+                        await addLogMessage(`${monster.nome} está em chamas! Sofrerá 3 de dano por 3 turnos.`, 800);
+                    }
+                    
+                    if (itemId === "granada-de-concussao" && monster.pontosDeEnergiaMax < 50) {
+                        if (!monster.activeMonsterDebuffs) monster.activeMonsterDebuffs = [];
+                        monster.activeMonsterDebuffs = monster.activeMonsterDebuffs.filter(d => d.tipo !== "stun");
+                        monster.activeMonsterDebuffs.push({ tipo: "stun", valor: 1, turnos: 1, nome: item.content });
+                        await addLogMessage(`${monster.nome} foi atordoado pela explosão!`, 800);
+                    }
+                    
+                    if (monster.pontosDeEnergia <= 0) monsterDefeated = true;
                 }
-                if (currentMonster.pontosDeEnergia <= 0) monsterDefeated = true;
             }
         } else if (effect === "heal" && value > 0) {
             const energyTotal = playerData.energy?.total || 0;
