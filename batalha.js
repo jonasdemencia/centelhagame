@@ -1175,11 +1175,21 @@ async function usarItem(itemId, effect, value) {
 
         // --- LÓGICA DE DANO E EFEITOS ---
         if (itemId === "granada-mao" || itemId === "granada-de-concussao" || itemId === "granada-incendiaria") {
-            const totalDamage = rollDice(item.damage);
+            // Busca as propriedades do template original
+            const allItemsArr = [...initialItems, ...extraItems];
+            const itemTemplate = allItemsArr.find(template => template.id === itemId);
             
-            // Verifica se tem propriedade de área, senão usa lógica padrão
-            if (item.areaEffect && item.areaRadius) {
-                const targets = selectAreaTargets(item.areaRadius);
+            if (!itemTemplate || !itemTemplate.damage) {
+                console.error("Template do item não encontrado ou sem propriedade damage:", itemId);
+                await addLogMessage(`Erro: Item ${itemId} não configurado corretamente.`, 1000);
+                endPlayerTurn();
+                return;
+            }
+            
+            const totalDamage = rollDice(itemTemplate.damage);
+            
+            if (itemTemplate.areaEffect && itemTemplate.areaRadius) {
+                const targets = selectAreaTargets(itemTemplate.areaRadius);
                 const damageDistribution = distributeAreaDamage(totalDamage, targets);
                 
                 await addLogMessage(`Você arremessa uma ${item.content}! Ela explode atingindo ${targets.length} alvo(s)!`, 1000);
@@ -1205,7 +1215,7 @@ async function usarItem(itemId, effect, value) {
                     if (monster.pontosDeEnergia <= 0) monsterDefeated = true;
                 }
             } else {
-                // Fallback para lógica antiga caso não tenha propriedades de área
+                // Fallback para lógica antiga
                 if (currentMonster) {
                     currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia - totalDamage);
                     await addLogMessage(`Você arremessa uma ${item.content}! Ela explode e causa <b>${totalDamage}</b> de dano ao ${currentMonster.nome}.`, 1000);
