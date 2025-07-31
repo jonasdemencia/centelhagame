@@ -3907,11 +3907,6 @@ if (!isTouchSpell) {
 // ==================================================================
 }
     
-      // Verifica se é um ataque de toque mágico
-const isTouchSpell = (window.touchSpellContext !== null && window.touchSpellContext !== undefined) || 
-                     (window.touchDebuffContext !== null && window.touchDebuffContext !== undefined);
-
-
 if (isTouchSpell) {
     const spellName = window.touchSpellContext?.nome || window.touchDebuffContext?.nome;
     await addLogMessage(`Tentando tocar ${currentMonster.nome} com ${spellName}...`, 800);
