@@ -2058,60 +2058,55 @@ function renderMonsterDebuffs(monster) {
 // Função para processar buffs no início do turno do jogador
 async function processBuffs() {
     if (activeBuffs.length === 0 && preparingSpells.length === 0) return Promise.resolve();
-    
+
     // Reduz duração de todos os buffs
     activeBuffs.forEach(buff => buff.turnos--);
 
-   // Processa preparação de Melf
-if (preparingSpells.length > 0) {
-    const spell = preparingSpells[0];
-    spell.turnosRestantes--;
-    
-    if (spell.turnosRestantes <= 0) {
-        // Lança a magia
-        await addLogMessage(`Flecha Ácida de Melf pronta e lançada!`, 800);
-        
-        // Teste de resistência
-        const resistanceRoll = Math.floor(Math.random() * 20) + 1;
-        const resistanceTotal = resistanceRoll + spell.alvo.habilidade;
-        const difficulty = 20;
-        
-        await addLogMessage(`${spell.alvo.nome} tenta resistir: ${resistanceRoll} + ${spell.alvo.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
-        
-        if (resistanceTotal >= difficulty) {
-            await addLogMessage(`${spell.alvo.nome} resistiu às flechas ácidas!`, 1000);
-        } else {
-            await addLogMessage(`A flecha ácida nível ${spell.nivel} atinge ${spell.alvo.nome}!`, 800);
-            
-            // Dano inicial
-            const damage = rollDice("2d4");
-            spell.alvo.pontosDeEnergia -= damage;
-            spell.alvo.pontosDeEnergia = Math.max(0, spell.alvo.pontosDeEnergia);
-            await addLogMessage(`${spell.alvo.nome} sofre ${damage} de dano ácido inicial!`, 800);
-            
-            // Adiciona DOT
-            if (!spell.alvo.activeMonsterDebuffs) spell.alvo.activeMonsterDebuffs = [];
-            spell.alvo.activeMonsterDebuffs.push({
-                tipo: "acid_dot",
-                valor: "2d4",
-                turnos: spell.nivel,
-                nome: "Flecha Ácida de Melf"
-            });
-            
-            await addLogMessage(`${spell.alvo.nome} está sendo corroído pelo ácido! Sofrerá dano por ${spell.nivel} turnos.`, 800);
-            displayAllMonsterHealthBars();
+    // Processa preparação de Melf
+    if (preparingSpells.length > 0) {
+        const spell = preparingSpells[0];
+        spell.turnosRestantes--;
+
+        if (spell.turnosRestantes <= 0) {
+            // Lança a magia
+            await addLogMessage(`Flecha Ácida de Melf pronta e lançada!`, 800);
+
+            // Teste de resistência
+            const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+            const resistanceTotal = resistanceRoll + spell.alvo.habilidade;
+            const difficulty = 20;
+            await addLogMessage(`${spell.alvo.nome} tenta resistir: ${resistanceRoll} + ${spell.alvo.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
+
+            if (resistanceTotal >= difficulty) {
+                await addLogMessage(`${spell.alvo.nome} resistiu às flechas ácidas!`, 1000);
+            } else {
+                await addLogMessage(`A flecha ácida nível ${spell.nivel} atinge ${spell.alvo.nome}!`, 800);
+
+                // Dano inicial
+                const damage = rollDice("2d4");
+                spell.alvo.pontosDeEnergia -= damage;
+                spell.alvo.pontosDeEnergia = Math.max(0, spell.alvo.pontosDeEnergia);
+                await addLogMessage(`${spell.alvo.nome} sofre ${damage} de dano ácido inicial!`, 800);
+
+                // Adiciona DOT
+                if (!spell.alvo.activeMonsterDebuffs) spell.alvo.activeMonsterDebuffs = [];
+                spell.alvo.activeMonsterDebuffs.push({
+                    tipo: "acid_dot",
+                    valor: "2d4",
+                    turnos: spell.nivel,
+                    nome: "Flecha Ácida de Melf"
+                });
+                await addLogMessage(`${spell.alvo.nome} está sendo corroído pelo ácido! Sofrerá dano por ${spell.nivel} turnos.`, 800);
+                displayAllMonsterHealthBars();
+            }
+
+            preparingSpells = []; // Limpa a magia da fila de preparação.
+
+            // A conjuração da magia consome o turno do jogador.
+            endPlayerTurn();
+            return; // Sai da função para garantir que o turno termine corretamente.
         }
-        
-        preparingSpells = [];
-        
-        // Reabilita botões
-        const actionButtons = document.querySelectorAll('#attack-options button');
-        actionButtons.forEach(button => {
-            button.disabled = false;
-            button.style.opacity = '1';
-        });
     }
-}
 
 
     // Ativa Anastia após o carregamento
