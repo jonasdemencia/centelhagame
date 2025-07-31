@@ -736,6 +736,17 @@ const magiasDisponiveis = [
         valor: 4
     },
 {
+    id: "esfera-flamejante",
+    nome: "Esfera Flamejante",
+    descricao: "Projétil flamejante de área (raio 2)",
+    custo: 4,
+    efeito: "area_damage",
+    valor: "2d6",
+    areaEffect: true,
+    areaRadius: 2,
+    allowsResistance: true
+},
+{
         id: "armadura-arcana",
         nome: "Armadura Arcana",
         descricao: "Aumenta temporariamente a couraça",
@@ -1694,6 +1705,59 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         return;
     }
 }
+
+    } else if (efeito === "area_damage") {
+        // Pula teste de resistência individual, faz para cada alvo
+        const targets = selectAreaTargets(magia.areaRadius || 3);
+        const totalDamage = rollDice(valor);
+        const damageDistribution = distributeAreaDamage(totalDamage, targets);
+        
+        await addLogMessage(`${magia.nome} explode atingindo ${targets.length} alvo(s)!`, 800);
+        
+        for (const {monster, damage} of damageDistribution) {
+            if (magia.allowsResistance !== false) {
+                const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+                const resistanceTotal = resistanceRoll + monster.habilidade;
+                const difficulty = 20;
+                
+                if (resistanceTotal >= difficulty) {
+                    const reducedDamage = Math.floor(damage / 2);
+                    monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - reducedDamage);
+                    await addLogMessage(`${monster.nome} resiste parcialmente: ${reducedDamage} dano.`, 800);
+                } else {
+                    monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - damage);
+                    await addLogMessage(`${monster.nome} sofre ${damage} de dano.`, 800);
+                }
+            } else {
+                monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - damage);
+                await addLogMessage(`${monster.nome} sofre ${damage} de dano.`, 800);
+            }
+            
+            if (monster.pontosDeEnergia <= 0) monsterDefeated = true;
+        }
+        
+        displayAllMonsterHealthBars();
+        window.arcanumIudicium.sucesso();
+        
+        // Verifica fim de batalha
+        if (monsterDefeated) {
+            const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+            if (monstersAlive.length === 0) {
+                handlePostBattle(currentMonster);
+                return;
+            } else {
+                window.currentMonster = monstersAlive[0];
+                currentMonster = window.currentMonster;
+                updateMonsterInfoUI();
+                displayAllMonsterHealthBars();
+            }
+        }
+        
+        await updatePlayerMagicInFirestore(userId, playerMagic);
+        await saveBattleState(userId, battleId, playerHealth);
+        endPlayerTurn();
+        return;
+    }
 
 
 async function salvarDropsNoLoot(userId, drops) {
