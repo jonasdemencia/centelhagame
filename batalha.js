@@ -1756,7 +1756,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         endPlayerTurn();
         return;
     }
-
+}
 
 async function salvarDropsNoLoot(userId, drops) {
     const lootCollectionRef = collection(db, "users", userId, "loot");
