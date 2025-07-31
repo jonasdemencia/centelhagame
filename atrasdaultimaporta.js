@@ -521,6 +521,18 @@ const magias = [
         duracao: "Instantânea"
     },
     {
+    id: "flecha-acida-melf",
+    nome: "Flecha Ácida de Melf (SAGITTAMELFAX)",
+    nomeVerdadeiro: "Seta do Ventre que Corrói",
+    descricao: "Uma flecha etérea que perfura e derrama ácido pelos órgãos internos. Requer dois turnos de concentração para moldar a ponta corrosiva.",
+    custo: 3,
+    efeito: "Dano inicial (2d4) + dano por turno",
+    componente: null,
+    resistencia: "Nenhuma",
+    tempoExecucao: "2 turnos de preparação",
+    duracao: "Dano contínuo"
+},
+    {
         id: "toque-macabro",
         nome: "Toque Macabro (EXSANGUO)",
         nomeVerdadeiro: "Frieza que Suga a Cor",
