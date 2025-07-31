@@ -3975,13 +3975,14 @@ if (playerAttackRollRaw === 1 && !isTouchSpell) {
 // 1. Determinar o limiar do acerto crítico SIFER
 let criticalThreshold = 20; // Padrão é 20
 const levezAfiadaBuff = activeBuffs.find(buff => buff.tipo === 'critico_aprimorado');
-if (
-  levezAfiadaBuff &&
-  equippedWeaponName &&
-  armasLeves.map(a => a.toLowerCase()).includes(equippedWeaponName.toLowerCase())
-) {
-  criticalThreshold = levezAfiadaBuff.valor;
+if (levezAfiadaBuff) {
+  const inventory = window.playerData?.inventory;
+  const currentWeaponName = inventory?.equippedItems?.weapon;
+  if (currentWeaponName && armasLeves.map(a => a.toLowerCase()).includes(currentWeaponName.toLowerCase())) {
+    criticalThreshold = levezAfiadaBuff.valor;
+  }
 }
+
 
         // Anastia: limiar de crítico SIFER em 15+
 const anastiaBuff = activeBuffs.find(buff => buff.tipo === "anastia");
