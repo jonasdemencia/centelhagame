@@ -2117,7 +2117,9 @@ if (preparingSpells.length > 0) {
             });
             
             displayAllMonsterHealthBars();
-            addLogMessage && addLogMessage(`Flecha Ácida atinge ${spell.alvo.nome} causando ${damage} de dano!`, 800);
+            if (typeof addLogMessage === 'function') {
+                addLogMessage(`Flecha Ácida atinge ${spell.alvo.nome} causando ${damage} de dano!`, 800);
+            }
         }
         
         preparingSpells = [];
@@ -2129,9 +2131,12 @@ if (preparingSpells.length > 0) {
             button.style.opacity = '1';
         });
     } else {
-        addLogMessage && addLogMessage(`Preparando Flecha Ácida... (${3-spell.turnosRestantes}/2 turnos)`, 800);
+        if (typeof addLogMessage === 'function') {
+            addLogMessage(`Preparando Flecha Ácida... (${3-spell.turnosRestantes}/2 turnos)`, 800);
+        }
     }
-}
+    return Promise.resolve();
+} // <- ADICIONE ESTA LINHA ANTES DESTA CHAVE
 
 
     // Ativa Anastia após o carregamento
