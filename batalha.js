@@ -3840,14 +3840,20 @@ if (window.punhaladaVenenosaContext) {
 // --- FIM: Punhalada Venenosa ---
         
         
-// --- LÓGICA DE GASTO DE MUNIÇÃO ---
+// Verifica se é um ataque de toque mágico
+const isTouchSpell = (window.touchSpellContext !== null && window.touchSpellContext !== undefined) || 
+                     (window.touchDebuffContext !== null && window.touchDebuffContext !== undefined);
+        
 
-const inventory = window.playerData?.inventory;
-const equippedWeaponName = inventory?.equippedItems?.weapon;
-const allItemsArr = [...initialItems, ...extraItems];
-const weaponObject = allItemsArr.find(item => item.content === equippedWeaponName);
+// --- LÓGICA DE GASTO DE MUNIÇÃO (apenas para ataques normais) ---
+if (!isTouchSpell) {
+    const inventory = window.playerData?.inventory;
+    const equippedWeaponName = inventory?.equippedItems?.weapon;
+    const allItemsArr = [...initialItems, ...extraItems];
+    const weaponObject = allItemsArr.find(item => item.content === equippedWeaponName);
 
-if (weaponObject && weaponObject.ammoType) {
+    if (weaponObject && weaponObject.ammoType) {
+
     let loadedAmmo = inventory.equippedItems.weapon_loadedAmmo || 0;
     if (loadedAmmo <= 0) {
         // --- INÍCIO LÓGICA DE RECARGA ---
@@ -3899,7 +3905,8 @@ if (weaponObject && weaponObject.ammoType) {
 // ==================================================================
 // === FIM: CÓDIGO A SER INSERIDO ===================================
 // ==================================================================
-        
+}
+    
       // Verifica se é um ataque de toque mágico
 const isTouchSpell = (window.touchSpellContext !== null && window.touchSpellContext !== undefined) || 
                      (window.touchDebuffContext !== null && window.touchDebuffContext !== undefined);
