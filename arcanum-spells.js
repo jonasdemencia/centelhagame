@@ -153,6 +153,8 @@ function getSpellBaseWord(spellId) {
         'luz': 'LUMINA',
         'cura-menor': 'SANITAS',
         'escudo-arcano': 'AEGIS'
+        'flecha-acida-melf': 'SAGITTAMELFAX',
+
     };
     return baseWords[spellId] || 'ARCANUM';
 }
