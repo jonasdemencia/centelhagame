@@ -41,6 +41,9 @@ const extraItems = [
 const armasLeves = ["Adaga"];
 
 let monsterNames = []; // <--- ADICIONE ESTA LINHA AQUI
+// Sistema Flecha Ácida de Melf
+let preparingSpells = [];
+
 
 function updateMonsterInfoUI() {
     const target = window.currentMonster;
@@ -453,6 +456,30 @@ if (burnDebuff) {
     }
 }
 
+    // Processa DOT ácido
+const acidDot = monster.activeMonsterDebuffs.find(debuff => debuff.tipo === "acid_dot");
+if (acidDot) {
+    const damage = rollDice(acidDot.valor);
+    monster.pontosDeEnergia -= damage;
+    monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia);
+    displayAllMonsterHealthBars();
+    
+    if (typeof addLogMessage === 'function') {
+        addLogMessage(`${monster.nome} perde ${damage} HP por ácido corrosivo.`, 800);
+    }
+    
+    if (monster.pontosDeEnergia <= 0) {
+        if (typeof addLogMessage === 'function') {
+            addLogMessage(`<p style="color: green; font-weight: bold;">${monster.nome} foi dissolvido pelo ácido!</p>`, 1000);
+        }
+        const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+        if (monstersAlive.length === 0) {
+            handlePostBattle(monster);
+            return;
+        }
+    }
+}
+
 
 // Processa amputação de pernas (chance de perder turno)
 const legsDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "amputation_legs");
@@ -717,6 +744,14 @@ const magiasDisponiveis = [
     valor: "1d4+1"
 },
 
+    {
+    id: "flecha-acida-melf",
+    nome: "Flecha Ácida de Melf",
+    descricao: "Prepara por 2 turnos, depois causa 2d4 inicial + 2d4 por turno (nível = turnos extras)",
+    custo: 8,
+    efeito: "melf_preparation",
+    valor: "2d4"
+},    
     {
     id: "pasmar",
     nome: "Pasmar",
@@ -1703,6 +1738,37 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         
         // Não passa o turno, aguarda rolagem de ataque
         return;
+
+        } else if (efeito === "melf_preparation") {
+    // Verifica se já está preparando
+    if (preparingSpells.length > 0) {
+        await addLogMessage("Você já está preparando uma magia!", 1000);
+        return;
+    }
+    
+    // Cria preparação
+    preparingSpells.push({
+        turnosRestantes: 2,
+        nivel: 1,
+        alvo: currentMonster
+    });
+    
+    await addLogMessage(`Preparando Flecha Ácida de Melf... (1/2 turnos)`, 800);
+    
+    // Bloqueia botões exceto fuga
+    const actionButtons = document.querySelectorAll('#attack-options button');
+    actionButtons.forEach(button => {
+        if (button.id !== 'correr-batalha') {
+            button.disabled = true;
+            button.style.opacity = '0.5';
+        }
+    });
+    
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, battleId, playerHealth);
+    endPlayerTurn();
+    return;
+
     
                 } else if (efeito === "area_damage") {
         const targets = selectAreaTargets(magia.areaRadius || 3);
@@ -2028,6 +2094,45 @@ function processBuffs() {
     
     // Reduz duração de todos os buffs
     activeBuffs.forEach(buff => buff.turnos--);
+
+    // Processa preparação de Melf
+if (preparingSpells.length > 0) {
+    const spell = preparingSpells[0];
+    spell.turnosRestantes--;
+    
+    if (spell.turnosRestantes <= 0) {
+        // Lança a magia
+        const damage = rollDice("2d4");
+        if (spell.alvo && spell.alvo.pontosDeEnergia > 0) {
+            spell.alvo.pontosDeEnergia -= damage;
+            spell.alvo.pontosDeEnergia = Math.max(0, spell.alvo.pontosDeEnergia);
+            
+            // Adiciona DOT
+            if (!spell.alvo.activeMonsterDebuffs) spell.alvo.activeMonsterDebuffs = [];
+            spell.alvo.activeMonsterDebuffs.push({
+                tipo: "acid_dot",
+                valor: "2d4",
+                turnos: spell.nivel,
+                nome: "Flecha Ácida de Melf"
+            });
+            
+            displayAllMonsterHealthBars();
+            addLogMessage && addLogMessage(`Flecha Ácida atinge ${spell.alvo.nome} causando ${damage} de dano!`, 800);
+        }
+        
+        preparingSpells = [];
+        
+        // Reabilita botões
+        const actionButtons = document.querySelectorAll('#attack-options button');
+        actionButtons.forEach(button => {
+            button.disabled = false;
+            button.style.opacity = '1';
+        });
+    } else {
+        addLogMessage && addLogMessage(`Preparando Flecha Ácida... (${3-spell.turnosRestantes}/2 turnos)`, 800);
+    }
+}
+
 
     // Ativa Anastia após o carregamento
 const anastiaLoading = activeBuffs.find(buff => buff.tipo === "anastia_loading" && buff.turnos <= 0);
