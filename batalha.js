@@ -35,8 +35,7 @@ const extraItems = [
     { id: "granada-mao", content: "Granada de Mão", uuid: "extra-granada-mao", consumable: true, quantity: 3, effect: "explosion", damage: "3D8", description: "Explosivo portátil de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false },
     { id: "granada-de-concussao", content: "Granada de Concussão", uuid: "extra-granada-de-concussao", consumable: true, quantity: 3, effect: "stun", damage: "3D4", description: "Explosivo de concussão de área (raio 2). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 2, allowsResistance: false },
     { id: "granada-incendiaria", content: "Granada Incendiária", uuid: "extra-granada-incendiaria", consumable: true, quantity: 3, effect: "explosion", damage: "2D6", description: "Explosivo incendiário de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false },
-
-
+    { id: "peitoral-de-aço", content: "Peitoral de aço", uuid: "extra-peitoral-de-aço", slot: "armor", description: "Armadura média, de peso considerável", defense: 5 },
 ];
 
 const armasLeves = ["Adaga"];
