@@ -2057,7 +2057,7 @@ function renderMonsterDebuffs(monster) {
 
 // Função para processar buffs no início do turno do jogador
 async function processBuffs() {
-    if (activeBuffs.length === 0) return Promise.resolve();
+    if (activeBuffs.length === 0 && preparingSpells.length === 0) return Promise.resolve();
     
     // Reduz duração de todos os buffs
     activeBuffs.forEach(buff => buff.turnos--);
