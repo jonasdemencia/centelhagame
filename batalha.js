@@ -3400,7 +3400,8 @@ if (window.touchDebuffContext) {
             nome: "Toque Macabro"
         });
         
-        updateMonsterDebuffsDisplay();
+        displayAllMonsterHealthBars();
+
     }
     
     // Limpa contexto
