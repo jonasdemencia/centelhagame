@@ -3990,11 +3990,12 @@ if (anastiaBuff) {
   criticalThreshold = anastiaBuff.criticalThreshold;
 }
         
+const currentWeaponName = window.playerData?.inventory?.equippedItems?.weapon;
 console.log("DEBUG SIFER", {
   playerAttackRollRaw,
   criticalThreshold,
   levezAfiadaBuff,
-  equippedWeaponName,
+  currentWeaponName,
   armasLeves
 });
 
