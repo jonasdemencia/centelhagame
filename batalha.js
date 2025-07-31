@@ -3389,11 +3389,11 @@ if (window.touchDebuffContext) {
 
         
         
-        // Remove debuff anterior do mesmo tipo se existir
-        activeMonsterDebuffs = activeMonsterDebuffs.filter(debuff => debuff.tipo !== "damage_reduction");
+       // Remove debuff anterior do mesmo tipo se existir
+        currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(debuff => debuff.tipo !== "damage_reduction");
         
         // Adiciona novo debuff
-        activeMonsterDebuffs.push({
+        currentMonster.activeMonsterDebuffs.push({
             tipo: "damage_reduction",
             valor: 3,
             turnos: 3,
