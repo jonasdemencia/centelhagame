@@ -463,15 +463,10 @@ if (acidDot) {
     currentMonster.pontosDeEnergia -= damage;
     currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
     displayAllMonsterHealthBars();
-    
-    if (typeof addLogMessage === 'function') {
-        addLogMessage(`${currentMonster.nome} perde ${damage} HP por ácido corrosivo.`, 800);
-    }
+    await addLogMessage(`${currentMonster.nome} perde ${damage} Energia por ácido corrosivo.`, 800);
     
     if (currentMonster.pontosDeEnergia <= 0) {
-        if (typeof addLogMessage === 'function') {
-            addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi dissolvido pelo ácido!</p>`, 1000);
-        }
+        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi dissolvido pelo ácido!</p>`, 1000);
         const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
         if (monstersAlive.length === 0) {
             handlePostBattle(currentMonster);
@@ -479,6 +474,7 @@ if (acidDot) {
         }
     }
 }
+
 
 
 // Processa amputação de pernas (chance de perder turno)
@@ -1450,12 +1446,13 @@ async function usarMagia(magiaId, efeito, valor, custo) {
     }
 
     // --- INÍCIO INTEGRAÇÃO ARCANUM ---
-    if (magiaId === 'missil-magico' || magiaId === 'toque-chocante') {
-        document.getElementById("magias-modal").style.display = "none";
-        setupArcanumConjurationModal(magiaId);
-        return;
-    }
-    // --- FIM INTEGRAÇÃO ARCANUM ---
+if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === 'flecha-acida-melf') {
+    document.getElementById("magias-modal").style.display = "none";
+    setupArcanumConjurationModal(magiaId);
+    return;
+}
+// --- FIM INTEGRAÇÃO ARCANUM ---
+
 
     const userId = auth.currentUser.uid;
     
@@ -1739,37 +1736,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
         // Não passa o turno, aguarda rolagem de ataque
         return;
 
-        } else if (efeito === "melf_preparation") {
-    // Verifica se já está preparando
-    if (preparingSpells.length > 0) {
-        await addLogMessage("Você já está preparando uma magia!", 1000);
-        return;
-    }
-    
-    // Cria preparação
-    preparingSpells.push({
-        turnosRestantes: 2,
-        nivel: 1,
-        alvo: currentMonster
-    });
-    
-    await addLogMessage(`Preparando Flecha Ácida de Melf... (1/2 turnos)`, 800);
-    
-    // Bloqueia botões exceto fuga
-    const actionButtons = document.querySelectorAll('#attack-options button');
-    actionButtons.forEach(button => {
-        if (button.id !== 'correr-batalha') {
-            button.disabled = true;
-            button.style.opacity = '0.5';
-        }
-    });
-    
-    await updatePlayerMagicInFirestore(userId, playerMagic);
-    await saveBattleState(userId, battleId, playerHealth);
-    endPlayerTurn();
-    return;
-
-    
+        
                 } else if (efeito === "area_damage") {
         const targets = selectAreaTargets(magia.areaRadius || 3);
         const totalDamage = rollDice(valor);
@@ -2102,10 +2069,25 @@ if (preparingSpells.length > 0) {
     
     if (spell.turnosRestantes <= 0) {
         // Lança a magia
-        const damage = rollDice("2d4");
-        if (spell.alvo && spell.alvo.pontosDeEnergia > 0) {
+        await addLogMessage(`Flecha Ácida de Melf pronta e lançada!`, 800);
+        
+        // Teste de resistência
+        const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+        const resistanceTotal = resistanceRoll + spell.alvo.habilidade;
+        const difficulty = 20;
+        
+        await addLogMessage(`${spell.alvo.nome} tenta resistir: ${resistanceRoll} + ${spell.alvo.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
+        
+        if (resistanceTotal >= difficulty) {
+            await addLogMessage(`${spell.alvo.nome} resistiu às flechas ácidas!`, 1000);
+        } else {
+            await addLogMessage(`A flecha ácida nível ${spell.nivel} atinge ${spell.alvo.nome}!`, 800);
+            
+            // Dano inicial
+            const damage = rollDice("2d4");
             spell.alvo.pontosDeEnergia -= damage;
             spell.alvo.pontosDeEnergia = Math.max(0, spell.alvo.pontosDeEnergia);
+            await addLogMessage(`${spell.alvo.nome} sofre ${damage} de dano ácido inicial!`, 800);
             
             // Adiciona DOT
             if (!spell.alvo.activeMonsterDebuffs) spell.alvo.activeMonsterDebuffs = [];
@@ -2116,10 +2098,8 @@ if (preparingSpells.length > 0) {
                 nome: "Flecha Ácida de Melf"
             });
             
+            await addLogMessage(`${spell.alvo.nome} está sendo corroído pelo ácido! Sofrerá dano por ${spell.nivel} turnos.`, 800);
             displayAllMonsterHealthBars();
-            if (typeof addLogMessage === 'function') {
-                addLogMessage(`Flecha Ácida atinge ${spell.alvo.nome} causando ${damage} de dano!`, 800);
-            }
         }
         
         preparingSpells = [];
@@ -2130,14 +2110,8 @@ if (preparingSpells.length > 0) {
             button.disabled = false;
             button.style.opacity = '1';
         });
-    } else {
-        if (typeof addLogMessage === 'function') {
-            addLogMessage(`Preparando Flecha Ácida... (${3-spell.turnosRestantes}/2 turnos)`, 800);
-        }
     }
-    // REMOVA O "return Promise.resolve();" DAQUI
 }
-
 
 
     // Ativa Anastia após o carregamento
@@ -4451,6 +4425,29 @@ async function setupArcanumConjurationModal(magiaId) {
     }
 }
 break;
+                    
+                    case 'flecha-acida-melf':
+    msg = `<span style="color:lime;">Conjuração bem-sucedida! Uma flecha ácida nível ${result.level} canalizada! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
+    addLogMessage(msg, 500);
+    addLogMessage(`Preparando Flecha Ácida de Melf... (1/1 turno)`, 800);
+    
+    preparingSpells.push({
+        turnosRestantes: 1,
+        nivel: result.level,
+        alvo: currentMonster,
+        tipo: 'melf'
+    });
+    
+    // Bloqueia botões
+    const actionButtons = document.querySelectorAll('#attack-options button');
+    actionButtons.forEach(button => {
+        if (button.id !== 'correr-batalha') {
+            button.disabled = true;
+            button.style.opacity = '0.5';
+        }
+    });
+    break;
+
                     
                 case 'toque-chocante':
                     msg = `<span style="color:lime;">Conjuração bem-sucedida! <b>${result.level} toque(s)</b> canalizados! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
