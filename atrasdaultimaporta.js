@@ -385,6 +385,21 @@ const magias = [
         tempoExecucao: "1 turno",
         duracao: "3 turnos"
     },
+    
+{
+    id: "esfera-flamejante",
+    nome: "Esfera Flamejante",
+    nomeVerdadeiro: "Orbe da Ira Ardente",
+    descricao: "Uma esfera de fogo puro que explode ao impacto, consumindo tudo em seu raio.",
+    custo: 4,
+    efeito: "Dano de área (2d6)",
+    componente: null,
+    resistencia: "Sim (metade do dano)",
+    tempoExecucao: "1 turno",
+    duracao: "Instantânea"
+},
+
+    
     {
         id: "causar-medo",
         nome: "Causar Medo (TIMORIS)",
