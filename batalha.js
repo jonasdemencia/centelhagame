@@ -393,7 +393,7 @@ if (sleepDebuff) {
 }
 
 
-// Processa debuffs do monstro
+// PROCESSA DEBUFFS DO MONSTRO
 await processMonsterDebuffs();
 
     // Processa sangramento de evisceração
@@ -433,6 +433,26 @@ if (currentMonster.pontosDeEnergia <= 0) {
     return; // Retorna para que o monstro morto não ataque. O loop principal continua.
 }
 }
+
+    // Processa queimadura
+const burnDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "burn");
+if (burnDebuff) {
+    currentMonster.pontosDeEnergia -= burnDebuff.valor;
+    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+    displayAllMonsterHealthBars();
+    await addLogMessage(`${currentMonster.nome} perde ${burnDebuff.valor} HP por queimadura.`, 800);
+    
+    // Verifica se morreu por queimadura
+    if (currentMonster.pontosDeEnergia <= 0) {
+        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} morreu queimado!</p>`, 1000);
+        const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+        if (monstersAlive.length === 0) {
+            handlePostBattle(currentMonster);
+        }
+        return;
+    }
+}
+
 
 // Processa amputação de pernas (chance de perder turno)
 const legsDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "amputation_legs");
@@ -1121,11 +1141,20 @@ async function usarItem(itemId, effect, value) {
         let shouldEndTurn = true;
 
         // --- LÓGICA DE DANO E EFEITOS ---
-        if (itemId === "granada-mao" || itemId === "granada-de-concussao") {
+        if (itemId === "granada-mao" || itemId === "granada-de-concussao" || itemId === "granada-incendiaria") {
             const dano = rollDice(item.damage);
             if (currentMonster) {
                 currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia - dano);
                 await addLogMessage(`Você arremessa uma ${item.content}! Ela explode e causa <b>${dano}</b> de dano ao ${currentMonster.nome}.`, 1000);
+
+                    if (itemId === "granada-incendiaria") {
+                    if (!currentMonster.activeMonsterDebuffs) currentMonster.activeMonsterDebuffs = [];
+                    currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(d => d.tipo !== "burn");
+                    currentMonster.activeMonsterDebuffs.push({ tipo: "burn", valor: 3, turnos: 3, nome: "Queimadura" });
+                    await addLogMessage(`${currentMonster.nome} está em chamas! Sofrerá 3 de dano por 3 turnos.`, 800);
+                }
+
+                
                 if (itemId === "granada-de-concussao" && currentMonster.pontosDeEnergiaMax < 50) {
                     if (!currentMonster.activeMonsterDebuffs) currentMonster.activeMonsterDebuffs = [];
                     currentMonster.activeMonsterDebuffs = currentMonster.activeMonsterDebuffs.filter(d => d.tipo !== "stun");
@@ -1830,6 +1859,7 @@ function renderMonsterDebuffs(monster) {
         switch (debuff.tipo) {
             case 'bleeding':
             case 'poison':
+            case 'burn':
                 label = `(-${debuff.valor} HP/turno)`;
                 break;
             case 'accuracy':
