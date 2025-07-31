@@ -457,24 +457,24 @@ if (burnDebuff) {
 }
 
     // Processa DOT ácido
-const acidDot = monster.activeMonsterDebuffs.find(debuff => debuff.tipo === "acid_dot");
+const acidDot = currentMonster.activeMonsterDebuffs.find(debuff => debuff.tipo === "acid_dot");
 if (acidDot) {
     const damage = rollDice(acidDot.valor);
-    monster.pontosDeEnergia -= damage;
-    monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia);
+    currentMonster.pontosDeEnergia -= damage;
+    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
     displayAllMonsterHealthBars();
     
     if (typeof addLogMessage === 'function') {
-        addLogMessage(`${monster.nome} perde ${damage} HP por ácido corrosivo.`, 800);
+        addLogMessage(`${currentMonster.nome} perde ${damage} HP por ácido corrosivo.`, 800);
     }
     
-    if (monster.pontosDeEnergia <= 0) {
+    if (currentMonster.pontosDeEnergia <= 0) {
         if (typeof addLogMessage === 'function') {
-            addLogMessage(`<p style="color: green; font-weight: bold;">${monster.nome} foi dissolvido pelo ácido!</p>`, 1000);
+            addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi dissolvido pelo ácido!</p>`, 1000);
         }
         const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
         if (monstersAlive.length === 0) {
-            handlePostBattle(monster);
+            handlePostBattle(currentMonster);
             return;
         }
     }
