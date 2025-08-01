@@ -2101,18 +2101,16 @@ async function processBuffs() {
             }
 
             preparingSpells = [];
-
-// A conjuração consome o turno do jogador
-isPlayerTurn = false;
-window.isPlayerTurn = false;
-
-// Passa o turno para o monstro
-setTimeout(() => {
-    monstersTurn();
-}, 1500);
-return;
-        }
+        
+        // APENAS sinaliza que o turno foi consumido
+        window.isPlayerTurn = false;
+        isPlayerTurn = false;
+        
+        // Força o fim do turno do jogador
+        endPlayerTurn();
+        return;
     }
+}
 
     // Resto da função continua igual...
     const anastiaLoading = activeBuffs.find(buff => buff.tipo === "anastia_loading" && buff.turnos <= 0);
