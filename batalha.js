@@ -929,6 +929,11 @@ async function endMonsterTurn() {
         return;
     }
 
+    // Se o turno anterior foi consumido por magia, pula habilitação de UI
+if (window.skipNextPlayerTurnUI) {
+    console.log("LOG: Turno consumido por efeito especial. UI não habilitada.");
+    window.skipNextPlayerTurnUI = false; // reseta a flag
+} else {
     // Se o turno não foi consumido, o fluxo normal continua.
     if (attackOptionsDiv) {
         attackOptionsDiv.style.display = 'block';
@@ -944,6 +949,8 @@ async function endMonsterTurn() {
             correrButton.onclick = attemptEscape;
         }
     }
+}
+
 
     addLogMessage(`Turno do Jogador`, 1000);
     await verificarFugaAnimais();
@@ -2067,6 +2074,7 @@ async function processBuffs() {
                 await addLogMessage(`${spell.alvo.nome} está sendo corroído pelo ácido! Sofrerá dano por ${spell.nivel} turnos.`, 800);
                 displayAllMonsterHealthBars();
             }
+            window.skipNextPlayerTurnUI = true; // Marca que o turno já foi consumido
             preparingSpells = []; // Limpa a magia da fila de preparação.
             return true; // SINALIZA QUE O TURNO FOI CONSUMIDO
         }
