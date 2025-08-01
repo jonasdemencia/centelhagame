@@ -1453,6 +1453,8 @@ function updateCharacterSheet(playerData) {
     document.getElementById("char-race").innerText = playerData.race || "-";
     document.getElementById("char-class").innerText = playerData.class || "-";
     document.getElementById("char-alignment").innerText = playerData.alignment || "-";
+    document.getElementById("char-idade").innerText = playerData.idade || "-";
+
     
     // Atualiza energia e barra de HP
     const energyTotal = playerData.energy?.total ?? 0;
@@ -1514,3 +1516,4 @@ async function savePlayerData(uid, playerData) {
         console.error("Erro ao salvar os dados do jogador:", error);
     }
 }
+
