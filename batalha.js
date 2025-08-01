@@ -1166,6 +1166,11 @@ function selectAreaTargets(radius) {
 // Função para distribuir dano em área
 function distributeAreaDamage(totalDamage, targets) {
     if (targets.length === 0) return [];
+
+    // Se houver apenas um alvo, ele recebe o dano total.
+    if (targets.length === 1) {
+        return [{ monster: targets[0], damage: totalDamage }];
+    }
     
     const primaryDamage = Math.floor(totalDamage * 0.6);
     const remainingDamage = totalDamage - primaryDamage;
