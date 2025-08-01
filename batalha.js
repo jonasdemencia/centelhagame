@@ -4429,6 +4429,10 @@ break;
             button.style.opacity = '0.5';
         }
     });
+// Consome a magia
+playerMagic -= 8;
+atualizarBarraMagia(playerMagic, playerMaxMagic);
+await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
     break;
 
                     
