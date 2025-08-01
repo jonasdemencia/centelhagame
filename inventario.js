@@ -85,7 +85,7 @@ const extraItems = [
     { id: "granada-de-concussao", content: "Granada de Concussão", uuid: "extra-granada-de-concussao", consumable: true, quantity: 3, effect: "stun", damage: "3D4", description: "Explosivo de concussão de área (raio 2). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 2, allowsResistance: false },
     { id: "granada-incendiaria", content: "Granada Incendiária", uuid: "extra-granada-incendiaria", consumable: true, quantity: 3, effect: "explosion", damage: "2D6", description: "Explosivo incendiário de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false },
     { id: "peitoral-de-aço", content: "Peitoral de aço", uuid: "extra-peitoral-de-aço", slot: "armor", description: "Armadura média, de peso considerável", defense: 5 },
-    { id: "pocao-cura-maior", content: "Poção de Cura Maior", consumable: true, uuid: "extra-pocao-cura-maior", quantity: 10, effect: "heal", value: 100, description: "Uma poção que restaura uma moderada quantidade de energia vital." },
+    { id: "pocao-cura-completa", content: "Poção de Cura Completa", consumable: true, uuid: "extra-pocao-cura-completa", quantity: 10, effect: "heal", value: 150, description: "Uma poção que restaura uma massiva quantidade de energia vital." },
 ];
 
 // Função para reiniciar o inventário
@@ -691,7 +691,7 @@ if (useButton) {
         await savePlayerData(auth.currentUser.uid, currentPlayerData);
         console.log("Energia diminuída para:", currentPlayerData.energy.total);
     }
-} else if (effect === "heal" && (itemName === "Pequeno saco com ervas medicinais" || itemName === "Poção de Cura Menor" || itemName === "Poção de Cura Maior")) {
+} else if (effect === "heal" && (itemName === "Pequeno saco com ervas medicinais" || itemName === "Poção de Cura Menor" || itemName === "Poção de Cura Completa")) {
 
     if (currentPlayerData && currentPlayerData.energy) {
         const initialEnergy = currentPlayerData.energy.initial;
