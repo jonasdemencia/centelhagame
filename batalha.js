@@ -731,6 +731,14 @@ const magiasDisponiveis = [
     componentes: ["grilo"] // ADICIONE ESTA LINHA
 },
 
+    {
+    id: "voo",
+    nome: "Voo",
+    descricao: "Concede voo mágico: +4 ataque para você, -4 ataque para todos inimigos por 1d10 turnos",
+    custo: 5,
+    efeito: "flight",
+    valor: 4
+},
 
     {
     id: "toque-macabro",
@@ -1793,6 +1801,47 @@ if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === '
         endPlayerTurn();
         return;
     }
+    
+    } else if (efeito === "flight") {
+    // Verifica se já tem Voo ativo
+    const vooExistente = activeBuffs.find(buff => buff.tipo === "voo");
+    if (vooExistente) {
+        await addLogMessage(`Voo já está ativo! Não é possível lançar novamente.`, 1000);
+        await updatePlayerMagicInFirestore(userId, playerMagic);
+        await saveBattleState(userId, battleId, playerHealth);
+        endPlayerTurn();
+        return;
+    }
+    
+    const duracao = rollDice("1d10");
+    
+    // Aplica buff no jogador
+    activeBuffs.push({
+        tipo: "voo",
+        valor: parseInt(valor),
+        turnos: duracao,
+        nome: magia.nome
+    });
+    
+    // Aplica debuff em TODOS os monstros
+    window.currentMonsters.forEach(monster => {
+        if (!monster.activeMonsterDebuffs) monster.activeMonsterDebuffs = [];
+        monster.activeMonsterDebuffs = monster.activeMonsterDebuffs.filter(debuff => debuff.nome !== "Voo");
+        monster.activeMonsterDebuffs.push({
+            tipo: "accuracy",
+            valor: parseInt(valor),
+            turnos: duracao,
+            nome: "Voo"
+        });
+    });
+    
+    updateBuffsDisplay();
+    displayAllMonsterHealthBars();
+    await addLogMessage(`Você alça voo! +${valor} ataque por ${duracao} turnos. Todos inimigos sofrem -${valor} ataque.`, 800);
+    
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, battleId, playerHealth);
+    endPlayerTurn();
 }
 
 async function salvarDropsNoLoot(userId, drops) {
@@ -2134,6 +2183,56 @@ async function processBuffs() {
     }, Promise.resolve());
 
     return false; // SINALIZA QUE O TURNO NÃO FOI CONSUMIDO
+}
+
+// Processa teste de fim do Voo
+const vooBuff = activeBuffs.find(buff => buff.tipo === "voo" && buff.turnos <= 0);
+if (vooBuff) {
+    activeBuffs = activeBuffs.filter(buff => buff.tipo !== "voo");
+    
+    // Remove debuff de todos os monstros
+    window.currentMonsters.forEach(monster => {
+        if (monster.activeMonsterDebuffs) {
+            monster.activeMonsterDebuffs = monster.activeMonsterDebuffs.filter(debuff => debuff.nome !== "Voo");
+        }
+    });
+    displayAllMonsterHealthBars();
+    updateBuffsDisplay();
+    
+    await addLogMessage("O efeito de Voo se dissipa! Faça um teste de habilidade (dificuldade 12) ou sofra 2d6 de dano.", 1000);
+    
+    // Cria botão de teste
+    const testBtn = document.createElement('button');
+    testBtn.textContent = 'Rolar Teste de Habilidade';
+    testBtn.classList.add('action-btn');
+    currentTurnBlock.appendChild(testBtn);
+    
+    const testResult = await new Promise(resolve => {
+        testBtn.addEventListener('click', () => {
+            const roll = Math.floor(Math.random() * 20) + 1;
+            resolve(roll);
+        }, { once: true });
+    });
+    
+    testBtn.remove();
+    const habilidadeTotal = testResult + (playerData?.skill?.total || 0);
+    
+    await addLogMessage(`Você rolou ${testResult} + ${playerData?.skill?.total || 0} (Hab) = ${habilidadeTotal} vs 12`, 1000);
+    
+    if (habilidadeTotal >= 12) {
+        await addLogMessage("Você consegue pousar com segurança!", 800);
+    } else {
+        const damage = rollDice("2d6");
+        playerHealth -= damage;
+        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+        await addLogMessage(`Você cai desajeitadamente e sofre ${damage} de dano!`, 1000);
+        
+        const user = auth.currentUser;
+        if (user) {
+            await updatePlayerEnergyInFirestore(user.uid, playerHealth);
+            await saveBattleState(user.uid, battleId, playerHealth);
+        }
+    }
 }
 
 
@@ -4149,7 +4248,15 @@ if (criticalBuff && !isTouchSpell) {
     // playerAttackRollRaw = 20; // TESTE de crítico: sempre 20
 }
 
-        const playerAttackRollTotal = playerAttackRollRaw + playerAbilityValue;
+        // Aplica bônus de Voo
+const vooBuff = activeBuffs.find(buff => buff.tipo === "voo");
+const vooBonus = vooBuff ? vooBuff.valor : 0;
+const playerAttackRollTotal = playerAttackRollRaw + playerAbilityValue + vooBonus;
+
+if (vooBonus > 0) {
+    await addLogMessage(`Bônus de Voo: +${vooBonus}`, 500);
+}
+
         const monsterDefense = getMonsterDefense();
 
         if (isTouchSpell) {
