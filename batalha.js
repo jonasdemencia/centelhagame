@@ -1842,7 +1842,7 @@ if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === '
             await saveBattleState(userId, battleId, playerHealth);
             endPlayerTurn();
         }
-    
+    }
 
 async function salvarDropsNoLoot(userId, drops) {
     const lootCollectionRef = collection(db, "users", userId, "loot");
