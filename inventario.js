@@ -1453,7 +1453,24 @@ function updateCharacterSheet(playerData) {
     document.getElementById("char-race").innerText = playerData.race || "-";
     document.getElementById("char-class").innerText = playerData.class || "-";
     document.getElementById("char-alignment").innerText = playerData.alignment || "-";
-    document.getElementById("char-idade").innerText = playerData.idade || "-";
+    
+    // --- Início do Bloco de Idade ---
+// Verifica se a propriedade 'idade' não existe no objeto do jogador
+if (playerData.idade === undefined) {
+    // Se não existir, define uma idade padrão de 20 anos
+    playerData.idade = 20; 
+    
+    // E salva essa idade padrão no Firestore para o personagem atual
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+        const playerRef = doc(db, "players", uid);
+        updateDoc(playerRef, { idade: playerData.idade });
+        console.log(`Idade padrão (20) definida para o usuário ${uid}`);
+    }
+}
+// Finalmente, atualiza o elemento HTML com a idade (seja a que já existia ou a padrão)
+document.getElementById("char-idade").innerText = playerData.idade;
+// --- Fim do Bloco de Idade ---
 
     
     // Atualiza energia e barra de HP
@@ -1516,4 +1533,5 @@ async function savePlayerData(uid, playerData) {
         console.error("Erro ao salvar os dados do jogador:", error);
     }
 }
+
 
