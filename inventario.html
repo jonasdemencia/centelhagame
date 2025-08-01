@@ -68,81 +68,55 @@
                 </div>
 
                 <div class="carousel-slide" id="character-sheet">
-                    <div class="character-sheet">
-                        <p><strong>Nome:</strong> <span id="char-name">-</span></p>
-                        <p><strong>Classe:</strong> <span id="char-class">-</span></p>
-                        <p><strong>Raça:</strong> <span id="char-race">-</span></p>
-                        <p><strong>Alinhamento:</strong> <span id="char-alignment">-</span></p>
-
-                        <div class="attribute-container">
-                            <div class="attribute">
-                                <span class="label">Energia</span>
-                                <span id="char-energy">0/0</span>
-                                <div class="barra-hp-container">
-                                    <div id="barra-hp-inventario" class="barra-hp"></div>
-                                </div>
-                            </div>
-
-                            <!-- INSIRA O CÓDIGO DA BARRA DE EXPERIÊNCIA AQUI -->
-    <div class="attribute xp-attribute">
-        <span class="label">Nível</span>
-        <span id="char-level">1</span>
-        <div class="xp-container">
-            <span id="char-xp">0/100</span>
-            <div class="barra-xp-container">
-                <div id="barra-xp-inventario" class="barra-xp"></div>
-            </div>
+    <div class="sheet-grid-container">
+        <!-- Cabeçalho -->
+        <div class="sheet-header">
+            <p><strong>Nome:</strong> <span id="char-name">-</span></p>
+            <p><strong>Classe:</strong> <span id="char-class">-</span></p>
+            <p><strong>Raça:</strong> <span id="char-race">-</span></p>
         </div>
-    </div>
-                            
-                            <div class="attribute">
-                                <span class="label">Habilidade</span>
-                                <span id="char-skill">0</span>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Carisma</span>
-                                <span id="char-charisma">0</span>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Magia</span>
-                                <span id="char-magic">0</span>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Sorte</span>
-                                <span id="char-luck">0</span>
-                            </div>
-                        </div>
 
-                        <div class="char-alignment">
-                            <div class="char-hand-container">
-                                <span>Mão Dominante</span>
-                                <span id="char-hand">-</span>
-                            </div>
-                            <div class="char-hemisphere-container">
-                                <span>Hemisfério Dominante</span>
-                                <span id="char-hemisphere">-</span>
-                            </div>
-                        </div>
-
-                        <div class="couraca-dano">
-                            <div class="attribute">
-                                <span class="label">Couraça</span>
-                                <span id="char-couraca">0</span>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Dano</span>
-                                <span id="char-dano">0</span>
-                            </div>
-                        </div>
-
-                        <div class="time-container">
-                            <div class="attribute">
-                                <span class="label">Dia</span>
-                                <span id="char-day">1</span>
-                            </div>
-                        </div>
+        <!-- Status Principais -->
+        <div class="sheet-main-status">
+            <div class="attribute">
+                <span class="label">Energia</span>
+                <span id="char-energy">0/0</span>
+                <div class="barra-hp-container">
+                    <div id="barra-hp-inventario" class="barra-hp"></div>
+                </div>
+            </div>
+            <div class="attribute xp-attribute">
+                <span class="label">Nível</span>
+                <span id="char-level">1</span>
+                <div class="xp-container">
+                    <span id="char-xp">0/100</span>
+                    <div class="barra-xp-container">
+                        <div id="barra-xp-inventario" class="barra-xp"></div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Grade de Atributos e Combate -->
+        <div class="sheet-stats-grid">
+            <div class="stat-box"><span class="label">Habilidade</span><span id="char-skill">0</span></div>
+            <div class="stat-box"><span class="label">Couraça</span><span id="char-couraca">0</span></div>
+            <div class="stat-box"><span class="label">Carisma</span><span id="char-charisma">0</span></div>
+            <div class="stat-box"><span class="label">Dano</span><span id="char-dano">0</span></div>
+            <div class="stat-box"><span class="label">Magia</span><span id="char-magic">0</span></div>
+            <div class="stat-box"><span class="label">Sorte</span><span id="char-luck">0</span></div>
+            <!-- Adicione novos atributos aqui, eles se ajustarão na grade -->
+        </div>
+
+        <!-- Detalhes Adicionais -->
+        <div class="sheet-footer">
+            <span><strong>Alinhamento:</strong> <span id="char-alignment">-</span></span>
+            <span><strong>Mão:</strong> <span id="char-hand">-</span></span>
+            <span><strong>Dia:</strong> <span id="char-day">1</span></span>
+        </div>
+    </div>
+</div>
+
                 <div class="carousel-nav">
                     <div class="carousel-buttons">
                         <button id="prevBtn">◀</button>
@@ -230,3 +204,4 @@
     <script type="module" src="inventario.js"></script>
 </body>
 </html>
+
