@@ -1747,102 +1747,102 @@ if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === '
         return;
 
         
-                } else if (efeito === "area_damage") {
-        const targets = selectAreaTargets(magia.areaRadius || 3);
-        const totalDamage = rollDice(valor);
-        const damageDistribution = distributeAreaDamage(totalDamage, targets);
-        
-        let monsterDefeated = false;
-        
-        await addLogMessage(`${magia.nome} explode atingindo ${targets.length} alvo(s)!`, 800);
-        
-        for (const {monster, damage} of damageDistribution) {
-            if (magia.allowsResistance !== false) {
-                const resistanceRoll = Math.floor(Math.random() * 20) + 1;
-                const resistanceTotal = resistanceRoll + monster.habilidade;
-                const difficulty = 20;
-                
-                await addLogMessage(`${monster.nome} tenta resistir: ${resistanceRoll} + ${monster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 800);
-                
-                if (resistanceTotal >= difficulty) {
-                    const reducedDamage = Math.floor(damage / 2);
-                    monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - reducedDamage);
-                    await addLogMessage(`${monster.nome} resiste parcialmente: sofre ${reducedDamage} de dano.`, 800);
+                        } else if (efeito === "area_damage") {
+            const targets = selectAreaTargets(magia.areaRadius || 3);
+            const totalDamage = rollDice(valor);
+            const damageDistribution = distributeAreaDamage(totalDamage, targets);
+            
+            let monsterDefeated = false;
+            
+            await addLogMessage(`${magia.nome} explode atingindo ${targets.length} alvo(s)!`, 800);
+            
+            for (const {monster, damage} of damageDistribution) {
+                if (magia.allowsResistance !== false) {
+                    const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+                    const resistanceTotal = resistanceRoll + monster.habilidade;
+                    const difficulty = 20;
+                    
+                    await addLogMessage(`${monster.nome} tenta resistir: ${resistanceRoll} + ${monster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 800);
+                    
+                    if (resistanceTotal >= difficulty) {
+                        const reducedDamage = Math.floor(damage / 2);
+                        monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - reducedDamage);
+                        await addLogMessage(`${monster.nome} resiste parcialmente: sofre ${reducedDamage} de dano.`, 800);
+                    } else {
+                        monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - damage);
+                        await addLogMessage(`${monster.nome} sofre ${damage} de dano flamejante.`, 800);
+                    }
                 } else {
                     monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - damage);
-                    await addLogMessage(`${monster.nome} sofre ${damage} de dano flamejante.`, 800);
+                    await addLogMessage(`${monster.nome} sofre ${damage} de dano.`, 800);
                 }
-            } else {
-                monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - damage);
-                await addLogMessage(`${monster.nome} sofre ${damage} de dano.`, 800);
+                
+                if (monster.pontosDeEnergia <= 0) monsterDefeated = true;
             }
             
-            if (monster.pontosDeEnergia <= 0) monsterDefeated = true;
-        }
-        
-        displayAllMonsterHealthBars();
-        window.arcanumIudicium.sucesso();
-        
-        if (monsterDefeated) {
-            const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
-            if (monstersAlive.length === 0) {
-                handlePostBattle(currentMonster);
-                return;
-            } else {
-                window.currentMonster = monstersAlive[0];
-                currentMonster = window.currentMonster;
-                updateMonsterInfoUI();
-                displayAllMonsterHealthBars();
+            displayAllMonsterHealthBars();
+            window.arcanumIudicium.sucesso();
+            
+            if (monsterDefeated) {
+                const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+                if (monstersAlive.length === 0) {
+                    handlePostBattle(currentMonster);
+                    return;
+                } else {
+                    window.currentMonster = monstersAlive[0];
+                    currentMonster = window.currentMonster;
+                    updateMonsterInfoUI();
+                    displayAllMonsterHealthBars();
+                }
             }
+            
+            await updatePlayerMagicInFirestore(userId, playerMagic);
+            await saveBattleState(userId, battleId, playerHealth);
+            endPlayerTurn();
+            return;
+        // A CHAVE EXTRA FOI REMOVIDA DAQUI. O "else if" abaixo agora se conecta corretamente.
+        } else if (efeito === "flight") {
+            // Verifica se já tem Voo ativo
+            const vooExistente = activeBuffs.find(buff => buff.tipo === "voo");
+            if (vooExistente) {
+                await addLogMessage(`Voo já está ativo! Não é possível lançar novamente.`, 1000);
+                await updatePlayerMagicInFirestore(userId, playerMagic);
+                await saveBattleState(userId, battleId, playerHealth);
+                endPlayerTurn();
+                return;
+            }
+            
+            const duracao = rollDice("1d10");
+            
+            // Aplica buff no jogador
+            activeBuffs.push({
+                tipo: "voo",
+                valor: parseInt(valor),
+                turnos: duracao,
+                nome: magia.nome
+            });
+            
+            // Aplica debuff em TODOS os monstros
+            window.currentMonsters.forEach(monster => {
+                if (!monster.activeMonsterDebuffs) monster.activeMonsterDebuffs = [];
+                monster.activeMonsterDebuffs = monster.activeMonsterDebuffs.filter(debuff => debuff.nome !== "Voo");
+                monster.activeMonsterDebuffs.push({
+                    tipo: "accuracy",
+                    valor: parseInt(valor),
+                    turnos: duracao,
+                    nome: "Voo"
+                });
+            });
+            
+            updateBuffsDisplay();
+            displayAllMonsterHealthBars();
+            await addLogMessage(`Você alça voo! +${valor} ataque por ${duracao} turnos. Todos inimigos sofrem -${valor} ataque.`, 800);
+            
+            await updatePlayerMagicInFirestore(userId, playerMagic);
+            await saveBattleState(userId, battleId, playerHealth);
+            endPlayerTurn();
         }
-        
-        await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, battleId, playerHealth);
-        endPlayerTurn();
-        return;
-    }
     
-    } else if (efeito === "flight") {
-    // Verifica se já tem Voo ativo
-    const vooExistente = activeBuffs.find(buff => buff.tipo === "voo");
-    if (vooExistente) {
-        await addLogMessage(`Voo já está ativo! Não é possível lançar novamente.`, 1000);
-        await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, battleId, playerHealth);
-        endPlayerTurn();
-        return;
-    }
-    
-    const duracao = rollDice("1d10");
-    
-    // Aplica buff no jogador
-    activeBuffs.push({
-        tipo: "voo",
-        valor: parseInt(valor),
-        turnos: duracao,
-        nome: magia.nome
-    });
-    
-    // Aplica debuff em TODOS os monstros
-    window.currentMonsters.forEach(monster => {
-        if (!monster.activeMonsterDebuffs) monster.activeMonsterDebuffs = [];
-        monster.activeMonsterDebuffs = monster.activeMonsterDebuffs.filter(debuff => debuff.nome !== "Voo");
-        monster.activeMonsterDebuffs.push({
-            tipo: "accuracy",
-            valor: parseInt(valor),
-            turnos: duracao,
-            nome: "Voo"
-        });
-    });
-    
-    updateBuffsDisplay();
-    displayAllMonsterHealthBars();
-    await addLogMessage(`Você alça voo! +${valor} ataque por ${duracao} turnos. Todos inimigos sofrem -${valor} ataque.`, 800);
-    
-    await updatePlayerMagicInFirestore(userId, playerMagic);
-    await saveBattleState(userId, battleId, playerHealth);
-    endPlayerTurn();
-}
 
 async function salvarDropsNoLoot(userId, drops) {
     const lootCollectionRef = collection(db, "users", userId, "loot");
