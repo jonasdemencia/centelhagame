@@ -901,7 +901,6 @@ function chooseMonsterAttack(monster) {
 
 
 async function endMonsterTurn() {
-
     console.log("LOG: Finalizando turno do monstro e iniciando turno do jogador.");
     if (isPlayerTurn) {
         console.error("LOG: endMonsterTurn chamado fora do turno do monstro. Abortando.");
@@ -914,7 +913,6 @@ async function endMonsterTurn() {
         startNewTurnBlock("Estado");
         addLogMessage(`<p style="color: red; font-weight: bold;">Você está inconsciente e indefeso!</p>`, 1000);
         addLogMessage(`O ${currentMonster.nome} continua atacando seu corpo inerte...`, 1000);
-        
         // Não passa o turno para o jogador, inicia outro turno do monstro
         setTimeout(() => {
             monsterAttack();
@@ -926,16 +924,24 @@ async function endMonsterTurn() {
     isPlayerTurn = true; // Marca que é o turno do jogador
     window.isPlayerTurn = true; // Atualiza a variável global
 
+    startNewTurnBlock("Jogador");
+    await processBuffs();
+
+    // Se processBuffs consumiu o turno (ex: Flecha Ácida), isPlayerTurn será false.
+    if (!window.isPlayerTurn) {
+        return; // Não continua com o turno do jogador, pois ele já foi encerrado.
+    }
+
+    // Se o turno não foi consumido, exibe as opções de ataque.
     if (attackOptionsDiv) {
         attackOptionsDiv.style.display = 'block'; // Exibe as opções de ataque do jogador
-
-                // Exibe e habilita todos os botões principais
+        // Exibe e habilita todos os botões principais
         const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
         const atoClasseButton = document.getElementById("ato-classe");
         const itensFerramentasButton = document.getElementById("itens-ferramentas");
         const correrButton = document.getElementById("correr-batalha");
         const magiaButton = document.getElementById("atacar-a-distancia");
-        
+
         if (atacarCorpoACorpoButton) {
             atacarCorpoACorpoButton.disabled = false;
             atacarCorpoACorpoButton.style.display = 'inline-block';
@@ -952,8 +958,6 @@ async function endMonsterTurn() {
             magiaButton.disabled = false;
             magiaButton.style.display = 'inline-block';
         }
-
-        
         // IMPORTANTE: Garantir que o botão de fuga esteja visível e com evento
         if (correrButton) {
             correrButton.disabled = false;
@@ -965,15 +969,10 @@ async function endMonsterTurn() {
         }
     }
 
-    startNewTurnBlock("Jogador");
-    await processBuffs();
     addLogMessage(`Turno do Jogador`, 1000);
-
     // Verificação de fuga de animais DEPOIS
     await verificarFugaAnimais();
 }
-
-
 
 // Exemplo para resetActionButtons
 function resetActionButtons() {
@@ -2143,6 +2142,7 @@ async function processBuffs() {
         });
     }, Promise.resolve());
 }
+
 
 async function verificarFugaAnimais() {
     console.log("VERIFICANDO FUGA DE ANIMAIS - FUNÇÃO CHAMADA");
