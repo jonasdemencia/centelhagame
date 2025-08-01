@@ -2183,7 +2183,6 @@ async function processBuffs() {
     }, Promise.resolve());
 
     return false; // SINALIZA QUE O TURNO NÃO FOI CONSUMIDO
-}
 
 // Processa teste de fim do Voo
 const vooBuff = activeBuffs.find(buff => buff.tipo === "voo" && buff.turnos <= 0);
@@ -2233,8 +2232,8 @@ if (vooBuff) {
             await saveBattleState(user.uid, battleId, playerHealth);
         }
     }
+ }
 }
-
 
 async function verificarFugaAnimais() {
     console.log("VERIFICANDO FUGA DE ANIMAIS - FUNÇÃO CHAMADA");
