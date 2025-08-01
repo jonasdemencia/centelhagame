@@ -67,21 +67,56 @@
                     </div>
                 </div>
 
-                <div class="carousel-slide" id="character-sheet">
-                    <div class="character-sheet">
-                        <p><strong>Nome:</strong> <span id="char-name">-</span></p>
-                        <p><strong>Classe:</strong> <span id="char-class">-</span></p>
-                        <p><strong>Raça:</strong> <span id="char-race">-</span></p>
-                        <p><strong>Alinhamento:</strong> <span id="char-alignment">-</span></p>
+                <div class="character-sheet">
+  <!-- Informações básicas em linha -->
+  <div class="basic-info-row">
+    <span><strong>Nome:</strong> <span id="char-name">-</span></span>
+    <span><strong>Classe:</strong> <span id="char-class">-</span></span>
+    <span><strong>Raça:</strong> <span id="char-race">-</span></span>
+    <span><strong>Nível:</strong> <span id="char-level">1</span></span>
+  </div>
 
-                        <div class="attribute-container">
-                            <div class="attribute">
-                                <span class="label">Energia</span>
-                                <span id="char-energy">0/0</span>
-                                <div class="barra-hp-container">
-                                    <div id="barra-hp-inventario" class="barra-hp"></div>
-                                </div>
-                            </div>
+  <!-- Barras principais -->
+  <div class="main-bars">
+    <div class="attribute">
+      <span class="label">Energia</span>
+      <span id="char-energy">0/0</span>
+      <div class="barra-hp-container">
+        <div id="barra-hp-inventario" class="barra-hp"></div>
+      </div>
+    </div>
+    <div class="attribute xp-attribute">
+      <span class="label">XP</span>
+      <span id="char-xp">0/100</span>
+      <div class="barra-xp-container">
+        <div id="barra-xp-inventario" class="barra-xp"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Atributos em grid 3x2 -->
+  <div class="attributes-grid">
+    <div class="attr-item"><span>Habilidade</span><span id="char-skill">0</span></div>
+    <div class="attr-item"><span>Carisma</span><span id="char-charisma">0</span></div>
+    <div class="attr-item"><span>Magia</span><span id="char-magic">0</span></div>
+    <div class="attr-item"><span>Sorte</span><span id="char-luck">0</span></div>
+    <div class="attr-item"><span>Couraça</span><span id="char-couraca">0</span></div>
+    <div class="attr-item"><span>Dano</span><span id="char-dano">0</span></div>
+  </div>
+
+  <!-- Informações extras compactas -->
+  <div class="compact-info">
+    <div class="info-line">
+      <span>Mão: <span id="char-hand">-</span></span>
+      <span>Hemisfério: <span id="char-hemisphere">-</span></span>
+    </div>
+    <div class="info-line">
+      <span>Alinhamento: <span id="char-alignment">-</span></span>
+      <span>Dia: <span id="char-day">1</span></span>
+    </div>
+  </div>
+</div>
+
 
                             <!-- INSIRA O CÓDIGO DA BARRA DE EXPERIÊNCIA AQUI -->
     <div class="attribute xp-attribute">
@@ -230,3 +265,4 @@
     <script type="module" src="inventario.js"></script>
 </body>
 </html>
+
