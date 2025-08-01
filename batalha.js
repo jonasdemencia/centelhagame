@@ -4061,15 +4061,12 @@ if (!isTouchSpell) {
     if (weaponObject && weaponObject.ammoType) {
 
     let loadedAmmo = inventory.equippedItems.weapon_loadedAmmo || 0;
-    if (loadedAmmo <= 0) {
-        // --- INÍCIO LÓGICA DE RECARGA ---
-        // Busca munição compatível no inventário
-        const ammoItemIndex = inventory.itemsInChest.findIndex(item => item.id === weaponObject.ammoType && item.quantity > 0);
-        if (ammoItemIndex === -1) {
-            await addLogMessage(`<strong style="color: red;">Sem munição!</strong> Você não pode atacar e perde o turno.`, 1000);
-            endPlayerTurn();
-            return;
-        }
+if (loadedAmmo <= 0) {
+    await addLogMessage(`<strong style="color: red;">Você não possui munições para essa arma!</strong>`, 1000);
+    endPlayerTurn();
+    return;
+}
+
         const ammoItem = inventory.itemsInChest[ammoItemIndex];
         const ammoToLoad = Math.min(weaponObject.ammoCapacity, ammoItem.quantity);
         inventory.equippedItems.weapon_loadedAmmo = ammoToLoad;
