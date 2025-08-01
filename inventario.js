@@ -691,7 +691,8 @@ if (useButton) {
         await savePlayerData(auth.currentUser.uid, currentPlayerData);
         console.log("Energia diminuída para:", currentPlayerData.energy.total);
     }
-} else if (effect === "heal" && (itemName === "Pequeno saco com ervas medicinais" || itemName === "Poção de Cura Menor")) {
+} else if (effect === "heal" && (itemName === "Pequeno saco com ervas medicinais" || itemName === "Poção de Cura Menor" || itemName === "Poção de Cura Maior")) {
+
     if (currentPlayerData && currentPlayerData.energy) {
         const initialEnergy = currentPlayerData.energy.initial;
         const newEnergy = Math.min(currentPlayerData.energy.total + value, initialEnergy);
