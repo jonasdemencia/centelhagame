@@ -24,6 +24,13 @@ let defeitoSelecionado2 = null;
 let defeitoCentralFinal = null;
 let selecoesDefeito = 0;
 
+// Função auxiliar para gerar um número inteiro aleatório entre min e max (inclusive)
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function rollDice(sides) {
     return Math.floor(Math.random() * sides) + 1;
 }
@@ -244,7 +251,7 @@ function getPlayerStats() {
         class: document.getElementById("class").value,
         maoDominante: document.getElementById("mao dominante").value,
         hemisferioDominante: document.getElementById("hemisfério dominante").value,
-        idade: document.getElementById("idade").value,
+        idade: generatedAge, // Salva a idade gerada
         defeitoCentral: defeitoCentralFinal,
         energy: {
             firstRoll: getStat("energy1"),
@@ -489,3 +496,4 @@ document.addEventListener("DOMContentLoaded", () => {
 // 🔹 Mantendo os métodos utilitários necessários
 window.rollStat = rollStat;
 window.resetStat = resetStat;
+
