@@ -4443,6 +4443,13 @@ await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
                 case 'toque-chocante':
                     msg = `<span style="color:lime;">Conjuração bem-sucedida! <b>${result.level} toque(s)</b> canalizados! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
                     addLogMessage(msg, 500);
+
+                    // --- INÍCIO DA CORREÇÃO ---
+                    // Consome a magia do jogador
+                    playerMagic -= magia.custo;
+                    atualizarBarraMagia(playerMagic, playerMaxMagic);
+                    await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
+                    // --- FIM DA CORREÇÃO ---
                     
                     window.touchSpellContext = {
                         dano: '1d6',
