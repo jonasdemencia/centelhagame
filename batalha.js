@@ -4059,51 +4059,56 @@ if (!isTouchSpell) {
     const weaponObject = allItemsArr.find(item => item.content === equippedWeaponName);
 
     if (weaponObject && weaponObject.ammoType) {
-
-    let loadedAmmo = inventory.equippedItems.weapon_loadedAmmo || 0;
-if (loadedAmmo <= 0) {
-    await addLogMessage(`<strong style="color: red;">Você não possui munições para essa arma!</strong>`, 1000);
-    endPlayerTurn();
-    return;
-}
-
-        const ammoItem = inventory.itemsInChest[ammoItemIndex];
-        const ammoToLoad = Math.min(weaponObject.ammoCapacity, ammoItem.quantity);
-        inventory.equippedItems.weapon_loadedAmmo = ammoToLoad;
-        ammoItem.quantity -= ammoToLoad;
-        if (ammoItem.quantity <= 0) {
-    // Remove do inventário
-    inventory.itemsInChest.splice(ammoItemIndex, 1);
-    // Marca como descartado para não ser readicionado
-    if (!inventory.discardedItems) inventory.discardedItems = [];
-    inventory.discardedItems.push(ammoItem.uuid);
-}
-        // Atualiza no Firestore
-        try {
-            const playerDocRef = doc(db, "players", userId);
-            await setDoc(playerDocRef, { inventory: inventory }, { merge: true });
+        let loadedAmmo = inventory.equippedItems.weapon_loadedAmmo || 0;
+        
+        if (loadedAmmo <= 0) {
+            // Busca munição compatível no inventário
+            const ammoItemIndex = inventory.itemsInChest.findIndex(item => item.id === weaponObject.ammoType && item.quantity > 0);
+            if (ammoItemIndex === -1) {
+                await addLogMessage(`<strong style="color: red;">Você não possui munições para essa arma!</strong>`, 1000);
+                endPlayerTurn();
+                return;
+            }
+            
+            const ammoItem = inventory.itemsInChest[ammoItemIndex];
+            const ammoToLoad = Math.min(weaponObject.ammoCapacity, ammoItem.quantity);
+            inventory.equippedItems.weapon_loadedAmmo = ammoToLoad;
+            ammoItem.quantity -= ammoToLoad;
+            
+            if (ammoItem.quantity <= 0) {
+                inventory.itemsInChest.splice(ammoItemIndex, 1);
+                if (!inventory.discardedItems) inventory.discardedItems = [];
+                inventory.discardedItems.push(ammoItem.uuid);
+            }
+            
+            try {
+                const playerDocRef = doc(db, "players", userId);
+                await setDoc(playerDocRef, { inventory: inventory }, { merge: true });
+                updatePlayerProjectilesDisplay();
+            } catch (error) {
+                console.error("LOG: Erro ao salvar munição no Firestore:", error);
+            }
+            
+            await addLogMessage(`<strong style="color: orange;">Você recarrega o ${weaponObject.content} com ${ammoToLoad} munição(ões).</strong>`, 1000);
+            endPlayerTurn();
+            return;
+        } else {
+            // Gasta uma munição normalmente
+            loadedAmmo--;
+            inventory.equippedItems.weapon_loadedAmmo = loadedAmmo;
+            await addLogMessage(`Você gasta uma munição. (${loadedAmmo} restantes)`, 500);
             updatePlayerProjectilesDisplay();
-        } catch (error) {
-            console.error("LOG: Erro ao salvar munição no Firestore:", error);
-        }
-        await addLogMessage(`<strong style="color: orange;">Você recarrega o ${weaponObject.content} com ${ammoToLoad} munição(ões).</strong>`, 1000);
-        endPlayerTurn();
-        return;
-        // --- FIM LÓGICA DE RECARGA ---
-    } else {
-        // Gasta uma munição normalmente
-        loadedAmmo--;
-        inventory.equippedItems.weapon_loadedAmmo = loadedAmmo;
-        await addLogMessage(`Você gasta uma munição. (${loadedAmmo} restantes)`, 500);
-        updatePlayerProjectilesDisplay();
-        try {
-            const playerDocRef = doc(db, "players", userId);
-            await setDoc(playerDocRef, { inventory: inventory }, { merge: true });
-        } catch (error) {
-            console.error("LOG: Erro ao salvar munição no Firestore:", error);
+            
+            try {
+                const playerDocRef = doc(db, "players", userId);
+                await setDoc(playerDocRef, { inventory: inventory }, { merge: true });
+            } catch (error) {
+                console.error("LOG: Erro ao salvar munição no Firestore:", error);
+            }
         }
     }
 }
+
 
 // ==================================================================
 // === FIM: CÓDIGO A SER INSERIDO ===================================
