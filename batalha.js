@@ -2102,14 +2102,11 @@ async function processBuffs() {
 
             preparingSpells = [];
 
-// Reabilita botões
-const actionButtons = document.querySelectorAll('#attack-options button');
-actionButtons.forEach(button => {
-    button.disabled = false;
-    button.style.opacity = '1';
-});
+// A conjuração consome o turno do jogador
+isPlayerTurn = false;
+window.isPlayerTurn = false;
 
-// A conjuração consome o turno - passa direto para o monstro
+// Passa o turno para o monstro
 setTimeout(() => {
     monstersTurn();
 }, 1500);
