@@ -532,6 +532,18 @@ const magias = [
     tempoExecucao: "2 turnos de preparação",
     duracao: "Dano contínuo"
 },
+{
+    id: "voo",
+    nome: "Voo (VOLATUS)",
+    nomeVerdadeiro: "Asas do Pensamento Leve",
+    descricao: "O conjurador se eleva acima do chão, ganhando vantagem tática.Seus inimigos lutam contra alguém que paira além de seu alcance natural.",
+    custo: 5,
+    efeito: "+4 ataque próprio, -4 ataque inimigos",
+    componente: null,
+    resistencia: "Nenhuma",
+    tempoExecucao: "1 turno",
+    duracao: "1d10 turnos"
+},
     {
         id: "toque-macabro",
         nome: "Toque Macabro (EXSANGUO)",
