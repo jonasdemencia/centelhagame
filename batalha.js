@@ -907,70 +907,45 @@ async function endMonsterTurn() {
         return;
     }
 
-    // Verifica se o jogador está inconsciente (energia entre 0 e -9)
     if (playerHealth <= 0 && playerHealth > -10) {
         console.log("LOG: Jogador inconsciente, o monstro continua atacando.");
         startNewTurnBlock("Estado");
         addLogMessage(`<p style="color: red; font-weight: bold;">Você está inconsciente e indefeso!</p>`, 1000);
         addLogMessage(`O ${currentMonster.nome} continua atacando seu corpo inerte...`, 1000);
-        // Não passa o turno para o jogador, inicia outro turno do monstro
         setTimeout(() => {
             monsterAttack();
         }, 2000);
         return;
     }
 
-    // Se o jogador não estiver inconsciente, continua normalmente
-    isPlayerTurn = true; // Marca que é o turno do jogador
-    window.isPlayerTurn = true; // Atualiza a variável global
+    isPlayerTurn = true;
+    window.isPlayerTurn = true;
 
     startNewTurnBlock("Jogador");
-    await processBuffs();
+    const turnConsumedBySpell = await processBuffs();
 
-    // Se processBuffs consumiu o turno (ex: Flecha Ácida), isPlayerTurn será false.
-    if (!window.isPlayerTurn) {
-        return; // Não continua com o turno do jogador, pois ele já foi encerrado.
+    if (turnConsumedBySpell) {
+        endPlayerTurn(); // O turno foi consumido pela magia, então encerramos aqui.
+        return;
     }
 
-    // Se o turno não foi consumido, exibe as opções de ataque.
+    // Se o turno não foi consumido, o fluxo normal continua.
     if (attackOptionsDiv) {
-        attackOptionsDiv.style.display = 'block'; // Exibe as opções de ataque do jogador
-        // Exibe e habilita todos os botões principais
-        const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
-        const atoClasseButton = document.getElementById("ato-classe");
-        const itensFerramentasButton = document.getElementById("itens-ferramentas");
+        attackOptionsDiv.style.display = 'block';
+        const buttons = document.querySelectorAll('#attack-options button');
+        buttons.forEach(button => {
+            button.disabled = false;
+            if (button.id === 'atacar-corpo-a-corpo' || button.id === 'ato-classe' || button.id === 'itens-ferramentas' || button.id === 'atacar-a-distancia' || button.id === 'correr-batalha') {
+                button.style.display = 'inline-block';
+            }
+        });
         const correrButton = document.getElementById("correr-batalha");
-        const magiaButton = document.getElementById("atacar-a-distancia");
-
-        if (atacarCorpoACorpoButton) {
-            atacarCorpoACorpoButton.disabled = false;
-            atacarCorpoACorpoButton.style.display = 'inline-block';
-        }
-        if (atoClasseButton) {
-            atoClasseButton.disabled = false;
-            atoClasseButton.style.display = 'inline-block';
-        }
-        if (itensFerramentasButton) {
-            itensFerramentasButton.disabled = false;
-            itensFerramentasButton.style.display = 'inline-block';
-        }
-        if (magiaButton) {
-            magiaButton.disabled = false;
-            magiaButton.style.display = 'inline-block';
-        }
-        // IMPORTANTE: Garantir que o botão de fuga esteja visível e com evento
         if (correrButton) {
-            correrButton.disabled = false;
-            correrButton.style.display = 'inline-block';
             correrButton.onclick = attemptEscape;
-            console.log("LOG: Botão 'Correr' exibido e configurado no turno do jogador");
-        } else {
-            console.error("LOG: Botão 'Correr' não encontrado em endMonsterTurn");
         }
     }
 
     addLogMessage(`Turno do Jogador`, 1000);
-    // Verificação de fuga de animais DEPOIS
     await verificarFugaAnimais();
 }
 
@@ -2057,12 +2032,7 @@ function renderMonsterDebuffs(monster) {
 
 // Função para processar buffs no início do turno do jogador
 async function processBuffs() {
-    if (activeBuffs.length === 0 && preparingSpells.length === 0) return Promise.resolve();
-
-    // Reduz duração de todos os buffs
-    activeBuffs.forEach(buff => buff.turnos--);
-
-    // Processa preparação de Melf
+    // Processa preparação de Melf primeiro, pois pode consumir o turno.
     if (preparingSpells.length > 0) {
         const spell = preparingSpells[0];
         spell.turnosRestantes--;
@@ -2081,13 +2051,11 @@ async function processBuffs() {
                 await addLogMessage(`${spell.alvo.nome} resistiu às flechas ácidas!`, 1000);
             } else {
                 await addLogMessage(`A flecha ácida nível ${spell.nivel} atinge ${spell.alvo.nome}!`, 800);
-
                 // Dano inicial
                 const damage = rollDice("2d4");
                 spell.alvo.pontosDeEnergia -= damage;
                 spell.alvo.pontosDeEnergia = Math.max(0, spell.alvo.pontosDeEnergia);
                 await addLogMessage(`${spell.alvo.nome} sofre ${damage} de dano ácido inicial!`, 800);
-
                 // Adiciona DOT
                 if (!spell.alvo.activeMonsterDebuffs) spell.alvo.activeMonsterDebuffs = [];
                 spell.alvo.activeMonsterDebuffs.push({
@@ -2099,20 +2067,18 @@ async function processBuffs() {
                 await addLogMessage(`${spell.alvo.nome} está sendo corroído pelo ácido! Sofrerá dano por ${spell.nivel} turnos.`, 800);
                 displayAllMonsterHealthBars();
             }
-
-            preparingSpells = [];
-        
-        // APENAS sinaliza que o turno foi consumido
-        window.isPlayerTurn = false;
-        isPlayerTurn = false;
-        
-        // Força o fim do turno do jogador
-        endPlayerTurn();
-        return;
+            preparingSpells = []; // Limpa a magia da fila de preparação.
+            return true; // SINALIZA QUE O TURNO FOI CONSUMIDO
+        }
     }
-}
 
-    // Resto da função continua igual...
+    // Se a flecha não foi lançada, continua com os outros buffs.
+    if (activeBuffs.length === 0) return false;
+
+    // Reduz duração de todos os buffs
+    activeBuffs.forEach(buff => buff.turnos--);
+
+    // Ativa Anastia após o carregamento
     const anastiaLoading = activeBuffs.find(buff => buff.tipo === "anastia_loading" && buff.turnos <= 0);
     if (anastiaLoading) {
         activeBuffs = activeBuffs.filter(buff => buff.tipo !== "anastia_loading");
@@ -2127,19 +2093,21 @@ async function processBuffs() {
         addLogMessage && addLogMessage("<span style='color:orange;'>Você entra em modo Anastia! Couraça -10, crítico SIFER em 15+ por 4 turnos.</span>", 1000);
     }
 
+    // Remove buffs expirados e mostra mensagem
     const expiredBuffs = activeBuffs.filter(buff => buff.turnos <= 0);
     activeBuffs = activeBuffs.filter(buff => buff.turnos > 0);
     updateBuffsDisplay();
 
-    return expiredBuffs.reduce((promise, buff) => {
-        return promise.then(() => {
-            if (typeof addLogMessage === 'function') {
-                return addLogMessage(`${buff.nome} se dissipou.`, 800);
-            }
-            return Promise.resolve();
-        });
+    await expiredBuffs.reduce(async (promise, buff) => {
+        await promise;
+        if (typeof addLogMessage === 'function') {
+            await addLogMessage(`${buff.nome} se dissipou.`, 800);
+        }
     }, Promise.resolve());
+
+    return false; // SINALIZA QUE O TURNO NÃO FOI CONSUMIDO
 }
+
 
 async function verificarFugaAnimais() {
     console.log("VERIFICANDO FUGA DE ANIMAIS - FUNÇÃO CHAMADA");
