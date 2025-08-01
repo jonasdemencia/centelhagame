@@ -933,6 +933,20 @@ async function endMonsterTurn() {
 if (window.skipNextPlayerTurnUI) {
     console.log("LOG: Turno consumido por efeito especial. UI não habilitada.");
     window.skipNextPlayerTurnUI = false; // reseta a flag
+    
+    // No PRÓXIMO turno do jogador, reabilita os botões
+    setTimeout(() => {
+        if (isPlayerTurn && attackOptionsDiv) {
+            attackOptionsDiv.style.display = 'block';
+            const buttons = document.querySelectorAll('#attack-options button');
+            buttons.forEach(button => {
+                button.disabled = false;
+                if (button.id === 'atacar-corpo-a-corpo' || button.id === 'ato-classe' || button.id === 'itens-ferramentas' || button.id === 'atacar-a-distancia' || button.id === 'correr-batalha') {
+                    button.style.display = 'inline-block';
+                }
+            });
+        }
+    }, 100);
 } else {
     // Se o turno não foi consumido, o fluxo normal continua.
     if (attackOptionsDiv) {
