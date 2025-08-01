@@ -2102,18 +2102,18 @@ async function processBuffs() {
 
             preparingSpells = [];
 
-            // Reabilita botões ANTES de passar o turno
-            const actionButtons = document.querySelectorAll('#attack-options button');
-            actionButtons.forEach(button => {
-                button.disabled = false;
-                button.style.opacity = '1';
-            });
+// Reabilita botões
+const actionButtons = document.querySelectorAll('#attack-options button');
+actionButtons.forEach(button => {
+    button.disabled = false;
+    button.style.opacity = '1';
+});
 
-            // A conjuração da magia consome o turno do jogador.
-            window.isPlayerTurn = false; // ADICIONE ESTA LINHA
-            isPlayerTurn = false; // ADICIONE ESTA LINHA
-            endPlayerTurn();
-            return;
+// A conjuração consome o turno - passa direto para o monstro
+setTimeout(() => {
+    monstersTurn();
+}, 1500);
+return;
         }
     }
 
