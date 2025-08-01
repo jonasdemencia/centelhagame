@@ -2100,39 +2100,42 @@ async function processBuffs() {
                 displayAllMonsterHealthBars();
             }
 
-            preparingSpells = []; // Limpa a magia da fila de preparação.
+            preparingSpells = [];
+
+            // Reabilita botões ANTES de passar o turno
+            const actionButtons = document.querySelectorAll('#attack-options button');
+            actionButtons.forEach(button => {
+                button.disabled = false;
+                button.style.opacity = '1';
+            });
 
             // A conjuração da magia consome o turno do jogador.
+            window.isPlayerTurn = false; // ADICIONE ESTA LINHA
+            isPlayerTurn = false; // ADICIONE ESTA LINHA
             endPlayerTurn();
-            return; // Sai da função para garantir que o turno termine corretamente.
+            return;
         }
     }
 
-    // Ativa Anastia após o carregamento
+    // Resto da função continua igual...
     const anastiaLoading = activeBuffs.find(buff => buff.tipo === "anastia_loading" && buff.turnos <= 0);
     if (anastiaLoading) {
-        // Remove buff de carregamento
         activeBuffs = activeBuffs.filter(buff => buff.tipo !== "anastia_loading");
-        // Aplica o buff de Anastia (4 turnos)
         activeBuffs.push({
             tipo: "anastia",
-            valor: -10, // penalidade de couraça
+            valor: -10,
             turnos: 4,
             nome: "Anastia (Modo de Mira)",
-            criticalThreshold: 15 // novo limiar de crítico
+            criticalThreshold: 15
         });
         updateBuffsDisplay();
         addLogMessage && addLogMessage("<span style='color:orange;'>Você entra em modo Anastia! Couraça -10, crítico SIFER em 15+ por 4 turnos.</span>", 1000);
     }
 
-    // Remove buffs expirados e mostra mensagem
     const expiredBuffs = activeBuffs.filter(buff => buff.turnos <= 0);
     activeBuffs = activeBuffs.filter(buff => buff.turnos > 0);
-
-    // Atualiza display
     updateBuffsDisplay();
 
-    // Processa mensagens de buffs expirados sequencialmente
     return expiredBuffs.reduce((promise, buff) => {
         return promise.then(() => {
             if (typeof addLogMessage === 'function') {
@@ -2142,7 +2145,6 @@ async function processBuffs() {
         });
     }, Promise.resolve());
 }
-
 
 async function verificarFugaAnimais() {
     console.log("VERIFICANDO FUGA DE ANIMAIS - FUNÇÃO CHAMADA");
