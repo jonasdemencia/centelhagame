@@ -612,7 +612,6 @@ saveInventoryData(auth.currentUser.uid);
 }
 
 
-
     // Adiciona funcionalidade ao botão de usar
 if (useButton) {
     useButton.addEventListener("click", async () => {
@@ -650,7 +649,23 @@ if (useButton) {
                         toggleUseButton(false);
                     }
                     
-                    saveInventoryData(auth.currentUser.uid);
+                    // Atualiza no Firestore diretamente
+                    const uid = auth.currentUser?.uid;
+                    if (uid) {
+                        const playerRef = doc(db, "players", uid);
+                        const playerSnap = await getDoc(playerRef);
+                        if (playerSnap.exists()) {
+                            const inventoryData = playerSnap.data().inventory;
+                            const itemIndex = inventoryData.itemsInChest.findIndex(i => i.id === selectedItem.dataset.item);
+                            if (itemIndex !== -1) {
+                                inventoryData.itemsInChest[itemIndex].quantity = quantity;
+                                if (quantity <= 0) {
+                                    inventoryData.itemsInChest.splice(itemIndex, 1);
+                                }
+                                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+                            }
+                        }
+                    }
                 }
                 
                 alert("Seus atributos foram aumentados para 100!");
@@ -731,7 +746,23 @@ if (useButton) {
                         toggleUseButton(false);
                     }
 
-                    saveInventoryData(auth.currentUser.uid);
+                    // Atualiza no Firestore diretamente
+                    const uid = auth.currentUser?.uid;
+                    if (uid) {
+                        const playerRef = doc(db, "players", uid);
+                        const playerSnap = await getDoc(playerRef);
+                        if (playerSnap.exists()) {
+                            const inventoryData = playerSnap.data().inventory;
+                            const itemIndex = inventoryData.itemsInChest.findIndex(i => i.id === itemId);
+                            if (itemIndex !== -1) {
+                                inventoryData.itemsInChest[itemIndex].quantity = quantity;
+                                if (quantity <= 0) {
+                                    inventoryData.itemsInChest.splice(itemIndex, 1);
+                                }
+                                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+                            }
+                        }
+                    }
                     console.log("Quantidade restante:", quantity);
                 }
             } else if (selectedItem) {
@@ -744,6 +775,7 @@ if (useButton) {
         console.warn("Botão 'Usar' não encontrado no HTML.");
     }
 });
+
 
 // Adiciona evento de clique aos novos itens do baú
 function addItemClickListener(item) {
