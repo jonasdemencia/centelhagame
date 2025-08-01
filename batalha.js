@@ -2108,41 +2108,40 @@ async function processBuffs() {
         }
     }
 
-
     // Ativa Anastia após o carregamento
-const anastiaLoading = activeBuffs.find(buff => buff.tipo === "anastia_loading" && buff.turnos <= 0);
-if (anastiaLoading) {
-  // Remove buff de carregamento
-  activeBuffs = activeBuffs.filter(buff => buff.tipo !== "anastia_loading");
-  // Aplica o buff de Anastia (4 turnos)
-  activeBuffs.push({
-    tipo: "anastia",
-    valor: -10, // penalidade de couraça
-    turnos: 4,
-    nome: "Anastia (Modo de Mira)",
-    criticalThreshold: 15 // novo limiar de crítico
-  });
-  updateBuffsDisplay();
-  addLogMessage && addLogMessage("<span style='color:orange;'>Você entra em modo Anastia! Couraça -10, crítico SIFER em 15+ por 4 turnos.</span>", 1000);
-}
-    
-    // Remove buffs expirados e mostra mensagem
-const expiredBuffs = activeBuffs.filter(buff => buff.turnos <= 0);
-activeBuffs = activeBuffs.filter(buff => buff.turnos > 0);
-// Atualiza display
-updateBuffsDisplay();
+    const anastiaLoading = activeBuffs.find(buff => buff.tipo === "anastia_loading" && buff.turnos <= 0);
+    if (anastiaLoading) {
+        // Remove buff de carregamento
+        activeBuffs = activeBuffs.filter(buff => buff.tipo !== "anastia_loading");
+        // Aplica o buff de Anastia (4 turnos)
+        activeBuffs.push({
+            tipo: "anastia",
+            valor: -10, // penalidade de couraça
+            turnos: 4,
+            nome: "Anastia (Modo de Mira)",
+            criticalThreshold: 15 // novo limiar de crítico
+        });
+        updateBuffsDisplay();
+        addLogMessage && addLogMessage("<span style='color:orange;'>Você entra em modo Anastia! Couraça -10, crítico SIFER em 15+ por 4 turnos.</span>", 1000);
+    }
 
-    
+    // Remove buffs expirados e mostra mensagem
+    const expiredBuffs = activeBuffs.filter(buff => buff.turnos <= 0);
+    activeBuffs = activeBuffs.filter(buff => buff.turnos > 0);
+
+    // Atualiza display
+    updateBuffsDisplay();
+
     // Processa mensagens de buffs expirados sequencialmente
     return expiredBuffs.reduce((promise, buff) => {
-    return promise.then(() => {
-        if (typeof addLogMessage === 'function') {
-            return addLogMessage(`${buff.nome} se dissipou.`, 800);
-        }
-        return Promise.resolve();
-    });
-}, Promise.resolve());
-  } // <- ADICIONE ESTA CHAVE AQUI
+        return promise.then(() => {
+            if (typeof addLogMessage === 'function') {
+                return addLogMessage(`${buff.nome} se dissipou.`, 800);
+            }
+            return Promise.resolve();
+        });
+    }, Promise.resolve());
+}
 
 async function verificarFugaAnimais() {
     console.log("VERIFICANDO FUGA DE ANIMAIS - FUNÇÃO CHAMADA");
