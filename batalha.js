@@ -4054,7 +4054,11 @@ const isTouchSpell = (window.touchSpellContext !== null && window.touchSpellCont
 // --- LÓGICA DE GASTO DE MUNIÇÃO (apenas para ataques normais) ---
 if (!isTouchSpell) {
     const inventory = window.playerData?.inventory;
-    const equippedWeaponName = inventory?.equippedItems?.weapon;
+    let equippedWeaponName = inventory?.equippedItems?.weapon;
+    // ADICIONE ESTA VERIFICAÇÃO E LIMPEZA
+    if (equippedWeaponName) {
+        equippedWeaponName = equippedWeaponName.replace(/\s*\(\d+\/\d+\)$/, "");
+    }
     const allItemsArr = [...initialItems, ...extraItems];
     const weaponObject = allItemsArr.find(item => item.content === equippedWeaponName);
 
