@@ -4635,7 +4635,7 @@ atualizarBarraMagia(playerMagic, playerMaxMagic);
 await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
     break;
 
-                    case 'relampago':
+                   case 'relampago':
     const nivelRelampago = result.level * 2;
     const nivelFinal = Math.min(10, nivelRelampago);
     
@@ -4652,8 +4652,21 @@ await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
     await addLogMessage(`O relâmpago atinge ${targets.length} oponente(s)!`, 800);
     
     for (const {monster, damage} of damageDistribution) {
-        monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - damage);
-        await addLogMessage(`${monster.nome} sofre ${damage} de dano elétrico.`, 800);
+        // Teste de resistência para cada monstro
+        const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+        const resistanceTotal = resistanceRoll + monster.habilidade;
+        const difficulty = 20;
+        
+        await addLogMessage(`${monster.nome} tenta resistir: ${resistanceRoll} + ${monster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 800);
+        
+        if (resistanceTotal >= difficulty) {
+            const reducedDamage = Math.floor(damage / 2);
+            monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - reducedDamage);
+            await addLogMessage(`${monster.nome} resiste parcialmente: sofre ${reducedDamage} de dano elétrico.`, 800);
+        } else {
+            monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - damage);
+            await addLogMessage(`${monster.nome} sofre ${damage} de dano elétrico.`, 800);
+        }
         
         if (monster.pontosDeEnergia <= 0) monsterDefeated = true;
     }
@@ -4674,7 +4687,7 @@ await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
     }
     break;
 
-                    
+
                 case 'toque-chocante':
                     msg = `<span style="color:lime;">Conjuração bem-sucedida! <b>${result.level} toque(s)</b> canalizados! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
                     addLogMessage(msg, 500);
