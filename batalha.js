@@ -4644,8 +4644,8 @@ await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
 
     // Seleciona até 5 alvos
     const targets = selectAreaTargets(5);
-    const totalDamage = rollDice(`${nivelFinal}d6`);
-    const damageDistribution = distributeAreaDamage(totalDamage, targets);
+    const relampagoDamage = rollDice(`${nivelFinal}d6`);
+    const damageDistribution = distributeAreaDamage(relampagoDamage, targets);
     
     let monsterDefeated = false;
     
