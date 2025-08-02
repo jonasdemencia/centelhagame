@@ -1568,7 +1568,7 @@ if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === '
     }
 
     // Teste de resistência do monstro (apenas para magias que não são touch_attack ou touch_debuff)
-    if (efeito !== "touch_attack" && efeito !== "touch_debuff" && efeito !== "area_damage" && efeito !== "flight") {
+    if (efeito !== "touch_attack" && efeito !== "touch_debuff" && efeito !== "area_damage" && efeito !== "flight" && efeito !== "velocidade") {
         const resistanceRoll = Math.floor(Math.random() * 20) + 1;
         const resistanceTotal = resistanceRoll + currentMonster.habilidade;
         const difficulty = 20;
