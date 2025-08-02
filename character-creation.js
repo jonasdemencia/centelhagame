@@ -459,16 +459,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // 🔹 Corrige a restauração da idade
                 if (playerData.idade) {
-                    const idadeSelect = document.getElementById("idade");
-                    const optionExists = [...idadeSelect.options].some(option => option.value === playerData.idade);
+    generatedAge = playerData.idade; // Restaura a idade gerada
+    
+    // Determina qual faixa etária corresponde à idade salva
+    let ageRange = "";
+    if (playerData.idade >= 18 && playerData.idade <= 25) {
+        ageRange = "Neófito (18-25 anos)";
+    } else if (playerData.idade >= 28 && playerData.idade <= 40) {
+        ageRange = "Confessor (28-40 anos)";
+    } else if (playerData.idade >= 45 && playerData.idade <= 60) {
+        ageRange = "Adepto (45-60 anos)";
+    }
+    
+    if (ageRange) {
+        document.getElementById("idade").value = ageRange;
+    }
+    console.log("Idade restaurada:", playerData.idade);
+}
 
-                    if (optionExists) {
-                        idadeSelect.value = playerData.idade;
-                    } else {
-                        console.warn("O valor salvo da idade não corresponde a nenhuma opção no <select>.");
-                    }
-                    console.log("Idade restaurada:", playerData.idade);
-                }
 
                 // 🔹 Preenche os atributos com dados salvos
                 const stats = ["energy", "skill", "charisma", "magic", "luck"];
@@ -530,6 +538,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // 🔹 Mantendo os métodos utilitários necessários
 window.rollStat = rollStat;
 window.resetStat = resetStat;
+
 
 
 
