@@ -385,7 +385,18 @@ const magias = [
         tempoExecucao: "1 turno",
         duracao: "3 turnos"
     },
-    
+    {
+    id: "relampago",
+    nome: "Relâmpago",
+    nomeVerdadeiro: "Tremor do Céu Partido",
+    descricao: "O conjurador rasga o véu entre os mundos, invocando a ira elétrica dos céus. Raios serpenteiam pelo ar, saltando entre os inimigos como cobras de luz pura.",
+    custo: 10,
+    efeito: "Até 10d6 de dano elétrico em área (até 5 oponentes). Cada modificador Arcanum = 2 níveis",
+    componente: "Nenhum",
+    resistencia: "Sim",
+    tempoExecucao: "1 turno",
+    duracao: "Instantâneo"
+},
 {
     id: "esfera-flamejante",
     nome: "Esfera Flamejante",
