@@ -776,6 +776,14 @@ const magiasDisponiveis = [
     valor: "1d4+1"
 },
     {
+    id: "toque-vampirico",
+    nome: "Toque Vampírico",
+    descricao: "Toque que drena energia vital do inimigo (até 6d6, cada modificador = 1d6)",
+    custo: 10,
+    efeito: "touch_vampiric",
+    valor: "1d6"
+},
+    {
     id: "relampago",
     nome: "Relâmpago",
     descricao: "Relâmpago mágico de área que atinge até 5 oponentes (até 10d6, cada modificador = 2 níveis)",
@@ -1513,7 +1521,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
     }
 
     // --- INÍCIO INTEGRAÇÃO ARCANUM ---
-if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === 'flecha-acida-melf' || magiaId === 'relampago') {
+if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === 'flecha-acida-melf' || magiaId === 'relampago' || magiaId === 'toque-vampirico') {
     document.getElementById("magias-modal").style.display = "none";
     setupArcanumConjurationModal(magiaId);
     return;
@@ -1959,7 +1967,6 @@ function getUrlParameter(name) {
 }
 
 // Função para barra de HP
-// Função para barra de HP
 function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
     const barra = document.getElementById(idElemento);
     const valorSpan = document.getElementById(`hp-${idElemento.replace('barra-hp-', '')}-valor`);
@@ -1973,60 +1980,60 @@ function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
         return;
     }
 
-    // Verifica se é a barra do monstro
     const isMonstro = idElemento === "barra-hp-monstro";
+    const isPlayer = idElemento === "barra-hp-jogador";
 
-    // Novo cálculo de porcentagem considerando valores negativos
     let porcentagem;
     if (valorAtual > 0) {
         porcentagem = (valorAtual / valorMaximo) * 100;
+        // Para jogador, permite exceder 100% (vampirismo)
+        if (isPlayer && porcentagem > 100) {
+            porcentagem = Math.min(200, porcentagem); // Máximo 200% na barra
+        }
     } else {
-        // Para valores negativos, calculamos a porcentagem até -10
-        porcentagem = Math.max(0, ((valorAtual + 10) / 10) * 30); // 30% é o máximo para valores negativos
+        porcentagem = Math.max(0, ((valorAtual + 10) / 10) * 30);
     }
     
-    // Atualiza a largura da barra
-    barra.style.width = `${porcentagem}%`;
+    barra.style.width = `${Math.min(100, porcentagem)}%`; // Barra nunca passa de 100% visualmente
     
-    // Define a cor da barra baseado no estado
+    // Define cor da barra
     if (valorAtual <= 0) {
-        // Para monstros, qualquer valor <= 0 significa morte
         if (isMonstro) {
-            barra.style.backgroundColor = '#000000'; // Preto para morto
+            barra.style.backgroundColor = '#000000';
         } else {
-            // Para o jogador, mantém a lógica original
             if (valorAtual <= -10) {
-                barra.style.backgroundColor = '#000000'; // Preto para morto
+                barra.style.backgroundColor = '#000000';
             } else {
-                barra.style.backgroundColor = '#8B0000'; // Vermelho escuro para inconsciente
+                barra.style.backgroundColor = '#8B0000';
             }
         }
+    } else if (isPlayer && valorAtual > valorMaximo) {
+        barra.style.backgroundColor = '#00FF00'; // Verde brilhante para vampirismo
     } else if (valorAtual <= valorMaximo * 0.3) {
-        barra.style.backgroundColor = '#FF0000'; // Vermelho para baixa energia
+        barra.style.backgroundColor = '#FF0000';
     } else {
-        barra.style.backgroundColor = '#008000'; // Verde para normal
+        barra.style.backgroundColor = '#008000';
     }
     
-    // Atualiza o texto
+    // Atualiza texto
     if (valorSpan) {
         if (valorAtual <= 0) {
-            // Para monstros, qualquer valor <= 0 significa morte
             if (isMonstro) {
                 valorSpan.innerHTML = `<span style="color: darkred">MORTO (${valorAtual}/${valorMaximo})</span>`;
             } else {
-                // Para o jogador, mantém a lógica original
                 if (valorAtual <= -10) {
                     valorSpan.innerHTML = `<span style="color: darkred">MORTO (${valorAtual}/${valorMaximo})</span>`;
                 } else {
                     valorSpan.innerHTML = `<span style="color: red">INCONSCIENTE (${valorAtual}/${valorMaximo})</span>`;
                 }
             }
+        } else if (isPlayer && valorAtual > valorMaximo) {
+            valorSpan.innerHTML = `<span style="color: lime">${valorAtual}/${valorMaximo}</span>`;
         } else {
             valorSpan.textContent = `${valorAtual}/${valorMaximo}`;
         }
     }
 }
-
 
 // Função para barra de Magia
 function atualizarBarraMagia(valorAtual, valorMaximo) {
@@ -2603,6 +2610,12 @@ function handlePostBattle(monster) {
 
     // Reset do contador de risco do Relâmpago
     relampagoRiskCounter = 1; // ← ADICIONAR ESTA LINHA
+
+    // Reset da energia vampírica
+if (playerHealth > playerMaxHealth) {
+    playerHealth = playerMaxHealth;
+    atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+}
 
     // Concede experiência ao jogador se o monstro foi derrotado
     if (monster && monster.pontosDeEnergia <= 0) {
@@ -3839,6 +3852,50 @@ if (currentMonster.pontosDeEnergia <= 0) {
 }
 
 
+// VERIFICAÇÃO PARA TOQUE VAMPÍRICO
+if (window.touchVampiricContext) {
+    const danoRolado = rollDice(window.touchVampiricContext.dano);
+    currentMonster.pontosDeEnergia -= danoRolado;
+    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+    displayAllMonsterHealthBars();
+    await addLogMessage(`${currentMonster.nome} sofreu ${danoRolado} de dano necrótico (${window.touchVampiricContext.dano}).`, 800);
+    
+    // Vampirismo: jogador ganha energia igual ao dano causado
+    playerHealth += danoRolado;
+    atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+    await addLogMessage(`<span style="color: green;">Você drena ${danoRolado} pontos de energia vital!</span>`, 800);
+    
+    // Limpa contexto
+    window.touchVampiricContext = null;
+    rolarDanoButton.style.display = 'none';
+    
+    // Verifica se morreu
+    if (currentMonster.pontosDeEnergia <= 0) {
+        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi drenado até a morte!</p>`, 1000);
+        const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+        if (monstersAlive.length === 0) {
+            handlePostBattle(currentMonster);
+        } else {
+            window.currentMonster = monstersAlive[0];
+            currentMonster = window.currentMonster;
+            await addLogMessage(`Próximo alvo: ${currentMonster.nome}.`, 800);
+            updateMonsterInfoUI();
+            displayAllMonsterHealthBars();
+            endPlayerTurn();
+        }
+        return;
+    }
+    
+    // Salva e passa turno
+    const user = auth.currentUser;
+    if (user) {
+        await updatePlayerEnergyInFirestore(user.uid, playerHealth);
+        await saveBattleState(user.uid, battleId, playerHealth);
+    }
+    endPlayerTurn();
+    return;
+}
+
 
         // Desabilita todos botões durante o processamento do dano
         const actionButtons = document.querySelectorAll('#attack-options button');
@@ -4644,6 +4701,29 @@ playerMagic -= 8;
 atualizarBarraMagia(playerMagic, playerMaxMagic);
 await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
     break;
+                    
+                    case 'toque-vampirico':
+    const nivelVampirico = Math.min(6, result.level); // Máximo 6d6
+    
+    msg = `<span style="color:lime;">Conjuração bem-sucedida! Toque Vampírico ${nivelVampirico}d6! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
+    addLogMessage(msg, 500);
+
+    // Consome a magia do jogador
+    playerMagic -= magia.custo;
+    atualizarBarraMagia(playerMagic, playerMaxMagic);
+    await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
+    
+    window.touchVampiricContext = {
+        dano: `${nivelVampirico}d6`,
+        nome: magia.nome,
+        nivel: nivelVampirico,
+        userId: auth.currentUser.uid,
+        monsterName: getUrlParameter('monstro')
+    };
+    
+    addLogMessage(`Clique em "Atacar" para tentar tocar o inimigo e drenar sua energia vital.`, 800);
+    break;
+
 
                    case 'relampago':
     const nivelRelampago = result.level * 2;
