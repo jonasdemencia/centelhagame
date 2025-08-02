@@ -44,7 +44,7 @@ const armasLeves = ["Adaga"];
 let monsterNames = []; // <--- ADICIONE ESTA LINHA AQUI
 // Sistema Flecha Ácida de Melf
 let preparingSpells = [];
-
+let relampagoRiskCounter = 1; // Contador de risco do Relâmpago (1-20)
 
 function updateMonsterInfoUI() {
     const target = window.currentMonster;
@@ -1493,6 +1493,12 @@ function selecionarMagia(magiaElement) {
     }
 }
 
+function resetArcanumBattle() {
+    resetDynamicConditions();
+    window.arcanumUsageCount = 0;
+    relampagoRiskCounter = 1; // ← ADICIONAR ESTA LINHA
+}
+
 
 async function usarMagia(magiaId, efeito, valor, custo) {
     // Encontra a magia
@@ -2595,6 +2601,9 @@ async function markMonsterAsDefeated(userId, monsterId) {
 function handlePostBattle(monster) {
     console.log("handlePostBattle chamado com monstro:", monster?.nome);
 
+    / Reset do contador de risco do Relâmpago
+    relampagoRiskCounter = 1; // ← ADICIONAR ESTA LINHA
+
     // Concede experiência ao jogador se o monstro foi derrotado
     if (monster && monster.pontosDeEnergia <= 0) {
         // Define a experiência com base no nome do monstro
@@ -3382,6 +3391,7 @@ async function updatePlayerExperience(userId, xpToAdd) {
                     await loadEquippedDice(userId);
             // Carregar dados do Arcanum Iudicium
         await window.arcanumIudicium.carregarFirestore();
+            relampagoRiskCounter = 1; // Reset do risco do Relâmpago
             console.log("LOG: Usuário logado. ID:", userId);
             const monsterName = getUrlParameter('monstro');
 
@@ -4647,6 +4657,10 @@ await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
     const relampagoDamage = rollDice(`${nivelFinal}d6`);
     const damageDistribution = distributeAreaDamage(relampagoDamage, targets);
     
+    // Sistema de risco crescente (rolagem oculta)
+    const riskRoll = Math.floor(Math.random() * 20) + 1;
+    const playerTakesDamage = riskRoll <= relampagoRiskCounter;
+    
     let monsterDefeated = false;
     
     await addLogMessage(`O relâmpago atinge ${targets.length} oponente(s)!`, 800);
@@ -4670,6 +4684,24 @@ await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
         
         if (monster.pontosDeEnergia <= 0) monsterDefeated = true;
     }
+    
+    // Verifica se o jogador também recebe dano
+    if (playerTakesDamage) {
+        const playerDamage = relampagoDamage;
+        playerHealth -= playerDamage;
+        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+        await addLogMessage(`<span style="color: red;">⚡ O relâmpago ricocheia! Você também sofre ${playerDamage} de dano elétrico!</span>`, 1200);
+        
+        // Salva estado do jogador
+        const user = auth.currentUser;
+        if (user) {
+            await updatePlayerEnergyInFirestore(user.uid, playerHealth);
+            await saveBattleState(user.uid, battleId, playerHealth);
+        }
+    }
+    
+    // Incrementa o contador de risco para o próximo uso
+    relampagoRiskCounter = Math.min(20, relampagoRiskCounter + 1);
     
     displayAllMonsterHealthBars();
     
