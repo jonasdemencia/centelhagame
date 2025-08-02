@@ -1776,22 +1776,23 @@ if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === '
         return; // Não passa turno, batalha acabou
 
     } else if (efeito === "touch_attack") {
-        // Salva contexto da magia de toque
-        window.touchSpellContext = {
-            dano: valor,
-            nome: magia.nome,
-            userId: userId,
-            monsterName: monsterName
-        };
-        
-        await addLogMessage(`Você canaliza ${magia.nome}! Clique no botão "Atacar" para tentar tocar o inimigo.`, 800);
-        
-        // Salva estado da magia
-        await updatePlayerMagicInFirestore(userId, playerMagic);
-        await saveBattleState(userId, battleId, playerHealth);
-        
-        // Não passa o turno, aguarda rolagem de ataque
-        return;
+    // Salva contexto da magia de toque
+    window.touchSpellContext = {
+        dano: valor,
+        nome: magia.nome,
+        userId: userId,
+        monsterName: monsterName
+    };
+    
+    await addLogMessage(`Você canaliza ${magia.nome}! Clique no botão "Atacar" para tentar tocar o inimigo.`, 800);
+    
+    // Salva estado da magia
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, battleId, playerHealth);
+    
+    // MANTÉM O TURNO DO JOGADOR - não chama endPlayerTurn()
+    return;
+
 
     } else if (efeito === "touch_debuff") {
         // Salva contexto da magia de toque com debuff
@@ -4839,7 +4840,7 @@ await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
         }
         
         // Só passa o turno se não for toque chocante bem-sucedido
-        if (!(result.success && magiaId === 'toque-chocante')) {
+if (!(result.success && (magiaId === 'toque-chocante' || magiaId === 'toque-vampirico'))) {
             endPlayerTurn();
         }
     };
