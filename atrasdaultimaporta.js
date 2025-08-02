@@ -386,6 +386,19 @@ const magias = [
         duracao: "3 turnos"
     },
     {
+    id: "toque-vampirico (THERMOVORUS)",
+    nome: "Toque Vampírico",
+    nomeVerdadeiro: "Sede da Alma Faminta",
+    descricao: "O conjurador estende a mão e toca a essência vital do inimigo. A energia flui como sangue negro, preenchendo o vazio interior do mago.",
+    custo: 10,
+    efeito: "Até 6d6 de dano necrótico. Energia drenada retorna ao conjurador (cada modificador Arcanum = 1d6)",
+    componente: "Nenhum",
+    resistencia: "Nenhuma (requer teste de ataque)",
+    tempoExecucao: "1 turno",
+    duracao: "Instantâneo"
+},
+
+    {
     id: "relampago (AEROTREMORIS)",
     nome: "Relâmpago",
     nomeVerdadeiro: "Tremor do Céu Partido",
