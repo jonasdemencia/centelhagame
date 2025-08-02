@@ -411,13 +411,13 @@ document.addEventListener("DOMContentLoaded", () => {
             let minAge, maxAge;
 
             switch (selectedAgeRange) {
-                case "Neófito (12-20 anos)":
-                    minAge = 12;
-                    maxAge = 20;
+                case "Neófito (18-25 anos)":
+                    minAge = 18;
+                    maxAge = 25;
                     break;
-                case "Confessor (25-35 anos)":
-                    minAge = 25;
-                    maxAge = 35;
+                case "Confessor (28-40 anos)":
+                    minAge = 28;
+                    maxAge = 40;
                     break;
                 case "Adepto (45-60 anos)":
                     minAge = 45;
@@ -533,5 +533,6 @@ document.addEventListener("DOMContentLoaded", () => {
 // 🔹 Mantendo os métodos utilitários necessários
 window.rollStat = rollStat;
 window.resetStat = resetStat;
+
 
 
