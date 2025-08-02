@@ -775,7 +775,17 @@ const magiasDisponiveis = [
     efeito: "touch_debuff",
     valor: "1d4+1"
 },
-
+    {
+    id: "relampago",
+    nome: "Relâmpago",
+    descricao: "Relâmpago mágico de área que atinge até 5 oponentes (até 10d6, cada modificador = 2 níveis)",
+    custo: 10,
+    efeito: "area_damage",
+    valor: "2d6",
+    areaEffect: true,
+    areaRadius: 5,
+    allowsResistance: true
+},
     {
     id: "flecha-acida-melf",
     nome: "Flecha Ácida de Melf",
@@ -1497,7 +1507,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
     }
 
     // --- INÍCIO INTEGRAÇÃO ARCANUM ---
-if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === 'flecha-acida-melf') {
+if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === 'flecha-acida-melf' || magiaId === 'relampago') {
     document.getElementById("magias-modal").style.display = "none";
     setupArcanumConjurationModal(magiaId);
     return;
@@ -4623,6 +4633,45 @@ break;
 playerMagic -= 8;
 atualizarBarraMagia(playerMagic, playerMaxMagic);
 await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
+    break;
+
+                    case 'relampago':
+    const nivelRelampago = result.level * 2;
+    const nivelFinal = Math.min(10, nivelRelampago);
+    
+    msg = `<span style="color:lime;">Conjuração bem-sucedida! Relâmpago nível ${nivelFinal} (${nivelFinal}d6)! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
+    addLogMessage(msg, 500);
+
+    // Seleciona até 5 alvos
+    const targets = selectAreaTargets(5);
+    const totalDamage = rollDice(`${nivelFinal}d6`);
+    const damageDistribution = distributeAreaDamage(totalDamage, targets);
+    
+    let monsterDefeated = false;
+    
+    await addLogMessage(`O relâmpago atinge ${targets.length} oponente(s)!`, 800);
+    
+    for (const {monster, damage} of damageDistribution) {
+        monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - damage);
+        await addLogMessage(`${monster.nome} sofre ${damage} de dano elétrico.`, 800);
+        
+        if (monster.pontosDeEnergia <= 0) monsterDefeated = true;
+    }
+    
+    displayAllMonsterHealthBars();
+    
+    if (monsterDefeated) {
+        const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+        if (monstersAlive.length === 0) {
+            handlePostBattle(currentMonster);
+            return;
+        } else {
+            window.currentMonster = monstersAlive[0];
+            currentMonster = window.currentMonster;
+            updateMonsterInfoUI();
+            displayAllMonsterHealthBars();
+        }
+    }
     break;
 
                     
