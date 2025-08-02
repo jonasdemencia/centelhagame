@@ -2601,7 +2601,7 @@ async function markMonsterAsDefeated(userId, monsterId) {
 function handlePostBattle(monster) {
     console.log("handlePostBattle chamado com monstro:", monster?.nome);
 
-    / Reset do contador de risco do Relâmpago
+    // Reset do contador de risco do Relâmpago
     relampagoRiskCounter = 1; // ← ADICIONAR ESTA LINHA
 
     // Concede experiência ao jogador se o monstro foi derrotado
