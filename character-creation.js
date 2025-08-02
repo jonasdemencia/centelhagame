@@ -399,10 +399,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-    // ... (seu código do accordion e do defeito central) ...
-
-
+    
     // --- INÍCIO DO BLOCO DE CÓDIGO DA IDADE ---
     const idadeSelect = document.getElementById("idade");
     if (idadeSelect) {
@@ -533,6 +530,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // 🔹 Mantendo os métodos utilitários necessários
 window.rollStat = rollStat;
 window.resetStat = resetStat;
+
 
 
 
