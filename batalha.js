@@ -1886,7 +1886,7 @@ if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === '
     // Adiciona buff de velocidade
     activeBuffs.push({
         tipo: "velocidade",
-        valor: parseInt(valor), // +2 couraça
+        valor: parseInt(valor),
         turnos: duracao,
         nome: magia.nome,
         acoesPorTurno: 2
@@ -1894,6 +1894,18 @@ if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === '
     
     updateBuffsDisplay();
     await addLogMessage(`Velocidade ativada! +${valor} couraça e 2 ações por turno por ${duracao} turnos.`, 800);
+    
+    // ADICIONAR ESTE BLOCO:
+    // Envelhece o jogador em 1 ano
+    const playerRef = doc(db, "players", userId);
+    const playerSnap = await getDoc(playerRef);
+    if (playerSnap.exists()) {
+        const currentAge = playerSnap.data().idade || 0;
+        const newAge = currentAge + 1;
+        await setDoc(playerRef, { idade: newAge }, { merge: true });
+        await addLogMessage(`Você envelheceu 1 ano de vida, agora tem ${newAge} anos.`, 800);
+    }
+    
     window.arcanumIudicium.sucesso();
     
     await updatePlayerMagicInFirestore(userId, playerMagic);
