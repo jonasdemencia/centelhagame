@@ -371,6 +371,10 @@ async function monstersTurn() {
 async function monsterAttack() {
     console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
 
+    if (currentMonster.pontosDeEnergia <= 0) {
+        console.log("LOG: monsterAttack - Monstro já está morto. Retornando.");
+        return;
+    }
     // Verifica se o jogador já está morto
     if (isPlayerTurn || playerHealth <= -10 || !currentMonster) {
         console.log("LOG: monsterAttack - Turno inválido ou jogador morto. Retornando.");
