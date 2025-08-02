@@ -23,6 +23,7 @@ let defeitoSelecionado1 = null;
 let defeitoSelecionado2 = null;
 let defeitoCentralFinal = null;
 let selecoesDefeito = 0;
+let generatedAge = null; // <--- ADICIONE ESTA LINHA
 
 // Função auxiliar para gerar um número inteiro aleatório entre min e max (inclusive)
 function getRandomInt(min, max) {
@@ -398,6 +399,42 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    document.addEventListener("DOMContentLoaded", () => {
+    // ... (seu código do accordion e do defeito central) ...
+
+
+    // --- INÍCIO DO BLOCO DE CÓDIGO DA IDADE ---
+    const idadeSelect = document.getElementById("idade");
+    if (idadeSelect) {
+        idadeSelect.addEventListener("change", () => {
+            const selectedAgeRange = idadeSelect.value;
+            let minAge, maxAge;
+
+            switch (selectedAgeRange) {
+                case "Neófito (12-20 anos)":
+                    minAge = 12;
+                    maxAge = 20;
+                    break;
+                case "Confessor (25-35 anos)":
+                    minAge = 25;
+                    maxAge = 35;
+                    break;
+                case "Adepto (45-60 anos)":
+                    minAge = 45;
+                    maxAge = 60;
+                    break;
+                default:
+                    generatedAge = null;
+                    return;
+            }
+            generatedAge = getRandomInt(minAge, maxAge);
+            console.log(`Idade aleatória gerada: ${generatedAge} anos`);
+            // Salva os dados imediatamente após gerar a idade
+            savePlayerData(auth.currentUser.uid, getPlayerStats());
+        });
+    }
+    // --- FIM DO BLOCO DE CÓDIGO DA IDADE ---
+
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             console.log("Usuário autenticado:", user.uid);
@@ -496,4 +533,5 @@ document.addEventListener("DOMContentLoaded", () => {
 // 🔹 Mantendo os métodos utilitários necessários
 window.rollStat = rollStat;
 window.resetStat = resetStat;
+
 
