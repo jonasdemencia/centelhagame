@@ -4304,8 +4304,9 @@ if (window.punhaladaVenenosaContext) {
         
         
 // Verifica se é um ataque de toque mágico
-const isTouchSpell = (window.touchSpellContext !== null && window.touchSpellContext !== undefined) || 
-                     (window.touchDebuffContext !== null && window.touchDebuffContext !== undefined);
+const isTouchSpell = (window.touchSpellContext !== null && window.touchSpellContext !== undefined) ||
+(window.touchDebuffContext !== null && window.touchDebuffContext !== undefined) ||
+(window.touchVampiricContext !== null && window.touchVampiricContext !== undefined);
         
 
 // --- LÓGICA DE GASTO DE MUNIÇÃO (apenas para ataques normais) ---
@@ -4375,10 +4376,9 @@ if (!isTouchSpell) {
 }
     
 if (isTouchSpell) {
-    const spellName = window.touchSpellContext?.nome || window.touchDebuffContext?.nome;
+    const spellName = window.touchSpellContext?.nome || window.touchDebuffContext?.nome || window.touchVampiricContext?.nome;
     await addLogMessage(`Tentando tocar ${currentMonster.nome} com ${spellName}...`, 800);
 }
-
 
         console.log("LOG: Botão 'Atacar Corpo a Corpo' clicado.");
 
