@@ -386,7 +386,7 @@ const magias = [
         duracao: "3 turnos"
     },
     {
-    id: "relampago",
+    id: "relampago (AEROTREMORIS)",
     nome: "Relâmpago",
     nomeVerdadeiro: "Tremor do Céu Partido",
     descricao: "O conjurador rasga o véu entre os mundos, invocando a ira elétrica dos céus. Raios serpenteiam pelo ar, saltando entre os inimigos como cobras de luz pura.",
