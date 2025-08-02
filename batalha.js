@@ -625,6 +625,28 @@ function endPlayerTurn() {
         return;
     }
 
+    // ADICIONAR ESTE BLOCO NO INÍCIO:
+    const velocidadeBuff = activeBuffs.find(buff => buff.tipo === "velocidade");
+    if (velocidadeBuff && !window.velocidadeUsada) {
+        window.velocidadeUsada = true;
+        addLogMessage("Buff de Velocidade: Você pode agir novamente!", 800);
+        // Reabilita botões para segunda ação
+        if (attackOptionsDiv) {
+            attackOptionsDiv.style.display = 'block';
+            const buttons = document.querySelectorAll('#attack-options button');
+            buttons.forEach(button => {
+                button.disabled = false;
+                if (button.id === 'atacar-corpo-a-corpo' || button.id === 'ato-classe' || button.id === 'itens-ferramentas' || button.id === 'atacar-a-distancia') {
+                    button.style.display = 'inline-block';
+                }
+            });
+        }
+        return; // Não passa o turno ainda
+    }
+    
+    // Reset da flag de velocidade para o próximo turno
+    window.velocidadeUsada = false;
+
     isPlayerTurn = false; // Marca que o turno do jogador acabou
     window.isPlayerTurn = false; // Atualiza a variável global
 
@@ -784,6 +806,14 @@ const magiasDisponiveis = [
     areaRadius: 2,
     allowsResistance: true
 },
+    {
+    id: "velocidade",
+    nome: "Velocidade",
+    descricao: "Ganha +2 couraça e 2 ações por turno por 3 turnos + 1d20",
+    custo: 10,
+    efeito: "velocidade",
+    valor: 2
+},
 {
         id: "armadura-arcana",
         nome: "Armadura Arcana",
@@ -926,6 +956,12 @@ async function endMonsterTurn() {
 
     isPlayerTurn = true;
     window.isPlayerTurn = true;
+
+    // Verifica se tem buff de velocidade para dupla ação
+    const velocidadeBuff = activeBuffs.find(buff => buff.tipo === "velocidade");
+    if (velocidadeBuff && !window.velocidadeUsada) {
+        window.velocidadeUsada = false; // Reset para o turno
+    }
 
     startNewTurnBlock("Jogador");
     const turnConsumedBySpell = await processBuffs();
@@ -1839,6 +1875,32 @@ if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === '
         endPlayerTurn();
     }
     // --- FIM DO CÓDIGO A SER ADICIONADO ---
+    
+    // --- VELOCIDADE ---
+    else if (efeito === "velocidade") {
+    const duracao = 3 + rollDice("1d20");
+    
+    // Remove buff anterior se existir
+    activeBuffs = activeBuffs.filter(buff => buff.tipo !== "velocidade");
+    
+    // Adiciona buff de velocidade
+    activeBuffs.push({
+        tipo: "velocidade",
+        valor: parseInt(valor), // +2 couraça
+        turnos: duracao,
+        nome: magia.nome,
+        acoesPorTurno: 2
+    });
+    
+    updateBuffsDisplay();
+    await addLogMessage(`Velocidade ativada! +${valor} couraça e 2 ações por turno por ${duracao} turnos.`, 800);
+    window.arcanumIudicium.sucesso();
+    
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, battleId, playerHealth);
+    endPlayerTurn();
+}
+    // --- VELOCIDADE ---
 }
 
 async function salvarDropsNoLoot(userId, drops) {
@@ -2008,6 +2070,7 @@ function getPlayerDefense() {
   activeBuffs.forEach(buff => {
     if (buff.tipo === "couraca" || buff.couracaBonus) buffBonus += buff.valor || buff.couracaBonus;
     if (buff.tipo === "anastia") buffBonus += buff.valor; // valor é -10
+    if (buff.tipo === "velocidade") buffBonus += buff.valor; // ADICIONAR ESTA LINHA
   });
   return baseDefense + buffBonus;
 }
