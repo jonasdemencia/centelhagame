@@ -154,7 +154,7 @@ function getSpellBaseWord(spellId) {
         'cura-menor': 'SANITAS',
         'escudo-arcano': 'AEGIS',
         'flecha-acida-melf': 'SAGITTAMELFAX',
-        'relampago': 'AEROTREMORIS'  // ← ADICIONAR ESTA LINHA
+        'relampago': 'AEROTREMORIS',  // ← ADICIONAR ESTA LINHA
         'toque-vampirico': 'THERMOVORUS'  // ← ADICIONAR ESTA LINHA
 
     };
@@ -833,6 +833,7 @@ window.ArcanumSpells = {
     validateConjuration,
     resetArcanumBattle,
 };
+
 
 
 
