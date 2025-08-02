@@ -625,7 +625,14 @@ function endPlayerTurn() {
         return;
     }
 
-    // ADICIONAR ESTE BLOCO NO INÍCIO:
+    // VELOCIDADE - VERIFICAR SE TODOS OS MONSTROS ESTÃO MORTOS ANTES DA SEGUNDA AÇÃO
+    const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+    if (monstersAlive.length === 0) {
+        console.log("LOG: Todos os monstros mortos, não permitindo segunda ação de Velocidade");
+        window.velocidadeUsada = false;
+        return; // Não continua se não há monstros vivos
+    }
+
     const velocidadeBuff = activeBuffs.find(buff => buff.tipo === "velocidade");
     if (velocidadeBuff && !window.velocidadeUsada) {
         window.velocidadeUsada = true;
