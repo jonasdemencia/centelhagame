@@ -1454,23 +1454,46 @@ function updateCharacterSheet(playerData) {
     document.getElementById("char-class").innerText = playerData.class || "-";
     document.getElementById("char-alignment").innerText = playerData.alignment || "-";
     
-    // --- Início do Bloco de Idade ---
-// Verifica se a propriedade 'idade' não existe no objeto do jogador
-if (playerData.idade === undefined) {
-    // Se não existir, define uma idade padrão de 20 anos
-    playerData.idade = 20; 
+    // --- Início do Bloco de Idade Robusto ---
+
+// Função auxiliar para gerar um número inteiro aleatório entre min e max (inclusive)
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// Verifica se a idade do jogador NÃO é um número. Isso corrige personagens com a string errada ou sem idade.
+if (typeof playerData.idade !== 'number') {
+    let newAge = 20; // Idade padrão caso a lógica abaixo falhe
+
+    // Se a idade for uma string (como "Adepto (45-60 anos)"), tenta extrair a faixa etária
+    if (typeof playerData.idade === 'string') {
+        // Procura por um padrão como "(XX-YY anos)"
+        const matches = playerData.idade.match(/\((\d+)-(\d+)\s*anos\)/);
+        if (matches && matches.length === 3) {
+            const minAge = parseInt(matches[1], 10);
+            const maxAge = parseInt(matches[2], 10);
+            // Gera uma idade aleatória dentro da faixa encontrada
+            newAge = getRandomInt(minAge, maxAge);
+        }
+    }
     
-    // E salva essa idade padrão no Firestore para o personagem atual
+    // Define a idade corrigida para o personagem
+    playerData.idade = newAge; 
+    
+    // Salva a idade correta (numérica) no Firestore para não precisar fazer isso de novo
     const uid = auth.currentUser?.uid;
     if (uid) {
         const playerRef = doc(db, "players", uid);
         updateDoc(playerRef, { idade: playerData.idade });
-        console.log(`Idade padrão (20) definida para o usuário ${uid}`);
+        console.log(`Idade do personagem corrigida para: ${playerData.idade}`);
     }
 }
-// Finalmente, atualiza o elemento HTML com a idade (seja a que já existia ou a padrão)
+
+// Atualiza o elemento HTML com a idade correta (agora garantido que é um número)
 document.getElementById("char-idade").innerText = playerData.idade;
-// --- Fim do Bloco de Idade ---
+// --- Fim do Bloco de Idade Robusto ---
 
     
     // Atualiza energia e barra de HP
@@ -1533,5 +1556,6 @@ async function savePlayerData(uid, playerData) {
         console.error("Erro ao salvar os dados do jogador:", error);
     }
 }
+
 
 
