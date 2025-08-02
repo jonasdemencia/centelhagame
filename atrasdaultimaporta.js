@@ -399,7 +399,19 @@ const magias = [
     duracao: "Instantânea"
 },
 
-    
+    {
+    id: "velocidade",
+    nome: "Velocidade",
+    nomeVerdadeiro: "Celeritas Duplex",
+    descricao: "Acelera drasticamente os reflexos e movimentos, permitindo múltiplas ações em combate.",
+    custo: 10,
+    efeito: "+2 couraça e 2 ações por turno",
+    componente: null,
+    resistencia: "Não",
+    tempoExecucao: "1 turno",
+    duracao: "3 turnos + 1d20"
+},
+
     {
         id: "causar-medo",
         nome: "Causar Medo (TIMORIS)",
