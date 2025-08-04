@@ -602,20 +602,19 @@ if (armsDebuff) {
             await addLogMessage(`<em>${randomEffect}</em>`, 800);
         }
 
-        // Verifica imunidade de Pele Rochosa
+        // Verifica imunidade de Pele Rochosa (decrementa a cada ataque)
 const peleRochosaBuff = activeBuffs.find(buff => buff.tipo === "pele_rochosa");
 if (peleRochosaBuff) {
-    await addLogMessage(`Pele Rochosa: Você é imune ao ataque físico!`, 1000);
-    
-    // Reduz duração em 1 (cada ataque, acertando ou não)
     peleRochosaBuff.turnos--;
     if (peleRochosaBuff.turnos <= 0) {
         activeBuffs = activeBuffs.filter(buff => buff.tipo !== "pele_rochosa");
         await addLogMessage(`Pele Rochosa se dissipou.`, 800);
     }
     updateBuffsDisplay();
+    await addLogMessage(`Pele Rochosa: Você é imune ao ataque físico!`, 1000);
     return;
 }
+
 
         playerHealth -= monsterDamageRoll;
         atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
@@ -2120,7 +2119,8 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff" && efeito !== "area_d
     await saveBattleState(userId, battleId, playerHealth);
     endPlayerTurn();
 }
-    else if (efeito === "pele_rochosa") {
+        
+   else if (efeito === "pele_rochosa") {
     const duracao = rollDice("1d4") + rollDice("1d10");
     
     activeBuffs = activeBuffs.filter(buff => buff.tipo !== "pele_rochosa");
@@ -2129,11 +2129,12 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff" && efeito !== "area_d
         tipo: "pele_rochosa",
         valor: 1,
         turnos: duracao,
-        nome: magia.nome
+        nome: magia.nome,
+        permanent: true // Flag para não ser processado em processBuffs()
     });
     
     updateBuffsDisplay();
-    await addLogMessage(`Pele Rochosa ativada! Imunidade total a ataques físicos por ${duracao} turnos.`, 800);
+    await addLogMessage(`Pele Rochosa ativada! Imunidade total a ataques físicos por ${duracao} ataques.`, 800);
     
     window.arcanumIudicium.sucesso();
     
@@ -2454,7 +2455,9 @@ async function processBuffs() {
     if (activeBuffs.length === 0) return false;
 
     // Reduz duração de todos os buffs
-    activeBuffs.forEach(buff => buff.turnos--);
+activeBuffs.forEach(buff => {
+    if (!buff.permanent) buff.turnos--;
+});
 
     // Ativa Anastia após o carregamento
     const anastiaLoading = activeBuffs.find(buff => buff.tipo === "anastia_loading" && buff.turnos <= 0);
