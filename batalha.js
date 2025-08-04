@@ -460,6 +460,28 @@ if (burnDebuff) {
         return;
     }
 }
+    // Processa Assassino Fantasmagórico
+const phantomDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "phantom_assassin");
+if (phantomDebuff) {
+    const assassinRoll = Math.floor(Math.random() * 20) + 1;
+    const monsterDefense = getMonsterDefense();
+    
+    await addLogMessage(`O Assassino Fantasmagórico ataca ${currentMonster.nome}: ${assassinRoll} vs ${monsterDefense}`, 1000);
+    
+    if (assassinRoll >= monsterDefense) {
+        await addLogMessage(`<p style="color: darkred; font-weight: bold;">O Assassino Fantasmagórico executa ${currentMonster.nome}!</p>`, 1200);
+        currentMonster.pontosDeEnergia = 0;
+        displayAllMonsterHealthBars();
+        
+        const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+        if (monstersAlive.length === 0) {
+            handlePostBattle(currentMonster);
+        }
+        return;
+    } else {
+        await addLogMessage(`O Assassino Fantasmagórico falha em seu ataque.`, 800);
+    }
+}
 
     // Processa DOT ácido
 const acidDot = currentMonster.activeMonsterDebuffs.find(debuff => debuff.tipo === "acid_dot");
@@ -812,6 +834,14 @@ const magiasDisponiveis = [
     custo: 3,
     efeito: "touch_debuff",
     valor: "1d4+1"
+},
+    {
+    id: "assassino-fantasmagorico",
+    nome: "Assassino Fantasmagórico",
+    descricao: "Invoca um assassino que tenta matar o alvo. Se resistir, se volta contra você.",
+    custo: 15,
+    efeito: "phantom_assassin",
+    valor: 1
 },
     {
     id: "escudo-do-fogo",
@@ -2015,6 +2045,58 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff" && efeito !== "area_d
     await saveBattleState(userId, battleId, playerHealth);
     endPlayerTurn();
 }
+    else if (efeito === "phantom_assassin") {
+    // Teste de resistência do monstro
+    const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+    const resistanceTotal = resistanceRoll + currentMonster.habilidade;
+    const difficulty = 20;
+    
+    await addLogMessage(`${currentMonster.nome} tenta resistir ao Assassino Fantasmagórico: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
+    
+    if (resistanceTotal >= difficulty) {
+        await addLogMessage(`${currentMonster.nome} resistiu! O assassino se volta contra você!`, 1000);
+        
+        // Mago faz teste de resistência
+        const playerResistanceRoll = Math.floor(Math.random() * 20) + 1;
+        const playerHabilidade = playerData?.skill?.total || 0;
+        const playerResistanceTotal = playerResistanceRoll + playerHabilidade;
+        
+        await addLogMessage(`Você tenta resistir: ${playerResistanceRoll} + ${playerHabilidade} = ${playerResistanceTotal} vs ${difficulty}`, 1000);
+        
+        if (playerResistanceTotal >= difficulty) {
+            await addLogMessage(`Você resistiu! O assassino se dissipa.`, 800);
+        } else {
+            await addLogMessage(`Você falhou! O assassino agora persegue você!`, 1000);
+            const duracao = 1 + rollDice("1d20");
+            
+            activeBuffs.push({
+                tipo: "phantom_assassin",
+                valor: 1,
+                turnos: duracao,
+                nome: "Assassino Fantasmagórico",
+                target: "player"
+            });
+            updateBuffsDisplay();
+        }
+    } else {
+        await addLogMessage(`${currentMonster.nome} falhou! O assassino o perseguirá!`, 800);
+        const duracao = 1 + rollDice("1d20");
+        
+        if (!currentMonster.activeMonsterDebuffs) currentMonster.activeMonsterDebuffs = [];
+        currentMonster.activeMonsterDebuffs.push({
+            tipo: "phantom_assassin",
+            valor: 1,
+            turnos: duracao,
+            nome: "Assassino Fantasmagórico"
+        });
+        displayAllMonsterHealthBars();
+    }
+    
+    window.arcanumIudicium.sucesso();
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, battleId, playerHealth);
+    endPlayerTurn();
+}
 }
 
 async function salvarDropsNoLoot(userId, drops) {
@@ -2403,6 +2485,36 @@ async function processBuffs() {
         }
     }
     // --- FIM DO CÓDIGO A SER ADICIONADO ---
+
+    // --- INSIRA AQUI O TRECHO DO ASSASSINO FANTASMAGÓRICO ---
+  const phantomBuff = activeBuffs.find(buff => buff.tipo === "phantom_assassin");
+  if (phantomBuff) {
+    const assassinRoll = Math.floor(Math.random() * 20) + 1;
+    const playerDefense = getPlayerDefense();
+    
+    await addLogMessage(`O Assassino Fantasmagórico ataca você: ${assassinRoll} vs ${playerDefense}`, 1000);
+    
+    if (assassinRoll >= playerDefense) {
+      await addLogMessage(
+        `<p style="color: darkred; font-weight: bold;">O Assassino Fantasmagórico te executa! Você morreu!</p>`,
+        1200
+      );
+      playerHealth = -11; // Força morte
+      atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+      
+      const user = auth.currentUser;
+      if (user) await updatePlayerEnergyInFirestore(user.uid, playerHealth);
+      
+      if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+      return true; // Turno consumido
+    } else {
+      await addLogMessage(
+        `O Assassino Fantasmagórico falha em seu ataque contra você.`,
+        800
+      );
+    }
+  }
+  // --- FIM DO BLOCO ASSASSINO FANTASMAGÓRICO ---
     return false; // SINALIZA QUE O TURNO NÃO FOI CONSUMIDO
 }
 
