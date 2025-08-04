@@ -3467,14 +3467,19 @@ if (fecharPainelAtos) {
 window.currentMonsters = [];
 monsterNames.forEach((name, index) => {
     const monsterData = getMonsterById(name.trim());
-    console.log("Carregando monstro:", name.trim(), monsterData); // <-- AQUI!
     if (monsterData) {
         const monsterInstance = JSON.parse(JSON.stringify(monsterData));
-        monsterInstance.id = `${monsterData.id || name.trim()}_${index}`; // Garante ID único
-        monsterInstance.pontosDeEnergiaMax = monsterInstance.pontosDeEnergia;
+        monsterInstance.id = `${monsterData.id || name.trim()}_${index}`;
+        
+        // Rola energia do monstro
+        const energiaRolada = rollDice(monsterInstance.energiaDados);
+        monsterInstance.pontosDeEnergia = energiaRolada;
+        monsterInstance.pontosDeEnergiaMax = energiaRolada;
+        
         window.currentMonsters.push(monsterInstance);
     }
 });
+
 
 // Define o alvo inicial do jogador
 window.currentMonster = window.currentMonsters[0] || null;
@@ -3653,13 +3658,14 @@ if (window.currentMonsters.length > 0) { // Verifica se há monstros para a bata
                 activeBuffs = savedState.activeBuffs || [];
 
                 // Carrega os dados de cada monstro
-                savedState.monsters.forEach(monsterData => {
-                    const monsterToUpdate = window.currentMonsters.find(m => m.id === monsterData.id);
-                    if (monsterToUpdate) {
-                        monsterToUpdate.pontosDeEnergia = monsterData.pontosDeEnergia;
-                        monsterToUpdate.activeMonsterDebuffs = monsterData.activeMonsterDebuffs || [];
-                    }
-                });
+savedState.monsters.forEach(monsterData => {
+    const monsterToUpdate = window.currentMonsters.find(m => m.id === monsterData.id);
+    if (monsterToUpdate) {
+        monsterToUpdate.pontosDeEnergia = monsterData.pontosDeEnergia;
+        monsterToUpdate.pontosDeEnergiaMax = monsterData.pontosDeEnergiaMax; // Adicionar esta linha
+        monsterToUpdate.activeMonsterDebuffs = monsterData.activeMonsterDebuffs || [];
+    }
+});
 
                 console.log("LOG: onAuthStateChanged - Estado da batalha carregado do Firestore:", savedState);
 
