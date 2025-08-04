@@ -3666,8 +3666,8 @@ if (window.currentMonsters.length > 0) { // Verifica se há monstros para a bata
 savedState.monsters.forEach(monsterData => {
     const monsterToUpdate = window.currentMonsters.find(m => m.id === monsterData.id);
     if (monsterToUpdate) {
+        // Apenas a energia ATUAL é restaurada. A MÁXIMA (rolada no início) é mantida.
         monsterToUpdate.pontosDeEnergia = monsterData.pontosDeEnergia;
-        monsterToUpdate.pontosDeEnergiaMax = monsterData.pontosDeEnergiaMax || monsterData.pontosDeEnergia;
         monsterToUpdate.activeMonsterDebuffs = monsterData.activeMonsterDebuffs || [];
     }
 });
