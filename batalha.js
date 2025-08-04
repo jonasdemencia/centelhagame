@@ -839,7 +839,7 @@ const magiasDisponiveis = [
     id: "assassino-fantasmagorico",
     nome: "Assassino Fantasmagórico",
     descricao: "Invoca um assassino que tenta matar o alvo. Se resistir, se volta contra você.",
-    custo: 15,
+    custo: 1,
     efeito: "phantom_assassin",
     valor: 1
 },
