@@ -398,6 +398,19 @@ const magias = [
     duracao: "Instantâneo"
 },
     {
+    id: "pele-rochosa",
+    nome: "Pele Rochosa (LAPIDEOCUTIS)",
+    nomeVerdadeiro: "Armamento da Rocha Viva",
+    descricao:
+      "O conjurador solidifica sua carne em pedra pura, tornando-se inabalável contra golpes físicos.",
+    custo: 2,
+    efeito: "Imunidade total a ataques físicos; cada ataque sofrido (acertar ou não) reduz 1 turno de duração",
+    componente: "Nenhum",
+    resistencia: "Nenhuma",
+    tempoExecucao: "Instantâneo",
+    duracao: "1d4 turnos + 1d10"
+  },
+    {
     id: "assassino-fantasmagorico",
     nome: "Assassino Fantasmagórico",
     nomeVerdadeiro: "Leviatã das Sombras Silenciosas",
