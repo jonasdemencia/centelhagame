@@ -2981,7 +2981,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
     const rolarDanoButton = document.getElementById("rolar-dano");
     const monsterNamesParam = getUrlParameter('monstros'); // Ex: "lobo,lobo" ou "lobo,esqueleto"
-    monsterNames = monsterNamesParam ? monsterNamesParam.split(',') : ['lobo', 'lobo']; // Padrão: 2 lobos
+    monsterNames = monsterNamesParam ? monsterNamesParam.split(',') : [getUrlParameter('monstro') || 'lobo'];
     // Cria um ID único e consistente para a batalha, independente da ordem dos monstros na URL
     battleId = [...monsterNames].sort().join('_');
     console.log("LOG: Battle ID gerado:", battleId);
