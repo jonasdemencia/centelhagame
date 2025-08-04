@@ -3466,14 +3466,23 @@ if (fecharPainelAtos) {
 // Limpa monstros antigos e carrega os novos
 window.currentMonsters = [];
 monsterNames.forEach((name, index) => {
-    const monsterData = getMonsterById(name.trim());
-    console.log("Carregando monstro:", name.trim(), monsterData); // <-- AQUI!
-    if (monsterData) {
-        const monsterInstance = JSON.parse(JSON.stringify(monsterData));
-        monsterInstance.id = `${monsterData.id || name.trim()}_${index}`; // Garante ID único
-        monsterInstance.pontosDeEnergiaMax = monsterInstance.pontosDeEnergia;
-        window.currentMonsters.push(monsterInstance);
+  const monsterData = getMonsterById(name.trim());
+  console.log("Carregando monstro:", name.trim(), monsterData);
+  if (monsterData) {
+    const monsterInstance = JSON.parse(JSON.stringify(monsterData));
+    monsterInstance.id = `${monsterData.id || name.trim()}_${index}`; // Garante ID único
+
+    // --- ENERGIA ALEATÓRIA ---
+    if (monsterInstance.energiaDados) {
+      const energiaSorteada = rollDice(monsterInstance.energiaDados);
+      monsterInstance.pontosDeEnergia = energiaSorteada;
+      monsterInstance.pontosDeEnergiaMax = energiaSorteada;
+    } else if (typeof monsterInstance.pontosDeEnergia !== 'undefined') {
+      monsterInstance.pontosDeEnergiaMax = monsterInstance.pontosDeEnergia;
     }
+
+    window.currentMonsters.push(monsterInstance);
+  }
 });
 
 // Define o alvo inicial do jogador
