@@ -602,6 +602,21 @@ if (armsDebuff) {
             await addLogMessage(`<em>${randomEffect}</em>`, 800);
         }
 
+        // Verifica imunidade de Pele Rochosa
+const peleRochosaBuff = activeBuffs.find(buff => buff.tipo === "pele_rochosa");
+if (peleRochosaBuff) {
+    await addLogMessage(`Pele Rochosa: Você é imune ao ataque físico!`, 1000);
+    
+    // Reduz duração em 1 (cada ataque, acertando ou não)
+    peleRochosaBuff.turnos--;
+    if (peleRochosaBuff.turnos <= 0) {
+        activeBuffs = activeBuffs.filter(buff => buff.tipo !== "pele_rochosa");
+        await addLogMessage(`Pele Rochosa se dissipou.`, 800);
+    }
+    updateBuffsDisplay();
+    return;
+}
+
         playerHealth -= monsterDamageRoll;
         atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
         await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano${isCriticalHit ? " crítico" : ""}.`, 1000);
@@ -834,6 +849,14 @@ const magiasDisponiveis = [
     custo: 3,
     efeito: "touch_debuff",
     valor: "1d4+1"
+},
+    {
+    id: "pele-rochosa",
+    nome: "Pele Rochosa",
+    descricao: "Imunidade total a ataques físicos por 1d4+1d10 turnos",
+    custo: 2,
+    efeito: "pele_rochosa",
+    valor: 1
 },
     {
     id: "assassino-fantasmagorico",
@@ -2093,6 +2116,27 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff" && efeito !== "area_d
     }
     
     window.arcanumIudicium.sucesso();
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, battleId, playerHealth);
+    endPlayerTurn();
+}
+    else if (efeito === "pele_rochosa") {
+    const duracao = rollDice("1d4") + rollDice("1d10");
+    
+    activeBuffs = activeBuffs.filter(buff => buff.tipo !== "pele_rochosa");
+    
+    activeBuffs.push({
+        tipo: "pele_rochosa",
+        valor: 1,
+        turnos: duracao,
+        nome: magia.nome
+    });
+    
+    updateBuffsDisplay();
+    await addLogMessage(`Pele Rochosa ativada! Imunidade total a ataques físicos por ${duracao} turnos.`, 800);
+    
+    window.arcanumIudicium.sucesso();
+    
     await updatePlayerMagicInFirestore(userId, playerMagic);
     await saveBattleState(userId, battleId, playerHealth);
     endPlayerTurn();
