@@ -1996,10 +1996,8 @@ if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === '
     else if (efeito === "fire_shield") {
     const duracao = 2 + rollDice("1d20");
     
-    // Remove buff anterior se existir
     activeBuffs = activeBuffs.filter(buff => buff.tipo !== "fire_shield");
     
-    // Adiciona buff de escudo do fogo
     activeBuffs.push({
         tipo: "fire_shield",
         valor: parseInt(valor),
