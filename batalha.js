@@ -3471,15 +3471,19 @@ monsterNames.forEach((name, index) => {
         const monsterInstance = JSON.parse(JSON.stringify(monsterData));
         monsterInstance.id = `${monsterData.id || name.trim()}_${index}`;
         
-        // Rola energia do monstro
-        const energiaRolada = rollDice(monsterInstance.energiaDados);
-        monsterInstance.pontosDeEnergia = energiaRolada;
-        monsterInstance.pontosDeEnergiaMax = energiaRolada;
+        // Rola energia do monstro ou usa valor fixo como fallback
+        if (monsterInstance.energiaDados) {
+            const energiaRolada = rollDice(monsterInstance.energiaDados);
+            monsterInstance.pontosDeEnergia = energiaRolada;
+            monsterInstance.pontosDeEnergiaMax = energiaRolada;
+        } else {
+            // Fallback para monstros sem energiaDados
+            monsterInstance.pontosDeEnergiaMax = monsterInstance.pontosDeEnergia;
+        }
         
         window.currentMonsters.push(monsterInstance);
     }
 });
-
 
 // Define o alvo inicial do jogador
 window.currentMonster = window.currentMonsters[0] || null;
