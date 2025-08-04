@@ -1740,7 +1740,6 @@ else if (efeito === "fire_shield") {
     await updatePlayerMagicInFirestore(userId, playerMagic);
     await saveBattleState(userId, battleId, playerHealth);
     endPlayerTurn();
-}
 
         
     } else if (efeito === "stun") {
