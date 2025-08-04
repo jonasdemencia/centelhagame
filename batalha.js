@@ -3461,27 +3461,17 @@ if (fecharPainelAtos) {
 // --- FIM DO BLOCO DE ATOS ---
 
 
-
-
 // Tenta carregar o monstro do sessionStorage primeiro
-// Limpa monstros antigos e carrega os novos
+// NOVO CÓDIGO (CORRETO)
 window.currentMonsters = [];
 monsterNames.forEach((name, index) => {
     const monsterData = getMonsterById(name.trim());
     if (monsterData) {
+        // Cria uma cópia profunda para evitar modificar o objeto original
         const monsterInstance = JSON.parse(JSON.stringify(monsterData));
+        // Atribui um ID único para esta instância específica na batalha
         monsterInstance.id = `${monsterData.id || name.trim()}_${index}`;
-        
-        // Rola energia do monstro ou usa valor fixo como fallback
-        if (monsterInstance.energiaDados) {
-            const energiaRolada = rollDice(monsterInstance.energiaDados);
-            monsterInstance.pontosDeEnergia = energiaRolada;
-            monsterInstance.pontosDeEnergiaMax = energiaRolada;
-        } else {
-            // Fallback para monstros sem energiaDados
-            monsterInstance.pontosDeEnergiaMax = monsterInstance.pontosDeEnergia;
-        }
-        
+        // A energia será definida posteriormente, após verificar o estado salvo
         window.currentMonsters.push(monsterInstance);
     }
 });
@@ -3651,60 +3641,68 @@ async function updatePlayerExperience(userId, xpToAdd) {
 
             // Carregar o estado da batalha ao carregar a página
 if (window.currentMonsters.length > 0) { // Verifica se há monstros para a batalha
-    loadBattleState(userId, battleId)
-        .then(savedState => {
-            if (savedState) {
-                // Carrega os dados do jogador
-                playerHealth = savedState.playerHealth;
-                isPlayerTurn = savedState.isPlayerTurn;
-                window.isPlayerTurn = savedState.isPlayerTurn;
-                battleStarted = savedState.battleStarted || true;
-                window.battleStarted = savedState.battleStarted || true;
-                activeBuffs = savedState.activeBuffs || [];
+    // NOVO CÓDIGO (CORRETO)
+loadBattleState(userId, battleId)
+    .then(savedState => {
+        if (savedState && savedState.monsters) {
+            // ESTADO SALVO ENCONTRADO: Restaura a batalha exatamente como estava
+            console.log("LOG: Restaurando batalha a partir do estado salvo.");
+            playerHealth = savedState.playerHealth;
+            isPlayerTurn = savedState.isPlayerTurn;
+            window.isPlayerTurn = savedState.isPlayerTurn;
+            battleStarted = savedState.battleStarted || true;
+            window.battleStarted = savedState.battleStarted || true;
+            activeBuffs = savedState.activeBuffs || [];
 
-                // Carrega os dados de cada monstro
-savedState.monsters.forEach(monsterData => {
-    const monsterToUpdate = window.currentMonsters.find(m => m.id === monsterData.id);
-    if (monsterToUpdate) {
-        // Apenas a energia ATUAL é restaurada. A MÁXIMA (rolada no início) é mantida.
-        monsterToUpdate.pontosDeEnergia = monsterData.pontosDeEnergia;
-        monsterToUpdate.activeMonsterDebuffs = monsterData.activeMonsterDebuffs || [];
-    }
-});
-
-                console.log("LOG: onAuthStateChanged - Estado da batalha carregado do Firestore:", savedState);
-
-                // Atualiza a UI
-                atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-                displayAllMonsterHealthBars();
-                updateBuffsDisplay();
-                updatePlayerCouracaDisplay();
-
-                // Define o alvo atual como o primeiro monstro vivo
-                window.currentMonster = window.currentMonsters.find(m => m.pontosDeEnergia > 0) || null;
-                currentMonster = window.currentMonster;
-                if(currentMonster) updateMonsterInfoUI();
-
-                // Esconde botões de início
-                const lutarButton = document.getElementById("iniciar-luta");
-                const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
-                if (lutarButton) lutarButton.style.display = 'none';
-                if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'none';
-
-                // Continua a batalha de onde parou
-                if (isPlayerTurn) {
-                    startNewTurnBlock("Jogador");
-                    addLogMessage("Turno do Jogador", 1000);
-                    if (attackOptionsDiv) attackOptionsDiv.style.display = 'block';
-                } else {
-                    startNewTurnBlock("Oponentes");
-                    addLogMessage("Turno dos Oponentes", 1000);
-                    if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
-                    setTimeout(() => { monstersTurn(); }, 2000);
+            // Itera sobre os monstros SALVOS e atualiza as instâncias na memória
+            savedState.monsters.forEach(monsterData => {
+                const monsterToUpdate = window.currentMonsters.find(m => m.id === monsterData.id);
+                if (monsterToUpdate) {
+                    monsterToUpdate.pontosDeEnergia = monsterData.pontosDeEnergia;
+                    // IMPORTANTE: Restaura a energia MÁXIMA do estado salvo
+                    monsterToUpdate.pontosDeEnergiaMax = monsterData.pontosDeEnergiaMax;
+                    monsterToUpdate.activeMonsterDebuffs = monsterData.activeMonsterDebuffs || [];
                 }
+            });
+
+            // Esconde botões de início e continua a batalha
+            const lutarButton = document.getElementById("iniciar-luta");
+            const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
+            if (lutarButton) lutarButton.style.display = 'none';
+            if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'none';
+
+            if (isPlayerTurn) {
+                startNewTurnBlock("Jogador");
+                addLogMessage("Turno do Jogador", 1000);
+                if (attackOptionsDiv) attackOptionsDiv.style.display = 'block';
+            } else {
+                startNewTurnBlock("Oponentes");
+                addLogMessage("Turno dos Oponentes", 1000);
+                if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+                setTimeout(() => { monstersTurn(); }, 2000);
             }
-        });
-}
+
+        } else {
+            // NENHUM ESTADO SALVO: Inicia uma nova batalha e rola a energia
+            console.log("LOG: Iniciando nova batalha, rolando energia dos monstros.");
+            window.currentMonsters.forEach(monster => {
+                if (monster.energiaDados) {
+                    const energiaRolada = rollDice(monster.energiaDados);
+                    monster.pontosDeEnergia = energiaRolada;
+                    monster.pontosDeEnergiaMax = energiaRolada;
+                } else {
+                    // Fallback para monstros sem a propriedade energiaDados
+                    monster.pontosDeEnergiaMax = monster.pontosDeEnergia;
+                }
+            });
+        }
+
+        // Este trecho de código agora funciona para os dois casos (batalha nova ou restaurada)
+        console.log("LOG: onAuthStateChanged - Estado da batalha carregado do Firestore:", savedState);
+        displayAllMonsterHealthBars();
+        updateBuffsDisplay();
+        updatePlayerCouracaDisplay();
+    });
 
             const playerDocRef = doc(db, "players", user.uid);
             getDoc(playerDocRef)
