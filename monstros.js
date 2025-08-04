@@ -8,7 +8,7 @@ export const monsterData = {
     imagem: "https://via.placeholder.com/150",
     descricao: "Um lobo selvagem com presas afiadas.",
     habilidade: 5,
-    couraça: 10,
+    couraça: 13,
     pontosDeEnergia: 15,
     pontosDeEnergiaMax: 15,
     experiencia: 50,
@@ -409,3 +409,4 @@ export const monsterData = {
 export function getMonsterById(monsterId) {
     return monsterData[monsterId] || null;
 }
+
