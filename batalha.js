@@ -6,7 +6,7 @@ import { loadEquippedDice, initializeModule } from './dice-ui.js';
 import { getMonsterById } from './monstros.js';
 import './arcanum-spells.js';
 
-// Itens iniciais que o jogador deve ter (adicionando propriedade de danoo)
+// Itens iniciais que o jogador deve ter (adicionando propriedade de dano)
 const initialItems = [
     { id: "bolsa-de-escriba", content: "Bolsa de escriba", description: "Uma bolsa para guardar pergaminhos e penas." },
     { id: "velas", content: "Velas", description: "Fontes de luz portáteis." },
