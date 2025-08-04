@@ -369,9 +369,6 @@ async function exibirJulgamentoGrimorio(categoria) {
 }
 
 
-
-
-
 const magias = [
     {
         id: "armadura-arcana",
@@ -404,7 +401,7 @@ const magias = [
     descricao:
       "O conjurador solidifica sua carne em pedra pura, tornando-se inabalável contra golpes físicos.",
     custo: 2,
-    efeito: "Imunidade total a ataques físicos; cada ataque sofrido (acertar ou não) reduz 1 turno de duração",
+    efeito: "Imunidade total a ataques físicos; cada ataque sofrido (acertar ou não) reduz 1 camada de proteção",
     componente: "Nenhum",
     resistencia: "Nenhuma",
     tempoExecucao: "Instantâneo",
