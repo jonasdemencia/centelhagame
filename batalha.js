@@ -584,7 +584,41 @@ if (armsDebuff) {
         atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
         await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano${isCriticalHit ? " crítico" : ""}.`, 1000);
 
-        // Salva o estado
+// Verifica reflexão do Escudo do Fogo
+const fireShieldBuff = activeBuffs.find(buff => buff.tipo === "fire_shield");
+if (fireShieldBuff) {
+    // Teste de resistência do monstro
+    const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+    const resistanceTotal = resistanceRoll + currentMonster.habilidade;
+    const difficulty = 20;
+    
+    await addLogMessage(`${currentMonster.nome} tenta resistir ao Escudo do Fogo: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 800);
+    
+    if (resistanceTotal < difficulty) {
+        currentMonster.pontosDeEnergia -= monsterDamageRoll;
+        currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+        displayAllMonsterHealthBars();
+        await addLogMessage(`<span style="color: orange;">Escudo do Fogo reflete ${monsterDamageRoll} de dano de volta para ${currentMonster.nome}!</span>`, 1000);
+        
+        if (currentMonster.pontosDeEnergia <= 0) {
+            await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado pela reflexão!</p>`, 1000);
+            const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+            if (monstersAlive.length === 0) {
+                handlePostBattle(currentMonster);
+                return;
+            } else {
+                window.currentMonster = monstersAlive[0];
+                currentMonster = window.currentMonster;
+                updateMonsterInfoUI();
+                displayAllMonsterHealthBars();
+            }
+        }
+    } else {
+        await addLogMessage(`${currentMonster.nome} resistiu ao Escudo do Fogo! Nenhum dano refletido.`, 800);
+    }
+}
+
+        
         // Salva o estado
 const user = auth.currentUser;
 if (user) {
@@ -778,6 +812,14 @@ const magiasDisponiveis = [
     custo: 3,
     efeito: "touch_debuff",
     valor: "1d4+1"
+},
+    {
+    id: "escudo-do-fogo",
+    nome: "Escudo do Fogo",
+    descricao: "Buff +2 couraça e reflete dano por 2 turnos + 1d20. Pode ser resistido.",
+    custo: 8,
+    efeito: "fire_shield",
+    valor: 2
 },
     {
     id: "toque-vampirico",
@@ -1673,7 +1715,34 @@ if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === '
         await updatePlayerMagicInFirestore(userId, playerMagic);
         await saveBattleState(userId, battleId, playerHealth);
         endPlayerTurn();
+        
 
+else if (efeito === "fire_shield") {
+    const duracao = 2 + rollDice("1d20");
+    
+    // Remove buff anterior se existir
+    activeBuffs = activeBuffs.filter(buff => buff.tipo !== "fire_shield");
+    
+    // Adiciona buff de escudo do fogo
+    activeBuffs.push({
+        tipo: "fire_shield",
+        valor: parseInt(valor),
+        turnos: duracao,
+        nome: magia.nome,
+        couracaBonus: parseInt(valor)
+    });
+    
+    updateBuffsDisplay();
+    await addLogMessage(`Escudo do Fogo ativado! +${valor} couraça e reflexão de dano por ${duracao} turnos.`, 800);
+    
+    window.arcanumIudicium.sucesso();
+    
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, battleId, playerHealth);
+    endPlayerTurn();
+}
+
+        
     } else if (efeito === "stun") {
         // Verifica se o monstro tem energia menor que 50
         if (currentMonster.pontosDeEnergiaMax >= 50) {
@@ -2118,6 +2187,8 @@ function getPlayerDefense() {
     if (buff.tipo === "couraca" || buff.couracaBonus) buffBonus += buff.valor || buff.couracaBonus;
     if (buff.tipo === "anastia") buffBonus += buff.valor; // valor é -10
     if (buff.tipo === "velocidade") buffBonus += buff.valor; // ADICIONAR ESTA LINHA
+    if (buff.tipo === "fire_shield") buffBonus += buff.valor;
+
   });
   return baseDefense + buffBonus;
 }
