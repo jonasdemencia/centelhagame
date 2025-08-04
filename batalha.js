@@ -2745,10 +2745,11 @@ function loadBattleState(userId, bId) {
 // Função para salvar o estado da batalha no Firestore
 function saveBattleState(userId, bId, playerHealth) {
     const monstersState = window.currentMonsters.map(m => ({
-        id: m.id, // ex: "lobo_0", "lobo_1"
-        pontosDeEnergia: m.pontosDeEnergia,
-        activeMonsterDebuffs: m.activeMonsterDebuffs || []
-    }));
+    id: m.id,
+    pontosDeEnergia: m.pontosDeEnergia,
+    pontosDeEnergiaMax: m.pontosDeEnergiaMax,
+    activeMonsterDebuffs: m.activeMonsterDebuffs || []
+}));
 
     console.log("LOG: saveBattleState chamado com:", { userId, battleId: bId, monstersState, playerHealth });
     if (!userId || !bId) {
@@ -3666,7 +3667,7 @@ savedState.monsters.forEach(monsterData => {
     const monsterToUpdate = window.currentMonsters.find(m => m.id === monsterData.id);
     if (monsterToUpdate) {
         monsterToUpdate.pontosDeEnergia = monsterData.pontosDeEnergia;
-        monsterToUpdate.pontosDeEnergiaMax = monsterData.pontosDeEnergiaMax; // Adicionar esta linha
+        monsterToUpdate.pontosDeEnergiaMax = monsterData.pontosDeEnergiaMax || monsterData.pontosDeEnergia;
         monsterToUpdate.activeMonsterDebuffs = monsterData.activeMonsterDebuffs || [];
     }
 });
