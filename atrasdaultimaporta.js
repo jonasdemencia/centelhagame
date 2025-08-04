@@ -581,6 +581,18 @@ const magias = [
     duracao: "1d10 turnos"
 },
     {
+  id: "escudo-do-fogo",
+  nome: "Escudo do Fogo (SCUTUM IGNIS)",
+  nomeVerdadeiro: "Muralha Ígnea Retaliadora",
+  descricao: "Palavras incandescentes na página explodem em chamas protetoras instantâneas ao redor do conjurador, formando um escudo flamejante.",
+  custo: 8,
+  efeito: "+2 Couraça; reflete todo o dano recebido de volta ao atacante",
+  componente: null,
+  resistencia: "Sim (atacante faz teste de resistência a magia ou sofre o dano refletido)",
+  tempoExecucao: "Instantâneo",
+  duracao: "2 turnos + 1d20"
+},
+    {
         id: "toque-macabro",
         nome: "Toque Macabro (EXSANGUO)",
         nomeVerdadeiro: "Frieza que Suga a Cor",
