@@ -397,7 +397,23 @@ const magias = [
     tempoExecucao: "1 turno",
     duracao: "Instantâneo"
 },
-
+    {
+    id: "assassino-fantasmagorico",
+    nome: "Assassino Fantasmagórico",
+    nomeVerdadeiro: "Leviatã das Sombras Silenciosas",
+    descricao:
+      "O mago traça sigilos impalpáveis e convoca o maior medo de seu oponente. " +
+      "Ele persegue o inimigo durante 1 turno + 1d20, tentando consumar sua morte.",
+    custo: 15,
+    efeito: "no início do turno da vítima, o espectro faz um ataque letal",
+    componente: "Nenhum",
+    resistencia:
+      "O alvo faz 1 teste de resistência. Se falhar, o espectro o persegue. " +
+      "Se passar, o assassino se volta contra o mago, que então faz seu próprio teste de resistência. " +
+      "Se o mago resistir, a magia se dispersa.",
+    tempoExecucao: "Instantâneo (magia de lançamento)",
+    duracao: "1 turno + 1d20"
+  },
     {
     id: "relampago",
     nome: "Relâmpago (AEROTREMORIS)",
