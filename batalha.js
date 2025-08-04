@@ -2049,7 +2049,7 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff" && efeito !== "area_d
     // Teste de resistência do monstro
     const resistanceRoll = Math.floor(Math.random() * 20) + 1;
     const resistanceTotal = resistanceRoll + currentMonster.habilidade;
-    const difficulty = 20;
+    const difficulty = 2;
     
     await addLogMessage(`${currentMonster.nome} tenta resistir ao Assassino Fantasmagórico: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 1000);
     
