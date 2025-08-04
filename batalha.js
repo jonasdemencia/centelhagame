@@ -1716,31 +1716,6 @@ if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === '
         await saveBattleState(userId, battleId, playerHealth);
         endPlayerTurn();
         
-
-else if (efeito === "fire_shield") {
-    const duracao = 2 + rollDice("1d20");
-    
-    // Remove buff anterior se existir
-    activeBuffs = activeBuffs.filter(buff => buff.tipo !== "fire_shield");
-    
-    // Adiciona buff de escudo do fogo
-    activeBuffs.push({
-        tipo: "fire_shield",
-        valor: parseInt(valor),
-        turnos: duracao,
-        nome: magia.nome,
-        couracaBonus: parseInt(valor)
-    });
-    
-    updateBuffsDisplay();
-    await addLogMessage(`Escudo do Fogo ativado! +${valor} couraça e reflexão de dano por ${duracao} turnos.`, 800);
-    
-    window.arcanumIudicium.sucesso();
-    
-    await updatePlayerMagicInFirestore(userId, playerMagic);
-    await saveBattleState(userId, battleId, playerHealth);
-    endPlayerTurn();
-
         
     } else if (efeito === "stun") {
         // Verifica se o monstro tem energia menor que 50
@@ -2016,7 +1991,32 @@ else if (efeito === "fire_shield") {
     await saveBattleState(userId, battleId, playerHealth);
     endPlayerTurn();
 }
-    // --- VELOCIDADE ---
+    // --- FIM VELOCIDADE ---
+
+    else if (efeito === "fire_shield") {
+    const duracao = 2 + rollDice("1d20");
+    
+    // Remove buff anterior se existir
+    activeBuffs = activeBuffs.filter(buff => buff.tipo !== "fire_shield");
+    
+    // Adiciona buff de escudo do fogo
+    activeBuffs.push({
+        tipo: "fire_shield",
+        valor: parseInt(valor),
+        turnos: duracao,
+        nome: magia.nome,
+        couracaBonus: parseInt(valor)
+    });
+    
+    updateBuffsDisplay();
+    await addLogMessage(`Escudo do Fogo ativado! +${valor} couraça e reflexão de dano por ${duracao} turnos.`, 800);
+    
+    window.arcanumIudicium.sucesso();
+    
+    await updatePlayerMagicInFirestore(userId, playerMagic);
+    await saveBattleState(userId, battleId, playerHealth);
+    endPlayerTurn();
+}
 }
 
 async function salvarDropsNoLoot(userId, drops) {
