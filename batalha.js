@@ -5124,17 +5124,19 @@ await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
                     document.body.appendChild(undeadModal);
                     
                     document.getElementById('animate-skeleton').onclick = () => {
-                        const result = animateUndead(necromancyLevel, 'skeleton');
-                        addLogMessage(result.message, 800);
-                        undeadModal.remove();
-                    };
-                    
-                    document.getElementById('animate-zombie').onclick = () => {
-                        const result = animateUndead(necromancyLevel, 'zombie');
-                        addLogMessage(result.message, 800);
-                        undeadModal.remove();
-                    };
-                    break;
+    const result = animateUndead(necromancyLevel, 'skeleton');
+    addLogMessage(result.message, 800);
+    undeadModal.remove();
+    endPlayerTurn();
+};
+
+document.getElementById('animate-zombie').onclick = () => {
+    const result = animateUndead(necromancyLevel, 'zombie');
+    addLogMessage(result.message, 800);
+    undeadModal.remove();
+    endPlayerTurn();
+};
+return;
 
 
                    case 'relampago':
@@ -5251,7 +5253,7 @@ await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
         }
         
         // Só passa o turno se não for toque chocante bem-sucedido
-if (!(result.success && (magiaId === 'toque-chocante' || magiaId === 'toque-vampirico'))) {
+if (!(result.success && (magiaId === 'toque-chocante' || magiaId === 'toque-vampirico' || magiaId === 'animar-mortos'))) {
             endPlayerTurn();
         }
     };
