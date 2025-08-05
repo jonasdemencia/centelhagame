@@ -771,9 +771,8 @@ function endPlayerTurn() {
         }
     }
     
-    await undeadAttack();
-
     setTimeout(() => {
+        await undeadAttack();
         console.log("LOG: Chamando monsterAttack após fim do turno do jogador.");
         console.log(`Eficiência Arcanum Iudicium: ${window.arcanumIudicium.getEficiencia()}%`); // ADICIONAR AQUI
         monstersTurn();
@@ -2414,13 +2413,17 @@ async function undeadAttack() {
             
             if (target.pontosDeEnergia <= 0) {
                 registerDeadBody(target);
+                const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+                if (monstersAlive.length === 0) {
+                    handlePostBattle(target);
+                    return;
+                }
             }
         }
     }
     
     displayAllMonsterHealthBars();
 }
-
 
 // Função para calcular couraça total (base + buffs)
 function getPlayerDefense() {
@@ -2956,7 +2959,6 @@ async function markMonsterAsDefeated(userId, monsterId) {
 }
 
 
-
 function handlePostBattle(monster) {
     console.log("handlePostBattle chamado com monstro:", monster?.nome);
 
@@ -3127,6 +3129,8 @@ monsterNames.forEach(name => {
     }
 
     window.battleStarted = false; // Reset do estado da batalha usando window para garantir escopo global
+    window.animatedUndead = [];
+    window.deadBodies = [];
 }
 
 
@@ -5091,6 +5095,12 @@ await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
                     const necromancyLevel = Math.floor(result.level * 2.5);
                     msg = `<span style="color:lime;">Necromancia nível ${necromancyLevel}!</span>`;
                     addLogMessage(msg, 500);
+
+                        // Consome a magia do jogador
+    playerMagic -= magia.custo;
+    atualizarBarraMagia(playerMagic, playerMaxMagic);
+    await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
+
                     
                     const undeadModal = document.createElement('div');
                     undeadModal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#333;padding:20px;border-radius:10px;z-index:1000;';
