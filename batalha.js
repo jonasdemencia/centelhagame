@@ -5262,3 +5262,4 @@ if (!(result.success && (magiaId === 'toque-chocante' || magiaId === 'toque-vamp
 }
 
 console.log("LOG: Fim do script batalha.js");
+});
