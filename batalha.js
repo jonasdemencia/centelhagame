@@ -461,9 +461,9 @@ if (poisonDebuff) {
     displayAllMonsterHealthBars();
     await addLogMessage(`${currentMonster.nome} perde ${poisonDebuff.valor} de energia por veneno.`, 800);
 
-    registerDeadBody(currentMonster); // ← ADICIONAR
+   registerDeadBody(currentMonster); // ← ADICIONAR
     // Verifica se morreu por veneno
-if (currentMonster.pontosDeEnergia <= 0) 
+if (currentMonster.pontosDeEnergia <= 0) {
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} sucumbiu ao veneno!</p>`, 1000);
     const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
     if (monstersAlive.length === 0) {
@@ -471,7 +471,7 @@ if (currentMonster.pontosDeEnergia <= 0)
     }
     return; // Retorna para que o monstro morto não ataque. O loop principal continua.
 }
-}
+
 
     // Processa queimadura
 const burnDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "burn");
