@@ -155,7 +155,8 @@ function getSpellBaseWord(spellId) {
         'escudo-arcano': 'AEGIS',
         'flecha-acida-melf': 'SAGITTAMELFAX',
         'relampago': 'AEROTREMORIS',  // ← ADICIONAR ESTA LINHA
-        'toque-vampirico': 'THERMOVORUS'  // ← ADICIONAR ESTA LINHA
+        'toque-vampirico': 'THERMOVORUS',  // ← ADICIONAR ESTA LINHA
+        'animar-mortos': 'MORTUUM'
 
     };
     return baseWords[spellId] || 'ARCANUM';
@@ -833,6 +834,7 @@ window.ArcanumSpells = {
     validateConjuration,
     resetArcanumBattle,
 };
+
 
 
 
