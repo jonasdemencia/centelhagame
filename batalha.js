@@ -401,6 +401,7 @@ async function monsterAttack() {
     console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
 
     if (currentMonster.pontosDeEnergia <= 0) {
+        console.log("DEBUG: Monstro morreu:", currentMonster.nome, currentMonster.id);
         console.log("DEBUG: Tentando registrar corpo:", currentMonster.nome, currentMonster.id, "HP:", currentMonster.pontosDeEnergia);
             registerDeadBody(currentMonster); // ← ADICIONAR
         console.log("LOG: monsterAttack - Monstro já está morto. Retornando.");
@@ -445,6 +446,7 @@ if (bleedingDebuff) {
     
    // Verifica se morreu por sangramento
 if (currentMonster.pontosDeEnergia <= 0) {
+    console.log("DEBUG: Monstro morreu:", currentMonster.nome, currentMonster.id);
     console.log("DEBUG: Tentando registrar corpo:", currentMonster.nome, currentMonster.id, "HP:", currentMonster.pontosDeEnergia);
         registerDeadBody(currentMonster); // ← ADICIONAR
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} morreu por perda de sangue!</p>`, 1000);
@@ -466,6 +468,7 @@ if (poisonDebuff) {
 
     // Verifica se morreu por veneno
 if (currentMonster.pontosDeEnergia <= 0) {
+    console.log("DEBUG: Monstro morreu:", currentMonster.nome, currentMonster.id);
     console.log("DEBUG: Tentando registrar corpo:", currentMonster.nome, currentMonster.id, "HP:", currentMonster.pontosDeEnergia);
         registerDeadBody(currentMonster); // ← ADICIONAR
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} sucumbiu ao veneno!</p>`, 1000);
@@ -487,6 +490,7 @@ if (burnDebuff) {
     
     // Verifica se morreu por queimadura
     if (currentMonster.pontosDeEnergia <= 0) {
+        console.log("DEBUG: Monstro morreu:", currentMonster.nome, currentMonster.id);
         console.log("DEBUG: Tentando registrar corpo:", currentMonster.nome, currentMonster.id, "HP:", currentMonster.pontosDeEnergia);
             registerDeadBody(currentMonster); // ← ADICIONAR
         await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} morreu queimado!</p>`, 1000);
@@ -530,6 +534,7 @@ if (acidDot) {
     await addLogMessage(`${currentMonster.nome} perde ${damage} Energia por ácido corrosivo.`, 800);
     
     if (currentMonster.pontosDeEnergia <= 0) {
+        console.log("DEBUG: Monstro morreu:", currentMonster.nome, currentMonster.id);
         console.log("DEBUG: Tentando registrar corpo:", currentMonster.nome, currentMonster.id, "HP:", currentMonster.pontosDeEnergia);
             registerDeadBody(currentMonster); // ← ADICIONAR
         await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi dissolvido pelo ácido!</p>`, 1000);
@@ -675,6 +680,7 @@ if (fireShieldBuff) {
         await addLogMessage(`<span style="color: orange;">Escudo do Fogo reflete ${monsterDamageRoll} de dano de volta para ${currentMonster.nome}!</span>`, 1000);
         
         if (currentMonster.pontosDeEnergia <= 0) {
+            console.log("DEBUG: Monstro morreu:", currentMonster.nome, currentMonster.id);
             console.log("DEBUG: Tentando registrar corpo:", currentMonster.nome, currentMonster.id, "HP:", currentMonster.pontosDeEnergia);
                 registerDeadBody(currentMonster); // ← ADICIONAR
             await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado pela reflexão!</p>`, 1000);
@@ -4104,6 +4110,7 @@ if (rollLocationBtn) {
         
         // Verifica se morreu
 if (currentMonster.pontosDeEnergia <= 0) {
+    console.log("DEBUG: Monstro morreu:", currentMonster.nome, currentMonster.id);
     console.log("DEBUG: Tentando registrar corpo:", currentMonster.nome, currentMonster.id, "HP:", currentMonster.pontosDeEnergia);
         registerDeadBody(currentMonster); // ← ADICIONAR
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
@@ -4150,6 +4157,7 @@ if (window.touchSpellContext) {
     
     // Verifica se morreu
 if (currentMonster.pontosDeEnergia <= 0) {
+    console.log("DEBUG: Monstro morreu:", currentMonster.nome, currentMonster.id);
     console.log("DEBUG: Tentando registrar corpo:", currentMonster.nome, currentMonster.id, "HP:", currentMonster.pontosDeEnergia);
         registerDeadBody(currentMonster); // ← ADICIONAR
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
@@ -4219,6 +4227,7 @@ if (window.touchDebuffContext) {
     
     // Verifica se morreu
 if (currentMonster.pontosDeEnergia <= 0) {
+    console.log("DEBUG: Monstro morreu:", currentMonster.nome, currentMonster.id);
     console.log("DEBUG: Tentando registrar corpo:", currentMonster.nome, currentMonster.id, "HP:", currentMonster.pontosDeEnergia);
         registerDeadBody(currentMonster); // ← ADICIONAR
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
@@ -4265,6 +4274,7 @@ if (window.touchVampiricContext) {
     
     // Verifica se morreu
     if (currentMonster.pontosDeEnergia <= 0) {
+        console.log("DEBUG: Monstro morreu:", currentMonster.nome, currentMonster.id);
         console.log("DEBUG: Tentando registrar corpo:", currentMonster.nome, currentMonster.id, "HP:", currentMonster.pontosDeEnergia);
             registerDeadBody(currentMonster); // ← ADICIONAR
         await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi drenado até a morte!</p>`, 1000);
@@ -4594,6 +4604,7 @@ if (window.isPunhaladaVenenosaAttack) {
 
         // Verifica derrota e o estado da batalha
 if (currentMonster.pontosDeEnergia <= 0) {
+    console.log("DEBUG: Monstro morreu:", currentMonster.nome, currentMonster.id);
     console.log("DEBUG: Tentando registrar corpo:", currentMonster.nome, currentMonster.id, "HP:", currentMonster.pontosDeEnergia);
         registerDeadBody(currentMonster); // ← ADICIONAR
     console.log(`LOG: Monstro derrotado após ${isSiferDamage ? 'SIFER' : 'Dano Normal'}!`);
@@ -5054,6 +5065,7 @@ async function setupArcanumConjurationModal(magiaId) {
     await addLogMessage(`Dardos Místicos causaram <b>${totalDamage}</b> de dano!`, 1000);
 
     if (currentMonster.pontosDeEnergia <= 0) {
+        console.log("DEBUG: Monstro morreu:", currentMonster.nome, currentMonster.id);
         console.log("DEBUG: Tentando registrar corpo:", currentMonster.nome, currentMonster.id, "HP:", currentMonster.pontosDeEnergia);
             registerDeadBody(currentMonster); // ← ADICIONAR
         await addLogMessage(`<span style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</span>`, 1000);
