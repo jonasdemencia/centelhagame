@@ -395,6 +395,18 @@ const magias = [
     duracao: "Instantâneo"
 },
     {
+    id: "animar-mortos",
+    nome: "Animar os Mortos",
+    nomeVerdadeiro: "Sussurros dos Ossos Despertos",
+    descricao: "Ao entoar arcanos esquecidos, o mago faz o solo estremecer. Ossos inertes se aglutinam num ritmo cadenciado, e de corpos abandonados emergem esqueletos e zumbis, prontos para cumprir ordens sombrias.",
+    custo: 2,
+    efeito: "Levanta até 1 criatura morta-viva (esqueleto ou zumbi)",
+    componente: "Fragmento de osso fresco mergulhado em tinta de sépia lunar",
+    resistencia: "Constituição CD 10 + modificador de Arcanum para resistir",
+    tempoExecucao: "1 ação completa",
+    duracao: "Concentração, até 2 turnos (+1 por nível acima de 3º)"
+  },
+    {
     id: "pele-rochosa",
     nome: "Pele Rochosa (LAPIDEOCUTIS)",
     nomeVerdadeiro: "Armamento da Rocha Viva",
