@@ -396,7 +396,7 @@ const magias = [
 },
     {
     id: "animar-mortos",
-    nome: "Animar os Mortos",
+    nome: "Animar os Mortos (MORTUUM)",
     nomeVerdadeiro: "Sussurros dos Ossos Despertos",
     descricao: "Ao entoar arcanos esquecidos, o mago faz o solo estremecer. Ossos inertes se aglutinam num ritmo cadenciado, e de corpos abandonados emergem esqueletos e zumbis, prontos para cumprir ordens sombrias.",
     custo: 2,
