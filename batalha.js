@@ -399,8 +399,8 @@ async function monstersTurn() {
 // Lógica do turno do monstro
 async function monsterAttack() {
     console.log("LOG: Iniciando monsterAttack. currentMonster:", currentMonster, "playerHealth:", playerHealth, "isPlayerTurn:", isPlayerTurn);
-    registerDeadBody(currentMonster); // ← ADICIONAR
     if (currentMonster.pontosDeEnergia <= 0) {
+        registerDeadBody(currentMonster); // ← ADICIONAR
         console.log("LOG: monsterAttack - Monstro já está morto. Retornando.");
         return;
     }
@@ -441,9 +441,9 @@ if (bleedingDebuff) {
     displayAllMonsterHealthBars();
     await addLogMessage(`${currentMonster.nome} perde ${bleedingDebuff.valor} HP por evisceração.`, 800);
 
-    registerDeadBody(currentMonster); // ← ADICIONAR
    // Verifica se morreu por sangramento
 if (currentMonster.pontosDeEnergia <= 0) {
+     registerDeadBody(currentMonster); // ← ADICIONAR
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} morreu por perda de sangue!</p>`, 1000);
     const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
     if (monstersAlive.length === 0) {
@@ -461,9 +461,9 @@ if (poisonDebuff) {
     displayAllMonsterHealthBars();
     await addLogMessage(`${currentMonster.nome} perde ${poisonDebuff.valor} de energia por veneno.`, 800);
 
-   registerDeadBody(currentMonster); // ← ADICIONAR
     // Verifica se morreu por veneno
 if (currentMonster.pontosDeEnergia <= 0) {
+     registerDeadBody(currentMonster); // ← ADICIONAR
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} sucumbiu ao veneno!</p>`, 1000);
     const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
     if (monstersAlive.length === 0) {
@@ -481,9 +481,9 @@ if (burnDebuff) {
     displayAllMonsterHealthBars();
     await addLogMessage(`${currentMonster.nome} perde ${burnDebuff.valor} HP por queimadura.`, 800);
 
-    registerDeadBody(currentMonster); // ← ADICIONAR
     // Verifica se morreu por queimadura
     if (currentMonster.pontosDeEnergia <= 0) {
+         registerDeadBody(currentMonster); // ← ADICIONAR
         await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} morreu queimado!</p>`, 1000);
         const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
         if (monstersAlive.length === 0) {
@@ -525,8 +525,8 @@ if (acidDot) {
     await addLogMessage(`${currentMonster.nome} perde ${damage} Energia por ácido corrosivo.`, 800);
 
     
-                registerDeadBody(currentMonster); // ← ADICIONAR
     if (currentMonster.pontosDeEnergia <= 0) {
+         registerDeadBody(currentMonster); // ← ADICIONAR
         await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi dissolvido pelo ácido!</p>`, 1000);
         const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
         if (monstersAlive.length === 0) {
@@ -669,8 +669,8 @@ if (fireShieldBuff) {
         displayAllMonsterHealthBars();
         await addLogMessage(`<span style="color: orange;">Escudo do Fogo reflete ${monsterDamageRoll} de dano de volta para ${currentMonster.nome}!</span>`, 1000);
 
-                    registerDeadBody(currentMonster); // ← ADICIONAR
         if (currentMonster.pontosDeEnergia <= 0) {
+             registerDeadBody(currentMonster); // ← ADICIONAR
             await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado pela reflexão!</p>`, 1000);
             const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
             if (monstersAlive.length === 0) {
@@ -4087,9 +4087,9 @@ if (rollLocationBtn) {
         window.magicContext = null;
         rolarDanoButton.style.display = 'none';
 
-                    registerDeadBody(currentMonster); // ← ADICIONAR
         // Verifica se morreu
 if (currentMonster.pontosDeEnergia <= 0) {
+     registerDeadBody(currentMonster); // ← ADICIONAR
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
     const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
     if (monstersAlive.length === 0) {
@@ -4132,9 +4132,9 @@ if (window.touchSpellContext) {
     window.touchSpellContext = null;
     rolarDanoButton.style.display = 'none';
 
-    registerDeadBody(currentMonster);
     // Verifica se morreu
 if (currentMonster.pontosDeEnergia <= 0) {
+     registerDeadBody(currentMonster); // ← ADICIONAR
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
     const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
     if (monstersAlive.length === 0) {
@@ -4200,9 +4200,9 @@ if (window.touchDebuffContext) {
     window.touchDebuffContext = null;
     rolarDanoButton.style.display = 'none';
 
-    registerDeadBody(currentMonster);
     // Verifica se morreu
 if (currentMonster.pontosDeEnergia <= 0) {
+     registerDeadBody(currentMonster); // ← ADICIONAR
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
     const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
     if (monstersAlive.length === 0) {
@@ -4245,9 +4245,9 @@ if (window.touchVampiricContext) {
     window.touchVampiricContext = null;
     rolarDanoButton.style.display = 'none';
 
-    registerDeadBody(currentMonster);
     // Verifica se morreu
     if (currentMonster.pontosDeEnergia <= 0) {
+         registerDeadBody(currentMonster); // ← ADICIONAR
         await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi drenado até a morte!</p>`, 1000);
         const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
         if (monstersAlive.length === 0) {
@@ -4572,9 +4572,9 @@ if (window.isPunhaladaVenenosaAttack) {
             await addLogMessage("Dano calculado foi zero.", 800);
         }
 
-registerDeadBody(currentMonster);
         // Verifica derrota e o estado da batalha
 if (currentMonster.pontosDeEnergia <= 0) {
+     registerDeadBody(currentMonster); // ← ADICIONAR
     console.log(`LOG: Monstro derrotado após ${isSiferDamage ? 'SIFER' : 'Dano Normal'}!`);
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
     isPlayerTurn = false; // Garante que o turno não continue
@@ -5032,8 +5032,8 @@ async function setupArcanumConjurationModal(magiaId) {
     displayAllMonsterHealthBars();
     await addLogMessage(`Dardos Místicos causaram <b>${totalDamage}</b> de dano!`, 1000);
 
-                       registerDeadBody(currentMonster);
     if (currentMonster.pontosDeEnergia <= 0) {
+         registerDeadBody(currentMonster); // ← ADICIONAR
         await addLogMessage(`<span style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</span>`, 1000);
         
         // **INÍCIO DA LÓGICA CORRIGIDA**
