@@ -2345,6 +2345,7 @@ function rollDice(diceString) {
 }
 
 function registerDeadBody(monster) {
+    console.log("DEBUG: Registrando corpo:", monster.nome, monster.id);
     if (!window.deadBodies.find(body => body.id === monster.id)) {
         window.deadBodies.push({
             id: monster.id,
@@ -2354,15 +2355,21 @@ function registerDeadBody(monster) {
             habilidade: monster.habilidade,
             couraça: monster.couraça || 0
         });
+        console.log("DEBUG: Total de corpos:", window.deadBodies.length);
     }
 }
 
+
 function animateUndead(necromancyLevel, undeadType) {
+    console.log("DEBUG: Corpos disponíveis:", window.deadBodies);
+    console.log("DEBUG: Já animados:", window.animatedUndead);
+    
     const availableBodies = window.deadBodies.filter(body => 
         !window.animatedUndead.find(undead => undead.originalId === body.id)
     );
     
     if (availableBodies.length === 0) {
+        console.log("DEBUG: Nenhum corpo disponível!");
         return { success: false, message: "Não há corpos disponíveis!" };
     }
     
@@ -2395,8 +2402,10 @@ function animateUndead(necromancyLevel, undeadType) {
     }
     
     window.animatedUndead.push(...animated);
+    console.log("DEBUG: Animados:", animated.length);
     return { success: true, animated, message: `${animated.length} morto(s)-vivo(s) animado(s)!` };
 }
+
 
 async function undeadAttack() {
     const aliveUndead = window.animatedUndead.filter(u => u.pontosDeEnergia > 0);
