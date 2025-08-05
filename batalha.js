@@ -45,6 +45,8 @@ let monsterNames = []; // <--- ADICIONE ESTA LINHA AQUI
 // Sistema Flecha Ácida de Melf
 let preparingSpells = [];
 let relampagoRiskCounter = 1; // Contador de risco do Relâmpago (1-20)
+window.animatedUndead = [];
+window.deadBodies = [];
 
 function updateMonsterInfoUI() {
     const target = window.currentMonster;
@@ -66,48 +68,75 @@ function updateMonsterInfoUI() {
 
 
 function displayAllMonsterHealthBars() {
-    const container = document.getElementById('monster-bars-container');
-    if (!container) return;
-    container.innerHTML = '';
+  const container = document.getElementById('monster-bars-container');
+  if (!container) return;
+  container.innerHTML = '';
 
-    window.currentMonsters.forEach(monster => {
-        const isTarget = (window.currentMonster && window.currentMonster.id === monster.id);
-        const monsterDiv = document.createElement('div');
-        monsterDiv.className = 'monster-bar-item' + (isTarget ? ' target' : '');
-        monsterDiv.style.cursor = 'pointer';
+  // Exibe barras de vida dos monstros atuais
+  window.currentMonsters.forEach(monster => {
+    const isTarget = (window.currentMonster && window.currentMonster.id === monster.id);
+    const monsterDiv = document.createElement('div');
+    monsterDiv.className = 'monster-bar-item' + (isTarget ? ' target' : '');
+    monsterDiv.style.cursor = 'pointer';
 
-        const barraId = `barra-hp-monstro-${monster.id}`;
-        const valorId = `hp-monstro-${monster.id}-valor`;
-        const debuffsId = `monster-debuffs-${monster.id}`; // ID único para os debuffs
+    const barraId = `barra-hp-monstro-${monster.id}`;
+    const valorId = `hp-monstro-${monster.id}-valor`;
+    const debuffsId = `monster-debuffs-${monster.id}`; // ID único para os debuffs
 
-        // Adiciona o container de debuffs abaixo da barra de HP
-        monsterDiv.innerHTML = `
-            <div style="display: flex; justify-content: space-between; font-size: 0.9em;">
-                <span>${monster.nome} ${isTarget ? '🎯' : ''}</span>
-            </div>
-            <div class="barra-hp-container" style="position: relative;">
-                <div id="${barraId}" class="barra-hp"></div>
-                <span id="${valorId}" class="hp-valor"></span>
-            </div>
-            <div id="${debuffsId}" class="debuffs-container"></div>
-        `;
+    monsterDiv.innerHTML = `
+      <div style="display: flex; justify-content: space-between; font-size: 0.9em;">
+        <span>${monster.nome} ${isTarget ? '🎯' : ''}</span>
+      </div>
+      <div class="barra-hp-container" style="position: relative;">
+        <div id="${barraId}" class="barra-hp"></div>
+        <span id="${valorId}" class="hp-valor"></span>
+      </div>
+      <div id="${debuffsId}" class="debuffs-container"></div>
+    `;
 
-        monsterDiv.addEventListener('click', () => {
-            if (monster.pontosDeEnergia > 0) {
-                window.currentMonster = monster;
-                currentMonster = monster;
-                updateMonsterInfoUI();
-                displayAllMonsterHealthBars();
-            }
-        });
+    monsterDiv.addEventListener('click', () => {
+      if (monster.pontosDeEnergia > 0) {
+        window.currentMonster = monster;
+        currentMonster = monster;
+        updateMonsterInfoUI();
+        displayAllMonsterHealthBars();
+      }
+    });
 
-        container.appendChild(monsterDiv);
+    container.appendChild(monsterDiv);
 
-        // Chama as funções para atualizar a barra e os debuffs deste monstro
-        atualizarBarraHP(barraId, monster.pontosDeEnergia, monster.pontosDeEnergiaMax);
-        renderMonsterDebuffs(monster); // Esta é a nova função que você vai criar
+    // Atualiza barra de HP e debuffs
+    atualizarBarraHP(barraId, monster.pontosDeEnergia, monster.pontosDeEnergiaMax);
+    renderMonsterDebuffs(monster);
+  });
+
+  // Exibir mortos-vivos
+  window.animatedUndead
+    .filter(u => u.pontosDeEnergia > 0)
+    .forEach(undead => {
+      const undeadDiv = document.createElement('div');
+      undeadDiv.className = 'monster-bar-item';
+      undeadDiv.innerHTML = `
+        <div style="display: flex; justify-content: space-between; font-size: 0.9em;">
+          <span>${undead.nome} 💀</span>
+        </div>
+        <div class="barra-hp-container">
+          <div
+            class="barra-hp"
+            style="
+              width: ${(undead.pontosDeEnergia / undead.pontosDeEnergiaMax) * 100}%;
+              background-color: #666;
+            "
+          ></div>
+          <span class="hp-valor">
+            ${undead.pontosDeEnergia}/${undead.pontosDeEnergiaMax}
+          </span>
+        </div>
+      `;
+      container.appendChild(undeadDiv);
     });
 }
+
 
 
 // Sistema Arcanum Iudicium
@@ -741,6 +770,8 @@ function endPlayerTurn() {
             atacarCorpoACorpoButton.style.display = 'none';
         }
     }
+    
+    await undeadAttack();
 
     setTimeout(() => {
         console.log("LOG: Chamando monsterAttack após fim do turno do jogador.");
@@ -848,6 +879,14 @@ const magiasDisponiveis = [
     efeito: "touch_debuff",
     valor: "1d4+1"
 },
+        {
+        id: "animar-mortos",
+        nome: "Animar os Mortos",
+        descricao: "Anima esqueletos ou zumbis de corpos mortos (Arcanum Verbis)",
+        custo: 2,
+        efeito: "animate_dead",
+        valor: 1
+    },
     {
     id: "pele-rochosa",
     nome: "Pele Rochosa",
@@ -1618,7 +1657,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
     }
 
     // --- INÍCIO INTEGRAÇÃO ARCANUM ---
-if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === 'flecha-acida-melf' || magiaId === 'relampago' || magiaId === 'toque-vampirico') {
+if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === 'flecha-acida-melf' || magiaId === 'relampago' || magiaId === 'toque-vampirico' || magiaId === 'animar-mortos') {
     document.getElementById("magias-modal").style.display = "none";
     setupArcanumConjurationModal(magiaId);
     return;
@@ -2300,6 +2339,88 @@ function rollDice(diceString) {
     }
 }
 
+function registerDeadBody(monster) {
+    if (!window.deadBodies.find(body => body.id === monster.id)) {
+        window.deadBodies.push({
+            id: monster.id,
+            nome: monster.nome,
+            pontosDeEnergiaMax: monster.pontosDeEnergiaMax,
+            dano: monster.dano,
+            habilidade: monster.habilidade,
+            couraça: monster.couraça || 0
+        });
+    }
+}
+
+function animateUndead(necromancyLevel, undeadType) {
+    const availableBodies = window.deadBodies.filter(body => 
+        !window.animatedUndead.find(undead => undead.originalId === body.id)
+    );
+    
+    if (availableBodies.length === 0) {
+        return { success: false, message: "Não há corpos disponíveis!" };
+    }
+    
+    const animated = [];
+    let remainingLevels = necromancyLevel;
+    
+    for (const body of availableBodies) {
+        if (remainingLevels <= 0) break;
+        
+        const hitDice = Math.ceil(body.pontosDeEnergiaMax / 8);
+        const requiredLevels = undeadType === 'zombie' ? hitDice + 1 : hitDice;
+        
+        if (remainingLevels >= requiredLevels) {
+            const hp = (undeadType === 'zombie' ? hitDice + 1 : hitDice) * 8;
+            const undead = {
+                id: `${undeadType}_${body.id}_${Date.now()}`,
+                originalId: body.id,
+                nome: undeadType === 'skeleton' ? 'Esqueleto' : 'Zumbi',
+                pontosDeEnergia: hp,
+                pontosDeEnergiaMax: hp,
+                dano: body.dano,
+                habilidade: body.habilidade,
+                couraça: Math.max(0, (body.couraça || 0) - 2),
+                isUndead: true,
+                isAlly: true
+            };
+            animated.push(undead);
+            remainingLevels -= requiredLevels;
+        }
+    }
+    
+    window.animatedUndead.push(...animated);
+    return { success: true, animated, message: `${animated.length} morto(s)-vivo(s) animado(s)!` };
+}
+
+async function undeadAttack() {
+    const aliveUndead = window.animatedUndead.filter(u => u.pontosDeEnergia > 0);
+    const aliveEnemies = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+    
+    if (aliveUndead.length === 0 || aliveEnemies.length === 0) return;
+    
+    for (const undead of aliveUndead) {
+        const target = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+        const attackRoll = Math.floor(Math.random() * 20) + 1 + undead.habilidade;
+        
+        await addLogMessage(`${undead.nome} ataca ${target.nome}: ${attackRoll} vs ${target.couraça || 0}`, 600);
+        
+        if (attackRoll >= (target.couraça || 0)) {
+            const damage = rollDice(undead.dano);
+            target.pontosDeEnergia -= damage;
+            target.pontosDeEnergia = Math.max(0, target.pontosDeEnergia);
+            
+            await addLogMessage(`${undead.nome} causa ${damage} de dano!`, 600);
+            
+            if (target.pontosDeEnergia <= 0) {
+                registerDeadBody(target);
+            }
+        }
+    }
+    
+    displayAllMonsterHealthBars();
+}
+
 
 // Função para calcular couraça total (base + buffs)
 function getPlayerDefense() {
@@ -2839,6 +2960,8 @@ async function markMonsterAsDefeated(userId, monsterId) {
 function handlePostBattle(monster) {
     console.log("handlePostBattle chamado com monstro:", monster?.nome);
 
+    registerDeadBody(monster);
+    
     // Reset do contador de risco do Relâmpago
     relampagoRiskCounter = 1; // ← ADICIONAR ESTA LINHA
 
@@ -4963,6 +5086,35 @@ await updatePlayerMagicInFirestore(auth.currentUser.uid, playerMagic);
     
     addLogMessage(`Clique em "Atacar" para tentar tocar o inimigo e drenar sua energia vital.`, 800);
     break;
+
+                                    case 'animar-mortos':
+                    const necromancyLevel = Math.floor(result.level * 2.5);
+                    msg = `<span style="color:lime;">Necromancia nível ${necromancyLevel}!</span>`;
+                    addLogMessage(msg, 500);
+                    
+                    const undeadModal = document.createElement('div');
+                    undeadModal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#333;padding:20px;border-radius:10px;z-index:1000;';
+                    undeadModal.innerHTML = `
+                        <h3 style="color:white;">Escolha o tipo:</h3>
+                        <button id="animate-skeleton" style="margin:5px;padding:10px;">Esqueletos</button>
+                        <button id="animate-zombie" style="margin:5px;padding:10px;">Zumbis</button>
+                    `;
+                    document.body.appendChild(undeadModal);
+                    
+                    document.getElementById('animate-skeleton').onclick = () => {
+                        const result = animateUndead(necromancyLevel, 'skeleton');
+                        addLogMessage(result.message, 800);
+                        undeadModal.remove();
+                        endPlayerTurn();
+                    };
+                    
+                    document.getElementById('animate-zombie').onclick = () => {
+                        const result = animateUndead(necromancyLevel, 'zombie');
+                        addLogMessage(result.message, 800);
+                        undeadModal.remove();
+                        endPlayerTurn();
+                    };
+                    break;
 
 
                    case 'relampago':
