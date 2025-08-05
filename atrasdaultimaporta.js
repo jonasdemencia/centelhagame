@@ -401,10 +401,10 @@ const magias = [
     descricao: "Ao entoar arcanos esquecidos, o mago faz o solo estremecer. Ossos inertes se aglutinam num ritmo cadenciado, e de corpos abandonados emergem esqueletos e zumbis, prontos para cumprir ordens sombrias.",
     custo: 2,
     efeito: "Levanta até 1 criatura morta-viva (esqueleto ou zumbi)",
-    componente: "Fragmento de osso fresco mergulhado em tinta de sépia lunar",
-    resistencia: "Constituição CD 10 + modificador de Arcanum para resistir",
+    componente: "Nenhum",
+    resistencia: "Nenhuma",
     tempoExecucao: "1 ação completa",
-    duracao: "Concentração, até 2 turnos (+1 por nível acima de 3º)"
+    duracao: "até o final de uma batalha"
   },
     {
     id: "pele-rochosa",
