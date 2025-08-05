@@ -771,7 +771,7 @@ function endPlayerTurn() {
         }
     }
     
-    setTimeout(() => {
+    setTimeout(async () => { // ✅ Adicionar async aqui
         await undeadAttack();
         console.log("LOG: Chamando monsterAttack após fim do turno do jogador.");
         console.log(`Eficiência Arcanum Iudicium: ${window.arcanumIudicium.getEficiencia()}%`); // ADICIONAR AQUI
