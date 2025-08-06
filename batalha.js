@@ -71,9 +71,6 @@ function displayAllMonsterHealthBars() {
   const container = document.getElementById('monster-bars-container');
   if (!container) return;
   container.innerHTML = '';
-// Remove barras de monstros mortos
-window.currentMonsters = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
-
     
   // Exibe barras de vida dos monstros atuais
   window.currentMonsters.forEach(monster => {
@@ -2371,10 +2368,6 @@ function registerDeadBody(monster) {
             couraça: monster.couraça || 0
         });
         console.log("DEBUG: Corpo registrado! Total:", window.deadBodies.length);
-        
-        // Remove da lista de monstros ativos
-        window.currentMonsters = window.currentMonsters.filter(m => m.id !== monster.id);
-        displayAllMonsterHealthBars();
     }
 }
 
@@ -2421,16 +2414,16 @@ function animateUndead(necromancyLevel, undeadType) {
 
     window.animatedUndead.push(...animated);
 
-    // Remover corpos animados da lista de monstros ativos
-    animated.forEach(undead => {
-        const originalIndex = window.currentMonsters.findIndex(m => m.id === undead.originalId);
-        if (originalIndex !== -1) {
-            window.currentMonsters.splice(originalIndex, 1);
-        }
-    });
+    // Remove corpos animados da lista de monstros ativos
+animated.forEach(undead => {
+    const originalIndex = window.currentMonsters.findIndex(m => m.id === undead.originalId);
+    if (originalIndex !== -1) {
+        window.currentMonsters.splice(originalIndex, 1);
+    }
+});
 
-    // Atualiza visualização das barras de HP
-    displayAllMonsterHealthBars();
+// Atualiza display das barras
+displayAllMonsterHealthBars();
 
     console.log("DEBUG: Animados:", animated.length);
     return { success: true, animated, message: `${animated.length} morto(s)-vivo(s) animado(s)!` };
