@@ -72,8 +72,13 @@ function displayAllMonsterHealthBars() {
   if (!container) return;
   container.innerHTML = '';
 
-  // Exibe barras de vida dos monstros atuais
+  // Filtra monstros vivos OU mortos que NÃO foram animados
   window.currentMonsters.forEach(monster => {
+    const wasAnimated = window.animatedUndead.some(undead => undead.originalId === monster.id);
+    const shouldShow = monster.pontosDeEnergia > 0 || !wasAnimated;
+    
+    if (!shouldShow) return; // Pula monstros mortos que foram animados
+    
     const isTarget = (window.currentMonster && window.currentMonster.id === monster.id);
     const monsterDiv = document.createElement('div');
     monsterDiv.className = 'monster-bar-item' + (isTarget ? ' target' : '');
@@ -2414,6 +2419,7 @@ function animateUndead(necromancyLevel, undeadType) {
     }
     
     window.animatedUndead.push(...animated);
+    displayAllMonsterHealthBars(); // Atualiza UI para remover corpos animados
     console.log("DEBUG: Animados:", animated.length);
     return { success: true, animated, message: `${animated.length} morto(s)-vivo(s) animado(s)!` };
 }
