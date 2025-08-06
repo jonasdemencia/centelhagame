@@ -2532,6 +2532,7 @@ async function undeadAttack() {
             target.pontosDeEnergia -= damage;
             window.damageTracker.addDamage(undead.id, damage);
             target.pontosDeEnergia = Math.max(0, target.pontosDeEnergia);
+            displayAllMonsterHealthBars();
             
             await addLogMessage(`${undead.nome} causa ${damage} de dano!`, 600);
             
@@ -2545,9 +2546,8 @@ async function undeadAttack() {
             }
         }
     }
-    
-    displayAllMonsterHealthBars();
 }
+
 
 // Função para calcular couraça total (base + buffs)
 function getPlayerDefense() {
