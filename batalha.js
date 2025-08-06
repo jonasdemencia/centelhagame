@@ -563,14 +563,20 @@ if (acidDot) {
     displayAllMonsterHealthBars();
     await addLogMessage(`${currentMonster.nome} perde ${damage} Energia por ácido corrosivo.`, 800);
     
-    if (currentMonster.pontosDeEnergia <= 0) {
+        if (currentMonster.pontosDeEnergia <= 0) {
         console.log("DEBUG: Monstro morreu:", currentMonster.nome, currentMonster.id);
         console.log("DEBUG: Tentando registrar corpo:", currentMonster.nome, currentMonster.id, "HP:", currentMonster.pontosDeEnergia);
-            registerDeadBody(currentMonster); // ← ADICIONAR
+            registerDeadBody(currentMonster);
         await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi dissolvido pelo ácido!</p>`, 1000);
         const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
         if (monstersAlive.length === 0) {
             handlePostBattle(currentMonster);
+            return;
+        } else {
+            window.currentMonster = monstersAlive[0];
+            currentMonster = window.currentMonster;
+            updateMonsterInfoUI();
+            displayAllMonsterHealthBars();
             return;
         }
     }
@@ -5025,6 +5031,7 @@ if (playerAttackRollRaw >= criticalThreshold && !isTouchSpell) {
         await addLogMessage(`Seu toque não consegue alcançar ${currentMonster.nome}.`, 1000);
         window.touchSpellContext = null;
         window.touchDebuffContext = null;
+        window.touchVampiricContext = null;
     } else {
         // CORREÇÃO AQUI:
         await addLogMessage(`Seu ataque passa de raspão no ${currentMonster.nome}.`, 1000);
