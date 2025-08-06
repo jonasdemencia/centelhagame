@@ -71,7 +71,10 @@ function displayAllMonsterHealthBars() {
   const container = document.getElementById('monster-bars-container');
   if (!container) return;
   container.innerHTML = '';
+// Remove barras de monstros mortos
+window.currentMonsters = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
 
+    
   // Exibe barras de vida dos monstros atuais
   window.currentMonsters.forEach(monster => {
     const isTarget = (window.currentMonster && window.currentMonster.id === monster.id);
@@ -2368,32 +2371,35 @@ function registerDeadBody(monster) {
             couraça: monster.couraça || 0
         });
         console.log("DEBUG: Corpo registrado! Total:", window.deadBodies.length);
+        
+        // Remove da lista de monstros ativos
+        window.currentMonsters = window.currentMonsters.filter(m => m.id !== monster.id);
+        displayAllMonsterHealthBars();
     }
 }
-
 
 function animateUndead(necromancyLevel, undeadType) {
     console.log("DEBUG: Corpos disponíveis:", window.deadBodies);
     console.log("DEBUG: Já animados:", window.animatedUndead);
-    
+
     const availableBodies = window.deadBodies.filter(body => 
         !window.animatedUndead.find(undead => undead.originalId === body.id)
     );
-    
+
     if (availableBodies.length === 0) {
         console.log("DEBUG: Nenhum corpo disponível!");
         return { success: false, message: "Não há corpos disponíveis!" };
     }
-    
+
     const animated = [];
     let remainingLevels = necromancyLevel;
-    
+
     for (const body of availableBodies) {
         if (remainingLevels <= 0) break;
-        
+
         const hitDice = Math.ceil(body.pontosDeEnergiaMax / 8);
         const requiredLevels = undeadType === 'zombie' ? hitDice + 1 : hitDice;
-        
+
         if (remainingLevels >= requiredLevels) {
             const hp = (undeadType === 'zombie' ? hitDice + 1 : hitDice) * 8;
             const undead = {
@@ -2412,12 +2418,23 @@ function animateUndead(necromancyLevel, undeadType) {
             remainingLevels -= requiredLevels;
         }
     }
-    
+
     window.animatedUndead.push(...animated);
+
+    // Remover corpos animados da lista de monstros ativos
+    animated.forEach(undead => {
+        const originalIndex = window.currentMonsters.findIndex(m => m.id === undead.originalId);
+        if (originalIndex !== -1) {
+            window.currentMonsters.splice(originalIndex, 1);
+        }
+    });
+
+    // Atualiza visualização das barras de HP
+    displayAllMonsterHealthBars();
+
     console.log("DEBUG: Animados:", animated.length);
     return { success: true, animated, message: `${animated.length} morto(s)-vivo(s) animado(s)!` };
 }
-
 
 async function undeadAttack() {
     const aliveUndead = window.animatedUndead.filter(u => u.pontosDeEnergia > 0);
