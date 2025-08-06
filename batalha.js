@@ -48,6 +48,36 @@ let relampagoRiskCounter = 1; // Contador de risco do Relâmpago (1-20)
 window.animatedUndead = [];
 window.deadBodies = [];
 
+// Sistema de rastreamento de dano por turno
+window.damageTracker = {
+    currentTurn: {},
+    previousTurn: {},
+    
+    addDamage(dealerId, damage) {
+        if (!this.currentTurn[dealerId]) this.currentTurn[dealerId] = 0;
+        this.currentTurn[dealerId] += damage;
+    },
+    
+    endTurn() {
+        this.previousTurn = { ...this.currentTurn };
+        this.currentTurn = {};
+    },
+    
+    getHighestDamageDealer() {
+        let maxDamage = 0;
+        let topDealer = null;
+        
+        for (const [dealerId, damage] of Object.entries(this.previousTurn)) {
+            if (damage > maxDamage) {
+                maxDamage = damage;
+                topDealer = dealerId;
+            }
+        }
+        
+        return topDealer;
+    }
+};
+
 function updateMonsterInfoUI() {
     const target = window.currentMonster;
     if (!target) {
@@ -560,7 +590,41 @@ if (legsDebuff) {
 }
 
     
-    // Escolhe o ataque (telegrafado ou novo)
+    // Determina o alvo (80% chance de atacar quem causou mais dano)
+    let targetEntity = null;
+    let isTargetingPlayer = true;
+
+    const aliveUndead = window.animatedUndead.filter(u => u.pontosDeEnergia > 0);
+    const highestDamageDealer = window.damageTracker.getHighestDamageDealer();
+    const shouldTargetTopDealer = Math.random() < 0.8;
+
+    if (shouldTargetTopDealer && highestDamageDealer) {
+        if (highestDamageDealer === 'player') {
+            targetEntity = 'player';
+            isTargetingPlayer = true;
+        } else {
+            targetEntity = aliveUndead.find(u => u.id === highestDamageDealer);
+            if (targetEntity) {
+                isTargetingPlayer = false;
+            } else {
+                targetEntity = 'player';
+                isTargetingPlayer = true;
+            }
+        }
+    } else {
+        const allTargets = ['player', ...aliveUndead];
+        const randomTarget = allTargets[Math.floor(Math.random() * allTargets.length)];
+        
+        if (randomTarget === 'player') {
+            targetEntity = 'player';
+            isTargetingPlayer = true;
+        } else {
+            targetEntity = randomTarget;
+            isTargetingPlayer = false;
+        }
+    }
+
+    // Escolhe o ataque
     let selectedAttack;
     if (nextTelegraphedAttack) {
         selectedAttack = nextTelegraphedAttack;
@@ -568,33 +632,37 @@ if (legsDebuff) {
         await addLogMessage(`<strong style="color: orange;">${selectedAttack.nome}!</strong>`, 800);
     } else {
         selectedAttack = chooseMonsterAttack(currentMonster);
-        await addLogMessage(`${currentMonster.nome} usa ${selectedAttack.nome}.`, 800);
+        const targetName = isTargetingPlayer ? 'você' : targetEntity.nome;
+        await addLogMessage(`${currentMonster.nome} usa ${selectedAttack.nome} contra ${targetName}.`, 800);
     }
 
     // Rolagem de ataque
     const monsterRollRaw = Math.floor(Math.random() * 20) + 1;
-    // Aplica penalidade de debuffs de precisão
-const accuracyPenalty = activeMonsterDebuffs
-    .filter(debuff => debuff.tipo === "accuracy")
-    .reduce((total, debuff) => total + debuff.valor, 0);
+    const accuracyPenalty = activeMonsterDebuffs
+        .filter(debuff => debuff.tipo === "accuracy")
+        .reduce((total, debuff) => total + debuff.valor, 0);
 
-const monsterAttackRoll = monsterRollRaw - accuracyPenalty;
+    const monsterAttackRoll = monsterRollRaw - accuracyPenalty;
 
-if (accuracyPenalty > 0) {
-    await addLogMessage(`${currentMonster.nome} sofre -${accuracyPenalty} de penalidade por debuffs.`, 800);
-}
+    if (accuracyPenalty > 0) {
+        await addLogMessage(`${currentMonster.nome} sofre -${accuracyPenalty} de penalidade por debuffs.`, 800);
+    }
 
+    await addLogMessage(`${currentMonster.nome} rolou ${monsterRollRaw} em um D20 para atacar.`, 1000);
 
-    
-await addLogMessage(`${currentMonster.nome} rolou ${monsterRollRaw} em um D20 para atacar.`, 1000);
-
-
-    const playerDefense = getPlayerDefense();
-    await addLogMessage(`Sua Couraça é ${playerDefense}.`, 1000);
+    // Calcula defesa do alvo
+    let targetDefense;
+    if (isTargetingPlayer) {
+        targetDefense = getPlayerDefense();
+        await addLogMessage(`Sua Couraça é ${targetDefense}.`, 1000);
+    } else {
+        targetDefense = targetEntity.couraça || 0;
+        await addLogMessage(`Couraça do ${targetEntity.nome} é ${targetDefense}.`, 1000);
+    }
 
     // Verifica se o ataque acertou
-    if (monsterAttackRoll >= playerDefense) {
-        const isCriticalHit = monsterRollRaw === 20;
+    if (monsterAttackRoll >= targetDefense) {
+                const isCriticalHit = monsterRollRaw === 20;
         
         if (isCriticalHit) {
             await addLogMessage(`<strong style="color: red;">ACERTO CRÍTICO!</strong> O ataque atinge um ponto vital!`, 1000);
@@ -602,124 +670,140 @@ await addLogMessage(`${currentMonster.nome} rolou ${monsterRollRaw} em um D20 pa
             await addLogMessage(`O ataque acertou!`, 1000);
         }
 
-        // --- INÍCIO: Dissipar buff oculto se acertado ---
-const ocultoBuffIndex = activeBuffs.findIndex(buff => buff.tipo === "oculto");
-if (ocultoBuffIndex !== -1) {
-  activeBuffs.splice(ocultoBuffIndex, 1);
-  updateBuffsDisplay();
-  await addLogMessage(`<span style="color:red;">Você foi atingido enquanto estava oculto! Seu estado de ocultação se dissipa e você não poderá aplicar o Backstab.</span>`, 1000);
-  window.isBackstabAttack = false; // Garante que não aplicará o bônus
-}
-// --- FIM: Dissipar buff oculto se acertado ---
-
-        // Calcula o dano
         let monsterDamageRoll = rollDice(selectedAttack.dano);
 
-// Aplica redução de dano por debuffs
-const damageReduction = activeMonsterDebuffs
-    .filter(debuff => debuff.tipo === "damage_reduction")
-    .reduce((total, debuff) => total + debuff.valor, 0);
+        // Aplica modificadores apenas para ataques contra o jogador
+        if (isTargetingPlayer) {
+            // --- INÍCIO: Dissipar buff oculto se acertado ---
+            const ocultoBuffIndex = activeBuffs.findIndex(buff => buff.tipo === "oculto");
+            if (ocultoBuffIndex !== -1) {
+                activeBuffs.splice(ocultoBuffIndex, 1);
+                updateBuffsDisplay();
+                await addLogMessage(`<span style="color:red;">Você foi atingido enquanto estava oculto! Seu estado de ocultação se dissipa e você não poderá aplicar o Backstab.</span>`, 1000);
+                window.isBackstabAttack = false;
+            }
+            // --- FIM: Dissipar buff oculto se acertado ---
 
-if (damageReduction > 0) {
-    monsterDamageRoll = Math.max(0, monsterDamageRoll - damageReduction);
-    await addLogMessage(`Dano reduzido em ${damageReduction} por debuffs (${monsterDamageRoll + damageReduction} → ${monsterDamageRoll}).`, 800);
-}
+            // Aplica redução de dano por debuffs
+            const damageReduction = activeMonsterDebuffs
+                .filter(debuff => debuff.tipo === "damage_reduction")
+                .reduce((total, debuff) => total + debuff.valor, 0);
 
-        // Aplica redução de dano por amputação de braços
-const armsDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "amputation_arms");
-if (armsDebuff) {
-    const originalDamage = monsterDamageRoll;
-    monsterDamageRoll = Math.max(1, Math.floor(monsterDamageRoll * 0.3));
-    await addLogMessage(`Dano reduzido por amputação (${originalDamage} → ${monsterDamageRoll}).`, 800);
-}
+            if (damageReduction > 0) {
+                monsterDamageRoll = Math.max(0, monsterDamageRoll - damageReduction);
+                await addLogMessage(`Dano reduzido em ${damageReduction} por debuffs (${monsterDamageRoll + damageReduction} → ${monsterDamageRoll}).`, 800);
+            }
 
+            // Aplica redução de dano por amputação de braços
+            const armsDebuff = activeMonsterDebuffs.find(debuff => debuff.tipo === "amputation_arms");
+            if (armsDebuff) {
+                const originalDamage = monsterDamageRoll;
+                monsterDamageRoll = Math.max(1, Math.floor(monsterDamageRoll * 0.3));
+                await addLogMessage(`Dano reduzido por amputação (${originalDamage} → ${monsterDamageRoll}).`, 800);
+            }
+        }
         
         if (isCriticalHit) {
             monsterDamageRoll = Math.floor(monsterDamageRoll * 1.5);
             const criticalEffects = [
-                "O golpe te deixa rdoado!",
-                "Você sente suas forças se esvaindo!",
-                "O impacto te faz perder o equilíbrio!",
-                "Um golpe certeiro que te faz recuar!"
+                "O golpe certeiro causa dano devastador!",
+                "Um ataque preciso que encontra uma brecha!",
+                "O impacto é brutal e certeiro!"
             ];
             const randomEffect = criticalEffects[Math.floor(Math.random() * criticalEffects.length)];
             await addLogMessage(`<em>${randomEffect}</em>`, 800);
         }
 
-        // Verifica imunidade de Pele Rochosa (decrementa a cada ataque)
-const peleRochosaBuff = activeBuffs.find(buff => buff.tipo === "pele_rochosa");
-if (peleRochosaBuff) {
-    peleRochosaBuff.turnos--;
-    if (peleRochosaBuff.turnos <= 0) {
-        activeBuffs = activeBuffs.filter(buff => buff.tipo !== "pele_rochosa");
-        await addLogMessage(`Pele Rochosa se dissipou.`, 800);
-    }
-    updateBuffsDisplay();
-    await addLogMessage(`Pele Rochosa: Você é imune ao ataque físico!`, 1000);
-    return;
-}
-
-        playerHealth -= monsterDamageRoll;
-        atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
-        await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano${isCriticalHit ? " crítico" : ""}.`, 1000);
-
-// Verifica reflexão do Escudo do Fogo
-const fireShieldBuff = activeBuffs.find(buff => buff.tipo === "fire_shield");
-if (fireShieldBuff) {
-    // Teste de resistência do monstro
-    const resistanceRoll = Math.floor(Math.random() * 20) + 1;
-    const resistanceTotal = resistanceRoll + currentMonster.habilidade;
-    const difficulty = 20;
-    
-    await addLogMessage(`${currentMonster.nome} tenta resistir ao Escudo do Fogo: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 800);
-    
-    if (resistanceTotal < difficulty) {
-        currentMonster.pontosDeEnergia -= monsterDamageRoll;
-        currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
-        displayAllMonsterHealthBars();
-        await addLogMessage(`<span style="color: orange;">Escudo do Fogo reflete ${monsterDamageRoll} de dano de volta para ${currentMonster.nome}!</span>`, 1000);
-        
-        if (currentMonster.pontosDeEnergia <= 0) {
-            console.log("DEBUG: Monstro morreu:", currentMonster.nome, currentMonster.id);
-            console.log("DEBUG: Tentando registrar corpo:", currentMonster.nome, currentMonster.id, "HP:", currentMonster.pontosDeEnergia);
-                registerDeadBody(currentMonster); // ← ADICIONAR
-            await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado pela reflexão!</p>`, 1000);
-            const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
-            if (monstersAlive.length === 0) {
-                handlePostBattle(currentMonster);
+        // Aplica o dano no alvo correto
+        if (isTargetingPlayer) {
+            // Verifica imunidade de Pele Rochosa
+            const peleRochosaBuff = activeBuffs.find(buff => buff.tipo === "pele_rochosa");
+            if (peleRochosaBuff) {
+                peleRochosaBuff.turnos--;
+                if (peleRochosaBuff.turnos <= 0) {
+                    activeBuffs = activeBuffs.filter(buff => buff.tipo !== "pele_rochosa");
+                    await addLogMessage(`Pele Rochosa se dissipou.`, 800);
+                }
+                updateBuffsDisplay();
+                await addLogMessage(`Pele Rochosa: Você é imune ao ataque físico!`, 1000);
                 return;
-            } else {
-                window.currentMonster = monstersAlive[0];
-                currentMonster = window.currentMonster;
-                updateMonsterInfoUI();
+            }
+
+            playerHealth -= monsterDamageRoll;
+            atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
+            await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano a você${isCriticalHit ? " crítico" : ""}.`, 1000);
+
+            // Verifica reflexão do Escudo do Fogo
+            const fireShieldBuff = activeBuffs.find(buff => buff.tipo === "fire_shield");
+            if (fireShieldBuff) {
+                const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+                const resistanceTotal = resistanceRoll + currentMonster.habilidade;
+                const difficulty = 20;
+                
+                await addLogMessage(`${currentMonster.nome} tenta resistir ao Escudo do Fogo: ${resistanceRoll} + ${currentMonster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 800);
+                
+                if (resistanceTotal < difficulty) {
+                    currentMonster.pontosDeEnergia -= monsterDamageRoll;
+                    currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia);
+                    displayAllMonsterHealthBars();
+                    await addLogMessage(`<span style="color: orange;">Escudo do Fogo reflete ${monsterDamageRoll} de dano de volta para ${currentMonster.nome}!</span>`, 1000);
+                    
+                    if (currentMonster.pontosDeEnergia <= 0) {
+                        registerDeadBody(currentMonster);
+                        await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado pela reflexão!</p>`, 1000);
+                        const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+                        if (monstersAlive.length === 0) {
+                            handlePostBattle(currentMonster);
+                            return;
+                        } else {
+                            window.currentMonster = monstersAlive[0];
+                            currentMonster = window.currentMonster;
+                            updateMonsterInfoUI();
+                            displayAllMonsterHealthBars();
+                        }
+                    }
+                } else {
+                    await addLogMessage(`${currentMonster.nome} resistiu ao Escudo do Fogo! Nenhum dano refletido.`, 800);
+                }
+            }
+            
+            // Salva o estado
+            const user = auth.currentUser;
+            if (user) {
+                await updatePlayerEnergyInFirestore(user.uid, playerHealth);
+                await saveBattleState(user.uid, battleId, playerHealth);
+            }
+            
+            // Verifica morte/inconsciência
+            if (playerHealth <= -10) {
+                await addLogMessage(`<p style="color: darkred;">Você morreu!</p>`, 1000);
+                if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+                return;
+            } else if (playerHealth <= 0) {
+                await addLogMessage(`<p style="color: red;">Você está inconsciente!</p>`, 1000);
+                if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+            }
+
+            await addLogMessage(`Sua energia: ${playerHealth}.`, 1000);
+        } else {
+            // Ataca o morto-vivo
+            targetEntity.pontosDeEnergia -= monsterDamageRoll;
+            targetEntity.pontosDeEnergia = Math.max(0, targetEntity.pontosDeEnergia);
+            displayAllMonsterHealthBars();
+            await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano ao ${targetEntity.nome}${isCriticalHit ? " crítico" : ""}.`, 1000);
+            
+            if (targetEntity.pontosDeEnergia <= 0) {
+                await addLogMessage(`<p style="color: red; font-weight: bold;">${targetEntity.nome} foi destruído!</p>`, 1000);
+                window.animatedUndead = window.animatedUndead.filter(u => u.id !== targetEntity.id);
                 displayAllMonsterHealthBars();
             }
-        }
-    } else {
-        await addLogMessage(`${currentMonster.nome} resistiu ao Escudo do Fogo! Nenhum dano refletido.`, 800);
-    }
-}
-
-        
-        // Salva o estado
-const user = auth.currentUser;
-if (user) {
-    await updatePlayerEnergyInFirestore(user.uid, playerHealth);
-    await saveBattleState(user.uid, battleId, playerHealth);
-}
-        // Verifica morte/inconsciência
-        if (playerHealth <= -10) {
-            await addLogMessage(`<p style="color: darkred;">Você morreu!</p>`, 1000);
-            if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
-            return;
-        } else if (playerHealth <= 0) {
-            await addLogMessage(`<p style="color: red;">Você está inconsciente!</p>`, 1000);
-            if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+            
+            await addLogMessage(`Energia do ${targetEntity.nome}: ${targetEntity.pontosDeEnergia}.`, 1000);
         }
 
-        await addLogMessage(`Sua energia: ${playerHealth}.`, 1000);
     } else {
-        await addLogMessage(`O ataque errou.`, 1000);
+                const targetName = isTargetingPlayer ? 'você' : targetEntity.nome;
+        await addLogMessage(`O ataque contra ${targetName} errou.`, 1000);
     }
 
     // Telegrafação após o ataque (se não foi um ataque telegrafado)
@@ -736,7 +820,6 @@ if (user) {
     }
 
 
-
 // Finaliza o turno do jogador e inicia o turno do monstro
 function endPlayerTurn() {
     console.log("LOG: Finalizando turno do jogador e iniciando turno do monstro.");
@@ -744,6 +827,7 @@ function endPlayerTurn() {
         console.error("LOG: endPlayerTurn chamado fora do turno do jogador. Abortando.");
         return;
     }
+    window.damageTracker.endTurn();
 
     // VELOCIDADE - VERIFICAR SE TODOS OS MONSTROS ESTÃO MORTOS ANTES DA SEGUNDA AÇÃO
     const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
@@ -1113,13 +1197,15 @@ function chooseMonsterAttack(monster) {
     return weightedAttacks[0]; // Fallback
 }
 
-
 async function endMonsterTurn() {
     console.log("LOG: Finalizando turno do monstro e iniciando turno do jogador.");
     if (isPlayerTurn) {
         console.error("LOG: endMonsterTurn chamado fora do turno do monstro. Abortando.");
         return;
     }
+    
+window.damageTracker.endTurn();
+
 
     if (playerHealth <= 0 && playerHealth > -10) {
         console.log("LOG: Jogador inconsciente, o monstro continua atacando.");
@@ -2444,6 +2530,7 @@ async function undeadAttack() {
         if (attackRoll >= (target.couraça || 0)) {
             const damage = rollDice(undead.dano);
             target.pontosDeEnergia -= damage;
+            window.damageTracker.addDamage(undead.id, damage);
             target.pontosDeEnergia = Math.max(0, target.pontosDeEnergia);
             
             await addLogMessage(`${undead.nome} causa ${damage} de dano!`, 600);
@@ -4591,6 +4678,7 @@ if (window.isPunhaladaVenenosaAttack) {
         if (totalDamage > 0) { // Só aplica se houver dano
             console.log(`Aplicando ${totalDamage} de dano ao monstro.`);
             currentMonster.pontosDeEnergia -= totalDamage;
+            window.damageTracker.addDamage('player', totalDamage);
             currentMonster.pontosDeEnergia = Math.max(0, currentMonster.pontosDeEnergia); // Garante não ficar negativo
 
             await addLogMessage(`${currentMonster.nome} sofreu ${totalDamage} de dano.`, 800);
