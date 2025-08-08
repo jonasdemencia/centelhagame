@@ -5309,11 +5309,11 @@ break;
 
     // Seleciona alvos em cone (até 5)
     const targets = selectAreaTargets(5);
-    let totalDamage = 0;
+let coneDamage = 0;
     for (let i = 0; i < nivelFinal; i++) {
-        totalDamage += rollDice('1d4') + 1;
+        coneDamage += rollDice('1d4') + 1;
     }
-    const damageDistribution = distributeAreaDamage(totalDamage, targets);
+    const damageDistribution = distributeAreaDamage(coneDamage, targets);
     
     let monsterDefeated = false;
     await addLogMessage(`O cone glacial atinge ${targets.length} oponente(s)!`, 800);
