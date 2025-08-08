@@ -5302,15 +5302,15 @@ break;
                        result.fluency >= 75 ? 1.5 : 
                        result.fluency >= 60 ? 1.0 : 0.7;
     
-    const nivelFinal = Math.min(20, Math.floor(result.level * fluidezMult));
+const coneNivelFinal = Math.min(20, Math.floor(result.level * fluidezMult));
     
-    msg = `<span style="color:cyan;">Conjuração bem-sucedida! Cone Glacial nível ${nivelFinal} (${nivelFinal}d4+${nivelFinal})! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
+    msg = `<span style="color:cyan;">Conjuração bem-sucedida! Cone Glacial nível ${coneNivelFinal} (${coneNivelFinal}d4+${coneNivelFinal})! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
     addLogMessage(msg, 500);
 
     // Seleciona alvos em cone (até 5)
     const targets = selectAreaTargets(5);
 let coneDamage = 0;
-    for (let i = 0; i < nivelFinal; i++) {
+    for (let i = 0; i < coneNivelFinal; i++) {
         coneDamage += rollDice('1d4') + 1;
     }
     const damageDistribution = distributeAreaDamage(coneDamage, targets);
