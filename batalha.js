@@ -5308,15 +5308,15 @@ const coneNivelFinal = Math.min(20, Math.floor(result.level * fluidezMult));
     addLogMessage(msg, 500);
 
     // Seleciona alvos em cone (até 5)
-    const targets = selectAreaTargets(5);
+    const coneTargets = selectAreaTargets(5);
 let coneDamage = 0;
     for (let i = 0; i < coneNivelFinal; i++) {
         coneDamage += rollDice('1d4') + 1;
     }
-    const damageDistribution = distributeAreaDamage(coneDamage, targets);
+const damageDistribution = distributeAreaDamage(coneDamage, coneTargets);
     
     let monsterDefeated = false;
-    await addLogMessage(`O cone glacial atinge ${targets.length} oponente(s)!`, 800);
+await addLogMessage(`O cone glacial atinge ${coneTargets.length} oponente(s)!`, 800);
     
     for (const {monster, damage} of damageDistribution) {
         // Teste de resistência
