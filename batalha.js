@@ -5313,12 +5313,12 @@ let coneDamage = 0;
     for (let i = 0; i < coneNivelFinal; i++) {
         coneDamage += rollDice('1d4') + 1;
     }
-const damageDistribution = distributeAreaDamage(coneDamage, coneTargets);
+const coneDamageDistribution = distributeAreaDamage(coneDamage, coneTargets);
     
     let monsterDefeated = false;
 await addLogMessage(`O cone glacial atinge ${coneTargets.length} oponente(s)!`, 800);
     
-    for (const {monster, damage} of damageDistribution) {
+    for (const {monster, damage} of coneDamageDistribution) {
         // Teste de resistência
         const resistanceRoll = Math.floor(Math.random() * 20) + 1;
         const resistanceTotal = resistanceRoll + monster.habilidade;
