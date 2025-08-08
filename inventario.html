@@ -34,9 +34,22 @@
             background-color: #f9f9f9;
             font-size: 0.9em;
         }
-    * {
-        font-weight: normal !important;
-    }
+   * {
+    font-weight: normal !important;
+    font-family: 'VT323', monospace !important;
+    letter-spacing: 1.5px !important;
+    -webkit-font-smoothing: none !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    font-smooth: never !important;
+    text-rendering: optimizeSpeed !important;
+}
+
+body {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+
     </style>
 </head>
 <body>
@@ -209,6 +222,7 @@
     <script type="module" src="inventario.js"></script>
 </body>
 </html>
+
 
 
 
