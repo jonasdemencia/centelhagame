@@ -1244,3 +1244,8 @@ dice-icon svg {
     50% { opacity: 0.6; }
 }
 
+#monster-name,
+.monster-bar-item {
+    text-transform: uppercase;
+}
+
