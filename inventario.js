@@ -22,6 +22,8 @@ let currentPlayerData = null; // Armazena os dados do jogador
 let inventoryListener = null;
 // Variável global para o listener do jogador
 let playerDataListener = null;
+// Adicione esta linha após as outras variáveis globais
+const allItemsArr = [...initialItems, ...extraItems];
 
 // Função para configurar listener dos dados do jogador
 async function setupPlayerDataListener(uid) {
@@ -133,7 +135,6 @@ async function carregarMunicaoNaArma() {
   const equippedWeaponName   = inventoryData.equippedItems.weapon;
   if (!equippedWeaponName) return;
 
-  const allItemsArr = [...initialItems, ...extraItems];
   const weaponData  = allItemsArr.find(item =>
     item.content === equippedWeaponName && item.ammoType
   );
@@ -396,7 +397,6 @@ document.addEventListener("DOMContentLoaded", () => {
     item.classList.add('selected');
 
         // Verifica se o item é equipável e adiciona classe
-const allItemsArr = [...initialItems, ...extraItems];
 const itemData = allItemsArr.find(i => i.id === item.dataset.item);
 if (itemData && itemData.slot) {
     item.classList.add('equipable');
@@ -405,7 +405,6 @@ if (itemData && itemData.slot) {
     // --- DESTAQUE DE SLOT COMPATÍVEL ---
     slots.forEach(slot => slot.classList.remove('highlight'));
    console.log("Item clicado:", item);
-const allItemsArr = [...initialItems, ...extraItems];
 const itemData = allItemsArr.find(i => i.id === item.dataset.item);
 console.log("itemData:", itemData);
 if (itemData && itemData.slot) {
@@ -465,7 +464,6 @@ if (isProjectile && weaponObj && weaponObj.ammoType === selectedItem.dataset.ite
         const slotType = slot.dataset.slot;
         const currentEquippedItem = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
 
-        const allItemsArr = [...initialItems, ...extraItems];
         // EQUIPE
         if (selectedItem) {
     const itemData = allItemsArr.find(i => i.id === selectedItem.dataset.item);
@@ -517,7 +515,6 @@ ${originalItemData.description || 'Descrição do item.'}
     delete slot.dataset.value;
 
     // Busca o objeto do item original
-    const allItemsArr = [...initialItems, ...extraItems];
     let itemName = currentEquippedItem.trim();
 
     // Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (6/6)" -> "Revolver 38")
@@ -795,14 +792,11 @@ function addItemClickListener(item) {
             item.classList.add('selected');
 
             // Verifica se o item é equipável e adiciona classe
-const allItemsArr = [...initialItems, ...extraItems];
 const itemData = allItemsArr.find(i => i.id === item.dataset.item);
 if (itemData && itemData.slot) {
     item.classList.add('equipable');
 }
 
-
-           const allItemsArr = [...initialItems, ...extraItems];
 const itemData = allItemsArr.find(i => i.id === item.dataset.item);
 if (itemData && itemData.slot) {
     document.querySelectorAll('.slot').forEach(slot => {
@@ -1131,7 +1125,6 @@ if (item.consumable || item.projectile) {
         // Ajuste para arma de fogo: exibe munição carregada
         if (slot.dataset.slot === "weapon" && equippedItem) {
             // Busca o objeto da arma no catálogo
-            const allItemsArr = [...initialItems, ...extraItems];
             const weaponObj = allItemsArr.find(i => i.content === equippedItem && i.ammoType);
             if (weaponObj) {
                 // Se for arma de fogo, mostra munição carregada
@@ -1244,7 +1237,6 @@ const armorSlot = document.querySelector('.slot[data-slot="armor"]');
 if (armorSlot && armorSlot.innerHTML !== armorSlot.dataset.slot) {
     const equippedArmorName = armorSlot.innerHTML;
     // BUSCA EM AMBOS OS ARRAYS
-    const allItemsArr = [...initialItems, ...extraItems];
     const armorData = allItemsArr.find(item => item.content === equippedArmorName);
     if (armorData && armorData.defense) {
         bonusCouraca += armorData.defense;
@@ -1296,7 +1288,6 @@ async function updateCharacterDamage() {
     let newDamageValue = "1"; // Valor padrão desarmado
     if (weaponSlot && weaponSlot.innerHTML !== weaponSlot.dataset.slot) {
         const equippedWeaponName = weaponSlot.innerHTML.replace(/\s*\(\d+\/\d+\)$/, "");
-        const allItemsArr = [...initialItems, ...extraItems];
         const weaponData = allItemsArr.find(item => item.content === equippedWeaponName);
         if (weaponData && weaponData.damage) {
             newDamageValue = weaponData.damage;
@@ -1380,7 +1371,6 @@ getDoc(playerRef).then(playerSnap => {
     equippedWeaponName = equippedWeaponName.replace(/\s*\(\d+\/\d+\)$/, "");
 
     // encontra no catálogo o tipo de munição dessa arma
-    const allItemsArr = [...initialItems, ...extraItems];
     const weaponData = allItemsArr.find(item =>
         item.content === equippedWeaponName && item.ammoType
     );
@@ -1571,6 +1561,7 @@ async function savePlayerData(uid, playerData) {
         console.error("Erro ao salvar os dados do jogador:", error);
     }
 }
+
 
 
 
