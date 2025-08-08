@@ -5296,30 +5296,27 @@ async function setupArcanumConjurationModal(magiaId) {
 break;
                     
                     case 'cone-glacial':
-    // Multiplicador especial para Cone Glacial
     const fluidezMult = result.fluency >= 95 ? 4.0 : 
                        result.fluency >= 85 ? 2.0 :
                        result.fluency >= 75 ? 1.5 : 
                        result.fluency >= 60 ? 1.0 : 0.7;
     
-const coneNivelFinal = Math.min(20, Math.floor(result.level * fluidezMult));
+    const coneNivelFinal = Math.min(20, Math.floor(result.level * fluidezMult));
     
     msg = `<span style="color:cyan;">Conjuração bem-sucedida! Cone Glacial nível ${coneNivelFinal} (${coneNivelFinal}d4+${coneNivelFinal})! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
     addLogMessage(msg, 500);
 
-    // Seleciona alvos em cone (até 5)
     const coneTargets = selectAreaTargets(5);
-let coneDamage = 0;
+    let coneDamage = 0;
     for (let i = 0; i < coneNivelFinal; i++) {
         coneDamage += rollDice('1d4') + 1;
     }
-const coneDamageDistribution = distributeAreaDamage(coneDamage, coneTargets);
+    const coneDamageDistribution = distributeAreaDamage(coneDamage, coneTargets);
     
-    let monsterDefeated = false;
-await addLogMessage(`O cone glacial atinge ${coneTargets.length} oponente(s)!`, 800);
+    let coneMonsterDefeated = false;
+    await addLogMessage(`O cone glacial atinge ${coneTargets.length} oponente(s)!`, 800);
     
     for (const {monster, damage} of coneDamageDistribution) {
-        // Teste de resistência
         const resistanceRoll = Math.floor(Math.random() * 20) + 1;
         const resistanceTotal = resistanceRoll + monster.habilidade;
         const difficulty = 20;
@@ -5335,12 +5332,12 @@ await addLogMessage(`O cone glacial atinge ${coneTargets.length} oponente(s)!`, 
             await addLogMessage(`${monster.nome} sofre ${damage} de dano glacial.`, 800);
         }
         
-        if (monster.pontosDeEnergia <= 0) monsterDefeated = true;
+        if (monster.pontosDeEnergia <= 0) coneMonsterDefeated = true;
     }
     
     displayAllMonsterHealthBars();
     
-    if (monsterDefeated) {
+    if (coneMonsterDefeated) {
         const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
         if (monstersAlive.length === 0) {
             handlePostBattle(currentMonster);
@@ -5353,6 +5350,7 @@ await addLogMessage(`O cone glacial atinge ${coneTargets.length} oponente(s)!`, 
         }
     }
     break;
+
 
                     
                     case 'flecha-acida-melf':
