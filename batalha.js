@@ -1005,6 +1005,14 @@ const magiasDisponiveis = [
     efeito: "touch_debuff",
     valor: "1d4+1"
 },
+    {
+    id: "cone-glacial",
+    nome: "Cone Glacial",
+    descricao: "Cone de gelo devastador (até 20d4+20, cada modificador = 1d4+1)",
+    custo: 2,
+    efeito: "cone_glacial",
+    valor: "1d4"
+},
         {
         id: "mao-interposta-bigby",
         nome: "A Mão Interposta de Bigby",
@@ -1793,7 +1801,7 @@ async function usarMagia(magiaId, efeito, valor, custo) {
     }
 
     // --- INÍCIO INTEGRAÇÃO ARCANUM ---
-if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === 'flecha-acida-melf' || magiaId === 'relampago' || magiaId === 'toque-vampirico' || magiaId === 'animar-mortos') {
+if (magiaId === 'missil-magico' || magiaId === 'toque-chocante' || magiaId === 'flecha-acida-melf' || magiaId === 'relampago' || magiaId === 'toque-vampirico' || magiaId === 'animar-mortos' || magiaId === 'cone-glacial') {
     document.getElementById("magias-modal").style.display = "none";
     setupArcanumConjurationModal(magiaId);
     return;
@@ -5286,6 +5294,66 @@ async function setupArcanumConjurationModal(magiaId) {
     }
 }
 break;
+                    
+                    case 'cone-glacial':
+    // Multiplicador especial para Cone Glacial
+    const fluidezMult = result.fluency >= 95 ? 4.0 : 
+                       result.fluency >= 85 ? 2.0 :
+                       result.fluency >= 75 ? 1.5 : 
+                       result.fluency >= 60 ? 1.0 : 0.7;
+    
+    const nivelFinal = Math.min(20, Math.floor(result.level * fluidezMult));
+    
+    msg = `<span style="color:cyan;">Conjuração bem-sucedida! Cone Glacial nível ${nivelFinal} (${nivelFinal}d4+${nivelFinal})! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
+    addLogMessage(msg, 500);
+
+    // Seleciona alvos em cone (até 5)
+    const targets = selectAreaTargets(5);
+    let totalDamage = 0;
+    for (let i = 0; i < nivelFinal; i++) {
+        totalDamage += rollDice('1d4') + 1;
+    }
+    const damageDistribution = distributeAreaDamage(totalDamage, targets);
+    
+    let monsterDefeated = false;
+    await addLogMessage(`O cone glacial atinge ${targets.length} oponente(s)!`, 800);
+    
+    for (const {monster, damage} of damageDistribution) {
+        // Teste de resistência
+        const resistanceRoll = Math.floor(Math.random() * 20) + 1;
+        const resistanceTotal = resistanceRoll + monster.habilidade;
+        const difficulty = 20;
+        
+        await addLogMessage(`${monster.nome} tenta resistir: ${resistanceRoll} + ${monster.habilidade} = ${resistanceTotal} vs ${difficulty}`, 800);
+        
+        if (resistanceTotal >= difficulty) {
+            const reducedDamage = Math.floor(damage / 2);
+            monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - reducedDamage);
+            await addLogMessage(`${monster.nome} resiste parcialmente: sofre ${reducedDamage} de dano glacial.`, 800);
+        } else {
+            monster.pontosDeEnergia = Math.max(0, monster.pontosDeEnergia - damage);
+            await addLogMessage(`${monster.nome} sofre ${damage} de dano glacial.`, 800);
+        }
+        
+        if (monster.pontosDeEnergia <= 0) monsterDefeated = true;
+    }
+    
+    displayAllMonsterHealthBars();
+    
+    if (monsterDefeated) {
+        const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+        if (monstersAlive.length === 0) {
+            handlePostBattle(currentMonster);
+            return;
+        } else {
+            window.currentMonster = monstersAlive[0];
+            currentMonster = window.currentMonster;
+            updateMonsterInfoUI();
+            displayAllMonsterHealthBars();
+        }
+    }
+    break;
+
                     
                     case 'flecha-acida-melf':
     msg = `<span style="color:lime;">Conjuração bem-sucedida! Uma flecha ácida nível ${result.level} canalizada! (Precisão: ${result.accuracy.toFixed(1)}%, Fluidez: ${result.fluency.toFixed(1)}%)</span>`;
