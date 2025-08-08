@@ -156,7 +156,8 @@ function getSpellBaseWord(spellId) {
         'flecha-acida-melf': 'SAGITTAMELFAX',
         'relampago': 'AEROTREMORIS',  // ← ADICIONAR ESTA LINHA
         'toque-vampirico': 'THERMOVORUS',  // ← ADICIONAR ESTA LINHA
-        'animar-mortos': 'MORTUUM'
+        'animar-mortos': 'MORTUUM',
+        'cone-glacial': 'NEFRIGUM'
 
     };
     return baseWords[spellId] || 'ARCANUM';
@@ -834,11 +835,3 @@ window.ArcanumSpells = {
     validateConjuration,
     resetArcanumBattle,
 };
-
-
-
-
-
-
-
-
