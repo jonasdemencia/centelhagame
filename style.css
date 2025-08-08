@@ -44,7 +44,7 @@ body {
     align-items: stretch; /* Estica os itens para preencher a largura */
     background: rgba(0, 0, 0, 0.7); /* Preto com transparência para destaque */
     border: 1px solid #555; /* Cinza para a borda */
-    border-radius: 6px; /* Bordas arredondadas */
+    border-radius: 4px; /* Bordas arredondadas */
     padding: 8px; /* Reduzindo um pouco o padding */
     margin-bottom: 8px; /* Reduzindo um pouco a margem */
 }
@@ -102,7 +102,7 @@ body {
     height: 35px; /* Diminuindo o tamanho */
     background: #444; /* Cinza mais escuro */
     border: 2px solid #888; /* Cinza claro */
-    border-radius: 6px; /* Arredondamento menor */
+    border-radius: 4px; /* Arredondamento menor */
     text-align: center;
     line-height: 35px; /* Ajustando a altura da linha */
     cursor: pointer;
@@ -131,7 +131,7 @@ body {
     padding: 8px; /* Reduzindo o padding */
     background: rgba(50, 50, 50, 0.8); /* Cinza escuro */
     border: 2px solid #777; /* Cinza */
-    border-radius: 8px; /* Arredondamento menor */
+    border-radius: 4px; /* Arredondamento menor */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -150,7 +150,7 @@ body {
     margin: 15px auto; /* Reduzindo a margem */
     padding: 15px; /* Reduzindo o padding */
     background-color: #fff; /* Branco para o fundo do container */
-    border-radius: 6px; /* Arredondamento menor */
+    border-radius: 4px; /* Arredondamento menor */
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.7); /* Sombra mais escura e menor */
     opacity: 0.95; /* Aumentei um pouco a opacidade */
     color: #333; /* Cor do texto dentro do container (cinza escuro) */
@@ -394,7 +394,7 @@ body {
 #battle-log {
     margin-top: 20px; /* Espaço acima do log */
     border: 1px solid #555; /* Borda da área */
-    border-radius: 6px;
+    border-radius: 4px;
     background-color: rgba(0, 0, 0, 0.7); /* Fundo mais transparente */
     padding: 15px; /* Mais espaçamento interno */
     text-align: left; /* Alinhamento do texto */
@@ -416,7 +416,7 @@ body {
     max-height: 220px; /* Altura ajustada para mensagens longas */
     overflow-y: auto; 
     border: 1px solid #888; /* Borda para o container */
-    border-radius: 6px; /* Curvas suaves */
+    border-radius: 4px; /* Curvas suaves */
     background-color: #222; /* Fundo mais escuro */
     padding: 10px;
     font-size: 13px; /* Texto um pouco maior */
@@ -445,7 +445,7 @@ body {
     margin-bottom: 12px;
     padding: 10px;
     background-color: #333;
-    border-radius: 6px;
+    border-radius: 4px;
     color: #fff;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); /* Adiciona um leve sombreado */
 }
@@ -480,7 +480,7 @@ body {
     flex-wrap: wrap;
     justify-content: center;
     border: 1px solid #555;
-    border-radius: 6px;
+    border-radius: 4px;
     padding: 10px;
     margin-bottom: 20px;
     background-color: rgba(0, 0, 0, 0.7);
@@ -499,7 +499,7 @@ body {
     min-width: 200px;
     background: #444; /* Fundo do item */
     padding: 8px;
-    border-radius: 6px;
+    border-radius: 4px;
     margin-bottom: 5px; /* Espaço entre os itens */
 }
 
@@ -660,7 +660,7 @@ h1 {
     min-height: 120px;
     width: 120px;
     background: rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
+    border-radius: 4px;
     margin-bottom: 10px;
     position: relative; /* Adicionado para posicionar o iframe */
     overflow: hidden;   /* Para manter o iframe dentro dos limites */
@@ -796,7 +796,7 @@ dice-icon svg {
   background-color: #2a2a2a;
   border: 1px solid #444;
   padding: 10px;
-  border-radius: 5px;
+  border-radius: 4px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s;
@@ -852,7 +852,7 @@ dice-icon svg {
 .buff-item {
   background-color: #2a4a2a;
   border: 1px solid #4a7a4a;
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 2px 6px;
   font-size: 0.8em;
   color: #90ee90;
@@ -863,7 +863,7 @@ dice-icon svg {
 
 .buff-turns {
   background-color: #1a3a1a;
-  border-radius: 2px;
+  border-radius: 4px;
   padding: 1px 4px;
   font-size: 0.7em;
   min-width: 12px;
@@ -1231,7 +1231,7 @@ dice-icon svg {
     margin: 2px 5px;
     padding: 2px 6px;
     background-color: rgba(254, 202, 87, 0.1);
-    border-radius: 3px;
+    border-radius: 4px;
     font-size: 10px;
 }
 
@@ -1243,3 +1243,4 @@ dice-icon svg {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.6; }
 }
+
