@@ -395,6 +395,18 @@ const magias = [
     duracao: "Instantâneo"
 },
     {
+  id: "mao-interposta-bigby",
+  nome: "Mão Interposta de Bigby",
+  nomeVerdadeiro: "Palma Etérea de Bigby",
+  descricao: "Ao invocar o gesto ancestral de Bigby, uma palma espectral irrompe entre você e o inimigo escolhido. Sob seu toque silencioso, sua couraça se firma em 20, enquanto a essência vital do conjurador se condensa num escudo pulsante, igual ao seu vigor máximo.",
+  custo: 2,
+  efeito: "Couraça 20 contra inimigo escolhido + escudo (energia = energia máxima do conjurador)",
+  componente: "Nenhum",
+  resistencia: "Nenhuma",
+  tempoExecucao: "Instantâneo",
+  duracao: "1 turno + 1d20 rodadas"
+},
+    {
     id: "animar-mortos",
     nome: "Animar os Mortos (MORTUUM)",
     nomeVerdadeiro: "Sussurros dos Ossos Despertos",
