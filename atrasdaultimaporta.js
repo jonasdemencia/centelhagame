@@ -419,6 +419,18 @@ const magias = [
     duracao: "até o final de uma batalha"
   },
     {
+  id: "cone-glacial",
+  nome: "Cone Glacial (NEFRIGUM)",
+  nomeVerdadeiro: "Conus Frigidus",
+  descricao: "Os ventos noturnos se detêm, e o mundo estrala em branco.\nDo punho do conjurador jorra um arco de geada letal, tecendo filamentos prateados num cone de 60°, onde carne se cristaliza e ossos estilhaçam em esculturas geladas.",
+  custo: 2,
+  efeito: "Até 20d4+20 de dano cortante gélido (1d4+1 por modificador de Arcanum) em cone de 60°",
+  componente: "Nenhum",
+  resistencia: "Sim",
+  tempoExecucao: "Instantâneo",
+  duracao: "Instantâneo"
+},
+    {
     id: "pele-rochosa",
     nome: "Pele Rochosa (LAPIDEOCUTIS)",
     nomeVerdadeiro: "Armamento da Rocha Viva",
