@@ -79,14 +79,31 @@ function addPulseToChangingConditions(conditionDiv, conditionKey) {
 function createArcanumPanel() {
     const panel = document.createElement('div');
     panel.id = 'arcanum-conditions-panel';
-    panel.innerHTML = `
-        <div class="arcanum-header">
-            <h3>⚡ CONDIÇÕES MÁGICAS</h3>
+        panel.innerHTML = `
+        <div class="arcanum-header" id="arcanum-header" style="cursor: pointer;">
+            <h3>⚡ CONDIÇÕES MÁGICAS <span id="toggle-arrow">▼</span></h3>
         </div>
         <div class="arcanum-conditions" id="arcanum-conditions-list">
             <!-- Condições serão inseridas aqui -->
         </div>
     `;
+    
+    // Adiciona evento de clique para recolher/expandir
+    panel.addEventListener('click', function(e) {
+        if (e.target.closest('.arcanum-header')) {
+            const conditionsList = document.getElementById('arcanum-conditions-list');
+            const arrow = document.getElementById('toggle-arrow');
+            
+            if (conditionsList.style.display === 'none') {
+                conditionsList.style.display = 'block';
+                arrow.textContent = '▼';
+            } else {
+                conditionsList.style.display = 'none';
+                arrow.textContent = '▶';
+            }
+        }
+    });
+
     
     // Adiciona CSS inline para o painel
     const style = document.createElement('style');
@@ -348,4 +365,5 @@ window.ArcanumUI = {
     initPanel: initArcanumPanel,
     updatePanel: updateArcanumPanel
 };
+
 
