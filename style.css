@@ -606,9 +606,9 @@ h1 {
 /* Novo: estilo para o texto do valor */
 .hp-valor {
     position: absolute;
-    left: 50%;
+    right: 5px;
     top: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateY(-50%);
     color: white;
     text-shadow: 1px 1px 1px black;
     font-size: 12px;
@@ -1257,4 +1257,5 @@ dice-icon svg {
 * {
     font-weight: normal !important;
 }
+
 
