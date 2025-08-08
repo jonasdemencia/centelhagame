@@ -405,7 +405,6 @@ if (itemData && itemData.slot) {
     // --- DESTAQUE DE SLOT COMPATÍVEL ---
     slots.forEach(slot => slot.classList.remove('highlight'));
    console.log("Item clicado:", item);
-const itemData = allItemsArr.find(i => i.id === item.dataset.item);
 console.log("itemData:", itemData);
 if (itemData && itemData.slot) {
     console.log("Slot compatível esperado:", itemData.slot);
@@ -1561,6 +1560,7 @@ async function savePlayerData(uid, playerData) {
         console.error("Erro ao salvar os dados do jogador:", error);
     }
 }
+
 
 
 
