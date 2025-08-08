@@ -47,6 +47,8 @@ let preparingSpells = [];
 let relampagoRiskCounter = 1; // Contador de risco do Relâmpago (1-20)
 window.animatedUndead = [];
 window.deadBodies = [];
+window.bigbyHandShields = {}; // { monsterId: { shield: valor, couraca: 20, turnos: duracao } }
+
 
 // Sistema de rastreamento de dano por turno
 window.damageTracker = {
@@ -735,6 +737,23 @@ if (legsDebuff) {
                 return;
             }
 
+            // Antes de: playerHealth -= monsterDamageRoll;
+const bigbyShield = window.bigbyHandShields[currentMonster.id];
+if (bigbyShield && bigbyShield.turnos > 0 && bigbyShield.shield > 0) {
+    if (monsterDamageRoll <= bigbyShield.shield) {
+        bigbyShield.shield -= monsterDamageRoll;
+        await addLogMessage(`Mão de Bigby absorve ${monsterDamageRoll} de dano! Escudo: ${bigbyShield.shield}`, 800);
+        monsterDamageRoll = 0;
+    } else {
+        const remainingDamage = monsterDamageRoll - bigbyShield.shield;
+        await addLogMessage(`Mão de Bigby absorve ${bigbyShield.shield} e se dissipa!`, 800);
+        delete window.bigbyHandShields[currentMonster.id];
+        updateBuffsDisplay();
+        monsterDamageRoll = remainingDamage;
+    }
+}
+
+
             playerHealth -= monsterDamageRoll;
             atualizarBarraHP("barra-hp-jogador", playerHealth, playerMaxHealth);
             await addLogMessage(`${currentMonster.nome} causou ${monsterDamageRoll} de dano a você${isCriticalHit ? " crítico" : ""}.`, 1000);
@@ -986,6 +1005,14 @@ const magiasDisponiveis = [
     efeito: "touch_debuff",
     valor: "1d4+1"
 },
+        {
+        id: "mao-interposta-bigby",
+        nome: "A Mão Interposta de Bigby",
+        descricao: "Uma mão gigante de proteção, com couraça 20 e energia igual a do mago",
+        custo: 2,
+        efeito: "bigby_hand",
+        valor: 20
+    },
         {
         id: "animar-mortos",
         nome: "Animar os Mortos",
@@ -2267,6 +2294,42 @@ if (efeito !== "touch_attack" && efeito !== "touch_debuff" && efeito !== "area_d
     endPlayerTurn();
 }
         
+        else if (efeito === "bigby_hand") {
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#333;padding:20px;border-radius:10px;z-index:1000;color:white;';
+    modal.innerHTML = `<h3>Escolha o oponente:</h3><div id="monster-selection"></div>`;
+    
+    const selection = modal.querySelector('#monster-selection');
+    window.currentMonsters.filter(m => m.pontosDeEnergia > 0).forEach(monster => {
+        const btn = document.createElement('button');
+        btn.textContent = monster.nome;
+        btn.style.cssText = 'display:block;margin:5px 0;padding:10px;width:100%;';
+        btn.onclick = async () => {
+            modal.remove();
+            const duracao = 1 + rollDice("1d20");
+            const playerTotalEnergy = window.playerData?.energy?.initial || playerMaxHealth;
+            
+            window.bigbyHandShields[monster.id] = {
+                shield: playerTotalEnergy,
+                couraca: 20,
+                turnos: duracao
+            };
+            
+            await addLogMessage(`Mão de Bigby ativa! Couraça 20 e escudo ${playerTotalEnergy} vs ${monster.nome} por ${duracao} turnos.`, 1000);
+            updateBuffsDisplay();
+            
+            await updatePlayerMagicInFirestore(userId, playerMagic);
+            await saveBattleState(userId, battleId, playerHealth);
+            endPlayerTurn();
+        };
+        selection.appendChild(btn);
+    });
+    
+    document.body.appendChild(modal);
+    return;
+}
+
+        
    else if (efeito === "pele_rochosa") {
     const duracao = rollDice("1d4") + rollDice("1d10");
     
@@ -2557,18 +2620,25 @@ async function undeadAttack() {
 
 // Função para calcular couraça total (base + buffs)
 function getPlayerDefense() {
-  const currentPlayerData = window.playerData || playerData;
-  const baseDefense = currentPlayerData?.couraca ? parseInt(currentPlayerData.couraca) : 0;
-  let buffBonus = 0;
-  activeBuffs.forEach(buff => {
-    if (buff.tipo === "couraca" || buff.couracaBonus) buffBonus += buff.valor || buff.couracaBonus;
-    if (buff.tipo === "anastia") buffBonus += buff.valor; // valor é -10
-    if (buff.tipo === "velocidade") buffBonus += buff.valor; // ADICIONAR ESTA LINHA
-    if (buff.tipo === "fire_shield") buffBonus += buff.valor;
-
-  });
-  return baseDefense + buffBonus;
+    // Verifica escudo de Bigby contra monstro atual
+    const bigbyShield = window.bigbyHandShields[currentMonster?.id];
+    if (bigbyShield && bigbyShield.turnos > 0) {
+        return 20; // Couraça fixa
+    }
+    
+    // Código original
+    const currentPlayerData = window.playerData || playerData;
+    const baseDefense = currentPlayerData?.couraca ? parseInt(currentPlayerData.couraca) : 0;
+    let buffBonus = 0;
+    activeBuffs.forEach(buff => {
+        if (buff.tipo === "couraca" || buff.couracaBonus) buffBonus += buff.valor || buff.couracaBonus;
+        if (buff.tipo === "anastia") buffBonus += buff.valor;
+        if (buff.tipo === "velocidade") buffBonus += buff.valor;
+        if (buff.tipo === "fire_shield") buffBonus += buff.valor;
+    });
+    return baseDefense + buffBonus;
 }
+
 
 // Adicione esta função após getPlayerDefense()
 function updatePlayerCouracaDisplay() {
@@ -2593,7 +2663,6 @@ function getMonsterDefense() {
 }
 
 
-
 // Função para atualizar display de buffs
 function updateBuffsDisplay() {
     const container = document.getElementById('buffs-container');
@@ -2610,6 +2679,20 @@ function updateBuffsDisplay() {
         `;
         container.appendChild(buffElement);
     });
+
+    // Escudos de Bigby
+for (const [monsterId, shield] of Object.entries(window.bigbyHandShields)) {
+    const monster = window.currentMonsters.find(m => m.id === monsterId);
+    const monsterName = monster ? monster.nome : "oponente";
+    const buffElement = document.createElement('div');
+    buffElement.className = 'buff-item';
+    buffElement.innerHTML = `
+        <span>Bigby vs ${monsterName}</span>
+        <span class="buff-turns">${shield.turnos} (${shield.shield})</span>
+    `;
+    container.appendChild(buffElement);
+}
+
     updatePlayerCouracaDisplay();
 }
 
@@ -2815,6 +2898,17 @@ activeBuffs.forEach(buff => {
     }
   }
   // --- FIM DO BLOCO ASSASSINO FANTASMAGÓRICO ---
+
+    // Processa escudos de Bigby
+for (const [monsterId, shield] of Object.entries(window.bigbyHandShields)) {
+    shield.turnos--;
+    if (shield.turnos <= 0) {
+        const monster = window.currentMonsters.find(m => m.id === monsterId);
+        if (monster) await addLogMessage(`Mão de Bigby contra ${monster.nome} se dissipou.`, 800);
+        delete window.bigbyHandShields[monsterId];
+    }
+}
+
     return false; // SINALIZA QUE O TURNO NÃO FOI CONSUMIDO
 }
 
