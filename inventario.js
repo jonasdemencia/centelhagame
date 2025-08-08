@@ -395,6 +395,13 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedItem = item;
     item.classList.add('selected');
 
+        // Verifica se o item é equipável e adiciona classe
+const allItemsArr = [...initialItems, ...extraItems];
+const itemData = allItemsArr.find(i => i.id === item.dataset.item);
+if (itemData && itemData.slot) {
+    item.classList.add('equipable');
+}
+
     // --- DESTAQUE DE SLOT COMPATÍVEL ---
     slots.forEach(slot => slot.classList.remove('highlight'));
    console.log("Item clicado:", item);
@@ -786,6 +793,14 @@ function addItemClickListener(item) {
             clearHighlights();
             selectedItem = item;
             item.classList.add('selected');
+
+            // Verifica se o item é equipável e adiciona classe
+const allItemsArr = [...initialItems, ...extraItems];
+const itemData = allItemsArr.find(i => i.id === item.dataset.item);
+if (itemData && itemData.slot) {
+    item.classList.add('equipable');
+}
+
 
            const allItemsArr = [...initialItems, ...extraItems];
 const itemData = allItemsArr.find(i => i.id === item.dataset.item);
@@ -1556,6 +1571,7 @@ async function savePlayerData(uid, playerData) {
         console.error("Erro ao salvar os dados do jogador:", error);
     }
 }
+
 
 
 
