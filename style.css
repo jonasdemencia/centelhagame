@@ -27,9 +27,14 @@ body {
     -moz-osx-font-smoothing: grayscale !important;
     font-smooth: never !important;
     text-rendering: optimizeSpeed !important;
+    font-weight: normal !important;
 }
 
-
+body {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
 
 /* Estilo para ocultar a página com a classe hidden */
 .hidden {
@@ -1252,3 +1257,4 @@ dice-icon svg {
 * {
     font-weight: normal !important;
 }
+
