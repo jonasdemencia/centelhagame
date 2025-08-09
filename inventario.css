@@ -109,9 +109,21 @@ p {
     width: 70px;
     height: 70px;
     background: #8b5a2b;
+    border: 2px solid #ccc;
+    border-radius: 0;
+    font-size: 14px;
+    font-weight: bold;
     position: relative;
     padding-right: 25px;
     line-height: normal;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    white-space: normal;
+    word-break: break-word;
+    color: white;
+    cursor: pointer;
 }
 
 .slot {
@@ -777,6 +789,7 @@ p {
     background-color: transparent !important;
     border: 2px solid #f1c40f !important;
 }
+
 
 
 
