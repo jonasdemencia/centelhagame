@@ -555,16 +555,11 @@ p {
 .dice-slot {
     width: 70px;
     height: 70px;
-    background: #583101;
-    border: 2px solid #d4a373;
-    border-radius: 8px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    font-size: 16px;
-    color: white;
-    margin: auto;
+    background: #222;
+    border: 2px solid #ccc;
+    border-radius: 0;
+    font-size: 14px;
+    font-weight: bold;
 }
 
 .dice-slot.highlight {
@@ -576,15 +571,10 @@ p {
     width: 70px;
     height: 70px;
     background: #8b5a2b;
-    border: 2px solid #d4a373;
-    border-radius: 8px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    font-size: 16px;
-    color: white;
-    margin: auto;
+    border: 2px solid #ccc;
+    border-radius: 0;
+    font-size: 14px;
+    font-weight: bold;
 }
 
 .dice-item.selected {
@@ -787,5 +777,6 @@ p {
     background-color: transparent !important;
     border: 2px solid #f1c40f !important;
 }
+
 
 
