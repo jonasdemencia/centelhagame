@@ -863,6 +863,7 @@ async function saveInventoryData(uid) {
         content: item.dataset.originalContent || item.innerHTML
            .split('<span class="item-expand-toggle">')[0]
            .split('<span class="item-energia">')[0]
+               .replace(/<[^>]*>/g, '')  // ← ADICIONE ESTA LINHA
            .trim()
 
       };
