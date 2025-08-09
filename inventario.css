@@ -70,7 +70,7 @@ p {
     background: #000;
     border: 2px solid #ccc;
     border-radius: 0;
-    min-height: 240px;
+    min-height: 216px;
 }
 
 .items {
@@ -81,7 +81,7 @@ p {
     align-items: start;
     padding: 10px;
     overflow-y: auto;
-    max-height: calc(240px - 40px);
+    max-height: calc(216px - 40px);
 }
 
 /* Estilo dos itens e slots */
@@ -791,4 +791,5 @@ p {
     background-color: transparent !important;
     border: 2px solid #f1c40f !important;
 }
+
 
