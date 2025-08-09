@@ -106,10 +106,12 @@ p {
 
 
 .item {
+    width: 70px;
+    height: 70px;
     background: #8b5a2b;
-    position: relative; /* Para posicionar o toggle dentro */
-    padding-right: 25px; /* Espaço para o botão de expandir */
-    line-height: normal; /* Remove o line-height fixo para permitir múltiplas linhas */
+    position: relative;
+    padding-right: 25px;
+    line-height: normal;
 }
 
 .slot {
@@ -551,8 +553,8 @@ p {
 }
 
 .dice-slot {
-    width: 56px;
-    height: 56px;
+    width: 70px;
+    height: 70px;
     background: #583101;
     border: 2px solid #d4a373;
     border-radius: 8px;
@@ -571,8 +573,8 @@ p {
 }
 
 .dice-item {
-    width: 56px;
-    height: 56px;
+    width: 70px;
+    height: 70px;
     background: #8b5a2b;
     border: 2px solid #d4a373;
     border-radius: 8px;
@@ -785,4 +787,5 @@ p {
     background-color: transparent !important;
     border: 2px solid #f1c40f !important;
 }
+
 
