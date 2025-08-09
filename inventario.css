@@ -114,7 +114,6 @@ p {
     font-size: 14px;
     font-weight: bold;
     position: relative;
-    padding-right: 25px;
     line-height: normal;
     text-align: center;
     display: flex;
@@ -789,6 +788,7 @@ p {
     background-color: transparent !important;
     border: 2px solid #f1c40f !important;
 }
+
 
 
 
