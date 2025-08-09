@@ -102,18 +102,21 @@ p {
     white-space: normal;
     word-break: break-word;
     color: white;
+    box-sizing: border-box; /* GARANTE QUE O TAMANHO TOTAL SEJA EXATAMENTE 70x70px */
 }
 
-
 .item {
+    background: #8b5a2b;
+    position: relative;
+    /* Todas as outras propriedades de tamanho (width, height, border, etc)
+       são herdadas da regra acima. O importante é que a propriedade
+       'padding-right' FOI REMOVIDA. */
     width: 70px;
     height: 70px;
-    background: #8b5a2b;
     border: 2px solid #ccc;
     border-radius: 0;
     font-size: 14px;
     font-weight: bold;
-    position: relative;
     line-height: normal;
     text-align: center;
     display: flex;
@@ -788,8 +791,3 @@ p {
     background-color: transparent !important;
     border: 2px solid #f1c40f !important;
 }
-
-
-
-
-
