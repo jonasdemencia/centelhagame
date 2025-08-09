@@ -783,7 +783,7 @@ p {
     border: 2px solid #ccc;
     border-radius: 0;
     width: 250px;
-    margin: auto;
+    margin: 5px auto 0;
     text-align: center;
 }
 
@@ -802,7 +802,7 @@ p {
 .chest, .dice-chest, .dice-section {
     display: block;
     position: relative;
-    margin-top: 20px;
+margin-top: 5px;
     padding: 15px;
     background: #000;
     border: 2px solid #ccc;
@@ -840,3 +840,4 @@ p {
     width: 24px;
     height: 24px;
 }
+
