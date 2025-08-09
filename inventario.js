@@ -1058,12 +1058,11 @@ async function loadInventoryData(uid) {
     
     // Verifica se está equipado (usando nome limpo)
     const isEquipped = Object.values(inventoryData.equippedItems)
-        .some(equippedName => {
-            if (!equippedName) return false;
-            // Remove sufixo de munição para comparação
-            const cleanEquippedName = equippedName.replace(/\s*\(\d+\/\d+\)$/, "");
-            return cleanEquippedName === extraItem.content;
-        });
+  .some(equippedName => {
+    if (!equippedName || typeof equippedName !== "string") return false;
+    const cleanEquippedName = equippedName.replace(/\s*\(\d+\/\d+\)$/, "");
+    return cleanEquippedName === extraItem.content;
+  });
     
     // Verifica se foi descartado
     const wasDiscarded = inventoryData.discardedItems?.includes(extraItem.uuid);
