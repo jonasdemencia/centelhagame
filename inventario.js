@@ -374,17 +374,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     
-    const itemsContainer = document.querySelector('.items');
-    if (itemsContainer) {
-  itemsContainer.addEventListener('click', function(event) {
-    // Se o clique NÃO foi em um .item nem em um filho de .item
-    if (!event.target.closest('.item')) {
-      clearHighlights();
-      selectedItem = null;
-      toggleUseButton(false);
+   // Listener global para desselecionar item clicando em qualquer lugar
+document.addEventListener('click', function(event) {
+    // Elementos que NÃO devem desselecionar o item
+    const keepSelection = event.target.closest('.item, .slot, #useBtn, #carregar-municao-btn, #discard-slot, .dice-item, .dice-slot');
+    
+    if (!keepSelection && selectedItem) {
+        clearHighlights();
+        selectedItem = null;
+        toggleUseButton(false);
     }
-  });
-}
+});
+
     const slots = document.querySelectorAll('.slot');
     const discardSlot = document.getElementById("discard-slot");
     const useButton = document.getElementById("useBtn"); // Obtém a referência do botão
