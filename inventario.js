@@ -23,6 +23,22 @@ let inventoryListener = null;
 // Variável global para o listener do jogador
 let playerDataListener = null;
 
+// Variável global para o listener
+let inventoryListener = null;
+// Variável global para o listener do jogador
+let playerDataListener = null;
+
+// --- NOVO: Função de debounce ---
+function debounce(func, delay) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), delay);
+    };
+}
+
+
 // Função para configurar listener dos dados do jogador
 async function setupPlayerDataListener(uid) {
     console.log("Configurando listener dos dados do jogador:", uid);
@@ -56,17 +72,18 @@ async function setupPlayerDataListener(uid) {
 }
 
 // Itens iniciais que o jogador deve ter (adicionando propriedade de danoo)
+// Itens iniciais que o jogador deve ter (adicionando propriedade de danoo)
 const initialItems = [
-    { id: "bolsa-de-escriba", content: "Bolsa de escriba", description: "Uma bolsa para guardar pergaminhos e penas.", image: "https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/images/items/bolsa-escriba.png" },
-    { id: "velas", content: "Velas", description: "Fontes de luz portáteis.", image: "https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/images/items/velas.png" },
-    { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2, description: "Um pequeno saco contendo ervas que podem curar ferimentos leves.", image: "https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/images/items/ervas.png" },
-    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital.", image: "https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/images/items/pocao-cura.png" },
-    { id: "pao", content: "Pão", consumable: true, quantity: 1, description: "Um pedaço de pão simples.", image: "https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/images/items/pao.png" },
-    { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 5, description: "Um pedaço de pão velho e mofado. Estranhamente, parece ter um efeito... diferente.", image: "https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/images/items/pao-mofado.png" },
-    { id: "elixir-poder", content: "Elixir do Poder Supremo", consumable: true, quantity: 5, effect: "boost_attributes", value: 100, description: "Um elixir mágico que aumenta temporariamente todos os seus atributos para 100.", image: "https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/images/items/elixir.png" },
+    { id: "bolsa-de-escriba", content: "Bolsa de escriba", description: "Uma bolsa para guardar pergaminhos e penas.", image: "https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/images/items/bolsa-escriba.png", uuid: crypto.randomUUID() },
+    { id: "velas", content: "Velas", description: "Fontes de luz portáteis.", image: "https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/images/items/velas.png", uuid: crypto.randomUUID() },
+    { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2, description: "Um pequeno saco contendo ervas que podem curar ferimentos leves.", image: "https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/images/items/ervas.png", uuid: crypto.randomUUID() },
+    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital.", image: "https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/images/items/pocao-cura.png", uuid: crypto.randomUUID() },
+    { id: "pao", content: "Pão", consumable: true, quantity: 1, description: "Um pedaço de pão simples.", image: "https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/images/items/pao.png", uuid: crypto.randomUUID() },
+    { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 5, description: "Um pedaço de pão velho e mofado. Estranhamente, parece ter um efeito... diferente.", image: "https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/images/items/pao-mofado.png", uuid: crypto.randomUUID() },
+    { id: "elixir-poder", content: "Elixir do Poder Supremo", consumable: true, quantity: 5, effect: "boost_attributes", value: 100, description: "Um elixir mágico que aumenta temporariamente todos os seus atributos para 100.", image: "https://raw.githubusercontent.com/jonasdemencia/centelhagame/main/images/items/elixir.png", uuid: crypto.randomUUID() },
     //{ id: "grilo", content: "Grilo", description: "Um pequeno grilo usado como componente mágico para magias de sono.", componente: true, energia: { total: 1, inicial: 1 } }
-
 ];
+
 
 // Lista de itens que podem ser adicionados dinamicamente (não iniciais)
 const extraItems = [
@@ -520,7 +537,7 @@ slot.innerHTML = `
         selectedItem = null;
         clearHighlights();
         toggleUseButton(false);
-        saveInventoryData(auth.currentUser.uid);
+        debouncedSaveInventoryData(auth.currentUser.uid);
         updateCharacterCouraca();
         updateCharacterDamage();
     }
@@ -631,7 +648,7 @@ selectedItem = null;
 clearHighlights();
 toggleUseButton(false);
 itemToRemove.remove();
-saveInventoryData(auth.currentUser.uid);
+debouncedSaveInventoryData(auth.currentUser.uid);
 
         }
     });
@@ -841,8 +858,11 @@ function clearHighlights() {
     document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
 }
 
-async function saveInventoryData(uid) {
-  console.log("Salvando dados do inventário para o usuário:", uid);
+// --- REMOVA A FUNÇÃO ORIGINAL saveInventoryData INTEIRA E SUBSTITUA PELO CÓDIGO ABAIXO ---
+
+// --- NOVO: Versão debounced da função de salvar inventário ---
+const debouncedSaveInventoryData = debounce(async (uid) => {
+  console.log("Salvando dados do inventário (debounced) para o usuário:", uid);
 
   const playerRef = doc(db, "players", uid);
   const playerSnap = await getDoc(playerRef);
@@ -930,18 +950,17 @@ async function saveInventoryData(uid) {
     discardedItems
   };
 
-  console.log("🔍 SALVANDO INVENTÁRIO:");
+  console.log("🔍 SALVANDO INVENTÁRIO (DEBOUNCED):");
   console.log("   - Itens no baú:", itemsInChest.map(i => i.id));
   console.log("   - Itens equipados:", equippedItems);
 
   try {
     await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-    console.log("Inventário salvo com sucesso!");
+    console.log("Inventário salvo com sucesso (debounced)!");
   } catch (error) {
-    console.error("Erro ao salvar o inventário:", error);
+    console.error("Erro ao salvar o inventário (debounced):", error);
   }
-}
-
+}, 500); // O '500' é o atraso em milissegundos. Você pode ajustar se necessário.
 
 
 // ADICIONE A FUNÇÃO saveDiceState AQUI, com a correção do parêntese
