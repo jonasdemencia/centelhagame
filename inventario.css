@@ -86,8 +86,8 @@ p {
 
 /* Estilo dos itens e slots */
 .slot, .item, .discard-slot {
-    width: 100px;
-    height: 100px;
+    width: 70px;
+    height: 70px;
     background: #222; /* fundo escuro, mas não marrom */
     border: 2px solid #ccc; /* borda cinza clara */
     border-radius: 0; /* sem arredondamento */
@@ -551,8 +551,8 @@ p {
 }
 
 .dice-slot {
-    width: 80px;
-    height: 80px;
+    width: 56px;
+    height: 56px;
     background: #583101;
     border: 2px solid #d4a373;
     border-radius: 8px;
@@ -571,8 +571,8 @@ p {
 }
 
 .dice-item {
-    width: 80px;
-    height: 80px;
+    width: 56px;
+    height: 56px;
     background: #8b5a2b;
     border: 2px solid #d4a373;
     border-radius: 8px;
@@ -785,3 +785,4 @@ p {
     background-color: transparent !important;
     border: 2px solid #f1c40f !important;
 }
+
