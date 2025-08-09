@@ -384,7 +384,14 @@ document.addEventListener('click', function(event) {
         selectedItem = null;
         toggleUseButton(false);
     }
+    
+    // Desselecionar dados
+    if (!keepSelection && selectedDice) {
+        clearDiceHighlights();
+        selectedDice = null;
+    }
 });
+
 
     const slots = document.querySelectorAll('.slot');
     const discardSlot = document.getElementById("discard-slot");
