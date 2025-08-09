@@ -531,12 +531,13 @@ const allItemsArr = [...initialItems, ...extraItems];
 let itemName = currentEquippedItem.trim();
 
 // NOVO: Extrai apenas o nome do item se contém HTML
-if (itemName.includes('<img')) {
+if (itemName.includes('<div') || itemName.includes('<img')) {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = itemName;
-    const textDiv = tempDiv.querySelector('div[style*="font-size: 10px"]');
-    itemName = textDiv ? textDiv.textContent.trim() : itemName;
+    // Pega o texto mais interno, removendo todas as tags HTML
+    itemName = tempDiv.textContent.trim();
 }
+
 
 // Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (6/6)" -> "Revolver 38")
 itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
