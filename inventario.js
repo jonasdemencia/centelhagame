@@ -560,7 +560,16 @@ slot.innerHTML = `
     delete slot.dataset.value;
 
     // Busca o objeto do item original
-    let itemName = currentEquippedItem.trim();
+    let itemName = null;
+const itemTextSpan = slot.querySelector('.item-text');
+if (itemTextSpan) {
+  itemName = itemTextSpan.textContent.trim();
+} else {
+  // Fallback: remove tags e sufixo de munição
+  itemName = currentEquippedItem.replace(/<[^>]*>/g, '').trim();
+}
+itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
+const originalItemData = allItemsArr.find(item => item.content === itemName);
 
     // Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (6/6)" -> "Revolver 38")
 // Remove HTML aninhado primeiro, depois sufixo de munição
