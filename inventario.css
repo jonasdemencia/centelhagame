@@ -115,8 +115,6 @@ p {
     word-break: break-word;
     color: white;
     cursor: pointer;
-    flex-direction: column; /* ADICIONE ESTA LINHA */
-    padding: 2px; /* ADICIONE ESTA LINHA */
 }
 
 .slot {
@@ -811,17 +809,4 @@ p {
     border-radius: 0;
     min-height: 216px;
     /* A propriedade 'flex: 1' que estava no .dice-section foi removida para garantir consistência */
-}
-
-.item img {
-    width: 40px;
-    height: 40px;
-    object-fit: contain;
-    margin-bottom: 2px;
-}
-
-.item-text {
-    font-size: 10px;
-    text-align: center;
-    line-height: 1.1;
 }
