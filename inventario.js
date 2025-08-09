@@ -524,7 +524,9 @@ ${originalItemData.description || 'Descrição do item.'}
     let itemName = currentEquippedItem.trim();
 
     // Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (6/6)" -> "Revolver 38")
-    itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
+// Remove HTML aninhado primeiro, depois sufixo de munição
+itemName = itemName.replace(/<[^>]*>/g, '').trim();
+itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
 
     const originalItemData = allItemsArr.find(item => item.content === itemName);
 
