@@ -490,11 +490,11 @@ if (itemsContainer) {
 
     slots.forEach(slot => {
     slot.addEventListener('click', () => {
+        const allItemsArr = [...initialItems, ...extraItems];
         console.log("Slot clicado:", slot);
         const slotType = slot.dataset.slot;
         const currentEquippedItem = slot.innerHTML !== slot.dataset.slot ? slot.innerHTML : null;
 
-        const allItemsArr = [...initialItems, ...extraItems];
         // EQUIPE
         if (selectedItem) {
     const itemData = allItemsArr.find(i => i.id === selectedItem.dataset.item);
@@ -1060,6 +1060,7 @@ async function loadInventoryData(uid) {
     const isEquipped = Object.values(inventoryData.equippedItems)
   .some(equippedName => {
     if (!equippedName || typeof equippedName !== "string") return false;
+    // Remove sufixo de munição para comparação
     const cleanEquippedName = equippedName.replace(/\s*\(\d+\/\d+\)$/, "");
     return cleanEquippedName === extraItem.content;
   });
