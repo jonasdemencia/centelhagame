@@ -405,10 +405,11 @@ document.addEventListener('click', function(event) {
     selectedItem = item;
     item.classList.add('selected');
 
+    // CORREÇÃO: Declara allItemsArr localmente
+    const allItemsArr = [...initialItems, ...extraItems];
+    
     // --- DESTAQUE DE SLOT COMPATÍVEL ---
     slots.forEach(slot => slot.classList.remove('highlight'));
-   console.log("Item clicado:", item);
-const allItemsArr = [...initialItems, ...extraItems];
 const itemData = allItemsArr.find(i => i.id === item.dataset.item);
 console.log("itemData:", itemData);
 if (itemData && itemData.slot) {
@@ -525,31 +526,24 @@ slot.innerHTML = `
         updateCharacterDamage();
     }
 } else if (selectedItem === null && currentEquippedItem && currentEquippedItem !== slot.dataset.slot) {
-    // Desequipar: remove do slot e adiciona ao inventário
     console.log("Desequipando item:", currentEquippedItem, "do slot:", slotType);
 
-    // Limpa o slot visualmente
     slot.innerHTML = slotType;
     delete slot.dataset.consumable;
     delete slot.dataset.quantity;
     delete slot.dataset.effect;
     delete slot.dataset.value;
 
-    // Busca o objeto do item original
     const allItemsArr = [...initialItems, ...extraItems];
-    let itemName = currentEquippedItem.trim();
-
-    // Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (6/6)" -> "Revolver 38")
-// Remove HTML aninhado primeiro, depois sufixo de munição
-itemName = itemName.replace(/<[^>]*>/g, '').trim();
-itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
+    let itemName = currentEquippedItem.replace(/<[^>]*>/g, '').trim().replace(/\s*\(\d+\/\d+\)$/, "");
 
     const originalItemData = allItemsArr.find(item => item.content === itemName);
 
     if (!originalItemData) {
-        console.warn("Item original não encontrado para desequipar:", currentEquippedItem);
+        console.warn("Item original não encontrado para desequipar:", itemName);
         return;
     }
+
 
     // Atualiza o inventário no Firestore
     const uid = auth.currentUser?.uid;
@@ -874,16 +868,13 @@ async function saveInventoryData(uid) {
       );
 
       const data = {
-        id: itemId,
-        uuid: item.dataset.uuid,
-       content: item.dataset.originalContent || item.querySelector('.item-text')?.textContent || item.innerHTML
-   .split('<span class="item-expand-toggle">')[0]
-   .split('<span class="item-energia">')[0]
-   .replace(/<[^>]*>/g, '')
-   .trim()
+    id: itemId,
+    uuid: item.dataset.uuid,
+    content: item.dataset.originalContent || 
+             item.querySelector('.item-text')?.textContent || 
+             item.innerHTML.replace(/<[^>]*>/g, '').replace(/\s*\(\d+\)$/, '').trim()
+};
 
-
-      };
 
       if (item.dataset.energia) {
         data.energia = JSON.parse(item.dataset.energia);
@@ -909,10 +900,16 @@ async function saveInventoryData(uid) {
   // Resto igual...
   const equippedItems = Array.from(document.querySelectorAll('.slot'))
     .reduce((acc, slot) => {
-      const itemName = slot.innerHTML !== slot.dataset.slot
-                      ? slot.innerHTML
-                      : null;
-      acc[slot.dataset.slot] = itemName;
+        if (slot.innerHTML !== slot.dataset.slot) {
+            let itemName = slot.innerHTML.replace(/<[^>]*>/g, '').trim();
+            if (slot.dataset.slot === "weapon") {
+                itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
+            }
+            acc[slot.dataset.slot] = itemName;
+        } else {
+            acc[slot.dataset.slot] = null;
+        }
+
 
       if (itemName && slot.dataset.consumable === 'true') {
         acc[slot.dataset.slot + '_consumable'] = true;
@@ -1104,7 +1101,17 @@ newItem.innerHTML = `
 </div>
 <span class="item-expand-toggle">+</span>
 <div class="item-description" style="display: none;">
+newItem.innerHTML = `
+<div class="item-content">
+    ${item.image ? `<img src="${item.image}" alt="${item.content}" class="item-image">` : `<span class="item-text">${item.content}</span>`}
+</div>
+<span class="item-expand-toggle">+</span>
+<div class="item-description" style="display: none;">
 ${item.description || 'Descrição do item.'}
+</div>
+${energiaHTML}
+`;
+
 </div>
 ${energiaHTML}
 `;
@@ -1178,10 +1185,10 @@ if (slot.dataset.slot === "weapon" && equippedItem) {
     const itemData = allItemsArr.find(i => i.content === equippedItem);
     slot.innerHTML = `
     <div class="item-content">
-        ${itemData?.image ? `<img src="${itemData.image}" alt="${equippedItem}" class="item-image">` : ''}
-        ${!itemData?.image ? `<span class="item-text">${equippedItem}</span>` : ''}
+        ${itemData?.image ? `<img src="${itemData.image}" alt="${equippedItem}" class="item-image">` : `<span class="item-text">${equippedItem}</span>`}
     </div>
 `;
+
 } else {
     slot.innerHTML = slot.dataset.slot;
 }
