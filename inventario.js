@@ -23,6 +23,13 @@ let inventoryListener = null;
 // Variável global para o listener do jogador
 let playerDataListener = null;
 
+// Mapeamento de imagens para itens
+const itemImages = {
+    "Adaga": "images/adaga.png",
+    // Adicione mais itens conforme necessário
+};
+
+
 // Função para configurar listener dos dados do jogador
 async function setupPlayerDataListener(uid) {
     console.log("Configurando listener dos dados do jogador:", uid);
@@ -1072,14 +1079,18 @@ function loadInventoryUI(inventoryData) {
 `;
         }
 
-        newItem.innerHTML = `
-${item.content}
+        const itemImage = itemImages[item.id] ? `<img src="${itemImages[item.id]}" alt="${item.content}" style="width: 40px; height: 40px; object-fit: contain;">` : '';
+
+newItem.innerHTML = `
+${itemImage}
+<div style="font-size: 10px;">${item.content}</div>
 <span class="item-expand-toggle">+</span>
 <div class="item-description" style="display: none;">
 ${item.description || 'Descrição do item.'}
 </div>
 ${energiaHTML}
 `;
+
 
 
 if (item.consumable || item.projectile) {
