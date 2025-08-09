@@ -899,36 +899,34 @@ async function saveInventoryData(uid) {
     .filter(item => item !== null);
 
   // Resto igual...
+  // Bloco Corrigido
   const equippedItems = Array.from(document.querySelectorAll('.slot'))
     .reduce((acc, slot) => {
+        // Verifica se o slot contém um item equipado
         if (slot.innerHTML !== slot.dataset.slot) {
+            // Extrai o nome do item, limpando tags HTML e a contagem de munição
             let itemName = slot.innerHTML.replace(/<[^>]*>/g, '').trim();
             if (slot.dataset.slot === "weapon") {
                 itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
             }
             acc[slot.dataset.slot] = itemName;
 
+            // Se o item for consumível, salva suas propriedades específicas
             if (slot.dataset.consumable === 'true') {
-    acc[slot.dataset.slot + '_consumable'] = true;
-    acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity, 10);
-    if (slot.dataset.effect) acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
-    if (slot.dataset.value) acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value, 10);
-} else {
-    acc[slot.dataset.slot] = null;
-}
-
-return acc;
-}, {});
-
-
-        acc[slot.dataset.slot + '_consumable'] = true;
-        acc[slot.dataset.slot + '_quantity']   = parseInt(slot.dataset.quantity, 10);
-        if (slot.dataset.effect) acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
-        if (slot.dataset.value)  acc[slot.dataset.slot + '_value']  = parseInt(slot.dataset.value, 10);
-      }
-
-      return acc;
-    }, {});
+                acc[slot.dataset.slot + '_consumable'] = true;
+                acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity, 10);
+                if (slot.dataset.effect) {
+                    acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
+                }
+                if (slot.dataset.value) {
+                    acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value, 10);
+                }
+            }
+        }
+        // Sempre retorna o acumulador para a próxima iteração
+        return acc;
+    }, {}); // O valor inicial do acumulador é um objeto vazio
+    
 
   const inventoryData = {
     itemsInChest,
