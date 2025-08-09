@@ -500,18 +500,18 @@ ${originalItemData.description || 'Descrição do item.'}
 }
 
         }
+
         // Equipa o novo item
-// Equipa o novo item
 const allItemsArr = [...initialItems, ...extraItems];
 const itemData = allItemsArr.find(i => i.id === selectedItem.dataset.item);
-const itemContent = selectedItem.querySelector('.item-text')?.textContent || selectedItem.innerHTML.split('<span class="item-expand-toggle">')[0].trim();
 
 slot.innerHTML = `
     <div class="item-content">
-        ${itemData?.image ? `<img src="${itemData.image}" alt="${itemContent}" class="item-image">` : ''}
-        <span class="item-text">${itemContent}</span>
+        ${itemData?.image ? `<img src="${itemData.image}" alt="${itemData.content}" class="item-image">` : ''}
+        ${!itemData?.image ? `<span class="item-text">${itemData.content}</span>` : ''}
     </div>
 `;
+
         slot.dataset.consumable = selectedItem.dataset.consumable;
         slot.dataset.quantity = selectedItem.dataset.quantity;
         slot.dataset.effect = selectedItem.dataset.effect;
@@ -1177,11 +1177,11 @@ if (slot.dataset.slot === "weapon" && equippedItem) {
     const allItemsArr = [...initialItems, ...extraItems];
     const itemData = allItemsArr.find(i => i.content === equippedItem);
     slot.innerHTML = `
-        <div class="item-content">
-            ${itemData?.image ? `<img src="${itemData.image}" alt="${equippedItem}" class="item-image">` : ''}
-            <span class="item-text">${equippedItem}</span>
-        </div>
-    `;
+    <div class="item-content">
+        ${itemData?.image ? `<img src="${itemData.image}" alt="${equippedItem}" class="item-image">` : ''}
+        ${!itemData?.image ? `<span class="item-text">${equippedItem}</span>` : ''}
+    </div>
+`;
 } else {
     slot.innerHTML = slot.dataset.slot;
 }
