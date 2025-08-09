@@ -1096,13 +1096,6 @@ newItem.dataset.originalContent = item.content;
 
 newItem.innerHTML = `
 <div class="item-content">
-    ${item.image ? `<img src="${item.image}" alt="${item.content}" class="item-image">` : ''}
-    ${!item.image ? `<span class="item-text">${item.content}</span>` : ''}
-</div>
-<span class="item-expand-toggle">+</span>
-<div class="item-description" style="display: none;">
-newItem.innerHTML = `
-<div class="item-content">
     ${item.image ? `<img src="${item.image}" alt="${item.content}" class="item-image">` : `<span class="item-text">${item.content}</span>`}
 </div>
 <span class="item-expand-toggle">+</span>
@@ -1112,9 +1105,6 @@ ${item.description || 'Descrição do item.'}
 ${energiaHTML}
 `;
 
-</div>
-${energiaHTML}
-`;
 
 
 if (item.consumable || item.projectile) {
