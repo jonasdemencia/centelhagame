@@ -23,10 +23,16 @@ let inventoryListener = null;
 // Variável global para o listener do jogador
 let playerDataListener = null;
 
-// Variável global para o listener
-let inventoryListener = null;
-// Variável global para o listener do jogador
-let playerDataListener = null;
+// Fallback para crypto.randomUUID() em navegadores mais antigos
+if (!crypto.randomUUID) {
+    crypto.randomUUID = function() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    };
+}
 
 // --- NOVO: Função de debounce ---
 function debounce(func, delay) {
@@ -116,6 +122,8 @@ async function resetInventory() {
     }
 
     try {
+
+        const playerRef = doc(db, "players", uid);
 
         // Remove o inventário atual
         await setDoc(playerRef, { 
@@ -395,21 +403,21 @@ document.addEventListener("DOMContentLoaded", () => {
     
    // Listener global para desselecionar item clicando em qualquer lugar
 document.addEventListener('click', function(event) {
-    // Elementos que NÃO devem desselecionar o item
     const keepSelection = event.target.closest('.item, .slot, #useBtn, #carregar-municao-btn, #discard-slot, .dice-item, .dice-slot');
     
-    if (!keepSelection && selectedItem) {
-        clearHighlights();
-        selectedItem = null;
-        toggleUseButton(false);
-    }
-    
-    // Desselecionar dados
-    if (!keepSelection && selectedDice) {
-        clearDiceHighlights();
-        selectedDice = null;
+    if (!keepSelection) {
+        if (selectedItem) {
+            clearHighlights();
+            selectedItem = null;
+            toggleUseButton(false);
+        }
+        if (selectedDice) {
+            clearDiceHighlights();
+            selectedDice = null;
+        }
     }
 });
+
 
 
     const slots = document.querySelectorAll('.slot');
@@ -896,11 +904,15 @@ const debouncedSaveInventoryData = debounce(async (uid) => {
       const data = {
         id: itemId,
         uuid: item.dataset.uuid,
-       content: item.dataset.originalContent || item.querySelector('.item-text')?.textContent || item.innerHTML
-   .split('<span class="item-expand-toggle">')[0]
-   .split('<span class="item-energia">')[0]
-   .replace(/<[^>]*>/g, '')
-   .trim()
+       content: item.dataset.originalContent || 
+         item.querySelector('.item-text')?.textContent || 
+         (() => {
+             // Fallback: extrai texto limpo do HTML
+             const tempDiv = document.createElement('div');
+             tempDiv.innerHTML = item.innerHTML.split('<span class="item-expand-toggle">')[0];
+             return tempDiv.textContent?.trim() || item.dataset.item;
+         })()
+
 
 
       };
@@ -1040,20 +1052,28 @@ async function loadInventoryData(uid) {
             let inventoryUpdated = false;
 
             for (const extraItem of extraItems) {
-                // Para munição, verifica se já existe QUALQUER item de mesmo id no inventário
-                if (extraItem.id === "municao-38") {
-                    const existsAny = inventoryData.itemsInChest.some(item => item.id === "municao-38");
-                    if (existsAny) continue;
-                }
-                const existsInChest = inventoryData.itemsInChest.some(item => item.uuid === extraItem.uuid);
-                const isEquipped = Object.values(inventoryData.equippedItems).includes(extraItem.content);
-                const wasDiscarded = inventoryData.discardedItems?.includes(extraItem.uuid);
-                if (!existsInChest && !isEquipped && !wasDiscarded) {
-                    console.log(`➕ ADICIONANDO NOVO ITEM EXTRA: ${extraItem.id}`);
-                    inventoryData.itemsInChest.push({ ...extraItem });
-                    inventoryUpdated = true;
-                }
-            }
+    // Verifica se o item já existe por UUID (mais confiável)
+    const existsInChest = inventoryData.itemsInChest.some(item => item.uuid === extraItem.uuid);
+    
+    // Verifica se está equipado (usando nome limpo)
+    const isEquipped = Object.values(inventoryData.equippedItems)
+        .some(equippedName => {
+            if (!equippedName) return false;
+            // Remove sufixo de munição para comparação
+            const cleanEquippedName = equippedName.replace(/\s*\(\d+\/\d+\)$/, "");
+            return cleanEquippedName === extraItem.content;
+        });
+    
+    // Verifica se foi descartado
+    const wasDiscarded = inventoryData.discardedItems?.includes(extraItem.uuid);
+    
+    if (!existsInChest && !isEquipped && !wasDiscarded) {
+        console.log(`➕ ADICIONANDO NOVO ITEM EXTRA: ${extraItem.id}`);
+        inventoryData.itemsInChest.push({ ...extraItem });
+        inventoryUpdated = true;
+    }
+}
+
 
             // Sempre filtra munições de 38 com quantidade <= 0
             inventoryData.itemsInChest = inventoryData.itemsInChest.filter(item => {
@@ -1092,7 +1112,12 @@ function loadInventoryUI(inventoryData) {
         const newItem = document.createElement('div');
         newItem.classList.add('item');
         newItem.dataset.item = item.id;
-        newItem.dataset.uuid = item.uuid || crypto.randomUUID();
+        // Garante UUID único e persistente
+if (!item.uuid) {
+    console.warn(`Item sem UUID detectado: ${item.id}. Gerando novo UUID.`);
+}
+newItem.dataset.uuid = item.uuid || crypto.randomUUID();
+
 
         if (item.energia) {
             newItem.dataset.energia = JSON.stringify(item.energia);
@@ -1458,7 +1483,7 @@ getDoc(playerRef).then(playerSnap => {
 
         if (temMunicao) {
           carregarBtn.style.display = "block";
-          carregarBtn.onclick     = carregarMunicaoNaArma;
+          carregarBtn.onclick = () => carregarMunicaoNaArma();
         } else {
           carregarBtn.style.display = "none";
         }
