@@ -527,7 +527,6 @@ ${originalItemData.description || 'Descrição do item.'}
         }
         // Equipa o novo item
 // Equipa o novo item
-const allItemsArr = [...initialItems, ...extraItems];
 const itemData = allItemsArr.find(i => i.id === selectedItem.dataset.item);
 const itemContent = selectedItem.querySelector('.item-text')?.textContent || selectedItem.innerHTML.split('<span class="item-expand-toggle">')[0].trim();
 
@@ -561,7 +560,6 @@ slot.innerHTML = `
     delete slot.dataset.value;
 
     // Busca o objeto do item original
-    const allItemsArr = [...initialItems, ...extraItems];
     let itemName = currentEquippedItem.trim();
 
     // Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (6/6)" -> "Revolver 38")
