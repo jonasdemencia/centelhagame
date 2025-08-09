@@ -909,17 +909,17 @@ async function saveInventoryData(uid) {
             acc[slot.dataset.slot] = itemName;
 
             if (slot.dataset.consumable === 'true') {
-                acc[slot.dataset.slot + '_consumable'] = true;
-                acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity, 10);
-                if (slot.dataset.effect) acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
-                if (slot.dataset.value) acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value, 10);
-            }
-        } else {
-            acc[slot.dataset.slot] = null;
-        }
+    acc[slot.dataset.slot + '_consumable'] = true;
+    acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity, 10);
+    if (slot.dataset.effect) acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
+    if (slot.dataset.value) acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value, 10);
+} else {
+    acc[slot.dataset.slot] = null;
+}
 
-        return acc;
-    }, {});
+return acc;
+}, {});
+
 
         acc[slot.dataset.slot + '_consumable'] = true;
         acc[slot.dataset.slot + '_quantity']   = parseInt(slot.dataset.quantity, 10);
