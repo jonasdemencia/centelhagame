@@ -858,10 +858,11 @@ async function saveInventoryData(uid) {
       const data = {
         id: itemId,
         uuid: item.dataset.uuid,
-        content: item.innerHTML
-                   .split('<span class="item-expand-toggle">')[0]
-                   .split('<span class="item-energia">')[0]
-                   .trim()
+        content: item.dataset.originalContent || item.innerHTML
+           .split('<span class="item-expand-toggle">')[0]
+           .split('<span class="item-energia">')[0]
+           .trim()
+
       };
 
       if (item.dataset.energia) {
@@ -1072,7 +1073,10 @@ function loadInventoryUI(inventoryData) {
 `;
         }
 
-        newItem.innerHTML = `
+        // Armazena o conteúdo original limpo
+newItem.dataset.originalContent = item.content;
+
+newItem.innerHTML = `
 ${item.content}
 <span class="item-expand-toggle">+</span>
 <div class="item-description" style="display: none;">
@@ -1080,6 +1084,7 @@ ${item.description || 'Descrição do item.'}
 </div>
 ${energiaHTML}
 `;
+
 
 
 if (item.consumable || item.projectile) {
