@@ -727,7 +727,8 @@ if (useButton) {
             }
         } else if (selectedItem && selectedItem.dataset.consumable === 'true') {
             const itemId = selectedItem.dataset.item;
-            const itemName = selectedItem.innerHTML.split('<span')[0].trim(); // Obtém o nome do item sem a quantidade
+            const itemName = selectedItem.querySelector('.item-text')?.textContent || 
+            selectedItem.innerHTML.split('<span')[0].replace(/<[^>]*>/g, '').trim();
             console.log("Usando item consumível:", itemName, "ID:", itemId);
             console.log("selectedItem:", selectedItem); // LOG
             console.log("selectedItem.dataset.quantity:", selectedItem.dataset.quantity); // LOG
