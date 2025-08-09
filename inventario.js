@@ -571,13 +571,6 @@ if (itemTextSpan) {
 itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
 const originalItemData = allItemsArr.find(item => item.content === itemName);
 
-    // Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (6/6)" -> "Revolver 38")
-// Remove HTML aninhado primeiro, depois sufixo de munição
-itemName = itemName.replace(/<[^>]*>/g, '').trim();
-itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
-
-    const originalItemData = allItemsArr.find(item => item.content === itemName);
-
     if (!originalItemData) {
         console.warn("Item original não encontrado para desequipar:", currentEquippedItem);
         return;
