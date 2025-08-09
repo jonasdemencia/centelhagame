@@ -61,17 +61,6 @@ p {
     gap: 10px;
 }
 
-/* Baú de itens */
-.chest {
-    display: block;
-    position: relative;
-    margin-top: 20px;
-    padding: 15px;
-    background: #000;
-    border: 2px solid #ccc;
-    border-radius: 0;
-    min-height: 216px;
-}
 
 .items {
     display: grid;
@@ -535,13 +524,6 @@ p {
     height: 100%;
 }
 
-.dice-section {
-    flex: 1;
-    padding: 15px;
-    background: rgba(0, 0, 0, 0.3);
-    border: 2px solid #aa6c39;
-    border-radius: 8px;
-}
 
 .dice-section h3 {
     color: #d4a373;
@@ -576,6 +558,7 @@ p {
     border-radius: 0;
     font-size: 14px;
     font-weight: bold;
+    box-sizing: border-box; /* ADICIONADO: Garante o tamanho exato de 70x70px, incluindo a borda */
 }
 
 .dice-slot.highlight {
@@ -809,7 +792,14 @@ p {
     margin-bottom: 15px;
 }
 
-.dice-chest {
+
+.dice-chest h2 {
+    color: white;
+    margin-bottom: 15px;
+}
+
+/* Baú de itens e Contêiner de Dados */
+.chest, .dice-chest, .dice-section {
     display: block;
     position: relative;
     margin-top: 20px;
@@ -818,12 +808,5 @@ p {
     border: 2px solid #ccc;
     border-radius: 0;
     min-height: 216px;
+    /* A propriedade 'flex: 1' que estava no .dice-section foi removida para garantir consistência */
 }
-
-.dice-chest h2 {
-    color: white;
-    margin-bottom: 15px;
-}
-
-
-
