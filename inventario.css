@@ -810,3 +810,33 @@ p {
     min-height: 216px;
     /* A propriedade 'flex: 1' que estava no .dice-section foi removida para garantir consistência */
 }
+
+.item-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.item-image {
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.item-text {
+    flex: 1;
+}
+
+/* Para itens equipados nos slots */
+.slot .item-content {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.slot .item-image {
+    width: 24px;
+    height: 24px;
+}
