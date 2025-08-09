@@ -551,11 +551,13 @@ p {
 
 .dice-items {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 10px;
+    justify-content: start;
+    align-items: start;
     padding: 10px;
     overflow-y: auto;
-    max-height: calc(300px - 60px);
+    max-height: calc(216px - 40px);
 }
 
 /* Estilos para os slots de dados */
@@ -806,5 +808,6 @@ p {
     color: white;
     margin-bottom: 15px;
 }
+
 
 
