@@ -535,7 +535,8 @@ slot.innerHTML = `
     delete slot.dataset.value;
 
     const allItemsArr = [...initialItems, ...extraItems];
-    let itemName = currentEquippedItem.replace(/<[^>]*>/g, '').trim().replace(/\s*\(\d+\/\d+\)$/, "");
+let itemName = currentEquippedItem.replace(/<[^>]*>/g, '').trim().replace(/\s*\(\d+\/\d+\)$/, "");
+console.log("Nome extraído para busca:", itemName);
 
     const originalItemData = allItemsArr.find(item => item.content === itemName);
 
@@ -906,12 +907,20 @@ async function saveInventoryData(uid) {
                 itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
             }
             acc[slot.dataset.slot] = itemName;
+
+            if (slot.dataset.consumable === 'true') {
+                acc[slot.dataset.slot + '_consumable'] = true;
+                acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity, 10);
+                if (slot.dataset.effect) acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
+                if (slot.dataset.value) acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value, 10);
+            }
         } else {
             acc[slot.dataset.slot] = null;
         }
 
+        return acc;
+    }, {});
 
-      if (itemName && slot.dataset.consumable === 'true') {
         acc[slot.dataset.slot + '_consumable'] = true;
         acc[slot.dataset.slot + '_quantity']   = parseInt(slot.dataset.quantity, 10);
         if (slot.dataset.effect) acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
