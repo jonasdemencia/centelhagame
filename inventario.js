@@ -520,20 +520,29 @@ ${originalItemData.description || 'Descrição do item.'}
     console.log("Desequipando item:", currentEquippedItem, "do slot:", slotType);
 
     // Limpa o slot visualmente
-    slot.innerHTML = slotType;
-    delete slot.dataset.consumable;
-    delete slot.dataset.quantity;
-    delete slot.dataset.effect;
-    delete slot.dataset.value;
+slot.innerHTML = slotType;
+delete slot.dataset.consumable;
+delete slot.dataset.quantity;
+delete slot.dataset.effect;
+delete slot.dataset.value;
 
-    // Busca o objeto do item original
-    const allItemsArr = [...initialItems, ...extraItems];
-    let itemName = currentEquippedItem.trim();
+// Busca o objeto do item original
+const allItemsArr = [...initialItems, ...extraItems];
+let itemName = currentEquippedItem.trim();
 
-    // Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (6/6)" -> "Revolver 38")
-    itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
+// NOVO: Extrai apenas o nome do item se contém HTML
+if (itemName.includes('<img')) {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = itemName;
+    const textDiv = tempDiv.querySelector('div[style*="font-size: 10px"]');
+    itemName = textDiv ? textDiv.textContent.trim() : itemName;
+}
 
-    const originalItemData = allItemsArr.find(item => item.content === itemName);
+// Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (6/6)" -> "Revolver 38")
+itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
+
+const originalItemData = allItemsArr.find(item => item.content === itemName);
+
 
     if (!originalItemData) {
         console.warn("Item original não encontrado para desequipar:", currentEquippedItem);
