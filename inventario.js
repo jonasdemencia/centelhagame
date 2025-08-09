@@ -70,23 +70,24 @@ const initialItems = [
 
 // Lista de itens que podem ser adicionados dinamicamente (não iniciais)
 const extraItems = [
-    { id: "grilo", content: "Grilo", uuid: "extra-grilo", description: "Um pequeno grilo saltitante.", componente: true, energia: { total: 1, inicial: 1 } },
-    { id: "facao", content: "Facao", uuid: "extra-facao", slot: "weapon", description: "Uma pequena lâmina afiada.", damage: "1D4" },
-    { id: "coberta", content: "Coberta", uuid: "extra-coberta", slot: "armor", description: "Vestes simples que oferecem pouca proteção.", defense: 2 },
-    { id: "la", content: "Lã", uuid: "extra-la", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true },
-    { id: "pedaco-couro", content: "Pedaço de couro", uuid: "extra-pedaco-couro", description: "Tira de couro endurecido para magias.", componente: true },
-    { id: "municao-38", content: "Munição de 38.", uuid: "extra-municao38", quantity: 6, projectile: true, description: "Projéteis letais calíbre 38." },
-    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, uuid: "extra-pocao-cura-menor", quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." },
-    { id: "revolver-38", content: "Revolver 38", uuid: "extra-revolver38", slot: "weapon", description: "Um revólver calibre 38.", damage: "1d8", ammoType: "municao-38", ammoCapacity: 6, loadedAmmo: 0 },
-    { id: "escopeta-12", content: "Escopeta 12", uuid: "extra-escopeta12", slot: "weapon", description: "Uma espingarda calibre 12.", damage: "1d12+2", ammoType: "municao-12", ammoCapacity: 5, loadedAmmo: 0 },
-    { id: "municao-12", content: "Munição de 12.", uuid: "extra-municao12", quantity: 5, projectile: true, description: "Projéteis letais calíbre 12." },
-    { id: "Adaga", content: "Adaga", uuid: "extra-adaga", slot: "weapon", description: "Uma punhal afiado.", damage: "1D4" },
-    { id: "granada-mao", content: "Granada de Mão", uuid: "extra-granada-mao", consumable: true, quantity: 3, effect: "explosion", damage: "3D8", description: "Explosivo portátil de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false },
-    { id: "granada-de-concussao", content: "Granada de Concussão", uuid: "extra-granada-de-concussao", consumable: true, quantity: 3, effect: "stun", damage: "3D4", description: "Explosivo de concussão de área (raio 2). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 2, allowsResistance: false },
-    { id: "granada-incendiaria", content: "Granada Incendiária", uuid: "extra-granada-incendiaria", consumable: true, quantity: 3, effect: "explosion", damage: "2D6", description: "Explosivo incendiário de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false },
-    { id: "peitoral-de-aço", content: "Peitoral de aço", uuid: "extra-peitoral-de-aço", slot: "armor", description: "Armadura média, de peso considerável", defense: 20 },
-    { id: "pocao-cura-completa", content: "Poção de Cura Completa", consumable: true, uuid: "extra-pocao-cura-completa", quantity: 10, effect: "heal", value: 150, description: "Uma poção que restaura uma massiva quantidade de energia vital." },
+    { id: "grilo", content: "Grilo", uuid: "extra-grilo", description: "Um pequeno grilo saltitante.", componente: true, energia: { total: 1, inicial: 1 }, image: "https://raw.githubusercontent.com/seu-usuario/seu-repo/main/images/items/grilo.png" },
+    { id: "facao", content: "Facao", uuid: "extra-facao", slot: "weapon", description: "Uma pequena lâmina afiada.", damage: "1D4", image: "https://raw.githubusercontent.com/seu-usuario/seu-repo/main/images/items/facao.png" },
+    { id: "coberta", content: "Coberta", uuid: "extra-coberta", slot: "armor", description: "Vestes simples que oferecem pouca proteção.", defense: 2, image: "https://raw.githubusercontent.com/seu-usuario/seu-repo/main/images/items/coberta.png" },
+    { id: "la", content: "Lã", uuid: "extra-la", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true, image: "https://raw.githubusercontent.com/seu-usuario/seu-repo/main/images/items/la.png" },
+    { id: "pedaco-couro", content: "Pedaço de couro", uuid: "extra-pedaco-couro", description: "Tira de couro endurecido para magias.", componente: true, image: "https://raw.githubusercontent.com/seu-usuario/seu-repo/main/images/items/couro.png" },
+    { id: "municao-38", content: "Munição de 38.", uuid: "extra-municao38", quantity: 6, projectile: true, description: "Projéteis letais calíbre 38.", image: "https://raw.githubusercontent.com/seu-usuario/seu-repo/main/images/items/municao-38.png" },
+    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, uuid: "extra-pocao-cura-menor", quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital.", image: "https://raw.githubusercontent.com/seu-usuario/seu-repo/main/images/items/pocao-cura.png" },
+    { id: "revolver-38", content: "Revolver 38", uuid: "extra-revolver38", slot: "weapon", description: "Um revólver calibre 38.", damage: "1d8", ammoType: "municao-38", ammoCapacity: 6, loadedAmmo: 0, image: "https://raw.githubusercontent.com/seu-usuario/seu-repo/main/images/items/revolver.png" },
+    { id: "escopeta-12", content: "Escopeta 12", uuid: "extra-escopeta12", slot: "weapon", description: "Uma espingarda calibre 12.", damage: "1d12+2", ammoType: "municao-12", ammoCapacity: 5, loadedAmmo: 0, image: "https://raw.githubusercontent.com/seu-usuario/seu-repo/main/images/items/escopeta.png" },
+    { id: "municao-12", content: "Munição de 12.", uuid: "extra-municao12", quantity: 5, projectile: true, description: "Projéteis letais calíbre 12.", image: "https://raw.githubusercontent.com/seu-usuario/seu-repo/main/images/items/municao-12.png" },
+    { id: "Adaga", content: "Adaga", uuid: "extra-adaga", slot: "weapon", description: "Uma punhal afiado.", damage: "1D4", image: "https://raw.githubusercontent.com/seu-usuario/seu-repo/main/images/items/adaga.png" },
+    { id: "granada-mao", content: "Granada de Mão", uuid: "extra-granada-mao", consumable: true, quantity: 3, effect: "explosion", damage: "3D8", description: "Explosivo portátil de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false, image: "https://raw.githubusercontent.com/seu-usuario/seu-repo/main/images/items/granada.png" },
+    { id: "granada-de-concussao", content: "Granada de Concussão", uuid: "extra-granada-de-concussao", consumable: true, quantity: 3, effect: "stun", damage: "3D4", description: "Explosivo de concussão de área (raio 2). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 2, allowsResistance: false, image: "https://raw.githubusercontent.com/seu-usuario/seu-repo/main/images/items/granada-concussao.png" },
+    { id: "granada-incendiaria", content: "Granada Incendiária", uuid: "extra-granada-incendiaria", consumable: true, quantity: 3, effect: "explosion", damage: "2D6", description: "Explosivo incendiário de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false, image: "https://raw.githubusercontent.com/seu-usuario/seu-repo/main/images/items/granada-incendiaria.png" },
+    { id: "peitoral-de-aço", content: "Peitoral de aço", uuid: "extra-peitoral-de-aço", slot: "armor", description: "Armadura média, de peso considerável", defense: 20, image: "https://raw.githubusercontent.com/seu-usuario/seu-repo/main/images/items/peitoral.png" },
+    { id: "pocao-cura-completa", content: "Poção de Cura Completa", consumable: true, uuid: "extra-pocao-cura-completa", quantity: 10, effect: "heal", value: 150, description: "Uma poção que restaura uma massiva quantidade de energia vital.", image: "https://raw.githubusercontent.com/seu-usuario/seu-repo/main/images/items/pocao-cura-completa.png" },
 ];
+
 
 // Função para reiniciar o inventário
 async function resetInventory() {
@@ -475,27 +476,41 @@ if (itemsContainer) {
         // Se já há um item equipado, faz swap
         if (currentEquippedItem && currentEquippedItem !== slot.dataset.slot) {
             // Desequipa o atual e equipa o novo
-            // 1. Cria novo item no inventário com o item atualmente equipado
-            const originalItemData = allItemsArr.find(i => i.content === currentEquippedItem.replace(/\s*\(\d+\/\d+\)$/, ""));
-            if (originalItemData) {
-                const newItem = document.createElement("div");
-                newItem.classList.add("item");
-                newItem.dataset.item = originalItemData.id;
-                newItem.dataset.uuid = crypto.randomUUID();
-                newItem.innerHTML = `
-${originalItemData.content}
+// 1. Cria novo item no inventário com o item atualmente equipado
+const originalItemData = allItemsArr.find(i => i.content === currentEquippedItem.replace(/\s*\(\d+\/\d+\)$/, ""));
+if (originalItemData) {
+    const newItem = document.createElement("div");
+    newItem.classList.add("item");
+    newItem.dataset.item = originalItemData.id;
+    newItem.dataset.uuid = crypto.randomUUID();
+    newItem.innerHTML = `
+<div class="item-content">
+    ${originalItemData.image ? `<img src="${originalItemData.image}" alt="${originalItemData.content}" class="item-image">` : ''}
+    <span class="item-text">${originalItemData.content}</span>
+</div>
 <span class="item-expand-toggle">+</span>
 <div class="item-description" style="display: none;">
 ${originalItemData.description || 'Descrição do item.'}
 </div>
 `;
-                const itemsContainer = document.querySelector('.items');
-                itemsContainer.appendChild(newItem);
-                addItemClickListener(newItem);
-            }
+    const itemsContainer = document.querySelector('.items');
+    itemsContainer.appendChild(newItem);
+    addItemClickListener(newItem);
+}
+
         }
         // Equipa o novo item
-        slot.innerHTML = selectedItem.innerHTML.split('<span class="item-expand-toggle">')[0].trim();
+// Equipa o novo item
+const allItemsArr = [...initialItems, ...extraItems];
+const itemData = allItemsArr.find(i => i.id === selectedItem.dataset.item);
+const itemContent = selectedItem.querySelector('.item-text')?.textContent || selectedItem.innerHTML.split('<span class="item-expand-toggle">')[0].trim();
+
+slot.innerHTML = `
+    <div class="item-content">
+        ${itemData?.image ? `<img src="${itemData.image}" alt="${itemContent}" class="item-image">` : ''}
+        <span class="item-text">${itemContent}</span>
+    </div>
+`;
         slot.dataset.consumable = selectedItem.dataset.consumable;
         slot.dataset.quantity = selectedItem.dataset.quantity;
         slot.dataset.effect = selectedItem.dataset.effect;
@@ -860,11 +875,12 @@ async function saveInventoryData(uid) {
       const data = {
         id: itemId,
         uuid: item.dataset.uuid,
-        content: item.dataset.originalContent || item.innerHTML
-           .split('<span class="item-expand-toggle">')[0]
-           .split('<span class="item-energia">')[0]
-               .replace(/<[^>]*>/g, '')  // ← ADICIONE ESTA LINHA
-           .trim()
+       content: item.dataset.originalContent || item.querySelector('.item-text')?.textContent || item.innerHTML
+   .split('<span class="item-expand-toggle">')[0]
+   .split('<span class="item-energia">')[0]
+   .replace(/<[^>]*>/g, '')
+   .trim()
+
 
       };
 
@@ -1077,7 +1093,8 @@ function loadInventoryUI(inventoryData) {
         }
 
         // Armazena o conteúdo original limpo
-newItem.dataset.originalContent = item.content.replace(/<[^>]*>/g, '').trim();
+newItem.dataset.originalContent = item.content;
+
 
 newItem.innerHTML = `
 <div class="item-content">
@@ -1134,20 +1151,40 @@ if (item.consumable || item.projectile) {
         const equippedItem = inventoryData.equippedItems[slot.dataset.slot];
 
         // Ajuste para arma de fogo: exibe munição carregada
-        if (slot.dataset.slot === "weapon" && equippedItem) {
-            // Busca o objeto da arma no catálogo
-            const allItemsArr = [...initialItems, ...extraItems];
-            const weaponObj = allItemsArr.find(i => i.content === equippedItem && i.ammoType);
-            if (weaponObj) {
-                // Se for arma de fogo, mostra munição carregada
-                const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
-                slot.innerHTML = `${equippedItem} (${loadedAmmo}/${weaponObj.ammoCapacity})`;
-            } else {
-                slot.innerHTML = equippedItem;
-            }
-        } else {
-            slot.innerHTML = equippedItem || slot.dataset.slot;
-        }
+if (slot.dataset.slot === "weapon" && equippedItem) {
+    const allItemsArr = [...initialItems, ...extraItems];
+    const weaponObj = allItemsArr.find(i => i.content === equippedItem && i.ammoType);
+    const itemData = allItemsArr.find(i => i.content === equippedItem);
+    
+    if (weaponObj) {
+        const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
+        slot.innerHTML = `
+            <div class="item-content">
+                ${itemData?.image ? `<img src="${itemData.image}" alt="${equippedItem}" class="item-image">` : ''}
+                <span class="item-text">${equippedItem} (${loadedAmmo}/${weaponObj.ammoCapacity})</span>
+            </div>
+        `;
+    } else {
+        slot.innerHTML = `
+            <div class="item-content">
+                ${itemData?.image ? `<img src="${itemData.image}" alt="${equippedItem}" class="item-image">` : ''}
+                <span class="item-text">${equippedItem}</span>
+            </div>
+        `;
+    }
+} else if (equippedItem) {
+    const allItemsArr = [...initialItems, ...extraItems];
+    const itemData = allItemsArr.find(i => i.content === equippedItem);
+    slot.innerHTML = `
+        <div class="item-content">
+            ${itemData?.image ? `<img src="${itemData.image}" alt="${equippedItem}" class="item-image">` : ''}
+            <span class="item-text">${equippedItem}</span>
+        </div>
+    `;
+} else {
+    slot.innerHTML = slot.dataset.slot;
+}
+
 
         if (equippedItem) {
             if (inventoryData.equippedItems[slot.dataset.slot + '_consumable']) {
