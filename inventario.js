@@ -1077,7 +1077,7 @@ function loadInventoryUI(inventoryData) {
         }
 
         // Armazena o conteúdo original limpo
-newItem.dataset.originalContent = item.content;
+newItem.dataset.originalContent = item.content.replace(/<[^>]*>/g, '').trim();
 
 newItem.innerHTML = `
 ${item.content}
