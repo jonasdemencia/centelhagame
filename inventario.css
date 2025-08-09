@@ -792,4 +792,19 @@ p {
     border: 2px solid #f1c40f !important;
 }
 
+.dice-slots-container {
+    padding: 20px;
+    background: #000;
+    border: 2px solid #ccc;
+    border-radius: 0;
+    width: 250px;
+    margin: auto;
+    text-align: center;
+}
+
+.dice-slots-container h3 {
+    color: white;
+    margin-bottom: 15px;
+}
+
 
