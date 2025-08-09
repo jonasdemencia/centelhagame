@@ -449,8 +449,9 @@ if (isProjectile && weaponObj && weaponObj.ammoType === selectedItem.dataset.ite
 }
     
     // Adiciona evento de clique aos itens iniciais
-    if (itemsContainer) {
-        itemsContainer.querySelectorAll('.item').forEach(item => {
+const itemsContainer = document.querySelector('.items');
+if (itemsContainer) {
+    itemsContainer.querySelectorAll('.item').forEach(item => {
             item.addEventListener('click', () => {
                 // Verifica se o clique foi no botão de expandir
                 if (!item.classList.contains('item-expand-toggle')) {
@@ -488,6 +489,7 @@ ${originalItemData.content}
 ${originalItemData.description || 'Descrição do item.'}
 </div>
 `;
+                const itemsContainer = document.querySelector('.items');
                 itemsContainer.appendChild(newItem);
                 addItemClickListener(newItem);
             }
