@@ -4812,15 +4812,13 @@ if (window.isPunhaladaVenenosaAttack) {
 if (currentMonster.pontosDeEnergia <= 0) {
     console.log("DEBUG: Monstro morreu:", currentMonster.nome, currentMonster.id);
     console.log("DEBUG: Tentando registrar corpo:", currentMonster.nome, currentMonster.id, "HP:", currentMonster.pontosDeEnergia);
-        registerDeadBody(currentMonster); // ← ADICIONAR
+    registerDeadBody(currentMonster); // ← ADICIONAR
     console.log(`LOG: Monstro derrotado após ${isSiferDamage ? 'SIFER' : 'Dano Normal'}!`);
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
-    isPlayerTurn = false; // Garante que o turno não continue
 
     // **INÍCIO DA LÓGICA CORRIGIDA**
     // Verifica se AINDA existem monstros vivos
     const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
-
     if (monstersAlive.length === 0) {
         // TODOS FORAM DERROTADOS! Fim da batalha.
         console.log("LOG: Todos os monstros foram derrotados!");
@@ -4830,14 +4828,12 @@ if (currentMonster.pontosDeEnergia <= 0) {
         window.currentMonster = monstersAlive[0];
         currentMonster = window.currentMonster;
         await addLogMessage(`Próximo alvo: ${currentMonster.nome}.`, 800);
-        
         // Atualiza a UI e passa o turno para o monstro
         updateMonsterInfoUI();
         displayAllMonsterHealthBars();
         endPlayerTurn();
     }
     // **FIM DA LÓGICA CORRIGIDA**
-
 } else {
     // O monstro sobreviveu, apenas passa o turno para o inimigo.
     console.log(`LOG: Monstro sobreviveu ao ${isSiferDamage ? 'SIFER' : 'Dano Normal'}. Passando turno.`);
