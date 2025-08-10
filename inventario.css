@@ -898,22 +898,21 @@ margin-top: 5px;
   top: 0; left: 0;
   height: 2px;
   width: var(--tail, 28px);
-  /* brilho no ponto de contato (100%), fade para trás (0%) */
   background: linear-gradient(90deg,
               rgba(0,255,255,0) 0%,
               rgba(0,255,255,0.35) 55%,
               rgba(0,255,255,0.9) 100%);
   box-shadow: 0 0 8px rgba(0,255,255,0.35);
   filter: blur(0.3px);
-  transform-origin: right center; /* ponta direita = cabeça */
+  transform-origin: center left; /* fixa no início da cauda */
   transform:
-    translate(calc(var(--x, -2px) + 1px), calc(var(--y, -2px) + 1px))
-    rotate(var(--a, 0deg));
-  z-index: 9; /* sempre atrás do pixel */
+    translate(var(--x), var(--y))
+    rotate(var(--a));
+  z-index: 9;
   pointer-events: none;
   animation: borderMotion 4s linear infinite;
-  will-change: transform, width;
 }
+
 
 /* Movimento + orientação + comprimento da cauda */
 @keyframes borderMotion {
@@ -937,6 +936,7 @@ margin-top: 5px;
   87.5%  { --x: -2px; --y: 34px;  --a: -90deg; --tail: 28px; }
   100%   { --x: -2px; --y: -2px;  --a: -90deg; --tail: 8px;  }
 }
+
 
 
 
