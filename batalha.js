@@ -4324,21 +4324,23 @@ if (rollLocationBtn) {
 if (currentMonster.pontosDeEnergia <= 0) {
     console.log("DEBUG: Monstro morreu:", currentMonster.nome, currentMonster.id);
     console.log("DEBUG: Tentando registrar corpo:", currentMonster.nome, currentMonster.id, "HP:", currentMonster.pontosDeEnergia);
-        registerDeadBody(currentMonster); // ← ADICIONAR
+        registerDeadBody(currentMonster);
     await addLogMessage(`<p style="color: green; font-weight: bold;">${currentMonster.nome} foi derrotado!</p>`, 1000);
     const monstersAlive = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
     if (monstersAlive.length === 0) {
         handlePostBattle(currentMonster);
+        return;
     } else {
         window.currentMonster = monstersAlive[0];
         currentMonster = window.currentMonster;
         await addLogMessage(`Próximo alvo: ${currentMonster.nome}.`, 800);
         updateMonsterInfoUI();
         displayAllMonsterHealthBars();
-        endPlayerTurn();
     }
+    endPlayerTurn();
     return;
 }
+
         
         // Salva e passa turno
         await updatePlayerMagicInFirestore(userId, playerMagic);
