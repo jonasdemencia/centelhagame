@@ -878,11 +878,13 @@ margin-top: 5px;
 
 @keyframes pulse-highlight {
     0% {
-        background-color: #f1c40f !important; /* Tom forte */
+        background-color: #f1c40f !important;
         border-color: #f39c12 !important;
     }
     100% {
-        background-color: #fff3a0 !important; /* Tom claro */
+        background-color: #fff3a0 !important;
         border-color: #ffcc02 !important;
     }
 }
+
+
