@@ -874,10 +874,11 @@ margin-top: 5px;
 
 .border-trail {
     position: absolute;
-    width: 4px;
-    height: 4px;
+    width: 2px;
+    height: 2px;
     background: #00ffff;
-    box-shadow: 0 0 8px #00ffff;
+    box-shadow: 0 0 5px #00ffff;
     z-index: 10;
     pointer-events: none;
 }
+
