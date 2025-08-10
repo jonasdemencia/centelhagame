@@ -138,7 +138,7 @@ const extraItems = [
 
 { id: "municao-12", content: "Munição de 12.", uuid: "extra-municao12", quantity: 5, projectile: true, description: "Projéteis letais calíbre 12.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/municao-12.png" },
 
-{ id: "Adaga", content: "Adaga", uuid: "extra-adaga", slot: "weapon", description: "Uma punhal afiado.", damage: "1D4", image: "https://github.com/jonasdemencia/centelhagame/blob/main/images/items/adaga.png" },
+{ id: "Adaga", content: "Adaga", uuid: "extra-adaga", slot: "weapon", description: "Uma punhal afiado.", damage: "1D4", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/adaga.png" },
 
 { id: "granada-mao", content: "Granada de Mão", uuid: "extra-granada-mao", consumable: true, quantity: 3, effect: "explosion", damage: "3D8", description: "Explosivo portátil de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false, image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/granada-mao.png" },
 
