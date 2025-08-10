@@ -873,7 +873,11 @@ margin-top: 5px;
     overflow: visible;
 }
 
-/* Cabeça (pixel) + rastro emanando como estrela cadente */
+.selected {
+  position: relative;
+}
+
+/* Cabeça (pixel) liderando */
 .selected::before {
   content: '';
   position: absolute;
@@ -881,53 +885,58 @@ margin-top: 5px;
   width: 3px; height: 3px;
   background: #fff;
   box-shadow: 0 0 6px #fff, 0 0 12px #f39c12;
-  z-index: 9;
+  z-index: 10;
   transform: translate(var(--x, -2px), var(--y, -2px));
   animation: borderMotion 4s linear infinite;
+  will-change: transform;
 }
 
+/* Cauda atrás do pixel (emanando dele) */
 .selected::after {
   content: '';
   position: absolute;
   top: 0; left: 0;
   height: 2px;
   width: var(--tail, 28px);
+  /* brilho no ponto de contato (100%), fade para trás (0%) */
   background: linear-gradient(90deg,
-              rgba(0,255,255,0.9) 0%,
-              rgba(0,255,255,0.4) 40%,
-              rgba(0,255,255,0) 100%);
+              rgba(0,255,255,0) 0%,
+              rgba(0,255,255,0.35) 55%,
+              rgba(0,255,255,0.9) 100%);
   box-shadow: 0 0 8px rgba(0,255,255,0.35);
   filter: blur(0.3px);
-  transform-origin: left center; /* âncora no pixel */
+  transform-origin: right center; /* ponta direita = cabeça */
   transform:
     translate(calc(var(--x, -2px) + 1px), calc(var(--y, -2px) + 1px))
     rotate(var(--a, 0deg));
-  z-index: 10;
+  z-index: 9; /* sempre atrás do pixel */
   pointer-events: none;
   animation: borderMotion 4s linear infinite;
+  will-change: transform, width;
 }
 
-/* Animação única que move a cabeça e orienta o rastro */
+/* Movimento + orientação + comprimento da cauda */
 @keyframes borderMotion {
   /* Topo → direita */
   0%     { --x: -2px; --y: -2px; --a: 0deg;   --tail: 8px;  }
-  12.5%  { --x: 34px; --y: -2px;   --a: 0deg;   --tail: 28px; }
-  24.99% { --x: 68px; --y: -2px;  --a: 0deg;   --tail: 8px; }
+  12.5%  { --x: 34px; --y: -2px; --a: 0deg;   --tail: 28px; }
+  24.99% { --x: 68px; --y: -2px; --a: 0deg;   --tail: 8px;  }
 
   /* Direita → baixo */
-  25%    { --x: 68px; --y: -2px;  --a: 90deg;  --tail: 8px; }
-  37.5%  { --x: 68px; --y: 34px; --a: 90deg; --tail: 28px; }
-  49.99% { --x: 68px; --y: 68px; --a: 90deg; --tail: 8px; }
+  25%    { --x: 68px; --y: -2px;  --a: 90deg; --tail: 8px;  }
+  37.5%  { --x: 68px; --y: 34px;  --a: 90deg; --tail: 28px; }
+  49.99% { --x: 68px; --y: 68px;  --a: 90deg; --tail: 8px;  }
 
   /* Baixo → esquerda */
-  50%    { --x: 68px; --y: 68px; --a: 180deg; --tail: 8px; }
-  62.5%  { --x: 34px;  --y: 68px; --a: 180deg; --tail: 28px; }
-  74.99% { --x: -2px;             --y: 68px; --a: 180deg; --tail: 8px; }
+  50%    { --x: 68px; --y: 68px;  --a: 180deg; --tail: 8px;  }
+  62.5%  { --x: 34px; --y: 68px;  --a: 180deg; --tail: 28px; }
+  74.99% { --x: -2px; --y: 68px;  --a: 180deg; --tail: 8px;  }
 
   /* Esquerda → topo */
-  75%    { --x: -2px;             --y: 68px; --a: -90deg; --tail: 8px; }
-  87.5%  { --x: -2px;             --y: 34px;  --a: -90deg; --tail: 28px; }
-  100%   { --x: -2px;             --y: -2px;             --a: -90deg; --tail: 8px; }
+  75%    { --x: -2px; --y: 68px;  --a: -90deg; --tail: 8px;  }
+  87.5%  { --x: -2px; --y: 34px;  --a: -90deg; --tail: 28px; }
+  100%   { --x: -2px; --y: -2px;  --a: -90deg; --tail: 8px;  }
 }
+
 
 
