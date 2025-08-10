@@ -866,58 +866,19 @@ margin-top: 5px;
 }
 
 /* Destaque do item selecionado */
+/* Destaque do item selecionado */
 .selected {
-    background-color: #f1c40f; /* Amarelo */
-    border-color: #f39c12; /* Borda amarelo escuro */
+    background-color: #f1c40f;
+    border-color: #f39c12;
     position: relative;
-    overflow: visible;
 }
 
-/* Cauda atrás do pixel (emanando dele) */
-.selected::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  height: 3px;
-  width: var(--tail, 28px);
-  background: linear-gradient(90deg,
-              rgba(0,255,255,0) 0%,
-              rgba(0,255,255,0.6) 50%,
-              rgba(0,255,255,1) 100%);
-  box-shadow: 0 0 8px rgba(0,255,255,0.6);
-  transform-origin: right center;
-  transform:
-    translate(var(--x), var(--y))
-    rotate(var(--a));
-  z-index: 10;
-  animation: borderMotion 4s linear infinite;
+.border-trail {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #00ffff;
+    box-shadow: 0 0 8px #00ffff;
+    z-index: 10;
+    pointer-events: none;
 }
-
-
-/* Movimento + orientação + comprimento da cauda */
-@keyframes borderMotion {
-  /* Topo → direita */
-  0%     { --x: -2px; --y: -2px; --a: 0deg;   --tail: 8px;  }
-  12.5%  { --x: 34px; --y: -2px; --a: 0deg;   --tail: 28px; }
-  24.99% { --x: 68px; --y: -2px; --a: 0deg;   --tail: 8px;  }
-
-  /* Direita → baixo */
-  25%    { --x: 68px; --y: -2px;  --a: 90deg; --tail: 8px;  }
-  37.5%  { --x: 68px; --y: 34px;  --a: 90deg; --tail: 28px; }
-  49.99% { --x: 68px; --y: 68px;  --a: 90deg; --tail: 8px;  }
-
-  /* Baixo → esquerda */
-  50%    { --x: 68px; --y: 68px;  --a: 180deg; --tail: 8px;  }
-  62.5%  { --x: 34px; --y: 68px;  --a: 180deg; --tail: 28px; }
-  74.99% { --x: -2px; --y: 68px;  --a: 180deg; --tail: 8px;  }
-
-  /* Esquerda → topo */
-  75%    { --x: -2px; --y: 68px;  --a: -90deg; --tail: 8px;  }
-  87.5%  { --x: -2px; --y: 34px;  --a: -90deg; --tail: 28px; }
-  100%   { --x: -2px; --y: -2px;  --a: -90deg; --tail: 8px;  }
-}
-
-
-
-
-
