@@ -4826,16 +4826,19 @@ if (currentMonster.pontosDeEnergia <= 0) {
         console.log("LOG: Todos os monstros foram derrotados!");
         handlePostBattle(currentMonster); // Chama a função de pós-batalha
     } else {
-        // Ainda há monstros. Define o próximo como alvo e continua a batalha.
-        window.currentMonster = monstersAlive[0];
-        currentMonster = window.currentMonster;
-        await addLogMessage(`Próximo alvo: ${currentMonster.nome}.`, 800);
-        
-        // Atualiza a UI e passa o turno para o monstro
-        updateMonsterInfoUI();
-        displayAllMonsterHealthBars();
+    // Ainda há monstros. Define o próximo como alvo e continua a batalha.
+    window.currentMonster = monstersAlive[0];
+    currentMonster = window.currentMonster;
+    await addLogMessage(`Próximo alvo: ${currentMonster.nome}.`, 800);
+    
+    // Atualiza a UI e passa o turno para o monstro
+    updateMonsterInfoUI();
+    displayAllMonsterHealthBars();
+    if (isPlayerTurn) {
         endPlayerTurn();
     }
+}
+
     // **FIM DA LÓGICA CORRIGIDA**
 
 } else {
