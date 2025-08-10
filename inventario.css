@@ -870,5 +870,21 @@ margin-top: 5px;
     border-left: 1px solid #ccc;
 }
 
+.selected {
+    background-color: #f1c40f;
+    border-color: #f39c12;
+    animation: pulse-highlight 1s infinite alternate;
+}
+
+@keyframes pulse-highlight {
+    0% {
+        background-color: #f1c40f; /* Tom forte */
+        border-color: #f39c12;
+    }
+    100% {
+        background-color: #f4d03f; /* Tom claro */
+        border-color: #f7dc6f;
+    }
+}
 
 
