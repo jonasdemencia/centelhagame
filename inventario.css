@@ -866,7 +866,6 @@ margin-top: 5px;
 }
 
 /* Destaque do item selecionado */
-/* Destaque do item selecionado */
 .selected {
     background-color: #f1c40f;
     border-color: #f39c12;
@@ -875,13 +874,10 @@ margin-top: 5px;
 
 .border-trail {
     position: absolute;
-    width: 12px;
+    width: 4px;
     height: 4px;
-    background: linear-gradient(90deg, rgba(0,255,255,0) 0%, rgba(0,255,255,0.8) 50%, rgba(0,255,255,1) 100%);
+    background: #00ffff;
     box-shadow: 0 0 8px #00ffff;
     z-index: 10;
     pointer-events: none;
-    border-radius: 2px;
 }
-
-
