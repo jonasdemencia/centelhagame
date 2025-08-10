@@ -911,25 +911,22 @@ margin-top: 5px;
 @keyframes borderMotion {
   /* Topo → direita */
   0%     { --x: -2px; --y: -2px; --a: 0deg;   --tail: 8px;  }
-  12.5%  { --x: calc(50% - 1px); --y: -2px;   --a: 0deg;   --tail: 28px; }
-  24.99% { --x: calc(100% - 1px); --y: -2px;  --a: 0deg;   --tail: 8px; }
+  12.5%  { --x: 34px; --y: -2px;   --a: 0deg;   --tail: 28px; }
+  24.99% { --x: 68px; --y: -2px;  --a: 0deg;   --tail: 8px; }
 
   /* Direita → baixo */
-  25%    { --x: calc(100% - 1px); --y: -2px;  --a: 90deg;  --tail: 8px; }
-  37.5%  { --x: calc(100% - 1px); --y: calc(50% - 1px); --a: 90deg; --tail: 28px; }
-  49.99% { --x: calc(100% - 1px); --y: calc(100% - 1px); --a: 90deg; --tail: 8px; }
+  25%    { --x: 68px; --y: -2px;  --a: 90deg;  --tail: 8px; }
+  37.5%  { --x: 68px; --y: 34px; --a: 90deg; --tail: 28px; }
+  49.99% { --x: 68px; --y: 68px; --a: 90deg; --tail: 8px; }
 
   /* Baixo → esquerda */
-  50%    { --x: calc(100% - 1px); --y: calc(100% - 1px); --a: 180deg; --tail: 8px; }
-  62.5%  { --x: calc(50% - 1px);  --y: calc(100% - 1px); --a: 180deg; --tail: 28px; }
-  74.99% { --x: -2px;             --y: calc(100% - 1px); --a: 180deg; --tail: 8px; }
+  50%    { --x: 68px; --y: 68px; --a: 180deg; --tail: 8px; }
+  62.5%  { --x: 34px;  --y: 68px; --a: 180deg; --tail: 28px; }
+  74.99% { --x: -2px;             --y: 68px; --a: 180deg; --tail: 8px; }
 
   /* Esquerda → topo */
-  75%    { --x: -2px;             --y: calc(100% - 1px); --a: -90deg; --tail: 8px; }
-  87.5%  { --x: -2px;             --y: calc(50% - 1px);  --a: -90deg; --tail: 28px; }
+  75%    { --x: -2px;             --y: 68px; --a: -90deg; --tail: 8px; }
+  87.5%  { --x: -2px;             --y: 34px;  --a: -90deg; --tail: 28px; }
   100%   { --x: -2px;             --y: -2px;             --a: -90deg; --tail: 8px; }
 }
-
-
-
 
