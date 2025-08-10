@@ -1258,33 +1258,46 @@ dice-icon svg {
     font-weight: normal !important;
 }
 
-/* Animação de pixel na borda para item selecionado */
-.item.selected,
-.dice-item.selected {
-    position: relative !important;
-    overflow: hidden !important;
-    /* Cor de fundo destacada, mas estática */
-    background-color: #f1c40f !important;
-    /* Borda estática para a animação do pixel funcionar sobre ela */
-    border: 2px solid #f39c12 !important;
-    /* Remove a animação de pulso conflitante */
-    animation: none !important;
+/* Destaque do item selecionado */
+.selected {
+    background-color: #f1c40f; /* Amarelo */
+    border-color: #f39c12; /* Borda amarelo escuro */
+    position: relative;
+    overflow: visible;
 }
 
-.item.selected::before,
-.dice-item.selected::before {
+/* Animação do pixel percorrendo as bordas */
+.selected::before {
     content: '';
     position: absolute;
-    width: 4px; /* Tamanho do pixel */
-    height: 4px; /* Tamanho do pixel */
-    background: #fff; /* Cor do pixel (branco) */
-    animation: border-pixel-run 1.5s linear infinite; /* Duração da animação */
+    width: 3px;
+    height: 3px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #fff, 0 0 12px #f39c12;
+    z-index: 10;
+    animation: pixelBorder 2s linear infinite;
 }
 
-@keyframes border-pixel-run {
-    0%   { top: -2px; left: -2px; } /* Canto superior esquerdo */
-    25%  { top: -2px; left: calc(100% - 2px); } /* Canto superior direito */
-    50%  { top: calc(100% - 2px); left: calc(100% - 2px); } /* Canto inferior direito */
-    75%  { top: calc(100% - 2px); left: -2px; } /* Canto inferior esquerdo */
-    100% { top: -2px; left: -2px; } /* Volta ao início */
+@keyframes pixelBorder {
+    0% {
+        top: -2px;
+        left: -2px;
+    }
+    25% {
+        top: -2px;
+        left: calc(100% - 1px);
+    }
+    50% {
+        top: calc(100% - 1px);
+        left: calc(100% - 1px);
+    }
+    75% {
+        top: calc(100% - 1px);
+        left: -2px;
+    }
+    100% {
+        top: -2px;
+        left: -2px;
+    }
 }
