@@ -888,58 +888,58 @@ margin-top: 5px;
 .selected::after {
     content: '';
     position: absolute;
-    width: 2px;
-    height: 2px;
-    background: linear-gradient(45deg, rgba(255,255,255,0.8), rgba(243,156,18,0.4));
-    box-shadow: 0 0 4px rgba(255,255,255,0.6);
+    width: 4px;
+    height: 4px;
+    background: #00ffff;
+    box-shadow: 0 0 8px #00ffff, 0 0 16px #00ffff;
     z-index: 9;
-    animation: pixelTrail 2s linear infinite;
+    animation: pixelTrail 4s linear infinite;
 }
 
 @keyframes pixelTrail {
     0% {
-        top: -1px;
-        left: -1px;
+        top: -2px;
+        left: -2px;
         opacity: 0;
     }
-    2% {
-        top: -1px;
-        left: -1px;
-        opacity: 0.8;
+    5% {
+        top: -2px;
+        left: -2px;
+        opacity: 1;
     }
     25% {
-        top: -1px;
+        top: -2px;
+        left: calc(100% - 2px);
+        opacity: 0.8;
+    }
+    30% {
+        top: -2px;
         left: calc(100% - 2px);
         opacity: 0.6;
-    }
-    27% {
-        top: -1px;
-        left: calc(100% - 2px);
-        opacity: 0.4;
     }
     50% {
         top: calc(100% - 2px);
         left: calc(100% - 2px);
-        opacity: 0.4;
+        opacity: 0.6;
     }
-    52% {
+    55% {
         top: calc(100% - 2px);
         left: calc(100% - 2px);
-        opacity: 0.2;
+        opacity: 0.4;
     }
     75% {
         top: calc(100% - 2px);
-        left: -1px;
+        left: -2px;
+        opacity: 0.4;
+    }
+    80% {
+        top: calc(100% - 2px);
+        left: -2px;
         opacity: 0.2;
     }
-    77% {
-        top: calc(100% - 2px);
-        left: -1px;
-        opacity: 0.1;
-    }
     100% {
-        top: -1px;
-        left: -1px;
+        top: -2px;
+        left: -2px;
         opacity: 0;
     }
 }
@@ -967,5 +967,6 @@ margin-top: 5px;
         left: -2px;
     }
 }
+
 
 
