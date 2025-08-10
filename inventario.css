@@ -882,7 +882,7 @@ margin-top: 5px;
     background: #fff;
     box-shadow: 0 0 6px #fff, 0 0 12px #f39c12;
     z-index: 10;
-    animation: pixelBorder 2s linear infinite;
+    animation: pixelBorder 4s linear infinite;
 }
 
 .selected::after {
@@ -902,7 +902,7 @@ margin-top: 5px;
         left: -2px;
         opacity: 0;
     }
-    5% {
+    10% {
         top: -2px;
         left: -2px;
         opacity: 1;
@@ -912,7 +912,7 @@ margin-top: 5px;
         left: calc(100% - 2px);
         opacity: 0.8;
     }
-    30% {
+    35% {
         top: -2px;
         left: calc(100% - 2px);
         opacity: 0.6;
@@ -922,7 +922,7 @@ margin-top: 5px;
         left: calc(100% - 2px);
         opacity: 0.6;
     }
-    55% {
+    60% {
         top: calc(100% - 2px);
         left: calc(100% - 2px);
         opacity: 0.4;
@@ -932,7 +932,7 @@ margin-top: 5px;
         left: -2px;
         opacity: 0.4;
     }
-    80% {
+    85% {
         top: calc(100% - 2px);
         left: -2px;
         opacity: 0.2;
@@ -943,7 +943,6 @@ margin-top: 5px;
         opacity: 0;
     }
 }
-
 
 @keyframes pixelBorder {
     0% {
@@ -967,6 +966,3 @@ margin-top: 5px;
         left: -2px;
     }
 }
-
-
-
