@@ -871,20 +871,18 @@ margin-top: 5px;
 }
 
 .selected {
-    background-color: #f1c40f;
-    border-color: #f39c12;
-    animation: pulse-highlight 1s infinite alternate;
+    background-color: #f1c40f !important;
+    border-color: #f39c12 !important;
+    animation: pulse-highlight 1s infinite alternate !important;
 }
 
 @keyframes pulse-highlight {
     0% {
-        background-color: #f1c40f; /* Tom forte */
-        border-color: #f39c12;
+        background-color: #f1c40f !important;
+        border-color: #f39c12 !important;
     }
     100% {
-        background-color: #f4d03f; /* Tom claro */
-        border-color: #f7dc6f;
+        background-color: #ffeb3b !important;
+        border-color: #ffc107 !important;
     }
 }
-
-
