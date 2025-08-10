@@ -841,14 +841,15 @@ function createBorderTrail(element) {
         let x, y;
         
         if (position < width) {
-            x = position; y = -2;
-        } else if (position < width + height) {
-            x = width - 2; y = position - width;
-        } else if (position < width * 2 + height) {
-            x = width - (position - width - height); y = height - 2;
-        } else {
-            x = -2; y = height - (position - width * 2 - height);
-        }
+    x = position; y = -2;
+} else if (position < width + height) {
+    x = width - 4; y = position - width;
+} else if (position < width * 2 + height) {
+    x = width - (position - width - height); y = height - 4;
+} else {
+    x = -2; y = height - (position - width * 2 - height);
+}
+
         
         trail.style.left = x + 'px';
         trail.style.top = y + 'px';
