@@ -250,11 +250,7 @@ return;
 
 const ammoItem = inventoryData.itemsInChest[ammoItemIndex];
 
-// **NOVA LÓGICA DE MUNIÇÃO**
-if (!inventoryData.weaponAmmoCounts) {
-    inventoryData.weaponAmmoCounts = {};
-}
-const loadedAmmo = inventoryData.weaponAmmoCounts[equippedWeaponName] || 0;
+const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
 
 const ammoToLoad = Math.min(
 
@@ -272,8 +268,8 @@ return;
 
 }
 
-// Atualiza munição carregada no novo objeto
-inventoryData.weaponAmmoCounts[equippedWeaponName] = loadedAmmo + ammoToLoad;
+// Atualiza munição carregada
+inventoryData.equippedItems.weapon_loadedAmmo = loadedAmmo + ammoToLoad;
 
 // Atualiza munição no inventário
 
@@ -771,217 +767,116 @@ handleItemClick(item);
 
 }
 
+// ==================================================================
+// === INÍCIO: LÓGICA DE EQUIPAR/DESEQUIPAR TOTALMENTE REFEITA =====
+// ==================================================================
 slots.forEach(slot => {
-
-slot.addEventListener('click', () => {
-
-console.log("Slot clicado:", slot);
-
-const slotType = slot.dataset.slot;
-
-const currentEquippedItemName = slot.dataset.itemName;
-
-const allItemsArr = [...initialItems, ...extraItems];
-
-// EQUIPE
-
-if (selectedItem) {
-
-const itemData = allItemsArr.find(i => i.id === selectedItem.dataset.item);
-
-if (itemData && slotType === itemData.slot) {
-
-// Se já há um item equipado, faz swap
-
-if (currentEquippedItemName && currentEquippedItemName !== slot.dataset.slot) {
-
-// Desequipa o atual e equipa o novo
-
-// 1. Cria novo item no inventário com o item atualmente equipado
-
-const originalItemData = allItemsArr.find(i => i.content === currentEquippedItemName.replace(/\s*\(\d+\/\d+\)$/, ""));
-
-if (originalItemData) {
-
-const newItem = document.createElement("div");
-
-newItem.classList.add("item");
-
-newItem.dataset.item = originalItemData.id;
-
-newItem.dataset.uuid = crypto.randomUUID();
-
-newItem.dataset.itemName = originalItemData.content;
-
-newItem.innerHTML = `
-
-<img src="${originalItemData.image}" alt="${originalItemData.content}" />
-
-<span class="item-expand-toggle">+</span>
-
-<div class="item-description" style="display: none;">
-
-${originalItemData.description || 'Descrição do item.'}
-
-</div>
-
-`;
-
-const itemsContainer = document.querySelector('.items');
-
-itemsContainer.appendChild(newItem);
-
-addItemClickListener(newItem);
-
-}
-
-}
-
-// Equipa o novo item
-
-slot.innerHTML = `<img src="${itemData.image}" alt="${itemData.content}" />`;
-
-slot.dataset.itemName = itemData.content;
-
-slot.dataset.consumable = selectedItem.dataset.consumable;
-
-slot.dataset.quantity = selectedItem.dataset.quantity;
-
-slot.dataset.effect = selectedItem.dataset.effect;
-
-slot.dataset.value = selectedItem.dataset.value;
-
-selectedItem.remove();
-
-selectedItem = null;
-
-clearHighlights();
-
-toggleUseButton(false);
-
-saveInventoryData(auth.currentUser.uid);
-
-updateCharacterCouraca();
-
-updateCharacterDamage();
-
-}
-
-} else if (selectedItem === null && currentEquippedItemName && currentEquippedItemName !== slot.dataset.slot) {
-
-// Desequipar: remove do slot e adiciona ao inventário
-
-console.log("Desequipando item:", currentEquippedItemName, "do slot:", slotType);
-
-// Limpa o slot visualmente
-
-slot.innerHTML = slotType;
-
-delete slot.dataset.itemName;
-
-delete slot.dataset.consumable;
-
-delete slot.dataset.quantity;
-
-delete slot.dataset.effect;
-
-delete slot.dataset.value;
-
-// Busca o objeto do item original
-
-const allItemsArr = [...initialItems, ...extraItems];
-
-let itemName = currentEquippedItemName.trim();
-
-// Remove sufixo de munição carregada, se existir (ex: "Revolver 38 (6/6)" -> "Revolver 38")
-
-// Remove HTML aninhado primeiro, depois sufixo de munição
-
-itemName = itemName.replace(/<[^>]*>/g, '').trim();
-
-itemName = itemName.replace(/\s*\(\d+\/\d+\)$/, "");
-
-const originalItemData = allItemsArr.find(item => item.content === itemName);
-
-if (!originalItemData) {
-
-console.warn("Item original não encontrado para desequipar:", currentEquippedItemName);
-
-return;
-
-}
-
-// Atualiza o inventário no Firestore
-
-const uid = auth.currentUser?.uid;
-
-if (!uid) return;
-
-const playerRef = doc(db, "players", uid);
-
-getDoc(playerRef).then(playerSnap => {
-
-if (!playerSnap.exists()) return;
-
-const inventoryData = playerSnap.data().inventory;
-
-// Verifica se já está no inventário
-
-const alreadyInChest = inventoryData.itemsInChest.some(item => item.id === originalItemData.id);
-
-if (!alreadyInChest) {
-
-// Adiciona ao inventário
-
-inventoryData.itemsInChest.push({
-
-...originalItemData,
-
-uuid: crypto.randomUUID()
-
+    slot.addEventListener('click', async () => {
+        const slotType = slot.dataset.slot;
+        const uid = auth.currentUser?.uid;
+        if (!uid) return;
+
+        const playerRef = doc(db, "players", uid);
+        const playerSnap = await getDoc(playerRef);
+        if (!playerSnap.exists()) return;
+
+        const inventoryData = playerSnap.data().inventory;
+        const allItemsArr = [...initialItems, ...extraItems];
+
+        // Garante que os objetos de inventário existam
+        if (!inventoryData.equippedItems) inventoryData.equippedItems = {};
+        if (!inventoryData.itemsInChest) inventoryData.itemsInChest = [];
+        if (!inventoryData.weaponAmmoCounts) inventoryData.weaponAmmoCounts = {};
+
+        const currentlyEquippedName = inventoryData.equippedItems[slotType];
+        const currentlyEquippedData = allItemsArr.find(i => i.content === currentlyEquippedName);
+
+        // CASO 1: EQUIPAR UM NOVO ITEM (selectedItem existe)
+        if (selectedItem) {
+            const newItemData = allItemsArr.find(i => i.id === selectedItem.dataset.item);
+
+            // Verifica se o slot é compatível
+            if (newItemData && slotType === newItemData.slot) {
+                console.log(`Equipando ${newItemData.content} no slot ${slotType}`);
+
+                // A) Salvar o estado do item que está sendo desequipado (se houver)
+                if (currentlyEquippedData) {
+                    console.log(`Desequipando ${currentlyEquippedName} para o inventário.`);
+                    // Se for uma arma, salva sua munição atual antes de mover
+                    if (currentlyEquippedData.ammoType) {
+                        const currentLoadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
+                        inventoryData.weaponAmmoCounts[currentlyEquippedName] = currentLoadedAmmo;
+                        console.log(`Salvando munição de ${currentlyEquippedName}: ${currentLoadedAmmo}`);
+                    }
+                    // Adiciona o item antigo de volta ao baú
+                    inventoryData.itemsInChest.push({ ...currentlyEquippedData, uuid: crypto.randomUUID() });
+                }
+
+                // B) Remover o novo item do baú
+                const itemInChestIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
+                if (itemInChestIndex > -1) {
+                    inventoryData.itemsInChest.splice(itemInChestIndex, 1);
+                }
+
+                // C) Colocar o novo item no slot e limpar dados antigos
+                inventoryData.equippedItems[slotType] = newItemData.content;
+                // Limpa todos os dados específicos de arma/consumível para evitar vazamento
+                delete inventoryData.equippedItems.weapon_loadedAmmo;
+                delete inventoryData.equippedItems[slotType + '_consumable'];
+                delete inventoryData.equippedItems[slotType + '_quantity'];
+                delete inventoryData.equippedItems[slotType + '_effect'];
+                delete inventoryData.equippedItems[slotType + '_value'];
+
+                // D) Se o novo item for uma arma de fogo, carregar sua munição específica
+                if (newItemData.ammoType) {
+                    const savedAmmo = inventoryData.weaponAmmoCounts[newItemData.content] || 0;
+                    inventoryData.equippedItems.weapon_loadedAmmo = savedAmmo;
+                    console.log(`Carregando munição de ${newItemData.content}: ${savedAmmo}`);
+                }
+                
+                // E) Salvar tudo no Firestore
+                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+
+                // F) Limpar estado da UI (o onSnapshot vai redesenhar)
+                selectedItem = null;
+                clearHighlights();
+                toggleUseButton(false);
+            }
+        }
+        // CASO 2: DESEQUIPAR UM ITEM (sem um novo item selecionado)
+        else if (currentlyEquippedData) {
+            console.log(`Desequipando ${currentlyEquippedName} do slot ${slotType}`);
+
+            // A) Salvar o estado do item (munição)
+            if (currentlyEquippedData.ammoType) {
+                const currentLoadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
+                inventoryData.weaponAmmoCounts[currentlyEquippedName] = currentLoadedAmmo;
+                console.log(`Salvando munição de ${currentlyEquippedName}: ${currentLoadedAmmo}`);
+            }
+
+            // B) Limpar o slot e todos os dados associados
+            inventoryData.equippedItems[slotType] = null;
+            delete inventoryData.equippedItems.weapon_loadedAmmo;
+            delete inventoryData.equippedItems[slotType + '_consumable'];
+            delete inventoryData.equippedItems[slotType + '_quantity'];
+            delete inventoryData.equippedItems[slotType + '_effect'];
+            delete inventoryData.equippedItems[slotType + '_value'];
+
+            // C) Adicionar o item de volta ao baú
+            inventoryData.itemsInChest.push({ ...currentlyEquippedData, uuid: crypto.randomUUID() });
+
+            // D) Salvar no Firestore
+            await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+
+            // E) Limpar estado da UI
+            clearHighlights();
+        }
+    });
 });
+// ==================================================================
+// === FIM: LÓGICA DE EQUIPAR/DESEQUIPAR TOTALMENTE REFEITA =======
+// ==================================================================
 
-}
-
-// LIMPA O SLOT NO FIRESTORE!
-
-if (inventoryData.equippedItems && inventoryData.equippedItems[slotType]) {
-
-inventoryData.equippedItems[slotType] = null;
-
-// Limpa também os campos extras se existirem
-
-delete inventoryData.equippedItems[slotType + '_consumable'];
-
-delete inventoryData.equippedItems[slotType + '_quantity'];
-
-delete inventoryData.equippedItems[slotType + '_effect'];
-
-delete inventoryData.equippedItems[slotType + '_value'];
-
-}
-
-setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-
-});
-
-// Não mexa no DOM do inventário manualmente!
-
-// O listener onSnapshot vai atualizar a interface
-
-clearHighlights();
-
-toggleUseButton(false);
-
-updateCharacterCouraca();
-
-updateCharacterDamage();
-
-}
-
-}); // <--- ESTA CHAVE FECHA O addEventListener
-
-}); // <--- ESTA CHAVE FECHA O forEach
 
 // Adiciona funcionalidade ao botão de descarte
 
@@ -1407,153 +1302,12 @@ document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'))
 
 }
 
+// ESTA FUNÇÃO NÃO É MAIS NECESSÁRIA, POIS O SALVAMENTO É FEITO DIRETAMENTE
+// NA LÓGICA DE EQUIPAR/DESEQUIPAR. PODE SER REMOVIDA OU DEIXADA EM BRANCO.
 async function saveInventoryData(uid) {
-
-console.log("Salvando dados do inventário para o usuário:", uid);
-
-const playerRef = doc(db, "players", uid);
-
-const playerSnap = await getDoc(playerRef);
-
-const currentInventoryData = playerSnap.data()?.inventory || {};
-
-const discardedItems = currentInventoryData.discardedItems || [];
-
-// Pega todos os itens do baú - COM filtro para descartados
-
-const itemsInChest = Array.from(document.querySelectorAll('.item'))
-
-.map(item => {
-
-const itemId = item.dataset.item;
-
-if (["weapon", "armor", "helmet", "amulet", "shield", "gloves", "ring", "boots"]
-
-.includes(itemId)) {
-
-return null;
-
+    console.log("saveInventoryData não é mais usada. O salvamento agora é direto.");
 }
 
-// IGNORA itens que já foram descartados
-
-const isDiscarded = discardedItems.includes(item.dataset.uuid);
-
-if (isDiscarded) {
-
-console.log(`🗑️ IGNORANDO ITEM DESCARTADO: ${itemId}`);
-
-return null;
-
-}
-
-console.log(
-
-`📦 PROCESSANDO ITEM: ${itemId} -` +
-
-`Content: ${item.dataset.itemName}`
-
-);
-
-const data = {
-
-id: itemId,
-
-uuid: item.dataset.uuid,
-
-content: item.dataset.itemName
-
-};
-
-if (item.dataset.energia) {
-
-data.energia = JSON.parse(item.dataset.energia);
-
-}
-
-if (item.dataset.consumable === 'true') {
-
-data.consumable = true;
-
-data.quantity = parseInt(item.dataset.quantity, 10);
-
-if (item.dataset.effect) data.effect = item.dataset.effect;
-
-if (item.dataset.value) data.value = parseInt(item.dataset.value, 10);
-
-}
-
-// === AQUI: trata projéteis ===
-
-if (item.dataset.projectile === 'true') {
-
-data.projectile = true;
-
-data.quantity = parseInt(item.dataset.quantity, 10);
-
-}
-
-return data;
-
-})
-
-.filter(item => item !== null);
-
-// Resto igual...
-
-const equippedItems = Array.from(document.querySelectorAll('.slot'))
-
-.reduce((acc, slot) => {
-
-const itemName = slot.dataset.itemName || null;
-
-acc[slot.dataset.slot] = itemName;
-
-if (itemName && slot.dataset.consumable === 'true') {
-
-acc[slot.dataset.slot + '_consumable'] = true;
-
-acc[slot.dataset.slot + '_quantity'] = parseInt(slot.dataset.quantity, 10);
-
-if (slot.dataset.effect) acc[slot.dataset.slot + '_effect'] = slot.dataset.effect;
-
-if (slot.dataset.value) acc[slot.dataset.slot + '_value'] = parseInt(slot.dataset.value, 10);
-
-}
-
-return acc;
-
-}, {});
-
-const inventoryData = {
-
-itemsInChest,
-
-equippedItems,
-
-discardedItems
-
-};
-
-console.log("🔍 SALVANDO INVENTÁRIO:");
-
-console.log(" - Itens no baú:", itemsInChest.map(i => i.id));
-
-console.log(" - Itens equipados:", equippedItems);
-
-try {
-
-await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-
-console.log("Inventário salvo com sucesso!");
-
-} catch (error) {
-
-console.error("Erro ao salvar o inventário:", error);
-
-}
-
-}
 
 // ADICIONE A FUNÇÃO saveDiceState AQUI, com a correção do parêntese
 
@@ -1851,11 +1605,9 @@ document.querySelectorAll('.slot').forEach(slot => {
         let slotHTML = `<img src="${item.image}" alt="${item.content}" />`;
         slot.dataset.itemName = item.content;
 
-        // **NOVA LÓGICA DE MUNIÇÃO**
-        // Lógica específica para armas com munição
+        // **LÓGICA DE MUNIÇÃO CORRIGIDA**
         if (slot.dataset.slot === "weapon" && item.ammoType) {
-            const ammoCounts = inventoryData.weaponAmmoCounts || {};
-            const loadedAmmo = ammoCounts[item.content] || 0;
+            const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
             slotHTML = `<img src="${item.image}" alt="${item.content}" /> (${loadedAmmo}/${item.ammoCapacity})`;
         }
         
