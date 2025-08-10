@@ -1258,22 +1258,33 @@ dice-icon svg {
     font-weight: normal !important;
 }
 
+/* Animação de pixel na borda para item selecionado */
 .item.selected,
 .dice-item.selected {
+    position: relative !important;
+    overflow: hidden !important;
+    /* Cor de fundo destacada, mas estática */
     background-color: #f1c40f !important;
-    border-color: #f39c12 !important;
-    animation: pulse-highlight 1.5s infinite alternate !important;
+    /* Borda estática para a animação do pixel funcionar sobre ela */
+    border: 2px solid #f39c12 !important;
+    /* Remove a animação de pulso conflitante */
+    animation: none !important;
 }
 
-@keyframes pulse-highlight {
-    0% {
-        background-color: #f1c40f !important;
-        border-color: #f39c12 !important;
-    }
-    100% {
-        background-color: #fff3a0 !important;
-        border-color: #ffcc02 !important;
-    }
+.item.selected::before,
+.dice-item.selected::before {
+    content: '';
+    position: absolute;
+    width: 4px; /* Tamanho do pixel */
+    height: 4px; /* Tamanho do pixel */
+    background: #fff; /* Cor do pixel (branco) */
+    animation: border-pixel-run 1.5s linear infinite; /* Duração da animação */
 }
 
-
+@keyframes border-pixel-run {
+    0%   { top: -2px; left: -2px; } /* Canto superior esquerdo */
+    25%  { top: -2px; left: calc(100% - 2px); } /* Canto superior direito */
+    50%  { top: calc(100% - 2px); left: calc(100% - 2px); } /* Canto inferior direito */
+    75%  { top: calc(100% - 2px); left: -2px; } /* Canto inferior esquerdo */
+    100% { top: -2px; left: -2px; } /* Volta ao início */
+}
