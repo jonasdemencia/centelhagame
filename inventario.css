@@ -876,9 +876,10 @@ margin-top: 5px;
     position: absolute;
     width: 2px;
     height: 2px;
-    background: #00ffff;
+    background: linear-gradient(90deg, rgba(0,255,255,0) 0%, rgba(0,255,255,0.8) 50%, rgba(0,255,255,1) 100%);
     box-shadow: 0 0 5px #00ffff;
     z-index: 10;
     pointer-events: none;
 }
+
 
