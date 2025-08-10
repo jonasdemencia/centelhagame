@@ -895,3 +895,12 @@ p {
         left: -2px;
     }
 }
+
+.item img, .slot img {
+    max-width: 60px !important;
+    max-height: 60px !important;
+    object-fit: contain !important;
+    display: block !important;
+    margin: auto !important;
+}
+
