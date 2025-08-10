@@ -64,7 +64,7 @@ p {
 
 .items {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     justify-content: start;
     align-items: start;
@@ -869,5 +869,6 @@ margin-top: 5px;
     width: 100%;
     border-left: 1px solid #ccc;
 }
+
 
 
