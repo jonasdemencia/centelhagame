@@ -852,9 +852,11 @@ margin-top: 5px;
 .left-panel {
     width: 50%;
     border-right: 2px solid #ccc;
-    background-color: #333;
+    background-color: #000;
     min-height: 216px;
     padding: 15px;
+    border: 2px solid #ccc;
+    border-right: 1px solid #ccc;
 }
 
 .right-panel {
@@ -865,4 +867,7 @@ margin-top: 5px;
 .right-panel .chest {
     margin: 0;
     width: 100%;
+    border-left: 1px solid #ccc;
 }
+
+
