@@ -865,13 +865,48 @@ margin-top: 5px;
     border-left: 1px solid #ccc;
 }
 
+/* Destaque do item selecionado */
 .selected {
-    background-color: #f1c40f !important;
-    border: 2px solid #fff !important;
-    animation: blink-border 0.5s infinite !important;
+    background-color: #f1c40f; /* Amarelo */
+    border-color: #f39c12; /* Borda amarelo escuro */
+    position: relative;
+    overflow: visible;
 }
 
-@keyframes blink-border {
-    0%, 50% { border-color: #fff; }
-    51%, 100% { border-color: #f39c12; }
+/* Animação do pixel percorrendo as bordas */
+.selected::before {
+    content: '';
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #fff, 0 0 12px #f39c12;
+    z-index: 10;
+    animation: pixelBorder 2s linear infinite;
 }
+
+@keyframes pixelBorder {
+    0% {
+        top: -2px;
+        left: -2px;
+    }
+    25% {
+        top: -2px;
+        left: calc(100% - 1px);
+    }
+    50% {
+        top: calc(100% - 1px);
+        left: calc(100% - 1px);
+    }
+    75% {
+        top: calc(100% - 1px);
+        left: -2px;
+    }
+    100% {
+        top: -2px;
+        left: -2px;
+    }
+}
+
+
