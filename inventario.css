@@ -926,3 +926,27 @@ margin-top: 5px;
         opacity: 0;
     }
 }
+
+@keyframes pixelBorder {
+    0% {
+        top: -2px;
+        left: -2px;
+    }
+    25% {
+        top: -2px;
+        left: calc(100% - 1px);
+    }
+    50% {
+        top: calc(100% - 1px);
+        left: calc(100% - 1px);
+    }
+    75% {
+        top: calc(100% - 1px);
+        left: -2px;
+    }
+    100% {
+        top: -2px;
+        left: -2px;
+    }
+}
+
