@@ -866,14 +866,20 @@ margin-top: 5px;
 }
 
 .selected {
-    background: linear-gradient(45deg, #f1c40f, #fff3a0, #f1c40f, #fff3a0) !important;
-    background-size: 400% 400% !important;
-    border-color: #f39c12 !important;
-    animation: gradient-pulse 1s ease-in-out infinite !important;
+    background-color: #f1c40f !important;
+    border: 2px solid transparent !important;
+    background-image: 
+        linear-gradient(90deg, #f39c12 25%, transparent 25%, transparent 75%, #f39c12 75%),
+        linear-gradient(90deg, #f39c12 25%, transparent 25%, transparent 75%, #f39c12 75%),
+        linear-gradient(0deg, #f39c12 25%, transparent 25%, transparent 75%, #f39c12 75%),
+        linear-gradient(0deg, #f39c12 25%, transparent 25%, transparent 75%, #f39c12 75%) !important;
+    background-size: 8px 2px, 8px 2px, 2px 8px, 2px 8px !important;
+    background-position: 0 0, 0 100%, 0 0, 100% 0 !important;
+    background-repeat: repeat-x, repeat-x, repeat-y, repeat-y !important;
+    animation: border-march 0.5s linear infinite !important;
 }
 
-@keyframes gradient-pulse {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
+@keyframes border-march {
+    0% { background-position: 0 0, 0 100%, 0 0, 100% 0; }
+    100% { background-position: 8px 0, -8px 100%, 0 8px, 100% -8px; }
 }
-
