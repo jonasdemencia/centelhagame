@@ -1258,4 +1258,22 @@ dice-icon svg {
     font-weight: normal !important;
 }
 
+.item.selected,
+.dice-item.selected {
+    background-color: #f1c40f !important;
+    border-color: #f39c12 !important;
+    animation: pulse-highlight 1.5s infinite alternate !important;
+}
+
+@keyframes pulse-highlight {
+    0% {
+        background-color: #f1c40f !important;
+        border-color: #f39c12 !important;
+    }
+    100% {
+        background-color: #fff3a0 !important;
+        border-color: #ffcc02 !important;
+    }
+}
+
 
