@@ -881,7 +881,7 @@ margin-top: 5px;
   width: 3px; height: 3px;
   background: #fff;
   box-shadow: 0 0 6px #fff, 0 0 12px #f39c12;
-  z-index: 10;
+  z-index: 9;
   transform: translate(var(--x, -2px), var(--y, -2px));
   animation: borderMotion 4s linear infinite;
 }
@@ -902,7 +902,7 @@ margin-top: 5px;
   transform:
     translate(calc(var(--x, -2px) + 1px), calc(var(--y, -2px) + 1px))
     rotate(var(--a, 0deg));
-  z-index: 9;
+  z-index: 10;
   pointer-events: none;
   animation: borderMotion 4s linear infinite;
 }
@@ -929,4 +929,5 @@ margin-top: 5px;
   87.5%  { --x: -2px;             --y: 34px;  --a: -90deg; --tail: 28px; }
   100%   { --x: -2px;             --y: -2px;             --a: -90deg; --tail: 8px; }
 }
+
 
