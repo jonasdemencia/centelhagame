@@ -873,87 +873,63 @@ margin-top: 5px;
     overflow: visible;
 }
 
-/* Animação do pixel percorrendo as bordas */
+/* Cabeça (pixel) + rastro emanando como estrela cadente */
 .selected::before {
-    content: '';
-    position: absolute;
-    width: 3px;
-    height: 3px;
-    background: #fff;
-    box-shadow: 0 0 6px #fff, 0 0 12px #f39c12;
-    z-index: 10;
-    animation: pixelBorder 4s linear infinite;
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 3px;
+  background: #fff;
+  box-shadow: 0 0 6px #fff, 0 0 12px #f39c12;
+  z-index: 10;
+  transform: translate(var(--x, -2px), var(--y, -2px));
+  animation: borderMotion 4s linear infinite;
 }
 
 .selected::after {
-    content: '';
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    background: radial-gradient(circle, #00ffff 30%, transparent 70%);
-    box-shadow:
-        0 0 10px rgba(0, 255, 255, 0.4),
-        0 0 20px rgba(0, 255, 255, 0.2);
-    z-index: 9;
-    animation: pixelTrail 4s linear infinite;
-    pointer-events: none;
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  height: 2px;
+  width: var(--tail, 28px);
+  background: linear-gradient(90deg,
+              rgba(0,255,255,0.9) 0%,
+              rgba(0,255,255,0.4) 40%,
+              rgba(0,255,255,0) 100%);
+  box-shadow: 0 0 8px rgba(0,255,255,0.35);
+  filter: blur(0.3px);
+  transform-origin: left center; /* âncora no pixel */
+  transform:
+    translate(calc(var(--x, -2px) + 1px), calc(var(--y, -2px) + 1px))
+    rotate(var(--a, 0deg));
+  z-index: 9;
+  pointer-events: none;
+  animation: borderMotion 4s linear infinite;
 }
 
-@keyframes pixelTrail {
-    0% {
-        top: -2px;
-        left: -2px;
-        transform: scale(1);
-        opacity: 0.6;
-    }
-    25% {
-        top: -2px;
-        left: calc(100% - 1px);
-        transform: scale(1.2);
-        opacity: 0.4;
-    }
-    50% {
-        top: calc(100% - 1px);
-        left: calc(100% - 1px);
-        transform: scale(1.5);
-        opacity: 0.3;
-    }
-    75% {
-        top: calc(100% - 1px);
-        left: -2px;
-        transform: scale(1.7);
-        opacity: 0.2;
-    }
-    100% {
-        top: -2px;
-        left: -2px;
-        transform: scale(2);
-        opacity: 0;
-    }
+/* Animação única que move a cabeça e orienta o rastro */
+@keyframes borderMotion {
+  /* Topo → direita */
+  0%     { --x: -2px; --y: -2px; --a: 0deg;   --tail: 8px;  }
+  12.5%  { --x: calc(50% - 1px); --y: -2px;   --a: 0deg;   --tail: 28px; }
+  24.99% { --x: calc(100% - 1px); --y: -2px;  --a: 0deg;   --tail: 8px; }
+
+  /* Direita → baixo */
+  25%    { --x: calc(100% - 1px); --y: -2px;  --a: 90deg;  --tail: 8px; }
+  37.5%  { --x: calc(100% - 1px); --y: calc(50% - 1px); --a: 90deg; --tail: 28px; }
+  49.99% { --x: calc(100% - 1px); --y: calc(100% - 1px); --a: 90deg; --tail: 8px; }
+
+  /* Baixo → esquerda */
+  50%    { --x: calc(100% - 1px); --y: calc(100% - 1px); --a: 180deg; --tail: 8px; }
+  62.5%  { --x: calc(50% - 1px);  --y: calc(100% - 1px); --a: 180deg; --tail: 28px; }
+  74.99% { --x: -2px;             --y: calc(100% - 1px); --a: 180deg; --tail: 8px; }
+
+  /* Esquerda → topo */
+  75%    { --x: -2px;             --y: calc(100% - 1px); --a: -90deg; --tail: 8px; }
+  87.5%  { --x: -2px;             --y: calc(50% - 1px);  --a: -90deg; --tail: 28px; }
+  100%   { --x: -2px;             --y: -2px;             --a: -90deg; --tail: 8px; }
 }
 
-@keyframes pixelBorder {
-    0% {
-        top: -2px;
-        left: -2px;
-    }
-    25% {
-        top: -2px;
-        left: calc(100% - 1px);
-    }
-    50% {
-        top: calc(100% - 1px);
-        left: calc(100% - 1px);
-    }
-    75% {
-        top: calc(100% - 1px);
-        left: -2px;
-    }
-    100% {
-        top: -2px;
-        left: -2px;
-    }
-}
 
 
 
