@@ -905,11 +905,16 @@ function endPlayerTurn() {
         }
     }
     
-    setTimeout(async () => { // ✅ Adicionar async aqui
-        await undeadAttack();
+        setTimeout(() => {
         console.log("LOG: Chamando monsterAttack após fim do turno do jogador.");
-        console.log(`Eficiência Arcanum Iudicium: ${window.arcanumIudicium.getEficiencia()}%`); // ADICIONAR AQUI
-        monstersTurn();
+        
+        // Verifica se ainda há monstros vivos antes de passar o turno
+        const monstersAlive = window.currentMonsters ? window.currentMonsters.filter(m => m.pontosDeEnergia > 0) : [];
+        if (monstersAlive.length > 0) {
+            monsterAttack();
+        } else {
+            console.log("LOG: Todos os monstros mortos, não passando turno para monstros.");
+        }
     }, 1500); // Delay para iniciar o turno do monstro
 }
 
