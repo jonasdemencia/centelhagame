@@ -1,4 +1,4 @@
-/* Aplicação da fonte Eagle Lake */
+i/* Aplicação da fonte Eagle Lake */
 body {
     font-family: 'Eagle Lake', cursive;
     text-align: center;
@@ -873,7 +873,7 @@ margin-top: 5px;
 }
 
 .border-trail {
-    position: absolute;
+    position: relative;
     width: 2px;
     height: 2px;
     background: linear-gradient(90deg, rgba(0,255,255,0) 0%, rgba(0,255,255,0.8) 50%, rgba(0,255,255,1) 100%);
@@ -881,5 +881,6 @@ margin-top: 5px;
     z-index: 10;
     pointer-events: none;
 }
+
 
 
