@@ -888,48 +888,49 @@ margin-top: 5px;
 .selected::after {
     content: '';
     position: absolute;
-    width: 4px;
-    height: 4px;
-    background: #00ffff;
-    box-shadow: 0 0 8px #00ffff, 0 0 16px #00ffff;
+    width: 6px;
+    height: 6px;
+    background: radial-gradient(circle, #00ffff 30%, transparent 70%);
+    box-shadow:
+        0 0 10px rgba(0, 255, 255, 0.4),
+        0 0 20px rgba(0, 255, 255, 0.2);
     z-index: 9;
     animation: pixelTrail 4s linear infinite;
+    pointer-events: none;
 }
 
 @keyframes pixelTrail {
     0% {
         top: -2px;
         left: -2px;
-        opacity: 0;
-    }
-    2% {
-        top: -2px;
-        left: -2px;
-        opacity: 1;
-    }
-    27% {
-        top: -2px;
-        left: calc(100% - 1px);
-        opacity: 0.8;
-    }
-    52% {
-        top: calc(100% - 1px);
-        left: calc(100% - 1px);
+        transform: scale(1);
         opacity: 0.6;
     }
-    77% {
+    25% {
+        top: -2px;
+        left: calc(100% - 1px);
+        transform: scale(1.2);
+        opacity: 0.4;
+    }
+    50% {
+        top: calc(100% - 1px);
+        left: calc(100% - 1px);
+        transform: scale(1.5);
+        opacity: 0.3;
+    }
+    75% {
         top: calc(100% - 1px);
         left: -2px;
-        opacity: 0.4;
+        transform: scale(1.7);
+        opacity: 0.2;
     }
     100% {
         top: -2px;
         left: -2px;
-        opacity: 0.2;
+        transform: scale(2);
+        opacity: 0;
     }
 }
-
-
 
 @keyframes pixelBorder {
     0% {
@@ -953,5 +954,6 @@ margin-top: 5px;
         left: -2px;
     }
 }
+
 
 
