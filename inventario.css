@@ -121,11 +121,6 @@ grid-template-columns: repeat(2, 1fr);
     background: #111; /* preto mais próximo e sólido */
 }
 
-/* Destaque do item selecionado */
-.selected {
-    background-color: #f1c40f; /* Amarelo */
-    border-color: #f39c12; /* Borda amarelo escuro */
-}
 
 /* Destaque dos slots compatíveis */
 .highlight {
@@ -886,5 +881,3 @@ margin-top: 5px;
         border-color: #ffcc02 !important;
     }
 }
-
-
