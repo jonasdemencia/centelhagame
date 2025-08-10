@@ -902,37 +902,33 @@ margin-top: 5px;
         left: -2px;
         opacity: 0;
     }
-    5% {
+    2% {
         top: -2px;
         left: -2px;
         opacity: 1;
     }
-    30% {
+    27% {
         top: -2px;
-        left: calc(100% - 15px);
+        left: calc(100% - 1px);
         opacity: 0.8;
     }
-    55% {
-        top: calc(100% - 15px);
-        left: calc(100% - 2px);
+    52% {
+        top: calc(100% - 1px);
+        left: calc(100% - 1px);
         opacity: 0.6;
     }
-    80% {
-        top: calc(100% - 2px);
-        left: 15px;
-        opacity: 0.4;
-    }
-    95% {
-        top: 15px;
+    77% {
+        top: calc(100% - 1px);
         left: -2px;
-        opacity: 0.2;
+        opacity: 0.4;
     }
     100% {
         top: -2px;
         left: -2px;
-        opacity: 0;
+        opacity: 0.2;
     }
 }
+
 
 
 @keyframes pixelBorder {
@@ -957,4 +953,5 @@ margin-top: 5px;
         left: -2px;
     }
 }
+
 
