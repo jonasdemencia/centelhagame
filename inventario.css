@@ -8,7 +8,6 @@ body {
     color: white;
 }
 
-
 /* Container principal */
 .container {
     max-width: 900px;
@@ -18,7 +17,6 @@ body {
     border-radius: 0; /* remove arredondamento */
     border: 2px solid #ccc; /* cinza claro */
 }
-
 
 /* Títulos */
 h1 {
@@ -46,7 +44,6 @@ p {
     margin: auto;
 }
 
-
 .equipment {
     display: flex;
     flex-direction: column;
@@ -61,10 +58,9 @@ p {
     gap: 10px;
 }
 
-
 .items {
     display: grid;
-grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     justify-content: start;
     align-items: start;
@@ -92,35 +88,24 @@ grid-template-columns: repeat(2, 1fr);
     word-break: break-word;
     color: white;
     box-sizing: border-box; /* GARANTE QUE O TAMANHO TOTAL SEJA EXATAMENTE 70x70px */
+    padding: 2px; /* Adiciona um pequeno preenchimento */
 }
 
 .item {
     background: #8b5a2b;
     position: relative;
-    /* Todas as outras propriedades de tamanho (width, height, border, etc)
-       são herdadas da regra acima. O importante é que a propriedade
-       'padding-right' FOI REMOVIDA. */
-    width: 70px;
-    height: 70px;
-    border: 2px solid #ccc;
-    border-radius: 0;
-    font-size: 14px;
-    font-weight: bold;
-    line-height: normal;
-    text-align: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    white-space: normal;
-    word-break: break-word;
-    color: white;
-    cursor: pointer;
+}
+
+/* Adicionado para estilizar a imagem dentro do item */
+.item img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Garante que a imagem caiba sem distorcer */
 }
 
 .slot {
     background: #111; /* preto mais próximo e sólido */
 }
-
 
 /* Destaque dos slots compatíveis */
 .highlight {
@@ -172,7 +157,6 @@ grid-template-columns: repeat(2, 1fr);
     border-color: #eee !important;
     color: white !important;
 }
-
 
 /* Valores */
 .stat-value {
@@ -519,7 +503,6 @@ grid-template-columns: repeat(2, 1fr);
     height: 100%;
 }
 
-
 .dice-section h3 {
     color: #d4a373;
     margin-bottom: 15px;
@@ -658,6 +641,7 @@ grid-template-columns: repeat(2, 1fr);
     transition: width 0.3s ease;
     z-index: 1;
 }
+
 .item-energy-text {
     position: relative;
     z-index: 3;
@@ -716,6 +700,7 @@ grid-template-columns: repeat(2, 1fr);
     justify-content: space-between;
     gap: 10px;
 }
+
 .sheet-header p {
     margin: 0;
     padding: 5px;
@@ -730,6 +715,7 @@ grid-template-columns: repeat(2, 1fr);
     justify-content: space-around;
     gap: 10px;
 }
+
 .sheet-main-status .attribute {
     width: 48%;
 }
@@ -749,9 +735,11 @@ grid-template-columns: repeat(2, 1fr);
     align-items: center;
     font-size: 14px;
 }
+
 .sheet-stats-grid .stat-box .label {
     color: #ccc;
 }
+
 .sheet-stats-grid .stat-box span:last-child {
     font-weight: bold;
     font-size: 16px;
@@ -787,7 +775,6 @@ grid-template-columns: repeat(2, 1fr);
     margin-bottom: 15px;
 }
 
-
 .dice-chest h2 {
     color: white;
     margin-bottom: 15px;
@@ -797,7 +784,7 @@ grid-template-columns: repeat(2, 1fr);
 .chest, .dice-chest, .dice-section {
     display: block;
     position: relative;
-margin-top: 5px;
+    margin-top: 5px;
     padding: 15px;
     background: #000;
     border: 2px solid #ccc;
@@ -908,5 +895,3 @@ margin-top: 5px;
         left: -2px;
     }
 }
-
-
