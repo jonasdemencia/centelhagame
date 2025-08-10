@@ -411,21 +411,28 @@ async function monstersTurn() {
         await monsterAttack(); 
     }
 
-    // Após todos os monstros atacarem, se o jogador ainda estiver vivo, passa o turno.
-    if (playerHealth > -10) {
-        // Define o alvo do jogador como o primeiro monstro vivo na lista
-        window.currentMonster = window.currentMonsters.find(m => m.pontosDeEnergia > 0) || null;
-        currentMonster = window.currentMonster;
-        
-        // Atualiza a UI para refletir o alvo atual do jogador
-        if(currentMonster) {
-            if (!currentMonster.activeMonsterDebuffs) currentMonster.activeMonsterDebuffs = [];
-            activeMonsterDebuffs = currentMonster.activeMonsterDebuffs;
-            updateMonsterInfoUI(); // Função que atualiza nome, hp, etc. do monstro
-        }
-        
-        endMonsterTurn(); // Finalmente, passa o turno para o jogador
+   // Após todos os monstros atacarem, se o jogador ainda estiver vivo, passa o turno.
+if (playerHealth > -10) {
+    // Verifica se ainda há monstros vivos
+    const remainingMonsters = window.currentMonsters.filter(m => m.pontosDeEnergia > 0);
+    if (remainingMonsters.length === 0) {
+        console.log("LOG: Todos os monstros foram derrotados durante o turno dos monstros.");
+        return; // Não passa o turno se não há monstros
     }
+    
+    // Define o alvo do jogador como o primeiro monstro vivo na lista
+    window.currentMonster = remainingMonsters[0];
+    currentMonster = window.currentMonster;
+    
+    // Atualiza a UI para refletir o alvo atual do jogador
+    if(currentMonster) {
+        if (!currentMonster.activeMonsterDebuffs) currentMonster.activeMonsterDebuffs = [];
+        activeMonsterDebuffs = currentMonster.activeMonsterDebuffs;
+        updateMonsterInfoUI(); // Função que atualiza nome, hp, etc. do monstro
+    }
+    
+    endMonsterTurn(); // Finalmente, passa o turno para o jogador
+}
 }
 
 // Lógica do turno do monstro
