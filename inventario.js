@@ -402,6 +402,8 @@ document.addEventListener('click', function(event) {
     clearHighlights();
     selectedItem = item;
     item.classList.add('selected');
+            createBorderTrail(item);
+
 
     // --- DESTAQUE DE SLOT COMPATÍVEL ---
     slots.forEach(slot => slot.classList.remove('highlight'));
@@ -798,6 +800,7 @@ function addItemClickListener(item) {
             clearHighlights();
             selectedItem = item;
             item.classList.add('selected');
+                createBorderTrail(item);
 
            const allItemsArr = [...initialItems, ...extraItems];
 const itemData = allItemsArr.find(i => i.id === item.dataset.item);
@@ -819,11 +822,53 @@ if (itemData && itemData.slot) {
     });
 }
 
-// Função para limpar destaques visuais
+function createBorderTrail(element) {
+    const existingTrail = element.querySelector('.border-trail');
+    if (existingTrail) existingTrail.remove();
+    
+    const trail = document.createElement('div');
+    trail.className = 'border-trail';
+    element.appendChild(trail);
+    
+    const width = element.offsetWidth;
+    const height = element.offsetHeight;
+    let position = 0;
+    const speed = 2;
+    const perimeter = (width + height) * 2 - 8;
+    
+    function animate() {
+        position = (position + speed) % perimeter;
+        let x, y;
+        
+        if (position < width) {
+            x = position; y = -2;
+        } else if (position < width + height) {
+            x = width - 2; y = position - width;
+        } else if (position < width * 2 + height) {
+            x = width - (position - width - height); y = height - 2;
+        } else {
+            x = -2; y = height - (position - width * 2 - height);
+        }
+        
+        trail.style.left = x + 'px';
+        trail.style.top = y + 'px';
+        
+        if (element.classList.contains('selected')) {
+            requestAnimationFrame(animate);
+        }
+    }
+    animate();
+}
+
 function clearHighlights() {
-    document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
+    document.querySelectorAll('.item').forEach(i => {
+        i.classList.remove('selected');
+        const trail = i.querySelector('.border-trail');
+        if (trail) trail.remove();
+    });
     document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
 }
+
 
 async function saveInventoryData(uid) {
   console.log("Salvando dados do inventário para o usuário:", uid);
