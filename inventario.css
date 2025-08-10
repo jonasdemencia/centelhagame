@@ -875,10 +875,13 @@ margin-top: 5px;
 
 .border-trail {
     position: absolute;
-    width: 4px;
+    width: 12px;
     height: 4px;
-    background: #00ffff;
+    background: linear-gradient(90deg, rgba(0,255,255,0) 0%, rgba(0,255,255,0.8) 50%, rgba(0,255,255,1) 100%);
     box-shadow: 0 0 8px #00ffff;
     z-index: 10;
     pointer-events: none;
+    border-radius: 2px;
 }
+
+
