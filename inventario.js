@@ -742,8 +742,6 @@ item.addEventListener('click', () => {
 // Verifica se o clique foi no botão de expandir
 handleItemClick(item);
 
-}
-
 });
 
 });
