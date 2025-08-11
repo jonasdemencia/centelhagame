@@ -1541,7 +1541,7 @@ document.querySelectorAll('.slot').forEach(slot => {
     const item = allItemsArr.find(i => i.content === equippedItemName);
 
     if (item) {
-        let slotHTML = `<img src="${item.image}" alt="${item.content}" />`;
+        let slotHTML = `<img src="${item.thumbnailImage || item.image}" alt="${item.content}" />`;
         slot.dataset.itemName = item.content;
 
         // **LÓGICA DE MUNIÇÃO CORRIGIDA**
