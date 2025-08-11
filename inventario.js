@@ -1520,14 +1520,11 @@ inventoryData.itemsInChest.forEach(dbItem => {
         `;
     }
 
-    let itemHTML = `
-        <img src="${fullItemData.image}" alt="${fullItemData.content}" />
-        <span class="item-expand-toggle">+</span>
-        <div class="item-description" style="display: none;">
-            ${fullItemData.description || 'Descrição do item.'}
-        </div>
-        ${energiaHTML}
-    `;
+   let itemHTML = `
+    <img src="${fullItemData.image}" alt="${fullItemData.content}" />
+    ${energiaHTML}
+`;
+
 
     if (fullItemData.consumable || fullItemData.projectile) {
         const quantity = dbItem.quantity || fullItemData.quantity;
@@ -1550,15 +1547,6 @@ inventoryData.itemsInChest.forEach(dbItem => {
     chestElement.appendChild(newItem);
     addItemClickListener(newItem);
 
-    const expandToggle = newItem.querySelector('.item-expand-toggle');
-    const descriptionDiv = newItem.querySelector('.item-description');
-    if (expandToggle && descriptionDiv) {
-        expandToggle.addEventListener('click', (event) => {
-            event.stopPropagation();
-            descriptionDiv.style.display = descriptionDiv.style.display === 'none' ? 'block' : 'none';
-            expandToggle.textContent = descriptionDiv.style.display === 'none' ? '+' : '-';
-        });
-    }
 });
 
 
