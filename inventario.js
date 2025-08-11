@@ -80,7 +80,7 @@ const extraItems = [
 { id: "revolver-38", content: "Revolver 38", uuid: "extra-revolver38", slot: "weapon", description: "Um revólver calibre 38.", damage: "1d8", ammoType: "municao-38", ammoCapacity: 6, loadedAmmo: 0, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/revolver-38.png" },
 { id: "escopeta-12", content: "Escopeta 12", uuid: "extra-escopeta12", slot: "weapon", description: "Uma espingarda calibre 12.", damage: "1d12+2", ammoType: "municao-12", ammoCapacity: 5, loadedAmmo: 0, image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/escopeta-12.png" },
 { id: "municao-12", content: "Munição de 12.", uuid: "extra-municao12", quantity: 5, projectile: true, description: "Projéteis letais calíbre 12.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/municao-12.png" },
-{ id: "Adaga", content: "Adaga", uuid: "extra-adaga", slot: "weapon", description: "Uma punhal afiado.", damage: "1D4", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/adaga.png" },
+{ id: "Adaga", content: "Adaga", uuid: "extra-adaga", slot: "weapon", description: "Uma punhal afiado.", damage: "1D4", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/adaga.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuadaga.png" },
 { id: "granada-mao", content: "Granada de Mão", uuid: "extra-granada-mao", consumable: true, quantity: 3, effect: "explosion", damage: "3D8", description: "Explosivo portátil de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false, image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/granada-mao.png" },
 { id: "granada-de-concussao", content: "Granada de Concussão", uuid: "extra-granada-de-concussao", consumable: true, quantity: 3, effect: "stun", damage: "3D4", description: "Explosivo de concussão de área (raio 2). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 2, allowsResistance: false, image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/granada-de-concussao.png" },
 { id: "granada-incendiaria", content: "Granada Incendiária", uuid: "extra-granada-incendiaria", consumable: true, quantity: 3, effect: "explosion", damage: "2D6", description: "Explosivo incendiário de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false, image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/granada-incendiaria.png" },
@@ -104,7 +104,7 @@ function updateItemPreview(item) {
     console.log("Item data encontrado:", itemData);
     
     if (itemData) {
-        previewImage.src = itemData.image;
+        previewImage.src = itemData.image; // Sempre usa a imagem em alta resolução
         previewImage.style.display = 'block';
         previewName.textContent = itemData.content;
         previewDescription.textContent = itemData.description || 'Sem descrição disponível';
@@ -1506,7 +1506,7 @@ inventoryData.itemsInChest.forEach(dbItem => {
     }
 
    let itemHTML = `
-    <img src="${fullItemData.image}" alt="${fullItemData.content}" />
+    <img src="${fullItemData.thumbnailImage || fullItemData.image}" alt="${fullItemData.content}" />
     ${energiaHTML}
 `;
 
