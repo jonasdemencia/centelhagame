@@ -704,21 +704,29 @@ if (carregarBtn) carregarBtn.style.display = "none";
     updateItemPreview(item);
 }
 
-    function updateItemPreview(item) {
+   function updateItemPreview(item) {
+    console.log("updateItemPreview chamada com:", item);
+    
     const previewImage = document.getElementById('preview-image');
     const previewName = document.getElementById('preview-name');
     const previewDescription = document.getElementById('preview-description');
     
+    console.log("Elementos encontrados:", previewImage, previewName, previewDescription);
+    
     const allItemsArr = [...initialItems, ...extraItems];
     const itemData = allItemsArr.find(i => i.id === item.dataset.item);
+    
+    console.log("Item data encontrado:", itemData);
     
     if (itemData) {
         previewImage.src = itemData.image;
         previewImage.style.display = 'block';
         previewName.textContent = itemData.content;
         previewDescription.textContent = itemData.description || 'Sem descrição disponível';
+        console.log("Preview atualizado com imagem:", itemData.image);
     }
 }
+
 
 
 // Adiciona evento de clique aos itens iniciais
@@ -1219,56 +1227,36 @@ console.warn("Botão 'Usar' não encontrado no HTML.");
 // Adiciona evento de clique aos novos itens do baú
 
 function addItemClickListener(item) {
+    item.addEventListener('click', (event) => {
+        if (!event.target.classList.contains('item-expand-toggle')) {
+            console.log("Novo item clicado no baú:", item);
+            clearHighlights();
+            selectedItem = item;
+            item.classList.add('selected');
 
-item.addEventListener('click', (event) => {
+            const allItemsArr = [...initialItems, ...extraItems];
+            const itemData = allItemsArr.find(i => i.id === item.dataset.item);
 
-// Verifica se o clique foi no botão de expandir
+            if (itemData && itemData.slot) {
+                document.querySelectorAll('.slot').forEach(slot => {
+                    if (slot.dataset.slot === itemData.slot) {
+                        slot.classList.add('highlight');
+                    }
+                });
+            }
 
-if (!event.target.classList.contains('item-expand-toggle')) {
-
-console.log("Novo item clicado no baú:", item);
-
-clearHighlights();
-
-selectedItem = item;
-
-item.classList.add('selected');
-
-const allItemsArr = [...initialItems, ...extraItems];
-
-const itemData = allItemsArr.find(i => i.id === item.dataset.item);
-
-if (itemData && itemData.slot) {
-
-document.querySelectorAll('.slot').forEach(slot => {
-
-if (slot.dataset.slot === itemData.slot) {
-
-slot.classList.add('highlight');
-
+            if (selectedItem.dataset.consumable === 'true') {
+                toggleUseButton(true);
+            } else {
+                toggleUseButton(false);
+            }
+            
+            // ADICIONAR ESTA LINHA AQUI:
+            updateItemPreview(item);
+        }
+    });
 }
 
-});
-
-}
-
-// Verifica se o item é consumível e mostra/oculta o botão "Usar"
-
-if (selectedItem.dataset.consumable === 'true') {
-
-toggleUseButton(true);
-
-} else {
-
-toggleUseButton(false);
-
-}
-
-}
-
-});
-
-}
 
 // Função para limpar destaques visuais
 
