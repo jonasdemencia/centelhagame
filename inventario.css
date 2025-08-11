@@ -91,9 +91,10 @@ p {
 }
 
 .item {
-    background: #8b5a2b;
+    background: #000; /* Muda de #8b5a2b para #000 */
     position: relative;
 }
+
 
 /* Adicionado para estilizar a imagem dentro do item */
 .item img {
