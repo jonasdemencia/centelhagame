@@ -1,115 +1,67 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-
 import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
-
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
-
 // Configuração Firebasee
-
 const firebaseConfig = {
-
 apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
-
 authDomain: "centelhagame-9d511.firebaseapp.com",
-
 projectId: "centelhagame-9d511",
-
 storageBucket: "centelhagame-9d511.appspot.com",
-
 messagingSenderId: "700809803145",
-
 appId: "1:700809803145:web:bff4c6a751ec9389919d58"
-
 };
 
 const app = initializeApp(firebaseConfig);
-
 const db = getFirestore(app);
-
 const auth = getAuth(app);
-
 let selectedItem = null; // Armazena o item selecionado
-
 let currentPlayerData = null; // Armazena os dados do jogador
-
 // Variável global para o listener
-
 let inventoryListener = null;
-
 // Variável global para o listener do jogador
-
 let playerDataListener = null;
 
 // Função para configurar listener dos dados do jogador
-
 async function setupPlayerDataListener(uid) {
-
 console.log("Configurando listener dos dados do jogador:", uid);
-
 try {
-
 const playerRef = doc(db, "players", uid);
 
 // Remove listener anterior se existir
-
 if (playerDataListener) {
-
 playerDataListener();
-
 }
 
 // Configura listener em tempo real para TODOS os dados do jogador
-
 playerDataListener = onSnapshot(playerRef, (docSnap) => {
-
 if (docSnap.exists()) {
-
 const playerData = docSnap.data();
-
 console.log("DADOS DO JOGADOR ATUALIZADOS EM TEMPO REAL!");
 
 // Atualiza dados globais
-
 currentPlayerData = playerData;
 
 // Atualiza a interface
-
 updateCharacterSheet(playerData);
-
 }
-
 }, (error) => {
-
 console.error("Erro no listener dos dados do jogador:", error);
-
 });
-
 } catch (error) {
-
 console.error("Erro ao configurar listener dos dados do jogador:", error);
-
 }
-
 }
 
 // Itens iniciais que o jogador deve ter (adicionando propriedade de danoo)
 
 const initialItems = [
-
 { id: "bolsa-de-escriba", content: "Bolsa de escriba", description: "Uma bolsa para guardar pergaminhos e penas.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/bolsa-de-escriba.png" },
-
 { id: "velas", content: "Velas", description: "Fontes de luz portáteis.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/velas.png" },
-
 { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2, description: "Um pequeno saco contendo ervas que podem curar ferimentos leves.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/pequeno-saco-ervas.png" },
-
 { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/pocao-cura-menor.png" },
-
 { id: "pao", content: "Pão", consumable: true, quantity: 1, description: "Um pedaço de pão simples.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/pao.png" },
-
 { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 5, description: "Um pedaço de pão velho e mofado. Estranhamente, parece ter um efeito... diferente.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/pao-mofado.png" },
-
 { id: "elixir-poder", content: "Elixir do Poder Supremo", consumable: true, quantity: 5, effect: "boost_attributes", value: 100, description: "Um elixir mágico que aumenta temporariamente todos os seus atributos para 100.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/elixir-poder.png" },
-
 //{ id: "grilo", content: "Grilo", description: "Um pequeno grilo usado como componente mágico para magias de sono.", componente: true, energia: { total: 1, inicial: 1 } }
 
 ];
