@@ -740,9 +740,6 @@ itemsContainer.querySelectorAll('.item').forEach(item => {
 item.addEventListener('click', () => {
 
 // Verifica se o clique foi no botão de expandir
-
-if (!item.classList.contains('item-expand-toggle')) {
-
 handleItemClick(item);
 
 }
@@ -1228,7 +1225,6 @@ console.warn("Botão 'Usar' não encontrado no HTML.");
 
 function addItemClickListener(item) {
     item.addEventListener('click', (event) => {
-        if (!event.target.classList.contains('item-expand-toggle')) {
             console.log("Novo item clicado no baú:", item);
             clearHighlights();
             selectedItem = item;
@@ -1521,13 +1517,10 @@ inventoryData.itemsInChest.forEach(dbItem => {
     }
 
     let itemHTML = `
-        <img src="${fullItemData.image}" alt="${fullItemData.content}" />
-        <span class="item-expand-toggle">+</span>
-        <div class="item-description" style="display: none;">
-            ${fullItemData.description || 'Descrição do item.'}
-        </div>
-        ${energiaHTML}
-    `;
+    <img src="${fullItemData.image}" alt="${fullItemData.content}" />
+    ${energiaHTML}
+`;
+
 
     if (fullItemData.consumable || fullItemData.projectile) {
         const quantity = dbItem.quantity || fullItemData.quantity;
@@ -1549,16 +1542,6 @@ inventoryData.itemsInChest.forEach(dbItem => {
     newItem.innerHTML = itemHTML;
     chestElement.appendChild(newItem);
     addItemClickListener(newItem);
-
-    const expandToggle = newItem.querySelector('.item-expand-toggle');
-    const descriptionDiv = newItem.querySelector('.item-description');
-    if (expandToggle && descriptionDiv) {
-        expandToggle.addEventListener('click', (event) => {
-            event.stopPropagation();
-            descriptionDiv.style.display = descriptionDiv.style.display === 'none' ? 'block' : 'none';
-            expandToggle.textContent = descriptionDiv.style.display === 'none' ? '+' : '-';
-        });
-    }
 });
 
 
