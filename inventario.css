@@ -871,8 +871,8 @@ p {
 }
 
 .item img, .slot img {
-    max-width: 60px !important;
-    max-height: 60px !important;
+    max-width: 45px !important; /* Muda de 60px para 45px */
+    max-height: 45px !important; /* Muda de 60px para 45px */
     object-fit: contain !important;
     display: block !important;
     margin: auto !important;
