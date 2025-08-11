@@ -98,12 +98,13 @@ p {
 
 /* Adicionado para estilizar a imagem dentro do item */
 .item img {
-    max-width: 66px !important;
-    max-height: 66px !important;
-    object-fit: cover !important; /* Muda de 'contain' para 'fill' */
+    max-width: 45px !important; /* Reduz de 66px para 45px */
+    max-height: 45px !important; /* Reduz de 66px para 45px */
+    object-fit: cover !important;
     display: block !important;
     margin: auto !important;
 }
+
 
 
 .slot {
