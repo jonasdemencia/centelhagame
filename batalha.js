@@ -6,37 +6,41 @@ import { loadEquippedDice, initializeModule } from './dice-ui.js';
 import { getMonsterById } from './monstros.js';
 import './arcanum-spells.js';
 
-// Itens iniciais que o jogador deve ter (adicionando propriedade de dano)
+// Itens iniciais que o jogador deve ter (adicionando propriedade de danoo)
+
 const initialItems = [
-    { id: "bolsa-de-escriba", content: "Bolsa de escriba", description: "Uma bolsa para guardar pergaminhos e penas." },
-    { id: "velas", content: "Velas", description: "Fontes de luz portáteis." },
-    { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2, description: "Um pequeno saco contendo ervas que podem curar ferimentos leves." },
-    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." },
-    { id: "pao", content: "Pão", consumable: true, quantity: 1, description: "Um pedaço de pão simples." },
-    { id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 5, description: "Um pedaço de pão velho e mofado. Estranhamente, parece ter um efeito... diferente." },
-    { id: "elixir-poder", content: "Elixir do Poder Supremo", consumable: true, quantity: 5, effect: "boost_attributes", value: 100, description: "Um elixir mágico que aumenta temporariamente todos os seus atributos para 100." },
-    //{ id: "grilo", content: "Grilo", description: "Um pequeno grilo usado como componente mágico para magias de sono.", componente: true, energia: { total: 1, inicial: 1 } }
+{ id: "bolsa-de-escriba", content: "Bolsa de escriba", description: "Uma bolsa para guardar pergaminhos e penas.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/bolsa-de-escriba.png" },
+{ id: "velas", content: "Velas", description: "Fontes de luz portáteis.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/velas.png" },
+{ id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, quantity: 3, effect: "heal", value: 2, description: "Um pequeno saco contendo ervas que podem curar ferimentos leves.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/pequeno-saco-ervas.png" },
+{ id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/pocao-cura-menor.png" },
+{ id: "pao", content: "Pão", consumable: true, quantity: 1, description: "Um pedaço de pão simples.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/pao.png" },
+{ id: "pao-mofado", content: "Pão Mofado", consumable: true, quantity: 20, effect: "damage", value: 5, description: "Um pedaço de pão velho e mofado. Estranhamente, parece ter um efeito... diferente.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/pao-mofado.png" },
+{ id: "elixir-poder", content: "Elixir do Poder Supremo", consumable: true, quantity: 5, effect: "boost_attributes", value: 100, description: "Um elixir mágico que aumenta temporariamente todos os seus atributos para 100.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/elixir-poder.png" },
+//{ id: "grilo", content: "Grilo", description: "Um pequeno grilo usado como componente mágico para magias de sono.", componente: true, energia: { total: 1, inicial: 1 } }
 
 ];
 
 // Lista de itens que podem ser adicionados dinamicamente (não iniciais)
+
 const extraItems = [
-    { id: "grilo", content: "Grilo", uuid: "extra-grilo", description: "Um pequeno grilo saltitante.", componente: true, energia: { total: 1, inicial: 1 } },
-    { id: "facao", content: "Facao", uuid: "extra-facao", slot: "weapon", description: "Uma pequena lâmina afiada.", damage: "1D4" },
-    { id: "coberta", content: "Coberta", uuid: "extra-coberta", slot: "armor", description: "Vestes simples que oferecem pouca proteção.", defense: 2 },
-    { id: "la", content: "Lã", uuid: "extra-la", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true },
-    { id: "pedaco-couro", content: "Pedaço de couro", uuid: "extra-pedaco-couro", description: "Tira de couro endurecido para magias.", componente: true },
-    { id: "municao-38", content: "Munição de 38.", uuid: "extra-municao38", quantity: 6, projectile: true, description: "Projéteis letais calíbre 38." },
-    { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, uuid: "extra-pocao-cura-menor", quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital." },
-    { id: "revolver-38", content: "Revolver 38", uuid: "extra-revolver38", slot: "weapon", description: "Um revólver calibre 38.", damage: "1d8", ammoType: "municao-38", ammoCapacity: 6, loadedAmmo: 0 },
-    { id: "escopeta-12", content: "Escopeta 12", uuid: "extra-escopeta12", slot: "weapon", description: "Uma espingarda calibre 12.", damage: "1d12+2", ammoType: "municao-12", ammoCapacity: 5, loadedAmmo: 0 },
-    { id: "municao-12", content: "Munição de 12.", uuid: "extra-municao12", quantity: 5, projectile: true, description: "Projéteis letais calíbre 12." },
-    { id: "Adaga", content: "Adaga", uuid: "extra-adaga", slot: "weapon", description: "Uma punhal afiado.", damage: "1D4" },
-    { id: "granada-mao", content: "Granada de Mão", uuid: "extra-granada-mao", consumable: true, quantity: 3, effect: "explosion", damage: "3D8", description: "Explosivo portátil de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false },
-    { id: "granada-de-concussao", content: "Granada de Concussão", uuid: "extra-granada-de-concussao", consumable: true, quantity: 3, effect: "stun", damage: "3D4", description: "Explosivo de concussão de área (raio 2). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 2, allowsResistance: false },
-    { id: "granada-incendiaria", content: "Granada Incendiária", uuid: "extra-granada-incendiaria", consumable: true, quantity: 3, effect: "explosion", damage: "2D6", description: "Explosivo incendiário de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false },
-    { id: "peitoral-de-aço", content: "Peitoral de aço", uuid: "extra-peitoral-de-aço", slot: "armor", description: "Armadura média, de peso considerável", defense: 20 },
-    { id: "pocao-cura-completa", content: "Poção de Cura Completa", consumable: true, uuid: "extra-pocao-cura-completa", quantity: 10, effect: "heal", value: 150, description: "Uma poção que restaura uma massiva quantidade de energia vital." },
+
+{ id: "grilo", content: "Grilo", uuid: "extra-grilo", description: "Um pequeno grilo saltitante.", componente: true, energia: { total: 1, inicial: 1 }, image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/grilo.png" },
+{ id: "facao", content: "Facao", uuid: "extra-facao", slot: "weapon", description: "Uma pequena lâmina afiada.", damage: "1D4", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/facao.png" },
+{ id: "coberta", content: "Coberta", uuid: "extra-coberta", slot: "armor", description: "Vestes simples que oferecem pouca proteção.", defense: 2, image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/coberta.png" },
+{ id: "la", content: "Lã", uuid: "extra-la", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true, image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/la.png" },
+{ id: "pedaco-couro", content: "Pedaço de couro", uuid: "extra-pedaco-couro", description: "Tira de couro endurecido para magias.", componente: true, image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/pedaco-couro.png" },
+{ id: "municao-38", content: "Munição de 38.", uuid: "extra-municao38", quantity: 6, projectile: true, description: "Projéteis letais calíbre 38.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/municao-38.png" },
+{ id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, uuid: "extra-pocao-cura-menor", quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/pocao-cura-menor.png" },
+{ id: "revolver-38", content: "Revolver 38", uuid: "extra-revolver38", slot: "weapon", description: "Um revólver calibre 38.", damage: "1d8", ammoType: "municao-38", ammoCapacity: 6, loadedAmmo: 0, image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/revolver-38.png" },
+{ id: "escopeta-12", content: "Escopeta 12", uuid: "extra-escopeta12", slot: "weapon", description: "Uma espingarda calibre 12.", damage: "1d12+2", ammoType: "municao-12", ammoCapacity: 5, loadedAmmo: 0, image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/escopeta-12.png" },
+{ id: "municao-12", content: "Munição de 12.", uuid: "extra-municao12", quantity: 5, projectile: true, description: "Projéteis letais calíbre 12.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/municao-12.png" },
+{ id: "Adaga", content: "Adaga", uuid: "extra-adaga", slot: "weapon", description: "Uma punhal afiado.", damage: "1D4", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/adaga.png" },
+{ id: "granada-mao", content: "Granada de Mão", uuid: "extra-granada-mao", consumable: true, quantity: 3, effect: "explosion", damage: "3D8", description: "Explosivo portátil de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false, image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/granada-mao.png" },
+{ id: "granada-de-concussao", content: "Granada de Concussão", uuid: "extra-granada-de-concussao", consumable: true, quantity: 3, effect: "stun", damage: "3D4", description: "Explosivo de concussão de área (raio 2). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 2, allowsResistance: false, image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/granada-de-concussao.png" },
+{ id: "granada-incendiaria", content: "Granada Incendiária", uuid: "extra-granada-incendiaria", consumable: true, quantity: 3, effect: "explosion", damage: "2D6", description: "Explosivo incendiário de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false, image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/granada-incendiaria.png" },
+{ id: "peitoral-de-aço", content: "Peitoral de aço", uuid: "extra-peitoral-de-aço", slot: "armor", description: "Armadura média, de peso considerável", defense: 20, image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/peitoral-de-aço.png" },
+{ id: "pocao-cura-completa", content: "Poção de Cura Completa", consumable: true, uuid: "extra-pocao-cura-completa", quantity: 10, effect: "heal", value: 150, description: "Uma poção que restaura uma massiva quantidade de energia vital.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/pocao-cura-completa.png" },
+
 ];
 
 const armasLeves = ["Adaga"];
