@@ -112,6 +112,23 @@ function updateItemPreview(item) {
     }
 }
 
+function createLowResImage(originalSrc, callback) {
+    const img = new Image();
+    img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Renderiza em baixa resolução (16x16) e depois escala
+        canvas.width = 16;
+        canvas.height = 16;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, 0, 0, 16, 16);
+        
+        callback(canvas.toDataURL());
+    };
+    img.src = originalSrc;
+}
+
 // Função para reiniciar o inventário
 
 async function resetInventory() {
@@ -1532,7 +1549,13 @@ inventoryData.itemsInChest.forEach(dbItem => {
     chestElement.appendChild(newItem);
     addItemClickListener(newItem);
 
-});
+// ADICIONAR AQUI:
+const imgElement = newItem.querySelector('img');
+if (imgElement && fullItemData.image) {
+    createLowResImage(fullItemData.image, (lowResUrl) => {
+        imgElement.src = lowResUrl;
+    });
+}
 
 
 // Carrega itens equipados
