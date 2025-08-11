@@ -585,6 +585,15 @@ selectedItem = null;
 
 toggleUseButton(false);
 
+    // ADICIONAR ESTAS LINHAS:
+        const previewImage = document.getElementById('preview-image');
+        const previewName = document.getElementById('preview-name');
+        const previewDescription = document.getElementById('preview-description');
+        
+        previewImage.style.display = 'none';
+        previewName.textContent = '';
+        previewDescription.textContent = '';
+
 }
 
 // Desselecionar dados
@@ -692,8 +701,25 @@ if (carregarBtn) carregarBtn.style.display = "none";
 }
 
 // --- FIM DO AJUSTE DE BOTÕES DE USO E MUNIÇÃO ---
-
+    updateItemPreview(item);
 }
+
+    function updateItemPreview(item) {
+    const previewImage = document.getElementById('preview-image');
+    const previewName = document.getElementById('preview-name');
+    const previewDescription = document.getElementById('preview-description');
+    
+    const allItemsArr = [...initialItems, ...extraItems];
+    const itemData = allItemsArr.find(i => i.id === item.dataset.item);
+    
+    if (itemData) {
+        previewImage.src = itemData.image;
+        previewImage.style.display = 'block';
+        previewName.textContent = itemData.content;
+        previewDescription.textContent = itemData.description || 'Sem descrição disponível';
+    }
+}
+
 
 // Adiciona evento de clique aos itens iniciais
 
