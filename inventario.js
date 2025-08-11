@@ -104,6 +104,29 @@ const extraItems = [
 
 ];
 
+function updateItemPreview(item) {
+    console.log("updateItemPreview chamada com:", item);
+    
+    const previewImage = document.getElementById('preview-image');
+    const previewName = document.getElementById('preview-name');
+    const previewDescription = document.getElementById('preview-description');
+    
+    console.log("Elementos encontrados:", previewImage, previewName, previewDescription);
+    
+    const allItemsArr = [...initialItems, ...extraItems];
+    const itemData = allItemsArr.find(i => i.id === item.dataset.item);
+    
+    console.log("Item data encontrado:", itemData);
+    
+    if (itemData) {
+        previewImage.src = itemData.image;
+        previewImage.style.display = 'block';
+        previewName.textContent = itemData.content;
+        previewDescription.textContent = itemData.description || 'Sem descrição disponível';
+        console.log("Preview atualizado com imagem:", itemData.image);
+    }
+}
+
 // Função para reiniciar o inventário
 
 async function resetInventory() {
@@ -615,28 +638,6 @@ const discardSlot = document.getElementById("discard-slot");
 const useButton = document.getElementById("useBtn"); // Obtém a referência do botão
 
 
-    function updateItemPreview(item) {
-    console.log("updateItemPreview chamada com:", item);
-    
-    const previewImage = document.getElementById('preview-image');
-    const previewName = document.getElementById('preview-name');
-    const previewDescription = document.getElementById('preview-description');
-    
-    console.log("Elementos encontrados:", previewImage, previewName, previewDescription);
-    
-    const allItemsArr = [...initialItems, ...extraItems];
-    const itemData = allItemsArr.find(i => i.id === item.dataset.item);
-    
-    console.log("Item data encontrado:", itemData);
-    
-    if (itemData) {
-        previewImage.src = itemData.image;
-        previewImage.style.display = 'block';
-        previewName.textContent = itemData.content;
-        previewDescription.textContent = itemData.description || 'Sem descrição disponível';
-        console.log("Preview atualizado com imagem:", itemData.image);
-    }
-}
 
 function handleItemClick(item) {
 
