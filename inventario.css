@@ -99,7 +99,7 @@ p {
 .item img {
     max-width: 66px !important;
     max-height: 66px !important;
-    object-fit: fill !important; /* Muda de 'contain' para 'fill' */
+    object-fit: cover !important; /* Muda de 'contain' para 'fill' */
     display: block !important;
     margin: auto !important;
 }
