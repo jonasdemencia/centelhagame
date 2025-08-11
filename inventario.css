@@ -97,10 +97,13 @@ p {
 
 /* Adicionado para estilizar a imagem dentro do item */
 .item img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: fill; /* contain; Garante que a imagem caiba sem distorcer */
+    max-width: 66px !important;
+    max-height: 66px !important;
+    object-fit: fill !important; /* Muda de 'contain' para 'fill' */
+    display: block !important;
+    margin: auto !important;
 }
+
 
 .slot {
     background: #111; /* preto mais próximo e sólido */
