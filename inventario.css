@@ -921,10 +921,13 @@ p {
 
 .item img {
     image-rendering: pixelated !important;
-    filter: blur(0.3px) !important;
+    width: 32px !important;
+    height: 32px !important;
+    transform: scale(1.4) !important;
 }
 
 #preview-image {
     image-rendering: auto !important;
-    filter: none !important;
+    transform: none !important;
 }
+
