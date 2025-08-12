@@ -1547,7 +1547,7 @@ document.querySelectorAll('.slot').forEach(slot => {
         // **LÓGICA DE MUNIÇÃO CORRIGIDA**
         if (slot.dataset.slot === "weapon" && item.ammoType) {
             const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
-            slotHTML = `<img src="${item.image}" alt="${item.content}" /> (${loadedAmmo}/${item.ammoCapacity})`;
+            slotHTML = `<img src="${item.thumbnailImage || item.image}" alt="${item.content}" /> (${loadedAmmo}/${item.ammoCapacity})`;
         }
         
         slot.innerHTML = slotHTML;
