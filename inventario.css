@@ -98,14 +98,12 @@ p {
 
 /* Adicionado para estilizar a imagem dentro do item */
 .item img {
-    max-width: 66px !important; /* Reduz de 66px para 45px */
-    max-height: 66px !important; /* Reduz de 66px para 45px */
-    object-fit: cover !important;
+    max-width: 60px !important;
+    max-height: 60px !important;
+    object-fit: contain !important;
     display: block !important;
     margin: auto !important;
 }
-
-
 
 .slot {
     background: #111; /* preto mais próximo e sólido */
@@ -919,15 +917,4 @@ p {
     color: #ccc;
 }
 
-.item img {
-    image-rendering: pixelated !important;
-    width: 32px !important;
-    height: 32px !important;
-    transform: scale(1.4) !important;
-}
-
-#preview-image {
-    image-rendering: auto !important;
-    transform: none !important;
-}
 
