@@ -32,7 +32,7 @@ if (playerDataListener) {
 playerDataListener();
 }
 
-// Configura listener em tempo real para TODOS os dados do jogador
+// Configura listener em tempo real para TODOS os dados do jogadorr
 playerDataListener = onSnapshot(playerRef, (docSnap) => {
 if (docSnap.exists()) {
 const playerData = docSnap.data();
