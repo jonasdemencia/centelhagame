@@ -65,6 +65,9 @@ body {
         .right-panel {
             flex: 1;
             padding-left: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
 
     </style>
@@ -113,6 +116,11 @@ body {
                             </div>
                         </div>
                         <div class="right-panel">
+                            <div class="portrait-panel">
+                                <div class="portrait-container">
+                                    <img id="portrait-image" src="" alt="Retrato do Personagem" style="display: none;">
+                                </div>
+                            </div>
                             <div class="chest">
                                 <div class="items">
                                     <div class="item">
@@ -223,4 +231,3 @@ body {
     <script type="module" src="inventario.js"></script>
 </body>
 </html>
-
