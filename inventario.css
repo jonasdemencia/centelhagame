@@ -815,7 +815,39 @@ p {
 .right-panel {
     width: 50%;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
+
+/* Janela do retrato do personagem */
+.portrait-panel {
+    padding: 15px;
+    background: #000;
+    border: 2px solid #ccc;
+    border-radius: 0;
+    min-height: 120px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.portrait-container {
+    width: 80px;
+    height: 80px;
+    border: 2px solid #ccc;
+    background: #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#portrait-image {
+    max-width: 76px;
+    max-height: 76px;
+    object-fit: contain;
+}
+
 
 .right-panel .chest {
     margin: 0;
@@ -915,5 +947,3 @@ p {
     font-size: 12px;
     color: #ccc;
 }
-
-
