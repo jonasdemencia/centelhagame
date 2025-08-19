@@ -2085,11 +2085,9 @@ function updateCharacterSheet(playerData) {
 if (!playerData) return;
 
 document.getElementById("char-name").innerText = playerData.name || "-";
-
+document.getElementById("char-name-display").innerText = playerData.name || "Nome do Personagem";
 document.getElementById("char-race").innerText = playerData.race || "-";
-
 document.getElementById("char-class").innerText = playerData.class || "-";
-
 document.getElementById("char-alignment").innerText = playerData.alignment || "-";
 
 // --- Início do Bloco de Idade Robusto ---
