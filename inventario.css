@@ -936,7 +936,7 @@ p {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: stretch;
+    align-items: flex-start;
     color: white;
     font-size: 8px;
     line-height: 1.2;
