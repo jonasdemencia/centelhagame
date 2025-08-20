@@ -953,7 +953,7 @@ p {
     justify-content: center;
     align-items: center;
     color: white;
-    font-size: 14px;
+    font-size: 5px;
     margin: 0 auto;
     box-sizing: border-box; /* Garante que a largura total (incluindo borda) seja 80px */
 }
