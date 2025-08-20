@@ -928,17 +928,20 @@ p {
 
 /* Nova janela de informação */
 .info-panel {
-    padding: 10px;
+    padding: 5px;
     background: #000;
     border: 2px solid #ccc;
     border-radius: 0;
-    min-height: 60px;
+    min-height: 80px;
     display: flex;
+    flex-direction: column;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     color: white;
-    font-size: 16px;
+    font-size: 8px;
+    line-height: 1.2;
     flex: 1;
+    text-align: left;
 }
 
 /* Janela do nome do personagem (ABORDAGEM AGRESSIVA) */
