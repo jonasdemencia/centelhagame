@@ -947,3 +947,26 @@ p {
     font-size: 12px;
     color: #ccc;
 }
+
+/* Container para as janelas superiores */
+.top-panels {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 5px;
+}
+
+/* Nova janela de informação */
+.info-panel {
+    padding: 10px;
+    background: #000;
+    border: 2px solid #ccc;
+    border-radius: 0;
+    min-height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 16px;
+    flex: 1;
+}
+
