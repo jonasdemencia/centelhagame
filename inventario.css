@@ -970,3 +970,13 @@ p {
     flex: 1;
 }
 
+.portrait-container {
+    width: 80px;
+    height: 80px;
+    border: 2px solid #ccc;
+    background: #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
