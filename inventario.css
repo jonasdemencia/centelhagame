@@ -932,7 +932,7 @@ p {
     background: #000;
     border: 2px solid #ccc;
     border-radius: 0;
-    min-height: 40px;
+    min-height: 60px;
     display: flex;
     justify-content: center;
     align-items: center;
