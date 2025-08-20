@@ -1765,6 +1765,8 @@ bonusCouraca += shieldData.defense;
 const totalCouraca = baseCouraca + bonusCouraca;
 
 couracaElement.innerText = totalCouraca;
+    document.getElementById("char-couraca-info").innerText = totalCouraca;
+
 
 console.log("Valor total da couraça:", totalCouraca);
 
@@ -1819,6 +1821,8 @@ newDamageValue = weaponData.damage;
 }
 
 if (damageDisplay) damageDisplay.textContent = newDamageValue;
+    document.getElementById("char-dano-info").textContent = newDamageValue;
+
 
 // NÃO atualize o campo 'dano' no Firestore!
 
@@ -2089,6 +2093,21 @@ document.getElementById("char-name-display").innerText = playerData.name || "Nom
 document.getElementById("char-race").innerText = playerData.race || "-";
 document.getElementById("char-class").innerText = playerData.class || "-";
 document.getElementById("char-alignment").innerText = playerData.alignment || "-";
+
+    // Atualiza o painel de informações
+document.getElementById("char-day-info").innerText = playerData.gameTime?.currentDay ?? 1;
+document.getElementById("char-class-info").innerText = playerData.class || "-";
+document.getElementById("char-race-info").innerText = playerData.race || "-";
+document.getElementById("char-alignment-info").innerText = playerData.alignment || "-";
+document.getElementById("char-age-info").innerText = playerData.idade;
+document.getElementById("char-hand-info").innerText = playerData.maoDominante || "-";
+document.getElementById("char-hemisphere-info").innerText = playerData.hemisferioDominante || "-";
+document.getElementById("char-skill-info").innerText = playerData.skill?.total ?? "-";
+document.getElementById("char-charisma-info").innerText = playerData.charisma?.total ?? "-";
+document.getElementById("char-magic-info").innerText = playerData.magic?.total ?? "-";
+document.getElementById("char-luck-info").innerText = playerData.luck?.total ?? "-";
+document.getElementById("char-couraca-info").innerText = playerData.couraca || "0";
+
 
 // --- Início do Bloco de Idade Robusto ---
 
