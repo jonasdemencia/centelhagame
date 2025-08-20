@@ -947,7 +947,7 @@ p {
     background: #000;
     border: 2px solid #ccc;
     border-radius: 0;
-    height: 25px; /* Altura ajustada para ser menor */
+    height: 10px; /* Altura ajustada para ser menor */
     width: 80px; /* Mesma largura do retrato */
     display: flex;
     justify-content: center;
