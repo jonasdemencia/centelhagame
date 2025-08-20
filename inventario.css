@@ -941,19 +941,27 @@ p {
     flex: 1;
 }
 
-/* Janela do nome do personagem (REGRA CORRIGIDA) */
+/* Janela do nome do personagem (ABORDAGEM AGRESSIVA) */
 .name-panel {
-    box-sizing: border-box; /* Essencial para o cálculo preciso do tamanho */
-    width: 80px;            /* Exatamente a mesma largura do retrato */
-    margin: 0 auto 5px auto;/* Centraliza e adiciona uma margem inferior para separar do retrato */
-    padding: 2px;           /* Espaçamento interno mínimo */
-    background: #000;
-    border: 2px solid #ccc;
-    color: white;
-    font-size: 12px;        /* Fonte reduzida para caber confortavelmente */
-    text-align: center;     /* Centraliza o texto horizontalmente */
-    line-height: 1.2;       /* Ajusta a altura da linha para o texto */
-    /* A altura agora é controlada pelo conteúdo e padding, não por 'height' */
+    box-sizing: border-box !important;
+    width: 80px !important;             /* Largura exata de 80px */
+    height: 20px !important;            /* Altura fixa e forçada */
+    min-height: 0 !important;           /* Remove qualquer altura mínima conflitante */
+    padding: 0 !important;              /* Zera o padding para não adicionar altura */
+    margin: 0 auto 5px auto !important; /* Margem para centralizar e separar */
+    
+    /* Estilos visuais forçados */
+    background: #000 !important;
+    border: 2px solid #ccc !important;
+    color: white !important;
+    font-size: 12px !important;
+    text-align: center !important;
+    
+    /* Alinhamento do texto dentro da altura fixa */
+    line-height: 16px !important; /* (altura - bordas verticais) -> (20px - 4px) */
+    
+    /* Garante que não seja um container flex que possa crescer */
+    display: block !important; 
 }
 
 /* Janela do retrato do personagem */
