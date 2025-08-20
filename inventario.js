@@ -2100,7 +2100,9 @@ document.getElementById("char-class-info").innerText = playerData.class || "-";
 document.getElementById("char-race-info").innerText = playerData.race || "-";
 document.getElementById("char-alignment-info").innerText = playerData.alignment || "-";
 document.getElementById("char-age-info").innerText = playerData.idade;
-document.getElementById("char-hand-info").innerText = playerData.maoDominante || "-";
+const handText = playerData.maoDominante === "Esquerda" ? "CANHOTO" : 
+                 playerData.maoDominante === "Direita" ? "DESTRO" : "-";
+document.getElementById("char-hand-info").innerText = handText;
 document.getElementById("char-hemisphere-info").innerText = playerData.hemisferioDominante || "-";
 document.getElementById("char-skill-info").innerText = playerData.skill?.total ?? "-";
 document.getElementById("char-charisma-info").innerText = playerData.charisma?.total ?? "-";
