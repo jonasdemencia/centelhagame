@@ -944,6 +944,11 @@ p {
     text-align: left;
 }
 
+.green-text {
+    color: #90EE90;
+}
+
+
 /* Janela do nome do personagem (ABORDAGEM AGRESSIVA) */
 .name-panel {
     box-sizing: border-box !important;
