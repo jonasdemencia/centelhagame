@@ -941,21 +941,19 @@ p {
     flex: 1;
 }
 
-/* Janela do nome do personagem */
+/* Janela do nome do personagem (REGRA CORRIGIDA) */
 .name-panel {
-    padding: 2px;
+    box-sizing: border-box; /* Essencial para o cálculo preciso do tamanho */
+    width: 80px;            /* Exatamente a mesma largura do retrato */
+    margin: 0 auto 5px auto;/* Centraliza e adiciona uma margem inferior para separar do retrato */
+    padding: 2px;           /* Espaçamento interno mínimo */
     background: #000;
     border: 2px solid #ccc;
-    border-radius: 0;
-    height: 10px; /* Altura ajustada para ser menor */
-    width: 80px; /* Mesma largura do retrato */
-    display: flex;
-    justify-content: center;
-    align-items: center;
     color: white;
-    font-size: 5px;
-    margin: 0 auto;
-    box-sizing: border-box; /* Garante que a largura total (incluindo borda) seja 80px */
+    font-size: 12px;        /* Fonte reduzida para caber confortavelmente */
+    text-align: center;     /* Centraliza o texto horizontalmente */
+    line-height: 1.2;       /* Ajusta a altura da linha para o texto */
+    /* A altura agora é controlada pelo conteúdo e padding, não por 'height' */
 }
 
 /* Janela do retrato do personagem */
@@ -968,7 +966,7 @@ p {
     align-items: center;
     justify-content: center;
     margin: 0 auto;
-    box-sizing: border-box; /* Garante que o tamanho total (incluindo borda) seja 80x80px */
+    box-sizing: border-box; /* Garante que o tamanho total seja 80x80px */
 }
 
 #portrait-image {
