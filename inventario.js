@@ -2101,8 +2101,8 @@ document.getElementById("char-race-info").innerText = playerData.race || "-";
 document.getElementById("char-alignment-info").innerText = playerData.alignment || "-";
 document.getElementById("char-age-info").innerText = playerData.idade;
     console.log("Valor de maoDominante:", playerData.maoDominante);
-const handText = playerData.maoDominante === "esquerda" ? "CANHOTO" : 
-                 playerData.maoDominante === "direita" ? "DESTRO" : "-";
+const handText = playerData.maoDominante === "esquerda" ? "Canhoto" : 
+                 playerData.maoDominante === "direita" ? "Destro" : "-";
 document.getElementById("char-hand-info").innerText = handText;
 document.getElementById("char-hemisphere-info").innerText = playerData.hemisferioDominante || "-";
 document.getElementById("char-skill-info").innerText = playerData.skill?.total ?? "-";
