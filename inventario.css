@@ -95,7 +95,6 @@ p {
     position: relative;
 }
 
-
 /* Adicionado para estilizar a imagem dentro do item */
 .item img {
     max-width: 60px !important;
@@ -274,8 +273,6 @@ p {
 }
 
 /* Alinhamento de Mão Dominante e Hemisfério Dominante */
-/* Alinhamento horizontal de Mão Dominante e Hemisfério Dominante */
-/* Alinhamento horizontal de Mão Dominante e Hemisfério Dominante */
 .char-alignment {
     display: flex;
     justify-content: center; /* Centraliza horizontalmente */
@@ -815,7 +812,6 @@ p {
     gap: 5px;
 }
 
-
 .right-panel {
     width: 50%;
     padding: 0;
@@ -823,24 +819,6 @@ p {
     flex-direction: column;
     gap: 5px;
 }
-
-/* Janela do retrato do personagem */
-.portrait-container {
-    width: 80px;
-    height: 80px;
-    border: 2px solid #ccc;
-    background: #222;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#portrait-image {
-    max-width: 76px;
-    max-height: 76px;
-    object-fit: contain;
-}
-
 
 .right-panel .chest {
     margin: 0;
@@ -969,18 +947,18 @@ p {
     background: #000;
     border: 2px solid #ccc;
     border-radius: 0;
-    min-height: 10px;
-    width: 80px;
+    height: 25px; /* Altura ajustada para ser menor */
+    width: 80px; /* Mesma largura do retrato */
     display: flex;
     justify-content: center;
     align-items: center;
     color: white;
     font-size: 14px;
     margin: 0 auto;
+    box-sizing: border-box; /* Garante que a largura total (incluindo borda) seja 80px */
 }
 
-
-
+/* Janela do retrato do personagem */
 .portrait-container {
     width: 80px;
     height: 80px;
@@ -990,5 +968,11 @@ p {
     align-items: center;
     justify-content: center;
     margin: 0 auto;
-    box-sizing: border-box;
+    box-sizing: border-box; /* Garante que o tamanho total (incluindo borda) seja 80x80px */
+}
+
+#portrait-image {
+    max-width: 76px;
+    max-height: 76px;
+    object-fit: contain;
 }
