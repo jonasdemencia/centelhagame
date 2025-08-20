@@ -2111,6 +2111,13 @@ document.getElementById("char-magic-info").innerText = playerData.magic?.total ?
 document.getElementById("char-luck-info").innerText = playerData.luck?.total ?? "-";
 document.getElementById("char-couraca-info").innerText = playerData.couraca || "0";
 
+    // Atualiza o portrait
+const portraitImage = document.getElementById("portrait-image");
+if (portraitImage) {
+    portraitImage.src = "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/portraits/portrait1.png";
+    portraitImage.style.display = 'block';
+}
+
 
 // --- Início do Bloco de Idade Robusto ---
 
