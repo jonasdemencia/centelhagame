@@ -2100,6 +2100,7 @@ document.getElementById("char-class-info").innerText = playerData.class || "-";
 document.getElementById("char-race-info").innerText = playerData.race || "-";
 document.getElementById("char-alignment-info").innerText = playerData.alignment || "-";
 document.getElementById("char-age-info").innerText = playerData.idade;
+    console.log("Valor de maoDominante:", playerData.maoDominante);
 const handText = playerData.maoDominante === "Esquerda" ? "CANHOTO" : 
                  playerData.maoDominante === "Direita" ? "DESTRO" : "-";
 document.getElementById("char-hand-info").innerText = handText;
