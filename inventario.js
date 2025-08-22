@@ -165,6 +165,47 @@ console.error("Erro ao resetar inventário:", error);
 
 window.resetInventory = resetInventory;
 
+// Função para remover duplicatas existentes
+async function removeDuplicateItems() {
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+        alert("Usuário não logado!");
+        return;
+    }
+    
+    const playerRef = doc(db, "players", uid);
+    const playerSnap = await getDoc(playerRef);
+    
+    if (!playerSnap.exists()) return;
+    
+    const inventoryData = playerSnap.data().inventory;
+    
+    // Remove duplicatas baseado no ID do item
+    const uniqueItems = [];
+    const seenIds = new Set();
+    
+    inventoryData.itemsInChest.forEach(item => {
+        if (!seenIds.has(item.id)) {
+            seenIds.add(item.id);
+            // Garante UUID único
+            if (!item.uuid) {
+                item.uuid = crypto.randomUUID();
+            }
+            uniqueItems.push(item);
+        }
+    });
+    
+    inventoryData.itemsInChest = uniqueItems;
+    
+    await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+    alert("Duplicatas removidas! Recarregando página...");
+    window.location.reload();
+}
+
+// Torna a função acessível globalmente
+window.removeDuplicateItems = removeDuplicateItems;
+
+
 async function carregarMunicaoNaArma() {
 
 const uid = auth.currentUser?.uid;
@@ -770,6 +811,7 @@ slots.forEach(slot => {
         // CASO 1: EQUIPAR UM NOVO ITEM (selectedItem existe)
         if (selectedItem) {
             const newItemData = allItemsArr.find(i => i.id === selectedItem.dataset.item);
+            const selectedUUID = selectedItem.dataset.uuid; // CORREÇÃO: Captura UUID específico
 
             // Verifica se o slot é compatível
             if (newItemData && slotType === newItemData.slot) {
@@ -784,12 +826,12 @@ slots.forEach(slot => {
                         inventoryData.weaponAmmoCounts[currentlyEquippedName] = currentLoadedAmmo;
                         console.log(`Salvando munição de ${currentlyEquippedName}: ${currentLoadedAmmo}`);
                     }
-                    // Adiciona o item antigo de volta ao baú
+                    // CORREÇÃO: Garante UUID único ao devolver item
                     inventoryData.itemsInChest.push({ ...currentlyEquippedData, uuid: crypto.randomUUID() });
                 }
 
-                // B) Remover o novo item do baú
-                const itemInChestIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
+                // B) CORREÇÃO: Remove item específico usando UUID
+                const itemInChestIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedUUID);
                 if (itemInChestIndex > -1) {
                     inventoryData.itemsInChest.splice(itemInChestIndex, 1);
                 }
@@ -838,7 +880,7 @@ slots.forEach(slot => {
             delete inventoryData.equippedItems[slotType + '_effect'];
             delete inventoryData.equippedItems[slotType + '_value'];
 
-            // C) Adicionar o item de volta ao baú
+            // C) CORREÇÃO: Garante UUID único ao devolver item
             inventoryData.itemsInChest.push({ ...currentlyEquippedData, uuid: crypto.randomUUID() });
 
             // D) Salvar no Firestore
@@ -852,6 +894,7 @@ slots.forEach(slot => {
 // ==================================================================
 // === FIM: LÓGICA DE EQUIPAR/DESEQUIPAR TOTALMENTE REFEITA =======
 // ==================================================================
+
 
 
 // Adiciona funcionalidade ao botão de descarte
@@ -1489,7 +1532,11 @@ inventoryData.itemsInChest.forEach(dbItem => {
     const newItem = document.createElement('div');
     newItem.classList.add('item');
     newItem.dataset.item = fullItemData.id;
-    newItem.dataset.uuid = dbItem.uuid || crypto.randomUUID(); // Usa o UUID do DB ou cria um novo.
+// Garante UUID único para cada item
+if (!dbItem.uuid) {
+    dbItem.uuid = crypto.randomUUID();
+}
+newItem.dataset.uuid = dbItem.uuid;
     newItem.dataset.itemName = fullItemData.content;
 
     if (fullItemData.energia) {
