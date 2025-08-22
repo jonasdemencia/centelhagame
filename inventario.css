@@ -1032,3 +1032,13 @@ p {
     z-index: 3;
 }
 
+.slot-weapon-ammo {
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+    color: #90EE90;
+    font-size: 20px;
+    font-weight: bold;
+    z-index: 3;
+}
+
