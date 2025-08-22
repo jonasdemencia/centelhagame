@@ -106,23 +106,26 @@ p {
 
 .slot {
     background: rgba(17, 17, 17, 0.1); /* preto semi-transparente */
+    position: relative;
 }
 
-.slot.equipped {
-    background-color: rgba(52, 152, 219, 0.5); /* Azul semi-transparente permanente */
-    background-size: 90% 90%;
-    background-position: center;
-    background-repeat: no-repeat;
+.slot.equipped::before,
+.slot.highlight::before {
+    content: "";
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 80%;
+    height: 80%;
+    background-color: rgba(52, 152, 219, 0.5);
+    pointer-events: none;
 }
 
 /* Destaque dos slots compatíveis */
 .highlight {
-    background-color: rgba(52, 152, 219, 0.5); /* Azul semi-transparente */
     border-color: #2980b9; /* Borda azul escuro */
-    background-size: 90% 90%;
-    background-position: center;
-    background-repeat: no-repeat;
 }
+
 
 /* Estilização da área de descarte */
 .discard-area {
