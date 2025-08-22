@@ -108,9 +108,13 @@ p {
     background: rgba(17, 17, 17, 0.1); /* preto semi-transparente */
 }
 
+.slot.equipped {
+    background-color: rgba(52, 152, 219, 0.5); /* Azul semi-transparente permanente */
+}
+
 /* Destaque dos slots compatíveis */
 .highlight {
-    background-color: #3498db; /* Azul claro */
+    background-color: rgba(52, 152, 219, 0.5); /* Azul semi-transparente */
     border-color: #2980b9; /* Borda azul escuro */
 }
 
