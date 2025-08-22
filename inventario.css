@@ -110,12 +110,18 @@ p {
 
 .slot.equipped {
     background-color: rgba(52, 152, 219, 0.5); /* Azul semi-transparente permanente */
+    background-size: 90% 90%;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 /* Destaque dos slots compatíveis */
 .highlight {
     background-color: rgba(52, 152, 219, 0.5); /* Azul semi-transparente */
     border-color: #2980b9; /* Borda azul escuro */
+    background-size: 90% 90%;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 /* Estilização da área de descarte */
