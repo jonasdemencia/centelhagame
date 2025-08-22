@@ -90,6 +90,7 @@ const extraItems = [
 { id: "punhal-ceremonial", content: "Punhal Ceremonial", uuid: "extra-punhal-ceremonial", slot: "weapon", description: "Um punhal usado para sacrifícios.", damage: "1D4", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/punhal-ceremonial.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupunhal-ceremonial.png" },
 { id: "lugerp08", content: "Luger P08", uuid: "extra-lugerp08", slot: "weapon", description: "Uma pistola 9mm rara, fabricada para a guerra.", damage: "1d8", ammoType: "municao-9mm", ammoCapacity: 8, loadedAmmo: 0, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/lugerp08.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thulugerp08.png" },
 { id: "municao-9mm", content: "Munição de 9mm", uuid: "extra-municao9mm", quantity: 10, projectile: true, description: "Projéteis letais calíbre 9mm", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/municao-9mm.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thumunicao-9mm.png" },
+{ id: "aneldafe", content: "Anel da Fé", uuid: "extra-anel-da-fé", slot: "ring", description: "Relíquia sagrada de um santo desconhecido", bonuses: { couraca: 1 }, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/aneldafe.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuaneldafe.png" },
 
 ];
 
@@ -1738,105 +1739,69 @@ return null;
 
 // Função para atualizar o valor da Couraça na ficha do personagem
 
+// Função para atualizar o valor da Couraça na ficha do personagem
 async function updateCharacterCouraca() {
+    const couracaElement = document.getElementById("char-couraca");
+    if (!couracaElement) return;
 
-const couracaElement = document.getElementById("char-couraca");
+    let baseCouraca = 0; // Valor base da couraça
+    let bonusCouraca = 0;
 
-if (!couracaElement) return;
+    const allItemsArr = [...initialItems, ...extraItems];
 
-let baseCouraca = 0; // Valor base da couraça
+    // Verifica o item equipado no slot de armadura
+    const armorSlot = document.querySelector('.slot[data-slot="armor"]');
+    if (armorSlot && armorSlot.dataset.itemName) {
+        const equippedArmorName = armorSlot.dataset.itemName;
+        const armorData = allItemsArr.find(item => item.content === equippedArmorName);
+        if (armorData && armorData.defense) {
+            bonusCouraca += armorData.defense;
+        }
+    }
 
-let bonusCouraca = 0;
+    // Verifica o item equipado no slot de botas
+    const bootsSlot = document.querySelector('.slot[data-slot="boots"]');
+    if (bootsSlot && bootsSlot.dataset.itemName) {
+        const equippedBootsName = bootsSlot.dataset.itemName;
+        const bootsData = allItemsArr.find(item => item.content === equippedBootsName);
+        if (bootsData && bootsData.defense) {
+            bonusCouraca += bootsData.defense;
+        }
+    }
 
-// Verifica o item equipado no slot de armadura
+    // Verifica o item equipado no slot de escudo
+    const shieldSlot = document.querySelector('.slot[data-slot="shield"]');
+    if (shieldSlot && shieldSlot.dataset.itemName) {
+        const equippedShieldName = shieldSlot.dataset.itemName;
+        const shieldData = allItemsArr.find(item => item.content === equippedShieldName);
+        if (shieldData && shieldData.defense) {
+            bonusCouraca += shieldData.defense;
+        }
+    }
 
-const armorSlot = document.querySelector('.slot[data-slot="armor"]');
+    // Bônus de itens equipados (sistema novo)
+    const equipBonuses = calculateEquippedBonuses();
+    bonusCouraca += equipBonuses.couraca;
 
-if (armorSlot && armorSlot.dataset.itemName) {
-
-const equippedArmorName = armorSlot.dataset.itemName;
-
-// BUSCA EM AMBOS OS ARRAYS
-
-const allItemsArr = [...initialItems, ...extraItems];
-
-const armorData = allItemsArr.find(item => item.content === equippedArmorName);
-
-if (armorData && armorData.defense) {
-
-bonusCouraca += armorData.defense;
-
-}
-
-}
-
-// Verifica o item equipado no slot de botas
-
-const bootsSlot = document.querySelector('.slot[data-slot="boots"]');
-
-if (bootsSlot && bootsSlot.dataset.itemName) {
-
-const equippedBootsName = bootsSlot.dataset.itemName;
-
-const bootsData = initialItems.find(item => item.content === equippedBootsName);
-
-if (bootsData && bootsData.defense) {
-
-bonusCouraca += bootsData.defense;
-
-}
-
-}
-
-// Verifica o item equipado no slot de escudo
-
-const shieldSlot = document.querySelector('.slot[data-slot="shield"]');
-
-if (shieldSlot && shieldSlot.dataset.itemName) {
-
-const equippedShieldName = shieldSlot.dataset.itemName;
-
-const shieldData = initialItems.find(item => item.content === equippedShieldName);
-
-if (shieldData && shieldData.defense) {
-
-bonusCouraca += shieldData.defense;
-
-}
-
-}
-
-const totalCouraca = baseCouraca + bonusCouraca;
-
-couracaElement.innerText = totalCouraca;
+    const totalCouraca = baseCouraca + bonusCouraca;
+    couracaElement.innerText = totalCouraca;
     document.getElementById("char-couraca-info").innerText = totalCouraca;
 
+    console.log("Valor total da couraça:", totalCouraca);
 
-console.log("Valor total da couraça:", totalCouraca);
-
-// Atualiza o campo 'couraca' no Firestore
-
-const uid = auth.currentUser?.uid;
-
-if (uid) {
-
-const playerRef = doc(db, "players", uid);
-
-try {
-
-await updateDoc(playerRef, { couraca: totalCouraca });
-
-console.log("Campo 'couraca' atualizado no Firestore para:", totalCouraca);
-
-} catch (error) {
-
-console.error("Erro ao atualizar o campo 'couraca' no Firestore:", error);
-
+    // Atualiza o campo 'couraca' no Firestore
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+        const playerRef = doc(db, "players", uid);
+        try {
+            await updateDoc(playerRef, { couraca: totalCouraca });
+            console.log("Campo 'couraca' atualizado no Firestore para:", totalCouraca);
+        } catch (error) {
+            console.error("Erro ao atualizar o campo 'couraca' no Firestore:", error);
+        }
+    }
 }
 
-}
-
-}
 
 async function updateCharacterDamage() {
 
@@ -1871,6 +1836,37 @@ if (damageDisplay) damageDisplay.textContent = newDamageValue;
 // NÃO atualize o campo 'dano' no Firestore!
 
 }
+
+// Função para calcular bônus de itens equipados
+function calculateEquippedBonuses() {
+    const bonuses = {
+        couraca: 0,
+        skill: 0,
+        charisma: 0,
+        magic: 0,
+        luck: 0
+    };
+
+    const allItemsArr = [...initialItems, ...extraItems];
+    
+    // Verifica todos os slots equipados
+    document.querySelectorAll('.slot').forEach(slot => {
+        const equippedItemName = slot.dataset.itemName;
+        if (equippedItemName) {
+            const itemData = allItemsArr.find(item => item.content === equippedItemName);
+            if (itemData && itemData.bonuses) {
+                Object.keys(itemData.bonuses).forEach(attribute => {
+                    if (bonuses.hasOwnProperty(attribute)) {
+                        bonuses[attribute] += itemData.bonuses[attribute];
+                    }
+                });
+            }
+        }
+    });
+
+    return bonuses;
+}
+
 
 // Adicione esta função após a função updateCharacterDamage
 
@@ -2129,38 +2125,43 @@ console.error("Erro ao salvar o dia do jogo:", error);
 // Modifique a função updateCharacterSheet para incluir a experiência
 
 function updateCharacterSheet(playerData) {
+    if (!playerData) return;
 
-if (!playerData) return;
-
-document.getElementById("char-name").innerText = playerData.name || "-";
-document.getElementById("char-name-display").innerText = playerData.name || "Nome do Personagem";
-document.getElementById("char-race").innerText = playerData.race || "-";
-document.getElementById("char-class").innerText = playerData.class || "-";
-document.getElementById("char-alignment").innerText = playerData.alignment || "-";
+    document.getElementById("char-name").innerText = playerData.name || "-";
+    document.getElementById("char-name-display").innerText = playerData.name || "Nome do Personagem";
+    document.getElementById("char-race").innerText = playerData.race || "-";
+    document.getElementById("char-class").innerText = playerData.class || "-";
+    document.getElementById("char-alignment").innerText = playerData.alignment || "-";
 
     // Atualiza o painel de informações
-document.getElementById("char-day-info").innerText = playerData.gameTime?.currentDay ?? 1;
-document.getElementById("char-class-info").innerText = playerData.class || "-";
-document.getElementById("char-race-info").innerText = playerData.race || "-";
-document.getElementById("char-alignment-info").innerText = playerData.alignment || "-";
-document.getElementById("char-age-info").innerText = playerData.idade;
+    document.getElementById("char-day-info").innerText = playerData.gameTime?.currentDay ?? 1;
+    document.getElementById("char-class-info").innerText = playerData.class || "-";
+    document.getElementById("char-race-info").innerText = playerData.race || "-";
+    document.getElementById("char-alignment-info").innerText = playerData.alignment || "-";
+    document.getElementById("char-age-info").innerText = playerData.idade;
     console.log("Valor de maoDominante:", playerData.maoDominante);
-const handText = playerData.maoDominante === "esquerda" ? "Canhoto" : 
-                 playerData.maoDominante === "direita" ? "Destro" : "-";
-document.getElementById("char-hand-info").innerText = handText;
-document.getElementById("char-hemisphere-info").innerText = playerData.hemisferioDominante || "-";
-document.getElementById("char-skill-info").innerText = playerData.skill?.total ?? "-";
-document.getElementById("char-charisma-info").innerText = playerData.charisma?.total ?? "-";
-document.getElementById("char-magic-info").innerText = playerData.magic?.total ?? "-";
-document.getElementById("char-luck-info").innerText = playerData.luck?.total ?? "-";
-document.getElementById("char-couraca-info").innerText = playerData.couraca || "0";
+    const handText = playerData.maoDominante === "esquerda" ? "Canhoto" : 
+                     playerData.maoDominante === "direita" ? "Destro" : "-";
+    document.getElementById("char-hand-info").innerText = handText;
+    document.getElementById("char-hemisphere-info").innerText = playerData.hemisferioDominante || "-";
+
+    // Calcula bônus de itens equipados
+    const equipBonuses = calculateEquippedBonuses();
+
+    // Atributos base + bônus de equipamentos
+    document.getElementById("char-skill-info").innerText = (playerData.skill?.total ?? 0) + equipBonuses.skill;
+    document.getElementById("char-charisma-info").innerText = (playerData.charisma?.total ?? 0) + equipBonuses.charisma;
+    document.getElementById("char-magic-info").innerText = (playerData.magic?.total ?? 0) + equipBonuses.magic;
+    document.getElementById("char-luck-info").innerText = (playerData.luck?.total ?? 0) + equipBonuses.luck;
+    document.getElementById("char-couraca-info").innerText = playerData.couraca || "0";
 
     // Atualiza o portrait
-const portraitImage = document.getElementById("portrait-image");
-if (portraitImage) {
-    portraitImage.src = "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/portraits/portrait1.png";
-    portraitImage.style.display = 'block';
-}
+    const portraitImage = document.getElementById("portrait-image");
+    if (portraitImage) {
+        portraitImage.src = "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/portraits/portrait1.png";
+        portraitImage.style.display = 'block';
+    }
+
 
 
 // --- Início do Bloco de Idade Robusto ---
