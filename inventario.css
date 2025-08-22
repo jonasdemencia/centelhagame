@@ -37,7 +37,7 @@ p {
 /* Seção do personagem */
 .character {
     padding: 20px;
-    background: #000; /* preto sólido */
+    background: #000 url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/slots-background.png') center/cover no-repeat;
     border: 2px solid #ccc; /* cinza claro */
     border-radius: 0;
     width: 250px;
