@@ -1558,11 +1558,15 @@ document.querySelectorAll('.slot').forEach(slot => {
         let slotHTML = `<img src="${item.thumbnailImage || item.image}" alt="${item.content}" />`;
         slot.dataset.itemName = item.content;
 
-        // **LÓGICA DE MUNIÇÃO CORRIGIDA**
-        if (slot.dataset.slot === "weapon" && item.ammoType) {
-            const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
-            slotHTML = `<img src="${item.thumbnailImage || item.image}" alt="${item.content}" /> (${loadedAmmo}/${item.ammoCapacity})`;
-        }
+       // **LÓGICA DE MUNIÇÃO CORRIGIDA**
+if (slot.dataset.slot === "weapon" && item.ammoType) {
+    const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
+    slotHTML = `<img src="${item.thumbnailImage || item.image}" alt="${item.content}" />`;
+    if (loadedAmmo > 0) {
+        slotHTML += `<span class="slot-weapon-ammo">${loadedAmmo}</span>`;
+    }
+}
+
         
         slot.innerHTML = slotHTML;
 
