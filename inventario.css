@@ -119,12 +119,19 @@ p {
     height: 80%;
     background-color: rgba(52, 152, 219, 0.5);
     pointer-events: none;
+    z-index: 1;
+}
+
+.slot img {
+    position: relative;
+    z-index: 2;
 }
 
 /* Destaque dos slots compatíveis */
 .highlight {
     border-color: #2980b9; /* Borda azul escuro */
 }
+
 
 
 /* Estilização da área de descarte */
