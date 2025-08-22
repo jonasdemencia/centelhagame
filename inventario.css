@@ -898,6 +898,19 @@ p {
     margin: auto !important;
 }
 
+.item-quantity {
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+    color: #87CEEB;
+    font-size: 10px;
+    font-weight: bold;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 1px 3px;
+    border-radius: 2px;
+    z-index: 3;
+}
+
 .item-preview {
     display: flex;
     flex-direction: column;
