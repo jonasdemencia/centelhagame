@@ -895,75 +895,49 @@ slots.forEach(slot => {
 // === FIM: LÓGICA DE EQUIPAR/DESEQUIPAR TOTALMENTE REFEITA =======
 // ==================================================================
 
-
-
 // Adiciona funcionalidade ao botão de descarte
-
 if (discardSlot) {
+    discardSlot.addEventListener("click", async () => {
+        console.log("Botão de descarte clicado");
+        if (selectedItem) {
+            console.log("🗑️ DESCARTANDO ITEM:");
+            console.log(" - ID do item:", selectedItem.dataset.item);
+            console.log(" - Conteúdo:", selectedItem.dataset.itemName);
 
-discardSlot.addEventListener("click", async () => {
+            const uid = auth.currentUser?.uid;
+            if (uid) {
+                const playerRef = doc(db, "players", uid);
+                const playerSnap = await getDoc(playerRef);
+                const inventoryData = playerSnap.data().inventory;
 
-console.log("Botão de descarte clicado");
+                // Remove o item do baú usando UUID
+                const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
+                if (itemIndex > -1) {
+                    inventoryData.itemsInChest.splice(itemIndex, 1);
+                }
 
-if (selectedItem) {
+                // Adiciona à lista de descartados
+                if (!inventoryData.discardedItems) {
+                    inventoryData.discardedItems = [];
+                }
+                
+                const uniqueDiscardId = selectedItem.dataset.uuid;
+                console.log(" - UUID único de descarte:", uniqueDiscardId);
+                inventoryData.discardedItems.push(uniqueDiscardId);
 
-console.log("🗑️ DESCARTANDO ITEM:");
+                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+                console.log(" - Item adicionado à lista de descartados");
 
-console.log(" - ID do item:", selectedItem.dataset.item);
-
-console.log(" - Conteúdo:", selectedItem.dataset.itemName);
-
-const uid = auth.currentUser?.uid;
-
-if (uid) {
-
-const playerRef = doc(db, "players", uid); // ✅ ADICIONE ESTA LINHA
-
-const playerSnap = await getDoc(playerRef);
-
-const inventoryData = playerSnap.data().inventory;
-
-if (!inventoryData.discardedItems) {
-
-inventoryData.discardedItems = [];
-
-}
-
-// CORREÇÃO: Criar ID único para descarte baseado no elemento DOM
-
-const uniqueDiscardId = selectedItem.dataset.uuid; // ← MUDAR ESTA LINHA
-
-console.log(" - UUID único de descarte:", uniqueDiscardId);
-
-inventoryData.discardedItems.push(uniqueDiscardId);
-
-await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-
-console.log(" - Item adicionado à lista de descartados");
-
-}
-
-const itemToRemove = selectedItem;
-
-selectedItem = null;
-
-clearHighlights();
-
-toggleUseButton(false);
-
-itemToRemove.remove();
-
-saveInventoryData(auth.currentUser.uid);
-
-}
-
-});
-
+                selectedItem = null;
+                clearHighlights();
+                toggleUseButton(false);
+            }
+        }
+    });
 } else {
-
-console.warn("Slot de descarte não encontrado no HTML.");
-
+    console.warn("Slot de descarte não encontrado no HTML.");
 }
+
 
 // Adiciona funcionalidade ao botão de usar
 
