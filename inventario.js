@@ -1517,21 +1517,26 @@ inventoryData.itemsInChest.forEach(dbItem => {
 
 
     if (fullItemData.consumable || fullItemData.projectile) {
-        const quantity = dbItem.quantity || fullItemData.quantity;
-        newItem.dataset.quantity = quantity;
+    const quantity = dbItem.quantity || fullItemData.quantity;
+    newItem.dataset.quantity = quantity;
 
-        if (fullItemData.consumable) {
-            newItem.dataset.consumable = 'true';
-            if (fullItemData.effect) newItem.dataset.effect = fullItemData.effect;
-            if (fullItemData.value) newItem.dataset.value = fullItemData.value;
-        }
-        if (fullItemData.projectile) {
-            newItem.dataset.projectile = 'true';
-        }
-        if (quantity > 0) {
-            itemHTML += `<span class="item-quantity">${quantity}</span>`;
-        }
+    if (fullItemData.consumable) {
+        newItem.dataset.consumable = 'true';
+        if (fullItemData.effect) newItem.dataset.effect = fullItemData.effect;
+        if (fullItemData.value) newItem.dataset.value = fullItemData.value;
     }
+    if (fullItemData.projectile) {
+        newItem.dataset.projectile = 'true';
+    }
+    if (quantity > 0) {
+        itemHTML += `<span class="item-quantity">${quantity}</span>`;
+    }
+}
+
+// Adiciona munição carregada para armas
+if (fullItemData.ammoType && dbItem.loadedAmmo > 0) {
+    itemHTML += `<span class="weapon-ammo">${dbItem.loadedAmmo}</span>`;
+}
 
     newItem.innerHTML = itemHTML;
     chestElement.appendChild(newItem);
