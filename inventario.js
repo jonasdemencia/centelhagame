@@ -1583,6 +1583,16 @@ document.querySelectorAll('.slot').forEach(slot => {
     }
 });
 
+// Adiciona classe 'equipped' aos slots que têm itens
+document.querySelectorAll('.slot').forEach(slot => {
+    const equippedItemName = inventoryData.equippedItems[slot.dataset.slot];
+    if (equippedItemName) {
+        slot.classList.add('equipped');
+    } else {
+        slot.classList.remove('equipped');
+    }
+});
+
 }
 
 
