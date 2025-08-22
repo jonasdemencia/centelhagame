@@ -790,7 +790,8 @@ handleItemClick(item);
 // ==================================================================
 slots.forEach(slot => {
     slot.addEventListener('click', async () => {
-        const slotType = slot.dataset.slot;
+const slotType = slot.dataset.slot;
+const slotId = slot.id;
         const uid = auth.currentUser?.uid;
         if (!uid) return;
 
@@ -806,7 +807,7 @@ slots.forEach(slot => {
         if (!inventoryData.itemsInChest) inventoryData.itemsInChest = [];
         if (!inventoryData.weaponAmmoCounts) inventoryData.weaponAmmoCounts = {};
 
-        const currentlyEquippedName = inventoryData.equippedItems[slotType];
+        const currentlyEquippedName = inventoryData.equippedItems[slotId];
         const currentlyEquippedData = allItemsArr.find(i => i.content === currentlyEquippedName);
 
         // CASO 1: EQUIPAR UM NOVO ITEM (selectedItem existe)
@@ -838,7 +839,7 @@ slots.forEach(slot => {
                 }
 
                 // C) Colocar o novo item no slot e limpar dados antigos
-                inventoryData.equippedItems[slotType] = newItemData.content;
+                inventoryData.equippedItems[slotId] = newItemData.content;
                 // Limpa todos os dados específicos de arma/consumível para evitar vazamento
                 delete inventoryData.equippedItems.weapon_loadedAmmo;
                 delete inventoryData.equippedItems[slotType + '_consumable'];
@@ -874,7 +875,7 @@ slots.forEach(slot => {
             }
 
             // B) Limpar o slot e todos os dados associados
-            inventoryData.equippedItems[slotType] = null;
+            inventoryData.equippedItems[slotId] = null;
             delete inventoryData.equippedItems.weapon_loadedAmmo;
             delete inventoryData.equippedItems[slotType + '_consumable'];
             delete inventoryData.equippedItems[slotType + '_quantity'];
@@ -1573,7 +1574,7 @@ if (fullItemData.ammoType) {
 
 // Carrega itens equipados
 document.querySelectorAll('.slot').forEach(slot => {
-    const equippedItemName = inventoryData.equippedItems[slot.dataset.slot];
+const equippedItemName = inventoryData.equippedItems[slot.id];
     const item = allItemsArr.find(i => i.content === equippedItemName);
 
     if (item) {
@@ -1598,7 +1599,7 @@ if (slot.dataset.slot === "weapon" && item.ammoType) {
         delete slot.dataset.effect;
         delete slot.dataset.value;
 
-        if (inventoryData.equippedItems[slot.dataset.slot + '_consumable']) {
+if (inventoryData.equippedItems[slot.id + '_consumable']) {
             slot.dataset.consumable = 'true';
             slot.dataset.quantity = inventoryData.equippedItems[slot.dataset.slot + '_quantity'];
             if (inventoryData.equippedItems[slot.dataset.slot + '_effect']) {
@@ -1620,7 +1621,7 @@ if (slot.dataset.slot === "weapon" && item.ammoType) {
 
 // Adiciona classe 'equipped' aos slots que têm itens
 document.querySelectorAll('.slot').forEach(slot => {
-    const equippedItemName = inventoryData.equippedItems[slot.dataset.slot];
+const equippedItemName = inventoryData.equippedItems[slot.id];
     if (equippedItemName) {
         slot.classList.add('equipped');
     } else {
@@ -1851,7 +1852,7 @@ function calculateEquippedBonuses() {
     
     // Verifica todos os slots equipados
     document.querySelectorAll('.slot').forEach(slot => {
-        const equippedItemName = slot.dataset.itemName;
+const equippedItemName = slot.dataset.itemName;
         if (equippedItemName) {
             const itemData = allItemsArr.find(item => item.content === equippedItemName);
             if (itemData && itemData.bonuses) {
