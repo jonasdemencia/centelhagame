@@ -1529,7 +1529,7 @@ inventoryData.itemsInChest.forEach(dbItem => {
             newItem.dataset.projectile = 'true';
         }
         if (quantity > 0) {
-            itemHTML += `<span class="item-quantity">(${quantity})</span>`;
+            itemHTML += `<span class="item-quantity">${quantity}</span>`;
         }
     }
 
