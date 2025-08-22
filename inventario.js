@@ -1534,9 +1534,13 @@ inventoryData.itemsInChest.forEach(dbItem => {
 }
 
 // Adiciona munição carregada para armas
-if (fullItemData.ammoType && dbItem.loadedAmmo > 0) {
-    itemHTML += `<span class="weapon-ammo">${dbItem.loadedAmmo}</span>`;
+if (fullItemData.ammoType) {
+    const savedAmmo = inventoryData.weaponAmmoCounts[fullItemData.content] || 0;
+    if (savedAmmo > 0) {
+        itemHTML += `<span class="weapon-ammo">${savedAmmo}</span>`;
+    }
 }
+
 
     newItem.innerHTML = itemHTML;
     chestElement.appendChild(newItem);
