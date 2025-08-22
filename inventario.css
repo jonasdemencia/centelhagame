@@ -105,7 +105,7 @@ p {
 }
 
 .slot {
-    background: rgba(17, 17, 17, 0.3); /* preto semi-transparente */
+    background: rgba(17, 17, 17, 0.1); /* preto semi-transparente */
 }
 
 /* Destaque dos slots compatíveis */
