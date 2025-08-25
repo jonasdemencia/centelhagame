@@ -967,15 +967,18 @@ color: white;
 }
 
 .preview-info h3 {
-margin: 0 0 5px 0;
-font-size: 14px;
+    margin: 0 0 5px 0;
+    font-size: 14px;
+    -webkit-text-stroke: 1px #ccc;
 }
 
 .preview-info p {
-margin: 0;
-font-size: 12px;
-color: #ccc;
+    margin: 0;
+    font-size: 12px;
+    color: #ccc;
+    -webkit-text-stroke: 1px #ccc;
 }
+
 
 
 /* Container para as janelas superiores */
