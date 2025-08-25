@@ -936,7 +936,7 @@ p {
 
 .preview-image-container {
     width: 130px;
-    height: 130px;
+    height: 96px;
     border: 1px solid #ccc;
     background: #000039;
     display: flex;
