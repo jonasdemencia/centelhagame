@@ -970,14 +970,25 @@ p {
     font-size: 14px;
     color: white; /* preenchimento branco */
     -webkit-text-stroke: 1px #ccc; /* contorno cinza claro */
+    text-shadow:
+       -1px -1px 0 #ccc,
+        1px -1px 0 #ccc,
+       -1px  1px 0 #ccc,
+        1px  1px 0 #ccc; /* fallback para navegadores sem text-stroke */
 }
 
 .preview-info p {
     margin: 0;
     font-size: 12px;
-    color: white; /* preenchimento branco */
+    color: white;
     -webkit-text-stroke: 1px #ccc;
+    text-shadow:
+       -1px -1px 0 #ccc,
+        1px -1px 0 #ccc,
+       -1px  1px 0 #ccc,
+        1px  1px 0 #ccc;
 }
+
 
 /* Container para as janelas superiores */
 .top-panels {
