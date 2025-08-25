@@ -982,7 +982,10 @@ color: white;
     color: #ccc;
     -webkit-text-stroke: 0.2px #ccc;
     text-align: justify;
+    text-justify: inter-word;
+    hyphens: auto;
 }
+
 
 /* Container para as janelas superiores */
 .top-panels {
