@@ -918,6 +918,16 @@ p {
 }
 
 
+.preview-image-window {
+    border: 2px solid #ccc;
+    background: #000;
+    padding: 5px;
+    margin-bottom: 5px;
+    box-shadow: 
+        inset 2px 2px 4px rgba(0, 0, 0, 0.6),
+        2px 2px 6px rgba(0, 0, 0, 0.4);
+}
+
 .preview-image-container {
     width: 120px;
     height: 120px;
@@ -926,17 +936,27 @@ p {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 10px;
+    margin: 0 auto;
     box-shadow: 
         inset 2px 2px 4px rgba(0, 0, 0, 0.6),
         2px 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 
+
 #preview-image {
     max-width: 110px;
     max-height: 110px;
     object-fit: contain;
+}
+
+.preview-info-window {
+    border: 2px solid #ccc;
+    background: #000;
+    padding: 8px;
+    box-shadow: 
+        inset 2px 2px 4px rgba(0, 0, 0, 0.6),
+        2px 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .preview-info {
