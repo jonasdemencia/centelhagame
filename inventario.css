@@ -1024,7 +1024,7 @@ color: white;
     height: 20px !important;            /* Altura fixa e forçada */
     min-height: 0 !important;           /* Remove qualquer altura mínima conflitante */
     padding: 0 !important;              /* Zera o padding para não adicionar altura */
-    margin: 0 auto 2px auto !important; /* Margem para centralizar e separar */
+    margin: 0 auto 1px auto !important; /* Margem para centralizar e separar */
     
     /* Estilos visuais forçados */
     background: #000 !important;
