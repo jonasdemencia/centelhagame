@@ -961,32 +961,20 @@ p {
 }
 
 
-.preview-info {
-    text-align: center;
+ .preview-info {
+text-align: center;
+color: white;
 }
 
 .preview-info h3 {
-    margin: 0 0 5px 0;
-    font-size: 14px;
-    color: white; /* preenchimento branco */
-    -webkit-text-stroke: 1px #ccc; /* contorno cinza claro */
-    text-shadow:
-       -1px -1px 0 #ccc,
-        1px -1px 0 #ccc,
-       -1px  1px 0 #ccc,
-        1px  1px 0 #ccc; /* fallback para navegadores sem text-stroke */
+margin: 0 0 5px 0;
+font-size: 14px;
 }
 
 .preview-info p {
-    margin: 0;
-    font-size: 12px;
-    color: white;
-    -webkit-text-stroke: 1px #ccc;
-    text-shadow:
-       -1px -1px 0 #ccc,
-        1px -1px 0 #ccc,
-       -1px  1px 0 #ccc,
-        1px  1px 0 #ccc;
+margin: 0;
+font-size: 12px;
+color: #ccc;
 }
 
 
