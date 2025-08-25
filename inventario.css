@@ -981,9 +981,8 @@ color: white;
     font-size: 12px;
     color: #ccc;
     -webkit-text-stroke: 0.2px #ccc;
+    text-align: justify;
 }
-
-
 
 /* Container para as janelas superiores */
 .top-panels {
