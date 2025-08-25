@@ -969,15 +969,17 @@ p {
 .preview-info h3 {
     margin: 0 0 5px 0;
     font-size: 14px;
-    -webkit-text-stroke: 1px #ccc;
+    -webkit-text-stroke: 1px #ccc; /* cor e espessura do contorno */
+    -webkit-text-fill-color: transparent; /* remove o preenchimento */
 }
 
 .preview-info p {
     margin: 0;
     font-size: 12px;
-    color: #ccc;
     -webkit-text-stroke: 1px #ccc;
+    -webkit-text-fill-color: transparent;
 }
+
 
 
 /* Container para as janelas superiores */
