@@ -969,15 +969,16 @@ p {
 .preview-info h3 {
     margin: 0 0 5px 0;
     font-size: 14px;
-    text-shadow: 1px 1px 0 #ccc;
+    -webkit-text-stroke: 1px #ccc;
 }
 
 .preview-info p {
     margin: 0;
     font-size: 12px;
     color: #ccc;
-    text-shadow: 1px 1px 0 #ccc;
+    -webkit-text-stroke: 1px #ccc;
 }
+
 
 /* Container para as janelas superiores */
 .top-panels {
