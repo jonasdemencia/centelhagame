@@ -61,7 +61,7 @@ p {
 .items {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 5px;
     justify-content: start;
     align-items: start;
     padding: 10px;
