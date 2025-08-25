@@ -969,12 +969,14 @@ p {
 .preview-info h3 {
     margin: 0 0 5px 0;
     font-size: 14px;
+    text-shadow: 1px 1px 0 #ccc;
 }
 
 .preview-info p {
     margin: 0;
     font-size: 12px;
     color: #ccc;
+    text-shadow: 1px 1px 0 #ccc;
 }
 
 /* Container para as janelas superiores */
