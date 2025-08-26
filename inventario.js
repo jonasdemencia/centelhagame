@@ -21,7 +21,7 @@ let inventoryListener = null;
 // Variável global para o listener do jogador
 let playerDataListener = null;
 
-// Função para configurar listener dos dados do jogador
+// Função para configurar listener dos dadoss do jogador
 async function setupPlayerDataListener(uid) {
 console.log("Configurando listener dos dados do jogador:", uid);
 try {
