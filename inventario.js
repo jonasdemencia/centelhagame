@@ -104,17 +104,6 @@ const extraItems = [
 
 ];
 
-function updateEnergyMeter(currentEnergy, maxEnergy) {
-    const percentage = (currentEnergy / maxEnergy) * 100;
-    const clipValue = 100 - percentage; // inverte para clip-path
-    
-    document.getElementById('energy-fill').style.clipPath = 
-        `inset(0 ${clipValue}% 0 0)`; // preenche da esquerda para direita
-}
-
-// Exemplo de uso:
-updateEnergyMeter(75, 100); // 75% de energia
-
 
 function updateItemPreview(item) {
     console.log("updateItemPreview chamada com:", item);
