@@ -101,6 +101,7 @@ const extraItems = [
 { id: "desert-eagle", content: "Desert Eagle", uuid: "extra-desert-eagle", slot: "weapon", description: "Pistola semiautomática, calíbre 50", damage: "1d12", ammoType: "municao-50", ammoCapacity: 8, loadedAmmo: 0, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/desert-eagle.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thudesert-eagle.png" },
 { id: "municao-357", content: "Munição de 357", uuid: "extra-municao-357", quantity: 20, projectile: true, description: "Projéteis letais calíbre 357", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/municao-357.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thumunicao-357.png" },
 { id: "municao-50", content: "Munição de 50AE", uuid: "extra-municao-50", quantity: 20, projectile: true, description: "Projéteis letais calíbre 50AE", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/municao-50.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thumunicao-50.png" },
+{ id: "marreta", content: "Marreta", uuid: "extra-marreta", slot: "weapon", description: "Martelo de forja. 10kg.", damage: "1D10", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/marreta.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thumarreta.png" },
 
 ];
 
