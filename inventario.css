@@ -1098,3 +1098,26 @@ color: white;
         inset 2px 2px 4px rgba(0, 0, 0, 0.6),
         2px 2px 6px rgba(0, 0, 0, 0.4);
 }
+
+.energy-meter-container {
+    position: relative;
+    width: 100px; /* ajuste conforme sua imagem */
+    height: 50px;  /* ajuste conforme sua imagem */
+    margin: 0 auto; /* centraliza na janela */
+}
+
+.meter-background {
+    width: 100%;
+    height: 100%;
+    opacity: 0.3; /* imagem "apagada" como fundo */
+}
+
+.meter-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    clip-path: inset(0 0 0 0); /* inicialmente 100% visível */
+}
+
