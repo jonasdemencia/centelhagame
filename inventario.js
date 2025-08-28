@@ -2341,6 +2341,3 @@ console.error("Erro ao salvar os dados do jogador:", error);
 }
 
 }
-
-
-}
