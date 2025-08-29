@@ -1027,7 +1027,7 @@ color: white;
 
     
     /* Estilos visuais forçados */
-    background: #000 !important;
+    background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/name-panel-bg.png') center/cover no-repeat !important;
     border: 2px solid #ccc !important;
     color: white !important;
     font-size: 12px !important;
@@ -1037,7 +1037,9 @@ color: white;
     line-height: 16px !important; /* (altura - bordas verticais) -> (20px - 4px) */
     
     /* Garante que não seja um container flex que possa crescer */
-    display: block !important; 
+    display: block !important;
+    position: relative !important;
+    z-index: 2 !important;
 }
 
 /* Janela do retrato do personagem */
