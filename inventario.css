@@ -1041,22 +1041,24 @@ color: white;
 
 /* Janela do retrato do personagem */
 .portrait-container {
-    width: 80px;
-    height: 80px;
+    width: 112px;
+    height: 99px;
     border: 2px solid #ccc;
-    background: #222;
+    background: #000039;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto;
-    box-sizing: border-box; /* Garante que o tamanho total seja 80x80px */
+    box-sizing: border-box;
 }
 
+
 #portrait-image {
-    max-width: 76px;
-    max-height: 76px;
+    max-width: 108px;
+    max-height: 95px;
     object-fit: contain;
 }
+
 
 .weapon-ammo {
     position: absolute;
