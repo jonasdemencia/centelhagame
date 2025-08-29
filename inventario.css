@@ -1051,7 +1051,7 @@ margin: 0 auto 0px auto !important; /* Margem para centralizar e separar */
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 0 auto; /* Remove margem superior */
+margin: 0 auto -2px auto !important;
     box-sizing: border-box;
 }
 
