@@ -1020,7 +1020,7 @@ color: white;
 .name-panel {
     box-sizing: border-box !important;
     width: 112px !important;            /* Mesma largura do portrait */
-    height: 20px !important;            /* Altura fixa e forçada */
+    height: 30px !important;            /* Altura fixa e forçada */
     min-height: 0 !important;           /* Remove qualquer altura mínima conflitante */
     padding: 0 !important;              /* Zera o padding para não adicionar altura */
     margin: 0 auto 2px auto !important; /* Margem para centralizar e separar */
