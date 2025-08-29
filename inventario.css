@@ -1027,7 +1027,7 @@ color: white;
 
     
     /* Estilos visuais forçados */
-    background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/name-panel-bg.png') center/cover no-repeat !important;
+    background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/name-panel-bg.png') center/cover no-repeat !important;
     border: 2px solid #ccc !important;
     color: white !important;
     font-size: 12px !important;
