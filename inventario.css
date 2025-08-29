@@ -1042,6 +1042,23 @@ margin: 0 auto 0px auto !important; /* Margem para centralizar e separar */
     z-index: 2 !important;
 }
 
+.profile-area {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    width: 112px;
+    z-index: 5;
+}
+
+.profile-area .name-panel {
+    margin-bottom: 0 !important;
+}
+
+.profile-area .portrait-container {
+    margin-top: 0 !important;
+}
+
+
 /* Janela do retrato do personagem */
 .portrait-container {
     width: 112px;
