@@ -819,6 +819,7 @@ p {
     gap: 0;
     background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png') center/cover no-repeat;
     background-size: contain;
+    background-position: top left;
 }
 
 
