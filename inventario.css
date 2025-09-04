@@ -1065,21 +1065,6 @@ margin: 0 auto 0px auto !important; /* Margem para centralizar e separar */
 }
 
 
-/* Janela do retrato do personagem */
-.portrait-container {
-    width: 112px;
-    height: 99px;
-    border: 2px solid #ccc;
-    background: #000039;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-margin: 0 auto -10px auto !important;
-    box-sizing: border-box;
-}
-
-
-
 #portrait-image {
     max-width: 108px;
     max-height: 95px;
