@@ -91,7 +91,7 @@ p {
 }
 
 .item {
-    background: #000; /* Muda de #8b5a2b para #000 */
+    background: transparent !important;
     position: relative;
 }
 
@@ -924,7 +924,7 @@ p {
 
 .preview-image-window {
     border: 2px solid #ccc;
-    background: #000019;
+    background: transparent !important;
     padding: 8px;
     margin-bottom: 5px;
     width: 160px;
@@ -959,7 +959,7 @@ p {
 
 .preview-info-window {
     border: 2px solid #ccc;
-    background: #000;
+    background: transparent !important;
     padding: 8px;
     width: 160px;
     box-shadow: 
