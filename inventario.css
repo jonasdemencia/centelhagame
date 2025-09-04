@@ -1025,7 +1025,7 @@ color: white;
 /* Janela do nome do personagem (ABORDAGEM AGRESSIVA) */
 .name-panel {
     box-sizing: border-box !important;
-    width: 112px !important;            /* Mesma largura do portrait */
+    width: 108px !important;            /* Mesma largura do portrait */
     height: 30px !important;            /* Altura fixa e forçada */
     min-height: 0 !important;           /* Remove qualquer altura mínima conflitante */
     padding: 0 !important;              /* Zera o padding para não adicionar altura */
