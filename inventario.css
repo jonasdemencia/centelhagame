@@ -1030,6 +1030,8 @@ color: white;
     min-height: 0 !important;           /* Remove qualquer altura mínima conflitante */
     padding: 0 !important;              /* Zera o padding para não adicionar altura */
 margin: 0 auto 0px auto !important; /* Margem para centralizar e separar */
+        background: transparent !important;
+
 
     
     /* Estilos visuais forçados */
@@ -1048,28 +1050,14 @@ margin: 0 auto 0px auto !important; /* Margem para centralizar e separar */
     z-index: 2 !important;
 }
 
-.profile-area {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    width: 112px;
-    z-index: 5;
-}
-
-.profile-area .name-panel {
-    margin-bottom: 0 !important;
-}
-
-.profile-area .portrait-container {
-    margin-top: 0 !important;
-}
-
-
 #portrait-image {
-    max-width: 108px;
-    max-height: 95px;
+    width: 108px;
+    height: 95px;
     object-fit: contain;
+    display: block;
+    margin: 0 auto;
 }
+
 
 
 .weapon-ammo {
