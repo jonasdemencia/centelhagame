@@ -1051,14 +1051,12 @@ margin: 0 auto 0px auto !important; /* Margem para centralizar e separar */
 }
 
 #portrait-image {
-    width: 108px;
-    height: 95px;
+    width: 112px;
+    height: 99px;
     object-fit: contain;
     display: block;
     margin: 0 auto;
 }
-
-
 
 .weapon-ammo {
     position: absolute;
