@@ -1025,7 +1025,7 @@ color: white;
 /* Janela do nome do personagem (ABORDAGEM AGRESSIVA) */
 .name-panel {
     box-sizing: border-box !important;
-    width: 108px !important;
+    width: 80px !important;
     height: 30px !important;
     min-height: 0 !important;
     padding: 0 !important;
@@ -1042,11 +1042,11 @@ color: white;
 }
 
 #portrait-image {
-    width: 108px;
-    height: 95px;
+    width: 80px;
+    height: 80px;
     object-fit: contain;
     display: block;
-    margin: 0 0; /* Remove margin auto, alinha à esquerda */
+    margin: 0 0;
 }
 
 
