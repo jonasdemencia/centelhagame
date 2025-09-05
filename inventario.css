@@ -1035,7 +1035,7 @@ margin: 0 auto 0px auto !important; /* Margem para centralizar e separar */
 
     
     /* Estilos visuais forçados */
-    background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/name-panel-bg.png') center/cover no-repeat !important;
+    background: transparent;
     border: 2px solid #ccc !important;
     color: white !important;
     font-size: 12px !important;
