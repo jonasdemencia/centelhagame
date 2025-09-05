@@ -70,7 +70,6 @@ body {
     padding-left: 10px;
 }
 
-
         /* Janela do nome do personagem */
         .name-panel {
             padding: 10px;
@@ -83,6 +82,18 @@ body {
             align-items: center;
             color: white;
             font-size: 16px;
+        }
+
+        .profile-info-container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .profile-info-container .info-panel {
+            flex: 1;
+            min-height: 80px;
         }
 
     </style>
@@ -123,8 +134,17 @@ body {
                             <div class="name-panel">
                                 <span id="char-name-display">Nome do Personagem</span>
                             </div>
-                           <img id="portrait-image" src="" alt="Retrato do Personagem" style="display: none;">
-
+                            
+                            <div class="profile-info-container">
+                                <img id="portrait-image" src="" alt="Retrato do Personagem" style="display: none;">
+                                <div class="info-panel">
+                                    <div style="text-align: center;">PERFIL</div>
+                                    <div><span id="char-class-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-race-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-alignment-info" class="green-text">-</span></div>
+                                    <div><span id="char-age-info" class="green-text">-</span> ANOS&nbsp;&nbsp;&nbsp;<span id="char-hand-info" class="green-text">-</span>&nbsp;&nbsp;&nbsp;HEM: <span id="char-hemisphere-info" class="green-text">-</span></div>
+                                    <div>HA: <span id="char-skill-info" class="green-text">-</span>&nbsp;&nbsp;CA: <span id="char-charisma-info" class="green-text">-</span>&nbsp;&nbsp;MA: <span id="char-magic-info" class="green-text">-</span>&nbsp;&nbsp;SO: <span id="char-luck-info" class="green-text">-</span></div>
+                                    <div>COURAÇA: <span id="char-couraca-info" class="green-text">0</span>&nbsp;&nbsp;DANO: <span id="char-dano-info" class="green-text">1</span>&nbsp;&nbsp;DIA: <span id="char-day-info" class="green-text">1</span></div>
+                                </div>
+                            </div>
 
                             <div class="item-preview">
                                 <div class="preview-image-window">
@@ -142,19 +162,8 @@ body {
                             </div>
                         </div>
                         <div class="right-panel">
-    <div class="top-panels">
-       <div class="info-panel">
-    <div style="text-align: center;">PERFIL</div>
-    <div><span id="char-class-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-race-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-alignment-info" class="green-text">-</span></div>
-    <div><span id="char-age-info" class="green-text">-</span> ANOS&nbsp;&nbsp;&nbsp;<span id="char-hand-info" class="green-text">-</span>&nbsp;&nbsp;&nbsp;HEM: <span id="char-hemisphere-info" class="green-text">-</span></div>
-    <div>HA: <span id="char-skill-info" class="green-text">-</span>&nbsp;&nbsp;CA: <span id="char-charisma-info" class="green-text">-</span>&nbsp;&nbsp;MA: <span id="char-magic-info" class="green-text">-</span>&nbsp;&nbsp;SO: <span id="char-luck-info" class="green-text">-</span></div>
-    <div>COURAÇA: <span id="char-couraca-info" class="green-text">0</span>&nbsp;&nbsp;DANO: <span id="char-dano-info" class="green-text">1</span>&nbsp;&nbsp;DIA: <span id="char-day-info" class="green-text">1</span></div>
-</div>
-
-
-    </div>
-    <div class="chest">
-        <div class="items">
+                            <div class="chest">
+                                <div class="items">
                                     <div class="item">
                                         Item de Exemplo
                                         <span class="item-expand-toggle">+</span>
@@ -263,14 +272,3 @@ body {
     <script type="module" src="inventario.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
