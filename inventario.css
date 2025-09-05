@@ -926,7 +926,7 @@ p {
 
 
 .preview-image-window {
-    border: 2px solid #ccc;
+    border: none;
     background: transparent !important;
     padding: 8px;
     margin-bottom: 5px;
