@@ -949,6 +949,7 @@ p {
     align-items: center;
     justify-content: center;
     margin: 0 auto;
+        margin-top: -20px;
     box-shadow: 
         inset 2px 2px 4px rgba(0, 0, 0, 0.6),
         2px 2px 6px rgba(0, 0, 0, 0.4);
@@ -974,6 +975,7 @@ p {
  .preview-info {
 text-align: center;
 color: white;
+margin-top: -20px;
 }
 
 .preview-info h3 {
