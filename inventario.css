@@ -67,6 +67,7 @@ p {
     padding: 10px;
     overflow-y: auto;
     max-height: calc(350px - 40px);
+    margin-left: -5px;
 }
 
 /* Estilo dos itens e slots */
