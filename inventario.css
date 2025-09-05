@@ -924,22 +924,6 @@ p {
     justify-content: center;
 }
 
-
-.preview-image-window {
-    border: none;
-    background: transparent !important;
-    padding: 8px;
-    margin-bottom: 5px;
-    width: 160px;
-    height: 160px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 
-        inset 2px 2px 4px rgba(0, 0, 0, 0.6),
-        2px 2px 6px rgba(0, 0, 0, 0.4);
-}
-
 .preview-image-container {
     width: 130px;
     height: 96px;
@@ -960,17 +944,6 @@ p {
     max-height: 110px;
     object-fit: contain;
 }
-
-.preview-info-window {
-    border: none;
-    background: transparent !important;
-    padding: 8px;
-    width: 160px;
-    box-shadow: 
-        inset 2px 2px 4px rgba(0, 0, 0, 0.6),
-        2px 2px 6px rgba(0, 0, 0, 0.4);
-}
-
 
  .preview-info {
 text-align: center;
