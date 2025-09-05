@@ -1046,3 +1046,14 @@ margin-top: -20px;
     z-index: 3;
 }
 
+.preview-info-window {
+    border: 2px solid #ccc;
+    background: transparent !important;
+    padding: 8px;
+    width: 160px;
+    box-shadow: 
+        inset 2px 2px 4px rgba(0, 0, 0, 0.6),
+        2px 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+
