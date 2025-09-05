@@ -814,9 +814,10 @@ p {
 /* Novos estilos para divisão vertical */
 .chest-area {
     display: flex;
-    width: 100%;
+    width: 110%;
     height: 100%;
     gap: 0;
+    margin-left: -5%;
     background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png') center/cover no-repeat;
     background-size: 110%;
     background-position: top left;
