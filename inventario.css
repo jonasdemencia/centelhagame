@@ -1025,26 +1025,17 @@ color: white;
 /* Janela do nome do personagem (ABORDAGEM AGRESSIVA) */
 .name-panel {
     box-sizing: border-box !important;
-    width: 108px !important;            /* Mesma largura do portrait */
-    height: 30px !important;            /* Altura fixa e forçada */
-    min-height: 0 !important;           /* Remove qualquer altura mínima conflitante */
-    padding: 0 !important;              /* Zera o padding para não adicionar altura */
-margin: 0 auto 0px auto !important; /* Margem para centralizar e separar */
-        background: transparent !important;
-
-
-    
-    /* Estilos visuais forçados */
-    background: transparent;
+    width: 108px !important;
+    height: 30px !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 0 0px 0 !important; /* Remove margin auto, alinha à esquerda */
+    background: transparent !important;
     border: 2px solid #ccc !important;
     color: white !important;
     font-size: 12px !important;
     text-align: center !important;
-    
-    /* Alinhamento do texto dentro da altura fixa */
-    line-height: 16px !important; /* (altura - bordas verticais) -> (20px - 4px) */
-    
-    /* Garante que não seja um container flex que possa crescer */
+    line-height: 16px !important;
     display: block !important;
     position: relative !important;
     z-index: 2 !important;
@@ -1055,8 +1046,9 @@ margin: 0 auto 0px auto !important; /* Margem para centralizar e separar */
     height: 95px;
     object-fit: contain;
     display: block;
-    margin: 0 auto;
+    margin: 0 0; /* Remove margin auto, alinha à esquerda */
 }
+
 
 .weapon-ammo {
     position: absolute;
