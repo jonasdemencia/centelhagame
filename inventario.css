@@ -847,7 +847,7 @@ p {
 
 .right-panel .chest {
     margin: 0;
-    width: 100%;
+    width: 90%;
     border-left: 1px solid #ccc;
     background: transparent !important;
 }
