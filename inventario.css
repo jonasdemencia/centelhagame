@@ -820,8 +820,8 @@ p {
     gap: 0;
     margin-left: 0;
     background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png') center/cover no-repeat;
-background-size: cover; /* remove o 110% */
-background-position: center left; /* centraliza verticalmente, mantém à esquerda */
+    background-size: contain;
+background-position: center; /* centraliza verticalmente, mantém à esquerda */
 }
 
 
