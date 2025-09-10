@@ -207,6 +207,7 @@ p {
 .carousel-slide {
     width: 100%;
     display: none;
+        position: relative;
 }
 
 .carousel-slide.active {
@@ -815,15 +816,16 @@ p {
 /* Novos estilos para divisão vertical */
 .chest-area {
     display: flex;
-    width: 100%;
+    position: absolute;
+    left: 0;
+    right: 0;
+    width: 100vw;
     height: 100%;
     gap: 0;
-    margin-left: 0;
     background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png') center/cover no-repeat;
     background-size: contain;
-background-position: center top; 
+    background-position: center top;
 }
-
 
 .left-panel {
     width: 70%;
