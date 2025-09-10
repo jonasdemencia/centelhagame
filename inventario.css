@@ -75,7 +75,7 @@ p {
     padding: 10px;
     overflow-y: auto;
     max-height: calc(350px - 40px);
-    margin-left: -5px;
+    margin-left: -8px;
 }
 
 /* Estilo dos itens e slots */
@@ -1004,6 +1004,8 @@ color: white;
     line-height: 1.2;
     flex: 1;
     text-align: left;
+    margin-left: 10px;
+margin-top: 10px;
 }
 
 .green-text {
@@ -1036,6 +1038,8 @@ color: white;
     object-fit: contain;
     display: block;
     margin: 0 0;
+    margin-left: 10px;
+margin-top: 10px;
 }
 
 
