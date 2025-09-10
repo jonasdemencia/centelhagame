@@ -18,6 +18,18 @@ body {
     border: 2px solid #ccc; /* cinza claro */
 }
 
+@media (max-width: 768px) {
+    .container {
+        max-width: 100vw; /* usa toda a largura da tela */
+        padding: 10px; /* reduz padding */
+    }
+    
+    .chest-area {
+        background-size: cover; /* garante que cubra toda a área */
+        background-position: center;
+    }
+}
+
 /* Títulos */
 h1 {
     font-size: 32px;
