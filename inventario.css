@@ -10,7 +10,7 @@ body {
 
 /* Container principal */
 .container {
-    max-width: 1080px; /* aumenta de 900px para 1080px */
+    max-width: 1200px; /* aumenta mais */
     margin: auto;
     background: #000; /* fundo preto sólido */
     padding: 20px;
@@ -816,16 +816,15 @@ p {
 /* Novos estilos para divisão vertical */
 .chest-area {
     display: flex;
-    position: absolute;
-    left: 0;
-    right: 0;
-    width: 100vw;
+    width: 100%;
     height: 100%;
     gap: 0;
+    margin-left: 0;
     background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png') center/cover no-repeat;
-    background-size: contain;
-    background-position: center top;
+    background-size: cover; /* volta para cover */
+    background-position: center;
 }
+
 
 .left-panel {
     width: 70%;
