@@ -203,7 +203,7 @@ p {
 .carousel-wrapper {
     position: relative;
     width: 100%;
-    max-width: 400px;
+    max-width: none;
     margin: 0 auto 50px auto;
 }
 
