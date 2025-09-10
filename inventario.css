@@ -863,6 +863,7 @@ p {
     border-left: 1px solid #ccc;
     background: transparent !important;
     border: none;
+        border-color: transparent;
 }
 
 /* Destaque do item selecionado */
@@ -991,7 +992,7 @@ color: white;
 .info-panel {
     padding: 5px;
     background: transparent !important;
-    border: 2px solid #ccc;
+    border: none;
     border-radius: 0;
     min-height: 80px;
     display: flex;
