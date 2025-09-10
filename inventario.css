@@ -84,6 +84,7 @@ p {
     height: 70px;
     background: #222; /* fundo escuro, mas não marrom */
     border: 2px solid #ccc; /* borda cinza clara */
+    border-color: transparent;
     border-radius: 0; /* sem arredondamento */
     text-align: center;
     line-height: normal; /* para múltiplas linhas */
@@ -101,6 +102,7 @@ p {
 
 .item {
     background: transparent !important;
+        border-color: transparent;
     position: relative;
 }
 
@@ -838,6 +840,7 @@ p {
 .left-panel {
     width: 70%;
     border-right: 2px solid #ccc;
+    border-right-color: transparent;
     background-color: transparent !important;
     min-height: 350px;
     padding: 15px;
