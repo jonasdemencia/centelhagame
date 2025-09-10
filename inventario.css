@@ -865,7 +865,6 @@ p {
     border-left: 1px solid #ccc;
     background: transparent !important;
     border: none;
-        border-color: transparent;
 }
 
 /* Destaque do item selecionado */
