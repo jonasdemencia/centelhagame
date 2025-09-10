@@ -841,7 +841,7 @@ p {
     background-color: transparent !important;
     min-height: 350px;
     padding: 15px;
-    border: 2px solid #ccc;
+    border: none;
     border-right: 1px solid #ccc;
     display: flex;
     flex-direction: column;
@@ -862,6 +862,7 @@ p {
     width: 90%;
     border-left: 1px solid #ccc;
     background: transparent !important;
+    border: none;
 }
 
 /* Destaque do item selecionado */
@@ -1018,7 +1019,7 @@ color: white;
     padding: 0 !important;
     margin: 0 0 0px 0 !important; /* Remove margin auto, alinha à esquerda */
     background: transparent !important;
-    border: 2px solid #ccc !important;
+    border: none !important;
     color: white !important;
     font-size: 12px !important;
     text-align: center !important;
