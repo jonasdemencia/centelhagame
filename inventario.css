@@ -10,7 +10,7 @@ body {
 
 /* Container principal */
 .container {
-    max-width: 500px; /* aumenta mais */
+    max-width: 400px; /* aumenta mais */
     margin: auto;
     background: #000; /* fundo preto sólido */
     padding: 20px;
@@ -823,7 +823,7 @@ p {
 
 /* Novos estilos para divisão vertical */
 .chest-area {
-    min-height: 600px; /* ou o valor desejado */
+    min-height: 400px; /* ou o valor desejado */
     display: flex;
     width: 100%;
     height: 100%;
