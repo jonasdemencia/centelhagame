@@ -10,7 +10,7 @@ body {
 
 /* Container principal */
 .container {
-    max-width: 1200px; /* aumenta mais */
+    max-width: 1300px; /* aumenta mais */
     margin: auto;
     background: #000; /* fundo preto sólido */
     padding: 20px;
