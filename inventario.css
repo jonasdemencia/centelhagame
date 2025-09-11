@@ -1,1065 +1,130 @@
-/* Aplicação da fonte Eagle Lake */
-body {
-    font-family: 'Eagle Lake', cursive;
-    text-align: center;
-    margin: 0;
-    padding: 5px;
-    background-color: #000; /* preto absoluto */
-    color: white;
-}
-
-/* Container principal */
-.container {
-    max-width: 510px; /* aumenta mais */
-    margin: auto;
-    background: #000; /* fundo preto sólido */
-    padding: 20px;
-    border-radius: 0; /* remove arredondamento */
-    border: 2px solid #ccc; /* cinza claro */
-}
-
-@media (max-width: 768px) {
-    .chest-area {
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-    }
-}
-
-/* Títulos */
-h1 {
-    font-size: 32px;
-    margin-bottom: 10px;
-}
-
-h2 {
-    font-size: 24px;
-    margin-bottom: 10px;
-}
-
-p {
-    font-size: 16px;
-    margin-bottom: 20px;
-}
-
-/* Seção do personagem */
-.character {
-    padding: 20px;
-    background: #000 url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/slots-background.png') center/cover no-repeat;
-    border: 2px solid #ccc; /* cinza claro */
-    border-radius: 0;
-    width: 250px;
-    margin: auto;
-}
-
-.equipment {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Organização dos slots */
-.slot-row {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-}
-
-.items {
-    display: grid;
-    grid-template-columns: repeat(2, 70px);
-    gap: 2px !important;
-    justify-content: start;
-    align-items: start;
-    padding: 10px;
-    overflow-y: auto;
-    max-height: calc(350px - 40px);
-    margin-left: -8px;
-}
-
-/* Estilo dos itens e slots */
-.slot, .item, .discard-slot {
-    width: 70px;
-    height: 70px;
-    background: #222; /* fundo escuro, mas não marrom */
-    border: 2px solid #ccc; /* borda cinza clara */
-    border-color: transparent;
-    border-radius: 0; /* sem arredondamento */
-    text-align: center;
-    line-height: normal; /* para múltiplas linhas */
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    white-space: normal;
-    word-break: break-word;
-    color: white;
-    box-sizing: border-box; /* GARANTE QUE O TAMANHO TOTAL SEJA EXATAMENTE 70x70px */
-}
-
-.item {
-    background: transparent !important;
-    position: relative;
-}
-
-/* Adicionado para estilizar a imagem dentro do item */
-.item img {
-    max-width: 60px !important;
-    max-height: 60px !important;
-    object-fit: contain !important;
-    display: block !important;
-    margin: auto !important;
-}
-
-.slot {
-    background: rgba(17, 17, 17, 0.1); /* preto semi-transparente */
-    position: relative;
-}
-
-.slot.equipped::before,
-.slot.highlight::before {
-    content: "";
-    position: absolute;
-    top: 10%;
-    left: 10%;
-    width: 80%;
-    height: 80%;
-    background-color: rgba(52, 152, 219, 0.5);
-    pointer-events: none;
-    z-index: 1;
-}
-
-.slot img {
-    position: relative;
-    z-index: 2;
-}
-
-/* Destaque dos slots compatíveis */
-.highlight {
-    border-color: #2980b9; /* Borda azul escuro */
-}
-
-
-
-/* Estilização da área de descarte */
-.discard-area {
-    margin-top: 20px;
-    padding: 10px;
-    background: rgba(50, 30, 15, 0.8);
-    border: 3px solid #a52a2a;
-    border-radius: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-}
-
-.discard-slot {
-    background: #a52a2a;
-    color: #fff;
-    font-weight: bold;
-    height: auto; /* Ajusta a altura automaticamente */
-    line-height: normal; /* Remove a altura de linha fixa */
-    padding: 10px; /* Adiciona um pouco de preenchimento interno */
-}
-
-/* Botões alinhados (se aplicável) */
-.stat-buttons-inline {
-    display: inline-flex;
-    gap: 10px;
-    margin-left: 10px;
-}
-
-.button {
-    background-color: #111 !important; /* fundo escuro */
-    border: 1px solid #ccc !important; /* borda cinza claro */
-    color: white !important;
-    padding: 6px 12px;
-    font-family: 'Eagle Lake', cursive;
-    cursor: pointer;
-    border-radius: 0 !important; /* remove arredondamento */
-}
-
-.button:hover {
-    background-color: #333 !important;
-    border-color: #eee !important;
-    color: white !important;
-}
-
-/* Valores */
-.stat-value {
-    font-size: 16px;
-    color: white;
-}
-
-/* Página oculta */
-.hidden {
-    display: none;
-}
-
-/* Correções do Carrossel */
-.carousel-wrapper {
-    position: relative;
-    width: 100%;
-    max-width: none;
-    margin: 0 auto 50px auto;
-}
-
-.carousel-container {
-    position: relative;
-    width: 100%;
-}
-
-.carousel-slide {
-    width: 100%;
-    display: none;
-        position: relative;
-}
-
-.carousel-slide.active {
-    display: block;
-}
-
-.carousel-buttons {
-    position: absolute;
-    bottom: -40px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 15px;
-    z-index: 100;
-}
-
-.carousel-buttons button {
-    background: #aa6c39;
-    border: none;
-    padding: 10px 20px;
-    font-size: 16px;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.carousel-buttons button:hover {
-    background: #8b5a2b;
-    transform: translateY(-1px);
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-}
-
-/* 📌 Organização da ficha do personagem */
-.character-sheet {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px; /* Espaço menor entre as janelas */
-    justify-content: center; /* Centraliza a ficha */
-    font-size: 13px; /* Fonte menor para toda a ficha */
-    width: 250px; /* Adicionando a mesma largura do .character */
-    margin: auto; /* Centraliza a ficha também */
-}
-
-.character-sheet p {
-    flex-basis: 45%; /* Nome/Classe e Raça/Alinhamento lado a lado */
-    padding: 4px; /* Preenchimento interno ajustado */
-    font-size: 12px; /* Reduzindo o tamanho da fonte */
-    background: rgba(0, 0, 0, 0.4); /* Fundo transparente mais suave */
-    border: 1px solid #aa6c39; /* Borda menor */
-    border-radius: 6px;
-    margin: 0;
-}
-
-/* 📌 Atributos */
-/* Organização dos atributos */
-.attribute-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px; /* Espaço entre os atributos */
-    justify-content: center;
-    margin-top: 15px;
-}
-
-.attribute-container .attribute {
-    display: flex;
-    flex-direction: column; /* Nomes acima dos valores */
-    align-items: center;
-    width: 45px; /* Tamanho menor das janelas */
-    height: 45px;
-    background-color: #8b5a2b;
-    border: 1px solid #d4a373;
-    border-radius: 6px;
-    font-size: 0.9em;
-    color: white;
-    text-align: center;
-}
-
-.attribute-container .attribute .label {
-    font-size: 0.7em; /* Nomes menores */
-    margin-bottom: 2px; /* Espaço entre o nome e o valor */
-    color: #ffffff;
-}
-
-/* Alinhamento de Mão Dominante e Hemisfério Dominante */
-.char-alignment {
-    display: flex;
-    justify-content: center; /* Centraliza horizontalmente */
-    gap: 15px; /* Espaço entre as janelas */
-    margin-top: 15px;
-}
-
-.char-hand-container,
-.char-hemisphere-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 80px; /* Largura ajustada */
-    height: 50px; /* Altura ajustada */
-    background-color: rgba(0, 0, 0, 0.4);
-    border: 1px solid #aa6c39;
-    border-radius: 6px;
-    font-size: 0.8em;
-    color: white;
-    text-align: center;
-    padding: 5px;
-}
-
-/* Couraça e Dano agora abaixo de Mão Dominante e Hemisfério */
-.couraca-dano {
-    display: flex;
-    justify-content: center; /* Centraliza horizontalmente */
-    gap: 15px; /* Espaço entre as janelas */
-    margin-top: 10px; /* Espaçamento acima */
-}
-
-.couraca-dano .attribute {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 80px; /* Tamanho ajustado */
-    height: 50px;
-    background-color: #8b5a2b;
-    border: 1px solid #d4a373;
-    border-radius: 6px;
-    font-size: 0.9em;
-    text-align: center;
-    color: white;
-}
-
-.couraca-dano .attribute .label {
-    font-size: 0.7em; /* Nome Couraça/Dano menor */
-    margin-bottom: 2px;
-}
-
-/* Estilo para o valor de energia atual/máximo */
-#char-energy {
-    font-size: 0.9em; /* Ajusta o tamanho da fonte para caber bem no espaço */
-    white-space: nowrap; /* Impede que quebre em duas linhas */
-    display: block; /* Garante que ocupe sua própria linha */
-    margin-top: 2px; /* Pequeno espaço após o rótulo */
-    font-weight: bold; /* Deixa o número em negrito */
-}
-
-/* Ajusta o container do atributo energia para comportar o novo formato */
-.attribute-container .attribute:has(#char-energy) {
-    height: auto; /* Permite que a altura se ajuste ao conteúdo */
-    padding: 5px 0; /* Adiciona um pouco de padding vertical */
-}
-
-/* Barra de HP no inventário */
-.attribute .barra-hp-container {
-    width: 40px; /* Largura menor que a da batalha */
-    height: 4px; /* Altura menor para ficar mais discreto */
-    background-color: #ccc;
-    border: 1px solid #333;
-    margin: 2px auto 0; /* Centraliza e adiciona um pequeno espaço acima */
-}
-
-.attribute .barra-hp {
-    height: 100%;
-    background-color: #4CAF50;
-    width: 100%;
-    transition: width 0.3s ease;
-}
-
-.time-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background-color: #8b5a2b;
-    border: 1px solid #d4a373;
-    border-radius: 6px;
-    padding: 5px;
-    margin-top: 10px;
-    width: 80px;
-}
-
-.time-container .label {
-    font-size: 0.7em;
-    margin-bottom: 2px;
-    color: #ffffff;
-}
-
-#char-day {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #ffffff;
-}
-
-/* PO no interior do baú */
-#char-po-container {
-    position: absolute;
-    bottom: 10px;
-    left: 10px; /* Ajuste para canto inferior esquerdo */
-    width: 50px; /* Janelas menores */
-    height: 40px;
-    display: flex;
-    flex-direction: column; /* Coloca o nome acima do valor */
-    justify-content: center;
-    align-items: center;
-    background-color: #ffd700; /* Dourado */
-    border: 1px solid #aa6c39;
-    border-radius: 7px;
-    font-size: 0.7em; /* Fonte reduzida */
-    color: black; /* Contraste para o texto */
-}
-
-#char-po-container .label {
-    font-size: 0.7em; /* Nome PO menor */
-    margin-bottom: 2px;
-}
-
-#useBtn {
-    display: none; /* Inicialmente oculto */
-    position: absolute; /* Permite o posicionamento via JavaScript */
-    /* Você pode adicionar outros estilos aqui, como cor de fundo, borda, etc. */
-    background-color: #4CAF50; /* Exemplo de cor */
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    text-align: center;
-    text-decoration: none;
-    font-size: 14px;
-    cursor: pointer;
-    border-radius: 5px;
-    z-index: 11; /* Garante que fique acima de outros elementos */
-}
-
-/* Estilos para o segundo carrossel (storage) */
-.storage-carousel-wrapper {
-    position: relative;
-    width: 100%;
-    margin: 20px auto;
-}
-
-.storage-carousel-container {
-    position: relative;
-    width: 100%;
-}
-
-.storage-carousel-slide {
-    width: 100%;
-    display: none;
-}
-
-.storage-carousel-slide.active {
-    display: block;
-}
-
-.storage-carousel-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.storage-carousel-buttons button {
-    background: #aa6c39;
-    border: none;
-    padding: 10px 20px;
-    font-size: 16px;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.storage-carousel-buttons button:hover {
-    background: #8b5a2b;
-    transform: translateY(-1px);
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-}
-
-/* Estilos para o Estojo de Dados */
-.dice-container {
-    display: flex;
-    gap: 20px;
-    height: 100%;
-}
-
-.dice-section h3 {
-    color: #d4a373;
-    margin-bottom: 15px;
-    text-align: center;
-}
-
-.dice-items {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    justify-content: start;
-    align-items: start;
-    padding: 10px;
-    overflow-y: auto;
-    max-height: calc(350px - 40px);
-}
-
-/* Estilos para os slots de dados */
-.dice-slots {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px;
-}
-
-.dice-slot {
-    width: 70px;
-    height: 70px;
-    background: #222;
-    border: 2px solid #ccc;
-    border-radius: 0;
-    font-size: 14px;
-    font-weight: bold;
-    box-sizing: border-box; /* ADICIONADO: Garante o tamanho exato de 70x70px, incluindo a borda */
-}
-
-.dice-slot.highlight {
-    background-color: #3498db;
-    border-color: #2980b9;
-}
-
-.dice-item {
-    width: 70px;
-    height: 70px;
-    background: #8b5a2b;
-    border: 2px solid #ccc;
-    border-radius: 0;
-    font-size: 14px;
-    font-weight: bold;
-}
-
-.dice-item.selected {
-    background-color: #f1c40f;
-    border-color: #f39c12;
-}
-
-/* Organizar os slots de dados em grupos de 3 */
-.dice-slots-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 15px; /* Espaço entre as linhas */
-}
-
-.dice-slot-row {
-    display: flex;
-    justify-content: center; /* Centraliza horizontalmente */
-    gap: 10px; /* Espaço entre os slots na mesma linha */
-}
-
-/* Estilo para o atributo de experiência */
-.xp-attribute {
-    width: auto !important;
-    height: auto !important;
-    padding: 5px !important;
-    background-color: #4b0082 !important; /* Roxo para diferenciar da energia */
-}
-
-.xp-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 2px;
-}
-
-#char-level {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #ffd700; /* Dourado para o nível */
-}
-
-#char-xp {
-    font-size: 0.7em;
-    white-space: nowrap;
-    margin-bottom: 2px;
-}
-
-.barra-xp-container {
-    width: 40px;
-    height: 4px;
-    background-color: #333;
-    border: 1px solid #555;
-    margin: 2px auto 0;
-}
-
-.barra-xp {
-    height: 100%;
-    background-color: #9370db; /* Roxo mais claro para a barra */
-    width: 0%; /* Começa vazio */
-    transition: width 0.3s ease;
-}
-
-/* Barra de energia para itens vivos */
-.item-energy-bar {
-    position: absolute;
-    bottom: 25px;
-    left: 5px;
-    right: 25px;
-    height: 12px;
-    background-color: #333;
-    border: 1px solid #555;
-    border-radius: 2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 8px;
-    color: white;
-    z-index: 2;
-}
-
-.item-energy-fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    border-radius: 1px;
-    transition: width 0.3s ease;
-    z-index: 1;
-}
-
-.item-energy-text {
-    position: relative;
-    z-index: 3;
-    font-weight: bold;
-    text-shadow: 1px 1px 1px rgba(0,0,0,0.8);
-}
-
-.item.multi-selected {
-    border: 2px solid #ff6b6b;
-    background-color: rgba(255, 107, 107, 0.2);
-}
-
-.multi-select-controls {
-    margin: 10px 0;
-    text-align: center;
-}
-
-.multi-select-btn {
-    padding: 5px 10px;
-    margin: 0 5px;
-    background: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-}
-
-.multi-select-btn:hover {
-    background: #45a049;
-}
-
-.discard-selected-btn {
-    background: #f44336;
-}
-
-.discard-selected-btn:hover {
-    background: #da190b;
-}
-
-* {
-    border-radius: 0 !important;
-}
-
-/* --- ESTILOS PARA FICHA EM GRADE (OPÇÃO 2) --- */
-.sheet-grid-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 10px;
-    background-color: #1a1a1a;
-    border: 1px solid #444;
-}
-
-.sheet-header {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.sheet-header p {
-    margin: 0;
-    padding: 5px;
-    background-color: #2c2c2c;
-    border: 1px solid #444;
-    flex-grow: 1;
-    text-align: center;
-}
-
-.sheet-main-status {
-    display: flex;
-    justify-content: space-around;
-    gap: 10px;
-}
-
-.sheet-main-status .attribute {
-    width: 48%;
-}
-
-.sheet-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Duas colunas */
-    gap: 8px;
-}
-
-.sheet-stats-grid .stat-box {
-    background-color: #2c2c2c;
-    border: 1px solid #444;
-    padding: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-}
-
-.sheet-stats-grid .stat-box .label {
-    color: #ccc;
-}
-
-.sheet-stats-grid .stat-box span:last-child {
-    font-weight: bold;
-    font-size: 16px;
-}
-
-.sheet-footer {
-    display: flex;
-    justify-content: space-around;
-    font-size: 12px;
-    color: #ccc;
-    margin-top: 5px;
-    border-top: 1px solid #444;
-    padding-top: 8px;
-}
-
-.item.selected:not(.equipable) {
-    background-color: transparent !important;
-    border: 2px solid #f1c40f !important;
-}
-
-.dice-slots-container {
-    padding: 20px;
-    background: #000;
-    border: 2px solid #ccc;
-    border-radius: 0;
-    width: 250px;
-    margin: 5px auto 0;
-    text-align: center;
-}
-
-.dice-slots-container h3 {
-    color: white;
-    margin-bottom: 15px;
-}
-
-.dice-chest h2 {
-    color: white;
-    margin-bottom: 15px;
-}
-
-/* Baú de itens e Contêiner de Dados */
-.chest, .dice-chest, .dice-section {
-    display: block;
-    position: relative;
-    margin-top: 5px;
-    padding: 15px;
-    background: #000;
-    border: 2px solid #ccc;
-    border-radius: 0;
-    min-height: 350px;
-}
-
-.item-content {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.item-image {
-    width: 32px;
-    height: 32px;
-    object-fit: cover;
-    border-radius: 4px;
-    flex-shrink: 0;
-}
-
-.item-text {
-    flex: 1;
-}
-
-/* Para itens equipados nos slots */
-.slot .item-content {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.slot .item-image {
-    width: 24px;
-    height: 24px;
-}
-
-/* Novos estilos para divisão vertical */
-.chest-area {
-    min-height: 430px; /* ou o valor desejado */
-    display: flex;
-    width: 100%;
-    height: 100%;
-    gap: 0;
-    margin-left: 0;
-    background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png') center/cover no-repeat;
-    background-size: cover; /* volta para cover */
-    background-position: center;
-}
-
-
-.left-panel {
-    width: 70%;
-    border-right: none;
-    border-right-color: transparent;
-    background-color: transparent !important;
-    min-height: 350px;
-    padding: 15px;
-    border: none;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-
-.right-panel {
-    width: 40%;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.right-panel .chest {
-    margin: 0;
-    width: 90%;
-    border-left: none;
-    background: transparent !important;
-    border: none;
-}
-
-/* Destaque do item selecionado */
-.selected {
-    background-color: #f1c40f; /* Amarelo */
-    border-color: #f39c12; /* Borda amarelo escuro */
-    position: relative;
-    overflow: visible;
-}
-
-/* Animação do pixel percorrendo as bordas */
-.selected::before {
-    content: '';
-    position: absolute;
-    width: 3px;
-    height: 3px;
-    background: #fff;
-    border-radius: 50%;
-    box-shadow: 0 0 6px #fff, 0 0 12px #f39c12;
-    z-index: 10;
-    animation: pixelBorder 2s linear infinite;
-}
-
-@keyframes pixelBorder {
-    0% {
-        top: -2px;
-        left: -2px;
-    }
-    25% {
-        top: -2px;
-        left: calc(100% - 1px);
-    }
-    50% {
-        top: calc(100% - 1px);
-        left: calc(100% - 1px);
-    }
-    75% {
-        top: calc(100% - 1px);
-        left: -2px;
-    }
-    100% {
-        top: -2px;
-        left: -2px;
-    }
-}
-
-.item img, .slot img {
-    max-width: 60px !important; /* Muda de 60px para 45px */
-    max-height: 60px !important; /* Muda de 60px para 45px */
-    object-fit: contain !important;
-    display: block !important;
-    margin: auto !important;
-}
-
-.item-quantity {
-    position: absolute;
-    bottom: 2px;
-    left: 2px;
-    color: #87CEEB;
-    font-size: 20px;
-    font-weight: bold;
-    z-index: 3;
-}
-
-
-.item-preview {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 100%;
-    justify-content: center;
-}
-
-.preview-image-container {
-    width: 130px;
-    height: 96px;
-    border: 1px solid #ccc;
-    background: #000039;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-        margin-top: -65px;
-    margin-left: 10px;
-    box-shadow: 
-        inset 2px 2px 4px rgba(0, 0, 0, 0.6),
-        2px 2px 6px rgba(0, 0, 0, 0.4);
-}
-
-#preview-image {
-    max-width: 110px;
-    max-height: 110px;
-    object-fit: contain;
-}
-
- .preview-info {
-text-align: center;
-color: white;
-      margin-top: 15px;
-}
-
-.preview-info h3 {
-    margin: 0 0 5px 0;
-    font-size: 14px;
-    -webkit-text-stroke: 0.2px #ccc;
-}
-
-.preview-info p {
-    margin: 0;
-    font-size: 12px;
-    color: #ccc;
-    -webkit-text-stroke: 0.2px #ccc;
-    text-align: justify;
-    text-justify: inter-word;
-    hyphens: auto;
-}
-
-
-/* Container para as janelas superiores */
-.top-panels {
-    display: flex;
-    gap: 5px;
-    margin-bottom: 5px;
-}
-
-/* Nova janela de informação */
-.info-panel {
-    padding: 5px;
-    background: transparent !important;
-    border: none;
-    border-radius: 0;
-    min-height: 80px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    color: white;
-    font-size: 8px;
-    line-height: 1.2;
-    flex: 1;
-    text-align: left;
-    margin-left: 20px;
-    margin-top: 2px;
-}
-
-.green-text {
-    color: #90EE90;
-}
-
-
-/* Janela do nome do personagem (ABORDAGEM AGRESSIVA) */
-.name-panel {
-    box-sizing: border-box !important;
-    width: 80px !important;
-    height: 30px !important;
-    min-height: 0 !important;
-    padding: 0 !important;
-    margin: 0 0 0px 0 !important; /* Remove margin auto, alinha à esquerda */
-    background: transparent !important;
-    border: none !important;
-    color: white !important;
-    font-size: 12px !important;
-    text-align: center !important;
-    line-height: 16px !important;
-    display: block !important;
-    position: relative !important;
-    z-index: 2 !important;
-}
-
-#portrait-image {
-    width: 80px;
-    height: 80px;
-    object-fit: contain;
-    display: block;
-    margin: 0 0;
-margin-left: 20px;
-margin-top: 10px;
-}
-
-
-.weapon-ammo {
-    position: absolute;
-    bottom: 2px;
-    left: 2px;
-    color: #90EE90;
-    font-size: 20px;
-    font-weight: bold;
-    z-index: 3;
-}
-
-.slot-weapon-ammo {
-    position: absolute;
-    bottom: 2px;
-    left: 2px;
-    color: #90EE90;
-    font-size: 20px;
-    font-weight: bold;
-    z-index: 3;
-}
+/* Aplicação da fonte Eagle Lake / body { font-family: 'Eagle Lake', cursive; text-align: center; margin: 0; padding: 5px; background-color: #000; / preto absoluto */ color: white; }
+
+/* Container principal / .container { max-width: 510px; / aumenta mais / margin: auto; background: #000; / fundo preto sólido / padding: 20px; border-radius: 0; / remove arredondamento / border: 2px solid #ccc; / cinza claro */ }
+
+@media (max-width: 768px) { .chest-area { background-size: contain; background-repeat: no-repeat; background-position: center; } }
+
+/* Títulos */ h1 { font-size: 32px; margin-bottom: 10px; } h2 { font-size: 24px; margin-bottom: 10px; } p { font-size: 16px; margin-bottom: 20px; }
+
+/* Seção do personagem / .character { padding: 20px; background: #000 url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/slots-background.png') center/cover no-repeat; border: 2px solid #ccc; / cinza claro */ border-radius: 0; width: 250px; margin: auto; }
+
+.equipment { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+/* Organização dos slots */ .slot-row { display: flex; justify-content: center; gap: 10px; }
+
+.items { display: grid; grid-template-columns: repeat(2, 70px); gap: 2px !important; justify-content: start; align-items: start; padding: 10px; overflow-y: auto; max-height: calc(350px - 40px); margin-left: -8px; }
+
+/* Estilo dos itens e slots / .slot, .item, .discard-slot { width: 70px; height: 70px; background: #222; / fundo escuro, mas não marrom / border: 2px solid #ccc; / borda cinza clara / border-color: transparent; border-radius: 0; / sem arredondamento / text-align: center; line-height: normal; / para múltiplas linhas / cursor: pointer; font-size: 14px; font-weight: bold; display: flex; justify-content: center; align-items: center; white-space: normal; word-break: break-word; color: white; box-sizing: border-box; / GARANTE QUE O TAMANHO TOTAL SEJA EXATAMENTE 70x70px */ }
+
+.item { background: transparent !important; position: relative; }
+
+/* Adicionado para estilizar a imagem dentro do item */ .item img { max-width: 60px !important; max-height: 60px !important; object-fit: contain !important; display: block !important; margin: auto !important; }
+
+.slot { background: rgba(17, 17, 17, 0.1); /* preto semi-transparente */ position: relative; }
+
+.slot.equipped::before, .slot.highlight::before { content: ""; position: absolute; top: 10%; left: 10%; width: 80%; height: 80%; background-color: rgba(52, 152, 219, 0.5); pointer-events: none; z-index: 1; }
+
+.slot img { position: relative; z-index: 2; }
+
+/* Destaque dos slots compatíveis / .highlight { border-color: #2980b9; / Borda azul escuro */ }
+
+/* Estilização da área de descarte */ .discard-area { margin-top: 20px; padding: 10px; background: rgba(50, 30, 15, 0.8); border: 3px solid #a52a2a; border-radius: 10px; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+
+.discard-slot { background: #a52a2a; color: #fff; font-weight: bold; height: auto; /* Ajusta a altura automaticamente / line-height: normal; / Remove a altura de linha fixa / padding: 10px; / Adiciona um pouco de preenchimento interno */ }
+
+/* Botões alinhados (se aplicável) */ .stat-buttons-inline { display: inline-flex; gap: 10px; margin-left: 10px; }
+
+.button { background-color: #111 !important; /* fundo escuro / border: 1px solid #ccc !important; / borda cinza claro / color: white !important; padding: 6px 12px; font-family: 'Eagle Lake', cursive; cursor: pointer; border-radius: 0 !important; / remove arredondamento */ }
+
+.button:hover { background-color: #333 !important; border-color: #eee !important; color: white !important; }
+
+/* Valores */ .stat-value { font-size: 16px; color: white; }
+
+/* Página oculta */ .hidden { display: none; }
+
+/* Correções do Carrossel */ .carousel-wrapper { position: relative; width: 100%; max-width: none; margin: 0 auto 50px auto; } .carousel-container { position: relative; width: 100%; } .carousel-slide { width: 100%; display: none; position: relative; } .carousel-slide.active { display: block; } .carousel-buttons { position: absolute; bottom: -40px; left: 0; right: 0; display: flex; justify-content: center; gap: 10px; margin-top: 15px; z-index: 100; } .carousel-buttons button { background: #aa6c39; border: none; padding: 10px 20px; font-size: 16px; color: white; border-radius: 5px; cursor: pointer; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); } .carousel-buttons button:hover { background: #8b5a2b; transform: translateY(-1px); box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3); }
+
+/* 📌 Organização da ficha do personagem / .character-sheet { display: flex; flex-wrap: wrap; gap: 8px; / Espaço menor entre as janelas / justify-content: center; / Centraliza a ficha / font-size: 13px; / Fonte menor para toda a ficha / width: 250px; / Adicionando a mesma largura do .character / margin: auto; / Centraliza a ficha também / } .character-sheet p { flex-basis: 45%; / Nome/Classe e Raça/Alinhamento lado a lado / padding: 4px; / Preenchimento interno ajustado / font-size: 12px; / Reduzindo o tamanho da fonte / background: rgba(0, 0, 0, 0.4); / Fundo transparente mais suave / border: 1px solid #aa6c39; / Borda menor */ border-radius: 6px; margin: 0; }
+
+/* 📌 Atributos / / Organização dos atributos / .attribute-container { display: flex; flex-wrap: wrap; gap: 10px; / Espaço entre os atributos / justify-content: center; margin-top: 15px; } .attribute-container .attribute { display: flex; flex-direction: column; / Nomes acima dos valores / align-items: center; width: 45px; / Tamanho menor das janelas / height: 45px; background-color: #8b5a2b; border: 1px solid #d4a373; border-radius: 6px; font-size: 0.9em; color: white; text-align: center; } .attribute-container .attribute .label { font-size: 0.7em; / Nomes menores / margin-bottom: 2px; / Espaço entre o nome e o valor */ color: #ffffff; }
+
+/* Alinhamento de Mão Dominante e Hemisfério Dominante / .char-alignment { display: flex; justify-content: center; / Centraliza horizontalmente / gap: 15px; / Espaço entre as janelas / margin-top: 15px; } .char-hand-container, .char-hemisphere-container { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 80px; / Largura ajustada / height: 50px; / Altura ajustada */ background-color: rgba(0, 0, 0, 0.4); border: 1px solid #aa6c39; border-radius: 6px; font-size: 0.8em; color: white; text-align: center; padding: 5px; }
+
+/* Couraça e Dano agora abaixo de Mão Dominante e Hemisfério / .couraca-dano { display: flex; justify-content: center; / Centraliza horizontalmente / gap: 15px; / Espaço entre as janelas / margin-top: 10px; / Espaçamento acima / } .couraca-dano .attribute { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 80px; / Tamanho ajustado / height: 50px; background-color: #8b5a2b; border: 1px solid #d4a373; border-radius: 6px; font-size: 0.9em; text-align: center; color: white; } .couraca-dano .attribute .label { font-size: 0.7em; / Nome Couraça/Dano menor */ margin-bottom: 2px; }
+
+/* Estilo para o valor de energia atual/máximo / #char-energy { font-size: 0.9em; / Ajusta o tamanho da fonte para caber bem no espaço / white-space: nowrap; / Impede que quebre em duas linhas / display: block; / Garante que ocupe sua própria linha / margin-top: 2px; / Pequeno espaço após o rótulo / font-weight: bold; / Deixa o número em negrito */ }
+
+/* Ajusta o container do atributo energia para comportar o novo formato / .attribute-container .attribute:has(#char-energy) { height: auto; / Permite que a altura se ajuste ao conteúdo / padding: 5px 0; / Adiciona um pouco de padding vertical */ }
+
+/* Barra de HP no inventário / .attribute .barra-hp-container { width: 40px; / Largura menor que a da batalha / height: 4px; / Altura menor para ficar mais discreto / background-color: #ccc; border: 1px solid #333; margin: 2px auto 0; / Centraliza e adiciona um pequeno espaço acima */ } .attribute .barra-hp { height: 100%; background-color: #4CAF50; width: 100%; transition: width 0.3s ease; }
+
+.time-container { display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #8b5a2b; border: 1px solid #d4a373; border-radius: 6px; padding: 5px; margin-top: 10px; width: 80px; } .time-container .label { font-size: 0.7em; margin-bottom: 2px; color: #ffffff; } #char-day { font-size: 1.2em; font-weight: bold; color: #ffffff; }
+
+/* PO no interior do baú / #char-po-container { position: absolute; bottom: 10px; left: 10px; / Ajuste para canto inferior esquerdo / width: 50px; / Janelas menores / height: 40px; display: flex; flex-direction: column; / Coloca o nome acima do valor / justify-content: center; align-items: center; background-color: #ffd700; / Dourado / border: 1px solid #aa6c39; border-radius: 7px; font-size: 0.7em; / Fonte reduzida / color: black; / Contraste para o texto / } #char-po-container .label { font-size: 0.7em; / Nome PO menor */ margin-bottom: 2px; }
+
+#useBtn { display: none; /* Inicialmente oculto / position: absolute; / Permite o posicionamento via JavaScript / / Você pode adicionar outros estilos aqui, como cor de fundo, borda, etc. / background-color: #4CAF50; / Exemplo de cor / color: white; border: none; padding: 8px 12px; text-align: center; text-decoration: none; font-size: 14px; cursor: pointer; border-radius: 5px; z-index: 11; / Garante que fique acima de outros elementos */ }
+
+/* Estilos para o segundo carrossel (storage) */ .storage-carousel-wrapper { position: relative; width: 100%; margin: 20px auto; } .storage-carousel-container { position: relative; width: 100%; } .storage-carousel-slide { width: 100%; display: none; } .storage-carousel-slide.active { display: block; } .storage-carousel-buttons { display: flex; justify-content: center; gap: 10px; margin-top: 15px; } .storage-carousel-buttons button { background: #aa6c39; border: none; padding: 10px 20px; font-size: 16px; color: white; border-radius: 5px; cursor: pointer; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); } .storage-carousel-buttons button:hover { background: #8b5a2b; transform: translateY(-1px); box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3); }
+
+/* Estilos para o Estojo de Dados */ .dice-container { display: flex; gap: 20px; height: 100%; } .dice-section h3 { color: #d4a373; margin-bottom: 15px; text-align: center; } .dice-items { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; justify-content: start; align-items: start; padding: 10px; overflow-y: auto; max-height: calc(350px - 40px); }
+
+/* Estilos para os slots de dados / .dice-slots { display: flex; flex-direction: column; gap: 10px; padding: 10px; } .dice-slot { width: 70px; height: 70px; background: #222; border: 2px solid #ccc; border-radius: 0; font-size: 14px; font-weight: bold; box-sizing: border-box; / ADICIONADO: Garante o tamanho exato de 70x70px, incluindo a borda */ } .dice-slot.highlight { background-color: #3498db; border-color: #2980b9; } .dice-item { width: 70px; height: 70px; background: #8b5a2b; border: 2px solid #ccc; border-radius: 0; font-size: 14px; font-weight: bold; } .dice-item.selected { background-color: #f1c40f; border-color: #f39c12; }
+
+/* Organizar os slots de dados em grupos de 3 / .dice-slots-grid { display: flex; flex-direction: column; gap: 15px; / Espaço entre as linhas / } .dice-slot-row { display: flex; justify-content: center; / Centraliza horizontalmente / gap: 10px; / Espaço entre os slots na mesma linha */ }
+
+/* Estilo para o atributo de experiência / .xp-attribute { width: auto !important; height: auto !important; padding: 5px !important; background-color: #4b0082 !important; / Roxo para diferenciar da energia / } .xp-container { display: flex; flex-direction: column; align-items: center; margin-top: 2px; } #char-level { font-size: 1.2em; font-weight: bold; color: #ffd700; / Dourado para o nível / } #char-xp { font-size: 0.7em; white-space: nowrap; margin-bottom: 2px; } .barra-xp-container { width: 40px; height: 4px; background-color: #333; border: 1px solid #555; margin: 2px auto 0; } .barra-xp { height: 100%; background-color: #9370db; / Roxo mais claro para a barra / width: 0%; / Começa vazio */ transition: width 0.3s ease; }
+
+/* Barra de energia para itens vivos */ .item-energy-bar { position: absolute; bottom: 25px; left: 5px; right: 25px; height: 12px; background-color: #333; border: 1px solid #555; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 8px; color: white; z-index: 2; } .item-energy-fill { position: absolute; top: 0; left: 0; height: 100%; border-radius: 1px; transition: width 0.3s ease; z-index: 1; } .item-energy-text { position: relative; z-index: 3; font-weight: bold; text-shadow: 1px 1px 1px rgba(0,0,0,0.8); }
+
+.item.multi-selected { border: 2px solid #ff6b6b; background-color: rgba(255, 107, 107, 0.2); } .multi-select-controls { margin: 10px 0; text-align: center; } .multi-select-btn { padding: 5px 10px; margin: 0 5px; background: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer; } .multi-select-btn:hover { background: #45a049; } .discard-selected-btn { background: #f44336; } .discard-selected-btn:hover { background: #da190b; }
+
+{ border-radius: 0 !important; }
+/* --- ESTILOS PARA FICHA EM GRADE (OPÇÃO 2) --- / .sheet-grid-container { display: flex; flex-direction: column; gap: 12px; padding: 10px; background-color: #1a1a1a; border: 1px solid #444; } .sheet-header { display: flex; justify-content: space-between; gap: 10px; } .sheet-header p { margin: 0; padding: 5px; background-color: #2c2c2c; border: 1px solid #444; flex-grow: 1; text-align: center; } .sheet-main-status { display: flex; justify-content: space-around; gap: 10px; } .sheet-main-status .attribute { width: 48%; } .sheet-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); / Duas colunas */ gap: 8px; } .sheet-stats-grid .stat-box { background-color: #2c2c2c; border: 1px solid #444; padding: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; } .sheet-stats-grid .stat-box .label { color: #ccc; } .sheet-stats-grid .stat-box span:last-child { font-weight: bold; font-size: 16px; } .sheet-footer { display: flex; justify-content: space-around; font-size: 12px; color: #ccc; margin-top: 5px; border-top: 1px solid #444; padding-top: 8px; }
+
+.item.selected:not(.equipable) { background-color: transparent !important; border: 2px solid #f1c40f !important; }
+
+.dice-slots-container { padding: 20px; background: #000; border: 2px solid #ccc; border-radius: 0; width: 250px; margin: 5px auto 0; text-align: center; } .dice-slots-container h3 { color: white; margin-bottom: 15px; } .dice-chest h2 { color: white; margin-bottom: 15px; }
+
+/* Baú de itens e Contêiner de Dados */ .chest, .dice-chest, .dice-section { display: block; position: relative; margin-top: 5px; padding: 15px; background: #000; border: 2px solid #ccc; border-radius: 0; min-height: 350px; }
+
+.item-content { display: flex; align-items: center; gap: 8px; } .item-image { width: 32px; height: 32px; object-fit: cover; border-radius: 4px; flex-shrink: 0; } .item-text { flex: 1; }
+
+/* Para itens equipados nos slots */ .slot .item-content { display: flex; align-items: center; gap: 6px; } .slot .item-image { width: 24px; height: 24px; }
+
+/* Novos estilos para divisão vertical / .chest-area { min-height: 430px; / ou o valor desejado / display: flex; width: 100%; height: 100%; gap: 0; margin-left: 0; background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png') center/cover no-repeat; background-size: cover; / volta para cover / background-position: center; position: relative; / AJUSTE: torna-se o referencial dos overlays absolutos */ }
+
+.left-panel { width: 70%; border-right: none; border-right-color: transparent; background-color: transparent !important; min-height: 350px; padding: 15px; border: none; display: flex; flex-direction: column; gap: 2px; }
+
+.right-panel { width: 40%; padding: 0; display: flex; flex-direction: column; gap: 5px; } .right-panel .chest { margin: 0; width: 90%; border-left: none; background: transparent !important; border: none; }
+
+/* Destaque do item selecionado / .selected { background-color: #f1c40f; / Amarelo / border-color: #f39c12; / Borda amarelo escuro */ position: relative; overflow: visible; }
+
+/* Animação do pixel percorrendo as bordas */ .selected::before { content: ''; position: absolute; width: 3px; height: 3px; background: #fff; border-radius: 50%; box-shadow: 0 0 6px #fff, 0 0 12px #f39c12; z-index: 10; animation: pixelBorder 2s linear infinite; } @keyframes pixelBorder { 0% { top: -2px; left: -2px; } 25% { top: -2px; left: calc(100% - 1px); } 50% { top: calc(100% - 1px); left: calc(100% - 1px); } 75% { top: calc(100% - 1px); left: -2px; } 100% { top: -2px; left: -2px; } }
+
+.item img, .slot img { max-width: 60px !important; /* Muda de 60px para 45px / max-height: 60px !important; / Muda de 60px para 45px */ object-fit: contain !important; display: block !important; margin: auto !important; }
+
+.item-quantity { position: absolute; bottom: 2px; left: 2px; color: #87CEEB; font-size: 20px; font-weight: bold; z-index: 3; }
+
+.item-preview { display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: center; }
+
+.preview-image-container { width: 130px; height: 96px; border: 1px solid #ccc; background: #000039; display: flex; align-items: center; justify-content: center; margin: 0 auto; margin-top: -65px; margin-left: 10px; box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.6), 2px 2px 6px rgba(0, 0, 0, 0.4); } #preview-image { max-width: 110px; max-height: 110px; object-fit: contain; }
+
+.preview-info { text-align: center; color: white; margin-top: 15px; } .preview-info h3 { margin: 0 0 5px 0; font-size: 14px; -webkit-text-stroke: 0.2px #ccc; } .preview-info p { margin: 0; font-size: 12px; color: #ccc; -webkit-text-stroke: 0.2px #ccc; text-align: justify; text-justify: inter-word; hyphens: auto; }
+
+/* Container para as janelas superiores */ .top-panels { display: flex; gap: 5px; margin-bottom: 5px; }
+
+/* Nova janela de informação */ .info-panel { padding: 5px; background: transparent !important; border: none; border-radius: 0; min-height: 80px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; color: white; font-size: 8px; line-height: 1.2; flex: 1; text-align: left; margin-left: 20px; margin-top: 2px; } .green-text { color: #90EE90; }
+
+/* Janela do nome do personagem (ABORDAGEM AGRESSIVA) / .name-panel { box-sizing: border-box !important; width: 80px !important; height: 30px !important; min-height: 0 !important; padding: 0 !important; margin: 0 0 0px 0 !important; / Remove margin auto, alinha à esquerda */ background: transparent !important; border: none !important; color: white !important; font-size: 12px !important; text-align: center !important; line-height: 16px !important; display: block !important; position: relative !important; z-index: 2 !important; }
+
+/* Retrato antigo (vai ser sobrescrito pela âncora) */ #portrait-image { width: 80px; height: 80px; object-fit: contain; display: block; margin: 0 0; margin-left: 20px; margin-top: 10px; }
+
+.weapon-ammo { position: absolute; bottom: 2px; left: 2px; color: #90EE90; font-size: 20px; font-weight: bold; z-index: 3; } .slot-weapon-ammo { position: absolute; bottom: 2px; left: 2px; color: #90EE90; font-size: 20px; font-weight: bold; z-index: 3; }
+
+/* ======================================================= / / AJUSTES PARA FIXAR O PORTRAIT AO BACKGROUND (ÂNCORA) / / ======================================================= */
+
+/* torna a área de background o referencial de posição */ .chest-area { position: relative; }
+
+/* Contêiner âncora do retrato, posicionado sobre o fundo / #portrait-anchor { position: absolute; z-index: 5; / acima do fundo e dos conteúdos comuns / left: 3.8%; / AJUSTE FINO: posição horizontal relativa ao chest-area / top: 4.2%; / AJUSTE FINO: posição vertical relativa ao chest-area / width: 15%; / AJUSTE FINO: tamanho relativo ao chest-area / height: auto; pointer-events: none; / cliques passam para os elementos abaixo (opcional) */ }
+
+/* A imagem do retrato preenche a âncora e ignora margens antigas */ #portrait-anchor #portrait-image { position: static !important; display: block !important; width: 100% !important; height: auto !important; margin: 0 !important; object-fit: contain !important; image-rendering: pixelated; }
