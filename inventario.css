@@ -1073,7 +1073,11 @@ p {
     display: block;
     min-height: 200px;
     height: auto;
+    background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png') center/cover no-repeat;
+    background-size: cover;
+    background-position: center;
 }
+
 
 .stage-bg {
     display: block;
