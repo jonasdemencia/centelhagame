@@ -1,7 +1,3 @@
-/* Fix para compatibilidade entre navegadores */
-.items { justify-content: center; margin: 0 auto; }
-
-/* Seu CSS original continua igual abaixo... */
 /* Aplicação da fonte Eagle Lake */
 body {
     font-family: 'Eagle Lake', cursive;
@@ -11,7 +7,6 @@ body {
     background-color: #000; /* preto absoluto */
     color: white;
 }
-
 
 /* Container principal */
 .container {
@@ -75,12 +70,12 @@ p {
     display: grid;
     grid-template-columns: repeat(2, 70px);
     gap: 2px !important;
-    justify-content: center;  /* ← MUDANÇA AQUI */
+    justify-content: start;
     align-items: start;
     padding: 10px;
     overflow-y: auto;
     max-height: calc(350px - 40px);
-    margin: 0 auto;  /* ← MUDANÇA AQUI */
+    margin-left: -8px;
 }
 
 /* Estilo dos itens e slots */
