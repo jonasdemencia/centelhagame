@@ -1011,11 +1011,13 @@ color: white;
     color: white;
     font-size: 8px;
     line-height: 1.2;
-    flex: 1.6; /* ← MUDANÇA AQUI */
+    flex: 1;
     text-align: left;
-    margin-left: 20px;
+    margin-left: 10px; /* ← MUDANÇA AQUI de 20px para 10px */
     margin-top: 2px;
+    width: 200px; /* ← ADICIONE ESTA LINHA */
 }
+
 
 .green-text {
     color: #90EE90;
