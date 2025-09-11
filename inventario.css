@@ -31,12 +31,10 @@ h1 {
     font-size: 32px;
     margin-bottom: 10px;
 }
-
 h2 {
     font-size: 24px;
     margin-bottom: 10px;
 }
-
 p {
     font-size: 16px;
     margin-bottom: 20px;
@@ -142,8 +140,6 @@ p {
     border-color: #2980b9; /* Borda azul escuro */
 }
 
-
-
 /* Estilização da área de descarte */
 .discard-area {
     margin-top: 20px;
@@ -207,22 +203,18 @@ p {
     max-width: none;
     margin: 0 auto 50px auto;
 }
-
 .carousel-container {
     position: relative;
     width: 100%;
 }
-
 .carousel-slide {
     width: 100%;
     display: none;
-        position: relative;
+    position: relative;
 }
-
 .carousel-slide.active {
     display: block;
 }
-
 .carousel-buttons {
     position: absolute;
     bottom: -40px;
@@ -234,7 +226,6 @@ p {
     margin-top: 15px;
     z-index: 100;
 }
-
 .carousel-buttons button {
     background: #aa6c39;
     border: none;
@@ -245,7 +236,6 @@ p {
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-
 .carousel-buttons button:hover {
     background: #8b5a2b;
     transform: translateY(-1px);
@@ -262,7 +252,6 @@ p {
     width: 250px; /* Adicionando a mesma largura do .character */
     margin: auto; /* Centraliza a ficha também */
 }
-
 .character-sheet p {
     flex-basis: 45%; /* Nome/Classe e Raça/Alinhamento lado a lado */
     padding: 4px; /* Preenchimento interno ajustado */
@@ -282,7 +271,6 @@ p {
     justify-content: center;
     margin-top: 15px;
 }
-
 .attribute-container .attribute {
     display: flex;
     flex-direction: column; /* Nomes acima dos valores */
@@ -296,7 +284,6 @@ p {
     color: white;
     text-align: center;
 }
-
 .attribute-container .attribute .label {
     font-size: 0.7em; /* Nomes menores */
     margin-bottom: 2px; /* Espaço entre o nome e o valor */
@@ -310,7 +297,6 @@ p {
     gap: 15px; /* Espaço entre as janelas */
     margin-top: 15px;
 }
-
 .char-hand-container,
 .char-hemisphere-container {
     display: flex;
@@ -335,7 +321,6 @@ p {
     gap: 15px; /* Espaço entre as janelas */
     margin-top: 10px; /* Espaçamento acima */
 }
-
 .couraca-dano .attribute {
     display: flex;
     flex-direction: column;
@@ -350,7 +335,6 @@ p {
     text-align: center;
     color: white;
 }
-
 .couraca-dano .attribute .label {
     font-size: 0.7em; /* Nome Couraça/Dano menor */
     margin-bottom: 2px;
@@ -379,7 +363,6 @@ p {
     border: 1px solid #333;
     margin: 2px auto 0; /* Centraliza e adiciona um pequeno espaço acima */
 }
-
 .attribute .barra-hp {
     height: 100%;
     background-color: #4CAF50;
@@ -399,13 +382,11 @@ p {
     margin-top: 10px;
     width: 80px;
 }
-
 .time-container .label {
     font-size: 0.7em;
     margin-bottom: 2px;
     color: #ffffff;
 }
-
 #char-day {
     font-size: 1.2em;
     font-weight: bold;
@@ -429,7 +410,6 @@ p {
     font-size: 0.7em; /* Fonte reduzida */
     color: black; /* Contraste para o texto */
 }
-
 #char-po-container .label {
     font-size: 0.7em; /* Nome PO menor */
     margin-bottom: 2px;
@@ -457,28 +437,23 @@ p {
     width: 100%;
     margin: 20px auto;
 }
-
 .storage-carousel-container {
     position: relative;
     width: 100%;
 }
-
 .storage-carousel-slide {
     width: 100%;
     display: none;
 }
-
 .storage-carousel-slide.active {
     display: block;
 }
-
 .storage-carousel-buttons {
     display: flex;
     justify-content: center;
     gap: 10px;
     margin-top: 15px;
 }
-
 .storage-carousel-buttons button {
     background: #aa6c39;
     border: none;
@@ -489,7 +464,6 @@ p {
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-
 .storage-carousel-buttons button:hover {
     background: #8b5a2b;
     transform: translateY(-1px);
@@ -502,13 +476,11 @@ p {
     gap: 20px;
     height: 100%;
 }
-
 .dice-section h3 {
     color: #d4a373;
     margin-bottom: 15px;
     text-align: center;
 }
-
 .dice-items {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -527,7 +499,6 @@ p {
     gap: 10px;
     padding: 10px;
 }
-
 .dice-slot {
     width: 70px;
     height: 70px;
@@ -538,12 +509,10 @@ p {
     font-weight: bold;
     box-sizing: border-box; /* ADICIONADO: Garante o tamanho exato de 70x70px, incluindo a borda */
 }
-
 .dice-slot.highlight {
     background-color: #3498db;
     border-color: #2980b9;
 }
-
 .dice-item {
     width: 70px;
     height: 70px;
@@ -553,7 +522,6 @@ p {
     font-size: 14px;
     font-weight: bold;
 }
-
 .dice-item.selected {
     background-color: #f1c40f;
     border-color: #f39c12;
@@ -565,7 +533,6 @@ p {
     flex-direction: column;
     gap: 15px; /* Espaço entre as linhas */
 }
-
 .dice-slot-row {
     display: flex;
     justify-content: center; /* Centraliza horizontalmente */
@@ -579,26 +546,22 @@ p {
     padding: 5px !important;
     background-color: #4b0082 !important; /* Roxo para diferenciar da energia */
 }
-
 .xp-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-top: 2px;
 }
-
 #char-level {
     font-size: 1.2em;
     font-weight: bold;
     color: #ffd700; /* Dourado para o nível */
 }
-
 #char-xp {
     font-size: 0.7em;
     white-space: nowrap;
     margin-bottom: 2px;
 }
-
 .barra-xp-container {
     width: 40px;
     height: 4px;
@@ -606,7 +569,6 @@ p {
     border: 1px solid #555;
     margin: 2px auto 0;
 }
-
 .barra-xp {
     height: 100%;
     background-color: #9370db; /* Roxo mais claro para a barra */
@@ -631,7 +593,6 @@ p {
     color: white;
     z-index: 2;
 }
-
 .item-energy-fill {
     position: absolute;
     top: 0;
@@ -641,7 +602,6 @@ p {
     transition: width 0.3s ease;
     z-index: 1;
 }
-
 .item-energy-text {
     position: relative;
     z-index: 3;
@@ -653,12 +613,10 @@ p {
     border: 2px solid #ff6b6b;
     background-color: rgba(255, 107, 107, 0.2);
 }
-
 .multi-select-controls {
     margin: 10px 0;
     text-align: center;
 }
-
 .multi-select-btn {
     padding: 5px 10px;
     margin: 0 5px;
@@ -668,15 +626,12 @@ p {
     border-radius: 3px;
     cursor: pointer;
 }
-
 .multi-select-btn:hover {
     background: #45a049;
 }
-
 .discard-selected-btn {
     background: #f44336;
 }
-
 .discard-selected-btn:hover {
     background: #da190b;
 }
@@ -694,13 +649,11 @@ p {
     background-color: #1a1a1a;
     border: 1px solid #444;
 }
-
 .sheet-header {
     display: flex;
     justify-content: space-between;
     gap: 10px;
 }
-
 .sheet-header p {
     margin: 0;
     padding: 5px;
@@ -709,23 +662,19 @@ p {
     flex-grow: 1;
     text-align: center;
 }
-
 .sheet-main-status {
     display: flex;
     justify-content: space-around;
     gap: 10px;
 }
-
 .sheet-main-status .attribute {
     width: 48%;
 }
-
 .sheet-stats-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr); /* Duas colunas */
     gap: 8px;
 }
-
 .sheet-stats-grid .stat-box {
     background-color: #2c2c2c;
     border: 1px solid #444;
@@ -735,16 +684,13 @@ p {
     align-items: center;
     font-size: 14px;
 }
-
 .sheet-stats-grid .stat-box .label {
     color: #ccc;
 }
-
 .sheet-stats-grid .stat-box span:last-child {
     font-weight: bold;
     font-size: 16px;
 }
-
 .sheet-footer {
     display: flex;
     justify-content: space-around;
@@ -769,12 +715,10 @@ p {
     margin: 5px auto 0;
     text-align: center;
 }
-
 .dice-slots-container h3 {
     color: white;
     margin-bottom: 15px;
 }
-
 .dice-chest h2 {
     color: white;
     margin-bottom: 15px;
@@ -797,7 +741,6 @@ p {
     align-items: center;
     gap: 8px;
 }
-
 .item-image {
     width: 32px;
     height: 32px;
@@ -805,7 +748,6 @@ p {
     border-radius: 4px;
     flex-shrink: 0;
 }
-
 .item-text {
     flex: 1;
 }
@@ -816,7 +758,6 @@ p {
     align-items: center;
     gap: 6px;
 }
-
 .slot .item-image {
     width: 24px;
     height: 24px;
@@ -830,11 +771,9 @@ p {
     height: 100%;
     gap: 0;
     margin-left: 0;
-    background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png') center/cover no-repeat;
-    background-size: cover; /* volta para cover */
-    background-position: center;
+    /* AJUSTE: remover background antigo para evitar duplicidade com o stage */
+    background: none !important;
 }
-
 
 .left-panel {
     width: 70%;
@@ -848,8 +787,6 @@ p {
     flex-direction: column;
     gap: 2px;
 }
-
-
 .right-panel {
     width: 40%;
     padding: 0;
@@ -857,7 +794,6 @@ p {
     flex-direction: column;
     gap: 5px;
 }
-
 .right-panel .chest {
     margin: 0;
     width: 90%;
@@ -873,7 +809,6 @@ p {
     position: relative;
     overflow: visible;
 }
-
 /* Animação do pixel percorrendo as bordas */
 .selected::before {
     content: '';
@@ -886,33 +821,17 @@ p {
     z-index: 10;
     animation: pixelBorder 2s linear infinite;
 }
-
 @keyframes pixelBorder {
-    0% {
-        top: -2px;
-        left: -2px;
-    }
-    25% {
-        top: -2px;
-        left: calc(100% - 1px);
-    }
-    50% {
-        top: calc(100% - 1px);
-        left: calc(100% - 1px);
-    }
-    75% {
-        top: calc(100% - 1px);
-        left: -2px;
-    }
-    100% {
-        top: -2px;
-        left: -2px;
-    }
+    0% { top: -2px; left: -2px; }
+    25% { top: -2px; left: calc(100% - 1px); }
+    50% { top: calc(100% - 1px); left: calc(100% - 1px); }
+    75% { top: calc(100% - 1px); left: -2px; }
+    100% { top: -2px; left: -2px; }
 }
 
 .item img, .slot img {
-    max-width: 60px !important; /* Muda de 60px para 45px */
-    max-height: 60px !important; /* Muda de 60px para 45px */
+    max-width: 60px !important;
+    max-height: 60px !important;
     object-fit: contain !important;
     display: block !important;
     margin: auto !important;
@@ -928,7 +847,6 @@ p {
     z-index: 3;
 }
 
-
 .item-preview {
     display: flex;
     flex-direction: column;
@@ -936,7 +854,6 @@ p {
     height: 100%;
     justify-content: center;
 }
-
 .preview-image-container {
     width: 130px;
     height: 96px;
@@ -946,31 +863,27 @@ p {
     align-items: center;
     justify-content: center;
     margin: 0 auto;
-        margin-top: -65px;
+    margin-top: -65px;
     margin-left: 10px;
-    box-shadow: 
+    box-shadow:
         inset 2px 2px 4px rgba(0, 0, 0, 0.6),
         2px 2px 6px rgba(0, 0, 0, 0.4);
 }
-
 #preview-image {
     max-width: 110px;
     max-height: 110px;
     object-fit: contain;
 }
-
- .preview-info {
-text-align: center;
-color: white;
-      margin-top: 15px;
+.preview-info {
+    text-align: center;
+    color: white;
+    margin-top: 15px;
 }
-
 .preview-info h3 {
     margin: 0 0 5px 0;
     font-size: 14px;
     -webkit-text-stroke: 0.2px #ccc;
 }
-
 .preview-info p {
     margin: 0;
     font-size: 12px;
@@ -980,7 +893,6 @@ color: white;
     text-justify: inter-word;
     hyphens: auto;
 }
-
 
 /* Container para as janelas superiores */
 .top-panels {
@@ -1008,20 +920,16 @@ color: white;
     margin-left: 20px;
     margin-top: 2px;
 }
+.green-text { color: #90EE90; }
 
-.green-text {
-    color: #90EE90;
-}
-
-
-/* Janela do nome do personagem (ABORDAGEM AGRESSIVA) */
+/* Janela do nome do personagem (ABORDAGEM AGRESSIVA) - SERÁ IGNORADO PELO NOVO LAYOUT */
 .name-panel {
     box-sizing: border-box !important;
     width: 80px !important;
     height: 30px !important;
     min-height: 0 !important;
     padding: 0 !important;
-    margin: 0 0 0px 0 !important; /* Remove margin auto, alinha à esquerda */
+    margin: 0 0 0px 0 !important;
     background: transparent !important;
     border: none !important;
     color: white !important;
@@ -1033,6 +941,7 @@ color: white;
     z-index: 2 !important;
 }
 
+/* Retrato antigo (NÃO USADO NO NOVO LAYOUT) */
 #portrait-image {
     width: 80px;
     height: 80px;
@@ -1046,8 +955,8 @@ color: white;
     transform: scale(1) !important;
 }
 
-
-.weapon-ammo {
+.weapon-ammo,
+.slot-weapon-ammo {
     position: absolute;
     bottom: 2px;
     left: 2px;
@@ -1057,12 +966,62 @@ color: white;
     z-index: 3;
 }
 
-.slot-weapon-ammo {
+/* =========================
+   STAGE RESPONSIVO (NOVO)
+   ========================= */
+
+.stage {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    line-height: 0;
+    user-select: none;
+    display: block;
+}
+
+.stage-bg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.overlay {
     position: absolute;
-    bottom: 2px;
-    left: 2px;
-    color: #90EE90;
-    font-size: 20px;
-    font-weight: bold;
-    z-index: 3;
+    z-index: 2;
+    pointer-events: auto;
+    box-sizing: border-box;
+}
+
+.overlay img,
+.portrait .portrait-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.name-tag {
+    color: #fff;
+    font-family: 'Eagle Lake', cursive;
+    font-size: 12px;
+    line-height: 1.2;
+    text-align: center;
+    text-shadow: 0 0 1px #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.info-box {
+    color: #fff;
+    font-family: 'Eagle Lake', cursive;
+    font-size: 10px;
+    line-height: 1.2;
+    padding: 4px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid #aa6c39;
+}
+
+.stage.debug .overlay {
+    outline: 1px dashed rgba(255, 255, 0, 0.8);
 }
