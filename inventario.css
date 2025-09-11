@@ -1,4 +1,9 @@
 
+/* Reset seletivo para evitar quebras */
+.items, .slot, .item, .discard-slot, .dice-slot, .dice-item {
+    box-sizing: border-box;
+}
+
 /* Aplicação da fonte Eagle Lake */
 body {
     font-family: 'Eagle Lake', cursive;
@@ -70,13 +75,13 @@ p {
 .items {
     display: grid;
     grid-template-columns: repeat(2, 70px);
-    gap: 2px !important;
-    justify-content: start;
+    gap: 2px;
+    justify-content: center; /* Mudança aqui para centralizar */
     align-items: start;
     padding: 10px;
     overflow-y: auto;
     max-height: calc(350px - 40px);
-    margin-left: -8px;
+    margin: 0 auto; /* Centraliza o grid */
 }
 
 /* Estilo dos itens e slots */
@@ -142,8 +147,6 @@ p {
 .highlight {
     border-color: #2980b9; /* Borda azul escuro */
 }
-
-
 
 /* Estilização da área de descarte */
 .discard-area {
@@ -217,7 +220,7 @@ p {
 .carousel-slide {
     width: 100%;
     display: none;
-        position: relative;
+    position: relative;
 }
 
 .carousel-slide.active {
@@ -831,11 +834,8 @@ p {
     height: 100%;
     gap: 0;
     margin-left: 0;
-    background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png') center/cover no-repeat;
-    background-size: cover; /* volta para cover */
-    background-position: center;
+    background: none !important; /* Remove background antigo */
 }
-
 
 .left-panel {
     width: 70%;
@@ -849,7 +849,6 @@ p {
     flex-direction: column;
     gap: 2px;
 }
-
 
 .right-panel {
     width: 40%;
@@ -912,8 +911,8 @@ p {
 }
 
 .item img, .slot img {
-    max-width: 60px !important; /* Muda de 60px para 45px */
-    max-height: 60px !important; /* Muda de 60px para 45px */
+    max-width: 60px !important;
+    max-height: 60px !important;
     object-fit: contain !important;
     display: block !important;
     margin: auto !important;
@@ -928,7 +927,6 @@ p {
     font-weight: bold;
     z-index: 3;
 }
-
 
 .item-preview {
     display: flex;
@@ -947,7 +945,7 @@ p {
     align-items: center;
     justify-content: center;
     margin: 0 auto;
-        margin-top: -65px;
+    margin-top: -65px;
     margin-left: 10px;
     box-shadow: 
         inset 2px 2px 4px rgba(0, 0, 0, 0.6),
@@ -960,10 +958,10 @@ p {
     object-fit: contain;
 }
 
- .preview-info {
-text-align: center;
-color: white;
-      margin-top: 15px;
+.preview-info {
+    text-align: center;
+    color: white;
+    margin-top: 15px;
 }
 
 .preview-info h3 {
@@ -981,7 +979,6 @@ color: white;
     text-justify: inter-word;
     hyphens: auto;
 }
-
 
 /* Container para as janelas superiores */
 .top-panels {
@@ -1014,7 +1011,6 @@ color: white;
     color: #90EE90;
 }
 
-
 /* Janela do nome do personagem (ABORDAGEM AGRESSIVA) */
 .name-panel {
     box-sizing: border-box !important;
@@ -1040,10 +1036,9 @@ color: white;
     object-fit: contain;
     display: block;
     margin: 0 0;
-margin-left: 20px;
-margin-top: 10px;
+    margin-left: 20px;
+    margin-top: 10px;
 }
-
 
 .weapon-ammo {
     position: absolute;
@@ -1063,4 +1058,66 @@ margin-top: 10px;
     font-size: 20px;
     font-weight: bold;
     z-index: 3;
+}
+
+/* =========================
+   STAGE RESPONSIVO (NOVO)
+   ========================= */
+
+.stage {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    line-height: 0;
+    user-select: none;
+    display: block;
+    min-height: 200px;
+    height: auto;
+}
+
+.stage-bg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.overlay {
+    position: absolute;
+    z-index: 2;
+    pointer-events: auto;
+    box-sizing: border-box;
+}
+
+.overlay img,
+.portrait .portrait-img {
+    display: block !important;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.name-tag {
+    color: #fff;
+    font-family: 'Eagle Lake', cursive;
+    font-size: 12px;
+    line-height: 1.2;
+    text-align: center;
+    text-shadow: 0 0 1px #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.info-box {
+    color: #fff;
+    font-family: 'Eagle Lake', cursive;
+    font-size: 10px;
+    line-height: 1.2;
+    padding: 4px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid #aa6c39;
+}
+
+.stage.debug .overlay {
+    outline: 1px dashed rgba(255, 255, 0, 0.8);
 }
