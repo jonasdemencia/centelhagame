@@ -946,7 +946,7 @@ p {
     align-items: center;
     justify-content: center;
     margin: 0 auto;
-        margin-top: -40px;
+        margin-top: -55px;
     box-shadow: 
         inset 2px 2px 4px rgba(0, 0, 0, 0.6),
         2px 2px 6px rgba(0, 0, 0, 0.4);
@@ -1005,7 +1005,7 @@ color: white;
     flex: 1;
     text-align: left;
     margin-left: 20px;
-    margin-top: 10px;
+    margin-top: 5px;
 }
 
 .green-text {
@@ -1039,7 +1039,7 @@ color: white;
     display: block;
     margin: 0 0;
 margin-left: 20px;
-margin-top: 14px;
+margin-top: 10px;
 }
 
 
