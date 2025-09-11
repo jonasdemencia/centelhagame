@@ -75,8 +75,16 @@ p {
     padding: 10px;
     overflow-y: auto;
     max-height: calc(350px - 40px);
-    margin-left: -4px;
+    margin-left: -8px; /* Chrome/Edge */
 }
+
+/* Firefox específico */
+@-moz-document url-prefix() {
+    .items {
+        margin-left: -15px;
+    }
+}
+
 
 /* Estilo dos itens e slots */
 .slot, .item, .discard-slot {
