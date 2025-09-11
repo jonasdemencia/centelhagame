@@ -78,70 +78,60 @@
                     </div>
 
                     <div class="chest-area">
-                        <div class="left-panel">
-                            <!-- ================================================== -->
-                            <!-- INÍCIO DA NOVA ESTRUTURA DO STAGE DO JOGADOR      -->
-                            <!-- ================================================== -->
-                            <div class="stage" id="player-stage">
-                                <!-- 1. Fundo do stage (a imagem que contém as molduras) -->
-                                <img class="stage-bg" src="https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png" alt="Fundo do jogo">
+    <!-- 1. Imagem de Fundo como Elemento -->
+    <img class="stage-bg" src="https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png" alt="Fundo do jogo">
 
-                                <!-- 2. Portrait (AJUSTE AQUI: left, top, width) -->
-                                <div class="overlay portrait" id="p-portrait" style="left: 5.5%; top: 5.5%; width: 23%;">
-                                    <img class="portrait-img" src="https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/portraits/protagonista.png" alt="Retrato">
-                                </div>
+    <!-- 2. Overlays (Retrato, Nome, Infos) -->
+    <!-- PONTO DE AJUSTE: Alinhe os itens abaixo mudando os valores de left, top, width em % -->
+    <div class="overlay portrait" id="p-portrait" style="left: 3.8%; top: 5.5%; width: 16%;">
+        <img class="portrait-img" src="https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/portraits/protagonista.png" alt="Retrato">
+    </div>
+    <div class="overlay name-tag" id="p-name" style="left: 22.4%; top: 8%; width: 24.5%; height: 8%;">
+        <span id="char-name-display">Nome do Personagem</span>
+    </div>
+    <div class="overlay info-box" id="p-info" style="left: 22.4%; top: 17%; width: 31.5%; height: 20%;">
+        <div><span id="char-class-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-race-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-alignment-info" class="green-text">-</span></div>
+        <div><span id="char-age-info" class="green-text">-</span> ANOS&nbsp;&nbsp;&nbsp;<span id="char-hand-info" class="green-text">-</span>&nbsp;&nbsp;&nbsp;HEM: <span id="char-hemisphere-info" class="green-text">-</span></div>
+        <div>HA: <span id="char-skill-info" class="green-text">-</span>&nbsp;&nbsp;CA: <span id="char-charisma-info" class="green-text">-</span>&nbsp;&nbsp;MA: <span id="char-magic-info" class="green-text">-</span>&nbsp;&nbsp;SO: <span id="char-luck-info" class="green-text">-</span></div>
+        <div>COURAÇA: <span id="char-couraca-info" class="green-text">0</span>&nbsp;&nbsp;DANO: <span id="char-dano-info" class="green-text">1</span>&nbsp;&nbsp;DIA: <span id="char-day-info" class="green-text">1</span></div>
+    </div>
 
-                                <!-- 3. Nome (AJUSTE AQUI: left, top, width, height) -->
-                                <div class="overlay name-tag" id="p-name" style="left: 32%; top: 8%; width: 35%; height: 8%;">
-                                    <span id="char-name-display">Nome do Personagem</span>
-                                </div>
+    <!-- 3. Painéis Originais (agora sobre a imagem de fundo) -->
+    <div class="left-panel">
+        <!-- O conteúdo de nome e info foi movido para os overlays acima -->
+        <div class="item-preview">
+            <div class="preview-image-window">
+                <div class="preview-image-container">
+                    <img id="preview-image" src="" alt="Item Preview" style="display: none;">
+                </div>
+            </div>
+            <div class="preview-info-window">
+                <div class="preview-info">
+                    <h3 id="preview-name"></h3>
+                    <p id="preview-description"></p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                                <!-- 4. Info Box (AJUSTE AQUI: left, top, width, height) -->
-                                <div class="overlay info-box" id="p-info" style="left: 32%; top: 17%; width: 45%; height: 20%;">
-                                    <div><span id="char-class-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-race-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-alignment-info" class="green-text">-</span></div>
-                                    <div><span id="char-age-info" class="green-text">-</span> ANOS&nbsp;&nbsp;&nbsp;<span id="char-hand-info" class="green-text">-</span>&nbsp;&nbsp;&nbsp;HEM: <span id="char-hemisphere-info" class="green-text">-</span></div>
-                                    <div>HA: <span id="char-skill-info" class="green-text">-</span>&nbsp;&nbsp;CA: <span id="char-charisma-info" class="green-text">-</span>&nbsp;&nbsp;MA: <span id="char-magic-info" class="green-text">-</span>&nbsp;&nbsp;SO: <span id="char-luck-info" class="green-text">-</span></div>
-                                    <div>COURAÇA: <span id="char-couraca-info" class="green-text">0</span>&nbsp;&nbsp;DANO: <span id="char-dano-info" class="green-text">1</span>&nbsp;&nbsp;DIA: <span id="char-day-info" class="green-text">1</span></div>
-                                </div>
-                            </div>
-                            <!-- ================================================== -->
-                            <!-- FIM DA NOVA ESTRUTURA DO STAGE                     -->
-                            <!-- ================================================== -->
-
-                            <div class="item-preview">
-                                <div class="preview-image-window">
-                                    <div class="preview-image-container">
-                                        <img id="preview-image" src="" alt="Item Preview" style="display: none;">
-                                    </div>
-                                </div>
-                                <div class="preview-info-window">
-                                    <div class="preview-info">
-                                        <h3 id="preview-name"></h3>
-                                        <p id="preview-description"></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="right-panel">
-                            <div class="chest">
-                                <div class="items">
-                                    <div class="item">
-                                        Item de Exemplo
-                                        <span class="item-expand-toggle">+</span>
-                                        <div class="item-description" style="display: none;">
-                                            Descrição deste item de exemplo.
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="char-po-container">
-                                    <span class="label">Peças de Ouro:</span>
-                                    <span id="char-po">0</span>
-                                </div>
-                            </div>
-                        </div>
+    <div class="right-panel">
+        <div class="chest">
+            <div class="items">
+                <div class="item">
+                    Item de Exemplo
+                    <span class="item-expand-toggle">+</span>
+                    <div class="item-description" style="display: none;">
+                        Descrição deste item de exemplo.
                     </div>
                 </div>
+            </div>
+            <div id="char-po-container">
+                <span class="label">Peças de Ouro:</span>
+                <span id="char-po">0</span>
+            </div>
+        </div>
+    </div>
+</div>
 
                 <!-- Slide 2: Ficha do Personagem -->
                 <div class="carousel-slide" id="character-sheet">
@@ -233,3 +223,4 @@
     <script type="module" src="inventario.js"></script>
 </body>
 </html>
+
