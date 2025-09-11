@@ -1038,14 +1038,14 @@ color: white;
     height: 80px;
     object-fit: contain;
     display: block;
-    position: fixed;
+    position: absolute;
     left: 20px;
     top: 10px;
     margin: 0;
-    zoom: 1;
-    transform: scale(1);
-    transform-origin: top left;
+    zoom: 1 !important;
+    transform: scale(1) !important;
 }
+
 
 .weapon-ammo {
     position: absolute;
