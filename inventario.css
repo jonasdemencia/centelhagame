@@ -955,7 +955,7 @@ p {
     justify-content: center;
     margin: 0 auto;
         margin-top: -65px;
-    margin-left: 10px;
+    margin-left: 20px;
     box-shadow: 
         inset 2px 2px 4px rgba(0, 0, 0, 0.6),
         2px 2px 6px rgba(0, 0, 0, 0.4);
@@ -970,7 +970,8 @@ p {
  .preview-info {
 text-align: center;
 color: white;
-      margin-top: 15px;
+     margin-top: 25px;
+width: 100px;
 }
 
 .preview-info h3 {
@@ -1014,7 +1015,7 @@ color: white;
     word-spacing: -1px; /* ← ADICIONE ESTA LINHA */
     flex: 1;
     text-align: left;
-    margin-left: 20px;
+    margin-left: 30px;
     margin-top: 2px;
 }
 
