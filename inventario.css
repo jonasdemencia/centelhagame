@@ -1011,7 +1011,7 @@ color: white;
     color: white;
     font-size: 8px;
     line-height: 1.2;
-    flex: 1;
+    flex: 1.3; /* ← MUDANÇA AQUI */
     text-align: left;
     margin-left: 20px;
     margin-top: 2px;
