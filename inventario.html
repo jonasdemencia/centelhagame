@@ -7,11 +7,10 @@
     <link rel="stylesheet" href="inventario.css">
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
-        /* Estilos adicionados para o expandir/recolher */
+        /* Estilos in-page (mantidos para compatibilidade) */
         .item {
-            position: relative; /* Para posicionar o toggle dentro */
+            position: relative;
         }
-
         .item-expand-toggle {
             position: absolute;
             top: 5px;
@@ -25,7 +24,6 @@
             text-align: center;
             line-height: 18px;
         }
-
         .item-description {
             margin-top: 5px;
             padding: 5px;
@@ -33,125 +31,98 @@
             background-color: #f9f9f9;
             font-size: 0.9em;
         }
-   * {
-    font-weight: normal !important;
-    font-family: 'VT323', monospace !important;
-    letter-spacing: 1.5px !important;
-    -webkit-font-smoothing: none !important;
-    -moz-osx-font-smoothing: grayscale !important;
-    font-smooth: never !important;
-    text-rendering: optimizeSpeed !important;
-}
-
-body {
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-}
-
-        .left-panel {
-    flex: 1.5;
-    padding-right: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.right-panel {
-    flex: 1;
-    padding-left: 10px;
-}
-
-        /* Janela do nome do personagem */
-        .name-panel {
-            padding: 10px;
-            background: #000;
-            border: 2px solid #ccc;
-            border-radius: 0;
-            min-height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 16px;
+        * {
+            font-weight: normal !important;
+            font-family: 'VT323', monospace !important;
+            letter-spacing: 1.5px !important;
+            -webkit-font-smoothing: none !important;
+            -moz-osx-font-smoothing: grayscale !important;
+            font-smooth: never !important;
+            text-rendering: optimizeSpeed !important;
         }
-
-        .profile-info-container {
-            display: flex;
-            gap: 10px;
-            align-items: flex-start;
-            margin-bottom: 10px;
+        body {
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
         }
-
-        .profile-info-container .info-panel {
-            flex: 1;
-            min-height: 80px;
-        }
-
     </style>
 </head>
 <body>
     <div class="container">
-       <button id="useBtn" style="display:none;">Usar</button>
+        <button id="useBtn" style="display:none;">Usar</button>
         <button id="carregar-municao-btn" style="display:none;">Carregar Munição</button>
-<button onclick="resetInventory()" style="background: red; color: white; padding: 10px; display:none;">RESETAR INVENTÁRIO (TEMPORÁRIO)</button>
+        <button onclick="resetInventory()" style="background: red; color: white; padding: 10px; display:none;">RESETAR INVENTÁRIO (TEMPORÁRIO)</button>
 
         <div class="carousel-wrapper">
             <div class="carousel-container">
-                <!-- Slide 1: Chest + Slots -->
+                <!-- Slide 1: Inventário Principal -->
                 <div class="carousel-slide active" id="inventory-window">
                     <div class="character">
                         <div class="equipment">
-    <div class="slot-row">
-    <div class="slot" id="gloves" data-slot="gloves">Luvas</div>
-    <div class="slot" id="helmet" data-slot="helmet">Cabeça</div>
-    <div class="slot" id="amulet" data-slot="amulet">Amuleto</div>
-</div>
-<div class="slot-row">
-    <div class="slot" id="weapon" data-slot="weapon">Mão Esquerda</div>
-    <div class="slot" id="armor" data-slot="armor">Peitoral</div>
-    <div class="slot" id="shield" data-slot="shield">Mão Direita</div>
-</div>
-<div class="slot-row">
-    <div class="slot" id="ring" data-slot="ring">Anel</div>
-    <div class="slot" id="boots" data-slot="boots">Botas</div>
-    <div class="slot" id="ring2" data-slot="ring">Anel</div>
-</div>
-</div>
-
+                            <div class="slot-row">
+                                <div class="slot" id="gloves" data-slot="gloves">Luvas</div>
+                                <div class="slot" id="helmet" data-slot="helmet">Cabeça</div>
+                                <div class="slot" id="amulet" data-slot="amulet">Amuleto</div>
+                            </div>
+                            <div class="slot-row">
+                                <div class="slot" id="weapon" data-slot="weapon">Mão Esquerda</div>
+                                <div class="slot" id="armor" data-slot="armor">Peitoral</div>
+                                <div class="slot" id="shield" data-slot="shield">Mão Direita</div>
+                            </div>
+                            <div class="slot-row">
+                                <div class="slot" id="ring" data-slot="ring">Anel</div>
+                                <div class="slot" id="boots" data-slot="boots">Botas</div>
+                                <div class="slot" id="ring2" data-slot="ring">Anel</div>
+                            </div>
+                        </div>
                     </div>
-                    
+
                     <div class="chest-area">
                         <div class="left-panel">
-                            <div class="name-panel">
-                                <span id="char-name-display">Nome do Personagem</span>
-                            </div>
-                            
-                            <div class="profile-info-container">
-                                <img id="portrait-image" src="" alt="Retrato do Personagem" style="display: none;">
-                                <div class="info-panel">
+                            <!-- ================================================== -->
+                            <!-- INÍCIO DA NOVA ESTRUTURA DO STAGE DO JOGADOR      -->
+                            <!-- ================================================== -->
+                            <div class="stage" id="player-stage">
+                                <!-- 1. Fundo do stage (a imagem que contém as molduras) -->
+                                <img class="stage-bg" src="https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png" alt="Fundo do jogo">
+
+                                <!-- 2. Portrait (AJUSTE AQUI: left, top, width) -->
+                                <div class="overlay portrait" id="p-portrait" style="left: 5.5%; top: 5.5%; width: 23%;">
+                                    <img class="portrait-img" src="https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/portraits/protagonista.png" alt="Retrato">
+                                </div>
+
+                                <!-- 3. Nome (AJUSTE AQUI: left, top, width, height) -->
+                                <div class="overlay name-tag" id="p-name" style="left: 32%; top: 8%; width: 35%; height: 8%;">
+                                    <span id="char-name-display">Nome do Personagem</span>
+                                </div>
+
+                                <!-- 4. Info Box (AJUSTE AQUI: left, top, width, height) -->
+                                <div class="overlay info-box" id="p-info" style="left: 32%; top: 17%; width: 45%; height: 20%;">
                                     <div><span id="char-class-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-race-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-alignment-info" class="green-text">-</span></div>
                                     <div><span id="char-age-info" class="green-text">-</span> ANOS&nbsp;&nbsp;&nbsp;<span id="char-hand-info" class="green-text">-</span>&nbsp;&nbsp;&nbsp;HEM: <span id="char-hemisphere-info" class="green-text">-</span></div>
                                     <div>HA: <span id="char-skill-info" class="green-text">-</span>&nbsp;&nbsp;CA: <span id="char-charisma-info" class="green-text">-</span>&nbsp;&nbsp;MA: <span id="char-magic-info" class="green-text">-</span>&nbsp;&nbsp;SO: <span id="char-luck-info" class="green-text">-</span></div>
                                     <div>COURAÇA: <span id="char-couraca-info" class="green-text">0</span>&nbsp;&nbsp;DANO: <span id="char-dano-info" class="green-text">1</span>&nbsp;&nbsp;DIA: <span id="char-day-info" class="green-text">1</span></div>
                                 </div>
                             </div>
+                            <!-- ================================================== -->
+                            <!-- FIM DA NOVA ESTRUTURA DO STAGE                     -->
+                            <!-- ================================================== -->
 
                             <div class="item-preview">
                                 <div class="preview-image-window">
-    <div class="preview-image-container">
-        <img id="preview-image" src="" alt="Item Preview" style="display: none;">
-    </div>
-</div>
-<div class="preview-info-window">
-    <div class="preview-info">
-        <h3 id="preview-name"></h3>
-        <p id="preview-description"></p>
-    </div>
-</div>
-
+                                    <div class="preview-image-container">
+                                        <img id="preview-image" src="" alt="Item Preview" style="display: none;">
+                                    </div>
+                                </div>
+                                <div class="preview-info-window">
+                                    <div class="preview-info">
+                                        <h3 id="preview-name"></h3>
+                                        <p id="preview-description"></p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
                         <div class="right-panel">
                             <div class="chest">
                                 <div class="items">
@@ -237,7 +208,6 @@ body {
                             </div>
                         </div>
                     </div>
-                    
                     <div class="chest dice-chest">
                         <h2>Coleção de Dados</h2>
                         <div class="dice-items">
@@ -246,7 +216,7 @@ body {
                     </div>
                 </div>
             </div>
-            
+
             <div class="carousel-nav">
                 <div class="carousel-buttons">
                     <button id="prevBtn">◀</button>
@@ -263,6 +233,3 @@ body {
     <script type="module" src="inventario.js"></script>
 </body>
 </html>
-
-
-
