@@ -1039,10 +1039,9 @@ color: white;
     object-fit: contain;
     display: block;
     margin: 0 0;
-margin-left: 4%; /* em vez de 20px */
-    margin-top: 2.3%; /* em vez de 10px */
+    margin-left: 4vw; /* mudança aqui */
+    margin-top: 2.3vh; /* mudança aqui */
 }
-
 
 .weapon-ammo {
     position: absolute;
