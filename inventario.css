@@ -846,6 +846,7 @@ background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/ma
 
 .left-panel {
     width: 70%;
+        position: relative; /* ← ADICIONE ESTA LINHA */
     border-right: none;
     border-right-color: transparent;
     background-color: transparent !important;
@@ -945,6 +946,7 @@ background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/ma
     justify-content: flex-start;
     padding-top: 100px;
 }
+
 
 .preview-image-container {
     width: 130px;
