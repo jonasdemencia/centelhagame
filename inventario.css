@@ -838,7 +838,7 @@ p {
     height: 100%;
     gap: 0;
     margin-left: 0;
-    background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png') center/cover no-repeat;
+    background: url('https://raw.githubusercontent.com/jonasdemencia/haGame/main/images/backgrounds/test-background.png') center/cover no-repeat;
     background-size: cover; /* volta para cover */
     background-position: center;
 }
@@ -949,7 +949,7 @@ p {
     width: 130px;
     height: 96px;
     border: 1px solid #ccc;
-    background: #000039;
+background: #000039 url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/preview-background.png') center/cover no-repeat;
     display: flex;
     align-items: center;
     justify-content: center;
