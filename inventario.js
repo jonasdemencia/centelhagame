@@ -1413,124 +1413,43 @@ async function checkAndAddExtraItems(uid) {
     }
 }
 
+// FUNÇÃO ANTIGA (loadInventoryData) SUBSTITUÍDA POR ESTA VERSÃO CORRIGIDA
 async function loadInventoryData(uid) {
+    console.log("Configurando listener em tempo real para o inventário:", uid);
+    try {
+        const playerRef = doc(db, "players", uid);
 
-console.log("Configurando listener em tempo real para o inventário:", uid);
+        if (inventoryListener) {
+            inventoryListener();
+        }
 
-try {
+        inventoryListener = onSnapshot(playerRef, async (docSnap) => {
+            // Se não existir inventário, inicializa com padrão (isso só roda uma vez)
+            if (!docSnap.exists() || !docSnap.data().inventory) {
+                const initialInventoryData = {
+                    itemsInChest: initialItems.map(item => ({ ...item, uuid: crypto.randomUUID() })),
+                    equippedItems: {},
+                    weaponAmmoCounts: {}
+                };
+                await setDoc(playerRef, { inventory: initialInventoryData }, { merge: true });
+                console.log("Inventário inicializado com os itens padrão.");
+                return;
+            }
 
-const playerRef = doc(db, "players", uid);
+            const inventoryData = docSnap.data().inventory;
+            
+            // A LÓGICA DE ADICIONAR ITENS FOI REMOVIDA DAQUI PARA PARAR O LOOP.
+            // A função apenas ouve e redesenha a UI.
+            
+            loadInventoryUI(inventoryData);
 
-// cancela listener anterior, se existir
+        }, (error) => {
+            console.error("Erro no listener do inventário:", error);
+        });
 
-if (inventoryListener) {
-
-inventoryListener();
-
-}
-
-inventoryListener = onSnapshot(playerRef, async (docSnap) => {
-
-// se não existir inventário, inicializa com padrão
-
-if (!docSnap.exists() || !docSnap.data().inventory) {
-
-const initialInventoryData = {
-
-itemsInChest: initialItems.map(item => ({ ...item })),
-
-equippedItems: {
-
-weapon: null, armor: null, helmet: null, amulet: null,
-
-shield: null, gloves: null, ring: null, boots: null
-
-},
-weaponAmmoCounts: {} // **NOVO** Inicializa o mapa de munição
-
-};
-
-await setDoc(playerRef, { inventory: initialInventoryData }, { merge: true });
-
-console.log("Inventário inicializado com os itens padrão.");
-
-return;
-
-}
-
-const inventoryData = docSnap.data().inventory;
-
-// ADICIONA ITENS EXTRAS NOVOS
-
-let inventoryUpdated = false;
-
-for (const extraItem of extraItems) {
-
-// Para munição, verifica se já existe QUALQUER item de mesmo id no inventário
-
-if (extraItem.id === "municao-38") {
-
-const existsAny = inventoryData.itemsInChest.some(item => item.id === "municao-38");
-
-if (existsAny) continue;
-
-}
-
-const existsInChest = inventoryData.itemsInChest.some(item => item.uuid === extraItem.uuid);
-
-const isEquipped = Object.values(inventoryData.equippedItems).includes(extraItem.content);
-
-const wasDiscarded = inventoryData.discardedItems?.includes(extraItem.uuid);
-
-if (!existsInChest && !isEquipped && !wasDiscarded) {
-
-console.log(`➕ ADICIONANDO NOVO ITEM EXTRA: ${extraItem.id}`);
-
-inventoryData.itemsInChest.push({ ...extraItem });
-
-inventoryUpdated = true;
-
-}
-
-}
-
-// Sempre filtra munições de 38 com quantidade <= 0
-
-inventoryData.itemsInChest = inventoryData.itemsInChest.filter(item => {
-
-if (item.id === "municao-38" && item.quantity <= 0) return false;
-
-return true;
-
-});
-
-if (inventoryUpdated) {
-
-await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-
-console.log("Novos itens extras adicionados e munições zeradas filtradas.");
-
-}
-
-// console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
-
-loadInventoryUI(inventoryData);
-// updateCharacterCouraca(); // Comentado para evitar loop
-// updateCharacterDamage(); // Comentado para evitar loop
-
-
-}, (error) => {
-
-console.error("Erro no listener do inventário:", error);
-
-});
-
-} catch (error) {
-
-console.error("Erro ao configurar listener do inventário:", error);
-
-}
-
+    } catch (error) {
+        console.error("Erro ao configurar listener do inventário:", error);
+    }
 }
 
 function loadInventoryUI(inventoryData) {
