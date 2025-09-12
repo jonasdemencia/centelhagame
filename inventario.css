@@ -1053,8 +1053,10 @@ font-family: 'VT323', monospace !important;
 text-shadow: 
     1px 1px 0 #003300,
     2px 2px 0 #001100 !important;
-transform: scaleY(1.3); /* aumenta 30% na vertical */
-display: inline-block; /* necessário para o transform funcionar no texto */
+transform: scaleY(1.3);
+display: inline-block;
+text-transform: uppercase; /* força caixa alta */
+
 
 
     text-align: center !important;
