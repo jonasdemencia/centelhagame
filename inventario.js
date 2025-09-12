@@ -42,7 +42,8 @@ console.log("DADOS DO JOGADOR ATUALIZADOS EM TEMPO REAL!");
 currentPlayerData = playerData;
 
 // Atualiza a interface
-updateCharacterSheet(playerData);
+// updateCharacterSheet(playerData); // Comentado para evitar loop
+
 }
 }, (error) => {
 console.error("Erro no listener dos dados do jogador:", error);
@@ -1478,10 +1479,9 @@ console.log("Novos itens extras adicionados e munições zeradas filtradas.");
 console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
 
 loadInventoryUI(inventoryData);
+// updateCharacterCouraca(); // Comentado para evitar loop
+// updateCharacterDamage(); // Comentado para evitar loop
 
-updateCharacterCouraca();
-
-updateCharacterDamage();
 
 }, (error) => {
 
