@@ -1009,14 +1009,14 @@ width: 180px;
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-    color: white;
+color: #84946b !important;
     font-size: 8px;
     line-height: 1.2;
     word-spacing: -2.5px; /* ← ADICIONE ESTA LINHA */
     flex: 1;
     text-align: left;
     margin-left: 24px;
-    margin-top: 0.8px;
+    margin-top: 1px;
 }
 
 
