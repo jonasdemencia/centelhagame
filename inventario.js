@@ -1423,57 +1423,7 @@ return;
 
 const inventoryData = docSnap.data().inventory;
 
-// ADICIONA ITENS EXTRAS NOVOS
 
-let inventoryUpdated = false;
-
-for (const extraItem of extraItems) {
-
-// Para munição, verifica se já existe QUALQUER item de mesmo id no inventário
-
-if (extraItem.id === "municao-38") {
-
-const existsAny = inventoryData.itemsInChest.some(item => item.id === "municao-38");
-
-if (existsAny) continue;
-
-}
-
-const existsInChest = inventoryData.itemsInChest.some(item => item.uuid === extraItem.uuid);
-
-const isEquipped = Object.values(inventoryData.equippedItems).includes(extraItem.content);
-
-const wasDiscarded = inventoryData.discardedItems?.includes(extraItem.uuid);
-
-if (!existsInChest && !isEquipped && !wasDiscarded) {
-
-console.log(`➕ ADICIONANDO NOVO ITEM EXTRA: ${extraItem.id}`);
-
-inventoryData.itemsInChest.push({ ...extraItem });
-
-inventoryUpdated = true;
-
-}
-
-}
-
-// Sempre filtra munições de 38 com quantidade <= 0
-
-inventoryData.itemsInChest = inventoryData.itemsInChest.filter(item => {
-
-if (item.id === "municao-38" && item.quantity <= 0) return false;
-
-return true;
-
-});
-
-if (inventoryUpdated) {
-
-await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-
-console.log("Novos itens extras adicionados e munições zeradas filtradas.");
-
-}
 
 console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
 
@@ -1515,7 +1465,6 @@ inventoryData.itemsInChest.forEach(dbItem => {
         return; // Pula para o próximo item se não encontrar os detalhes.
     }
 
-    console.log(`[LOAD UI] Processando item: ${fullItemData.content}`, fullItemData);
 
     const newItem = document.createElement('div');
     newItem.classList.add('item');
