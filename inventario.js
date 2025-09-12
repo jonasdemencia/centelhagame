@@ -1807,8 +1807,8 @@ async function updateCharacterCouraca() {
     if (uid) {
         const playerRef = doc(db, "players", uid);
         try {
-            await updateDoc(playerRef, { couraca: totalCouraca });
-            console.log("Campo 'couraca' atualizado no Firestore para:", totalCouraca);
+// await updateDoc(playerRef, { couraca: totalCouraca }); // Comentado para evitar loop
+// console.log("Campo 'couraca' atualizado no Firestore para:", totalCouraca);
         } catch (error) {
             console.error("Erro ao atualizar o campo 'couraca' no Firestore:", error);
         }
