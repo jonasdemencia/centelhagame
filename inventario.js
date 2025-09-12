@@ -1476,7 +1476,7 @@ console.log("Novos itens extras adicionados e munições zeradas filtradas.");
 
 }
 
-console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
+// console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
 
 loadInventoryUI(inventoryData);
 // updateCharacterCouraca(); // Comentado para evitar loop
@@ -1499,7 +1499,7 @@ console.error("Erro ao configurar listener do inventário:", error);
 
 function loadInventoryUI(inventoryData) {
 
-console.log("--- [LOAD UI] --- Iniciando redesenho do inventário com dados do Firestore:", inventoryData);
+// console.log("--- [LOAD UI] --- Iniciando redesenho do inventário com dados do Firestore:", inventoryData);
 
 const chestElement = document.querySelector('.items');
 chestElement.innerHTML = ""; // Limpa o conteúdo atual
@@ -1515,7 +1515,7 @@ inventoryData.itemsInChest.forEach(dbItem => {
         return; // Pula para o próximo item se não encontrar os detalhes.
     }
 
-    console.log(`[LOAD UI] Processando item: ${fullItemData.content}`, fullItemData);
+// console.log(`[LOAD UI] Processando item: ${fullItemData.content}`, fullItemData);
 
     const newItem = document.createElement('div');
     newItem.classList.add('item');
