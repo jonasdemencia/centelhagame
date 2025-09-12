@@ -982,7 +982,8 @@ background: #000039 url('https://raw.githubusercontent.com/jonasdemencia/Centelh
 .preview-info h3 {
     margin: 0 0 5px 0;
     font-size: 16px;
-        line-height: 1.1; /* ← ADICIONE ESTA LINHA */
+    line-height: 1.1; /* ← ADICIONE ESTA LINHA */
+    color: #d0d0d0; /* ← ADICIONE ESTA LINHA */
     -webkit-text-stroke: 0.2px #ccc;
     font-family: 'VT323', monospace !important;
     text-shadow: 
@@ -995,7 +996,7 @@ background: #000039 url('https://raw.githubusercontent.com/jonasdemencia/Centelh
 .preview-info p {
     margin: 0;
     font-size: 16px;
-    color: #ccc;
+color: #d0d0d0;
     -webkit-text-stroke: 0.2px #ccc;
     text-align: justify;
     text-justify: inter-word;
