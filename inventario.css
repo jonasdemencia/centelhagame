@@ -1051,8 +1051,8 @@ color: #00ff00 !important;
 font-size: 25px !important;
 font-family: 'VT323', monospace !important;
 text-shadow: 
+    1px 1px 0 #003300,
     2px 2px 0 #001100 !important;
-
 
     text-align: center !important;
     line-height: 16px !important;
