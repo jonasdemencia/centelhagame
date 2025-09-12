@@ -973,7 +973,7 @@ background: #000039 url('https://raw.githubusercontent.com/jonasdemencia/Centelh
  .preview-info {
     text-align: left; /* ← MUDANÇA AQUI */
     color: white;
-    margin-top: 35px;
+    margin-top: 40px;
     width: 180px;
     margin-left: -10px; /* ← ADICIONE ESTA LINHA */
 }
