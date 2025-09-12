@@ -1377,6 +1377,42 @@ console.error("Erro ao carregar estado dos dados:", error);
 
 }
 
+// NOVA FUNÇÃO PARA ADICIONAR ITENS NOVOS (RODA APENAS UMA VEZ)
+async function checkAndAddExtraItems(uid) {
+    const playerRef = doc(db, "players", uid);
+    const playerSnap = await getDoc(playerRef);
+
+    if (!playerSnap.exists()) return;
+
+    const inventoryData = playerSnap.data().inventory;
+    if (!inventoryData) return;
+
+    let inventoryUpdated = false;
+    const allItemsArr = [...initialItems, ...extraItems];
+
+    for (const extraItem of extraItems) {
+        // Garante que cada item no inventário tenha um UUID para verificação
+        inventoryData.itemsInChest.forEach(item => {
+            if (!item.uuid) item.uuid = crypto.randomUUID();
+        });
+
+        const existsInChest = inventoryData.itemsInChest.some(item => item.uuid === extraItem.uuid);
+        const isEquipped = Object.values(inventoryData.equippedItems).includes(extraItem.content);
+        const wasDiscarded = inventoryData.discardedItems?.includes(extraItem.uuid);
+
+        if (!existsInChest && !isEquipped && !wasDiscarded) {
+            console.log(`MIGRANDO INVENTÁRIO: Adicionando ${extraItem.content}`);
+            inventoryData.itemsInChest.push({ ...extraItem });
+            inventoryUpdated = true;
+        }
+    }
+
+    if (inventoryUpdated) {
+        await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+        console.log("Migração do inventário concluída. Novos itens adicionados.");
+    }
+}
+
 async function loadInventoryData(uid) {
 
 console.log("Configurando listener em tempo real para o inventário:", uid);
@@ -1952,6 +1988,9 @@ console.log("Usuário autenticado:", user.uid);
 // Carrega dados básicos e inicializa a ficha
 
 currentPlayerData = await getPlayerData(user.uid);
+
+    // >>> ADICIONE ESTA LINHA AQUI <<<
+        await checkAndAddExtraItems(user.uid);
 
 if (currentPlayerData) {
 
