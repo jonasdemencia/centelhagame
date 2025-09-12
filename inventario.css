@@ -1033,11 +1033,11 @@ width: 180px;
     height: 30px !important;
     min-height: 0 !important;
     padding: 0 !important;
-    margin: 0 0 0px 0 !important; /* Remove margin auto, alinha à esquerda */
+    margin: 0 0 -5px 20px !important; /* ← MUDANÇA AQUI */
     background: transparent !important;
     border: none !important;
     color: white !important;
-    font-size: 12px !important;
+    font-size: 18px !important; /* ← MUDANÇA AQUI */
     text-align: center !important;
     line-height: 16px !important;
     display: block !important;
