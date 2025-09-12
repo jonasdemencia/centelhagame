@@ -1029,6 +1029,7 @@ width: 180px;
 .profile-info-container .info-panel {
     flex: 1;
     min-height: 80px;
+    margin-top: -10px; /* ← ADICIONE ESTA LINHA */
 }
 
 .green-text {
