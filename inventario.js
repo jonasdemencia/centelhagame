@@ -1961,11 +1961,10 @@ initializeGameTime(currentPlayerData);
 
 }
 
-// CONFIGURA OS DOIS LISTENERS
-
-await setupPlayerDataListener(user.uid);
-
+// CONFIGURA APENAS UM LISTENER
 await loadInventoryData(user.uid);
+// await setupPlayerDataListener(user.uid); // Comentado para evitar loop
+
 
 // ── AQUI: configurar exibição do botão "carregar munição" ──
 
