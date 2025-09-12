@@ -1009,14 +1009,14 @@ width: 180px;
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-color: #84946b !important;
+    color: white !important;;
     font-size: 8px;
     line-height: 1.2;
     word-spacing: -2.5px; /* ← ADICIONE ESTA LINHA */
     flex: 1;
     text-align: left;
     margin-left: 24px;
-    margin-top: 1px;
+    margin-top: -1px;
 }
 
 
@@ -1036,7 +1036,7 @@ color: #84946b !important;
     margin: 10px 0 -5px 20px !important;
     background: transparent !important;
     border: none !important;
-    color: white !important;
+    color: #84946b !important;
     font-size: 25px !important; /* ← MUDANÇA AQUI */
     text-align: center !important;
     line-height: 16px !important;
