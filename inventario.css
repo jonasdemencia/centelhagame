@@ -982,6 +982,7 @@ background: #000039 url('https://raw.githubusercontent.com/jonasdemencia/Centelh
 .preview-info h3 {
     margin: 0 0 5px 0;
     font-size: 16px;
+        line-height: 1.1; /* ← ADICIONE ESTA LINHA */
     -webkit-text-stroke: 0.2px #ccc;
     font-family: 'VT323', monospace !important;
     text-shadow: 
