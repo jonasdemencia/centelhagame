@@ -1074,7 +1074,7 @@ text-transform: uppercase; /* força caixa alta */
     display: block;
     margin: 0 0;
 margin-left: 20px;
-margin-top: 1px;
+margin-top: -20px;
 }
 
 
