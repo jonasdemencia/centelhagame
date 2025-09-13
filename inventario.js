@@ -42,8 +42,7 @@ console.log("DADOS DO JOGADOR ATUALIZADOS EM TEMPO REAL!");
 currentPlayerData = playerData;
 
 // Atualiza a interface
-// updateCharacterSheet(playerData); // Comentado para evitar loop
-
+updateCharacterSheet(playerData);
 }
 }, (error) => {
 console.error("Erro no listener dos dados do jogador:", error);
@@ -76,11 +75,11 @@ const extraItems = [
 { id: "coberta", content: "Coberta", uuid: "extra-coberta", slot: "armor", description: "Vestes simples que oferecem pouca proteção.", defense: 2, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/coberta.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thucoberta.png" },
 { id: "la", content: "Lã", uuid: "extra-la", description: "Fios de lã usados como componente mágico para magias de atordoamento.", componente: true, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/la.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thula.png" },
 { id: "pedaco-couro", content: "Pedaço de couro", uuid: "extra-pedaco-couro", description: "Tira de couro endurecido para magias.", componente: true, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pedaco-couro.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupedaco-couro.png" },
-{ id: "municao-38", content: "Munição de 38.", uuid: "extra-municao38", quantity: 20, projectile: true, description: "Projéteis letais calíbre 38.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/municao-38.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thumunicao-38.png" },
+{ id: "municao-38", content: "Munição de 38", uuid: "extra-municao38", quantity: 20, projectile: true, description: "Projéteis letais calíbre 38.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/municao-38.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thumunicao-38.png" },
 { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, uuid: "extra-pocao-cura-menor", quantity: 2, effect: "heal", value: 3, description: "Uma poção que restaura uma pequena quantidade de energia vital.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pocao-cura-menor.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupocao-cura-menor.png" },
 { id: "revolver-38", content: "Revolver 38", uuid: "extra-revolver38", slot: "weapon", description: "Um revólver calibre 38.", damage: "1d8", ammoType: "municao-38", ammoCapacity: 6, loadedAmmo: 0, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/revolver-38.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thurevolver-38.png" },
 { id: "escopeta-12", content: "Escopeta 12", uuid: "extra-escopeta12", slot: "weapon", description: "Uma espingarda calibre 12.", damage: "1d12+2", ammoType: "municao-12", ammoCapacity: 5, loadedAmmo: 0, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/escopeta-12.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuescopeta-12.png" },
-{ id: "municao-12", content: "Munição de 12.", uuid: "extra-municao12", quantity: 10, projectile: true, description: "Projéteis letais calíbre 12.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/municao-12.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thumunicao-12.png" },
+{ id: "municao-12", content: "Munição de 12", uuid: "extra-municao12", quantity: 10, projectile: true, description: "Projéteis letais calíbre 12.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/municao-12.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thumunicao-12.png" },
 { id: "Adaga", content: "Adaga", uuid: "extra-adaga", slot: "weapon", description: "Um punhal afiado.", damage: "1D4", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/adaga.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuadaga.png" },
 { id: "granada-mao", content: "Granada de Mão", uuid: "extra-granada-mao", consumable: true, quantity: 3, effect: "explosion", damage: "3D8", description: "Explosivo portátil de área (raio 3). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 3, allowsResistance: false, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/granada-mao.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thugranada-mao.png" },
 { id: "granada-de-concussao", content: "Granada de Concussão", uuid: "extra-granada-de-concussao", consumable: true, quantity: 3, effect: "stun", damage: "3D4", description: "Explosivo de concussão de área (raio 2). Pode ser lançada para causar dano em área.", areaEffect: true, areaRadius: 2, allowsResistance: false, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/granada-de-concussao.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thugranada-de-concussao.png" },
@@ -1377,84 +1376,80 @@ console.error("Erro ao carregar estado dos dados:", error);
 
 }
 
-// NOVA FUNÇÃO PARA ADICIONAR ITENS NOVOS (RODA APENAS UMA VEZ)
-async function checkAndAddExtraItems(uid) {
-    const playerRef = doc(db, "players", uid);
-    const playerSnap = await getDoc(playerRef);
+async function loadInventoryData(uid) {
 
-    if (!playerSnap.exists()) return;
+console.log("Configurando listener em tempo real para o inventário:", uid);
 
-    const inventoryData = playerSnap.data().inventory;
-    if (!inventoryData) return;
+try {
 
-    let inventoryUpdated = false;
-    const allItemsArr = [...initialItems, ...extraItems];
+const playerRef = doc(db, "players", uid);
 
-    for (const extraItem of extraItems) {
-        // Garante que cada item no inventário tenha um UUID para verificação
-        inventoryData.itemsInChest.forEach(item => {
-            if (!item.uuid) item.uuid = crypto.randomUUID();
-        });
+// cancela listener anterior, se existir
 
-        const existsInChest = inventoryData.itemsInChest.some(item => item.uuid === extraItem.uuid);
-        const isEquipped = Object.values(inventoryData.equippedItems).includes(extraItem.content);
-        const wasDiscarded = inventoryData.discardedItems?.includes(extraItem.uuid);
+if (inventoryListener) {
 
-        if (!existsInChest && !isEquipped && !wasDiscarded) {
-            console.log(`MIGRANDO INVENTÁRIO: Adicionando ${extraItem.content}`);
-            inventoryData.itemsInChest.push({ ...extraItem });
-            inventoryUpdated = true;
-        }
-    }
+inventoryListener();
 
-    if (inventoryUpdated) {
-        await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-        console.log("Migração do inventário concluída. Novos itens adicionados.");
-    }
 }
 
-// FUNÇÃO ANTIGA (loadInventoryData) SUBSTITUÍDA POR ESTA VERSÃO CORRIGIDA
-async function loadInventoryData(uid) {
-    console.log("Configurando listener em tempo real para o inventário:", uid);
-    try {
-        const playerRef = doc(db, "players", uid);
+inventoryListener = onSnapshot(playerRef, async (docSnap) => {
 
-        if (inventoryListener) {
-            inventoryListener();
-        }
+// se não existir inventário, inicializa com padrão
 
-        inventoryListener = onSnapshot(playerRef, async (docSnap) => {
-            // Se não existir inventário, inicializa com padrão (isso só roda uma vez)
-            if (!docSnap.exists() || !docSnap.data().inventory) {
-                const initialInventoryData = {
-                    itemsInChest: initialItems.map(item => ({ ...item, uuid: crypto.randomUUID() })),
-                    equippedItems: {},
-                    weaponAmmoCounts: {}
-                };
-                await setDoc(playerRef, { inventory: initialInventoryData }, { merge: true });
-                console.log("Inventário inicializado com os itens padrão.");
-                return;
-            }
+if (!docSnap.exists() || !docSnap.data().inventory) {
 
-            const inventoryData = docSnap.data().inventory;
-            
-            // A LÓGICA DE ADICIONAR ITENS FOI REMOVIDA DAQUI PARA PARAR O LOOP.
-            // A função apenas ouve e redesenha a UI.
-            
-            loadInventoryUI(inventoryData);
+const initialInventoryData = {
 
-        }, (error) => {
-            console.error("Erro no listener do inventário:", error);
-        });
+itemsInChest: initialItems.map(item => ({ ...item })),
 
-    } catch (error) {
-        console.error("Erro ao configurar listener do inventário:", error);
-    }
+equippedItems: {
+
+weapon: null, armor: null, helmet: null, amulet: null,
+
+shield: null, gloves: null, ring: null, boots: null
+
+},
+weaponAmmoCounts: {} // **NOVO** Inicializa o mapa de munição
+
+};
+
+await setDoc(playerRef, { inventory: initialInventoryData }, { merge: true });
+
+console.log("Inventário inicializado com os itens padrão.");
+
+return;
+
+}
+
+const inventoryData = docSnap.data().inventory;
+
+
+
+console.log("INVENTÁRIO ATUALIZADO EM TEMPO REAL!");
+
+loadInventoryUI(inventoryData);
+
+updateCharacterCouraca();
+
+updateCharacterDamage();
+
+}, (error) => {
+
+console.error("Erro no listener do inventário:", error);
+
+});
+
+} catch (error) {
+
+console.error("Erro ao configurar listener do inventário:", error);
+
+}
+
 }
 
 function loadInventoryUI(inventoryData) {
 
-// console.log("--- [LOAD UI] --- Iniciando redesenho do inventário com dados do Firestore:", inventoryData);
+console.log("--- [LOAD UI] --- Iniciando redesenho do inventário com dados do Firestore:", inventoryData);
 
 const chestElement = document.querySelector('.items');
 chestElement.innerHTML = ""; // Limpa o conteúdo atual
@@ -1470,7 +1465,6 @@ inventoryData.itemsInChest.forEach(dbItem => {
         return; // Pula para o próximo item se não encontrar os detalhes.
     }
 
-// console.log(`[LOAD UI] Processando item: ${fullItemData.content}`, fullItemData);
 
     const newItem = document.createElement('div');
     newItem.classList.add('item');
@@ -1762,8 +1756,8 @@ async function updateCharacterCouraca() {
     if (uid) {
         const playerRef = doc(db, "players", uid);
         try {
-// await updateDoc(playerRef, { couraca: totalCouraca }); // Comentado para evitar loop
-// console.log("Campo 'couraca' atualizado no Firestore para:", totalCouraca);
+            await updateDoc(playerRef, { couraca: totalCouraca });
+            console.log("Campo 'couraca' atualizado no Firestore para:", totalCouraca);
         } catch (error) {
             console.error("Erro ao atualizar o campo 'couraca' no Firestore:", error);
         }
@@ -1908,9 +1902,6 @@ console.log("Usuário autenticado:", user.uid);
 
 currentPlayerData = await getPlayerData(user.uid);
 
-    // >>> ADICIONE ESTA LINHA AQUI <<<
-        await checkAndAddExtraItems(user.uid);
-
 if (currentPlayerData) {
 
 updateCharacterSheet(currentPlayerData);
@@ -1919,10 +1910,11 @@ initializeGameTime(currentPlayerData);
 
 }
 
-// CONFIGURA APENAS UM LISTENER
-await loadInventoryData(user.uid);
-// await setupPlayerDataListener(user.uid); // Comentado para evitar loop
+// CONFIGURA OS DOIS LISTENERS
 
+await setupPlayerDataListener(user.uid);
+
+await loadInventoryData(user.uid);
 
 // ── AQUI: configurar exibição do botão "carregar munição" ──
 
@@ -2301,3 +2293,4 @@ console.error("Erro ao salvar os dados do jogador:", error);
 }
 
 }
+
