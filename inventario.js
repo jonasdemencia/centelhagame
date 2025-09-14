@@ -111,25 +111,23 @@ const extraItems = [
 function updateItemPreview(item) {
     console.log("updateItemPreview chamada com:", item);
     
+    const previewContainer = document.querySelector('.preview-image-container');
     const previewImage = document.getElementById('preview-image');
     const previewName = document.getElementById('preview-name');
     const previewDescription = document.getElementById('preview-description');
     
-    console.log("Elementos encontrados:", previewImage, previewName, previewDescription);
-    
     const allItemsArr = [...initialItems, ...extraItems];
     const itemData = allItemsArr.find(i => i.id === item.dataset.item);
     
-    console.log("Item data encontrado:", itemData);
-    
     if (itemData) {
-        previewImage.src = itemData.image; // Sempre usa a imagem em alta resolução
+        previewContainer.style.display = 'flex'; // mostra o tapete
+        previewImage.src = itemData.image;
         previewImage.style.display = 'block';
         previewName.textContent = itemData.content;
         previewDescription.textContent = itemData.description || 'Sem descrição disponível';
-        console.log("Preview atualizado com imagem:", itemData.image);
     }
 }
+
 
 // Função para reiniciar o inventário
 
@@ -646,23 +644,26 @@ document.addEventListener('click', function(event) {
 const keepSelection = event.target.closest('.item, .slot, #useBtn, #carregar-municao-btn, #discard-slot, .dice-item, .dice-slot');
 
 if (!keepSelection && selectedItem) {
+    clearHighlights();
+    selectedItem = null;
+    toggleUseButton(false);
 
-clearHighlights();
+    // Esconde o tapete do preview
+    const previewContainer = document.querySelector('.preview-image-container');
+    if (previewContainer) {
+        previewContainer.style.display = 'none';
+    }
 
-selectedItem = null;
-
-toggleUseButton(false);
-
-    // ADICIONAR ESTAS LINHAS:
-        const previewImage = document.getElementById('preview-image');
-        const previewName = document.getElementById('preview-name');
-        const previewDescription = document.getElementById('preview-description');
-        
-        previewImage.style.display = 'none';
-        previewName.textContent = '';
-        previewDescription.textContent = '';
-
+    // Limpa o conteúdo
+    const previewImage = document.getElementById('preview-image');
+    const previewName = document.getElementById('preview-name');
+    const previewDescription = document.getElementById('preview-description');
+    
+    previewImage.style.display = 'none';
+    previewName.textContent = '';
+    previewDescription.textContent = '';
 }
+
 
 // Desselecionar dados
 
