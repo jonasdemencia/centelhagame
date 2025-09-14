@@ -951,7 +951,7 @@ background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/ma
 .preview-image-container {
     width: 130px;
     height: 96px;
-    border: 3px solid #fff; /* borda branca mais grossa */
+    border: 2px solid #fff; /* borda branca normal */
     background: #000039 url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/preview-background.png') center/cover no-repeat;
     display: flex;
     align-items: center;
@@ -961,15 +961,16 @@ background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/ma
     margin-left: 14px;
     box-shadow: 
         /* bordas externas */
-        0 0 0 2px #aaa,
-        0 0 0 4px #666,
+        0 0 0 1px #aaa,
+        0 0 0 2px #666,
         /* bordas internas */
-        inset 0 0 0 2px #aaa,
-        inset 0 0 0 4px #666,
-        /* sombras originais (mantidas) */
+        inset 0 0 0 1px #aaa,
+        inset 0 0 0 2px #666,
+        /* sombras originais */
         inset 2px 2px 4px rgba(0, 0, 0, 0.6),
         2px 2px 6px rgba(0, 0, 0, 0.4);
 }
+
 
 
 #preview-image {
