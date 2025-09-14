@@ -67,6 +67,7 @@ p {
 }
 
 .items {
+    margin-top: 10px;
     display: grid;
     grid-template-columns: repeat(2, 70px);
     gap: 2px !important;
@@ -949,6 +950,7 @@ background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/ma
 
 
 .preview-image-container {
+        display: none; /* esconde por padrão */
     width: 130px;
     height: 96px;
     border: 1px solid #fff; /* borda branca fina */
