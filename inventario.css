@@ -1180,3 +1180,26 @@ body {
     font-smooth: never !important;
     text-rendering: optimizeSpeed !important;
 }
+
+.item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/moldura-item-grid-background.png');
+    background-size: cover;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.item img {
+    position: relative;
+    z-index: 2;
+}
+
+.item-quantity, .weapon-ammo {
+    position: relative;
+    z-index: 3;
+}
