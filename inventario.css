@@ -770,8 +770,11 @@ p {
 
 .item.selected:not(.equipable) {
     background-color: transparent !important;
-    border: 2px solid #f1c40f !important;
+    border: none !important;
+    outline: 1px solid #f1c40f !important;
+    outline-offset: -1px !important;
 }
+
 
 .dice-slots-container {
     padding: 20px;
@@ -900,29 +903,31 @@ p {
     border-radius: 50%;
     box-shadow: 0 0 6px #fff, 0 0 12px #f39c12;
     z-index: 11;
+    pointer-events: none;
     animation: pixelBorder 2s linear infinite;
 }
 
+
 @keyframes pixelBorder {
     0% {
-        top: -2px;
-        left: -2px;
+        top: 0;
+        left: 0;
     }
     25% {
-        top: -2px;
-        left: calc(100% - 1px);
+        top: 0;
+        left: calc(100% - 3px);
     }
     50% {
-        top: calc(100% - 1px);
-        left: calc(100% - 1px);
+        top: calc(100% - 3px);
+        left: calc(100% - 3px);
     }
     75% {
-        top: calc(100% - 1px);
-        left: -2px;
+        top: calc(100% - 3px);
+        left: 0;
     }
     100% {
-        top: -2px;
-        left: -2px;
+        top: 0;
+        left: 0;
     }
 }
 
