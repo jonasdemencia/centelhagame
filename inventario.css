@@ -112,6 +112,7 @@ p {
 .item {
     background: transparent !important;
     position: relative;
+        overflow: visible !important; /* permite que a borda saia dos limites */
 }
 
 /* Adicionado para estilizar a imagem dentro do item */
@@ -893,7 +894,7 @@ background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/ma
     background: #fff;
     border-radius: 50%;
     box-shadow: 0 0 6px #fff, 0 0 12px #f39c12;
-    z-index: 11; /* aumentado de 10 para ficar acima da moldura */
+    z-index: 11;
     animation: pixelBorder 2s linear infinite;
 }
 
