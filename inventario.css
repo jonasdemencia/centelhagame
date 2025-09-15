@@ -75,6 +75,7 @@ p {
     align-items: start;
     padding: 10px;
     overflow-y: auto;
+    overflow-x: visible;
     max-height: calc(350px - 40px);
     margin-left: -8px; /* Chrome/Edge */
 }
@@ -112,8 +113,10 @@ p {
 .item {
     background: transparent !important;
     position: relative;
-        overflow: visible !important; /* permite que a borda saia dos limites */
+    overflow: visible !important;
+    z-index: 2;
 }
+
 
 /* Adicionado para estilizar a imagem dentro do item */
 .item img {
@@ -834,21 +837,21 @@ p {
 
 /* Novos estilos para divisão vertical */
 .chest-area {
-    min-height: 430px; /* ou o valor desejado */
+    min-height: 430px;
     display: flex;
     width: 100%;
     height: 100%;
     gap: 0;
     margin-left: 0;
-background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png') center/cover no-repeat;
-    background-size: cover; /* volta para cover */
+    background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png') center/cover no-repeat;
+    background-size: cover;
     background-position: center;
+    overflow: visible;
 }
-
 
 .left-panel {
     width: 70%;
-        position: relative; /* ← ADICIONE ESTA LINHA */
+    position: relative;
     border-right: none;
     border-right-color: transparent;
     background-color: transparent !important;
@@ -858,7 +861,9 @@ background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/ma
     display: flex;
     flex-direction: column;
     gap: 2px;
+    overflow: visible;
 }
+
 
 
 .right-panel {
