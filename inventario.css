@@ -1184,15 +1184,16 @@ body {
 .item::before {
     content: '';
     position: absolute;
-    top: -5px;
-    left: -5px;
-    width: 80px;
-    height: 57px;
+    top: 0;
+    left: 0;
+    width: 70px;
+    height: 70px;
     background-image: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/moldura-item-grid-background.png');
-    background-size: 80px 57px;
+    background-size: 70px 70px;
     pointer-events: none;
     z-index: 1;
 }
+
 
 .item img {
     position: relative;
