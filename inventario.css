@@ -1201,6 +1201,17 @@ body {
 }
 
 .item-quantity, .weapon-ammo {
-    position: relative;
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+    color: #87CEEB;
+    font-size: 20px;
+    font-weight: bold;
     z-index: 3;
+    line-height: 1; /* corrige alinhamento vertical */
 }
+
+.weapon-ammo {
+    color: #90EE90;
+}
+
