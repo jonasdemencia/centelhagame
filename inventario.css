@@ -67,7 +67,6 @@ p {
 }
 
 .items {
-    margin-top: 10px;
     display: grid;
     grid-template-columns: repeat(2, 70px);
     gap: 2px !important;
@@ -885,7 +884,7 @@ background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/ma
 }
 
 /* Animação do pixel percorrendo as bordas */
-.selected::after {
+.selected::before {
     content: '';
     position: absolute;
     width: 3px;
@@ -950,7 +949,6 @@ background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/ma
 
 
 .preview-image-container {
-        display: none; /* esconde por padrão */
     width: 130px;
     height: 96px;
     border: 1px solid #fff; /* borda branca fina */
@@ -1181,37 +1179,4 @@ body {
     text-rendering: optimizeSpeed !important;
 }
 
-.item::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 70px;
-    height: 70px;
-    background-image: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/moldura-item-grid-background.png');
-    background-size: 70px 70px;
-    pointer-events: none;
-    z-index: 1;
-}
-
-
-.item img {
-    position: relative;
-    z-index: 2;
-}
-
-.item-quantity, .weapon-ammo {
-    position: absolute;
-    bottom: 2px;
-    left: 2px;
-    color: #87CEEB;
-    font-size: 20px;
-    font-weight: bold;
-    z-index: 3;
-    line-height: 1; /* corrige alinhamento vertical */
-}
-
-.weapon-ammo {
-    color: #90EE90;
-}
 
