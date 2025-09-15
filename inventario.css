@@ -885,7 +885,7 @@ background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/ma
 }
 
 /* Animação do pixel percorrendo as bordas */
-.selected::before {
+.selected::after {
     content: '';
     position: absolute;
     width: 3px;
