@@ -1123,7 +1123,7 @@ console.log("Energia diminuída para:", currentPlayerData.energy.total);
 
 }
 
-} else if (effect === "heal" && (itemName === "Pequeno saco com ervas medicinais" || itemName === "Poção de Cura Menor" || itemName === "Poção de Cura Completa")) {
+} else if (effect === "heal") {
 
 if (currentPlayerData && currentPlayerData.energy) {
 
