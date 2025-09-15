@@ -1005,19 +1005,20 @@ background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/ma
 .preview-info p {
     margin: 0;
     font-size: 16px;
-    color: #c0c0c0; /* mais escuro que #d0d0d0 */
+    color: #c0c0c0;
     -webkit-text-stroke: 0.2px #ccc;
     text-align: justify;
     text-justify: inter-word;
     hyphens: auto;
     font-family: 'VT323', monospace !important;
     text-shadow: 
-        1px 1px 0 #006600, /* mais claro que #003300 */
-        2px 2px 0 #004400 !important; /* mais claro que #001100 */
+        1px 1px 0 #666666,
+        2px 2px 0 #444444 !important;
     transform: scaleY(1.3);
     display: inline-block;
     line-height: 1.1;
 }
+
 
 /* Container para as janelas superiores */
 .top-panels {
