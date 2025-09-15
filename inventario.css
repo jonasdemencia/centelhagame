@@ -113,6 +113,20 @@ p {
     position: relative;
 }
 
+.item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 70px;
+    height: 70px;
+    background-image: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/moldura-item-grid-background.png');
+    background-size: 70px 70px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+
 /* Adicionado para estilizar a imagem dentro do item */
 .item img {
     max-width: 60px !important;
@@ -120,6 +134,8 @@ p {
     object-fit: contain !important;
     display: block !important;
     margin: auto !important;
+    position: relative;
+    z-index: 2;
 }
 
 .slot {
