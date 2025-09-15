@@ -893,7 +893,7 @@ background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/ma
     background: #fff;
     border-radius: 50%;
     box-shadow: 0 0 6px #fff, 0 0 12px #f39c12;
-    z-index: 10;
+    z-index: 11; /* aumentado de 10 para ficar acima da moldura */
     animation: pixelBorder 2s linear infinite;
 }
 
