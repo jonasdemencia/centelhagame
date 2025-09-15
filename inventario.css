@@ -901,31 +901,43 @@ p {
     box-sizing: border-box;
     pointer-events: none;
     z-index: 11;
-    background: radial-gradient(#fff 1.5px, rgba(255,255,255,0) 1.6px) no-repeat;
-    filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 4px #f39c12);
+}
+
+.selected::before {
+    content: '';
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #fff, 0 0 12px #f39c12;
+    z-index: 12;
+    pointer-events: none;
     animation: pixelBorder 2s linear infinite;
 }
 
-
-
 @keyframes pixelBorder {
     0% {
-        background-position: 0 0;
+        top: 0;
+        left: 0;
     }
     25% {
-        background-position: calc(100% - 3px) 0;
+        top: 0;
+        left: calc(100% - 3px);
     }
     50% {
-        background-position: calc(100% - 3px) calc(100% - 3px);
+        top: calc(100% - 3px);
+        left: calc(100% - 3px);
     }
     75% {
-        background-position: 0 calc(100% - 3px);
+        top: calc(100% - 3px);
+        left: 0;
     }
     100% {
-        background-position: 0 0;
+        top: 0;
+        left: 0;
     }
 }
-
 
 .item img, .slot img {
     max-width: 60px !important; /* Muda de 60px para 45px */
