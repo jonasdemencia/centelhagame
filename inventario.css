@@ -991,33 +991,35 @@ background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/ma
 .preview-info h3 {
     margin: 0 0 10px 0;
     font-size: 16px;
-    line-height: 1.1; /* ← ADICIONE ESTA LINHA */
-    color: #d0d0d0; /* ← ADICIONE ESTA LINHA */
+    line-height: 1.1;
+    color: #b0b0b0;
     -webkit-text-stroke: 0.2px #ccc;
     font-family: 'VT323', monospace !important;
     text-shadow: 
-        1px 1px 0 #003300,
-        2px 2px 0 #001100 !important;
+        1px 1px 0 #004400,
+        2px 2px 0 #002200 !important;
     transform: scaleY(1.3);
     display: inline-block;
 }
 
+
 .preview-info p {
     margin: 0;
     font-size: 16px;
-color: #d0d0d0;
+    color: #b0b0b0;
     -webkit-text-stroke: 0.2px #ccc;
     text-align: justify;
     text-justify: inter-word;
     hyphens: auto;
     font-family: 'VT323', monospace !important;
     text-shadow: 
-        1px 1px 0 #003300,
-        2px 2px 0 #001100 !important;
+        1px 1px 0 #004400,
+        2px 2px 0 #002200 !important;
     transform: scaleY(1.3);
     display: inline-block;
     line-height: 1.1;
 }
+
 
 /* Container para as janelas superiores */
 .top-panels {
