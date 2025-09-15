@@ -886,22 +886,12 @@ p {
 
 /* Destaque do item selecionado */
 .selected {
-    background-color: #f1c40f; /* Amarelo */
-    border-color: #f39c12; /* Borda amarelo escuro */
+    background-color: #f1c40f;
+    border-color: #f39c12;
     position: relative;
     overflow: visible;
 }
 
-/* Animação do pixel percorrendo as bordas */
-.selected::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border: 2px solid #f1c40f;
-    box-sizing: border-box;
-    pointer-events: none;
-    z-index: 11;
-}
 
 .selected::before {
     content: '';
@@ -911,33 +901,34 @@ p {
     background: #fff;
     border-radius: 50%;
     box-shadow: 0 0 6px #fff, 0 0 12px #f39c12;
-    z-index: 12;
-    pointer-events: none;
+    z-index: 10;
     animation: pixelBorder 2s linear infinite;
 }
 
+
 @keyframes pixelBorder {
     0% {
-        top: 0;
-        left: 0;
+        top: -2px;
+        left: -2px;
     }
     25% {
-        top: 0;
-        left: calc(100% - 3px);
+        top: -2px;
+        left: calc(100% - 1px);
     }
     50% {
-        top: calc(100% - 3px);
-        left: calc(100% - 3px);
+        top: calc(100% - 1px);
+        left: calc(100% - 1px);
     }
     75% {
-        top: calc(100% - 3px);
-        left: 0;
+        top: calc(100% - 1px);
+        left: -2px;
     }
     100% {
-        top: 0;
-        left: 0;
+        top: -2px;
+        left: -2px;
     }
 }
+
 
 .item img, .slot img {
     max-width: 60px !important; /* Muda de 60px para 45px */
