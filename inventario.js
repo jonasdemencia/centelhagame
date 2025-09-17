@@ -104,7 +104,7 @@ const extraItems = [
 { id: "clava-grande", content: "Clava Grande", uuid: "extra-clava-grande", slot: "weapon", description: "Clava para matar monstros. 8kg.", damage: "1D10", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/clava-grande.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuclava-grande.png" },
 { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, uuid: "extra-pequeno-saco-ervas", quantity: 5, effect: "heal", value: 1, description: "Plantas capazes de curar feridas leves.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pequeno-saco-ervas.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupequeno-saco-ervas.png" },
 { id: "pao-mofado", content: "Pão Mofado", uuid: "extra-pao-mofado", consumable: true, quantity: 3, effect: "damage", value: 5, description: "Um pedaço de pão velho e mofado.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pao-mofado.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupao-mofado.png" },
-{ id: "espada-duas-maos", content: "Espada de Duas Mãos", uuid: "extra-espada-duas-maos", slot: "weapon", twoHanded: true, description: "Uma espada pesada que requer ambas as mãos para uso.", damage: "2D6", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/espada-duas-maos.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuespada-duas-maos.png" },
+{ id: "espada-duas-maos", content: "Espada de Duas Mãos", uuid: "extra-espada-duas-maos", large: true, slot: "weapon", twoHanded: true, description: "Uma espada pesada que requer ambas as mãos para uso.", damage: "2D6", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/espada-duas-maos.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuespada-duas-maos.png" },
 
 ];
 
@@ -1545,8 +1545,12 @@ inventoryData.itemsInChest.forEach(dbItem => {
     console.log(`[LOAD UI] Processando item: ${fullItemData.content}`, fullItemData);
 
     const newItem = document.createElement('div');
-    newItem.classList.add('item');
-    newItem.dataset.item = fullItemData.id;
+newItem.classList.add('item');
+if (fullItemData.large) {
+    newItem.classList.add('large');
+}
+newItem.dataset.item = fullItemData.id;
+
 // Garante UUID único para cada item
 if (!dbItem.uuid) {
     dbItem.uuid = crypto.randomUUID();
@@ -1669,8 +1673,8 @@ const equippedItemName = inventoryData.equippedItems[slot.id];
 });
 
 updateSlotCompatibility();
+reorganizeGrid();
 }
-
 
 
 function loadDiceUI(diceState) {
@@ -1931,6 +1935,23 @@ function updateSlotCompatibility() {
     }
 }
 
+function reorganizeGrid() {
+    const chestElement = document.querySelector('.items');
+    const items = Array.from(chestElement.children);
+    
+    // Remove todos os itens
+    items.forEach(item => item.remove());
+    
+    // Reordena: itens grandes primeiro, depois pequenos
+    const largeItems = items.filter(item => item.classList.contains('large'));
+    const smallItems = items.filter(item => !item.classList.contains('large'));
+    
+    // Adiciona itens grandes em posições pares
+    largeItems.forEach(item => chestElement.appendChild(item));
+    
+    // Preenche espaços restantes com itens pequenos
+    smallItems.forEach(item => chestElement.appendChild(item));
+}
 
 
 // Adicione esta função após a função updateCharacterDamage
