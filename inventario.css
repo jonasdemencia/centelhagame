@@ -1191,8 +1191,8 @@ body {
 }
 
 .slot.blocked {
-    background-color: #8b0000 !important;
-    border-color: #ff0000 !important;
+    background-color: #cd5c5c !important;
+    border-color: #ff6b6b !important;
     opacity: 0.7;
     cursor: not-allowed;
 }
