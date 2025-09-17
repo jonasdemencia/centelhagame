@@ -944,8 +944,12 @@ background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/ma
     font-size: 20px;
     font-weight: bold;
     z-index: 3;
+    font-family: 'VT323', monospace !important;
+    text-shadow: 
+        1px 1px 0 #004400,
+        2px 2px 0 #002200 !important;
+    transform: scaleY(1.3);
 }
-
 
 .item-preview {
     display: flex;
@@ -1123,6 +1127,11 @@ margin-top: -20px;
     font-size: 20px;
     font-weight: bold;
     z-index: 3;
+    font-family: 'VT323', monospace !important;
+    text-shadow: 
+        1px 1px 0 #004400,
+        2px 2px 0 #002200 !important;
+    transform: scaleY(1.3);
 }
 
 .slot-weapon-ammo {
@@ -1133,7 +1142,13 @@ margin-top: -20px;
     font-size: 20px;
     font-weight: bold;
     z-index: 3;
+    font-family: 'VT323', monospace !important;
+    text-shadow: 
+        1px 1px 0 #004400,
+        2px 2px 0 #002200 !important;
+    transform: scaleY(1.3);
 }
+
 /* Estilos movidos do HTML */
 .item {
     position: relative;
