@@ -104,6 +104,7 @@ const extraItems = [
 { id: "clava-grande", content: "Clava Grande", uuid: "extra-clava-grande", slot: "weapon", description: "Clava para matar monstros. 8kg.", damage: "1D10", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/clava-grande.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuclava-grande.png" },
 { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, uuid: "extra-pequeno-saco-ervas", quantity: 5, effect: "heal", value: 1, description: "Plantas capazes de curar feridas leves.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pequeno-saco-ervas.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupequeno-saco-ervas.png" },
 { id: "pao-mofado", content: "Pão Mofado", uuid: "extra-pao-mofado", consumable: true, quantity: 3, effect: "damage", value: 5, description: "Um pedaço de pão velho e mofado.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pao-mofado.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupao-mofado.png" },
+{ id: "espada-duas-maos", content: "Espada de Duas Mãos", uuid: "extra-espada-duas-maos", slot: "weapon", twoHanded: true, description: "Uma espada pesada que requer ambas as mãos para uso.", damage: "2D6", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/espada-duas-maos.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuespada-duas-maos.png" },
 
 ];
 
@@ -830,7 +831,31 @@ const slotId = slot.id;
             const selectedUUID = selectedItem.dataset.uuid; // CORREÇÃO: Captura UUID específico
 
             // Verifica se o slot é compatível
-            if (newItemData && slotType === newItemData.slot) {
+if (newItemData && slotType === newItemData.slot) {
+    // Verifica incompatibilidades
+    if (slotType === "shield") {
+        const weaponSlot = document.querySelector('.slot[data-slot="weapon"]');
+        const equippedWeaponName = weaponSlot?.dataset.itemName;
+        if (equippedWeaponName) {
+            const weaponData = allItemsArr.find(item => item.content === equippedWeaponName);
+            if (weaponData && weaponData.twoHanded) {
+                alert("Não é possível equipar escudo com arma de duas mãos!");
+                return;
+            }
+        }
+    }
+    
+    if (slotType === "weapon" && newItemData.twoHanded) {
+        const shieldSlot = document.querySelector('.slot[data-slot="shield"]');
+        const equippedShieldName = shieldSlot?.dataset.itemName;
+        if (equippedShieldName) {
+            const shieldData = allItemsArr.find(item => item.content === equippedShieldName);
+            inventoryData.itemsInChest.push({ ...shieldData, uuid: crypto.randomUUID() });
+            inventoryData.equippedItems.shield = null;
+            alert("Escudo foi desequipado para usar arma de duas mãos!");
+        }
+    }
+
                 console.log(`Equipando ${newItemData.content} no slot ${slotType}`);
 
                 // A) Salvar o estado do item que está sendo desequipado (se houver)
@@ -1643,7 +1668,9 @@ const equippedItemName = inventoryData.equippedItems[slot.id];
     }
 });
 
+updateSlotCompatibility();
 }
+
 
 
 function loadDiceUI(diceState) {
@@ -1881,6 +1908,29 @@ const equippedItemName = slot.dataset.itemName;
 
     return bonuses;
 }
+
+
+function updateSlotCompatibility() {
+    const weaponSlot = document.querySelector('.slot[data-slot="weapon"]');
+    const shieldSlot = document.querySelector('.slot[data-slot="shield"]');
+    
+    if (!weaponSlot || !shieldSlot) return;
+    
+    const allItemsArr = [...initialItems, ...extraItems];
+    const equippedWeaponName = weaponSlot.dataset.itemName;
+    
+    if (equippedWeaponName) {
+        const weaponData = allItemsArr.find(item => item.content === equippedWeaponName);
+        if (weaponData && weaponData.twoHanded) {
+            shieldSlot.classList.add('blocked');
+        } else {
+            shieldSlot.classList.remove('blocked');
+        }
+    } else {
+        shieldSlot.classList.remove('blocked');
+    }
+}
+
 
 
 // Adicione esta função após a função updateCharacterDamage
