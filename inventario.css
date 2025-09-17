@@ -115,6 +115,10 @@ p {
     position: relative;
 }
 
+.item.large {
+    background: transparent url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/moldura-item-grid-background2.png') center/142px 70px no-repeat !important;
+}
+
 /* Adicionado para estilizar a imagem dentro do item */
 .item img {
     max-width: 60px !important;
