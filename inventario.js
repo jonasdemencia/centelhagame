@@ -1093,21 +1093,16 @@ location.reload();
         const playerSnap = await getDoc(playerRef);
         const inventoryData = playerSnap.data().inventory;
         
+        // Expande o inventário
         inventoryData.inventorySpaces = (inventoryData.inventorySpaces || 50) + expandValue;
         
         // Consome o item
-        let quantity = parseInt(selectedItem.dataset.quantity);
-        quantity--;
-        
-        if (quantity <= 0) {
-            const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
-            if (itemIndex > -1) {
+        const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
+        if (itemIndex > -1) {
+            inventoryData.itemsInChest[itemIndex].quantity--;
+            
+            if (inventoryData.itemsInChest[itemIndex].quantity <= 0) {
                 inventoryData.itemsInChest.splice(itemIndex, 1);
-            }
-        } else {
-            const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
-            if (itemIndex > -1) {
-                inventoryData.itemsInChest[itemIndex].quantity = quantity;
             }
         }
         
@@ -1118,9 +1113,8 @@ location.reload();
         clearHighlights();
         toggleUseButton(false);
     }
+    return;
 
-
-return;
 
 }
 
