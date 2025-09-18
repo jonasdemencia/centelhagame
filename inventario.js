@@ -55,7 +55,7 @@ console.error("Erro ao configurar listener dos dados do jogador:", error);
 // Itens iniciais que o jogador deve ter (adicionando propriedade de danoo)
 
 const initialItems = [
-{ id: "bolsa-de-escriba", content: "Bolsa de escriba", description: "Uma bolsa para guardar pergaminhos e penas.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/bolsa-de-escriba.png" },
+{ id: "bolsa-de-escriba", content: "Bolsa de escriba", uuid: "extra-bolsa-de-escriba", consumable: true, quantity: 1, effect: "expand_inventory", value: 2, description: "Uma bolsa para guardar pergaminhos e penas.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/bolsa-de-escriba.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thubolsa-de-escriba.png" },
 { id: "pao", content: "Pão", consumable: true, uuid: "extra-pao", quantity: 5, effect: "heal", value: 1, description: "Iguaria simples de trigo.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pao.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupao.png" },
 { id: "elixir-poder", content: "Elixir do Poder Supremo", consumable: true, quantity: 5, effect: "boost_attributes", value: 100, description: "Um elixir mágico que aumenta temporariamente todos os seus atributos para 100.", image: "https://raw.githubusercontent.com/DanielSanMedium/CentelhaGame/main/images/elixir-poder.png" },
 //{ id: "grilo", content: "Grilo", description: "Um pequeno grilo usado como componente mágico para magias de sono.", componente: true, energia: { total: 1, inicial: 1 } }
@@ -1084,6 +1084,42 @@ alert("Seus atributos foram aumentados para 100!");
 
 location.reload();
 
+} else if (selectedItem && selectedItem.dataset.effect === "expand_inventory") {
+    const expandValue = parseInt(selectedItem.dataset.value) || 2;
+    
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+        const playerRef = doc(db, "players", uid);
+        const playerSnap = await getDoc(playerRef);
+        const inventoryData = playerSnap.data().inventory;
+        
+        inventoryData.inventoryRows = (inventoryData.inventoryRows || 25) + Math.ceil(expandValue / 2);
+        
+        // Consome o item
+        let quantity = parseInt(selectedItem.dataset.quantity);
+        quantity--;
+        
+        if (quantity <= 0) {
+            const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
+            if (itemIndex > -1) {
+                inventoryData.itemsInChest.splice(itemIndex, 1);
+            }
+        } else {
+            const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
+            if (itemIndex > -1) {
+                inventoryData.itemsInChest[itemIndex].quantity = quantity;
+            }
+        }
+        
+        await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+        alert(`Inventário expandido! +${expandValue} espaços adicionados.`);
+        
+        selectedItem = null;
+        clearHighlights();
+        toggleUseButton(false);
+    }
+
+
 return;
 
 }
@@ -1437,6 +1473,7 @@ shield: null, gloves: null, ring: null, boots: null
 
 },
 weaponAmmoCounts: {} // **NOVO** Inicializa o mapa de munição
+inventoryRows: 25
 
 };
 
@@ -1674,6 +1711,10 @@ const equippedItemName = inventoryData.equippedItems[slot.id];
 
 updateSlotCompatibility();
 reorganizeGrid();
+    // Atualiza CSS dinâmico para linhas do inventário
+const inventoryRows = inventoryData.inventoryRows || 25;
+document.documentElement.style.setProperty('--inventory-rows', inventoryRows);
+
 }
 
 
