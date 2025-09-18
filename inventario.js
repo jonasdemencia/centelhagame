@@ -1475,15 +1475,6 @@ if (fullItemData.ammoType) {
         emptySlot.classList.add('item', 'empty-slot');
         chestElement.appendChild(emptySlot);
     }
-const inventorySpaces = inventoryData.inventorySpaces || 50;
-const totalSlots = inventorySpaces;
-const currentItems = inventoryData.itemsInChest.length;
-
-for (let i = currentItems; i < totalSlots; i++) {
-    const emptySlot = document.createElement('div');
-    emptySlot.classList.add('item', 'empty-slot');
-    chestElement.appendChild(emptySlot);
-}
 
 // Carrega itens equipados
 document.querySelectorAll('.slot').forEach(slot => {
