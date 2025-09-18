@@ -661,9 +661,9 @@ if (!keepSelection && selectedItem) {
     const previewDescription = document.getElementById('preview-description');
     
     previewImage.style.display = 'none';
-    previewName.textContent = '';
-    previewDescription.textContent = '';
-}
+previewName.textContent = '';
+previewDescription.textContent = '';
+}); // Parêntese de fechamento adicionado
 
 
 // Desselecionar dados
