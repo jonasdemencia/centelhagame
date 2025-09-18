@@ -983,317 +983,131 @@ if (discardSlot) {
 // Adiciona funcionalidade ao botão de usar
 
 if (useButton) {
+    useButton.addEventListener("click", async () => {
+        console.log("Botão 'Usar' clicado");
 
-useButton.addEventListener("click", async () => {
-
-console.log("Botão 'Usar' clicado");
-
-if (selectedItem && selectedItem.dataset.effect === "boost_attributes") {
-
-// Aplica o boost de atributos
-
-if (currentPlayerData) {
-
-// Aplica o boost
-
-const boostValue = parseInt(selectedItem.dataset.value) || 100;
-
-currentPlayerData.luck = { total: boostValue, initial: boostValue };
-
-currentPlayerData.skill = { total: boostValue, initial: boostValue };
-
-currentPlayerData.charisma = { total: boostValue, initial: boostValue };
-
-currentPlayerData.magic = { total: boostValue, initial: boostValue };
-
-// Salva no Firestore
-
-await savePlayerData(auth.currentUser.uid, currentPlayerData);
-
-// Consome o item
-
-let quantity = parseInt(selectedItem.dataset.quantity);
-
-if (!isNaN(quantity) && quantity > 0) {
-
-quantity--;
-
-selectedItem.dataset.quantity = quantity;
-
-const quantitySpan = selectedItem.querySelector('.item-quantity');
-
-if (quantitySpan) {
-
-quantitySpan.textContent = quantity > 0 ? `(${quantity})` : '';
-
-} else if (quantity > 0) {
-
-selectedItem.innerHTML += `<span class="item-quantity">(${quantity})</span>`;
-
-}
-
-if (quantity === 0) {
-
-selectedItem.remove();
-
-selectedItem = null;
-
-clearHighlights();
-
-toggleUseButton(false);
-
-}
-
-// Atualiza no Firestore diretamente
-
-const uid = auth.currentUser?.uid;
-
-if (uid) {
-
-const playerRef = doc(db, "players", uid);
-
-const playerSnap = await getDoc(playerRef);
-
-if (playerSnap.exists()) {
-
-const inventoryData = playerSnap.data().inventory;
-
-const itemIndex = inventoryData.itemsInChest.findIndex(i => i.id === selectedItem.dataset.item);
-
-if (itemIndex !== -1) {
-
-inventoryData.itemsInChest[itemIndex].quantity = quantity;
-
-if (quantity <= 0) {
-
-inventoryData.itemsInChest.splice(itemIndex, 1);
-
-}
-
-await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-
-}
-
-}
-
-}
-
-}
-
-alert("Seus atributos foram aumentados para 100!");
-
-location.reload();
-
-} else if (selectedItem && selectedItem.dataset.effect === "expand_inventory") {
-    const expandValue = parseInt(selectedItem.dataset.value) || 2;
-    const uid = auth.currentUser?.uid;
-    if (uid) {
-        const playerRef = doc(db, "players", uid);
-        const playerSnap = await getDoc(playerRef);
-        if (!playerSnap.exists()) return;
-
-        const inventoryData = playerSnap.data().inventory;
-
-        // Garante que inventorySpaces seja um número
-        inventoryData.inventorySpaces = Number(inventoryData.inventorySpaces) || 50;
-
-        // Expande o inventário
-        inventoryData.inventorySpaces += expandValue;
-
-        // Consome o item: remove-o diretamente do inventário pelo seu UUID
-        const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
-        if (itemIndex > -1) {
-            inventoryData.itemsInChest.splice(itemIndex, 1);
+        if (!selectedItem) {
+            console.log("Nenhum item selecionado para usar.");
+            return;
         }
 
-        await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+        const uid = auth.currentUser?.uid;
+        if (!uid) return;
 
-        alert(`Inventário expandido! +${expandValue} espaços adicionados.`);
+        const playerRef = doc(db, "players", uid);
 
-        // Limpa a seleção e o estado da UI. O listener do Firestore cuidará de redesenhar.
+        // CASO 1: Elixir do Poder (boost_attributes)
+        if (selectedItem.dataset.effect === "boost_attributes") {
+            if (currentPlayerData) {
+                const boostValue = parseInt(selectedItem.dataset.value) || 100;
+                currentPlayerData.luck = { total: boostValue, initial: boostValue };
+                currentPlayerData.skill = { total: boostValue, initial: boostValue };
+                currentPlayerData.charisma = { total: boostValue, initial: boostValue };
+                currentPlayerData.magic = { total: boostValue, initial: boostValue };
+
+                await savePlayerData(uid, currentPlayerData);
+
+                // Consome o item no Firestore
+                const playerSnap = await getDoc(playerRef);
+                if (playerSnap.exists()) {
+                    const inventoryData = playerSnap.data().inventory;
+                    const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
+                    if (itemIndex !== -1) {
+                        inventoryData.itemsInChest[itemIndex].quantity--;
+                        if (inventoryData.itemsInChest[itemIndex].quantity <= 0) {
+                            inventoryData.itemsInChest.splice(itemIndex, 1);
+                        }
+                        await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+                    }
+                }
+                alert("Seus atributos foram aumentados para 100!");
+                location.reload();
+            }
+        }
+
+        // CASO 2: Bolsa de Escriba (expand_inventory) - CORRIGIDO
+        else if (selectedItem.dataset.effect === "expand_inventory") {
+            const expandValue = parseInt(selectedItem.dataset.value) || 2;
+            const itemUUID = selectedItem.dataset.uuid;
+
+            try {
+                const playerSnap = await getDoc(playerRef);
+                if (!playerSnap.exists()) return;
+
+                const inventoryData = playerSnap.data().inventory;
+
+                // Expande o inventário
+                inventoryData.inventorySpaces = (inventoryData.inventorySpaces || 50) + expandValue;
+
+                // Remove o item do baú pelo UUID
+                const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === itemUUID);
+                if (itemIndex > -1) {
+                    inventoryData.itemsInChest.splice(itemIndex, 1);
+                }
+
+                // Adiciona à lista de descartados para não ser re-adicionado
+                if (!inventoryData.discardedItems) {
+                    inventoryData.discardedItems = [];
+                }
+                inventoryData.discardedItems.push(itemUUID);
+
+                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+
+                alert(`Inventário expandido! +${expandValue} espaços adicionados.`);
+
+            } catch (error) {
+                console.error("Erro ao usar a bolsa de escriba:", error);
+                alert("Ocorreu um erro ao tentar expandir o inventário.");
+            }
+        }
+
+        // CASO 3: Outros Consumíveis (heal, damage, etc.)
+        else if (selectedItem.dataset.consumable === 'true') {
+            const itemId = selectedItem.dataset.item;
+            const itemName = selectedItem.dataset.itemName;
+            const effect = selectedItem.dataset.effect;
+            const value = parseInt(selectedItem.dataset.value);
+
+            console.log("Usando item consumível:", itemName, "ID:", itemId);
+
+            // Aplica o efeito
+            if (effect === "damage") {
+                if (currentPlayerData && currentPlayerData.energy) {
+                    currentPlayerData.energy.total -= value;
+                    await savePlayerData(uid, currentPlayerData);
+                }
+            } else if (effect === "heal") {
+                if (currentPlayerData && currentPlayerData.energy) {
+                    const initialEnergy = currentPlayerData.energy.initial;
+                    currentPlayerData.energy.total = Math.min(currentPlayerData.energy.total + value, initialEnergy);
+                    await savePlayerData(uid, currentPlayerData);
+                }
+            }
+
+            // Consome o item no Firestore
+            const playerSnap = await getDoc(playerRef);
+            if (playerSnap.exists()) {
+                const inventoryData = playerSnap.data().inventory;
+                const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
+                if (itemIndex !== -1) {
+                    inventoryData.itemsInChest[itemIndex].quantity--;
+                    if (inventoryData.itemsInChest[itemIndex].quantity <= 0) {
+                        inventoryData.itemsInChest.splice(itemIndex, 1);
+                    }
+                    await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+                }
+            }
+        }
+
+        else {
+            console.log("O item selecionado não é consumível.");
+        }
+
+        // Limpa a seleção da UI após o uso
         selectedItem = null;
         clearHighlights();
         toggleUseButton(false);
-    }
-    return;
-}
-
-} else if (selectedItem && selectedItem.dataset.consumable === 'true') {
-
-const itemId = selectedItem.dataset.item;
-
-const itemName = selectedItem.dataset.itemName; // Obtém o nome do item sem a quantidade
-
-console.log("Usando item consumível:", itemName, "ID:", itemId);
-
-console.log("selectedItem:", selectedItem); // LOG
-
-console.log("selectedItem.dataset.quantity:", selectedItem.dataset.quantity); // LOG
-
-console.log("itemName:", itemName); // LOG
-
-let quantity = parseInt(selectedItem.dataset.quantity);
-
-if (!isNaN(quantity) && quantity > 0) {
-
-// Aplica o efeito do item ANTES de decrementar a quantidade para a verificação
-
-if (selectedItem && selectedItem.dataset.effect) {
-
-const effect = selectedItem.dataset.effect;
-
-const value = parseInt(selectedItem.dataset.value);
-
-console.log("Aplicando efeito:", effect, "com valor:", value);
-
-    if (effect === "damage" && itemName === "Pão Mofado") {
-
-if (currentPlayerData && currentPlayerData.energy && currentPlayerData.energy.total > 0) {
-
-currentPlayerData.energy.total -= value;
-
-// Atualiza o texto e a barra de HP
-
-const energyTotal = currentPlayerData.energy.total;
-
-const energyInitial = currentPlayerData.energy.initial;
-
-document.getElementById("char-energy").innerText = `${energyTotal}/${energyInitial}`;
-
-// Atualiza a barra de HP
-
-const barraHP = document.getElementById("barra-hp-inventario");
-
-if (barraHP) {
-
-const porcentagem = Math.max(0, (energyTotal / energyInitial) * 100);
-
-barraHP.style.width = `${porcentagem}%`;
-
-}
-
-await savePlayerData(auth.currentUser.uid, currentPlayerData);
-
-console.log("Energia diminuída para:", currentPlayerData.energy.total);
-
-}
-
-} else if (effect === "heal") {
-
-if (currentPlayerData && currentPlayerData.energy) {
-
-const initialEnergy = currentPlayerData.energy.initial;
-
-const newEnergy = Math.min(currentPlayerData.energy.total + value, initialEnergy);
-
-currentPlayerData.energy.total = newEnergy;
-
-// Atualiza o texto e a barra de HP
-
-document.getElementById("char-energy").innerText = `${newEnergy}/${initialEnergy}`;
-
-// Atualiza a barra de HP
-
-const barraHP = document.getElementById("barra-hp-inventario");
-
-if (barraHP) {
-
-const porcentagem = Math.max(0, (newEnergy / initialEnergy) * 100);
-
-barraHP.style.width = `${porcentagem}%`;
-
-}
-
-await savePlayerData(auth.currentUser.uid, currentPlayerData);
-
-console.log("Energia aumentada para:", currentPlayerData.energy.total);
-
-}
-
-}
-
-}
-
-quantity--;
-
-selectedItem.dataset.quantity = quantity;
-
-const quantitySpan = selectedItem.querySelector('.item-quantity');
-
-if (quantitySpan) {
-
-quantitySpan.textContent = quantity > 0 ? `(${quantity})` : '';
-
-} else if (quantity > 0) {
-
-selectedItem.innerHTML += `<span class="item-quantity">(${quantity})</span>`;
-
-}
-
-if (quantity === 0) {
-
-console.log("Item consumível esgotado:", itemName);
-
-selectedItem.remove();
-
-selectedItem = null;
-
-clearHighlights();
-
-toggleUseButton(false);
-
-}
-
-// Atualiza no Firestore diretamente
-
-const uid = auth.currentUser?.uid;
-
-if (uid) {
-
-const playerRef = doc(db, "players", uid);
-
-const playerSnap = await getDoc(playerRef);
-
-if (playerSnap.exists()) {
-
-const inventoryData = playerSnap.data().inventory;
-
-const itemIndex = inventoryData.itemsInChest.findIndex(i => i.id === itemId);
-
-if (itemIndex !== -1) {
-
-inventoryData.itemsInChest[itemIndex].quantity = quantity;
-
-if (quantity <= 0) {
-
-inventoryData.itemsInChest.splice(itemIndex, 1);
-
-}
-
-await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-
-}
-
-}
-
-}
-
-console.log("Quantidade restante:", quantity);
-
-}
-
-} else if (selectedItem) {
-
-console.log("O item selecionado não é consumível.");
-
-} else {
-
-console.log("Nenhum item consumível selecionado para usar.");
-
-}
-
-});
-
+    });
 } else {
 
 console.warn("Botão 'Usar' não encontrado no HTML.");
