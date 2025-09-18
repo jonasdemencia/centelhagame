@@ -69,6 +69,7 @@ p {
 .items {
     display: grid;
     grid-template-columns: repeat(2, 70px);
+    grid-template-rows: repeat(var(--inventory-rows, 25), 70px);
     gap: 2px !important;
     justify-content: start;
     align-items: start;
@@ -78,6 +79,7 @@ p {
     margin-left: -8px; /* Chrome/Edge */
     margin-top: 20px;
 }
+
 
 
 /* Firefox específico */
