@@ -1534,7 +1534,7 @@ const equippedItemName = inventoryData.equippedItems[slot.id];
 });
 
 updateSlotCompatibility();
-reorganizeGrid();
+// reorganizeGrid();
 }
 
 
