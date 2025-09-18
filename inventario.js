@@ -1651,7 +1651,6 @@ if (fullItemData.ammoType) {
 
 });
 
-    });
 
 // Adiciona slots vazios para mostrar espaços expandidos
 const inventoryRows = inventoryData.inventoryRows || 25;
