@@ -1168,9 +1168,6 @@ console.log("Aplicando efeito:", effect, "com valor:", value);
     }
 } else if (effect === "damage" && itemName === "Pão Mofado") {
 
-
-if (effect === "damage" && itemName === "Pão Mofado") {
-
 if (currentPlayerData && currentPlayerData.energy && currentPlayerData.energy.total > 0) {
 
 currentPlayerData.energy.total -= value;
