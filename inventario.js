@@ -1086,36 +1086,36 @@ location.reload();
 
 } else if (selectedItem && selectedItem.dataset.effect === "expand_inventory") {
     const expandValue = parseInt(selectedItem.dataset.value) || 2;
-    
     const uid = auth.currentUser?.uid;
     if (uid) {
         const playerRef = doc(db, "players", uid);
         const playerSnap = await getDoc(playerRef);
+        if (!playerSnap.exists()) return;
+
         const inventoryData = playerSnap.data().inventory;
-        
+
+        // Garante que inventorySpaces seja um número
+        inventoryData.inventorySpaces = Number(inventoryData.inventorySpaces) || 50;
+
         // Expande o inventário
-        inventoryData.inventorySpaces = (inventoryData.inventorySpaces || 50) + expandValue;
-        
-        // Consome o item
+        inventoryData.inventorySpaces += expandValue;
+
+        // Consome o item: remove-o diretamente do inventário pelo seu UUID
         const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
         if (itemIndex > -1) {
-            inventoryData.itemsInChest[itemIndex].quantity--;
-            
-            if (inventoryData.itemsInChest[itemIndex].quantity <= 0) {
-                inventoryData.itemsInChest.splice(itemIndex, 1);
-            }
+            inventoryData.itemsInChest.splice(itemIndex, 1);
         }
-        
+
         await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+
         alert(`Inventário expandido! +${expandValue} espaços adicionados.`);
-        
+
+        // Limpa a seleção e o estado da UI. O listener do Firestore cuidará de redesenhar.
         selectedItem = null;
         clearHighlights();
         toggleUseButton(false);
     }
     return;
-
-
 }
 
 } else if (selectedItem && selectedItem.dataset.consumable === 'true') {
