@@ -1152,21 +1152,7 @@ const value = parseInt(selectedItem.dataset.value);
 
 console.log("Aplicando efeito:", effect, "com valor:", value);
 
-    if (effect === "expand_inventory") {
-    const expandValue = parseInt(selectedItem.dataset.value) || 2;
-    
-    const uid = auth.currentUser?.uid;
-    if (uid) {
-        const playerRef = doc(db, "players", uid);
-        const playerSnap = await getDoc(playerRef);
-        const inventoryData = playerSnap.data().inventory;
-        
-        inventoryData.inventoryRows = (inventoryData.inventoryRows || 25) + Math.ceil(expandValue / 2);
-        
-        await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-        alert(`Inventário expandido! +${expandValue} espaços adicionados.`);
-    }
-} else if (effect === "damage" && itemName === "Pão Mofado") {
+    if (effect === "damage" && itemName === "Pão Mofado") {
 
 if (currentPlayerData && currentPlayerData.energy && currentPlayerData.energy.total > 0) {
 
@@ -1665,6 +1651,18 @@ if (fullItemData.ammoType) {
 
 });
 
+    });
+
+// Adiciona slots vazios para mostrar espaços expandidos
+const inventoryRows = inventoryData.inventoryRows || 25;
+const totalSlots = inventoryRows * 2; // 2 colunas
+const currentItems = inventoryData.itemsInChest.length;
+
+for (let i = currentItems; i < totalSlots; i++) {
+    const emptySlot = document.createElement('div');
+    emptySlot.classList.add('item', 'empty-slot');
+    chestElement.appendChild(emptySlot);
+}
 
 // Carrega itens equipados
 document.querySelectorAll('.slot').forEach(slot => {
