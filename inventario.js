@@ -1710,6 +1710,10 @@ const equippedItemName = inventoryData.equippedItems[slot.id];
 
 updateSlotCompatibility();
 reorganizeGrid();
+
+// Atualiza CSS dinâmico para linhas do inventário
+const inventoryRows = inventoryData.inventoryRows || 25;
+document.documentElement.style.setProperty('--inventory-rows', inventoryRows);
 }
 
 
