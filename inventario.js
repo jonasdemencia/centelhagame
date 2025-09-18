@@ -1093,7 +1093,7 @@ location.reload();
         const playerSnap = await getDoc(playerRef);
         const inventoryData = playerSnap.data().inventory;
         
-        inventoryData.inventoryRows = (inventoryData.inventoryRows || 25) + Math.ceil(expandValue / 2);
+        inventoryData.inventorySpaces = (inventoryData.inventorySpaces || 50) + expandValue;
         
         // Consome o item
         let quantity = parseInt(selectedItem.dataset.quantity);
@@ -1463,19 +1463,16 @@ if (!docSnap.exists() || !docSnap.data().inventory) {
 
 const initialInventoryData = {
 
-itemsInChest: initialItems.map(item => ({ ...item })),
-
-equippedItems: {
-
-weapon: null, armor: null, helmet: null, amulet: null,
-
-shield: null, gloves: null, ring: null, boots: null
-
-},
-weaponAmmoCounts: {}, // **NOVO** Inicializa o mapa de munição
-inventoryRows: 25
-    
+const initialInventoryData = {
+    itemsInChest: initialItems.map(item => ({ ...item })),
+    equippedItems: {
+        weapon: null, armor: null, helmet: null, amulet: null,
+        shield: null, gloves: null, ring: null, boots: null
+    },
+    weaponAmmoCounts: {},
+    inventorySpaces: 50
 };
+
 
 await setDoc(playerRef, { inventory: initialInventoryData }, { merge: true });
 
@@ -1653,8 +1650,8 @@ if (fullItemData.ammoType) {
 
 
 // Adiciona slots vazios para mostrar espaços expandidos
-const inventoryRows = inventoryData.inventoryRows || 25;
-const totalSlots = inventoryRows * 2; // 2 colunas
+const inventorySpaces = inventoryData.inventorySpaces || 50;
+const totalSlots = inventorySpaces;
 const currentItems = inventoryData.itemsInChest.length;
 
 for (let i = currentItems; i < totalSlots; i++) {
