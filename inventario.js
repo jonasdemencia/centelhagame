@@ -1462,8 +1462,6 @@ inventoryListener = onSnapshot(playerRef, async (docSnap) => {
 if (!docSnap.exists() || !docSnap.data().inventory) {
 
 const initialInventoryData = {
-
-const initialInventoryData = {
     itemsInChest: initialItems.map(item => ({ ...item })),
     equippedItems: {
         weapon: null, armor: null, helmet: null, amulet: null,
