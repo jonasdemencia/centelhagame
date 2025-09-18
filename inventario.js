@@ -1373,29 +1373,27 @@ chestElement.innerHTML = ""; // Limpa o conteúdo atual
 
 const allItemsArr = [...initialItems, ...extraItems];
 
-inventoryData.itemsInChest.forEach(dbItem => {
-    // Encontra os detalhes completos do item (incluindo a imagem) usando o ID do item do banco de dados.
-    const fullItemData = allItemsArr.find(localItem => localItem.id === dbItem.id);
+const largeItemElements = [];
+const smallItemElements = [];
 
+inventoryData.itemsInChest.forEach(dbItem => {
+    const fullItemData = allItemsArr.find(localItem => localItem.id === dbItem.id);
     if (!fullItemData) {
         console.warn(`[LOAD UI] Item com id "${dbItem.id}" não encontrado nos catálogos locais. Pulando.`);
-        return; // Pula para o próximo item se não encontrar os detalhes.
+        return;
     }
 
-    console.log(`[LOAD UI] Processando item: ${fullItemData.content}`, fullItemData);
-
     const newItem = document.createElement('div');
-newItem.classList.add('item');
-if (fullItemData.large) {
-    newItem.classList.add('large');
-}
-newItem.dataset.item = fullItemData.id;
+    newItem.classList.add('item');
+    if (fullItemData.large) {
+        newItem.classList.add('large');
+    }
 
-// Garante UUID único para cada item
-if (!dbItem.uuid) {
-    dbItem.uuid = crypto.randomUUID();
-}
-newItem.dataset.uuid = dbItem.uuid;
+    newItem.dataset.item = fullItemData.id;
+    if (!dbItem.uuid) {
+        dbItem.uuid = crypto.randomUUID();
+    }
+    newItem.dataset.uuid = dbItem.uuid;
     newItem.dataset.itemName = fullItemData.content;
 
     if (fullItemData.energia) {
@@ -1416,43 +1414,45 @@ newItem.dataset.uuid = dbItem.uuid;
         `;
     }
 
-   let itemHTML = `
-    <img src="${fullItemData.thumbnailImage || fullItemData.image}" alt="${fullItemData.content}" />
-    ${energiaHTML}
-`;
-
+    let itemHTML = `<img src="${fullItemData.thumbnailImage || fullItemData.image}" alt="${fullItemData.content}" />${energiaHTML}`;
 
     if (fullItemData.consumable || fullItemData.projectile) {
-    const quantity = dbItem.quantity || fullItemData.quantity;
-    newItem.dataset.quantity = quantity;
+        const quantity = dbItem.quantity || fullItemData.quantity;
+        newItem.dataset.quantity = quantity;
+        if (fullItemData.consumable) {
+            newItem.dataset.consumable = 'true';
+            if (fullItemData.effect) newItem.dataset.effect = fullItemData.effect;
+            if (fullItemData.value) newItem.dataset.value = fullItemData.value;
+        }
+        if (fullItemData.projectile) {
+            newItem.dataset.projectile = 'true';
+        }
+        if (quantity > 0) {
+            itemHTML += `<span class="item-quantity">${quantity}</span>`;
+        }
+    }
 
-    if (fullItemData.consumable) {
-        newItem.dataset.consumable = 'true';
-        if (fullItemData.effect) newItem.dataset.effect = fullItemData.effect;
-        if (fullItemData.value) newItem.dataset.value = fullItemData.value;
+    if (fullItemData.ammoType) {
+        const savedAmmo = inventoryData.weaponAmmoCounts[fullItemData.content] || 0;
+        if (savedAmmo > 0) {
+            itemHTML += `<span class="weapon-ammo">${savedAmmo}</span>`;
+        }
     }
-    if (fullItemData.projectile) {
-        newItem.dataset.projectile = 'true';
-    }
-    if (quantity > 0) {
-        itemHTML += `<span class="item-quantity">${quantity}</span>`;
-    }
-}
-
-// Adiciona munição carregada para armas
-if (fullItemData.ammoType) {
-    const savedAmmo = inventoryData.weaponAmmoCounts[fullItemData.content] || 0;
-    if (savedAmmo > 0) {
-        itemHTML += `<span class="weapon-ammo">${savedAmmo}</span>`;
-    }
-}
-
 
     newItem.innerHTML = itemHTML;
-    chestElement.appendChild(newItem);
-    addItemClickListener(newItem);
 
+    if (fullItemData.large) {
+        largeItemElements.push(newItem);
+    } else {
+        smallItemElements.push(newItem);
+    }
+
+    addItemClickListener(newItem);
 });
+
+// Adiciona os itens ordenados ao DOM para otimizar o preenchimento da grade
+largeItemElements.forEach(item => chestElement.appendChild(item));
+smallItemElements.forEach(item => chestElement.appendChild(item));
 
 
 // Adiciona slots vazios para mostrar espaços expandidos
@@ -1794,24 +1794,6 @@ function updateSlotCompatibility() {
     } else {
         shieldSlot.classList.remove('blocked');
     }
-}
-
-function reorganizeGrid() {
-    const chestElement = document.querySelector('.items');
-    const items = Array.from(chestElement.children);
-    
-    // Remove todos os itens
-    items.forEach(item => item.remove());
-    
-    // Reordena: itens grandes primeiro, depois pequenos
-    const largeItems = items.filter(item => item.classList.contains('large'));
-    const smallItems = items.filter(item => !item.classList.contains('large'));
-    
-    // Adiciona itens grandes em posições pares
-    largeItems.forEach(item => chestElement.appendChild(item));
-    
-    // Preenche espaços restantes com itens pequenos
-    smallItems.forEach(item => chestElement.appendChild(item));
 }
 
 
