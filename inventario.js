@@ -1472,9 +1472,9 @@ weapon: null, armor: null, helmet: null, amulet: null,
 shield: null, gloves: null, ring: null, boots: null
 
 },
-weaponAmmoCounts: {} // **NOVO** Inicializa o mapa de munição
+weaponAmmoCounts: {}, // **NOVO** Inicializa o mapa de munição
 inventoryRows: 25
-
+    
 };
 
 await setDoc(playerRef, { inventory: initialInventoryData }, { merge: true });
