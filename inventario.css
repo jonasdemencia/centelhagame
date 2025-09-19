@@ -13,7 +13,9 @@ body {
     width: 500px;
     height: 430px;
     position: relative;
+    margin: 0 auto;
 }
+
 
 
 @media (max-width: 768px) {
@@ -61,7 +63,9 @@ p {
     background: url('background-unico.png') center/contain no-repeat;
     width: 500px;
     height: 430px;
+    z-index: 1;
 }
+
 
 
 .top-section {
@@ -72,7 +76,9 @@ p {
     transition: transform 0.5s ease;
     transform: translateY(-400px);
     overflow: hidden;
+    z-index: 2;
 }
+
 
 .container.expanded .bottom-section {
     transform: translateY(400px);
@@ -887,7 +893,6 @@ p {
     height: 100%;
     gap: 0;
     margin-left: 0;
-background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png') center/cover no-repeat;
     background-size: cover; /* volta para cover */
     background-position: center;
 }
