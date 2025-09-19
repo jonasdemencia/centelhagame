@@ -1320,25 +1320,25 @@ body {
 
 @keyframes explosiveFire {
     0% {
-        transform: translateY(-50px) translateX(0) scale(1);
+        transform: translateY(400px) translateX(0) scale(1);
         background: #ff0000;
         opacity: 1;
         box-shadow: 0 0 5px #ff0000;
     }
     20% {
-        transform: translateY(100px) translateX(var(--random-x)) scale(2);
+        transform: translateY(300px) translateX(var(--random-x)) scale(2);
         background: #ff4400;
         opacity: 1;
         box-shadow: 0 0 10px #ff4400;
     }
     60% {
-        transform: translateY(300px) translateX(var(--random-x2)) scale(1.5);
+        transform: translateY(100px) translateX(var(--random-x2)) scale(1.5);
         background: #ffaa00;
         opacity: 1;
         box-shadow: 0 0 8px #ffaa00;
     }
     100% {
-        transform: translateY(400px) translateX(var(--random-x3)) scale(0.5);
+        transform: translateY(-50px) translateX(var(--random-x3)) scale(0.5);
         background: #ffffff;
         opacity: 0;
         box-shadow: 0 0 20px #ffffff;
@@ -1347,22 +1347,22 @@ body {
 
 @keyframes megaFire {
     0% {
-        transform: translateY(-100px) scale(1);
+        transform: translateY(400px) scale(1);
         background: #ff0000;
         opacity: 1;
     }
     30% {
-        transform: translateY(50px) scale(3);
+        transform: translateY(200px) scale(3);
         background: #ff2200;
         opacity: 1;
     }
     70% {
-        transform: translateY(200px) scale(2);
+        transform: translateY(50px) scale(2);
         background: #ff6600;
         opacity: 1;
     }
     100% {
-        transform: translateY(400px) scale(4);
+        transform: translateY(-100px) scale(4);
         background: #ffffff;
         opacity: 0;
     }
