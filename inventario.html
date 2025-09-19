@@ -179,12 +179,33 @@
     </div>
 
     <script type="module" src="inventario.js"></script>
-<script src="weather-effects.js"></script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+    
+    const firebaseConfig = {
+        apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
+        authDomain: "centelhagame-9d511.firebaseapp.com",
+        projectId: "centelhagame-9d511",
+        storageBucket: "centelhagame-9d511.appspot.com",
+        messagingSenderId: "700809803145",
+        appId: "1:700809803145:web:bff4c6a751ec9389919d58"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    window.db = getFirestore(app);
+    window.doc = doc;
+    window.setDoc = setDoc;
+    window.getDoc = getDoc;
+</script>
 <script src="arcanum-conditions.js"></script>
+<script src="weather-effects.js"></script>
+
 
 </body>
 </html>
 </html>
+
 
 
 
