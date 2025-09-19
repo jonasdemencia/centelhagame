@@ -1367,3 +1367,16 @@ body {
         opacity: 0;
     }
 }
+
+.slot-row:nth-child(2) {
+    gap: 50px;
+    margin-top: 20px;
+}
+
+.slot-row:nth-child(2) #weapon {
+    transform: translateX(-20px);
+}
+
+.slot-row:nth-child(2) #shield {
+    transform: translateX(20px);
+}
