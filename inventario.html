@@ -203,22 +203,46 @@
     <script src="arcanum-conditions.js"></script>
     <script src="weather-effects.js"></script>
     
-    <script>
-    setTimeout(function() {
-        console.log('Procurando botão...');
-        const expandBtn = document.getElementById('expand-btn');
-        const container = document.querySelector('.container');
-        
-        console.log('Botão encontrado:', expandBtn);
-        console.log('Container encontrado:', container);
-        
-        if (expandBtn && container) {
-            expandBtn.addEventListener('click', function() {
-                console.log('Botão clicado!');
-                container.classList.toggle('expanded');
-            });
-        }
-    }, 2000);
-    </script>
+   <script>
+setTimeout(function() {
+    console.log('Procurando botão...');
+    const expandBtn = document.getElementById('expand-btn');
+    const container = document.querySelector('.container');
+    
+    console.log('Botão encontrado:', expandBtn);
+    console.log('Container encontrado:', container);
+    
+    if (expandBtn && container) {
+        expandBtn.addEventListener('click', function() {
+            console.log('Botão clicado!');
+            container.classList.toggle('expanded');
+            
+            // ADICIONE AQUI:
+            if (container.classList.contains('expanded')) {
+                createFireParticles();
+            }
+        });
+    }
+}, 2000);
+
+function createFireParticles() {
+    const topSection = document.querySelector('.top-section');
+    const fireContainer = document.createElement('div');
+    fireContainer.className = 'fire-particles';
+    
+    for(let i = 0; i < 20; i++) {
+        const pixel = document.createElement('div');
+        pixel.className = 'fire-pixel';
+        pixel.style.left = Math.random() * 100 + '%';
+        pixel.style.animationDelay = Math.random() * 0.1 + 's';
+        fireContainer.appendChild(pixel);
+    }
+    
+    topSection.appendChild(fireContainer);
+    setTimeout(() => fireContainer.remove(), 500);
+}
+</script>
+
 </body>
 </html>
+
