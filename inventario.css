@@ -1393,5 +1393,6 @@ body {
 .rings-row {
     justify-content: space-between;
     width: 210px;
-    margin: 0 auto;
+    margin: 15px auto 0;
 }
+
