@@ -11,10 +11,10 @@ body {
 /* Container principal */
 .container {
     width: 500px;
-    height: 430px;
+    height: 830px;
     position: relative;
     margin: 0 auto;
-    overflow: hidden;
+    overflow: visible;
 }
 
 @media (max-width: 768px) {
