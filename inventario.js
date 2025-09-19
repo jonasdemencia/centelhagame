@@ -2261,21 +2261,28 @@ console.error("Erro ao salvar os dados do jogador:", error);
 // Sistema de expansão/recolhimento
 let isExpanded = false;
 
-document.addEventListener('DOMContentLoaded', function() {
+setTimeout(function() {
     const expandBtn = document.getElementById('expand-btn');
     const container = document.querySelector('.container');
     
     if (expandBtn && container) {
         expandBtn.addEventListener('click', function() {
+            console.log('Botão clicado!');
             isExpanded = !isExpanded;
             
             if (isExpanded) {
                 container.classList.add('expanded');
+                console.log('Expandindo...');
             } else {
                 container.classList.remove('expanded');
+                console.log('Recolhendo...');
             }
         });
+        console.log('Event listener adicionado ao botão');
+    } else {
+        console.log('Botão ou container não encontrado');
     }
-});
+}, 1000);
+
 
 }
