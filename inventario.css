@@ -10,7 +10,6 @@ body {
 
 /* Container principal */
 .container {
-    background: url('background-unico.png') center/contain no-repeat;
     width: 500px;
     height: 430px;
     position: relative;
@@ -59,7 +58,11 @@ p {
     position: relative;
     transition: transform 0.5s ease;
     transform: translateY(0);
+    background: url('background-unico.png') center/contain no-repeat;
+    width: 500px;
+    height: 430px;
 }
+
 
 .top-section {
     position: absolute;
@@ -82,7 +85,6 @@ p {
 .character {
     width: 500px;
     height: 800px;
-    background: url('background-unico.png') center/contain no-repeat;
     position: relative;
 }
 
