@@ -69,23 +69,23 @@ p {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 500px;
     height: 400px;
     transition: transform 0.5s ease;
-    transform: translateY(-370px);
+    transform: translateY(-400px);
     overflow: hidden;
     z-index: 1;
-    background: url('background-unico.png') center/contain no-repeat;
+    background: url('background-unico.png') 0 0/500px 800px no-repeat;
 }
 
-
 .container.expanded .bottom-section {
-    transform: translateY(0);
+    transform: translateY(400px);
 }
 
 .container.expanded .top-section {
     transform: translateY(0);
 }
+
 
 .character {
     width: 500px;
