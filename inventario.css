@@ -64,7 +64,7 @@ p {
 
 .top-section {
     position: absolute;
-    top: 430px;
+    top: -400px;
     left: 86px;
     width: 328px;
     height: 400px;
@@ -80,7 +80,7 @@ p {
 }
 
 .container.expanded .top-section {
-    transform: translateY(-400px);
+    transform: translateY(400px);
 }
 
 .character {
