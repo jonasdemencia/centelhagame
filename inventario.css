@@ -1387,11 +1387,11 @@ body {
 
 .armor-row {
     justify-content: center;
-    margin-top: 15px;
+    margin-top: 25px;
 }
 
 .rings-row {
     justify-content: space-between;
     width: 210px;
-    margin: -8px auto 0;
+    margin: -10px auto 0;
 }
