@@ -230,28 +230,36 @@ function createFireParticles() {
     const fireContainer = document.createElement('div');
     fireContainer.className = 'fire-particles';
     
-    for(let i = 0; i < 200; i++) {
+    for(let i = 0; i < 150; i++) {
         const pixel = document.createElement('div');
         pixel.className = 'fire-pixel';
         
-        if(Math.random() < 0.3) {
+        // 50% são mega intensas
+        if(Math.random() < 0.5) {
             pixel.classList.add('intense');
         }
         
+        // Movimento aleatório
+        pixel.style.setProperty('--random-x', (Math.random() - 0.5) * 100 + 'px');
+        pixel.style.setProperty('--random-x2', (Math.random() - 0.5) * 150 + 'px');
+        pixel.style.setProperty('--random-x3', (Math.random() - 0.5) * 200 + 'px');
+        
         pixel.style.left = Math.random() * 100 + '%';
-        pixel.style.animationDelay = Math.random() * 0.15 + 's';
+        pixel.style.animationDelay = Math.random() * 0.3 + 's';
         fireContainer.appendChild(pixel);
     }
     
     topSection.appendChild(fireContainer);
-    setTimeout(() => fireContainer.remove(), 1000);
+    setTimeout(() => fireContainer.remove(), 1500);
 }
+
 
 
 </script>
 
 </body>
 </html>
+
 
 
 
