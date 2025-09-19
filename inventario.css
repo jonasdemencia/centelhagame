@@ -1382,13 +1382,17 @@ body {
     justify-content: space-between;
     width: 220px;
     margin: 0 auto;
-    margin-top: 75px;
+    margin-top: 95px;
 }
 
 .armor-row {
     justify-content: center;
-    margin-top: 25px;
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
 }
+
 
 .rings-row {
     justify-content: space-between;
