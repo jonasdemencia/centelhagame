@@ -45,14 +45,14 @@ p {
 /* Seção do personagem */
 .character {
     padding: 20px;
-    background: #000 url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/slots-background.png') center/cover no-repeat;
+    background: #000 url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/slots-background.png') center/contain no-repeat;
     border: 2px solid #ccc; /* cinza claro */
     border-radius: 0;
     width: 400px;
     height: 328px;
     margin: auto;
-    background-size: 400px 328px;
 }
+
 
 
 .equipment {
