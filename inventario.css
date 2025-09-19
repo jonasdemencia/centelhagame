@@ -1374,7 +1374,7 @@ body {
 
 .weapon-shield-row {
     justify-content: space-between;
-    width: 250px;
+    width: 280px;
     margin: 0 auto;
 }
 
@@ -1388,7 +1388,7 @@ body {
 .armor-row {
     justify-content: center;
     position: absolute;
-    bottom: 50px;
+    bottom: 40px;
     left: 50%;
     transform: translateX(-50%);
 }
