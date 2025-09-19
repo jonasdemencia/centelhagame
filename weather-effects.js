@@ -63,41 +63,38 @@ class WeatherEffectsManager {
                     100% { opacity: 0; }
                 }
 
-               .static-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-    background-size: 1px 1px;
-    animation: static-flicker 0.2s steps(20, end) infinite;
-}
-
+                .static-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                    background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                                      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+                    background-size: 1px 1px;
+                    animation: static-flicker 0.2s steps(20, end) infinite;
+                }
 
                 .pixel {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    pointer-events: none;
-    border-radius: 50%;
-    animation-iteration-count: infinite;
-    animation-timing-function: ease-in-out;
-}
-
+                    position: absolute;
+                    width: 1px;
+                    height: 1px;
+                    pointer-events: none;
+                    border-radius: 50%;
+                    animation-iteration-count: infinite;
+                    animation-timing-function: ease-in-out;
+                }
 
                 .pixel.purple {
-    background-color: #8a2be2;
-    box-shadow: 0 0 2px 1px #8a2be2, 0 0 4px #8a2be2;
-}
+                    background-color: #8a2be2;
+                    box-shadow: 0 0 2px 1px #8a2be2, 0 0 4px #8a2be2;
+                }
 
-.pixel.silver {
-    background-color: #c0c0c0;
-    box-shadow: 0 0 2px 1px #c0c0c0, 0 0 4px #c0c0c0;
-}
-
+                .pixel.silver {
+                    background-color: #c0c0c0;
+                    box-shadow: 0 0 2px 1px #c0c0c0, 0 0 4px #c0c0c0;
+                }
             `
         };
 
@@ -163,9 +160,11 @@ class WeatherEffectsManager {
             
             const duration = Math.random() * (maxDuration - minDuration) + minDuration;
             const delay = Math.random() * -duration;
-            const leftPosition = Math.random() * 100;
-            const topPosition = Math.random() * 100;
-
+            
+            // Posição inicial aleatória
+            let leftPosition = Math.random() * 100;
+            let topPosition = Math.random() * 100;
+            
             pixel.style.left = `${leftPosition}vw`;
             pixel.style.top = `${topPosition}vh`;
             pixel.style.animationDuration = `${duration}s`;
@@ -173,6 +172,14 @@ class WeatherEffectsManager {
             pixel.style.animationName = isSilver ? 'pixel-glow' : 'pixel-fade';
             
             container.appendChild(pixel);
+            
+            // Move o pixel para nova posição a cada ciclo de animação
+            pixel.addEventListener('animationiteration', () => {
+                leftPosition = Math.random() * 100;
+                topPosition = Math.random() * 100;
+                pixel.style.left = `${leftPosition}vw`;
+                pixel.style.top = `${topPosition}vh`;
+            });
         }
     }
 
@@ -201,8 +208,10 @@ class WeatherEffectsManager {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    window.WeatherEffects = new WeatherEffectsManager();
+    // Aguarda o Firebase carregar
+    setTimeout(() => {
+        window.WeatherEffects = new WeatherEffectsManager();
+    }, 1000);
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
-
