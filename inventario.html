@@ -230,28 +230,29 @@ function createFireParticles() {
     const fireContainer = document.createElement('div');
     fireContainer.className = 'fire-particles';
     
-    for(let i = 0; i < 500; i++) {
+    for(let i = 0; i < 200; i++) {
         const pixel = document.createElement('div');
         pixel.className = 'fire-pixel';
         
-        // 30% das partículas são intensas
         if(Math.random() < 0.3) {
             pixel.classList.add('intense');
         }
         
         pixel.style.left = Math.random() * 100 + '%';
-        pixel.style.animationDelay = Math.random() * 0.1 + 's';
+        pixel.style.animationDelay = Math.random() * 0.15 + 's';
         fireContainer.appendChild(pixel);
     }
     
     topSection.appendChild(fireContainer);
-    setTimeout(() => fireContainer.remove(), 600);
+    setTimeout(() => fireContainer.remove(), 1000);
 }
+
 
 </script>
 
 </body>
 </html>
+
 
 
 
