@@ -1368,15 +1368,28 @@ body {
     }
 }
 
-.slot-row:nth-child(2) {
-    gap: 50px;
-    margin-top: 20px;
+.helmet-row {
+    justify-content: center;
 }
 
-.slot-row:nth-child(2) #weapon {
-    transform: translateX(-20px);
+.weapon-shield-row {
+    justify-content: space-between;
+    width: 200px;
+    margin: 0 auto;
 }
 
-.slot-row:nth-child(2) #shield {
-    transform: translateX(20px);
+.gloves-amulet-row {
+    justify-content: space-between;
+    width: 150px;
+    margin: 0 auto;
+}
+
+.armor-row {
+    justify-content: center;
+}
+
+.rings-row {
+    justify-content: space-between;
+    width: 180px;
+    margin: 0 auto;
 }
