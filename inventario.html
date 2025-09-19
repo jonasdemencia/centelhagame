@@ -6,209 +6,201 @@
     <title>Inventário de Itens</title>
     <link rel="stylesheet" href="inventario.css">
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    
 </head>
 <body>
     <div class="container">
-       <button id="useBtn" style="display:none;">Usar</button>
+        <button id="useBtn" style="display:none;">Usar</button>
         <button id="carregar-municao-btn" style="display:none;">Carregar Munição</button>
-<button onclick="resetInventory()" style="background: red; color: white; padding: 10px; display:none;">RESETAR INVENTÁRIO (TEMPORÁRIO)</button>
-
-        <div class="carousel-wrapper">
-            <div class="carousel-container">
-                <!-- Slide 1: Chest + Slots -->
-                <div class="carousel-slide active" id="inventory-window">
-                    <div class="character">
-                        <div class="equipment">
-    <div class="slot-row">
-    <div class="slot" id="gloves" data-slot="gloves">Luvas</div>
-    <div class="slot" id="helmet" data-slot="helmet">Cabeça</div>
-    <div class="slot" id="amulet" data-slot="amulet">Amuleto</div>
-</div>
-<div class="slot-row">
-    <div class="slot" id="weapon" data-slot="weapon">Mão Esquerda</div>
-    <div class="slot" id="armor" data-slot="armor">Peitoral</div>
-    <div class="slot" id="shield" data-slot="shield">Mão Direita</div>
-</div>
-<div class="slot-row">
-    <div class="slot" id="ring" data-slot="ring">Anel</div>
-    <div class="slot" id="boots" data-slot="boots">Botas</div>
-    <div class="slot" id="ring2" data-slot="ring">Anel</div>
-</div>
-</div>
-
-                    </div>
-                    
-                    <div class="chest-area">
-                        <div class="left-panel">
-                            <div class="name-panel">
-                                <span id="char-name-display">Nome do Personagem</span>
-                            </div>
-                            
-                            <div class="profile-info-container">
-                                <img id="portrait-image" src="" alt="Retrato do Personagem" style="display: none;">
-                                <div class="info-panel">
-                                    <div><span id="char-class-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-race-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-alignment-info" class="green-text">-</span></div>
-                                    <div><span id="char-age-info" class="green-text">-</span> ANOS&nbsp;&nbsp;&nbsp;<span id="char-hand-info" class="green-text">-</span>&nbsp;&nbsp;&nbsp;HEM: <span id="char-hemisphere-info" class="green-text">-</span></div>
-                                    <div>HA: <span id="char-skill-info" class="green-text">-</span>&nbsp;&nbsp;CA: <span id="char-charisma-info" class="green-text">-</span>&nbsp;&nbsp;MA: <span id="char-magic-info" class="green-text">-</span>&nbsp;&nbsp;SO: <span id="char-luck-info" class="green-text">-</span></div>
-                                    <div>COURAÇA: <span id="char-couraca-info" class="green-text">0</span>&nbsp;&nbsp;DANO: <span id="char-dano-info" class="green-text">1</span>&nbsp;&nbsp;DIA: <span id="char-day-info" class="green-text">1</span></div>
+        <button onclick="resetInventory()" style="background: red; color: white; padding: 10px; display:none;">RESETAR INVENTÁRIO (TEMPORÁRIO)</button>
+        
+        <!-- Botão para expandir/recolher -->
+        <button id="expand-btn" class="expand-button">⚔️</button>
+        
+        <!-- Container da parte inferior (inicialmente no topo) -->
+        <div class="bottom-section" id="bottom-section">
+            <div class="carousel-wrapper">
+                <div class="carousel-container">
+                    <div class="carousel-slide active" id="inventory-window">
+                        <div class="chest-area">
+                            <div class="left-panel">
+                                <div class="name-panel">
+                                    <span id="char-name-display">Nome do Personagem</span>
                                 </div>
-                            </div>
+                                
+                                <div class="profile-info-container">
+                                    <img id="portrait-image" src="" alt="Retrato do Personagem" style="display: none;">
+                                    <div class="info-panel">
+                                        <div><span id="char-class-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-race-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-alignment-info" class="green-text">-</span></div>
+                                        <div><span id="char-age-info" class="green-text">-</span> ANOS&nbsp;&nbsp;&nbsp;<span id="char-hand-info" class="green-text">-</span>&nbsp;&nbsp;&nbsp;HEM: <span id="char-hemisphere-info" class="green-text">-</span></div>
+                                        <div>HA: <span id="char-skill-info" class="green-text">-</span>&nbsp;&nbsp;CA: <span id="char-charisma-info" class="green-text">-</span>&nbsp;&nbsp;MA: <span id="char-magic-info" class="green-text">-</span>&nbsp;&nbsp;SO: <span id="char-luck-info" class="green-text">-</span></div>
+                                        <div>COURAÇA: <span id="char-couraca-info" class="green-text">0</span>&nbsp;&nbsp;DANO: <span id="char-dano-info" class="green-text">1</span>&nbsp;&nbsp;DIA: <span id="char-day-info" class="green-text">1</span></div>
+                                    </div>
+                                </div>
 
-                            <div class="item-preview">
-                                <div class="preview-image-window">
-    <div class="preview-image-container">
-        <img id="preview-image" src="" alt="Item Preview" style="display: none;">
-    </div>
-</div>
-<div class="preview-info-window">
-    <div class="preview-info">
-        <h3 id="preview-name"></h3>
-        <p id="preview-description"></p>
-    </div>
-</div>
-
-                            </div>
-                        </div>
-                        <div class="right-panel">
-                            <div class="chest">
-                                <div class="items">
-                                    <div class="item">
-                                        Item de Exemplo
-                                        <span class="item-expand-toggle">+</span>
-                                        <div class="item-description" style="display: none;">
-                                            Descrição deste item de exemplo.
+                                <div class="item-preview">
+                                    <div class="preview-image-window">
+                                        <div class="preview-image-container">
+                                            <img id="preview-image" src="" alt="Item Preview" style="display: none;">
+                                        </div>
+                                    </div>
+                                    <div class="preview-info-window">
+                                        <div class="preview-info">
+                                            <h3 id="preview-name"></h3>
+                                            <p id="preview-description"></p>
                                         </div>
                                     </div>
                                 </div>
-                                <div id="char-po-container">
-                                    <span class="label">Peças de Ouro:</span>
-                                    <span id="char-po">0</span>
-                                </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Slide 2: Ficha do Personagem -->
-                <div class="carousel-slide" id="character-sheet">
-                    <div class="sheet-grid-container">
-                        <div class="sheet-header">
-                            <p><strong>Nome:</strong> <span id="char-name">-</span></p>
-                            <p><strong>Classe:</strong> <span id="char-class">-</span></p>
-                            <p><strong>Raça:</strong> <span id="char-race">-</span></p>
-                        </div>
-                        <div class="sheet-main-status">
-                            <div class="attribute">
-                                <span class="label">Energia</span>
-                                <span id="char-energy">0/0</span>
-                                <div class="barra-hp-container">
-                                    <div id="barra-hp-inventario" class="barra-hp"></div>
-                                </div>
-                            </div>
-                            <div class="attribute xp-attribute">
-                                <span class="label">Nível</span>
-                                <span id="char-level">1</span>
-                                <div class="xp-container">
-                                    <span id="char-xp">0/100</span>
-                                    <div class="barra-xp-container">
-                                        <div id="barra-xp-inventario" class="barra-xp"></div>
+                            <div class="right-panel">
+                                <div class="chest">
+                                    <div class="items">
+                                        <div class="item">
+                                            Item de Exemplo
+                                            <span class="item-expand-toggle">+</span>
+                                            <div class="item-description" style="display: none;">
+                                                Descrição deste item de exemplo.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="char-po-container">
+                                        <span class="label">Peças de Ouro:</span>
+                                        <span id="char-po">0</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="sheet-stats-grid">
-                            <div class="stat-box"><span class="label">Habilidade</span><span id="char-skill">0</span></div>
-                            <div class="stat-box"><span class="label">Couraça</span><span id="char-couraca">0</span></div>
-                            <div class="stat-box"><span class="label">Carisma</span><span id="char-charisma">0</span></div>
-                            <div class="stat-box"><span class="label">Dano</span><span id="char-dano">0</span></div>
-                            <div class="stat-box"><span class="label">Magia</span><span id="char-magic">0</span></div>
-                            <div class="stat-box"><span class="label">Sorte</span><span id="char-luck">0</span></div>
+                    </div>
+
+                    <div class="carousel-slide" id="character-sheet">
+                        <div class="sheet-grid-container">
+                            <div class="sheet-header">
+                                <p><strong>Nome:</strong> <span id="char-name">-</span></p>
+                                <p><strong>Classe:</strong> <span id="char-class">-</span></p>
+                                <p><strong>Raça:</strong> <span id="char-race">-</span></p>
+                            </div>
+                            <div class="sheet-main-status">
+                                <div class="attribute">
+                                    <span class="label">Energia</span>
+                                    <span id="char-energy">0/0</span>
+                                    <div class="barra-hp-container">
+                                        <div id="barra-hp-inventario" class="barra-hp"></div>
+                                    </div>
+                                </div>
+                                <div class="attribute xp-attribute">
+                                    <span class="label">Nível</span>
+                                    <span id="char-level">1</span>
+                                    <div class="xp-container">
+                                        <span id="char-xp">0/100</span>
+                                        <div class="barra-xp-container">
+                                            <div id="barra-xp-inventario" class="barra-xp"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sheet-stats-grid">
+                                <div class="stat-box"><span class="label">Habilidade</span><span id="char-skill">0</span></div>
+                                <div class="stat-box"><span class="label">Couraça</span><span id="char-couraca">0</span></div>
+                                <div class="stat-box"><span class="label">Carisma</span><span id="char-charisma">0</span></div>
+                                <div class="stat-box"><span class="label">Dano</span><span id="char-dano">0</span></div>
+                                <div class="stat-box"><span class="label">Magia</span><span id="char-magic">0</span></div>
+                                <div class="stat-box"><span class="label">Sorte</span><span id="char-luck">0</span></div>
+                            </div>
+                            <div class="sheet-footer">
+                                <span><strong>Alinhamento:</strong> <span id="char-alignment">-</span></span>
+                                <span><strong>Mão:</strong> <span id="char-hand">-</span></span>
+                                <span><strong>Hemisfério:</strong> <span id="char-hemisphere">-</span></span>
+                                <span><strong>Dia:</strong> <span id="char-day">1</span></span>
+                                <span><strong>Idade:</strong> <span id="char-idade">-</span></span>
+                            </div>
                         </div>
-                        <div class="sheet-footer">
-                            <span><strong>Alinhamento:</strong> <span id="char-alignment">-</span></span>
-                            <span><strong>Mão:</strong> <span id="char-hand">-</span></span>
-                            <span><strong>Hemisfério:</strong> <span id="char-hemisphere">-</span></span>
-                            <span><strong>Dia:</strong> <span id="char-day">1</span></span>
-                            <span><strong>Idade:</strong> <span id="char-idade">-</span></span>
+                    </div>
+
+                    <div class="carousel-slide" id="dice-window">
+                        <div class="dice-slots-container">
+                            <h3>Dados Equipados</h3>
+                            <div class="dice-slots-grid">
+                                <div class="dice-slot-row">
+                                    <div class="dice-slot" data-dice="D3">D3</div>
+                                    <div class="dice-slot" data-dice="D4">D4</div>
+                                    <div class="dice-slot" data-dice="D6">D6</div>
+                                </div>
+                                <div class="dice-slot-row">
+                                    <div class="dice-slot" data-dice="D8">D8</div>
+                                    <div class="dice-slot" data-dice="D10">D10</div>
+                                    <div class="dice-slot" data-dice="D12">D12</div>
+                                </div>
+                                <div class="dice-slot-row">
+                                    <div class="dice-slot" data-dice="D20">D20</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chest dice-chest">
+                            <h2>Coleção de Dados</h2>
+                            <div class="dice-items">
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Slide 3: Dados -->
-                <div class="carousel-slide" id="dice-window">
-                    <div class="dice-slots-container">
-                        <h3>Dados Equipados</h3>
-                        <div class="dice-slots-grid">
-                            <div class="dice-slot-row">
-                                <div class="dice-slot" data-dice="D3">D3</div>
-                                <div class="dice-slot" data-dice="D4">D4</div>
-                                <div class="dice-slot" data-dice="D6">D6</div>
-                            </div>
-                            <div class="dice-slot-row">
-                                <div class="dice-slot" data-dice="D8">D8</div>
-                                <div class="dice-slot" data-dice="D10">D10</div>
-                                <div class="dice-slot" data-dice="D12">D12</div>
-                            </div>
-                            <div class="dice-slot-row">
-                                <div class="dice-slot" data-dice="D20">D20</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="chest dice-chest">
-                        <h2>Coleção de Dados</h2>
-                        <div class="dice-items">
-                            <!-- Os dados da coleção serão adicionados aqui dinamicamente -->
-                        </div>
+                
+                <div class="carousel-nav">
+                    <div class="carousel-buttons">
+                        <button id="prevBtn">◀</button>
+                        <button id="nextBtn">▶</button>
                     </div>
                 </div>
             </div>
-            
-            <div class="carousel-nav">
-                <div class="carousel-buttons">
-                    <button id="prevBtn">◀</button>
-                    <button id="nextBtn">▶</button>
-                </div>
+
+            <div class="discard-area">
+                <div class="discard-slot" id="discard-slot">descarte</div>
             </div>
         </div>
-
-        <div class="discard-area">
-            <div class="discard-slot" id="discard-slot">descarte</div>
+        
+        <!-- Container da parte superior (slots de equipamentos) -->
+        <div class="top-section" id="top-section">
+            <div class="character">
+                <div class="equipment">
+                    <div class="slot-row">
+                        <div class="slot" id="gloves" data-slot="gloves">Luvas</div>
+                        <div class="slot" id="helmet" data-slot="helmet">Cabeça</div>
+                        <div class="slot" id="amulet" data-slot="amulet">Amuleto</div>
+                    </div>
+                    <div class="slot-row">
+                        <div class="slot" id="weapon" data-slot="weapon">Mão Esquerda</div>
+                        <div class="slot" id="armor" data-slot="armor">Peitoral</div>
+                        <div class="slot" id="shield" data-slot="shield">Mão Direita</div>
+                    </div>
+                    <div class="slot-row">
+                        <div class="slot" id="ring" data-slot="ring">Anel</div>
+                        <div class="slot" id="boots" data-slot="boots">Botas</div>
+                        <div class="slot" id="ring2" data-slot="ring">Anel</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script type="module" src="inventario.js"></script>
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
-    
-    const firebaseConfig = {
-        apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
-        authDomain: "centelhagame-9d511.firebaseapp.com",
-        projectId: "centelhagame-9d511",
-        storageBucket: "centelhagame-9d511.appspot.com",
-        messagingSenderId: "700809803145",
-        appId: "1:700809803145:web:bff4c6a751ec9389919d58"
-    };
-    
-    const app = initializeApp(firebaseConfig);
-    window.db = getFirestore(app);
-    window.doc = doc;
-    window.setDoc = setDoc;
-    window.getDoc = getDoc;
-</script>
-<script src="arcanum-conditions.js"></script>
-<script src="weather-effects.js"></script>
-
-
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
+            authDomain: "centelhagame-9d511.firebaseapp.com",
+            projectId: "centelhagame-9d511",
+            storageBucket: "centelhagame-9d511.appspot.com",
+            messagingSenderId: "700809803145",
+            appId: "1:700809803145:web:bff4c6a751ec9389919d58"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+    </script>
+    <script src="arcanum-conditions.js"></script>
+    <script src="weather-effects.js"></script>
 </body>
 </html>
-</html>
-
-
-
-
-
-
-
