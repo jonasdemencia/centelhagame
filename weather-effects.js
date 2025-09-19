@@ -63,38 +63,41 @@ class WeatherEffectsManager {
                     100% { opacity: 0; }
                 }
 
-                .static-overlay {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    pointer-events: none;
-                    background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-                                      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-                    background-size: 2px 2px;
-                    animation: static-flicker 0.2s steps(20, end) infinite;
-                }
+               .static-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 1px 1px;
+    animation: static-flicker 0.2s steps(20, end) infinite;
+}
+
 
                 .pixel {
-                    position: absolute;
-                    width: 2px;
-                    height: 2px;
-                    pointer-events: none;
-                    border-radius: 50%;
-                    animation-iteration-count: infinite;
-                    animation-timing-function: ease-in-out;
-                }
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+    border-radius: 50%;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+}
+
 
                 .pixel.purple {
-                    background-color: #8a2be2;
-                    box-shadow: 0 0 5px 2px #8a2be2, 0 0 10px #8a2be2;
-                }
+    background-color: #8a2be2;
+    box-shadow: 0 0 2px 1px #8a2be2, 0 0 4px #8a2be2;
+}
 
-                .pixel.silver {
-                    background-color: #c0c0c0;
-                    box-shadow: 0 0 5px 2px #c0c0c0, 0 0 10px #c0c0c0;
-                }
+.pixel.silver {
+    background-color: #c0c0c0;
+    box-shadow: 0 0 2px 1px #c0c0c0, 0 0 4px #c0c0c0;
+}
+
             `
         };
 
@@ -202,3 +205,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
