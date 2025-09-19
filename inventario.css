@@ -1287,11 +1287,15 @@ body {
 
 .fire-pixel {
     position: absolute;
-    width: 2px;
-    height: 2px;
+    width: 1px;
+    height: 1px;
     background: #ff4500;
-    border-radius: 1px;
     animation: fireRise 0.3s ease-out forwards;
+}
+
+.fire-pixel.intense {
+    box-shadow: 0 0 8px #ff2200, 0 0 12px #ff4400;
+    animation: fireRiseIntense 0.5s ease-out forwards;
 }
 
 @keyframes fireRise {
@@ -1300,13 +1304,27 @@ body {
         background: #ff4500;
         opacity: 1;
     }
-    50% {
-        background: #ff6600;
-        opacity: 0.8;
-    }
     100% {
         transform: translateY(0);
         background: #ff8800;
+        opacity: 0;
+    }
+}
+
+@keyframes fireRiseIntense {
+    0% {
+        transform: translateY(400px);
+        background: #ff2200;
+        opacity: 1;
+    }
+    70% {
+        transform: translateY(50px);
+        background: #ff4400;
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0);
+        background: #ff6600;
         opacity: 0;
     }
 }
