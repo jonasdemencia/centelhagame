@@ -10,13 +10,12 @@ body {
 
 /* Container principal */
 .container {
-    max-width: 510px; /* aumenta mais */
-    margin: auto;
-    background: #000; /* fundo preto sólido */
-    padding: 20px;
-    border-radius: 0; /* remove arredondamento */
-    border: 2px solid #ccc; /* cinza claro */
+    background: url('background-unico.png') center/contain no-repeat;
+    width: 500px;
+    height: 430px;
+    position: relative;
 }
+
 
 @media (max-width: 768px) {
     .chest-area {
@@ -82,9 +81,11 @@ p {
 
 .character {
     width: 500px;
-    height: 400px;
+    height: 800px;
     background: url('background-unico.png') center/contain no-repeat;
+    position: relative;
 }
+
 
 
 
