@@ -230,41 +230,30 @@ function createFireParticles() {
     const fireContainer = document.createElement('div');
     fireContainer.className = 'fire-particles';
     
-    for(let i = 0; i < 150; i++) {
+    for(let i = 0; i < 40; i++) {
         const pixel = document.createElement('div');
         pixel.className = 'fire-pixel';
         
-        // 50% são mega intensas
-        if(Math.random() < 0.5) {
+        if(Math.random() < 0.3) {
             pixel.classList.add('intense');
         }
         
-        // Movimento aleatório
-        pixel.style.setProperty('--random-x', (Math.random() - 0.5) * 100 + 'px');
-        pixel.style.setProperty('--random-x2', (Math.random() - 0.5) * 150 + 'px');
-        pixel.style.setProperty('--random-x3', (Math.random() - 0.5) * 200 + 'px');
+        // Movimento mais aleatório
+        pixel.style.setProperty('--random-x', (Math.random() - 0.5) * 200 + 'px');
+        pixel.style.setProperty('--random-x2', (Math.random() - 0.5) * 300 + 'px');
+        pixel.style.setProperty('--random-x3', (Math.random() - 0.5) * 400 + 'px');
         
         pixel.style.left = Math.random() * 100 + '%';
-        pixel.style.animationDelay = Math.random() * 0.3 + 's';
+        pixel.style.animationDelay = Math.random() * 0.2 + 's';
+        pixel.style.animationDuration = (0.4 + Math.random() * 0.4) + 's';
         fireContainer.appendChild(pixel);
     }
     
     topSection.appendChild(fireContainer);
-    setTimeout(() => fireContainer.remove(), 1500);
+    setTimeout(() => fireContainer.remove(), 1000);
 }
-
-
 
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
