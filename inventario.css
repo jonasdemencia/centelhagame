@@ -43,15 +43,49 @@ p {
 }
 
 /* Seção do personagem */
-.character {
-    padding: 20px;
-    background: #000 url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/slots-background.png') center/contain no-repeat;
-    border: 2px solid #ccc; /* cinza claro */
-    border-radius: 0;
-    width: 400px;
-    height: 328px;
-    margin: auto;
+.expand-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: #8B4513;
+    color: white;
+    border: 2px solid #654321;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 18px;
 }
+
+.bottom-section {
+    position: relative;
+    transition: transform 0.5s ease;
+    transform: translateY(0);
+}
+
+.top-section {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    transition: transform 0.5s ease;
+    transform: translateY(-400px);
+    overflow: hidden;
+}
+
+.container.expanded .bottom-section {
+    transform: translateY(400px);
+}
+
+.container.expanded .top-section {
+    transform: translateY(0);
+}
+
+.character {
+    width: 500px;
+    height: 400px;
+    background: url('background-unico.png') center/contain no-repeat;
+}
+
 
 
 
