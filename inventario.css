@@ -1374,23 +1374,24 @@ body {
 
 .weapon-shield-row {
     justify-content: space-between;
-    width: 220px;
+    width: 230px;
     margin: 0 auto;
 }
 
 .gloves-amulet-row {
     justify-content: space-between;
-    width: 170px;
+    width: 220px;
     margin: 0 auto;
+    margin-top: 30px;
 }
 
 .armor-row {
     justify-content: center;
-    margin-top: 10px;
+    margin-top: 15px;
 }
 
 .rings-row {
     justify-content: space-between;
-    width: 200px;
+    width: 210px;
     margin: 0 auto;
 }
