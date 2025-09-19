@@ -86,7 +86,7 @@ p {
     transform: translateY(0);
     clip-path: inset(0 0 0 0);
     transition: transform 0.3s ease, clip-path 0.1s ease;
-    animation: hotSteel 1.2s ease-out forwards;
+    animation: hotSteel 0.7s ease-out forwards;
 }
 
 @keyframes hotSteel {
