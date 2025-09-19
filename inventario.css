@@ -14,11 +14,8 @@ body {
     height: 430px;
     position: relative;
     margin: 0 auto;
-    background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/test-background.png') center/cover no-repeat;
+    background: url('background-frontal.png') center/contain no-repeat;
 }
-
-
-
 
 @media (max-width: 768px) {
     .chest-area {
@@ -47,7 +44,7 @@ p {
 /* Seção do personagem */
 .expand-button {
     position: fixed;
-    : 20px;
+    top: 20px;
     right: 20px;
     z-index: 1000;
     background: #8B4513;
@@ -67,15 +64,15 @@ p {
 
 .top-section {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 500px;
+    top: 430px;
+    left: 86px;
+    width: 328px;
     height: 400px;
     transition: transform 0.5s ease;
-    transform: translateY(-400px);
+    transform: translateY(0);
     overflow: hidden;
     z-index: 1;
-    background: url('background-unico.png') 0 0/500px 800px no-repeat;
+    background: url('background-traseiro.png') center/contain no-repeat;
 }
 
 .container.expanded .bottom-section {
@@ -83,13 +80,12 @@ p {
 }
 
 .container.expanded .top-section {
-    transform: translateY(0);
+    transform: translateY(-400px);
 }
 
-
 .character {
-    width: 500px;
-    height: 800px;
+    width: 328px;
+    height: 400px;
     position: relative;
 }
 
