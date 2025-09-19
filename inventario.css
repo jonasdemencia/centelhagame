@@ -13,6 +13,7 @@ body {
     width: 500px;
     height: 430px;
     position: relative;
+        background: url('background-unico.png') center/contain no-repeat;
     margin: 0 auto;
 }
 
@@ -60,7 +61,6 @@ p {
     position: relative;
     transition: transform 0.5s ease;
     transform: translateY(0);
-    background: url('background-unico.png') center/contain no-repeat;
     width: 500px;
     height: 430px;
     z-index: 1;
