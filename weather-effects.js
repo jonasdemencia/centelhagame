@@ -7,28 +7,94 @@ class WeatherEffectsManager {
     }
 
     async init() {
-        // Carrega efeitos disponíveis
         this.loadEffectDefinitions();
-        
-        // Aplica efeitos baseado nas condições atuais
         await this.updateEffects();
-        
-        // Atualiza a cada 30 minutos
         setInterval(() => this.updateEffects(), 30 * 60 * 1000);
     }
 
     loadEffectDefinitions() {
-        // Efeito de Interferência (você vai substituir depois)
+        // Efeito de Interferência Mágica (correto)
         this.effects.interference = {
             html: `<div class="weather-overlay interference-effect">
-                <div class="embers-overlay">
-                    ${Array(15).fill().map(() => '<div class="ember"></div>').join('')}
-                </div>
+                <div class="static-overlay"></div>
             </div>`,
             css: `
-                .interference-effect { /* CSS temporário - você vai substituir */ }
-                .embers-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
-                .ember { position: absolute; bottom: -10px; width: 3px; height: 3px; background: orange; border-radius: 50%; }
+                .interference-effect {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                    z-index: 9999;
+                }
+
+                @keyframes static-flicker {
+                    0% { filter: brightness(1) contrast(1); }
+                    5% { filter: brightness(1.2) contrast(1.1); }
+                    10% { filter: brightness(0.8) contrast(1); }
+                    15% { filter: brightness(1.1) contrast(0.9); }
+                    20% { filter: brightness(1) contrast(1); }
+                    25% { filter: brightness(1.2) contrast(1.1); }
+                    30% { filter: brightness(0.8) contrast(1); }
+                    35% { filter: brightness(1.1) contrast(0.9); }
+                    40% { filter: brightness(1) contrast(1); }
+                    45% { filter: brightness(1.2) contrast(1.1); }
+                    50% { filter: brightness(0.8) contrast(1); }
+                    55% { filter: brightness(1.1) contrast(0.9); }
+                    60% { filter: brightness(1) contrast(1); }
+                    65% { filter: brightness(1.2) contrast(1.1); }
+                    70% { filter: brightness(0.8) contrast(1); }
+                    75% { filter: brightness(1.1) contrast(0.9); }
+                    80% { filter: brightness(1) contrast(1); }
+                    85% { filter: brightness(1.2) contrast(1.1); }
+                    90% { filter: brightness(0.8) contrast(1); }
+                    95% { filter: brightness(1.1) contrast(0.9); }
+                    100% { filter: brightness(1) contrast(1); }
+                }
+
+                @keyframes pixel-glow {
+                    0%, 100% { opacity: 0; transform: scale(1); }
+                    50% { opacity: 0.8; transform: scale(1.5); }
+                }
+                
+                @keyframes pixel-fade {
+                    0% { opacity: 1; }
+                    100% { opacity: 0; }
+                }
+
+                .static-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                    background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                                      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+                    background-size: 2px 2px;
+                    animation: static-flicker 0.2s steps(20, end) infinite;
+                }
+
+                .pixel {
+                    position: absolute;
+                    width: 2px;
+                    height: 2px;
+                    pointer-events: none;
+                    border-radius: 50%;
+                    animation-iteration-count: infinite;
+                    animation-timing-function: ease-in-out;
+                }
+
+                .pixel.purple {
+                    background-color: #8a2be2;
+                    box-shadow: 0 0 5px 2px #8a2be2, 0 0 10px #8a2be2;
+                }
+
+                .pixel.silver {
+                    background-color: #c0c0c0;
+                    box-shadow: 0 0 5px 2px #c0c0c0, 0 0 10px #c0c0c0;
+                }
             `
         };
 
@@ -62,7 +128,6 @@ class WeatherEffectsManager {
     }
 
     determineEffect(conditions) {
-        // Prioridade dos efeitos
         if (conditions.energiaMagica === 'interferencia') return 'interference';
         if (conditions.clima === 'tempestade') return 'storm';
         if (conditions.clima === 'neblina') return 'fog';
@@ -73,21 +138,45 @@ class WeatherEffectsManager {
         const effect = this.effects[effectName];
         if (!effect) return;
 
-        // Adiciona CSS
         this.injectCSS(effect.css, `weather-${effectName}`);
         
-        // Adiciona HTML
         const container = document.createElement('div');
         container.innerHTML = effect.html;
-        document.body.appendChild(container.firstElementChild);
+        const overlay = container.firstElementChild;
+        document.body.appendChild(overlay);
+
+        // Adiciona pixels mágicos para interferência
+        if (effectName === 'interference') {
+            this.createMagicPixels(overlay, 15, 4, 7);
+        }
+    }
+
+    createMagicPixels(container, count, minDuration, maxDuration) {
+        for (let i = 0; i < count; i++) {
+            const pixel = document.createElement('div');
+            const isSilver = Math.random() < 0.5;
+            
+            pixel.className = `pixel ${isSilver ? 'silver' : 'purple'}`;
+            
+            const duration = Math.random() * (maxDuration - minDuration) + minDuration;
+            const delay = Math.random() * -duration;
+            const leftPosition = Math.random() * 100;
+            const topPosition = Math.random() * 100;
+
+            pixel.style.left = `${leftPosition}vw`;
+            pixel.style.top = `${topPosition}vh`;
+            pixel.style.animationDuration = `${duration}s`;
+            pixel.style.animationDelay = `${delay}s`;
+            pixel.style.animationName = isSilver ? 'pixel-glow' : 'pixel-fade';
+            
+            container.appendChild(pixel);
+        }
     }
 
     removeCurrentEffect() {
-        // Remove overlay HTML
         const overlay = document.querySelector('.weather-overlay');
         if (overlay) overlay.remove();
         
-        // Remove CSS
         const styleSheets = document.querySelectorAll('style[data-weather]');
         styleSheets.forEach(sheet => sheet.remove());
     }
@@ -99,21 +188,17 @@ class WeatherEffectsManager {
         document.head.appendChild(style);
     }
 
-    // Método para adicionar novos efeitos dinamicamente
     addEffect(name, definition) {
         this.effects[name] = definition;
     }
 
-    // Método para forçar atualização manual
     async forceUpdate() {
         await this.updateEffects();
     }
 }
 
-// Inicializa automaticamente quando a página carrega
 document.addEventListener('DOMContentLoaded', () => {
     window.WeatherEffects = new WeatherEffectsManager();
 });
 
-// Torna disponível globalmente
 window.WeatherEffectsManager = WeatherEffectsManager;
