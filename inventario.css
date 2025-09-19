@@ -67,13 +67,13 @@ p {
 
 .top-section {
     position: absolute;
-    top: 0px;
+    top: 30px;
     left: 86px;
     width: 328px;
     height: 400px;
     z-index: 1;
     background: url('background-traseiro.png') center/contain no-repeat;
-    clip-path: inset(0 0 30px 0);
+    clip-path: inset(30px 0 30px 0);
     transition: transform 0.5s ease, clip-path 0.5s ease;
 }
 
