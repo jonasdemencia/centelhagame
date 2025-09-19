@@ -230,7 +230,7 @@ function createFireParticles() {
     const fireContainer = document.createElement('div');
     fireContainer.className = 'fire-particles';
     
-    for(let i = 0; i < 20; i++) {
+    for(let i = 0; i < 80; i++) {
         const pixel = document.createElement('div');
         pixel.className = 'fire-pixel';
         pixel.style.left = Math.random() * 100 + '%';
@@ -241,8 +241,10 @@ function createFireParticles() {
     topSection.appendChild(fireContainer);
     setTimeout(() => fireContainer.remove(), 500);
 }
+
 </script>
 
 </body>
 </html>
+
 
