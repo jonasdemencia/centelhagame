@@ -2258,5 +2258,24 @@ console.log("GAME OVER: Energia chegou a 0 ou menos.");
 console.error("Erro ao salvar os dados do jogador:", error);
 
 }
+// Sistema de expansão/recolhimento
+let isExpanded = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const expandBtn = document.getElementById('expand-btn');
+    const container = document.querySelector('.container');
+    
+    if (expandBtn && container) {
+        expandBtn.addEventListener('click', function() {
+            isExpanded = !isExpanded;
+            
+            if (isExpanded) {
+                container.classList.add('expanded');
+            } else {
+                container.classList.remove('expanded');
+            }
+        });
+    }
+});
 
 }
