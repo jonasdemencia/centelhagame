@@ -1382,12 +1382,12 @@ body {
     justify-content: space-between;
     width: 220px;
     margin: 0 auto;
-    margin-top: 30px;
+    margin-top: 15px;
 }
 
 .armor-row {
     justify-content: center;
-    margin-top: 15px;
+    margin-top: 10px;
 }
 
 .rings-row {
@@ -1395,5 +1395,3 @@ body {
     width: 210px;
     margin: 5px auto 0;
 }
-
-
