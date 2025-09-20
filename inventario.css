@@ -83,10 +83,17 @@ p {
 }
 
 .container.expanded .top-section {
-    transform: translateY(0);
-    clip-path: inset(0 0 0 0);
-    transition: transform 0.3s ease, clip-path 0.1s ease;
-    animation: hotSteel 0.7s ease-out forwards;
+
+transform: translateY(0);
+
+clip-path: inset(0 0 0 0);
+
+transition: transform 0.3s ease, clip-path 0.1s ease;
+
+animation: hotSteel 0.7s ease-out forwards;
+
+z-index: 3; /* Garante que o painel de equipamento fique na frente quando expandido */
+
 }
 
 @keyframes hotSteel {
