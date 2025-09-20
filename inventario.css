@@ -1463,3 +1463,6 @@ max-height: 80px !important;
     pointer-events: auto !important;
 }
 
+#weapon img {
+    transform: rotate(-90deg);
+}
