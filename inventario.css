@@ -1411,13 +1411,13 @@ body {
 }
 
 #armor {
-    width: 90px;
-    height: 90px;
+    width: 90px !important;
+    height: 90px !important;
 }
 
 #armor img {
-    max-width: 110px !important;
-    max-height: 110px !important;
+    max-width: 90px !important;
+    max-height: 90px !important;
 }
 
 #armor.equipped::before {
