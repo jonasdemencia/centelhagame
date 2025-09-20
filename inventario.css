@@ -210,7 +210,7 @@ animation: hotSteel 0.7s ease-out forwards;
     left: 10%;
     width: 80%;
     height: 80%;
-    background-color: rgba(52, 152, 219, 0.5);
+    background-color: rgba(52, 152, 219, 0.3);
     pointer-events: none;
     z-index: 1;
 }
@@ -1443,16 +1443,27 @@ max-height: 80px !important;
 
 }
 
-#armor.equipped::before,
-#weapon.equipped::before,
-#shield.equipped::before {
+#armor.equipped::before {
     content: "";
     position: absolute;
     top: 1%;
     left: 25%;
     width: 50%;
     height: 98%;
-    background-color: rgba(52, 152, 219, 0.5);
+    background-color: rgba(52, 152, 219, 0.3);
+    pointer-events: none;
+    z-index: 1;
+}
+
+#weapon.equipped::before,
+#shield.equipped::before {
+    content: "";
+    position: absolute;
+    top: -5%;
+    left: 25%;
+    width: 50%;
+    height: 110%;
+    background-color: rgba(52, 152, 219, 0.3);
     pointer-events: none;
     z-index: 1;
 }
