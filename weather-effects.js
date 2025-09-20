@@ -98,16 +98,6 @@ class WeatherEffectsManager {
             `
         };
 
-        // Placeholder para outros efeitos
-        this.effects.storm = {
-            html: `<div class="weather-overlay storm-effect"><div class="rain-lines"></div></div>`,
-            css: `.storm-effect { position: fixed; inset: 0; pointer-events: none; z-index: 9999; background: rgba(0,0,50,0.3); }`
-        };
-
-        this.effects.fog = {
-            html: `<div class="weather-overlay fog-effect"></div>`,
-            css: `.fog-effect { position: fixed; inset: 0; pointer-events: none; z-index: 9999; background: rgba(200,200,200,0.2); }`
-        };
     }
 
     async updateEffects() {
@@ -128,11 +118,9 @@ class WeatherEffectsManager {
     }
 
     determineEffect(conditions) {
-        if (conditions.energiaMagica === 'interferencia') return 'interference';
-        if (conditions.clima === 'tempestade') return 'storm';
-        if (conditions.clima === 'neblina') return 'fog';
-        return null;
-    }
+    if (conditions.energiaMagica === 'interferencia') return 'interference';
+    return null;
+}
 
     applyEffect(effectName) {
         const effect = this.effects[effectName];
@@ -215,4 +203,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
 
