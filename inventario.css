@@ -1409,3 +1409,14 @@ body {
     left: 50%;
     transform: translateX(-50%);
 }
+
+#armor {
+    width: 110px;
+    height: 110px;
+}
+
+#armor img {
+    max-width: 110px !important;
+    max-height: 110px !important;
+}
+
