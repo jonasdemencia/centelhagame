@@ -1482,7 +1482,11 @@ const equippedItemName = inventoryData.equippedItems[slot.id];
     const item = allItemsArr.find(i => i.content === equippedItemName);
 
     if (item) {
-        let slotHTML = `<img src="${item.thumbnailImage || item.image}" alt="${item.content}" />`;
+        let imageToUse = item.thumbnailImage || item.image;
+if (slot.id === 'armor') {
+    imageToUse = item.image;
+}
+let slotHTML = `<img src="${imageToUse}" alt="${item.content}" />`;
         slot.dataset.itemName = item.content;
 
        // **LÓGICA DE MUNIÇÃO CORRIGIDA**
