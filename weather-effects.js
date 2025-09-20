@@ -180,11 +180,12 @@ class WeatherEffectsManager {
     }
 
     determineEffect(conditions) {
-        if (conditions.energiaMagica === 'interferencia') return 'interference';
-        if (conditions.clima === 'tempestade') return 'storm';
-        if (conditions.clima === 'quente') return 'hot';
-        return null;
-    }
+    if (conditions.energiaMagica === 'interferencia') return 'interference';
+    if (conditions.clima === 'tempestade') return 'storm';
+    if (conditions.temperatura === 'quente') return 'hot';
+    return null;
+}
+
 
     applyEffect(effectName) {
         const effect = this.effects[effectName];
@@ -328,3 +329,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
