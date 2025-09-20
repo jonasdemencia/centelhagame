@@ -1455,3 +1455,7 @@ max-height: 80px !important;
 .container.expanded #armor {
     pointer-events: auto !important;
 }
+.container.expanded .carousel-buttons {
+    pointer-events: auto !important;
+}
+
