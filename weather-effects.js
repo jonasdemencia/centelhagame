@@ -209,11 +209,12 @@ class WeatherEffectsManager {
     }
 
     createRainDrops(container) {
-        const layers = [
-    { count: 80, minSize: 0.5, maxSize: 1, minDuration: 4, maxDuration: 7 },
-    { count: 150, minSize: 0.8, maxSize: 1.5, minDuration: 3, maxDuration: 5 },
-    { count: 100, minSize: 1, maxSize: 2, minDuration: 2, maxDuration: 4 }
+       const layers = [
+    { count: 80, minSize: 0.5, maxSize: 1, minDuration: 1, maxDuration: 2 },
+    { count: 150, minSize: 0.8, maxSize: 1.5, minDuration: 0.8, maxDuration: 1.5 },
+    { count: 100, minSize: 1, maxSize: 2, minDuration: 0.5, maxDuration: 1 }
 ];
+
         
         layers.forEach(layer => {
             for (let i = 0; i < layer.count; i++) {
@@ -268,5 +269,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
 
 
