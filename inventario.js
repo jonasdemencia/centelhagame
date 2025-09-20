@@ -1485,6 +1485,11 @@ const equippedItemName = inventoryData.equippedItems[slot.id];
        let slotHTML = `<img src="${item.thumbnailImage || item.image}" alt="${item.content}" />`;
 
         slot.dataset.itemName = item.content;
+        if (slot.dataset.slot === "weapon" && item.twoHanded) {
+    slot.classList.add('two-handed');
+} else if (slot.dataset.slot === "weapon") {
+    slot.classList.remove('two-handed');
+}
 
         // Adiciona classe two-handed para armas de duas mãos
 if (slot.dataset.slot === "weapon" && item.twoHanded) {
