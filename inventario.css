@@ -1423,11 +1423,12 @@ body {
 #armor.equipped::before {
     content: "";
     position: absolute;
-    top: 5%;
-    left: 15%;
-    width: 70%;
-    height: 90%;
+    top: 2%;
+    left: 20%;
+    width: 60%;
+    height: 96%;
     background-color: rgba(52, 152, 219, 0.5);
     pointer-events: none;
     z-index: 1;
 }
+
