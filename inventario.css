@@ -1459,15 +1459,14 @@ max-height: 80px !important;
 #shield.equipped::before {
     content: "";
     position: absolute;
-    top: -5%;
+    top: -10%;
     left: 25%;
     width: 50%;
-    height: 110%;
+    height: 120%;
     background-color: rgba(52, 152, 219, 0.3);
     pointer-events: none;
     z-index: 1;
 }
-
 
 /* Correção para clique no slot de armadura quando o inventário está aberto */
 .container.expanded .bottom-section {
