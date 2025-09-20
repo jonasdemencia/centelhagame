@@ -101,13 +101,14 @@ class WeatherEffectsManager {
         this.effects.storm = {
             html: `<div class="weather-overlay storm-effect"><div class="rain-container"></div></div>`,
             css: `
-                .storm-effect {
-                    position: fixed;
-                    inset: 0;
-                    pointer-events: none;
-                    z-index: 9999;
-                    background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
-                }
+    .storm-effect {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 9999;
+        background: rgba(27, 39, 53, 0.3);
+    }
+
                 .rain-container {
                     position: absolute;
                     top: 0;
@@ -267,3 +268,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
