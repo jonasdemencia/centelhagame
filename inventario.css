@@ -1505,3 +1505,8 @@ max-height: 80px !important;
     pointer-events: none;
     z-index: 1;
 }
+
+#helmet img {
+    max-width: 80px !important;
+    max-height: 80px !important;
+}
