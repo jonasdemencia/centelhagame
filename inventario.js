@@ -1486,6 +1486,14 @@ const equippedItemName = inventoryData.equippedItems[slot.id];
 
         slot.dataset.itemName = item.content;
 
+        // Adiciona classe two-handed para armas de duas mãos
+if (slot.dataset.slot === "weapon" && item.twoHanded) {
+    slot.classList.add('two-handed');
+} else {
+    slot.classList.remove('two-handed');
+}
+
+
        // **LÓGICA DE MUNIÇÃO CORRIGIDA**
 if (slot.dataset.slot === "weapon" && item.ammoType) {
     const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
