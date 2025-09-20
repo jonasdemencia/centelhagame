@@ -1506,7 +1506,9 @@ max-height: 80px !important;
     z-index: 1;
 }
 
-#helmet img {
+.slot#helmet img {
     max-width: 100px !important;
     max-height: 100px !important;
+    width: 100px !important;
+    height: 100px !important;
 }
