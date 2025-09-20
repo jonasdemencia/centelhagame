@@ -1273,11 +1273,21 @@ body {
 }
 
 .slot.blocked {
-    background-color: #cd5c5c !important;
-    border-color: #ff6b6b !important;
-    opacity: 0.7;
     cursor: not-allowed;
 }
+
+.slot.blocked::before {
+    content: "";
+    position: absolute;
+    top: 1%;
+    left: 25%;
+    width: 50%;
+    height: 98%;
+    background-color: rgba(255, 107, 107, 0.5);
+    pointer-events: none;
+    z-index: 1;
+}
+
 
 .item.large {
     grid-column: span 2;
