@@ -1380,7 +1380,7 @@ body {
     justify-content: space-between;
     width: 300px;
     position: absolute;
-    top: 110px;
+    top: 100px;
     left: 50%;
     transform: translateX(-50%);
 }
@@ -1397,7 +1397,7 @@ body {
 .armor-row {
     justify-content: center;
     position: absolute;
-    bottom: 20px;
+    bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
 }
