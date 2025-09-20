@@ -1465,4 +1465,11 @@ max-height: 80px !important;
 
 #weapon img {
     transform: rotate(-90deg);
+    max-width: 80px !important;
+    max-height: 80px !important;
+}
+
+#weapon.two-handed img {
+    max-width: 100px !important;
+    max-height: 100px !important;
 }
