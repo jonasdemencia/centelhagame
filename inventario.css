@@ -79,7 +79,7 @@ p {
 
 
 .container.expanded .bottom-section {
-    transform: translateY(400px);
+    transform: translateY(380px);
 }
 
 .container.expanded .top-section {
