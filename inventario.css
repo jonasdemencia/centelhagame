@@ -1442,4 +1442,11 @@ max-height: 80px !important;
     z-index: 1;
 }
 
+/* Correção para clique no slot de armadura quando o inventário está aberto */
+.container.expanded .bottom-section {
+    pointer-events: none;
+}
 
+.container.expanded .bottom-section .chest-area {
+    pointer-events: auto;
+}
