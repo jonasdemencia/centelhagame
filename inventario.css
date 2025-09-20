@@ -1450,3 +1450,6 @@ max-height: 80px !important;
 .container.expanded .bottom-section .chest-area {
     pointer-events: auto;
 }
+.container.expanded #armor {
+    pointer-events: auto !important;
+}
