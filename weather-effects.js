@@ -101,14 +101,13 @@ class WeatherEffectsManager {
         this.effects.storm = {
             html: `<div class="weather-overlay storm-effect"><div class="rain-container"></div></div>`,
             css: `
-    .storm-effect {
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        z-index: 9999;
-        background: rgba(27, 39, 53, 0.3);
-    }
-
+                .storm-effect {
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 9999;
+                    background: rgba(27, 39, 53, 0.3);
+                }
                 .rain-container {
                     position: absolute;
                     top: 0;
@@ -126,6 +125,38 @@ class WeatherEffectsManager {
                 }
                 @keyframes fall {
                     to { transform: translateY(100vh); }
+                }
+            `
+        };
+
+        this.effects.hot = {
+            html: `<div class="weather-overlay hot-effect"><div class="particle-container"></div></div>`,
+            css: `
+                .hot-effect {
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 9999;
+                    background: rgba(255, 87, 34, 0.1);
+                }
+                .particle-container {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                }
+                .heat-particle {
+                    position: absolute;
+                    bottom: -20px;
+                    background-color: rgba(255, 87, 34, 0.6);
+                    border-radius: 50%;
+                    animation: rise linear infinite;
+                }
+                @keyframes rise {
+                    0% { transform: translateY(0) scale(1); opacity: 1; }
+                    100% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
                 }
             `
         };
@@ -151,6 +182,7 @@ class WeatherEffectsManager {
     determineEffect(conditions) {
         if (conditions.energiaMagica === 'interferencia') return 'interference';
         if (conditions.clima === 'tempestade') return 'storm';
+        if (conditions.clima === 'quente') return 'hot';
         return null;
     }
 
@@ -173,6 +205,11 @@ class WeatherEffectsManager {
         // Adiciona gotas de chuva para tempestade
         if (effectName === 'storm') {
             this.createRainDrops(overlay.querySelector('.rain-container'));
+        }
+
+        // Adiciona partículas de calor para dia quente
+        if (effectName === 'hot') {
+            this.createHeatParticles(overlay.querySelector('.particle-container'));
         }
     }
 
@@ -209,17 +246,16 @@ class WeatherEffectsManager {
     }
 
     createRainDrops(container) {
-       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-const layers = isMobile ? [
-    { count: 20, minSize: 0.5, maxSize: 1, minDuration: 2, maxDuration: 3 },
-    { count: 30, minSize: 0.8, maxSize: 1.5, minDuration: 1.5, maxDuration: 2.5 },
-    { count: 25, minSize: 1, maxSize: 2, minDuration: 1, maxDuration: 2 }
-] : [
-    { count: 80, minSize: 0.5, maxSize: 1, minDuration: 2, maxDuration: 3 },
-    { count: 150, minSize: 0.8, maxSize: 1.5, minDuration: 1.5, maxDuration: 2.5 },
-    { count: 100, minSize: 1, maxSize: 2, minDuration: 1, maxDuration: 2 }
-];
-
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const layers = isMobile ? [
+            { count: 20, minSize: 0.5, maxSize: 1, minDuration: 2, maxDuration: 3 },
+            { count: 30, minSize: 0.8, maxSize: 1.5, minDuration: 1.5, maxDuration: 2.5 },
+            { count: 25, minSize: 1, maxSize: 2, minDuration: 1, maxDuration: 2 }
+        ] : [
+            { count: 80, minSize: 0.5, maxSize: 1, minDuration: 2, maxDuration: 3 },
+            { count: 150, minSize: 0.8, maxSize: 1.5, minDuration: 1.5, maxDuration: 2.5 },
+            { count: 100, minSize: 1, maxSize: 2, minDuration: 1, maxDuration: 2 }
+        ];
         
         layers.forEach(layer => {
             for (let i = 0; i < layer.count; i++) {
@@ -240,6 +276,24 @@ const layers = isMobile ? [
                 container.appendChild(drop);
             }
         });
+    }
+
+    createHeatParticles(container) {
+        for (let i = 0; i < 10; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'heat-particle';
+            const size = Math.random() * 8 + 5;
+            const duration = Math.random() * 10 + 9;
+            const delay = Math.random() * -duration;
+            
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.animationDuration = `${duration}s`;
+            particle.style.animationDelay = `${delay}s`;
+            
+            container.appendChild(particle);
+        }
     }
 
     removeCurrentEffect() {
@@ -274,8 +328,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
-
-
-
-
-
