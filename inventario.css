@@ -1416,8 +1416,8 @@ body {
 }
 
 #armor img {
-    max-width: 90px !important;
-    max-height: 90px !important;
+    max-width: 80px !important;
+    max-height: 80px !important;
 }
 
 #armor.equipped::before {
