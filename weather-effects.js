@@ -98,6 +98,36 @@ class WeatherEffectsManager {
             `
         };
 
+        this.effects.storm = {
+            html: `<div class="weather-overlay storm-effect"><div class="rain-container"></div></div>`,
+            css: `
+                .storm-effect {
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 9999;
+                    background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+                }
+                .rain-container {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                }
+                .drop {
+                    position: absolute;
+                    background: #fff;
+                    border-radius: 50%;
+                    opacity: 0.6;
+                    animation: fall linear infinite;
+                }
+                @keyframes fall {
+                    to { transform: translateY(100vh); }
+                }
+            `
+        };
     }
 
     async updateEffects() {
@@ -118,9 +148,10 @@ class WeatherEffectsManager {
     }
 
     determineEffect(conditions) {
-    if (conditions.energiaMagica === 'interferencia') return 'interference';
-    return null;
-}
+        if (conditions.energiaMagica === 'interferencia') return 'interference';
+        if (conditions.clima === 'tempestade') return 'storm';
+        return null;
+    }
 
     applyEffect(effectName) {
         const effect = this.effects[effectName];
@@ -136,6 +167,11 @@ class WeatherEffectsManager {
         // Adiciona pixels mágicos para interferência
         if (effectName === 'interference') {
             this.createMagicPixels(overlay, 15, 4, 7);
+        }
+
+        // Adiciona gotas de chuva para tempestade
+        if (effectName === 'storm') {
+            this.createRainDrops(overlay.querySelector('.rain-container'));
         }
     }
 
@@ -171,6 +207,34 @@ class WeatherEffectsManager {
         }
     }
 
+    createRainDrops(container) {
+        const layers = [
+            { count: 80, minSize: 1, maxSize: 2, minDuration: 4, maxDuration: 7 },
+            { count: 150, minSize: 2, maxSize: 4, minDuration: 3, maxDuration: 5 },
+            { count: 100, minSize: 3, maxSize: 6, minDuration: 2, maxDuration: 4 }
+        ];
+        
+        layers.forEach(layer => {
+            for (let i = 0; i < layer.count; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'drop';
+                const size = Math.random() * (layer.maxSize - layer.minSize) + layer.minSize;
+                const duration = Math.random() * (layer.maxDuration - layer.minDuration) + layer.minDuration;
+                const delay = Math.random() * -duration;
+                
+                drop.style.width = `${size}px`;
+                drop.style.height = `${size * 2}px`;
+                drop.style.left = `${Math.random() * 100}vw`;
+                drop.style.animationDuration = `${duration}s`;
+                drop.style.animationDelay = `${delay}s`;
+                drop.style.opacity = Math.random() * 0.4 + 0.2;
+                drop.style.filter = `blur(${size / 4}px)`;
+                
+                container.appendChild(drop);
+            }
+        });
+    }
+
     removeCurrentEffect() {
         const overlay = document.querySelector('.weather-overlay');
         if (overlay) overlay.remove();
@@ -203,5 +267,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
-
-
