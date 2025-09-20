@@ -283,7 +283,7 @@ class WeatherEffectsManager {
         for (let i = 0; i < 10; i++) {
             const particle = document.createElement('div');
             particle.className = 'heat-particle';
-            const size = Math.random() * 8 + 5;
+            const size = Math.random() * 4 + 2;
             const duration = Math.random() * 10 + 9;
             const delay = Math.random() * -duration;
             
@@ -329,4 +329,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
 
