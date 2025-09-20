@@ -1403,9 +1403,9 @@ body {
 
 .rings-row {
     justify-content: space-between;
-    width: 210px;
+    width: 240px;
     position: absolute;
-    bottom: 30px;
+    bottom: 25px;
     left: 50%;
     transform: translateX(-50%);
 }
