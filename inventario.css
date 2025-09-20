@@ -1389,7 +1389,7 @@ body {
     justify-content: space-between;
     width: 240px;
     position: absolute;
-    top: 185px;
+    top: 210px;
     left: 50%;
     transform: translateX(-50%);
 }
