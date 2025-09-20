@@ -106,7 +106,7 @@ class WeatherEffectsManager {
 
         this.effects.fog = {
             html: `<div class="weather-overlay fog-effect"></div>`,
-            css: `.fog-effect { position: fixed; inset: 0; pointer-events: none; z-index: 9999; background: rgba(200,200,200,0.4); }`
+            css: `.fog-effect { position: fixed; inset: 0; pointer-events: none; z-index: 9999; background: rgba(200,200,200,0.2); }`
         };
     }
 
@@ -215,3 +215,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
