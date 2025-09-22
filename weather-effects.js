@@ -349,7 +349,7 @@ class WeatherEffectsManager {
             leaf.style.left = `${Math.random() * 100}%`;
             leaf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
             
-            const duration = Math.random() * 5 + 5;
+const duration = Math.random() * 15 + 25;
             leaf.style.animationDuration = `${duration}s, 3s`;
             
             container.appendChild(leaf);
@@ -397,4 +397,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
 
