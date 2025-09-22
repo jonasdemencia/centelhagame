@@ -361,9 +361,27 @@ class WeatherEffectsManager {
                         const progress = elapsed / duration;
                         
                         if (progress >= 1) {
-                            leaf.remove();
-                            return;
-                        }
+    leaf.remove();
+    // Cria uma nova folha para substituir
+    setTimeout(() => {
+        const newLeaf = document.createElement('div');
+        newLeaf.className = `autumn-leaf ${size}`;
+        newLeaf.style.left = Math.random() * window.innerWidth + 'px';
+        newLeaf.style.top = '-50px';
+        newLeaf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        newLeaf.style.opacity = Math.random() * 0.3 + 0.1;
+        
+        container.appendChild(newLeaf);
+        
+        // Reinicia a animação com a nova folha
+        startTime = Date.now();
+        rotation = 0;
+        leaf = newLeaf;
+        animate();
+    }, Math.random() * 2000);
+    return;
+}
+
                         
                         const easeProgress = progress * progress * (3 - 2 * progress);
                         const y = -50 + (window.innerHeight + 100) * easeProgress;
@@ -412,3 +430,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
