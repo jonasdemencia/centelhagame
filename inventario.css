@@ -1168,15 +1168,9 @@ animation: hotSteel 0.7s ease-out forwards;
     color: #84946b !important;
     font-size: 25px !important;
     font-family: 'VT323', monospace !important;
-    text-shadow:
-    -1px -1px 0 #003300,
-     1px -1px 0 #003300,
-    -1px  1px 0 #003300,
-     1px  1px 0 #003300,
-    -2px  0   0 #003300,
-     2px  0   0 #003300,
-     0   -2px 0 #003300,
-     0    2px 0 #003300;
+    text-shadow: 
+        1px 1px 0 #003300,
+        2px 2px 0 #001100 !important;
     transform: scaleY(1.3);
     display: inline-block;
     text-transform: uppercase;
@@ -1186,6 +1180,7 @@ animation: hotSteel 0.7s ease-out forwards;
     position: relative !important;
     z-index: 2 !important;
 }
+
 
 
 #portrait-image {
