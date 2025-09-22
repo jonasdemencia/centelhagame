@@ -1073,14 +1073,14 @@ animation: hotSteel 0.7s ease-out forwards;
     color: #b0b0b0;
     font-family: 'VT323', monospace !important;
    text-shadow:
-    -1px -1px 0 #666,
-     1px -1px 0 #666,
-    -1px  1px 0 #666,
-     1px  1px 0 #666,
-    -2px  0   0 #666,
-     2px  0   0 #666,
-     0   -2px 0 #666,
-     0    2px 0 #666;
+    -1px -1px 0 #333,
+     1px -1px 0 #333,
+    -1px  1px 0 #333,
+     1px  1px 0 #333,
+    -2px  0   0 #333,
+     2px  0   0 #333,
+     0   -2px 0 #333,
+     0    2px 0 #333;
     transform: scaleY(1.3);
     display: inline-block;
 }
@@ -1094,14 +1094,14 @@ animation: hotSteel 0.7s ease-out forwards;
     hyphens: auto;
     font-family: 'VT323', monospace !important;
     text-shadow:
-    -1px -1px 0 #666,
-     1px -1px 0 #666,
-    -1px  1px 0 #666,
-     1px  1px 0 #666,
-    -2px  0   0 #666,
-     2px  0   0 #666,
-     0   -2px 0 #666,
-     0    2px 0 #666;
+    -1px -1px 0 #333,
+     1px -1px 0 #333,
+    -1px  1px 0 #333,
+     1px  1px 0 #333,
+    -2px  0   0 #333,
+     2px  0   0 #333,
+     0   -2px 0 #333,
+     0    2px 0 #333;
     transform: scaleY(1.3);
     display: inline-block;
     line-height: 1.1;
