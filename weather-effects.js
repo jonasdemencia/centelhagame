@@ -181,11 +181,25 @@ class WeatherEffectsManager {
                 }
                 .autumn-leaf {
                     position: absolute;
+                    top: -10px;
+                    width: 2px;
+                    height: 2px;
+                    opacity: 0.8;
                     pointer-events: none;
+                    animation-name: fall, sway;
+                    animation-duration: 8s, 3s;
+                    animation-timing-function: linear, ease-in-out;
+                    animation-iteration-count: 1, infinite;
                 }
-                .autumn-leaf.small { width: 1px; height: 1px; }
-                .autumn-leaf.medium { width: 2px; height: 2px; }
-                .autumn-leaf.large { width: 3px; height: 3px; }
+                @keyframes fall {
+                    0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+                    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+                }
+                @keyframes sway {
+                    0% { transform: translateX(0); }
+                    50% { transform: translateX(30px); }
+                    100% { transform: translateX(0); }
+                }
             `
         };
     }
@@ -332,70 +346,27 @@ class WeatherEffectsManager {
 
     createAutumnLeaves(container) {
         const colors = ['#8b0000', '#d2691e', '#ff8c00', '#ffd700', '#800000'];
-        const sizes = ['small', 'medium', 'large'];
-        const counts = [20, 12, 6];
         
-        sizes.forEach((size, index) => {
-            for (let i = 0; i < counts[index]; i++) {
-                setTimeout(() => {
-                    const leaf = document.createElement('div');
-                    leaf.className = `autumn-leaf ${size}`;
-                    leaf.style.left = Math.random() * window.innerWidth + 'px';
-                    leaf.style.top = '-50px';
-                    leaf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                    leaf.style.opacity = Math.random() * 0.3 + 0.1;
-                    
-                    container.appendChild(leaf);
-                    
-                    const duration = 25000 + Math.random() * 15000;
-                    const swaySpeed = 0.0002 + Math.random() * 0.0008;
-                    const swayAmount = 15 + Math.random() * 25;
-                    const rotationSpeed = 0.5 + Math.random() * 1;
-                    const driftX = (Math.random() - 0.5) * 60;
-                    
-                    let startTime = Date.now();
-                    let rotation = 0;
-                    
-                    const animate = () => {
-                        const elapsed = Date.now() - startTime;
-                        const progress = elapsed / duration;
-                        
-                        if (progress >= 1) {
-    leaf.remove();
-    // Cria uma nova folha para substituir
-    setTimeout(() => {
-        const newLeaf = document.createElement('div');
-        newLeaf.className = `autumn-leaf ${size}`;
-        newLeaf.style.left = Math.random() * window.innerWidth + 'px';
-        newLeaf.style.top = '-50px';
-        newLeaf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        newLeaf.style.opacity = Math.random() * 0.3 + 0.1;
+        const spawnLeaf = () => {
+            const leaf = document.createElement('div');
+            leaf.className = 'autumn-leaf';
+            leaf.style.left = `${Math.random() * 100}%`;
+            leaf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            const duration = Math.random() * 5 + 5;
+            leaf.style.animationDuration = `${duration}s, 3s`;
+            
+            container.appendChild(leaf);
+            
+            leaf.addEventListener('animationend', () => {
+                leaf.remove();
+                spawnLeaf();
+            });
+        };
         
-        container.appendChild(newLeaf);
-        
-        // Reinicia a animação com a nova folha
-        startTime = Date.now();
-        rotation = 0;
-        leaf = newLeaf;
-        animate();
-    }, Math.random() * 2000);
-    return;
-}
-
-                        
-                        const easeProgress = progress * progress * (3 - 2 * progress);
-                        const y = -50 + (window.innerHeight + 100) * easeProgress;
-                        const x = Math.sin(elapsed * swaySpeed) * swayAmount + (driftX * progress);
-                        rotation += rotationSpeed;
-                        
-                        leaf.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg)`;
-                        requestAnimationFrame(animate);
-                    };
-                    
-                    animate();
-                }, i * (size === 'small' ? 500 : size === 'medium' ? 700 : 1000));
-            }
-        });
+        for (let i = 0; i < 15; i++) {
+            spawnLeaf();
+        }
     }
 
     removeCurrentEffect() {
@@ -430,4 +401,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
-
