@@ -180,26 +180,22 @@ class WeatherEffectsManager {
                     pointer-events: none;
                 }
                 .autumn-leaf {
-                    position: absolute;
-                    top: -10px;
-                    width: 2px;
-                    height: 2px;
-                    opacity: 0.8;
-                    pointer-events: none;
-                    animation-name: fall, sway;
-                    animation-duration: 8s, 3s;
-                    animation-timing-function: linear, ease-in-out;
-                    animation-iteration-count: 1, infinite;
-                }
-                @keyframes fall {
-                    0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
-                    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-                }
-                @keyframes sway {
-                    0% { transform: translateX(0); }
-                    50% { transform: translateX(30px); }
-                    100% { transform: translateX(0); }
-                }
+    position: absolute;
+    top: -10px;
+    width: 2px;
+    height: 2px;
+    opacity: 0.8;
+    pointer-events: none;
+    animation: autumnFall linear;
+}
+@keyframes autumnFall {
+    0% { transform: translateY(-10px) translateX(0) rotate(0deg); opacity: 1; }
+    25% { transform: translateY(25vh) translateX(15px) rotate(90deg); }
+    50% { transform: translateY(50vh) translateX(-10px) rotate(180deg); }
+    75% { transform: translateY(75vh) translateX(20px) rotate(270deg); }
+    100% { transform: translateY(100vh) translateX(0) rotate(360deg); opacity: 0; }
+}
+
             `
         };
     }
@@ -401,3 +397,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
