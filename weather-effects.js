@@ -160,6 +160,34 @@ class WeatherEffectsManager {
                 }
             `
         };
+
+        this.effects.autumn = {
+            html: `<div class="weather-overlay autumn-effect"><div class="leaves-container"></div></div>`,
+            css: `
+                .autumn-effect {
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 9999;
+                    background: linear-gradient(to bottom, rgba(253, 228, 197, 0.1) 0%, rgba(216, 131, 112, 0.1) 50%, rgba(123, 75, 59, 0.1) 100%);
+                }
+                .leaves-container {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                }
+                .autumn-leaf {
+                    position: absolute;
+                    pointer-events: none;
+                }
+                .autumn-leaf.small { width: 1px; height: 1px; }
+                .autumn-leaf.medium { width: 2px; height: 2px; }
+                .autumn-leaf.large { width: 3px; height: 3px; }
+            `
+        };
     }
 
     async updateEffects() {
@@ -180,12 +208,12 @@ class WeatherEffectsManager {
     }
 
     determineEffect(conditions) {
-    if (conditions.energiaMagica === 'interferencia') return 'interference';
-    if (conditions.clima === 'tempestade') return 'storm';
-    if (conditions.temperatura === 'quente') return 'hot';
-    return null;
-}
-
+        if (conditions.energiaMagica === 'interferencia') return 'interference';
+        if (conditions.clima === 'tempestade') return 'storm';
+        if (conditions.temperatura === 'quente') return 'hot';
+        if (conditions.estacao === 'outono') return 'autumn';
+        return null;
+    }
 
     applyEffect(effectName) {
         const effect = this.effects[effectName];
@@ -211,6 +239,11 @@ class WeatherEffectsManager {
         // Adiciona partículas de calor para dia quente
         if (effectName === 'hot') {
             this.createHeatParticles(overlay.querySelector('.particle-container'));
+        }
+
+        // Adiciona folhas de outono
+        if (effectName === 'autumn') {
+            this.createAutumnLeaves(overlay.querySelector('.leaves-container'));
         }
     }
 
@@ -297,6 +330,56 @@ class WeatherEffectsManager {
         }
     }
 
+    createAutumnLeaves(container) {
+        const colors = ['#8b0000', '#d2691e', '#ff8c00', '#ffd700', '#800000'];
+        const sizes = ['small', 'medium', 'large'];
+        const counts = [20, 12, 6];
+        
+        sizes.forEach((size, index) => {
+            for (let i = 0; i < counts[index]; i++) {
+                setTimeout(() => {
+                    const leaf = document.createElement('div');
+                    leaf.className = `autumn-leaf ${size}`;
+                    leaf.style.left = Math.random() * window.innerWidth + 'px';
+                    leaf.style.top = '-50px';
+                    leaf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    leaf.style.opacity = Math.random() * 0.3 + 0.1;
+                    
+                    container.appendChild(leaf);
+                    
+                    const duration = 25000 + Math.random() * 15000;
+                    const swaySpeed = 0.0002 + Math.random() * 0.0008;
+                    const swayAmount = 15 + Math.random() * 25;
+                    const rotationSpeed = 0.5 + Math.random() * 1;
+                    const driftX = (Math.random() - 0.5) * 60;
+                    
+                    let startTime = Date.now();
+                    let rotation = 0;
+                    
+                    const animate = () => {
+                        const elapsed = Date.now() - startTime;
+                        const progress = elapsed / duration;
+                        
+                        if (progress >= 1) {
+                            leaf.remove();
+                            return;
+                        }
+                        
+                        const easeProgress = progress * progress * (3 - 2 * progress);
+                        const y = -50 + (window.innerHeight + 100) * easeProgress;
+                        const x = Math.sin(elapsed * swaySpeed) * swayAmount + (driftX * progress);
+                        rotation += rotationSpeed;
+                        
+                        leaf.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg)`;
+                        requestAnimationFrame(animate);
+                    };
+                    
+                    animate();
+                }, i * (size === 'small' ? 500 : size === 'medium' ? 700 : 1000));
+            }
+        });
+    }
+
     removeCurrentEffect() {
         const overlay = document.querySelector('.weather-overlay');
         if (overlay) overlay.remove();
@@ -329,5 +412,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
-
-
