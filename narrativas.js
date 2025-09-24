@@ -192,10 +192,15 @@ class SistemaNarrativas {
             const inventory = playerData.inventory || {};
             const chest = inventory.itemsInChest || [];
             
+            // Cria item com propriedades completas
             const novoItem = {
                 id: itemId,
-                content: itemId.replace('-', ' '),
-                quantity: 1
+                content: itemId.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                uuid: `extra-${itemId}`,
+                quantity: 1,
+                description: `Item encontrado na aventura: ${itemId.replace('-', ' ')}`,
+                image: `https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/${itemId}.png`,
+                thumbnailImage: `https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thu${itemId}.png`
             };
             
             chest.push(novoItem);
