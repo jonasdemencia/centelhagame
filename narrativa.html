@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Narrativas - RPG</title>
+    <link rel="stylesheet" href="narrativas.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Seleção de Narrativas -->
+        <div id="selecao-narrativas" class="tela-ativa">
+            <h1>Escolha sua Aventura</h1>
+            <div class="lista-narrativas">
+                <div class="narrativa-card" data-narrativa="floresta-sombria">
+                    <h3>A Floresta Sombria</h3>
+                    <p>Uma jornada perigosa através de terras antigas...</p>
+                </div>
+                <div class="narrativa-card" data-narrativa="cavernas-perdidas">
+                    <h3>As Cavernas Perdidas</h3>
+                    <p>Tesouros e perigos aguardam nas profundezas...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela de Narrativa Ativa -->
+        <div id="narrativa-ativa" class="tela-oculta">
+            <div class="cabecalho">
+                <button id="voltar-selecao">← Voltar</button>
+                <h2 id="titulo-narrativa"></h2>
+            </div>
+            
+            <div class="secao-atual">
+                <div class="numero-secao">Seção <span id="numero-secao">1</span></div>
+                <div class="texto-narrativa" id="texto-narrativa"></div>
+                
+                <div class="opcoes-container" id="opcoes-container">
+                    <!-- Opções serão inseridas dinamicamente -->
+                </div>
+            </div>
+
+            <!-- Modal para testes de atributos -->
+            <div id="modal-teste" class="modal oculto">
+                <div class="modal-content">
+                    <h3>Teste de <span id="atributo-teste"></span></h3>
+                    <p>Dificuldade: <span id="dificuldade-teste"></span></p>
+                    <button id="rolar-dados">Rolar Dados</button>
+                    <div id="resultado-teste" class="oculto">
+                        <p>Resultado: <span id="valor-rolado"></span></p>
+                        <p id="status-teste"></p>
+                        <button id="continuar-teste">Continuar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="narrativas-data.js"></script>
+    <script src="narrativas.js"></script>
+</body>
+</html>
