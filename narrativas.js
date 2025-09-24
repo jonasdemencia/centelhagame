@@ -134,6 +134,7 @@ class SistemaNarrativas {
             }
 
             btn.addEventListener('click', () => {
+                    console.log('Botão clicado, opção:', opcao); // ADICIONE ESTA LINHA
     this.processarOpcao(opcao);
 });
 
@@ -352,16 +353,18 @@ class SistemaNarrativas {
         }
     }
 async processarOpcao(opcao) {
+    console.log('processarOpcao chamada com:', opcao); // ADICIONE ESTA LINHA
+    
     // Consome item se necessário
     if (opcao.requer) {
         await this.consumirItem(opcao.requer);
     }
     
     if (opcao.batalha) {
-    // Salva destinos de vitória/derrota
-    sessionStorage.setItem('narrativa-vitoria', opcao.vitoria);
-    sessionStorage.setItem('narrativa-derrota', opcao.derrota);
-    window.location.href = `batalha.html?monstros=${opcao.batalha}`;
+        console.log('Redirecionando para batalha:', opcao.batalha); // ADICIONE ESTA LINHA
+        sessionStorage.setItem('narrativa-vitoria', opcao.vitoria);
+        sessionStorage.setItem('narrativa-derrota', opcao.derrota);
+        window.location.href = `batalha.html?monstros=${opcao.batalha}`;
     } else if (opcao.teste) {
         this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
     } else {
@@ -380,5 +383,6 @@ async processarOpcao(opcao) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
