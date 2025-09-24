@@ -1258,7 +1258,7 @@ window.damageTracker.endTurn();
         addLogMessage(`<p style="color: red; font-weight: bold;">Você está inconsciente e indefeso!</p>`, 1000);
         addLogMessage(`O ${currentMonster.nome} continua atacando seu corpo inerte...`, 1000);
         setTimeout(() => {
-            monsterAttack();
+            monstersTurn(); // <-- LINHA MODIFICADA
         }, 2000);
         return;
     }
@@ -4199,11 +4199,13 @@ if (lutarButton) {
                                     setTimeout(async () => {
                                         startNewTurnBlock(currentMonster.nome);
                                         await addLogMessage(`<p>${currentMonster.nome} venceu a Iniciativa e atacará primeiro.</p>`, 1000);
-                                        initiativeWinner = 'monster';
-                                        isPlayerTurn = false;
-                                        if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
-                                        console.log("LOG: onAuthStateChanged - Monstro venceu a iniciativa! initiativeWinner =", initiativeWinner, "isPlayerTurn =", isPlayerTurn);
-                                        await monsterAttack(); // Monstro ataca primeiro
+                                        // SUBSTITUA PELO NOVO BLOCO
+initiativeWinner = 'monster';
+isPlayerTurn = false;
+window.isPlayerTurn = false; // <-- LINHA ADICIONADA
+if (attackOptionsDiv) attackOptionsDiv.style.display = 'none';
+console.log("LOG: onAuthStateChanged - Monstro venceu a iniciativa! initiativeWinner =", initiativeWinner, "isPlayerTurn =", isPlayerTurn);
+await monstersTurn(); // <-- LINHA MODIFICADA
                                     }, 500);
                                 } else {
                                     await addLogMessage(`<p>Houve um empate na iniciativa!</p>`, 1000);
