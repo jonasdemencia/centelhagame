@@ -3226,8 +3226,14 @@ function handlePostBattle(monster) {
 
     registerDeadBody(monster);
     
+    // ADICIONAR ESTA LINHA AQUI:
+    if (auth.currentUser) {
+        window.createContinueAdventureButton(db, auth.currentUser.uid);
+    }
+    
     // Reset do contador de risco do Relâmpago
-    relampagoRiskCounter = 1; // ← ADICIONAR ESTA LINHA
+    relampagoRiskCounter = 1;
+
 
     // Reset da energia vampírica
 if (playerHealth > playerMaxHealth) {
