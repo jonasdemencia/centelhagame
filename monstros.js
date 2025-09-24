@@ -49,6 +49,18 @@ export const monsterData = {
         ]
     },
 
+"guardiao": {
+    nome: "Guardião",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um guardião poderoso que protege os segredos antigos.",
+    habilidade: 8,
+    couraça: 5,
+    energiaDados: "4d8+8",
+    experiencia: 200,
+    dano: "2d6+2"
+},
+
+    
     "blood-golem": {
     id: "blood-golem",
     nome: "Golem de Sangue",
@@ -408,6 +420,7 @@ export const monsterData = {
 export function getMonsterById(monsterId) {
     return monsterData[monsterId] || null;
 }
+
 
 
 
