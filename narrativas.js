@@ -156,15 +156,11 @@ class SistemaNarrativas {
             return false;
         }
         
-        console.log(`Procurando item: '${itemId}'`);
-        console.log('Inventário completo:', this.playerData.inventory.itemsInChest);
-        
         const temItem = this.playerData.inventory.itemsInChest.some(item => {
-            console.log(`Comparando: item.id='${item.id}' com '${itemId}'`);
-            return item.id === itemId;
+            return item.id === itemId && (item.quantity || 1) > 0;
         });
         
-        console.log(`Resultado: ${temItem ? 'POSSUI' : 'NÃO POSSUI'}`);
+        console.log(`Item '${itemId}': ${temItem ? 'POSSUI' : 'NÃO POSSUI'}`);
         return temItem;
     }
 
@@ -192,18 +188,27 @@ class SistemaNarrativas {
             const inventory = playerData.inventory || {};
             const chest = inventory.itemsInChest || [];
             
-            // Cria item com propriedades completas
-            const novoItem = {
-                id: itemId,
-                content: itemId.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                uuid: `extra-${itemId}`,
-                quantity: 1,
-                description: `Item encontrado na aventura: ${itemId.replace('-', ' ')}`,
-                image: `https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/${itemId}.png`,
-                thumbnailImage: `https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thu${itemId}.png`
-            };
+            // Busca item no catálogo global
+            const itemTemplate = window.CATALOGO_ITENS[itemId];
+            if (!itemTemplate) {
+                console.error(`Item '${itemId}' não encontrado no catálogo`);
+                return;
+            }
             
-            chest.push(novoItem);
+            // Verifica se já existe no inventário
+            const existeItem = chest.find(item => item.id === itemId);
+            if (existeItem) {
+                existeItem.quantity = (existeItem.quantity || 1) + 1;
+            } else {
+                // Cria item baseado no template do catálogo
+                const novoItem = {
+                    ...itemTemplate,
+                    uuid: crypto.randomUUID(),
+                    quantity: 1
+                };
+                
+                chest.push(novoItem);
+            }
             
             await updateDoc(playerDocRef, {
                 "inventory.itemsInChest": chest
