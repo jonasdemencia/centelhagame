@@ -166,12 +166,13 @@ const NARRATIVAS = {
                 ]
             },
             12: {
-                texto: "Você decide acampar na clareira. Durante a noite, sonha com visões da torre e acorda sabendo exatamente onde deve ir.",
-                efeitos: [{ tipo: "energia", valor: 5 }],
-                opcoes: [
-                    { texto: "Seguir em direção à torre", secao: 89 }
-                ]
-            },
+    texto: "Você descansa na clareira sob a luz da lua. A energia mágica do lugar restaura suas forças (+3 energia). Durante a noite, sonha com visões da torre e acorda sabendo exatamente onde deve ir.",
+    efeitos: [{ tipo: "energia", valor: 3 }],
+    opcoes: [
+        { texto: "Seguir em direção à torre", secao: 89 }
+    ]
+},
+
             100: {
                 texto: "Você entra no círculo de pedras e sente uma energia antiga fluindo através de você. Visões do passado revelam o caminho para a torre.",
                 efeitos: [{ tipo: "energia", valor: 3 }, { tipo: "item", item: "conhecimento-antigo" }],
@@ -408,3 +409,4 @@ const NARRATIVAS = {
         }
     }
 };
+
