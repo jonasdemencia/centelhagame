@@ -184,7 +184,12 @@ const NARRATIVAS = {
                 texto: "Você tenta forçar a porta mas ela é muito resistente. Seus esforços chamam a atenção de guardiões espectrais que emergem das paredes!",
                 efeitos: [{ tipo: "energia", valor: -3 }],
                 opcoes: [
-                    { texto: "Lutar contra os guardiões", secao: 104 },
+                    { 
+    texto: "Lutar contra os guardiões", 
+    batalha: "guardiao-espectral,guardiao-espectral",
+    vitoria: 104,
+    derrota: 67
+},
                     { texto: "Tentar fugir", secao: 67 }
                 ]
             },
@@ -409,4 +414,5 @@ const NARRATIVAS = {
         }
     }
 };
+
 
