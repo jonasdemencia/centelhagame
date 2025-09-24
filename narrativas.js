@@ -358,10 +358,10 @@ async processarOpcao(opcao) {
     }
     
     if (opcao.batalha) {
-        // Salva destinos de vitória/derrota
-        sessionStorage.setItem('narrativa-vitoria', opcao.vitoria);
-        sessionStorage.setItem('narrativa-derrota', opcao.derrota);
-        window.location.href = 'batalha.html';
+    // Salva destinos de vitória/derrota
+    sessionStorage.setItem('narrativa-vitoria', opcao.vitoria);
+    sessionStorage.setItem('narrativa-derrota', opcao.derrota);
+    window.location.href = `batalha.html?monstros=${opcao.batalha}`;
     } else if (opcao.teste) {
         this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
     } else {
@@ -380,4 +380,5 @@ async processarOpcao(opcao) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
