@@ -1,20 +1,50 @@
+// Importa os SDKs necessários do Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+
+// Configuração do Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
+    authDomain: "centelhagame-9d511.firebaseapp.com",
+    projectId: "centelhagame-9d511",
+    storageBucket: "centelhagame-9d511.appspot.com",
+    messagingSenderId: "700809803145",
+    appId: "1:700809803145:web:bff4c6a751ec9389919d58"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
 class SistemaNarrativas {
     constructor() {
         this.narrativaAtual = null;
         this.secaoAtual = 1;
-        this.inventarioJogador = this.carregarInventario();
-        this.energiaJogador = this.carregarEnergia();
-        this.atributosJogador = this.carregarAtributos();
+        this.playerData = null;
+        this.userId = null;
         
         this.inicializar();
     }
 
     inicializar() {
+        // Verifica autenticação
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                this.userId = user.uid;
+                this.configurarEventListeners();
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+    }
+    
+    configurarEventListeners() {
         // Event listeners para seleção de narrativas
         document.querySelectorAll('.narrativa-card').forEach(card => {
-            card.addEventListener('click', (e) => {
+            card.addEventListener('click', async (e) => {
                 const narrativaId = e.currentTarget.dataset.narrativa;
-                this.iniciarNarrativa(narrativaId);
+                await this.iniciarNarrativa(narrativaId);
             });
         });
 
@@ -33,25 +63,20 @@ class SistemaNarrativas {
         });
     }
 
-    carregarInventario() {
-        // Integração com sistema de inventário existente
-        return JSON.parse(localStorage.getItem('inventario') || '[]');
+    async carregarDadosJogador() {
+        if (!this.userId) return;
+        
+        const playerDocRef = doc(db, "players", this.userId);
+        const docSnap = await getDoc(playerDocRef);
+        
+        if (docSnap.exists()) {
+            this.playerData = docSnap.data();
+        }
     }
 
-    carregarEnergia() {
-        return parseInt(localStorage.getItem('energia') || '20');
-    }
-
-    carregarAtributos() {
-        return {
-            força: parseInt(localStorage.getItem('forca') || '10'),
-            agilidade: parseInt(localStorage.getItem('agilidade') || '10'),
-            inteligência: parseInt(localStorage.getItem('inteligencia') || '10'),
-            carisma: parseInt(localStorage.getItem('carisma') || '10')
-        };
-    }
-
-    iniciarNarrativa(narrativaId) {
+    async iniciarNarrativa(narrativaId) {
+        await this.carregarDadosJogador();
+        
         this.narrativaAtual = NARRATIVAS[narrativaId];
         this.secaoAtual = 1;
         
@@ -62,7 +87,7 @@ class SistemaNarrativas {
         this.mostrarSecao(1);
     }
 
-    mostrarSecao(numeroSecao) {
+    async mostrarSecao(numeroSecao) {
         const secao = this.narrativaAtual.secoes[numeroSecao];
         if (!secao) return;
 
@@ -70,7 +95,7 @@ class SistemaNarrativas {
         
         // Aplicar efeitos da seção
         if (secao.efeitos) {
-            this.aplicarEfeitos(secao.efeitos);
+            await this.aplicarEfeitos(secao.efeitos);
         }
 
         // Mostrar conteúdo
@@ -105,11 +130,11 @@ class SistemaNarrativas {
                 btn.textContent += ' (Requer: ' + opcao.requer + ')';
             }
 
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', async () => {
                 if (opcao.teste) {
                     this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
                 } else {
-                    this.mostrarSecao(opcao.secao);
+                    await this.mostrarSecao(opcao.secao);
                 }
             });
 
@@ -118,32 +143,63 @@ class SistemaNarrativas {
     }
 
     temItem(itemId) {
-        return this.inventarioJogador.some(item => item.id === itemId);
+        if (!this.playerData?.inventory?.itemsInChest) return false;
+        return this.playerData.inventory.itemsInChest.some(item => item.id === itemId);
     }
 
-    aplicarEfeitos(efeitos) {
-        efeitos.forEach(efeito => {
+    async aplicarEfeitos(efeitos) {
+        for (const efeito of efeitos) {
             switch (efeito.tipo) {
                 case 'energia':
-                    this.energiaJogador += efeito.valor;
-                    this.salvarEnergia();
+                    await this.modificarEnergia(efeito.valor);
                     break;
                 case 'item':
-                    this.adicionarItem(efeito.item);
+                    await this.adicionarItem(efeito.item);
                     break;
             }
-        });
+        }
     }
 
-    adicionarItem(itemId) {
-        // Integração com sistema de inventário
-        const novoItem = { id: itemId, nome: itemId.replace('-', ' '), quantidade: 1 };
-        this.inventarioJogador.push(novoItem);
-        localStorage.setItem('inventario', JSON.stringify(this.inventarioJogador));
+    async adicionarItem(itemId) {
+        if (!this.userId) return;
+        
+        const playerDocRef = doc(db, "players", this.userId);
+        const docSnap = await getDoc(playerDocRef);
+        
+        if (docSnap.exists()) {
+            const playerData = docSnap.data();
+            const inventory = playerData.inventory || {};
+            const chest = inventory.itemsInChest || [];
+            
+            const novoItem = {
+                id: itemId,
+                content: itemId.replace('-', ' '),
+                quantity: 1
+            };
+            
+            chest.push(novoItem);
+            
+            await updateDoc(playerDocRef, {
+                "inventory.itemsInChest": chest
+            });
+        }
     }
-
-    salvarEnergia() {
-        localStorage.setItem('energia', this.energiaJogador.toString());
+    
+    async modificarEnergia(valor) {
+        if (!this.userId) return;
+        
+        const playerDocRef = doc(db, "players", this.userId);
+        const docSnap = await getDoc(playerDocRef);
+        
+        if (docSnap.exists()) {
+            const playerData = docSnap.data();
+            const energiaAtual = playerData.energy?.total || 20;
+            const novaEnergia = Math.max(0, energiaAtual + valor);
+            
+            await updateDoc(playerDocRef, {
+                "energy.total": novaEnergia
+            });
+        }
     }
 
     iniciarTeste(atributo, dificuldade, secaoSucesso) {
@@ -156,7 +212,23 @@ class SistemaNarrativas {
     }
 
     rolarDados() {
-        const valorAtributo = this.atributosJogador[this.testeAtual.atributo];
+        const atributoNome = this.testeAtual.atributo;
+        let valorAtributo = 10; // valor padrão
+        
+        // Mapeia nomes de atributos para os campos do Firestore
+        const mapeamentoAtributos = {
+            'magia': 'magic',
+            'carisma': 'charisma',
+            'habilidade': 'skill',
+            'sorte': 'luck'
+        };
+        
+        const campoFirestore = mapeamentoAtributos[atributoNome] || atributoNome;
+        
+        if (this.playerData && this.playerData[campoFirestore]?.total) {
+            valorAtributo = this.playerData[campoFirestore].total;
+        }
+        
         const dadoRolado = Math.floor(Math.random() * 20) + 1;
         const total = valorAtributo + dadoRolado;
         
@@ -171,17 +243,15 @@ class SistemaNarrativas {
         document.getElementById('rolar-dados').style.display = 'none';
     }
 
-    continuarAposTeste() {
+    async continuarAposTeste() {
         document.getElementById('modal-teste').classList.add('oculto');
         document.getElementById('rolar-dados').style.display = 'block';
         
         if (this.resultadoTeste) {
             this.mostrarSecao(this.testeAtual.secaoSucesso);
         } else {
-            // Em caso de falha, pode ir para seção de falha ou perder energia
-            this.energiaJogador -= 2;
-            this.salvarEnergia();
-            // Por simplicidade, volta para seção anterior ou mostra opções alternativas
+            // Em caso de falha, perde energia
+            await this.modificarEnergia(-2);
             this.mostrarSecao(this.secaoAtual);
         }
     }
