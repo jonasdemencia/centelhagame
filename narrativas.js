@@ -91,15 +91,19 @@ class SistemaNarrativas {
     }
 
     async mostrarSecao(numeroSecao) {
-        const secao = this.narrativaAtual.secoes[numeroSecao];
-        if (!secao) return;
+    const secao = this.narrativaAtual.secoes[numeroSecao];
+    if (!secao) return;
 
-        this.secaoAtual = numeroSecao;
-        
-        // Aplicar efeitos da seção
-        if (secao.efeitos) {
-            await this.aplicarEfeitos(secao.efeitos);
-        }
+    this.secaoAtual = numeroSecao;
+    
+    // Salva progresso no Firestore
+    await this.salvarProgresso(numeroSecao);
+    
+    // Aplicar efeitos da seção
+    if (secao.efeitos) {
+        await this.aplicarEfeitos(secao.efeitos);
+    }
+
 
         // Mostrar conteúdo
         document.getElementById('numero-secao').textContent = numeroSecao;
@@ -352,18 +356,34 @@ class SistemaNarrativas {
             this.mostrarSecao(this.secaoAtual);
         }
     }
-async processarOpcao(opcao) {
-    console.log('processarOpcao chamada com:', opcao); // ADICIONE ESTA LINHA
     
+async salvarProgresso(numeroSecao) {
+    if (!this.userId || !this.narrativaAtual) return;
+    
+    const playerDocRef = doc(db, "players", this.userId);
+    await updateDoc(playerDocRef, {
+        "narrativeProgress.currentSection": numeroSecao,
+        "narrativeProgress.narrativeId": Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual),
+        "narrativeProgress.lastUpdated": new Date().toISOString()
+    });
+}
+
+async processarOpcao(opcao) {
     // Consome item se necessário
     if (opcao.requer) {
         await this.consumirItem(opcao.requer);
     }
     
     if (opcao.batalha) {
-        console.log('Redirecionando para batalha:', opcao.batalha); // ADICIONE ESTA LINHA
-        sessionStorage.setItem('narrativa-vitoria', opcao.vitoria);
-        sessionStorage.setItem('narrativa-derrota', opcao.derrota);
+        // Salva dados da batalha no Firestore
+        const playerDocRef = doc(db, "players", this.userId);
+        await updateDoc(playerDocRef, {
+            "narrativeProgress.battleReturn": {
+                vitoria: opcao.vitoria,
+                derrota: opcao.derrota,
+                active: true
+            }
+        });
         window.location.href = `batalha.html?monstros=${opcao.batalha}`;
     } else if (opcao.teste) {
         this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
@@ -372,6 +392,7 @@ async processarOpcao(opcao) {
     }
 }
 
+
     voltarSelecao() {
         document.getElementById('narrativa-ativa').className = 'tela-oculta';
         document.getElementById('selecao-narrativas').className = 'tela-ativa';
@@ -379,10 +400,52 @@ async processarOpcao(opcao) {
     }
 }
 
+// Função para criar botão "Continuar Aventura" (para usar no batalha.js)
+window.createContinueAdventureButton = async function(db, userId) {
+    try {
+        const playerDocRef = doc(db, "players", userId);
+        const docSnap = await getDoc(playerDocRef);
+        
+        if (!docSnap.exists()) return false;
+        
+        const playerData = docSnap.data();
+        const battleReturn = playerData.narrativeProgress?.battleReturn;
+        
+        if (!battleReturn || !battleReturn.active) return false;
+        
+        const button = document.createElement('button');
+        button.textContent = 'Continuar Aventura';
+        button.style.cssText = 'background: #4CAF50; color: white; padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; cursor: pointer;';
+        
+        button.addEventListener('click', async () => {
+            const targetSection = battleReturn.vitoria;
+            
+            await updateDoc(playerDocRef, {
+                "narrativeProgress.currentSection": targetSection,
+                "narrativeProgress.battleReturn.active": false
+            });
+            
+            window.location.href = `narrativas.html?secao=${targetSection}`;
+        });
+        
+        const lootButton = document.getElementById('loot-button');
+        if (lootButton && lootButton.parentNode) {
+            lootButton.parentNode.insertBefore(button, lootButton.nextSibling);
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Erro ao criar botão:', error);
+        return false;
+    }
+};
+
 // Inicializar sistema quando página carregar
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
+
 
 
 
