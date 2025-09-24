@@ -133,18 +133,10 @@ class SistemaNarrativas {
                 btn.textContent += ' (Requer: ' + opcao.requer + ')';
             }
 
-            btn.addEventListener('click', async () => {
-                // Consome item se necessário
-                if (opcao.requer) {
-                    await this.consumirItem(opcao.requer);
-                }
-                
-                if (opcao.teste) {
-                    this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
-                } else {
-                    await this.mostrarSecao(opcao.secao);
-                }
-            });
+            btn.addEventListener('click', () => {
+    this.processarOpcao(opcao);
+});
+
 
             container.appendChild(btn);
         });
@@ -359,6 +351,23 @@ class SistemaNarrativas {
             this.mostrarSecao(this.secaoAtual);
         }
     }
+async processarOpcao(opcao) {
+    // Consome item se necessário
+    if (opcao.requer) {
+        await this.consumirItem(opcao.requer);
+    }
+    
+    if (opcao.batalha) {
+        // Salva destinos de vitória/derrota
+        sessionStorage.setItem('narrativa-vitoria', opcao.vitoria);
+        sessionStorage.setItem('narrativa-derrota', opcao.derrota);
+        window.location.href = 'batalha.html';
+    } else if (opcao.teste) {
+        this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
+    } else {
+        await this.mostrarSecao(opcao.secao);
+    }
+}
 
     voltarSelecao() {
         document.getElementById('narrativa-ativa').className = 'tela-oculta';
@@ -371,3 +380,4 @@ class SistemaNarrativas {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
