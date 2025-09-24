@@ -180,6 +180,23 @@ class SistemaNarrativas {
     async adicionarItem(itemId) {
         if (!this.userId) return;
         
+        // Definições dos itens das narrativas
+        const itensNarrativas = {
+            'chave-runica': { content: 'Chave Rúnica', description: 'Chave de prata com runas brilhantes' },
+            'amuleto-proteção': { content: 'Amuleto de Proteção', description: 'Amuleto que pulsa com energia mágica', slot: 'amulet', defense: 1 },
+            'anel-aquático': { content: 'Anel Aquático', description: 'Anel mágico encontrado nas águas', slot: 'ring', bonuses: { magic: 2 } },
+            'chave-dourada': { content: 'Chave Dourada', description: 'Pequena chave dourada dada pelo lobo' },
+            'tesouro-lobo': { content: 'Tesouro do Lobo', description: 'Tesouro encontrado com a ajuda do lobo' },
+            'conhecimento-antigo': { content: 'Conhecimento Antigo', description: 'Sabedoria ancestral do círculo de pedras' },
+            'pergaminho-sabedoria': { content: 'Pergaminho da Sabedoria', description: 'Pergaminho com segredos da torre' },
+            'cristal-luminoso': { content: 'Cristal Luminoso', description: 'Cristal que brilha com luz azulada' },
+            'pepitas-ouro': { content: 'Pepitas de Ouro', description: 'Pequenas pepitas de ouro da mina' },
+            'tesouro-principal': { content: 'Tesouro Principal', description: 'O grande tesouro das cavernas perdidas' },
+            'corda': { content: 'Corda', description: 'Corda resistente para escaladas' },
+            'ração': { content: 'Ração', description: 'Comida para viagem', consumable: true, effect: 'heal', value: 2 },
+            'tocha': { content: 'Tocha', description: 'Bastão de madeira envolto em trapos embebidos em óleo', consumable: true }
+        };
+        
         const playerDocRef = doc(db, "players", this.userId);
         const docSnap = await getDoc(playerDocRef);
         
@@ -188,10 +205,9 @@ class SistemaNarrativas {
             const inventory = playerData.inventory || {};
             const chest = inventory.itemsInChest || [];
             
-            // Busca item no catálogo global
-            const itemTemplate = window.CATALOGO_ITENS[itemId];
-            if (!itemTemplate) {
-                console.error(`Item '${itemId}' não encontrado no catálogo`);
+            const itemData = itensNarrativas[itemId];
+            if (!itemData) {
+                console.error(`Item '${itemId}' não encontrado nas narrativas`);
                 return;
             }
             
@@ -200,12 +216,26 @@ class SistemaNarrativas {
             if (existeItem) {
                 existeItem.quantity = (existeItem.quantity || 1) + 1;
             } else {
-                // Cria item baseado no template do catálogo
+                // Cria item com propriedades completas
                 const novoItem = {
-                    ...itemTemplate,
+                    id: itemId,
+                    content: itemData.content,
                     uuid: crypto.randomUUID(),
-                    quantity: 1
+                    quantity: 1,
+                    description: itemData.description,
+                    image: `https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/${itemId}.png`,
+                    thumbnailImage: `https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thu${itemId}.png`
                 };
+                
+                // Adiciona propriedades específicas se existirem
+                if (itemData.slot) novoItem.slot = itemData.slot;
+                if (itemData.defense) novoItem.defense = itemData.defense;
+                if (itemData.bonuses) novoItem.bonuses = itemData.bonuses;
+                if (itemData.consumable) {
+                    novoItem.consumable = true;
+                    if (itemData.effect) novoItem.effect = itemData.effect;
+                    if (itemData.value) novoItem.value = itemData.value;
+                }
                 
                 chest.push(novoItem);
             }
