@@ -134,6 +134,11 @@ class SistemaNarrativas {
             }
 
             btn.addEventListener('click', async () => {
+                // Consome item se necessário
+                if (opcao.requer) {
+                    await this.consumirItem(opcao.requer);
+                }
+                
                 if (opcao.teste) {
                     this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
                 } else {
@@ -223,6 +228,41 @@ class SistemaNarrativas {
             // Atualiza dados locais
             this.playerData.energy.total = novaEnergia;
             console.log('Energia modificada:', valor, 'Nova energia:', novaEnergia);
+        }
+    }
+    
+    async consumirItem(itemId) {
+        if (!this.userId) return;
+        
+        const playerDocRef = doc(db, "players", this.userId);
+        const docSnap = await getDoc(playerDocRef);
+        
+        if (docSnap.exists()) {
+            const playerData = docSnap.data();
+            const inventory = playerData.inventory || {};
+            const chest = inventory.itemsInChest || [];
+            
+            const itemIndex = chest.findIndex(item => item.id === itemId);
+            
+            if (itemIndex !== -1) {
+                const item = chest[itemIndex];
+                
+                if (item.quantity > 1) {
+                    // Reduz quantidade
+                    chest[itemIndex].quantity -= 1;
+                } else {
+                    // Remove item completamente
+                    chest.splice(itemIndex, 1);
+                }
+                
+                await updateDoc(playerDocRef, {
+                    "inventory.itemsInChest": chest
+                });
+                
+                // Atualiza dados locais
+                this.playerData.inventory.itemsInChest = chest;
+                console.log('Item consumido:', itemId, 'Inventário atualizado:', chest);
+            }
         }
     }
 
