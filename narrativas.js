@@ -71,6 +71,9 @@ class SistemaNarrativas {
         
         if (docSnap.exists()) {
             this.playerData = docSnap.data();
+            console.log('Dados do jogador carregados:', this.playerData);
+        } else {
+            console.log('Nenhum dado do jogador encontrado');
         }
     }
 
@@ -143,8 +146,15 @@ class SistemaNarrativas {
     }
 
     temItem(itemId) {
-        if (!this.playerData?.inventory?.itemsInChest) return false;
-        return this.playerData.inventory.itemsInChest.some(item => item.id === itemId);
+        if (!this.playerData?.inventory?.itemsInChest) {
+            console.log('Inventário não encontrado ou vazio');
+            return false;
+        }
+        
+        const temItem = this.playerData.inventory.itemsInChest.some(item => item.id === itemId);
+        console.log(`Verificando item '${itemId}':`, temItem ? 'POSSUI' : 'NÃO POSSUI');
+        console.log('Inventário atual:', this.playerData.inventory.itemsInChest);
+        return temItem;
     }
 
     async aplicarEfeitos(efeitos) {
@@ -182,6 +192,10 @@ class SistemaNarrativas {
             await updateDoc(playerDocRef, {
                 "inventory.itemsInChest": chest
             });
+            
+            // Atualiza dados locais
+            this.playerData.inventory.itemsInChest = chest;
+            console.log('Item adicionado:', itemId, 'Inventário atual:', chest);
         }
     }
     
@@ -199,6 +213,10 @@ class SistemaNarrativas {
             await updateDoc(playerDocRef, {
                 "energy.total": novaEnergia
             });
+            
+            // Atualiza dados locais
+            this.playerData.energy.total = novaEnergia;
+            console.log('Energia modificada:', valor, 'Nova energia:', novaEnergia);
         }
     }
 
@@ -267,3 +285,4 @@ class SistemaNarrativas {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
