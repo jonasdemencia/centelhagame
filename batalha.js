@@ -3353,6 +3353,19 @@ monsterNames.forEach(name => {
         console.error("Erro: Botão de loot não encontrado no HTML.");
     }
 
+    // Verifica se veio das narrativas
+const narrativaVitoria = sessionStorage.getItem('narrativa-vitoria');
+const narrativaDerrota = sessionStorage.getItem('narrativa-derrota');
+
+if (narrativaVitoria || narrativaDerrota) {
+    const secaoDestino = monster && monster.pontosDeEnergia <= 0 ? narrativaVitoria : narrativaDerrota;
+    sessionStorage.removeItem('narrativa-vitoria');
+    sessionStorage.removeItem('narrativa-derrota');
+    window.location.href = `narrativas.html?secao=${secaoDestino}`;
+    return;
+}
+
+
     // Limpa o estado da batalha quando o monstro é derrotado
     if (user && monster) {
         const monsterName = getUrlParameter('monstro') || monster.id;
