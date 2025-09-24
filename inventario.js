@@ -61,6 +61,24 @@ const initialItems = [
 
 ];
 
+// Itens das narrativas (sincronizado com narrativas.js)
+const itensNarrativas = [
+    { id: 'chave-runica', content: 'Chave Rúnica', description: 'Chave de prata com runas brilhantes', image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/chave-runica.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuchave-runica.png" },
+    { id: 'amuleto-proteção', content: 'Amuleto de Proteção', description: 'Amuleto que pulsa com energia mágica', slot: 'amulet', defense: 1, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/amuleto-proteção.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuamuleto-proteção.png" },
+    { id: 'anel-aquático', content: 'Anel Aquático', description: 'Anel mágico encontrado nas águas', slot: 'ring', bonuses: { magic: 2 }, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/anel-aquático.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuanel-aquático.png" },
+    { id: 'chave-dourada', content: 'Chave Dourada', description: 'Pequena chave dourada dada pelo lobo', image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/chave-dourada.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuchave-dourada.png" },
+    { id: 'tesouro-lobo', content: 'Tesouro do Lobo', description: 'Tesouro encontrado com a ajuda do lobo', image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/tesouro-lobo.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thutesouro-lobo.png" },
+    { id: 'conhecimento-antigo', content: 'Conhecimento Antigo', description: 'Sabedoria ancestral do círculo de pedras', image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/conhecimento-antigo.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuconhecimento-antigo.png" },
+    { id: 'pergaminho-sabedoria', content: 'Pergaminho da Sabedoria', description: 'Pergaminho com segredos da torre', image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pergaminho-sabedoria.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupergaminho-sabedoria.png" },
+    { id: 'cristal-luminoso', content: 'Cristal Luminoso', description: 'Cristal que brilha com luz azulada', image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/cristal-luminoso.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thucristal-luminoso.png" },
+    { id: 'pepitas-ouro', content: 'Pepitas de Ouro', description: 'Pequenas pepitas de ouro da mina', image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pepitas-ouro.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupepitas-ouro.png" },
+    { id: 'tesouro-principal', content: 'Tesouro Principal', description: 'O grande tesouro das cavernas perdidas', image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/tesouro-principal.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thutesouro-principal.png" },
+    { id: 'corda', content: 'Corda', description: 'Corda resistente para escaladas', image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/corda.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thucorda.png" },
+    { id: 'ração', content: 'Ração', description: 'Comida para viagem', consumable: true, effect: 'heal', value: 2, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/ração.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuracao.png" },
+    { id: 'tocha', content: 'Tocha', description: 'Bastão de madeira envolto em trapos embebidos em óleo', consumable: true, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/tocha.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thutocha.png" }
+];
+
+
 // Lista de itens que podem ser adicionados dinamicamente (não iniciais)
 
 const extraItems = [
@@ -119,7 +137,7 @@ function updateItemPreview(item) {
     const previewName = document.getElementById('preview-name');
     const previewDescription = document.getElementById('preview-description');
     
-    const allItemsArr = [...initialItems, ...extraItems];
+    const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
     const itemData = allItemsArr.find(i => i.id === item.dataset.item);
     
     if (itemData) {
@@ -239,7 +257,7 @@ const equippedWeaponName = inventoryData.equippedItems.weapon;
 
 if (!equippedWeaponName) return;
 
-const allItemsArr = [...initialItems, ...extraItems];
+const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
 
 const weaponData = allItemsArr.find(item =>
 
@@ -704,7 +722,7 @@ slots.forEach(slot => slot.classList.remove('highlight'));
 
 console.log("Item clicado:", item);
 
-const allItemsArr = [...initialItems, ...extraItems];
+const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
 
 const itemData = allItemsArr.find(i => i.id === item.dataset.item);
 
@@ -817,7 +835,7 @@ const slotId = slot.id;
         if (!playerSnap.exists()) return;
 
         const inventoryData = playerSnap.data().inventory;
-        const allItemsArr = [...initialItems, ...extraItems];
+        const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
 
         // Garante que os objetos de inventário existam
         if (!inventoryData.equippedItems) inventoryData.equippedItems = {};
@@ -1128,7 +1146,7 @@ function addItemClickListener(item) {
             selectedItem = item;
             item.classList.add('selected');
 
-            const allItemsArr = [...initialItems, ...extraItems];
+            const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
             const itemData = allItemsArr.find(i => i.id === item.dataset.item);
 
             if (itemData && itemData.slot) {
@@ -1373,7 +1391,7 @@ console.log("--- [LOAD UI] --- Iniciando redesenho do inventário com dados do F
 const chestElement = document.querySelector('.items');
 chestElement.innerHTML = ""; // Limpa o conteúdo atual
 
-const allItemsArr = [...initialItems, ...extraItems];
+const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
 
 const largeItemElements = [];
 const smallItemElements = [];
@@ -1670,7 +1688,7 @@ async function updateCharacterCouraca() {
     let baseCouraca = 0; // Valor base da couraça
     let bonusCouraca = 0;
 
-    const allItemsArr = [...initialItems, ...extraItems];
+    const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
 
     // Verifica o item equipado no slot de armadura
     const armorSlot = document.querySelector('.slot[data-slot="armor"]');
@@ -1740,7 +1758,7 @@ if (weaponSlot && weaponSlot.dataset.itemName) {
 
 const equippedWeaponName = weaponSlot.dataset.itemName.replace(/\s*\(\d+\/\d+\)$/, "");
 
-const allItemsArr = [...initialItems, ...extraItems];
+const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
 
 const weaponData = allItemsArr.find(item => item.content === equippedWeaponName);
 
@@ -1770,7 +1788,7 @@ function calculateEquippedBonuses() {
         luck: 0
     };
 
-    const allItemsArr = [...initialItems, ...extraItems];
+    const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
     
     // Verifica todos os slots equipados
     document.querySelectorAll('.slot').forEach(slot => {
@@ -1797,7 +1815,7 @@ function updateSlotCompatibility() {
     
     if (!weaponSlot || !shieldSlot) return;
     
-    const allItemsArr = [...initialItems, ...extraItems];
+    const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
     const equippedWeaponName = weaponSlot.dataset.itemName;
     
     if (equippedWeaponName) {
@@ -1933,7 +1951,7 @@ equippedWeaponName = equippedWeaponName.replace(/\s*\(\d+\/\d+\)$/, "");
 
 // encontra no catálogo o tipo de munição dessa arma
 
-const allItemsArr = [...initialItems, ...extraItems];
+const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
 
 const weaponData = allItemsArr.find(item =>
 
