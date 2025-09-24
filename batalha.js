@@ -3220,6 +3220,43 @@ async function markMonsterAsDefeated(userId, monsterId) {
     }
 }
 
+async function createContinueAdventureButton(db, userId) {
+    try {
+        const playerDocRef = doc(db, "players", userId);
+        const docSnap = await getDoc(playerDocRef);
+        
+        if (!docSnap.exists()) return false;
+        
+        const playerData = docSnap.data();
+        const battleReturn = playerData.narrativeProgress?.battleReturn;
+        
+        if (!battleReturn || !battleReturn.active) return false;
+        
+        const button = document.createElement('button');
+        button.textContent = 'Continuar Aventura';
+        button.style.cssText = 'background: #4CAF50; color: white; padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; cursor: pointer;';
+        
+        button.addEventListener('click', async () => {
+            await updateDoc(playerDocRef, {
+                "narrativeProgress.currentSection": battleReturn.vitoria,
+                "narrativeProgress.battleReturn.active": false
+            });
+            
+            window.location.href = `narrativas.html?secao=${battleReturn.vitoria}`;
+        });
+        
+        const lootButton = document.getElementById('loot-button');
+        if (lootButton && lootButton.parentNode) {
+            lootButton.parentNode.insertBefore(button, lootButton.nextSibling);
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Erro ao criar botão:', error);
+        return false;
+    }
+}
+
 
 function handlePostBattle(monster) {
     console.log("handlePostBattle chamado com monstro:", monster?.nome);
@@ -3228,7 +3265,7 @@ function handlePostBattle(monster) {
     
     // ADICIONAR ESTA LINHA AQUI:
     if (auth.currentUser) {
-        window.createContinueAdventureButton(db, auth.currentUser.uid);
+createContinueAdventureButton(db, auth.currentUser.uid);
     }
     
     // Reset do contador de risco do Relâmpago
