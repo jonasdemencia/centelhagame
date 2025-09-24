@@ -151,9 +151,15 @@ class SistemaNarrativas {
             return false;
         }
         
-        const temItem = this.playerData.inventory.itemsInChest.some(item => item.id === itemId);
-        console.log(`Verificando item '${itemId}':`, temItem ? 'POSSUI' : 'NÃO POSSUI');
-        console.log('Inventário atual:', this.playerData.inventory.itemsInChest);
+        console.log(`Procurando item: '${itemId}'`);
+        console.log('Inventário completo:', this.playerData.inventory.itemsInChest);
+        
+        const temItem = this.playerData.inventory.itemsInChest.some(item => {
+            console.log(`Comparando: item.id='${item.id}' com '${itemId}'`);
+            return item.id === itemId;
+        });
+        
+        console.log(`Resultado: ${temItem ? 'POSSUI' : 'NÃO POSSUI'}`);
         return temItem;
     }
 
@@ -285,4 +291,3 @@ class SistemaNarrativas {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
-
