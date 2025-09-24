@@ -49,8 +49,8 @@ export const monsterData = {
         ]
     },
 
-"guardiao": {
-    nome: "Guardião",
+"guardiao-espectral": {
+    nome: "Guardião Espectral",
     imagem: "https://via.placeholder.com/150",
     descricao: "Um guardião poderoso que protege os segredos antigos.",
     habilidade: 8,
@@ -420,6 +420,7 @@ export const monsterData = {
 export function getMonsterById(monsterId) {
     return monsterData[monsterId] || null;
 }
+
 
 
 
