@@ -49,7 +49,98 @@ export const monsterData = {
         ]
     },
 
+"zumbi": {
+    nome: "Zumbi Putrefato",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um morto-vivo em decomposição com movimentos lentos mas persistentes.",
+    habilidade: 3,
+    couraça: 2,
+    energiaDados: "2d8",
+    experiencia: 30,
+    dano: "1D6",
+    ataques: [
+        {
+            id: "garra",
+            nome: "Garra Podre",
+            dano: "1d4",
+            peso: 80,
+            pesoHPBaixo: 50,
+            telegrafado: false
+        },
+        {
+            id: "mordida",
+            nome: "Mordida Infecta",
+            dano: "1d6+1",
+            peso: 20,
+            pesoHPBaixo: 50,
+            telegrafado: true,
+            mensagemTelegraf: "O zumbi abre a boca revelando dentes podres..."
+        }
+    ]
+},
 
+"lorde-aldric-zumbi": {
+    nome: "Lorde Aldric Morto-Vivo",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "O antigo governante da vila, agora uma abominação de carne apodrecida em armadura cerimonial.",
+    habilidade: 8,
+    couraça: 4,
+    energiaDados: "6d8+10",
+    experiencia: 200,
+    dano: "2D6",
+    ataques: [
+        {
+            id: "espada",
+            nome: "Golpe de Espada",
+            dano: "1d8+2",
+            peso: 60,
+            pesoHPBaixo: 40,
+            telegrafado: false
+        },
+        {
+            id: "investida",
+            nome: "Investida Real",
+            dano: "2d6+3",
+            peso: 40,
+            pesoHPBaixo: 60,
+            telegrafado: true,
+            mensagemTelegraf: "Lorde Aldric ergue sua espada e avança com fúria ancestral..."
+        }
+    ]
+},
+
+"necromante": {
+    nome: "Morteus, o Necromante",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um feiticeiro das trevas mumificado, cercado por energia sombria.",
+    habilidade: 10,
+    couraça: 2,
+    energiaDados: "5d8+5",
+    experiencia: 150,
+    dano: "1D8",
+    ataques: [
+        {
+            id: "raio-sombrio",
+            nome: "Raio das Trevas",
+            dano: "1d6+1",
+            peso: 70,
+            pesoHPBaixo: 50,
+            telegrafado: false
+        },
+        {
+            id: "drenar-vida",
+            nome: "Drenar Vida",
+            dano: "1d10+2",
+            peso: 30,
+            pesoHPBaixo: 50,
+            telegrafado: true,
+            mensagemTelegraf: "Morteus estende as mãos e energia sombria se acumula..."
+        }
+    ]
+},
+
+
+    
     // Novos monstros para A Coroa de Ferro - estrutura completa como o lobo
 
 "cultista-sombra": {
@@ -413,17 +504,7 @@ export const monsterData = {
         experiencia: 55,
         dano: "1D6"
     },
-    "zumbi": {
-        nome: "Zumbi Cambaleante",
-        imagem: "https://via.placeholder.com/150",
-        descricao: "Um morto-vivo lento, mas persistente.",
-        habilidade: 1,
-        couraça: 1,
-        pontosDeEnergia: 3,
-        pontosDeEnergiaMax: 3,
-        experiencia: 70,
-        dano: "1D8"
-    },
+    
     "harpia": {
         nome: "Harpia Cruel",
         imagem: "https://via.placeholder.com/150",
@@ -637,6 +718,7 @@ export const monsterData = {
 export function getMonsterById(monsterId) {
     return monsterData[monsterId] || null;
 }
+
 
 
 
