@@ -453,7 +453,7 @@ const NARRATIVAS = {
     opcoes: [
         { texto: "Ir investigar o cemitério imediatamente", secao: 8 },
         { texto: "Continuar explorando a vila primeiro", secao: 4 },
-        { texto: "Procurar por mais informações na loja", secao: 73 }
+{ texto: "Procurar por mais informações na loja", secao: 76 }
     ]
 },
 
@@ -666,7 +666,8 @@ const NARRATIVAS = {
     efeitos: [{ tipo: "item", item: "pocao-cura-menor" }],
     opcoes: [
         { texto: "Sair do mausoléu com os itens", secao: 63 },
-        { texto: "Procurar por pistas sobre onde Lorde Aldric pode estar", secao: 85 }
+{ texto: "Procurar por pistas sobre onde Lorde Aldric pode estar", secao: 68 }
+
     ]
 },
 68: {
@@ -728,6 +729,14 @@ const NARRATIVAS = {
     texto: "Partindo da Vila de Pedravale, você carrega consigo não apenas a coroa de ferro e os tesouros descobertos, mas também o conhecimento de que trouxe paz aos mortos inquietos. O sol nasce no horizonte, dissipando as últimas sombras da vila amaldiçoada. Atrás de você, Pedravale finalmente descansa em silêncio eterno, seus habitantes libertados de duas décadas de tormento. Sua jornada pela vila abandonada chegou ao fim, e você emerge como um herói que enfrentou os horrores do passado e prevaleceu. A estrada à frente promete novas aventuras, mas esta vitória permanecerá para sempre em sua memória.",
     efeitos: [{ tipo: "energia", valor: 5 }],
     final: true
+},
+
+76: {
+    texto: "Procurando por mais informações na loja, você vasculha cuidadosamente os fundos do estabelecimento. Atrás do balcão, você encontra uma gaveta secreta contendo correspondências entre o proprietário e autoridades de cidades vizinhas. As cartas revelam que eventos similares ocorreram em outras vilas, sempre precedidos pelo desaparecimento de artefatos antigos de cemitérios locais. Uma carta menciona especificamente um 'Amuleto da Morte' que foi roubado do mausoléu de Pedravale dias antes da praga começar.",
+    opcoes: [
+        { texto: "Ir ao cemitério procurar pelo amuleto", secao: 8 },
+        { texto: "Continuar explorando a vila", secao: 4 }
+    ]
 }
    }
   },
@@ -2150,6 +2159,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
