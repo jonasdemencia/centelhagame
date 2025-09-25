@@ -47,6 +47,19 @@ class SistemaNarrativas {
         document.querySelectorAll('.narrativa-card').forEach(card => {
             card.addEventListener('click', async (e) => {
                 const narrativaId = e.currentTarget.dataset.narrativa;
+                
+                // Verifica se aventura foi completada
+                const playerDocRef = doc(db, "players", this.userId);
+                const docSnap = await getDoc(playerDocRef);
+                
+                if (docSnap.exists()) {
+                    const progress = docSnap.data().narrativeProgress;
+                    if (progress && progress.completed && progress.narrativeId === narrativaId) {
+                        this.mostrarAventuraCompleta();
+                        return;
+                    }
+                }
+                
                 await this.iniciarNarrativa(narrativaId);
             });
         });
@@ -449,6 +462,7 @@ class SistemaNarrativas {
         const playerDocRef = doc(db, "players", this.userId);
         
         if (isFinal) {
+            console.log('SALVANDO AVENTURA COMO COMPLETADA:', numeroSecao);
             await updateDoc(playerDocRef, {
                 "narrativeProgress.completed": true,
                 "narrativeProgress.currentSection": numeroSecao,
