@@ -52,7 +52,7 @@ console.error("Erro ao configurar listener dos dados do jogador:", error);
 }
 }
 
-// Itens iniciais que o jogador deve ter (adicionando propriedade de danoo)
+// Itens iniciaiss que o jogador deve ter (adicionando propriedade de danoo)
 
 const initialItems = [
 { id: "pao", content: "Pão", consumable: true, uuid: "extra-pao", quantity: 5, effect: "heal", value: 1, description: "Iguaria simples de trigo.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pao.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupao.png" },
