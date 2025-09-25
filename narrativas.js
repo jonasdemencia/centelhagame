@@ -38,29 +38,6 @@ class SistemaNarrativas {
             }
         });
     }
-
-    async verificarProgressoSalvo() {
-        if (!this.userId) return;
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const secaoUrl = urlParams.get('secao');
-        
-        // Se veio com seção na URL, usa ela
-        if (secaoUrl) {
-            console.log('Seção da URL:', secaoUrl);
-            // Busca qual narrativa contém essa seção
-            for (const [narrativaId, narrativa] of Object.entries(NARRATIVAS)) {
-                console.log('Verificando narrativa:', narrativaId, 'para seção:', secaoUrl);
-                if (narrativa.secoes && narrativa.secoes[secaoUrl]) {
-                    console.log('Seção encontrada! Iniciando narrativa:', narrativaId);
-                    await this.iniciarNarrativa(narrativaId);
-                    await this.mostrarSecao(parseInt(secaoUrl));
-                    return;
-                }
-            }
-            console.log('Seção não encontrada em nenhuma narrativa');
-        }
-    }
     
     async configurarEventListeners() {
         // Verifica se há progresso salvo
@@ -123,7 +100,7 @@ class SistemaNarrativas {
         this.secaoAtual = numeroSecao;
         
         // Salva progresso no Firestore
-        await this.salvarProgresso(numeroSecao);
+        await this.salvarProgresso(numeroSecao, secao.final);
         
         // Aplicar efeitos da seção
         if (secao.efeitos) {
@@ -163,7 +140,6 @@ class SistemaNarrativas {
             }
 
             btn.addEventListener('click', () => {
-                console.log('Botão clicado, opção:', opcao);
                 this.processarOpcao(opcao);
             });
 
@@ -337,10 +313,6 @@ class SistemaNarrativas {
     }
 
     rolarDados() {
-        if (!this.testeAtual) {
-            console.error('Erro: testeAtual não definido');
-            return;
-        }
         const atributoNome = this.testeAtual.atributo;
         let valorAtributo = 10; // valor padrão
         
@@ -384,16 +356,108 @@ class SistemaNarrativas {
             this.mostrarSecao(this.secaoAtual);
         }
     }
+
+    async verificarProgressoSalvo() {
+        if (!this.userId) return;
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const secaoUrl = urlParams.get('secao');
+        
+        // Se veio com seção na URL, usa ela
+        if (secaoUrl) {
+            // Busca qual narrativa contém essa seção
+            for (const [narrativaId, narrativa] of Object.entries(NARRATIVAS)) {
+                if (narrativa.secoes[secaoUrl]) {
+                    await this.iniciarNarrativa(narrativaId);
+                    await this.mostrarSecao(parseInt(secaoUrl));
+                    return;
+                }
+            }
+        }
+        
+        // Senão, verifica progresso salvo
+        const playerDocRef = doc(db, "players", this.userId);
+        const docSnap = await getDoc(playerDocRef);
+        
+        if (docSnap.exists()) {
+            const progress = docSnap.data().narrativeProgress;
+            if (progress && progress.currentSection && progress.narrativeId) {
+                // Verifica se aventura foi completada
+                if (progress.completed) {
+                    this.mostrarAventuraCompleta();
+                } else {
+                    this.mostrarOpcaoContinuar(progress);
+                }
+            }
+        }
+    }
     
-    async salvarProgresso(numeroSecao) {
+    mostrarAventuraCompleta() {
+        const container = document.getElementById('selecao-narrativas');
+        const completeDiv = document.createElement('div');
+        completeDiv.style.cssText = 'text-align: center; margin: 20px; padding: 20px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 10px; color: #155724;';
+        completeDiv.innerHTML = `
+            <h3>🎉 Aventura Completada!</h3>
+            <p>Você já completou esta aventura com sucesso!</p>
+            <button id="new-adventure" style="background: #28a745; color: white; padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer;">Escolher Nova Aventura</button>
+        `;
+        
+        container.insertBefore(completeDiv, container.firstChild);
+        
+        document.getElementById('new-adventure').addEventListener('click', async () => {
+            await this.limparProgresso();
+            completeDiv.remove();
+        });
+    }
+    
+    mostrarOpcaoContinuar(progress) {
+        const container = document.getElementById('selecao-narrativas');
+        const continueDiv = document.createElement('div');
+        continueDiv.style.cssText = 'text-align: center; margin: 20px; padding: 20px; background: #f0f0f0; border-radius: 10px;';
+        continueDiv.innerHTML = `
+            <h3>Aventura em Progresso</h3>
+            <p>Você tem uma aventura em andamento na seção ${progress.currentSection}</p>
+            <button id="continue-saved" style="background: #4CAF50; color: white; padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer;">Continuar</button>
+            <button id="new-adventure" style="background: #f44336; color: white; padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer;">Nova Aventura</button>
+        `;
+        
+        container.insertBefore(continueDiv, container.firstChild);
+        
+        document.getElementById('continue-saved').addEventListener('click', async () => {
+            await this.iniciarNarrativa(progress.narrativeId);
+            await this.mostrarSecao(progress.currentSection);
+            continueDiv.remove();
+        });
+        
+        document.getElementById('new-adventure').addEventListener('click', async () => {
+            await this.limparProgresso();
+            continueDiv.remove();
+        });
+    }
+    
+    async limparProgresso() {
+        if (!this.userId) return;
+        const playerDocRef = doc(db, "players", this.userId);
+        await updateDoc(playerDocRef, {
+            "narrativeProgress": null
+        });
+    }
+
+    async salvarProgresso(numeroSecao, isFinal = false) {
         if (!this.userId || !this.narrativaAtual) return;
         
         const playerDocRef = doc(db, "players", this.userId);
-        await updateDoc(playerDocRef, {
+        const progressData = {
             "narrativeProgress.currentSection": numeroSecao,
             "narrativeProgress.narrativeId": Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual),
             "narrativeProgress.lastUpdated": new Date().toISOString()
-        });
+        };
+        
+        if (isFinal) {
+            progressData["narrativeProgress.completed"] = true;
+        }
+        
+        await updateDoc(playerDocRef, progressData);
     }
 
     async processarOpcao(opcao) {
@@ -420,12 +484,60 @@ class SistemaNarrativas {
         }
     }
 
-    voltarSelecao() {
+    async voltarSelecao() {
+        // Limpa progresso ao sair da narrativa
+        if (this.userId) {
+            const playerDocRef = doc(db, "players", this.userId);
+            await updateDoc(playerDocRef, {
+                "narrativeProgress": null
+            });
+        }
+        
         document.getElementById('narrativa-ativa').className = 'tela-oculta';
         document.getElementById('selecao-narrativas').className = 'tela-ativa';
         this.narrativaAtual = null;
     }
 }
+
+// Função para criar botão "Continuar Aventura" (para usar no batalha.js)
+window.createContinueAdventureButton = async function(db, userId) {
+    try {
+        const playerDocRef = doc(db, "players", userId);
+        const docSnap = await getDoc(playerDocRef);
+        
+        if (!docSnap.exists()) return false;
+        
+        const playerData = docSnap.data();
+        const battleReturn = playerData.narrativeProgress?.battleReturn;
+        
+        if (!battleReturn || !battleReturn.active) return false;
+        
+        const button = document.createElement('button');
+        button.textContent = 'Continuar Aventura';
+        button.style.cssText = 'background: #4CAF50; color: white; padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; cursor: pointer;';
+        
+        button.addEventListener('click', async () => {
+            const targetSection = battleReturn.vitoria;
+            
+            await updateDoc(playerDocRef, {
+                "narrativeProgress.currentSection": targetSection,
+                "narrativeProgress.battleReturn.active": false
+            });
+            
+            window.location.href = `narrativas.html?secao=${targetSection}`;
+        });
+        
+        const lootButton = document.getElementById('loot-button');
+        if (lootButton && lootButton.parentNode) {
+            lootButton.parentNode.insertBefore(button, lootButton.nextSibling);
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Erro ao criar botão:', error);
+        return false;
+    }
+};
 
 // Inicializar sistema quando página carregar
 document.addEventListener('DOMContentLoaded', () => {
