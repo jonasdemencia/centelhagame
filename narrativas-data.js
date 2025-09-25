@@ -31,13 +31,6 @@ BATALHAS:
 - vitoria: seção para vitória
 - derrota: seção para derrota
 
-ITENS DISPONÍVEIS:
-- tocha, corda, ração (consumíveis básicos)
-- chave-runica, chave-dourada (chaves especiais)
-- amuleto-proteção, anel-aquático (equipamentos mágicos)
-- cristal-luminoso, pergaminho-sabedoria (itens especiais)
-- tesouro-lobo, tesouro-principal (tesouros)
-
 EXEMPLO DE SEÇÃO COMPLETA:
 15: {
     texto: "Descrição da situação atual",
@@ -474,6 +467,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
