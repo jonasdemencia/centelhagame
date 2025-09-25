@@ -51,6 +51,41 @@ SEÇÃO FINAL:
 }
 */
 
+/*
+=== GUIA CRÍTICO PARA NARRATIVAS - CONEXÃO ENTRE ESCOLHAS E SEÇÕES ===
+
+REGRA FUNDAMENTAL: CONTINUIDADE NARRATIVA DIRETA
+- Cada seção DEVE começar fazendo referência DIRETA à escolha que levou até ela
+- Se a escolha é "Usar a corda para escalar", a seção seguinte DEVE começar: "Ao usar a corda, você..."
+- Se a escolha é "Investigar o baú", a seção seguinte DEVE começar: "Investigando o baú, você descobre..."
+- Se a escolha é "Atacar o goblin", a seção seguinte DEVE começar: "Seu ataque contra o goblin..."
+
+EXEMPLOS CORRETOS:
+Escolha: "Examinar a porta misteriosa"
+Seção seguinte: "Examinando cuidadosamente a porta, você nota entalhes estranhos..."
+
+Escolha: "Beber a poção vermelha"  
+Seção seguinte: "Ao beber a poção vermelha, um calor intenso percorre seu corpo..."
+
+EXEMPLOS INCORRETOS:
+Escolha: "Usar a chave dourada"
+Seção seguinte: "Você se encontra em uma nova câmara..." ❌ (não menciona a chave)
+
+PROGRESSÃO NARRATIVA:
+- Evite saltos abruptos entre locais sem transição adequada
+- Cada seção deve fluir naturalmente da anterior
+- Reduza a quantidade de itens dados por seção (máximo 1-2 itens por descoberta)
+- Crie mais seções intermediárias para ações complexas
+
+ESTRUTURA IDEAL:
+1. Referência direta à escolha anterior
+2. Descrição da ação sendo executada  
+3. Consequências/descobertas da ação
+4. Novas opções baseadas na situação atual
+
+Esta continuidade é ESSENCIAL para manter a imersão do jogador na narrativa.
+*/
+
 // Dados das narrativas
 const NARRATIVAS = {
 
@@ -1471,6 +1506,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
