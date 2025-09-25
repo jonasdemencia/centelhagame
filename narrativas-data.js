@@ -1035,7 +1035,7 @@ const NARRATIVAS = {
 
     }
   }
-},
+}
 
     
     "floresta-sombria": {
@@ -1452,6 +1452,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
