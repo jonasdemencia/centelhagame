@@ -23,7 +23,6 @@ class SistemaNarrativas {
         this.secaoAtual = 1;
         this.playerData = null;
         this.userId = null;
-        
         this.inicializar();
     }
 
@@ -38,28 +37,28 @@ class SistemaNarrativas {
             }
         });
     }
-    
+
     async configurarEventListeners() {
         // Verifica se há progresso salvo
         await this.verificarProgressoSalvo();
-        
+
         // Event listeners para seleção de narrativas
         document.querySelectorAll('.narrativa-card').forEach(card => {
             card.addEventListener('click', async (e) => {
                 const narrativaId = e.currentTarget.dataset.narrativa;
-                
+
                 // Verifica se aventura foi completada
                 const playerDocRef = doc(db, "players", this.userId);
                 const docSnap = await getDoc(playerDocRef);
-                
                 if (docSnap.exists()) {
-                    const progress = docSnap.data().narrativeProgress;
-                    if (progress && progress.completed && progress.narrativeId === narrativaId) {
-                        this.mostrarAventuraCompleta();
+                    // AJUSTE 1: VERIFICA O PROGRESSO DA NARRATIVA ESPECÍFICA
+                    const allProgress = docSnap.data().narrativeProgress;
+                    if (allProgress && allProgress[narrativaId] && allProgress[narrativaId].completed) {
+                        alert("Você já completou esta aventura!");
                         return;
                     }
                 }
-                
+
                 await this.iniciarNarrativa(narrativaId);
             });
         });
@@ -81,10 +80,8 @@ class SistemaNarrativas {
 
     async carregarDadosJogador() {
         if (!this.userId) return;
-        
         const playerDocRef = doc(db, "players", this.userId);
         const docSnap = await getDoc(playerDocRef);
-        
         if (docSnap.exists()) {
             this.playerData = docSnap.data();
             console.log('Dados do jogador carregados:', this.playerData);
@@ -95,26 +92,22 @@ class SistemaNarrativas {
 
     async iniciarNarrativa(narrativaId) {
         await this.carregarDadosJogador();
-        
         this.narrativaAtual = NARRATIVAS[narrativaId];
         this.secaoAtual = 1;
-        
         document.getElementById('selecao-narrativas').className = 'tela-oculta';
         document.getElementById('narrativa-ativa').className = 'tela-ativa';
         document.getElementById('titulo-narrativa').textContent = this.narrativaAtual.titulo;
-        
         this.mostrarSecao(1);
     }
 
     async mostrarSecao(numeroSecao) {
         const secao = this.narrativaAtual.secoes[numeroSecao];
         if (!secao) return;
-
         this.secaoAtual = numeroSecao;
-        
+
         // Salva progresso no Firestore
         await this.salvarProgresso(numeroSecao, secao.final);
-        
+
         // Aplicar efeitos da seção
         if (secao.efeitos) {
             await this.aplicarEfeitos(secao.efeitos);
@@ -123,7 +116,7 @@ class SistemaNarrativas {
         // Mostrar conteúdo
         document.getElementById('numero-secao').textContent = numeroSecao;
         document.getElementById('texto-narrativa').textContent = secao.texto;
-        
+
         // Criar opções
         this.criarOpcoes(secao.opcoes, secao.final);
     }
@@ -145,7 +138,7 @@ class SistemaNarrativas {
             const btn = document.createElement('button');
             btn.className = 'opcao-btn';
             btn.textContent = opcao.texto;
-            
+
             // Verificar requisitos
             if (opcao.requer && !this.temItem(opcao.requer)) {
                 btn.disabled = true;
@@ -155,7 +148,6 @@ class SistemaNarrativas {
             btn.addEventListener('click', () => {
                 this.processarOpcao(opcao);
             });
-
             container.appendChild(btn);
         });
     }
@@ -165,11 +157,9 @@ class SistemaNarrativas {
             console.log('Inventário não encontrado ou vazio');
             return false;
         }
-        
         const temItem = this.playerData.inventory.itemsInChest.some(item => {
             return item.id === itemId && (item.quantity || 1) > 0;
         });
-        
         console.log(`Item '${itemId}': ${temItem ? 'POSSUI' : 'NÃO POSSUI'}`);
         return temItem;
     }
@@ -189,8 +179,7 @@ class SistemaNarrativas {
 
     async adicionarItem(itemId) {
         if (!this.userId) return;
-        
-        // Definições dos itens das narrativas
+
         const itensNarrativas = {
             'chave-runica': { content: 'Chave Rúnica', description: 'Chave de prata com runas brilhantes' },
             'amuleto-proteção': { content: 'Amuleto de Proteção', description: 'Amuleto que pulsa com energia mágica', slot: 'amulet', defense: 1 },
@@ -206,27 +195,25 @@ class SistemaNarrativas {
             'ração': { content: 'Ração', description: 'Comida para viagem', consumable: true, effect: 'heal', value: 2 },
             'tocha': { content: 'Tocha', description: 'Bastão de madeira envolto em trapos embebidos em óleo', consumable: true }
         };
-        
+
         const playerDocRef = doc(db, "players", this.userId);
         const docSnap = await getDoc(playerDocRef);
-        
+
         if (docSnap.exists()) {
             const playerData = docSnap.data();
             const inventory = playerData.inventory || {};
             const chest = inventory.itemsInChest || [];
-            
             const itemData = itensNarrativas[itemId];
+
             if (!itemData) {
                 console.error(`Item '${itemId}' não encontrado nas narrativas`);
                 return;
             }
-            
-            // Verifica se já existe no inventário
+
             const existeItem = chest.find(item => item.id === itemId);
             if (existeItem) {
                 existeItem.quantity = (existeItem.quantity || 1) + 1;
             } else {
-                // Cria item com propriedades completas
                 const novoItem = {
                     id: itemId,
                     content: itemData.content,
@@ -236,8 +223,6 @@ class SistemaNarrativas {
                     image: `https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/${itemId}.png`,
                     thumbnailImage: `https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thu${itemId}.png`
                 };
-                
-                // Adiciona propriedades específicas se existirem
                 if (itemData.slot) novoItem.slot = itemData.slot;
                 if (itemData.defense) novoItem.defense = itemData.defense;
                 if (itemData.bonuses) novoItem.bonuses = itemData.bonuses;
@@ -246,70 +231,53 @@ class SistemaNarrativas {
                     if (itemData.effect) novoItem.effect = itemData.effect;
                     if (itemData.value) novoItem.value = itemData.value;
                 }
-                
                 chest.push(novoItem);
             }
-            
+
             await updateDoc(playerDocRef, {
                 "inventory.itemsInChest": chest
             });
-            
-            // Atualiza dados locais
+
             this.playerData.inventory.itemsInChest = chest;
             console.log('Item adicionado:', itemId, 'Inventário atual:', chest);
         }
     }
-    
+
     async modificarEnergia(valor) {
         if (!this.userId) return;
-        
         const playerDocRef = doc(db, "players", this.userId);
         const docSnap = await getDoc(playerDocRef);
-        
         if (docSnap.exists()) {
             const playerData = docSnap.data();
             const energiaAtual = playerData.energy?.total || 20;
             const novaEnergia = Math.max(0, energiaAtual + valor);
-            
             await updateDoc(playerDocRef, {
                 "energy.total": novaEnergia
             });
-            
-            // Atualiza dados locais
             this.playerData.energy.total = novaEnergia;
             console.log('Energia modificada:', valor, 'Nova energia:', novaEnergia);
         }
     }
-    
+
     async consumirItem(itemId) {
         if (!this.userId) return;
-        
         const playerDocRef = doc(db, "players", this.userId);
         const docSnap = await getDoc(playerDocRef);
-        
         if (docSnap.exists()) {
             const playerData = docSnap.data();
             const inventory = playerData.inventory || {};
             const chest = inventory.itemsInChest || [];
-            
             const itemIndex = chest.findIndex(item => item.id === itemId);
-            
             if (itemIndex !== -1) {
                 const item = chest[itemIndex];
-                
                 if (item.quantity > 1) {
-                    // Reduz quantidade
                     chest[itemIndex].quantity -= 1;
                 } else {
-                    // Remove item completamente
                     chest.splice(itemIndex, 1);
                 }
-                
                 await updateDoc(playerDocRef, {
                     "inventory.itemsInChest": chest
                 });
-                
-                // Atualiza dados locais
                 this.playerData.inventory.itemsInChest = chest;
                 console.log('Item consumido:', itemId, 'Inventário atualizado:', chest);
             }
@@ -318,7 +286,6 @@ class SistemaNarrativas {
 
     iniciarTeste(atributo, dificuldade, secaoSucesso) {
         this.testeAtual = { atributo, dificuldade, secaoSucesso };
-        
         document.getElementById('atributo-teste').textContent = atributo;
         document.getElementById('dificuldade-teste').textContent = dificuldade;
         document.getElementById('modal-teste').classList.remove('oculto');
@@ -327,31 +294,23 @@ class SistemaNarrativas {
 
     rolarDados() {
         const atributoNome = this.testeAtual.atributo;
-        let valorAtributo = 10; // valor padrão
-        
-        // Mapeia nomes de atributos para os campos do Firestore
+        let valorAtributo = 10;
         const mapeamentoAtributos = {
             'magia': 'magic',
             'carisma': 'charisma',
             'habilidade': 'skill',
             'sorte': 'luck'
         };
-        
         const campoFirestore = mapeamentoAtributos[atributoNome] || atributoNome;
-        
         if (this.playerData && this.playerData[campoFirestore]?.total) {
             valorAtributo = this.playerData[campoFirestore].total;
         }
-        
         const dadoRolado = Math.floor(Math.random() * 20) + 1;
         const total = valorAtributo + dadoRolado;
-        
         const sucesso = total >= this.testeAtual.dificuldade;
-        
         document.getElementById('valor-rolado').textContent = `${dadoRolado} + ${valorAtributo} = ${total}`;
         document.getElementById('status-teste').textContent = sucesso ? 'SUCESSO!' : 'FALHA!';
         document.getElementById('status-teste').className = sucesso ? 'sucesso' : 'falha';
-        
         this.resultadoTeste = sucesso;
         document.getElementById('resultado-teste').classList.remove('oculto');
         document.getElementById('rolar-dados').style.display = 'none';
@@ -360,11 +319,9 @@ class SistemaNarrativas {
     async continuarAposTeste() {
         document.getElementById('modal-teste').classList.add('oculto');
         document.getElementById('rolar-dados').style.display = 'block';
-        
         if (this.resultadoTeste) {
             this.mostrarSecao(this.testeAtual.secaoSucesso);
         } else {
-            // Em caso de falha, perde energia
             await this.modificarEnergia(-2);
             this.mostrarSecao(this.secaoAtual);
         }
@@ -372,13 +329,11 @@ class SistemaNarrativas {
 
     async verificarProgressoSalvo() {
         if (!this.userId) return;
-        
+
         const urlParams = new URLSearchParams(window.location.search);
         const secaoUrl = urlParams.get('secao');
-        
-        // Se veio com seção na URL, usa ela
+
         if (secaoUrl) {
-            // Busca qual narrativa contém essa seção
             for (const [narrativaId, narrativa] of Object.entries(NARRATIVAS)) {
                 if (narrativa.secoes[secaoUrl]) {
                     await this.iniciarNarrativa(narrativaId);
@@ -387,24 +342,28 @@ class SistemaNarrativas {
                 }
             }
         }
-        
-        // Senão, verifica progresso salvo
+
         const playerDocRef = doc(db, "players", this.userId);
         const docSnap = await getDoc(playerDocRef);
-        
+
         if (docSnap.exists()) {
-            const progress = docSnap.data().narrativeProgress;
-            if (progress && progress.currentSection && progress.narrativeId) {
-                // Verifica se aventura foi completada
-                if (progress.completed) {
-                    this.mostrarAventuraCompleta();
-                } else {
+            const allProgress = docSnap.data().narrativeProgress;
+            if (allProgress) {
+                const inProgressNarrativeId = Object.keys(allProgress).find(
+                    id => allProgress[id] && !allProgress[id].completed
+                );
+
+                if (inProgressNarrativeId) {
+                    const progress = {
+                        ...allProgress[inProgressNarrativeId],
+                        narrativeId: inProgressNarrativeId
+                    };
                     this.mostrarOpcaoContinuar(progress);
                 }
             }
         }
     }
-    
+
     mostrarAventuraCompleta() {
         const container = document.getElementById('selecao-narrativas');
         const completeDiv = document.createElement('div');
@@ -414,15 +373,13 @@ class SistemaNarrativas {
             <p>Você já completou esta aventura com sucesso!</p>
             <button id="new-adventure" style="background: #28a745; color: white; padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer;">Escolher Nova Aventura</button>
         `;
-        
         container.insertBefore(completeDiv, container.firstChild);
-        
         document.getElementById('new-adventure').addEventListener('click', async () => {
             await this.limparProgresso();
             completeDiv.remove();
         });
     }
-    
+
     mostrarOpcaoContinuar(progress) {
         const container = document.getElementById('selecao-narrativas');
         const continueDiv = document.createElement('div');
@@ -433,21 +390,18 @@ class SistemaNarrativas {
             <button id="continue-saved" style="background: #4CAF50; color: white; padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer;">Continuar</button>
             <button id="new-adventure" style="background: #f44336; color: white; padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer;">Nova Aventura</button>
         `;
-        
         container.insertBefore(continueDiv, container.firstChild);
-        
         document.getElementById('continue-saved').addEventListener('click', async () => {
             await this.iniciarNarrativa(progress.narrativeId);
             await this.mostrarSecao(progress.currentSection);
             continueDiv.remove();
         });
-        
         document.getElementById('new-adventure').addEventListener('click', async () => {
             await this.limparProgresso();
             continueDiv.remove();
         });
     }
-    
+
     async limparProgresso() {
         if (!this.userId) return;
         const playerDocRef = doc(db, "players", this.userId);
@@ -456,40 +410,38 @@ class SistemaNarrativas {
         });
     }
 
+    // AJUSTE 2: SALVA O PROGRESSO DENTRO DE UM OBJETO DA NARRATIVA
     async salvarProgresso(numeroSecao, isFinal = false) {
-    if (!this.userId || !this.narrativaAtual) return;
-    
-    const playerDocRef = doc(db, "players", this.userId);
-    
-    if (isFinal) {
-        console.log('SALVANDO AVENTURA COMO COMPLETADA:', numeroSecao);
+        if (!this.userId || !this.narrativaAtual) return;
+
+        const playerDocRef = doc(db, "players", this.userId);
+        const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual);
+
+        const progressData = {
+            lastUpdated: new Date().toISOString()
+        };
+
+        if (isFinal) {
+            console.log('SALVANDO AVENTURA COMO COMPLETADA:', numeroSecao);
+            progressData.completed = true;
+            progressData.currentSection = numeroSecao;
+        } else {
+            progressData.completed = false;
+            progressData.currentSection = numeroSecao;
+        }
+
         await setDoc(playerDocRef, {
             narrativeProgress: {
-                completed: true,
-                currentSection: numeroSecao,
-                narrativeId: Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual),
-                lastUpdated: new Date().toISOString()
-            }
-        }, { merge: true });
-    } else {
-        await setDoc(playerDocRef, {
-            narrativeProgress: {
-                currentSection: numeroSecao,
-                narrativeId: Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual),
-                lastUpdated: new Date().toISOString()
+                [narrativeId]: progressData
             }
         }, { merge: true });
     }
-}
 
     async processarOpcao(opcao) {
-        // Consome item se necessário
         if (opcao.requer) {
             await this.consumirItem(opcao.requer);
         }
-        
         if (opcao.batalha) {
-            // Salva dados da batalha no Firestore
             const playerDocRef = doc(db, "players", this.userId);
             await updateDoc(playerDocRef, {
                 "narrativeProgress.battleReturn": {
@@ -513,39 +465,29 @@ class SistemaNarrativas {
     }
 }
 
-// Função para criar botão "Continuar Aventura" (para usar no batalha.js)
 window.createContinueAdventureButton = async function(db, userId) {
     try {
         const playerDocRef = doc(db, "players", userId);
         const docSnap = await getDoc(playerDocRef);
-        
         if (!docSnap.exists()) return false;
-        
         const playerData = docSnap.data();
         const battleReturn = playerData.narrativeProgress?.battleReturn;
-        
         if (!battleReturn || !battleReturn.active) return false;
-        
         const button = document.createElement('button');
         button.textContent = 'Continuar Aventura';
         button.style.cssText = 'background: #4CAF50; color: white; padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; cursor: pointer;';
-        
         button.addEventListener('click', async () => {
             const targetSection = battleReturn.vitoria;
-            
             await updateDoc(playerDocRef, {
                 "narrativeProgress.currentSection": targetSection,
                 "narrativeProgress.battleReturn.active": false
             });
-            
             window.location.href = `narrativas.html?secao=${targetSection}`;
         });
-        
         const lootButton = document.getElementById('loot-button');
         if (lootButton && lootButton.parentNode) {
             lootButton.parentNode.insertBefore(button, lootButton.nextSibling);
         }
-        
         return true;
     } catch (error) {
         console.error('Erro ao criar botão:', error);
@@ -553,8 +495,6 @@ window.createContinueAdventureButton = async function(db, userId) {
     }
 };
 
-// Inicializar sistema quando página carregar
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
-
