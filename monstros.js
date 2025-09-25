@@ -55,9 +55,9 @@ export const monsterData = {
     descricao: "Um guardião poderoso que protege os segredos antigos.",
     habilidade: 8,
     couraça: 5,
-    energiaDados: "4d8+8",
+    energiaDados: "1d4+2",
     experiencia: 200,
-    dano: "2d6+2"
+    dano: "1d4+2"
 },
 
     
@@ -420,6 +420,7 @@ export const monsterData = {
 export function getMonsterById(monsterId) {
     return monsterData[monsterId] || null;
 }
+
 
 
 
