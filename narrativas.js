@@ -443,22 +443,27 @@ class SistemaNarrativas {
         });
     }
 
-    async salvarProgresso(numeroSecao, isFinal = false) {
-        if (!this.userId || !this.narrativaAtual) return;
-        
-        const playerDocRef = doc(db, "players", this.userId);
-        const progressData = {
+   async salvarProgresso(numeroSecao, isFinal = false) {
+    if (!this.userId || !this.narrativaAtual) return;
+    
+    const playerDocRef = doc(db, "players", this.userId);
+    
+    if (isFinal) {
+        await updateDoc(playerDocRef, {
+            "narrativeProgress.completed": true,
             "narrativeProgress.currentSection": numeroSecao,
             "narrativeProgress.narrativeId": Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual),
             "narrativeProgress.lastUpdated": new Date().toISOString()
-        };
-        
-        if (isFinal) {
-            progressData["narrativeProgress.completed"] = true;
-        }
-        
-        await updateDoc(playerDocRef, progressData);
+        });
+    } else {
+        await updateDoc(playerDocRef, {
+            "narrativeProgress.currentSection": numeroSecao,
+            "narrativeProgress.narrativeId": Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual),
+            "narrativeProgress.lastUpdated": new Date().toISOString()
+        });
     }
+}
+
 
     async processarOpcao(opcao) {
         // Consome item se necessário
@@ -543,3 +548,4 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
