@@ -400,50 +400,17 @@ async processarOpcao(opcao) {
     }
 }
 
-// Função para criar botão "Continuar Aventura" (para usar no batalha.js)
-window.createContinueAdventureButton = async function(db, userId) {
-    try {
-        const playerDocRef = doc(db, "players", userId);
-        const docSnap = await getDoc(playerDocRef);
-        
-        if (!docSnap.exists()) return false;
-        
-        const playerData = docSnap.data();
-        const battleReturn = playerData.narrativeProgress?.battleReturn;
-        
-        if (!battleReturn || !battleReturn.active) return false;
-        
-        const button = document.createElement('button');
-        button.textContent = 'Continuar Aventura';
-        button.style.cssText = 'background: #4CAF50; color: white; padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; cursor: pointer;';
-        
-        button.addEventListener('click', async () => {
-            const targetSection = battleReturn.vitoria;
-            
-            await updateDoc(playerDocRef, {
-                "narrativeProgress.currentSection": targetSection,
-                "narrativeProgress.battleReturn.active": false
-            });
-            
-            window.location.href = `narrativas.html?secao=${targetSection}`;
-        });
-        
-        const lootButton = document.getElementById('loot-button');
-        if (lootButton && lootButton.parentNode) {
-            lootButton.parentNode.insertBefore(button, lootButton.nextSibling);
-        }
-        
-        return true;
-    } catch (error) {
-        console.error('Erro ao criar botão:', error);
-        return false;
-    }
-};
+// Inicializar sistema quando página carregar
+document.addEventListener('DOMContentLoaded', () => {
+    new SistemaNarrativas();
+});
+
 
 // Inicializar sistema quando página carregar
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
