@@ -59,268 +59,268 @@ const NARRATIVAS = {
     titulo: "A Coroa de Ferro — Aventura Completa",
     secoes: {
       1: {
-        texto: "Você, Silas, chega à muralha quebrada da Fortaleza de Ferro. O vento traz o cheiro de metal e pó. Ao longe, uma tocha vacila junto a uma placa semi-enterrada com runas.",
+        texto: "O vento cortante das Terras Devastadas finalmente cessa quando você avista seu destino. A Fortaleza de Ferro se ergue diante de você como uma cicatriz negra contra o céu plúmbeo, suas torres quebradas apontando para os céus como dedos acusadores. Muralhas que um dia desafiaram exércitos inteiros agora jazem em ruínas, pedras milenares espalhadas como ossos de gigantes. O ar carrega o sabor metálico do ferro oxidado misturado ao pó de séculos esquecidos. No portão principal, uma única tocha desafia o tempo, sua chama dançando obstinadamente sobre algo que brilha no chão pedregoso. As lendas sussurram que aqui repousa a Coroa de Ferro, mas as ruínas guardam segredos mais sombrios que qualquer tesouro.",
         opcoes: [
-          { texto: "Investigar a placa com cuidado", secao: 2 },
-          { texto: "Seguir o caminho principal pela ponte destruída", secao: 5 },
-          { texto: "Procurar abrigo entre os escombros", secao: 8 }
+          { texto: "Investigar o objeto brilhante próximo à tocha", secao: 2 },
+          { texto: "Seguir direto pela ponte destruída rumo ao interior", secao: 5 },
+          { texto: "Buscar abrigo entre os escombros para observar", secao: 8 }
         ]
       },
 
       2: {
-        texto: "As runas sussurram quando suas mãos tocam a pedra. Uma pequena cavidade se abre, revelando um objeto envolto em pano—um pavio negro e um bilhete queimado.",
+        texto: "Seus passos ecoam no silêncio mortal enquanto você se aproxima da tocha. A chama projeta sombras dançantes sobre uma pedra peculiar, diferente de todas as outras espalhadas pelo local. Esta possui veios dourados que serpenteiam por sua superfície como raios congelados no tempo, pulsando com uma luz interior sutil. Quando seus dedos tocam a superfície fria, a pedra cede como argila macia, revelando sua natureza mágica. Com um sussurro quase inaudível, uma cavidade secreta se abre, forrada com tecido negro que parece absorver a luz. Dentro, protegidos por séculos de espera, repousam dois artefatos: um pavio de cor impossível que parece sugar a luminosidade ao redor, e um bilhete cujas bordas ainda fumegam com chamas fantasmagóricas.",
         efeitos: [{ tipo: "item", item: "pavio-negro" }, { tipo: "item", item: "bilhete-queimado" }],
         opcoes: [
-          { texto: "Ler o bilhete com atenção", secao: 3 },
-          { texto: "Guardar os itens e seguir pela ponte", secao: 5 }
+          { texto: "Examinar cuidadosamente o bilhete misterioso", secao: 3 },
+          { texto: "Guardar os artefatos e prosseguir pela ponte", secao: 5 }
         ]
       },
 
       3: {
-        texto: "O bilhete menciona 'A Coroa espera sob pedra e cinza. O selo precisa da Espada e do Medalhão.' Há uma letra borrada: '— S.'",
+        texto: "Suas mãos tremem ligeiramente ao desdobrar o pergaminho antigo. As palavras parecem escritas com tinta que ainda brilha fracamente: 'A Coroa espera sob pedra e cinza, onde os antigos selaram o poder. O ritual exige três elementos: a Espada que corta véus, o Medalhão que guarda memórias, e a Voz que desperta os mortos. Cuidado com aqueles que buscam apenas poder - eles encontrarão apenas destruição.' A assinatura é apenas uma letra borrada: 'S.' Você sente que este bilhete foi deixado por alguém que conhecia os segredos da Fortaleza, talvez o último a tentar reivindicar a Coroa.",
         efeitos: [{ tipo: "energia", valor: 1 }],
         opcoes: [
-          { texto: "Memorizar o texto e guardar o bilhete", secao: 5 },
-          { texto: "Procurar por um medalhão nas proximidades", secao: 4, teste: "sorte", dificuldade: 12 }
+          { texto: "Memorizar cada palavra e seguir pela ponte", secao: 5 },
+          { texto: "Procurar pelo medalhão mencionado nas proximidades", secao: 4, teste: "sorte", dificuldade: 12 }
         ]
       },
 
       4: {
-        texto: "Entre destroços, você encontra um medalhão com um selo de ferro. Ele vibra baixo, como se respondesse ao pavio negro.",
+        texto: "Sua intuição o guia através dos destroços espalhados pelo pátio. Entre pedras rachadas e metal retorcido, algo metálico captura sua atenção. É um medalhão de ferro negro, gravado com símbolos que parecem se mover quando você não está olhando diretamente. O momento em que seus dedos tocam o metal frio, uma vibração baixa percorre seu braço - o medalhão está respondendo ao pavio negro em sua posse. Os símbolos brilham momentaneamente, como se reconhecessem um antigo companheiro. Você percebe que este não é um achado casual; foi deixado aqui propositalmente, aguardando alguém com o conhecimento necessário para encontrá-lo.",
         efeitos: [{ tipo: "item", item: "medalhao-selo" }],
         opcoes: [
-          { texto: "Levar o medalhão e seguir pela ponte", secao: 5 },
-          { texto: "Ficar e examinar o medalhão mais a fundo", secao: 9, teste: "magia", dificuldade: 14 }
+          { texto: "Seguir pela ponte com o medalhão pulsante", secao: 5 },
+          { texto: "Tentar sondar o medalhão com magia", secao: 9, teste: "magia", dificuldade: 14 }
         ]
       },
 
       5: {
-        texto: "A ponte range sob seus pés. No meio, dois cultistas encapuzados bloqueiam a passagem, murmurando em um dialecto antigo. Eles notam você.",
+        texto: "A ponte de pedra range ameaçadoramente sob seus pés, suas fundações abaladas por séculos de abandono. Fissuras profundas percorrem sua extensão, e você pode ouvir o eco do vazio abaixo. No ponto central da travessia, duas figuras encapuzadas emergem das sombras como espectros materializados. Seus mantos esfarrapados ondulam sem vento, e você pode sentir o frio sobrenatural que emana de suas presenças. Eles murmuram em um dialeto antigo, palavras que fazem o ar vibrar com energia sombria. Quando percebem sua aproximação, param abruptamente. Capuzes se voltam em sua direção, revelando apenas escuridão onde deveriam estar rostos. O confronto é inevitável.",
         opcoes: [
-          { texto: "Tentar dialogar (carisma)", secao: 6, teste: "carisma", dificuldade: 15 },
-          { texto: "Atacar os cultistas antes que reajam", batalha: "cultista-sombra,cultista-sombra", vitoria: 7, derrota: 30 },
-          { texto: "Recuar e procurar rota alternativa", secao: 8 }
+          { texto: "Tentar estabelecer comunicação pacífica", secao: 6, teste: "carisma", dificuldade: 15 },
+          { texto: "Atacar antes que possam reagir", batalha: "cultista-sombra,cultista-sombra", vitoria: 7, derrota: 30 },
+          { texto: "Recuar e buscar rota alternativa", secao: 8 }
         ]
       },
 
       6: {
-        texto: "Seu tom firme e uma menção à 'Coroa' cria hesitação. Um dos cultistas recua; o outro rosna. Eles não confiam facilmente.",
+        texto: "Você ergue as mãos em gesto de paz, sua voz ecoando pela ponte: 'Não venho como inimigo. Busco a Coroa de Ferro.' As palavras causam um efeito imediato - um dos cultistas recua visivelmente, enquanto o outro emite um rosnar gutural que ecoa de forma impossível. O primeiro sussurra algo em sua língua sombria, e você capta fragmentos: '...buscador... como os outros...' Há hesitação em seus movimentos, como se estivessem divididos entre atacar e fugir. A menção da Coroa claramente os perturbou, mas a desconfiança ainda domina suas ações. Você percebe que tem uma janela de oportunidade antes que decidam agir.",
         opcoes: [
-          { texto: "Conseguir informação com persuasão", secao: 11, teste: "carisma", dificuldade: 13 },
-          { texto: "Enganar e afirmar que você traz oferta", secao: 10, teste: "habilidade", dificuldade: 14 },
-          { texto: "Atacar enquanto um hesita", batalha: "cultista-sombra", vitoria: 7, derrota: 30 }
+          { texto: "Pressionar com mais informações sobre a Coroa", secao: 11, teste: "carisma", dificuldade: 13 },
+          { texto: "Fingir ser um enviado com oferendas", secao: 10, teste: "habilidade", dificuldade: 14 },
+          { texto: "Aproveitar a hesitação para atacar", batalha: "cultista-sombra", vitoria: 7, derrota: 30 }
         ]
       },
 
       7: {
-        texto: "Após o confronto, você encontra no bolso de um cultista um mapa parcial da Fortaleza e um frasco com um líquido escuro.",
+        texto: "O silêncio retorna à ponte após o confronto. Os corpos dos cultistas se dissolvem em fumaça negra, deixando apenas seus pertences materiais. Vasculhando os restos, você encontra um mapa parcial da Fortaleza, desenhado em pergaminho que parece feito de pele humana. As anotações estão em múltiplas línguas, algumas das quais você reconhece como dialetos arcanos. Há também um frasco de vidro escuro contendo um líquido que se move por conta própria, brilhando com uma luz sinistra. O mapa revela passagens secretas e câmaras ocultas, informações que poderiam ser vitais para navegar pelos perigos à frente.",
         efeitos: [{ tipo: "item", item: "mapa-parcial" }, { tipo: "item", item: "frasco-escuro" }],
         opcoes: [
-          { texto: "Seguir pelo portão principal", secao: 12 },
-          { texto: "Investigar o frasco com cautela", secao: 14, teste: "magia", dificuldade: 12 }
+          { texto: "Estudar o mapa e seguir pelo portão principal", secao: 12 },
+          { texto: "Investigar o frasco misterioso com cautela", secao: 14, teste: "magia", dificuldade: 12 }
         ]
       },
 
       8: {
-        texto: "Entre os escombros você acha três tochas apagadas e um anel simples com entalhes aquáticos. As brasas parecem ter sido arrancadas das tochas.",
+        texto: "Os escombros oferecem abrigo temporário do vento cortante. Entre as pedras caídas, você descobre os restos de uma antiga fogueira - três tochas cuidadosamente arranjadas, suas brasas há muito extintas, mas a madeira ainda preservada por algum encantamento. Próximo a elas, meio enterrado na terra, brilha um anel simples gravado com símbolos aquáticos que parecem fluir como água real. As tochas foram claramente preparadas por alguém que esperava retornar, mas nunca o fez. O anel pulsa com magia elemental, sugerindo que pertenceu a um mago especializado em magias aquáticas. Você se pergunta que destino teve seu antigo portador.",
         efeitos: [{ tipo: "item", item: "tochas-apagadas" }, { tipo: "item", item: "anel-aquatico" }],
         opcoes: [
           { texto: "Amarrar as tochas no cinto e prosseguir", secao: 12 },
-          { texto: "Vender o anel para um mercador (mais tarde)", secao: 5 }
+          { texto: "Retornar à ponte principal", secao: 5 }
         ]
       },
 
       9: {
-        texto: "Ao sondar o medalhão com arcanismo, você sente uma faísca — uma visão curta da Sala da Coroa. Algo observa: o Velho da Pedra. Você fica tonto.",
+        texto: "Concentrando sua energia mágica no medalhão, você sente uma conexão se formar. Visões fragmentadas invadem sua mente: uma câmara circular banhada em luz dourada, uma coroa flutuando no ar, e uma figura de pedra observando tudo com olhos que brilham como estrelas. A visão é intensa demais - você sente como se sua consciência fosse puxada através do tempo e espaço. Por um momento aterrorizante, você tem certeza de que a figura de pedra - o Velho da Pedra, sussurra uma voz em sua mente - está olhando diretamente para você através da visão. A conexão se rompe abruptamente, deixando-o tonto e com uma dor de cabeça latejante.",
         efeitos: [{ tipo: "energia", valor: -1 }],
         opcoes: [
-          { texto: "Continuar com cautela", secao: 12 },
-          { texto: "Tentar usar a visão para traçar um caminho (magia)", secao: 13, teste: "magia", dificuldade: 16 }
+          { texto: "Prosseguir com cautela redobrada", secao: 12 },
+          { texto: "Tentar usar a visão para mapear um caminho", secao: 13, teste: "magia", dificuldade: 16 }
         ]
       },
 
       10: {
-        texto: "Seu ardil funciona: um dos cultistas aceita o frasco em troca de passagem. O líquido é venenoso; você evita contato com ele.",
+        texto: "Sua performance é convincente. Retirando o frasco escuro, você o oferece como 'tributo aos guardiões da Fortaleza'. O cultista hesitante estende uma mão esquelética, aceitando a oferenda com algo que poderia ser gratidão. Ele sussurra palavras em sua língua sombria antes de se afastar, permitindo sua passagem. Seu companheiro o segue relutantemente. Quando estão longe, você percebe que o líquido no frasco era claramente venenoso - as bordas do vidro onde o cultista tocou agora mostram sinais de corrosão. Você evitou um confronto, mas também entregou uma arma potencial.",
         efeitos: [{ tipo: "item", item: "frasco-veneno" }],
         opcoes: [
-          { texto: "Seguir para dentro da fortaleza", secao: 12 },
-          { texto: "Roubar mais pertences e fugir", secao: 31 }
+          { texto: "Seguir rapidamente para o interior da fortaleza", secao: 12 },
+          { texto: "Tentar seguir os cultistas discretamente", secao: 31 }
         ]
       },
 
       11: {
-        texto: "Com cuidado, extrai dos cultistas que algo se move sob a muralha: servos corrompidos que guardam a entrada subterrânea. Eles temem a 'Coroa'.",
+        texto: "Sua persistência diplomática rende frutos. O cultista mais receptivo começa a falar em um comum quebrado: 'Outros... vieram antes... todos falharam... Servos de pedra... guardam entrada... abaixo da terra...' Ele aponta para uma seção da muralha onde as pedras parecem diferentes das outras. 'Eles... temem a Coroa... como nós... Poder demais... para mortais...' Suas palavras são entrecortadas por tremores de medo. O outro cultista puxa seu companheiro, claramente desconfortável com a conversa, mas você conseguiu informações valiosas sobre uma entrada alternativa e a natureza dos guardiões que a protegem.",
         opcoes: [
-          { texto: "Ir para a entrada subterrânea indicada", secao: 16 },
-          { texto: "Ir pelo pátio principal e procurar sinais", secao: 12 }
+          { texto: "Seguir a dica sobre a entrada subterrânea", secao: 16 },
+          { texto: "Agradecer e ir pelo pátio principal", secao: 12 }
         ]
       },
 
       12: {
-        texto: "O pátio principal range. Estátuas rachadas observam você. Um som metálico vem do subterrâneo — algo responde ao som do medalhão.",
+        texto: "O pátio principal da Fortaleza é um cemitério de ambições passadas. Estátuas quebradas de antigos heróis observam sua passagem com olhos de pedra rachados, suas expressões congeladas em eternos gritos silenciosos. O chão é um mosaico de pedras soltas e metal retorcido, cada passo produzindo ecos que parecem despertar memórias adormecidas. De algum lugar nas profundezas abaixo de seus pés, um som metálico ressoa - como se algo gigantesco estivesse se movendo em resposta ao medalhão em sua posse. As torres ao redor se erguem como sentinelas mortas, suas janelas vazias como órbitas oculares. Você sente que está sendo observado por forças invisíveis.",
         opcoes: [
-          { texto: "Procurar entrada subterrânea (mapa parcial ajuda)", secao: 16, requer: "mapa-parcial" },
-          { texto: "Subir na torre para observar (teste habilidade)", secao: 18, teste: "habilidade", dificuldade: 13 },
-          { texto: "Explorar as celas vazias", secao: 20 }
+          { texto: "Procurar a entrada subterrânea usando o mapa", secao: 16, requer: "mapa-parcial" },
+          { texto: "Subir na torre mais alta para reconhecimento", secao: 18, teste: "habilidade", dificuldade: 13 },
+          { texto: "Explorar as antigas celas da prisão", secao: 20 }
         ]
       },
 
       13: {
-        texto: "Sua leitura mágica do selo revela uma pista: a Coroa exige 'Força, Selo e Voz'. Você anota isso mentalmente antes que a visão desvaneça.",
+        texto: "Forçando sua mente através da dor residual da visão, você consegue extrair mais detalhes. As imagens se reorganizam em sua consciência: a Coroa não é apenas um objeto de poder, mas um teste. Três elementos são necessários - Força, Selo e Voz - cada um representando um aspecto da alma humana. Você vê fragmentos de rituais antigos, palavras de poder escritas em línguas mortas, e compreende que a jornada até a Coroa é tanto física quanto espiritual. A informação se cristaliza em sua mente como conhecimento arcano, mas você sente que pagou um preço por essa sabedoria prematura.",
         efeitos: [{ tipo: "item", item: "nota-selo" }],
         opcoes: [
-          { texto: "Prosseguir ao subterrâneo", secao: 16 },
-          { texto: "Guardar a nota e explorar a torre", secao: 18 }
+          { texto: "Usar o conhecimento para ir direto ao subterrâneo", secao: 16 },
+          { texto: "Explorar a torre para confirmar as visões", secao: 18 }
         ]
       },
 
       14: {
-        texto: "O frasco revela um óleo que, aplicado a uma lâmina, queima substâncias corruptas. Pode ser útil contra criaturas de pedra.",
+        texto: "Concentrando-se no frasco, você sente a magia sombria que permeia o líquido. Não é apenas veneno - é algo muito mais específico. O líquido foi destilado de essências corruptoras, projetado para dissolver substâncias mágicas corrompidas. Aplicado a uma lâmina, ele poderia ser devastador contra criaturas de pedra animada ou construtos mágicos. A descoberta é valiosa, mas você também percebe que o líquido é instável - usar incorretamente poderia resultar em consequências desastrosas. O frasco pulsa com uma luz sinistra, como se estivesse ansioso para cumprir seu propósito destrutivo.",
         efeitos: [{ tipo: "item", item: "oleo-corrosivo" }],
         opcoes: [
-          { texto: "Guardar o óleo e entrar na fortaleza", secao: 12 },
-          { texto: "Testar o óleo em uma amostra (teste sorte)", secao: 21, teste: "sorte", dificuldade: 13 }
+          { texto: "Guardar cuidadosamente e entrar na fortaleza", secao: 12 },
+          { texto: "Testar o óleo em uma pequena amostra", secao: 21, teste: "sorte", dificuldade: 13 }
         ]
       },
 
       15: {
-        texto: "Você encontra uma adega onde um guerreiro morto segura uma espada com inscrições. A lâmina parece familiar — chama-se Espada Ferrugem, mas há runas de restauração.",
+        texto: "A adega antiga exala o aroma de vinhos há muito evaporados e madeira apodrecida. No centro da câmara, um guerreiro esquelético permanece sentado em uma cadeira de pedra, ainda vestindo uma armadura que um dia foi magnífica. Suas mãos ósseas seguram uma espada cuja lâmina, apesar da ferrugem que a cobre, ainda pulsa com poder latente. Runas de restauração brilham fracamente ao longo do fio da espada, sugerindo que sua deterioração é apenas superficial. Uma placa de metal aos pés do guerreiro identifica a arma: 'Espada Ferrugem - Que desperta quando a necessidade é grande.' Você sente que esta lâmina tem uma história própria, aguardando o momento certo para revelar seu verdadeiro poder.",
         efeitos: [{ tipo: "item", item: "espada-ferrugem" }],
         opcoes: [
-          { texto: "Empunhar a espada", secao: 17 },
-          { texto: "Levar a espada e manter distância", secao: 20 }
+          { texto: "Empunhar a espada com respeito", secao: 17 },
+          { texto: "Levar a espada mas manter distância", secao: 20 }
         ]
       },
 
       16: {
-        texto: "A entrada subterrânea é uma escada íngreme. O ar fica frio — algo respira nas profundezas. No início da escada, três formas se erguem: servos de pedra corrompidos.",
+        texto: "A entrada subterrânea se abre como uma boca faminta nas profundezas da terra. Degraus de pedra negra descem em espiral, desaparecendo na escuridão absoluta. O ar que sobe das profundezas é gelado e carrega o cheiro de terra antiga e algo mais - uma presença viva que respira nas sombras. Quando você coloca o pé no primeiro degrau, ecos distantes respondem, como se algo gigantesco tivesse despertado lá embaixo. Três formas começam a se materializar na escuridão: servos de pedra corrompidos, seus olhos brilhando com luz malévola. Eles se movem com propósito mortal, bloqueando sua descida. A batalha nas escadas será perigosa - um passo em falso poderia significar uma queda fatal.",
         opcoes: [
-          { texto: "Enfrentar as formas na escada", batalha: "servo-pedra,servo-pedra", vitoria: 19, derrota: 30 },
-          { texto: "Usar o óleo corrosivo na lâmina antes de descer", secao: 19, requer: "oleo-corrosivo" },
-          { texto: "Recusar e voltar ao pátio", secao: 12 }
+          { texto: "Enfrentar os servos na escada estreita", batalha: "servo-pedra,servo-pedra", vitoria: 19, derrota: 30 },
+          { texto: "Aplicar óleo corrosivo na lâmina primeiro", secao: 19, requer: "oleo-corrosivo" },
+          { texto: "Recuar e buscar outra entrada", secao: 12 }
         ]
       },
 
       17: {
-        texto: "Ao empunhar a Espada Ferrugem, você sente um peso; ela parece reagir ao medalhão. Força +1 momentânea.",
+        texto: "No momento em que seus dedos se fecham ao redor do punho da Espada Ferrugem, uma transformação ocorre. A ferrugem se desprende como escamas mortas, revelando uma lâmina de aço puro que brilha com luz própria. Poder flui através de seus braços, e você sente sua força física aumentar temporariamente. A espada vibra em harmonia com o medalhão, como se fossem partes de um conjunto maior. Runas antigas aparecem na lâmina, pulsando com energia restauradora. Você compreende instintivamente que esta não é apenas uma arma, mas uma chave - uma das três necessárias para alcançar a Coroa. O guerreiro morto parece sorrir em aprovação.",
         efeitos: [{ tipo: "energia", valor: 2 }, { tipo: "item", item: "espada-ferrugem" }],
         opcoes: [
-          { texto: "Testar a espada contra um manequim (teste habilidade)", secao: 22, teste: "habilidade", dificuldade: 12 },
-          { texto: "Seguir para a escada subterrânea", secao: 16 }
+          { texto: "Testar a espada em um manequim de treino", secao: 22, teste: "habilidade", dificuldade: 12 },
+          { texto: "Seguir imediatamente para o subterrâneo", secao: 16 }
         ]
       },
 
       18: {
-        texto: "Subir à torre oferece vista: a Fortaleza abriga um salão central com cinco pilares e uma abertura que leva às catacumbas. Você nota figuras movendo-se além do portão sul.",
+        texto: "A subida pela torre é traiçoeira, com degraus quebrados e cordas podres, mas a vista do topo vale o risco. A Fortaleza se revela em toda sua complexidade: um labirinto de pátios conectados, câmaras ocultas, e no centro, um salão principal dominado por cinco pilares massivos. Uma abertura circular no chão do salão principal leva às catacumbas - claramente o caminho para os níveis mais profundos. Ao sul, você nota movimento: figuras encapuzadas patrulhando uma área que o mapa não mostrava. Há mais cultistas aqui do que você imaginava, e eles parecem estar protegendo algo específico. A informação estratégica que você ganhou pode ser crucial para evitar emboscadas.",
         opcoes: [
-          { texto: "Marcar a posição e descer pela escada", secao: 16 },
-          { texto: "Tentar ser furtivo e contornar o pátio (teste habilidade)", secao: 24, teste: "habilidade", dificuldade: 14 }
+          { texto: "Descer e ir direto para a escada subterrânea", secao: 16 },
+          { texto: "Tentar contornar os patrulheiros furtivamente", secao: 24, teste: "habilidade", dificuldade: 14 }
         ]
       },
 
       19: {
-        texto: "Com ou sem óleo, você avança e derrota as formas de pedra. No chão, um pequeno pergaminho sussurra em uma língua antiga.",
+        texto: "A batalha contra os servos de pedra é brutal mas vitoriosa. Seus golpes, potencializados pelo óleo corrosivo ou pela determinação pura, racham suas formas rochosas até que se desfazem em cascalho. No silêncio que se segue, você nota algo que os servos estavam guardando: um pequeno pergaminho enrolado, selado com cera negra. Quando quebra o selo, palavras em uma língua antiga começam a sussurrar no ar ao redor, como se o próprio pergaminho estivesse vivo. As palavras são hipnóticas, quase sedutoras, prometendo conhecimento proibido para aqueles corajosos o suficiente para escutar. Você sente que este pergaminho contém segredos que poderiam ser tanto uma bênção quanto uma maldição.",
         efeitos: [{ tipo: "item", item: "pergaminho-sussurro" }],
         opcoes: [
-          { texto: "Ler o pergaminho (magia)", secao: 23, teste: "magia", dificuldade: 14 },
-          { texto: "Guardar o pergaminho e seguir adiante", secao: 25 }
+          { texto: "Tentar decifrar o pergaminho imediatamente", secao: 23, teste: "magia", dificuldade: 14 },
+          { texto: "Guardar o pergaminho e continuar descendo", secao: 25 }
         ]
       },
 
       20: {
-        texto: "As celas guardam poucos prisioneiros—apenas ossos e formas de roupas. Porém, alguém deixou uma bolsa com moedas e um mapa rasgado do subsolo.",
+        texto: "As antigas celas da prisão contam histórias silenciosas de sofrimento e desespero. A maioria contém apenas ossos e trapos apodrecidos, mas uma cela no final do corredor revela um tesouro inesperado. Alguém - talvez um prisioneiro com conhecimento arcano - escondeu uma bolsa de couro contendo moedas de ouro antigo e um mapa detalhado do subsolo da torre. As moedas são de uma época anterior à construção da Fortaleza, sugerindo que este lugar tem uma história muito mais longa do que aparenta. O mapa mostra câmaras secretas e passagens ocultas, incluindo o que parece ser uma rota direta para o coração da Fortaleza. Você se pergunta que prisioneiro possuía tal conhecimento.",
         efeitos: [{ tipo: "item", item: "moedas-antigas" }, { tipo: "item", item: "mapa-torre" }],
         opcoes: [
-          { texto: "Levar o mapa e seguir para o subterrâneo", secao: 16 },
-          { texto: "Investigar as celas mais a fundo (teste sorte)", secao: 21, teste: "sorte", dificuldade: 12 }
+          { texto: "Usar o mapa para navegar ao subterrâneo", secao: 16 },
+          { texto: "Investigar mais profundamente as celas", secao: 21, teste: "sorte", dificuldade: 12 }
         ]
       },
 
       21: {
-        texto: "Sua sorte lhe dá uma pista valiosa: uma inscrição no muro que descreve uma câmara de provação. A inscrição menciona três chaves — Espada, Medalhão e a 'Voz'.",
+        texto: "Sua persistência em explorar é recompensada com uma descoberta extraordinária. Em uma cela aparentemente vazia, você encontra inscrições gravadas na parede de pedra - não com ferramentas, mas com magia pura. As palavras brilham fracamente quando tocadas, revelando uma profecia sobre a Coroa: 'Três chaves abrem o caminho: a Espada que corta ilusões, o Medalhão que preserva memórias, e a Voz que desperta os adormecidos. Somente quando unidos em propósito puro, o guardião final se revelará.' A inscrição é assinada com um símbolo que você reconhece dos textos arcanos - a marca de um mago de grande poder. Este conhecimento pode ser a diferença entre sucesso e fracasso em sua busca.",
         efeitos: [{ tipo: "item", item: "inscricao-provacoes" }],
         opcoes: [
-          { texto: "Anotar mentalmente e seguir", secao: 25 },
-          { texto: "Procurar sinais da 'Voz' pela torre", secao: 18 }
+          { texto: "Memorizar cada palavra e prosseguir", secao: 25 },
+          { texto: "Procurar mais pistas sobre a 'Voz' na torre", secao: 18 }
         ]
       },
 
       22: {
-        texto: "O teste mostra que você domina a lâmina: a Espada Ferrugem responde bem. Você ganha confiança e percebe uma inscrição na guarda.",
+        texto: "Testando a Espada Ferrugem contra um manequim de treino abandonado, você fica impressionado com sua resposta. A lâmina corta o ar com um som musical, e quando atinge o alvo, runas brilham ao longo de seu fio. Você sente uma conexão crescente com a arma, como se ela estivesse aprendendo seu estilo de luta. Na guarda da espada, símbolos que você não havia notado antes começam a aparecer - uma inscrição em língua élfica antiga que pulsa com luz própria. Sua confiança com a arma aumenta significativamente, e você percebe que dominar esta espada pode ser crucial para os desafios à frente. A lâmina parece ansiosa por ação real.",
         efeitos: [{ tipo: "energia", valor: 1 }, { tipo: "item", item: "guarda-runa" }],
         opcoes: [
-          { texto: "Tentar decifrar a runa depois (magia)", secao: 23, teste: "magia", dificuldade: 13 },
-          { texto: "Seguir para as catacumbas", secao: 25 }
+          { texto: "Tentar decifrar a runa élfica", secao: 23, teste: "magia", dificuldade: 13 },
+          { texto: "Seguir confiante para as catacumbas", secao: 25 }
         ]
       },
 
       23: {
-        texto: "Ao decifrar o pergaminho ou a runa, uma voz baixa sussurra uma palavra: 'Serafim'. Uma sensação de vigilância cresce.",
+        texto: "Concentrando sua energia mágica no pergaminho ou na runa, palavras antigas começam a se formar em sua mente. Uma voz sussurra diretamente em sua consciência, falando uma única palavra de poder: 'Serafim.' O nome ressoa através de seu ser como um sino de bronze, carregando peso e autoridade que transcendem a compreensão mortal. Você sente que esta palavra é mais que um nome - é uma chave, um comando, uma invocação. Mas com o conhecimento vem uma sensação crescente de que você está sendo observado. Algo nas profundezas da Fortaleza despertou para sua presença, atraído pelo poder que você acabou de despertar. O ar ao redor parece vibrar com expectativa.",
         efeitos: [{ tipo: "item", item: "palavra-serafim" }],
         opcoes: [
           { texto: "Guardar a palavra e prosseguir com cautela", secao: 25 },
-          { texto: "Vociferar a palavra (teste carisma) para testar reação", secao: 26, teste: "carisma", dificuldade: 16 }
+          { texto: "Testar o poder da palavra imediatamente", secao: 26, teste: "carisma", dificuldade: 16 }
         ]
       },
 
       24: {
-        texto: "Seu movimento furtivo falha por pouco. Um vigia ouve ruído e chama dois guardas de pedra. Você tem que lutar.",
+        texto: "Sua tentativa de movimento furtivo quase funciona. Você consegue evitar a maioria dos patrulheiros, deslizando entre as sombras como um fantasma. Mas no último momento, um fragmento de pedra solta se desprende sob seu pé, criando um eco que ressoa pelo pátio silencioso. Um vigia encapuzado ergue a cabeça, seus sentidos aguçados detectando a perturbação. Ele emite um chamado gutural que desperta dois guardiões de pedra adormecidos. Estas criaturas são diferentes dos servos que você enfrentou antes - maiores, mais elaboradamente esculpidas, com runas de poder brilhando em suas superfícies rochosas. Eles se movem com propósito letal, bloqueando qualquer rota de fuga.",
         batalha: "guardiao-pedra,guardiao-pedra",
         vitoria: 19,
         derrota: 30
       },
 
       25: {
-        texto: "Você desce mais profundamente e encontra uma antecâmara com três portas: Ferro, Argila e Sombras. Cada porta exala promessa e perigo.",
+        texto: "As profundezas da Fortaleza revelam sua verdadeira natureza labiríntica. Você se encontra em uma antecâmara circular, iluminada por cristais que brilham com luz fria e azulada. Três portas se erguem diante de você, cada uma marcada com símbolos distintos e exalando uma aura diferente. A Porta de Ferro pulsa com energia bruta, suas dobradiças gemendo com poder contido. A Porta de Argila sussurra com inteligência antiga, coberta de enigmas e símbolos matemáticos. A Porta das Sombras parece absorver a luz ao redor, prometendo segredos ocultos para aqueles corajosos o suficiente para abraçar a escuridão. Você sente que cada porta testará um aspecto diferente de sua alma, e a escolha que fizer determinará não apenas seu caminho, mas sua transformação.",
         opcoes: [
-          { texto: "Porta de Ferro (poder bruto)", secao: 27 },
-          { texto: "Porta de Argila (engenho e truque)", secao: 28 },
-          { texto: "Porta das Sombras (stealth/engano)", secao: 29 }
+          { texto: "Escolher a Porta de Ferro - o caminho da força", secao: 27 },
+          { texto: "Escolher a Porta de Argila - o caminho da sabedoria", secao: 28 },
+          { texto: "Escolher a Porta das Sombras - o caminho do mistério", secao: 29 }
         ]
       },
 
       26: {
-        texto: "Gritar a palavra 'Serafim' provoca tremor: uma figura angelical de pedra abre os olhos e recua. Sua tentativa quase se volta contra você.",
+        texto: "Impulsionado pela curiosidade e confiança, você pronuncia a palavra 'Serafim' em voz alta. O efeito é imediato e aterrorizante. Sua voz ecoa através das câmaras com poder amplificado, e em resposta, uma figura angelical de pedra - que você não havia notado antes - abre olhos que brilham como estrelas. A estátua se move com graça fluida, recuando de você com algo que poderia ser medo ou respeito. Mas o poder que você invocou é instável, selvagem. Energia crua percorre seu corpo, queimando seus nervos e deixando-o temporariamente enfraquecido. Você compreende que pronunciar nomes de poder sem compreender completamente suas implicações é extremamente perigoso.",
         efeitos: [{ tipo: "energia", valor: -2 }],
         opcoes: [
-          { texto: "Aproveitar o recuo para avançar", secao: 25 },
-          { texto: "Retroceder e planejar diferente", secao: 12 }
+          { texto: "Aproveitar o recuo da estátua para avançar", secao: 25 },
+          { texto: "Recuar e repensar sua abordagem", secao: 12 }
         ]
       },
 
       27: {
-        texto: "A porta de Ferro exige força. Um mecanismo testará sua vontade. Uma alavanca pesada aguarda — coragem e força serão necessárias.",
+        texto: "A Porta de Ferro se abre para uma câmara que testa os limites da resistência física e mental. No centro da sala, uma alavanca massiva de ferro negro se ergue do chão, conectada a um mecanismo complexo de engrenagens e contrapesos. Runas de força brilham ao longo de sua superfície, pulsando em ritmo com seu batimento cardíaco. O ar é denso com o peso da expectativa - você sente que esta não é apenas uma prova de força bruta, mas de determinação e vontade. A alavanca parece impossível de mover por meios normais, mas você percebe que há mais neste teste do que aparenta. Coragem e criatividade podem ser tão importantes quanto músculos.",
         opcoes: [
-          { texto: "Forçar a alavanca (teste habilidade)", secao: 32, teste: "habilidade", dificuldade: 15 },
-          { texto: "Procurar contrapesos na sala (teste sorte)", secao: 33, teste: "sorte", dificuldade: 13 },
-          { texto: "Voltar e escolher outra porta", secao: 25 }
+          { texto: "Aplicar força bruta pura na alavanca", secao: 32, teste: "habilidade", dificuldade: 15 },
+          { texto: "Procurar por contrapesos ou mecanismos ocultos", secao: 33, teste: "sorte", dificuldade: 13 },
+          { texto: "Reconsiderar e escolher outra porta", secao: 25 }
         ]
       },
 
       28: {
-        texto: "A porta de Argila abre para um salão de artifícios e armadilhas inteligentes. Você ouve engrenagens e sente que resolver enigmas será útil.",
+        texto: "A Porta de Argila revela um salão de maravilhas intelectuais e armadilhas engenhosas. As paredes são cobertas com diagramas matemáticos, fórmulas alquímicas e quebra-cabeças mecânicos que se movem e se reconfiguram constantemente. O chão é um tabuleiro gigante de xadrez, onde cada movimento errado pode ativar uma armadilha mortal. Engrenagens douradas giram no teto, criando padrões hipnóticos que desafiam a mente a encontrar ordem no caos. O ar vibra com energia intelectual, e você sente que resolver os enigmas desta câmara exigirá não apenas inteligência, mas intuição e criatividade. Cada puzzle resolvido parece desbloquear o próximo nível de complexidade.",
         opcoes: [
-          { texto: "Tentar desarmar armadilha (teste habilidade)", secao: 32, teste: "habilidade", dificuldade: 14 },
-          { texto: "Usar pergaminho-sussurro para achar padrões (magia)", secao: 31, teste: "magia", dificuldade: 13 },
-          { texto: "Retornar e escolher outra porta", secao: 25 }
+          { texto: "Tentar desarmar as armadilhas metodicamente", secao: 32, teste: "habilidade", dificuldade: 14 },
+          { texto: "Usar o pergaminho-sussurro para revelar padrões", secao: 31, teste: "magia", dificuldade: 13 },
+          { texto: "Retornar e escolher uma porta diferente", secao: 25 }
         ]
       },
 
       29: {
-        texto: "A porta das Sombras conduz a corredores escuros onde ecos confundem os sentidos. A escuridão parece viva; algo se move e ataca: sombras ambulantes.",
+        texto: "A Porta das Sombras conduz a corredores onde a própria escuridão parece viva e malévola. Suas tochas se apagam inexplicavelmente, e você é forçado a navegar por instinto e tato. Ecos distorcidos confundem seus sentidos - passos que não são seus, sussurros em línguas mortas, risos que vêm de todas as direções ao mesmo tempo. A escuridão não é apenas ausência de luz, mas uma presença ativa que tenta desorientá-lo e quebrá-lo psicologicamente. Então, sem aviso, formas sombrias se materializam ao seu redor - sombras errantes que se alimentam de medo e desespero. Elas se movem como fumaça líquida, atacando não apenas seu corpo, mas sua própria essência espiritual.",
         batalha: "sombra-errante,sombra-errante",
         vitoria: 31,
         derrota: 30
       },
 
       30: {
-        texto: "Você sucumbe às forças aqui — seu corpo não resiste à corrupção ou ao golpe mortal. Sua jornada termina nas cinzas da Fortaleza.",
+        texto: "A escuridão o consome completamente. Seja pelas lâminas dos cultistas, pelos punhos esmagadores dos guardiões de pedra, ou pela essência vampírica das sombras errantes, sua força vital se esvai como areia entre os dedos. Suas últimas visões são das ruínas da Fortaleza de Ferro se fechando ao seu redor como uma tumba. A Coroa permanecerá selada, aguardando outro buscador mais preparado ou mais afortunado. Sua jornada termina nas cinzas de ambições antigas, mais uma alma perdida nos corredores do poder. As pedras guardarão o segredo de seu fracasso por toda a eternidade.",
         efeitos: [{ tipo: "energia", valor: -10 }],
         final: true
       },
 
       31: {
-        texto: "Após confronto ou resolução, você encontra uma pequena câmara com 5 itens moldados: um medalhão, um pergaminho, um mapa, um fragmento de espada e um amuleto.",
+        texto: "Após superar os desafios através de combate, astúcia ou magia, você descobre uma câmara secreta oculta atrás de uma parede falsa. Esta sala circular é claramente um santuário, preservado por séculos de magia protetora. Cinco pedestais de mármore branco se erguem do chão, cada um sustentando um artefato diferente: um medalhão que brilha com luz interior, um pergaminho que se desenrola sozinho revelando mapas em constante mudança, um mapa gravado em metal que mostra passagens secretas, um fragmento de espada que vibra com poder latente, e um amuleto em forma de urna que pulsa com energia protetora. Você sente que estes itens foram deixados aqui propositalmente, aguardando alguém digno de encontrá-los.",
         efeitos: [
           { tipo: "item", item: "medalhao-antigo" },
           { tipo: "item", item: "pergaminho-guia" },
@@ -329,45 +329,47 @@ const NARRATIVAS = {
           { tipo: "item", item: "amuleto-urna" }
         ],
         opcoes: [
-          { texto: "Tomar os itens e retornar ao corredor", secao: 25 },
-          { texto: "Estudar os itens (teste magia)", secao: 34, teste: "magia", dificuldade: 15 }
+          { texto: "Coletar todos os itens e retornar", secao: 25 },
+          { texto: "Estudar os itens magicamente antes de tocá-los", secao: 34, teste: "magia", dificuldade: 15 }
         ]
       },
 
       32: {
-        texto: "Sua perícia permite você superar a prova mecânica. Uma câmara se abre e revela um item único: um pergaminho de comando que murmura instruções.",
+        texto: "Sua abordagem metódica e determinada supera o desafio mecânico. Seja através de força pura, engenhosidade técnica, ou pura persistência, você consegue ativar o mecanismo antigo. Engrenagens rangem de volta à vida após séculos de dormência, e uma câmara secreta se abre com um suspiro de ar antigo. Dentro, sobre um altar de obsidiana, repousa um pergaminho único - o Pergaminho de Comando. Mesmo sem tocá-lo, você pode ouvir sussurros emanando do pergaminho, instruções em múltiplas línguas que parecem se adaptar ao seu entendimento. Este artefato claramente possui inteligência própria e poder para influenciar o mundo ao redor.",
         efeitos: [{ tipo: "item", item: "pergaminho-comando" }],
         opcoes: [
-          { texto: "Guardar o pergaminho e seguir", secao: 25 },
-          { texto: "Usar o pergaminho agora (magia)", secao: 34, teste: "magia", dificuldade: 14 }
+          { texto: "Guardar cuidadosamente o pergaminho", secao: 25 },
+          { texto: "Tentar ativar o pergaminho imediatamente", secao: 34, teste: "magia", dificuldade: 14 }
         ]
       },
 
       33: {
-        texto: "Sua sorte revela um contrapeso oculto; ao acioná-lo, a alavanca desta sala torna-se leve. Uma passagem se abre para uma antecâmara com inscrições da 'Voz'.",
+        texto: "Sua intuição o guia para descobrir um mecanismo oculto - um contrapeso secreto escondido atrás de uma pedra solta na parede. Quando acionado, o sistema de alavancas se reequilibra, tornando a tarefa impossível subitamente manejável. A alavanca se move com facilidade surpreendente, revelando que a verdadeira prova não era de força bruta, mas de sabedoria para encontrar soluções elegantes. Uma passagem secreta se abre, levando a uma antecâmara menor onde inscrições sobre a 'Voz' cobrem as paredes. Estas inscrições brilham com poder latente, sussurrando segredos sobre o terceiro elemento necessário para alcançar a Coroa de Ferro.",
         efeitos: [{ tipo: "item", item: "inscricao-voz" }],
         opcoes: [
-          { texto: "Ler a inscrição (carisma/magia)", secao: 34, teste: "magia", dificuldade: 13 },
-          { texto: "Guardar e prosseguir para a Porta de Sombras", secao: 29 }
+          { texto: "Estudar as inscrições sobre a Voz", secao: 34, teste: "magia", dificuldade: 13 },
+          { texto: "Memorizar as inscrições e continuar", secao: 29 }
         ]
       },
+
 
       34: {
-        texto: "Os itens e inscrições revelam fragmentos do ritual: a Coroa exige três chaves (Espada, Medalhão, Voz) e um teste de alma. Você sente o ápice se aproximando.",
-        opcoes: [
-          { texto: "Preparar-se e escolher uma porta com intenção", secao: 25 },
-          { texto: "Sair à superfície para reagrupar (pode render novo caminho)", secao: 12 }
-        ]
-      },
+  texto: "Combinando todos os artefatos e conhecimentos coletados, uma revelação se forma em sua mente como peças de um quebra-cabeça cósmico. Os itens ressoam entre si, criando uma sinfonia de poder que revela a verdade sobre a Coroa de Ferro: ela não é meramente um objeto de poder, mas um teste definitivo da alma. Três elementos são necessários - a Espada que representa Força, o Medalhão que simboliza Memória, e a Voz que encarna Vontade. Mas além disso, você compreende que a jornada em si é a verdadeira transformação. Cada desafio superado, cada escolha feita, moldou você para este momento. O ritual final aguarda, mas você sente que algo antigo e poderoso começou a despertar nas profundezas mais baixas da Fortaleza.",
+  opcoes: [
+    { texto: "Preparar-se mentalmente e buscar a câmara final", secao: 35 },
+    { texto: "Retornar à superfície para se reagrupar", secao: 12 }
+  ]
+},
 
-      35: {
-        texto: "No fundo da antecâmara, uma porta selada possui entalhe vazio para uma peça — a Próxima Câmara aguarda. Um eco profundo anuncia que algo começou a despertar acima.",
-        efeitos: [{ tipo: "energia", valor: -1 }],
-        opcoes: [
-          { texto: "Inserir um dos itens como teste (Espada/Medalhão/Palavra)", secao: 36 },
-          { texto: "Recuar e preparar melhor antes de prosseguir", secao: 12 }
-        ]
-      },
+35: {
+  texto: "No coração mais profundo da Fortaleza, você encontra uma porta diferente de todas as outras. Feita de metal negro que parece absorver luz, ela possui um entalhe circular no centro - claramente projetado para receber um dos artefatos em sua posse. Runas de poder percorrem sua superfície como veias de fogo frio, pulsando em ritmo com seu batimento cardíaco. Quando você se aproxima, a porta ressoa com um eco profundo que parece vir das próprias fundações da realidade. Algo imenso e antigo se move além desta barreira, aguardando sua decisão. Você sente que inserir qualquer item no entalhe será irreversível - o verdadeiro teste da Coroa de Ferro está prestes a começar.",
+  efeitos: [{ tipo: "energia", valor: -1 }],
+  opcoes: [
+    { texto: "Inserir o medalhão no entalhe", secao: 36 },
+    { texto: "Inserir a espada no entalhe", secao: 36 },
+    { texto: "Recuar e considerar outras opções", secao: 12 }
+  ]
+},
 
 36: {
   texto: "Ao inserir o medalhão no entalhe, a porta ressoa com um eco metálico. Ela se abre revelando uma câmara circular com cinco altares. No centro, uma figura de pedra desperta: o Velho da Pedra.",
@@ -1452,6 +1454,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
