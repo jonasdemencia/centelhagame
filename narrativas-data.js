@@ -89,6 +89,590 @@ Esta continuidade é ESSENCIAL para manter a imersão do jogador na narrativa.
 // Dados das narrativas
 const NARRATIVAS = {
 
+"vila-abandonada": {
+    id: "vila-abandonada",
+    titulo: "A Vila Abandonada",
+    secoes: {
+        1: {
+            texto: "A névoa matinal se dissipa lentamente enquanto você se aproxima dos restos da Vila de Pedravale. Casas de madeira apodrecida se erguem como dentes quebrados contra o céu cinzento, suas janelas vazias observando como olhos mortos. O silêncio é opressivo - nem mesmo o canto de pássaros quebra a quietude mortal. Suas botas fazem o único som, estalando sobre folhas secas e galhos quebrados. À sua frente, três caminhos se abrem: a rua principal que corta o centro da vila, um atalho pela lateral que contorna as casas maiores, e uma trilha que leva diretamente ao cemitério no alto da colina.",
+            opcoes: [
+                { texto: "Seguir pela rua principal da vila", secao: 2 },
+                { texto: "Tomar o atalho lateral pelas casas menores", secao: 5 },
+                { texto: "Ir diretamente ao cemitério na colina", secao: 8 }
+            ]
+        },
+
+        2: {
+            texto: "Seguindo pela rua principal, seus passos ecoam entre as fachadas deterioradas. As casas se inclinam umas contra as outras como bêbados procurando apoio, suas madeiras escurecidas pelo tempo e pela umidade. Você nota que algumas portas estão entreabertas, balançando suavemente com a brisa que sopra entre os edifícios. O cheiro de mofo e decomposição é forte aqui. De repente, um ruído seco vem de uma das casas à sua direita - como se algo pesado tivesse caído no chão. Sua mão instintivamente se move para a arma em seu cinto.",
+            opcoes: [
+                { texto: "Investigar o ruído na casa à direita", secao: 3 },
+                { texto: "Ignorar o som e continuar pela rua", secao: 4 },
+                { texto: "Parar e escutar atentamente por mais ruídos", secao: 6 }
+            ]
+        },
+
+        3: {
+            texto: "Investigando o ruído, você empurra cuidadosamente a porta da casa. Ela range nos gonzos enferrujados, abrindo para revelar um interior mergulhado em sombras. O cheiro de podridão é quase insuportável aqui. Seus olhos se ajustam à escuridão e você vê móveis cobertos por teias de aranha e uma espessa camada de poeira. No chão, uma pilha de tábuas podres que deve ter caído do teto explica o ruído. Mas algo mais chama sua atenção - pegadas recentes na poeira, definitivamente humanas, levando em direção aos fundos da casa.",
+            opcoes: [
+                { texto: "Seguir as pegadas até os fundos da casa", secao: 9 },
+                { texto: "Procurar por suprimentos na casa", secao: 10 },
+                { texto: "Sair imediatamente da casa", secao: 4 }
+            ]
+        },
+
+        4: {
+            texto: "Continuando pela rua principal, você passa por mais casas em ruínas. A vila parece ter sido abandonada há décadas, mas há sinais perturbadores de atividade recente - uma fogueira ainda fumegante em um dos pátios, roupas penduradas em um varal que balançam no vento. Você chega a uma praça central onde uma fonte seca se ergue, coberta de musgo e rachada. Ao redor da praça, quatro edifícios se destacam: uma igreja com sua torre desabada, uma taverna com a placa balançando, uma loja geral com as janelas tapadas, e o que parece ter sido a casa do prefeito.",
+            opcoes: [
+                { texto: "Explorar a igreja em ruínas", secao: 11 },
+                { texto: "Investigar a taverna abandonada", secao: 14 },
+                { texto: "Examinar a loja geral", secao: 17 }
+            ]
+        },
+
+        5: {
+            texto: "Tomando o atalho lateral, você caminha entre casas menores e mais modestas. Estas construções parecem ter resistido melhor ao tempo, suas estruturas de pedra ainda sólidas apesar do abandono. Você nota jardins selvagens onde vegetais ainda crescem sem cuidado, e poços que ainda contêm água limpa. É aqui que você ouve pela primeira vez - um gemido baixo e prolongado vindo de algum lugar próximo. O som é definitivamente humano, mas há algo errado nele, algo que faz sua pele se arrepiar.",
+            opcoes: [
+                { texto: "Seguir o som do gemido", secao: 12 },
+                { texto: "Procurar água e suprimentos nos jardins", secao: 13 },
+                { texto: "Evitar o som e contornar a área", secao: 4 }
+            ]
+        },
+
+        6: {
+            texto: "Parando para escutar atentamente, você fecha os olhos e aguça os ouvidos. O silêncio da vila é quebrado por sons sutis que você não havia notado antes: o ranger de madeira velha, o sussurro do vento através de janelas quebradas, e algo mais - passos lentos e arrastados vindo de algum lugar não muito distante. Os passos param quando você para, como se quem quer que seja também estivesse escutando. Um calafrio percorre sua espinha.",
+            opcoes: [
+                { texto: "Chamar em voz alta para identificar a presença", secao: 7 },
+                { texto: "Mover-se silenciosamente em direção aos passos", secao: 15, teste: "habilidade", dificuldade: 12 },
+                { texto: "Recuar lentamente para a entrada da vila", secao: 1 }
+            ]
+        },
+
+        7: {
+            texto: "Chamando em voz alta 'Há alguém aí?', sua voz ecoa entre os edifícios vazios. Por um momento, apenas o eco responde. Então, de várias direções ao mesmo tempo, você ouve respostas - gemidos baixos e guturais que definitivamente não são humanos normais. Sombras começam a se mover nas janelas das casas ao redor, e você percebe que cometeu um erro terrível. Você não está sozinho na vila, e o que quer que habite aqui agora sabe exatamente onde você está.",
+            opcoes: [
+                { texto: "Correr imediatamente para a praça central", secao: 4 },
+                { texto: "Procurar abrigo na casa mais próxima", secao: 3 },
+                { texto: "Ficar parado e preparar-se para o confronto", secao: 16 }
+            ]
+        },
+
+        8: {
+            texto: "Subindo diretamente ao cemitério na colina, você deixa a vila para trás e segue uma trilha íngreme entre árvores mortas. O cemitério de Pedravale se estende diante de você como um mar de lápides inclinadas e mausoléus desmoronados. Muitas sepulturas foram profanadas, com terra espalhada e caixões expostos. No centro do cemitério, um mausoléu maior que os outros permanece intacto, suas portas de ferro forjado ainda fechadas. Corvos observam de poleiros em cruzes quebradas, seus olhos negros seguindo cada um de seus movimentos.",
+            opcoes: [
+                { texto: "Examinar as sepulturas profanadas", secao: 18 },
+                { texto: "Ir diretamente ao mausoléu central", secao: 21 },
+                { texto: "Procurar por pistas entre as lápides", secao: 24 }
+            ]
+        },
+
+        9: {
+            texto: "Seguindo as pegadas até os fundos da casa, você encontra uma porta que leva a um pequeno porão. As pegadas descem os degraus de madeira apodrecida. O ar aqui embaixo é ainda mais viciado, carregado com o cheiro doce e enjoativo da carne em decomposição. Você ouve um ruído de mastigação vindo da escuridão à frente. Sua mão treme ligeiramente enquanto você considera suas opções.",
+            opcoes: [
+                { texto: "Descer ao porão para investigar", secao: 19 },
+                { texto: "Chamar para baixo para anunciar sua presença", secao: 20 },
+                { texto: "Sair silenciosamente da casa", secao: 4 }
+            ]
+        },
+
+        10: {
+            texto: "Procurando por suprimentos na casa, você vasculha cuidadosamente os cômodos. Na cozinha, encontra algumas latas de conserva ainda seladas, embora enferrujadas. Em um armário, descobre uma vela meio derretida e alguns fósforos em uma lata impermeável. Os suprimentos não são muito, mas podem ser úteis.",
+            efeitos: [{ tipo: "item", item: "lata-sardinha" }],
+            opcoes: [
+                { texto: "Continuar procurando por mais suprimentos", secao: 22 },
+                { texto: "Sair da casa e seguir pela rua", secao: 4 }
+            ]
+        },
+
+        11: {
+            texto: "Explorando a igreja em ruínas, você empurra as pesadas portas de madeira. Elas se abrem com um gemido prolongado, revelando um interior devastado. Bancos quebrados estão espalhados pelo chão, e o altar foi profanado com símbolos estranhos gravados na pedra. Vitrais coloridos jazem em cacos pelo chão, criando um mosaico macabro de cores. Mas o que mais chama sua atenção é o buraco no chão onde deveria estar o púlpito - uma abertura escura que desce para as profundezas.",
+            opcoes: [
+                { texto: "Descer pelo buraco no chão", secao: 25 },
+                { texto: "Examinar os símbolos no altar", secao: 26 },
+                { texto: "Procurar por itens úteis entre os destroços", secao: 27 }
+            ]
+        },
+
+        12: {
+            texto: "Seguindo o som do gemido, você se aproxima de uma pequena casa de pedra com a porta entreaberta. O gemido vem definitivamente de dentro, um som de dor e desespero que faz seu coração acelerar. Através da fresta da porta, você vê movimento - uma figura humana curvada sobre algo no chão. A figura está de costas para você, balançando lentamente para frente e para trás.",
+            opcoes: [
+                { texto: "Entrar na casa para ajudar", secao: 28 },
+                { texto: "Bater na porta antes de entrar", secao: 29 },
+                { texto: "Observar mais um pouco antes de agir", secao: 30 }
+            ]
+        },
+
+        13: {
+            texto: "Procurando água e suprimentos nos jardins abandonados, você encontra um poço com água ainda limpa e alguns vegetais que cresceram selvagens. Entre as plantas, você descobre uma pequena horta onde ainda crescem batatas e cenouras. É uma descoberta valiosa em um lugar tão desolado.",
+            efeitos: [{ tipo: "energia", valor: 2 }],
+            opcoes: [
+                { texto: "Coletar mais vegetais para a jornada", secao: 31 },
+                { texto: "Beber água e descansar um pouco", secao: 32 },
+                { texto: "Continuar explorando a vila", secao: 4 }
+            ]
+        },
+
+        14: {
+            texto: "Investigando a taverna abandonada, você empurra as portas duplas que rangem nos gonzos. O interior está mergulhado em penumbra, mas você pode distinguir mesas e cadeiras viradas, garrafas quebradas espalhadas pelo chão, e um balcão coberto de poeira. Atrás do balcão, prateleiras vazias se estendem até o teto. Há um cheiro residual de álcool e algo mais - algo orgânico e desagradável.",
+            opcoes: [
+                { texto: "Procurar por bebidas ou comida", secao: 33 },
+                { texto: "Examinar o andar superior da taverna", secao: 34 },
+                { texto: "Investigar o porão da taverna", secao: 35 }
+            ]
+        },
+
+        15: {
+            texto: "Movendo-se silenciosamente em direção aos passos, você consegue se aproximar sem ser detectado. Espiando ao redor de uma esquina, você vê uma figura humana cambaleando pela rua. Mas há algo terrivelmente errado com ela - seus movimentos são desajeitados e não naturais, e você pode ver que partes de sua carne estão apodrecendo. É um morto-vivo, um zumbi. E ele não está sozinho - você pode ver mais figuras similares emergindo de casas próximas.",
+            opcoes: [
+                { texto: "Atacar o zumbi mais próximo", batalha: "zumbi", vitoria: 36, derrota: 37 },
+                { texto: "Tentar contornar os zumbis silenciosamente", secao: 38, teste: "habilidade", dificuldade: 14 },
+                { texto: "Recuar lentamente", secao: 1 }
+            ]
+        },
+
+        16: {
+            texto: "Ficando parado e preparando-se para o confronto, você saca sua arma e aguarda. Não demora muito para que as primeiras figuras apareçam - zumbis em vários estágios de decomposição, cambaleando em sua direção com fome nos olhos mortos. Você conta pelo menos três deles se aproximando de direções diferentes.",
+            batalha: "zumbi,zumbi,zumbi",
+            vitoria: 39,
+            derrota: 37
+        },
+
+        17: {
+            texto: "Examinando a loja geral, você encontra as janelas tapadas com tábuas, mas a porta está destrancada. Dentro, prateleiras vazias se estendem em fileiras ordenadas, mas o chão está coberto de produtos espalhados e estragados. No fundo da loja, você nota uma seção que parece ter sido barricada recentemente.",
+            opcoes: [
+                { texto: "Investigar a área barricada", secao: 40 },
+                { texto: "Procurar por suprimentos úteis", secao: 41 },
+                { texto: "Examinar os registros da loja", secao: 42 }
+            ]
+        },
+
+        18: {
+            texto: "Examinando as sepulturas profanadas, você vê que foram abertas de dentro para fora - a terra foi empurrada para cima, não escavada de cima para baixo. Isso significa que os mortos se levantaram por conta própria. Entre os caixões quebrados, você encontra alguns objetos pessoais que podem ser úteis.",
+            efeitos: [{ tipo: "item", item: "corda" }],
+            opcoes: [
+                { texto: "Continuar examinando mais sepulturas", secao: 43 },
+                { texto: "Ir ao mausoléu central", secao: 21 },
+                { texto: "Descer de volta à vila", secao: 4 }
+            ]
+        },
+
+        19: {
+            texto: "Descendo ao porão para investigar, você encontra uma cena horrível. Uma figura humana - ou o que um dia foi humana - está devorando os restos de um animal. Quando ela percebe sua presença, vira-se lentamente, revelando um rosto em decomposição e olhos vazios. É um zumbi, e ele está entre você e a única saída.",
+            batalha: "zumbi",
+            vitoria: 44,
+            derrota: 37
+        },
+
+        20: {
+            texto: "Chamando para baixo para anunciar sua presença, você grita 'Olá, há alguém aí embaixo?'. A mastigação para imediatamente, seguida por um silêncio tenso. Então você ouve passos lentos e arrastados subindo as escadas. Uma figura emerge da escuridão - um zumbi com roupas esfarrapadas e carne apodrecendo.",
+            batalha: "zumbi",
+            vitoria: 44,
+            derrota: 37
+        },
+
+        21: {
+            texto: "Indo diretamente ao mausoléu central, você se aproxima da imponente estrutura de pedra. As portas de ferro forjado estão fechadas, mas não trancadas. Símbolos estranhos estão gravados na pedra, e você sente uma energia sinistra emanando do interior. Este lugar claramente tem importância especial.",
+            opcoes: [
+                { texto: "Abrir as portas e entrar no mausoléu", secao: 45 },
+                { texto: "Examinar os símbolos antes de entrar", secao: 46 },
+                { texto: "Procurar outra entrada", secao: 47 }
+            ]
+        },
+
+        22: {
+            texto: "Continuando a procurar por mais suprimentos, você encontra no sótão da casa uma pequena reserva escondida. Há mais algumas latas de comida e, surpreendentemente, munição para armas de fogo.",
+            efeitos: [{ tipo: "item", item: "municao-38" }],
+            opcoes: [
+                { texto: "Descer e sair da casa", secao: 4 },
+                { texto: "Procurar por armas também", secao: 48 }
+            ]
+        },
+
+        23: {
+            texto: "Procurando por armas, você encontra uma velha espingarda de caça em um armário trancado. Ela está em condições razoáveis e pode ser útil.",
+            opcoes: [
+                { texto: "Pegar a espingarda e sair", secao: 4 },
+                { texto: "Procurar por mais munição", secao: 49 }
+            ]
+        },
+
+        24: {
+            texto: "Procurando por pistas entre as lápides, você encontra inscrições que contam a história da vila. Aparentemente, uma praga misteriosa atingiu Pedravale há cerca de vinte anos, matando quase todos os habitantes. As datas nas lápides confirmam que a maioria morreu em um período muito curto.",
+            opcoes: [
+                { texto: "Investigar mais sobre a praga", secao: 50 },
+                { texto: "Ir ao mausoléu para mais respostas", secao: 21 },
+                { texto: "Descer à vila", secao: 4 }
+            ]
+        },
+
+        25: {
+            texto: "Descendo pelo buraco no chão da igreja, você encontra uma cripta antiga. O ar aqui é frio e úmido, e você pode ouvir gotejamento de água em algum lugar na escuridão. Tochas apagadas estão presas às paredes, e você vê sarcófagos de pedra alinhados em fileiras.",
+            opcoes: [
+                { texto: "Acender uma das tochas", secao: 51, requer: "tocha" },
+                { texto: "Examinar os sarcófagos no escuro", secao: 52 },
+                { texto: "Procurar por uma saída alternativa", secao: 53 }
+            ]
+        },
+
+        26: {
+            texto: "Examinando os símbolos no altar, você reconhece alguns como sendo de necromancia - magia relacionada aos mortos. Os símbolos parecem formar um ritual complexo, possivelmente para ressuscitar os mortos. Isso explicaria o que aconteceu com os habitantes da vila.",
+            opcoes: [
+                { texto: "Tentar decifrar mais do ritual", secao: 54, teste: "magia", dificuldade: 15 },
+                { texto: "Procurar por mais pistas na igreja", secao: 27 },
+                { texto: "Sair da igreja imediatamente", secao: 4 }
+            ]
+        },
+
+        27: {
+            texto: "Procurando por itens úteis entre os destroços da igreja, você encontra alguns objetos religiosos que podem oferecer proteção contra mortos-vivos, incluindo um pequeno crucifixo de prata.",
+            efeitos: [{ tipo: "item", item: "punhal-ceremonial" }],
+            opcoes: [
+                { texto: "Continuar explorando a igreja", secao: 25 },
+                { texto: "Sair e ir para outro local", secao: 4 }
+            ]
+        },
+
+        28: {
+            texto: "Entrando na casa para ajudar, você empurra a porta e chama 'Precisa de ajuda?'. A figura se vira lentamente, e você vê com horror que metade de seu rosto foi arrancada, revelando osso e músculos expostos. Não é uma pessoa ferida - é um zumbi se alimentando de um cadáver.",
+            batalha: "zumbi",
+            vitoria: 55,
+            derrota: 37
+        },
+
+        29: {
+            texto: "Batendo na porta antes de entrar, você anuncia sua presença. O gemido para, e você ouve movimento dentro da casa. A porta se abre lentamente, revelando uma figura humana em estado avançado de decomposição.",
+            batalha: "zumbi",
+            vitoria: 55,
+            derrota: 37
+        },
+
+        30: {
+            texto: "Observando mais um pouco antes de agir, você percebe que a figura está se alimentando de algo - ou alguém. Seus movimentos são mecânicos e não naturais. Definitivamente não é uma pessoa normal ferida, mas sim um morto-vivo.",
+            opcoes: [
+                { texto: "Atacar o zumbi de surpresa", batalha: "zumbi", vitoria: 55, derrota: 37 },
+                { texto: "Tentar passar despercebido", secao: 56, teste: "habilidade", dificuldade: 13 },
+                { texto: "Recuar silenciosamente", secao: 4 }
+            ]
+        },
+
+        31: {
+            texto: "Coletando mais vegetais para a jornada, você enche seus bolsos com batatas e cenouras. Será uma reserva valiosa de comida para os dias à frente.",
+            efeitos: [{ tipo: "item", item: "lata-sardinha" }],
+            opcoes: [
+                { texto: "Continuar explorando a vila", secao: 4 }
+            ]
+        },
+
+        32: {
+            texto: "Bebendo água fresca do poço e descansando um pouco, você se sente revigorado. O breve descanso restaura suas energias.",
+            efeitos: [{ tipo: "energia", valor: 3 }],
+            opcoes: [
+                { texto: "Continuar explorando", secao: 4 }
+            ]
+        },
+
+        33: {
+            texto: "Procurando por bebidas ou comida na taverna, você encontra algumas garrafas intactas de bebida alcoólica e alguns pedaços de pão duro que ainda estão comestíveis.",
+            efeitos: [{ tipo: "item", item: "lata-sardinha" }],
+            opcoes: [
+                { texto: "Explorar o andar superior", secao: 34 },
+                { texto: "Investigar o porão", secao: 35 }
+            ]
+        },
+
+        34: {
+            texto: "Examinando o andar superior da taverna, você encontra quartos de hóspedes abandonados. Em um deles, há sinais de luta - móveis virados e manchas escuras no chão. Em uma cômoda, você encontra algumas moedas e um mapa local.",
+            opcoes: [
+                { texto: "Examinar o mapa mais detalhadamente", secao: 57 },
+                { texto: "Investigar os sinais de luta", secao: 58 },
+                { texto: "Descer e sair da taverna", secao: 4 }
+            ]
+        },
+
+        35: {
+    texto: "Investigando o porão da taverna, você desce por escadas de madeira que gemem sob seu peso. O ar aqui embaixo é denso e viciado, carregado com o cheiro de cerveja azeda e algo muito pior - o odor doce e enjoativo da carne em decomposição. Barris de carvalho se alinham contra as paredes de pedra úmida, alguns rachados e vazando seu conteúdo no chão enlameado. É então que você ouve - um arrastar lento e deliberado vindo de trás dos barris maiores, acompanhado por um gemido baixo que faz sua pele se arrepiar. Algo definitivamente se move nas sombras mais profundas do porão.",
+    opcoes: [
+        { texto: "Investigar cautelosamente os sons", secao: 59 },
+        { texto: "Subir imediatamente as escadas", secao: 34 },
+        { texto: "Preparar sua arma e aguardar", secao: 60 }
+    ]
+},
+
+36: {
+    texto: "Após atacar o zumbi mais próximo, sua lâmina corta através da carne apodrecida com um som nauseante. A criatura desaba, mas o barulho da luta ecoa pelas ruas vazias como um sino de alarme. Quase imediatamente, você ouve respostas - gemidos guturais vindos de várias direções, o som de portas rangendo ao se abrirem, e passos arrastados se aproximando. Você despertou a atenção de outros mortos-vivos que habitam as casas ao redor. Sombras começam a se mover nas janelas quebradas, e você percebe que precisa se mover rapidamente.",
+    opcoes: [
+        { texto: "Correr para a praça central", secao: 4 },
+        { texto: "Procurar abrigo na casa mais próxima", secao: 3 },
+        { texto: "Ficar e lutar contra os que se aproximam", secao: 16 }
+    ]
+},
+
+37: {
+    texto: "Os zumbis o cercam como uma maré de carne podre e ossos expostos. Suas garras sujas rasgam sua roupa e depois sua pele, enquanto dentes amarelados e quebrados buscam sua garganta. Você luta desesperadamente, mas são muitos, e sua força se esvai rapidamente junto com seu sangue. Suas últimas visões são de olhos mortos e vazios observando enquanto você se torna mais uma vítima da maldição que assola a Vila de Pedravale. Sua jornada termina aqui, entre os destroços de uma civilização perdida.",
+    efeitos: [{ tipo: "energia", valor: -10 }],
+    final: true
+},
+
+38: {
+    texto: "Tentando contornar os zumbis silenciosamente, você se move como uma sombra entre as ruínas. Seus passos são cuidadosamente calculados, evitando galhos secos e detritos que poderiam fazer ruído. Os mortos-vivos continuam sua patrulha sem propósito, cambaleando pelas ruas com movimentos mecânicos e previsíveis. Você consegue passar despercebido, usando as sombras das casas em ruínas como cobertura. Após alguns minutos tensos, você emerge na praça central sem ter sido detectado, seu coração ainda batendo acelerado pela tensão.",
+    opcoes: [
+        { texto: "Explorar a praça central com cuidado", secao: 4 }
+    ]
+},
+
+39: {
+    texto: "Após uma batalha brutal contra os três zumbis, você permanece de pé entre os corpos em decomposição que finalmente encontraram o descanso eterno. Suas roupas estão rasgadas e manchadas de sangue - tanto seu quanto das criaturas - e você respira pesadamente, exausto pelo combate. Cada golpe foi uma luta contra a náusea causada pelo cheiro e pela visão da carne apodrecida, mas sua determinação prevaleceu. O silêncio retorna às ruas, pelo menos temporariamente. Você sabe que pode haver mais zumbis na vila, mas pelo menos esta área está segura por enquanto.",
+    efeitos: [{ tipo: "energia", valor: -2 }],
+    opcoes: [
+        { texto: "Ir para a praça central", secao: 4 },
+        { texto: "Procurar suprimentos nas casas próximas", secao: 10 },
+        { texto: "Descansar um momento para recuperar o fôlego", secao: 71 }
+    ]
+},
+
+40: {
+    texto: "Investigando a área barricada da loja, você encontra evidências de que alguém tentou desesperadamente se esconder aqui durante os primeiros dias da praga. Tábuas foram pregadas de forma apressada, criando um pequeno refúgio nos fundos da loja. Dentro deste espaço claustrofóbico, você encontra os restos de uma existência precária: cobertores sujos empilhados em um canto, latas de comida vazias espalhadas pelo chão, e uma pequena reserva de suprimentos médicos cuidadosamente organizados em uma caixa de madeira. Há também um diário com páginas rasgadas, suas últimas entradas falando de desespero crescente e sons terríveis vindos de fora.",
+    efeitos: [{ tipo: "item", item: "pocao-cura-menor" }],
+    opcoes: [
+        { texto: "Ler o diário mais detalhadamente", secao: 72 },
+        { texto: "Procurar por mais suprimentos escondidos", secao: 41 },
+        { texto: "Examinar os registros da loja", secao: 42 }
+    ]
+},
+
+41: {
+    texto: "Procurando por suprimentos úteis na loja, você vasculha sistematicamente as prateleiras vazias e os cantos escuros. Atrás do balcão principal, você encontra um compartimento secreto que o antigo proprietário usava para guardar itens valiosos. Dentro há algumas ferramentas básicas - um martelo, pregos, e uma corda resistente - além de mais algumas latas de conserva que foram cuidadosamente escondidas quando a situação começou a se deteriorar. As latas estão enferrujadas mas ainda seladas, uma descoberta valiosa em um lugar tão desolado.",
+    efeitos: [{ tipo: "item", item: "lata-sardinha" }],
+    opcoes: [
+        { texto: "Continuar explorando a vila", secao: 4 },
+        { texto: "Examinar os registros da loja", secao: 42 }
+    ]
+},
+
+42: {
+    texto: "Examinando os registros da loja, você encontra um diário encadernado em couro que pertencia ao proprietário. As páginas amareladas contam uma história progressivamente mais sombria: as primeiras entradas falam de pessoas ficando doentes com uma febre estranha, depois de comportamentos erráticos e violentos. As entradas finais, escritas com caligrafia trêmula, descrevem pessoas mortas se levantando e atacando os vivos. O proprietário menciona repetidamente que tudo começou depois que 'aquela maldita coisa foi desenterrada no cemitério da colina'. A última entrada, quase ilegível, simplesmente diz: 'Eles estão batendo na porta. Que Deus nos ajude.'",
+    opcoes: [
+        { texto: "Ir investigar o cemitério imediatamente", secao: 8 },
+        { texto: "Continuar explorando a vila primeiro", secao: 4 },
+        { texto: "Procurar por mais informações na loja", secao: 73 }
+    ]
+},
+
+43: {
+    texto: "Continuando a examinar mais sepulturas, você caminha entre as lápides inclinadas e os mausoléus desmoronados. A evidência é consistente e perturbadora: sepultura após sepultura foi aberta de dentro para fora, com terra e pedras espalhadas como se os mortos tivessem literalmente escavado seu caminho para a superfície. Entre os destroços de um caixão particularmente ornamentado, você encontra algo inesperado - uma granada militar antiga, provavelmente da última guerra, ainda em condições de uso. Alguém deve ter sido enterrado com ela, talvez um veterano. O metal está corroído, mas o mecanismo parece funcional.",
+    efeitos: [{ tipo: "item", item: "granada-mao" }],
+    opcoes: [
+        { texto: "Ir ao mausoléu central", secao: 21 },
+        { texto: "Descer de volta à vila", secao: 4 },
+        { texto: "Examinar mais sepulturas em busca de pistas", secao: 74 }
+    ]
+},
+
+44: {
+    texto: "Após derrotar o zumbi no porão, você permanece parado por um momento, tentando controlar sua respiração e o enjoo causado pelo combate. O corpo da criatura jaz imóvel no chão enlameado, finalmente em paz. Agora você pode explorar o porão com segurança. Entre os restos espalhados pelo chão - ossos roídos e trapos de roupa - você encontra algumas moedas antigas e uma chave de ferro ornamentada que deve ter pertencido ao zumbi quando ainda era humano. A chave é pesada e bem trabalhada, sugerindo que abria algo importante.",
+    opcoes: [
+        { texto: "Subir e sair da casa", secao: 4 },
+        { texto: "Procurar por mais itens no porão", secao: 61 },
+        { texto: "Examinar a chave mais detalhadamente", secao: 75 }
+    ]
+},
+
+45: {
+    texto: "Abrindo as pesadas portas de ferro forjado, você entra no mausoléu central. O interior é surpreendentemente bem preservado, com paredes de mármore polido e um teto abobadado decorado com relevos elaborados. No centro da câmara, um sarcófago de pedra negra repousa sobre uma plataforma elevada, cercado por velas há muito apagadas. Mas o que mais chama sua atenção é o objeto que repousa sobre a tampa do sarcófago - uma coroa de ferro simples, sem ornamentos ou gemas, mas que irradia uma aura de autoridade antiga. Não há magia nela, apenas o peso simbólico do poder que um dia governou esta vila condenada.",
+    efeitos: [{ tipo: "item", item: "coroa-ferro" }],
+    opcoes: [
+        { texto: "Examinar o sarcófago cuidadosamente", secao: 62 },
+        { texto: "Pegar a coroa e sair imediatamente", secao: 63 },
+        { texto: "Procurar por outras pistas na câmara", secao: 64 }
+    ]
+},
+
+46: {
+    texto: "Examinando os símbolos gravados na pedra antes de entrar, você reconhece uma mistura de avisos e proteções. Alguns símbolos são claramente avisos contra profanação, gravados em latim antigo com ameaças de maldições eternas para aqueles que perturbarem o descanso dos mortos. Outros são proteções contra mortos-vivos - cruzes invertidas, círculos de sal representados em pedra, e runas que você reconhece de textos sobre necromancia. Isso sugere que quem foi enterrado aqui era não apenas importante, mas também temido. Talvez alguém que lidava com forças sombrias em vida.",
+    opcoes: [
+        { texto: "Entrar no mausoléu com cautela", secao: 45 },
+        { texto: "Procurar outra entrada", secao: 47 },
+        { texto: "Reconsiderar e explorar outras áreas", secao: 8 }
+    ]
+},
+
+47: {
+    texto: "Procurando outra entrada, você contorna o mausoléu e encontra uma passagem lateral parcialmente oculta por hera selvagem. Esta entrada menor parece ter sido construída para permitir acesso de manutenção, evitando a entrada principal cerimonial. A passagem é estreita e baixa, forçando você a se curvar, mas leva diretamente à câmara principal. Mais importante, ela evita qualquer armadilha ou proteção mágica que possa ter sido colocada na entrada principal. É uma rota mais segura, embora menos digna.",
+    opcoes: [
+        { texto: "Usar a entrada lateral", secao: 45 },
+        { texto: "Voltar e usar a entrada principal", secao: 45 }
+    ]
+},
+
+48: {
+    texto: "Procurando por armas no sótão da casa, você encontra uma velha espingarda de caça apoiada contra uma viga de madeira. A arma está coberta de poeira, mas em condições surpreendentemente boas. Ao lado dela, uma caixa de munição meio vazia confirma que o antigo morador estava preparado para se defender. A espingarda é de calibre 12, robusta e confiável - exatamente o tipo de arma que seria útil contra mortos-vivos. Você também encontra um punhal de caça em uma bainha de couro, sua lâmina ainda afiada apesar dos anos.",
+    opcoes: [
+        { texto: "Pegar as armas e sair da casa", secao: 4 },
+        { texto: "Procurar por mais munição", secao: 49 }
+    ]
+},
+
+49: {
+    texto: "Procurando por mais munição, você vasculha cuidadosamente o sótão e encontra uma lata de biscoitos que foi convertida em esconderijo. Dentro há cartuchos adicionais para a espingarda, cuidadosamente embrulhados em pano oleado para protegê-los da umidade. Há também algumas balas para pistola, sugerindo que o morador tinha mais de uma arma. É uma descoberta valiosa - munição será essencial se você encontrar mais mortos-vivos.",
+    efeitos: [{ tipo: "item", item: "municao-38" }],
+    opcoes: [
+        { texto: "Sair da casa com seus achados", secao: 4 },
+        { texto: "Procurar por mais armas escondidas", secao: 76 }
+    ]
+},
+
+50: {
+    texto: "Investigando mais sobre a praga através das inscrições nas lápides, você começa a montar um quadro perturbador. As datas mostram que a morte chegou em ondas: primeiro os idosos e doentes, depois os adultos saudáveis, e finalmente até mesmo as crianças. Mas há algo mais sinistro - algumas lápides têm símbolos estranhos gravados nelas, símbolos que você reconhece como sendo relacionados à necromancia. Isso não foi uma praga natural. Alguém orquestrou deliberadamente a morte de toda a vila, possivelmente para criar um exército de mortos-vivos. A pergunta que permanece é: quem, e por quê?",
+    opcoes: [
+        { texto: "Ir ao mausoléu para mais respostas", secao: 21 },
+        { texto: "Descer à vila para procurar mais evidências", secao: 4 },
+        { texto: "Examinar os símbolos necromânticos mais de perto", secao: 77 }
+    ]
+},
+
+51: {
+    texto: "Acendendo uma das tochas presas à parede, a cripta se ilumina com uma luz dançante que revela sua verdadeira extensão. A câmara é muito maior do que você imaginava, com fileiras de sarcófagos de pedra se estendendo nas sombras. As paredes são cobertas de símbolos necromânticos gravados na pedra, alguns ainda brilhando fracamente com energia residual. O ar é frio e úmido, carregado com o cheiro de incenso antigo e algo mais sombrio. No fundo da cripta, você vê uma passagem arqueada que desce ainda mais fundo na terra, suas profundezas perdidas na escuridão.",
+    opcoes: [
+        { texto: "Examinar os sarcófagos iluminados", secao: 52 },
+        { texto: "Seguir a passagem mais profunda", secao: 65 },
+        { texto: "Estudar os símbolos nas paredes", secao: 78 }
+    ]
+},
+
+52: {
+    texto: "Examinando os sarcófagos à luz da tocha, você faz uma descoberta perturbadora: muitos estão vazios, suas tampas pesadas empurradas de dentro para fora e caídas no chão de pedra. Os ocupantes claramente se levantaram e partiram, deixando apenas sudários rasgados e ossos espalhados. Em um dos sarcófagos que permanece selado, você encontra inscrições que identificam o ocupante como um alto sacerdote da vila. Dentro, junto aos ossos antigos, há alguns objetos rituais de prata que podem ser valiosos - ou úteis contra mortos-vivos.",
+    opcoes: [
+        { texto: "Coletar os objetos rituais", secao: 79 },
+        { texto: "Continuar explorando a cripta", secao: 65 },
+        { texto: "Voltar à superfície", secao: 4 }
+    ]
+},
+
+53: {
+    texto: "Procurando por uma saída alternativa, você explora as bordas da cripta com cuidado. Atrás de um dos sarcófagos maiores, você encontra uma passagem estreita que foi parcialmente bloqueada por pedras caídas. Com algum esforço, você consegue mover as pedras e descobrir que a passagem leva de volta à superfície, emergindo atrás da igreja através de uma entrada oculta por arbustos selvagens. É uma rota de fuga útil, caso você precise sair rapidamente.",
+    opcoes: [
+        { texto: "Usar a passagem para sair", secao: 4 },
+        { texto: "Marcar a localização e continuar explorando", secao: 65 }
+    ]
+},
+
+54: {
+    texto: "Tentando decifrar mais do ritual necromântico gravado no altar, você se concentra nos símbolos complexos. Seu conhecimento de magia permite que você compreenda a verdadeira magnitude do que foi feito aqui. Este não foi um ritual simples - foi uma invocação massiva projetada para ressuscitar todos os mortos da vila simultaneamente. O ritual exigia um sacrifício enorme de energia vital, provavelmente a vida do próprio conjurador. Quem quer que tenha feito isso estava disposto a morrer para criar um exército de mortos-vivos. Mas por quê? E onde está esse necromante agora?",
+    opcoes: [
+        { texto: "Procurar por mais pistas na igreja", secao: 27 },
+        { texto: "Ir ao cemitério investigar o local do ritual", secao: 8 },
+        { texto: "Descer à cripta para procurar o necromante", secao: 25 }
+    ]
+},
+
+55: {
+    texto: "Após derrotar o zumbi na casa, você permanece parado por um momento, controlando sua respiração e tentando não pensar no que acabou de presenciar. A criatura estava se alimentando dos restos de alguém que provavelmente foi seu vizinho ou amigo em vida. Entre os pertences espalhados pela casa, você encontra algumas provisões que ainda estão boas - pão seco mas comestível e água limpa em uma jarra de cerâmica. Há também algumas velas e fósforos que podem ser úteis na escuridão.",
+    efeitos: [{ tipo: "energia", valor: 1 }],
+    opcoes: [
+        { texto: "Continuar explorando a vila", secao: 4 },
+        { texto: "Procurar por mais suprimentos na casa", secao: 80 }
+    ]
+},
+
+56: {
+    texto: "Tentando passar despercebido pelo zumbi que se alimenta, você se move com extremo cuidado. Cada passo é calculado, cada respiração controlada. A criatura está completamente absorta em sua refeição macabra, os sons de mastigação mascarando qualquer ruído pequeno que você possa fazer. Você consegue contornar a casa sem ser detectado, embora a visão e os sons do que presenciou continuem assombrando sua mente. Pelo menos agora você sabe que os zumbis podem ser distraídos quando estão se alimentando.",
+    opcoes: [
+        { texto: "Ir para a praça central", secao: 4 },
+        { texto: "Procurar por outras casas para explorar", secao: 81 }
+    ]
+},
+
+57: {
+    texto: "Examinando o mapa mais detalhadamente à luz fraca que entra pela janela quebrada, você vê que ele marca cuidadosamente vários pontos importantes na vila. Há círculos vermelhos ao redor da igreja, da taverna, e de várias casas - provavelmente locais onde os moradores tentaram se barricar. Mais importante, há um X grande marcado no cemitério com a palavra 'origem' escrita ao lado em tinta vermelha. Isso confirma suas suspeitas de que tudo começou lá. O mapa também mostra túneis subterrâneos conectando vários edifícios, sugerindo que havia rotas de fuga planejadas.",
+    opcoes: [
+        { texto: "Ir ao cemitério investigar a 'origem'", secao: 8 },
+        { texto: "Procurar pelos túneis subterrâneos", secao: 82 },
+        { texto: "Continuar explorando a taverna", secao: 35 }
+    ]
+},
+
+58: {
+    texto: "Investigando os sinais de luta no quarto da taverna, você reconstrói mentalmente o que aconteceu aqui. Móveis foram usados como barricadas, há marcas de garras profundas nas paredes de madeira, e manchas de sangue seco formam padrões que contam uma história de desespero. Alguém lutou bravamente aqui, mas as marcas sugerem que enfrentaram múltiplos atacantes. Você encontra cartuchos de espingarda vazios no chão e buracos de bala nas paredes - quem quer que tenha estado aqui estava bem armado, mas ainda assim foi dominado.",
+    opcoes: [
+        { texto: "Procurar por sobreviventes no porão", secao: 35 },
+        { texto: "Examinar as armas deixadas para trás", secao: 83 },
+        { texto: "Sair da taverna", secao: 4 }
+    ]
+},
+
+59: {
+    texto: "Investigando cautelosamente os sons atrás dos barris, você se move lentamente pela penumbra do porão. O arrastar se torna mais intenso conforme você se aproxima, acompanhado por gemidos abafados. Quando você contorna o último barril grande, encontra a fonte do ruído: um zumbi em estado avançado de decomposição está preso entre dois barris pesados que caíram sobre ele. A criatura se debate fracamente, tentando se libertar, suas unhas arranhando inutilmente a madeira. Seus olhos mortos se fixam em você com uma fome terrível.",
+    batalha: "zumbi",
+    vitoria: 66,
+    derrota: 37
+},
+
+60: {
+    texto: "Preparando sua arma e aguardando, você se posiciona estrategicamente perto da escada, garantindo uma rota de fuga. Não demora muito para que a fonte dos ruídos se revele: um zumbi emerge de trás dos barris de vinho, cambaleando em sua direção com movimentos desajeitados mas determinados. A criatura usa roupas que um dia foram as de um taberneiro - um avental de couro manchado e uma camisa de linho rasgada. Seus olhos vazios se fixam em você com fome primitiva, e ele acelera o passo tanto quanto sua condição permite.",
+    batalha: "zumbi",
+    vitoria: 66,
+    derrota: 37
+},
+
+61: {
+    texto: "Procurando por mais itens no porão após derrotar o zumbi, você vasculha cuidadosamente entre os barris e caixas empilhadas. Atrás de algumas caixas de vinho vazias, você encontra uma pequena reserva que alguém escondeu durante os primeiros dias da praga. Há bandagens limpas, uma pequena garrafa de álcool medicinal, e algumas ervas secas que ainda mantêm suas propriedades curativas. É uma descoberta valiosa que pode salvar sua vida se você se ferir.",
+    efeitos: [{ tipo: "item", item: "pocao-cura-menor" }],
+    opcoes: [
+        { texto: "Subir e continuar explorando", secao: 4 },
+        { texto: "Procurar por mais esconderijos", secao: 84 }
+    ]
+},
+
+62: {
+    texto: "Examinando o sarcófago cuidadosamente, você lê as inscrições elaboradas gravadas em sua superfície de pedra negra. Elas identificam o ocupante como Lorde Aldric Pedravale, o último governante da vila, que morreu há exatos vinte anos - coincidindo com o início da praga. As inscrições falam de um homem justo e sábio, amado por seu povo. Mas há algo estranho: símbolos necromânticos foram gravados sobre as inscrições originais, como se alguém tivesse profanado o túmulo após o enterro. Isso sugere que o próprio Lorde Aldric pode ter sido ressuscitado como morto-vivo.",
+    opcoes: [
+        { texto: "Abrir o sarcófago para verificar", secao: 67, teste: "habilidade", dificuldade: 15 },
+        { texto: "Sair do mausoléu imediatamente", secao: 8 },
+        { texto: "Procurar por mais pistas antes de abrir", secao: 64 }
+    ]
+},
+
+63: {
+    texto: "Pegando a coroa de ferro simples, você sente seu peso considerável em suas mãos. Embora não possua poderes mágicos, ela representa a autoridade que um dia governou esta vila próspera. O metal frio contra sua pele parece carregar o peso da história - das decisões tomadas, das vidas perdidas, e da tragédia que se abateu sobre Pedravale. Você completou sua exploração da Vila Abandonada, descobrindo seus segredos sombrios e sobrevivendo aos horrores que a habitam. A coroa será uma lembrança permanente desta jornada através da morte e da desolação.",
+    efeitos: [{ tipo: "energia", valor: 5 }],
+    final: true
+},
+
+64: {
+    texto: "Procurando por outras pistas na câmara do mausoléu, você examina cuidadosamente cada canto da estrutura ornamentada. Atrás do sarcófago, você encontra uma pequena alcova que contém documentos antigos preservados em um baú de metal. Os pergaminhos revelam a verdade chocante sobre a praga: ela foi causada intencionalmente por um necromante chamado Morteus, que buscava vingança contra Lorde Aldric por ter banido ele da vila anos antes. O necromante usou um ritual proibido para matar todos os habitantes e ressuscitá-los como seus servos mortos-vivos.",
+    opcoes: [
+        { texto: "Procurar pelo necromante Morteus", secao: 68 },
+        { texto: "Sair com as informações descobertas", secao: 63 },
+        { texto: "Investigar se Lorde Aldric também foi ressuscitado", secao: 67 }
+    ]
+},
+
+65: {
+    texto: "Seguindo a passagem mais profunda da cripta, você desce por uma escadaria de pedra que se aprofunda nas entranhas da terra. O ar se torna progressivamente mais frio e carregado de energia sombria. As paredes são cobertas de símbolos necromânticos que brilham com uma luz fantasmagórica, e você pode ouvir sussurros em línguas mortas ecoando das profundezas. Finalmente, você chega a uma câmara final onde os restos do necromante Morteus ainda repousam em um altar de obsidiana. Seu corpo mumificado está cercado por artefatos sombrios, e você sente que sua presença maligna ainda contamina este lugar.",
+    batalha: "necromante",
+    vitoria: 69,
+    derrota: 37
+},
+
+66: {
+    texto: "Após derrotar o zumbi no porão da taverna, você se permite um momento para recuperar o fôlego. A luta foi mais difícil do que esperava - a criatura estava presa, mas isso a tornou mais desesperada e violenta. Agora você pode explorar o porão com segurança. Entre os barris de cerveja e vinho, você encontra algumas garrafas intactas de bebida forte que podem servir tanto como antisséptico quanto como combustível para tochas. Há também algumas moedas de prata espalhadas pelo chão, provavelmente caídas dos bolsos do zumbi quando ele ainda era o taberneiro.",
+    opcoes: [
+        { texto: "Subir e continuar explorando a vila", secao: 4 },
+        { texto: "Procurar por mais itens escondidos", secao: 84 }
+    ]
+},
+
+67: {
+    texto: "Abrindo o sarcófago com grande esforço, as dobradiças de pedra gemem em protesto após décadas seladas. Quando a tampa pesada finalmente se move, você descobre que suas suspeitas estavam corretas: o sarcófago está vazio. Lorde Aldric também se levantou como morto-vivo, provavelmente logo após o ritual necromântico. Mas no fundo do sarcófago, há um compartimento secreto que contém os pertences pessoais do lorde - incluindo uma poção de cura poderosa e um anel com o selo da família. Estes itens podem ser valiosos, tanto monetariamente quanto para sua sobrevivência.",
+    efeitos: [{ tipo: "item", item: "pocao-cura-menor" }],
+    opcoes: [
+        { texto: "Sair do mausoléu com os itens", secao: 63 },
+        { texto: "Procurar por pistas sobre onde Lorde Aldric pode estar", secao: 85 }
+    ]
+},
+
+
+
+    
 "coroa-de-ferro-epica": {
     id: "coroa-de-ferro-epica",
     titulo: "A Coroa de Ferro — Aventura Completa",
@@ -1506,6 +2090,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
