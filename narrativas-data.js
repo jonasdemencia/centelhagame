@@ -1,3 +1,63 @@
+/*
+=== SISTEMA DE NARRATIVAS - GUIA PARA CRIADORES ===
+
+ESTRUTURA BÁSICA:
+- Cada narrativa tem um ID único e título
+- Seções numeradas contêm texto, opções e efeitos
+- Seções finais devem ter "final: true"
+
+OPÇÕES:
+- texto: Texto do botão
+- secao: Próxima seção
+- requer: Item necessário (opcional)
+- teste: Atributo testado (opcional)
+- dificuldade: Valor do teste (opcional)
+- batalha: Monstros para lutar (opcional)
+- vitoria/derrota: Seções pós-batalha (opcional)
+
+EFEITOS:
+- { tipo: "energia", valor: X } - Modifica energia (+/-)
+- { tipo: "item", item: "id-item" } - Adiciona item ao inventário
+
+TESTES DE ATRIBUTOS:
+- "magia" - Testa atributo magic do jogador
+- "habilidade" - Testa atributo skill do jogador  
+- "carisma" - Testa atributo charisma do jogador
+- "sorte" - Testa atributo luck do jogador
+- Dificuldade: 10=fácil, 15=médio, 20=difícil
+
+BATALHAS:
+- batalha: "monstro1,monstro2" - Lista de monstros separados por vírgula
+- vitoria: seção para vitória
+- derrota: seção para derrota
+
+ITENS DISPONÍVEIS:
+- tocha, corda, ração (consumíveis básicos)
+- chave-runica, chave-dourada (chaves especiais)
+- amuleto-proteção, anel-aquático (equipamentos mágicos)
+- cristal-luminoso, pergaminho-sabedoria (itens especiais)
+- tesouro-lobo, tesouro-principal (tesouros)
+
+EXEMPLO DE SEÇÃO COMPLETA:
+15: {
+    texto: "Descrição da situação atual",
+    efeitos: [{ tipo: "energia", valor: 2 }, { tipo: "item", item: "tocha" }],
+    opcoes: [
+        { texto: "Opção normal", secao: 20 },
+        { texto: "Opção com item", secao: 25, requer: "chave-runica" },
+        { texto: "Opção com teste", secao: 30, teste: "habilidade", dificuldade: 15 },
+        { texto: "Opção de batalha", batalha: "goblin,orc", vitoria: 35, derrota: 40 }
+    ]
+}
+
+SEÇÃO FINAL:
+101: {
+    texto: "Você completou a aventura!",
+    efeitos: [{ tipo: "energia", valor: 10 }, { tipo: "item", item: "tesouro-principal" }],
+    final: true
+}
+*/
+
 // Dados das narrativas
 const NARRATIVAS = {
     "floresta-sombria": {
@@ -414,5 +474,6 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
