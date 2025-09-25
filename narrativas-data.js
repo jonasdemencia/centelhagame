@@ -669,8 +669,68 @@ const NARRATIVAS = {
         { texto: "Procurar por pistas sobre onde Lorde Aldric pode estar", secao: 85 }
     ]
 },
+68: {
+    texto: "Procurando por pistas sobre o paradeiro de Lorde Aldric, você examina cuidadosamente o mausoléu. Nas paredes de mármore, você encontra arranhões profundos - marcas de garras que só poderiam ter sido feitas de dentro para fora. Seguindo as marcas até a entrada, você nota pegadas na poeira que levam em direção ao centro da vila. De repente, um rugido gutural ecoa da direção da praça central, seguido pelo som de pedra sendo quebrada. Algo grande e poderoso está se movendo lá embaixo.",
+    opcoes: [
+        { texto: "Ir à praça central enfrentar Lorde Aldric", secao: 69 },
+        { texto: "Tentar contornar e fugir da vila", secao: 70 },
+        { texto: "Procurar uma arma melhor antes do confronto", secao: 71 }
+    ]
+},
 
+69: {
+    texto: "Indo à praça central para enfrentar Lorde Aldric, você desce a colina com determinação. Na praça, uma figura imponente aguarda - o que um dia foi um nobre lorde agora é uma abominação de carne apodrecida e ossos expostos, ainda usando os restos de sua armadura cerimonial. Seus olhos brilham com uma luz sobrenatural, e ele empunha uma espada enferrujada. 'Quem ousa profanar meu domínio?' ele rosna com uma voz que ecoa do além-túmulo.",
+    batalha: "lorde-aldric-zumbi",
+    vitoria: 72,
+    derrota: 37
+},
 
+70: {
+    texto: "Tentando contornar e fugir da vila, você se move silenciosamente pelas ruas laterais, evitando a praça central onde os rugidos continuam ecoando. Sua estratégia de evitar o confronto direto se mostra sábia - você consegue chegar à entrada da vila sem ser detectado. Olhando para trás uma última vez, você vê uma figura sombria e imponente se movendo entre as ruínas. Você escapou da Vila de Pedravale com vida, mas sem resolver completamente seus mistérios.",
+    efeitos: [{ tipo: "energia", valor: 2 }],
+    final: true
+},
+
+71: {
+    texto: "Procurando uma arma melhor antes do confronto, você vasculha rapidamente as casas próximas ao cemitério. Em uma antiga casa de guarda, você encontra uma balestra militar ainda em bom estado, junto com algumas virotes de ferro. A arma é pesada mas poderosa - exatamente o que você precisa para enfrentar um morto-vivo de grande poder. Armado adequadamente, você se sente mais confiante para o confronto que se aproxima.",
+    efeitos: [{ tipo: "item", item: "balestra-militar" }],
+    opcoes: [
+        { texto: "Ir enfrentar Lorde Aldric na praça", secao: 69 },
+        { texto: "Tentar uma emboscada nas ruas", secao: 73 }
+    ]
+},
+
+72: {
+    texto: "Após uma batalha épica contra Lorde Aldric, você permanece de pé sobre os restos finalmente em paz do antigo governante. A luta foi brutal - o lorde zumbi mantinha muito de sua habilidade marcial mesmo na morte, mas sua determinação prevaleceu. Com sua destruição, você sente uma mudança no ar da vila. Os gemidos distantes dos outros zumbis cessam gradualmente, como se a morte de seu líder os tivesse libertado de sua maldição. Você encontra entre os restos do lorde sua coroa de ferro, símbolo de sua antiga autoridade.",
+    efeitos: [{ tipo: "energia", valor: -3 }, { tipo: "item", item: "coroa-ferro" }],
+    opcoes: [
+        { texto: "Explorar a vila agora pacificada", secao: 74 },
+        { texto: "Partir imediatamente com a coroa", secao: 75 }
+    ]
+},
+
+73: {
+    texto: "Tentando uma emboscada nas ruas, você se posiciona estrategicamente atrás de uma casa em ruínas com sua balestra preparada. Quando Lorde Aldric emerge da praça procurando por você, você tem a vantagem da surpresa. Seu primeiro tiro acerta em cheio, mas o morto-vivo é resistente. Ele se vira em sua direção com um rugido de fúria, mas você já está recarregando para um segundo disparo. A emboscada lhe dá uma vantagem crucial no combate.",
+    batalha: "lorde-aldric-zumbi",
+    vitoria: 72,
+    derrota: 37
+},
+
+74: {
+    texto: "Explorando a vila agora pacificada após a morte de Lorde Aldric, você caminha pelas ruas que finalmente encontraram silêncio verdadeiro. Os zumbis restantes desabaram onde estavam, libertados da maldição que os prendia. Nas casas, você encontra tesouros esquecidos e suprimentos valiosos que os antigos moradores esconderam. Mais importante, você encontra um diário que revela a localização de outros tesouros da família Pedravale, incluindo uma reserva de ouro escondida no poço da praça central.",
+    efeitos: [{ tipo: "item", item: "mapa-tesouro" }, { tipo: "energia", valor: 3 }],
+    opcoes: [
+        { texto: "Partir da vila com seus tesouros", secao: 75 }
+    ]
+},
+
+75: {
+    texto: "Partindo da Vila de Pedravale, você carrega consigo não apenas a coroa de ferro e os tesouros descobertos, mas também o conhecimento de que trouxe paz aos mortos inquietos. O sol nasce no horizonte, dissipando as últimas sombras da vila amaldiçoada. Atrás de você, Pedravale finalmente descansa em silêncio eterno, seus habitantes libertados de duas décadas de tormento. Sua jornada pela vila abandonada chegou ao fim, e você emerge como um herói que enfrentou os horrores do passado e prevaleceu. A estrada à frente promete novas aventuras, mas esta vitória permanecerá para sempre em sua memória.",
+    efeitos: [{ tipo: "energia", valor: 5 }],
+    final: true
+}
+   }
+  },
 
     
 "coroa-de-ferro-epica": {
@@ -2090,6 +2150,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
