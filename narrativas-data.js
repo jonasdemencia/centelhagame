@@ -372,281 +372,298 @@ const NARRATIVAS = {
 },
 
 36: {
-  texto: "Ao inserir o medalhão no entalhe, a porta ressoa com um eco metálico. Ela se abre revelando uma câmara circular com cinco altares. No centro, uma figura de pedra desperta: o Velho da Pedra.",
+  texto: "O momento em que o artefato toca o entalhe, a porta ressoa com um eco que parece atravessar dimensões. Ela se abre lentamente, revelando uma câmara circular de proporções majestosas, iluminada por uma luz dourada que emana das próprias pedras. Cinco altares de diferentes materiais se erguem em círculo perfeito: mármore branco, obsidiana negra, ouro puro, prata lunar e cristal transparente. No centro, uma figura imponente desperta de seu sono milenar - o Velho da Pedra. Seus olhos se abrem como estrelas nascendo, e quando ele se ergue, você sente o peso de eras incontáveis em seu olhar. Sua voz ecoa como montanhas falando: 'Finalmente, outro buscador chega ao coração da verdade. Mas a Coroa não se entrega facilmente - ela deve reconhecer a dignidade em sua alma.'",
   opcoes: [
-    { texto: "Aproximar-se respeitosamente do Velho", secao: 37, teste: "carisma", dificuldade: 14 },
+    { texto: "Aproximar-se com respeito e humildade", secao: 37, teste: "carisma", dificuldade: 14 },
     { texto: "Empunhar a Espada Ferrugem defensivamente", secao: 38 },
-    { texto: "Usar a palavra 'Serafim' como saudação", secao: 39, requer: "palavra-serafim" }
+    { texto: "Pronunciar a palavra 'Serafim' como saudação", secao: 39, requer: "palavra-serafim" }
   ]
 },
 
 37: {
-  texto: "O Velho da Pedra inclina a cabeça. 'Há muito não vejo um buscador verdadeiro. A Coroa aguarda, mas três provações devem ser superadas.' Ele aponta para os altares.",
+  texto: "Sua postura respeitosa e humilde toca algo profundo no coração do Velho da Pedra. Ele inclina sua cabeça massiva em reconhecimento, e você sente uma onda de aprovação emanar de sua presença antiga. 'Há muito não vejo um buscador que compreende que a verdadeira força vem da humildade', sua voz ressoa com aprovação calorosa. 'A Coroa de Ferro aguarda há séculos por alguém digno, mas primeiro você deve provar seu valor através de cinco provações sagradas.' Ele gesticula para os altares ao redor. 'Cada altar testará um aspecto de sua alma. Falhe em três, e a Coroa permanecerá selada para sempre. Mas demonstre sabedoria, coragem, força, sacrifício e verdade, e ela reconhecerá sua dignidade.'",
   efeitos: [{ tipo: "energia", valor: 2 }],
   opcoes: [
-    { texto: "Perguntar sobre as provações", secao: 40 },
-    { texto: "Examinar os cinco altares", secao: 41 }
+    { texto: "Perguntar sobre a natureza das provações", secao: 40 },
+    { texto: "Examinar os cinco altares cuidadosamente", secao: 41 },
+    { texto: "Expressar gratidão pela orientação", secao: 42 }
   ]
 },
 
 38: {
-  texto: "O Velho sorri ao ver a espada. 'Ah, a Ferrugem desperta. Você carrega uma das chaves, mas ainda falta muito.' Sua voz ecoa como pedras rolando.",
+  texto: "A Espada Ferrugem brilha com luz renovada quando empunhada na presença do Velho da Pedra. Ele observa a lâmina com olhos que viram o nascimento de impérios, e um sorriso antigo cruza suas feições rochosas. 'Ah, a Ferrugem desperta novamente. Você carrega uma das três chaves sagradas, jovem buscador.' Sua voz carrega o peso de montanhas, mas também uma calorosa aprovação. 'Esta lâmina serviu a muitos heróis ao longo dos séculos, mas poucos a fizeram brilhar com tal intensidade. Ela reconhece em você um espírito guerreiro, mas a Coroa exige mais que força de braço. Você está preparado para os testes que virão?'",
   opcoes: [
-    { texto: "Baixar a espada e mostrar respeito", secao: 37 },
-    { texto: "Manter posição defensiva", secao: 42, teste: "habilidade", dificuldade: 15 }
+    { texto: "Baixar a espada em sinal de respeito", secao: 37 },
+    { texto: "Manter posição defensiva por precaução", secao: 43, teste: "habilidade", dificuldade: 15 },
+    { texto: "Perguntar sobre as outras duas chaves", secao: 44 }
   ]
 },
 
 39: {
-  texto: "'Serafim...' O Velho recua ligeiramente. 'Você conhece os nomes antigos. Isso é... interessante. Mas cuidado, jovem. Nem todos os nomes devem ser pronunciados aqui.'",
+  texto: "A palavra 'Serafim' ecoa pela câmara com poder que faz as próprias pedras vibrarem. O Velho da Pedra recua ligeiramente, seus olhos se alargando com algo entre surpresa e cautela. 'Você conhece os nomes de poder... isso é tanto impressionante quanto perigoso, jovem buscador.' Sua voz carrega uma nota de advertência. 'Serafim foi um dos primeiros guardiões desta fortaleza, e seu nome ainda ressoa com autoridade divina. Mas cuidado - nem todos os nomes antigos devem ser pronunciados levianamente. Alguns carregam consequências que transcendem a compreensão mortal.' O ar ao redor vibra com energia residual, e você sente que despertou algo nas profundezas da fortaleza.",
   efeitos: [{ tipo: "energia", valor: -1 }],
   opcoes: [
-    { texto: "Pedir desculpas e mostrar humildade", secao: 37 },
-    { texto: "Perguntar sobre outros nomes proibidos", secao: 43, teste: "magia", dificuldade: 16 }
+    { texto: "Pedir desculpas pela imprudência", secao: 37 },
+    { texto: "Perguntar sobre outros nomes de poder", secao: 45, teste: "magia", dificuldade: 16 },
+    { texto: "Mostrar que pode controlar tal poder", secao: 46, teste: "carisma", dificuldade: 17 }
   ]
 },
 
 40: {
-  texto: "O Velho gesticula para os altares. 'Força, Sabedoria, Coragem, Sacrifício e Verdade. Cada altar testará uma parte de sua alma. Falhe em três, e a Coroa permanecerá selada.'",
+  texto: "O Velho da Pedra gesticula majestosamente para os cinco altares, cada um pulsando com uma energia distinta. 'Cada altar representa uma virtude fundamental que todo verdadeiro líder deve possuir', explica com voz que ecoa através dos séculos. 'O Altar da Força testará sua determinação física e mental. O da Sabedoria desafiará seu intelecto e intuição. O da Coragem medirá sua bravura diante do impossível. O do Sacrifício avaliará sua disposição para colocar outros antes de si mesmo. E finalmente, o da Verdade examinará a pureza de suas intenções.' Seus olhos brilham como estrelas antigas. 'Você deve conquistar pelo menos três para que a Coroa reconheça sua dignidade. Escolha sabiamente por onde começar.'",
   efeitos: [{ tipo: "item", item: "conhecimento-altares" }],
   opcoes: [
-    { texto: "Começar pelo Altar da Força", secao: 44 },
-    { texto: "Começar pelo Altar da Sabedoria", secao: 47 },
-    { texto: "Começar pelo Altar da Coragem", secao: 50 }
+    { texto: "Começar pelo Altar da Força", secao: 47 },
+    { texto: "Começar pelo Altar da Sabedoria", secao: 50 },
+    { texto: "Começar pelo Altar da Coragem", secao: 53 }
   ]
 },
 
 41: {
-  texto: "Os altares brilham com runas diferentes. Força (vermelho), Sabedoria (azul), Coragem (dourado), Sacrifício (negro) e Verdade (branco). Cada um pulsa esperando sua escolha.",
+  texto: "Cada altar irradia uma presença única e poderosa. O Altar da Força, esculpido em mármore branco, pulsa com energia vermelha que faz seus músculos formigarem. O da Sabedoria, feito de obsidiana negra polida, brilha com luz azul que sussurra segredos antigos. O da Coragem, moldado em ouro puro, emite uma luz dourada que aquece seu coração com determinação. O do Sacrifício, talhado em prata lunar, reflete uma luz prateada que toca sua alma com compaixão. E o da Verdade, cristalizado em quartzo transparente, irradia luz branca pura que parece ver através de todas as máscaras e pretensões. Você sente que cada escolha moldará não apenas seu destino, mas sua própria essência.",
   opcoes: [
-    { texto: "Tocar o Altar da Força primeiro", secao: 44 },
-    { texto: "Tocar o Altar da Sabedoria primeiro", secao: 47 },
-    { texto: "Tocar o Altar do Sacrifício primeiro", secao: 53 }
+    { texto: "Tocar o Altar da Força primeiro", secao: 47 },
+    { texto: "Tocar o Altar da Sabedoria primeiro", secao: 50 },
+    { texto: "Tocar o Altar do Sacrifício primeiro", secao: 56 },
+    { texto: "Meditar antes de escolher", secao: 48 }
   ]
 },
 
 42: {
-  texto: "Sua postura defensiva irrita o Velho. 'Desconfiança não o levará à Coroa.' Ele bate o cajado no chão e guardiões de pedra emergem das paredes.",
-  batalha: "guardiao-antigo,guardiao-antigo",
-  vitoria: 45,
-  derrota: 60
-},
-
-43: {
-  texto: "O Velho sussurra nomes que fazem o ar vibrar: 'Malachar, Vorthak, Serafim... Cada nome tem poder aqui. Use-os sabiamente.' Você sente conhecimento perigoso.",
-  efeitos: [{ tipo: "item", item: "nomes-poder" }],
+  texto: "Sua gratidão genuína ressoa pela câmara como música celestial. O Velho da Pedra sorri com uma calorosa aprovação que você sente até os ossos. 'Poucos buscadores reconhecem a sabedoria de aceitar orientação', ele observa com satisfação. 'Esta humildade já fala bem de seu caráter.' Ele ergue uma mão massiva em bênção. 'Permita-me oferecer um conselho que pode salvar sua vida: a Coroa não busca perfeição, mas autenticidade. Seja verdadeiro consigo mesmo em cada teste, pois ela pode sentir falsidade como um lobo sente medo.' Uma energia reconfortante flui através de você, fortalecendo tanto seu corpo quanto seu espírito para os desafios vindouros.",
+  efeitos: [{ tipo: "item", item: "bencao-guardiao" }, { tipo: "energia", valor: 3 }],
   opcoes: [
-    { texto: "Agradecer e prosseguir aos altares", secao: 40 },
-    { texto: "Perguntar sobre Malachar especificamente", secao: 46, teste: "carisma", dificuldade: 17 }
+    { texto: "Partir para os altares com a bênção", secao: 40 },
+    { texto: "Perguntar sobre buscadores anteriores", secao: 49 }
   ]
 },
 
+43: {
+  texto: "Sua postura defensiva desperta algo sombrio no Velho da Pedra. Seus olhos se estreitam, e a temperatura da câmara despenca vários graus. 'Desconfiança e paranoia não são virtudes que a Coroa valoriza', sua voz ecoa com desaprovação que faz as pedras tremerem. 'Se você não pode confiar no guardião que protege este lugar há milênios, como pode esperar que a Coroa confie em você?' Ele bate seu cajado no chão com força suficiente para rachar a pedra, e guardiões de pedra começam a emergir das paredes como pesadelos ganhando vida. 'Prove sua força através do combate, já que escolheu o caminho da violência!'",
+  batalha: "guardiao-antigo,guardiao-antigo",
+  vitoria: 51,
+  derrota: 65
+},
+
 44: {
-  texto: "O Altar da Força exige que você mova uma pedra gigantesca. Suas mãos tocam a superfície fria e você sente o peso de montanhas.",
+  texto: "O interesse do Velho da Pedra se acende como uma forja antiga ganhando vida. 'Ah, você busca compreender o mistério completo', ele murmura com aprovação crescente. 'As três chaves são: a Espada que corta através de ilusões e mentiras, revelando a verdade oculta; o Medalhão que preserva as memórias dos justos e dos caídos, lembrando-nos das lições do passado; e a Voz que desperta os adormecidos e comanda o respeito dos antigos.' Seus olhos brilham com sabedoria milenar. 'Você já possui a primeira. O segundo pode estar mais próximo do que imagina. Mas a terceira... ah, a Voz deve ser conquistada através da provação, não encontrada.' Ele aponta para os altares. 'Comece sua jornada, e talvez a Voz se revele.'",
+  efeitos: [{ tipo: "item", item: "conhecimento-chaves" }],
   opcoes: [
-    { texto: "Usar força bruta (teste habilidade)", secao: 48, teste: "habilidade", dificuldade: 16 },
-    { texto: "Usar a Espada Ferrugem como alavanca", secao: 49, requer: "espada-ferrugem" },
-    { texto: "Procurar mecanismo oculto (teste sorte)", secao: 51, teste: "sorte", dificuldade: 14 }
+    { texto: "Começar as provações com novo entendimento", secao: 40 },
+    { texto: "Examinar o medalhão em sua posse", secao: 52 }
   ]
 },
 
 45: {
-  texto: "Após derrotar os guardiões, o Velho assente respeitosamente. 'Força através do combate. Você provou seu valor.' O primeiro altar se ilumina.",
-  efeitos: [{ tipo: "item", item: "selo-forca" }, { tipo: "energia", valor: -2 }],
+  texto: "O Velho da Pedra hesita, como se pesando cuidadosamente suas palavras. Finalmente, ele sussurra nomes que fazem o próprio ar vibrar com poder: 'Malachar, o Ambicioso, que falhou no teste final e se tornou parte da fortaleza. Vorthak, o Destruidor, cujo nome ainda desperta pesadelos nas pedras. E Serafim, o Primeiro Guardião, cuja pureza ainda protege este lugar.' Cada nome carrega peso sobrenatural, e você sente conhecimento perigoso se infiltrando em sua mente. 'Use estes nomes com extrema cautela, jovem buscador. Palavras de poder podem tanto elevar quanto destruir aqueles que as pronunciam sem sabedoria.'",
+  efeitos: [{ tipo: "item", item: "nomes-poder" }],
   opcoes: [
-    { texto: "Prosseguir ao Altar da Sabedoria", secao: 47 },
-    { texto: "Descansar antes do próximo teste", secao: 52 }
+    { texto: "Agradecer pela confiança e prosseguir", secao: 40 },
+    { texto: "Perguntar especificamente sobre Malachar", secao: 54, teste: "carisma", dificuldade: 17 }
   ]
 },
 
 46: {
-  texto: "'Malachar foi o último a tentar reivindicar a Coroa. Ele falhou no teste final e se tornou parte da fortaleza.' O Velho aponta para uma estátua que você não havia notado.",
-  efeitos: [{ tipo: "item", item: "historia-malachar" }],
+  texto: "Sua demonstração de controle sobre forças arcanas impressiona profundamente o Velho da Pedra. Energia mágica dança ao redor de seus dedos como chamas domesticadas, e você pronuncia palavras de poder com precisão que ecoa através das eras. 'Impressionante', ele admite com respeito genuíno. 'Poucos mortais conseguem canalizar tais forças sem serem consumidos por elas. Você possui não apenas poder, mas a disciplina para controlá-lo.' Sua aprovação se manifesta como uma aura dourada que o envolve. 'Esta demonstração conta como uma vitória parcial no Altar da Sabedoria. Você compreende que verdadeiro poder vem do autocontrole.'",
+  efeitos: [{ tipo: "item", item: "demonstracao-poder" }, { tipo: "energia", valor: 2 }],
   opcoes: [
-    { texto: "Examinar a estátua de Malachar", secao: 54, teste: "magia", dificuldade: 15 },
-    { texto: "Evitar a estátua e focar nos altares", secao: 40 }
+    { texto: "Usar esta vantagem nos testes vindouros", secao: 40 },
+    { texto: "Mostrar humildade apesar do elogio", secao: 42 }
   ]
 },
 
 47: {
-  texto: "O Altar da Sabedoria apresenta um enigma em runas antigas: 'O que cresce quando dividido, diminui quando somado, e permanece igual quando multiplicado?'",
+  texto: "O Altar da Força se ergue diante de você como um monumento à determinação humana. Quando você se aproxima, uma pedra colossal se materializa - um bloco de granito negro que deve pesar várias toneladas. Runas de poder percorrem sua superfície, pulsando com energia vermelha que sincroniza com seu batimento cardíaco. 'A força verdadeira', ecoa a voz do Velho da Pedra, 'não reside apenas nos músculos, mas na vontade inquebrantável de perseverar quando tudo parece impossível.' O desafio é claro: mover esta pedra que desafia as leis da física. Mas você sente que há múltiplas formas de demonstrar força - física, mental, e espiritual.",
   opcoes: [
-    { texto: "Responder 'Conhecimento'", secao: 55 },
-    { texto: "Responder 'Nada/Zero'", secao: 56 },
-    { texto: "Usar o pergaminho-sussurro para ajuda", secao: 57, requer: "pergaminho-sussurro" }
+    { texto: "Aplicar força física bruta", secao: 58, teste: "habilidade", dificuldade: 16 },
+    { texto: "Usar a Espada Ferrugem como alavanca", secao: 59, requer: "espada-ferrugem" },
+    { texto: "Procurar por mecanismos ocultos", secao: 60, teste: "sorte", dificuldade: 14 },
+    { texto: "Tentar mover com força de vontade pura", secao: 61, teste: "carisma", dificuldade: 18 }
   ]
 },
 
 48: {
-  texto: "Com grande esforço, você move a pedra. Músculos queimam, mas sua determinação prevalece. O altar reconhece sua força física.",
-  efeitos: [{ tipo: "item", item: "selo-forca" }, { tipo: "energia", valor: -3 }],
+  texto: "Você se senta em posição de lótus no centro da câmara, fechando os olhos e permitindo que sua consciência se expanda. A meditação revela camadas de significado ocultas nos altares - cada um não é apenas um teste, mas uma oportunidade de crescimento espiritual. Você vê visões de buscadores anteriores: alguns que falharam por arrogância, outros por covardia, e poucos que triunfaram através da autenticidade genuína. A Coroa de Ferro se revela não como um prêmio a ser conquistado, mas como uma responsabilidade a ser aceita. Quando abre os olhos, você sente uma clareza mental que não possuía antes, e uma compreensão mais profunda do que realmente está em jogo.",
+  efeitos: [{ tipo: "item", item: "sabedoria-meditacao" }, { tipo: "energia", valor: 2 }],
   opcoes: [
-    { texto: "Prosseguir ao próximo altar", secao: 47 },
-    { texto: "Descansar para recuperar energia", secao: 52 }
+    { texto: "Começar pelos altares com nova perspectiva", secao: 40 },
+    { texto: "Compartilhar suas visões com o Velho", secao: 55 }
   ]
 },
 
 49: {
-  texto: "A Espada Ferrugem vibra ao tocar a pedra. Com ela como alavanca, você move o obstáculo facilmente. A espada brilha mais forte.",
-  efeitos: [{ tipo: "item", item: "selo-forca" }, { tipo: "item", item: "espada-desperta" }],
+  texto: "Os olhos do Velho da Pedra se tornam distantes, como se estivesse vendo através de séculos de memórias. 'Muitos vieram antes de você', ele começa com voz carregada de melancolia. 'Guerreiros orgulhosos que acreditavam que força bruta bastaria. Magos arrogantes que pensavam que conhecimento arcano era suficiente. Nobres que esperavam que linhagem os tornasse dignos.' Ele aponta para estátuas que você não havia notado antes - figuras de pedra espalhadas pela câmara. 'Todos falharam porque buscavam a Coroa para si mesmos, não para servir outros. Malachar foi o mais próximo do sucesso, mas sua ambição final o condenou.' Suas palavras carregam o peso de tragédias incontáveis.",
+  efeitos: [{ tipo: "item", item: "historia-buscadores" }],
   opcoes: [
-    { texto: "Continuar com a espada energizada", secao: 47 },
-    { texto: "Examinar as mudanças na espada", secao: 58 }
+    { texto: "Prometer ser diferente dos anteriores", secao: 40 },
+    { texto: "Perguntar sobre o destino de Malachar", secao: 54 }
   ]
 },
 
 50: {
-  texto: "O Altar da Coragem mostra uma visão: você deve atravessar um corredor cheio de lâminas giratórias. O medo tenta paralisá-lo.",
+  texto: "O Altar da Sabedoria pulsa com energia azul hipnótica quando você se aproxima. Símbolos matemáticos e filosóficos começam a aparecer no ar ao redor, formando equações que desafiam a compreensão mortal. Uma voz etérea sussurra um enigma que ecoa através das dimensões: 'Eu sou o que cresce quando dividido, diminuo quando somado, e permaneço inalterado quando multiplicado por qualquer número. Sou mais poderoso nas mãos dos humildes e mais fraco nas garras dos arrogantes. O que sou?' As palavras vibram com poder arcano, e você sente que a resposta correta não virá apenas do intelecto, mas da compreensão profunda da natureza da existência.",
   opcoes: [
-    { texto: "Correr através das lâminas (teste habilidade)", secao: 59, teste: "habilidade", dificuldade: 17 },
-    { texto: "Avançar lentamente, calculando (teste magia)", secao: 61, teste: "magia", dificuldade: 15 },
-    { texto: "Usar o amuleto-urna como proteção", secao: 62, requer: "amuleto-urna" }
+    { texto: "Responder 'Conhecimento'", secao: 62 },
+    { texto: "Responder 'Sabedoria'", secao: 63 },
+    { texto: "Responder 'Humildade'", secao: 64 },
+    { texto: "Usar o pergaminho-sussurro para ajuda", secao: 57, requer: "pergaminho-sussurro" }
   ]
 },
 
 51: {
-  texto: "Sua sorte revela um mecanismo oculto. A pedra se move sozinha quando você pressiona a sequência correta de runas.",
-  efeitos: [{ tipo: "item", item: "selo-forca" }, { tipo: "energia", valor: 1 }],
+  texto: "Após derrotar os guardiões através de pura habilidade marcial, você permanece ofegante mas vitorioso no centro da câmara. O Velho da Pedra observa com uma mistura de aprovação e tristeza. 'Você provou sua força através do combate', ele reconhece com um aceno solene. 'Mas lembre-se - a violência deve sempre ser o último recurso, não o primeiro.' Apesar de suas palavras de cautela, você sente que passou no primeiro teste. O Altar da Força se ilumina com luz vermelha brilhante, reconhecendo sua vitória. 'Um altar conquistado', murmura o guardião. 'Mas os próximos testes exigirão mais que força de braço.'",
+  efeitos: [{ tipo: "item", item: "selo-forca" }, { tipo: "energia", valor: -2 }],
   opcoes: [
-    { texto: "Memorizar o padrão das runas", secao: 47 },
-    { texto: "Procurar padrões similares em outros altares", secao: 63 }
+    { texto: "Prosseguir ao Altar da Sabedoria", secao: 50 },
+    { texto: "Descansar antes do próximo teste", secao: 56 },
+    { texto: "Pedir orientação sobre os próximos desafios", secao: 40 }
   ]
 },
 
 52: {
-  texto: "Você descansa na câmara. O Velho observa silenciosamente. 'A pressa é inimiga da sabedoria', ele murmura. Você se sente revigorado.",
-  efeitos: [{ tipo: "energia", valor: 4 }],
+  texto: "Examinando o medalhão em sua posse com nova compreensão, você percebe detalhes que havia perdido antes. Os símbolos gravados em sua superfície não são meramente decorativos - eles contam uma história. Imagens de heróis antigos, batalhas épicas, e sacrifícios nobres se revelam quando você traça os padrões com o dedo. O medalhão pulsa com energia crescente, como se estivesse respondendo ao seu reconhecimento. Memórias que não são suas começam a fluir através de sua consciência - fragmentos de vidas vividas por portadores anteriores do medalhão. Você compreende que este artefato não apenas preserva memórias, mas as compartilha com aqueles dignos de carregá-las.",
+  efeitos: [{ tipo: "item", item: "memorias-medalhao" }, { tipo: "energia", valor: 1 }],
   opcoes: [
-    { texto: "Continuar aos altares restantes", secao: 47 },
-    { texto: "Conversar mais com o Velho", secao: 64 }
+    { texto: "Usar as memórias para guiar suas escolhas", secao: 40 },
+    { texto: "Tentar comunicar com os espíritos do medalhão", secao: 53, teste: "magia", dificuldade: 15 }
   ]
 },
 
 53: {
-  texto: "O Altar do Sacrifício exige que você ofereça algo valioso. Vários itens em seu inventário começam a brilhar, respondendo ao altar.",
+  texto: "Concentrando sua energia mágica no medalhão, você estabelece uma conexão com as consciências adormecidas dentro dele. Vozes sussurram em sua mente - não ameaçadoras, mas orientadoras. 'Jovem buscador', fala uma voz feminina carregada de sabedoria, 'nós que viemos antes oferecemos nosso conselho. A Coroa não pode ser conquistada - apenas aceita. Demonstre não que você é forte, mas que é digno.' Outras vozes se juntam ao coro: 'Coragem não é ausência de medo, mas ação apesar dele.' 'Sabedoria é saber quando não saber é suficiente.' 'Sacrifício verdadeiro não busca reconhecimento.' As vozes se desvanecem, deixando você com uma compreensão mais profunda dos testes à frente.",
+  efeitos: [{ tipo: "item", item: "conselhos-antigos" }, { tipo: "energia", valor: 2 }],
   opcoes: [
-    { texto: "Sacrificar o medalhão-selo", secao: 65, requer: "medalhao-selo" },
-    { texto: "Sacrificar as moedas antigas", secao: 66, requer: "moedas-antigas" },
-    { texto: "Sacrificar parte de sua energia vital", secao: 67, teste: "carisma", dificuldade: 16 }
+    { texto: "Seguir os conselhos dos antigos", secao: 40 },
+    { texto: "Agradecer aos espíritos e prosseguir", secao: 47 }
   ]
 },
 
 54: {
-  texto: "A estátua de Malachar sussurra quando tocada. Visões mostram sua falha: ele tentou usar força bruta contra a Coroa e foi consumido por ela.",
-  efeitos: [{ tipo: "item", item: "visao-malachar" }, { tipo: "energia", valor: -1 }],
+  texto: "O semblante do Velho da Pedra se ensombrece quando você menciona Malachar. Ele aponta para uma estátua que você não havia notado - uma figura orgulhosa em armadura elaborada, mas com expressão de desespero eterno gravada em pedra. 'Malachar, o Ambicioso', ele sussurra com tristeza profunda. 'Ele chegou mais perto da Coroa que qualquer outro em mil anos. Passou em quatro dos cinco testes com brilhantismo. Mas no teste final da Verdade, quando perguntado por que buscava a Coroa, ele respondeu com honestidade brutal: para governar e ser adorado.' O Velho balança a cabeça. 'A Coroa o transformou em pedra no mesmo instante. Ele permanece aqui como advertência - poder sem humildade é destruição certa.'",
+  efeitos: [{ tipo: "item", item: "historia-malachar" }],
   opcoes: [
+    { texto: "Examinar a estátua de Malachar", secao: 67, teste: "magia", dificuldade: 15 },
     { texto: "Aprender com o erro de Malachar", secao: 40 },
-    { texto: "Tentar comunicar com o espírito de Malachar", secao: 68, teste: "magia", dificuldade: 18 }
+    { texto: "Prometer não repetir seus erros", secao: 42 }
   ]
 },
 
 55: {
-  texto: "Resposta incorreta. O altar pulsa vermelho e uma descarga de energia o atinge. Você sente sua sabedoria sendo testada mais duramente.",
-  efeitos: [{ tipo: "energia", valor: -2 }],
+  texto: "Suas visões meditativas fascinam profundamente o Velho da Pedra. Ele se inclina para frente, seus olhos brilhando com interesse genuíno. 'Poucos conseguem ver além do véu da realidade física', ele observa com admiração crescente. 'Suas visões revelam uma verdade fundamental - a Coroa de Ferro não é um objeto, mas um estado de ser. Ela representa a harmonia perfeita entre poder e responsabilidade, força e compaixão, liderança e serviço.' Ele gesticula para os altares. 'Cada teste não busca medir suas habilidades, mas revelar seu caráter verdadeiro. Continue com esta sabedoria, e você pode ser o primeiro em séculos a verdadeiramente compreender o propósito da Coroa.'",
+  efeitos: [{ tipo: "item", item: "compreensao-coroa" }, { tipo: "energia", valor: 3 }],
   opcoes: [
-    { texto: "Tentar novamente com 'Zero'", secao: 56 },
-    { texto: "Desistir deste altar por ora", secao: 50 }
+    { texto: "Abordar os testes com nova compreensão", secao: 40 },
+    { texto: "Perguntar sobre o verdadeiro propósito da Coroa", secao: 68 }
   ]
 },
 
 56: {
-  texto: "Correto! O altar brilha azul. 'Zero cresce quando dividido por frações, diminui quando somado a negativos, permanece zero quando multiplicado.' Você ganha sabedoria.",
-  efeitos: [{ tipo: "item", item: "selo-sabedoria" }, { tipo: "energia", valor: 1 }],
+  texto: "O Altar do Sacrifício irradia uma energia prateada que toca sua alma com uma mistura de melancolia e esperança. Quando você se aproxima, uma visão se forma no ar - imagens de heróis ao longo da história fazendo escolhas impossíveis, colocando o bem de outros acima de suas próprias necessidades. A voz do altar sussurra diretamente em sua consciência: 'Verdadeiro sacrifício não é perda, mas transformação. O que você está disposto a entregar para que outros possam prosperar?' Vários de seus pertences começam a brilhar com luz prateada, respondendo ao poder do altar. Você sente que a escolha que fizer aqui revelará a profundidade de seu caráter mais que qualquer outro teste.",
   opcoes: [
-    { texto: "Prosseguir ao Altar da Coragem", secao: 50 },
-    { texto: "Tentar o Altar da Verdade", secao: 69 }
+    { texto: "Sacrificar o medalhão-selo", secao: 69, requer: "medalhao-selo" },
+    { texto: "Sacrificar as moedas antigas", secao: 70, requer: "moedas-antigas" },
+    { texto: "Sacrificar parte de sua energia vital", secao: 71, teste: "carisma", dificuldade: 16 },
+    { texto: "Oferecer suas memórias mais preciosas", secao: 72, teste: "magia", dificuldade: 17 }
   ]
 },
 
 57: {
-  texto: "O pergaminho sussurra a resposta: 'Zero'. Você usa o conhecimento arcano para resolver o enigma, mas sente que trapaceou ligeiramente.",
-  efeitos: [{ tipo: "item", item: "selo-sabedoria" }],
+  texto: "O pergaminho-sussurro se desenrola em suas mãos, revelando palavras que dançam e se reorganizam diante de seus olhos. Vozes antigas sussurram a resposta diretamente em sua mente, mas junto com o conhecimento vem uma sensação de que você trapaceou ligeiramente. O altar pulsa com luz azul, reconhecendo a resposta correta, mas a intensidade é menor que deveria ser. O Velho da Pedra observa com uma expressão neutra. 'Conhecimento obtido através de atalhos tem menos valor que sabedoria conquistada através de reflexão', ele comenta suavemente. 'O altar aceita sua resposta, mas registra a fonte de seu conhecimento.'",
+  efeitos: [{ tipo: "item", item: "selo-sabedoria-parcial" }],
   opcoes: [
-    { texto: "Aceitar a vitória e continuar", secao: 50 },
-    { texto: "Confessar ao Velho que usou ajuda", secao: 70, teste: "carisma", dificuldade: 14 }
+    { texto: "Aceitar a vitória parcial e continuar", secao: 53 },
+    { texto: "Confessar que usou ajuda externa", secao: 73, teste: "carisma", dificuldade: 14 },
+    { texto: "Tentar resolver outro enigma sem ajuda", secao: 74 }
   ]
 },
 
 58: {
-  texto: "A Espada Ferrugem agora pulsa com energia própria. Runas aparecem na lâmina: 'Cortadora de Véus'. Ela pode afetar criaturas mágicas.",
-  efeitos: [{ tipo: "item", item: "espada-cortadora-veus" }],
+  texto: "Você se posiciona diante da pedra colossal, músculos tensionando enquanto canaliza toda sua força física. Suas mãos encontram pontos de apoio na superfície rugosa, e você empurra com tudo que tem. Por um momento aterrorizante, nada acontece - a pedra permanece imóvel como uma montanha. Mas então, lentamente, quase imperceptivelmente, ela começa a se mover. Centímetro por centímetro, sua determinação pura supera a impossibilidade física. Suor escorre por seu rosto, músculos queimam como fogo, mas você persiste. Finalmente, com um rugido de triunfo, a pedra se desloca completamente. O Altar da Força explode em luz vermelha brilhante, reconhecendo sua vitória através de pura determinação.",
+  efeitos: [{ tipo: "item", item: "selo-forca" }, { tipo: "energia", valor: -3 }],
   opcoes: [
-    { texto: "Testar a nova habilidade da espada", secao: 47 },
-    { texto: "Guardar o poder para momento crucial", secao: 50 }
+    { texto: "Descansar após o esforço hercúleo", secao: 56 },
+    { texto: "Continuar imediatamente ao próximo teste", secao: 50 },
+    { texto: "Celebrar a vitória com o Velho da Pedra", secao: 75 }
   ]
 },
 
 59: {
-  texto: "Você corre através das lâminas com agilidade. Alguns cortes superficiais, mas sua coragem é reconhecida. O altar dourado se ilumina.",
-  efeitos: [{ tipo: "item", item: "selo-coragem" }, { tipo: "energia", valor: -2 }],
+  texto: "A Espada Ferrugem vibra com poder crescente quando você a posiciona como alavanca contra a pedra colossal. No momento em que a lâmina toca a superfície rochosa, runas de força se acendem ao longo de seu fio, e você sente a arma canalizar e amplificar sua própria força. Com a espada como extensão de sua vontade, a pedra impossível se move com surpreendente facilidade. Mais que isso - a própria espada se transforma no processo, sua lâmina brilhando com nova intensidade e poder. Você compreende que a verdadeira força não vem apenas de músculos, mas da harmonia entre guerreiro e arma, vontade e ferramenta.",
+  efeitos: [{ tipo: "item", item: "selo-forca" }, { tipo: "item", item: "espada-desperta" }],
   opcoes: [
-    { texto: "Continuar ao Altar do Sacrifício", secao: 53 },
-    { texto: "Ir direto ao Altar da Verdade", secao: 69 }
+    { texto: "Examinar as mudanças na espada", secao: 76 },
+    { texto: "Continuar aos próximos testes", secao: 50 },
+    { texto: "Agradecer à espada pela parceria", secao: 77 }
   ]
 },
 
 60: {
-  texto: "Você cai derrotado na câmara dos altares. O Velho balança a cabeça tristemente. 'Nem todos estão prontos para a Coroa.' Sua jornada termina aqui.",
-  efeitos: [{ tipo: "energia", valor: -10 }],
-  final: true
+  texto: "Sua intuição o guia para examinar a base da pedra colossal, onde você descobre um mecanismo engenhoso oculto por séculos de poeira e negligência. Runas de ativação brilham fracamente quando tocadas na sequência correta, revelando que a verdadeira prova não era de força bruta, mas de sabedoria para encontrar soluções elegantes. Quando o mecanismo se ativa, a pedra se move sozinha, flutuando graciosamente para o lado como se não pesasse nada. O Altar da Força brilha com aprovação, reconhecendo que você demonstrou a forma mais elevada de força - a inteligência para superar obstáculos impossíveis através de compreensão em vez de violência.",
+  efeitos: [{ tipo: "item", item: "selo-forca" }, { tipo: "energia", valor: 1 }],
+  opcoes: [
+    { texto: "Memorizar o padrão das runas", secao: 78 },
+    { texto: "Procurar mecanismos similares em outros altares", secao: 79 },
+    { texto: "Prosseguir confiante ao próximo teste", secao: 50 }
+  ]
 },
 
 61: {
-  texto: "Sua abordagem calculada funciona. Você mapeia o padrão das lâminas e passa ileso. Coragem através da sabedoria é reconhecida.",
-  efeitos: [{ tipo: "item", item: "selo-coragem" }, { tipo: "energia", valor: 1 }],
+  texto: "Fechando os olhos e concentrando toda sua força de vontade, você estende as mãos em direção à pedra colossal sem tocá-la fisicamente. Energia pura flui através de seu ser, manifestando-se como poder telecinético que desafia as leis da física. A pedra começa a tremer, depois a levitar, respondendo não à força muscular, mas à pura determinação de sua alma. É o teste mais difícil que você já enfrentou - manter tal concentração enquanto move um objeto de várias toneladas através de força de vontade pura. Quando finalmente consegue, você sente que transcendeu limitações mortais normais.",
+  efeitos: [{ tipo: "item", item: "selo-forca" }, { tipo: "item", item: "despertar-psiquico" }, { tipo: "energia", valor: -1 }],
   opcoes: [
-    { texto: "Prosseguir confiante", secao: 53 },
-    { texto: "Analisar os padrões dos outros altares", secao: 63 }
+    { texto: "Explorar seus novos poderes psíquicos", secao: 80 },
+    { texto: "Manter humildade apesar do poder", secao: 42 },
+    { texto: "Continuar aos próximos testes", secao: 50 }
   ]
 },
 
 62: {
-  texto: "O amuleto-urna cria uma barreira protetora. Você atravessa as lâminas sem ferimentos, mas o amuleto se desfaz no processo.",
-  efeitos: [{ tipo: "item", item: "selo-coragem" }],
+  texto: "Sua resposta 'Conhecimento' faz o altar pulsar com luz azul, mas não da forma triunfante que você esperava. Em vez disso, a luz vacila, como se o altar estivesse considerando sua resposta. A voz etérea sussurra novamente: 'Conhecimento pode crescer quando compartilhado, mas também pode diminuir quando mal usado. Você está próximo da verdade, mas não a alcançou completamente.' O teste não falhou, mas também não foi um sucesso completo. Você sente que há uma resposta mais profunda, mais fundamental, que captura a essência verdadeira do enigma.",
   opcoes: [
-    { texto: "Lamentar a perda do amuleto", secao: 53 },
-    { texto: "Agradecer o sacrifício do amuleto", secao: 67 }
+    { texto: "Tentar novamente com 'Sabedoria'", secao: 63 },
+    { texto: "Tentar novamente com 'Humildade'", secao: 64 },
+    { texto: "Aceitar a resposta parcial e continuar", secao: 81 },
+    { texto: "Meditar sobre o significado mais profundo", secao: 82, teste: "magia", dificuldade: 15 }
   ]
 },
 
 63: {
-  texto: "Você descobre que todos os altares seguem padrões similares. Este conhecimento pode facilitar os testes restantes.",
-  efeitos: [{ tipo: "item", item: "padroes-altares" }],
+  texto: "A palavra 'Sabedoria' ressoa através da câmara com poder crescente. O Altar da Sabedoria explode em luz azul brilhante, reconhecendo a verdade em sua resposta. 'Correto!', ecoa a voz etérea com aprovação calorosa. 'Sabedoria cresce quando compartilhada, diminui quando guardada egoisticamente, e permanece constante quando aplicada com humildade. É o mais poderoso nas mãos daqueles que reconhecem suas próprias limitações.' Conhecimento arcano flui através de sua mente, expandindo sua compreensão não apenas de magia, mas da natureza fundamental da existência. Você sente que passou no teste não apenas através de intelecto, mas através de compreensão genuína.",
+  efeitos: [{ tipo: "item", item: "selo-sabedoria" }, { tipo: "energia", valor: 2 }],
   opcoes: [
-    { texto: "Usar o conhecimento no próximo altar", secao: 53 },
-    { texto: "Compartilhar descoberta com o Velho", secao: 64 }
+    { texto: "Prosseguir ao Altar da Coragem", secao: 83 },
+    { texto: "Tentar o Altar da Verdade", secao: 84 },
+    { texto: "Compartilhar a sabedoria com o Velho", secao: 85 }
   ]
 },
 
 64: {
-  texto: "O Velho sorri. 'Você aprende rápido. A Coroa escolhe aqueles que observam, não apenas aqueles que agem.' Ele oferece uma dica valiosa.",
-  efeitos: [{ tipo: "item", item: "dica-velho" }, { tipo: "energia", valor: 2 }],
+  texto: "Sua resposta 'Humildade' faz o altar brilhar com uma luz azul suave e calorosa. A voz etérea sussurra com aprovação profunda: 'Uma resposta sábia, jovem buscador. Humildade é verdadeiramente o que cresce quando dividida, diminui quando acumulada, e permanece pura quando multiplicada por qualquer experiência.' O altar reconhece não apenas a correção de sua resposta, mas a sabedoria de coração que a inspirou. 'Você compreende que verdadeira sabedoria começa com o reconhecimento de nossa própria ignorância.' Energia serena flui através de você, trazendo não apenas conhecimento, mas paz interior.",
+  efeitos: [{ tipo: "item", item: "selo-sabedoria" }, { tipo: "item", item: "coracao-humilde" }, { tipo: "energia", valor: 3 }],
   opcoes: [
-    { texto: "Usar a dica nos altares restantes", secao: 53 },
-    { texto: "Perguntar sobre a natureza da Coroa", secao: 71 }
+    { texto: "Continuar com humildade renovada", secao: 83 },
+    { texto: "Agradecer pela lição", secao: 42 },
+    { texto: "Meditar sobre o significado da humildade", secao: 86 }
   ]
 },
 
 65: {
-  texto: "Ao sacrificar o medalhão-selo, você sente uma conexão profunda com a Coroa. O altar negro pulsa e aceita sua oferenda.",
-  efeitos: [{ tipo: "item", item: "selo-sacrificio" }],
-  opcoes: [
-    { texto: "Sentir a perda mas continuar", secao: 69 },
-    { texto: "Questionar se foi a escolha certa", secao: 72 }
-  ]
+  texto: "A escuridão o consome completamente, seja através das lâminas dos guardiões antigos, da exaustão total de suas forças, ou da rejeição final da própria Coroa de Ferro. Sua última visão é do Velho da Pedra balançando a cabeça com tristeza infinita. 'Nem todos estão destinados a carregar tal fardo', sua voz ecoa como um lamento através das dimensões. 'Que sua alma encontre paz no além, e que outro mais preparado venha em seu lugar.' As pedras da Fortaleza de Ferro se fecham ao seu redor como uma tumba eterna, guardando o segredo de mais um buscador que ousou sonhar com poder além de sua capacidade. A Coroa permanece selada, aguardando alguém verdadeiramente digno de sua responsabilidade cósmica.",
+  efeitos: [{ tipo: "energia", valor: -10 }],
+  final: true
 },
 
 66: {
-  texto: "As moedas antigas se dissolvem no altar. Você sente que ofereceu riqueza material por poder espiritual. O altar aceita.",
+  texto: "As moedas antigas se dissolvem no altar como açúcar na chuva, cada uma liberando memórias de épocas passadas - reis justos, comerciantes honestos, e heróis esquecidos que as carregaram. Você sente que ofereceu não apenas riqueza material, mas a história e o legado de gerações inteiras. O Altar do Sacrifício pulsa com luz prateada crescente, reconhecendo que você compreende o verdadeiro valor do que entregou. 'Riqueza material é transitória', sussurra uma voz antiga, 'mas o sacrifício feito com propósito nobre ecoa através da eternidade.' Você sente uma leveza espiritual, como se um peso invisível tivesse sido removido de seus ombros.",
   efeitos: [{ tipo: "item", item: "selo-sacrificio" }],
   opcoes: [
     { texto: "Continuar ao último altar", secao: 69 },
-    { texto: "Refletir sobre o significado", secao: 73 }
+    { texto: "Refletir sobre o significado do sacrifício", secao: 73 }
   ]
 },
 
 67: {
-  texto: "Você oferece parte de sua força vital. Dor intensa, mas o altar reconhece o verdadeiro sacrifício. Sua determinação impressiona o Velho.",
+  texto: "Você coloca as mãos sobre seu coração e oferece parte de sua própria força vital ao altar. Dor intensa percorre seu corpo como fogo líquido, mas junto com ela vem uma compreensão profunda - você está literalmente dando parte de si mesmo para que outros possam prosperar. O Altar do Sacrifício brilha com luz prateada cegante, reconhecendo o verdadeiro sacrifício. Sua determinação impressiona até mesmo o Velho da Pedra, que observa com respeito renovado. 'Poucos têm coragem para oferecer sua própria essência', ele murmura com admiração. 'Este é o sacrifício mais puro - dar de si mesmo sem expectativa de retorno.'",
   efeitos: [{ tipo: "item", item: "selo-sacrificio" }, { tipo: "energia", valor: -3 }],
   opcoes: [
     { texto: "Continuar apesar da fraqueza", secao: 69 },
@@ -655,29 +672,29 @@ const NARRATIVAS = {
 },
 
 68: {
-  texto: "O espírito de Malachar sussurra: 'A Coroa... não pode ser dominada... apenas aceita... Cuidado com... a sede de poder...' Sua voz se desfaz.",
-  efeitos: [{ tipo: "item", item: "aviso-malachar" }],
+  texto: "O Velho da Pedra se inclina para frente, seus olhos brilhando com uma luz que parece vir de estrelas distantes. 'A Coroa de Ferro não foi criada para conceder poder, mas para testá-lo', ele revela com voz carregada de séculos de sabedoria. 'Ela é um espelho da alma, refletindo a verdadeira natureza daqueles que a buscam. Aqueles movidos por ambição encontram apenas destruição. Mas aqueles guiados por compaixão e senso de dever... eles descobrem que a Coroa não é um fardo, mas uma extensão de quem já são.' Ele gesticula para a câmara ao redor. 'Este lugar inteiro é um teste - cada escolha, cada ação, cada pensamento é avaliado. A Coroa já sabe se você é digno; os testes apenas revelam essa verdade para você mesmo.'",
+  efeitos: [{ tipo: "item", item: "proposito-coroa" }, { tipo: "energia", valor: 2 }],
   opcoes: [
-    { texto: "Levar o aviso a sério", secao: 69 },
-    { texto: "Ignorar as palavras de um fracassado", secao: 75 }
+    { texto: "Abordar os testes finais com nova compreensão", secao: 40 },
+    { texto: "Perguntar sobre sua própria dignidade", secao: 87 }
   ]
 },
 
 69: {
-  texto: "O Altar da Verdade final brilha branco puro. Uma voz ecoa: 'Por que você busca a Coroa de Ferro?' Sua resposta determinará tudo.",
+  texto: "Ao sacrificar o medalhão-selo, você sente como se estivesse entregando uma parte de sua própria história. O artefato se dissolve em luz prateada que é absorvida pelo altar, e com ele vão as memórias e conexões que havia formado. Mas em troca, você sente uma conexão profunda e inexplicável com a própria Coroa de Ferro, como se ela reconhecesse seu sacrifício e o aprovasse. O Altar do Sacrifício pulsa com energia crescente, e você compreende que abrir mão de algo precioso para um bem maior é a essência do verdadeiro sacrifício. O Velho da Pedra observa com aprovação silenciosa, reconhecendo a profundidade de sua escolha.",
+  efeitos: [{ tipo: "item", item: "selo-sacrificio" }],
   opcoes: [
-    { texto: "Para obter poder e governar", secao: 76 },
-    { texto: "Para proteger os inocentes", secao: 77 },
-    { texto: "Para compreender meu destino", secao: 78, teste: "carisma", dificuldade: 15 }
+    { texto: "Sentir a perda mas continuar com determinação", secao: 84 },
+    { texto: "Questionar se foi a escolha certa", secao: 72 }
   ]
 },
 
 70: {
-  texto: "O Velho aprecia sua honestidade. 'A verdade é mais valiosa que a vitória obtida por engano.' Ele concede o selo mesmo assim.",
+  texto: "O Velho da Pedra observa sua confissão com olhos que brilham de aprovação. 'A honestidade é uma virtude rara entre os buscadores de poder', ele comenta com uma voz calorosa que ecoa pela câmara. 'Muitos tentariam esconder o uso de ajuda externa, mas você escolheu a verdade sobre a aparência de sucesso.' Ele ergue uma mão em bênção. 'Esta honestidade vale mais que qualquer vitória obtida através de engano. O altar reconhece não apenas sua resposta correta, mas a integridade com que a obteve.' Uma luz dourada o envolve, e você sente que ganhou algo muito mais valioso que um simples selo - ganhou respeito genuíno.",
   efeitos: [{ tipo: "item", item: "selo-sabedoria" }, { tipo: "item", item: "bencao-honestidade" }],
   opcoes: [
-    { texto: "Agradecer e continuar humildemente", secao: 50 },
-    { texto: "Prometer ser sempre honesto", secao: 69 }
+    { texto: "Agradecer e continuar humildemente", secao: 83 },
+    { texto: "Prometer ser sempre honesto daqui em diante", secao: 84 }
   ]
 },
 
@@ -1454,6 +1471,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
