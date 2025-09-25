@@ -29,17 +29,43 @@ class SistemaNarrativas {
 
     inicializar() {
         // Verifica autenticação
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 this.userId = user.uid;
-                this.configurarEventListeners();
+                await this.configurarEventListeners();
             } else {
                 window.location.href = "index.html";
             }
         });
     }
+
+    async verificarProgressoSalvo() {
+        if (!this.userId) return;
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const secaoUrl = urlParams.get('secao');
+        
+        // Se veio com seção na URL, usa ela
+        if (secaoUrl) {
+            console.log('Seção da URL:', secaoUrl);
+            // Busca qual narrativa contém essa seção
+            for (const [narrativaId, narrativa] of Object.entries(NARRATIVAS)) {
+                console.log('Verificando narrativa:', narrativaId, 'para seção:', secaoUrl);
+                if (narrativa.secoes && narrativa.secoes[secaoUrl]) {
+                    console.log('Seção encontrada! Iniciando narrativa:', narrativaId);
+                    await this.iniciarNarrativa(narrativaId);
+                    await this.mostrarSecao(parseInt(secaoUrl));
+                    return;
+                }
+            }
+            console.log('Seção não encontrada em nenhuma narrativa');
+        }
+    }
     
-    configurarEventListeners() {
+    async configurarEventListeners() {
+        // Verifica se há progresso salvo
+        await this.verificarProgressoSalvo();
+        
         // Event listeners para seleção de narrativas
         document.querySelectorAll('.narrativa-card').forEach(card => {
             card.addEventListener('click', async (e) => {
@@ -91,19 +117,18 @@ class SistemaNarrativas {
     }
 
     async mostrarSecao(numeroSecao) {
-    const secao = this.narrativaAtual.secoes[numeroSecao];
-    if (!secao) return;
+        const secao = this.narrativaAtual.secoes[numeroSecao];
+        if (!secao) return;
 
-    this.secaoAtual = numeroSecao;
-    
-    // Salva progresso no Firestore
-    await this.salvarProgresso(numeroSecao);
-    
-    // Aplicar efeitos da seção
-    if (secao.efeitos) {
-        await this.aplicarEfeitos(secao.efeitos);
-    }
-
+        this.secaoAtual = numeroSecao;
+        
+        // Salva progresso no Firestore
+        await this.salvarProgresso(numeroSecao);
+        
+        // Aplicar efeitos da seção
+        if (secao.efeitos) {
+            await this.aplicarEfeitos(secao.efeitos);
+        }
 
         // Mostrar conteúdo
         document.getElementById('numero-secao').textContent = numeroSecao;
@@ -138,10 +163,9 @@ class SistemaNarrativas {
             }
 
             btn.addEventListener('click', () => {
-                    console.log('Botão clicado, opção:', opcao); // ADICIONE ESTA LINHA
-    this.processarOpcao(opcao);
-});
-
+                console.log('Botão clicado, opção:', opcao);
+                this.processarOpcao(opcao);
+            });
 
             container.appendChild(btn);
         });
@@ -313,6 +337,10 @@ class SistemaNarrativas {
     }
 
     rolarDados() {
+        if (!this.testeAtual) {
+            console.error('Erro: testeAtual não definido');
+            return;
+        }
         const atributoNome = this.testeAtual.atributo;
         let valorAtributo = 10; // valor padrão
         
@@ -357,41 +385,40 @@ class SistemaNarrativas {
         }
     }
     
-async salvarProgresso(numeroSecao) {
-    if (!this.userId || !this.narrativaAtual) return;
-    
-    const playerDocRef = doc(db, "players", this.userId);
-    await updateDoc(playerDocRef, {
-        "narrativeProgress.currentSection": numeroSecao,
-        "narrativeProgress.narrativeId": Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual),
-        "narrativeProgress.lastUpdated": new Date().toISOString()
-    });
-}
-
-async processarOpcao(opcao) {
-    // Consome item se necessário
-    if (opcao.requer) {
-        await this.consumirItem(opcao.requer);
-    }
-    
-    if (opcao.batalha) {
-        // Salva dados da batalha no Firestore
+    async salvarProgresso(numeroSecao) {
+        if (!this.userId || !this.narrativaAtual) return;
+        
         const playerDocRef = doc(db, "players", this.userId);
         await updateDoc(playerDocRef, {
-            "narrativeProgress.battleReturn": {
-                vitoria: opcao.vitoria,
-                derrota: opcao.derrota,
-                active: true
-            }
+            "narrativeProgress.currentSection": numeroSecao,
+            "narrativeProgress.narrativeId": Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual),
+            "narrativeProgress.lastUpdated": new Date().toISOString()
         });
-        window.location.href = `batalha.html?monstros=${opcao.batalha}`;
-    } else if (opcao.teste) {
-        this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
-    } else {
-        await this.mostrarSecao(opcao.secao);
     }
-}
 
+    async processarOpcao(opcao) {
+        // Consome item se necessário
+        if (opcao.requer) {
+            await this.consumirItem(opcao.requer);
+        }
+        
+        if (opcao.batalha) {
+            // Salva dados da batalha no Firestore
+            const playerDocRef = doc(db, "players", this.userId);
+            await updateDoc(playerDocRef, {
+                "narrativeProgress.battleReturn": {
+                    vitoria: opcao.vitoria,
+                    derrota: opcao.derrota,
+                    active: true
+                }
+            });
+            window.location.href = `batalha.html?monstros=${opcao.batalha}`;
+        } else if (opcao.teste) {
+            this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
+        } else {
+            await this.mostrarSecao(opcao.secao);
+        }
+    }
 
     voltarSelecao() {
         document.getElementById('narrativa-ativa').className = 'tela-oculta';
@@ -404,15 +431,3 @@ async processarOpcao(opcao) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
-
-
-// Inicializar sistema quando página carregar
-document.addEventListener('DOMContentLoaded', () => {
-    new SistemaNarrativas();
-});
-
-
-
-
-
-
