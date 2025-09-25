@@ -194,87 +194,6 @@ class SistemaNarrativas {
             'corda': { content: 'Corda', description: 'Corda resistente para escaladas' },
             'ração': { content: 'Ração', description: 'Comida para viagem', consumable: true, effect: 'heal', value: 2 },
             'tocha': { content: 'Tocha', description: 'Bastão de madeira envolto em trapos embebidos em óleo', consumable: true },
-
-// AVENTURA - A COROA Itens básicos/iniciais
-    'pavio-negro': { content: 'Pavio Negro', description: 'Um pavio misterioso que vibra com energia sombria' },
-    'bilhete-queimado': { content: 'Bilhete Queimado', description: 'Bilhete parcialmente queimado com pistas sobre a Coroa' },
-    'medalhao-selo': { content: 'Medalhão do Selo', description: 'Medalhão de ferro que vibra com poder antigo' },
-    'mapa-parcial': { content: 'Mapa Parcial', description: 'Mapa incompleto da Fortaleza de Ferro' },
-    'frasco-escuro': { content: 'Frasco Escuro', description: 'Frasco com líquido de origem desconhecida' },
-    'tochas-apagadas': { content: 'Tochas Apagadas', description: 'Três tochas sem brasas, prontas para acender' },
-    'anel-aquatico': { content: 'Anel Aquático', description: 'Anel simples com entalhes aquáticos', slot: 'ring', bonuses: { magic: 1 } },
-    'frasco-veneno': { content: 'Frasco de Veneno', description: 'Líquido venenoso obtido dos cultistas', consumable: true },
-    'oleo-corrosivo': { content: 'Óleo Corrosivo', description: 'Óleo que queima substâncias corruptas', consumable: true },
-    'espada-ferrugem': { content: 'Espada Ferrugem', description: 'Espada antiga com runas de restauração', slot: 'weapon', attack: 3 },
-    
-    // Itens de conhecimento/informação
-    'nota-selo': { content: 'Nota do Selo', description: 'Anotações sobre Força, Selo e Voz' },
-    'pergaminho-sussurro': { content: 'Pergaminho Sussurrante', description: 'Pergaminho que sussurra em língua antiga' },
-    'moedas-antigas': { content: 'Moedas Antigas', description: 'Moedas de valor histórico' },
-    'mapa-torre': { content: 'Mapa da Torre', description: 'Mapa rasgado do subsolo da torre' },
-    'inscricao-provacoes': { content: 'Inscrição das Provações', description: 'Inscrição sobre três chaves necessárias' },
-    'guarda-runa': { content: 'Runa da Guarda', description: 'Inscrição encontrada na guarda da espada' },
-    'palavra-serafim': { content: 'Palavra Serafim', description: 'Palavra de poder sussurrada pelos antigos' },
-    
-    // Itens da câmara secreta
-    'medalhao-antigo': { content: 'Medalhão Antigo', description: 'Medalhão moldado em câmara secreta' },
-    'pergaminho-guia': { content: 'Pergaminho Guia', description: 'Pergaminho com orientações místicas' },
-    'mapa-secreto': { content: 'Mapa Secreto', description: 'Mapa revelando passagens ocultas' },
-    'fragmento-espada': { content: 'Fragmento de Espada', description: 'Pedaço de lâmina antiga e poderosa' },
-    'amuleto-urna': { content: 'Amuleto da Urna', description: 'Amuleto protetor em forma de urna', slot: 'amulet', defense: 2 },
-    'pergaminho-comando': { content: 'Pergaminho de Comando', description: 'Pergaminho que murmura instruções arcanas' },
-    'inscricao-voz': { content: 'Inscrição da Voz', description: 'Inscrições sobre o poder da Voz' },
-    
-    // Itens dos altares e provações
-    'conhecimento-altares': { content: 'Conhecimento dos Altares', description: 'Sabedoria sobre os cinco altares sagrados' },
-    'nomes-poder': { content: 'Nomes de Poder', description: 'Conhecimento perigoso sobre nomes antigos' },
-    'historia-malachar': { content: 'História de Malachar', description: 'Conhecimento sobre o fracasso de Malachar' },
-    'selo-forca': { content: 'Selo da Força', description: 'Selo obtido no Altar da Força' },
-    'espada-desperta': { content: 'Espada Desperta', description: 'Espada Ferrugem energizada pelos altares', slot: 'weapon', attack: 5 },
-    'espada-cortadora-veus': { content: 'Espada Cortadora de Véus', description: 'Espada capaz de afetar criaturas mágicas', slot: 'weapon', attack: 6, bonuses: { magic: 2 } },
-    'selo-sabedoria': { content: 'Selo da Sabedoria', description: 'Selo obtido no Altar da Sabedoria' },
-    'bencao-honestidade': { content: 'Bênção da Honestidade', description: 'Bênção por confessar o uso de ajuda' },
-    'padroes-altares': { content: 'Padrões dos Altares', description: 'Conhecimento sobre padrões dos altares' },
-    'dica-velho': { content: 'Dica do Velho', description: 'Conselho valioso do Velho da Pedra' },
-    'selo-sacrificio': { content: 'Selo do Sacrifício', description: 'Selo obtido no Altar do Sacrifício' },
-    'visao-malachar': { content: 'Visão de Malachar', description: 'Visões do fracasso do antigo buscador' },
-    'aviso-malachar': { content: 'Aviso de Malachar', description: 'Advertência sobre a sede de poder' },
-    'selo-coragem': { content: 'Selo da Coragem', description: 'Selo obtido no Altar da Coragem' },
-    'selo-verdade': { content: 'Selo da Verdade', description: 'Selo final obtido no Altar da Verdade' },
-    
-    // Itens de sabedoria e crescimento
-    'verdade-coroa': { content: 'Verdade da Coroa', description: 'Conhecimento sobre a verdadeira natureza da Coroa' },
-    'licao-compaixao': { content: 'Lição da Compaixão', description: 'Compreensão sobre o poder da compaixão' },
-    'perdao-sombras': { content: 'Perdão das Sombras', description: 'Paz oferecida às sombras derrotadas' },
-    'paz-sombras': { content: 'Paz das Sombras', description: 'Gratidão das sombras que encontraram descanso' },
-    'identidade-guardiao': { content: 'Identidade do Guardião', description: 'Conhecimento sobre a verdadeira natureza do Velho' },
-    'conhecimento-guardioes': { content: 'Conhecimento dos Guardiões', description: 'Sabedoria sobre a ordem secreta' },
-    'conselho-final': { content: 'Conselho Final', description: 'Última orientação antes do teste da Coroa' },
-    'bencao-guardiao': { content: 'Bênção do Guardião', description: 'Bênção para a jornada final' },
-    'conhecimento-coroa': { content: 'Conhecimento da Coroa', description: 'Compreensão sobre a história da Coroa' },
-    'visoes-futuro': { content: 'Visões do Futuro', description: 'Visões das consequências de portar a Coroa' },
-    'sinal-divino': { content: 'Sinal Divino', description: 'Aprovação celestial para aceitar a Coroa' },
-    
-    // Itens finais/recompensas
-    'coroa-ferro': { content: 'Coroa de Ferro', description: 'A lendária Coroa de Ferro, símbolo de proteção', slot: 'head', defense: 5, bonuses: { magic: 5, charisma: 3 } },
-    'coroa-aprendiz': { content: 'Coroa do Aprendiz', description: 'Versão da Coroa para aqueles em aprendizado', slot: 'head', defense: 3, bonuses: { magic: 3 } },
-    'titulo-protetor': { content: 'Título de Protetor', description: 'Reconhecimento como protetor do mundo' },
-    'fragmento-coroa': { content: 'Fragmento da Coroa', description: 'Pedaço da Coroa dividida entre guardiões' },
-    'cajado-guardiao': { content: 'Cajado do Guardião', description: 'Cajado de poder para guiar outros buscadores', slot: 'weapon', attack: 4, bonuses: { magic: 4 } },
-    'manual-aprendiz': { content: 'Manual do Aprendiz', description: 'Guia para aprender sobre responsabilidade' },
-    'alianca-mentor': { content: 'Aliança do Mentor', description: 'Símbolo da parceria com o Velho da Pedra' },
-    'grimorio-poder': { content: 'Grimório de Poder', description: 'Livro com habilidades além da imaginação' },
-    'promessa-retorno': { content: 'Promessa de Retorno', description: 'Compromisso de retornar mais sábio' },
-    'selo-conselho': { content: 'Selo do Conselho', description: 'Símbolo da sabedoria coletiva' },
-    'marca-fracasso': { content: 'Marca do Fracasso', description: 'Cicatriz deixada pela rejeição da Coroa' },
-    'cicatriz-rejeicao': { content: 'Cicatriz da Rejeição', description: 'Marca permanente da insistência na força' },
-    'tomo-sabedoria': { content: 'Tomo da Sabedoria', description: 'Livro criado pela tradição de conhecimento compartilhado' },
-    'coroa-humildade': { content: 'Coroa da Humildade', description: 'Coroa que reconhece a verdadeira dignidade', slot: 'head', defense: 6, bonuses: { charisma: 5 } },
-    'manto-guardiao': { content: 'Manto do Guardião', description: 'Veste da ordem secreta dos Guardiões', slot: 'armor', defense: 4 },
-    'diario-jornada': { content: 'Diário da Jornada', description: 'Registro da jornada de autodescoberta' },
-    'aura-confianca': { content: 'Aura de Confiança', description: 'Presença que impressiona até os antigos' },
-    'coracao-compassivo': { content: 'Coração Compassivo', description: 'Símbolo do maior poder - a compaixão' },
-    'sabedoria-interior': { content: 'Sabedoria Interior', description: 'Compreensão de que a jornada é a verdadeira vitória' }
             
         };
 
@@ -580,4 +499,5 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
