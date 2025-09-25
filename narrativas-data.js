@@ -369,8 +369,6 @@ const NARRATIVAS = {
         ]
       },
 
-    // PARTE 2: A Coroa de Ferro — O Despertar das Profundezas (Seções 36-70)
-
 36: {
   texto: "Ao inserir o medalhão no entalhe, a porta ressoa com um eco metálico. Ela se abre revelando uma câmara circular com cinco altares. No centro, uma figura de pedra desperta: o Velho da Pedra.",
   opcoes: [
@@ -1037,7 +1035,7 @@ const NARRATIVAS = {
 
     }
   }
-};
+},
 
     
     "floresta-sombria": {
@@ -1454,6 +1452,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
