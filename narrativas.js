@@ -457,26 +457,30 @@ class SistemaNarrativas {
     }
 
     async salvarProgresso(numeroSecao, isFinal = false) {
-        if (!this.userId || !this.narrativaAtual) return;
-        
-        const playerDocRef = doc(db, "players", this.userId);
-        
-        if (isFinal) {
-            console.log('SALVANDO AVENTURA COMO COMPLETADA:', numeroSecao);
-            await updateDoc(playerDocRef, {
-                "narrativeProgress.completed": true,
-                "narrativeProgress.currentSection": numeroSecao,
-                "narrativeProgress.narrativeId": Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual),
-                "narrativeProgress.lastUpdated": new Date().toISOString()
-            });
-        } else {
-            await updateDoc(playerDocRef, {
-                "narrativeProgress.currentSection": numeroSecao,
-                "narrativeProgress.narrativeId": Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual),
-                "narrativeProgress.lastUpdated": new Date().toISOString()
-            });
-        }
+    if (!this.userId || !this.narrativaAtual) return;
+    
+    const playerDocRef = doc(db, "players", this.userId);
+    
+    if (isFinal) {
+        console.log('SALVANDO AVENTURA COMO COMPLETADA:', numeroSecao);
+        await setDoc(playerDocRef, {
+            narrativeProgress: {
+                completed: true,
+                currentSection: numeroSecao,
+                narrativeId: Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual),
+                lastUpdated: new Date().toISOString()
+            }
+        }, { merge: true });
+    } else {
+        await setDoc(playerDocRef, {
+            narrativeProgress: {
+                currentSection: numeroSecao,
+                narrativeId: Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual),
+                lastUpdated: new Date().toISOString()
+            }
+        }, { merge: true });
     }
+}
 
     async processarOpcao(opcao) {
         // Consome item se necessário
@@ -553,3 +557,4 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
