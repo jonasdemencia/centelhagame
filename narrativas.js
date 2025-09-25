@@ -443,27 +443,26 @@ class SistemaNarrativas {
         });
     }
 
-   async salvarProgresso(numeroSecao, isFinal = false) {
-    if (!this.userId || !this.narrativaAtual) return;
-    
-    const playerDocRef = doc(db, "players", this.userId);
-    
-    if (isFinal) {
-        await updateDoc(playerDocRef, {
-            "narrativeProgress.completed": true,
-            "narrativeProgress.currentSection": numeroSecao,
-            "narrativeProgress.narrativeId": Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual),
-            "narrativeProgress.lastUpdated": new Date().toISOString()
-        });
-    } else {
-        await updateDoc(playerDocRef, {
-            "narrativeProgress.currentSection": numeroSecao,
-            "narrativeProgress.narrativeId": Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual),
-            "narrativeProgress.lastUpdated": new Date().toISOString()
-        });
+    async salvarProgresso(numeroSecao, isFinal = false) {
+        if (!this.userId || !this.narrativaAtual) return;
+        
+        const playerDocRef = doc(db, "players", this.userId);
+        
+        if (isFinal) {
+            await updateDoc(playerDocRef, {
+                "narrativeProgress.completed": true,
+                "narrativeProgress.currentSection": numeroSecao,
+                "narrativeProgress.narrativeId": Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual),
+                "narrativeProgress.lastUpdated": new Date().toISOString()
+            });
+        } else {
+            await updateDoc(playerDocRef, {
+                "narrativeProgress.currentSection": numeroSecao,
+                "narrativeProgress.narrativeId": Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual),
+                "narrativeProgress.lastUpdated": new Date().toISOString()
+            });
+        }
     }
-}
-
 
     async processarOpcao(opcao) {
         // Consome item se necessário
@@ -490,14 +489,6 @@ class SistemaNarrativas {
     }
 
     async voltarSelecao() {
-        // Limpa progresso ao sair da narrativa
-        if (this.userId) {
-            const playerDocRef = doc(db, "players", this.userId);
-            await updateDoc(playerDocRef, {
-                "narrativeProgress": null
-            });
-        }
-        
         document.getElementById('narrativa-ativa').className = 'tela-oculta';
         document.getElementById('selecao-narrativas').className = 'tela-ativa';
         this.narrativaAtual = null;
@@ -548,4 +539,3 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
-
