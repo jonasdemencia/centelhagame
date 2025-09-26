@@ -215,15 +215,8 @@ class WeatherEffectsManager {
                     inset: 0;
                     background: white;
                     opacity: 0;
-                    animation: flash 8s infinite;
-                }
-              @keyframes flash {
-    0%, 10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90%, 100% { opacity: 0; }
-    15% { opacity: 0.4; }
-    35% { opacity: 0.6; }
-    55% { opacity: 0.3; }
-    75% { opacity: 0.5; }
-    85% { opacity: 0.2; }
+                    pointer-events: none;
+                    transition: opacity 0.1s ease;
                 }
             `
         };
@@ -380,6 +373,52 @@ class WeatherEffectsManager {
             `
         };
 
+        this.effects.spring = {
+            html: `<div class="weather-overlay spring-effect"><div class="pollen-container"></div></div>`,
+            css: `
+                .spring-effect {
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 9999;
+                    background: linear-gradient(to bottom right, rgba(230, 247, 255, 0.1), rgba(240, 253, 244, 0.1));
+                }
+                .pollen-container {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                }
+                @keyframes pollen-float {
+                    0% { transform: translateY(-10vh) translateX(0); opacity: 0; }
+                    10% { opacity: 0.15; }
+                    50% { transform: translateY(40vh) translateX(10vw); opacity: 0.2; }
+                    90% { opacity: 0.15; }
+                    100% { transform: translateY(110vh) translateX(-5vw); opacity: 0; }
+                }
+                .pollen {
+                    position: absolute;
+                    pointer-events: none;
+                    animation-iteration-count: infinite;
+                    animation-timing-function: ease-in-out;
+                    animation-name: pollen-float;
+                    border-radius: 50%;
+                }
+                .pollen.gold {
+                    background-color: #ffd700;
+                    box-shadow: 0 0 5px #ffd700;
+                }
+                .pollen.yellow {
+                    background-color: #fceb9b;
+                }
+                .pollen.a { width: 3px; height: 3px; }
+                .pollen.b { width: 4px; height: 4px; }
+                .pollen.c { width: 5px; height: 5px; }
+            `
+        };
+
         this.effects.winter = {
             html: `<div class="weather-overlay winter-effect"><div class="blizzard"></div><div class="snow-container"></div></div>`,
             css: `
@@ -527,6 +566,7 @@ class WeatherEffectsManager {
         if (conditions.clima === 'nublado') return 'cloudy';
         if (conditions.temperatura === 'muito-quente') return 'veryhot';
         if (conditions.temperatura === 'quente') return 'hot';
+        if (conditions.estacao === 'primavera') return 'spring';
         if (conditions.estacao === 'inverno') return 'winter';
         if (conditions.estacao === 'outono') return 'autumn';
         return null;
@@ -548,6 +588,11 @@ class WeatherEffectsManager {
             this.createMagicPixels(overlay, 15, 4, 7);
         }
 
+        // Adiciona flash aleatório para energia mágica alta
+        if (effectName === 'highmagic') {
+            this.createRandomFlash(overlay);
+        }
+
         // Adiciona gotas de chuva para tempestade
         if (effectName === 'storm') {
             this.createRainDrops(overlay.querySelector('.rain-container'));
@@ -563,6 +608,11 @@ class WeatherEffectsManager {
             this.createEmbers(overlay.querySelector('.embers-container'));
         }
 
+        // Adiciona pólen para primavera
+        if (effectName === 'spring') {
+            this.createPollen(overlay.querySelector('.pollen-container'));
+        }
+
         // Adiciona flocos de neve para inverno
         if (effectName === 'winter') {
             this.createSnowflakes(overlay.querySelector('.snow-container'));
@@ -572,6 +622,47 @@ class WeatherEffectsManager {
         if (effectName === 'autumn') {
             this.createAutumnLeaves(overlay.querySelector('.leaves-container'));
         }
+    }
+
+    createPollen(container) {
+        const createPollenGroup = (count, className, minDuration, maxDuration, minDelay, maxDelay) => {
+            for (let i = 0; i < count; i++) {
+                const pollen = document.createElement('div');
+                const isGold = Math.random() < 0.1;
+                
+                pollen.className = `pollen ${className} ${isGold ? 'gold' : 'yellow'}`;
+                
+                const duration = Math.random() * (maxDuration - minDuration) + minDuration;
+                const delay = Math.random() * (maxDelay - minDelay) + minDelay;
+                const leftPosition = Math.random() * 100;
+
+                pollen.style.left = `${leftPosition}vw`;
+                pollen.style.animationDuration = `${duration}s`;
+                pollen.style.animationDelay = `${delay}s`;
+                
+                container.appendChild(pollen);
+            }
+        };
+        
+        createPollenGroup(50, 'a', 60, 80, -80, -10);
+        createPollenGroup(20, 'b', 70, 90, -90, -20);
+        createPollenGroup(10, 'c', 80, 100, -100, -30);
+    }
+
+    createRandomFlash(container) {
+        const flash = container.querySelector('.flash');
+        
+        const randomFlash = () => {
+            flash.style.opacity = 0.4 + Math.random() * 0.6;
+            setTimeout(() => {
+                flash.style.opacity = 0;
+            }, 100 + Math.random() * 200);
+            
+            const next = 2000 + Math.random() * 5000;
+            setTimeout(randomFlash, next);
+        };
+        
+        setTimeout(randomFlash, 2000);
     }
 
     createMagicPixels(container, count, minDuration, maxDuration) {
@@ -776,6 +867,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
-
-
-
