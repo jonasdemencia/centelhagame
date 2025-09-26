@@ -691,7 +691,7 @@ class WeatherEffectsManager {
     }
 
     createPollen(container) {
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 15; i++) {
             const p = document.createElement('div');
             p.className = 'pollen ' + (['tiny','small','medium'][Math.floor(Math.random()*3)]);
             p.style.left = Math.random() * 100 + 'vw';
@@ -704,7 +704,7 @@ class WeatherEffectsManager {
     createPetals(container) {
         const movements = ['petal-fall', 'petal-float'];
         
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 5; i++) {
             const petal = document.createElement('div');
             petal.className = 'petal';
             petal.style.left = `${Math.random() * 100}vw`;
@@ -933,3 +933,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
