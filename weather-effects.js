@@ -182,7 +182,7 @@ class WeatherEffectsManager {
                     height: 2px;
                     background: rgba(255,255,255,0.15);
                     top: -2px;
-                    animation: scan 3s linear infinite;
+                    animation: scan 5s linear infinite;
                 }
                 @keyframes scan {
                     0% { top: -2px; }
@@ -215,12 +215,15 @@ class WeatherEffectsManager {
                     inset: 0;
                     background: white;
                     opacity: 0;
-                    animation: flash 8s infinite;
+                    animation: flash 12s infinite;
                 }
                 @keyframes flash {
-                    0%, 97%, 100% { opacity: 0; }
-                    98% { opacity: 0.5; }
-                    99% { opacity: 0; }
+    0%, 94%, 100% { opacity: 0; }
+    95% { opacity: 0.5; }
+    96% { opacity: 0; }
+    97% { opacity: 0.3; }
+    98% { opacity: 0; }
+    99% { opacity: 0.4; }
                 }
             `
         };
@@ -773,3 +776,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
