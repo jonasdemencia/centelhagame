@@ -28,7 +28,6 @@ class WeatherEffectsManager {
                     pointer-events: none;
                     z-index: 9999;
                 }
-
                 @keyframes static-flicker {
                     0% { filter: brightness(1) contrast(1); }
                     5% { filter: brightness(1.2) contrast(1.1); }
@@ -52,17 +51,14 @@ class WeatherEffectsManager {
                     95% { filter: brightness(1.1) contrast(0.9); }
                     100% { filter: brightness(1) contrast(1); }
                 }
-
                 @keyframes pixel-glow {
                     0%, 100% { opacity: 0; transform: scale(1); }
                     50% { opacity: 0.8; transform: scale(1.5); }
                 }
-                
                 @keyframes pixel-fade {
                     0% { opacity: 1; }
                     100% { opacity: 0; }
                 }
-
                 .static-overlay {
                     position: absolute;
                     top: 0;
@@ -75,7 +71,6 @@ class WeatherEffectsManager {
                     background-size: 1px 1px;
                     animation: static-flicker 0.2s steps(20, end) infinite;
                 }
-
                 .pixel {
                     position: absolute;
                     width: 1px;
@@ -85,12 +80,10 @@ class WeatherEffectsManager {
                     animation-iteration-count: infinite;
                     animation-timing-function: ease-in-out;
                 }
-
                 .pixel.purple {
                     background-color: #8a2be2;
                     box-shadow: 0 0 2px 1px #8a2be2, 0 0 4px #8a2be2;
                 }
-
                 .pixel.silver {
                     background-color: #c0c0c0;
                     box-shadow: 0 0 2px 1px #c0c0c0, 0 0 4px #c0c0c0;
@@ -198,75 +191,69 @@ class WeatherEffectsManager {
             `
         };
 
-        // Substitua esta parte no seu código original
-this.effects.cloudy = {
-    // HTML permanece o mesmo, com duas camadas
-    html: `<div class="weather-overlay cloudy-effect">
-               <div class="fog-container">
-                   <div class="fog-layer"></div>
-                   <div class="fog-layer"></div>
-               </div>
-           </div>`,
-    css: `
-        .cloudy-effect {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 9999;
-            background-color: rgba(74, 74, 74, 0.2);
-            overflow: hidden; 
-        }
-        
-        @keyframes fog-drift {
-            0% {
-                transform: translateX(0);
-            }
-            100% {
-                transform: translateX(-50%);
-            }
-        }
-        
-        .fog-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 200vw;
-            height: 100%;
-            display: flex;
-            animation: fog-drift 120s linear infinite;
-        }
-
-        .fog-layer {
-            width: 100vw;
-            height: 100%;
-            position: relative;
-        }
-
-        .fog-layer::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            /* CORREÇÃO AQUI: Adicionado um espaço antes de "rgba" em cada linha do box-shadow */
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-            box-shadow: 
-                30vw 10vh 20vh 5vh rgba(255, 255, 255, 0.2),
-                50vw 80vh 15vh 4vh rgba(255, 255, 255, 0.2),
-                80vw 20vh 25vh 6vh rgba(255, 255, 255, 0.2),
-                10vw 90vh 18vh 3vh rgba(255, 255, 255, 0.2),
-                90vw 50vh 22vh 7vh rgba(255, 255, 255, 0.2),
-                20vw 40vh 10vh 2vh rgba(255, 255, 255, 0.2),
-                70vw 70vh 16vh 5vh rgba(255, 255, 255, 0.2),
-                40vw 30vh 24vh 8vh rgba(255, 255, 255, 0.2),
-                60vw 60vh 19vh 6vh rgba(255, 255, 255, 0.2);
-            filter: blur(50px);
-            opacity: 0.8;
-            pointer-events: none;
-        }
-    `
-};
+        this.effects.cloudy = {
+            html: `<div class="weather-overlay cloudy-effect">
+                       <div class="fog-container">
+                           <div class="fog-layer"></div>
+                           <div class="fog-layer"></div>
+                       </div>
+                   </div>`,
+            css: `
+                .cloudy-effect {
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 9999;
+                    background-color: rgba(74, 74, 74, 0.2);
+                    overflow: hidden; 
+                }
+                @keyframes fog-drift {
+                    0% {
+                        transform: translateX(0);
+                    }
+                    100% {
+                        transform: translateX(-50%);
+                    }
+                }
+                .fog-container {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 200vw;
+                    height: 100%;
+                    display: flex;
+                    animation: fog-drift 120s linear infinite;
+                }
+                .fog-layer {
+                    width: 100vw;
+                    height: 100%;
+                    position: relative;
+                }
+                .fog-layer::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+                    box-shadow: 
+                        30vw 10vh 20vh 5vh,
+                        50vw 80vh 15vh 4vh,
+                        80vw 20vh 25vh 6vh,
+                        10vw 90vh 18vh 3vh,
+                        90vw 50vh 22vh 7vh,
+                        20vw 40vh 10vh 2vh,
+                        70vw 70vh 16vh 5vh,
+                        40vw 30vh 24vh 8vh,
+                        60vw 60vh 19vh 6vh;
+                    filter: blur(50px);
+                    opacity: 0.8;
+                    pointer-events: none;
+                }
+            `
+        };
+    } // <-- PONTO E VÍRGULA REMOVIDO DAQUI
 
     async updateEffects() {
         try {
@@ -457,14 +444,3 @@ this.effects.cloudy = {
         await this.updateEffects();
     }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Aguarda o Firebase carregar
-    setTimeout(() => {
-        window.WeatherEffects = new WeatherEffectsManager();
-    }, 1000);
-});
-
-window.WeatherEffectsManager = WeatherEffectsManager;
-
-
