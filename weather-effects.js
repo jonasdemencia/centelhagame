@@ -374,55 +374,95 @@ class WeatherEffectsManager {
         };
 
         this.effects.spring = {
-            html: `<div class="weather-overlay spring-effect"><div class="pollen-container"></div></div>`,
+            html: `
+                <div class="weather-overlay spring-effect">
+                    <div class="pollen-container"></div>
+                    <div class="petal-container"></div>
+                </div>
+            `,
             css: `
                 .spring-effect {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 9999;
-    background: linear-gradient(
-        to bottom right,
-        rgba(240, 253, 244, 0.08),
-        rgba(255, 250, 230, 0.06)
-    );
-}
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 9999;
+                    background: linear-gradient(
+                        to bottom right,
+                        rgba(240, 253, 244, 0.08),
+                        rgba(255, 250, 230, 0.06)
+                    );
+                }
 
-.pollen-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    pointer-events: none;
-}
+                .pollen-container {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    overflow: hidden;
+                    pointer-events: none;
+                }
 
-@keyframes pollen-float {
-    0%   { transform: translateY(-10vh) translateX(0); opacity: 0; }
-    10%  { opacity: 0.6; }
-    40%  { transform: translateY(40vh) translateX(6vw) rotate(10deg); opacity: 0.8; }
-    70%  { transform: translateY(75vh) translateX(-4vw) rotate(-15deg); opacity: 0.6; }
-    100% { transform: translateY(110vh) translateX(2vw) rotate(0deg); opacity: 0; }
-}
+                .petal-container {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    overflow: hidden;
+                    pointer-events: none;
+                }
 
-.pollen {
-    position: absolute;
-    border-radius: 50%;
-    opacity: 0;
-    pointer-events: none;
-    animation-name: pollen-float;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
-    background: #ffff00;
-    box-shadow: 0 0 3px #ffff00;
-}
+                @keyframes pollen-float {
+                    0%   { transform: translateY(-10vh) translateX(0); opacity: 0; }
+                    10%  { opacity: 0.6; }
+                    40%  { transform: translateY(40vh) translateX(6vw) rotate(10deg); opacity: 0.8; }
+                    70%  { transform: translateY(75vh) translateX(-4vw) rotate(-15deg); opacity: 0.6; }
+                    100% { transform: translateY(110vh) translateX(2vw) rotate(0deg); opacity: 0; }
+                }
 
-.pollen.tiny  { width: 1px; height: 1px; }
-.pollen.small { width: 1.5px; height: 1.5px; }
-.pollen.medium { width: 2px; height: 2px; }
+                .pollen {
+                    position: absolute;
+                    border-radius: 50%;
+                    opacity: 0;
+                    pointer-events: none;
+                    animation-name: pollen-float;
+                    animation-timing-function: ease-in-out;
+                    animation-iteration-count: infinite;
+                    background: #ffff00;
+                    box-shadow: 0 0 3px #ffff00;
+                }
 
+                .pollen.tiny  { width: 1px; height: 1px; }
+                .pollen.small { width: 1.5px; height: 1.5px; }
+                .pollen.medium { width: 2px; height: 2px; }
 
+                @keyframes petal-fall {
+                    0% {
+                        transform: translateY(-10vh) translateX(0) rotateZ(0deg) rotateX(0deg);
+                        opacity: 0;
+                    }
+                    10% { opacity: 1; }
+                    50% {
+                        transform: translateY(50vh) translateX(15vw) rotateZ(90deg) rotateX(180deg);
+                        opacity: 0.9;
+                    }
+                    100% {
+                        transform: translateY(120vh) translateX(-10vw) rotateZ(180deg) rotateX(360deg);
+                        opacity: 0;
+                    }
+                }
+
+                .petal {
+                    position: absolute;
+                    width: 20px;
+                    height: 28px;
+                    background: radial-gradient(circle at 30% 30%, #ff7f9f 0%, #ff4770 60%, #d62849 100%);
+                    border-radius: 60% 60% 80% 80%;
+                    opacity: 0;
+                    animation: petal-fall linear infinite;
+                    filter: blur(0.3px);
+                }
             `
         };
 
@@ -615,9 +655,10 @@ class WeatherEffectsManager {
             this.createEmbers(overlay.querySelector('.embers-container'));
         }
 
-        // Adiciona pólen para primavera
+        // Adiciona pólen e pétalas para primavera
         if (effectName === 'spring') {
             this.createPollen(overlay.querySelector('.pollen-container'));
+            this.createPetals(overlay.querySelector('.petal-container'));
         }
 
         // Adiciona flocos de neve para inverno
@@ -632,13 +673,25 @@ class WeatherEffectsManager {
     }
 
     createPollen(container) {
-for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 30; i++) {
             const p = document.createElement('div');
             p.className = 'pollen ' + (['tiny','small','medium'][Math.floor(Math.random()*3)]);
             p.style.left = Math.random() * 100 + 'vw';
             p.style.animationDuration = (10 + Math.random() * 15) + 's';
             p.style.animationDelay = (Math.random() * 10) + 's';
             container.appendChild(p);
+        }
+    }
+
+    createPetals(container) {
+        for (let i = 0; i < 10; i++) {
+            const petal = document.createElement('div');
+            petal.className = 'petal';
+            petal.style.left = `${Math.random() * 100}vw`;
+            petal.style.animationDuration = `${8 + Math.random() * 6}s`;
+            petal.style.animationDelay = `${Math.random() * 10}s`;
+            petal.style.transform = `rotate(${Math.random() * 360}deg)`;
+            container.appendChild(petal);
         }
     }
 
@@ -860,5 +913,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
-
-
