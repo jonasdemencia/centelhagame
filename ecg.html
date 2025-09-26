@@ -9,8 +9,8 @@
     --scale: 3; /* Escala final para ficar pixelado (aumente para ficar maior) */
     --bg: #0b0b0b;
     --grid: rgba(0,200,0,0.05);
-    --line: #6bff6b; /* cor principal da linha */
-    --line-weak: rgba(107,255,107,0.5);
+    --line: #90EE90; /* cor principal da linha */
+    --line-weak: rgba(144,238,144,0.5);
   }
   html,body{height:100%;margin:0;background:var(--bg);display:flex;align-items:center;justify-content:center;font-family:system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;}
   .wrap{
@@ -39,7 +39,7 @@
   /* pequena UI explicativa (opcional) */
   .label {
     position: absolute;
-    color: rgba(107,255,107,0.85);
+    color: rgba(144,238,144,0.85);
     font-size: 11px;
     letter-spacing: 1px;
     left: 12px;
@@ -86,7 +86,7 @@ const bpmEl = document.getElementById('bpm');
 bpmEl.textContent = Math.round(bpm);
 
 // speed: how many pixels advance per second
-const pixelsPerSecond = 25; // controls horizontal scrolling speed
+const pixelsPerSecond = 20; // controls horizontal scrolling speed
 
 // sample interval time in ms per pixel
 let msPerPixel = 1000 / pixelsPerSecond;
@@ -173,7 +173,7 @@ function drawECG() {
   ctx.lineCap = 'butt';
 
   // faint glow
-  ctx.strokeStyle = 'rgba(107,255,107,0.08)';
+  ctx.strokeStyle = 'rgba(144,238,144,0.08)';
   ctx.lineWidth = 3;
   ctx.beginPath();
   for (let x = 0; x < W; x++) {
@@ -184,7 +184,7 @@ function drawECG() {
   ctx.stroke();
 
   // core thin pixel-perfect line
-  ctx.strokeStyle = 'rgba(107,255,107,1)';
+  ctx.strokeStyle = 'rgba(144,238,144,1)';
   ctx.lineWidth = 1.1; // thin
   ctx.beginPath();
   for (let x = 0; x < W; x++) {
@@ -195,7 +195,7 @@ function drawECG() {
   ctx.stroke();
 
   // small jagged pixel highlights for retro effect
-  ctx.fillStyle = 'rgba(180,255,180,0.8)';
+  ctx.fillStyle = 'rgba(144,238,144,0.8)';
   for (let x = 0; x < W; x += 6) {
     const y = Math.round(buffer[x]);
     ctx.fillRect(x, y, 1, 1);
