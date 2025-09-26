@@ -471,6 +471,11 @@ class WeatherEffectsManager {
                     }
                 }
 
+                .petal.green {
+    background: radial-gradient(circle at 30% 30%, #90ee90 0%, #32cd32 60%, #228b22 100%);
+}
+
+
                 .petal {
                     position: absolute;
                     width: 5px;
@@ -702,18 +707,20 @@ class WeatherEffectsManager {
     }
 
     createPetals(container) {
-        const movements = ['petal-fall', 'petal-float'];
-        
-        for (let i = 0; i < 5; i++) {
-            const petal = document.createElement('div');
-            petal.className = 'petal';
-            petal.style.left = `${Math.random() * 100}vw`;
-            petal.style.animationDuration = `${10 + Math.random() * 8}s`;
-            petal.style.animationDelay = `${Math.random() * 10}s`;
-            petal.style.animationName = movements[Math.floor(Math.random() * movements.length)];
-            container.appendChild(petal);
-        }
+    const movements = ['petal-fall', 'petal-float'];
+    
+    for (let i = 0; i < 5; i++) {
+        const petal = document.createElement('div');
+        const isGreen = i === 0; // 1 de cada 5 pétalas será verde
+        petal.className = isGreen ? 'petal green' : 'petal';
+        petal.style.left = `${Math.random() * 100}vw`;
+        petal.style.animationDuration = `${10 + Math.random() * 8}s`;
+        petal.style.animationDelay = `${Math.random() * 10}s`;
+        petal.style.animationName = movements[Math.floor(Math.random() * movements.length)];
+        container.appendChild(petal);
     }
+}
+
 
     createRandomFlash(container) {
         const flash = container.querySelector('.flash');
@@ -933,4 +940,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
 
