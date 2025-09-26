@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ECG Pixel Pulse</title>
+<style>
+  :root{
+    --scale: 3; /* Escala final para ficar pixelado (aumente para ficar maior) */
+    --bg: #0b0b0b;
+    --grid: rgba(0,200,0,0.05);
+    --line: #6bff6b; /* cor principal da linha */
+    --line-weak: rgba(107,255,107,0.5);
+  }
+  html,body{height:100%;margin:0;background:var(--bg);display:flex;align-items:center;justify-content:center;font-family:system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+  .wrap{
+    width: calc(320px * var(--scale));
+    height: calc(96px * var(--scale));
+    box-shadow: 0 6px 30px rgba(0,0,0,0.6), inset 0 0 12px rgba(0,0,0,0.6);
+    border-radius: 6px;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+    padding: 8px;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* Canvas pixelado: desenho em baixa resolução e ampliado */
+  canvas {
+    image-rendering: pixelated;
+    width: 320px;
+    height: 96px;
+    image-rendering: crisp-edges;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+    transform-origin: center;
+    transform: scale(var(--scale));
+    display:block;
+  }
+
+  /* pequena UI explicativa (opcional) */
+  .label {
+    position: absolute;
+    color: rgba(107,255,107,0.85);
+    font-size: 11px;
+    letter-spacing: 1px;
+    left: 12px;
+    top: 10px;
+    text-shadow: 0 0 4px rgba(0,0,0,0.7);
+  }
+
+  /* grid lines (for a subtle monitor feel) - drawn in canvas but keep fallback) */
+  .legend { position:absolute; bottom:6px; right:10px; color:#0f0a0a6b; font-size:10px;}
+</style>
+</head>
+<body>
+  <div class="wrap" aria-hidden="true">
+    <canvas id="ecg" width="320" height="96"></canvas>
+    <div class="label">ECG — lead II</div>
+    <div class="legend">BPM: <span id="bpm">72</span></div>
+  </div>
+
+<script>
+/*
+  ECG pixelated monitor
+  - canvas virtual resolution is 320x96 (you can change)
+  - we draw a subtle grid, then a moving ECG polyline
+  - ECG waveform generation: baseline + per-beat QRS/T synthetic pattern
+*/
+
+const canvas = document.getElementById('ecg');
+const ctx = canvas.getContext('2d', {alpha:false});
+
+// crisp pixels
+ctx.imageSmoothingEnabled = false;
+
+// virtual drawing area
+const W = canvas.width;   // 320
+const H = canvas.height;  // 96
+const midY = H * 0.5;
+
+// state: circular buffer of Y positions across width
+let buffer = new Float32Array(W).fill(midY);
+
+// timing settings (can change for different realism)
+let bpm = 72;
+const bpmEl = document.getElementById('bpm');
+bpmEl.textContent = Math.round(bpm);
+
+// speed: how many pixels advance per second
+const pixelsPerSecond = 60; // controls horizontal scrolling speed
+
+// sample interval time in ms per pixel
+let msPerPixel = 1000 / pixelsPerSecond;
+
+// heartbeat scheduling
+let lastBeatTime = performance.now();
+let beatInterval = 60000 / bpm; // ms between beats
+
+// parameters for waveform shape
+const baselineJitter = 0.3; // small jitter amplitude
+const noiseAmp = 0.6; // small noise
+const qrsStrength = 18; // spike height in pixels
+const tWaveStrength = 6; // smaller bump after QRS
+const prSegment = 8; // horizontal length of PR segment (pixels)
+const qrsWidth = 3; // width of spike (pixels)
+const twaveWidth = 10; // width of T wave
+
+// pre-generate a single beat pattern (array of deltaY)
+function generateBeatPattern() {
+  // pattern length in pixels (sum of all segments)
+  const len = prSegment + qrsWidth + twaveWidth + 10;
+  const arr = new Float32Array(len).fill(0);
+  // PR segment: small baseline
+  for (let i = 0; i < prSegment; i++) arr[i] = Math.random() * baselineJitter - baselineJitter/2;
+  // Q wave (tiny negative deflection)
+  let idx = prSegment;
+  arr[idx++] = -1 * (qrsStrength * 0.15);
+  // R spike (sharp positive)
+  arr[idx++] = qrsStrength * 1.0;
+  // S small negative
+  arr[idx++] = -qrsStrength * 0.45;
+  // small recovery baseline
+  for (let i = idx; i < idx + 4; i++) {
+    if (i < arr.length) arr[i] = Math.random() * baselineJitter - baselineJitter/2;
+  }
+  // T wave: wider gentle bump
+  let tStart = Math.max(idx + 4, prSegment + qrsWidth);
+  for (let i = 0; i < twaveWidth && (tStart + i) < arr.length; i++) {
+    // use a smooth curve (sin) for T wave
+    let progress = i / twaveWidth;
+    arr[tStart + i] = Math.sin(Math.PI * progress) * tWaveStrength * 0.8 * (0.8 + Math.random()*0.4);
+  }
+  // smear / small random variations
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] += (Math.random()*2 - 1) * noiseAmp * 0.2;
+  }
+  return arr;
+}
+
+let beatPattern = generateBeatPattern();
+
+// function to schedule next beat, possibly with slight variation
+function scheduleNextBeat(now) {
+  beatInterval = 60000 / bpm * (0.98 + Math.random()*0.04); // small natural jitter
+  lastBeatTime = now;
+}
+
+// draw grid (subtle pixel grid)
+function drawGrid() {
+  ctx.fillStyle = '#070907';
+  ctx.fillRect(0,0,W,H);
+
+  // light horizontal midline and secondary lines
+  ctx.strokeStyle = 'rgba(0,255,0,0.04)';
+  ctx.lineWidth = 1;
+  for (let y = 0; y < H; y += 8) {
+    ctx.beginPath();
+    ctx.moveTo(0.5, y + 0.5);
+    ctx.lineTo(W + 0.5, y + 0.5);
+    ctx.stroke();
+  }
+  // darker midline:
+  ctx.strokeStyle = 'rgba(0,255,0,0.08)';
+  ctx.beginPath();
+  ctx.moveTo(0.5, midY + 0.5);
+  ctx.lineTo(W + 0.5, midY + 0.5);
+  ctx.stroke();
+}
+
+// render the buffer as connected pixels (pixelated polyline)
+function drawECG() {
+  // glow/backlight: draw semi-transparent wide line first to simulate glow
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'butt';
+
+  // faint glow
+  ctx.strokeStyle = 'rgba(107,255,107,0.08)';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  for (let x = 0; x < W; x++) {
+    const y = buffer[x];
+    if (x === 0) ctx.moveTo(x + 0.5, y + 0.5);
+    else ctx.lineTo(x + 0.5, y + 0.5);
+  }
+  ctx.stroke();
+
+  // core thin pixel-perfect line
+  ctx.strokeStyle = 'rgba(107,255,107,1)';
+  ctx.lineWidth = 1.1; // thin
+  ctx.beginPath();
+  for (let x = 0; x < W; x++) {
+    const y = buffer[x];
+    if (x === 0) ctx.moveTo(x + 0.5, y + 0.5);
+    else ctx.lineTo(x + 0.5, y + 0.5);
+  }
+  ctx.stroke();
+
+  // small jagged pixel highlights for retro effect
+  ctx.fillStyle = 'rgba(180,255,180,0.8)';
+  for (let x = 0; x < W; x += 6) {
+    const y = Math.round(buffer[x]);
+    ctx.fillRect(x, y, 1, 1);
+  }
+}
+
+// push new sample value into the buffer and shift left
+function pushSample(value) {
+  for (let i = 0; i < W-1; i++) {
+    buffer[i] = buffer[i+1];
+  }
+  buffer[W-1] = value;
+}
+
+// create a stream of samples: baseline with occasional beats
+let lastTick = performance.now();
+let tickFrac = 0; // used to step through beat pattern when active
+let beatActive = false;
+let beatIndex = 0;
+
+function update(now) {
+  const dt = now - lastTick;
+  lastTick = now;
+
+  // determine how many pixels we need to advance based on time
+  const pixelsToAdvance = (dt / msPerPixel);
+  // accumulate fractional movement
+  tickFrac += pixelsToAdvance;
+
+  // while we have at least 1 pixel of movement to produce, create sample(s)
+  while (tickFrac >= 1) {
+    tickFrac -= 1;
+
+    // check if it's time to start a beat
+    if (!beatActive && now - lastBeatTime >= beatInterval) {
+      beatActive = true;
+      beatPattern = generateBeatPattern(); // regenerate for natural variety
+      beatIndex = 0;
+      scheduleNextBeat(now);
+    }
+
+    let y = midY;
+
+    // baseline small noise
+    y += (Math.random() * 2 - 1) * baselineJitter;
+
+    if (beatActive) {
+      if (beatIndex < beatPattern.length) {
+        y += -beatPattern[beatIndex]; // negative because screen coords increase downwards
+        beatIndex++;
+      } else {
+        beatActive = false;
+      }
+    } else {
+      // small wandering baseline
+      y += Math.sin(now * 0.001 + Math.random()*2) * baselineJitter * 2;
+    }
+
+    // clamp to canvas
+    if (y < 2) y = 2;
+    if (y > H-2) y = H-2;
+
+    pushSample(y);
+  }
+
+  // render
+  drawFrame();
+
+  requestAnimationFrame(update);
+}
+
+function drawFrame() {
+  drawGrid();
+  drawECG();
+}
+
+// initialization
+function init() {
+  // initialize buffer to baseline
+  for (let i = 0; i < W; i++) buffer[i] = midY + Math.random()*0.4 - 0.2;
+
+  // set msPerPixel depending on pixelsPerSecond
+  msPerPixel = 1000 / pixelsPerSecond;
+
+  lastTick = performance.now();
+  lastBeatTime = performance.now();
+
+  requestAnimationFrame(update);
+}
+
+// optional: change BPM using keyboard +/- (nice for testing)
+window.addEventListener('keydown', (e) => {
+  if (e.key === '+' || e.key === '=') {
+    bpm = Math.min(200, bpm + 2);
+    bpmEl.textContent = Math.round(bpm);
+  } else if (e.key === '-' || e.key === '_') {
+    bpm = Math.max(30, bpm - 2);
+    bpmEl.textContent = Math.round(bpm);
+  } else if (e.key === ' ') {
+    // toggle a single big beat for test
+    beatActive = true;
+    beatPattern = generateBeatPattern();
+    beatIndex = 0;
+    lastBeatTime = performance.now();
+  }
+});
+
+init();
+</script>
+</body>
+</html>
