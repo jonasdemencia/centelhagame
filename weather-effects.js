@@ -250,6 +250,71 @@ class WeatherEffectsManager {
             `
         };
 
+        this.effects.winter = {
+            html: `<div class="weather-overlay winter-effect"><div class="blizzard"></div><div class="snow-container"></div></div>`,
+            css: `
+                .winter-effect {
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 9999;
+                    background: linear-gradient(to bottom, rgba(26, 26, 46, 0.2), rgba(22, 33, 62, 0.2));
+                }
+                .blizzard {
+                    position: absolute;
+                    inset: -20%;
+                    background-image: repeating-linear-gradient(
+                        -20deg,
+                        rgba(255,255,255,0.15) 0px,
+                        rgba(255,255,255,0.15) 1px,
+                        transparent 1px,
+                        transparent 10px
+                    );
+                    animation: blow 3s linear infinite;
+                    filter: blur(1px);
+                    opacity: 0.15;
+                }
+                @keyframes blow {
+                    from { transform: translateX(0) translateY(0) skewX(-6deg); }
+                    to   { transform: translateX(-20vh) translateY(12vh) skewX(-6deg); }
+                }
+                .snow-container {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                }
+                @keyframes snowfall {
+                    0%   { transform: translateY(-10vh) translateX(0); opacity: 0; }
+                    10%  { opacity: 0.8; }
+                    100% { transform: translateY(110vh) translateX(10vw); opacity: 0; }
+                }
+                @keyframes sway {
+                    0%,100% { transform: translateX(0) rotate(0deg); }
+                    50%     { transform: translateX(1vw) rotate(8deg); }
+                }
+                .flake {
+                    position: absolute;
+                    top: -20px;
+                    animation: snowfall linear forwards;
+                }
+                .flake span {
+                    display: block;
+                    width: 4px;
+                    height: 4px;
+                    background: white;
+                    border-radius: 50%;
+                    animation: sway ease-in-out infinite;
+                    opacity: 0.7;
+                }
+                .flake.small span { width: 2px; height: 2px; opacity: 0.5; }
+                .flake.medium span { width: 3px; height: 3px; opacity: 0.6; }
+                .flake.large span { width: 5px; height: 5px; opacity: 0.8; }
+            `
+        };
+
         this.effects.cloudy = {
             html: `<div class="weather-overlay cloudy-effect"><div class="fog-container"></div></div>`,
             css: `
@@ -330,6 +395,7 @@ class WeatherEffectsManager {
         if (conditions.clima === 'nublado') return 'cloudy';
         if (conditions.temperatura === 'muito-quente') return 'veryhot';
         if (conditions.temperatura === 'quente') return 'hot';
+        if (conditions.estacao === 'inverno') return 'winter';
         if (conditions.estacao === 'outono') return 'autumn';
         return null;
     }
@@ -363,6 +429,11 @@ class WeatherEffectsManager {
         // Adiciona brasas para muito quente
         if (effectName === 'veryhot') {
             this.createEmbers(overlay.querySelector('.embers-container'));
+        }
+
+        // Adiciona flocos de neve para inverno
+        if (effectName === 'winter') {
+            this.createSnowflakes(overlay.querySelector('.snow-container'));
         }
 
         // Adiciona folhas de outono
@@ -483,6 +554,37 @@ class WeatherEffectsManager {
             ember.style.animationDelay = `${data.delay}s`;
             container.appendChild(ember);
         });
+    }
+
+    createSnowflakes(container) {
+        const spawnFlake = (size, count) => {
+            for (let i = 0; i < count; i++) {
+                const flake = document.createElement('div');
+                flake.className = `flake ${size}`;
+                const inner = document.createElement('span');
+                flake.appendChild(inner);
+
+                flake.style.left = Math.random() * 100 + 'vw';
+                const fallDur = 12 + Math.random() * 10;
+                const swayDur = 4 + Math.random() * 3;
+                const delay = Math.random() * 8;
+
+                flake.style.animationDuration = fallDur + 's';
+                flake.style.animationDelay = delay + 's';
+                inner.style.animationDuration = swayDur + 's';
+
+                container.appendChild(flake);
+
+                flake.addEventListener('animationend', () => {
+                    flake.remove();
+                    spawnFlake(size, 1);
+                });
+            }
+        };
+
+        spawnFlake('small', 40);
+        spawnFlake('medium', 25);
+        spawnFlake('large', 10);
     }
 
     createAutumnLeaves(container) {
