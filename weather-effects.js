@@ -210,18 +210,18 @@ class WeatherEffectsManager {
                 }
                 
                 @keyframes fog-drift {
-                    from {
-                        transform: translateX(-100%);
+                    0% {
+                        transform: translateX(0);
                     }
-                    to {
-                        transform: translateX(100vw);
+                    100% {
+                        transform: translateX(100%);
                     }
                 }
                 
                 .fog-container {
                     position: absolute;
                     top: 0;
-                    left: 0;
+                    left: -100vw;
                     width: 300vw;
                     height: 100%;
                     animation: fog-drift 120s linear infinite;
