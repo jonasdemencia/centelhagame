@@ -145,7 +145,7 @@ class WeatherEffectsManager {
         };
 
         this.effects.highmagic = {
-            html: `<div class="weather-overlay highmagic-effect"><div class="scanline"></div></div>`,
+            html: `<div class="weather-overlay highmagic-effect"><div class="scanline"></div><div class="waves"></div><div class="flash"></div></div>`,
             css: `
                 .highmagic-effect {
                     position: fixed;
@@ -153,6 +153,7 @@ class WeatherEffectsManager {
                     pointer-events: none;
                     z-index: 9999;
                     background: rgba(17, 17, 17, 0.2);
+                    filter: contrast(1.2) brightness(1.1) saturate(1.2);
                 }
                 
                 .highmagic-effect::before {
@@ -161,8 +162,8 @@ class WeatherEffectsManager {
                     inset: 0;
                     background: repeating-linear-gradient(
                         0deg,
-                        rgba(255,255,255,0.05) 0px,
-                        rgba(255,255,255,0.05) 1px,
+                        rgba(255,255,255,0.04) 0px,
+                        rgba(255,255,255,0.04) 1px,
                         transparent 1px,
                         transparent 2px
                     );
@@ -179,13 +180,47 @@ class WeatherEffectsManager {
                     position: absolute;
                     width: 100%;
                     height: 2px;
-                    background: rgba(255,255,255,0.2);
+                    background: rgba(255,255,255,0.15);
                     top: -2px;
                     animation: scan 3s linear infinite;
                 }
                 @keyframes scan {
                     0% { top: -2px; }
                     100% { top: 100%; }
+                }
+
+                .waves {
+                    position: absolute;
+                    inset: 0;
+                    background: repeating-linear-gradient(
+                        to bottom,
+                        rgba(255,255,255,0.03) 0px,
+                        rgba(255,255,255,0.03) 2px,
+                        transparent 2px,
+                        transparent 4px
+                    );
+                    animation: distort 5s infinite;
+                    mix-blend-mode: overlay;
+                }
+                @keyframes distort {
+                    0%, 100% { transform: translateX(0); }
+                    20% { transform: translateX(-10px); }
+                    40% { transform: translateX(5px); }
+                    60% { transform: translateX(-5px); }
+                    80% { transform: translateX(8px); }
+                }
+
+                .flash {
+                    position: absolute;
+                    inset: 0;
+                    background: white;
+                    opacity: 0;
+                    animation: flash 8s infinite;
+                }
+                @keyframes flash {
+                    0%, 97%, 100% { opacity: 0; }
+                    98% { opacity: 0.5; }
+                    99% { opacity: 0; }
                 }
             `
         };
