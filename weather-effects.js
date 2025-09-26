@@ -286,7 +286,7 @@ class WeatherEffectsManager {
                     height: 100%;
                     pointer-events: none;
                 }
-                @keyframes snowfall {
+                @keyframes fall {
                     0%   { transform: translateY(-10vh) translateX(0); opacity: 0; }
                     10%  { opacity: 0.8; }
                     100% { transform: translateY(110vh) translateX(10vw); opacity: 0; }
@@ -298,7 +298,7 @@ class WeatherEffectsManager {
                 .flake {
                     position: absolute;
                     top: -20px;
-                    animation: snowfall linear forwards;
+                    animation: fall linear forwards;
                 }
                 .flake span {
                     display: block;
