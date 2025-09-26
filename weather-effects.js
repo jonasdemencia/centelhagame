@@ -161,6 +161,58 @@ class WeatherEffectsManager {
             `
         };
 
+        this.effects.veryhot = {
+            html: `<div class="weather-overlay veryhot-effect"><div class="embers-container"></div></div>`,
+            css: `
+                .veryhot-effect {
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 9999;
+                    background: rgba(255, 60, 0, 0.15);
+                }
+                .embers-container {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                }
+                .ember {
+                    position: absolute;
+                    bottom: -10px;
+                    background: radial-gradient(circle at center, rgba(255, 120, 0, 0.9) 0%, rgba(255, 60, 0, 0.7) 50%, rgba(255, 0, 0, 0.5) 100%);
+                    box-shadow: 0 0 5px rgba(255, 100, 0, 0.8), 0 0 10px rgba(255, 50, 0, 0.6);
+                    border-radius: 50%;
+                    animation: rise-ember linear infinite;
+                    opacity: 0;
+                }
+                @keyframes rise-ember {
+                    0% {
+                        transform: translateY(0) scale(0.8);
+                        opacity: 0;
+                        filter: blur(0px);
+                    }
+                    20% {
+                        opacity: 1;
+                        transform: translateY(-10vh) scale(1);
+                        filter: blur(0px);
+                    }
+                    80% {
+                        opacity: 0.8;
+                        transform: translateY(-80vh) scale(0.6);
+                        filter: blur(1px);
+                    }
+                    100% {
+                        transform: translateY(-100vh) scale(0.3);
+                        opacity: 0;
+                        filter: blur(2px);
+                    }
+                }
+            `
+        };
+
         this.effects.autumn = {
             html: `<div class="weather-overlay autumn-effect"><div class="leaves-container"></div></div>`,
             css: `
@@ -210,18 +262,18 @@ class WeatherEffectsManager {
                 }
                 
                 @keyframes fog-drift {
-                    0% {
-                        transform: translateX(0);
+                    from {
+                        transform: translateX(-100%);
                     }
-                    100% {
-                        transform: translateX(100%);
+                    to {
+                        transform: translateX(100vw);
                     }
                 }
                 
                 .fog-container {
                     position: absolute;
                     top: 0;
-                    left: -100vw;
+                    left: 0;
                     width: 300vw;
                     height: 100%;
                     animation: fog-drift 120s linear infinite;
@@ -276,6 +328,7 @@ class WeatherEffectsManager {
         if (conditions.energiaMagica === 'interferencia') return 'interference';
         if (conditions.clima === 'tempestade') return 'storm';
         if (conditions.clima === 'nublado') return 'cloudy';
+        if (conditions.temperatura === 'muito-quente') return 'veryhot';
         if (conditions.temperatura === 'quente') return 'hot';
         if (conditions.estacao === 'outono') return 'autumn';
         return null;
@@ -305,6 +358,11 @@ class WeatherEffectsManager {
         // Adiciona partículas de calor para dia quente
         if (effectName === 'hot') {
             this.createHeatParticles(overlay.querySelector('.particle-container'));
+        }
+
+        // Adiciona brasas para muito quente
+        if (effectName === 'veryhot') {
+            this.createEmbers(overlay.querySelector('.embers-container'));
         }
 
         // Adiciona folhas de outono
@@ -394,6 +452,37 @@ class WeatherEffectsManager {
             
             container.appendChild(particle);
         }
+    }
+
+    createEmbers(container) {
+        const emberData = [
+            { width: 3, height: 3, left: 10, duration: 10, delay: -1 },
+            { width: 2, height: 2, left: 20, duration: 8, delay: -4 },
+            { width: 4, height: 4, left: 30, duration: 12, delay: -2 },
+            { width: 2.5, height: 2.5, left: 40, duration: 9, delay: -6 },
+            { width: 3.5, height: 3.5, left: 50, duration: 11, delay: -3 },
+            { width: 2, height: 2, left: 60, duration: 7, delay: -5 },
+            { width: 4, height: 4, left: 70, duration: 13, delay: -0.5 },
+            { width: 2.8, height: 2.8, left: 80, duration: 10.5, delay: -7 },
+            { width: 3, height: 3, left: 90, duration: 9.5, delay: -2.5 },
+            { width: 2.2, height: 2.2, left: 15, duration: 8.5, delay: -1.5 },
+            { width: 3.8, height: 3.8, left: 35, duration: 14, delay: -4.5 },
+            { width: 2.7, height: 2.7, left: 55, duration: 9, delay: -0.8 },
+            { width: 3.2, height: 3.2, left: 75, duration: 11.5, delay: -3.5 },
+            { width: 2.3, height: 2.3, left: 95, duration: 7.5, delay: -6.5 },
+            { width: 3.6, height: 3.6, left: 5, duration: 10, delay: -1.8 }
+        ];
+
+        emberData.forEach(data => {
+            const ember = document.createElement('div');
+            ember.className = 'ember';
+            ember.style.width = `${data.width}px`;
+            ember.style.height = `${data.height}px`;
+            ember.style.left = `${data.left}%`;
+            ember.style.animationDuration = `${data.duration}s`;
+            ember.style.animationDelay = `${data.delay}s`;
+            container.appendChild(ember);
+        });
     }
 
     createAutumnLeaves(container) {
