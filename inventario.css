@@ -1129,7 +1129,7 @@ animation: hotSteel 0.7s ease-out forwards;
     color: white !important;;
     font-size: 8px;
     line-height: 1.1;
-    word-spacing: -1px;
+    word-spacing: -3px;
     flex: 1;
     text-align: left;
     margin-left: 18px;
