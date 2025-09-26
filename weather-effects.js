@@ -381,44 +381,46 @@ class WeatherEffectsManager {
                     inset: 0;
                     pointer-events: none;
                     z-index: 9999;
-                    background: linear-gradient(to bottom right, rgba(230, 247, 255, 0.1), rgba(240, 253, 244, 0.1));
+                    background: linear-gradient(
+                        to bottom right,
+                        rgba(240, 253, 244, 0.08),
+                        rgba(255, 250, 230, 0.06)
+                    );
                 }
+
                 .pollen-container {
                     position: absolute;
                     top: 0;
                     left: 0;
                     width: 100%;
                     height: 100%;
+                    overflow: hidden;
                     pointer-events: none;
                 }
+
                 @keyframes pollen-float {
-                    0% { transform: translateY(-10vh) translateX(0); opacity: 0; }
-                    10% { opacity: 0.15; }
-                    50% { transform: translateY(40vh) translateX(10vw); opacity: 0.2; }
-                    90% { opacity: 0.15; }
-                    100% { transform: translateY(110vh) translateX(-5vw); opacity: 0; }
+                    0%   { transform: translateY(-10vh) translateX(0); opacity: 0; }
+                    10%  { opacity: 0.1; }
+                    40%  { transform: translateY(40vh) translateX(6vw) rotate(10deg); opacity: 0.2; }
+                    70%  { transform: translateY(75vh) translateX(-4vw) rotate(-15deg); opacity: 0.15; }
+                    100% { transform: translateY(110vh) translateX(2vw) rotate(0deg); opacity: 0; }
                 }
+
                 .pollen {
                     position: absolute;
-                    pointer-events: none;
-                    animation-iteration-count: infinite;
-                    animation-timing-function: ease-in-out;
-                    animation-name: pollen-float;
                     border-radius: 50%;
+                    opacity: 0;
+                    pointer-events: none;
+                    animation-name: pollen-float;
+                    animation-timing-function: ease-in-out;
+                    animation-iteration-count: infinite;
+                    background: radial-gradient(circle, rgba(255, 230, 140, 0.8) 0%, rgba(255, 230, 140, 0) 70%);
+                    filter: blur(1px);
                 }
-                .pollen.gold {
-                    background-color: #ffd700;
-                    box-shadow: 0 0 5px #ffd700;
-                }
-                .pollen.yellow {
-    background-color: #ffff00;
-    box-shadow: 0 0 3px #ffff00;
-}
 
-                .pollen.a { width: 1px; height: 1px; }
-.pollen.b { width: 2px; height: 2px; }
-.pollen.c { width: 3px; height: 3px; }
-
+                .pollen.tiny  { width: 2px; height: 2px; }
+                .pollen.small { width: 3px; height: 3px; }
+                .pollen.medium { width: 4px; height: 4px; }
             `
         };
 
@@ -628,28 +630,14 @@ class WeatherEffectsManager {
     }
 
     createPollen(container) {
-        const createPollenGroup = (count, className, minDuration, maxDuration, minDelay, maxDelay) => {
-            for (let i = 0; i < count; i++) {
-                const pollen = document.createElement('div');
-                const isGold = Math.random() < 0.1;
-                
-                pollen.className = `pollen ${className} ${isGold ? 'gold' : 'yellow'}`;
-                
-                const duration = Math.random() * (maxDuration - minDuration) + minDuration;
-                const delay = Math.random() * (maxDelay - minDelay) + minDelay;
-                const leftPosition = Math.random() * 100;
-
-                pollen.style.left = `${leftPosition}vw`;
-                pollen.style.animationDuration = `${duration}s`;
-                pollen.style.animationDelay = `${delay}s`;
-                
-                container.appendChild(pollen);
-            }
-        };
-        
-        createPollenGroup(50, 'a', 60, 80, -80, -10);
-        createPollenGroup(20, 'b', 70, 90, -90, -20);
-        createPollenGroup(10, 'c', 80, 100, -100, -30);
+        for (let i = 0; i < 60; i++) {
+            const p = document.createElement('div');
+            p.className = 'pollen ' + (['tiny','small','medium'][Math.floor(Math.random()*3)]);
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.animationDuration = (10 + Math.random() * 15) + 's';
+            p.style.animationDelay = (Math.random() * 10) + 's';
+            container.appendChild(p);
+        }
     }
 
     createRandomFlash(container) {
@@ -870,5 +858,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
-
-
