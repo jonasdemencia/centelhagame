@@ -98,6 +98,52 @@ class WeatherEffectsManager {
             `
         };
 
+        this.effects.lowmagic = {
+            html: `<div class="weather-overlay lowmagic-effect"><div class="scanline"></div></div>`,
+            css: `
+                .lowmagic-effect {
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 9999;
+                    background: rgba(17, 17, 17, 0.1);
+                }
+                
+                .lowmagic-effect::before {
+                    content: "";
+                    position: absolute;
+                    inset: 0;
+                    background: repeating-linear-gradient(
+                        0deg,
+                        rgba(255,255,255,0.03) 0px,
+                        rgba(255,255,255,0.03) 1px,
+                        transparent 1px,
+                        transparent 3px
+                    );
+                    animation: noise 0.4s steps(2) infinite;
+                    mix-blend-mode: overlay;
+                }
+
+                @keyframes noise {
+                    from { transform: translateY(0); }
+                    to   { transform: translateY(-1px); }
+                }
+
+                .scanline {
+                    position: absolute;
+                    width: 100%;
+                    height: 1px;
+                    background: rgba(255,255,255,0.08);
+                    top: -2px;
+                    animation: scan 6s linear infinite;
+                }
+                @keyframes scan {
+                    0% { top: -2px; }
+                    100% { top: 100%; }
+                }
+            `
+        };
+
         this.effects.storm = {
             html: `<div class="weather-overlay storm-effect"><div class="rain-container"></div></div>`,
             css: `
@@ -309,9 +355,9 @@ class WeatherEffectsManager {
                     animation: sway ease-in-out infinite;
                     opacity: 0.7;
                 }
-                .flake.small span { width: 1px; height: 1px; }
-.flake.medium span { width: 2px; height: 2px; }
-.flake.large span { width: 4px; height: 4px; }
+                .flake.small span { width: 1px; height: 1px; opacity: 0.5; }
+                .flake.medium span { width: 2px; height: 2px; opacity: 0.6; }
+                .flake.large span { width: 4px; height: 4px; opacity: 0.8; }
             `
         };
 
@@ -391,6 +437,7 @@ class WeatherEffectsManager {
 
     determineEffect(conditions) {
         if (conditions.energiaMagica === 'interferencia') return 'interference';
+        if (conditions.energiaMagica === 'baixa') return 'lowmagic';
         if (conditions.clima === 'tempestade') return 'storm';
         if (conditions.clima === 'nublado') return 'cloudy';
         if (conditions.temperatura === 'muito-quente') return 'veryhot';
@@ -644,4 +691,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
-
