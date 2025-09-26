@@ -180,22 +180,77 @@ class WeatherEffectsManager {
                     pointer-events: none;
                 }
                 .autumn-leaf {
-    position: absolute;
-    top: -10px;
-    width: 2px;
-    height: 2px;
-    opacity: 0.8;
-    pointer-events: none;
-    animation: autumnFall linear;
-}
-@keyframes autumnFall {
-    0% { transform: translateY(-10px) translateX(0) rotate(0deg); opacity: 1; }
-    25% { transform: translateY(25vh) translateX(15px) rotate(90deg); }
-    50% { transform: translateY(50vh) translateX(-10px) rotate(180deg); }
-    75% { transform: translateY(75vh) translateX(20px) rotate(270deg); }
-    100% { transform: translateY(100vh) translateX(0) rotate(360deg); opacity: 0; }
-}
+                    position: absolute;
+                    top: -10px;
+                    width: 2px;
+                    height: 2px;
+                    opacity: 0.8;
+                    pointer-events: none;
+                    animation: autumnFall linear;
+                }
+                @keyframes autumnFall {
+                    0% { transform: translateY(-10px) translateX(0) rotate(0deg); opacity: 1; }
+                    25% { transform: translateY(25vh) translateX(15px) rotate(90deg); }
+                    50% { transform: translateY(50vh) translateX(-10px) rotate(180deg); }
+                    75% { transform: translateY(75vh) translateX(20px) rotate(270deg); }
+                    100% { transform: translateY(100vh) translateX(0) rotate(360deg); opacity: 0; }
+                }
+            `
+        };
 
+        this.effects.cloudy = {
+            html: `<div class="weather-overlay cloudy-effect"><div class="fog-container"></div></div>`,
+            css: `
+                .cloudy-effect {
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 9999;
+                    background-color: rgba(74, 74, 74, 0.2);
+                }
+                
+                @keyframes fog-drift {
+                    0% {
+                        transform: translateX(0);
+                    }
+                    100% {
+                        transform: translateX(100%);
+                    }
+                }
+                
+                .fog-container {
+                    position: absolute;
+                    top: 0;
+                    left: -100vw;
+                    width: 300vw;
+                    height: 100%;
+                    animation: fog-drift 120s linear infinite;
+                }
+
+                .fog-container::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+                    
+                    box-shadow: 
+                        30vw 10vh 20vh 5vh,
+                        50vw 80vh 15vh 4vh,
+                        80vw 20vh 25vh 6vh,
+                        10vw 90vh 18vh 3vh,
+                        90vw 50vh 22vh 7vh,
+                        20vw 40vh 10vh 2vh,
+                        70vw 70vh 16vh 5vh,
+                        40vw 30vh 24vh 8vh,
+                        60vw 60vh 19vh 6vh;
+                    
+                    filter: blur(50px);
+                    opacity: 0.8;
+                    pointer-events: none;
+                }
             `
         };
     }
@@ -220,6 +275,7 @@ class WeatherEffectsManager {
     determineEffect(conditions) {
         if (conditions.energiaMagica === 'interferencia') return 'interference';
         if (conditions.clima === 'tempestade') return 'storm';
+        if (conditions.clima === 'nublado') return 'cloudy';
         if (conditions.temperatura === 'quente') return 'hot';
         if (conditions.estacao === 'outono') return 'autumn';
         return null;
@@ -349,7 +405,7 @@ class WeatherEffectsManager {
             leaf.style.left = `${Math.random() * 100}%`;
             leaf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
             
-const duration = Math.random() * 15 + 25;
+            const duration = Math.random() * 15 + 25;
             leaf.style.animationDuration = `${duration}s, 3s`;
             
             container.appendChild(leaf);
@@ -397,5 +453,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
-
-
