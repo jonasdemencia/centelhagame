@@ -211,10 +211,10 @@ class WeatherEffectsManager {
                 
                 @keyframes fog-drift {
                     0% {
-                        transform: translateX(-100vw);
+                        transform: translateX(-200vw);
                     }
                     100% {
-                        transform: translateX(100vw);
+                        transform: translateX(0vw);
                     }
                 }
                 
@@ -222,7 +222,7 @@ class WeatherEffectsManager {
                     position: absolute;
                     top: 0;
                     left: 0;
-                    width: 400vw;
+                    width: 200vw;
                     height: 100%;
                     animation: fog-drift 60s linear infinite;
                 }
@@ -237,18 +237,18 @@ class WeatherEffectsManager {
                     background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 60%);
                     
                     box-shadow: 
-                        30vw 10vh 25vh 8vh rgba(255, 255, 255, 0.3),
-                        50vw 80vh 20vh 6vh rgba(255, 255, 255, 0.25),
-                        80vw 20vh 30vh 10vh rgba(255, 255, 255, 0.35),
-                        10vw 90vh 22vh 5vh rgba(255, 255, 255, 0.2),
-                        90vw 50vh 28vh 12vh rgba(255, 255, 255, 0.4),
-                        20vw 40vh 15vh 4vh rgba(255, 255, 255, 0.15),
-                        70vw 70vh 24vh 8vh rgba(255, 255, 255, 0.3),
-                        40vw 30vh 32vh 14vh rgba(255, 255, 255, 0.45),
-                        60vw 60vh 26vh 9vh rgba(255, 255, 255, 0.35),
-                        15vw 25vh 18vh 6vh rgba(255, 255, 255, 0.25),
-                        85vw 75vh 22vh 7vh rgba(255, 255, 255, 0.3),
-                        35vw 85vh 20vh 5vh rgba(255, 255, 255, 0.2);
+                        30vw 10vh 25vh 8vh rgba(255, 255, 255, 0.3), 130vw 10vh 25vh 8vh rgba(255, 255, 255, 0.3),
+                        50vw 80vh 20vh 6vh rgba(255, 255, 255, 0.25), 150vw 80vh 20vh 6vh rgba(255, 255, 255, 0.25),
+                        80vw 20vh 30vh 10vh rgba(255, 255, 255, 0.35), 180vw 20vh 30vh 10vh rgba(255, 255, 255, 0.35),
+                        10vw 90vh 22vh 5vh rgba(255, 255, 255, 0.2), 110vw 90vh 22vh 5vh rgba(255, 255, 255, 0.2),
+                        90vw 50vh 28vh 12vh rgba(255, 255, 255, 0.4), 190vw 50vh 28vh 12vh rgba(255, 255, 255, 0.4),
+                        20vw 40vh 15vh 4vh rgba(255, 255, 255, 0.15), 120vw 40vh 15vh 4vh rgba(255, 255, 255, 0.15),
+                        70vw 70vh 24vh 8vh rgba(255, 255, 255, 0.3), 170vw 70vh 24vh 8vh rgba(255, 255, 255, 0.3),
+                        40vw 30vh 32vh 14vh rgba(255, 255, 255, 0.45), 140vw 30vh 32vh 14vh rgba(255, 255, 255, 0.45),
+                        60vw 60vh 26vh 9vh rgba(255, 255, 255, 0.35), 160vw 60vh 26vh 9vh rgba(255, 255, 255, 0.35),
+                        15vw 25vh 18vh 6vh rgba(255, 255, 255, 0.25), 115vw 25vh 18vh 6vh rgba(255, 255, 255, 0.25),
+                        85vw 75vh 22vh 7vh rgba(255, 255, 255, 0.3), 185vw 75vh 22vh 7vh rgba(255, 255, 255, 0.3),
+                        35vw 85vh 20vh 5vh rgba(255, 255, 255, 0.2), 135vw 85vh 20vh 5vh rgba(255, 255, 255, 0.2);
                     
                     filter: blur(40px);
                     opacity: 1;
