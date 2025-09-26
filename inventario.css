@@ -1527,10 +1527,10 @@ max-height: 80px !important;
 .info-panel::before {
     content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 120px;
-    height: 90px;
+    top: -15px;
+left: -30px;
+    width: 100px;
+    height: 75px;
     background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/quebradoesse.png') center/contain no-repeat;
     pointer-events: none;
     z-index: 3;
