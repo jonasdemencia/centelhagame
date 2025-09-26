@@ -418,9 +418,10 @@ class WeatherEffectsManager {
     box-shadow: 0 0 3px #ffff00;
 }
 
-.pollen.tiny  { width: 2px; height: 2px; }
-.pollen.small { width: 3px; height: 3px; }
-.pollen.medium { width: 4px; height: 4px; }
+.pollen.tiny  { width: 1px; height: 1px; }
+.pollen.small { width: 1.5px; height: 1.5px; }
+.pollen.medium { width: 2px; height: 2px; }
+
 
             `
         };
@@ -631,7 +632,7 @@ class WeatherEffectsManager {
     }
 
     createPollen(container) {
-        for (let i = 0; i < 60; i++) {
+for (let i = 0; i < 30; i++) {
             const p = document.createElement('div');
             p.className = 'pollen ' + (['tiny','small','medium'][Math.floor(Math.random()*3)]);
             p.style.left = Math.random() * 100 + 'vw';
@@ -859,4 +860,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
 
