@@ -1534,5 +1534,5 @@ max-height: 80px !important;
     background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/quebradoesse.png') center/contain no-repeat;
     pointer-events: none;
     z-index: 3;
-    mix-blend-mode: screen;
+    mix-blend-mode: overlay;
 }
