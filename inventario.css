@@ -1135,7 +1135,9 @@ animation: hotSteel 0.7s ease-out forwards;
     margin-left: 18px;
     margin-top: -3.5px;
     white-space: nowrap;
+    position: relative;
 }
+
 
 .profile-info-container {
     display: flex;
@@ -1520,4 +1522,16 @@ max-height: 80px !important;
     max-height: 85px !important;
     width: 85px !important;
     height: 85px !important;
+}
+
+.info-panel::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 168px;
+    height: 121px;
+    background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/quebradoesse.png') center/contain no-repeat;
+    pointer-events: none;
+    z-index: 3;
 }
