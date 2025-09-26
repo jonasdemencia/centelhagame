@@ -28,6 +28,7 @@ class WeatherEffectsManager {
                     pointer-events: none;
                     z-index: 9999;
                 }
+
                 @keyframes static-flicker {
                     0% { filter: brightness(1) contrast(1); }
                     5% { filter: brightness(1.2) contrast(1.1); }
@@ -51,14 +52,17 @@ class WeatherEffectsManager {
                     95% { filter: brightness(1.1) contrast(0.9); }
                     100% { filter: brightness(1) contrast(1); }
                 }
+
                 @keyframes pixel-glow {
                     0%, 100% { opacity: 0; transform: scale(1); }
                     50% { opacity: 0.8; transform: scale(1.5); }
                 }
+                
                 @keyframes pixel-fade {
                     0% { opacity: 1; }
                     100% { opacity: 0; }
                 }
+
                 .static-overlay {
                     position: absolute;
                     top: 0;
@@ -71,6 +75,7 @@ class WeatherEffectsManager {
                     background-size: 1px 1px;
                     animation: static-flicker 0.2s steps(20, end) infinite;
                 }
+
                 .pixel {
                     position: absolute;
                     width: 1px;
@@ -80,10 +85,12 @@ class WeatherEffectsManager {
                     animation-iteration-count: infinite;
                     animation-timing-function: ease-in-out;
                 }
+
                 .pixel.purple {
                     background-color: #8a2be2;
                     box-shadow: 0 0 2px 1px #8a2be2, 0 0 4px #8a2be2;
                 }
+
                 .pixel.silver {
                     background-color: #c0c0c0;
                     box-shadow: 0 0 2px 1px #c0c0c0, 0 0 4px #c0c0c0;
@@ -192,12 +199,7 @@ class WeatherEffectsManager {
         };
 
         this.effects.cloudy = {
-            html: `<div class="weather-overlay cloudy-effect">
-                       <div class="fog-container">
-                           <div class="fog-layer"></div>
-                           <div class="fog-layer"></div>
-                       </div>
-                   </div>`,
+            html: `<div class="weather-overlay cloudy-effect"><div class="fog-container"></div></div>`,
             css: `
                 .cloudy-effect {
                     position: fixed;
@@ -205,31 +207,27 @@ class WeatherEffectsManager {
                     pointer-events: none;
                     z-index: 9999;
                     background-color: rgba(74, 74, 74, 0.2);
-                    overflow: hidden; 
                 }
+                
                 @keyframes fog-drift {
                     0% {
                         transform: translateX(0);
                     }
                     100% {
-                        transform: translateX(-50%);
+                        transform: translateX(100%);
                     }
                 }
+                
                 .fog-container {
                     position: absolute;
                     top: 0;
-                    left: 0;
-                    width: 200vw;
+                    left: -100vw;
+                    width: 300vw;
                     height: 100%;
-                    display: flex;
                     animation: fog-drift 120s linear infinite;
                 }
-                .fog-layer {
-                    width: 100vw;
-                    height: 100%;
-                    position: relative;
-                }
-                .fog-layer::before {
+
+                .fog-container::before {
                     content: '';
                     position: absolute;
                     top: 0;
@@ -237,6 +235,7 @@ class WeatherEffectsManager {
                     width: 100%;
                     height: 100%;
                     background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+                    
                     box-shadow: 
                         30vw 10vh 20vh 5vh,
                         50vw 80vh 15vh 4vh,
@@ -247,13 +246,14 @@ class WeatherEffectsManager {
                         70vw 70vh 16vh 5vh,
                         40vw 30vh 24vh 8vh,
                         60vw 60vh 19vh 6vh;
+                    
                     filter: blur(50px);
                     opacity: 0.8;
                     pointer-events: none;
                 }
             `
         };
-    } // <-- PONTO E VÍRGULA REMOVIDO DAQUI
+    }
 
     async updateEffects() {
         try {
@@ -444,3 +444,12 @@ class WeatherEffectsManager {
         await this.updateEffects();
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Aguarda o Firebase carregar
+    setTimeout(() => {
+        window.WeatherEffects = new WeatherEffectsManager();
+    }, 1000);
+});
+
+window.WeatherEffectsManager = WeatherEffectsManager;
