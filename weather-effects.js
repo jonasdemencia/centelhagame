@@ -415,9 +415,10 @@ class WeatherEffectsManager {
     box-shadow: 0 0 3px #ffff00;
 }
 
-                .pollen.a { width: 3px; height: 3px; }
-                .pollen.b { width: 4px; height: 4px; }
-                .pollen.c { width: 5px; height: 5px; }
+                .pollen.a { width: 1px; height: 1px; }
+.pollen.b { width: 2px; height: 2px; }
+.pollen.c { width: 3px; height: 3px; }
+
             `
         };
 
@@ -869,4 +870,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
 
