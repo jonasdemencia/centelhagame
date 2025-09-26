@@ -411,8 +411,10 @@ class WeatherEffectsManager {
                     box-shadow: 0 0 5px #ffd700;
                 }
                 .pollen.yellow {
-                    background-color: #fceb9b;
-                }
+    background-color: #ffff00;
+    box-shadow: 0 0 3px #ffff00;
+}
+
                 .pollen.a { width: 3px; height: 3px; }
                 .pollen.b { width: 4px; height: 4px; }
                 .pollen.c { width: 5px; height: 5px; }
@@ -867,3 +869,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
