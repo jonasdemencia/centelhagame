@@ -453,10 +453,73 @@ class WeatherEffectsManager {
                     }
                 }
 
+                @keyframes petal-spiral {
+                    0% {
+                        transform: translateY(-10vh) translateX(0) rotateZ(0deg) scale(1);
+                        opacity: 0;
+                    }
+                    10% { opacity: 1; }
+                    25% {
+                        transform: translateY(25vh) translateX(20vw) rotateZ(180deg) scale(0.8);
+                    }
+                    50% {
+                        transform: translateY(50vh) translateX(-15vw) rotateZ(360deg) scale(1.1);
+                    }
+                    75% {
+                        transform: translateY(75vh) translateX(25vw) rotateZ(540deg) scale(0.7);
+                    }
+                    100% {
+                        transform: translateY(120vh) translateX(0) rotateZ(720deg) scale(0.5);
+                        opacity: 0;
+                    }
+                }
+
+                @keyframes petal-drift {
+                    0% {
+                        transform: translateY(-10vh) translateX(0) rotateZ(0deg);
+                        opacity: 0;
+                    }
+                    10% { opacity: 1; }
+                    30% {
+                        transform: translateY(30vh) translateX(-20vw) rotateZ(45deg);
+                    }
+                    60% {
+                        transform: translateY(60vh) translateX(30vw) rotateZ(135deg);
+                    }
+                    100% {
+                        transform: translateY(120vh) translateX(-5vw) rotateZ(270deg);
+                        opacity: 0;
+                    }
+                }
+
+                @keyframes petal-sway {
+                    0% {
+                        transform: translateY(-10vh) translateX(0) rotateZ(0deg);
+                        opacity: 0;
+                    }
+                    10% { opacity: 1; }
+                    20% {
+                        transform: translateY(20vh) translateX(8vw) rotateZ(30deg);
+                    }
+                    40% {
+                        transform: translateY(40vh) translateX(-12vw) rotateZ(-45deg);
+                    }
+                    60% {
+                        transform: translateY(60vh) translateX(18vw) rotateZ(60deg);
+                    }
+                    80% {
+                        transform: translateY(80vh) translateX(-8vw) rotateZ(-30deg);
+                    }
+                    100% {
+                        transform: translateY(120vh) translateX(5vw) rotateZ(15deg);
+                        opacity: 0;
+                    }
+                }
+
                 .petal {
                     position: absolute;
-                    width: 20px;
-                    height: 28px;
+                    width: 12px;
+                    height: 16px;
                     background: radial-gradient(circle at 30% 30%, #ff7f9f 0%, #ff4770 60%, #d62849 100%);
                     border-radius: 60% 60% 80% 80%;
                     opacity: 0;
@@ -684,12 +747,20 @@ class WeatherEffectsManager {
     }
 
     createPetals(container) {
+        const movements = [
+            'petal-fall',
+            'petal-spiral',
+            'petal-drift',
+            'petal-sway'
+        ];
+        
         for (let i = 0; i < 10; i++) {
             const petal = document.createElement('div');
             petal.className = 'petal';
             petal.style.left = `${Math.random() * 100}vw`;
             petal.style.animationDuration = `${8 + Math.random() * 6}s`;
             petal.style.animationDelay = `${Math.random() * 10}s`;
+            petal.style.animationName = movements[Math.floor(Math.random() * movements.length)];
             petal.style.transform = `rotate(${Math.random() * 360}deg)`;
             container.appendChild(petal);
         }
