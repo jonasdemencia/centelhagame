@@ -200,7 +200,7 @@ class WeatherEffectsManager {
 
         // Substitua esta parte no seu código original
 this.effects.cloudy = {
-    // HTML: Agora com duas camadas de neblina idênticas dentro do container
+    // HTML permanece o mesmo, com duas camadas
     html: `<div class="weather-overlay cloudy-effect">
                <div class="fog-container">
                    <div class="fog-layer"></div>
@@ -214,38 +214,34 @@ this.effects.cloudy = {
             pointer-events: none;
             z-index: 9999;
             background-color: rgba(74, 74, 74, 0.2);
-            overflow: hidden; /* Garante que nada vaze para fora da tela */
+            overflow: hidden; 
         }
         
-        /* Keyframes corrigidos para mover metade da largura total */
         @keyframes fog-drift {
             0% {
                 transform: translateX(0);
             }
             100% {
-                transform: translateX(-50%); /* Move exatamente uma largura de tela */
+                transform: translateX(-50%);
             }
         }
         
-        /* O container agora tem o dobro da largura da tela e usa flexbox */
         .fog-container {
             position: absolute;
             top: 0;
             left: 0;
-            width: 200vw; /* Dobro da largura da tela para comportar as duas camadas */
+            width: 200vw;
             height: 100%;
-            display: flex; /* Alinha as camadas lado a lado */
+            display: flex;
             animation: fog-drift 120s linear infinite;
         }
 
-        /* A camada individual da neblina (teremos duas) */
         .fog-layer {
-            width: 100vw; /* Cada camada tem a largura da tela */
+            width: 100vw;
             height: 100%;
             position: relative;
         }
 
-        /* O visual da neblina agora é aplicado a cada camada */
         .fog-layer::before {
             content: '';
             position: absolute;
@@ -253,17 +249,18 @@ this.effects.cloudy = {
             left: 0;
             width: 100%;
             height: 100%;
+            /* CORREÇÃO AQUI: Adicionado um espaço antes de "rgba" em cada linha do box-shadow */
             background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
             box-shadow: 
-                30vw 10vh 20vh 5vh rgba(255,255,255,0.2),
-                50vw 80vh 15vh 4vh rgba(255,255,255,0.2),
-                80vw 20vh 25vh 6vh rgba(255,255,255,0.2),
-                10vw 90vh 18vh 3vh rgba(255,255,255,0.2),
-                90vw 50vh 22vh 7vh rgba(255,255,255,0.2),
-                20vw 40vh 10vh 2vh rgba(255,255,255,0.2),
-                70vw 70vh 16vh 5vh rgba(255,255,255,0.2),
-                40vw 30vh 24vh 8vh rgba(255,255,255,0.2),
-                60vw 60vh 19vh 6vh rgba(255,255,255,0.2);
+                30vw 10vh 20vh 5vh rgba(255, 255, 255, 0.2),
+                50vw 80vh 15vh 4vh rgba(255, 255, 255, 0.2),
+                80vw 20vh 25vh 6vh rgba(255, 255, 255, 0.2),
+                10vw 90vh 18vh 3vh rgba(255, 255, 255, 0.2),
+                90vw 50vh 22vh 7vh rgba(255, 255, 255, 0.2),
+                20vw 40vh 10vh 2vh rgba(255, 255, 255, 0.2),
+                70vw 70vh 16vh 5vh rgba(255, 255, 255, 0.2),
+                40vw 30vh 24vh 8vh rgba(255, 255, 255, 0.2),
+                60vw 60vh 19vh 6vh rgba(255, 255, 255, 0.2);
             filter: blur(50px);
             opacity: 0.8;
             pointer-events: none;
@@ -469,4 +466,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
 
