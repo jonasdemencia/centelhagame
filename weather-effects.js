@@ -144,6 +144,52 @@ class WeatherEffectsManager {
             `
         };
 
+        this.effects.highmagic = {
+            html: `<div class="weather-overlay highmagic-effect"><div class="scanline"></div></div>`,
+            css: `
+                .highmagic-effect {
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 9999;
+                    background: rgba(17, 17, 17, 0.2);
+                }
+                
+                .highmagic-effect::before {
+                    content: "";
+                    position: absolute;
+                    inset: 0;
+                    background: repeating-linear-gradient(
+                        0deg,
+                        rgba(255,255,255,0.05) 0px,
+                        rgba(255,255,255,0.05) 1px,
+                        transparent 1px,
+                        transparent 2px
+                    );
+                    animation: noise 0.2s steps(2) infinite;
+                    mix-blend-mode: overlay;
+                }
+
+                @keyframes noise {
+                    from { transform: translateY(0); }
+                    to   { transform: translateY(-2px); }
+                }
+
+                .scanline {
+                    position: absolute;
+                    width: 100%;
+                    height: 2px;
+                    background: rgba(255,255,255,0.2);
+                    top: -2px;
+                    animation: scan 3s linear infinite;
+                }
+                @keyframes scan {
+                    0% { top: -2px; }
+                    100% { top: 100%; }
+                }
+            `
+        };
+
         this.effects.storm = {
             html: `<div class="weather-overlay storm-effect"><div class="rain-container"></div></div>`,
             css: `
@@ -437,6 +483,7 @@ class WeatherEffectsManager {
 
     determineEffect(conditions) {
         if (conditions.energiaMagica === 'interferencia') return 'interference';
+        if (conditions.energiaMagica === 'alta') return 'highmagic';
         if (conditions.energiaMagica === 'baixa') return 'lowmagic';
         if (conditions.clima === 'tempestade') return 'storm';
         if (conditions.clima === 'nublado') return 'cloudy';
