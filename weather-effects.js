@@ -302,16 +302,16 @@ class WeatherEffectsManager {
                 }
                 .flake span {
                     display: block;
-                    width: 4px;
-                    height: 4px;
+                    width: 3px;
+                    height: 3px;
                     background: white;
                     border-radius: 50%;
                     animation: sway ease-in-out infinite;
                     opacity: 0.7;
                 }
-                .flake.small span { width: 2px; height: 2px; opacity: 0.5; }
-                .flake.medium span { width: 3px; height: 3px; opacity: 0.6; }
-                .flake.large span { width: 5px; height: 5px; opacity: 0.8; }
+                .flake.small span { width: 1px; height: 1px; }
+.flake.medium span { width: 2px; height: 2px; }
+.flake.large span { width: 4px; height: 4px; }
             `
         };
 
@@ -644,3 +644,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
