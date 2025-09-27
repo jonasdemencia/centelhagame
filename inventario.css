@@ -1118,15 +1118,15 @@ animation: hotSteel 0.7s ease-out forwards;
 /* Nova janela de informação */
 .info-panel {
     padding: 5px;
-    background: rgba(0, 0, 0, 0.6);
+    background: transparent !important;
     border: none;
     border-radius: 0;
-min-height: 50px;
+    min-height: 80px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-    color: white !important;
+    color: white !important;;
     font-size: 8px;
     line-height: 1.1;
     word-spacing: -3px;
@@ -1136,8 +1136,8 @@ min-height: 50px;
     margin-top: -3.5px;
     white-space: nowrap;
     position: relative;
-    overflow: hidden;
 }
+
 
 .profile-info-container {
     display: flex;
@@ -1155,10 +1155,7 @@ min-height: 50px;
 
 .green-text {
     color: #90EE90;
-    text-shadow: 0 0 2px rgba(144,238,144,0.6),
-                 0 0 5px rgba(144,238,144,0.3);
 }
-
 
 
 /* Janela do nome do personagem (ABORDAGEM AGRESSIVA) */
@@ -1530,38 +1527,12 @@ max-height: 80px !important;
 .info-panel::before {
     content: "";
     position: absolute;
-    top: 20px;
-    left: 10px;
-    right: 10px;
-    bottom: 20px;
-background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/quebradoesse.png') center/contain no-repeat;
-    opacity: 0.6;
-    mix-blend-mode: screen;
-    pointer-events: none;
-    z-index: 2;
-}
-
-.info-panel::after {
-    content: "";
-    position: absolute;
-    top: 20px;
-    left: 10px;
-    right: 10px;
-    bottom: 20px;
-    background: linear-gradient(120deg,
-        rgba(255,255,255,0.05) 20%,
-        rgba(255,255,255,0.02) 40%,
-        rgba(255,255,255,0.08) 60%,
-        rgba(255,255,255,0) 100%
-    );
-    opacity: 0.4;
+    top: -5px;
+    left: 45px;
+    width: 100px;
+    height: 75px;
+    background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/quebradoesse.png') center/cover no-repeat;
     pointer-events: none;
     z-index: 3;
-    animation: glassShimmer 6s infinite linear;
-}
-
-
-@keyframes glassShimmer {
-    0% { background-position: -100px 0; }
-    100% { background-position: 200px 0; }
+    mix-blend-mode: screen;
 }
