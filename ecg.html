@@ -81,7 +81,7 @@ const midY = H * 0.5;
 let buffer = new Float32Array(W).fill(midY);
 
 // timing settings (can change for different realism)
-let bpm = 72;
+let bpm = 50;
 const bpmEl = document.getElementById('bpm');
 bpmEl.textContent = Math.round(bpm);
 
@@ -97,7 +97,7 @@ let beatInterval = 60000 / bpm; // ms between beats
 
 // parameters for waveform shape
 const baselineJitter = 0.3; // small jitter amplitude
-const noiseAmp = 0.6; // small noise
+const noiseAmp = 0.3; // small noise
 const qrsStrength = 18; // spike height in pixels
 const tWaveStrength = 6; // smaller bump after QRS
 const prSegment = 8; // horizontal length of PR segment (pixels)
