@@ -1532,7 +1532,10 @@ max-height: 80px !important;
 .info-panel::before {
     content: "";
     position: absolute;
-    inset: 0;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
     background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/quebradoesse.png') center/cover no-repeat;
     opacity: 0.6;
     mix-blend-mode: screen;
@@ -1540,10 +1543,14 @@ max-height: 80px !important;
     z-index: 2;
 }
 
+
 .info-panel::after {
     content: "";
     position: absolute;
-    inset: 0;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
     background: linear-gradient(120deg,
         rgba(255,255,255,0.05) 20%,
         rgba(255,255,255,0.02) 40%,
