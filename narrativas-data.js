@@ -611,11 +611,11 @@ const NARRATIVAS = {
 
 59: {
     texto: "Investigando cautelosamente os sons atrás dos barris, você se move lentamente pela penumbra do porão. O arrastar se torna mais intenso conforme você se aproxima, acompanhado por gemidos abafados. Quando você contorna o último barril grande, encontra a fonte do ruído: um zumbi em estado avançado de decomposição está preso entre dois barris pesados que caíram sobre ele. A criatura se debate fracamente, tentando se libertar, suas unhas arranhando inutilmente a madeira. Seus olhos mortos se fixam em você com uma fome terrível.",
-    opcoes: [], // Adicione esta linha
     batalha: "zumbi",
     vitoria: 66,
     derrota: 37
-},
+}
+
 
 60: {
     texto: "Preparando sua arma e aguardando, você se posiciona estrategicamente perto da escada, garantindo uma rota de fuga. Não demora muito para que a fonte dos ruídos se revele: um zumbi emerge de trás dos barris de vinho, cambaleando em sua direção com movimentos desajeitados mas determinados. A criatura usa roupas que um dia foram as de um taberneiro - um avental de couro manchado e uma camisa de linho rasgada. Seus olhos vazios se fixam em você com fome primitiva, e ele acelera o passo tanto quanto sua condição permite.",
@@ -2250,6 +2250,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
