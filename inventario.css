@@ -1526,8 +1526,7 @@ max-height: 80px !important;
     height: 85px !important;
 }
 
-.info-panel::before {
-    content: "";
+.crack-overlay {
     position: absolute;
     top: -5px;
     left: 45px;
@@ -1535,7 +1534,7 @@ max-height: 80px !important;
     height: 75px;
     background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/quebradoesse.png') center/cover no-repeat;
     pointer-events: none;
-    z-index: 2;
+    z-index: 9999;
     mix-blend-mode: screen;
 }
 
