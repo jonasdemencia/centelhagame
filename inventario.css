@@ -1155,8 +1155,6 @@ animation: hotSteel 0.7s ease-out forwards;
 
 .green-text {
     color: #90EE90;
-    position: relative;
-z-index: 1;
 }
 
 
@@ -1526,23 +1524,15 @@ max-height: 80px !important;
     height: 85px !important;
 }
 
-.crack-overlay {
+.info-panel::before {
+    content: "";
     position: absolute;
-    top: -35px;
+    top: -5px;
     left: 45px;
     width: 100px;
     height: 75px;
     background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/quebradoesse.png') center/cover no-repeat;
     pointer-events: none;
-    z-index: 4;
-    opacity: 0.7;
-}
-
-.info-panel > div {
-    position: relative;
-    z-index: 1;
-}
-
-.info-panel > div:not(.crack-overlay) {
-    margin-top: 15px;
+    z-index: 3;
+    mix-blend-mode: screen;
 }
