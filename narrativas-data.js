@@ -739,6 +739,16 @@ const NARRATIVAS = {
     ]
 },
 
+        83: {
+    texto: "Examinando as armas deixadas para trás no quarto da taverna, você encontra uma espingarda de caça abandonada no canto, ainda carregada mas com o cano ligeiramente entortado pela luta. Ao lado dela, há um machado de lenhador com a lâmina manchada de sangue seco - tanto humano quanto de algo mais escuro e viscoso. Entre os destroços, você também encontra uma caixa de munição meio vazia e algumas facas de cozinha que foram usadas como armas improvisadas.",
+    efeitos: [{ tipo: "item", item: "machado-lenhador" }],
+    opcoes: [
+        { texto: "Pegar as armas e sair da taverna", secao: 4 },
+        { texto: "Procurar por sobreviventes no porão", secao: 35 }
+    ]
+},
+
+
 85: {
     texto: "Lendo o diário mais detalhadamente, você descobre entradas cada vez mais desesperadas. O autor descreve como a 'febre estranha' se espalhou rapidamente, transformando vizinhos em criaturas violentas e famintas. As últimas páginas revelam que ele viu pessoas mortas se levantando do cemitério e caminhando de volta para a vila. A entrada final, escrita com tinta tremula, diz: 'O necromante Morteus retornou para se vingar. Que Deus nos perdoe pelo que fizemos com ele anos atrás.'",
     opcoes: [
@@ -2168,6 +2178,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
