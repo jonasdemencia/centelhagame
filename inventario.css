@@ -1118,7 +1118,7 @@ animation: hotSteel 0.7s ease-out forwards;
 /* Nova janela de informação */
 .info-panel {
     padding: 5px;
-    background: transparent !important;
+    background: rgba(0, 0, 0, 0.6);
     border: none;
     border-radius: 0;
     min-height: 80px;
@@ -1126,7 +1126,7 @@ animation: hotSteel 0.7s ease-out forwards;
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-    color: white !important;;
+    color: white !important;
     font-size: 8px;
     line-height: 1.1;
     word-spacing: -3px;
@@ -1136,7 +1136,9 @@ animation: hotSteel 0.7s ease-out forwards;
     margin-top: -3.5px;
     white-space: nowrap;
     position: relative;
+    overflow: hidden;
 }
+
 
 
 .profile-info-container {
@@ -1155,7 +1157,10 @@ animation: hotSteel 0.7s ease-out forwards;
 
 .green-text {
     color: #90EE90;
+    text-shadow: 0 0 2px rgba(144,238,144,0.6),
+                 0 0 5px rgba(144,238,144,0.3);
 }
+
 
 
 /* Janela do nome do personagem (ABORDAGEM AGRESSIVA) */
@@ -1527,12 +1532,31 @@ max-height: 80px !important;
 .info-panel::before {
     content: "";
     position: absolute;
-    top: -5px;
-    left: 45px;
-    width: 100px;
-    height: 75px;
+    inset: 0;
     background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/quebradoesse.png') center/cover no-repeat;
+    opacity: 0.6;
+    mix-blend-mode: screen;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.info-panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg,
+        rgba(255,255,255,0.05) 20%,
+        rgba(255,255,255,0.02) 40%,
+        rgba(255,255,255,0.08) 60%,
+        rgba(255,255,255,0) 100%
+    );
+    opacity: 0.4;
     pointer-events: none;
     z-index: 3;
-    mix-blend-mode: screen;
+    animation: glassShimmer 6s infinite linear;
+}
+
+@keyframes glassShimmer {
+    0% { background-position: -100px 0; }
+    100% { background-position: 200px 0; }
 }
