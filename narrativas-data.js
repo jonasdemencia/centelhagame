@@ -611,9 +611,9 @@ const NARRATIVAS = {
 
 59: {
     texto: "Investigando cautelosamente os sons atrás dos barris, você se move lentamente pela penumbra do porão. O arrastar se torna mais intenso conforme você se aproxima, acompanhado por gemidos abafados. Quando você contorna o último barril grande, encontra a fonte do ruído: um zumbi em estado avançado de decomposição está preso entre dois barris pesados que caíram sobre ele. A criatura se debate fracamente, tentando se libertar, suas unhas arranhando inutilmente a madeira. Seus olhos mortos se fixam em você com uma fome terrível.",
-    batalha: "zumbi",
-    vitoria: 66,
-    derrota: 37
+    opcoes: [
+        { texto: "Atacar o zumbi preso", batalha: "zumbi", vitoria: 66, derrota: 37 }
+    ]
 },
 
 
@@ -2250,6 +2250,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
