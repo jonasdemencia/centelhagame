@@ -1155,6 +1155,8 @@ animation: hotSteel 0.7s ease-out forwards;
 
 .green-text {
     color: #90EE90;
+    position: relative;
+z-index: 1;
 }
 
 
@@ -1533,7 +1535,7 @@ max-height: 80px !important;
     height: 75px;
     background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/quebradoesse.png') center/cover no-repeat;
     pointer-events: none;
-    z-index: 10;
+    z-index: 2;
     mix-blend-mode: screen;
 }
 
