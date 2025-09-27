@@ -59,6 +59,7 @@ REGRA FUNDAMENTAL: CONTINUIDADE NARRATIVA DIRETA
 - Se a escolha é "Usar a corda para escalar", a seção seguinte DEVE começar: "Ao usar a corda, você..."
 - Se a escolha é "Investigar o baú", a seção seguinte DEVE começar: "Investigando o baú, você descobre..."
 - Se a escolha é "Atacar o goblin", a seção seguinte DEVE começar: "Seu ataque contra o goblin..."
+*/
 
 /*
 === AVISO CRÍTICO ===
@@ -67,7 +68,8 @@ Sempre verificar se a seção de destino existe antes de criar uma opção.
 Se a seção não existe, criar a seção primeiro ou usar uma seção existente.
 */
 
-
+/*
+=== AVISO CRÍTICO ===
 EXEMPLOS CORRETOS:
 Escolha: "Examinar a porta misteriosa"
 Seção seguinte: "Examinando cuidadosamente a porta, você nota entalhes estranhos..."
@@ -2247,6 +2249,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
