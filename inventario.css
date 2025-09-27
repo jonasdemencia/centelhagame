@@ -1536,3 +1536,8 @@ max-height: 80px !important;
     z-index: 3;
     mix-blend-mode: screen;
 }
+
+.info-panel > div {
+    position: relative;
+    z-index: 1;
+}
