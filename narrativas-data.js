@@ -756,6 +756,67 @@ const NARRATIVAS = {
     ]
 },
 
+        77: {
+    texto: "Examinando os símbolos necromânticos mais de perto, você descobre que eles formam um padrão ritual complexo. Cada símbolo representa uma fase da ressurreição em massa que devastou a vila. O conhecimento é perturbador, mas pode ser útil para compreender como reverter ou prevenir tais magias no futuro.",
+    efeitos: [{ tipo: "item", item: "conhecimento-necromancia" }],
+    opcoes: [
+        { texto: "Ir ao mausoléu com este conhecimento", secao: 21 },
+        { texto: "Procurar mais evidências na vila", secao: 4 }
+    ]
+},
+
+78: {
+    texto: "Estudando os símbolos nas paredes da cripta, você reconhece runas de contenção e banimento. Elas foram gravadas para manter algo preso aqui embaixo. Mas muitas das runas estão rachadas ou apagadas, sugerindo que o que quer que estivesse contido pode ter escapado.",
+    opcoes: [
+        { texto: "Tentar reparar algumas runas", secao: 65, teste: "magia", dificuldade: 16 },
+        { texto: "Continuar explorando a cripta", secao: 52 },
+        { texto: "Sair imediatamente", secao: 4 }
+    ]
+},
+
+79: {
+    texto: "Coletando os objetos rituais de prata, você sente uma energia protetora emanar deles. São relíquias sagradas que podem oferecer proteção contra mortos-vivos e outras criaturas sombrias.",
+    efeitos: [{ tipo: "item", item: "reliquia-sagrada" }],
+    opcoes: [
+        { texto: "Continuar explorando com proteção", secao: 65 },
+        { texto: "Voltar à superfície", secao: 4 }
+    ]
+},
+
+80: {
+    texto: "Procurando por mais suprimentos na casa após derrotar o zumbi, você encontra uma pequena despensa escondida. Há conservas, água limpa e algumas velas que ainda podem ser úteis.",
+    efeitos: [{ tipo: "item", item: "suprimentos-casa" }],
+    opcoes: [
+        { texto: "Continuar explorando a vila", secao: 4 }
+    ]
+},
+
+81: {
+    texto: "Procurando por outras casas para explorar, você encontra uma residência que parece ter sido barricada de dentro. A porta está trancada, mas você pode ouvir um som fraco vindo de dentro.",
+    opcoes: [
+        { texto: "Forçar a entrada", secao: 28, teste: "habilidade", dificuldade: 13 },
+        { texto: "Bater na porta e anunciar presença", secao: 29 },
+        { texto: "Procurar outra casa", secao: 4 }
+    ]
+},
+
+82: {
+    texto: "Procurando pelos túneis subterrâneos marcados no mapa, você encontra uma entrada oculta atrás da igreja. Os túneis conectam vários edifícios importantes da vila, criando uma rede de escape que nunca foi usada.",
+    opcoes: [
+        { texto: "Explorar os túneis", secao: 25 },
+        { texto: "Usar os túneis para chegar ao cemitério", secao: 8 },
+        { texto: "Voltar à superfície", secao: 4 }
+    ]
+},
+
+84: {
+    texto: "Procurando por mais esconderijos no porão, você encontra uma passagem secreta atrás de alguns barris. Ela leva a um túnel que conecta com outros edifícios da vila.",
+    opcoes: [
+        { texto: "Seguir o túnel", secao: 82 },
+        { texto: "Subir e sair da taverna", secao: 4 }
+    ]
+},
+
 
 85: {
     texto: "Lendo o diário mais detalhadamente, você descobre entradas cada vez mais desesperadas. O autor descreve como a 'febre estranha' se espalhou rapidamente, transformando vizinhos em criaturas violentas e famintas. As últimas páginas revelam que ele viu pessoas mortas se levantando do cemitério e caminhando de volta para a vila. A entrada final, escrita com tinta tremula, diz: 'O necromante Morteus retornou para se vingar. Que Deus nos perdoe pelo que fizemos com ele anos atrás.'",
@@ -2186,6 +2247,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
