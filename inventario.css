@@ -1528,7 +1528,7 @@ max-height: 80px !important;
 
 .crack-overlay {
     position: absolute;
-    top: -25px;
+    top: -35px;
     left: 45px;
     width: 100px;
     height: 75px;
@@ -1541,4 +1541,8 @@ max-height: 80px !important;
 .info-panel > div {
     position: relative;
     z-index: 1;
+}
+
+.info-panel > div:not(.crack-overlay) {
+    margin-top: 15px;
 }
