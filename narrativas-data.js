@@ -614,7 +614,7 @@ const NARRATIVAS = {
     batalha: "zumbi",
     vitoria: 66,
     derrota: 37
-}
+},
 
 
 60: {
@@ -2250,6 +2250,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
