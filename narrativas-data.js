@@ -433,7 +433,7 @@ const NARRATIVAS = {
     texto: "Investigando a área barricada da loja, você encontra evidências de que alguém tentou desesperadamente se esconder aqui durante os primeiros dias da praga. Tábuas foram pregadas de forma apressada, criando um pequeno refúgio nos fundos da loja. Dentro deste espaço claustrofóbico, você encontra os restos de uma existência precária: cobertores sujos empilhados em um canto, latas de comida vazias espalhadas pelo chão, e uma pequena reserva de suprimentos médicos cuidadosamente organizados em uma caixa de madeira. Há também um diário com páginas rasgadas, suas últimas entradas falando de desespero crescente e sons terríveis vindos de fora.",
     efeitos: [{ tipo: "item", item: "pocao-cura-menor" }],
     opcoes: [
-        { texto: "Ler o diário mais detalhadamente", secao: 72 },
+        { texto: "Ler o diário mais detalhadamente", secao: 85 },
         { texto: "Procurar por mais suprimentos escondidos", secao: 41 },
         { texto: "Examinar os registros da loja", secao: 42 }
     ]
@@ -736,6 +736,15 @@ const NARRATIVAS = {
     opcoes: [
         { texto: "Ir ao cemitério procurar pelo amuleto", secao: 8 },
         { texto: "Continuar explorando a vila", secao: 4 }
+    ]
+},
+
+85: {
+    texto: "Lendo o diário mais detalhadamente, você descobre entradas cada vez mais desesperadas. O autor descreve como a 'febre estranha' se espalhou rapidamente, transformando vizinhos em criaturas violentas e famintas. As últimas páginas revelam que ele viu pessoas mortas se levantando do cemitério e caminhando de volta para a vila. A entrada final, escrita com tinta tremula, diz: 'O necromante Morteus retornou para se vingar. Que Deus nos perdoe pelo que fizemos com ele anos atrás.'",
+    opcoes: [
+        { texto: "Ir ao cemitério procurar por Morteus", secao: 8 },
+        { texto: "Procurar mais informações sobre Morteus", secao: 42 },
+        { texto: "Sair da loja imediatamente", secao: 4 }
     ]
 }
    }
@@ -2159,6 +2168,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
