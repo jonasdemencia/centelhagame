@@ -1532,17 +1532,15 @@ max-height: 80px !important;
 .info-panel::before {
     content: "";
     position: absolute;
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    bottom: 10px;
+    top: -5px;
+    left: 45px;
+    width: 100px;
+    height: 75px;
     background: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/quebradoesse.png') center/cover no-repeat;
-    opacity: 0.6;
-    mix-blend-mode: screen;
     pointer-events: none;
-    z-index: 2;
+    z-index: 3;
+    mix-blend-mode: screen;
 }
-
 
 .info-panel::after {
     content: "";
