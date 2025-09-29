@@ -327,7 +327,7 @@ const NARRATIVAS = {
             texto: "Examinando os símbolos no altar, você reconhece alguns como sendo de necromancia - magia relacionada aos mortos. Os símbolos parecem formar um ritual complexo, possivelmente para ressuscitar os mortos. Isso explicaria o que aconteceu com os habitantes da vila.",
             opcoes: [
                 { texto: "Tentar decifrar mais do ritual", secao: 54, teste: "magia", dificuldade: 15 },
-                { texto: "Procurar por mais pistas na igreja", secao: 27 },
+                { texto: "Procurar por itens na igreja", secao: 27 },
                 { texto: "Sair da igreja imediatamente", secao: 4 }
             ]
         },
@@ -834,7 +834,6 @@ const NARRATIVAS = {
     opcoes: [
         { texto: "Atacar o zumbi rapidamente", batalha: "zumbi", vitoria: 88, derrota: 37 },
         { texto: "Tentar recuar para o túnel", secao: 86, teste: "habilidade", dificuldade: 12 },
-        { texto: "Sair completamente e enfrentar", secao: 4 }
     ]
 },
 
@@ -2277,6 +2276,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
