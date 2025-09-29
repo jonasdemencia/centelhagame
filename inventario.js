@@ -938,6 +938,18 @@ if (newItemData && slotType === newItemData.slot) {
 
                 // C) Colocar o novo item no slot e limpar dados antigos
                 inventoryData.equippedItems[slotId] = newItemData.content;
+
+if (newItemData.bonuses && newItemData.bonuses.energy) {
+    const currentEnergy = playerData.energy || { total: 0, initial: 0 };
+    const newInitial = currentEnergy.initial + newItemData.bonuses.energy;
+    const newTotal = Math.min(currentEnergy.total + newItemData.bonuses.energy, newInitial);
+    
+    await setDoc(playerRef, {
+        energy: { total: newTotal, initial: newInitial }
+    }, { merge: true });
+}
+
+    
                 // Limpa todos os dados específicos de arma/consumível para evitar vazamento
                 delete inventoryData.equippedItems.weapon_loadedAmmo;
                 delete inventoryData.equippedItems[slotType + '_consumable'];
@@ -974,6 +986,19 @@ if (newItemData && slotType === newItemData.slot) {
 
             // B) Limpar o slot e todos os dados associados
             inventoryData.equippedItems[slotId] = null;
+
+// Após: inventoryData.equippedItems[slotId] = null;
+if (currentlyEquippedData.bonuses && currentlyEquippedData.bonuses.energy) {
+    const currentEnergy = playerData.energy || { total: 0, initial: 0 };
+    const newInitial = Math.max(1, currentEnergy.initial - currentlyEquippedData.bonuses.energy);
+    const newTotal = Math.min(currentEnergy.total, newInitial);
+    
+    await setDoc(playerRef, {
+        energy: { total: newTotal, initial: newInitial }
+    }, { merge: true });
+}
+
+            
             delete inventoryData.equippedItems.weapon_loadedAmmo;
             delete inventoryData.equippedItems[slotType + '_consumable'];
             delete inventoryData.equippedItems[slotType + '_quantity'];
@@ -2158,7 +2183,6 @@ function updateCharacterSheet(playerData) {
     document.getElementById("char-magic-info").innerText = (playerData.magic?.total ?? 0) + equipBonuses.magic;
     document.getElementById("char-luck-info").innerText = (playerData.luck?.total ?? 0) + equipBonuses.luck;
     document.getElementById("char-couraca-info").innerText = playerData.couraca || "0";
-    document.getElementById("char-energy-info").innerText = (playerData.energy?.total ?? 0) + equipBonuses.energy;
 
 
     // Atualiza o portrait
