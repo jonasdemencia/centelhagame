@@ -117,6 +117,12 @@ class SistemaNarrativas {
         document.getElementById('numero-secao').textContent = numeroSecao;
         document.getElementById('texto-narrativa').textContent = secao.texto;
 
+        // Verificar batalha automática (sem opções)
+        if (secao.batalha && !secao.opcoes) {
+            await this.processarBatalhaAutomatica(secao);
+            return;
+        }
+
         // Criar opções
         this.criarOpcoes(secao.opcoes, secao.final);
     }
@@ -461,6 +467,18 @@ class SistemaNarrativas {
         }
     }
 
+    async processarBatalhaAutomatica(secao) {
+        const playerDocRef = doc(db, "players", this.userId);
+        await updateDoc(playerDocRef, {
+            "narrativeProgress.battleReturn": {
+                vitoria: secao.vitoria,
+                derrota: secao.derrota,
+                active: true
+            }
+        });
+        window.location.href = `batalha.html?monstros=${secao.batalha}`;
+    }
+
     async voltarSelecao() {
         document.getElementById('narrativa-ativa').className = 'tela-oculta';
         document.getElementById('selecao-narrativas').className = 'tela-ativa';
@@ -501,6 +519,3 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
-
-
-
