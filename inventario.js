@@ -105,6 +105,12 @@ const extraItems = [
 { id: "punhal-ceremonial", content: "Punhal Ceremonial", uuid: "extra-punhal-ceremonial", slot: "weapon", description: "Punhal usado para sacrifícios.", damage: "1D4", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/punhal-ceremonial.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupunhal-ceremonial.png" },
 { id: "revolver-38", content: "Revolver 38", uuid: "extra-revolver38", slot: "weapon", description: "Calibre 38.", damage: "1d8", ammoType: "municao-38", ammoCapacity: 6, loadedAmmo: 0, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/revolver-38.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thurevolver-38.png" },
 
+// === AMULETOS ===
+{ id: "amuletodaarmaduranatual", content: "Amuleto da Armadura Natural", uuid: "extra-amuletodaarmaduranatural", slot: "amulet", description: "Colar mágico contra sugadores.", bonuses: { couraca: 1 }, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/amuletodaarmaduranatural.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuamuletodaarmaduranatural.png" },
+
+// === ANÉIS ===
+{ id: "aneldafe", content: "Anel da Fé", uuid: "extra-anel-da-fé", slot: "ring", description: "Relíquia sagrada de um santo desconhecido", bonuses: { couraca: 1 }, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/aneldafe.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuaneldafe.png" },
+
 // === ARMADURAS ===
 { id: "armaduradecouro", content: "Armadura de Couro", uuid: "extra-armaduradecouro", slot: "armor", description: "Armadura leve, para manobras artistícas", defense: 2, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/armaduradecouro.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuarmaduradecouro.png" },
 { id: "habito-monastico", content: "Hábito Monástico", uuid: "extra-habito-monastico", slot: "armor", description: "Túnica de burel com forro reforçado, para monges viajantes", defense: 1, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/habito-monastico.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuhabito-monastico.png" },
@@ -117,8 +123,6 @@ const extraItems = [
 // === CAPACETES ===
 { id: "mascara-de-gas", content: "Máscara de Gás", uuid: "extra-mascara-de-gas", slot: "helmet", defense: 1, description: "Modelo soviético, filtro cilíndrico frontal. Da segunda guerra.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/mascara-de-gas.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thumascara-de-gas.png" },
 
-// === ANÉIS ===
-{ id: "aneldafe", content: "Anel da Fé", uuid: "extra-anel-da-fé", slot: "ring", description: "Relíquia sagrada de um santo desconhecido", bonuses: { couraca: 1 }, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/aneldafe.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuaneldafe.png" },
 
 // === MUNIÇÕES ===
 { id: "municao-12", content: "Munição de 12.", uuid: "extra-municao12", quantity: 10, projectile: true, description: "Projéteis letais calíbre 12.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/municao-12.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thumunicao-12.png" },
