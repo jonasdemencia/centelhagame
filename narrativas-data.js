@@ -659,9 +659,11 @@ const NARRATIVAS = {
 
 65: {
     texto: "Seguindo a passagem mais profunda da cripta, você desce por uma escadaria de pedra que se aprofunda nas entranhas da terra. O ar se torna progressivamente mais frio e carregado de energia sombria. As paredes são cobertas de símbolos necromânticos que brilham com uma luz fantasmagórica, e você pode ouvir sussurros em línguas mortas ecoando das profundezas. Finalmente, você chega a uma câmara final onde os restos do necromante Morteus ainda repousam em um altar de obsidiana. Seu corpo mumificado está cercado por artefatos sombrios, e você sente que sua presença maligna ainda contamina este lugar.",
-    batalha: "necromante",
-    vitoria: 69,
-    derrota: 37
+    opcoes: [
+        { texto: "Atacar o necromante imediatamente", batalha: "necromante", vitoria: 69, derrota: 37 },
+        { texto: "Tentar pegar um artefato e fugir", secao: 89, teste: "habilidade", dificuldade: 15 },
+        { texto: "Recuar silenciosamente", secao: 52 }
+    ]
 },
 
 66: {
@@ -845,6 +847,14 @@ const NARRATIVAS = {
     ]
 }
 ,
+
+        89: {
+    texto: "Tentando pegar um artefato sombrio, você se move rapidamente em direção ao altar. Mas no momento em que seus dedos tocam um dos objetos necromânticos, os olhos do necromante se abrem com um brilho sobrenatural. 'Ladrão!' ele sibila, e sua forma mumificada começa a se erguer. Você conseguiu pegar o artefato, mas agora terá que enfrentar sua ira.",
+    efeitos: [{ tipo: "item", item: "artefato-sombrio" }],
+    batalha: "necromante",
+    vitoria: 69,
+    derrota: 37
+},
 
 85: {
     texto: "Lendo o diário mais detalhadamente, você descobre entradas cada vez mais desesperadas. O autor descreve como a 'febre estranha' se espalhou rapidamente, transformando vizinhos em criaturas violentas e famintas. As últimas páginas revelam que ele viu pessoas mortas se levantando do cemitério e caminhando de volta para a vila. A entrada final, escrita com tinta tremula, diz: 'O necromante Morteus retornou para se vingar. Que Deus nos perdoe pelo que fizemos com ele anos atrás.'",
@@ -2276,6 +2286,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
