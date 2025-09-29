@@ -825,10 +825,27 @@ const NARRATIVAS = {
     efeitos: [{ tipo: "item", item: "suprimentos-emergencia" }, { tipo: "energia", valor: 2 }],
     opcoes: [
         { texto: "Voltar pelos túneis", secao: 82 },
-        { texto: "Procurar uma saída para a superfície", secao: 4 }
+{ texto: "Procurar uma saída para a superfície", secao: 87 }
     ]
 },
 
+87: {
+    texto: "Procurando uma saída para a superfície, você encontra uma escada de pedra que leva para cima. Ao emergir através de um alçapão oculto atrás da igreja, você se depara com um zumbi solitário que estava vagando pela área. A criatura se vira imediatamente em sua direção, atraída pelo som do alçapão se abrindo. Você está em posição vulnerável, meio saído do buraco.",
+    opcoes: [
+        { texto: "Atacar o zumbi rapidamente", batalha: "zumbi", vitoria: 88, derrota: 37 },
+        { texto: "Tentar recuar para o túnel", secao: 86, teste: "habilidade", dificuldade: 12 },
+        { texto: "Sair completamente e enfrentar", secao: 4 }
+    ]
+},
+
+88: {
+    texto: "Após derrotar o zumbi que guardava a saída, você respira aliviado. A luta foi rápida mas intensa. Agora você pode se orientar com segurança e seguir em direção à praça central da vila.",
+    efeitos: [{ tipo: "energia", valor: -1 }],
+    opcoes: [
+        { texto: "Ir para a praça central", secao: 4 }
+    ]
+}
+,
 
 85: {
     texto: "Lendo o diário mais detalhadamente, você descobre entradas cada vez mais desesperadas. O autor descreve como a 'febre estranha' se espalhou rapidamente, transformando vizinhos em criaturas violentas e famintas. As últimas páginas revelam que ele viu pessoas mortas se levantando do cemitério e caminhando de volta para a vila. A entrada final, escrita com tinta tremula, diz: 'O necromante Morteus retornou para se vingar. Que Deus nos perdoe pelo que fizemos com ele anos atrás.'",
@@ -2260,6 +2277,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
