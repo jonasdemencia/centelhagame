@@ -107,6 +107,8 @@ const extraItems = [
 
 // === AMULETOS ===
 { id: "amuletodaarmaduranatual", content: "Amuleto da Armadura Natural", uuid: "extra-amuletodaarmaduranatural", slot: "amulet", description: "Colar mágico contra sugadores.", bonuses: { couraca: 1 }, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/amuletodaarmaduranatural.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuamuletodaarmaduranatural.png" },
+{ id: "amuletodaserpentedourada", content: "Amuleto da Serpente Dourada", uuid: "extra-amuletodaserpentedourada", slot: "amulet", description: "Aumenta a energia vital.", bonuses: { energy: 5 }, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/amuletodaserpentedourada.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuamuletodaserpentedourada.png" },
+   
 
 // === ANÉIS ===
 { id: "aneldafe", content: "Anel da Fé", uuid: "extra-anel-da-fé", slot: "ring", description: "Relíquia sagrada de um santo desconhecido", bonuses: { couraca: 1 }, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/aneldafe.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuaneldafe.png" },
