@@ -940,7 +940,7 @@ if (newItemData && slotType === newItemData.slot) {
                 inventoryData.equippedItems[slotId] = newItemData.content;
 
 if (newItemData.bonuses && newItemData.bonuses.energy) {
-    const currentEnergy = playerData.energy || { total: 0, initial: 0 };
+const currentEnergy = currentPlayerData.energy || { total: 0, initial: 0 };
     const newInitial = currentEnergy.initial + newItemData.bonuses.energy;
     const newTotal = Math.min(currentEnergy.total + newItemData.bonuses.energy, newInitial);
     
@@ -989,7 +989,7 @@ if (newItemData.bonuses && newItemData.bonuses.energy) {
 
 // Após: inventoryData.equippedItems[slotId] = null;
 if (currentlyEquippedData.bonuses && currentlyEquippedData.bonuses.energy) {
-    const currentEnergy = playerData.energy || { total: 0, initial: 0 };
+const currentEnergy = currentPlayerData.energy || { total: 0, initial: 0 };
     const newInitial = Math.max(1, currentEnergy.initial - currentlyEquippedData.bonuses.energy);
     const newTotal = Math.min(currentEnergy.total, newInitial);
     
