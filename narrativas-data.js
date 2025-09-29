@@ -804,11 +804,11 @@ const NARRATIVAS = {
 },
 
 82: {
-    texto: "Procurando pelos túneis subterrâneos marcados no mapa, você encontra uma entrada oculta atrás da igreja. Os túneis conectam vários edifícios importantes da vila, criando uma rede de escape que nunca foi usada.",
+    texto: "Explorando os túneis subterrâneos, você caminha por passagens estreitas de pedra que conectam os edifícios principais da vila. As paredes são úmidas e cobertas de musgo, e você pode ouvir gotejamento constante. Os túneis foram claramente construídos como rotas de fuga, mas nunca foram usados - não há sinais de passagem recente. Você encontra três ramificações: uma leva em direção ao cemitério, outra para o centro da vila, e a terceira para uma área que você ainda não explorou.",
     opcoes: [
-        { texto: "Explorar os túneis", secao: 25 },
-        { texto: "Usar os túneis para chegar ao cemitério", secao: 8 },
-        { texto: "Voltar à superfície", secao: 4 }
+        { texto: "Seguir o túnel para o cemitério", secao: 8 },
+        { texto: "Ir para o centro da vila pelos túneis", secao: 4 },
+        { texto: "Explorar a área desconhecida", secao: 86 }
     ]
 },
 
@@ -831,6 +831,15 @@ const NARRATIVAS = {
 }
    }
   },
+
+    86: {
+    texto: "Seguindo o túnel para a área desconhecida, você emerge em uma câmara subterrânea que parece ter sido usada como depósito de suprimentos de emergência. Há barris de água, caixas de comida preservada e equipamentos básicos de sobrevivência.",
+    efeitos: [{ tipo: "item", item: "suprimentos-emergencia" }, { tipo: "energia", valor: 2 }],
+    opcoes: [
+        { texto: "Voltar pelos túneis", secao: 82 },
+        { texto: "Procurar uma saída para a superfície", secao: 4 }
+    ]
+},
 
     
 "coroa-de-ferro-epica": {
@@ -2250,6 +2259,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
