@@ -131,7 +131,7 @@ const NARRATIVAS = {
         },
 
         4: {
-            texto: "Continuando pela rua principal, você passa por mais casas em ruínas. A vila parece ter sido abandonada há décadas, mas há sinais perturbadores de atividade recente - uma fogueira ainda fumegante em um dos pátios, roupas penduradas em um varal que balançam no vento. Você chega a uma praça central onde uma fonte seca se ergue, coberta de musgo e rachada. Ao redor da praça, quatro edifícios se destacam: uma igreja com sua torre desabada, uma taverna com a placa balançando, uma loja geral com as janelas tapadas, e o que parece ter sido a casa do prefeito.",
+            texto: "Você chega a rua principal. A vila parece ter sido abandonada há décadas, mas há sinais perturbadores de atividade recente - uma fogueira ainda fumegante em um dos pátios, roupas penduradas em um varal que balançam no vento. Você chega a uma praça central onde uma fonte seca se ergue, coberta de musgo e rachada. Ao redor da praça, quatro edifícios se destacam: uma igreja com sua torre desabada, uma taverna com a placa balançando, uma loja geral com as janelas tapadas, e o que parece ter sido a casa do prefeito.",
             opcoes: [
                 { texto: "Explorar a igreja em ruínas", secao: 11 },
                 { texto: "Investigar a taverna abandonada", secao: 14 },
@@ -2260,6 +2260,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
