@@ -851,6 +851,7 @@ const NARRATIVAS = {
         89: {
     texto: "Tentando pegar um artefato sombrio, você se move rapidamente em direção ao altar. Mas no momento em que seus dedos tocam um dos objetos necromânticos, os olhos do necromante se abrem com um brilho sobrenatural. 'Ladrão!' ele sibila, e sua forma mumificada começa a se erguer. Você conseguiu pegar o artefato, mas agora terá que enfrentar sua ira.",
     efeitos: [{ tipo: "item", item: "artefato-sombrio" }],
+    opcoes: [],
     batalha: "necromante",
     vitoria: 69,
     derrota: 37
@@ -2286,6 +2287,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
