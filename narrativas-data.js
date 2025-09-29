@@ -688,7 +688,7 @@ const NARRATIVAS = {
     opcoes: [
         { texto: "Ir à praça central enfrentar Lorde Aldric", secao: 69 },
         { texto: "Tentar contornar e fugir da vila", secao: 70 },
-        { texto: "Procurar uma arma melhor antes do confronto", secao: 71 }
+        { texto: "Procurar uma arma melhor antes do confronto", secao: 90 }
     ]
 },
 
@@ -706,11 +706,11 @@ const NARRATIVAS = {
 },
 
 71: {
-    texto: "Procurando uma arma melhor antes do confronto, você vasculha rapidamente as casas próximas ao cemitério. Em uma antiga casa de guarda, você encontra uma balestra militar ainda em bom estado, junto com algumas virotes de ferro. A arma é pesada mas poderosa - exatamente o que você precisa para enfrentar um morto-vivo de grande poder. Armado adequadamente, você se sente mais confiante para o confronto que se aproxima.",
-    efeitos: [{ tipo: "item", item: "balestra-militar" }],
+    texto: "Descansando um momento para recuperar o fôlego após a batalha brutal, você se apoia contra uma parede de pedra e respira profundamente. O ar frio da vila ajuda a limpar seus pulmões do cheiro de decomposição. Alguns minutos de descanso restauram parte de suas energias e clarificam sua mente para os desafios à frente.",
+    efeitos: [{ tipo: "energia", valor: 2 }],
     opcoes: [
-        { texto: "Ir enfrentar Lorde Aldric na praça", secao: 69 },
-        { texto: "Tentar uma emboscada nas ruas", secao: 73 }
+        { texto: "Ir para a praça central", secao: 4 },
+        { texto: "Procurar suprimentos nas casas próximas", secao: 10 }
     ]
 },
 
@@ -855,6 +855,15 @@ const NARRATIVAS = {
         { texto: "Lutar contra o necromante", batalha: "necromante", vitoria: 69, derrota: 37 }
     ]
 },
+        90: {
+    texto: "Procurando uma arma melhor antes do confronto, você vasculha rapidamente as casas próximas ao cemitério. Em uma antiga casa de guarda, você encontra uma balestra militar ainda em bom estado, junto com algumas virotes de ferro. A arma é pesada mas poderosa - exatamente o que você precisa para enfrentar um morto-vivo de grande poder. Armado adequadamente, você se sente mais confiante para o confronto que se aproxima.",
+    efeitos: [{ tipo: "item", item: "balestra-militar" }],
+    opcoes: [
+        { texto: "Ir enfrentar Lorde Aldric na praça", secao: 69 },
+        { texto: "Tentar uma emboscada nas ruas", secao: 73 }
+    ]
+},
+
 
 85: {
     texto: "Lendo o diário mais detalhadamente, você descobre entradas cada vez mais desesperadas. O autor descreve como a 'febre estranha' se espalhou rapidamente, transformando vizinhos em criaturas violentas e famintas. As últimas páginas revelam que ele viu pessoas mortas se levantando do cemitério e caminhando de volta para a vila. A entrada final, escrita com tinta tremula, diz: 'O necromante Morteus retornou para se vingar. Que Deus nos perdoe pelo que fizemos com ele anos atrás.'",
@@ -2286,6 +2295,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
