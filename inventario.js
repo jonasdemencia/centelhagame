@@ -1822,7 +1822,9 @@ function calculateEquippedBonuses() {
         skill: 0,
         charisma: 0,
         magic: 0,
-        luck: 0
+        luck: 0,
+        energy: 0  // ADICIONE ESTA LINHA
+
     };
 
     const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
@@ -2154,6 +2156,8 @@ function updateCharacterSheet(playerData) {
     document.getElementById("char-magic-info").innerText = (playerData.magic?.total ?? 0) + equipBonuses.magic;
     document.getElementById("char-luck-info").innerText = (playerData.luck?.total ?? 0) + equipBonuses.luck;
     document.getElementById("char-couraca-info").innerText = playerData.couraca || "0";
+    document.getElementById("char-energy-info").innerText = (playerData.energy?.total ?? 0) + equipBonuses.energy;
+
 
     // Atualiza o portrait
     const portraitImage = document.getElementById("portrait-image");
