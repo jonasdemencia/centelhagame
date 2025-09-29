@@ -1777,6 +1777,17 @@ async function updateCharacterCouraca() {
         }
     }
 
+    // Verifica o item equipado no slot de capacete
+const helmetSlot = document.querySelector('.slot[data-slot="helmet"]');
+if (helmetSlot && helmetSlot.dataset.itemName) {
+    const equippedHelmetName = helmetSlot.dataset.itemName;
+    const helmetData = allItemsArr.find(item => item.content === equippedHelmetName);
+    if (helmetData && helmetData.defense) {
+        bonusCouraca += helmetData.defense;
+    }
+}
+
+
     // Bônus de itens equipados (sistema novo)
     const equipBonuses = calculateEquippedBonuses();
     bonusCouraca += equipBonuses.couraca;
