@@ -555,60 +555,64 @@ class WeatherEffectsManager {
         };
 
         this.effects.cloudy = {
-            html: `<div class="weather-overlay cloudy-effect"><div class="fog-container"></div></div>`,
-            css: `
-                .cloudy-effect {
-                    position: fixed;
-                    inset: 0;
-                    pointer-events: none;
-                    z-index: 9999;
-                    background-color: rgba(74, 74, 74, 0.2);
-                }
-                
-                @keyframes fog-drift {
-                    from {
-                        transform: translateX(-100%);
-                    }
-                    to {
-                        transform: translateX(100vw);
-                    }
-                }
-                
-                .fog-container {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 300vw;
-                    height: 100%;
-                    animation: fog-drift 120s linear infinite;
-                }
+    html: `<div class="weather-overlay cloudy-effect"><div class="fog-wrapper"><div class="fog-layer"></div><div class="fog-layer"></div></div></div>`,
+    css: `
+        .cloudy-effect {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9999;
+            background-color: rgba(74, 74, 74, 0.2);
+        }
+        
+        @keyframes fog-drift {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        
+        .fog-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            display: flex;
+            animation: fog-drift 120s linear infinite;
+        }
 
-                .fog-container::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-                    
-                    box-shadow: 
-                        30vw 10vh 20vh 5vh,
-                        50vw 80vh 15vh 4vh,
-                        80vw 20vh 25vh 6vh,
-                        10vw 90vh 18vh 3vh,
-                        90vw 50vh 22vh 7vh,
-                        20vw 40vh 10vh 2vh,
-                        70vw 70vh 16vh 5vh,
-                        40vw 30vh 24vh 8vh,
-                        60vw 60vh 19vh 6vh;
-                    
-                    filter: blur(50px);
-                    opacity: 0.8;
-                    pointer-events: none;
-                }
-            `
-        };
+        .fog-layer {
+            position: relative;
+            width: 50%;
+            height: 100%;
+        }
+
+        .fog-layer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+            
+            box-shadow: 
+                30vw 10vh 20vh 5vh,
+                50vw 80vh 15vh 4vh,
+                80vw 20vh 25vh 6vh,
+                10vw 90vh 18vh 3vh,
+                90vw 50vh 22vh 7vh,
+                20vw 40vh 10vh 2vh,
+                70vw 70vh 16vh 5vh,
+                40vw 30vh 24vh 8vh,
+                60vw 60vh 19vh 6vh;
+            
+            filter: blur(50px);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+    `
+};
+
     }
 
     async updateEffects() {
@@ -940,5 +944,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
 
 
