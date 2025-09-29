@@ -1540,25 +1540,18 @@ smallItemElements.forEach(item => chestElement.appendChild(item));
 
 
 // Adiciona slots vazios para mostrar espaços expandidos
-    const inventorySpaces = inventoryData.inventorySpaces || 50;
+const inventorySpaces = inventoryData.inventorySpaces || 50;
 
-    // Calcula o espaço real ocupado pelos itens, considerando os itens grandes
-    const occupiedSpace = inventoryData.itemsInChest.reduce((total, dbItem) => {
-        const fullItemData = allItemsArr.find(localItem => localItem.id === dbItem.id);
-        if (fullItemData && fullItemData.large) {
-            return total + 2; // Itens grandes ocupam 2 espaços
-        } else {
-            return total + 1; // Itens normais ocupam 1 espaço
-        }
-    }, 0);
+// Calcula espaço ocupado considerando itens grandes
+const occupiedSpace = largeItemElements.length * 2 + smallItemElements.length;
+const emptySlotsCount = Math.max(0, inventorySpaces - occupiedSpace);
 
-    const emptySlotsCount = inventorySpaces - occupiedSpace;
+for (let i = 0; i < emptySlotsCount; i++) {
+    const emptySlot = document.createElement('div');
+    emptySlot.classList.add('item', 'empty-slot');
+    chestElement.appendChild(emptySlot);
+}
 
-    for (let i = 0; i < emptySlotsCount; i++) {
-        const emptySlot = document.createElement('div');
-        emptySlot.classList.add('item', 'empty-slot');
-        chestElement.appendChild(emptySlot);
-    }
 
 // Carrega itens equipados
 document.querySelectorAll('.slot').forEach(slot => {
