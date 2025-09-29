@@ -820,6 +820,15 @@ const NARRATIVAS = {
     ]
 },
 
+        86: {
+    texto: "Seguindo o túnel para a área desconhecida, você emerge em uma câmara subterrânea que parece ter sido usada como depósito de suprimentos de emergência. Há barris de água, caixas de comida preservada e equipamentos básicos de sobrevivência.",
+    efeitos: [{ tipo: "item", item: "suprimentos-emergencia" }, { tipo: "energia", valor: 2 }],
+    opcoes: [
+        { texto: "Voltar pelos túneis", secao: 82 },
+        { texto: "Procurar uma saída para a superfície", secao: 4 }
+    ]
+},
+
 
 85: {
     texto: "Lendo o diário mais detalhadamente, você descobre entradas cada vez mais desesperadas. O autor descreve como a 'febre estranha' se espalhou rapidamente, transformando vizinhos em criaturas violentas e famintas. As últimas páginas revelam que ele viu pessoas mortas se levantando do cemitério e caminhando de volta para a vila. A entrada final, escrita com tinta tremula, diz: 'O necromante Morteus retornou para se vingar. Que Deus nos perdoe pelo que fizemos com ele anos atrás.'",
@@ -832,15 +841,7 @@ const NARRATIVAS = {
    }
   },
 
-    86: {
-    texto: "Seguindo o túnel para a área desconhecida, você emerge em uma câmara subterrânea que parece ter sido usada como depósito de suprimentos de emergência. Há barris de água, caixas de comida preservada e equipamentos básicos de sobrevivência.",
-    efeitos: [{ tipo: "item", item: "suprimentos-emergencia" }, { tipo: "energia", valor: 2 }],
-    opcoes: [
-        { texto: "Voltar pelos túneis", secao: 82 },
-        { texto: "Procurar uma saída para a superfície", secao: 4 }
-    ]
-},
-
+    
     
 "coroa-de-ferro-epica": {
     id: "coroa-de-ferro-epica",
@@ -2259,6 +2260,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
