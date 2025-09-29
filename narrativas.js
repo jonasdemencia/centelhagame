@@ -245,20 +245,22 @@ class SistemaNarrativas {
     }
 
     async modificarEnergia(valor) {
-        if (!this.userId) return;
-        const playerDocRef = doc(db, "players", this.userId);
-        const docSnap = await getDoc(playerDocRef);
-        if (docSnap.exists()) {
-            const playerData = docSnap.data();
-            const energiaAtual = playerData.energy?.total || 20;
-            const novaEnergia = Math.max(0, energiaAtual + valor);
-            await updateDoc(playerDocRef, {
-                "energy.total": novaEnergia
-            });
-            this.playerData.energy.total = novaEnergia;
-            console.log('Energia modificada:', valor, 'Nova energia:', novaEnergia);
-        }
+    if (!this.userId) return;
+    const playerDocRef = doc(db, "players", this.userId);
+    const docSnap = await getDoc(playerDocRef);
+    if (docSnap.exists()) {
+        const playerData = docSnap.data();
+        const energiaAtual = playerData.energy?.total || 20;
+        const energiaMaxima = playerData.energy?.initial || 20;
+        const novaEnergia = Math.max(0, Math.min(energiaMaxima, energiaAtual + valor));
+        await updateDoc(playerDocRef, {
+            "energy.total": novaEnergia
+        });
+        this.playerData.energy.total = novaEnergia;
+        console.log('Energia modificada:', valor, 'Nova energia:', novaEnergia);
     }
+}
+
 
     async consumirItem(itemId) {
         if (!this.userId) return;
@@ -499,5 +501,6 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
