@@ -31,15 +31,42 @@ BATALHAS:
 - vitoria: seção para vitória
 - derrota: seção para derrota
 
-EXEMPLO DE SEÇÃO COMPLETA:
+=== COMO FUNCIONAM AS BATALHAS ===
+
+1. BATALHA EM OPÇÃO (Mais comum):
+   - Jogador escolhe lutar
+   - Sistema redireciona para batalha.html
+   - Após vitória/derrota, retorna para seção específica
+
+2. BATALHA AUTOMÁTICA (Implementada):
+   - Seção sem propriedade "opcoes"
+   - Sistema processa automaticamente
+
+EXEMPLOS FUNCIONAIS:
+
+// Batalha em opção (RECOMENDADO)
 15: {
-    texto: "Descrição da situação atual",
-    efeitos: [{ tipo: "energia", valor: 2 }, { tipo: "item", item: "tocha" }],
+    texto: "Um goblin salta das sombras, rosnando ameaçadoramente!",
     opcoes: [
-        { texto: "Opção normal", secao: 20 },
-        { texto: "Opção com item", secao: 25, requer: "chave-runica" },
-        { texto: "Opção com teste", secao: 30, teste: "habilidade", dificuldade: 15 },
-        { texto: "Opção de batalha", batalha: "goblin,orc", vitoria: 35, derrota: 40 }
+        { texto: "Lutar contra o goblin", batalha: "goblin", vitoria: 20, derrota: 25 },
+        { texto: "Tentar fugir", secao: 30, teste: "habilidade", dificuldade: 12 }
+    ]
+}
+
+// Batalha automática (sem propriedade opcoes)
+16: {
+    texto: "Zumbis cercam você! Não há como fugir!",
+    batalha: "zumbi,zumbi,zumbi",
+    vitoria: 35,
+    derrota: 40
+}
+
+// Batalha após teste falhado
+89: {
+    texto: "O necromante desperta e se ergue furioso!",
+    efeitos: [{ tipo: "item", item: "artefato-sombrio" }],
+    opcoes: [
+        { texto: "Enfrentar o necromante", batalha: "necromante", vitoria: 69, derrota: 37 }
     ]
 }
 
@@ -52,34 +79,81 @@ SEÇÃO FINAL:
 */
 
 /*
-=== GUIA CRÍTICO PARA NARRATIVAS - CONEXÃO ENTRE ESCOLHAS E SEÇÕES ===
+=== DESIGN DE SEÇÕES - REUTILIZAÇÃO VS ESPECIFICIDADE ===
 
-REGRA FUNDAMENTAL: CONTINUIDADE NARRATIVA DIRETA
-- Cada seção DEVE começar fazendo referência DIRETA à escolha que levou até ela
-- Se a escolha é "Usar a corda para escalar", a seção seguinte DEVE começar: "Ao usar a corda, você..."
-- Se a escolha é "Investigar o baú", a seção seguinte DEVE começar: "Investigando o baú, você descobre..."
-- Se a escolha é "Atacar o goblin", a seção seguinte DEVE começar: "Seu ataque contra o goblin..."
+TIPOS DE SEÇÕES:
+
+1. SEÇÕES REUTILIZÁVEIS (podem ser acessadas de múltiplos pontos):
+   - Texto GENÉRICO que funciona independente da origem
+   - Não fazem referência específica à seção anterior
+   - Exemplo: Seção 4 (praça central), Seção 10 (procurar suprimentos)
+
+2. SEÇÕES ESPECÍFICAS (acesso único):
+   - Podem referenciar diretamente a escolha anterior
+   - Usadas quando há apenas um caminho para chegar até ela
+
+EXEMPLOS:
+
+// SEÇÃO REUTILIZÁVEL (CORRETO)
+10: {
+    texto: "Procurando por suprimentos na casa, você vasculha cuidadosamente os cômodos...",
+    // ✅ Genérico - funciona vindo de qualquer lugar
+}
+
+// SEÇÃO ESPECÍFICA (CORRETO)
+89: {
+    texto: "Tentando pegar um artefato sombrio, você se move rapidamente...",
+    // ✅ Específico - só vem de uma escolha de teste
+}
+
+// TRANSIÇÃO NA ORIGEM (CORRETO)
+3: {
+    texto: "...Você decide que seria prudente procurar por suprimentos úteis.",
+    opcoes: [
+        { texto: "Procurar por suprimentos na casa", secao: 10 }
+        // ✅ A transição está na ESCOLHA, não na seção destino
+    ]
+}
+
+REGRA: Se múltiplas seções podem levar à mesma seção destino, 
+a seção destino deve ser genérica e as transições ficam nas origens.
 */
 
 /*
-=== AVISO CRÍTICO ===
-NUNCA criar opções que apontem para seções inexistentes!
-Sempre verificar se a seção de destino existe antes de criar uma opção.
-Se a seção não existe, criar a seção primeiro ou usar uma seção existente.
+=== AVISO CRÍTICO - GESTÃO DE SEÇÕES ===
+
+NUNCA REUTILIZAR NÚMEROS DE SEÇÃO!
+- SEMPRE verificar se a seção já existe antes de criar uma opção
+- SEMPRE ler o conteúdo da seção de destino para confirmar que faz sentido
+- Se a seção existe mas tem conteúdo diferente, usar outro número
+- Manter lista de seções usadas para evitar conflitos
+
+PROCESSO OBRIGATÓRIO:
+1. Criar a opção com número de seção
+2. VERIFICAR se essa seção existe
+3. LER o conteúdo da seção
+4. CONFIRMAR que o texto faz sentido com a escolha
+5. Se não faz sentido, usar outro número ou criar nova seção
+
+EXEMPLO DO ERRO COMUM:
+Opção: "Descansar para recuperar o fôlego" → secao: 71
+Seção 71: "Procurando armas..." ❌ ERRO! Conteúdo não relacionado
+
+CORREÇÃO:
+Opção: "Descansar para recuperar o fôlego" → secao: 90 (nova seção)
+Seção 90: "Descansando um momento..." ✅ CORRETO!
 */
 
 /*
-=== AVISO CRÍTICO ===
-EXEMPLOS CORRETOS:
-Escolha: "Examinar a porta misteriosa"
-Seção seguinte: "Examinando cuidadosamente a porta, você nota entalhes estranhos..."
+=== CONTINUIDADE NARRATIVA ===
 
-Escolha: "Beber a poção vermelha"  
-Seção seguinte: "Ao beber a poção vermelha, um calor intenso percorre seu corpo..."
+PARA SEÇÕES ESPECÍFICAS:
+- Fazer referência direta à escolha anterior
+- "Ao usar a corda, você..." / "Investigando o baú, você descobre..."
 
-EXEMPLOS INCORRETOS:
-Escolha: "Usar a chave dourada"
-Seção seguinte: "Você se encontra em uma nova câmara..." ❌ (não menciona a chave)
+PARA SEÇÕES REUTILIZÁVEIS:
+- Texto genérico que funciona de qualquer origem
+- Transições ficam nas seções de origem e nas escolhas
 
 PROGRESSÃO NARRATIVA:
 - Evite saltos abruptos entre locais sem transição adequada
@@ -88,13 +162,16 @@ PROGRESSÃO NARRATIVA:
 - Crie mais seções intermediárias para ações complexas
 
 ESTRUTURA IDEAL:
-1. Referência direta à escolha anterior
-2. Descrição da ação sendo executada  
-3. Consequências/descobertas da ação
-4. Novas opções baseadas na situação atual
+1. Avaliação se a seção será reutilizável ou específica
+2. Se reutilizável: texto genérico + transições nas origens
+3. Se específica: referência direta à escolha anterior
+4. Consequências/descobertas da ação
+5. Novas opções baseadas na situação atual
 
-Esta continuidade é ESSENCIAL para manter a imersão do jogador na narrativa.
+Esta estrutura é ESSENCIAL para manter a flexibilidade e imersão narrativa.
 */
+
+
 
 // Dados das narrativas
 const NARRATIVAS = {
@@ -2295,6 +2372,7 @@ const NARRATIVAS = {
         }
     }
 };
+
 
 
 
