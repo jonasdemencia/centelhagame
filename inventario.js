@@ -2326,8 +2326,6 @@ document.getElementById("char-luck").innerText = playerData.luck?.total ?? "-";
 
 document.getElementById("char-couraca").innerText = playerData.couraca || "0";
 
-document.getElementById("char-po").innerText = playerData.po || "0";
-
 document.getElementById("char-hand").innerText = playerData.maoDominante || "-";
 
 document.getElementById("char-hemisphere").innerText = playerData.hemisferioDominante || "-";
