@@ -2170,6 +2170,8 @@ function updateCharacterSheet(playerData) {
 
     // Atualiza o painel de informações
     document.getElementById("char-day-info").innerText = playerData.gameTime?.currentDay ?? 1;
+    document.getElementById("char-po-info").innerText = playerData.po || "0";
+    document.getElementById("char-level-info").innerText = levelInfo.level;
     document.getElementById("char-class-info").innerText = playerData.class || "-";
     document.getElementById("char-race-info").innerText = playerData.race || "-";
     document.getElementById("char-alignment-info").innerText = playerData.alignment || "-";
