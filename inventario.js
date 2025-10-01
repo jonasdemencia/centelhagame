@@ -2474,7 +2474,7 @@ setTimeout(function() {
     } else {
         console.log('Botão ou container não encontrado');
     }
-}, 1000);
+
     
 function typeWriterDescription(message, element) {
     let index = 0;
@@ -2490,5 +2490,5 @@ function typeWriterDescription(message, element) {
     
     typeWriter();
 }
-
+}, 1000);
 }
