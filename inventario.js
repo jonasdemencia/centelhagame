@@ -172,20 +172,15 @@ const extraItems = [
 ];
 
 function typeWriterDescription(message, element) {
+    element.textContent = ''; // ← ADICIONE ESTA LINHA
     let index = 0;
-    const typingSpeed = 30; // Velocidade em milissegundos
+    const typingSpeed = 30;
     
-    // Cancela qualquer animação anterior no mesmo elemento
-    if (element.typeWriterTimeout) {
-        clearTimeout(element.typeWriterTimeout);
-    }
-    element.textContent = ''; // Limpa o texto antes de começar
-
     function typeWriter() {
         if (index < message.length) {
             element.textContent += message.charAt(index);
             index++;
-            element.typeWriterTimeout = setTimeout(typeWriter, typingSpeed);
+            setTimeout(typeWriter, typingSpeed);
         }
     }
     
