@@ -595,8 +595,6 @@ useButton.style.display = show ? "block" : "none";
 
 } else {
 
-console.warn("Botão 'Usar' não encontrado no HTML.");
-
 }
 
 }
