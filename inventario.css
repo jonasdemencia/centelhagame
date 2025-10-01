@@ -1542,7 +1542,7 @@ max-height: 80px !important;
 
 .item-actions-window {
     position: absolute;
-    right: -70px;
+    right: -40px;
     top: 50%;
     transform: translateY(-50%);
     width: 90px;
