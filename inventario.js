@@ -1215,6 +1215,7 @@ if (actionChecarBtn) {
     actionChecarBtn.addEventListener('click', () => {
         if (selectedItem) {
             updateItemPreview(selectedItem);
+            hideItemActions(); // ← ADICIONE ESTA LINHA
         }
     });
 }    
