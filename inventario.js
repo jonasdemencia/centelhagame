@@ -1704,6 +1704,7 @@ if (previewContainer) {
     previewContainer.style.display = 'flex';
     previewContainer.style.background = 'none';
     previewContainer.style.border = 'none';
+    previewContainer.style.boxShadow = 'none'; // <-- ADICIONE ESTA LINHA
     document.getElementById('preview-image').style.display = 'none';
     document.getElementById('preview-name').textContent = '';
     document.getElementById('preview-description').textContent = '';
