@@ -191,7 +191,10 @@ previewContainer.style.border = '1px solid #fff'; // restaura a borda original
         previewImage.src = itemData.image;
         previewImage.style.display = 'block';
         previewName.textContent = itemData.content;
-        previewDescription.textContent = itemData.description || 'Sem descrição disponível';
+        const description = itemData.description || 'Sem descrição disponível';
+previewDescription.textContent = '';
+typeWriterDescription(description, previewDescription);
+
     }
 }
 
@@ -2472,5 +2475,20 @@ setTimeout(function() {
         console.log('Botão ou container não encontrado');
     }
 }, 1000);
+    
+function typeWriterDescription(message, element) {
+    let index = 0;
+    const typingSpeed = 30;
+    
+    function typeWriter() {
+        if (index < message.length) {
+            element.textContent += message.charAt(index);
+            index++;
+            setTimeout(typeWriter, typingSpeed);
+        }
+    }
+    
+    typeWriter();
+}
 
 }
