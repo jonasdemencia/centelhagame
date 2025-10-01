@@ -185,6 +185,7 @@ function updateItemPreview(item) {
     
     if (itemData) {
         previewContainer.style.display = 'flex'; // mostra o tapete
+        previewContainer.style.background = ''; // restaura o fundo original
         previewImage.src = itemData.image;
         previewImage.style.display = 'block';
         previewName.textContent = itemData.content;
@@ -844,6 +845,7 @@ previewName.textContent = itemData.content;
 document.getElementById('preview-description').textContent = '';
 document.getElementById('preview-image').style.display = 'none';
 document.querySelector('.preview-image-container').style.display = 'flex';
+document.querySelector('.preview-image-container').style.background = 'transparent';
 
 }
 
@@ -1262,6 +1264,8 @@ function addItemClickListener(item) {
                     previewDescription.textContent = '';
                     previewImage.style.display = 'none';
                     previewContainer.style.display = 'flex';
+                    previewContainer.style.background = 'transparent';
+
                 }
 
             } else if (item.clickCount === 2) {
