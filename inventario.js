@@ -201,19 +201,43 @@ function updateItemPreview(item) {
     const itemData = allItemsArr.find(i => i.id === item.dataset.item);
     
     if (itemData) {
-        previewContainer.style.display = 'flex'; // mostra o tapete
-        previewContainer.style.background = ''; // restaura o fundo original
-previewContainer.style.border = '1px solid #fff'; // restaura a borda original
-            previewContainer.style.boxShadow = ''; // <-- ADICIONE ESTA LINHA PARA RESTAURAR O EFEITO DO CSS
+        previewContainer.style.display = 'flex';
+        previewContainer.style.background = '';
+        previewContainer.style.border = '1px solid #fff';
+        previewContainer.style.boxShadow = '';
+        
+        // Posiciona elementos na esquerda da área do preview
+        previewImage.style.transform = 'translateX(-50px)';
+        previewImage.style.opacity = '0';
+        previewName.style.transform = 'translateX(-50px)';
+        previewName.style.opacity = '0';
+        previewDescription.style.transform = 'translateX(-50px)';
+        previewDescription.style.opacity = '0';
+        
         previewImage.src = itemData.image;
         previewImage.style.display = 'block';
         previewName.textContent = itemData.content;
+        
+        // Anima para o centro
+        setTimeout(() => {
+            previewImage.style.transition = 'transform 0.4s ease-out, opacity 0.4s ease-out';
+            previewName.style.transition = 'transform 0.4s ease-out, opacity 0.4s ease-out';
+            previewDescription.style.transition = 'transform 0.4s ease-out, opacity 0.4s ease-out';
+            
+            previewImage.style.transform = 'translateX(0)';
+            previewImage.style.opacity = '1';
+            previewName.style.transform = 'translateX(0)';
+            previewName.style.opacity = '1';
+            previewDescription.style.transform = 'translateX(0)';
+            previewDescription.style.opacity = '1';
+        }, 10);
+        
         const description = itemData.description || 'Sem descrição disponível';
-previewDescription.textContent = '';
-typeWriterDescription(description, previewDescription);
-
+        previewDescription.textContent = '';
+        typeWriterDescription(description, previewDescription);
     }
 }
+
 
 
 // Função para reiniciar o inventário
