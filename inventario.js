@@ -1196,7 +1196,15 @@ if (actionUsarBtn) {
     });
 }
 
-    
+    // Adiciona funcionalidade ao botão checar das opções
+const actionChecarBtn = document.getElementById('action-checar');
+if (actionChecarBtn) {
+    actionChecarBtn.addEventListener('click', () => {
+        if (selectedItem) {
+            updateItemPreview(selectedItem);
+        }
+    });
+}    
 });
 
 // Adiciona evento de clique aos novos itens do baú
@@ -1237,8 +1245,24 @@ function addItemClickListener(item) {
                 } else {
                     toggleUseButton(false);
                 }
-                
-                updateItemPreview(item);
+
+                // Mostra apenas o nome no preview
+const previewName = document.getElementById('preview-name');
+const previewDescription = document.getElementById('preview-description');
+const previewContainer = document.querySelector('.preview-image-container');
+const previewImage = document.getElementById('preview-image');
+
+const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
+const itemData = allItemsArr.find(i => i.id === item.dataset.item);
+
+if (itemData) {
+    previewName.textContent = itemData.content;
+    previewDescription.textContent = '';
+    previewImage.style.display = 'none';
+    previewContainer.style.display = 'none';
+}
+
+
             } else if (item.clickCount === 2) {
                 showItemActions();
                 item.clickCount = 0;
