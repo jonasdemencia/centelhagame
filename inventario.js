@@ -1240,15 +1240,7 @@ function addItemClickListener(item) {
 
     item.addEventListener('dblclick', function(e) {
         e.preventDefault();
-        showItemActions(item);
-    });
-}
-
-    // ADICIONAR EVENTO DE DUPLO CLIQUE
-    item.addEventListener('dblclick', (event) => {
-        if (!event.target.classList.contains('item-expand-toggle')) {
-            showItemActions();
-        }
+        showItemActions();
     });
 }
 
@@ -1265,7 +1257,6 @@ function hideItemActions() {
         actionsWindow.style.display = 'none';
     }
 }
-
 
 
 // Função para limpar destaques visuais
