@@ -171,6 +171,27 @@ const extraItems = [
 
 ];
 
+function typeWriterDescription(message, element) {
+    let index = 0;
+    const typingSpeed = 30; // Velocidade em milissegundos
+    
+    // Cancela qualquer animação anterior no mesmo elemento
+    if (element.typeWriterTimeout) {
+        clearTimeout(element.typeWriterTimeout);
+    }
+    element.textContent = ''; // Limpa o texto antes de começar
+
+    function typeWriter() {
+        if (index < message.length) {
+            element.textContent += message.charAt(index);
+            index++;
+            element.typeWriterTimeout = setTimeout(typeWriter, typingSpeed);
+        }
+    }
+    
+    typeWriter();
+}
+
 
 function updateItemPreview(item) {
     console.log("updateItemPreview chamada com:", item);
@@ -2475,20 +2496,5 @@ setTimeout(function() {
         console.log('Botão ou container não encontrado');
     }
 
-    
-function typeWriterDescription(message, element) {
-    let index = 0;
-    const typingSpeed = 30;
-    
-    function typeWriter() {
-        if (index < message.length) {
-            element.textContent += message.charAt(index);
-            index++;
-            setTimeout(typeWriter, typingSpeed);
-        }
-    }
-    
-    typeWriter();
-}
 }, 1000);
 }
