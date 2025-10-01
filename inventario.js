@@ -172,10 +172,10 @@ const extraItems = [
 ];
 
 function typeWriterDescription(message, element) {
-    element.textContent = ''; // ← ADICIONE ESTA LINHA
+    element.textContent = ''; // sempre limpa antes de escrever
     let index = 0;
     const typingSpeed = 30;
-    
+
     function typeWriter() {
         if (index < message.length) {
             element.textContent += message.charAt(index);
@@ -183,9 +183,10 @@ function typeWriterDescription(message, element) {
             setTimeout(typeWriter, typingSpeed);
         }
     }
-    
+
     typeWriter();
 }
+
 
 
 function updateItemPreview(item) {
