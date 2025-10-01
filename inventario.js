@@ -1252,7 +1252,6 @@ const previewDescription = document.getElementById('preview-description');
 const previewContainer = document.querySelector('.preview-image-container');
 const previewImage = document.getElementById('preview-image');
 
-const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
 const itemData = allItemsArr.find(i => i.id === item.dataset.item);
 
 if (itemData) {
