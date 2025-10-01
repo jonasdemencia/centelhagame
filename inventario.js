@@ -843,7 +843,7 @@ const previewName = document.getElementById('preview-name');
 previewName.textContent = itemData.content;
 document.getElementById('preview-description').textContent = '';
 document.getElementById('preview-image').style.display = 'none';
-document.querySelector('.preview-image-container').style.display = 'none';
+document.querySelector('.preview-image-container').style.display = 'flex';
 
 }
 
@@ -1261,7 +1261,7 @@ function addItemClickListener(item) {
                     previewName.textContent = itemData.content;
                     previewDescription.textContent = '';
                     previewImage.style.display = 'none';
-                    previewContainer.style.display = 'none';
+                    previewContainer.style.display = 'flex';
                 }
 
             } else if (item.clickCount === 2) {
