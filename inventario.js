@@ -1517,6 +1517,8 @@ console.error("Erro ao configurar listener do inventário:", error);
 
 function loadInventoryUI(inventoryData) {
     console.log("--- [LOAD UI] --- Iniciando redesenho do inventário com dados do Firestore:", inventoryData);
+
+        document.querySelector('.preview-image-container').style.border = 'none';
     
     // ADICIONE ESTAS LINHAS NO INÍCIO:
     const previewContainer = document.querySelector('.preview-image-container');
