@@ -1578,3 +1578,9 @@ max-height: 80px !important;
     -webkit-tap-highlight-color: transparent;
 }
 
+#preview-description {
+  display: block;  /* força ficar abaixo do nome */
+  margin-top: 4px; /* espaço opcional entre nome e descrição */
+  white-space: pre-wrap; /* mantém quebras de linha se você quiser formatar */
+}
+
