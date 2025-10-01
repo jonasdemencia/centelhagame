@@ -845,7 +845,6 @@ previewName.textContent = itemData.content;
 document.getElementById('preview-description').textContent = '';
 document.getElementById('preview-image').style.display = 'none';
 document.querySelector('.preview-image-container').style.display = 'flex';
-document.querySelector('.preview-image-container').style.background = 'transparent';
 
 }
 
@@ -1264,7 +1263,6 @@ function addItemClickListener(item) {
                     previewDescription.textContent = '';
                     previewImage.style.display = 'none';
                     previewContainer.style.display = 'flex';
-                    previewContainer.style.background = 'transparent';
 
                 }
 
@@ -1690,6 +1688,11 @@ const equippedItemName = inventoryData.equippedItems[slot.id];
 
 updateSlotCompatibility();
 // reorganizeGrid();
+
+const previewContainer = document.querySelector('.preview-image-container');
+if (previewContainer) {
+    previewContainer.style.display = 'none';
+}
 }
 
 
