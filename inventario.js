@@ -1516,10 +1516,23 @@ console.error("Erro ao configurar listener do inventário:", error);
 }
 
 function loadInventoryUI(inventoryData) {
+    console.log("--- [LOAD UI] --- Iniciando redesenho do inventário com dados do Firestore:", inventoryData);
+    
+    // ADICIONE ESTAS LINHAS NO INÍCIO:
+    const previewContainer = document.querySelector('.preview-image-container');
+    const previewImage = document.getElementById('preview-image');
+    const previewName = document.getElementById('preview-name');
+    const previewDescription = document.getElementById('preview-description');
 
-console.log("--- [LOAD UI] --- Iniciando redesenho do inventário com dados do Firestore:", inventoryData);
-
-const chestElement = document.querySelector('.items');
+    // garante que não tem borda ao abrir
+    if (previewContainer) {
+        previewContainer.style.border = 'none';
+    }
+    if (previewImage) previewImage.style.display = 'none';
+    if (previewName) previewName.textContent = '';
+    if (previewDescription) previewDescription.textContent = '';
+    
+    const chestElement = document.querySelector('.items');
 chestElement.innerHTML = ""; // Limpa o conteúdo atual
 
 const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
