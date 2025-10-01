@@ -1217,7 +1217,6 @@ if (actionChecarBtn) {
 
 function addItemClickListener(item) {
     item.clickCount = 0;
-
     item.addEventListener('click', (event) => {
         if (!event.target.classList.contains('item-expand-toggle')) {
             // Reset contador de todos os outros itens
@@ -1226,9 +1225,9 @@ function addItemClickListener(item) {
                     otherItem.clickCount = 0;
                 }
             });
-            
+
             item.clickCount++;
-            
+
             if (item.clickCount === 1) {
                 console.log("Novo item clicado no baú:", item);
                 clearHighlights();
@@ -1253,21 +1252,17 @@ function addItemClickListener(item) {
                 }
 
                 // Mostra apenas o nome no preview
-const previewName = document.getElementById('preview-name');
-const previewDescription = document.getElementById('preview-description');
-const previewContainer = document.querySelector('.preview-image-container');
-const previewImage = document.getElementById('preview-image');
+                const previewName = document.getElementById('preview-name');
+                const previewDescription = document.getElementById('preview-description');
+                const previewContainer = document.querySelector('.preview-image-container');
+                const previewImage = document.getElementById('preview-image');
 
-const itemData = allItemsArr.find(i => i.id === item.dataset.item);
-const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
-
-if (itemData) {
-    previewName.textContent = itemData.content;
-    previewDescription.textContent = '';
-    previewImage.style.display = 'none';
-    previewContainer.style.display = 'none';
-}
-
+                if (itemData) {
+                    previewName.textContent = itemData.content;
+                    previewDescription.textContent = '';
+                    previewImage.style.display = 'none';
+                    previewContainer.style.display = 'none';
+                }
 
             } else if (item.clickCount === 2) {
                 showItemActions();
