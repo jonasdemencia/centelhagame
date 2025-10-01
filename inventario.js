@@ -1229,10 +1229,12 @@ function addItemClickListener(item) {
             item.clickCount++;
             
             if (item.clickCount === 1) {
-                console.log("Novo item clicado no baú:", item);
-                clearHighlights();
-                selectedItem = item;
-                item.classList.add('selected');
+    console.log("Novo item clicado no baú:", item);
+    clearHighlights();
+    selectedItem = item;
+    item.classList.add('selected');
+    item.clickCount = 1; // Restaura o contador após clearHighlights
+
 
                 const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
                 const itemData = allItemsArr.find(i => i.id === item.dataset.item);
@@ -1286,10 +1288,13 @@ function hideItemActions() {
 function clearHighlights() {
     document.querySelectorAll('.item').forEach(i => {
         i.classList.remove('selected');
-        i.clickCount = 0;
+        if (i !== selectedItem) {
+            i.clickCount = 0;
+        }
     });
     document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
 }
+
 
 
 // ESTA FUNÇÃO NÃO É MAIS NECESSÁRIA, POIS O SALVAMENTO É FEITO DIRETAMENTE
