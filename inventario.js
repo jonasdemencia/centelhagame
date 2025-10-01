@@ -187,6 +187,7 @@ function updateItemPreview(item) {
         previewContainer.style.display = 'flex'; // mostra o tapete
         previewContainer.style.background = ''; // restaura o fundo original
 previewContainer.style.border = '1px solid #fff'; // restaura a borda original
+            previewContainer.style.boxShadow = ''; // <-- ADICIONE ESTA LINHA PARA RESTAURAR O EFEITO DO CSS
         previewImage.src = itemData.image;
         previewImage.style.display = 'block';
         previewName.textContent = itemData.content;
@@ -848,6 +849,8 @@ document.getElementById('preview-image').style.display = 'none';
 document.querySelector('.preview-image-container').style.display = 'flex';
 document.querySelector('.preview-image-container').style.background = 'none';
 document.querySelector('.preview-image-container').style.border = 'none';
+document.querySelector('.preview-image-container').style.boxShadow = 'none'; // <-- ADICIONE ESTA LINHA
+
 
 }
 
@@ -1268,6 +1271,7 @@ function addItemClickListener(item) {
     previewContainer.style.display = 'flex';
     previewContainer.style.background = 'none';
     previewContainer.style.border = 'none';
+        previewContainer.style.boxShadow = 'none'; // <-- ADICIONE ESTA LINHA
 }
 
 
