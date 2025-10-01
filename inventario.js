@@ -1217,6 +1217,40 @@ console.warn("Botão 'Usar' não encontrado no HTML.");
 
 }
 
+// Adiciona funcionalidade ao botão descartar das opções
+const actionDescartarBtn = document.getElementById('action-descartar');
+if (actionDescartarBtn) {
+    actionDescartarBtn.addEventListener('click', async () => {
+        if (selectedItem) {
+            const uid = auth.currentUser?.uid;
+            if (uid) {
+                const playerRef = doc(db, "players", uid);
+                const playerSnap = await getDoc(playerRef);
+                const inventoryData = playerSnap.data().inventory;
+
+                const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
+                if (itemIndex > -1) {
+                    inventoryData.itemsInChest.splice(itemIndex, 1);
+                }
+
+                if (!inventoryData.discardedItems) {
+                    inventoryData.discardedItems = [];
+                }
+                
+                inventoryData.discardedItems.push(selectedItem.dataset.uuid);
+
+                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+
+                selectedItem = null;
+                clearHighlights();
+                toggleUseButton(false);
+                hideItemActions();
+            }
+        }
+    });
+}
+
+    
 });
 
 // Adiciona evento de clique aos novos itens do baú
