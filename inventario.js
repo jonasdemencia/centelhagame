@@ -845,27 +845,26 @@ if (carregarBtn) carregarBtn.style.display = "none";
 
 // Adiciona evento de clique aos itens iniciais
 
+// Adiciona evento de clique aos itens iniciais
 const itemsContainer = document.querySelector('.items');
-
 if (itemsContainer) {
-
-itemsContainer.querySelectorAll('.item').forEach(item => {
-
-item.addEventListener('click', () => {
-
-// Verifica se o clique foi no botão de expandir
-
-if (!item.classList.contains('item-expand-toggle')) {
-
-handleItemClick(item);
-
+    itemsContainer.querySelectorAll('.item').forEach(item => {
+        item.addEventListener('click', () => {
+            // Verifica se o clique foi no botão de expandir
+            if (!item.classList.contains('item-expand-toggle')) {
+                handleItemClick(item);
+            }
+        });
+        
+        // ADICIONAR EVENTO DE DUPLO CLIQUE TAMBÉM AQUI
+        item.addEventListener('dblclick', (event) => {
+            if (!event.target.classList.contains('item-expand-toggle')) {
+                showItemActions();
+            }
+        });
+    });
 }
 
-});
-
-});
-
-}
 
 // ==================================================================
 // === INÍCIO: LÓGICA DE EQUIPAR/DESEQUIPAR TOTALMENTE REFEITA =====
