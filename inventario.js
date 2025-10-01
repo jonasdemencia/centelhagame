@@ -705,7 +705,7 @@ document.addEventListener('click', function(event) {
 
 // Elementos que NÃO devem desselecionar o item
 
-const keepSelection = event.target.closest('.item, .slot, #useBtn, #carregar-municao-btn, #discard-slot, .dice-item, .dice-slot');
+const keepSelection = event.target.closest('.item, .slot, #useBtn, #carregar-municao-btn, #discard-slot, .dice-item, .dice-slot, .item-actions-window');
 
 if (!keepSelection && selectedItem) {
     clearHighlights();
@@ -726,6 +726,10 @@ if (!keepSelection && selectedItem) {
     previewImage.style.display = 'none';
     previewName.textContent = '';
     previewDescription.textContent = '';
+
+// Esconde janela de ações
+hideItemActions();
+    
 }
 
 
@@ -1231,11 +1235,32 @@ function addItemClickListener(item) {
                 toggleUseButton(false);
             }
             
-            // ADICIONAR ESTA LINHA AQUI:
             updateItemPreview(item);
         }
     });
+
+    // ADICIONAR EVENTO DE DUPLO CLIQUE
+    item.addEventListener('dblclick', (event) => {
+        if (!event.target.classList.contains('item-expand-toggle')) {
+            showItemActions();
+        }
+    });
 }
+
+function showItemActions() {
+    const actionsWindow = document.getElementById('item-actions-window');
+    if (actionsWindow) {
+        actionsWindow.style.display = 'block';
+    }
+}
+
+function hideItemActions() {
+    const actionsWindow = document.getElementById('item-actions-window');
+    if (actionsWindow) {
+        actionsWindow.style.display = 'none';
+    }
+}
+
 
 
 // Função para limpar destaques visuais
