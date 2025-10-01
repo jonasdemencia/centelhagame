@@ -1259,6 +1259,7 @@ const previewContainer = document.querySelector('.preview-image-container');
 const previewImage = document.getElementById('preview-image');
 
 const itemData = allItemsArr.find(i => i.id === item.dataset.item);
+const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
 
 if (itemData) {
     previewName.textContent = itemData.content;
