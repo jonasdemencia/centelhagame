@@ -845,6 +845,7 @@ previewName.textContent = itemData.content;
 document.getElementById('preview-description').textContent = '';
 document.getElementById('preview-image').style.display = 'none';
 document.querySelector('.preview-image-container').style.display = 'flex';
+document.querySelector('.preview-image-container').style.background = 'none';
 
 }
 
@@ -1259,12 +1260,13 @@ function addItemClickListener(item) {
                 const previewImage = document.getElementById('preview-image');
 
                 if (itemData) {
-                    previewName.textContent = itemData.content;
-                    previewDescription.textContent = '';
-                    previewImage.style.display = 'none';
-                    previewContainer.style.display = 'flex';
+    previewName.textContent = itemData.content;
+    previewDescription.textContent = '';
+    previewImage.style.display = 'none';
+    previewContainer.style.display = 'flex';
+    previewContainer.style.background = 'none';
+}
 
-                }
 
             } else if (item.clickCount === 2) {
                 showItemActions();
@@ -1691,7 +1693,11 @@ updateSlotCompatibility();
 
 const previewContainer = document.querySelector('.preview-image-container');
 if (previewContainer) {
-    previewContainer.style.display = 'none';
+    previewContainer.style.display = 'flex';
+    previewContainer.style.background = 'none';
+    document.getElementById('preview-image').style.display = 'none';
+    document.getElementById('preview-name').textContent = '';
+    document.getElementById('preview-description').textContent = '';
 }
 }
 
