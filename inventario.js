@@ -186,7 +186,7 @@ function updateItemPreview(item) {
     if (itemData) {
         previewContainer.style.display = 'flex'; // mostra o tapete
         previewContainer.style.background = ''; // restaura o fundo original
-        previewContainer.style.border = ''; // restaura a borda original
+previewContainer.style.border = '1px solid #fff'; // restaura a borda original
         previewImage.src = itemData.image;
         previewImage.style.display = 'block';
         previewName.textContent = itemData.content;
