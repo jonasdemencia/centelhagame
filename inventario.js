@@ -838,7 +838,13 @@ if (carregarBtn) carregarBtn.style.display = "none";
 }
 
 // --- FIM DO AJUSTE DE BOTÕES DE USO E MUNIÇÃO ---
-    updateItemPreview(item);
+    // Mostra apenas o nome no preview
+const previewName = document.getElementById('preview-name');
+previewName.textContent = itemData.content;
+document.getElementById('preview-description').textContent = '';
+document.getElementById('preview-image').style.display = 'none';
+document.querySelector('.preview-image-container').style.display = 'none';
+
 }
 
 // Adiciona evento de clique aos itens iniciais
