@@ -729,7 +729,9 @@ if (!keepSelection && selectedItem) {
 
 // Esconde janela de ações
 hideItemActions();
-    
+    document.querySelectorAll('.item').forEach(item => {
+        item.clickCount = 0;
+    });
 }
 
 
@@ -1220,13 +1222,13 @@ console.warn("Botão 'Usar' não encontrado no HTML.");
 // Adiciona evento de clique aos novos itens do baú
 
 function addItemClickListener(item) {
-    let clickCount = 0;
+    item.clickCount = 0;
 
     item.addEventListener('click', (event) => {
         if (!event.target.classList.contains('item-expand-toggle')) {
-            clickCount++;
+            item.clickCount++;
             
-            if (clickCount === 1) {
+            if (item.clickCount === 1) {
                 console.log("Novo item clicado no baú:", item);
                 clearHighlights();
                 selectedItem = item;
@@ -1250,9 +1252,9 @@ function addItemClickListener(item) {
                 }
                 
                 updateItemPreview(item);
-            } else if (clickCount === 2) {
+            } else if (item.clickCount === 2) {
                 showItemActions();
-                clickCount = 0;
+                item.clickCount = 0;
             }
         }
     });
@@ -1262,6 +1264,7 @@ function addItemClickListener(item) {
         showItemActions();
     });
 }
+
 
 function showItemActions() {
     const actionsWindow = document.getElementById('item-actions-window');
@@ -1281,12 +1284,13 @@ function hideItemActions() {
 // Função para limpar destaques visuais
 
 function clearHighlights() {
-
-document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
-
-document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
-
+    document.querySelectorAll('.item').forEach(i => {
+        i.classList.remove('selected');
+        i.clickCount = 0;
+    });
+    document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
 }
+
 
 // ESTA FUNÇÃO NÃO É MAIS NECESSÁRIA, POIS O SALVAMENTO É FEITO DIRETAMENTE
 // NA LÓGICA DE EQUIPAR/DESEQUIPAR. PODE SER REMOVIDA OU DEIXADA EM BRANCO.
