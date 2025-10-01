@@ -749,8 +749,6 @@ selectedDice = null;
 
 const slots = document.querySelectorAll('.slot');
 
-const discardSlot = document.getElementById("discard-slot");
-
 const useButton = document.getElementById("useBtn"); // Obtém a referência do botão
 
 
@@ -1038,50 +1036,6 @@ const currentEnergy = currentPlayerData.energy || { total: 0, initial: 0 };
 // ==================================================================
 // === FIM: LÓGICA DE EQUIPAR/DESEQUIPAR TOTALMENTE REFEITA =======
 // ==================================================================
-
-// Adiciona funcionalidade ao botão de descarte
-if (discardSlot) {
-    discardSlot.addEventListener("click", async () => {
-        console.log("Botão de descarte clicado");
-        if (selectedItem) {
-            console.log("🗑️ DESCARTANDO ITEM:");
-            console.log(" - ID do item:", selectedItem.dataset.item);
-            console.log(" - Conteúdo:", selectedItem.dataset.itemName);
-
-            const uid = auth.currentUser?.uid;
-            if (uid) {
-                const playerRef = doc(db, "players", uid);
-                const playerSnap = await getDoc(playerRef);
-                const inventoryData = playerSnap.data().inventory;
-
-                // Remove o item do baú usando UUID
-                const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
-                if (itemIndex > -1) {
-                    inventoryData.itemsInChest.splice(itemIndex, 1);
-                }
-
-                // Adiciona à lista de descartados
-                if (!inventoryData.discardedItems) {
-                    inventoryData.discardedItems = [];
-                }
-                
-                const uniqueDiscardId = selectedItem.dataset.uuid;
-                console.log(" - UUID único de descarte:", uniqueDiscardId);
-                inventoryData.discardedItems.push(uniqueDiscardId);
-
-                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-                console.log(" - Item adicionado à lista de descartados");
-
-                selectedItem = null;
-                clearHighlights();
-                toggleUseButton(false);
-            }
-        }
-    });
-} else {
-    console.warn("Slot de descarte não encontrado no HTML.");
-}
-
 
 // Adiciona funcionalidade ao botão de usar
 
