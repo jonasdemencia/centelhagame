@@ -1580,7 +1580,7 @@ max-height: 80px !important;
 
 #preview-description {
   display: block;  /* força ficar abaixo do nome */
-  margin-top: 0px; /* espaço opcional entre nome e descrição */
+ margin-bottom: 0px !important;
   white-space: pre-wrap; /* mantém quebras de linha se você quiser formatar */
 }
 
