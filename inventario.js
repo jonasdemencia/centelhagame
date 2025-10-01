@@ -856,22 +856,30 @@ if (itemsContainer) {
             }
         });
         
-        // ADICIONAR EVENTO DE DUPLO CLIQUE TAMBÉM AQUI
-        item.addEventListener('touchend', function(e) {
-    e.preventDefault();
-    if (e.touches.length === 0) {
-        showItemActions();
-    }
-});
+        let touchTime = 0;
 
-item.addEventListener('dblclick', (event) => {
-    if (!event.target.classList.contains('item-expand-toggle')) {
-        showItemActions();
-    }
-});
+        item.addEventListener('touchstart', function(e) {
+            if (touchTime === 0) {
+                touchTime = new Date().getTime();
+            } else {
+                if (((new Date().getTime()) - touchTime) < 500) {
+                    e.preventDefault();
+                    showItemActions();
+                    touchTime = 0;
+                } else {
+                    touchTime = new Date().getTime();
+                }
+            }
+        });
 
+        item.addEventListener('dblclick', (event) => {
+            if (!event.target.classList.contains('item-expand-toggle')) {
+                showItemActions();
+            }
+        });
     });
 }
+
 
 
 // ==================================================================
@@ -1246,10 +1254,19 @@ function addItemClickListener(item) {
         }
     });
 
-    item.addEventListener('touchend', function(e) {
-    e.preventDefault();
-    if (e.touches.length === 0) {
-        showItemActions();
+    let touchTime = 0;
+
+item.addEventListener('touchstart', function(e) {
+    if (touchTime === 0) {
+        touchTime = new Date().getTime();
+    } else {
+        if (((new Date().getTime()) - touchTime) < 500) {
+            e.preventDefault();
+            showItemActions();
+            touchTime = 0;
+        } else {
+            touchTime = new Date().getTime();
+        }
     }
 });
 
@@ -1257,6 +1274,7 @@ item.addEventListener('dblclick', function(e) {
     e.preventDefault();
     showItemActions();
 });
+
 
 }
 
