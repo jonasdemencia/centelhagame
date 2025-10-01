@@ -1034,7 +1034,6 @@ animation: hotSteel 0.7s ease-out forwards;
 .preview-image-container {
     width: 130px;
     height: 96px;
-    border: 1px solid #fff; /* borda branca fina */
     background: #000039 url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/preview-background.png') center/cover no-repeat;
     display: flex;
     align-items: center;
