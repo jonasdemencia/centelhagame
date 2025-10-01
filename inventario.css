@@ -1570,3 +1570,11 @@ max-height: 80px !important;
 .action-btn:hover {
     background: #555;
 }
+
+.item {
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
