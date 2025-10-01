@@ -1204,6 +1204,130 @@ if (actionDescartarBtn) {
     });
 }
 
+    // Adiciona funcionalidade ao botão usar das opções
+const actionUsarBtn = document.getElementById('action-usar');
+if (actionUsarBtn) {
+    actionUsarBtn.addEventListener('click', async () => {
+        console.log("Botão 'Usar' das opções clicado");
+
+        if (!selectedItem) {
+            console.log("Nenhum item selecionado para usar.");
+            return;
+        }
+
+        const uid = auth.currentUser?.uid;
+        if (!uid) return;
+
+        const playerRef = doc(db, "players", uid);
+
+        // CASO 1: Elixir do Poder (boost_attributes)
+        if (selectedItem.dataset.effect === "boost_attributes") {
+            if (currentPlayerData) {
+                const boostValue = parseInt(selectedItem.dataset.value) || 100;
+                currentPlayerData.luck = { total: boostValue, initial: boostValue };
+                currentPlayerData.skill = { total: boostValue, initial: boostValue };
+                currentPlayerData.charisma = { total: boostValue, initial: boostValue };
+                currentPlayerData.magic = { total: boostValue, initial: boostValue };
+
+                await savePlayerData(uid, currentPlayerData);
+
+                const playerSnap = await getDoc(playerRef);
+                if (playerSnap.exists()) {
+                    const inventoryData = playerSnap.data().inventory;
+                    const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
+                    if (itemIndex !== -1) {
+                        inventoryData.itemsInChest[itemIndex].quantity--;
+                        if (inventoryData.itemsInChest[itemIndex].quantity <= 0) {
+                            inventoryData.itemsInChest.splice(itemIndex, 1);
+                        }
+                        await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+                    }
+                }
+                alert("Seus atributos foram aumentados para 100!");
+                location.reload();
+            }
+        }
+
+        // CASO 2: Bolsa de Escriba (expand_inventory)
+        else if (selectedItem.dataset.effect === "expand_inventory") {
+            const expandValue = parseInt(selectedItem.dataset.value) || 2;
+            const itemUUID = selectedItem.dataset.uuid;
+
+            try {
+                const playerSnap = await getDoc(playerRef);
+                if (!playerSnap.exists()) return;
+
+                const inventoryData = playerSnap.data().inventory;
+
+                inventoryData.inventorySpaces = (inventoryData.inventorySpaces || 50) + expandValue;
+
+                const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === itemUUID);
+                if (itemIndex > -1) {
+                    inventoryData.itemsInChest.splice(itemIndex, 1);
+                }
+
+                if (!inventoryData.discardedItems) {
+                    inventoryData.discardedItems = [];
+                }
+                inventoryData.discardedItems.push(itemUUID);
+
+                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+
+                alert(`Inventário expandido! +${expandValue} espaços adicionados.`);
+
+            } catch (error) {
+                console.error("Erro ao usar a bolsa de escriba:", error);
+                alert("Ocorreu um erro ao tentar expandir o inventário.");
+            }
+        }
+
+        // CASO 3: Outros Consumíveis (heal, damage, etc.)
+        else if (selectedItem.dataset.consumable === 'true') {
+            const itemId = selectedItem.dataset.item;
+            const itemName = selectedItem.dataset.itemName;
+            const effect = selectedItem.dataset.effect;
+            const value = parseInt(selectedItem.dataset.value);
+
+            console.log("Usando item consumível:", itemName, "ID:", itemId);
+
+            if (effect === "damage") {
+                if (currentPlayerData && currentPlayerData.energy) {
+                    currentPlayerData.energy.total -= value;
+                    await savePlayerData(uid, currentPlayerData);
+                }
+            } else if (effect === "heal") {
+                if (currentPlayerData && currentPlayerData.energy) {
+                    const initialEnergy = currentPlayerData.energy.initial;
+                    currentPlayerData.energy.total = Math.min(currentPlayerData.energy.total + value, initialEnergy);
+                    await savePlayerData(uid, currentPlayerData);
+                }
+            }
+
+            const playerSnap = await getDoc(playerRef);
+            if (playerSnap.exists()) {
+                const inventoryData = playerSnap.data().inventory;
+                const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
+                if (itemIndex !== -1) {
+                    inventoryData.itemsInChest[itemIndex].quantity--;
+                    if (inventoryData.itemsInChest[itemIndex].quantity <= 0) {
+                        inventoryData.itemsInChest.splice(itemIndex, 1);
+                    }
+                    await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+                }
+            }
+        }
+
+        else {
+            console.log("O item selecionado não é consumível.");
+        }
+
+        selectedItem = null;
+        clearHighlights();
+        toggleUseButton(false);
+        hideItemActions();
+    });
+}
+
     
 });
 
