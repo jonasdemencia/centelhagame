@@ -846,28 +846,21 @@ if (carregarBtn) carregarBtn.style.display = "none";
 // Adiciona evento de clique aos itens iniciais
 
 // Adiciona evento de clique aos itens iniciais
+// Adiciona evento de clique aos itens iniciais
 const itemsContainer = document.querySelector('.items');
 if (itemsContainer) {
     itemsContainer.querySelectorAll('.item').forEach(item => {
+        let clickCount = 0;
+        
         item.addEventListener('click', () => {
             // Verifica se o clique foi no botão de expandir
             if (!item.classList.contains('item-expand-toggle')) {
-                handleItemClick(item);
-            }
-        });
-        
-        let touchTime = 0;
-
-        item.addEventListener('touchstart', function(e) {
-            if (touchTime === 0) {
-                touchTime = new Date().getTime();
-            } else {
-                if (((new Date().getTime()) - touchTime) < 500) {
-                    e.preventDefault();
+                clickCount++;
+                if (clickCount === 1) {
+                    handleItemClick(item);
+                } else if (clickCount === 2) {
                     showItemActions();
-                    touchTime = 0;
-                } else {
-                    touchTime = new Date().getTime();
+                    clickCount = 0;
                 }
             }
         });
@@ -879,6 +872,7 @@ if (itemsContainer) {
         });
     });
 }
+
 
 
 
@@ -1226,56 +1220,47 @@ console.warn("Botão 'Usar' não encontrado no HTML.");
 // Adiciona evento de clique aos novos itens do baú
 
 function addItemClickListener(item) {
+    let clickCount = 0;
+
     item.addEventListener('click', (event) => {
         if (!event.target.classList.contains('item-expand-toggle')) {
-            console.log("Novo item clicado no baú:", item);
-            clearHighlights();
-            selectedItem = item;
-            item.classList.add('selected');
-
-            const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
-            const itemData = allItemsArr.find(i => i.id === item.dataset.item);
-
-            if (itemData && itemData.slot) {
-                document.querySelectorAll('.slot').forEach(slot => {
-                    if (slot.dataset.slot === itemData.slot) {
-                        slot.classList.add('highlight');
-                    }
-                });
-            }
-
-            if (selectedItem.dataset.consumable === 'true') {
-                toggleUseButton(true);
-            } else {
-                toggleUseButton(false);
-            }
+            clickCount++;
             
-            updateItemPreview(item);
+            if (clickCount === 1) {
+                console.log("Novo item clicado no baú:", item);
+                clearHighlights();
+                selectedItem = item;
+                item.classList.add('selected');
+
+                const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
+                const itemData = allItemsArr.find(i => i.id === item.dataset.item);
+
+                if (itemData && itemData.slot) {
+                    document.querySelectorAll('.slot').forEach(slot => {
+                        if (slot.dataset.slot === itemData.slot) {
+                            slot.classList.add('highlight');
+                        }
+                    });
+                }
+
+                if (selectedItem.dataset.consumable === 'true') {
+                    toggleUseButton(true);
+                } else {
+                    toggleUseButton(false);
+                }
+                
+                updateItemPreview(item);
+            } else if (clickCount === 2) {
+                showItemActions();
+                clickCount = 0;
+            }
         }
     });
 
-    let touchTime = 0;
-
-item.addEventListener('touchstart', function(e) {
-    if (touchTime === 0) {
-        touchTime = new Date().getTime();
-    } else {
-        if (((new Date().getTime()) - touchTime) < 500) {
-            e.preventDefault();
-            showItemActions();
-            touchTime = 0;
-        } else {
-            touchTime = new Date().getTime();
-        }
-    }
-});
-
-item.addEventListener('dblclick', function(e) {
-    e.preventDefault();
-    showItemActions();
-});
-
-
+    item.addEventListener('dblclick', function(e) {
+        e.preventDefault();
+        showItemActions();
+    });
 }
 
 function showItemActions() {
