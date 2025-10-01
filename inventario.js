@@ -857,11 +857,19 @@ if (itemsContainer) {
         });
         
         // ADICIONAR EVENTO DE DUPLO CLIQUE TAMBÉM AQUI
-        item.addEventListener('dblclick', (event) => {
-            if (!event.target.classList.contains('item-expand-toggle')) {
-                showItemActions();
-            }
-        });
+        item.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    if (e.touches.length === 0) {
+        showItemActions();
+    }
+});
+
+item.addEventListener('dblclick', (event) => {
+    if (!event.target.classList.contains('item-expand-toggle')) {
+        showItemActions();
+    }
+});
+
     });
 }
 
@@ -1238,10 +1246,18 @@ function addItemClickListener(item) {
         }
     });
 
-    item.addEventListener('dblclick', function(e) {
-        e.preventDefault();
+    item.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    if (e.touches.length === 0) {
         showItemActions();
-    });
+    }
+});
+
+item.addEventListener('dblclick', function(e) {
+    e.preventDefault();
+    showItemActions();
+});
+
 }
 
 function showItemActions() {
