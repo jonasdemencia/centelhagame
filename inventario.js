@@ -1339,16 +1339,19 @@ function addItemClickListener(item) {
 function showItemActions() {
     const actionsWindow = document.getElementById('item-actions-window');
     if (actionsWindow) {
-        actionsWindow.classList.add('active');
+        actionsWindow.style.display = 'block';
+        actionsWindow.classList.add('active'); // APENAS ADICIONE ESTA LINHA
     }
 }
 
 function hideItemActions() {
     const actionsWindow = document.getElementById('item-actions-window');
     if (actionsWindow) {
-        actionsWindow.classList.remove('active');
+        actionsWindow.classList.remove('active'); // APENAS ADICIONE ESTA LINHA
+        actionsWindow.style.display = 'none';
     }
 }
+
 
 
 // Função para limpar destaques visuais
