@@ -727,20 +727,23 @@ class WeatherEffectsManager {
 
 
     createRandomFlash(container) {
-        const flash = container.querySelector('.flash');
+    const flash = container.querySelector('.flash');
+    
+    const randomFlash = () => {
+        // intensidade mais baixa e variável
+        flash.style.opacity = 0.1 + Math.random() * 0.3; // 0.1 até 0.4
+        setTimeout(() => {
+            flash.style.opacity = 0;
+        }, 100 + Math.random() * 400);
         
-        const randomFlash = () => {
-            flash.style.opacity = 0.4 + Math.random() * 0.6;
-            setTimeout(() => {
-                flash.style.opacity = 0;
-            }, 100 + Math.random() * 200);
-            
-            const next = 2000 + Math.random() * 5000;
-            setTimeout(randomFlash, next);
-        };
-        
-        setTimeout(randomFlash, 2000);
-    }
+        // intervalo mais longo e bem randômico
+        const next = 5000 + Math.random() * 15000; // entre 5s e 20s
+        setTimeout(randomFlash, next);
+    };
+    
+    setTimeout(randomFlash, 5000); // primeiro flash após 5s
+}
+
 
     createMagicPixels(container, count, minDuration, maxDuration) {
         for (let i = 0; i < count; i++) {
@@ -944,6 +947,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.WeatherEffectsManager = WeatherEffectsManager;
+
 
 
 
