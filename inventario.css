@@ -1610,9 +1610,11 @@ max-height: 80px !important;
 .action-btn {
   background: transparent;
   border: none;
-  margin: 0; /* removido completamente */
-  padding: 8px 2px 4px 8px;
+  margin: 0;
+  padding: 8px 2px 2px 8px; /* reduzi padding inferior de 4px para 2px */
   text-align: right;
+  text-transform: uppercase; /* caixa alta */
+  line-height: 1; /* controla altura da linha */
 }
 
 #item-actions-window.active {
