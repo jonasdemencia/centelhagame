@@ -1585,12 +1585,13 @@ max-height: 80px !important;
   white-space: pre-wrap; /* mantém quebras de linha se você quiser formatar */
 }
 
+/* --- Animação do container de opções (efeito canivete OTF) --- */
 #item-actions-window {
   position: absolute;
   right: -15px;
   top: 5px;
   width: 90px;
-  height: 170px; /* 120 + 50 */
+  height: 170px; /* mudou só isso */
   transform: scaleX(0);
   transform-origin: right center;
   opacity: 0;
@@ -1605,9 +1606,14 @@ max-height: 80px !important;
   top: 0;
   left: 0;
   width: 90px;
-  height: 170px; /* 120 + 50 */
+  height: 170px; /* mudou só isso */
   background-image: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/janeladeopcoes.png');
-  background-size: 90px 170px;
+  background-size: 90px 170px; /* mudou só isso */
   background-repeat: no-repeat;
   z-index: -1;
+}
+
+#item-actions-window.active {
+  transform: scaleX(1);
+  opacity: 1;
 }
