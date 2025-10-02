@@ -1340,17 +1340,22 @@ function showItemActions() {
     const actionsWindow = document.getElementById('item-actions-window');
     if (actionsWindow) {
         actionsWindow.style.display = 'block';
-        actionsWindow.classList.add('active'); // APENAS ADICIONE ESTA LINHA
+        requestAnimationFrame(() => {
+            actionsWindow.classList.add('active');
+        });
     }
 }
 
 function hideItemActions() {
     const actionsWindow = document.getElementById('item-actions-window');
     if (actionsWindow) {
-        actionsWindow.classList.remove('active'); // APENAS ADICIONE ESTA LINHA
-        actionsWindow.style.display = 'none';
+        actionsWindow.classList.remove('active');
+        setTimeout(() => {
+            actionsWindow.style.display = 'none';
+        }, 400);
     }
 }
+
 
 
 
