@@ -1610,9 +1610,9 @@ max-height: 80px !important;
 .action-btn {
   background: transparent;
   border: none;
-  margin: 2px 0; /* mais distantes um do outro */
-  padding: 4px 2px 4px 8px; /* mais para a direita */
-  text-align: right; /* alinha texto à direita */
+  margin: 2px 0;
+  padding: 6px 2px 4px 8px; /* aumentei padding superior de 4px para 6px */
+  text-align: right;
 }
 
 #item-actions-window.active {
