@@ -1617,6 +1617,10 @@ max-height: 80px !important;
   line-height: 1;
 }
 
+.action-btn:hover {
+  background: #555;
+  padding: 6px 2px 4px 6px; /* centraliza verticalmente e reduz largura esquerda */
+}
 
 #item-actions-window.active {
   transform: scaleX(1);
