@@ -1596,6 +1596,10 @@ max-height: 80px !important;
   overflow: hidden;               /* não deixa nada "vazar" */
   transition: transform 0.15s ease-out, opacity 0.1s ease-out;
   z-index: 20;
+    background-image: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/janeladeopcoes.png');
+    background-size: cover; /* ou contain, dependendo do que quiser */
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 #item-actions-window.active {
