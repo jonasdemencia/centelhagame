@@ -1591,9 +1591,10 @@ max-height: 80px !important;
   right: -15px;
   top: 5px;
   width: 90px;
-  height: auto; /* altura automática baseada no conteúdo */
-  min-height: 120px; /* altura mínima */
-  padding: 10px; /* espaçamento interno uniforme */
+  height: auto;
+  min-height: 120px;
+  padding: 10px;
+  box-sizing: border-box; /* ADICIONE ESTA LINHA */
   transform: scaleX(0);
   transform-origin: right center;
   opacity: 0;
@@ -1610,3 +1611,4 @@ max-height: 80px !important;
   transform: scaleX(1);
   opacity: 1;
 }
+
