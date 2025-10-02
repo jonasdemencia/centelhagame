@@ -1593,7 +1593,7 @@ max-height: 80px !important;
   transform-origin: right center; /* abre da direita para a esquerda */
   opacity: 0;                     /* invisível no estado inicial */
   overflow: hidden;               /* não deixa nada "vazar" */
-  transition: transform 0.3s ease-out, opacity 0.2s ease-out;
+  transition: transform 0.15s ease-out, opacity 0.1s ease-out;
   z-index: 20;
 }
 
