@@ -1591,7 +1591,7 @@ max-height: 80px !important;
   right: -15px;
   top: 5px;
   width: 90px;
-  height: 170px; /* mudou só isso */
+  height: 140px; /* reduzido de 170px */
   transform: scaleX(0);
   transform-origin: right center;
   opacity: 0;
@@ -1606,9 +1606,9 @@ max-height: 80px !important;
   top: 0;
   left: 0;
   width: 90px;
-  height: 170px; /* mudou só isso */
+  height: 140px; /* reduzido de 170px */
   background-image: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/janeladeopcoes.png');
-  background-size: 90px 170px; /* mudou só isso */
+  background-size: 90px 140px; /* reduzido de 170px */
   background-repeat: no-repeat;
   z-index: -1;
 }
@@ -1617,3 +1617,4 @@ max-height: 80px !important;
   transform: scaleX(1);
   opacity: 1;
 }
+
