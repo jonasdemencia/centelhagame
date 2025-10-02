@@ -1339,14 +1339,14 @@ function addItemClickListener(item) {
 function showItemActions() {
     const actionsWindow = document.getElementById('item-actions-window');
     if (actionsWindow) {
-        actionsWindow.style.display = 'block';
+        actionsWindow.classList.add('active');
     }
 }
 
 function hideItemActions() {
     const actionsWindow = document.getElementById('item-actions-window');
     if (actionsWindow) {
-        actionsWindow.style.display = 'none';
+        actionsWindow.classList.remove('active');
     }
 }
 
