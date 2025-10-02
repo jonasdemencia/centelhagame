@@ -1591,9 +1591,8 @@ max-height: 80px !important;
   right: -15px;
   top: 5px;
   width: 90px;
-  height: auto;
-  min-height: 120px;
-  padding: 10px;
+  height: 120px; /* altura fixa */
+  padding: 0; /* remove padding */
   box-sizing: border-box;
   transform: scaleX(0);
   transform-origin: right center;
@@ -1605,12 +1604,13 @@ max-height: 80px !important;
   background-size: 90px 120px;
   background-repeat: no-repeat;
   background-position: center;
-  border: none; /* remove bordas */
+  border: none;
 }
 
 .action-btn {
-  background: transparent; /* botões transparentes */
-  border: none; /* remove bordas dos botões */
+  background: transparent;
+  border: none;
+  margin: 2px 0; /* diminui distância entre botões */
 }
 
 
