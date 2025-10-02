@@ -1588,11 +1588,11 @@ max-height: 80px !important;
 /* --- Animação do container de opções (efeito canivete OTF) --- */
 #item-actions-window {
   position: absolute;
-  right: -15px;
+  right: -17px; /* mudou de -15px para -17px (2px mais à direita) */
   top: 5px;
   width: 90px;
-  height: 120px; /* altura fixa */
-  padding: 0; /* remove padding */
+  height: 120px;
+  padding: 0;
   box-sizing: border-box;
   transform: scaleX(0);
   transform-origin: right center;
@@ -1611,9 +1611,10 @@ max-height: 80px !important;
   background: transparent;
   border: none;
   margin: 2px 0;
-  padding: 6px 2px 4px 8px; /* aumentei padding superior de 4px para 6px */
+  padding: 8px 2px 4px 8px; /* aumentei padding superior de 6px para 8px */
   text-align: right;
 }
+
 
 #item-actions-window.active {
   transform: scaleX(1);
