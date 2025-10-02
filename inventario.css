@@ -1585,3 +1585,16 @@ max-height: 80px !important;
   white-space: pre-wrap; /* mantém quebras de linha se você quiser formatar */
 }
 
+/* --- Animação do container de opções (efeito canivete OTF) --- */
+#optionsContainer {
+  position: absolute;
+  transform: translateX(100%); /* começa escondido à direita */
+  opacity: 0;
+  transition: transform 0.3s ease-out, opacity 0.2s ease-out;
+  z-index: 20;
+}
+
+#optionsContainer.active {
+  transform: translateX(0); /* desliza para posição original */
+  opacity: 1;
+}
