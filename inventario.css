@@ -1594,7 +1594,7 @@ max-height: 80px !important;
   height: auto;
   min-height: 120px;
   padding: 10px;
-  box-sizing: border-box; /* ADICIONE ESTA LINHA */
+  box-sizing: border-box;
   transform: scaleX(0);
   transform-origin: right center;
   opacity: 0;
@@ -1605,7 +1605,14 @@ max-height: 80px !important;
   background-size: 90px 120px;
   background-repeat: no-repeat;
   background-position: center;
+  border: none; /* remove bordas */
 }
+
+.action-btn {
+  background: transparent; /* botões transparentes */
+  border: none; /* remove bordas dos botões */
+}
+
 
 #item-actions-window.active {
   transform: scaleX(1);
