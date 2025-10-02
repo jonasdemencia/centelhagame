@@ -1588,23 +1588,33 @@ max-height: 80px !important;
 /* --- Animação do container de opções (efeito canivete OTF) --- */
 #item-actions-window {
   position: absolute;
-  right: -15px;                   /* mais para a direita */
-  top: 5px;                       /* mais para cima */
-  transform: scaleX(0);          /* totalmente comprimido */
-  transform-origin: right center; /* abre da direita para a esquerda */
-  opacity: 0;                     /* invisível no estado inicial */
-  overflow: hidden;               /* não deixa nada "vazar" */
+  right: -15px;
+  top: 5px;
+  width: 90px;
+  height: 104px;
+  transform: scaleX(0);
+  transform-origin: right center;
+  opacity: 0;
+  overflow: hidden;
   transition: transform 0.15s ease-out, opacity 0.1s ease-out;
   z-index: 20;
-    background-image: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/janeladeopcoes.png');
-    background-size: 90px 104px; /* tamanho exato da imagem */
-    background-size: cover; /* ou contain, dependendo do que quiser */
-    background-repeat: no-repeat;
-    background-position: center;
+}
+
+#item-actions-window::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 90px;
+  height: 104px;
+  background-image: url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/janeladeopcoes.png');
+  background-size: 90px 104px;
+  background-repeat: no-repeat;
+  z-index: -1;
 }
 
 #item-actions-window.active {
-  transform: scaleX(1); /* tamanho normal */
+  transform: scaleX(1);
   opacity: 1;
 }
 
