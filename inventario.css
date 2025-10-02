@@ -1610,9 +1610,8 @@ max-height: 80px !important;
 .action-btn {
   background: transparent;
   border: none;
-  margin: 2px 0; /* diminui distância entre botões */
+  margin: 0; /* remove margem completamente */
 }
-
 
 #item-actions-window.active {
   transform: scaleX(1);
