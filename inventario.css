@@ -1589,7 +1589,7 @@ max-height: 80px !important;
 #item-actions-window {
   position: absolute;
   right: -10px;                   /* mais para a direita */
-  top: -20px;                     /* mais para cima */
+  top: 10px;                      /* mais para baixo */
   transform: scaleX(0);          /* totalmente comprimido */
   transform-origin: right center; /* abre da direita para a esquerda */
   opacity: 0;                     /* invisível no estado inicial */
@@ -1602,4 +1602,3 @@ max-height: 80px !important;
   transform: scaleX(1); /* tamanho normal */
   opacity: 1;
 }
-
