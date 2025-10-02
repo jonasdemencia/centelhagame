@@ -1588,13 +1588,16 @@ max-height: 80px !important;
 /* --- Animação do container de opções (efeito canivete OTF) --- */
 #item-actions-window {
   position: absolute;
-  transform: translateX(100%); /* começa escondido à direita */
-  opacity: 0;
+  right: 0;
+  transform: scaleX(0);          /* totalmente comprimido */
+  transform-origin: right center; /* abre da direita para a esquerda */
+  opacity: 0;                     /* invisível no estado inicial */
+  overflow: hidden;               /* não deixa nada "vazar" */
   transition: transform 0.3s ease-out, opacity 0.2s ease-out;
   z-index: 20;
 }
 
 #item-actions-window.active {
-  transform: translateX(0); /* desliza para posição original */
+  transform: scaleX(1); /* tamanho normal */
   opacity: 1;
 }
