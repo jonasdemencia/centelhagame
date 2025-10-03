@@ -96,8 +96,8 @@ let lastBeatTime = performance.now();
 let beatInterval = 60000 / bpm; // ms between beats
 
 // parameters for waveform shape
-const baselineJitter = 0.3; // small jitter amplitude
-const noiseAmp = 0.3; // small noise
+const baselineJitter = 0.05; // reduzido de 0.3 para 0.05
+const noiseAmp = 0.05; // reduzido de 0.3 para 0.05
 const qrsStrength = 18; // spike height in pixels
 const tWaveStrength = 6; // smaller bump after QRS
 const prSegment = 8; // horizontal length of PR segment (pixels)
