@@ -578,3 +578,6 @@ window.createContinueAdventureButton = async function(db, userId) {
 
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
+});
+
+
