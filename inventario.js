@@ -172,7 +172,7 @@ const extraItems = [
 { id: "corda", content: "Corda", uuid: "extra-corda", description: "Corda resistente para escaladas.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/corda.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thucorda.png" },
 { id: "esqueiro", content: "Esqueiro", uuid: "extra-esqueiro", description: "Produz chama contínua.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/esqueiro.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuesqueiro.png" },
 { id: "cartaodeacesso1", content: "Cartao de Acesso 1", uuid: "extra-cartaodeacesso1", description: "Permite a entrada a área restrita.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/cartaodeacesso1.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thucartaodeacesso1.png" },
-{ id: "cartaodeacesso1", content: "Cartao de Acesso 2", uuid: "extra-cartaodeacesso2", description: "Permite a entrada a área restrita.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/cartaodeacesso2.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thucartaodeacesso2.png" }
+{ id: "cartaodeacesso2", content: "Cartao de Acesso 2", uuid: "extra-cartaodeacesso2", description: "Permite a entrada a área restrita.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/cartaodeacesso2.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thucartaodeacesso2.png" }
 
 ];
 
