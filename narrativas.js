@@ -26,6 +26,8 @@ class SistemaNarrativas {
         this.secaoAtual = 1;
         this.playerData = null;
         this.userId = null;
+        this.itemPendente = null;
+
 this.itensNarrativas = {
     
 // === ARMAS DE FOGO ===
@@ -234,19 +236,42 @@ this.narrativaAtual = NARRATIVAS[narrativaId];
     textoContainer.innerHTML = textoHTML;
 
     textoContainer.querySelectorAll('.item-coletavel').forEach(span => {
-        span.addEventListener('click', async () => {
+        span.addEventListener('click', () => {
             const itemId = span.dataset.itemId;
-            await this.adicionarItem(itemId);
-            span.remove();
-            alert(`${span.textContent} adicionado ao inventário!`);
+            this.abrirInventarioComItem(itemId, span);
         });
     });
 }
+
 
 obterNomeItem(itemId) {
     return this.itensNarrativas[itemId]?.content || itemId;
 }
 
+abrirInventarioComItem(itemId, spanElement) {
+    this.itemPendente = { id: itemId, span: spanElement };
+    const itemData = this.itensNarrativas[itemId];
+    document.getElementById('narrativa-ativa').style.display = 'none';
+    document.getElementById('inventario-narrativa').classList.add('ativo');
+    document.getElementById('preview-image-inv').src = itemData.image;
+    document.getElementById('preview-image-inv').style.display = 'block';
+    document.getElementById('preview-name-inv').textContent = itemData.content;
+    document.getElementById('preview-description-inv').innerHTML = `Você pegará a ${itemData.content}?<br><button id="btn-sim-inv">Sim</button> <button id="btn-nao-inv">Não</button>`;
+    document.getElementById('btn-sim-inv').addEventListener('click', () => this.confirmarPegarItem());
+    document.getElementById('btn-nao-inv').addEventListener('click', () => this.fecharInventario());
+}
+
+async confirmarPegarItem() {
+    await this.adicionarItem(this.itemPendente.id);
+    this.itemPendente.span.remove();
+    this.fecharInventario();
+}
+
+fecharInventario() {
+    document.getElementById('inventario-narrativa').classList.remove('ativo');
+    document.getElementById('narrativa-ativa').style.display = 'block';
+    this.itemPendente = null;
+}
 
 
     criarOpcoes(opcoes, isFinal = false) {
@@ -633,6 +658,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
