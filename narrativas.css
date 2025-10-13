@@ -209,12 +209,14 @@ h1 {
     background: black;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.5s;
+    transition: opacity 0.2s;
     z-index: 9998;
 }
 
 .fade-overlay.active {
     opacity: 1;
 }
+
+
 
 
