@@ -283,55 +283,6 @@ fecharInventario() {
     this.itemPendente = null;
 }
 
-    carregarDadosInventario() {
-    if (!this.playerData) return;
-    
-    // Nome e retrato
-    document.getElementById('char-name-display').textContent = this.playerData.name || 'Jogador';
-    if (this.playerData.portrait) {
-        document.getElementById('portrait-image').src = this.playerData.portrait;
-        document.getElementById('portrait-image').style.display = 'block';
-    }
-    
-    // Stats
-    document.getElementById('char-class-info').textContent = this.playerData.class || '-';
-    document.getElementById('char-race-info').textContent = this.playerData.race || '-';
-    document.getElementById('char-alignment-info').textContent = this.playerData.alignment || '-';
-    document.getElementById('char-age-info').textContent = this.playerData.age || '-';
-    document.getElementById('char-hand-info').textContent = this.playerData.hand || '-';
-    document.getElementById('char-hemisphere-info').textContent = this.playerData.hemisphere || '-';
-    document.getElementById('char-skill-info').textContent = this.playerData.skill?.total || 0;
-    document.getElementById('char-charisma-info').textContent = this.playerData.charisma?.total || 0;
-    document.getElementById('char-magic-info').textContent = this.playerData.magic?.total || 0;
-    document.getElementById('char-luck-info').textContent = this.playerData.luck?.total || 0;
-    document.getElementById('char-couraca-info').textContent = this.playerData.couraca || 0;
-    document.getElementById('char-dano-info').textContent = this.playerData.dano || 1;
-    document.getElementById('char-day-info').textContent = this.playerData.day || 1;
-    document.getElementById('char-po-info').textContent = this.playerData.po || 0;
-    document.getElementById('char-level-info').textContent = this.playerData.level || 1;
-    
-    // Itens do inventário
-    const itemsContainer = document.querySelector('#inventario-narrativa .items');
-    itemsContainer.innerHTML = '';
-    if (this.playerData.inventory?.itemsInChest) {
-        this.playerData.inventory.itemsInChest.forEach(item => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'item';
-            const img = document.createElement('img');
-            img.src = item.thumbnailImage || item.image;
-            itemDiv.appendChild(img);
-            if (item.quantity > 1) {
-                const qty = document.createElement('span');
-                qty.className = 'item-quantity';
-                qty.textContent = item.quantity;
-                itemDiv.appendChild(qty);
-            }
-            itemsContainer.appendChild(itemDiv);
-        });
-    }
-}
-
-
 
     criarOpcoes(opcoes, isFinal = false) {
         const container = document.getElementById('opcoes-container');
@@ -717,6 +668,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
