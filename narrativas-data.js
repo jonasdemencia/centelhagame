@@ -176,6 +176,2586 @@ Esta estrutura é ESSENCIAL para manter a flexibilidade e imersão narrativa.
 // Dados das narrativas
 const NARRATIVAS = {
 
+"condominio-tempo-perdido": {
+    id: "condominio-tempo-perdido",
+    titulo: "O Condomínio do tempo perdido",
+    secoes: {
+        1: {
+            texto: "Você abre os olhos sobre mármore polido. O teto se perde em altura, sustentado por colunas de granito negro. Lustres de cristal pendem imóveis. Silêncio absoluto. Seu corpo está intacto, suas roupas limpas.",
+            opcoes: [
+                { texto: "Explorar o corredor à esquerda", secao: 2 },
+                { texto: "Explorar o corredor à direita", secao: 3 },
+                { texto: "Examinar as colunas de perto", secao: 4 },
+                { texto: "Subir a escadaria central", secao: 5 }
+            ]
+        },
+
+        2: {
+            texto: "Paredes cobertas por tapeçarias de seda representando cenas de caça. O corredor se estende por trinta metros. Cheiro leve de cera de abelha.",
+            opcoes: [
+                { texto: "Seguir até o fim do corredor", secao: 6 },
+                { texto: "Tocar as tapeçarias", secao: 7 },
+                { texto: "Retornar ao hall", secao: 1 },
+                { texto: "Abrir a porta à direita", secao: 8 }
+            ]
+        },
+
+        3: {
+            texto: "Dezenas de retratos a óleo em molduras douradas. Rostos de homens e mulheres em trajes formais, nenhum sorrindo. A luz vem de janelas altas.",
+            opcoes: [
+                { texto: "Examinar os retratos mais de perto", secao: 9 },
+                { texto: "Seguir pela galeria", secao: 10 },
+                { texto: "Tentar abrir uma janela", secao: 11 },
+                { texto: "Voltar ao hall", secao: 1 }
+            ]
+        },
+
+        4: {
+            texto: "Granito negro com veios dourados. Frio ao toque. Cada coluna tem três metros de diâmetro. Nenhuma inscrição visível.",
+            opcoes: [
+                { texto: "Retornar ao hall", secao: 1 }
+            ]
+        },
+
+        5: {
+            texto: "Degraus de mármore branco sobem em espiral. Corrimão de mogno. Você alcança o primeiro patamar. Três portas: uma vermelha, uma branca, uma de bronze.",
+            opcoes: [
+                { texto: "Abrir a porta vermelha", secao: 12 },
+                { texto: "Abrir a porta branca", secao: 13 },
+                { texto: "Abrir a porta de bronze", secao: 14 },
+                { texto: "Descer ao hall", secao: 1 }
+            ]
+        },
+
+        6: {
+            texto: "Mesa de carvalho para cinquenta pessoas. Talheres de prata alinhados. Nenhum prato, nenhum alimento. Candelabros apagados. Temperatura amena.",
+            opcoes: [
+                { texto: "Procurar por comida nos armários", secao: 15 },
+                { texto: "Examinar os talheres", secao: 16 },
+                { texto: "Sair pela porta oposta", secao: 17 },
+                { texto: "Retornar ao corredor", secao: 2 }
+            ]
+        },
+
+        7: {
+            texto: "Seda genuína, bordados em fio de ouro. Representam cervos sendo abatidos por arqueiros. Nenhum som além da sua respiração.",
+            opcoes: [
+                { texto: "Retornar ao corredor", secao: 2 }
+            ]
+        },
+
+        8: {
+            texto: "Estantes de mogno até o teto. Livros encadernados em couro. Cheiro de papel antigo. Uma escada de madeira apoiada na parede.",
+            opcoes: [
+                { texto: "Ler os títulos dos livros", secao: 18 },
+                { texto: "Subir pela escada", secao: 19 },
+                { texto: "Procurar por mapas ou documentos", secao: 20 },
+                { texto: "Sair", secao: 2 }
+            ]
+        },
+
+        9: {
+            texto: "Pinceladas precisas. Olhos que parecem seguir, mas é apenas técnica. Placas douradas com nomes em idiomas que você não reconhece.",
+            opcoes: [
+                { texto: "Retornar à galeria", secao: 3 }
+            ]
+        },
+
+        10: {
+            texto: "Piano de cauda no centro. Harpas, violinos em estantes. Partitura aberta sobre o piano: notas complexas, sem título.",
+            opcoes: [
+                { texto: "Tocar uma tecla do piano", secao: 21 },
+                { texto: "Examinar as partituras", secao: 22 },
+                { texto: "Sair pela porta lateral", secao: 23 },
+                { texto: "Voltar à galeria", secao: 3 }
+            ]
+        },
+
+        11: {
+            texto: "Vidro grosso, sem trinco. A vista mostra jardins internos com fontes de pedra. Nenhum movimento lá fora.",
+            opcoes: [
+                { texto: "Retornar à galeria", secao: 3 }
+            ]
+        },
+
+        12: {
+            texto: "Bancos de madeira escura. Altar de mármore branco com velas apagadas. Vitrais representam figuras abstratas em azul e dourado, inscrição em latim: 'Custos qui cecidit'. Silêncio denso.",
+            opcoes: [
+                { texto: "Examinar o altar", secao: 24 },
+                { texto: "Sentar-se nos bancos", secao: 25 },
+                { texto: "Sair pela porta lateral", secao: 26 },
+                { texto: "Retornar ao patamar", secao: 5 }
+            ]
+        },
+
+        13: {
+            texto: "Cama com dossel, lençóis de linho branco impecáveis. Armário vazio. Janela com cortinas de veludo. Nenhum objeto pessoal.",
+            opcoes: [
+                { texto: "Deitar na cama", secao: 27 },
+                { texto: "Abrir o armário", secao: 28 },
+                { texto: "Olhar pela janela", secao: 29 },
+                { texto: "Sair", secao: 5 }
+            ]
+        },
+
+        14: {
+            texto: "Mesa de jacarandá com tinteiro seco. Arquivos de metal trancados. Telefone antigo, sem linha. Cheiro de couro e tinta.",
+            opcoes: [
+                { texto: "Tentar abrir os arquivos", secao: 30 },
+                { texto: "Examinar os papéis sobre a mesa", secao: 31 },
+                { texto: "Pegar o telefone", secao: 32 },
+                { texto: "Sair", secao: 5 }
+            ]
+        },
+
+        15: {
+            texto: "Prateleiras com latas lacradas: conservas de frutas, vegetais, carnes. Água engarrafada em caixas. Tudo em perfeito estado.",
+            efeitos: [
+                { tipo: "item", item: "lata-sardinha" },
+                { tipo: "item", item: "lata-sardinha" },
+                { tipo: "item", item: "lata-sardinha" }
+            ],
+            opcoes: [
+                { texto: "Retornar ao salão", secao: 6 }
+            ]
+        },
+
+        16: {
+            texto: "Talheres sem manchas, sem marcas de uso. Refletem seu rosto com clareza.",
+            opcoes: [
+                { texto: "Retornar ao salão", secao: 6 }
+            ]
+        },
+
+        17: {
+            texto: "Paredes simples, piso de pedra. Portas numeradas de 1 a 8. Iluminação natural de claraboias.",
+            opcoes: [
+                { texto: "Abrir porta 1", secao: 33 },
+                { texto: "Abrir porta 4", secao: 34 },
+                { texto: "Abrir porta 8", secao: 35 },
+                { texto: "Seguir até o fim do corredor", secao: 36 }
+            ]
+        },
+
+        18: {
+            texto: "Livros em latim, grego, árabe, hebraico. Tratados de filosofia, teologia, astronomia. Nenhum em linguagem que você domine completamente.",
+            opcoes: [
+                { texto: "Retornar à biblioteca", secao: 8 }
+            ]
+        },
+
+        19: {
+            texto: "Mais livros. Uma janela circular mostra o céu: azul claro, sem nuvens, sem pássaros.",
+            opcoes: [
+                { texto: "Descer", secao: 8 }
+            ]
+        },
+
+        20: {
+            texto: "Plantas arquitetônicas do edifício. Centenas de salas. Você está na Ala Leste, Nível 1. Existem pelo menos 8 níveis.",
+            opcoes: [
+                { texto: "Retornar à biblioteca", secao: 8 }
+            ]
+        },
+
+        21: {
+            texto: "O som ressoa puro e longo. Nenhum eco responde. O silêncio retorna.",
+            opcoes: [
+                { texto: "Retornar ao salão", secao: 10 }
+            ]
+        },
+
+        22: {
+            texto: "Composições para orquestra completa. Anotações à mão nas margens: 'Execução prevista para 14/09'. Nenhum ano indicado.",
+            opcoes: [
+                { texto: "Retornar ao salão", secao: 10 }
+            ]
+        },
+
+        23: {
+            texto: "Fonte de pedra com água cristalina. Roseiras sem flores. Grama aparada. Céu visível, mas nenhum som de vento.",
+            opcoes: [
+                { texto: "Beber da fonte", secao: 37 },
+                { texto: "Explorar o jardim", secao: 38 },
+                { texto: "Entrar pela porta oposta", secao: 39 },
+                { texto: "Retornar ao salão", secao: 10 }
+            ]
+        },
+
+        24: {
+            texto: "Velas de cera virgem, nunca acesas. Livro fechado com capa de couro negro. Nenhum símbolo religioso reconhecível.",
+            efeitos: [{ tipo: "item", item: "bolsa-ouro-pequena" }],
+            opcoes: [
+                { texto: "Abrir o livro", secao: 40 },
+                { texto: "Retornar à capela", secao: 12 }
+            ]
+        },
+
+        25: {
+            texto: "Você senta. O banco é duro. O silêncio pressiona seus ouvidos. Nenhuma sensação de paz ou desconforto, apenas vazio.",
+            opcoes: [
+                { texto: "Levantar e sair", secao: 12 }
+            ]
+        },
+
+        26: {
+            texto: "Armários com vestes cerimoniais: brancas, douradas, púrpuras. Cálices de ouro. Incenso em caixas lacradas.",
+            opcoes: [
+                { texto: "Examinar as vestes", secao: 41 },
+                { texto: "Sair pela porta dos fundos", secao: 42 },
+                { texto: "Retornar à capela", secao: 12 }
+            ]
+        },
+
+        27: {
+            texto: "Você deita. O colchão é firme. Nenhum som. Você não sente sono, mas o corpo relaxa.",
+            efeitos: [{ tipo: "energia", valor: 2 }],
+            opcoes: [
+                { texto: "Levantar", secao: 13 }
+            ]
+        },
+
+        28: {
+            texto: "Cabides de madeira. Cheiro de cedro. Nenhuma roupa, nenhum objeto.",
+            opcoes: [
+                { texto: "Retornar ao quarto", secao: 13 }
+            ]
+        },
+
+        29: {
+            texto: "Jardins internos se estendem em padrões geométricos. Fontes, estátuas, caminhos de pedra. Nenhum movimento.",
+            opcoes: [
+                { texto: "Retornar ao quarto", secao: 13 }
+            ]
+        },
+
+        30: {
+            texto: "Fechaduras de combinação. Você não tem a senha. Metal frio e resistente.",
+            opcoes: [
+                { texto: "Retornar ao escritório", secao: 14 }
+            ]
+        },
+
+        31: {
+            texto: "Listas de suprimentos: 'Vinho tinto - 400 garrafas', 'Caviar - 80kg', 'Lençóis de seda - 200 jogos'. Datas ilegíveis.",
+            efeitos: [{ tipo: "item", item: "bolsa-ouro-pequena" }],
+            opcoes: [
+                { texto: "Retornar ao escritório", secao: 14 }
+            ]
+        },
+
+        32: {
+            texto: "Você levanta o fone. Nenhum tom. Nenhum ruído. Plástico frio contra sua orelha.",
+            opcoes: [
+                { texto: "Retornar ao escritório", secao: 14 }
+            ]
+        },
+
+        33: {
+            texto: "Cama simples, mesa pequena, cadeira. Nenhum objeto pessoal. Limpo e vazio.",
+            opcoes: [
+                { texto: "Sair", secao: 17 }
+            ]
+        },
+
+        34: {
+            texto: "Vassouras, baldes, produtos químicos em frascos rotulados. Cheiro de cloro e lavanda.",
+            opcoes: [
+                { texto: "Sair", secao: 17 }
+            ]
+        },
+
+        35: {
+            texto: "Máquinas industriais de lavar. Cestos vazios. Cheiro de sabão neutro.",
+            opcoes: [
+                { texto: "Sair", secao: 17 }
+            ]
+        },
+
+        36: {
+            texto: "Fogões de aço inoxidável. Geladeiras desligadas, vazias. Facas penduradas em ordem de tamanho. Nenhum alimento.",
+            opcoes: [
+                { texto: "Examinar as geladeiras", secao: 43 },
+                { texto: "Pegar uma faca", secao: 44 },
+                { texto: "Sair pela porta de serviço", secao: 45 },
+                { texto: "Retornar ao corredor", secao: 17 }
+            ]
+        },
+
+        37: {
+            texto: "Você bebe. Fria, sem sabor. Sua sede diminui.",
+            efeitos: [{ tipo: "energia", valor: 1 }],
+            opcoes: [
+                { texto: "Retornar ao jardim", secao: 23 }
+            ]
+        },
+
+        38: {
+            texto: "Estátuas de mármore: figuras humanas em poses formais. Nenhuma placa identificadora. Grama macia sob seus pés.",
+            opcoes: [
+                { texto: "Examinar uma estátua", secao: 46 },
+                { texto: "Seguir o caminho norte", secao: 47 },
+                { texto: "Seguir o caminho sul", secao: 48 },
+                { texto: "Retornar", secao: 23 }
+            ]
+        },
+
+        39: {
+            texto: "Estrutura de vidro e ferro. Plantas tropicais em vasos imensos. Umidade no ar. Temperatura elevada.",
+            opcoes: [
+                { texto: "Explorar entre as plantas", secao: 49 },
+                { texto: "Sair pela porta oposta", secao: 50 },
+                { texto: "Retornar ao jardim", secao: 23 }
+            ]
+        },
+
+        40: {
+            texto: "Textos em latim. Orações, rituais, calendários. Ilustrações de santos e mártires. Nenhuma anotação pessoal.",
+            opcoes: [
+                { texto: "Retornar ao altar", secao: 24 }
+            ]
+        },
+
+        41: {
+            texto: "Tecidos pesados, bordados em ouro. Tamanhos variados. Cheiro de naftalina.",
+            opcoes: [
+                { texto: "Retornar à sacristia", secao: 26 }
+            ]
+        },
+
+        42: {
+            texto: "Cabines de madeira escura com cortinas. Silêncio absoluto.",
+            opcoes: [
+                { texto: "Entrar em um confessionário", secao: 51 },
+                { texto: "Seguir o corredor", secao: 52 },
+                { texto: "Retornar à sacristia", secao: 26 }
+            ]
+        },
+
+        43: {
+            texto: "Prateleiras limpas. Nenhum resíduo. Desligadas há tempo indeterminado.",
+            opcoes: [
+                { texto: "Retornar à cozinha", secao: 36 }
+            ]
+        },
+
+        44: {
+            texto: "Lâmina de 20cm, afiada. Cabo de madeira.",
+            efeitos: [{ tipo: "item", item: "faca-cozinha" }],
+            opcoes: [
+                { texto: "Retornar à cozinha", secao: 36 }
+            ]
+        },
+
+        45: {
+            texto: "Área externa coberta. Portões de metal fechados. Caminhões não há. Caixas vazias empilhadas.",
+            opcoes: [
+                { texto: "Tentar abrir os portões", secao: 53 },
+                { texto: "Examinar as caixas", secao: 54 },
+                { texto: "Entrar pela porta lateral", secao: 55 },
+                { texto: "Retornar à cozinha", secao: 36 }
+            ]
+        },
+
+        46: {
+            texto: "Homem de meia-idade, mãos cruzadas. Expressão neutra. Mármore branco sem manchas.",
+            opcoes: [
+                { texto: "Retornar ao jardim", secao: 38 }
+            ]
+        },
+
+        47: {
+            texto: "Mais fontes. Bancos de pedra. Uma pérgola coberta de hera seca.",
+            opcoes: [
+                { texto: "Sentar em um banco", secao: 56 },
+                { texto: "Explorar a pérgola", secao: 57 },
+                { texto: "Retornar", secao: 38 }
+            ]
+        },
+
+        48: {
+            texto: "Labirinto de arbustos baixos. Entrada visível.",
+            opcoes: [
+                { texto: "Entrar no labirinto", secao: 58 },
+                { texto: "Contornar o labirinto", secao: 59 },
+                { texto: "Retornar", secao: 38 }
+            ]
+        },
+
+        49: {
+            texto: "Folhas largas, úmidas. Orquídeas, samambaias gigantes. Nenhum inseto. Nenhum som de água corrente.",
+            opcoes: [
+                { texto: "Retornar ao conservatório", secao: 39 }
+            ]
+        },
+
+        50: {
+            texto: "Ferramentas penduradas: pás, tesouras, regadores. Terra em sacos. Sementes em envelopes rotulados.",
+            opcoes: [
+                { texto: "Pegar uma ferramenta", secao: 60 },
+                { texto: "Sair pela porta externa", secao: 61 },
+                { texto: "Retornar ao conservatório", secao: 39 }
+            ]
+        },
+
+        51: {
+            texto: "Banco estreito. Grade de madeira. Cheiro de verniz. Você espera. Nada acontece.",
+            opcoes: [
+                { texto: "Sair", secao: 42 }
+            ]
+        },
+
+        52: {
+            texto: "Mesa oval, vinte cadeiras. Quadro branco vazio. Projetor antigo coberto por lona.",
+            opcoes: [
+                { texto: "Examinar o quadro", secao: 62 },
+                { texto: "Sair pela porta dupla", secao: 63 },
+                { texto: "Retornar ao corredor", secao: 42 }
+            ]
+        },
+
+        53: {
+            texto: "Correntes grossas, cadeado industrial. Você não tem a chave. Metal frio.",
+            opcoes: [
+                { texto: "Retornar ao pátio", secao: 45 }
+            ]
+        },
+
+        54: {
+            texto: "Madeira e papelão. Etiquetas desbotadas: 'Frágil', 'Importado', 'Manter Refrigerado'.",
+            opcoes: [
+                { texto: "Retornar ao pátio", secao: 45 }
+            ]
+        },
+
+        55: {
+            texto: "Tubulações expostas. Caixas de fusíveis. Cheiro de óleo e metal.",
+            opcoes: [
+                { texto: "Examinar as caixas de fusíveis", secao: 64 },
+                { texto: "Seguir o corredor", secao: 65 },
+                { texto: "Retornar ao pátio", secao: 45 }
+            ]
+        },
+
+        56: {
+            texto: "Pedra fria. Você senta e observa. Nenhum pássaro, nenhum inseto. Apenas silêncio.",
+            opcoes: [
+                { texto: "Levantar", secao: 47 }
+            ]
+        },
+
+        57: {
+            texto: "Estrutura de ferro. Hera seca, mas não morta. Sombra agradável.",
+            opcoes: [
+                { texto: "Retornar", secao: 47 }
+            ]
+        },
+
+        58: {
+            texto: "Arbustos de buxo aparados. Caminhos estreitos. Você avança.",
+            opcoes: [
+                { texto: "Continuar", secao: 66 },
+                { texto: "Retornar à entrada", secao: 48 }
+            ]
+        },
+
+        59: {
+            texto: "Você segue a borda externa. Leva cinco minutos. Nenhuma surpresa.",
+            opcoes: [
+                { texto: "Retornar", secao: 48 }
+            ]
+        },
+
+        60: {
+            texto: "Cabo de madeira, lâmina de metal. Ferramenta sólida.",
+            efeitos: [{ tipo: "item", item: "pa-jardinagem" }],
+            opcoes: [
+                { texto: "Retornar à sala", secao: 50 }
+            ]
+        },
+
+        61: {
+            texto: "Canteiros de flores sem flores. Terra escura e úmida. Céu azul acima.",
+            opcoes: [
+                { texto: "Explorar os canteiros", secao: 67 },
+                { texto: "Seguir o caminho de pedras", secao: 68 },
+                { texto: "Retornar à sala", secao: 50 }
+            ]
+        },
+
+        62: {
+            texto: "Superfície limpa. Marcadores secos na bandeja. Nenhuma mensagem.",
+            opcoes: [
+                { texto: "Retornar ao salão", secao: 52 }
+            ]
+        },
+
+        63: {
+            texto: "Pinturas abstratas em telas enormes. Cores vibrantes: vermelho, azul, dourado. Nenhuma assinatura visível.",
+            opcoes: [
+                { texto: "Examinar as pinturas", secao: 69 },
+                { texto: "Seguir pela galeria", secao: 70 },
+                { texto: "Retornar ao salão", secao: 52 }
+            ]
+        },
+
+        64: {
+            texto: "Disjuntores todos ligados. Sistema elétrico ativo. Etiquetas: 'Ala Norte', 'Cozinha', 'Capela'.",
+            opcoes: [
+                { texto: "Retornar ao corredor", secao: 55 }
+            ]
+        },
+
+        65: {
+            texto: "Caldeira industrial desligada. Medidores em zero. Cheiro de metal e poeira.",
+            opcoes: [
+                { texto: "Examinar a caldeira", secao: 71 },
+                { texto: "Sair pela porta dos fundos", secao: 72 },
+                { texto: "Retornar ao corredor", secao: 55 }
+            ]
+        },
+
+        66: {
+            texto: "Pequena clareira circular. Banco de pedra. Nada mais.",
+            opcoes: [
+                { texto: "Sentar", secao: 73 },
+                { texto: "Retornar", secao: 58 }
+            ]
+        },
+
+        67: {
+            texto: "Terra preparada, mas nenhuma planta. Umidade presente.",
+            opcoes: [
+                { texto: "Retornar ao jardim", secao: 61 }
+            ]
+        },
+
+        68: {
+            texto: "Pedras brancas polidas. O caminho leva a uma porta de vidro.",
+            opcoes: [
+                { texto: "Abrir a porta", secao: 74 },
+                { texto: "Retornar", secao: 61 }
+            ]
+        },
+
+        69: {
+            texto: "Pinceladas largas. Formas que sugerem movimento. Nenhuma figura reconhecível.",
+            opcoes: [
+                { texto: "Retornar à galeria", secao: 63 }
+            ]
+        },
+
+        70: {
+            texto: "Esculturas de bronze e mármore. Formas humanas distorcidas, abstratas. Pedestais numerados.",
+            opcoes: [
+                { texto: "Examinar uma escultura", secao: 75 },
+                { texto: "Sair pela porta lateral", secao: 76 },
+                { texto: "Retornar à galeria", secao: 63 }
+            ]
+        },
+
+        71: {
+            texto: "Metal enferrujado em alguns pontos. Desligada há meses, talvez anos.",
+            opcoes: [
+                { texto: "Retornar à sala", secao: 65 }
+            ]
+        },
+
+        72: {
+            texto: "Pilhas de carvão. Pás encostadas na parede. Cheiro de mineral.",
+            opcoes: [
+                { texto: "Sair pela porta externa", secao: 77 },
+                { texto: "Retornar à sala", secao: 65 }
+            ]
+        },
+
+        73: {
+            texto: "Você senta. O labirinto bloqueia a visão. Apenas céu acima. Silêncio completo.",
+            opcoes: [
+                { texto: "Levantar e sair", secao: 66 }
+            ]
+        },
+
+        74: {
+            texto: "Paredes cobertas por espelhos. Seu reflexo se multiplica infinitamente. Luz de lustres de cristal.",
+            opcoes: [
+                { texto: "Caminhar entre os espelhos", secao: 78 },
+                { texto: "Tocar um espelho", secao: 79 },
+                { texto: "Sair pela porta oposta", secao: 80 },
+                { texto: "Retornar", secao: 68 }
+            ]
+        },
+
+        75: {
+            texto: "Bronze polido, detalhes de ouro. Forma que lembra um corpo curvado. Frio ao toque.",
+            efeitos: [{ tipo: "item", item: "bolsa-ouro-pequena" }],
+            opcoes: [
+                { texto: "Retornar ao salão", secao: 70 }
+            ]
+        },
+
+        76: {
+            texto: "Cavaletes, telas em branco, tintas secas em tubos. Cheiro de terebintina.",
+            opcoes: [
+                { texto: "Examinar as telas", secao: 81 },
+                { texto: "Sair pela janela para o terraço", secao: 82 },
+                { texto: "Retornar ao salão", secao: 70 }
+            ]
+        },
+
+        77: {
+            texto: "Área aberta. Muros altos. Portão de ferro trancado. Nenhuma vegetação.",
+            opcoes: [
+                { texto: "Examinar o portão", secao: 83 },
+                { texto: "Explorar o perímetro", secao: 84 },
+                { texto: "Retornar ao depósito", secao: 72 }
+            ]
+        },
+
+        78: {
+            texto: "Você caminha. Seus reflexos se movem em sincronia perfeita. Nenhuma distorção.",
+            opcoes: [
+                { texto: "Retornar ao salão", secao: 74 }
+            ]
+        },
+
+        79: {
+            texto: "Vidro liso. Seu reflexo é nítido. Nenhuma marca, nenhuma imperfeição.",
+            opcoes: [
+                { texto: "Retornar ao salão", secao: 74 }
+            ]
+        },
+
+        80: {
+            texto: "Piso de madeira encerada. Lustre central imenso. Palco pequeno ao fundo. Silêncio absoluto.",
+            opcoes: [
+                { texto: "Atravessar até o palco", secao: 85 },
+                { texto: "Examinar o lustre", secao: 86 },
+                { texto: "Sair pela porta lateral", secao: 87 },
+                { texto: "Retornar ao salão", secao: 74 }
+            ]
+        },
+
+        81: {
+            texto: "Preparadas com gesso. Nenhuma pincelada. Prontas para uso.",
+            opcoes: [
+                { texto: "Retornar ao ateliê", secao: 76 }
+            ]
+        },
+
+       82: {
+            texto: "Pedra sob seus pés. Vista para jardins internos e telhados de outras alas. Céu azul, sem nuvens.",
+            opcoes: [
+                { texto: "Observar a vista", secao: 88 },
+                { texto: "Entrar pela porta adjacente", secao: 89 },
+                { texto: "Retornar ao ateliê", secao: 76 }
+            ]
+        },
+
+        83: {
+            texto: "Trancado. Barras grossas. Além dele, mais pátios e muros.",
+            opcoes: [
+                { texto: "Retornar ao pátio", secao: 77 }
+            ]
+        },
+
+        84: {
+            texto: "Muros de pedra, três metros de altura. Nenhuma escada, nenhuma abertura.",
+            opcoes: [
+                { texto: "Retornar ao pátio", secao: 77 }
+            ]
+        },
+
+        85: {
+            texto: "Tábuas de madeira. Cortinas vermelhas fechadas. Nenhum instrumento, nenhum cenário.",
+            opcoes: [
+                { texto: "Abrir as cortinas", secao: 90 },
+                { texto: "Retornar à sala", secao: 80 }
+            ]
+        },
+
+        86: {
+            texto: "Cristais que refratam luz. Deve pesar centenas de quilos. Suspenso por correntes de bronze.",
+            opcoes: [
+                { texto: "Retornar à sala", secao: 80 }
+            ]
+        },
+
+        87: {
+            texto: "Espelhos com lâmpadas. Cadeiras estofadas. Nenhum cosmético, nenhuma roupa.",
+            opcoes: [
+                { texto: "Examinar os espelhos", secao: 91 },
+                { texto: "Sair pela porta dos fundos", secao: 92 },
+                { texto: "Retornar à sala", secao: 80 }
+            ]
+        },
+
+        88: {
+            texto: "O edifício se estende em todas as direções. Torres, cúpulas, alas inteiras. Você está em uma fração mínima.",
+            opcoes: [
+                { texto: "Retornar ao terraço", secao: 82 }
+            ]
+        },
+
+        89: {
+            texto: "Três andares de estantes. Escadas em espiral. Dezenas de milhares de livros. Silêncio denso.",
+            opcoes: [
+                { texto: "Explorar o primeiro andar", secao: 93 },
+                { texto: "Subir para o segundo andar", secao: 94 },
+                { texto: "Procurar por uma saída", secao: 95 },
+                { texto: "Retornar ao terraço", secao: 82 }
+            ]
+        },
+
+        90: {
+            texto: "Parede de tijolos. Nenhuma porta, nenhuma janela. Apenas parede.",
+            opcoes: [
+                { texto: "Retornar ao palco", secao: 85 }
+            ]
+        },
+
+        91: {
+            texto: "Você se vê claramente. Nenhuma mudança. Nenhum detalhe estranho.",
+            opcoes: [
+                { texto: "Retornar ao camarim", secao: 87 }
+            ]
+        },
+
+        92: {
+            texto: "Estreito, mal iluminado. Portas numeradas. Cheiro de poeira.",
+            opcoes: [
+                { texto: "Abrir porta 3", secao: 96 },
+                { texto: "Abrir porta 7", secao: 97 },
+                { texto: "Seguir até o fim", secao: 98 },
+                { texto: "Retornar ao camarim", secao: 87 }
+            ]
+        },
+
+        93: {
+            texto: "Platão, Aristóteles, Kant, Nietzsche. Edições antigas, encadernações de couro.",
+            opcoes: [
+                { texto: "Retornar à biblioteca", secao: 89 }
+            ]
+        },
+
+        94: {
+            texto: "Crônicas, biografias, tratados militares. Janelas altas com vista para jardins.",
+            opcoes: [
+                { texto: "Examinar os livros", secao: 99 },
+                { texto: "Retornar ao primeiro andar", secao: 89 }
+            ]
+        },
+
+        95: {
+            texto: "Porta de carvalho maciço. Destrancada.",
+            opcoes: [
+                { texto: "Abrir e sair", secao: 100 },
+                { texto: "Retornar à biblioteca", secao: 89 }
+            ]
+        },
+
+        96: {
+            texto: "Máscaras teatrais, espadas falsas, coroas de papelão. Poeira espessa.",
+            opcoes: [
+                { texto: "Retornar ao corredor", secao: 92 }
+            ]
+        },
+
+        97: {
+            texto: "Equipamento antigo. Botões, alavancas, fios. Tudo desligado.",
+            opcoes: [
+                { texto: "Retornar ao corredor", secao: 92 }
+            ]
+        },
+
+        98: {
+            texto: "Degraus de concreto. Corrimão de metal. Sobe e desce.",
+            opcoes: [
+                { texto: "Descer", secao: 170 },
+                { texto: "Retornar ao corredor", secao: 92 }
+            ]
+        },
+
+        99: {
+            texto: "Guerras, impérios, revoluções. Nenhum evento que você reconheça completamente. Datas que não fazem sentido.",
+            opcoes: [
+                { texto: "Retornar ao segundo andar", secao: 94 }
+            ]
+        },
+
+        100: {
+            texto: "Paredes curvas. Janelas de ambos os lados. Você vê jardins internos à esquerda, pátios à direita. O corredor continua.",
+            opcoes: [
+                { texto: "Seguir em frente", secao: 101 },
+                { texto: "Retornar à biblioteca", secao: 89 }
+            ]
+        },
+
+101: {
+            texto: "Você desperta caminhando. Mármore polido, lustres de cristal, silêncio absoluto. Memória vaga de como chegou aqui.",
+            opcoes: [
+                { texto: "Seguir em frente", secao: 102 },
+                { texto: "Examinar as paredes", secao: 103 },
+                { texto: "Virar à esquerda", secao: 104 }
+            ]
+        },
+
+       102: {
+            texto: "Teto altíssimo com afrescos de batalhas. Escadaria dupla ao fundo. Portas laterais fechadas.",
+            opcoes: [
+                { texto: "Subir a escadaria", secao: 105 },
+                { texto: "Tentar a porta esquerda", secao: 106 },
+                { texto: "Tentar a porta direita", secao: 107 }
+            ]
+        },
+
+        103: {
+            texto: "Relevos em ouro representam figuras encapuzadas. Frio ao toque. Nenhuma inscrição legível. Lascas de ouro se desprendem dos relevos.",
+            efeitos: [{ tipo: "item", item: "bolsa-ouro-pequena" }],
+            opcoes: [
+                { texto: "Retornar ao corredor", secao: 101 },
+                { texto: "Seguir em frente", secao: 102 }
+            ]
+        },
+
+        104: {
+            texto: "Janelas altas mostram céu cinza. Portas de mogno enfileiradas. Tapete vermelho gasto.",
+            opcoes: [
+                { texto: "Abrir primeira porta", secao: 108 },
+                { texto: "Abrir segunda porta", secao: 109 },
+                { texto: "Continuar até o fim", secao: 110 }
+            ]
+        },
+
+        105: {
+            texto: "Varanda circular. Três corredores se ramificam: norte, leste, oeste. Candelabros apagados.",
+            opcoes: [
+                { texto: "Corredor norte", secao: 111 },
+                { texto: "Corredor leste", secao: 112 },
+                { texto: "Corredor oeste", secao: 113 }
+            ]
+        },
+
+        106: {
+            texto: "Madeira maciça. Fechadura complexa. Não cede.",
+            opcoes: [
+                { texto: "Forçar", secao: 114, teste: "habilidade", dificuldade: 15 },
+                { texto: "Retornar ao hall", secao: 102 }
+            ]
+        },
+
+        107: {
+            texto: "Cadeiras de veludo alinhadas. Mesa central com jarra de água cristalina. Silêncio opressivo.",
+            opcoes: [
+                { texto: "Beber água", secao: 115 },
+                { texto: "Examinar cadeiras", secao: 116 },
+                { texto: "Sair pela porta oposta", secao: 117 }
+            ]
+        },
+
+        108: {
+            texto: "Piano de cauda coberto por pano branco. Partituras espalhadas. Cheiro de cera.",
+            opcoes: [
+                { texto: "Tocar piano", secao: 118 },
+                { texto: "Ler partituras", secao: 119 },
+                { texto: "Sair", secao: 104 }
+            ]
+        },
+
+        109: {
+            texto: "Quadros de batalhas, coroações, concílios. Rostos sem expressão. Molduras douradas.",
+            opcoes: [
+                { texto: "Examinar quadro maior", secao: 120 },
+                { texto: "Procurar assinatura", secao: 121 },
+                { texto: "Sair", secao: 104 }
+            ]
+        },
+
+        110: {
+            texto: "Bronze trabalhado. Símbolos geométricos entrelaçados. Destrancada.",
+            opcoes: [
+                { texto: "Entrar", secao: 122 },
+                { texto: "Retornar", secao: 104 }
+            ]
+        },
+
+        111: {
+            texto: "Tecidos pesados cobrem as paredes. Cenas de caça e festas. Ar abafado.",
+            opcoes: [
+                { texto: "Afastar tapeçaria", secao: 123 },
+                { texto: "Seguir até o fim", secao: 124 },
+                { texto: "Retornar", secao: 105 }
+            ]
+        },
+
+        112: {
+            texto: "Luz colorida filtra por vitrais imensos. Padrões geométricos e florais. Piso de mármore aquecido.",
+            opcoes: [
+                { texto: "Examinar vitral central", secao: 125 },
+                { texto: "Continuar", secao: 126 },
+                { texto: "Retornar", secao: 105 }
+            ]
+        },
+
+        113: {
+            texto: "Armaduras completas alinhadas. Alabardas, espadas, escudos. Metal sem ferrugem.",
+            opcoes: [
+                { texto: "Pegar espada", secao: 127 },
+                { texto: "Examinar elmo", secao: 128 },
+                { texto: "Seguir adiante", secao: 129 }
+            ]
+        },
+
+        114: {
+            texto: "A fechadura resiste. Seus dedos doem. Nada muda.",
+            efeitos: [{ tipo: "energia", valor: -1 }],
+            opcoes: [
+                { texto: "Retornar", secao: 102 }
+            ]
+        },
+
+        115: {
+            texto: "Sabor puro. Frescor imediato.",
+            efeitos: [{ tipo: "energia", valor: 2 }],
+            opcoes: [
+                { texto: "Encher recipiente (se tiver)", secao: 130 },
+                { texto: "Sair", secao: 117 }
+            ]
+        },
+
+        116: {
+            texto: "Tecido intacto mas empoeirado. Nenhum objeto escondido. Tempo perdido.",
+            opcoes: [
+                { texto: "Retornar", secao: 107 }
+            ]
+        },
+
+        117: {
+            texto: "Escudos heráldicos cobrem paredes. Leões, águias, cruzes. Nenhum reconhecível.",
+            opcoes: [
+                { texto: "Examinar brasão central", secao: 131 },
+                { texto: "Porta ao fundo", secao: 132 },
+                { texto: "Retornar", secao: 107 }
+            ]
+        },
+
+        118: {
+            texto: "O piano emite som perfeito. A nota ecoa longamente. Nada mais acontece.",
+            opcoes: [
+                { texto: "Sair", secao: 108 }
+            ]
+        },
+
+        119: {
+            texto: "Notação musical estranha. Alguns símbolos que não são notas. Papel amarelado.",
+            opcoes: [
+                { texto: "Tocar partitura", secao: 133 },
+                { texto: "Deixar", secao: 108 }
+            ]
+        },
+
+        120: {
+            texto: "Figura central usa coroa de espinhos dourados. Multidão ajoelhada. Céu vermelho ao fundo.",
+            opcoes: [
+                { texto: "Procurar placa", secao: 134 },
+                { texto: "Sair", secao: 109 }
+            ]
+        },
+
+        121: {
+            texto: "Rabiscos em tinta preta. Nenhum nome claro. Datas estranhas.",
+            opcoes: [
+                { texto: "Sair", secao: 109 }
+            ]
+        },
+
+        122: {
+            texto: "Trono de ébano e ouro. Vazio. Tapete púrpura leva até ele. Janelas mostram jardins internos.",
+            opcoes: [
+                { texto: "Sentar no trono", secao: 135 },
+                { texto: "Examinar janelas", secao: 136 },
+                { texto: "Porta lateral", secao: 137 },
+                { texto: "Retornar", secao: 110 }
+            ]
+        },
+
+        123: {
+            texto: "Atrás da tapeçaria, porta estreita de pedra. Escuridão além.",
+            opcoes: [
+                { texto: "Entrar", secao: 138, requer: "tocha" },
+                { texto: "Retornar", secao: 111 }
+            ]
+        },
+
+        124: {
+            texto: "Mesa oval. Doze cadeiras. Documentos empilhados. Cheiro de couro velho.",
+            opcoes: [
+                { texto: "Ler documentos", secao: 139 },
+                { texto: "Examinar cadeiras", secao: 140 },
+                { texto: "Porta oposta", secao: 141 }
+            ]
+        },
+
+        125: {
+            texto: "Sol dourado à esquerda, lua prateada à direita. Entrelaçados no centro. Luz quente.",
+            opcoes: [
+                { texto: "Tocar o vidro", secao: 142 },
+                { texto: "Continuar", secao: 126 }
+            ]
+        },
+
+        126: {
+            texto: "Cúpula de vidro. Plantas exuberantes. Umidade densa. Flores sem perfume.",
+            opcoes: [
+                { texto: "Colher fruto", secao: 143 },
+                { texto: "Examinar plantas", secao: 144 },
+                { texto: "Sair", secao: 112 }
+            ]
+        },
+
+        127: {
+            texto: "Lâmina perfeita. Peso equilibrado.",
+            efeitos: [{ tipo: "item", item: "espada-longa" }],
+            opcoes: [
+                { texto: "Continuar", secao: 113 }
+            ]
+        },
+
+        128: {
+            texto: "Visor baixado. Interior forrado de seda vermelha. Vazio.",
+            opcoes: [
+                { texto: "Vestir elmo", secao: 145 },
+                { texto: "Deixar", secao: 113 }
+            ]
+        },
+
+        129: {
+            texto: "Prateleiras com armas brancas. Bestas, machados, maças. Tudo impecável.",
+            opcoes: [
+                { texto: "Pegar besta", secao: 146 },
+                { texto: "Examinar flechas", secao: 147 },
+                { texto: "Porta ao fundo", secao: 148 }
+            ]
+        },
+
+        130: {
+            texto: "Você enche seu recipiente com água cristalina.",
+            efeitos: [{ tipo: "item", item: "agua-3-doses" }],
+            opcoes: [
+                { texto: "Sair", secao: 107 }
+            ]
+        },
+
+        131: {
+            texto: "Torre negra sobre campo dourado. Três estrelas acima. Lema em latim: 'Tempus Edax Rerum'.",
+            opcoes: [
+                { texto: "Memorizar", secao: 149 },
+                { texto: "Sair", secao: 117 }
+            ]
+        },
+
+        132: {
+            texto: "Estantes até o teto. Escadas rolantes. Documentos encadernados em couro negro.",
+            opcoes: [
+                { texto: "Subir escada", secao: 150 },
+                { texto: "Ler documento próximo", secao: 151 },
+                { texto: "Sair", secao: 117 }
+            ]
+        },
+
+        133: {
+            texto: "Uma música esquisita, mas nostálgica. Barulho de clique, compartimento interno do piano aberto, no interior se encontra uma chave.",
+            efeitos: [
+                { tipo: "item", item: "engrenagem-prata" },
+                { tipo: "item", item: "bolsa-ouro-pequena" }
+            ],
+            opcoes: [
+                { texto: "Sair", secao: 108 }
+            ]
+        },
+
+        134: {
+            texto: "Apenas marcas na parede onde deveria estar. Pregos enferrujados.",
+            opcoes: [
+                { texto: "Sair", secao: 109 }
+            ]
+        },
+
+        135: {
+            texto: "Frio penetrante. Visão ampla do salão. Sensação de peso nos ombros. Nada mais.",
+            opcoes: [
+                { texto: "Levantar", secao: 122 }
+            ]
+        },
+
+        136: {
+            texto: "Pátio quadrado. Fontes secas. Árvores podadas geometricamente. Céu cinza imóvel.",
+            opcoes: [
+                { texto: "Procurar saída para jardim", secao: 152 },
+                { texto: "Retornar", secao: 122 }
+            ]
+        },
+
+        137: {
+            texto: "Globos terrestres. Mapas náuticos. Continentes que não reconhece. Oceanos com nomes estranhos.",
+            opcoes: [
+                { texto: "Examinar globo", secao: 153 },
+                { texto: "Rolar mapa", secao: 154 },
+                { texto: "Sair", secao: 122 }
+            ]
+        },
+
+        138: {
+            texto: "Impossível avançar sem luz. Ar frio vem de dentro.",
+            opcoes: [
+                { texto: "Retornar", secao: 111 }
+            ]
+        },
+
+        139: {
+            texto: "Tratados entre nações desconhecidas. Selos de cera intactos. Idiomas misturados.",
+            opcoes: [
+                { texto: "Guardar documento", secao: 155 },
+                { texto: "Deixar", secao: 124 }
+            ]
+        },
+
+        140: {
+            texto: "Madeira escura. Almofadas vermelhas. Nenhuma diferente. Nenhuma marca de uso.",
+            opcoes: [
+                { texto: "Sair", secao: 124 }
+            ]
+        },
+
+        141: {
+            texto: "Escada em espiral sobe pela torre. Instrumentos astronômicos cobertos. Cheiro de metal.",
+            opcoes: [
+                { texto: "Subir", secao: 156 },
+                { texto: "Examinar instrumentos", secao: 157 },
+                { texto: "Retornar", secao: 124 }
+            ]
+        },
+
+        142: {
+            texto: "Calor suave pulsa sob seus dedos. Luz intensifica brevemente. Depois normaliza.",
+            opcoes: [
+                { texto: "Continuar", secao: 126 }
+            ]
+        },
+
+        143: {
+            texto: "Aparência suculenta. Você come. Sabor amargo.",
+            opcoes: [
+                { texto: "Continuar", secao: 126, teste: "sorte", dificuldade: 12 }
+            ]
+        },
+
+        144: {
+            texto: "Folhas com dentes. Algumas abertas. Restos de insetos dentro. Você recua.",
+            opcoes: [
+                { texto: "Sair", secao: 126 }
+            ]
+        },
+
+        145: {
+            texto: "Visor estreita campo de visão. Respiração ecoa. Desconfortável.",
+            opcoes: [
+                { texto: "Tirar", secao: 113 }
+            ]
+        },
+
+        146: {
+            texto: "Besta pesada mas bem equilibrada.",
+            efeitos: [{ tipo: "item", item: "besta" }],
+            opcoes: [
+                { texto: "Continuar", secao: 129 }
+            ]
+        },
+
+        147: {
+            texto: "Virotes emplumados, pontas afiadas.",
+            efeitos: [{ tipo: "item", item: "virotes-10" }],
+            opcoes: [
+                { texto: "Continuar", secao: 129 }
+            ]
+        },
+
+        148: {
+            texto: "Bancadas com ferramentas. Óleos, pedras de amolar, couro. Ordem meticulosa.",
+            opcoes: [
+                { texto: "Pegar ferramentas", secao: 158 },
+                { texto: "Examinar bancada", secao: 159 },
+                { texto: "Porta lateral", secao: 160 }
+            ]
+        },
+
+        149: {
+            texto: "'O tempo devora todas as coisas.' Você sente o peso das palavras.",
+            opcoes: [
+                { texto: "Sair", secao: 117 }
+            ]
+        },
+
+        150: {
+            texto: "Documentos mais antigos. Pergaminhos frágeis. Selos reais desconhecidos.",
+            opcoes: [
+                { texto: "Ler pergaminho", secao: 161 },
+                { texto: "Descer", secao: 132 }
+            ]
+        },
+
+        151: {
+            texto: "Nomes, datas, títulos. 'Papa Gregório XIX - 2087'. 'Imperador Zhao - 1823'. Impossível.",
+            opcoes: [
+                { texto: "Continuar lendo", secao: 162 },
+                { texto: "Sair", secao: 132 }
+            ]
+        },
+
+        152: {
+            texto: "Trancada. Vidro grosso. Você vê o jardim mas não pode alcançá-lo.",
+            opcoes: [
+                { texto: "Quebrar vidro", secao: 163, teste: "habilidade", dificuldade: 16 },
+                { texto: "Retornar", secao: 122 }
+            ]
+        },
+
+        153: {
+            texto: "Sete continentes. Nenhum corresponde ao que conhece. Oceano central chamado 'Mare Infinitum'.",
+            opcoes: [
+                { texto: "Girar globo", secao: 164 },
+                { texto: "Sair", secao: 137 }
+            ]
+        },
+
+        154: {
+            texto: "Rotas comerciais. Ilhas numeradas. Escala incompreensível.",
+            efeitos: [{ tipo: "item", item: "mapa-nautico" }],
+            opcoes: [
+                { texto: "Sair", secao: 137 }
+            ]
+        },
+
+        155: {
+            texto: "Você guarda o tratado cuidadosamente.",
+            efeitos: [{ tipo: "item", item: "documento-diplomatico" }],
+            opcoes: [
+                { texto: "Sair", secao: 124 }
+            ]
+        },
+
+        156: {
+            texto: "Telescópio gigante aponta para cúpula fechada. Painéis de controle. Alavancas.",
+            opcoes: [
+                { texto: "Abrir cúpula", secao: 165 },
+                { texto: "Olhar telescópio", secao: 166 },
+                { texto: "Descer", secao: 141 }
+            ]
+        },
+
+        157: {
+            texto: "Anéis entrelaçados. Gravações em árabe e latim. Mecanismo travado.",
+            opcoes: [
+                { texto: "Tentar girar", secao: 167, requer: "kit-ferramentas" },
+                { texto: "Deixar", secao: 141 }
+            ]
+        },
+
+        158: {
+            texto: "Kit completo de ferramentas de precisão.",
+            efeitos: [{ tipo: "item", item: "kit-ferramentas" }],
+            opcoes: [
+                { texto: "Continuar", secao: 148 }
+            ]
+        },
+
+        159: {
+            texto: "Desenhos de mecanismos. Engrenagens, polias, contrapesos. Anotações em alemão.",
+            opcoes: [
+                { texto: "Guardar", secao: 168 },
+                { texto: "Deixar", secao: 148 }
+            ]
+        },
+
+        160: {
+            texto: "Baias vazias. Feno fresco. Cheiro de cavalo ausente. Selas penduradas.",
+            opcoes: [
+                { texto: "Examinar selas", secao: 169 },
+                { texto: "Porta oposta", secao: 170 },
+                { texto: "Retornar", secao: 148 }
+            ]
+        },
+
+        161: {
+            texto: "Decreto de fundação do castelo. Data: 'Ano Zero da Nova Contagem'. Assinatura ilegível.",
+            opcoes: [
+                { texto: "Descer", secao: 132 }
+            ]
+        },
+
+        162: {
+            texto: "Entradas recentes. 'Conselho Extraordinário - ontem'. 'Evacuação completa - hoje'. Tinta fresca.",
+            opcoes: [
+                { texto: "Procurar mais", secao: 171 },
+                { texto: "Sair", secao: 132 }
+            ]
+        },
+
+        163: {
+            texto: "Você golpeia. Vidro racha mas não quebra. Fragmento salta e corta seu braço.",
+            efeitos: [{ tipo: "energia", valor: -3 }],
+            opcoes: [
+                { texto: "Retornar", secao: 122 }
+            ]
+        },
+
+        164: {
+            texto: "Ao girar, clique suave. Gaveta se abre na base. Dentro: chave de bronze.",
+            efeitos: [{ tipo: "item", item: "chave-bronze" }],
+            opcoes: [
+                { texto: "Sair", secao: 137 }
+            ]
+        },
+
+        165: {
+            texto: "Céu cinza uniforme. Sem sol, sem estrelas. Luz difusa sem fonte. Vento frio.",
+            opcoes: [
+                { texto: "Olhar telescópio", secao: 166 },
+                { texto: "Descer", secao: 156 }
+            ]
+        },
+
+        166: {
+            texto: "Ampliação revela... o mesmo céu cinza. Nenhuma estrela. Nenhuma nuvem. Vazio.",
+            opcoes: [
+                { texto: "Descer", secao: 156 }
+            ]
+        },
+
+        167: {
+            texto: "O Mecanismo interno que parecia fundido, cede. Você encontra um envelope com uma senha.",
+            efeitos: [{ tipo: "item", item: "envelope-senha" }],
+            opcoes: [
+                { texto: "Deixar", secao: 141 }
+            ]
+        },
+
+        168: {
+            texto: "Você guarda os projetos cuidadosamente.",
+            efeitos: [{ tipo: "item", item: "projeto-mecanico" }],
+            opcoes: [
+                { texto: "Continuar", secao: 148 }
+            ]
+        },
+
+        169: {
+            texto: "Trabalho fino. Iniciais gravadas: 'V.R.', 'M.K.', 'T.S.'. Couro macio.",
+            opcoes: [
+                { texto: "Continuar", secao: 160 }
+            ]
+        },
+
+        170: {
+            texto: "Escada desce em espiral. Ar frio e úmido. Cheiro de vinho e pedra.",
+            opcoes: [
+                { texto: "Descer", secao: 172 },
+                { texto: "Retornar para estábulos", secao: 160 },
+                { texto: "Retornar para escada de serviços do teatro", secao: 98 }
+            ]
+        },
+
+        171: {
+            texto: "Marca de rasgo recente. Última entrada incompleta: 'O protocolo foi revisto. Todos devem—'",
+            opcoes: [
+                { texto: "Sair", secao: 132 }
+            ]
+        },
+
+        172: {
+            texto: "Barris imensos. Garrafas empoeiradas. Prateleiras infinitas. Temperatura constante. Uma caixa escondida em um canto contém moedas.",
+            efeitos: [{ tipo: "item", item: "bolsa-ouro-pequena" }],
+            opcoes: [
+                { texto: "Abrir barril", secao: 173 },
+                { texto: "Examinar garrafas", secao: 174 },
+                { texto: "Porta ao fundo", secao: 175 }
+            ]
+        },
+
+        173: {
+            texto: "Aroma forte. Sabor encorpado.",
+            efeitos: [{ tipo: "energia", valor: 2 }],
+            opcoes: [
+                { texto: "Continuar", secao: 172 }
+            ]
+        },
+
+        174: {
+            texto: "Rótulos: 'Château Cronos 2156', 'Vinho do Fim 1888'. Garrafas intactas.",
+            opcoes: [
+                { texto: "Pegar garrafa", secao: 176 },
+                { texto: "Deixar", secao: 172 }
+            ]
+        },
+
+        175: {
+            texto: "Calor intenso. Fornos gigantes. Brasas ainda acesas. Carvão empilhado.",
+            opcoes: [
+                { texto: "Examinar fornos", secao: 177 },
+                { texto: "Pegar carvão", secao: 178 },
+                { texto: "Porta lateral", secao: 179 }
+            ]
+        },
+
+        176: {
+            texto: "Garrafa antiga e valiosa.",
+            efeitos: [{ tipo: "item", item: "vinho-raro" }],
+            opcoes: [
+                { texto: "Continuar", secao: 172 }
+            ]
+        },
+
+        177: {
+            texto: "Fogo baixo mas constante. Nenhum combustível visível sendo consumido. Calor perpétuo.",
+            opcoes: [
+                { texto: "Investigar mecanismo", secao: 180 },
+                { texto: "Sair", secao: 175 }
+            ]
+        },
+
+        178: {
+            texto: "Carvão mineral de boa qualidade.",
+            efeitos: [{ tipo: "item", item: "carvao" }],
+            opcoes: [
+                { texto: "Continuar", secao: 175 }
+            ]
+        },
+
+        179: {
+            texto: "Poço profundo. Água cristalina no fundo. Balde e corda disponíveis.",
+            opcoes: [
+                { texto: "Puxar água", secao: 181 },
+                { texto: "Examinar profundidade", secao: 182 },
+                { texto: "Sair", secao: 175 }
+            ]
+        },
+
+        180: {
+            texto: "Engrenagens giram sozinhas. Calor vem de dentro da pedra. Impossível desligar.",
+            opcoes: [
+                { texto: "Sair", secao: 175 }
+            ]
+        },
+
+        181: {
+            texto: "Água pura e fresca do poço profundo.",
+            efeitos: [{ tipo: "item", item: "agua-5-doses" }],
+            opcoes: [
+                { texto: "Continuar", secao: 179 }
+            ]
+        },
+
+       182: {
+            texto: "Você se inclina demais. Pedras soltas. Equilíbrio perdido.",
+            opcoes: [
+                { texto: "Tentar se segurar", secao: 179, teste: "habilidade", dificuldade: 14 }
+            ]
+        },
+
+        183: {
+            texto: "Corredor estreito. Portas de ferro. Tochas apagadas. Silêncio absoluto.",
+            opcoes: [
+                { texto: "Entrar", secao: 184 },
+                { texto: "Retornar", secao: 175 }
+            ]
+        },
+
+        184: {
+            texto: "Grades enferrujadas. Palha podre. Correntes nas paredes. Nenhum prisioneiro. Nunca houve.",
+            opcoes: [
+                { texto: "Examinar cela", secao: 185 },
+                { texto: "Continuar", secao: 186 },
+                { texto: "Retornar", secao: 183 }
+            ]
+        },
+
+        185: {
+            texto: "Arranhões profundos. Não são palavras. Padrões repetitivos. Contagem? Ritual?",
+            opcoes: [
+                { texto: "Sair", secao: 184 }
+            ]
+        },
+
+        186: {
+            texto: "Mesa de madeira. Instrumentos pendurados. Limpos. Nunca usados.",
+            opcoes: [
+                { texto: "Examinar instrumentos", secao: 187 },
+                { texto: "Porta oposta", secao: 188 },
+                { texto: "Retornar", secao: 184 }
+            ]
+        },
+
+        187: {
+            texto: "Polidos. Afiados. Sem marcas de sangue. Decorativos? Ameaça simbólica?",
+            opcoes: [
+                { texto: "Sair", secao: 186 }
+            ]
+        },
+
+        188: {
+            texto: "Arena coberta. Bonecos de treino. Armas de madeira. Marcas de uso recente.",
+            batalha: "dobermann",
+            vitoria: 189,
+            derrota: 320
+        },
+
+        189: {
+            texto: "Você pratica golpes. Músculos respondem bem.",
+            efeitos: [{ tipo: "habilidade", valor: 1 }],
+            opcoes: [
+                { texto: "Continuar", secao: 188 }
+            ]
+        },
+
+        190: {
+            texto: "Cortes precisos. Alguém treinou aqui recentemente. Palha ainda fresca no chão.",
+            opcoes: [
+                { texto: "Sair", secao: 188 }
+            ]
+        },
+
+        191: {
+            texto: "Manuais de combate. Estratégias de cerco. Mapas de batalhas. Idiomas variados.",
+            opcoes: [
+                { texto: "Ler manual", secao: 192 },
+                { texto: "Examinar mapas", secao: 193 },
+                { texto: "Escada", secao: 194 }
+            ]
+        },
+
+        192: {
+            texto: "Ilustrações detalhadas. Técnicas avançadas.",
+            opcoes: [
+                { texto: "Ler completamente", secao: 195 },
+                { texto: "Deixar", secao: 191 }
+            ]
+        },
+
+        193: {
+            texto: "Este castelo. Visto de cima. Muralhas, torres, passagens secretas marcadas.",
+            efeitos: [{ tipo: "item", item: "mapa-castelo" }],
+            opcoes: [
+                { texto: "Continuar", secao: 191 }
+            ]
+        },
+
+        194: {
+            texto: "Mezanino. Livros raros. Globos iluminados. Escrivaninhas de mármore. No final, uma porta com Mecanismos de prata trancada.",
+            opcoes: [
+                { texto: "Examinar livros", secao: 196 },
+                { texto: "Globo iluminado", secao: 197 },
+                { texto: "Abrir a porta", secao: 198, requer: "engrenagem-prata" }
+            ]
+        },
+
+        195: {
+            texto: "Conhecimento profundo adquirido através de horas de estudo.",
+            efeitos: [
+                { tipo: "habilidade", valor: 1 },
+                { tipo: "energia", valor: -2 }
+            ],
+            opcoes: [
+                { texto: "Sair", secao: 191 }
+            ]
+        },
+
+        196: {
+            texto: "Tratados sobre tempo, realidade, percepção. Autores desconhecidos. Conceitos densos.",
+            opcoes: [
+                { texto: "Ler brevemente", secao: 199 },
+                { texto: "Deixar", secao: 194 }
+            ]
+        },
+
+        197: {
+            texto: "Luz interna sem fonte. Continentes brilham em verde. Oceanos em azul profundo.",
+            opcoes: [
+                { texto: "Tocar", secao: 200 },
+                { texto: "Deixar", secao: 194 }
+            ]
+        },
+
+        198: {
+            texto: "Degraus de pedra. Corrimão luxuoso de prata. Sobe para torres. Desce para subsolo.",
+            opcoes: [
+                { texto: "Subir", secao: 202 },
+                { texto: "Descer", secao: 203 },
+                { texto: "Retornar", secao: 194 }
+            ]
+        },
+
+        199: {
+            texto: "'Tempo é prisão voluntária.' Os tratados sugerem que o tempo não é uma linha, mas algo maleável. As frases parecem escritas para confundir mais do que esclarecer. Nada concreto.",
+            opcoes: [
+                { texto: "Sair", secao: 194 }
+            ]
+        },
+
+        200: {
+            texto: "Calor suave. Luz pulsa como batimento cardíaco. Depois estabiliza. Nada mais.",
+            opcoes: [
+                { texto: "Sair", secao: 194 }
+            ]
+        },
+
+       202: {
+            texto: "Mármore branco, lustres de cristal, portas de mogno. Silêncio absoluto.",
+            opcoes: [
+                { texto: "Porta à esquerda", secao: 205 },
+                { texto: "Porta à direita", secao: 206 },
+                { texto: "Escadaria em caracol ascendente", secao: 207 }
+            ]
+        },
+
+        203: {
+            texto: "Pedra fria, tochas apagadas, ar úmido. Escuridão à frente.",
+            opcoes: [
+                { texto: "Continuar no escuro", secao: 208 },
+                { texto: "Retornar à escadaria", secao: 198 },
+                { texto: "Procurar por luz", secao: 209 }
+            ]
+        },
+
+        204: {
+            texto: "Prata maciça com relevos de constelações. Frio ao toque.",
+            opcoes: [
+                { texto: "Subir", secao: 202 },
+                { texto: "Descer", secao: 203 }
+            ]
+        },
+
+        205: {
+            texto: "Janelas estreitas, mesa com mapa empoeirado, armadura vazia no canto.",
+            opcoes: [
+                { texto: "Examinar mapa", secao: 210 },
+                { texto: "Examinar armadura", secao: 211 },
+                { texto: "Porta oposta", secao: 212 }
+            ]
+        },
+
+        206: {
+            texto: "Sacos de trigo e centeio perfeitamente preservados. Cheiro de grão fresco.",
+            opcoes: [
+                { texto: "Comer grãos", secao: 213 },
+                { texto: "Examinar sacos", secao: 214 },
+                { texto: "Porta ao fundo", secao: 215 }
+            ]
+        },
+
+        207: {
+            texto: "Degraus de mármore, paredes com tapeçarias. Sobe indefinidamente.",
+            opcoes: [
+                { texto: "Continuar subindo", secao: 216 },
+                { texto: "Retornar", secao: 202 },
+                { texto: "Examinar tapeçarias", secao: 217 }
+            ]
+        },
+
+        208: {
+            texto: "Você tropeça em degraus invisíveis.",
+            opcoes: [
+                { texto: "Tentar se recuperar", secao: 203, teste: "habilidade", dificuldade: 15 }
+            ]
+        },
+
+        209: {
+            texto: "Tocha apagada mas com óleo fresco. Precisa de fogo.",
+            opcoes: [
+                { texto: "Acender", secao: 218, requer: "fogo" },
+                { texto: "Retornar", secao: 203 }
+            ]
+        },
+
+        210: {
+            texto: "Desenho arquitetônico complexo. Múltiplos andares, subsolo profundo.",
+            efeitos: [{ tipo: "item", item: "mapa-torre" }],
+            opcoes: [
+                { texto: "Sair", secao: 205 }
+            ]
+        },
+
+        211: {
+            texto: "Aço polido, sem ferrugem. Interior forrado de veludo vermelho.",
+            opcoes: [
+                { texto: "Vestir elmo", secao: 219 },
+                { texto: "Sair", secao: 205 }
+            ]
+        },
+
+        212: {
+            texto: "Fogão imenso, panelas de cobre, mesa de corte. Tudo limpo e organizado.",
+            opcoes: [
+                { texto: "Procurar comida", secao: 220 },
+                { texto: "Examinar fogão", secao: 221 },
+                { texto: "Porta lateral", secao: 222 }
+            ]
+        },
+
+        213: {
+            texto: "Sabor neutro mas nutritivo.",
+            efeitos: [{ tipo: "energia", valor: 1 }],
+            opcoes: [
+                { texto: "Continuar", secao: 206 }
+            ]
+        },
+
+        214: {
+            texto: "Símbolos estranhos bordados. Referências sem sentido: 'Colheita De Formas'.",
+            opcoes: [
+                { texto: "Sair", secao: 206 }
+            ]
+        },
+
+        215: {
+            texto: "Mesa longa, bancos de madeira, talheres de prata. Pratos vazios perfeitamente alinhados.",
+            opcoes: [
+                { texto: "Sentar", secao: 223 },
+                { texto: "Examinar pratos", secao: 224 },
+                { texto: "Porta dupla", secao: 225 }
+            ]
+        },
+
+        216: {
+            texto: "Corredor circular com portas numeradas. Candelabros acesos sem chama visível.",
+            opcoes: [
+                { texto: "Porta 1", secao: 226 },
+                { texto: "Porta 2", secao: 227 },
+                { texto: "Porta 3", secao: 228 },
+                { texto: "Continuar subindo", secao: 229 }
+            ]
+        },
+
+        217: {
+            texto: "Cenas de guerra, figuras sem rosto, estandartes irreconhecíveis.",
+            opcoes: [
+                { texto: "Afastar tapeçaria", secao: 230 },
+                { texto: "Continuar", secao: 207 }
+            ]
+        },
+
+        218: {
+            texto: "Luz alaranjada revela escada descendente.",
+            efeitos: [{ tipo: "item", item: "tocha" }],
+            opcoes: [
+                { texto: "Descer com luz", secao: 231 },
+                { texto: "Retornar", secao: 203 }
+            ]
+        },
+
+        219: {
+            texto: "O elmo limita sua visão periférica. Desconfortável.",
+            opcoes: [
+                { texto: "Remover", secao: 205 }
+            ]
+        },
+
+        220: {
+            texto: "Atrás de painel falso: pães, queijos, frutas cristalizadas. Tudo fresco.",
+            opcoes: [
+                { texto: "Comer", secao: 232 },
+                { texto: "Guardar comida", secao: 232 }
+            ]
+        },
+
+        221: {
+            texto: "Brasas acesas sem combustível. Calor constante. Impossível apagar.",
+            opcoes: [
+                { texto: "Acender tocha (se tiver)", secao: 233 },
+                { texto: "Sair", secao: 212 }
+            ]
+        },
+
+        222: {
+            texto: "Beliches alinhados, lençóis brancos impecáveis. Nenhum sinal de uso.",
+            opcoes: [
+                { texto: "Descansar", secao: 234 },
+                { texto: "Examinar beliches", secao: 235 },
+                { texto: "Porta ao fundo", secao: 236 }
+            ]
+        },
+
+        223: {
+            texto: "Você senta. Silêncio opressivo. Nada acontece.",
+            opcoes: [
+                { texto: "Levantar", secao: 215 }
+            ]
+        },
+
+        224: {
+            texto: "Brasão dourado: torre negra sobre campo branco. Sem rachaduras.",
+            opcoes: [
+                { texto: "Sair", secao: 215 }
+            ]
+        },
+
+        225: {
+            texto: "Escrivaninha de carvalho, estante com livros militares, mapa na parede.",
+            opcoes: [
+                { texto: "Examinar escrivaninha", secao: 237 },
+                { texto: "Ler livros", secao: 238 },
+                { texto: "Examinar mapa", secao: 239 }
+            ]
+        },
+
+        226: {
+            texto: "Globo terrestre, telescópio pequeno, livros de astronomia.",
+            opcoes: [
+                { texto: "Examinar globo", secao: 240 },
+                { texto: "Usar telescópio", secao: 241 },
+                { texto: "Sair", secao: 216 }
+            ]
+        },
+
+        227: {
+            texto: "Cama de dossel, baú trancado, janela com vista para névoa cinza.",
+            opcoes: [
+                { texto: "Forçar baú", secao: 242, teste: "habilidade", dificuldade: 14 },
+                { texto: "Examinar janela", secao: 243 },
+                { texto: "Sair", secao: 216 }
+            ]
+        },
+
+        228: {
+            texto: "Máquina de costura antiga, tecidos empilhados, agulhas e linhas organizadas.",
+            opcoes: [
+                { texto: "Procurar itens úteis", secao: 244 },
+                { texto: "Examinar tecidos", secao: 245 },
+                { texto: "Sair", secao: 216 }
+            ]
+        },
+
+        229: {
+            texto: "Corredor mais estreito, portas de metal, ar mais frio.",
+            opcoes: [
+                { texto: "Porta de ferro", secao: 246 },
+                { texto: "Porta de bronze", secao: 247 },
+                { texto: "Continuar subindo", secao: 248 }
+            ]
+        },
+
+        230: {
+            texto: "Corredor estreito atrás da tapeçaria. Escuridão total.",
+            opcoes: [
+                { texto: "Entrar com luz", secao: 249, requer: "tocha" },
+                { texto: "Retornar", secao: 207 }
+            ]
+        },
+
+        231: {
+            texto: "Pás, picaretas, martelos, serras. Tudo organizado em ganchos.",
+            opcoes: [
+                { texto: "Pegar pá", secao: 250 },
+                { texto: "Pegar martelo", secao: 250 },
+                { texto: "Porta lateral", secao: 251 }
+            ]
+        },
+
+        232: {
+            texto: "Você se sente revigorado.",
+            efeitos: [{ tipo: "energia", valor: 2 }],
+            opcoes: [
+                { texto: "Sair", secao: 212 }
+            ]
+        },
+
+        233: {
+            texto: "Tocha acesa com sucesso.",
+            efeitos: [{ tipo: "item", item: "tocha-acesa" }],
+            opcoes: [
+                { texto: "Sair", secao: 212 }
+            ]
+        },
+
+        234: {
+            texto: "Sono sem sonhos. Você acorda revigorado.",
+            efeitos: [{ tipo: "energia", valor: 3 }],
+            opcoes: [
+                { texto: "Continuar", secao: 222 }
+            ]
+        },
+
+        235: {
+            texto: "Sem marcas, sem dobras. Como se nunca tivessem sido usados.",
+            opcoes: [
+                { texto: "Sair", secao: 222 }
+            ]
+        },
+
+        236: {
+            texto: "Camas com lençóis brancos, armário com frascos, cheiro de ervas medicinais.",
+            opcoes: [
+                { texto: "Examinar frascos", secao: 252 },
+                { texto: "Examinar camas", secao: 253 },
+                { texto: "Porta oposta", secao: 254 }
+            ]
+        },
+
+        237: {
+            texto: "Fechadura complexa. Precisa de chave específica.",
+            opcoes: [
+                { texto: "Abrir", secao: 255, requer: "chave-pequena" },
+                { texto: "Sair", secao: 225 }
+            ]
+        },
+
+        238: {
+            texto: "Estratégias de defesa, formações de combate.",
+            opcoes: [
+                { texto: "Ler completamente", secao: 256 },
+                { texto: "Sair", secao: 225 }
+            ]
+        },
+
+        239: {
+            texto: "Mostra a torre e arredores. Floresta densa ao redor. Nenhuma estrada visível.",
+            opcoes: [
+                { texto: "Memorizar", secao: 257 },
+                { texto: "Sair", secao: 225 }
+            ]
+        },
+
+        240: {
+            texto: "Geografia impossível. Oceanos com nomes em idiomas mortos.",
+            opcoes: [
+                { texto: "Girar globo", secao: 258 },
+                { texto: "Sair", secao: 226 }
+            ]
+        },
+
+        241: {
+            texto: "Aponta para janela. Você vê apenas névoa cinza uniforme.",
+            opcoes: [
+                { texto: "Sair", secao: 226 }
+            ]
+        },
+
+        242: {
+            texto: "Dentro: envelope lacrado, moedas de ouro, adaga ornamentada.",
+            opcoes: [
+                { texto: "Pegar envelope", secao: 259 },
+                { texto: "Pegar moedas", secao: 259 },
+                { texto: "Pegar adaga", secao: 259 }
+            ]
+        },
+
+        243: {
+            texto: "Não há horizonte. Apenas cinza uniforme. Sem sol, sem referências.",
+            opcoes: [
+                { texto: "Sair", secao: 227 }
+            ]
+        },
+
+        244: {
+            texto: "Agulhas, linha resistente, tesoura afiada.",
+            efeitos: [{ tipo: "item", item: "kit-costura" }],
+            opcoes: [
+                { texto: "Sair", secao: 228 }
+            ]
+        },
+
+        245: {
+            texto: "Seda, veludo, brocado. Cores vibrantes. Perfeitamente preservados.",
+            opcoes: [
+                { texto: "Sair", secao: 228 }
+            ]
+        },
+
+        246: {
+            texto: "Tanque imenso de água cristalina. Sistema de filtragem complexo.",
+            opcoes: [
+                { texto: "Beber água", secao: 260 },
+                { texto: "Encher recipiente", secao: 261 },
+                { texto: "Examinar sistema", secao: 262 }
+            ]
+        },
+
+        247: {
+            texto: "Cofres de ferro, balança de precisão, livros contábeis.",
+            opcoes: [
+                { texto: "Examinar cofres", secao: 263 },
+                { texto: "Ler livros contábeis", secao: 264 },
+                { texto: "Sair", secao: 229 }
+            ]
+        },
+
+        248: {
+            texto: "Corredor com vitrais coloridos. Luz difusa sem fonte aparente.",
+            opcoes: [
+                { texto: "Examinar vitrais", secao: 265 },
+                { texto: "Porta ornamentada", secao: 266 },
+                { texto: "Continuar subindo", secao: 267 }
+            ]
+        },
+
+        249: {
+            texto: "Leva a outra parte da torre. Paredes de pedra úmida.",
+            opcoes: [
+                { texto: "Seguir túnel", secao: 268 },
+                { texto: "Retornar", secao: 230 }
+            ]
+        },
+
+        250: {
+            texto: "Ferramentas adquiridas.",
+            efeitos: [{ tipo: "item", item: "ferramentas" }],
+            opcoes: [
+                { texto: "Continuar", secao: 231 }
+            ]
+        },
+
+        251: {
+            texto: "Mesa redonda, seis cadeiras, candelabro central. Documentos espalhados.",
+            opcoes: [
+                { texto: "Ler documentos", secao: 269 },
+                { texto: "Examinar candelabro", secao: 270 },
+                { texto: "Porta lateral", secao: 271 }
+            ]
+        },
+
+        252: {
+            texto: "Frascos rotulados: 'Cura', 'Vigor', 'Sono'. Um está sem rótulo.",
+            opcoes: [
+                { texto: "Beber 'Cura'", secao: 272 },
+                { texto: "Beber 'Vigor'", secao: 272 },
+                { texto: "Beber sem rótulo", secao: 273, teste: "sorte", dificuldade: 12 }
+            ]
+        },
+
+        253: {
+            texto: "Colchões firmes, travesseiros macios. Nenhuma marca de uso.",
+            opcoes: [
+                { texto: "Sair", secao: 236 }
+            ]
+        },
+
+        254: {
+            texto: "Camas menores, baús pessoais, quadro-negro com anotações.",
+            opcoes: [
+                { texto: "Examinar baús", secao: 274 },
+                { texto: "Ler quadro-negro", secao: 275 },
+                { texto: "Porta ao fundo", secao: 276 }
+            ]
+        },
+
+        255: {
+            texto: "Dentro: diário do capitão, chave de bronze, medalha militar.",
+            opcoes: [
+                { texto: "Ler diário", secao: 277 },
+                { texto: "Pegar chave", secao: 278 },
+                { texto: "Pegar medalha", secao: 278 }
+            ]
+        },
+
+        256: {
+            texto: "Conhecimento profundo adquirido.",
+            efeitos: [{ tipo: "habilidade", valor: 1 }],
+            opcoes: [
+                { texto: "Sair", secao: 225 }
+            ]
+        },
+
+        257: {
+            texto: "Você agora conhece a disposição externa da torre.",
+            opcoes: [
+                { texto: "Sair", secao: 225 }
+            ]
+        },
+
+        258: {
+            texto: "Compartimento secreto se abre. Dentro: chave pequena de prata.",
+            efeitos: [{ tipo: "item", item: "chave-pequena" }],
+            opcoes: [
+                { texto: "Sair", secao: 226 }
+            ]
+        },
+
+        259: {
+            texto: "Inventário atualizado.",
+            efeitos: [
+                { tipo: "item", item: "envelope-senha" },
+                { tipo: "item", item: "ouro" },
+                { tipo: "item", item: "adaga" }
+            ],
+            opcoes: [
+                { texto: "Sair", secao: 227 }
+            ]
+        },
+
+        260: {
+            texto: "Frescor imediato.",
+            efeitos: [{ tipo: "energia", valor: 1 }],
+            opcoes: [
+                { texto: "Sair", secao: 246 }
+            ]
+        },
+
+        261: {
+            texto: "Recipiente cheio de água cristalina.",
+            efeitos: [{ tipo: "item", item: "agua-3-doses" }],
+            opcoes: [
+                { texto: "Sair", secao: 246 }
+            ]
+        },
+
+        262: {
+            texto: "Sistema de tubulação impossível. Água flui sem bomba visível.",
+            opcoes: [
+                { texto: "Sair", secao: 246 }
+            ]
+        },
+
+        263: {
+            texto: "Fechaduras múltiplas. Precisa de combinação específica.",
+            opcoes: [
+                { texto: "Abrir", secao: 280, requer: "envelope-senha" },
+                { texto: "Sair", secao: 247 }
+            ]
+        },
+
+        264: {
+            texto: "Transações impossíveis. 'Pagamento ao Guardião da hora - 2017ac'.",
+            opcoes: [
+                { texto: "Continuar lendo", secao: 281 },
+                { texto: "Sair", secao: 247 }
+            ]
+        },
+
+        265: {
+            texto: "Padrões matemáticos complexos. Luz forma sombras que não correspondem.",
+            opcoes: [
+                { texto: "Tocar vitral", secao: 282 },
+                { texto: "Continuar", secao: 248 }
+            ]
+        },
+
+        266: {
+            texto: "Estantes com livros encadeados, escrivaninha com tinta fresca, pergaminhos.",
+            opcoes: [
+                { texto: "Examinar livros", secao: 283 },
+                { texto: "Ler pergaminho", secao: 284 },
+                { texto: "Porta secreta", secao: 285 }
+            ]
+        },
+
+        267: {
+            texto: "Corredor circular, portas idênticas, eco estranho dos passos.",
+            opcoes: [
+                { texto: "Porta A", secao: 286 },
+                { texto: "Porta B", secao: 287 },
+                { texto: "Porta C", secao: 288 },
+                { texto: "Continuar subindo", secao: 289 }
+            ]
+        },
+
+        268: {
+            texto: "Você emerge em uma sala diferente da torre.",
+            opcoes: [
+                { texto: "Explorar sala", secao: 290 },
+                { texto: "Retornar pelo túnel", secao: 249 }
+            ]
+        },
+
+        269: {
+            texto: "'Protocolo de Evacuação aprovado. Todos os residentes devem partir antes do Evento.'",
+            opcoes: [
+                { texto: "Continuar lendo", secao: 291 },
+                { texto: "Sair", secao: 251 }
+            ]
+        },
+
+        270: {
+            texto: "Velas acesas sem consumir cera. Chama fria ao toque.",
+            opcoes: [
+                { texto: "Sair", secao: 251 }
+            ]
+        },
+
+        271: {
+            texto: "Gaiola de ferro pendurada por correntes. Vazia. Porta aberta.",
+            opcoes: [
+                { texto: "Entrar na gaiola", secao: 292 },
+                { texto: "Examinar correntes", secao: 293 },
+                { texto: "Porta oposta", secao: 294 }
+            ]
+        },
+
+        272: {
+            texto: "Efeito da poção aplicado.",
+            efeitos: [{ tipo: "energia", valor: 3 }],
+            opcoes: [
+                { texto: "Sair", secao: 236 }
+            ]
+        },
+
+        273: {
+            texto: "Sabor amargo. Dor intensa. Visão escurece. Você morre.",
+            efeitos: [{ tipo: "energia", valor: -10 }],
+            final: true
+        },
+
+        274: {
+            texto: "Roupas pequenas, livros de estudo, brinquedos de madeira.",
+            opcoes: [
+                { texto: "Pegar livro", secao: 295 },
+                { texto: "Sair", secao: 254 }
+            ]
+        },
+
+        275: {
+            texto: "Diagrama de constelações. Anotação: 'O céu mudou. Ninguém sabe por quê.'",
+            opcoes: [
+                { texto: "Memorizar", secao: 296 },
+                { texto: "Sair", secao: 254 }
+            ]
+        },
+
+        276: {
+            texto: "Livros ilustrados, globo pequeno, brinquedos educativos.",
+            opcoes: [
+                { texto: "Examinar livros", secao: 297 },
+                { texto: "Sair", secao: 254 }
+            ]
+        },
+
+        277: {
+            texto: "'Dia 1.247: Ainda nenhum sinal de mudança. A torre permanece. Nós permanecemos.'",
+            opcoes: [
+                { texto: "Continuar lendo", secao: 298 },
+                { texto: "Sair", secao: 225 }
+            ]
+        },
+
+        278: {
+            texto: "Itens guardados no inventário.",
+            efeitos: [
+                { tipo: "item", item: "chave-bronze" },
+                { tipo: "item", item: "medalha" }
+            ],
+            opcoes: [
+                { texto: "Sair", secao: 225 }
+            ]
+        },
+
+        279: {
+            texto: "Chave pequena adquirida.",
+            efeitos: [{ tipo: "item", item: "chave-pequena" }],
+            opcoes: [
+                { texto: "Sair", secao: 226 }
+            ]
+        },
+
+        280: {
+            texto: "Senha correta. Dentro: garrafa de vinho raro, documento selado, joia.",
+            opcoes: [
+                { texto: "Pegar vinho", secao: 299 },
+                { texto: "Pegar documento", secao: 299 },
+                { texto: "Pegar joia", secao: 299 }
+            ]
+        },
+
+        281: {
+            texto: "'O Tesoureiro desapareceu. Seus livros continuam se atualizando sozinhos.'",
+            opcoes: [
+                { texto: "Sair", secao: 247 }
+            ]
+        },
+
+        282: {
+            texto: "Calor pulsa sob seus dedos. Padrão geométrico brilha brevemente.",
+            opcoes: [
+                { texto: "Continuar", secao: 248 }
+            ]
+        },
+
+        283: {
+            texto: "Títulos em latim: 'De Natura Temporis', 'Codex Aeternum'. Correntes de prata.",
+            opcoes: [
+                { texto: "Tentar abrir", secao: 300, requer: "chave-especial" },
+                { texto: "Sair", secao: 266 }
+            ]
+        },
+
+        284: {
+            texto: "'Aquele que alcançar o Pináculo verá a verdade. Mas a verdade não liberta.'",
+            opcoes: [
+                { texto: "Sair", secao: 266 }
+            ]
+        },
+
+        285: {
+            texto: "Atrás de estante móvel. Escada estreita desce.",
+            opcoes: [
+                { texto: "Descer", secao: 203 },
+                { texto: "Sair", secao: 266 }
+            ]
+        },
+
+        286: {
+            texto: "Cama, mesa, cadeira. Nada mais. Janela mostra névoa.",
+            opcoes: [
+                { texto: "Descansar", secao: 267 },
+                { texto: "Sair", secao: 267 }
+            ]
+        },
+
+        287: {
+            texto: "Exatamente igual ao anterior. Mesma disposição. Mesma névoa.",
+            opcoes: [
+                { texto: "Descansar", secao: 267 },
+                { texto: "Sair", secao: 267 }
+            ]
+        },
+
+        288: {
+            texto: "Tudo invertido. Porta à direita em vez de esquerda. Sensação de vertigem.",
+            opcoes: [
+                { texto: "Examinar espelho", secao: 319 },
+                { texto: "Sair", secao: 267 }
+            ]
+        },
+
+        289: {
+            texto: "Sala circular com janelas em todas as direções. Escada termina aqui.",
+            opcoes: [
+                { texto: "Examinar janelas", secao: 304 },
+                { texto: "Porta para terraço", secao: 303 },
+                { texto: "Descer", secao: 267 }
+            ]
+        },
+
+        290: {
+            texto: "Engrenagens gigantes, alavancas, painéis de controle. Tudo em movimento.",
+            opcoes: [
+                { texto: "Examinar engrenagens", secao: 317 },
+                { texto: "Puxar alavanca", secao: 318 },
+                { texto: "Sair", secao: 268 }
+            ]
+        },
+
+        291: {
+            texto: "'Todos devem partir. A torre será selada. O Guardião permanecerá.'",
+            opcoes: [
+                { texto: "Sair", secao: 251 }
+            ]
+        },
+
+        292: {
+            texto: "Porta se fecha sozinha. Correntes começam a subir.",
+            opcoes: [
+                { texto: "Tentar escapar", secao: 271, teste: "habilidade", dificuldade: 16 }
+            ]
+        },
+
+        293: {
+            texto: "Ferro negro. Mecanismo de roldana complexo. Ainda funcional.",
+            opcoes: [
+                { texto: "Sair", secao: 271 }
+            ]
+        },
+
+        294: {
+            texto: "Alavancas controlam a gaiola. Painel com instruções em latim. Há um corredor estreito que termina em uma porta de ferro.",
+            opcoes: [
+                { texto: "Abrir a porta", secao: 308, requer: "chave-ferro-azul" },
+                { texto: "Acionar alavanca", secao: 316 },
+                { texto: "Sair", secao: 271 }
+            ]
+        },
+
+        295: {
+            texto: "Livro básico coletado.",
+            efeitos: [{ tipo: "item", item: "livro-basico" }],
+            opcoes: [
+                { texto: "Sair", secao: 254 }
+            ]
+        },
+
+        296: {
+            texto: "Você reconhece alguns padrões. Podem ser úteis.",
+            opcoes: [
+                { texto: "Sair", secao: 254 }
+            ]
+        },
+
+        297: {
+            texto: "Histórias sobre a torre. 'A Torre que Toca o Tempo'. 'O Guardião Eterno'.",
+            opcoes: [
+                { texto: "Ler completamente", secao: 314 },
+                { texto: "Sair", secao: 254 }
+            ]
+        },
+
+        298: {
+            texto: "'Dia 2.000: parei de contar. O tempo não significa nada aqui'.",
+            opcoes: [
+                { texto: "Sair", secao: 225 }
+            ]
+        },
+        299: {
+            texto: "Tesouro coletado.",
+            efeitos: [
+                { tipo: "item", item: "vinho-raro" },
+                { tipo: "item", item: "documento-selado" },
+                { tipo: "item", item: "joia" }
+            ],
+            opcoes: [
+                { texto: "Sair", secao: 247 }
+            ]
+        },
+
+        300: {
+            texto: "As correntes não cedem. Precisa de chave especial ou ferramenta específica.",
+            opcoes: [
+                { texto: "Usar ferramentas", secao: 315, requer: "ferramentas" },
+                { texto: "Sair", secao: 266 }
+            ]
+        },
+
+        303: {
+            texto: "Pedra fria sob os pés. O vento sopra sem som. No centro, um cofre de ferro incrustado no chão.",
+            opcoes: [
+                { texto: "Observar o horizonte", secao: 304 },
+                { texto: "Examinar o cofre", secao: 305 },
+                { texto: "Retornar ao pináculo", secao: 289 }
+            ]
+        },
+
+        304: {
+            texto: "Não há sol, nem estrelas. Apenas um céu uniforme, imóvel.",
+            opcoes: [
+                { texto: "Retornar", secao: 303 },
+                { texto: "Concluir aventura", secao: 313 }
+            ]
+        },
+
+        305: {
+            texto: "Fechadura com combinação numérica.",
+            opcoes: [
+                { texto: "Usar senha", secao: 306, requer: "envelope-senha" },
+                { texto: "Retornar", secao: 303 }
+            ]
+        },
+
+        306: {
+            texto: "O mecanismo cede. Dentro, uma chave pesada de ferro azulado e um bilhete dobrado.",
+            efeitos: [{ tipo: "item", item: "chave-ferro-azul" }],
+            opcoes: [
+                { texto: "Ler o bilhete", secao: 307 },
+                { texto: "Guardar tudo e sair", secao: 303 }
+            ]
+        },
+
+        307: {
+            texto: "A caligrafia é irregular, como se tivesse sido escrita às pressas: 'No fundo da torre, atrás da porta acorrentada, está um Anjo. Não fale com ele. Não o olhe por muito tempo. Se precisar, toque-o — é a única forma de atravessar. Mas lembre-se: o toque não o liberta'.",
+            opcoes: [
+                { texto: "Guardar tudo e sair", secao: 303 }
+            ]
+        },
+
+        308: {
+            texto: "No centro da sala, uma mulher nua e bela o encara. Da cintura para baixo, as pernas são de cachorro — finas, tortas, incapazes de sustentar o corpo. Ela respira devagar, como se cada movimento fosse um erro da própria carne.",
+            opcoes: [
+                { texto: "Tentar falar com ela", secao: 309 },
+                { texto: "Tocar o corpo", secao: 310 },
+                { texto: "Observar em silêncio", secao: 311 }
+            ]
+        },
+
+        309: {
+            texto: "Você fala. A boca dela se abre, mas a resposta vem de algum modo atrasado, como se a voz tivesse ficado presa em outro tempo ou lugar. As palavras são o eco exato do que você disse, repetidas em tom mais baixo.",
+            opcoes: [
+                { texto: "Tocar o corpo", secao: 310 },
+                { texto: "Observar em silêncio", secao: 311 }
+            ]
+        },
+
+        310: {
+            texto: "Você estende a mão e toca sua pele. Esperava frio, mas encontra calor. O corpo dela pulsa suave, como se embalasse você. Por um instante, sente-se protegido, como se estivesse nos braços de uma mãe.",
+            opcoes: [
+                { texto: "Despedir-se", secao: 312 },
+                { texto: "Retornar", secao: 294 }
+            ]
+        },
+
+        311: {
+            texto: "Você permanece em silêncio. Ela não se move, você sente que está sendo contado de alguma forma.",
+            opcoes: [
+                { texto: "Retornar", secao: 294 }
+            ]
+        },
+
+        312: {
+            texto: "Você aproxima o rosto do dela. Ao sussurrar 'adeus', sua mão afunda no torax macio da mulher como se fosse barro quente. O corpo treme, mas não resiste. O calor maternal se desfaz em silêncio. O ar da sala pesa. Você sente que matou algo que não deveria existir — ou que sempre esteve esperando por isso.",
+            final: true
+        },
+
+        313: {
+            texto: "Você permanece. O silêncio não pesa mais. O céu imóvel parece acolher sua presença. Por um instante, sente que algo próximo, no interior do aposento, compartilha a mesma imobilidade. A paz é estranha, mas suficiente. Você olha para trás.",
+            final: true
+        },
+
+        314: {
+            texto: "'caiu do céu e se machucou. Ficou descansando no fundo da Torre. À noite, três reis desciam para vê-la. Um trazia ouro, outro silêncio, outro não trazia nada. As crianças perguntavam: — Por que ela não volta para o alto? E os Fundadores respondiam: — Porque a Torre precisa de quem nunca parta.'",
+            opcoes: [
+                { texto: "Sair", secao: 254 }
+            ]
+        },
+
+        315: {
+            texto: "Usando as ferramentas, você consegue romper as correntes.",
+            efeitos: [{ tipo: "item", item: "livro-raro" }],
+            opcoes: [
+                { texto: "Sair", secao: 266 }
+            ]
+        },
+
+        316: {
+            texto: "Você aciona a alavanca. Um som metálico percorre a Torre inteira, como um grito de ferro. Algo — ou alguém — sabe que você está aqui.",
+            opcoes: [
+                { texto: "Retornar", secao: 294 }
+            ]
+        },
+
+        317: {
+            texto: "Entre os dentes metálicos em movimento, algo brilha.",
+            opcoes: [
+                { texto: "Retornar", secao: 290 }
+            ]
+        },
+
+        318: {
+            texto: "Você puxa a alavanca. As engrenagens param de repente. O chão treme, e por um instante parece que a Torre inteira se moveu. O silêncio que se segue é mais pesado que o ruído.",
+            efeitos: [{ tipo: "item", item: "amuleto-desconhecido" }],
+            opcoes: [
+                { texto: "Retornar", secao: 290 }
+            ]
+        },
+
+        319: {
+            texto: "O espelho não devolve seus gestos. Em vez disso, você se vê deitado em um corredor da Torre, imóvel, como se dormisse.",
+            opcoes: [
+                { texto: "Sair", secao: 267 }
+            ]
+        },
+
+      320: {
+    texto: "Você foi derrotado em combate. Suas forças se esgotam e você cai no chão frio da arena. A escuridão toma conta de sua visão. Sua jornada termina aqui.",
+    efeitos: [{ tipo: "energia", valor: -10 }],
+    final: true
+}
+}
+
+
+   
 "vila-abandonada": {
     id: "vila-abandonada",
     titulo: "A Vila Abandonada",
@@ -2372,3 +4952,4 @@ const NARRATIVAS = {
         }
     }
 };
+
