@@ -251,19 +251,25 @@ obterNomeItem(itemId) {
 abrirInventarioComItem(itemId, spanElement) {
     this.itemPendente = { id: itemId, span: spanElement };
     const itemData = this.itensNarrativas[itemId];
+    
     document.getElementById('narrativa-ativa').style.display = 'none';
     document.getElementById('inventario-narrativa').classList.add('ativo');
 
-    // ADICIONE ESTAS LINHAS:
-    this.carregarDadosInventario();
+    // Inicializa o inventário
+    if (window.loadInventoryUI) {
+        window.loadInventoryUI();
+    }
     
+    // Mostra preview do item
     document.getElementById('preview-image-inv').src = itemData.image;
     document.getElementById('preview-image-inv').style.display = 'block';
     document.getElementById('preview-name-inv').textContent = itemData.content;
     document.getElementById('preview-description-inv').innerHTML = `Você pegará a ${itemData.content}?<br><button id="btn-sim-inv">Sim</button> <button id="btn-nao-inv">Não</button>`;
+    
     document.getElementById('btn-sim-inv').addEventListener('click', () => this.confirmarPegarItem());
     document.getElementById('btn-nao-inv').addEventListener('click', () => this.fecharInventario());
 }
+
 
 async confirmarPegarItem() {
     await this.adicionarItem(this.itemPendente.id);
@@ -711,6 +717,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
