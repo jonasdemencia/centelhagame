@@ -1237,6 +1237,8 @@ else if (selectedItem.dataset.item === 'pequenabolsaouro') {
             await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
             
             alert(`Você ganhou ${goldValue} moedas de ouro! Total: ${novoTotal}`);
+            updateCharacterSheet(currentPlayerData); // ADICIONE ESTA LINHA
+
         }
     }
 }
