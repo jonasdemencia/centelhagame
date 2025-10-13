@@ -306,57 +306,48 @@ obterNomeItem(itemId) {
     }
 
     async adicionarItem(itemId) {
-        if (!this.userId) return;
+    if (!this.userId) return;
 
-            const itensNarrativas = this.itensNarrativas; // MUDE ESTA LINHA
+    const playerDocRef = doc(db, "players", this.userId);
+    const docSnap = await getDoc(playerDocRef);
 
-            
-            
-        };
+    if (docSnap.exists()) {
+        const playerData = docSnap.data();
+        const inventory = playerData.inventory || {};
+        const chest = inventory.itemsInChest || [];
+        const itemData = this.itensNarrativas[itemId];
 
-       const playerDocRef = doc(db, "players", this.userId);
-const docSnap = await getDoc(playerDocRef);
-
-if (docSnap.exists()) {
-    const playerData = docSnap.data();
-    const inventory = playerData.inventory || {};
-    const chest = inventory.itemsInChest || [];
-    const itemData = itensNarrativas[itemId];
-
-    if (!itemData) {
-        console.error(`Item '${itemId}' não encontrado nas narrativas`);
-        return;
-    }
-
-    // VERIFICA STACKABLE PRIMEIRO
-    if (itemData.stackable === false) {
-        // Sempre adiciona nova instância
-        const novoItem = { ...itemData, uuid: crypto.randomUUID() };
-        
-        // Se for bolsa de ouro, adiciona valor aleatório
-        if (itemId === "pequenabolsaouro") {
-            novoItem.goldValue = Math.floor(Math.random() * 10) + 1;
+        if (!itemData) {
+            console.error(`Item '${itemId}' não encontrado nas narrativas`);
+            return;
         }
-        
-        chest.push(novoItem);
-    } else {
-        // Comportamento empilhável
-        const existeItem = chest.find(item => item.id === itemId);
-        if (existeItem) {
-            existeItem.quantity = (existeItem.quantity || 1) + 1;
+
+        if (itemData.stackable === false) {
+            const novoItem = { ...itemData, uuid: crypto.randomUUID() };
+            
+            if (itemId === "pequenabolsaouro") {
+                novoItem.goldValue = Math.floor(Math.random() * 10) + 1;
+            }
+            
+            chest.push(novoItem);
         } else {
-            chest.push({ ...itemData, quantity: 1, uuid: crypto.randomUUID() });
+            const existeItem = chest.find(item => item.id === itemId);
+            if (existeItem) {
+                existeItem.quantity = (existeItem.quantity || 1) + 1;
+            } else {
+                chest.push({ ...itemData, quantity: 1, uuid: crypto.randomUUID() });
+            }
         }
+
+        await updateDoc(playerDocRef, {
+            "inventory.itemsInChest": chest
+        });
+
+        this.playerData.inventory.itemsInChest = chest;
+        console.log('Item adicionado:', itemId, 'Inventário atual:', chest);
     }
-
-    await updateDoc(playerDocRef, {
-        "inventory.itemsInChest": chest
-    });
-
-    this.playerData.inventory.itemsInChest = chest;
-    console.log('Item adicionado:', itemId, 'Inventário atual:', chest);
 }
-}
+
     
     async modificarEnergia(valor) {
     if (!this.userId) return;
@@ -642,6 +633,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
