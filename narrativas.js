@@ -92,7 +92,7 @@ class SistemaNarrativas {
 
     async iniciarNarrativa(narrativaId) {
         await this.carregarDadosJogador();
-        this.narrativaAtual = NARRATIVAS[narrativaId];
+        this.narrativaAtual = window.NARRATIVAS[narrativaId];
         this.secaoAtual = 1;
         document.getElementById('selecao-narrativas').className = 'tela-oculta';
         document.getElementById('narrativa-ativa').className = 'tela-ativa';
@@ -403,7 +403,7 @@ class SistemaNarrativas {
         const secaoUrl = urlParams.get('secao');
 
         if (secaoUrl) {
-            for (const [narrativaId, narrativa] of Object.entries(NARRATIVAS)) {
+            for (const [narrativaId, narrativa] of Object.entries(window.NARRATIVAS)) {
                 if (narrativa.secoes[secaoUrl]) {
                     await this.iniciarNarrativa(narrativaId);
                     await this.mostrarSecao(parseInt(secaoUrl));
@@ -484,7 +484,7 @@ class SistemaNarrativas {
         if (!this.userId || !this.narrativaAtual) return;
 
         const playerDocRef = doc(db, "players", this.userId);
-        const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual);
+        const narrativeId = Object.keys(window.NARRATIVAS).find(key => window.NARRATIVAS[key] === this.narrativaAtual);
 
         const progressData = {
             lastUpdated: new Date().toISOString()
@@ -579,5 +579,6 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
