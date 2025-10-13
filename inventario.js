@@ -1226,6 +1226,11 @@ if (actionUsarBtn) {
                     const ouroAtual = playerData.p?.ouro || 0;
                     
                     await updateDoc(playerRef, { "p.ouro": ouroAtual + goldValue });
+
+                    // ADICIONE ESTAS LINHAS
+if (!currentPlayerData.p) currentPlayerData.p = {};
+currentPlayerData.p.ouro = ouroAtual + goldValue;
+document.getElementById("char-po-info").innerText = currentPlayerData.p.ouro;
                     
                     inventoryData.itemsInChest.splice(itemIndex, 1);
                     await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
