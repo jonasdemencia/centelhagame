@@ -1226,22 +1226,18 @@ else if (selectedItem.dataset.item === 'pequenabolsaouro') {
             const ouroAtual = playerData.p?.ouro || 0;
             const novoTotal = ouroAtual + goldValue;
             
-            await updateDoc(playerRef, { "p.ouro": novoTotal });
-            
-            // Atualiza variável global e UI
-            if (!currentPlayerData.p) currentPlayerData.p = {};
-            currentPlayerData.p.ouro = novoTotal;
-            document.getElementById("char-po-info").innerText = novoTotal;
-            
             inventoryData.itemsInChest.splice(itemIndex, 1);
-            await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+            
+            await setDoc(playerRef, { 
+                inventory: inventoryData,
+                "p.ouro": novoTotal 
+            }, { merge: true });
             
             alert(`Você ganhou ${goldValue} moedas de ouro! Total: ${novoTotal}`);
-            updateCharacterSheet(currentPlayerData); // ADICIONE ESTA LINHA
-
         }
     }
 }
+
 
 
         // CASO 4: Outros Consumíveis (heal, damage, etc.)
