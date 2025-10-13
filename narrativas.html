@@ -75,27 +75,61 @@
         </div>
     </div>
 
-    <!-- Inventário (oculto) -->
-    <div id="inventario-narrativa">
-        <div class="chest-area">
-            <div class="left-panel">
-                <div class="item-preview">
-                    <div class="preview-image-window">
-                        <div class="preview-image-container">
-                            <img id="preview-image-inv" src="" alt="Item Preview" style="display: none;">
-                        </div>
-                    </div>
-                    <div class="preview-info-window">
-                        <div class="preview-info">
-                            <h3 id="preview-name-inv"></h3>
-                            <p id="preview-description-inv"></p>
+   <!-- Inventário (oculto) -->
+<div id="inventario-narrativa">
+    <div class="container">
+        <div class="bottom-section">
+            <div class="carousel-wrapper">
+                <div class="carousel-container">
+                    <div class="carousel-slide active" id="inventory-window">
+                        <div class="chest-area">
+                            <div class="left-panel">
+                                <div class="name-panel">
+                                    <span id="char-name-display">Nome do Personagem</span>
+                                </div>
+                                
+                                <div class="profile-info-container">
+                                    <img id="portrait-image" src="" alt="Retrato do Personagem" style="display: none;">
+                                    <div class="info-panel">
+                                        <div><span id="char-class-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-race-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-alignment-info" class="green-text">-</span></div>
+                                        <div><span id="char-age-info" class="green-text">-</span> ANOS&nbsp;&nbsp;&nbsp;<span id="char-hand-info" class="green-text">-</span>&nbsp;&nbsp;&nbsp;HEM: <span id="char-hemisphere-info" class="green-text">-</span></div>
+                                        <div>HA: <span id="char-skill-info" class="green-text">-</span>&nbsp;&nbsp;CA: <span id="char-charisma-info" class="green-text">-</span>&nbsp;&nbsp;MA: <span id="char-magic-info" class="green-text">-</span>&nbsp;&nbsp;SO: <span id="char-luck-info" class="green-text">-</span></div>
+                                        <div>COURAÇA: <span id="char-couraca-info" class="green-text">0</span>&nbsp;&nbsp;DANO: <span id="char-dano-info" class="green-text">1</span>&nbsp;&nbsp;DIA: <span id="char-day-info" class="green-text">1</span></div>
+                                        <div>P.OURO: <span id="char-po-info" class="green-text">0</span>&nbsp;&nbsp;NÍVEL: <span id="char-level-info" class="green-text">1</span></div>
+                                    </div>
+                                </div>
+
+                                <div class="item-preview">
+                                    <div class="preview-image-window">
+                                        <div class="preview-image-container">
+                                            <img id="preview-image-inv" src="" alt="Item Preview" style="display: none;">
+                                        </div>
+                                    </div>
+                                    <div class="preview-info-window">
+                                        <div class="preview-info">
+                                            <h3 id="preview-name-inv"></h3>
+                                            <p id="preview-description-inv"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="right-panel">
+                                <div class="chest">
+                                    <div class="items" id="items-inv">
+                                        <!-- Itens do inventário -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
+
 
 <script type="module" src="narrativas.js"></script>
 </body>
 </html>
+
