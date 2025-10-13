@@ -2753,7 +2753,7 @@ export const NARRATIVAS = {
     final: true
 }
 }
-
+},
 
    
 "vila-abandonada": {
@@ -4952,6 +4952,7 @@ export const NARRATIVAS = {
         }
     }
 };
+
 
 
 
