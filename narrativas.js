@@ -319,7 +319,7 @@ if (docSnap.exists()) {
     this.playerData.inventory.itemsInChest = chest;
     console.log('Item adicionado:', itemId, 'Inventário atual:', chest);
 }
-
+}
     
     async modificarEnergia(valor) {
     if (!this.userId) return;
@@ -605,6 +605,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
