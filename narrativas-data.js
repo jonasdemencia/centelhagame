@@ -384,7 +384,7 @@ export const NARRATIVAS = {
 
         24: {
             texto: "Velas de cera virgem, nunca acesas. Livro fechado com capa de couro negro. Nenhum símbolo religioso reconhecível.",
-            efeitos: [{ tipo: "item", item: "bolsa-ouro-pequena" }],
+            efeitos: [{ tipo: "item", item: "pequenabolsaouro" }],
             opcoes: [
                 { texto: "Abrir o livro", secao: 40 },
                 { texto: "Retornar à capela", secao: 12 }
@@ -4952,6 +4952,7 @@ export const NARRATIVAS = {
         }
     }
 };
+
 
 
 
