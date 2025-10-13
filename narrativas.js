@@ -277,42 +277,42 @@ this.narrativaAtual = NARRATIVAS[narrativaId];
             
         };
 
-        const playerDocRef = doc(db, "players", this.userId);
-        const docSnap = await getDoc(playerDocRef);
+       const playerDocRef = doc(db, "players", this.userId);
+    const docSnap = await getDoc(playerDocRef);
 
-        if (docSnap.exists()) {
-            const playerData = docSnap.data();
-            const inventory = playerData.inventory || {};
-            const chest = inventory.itemsInChest || [];
-            const itemData = itensNarrativas[itemId];
+    if (docSnap.exists()) {
+        const playerData = docSnap.data();
+        const inventory = playerData.inventory || {};
+        const chest = inventory.itemsInChest || [];
+        const itemData = itensNarrativas[itemId];
 
-            if (!itemData) {
-                console.error(`Item '${itemId}' não encontrado nas narrativas`);
-                return;
-            }
+        if (!itemData) {
+            console.error(`Item '${itemId}' não encontrado nas narrativas`);
+            return;
+        }
 
+        if (itemData.stackable === false) {
+            const novoItem = { ...itemData, uuid: crypto.randomUUID() };
+            chest.push(novoItem);
+        } else {
             const existeItem = chest.find(item => item.id === itemId);
             if (existeItem) {
                 existeItem.quantity = (existeItem.quantity || 1) + 1;
             } else {
-                // Cria item com propriedades completas do modelo padronizado
-                const novoItem = { ...itemData, quantity: 1 };
-                
-                // Gera novo UUID único para esta instância
-                novoItem.uuid = crypto.randomUUID();
-                
+                const novoItem = { ...itemData, quantity: 1, uuid: crypto.randomUUID() };
                 chest.push(novoItem);
             }
-
-            await updateDoc(playerDocRef, {
-                "inventory.itemsInChest": chest
-            });
-
-            this.playerData.inventory.itemsInChest = chest;
-            console.log('Item adicionado:', itemId, 'Inventário atual:', chest);
         }
-    }
 
+        await updateDoc(playerDocRef, {
+            "inventory.itemsInChest": chest
+        });
+
+        this.playerData.inventory.itemsInChest = chest;
+        console.log('Item adicionado:', itemId, 'Inventário atual:', chest);
+    }
+}
+    
     async modificarEnergia(valor) {
     if (!this.userId) return;
     const playerDocRef = doc(db, "players", this.userId);
@@ -582,6 +582,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
