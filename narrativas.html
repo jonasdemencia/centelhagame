@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Narrativas - RPG</title>
     <link rel="stylesheet" href="narrativas.css">
+    <link rel="stylesheet" href="inventario.css">
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
         .narrativa-card { background: #2a2a2a; border: 2px solid #444; padding: 20px; cursor: pointer; margin: 10px 0; }
         .narrativa-card:hover { border-color: #ffd700; }
+        #inventario-narrativa { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; }
+        #inventario-narrativa.ativo { display: block; }
     </style>
 </head>
 <body>
@@ -33,10 +37,9 @@
                     <p>Explore os mistérios sombrios da Vila de Pedravale...</p>
                 </div>
                 <div class="narrativa-card" data-narrativa="condominio-tempo-perdido">
-    <h3>O Condomínio do Tempo Perdido</h3>
-    <p>Desperte em um condomínio misterioso sem memória de como chegou...</p>
-</div>
-
+                    <h3>O Condomínio do Tempo Perdido</h3>
+                    <p>Desperte em um condomínio misterioso sem memória de como chegou...</p>
+                </div>
             </div>
         </div>
 
@@ -72,8 +75,27 @@
         </div>
     </div>
 
+    <!-- Inventário (oculto) -->
+    <div id="inventario-narrativa">
+        <div class="chest-area">
+            <div class="left-panel">
+                <div class="item-preview">
+                    <div class="preview-image-window">
+                        <div class="preview-image-container">
+                            <img id="preview-image-inv" src="" alt="Item Preview" style="display: none;">
+                        </div>
+                    </div>
+                    <div class="preview-info-window">
+                        <div class="preview-info">
+                            <h3 id="preview-name-inv"></h3>
+                            <p id="preview-description-inv"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <script type="module" src="narrativas.js"></script>
 </body>
 </html>
-
-
