@@ -255,6 +255,13 @@ abrirInventarioComItem(itemId, spanElement) {
     document.getElementById('narrativa-ativa').style.display = 'none';
     document.getElementById('inventario-narrativa').classList.add('ativo');
     
+    // Ativa o botão expandir
+    const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
+    const container = document.querySelector('#inventario-narrativa .container');
+    if (expandBtn && container) {
+        expandBtn.onclick = () => container.classList.toggle('expanded');
+    }
+    
     document.getElementById('preview-image').src = itemData.image;
     document.getElementById('preview-image').style.display = 'block';
     document.getElementById('preview-name').textContent = itemData.content;
@@ -263,6 +270,7 @@ abrirInventarioComItem(itemId, spanElement) {
     document.getElementById('btn-sim-inv').addEventListener('click', () => this.confirmarPegarItem());
     document.getElementById('btn-nao-inv').addEventListener('click', () => this.fecharInventario());
 }
+
 
 
 
@@ -664,6 +672,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
