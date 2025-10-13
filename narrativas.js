@@ -254,13 +254,7 @@ abrirInventarioComItem(itemId, spanElement) {
     
     document.getElementById('narrativa-ativa').style.display = 'none';
     document.getElementById('inventario-narrativa').classList.add('ativo');
-
-    // Inicializa o inventário
-    if (window.loadInventoryUI) {
-        window.loadInventoryUI();
-    }
     
-    // Mostra preview do item
     document.getElementById('preview-image-inv').src = itemData.image;
     document.getElementById('preview-image-inv').style.display = 'block';
     document.getElementById('preview-name-inv').textContent = itemData.content;
@@ -269,6 +263,7 @@ abrirInventarioComItem(itemId, spanElement) {
     document.getElementById('btn-sim-inv').addEventListener('click', () => this.confirmarPegarItem());
     document.getElementById('btn-nao-inv').addEventListener('click', () => this.fecharInventario());
 }
+
 
 
 async confirmarPegarItem() {
@@ -668,6 +663,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
