@@ -174,7 +174,7 @@ Esta estrutura é ESSENCIAL para manter a flexibilidade e imersão narrativa.
 
 
 // Dados das narrativas
-const NARRATIVAS = {
+window.NARRATIVAS = {
 
 "condominio-tempo-perdido": {
     id: "condominio-tempo-perdido",
@@ -4952,4 +4952,5 @@ const NARRATIVAS = {
         }
     }
 };
+
 
