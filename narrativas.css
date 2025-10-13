@@ -91,7 +91,7 @@ h1 {
 .secao-atual {
     background: #2a2a2a;
     border: 2px solid #444;
-    padding: 30px;
+    padding: 20px;
     margin-bottom: 20px;
 }
 
@@ -199,3 +199,4 @@ h1 {
 .falha {
     color: #f44336;
 }
+
