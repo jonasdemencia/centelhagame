@@ -26,171 +26,9 @@ class SistemaNarrativas {
         this.secaoAtual = 1;
         this.playerData = null;
         this.userId = null;
-        this.inicializar();
-    }
-
-    inicializar() {
-        // Verifica autenticação
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                this.userId = user.uid;
-                await this.configurarEventListeners();
-            } else {
-                window.location.href = "index.html";
-            }
-        });
-    }
-
-    async configurarEventListeners() {
-        // Verifica se há progresso salvo
-        await this.verificarProgressoSalvo();
-
-        // Event listeners para seleção de narrativas
-        document.querySelectorAll('.narrativa-card').forEach(card => {
-            card.addEventListener('click', async (e) => {
-                const narrativaId = e.currentTarget.dataset.narrativa;
-
-                // Verifica se aventura foi completada
-                const playerDocRef = doc(db, "players", this.userId);
-                const docSnap = await getDoc(playerDocRef);
-                if (docSnap.exists()) {
-                    // AJUSTE 1: VERIFICA O PROGRESSO DA NARRATIVA ESPECÍFICA
-                    const allProgress = docSnap.data().narrativeProgress;
-                    if (allProgress && allProgress[narrativaId] && allProgress[narrativaId].completed) {
-                        alert("Você já completou esta aventura!");
-                        return;
-                    }
-                }
-
-                await this.iniciarNarrativa(narrativaId);
-            });
-        });
-
-        // Botão voltar
-        document.getElementById('voltar-selecao').addEventListener('click', () => {
-            this.voltarSelecao();
-        });
-
-        // Modal de teste
-        document.getElementById('rolar-dados').addEventListener('click', () => {
-            this.rolarDados();
-        });
-
-        document.getElementById('continuar-teste').addEventListener('click', () => {
-            this.continuarAposTeste();
-        });
-    }
-
-    async carregarDadosJogador() {
-        if (!this.userId) return;
-        const playerDocRef = doc(db, "players", this.userId);
-        const docSnap = await getDoc(playerDocRef);
-        if (docSnap.exists()) {
-            this.playerData = docSnap.data();
-            console.log('Dados do jogador carregados:', this.playerData);
-        } else {
-            console.log('Nenhum dado do jogador encontrado');
-        }
-    }
-
-    async iniciarNarrativa(narrativaId) {
-        await this.carregarDadosJogador();
-this.narrativaAtual = NARRATIVAS[narrativaId];
-        this.secaoAtual = 1;
-        document.getElementById('selecao-narrativas').className = 'tela-oculta';
-        document.getElementById('narrativa-ativa').className = 'tela-ativa';
-        document.getElementById('titulo-narrativa').textContent = this.narrativaAtual.titulo;
-        this.mostrarSecao(1);
-    }
-
-    async mostrarSecao(numeroSecao) {
-        const secao = this.narrativaAtual.secoes[numeroSecao];
-        if (!secao) return;
-        this.secaoAtual = numeroSecao;
-
-        // Salva progresso no Firestore
-        await this.salvarProgresso(numeroSecao, secao.final);
-
-        // Aplicar efeitos da seção
-        if (secao.efeitos) {
-            await this.aplicarEfeitos(secao.efeitos);
-        }
-
-        // Mostrar conteúdo
-        document.getElementById('numero-secao').textContent = numeroSecao;
-        document.getElementById('texto-narrativa').textContent = secao.texto;
-
-        // Verificar batalha automática (sem opções)
-        if (secao.batalha && !secao.opcoes) {
-            await this.processarBatalhaAutomatica(secao);
-            return;
-        }
-
-        // Criar opções
-        this.criarOpcoes(secao.opcoes, secao.final);
-    }
-
-    criarOpcoes(opcoes, isFinal = false) {
-        const container = document.getElementById('opcoes-container');
-        container.innerHTML = '';
-
-        if (isFinal) {
-            const btnFinalizar = document.createElement('button');
-            btnFinalizar.className = 'opcao-btn';
-            btnFinalizar.textContent = 'Finalizar Aventura';
-            btnFinalizar.addEventListener('click', () => this.voltarSelecao());
-            container.appendChild(btnFinalizar);
-            return;
-        }
-
-        opcoes.forEach((opcao, index) => {
-            const btn = document.createElement('button');
-            btn.className = 'opcao-btn';
-            btn.textContent = opcao.texto;
-
-            // Verificar requisitos
-            if (opcao.requer && !this.temItem(opcao.requer)) {
-                btn.disabled = true;
-                btn.textContent += ' (Requer: ' + opcao.requer + ')';
-            }
-
-            btn.addEventListener('click', () => {
-                this.processarOpcao(opcao);
-            });
-            container.appendChild(btn);
-        });
-    }
-
-    temItem(itemId) {
-        if (!this.playerData?.inventory?.itemsInChest) {
-            console.log('Inventário não encontrado ou vazio');
-            return false;
-        }
-        const temItem = this.playerData.inventory.itemsInChest.some(item => {
-            return item.id === itemId && (item.quantity || 1) > 0;
-        });
-        console.log(`Item '${itemId}': ${temItem ? 'POSSUI' : 'NÃO POSSUI'}`);
-        return temItem;
-    }
-
-    async aplicarEfeitos(efeitos) {
-        for (const efeito of efeitos) {
-            switch (efeito.tipo) {
-                case 'energia':
-                    await this.modificarEnergia(efeito.valor);
-                    break;
-                case 'item':
-                    await this.adicionarItem(efeito.item);
-                    break;
-            }
-        }
-    }
-
-    async adicionarItem(itemId) {
-        if (!this.userId) return;
-
-        const itensNarrativas = {
-            // === ARMAS DE FOGO ===
+this.itensNarrativas = {
+    
+// === ARMAS DE FOGO ===
             "ak-47": { id: "ak-47", content: "AK 47", uuid: "extra-ak-47", slot: "weapon", large: true, twoHanded: true, description: "Fuzil de assalto da União Soviética. Fabricada em 1945.", damage: "2d10", ammoType: "municao-762", ammoCapacity: 30, loadedAmmo: 0, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/ak-47.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuak-47.png" },
             "amt-502d": { id: "amt-502d", content: "AMT-502D", uuid: "extra-amt-502d", slot: "weapon", description: "Protótipo fabricado supostamente em 2032(?), calíbre 50, 2 gatilhos.", damage: "3d12", ammoType: "municao-50", ammoCapacity: 14, loadedAmmo: 0, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/amt-502d.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuamt-502d.png" },
             "beretta-92": { id: "beretta-92", content: "Beretta 92", uuid: "extra-beretta-92", slot: "weapon", description: "Pistola semiautomática italiana. Fabricada em 1972.", damage: "1d8", ammoType: "municao-9mm", ammoCapacity: 10, loadedAmmo: 0, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/beretta-92.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuberetta-92.png" },
@@ -274,6 +112,205 @@ this.narrativaAtual = NARRATIVAS[narrativaId];
             "corda": { id: "corda", content: "Corda", uuid: "extra-corda", description: "Corda resistente para escaladas.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/corda.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thucorda.png" },
             "esqueiro": { id: "esqueiro", content: "Esqueiro", uuid: "extra-esqueiro", description: "Produz chama contínua.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/esqueiro.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuesqueiro.png" },
 
+
+         };
+        this.inicializar();
+    }
+
+    inicializar() {
+        // Verifica autenticação
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                this.userId = user.uid;
+                await this.configurarEventListeners();
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+    }
+
+    async configurarEventListeners() {
+        // Verifica se há progresso salvo
+        await this.verificarProgressoSalvo();
+
+        // Event listeners para seleção de narrativas
+        document.querySelectorAll('.narrativa-card').forEach(card => {
+            card.addEventListener('click', async (e) => {
+                const narrativaId = e.currentTarget.dataset.narrativa;
+
+                // Verifica se aventura foi completada
+                const playerDocRef = doc(db, "players", this.userId);
+                const docSnap = await getDoc(playerDocRef);
+                if (docSnap.exists()) {
+                    // AJUSTE 1: VERIFICA O PROGRESSO DA NARRATIVA ESPECÍFICA
+                    const allProgress = docSnap.data().narrativeProgress;
+                    if (allProgress && allProgress[narrativaId] && allProgress[narrativaId].completed) {
+                        alert("Você já completou esta aventura!");
+                        return;
+                    }
+                }
+
+                await this.iniciarNarrativa(narrativaId);
+            });
+        });
+
+        // Botão voltar
+        document.getElementById('voltar-selecao').addEventListener('click', () => {
+            this.voltarSelecao();
+        });
+
+        // Modal de teste
+        document.getElementById('rolar-dados').addEventListener('click', () => {
+            this.rolarDados();
+        });
+
+        document.getElementById('continuar-teste').addEventListener('click', () => {
+            this.continuarAposTeste();
+        });
+    }
+
+    async carregarDadosJogador() {
+        if (!this.userId) return;
+        const playerDocRef = doc(db, "players", this.userId);
+        const docSnap = await getDoc(playerDocRef);
+        if (docSnap.exists()) {
+            this.playerData = docSnap.data();
+            console.log('Dados do jogador carregados:', this.playerData);
+        } else {
+            console.log('Nenhum dado do jogador encontrado');
+        }
+    }
+
+    async iniciarNarrativa(narrativaId) {
+        await this.carregarDadosJogador();
+this.narrativaAtual = NARRATIVAS[narrativaId];
+        this.secaoAtual = 1;
+        document.getElementById('selecao-narrativas').className = 'tela-oculta';
+        document.getElementById('narrativa-ativa').className = 'tela-ativa';
+        document.getElementById('titulo-narrativa').textContent = this.narrativaAtual.titulo;
+        this.mostrarSecao(1);
+    }
+
+    async mostrarSecao(numeroSecao) {
+    const secao = this.narrativaAtual.secoes[numeroSecao];
+    if (!secao) return;
+    this.secaoAtual = numeroSecao;
+
+    await this.salvarProgresso(numeroSecao, secao.final);
+
+    // Aplicar apenas efeitos de energia
+    if (secao.efeitos) {
+        for (const efeito of secao.efeitos) {
+            if (efeito.tipo === 'energia') {
+                await this.modificarEnergia(efeito.valor);
+            }
+        }
+    }
+
+    document.getElementById('numero-secao').textContent = numeroSecao;
+    this.renderizarTextoComItens(secao);
+
+    if (secao.batalha && !secao.opcoes) {
+        await this.processarBatalhaAutomatica(secao);
+        return;
+    }
+
+    this.criarOpcoes(secao.opcoes, secao.final);
+}
+
+    renderizarTextoComItens(secao) {
+    const textoContainer = document.getElementById('texto-narrativa');
+    let textoHTML = secao.texto;
+
+    if (secao.efeitos) {
+        secao.efeitos.forEach(efeito => {
+            if (efeito.tipo === 'item') {
+                const itemNome = this.obterNomeItem(efeito.item);
+                textoHTML += ` <span class="item-coletavel" data-item-id="${efeito.item}" style="color: #90EE90; cursor: pointer; text-decoration: underline;">${itemNome}</span>`;
+            }
+        });
+    }
+
+    textoContainer.innerHTML = textoHTML;
+
+    textoContainer.querySelectorAll('.item-coletavel').forEach(span => {
+        span.addEventListener('click', async () => {
+            const itemId = span.dataset.itemId;
+            await this.adicionarItem(itemId);
+            span.remove();
+            alert(`${span.textContent} adicionado ao inventário!`);
+        });
+    });
+}
+
+obterNomeItem(itemId) {
+    return this.itensNarrativas[itemId]?.content || itemId;
+}
+
+
+
+    criarOpcoes(opcoes, isFinal = false) {
+        const container = document.getElementById('opcoes-container');
+        container.innerHTML = '';
+
+        if (isFinal) {
+            const btnFinalizar = document.createElement('button');
+            btnFinalizar.className = 'opcao-btn';
+            btnFinalizar.textContent = 'Finalizar Aventura';
+            btnFinalizar.addEventListener('click', () => this.voltarSelecao());
+            container.appendChild(btnFinalizar);
+            return;
+        }
+
+        opcoes.forEach((opcao, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'opcao-btn';
+            btn.textContent = opcao.texto;
+
+            // Verificar requisitos
+            if (opcao.requer && !this.temItem(opcao.requer)) {
+                btn.disabled = true;
+                btn.textContent += ' (Requer: ' + opcao.requer + ')';
+            }
+
+            btn.addEventListener('click', () => {
+                this.processarOpcao(opcao);
+            });
+            container.appendChild(btn);
+        });
+    }
+
+    temItem(itemId) {
+        if (!this.playerData?.inventory?.itemsInChest) {
+            console.log('Inventário não encontrado ou vazio');
+            return false;
+        }
+        const temItem = this.playerData.inventory.itemsInChest.some(item => {
+            return item.id === itemId && (item.quantity || 1) > 0;
+        });
+        console.log(`Item '${itemId}': ${temItem ? 'POSSUI' : 'NÃO POSSUI'}`);
+        return temItem;
+    }
+
+    async aplicarEfeitos(efeitos) {
+        for (const efeito of efeitos) {
+            switch (efeito.tipo) {
+                case 'energia':
+                    await this.modificarEnergia(efeito.valor);
+                    break;
+                case 'item':
+                    await this.adicionarItem(efeito.item);
+                    break;
+            }
+        }
+    }
+
+    async adicionarItem(itemId) {
+        if (!this.userId) return;
+
+            const itensNarrativas = this.itensNarrativas; // MUDE ESTA LINHA
+
+            
             
         };
 
@@ -605,6 +642,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
