@@ -268,7 +268,7 @@ this.narrativaAtual = NARRATIVAS[narrativaId];
             "estatuetaareliquia": { id: "estatuetaareliquia", content: "Estatueta A. Relíquia", uuid: "extra-estatuetaareliquia", description: "Um deus humanoide feito de bronze. Antiquário de valor incomum.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/estatuetaareliquia.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuestatuetaareliquia.png" },
             "estatuetabreliquia": { id: "estatuetabreliquia", content: "Estatueta B. Relíquia", uuid: "extra-estatuetabreliquia", description: "Um deus humanoide feito de bronze. Antiquário de valor incomum.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/estatuetabreliquia.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuestatuetabreliquia.png" },
             "estatuetacreliquia": { id: "estatuetacreliquia", content: "Estatueta C. Relíquia", uuid: "extra-estatuetacreliquia", description: "Um deus feito de marfim. Antiquário de valor incomum.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/estatuetacreliquia.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuestatuetacreliquia.png" },
-            "pequenabolsaouro": { id: "pequenabolsaouro", content: "Pequena Bolsa de Ouro", uuid: "extra-pequenabolsaouro", description: "Uma quantia modesta de Dracmas.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pequenabolsaouro.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupequenabolsaouro.png" },
+            "pequenabolsaouro": { id: "pequenabolsaouro", content: "Pequena Bolsa de Ouro", uuid: "extra-pequenabolsaouro", stackable: false, description: "Uma quantia modesta de Dracmas.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pequenabolsaouro.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupequenabolsaouro.png" },
 
             // === UTILITÁRIOS ===
             "corda": { id: "corda", content: "Corda", uuid: "extra-corda", description: "Corda resistente para escaladas.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/corda.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thucorda.png" },
@@ -583,6 +583,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
