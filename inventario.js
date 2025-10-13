@@ -1212,7 +1212,30 @@ if (actionUsarBtn) {
             }
         }
 
-        // CASO 3: Outros Consumíveis (heal, damage, etc.)
+        // CASO 3: Bolsa de Ouro
+        else if (selectedItem.dataset.item === 'pequenabolsaouro') {
+            const playerSnap = await getDoc(playerRef);
+            
+            if (playerSnap.exists()) {
+                const playerData = playerSnap.data();
+                const inventoryData = playerData.inventory;
+                
+                const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
+                if (itemIndex !== -1) {
+                    const goldValue = inventoryData.itemsInChest[itemIndex].goldValue || Math.floor(Math.random() * 10) + 1;
+                    const ouroAtual = playerData.p?.ouro || 0;
+                    
+                    await updateDoc(playerRef, { "p.ouro": ouroAtual + goldValue });
+                    
+                    inventoryData.itemsInChest.splice(itemIndex, 1);
+                    await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
+                    
+                    alert(`Você ganhou ${goldValue} moedas de ouro!`);
+                }
+            }
+        }
+
+        // CASO 4: Outros Consumíveis (heal, damage, etc.)
         else if (selectedItem.dataset.consumable === 'true') {
             const itemId = selectedItem.dataset.item;
             const itemName = selectedItem.dataset.itemName;
@@ -1258,6 +1281,7 @@ if (actionUsarBtn) {
         hideItemActions();
     });
 }
+
 
     // Adiciona funcionalidade ao botão checar das opções
 const actionChecarBtn = document.getElementById('action-checar');
