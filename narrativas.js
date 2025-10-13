@@ -252,27 +252,38 @@ abrirInventarioComItem(itemId, spanElement) {
     this.itemPendente = { id: itemId, span: spanElement };
     const itemData = this.itensNarrativas[itemId];
     
-    document.getElementById('narrativa-ativa').style.display = 'none';
-    document.getElementById('inventario-narrativa').classList.add('ativo');
+    // Cria overlay de fade
+    const overlay = document.createElement('div');
+    overlay.className = 'fade-overlay';
+    document.body.appendChild(overlay);
     
-    // Ativa o botão expandir
-    const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
-    const container = document.querySelector('#inventario-narrativa .container');
-    if (expandBtn && container) {
-        expandBtn.onclick = () => container.classList.toggle('expanded');
-    }
+    // Escurece
+    setTimeout(() => overlay.classList.add('active'), 10);
     
-    document.getElementById('preview-image').src = itemData.image;
-    document.getElementById('preview-image').style.display = 'block';
-    document.getElementById('preview-name').textContent = itemData.content;
-    document.getElementById('preview-description').innerHTML = `Você pegará a ${itemData.content}?<br><button id="btn-sim-inv">Sim</button> <button id="btn-nao-inv">Não</button>`;
-    
-    document.getElementById('btn-sim-inv').addEventListener('click', () => this.confirmarPegarItem());
-    document.getElementById('btn-nao-inv').addEventListener('click', () => this.fecharInventario());
+    // Após 1 segundo, abre inventário e clareia
+    setTimeout(() => {
+        document.getElementById('narrativa-ativa').style.display = 'none';
+        document.getElementById('inventario-narrativa').classList.add('ativo');
+        
+        const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
+        const container = document.querySelector('#inventario-narrativa .container');
+        if (expandBtn && container) {
+            expandBtn.onclick = () => container.classList.toggle('expanded');
+        }
+        
+        document.getElementById('preview-image').src = itemData.image;
+        document.getElementById('preview-image').style.display = 'block';
+        document.getElementById('preview-name').textContent = itemData.content;
+        document.getElementById('preview-description').innerHTML = `Você pegará a ${itemData.content}?<br><button id="btn-sim-inv">Sim</button> <button id="btn-nao-inv">Não</button>`;
+        
+        document.getElementById('btn-sim-inv').addEventListener('click', () => this.confirmarPegarItem());
+        document.getElementById('btn-nao-inv').addEventListener('click', () => this.fecharInventario());
+        
+        // Clareia
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 500);
+    }, 1000);
 }
-
-
-
 
 
 async confirmarPegarItem() {
@@ -672,6 +683,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
