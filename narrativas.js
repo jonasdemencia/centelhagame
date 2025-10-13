@@ -252,15 +252,14 @@ abrirInventarioComItem(itemId, spanElement) {
     this.itemPendente = { id: itemId, span: spanElement };
     const itemData = this.itensNarrativas[itemId];
     
-    // Cria overlay de fade
     const overlay = document.createElement('div');
     overlay.className = 'fade-overlay';
     document.body.appendChild(overlay);
     
-    // Escurece
+    // Escurece rápido (0.2s)
     setTimeout(() => overlay.classList.add('active'), 10);
     
-    // Após 1 segundo, abre inventário e clareia
+    // Fica preto por 1 segundo, depois abre inventário e clareia
     setTimeout(() => {
         document.getElementById('narrativa-ativa').style.display = 'none';
         document.getElementById('inventario-narrativa').classList.add('ativo');
@@ -279,11 +278,12 @@ abrirInventarioComItem(itemId, spanElement) {
         document.getElementById('btn-sim-inv').addEventListener('click', () => this.confirmarPegarItem());
         document.getElementById('btn-nao-inv').addEventListener('click', () => this.fecharInventario());
         
-        // Clareia
+        // Clareia rápido (0.2s)
         overlay.classList.remove('active');
-        setTimeout(() => overlay.remove(), 500);
-    }, 1000);
+        setTimeout(() => overlay.remove(), 200);
+    }, 1200);
 }
+
 
 
 async confirmarPegarItem() {
@@ -683,6 +683,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
