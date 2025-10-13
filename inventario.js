@@ -1223,15 +1223,16 @@ else if (selectedItem.dataset.item === 'pequenabolsaouro') {
         const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
         if (itemIndex !== -1) {
             const goldValue = inventoryData.itemsInChest[itemIndex].goldValue || Math.floor(Math.random() * 10) + 1;
-            const ouroAtual = playerData.p?.ouro || 0;
+            const ouroAtual = playerData.po || 0;
             const novoTotal = ouroAtual + goldValue;
             
             inventoryData.itemsInChest.splice(itemIndex, 1);
             
-            await setDoc(playerRef, { 
-                inventory: inventoryData,
-                "p.ouro": novoTotal 
-            }, { merge: true });
+           await setDoc(playerRef, { 
+    inventory: inventoryData,
+    po: novoTotal 
+}, { merge: true });
+
             
             alert(`Você ganhou ${goldValue} moedas de ouro! Total: ${novoTotal}`);
         }
