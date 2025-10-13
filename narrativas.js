@@ -268,7 +268,7 @@ this.narrativaAtual = NARRATIVAS[narrativaId];
             "estatuetaareliquia": { id: "estatuetaareliquia", content: "Estatueta A. Relíquia", uuid: "extra-estatuetaareliquia", description: "Um deus humanoide feito de bronze. Antiquário de valor incomum.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/estatuetaareliquia.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuestatuetaareliquia.png" },
             "estatuetabreliquia": { id: "estatuetabreliquia", content: "Estatueta B. Relíquia", uuid: "extra-estatuetabreliquia", description: "Um deus humanoide feito de bronze. Antiquário de valor incomum.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/estatuetabreliquia.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuestatuetabreliquia.png" },
             "estatuetacreliquia": { id: "estatuetacreliquia", content: "Estatueta C. Relíquia", uuid: "extra-estatuetacreliquia", description: "Um deus feito de marfim. Antiquário de valor incomum.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/estatuetacreliquia.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuestatuetacreliquia.png" },
-            "pequenabolsaouro": { id: "pequenabolsaouro", content: "Pequena Bolsa de Ouro", uuid: "extra-pequenabolsaouro", stackable: false, description: "Uma quantia modesta de Dracmas.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pequenabolsaouro.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupequenabolsaouro.png" },
+            "pequenabolsaouro": { id: "pequenabolsaouro", content: "Pequena Bolsa de Ouro", uuid: "extra-pequenabolsaouro", stackable: false, consumable: true, description: "Uma quantia modesta de Dracmas.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pequenabolsaouro.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupequenabolsaouro.png" },
 
             // === UTILITÁRIOS ===
             "corda": { id: "corda", content: "Corda", uuid: "extra-corda", description: "Corda resistente para escaladas.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/corda.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thucorda.png" },
@@ -278,41 +278,48 @@ this.narrativaAtual = NARRATIVAS[narrativaId];
         };
 
        const playerDocRef = doc(db, "players", this.userId);
-    const docSnap = await getDoc(playerDocRef);
+const docSnap = await getDoc(playerDocRef);
 
-    if (docSnap.exists()) {
-        const playerData = docSnap.data();
-        const inventory = playerData.inventory || {};
-        const chest = inventory.itemsInChest || [];
-        const itemData = itensNarrativas[itemId];
+if (docSnap.exists()) {
+    const playerData = docSnap.data();
+    const inventory = playerData.inventory || {};
+    const chest = inventory.itemsInChest || [];
+    const itemData = itensNarrativas[itemId];
 
-        if (!itemData) {
-            console.error(`Item '${itemId}' não encontrado nas narrativas`);
-            return;
-        }
-
-        // VERIFICA STACKABLE PRIMEIRO
-        if (itemData.stackable === false) {
-            // Sempre adiciona nova instância
-            chest.push({ ...itemData, uuid: crypto.randomUUID() });
-        } else {
-            // Comportamento empilhável
-            const existeItem = chest.find(item => item.id === itemId);
-            if (existeItem) {
-                existeItem.quantity = (existeItem.quantity || 1) + 1;
-            } else {
-                chest.push({ ...itemData, quantity: 1, uuid: crypto.randomUUID() });
-            }
-        }
-
-        await updateDoc(playerDocRef, {
-            "inventory.itemsInChest": chest
-        });
-
-        this.playerData.inventory.itemsInChest = chest;
-        console.log('Item adicionado:', itemId, 'Inventário atual:', chest);
+    if (!itemData) {
+        console.error(`Item '${itemId}' não encontrado nas narrativas`);
+        return;
     }
+
+    // VERIFICA STACKABLE PRIMEIRO
+    if (itemData.stackable === false) {
+        // Sempre adiciona nova instância
+        const novoItem = { ...itemData, uuid: crypto.randomUUID() };
+        
+        // Se for bolsa de ouro, adiciona valor aleatório
+        if (itemId === "pequenabolsaouro") {
+            novoItem.goldValue = Math.floor(Math.random() * 10) + 1;
+        }
+        
+        chest.push(novoItem);
+    } else {
+        // Comportamento empilhável
+        const existeItem = chest.find(item => item.id === itemId);
+        if (existeItem) {
+            existeItem.quantity = (existeItem.quantity || 1) + 1;
+        } else {
+            chest.push({ ...itemData, quantity: 1, uuid: crypto.randomUUID() });
+        }
+    }
+
+    await updateDoc(playerDocRef, {
+        "inventory.itemsInChest": chest
+    });
+
+    this.playerData.inventory.itemsInChest = chest;
+    console.log('Item adicionado:', itemId, 'Inventário atual:', chest);
 }
+
     
     async modificarEnergia(valor) {
     if (!this.userId) return;
@@ -333,29 +340,44 @@ this.narrativaAtual = NARRATIVAS[narrativaId];
 
 
     async consumirItem(itemId) {
-        if (!this.userId) return;
-        const playerDocRef = doc(db, "players", this.userId);
-        const docSnap = await getDoc(playerDocRef);
-        if (docSnap.exists()) {
-            const playerData = docSnap.data();
-            const inventory = playerData.inventory || {};
-            const chest = inventory.itemsInChest || [];
-            const itemIndex = chest.findIndex(item => item.id === itemId);
-            if (itemIndex !== -1) {
-                const item = chest[itemIndex];
-                if (item.quantity > 1) {
-                    chest[itemIndex].quantity -= 1;
-                } else {
-                    chest.splice(itemIndex, 1);
-                }
+    if (!this.userId) return;
+    const playerDocRef = doc(db, "players", this.userId);
+    const docSnap = await getDoc(playerDocRef);
+    if (docSnap.exists()) {
+        const playerData = docSnap.data();
+        const inventory = playerData.inventory || {};
+        const chest = inventory.itemsInChest || [];
+        const itemIndex = chest.findIndex(item => item.id === itemId);
+        
+        if (itemIndex !== -1) {
+            const item = chest[itemIndex];
+            
+            // Se for bolsa de ouro, adiciona ao p.ouro
+            if (itemId === "pequenabolsaouro" && item.goldValue) {
+                const ouroAtual = playerData.p?.ouro || 0;
                 await updateDoc(playerDocRef, {
-                    "inventory.itemsInChest": chest
+                    "p.ouro": ouroAtual + item.goldValue
                 });
-                this.playerData.inventory.itemsInChest = chest;
-                console.log('Item consumido:', itemId, 'Inventário atualizado:', chest);
+                this.playerData.p = this.playerData.p || {};
+                this.playerData.p.ouro = ouroAtual + item.goldValue;
             }
+            
+            // Remove a bolsa do inventário
+            if (item.quantity > 1) {
+                chest[itemIndex].quantity -= 1;
+            } else {
+                chest.splice(itemIndex, 1);
+            }
+            
+            await updateDoc(playerDocRef, {
+                "inventory.itemsInChest": chest
+            });
+            this.playerData.inventory.itemsInChest = chest;
+            console.log('Item consumido:', itemId, 'Inventário atualizado:', chest);
         }
     }
+}
+
 
     iniciarTeste(atributo, dificuldade, secaoSucesso) {
         this.testeAtual = { atributo, dificuldade, secaoSucesso };
@@ -583,6 +605,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
