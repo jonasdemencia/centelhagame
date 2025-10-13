@@ -291,16 +291,17 @@ this.narrativaAtual = NARRATIVAS[narrativaId];
             return;
         }
 
+        // VERIFICA STACKABLE PRIMEIRO
         if (itemData.stackable === false) {
-            const novoItem = { ...itemData, uuid: crypto.randomUUID() };
-            chest.push(novoItem);
+            // Sempre adiciona nova instância
+            chest.push({ ...itemData, uuid: crypto.randomUUID() });
         } else {
+            // Comportamento empilhável
             const existeItem = chest.find(item => item.id === itemId);
             if (existeItem) {
                 existeItem.quantity = (existeItem.quantity || 1) + 1;
             } else {
-                const novoItem = { ...itemData, quantity: 1, uuid: crypto.randomUUID() };
-                chest.push(novoItem);
+                chest.push({ ...itemData, quantity: 1, uuid: crypto.randomUUID() });
             }
         }
 
@@ -582,6 +583,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
