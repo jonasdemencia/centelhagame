@@ -337,6 +337,23 @@ async confirmarPegarItem() {
     }, 30);
 }
 
+    fecharInventario() {
+    document.getElementById('inventario-narrativa').classList.remove('ativo');
+    document.getElementById('narrativa-ativa').style.display = 'block';
+    
+    document.getElementById('preview-image').style.display = 'none';
+    document.getElementById('preview-image').src = '';
+    document.getElementById('preview-name').textContent = '';
+    document.getElementById('preview-description').innerHTML = '';
+    
+    const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
+    if (imageContainer) {
+        imageContainer.style.display = 'none';
+    }
+    
+    this.itemPendente = null;
+}
+
 
 
     criarOpcoes(opcoes, isFinal = false) {
@@ -723,6 +740,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
