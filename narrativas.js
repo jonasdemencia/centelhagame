@@ -282,10 +282,23 @@ if (imageContainer) {
 }
 
         document.getElementById('preview-name').textContent = '';
-        document.getElementById('preview-description').innerHTML = `Você pegará a ${itemData.content}?<br><button id="btn-sim-inv">Sim</button> <button id="btn-nao-inv">Não</button>`;
-        
+        const texto = `Você pegará a ${itemData.content}?`;
+const previewDesc = document.getElementById('preview-description');
+previewDesc.innerHTML = '';
+
+let i = 0;
+const typeWriter = setInterval(() => {
+    if (i < texto.length) {
+        previewDesc.textContent += texto.charAt(i);
+        i++;
+    } else {
+        clearInterval(typeWriter);
+        previewDesc.innerHTML += '<br><button id="btn-sim-inv">Sim</button> <button id="btn-nao-inv">Não</button>';
         document.getElementById('btn-sim-inv').addEventListener('click', () => this.confirmarPegarItem());
         document.getElementById('btn-nao-inv').addEventListener('click', () => this.fecharInventario());
+    }
+}, 50);
+
         
         // Clareia rápido (0.2s)
         overlay.classList.remove('active');
@@ -706,6 +719,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
