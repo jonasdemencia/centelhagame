@@ -337,11 +337,16 @@ async confirmarPegarItem() {
             i++;
         } else {
             clearInterval(typeWriter);
-            // Fecha após 2 segundos
+            // Limpa preview após 2 segundos mas mantém inventário aberto
             setTimeout(() => {
                 document.getElementById('preview-image').style.display = 'none';
                 document.getElementById('preview-image').src = '';
-                this.fecharInventario();
+                document.getElementById('preview-description').innerHTML = '';
+                const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
+                if (imageContainer) {
+                    imageContainer.style.display = 'none';
+                }
+                this.itemPendente = null;
             }, 2000);
         }
     }, 30);
@@ -750,6 +755,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
