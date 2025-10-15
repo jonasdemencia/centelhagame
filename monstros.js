@@ -49,6 +49,37 @@ export const monsterData = {
         ]
     },
 
+    "coruja": {
+    nome: "Coruja Sombria",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Uma coruja de olhos penetrantes que guarda os segredos da sala de reuniões.",
+    habilidade: 4,
+    couraça: 2,
+    energiaDados: "2d6",
+    experiencia: 40,
+    dano: "1D6",
+    ataques: [
+        {
+            id: "bicada",
+            nome: "Bicada Afiada",
+            dano: "1d4",
+            peso: 70,
+            pesoHPBaixo: 50,
+            telegrafado: false
+        },
+        {
+            id: "garras",
+            nome: "Garras Dilacerantes",
+            dano: "1d6+1",
+            peso: 30,
+            pesoHPBaixo: 50,
+            telegrafado: true,
+            mensagemTelegraf: "A coruja abre suas asas e suas garras brilham ameaçadoramente..."
+        }
+    ]
+},
+
+
 "zumbi": {
     nome: "Zumbi Putrefato",
     imagem: "https://via.placeholder.com/150",
@@ -718,6 +749,7 @@ export const monsterData = {
 export function getMonsterById(monsterId) {
     return monsterData[monsterId] || null;
 }
+
 
 
 
