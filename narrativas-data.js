@@ -606,13 +606,21 @@ export const NARRATIVAS = {
         },
 
         52: {
-            texto: "Mesa oval, vinte cadeiras. Quadro branco vazio. Projetor antigo coberto por lona.",
-            opcoes: [
-                { texto: "Examinar o quadro", secao: 62 },
-                { texto: "Sair pela porta dupla", secao: 63 },
-                { texto: "Retornar ao corredor", secao: 42 }
-            ]
-        },
+    texto: "Mesa oval, vinte cadeiras. Quadro branco vazio. Projetor antigo coberto por lona. Uma coruja sombria pousa sobre a mesa, seus olhos fixos em você.",
+    batalha: "coruja",
+    vitoria: 521,
+    derrota: 320
+},
+
+521: {
+    texto: "Após derrotar a coruja, você pode explorar a sala com segurança. Mesa oval, vinte cadeiras. Quadro branco vazio. Projetor antigo coberto por lona.",
+    opcoes: [
+        { texto: "Examinar o quadro", secao: 62 },
+        { texto: "Sair pela porta dupla", secao: 63 },
+        { texto: "Retornar ao corredor", secao: 42 }
+    ]
+},
+
 
         53: {
             texto: "Correntes grossas, cadeado industrial. Você não tem a chave. Metal frio.",
@@ -3736,6 +3744,7 @@ export const NARRATIVAS = {
         }
     }
 };
+
 
 
 
