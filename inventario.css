@@ -142,16 +142,34 @@ animation: hotSteel 0.7s ease-out forwards;
     padding: 10px;
     overflow-y: auto;
     max-height: calc(350px - 55px);
-    margin-left: -12px; /* Chrome/Edge */
+    margin-left: -12px;
     margin-top: 25px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(139, 69, 19, 0.4) transparent;
 }
-
 
 /* Firefox específico */
 @-moz-document url-prefix() {
     .items {
         margin-left: -15px;
     }
+}
+
+.items::-webkit-scrollbar {
+    width: 6px;
+}
+
+.items::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.items::-webkit-scrollbar-thumb {
+    background: rgba(139, 69, 19, 0.4);
+    border-radius: 3px;
+}
+
+.items::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 69, 19, 0.7);
 }
 
 
