@@ -753,8 +753,9 @@ storageSlides[currentStorageSlide].classList.add("active");
 // Listener global para desselecionar item clicando em qualquer lugar
 
 // CÓDIGO DE SUBSTITUIÇÃO 2.2
+// SUBSTITUA O BLOCO INTEIRO POR ESTE:
 document.addEventListener('click', function(event) {
-    // Se uma ação da narrativa estiver em progresso, não faça nada.
+    // Se uma ação da narrativa estiver em progresso, ignora o clique para evitar conflitos.
     if (window.narrativeActionInProgress) {
         return;
     }
@@ -1606,196 +1607,170 @@ console.error("Erro ao configurar listener do inventário:", error);
 
 }
 
+// SUBSTITUA A FUNÇÃO INTEIRA POR ESTA:
 function loadInventoryUI(inventoryData) {
     console.log("--- [LOAD UI] --- Iniciando redesenho do inventário com dados do Firestore:", inventoryData);
 
-        document.querySelector('.preview-image-container').style.border = 'none';
-        
     const chestElement = document.querySelector('.items');
-chestElement.innerHTML = ""; // Limpa o conteúdo atual
+    chestElement.innerHTML = ""; // Limpa o conteúdo atual
 
-const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
+    const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
+    const largeItemElements = [];
+    const smallItemElements = [];
 
-const largeItemElements = [];
-const smallItemElements = [];
-
-inventoryData.itemsInChest.forEach(dbItem => {
-    const fullItemData = allItemsArr.find(localItem => localItem.id === dbItem.id);
-    if (!fullItemData) {
-        console.warn(`[LOAD UI] Item com id "${dbItem.id}" não encontrado nos catálogos locais. Pulando.`);
-        return;
-    }
-
-    const newItem = document.createElement('div');
-    newItem.classList.add('item');
-    if (fullItemData.large) {
-        newItem.classList.add('large');
-    }
-
-    newItem.dataset.item = fullItemData.id;
-    if (!dbItem.uuid) {
-        dbItem.uuid = crypto.randomUUID();
-    }
-    newItem.dataset.uuid = dbItem.uuid;
-    newItem.dataset.itemName = fullItemData.content;
-
-    if (fullItemData.energia) {
-        newItem.dataset.energia = JSON.stringify(fullItemData.energia);
-    }
-
-    let energiaHTML = "";
-    if (fullItemData.energia) {
-        const porcentagem = (fullItemData.energia.total / fullItemData.energia.inicial) * 100;
-        let cor = "#4CAF50";
-        if (porcentagem <= 50) cor = "#FFA500";
-        if (porcentagem <= 25) cor = "#FF0000";
-        energiaHTML = `
-            <div class="item-energy-bar">
-                <div class="item-energy-fill" style="width: ${porcentagem}%; background-color: ${cor};"></div>
-                <span class="item-energy-text">${fullItemData.energia.total}/${fullItemData.energia.inicial}</span>
-            </div>
-        `;
-    }
-
-    let itemHTML = `<img src="${fullItemData.thumbnailImage || fullItemData.image}" alt="${fullItemData.content}" />${energiaHTML}`;
-
-    if (fullItemData.consumable || fullItemData.projectile) {
-        const quantity = dbItem.quantity || fullItemData.quantity;
-        newItem.dataset.quantity = quantity;
-        if (fullItemData.consumable) {
-            newItem.dataset.consumable = 'true';
-            if (fullItemData.effect) newItem.dataset.effect = fullItemData.effect;
-            if (fullItemData.value) newItem.dataset.value = fullItemData.value;
+    inventoryData.itemsInChest.forEach(dbItem => {
+        const fullItemData = allItemsArr.find(localItem => localItem.id === dbItem.id);
+        if (!fullItemData) {
+            console.warn(`[LOAD UI] Item com id "${dbItem.id}" não encontrado nos catálogos locais. Pulando.`);
+            return;
         }
-        if (fullItemData.projectile) {
-            newItem.dataset.projectile = 'true';
+
+        const newItem = document.createElement('div');
+        newItem.classList.add('item');
+        if (fullItemData.large) {
+            newItem.classList.add('large');
         }
-        if (quantity > 0) {
-            itemHTML += `<span class="item-quantity">${quantity}</span>`;
+        newItem.dataset.item = fullItemData.id;
+        if (!dbItem.uuid) {
+            dbItem.uuid = crypto.randomUUID();
         }
-    }
+        newItem.dataset.uuid = dbItem.uuid;
+        newItem.dataset.itemName = fullItemData.content;
 
-    if (fullItemData.ammoType) {
-        const savedAmmo = inventoryData.weaponAmmoCounts[fullItemData.content] || 0;
-        if (savedAmmo > 0) {
-            itemHTML += `<span class="weapon-ammo">${savedAmmo}</span>`;
+        if (fullItemData.energia) {
+            newItem.dataset.energia = JSON.stringify(fullItemData.energia);
         }
-    }
 
-    newItem.innerHTML = itemHTML;
+        let energiaHTML = "";
+        if (fullItemData.energia) {
+            const porcentagem = (fullItemData.energia.total / fullItemData.energia.inicial) * 100;
+            let cor = "#4CAF50";
+            if (porcentagem <= 50) cor = "#FFA500";
+            if (porcentagem <= 25) cor = "#FF0000";
+            energiaHTML = `
+<div class="item-energy-bar">
+    <div class="item-energy-fill" style="width: ${porcentagem}%; background-color: ${cor};"></div>
+    <span class="item-energy-text">${fullItemData.energia.total}/${fullItemData.energia.inicial}</span>
+</div>
+`;
+        }
 
-    if (fullItemData.large) {
-        largeItemElements.push(newItem);
-    } else {
-        smallItemElements.push(newItem);
-    }
+        let itemHTML = `<img src="${fullItemData.thumbnailImage || fullItemData.image}" alt="${fullItemData.content}" />${energiaHTML}`;
 
-    addItemClickListener(newItem);
-});
-
-// Adiciona os itens ordenados ao DOM para otimizar o preenchimento da grade
-largeItemElements.forEach(item => chestElement.appendChild(item));
-smallItemElements.forEach(item => chestElement.appendChild(item));
-
-
-// Adiciona slots vazios para mostrar espaços expandidos
-const inventorySpaces = inventoryData.inventorySpaces || 50;
-
-// Calcula espaço ocupado considerando itens grandes
-const occupiedSpace = largeItemElements.length * 2 + smallItemElements.length;
-const emptySlotsCount = Math.max(0, inventorySpaces - occupiedSpace);
-
-for (let i = 0; i < emptySlotsCount; i++) {
-    const emptySlot = document.createElement('div');
-    emptySlot.classList.add('item', 'empty-slot');
-    chestElement.appendChild(emptySlot);
-}
-
-
-// Carrega itens equipados
-document.querySelectorAll('.slot').forEach(slot => {
-const equippedItemName = inventoryData.equippedItems[slot.id];
-    const item = allItemsArr.find(i => i.content === equippedItemName);
-
-    if (item) {
-       let slotHTML = `<img src="${item.thumbnailImage || item.image}" alt="${item.content}" />`;
-
-        slot.dataset.itemName = item.content;
-        if (slot.dataset.slot === "weapon" && item.twoHanded) {
-    slot.classList.add('two-handed');
-} else if (slot.dataset.slot === "weapon") {
-    slot.classList.remove('two-handed');
-}
-
-        // Adiciona classe two-handed para armas de duas mãos
-if (slot.dataset.slot === "weapon" && item.twoHanded) {
-    slot.classList.add('two-handed');
-} else {
-    slot.classList.remove('two-handed');
-}
-
-
-       // **LÓGICA DE MUNIÇÃO CORRIGIDA**
-if (slot.dataset.slot === "weapon" && item.ammoType) {
-    const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
-    slotHTML = `<img src="${item.thumbnailImage || item.image}" alt="${item.content}" />`;
-    if (loadedAmmo > 0) {
-        slotHTML += `<span class="slot-weapon-ammo">${loadedAmmo}</span>`;
-    }
-}
-
-        
-        slot.innerHTML = slotHTML;
-
-        // Limpa dados antigos e define os novos se o item for consumível
-        delete slot.dataset.consumable;
-        delete slot.dataset.quantity;
-        delete slot.dataset.effect;
-        delete slot.dataset.value;
-
-if (inventoryData.equippedItems[slot.id + '_consumable']) {
-            slot.dataset.consumable = 'true';
-            slot.dataset.quantity = inventoryData.equippedItems[slot.dataset.slot + '_quantity'];
-            if (inventoryData.equippedItems[slot.dataset.slot + '_effect']) {
-                slot.dataset.effect = inventoryData.equippedItems[slot.dataset.slot + '_effect'];
+        if (fullItemData.consumable || fullItemData.projectile) {
+            const quantity = dbItem.quantity || fullItemData.quantity;
+            newItem.dataset.quantity = quantity;
+            if (fullItemData.consumable) {
+                newItem.dataset.consumable = 'true';
+                if (fullItemData.effect) newItem.dataset.effect = fullItemData.effect;
+                if (fullItemData.value) newItem.dataset.value = fullItemData.value;
             }
-            if (inventoryData.equippedItems[slot.dataset.slot + '_value']) {
-                slot.dataset.value = inventoryData.equippedItems[slot.dataset.slot + '_value'];
+            if (fullItemData.projectile) {
+                newItem.dataset.projectile = 'true';
+            }
+            if (quantity > 0) {
+                itemHTML += `<span class="item-quantity">${quantity}</span>`;
             }
         }
-    } else {
-        slot.innerHTML = slot.dataset.slot;
-        delete slot.dataset.itemName;
-        delete slot.dataset.consumable;
-        delete slot.dataset.quantity;
-        delete slot.dataset.effect;
-        delete slot.dataset.value;
+
+        if (fullItemData.ammoType) {
+            const savedAmmo = inventoryData.weaponAmmoCounts[fullItemData.content] || 0;
+            if (savedAmmo > 0) {
+                itemHTML += `<span class="weapon-ammo">${savedAmmo}</span>`;
+            }
+        }
+
+        newItem.innerHTML = itemHTML;
+
+        if (fullItemData.large) {
+            largeItemElements.push(newItem);
+        } else {
+            smallItemElements.push(newItem);
+        }
+        addItemClickListener(newItem);
+    });
+
+    largeItemElements.forEach(item => chestElement.appendChild(item));
+    smallItemElements.forEach(item => chestElement.appendChild(item));
+
+    const inventorySpaces = inventoryData.inventorySpaces || 50;
+    const occupiedSpace = largeItemElements.length * 2 + smallItemElements.length;
+    const emptySlotsCount = Math.max(0, inventorySpaces - occupiedSpace);
+
+    for (let i = 0; i < emptySlotsCount; i++) {
+        const emptySlot = document.createElement('div');
+        emptySlot.classList.add('item', 'empty-slot');
+        chestElement.appendChild(emptySlot);
     }
-});
 
-// Adiciona classe 'equipped' aos slots que têm itens
-document.querySelectorAll('.slot').forEach(slot => {
-const equippedItemName = inventoryData.equippedItems[slot.id];
-    if (equippedItemName) {
-        slot.classList.add('equipped');
-    } else {
-        slot.classList.remove('equipped');
+    document.querySelectorAll('.slot').forEach(slot => {
+        const equippedItemName = inventoryData.equippedItems[slot.id];
+        const item = allItemsArr.find(i => i.content === equippedItemName);
+        if (item) {
+            let slotHTML = `<img src="${item.thumbnailImage || item.image}" alt="${item.content}" />`;
+            slot.dataset.itemName = item.content;
+
+            if (slot.dataset.slot === "weapon" && item.twoHanded) {
+                slot.classList.add('two-handed');
+            } else if (slot.dataset.slot === "weapon") {
+                slot.classList.remove('two-handed');
+            }
+
+            if (slot.dataset.slot === "weapon" && item.ammoType) {
+                const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
+                slotHTML = `<img src="${item.thumbnailImage || item.image}" alt="${item.content}" />`;
+                if (loadedAmmo > 0) {
+                    slotHTML += `<span class="slot-weapon-ammo">${loadedAmmo}</span>`;
+                }
+            }
+            slot.innerHTML = slotHTML;
+
+            delete slot.dataset.consumable;
+            delete slot.dataset.quantity;
+            delete slot.dataset.effect;
+            delete slot.dataset.value;
+
+            if (inventoryData.equippedItems[slot.id + '_consumable']) {
+                slot.dataset.consumable = 'true';
+                slot.dataset.quantity = inventoryData.equippedItems[slot.dataset.slot + '_quantity'];
+                if (inventoryData.equippedItems[slot.dataset.slot + '_effect']) {
+                    slot.dataset.effect = inventoryData.equippedItems[slot.dataset.slot + '_effect'];
+                }
+                if (inventoryData.equippedItems[slot.dataset.slot + '_value']) {
+                    slot.dataset.value = inventoryData.equippedItems[slot.dataset.slot + '_value'];
+                }
+            }
+        } else {
+            slot.innerHTML = slot.dataset.slot;
+            delete slot.dataset.itemName;
+            delete slot.dataset.consumable;
+            delete slot.dataset.quantity;
+            delete slot.dataset.effect;
+            delete slot.dataset.value;
+        }
+    });
+
+    document.querySelectorAll('.slot').forEach(slot => {
+        const equippedItemName = inventoryData.equippedItems[slot.id];
+        if (equippedItemName) {
+            slot.classList.add('equipped');
+        } else {
+            slot.classList.remove('equipped');
+        }
+    });
+
+    updateSlotCompatibility();
+
+    // CORREÇÃO APLICADA AQUI:
+    const previewContainer = document.querySelector('.preview-image-container');
+    if (previewContainer) {
+        // Apenas esconde o container em vez de remover seus estilos.
+        // A lógica da narrativa irá reexibi-lo quando necessário.
+        previewContainer.style.display = 'none';
+        document.getElementById('preview-image').style.display = 'none';
+        document.getElementById('preview-name').textContent = '';
+        document.getElementById('preview-description').textContent = '';
     }
-});
-
-updateSlotCompatibility();
-// reorganizeGrid();
-
-const previewContainer = document.querySelector('.preview-image-container');
-if (previewContainer) {
-    previewContainer.style.display = 'flex';
-    previewContainer.style.background = 'none';
-    previewContainer.style.border = 'none';
-    previewContainer.style.boxShadow = 'none'; // <-- ADICIONE ESTA LINHA
-    document.getElementById('preview-image').style.display = 'none';
-    document.getElementById('preview-name').textContent = '';
-    document.getElementById('preview-description').textContent = '';
-}
 }
 
 
