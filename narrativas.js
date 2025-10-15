@@ -235,12 +235,15 @@ this.narrativaAtual = NARRATIVAS[narrativaId];
 
     textoContainer.innerHTML = textoHTML;
 
-    textoContainer.querySelectorAll('.item-coletavel').forEach(span => {
-        span.addEventListener('click', () => {
-            const itemId = span.dataset.itemId;
-            this.abrirInventarioComItem(itemId, span);
-        });
+    // CÓDIGO CORRIGIDO E FINAL
+textoContainer.querySelectorAll('.item-coletavel').forEach(span => {
+    span.addEventListener('click', (e) => { // 1. Receba o evento 'e'
+        e.stopPropagation(); // 2. Adicione esta linha para parar a propagação do clique
+
+        const itemId = span.dataset.itemId;
+        this.abrirInventarioComItem(itemId, span);
     });
+});
 }
 
 
@@ -755,6 +758,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
