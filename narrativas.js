@@ -312,25 +312,27 @@ async confirmarPegarItem() {
     await this.adicionarItem(this.itemPendente.id);
     this.itemPendente.span.remove();
     
-    // Limpa o preview
-    document.getElementById('preview-image').style.display = 'none';
-    document.getElementById('preview-image').src = '';
+    // Mostra mensagem de confirmação com efeito de digitação rápido
+    const itemNome = this.itensNarrativas[this.itemPendente.id].content;
+    const texto = `Você pegou ${itemNome}.`;
+    const previewDesc = document.getElementById('preview-description');
+    previewDesc.innerHTML = '';
     
-    this.fecharInventario();
-}
-
-
-fecharInventario() {
-    document.getElementById('inventario-narrativa').classList.remove('ativo');
-    document.getElementById('narrativa-ativa').style.display = 'block';
-    
-    // Limpa o preview
-    document.getElementById('preview-image').style.display = 'none';
-    document.getElementById('preview-image').src = '';
-    document.getElementById('preview-name').textContent = '';
-    document.getElementById('preview-description').innerHTML = '';
-    
-    this.itemPendente = null;
+    let i = 0;
+    const typeWriter = setInterval(() => {
+        if (i < texto.length) {
+            previewDesc.textContent += texto.charAt(i);
+            i++;
+        } else {
+            clearInterval(typeWriter);
+            // Fecha após 2 segundos
+            setTimeout(() => {
+                document.getElementById('preview-image').style.display = 'none';
+                document.getElementById('preview-image').src = '';
+                this.fecharInventario();
+            }, 2000);
+        }
+    }, 30);
 }
 
 
@@ -719,6 +721,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
