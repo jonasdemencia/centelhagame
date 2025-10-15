@@ -161,10 +161,6 @@ this.itensNarrativas = {
             this.voltarSelecao();
         });
 
-// Botão abrir inventário
-document.getElementById('abrir-inventario-btn').addEventListener('click', () => {
-    this.abrirInventarioSemItem();
-});
 
         // Modal de teste
         document.getElementById('rolar-dados').addEventListener('click', () => {
@@ -189,14 +185,21 @@ document.getElementById('abrir-inventario-btn').addEventListener('click', () => 
     }
 
     async iniciarNarrativa(narrativaId) {
-        await this.carregarDadosJogador();
-this.narrativaAtual = NARRATIVAS[narrativaId];
-        this.secaoAtual = 1;
-        document.getElementById('selecao-narrativas').className = 'tela-oculta';
-        document.getElementById('narrativa-ativa').className = 'tela-ativa';
-        document.getElementById('titulo-narrativa').textContent = this.narrativaAtual.titulo;
-        this.mostrarSecao(1);
-    }
+    await this.carregarDadosJogador();
+    this.narrativaAtual = NARRATIVAS[narrativaId];
+    this.secaoAtual = 1;
+    document.getElementById('selecao-narrativas').className = 'tela-oculta';
+    document.getElementById('narrativa-ativa').className = 'tela-ativa';
+    document.getElementById('titulo-narrativa').textContent = this.narrativaAtual.titulo;
+    
+    // ADICIONE ESTAS LINHAS AQUI:
+    document.getElementById('abrir-inventario-btn').onclick = () => {
+        this.abrirInventarioSemItem();
+    };
+    
+    this.mostrarSecao(1);
+}
+
 
     async mostrarSecao(numeroSecao) {
     const secao = this.narrativaAtual.secoes[numeroSecao];
@@ -819,6 +822,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
