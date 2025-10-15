@@ -466,6 +466,21 @@ fecharInventario() {
             return;
         }
 
+        // VERIFICA ESPAÇO ANTES DE ADICIONAR
+        const totalSlots = inventory.inventorySpaces || 50;
+        const slotsNecessarios = itemData.large ? 2 : 1;
+        
+        let slotsOcupados = 0;
+        chest.forEach(item => {
+            const itemInfo = this.itensNarrativas[item.id];
+            slotsOcupados += itemInfo?.large ? 2 : 1;
+        });
+        
+        if (slotsOcupados + slotsNecessarios > totalSlots) {
+            console.error('Sem espaço suficiente no inventário');
+            return;
+        }
+
         if (itemData.stackable === false) {
             const novoItem = { ...itemData, uuid: crypto.randomUUID() };
             
@@ -488,9 +503,10 @@ fecharInventario() {
         });
 
         this.playerData.inventory.itemsInChest = chest;
-        console.log('Item adicionado:', itemId, 'Inventário atual:', chest);
+        console.log('Item adicionado:', itemId);
     }
 }
+
 
     
     async modificarEnergia(valor) {
@@ -777,6 +793,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
