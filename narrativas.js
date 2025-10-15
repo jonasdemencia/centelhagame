@@ -281,7 +281,7 @@ abrirInventarioComItem(itemId, spanElement) {
         // Clareia rápido (0.2s)
         overlay.classList.remove('active');
         setTimeout(() => overlay.remove(), 200);
-    }, 1700);
+    }, 1500);
 }
 
 
@@ -683,6 +683,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
