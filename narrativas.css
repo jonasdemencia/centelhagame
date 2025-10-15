@@ -217,6 +217,15 @@ h1 {
     opacity: 1;
 }
 
+#inventario-narrativa .preview-image-container {
+    width: 130px;
+    height: 96px;
+    background: #000039 url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/preview-background.png') center/cover no-repeat !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
 
 
 
