@@ -752,51 +752,48 @@ storageSlides[currentStorageSlide].classList.add("active");
 
 // Listener global para desselecionar item clicando em qualquer lugar
 
+// CÓDIGO DE SUBSTITUIÇÃO 2.2
 document.addEventListener('click', function(event) {
-
-// Elementos que NÃO devem desselecionar o item
-
-// CÓDIGO CORRIGIDO
-const keepSelection = event.target.closest('.item, .slot, #useBtn, #carregar-municao-btn, #discard-slot, .dice-item, .dice-slot, .item-actions-window, .item-coletavel, .preview-image-window, .preview-image-container');
-    
-if (!keepSelection && selectedItem) {
-    clearHighlights();
-    selectedItem = null;
-    toggleUseButton(false);
-
-    // Esconde o tapete do preview
-    const previewContainer = document.querySelector('.preview-image-container');
-    if (previewContainer) {
-        previewContainer.style.display = 'none';
+    // Se uma ação da narrativa estiver em progresso, não faça nada.
+    if (window.narrativeActionInProgress) {
+        return;
     }
 
-    // Limpa o conteúdo
-    const previewImage = document.getElementById('preview-image');
-    const previewName = document.getElementById('preview-name');
-    const previewDescription = document.getElementById('preview-description');
-    
-    previewImage.style.display = 'none';
-    previewName.textContent = '';
-    previewDescription.textContent = '';
+    // Elementos que NÃO devem desselecionar o item
+    const keepSelection = event.target.closest('.item, .slot, #useBtn, #carregar-municao-btn, #discard-slot, .dice-item, .dice-slot, .item-actions-window, .item-coletavel, .preview-image-window, .preview-image-container');
 
-// Esconde janela de ações
-hideItemActions();
-    document.querySelectorAll('.item').forEach(item => {
-        item.clickCount = 0;
-    });
-}
+    if (!keepSelection && selectedItem) {
+        clearHighlights();
+        selectedItem = null;
+        toggleUseButton(false);
 
+        // Esconde o tapete do preview
+        const previewContainer = document.querySelector('.preview-image-container');
+        if (previewContainer) {
+            previewContainer.style.display = 'none';
+        }
 
-// Desselecionar dados
+        // Limpa o conteúdo
+        const previewImage = document.getElementById('preview-image');
+        const previewName = document.getElementById('preview-name');
+        const previewDescription = document.getElementById('preview-description');
+        previewImage.style.display = 'none';
+        previewName.textContent = '';
+        previewDescription.textContent = '';
 
-if (!keepSelection && selectedDice) {
+        // Esconde janela de ações
+        hideItemActions();
 
-clearDiceHighlights();
+        document.querySelectorAll('.item').forEach(item => {
+            item.clickCount = 0;
+        });
+    }
 
-selectedDice = null;
-
-}
-
+    // Desselecionar dados
+    if (!keepSelection && selectedDice) {
+        clearDiceHighlights();
+        selectedDice = null;
+    }
 });
 
 const slots = document.querySelectorAll('.slot');
