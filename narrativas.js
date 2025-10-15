@@ -263,6 +263,8 @@ abrirInventarioComItem(itemId, spanElement) {
     setTimeout(() => {
         document.getElementById('narrativa-ativa').style.display = 'none';
         document.getElementById('inventario-narrativa').classList.add('ativo');
+        document.getElementById('fechar-inventario-btn').onclick = () => this.fecharInventario();
+
         
         const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
         const container = document.querySelector('#inventario-narrativa .container');
@@ -721,6 +723,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
