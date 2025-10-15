@@ -412,7 +412,7 @@ async confirmarPegarItem() {
         
         overlay.classList.remove('active');
         setTimeout(() => overlay.remove(), 200);
-    }, 1400);
+    }, 1200);
 }
 
 
@@ -834,6 +834,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
