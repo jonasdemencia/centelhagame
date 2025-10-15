@@ -272,6 +272,15 @@ abrirInventarioComItem(itemId, spanElement) {
         
         document.getElementById('preview-image').src = itemData.image;
         document.getElementById('preview-image').style.display = 'block';
+        const previewContainer = document.querySelector('#inventario-narrativa .preview-image-window');
+if (previewContainer) {
+    previewContainer.style.display = 'block';
+}
+const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
+if (imageContainer) {
+    imageContainer.style.display = 'flex';
+}
+
         document.getElementById('preview-name').textContent = '';
         document.getElementById('preview-description').innerHTML = `Você pegará a ${itemData.content}?<br><button id="btn-sim-inv">Sim</button> <button id="btn-nao-inv">Não</button>`;
         
@@ -683,6 +692,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
