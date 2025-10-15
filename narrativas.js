@@ -161,6 +161,11 @@ this.itensNarrativas = {
             this.voltarSelecao();
         });
 
+// Botão abrir inventário
+document.getElementById('abrir-inventario-btn').addEventListener('click', () => {
+    this.abrirInventarioSemItem();
+});
+
         // Modal de teste
         document.getElementById('rolar-dados').addEventListener('click', () => {
             this.rolarDados();
@@ -375,6 +380,27 @@ async confirmarPegarItem() {
         }
     }, 30);
 }
+
+    abrirInventarioSemItem() {
+    document.getElementById('narrativa-ativa').style.display = 'none';
+    document.getElementById('inventario-narrativa').classList.add('ativo');
+    document.getElementById('fechar-inventario-btn').onclick = () => this.fecharInventario();
+    
+    const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
+    const container = document.querySelector('#inventario-narrativa .container');
+    if (expandBtn && container) {
+        expandBtn.onclick = () => container.classList.toggle('expanded');
+    }
+    
+    document.getElementById('preview-image').style.display = 'none';
+    document.getElementById('preview-name').textContent = '';
+    document.getElementById('preview-description').textContent = 'Visualize seus itens aqui.';
+    const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
+    if (imageContainer) {
+        imageContainer.style.display = 'none';
+    }
+}
+
 
 // SUBSTITUA A FUNÇÃO INTEIRA POR ESTA:
 fecharInventario() {
@@ -793,6 +819,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
