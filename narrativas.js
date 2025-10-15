@@ -220,7 +220,7 @@ this.narrativaAtual = NARRATIVAS[narrativaId];
     this.criarOpcoes(secao.opcoes, secao.final);
 }
 
-    // CÓDIGO DE SUBSTITUIÇÃO 1.1
+// SUBSTITUA A FUNÇÃO INTEIRA POR ESTA:
 renderizarTextoComItens(secao) {
     const textoContainer = document.getElementById('texto-narrativa');
     let textoHTML = secao.texto;
@@ -235,7 +235,7 @@ renderizarTextoComItens(secao) {
     textoContainer.innerHTML = textoHTML;
 
     textoContainer.querySelectorAll('.item-coletavel').forEach(span => {
-        span.addEventListener('click', () => {
+        span.addEventListener('click', () => { // O 'e' e 'e.stopPropagation()' foram removidos
             const itemId = span.dataset.itemId;
             this.abrirInventarioComItem(itemId, span);
         });
@@ -247,9 +247,9 @@ obterNomeItem(itemId) {
     return this.itensNarrativas[itemId]?.content || itemId;
 }
 
-// CÓDIGO DE SUBSTITUIÇÃO 1.2
+// SUBSTITUA A FUNÇÃO INTEIRA POR ESTA:
 abrirInventarioComItem(itemId, spanElement) {
-    window.narrativeActionInProgress = true; // BANDEIRA ATIVADA
+    window.narrativeActionInProgress = true; // ATIVA A BANDEIRA
     this.itemPendente = { id: itemId, span: spanElement };
     const itemData = this.itensNarrativas[itemId];
 
@@ -303,7 +303,7 @@ abrirInventarioComItem(itemId, spanElement) {
                         imageContainer.style.display = 'none';
                     }
                     this.itemPendente = null;
-                    window.narrativeActionInProgress = false; // BANDEIRA DESATIVADA
+                    window.narrativeActionInProgress = false; // DESATIVA A BANDEIRA
                 });
             }
         }, 50);
@@ -313,10 +313,7 @@ abrirInventarioComItem(itemId, spanElement) {
     }, 1500);
 }
 
-
-
-
-// CÓDIGO DE SUBSTITUIÇÃO 1.3
+// SUBSTITUA A FUNÇÃO INTEIRA POR ESTA:
 async confirmarPegarItem() {
     await this.adicionarItem(this.itemPendente.id);
     this.itemPendente.span.remove();
@@ -341,13 +338,13 @@ async confirmarPegarItem() {
                     imageContainer.style.display = 'none';
                 }
                 this.itemPendente = null;
-                window.narrativeActionInProgress = false; // BANDEIRA DESATIVADA
+                window.narrativeActionInProgress = false; // DESATIVA A BANDEIRA
             }, 2000);
         }
     }, 30);
 }
 
-    // CÓDIGO DE SUBSTITUIÇÃO 1.4
+// SUBSTITUA A FUNÇÃO INTEIRA POR ESTA:
 fecharInventario() {
     document.getElementById('inventario-narrativa').classList.remove('ativo');
     document.getElementById('narrativa-ativa').style.display = 'block';
@@ -360,7 +357,7 @@ fecharInventario() {
         imageContainer.style.display = 'none';
     }
     this.itemPendente = null;
-    window.narrativeActionInProgress = false; // BANDEIRA DESATIVADA
+    window.narrativeActionInProgress = false; // DESATIVA A BANDEIRA
 }
 
 
@@ -748,6 +745,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
