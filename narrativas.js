@@ -247,29 +247,60 @@ obterNomeItem(itemId) {
     return this.itensNarrativas[itemId]?.content || itemId;
 }
 
-// SUBSTITUA A FUNÇÃO INTEIRA POR ESTA:
-abrirInventarioComItem(itemId, spanElement) {
-    window.narrativeActionInProgress = true; // ATIVA A BANDEIRA
-    this.itemPendente = { id: itemId, span: spanElement };
-    const itemData = this.itensNarrativas[itemId];
 
+    
+async abrirInventarioComItem(itemId, spanElement) {
+    const itemData = this.itensNarrativas[itemId];
+    const slotsNecessarios = itemData.large ? 2 : 1;
+    
+    const playerDocRef = doc(db, "players", this.userId);
+    const docSnap = await getDoc(playerDocRef);
+    
+    if (docSnap.exists()) {
+        const inventoryData = docSnap.data().inventory;
+        const totalSlots = inventoryData.inventorySpaces || 50;
+        const itemsInChest = inventoryData.itemsInChest || [];
+        
+        let slotsOcupados = 0;
+        itemsInChest.forEach(item => {
+            const itemInfo = this.itensNarrativas[item.id];
+            slotsOcupados += itemInfo?.large ? 2 : 1;
+        });
+        
+        const slotsDisponiveis = totalSlots - slotsOcupados;
+        
+        if (slotsDisponiveis < slotsNecessarios) {
+            const textoContainer = document.getElementById('texto-narrativa');
+            const mensagem = document.createElement('p');
+            mensagem.textContent = 'Você não tem espaço suficiente para mais itens.';
+            mensagem.style.color = '#ff6b6b';
+            mensagem.style.marginTop = '20px';
+            textoContainer.appendChild(mensagem);
+            setTimeout(() => mensagem.remove(), 3000);
+            return;
+        }
+    }
+    
+    window.narrativeActionInProgress = true;
+    this.itemPendente = { id: itemId, span: spanElement };
+    
     const overlay = document.createElement('div');
     overlay.className = 'fade-overlay';
     document.body.appendChild(overlay);
-
+    
     setTimeout(() => overlay.classList.add('active'), 10);
-
+    
     setTimeout(() => {
         document.getElementById('narrativa-ativa').style.display = 'none';
         document.getElementById('inventario-narrativa').classList.add('ativo');
         document.getElementById('fechar-inventario-btn').onclick = () => this.fecharInventario();
-
+        
         const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
         const container = document.querySelector('#inventario-narrativa .container');
         if (expandBtn && container) {
             expandBtn.onclick = () => container.classList.toggle('expanded');
         }
-
+        
         document.getElementById('preview-image').src = itemData.image;
         document.getElementById('preview-image').style.display = 'block';
         const previewContainer = document.querySelector('#inventario-narrativa .preview-image-window');
@@ -281,7 +312,7 @@ abrirInventarioComItem(itemId, spanElement) {
             imageContainer.style.display = 'flex';
         }
         document.getElementById('preview-name').textContent = '';
-
+        
         const texto = `Você pegará a ${itemData.content}?`;
         const previewDesc = document.getElementById('preview-description');
         previewDesc.innerHTML = '';
@@ -303,15 +334,16 @@ abrirInventarioComItem(itemId, spanElement) {
                         imageContainer.style.display = 'none';
                     }
                     this.itemPendente = null;
-                    window.narrativeActionInProgress = false; // DESATIVA A BANDEIRA
+                    window.narrativeActionInProgress = false;
                 });
             }
         }, 50);
-
+        
         overlay.classList.remove('active');
         setTimeout(() => overlay.remove(), 200);
     }, 1500);
 }
+
 
 // SUBSTITUA A FUNÇÃO INTEIRA POR ESTA:
 async confirmarPegarItem() {
@@ -745,6 +777,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
