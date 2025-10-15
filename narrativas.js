@@ -275,31 +275,40 @@ abrirInventarioComItem(itemId, spanElement) {
         document.getElementById('preview-image').src = itemData.image;
         document.getElementById('preview-image').style.display = 'block';
         const previewContainer = document.querySelector('#inventario-narrativa .preview-image-window');
-if (previewContainer) {
-    previewContainer.style.display = 'block';
-}
-const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
-if (imageContainer) {
-    imageContainer.style.display = 'flex';
-}
+        if (previewContainer) {
+            previewContainer.style.display = 'block';
+        }
+        const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
+        if (imageContainer) {
+            imageContainer.style.display = 'flex';
+        }
 
         document.getElementById('preview-name').textContent = '';
         const texto = `Você pegará a ${itemData.content}?`;
-const previewDesc = document.getElementById('preview-description');
-previewDesc.innerHTML = '';
+        const previewDesc = document.getElementById('preview-description');
+        previewDesc.innerHTML = '';
 
-let i = 0;
-const typeWriter = setInterval(() => {
-    if (i < texto.length) {
-        previewDesc.textContent += texto.charAt(i);
-        i++;
-    } else {
-        clearInterval(typeWriter);
-        previewDesc.innerHTML += '<br><button id="btn-sim-inv">Sim</button> <button id="btn-nao-inv">Não</button>';
-        document.getElementById('btn-sim-inv').addEventListener('click', () => this.confirmarPegarItem());
-        document.getElementById('btn-nao-inv').addEventListener('click', () => this.fecharInventario());
-    }
-}, 50);
+        let i = 0;
+        const typeWriter = setInterval(() => {
+            if (i < texto.length) {
+                previewDesc.textContent += texto.charAt(i);
+                i++;
+            } else {
+                clearInterval(typeWriter);
+                previewDesc.innerHTML += '<br><button id="btn-sim-inv">Sim</button> <button id="btn-nao-inv">Não</button>';
+                document.getElementById('btn-sim-inv').addEventListener('click', () => this.confirmarPegarItem());
+                document.getElementById('btn-nao-inv').addEventListener('click', () => {
+                    document.getElementById('preview-image').style.display = 'none';
+                    document.getElementById('preview-image').src = '';
+                    document.getElementById('preview-description').innerHTML = '';
+                    const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
+                    if (imageContainer) {
+                        imageContainer.style.display = 'none';
+                    }
+                    this.itemPendente = null;
+                });
+            }
+        }, 50);
 
         
         // Clareia rápido (0.2s)
@@ -307,6 +316,7 @@ const typeWriter = setInterval(() => {
         setTimeout(() => overlay.remove(), 200);
     }, 1500);
 }
+
 
 
 
@@ -740,6 +750,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
