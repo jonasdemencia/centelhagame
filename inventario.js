@@ -763,7 +763,7 @@ document.addEventListener('click', function(event) {
     // Elementos que NÃO devem desselecionar o item
     const keepSelection = event.target.closest('.item, .slot, #useBtn, #carregar-municao-btn, #discard-slot, .dice-item, .dice-slot, .item-actions-window, .item-coletavel, .preview-image-window, .preview-image-container');
 
-    if (!keepSelection && selectedItem) {
+    if (!keepSelection && selectedItem && !window.narrativeActionInProgress) {
         clearHighlights();
         selectedItem = null;
         toggleUseButton(false);
