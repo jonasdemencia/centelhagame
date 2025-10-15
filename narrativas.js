@@ -299,8 +299,13 @@ abrirInventarioComItem(itemId, spanElement) {
             } else {
                 clearInterval(typeWriter);
                 previewDesc.innerHTML += '<br><button id="btn-sim-inv">Sim</button> <button id="btn-nao-inv">Não</button>';
-                document.getElementById('btn-sim-inv').addEventListener('click', () => this.confirmarPegarItem());
-                document.getElementById('btn-nao-inv').addEventListener('click', () => {
+document.getElementById('btn-sim-inv').addEventListener('click', (e) => {
+    e.stopPropagation();
+    this.confirmarPegarItem();
+});
+document.getElementById('btn-nao-inv').addEventListener('click', (e) => {
+    e.stopPropagation();
+
                     document.getElementById('preview-image').style.display = 'none';
                     document.getElementById('preview-image').src = '';
                     document.getElementById('preview-description').innerHTML = '';
@@ -758,6 +763,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
