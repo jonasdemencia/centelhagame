@@ -220,30 +220,26 @@ this.narrativaAtual = NARRATIVAS[narrativaId];
     this.criarOpcoes(secao.opcoes, secao.final);
 }
 
-    renderizarTextoComItens(secao) {
+    // CÓDIGO DE SUBSTITUIÇÃO 1.1
+renderizarTextoComItens(secao) {
     const textoContainer = document.getElementById('texto-narrativa');
     let textoHTML = secao.texto;
-
     if (secao.efeitos) {
         secao.efeitos.forEach(efeito => {
             if (efeito.tipo === 'item') {
                 const itemNome = this.obterNomeItem(efeito.item);
-                textoHTML += ` <span class="item-coletavel" data-item-id="${efeito.item}" style="color: #90EE90; cursor: pointer; text-decoration: underline;">${itemNome}</span>`;
+                textoHTML += `<span class="item-coletavel" data-item-id="${efeito.item}" style="color: #90EE90; cursor: pointer; text-decoration: underline;">${itemNome}</span>`;
             }
         });
     }
-
     textoContainer.innerHTML = textoHTML;
 
-    // CÓDIGO CORRIGIDO E FINAL
-textoContainer.querySelectorAll('.item-coletavel').forEach(span => {
-    span.addEventListener('click', (e) => { // 1. Receba o evento 'e'
-        e.stopPropagation(); // 2. Adicione esta linha para parar a propagação do clique
-
-        const itemId = span.dataset.itemId;
-        this.abrirInventarioComItem(itemId, span);
+    textoContainer.querySelectorAll('.item-coletavel').forEach(span => {
+        span.addEventListener('click', () => {
+            const itemId = span.dataset.itemId;
+            this.abrirInventarioComItem(itemId, span);
+        });
     });
-});
 }
 
 
@@ -251,30 +247,29 @@ obterNomeItem(itemId) {
     return this.itensNarrativas[itemId]?.content || itemId;
 }
 
+// CÓDIGO DE SUBSTITUIÇÃO 1.2
 abrirInventarioComItem(itemId, spanElement) {
+    window.narrativeActionInProgress = true; // BANDEIRA ATIVADA
     this.itemPendente = { id: itemId, span: spanElement };
     const itemData = this.itensNarrativas[itemId];
-    
+
     const overlay = document.createElement('div');
     overlay.className = 'fade-overlay';
     document.body.appendChild(overlay);
-    
-    // Escurece rápido (0.2s)
+
     setTimeout(() => overlay.classList.add('active'), 10);
-    
-    // Fica preto por 1 segundo, depois abre inventário e clareia
+
     setTimeout(() => {
         document.getElementById('narrativa-ativa').style.display = 'none';
         document.getElementById('inventario-narrativa').classList.add('ativo');
         document.getElementById('fechar-inventario-btn').onclick = () => this.fecharInventario();
 
-        
         const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
         const container = document.querySelector('#inventario-narrativa .container');
         if (expandBtn && container) {
             expandBtn.onclick = () => container.classList.toggle('expanded');
         }
-        
+
         document.getElementById('preview-image').src = itemData.image;
         document.getElementById('preview-image').style.display = 'block';
         const previewContainer = document.querySelector('#inventario-narrativa .preview-image-window');
@@ -285,12 +280,11 @@ abrirInventarioComItem(itemId, spanElement) {
         if (imageContainer) {
             imageContainer.style.display = 'flex';
         }
-
         document.getElementById('preview-name').textContent = '';
+
         const texto = `Você pegará a ${itemData.content}?`;
         const previewDesc = document.getElementById('preview-description');
         previewDesc.innerHTML = '';
-
         let i = 0;
         const typeWriter = setInterval(() => {
             if (i < texto.length) {
@@ -299,13 +293,8 @@ abrirInventarioComItem(itemId, spanElement) {
             } else {
                 clearInterval(typeWriter);
                 previewDesc.innerHTML += '<br><button id="btn-sim-inv">Sim</button> <button id="btn-nao-inv">Não</button>';
-document.getElementById('btn-sim-inv').addEventListener('click', (e) => {
-    e.stopPropagation();
-    this.confirmarPegarItem();
-});
-document.getElementById('btn-nao-inv').addEventListener('click', (e) => {
-    e.stopPropagation();
-
+                document.getElementById('btn-sim-inv').addEventListener('click', () => this.confirmarPegarItem());
+                document.getElementById('btn-nao-inv').addEventListener('click', () => {
                     document.getElementById('preview-image').style.display = 'none';
                     document.getElementById('preview-image').src = '';
                     document.getElementById('preview-description').innerHTML = '';
@@ -314,12 +303,11 @@ document.getElementById('btn-nao-inv').addEventListener('click', (e) => {
                         imageContainer.style.display = 'none';
                     }
                     this.itemPendente = null;
+                    window.narrativeActionInProgress = false; // BANDEIRA DESATIVADA
                 });
             }
         }, 50);
 
-        
-        // Clareia rápido (0.2s)
         overlay.classList.remove('active');
         setTimeout(() => overlay.remove(), 200);
     }, 1500);
@@ -328,16 +316,15 @@ document.getElementById('btn-nao-inv').addEventListener('click', (e) => {
 
 
 
+// CÓDIGO DE SUBSTITUIÇÃO 1.3
 async confirmarPegarItem() {
     await this.adicionarItem(this.itemPendente.id);
     this.itemPendente.span.remove();
-    
-    // Mostra mensagem de confirmação com efeito de digitação rápido
+
     const itemNome = this.itensNarrativas[this.itemPendente.id].content;
     const texto = `Você pegou ${itemNome}.`;
     const previewDesc = document.getElementById('preview-description');
     previewDesc.innerHTML = '';
-    
     let i = 0;
     const typeWriter = setInterval(() => {
         if (i < texto.length) {
@@ -345,7 +332,6 @@ async confirmarPegarItem() {
             i++;
         } else {
             clearInterval(typeWriter);
-            // Limpa preview após 2 segundos mas mantém inventário aberto
             setTimeout(() => {
                 document.getElementById('preview-image').style.display = 'none';
                 document.getElementById('preview-image').src = '';
@@ -355,28 +341,27 @@ async confirmarPegarItem() {
                     imageContainer.style.display = 'none';
                 }
                 this.itemPendente = null;
+                window.narrativeActionInProgress = false; // BANDEIRA DESATIVADA
             }, 2000);
         }
     }, 30);
 }
 
-    fecharInventario() {
+    // CÓDIGO DE SUBSTITUIÇÃO 1.4
+fecharInventario() {
     document.getElementById('inventario-narrativa').classList.remove('ativo');
     document.getElementById('narrativa-ativa').style.display = 'block';
-    
     document.getElementById('preview-image').style.display = 'none';
     document.getElementById('preview-image').src = '';
     document.getElementById('preview-name').textContent = '';
     document.getElementById('preview-description').innerHTML = '';
-    
     const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
     if (imageContainer) {
         imageContainer.style.display = 'none';
     }
-    
     this.itemPendente = null;
+    window.narrativeActionInProgress = false; // BANDEIRA DESATIVADA
 }
-
 
 
     criarOpcoes(opcoes, isFinal = false) {
@@ -763,6 +748,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
