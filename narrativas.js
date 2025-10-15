@@ -385,24 +385,36 @@ async confirmarPegarItem() {
 }
 
     abrirInventarioSemItem() {
-    document.getElementById('narrativa-ativa').style.display = 'none';
-    document.getElementById('inventario-narrativa').classList.add('ativo');
-    document.getElementById('fechar-inventario-btn').onclick = () => this.fecharInventario();
+    const overlay = document.createElement('div');
+    overlay.className = 'fade-overlay';
+    document.body.appendChild(overlay);
     
-    const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
-    const container = document.querySelector('#inventario-narrativa .container');
-    if (expandBtn && container) {
-        expandBtn.onclick = () => container.classList.toggle('expanded');
-    }
+    setTimeout(() => overlay.classList.add('active'), 10);
     
-    document.getElementById('preview-image').style.display = 'none';
-    document.getElementById('preview-name').textContent = '';
-    document.getElementById('preview-description').textContent = 'Visualize seus itens aqui.';
-    const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
-    if (imageContainer) {
-        imageContainer.style.display = 'none';
-    }
+    setTimeout(() => {
+        document.getElementById('narrativa-ativa').style.display = 'none';
+        document.getElementById('inventario-narrativa').classList.add('ativo');
+        document.getElementById('fechar-inventario-btn').onclick = () => this.fecharInventario();
+        
+        const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
+        const container = document.querySelector('#inventario-narrativa .container');
+        if (expandBtn && container) {
+            expandBtn.onclick = () => container.classList.toggle('expanded');
+        }
+        
+        document.getElementById('preview-image').style.display = 'none';
+        document.getElementById('preview-name').textContent = '';
+        document.getElementById('preview-description').textContent = '';
+        const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
+        if (imageContainer) {
+            imageContainer.style.display = 'none';
+        }
+        
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 200);
+    }, 1400);
 }
+
 
 
 // SUBSTITUA A FUNÇÃO INTEIRA POR ESTA:
@@ -822,6 +834,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
