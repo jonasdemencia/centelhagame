@@ -756,8 +756,9 @@ document.addEventListener('click', function(event) {
 
 // Elementos que NÃO devem desselecionar o item
 
-const keepSelection = event.target.closest('.item, .slot, #useBtn, #carregar-municao-btn, #discard-slot, .dice-item, .dice-slot, .item-actions-window');
-
+// CÓDIGO CORRIGIDO
+const keepSelection = event.target.closest('.item, .slot, #useBtn, #carregar-municao-btn, #discard-slot, .dice-item, .dice-slot, .item-actions-window, .item-coletavel');
+    
 if (!keepSelection && selectedItem) {
     clearHighlights();
     selectedItem = null;
