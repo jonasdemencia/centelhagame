@@ -804,7 +804,7 @@ const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this
         
         // Fade in (mais rápido)
         overlay.classList.remove('active');
-        setTimeout(() => overlay.remove(), 500); // Reduzido de 1000 para 500
+        setTimeout(() => overlay.remove(), 1200); // Reduzido de 1000 para 500
         
     } else {
         // Sem som - comportamento normal
@@ -882,6 +882,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
