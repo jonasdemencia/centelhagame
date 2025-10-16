@@ -616,7 +616,7 @@ export const NARRATIVAS = {
     texto: "Após derrotar a coruja, você pode explorar a sala com segurança. Mesa oval, vinte cadeiras. Quadro branco vazio. Projetor antigo coberto por lona.",
     opcoes: [
         { texto: "Examinar o quadro", secao: 62 },
-        { texto: "Sair pela porta dupla", secao: 63 },
+        { texto: "Sair pela porta dupla", secao: 63, som: "passos.mp3" },
         { texto: "Retornar ao corredor", secao: 42 }
     ]
 },
@@ -3744,6 +3744,7 @@ export const NARRATIVAS = {
         }
     }
 };
+
 
 
 
