@@ -526,7 +526,7 @@ export const NARRATIVAS = {
         42: {
             texto: "Cabines de madeira escura com cortinas. Silêncio absoluto.",
             opcoes: [
-                { texto: "Entrar em um confessionário", secao: 51, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3" }, },
+                { texto: "Entrar em um confessionário", secao: 51, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3" },
                 { texto: "Seguir o corredor", secao: 52 },
                 { texto: "Retornar à sacristia", secao: 26 }
             ]
@@ -3744,6 +3744,7 @@ export const NARRATIVAS = {
         }
     }
 };
+
 
 
 
