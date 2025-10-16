@@ -762,25 +762,34 @@ const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this
     }
 
     async processarOpcao(opcao) {
-        if (opcao.requer) {
-            await this.consumirItem(opcao.requer);
-        }
-        if (opcao.batalha) {
-            const playerDocRef = doc(db, "players", this.userId);
-            await updateDoc(playerDocRef, {
-                "narrativeProgress.battleReturn": {
-                    vitoria: opcao.vitoria,
-                    derrota: opcao.derrota,
-                    active: true
-                }
-            });
-            window.location.href = `batalha.html?monstros=${opcao.batalha}`;
-        } else if (opcao.teste) {
-            this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
-        } else {
-            await this.mostrarSecao(opcao.secao);
-        }
+    // ADICIONE ESTAS LINHAS NO INÍCIO
+    if (opcao.som) {
+        const audio = new Audio(opcao.som);
+        audio.play();
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Aguarda 1 segundo
     }
+    
+    // Resto do código original continua igual
+    if (opcao.requer) {
+        await this.consumirItem(opcao.requer);
+    }
+    if (opcao.batalha) {
+        const playerDocRef = doc(db, "players", this.userId);
+        await updateDoc(playerDocRef, {
+            "narrativeProgress.battleReturn": {
+                vitoria: opcao.vitoria,
+                derrota: opcao.derrota,
+                active: true
+            }
+        });
+        window.location.href = `batalha.html?monstros=${opcao.batalha}`;
+    } else if (opcao.teste) {
+        this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
+    } else {
+        await this.mostrarSecao(opcao.secao);
+    }
+}
+
 
     async processarBatalhaAutomatica(secao) {
         const playerDocRef = doc(db, "players", this.userId);
@@ -834,6 +843,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
