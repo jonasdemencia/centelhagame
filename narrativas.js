@@ -768,15 +768,15 @@ const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this
         overlay.className = 'fade-overlay';
         document.body.appendChild(overlay);
         
-        // Fade to black
+        // Fade to black (mais rápido)
         setTimeout(() => overlay.classList.add('active'), 10);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 500)); // Reduzido de 1000 para 500
         
         // Tocar som
         try {
             const audio = new Audio(opcao.som);
             await audio.play();
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await new Promise(resolve => setTimeout(resolve, 1500)); // Reduzido de 2000 para 1500
         } catch (error) {
             console.log('Erro ao tocar som:', error);
         }
@@ -802,9 +802,9 @@ const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this
             await this.mostrarSecao(opcao.secao);
         }
         
-        // Fade in
+        // Fade in (mais rápido)
         overlay.classList.remove('active');
-        setTimeout(() => overlay.remove(), 1000);
+        setTimeout(() => overlay.remove(), 500); // Reduzido de 1000 para 500
         
     } else {
         // Sem som - comportamento normal
@@ -828,7 +828,6 @@ const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this
         }
     }
 }
-
 
 
     async processarBatalhaAutomatica(secao) {
@@ -883,6 +882,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
