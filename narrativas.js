@@ -790,7 +790,7 @@ const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this
     
     // Tocar som (usa o som da opção ou o padrão de passos)
     try {
-        const audio = new Audio(opcao.som || 'sounds/passos.mp3');
+        const audio = new Audio(opcao.som || 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
         await audio.play();
         await new Promise(resolve => setTimeout(resolve, 1500));
     } catch (error) {
@@ -877,6 +877,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
