@@ -252,6 +252,18 @@ h1 {
 }
 
 
+#canvas-container {
+    background: #000;
+    border: 2px solid #444;
+    overflow: hidden;
+}
+
+#three-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
 
 
 
