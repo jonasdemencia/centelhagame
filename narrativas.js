@@ -1,5 +1,7 @@
 // Importa NARRATIVAS do arquivo de dados
 import { NARRATIVAS } from './narrativas-data.js';
+import { Visao3D } from './visao3d.js';
+
 
 // Importa os SDKs necessários do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
@@ -27,6 +29,8 @@ class SistemaNarrativas {
         this.playerData = null;
         this.userId = null;
         this.itemPendente = null;
+        this.visao3d = null; // ADICIONE ISTO
+
 
 this.itensNarrativas = {
     
@@ -196,6 +200,11 @@ this.itensNarrativas = {
     document.getElementById('abrir-inventario-btn').onclick = () => {
         this.abrirInventarioSemItem();
     };
+
+        // ADICIONE ISTO
+    if (!this.visao3d) {
+        this.visao3d = new Visao3D('canvas-container');
+    }
     
     this.mostrarSecao(1);
 }
@@ -463,6 +472,10 @@ fecharInventario() {
             });
             container.appendChild(btn);
         });
+        // ADICIONE ISTO
+    if (this.visao3d) {
+        this.visao3d.carregarOpcoes(opcoes);
+    }
     }
 
     temItem(itemId) {
@@ -882,6 +895,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
