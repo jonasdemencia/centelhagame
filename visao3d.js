@@ -56,30 +56,31 @@ export class Visao3D {
     }
 
     setupControls() {
-        document.addEventListener('keydown', (e) => {
-            const speed = 0.05;
-            if (e.key === 'ArrowUp') this.rotX += speed;
-            if (e.key === 'ArrowDown') this.rotX -= speed;
-            if (e.key === 'ArrowLeft') this.rotY += speed;
-            if (e.key === 'ArrowRight') this.rotY -= speed;
-        });
-        
-        // Mouse drag (opcional)
-        let isDragging = false;
-        let previousMousePosition = { x: 0, y: 0 };
-        
-        this.container.addEventListener('mousedown', () => isDragging = true);
-        this.container.addEventListener('mouseup', () => isDragging = false);
-        this.container.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                const deltaX = e.clientX - previousMousePosition.x;
-                const deltaY = e.clientY - previousMousePosition.y;
-                this.rotY -= deltaX * 0.005;
-                this.rotX -= deltaY * 0.005;
-            }
-            previousMousePosition = { x: e.clientX, y: e.clientY };
-        });
-    }
+    document.addEventListener('keydown', (e) => {
+        const speed = 0.05;
+        if (e.key === 'w' || e.key === 'W') this.rotX += speed;
+        if (e.key === 's' || e.key === 'S') this.rotX -= speed;
+        if (e.key === 'a' || e.key === 'A') this.rotY += speed;
+        if (e.key === 'd' || e.key === 'D') this.rotY -= speed;
+    });
+    
+    // Mouse drag (opcional)
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    
+    this.container.addEventListener('mousedown', () => isDragging = true);
+    this.container.addEventListener('mouseup', () => isDragging = false);
+    this.container.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            const deltaX = e.clientX - previousMousePosition.x;
+            const deltaY = e.clientY - previousMousePosition.y;
+            this.rotY -= deltaX * 0.005;
+            this.rotX -= deltaY * 0.005;
+        }
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+}
+
 
   criarTexto(texto, size = 1) {
     const canvas = document.createElement('canvas');
