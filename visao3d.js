@@ -84,58 +84,49 @@ export class Visao3D {
    criarTexto(texto, size = 1) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = 2048;  // Resolução muito maior
-    canvas.height = 1024;
+    canvas.width = 1024;
+    canvas.height = 512;
     
     ctx.fillStyle = '#2a2a2a';
-    ctx.fillRect(0, 0, 2048, 1024);
+    ctx.fillRect(0, 0, 1024, 512);
     
-    // Borda para destacar
-    ctx.strokeStyle = '#ffd700';
-    ctx.lineWidth = 8;
-    ctx.strokeRect(20, 20, 2008, 984);
-    
-    ctx.font = 'bold 120px VT323, monospace';  // Fonte gigante
+    ctx.font = 'bold 80px VT323, monospace';
     ctx.fillStyle = '#ffd700';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
-    // Quebrar texto em linhas
-    const words = texto.split(' ');
-    let line = '';
-    let y = 512;
-    const lineHeight = 140;
+    // Texto simples sem quebra de linha complicada
     const lines = [];
+    const words = texto.split(' ');
+    let currentLine = '';
     
     words.forEach(word => {
-        const testLine = line + word + ' ';
-        const metrics = ctx.measureText(testLine);
-        if (metrics.width > 1900 && line !== '') {
-            lines.push(line);
-            line = word + ' ';
+        const testLine = currentLine + word + ' ';
+        if (ctx.measureText(testLine).width > 900) {
+            lines.push(currentLine);
+            currentLine = word + ' ';
         } else {
-            line = testLine;
+            currentLine = testLine;
         }
     });
-    lines.push(line);
+    lines.push(currentLine);
     
-    // Centralizar verticalmente
-    const startY = 512 - ((lines.length - 1) * lineHeight) / 2;
+    // Desenhar linhas centralizadas
+    const startY = 256 - ((lines.length - 1) * 50);
     lines.forEach((line, i) => {
-        ctx.fillText(line, 1024, startY + (i * lineHeight));
+        ctx.fillText(line, 512, startY + (i * 100));
     });
     
     const texture = new THREE.CanvasTexture(canvas);
-    texture.minFilter = THREE.LinearFilter;  // Melhor filtro
-    texture.magFilter = THREE.LinearFilter;
-    
     const material = new THREE.MeshBasicMaterial({ 
         map: texture, 
         side: THREE.DoubleSide, 
         transparent: true 
     });
+    
+    // PLANOS MUITO MAIORES
     const plane = new THREE.Mesh(
-        new THREE.PlaneGeometry(size * 20, size * 10),  // Ainda maior
+        new THREE.PlaneGeometry(30, 15),
         material
     );
     
@@ -143,36 +134,37 @@ export class Visao3D {
 }
 
 
-
     carregarOpcoes(opcoes) {
-        // Limpar textos anteriores
-        this.textMeshes.forEach(mesh => this.scene.remove(mesh));
-        this.textMeshes = [];
-        this.opcoes = opcoes;
+    // Limpar textos anteriores
+    this.textMeshes.forEach(mesh => this.scene.remove(mesh));
+    this.textMeshes = [];
+    this.opcoes = opcoes;
+    
+    // Posições MAIS PRÓXIMAS
+    const posicoes = [
+        { pos: [0, 0, -25], rot: [0, 0, 0] },           // Frente
+        { pos: [-25, 0, 0], rot: [0, Math.PI/2, 0] },   // Esquerda
+        { pos: [25, 0, 0], rot: [0, -Math.PI/2, 0] },   // Direita
+        { pos: [0, 0, 25], rot: [0, Math.PI, 0] },      // Trás
+        { pos: [0, 20, 0], rot: [-Math.PI/4, 0, 0] },   // Cima
+        { pos: [0, -20, 0], rot: [Math.PI/4, 0, 0] }    // Baixo
+    ];
+    
+    opcoes.forEach((opcao, index) => {
+        if (index >= posicoes.length) return;
         
-        // Posições para até 6 opções
-        const posicoes = [
-            { pos: [0, 0, -40], rot: [0, 0, 0] },           // Frente
-            { pos: [-40, 0, 0], rot: [0, Math.PI/2, 0] },   // Esquerda
-            { pos: [40, 0, 0], rot: [0, -Math.PI/2, 0] },   // Direita
-            { pos: [0, 0, 40], rot: [0, Math.PI, 0] },      // Trás
-            { pos: [0, 30, 0], rot: [-Math.PI/4, 0, 0] },   // Cima
-            { pos: [0, -30, 0], rot: [Math.PI/4, 0, 0] }    // Baixo
-        ];
+        const textMesh = this.criarTexto(opcao.texto);
+        const pos = posicoes[index];
+        textMesh.position.set(...pos.pos);
+        textMesh.rotation.set(...pos.rot);
+        textMesh.userData = { opcao, index };
         
-        opcoes.forEach((opcao, index) => {
-            if (index >= posicoes.length) return;
-            
-            const textMesh = this.criarTexto(opcao.texto);
-            const pos = posicoes[index];
-            textMesh.position.set(...pos.pos);
-            textMesh.rotation.set(...pos.rot);
-            textMesh.userData = { opcao, index };
-            
-            this.scene.add(textMesh);
-            this.textMeshes.push(textMesh);
-        });
-    }
+        this.scene.add(textMesh);
+        this.textMeshes.push(textMesh);
+    });
+}
+
+    
 
     onClick(event) {
     // Calcular posição do mouse normalizada
