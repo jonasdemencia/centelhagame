@@ -47,6 +47,11 @@ export class Visao3D {
         
         // Iniciar loop
         this.animate();
+        // ADICIONE ISTO - Raycaster para cliques
+    this.raycaster = new THREE.Raycaster();
+    this.mouse = new THREE.Vector2();
+    
+    this.container.addEventListener('click', (e) => this.onClick(e));
     }
 
     setupControls() {
@@ -84,7 +89,7 @@ export class Visao3D {
         ctx.fillStyle = '#2a2a2a';
         ctx.fillRect(0, 0, 512, 256);
         
-        ctx.font = '32px VT323, monospace';
+        ctx.font = 'bold 48px VT323, monospace';
         ctx.fillStyle = '#ffd700';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -151,6 +156,29 @@ export class Visao3D {
             this.textMeshes.push(textMesh);
         });
     }
+
+    onClick(event) {
+    // Calcular posição do mouse normalizada
+    const rect = this.container.getBoundingClientRect();
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    
+    // Atualizar raycaster
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    
+    // Verificar interseções com textos
+    const intersects = this.raycaster.intersectObjects(this.textMeshes);
+    
+    if (intersects.length > 0) {
+        const clickedMesh = intersects[0].object;
+        const opcao = clickedMesh.userData.opcao;
+        
+        // Disparar evento customizado
+        const event = new CustomEvent('opcaoClicada3D', { detail: opcao });
+        document.dispatchEvent(event);
+    }
+}
+
 
     animate() {
         requestAnimationFrame(() => this.animate());
