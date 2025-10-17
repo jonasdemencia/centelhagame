@@ -20,6 +20,7 @@
             display: flex 
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -57,7 +58,11 @@
     <h2 id="titulo-narrativa"></h2>
     <button id="abrir-inventario-btn" style="background: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer;">📦 Inventário</button>
 </div>
-
+            
+<!-- ADICIONE ISTO AQUI -->
+<div id="canvas-container" style="width: 100%; height: 400px; position: relative; margin-bottom: 20px;">
+    <canvas id="three-canvas"></canvas>
+</div>
             
             <div class="secao-atual">
                 <div class="numero-secao">Seção <span id="numero-secao">1</span></div>
@@ -272,5 +277,6 @@
 <script type="module" src="narrativas.js"></script>
 </body>
 </html>
+
 
 
