@@ -81,16 +81,21 @@ export class Visao3D {
         });
     }
 
-    criarTexto(texto, size = 1) {
+   criarTexto(texto, size = 1) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = 1024;  // Aumentado de 512
-    canvas.height = 512;  // Aumentado de 256
+    canvas.width = 2048;  // Resolução muito maior
+    canvas.height = 1024;
     
     ctx.fillStyle = '#2a2a2a';
-    ctx.fillRect(0, 0, 1024, 512);
+    ctx.fillRect(0, 0, 2048, 1024);
     
-    ctx.font = 'bold 72px VT323, monospace';  // Aumentado de 48px
+    // Borda para destacar
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(20, 20, 2008, 984);
+    
+    ctx.font = 'bold 120px VT323, monospace';  // Fonte gigante
     ctx.fillStyle = '#ffd700';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -98,35 +103,45 @@ export class Visao3D {
     // Quebrar texto em linhas
     const words = texto.split(' ');
     let line = '';
-    let y = 256;  // Ajustado para o novo tamanho
-    const lineHeight = 80;  // Aumentado
+    let y = 512;
+    const lineHeight = 140;
+    const lines = [];
     
     words.forEach(word => {
         const testLine = line + word + ' ';
         const metrics = ctx.measureText(testLine);
-        if (metrics.width > 960 && line !== '') {  // Ajustado para nova largura
-            ctx.fillText(line, 512, y);  // Ajustado para novo centro
+        if (metrics.width > 1900 && line !== '') {
+            lines.push(line);
             line = word + ' ';
-            y += lineHeight;
         } else {
             line = testLine;
         }
     });
-    ctx.fillText(line, 512, y);  // Ajustado para novo centro
+    lines.push(line);
+    
+    // Centralizar verticalmente
+    const startY = 512 - ((lines.length - 1) * lineHeight) / 2;
+    lines.forEach((line, i) => {
+        ctx.fillText(line, 1024, startY + (i * lineHeight));
+    });
     
     const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;  // Melhor filtro
+    texture.magFilter = THREE.LinearFilter;
+    
     const material = new THREE.MeshBasicMaterial({ 
         map: texture, 
         side: THREE.DoubleSide, 
         transparent: true 
     });
     const plane = new THREE.Mesh(
-        new THREE.PlaneGeometry(size * 15, size * 8),  // Aumentado de 10x5
+        new THREE.PlaneGeometry(size * 20, size * 10),  // Ainda maior
         material
     );
     
     return plane;
 }
+
 
 
     carregarOpcoes(opcoes) {
