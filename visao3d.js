@@ -81,41 +81,37 @@ export class Visao3D {
         });
     }
 
-   criarTexto(texto, size = 1) {
+  criarTexto(texto, size = 1) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = 1024;
-    canvas.height = 512;
+    canvas.width = 512;
+    canvas.height = 256;
     
     ctx.fillStyle = '#2a2a2a';
-    ctx.fillRect(0, 0, 1024, 512);
+    ctx.fillRect(0, 0, 512, 256);
     
-    ctx.font = 'bold 80px VT323, monospace';
+    ctx.font = 'bold 60px VT323, monospace';  // Só aumentei a fonte
     ctx.fillStyle = '#ffd700';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
-    // Texto simples sem quebra de linha complicada
-    const lines = [];
     const words = texto.split(' ');
-    let currentLine = '';
+    let line = '';
+    let y = 128;
+    const lineHeight = 70;
     
     words.forEach(word => {
-        const testLine = currentLine + word + ' ';
-        if (ctx.measureText(testLine).width > 900) {
-            lines.push(currentLine);
-            currentLine = word + ' ';
+        const testLine = line + word + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > 480 && line !== '') {
+            ctx.fillText(line, 256, y);
+            line = word + ' ';
+            y += lineHeight;
         } else {
-            currentLine = testLine;
+            line = testLine;
         }
     });
-    lines.push(currentLine);
-    
-    // Desenhar linhas centralizadas
-    const startY = 256 - ((lines.length - 1) * 50);
-    lines.forEach((line, i) => {
-        ctx.fillText(line, 512, startY + (i * 100));
-    });
+    ctx.fillText(line, 256, y);
     
     const texture = new THREE.CanvasTexture(canvas);
     const material = new THREE.MeshBasicMaterial({ 
@@ -123,10 +119,8 @@ export class Visao3D {
         side: THREE.DoubleSide, 
         transparent: true 
     });
-    
-    // PLANOS MUITO MAIORES
     const plane = new THREE.Mesh(
-        new THREE.PlaneGeometry(30, 15),
+        new THREE.PlaneGeometry(size * 10, size * 5), 
         material
     );
     
@@ -142,13 +136,13 @@ export class Visao3D {
     
     // Posições MAIS PRÓXIMAS
     const posicoes = [
-        { pos: [0, 0, -25], rot: [0, 0, 0] },           // Frente
-        { pos: [-25, 0, 0], rot: [0, Math.PI/2, 0] },   // Esquerda
-        { pos: [25, 0, 0], rot: [0, -Math.PI/2, 0] },   // Direita
-        { pos: [0, 0, 25], rot: [0, Math.PI, 0] },      // Trás
-        { pos: [0, 20, 0], rot: [-Math.PI/4, 0, 0] },   // Cima
-        { pos: [0, -20, 0], rot: [Math.PI/4, 0, 0] }    // Baixo
-    ];
+    { pos: [0, 0, -40], rot: [0, 0, 0] },           // Frente
+    { pos: [-40, 0, 0], rot: [0, Math.PI/2, 0] },   // Esquerda
+    { pos: [40, 0, 0], rot: [0, -Math.PI/2, 0] },   // Direita
+    { pos: [0, 0, 40], rot: [0, Math.PI, 0] },      // Trás
+    { pos: [0, 30, 0], rot: [-Math.PI/4, 0, 0] },   // Cima
+    { pos: [0, -30, 0], rot: [Math.PI/4, 0, 0] }    // Baixo
+];
     
     opcoes.forEach((opcao, index) => {
         if (index >= posicoes.length) return;
