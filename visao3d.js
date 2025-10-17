@@ -52,6 +52,7 @@ export class Visao3D {
     this.mouse = new THREE.Vector2();
     
     this.container.addEventListener('click', (e) => this.onClick(e));
+    this.container.addEventListener('mousemove', (e) => this.onMouseMove(e)); // ADICIONE ESTA LINHA
     }
 
     setupControls() {
@@ -81,51 +82,52 @@ export class Visao3D {
     }
 
     criarTexto(texto, size = 1) {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = 512;
-        canvas.height = 256;
-        
-        ctx.fillStyle = '#2a2a2a';
-        ctx.fillRect(0, 0, 512, 256);
-        
-        ctx.font = 'bold 48px VT323, monospace';
-        ctx.fillStyle = '#ffd700';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        // Quebrar texto em linhas
-        const words = texto.split(' ');
-        let line = '';
-        let y = 128;
-        const lineHeight = 40;
-        
-        words.forEach(word => {
-            const testLine = line + word + ' ';
-            const metrics = ctx.measureText(testLine);
-            if (metrics.width > 480 && line !== '') {
-                ctx.fillText(line, 256, y);
-                line = word + ' ';
-                y += lineHeight;
-            } else {
-                line = testLine;
-            }
-        });
-        ctx.fillText(line, 256, y);
-        
-        const texture = new THREE.CanvasTexture(canvas);
-        const material = new THREE.MeshBasicMaterial({ 
-            map: texture, 
-            side: THREE.DoubleSide, 
-            transparent: true 
-        });
-        const plane = new THREE.Mesh(
-            new THREE.PlaneGeometry(size * 10, size * 5), 
-            material
-        );
-        
-        return plane;
-    }
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 1024;  // Aumentado de 512
+    canvas.height = 512;  // Aumentado de 256
+    
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fillRect(0, 0, 1024, 512);
+    
+    ctx.font = 'bold 72px VT323, monospace';  // Aumentado de 48px
+    ctx.fillStyle = '#ffd700';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Quebrar texto em linhas
+    const words = texto.split(' ');
+    let line = '';
+    let y = 256;  // Ajustado para o novo tamanho
+    const lineHeight = 80;  // Aumentado
+    
+    words.forEach(word => {
+        const testLine = line + word + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > 960 && line !== '') {  // Ajustado para nova largura
+            ctx.fillText(line, 512, y);  // Ajustado para novo centro
+            line = word + ' ';
+            y += lineHeight;
+        } else {
+            line = testLine;
+        }
+    });
+    ctx.fillText(line, 512, y);  // Ajustado para novo centro
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    const material = new THREE.MeshBasicMaterial({ 
+        map: texture, 
+        side: THREE.DoubleSide, 
+        transparent: true 
+    });
+    const plane = new THREE.Mesh(
+        new THREE.PlaneGeometry(size * 15, size * 8),  // Aumentado de 10x5
+        material
+    );
+    
+    return plane;
+}
+
 
     carregarOpcoes(opcoes) {
         // Limpar textos anteriores
@@ -176,6 +178,28 @@ export class Visao3D {
         // Disparar evento customizado
         const event = new CustomEvent('opcaoClicada3D', { detail: opcao });
         document.dispatchEvent(event);
+    }
+}
+
+    // ADICIONE AQUI
+onMouseMove(event) {
+    const rect = this.container.getBoundingClientRect();
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const intersects = this.raycaster.intersectObjects(this.textMeshes);
+    
+    // Mudar cursor
+    this.container.style.cursor = intersects.length > 0 ? 'pointer' : 'default';
+    
+    // Destacar texto
+    this.textMeshes.forEach(mesh => {
+        mesh.material.opacity = 0.7;
+    });
+    
+    if (intersects.length > 0) {
+        intersects[0].object.material.opacity = 1.0;
     }
 }
 
