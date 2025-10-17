@@ -167,43 +167,49 @@ export class Visao3D {
         });
     }
 
-    criarSetas() {
-        const simbolos = ['←', '→', '↑', '↓'];
-        const posicoes = [
-            [-15, 0, -25],
-            [15, 0, -25],
-            [0, 15, -25],
-            [0, -15, -25]
-        ];
-        
-        simbolos.forEach((simbolo, i) => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = 128;
-            canvas.height = 128;
-            
-            ctx.fillStyle = '#1a1a1a';
-            ctx.fillRect(0, 0, 128, 128);
-            ctx.font = 'bold 80px Arial';
-            ctx.fillStyle = '#ffd700';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(simbolo, 64, 64);
-            
-            const texture = new THREE.CanvasTexture(canvas);
-            const material = new THREE.MeshBasicMaterial({ 
-                map: texture, 
-                transparent: true,
-                side: THREE.DoubleSide
-            });
-            const plane = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), material);
-            plane.position.set(...posicoes[i]);
-            plane.userData = { simbolo, direcao: null };
-            
-            this.scene.add(plane);
-            this.setas.push(plane);
+    // CÓDIGO DE SUBSTITUIÇÃO 1
+criarSetas() {
+    const simbolos = ['←', '→', '↑', '↓'];
+    // Posições ajustadas para ficarem mais próximas da câmera
+    const posicoes = [
+        [-4, 0, -10],  // Esquerda
+        [4, 0, -10],   // Direita
+        [0, 3, -10],   // Cima
+        [0, -3, -10]   // Baixo
+    ];
+
+    simbolos.forEach((simbolo, i) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 128;
+        canvas.height = 128;
+        // Fundo removido para melhor integração visual
+        ctx.font = 'bold 90px Arial';
+        ctx.fillStyle = '#ffd700';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(simbolo, 64, 70);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const material = new THREE.MeshBasicMaterial({
+            map: texture,
+            transparent: true,
+            side: THREE.DoubleSide,
+            opacity: 0.7 // Opacidade inicial
         });
-    }
+
+        const plane = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material); // Tamanho reduzido
+        plane.position.set(...posicoes[i]);
+        plane.userData = { simbolo, direcao: null };
+
+        // A MUDANÇA CRÍTICA: Adiciona a seta à câmera, não à cena.
+        this.camera.add(plane); 
+        this.setas.push(plane);
+    });
+
+    // Adiciona a câmera (com as setas filhas) à cena
+    this.scene.add(this.camera);
+}
 
     detectarDirecao() {
         const threshold = 0.5;
@@ -316,17 +322,18 @@ export class Visao3D {
         }
     }
 
-    animate() {
-        requestAnimationFrame(() => this.animate());
-        
-        if (!this.animando) {
-            this.camera.rotation.x = this.rotX;
-            this.camera.rotation.y = this.rotY;
-        }
-        
-        this.atualizarSetas();
-        this.renderer.render(this.scene, this.camera);
-    }
+    // CÓDIGO DE SUBSTITUIÇÃO 2
+animate() {
+    requestAnimationFrame(() => this.animate());
+
+    // Removemos a condição 'if (!this.animando)'
+    // A câmera agora sempre segue os valores de rotação, que são suavizados pela função de animação.
+    this.camera.rotation.x = this.rotX;
+    this.camera.rotation.y = this.rotY;
+
+    this.atualizarSetas();
+    this.renderer.render(this.scene, this.camera);
+}
 
     onResize() {
         this.camera.aspect = this.container.offsetWidth / this.container.offsetHeight;
