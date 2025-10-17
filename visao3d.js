@@ -82,6 +82,9 @@ export class Visao3D {
             if (e.key === 's' || e.key === 'S') this.rotX -= speed;
             if (e.key === 'a' || e.key === 'A') this.rotY += speed;
             if (e.key === 'd' || e.key === 'D') this.rotY -= speed;
+
+            // 🧭 Limite vertical - evita piruetas
+            this.rotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotX));
         });
 
         let isDragging = false;
@@ -95,6 +98,9 @@ export class Visao3D {
                 const deltaY = e.clientY - previousMousePosition.y;
                 this.rotY -= deltaX * 0.005;
                 this.rotX -= deltaY * 0.005;
+
+                // 🧭 Limite vertical também durante o arraste
+                this.rotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotX));
             }
             previousMousePosition = { x: e.clientX, y: e.clientY };
         });
