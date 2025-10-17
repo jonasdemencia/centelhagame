@@ -196,15 +196,19 @@ this.itensNarrativas = {
     document.getElementById('narrativa-ativa').className = 'tela-ativa';
     document.getElementById('titulo-narrativa').textContent = this.narrativaAtual.titulo;
     
-    // ADICIONE ESTAS LINHAS AQUI:
     document.getElementById('abrir-inventario-btn').onclick = () => {
         this.abrirInventarioSemItem();
     };
 
-        // ADICIONE ISTO
+    // Inicializar visão 3D
     if (!this.visao3d) {
         this.visao3d = new Visao3D('canvas-container');
     }
+    
+    // Listener para cliques na visão 3D
+    document.addEventListener('opcaoClicada3D', (e) => {
+        this.processarOpcao(e.detail);
+    });
     
     this.mostrarSecao(1);
 }
@@ -895,6 +899,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
