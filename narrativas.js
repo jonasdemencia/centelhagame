@@ -779,72 +779,50 @@ const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this
     }
 
     async processarOpcao(opcao) {
-    if (opcao.som) {
-        // Criar overlay de fade
-        const overlay = document.createElement('div');
-        overlay.className = 'fade-overlay';
-        document.body.appendChild(overlay);
-        
-        // Fade to black (mais rápido)
-        setTimeout(() => overlay.classList.add('active'), 10);
-        await new Promise(resolve => setTimeout(resolve, 500)); // Reduzido de 1000 para 500
-        
-        // Tocar som
-        try {
-            const audio = new Audio(opcao.som);
-            await audio.play();
-            await new Promise(resolve => setTimeout(resolve, 1500)); // Reduzido de 2000 para 1500
-        } catch (error) {
-            console.log('Erro ao tocar som:', error);
-        }
-        
-        // Processar mudança (no escuro)
-        if (opcao.requer) {
-            await this.consumirItem(opcao.requer);
-        }
-        if (opcao.batalha) {
-            const playerDocRef = doc(db, "players", this.userId);
-            await updateDoc(playerDocRef, {
-                "narrativeProgress.battleReturn": {
-                    vitoria: opcao.vitoria,
-                    derrota: opcao.derrota,
-                    active: true
-                }
-            });
-            window.location.href = `batalha.html?monstros=${opcao.batalha}`;
-            return;
-        } else if (opcao.teste) {
-            this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
-        } else {
-            await this.mostrarSecao(opcao.secao);
-        }
-        
-        // Fade in (mais rápido)
-        overlay.classList.remove('active');
-        setTimeout(() => overlay.remove(), 1200); // Reduzido de 1000 para 500
-        
-    } else {
-        // Sem som - comportamento normal
-        if (opcao.requer) {
-            await this.consumirItem(opcao.requer);
-        }
-        if (opcao.batalha) {
-            const playerDocRef = doc(db, "players", this.userId);
-            await updateDoc(playerDocRef, {
-                "narrativeProgress.battleReturn": {
-                    vitoria: opcao.vitoria,
-                    derrota: opcao.derrota,
-                    active: true
-                }
-            });
-            window.location.href = `batalha.html?monstros=${opcao.batalha}`;
-        } else if (opcao.teste) {
-            this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
-        } else {
-            await this.mostrarSecao(opcao.secao);
-        }
+    // SEMPRE criar overlay de fade
+    const overlay = document.createElement('div');
+    overlay.className = 'fade-overlay';
+    document.body.appendChild(overlay);
+    
+    // Fade to black
+    setTimeout(() => overlay.classList.add('active'), 10);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Tocar som (usa o som da opção ou o padrão de passos)
+    try {
+        const audio = new Audio(opcao.som || 'sounds/passos.mp3');
+        await audio.play();
+        await new Promise(resolve => setTimeout(resolve, 1500));
+    } catch (error) {
+        console.log('Erro ao tocar som:', error);
     }
+    
+    // Processar mudança (no escuro)
+    if (opcao.requer) {
+        await this.consumirItem(opcao.requer);
+    }
+    if (opcao.batalha) {
+        const playerDocRef = doc(db, "players", this.userId);
+        await updateDoc(playerDocRef, {
+            "narrativeProgress.battleReturn": {
+                vitoria: opcao.vitoria,
+                derrota: opcao.derrota,
+                active: true
+            }
+        });
+        window.location.href = `batalha.html?monstros=${opcao.batalha}`;
+        return;
+    } else if (opcao.teste) {
+        this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
+    } else {
+        await this.mostrarSecao(opcao.secao);
+    }
+    
+    // Fade in
+    overlay.classList.remove('active');
+    setTimeout(() => overlay.remove(), 1200);
 }
+
 
 
     async processarBatalhaAutomatica(secao) {
@@ -899,6 +877,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
