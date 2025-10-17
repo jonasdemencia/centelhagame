@@ -254,30 +254,52 @@ export class Visao3D {
     }
 
     onClick(event) {
-        const rect = this.container.getBoundingClientRect();
-        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    const rect = this.container.getBoundingClientRect();
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-        this.raycaster.setFromCamera(this.mouse, this.camera);
-        const setasVisiveis = this.setas.filter(s => s.visible);
-        const intersectsSetas = this.raycaster.intersectObjects(setasVisiveis);
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const setasVisiveis = this.setas.filter(s => s.visible);
+    const intersectsSetas = this.raycaster.intersectObjects(setasVisiveis);
 
-        if (intersectsSetas.length > 0) {
-            const seta = intersectsSetas[0].object;
-            if (seta.userData.direcao) {
-                this.rotacionarPara(seta.userData.direcao);
-            }
-            return;
+    if (intersectsSetas.length > 0) {
+        const seta = intersectsSetas[0].object;
+        const simbolo = seta.userData.simbolo;
+
+        // 🔹 Novo comportamento de rotação livre:
+        const step = 0.2; // velocidade da rotação
+
+        switch (simbolo) {
+            case '←':
+                this.rotY += step; // gira à esquerda
+                break;
+            case '→':
+                this.rotY -= step; // gira à direita
+                break;
+            case '↑':
+                this.rotX += step; // olha para cima
+                break;
+            case '↓':
+                this.rotX -= step; // olha para baixo
+                break;
         }
 
-        const intersects = this.raycaster.intersectObjects(this.textMeshes);
-        if (intersects.length > 0) {
-            const clickedMesh = intersects[0].object;
-            const opcao = clickedMesh.userData.opcao;
-            const event = new CustomEvent('opcaoClicada3D', { detail: opcao });
-            document.dispatchEvent(event);
-        }
+        // 🧭 Limite vertical (para não girar de cabeça pra baixo)
+        this.rotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotX));
+
+        return;
     }
+
+    // (mantém a lógica original dos textos)
+    const intersects = this.raycaster.intersectObjects(this.textMeshes);
+    if (intersects.length > 0) {
+        const clickedMesh = intersects[0].object;
+        const opcao = clickedMesh.userData.opcao;
+        const event = new CustomEvent('opcaoClicada3D', { detail: opcao });
+        document.dispatchEvent(event);
+    }
+}
+
 
     onMouseMove(event) {
         const rect = this.container.getBoundingClientRect();
