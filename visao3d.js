@@ -253,7 +253,7 @@ export class Visao3D {
         });
     }
 
-   onClick(event) {
+  onClick(event) {
     const rect = this.container.getBoundingClientRect();
     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -266,28 +266,31 @@ export class Visao3D {
         const seta = intersectsSetas[0].object;
         const simbolo = seta.userData.simbolo;
 
-        const stepY = Math.PI / 2; // 90 graus por clique (horizontal)
-        const stepX = Math.PI / 6; // 30 graus por clique (vertical leve)
+        const stepY = Math.PI / 2; // 90 graus horizontais
+        const stepX = Math.PI / 6; // 30 graus verticais
+        let alvoX = this.rotX;
+        let alvoY = this.rotY;
 
         switch (simbolo) {
             case '←':
-                this.rotY += stepY; // gira livremente à esquerda
+                alvoY += stepY;
                 break;
             case '→':
-                this.rotY -= stepY; // gira livremente à direita
+                alvoY -= stepY;
                 break;
             case '↑':
-                this.rotX = Math.min(this.rotX + stepX, Math.PI / 3); // olha pra cima com limite
+                alvoX = Math.min(this.rotX + stepX, Math.PI / 3);
                 break;
             case '↓':
-                this.rotX = Math.max(this.rotX - stepX, -Math.PI / 3); // olha pra baixo com limite
+                alvoX = Math.max(this.rotX - stepX, -Math.PI / 3);
                 break;
         }
 
+        this.animarRotacaoSuave(alvoX, alvoY);
         return;
     }
 
-    // (mantém a lógica de clique nos textos)
+    // 🔹 Clique nos textos
     const intersects = this.raycaster.intersectObjects(this.textMeshes);
     if (intersects.length > 0) {
         const clickedMesh = intersects[0].object;
@@ -295,6 +298,34 @@ export class Visao3D {
         const event = new CustomEvent('opcaoClicada3D', { detail: opcao });
         document.dispatchEvent(event);
     }
+}
+
+// 🔄 Nova função: rotação suave e contínua
+animarRotacaoSuave(alvoX, alvoY) {
+    if (this.animando) return;
+    this.animando = true;
+
+    const inicioX = this.rotX;
+    const inicioY = this.rotY;
+    const duracao = 800; // duração da animação (ms)
+    const inicio = performance.now();
+
+    const animar = (tempo) => {
+        const t = Math.min((tempo - inicio) / duracao, 1);
+        const ease = 1 - Math.pow(1 - t, 3); // easing cúbico
+
+        this.rotX = inicioX + (alvoX - inicioX) * ease;
+        this.rotY = inicioY + (alvoY - inicioY) * ease;
+
+        if (t < 1) {
+            requestAnimationFrame(animar);
+        } else {
+            this.rotX = alvoX;
+            this.rotY = alvoY;
+            this.animando = false;
+        }
+    };
+    requestAnimationFrame(animar);
 }
 
 
