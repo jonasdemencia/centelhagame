@@ -253,7 +253,7 @@ export class Visao3D {
         });
     }
 
-    onClick(event) {
+   onClick(event) {
     const rect = this.container.getBoundingClientRect();
     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -266,31 +266,28 @@ export class Visao3D {
         const seta = intersectsSetas[0].object;
         const simbolo = seta.userData.simbolo;
 
-        // 🔹 Novo comportamento de rotação livre:
-        const step = 0.2; // velocidade da rotação
+        const stepY = Math.PI / 2; // 90 graus por clique (horizontal)
+        const stepX = Math.PI / 6; // 30 graus por clique (vertical leve)
 
         switch (simbolo) {
             case '←':
-                this.rotY += step; // gira à esquerda
+                this.rotY += stepY; // gira livremente à esquerda
                 break;
             case '→':
-                this.rotY -= step; // gira à direita
+                this.rotY -= stepY; // gira livremente à direita
                 break;
             case '↑':
-                this.rotX += step; // olha para cima
+                this.rotX = Math.min(this.rotX + stepX, Math.PI / 3); // olha pra cima com limite
                 break;
             case '↓':
-                this.rotX -= step; // olha para baixo
+                this.rotX = Math.max(this.rotX - stepX, -Math.PI / 3); // olha pra baixo com limite
                 break;
         }
-
-        // 🧭 Limite vertical (para não girar de cabeça pra baixo)
-        this.rotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotX));
 
         return;
     }
 
-    // (mantém a lógica original dos textos)
+    // (mantém a lógica de clique nos textos)
     const intersects = this.raycaster.intersectObjects(this.textMeshes);
     if (intersects.length > 0) {
         const clickedMesh = intersects[0].object;
@@ -299,6 +296,7 @@ export class Visao3D {
         document.dispatchEvent(event);
     }
 }
+
 
 
     onMouseMove(event) {
