@@ -7,7 +7,8 @@ export class SistemaEmergencia {
         this.contadorSecoes = 0;
         this.emergenciaAtiva = false;
         this.secaoOrigemEmergencia = null;
-        this.apiKey = "COLE_SUA_CHAVE_DE_API_GEMINI_AQUI"; // Importante!
+        this.workerUrl = "https://lucky-scene-6054.fabiorainersilva.workers.dev/"; // URL do seu Worker Cloudflare
+
     }
 
 
@@ -122,45 +123,32 @@ export class SistemaEmergencia {
      * Função que chama a API da IA (ex: Google Gemini).
      */
     async chamarOraculoNarrativo(prompt) {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.apiKey}`;
-        
-        const body = {
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-                temperature: 1.0, // Alta criatividade
-                maxOutputTokens: 500
-            },
-            safetySettings: [ // Configurações de segurança para permitir temas de terror
-                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-            ]
-        };
+  const url = this.workerUrl; // chama o Worker, não a Gemini diretamente
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt })
+  });
 
-        if (!response.ok) {
-            throw new Error(`Erro na API: ${response.status} ${response.statusText}`);
-        }
+  if (!response.ok) {
+    throw new Error(`Erro no Worker: ${response.status} ${response.statusText}`);
+  }
 
-        const data = await response.json();
-        
-        if (!data.candidates || !data.candidates[0].content) {
-            throw new Error("Resposta da IA vazia ou mal formatada.");
-        }
+  const data = await response.json();
 
-        const jsonText = data.candidates[0].content.parts[0].text
-            .replace(/```json/g, '')
-            .replace(/```/g, '')
-            .trim();
-            
-        return JSON.parse(jsonText);
-    }
+  const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text
+    ?.replace(/```json/g, "")
+    ?.replace(/```/g, "")
+    ?.trim();
+
+  if (!jsonText) {
+    throw new Error("Resposta vazia ou mal formatada do Oráculo.");
+  }
+
+  return JSON.parse(jsonText);
+}
+
 
     /**
      * Converte a resposta JSON da IA em uma "Seção" que o jogo entende.
@@ -281,6 +269,7 @@ export class SistemaEmergencia {
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
 
 
