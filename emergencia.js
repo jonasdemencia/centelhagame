@@ -122,8 +122,8 @@ export class SistemaEmergencia {
     /**
      * Função que chama a API da IA (ex: Google Gemini).
      */
-    async chamarOraculoNarrativo(prompt) {
-  const url = this.workerUrl; // chama o Worker, não a Gemini diretamente
+   async chamarOraculoNarrativo(prompt) {
+  const url = this.workerUrl;
 
   const response = await fetch(url, {
     method: "POST",
@@ -137,16 +137,39 @@ export class SistemaEmergencia {
 
   const data = await response.json();
 
-  const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text
-    ?.replace(/```json/g, "")
-    ?.replace(/```/g, "")
-    ?.trim();
+  console.log("[ORÁCULO] Resposta bruta:", data);
 
-  if (!jsonText) {
-    throw new Error("Resposta vazia ou mal formatada do Oráculo.");
+  // Tenta extrair o texto da resposta Gemini
+  let jsonText = null;
+
+  if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+    jsonText = data.candidates[0].content.parts[0].text;
+  } else if (data.error) {
+    throw new Error(`Erro da Gemini: ${data.error.message}`);
+  } else {
+    console.error("[ORÁCULO] Estrutura inesperada:", JSON.stringify(data, null, 2));
+    throw new Error("Resposta da Gemini em formato inesperado.");
   }
 
-  return JSON.parse(jsonText);
+  // Remove markdown code blocks
+  jsonText = jsonText
+    .replace(/```json/g, "")
+    .replace(/```/g, "")
+    .trim();
+
+  console.log("[ORÁCULO] JSON extraído:", jsonText);
+
+  if (!jsonText) {
+    throw new Error("Resposta vazia após extração.");
+  }
+
+  try {
+    return JSON.parse(jsonText);
+  } catch (parseError) {
+    console.error("[ORÁCULO] Erro ao fazer parse do JSON:", parseError);
+    console.error("[ORÁCULO] Texto que tentei fazer parse:", jsonText);
+    throw new Error(`JSON inválido: ${parseError.message}`);
+  }
 }
 
 
@@ -269,6 +292,7 @@ export class SistemaEmergencia {
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
 
 
