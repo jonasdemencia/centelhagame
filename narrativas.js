@@ -31,6 +31,8 @@ class SistemaNarrativas {
         this.itemPendente = null;
         this.visao3d = null;
         this.secaoEmergentePai = null;
+        this.contadorSecoesParaEmergencia = 0;
+        this.statsOcultos = {}; // Vamos manter isso vazio por enquanto, mas o código futuro pode precisar
 
         // IMPORTANTE: Definir itensNarrativas ANTES de criar SistemaEmergencia
         this.itensNarrativas = {
@@ -205,65 +207,80 @@ class SistemaNarrativas {
     }
 
     async mostrarSecao(numeroSecao) {
-        let secao;
+    let secao;
 
-        if (typeof numeroSecao === 'string' && numeroSecao.startsWith('emergente_')) {
-            secao = this.sistemaEmergencia.secoesEmergentes.get(numeroSecao);
-        } else {
-            secao = this.narrativaAtual.secoes[numeroSecao];
-        }
+    if (typeof numeroSecao === 'string' && numeroSecao.startsWith('emergente_')) {
+        secao = this.sistemaEmergencia.secoesEmergentes.get(numeroSecao);
+    } else {
+        secao = this.narrativaAtual.secoes[numeroSecao];
+    }
 
-        if (!secao) {
-            console.error('Seção não encontrada:', numeroSecao);
-            return;
-        }
+    if (!secao) {
+        console.error('Seção não encontrada:', numeroSecao);
+        return;
+    }
 
-        this.secaoAtual = numeroSecao;
+    this.secaoAtual = numeroSecao;
 
-        // ETAPA 3: Verificar e ativar emergência
-        const contextoAtual = this.sistemaEmergencia.analisarSecao(secao, numeroSecao);
-        const emergenciaHabilitada = this.narrativaAtual.emergenciaHabilitada !== false;
-        const resultadoEmergencia = this.sistemaEmergencia.verificarEAtivarEmergencia(numeroSecao, contextoAtual, this.narrativaAtual, emergenciaHabilitada);
+    // 🔹 INÍCIO DA MODIFICAÇÃO
+    // Só incrementa se não for seção emergente
+    if (typeof numeroSecao === 'number' || !numeroSecao.startsWith('emergente_')) {
+        this.contadorSecoesParaEmergencia++;
+    }
 
-        if (resultadoEmergencia && resultadoEmergencia.ativada) {
-            console.log(`[NARRATIVAS] 🎯 EXIBINDO SEÇÃO EMERGENTE: ${resultadoEmergencia.idSecao}`);
-            console.log(`[NARRATIVAS] Texto: ${resultadoEmergencia.secao.texto.substring(0, 100)}...`);
-            this.secaoEmergentePai = resultadoEmergencia.secao;
-            const secaoAMostrar = resultadoEmergencia.secao;
-            document.getElementById('numero-secao').textContent = `${numeroSecao} [EMERGÊNCIA]`;
-            this.renderizarTextoComItens(secaoAMostrar);
-            this.criarOpcoes(secaoAMostrar.opcoes, secaoAMostrar.final);
+    const contextoAtual = this.sistemaEmergencia.analisarSecao(secao, numeroSecao);
+    const emergenciaHabilitada = this.narrativaAtual.emergenciaHabilitada !== false;
 
-            if (secaoAMostrar.efeitos) {
-                for (const efeito of secaoAMostrar.efeitos) {
-                    if (efeito.tipo === 'energia') {
-                        await this.modificarEnergia(efeito.valor);
-                    }
-                }
-            }
-            return;
-        }
+    // Agora passamos o contador, o título e a seção atual
+    const resultadoEmergencia = await this.sistemaEmergencia.verificarEAtivarEmergencia(
+        this.contadorSecoesParaEmergencia,
+        this.narrativaAtual.titulo,
+        secao,
+        emergenciaHabilitada
+    );
 
-        await this.salvarProgresso(numeroSecao, secao.final);
+    if (resultadoEmergencia && resultadoEmergencia.ativada) {
+        console.log(`[NARRATIVAS] 🎯 EXIBINDO SEÇÃO DA IA: ${resultadoEmergencia.idSecao}`);
+        this.contadorSecoesParaEmergencia = 0; // reseta o contador
+        this.secaoEmergentePai = resultadoEmergencia.secao;
 
-        if (secao.efeitos) {
-            for (const efeito of secao.efeitos) {
+        const secaoAMostrar = resultadoEmergencia.secao;
+        document.getElementById('numero-secao').textContent = `${numeroSecao} [EMERGÊNCIA]`;
+        this.renderizarTextoComItens(secaoAMostrar);
+        this.criarOpcoes(secaoAMostrar.opcoes, secaoAMostrar.final);
+
+        if (secaoAMostrar.efeitos) {
+            for (const efeito of secaoAMostrar.efeitos) {
                 if (efeito.tipo === 'energia') {
                     await this.modificarEnergia(efeito.valor);
                 }
             }
         }
-
-        document.getElementById('numero-secao').textContent = numeroSecao;
-        this.renderizarTextoComItens(secao);
-
-        if (secao.batalha && !secao.opcoes) {
-            await this.processarBatalhaAutomatica(secao);
-            return;
-        }
-
-        this.criarOpcoes(secao.opcoes, secao.final);
+        return;
     }
+    // 🔹 FIM DA MODIFICAÇÃO
+
+    await this.salvarProgresso(numeroSecao, secao.final);
+
+    if (secao.efeitos) {
+        for (const efeito of secao.efeitos) {
+            if (efeito.tipo === 'energia') {
+                await this.modificarEnergia(efeito.valor);
+            }
+        }
+    }
+
+    document.getElementById('numero-secao').textContent = numeroSecao;
+    this.renderizarTextoComItens(secao);
+
+    if (secao.batalha && !secao.opcoes) {
+        await this.processarBatalhaAutomatica(secao);
+        return;
+    }
+
+    this.criarOpcoes(secao.opcoes, secao.final);
+}
+
 
     renderizarTextoComItens(secao) {
         const textoContainer = document.getElementById('texto-narrativa');
@@ -919,5 +936,6 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
