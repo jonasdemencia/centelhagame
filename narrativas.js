@@ -3,7 +3,6 @@ import { NARRATIVAS } from './narrativas-data.js';
 import { Visao3D } from './visao3d.js';
 import { SistemaEmergencia } from './emergencia.js';
 
-
 // Importa os SDKs necessários do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
@@ -30,14 +29,12 @@ class SistemaNarrativas {
         this.playerData = null;
         this.userId = null;
         this.itemPendente = null;
-        this.visao3d = null; // ADICIONE ISTO
-        this.sistemaEmergencia = new SistemaEmergencia(this.itensNarrativas);
-        this.secaoEmergentePai = null; // Rastreia seção emergente atual
+        this.visao3d = null;
+        this.secaoEmergentePai = null;
 
-
-this.itensNarrativas = {
-    
-// === ARMAS DE FOGO ===
+        // IMPORTANTE: Definir itensNarrativas ANTES de criar SistemaEmergencia
+        this.itensNarrativas = {
+            // === ARMAS DE FOGO ===
             "ak-47": { id: "ak-47", content: "AK 47", uuid: "extra-ak-47", slot: "weapon", large: true, twoHanded: true, description: "Fuzil de assalto da União Soviética. Fabricada em 1945.", damage: "2d10", ammoType: "municao-762", ammoCapacity: 30, loadedAmmo: 0, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/ak-47.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuak-47.png" },
             "amt-502d": { id: "amt-502d", content: "AMT-502D", uuid: "extra-amt-502d", slot: "weapon", description: "Protótipo fabricado supostamente em 2032(?), calíbre 50, 2 gatilhos.", damage: "3d12", ammoType: "municao-50", ammoCapacity: 14, loadedAmmo: 0, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/amt-502d.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuamt-502d.png" },
             "beretta-92": { id: "beretta-92", content: "Beretta 92", uuid: "extra-beretta-92", slot: "weapon", description: "Pistola semiautomática italiana. Fabricada em 1972.", damage: "1d8", ammoType: "municao-9mm", ammoCapacity: 10, loadedAmmo: 0, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/beretta-92.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuberetta-92.png" },
@@ -120,14 +117,15 @@ this.itensNarrativas = {
             // === UTILITÁRIOS ===
             "corda": { id: "corda", content: "Corda", uuid: "extra-corda", description: "Corda resistente para escaladas.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/corda.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thucorda.png" },
             "esqueiro": { id: "esqueiro", content: "Esqueiro", uuid: "extra-esqueiro", description: "Produz chama contínua.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/esqueiro.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuesqueiro.png" },
+        };
 
+        // AGORA criar SistemaEmergencia com itensNarrativas já definido
+        this.sistemaEmergencia = new SistemaEmergencia(this.itensNarrativas);
 
-         };
         this.inicializar();
     }
 
     inicializar() {
-        // Verifica autenticação
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 this.userId = user.uid;
@@ -139,37 +137,28 @@ this.itensNarrativas = {
     }
 
     async configurarEventListeners() {
-        // Verifica se há progresso salvo
         await this.verificarProgressoSalvo();
 
-        // Event listeners para seleção de narrativas
         document.querySelectorAll('.narrativa-card').forEach(card => {
             card.addEventListener('click', async (e) => {
                 const narrativaId = e.currentTarget.dataset.narrativa;
-
-                // Verifica se aventura foi completada
                 const playerDocRef = doc(db, "players", this.userId);
                 const docSnap = await getDoc(playerDocRef);
                 if (docSnap.exists()) {
-                    // AJUSTE 1: VERIFICA O PROGRESSO DA NARRATIVA ESPECÍFICA
                     const allProgress = docSnap.data().narrativeProgress;
                     if (allProgress && allProgress[narrativaId] && allProgress[narrativaId].completed) {
                         alert("Você já completou esta aventura!");
                         return;
                     }
                 }
-
                 await this.iniciarNarrativa(narrativaId);
             });
         });
 
-        // Botão voltar
         document.getElementById('voltar-selecao').addEventListener('click', () => {
             this.voltarSelecao();
         });
 
-
-        // Modal de teste
         document.getElementById('rolar-dados').addEventListener('click', () => {
             this.rolarDados();
         });
@@ -192,181 +181,214 @@ this.itensNarrativas = {
     }
 
     async iniciarNarrativa(narrativaId) {
-    await this.carregarDadosJogador();
-    this.narrativaAtual = NARRATIVAS[narrativaId];
-    this.secaoAtual = 1;
-    this.sistemaEmergencia.resetar();
-    document.getElementById('selecao-narrativas').className = 'tela-oculta';
-    document.getElementById('narrativa-ativa').className = 'tela-ativa';
-    document.getElementById('titulo-narrativa').textContent = this.narrativaAtual.titulo;
-    
-    document.getElementById('abrir-inventario-btn').onclick = () => {
-        this.abrirInventarioSemItem();
-    };
+        await this.carregarDadosJogador();
+        this.narrativaAtual = NARRATIVAS[narrativaId];
+        this.secaoAtual = 1;
+        this.sistemaEmergencia.resetar();
+        document.getElementById('selecao-narrativas').className = 'tela-oculta';
+        document.getElementById('narrativa-ativa').className = 'tela-ativa';
+        document.getElementById('titulo-narrativa').textContent = this.narrativaAtual.titulo;
 
-    // Inicializar visão 3D
-    if (!this.visao3d) {
-        this.visao3d = new Visao3D('canvas-container');
+        document.getElementById('abrir-inventario-btn').onclick = () => {
+            this.abrirInventarioSemItem();
+        };
+
+        if (!this.visao3d) {
+            this.visao3d = new Visao3D('canvas-container');
+        }
+
+        document.addEventListener('opcaoClicada3D', (e) => {
+            this.processarOpcao(e.detail);
+        });
+
+        this.mostrarSecao(1);
     }
-    
-    // Listener para cliques na visão 3D
-    document.addEventListener('opcaoClicada3D', (e) => {
-        this.processarOpcao(e.detail);
-    });
-    
-    this.mostrarSecao(1);
-}
-
 
     async mostrarSecao(numeroSecao) {
-    let secao;
-if (typeof numeroSecao === 'string' && numeroSecao.startsWith('emergente_')) {
-    secao = this.sistemaEmergencia.secoesEmergentes.get(numeroSecao);
-} else {
-    secao = this.narrativaAtual.secoes[numeroSecao];
-}
-    if (!secao) return;
-    this.secaoAtual = numeroSecao;
+        let secao;
 
-        // ETAPA 3: Verificar e ativar emergência
-const contextoAtual = this.sistemaEmergencia.analisarSecao(secao, numeroSecao);
-const emergenciaHabilitada = this.narrativaAtual.emergenciaHabilitada !== false; // Permite desabilitar por narrativa
-const resultadoEmergencia = this.sistemaEmergencia.verificarEAtivarEmergencia(numeroSecao, contextoAtual, this.narrativaAtual, emergenciaHabilitada);
-
-if (resultadoEmergencia && resultadoEmergencia.ativada) {
-    this.secaoEmergentePai = resultadoEmergencia.secao;
-    const secaoAMostrar = resultadoEmergencia.secao;
-    document.getElementById('numero-secao').textContent = `${numeroSecao} [EMERGÊNCIA]`;
-    this.renderizarTextoComItens(secaoAMostrar);
-    this.criarOpcoes(secaoAMostrar.opcoes, secaoAMostrar.final);
-    
-    // Aplicar efeitos da seção emergente
-    if (secaoAMostrar.efeitos) {
-        for (const efeito of secaoAMostrar.efeitos) {
-            if (efeito.tipo === 'energia') {
-                await this.modificarEnergia(efeito.valor);
-            }
+        if (typeof numeroSecao === 'string' && numeroSecao.startsWith('emergente_')) {
+            secao = this.sistemaEmergencia.secoesEmergentes.get(numeroSecao);
+        } else {
+            secao = this.narrativaAtual.secoes[numeroSecao];
         }
-    }
-    return;
-}
 
-    await this.salvarProgresso(numeroSecao, secao.final);
-
-    // Aplicar apenas efeitos de energia
-    if (secao.efeitos) {
-        for (const efeito of secao.efeitos) {
-            if (efeito.tipo === 'energia') {
-                await this.modificarEnergia(efeito.valor);
-            }
-        }
-    }
-
-    document.getElementById('numero-secao').textContent = numeroSecao;
-    this.renderizarTextoComItens(secao);
-
-    if (secao.batalha && !secao.opcoes) {
-        await this.processarBatalhaAutomatica(secao);
-        return;
-    }
-
-    this.criarOpcoes(secao.opcoes, secao.final);
-}
-
-// SUBSTITUA A FUNÇÃO INTEIRA POR ESTA:
-renderizarTextoComItens(secao) {
-    const textoContainer = document.getElementById('texto-narrativa');
-    let textoHTML = secao.texto;
-    if (secao.efeitos) {
-        secao.efeitos.forEach(efeito => {
-            if (efeito.tipo === 'item') {
-                const itemNome = this.obterNomeItem(efeito.item);
-                textoHTML += `<span class="item-coletavel" data-item-id="${efeito.item}" style="color: #90EE90; cursor: pointer; text-decoration: underline;">${itemNome}</span>`;
-            }
-        });
-    }
-    textoContainer.innerHTML = textoHTML;
-
-    textoContainer.querySelectorAll('.item-coletavel').forEach(span => {
-        span.addEventListener('click', () => { // O 'e' e 'e.stopPropagation()' foram removidos
-            const itemId = span.dataset.itemId;
-            this.abrirInventarioComItem(itemId, span);
-        });
-    });
-}
-
-
-obterNomeItem(itemId) {
-    return this.itensNarrativas[itemId]?.content || itemId;
-}
-
-
-    
-async abrirInventarioComItem(itemId, spanElement) {
-    const itemData = this.itensNarrativas[itemId];
-    const slotsNecessarios = itemData.large ? 2 : 1;
-    
-    const playerDocRef = doc(db, "players", this.userId);
-    const docSnap = await getDoc(playerDocRef);
-    
-    if (docSnap.exists()) {
-        const inventoryData = docSnap.data().inventory;
-        const totalSlots = inventoryData.inventorySpaces || 50;
-        const itemsInChest = inventoryData.itemsInChest || [];
-        
-        let slotsOcupados = 0;
-        itemsInChest.forEach(item => {
-            const itemInfo = this.itensNarrativas[item.id];
-            slotsOcupados += itemInfo?.large ? 2 : 1;
-        });
-        
-        const slotsDisponiveis = totalSlots - slotsOcupados;
-        
-        if (slotsDisponiveis < slotsNecessarios) {
-            const textoContainer = document.getElementById('texto-narrativa');
-            const mensagem = document.createElement('p');
-            mensagem.textContent = 'Você não tem espaço suficiente para mais itens.';
-            mensagem.style.color = '#ff6b6b';
-            mensagem.style.marginTop = '20px';
-            textoContainer.appendChild(mensagem);
-            setTimeout(() => mensagem.remove(), 3000);
+        if (!secao) {
+            console.error('Seção não encontrada:', numeroSecao);
             return;
         }
+
+        this.secaoAtual = numeroSecao;
+
+        // ETAPA 3: Verificar e ativar emergência
+        const contextoAtual = this.sistemaEmergencia.analisarSecao(secao, numeroSecao);
+        const emergenciaHabilitada = this.narrativaAtual.emergenciaHabilitada !== false;
+        const resultadoEmergencia = this.sistemaEmergencia.verificarEAtivarEmergencia(numeroSecao, contextoAtual, this.narrativaAtual, emergenciaHabilitada);
+
+        if (resultadoEmergencia && resultadoEmergencia.ativada) {
+            this.secaoEmergentePai = resultadoEmergencia.secao;
+            const secaoAMostrar = resultadoEmergencia.secao;
+            document.getElementById('numero-secao').textContent = `${numeroSecao} [EMERGÊNCIA]`;
+            this.renderizarTextoComItens(secaoAMostrar);
+            this.criarOpcoes(secaoAMostrar.opcoes, secaoAMostrar.final);
+
+            if (secaoAMostrar.efeitos) {
+                for (const efeito of secaoAMostrar.efeitos) {
+                    if (efeito.tipo === 'energia') {
+                        await this.modificarEnergia(efeito.valor);
+                    }
+                }
+            }
+            return;
+        }
+
+        await this.salvarProgresso(numeroSecao, secao.final);
+
+        if (secao.efeitos) {
+            for (const efeito of secao.efeitos) {
+                if (efeito.tipo === 'energia') {
+                    await this.modificarEnergia(efeito.valor);
+                }
+            }
+        }
+
+        document.getElementById('numero-secao').textContent = numeroSecao;
+        this.renderizarTextoComItens(secao);
+
+        if (secao.batalha && !secao.opcoes) {
+            await this.processarBatalhaAutomatica(secao);
+            return;
+        }
+
+        this.criarOpcoes(secao.opcoes, secao.final);
     }
-    
-    window.narrativeActionInProgress = true;
-    this.itemPendente = { id: itemId, span: spanElement };
-    
-    const overlay = document.createElement('div');
-    overlay.className = 'fade-overlay';
-    document.body.appendChild(overlay);
-    
-    setTimeout(() => overlay.classList.add('active'), 10);
-    
-    setTimeout(() => {
-        document.getElementById('narrativa-ativa').style.display = 'none';
-        document.getElementById('inventario-narrativa').classList.add('ativo');
-        document.getElementById('fechar-inventario-btn').onclick = () => this.fecharInventario();
-        
-        const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
-        const container = document.querySelector('#inventario-narrativa .container');
-        if (expandBtn && container) {
-            expandBtn.onclick = () => container.classList.toggle('expanded');
+
+    renderizarTextoComItens(secao) {
+        const textoContainer = document.getElementById('texto-narrativa');
+        let textoHTML = secao.texto;
+        if (secao.efeitos) {
+            secao.efeitos.forEach(efeito => {
+                if (efeito.tipo === 'item') {
+                    const itemNome = this.obterNomeItem(efeito.item);
+                    textoHTML += `<span class="item-coletavel" data-item-id="${efeito.item}" style="color: #90EE90; cursor: pointer; text-decoration: underline;">${itemNome}</span>`;
+                }
+            });
         }
-        
-        document.getElementById('preview-image').src = itemData.image;
-        document.getElementById('preview-image').style.display = 'block';
-        const previewContainer = document.querySelector('#inventario-narrativa .preview-image-window');
-        if (previewContainer) {
-            previewContainer.style.display = 'block';
+        textoContainer.innerHTML = textoHTML;
+
+        textoContainer.querySelectorAll('.item-coletavel').forEach(span => {
+            span.addEventListener('click', () => {
+                const itemId = span.dataset.itemId;
+                this.abrirInventarioComItem(itemId, span);
+            });
+        });
+    }
+
+    obterNomeItem(itemId) {
+        return this.itensNarrativas[itemId]?.content || itemId;
+    }
+
+    async abrirInventarioComItem(itemId, spanElement) {
+        const itemData = this.itensNarrativas[itemId];
+        const slotsNecessarios = itemData.large ? 2 : 1;
+
+        const playerDocRef = doc(db, "players", this.userId);
+        const docSnap = await getDoc(playerDocRef);
+
+        if (docSnap.exists()) {
+            const inventoryData = docSnap.data().inventory;
+            const totalSlots = inventoryData.inventorySpaces || 50;
+            const itemsInChest = inventoryData.itemsInChest || [];
+
+            let slotsOcupados = 0;
+            itemsInChest.forEach(item => {
+                const itemInfo = this.itensNarrativas[item.id];
+                slotsOcupados += itemInfo?.large ? 2 : 1;
+            });
+
+            const slotsDisponiveis = totalSlots - slotsOcupados;
+
+            if (slotsDisponiveis < slotsNecessarios) {
+                const textoContainer = document.getElementById('texto-narrativa');
+                const mensagem = document.createElement('p');
+                mensagem.textContent = 'Você não tem espaço suficiente para mais itens.';
+                mensagem.style.color = '#ff6b6b';
+                mensagem.style.marginTop = '20px';
+                textoContainer.appendChild(mensagem);
+                setTimeout(() => mensagem.remove(), 3000);
+                return;
+            }
         }
-        const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
-        if (imageContainer) {
-            imageContainer.style.display = 'flex';
-        }
-        document.getElementById('preview-name').textContent = '';
-        
-        const texto = `Você pegará a ${itemData.content}?`;
+
+        window.narrativeActionInProgress = true;
+        this.itemPendente = { id: itemId, span: spanElement };
+
+        const overlay = document.createElement('div');
+        overlay.className = 'fade-overlay';
+        document.body.appendChild(overlay);
+
+        setTimeout(() => overlay.classList.add('active'), 10);
+
+        setTimeout(() => {
+            document.getElementById('narrativa-ativa').style.display = 'none';
+            document.getElementById('inventario-narrativa').classList.add('ativo');
+            document.getElementById('fechar-inventario-btn').onclick = () => this.fecharInventario();
+
+            const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
+            const container = document.querySelector('#inventario-narrativa .container');
+            if (expandBtn && container) {
+                expandBtn.onclick = () => container.classList.toggle('expanded');
+            }
+
+            document.getElementById('preview-image').src = itemData.image;
+            document.getElementById('preview-image').style.display = 'block';
+            const previewContainer = document.querySelector('#inventario-narrativa .preview-image-window');
+            if (previewContainer) {
+                previewContainer.style.display = 'block';
+            }
+            const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
+            if (imageContainer) {
+                imageContainer.style.display = 'flex';
+            }
+            document.getElementById('preview-name').textContent = '';
+
+            const texto = `Você pegará a ${itemData.content}?`;
+            const previewDesc = document.getElementById('preview-description');
+            previewDesc.innerHTML = '';
+            let i = 0;
+            const typeWriter = setInterval(() => {
+                if (i < texto.length) {
+                    previewDesc.textContent += texto.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(typeWriter);
+                    previewDesc.innerHTML += '<br><button id="btn-sim-inv">Sim</button> <button id="btn-nao-inv">Não</button>';
+                    document.getElementById('btn-sim-inv').addEventListener('click', () => this.confirmarPegarItem());
+                    document.getElementById('btn-nao-inv').addEventListener('click', () => {
+                        document.getElementById('preview-image').style.display = 'none';
+                        document.getElementById('preview-image').src = '';
+                        document.getElementById('preview-description').innerHTML = '';
+                        const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
+                        if (imageContainer) {
+                            imageContainer.style.display = 'none';
+                        }
+                        this.itemPendente = null;
+                        window.narrativeActionInProgress = false;
+                    });
+                }
+            }, 50);
+
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.remove(), 200);
+        }, 1500);
+    }
+
+    async confirmarPegarItem() {
+        await this.adicionarItem(this.itemPendente.id);
+        this.itemPendente.span.remove();
+
+        const itemNome = this.itensNarrativas[this.itemPendente.id].content;
+        const texto = `Você pegou ${itemNome}.`;
         const previewDesc = document.getElementById('preview-description');
         previewDesc.innerHTML = '';
         let i = 0;
@@ -376,9 +398,7 @@ async abrirInventarioComItem(itemId, spanElement) {
                 i++;
             } else {
                 clearInterval(typeWriter);
-                previewDesc.innerHTML += '<br><button id="btn-sim-inv">Sim</button> <button id="btn-nao-inv">Não</button>';
-                document.getElementById('btn-sim-inv').addEventListener('click', () => this.confirmarPegarItem());
-                document.getElementById('btn-nao-inv').addEventListener('click', () => {
+                setTimeout(() => {
                     document.getElementById('preview-image').style.display = 'none';
                     document.getElementById('preview-image').src = '';
                     document.getElementById('preview-description').innerHTML = '';
@@ -388,96 +408,56 @@ async abrirInventarioComItem(itemId, spanElement) {
                     }
                     this.itemPendente = null;
                     window.narrativeActionInProgress = false;
-                });
+                }, 2000);
             }
-        }, 50);
-        
-        overlay.classList.remove('active');
-        setTimeout(() => overlay.remove(), 200);
-    }, 1500);
-}
-
-
-// SUBSTITUA A FUNÇÃO INTEIRA POR ESTA:
-async confirmarPegarItem() {
-    await this.adicionarItem(this.itemPendente.id);
-    this.itemPendente.span.remove();
-
-    const itemNome = this.itensNarrativas[this.itemPendente.id].content;
-    const texto = `Você pegou ${itemNome}.`;
-    const previewDesc = document.getElementById('preview-description');
-    previewDesc.innerHTML = '';
-    let i = 0;
-    const typeWriter = setInterval(() => {
-        if (i < texto.length) {
-            previewDesc.textContent += texto.charAt(i);
-            i++;
-        } else {
-            clearInterval(typeWriter);
-            setTimeout(() => {
-                document.getElementById('preview-image').style.display = 'none';
-                document.getElementById('preview-image').src = '';
-                document.getElementById('preview-description').innerHTML = '';
-                const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
-                if (imageContainer) {
-                    imageContainer.style.display = 'none';
-                }
-                this.itemPendente = null;
-                window.narrativeActionInProgress = false; // DESATIVA A BANDEIRA
-            }, 2000);
-        }
-    }, 30);
-}
+        }, 30);
+    }
 
     abrirInventarioSemItem() {
-    const overlay = document.createElement('div');
-    overlay.className = 'fade-overlay';
-    document.body.appendChild(overlay);
-    
-    setTimeout(() => overlay.classList.add('active'), 10);
-    
-    setTimeout(() => {
-        document.getElementById('narrativa-ativa').style.display = 'none';
-        document.getElementById('inventario-narrativa').classList.add('ativo');
-        document.getElementById('fechar-inventario-btn').onclick = () => this.fecharInventario();
-        
-        const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
-        const container = document.querySelector('#inventario-narrativa .container');
-        if (expandBtn && container) {
-            expandBtn.onclick = () => container.classList.toggle('expanded');
-        }
-        
+        const overlay = document.createElement('div');
+        overlay.className = 'fade-overlay';
+        document.body.appendChild(overlay);
+
+        setTimeout(() => overlay.classList.add('active'), 10);
+
+        setTimeout(() => {
+            document.getElementById('narrativa-ativa').style.display = 'none';
+            document.getElementById('inventario-narrativa').classList.add('ativo');
+            document.getElementById('fechar-inventario-btn').onclick = () => this.fecharInventario();
+
+            const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
+            const container = document.querySelector('#inventario-narrativa .container');
+            if (expandBtn && container) {
+                expandBtn.onclick = () => container.classList.toggle('expanded');
+            }
+
+            document.getElementById('preview-image').style.display = 'none';
+            document.getElementById('preview-name').textContent = '';
+            document.getElementById('preview-description').textContent = '';
+            const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
+            if (imageContainer) {
+                imageContainer.style.display = 'none';
+            }
+
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.remove(), 200);
+        }, 1200);
+    }
+
+    fecharInventario() {
+        document.getElementById('inventario-narrativa').classList.remove('ativo');
+        document.getElementById('narrativa-ativa').style.display = 'block';
         document.getElementById('preview-image').style.display = 'none';
+        document.getElementById('preview-image').src = '';
         document.getElementById('preview-name').textContent = '';
-        document.getElementById('preview-description').textContent = '';
+        document.getElementById('preview-description').innerHTML = '';
         const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
         if (imageContainer) {
             imageContainer.style.display = 'none';
         }
-        
-        overlay.classList.remove('active');
-        setTimeout(() => overlay.remove(), 200);
-    }, 1200);
-}
-
-
-
-// SUBSTITUA A FUNÇÃO INTEIRA POR ESTA:
-fecharInventario() {
-    document.getElementById('inventario-narrativa').classList.remove('ativo');
-    document.getElementById('narrativa-ativa').style.display = 'block';
-    document.getElementById('preview-image').style.display = 'none';
-    document.getElementById('preview-image').src = '';
-    document.getElementById('preview-name').textContent = '';
-    document.getElementById('preview-description').innerHTML = '';
-    const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
-    if (imageContainer) {
-        imageContainer.style.display = 'none';
+        this.itemPendente = null;
+        window.narrativeActionInProgress = false;
     }
-    this.itemPendente = null;
-    window.narrativeActionInProgress = false; // DESATIVA A BANDEIRA
-}
-
 
     criarOpcoes(opcoes, isFinal = false) {
         const container = document.getElementById('opcoes-container');
@@ -497,7 +477,6 @@ fecharInventario() {
             btn.className = 'opcao-btn';
             btn.textContent = opcao.texto;
 
-            // Verificar requisitos
             if (opcao.requer && !this.temItem(opcao.requer)) {
                 btn.disabled = true;
                 btn.textContent += ' (Requer: ' + opcao.requer + ')';
@@ -508,10 +487,10 @@ fecharInventario() {
             });
             container.appendChild(btn);
         });
-        // ADICIONE ISTO
-    if (this.visao3d) {
-        this.visao3d.carregarOpcoes(opcoes);
-    }
+
+        if (this.visao3d) {
+            this.visao3d.carregarOpcoes(opcoes);
+        }
     }
 
     temItem(itemId) {
@@ -540,122 +519,115 @@ fecharInventario() {
     }
 
     async adicionarItem(itemId) {
-    if (!this.userId) return;
+        if (!this.userId) return;
 
-    const playerDocRef = doc(db, "players", this.userId);
-    const docSnap = await getDoc(playerDocRef);
+        const playerDocRef = doc(db, "players", this.userId);
+        const docSnap = await getDoc(playerDocRef);
 
-    if (docSnap.exists()) {
-        const playerData = docSnap.data();
-        const inventory = playerData.inventory || {};
-        const chest = inventory.itemsInChest || [];
-        const itemData = this.itensNarrativas[itemId];
+        if (docSnap.exists()) {
+            const playerData = docSnap.data();
+            const inventory = playerData.inventory || {};
+            const chest = inventory.itemsInChest || [];
+            const itemData = this.itensNarrativas[itemId];
 
-        if (!itemData) {
-            console.error(`Item '${itemId}' não encontrado nas narrativas`);
-            return;
-        }
-
-        // VERIFICA ESPAÇO ANTES DE ADICIONAR
-        const totalSlots = inventory.inventorySpaces || 50;
-        const slotsNecessarios = itemData.large ? 2 : 1;
-        
-        let slotsOcupados = 0;
-        chest.forEach(item => {
-            const itemInfo = this.itensNarrativas[item.id];
-            slotsOcupados += itemInfo?.large ? 2 : 1;
-        });
-        
-        if (slotsOcupados + slotsNecessarios > totalSlots) {
-            console.error('Sem espaço suficiente no inventário');
-            return;
-        }
-
-        if (itemData.stackable === false) {
-            const novoItem = { ...itemData, uuid: crypto.randomUUID() };
-            
-            if (itemId === "pequenabolsaouro") {
-                novoItem.goldValue = Math.floor(Math.random() * 10) + 1;
+            if (!itemData) {
+                console.error(`Item '${itemId}' não encontrado nas narrativas`);
+                return;
             }
-            
-            chest.push(novoItem);
-        } else {
-            const existeItem = chest.find(item => item.id === itemId);
-            if (existeItem) {
-                existeItem.quantity = (existeItem.quantity || 1) + 1;
+
+            const totalSlots = inventory.inventorySpaces || 50;
+            const slotsNecessarios = itemData.large ? 2 : 1;
+
+            let slotsOcupados = 0;
+            chest.forEach(item => {
+                const itemInfo = this.itensNarrativas[item.id];
+                slotsOcupados += itemInfo?.large ? 2 : 1;
+            });
+
+            if (slotsOcupados + slotsNecessarios > totalSlots) {
+                console.error('Sem espaço suficiente no inventário');
+                return;
+            }
+
+            if (itemData.stackable === false) {
+                const novoItem = { ...itemData, uuid: crypto.randomUUID() };
+
+                if (itemId === "pequenabolsaouro") {
+                    novoItem.goldValue = Math.floor(Math.random() * 10) + 1;
+                }
+
+                chest.push(novoItem);
             } else {
-                chest.push({ ...itemData, quantity: 1, uuid: crypto.randomUUID() });
+                const existeItem = chest.find(item => item.id === itemId);
+                if (existeItem) {
+                    existeItem.quantity = (existeItem.quantity || 1) + 1;
+                } else {
+                    chest.push({ ...itemData, quantity: 1, uuid: crypto.randomUUID() });
+                }
             }
-        }
 
-        await updateDoc(playerDocRef, {
-            "inventory.itemsInChest": chest
-        });
-
-        this.playerData.inventory.itemsInChest = chest;
-        console.log('Item adicionado:', itemId);
-    }
-}
-
-
-    
-    async modificarEnergia(valor) {
-    if (!this.userId) return;
-    const playerDocRef = doc(db, "players", this.userId);
-    const docSnap = await getDoc(playerDocRef);
-    if (docSnap.exists()) {
-        const playerData = docSnap.data();
-        const energiaAtual = playerData.energy?.total || 20;
-        const energiaMaxima = playerData.energy?.initial || 20;
-        const novaEnergia = Math.max(0, Math.min(energiaMaxima, energiaAtual + valor));
-        await updateDoc(playerDocRef, {
-            "energy.total": novaEnergia
-        });
-        this.playerData.energy.total = novaEnergia;
-        console.log('Energia modificada:', valor, 'Nova energia:', novaEnergia);
-    }
-}
-
-
-    async consumirItem(itemId) {
-    if (!this.userId) return;
-    const playerDocRef = doc(db, "players", this.userId);
-    const docSnap = await getDoc(playerDocRef);
-    if (docSnap.exists()) {
-        const playerData = docSnap.data();
-        const inventory = playerData.inventory || {};
-        const chest = inventory.itemsInChest || [];
-        const itemIndex = chest.findIndex(item => item.id === itemId);
-        
-        if (itemIndex !== -1) {
-            const item = chest[itemIndex];
-            
-            // Se for bolsa de ouro, adiciona ao p.ouro
-            if (itemId === "pequenabolsaouro" && item.goldValue) {
-                const ouroAtual = playerData.p?.ouro || 0;
-                await updateDoc(playerDocRef, {
-                    "p.ouro": ouroAtual + item.goldValue
-                });
-                this.playerData.p = this.playerData.p || {};
-                this.playerData.p.ouro = ouroAtual + item.goldValue;
-            }
-            
-            // Remove a bolsa do inventário
-            if (item.quantity > 1) {
-                chest[itemIndex].quantity -= 1;
-            } else {
-                chest.splice(itemIndex, 1);
-            }
-            
             await updateDoc(playerDocRef, {
                 "inventory.itemsInChest": chest
             });
+
             this.playerData.inventory.itemsInChest = chest;
-            console.log('Item consumido:', itemId, 'Inventário atualizado:', chest);
+            console.log('Item adicionado:', itemId);
         }
     }
-}
 
+    async modificarEnergia(valor) {
+        if (!this.userId) return;
+        const playerDocRef = doc(db, "players", this.userId);
+        const docSnap = await getDoc(playerDocRef);
+        if (docSnap.exists()) {
+            const playerData = docSnap.data();
+            const energiaAtual = playerData.energy?.total || 20;
+            const energiaMaxima = playerData.energy?.initial || 20;
+            const novaEnergia = Math.max(0, Math.min(energiaMaxima, energiaAtual + valor));
+            await updateDoc(playerDocRef, {
+                "energy.total": novaEnergia
+            });
+            this.playerData.energy.total = novaEnergia;
+            console.log('Energia modificada:', valor, 'Nova energia:', novaEnergia);
+        }
+    }
+
+    async consumirItem(itemId) {
+        if (!this.userId) return;
+        const playerDocRef = doc(db, "players", this.userId);
+        const docSnap = await getDoc(playerDocRef);
+        if (docSnap.exists()) {
+            const playerData = docSnap.data();
+            const inventory = playerData.inventory || {};
+            const chest = inventory.itemsInChest || [];
+            const itemIndex = chest.findIndex(item => item.id === itemId);
+
+            if (itemIndex !== -1) {
+                const item = chest[itemIndex];
+
+                if (itemId === "pequenabolsaouro" && item.goldValue) {
+                    const ouroAtual = playerData.p?.ouro || 0;
+                    await updateDoc(playerDocRef, {
+                        "p.ouro": ouroAtual + item.goldValue
+                    });
+                    this.playerData.p = this.playerData.p || {};
+                    this.playerData.p.ouro = ouroAtual + item.goldValue;
+                }
+
+                if (item.quantity > 1) {
+                    chest[itemIndex].quantity -= 1;
+                } else {
+                    chest.splice(itemIndex, 1);
+                }
+
+                await updateDoc(playerDocRef, {
+                    "inventory.itemsInChest": chest
+                });
+                this.playerData.inventory.itemsInChest = chest;
+                console.log('Item consumido:', itemId, 'Inventário atualizado:', chest);
+            }
+        }
+    }
 
     iniciarTeste(atributo, dificuldade, secaoSucesso) {
         this.testeAtual = { atributo, dificuldade, secaoSucesso };
@@ -707,8 +679,8 @@ fecharInventario() {
         const secaoUrl = urlParams.get('secao');
 
         if (secaoUrl) {
-for (const [narrativaId, narrativa] of Object.entries(NARRATIVAS)) {
-    if (narrativa.secoes[secaoUrl]) {
+            for (const [narrativaId, narrativa] of Object.entries(NARRATIVAS)) {
+                if (narrativa.secoes[secaoUrl]) {
                     await this.iniciarNarrativa(narrativaId);
                     await this.mostrarSecao(parseInt(secaoUrl));
                     return;
@@ -783,13 +755,12 @@ for (const [narrativaId, narrativa] of Object.entries(NARRATIVAS)) {
         });
     }
 
-    // AJUSTE 2: SALVA O PROGRESSO DENTRO DE UM OBJETO DA NARRATIVA
     async salvarProgresso(numeroSecao, isFinal = false) {
         if (!this.userId || !this.narrativaAtual) return;
 
         const playerDocRef = doc(db, "players", this.userId);
-const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual);
-        
+        const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual);
+
         const progressData = {
             lastUpdated: new Date().toISOString()
         };
@@ -811,64 +782,74 @@ const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this
     }
 
     async processarOpcao(opcao) {
-    // SEMPRE criar overlay de fade
-    const overlay = document.createElement('div');
-    overlay.className = 'fade-overlay';
-    document.body.appendChild(overlay);
-    
-    // Fade to black
-    setTimeout(() => overlay.classList.add('active'), 10);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Tocar som (usa o som da opção ou o padrão de passos)
-    try {
-        const audio = new Audio(opcao.som || 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
-        await audio.play();
-        await new Promise(resolve => setTimeout(resolve, 1500));
-    } catch (error) {
-        console.log('Erro ao tocar som:', error);
-    }
-    
-    // Processar mudança (no escuro)
-    if (opcao.requer) {
-        await this.consumirItem(opcao.requer);
-    }
+        // ETAPA 3: Processar opção emergente se aplicável
+        if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
+            const resultadoEmergencia = this.sistemaEmergencia.processarOpcaoEmergente(opcao, this.secaoEmergentePai);
 
-    // ETAPA 3: Processar opção emergente se aplicável
-    if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
-        const resultadoEmergencia = this.sistemaEmergencia.processarOpcaoEmergente(opcao, this.secaoEmergentePai);
-        
-        if (resultadoEmergencia && resultadoEmergencia.ativada) {
-            this.secaoEmergentePai = resultadoEmergencia.secao;
-            // Continua com a seção emergente
-            await this.mostrarSecao(resultadoEmergencia.idSecao);
-            return;
-        }
-    }
+            if (resultadoEmergencia && resultadoEmergencia.ativada) {
+                this.secaoEmergentePai = resultadoEmergencia.secao;
 
-    if (opcao.batalha) {
-        const playerDocRef = doc(db, "players", this.userId);
-        await updateDoc(playerDocRef, {
-            "narrativeProgress.battleReturn": {
-                vitoria: opcao.vitoria,
-                derrota: opcao.derrota,
-                active: true
+                // Cria overlay de transição
+                const overlay = document.createElement('div');
+                overlay.className = 'fade-overlay';
+                document.body.appendChild(overlay);
+
+                setTimeout(() => overlay.classList.add('active'), 10);
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // Mostra a nova seção emergente
+                await this.mostrarSecao(resultadoEmergencia.idSecao);
+
+                overlay.classList.remove('active');
+                setTimeout(() => overlay.remove(), 1200);
+                return;
             }
-        });
-        window.location.href = `batalha.html?monstros=${opcao.batalha}`;
-        return;
-    } else if (opcao.teste) {
-        this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
-    } else {
-        await this.mostrarSecao(opcao.secao);
+        }
+
+        // SEMPRE criar overlay de fade
+        const overlay = document.createElement('div');
+        overlay.className = 'fade-overlay';
+        document.body.appendChild(overlay);
+
+        // Fade to black
+        setTimeout(() => overlay.classList.add('active'), 10);
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Tocar som (usa o som da opção ou o padrão de passos)
+        try {
+            const audio = new Audio(opcao.som || 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
+            await audio.play();
+            await new Promise(resolve => setTimeout(resolve, 1500));
+        } catch (error) {
+            console.log('Erro ao tocar som:', error);
+        }
+
+        // Processar mudança (no escuro)
+        if (opcao.requer) {
+            await this.consumirItem(opcao.requer);
+        }
+
+        if (opcao.batalha) {
+            const playerDocRef = doc(db, "players", this.userId);
+            await updateDoc(playerDocRef, {
+                "narrativeProgress.battleReturn": {
+                    vitoria: opcao.vitoria,
+                    derrota: opcao.derrota,
+                    active: true
+                }
+            });
+            window.location.href = `batalha.html?monstros=${opcao.batalha}`;
+            return;
+        } else if (opcao.teste) {
+            this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
+        } else {
+            await this.mostrarSecao(opcao.secao);
+        }
+
+        // Fade in
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 1200);
     }
-    
-    // Fade in
-    overlay.classList.remove('active');
-    setTimeout(() => overlay.remove(), 1200);
-}
-
-
 
     async processarBatalhaAutomatica(secao) {
         const playerDocRef = doc(db, "players", this.userId);
@@ -922,53 +903,3 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
