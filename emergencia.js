@@ -1,4 +1,6 @@
-// emergencia.js - Sistema de Síntese Semântica Emergente - ETAPA 3
+// emergencia.js - Sistema de Síntese Semântica Emergente - VERSÃO 2 CORRIGIDA
+// Narrativas coerentes e com sentido real
+
 export class SistemaEmergencia {
     constructor(itensNarrativas = {}) {
         this.historico = [];
@@ -36,42 +38,6 @@ export class SistemaEmergencia {
             eco: { nome: 'eco', peso: 1.4 },
             paradoxo: { nome: 'paradoxo', peso: 0.9 }
         };
-
-        this.templates = {
-            abertura: [
-                'Ao {acao}, você percebe algo que não deveria estar ali',
-                'Examinando {elemento1} mais de perto, uma impossibilidade se revela',
-                'Sua atenção é atraída para {elemento1} - algo está errado',
-                'No momento em que você {acao}, a realidade parece tremer'
-            ],
-            sensorial: [
-                'Um {sentido} impossível invade seus sentidos',
-                'Você {sentido}, embora saiba que isso não deveria ser possível',
-                'Seus sentidos captam algo que a lógica rejeita',
-                'A percepção se distorce: você {sentido}'
-            ]
-        };
-
-        this.complementos = {
-            consequencia: [
-                'A sensação persiste mesmo quando você desvia o olhar',
-                'Algo fundamental mudou, embora você não saiba exatamente o quê',
-                'O momento passa, mas deixa uma marca na sua percepção',
-                'Você sente que testemunhou algo significativo'
-            ],
-            duvida: [
-                'Mas quando você pisca, tudo parece normal novamente',
-                'Seria apenas cansaço? Ou algo mais?',
-                'Você questiona se realmente viu o que pensa ter visto',
-                'A memória já começa a se tornar nebulosa'
-            ],
-            intensificacao: [
-                'E não é a única coisa estranha que você nota',
-                'O fenômeno parece se intensificar',
-                'Outras anomalias começam a se manifestar',
-                'A realidade ao redor continua se distorcendo'
-            ]
-        };
     }
 
     verificarEAtivarEmergencia(secaoAtual, contextoAtual, narrativaAtual, emergenciaHabilitada = true) {
@@ -106,8 +72,14 @@ export class SistemaEmergencia {
         return contexto;
     }
 
-    extrairAmbientes(texto) { return this.dicionario.ambientes.filter(amb => texto.includes(amb)); }
-    extrairObjetos(texto) { return this.dicionario.objetos.filter(obj => texto.includes(obj)); }
+    extrairAmbientes(texto) { 
+        return this.dicionario.ambientes.filter(amb => texto.includes(amb)); 
+    }
+
+    extrairObjetos(texto) { 
+        return this.dicionario.objetos.filter(obj => texto.includes(obj)); 
+    }
+
     extrairAtmosfera(texto) {
         const atmosferas = [];
         for (const [tipo, palavras] of Object.entries(this.dicionario.atmosfera)) {
@@ -115,6 +87,7 @@ export class SistemaEmergencia {
         }
         return atmosferas;
     }
+
     extrairSensorial(texto) {
         const sensoriais = [];
         for (const [sentido, palavras] of Object.entries(this.dicionario.sensorial)) {
@@ -122,6 +95,7 @@ export class SistemaEmergencia {
         }
         return sensoriais;
     }
+
     extrairAcoes(secao) {
         if (!secao.opcoes) return [];
         const verbos = ['abrir', 'fechar', 'examinar', 'tocar', 'pegar', 'entrar', 'sair', 'subir', 'descer', 'procurar', 'ler', 'escutar', 'observar', 'beber', 'comer'];
@@ -132,6 +106,7 @@ export class SistemaEmergencia {
         });
         return [...new Set(acoes)];
     }
+
     extrairItens(secao) {
         if (!secao.efeitos) return [];
         return secao.efeitos.filter(efeito => efeito.tipo === 'item').map(efeito => efeito.item);
@@ -177,123 +152,102 @@ export class SistemaEmergencia {
         return this.operacoes[operacaoNome];
     }
 
-    gerarIdEmergente() { return `emergente_${++this.contadorSecoes}_${Date.now()}`; }
+    gerarIdEmergente() { 
+        return `emergente_${++this.contadorSecoes}_${Date.now()}`; 
+    }
 
+    // NOVO: Gera texto COERENTE baseado em templates narrativos
     gerarTextoEmergente(operacao, elementos, contextoAtual) {
-        let texto = '';
-        texto += this.gerarAbertura(elementos, contextoAtual) + ' ';
-        texto += this.gerarEventoPrincipal(operacao, elementos) + ' ';
-        texto += this.gerarDetalheSensorial(elementos, contextoAtual) + ' ';
-        texto += this.escolherAleatorio(this.complementos[this.escolherTipoComplemento()]);
-        return texto;
-    }
-
-    gerarAbertura(elementos, contextoAtual) {
-        const estrutura = this.escolherAleatorio(this.templates.abertura);
-        const acao = this.escolherAleatorio(contextoAtual.acoes) || 'observar ao redor';
-        const elemento1 = elementos.objeto || elementos.ambiente || 'o ambiente';
-        return estrutura.replace('{acao}', acao).replace('{elemento1}', this.artigo(elemento1));
-    }
-
-    gerarEventoPrincipal(operacao, elementos) {
-        switch(operacao.nome) {
-            case 'espelhamento': return this.gerarEspelhamento(elementos);
-            case 'inversão': return this.gerarInversao(elementos);
-            case 'fusão': return this.gerarFusao(elementos);
-            case 'manifestação': return this.gerarManifestacao(elementos);
-            case 'eco': return this.gerarEco(elementos);
-            case 'paradoxo': return this.gerarParadoxo(elementos);
-            default: return this.gerarGenerico(elementos);
-        }
-    }
-
-    gerarEspelhamento(elementos) {
-        const templates = [
-            `${this.artigo(elementos.objeto)} reflete não você, mas ${this.artigo(elementos.passado?.objeto || 'algo impossível')}`,
-            `Ao observar ${this.artigo(elementos.objeto)}, você vê a cena de ${this.artigo(elementos.passado?.ambiente || 'outro lugar')} espelhada de forma distorcida`,
-            `${this.artigo(elementos.objeto)} e ${this.artigo(elementos.passado?.objeto || 'suas memórias')} se espelham em uma geometria impossível`
-        ];
-        return this.escolherAleatorio(templates) + '.';
-    }
-
-    gerarInversao(elementos) {
-        const propriedades = { frio: 'quente', escuro: 'luminoso', silencioso: 'barulhento', vazio: 'preenchido' };
-        const atmosfera = elementos.atmosfera || 'normal';
-        const invertido = propriedades[atmosfera] || 'diferente';
-        const templates = [
-            `O que deveria ser ${atmosfera} agora é inexplicavelmente ${invertido}`,
-            `${this.artigo(elementos.ambiente)} comporta-se ao contrário do esperado`,
-            `A natureza de ${this.artigo(elementos.ambiente)} se inverte`
-        ];
-        return this.escolherAleatorio(templates) + '.';
-    }
-
-    gerarFusao(elementos) {
-        const elemento1 = elementos.objeto || elementos.ambiente;
-        const elemento2 = elementos.passado?.objeto || elementos.passado?.ambiente || 'algo do passado';
-        const templates = [
-            `${this.artigo(elemento1)} e ${this.artigo(elemento2)} começam a se fundir de forma antinatural`,
-            `A fronteira entre ${this.artigo(elemento1)} e ${this.artigo(elemento2)} se dissolve gradualmente`,
-            `${this.artigo(elemento1)} contém impossíveis fragmentos de ${this.artigo(elemento2)}`
-        ];
-        return this.escolherAleatorio(templates) + '.';
-    }
-
-    gerarManifestacao(elementos) {
-        const abstrato = elementos.atmosfera || 'o silêncio';
-        const concreto = elementos.objeto || elementos.ambiente;
-        const templates = [
-            `${this.artigo(abstrato)} ganha substância física, materializando-se como ${this.artigo(concreto)}`,
-            `Você vê ${this.artigo(abstrato)} tomar forma tangível`,
-            `O que era apenas ${abstrato} agora existe concretamente`
-        ];
-        return this.escolherAleatorio(templates) + '.';
-    }
-
-    gerarEco(elementos) {
-        const passado = elementos.passado?.objeto || elementos.passado?.ambiente || 'algo familiar';
-        const templates = [
-            `Um eco de ${this.artigo(passado)} ressurge aqui, mas distorcido`,
-            `${this.artigo(passado)} retorna, mas transformado`,
-            `Você reconhece ${this.artigo(passado)}, mas algo mudou`
-        ];
-        return this.escolherAleatorio(templates) + '.';
-    }
-
-    gerarParadoxo(elementos) {
-        const elemento1 = elementos.ambiente || 'este lugar';
-        const estado1 = elementos.atmosfera || 'presente';
-        const estado2 = this.escolherEstadoOposto(estado1);
-        const templates = [
-            `${this.artigo(elemento1)} existe e não existe simultaneamente`,
-            `Você está em ${this.artigo(elemento1)}, mas também não está`,
-            `${this.artigo(elemento1)} é ao mesmo tempo ${estado1} e ${estado2}`
-        ];
-        return this.escolherAleatorio(templates) + '.';
-    }
-
-    gerarGenerico(elementos) {
-        const elemento = elementos.objeto || elementos.ambiente || 'algo indefinível';
-        return `${this.artigo(elemento)} se comporta de forma impossível.`;
-    }
-
-    gerarDetalheSensorial(elementos, contextoAtual) {
-        const sensoriais = contextoAtual.sensorial || [];
-        const detalhes = {
-            visual: ['A luz parece se dobrar de forma estranha', 'Sombras se movem onde não deveriam', 'Suas bordas tremulam como miragem'],
-            auditivo: ['Um som fantasma ecoa no ar', 'Você ouve algo que parece vir de muito longe', 'O silêncio se torna quase audível'],
-            tátil: ['O ar ao redor parece diferente', 'Uma sensação estranha percorre sua espinha', 'A temperatura flutua de forma inexplicável'],
-            olfativo: ['Um cheiro que não deveria estar aqui', 'O ar carrega um odor impossível', 'Fragrâncias de outro lugar se misturam']
+        const narrativas = {
+            espelhamento: [
+                {
+                    condicao: () => elementos.objeto && ['espelho', 'vidro', 'água', 'superfície'].some(o => elementos.objeto.includes(o)),
+                    texto: () => `Ao se aproximar de ${this.artigo(elementos.objeto)}, você nota algo perturbador: em vez de seu reflexo, vê ${this.artigo(elementos.passado?.objeto || 'algo que não deveria estar ali')}. Por um instante, você jura que viu movimento - como se o reflexo tivesse vida própria. Quando pisca, tudo volta ao normal.`
+                },
+                {
+                    condicao: () => elementos.objeto && elementos.passado?.objeto,
+                    texto: () => `Examinando ${this.artigo(elementos.objeto)} mais de perto, você percebe que ele parece estar em dois lugares ao mesmo tempo. Aqui, diante de você. E também em ${this.artigo(elementos.passado?.ambiente || 'outro lugar')}, como se houvesse uma conexão invisível entre eles. A sensação é perturbadora.`
+                }
+            ],
+            
+            inversão: [
+                {
+                    condicao: () => elementos.atmosfera && elementos.ambiente,
+                    texto: () => `${this.artigo(elementos.ambiente)} deveria ser ${elementos.atmosfera}, mas não é. Onde deveria haver ${elementos.atmosfera}, agora há o oposto. É como se as próprias leis da realidade tivessem se invertido neste lugar. Você sente um desconforto profundo.`
+                },
+                {
+                    condicao: () => elementos.objeto && elementos.atmosfera,
+                    texto: () => `${this.artigo(elementos.objeto)} comporta-se de forma completamente contrária ao esperado. Deveria ser ${elementos.atmosfera}, mas é exatamente o oposto. Você toca e sente a contradição em sua pele. Algo está fundamentalmente errado.`
+                }
+            ],
+            
+            fusão: [
+                {
+                    condicao: () => elementos.objeto && elementos.passado?.objeto,
+                    texto: () => `Você nota algo impossível: ${this.artigo(elementos.objeto)} e ${this.artigo(elementos.passado?.objeto)} parecem estar se tornando uma coisa só. Não é que estejam próximos - é como se estivessem se fundindo lentamente, suas fronteiras se dissolvendo. Você consegue ver através de um para o outro.`
+                },
+                {
+                    condicao: () => elementos.objeto && elementos.ambiente,
+                    texto: () => `${this.artigo(elementos.objeto)} não parece mais separado de ${this.artigo(elementos.ambiente)}. Eles estão se tornando uma coisa só, como se o objeto estivesse sendo absorvido pelo espaço ao seu redor. É uma transformação lenta e perturbadora.`
+                }
+            ],
+            
+            manifestação: [
+                {
+                    condicao: () => elementos.atmosfera && elementos.objeto,
+                    texto: () => `O ${elementos.atmosfera} que preenchia este lugar começa a ganhar forma. Você vê ${this.artigo(elementos.objeto)} emergindo da própria essência do ${elementos.atmosfera}, como se o intangível estivesse se tornando real. É como assistir a criação de algo que nunca deveria existir.`
+                },
+                {
+                    condicao: () => elementos.sensorial && elementos.objeto,
+                    texto: () => `Você ${elementos.sensorial} algo que não deveria ser possível. O que era apenas uma sensação, uma impressão, agora tem forma: ${this.artigo(elementos.objeto)}. Está ali, real e tangível, onde antes havia apenas vazio.`
+                }
+            ],
+            
+            eco: [
+                {
+                    condicao: () => elementos.passado?.objeto && elementos.objeto,
+                    texto: () => `Você reconhece ${this.artigo(elementos.passado?.objeto)} aqui, neste lugar. Mas algo está diferente. Não é exatamente o mesmo - é como um eco distorcido, uma versão alterada do que você viu antes. Está aqui, mas não deveria estar. Como chegou até aqui?`
+                },
+                {
+                    condicao: () => elementos.passado?.ambiente && elementos.ambiente,
+                    texto: () => `${this.artigo(elementos.ambiente)} lembra ${this.artigo(elementos.passado?.ambiente)} de forma perturbadora. Não é o mesmo lugar, mas há ecos dele aqui - detalhes que você reconhece, padrões que se repetem. É como se o passado estivesse vazando para o presente.`
+                }
+            ],
+            
+            paradoxo: [
+                {
+                    condicao: () => elementos.ambiente && elementos.atmosfera,
+                    texto: () => `${this.artigo(elementos.ambiente)} é e não é ao mesmo tempo. Você está aqui, mas também não está. É ${elementos.atmosfera}, mas também é o oposto. Sua mente luta para processar a contradição, mas a realidade insiste em ambas as verdades simultaneamente.`
+                },
+                {
+                    condicao: () => elementos.objeto && elementos.sensorial,
+                    texto: () => `${this.artigo(elementos.objeto)} existe em dois estados contraditórios. Você consegue ${elementos.sensorial} ambos ao mesmo tempo - o que é e o que não é. Sua percepção se divide, tentando compreender o impossível.`
+                }
+            ]
         };
-        const sentido = this.escolherAleatorio(sensoriais) || 'visual';
-        return this.escolherAleatorio(detalhes[sentido] || detalhes.visual);
+
+        const narrativasOperacao = narrativas[operacao.nome] || [];
+        for (const narrativa of narrativasOperacao) {
+            if (narrativa.condicao()) {
+                return narrativa.texto();
+            }
+        }
+        
+        return this.gerarTextoGenericoCoerente(operacao, elementos);
     }
 
-    escolherTipoComplemento() {
-        const rand = Math.random();
-        if (rand < 0.35) return 'consequencia';
-        if (rand < 0.55) return 'duvida';
-        return 'intensificacao';
+    // Fallback genérico mas coerente
+    gerarTextoGenericoCoerente(operacao, elementos) {
+        const textos = {
+            espelhamento: `Você percebe que ${this.artigo(elementos.objeto || 'algo')} não está refletindo a realidade corretamente. Há uma desconexão entre o que você vê e o que deveria estar ali.`,
+            inversão: `${this.artigo(elementos.ambiente || 'este lugar')} comporta-se de forma contrária ao esperado. As regras normais não parecem se aplicar aqui.`,
+            fusão: `${this.artigo(elementos.objeto || 'algo')} e ${this.artigo(elementos.passado?.objeto || 'algo mais')} parecem estar se tornando uma coisa só, suas fronteiras se dissolvendo.`,
+            manifestação: `O que era apenas uma sensação agora ganha forma tangível. Você consegue ver e tocar o que antes era apenas uma impressão.`,
+            eco: `Você reconhece ${this.artigo(elementos.passado?.objeto || 'algo')} aqui, mas está diferente - como um eco distorcido do que você viu antes.`,
+            paradoxo: `Duas verdades contraditórias coexistem neste lugar. Sua mente luta para processar o impossível.`
+        };
+        
+        return textos[operacao.nome] || 'Algo estranho acontece aqui.';
     }
 
     artigo(substantivo) {
@@ -335,9 +289,9 @@ export class SistemaEmergencia {
 
     gerarOpcaoInvestigar(operacao, elementos) {
         const templates = {
-            espelhamento: ['Observar o reflexo mais atentamente', 'Tentar compreender o espelhamento', 'Examinar a natureza do reflexo'],
+            espelhamento: ['Observar o reflexo mais atentamente', 'Tentar compreender a desconexão', 'Examinar a natureza do reflexo'],
             inversão: ['Investigar a inversão mais de perto', 'Tentar entender a mudança', 'Procurar a causa da anomalia'],
-            fusão: ['Estudar a fusão em progresso', 'Observar como os elementos se misturam', 'Examinar a fronteira entre os elementos'],
+            fusão: ['Estudar a fusão em progresso', 'Observar como os elementos se misturam', 'Examinar a fronteira entre eles'],
             manifestação: ['Investigar a manifestação física', 'Tentar tocar o que se materializou', 'Compreender a natureza do fenômeno'],
             eco: ['Procurar pela origem do eco', 'Tentar lembrar do original', 'Comparar com suas memórias'],
             paradoxo: ['Tentar resolver o paradoxo', 'Aceitar ambas as realidades', 'Procurar uma explicação lógica']
@@ -427,27 +381,27 @@ export class SistemaEmergencia {
 
     gerarTextoContinuacaoInvestigar(secaoPai) {
         const templates = [
-            `Ao examinar mais de perto, você percebe camadas de significado que antes não notara. ${this.artigo(secaoPai.elementos.objeto || 'o fenômeno')} parece responder à sua atenção, revelando detalhes cada vez mais impossíveis.`,
-            `Sua investigação revela que ${this.artigo(secaoPai.elementos.objeto || 'a anomalia')} não é estática - muda conforme você a observa. A linha entre observador e observado começa a se confundir.`,
-            `Quanto mais você estuda ${this.artigo(secaoPai.elementos.objeto || 'o impossível')}, mais complexo se torna. Padrões dentro de padrões emergem.`
+            `Ao examinar mais de perto, você percebe camadas de significado que antes não notara. ${this.artigo(secaoPai.elementos.objeto || 'o fenômeno')} parece responder à sua atenção, revelando detalhes cada vez mais impossíveis. Você sente que está no limiar de uma compreensão que sua mente não consegue processar completamente.`,
+            `Sua investigação revela que ${this.artigo(secaoPai.elementos.objeto || 'a anomalia')} não é estática - muda conforme você a observa. A linha entre observador e observado começa a se confundir. Quanto mais você tenta entender, mais complexo se torna.`,
+            `Quanto mais você estuda ${this.artigo(secaoPai.elementos.objeto || 'o impossível')}, mais padrões você descobre. Cada padrão leva a outro, cada resposta gera mais perguntas. É como se estivesse vendo apenas a ponta de algo muito maior.`
         ];
         return this.escolherAleatorio(templates);
     }
 
     gerarTextoContinuacaoInteragir(secaoPai) {
         const templates = [
-            `No momento em que você toca ${this.artigo(secaoPai.elementos.objeto || 'a anomalia')}, uma sensação estranha percorre seu corpo. O contato deixa uma marca não física.`,
-            `Sua interação com ${this.artigo(secaoPai.elementos.objeto || 'o fenômeno')} produz um efeito inesperado. Você sente que está sendo tocado de volta.`,
-            `Ao interferir com ${this.artigo(secaoPai.elementos.objeto || 'a manifestação')}, você desencadeia uma reação em cascata que altera tudo ao redor.`
+            `No momento em que você toca ${this.artigo(secaoPai.elementos.objeto || 'a anomalia')}, uma sensação estranha percorre seu corpo - como se estivesse tocando algo que existe em múltiplas dimensões simultaneamente. O contato deixa uma marca não física, uma memória que não é sua. Quando você retira a mão, algo fundamental mudou.`,
+            `Sua interação com ${this.artigo(secaoPai.elementos.objeto || 'o fenômeno')} produz um efeito inesperado. Em vez de simplesmente tocá-lo, você sente que está sendo tocado de volta - não fisicamente, mas de uma forma que ultrapassa os sentidos convencionais. A experiência é simultaneamente fascinante e perturbadora.`,
+            `Ao interferir com ${this.artigo(secaoPai.elementos.objeto || 'a manifestação')}, você desencadeia uma reação em cascata. O efeito se espalha como ondas em um lago, alterando sutilmente tudo ao redor. Por um momento, você não tem certeza de onde termina o fenômeno e onde você começa.`
         ];
         return this.escolherAleatorio(templates);
     }
 
     gerarSecaoConvergencia(secaoEmergente) {
         const textosConvergencia = [
-            `Gradualmente, a estranheza se dissipa como névoa ao sol da manhã. ${this.artigo(secaoEmergente.elementos.ambiente || 'o lugar')} retorna à sua forma normal. O que você experimentou deixa uma impressão duradoura. Mas a jornada deve continuar.`,
-            `A realidade se reassenta lentamente, como poeira após uma tempestade. Você carrega consigo a memória do impossível, mas agora ela parece distante, quase como um sonho. É hora de seguir em frente.`,
-            `Por fim, você se permite desviar o olhar. Quando olha de volta, tudo parece... comum. Será que realmente aconteceu? Você decide que algumas coisas não precisam de explicação. Com um último olhar para trás, você retoma seu caminho.`
+            `Gradualmente, a estranheza se dissipa como névoa ao sol da manhã. ${this.artigo(secaoEmergente.elementos.ambiente || 'o lugar')} retorna à sua forma normal - ou pelo menos, ao que você aceita como normal. O que você experimentou deixa uma impressão duradoura, uma marca na sua percepção que talvez nunca se apague completamente. Mas a jornada deve continuar.`,
+            `A realidade se reassenta lentamente, como poeira após uma tempestade. O fenômeno não desapareceu exatamente - você simplesmente para de percebê-lo, como se sua mente tivesse atingido um limite de processamento. Você carrega consigo a memória do impossível, mas agora ela parece distante, quase como um sonho. É hora de seguir em frente.`,
+            `Por fim, você se permite desviar o olhar. Quando olha de volta, tudo parece... comum. Será que realmente aconteceu? A dúvida é parte da experiência agora. Você decide que algumas coisas não precisam de explicação - apenas aceitação. Com um último olhar para trás, você retoma seu caminho.`
         ];
 
         this.emergenciaAtiva = false;
