@@ -448,26 +448,30 @@ export class SistemaEmergencia {
     }
 
     processarOpcaoEmergente(opcao, secaoEmergentePai) {
-        if (opcao.tipo === 'recuar' || opcao.tipo === 'convergir') {
-            this.emergenciaAtiva = false;
-            return null;
-        }
-
-        if (opcao.tipo === 'aprofundar' || opcao.tipo === 'investigar' || opcao.tipo === 'interagir') {
-            const continuacao = this.gerarContinuacaoEmergente(secaoEmergentePai, opcao.tipo);
-            const idEmergente = opcao.secao;
-            this.secoesEmergentes.set(idEmergente, continuacao);
-            
-            return {
-                ativada: true,
-                idSecao: idEmergente,
-                secao: continuacao,
-                profundidade: this.profundidadeAtual
-            };
-        }
-
+    console.log(`[EMERGÊNCIA] Processando opção: ${opcao.tipo}`);
+    
+    if (opcao.tipo === 'recuar' || opcao.tipo === 'convergir') {
+        console.log(`[EMERGÊNCIA] ✅ Desativando emergência (tipo: ${opcao.tipo})`);
+        this.emergenciaAtiva = false;
         return null;
     }
+    
+    if (opcao.tipo === 'aprofundar' || opcao.tipo === 'investigar' || opcao.tipo === 'interagir') {
+        console.log(`[EMERGÊNCIA] Gerando continuação (profundidade: ${this.profundidadeAtual})`);
+        const continuacao = this.gerarContinuacaoEmergente(secaoEmergentePai, opcao.tipo);
+        const idEmergente = opcao.secao;
+        this.secoesEmergentes.set(idEmergente, continuacao);
+        
+        return {
+            ativada: true,
+            idSecao: idEmergente,
+            secao: continuacao,
+            profundidade: this.profundidadeAtual
+        };
+    }
+
+    return null;
+}
 
     obterSecao(id, narrativaAtual) {
         if (typeof id === 'number' || !id.startsWith('emergente_')) {
@@ -488,6 +492,7 @@ export class SistemaEmergencia {
 }
 
 export const sistemaEmergencia = new SistemaEmergencia();
+
 
 
 
