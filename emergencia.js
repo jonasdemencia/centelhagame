@@ -1,5 +1,8 @@
 // emergencia.js - NOVO ARQUIVO (VERSÃO ORÁCULO)
 
+// importa a chave do arquivo de configuração
+import { API_KEY } from './config.js';
+
 export class SistemaEmergencia {
     constructor(itensNarrativas = {}) {
         this.historico = []; // Armazena o contexto das seções visitadas
@@ -7,8 +10,10 @@ export class SistemaEmergencia {
         this.contadorSecoes = 0;
         this.emergenciaAtiva = false;
         this.secaoOrigemEmergencia = null;
-        this.apiKey = "COLE_SUA_CHAVE_DE_API_GEMINI_AQUI"; // Importante!
+        this.apiKey = API_KEY; // agora vem do config.js
     }
+}
+
 
     /**
      * Analisa e armazena o contexto da seção atual no histórico.
@@ -280,4 +285,5 @@ export class SistemaEmergencia {
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
