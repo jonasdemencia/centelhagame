@@ -784,74 +784,88 @@ class SistemaNarrativas {
     }
 
     async processarOpcao(opcao) {
-        // ETAPA 3: Processar opção emergente se aplicável
-        if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
-            const resultadoEmergencia = this.sistemaEmergencia.processarOpcaoEmergente(opcao, this.secaoEmergentePai);
-
-            if (resultadoEmergencia && resultadoEmergencia.ativada) {
-                this.secaoEmergentePai = resultadoEmergencia.secao;
-
-                // Cria overlay de transição
-                const overlay = document.createElement('div');
-                overlay.className = 'fade-overlay';
-                document.body.appendChild(overlay);
-
-                setTimeout(() => overlay.classList.add('active'), 10);
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                // Mostra a nova seção emergente
-                await this.mostrarSecao(resultadoEmergencia.idSecao);
-
-                overlay.classList.remove('active');
-                setTimeout(() => overlay.remove(), 1200);
-                return;
-            }
+    // RESETAR EMERGÊNCIA SE VOLTANDO AO FLUXO NORMAL
+    if (this.sistemaEmergencia && this.sistemaEmergencia.emergenciaAtiva) {
+        console.log(`[NARRATIVAS] Verificando se deve desativar emergência...`);
+        console.log(`[NARRATIVAS] Seção destino: ${opcao.secao}, Origem: ${this.sistemaEmergencia.secaoOrigemEmergencia}`);
+        
+        // Se a opção leva para fora da emergência, desativa
+        if (opcao.secao && !String(opcao.secao).startsWith('emergente_')) {
+            console.log(`[NARRATIVAS] ✅ Desativando emergência - voltando ao fluxo normal`);
+            this.sistemaEmergencia.emergenciaAtiva = false;
+            this.sistemaEmergencia.ultimaEmergencia = opcao.secao;
         }
-
-        // SEMPRE criar overlay de fade
-        const overlay = document.createElement('div');
-        overlay.className = 'fade-overlay';
-        document.body.appendChild(overlay);
-
-        // Fade to black
-        setTimeout(() => overlay.classList.add('active'), 10);
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Tocar som (usa o som da opção ou o padrão de passos)
-        try {
-            const audio = new Audio(opcao.som || 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
-            await audio.play();
-            await new Promise(resolve => setTimeout(resolve, 1500));
-        } catch (error) {
-            console.log('Erro ao tocar som:', error);
-        }
-
-        // Processar mudança (no escuro)
-        if (opcao.requer) {
-            await this.consumirItem(opcao.requer);
-        }
-
-        if (opcao.batalha) {
-            const playerDocRef = doc(db, "players", this.userId);
-            await updateDoc(playerDocRef, {
-                "narrativeProgress.battleReturn": {
-                    vitoria: opcao.vitoria,
-                    derrota: opcao.derrota,
-                    active: true
-                }
-            });
-            window.location.href = `batalha.html?monstros=${opcao.batalha}`;
-            return;
-        } else if (opcao.teste) {
-            this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
-        } else {
-            await this.mostrarSecao(opcao.secao);
-        }
-
-        // Fade in
-        overlay.classList.remove('active');
-        setTimeout(() => overlay.remove(), 1200);
     }
+
+    // ETAPA 3: Processar opção emergente se aplicável
+    if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
+        const resultadoEmergencia = this.sistemaEmergencia.processarOpcaoEmergente(opcao, this.secaoEmergentePai);
+
+        if (resultadoEmergencia && resultadoEmergencia.ativada) {
+            this.secaoEmergentePai = resultadoEmergencia.secao;
+
+            // Cria overlay de transição
+            const overlay = document.createElement('div');
+            overlay.className = 'fade-overlay';
+            document.body.appendChild(overlay);
+
+            setTimeout(() => overlay.classList.add('active'), 10);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Mostra a nova seção emergente
+            await this.mostrarSecao(resultadoEmergencia.idSecao);
+
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.remove(), 1200);
+
+            return;
+        }
+    }
+
+    // SEMPRE criar overlay de fade
+    const overlay = document.createElement('div');
+    overlay.className = 'fade-overlay';
+    document.body.appendChild(overlay);
+
+    // Fade to black
+    setTimeout(() => overlay.classList.add('active'), 10);
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Tocar som (usa o som da opção ou o padrão de passos)
+    try {
+        const audio = new Audio(opcao.som || 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
+        await audio.play();
+        await new Promise(resolve => setTimeout(resolve, 1500));
+    } catch (error) {
+        console.log('Erro ao tocar som:', error);
+    }
+
+    // Processar mudança (no escuro)
+    if (opcao.requer) {
+        await this.consumirItem(opcao.requer);
+    }
+
+    if (opcao.batalha) {
+        const playerDocRef = doc(db, "players", this.userId);
+        await updateDoc(playerDocRef, {
+            "narrativeProgress.battleReturn": {
+                vitoria: opcao.vitoria,
+                derrota: opcao.derrota,
+                active: true
+            }
+        });
+        window.location.href = `batalha.html?monstros=${opcao.batalha}`;
+        return;
+    } else if (opcao.teste) {
+        this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
+    } else {
+        await this.mostrarSecao(opcao.secao);
+    }
+
+    // Fade in
+    overlay.classList.remove('active');
+    setTimeout(() => overlay.remove(), 1200);
+}
 
     async processarBatalhaAutomatica(secao) {
         const playerDocRef = doc(db, "players", this.userId);
@@ -905,4 +919,5 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
