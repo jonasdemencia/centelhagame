@@ -379,35 +379,53 @@ export class SistemaEmergencia {
     }
 
     gerarContinuacaoEmergente(secaoEmergentePai, tipoOpcao) {
-        this.profundidadeAtual++;
-        const profundidade = this.profundidadeAtual;
+    console.log(`[EMERGÊNCIA] Gerando continuação - Profundidade: ${secaoEmergentePai.profundidade}, Tipo: ${tipoOpcao}`);
+    
+    this.profundidadeAtual++;
+    const profundidade = this.profundidadeAtual;
 
-        if (profundidade >= 3) {
-            return this.gerarSecaoConvergencia(secaoEmergentePai);
-        }
-
-        let texto = '';
-        if (tipoOpcao === 'investigar') {
-            texto = this.gerarTextoContinuacaoInvestigar(secaoEmergentePai);
-        } else if (tipoOpcao === 'interagir') {
-            texto = this.gerarTextoContinuacaoInteragir(secaoEmergentePai);
-        }
-
-        const opcoes = [
-            { texto: 'Aceitar o que viu e continuar', secao: secaoEmergentePai.origem + 1, tipo: 'convergir', emergente: false },
-            { texto: 'Explorar ainda mais profundamente', secao: this.gerarIdEmergente(), tipo: 'aprofundar', emergente: true }
-        ];
-
-        return {
-            texto: texto,
-            opcoes: opcoes,
-            emergente: true,
-            profundidade: profundidade,
-            origem: secaoEmergentePai.origem,
-            timestamp: Date.now(),
-            efeitos: this.gerarEfeitosEmergentes()
-        };
+    if (profundidade >= 3) {
+        console.log(`[EMERGÊNCIA] Atingiu profundidade máxima (${profundidade}), gerando convergência`);
+        return this.gerarSecaoConvergencia(secaoEmergentePai);
     }
+
+    let texto = '';
+
+    if (tipoOpcao === 'investigar') {
+        texto = this.gerarTextoContinuacaoInvestigar(secaoEmergentePai);
+    } else if (tipoOpcao === 'interagir') {
+        texto = this.gerarTextoContinuacaoInteragir(secaoEmergentePai);
+    } else {
+        console.log(`[EMERGÊNCIA] Tipo desconhecido: ${tipoOpcao}, usando investigar`);
+        texto = this.gerarTextoContinuacaoInvestigar(secaoEmergentePai);
+    }
+
+    const opcoes = [
+        { 
+            texto: 'Aceitar o que viu e continuar', 
+            secao: secaoEmergentePai.origem + 1, 
+            tipo: 'convergir', 
+            emergente: false 
+        },
+        { 
+            texto: 'Explorar ainda mais profundamente', 
+            secao: this.gerarIdEmergente(), 
+            tipo: 'aprofundar', 
+            emergente: true 
+        }
+    ];
+
+    return {
+        texto: texto,
+        opcoes: opcoes,
+        emergente: true,
+        profundidade: profundidade,
+        origem: secaoEmergentePai.origem,
+        timestamp: Date.now(),
+        elementos: secaoEmergentePai.elementos, // PASSA OS ELEMENTOS
+        efeitos: this.gerarEfeitosEmergentes()
+    };
+}
 
     gerarTextoContinuacaoInvestigar(secaoPai) {
         const templates = [
@@ -428,24 +446,43 @@ export class SistemaEmergencia {
     }
 
     gerarSecaoConvergencia(secaoEmergente) {
-        const textosConvergencia = [
-            `Gradualmente, a estranheza se dissipa como névoa ao sol da manhã. ${this.artigo(secaoEmergente.elementos.ambiente || 'o lugar')} retorna à sua forma normal - ou pelo menos, ao que você aceita como normal. O que você experimentou deixa uma impressão duradoura, uma marca na sua percepção que talvez nunca se apague completamente. Mas a jornada deve continuar.`,
-            `A realidade se reassenta lentamente, como poeira após uma tempestade. O fenômeno não desapareceu exatamente - você simplesmente para de percebê-lo, como se sua mente tivesse atingido um limite de processamento. Você carrega consigo a memória do impossível, mas agora ela parece distante, quase como um sonho. É hora de seguir em frente.`,
-            `Por fim, você se permite desviar o olhar. Quando olha de volta, tudo parece... comum. Será que realmente aconteceu? A dúvida é parte da experiência agora. Você decide que algumas coisas não precisam de explicação - apenas aceitação. Com um último olhar para trás, você retoma seu caminho.`
-        ];
-
-        this.emergenciaAtiva = false;
-        this.ultimaEmergencia = secaoEmergente.origem;
-
-        return {
-            texto: this.escolherAleatorio(textosConvergencia),
-            opcoes: [{ texto: 'Continuar sua jornada', secao: secaoEmergente.origem + 1 }],
-            emergente: true,
-            convergencia: true,
-            origem: secaoEmergente.origem,
-            timestamp: Date.now()
-        };
+    console.log(`[EMERGÊNCIA] Gerando seção de convergência`);
+    console.log(`[EMERGÊNCIA] secaoEmergente:`, secaoEmergente);
+    
+    // Validação de segurança
+    if (!secaoEmergente) {
+        console.error(`[EMERGÊNCIA] ❌ secaoEmergente é undefined!`);
+        secaoEmergente = { origem: 1, elementos: { ambiente: 'lugar' } };
     }
+    
+    if (!secaoEmergente.elementos) {
+        console.warn(`[EMERGÊNCIA] ⚠️ elementos é undefined, usando fallback`);
+        secaoEmergente.elementos = { ambiente: 'lugar', objeto: 'algo' };
+    }
+
+    const ambiente = secaoEmergente.elementos?.ambiente || 'o lugar';
+    
+    const textosConvergencia = [
+        `Gradualmente, a estranheza se dissipa como névoa ao sol da manhã. ${this.artigo(ambiente)} retorna à sua forma normal - ou pelo menos, ao que você aceita como normal. O que você experimentou deixa uma impressão duradoura, uma marca na sua percepção que talvez nunca se apague completamente. Mas a jornada deve continuar.`,
+
+        `A realidade se reassenta lentamente, como poeira após uma tempestade. O fenômeno não desapareceu exatamente - você simplesmente para de percebê-lo, como se sua mente tivesse atingido um limite de processamento. Você carrega consigo a memória do impossível, mas agora ela parece distante, quase como um sonho. É hora de seguir em frente.`,
+
+        `Por fim, você se permite desviar o olhar. Quando olha de volta, tudo parece... comum. Será que realmente aconteceu? A dúvida é parte da experiência agora. Você decide que algumas coisas não precisam de explicação - apenas aceitação. Com um último olhar para trás, você retoma seu caminho.`
+    ];
+
+    this.emergenciaAtiva = false;
+    this.ultimaEmergencia = secaoEmergente.origem || 1;
+
+    return {
+        texto: this.escolherAleatorio(textosConvergencia),
+        opcoes: [{ texto: 'Continuar sua jornada', secao: (secaoEmergente.origem || 1) + 1 }],
+        emergente: true,
+        convergencia: true,
+        origem: secaoEmergente.origem || 1,
+        timestamp: Date.now(),
+        elementos: secaoEmergente.elementos
+    };
+}
 
     processarOpcaoEmergente(opcao, secaoEmergentePai) {
     console.log(`[EMERGÊNCIA] Processando opção: ${opcao.tipo}`);
@@ -492,6 +529,7 @@ export class SistemaEmergencia {
 }
 
 export const sistemaEmergencia = new SistemaEmergencia();
+
 
 
 
