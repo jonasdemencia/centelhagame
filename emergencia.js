@@ -113,11 +113,23 @@ export class SistemaEmergencia {
     }
 
     deveAtivarEmergencia(secaoAtual) {
-        const secoesDesdeUltima = secaoAtual - this.ultimaEmergencia;
-        if (secoesDesdeUltima < 5) return false;
-        if (secoesDesdeUltima > 8) return true;
-        return Math.random() < 0.20;
-    }
+    const secoesDesdeUltima = secaoAtual - this.ultimaEmergencia;
+
+    // ANTES: if (secoesDesdeUltima < 5) return false;
+    // → Bloqueava emergências até a 5ª seção após a última.
+    // AGORA: reduzi para 3, permitindo emergências mais cedo.
+    if (secoesDesdeUltima < 3) return false;   // nunca antes de 3 seções
+
+    // ANTES: if (secoesDesdeUltima > 8) return true;
+    // → Garantia emergência apenas na 9ª seção.
+    // AGORA: reduzi para 6, garantindo já na 7ª seção.
+    if (secoesDesdeUltima > 6) return true;    // sempre após 6 seções
+
+    // ANTES: return Math.random() < 0.20;
+    // → Apenas 20% de chance entre 5 e 8 seções.
+    // AGORA: aumentei para 50%, tornando bem mais provável.
+    return Math.random() < 0.50;               // entre 3 e 6 → 50% de chance
+}
 
     selecionarElementosContexto(contextoAtual) {
         const elementos = {
@@ -458,3 +470,4 @@ export class SistemaEmergencia {
 }
 
 export const sistemaEmergencia = new SistemaEmergencia();
+
