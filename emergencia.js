@@ -87,8 +87,8 @@ export class SistemaEmergencia {
             O jogador está jogando uma aventura chamada "${tituloNarrativa}".
 
             **OBJETIVO:**
-            Invada a narrativa. Crie UMA (1) nova seção de jogo assustadora e perturbadora que se conecta ao que o jogador acabou de fazer.
-            O evento deve ser sutil, focado em quebra da realidade, loops temporais ou percepções distorcidas. NÃO use monstros óbvios (zumbis, fantasmas). Pense em "eco", "deja vu errado", "presença".
+            Invada a narrativa. Crie UMA (1) nova seção de jogo esquisita ou perturbadora que se conecta ao que o jogador acabou de fazer.
+            O evento deve ser sutil, focado em estranhamento. NÃO use monstros óbvios (zumbis, fantasmas).
 
             **CONTEXTO ATUAL DO JOGADOR:**
             Ele ACABOU de chegar na Seção ${secaoAtual.numero || this.historico.at(-1)?.numero}:
@@ -242,8 +242,8 @@ export class SistemaEmergencia {
      */
     construirPromptContinuação(secaoPai, textoOpcao) {
         return `
-            Você é um 'Mestre de Jogo' de terror psicológico.
-            O jogador estava em um evento perturbador:
+            Você é um 'Mestre de Jogo' de terror como a Mansão Diabólica de Steve Jackson, só que sutíl e mais lento.
+            O jogador estava em um evento inquietante ou perturbador:
             "${secaoPai.texto}"
 
             Ele ACABOU de escolher a opção:
@@ -251,7 +251,7 @@ export class SistemaEmergencia {
 
             **OBJETIVO:**
             Crie a consequência dessa escolha. O que acontece a seguir?
-            Aprofunde o mistério, aumente a tensão. A realidade deve ficar MAIS estranha.
+            Aprofunde o mistério, aumente um pouco a tensão. A realidade deve ficar apenas um pouco MAIS estranha.
             
             **TAREFA:**
             1.  Escreva o "texto" do que acontece após ele investigar.
@@ -259,7 +259,7 @@ export class SistemaEmergencia {
 
             **FORMATO OBRIGATÓRIO (APENAS JSON):**
             {
-              "texto": "[Descreva a realidade se distorcendo ainda mais.]",
+              "texto": "[Descreva a realidade se tornando um pouco mais inquietante.]",
               "opcoes": [
                 { "texto": "[Opção 1: Continuar investigando]", "tipo": "aprofundar" },
                 { "texto": "[Opção 2: Tentar fugir/parar agora]", "tipo": "recuar" }
@@ -280,3 +280,4 @@ export class SistemaEmergencia {
         this.secaoOrigemEmergencia = null;
     }
 }
+
