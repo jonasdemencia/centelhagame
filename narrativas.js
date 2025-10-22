@@ -1,6 +1,7 @@
 // Importa NARRATIVAS do arquivo de dados
 import { NARRATIVAS } from './narrativas-data.js';
 import { Visao3D } from './visao3d.js';
+import { SistemaEmergencia } from './emergencia.js';
 
 
 // Importa os SDKs necessários do Firebase
@@ -30,6 +31,8 @@ class SistemaNarrativas {
         this.userId = null;
         this.itemPendente = null;
         this.visao3d = null; // ADICIONE ISTO
+        this.sistemaEmergencia = new SistemaEmergencia(this.itensNarrativas);
+        this.secaoEmergentePai = null; // Rastreia seção emergente atual
 
 
 this.itensNarrativas = {
@@ -192,6 +195,7 @@ this.itensNarrativas = {
     await this.carregarDadosJogador();
     this.narrativaAtual = NARRATIVAS[narrativaId];
     this.secaoAtual = 1;
+    this.sistemaEmergencia.resetar();
     document.getElementById('selecao-narrativas').className = 'tela-oculta';
     document.getElementById('narrativa-ativa').className = 'tela-ativa';
     document.getElementById('titulo-narrativa').textContent = this.narrativaAtual.titulo;
@@ -215,9 +219,37 @@ this.itensNarrativas = {
 
 
     async mostrarSecao(numeroSecao) {
-    const secao = this.narrativaAtual.secoes[numeroSecao];
+    let secao;
+if (typeof numeroSecao === 'string' && numeroSecao.startsWith('emergente_')) {
+    secao = this.sistemaEmergencia.secoesEmergentes.get(numeroSecao);
+} else {
+    secao = this.narrativaAtual.secoes[numeroSecao];
+}
     if (!secao) return;
     this.secaoAtual = numeroSecao;
+
+        // ETAPA 3: Verificar e ativar emergência
+const contextoAtual = this.sistemaEmergencia.analisarSecao(secao, numeroSecao);
+const emergenciaHabilitada = this.narrativaAtual.emergenciaHabilitada !== false; // Permite desabilitar por narrativa
+const resultadoEmergencia = this.sistemaEmergencia.verificarEAtivarEmergencia(numeroSecao, contextoAtual, this.narrativaAtual, emergenciaHabilitada);
+
+if (resultadoEmergencia && resultadoEmergencia.ativada) {
+    this.secaoEmergentePai = resultadoEmergencia.secao;
+    const secaoAMostrar = resultadoEmergencia.secao;
+    document.getElementById('numero-secao').textContent = `${numeroSecao} [EMERGÊNCIA]`;
+    this.renderizarTextoComItens(secaoAMostrar);
+    this.criarOpcoes(secaoAMostrar.opcoes, secaoAMostrar.final);
+    
+    // Aplicar efeitos da seção emergente
+    if (secaoAMostrar.efeitos) {
+        for (const efeito of secaoAMostrar.efeitos) {
+            if (efeito.tipo === 'energia') {
+                await this.modificarEnergia(efeito.valor);
+            }
+        }
+    }
+    return;
+}
 
     await this.salvarProgresso(numeroSecao, secao.final);
 
@@ -801,6 +833,19 @@ const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this
     if (opcao.requer) {
         await this.consumirItem(opcao.requer);
     }
+
+    // ETAPA 3: Processar opção emergente se aplicável
+    if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
+        const resultadoEmergencia = this.sistemaEmergencia.processarOpcaoEmergente(opcao, this.secaoEmergentePai);
+        
+        if (resultadoEmergencia && resultadoEmergencia.ativada) {
+            this.secaoEmergentePai = resultadoEmergencia.secao;
+            // Continua com a seção emergente
+            await this.mostrarSecao(resultadoEmergencia.idSecao);
+            return;
+        }
+    }
+
     if (opcao.batalha) {
         const playerDocRef = doc(db, "players", this.userId);
         await updateDoc(playerDocRef, {
@@ -877,6 +922,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
