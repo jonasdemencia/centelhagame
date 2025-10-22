@@ -41,36 +41,54 @@ export class SistemaEmergencia {
     }
 
     verificarEAtivarEmergencia(secaoAtual, contextoAtual, narrativaAtual, emergenciaHabilitada = true) {
-        if (!emergenciaHabilitada || this.emergenciaAtiva) return null;
-        if (!this.deveAtivarEmergencia(secaoAtual)) return null;
-
-        const secaoEmergente = this.gerarSecaoEmergente(contextoAtual, secaoAtual);
-        this.emergenciaAtiva = true;
-        this.secaoOrigemEmergencia = secaoAtual;
-        this.profundidadeAtual = 1;
-
-        const idEmergente = this.gerarIdEmergente();
-        this.secoesEmergentes.set(idEmergente, secaoEmergente);
-
-        return { ativada: true, idSecao: idEmergente, secao: secaoEmergente, profundidade: 1 };
+    console.log(`[EMERGÊNCIA] Verificando... Habilitada: ${emergenciaHabilitada}, Ativa: ${this.emergenciaAtiva}`);
+    
+    if (!emergenciaHabilitada) {
+        console.log(`[EMERGÊNCIA] ❌ Desabilitada para esta narrativa`);
+        return null;
+    }
+    
+    if (this.emergenciaAtiva) {
+        console.log(`[EMERGÊNCIA] ❌ Já há emergência ativa`);
+        return null;
+    }
+    
+    if (!this.deveAtivarEmergencia(secaoAtual)) {
+        console.log(`[EMERGÊNCIA] ❌ Não deve ativar agora`);
+        return null;
     }
 
+    console.log(`[EMERGÊNCIA] 🎯 GERANDO SEÇÃO EMERGENTE!`);
+    const secaoEmergente = this.gerarSecaoEmergente(contextoAtual, secaoAtual);
+    this.emergenciaAtiva = true;
+    this.secaoOrigemEmergencia = secaoAtual;
+    this.profundidadeAtual = 1;
+
+    const idEmergente = this.gerarIdEmergente();
+    this.secoesEmergentes.set(idEmergente, secaoEmergente);
+
+    console.log(`[EMERGÊNCIA] ✅ Seção emergente criada: ${idEmergente}`);
+    return { ativada: true, idSecao: idEmergente, secao: secaoEmergente, profundidade: 1 };
+}
+
+    
     analisarSecao(secao, numeroSecao) {
-        const texto = secao.texto.toLowerCase();
-        const contexto = {
-            numero: numeroSecao,
-            timestamp: Date.now(),
-            ambiente: this.extrairAmbientes(texto),
-            objetos: this.extrairObjetos(texto),
-            atmosfera: this.extrairAtmosfera(texto),
-            sensorial: this.extrairSensorial(texto),
-            acoes: this.extrairAcoes(secao),
-            itensColetados: this.extrairItens(secao)
-        };
-        this.historico.push(contexto);
-        if (this.historico.length > 10) this.historico.shift();
-        return contexto;
-    }
+    const texto = secao.texto.toLowerCase();
+    const contexto = {
+        numero: numeroSecao,
+        timestamp: Date.now(),
+        ambiente: this.extrairAmbientes(texto),
+        objetos: this.extrairObjetos(texto),
+        atmosfera: this.extrairAtmosfera(texto),
+        sensorial: this.extrairSensorial(texto),
+        acoes: this.extrairAcoes(secao),
+        itensColetados: this.extrairItens(secao)
+    };
+    console.log(`[CONTEXTO] Seção ${numeroSecao}: Ambientes: ${contexto.ambiente.join(', ') || 'nenhum'}, Objetos: ${contexto.objetos.join(', ') || 'nenhum'}`);
+    this.historico.push(contexto);
+    if (this.historico.length > 10) this.historico.shift();
+    return contexto;
+}
 
     extrairAmbientes(texto) { 
         return this.dicionario.ambientes.filter(amb => texto.includes(amb)); 
@@ -114,9 +132,21 @@ export class SistemaEmergencia {
 
     deveAtivarEmergencia(secaoAtual) {
     const secoesDesdeUltima = secaoAtual - this.ultimaEmergencia;
-    if (secoesDesdeUltima < 2) return false;  // Reduzido de 3 para 2
-    if (secoesDesdeUltima > 4) return true;   // Reduzido de 6 para 4
-    return Math.random() < 0.70;              // Aumentado de 0.50 para 0.70 (70% de chance)
+    console.log(`[EMERGÊNCIA DEBUG] Seção: ${secaoAtual}, Seções desde última: ${secoesDesdeUltima}, Emergência ativa: ${this.emergenciaAtiva}`);
+    
+    if (secoesDesdeUltima < 2) {
+        console.log(`[EMERGÊNCIA DEBUG] Bloqueado: menos de 2 seções`);
+        return false;
+    }
+    if (secoesDesdeUltima > 4) {
+        console.log(`[EMERGÊNCIA DEBUG] ✅ ATIVANDO (garantido após 4 seções)`);
+        return true;
+    }
+    
+    const chance = Math.random();
+    const resultado = chance < 0.70;
+    console.log(`[EMERGÊNCIA DEBUG] Chance: ${(chance * 100).toFixed(2)}% < 70%? ${resultado}`);
+    return resultado;
 }
 
     selecionarElementosContexto(contextoAtual) {
@@ -458,5 +488,6 @@ export class SistemaEmergencia {
 }
 
 export const sistemaEmergencia = new SistemaEmergencia();
+
 
 
