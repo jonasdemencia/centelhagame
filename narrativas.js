@@ -226,6 +226,8 @@ class SistemaNarrativas {
         const resultadoEmergencia = this.sistemaEmergencia.verificarEAtivarEmergencia(numeroSecao, contextoAtual, this.narrativaAtual, emergenciaHabilitada);
 
         if (resultadoEmergencia && resultadoEmergencia.ativada) {
+            console.log(`[NARRATIVAS] 🎯 EXIBINDO SEÇÃO EMERGENTE: ${resultadoEmergencia.idSecao}`);
+            console.log(`[NARRATIVAS] Texto: ${resultadoEmergencia.secao.texto.substring(0, 100)}...`);
             this.secaoEmergentePai = resultadoEmergencia.secao;
             const secaoAMostrar = resultadoEmergencia.secao;
             document.getElementById('numero-secao').textContent = `${numeroSecao} [EMERGÊNCIA]`;
@@ -903,3 +905,4 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
