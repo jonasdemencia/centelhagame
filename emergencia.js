@@ -33,7 +33,7 @@ export class SistemaEmergencia {
      * Verifica se deve disparar a IA e, em caso afirmativo,
      * constrói o prompt e chama o "Oráculo".
      */
-    async verificarEAtivarEmergencia(contador, tituloNarrativa, secaoAtual, habilitada) {
+    async verificarEAtivarEmergencia(contador, tituloNarrativa, secaoAtual, numeroSecaoAtual, habilitada) {
         if (this.emergenciaAtiva || !habilitada) return null;
 
         // O gatilho que você pediu: a cada 4 seções
@@ -59,7 +59,7 @@ export class SistemaEmergencia {
 
             // 4. Ativar o modo de emergência
             this.emergenciaAtiva = true;
-            this.secaoOrigemEmergencia = secaoAtual.numero || 1; // Salva de onde saímos
+            this.secaoOrigemEmergencia = numeroSecaoAtual || 1; // Salva de onde saímos
             this.secoesEmergentes.set(idEmergente, secaoEmergente);
 
             console.log(`[EMERGÊNCIA] ✅ IA gerou a seção: ${idEmergente}`);
@@ -317,5 +317,6 @@ export class SistemaEmergencia {
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
 
