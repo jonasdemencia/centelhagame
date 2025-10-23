@@ -206,7 +206,7 @@ class SistemaNarrativas {
         this.mostrarSecao(1);
     }
 
-    async mostrarSecao(numeroSecao) {
+    async mostrarSecao(numeroSecao, secaoDeOrigem = null) {
     console.log(`[NARRATIVAS] mostrarSecao chamado com: ${numeroSecao}`);
     
     let secao;
@@ -236,11 +236,14 @@ class SistemaNarrativas {
     const emergenciaHabilitada = this.narrativaAtual.emergenciaHabilitada !== false;
 
     // Agora passamos o contador, o título e a seção atual
+    // 'numeroSecao' é o gatilho (25). 'secaoDeOrigem' é o retorno (12).
+    const pontoDeRetorno = secaoDeOrigem || numeroSecao;
+
     const resultadoEmergencia = await this.sistemaEmergencia.verificarEAtivarEmergencia(
         this.contadorSecoesParaEmergencia,
         this.narrativaAtual.titulo,
-        secao,
-        numeroSecao, // <--- ADICIONE ESTE PARÂMETRO
+        secao, // Conteúdo da seção 25 (para o prompt)
+        pontoDeRetorno, // A seção de retorno (12)
         emergenciaHabilitada
     );
     
@@ -887,9 +890,10 @@ if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
     } else if (opcao.teste) {
         this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
     } else {
-        await this.mostrarSecao(opcao.secao);
+        // this.secaoAtual AINDA é a origem (ex: 12)
+        // opcao.secao é o destino (ex: 25)
+        await this.mostrarSecao(opcao.secao, this.secaoAtual);
     }
-
     // Fade in
     overlay.classList.remove('active');
     setTimeout(() => overlay.remove(), 1200);
@@ -947,6 +951,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
