@@ -207,10 +207,14 @@ class SistemaNarrativas {
     }
 
     async mostrarSecao(numeroSecao) {
+    console.log(`[NARRATIVAS] mostrarSecao chamado com: ${numeroSecao}`);
+    
     let secao;
 
     if (typeof numeroSecao === 'string' && numeroSecao.startsWith('emergente_')) {
+        console.log(`[NARRATIVAS] Buscando seção emergente: ${numeroSecao}`);
         secao = this.sistemaEmergencia.secoesEmergentes.get(numeroSecao);
+        console.log(`[NARRATIVAS] Seção encontrada:`, secao);
     } else {
         secao = this.narrativaAtual.secoes[numeroSecao];
     }
@@ -815,29 +819,34 @@ class SistemaNarrativas {
     }
 
     // ETAPA 3: Processar opção emergente se aplicável
-    if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
-        const resultadoEmergencia = this.sistemaEmergencia.processarOpcaoEmergente(opcao, this.secaoEmergentePai);
+if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
+    console.log(`[NARRATIVAS] Processando opção emergente: ${opcao.tipo}`);
+    
+    const resultadoEmergencia = await this.sistemaEmergencia.processarOpcaoEmergente(opcao, this.secaoEmergentePai);
 
-        if (resultadoEmergencia && resultadoEmergencia.ativada) {
-            this.secaoEmergentePai = resultadoEmergencia.secao;
+    if (resultadoEmergencia && resultadoEmergencia.ativada) {
+        console.log(`[NARRATIVAS] Resultado emergência:`, resultadoEmergencia);
+        
+        this.secaoEmergentePai = resultadoEmergencia.secao;
 
-            // Cria overlay de transição
-            const overlay = document.createElement('div');
-            overlay.className = 'fade-overlay';
-            document.body.appendChild(overlay);
+        // Cria overlay de transição
+        const overlay = document.createElement('div');
+        overlay.className = 'fade-overlay';
+        document.body.appendChild(overlay);
 
-            setTimeout(() => overlay.classList.add('active'), 10);
-            await new Promise(resolve => setTimeout(resolve, 500));
+        setTimeout(() => overlay.classList.add('active'), 10);
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-            // Mostra a nova seção emergente
-            await this.mostrarSecao(resultadoEmergencia.idSecao);
+        // Mostra a nova seção emergente
+        console.log(`[NARRATIVAS] Mostrando seção: ${resultadoEmergencia.idSecao}`);
+        await this.mostrarSecao(resultadoEmergencia.idSecao);
 
-            overlay.classList.remove('active');
-            setTimeout(() => overlay.remove(), 1200);
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 1200);
 
-            return;
-        }
+        return;
     }
+}
 
     // SEMPRE criar overlay de fade
     const overlay = document.createElement('div');
@@ -936,6 +945,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
