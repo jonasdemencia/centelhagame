@@ -229,50 +229,50 @@ export class SistemaEmergencia {
      * Chamado por narrativas.js quando o jogador clica em uma opção emergente.
      */
     async processarOpcaoEmergente(opcao, secaoPai) {
-        if (!opcao.emergente || opcao.tipo !== "aprofundar") {
-            this.emergenciaAtiva = false;
-            return null;
-        }
-
-        console.log(`[EMERGÊNCIA] Aprofundando... (de ${secaoPai.id} para ${opcao.secao})`);
-
-        try {
-            const prompt = this.construirPromptContinuação(secaoPai, opcao.texto);
-            const respostaIA = await this.chamarOraculoNarrativo(prompt);
-
-            const proximaSecao = this.processarRespostaIA(respostaIA, secaoPai, opcao.secao);
-
-            this.secoesEmergentes.set(opcao.secao, proximaSecao);
-
-            return { ativada: true, idSecao: opcao.secao, secao: proximaSecao };
-
-        } catch (error) {
-            console.error("[EMERGÊNCIA] Falha ao aprofundar:", error);
-            this.emergenciaAtiva = false;
-
-            // Cria seção de desfecho sutil quando falha
-            const secaoDesfecho = {
-                texto: "A sensação se dissolve gradualmente, como névoa sob o sol da manhã. O que você experimentou deixa uma marca profunda em sua percepção, mas agora a realidade parece se reassentar. Você respira fundo, tentando processar o que acabou de viver. Talvez algumas coisas não sejam feitas para serem completamente compreendidas. Com um último olhar para trás, você segue em frente.",
-                opcoes: [{
-                    texto: "Continuar sua jornada",
-                    secao: secaoPai.origem + 1,
-                    emergente: false
-                }],
-                origem: secaoPai.origem,
-                convergencia: true
-            };
-
-            // Armazena a seção de desfecho
-            const idDesfecho = `emergente_desfecho_${Date.now()}`;
-            this.secoesEmergentes.set(idDesfecho, secaoDesfecho);
-
-            return {
-                ativada: true,
-                idSecao: idDesfecho,
-                secao: secaoDesfecho
-            };
-        }
+    if (!opcao.emergente || opcao.tipo !== "aprofundar") {
+        this.emergenciaAtiva = false;
+        return null;
     }
+
+    console.log(`[EMERGÊNCIA] Aprofundando... (de ${secaoPai.id} para ${opcao.secao})`);
+
+    try {
+        const prompt = this.construirPromptContinuação(secaoPai, opcao.texto);
+        const respostaIA = await this.chamarOraculoNarrativo(prompt);
+
+        const proximaSecao = this.processarRespostaIA(respostaIA, secaoPai, opcao.secao);
+
+        this.secoesEmergentes.set(opcao.secao, proximaSecao);
+
+        return { ativada: true, idSecao: opcao.secao, secao: proximaSecao };
+
+    } catch (error) {
+        console.error("[EMERGÊNCIA] Falha ao aprofundar:", error);
+        this.emergenciaAtiva = false;
+
+        // Cria seção de desfecho sutil quando falha
+        const secaoDesfecho = {
+            texto: "A sensação se dissolve gradualmente, como névoa sob o sol da manhã. O que você experimentou deixa uma marca profunda em sua percepção, mas agora a realidade parece se reassentar. Você respira fundo, tentando processar o que acabou de viver. Talvez algumas coisas não sejam feitas para serem completamente compreendidas. Com um último olhar para trás, você segue em frente.",
+            opcoes: [{
+                texto: "Continuar sua jornada",
+                secao: this.secaoOrigemEmergencia, // ← MUDANÇA: usar a origem real, não +1
+                emergente: false
+            }],
+            origem: this.secaoOrigemEmergencia,
+            convergencia: true
+        };
+
+        // Armazena a seção de desfecho
+        const idDesfecho = `emergente_desfecho_${Date.now()}`;
+        this.secoesEmergentes.set(idDesfecho, secaoDesfecho);
+
+        return {
+            ativada: true,
+            idSecao: idDesfecho,
+            secao: secaoDesfecho
+        };
+    }
+}
 
     /**
      * Constrói um prompt para a IA quando o jogador decide "aprofundar".
@@ -317,3 +317,4 @@ export class SistemaEmergencia {
         this.secaoOrigemEmergencia = null;
     }
 }
+
