@@ -240,6 +240,13 @@ class SistemaNarrativas {
         this.contadorSecoesParaEmergencia,
         this.narrativaAtual.titulo,
         secao,
+        numeroSecao, // <--- ADICIONE ESTE PARÂMETRO
+        emergenciaHabilitada
+    );
+    const resultadoEmergencia = await this.sistemaEmergencia.verificarEAtivarEmergencia(
+        this.contadorSecoesParaEmergencia,
+        this.narrativaAtual.titulo,
+        secao,
         emergenciaHabilitada
     );
 
@@ -945,6 +952,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
