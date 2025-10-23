@@ -55,11 +55,14 @@ export class SistemaEmergencia {
 
             // 3. Processar a resposta da IA para se tornar uma seção jogável
             const idEmergente = this.gerarIdEmergente();
-            const secaoEmergente = this.processarRespostaIA(respostaIA, secaoAtual, idEmergente);
 
-            // 4. Ativar o modo de emergência
+            // 4. Ativar o modo de emergência e SALVAR A ORIGEM (14) PRIMEIRO
             this.emergenciaAtiva = true;
-            this.secaoOrigemEmergencia = pontoDeRetorno || 1; // Salva o 12
+            this.secaoOrigemEmergencia = pontoDeRetorno || 1; // DEVE VIR ANTES
+
+            // AGORA processar a IA, que depende da origem (14) já salva
+            const secaoEmergente = this.processarRespostaIA(respostaJSON, secaoAtual, idEmergente);
+            
             this.secoesEmergentes.set(idEmergente, secaoEmergente);
 
             console.log(`[EMERGÊNCIA] ✅ IA gerou a seção: ${idEmergente}`);
@@ -318,6 +321,7 @@ export class SistemaEmergencia {
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
 
 
