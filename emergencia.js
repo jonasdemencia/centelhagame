@@ -33,7 +33,7 @@ export class SistemaEmergencia {
      * Verifica se deve disparar a IA e, em caso afirmativo,
      * constrói o prompt e chama o "Oráculo".
      */
-    async verificarEAtivarEmergencia(contador, tituloNarrativa, secaoAtual, numeroSecaoAtual, habilitada) {
+    async verificarEAtivarEmergencia(contador, tituloNarrativa, secaoAtual, pontoDeRetorno, habilitada) {
         if (this.emergenciaAtiva || !habilitada) return null;
 
         // O gatilho que você pediu: a cada 4 seções
@@ -59,7 +59,7 @@ export class SistemaEmergencia {
 
             // 4. Ativar o modo de emergência
             this.emergenciaAtiva = true;
-            this.secaoOrigemEmergencia = numeroSecaoAtual || 1; // Salva de onde saímos
+            this.secaoOrigemEmergencia = pontoDeRetorno || 1; // Salva o 12
             this.secoesEmergentes.set(idEmergente, secaoEmergente);
 
             console.log(`[EMERGÊNCIA] ✅ IA gerou a seção: ${idEmergente}`);
@@ -195,15 +195,16 @@ export class SistemaEmergencia {
      * Converte a resposta JSON da IA em uma "Seção" que o jogo entende.
      */
     processarRespostaIA(respostaJSON, secaoDeOrigem, novoId) {
-        const numeroSecaoOrigem = secaoDeOrigem.numero || this.secaoOrigemEmergencia;
+        // 'this.secaoOrigemEmergencia' é a única fonte confiável (agora é 12)
+        const numeroSecaoOrigem = this.secaoOrigemEmergencia;
 
         const opcoesProcessadas = respostaJSON.opcoes.map(op => {
             if (op.tipo === "recuar") {
-                // "Recuar" leva de volta ao fluxo normal, para a seção de origem
+                // "Recuar" leva de volta para a seção de origem real (12)
                 return {
                     texto: op.texto,
-                    secao: numeroSecaoOrigem, // Ex: Se veio da 12, volta para a 12
-                    emergente: false // Sinaliza para narrativas.js que a emergência acabou
+                    secao: numeroSecaoOrigem, // Apenas a origem, sem +1
+                    emergente: false 
                 };
             } else {
                 // "Aprofundar" gera um NOVO id emergente para a _próxima_ chamada de IA
@@ -317,6 +318,7 @@ export class SistemaEmergencia {
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
 
 
