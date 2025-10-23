@@ -243,12 +243,7 @@ class SistemaNarrativas {
         numeroSecao, // <--- ADICIONE ESTE PARÂMETRO
         emergenciaHabilitada
     );
-    const resultadoEmergencia = await this.sistemaEmergencia.verificarEAtivarEmergencia(
-        this.contadorSecoesParaEmergencia,
-        this.narrativaAtual.titulo,
-        secao,
-        emergenciaHabilitada
-    );
+    
 
     if (resultadoEmergencia && resultadoEmergencia.ativada) {
         console.log(`[NARRATIVAS] 🎯 EXIBINDO SEÇÃO DA IA: ${resultadoEmergencia.idSecao}`);
@@ -952,6 +947,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
