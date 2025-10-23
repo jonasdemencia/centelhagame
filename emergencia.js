@@ -211,43 +211,37 @@ export class SistemaEmergencia {
      * Chamado por narrativas.js quando o jogador clica em uma opção emergente.
      */
     async processarOpcaoEmergente(opcao, secaoPai) {
-        if (!opcao.emergente || opcao.tipo !== "aprofundar") {
-            // Se for "recuar", narrativas.js já cuida disso pois 'emergente' é false.
-            this.emergenciaAtiva = false;
-            return null;
-        }
-
-        // O jogador quer "aprofundar". Precisamos de OUTRA chamada de IA.
-        console.log(`[EMERGÊNCIA] Aprofundando... (de ${secaoPai.id} para ${opcao.secao})`);
-        
-        try {
-            // Criamos um prompt de *continuação*
-            const prompt = this.construirPromptContinuação(secaoPai, opcao.texto);
-            const respostaIA = await this.chamarOraculoNarrativo(prompt);
-            
-            // A IA nos deu a *próxima* seção emergente
-            const proximaSecao = this.processarRespostaIA(respostaIA, secaoPai, opcao.secao);
-
-            this.secoesEmergentes.set(opcao.secao, proximaSecao); // Armazena a nova seção
-
-            return { ativada: true, idSecao: opcao.secao, secao: proximaSecao };
-
-        } catch (error) {
-            console.error("[EMERGÊNCIA] Falha ao aprofundar:", error);
-            // Se falhar, mandamos o jogador de volta ao fluxo normal por segurança
-            this.emergenciaAtiva = false;
-            // Retorna um objeto de "convergência" forçada
-            return {
-                ativada: true,
-                idSecao: "emergente_falha",
-                secao: {
-                    texto: "A sensação se dissipa tão rápido quanto veio. Você balança a cabeça, tentando focar. A realidade parece se assentar de volta no lugar.",
-                    opcoes: [{ texto: "Continuar", secao: secaoPai.origem + 1, emergente: false }],
-                    origem: secaoPai.origem
-                }
-            };
-        }
+    if (!opcao.emergente || opcao.tipo !== "aprofundar") {
+        this.emergenciaAtiva = false;
+        return null;
     }
+
+    console.log(`[EMERGÊNCIA] Aprofundando... (de ${secaoPai.id} para ${opcao.secao})`);
+    
+    try {
+        const prompt = this.construirPromptContinuação(secaoPai, opcao.texto);
+        const respostaIA = await this.chamarOraculoNarrativo(prompt);
+        
+        const proximaSecao = this.processarRespostaIA(respostaIA, secaoPai, opcao.secao);
+
+        this.secoesEmergentes.set(opcao.secao, proximaSecao); // ← ISTO JÁ ESTÁ AQUI
+
+        return { ativada: true, idSecao: opcao.secao, secao: proximaSecao };
+
+    } catch (error) {
+        console.error("[EMERGÊNCIA] Falha ao aprofundar:", error);
+        this.emergenciaAtiva = false;
+        return {
+            ativada: true,
+            idSecao: "emergente_falha",
+            secao: {
+                texto: "A sensação se dissipa tão rápido quanto veio. Você balança a cabeça, tentando focar. A realidade parece se assentar de volta no lugar.",
+                opcoes: [{ texto: "Continuar", secao: secaoPai.origem + 1, emergente: false }],
+                origem: secaoPai.origem
+            }
+        };
+    }
+}
 
     /**
      * Constrói um prompt para a IA quando o jogador decide "aprofundar".
@@ -292,6 +286,7 @@ export class SistemaEmergencia {
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
 
 
