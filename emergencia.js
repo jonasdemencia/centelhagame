@@ -199,10 +199,10 @@ export class SistemaEmergencia {
 
         const opcoesProcessadas = respostaJSON.opcoes.map(op => {
             if (op.tipo === "recuar") {
-                // "Recuar" leva de volta ao fluxo normal, na seção seguinte à origem
+                // "Recuar" leva de volta ao fluxo normal, para a seção de origem
                 return {
                     texto: op.texto,
-                    secao: (numeroSecaoOrigem || 0) + 1, // Ex: Se veio da 12, volta para a 13
+                    secao: numeroSecaoOrigem, // Ex: Se veio da 12, volta para a 12
                     emergente: false // Sinaliza para narrativas.js que a emergência acabou
                 };
             } else {
@@ -317,4 +317,5 @@ export class SistemaEmergencia {
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
