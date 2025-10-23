@@ -49,19 +49,19 @@ export class SistemaEmergencia {
 
             // 2. Chamar a IA
             const respostaIA = await this.chamarOraculoNarrativo(prompt);
-            if (!respostaIA || !respostaIA.texto || !respostaIA.opcoes) {
-                throw new Error("Resposta da IA está mal formatada.");
-            }
+if (!respostaIA || !respostaIA.texto || !respostaIA.opcoes) {
+    throw new Error("Resposta da IA está mal formatada.");
+}
 
-            // 3. Processar a resposta da IA para se tornar uma seção jogável
-            const idEmergente = this.gerarIdEmergente();
+const idEmergente = this.gerarIdEmergente();
 
-            // 4. Ativar o modo de emergência e SALVAR A ORIGEM (14) PRIMEIRO
-            this.emergenciaAtiva = true;
-            this.secaoOrigemEmergencia = pontoDeRetorno || 1; // DEVE VIR ANTES
+// Ativa emergência e salva a origem antes de processar
+this.emergenciaAtiva = true;
+this.secaoOrigemEmergencia = pontoDeRetorno || 1;
 
-            // AGORA processar a IA, que depende da origem (14) já salva
-            const secaoEmergente = this.processarRespostaIA(respostaJSON, secaoAtual, idEmergente);
+// Usa a resposta correta (respostaIA) ao processar
+const secaoEmergente = this.processarRespostaIA(respostaIA, secaoAtual, idEmergente);
+
             
             this.secoesEmergentes.set(idEmergente, secaoEmergente);
 
@@ -321,6 +321,7 @@ export class SistemaEmergencia {
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
 
 
