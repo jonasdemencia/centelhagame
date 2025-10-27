@@ -121,7 +121,7 @@ Com base no contexto atual e no histórico, gere um evento que pareça surgir or
 3. Uma opção deve ser para "aprofundar" (investigar o fenômeno).
 4. Uma opção deve ser para "recuar" (tentar ignorar e retornar à normalidade).
 5. Opcionalmente, adicione uma terceira opção neutra — que mantenha a tensão sem resolvê-la.
-6. **(NOVO)** Opcionalmente, adicione um array "efeitos" se o evento descrito tiver uma consequência direta na energia do jogador (ex: susto, alívio, ferimento leve). Use o formato: `[{ "tipo": "energia", "valor": X }]`, onde X é um número (positivo para cura/alívio, negativo para dano/medo). Mantenha os efeitos sutis (-1, +1, -2).
+6. **(NOVO)** Opcionalmente, adicione um array "efeitos" se o evento descrito tiver uma consequência direta na energia do jogador (ex: susto, alívio, ferimento leve). Use o formato: `[{ "tipo": "energia", "valor": -1 }]`, onde X é um número (positivo para cura/alívio, negativo para dano/medo). Mantenha os efeitos sutis (-1, +1, -2).
 
 **FORMATO OBRIGATÓRIO (APENAS JSON):**
 Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer outro texto.
@@ -317,7 +317,7 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
             **TAREFA:**
 1. Escreva o "texto" do que acontece após ele investigar.
 2. Crie 2 opções: uma para "aprofundar" ainda mais, outra para "recuar" (agora que ele viu demais).
-3. **(NOVO)** Se a consequência da escolha tiver um impacto direto (ex: tocar algo causa dor, descobrir algo causa alívio), adicione um array "efeitos" opcional no formato `[{ "tipo": "energia", "valor": X }]`. Mantenha os valores baixos.
+3. **(NOVO)** Se a consequência da escolha tiver um impacto direto (ex: tocar algo causa dor, descobrir algo causa alívio), adicione um array "efeitos" opcional no formato `[{ "tipo": "energia", "valor": -1 }]`. Mantenha os valores baixos.
 
 **FORMATO OBRIGATÓRIO (APENAS JSON):**
 {
@@ -343,6 +343,7 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
 
 
