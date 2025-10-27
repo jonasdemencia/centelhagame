@@ -121,6 +121,7 @@ Com base no contexto atual e no histórico, gere um evento que pareça surgir or
 3. Uma opção deve ser para "aprofundar" (investigar o fenômeno).
 4. Uma opção deve ser para "recuar" (tentar ignorar e retornar à normalidade).
 5. Opcionalmente, adicione uma terceira opção neutra — que mantenha a tensão sem resolvê-la.
+6. **(NOVO)** Opcionalmente, adicione um array "efeitos" se o evento descrito tiver uma consequência direta na energia do jogador (ex: susto, alívio, ferimento leve). Use o formato: `[{ "tipo": "energia", "valor": X }]`, onde X é um número (positivo para cura/alívio, negativo para dano/medo). Mantenha os efeitos sutis (-1, +1, -2).
 
 **FORMATO OBRIGATÓRIO (APENAS JSON):**
 Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer outro texto.
@@ -131,7 +132,8 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
     { "texto": "[Opção 1: Investigar, Tocar, Escutar, Olhar de novo]", "tipo": "aprofundar" },
     { "texto": "[Opção 2: Recuar, Desviar o olhar, Ignorar, Retroceder]", "tipo": "recuar" },
     { "texto": "[Opção 3: Permanecer imóvel, Esperar, Fingir não perceber]", "tipo": "neutra" }
-  ]
+  ],
+  "efeitos": [{ "tipo": "energia", "valor": -1 }] // Exemplo opcional de efeito
 }
 `;
 
@@ -240,6 +242,7 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
         return {
             texto: respostaJSON.texto,
             opcoes: opcoesProcessadas,
+            efeitos: respostaJSON.efeitos || [], // <-- ADICIONE ESTA LINHA
             emergente: true,
             id: novoId,
             origem: numeroSecaoOrigem // Lembra de onde viemos
@@ -312,18 +315,20 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
             Aprofunde o mistério, aumente um pouco a tensão. A realidade deve ficar apenas um pouco MAIS estranha.
 
             **TAREFA:**
-            1. Escreva o "texto" do que acontece após ele investigar.
-            2. Crie 2 opções: uma para "aprofundar" ainda mais, outra para "recuar" (agora que ele viu demais).
+1. Escreva o "texto" do que acontece após ele investigar.
+2. Crie 2 opções: uma para "aprofundar" ainda mais, outra para "recuar" (agora que ele viu demais).
+3. **(NOVO)** Se a consequência da escolha tiver um impacto direto (ex: tocar algo causa dor, descobrir algo causa alívio), adicione um array "efeitos" opcional no formato `[{ "tipo": "energia", "valor": X }]`. Mantenha os valores baixos.
 
-            **FORMATO OBRIGATÓRIO (APENAS JSON):**
-            {
-              "texto": "[Descreva a realidade se tornando um pouco mais inquietante.]",
-              "opcoes": [
-                { "texto": "[Opção 1: Continuar investigando]", "tipo": "aprofundar" },
-                { "texto": "[Opção 2: Tentar fugir/parar agora]", "tipo": "recuar" }
-              ]
-            }
-        `;
+**FORMATO OBRIGATÓRIO (APENAS JSON):**
+{
+  "texto": "[Descreva a realidade se tornando um pouco mais inquietante.]",
+  "opcoes": [
+    { "texto": "[Opção 1: Continuar investigando]", "tipo": "aprofundar" },
+    { "texto": "[Opção 2: Tentar fugir/parar agora]", "tipo": "recuar" }
+  ],
+  "efeitos": [{ "tipo": "energia", "valor": -2 }] // Exemplo opcional
+}
+`;
     }
 
     gerarIdEmergente() {
@@ -338,6 +343,7 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
 
 
