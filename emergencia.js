@@ -114,13 +114,13 @@ Ele ACABOU de chegar na Seção ${secaoAtual.numero || this.historico.at(-1)?.nu
 **HISTÓRICO RECENTE (O que ele fez antes disso):**
 ${historicoFormatado}
 
-**SUA TAREFA:**
-Com base no contexto atual e no histórico, gere um evento que pareça surgir organicamente do mundo.
-1. Escreva um "texto" narrativo para a nova seção (uma única cena).
-2. Crie 2 ou 3 "opcoes" para o jogador.
-3. Uma opção deve ser para "aprofundar" (investigar o fenômeno).
-4. Uma opção deve ser para "recuar" (tentar ignorar e retornar à normalidade).
-5. Opcionalmente, adicione uma terceira opção neutra — que mantenha a tensão sem resolvê-la.
+ **SUA TAREFA:**
+            Baseado no contexto atual E no histórico, gere um evento.
+            1. Escreva um "texto" narrativo para a nova seção.
+            2. Crie 2 ou 3 "opcoes" para o jogador.
+            3. Uma opção deve ser para "aprofundar" (investigar o fenômeno).
+            4. Uma opção deve ser para "recuar" (ignorar e tentar voltar ao normal).
+
 
 **FORMATO OBRIGATÓRIO (APENAS JSON):**
 Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer outro texto.
@@ -337,4 +337,5 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
