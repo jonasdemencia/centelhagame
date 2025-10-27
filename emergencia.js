@@ -25,8 +25,6 @@ this.workerUrl = "https://lucky-scene-6054.fabiorainersilva.workers.dev/"; // UR
 
 analisarSecao(secao, numeroSecao) {
 
-// Não precisamos mais de dicionários. Apenas guardamos o texto e as opções.
-
 const contexto = {
 
 numero: numeroSecao.toString(),
@@ -39,11 +37,9 @@ opcoes: secao.opcoes ? secao.opcoes.map(op => op.texto) : ["Fim da seção."]
 
 this.historico.push(contexto);
 
-// Mantém apenas as últimas 5 seções no histórico
-
 if (this.historico.length > 5) this.historico.shift();
 
-return contexto; // Retorna o contexto atual (não é mais usado pela verificação)
+return contexto;
 
 }
 
@@ -56,11 +52,9 @@ async verificarEAtivarEmergencia(contador, tituloNarrativa, secaoAtual, pontoDeR
 
 if (this.emergenciaAtiva || !habilitada) return null;
 
-// O gatilho que você pediu: a cada 4 seções
-
 if (contador < 4) {
 
-return null; // Ainda não é hora
+return null;
 
 }
 
@@ -68,11 +62,7 @@ console.log(`[EMERGÊNCIA] 🎯 GATILHO: Contador ${contador} atingiu o limite.`
 
 try {
 
-// 1. Construir o prompt para a IA
-
 const prompt = this.construirPrompt(tituloNarrativa, secaoAtual);
-
-// 2. Chamar a IA
 
 const respostaIA = await this.chamarOraculoNarrativo(prompt);
 
@@ -84,13 +74,9 @@ throw new Error("Resposta da IA está mal formatada.");
 
 const idEmergente = this.gerarIdEmergente();
 
-// Ativa emergência e salva a origem antes de processar
-
 this.emergenciaAtiva = true;
 
 this.secaoOrigemEmergencia = pontoDeRetorno || 1;
-
-// Usa a resposta correta (respostaIA) ao processar
 
 const secaoEmergente = this.processarRespostaIA(respostaIA, secaoAtual, idEmergente);
 
@@ -104,7 +90,7 @@ return { ativada: true, idSecao: idEmergente, secao: secaoEmergente };
 
 console.error("[EMERGÊNCIA] Falha ao chamar o Oráculo:", error);
 
-return null; // Se a API falhar, o jogo continua normalmente.
+return null;
 
 }
 
@@ -124,8 +110,6 @@ const historicoFormatado = this.historico.map(h =>
 `Opções escolhidas: [${h.opcoes.join(', ')}]`
 
 ).join('\n\n');
-
-// Molde da Instrução (Versão Estendida — Horror Subversivo)
 
 return `
 
@@ -185,7 +169,7 @@ Com base no contexto atual e no histórico, gere um evento que pareça surgir or
 
 5. Opcionalmente, adicione uma terceira opção neutra — que mantenha a tensão sem resolvê-la.
 
-6. **(NOVO)** Opcionalmente, adicione um array "efeitos" se o evento descrito tiver uma consequência direta na energia do jogador (ex: susto, alívio, ferimento leve). Use o formato: \`[{ "tipo": "energia", "valor": -1 }]\`, onde X é um número (positivo para cura/alívio, negativo para dano/medo). Mantenha os efeitos sutis (-1, +1, -2).
+6. **(NOVO)** Opcionalmente, adicione um array "efeitos" se o evento descrito tiver uma consequência direta na energia do jogador (ex: susto, alívio, ferimento leve). Use o formato: [{ "tipo": "energia", "valor": -1 }], onde X é um número (positivo para cura/alívio, negativo para dano/medo). Mantenha os efeitos sutis (-1, +1, -2).
 
 **FORMATO OBRIGATÓRIO (APENAS JSON):**
 
@@ -205,7 +189,7 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
 
 ],
 
-"efeitos": [{ "tipo": "energia", "valor": -1 }] // Exemplo opcional de efeito
+"efeitos": [{ "tipo": "energia", "valor": -1 }]
 
 }
 
@@ -235,8 +219,6 @@ body: JSON.stringify({ prompt })
 
 });
 
-// Se erro 503 (Service Unavailable), tenta novamente
-
 if (response.status === 503 && tentativa < maxTentativas) {
 
 console.log(`[ORÁCULO] Erro 503, tentando novamente em 2s... (${tentativa}/${maxTentativas})`);
@@ -257,8 +239,6 @@ const data = await response.json();
 
 console.log("[ORÁCULO] Resposta bruta:", data);
 
-// Tenta extrair o texto da resposta Gemini
-
 let jsonText = null;
 
 if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
@@ -276,8 +256,6 @@ console.error("[ORÁCULO] Estrutura inesperada:", JSON.stringify(data, null, 2))
 throw new Error("Resposta da Gemini em formato inesperado.");
 
 }
-
-// Remove markdown code blocks
 
 jsonText = jsonText
 
@@ -311,15 +289,11 @@ throw new Error(`JSON inválido: ${parseError.message}`);
 
 } catch (err) {
 
-// Se falhar após todas as tentativas, relança o erro
-
 if (tentativa >= maxTentativas) {
 
 throw err;
 
 }
-
-// Tenta novamente com delay
 
 console.log(`[ORÁCULO] Erro, tentando novamente... (${tentativa}/${maxTentativas})`);
 
@@ -337,21 +311,17 @@ return this.chamarOraculoNarrativo(prompt, tentativa + 1);
 
 processarRespostaIA(respostaJSON, secaoDeOrigem, novoId) {
 
-// 'this.secaoOrigemEmergencia' é a única fonte confiável (agora é 12)
-
 const numeroSecaoOrigem = this.secaoOrigemEmergencia;
 
 const opcoesProcessadas = respostaJSON.opcoes.map(op => {
 
 if (op.tipo === "recuar") {
 
-// "Recuar" leva de volta para a seção de origem real (12)
-
 return {
 
 texto: op.texto,
 
-secao: numeroSecaoOrigem, // Apenas a origem, sem +1
+secao: numeroSecaoOrigem,
 
 emergente: false
 
@@ -359,15 +329,13 @@ emergente: false
 
 } else {
 
-// "Aprofundar" gera um NOVO id emergente para a _próxima_ chamada de IA
-
 return {
 
 texto: op.texto,
 
-secao: this.gerarIdEmergente(), // Ex: emergente_IA_2
+secao: this.gerarIdEmergente(),
 
-tipo: "aprofundar", // Mantém o tipo
+tipo: "aprofundar",
 
 emergente: true
 
@@ -383,13 +351,13 @@ texto: respostaJSON.texto,
 
 opcoes: opcoesProcessadas,
 
-efeitos: respostaJSON.efeitos || [], // <-- ADICIONE ESTA LINHA
+efeitos: respostaJSON.efeitos || [],
 
 emergente: true,
 
 id: novoId,
 
-origem: numeroSecaoOrigem // Lembra de onde viemos
+origem: numeroSecaoOrigem
 
 };
 
@@ -429,8 +397,6 @@ console.error("[EMERGÊNCIA] Falha ao aprofundar:", error);
 
 this.emergenciaAtiva = false;
 
-// Cria seção de desfecho sutil quando falha
-
 const secaoDesfecho = {
 
 texto: "A sensação se dissolve gradualmente, como névoa sob o sol da manhã. O que você experimentou deixa uma marca profunda em sua percepção, mas agora a realidade parece se reassentar. Você respira fundo, tentando processar o que acabou de viver. Talvez algumas coisas não sejam feitas para serem completamente compreendidas. Com um último olhar para trás, você segue em frente.",
@@ -439,7 +405,7 @@ opcoes: [{
 
 texto: "Continuar sua jornada",
 
-secao: this.secaoOrigemEmergencia, // ← MUDANÇA: usar a origem real, não +1
+secao: this.secaoOrigemEmergencia,
 
 emergente: false
 
@@ -450,8 +416,6 @@ origem: this.secaoOrigemEmergencia,
 convergencia: true
 
 };
-
-// Armazena a seção de desfecho
 
 const idDesfecho = `emergente_desfecho_${Date.now()}`;
 
@@ -501,7 +465,7 @@ Aprofunde o mistério, aumente um pouco a tensão. A realidade deve ficar apenas
 
 2. Crie 2 opções: uma para "aprofundar" ainda mais, outra para "recuar" (agora que ele viu demais).
 
-3. **(NOVO)** Se a consequência da escolha tiver um impacto direto (ex: tocar algo causa dor, descobrir algo causa alívio), adicione um array "efeitos" opcional no formato \`[{ "tipo": "energia", "valor": -1 }]\`. Mantenha os valores baixos.
+3. **(NOVO)** Se a consequência da escolha tiver um impacto direto (ex: tocar algo causa dor, descobrir algo causa alívio), adicione um array "efeitos" opcional no formato [{ "tipo": "energia", "valor": -1 }]. Mantenha os valores baixos.
 
 **FORMATO OBRIGATÓRIO (APENAS JSON):**
 
@@ -517,7 +481,7 @@ Aprofunde o mistério, aumente um pouco a tensão. A realidade deve ficar apenas
 
 ],
 
-"efeitos": [{ "tipo": "energia", "valor": -2 }] // Exemplo opcional
+"efeitos": [{ "tipo": "energia", "valor": -2 }]
 
 }
 
