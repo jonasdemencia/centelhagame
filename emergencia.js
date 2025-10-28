@@ -120,6 +120,7 @@ ${historicoFormatado}
             2. Crie 2 ou 3 "opcoes" para o jogador.
             3. Uma opção deve ser para "aprofundar" (investigar o fenômeno).
             4. Uma opção deve ser para "recuar" (ignorar e tentar voltar ao normal).
+            5. **(Opcional)** Se o evento narrativo causar estresse, medo ou um alívio súbito, adicione um campo "efeitos". Use \`[{ "tipo": "energia", "valor": -X }]\` para perda de energia (medo/estresse) ou \`[{ "tipo": "energia", "valor": X }]\` para ganho (calma/alívio). Use valores pequenos (ex: -1, -2, +1).
 
             **FORMATO OBRIGATÓRIO (APENAS JSON):**
             Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer outro texto.
@@ -129,10 +130,12 @@ ${historicoFormatado}
               "opcoes": [
                 { "texto": "[Opção 1: Investigar, Tocar, Encarar]", "tipo": "aprofundar" },
                 { "texto": "[Opção 2: Ignorar, Fugir, Desviar o olhar]", "tipo": "recuar" }
-  ]
-}
+              ],
+              "efeitos": [{ "tipo": "energia", "valor": -2 }]
+            }
 `;
     }
+    
 
     /**
      * Função que chama a API da IA com retry automático.
@@ -237,6 +240,7 @@ ${historicoFormatado}
         return {
             texto: respostaJSON.texto,
             opcoes: opcoesProcessadas,
+            efeitos: respostaJSON.efeitos || [], // <-- ✨ ADICIONE ESTA LINHA
             emergente: true,
             id: novoId,
             origem: numeroSecaoOrigem // Lembra de onde viemos
@@ -295,6 +299,8 @@ ${historicoFormatado}
     /**
      * Constrói um prompt para a IA quando o jogador decide "aprofundar".
      */
+    // Em emergencia.js
+
     construirPromptContinuação(secaoPai, textoOpcao) {
         return `
             Você é um 'Mestre de Jogo' de terror como a Mansão Diabólica de Steve Jackson, só que sutil e mais lento.
@@ -311,6 +317,7 @@ ${historicoFormatado}
             **TAREFA:**
             1. Escreva o "texto" do que acontece após ele investigar.
             2. Crie 2 opções: uma para "aprofundar" ainda mais, outra para "recuar" (agora que ele viu demais).
+            3. **(Opcional)** Adicione um campo \`"efeitos": [{ "tipo": "energia", "valor": X }]\` se esta consequência afetar diretamente a sanidade/energia do jogador (ex: -3 por um susto, +1 por uma revelação calmante).
 
             **FORMATO OBRIGATÓRIO (APENAS JSON):**
             {
@@ -318,7 +325,8 @@ ${historicoFormatado}
               "opcoes": [
                 { "texto": "[Opção 1: Continuar investigando]", "tipo": "aprofundar" },
                 { "texto": "[Opção 2: Tentar fugir/parar agora]", "tipo": "recuar" }
-              ]
+              ],
+              "efeitos": [{ "tipo": "energia", "valor": -3 }]
             }
         `;
     }
@@ -335,6 +343,7 @@ ${historicoFormatado}
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
 
 
