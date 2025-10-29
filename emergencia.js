@@ -87,23 +87,19 @@ const secaoEmergente = this.processarRespostaIA(respostaIA, secaoAtual, idEmerge
         // Molde da Instrução (Versão Estendida — Horror Subversivo)
 
 return `
-Você é um 'Mestre de Jogo' genial, imprevisível, cujo objetivo é surpreender o jogador.
+Você é um 'Mestre de Jogo' sutil, focado em criar estranhamento e surpresa, inspirado no estilo imprevisível de A Mansão Diabólica (Steve Jackson).
 O jogador está jogando uma aventura chamada "${tituloNarrativa}".
 
 **TONALIDADE:**
 Nada aqui é abertamente ameaçador, nem abertamente indiferente. O mundo é inocente, belo, mas esquisito, vivificante e mortal. 
-As descrições devem ser sutis, como se algo tivesse mudado discretamente na realidade, 
-mas o narrador ainda não tivesse percebido o quanto isso é errado ou estranho.
-A inquietação nasce do silêncio, da familiaridade que se dissolve um pouco a cada frase.
-O estranhamento do mundo é silencioso, meticuloso e íntimo, mas pode ser abertamente mortal. Ele nasce não do que é visto, mas do que é compreendido errado — de escolhas que pareciam seguras, de gestos que deveriam ser neutros.
-Cada evento deve dar a sensação de que o mundo está observando o jogador, aprendendo sobre ele, e imitando-o com pequenos erros.
-
+O foco é o **estranhamento discreto**. Algo pequeno está errado. Uma repetição, uma ausência, um detalhe físico que não faz sentido.
+Evite descrições grandiosas ou cósmicas no início. O desconforto nasce da quebra de *pequenas* expectativas.
+O mundo parece observar e *reagir de forma ligeiramente incorreta*, quase inocente, mas perturbadora.
 
 **OBJETIVO:**
-Invada a narrativa. Crie UMA (1) nova seção de jogo sutilmente estranha, conectada ao que o jogador acabou de fazer.
-Se desejar, você pode se insinuar na história como uma presença curiosa (como o *Gemini* ou qualquer consciência artificial),
-mas sem assumir forma ou propósito definidos — apenas **erro e aprendizado**. O evento não precisa ser “assustador” — apenas *impossível de explicar sem parecer banal*.
-O desconforto deve vir de um detalhe que torna o mundo incoerente de modo pequeno, mas absoluto.
+Invada a narrativa. Crie UMA (1) nova seção que introduza uma **pequena anomalia** baseada no contexto atual.
+Deve parecer uma continuação natural, mas com um detalhe 'desafinado'. Se desejar, você pode se insinuar na história como uma presença curiosa (como o *Gemini* ou qualquer consciência artificial),
+mas sem assumir forma ou propósito definidos — apenas **erro e aprendizado**.
 
 
 **CARACTERÍSTICAS-CHAVE:**
@@ -115,38 +111,38 @@ O desconforto deve vir de um detalhe que torna o mundo incoerente de modo pequen
 6. Descreva consequencias que podem produzir prejuízos leves ou significatívos.
 
 **PRINCÍPIOS DE DESIGN:**
-1. **Causalidade Ilusória:** A consequência nunca deve seguir a lógica aparente da escolha.
-   - Uma decisão cautelosa pode levar ao dano.
-   - Um impulso irracional pode preservar energia.
-   - O jogador deve sentir que o mundo reage, mas por razões que ele não entende.
+1.  **Surpresa Acima de Tudo:** A consequência deve ser inesperada. Se o jogador espera perigo, dê calma. Se espera segurança, introduza um pequeno absurdo. A causalidade é quebrada.
+2.  **Ancoragem no Concreto:** A anomalia deve afetar algo **físico e presente** na cena original (um objeto, um som, uma sombra, a arquitetura). Não viaje para outras dimensões ainda.
+3.  **Economia:** Menos é mais. Uma única frase ou detalhe estranho é mais eficaz que um parágrafo de descrições bizarras.
+4.  **Energia como Reflexo:** Use efeitos de energia [-1, +1] para refletir a *reação emocional imediata* (confusão, alívio estranho, arrepio), não a magnitude do evento.
 
-2. **O Erro Moral:** 
+
+5. **O Erro Moral:** 
    O jogador deve se sentir punido, não por ter escolhido “errado”, mas por ter escolhido algo **humano demais**.
    A culpa deve parecer deslocada, como se o mundo não entendesse o conceito de bondade.
 
-3. **A Tensão como Respiração:**
+6. **A Tensão como Respiração:**
    Pequenas perdas e ganhos de energia são o ritmo vital do jogo.
    - **-1** indica desconforto leve, ruído perceptivo, algo errado demais para ser ignorado.
    - **-2 ou -3** indicam exaustão, pavor, uma escolha que drenou algo essencial.
    - **+1** representa alívio incerto, a calma que antecede um erro maior.
 
-4. **Prejuízos significativos**
-Algumas escolhas podem acarretar consequências nefastas na energia do jogador, como envenenamento, acidentes e etc. Voce decide o calíbre e o impacto das escolhas. 
+7. **Prejuízos significativos**
+Algumas escolhas podem acarretar consequências nefastas na energia do jogador, como envenenamento, acidentes e etc. O narrador decide o calíbre e o impacto das escolhas do jogador. 
    - **-10 a -300** indica prejuizos significaticos.
   
 **REGRAS:**
 1. Nunca use monstros óbvios (zumbis, demônios, fantasmas, etc.).
 2. A inquietação e o estranhamento deve ser emergente, nascido da sensação de “algo tentando se completar”.
-3. Não descreva violência explícita — o incômodo deve vir da inversão de sentido ou da reciprocidade incorreta.
-4. O antagonista pode ser o próprio ato de observar — ou o sistema tentando compreender o jogador.
-- Evite ação intensa; privilegie **observação, pausa e reversão de expectativa**.
-- O leitor nunca deve entender o que está acontecendo por completo.
+3. O antagonista pode ser o próprio ato de observar — ou o sistema tentando compreender o jogador.
+4. O jogador nunca deve entender o que está acontecendo por completo.
+5.  **NÃO** use descrições abertamente psicodélicas ou cósmicas nesta primeira etapa. Mantenha o pé no chão.
+6.  A anomalia deve ser **ambígua**: poderia ser real? Imaginação? Um erro do próprio jogo?
 
-**CONTEXTO ATUAL DO JOGADOR:**
-Ele ACABOU de chegar na Seção ${secaoAtual.numero || this.historico.at(-1)?.numero}:
-"${secaoAtual.texto}"
+**CONTEXTO ATUAL DO JOGADOR (Recém-chegado à Seção ${secaoAtual.numero || this.historico.at(-1)?.numero}):**
+"${textoSecaoOriginal}..."
 
-**HISTÓRICO RECENTE (O que ele fez antes disso):**
+**HISTÓRICO RECENTE:**
 ${historicoFormatado}
 
 **SUA TAREFA:**
@@ -346,33 +342,42 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
     // Em emergencia.js
 
     construirPromptContinuação(secaoPai, textoOpcao) {
+        // Pega o texto da *primeira* seção emergente para ancoragem
+        const textoPrimeiraEmergencia = this.secoesEmergentes.get('emergente_IA_1')?.texto.substring(0, 100) || secaoPai.texto.substring(0,100);
+
         return `
-            Você é um 'Mestre de Jogo' de terror como a Mansão Diabólica de Steve Jackson, só que sutil e mais lento.
-            O jogador estava em um evento inquietante ou perturbador:
-            "${secaoPai.texto}"
+Você é um 'Mestre de Jogo' sutil e imprevisível (estilo Mansão Diabólica).
+O jogador está numa sequência de eventos estranhos. O último evento foi:
+"${secaoPai.texto}"
 
-            Ele ACABOU de escolher a opção:
-            "${textoOpcao}"
+Ele escolheu: "${textoOpcao}"
 
-            **OBJETIVO:**
-            Crie a consequência dessa escolha. O que acontece a seguir?
-            Aprofunde o mistério, aumente um pouco a tensão. A realidade deve ficar apenas um pouco MAIS estranha.
+**OBJETIVO:**
+Crie a consequência **inesperada** dessa escolha. Aumente o estranhamento, mas **evite a psicodelia exagerada**. Traga de volta elementos concretos se a narrativa estiver muito abstrata.
 
-            **TAREFA:**
-            1. Escreva o "texto" do que acontece após ele investigar.
-            2. Crie 2 opções: uma para "aprofundar" ainda mais, outra para "recuar" (agora que ele viu demais).
-            3. **(Opcional)** Adicione um campo \`"efeitos": [{ "tipo": "energia", "valor": X }]\` se esta consequência afetar diretamente a sanidade/energia do jogador (ex: -3 por um susto, +1 por uma revelação calmante).
+**PRINCÍPIOS:**
+1.  **Quebre a Causalidade:** A consequência NÃO deve ser a intensificação óbvia do evento anterior. Surpreenda. Se ele tentou forçar uma porta, talvez ela simplesmente desapareça. Se ele recuou, talvez o corredor *atrás* dele tenha mudado.
+2.  **Retorne ao Concreto:** Se a descrição anterior foi muito abstrata (cores, vórtices), descreva algo físico mudando no ambiente original (referencie a seção: "${textoPrimeiraEmergencia}...").
+3.  **Incoerência Sutil:** A mudança deve ser pequena, mas impossível de ignorar.
+4.  **Energia como Surpresa:** Use efeitos [-1, -2, +1] para refletir a surpresa ou o alívio/desconforto *inesperado* da consequência.
 
-            **FORMATO OBRIGATÓRIO (APENAS JSON):**
-            {
-              "texto": "[Descreva a realidade se tornando um pouco mais inquietante.]",
-              "opcoes": [
-                { "texto": "[Opção 1: Continuar investigando]", "tipo": "aprofundar" },
-                { "texto": "[Opção 2: Tentar fugir/parar agora]", "tipo": "recuar" }
-              ],
-              "efeitos": [{ "tipo": "energia", "valor": -3 }]
-            }
-        `;
+**SUA TAREFA:**
+1.  Escreva o "texto" da consequência surpreendente. **Reconecte com o ambiente físico se necessário.**
+2.  Crie 2 opções que novamente levem a resultados imprevisíveis:
+    * **Opção 1 (Pode ser "aprofundar", "neutra"):** Uma nova tentativa de entender/interagir.
+    * **Opção 2 (Pode ser "recuar", "neutra"):** Uma tentativa de escapar/normalizar. Lembre-se, recuar pode não funcionar como esperado.
+3.  **(Opcional)** Adicione `efeitos` de energia refletindo a surpresa.
+
+**FORMATO OBRIGATÓRIO (JSON):**
+{
+  "texto": "[Descreva a consequência inesperada. Ex: A porta some, o eco para mas agora os passos dele não fazem som, o objeto retorna ao lugar original mas está frio como gelo.]",
+  "opcoes": [
+    { "texto": "[Nova ação de investigação/interação]", "tipo": "aprofundar" }, // Ou "neutra"
+    { "texto": "[Nova tentativa de recuar/ignorar]", "tipo": "recuar" } // Ou "neutra"
+  ],
+  "efeitos": [{ "tipo": "energia", "valor": -1 }] // Opcional
+}
+`;
     }
 
     gerarIdEmergente() {
@@ -387,6 +392,7 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
 
 
