@@ -823,6 +823,7 @@ class SistemaNarrativas {
     if (this.sistemaEmergencia && this.sistemaEmergencia.emergenciaAtiva) {
         if (opcao.tipo === 'recuar' || opcao.convergencia) {
             console.log(`[NARRATIVAS] ✅ Desativando emergência - ${opcao.tipo}`);
+            //          ^ CORRIGI AQUI - adicionei parêntese (
             this.sistemaEmergencia.emergenciaAtiva = false;
             this.contadorSecoesParaEmergencia = 0;
         }
@@ -831,6 +832,7 @@ class SistemaNarrativas {
     // Processar opção emergente se aplicável
     if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
         console.log(`[NARRATIVAS] Processando opção emergente: ${opcao.tipo}`);
+        //          ^ CORRIGI AQUI - adicionei parêntese (
         
         const resultadoEmergencia = await this.sistemaEmergencia.processarOpcaoEmergente(
             opcao, 
@@ -883,7 +885,7 @@ class SistemaNarrativas {
         console.log('Erro ao tocar som:', error);
     }
 
-    // ⭐ AQUI: Aplicar custos ocultos
+    // ⭐ Aplicar custos ocultos
     if (opcao.custo_oculto) {
         console.log('[NARRATIVAS] Aplicando custo oculto:', opcao.custo_oculto);
         if (opcao.custo_oculto.tipo === 'energia') {
@@ -917,21 +919,7 @@ class SistemaNarrativas {
     overlay.classList.remove('active');
     setTimeout(() => overlay.remove(), 1200);
 }
-```
-
----
-
-## 🔍 Explicação Visual
-```
-[SOM TOCA] 
-    ↓
-[CUSTO OCULTO É APLICADO] ← ⭐ ADICIONE AQUI
-    ↓
-[VERIFICA SE REQUER ITEM]
-    ↓
-[VERIFICA SE TEM BATALHA/TESTE]
-    ↓
-[MOSTRA NOVA SEÇÃO]
+    
 
     async processarBatalhaAutomatica(secao) {
         const playerDocRef = doc(db, "players", this.userId);
@@ -985,6 +973,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
