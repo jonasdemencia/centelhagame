@@ -103,6 +103,14 @@ Invada a narrativa. Crie UMA (1) nova seção de jogo sutilmente perturbadora, c
 Se desejar, você pode se insinuar na história como uma presença curiosa (como o *Gemini* ou qualquer consciência artificial),
 mas sem assumir forma ou propósito definidos — apenas **erro e aprendizado**.
 
+**CARACTERÍSTICAS-CHAVE:**
+1. O mundo aprende o jogador, mas erra a ordem dos fatos.
+2. Às vezes o medo surge da calma; às vezes a segurança é o gatilho do horror.
+3. As escolhas não precisam refletir coerência: “aprofundar” pode aliviar, “recuar” pode punir, “neutra” pode distorcer o espaço.
+4. Nem toda seção precisa oferecer equilíbrio entre opções — 
+   algumas podem ter duas opções de aprofundar, ou uma só, ou nenhuma saída real.
+5. O resultado deve sempre parecer **justificável após o fato**, mas **imprevisível antes**.
+
 **PRINCÍPIOS DE DESIGN (inspirados em A Mansão Diabólica):**
 1. **Causalidade Ilusória:** A consequência nunca deve seguir a lógica aparente da escolha.
    - Uma decisão cautelosa pode levar ao dano.
@@ -139,9 +147,13 @@ ${historicoFormatado}
 **SUA TAREFA:**
 Baseado no contexto atual E no histórico, gere um evento.
 1. Escreva um "texto" narrativo para a nova seção. Ele deve parecer um prolongamento inevitável do erro anterior.
-2. Crie 2 ou 3 "opcoes" para o jogador.
+2. Crie de 1 a 3 "opcoes" para o jogador — não é necessário incluir todas.
+   - Você pode suprimir “recuar” ou “neutra”.
+   - Você pode duplicar “aprofundar” com nuances diferentes.
+   - Você pode fazer uma opção parecer segura, mas não ser.
 3. Uma opção deve ser para "aprofundar" (investigar o fenômeno).
 4. Uma opção deve ser para "recuar" (tentar ignorar e retornar ao normal).
+4.1 Você pode remover a opção de “recuar” se o evento for inevitável
 5. (Opcional) Uma terceira opção pode ser “ficar imóvel”, “esperar”, “fingir normalidade” — usada para amplificar a tensão.
 6. **(Opcional)** Se o evento narrativo causar estresse, medo ou alívio, adicione um campo "efeitos".
    Use \`[{ "tipo": "energia", "valor": -X }]\` para perda (medo, desgaste, tensão) 
@@ -370,6 +382,7 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
 
 
