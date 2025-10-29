@@ -295,7 +295,16 @@ class SistemaNarrativas {
     this.criarOpcoes(secao.opcoes, secao.final);
 }
 
-
+// 🔍 === ADIÇÃO DO MÉTODO DE DEBUG ===
+    debugContadorEmergencia() {
+        console.log('===== DEBUG EMERGÊNCIA =====');
+        console.log('Contador atual:', this.contadorSecoesParaEmergencia);
+        console.log('Emergência ativa:', this.sistemaEmergencia.emergenciaAtiva);
+        console.log('Próxima emergência em:', 4 - this.contadorSecoesParaEmergencia, 'seções');
+        console.log('============================');
+    }
+    // 🔍 === FIM DO MÉTODO DE DEBUG ===
+    
     renderizarTextoComItens(secao) {
         const textoContainer = document.getElementById('texto-narrativa');
         let textoHTML = secao.texto;
@@ -970,6 +979,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
