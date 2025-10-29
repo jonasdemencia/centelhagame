@@ -227,36 +227,35 @@ class SistemaNarrativas {
 
     this.secaoAtual = numeroSecao;
 
-    // 🔹 INÍCIO DA MODIFICAÇÃO
+    // 🔹 ADICIONE LOG AQUI
     // Só incrementa se não for seção emergente
     if (typeof numeroSecao === 'number' || !numeroSecao.startsWith('emergente_')) {
         this.contadorSecoesParaEmergencia++;
+        console.log(`[NARRATIVAS] 📊 Contador para emergência: ${this.contadorSecoesParaEmergencia}/4`);
     }
 
     const contextoAtual = this.sistemaEmergencia.analisarSecao(
-    secao, 
-    numeroSecao, 
-    this.ultimaEscolhaFeita // Nova propriedade
-);
-        
+        secao, 
+        numeroSecao, 
+        this.ultimaEscolhaFeita
+    );
     const emergenciaHabilitada = this.narrativaAtual.emergenciaHabilitada !== false;
 
-    // Agora passamos o contador, o título e a seção atual
-    // 'numeroSecao' é o gatilho (25). 'secaoDeOrigem' é o retorno (12).
     const pontoDeRetorno = secaoDeOrigem || numeroSecao;
 
     const resultadoEmergencia = await this.sistemaEmergencia.verificarEAtivarEmergencia(
         this.contadorSecoesParaEmergencia,
         this.narrativaAtual.titulo,
-        secao, // Conteúdo da seção 25 (para o prompt)
-        pontoDeRetorno, // A seção de retorno (12)
+        secao,
+        pontoDeRetorno,
         emergenciaHabilitada
     );
     
-
     if (resultadoEmergencia && resultadoEmergencia.ativada) {
         console.log(`[NARRATIVAS] 🎯 EXIBINDO SEÇÃO DA IA: ${resultadoEmergencia.idSecao}`);
-        this.contadorSecoesParaEmergencia = 0; // reseta o contador
+        this.contadorSecoesParaEmergencia = 0; // 🔹 RESET IMEDIATO
+        console.log(`[NARRATIVAS] 🔄 Contador resetado após ativar emergência: ${this.contadorSecoesParaEmergencia}`);
+        
         this.secaoEmergentePai = resultadoEmergencia.secao;
 
         const secaoAMostrar = resultadoEmergencia.secao;
@@ -816,23 +815,21 @@ class SistemaNarrativas {
     }
 
     async processarOpcao(opcao) {
-    // Registra a escolha feita
     this.ultimaEscolhaFeita = opcao.texto;
 
-    // DESATIVA EMERGÊNCIA APENAS SE FOR OPÇÃO "RECUAR"
+    // DESATIVA EMERGÊNCIA E RESETA CONTADOR
     if (this.sistemaEmergencia && this.sistemaEmergencia.emergenciaAtiva) {
         if (opcao.tipo === 'recuar' || opcao.convergencia) {
             console.log(`[NARRATIVAS] ✅ Desativando emergência - ${opcao.tipo}`);
-            //          ^ CORRIGI AQUI - adicionei parêntese (
             this.sistemaEmergencia.emergenciaAtiva = false;
-            this.contadorSecoesParaEmergencia = 0;
+            this.contadorSecoesParaEmergencia = 0; // 🔹 RESET DO CONTADOR
+            console.log(`[NARRATIVAS] 🔄 Contador resetado ao sair da emergência: ${this.contadorSecoesParaEmergencia}`);
         }
     }
 
     // Processar opção emergente se aplicável
     if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
         console.log(`[NARRATIVAS] Processando opção emergente: ${opcao.tipo}`);
-        //          ^ CORRIGI AQUI - adicionei parêntese (
         
         const resultadoEmergencia = await this.sistemaEmergencia.processarOpcaoEmergente(
             opcao, 
@@ -973,6 +970,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
