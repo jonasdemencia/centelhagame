@@ -32,6 +32,7 @@ class SistemaNarrativas {
         this.visao3d = null;
         this.secaoEmergentePai = null;
         this.contadorSecoesParaEmergencia = 0;
+        this.ultimaEscolhaFeita = null; // Para rastreamento de padrões
         this.statsOcultos = {}; // Vamos manter isso vazio por enquanto, mas o código futuro pode precisar
 
         // IMPORTANTE: Definir itensNarrativas ANTES de criar SistemaEmergencia
@@ -232,7 +233,12 @@ class SistemaNarrativas {
         this.contadorSecoesParaEmergencia++;
     }
 
-    const contextoAtual = this.sistemaEmergencia.analisarSecao(secao, numeroSecao);
+    const contextoAtual = this.sistemaEmergencia.analisarSecao(
+    secao, 
+    numeroSecao, 
+    this.ultimaEscolhaFeita // Nova propriedade
+);
+        
     const emergenciaHabilitada = this.narrativaAtual.emergenciaHabilitada !== false;
 
     // Agora passamos o contador, o título e a seção atual
@@ -810,50 +816,56 @@ class SistemaNarrativas {
     }
 
     async processarOpcao(opcao) {
-    // RESETAR EMERGÊNCIA SE VOLTANDO AO FLUXO NORMAL
+    // Registra a escolha feita
+    this.ultimaEscolhaFeita = opcao.texto;
+
+    // DESATIVA EMERGÊNCIA APENAS SE FOR OPÇÃO "RECUAR"
     if (this.sistemaEmergencia && this.sistemaEmergencia.emergenciaAtiva) {
-        console.log(`[NARRATIVAS] Verificando se deve desativar emergência...`);
-        console.log(`[NARRATIVAS] Seção destino: ${opcao.secao}, Origem: ${this.sistemaEmergencia.secaoOrigemEmergencia}`);
-        
-        // Se a opção leva para fora da emergência, desativa
-        if (opcao.secao && !String(opcao.secao).startsWith('emergente_')) {
-            console.log(`[NARRATIVAS] ✅ Desativando emergência - voltando ao fluxo normal`);
+        if (opcao.tipo === 'recuar' || opcao.convergencia) {
+            console.log(`[NARRATIVAS] ✅ Desativando emergência - ${opcao.tipo}`);
             this.sistemaEmergencia.emergenciaAtiva = false;
-            this.sistemaEmergencia.ultimaEmergencia = opcao.secao;
+            this.contadorSecoesParaEmergencia = 0;
         }
     }
 
-    // ETAPA 3: Processar opção emergente se aplicável
-if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
-    console.log(`[NARRATIVAS] Processando opção emergente: ${opcao.tipo}`);
-    
-    const resultadoEmergencia = await this.sistemaEmergencia.processarOpcaoEmergente(opcao, this.secaoEmergentePai);
-
-    if (resultadoEmergencia && resultadoEmergencia.ativada) {
-        console.log(`[NARRATIVAS] Resultado emergência:`, resultadoEmergencia);
+    // Processar opção emergente se aplicável
+    if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
+        console.log(`[NARRATIVAS] Processando opção emergente: ${opcao.tipo}`);
         
-        this.secaoEmergentePai = resultadoEmergencia.secao;
+        const resultadoEmergencia = await this.sistemaEmergencia.processarOpcaoEmergente(
+            opcao, 
+            this.secaoEmergentePai
+        );
 
-        // Cria overlay de transição
-        const overlay = document.createElement('div');
-        overlay.className = 'fade-overlay';
-        document.body.appendChild(overlay);
+        if (resultadoEmergencia && resultadoEmergencia.ativada) {
+            this.secaoEmergentePai = resultadoEmergencia.secao;
 
-        setTimeout(() => overlay.classList.add('active'), 10);
-        await new Promise(resolve => setTimeout(resolve, 500));
+            const overlay = document.createElement('div');
+            overlay.className = 'fade-overlay';
+            document.body.appendChild(overlay);
 
-        // Mostra a nova seção emergente
-        console.log(`[NARRATIVAS] Mostrando seção: ${resultadoEmergencia.idSecao}`);
-        await this.mostrarSecao(resultadoEmergencia.idSecao);
+            setTimeout(() => overlay.classList.add('active'), 10);
+            await new Promise(resolve => setTimeout(resolve, 500));
 
-        overlay.classList.remove('active');
-        setTimeout(() => overlay.remove(), 1200);
+            // Aplicar efeitos da seção emergente
+            if (resultadoEmergencia.secao.efeitos) {
+                for (const efeito of resultadoEmergencia.secao.efeitos) {
+                    if (efeito.tipo === 'energia') {
+                        await this.modificarEnergia(efeito.valor);
+                    }
+                }
+            }
 
-        return;
+            await this.mostrarSecao(resultadoEmergencia.idSecao);
+
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.remove(), 1200);
+
+            return;
+        }
     }
-}
 
-    // SEMPRE criar overlay de fade
+    // Criar overlay de fade
     const overlay = document.createElement('div');
     overlay.className = 'fade-overlay';
     document.body.appendChild(overlay);
@@ -862,13 +874,21 @@ if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
     setTimeout(() => overlay.classList.add('active'), 10);
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Tocar som (usa o som da opção ou o padrão de passos)
+    // Tocar som
     try {
         const audio = new Audio(opcao.som || 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
         await audio.play();
         await new Promise(resolve => setTimeout(resolve, 1500));
     } catch (error) {
         console.log('Erro ao tocar som:', error);
+    }
+
+    // ⭐ AQUI: Aplicar custos ocultos
+    if (opcao.custo_oculto) {
+        console.log('[NARRATIVAS] Aplicando custo oculto:', opcao.custo_oculto);
+        if (opcao.custo_oculto.tipo === 'energia') {
+            await this.modificarEnergia(opcao.custo_oculto.valor);
+        }
     }
 
     // Processar mudança (no escuro)
@@ -890,14 +910,28 @@ if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
     } else if (opcao.teste) {
         this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
     } else {
-        // this.secaoAtual AINDA é a origem (ex: 12)
-        // opcao.secao é o destino (ex: 25)
         await this.mostrarSecao(opcao.secao, this.secaoAtual);
     }
+    
     // Fade in
     overlay.classList.remove('active');
     setTimeout(() => overlay.remove(), 1200);
 }
+```
+
+---
+
+## 🔍 Explicação Visual
+```
+[SOM TOCA] 
+    ↓
+[CUSTO OCULTO É APLICADO] ← ⭐ ADICIONE AQUI
+    ↓
+[VERIFICA SE REQUER ITEM]
+    ↓
+[VERIFICA SE TEM BATALHA/TESTE]
+    ↓
+[MOSTRA NOVA SEÇÃO]
 
     async processarBatalhaAutomatica(secao) {
         const playerDocRef = doc(db, "players", this.userId);
@@ -951,6 +985,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
