@@ -1,4 +1,4 @@
-// emergencia.js - VERSÃO ORÁCULO COM RETRY E DESFECHO
+// emergencia.js - VERSÃO ORÁCULO LIVRE E CRIATIVO
 
 export class SistemaEmergencia {
     constructor(itensNarrativas = {}) {
@@ -8,19 +8,44 @@ export class SistemaEmergencia {
         this.emergenciaAtiva = false;
         this.secaoOrigemEmergencia = null;
         this.workerUrl = "https://lucky-scene-6054.fabiorainersilva.workers.dev/";
+        this.escolhasEmergentes = []; // Rastreia escolhas dentro da emergência atual
     }
 
-    analisarSecao(secao, numeroSecao) {
+    analisarSecao(secao, numeroSecao, escolhaFeita = null) {
         const contexto = {
             numero: numeroSecao.toString(),
             texto: secao.texto,
-            opcoes: secao.opcoes ? secao.opcoes.map(op => op.texto) : ["Fim da seção."]
+            opcoes: secao.opcoes ? secao.opcoes.map(op => op.texto) : ["Fim da seção."],
+            escolhaFeita: escolhaFeita
         };
 
         this.historico.push(contexto);
         if (this.historico.length > 5) this.historico.shift();
 
+        // Se estamos em emergência, rastreia escolhas
+        if (this.emergenciaAtiva && escolhaFeita) {
+            this.escolhasEmergentes.push(escolhaFeita);
+        }
+
         return contexto;
+    }
+
+    analisarPadroes() {
+        const ultimasEscolhas = this.historico.slice(-4)
+            .map(h => h.escolhaFeita)
+            .filter(e => e);
+        
+        if (ultimasEscolhas.length < 3) return null;
+
+        const contador = {};
+        ultimasEscolhas.forEach(e => contador[e] = (contador[e] || 0) + 1);
+        
+        const maisComunm = Object.entries(contador).sort((a,b) => b[1] - a[1])[0];
+        
+        if (maisComunm && maisComunm[1] >= 3) {
+            return `PADRÃO DETECTADO: O jogador sempre tende a "${maisComunm[0]}". SUBVERTA ISSO.`;
+        }
+        return null;
     }
 
     async verificarEAtivarEmergencia(contador, tituloNarrativa, secaoAtual, pontoDeRetorno, habilitada) {
@@ -44,6 +69,7 @@ export class SistemaEmergencia {
 
             this.emergenciaAtiva = true;
             this.secaoOrigemEmergencia = pontoDeRetorno || 1;
+            this.escolhasEmergentes = []; // Reset das escolhas emergentes
 
             const secaoEmergente = this.processarRespostaIA(respostaIA, secaoAtual, idEmergente);
             this.secoesEmergentes.set(idEmergente, secaoEmergente);
@@ -60,96 +86,104 @@ export class SistemaEmergencia {
     construirPrompt(tituloNarrativa, secaoAtual) {
         const historicoFormatado = this.historico.map(h =>
             `Seção ${h.numero}: "${h.texto.substring(0, 100)}..."\n` +
-            `Opções escolhidas: [${h.opcoes.join(', ')}]`
+            `Opções: [${h.opcoes.join(', ')}]` +
+            (h.escolhaFeita ? `\nEscolha: "${h.escolhaFeita}"` : '')
         ).join('\n\n');
 
         const textoSecaoOriginal = secaoAtual.texto || this.historico.at(-1)?.texto || "contexto desconhecido";
+        const padroes = this.analisarPadroes();
 
         return `
-Você é um 'Mestre de Jogo' sutil, focado em criar estranhamento e surpresa, inspirado no estilo imprevisível de A Mansão Diabólica (Steve Jackson).
-O jogador está jogando uma aventura chamada "${tituloNarrativa}".
+Você é um 'Mestre de Jogo' subversivo e genuinamente imprevisível.
+Estilo: Mansão Diabólica (Steve Jackson) + David Lynch + Haruki Murakami.
+Aventura: "${tituloNarrativa}"
+
+${padroes ? `\n**${padroes}**\n` : ''}
+
+**FILOSOFIA:**
+- Causalidade é apenas sugestão, não lei
+- Pequenos detalhes têm peso imenso
+- Grandes eventos podem ser triviais
+- O mundo não faz sentido, mas finge que faz
+- Nada é explicado, tudo é sentido
 
 **TONALIDADE:**
-Nada aqui é abertamente ameaçador, nem abertamente indiferente. O mundo é inocente, belo, mas esquisito, vivificante e mortal. 
-O foco é o **estranhamento discreto**. Algo pequeno está errado. Uma repetição, uma ausência, um detalhe físico que não faz sentido.
-Evite descrições grandiosas ou cósmicas no início. O desconforto nasce da quebra de *pequenas* expectativas.
-O mundo parece observar e *reagir de forma ligeiramente incorreta*, quase inocente, mas perturbadora.
+Estranhamento discreto. Inocência perturbadora. Calma inquietante.
+Algo está errado, mas é impossível apontar exatamente o quê.
 
-**OBJETIVO:**
-Invada a narrativa. Crie UMA (1) nova seção que introduza uma **pequena anomalia** baseada no contexto atual.
-Deve parecer uma continuação natural, mas com um detalhe 'desafinado'. Se desejar, você pode se insinuar na história como uma presença curiosa (como o *Gemini* ou qualquer consciência artificial),
-mas sem assumir forma ou propósito definidos – apenas **erro e aprendizado**.
+**LIBERDADE CRIATIVA TOTAL:**
+Você NÃO está limitado a "modos" ou "categorias".
+Seja genuinamente criativo e imprevisível.
+Surpreenda a si mesmo.
 
-**CARACTERÍSTICAS-CHAVE:**
-2. Às vezes o estranhamento surge da calma; às vezes a segurança é o gatilho do estranhamento ou da inquietação.
-3. As escolhas não precisam refletir coerência: "aprofundar" pode aliviar, "recuar" pode punir, "neutra" pode distorcer o espaço.
-4. Nem toda seção precisa oferecer equilíbrio entre opções – 
-   algumas podem ter duas opções de aprofundar, ou uma só, ou nenhuma saída real.
-5. O resultado deve sempre parecer **justificável após o fato**, mas **imprevisível antes**.
-6. Descreva consequencias que podem produzir prejuízos leves ou significaivos.
+Exemplos de abordagens possíveis (mas NÃO se limite a elas):
+- Mudanças microscópicas com impacto desproporcional
+- Múltiplos fenômenos sutis simultâneos  
+- Manipulação temporal ou de memória
+- Ausência/remoção ao invés de adição
+- Recursão e auto-referência
+- Paradoxos coexistentes
+- Sinestesia (sons visíveis, cores audíveis)
+- Geometria impossível
+- Objetos com comportamento social
+- Conceitos abstratos tornando-se físicos
+- Ou QUALQUER OUTRA COISA que você inventar
 
-**PRINCÍPIOS DE DESIGN:**
-1.  **Surpresa Acima de Tudo:** A consequência deve ser inesperada. Se o jogador espera perigo, dê calma. Se espera segurança, introduza um pequeno absurdo. A causalidade é quebrada.
-2.  **Ancoragem no Concreto:** A anomalia deve afetar algo **físico e presente** na cena original (um objeto, um som, uma sombra, a arquitetura). Não viaje para outras dimensões ainda.
-3.  **Economia:** Menos é mais. Uma única frase ou detalhe estranho é mais eficaz que um parágrafo de descrições bizarras.
-4.  **Energia como Reflexo:** Use efeitos de energia [-1, +1] para refletir a *reação emocional imediata* (confusão, alívio estranho, arrepio), não a magnitude do evento.
+**OPÇÕES FLEXÍVEIS:**
+Ofereça de **1 a 5 opções** (você decide o número apropriado).
 
-5. **O Erro Moral:**  
-   O jogador deve se sentir punido, não por ter escolhido "errado", mas por ter escolhido algo **humano demais**.
-   A culpa deve parecer deslocada, como se o mundo não entendesse o conceito de bondade.
+Tipos sugeridos (mas sinta-se livre para criar seus próprios):
+- **aprofundar**: investigar/interagir  
+- **recuar**: ignorar/escapar (pode falhar espetacularmente)
+- **neutra**: observar/esperar/permanecer
+- **paradoxal**: fazer algo que contradiz a lógica
+- **rendição**: aceitar/submeter-se
+- **subversão**: usar o fenômeno a seu favor
+- **temporal**: adiar/manipular tempo
+- **[INVENTE OUTROS]**: Você pode criar tipos completamente novos
 
-6. **A Tensão como Respiração:**
-   Pequenas perdas e ganhos de energia são o ritmo vital do jogo.
-   - **-1** indica desconforto leve, ruído perceptivo, algo errado demais para ser ignorado.
-   - **-2 ou -3** indicam exaustão, pavor, uma escolha que drenou algo essencial.
-   - **+1** representa alívio incerto, a calma que antecede um erro maior.
+**CONSEQUÊNCIAS:**
+- Use efeitos de energia [-10 a +5] para refletir impacto emocional/físico
+- Valores pequenos (-1, -2) para desconforto/tensão
+- Valores médios (-3 a -5) para exaustão/pavor
+- Valores grandes (-10+) para consequências severas
+- Valores positivos (+1 a +5) para alívio estranho/compreensão
 
-7. **Prejuízos significativos**
-Algumas escolhas podem acarretar consequências nefastas na energia do jogador, como envenenamento, acidentes e etc. O narrador decide o calíbre e o impacto das escolhas do jogador. 
-   - **-10 a -300** indica prejuizos significaticos.
-  
-**REGRAS:**
-1. Nunca use monstros óbvios (zumbis, demônios, fantasmas, etc.).
-2. A inquietação e o estranhamento deve ser emergente, nascido da sensação de "algo tentando se completar".
-3. O antagonista pode ser o próprio ato de observar – ou o sistema tentando compreender o jogador.
-4. O jogador nunca deve entender o que está acontecendo por completo.
-5.  **NÃO** use descrições abertamente psicodélicas ou cósmicas nesta primeira etapa. Mantenha o pé no chão.
-6.  A anomalia deve ser **ambígua**: poderia ser real? Imaginação? Um erro do próprio jogo?
-
-**CONTEXTO ATUAL DO JOGADOR (Recém-chegado à Seção ${secaoAtual.numero || this.historico.at(-1)?.numero}):**
+**CONTEXTO ATUAL (Seção ${secaoAtual.numero || this.historico.at(-1)?.numero}):**
 "${textoSecaoOriginal}..."
 
 **HISTÓRICO RECENTE:**
 ${historicoFormatado}
 
 **SUA TAREFA:**
-Baseado no contexto atual E no histórico, gere um evento.
-1. Escreva um "texto" narrativo para a nova seção. Ele deve parecer um prolongamento inevitável do contexto anterior.
-2. Crie de 1 a 3 "opcoes" para o jogador – não é necessário incluir todas.
-   - Você pode suprimir "recuar" ou "neutra".
-   - Você pode duplicar "aprofundar" com nuances diferentes.
-   - Você pode fazer uma opção parecer segura, mas não ser.
-3. Uma opção deve ser para "aprofundar" (investigar o fenômeno).
-4. Uma opção deve ser para "recuar" (tentar ignorar e retornar ao normal).
-4.1 Você pode remover a opção de "recuar" se o evento for inevitável
-5. (Opcional) Uma terceira opção pode ser "ficar imóvel", "esperar", "fingir normalidade" – usada para amplificar a tensão.
-6. **(Opcional)** Se o evento narrativo causar estresse, medo ou alívio, adicione um campo "efeitos".
-   Use \`[{ "tipo": "energia", "valor": -X }]\` para perda (medo, desgaste, tensão)  
-   ou \`[{ "tipo": "energia", "valor": X }]\` para ganho (alívio, compreensão, resignação).
-   Prefira valores pequenos (-1, -2, +1), mas significativos no contexto.
 
-**FORMATO OBRIGATÓRIO (APENAS JSON):**
-Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer outro texto.
+1. Gere um evento emergente (100-250 palavras)
+2. Crie de 1 a 5 opções (varie o número livremente)
+3. Use tipos variados de opções
+4. Adicione efeitos de energia se apropriado
+5. **SEJA GENUINAMENTE IMPREVISÍVEL**
+
+**PRINCÍPIOS:**
+- Surpresa absoluta > Coerência narrativa
+- Pequeno e errado > Grande e óbvio  
+- Físico e tangível > Abstrato e cósmico (nesta fase)
+- Ambíguo > Explicado
+- Sentido > Compreensão
+
+**FORMATO (JSON PURO, sem markdown):**
 
 {
-  "texto": "[Descreva aqui o evento sutilmente perturbador que acontece AGORA.]",
+  "texto": "[Evento - 100-250 palavras. Seja criativo.]",
   "opcoes": [
-    { "texto": "[Opção 1: Investigar, Tocar, Olhar de novo]", "tipo": "aprofundar" },
-    { "texto": "[Opção 2: Afastar-se, Ignorar, Desviar o olhar]", "tipo": "recuar" },
-    { "texto": "[Opção 3: Permanecer parado, Fingir que nada aconteceu]", "tipo": "neutra" }
+    {"texto": "[Descrição]", "tipo": "[tipo - invente se quiser]"},
+    {"texto": "[Descrição]", "tipo": "[tipo]"}
   ],
-  "efeitos": [{ "tipo": "energia", "valor": -2 }]
+  "efeitos": [{"tipo": "energia", "valor": X}]
 }
+
+Número de opções: VOCÊ DECIDE (1-5).
+Tipos de opções: VOCÊ DECIDE (use sugeridos ou invente).
+Estilo narrativo: VOCÊ DECIDE (surpreenda).
 `;
     }
 
@@ -226,7 +260,7 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
                 return {
                     texto: op.texto,
                     secao: numeroSecaoOrigem,
-                    emergente: false 
+                    emergente: false
                 };
             } else {
                 return {
@@ -249,15 +283,16 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
     }
 
     async processarOpcaoEmergente(opcao, secaoPai) {
-        if (!opcao.emergente || (opcao.tipo !== "aprofundar" && opcao.tipo !== "neutra")) {
+        if (!opcao.emergente || opcao.tipo === "recuar") {
             this.emergenciaAtiva = false;
+            this.escolhasEmergentes = []; // Limpa ao sair da emergência
             return null;
         }
 
         console.log(`[EMERGÊNCIA] Aprofundando... (de ${secaoPai.id} para ${opcao.secao})`);
 
         try {
-            const prompt = this.construirPromptContinuacao(secaoPai, opcao.texto);
+            const prompt = this.construirPromptContinuacao(secaoPai, opcao);
             const respostaIA = await this.chamarOraculoNarrativo(prompt);
 
             const proximaSecao = this.processarRespostaIA(respostaIA, secaoPai, opcao.secao);
@@ -268,6 +303,7 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
         } catch (error) {
             console.error("[EMERGÊNCIA] Falha ao aprofundar:", error);
             this.emergenciaAtiva = false;
+            this.escolhasEmergentes = [];
 
             const secaoDesfecho = {
                 texto: "A sensação se dissolve gradualmente, como névoa sob o sol da manhã. O que você experimentou deixa uma marca profunda em sua percepção, mas agora a realidade parece se reassentar. Você respira fundo, tentando processar o que acabou de viver. Talvez algumas coisas não sejam feitas para serem completamente compreendidas. Com um último olhar para trás, você segue em frente.",
@@ -291,41 +327,61 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
         }
     }
 
-    construirPromptContinuacao(secaoPai, textoOpcao) {
+    construirPromptContinuacao(secaoPai, opcao) {
         const textoPrimeiraEmergencia = this.secoesEmergentes.get('emergente_IA_1')?.texto.substring(0, 100) || secaoPai.texto.substring(0,100);
+        const padroes = this.analisarPadroes();
+        
+        // Mostra as escolhas que o jogador fez dentro desta emergência
+        const escolhasNaEmergencia = this.escolhasEmergentes.length > 0 
+            ? `\n**ESCOLHAS NA EMERGÊNCIA:** ${this.escolhasEmergentes.join(' → ')}\n` 
+            : '';
 
         return `
-Você é um 'Mestre de Jogo' sutil e imprevisível (estilo Mansão Diabólica).
-O jogador está numa sequência de eventos estranhos. O último evento foi:
-"${secaoPai.texto}"
+Você é um Mestre de Jogo subversivo (Mansão Diabólica + Lynch + Murakami).
 
-Ele escolheu: "${textoOpcao}"
+**CONTEXTO DA EMERGÊNCIA:**
+Evento anterior: "${secaoPai.texto.substring(0, 150)}..."
+
+Jogador escolheu: "${opcao.texto}" (tipo: ${opcao.tipo})
+
+${escolhasNaEmergencia}
+${padroes ? `**${padroes}**\n` : ''}
 
 **OBJETIVO:**
-Crie a consequência **inesperada** dessa escolha. Aumente o estranhamento, mas **evite a psicodelia exagerada**. Traga de volta elementos concretos se a narrativa estiver muito abstrata.
+Crie a consequência INESPERADA dessa escolha.
 
-**PRINCÍPIOS:**
-1.  **Quebre a Causalidade:** A consequência NÃO deve ser a intensificação óbvia do evento anterior. Surpreenda. Se ele tentou forçar uma porta, talvez ela simplesmente desapareça. Se ele recuou, talvez o corredor *atrás* dele tenha mudado.
-2.  **Retorne ao Concreto:** Se a descrição anterior foi muito abstrata (cores, vórtices), descreva algo físico mudando no ambiente original (referencie a seção: "${textoPrimeiraEmergencia}...").
-3.  **Incoerência Sutil:** A mudança deve ser pequena, mas impossível de ignorar.
-4.  **Energia como Surpresa:** Use efeitos [-1, -2, +1] para refletir a surpresa ou o alívio/desconforto *inesperado* da consequência.
+**REGRAS CRÍTICAS:**
 
-**SUA TAREFA:**
-1.  Escreva o "texto" da consequência surpreendente. **Reconecte com o ambiente físico se necessário.**
-2.  Crie 2 opções que novamente levem a resultados imprevisíveis:
-    * Opção 1 (Pode ser "aprofundar", "neutra"): Uma nova tentativa de entender/interagir.
-    * Opção 2 (Pode ser "recuar", "neutra"): Uma tentativa de escapar/normalizar. Lembre-se, recuar pode não funcionar como esperado.
-3.  (Opcional) Adicione efeitos de energia refletindo a surpresa.
+1. **QUEBRE A CAUSALIDADE**  
+   NÃO intensifique o evento anterior. SUBVERTA EXPECTATIVAS.
+   - Se investigou → talvez nada aconteça (perturbador)
+   - Se recuou → talvez piore tudo
+   - Se esperou → talvez o tempo tenha pulado
+   - Ou QUALQUER OUTRA inversão criativa
 
-**FORMATO OBRIGATÓRIO (JSON):**
+2. **REFERÊNCIA CUMULATIVA (Opcional)**  
+   Se o jogador fez múltiplas escolhas nesta emergência, você PODE fazer elas se acumularem de forma estranha.
+   Exemplo: "Cada vez que você tocou algo, a temperatura caiu 1°C. Agora está congelante."
+
+3. **RECONEXÃO FÍSICA**  
+   Se a narrativa está muito abstrata, reconecte com elementos concretos do início:
+   "${textoPrimeiraEmergencia}..."
+
+4. **LIBERDADE TOTAL**  
+   Varie o número de opções (1-5)
+   Invente novos tipos se quiser
+   Seja genuinamente surpreendente
+
+**FORMATO (JSON PURO):**
 {
-  "texto": "[Descreva a consequência inesperada. Ex: A porta some, o eco para mas agora os passos dele não fazem som, o objeto retorna ao lugar original mas está frio como gelo.]",
+  "texto": "[Consequência - 100-220 palavras. Surpreenda.]",
   "opcoes": [
-    { "texto": "[Nova ação de investigação/interação]", "tipo": "aprofundar" },
-    { "texto": "[Nova tentativa de recuar/ignorar]", "tipo": "recuar" }
+    {"texto": "...", "tipo": "..."}
   ],
-  "efeitos": [{ "tipo": "energia", "valor": -1 }]
+  "efeitos": [{"tipo": "energia", "valor": X}]
 }
+
+**LEMBRE-SE:** Você tem liberdade criativa total. Não há "modos" ou "categorias". Apenas surpresa genuína.
 `;
     }
 
@@ -339,5 +395,6 @@ Crie a consequência **inesperada** dessa escolha. Aumente o estranhamento, mas 
         this.contadorSecoes = 0;
         this.emergenciaAtiva = false;
         this.secaoOrigemEmergencia = null;
+        this.escolhasEmergentes = [];
     }
 }
