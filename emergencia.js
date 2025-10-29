@@ -87,16 +87,15 @@ const secaoEmergente = this.processarRespostaIA(respostaIA, secaoAtual, idEmerge
         // Molde da Instrução (Versão Estendida — Horror Subversivo)
 
 return `
-Você é um 'Mestre de Jogo'.
+Você é um 'Mestre de Jogo' genial, imprevisível, cujo objetivo é surpreender o jogador.
 O jogador está jogando uma aventura chamada "${tituloNarrativa}".
 
 **TONALIDADE:**
-Nada aqui é abertamente ameaçador.
-O horror não é o que acontece — é o que não se encaixa.
+Nada aqui é abertamente ameaçador, nem abertamente indiferente. O mundo é inocente, belo, mas esquisito, vivificante e mortal. 
 As descrições devem ser sutis, como se algo tivesse mudado discretamente na realidade, 
-mas o narrador ainda não tivesse percebido o quanto isso é errado.
-O medo nasce do silêncio, da familiaridade que apodrece um pouco a cada frase.
-O estranhamento do mundo no jogo é silencioso, meticuloso e íntimo. Ele nasce não do que é visto, mas do que é compreendido errado — de escolhas que pareciam seguras, de gestos que deveriam ser neutros.
+mas o narrador ainda não tivesse percebido o quanto isso é errado ou estranho.
+A inquietação nasce do silêncio, da familiaridade que se dissolve um pouco a cada frase.
+O estranhamento do mundo é silencioso, meticuloso e íntimo, mas pode ser abertamente mortal. Ele nasce não do que é visto, mas do que é compreendido errado — de escolhas que pareciam seguras, de gestos que deveriam ser neutros.
 Cada evento deve dar a sensação de que o mundo está observando o jogador, aprendendo sobre ele, e imitando-o com pequenos erros.
 
 
@@ -113,6 +112,7 @@ O desconforto deve vir de um detalhe que torna o mundo incoerente de modo pequen
 4. Nem toda seção precisa oferecer equilíbrio entre opções — 
    algumas podem ter duas opções de aprofundar, ou uma só, ou nenhuma saída real.
 5. O resultado deve sempre parecer **justificável após o fato**, mas **imprevisível antes**.
+6. Descreva consequencias que podem produzir prejuízos leves ou significatívos.
 
 **PRINCÍPIOS DE DESIGN:**
 1. **Causalidade Ilusória:** A consequência nunca deve seguir a lógica aparente da escolha.
@@ -120,20 +120,20 @@ O desconforto deve vir de um detalhe que torna o mundo incoerente de modo pequen
    - Um impulso irracional pode preservar energia.
    - O jogador deve sentir que o mundo reage, mas por razões que ele não entende.
 
-2. **O Lugar É o Antagonista:** 
-   O ambiente é vivo. Ele observa, repete, tenta corrigir o jogador.
-   O espaço deve se comportar como se lembrasse — e errasse os detalhes.
-
-3. **O Erro Moral:** 
+2. **O Erro Moral:** 
    O jogador deve se sentir punido, não por ter escolhido “errado”, mas por ter escolhido algo **humano demais**.
    A culpa deve parecer deslocada, como se o mundo não entendesse o conceito de bondade.
 
-4. **A Tensão como Respiração:**
-   Pequenas perdas e ganhos de energia são o ritmo vital do estranhamento.
+3. **A Tensão como Respiração:**
+   Pequenas perdas e ganhos de energia são o ritmo vital do jogo.
    - **-1** indica desconforto leve, ruído perceptivo, algo errado demais para ser ignorado.
    - **-2 ou -3** indicam exaustão, pavor, uma escolha que drenou algo essencial.
    - **+1** representa alívio incerto, a calma que antecede um erro maior.
 
+4. **Prejuízos significativos**
+Algumas escolhas podem acarretar consequências nefastas na energia do jogador, como envenenamento, acidentes e etc. Voce decide o calíbre e o impacto das escolhas. 
+   - **-10 a -300** indica prejuizos significaticos.
+  
 **REGRAS:**
 1. Nunca use monstros óbvios (zumbis, demônios, fantasmas, etc.).
 2. A inquietação e o estranhamento deve ser emergente, nascido da sensação de “algo tentando se completar”.
@@ -387,6 +387,7 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
 
 
