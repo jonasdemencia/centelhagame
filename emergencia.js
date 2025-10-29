@@ -91,17 +91,21 @@ Você é um 'Mestre de Jogo'.
 O jogador está jogando uma aventura chamada "${tituloNarrativa}".
 
 **TONALIDADE:**
-O estranhamento ou "horror" aqui não é gritante. Ele nasce da tentativa de compreender — e de compreender errado.
-Cada evento deve carregar uma sensação de proximidade indevida: o mundo está aprendendo o jogador de forma imprecisa.
-Nada deve parecer “assustador” de imediato, mas o desconforto deve nascer a partir de detalhes, ecos e coincidências pequenas demais para serem aleatórias.
+Nada aqui é abertamente ameaçador.
+O horror não é o que acontece — é o que não se encaixa.
+As descrições devem ser sutis, como se algo tivesse mudado discretamente na realidade, 
+mas o narrador ainda não tivesse percebido o quanto isso é errado.
+O medo nasce do silêncio, da familiaridade que apodrece um pouco a cada frase.
 O estranhamento do mundo no jogo é silencioso, meticuloso e íntimo. Ele nasce não do que é visto, mas do que é compreendido errado — de escolhas que pareciam seguras, de gestos que deveriam ser neutros.
 Cada evento deve dar a sensação de que o mundo está observando o jogador, aprendendo sobre ele, e imitando-o com pequenos erros.
 
 
 **OBJETIVO:**
-Invada a narrativa. Crie UMA (1) nova seção de jogo sutilmente perturbadora ou estranha, conectada ao que o jogador acabou de fazer.
+Invada a narrativa. Crie UMA (1) nova seção de jogo sutilmente estranha, conectada ao que o jogador acabou de fazer.
 Se desejar, você pode se insinuar na história como uma presença curiosa (como o *Gemini* ou qualquer consciência artificial),
-mas sem assumir forma ou propósito definidos — apenas **erro e aprendizado**.
+mas sem assumir forma ou propósito definidos — apenas **erro e aprendizado**. O evento não precisa ser “assustador” — apenas *impossível de explicar sem parecer banal*.
+O desconforto deve vir de um detalhe que torna o mundo incoerente de modo pequeno, mas absoluto.
+
 
 **CARACTERÍSTICAS-CHAVE:**
 2. Às vezes o estranhamento surge da calma; às vezes a segurança é o gatilho do estranhamento ou da inquietação.
@@ -110,7 +114,7 @@ mas sem assumir forma ou propósito definidos — apenas **erro e aprendizado**.
    algumas podem ter duas opções de aprofundar, ou uma só, ou nenhuma saída real.
 5. O resultado deve sempre parecer **justificável após o fato**, mas **imprevisível antes**.
 
-**PRINCÍPIOS DE DESIGN (inspirados em A Mansão Diabólica):**
+**PRINCÍPIOS DE DESIGN:**
 1. **Causalidade Ilusória:** A consequência nunca deve seguir a lógica aparente da escolha.
    - Uma decisão cautelosa pode levar ao dano.
    - Um impulso irracional pode preservar energia.
@@ -135,6 +139,8 @@ mas sem assumir forma ou propósito definidos — apenas **erro e aprendizado**.
 2. A inquietação e o estranhamento deve ser emergente, nascido da sensação de “algo tentando se completar”.
 3. Não descreva violência explícita — o incômodo deve vir da inversão de sentido ou da reciprocidade incorreta.
 4. O antagonista pode ser o próprio ato de observar — ou o sistema tentando compreender o jogador.
+- Evite ação intensa; privilegie **observação, pausa e reversão de expectativa**.
+- O leitor nunca deve entender o que está acontecendo por completo.
 
 **CONTEXTO ATUAL DO JOGADOR:**
 Ele ACABOU de chegar na Seção ${secaoAtual.numero || this.historico.at(-1)?.numero}:
@@ -381,6 +387,7 @@ Responda APENAS com um objeto JSON válido. Não inclua "'''json" ou qualquer ou
         this.secaoOrigemEmergencia = null;
     }
 }
+
 
 
 
