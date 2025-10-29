@@ -272,12 +272,13 @@ ${historicoFormatado}
     }
 
     async processarOpcaoEmergente(opcao, secaoPai) {
-        if (!opcao.emergente || opcao.tipo === "recuar") {
-            this.emergenciaAtiva = false;
-            this.escolhasEmergentes = [];
-            this.profundidadeAtual = 0;
-            return null;
-        }
+    if (!opcao.emergente || opcao.tipo === "recuar") {
+        this.emergenciaAtiva = false;
+        this.escolhasEmergentes = [];
+        this.profundidadeAtual = 0;
+        // 🔹 IMPORTANTE: Não retorna aqui, para que narrativas.js possa resetar contador
+        return null;
+    }
 
         this.profundidadeAtual++;
         console.log(`[EMERGÊNCIA] Profundidade: ${this.profundidadeAtual}/5`);
@@ -418,3 +419,4 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
         this.profundidadeAtual = 0;
     }
 }
+
