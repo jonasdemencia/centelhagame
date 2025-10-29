@@ -1,4 +1,4 @@
-// emergencia.js - VERSÃO ORÁCULO LIVRE E CRIATIVO
+// emergencia.js - VERSÃO ANCORADA E COM DESFECHOS
 
 export class SistemaEmergencia {
     constructor(itensNarrativas = {}) {
@@ -8,7 +8,8 @@ export class SistemaEmergencia {
         this.emergenciaAtiva = false;
         this.secaoOrigemEmergencia = null;
         this.workerUrl = "https://lucky-scene-6054.fabiorainersilva.workers.dev/";
-        this.escolhasEmergentes = []; // Rastreia escolhas dentro da emergência atual
+        this.escolhasEmergentes = [];
+        this.profundidadeAtual = 0; // Rastreia profundidade da emergência
     }
 
     analisarSecao(secao, numeroSecao, escolhaFeita = null) {
@@ -22,7 +23,6 @@ export class SistemaEmergencia {
         this.historico.push(contexto);
         if (this.historico.length > 5) this.historico.shift();
 
-        // Se estamos em emergência, rastreia escolhas
         if (this.emergenciaAtiva && escolhaFeita) {
             this.escolhasEmergentes.push(escolhaFeita);
         }
@@ -69,7 +69,8 @@ export class SistemaEmergencia {
 
             this.emergenciaAtiva = true;
             this.secaoOrigemEmergencia = pontoDeRetorno || 1;
-            this.escolhasEmergentes = []; // Reset das escolhas emergentes
+            this.escolhasEmergentes = [];
+            this.profundidadeAtual = 1; // Reset profundidade
 
             const secaoEmergente = this.processarRespostaIA(respostaIA, secaoAtual, idEmergente);
             this.secoesEmergentes.set(idEmergente, secaoEmergente);
@@ -94,96 +95,93 @@ export class SistemaEmergencia {
         const padroes = this.analisarPadroes();
 
         return `
-Você é um 'Mestre de Jogo' subversivo e genuinamente imprevisível.
-Estilo: Mansão Diabólica (Steve Jackson) + David Lynch + Haruki Murakami.
+Você é um 'Mestre de Jogo' que expande narrativas de forma COERENTE e ANCORADA.
 Aventura: "${tituloNarrativa}"
 
 ${padroes ? `\n**${padroes}**\n` : ''}
 
-**FILOSOFIA:**
-- Causalidade é apenas sugestão, não lei
-- Pequenos detalhes têm peso imenso
-- Grandes eventos podem ser triviais
-- O mundo não faz sentido, mas finge que faz
-- Nada é explicado, tudo é sentido
+**MISSÃO CRÍTICA:**
+Você vai expandir a narrativa atual de UMA destas 3 formas (escolha a mais apropriada):
 
-**TONALIDADE:**
-Estranhamento discreto. Inocência perturbadora. Calma inquietante.
-Algo está errado, mas é impossível apontar exatamente o quê.
+**MODO 1: EXPANSÃO NATURAL (Preferencial - 60% dos casos)**
+- A seção continua NORMALMENTE, mas com mais detalhes/opções
+- Exemplo: Jogador está em sala → você adiciona "Há uma porta escondida atrás do tapete"
+- Não muda o tom, não adiciona estranhamento
+- Apenas EXPANDE o que já existe com novos elementos concretos
+- Use este modo se o contexto for mundano/normal
 
-**LIBERDADE CRIATIVA TOTAL:**
-Você NÃO está limitado a "modos" ou "categorias".
-Seja genuinamente criativo e imprevisível.
-Surpreenda a si mesmo.
+**MODO 2: DETALHE PERTURBADOR (30% dos casos)**
+- Um PEQUENO detalhe físico está errado
+- Exemplo: "A sombra da vela aponta para direção errada"
+- ANCORAGEM OBRIGATÓRIA: deve afetar algo CONCRETO já mencionado
+- Nada abstrato, cósmico ou surreal demais
+- Use este modo se quiser adicionar tensão sutil
 
-Exemplos de abordagens possíveis (mas NÃO se limite a elas):
-- Mudanças microscópicas com impacto desproporcional
-- Múltiplos fenômenos sutis simultâneos  
-- Manipulação temporal ou de memória
-- Ausência/remoção ao invés de adição
-- Recursão e auto-referência
-- Paradoxos coexistentes
-- Sinestesia (sons visíveis, cores audíveis)
-- Geometria impossível
-- Objetos com comportamento social
-- Conceitos abstratos tornando-se físicos
-- Ou QUALQUER OUTRA COISA que você inventar
+**MODO 3: EVENTO MENOR (10% dos casos)**
+- Algo pequeno ACONTECE (não apenas "está estranho")
+- Exemplo: "Um objeto cai da prateleira sozinho"
+- Deve ser físico, tangível, explicável (mesmo que estranho)
+- Use este modo apenas se fizer sentido narrativo
 
-**OPÇÕES FLEXÍVEIS:**
-Ofereça de **1 a 5 opções** (você decide o número apropriado).
+**REGRAS ABSOLUTAS:**
 
-Tipos sugeridos (mas sinta-se livre para criar seus próprios):
-- **aprofundar**: investigar/interagir  
-- **recuar**: ignorar/escapar (pode falhar espetacularmente)
-- **neutra**: observar/esperar/permanecer
-- **paradoxal**: fazer algo que contradiz a lógica
-- **rendição**: aceitar/submeter-se
-- **subversão**: usar o fenômeno a seu favor
-- **temporal**: adiar/manipular tempo
-- **[INVENTE OUTROS]**: Você pode criar tipos completamente novos
+1. **ANCORAGEM FÍSICA OBRIGATÓRIA**
+   - SEMPRE referencie elementos CONCRETOS da seção original
+   - Sala → descreva a sala
+   - Objeto → o que acontece com o objeto
+   - Pessoa → como a pessoa age
+   - NUNCA: "realidade se fragmenta", "dimensões colidem", "vazio cósmico"
 
-**CONSEQUÊNCIAS:**
-- Use efeitos de energia [-10 a +5] para refletir impacto emocional/físico
-- Valores pequenos (-1, -2) para desconforto/tensão
-- Valores médios (-3 a -5) para exaustão/pavor
-- Valores grandes (-10+) para consequências severas
-- Valores positivos (+1 a +5) para alívio estranho/compreensão
+2. **ESCALA CONTROLADA**
+   - Mudanças devem ser PEQUENAS
+   - Preferência: adicionar detalhes/opções sobre causar estranhamento
+   - Um detalhe errado > múltiplos impossíveis
+
+3. **COERÊNCIA NARRATIVA**
+   - Se a seção é sobre "entrar numa biblioteca" → fale da biblioteca
+   - Não leve para outros lugares/dimensões/abstrações
+   - Expanda o QUE JÁ EXISTE
+
+4. **TOM APROPRIADO**
+   - Se contexto é normal → seja normal (Modo 1)
+   - Se já há tensão → adicione detalhe sutil (Modo 2)
+   - Apenas se muito apropriado → evento menor (Modo 3)
+
+**PROIBIDO:**
+- ❌ Mudanças cósmicas/dimensionais
+- ❌ Múltiplos fenômenos simultâneos
+- ❌ Linguagem muito poética/abstrata
+- ❌ Desviar do local/contexto atual
+- ❌ "Realidade", "tempo", "espaço" como protagonistas
 
 **CONTEXTO ATUAL (Seção ${secaoAtual.numero || this.historico.at(-1)?.numero}):**
-"${textoSecaoOriginal}..."
+"${textoSecaoOriginal}"
 
-**HISTÓRICO RECENTE:**
+**HISTÓRICO:**
 ${historicoFormatado}
 
-**SUA TAREFA:**
+**INSTRUÇÕES FINAIS:**
 
-1. Gere um evento emergente (100-250 palavras)
-2. Crie de 1 a 5 opções (varie o número livremente)
-3. Use tipos variados de opções
-4. Adicione efeitos de energia se apropriado
-5. **SEJA GENUINAMENTE IMPREVISÍVEL**
+1. Escolha UM dos 3 modos
+2. Gere texto (80-180 palavras) - MENOR que o original
+3. Crie 2-5 opções (varie livremente)
+4. Inclua SEMPRE pelo menos uma opção que seja claramente "continuar normal"
+5. Efeitos de energia: apenas se apropriado (-2 a +2, raramente maior)
 
-**PRINCÍPIOS:**
-- Surpresa absoluta > Coerência narrativa
-- Pequeno e errado > Grande e óbvio  
-- Físico e tangível > Abstrato e cósmico (nesta fase)
-- Ambíguo > Explicado
-- Sentido > Compreensão
-
-**FORMATO (JSON PURO, sem markdown):**
+**FORMATO (JSON PURO):**
 
 {
-  "texto": "[Evento - 100-250 palavras. Seja criativo.]",
+  "modo": "expansao_natural" | "detalhe_perturbador" | "evento_menor",
+  "texto": "[Texto coerente e ancorado - 80-180 palavras]",
   "opcoes": [
-    {"texto": "[Descrição]", "tipo": "[tipo - invente se quiser]"},
-    {"texto": "[Descrição]", "tipo": "[tipo]"}
+    {"texto": "[Opção 1]", "tipo": "aprofundar"},
+    {"texto": "[Opção 2]", "tipo": "neutra"},
+    {"texto": "[Continuar normalmente]", "tipo": "recuar"}
   ],
   "efeitos": [{"tipo": "energia", "valor": X}]
 }
 
-Número de opções: VOCÊ DECIDE (1-5).
-Tipos de opções: VOCÊ DECIDE (use sugeridos ou invente).
-Estilo narrativo: VOCÊ DECIDE (surpreenda).
+**LEMBRE-SE:** Expansão natural > Detalhe perturbador > Evento menor (em ordem de preferência)
 `;
     }
 
@@ -209,7 +207,6 @@ Estilo narrativo: VOCÊ DECIDE (surpreenda).
             }
 
             const data = await response.json();
-            console.log("[ORÁCULO] Resposta bruta:", data);
 
             let jsonText = null;
 
@@ -218,7 +215,6 @@ Estilo narrativo: VOCÊ DECIDE (surpreenda).
             } else if (data.error) {
                 throw new Error(`Erro da Gemini: ${data.error.message}`);
             } else {
-                console.error("[ORÁCULO] Estrutura inesperada:", JSON.stringify(data, null, 2));
                 throw new Error("Resposta da Gemini em formato inesperado.");
             }
 
@@ -227,26 +223,17 @@ Estilo narrativo: VOCÊ DECIDE (surpreenda).
                 .replace(/```/g, "")
                 .trim();
 
-            console.log("[ORÁCULO] JSON extraído:", jsonText);
-
             if (!jsonText) {
                 throw new Error("Resposta vazia após extração.");
             }
 
-            try {
-                return JSON.parse(jsonText);
-            } catch (parseError) {
-                console.error("[ORÁCULO] Erro ao fazer parse do JSON:", parseError);
-                console.error("[ORÁCULO] Texto que tentei fazer parse:", jsonText);
-                throw new Error(`JSON inválido: ${parseError.message}`);
-            }
+            return JSON.parse(jsonText);
 
         } catch (err) {
             if (tentativa >= maxTentativas) {
                 throw err;
             }
             
-            console.log(`[ORÁCULO] Erro, tentando novamente... (${tentativa}/${maxTentativas})`);
             await new Promise(resolve => setTimeout(resolve, 2000));
             return this.chamarOraculoNarrativo(prompt, tentativa + 1);
         }
@@ -278,18 +265,34 @@ Estilo narrativo: VOCÊ DECIDE (surpreenda).
             efeitos: respostaJSON.efeitos || [],
             emergente: true,
             id: novoId,
-            origem: numeroSecaoOrigem
+            origem: numeroSecaoOrigem,
+            modo: respostaJSON.modo,
+            profundidade: this.profundidadeAtual
         };
     }
 
     async processarOpcaoEmergente(opcao, secaoPai) {
         if (!opcao.emergente || opcao.tipo === "recuar") {
             this.emergenciaAtiva = false;
-            this.escolhasEmergentes = []; // Limpa ao sair da emergência
+            this.escolhasEmergentes = [];
+            this.profundidadeAtual = 0;
             return null;
         }
 
-        console.log(`[EMERGÊNCIA] Aprofundando... (de ${secaoPai.id} para ${opcao.secao})`);
+        this.profundidadeAtual++;
+        console.log(`[EMERGÊNCIA] Profundidade: ${this.profundidadeAtual}/5`);
+
+        // FORÇAR CONVERGÊNCIA após 3-5 seções
+        if (this.profundidadeAtual >= 5) {
+            console.log('[EMERGÊNCIA] 🎯 PROFUNDIDADE MÁXIMA - Forçando convergência');
+            return this.gerarConvergenciaForcada();
+        }
+
+        // Entre 3-4 seções, aumentar chance de convergência
+        if (this.profundidadeAtual >= 3 && Math.random() < 0.4) {
+            console.log('[EMERGÊNCIA] 🎯 Convergência natural acionada');
+            return this.gerarConvergenciaForcada();
+        }
 
         try {
             const prompt = this.construirPromptContinuacao(secaoPai, opcao);
@@ -302,86 +305,102 @@ Estilo narrativo: VOCÊ DECIDE (surpreenda).
 
         } catch (error) {
             console.error("[EMERGÊNCIA] Falha ao aprofundar:", error);
-            this.emergenciaAtiva = false;
-            this.escolhasEmergentes = [];
-
-            const secaoDesfecho = {
-                texto: "A sensação se dissolve gradualmente, como névoa sob o sol da manhã. O que você experimentou deixa uma marca profunda em sua percepção, mas agora a realidade parece se reassentar. Você respira fundo, tentando processar o que acabou de viver. Talvez algumas coisas não sejam feitas para serem completamente compreendidas. Com um último olhar para trás, você segue em frente.",
-                opcoes: [{
-                    texto: "Continuar sua jornada",
-                    secao: this.secaoOrigemEmergencia,
-                    emergente: false
-                }],
-                origem: this.secaoOrigemEmergencia,
-                convergencia: true
-            };
-
-            const idDesfecho = `emergente_desfecho_${Date.now()}`;
-            this.secoesEmergentes.set(idDesfecho, secaoDesfecho);
-
-            return {
-                ativada: true,
-                idSecao: idDesfecho,
-                secao: secaoDesfecho
-            };
+            return this.gerarConvergenciaForcada();
         }
+    }
+
+    gerarConvergenciaForcada() {
+        this.emergenciaAtiva = false;
+        this.escolhasEmergentes = [];
+        this.profundidadeAtual = 0;
+
+        const textosDesfecho = [
+            "Aos poucos, tudo volta ao que era. O momento passou, deixando apenas uma impressão vaga na memória. Você segue em frente.",
+            
+            "A sensação se dissipa como fumaça. O que quer que tenha acontecido, agora acabou. A normalidade retorna.",
+            
+            "Você pisca, e percebe que está de volta. Tudo parece... comum novamente. Talvez sempre tenha sido."
+        ];
+
+        const secaoDesfecho = {
+            texto: textosDesfecho[Math.floor(Math.random() * textosDesfecho.length)],
+            opcoes: [{
+                texto: "Continuar",
+                secao: this.secaoOrigemEmergencia,
+                emergente: false
+            }],
+            origem: this.secaoOrigemEmergencia,
+            convergencia: true,
+            final_emergencia: true
+        };
+
+        const idDesfecho = `emergente_desfecho_${Date.now()}`;
+        this.secoesEmergentes.set(idDesfecho, secaoDesfecho);
+
+        return {
+            ativada: true,
+            idSecao: idDesfecho,
+            secao: secaoDesfecho
+        };
     }
 
     construirPromptContinuacao(secaoPai, opcao) {
         const textoPrimeiraEmergencia = this.secoesEmergentes.get('emergente_IA_1')?.texto.substring(0, 100) || secaoPai.texto.substring(0,100);
         const padroes = this.analisarPadroes();
         
-        // Mostra as escolhas que o jogador fez dentro desta emergência
         const escolhasNaEmergencia = this.escolhasEmergentes.length > 0 
             ? `\n**ESCOLHAS NA EMERGÊNCIA:** ${this.escolhasEmergentes.join(' → ')}\n` 
             : '';
 
         return `
-Você é um Mestre de Jogo subversivo (Mansão Diabólica + Lynch + Murakami).
+Você é um Mestre de Jogo que mantém COERÊNCIA narrativa.
 
-**CONTEXTO DA EMERGÊNCIA:**
-Evento anterior: "${secaoPai.texto.substring(0, 150)}..."
+**PROFUNDIDADE ATUAL: ${this.profundidadeAtual}/5**
+${this.profundidadeAtual >= 3 ? '⚠️ PRÓXIMO DO LIMITE - Considere convergir naturalmente' : ''}
+
+**CONTEXTO:**
+Texto anterior: "${secaoPai.texto.substring(0, 150)}..."
+Modo usado: ${secaoPai.modo || 'desconhecido'}
 
 Jogador escolheu: "${opcao.texto}" (tipo: ${opcao.tipo})
 
 ${escolhasNaEmergencia}
 ${padroes ? `**${padroes}**\n` : ''}
 
-**OBJETIVO:**
-Crie a consequência INESPERADA dessa escolha.
+**ANCORAGEM OBRIGATÓRIA:**
+Referência ao contexto original: "${textoPrimeiraEmergencia}..."
 
-**REGRAS CRÍTICAS:**
+**INSTRUÇÕES:**
 
-1. **QUEBRE A CAUSALIDADE**  
-   NÃO intensifique o evento anterior. SUBVERTA EXPECTATIVAS.
-   - Se investigou → talvez nada aconteça (perturbador)
-   - Se recuou → talvez piore tudo
-   - Se esperou → talvez o tempo tenha pulado
-   - Ou QUALQUER OUTRA inversão criativa
+1. **PRIORIDADE MÁXIMA: ANCORAGEM**
+   - Consequência deve se conectar ao ambiente/objetos FÍSICOS originais
+   - Se está ficando abstrato demais → volte ao concreto
+   - Exemplo: Em vez de "tempo se dobra" → "o relógio na parede parou"
 
-2. **REFERÊNCIA CUMULATIVA (Opcional)**  
-   Se o jogador fez múltiplas escolhas nesta emergência, você PODE fazer elas se acumularem de forma estranha.
-   Exemplo: "Cada vez que você tocou algo, a temperatura caiu 1°C. Agora está congelante."
+2. **PROFUNDIDADE ${this.profundidadeAtual}:**
+   ${this.profundidadeAtual < 3 ? '- Pode expandir normalmente' : ''}
+   ${this.profundidadeAtual >= 3 ? '- CONSIDERE oferecer opção clara de "sair/encerrar"' : ''}
+   ${this.profundidadeAtual >= 4 ? '- RECOMENDADO: faça próxima seção ser conclusão natural' : ''}
 
-3. **RECONEXÃO FÍSICA**  
-   Se a narrativa está muito abstrata, reconecte com elementos concretos do início:
-   "${textoPrimeiraEmergencia}..."
+3. **CONSEQUÊNCIA DA ESCOLHA:**
+   - Deve ser física e tangível
+   - Conectada ao contexto original
+   - Coerente com o modo anterior
 
-4. **LIBERDADE TOTAL**  
-   Varie o número de opções (1-5)
-   Invente novos tipos se quiser
-   Seja genuinamente surpreendente
+4. **OPÇÕES (2-4):**
+   - Se profundidade < 3: normal (aprofundar/neutra/recuar)
+   - Se profundidade >= 3: INCLUIR opção óbvia de "continuar/sair"
 
 **FORMATO (JSON PURO):**
 {
-  "texto": "[Consequência - 100-220 palavras. Surpreenda.]",
+  "modo": "expansao_natural" | "detalhe_perturbador" | "evento_menor",
+  "texto": "[80-150 palavras - ancorado e coerente]",
   "opcoes": [
-    {"texto": "...", "tipo": "..."}
+    {"texto": "...", "tipo": "..."},
+    ${this.profundidadeAtual >= 3 ? '{"texto": "[Opção clara de sair/continuar]", "tipo": "recuar"},' : ''}
   ],
   "efeitos": [{"tipo": "energia", "valor": X}]
 }
-
-**LEMBRE-SE:** Você tem liberdade criativa total. Não há "modos" ou "categorias". Apenas surpresa genuína.
 `;
     }
 
@@ -396,5 +415,6 @@ Crie a consequência INESPERADA dessa escolha.
         this.emergenciaAtiva = false;
         this.secaoOrigemEmergencia = null;
         this.escolhasEmergentes = [];
+        this.profundidadeAtual = 0;
     }
 }
