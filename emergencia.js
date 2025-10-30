@@ -242,12 +242,14 @@ ${historicoFormatado}
     processarRespostaIA(respostaJSON, secaoDeOrigem, novoId) {
         const numeroSecaoOrigem = this.secaoOrigemEmergencia;
 
+        // CÓDIGO CORRIGIDO
         const opcoesProcessadas = respostaJSON.opcoes.map(op => {
             if (op.tipo === "recuar") {
                 return {
                     texto: op.texto,
                     secao: numeroSecaoOrigem,
-                    emergente: false
+                    emergente: false,
+                    tipo: 'recuar' // 👈 ADICIONE ESTA LINHA
                 };
             } else {
                 return {
@@ -419,4 +421,5 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
         this.profundidadeAtual = 0;
     }
 }
+
 
