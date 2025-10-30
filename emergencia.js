@@ -9,7 +9,25 @@ export class SistemaEmergencia {
         this.secaoOrigemEmergencia = null;
         this.workerUrl = "https://lucky-scene-6054.fabiorainersilva.workers.dev/";
         this.escolhasEmergentes = [];
+        this.itensNarrativas = itensNarrativas; // 👈 ADICIONE ESTA LINHA
         this.profundidadeAtual = 0; // Rastreia profundidade da emergência
+    }
+
+    getItensAmostra() {
+        // Retorna uma string formatada de itens "seguros" para a IA usar.
+        // Estes são itens comuns/consumíveis do seu narrativas.js.
+        // Você pode editar esta lista para incluir qualquer item que queira permitir.
+        return `
+- "pequenabolsaouro" (uma pequena bolsa de moedas)
+- "latadesardinha" (comida enlatada)
+- "pocao-cura-menor" (um pequeno frasco de cura)
+- "tocha" (uma tocha apagada)
+- "corda" (um rolo de corda)
+- "esqueiro" (um isqueiro)
+- "canivete" (um pequeno canivete)
+- "municao-9mm" (algumas balas 9mm)
+- "velas" (um pequeno pacote de velas)
+        `;
     }
 
     analisarSecao(secao, numeroSecao, escolhaFeita = null) {
@@ -167,6 +185,14 @@ ${historicoFormatado}
 3. Crie 2-5 opções (varie livremente)
 4. Inclua SEMPRE pelo menos uma opção que seja claramente "continuar normal"
 5. Efeitos de energia: apenas se apropriado (-2 a +2, raramente maior)
+
+// VVVVVV ADICIONE ESTA NOVA REGRA 6 VVVVVV
+        6. **(RARO E OPCIONAL) CONCEDER ITEM:** Se o Modo 1 (Expansão Natural) for usado e fizer sentido contextual (ex: o jogador encontra algo num canto, num corpo, etc.), você pode adicionar um item.
+           - Use o formato: \`"efeitos": [{"tipo": "item", "item": "ID_DO_ITEM"}]\`
+           - **REGRA CRÍTICA:** Use APENAS IDs da lista abaixo. Não invente IDs.
+           - **Lista de Itens Válidos:**
+${itensAmostra}
+        // ^^^^^^ FIM DA NOVA REGRA 6 ^^^^^^
 
 **FORMATO (JSON PURO):**
 
@@ -394,6 +420,14 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
    - Se profundidade < 3: normal (aprofundar/neutra/recuar)
    - Se profundidade >= 3: INCLUIR opção óbvia de "continuar/sair"
 
+   // VVVVVV ADICIONE ESTA NOVA REGRA 5 VVVVVV
+        5. **(RARO E OPCIONAL) CONCEDER ITEM:** Se fizer sentido contextual (ex: a consequência da escolha é encontrar algo), você pode adicionar um item.
+           - Formato: \`"efeitos": [{"tipo": "item", "item": "ID_DO_ITEM"}]\`
+           - **REGRA CRÍTICA:** Use APENAS IDs da lista abaixo. Não invente IDs.
+           - **Lista de Itens Válidos:**
+${itensAmostra}
+        // ^^^^^^ FIM DA NOVA REGRA 5 ^^^^^^
+
 **FORMATO (JSON PURO):**
 {
   "modo": "expansao_natural" | "detalhe_perturbador" | "evento_menor",
@@ -421,5 +455,6 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
         this.profundidadeAtual = 0;
     }
 }
+
 
 
