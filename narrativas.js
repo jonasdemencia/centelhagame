@@ -243,6 +243,7 @@ class SistemaNarrativas {
 
     const pontoDeRetorno = secaoDeOrigem || numeroSecao;
 
+    // CÓDIGO CORRIGIDO
     const resultadoEmergencia = await this.sistemaEmergencia.verificarEAtivarEmergencia(
         this.contadorSecoesParaEmergencia,
         this.narrativaAtual.titulo,
@@ -250,11 +251,13 @@ class SistemaNarrativas {
         pontoDeRetorno,
         emergenciaHabilitada
     );
-    
+
+    // 🔹 INÍCIO DA CORREÇÃO
+    // Se a emergência FOI ATIVADA, reseta o contador e mostra a seção
     if (resultadoEmergencia && resultadoEmergencia.ativada) {
         console.log(`[NARRATIVAS] 🎯 EXIBINDO SEÇÃO DA IA: ${resultadoEmergencia.idSecao}`);
-        this.contadorSecoesParaEmergencia = 0; // 🔹 RESET IMEDIATO
-        console.log(`[NARRATIVAS] 🔄 Contador resetado após ativar emergência: ${this.contadorSecoesParaEmergencia}`);
+        this.contadorSecoesParaEmergencia = 0; // 🔹 RESET NO SUCESSO
+        console.log(`[NARRATIVAS] 🔄 Contador resetado após ATIVAR emergência: ${this.contadorSecoesParaEmergencia}`);
         
         this.secaoEmergentePai = resultadoEmergencia.secao;
 
@@ -271,7 +274,15 @@ class SistemaNarrativas {
             }
         }
         return;
+    } 
+    // Se a emergência DEVERIA TER SIDO ATIVADA (contador >= 4) mas FALHOU (API error, etc.)
+    // E a emergência não está já ativa (garantia extra)
+    else if (this.contadorSecoesParaEmergencia >= 4 && !this.sistemaEmergencia.emergenciaAtiva) {
+        console.log(`[NARRATIVAS] ⚠️ Emergência falhou (API?) ou foi desativada. Resetando contador.`);
+        this.contadorSecoesParaEmergencia = 0; // 🔹 RESET NA FALHA
+        console.log(`[NARRATIVAS] 🔄 Contador resetado após FALHA na emergência: ${this.contadorSecoesParaEmergencia}`);
     }
+   
     // 🔹 FIM DA MODIFICAÇÃO
 
     await this.salvarProgresso(numeroSecao, secao.final);
@@ -979,6 +990,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
