@@ -112,6 +112,9 @@ export class SistemaEmergencia {
         const textoSecaoOriginal = secaoAtual.texto || this.historico.at(-1)?.texto || "contexto desconhecido";
         const padroes = this.analisarPadroes();
 
+        // 👇 ADICIONE ESTA LINHA EXATAMENTE AQUI 👇
+        const itensAmostra = this.getItensAmostra();
+        
         return `
 Você é um 'Mestre de Jogo' que expande narrativas de forma COERENTE e ANCORADA.
 Aventura: "${tituloNarrativa}"
@@ -381,6 +384,9 @@ ${itensAmostra}
             ? `\n**ESCOLHAS NA EMERGÊNCIA:** ${this.escolhasEmergentes.join(' → ')}\n` 
             : '';
 
+        // 👇 ADICIONE ESTA LINHA EXATAMENTE AQUI 👇
+        const itensAmostra = this.getItensAmostra();
+
         return `
 Você é um Mestre de Jogo que mantém COERÊNCIA narrativa.
 
@@ -455,6 +461,7 @@ ${itensAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
