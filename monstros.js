@@ -258,7 +258,7 @@ export const monsterData = {
         }
     ]
 }
-}
+};
 
 
 
@@ -266,18 +266,3 @@ export const monsterData = {
 export function getMonsterById(monsterId) {
     return monsterData[monsterId] || null;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
