@@ -3254,31 +3254,45 @@ async function createContinueAdventureButton(db, userId) {
             "background: #4CAF50; color: white; padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; cursor: pointer;";
 
         button.addEventListener("click", async () => {
-            try {
-                // Marca a batalha como concluída no Firestore
-                await updateDoc(playerDocRef, {
-                    "narrativeProgress.currentSection": targetSection,
-                    "narrativeProgress.battleReturn.active": false,
-                });
+  try {
+    // --- Pega dados locais e Firestore ---
+    const narrativaIdFinal =
+      narrativeId ||
+      sessionStorage.getItem("narrativa-id") ||
+      battleReturn.narrativeId ||
+      null;
 
-                // Limpa storage local
-                sessionStorage.removeItem("narrativa-vitoria");
-                sessionStorage.removeItem("narrativa-derrota");
-                sessionStorage.removeItem("narrativa-origem");
-                sessionStorage.removeItem("narrativa-id");
+    const secaoOrigemFinal =
+      sessionStorage.getItem("narrativa-origem") ||
+      battleReturn.secaoOrigem ||
+      null;
 
-                // Redireciona com base nos dados disponíveis
-                if (narrativeId && targetSection) {
-                    window.location.href = `narrativas.html?narrativa=${narrativeId}&secao=${targetSection}`;
-                } else if (targetSection) {
-                    window.location.href = `narrativas.html?secao=${targetSection}`;
-                } else {
-                    window.location.href = "narrativas.html";
-                }
-            } catch (err) {
-                console.error("Erro ao continuar aventura:", err);
-            }
-        });
+    if (!narrativaIdFinal || !secaoOrigemFinal) {
+      console.warn("[CONTINUAR] Dados insuficientes para retorno. narrativeId:", narrativaIdFinal, "secao:", secaoOrigemFinal);
+      return;
+    }
+
+    console.log("[CONTINUAR] Retornando para narrativa:", narrativaIdFinal, "seção:", secaoOrigemFinal);
+
+    // --- Atualiza dentro da narrativa correta ---
+    await updateDoc(playerDocRef, {
+      [`narrativeProgress.${narrativaIdFinal}.currentSection`]: secaoOrigemFinal,
+      "narrativeProgress.battleReturn.active": false
+    });
+
+    // --- Limpa caches ---
+    sessionStorage.removeItem("narrativa-vitoria");
+    sessionStorage.removeItem("narrativa-derrota");
+    sessionStorage.removeItem("narrativa-origem");
+    sessionStorage.removeItem("narrativa-id");
+
+    // --- Redireciona corretamente ---
+    window.location.href = `narrativas.html?narrativa=${narrativaIdFinal}&secao=${secaoOrigemFinal}`;
+  } catch (err) {
+    console.error("Erro ao continuar aventura:", err);
+  }
+});
+
 
         // Posiciona o botão após o loot-button
         const lootButton = document.getElementById("loot-button");
