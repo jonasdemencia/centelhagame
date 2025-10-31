@@ -3221,91 +3221,65 @@ async function markMonsterAsDefeated(userId, monsterId) {
 }
 
 async function createContinueAdventureButton(db, userId) {
-    try {
-        const playerDocRef = doc(db, "players", userId);
-        const docSnap = await getDoc(playerDocRef);
-        if (!docSnap.exists()) return false;
-
-        const playerData = docSnap.data();
-        const battleReturn = playerData.narrativeProgress?.battleReturn;
-        if (!battleReturn || !battleReturn.active) return false;
-
-        // --- NOVO: tenta recuperar dados locais para maior consistência ---
-        const narrativaLocal = sessionStorage.getItem("narrativa-id");
-        const origemLocal = sessionStorage.getItem("narrativa-origem");
-        const vitoriaLocal = sessionStorage.getItem("narrativa-vitoria");
-
-        // Decide a seção de destino com prioridade de dados locais
-        const targetSection =
-            origemLocal ||
-            battleReturn.secaoOrigem ||
-            vitoriaLocal ||
-            battleReturn.vitoria;
-
-        const narrativeId =
-            narrativaLocal ||
-            battleReturn.narrativeId ||
-            null;
-
-        // Cria botão
-        const button = document.createElement("button");
-        button.textContent = "Continuar Aventura";
-        button.style.cssText =
-            "background: #4CAF50; color: white; padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; cursor: pointer;";
-
-        button.addEventListener("click", async () => {
   try {
-    // --- Pega dados locais e Firestore ---
-    const narrativaIdFinal =
-      narrativeId ||
-      sessionStorage.getItem("narrativa-id") ||
-      battleReturn.narrativeId ||
-      null;
+    const playerDocRef = doc(db, "players", userId);
+    const docSnap = await getDoc(playerDocRef);
+    if (!docSnap.exists()) return false;
 
-    const secaoOrigemFinal =
+    const playerData = docSnap.data();
+    const battleReturn = playerData.narrativeProgress?.battleReturn;
+    if (!battleReturn || !battleReturn.active) return false;
+
+    // --- PRIORIDADE: usa sempre o que foi salvo como origem ---
+    const narrativeId = battleReturn.narrativeId;
+    const origemCorreta =
       sessionStorage.getItem("narrativa-origem") ||
-      battleReturn.secaoOrigem ||
-      null;
+      battleReturn.secaoOrigem;
 
-    if (!narrativaIdFinal || !secaoOrigemFinal) {
-      console.warn("[CONTINUAR] Dados insuficientes para retorno. narrativeId:", narrativaIdFinal, "secao:", secaoOrigemFinal);
-      return;
+    if (!narrativeId || !origemCorreta) {
+      console.error("⚠️ Dados insuficientes para retornar à seção original.", { narrativeId, origemCorreta });
+      return false;
     }
 
-    console.log("[CONTINUAR] Retornando para narrativa:", narrativaIdFinal, "seção:", secaoOrigemFinal);
+    const button = document.createElement("button");
+    button.textContent = "Continuar Aventura";
+    button.style.cssText = "background:#4CAF50;color:#fff;padding:10px 20px;margin:10px;border:none;border-radius:5px;cursor:pointer;";
 
-    // --- Atualiza dentro da narrativa correta ---
-    await updateDoc(playerDocRef, {
-      [`narrativeProgress.${narrativaIdFinal}.currentSection`]: secaoOrigemFinal,
-      "narrativeProgress.battleReturn.active": false
+    button.addEventListener("click", async () => {
+      try {
+        console.log("🔁 Retornando à narrativa:", narrativeId, "→ seção", origemCorreta);
+
+        // Atualiza o campo correto dentro da narrativa
+        await updateDoc(playerDocRef, {
+          [`narrativeProgress.${narrativeId}.currentSection`]: origemCorreta,
+          "narrativeProgress.battleReturn.active": false
+        });
+
+        // Limpa dados locais
+        sessionStorage.removeItem("narrativa-vitoria");
+        sessionStorage.removeItem("narrativa-derrota");
+        sessionStorage.removeItem("narrativa-origem");
+        sessionStorage.removeItem("narrativa-id");
+
+        // Redireciona de volta à seção original
+        window.location.href = `narrativas.html?narrativa=${narrativeId}&secao=${origemCorreta}`;
+      } catch (err) {
+        console.error("Erro ao continuar aventura:", err);
+      }
     });
 
-    // --- Limpa caches ---
-    sessionStorage.removeItem("narrativa-vitoria");
-    sessionStorage.removeItem("narrativa-derrota");
-    sessionStorage.removeItem("narrativa-origem");
-    sessionStorage.removeItem("narrativa-id");
-
-    // --- Redireciona corretamente ---
-    window.location.href = `narrativas.html?narrativa=${narrativaIdFinal}&secao=${secaoOrigemFinal}`;
-  } catch (err) {
-    console.error("Erro ao continuar aventura:", err);
-  }
-});
-
-
-        // Posiciona o botão após o loot-button
-        const lootButton = document.getElementById("loot-button");
-        if (lootButton && lootButton.parentNode) {
-            lootButton.parentNode.insertBefore(button, lootButton.nextSibling);
-        }
-
-        return true;
-    } catch (error) {
-        console.error("Erro ao criar botão:", error);
-        return false;
+    const lootButton = document.getElementById("loot-button");
+    if (lootButton && lootButton.parentNode) {
+      lootButton.parentNode.insertBefore(button, lootButton.nextSibling);
     }
+
+    return true;
+  } catch (error) {
+    console.error("Erro ao criar botão de continuação:", error);
+    return false;
+  }
 }
+
 
 function handlePostBattle(monster) {
     console.log("handlePostBattle chamado com monstro:", monster?.nome);
