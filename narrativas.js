@@ -964,19 +964,20 @@ async restaurarNarrativaAposRetorno(narrativeId, secao) {
     }
 
     if (opcao.batalha) {
-        const playerDocRef = doc(db, "players", this.userId);
-        const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual);
-        await updateDoc(playerDocRef, {
-            "narrativeProgress.battleReturn": {
-                vitoria: opcao.vitoria,
-                derrota: opcao.derrota,
-                narrativeId: narrativeId,  // 🆕 NOVO
-                active: true
-            }
-        });
-        window.location.href = `batalha.html?monstros=${opcao.batalha}`;
-        return;
-    } else if (opcao.teste) {
+    const playerDocRef = doc(db, "players", this.userId);
+    const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual);
+    await updateDoc(playerDocRef, {
+        "narrativeProgress.battleReturn": {
+            vitoria: opcao.vitoria,
+            derrota: opcao.derrota,
+            narrativeId: narrativeId,
+            secaoOrigem: this.secaoAtual,  // 🆕 NOVO: Salvar seção de origem
+            active: true
+        }
+    });
+    window.location.href = `batalha.html?monstros=${opcao.batalha}`;
+    return;
+} else if (opcao.teste) {
         this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
     } else {
         await this.mostrarSecao(opcao.secao, this.secaoAtual);
@@ -989,16 +990,17 @@ async restaurarNarrativaAposRetorno(narrativeId, secao) {
     
 
     async processarBatalhaAutomatica(secao) {
-        const playerDocRef = doc(db, "players", this.userId);
-        await updateDoc(playerDocRef, {
-            "narrativeProgress.battleReturn": {
-                vitoria: secao.vitoria,
-                derrota: secao.derrota,
-                active: true
-            }
-        });
-        window.location.href = `batalha.html?monstros=${secao.batalha}`;
-    }
+    const playerDocRef = doc(db, "players", this.userId);
+    await updateDoc(playerDocRef, {
+        "narrativeProgress.battleReturn": {
+            vitoria: secao.vitoria,
+            derrota: secao.derrota,
+            secaoOrigem: this.secaoAtual,  // 🆕 NOVO: Salvar seção de origem
+            active: true
+        }
+    });
+    window.location.href = `batalha.html?monstros=${secao.batalha}`;
+}
 
     async voltarSelecao() {
         document.getElementById('narrativa-ativa').className = 'tela-oculta';
@@ -1040,6 +1042,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
