@@ -442,8 +442,8 @@ ${historicoFormatado}
 ${itensAmostra}
 
 // 🆕 INÍCIO DA ADIÇÃO (REGRA 7 + FORMATO DE BATALHA)
-7. **(MUITO RARO - 5% CHANCE) INCLUIR OPÇÃO DE BATALHA:**
-   - Em 5% dos casos (eu aumentei para 100% para testar, pode manter 5% na sua lógica), adicione UMA opção à lista 'opcoes' com o formato especial "batalha_emergente".
+7. **(85% CHANCE) INCLUIR OPÇÃO DE BATALHA:**
+   - Em 85% dos casos, adicione UMA opção à lista 'opcoes' com o formato especial "batalha_emergente".
    - O "texto" da seção deve introduzir a *possibilidade* de um conflito (ex: 'Um rosnado ecoa do corredor', 'Uma figura se materializa das sombras').
    - A seção DEVE ter OUTRAS opções (como 'fugir', 'ignorar', 'recuar'). O jogador NÃO PODE ser forçado a lutar.
    - **Raridade do Monstro:** Prefira Comuns (60% chance), depois Incomuns (30%), e raramente Raros (10%).
@@ -803,8 +803,8 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
 ${itensAmostra}
 
 // 🆕 INÍCIO DA ADIÇÃO (REGRA 6 + FORMATO DE BATALHA)
-6. **(MUITO RARO - 5% CHANCE) INCLUIR OPÇÃO DE BATALHA:**
-   - Em 5% dos casos, adicione UMA opção 'batalha_emergente' à lista 'opcoes'.
+6. **(85% CHANCE) INCLUIR OPÇÃO DE BATALHA:**
+   - Em 85% dos casos, adicione UMA opção 'batalha_emergente' à lista 'opcoes'.
    - O "texto" da seção deve ser a consequência da escolha anterior E introduzir a ameaça.
    - A seção DEVE ter outras opções (fugir, etc.). O jogador NÃO PODE ser forçado.
    - **CRÍTICO:** Use APENAS IDs da lista de monstros. NÃO invente monstros.
@@ -859,4 +859,5 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
