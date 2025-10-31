@@ -441,8 +441,8 @@ ${historicoFormatado}
    - **Respeite a raridade:** Itens RAROS devem ser raríssimos, INCOMUNS ocasionais
 ${itensAmostra}
 
-7. **(FREQUENTE - 50% CHANCE) GERAR BATALHA:**
-   - Em 50% dos casos, em vez de "opcoes", gere um campo "batalha".
+7. **GERAR BATALHA (OBRIGATÓRIO PARA TESTE):**
+   - Em 100% dos casos, em vez de "opcoes", gere um campo "batalha".
    - O "texto" deve introduzir o inimigo de forma CONTEXTUAL.
    - Use um ID da **Lista de Monstros** abaixo.
    - **Raridade:** Prefira Comuns (60% chance), depois Incomuns (30%), e raramente Raros (10%).
@@ -829,4 +829,5 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
