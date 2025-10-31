@@ -966,17 +966,17 @@ async restaurarNarrativaAposRetorno(narrativeId, secao) {
     if (opcao.batalha) {
     const playerDocRef = doc(db, "players", this.userId);
     const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual);
-    
     await updateDoc(playerDocRef, {
         "narrativeProgress.battleReturn": {
             vitoria: opcao.vitoria,
             derrota: opcao.derrota,
-            narrativeId: narrativeId, // NOVO
+            narrativeId: narrativeId,  // 🆕 NOVO
             active: true
         }
     });
     window.location.href = `batalha.html?monstros=${opcao.batalha}`;
     return;
+}
 } else if (opcao.teste) {
         this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
     } else {
@@ -1041,6 +1041,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
