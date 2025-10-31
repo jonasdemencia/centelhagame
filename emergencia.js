@@ -1,4 +1,4 @@
-// emergencia.js - VERSÃO COM SISTEMA DE RARIDADE, POOLS INTELIGENTES E BATALHAS EMERGENTES
+// emergencia.js - VERSÃO COM SISTEMA DE RARIDADE E POOLS INTELIGENTES
 
 export class SistemaEmergencia {
     constructor(itensNarrativas = {}) {
@@ -12,15 +12,8 @@ export class SistemaEmergencia {
         this.itensNarrativas = itensNarrativas;
         this.profundidadeAtual = 0;
         
-        // 🆕 Classificar itens por raridade automaticamente
+        // 🆕 NOVO: Classificar itens por raridade automaticamente
         this.itensClassificados = this.classificarItensPorRaridade();
-
-        // 🆕 NOVO: Classificar monstros por raridade (baseado em monstros.js)
-        this.monstrosClassificados = {
-            comuns: ["coruja", "zumbi", "sombra-errante"],
-            incomuns: ["lobo", "servo-pedra"],
-            raros: ["necromante", "sombra-antiga"]
-        };
     }
 
     // 🆕 MÉTODO NOVO: Classifica todos os itens seguindo suas regras
@@ -264,15 +257,6 @@ export class SistemaEmergencia {
         return 'COMUM';
     }
 
-    // 🆕 MÉTODO NOVO: Gera string formatada de monstros para o prompt
-    getMonstrosAmostra() {
-        let output = '\n**LISTA DE MONSTROS VÁLIDOS (para campo "batalha"):**\n';
-        output += `- Comuns: "${this.monstrosClassificados.comuns.join('", "')}"\n`;
-        output += `- Incomuns: "${this.monstrosClassificados.incomuns.join('", "')}"\n`;
-        output += `- Raros: "${this.monstrosClassificados.raros.join('", "')}"\n`;
-        return output;
-    }
-
     analisarSecao(secao, numeroSecao, escolhaFeita = null) {
         const contexto = {
             numero: numeroSecao.toString(),
@@ -322,8 +306,8 @@ export class SistemaEmergencia {
             const prompt = this.construirPrompt(tituloNarrativa, secaoAtual);
             const respostaIA = await this.chamarOraculoNarrativo(prompt);
             
-            if (!respostaIA || !respostaIA.texto || (!respostaIA.opcoes && !respostaIA.batalha)) {
-                throw new Error("Resposta da IA está mal formatada (faltando texto, opções ou batalha).");
+            if (!respostaIA || !respostaIA.texto || !respostaIA.opcoes) {
+                throw new Error("Resposta da IA está mal formatada.");
             }
 
             const idEmergente = this.gerarIdEmergente();
@@ -357,8 +341,6 @@ export class SistemaEmergencia {
 
         // 🆕 ATUALIZADO: Passa o texto da seção para seleção contextual
         const itensAmostra = this.getItensAmostra(textoSecaoOriginal);
-        // 🆕 NOVO: Adiciona lista de monstros
-        const monstrosAmostra = this.getMonstrosAmostra();
         
         return `
 Você é um 'Mestre de Jogo' que expande narrativas de forma COERENTE e ANCORADA.
@@ -434,24 +416,16 @@ ${historicoFormatado}
 4. Inclua SEMPRE pelo menos uma opção que seja claramente "continuar normal"
 5. Efeitos de energia: apenas se apropriado (-2 a +2, raramente maior)
 
-6. **(RARO E OPCIONAL) CONCEDER ITEM:** - Só dê itens se fizer SENTIDO narrativo claro
+6. **(RARO E OPCIONAL) CONCEDER ITEM:** 
+   - Só dê itens se fizer SENTIDO narrativo claro
    - Exemplos válidos: "encontrar em baú", "pegar de corpo", "achar no chão"
    - Formato: \`"efeitos": [{"tipo": "item", "item": "ID_EXATO"}]\`
    - **CRÍTICO:** Use APENAS IDs da lista abaixo
    - **Respeite a raridade:** Itens RAROS devem ser raríssimos, INCOMUNS ocasionais
 ${itensAmostra}
 
-7. **GERAR BATALHA (OBRIGATÓRIO PARA TESTE):**
-   - Em 100% dos casos, em vez de "opcoes", gere um campo "batalha".
-   - O "texto" deve introduzir o inimigo de forma CONTEXTUAL.
-   - Use um ID da **Lista de Monstros** abaixo.
-   - **Raridade:** Prefira Comuns (60% chance), depois Incomuns (30%), e raramente Raros (10%).
-   - Se gerar "batalha", você DEVE gerar "textoVitoria" (o que acontece após a luta) e "opcoesVitoria" (as opções após a luta, seguindo as regras de "opcoes" normais).
-   - NÃO GERE o campo "opcoes" normal.
-${monstrosAmostra}
+**FORMATO (JSON PURO):**
 
-
-**FORMATO (JSON PURO - Modo Normal):**
 {
   "modo": "expansao_natural" | "detalhe_perturbador" | "evento_menor",
   "texto": "[Texto coerente e ancorado - 80-180 palavras]",
@@ -462,20 +436,6 @@ ${monstrosAmostra}
   ],
   "efeitos": [{"tipo": "energia", "valor": X}]
 }
-
-**FORMATO (JSON PURO - Modo Batalha - RARO 5%):**
-{
-  "modo": "evento_menor",
-  "texto": "[Texto introduzindo o inimigo contextualizado]",
-  "batalha": "[ID_DO_MONSTRO_DA_LISTA]",
-  "textoVitoria": "[Texto que o jogador vê após vencer a batalha]",
-  "opcoesVitoria": [
-    {"texto": "[Opção 1 pós-luta]", "tipo": "aprofundar"},
-    {"texto": "[Opção 2 pós-luta]", "tipo": "recuar"}
-  ],
-  "efeitos": []
-}
-
 
 **LEMBRE-SE:** Expansão natural > Detalhe perturbador > Evento menor (em ordem de preferência)
 `;
@@ -535,68 +495,9 @@ ${monstrosAmostra}
         }
     }
 
-    // 🆕 MÉTODO ATUALIZADO: Processa tanto respostas normais quanto de batalha
     processarRespostaIA(respostaJSON, secaoDeOrigem, novoId) {
         const numeroSecaoOrigem = this.secaoOrigemEmergencia;
 
-        // === 🆕 NOVO: LÓGICA DE BATALHA ===
-        if (respostaJSON.batalha) {
-            console.log(`[EMERGÊNCIA] ⚔️ IA gerou uma BATALHA: ${respostaJSON.batalha}`);
-            
-            const vitoriaId = this.gerarIdEmergente();
-            const derrotaSecao = this.gerarDerrotaEmergencia();
-            const derrotaId = derrotaSecao.id;
-
-            // Processa as opções da vitória (para onde ir depois da batalha)
-            const opcoesVitoriaProcessadas = respostaJSON.opcoesVitoria.map(op => {
-                if (op.tipo === "recuar") {
-                    return {
-                        texto: op.texto,
-                        secao: numeroSecaoOrigem,
-                        emergente: false,
-                        tipo: 'recuar'
-                    };
-                } else {
-                    return {
-                        texto: op.texto,
-                        secao: this.gerarIdEmergente(), // Gera ID para a próxima seção
-                        tipo: op.tipo,
-                        emergente: true
-                    };
-                }
-            });
-
-            // Cria a SEÇÃO DE VITÓRIA e a armazena
-            const secaoVitoria = {
-                texto: respostaJSON.textoVitoria,
-                opcoes: opcoesVitoriaProcessadas,
-                efeitos: respostaJSON.efeitos || [],
-                emergente: true,
-                id: vitoriaId,
-                origem: numeroSecaoOrigem,
-                modo: respostaJSON.modo,
-                profundidade: this.profundidadeAtual // Permanece na mesma profundidade
-            };
-            this.secoesEmergentes.set(vitoriaId, secaoVitoria);
-            console.log(`[EMERGÊNCIA] Seção de Vitória criada: ${vitoriaId}`);
-
-            // Retorna a SEÇÃO DE BATALHA (que será exibida agora)
-            const secaoBatalha = {
-                texto: respostaJSON.texto,
-                batalha: respostaJSON.batalha,
-                vitoria: vitoriaId,
-                derrota: derrotaId,
-                opcoes: [], // SEM OPÇÕES, para acionar batalha automática
-                emergente: true,
-                id: novoId,
-                origem: numeroSecaoOrigem,
-                modo: respostaJSON.modo,
-                profundidade: this.profundidadeAtual
-            };
-            return secaoBatalha;
-        }
-        
-        // === Lógica antiga (se não for batalha) ===
         const opcoesProcessadas = respostaJSON.opcoes.map(op => {
             if (op.tipo === "recuar") {
                 return {
@@ -663,32 +564,6 @@ ${monstrosAmostra}
         }
     }
 
-    // 🆕 MÉTODO NOVO: Gera uma seção de "Game Over" para batalhas emergentes
-    gerarDerrotaEmergencia() {
-        this.emergenciaAtiva = false; // A derrota encerra a emergência
-        this.escolhasEmergentes = [];
-        this.profundidadeAtual = 0;
-
-        const textoDerrota = "Você foi sobrepujado pela ameaça inesperada. A escuridão toma conta de sua visão enquanto suas forças se esvaem. Sua jornada termina aqui.";
-
-        const secaoDerrota = {
-            texto: textoDerrota,
-            opcoes: [], // Sem opções
-            final: true, // É um final de jogo
-            emergente: true,
-            origem: this.secaoOrigemEmergencia,
-            convergencia: false,
-            final_emergencia: true
-        };
-
-        const idDerrota = `emergente_derrota_${Date.now()}`;
-        secaoDerrota.id = idDerrota;
-        this.secoesEmergentes.set(idDerrota, secaoDerrota);
-        
-        console.log(`[EMERGÊNCIA] 💀 Seção de Derrota criada: ${idDerrota}`);
-        return secaoDerrota;
-    }
-
     gerarConvergenciaForcada() {
         this.emergenciaAtiva = false;
         this.escolhasEmergentes = [];
@@ -732,9 +607,8 @@ ${monstrosAmostra}
             ? `\n**ESCOLHAS NA EMERGÊNCIA:** ${this.escolhasEmergentes.join(' → ')}\n` 
             : '';
 
-        // 🆕 ATUALIZADO: Itens e monstros contextuais também na continuação
+        // 🆕 ATUALIZADO: Itens contextuais também na continuação
         const itensAmostra = this.getItensAmostra(secaoPai.texto);
-        const monstrosAmostra = this.getMonstrosAmostra();
 
         return `
 Você é um Mestre de Jogo que mantém COERÊNCIA narrativa.
@@ -775,21 +649,15 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
    - Se profundidade < 3: normal (aprofundar/neutra/recuar)
    - Se profundidade >= 3: INCLUIR opção óbvia de "continuar/sair"
 
-5. **(RARO E OPCIONAL) CONCEDER ITEM:** Se fizer sentido contextual (ex: a consequência da escolha é encontrar algo), você pode adicionar um item.
-   - Formato: \`"efeitos": [{"tipo": "item", "item": "ID_DO_ITEM"}]\`
-   - **REGRA CRÍTICA:** Use APENAS IDs da lista abaixo. Não invente IDs.
+   // VVVVVV ADICIONE ESTA NOVA REGRA 5 VVVVVV
+        5. **(RARO E OPCIONAL) CONCEDER ITEM:** Se fizer sentido contextual (ex: a consequência da escolha é encontrar algo), você pode adicionar um item.
+           - Formato: \`"efeitos": [{"tipo": "item", "item": "ID_DO_ITEM"}]\`
+           - **REGRA CRÍTICA:** Use APENAS IDs da lista abaixo. Não invente IDs.
+           - **Lista de Itens Válidos:**
 ${itensAmostra}
+        // ^^^^^^ FIM DA NOVA REGRA 5 ^^^^^^
 
-6. **(MUITO RARO - 5% CHANCE) GERAR BATALHA:**
-   - Em 5% dos casos, em vez de "opcoes", gere um campo "batalha".
-   - O "texto" deve ser a consequência da escolha ANTERIOR e introduzir o inimigo.
-   - Use um ID da **Lista de Monstros** abaixo.
-   - **Raridade:** Prefira Comuns (60%), Incomuns (30%), Raros (10%).
-   - Se gerar "batalha", gere "textoVitoria" e "opcoesVitoria".
-   - NÃO GERE o campo "opcoes" normal.
-${monstrosAmostra}
-
-**FORMATO (JSON PURO - Modo Normal):**
+**FORMATO (JSON PURO):**
 {
   "modo": "expansao_natural" | "detalhe_perturbador" | "evento_menor",
   "texto": "[80-150 palavras - ancorado e coerente]",
@@ -798,19 +666,6 @@ ${monstrosAmostra}
     ${this.profundidadeAtual >= 3 ? '{"texto": "[Opção clara de sair/continuar]", "tipo": "recuar"},' : ''}
   ],
   "efeitos": [{"tipo": "energia", "valor": X}]
-}
-
-**FORMATO (JSON PURO - Modo Batalha - RARO 5%):**
-{
-  "modo": "evento_menor",
-  "texto": "[Texto introduzindo o inimigo contextualizado]",
-  "batalha": "[ID_DO_MONSTRO_DA_LISTA]",
-  "textoVitoria": "[Texto que o jogador vê após vencer a batalha]",
-  "opcoesVitoria": [
-    {"texto": "[Opção 1 pós-luta]", "tipo": "aprofundar"},
-    ${this.profundidadeAtual >= 3 ? '{"texto": "[Opção clara de sair/continuar]", "tipo": "recuar"}' : '{"texto": "[Opção 2 pós-luta]", "tipo": "recuar"}'}
-  ],
-  "efeitos": []
 }
 `;
     }
@@ -829,5 +684,4 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
-
 
