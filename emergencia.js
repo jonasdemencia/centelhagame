@@ -311,7 +311,7 @@ export class SistemaEmergencia {
 
         // ⚠️ ATENÇÃO: Mudado para 1 para TESTES, como você mencionou.
         // Mude para `contador < 4` para voltar ao normal (gatilho a cada 4 seções).
-        if (contador < 1) { 
+        if (contador < 4) { 
             return null;
         }
 
@@ -859,3 +859,4 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
