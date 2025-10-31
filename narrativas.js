@@ -963,24 +963,47 @@ async restaurarNarrativaAposRetorno(narrativeId, secao) {
     }
 
     if (opcao.batalha) {
+    // Determina origem correta: se há emergência ativa, usa origem da emergência
+    const origemParaSalvar =
+        (this.sistemaEmergencia && this.sistemaEmergencia.emergenciaAtiva)
+            ? (this.sistemaEmergencia.secaoOrigemEmergencia || this.secaoAtual)
+            : this.secaoAtual;
+
+    // Calcula narrativeId de forma segura
+    const narrativeId = (() => {
+        try {
+            return Object.keys(NARRATIVAS).find(
+                key => NARRATIVAS[key] === this.narrativaAtual
+            ) || null;
+        } catch (e) {
+            return null;
+        }
+    })();
+
     const playerDocRef = doc(db, "players", this.userId);
-    const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual);
+
     await updateDoc(playerDocRef, {
         "narrativeProgress.battleReturn": {
-            vitoria: opcao.vitoria,
-            derrota: opcao.derrota,
-            narrativeId: narrativeId,
-            secaoOrigem: this.secaoAtual,
+            vitoria: opcao.vitoria || null,
+            derrota: opcao.derrota || null,
+            narrativeId,
+            secaoOrigem: origemParaSalvar,
             active: true
         }
     });
+
+    // Opcional: grava também no sessionStorage para retorno mais rápido
+    sessionStorage.setItem("narrativa-vitoria", opcao.vitoria || "");
+    sessionStorage.setItem("narrativa-derrota", opcao.derrota || "");
+    sessionStorage.setItem("narrativa-origem", origemParaSalvar || "");
+
     window.location.href = `batalha.html?monstros=${opcao.batalha}`;
     return;
 } else if (opcao.teste) {
-        this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
-    } else {
-        await this.mostrarSecao(opcao.secao, this.secaoAtual);
-    }
+    this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
+} else {
+    await this.mostrarSecao(opcao.secao, this.secaoAtual);
+}
     
     // Fade in
     overlay.classList.remove('active');
@@ -990,15 +1013,35 @@ async restaurarNarrativaAposRetorno(narrativeId, secao) {
 
     async processarBatalhaAutomatica(secao) {
     const playerDocRef = doc(db, "players", this.userId);
-    await updateDoc(playerDocRef, {
-        "narrativeProgress.battleReturn": {
-            vitoria: secao.vitoria,
-            derrota: secao.derrota,
-            secaoOrigem: this.secaoAtual,
-            active: true
-        }
-    });
-    window.location.href = `batalha.html?monstros=${secao.batalha}`;
+    const origemParaSalvar =
+    (this.sistemaEmergencia && this.sistemaEmergencia.emergenciaAtiva)
+        ? (this.sistemaEmergencia.secaoOrigemEmergencia || this.secaoAtual)
+        : this.secaoAtual;
+
+const narrativeId = (() => {
+    try {
+        return Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual) || null;
+    } catch (e) {
+        return null;
+    }
+})();
+
+await updateDoc(playerDocRef, {
+    "narrativeProgress.battleReturn": {
+        vitoria: secao.vitoria,
+        derrota: secao.derrota,
+        narrativeId,
+        secaoOrigem: origemParaSalvar,
+        active: true
+    }
+});
+
+sessionStorage.setItem("narrativa-vitoria", secao.vitoria || "");
+sessionStorage.setItem("narrativa-derrota", secao.derrota || "");
+sessionStorage.setItem("narrativa-origem", origemParaSalvar || "");
+
+window.location.href = `batalha.html?monstros=${secao.batalha}`;
+
 }
 
     async voltarSelecao() {
@@ -1041,6 +1084,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
