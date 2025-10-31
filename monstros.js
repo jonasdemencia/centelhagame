@@ -110,36 +110,6 @@ export const monsterData = {
     ]
 },
 
-"lorde-aldric-zumbi": {
-    nome: "Lorde Aldric Morto-Vivo",
-    imagem: "https://via.placeholder.com/150",
-    descricao: "O antigo governante da vila, agora uma abominação de carne apodrecida em armadura cerimonial.",
-    habilidade: 8,
-    couraça: 4,
-    energiaDados: "6d8+10",
-    experiencia: 200,
-    dano: "2D6",
-    ataques: [
-        {
-            id: "espada",
-            nome: "Golpe de Espada",
-            dano: "1d8+2",
-            peso: 60,
-            pesoHPBaixo: 40,
-            telegrafado: false
-        },
-        {
-            id: "investida",
-            nome: "Investida Real",
-            dano: "2d6+3",
-            peso: 40,
-            pesoHPBaixo: 60,
-            telegrafado: true,
-            mensagemTelegraf: "Lorde Aldric ergue sua espada e avança com fúria ancestral..."
-        }
-    ]
-},
-
 "necromante": {
     nome: "Morteus, o Necromante",
     imagem: "https://via.placeholder.com/150",
@@ -391,6 +361,7 @@ export const monsterData = {
 export function getMonsterById(monsterId) {
     return monsterData[monsterId] || null;
 }
+
 
 
 
