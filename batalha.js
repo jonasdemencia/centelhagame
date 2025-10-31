@@ -3232,6 +3232,9 @@ async function createContinueAdventureButton(db, userId) {
         
         if (!battleReturn || !battleReturn.active) return false;
         
+        // 🆕 NOVO: Extrai o narrativeId do battleReturn
+        const narrativeId = battleReturn.narrativeId;
+        
         const button = document.createElement('button');
         button.textContent = 'Continuar Aventura';
         button.style.cssText = 'background: #4CAF50; color: white; padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; cursor: pointer;';
@@ -3242,7 +3245,13 @@ async function createContinueAdventureButton(db, userId) {
                 "narrativeProgress.battleReturn.active": false
             });
             
-            window.location.href = `narrativas.html?secao=${battleReturn.vitoria}`;
+            // 🆕 MODIFICADO: Passa narrativeId na URL
+            const targetSection = battleReturn.vitoria;
+            if (narrativeId) {
+                window.location.href = `narrativas.html?narrativa=${narrativeId}&secao=${targetSection}`;
+            } else {
+                window.location.href = `narrativas.html?secao=${targetSection}`;
+            }
         });
         
         const lootButton = document.getElementById('loot-button');
