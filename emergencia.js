@@ -1,4 +1,4 @@
-// emergencia.js - VERSÃO COM SISTEMA DE RARIDADE E POOLS INTELIGENTES
+// emergencia.js - VERSÃO COM SISTEMA DE RARIDADE, POOLS INTELIGENTES E BATALHAS EM OPÇÃO
 
 export class SistemaEmergencia {
     constructor(itensNarrativas = {}) {
@@ -14,6 +14,13 @@ export class SistemaEmergencia {
         
         // 🆕 NOVO: Classificar itens por raridade automaticamente
         this.itensClassificados = this.classificarItensPorRaridade();
+
+        // 🆕 NOVO: Classificar monstros por raridade (baseado em monstros.js)
+        this.monstrosClassificados = {
+            comuns: ["coruja", "zumbi", "sombra-errante"],
+            incomuns: ["lobo", "servo-pedra"],
+            raros: ["necromante", "sombra-antiga"]
+        };
     }
 
     // 🆕 MÉTODO NOVO: Classifica todos os itens seguindo suas regras
@@ -148,10 +155,6 @@ export class SistemaEmergencia {
         console.log(`[CONTEXTO] Detectado: ${contextoDetectado.join(', ')}`);
 
         // === SELEÇÃO PONDERADA POR RARIDADE ===
-        // Comuns: 60% de chance
-        // Incomuns: 30% de chance  
-        // Raros: 10% de chance
-
         const adicionarItens = (pool, quantidade, probabilidade) => {
             const embaralhado = [...pool].sort(() => Math.random() - 0.5);
             let adicionados = 0;
@@ -257,6 +260,16 @@ export class SistemaEmergencia {
         return 'COMUM';
     }
 
+    // 🆕 MÉTODO NOVO: Gera string formatada de monstros para o prompt
+    getMonstrosAmostra() {
+        let output = '\n**LISTA DE MONSTROS VÁLIDOS (para campo "batalha"):**\n';
+        output += `**CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.\n`;
+        output += `- Comuns: "${this.monstrosClassificados.comuns.join('", "')}"\n`;
+        output += `- Incomuns: "${this.monstrosClassificados.incomuns.join('", "')}"\n`;
+        output += `- Raros: "${this.monstrosClassificados.raros.join('", "')}"\n`;
+        return output;
+    }
+
     analisarSecao(secao, numeroSecao, escolhaFeita = null) {
         const contexto = {
             numero: numeroSecao.toString(),
@@ -296,7 +309,9 @@ export class SistemaEmergencia {
     async verificarEAtivarEmergencia(contador, tituloNarrativa, secaoAtual, pontoDeRetorno, habilitada) {
         if (this.emergenciaAtiva || !habilitada) return null;
 
-        if (contador < 4) {
+        // ⚠️ ATENÇÃO: Mudado para 1 para TESTES, como você mencionou.
+        // Mude para `contador < 4` para voltar ao normal (gatilho a cada 4 seções).
+        if (contador < 1) { 
             return null;
         }
 
@@ -307,7 +322,7 @@ export class SistemaEmergencia {
             const respostaIA = await this.chamarOraculoNarrativo(prompt);
             
             if (!respostaIA || !respostaIA.texto || !respostaIA.opcoes) {
-                throw new Error("Resposta da IA está mal formatada.");
+                throw new Error("Resposta da IA está mal formatada (faltando texto ou opções).");
             }
 
             const idEmergente = this.gerarIdEmergente();
@@ -329,6 +344,7 @@ export class SistemaEmergencia {
         }
     }
 
+    // 🆕 PROMPT ATUALIZADO (lógica de batalha em OPÇÃO)
     construirPrompt(tituloNarrativa, secaoAtual) {
         const historicoFormatado = this.historico.map(h =>
             `Seção ${h.numero}: "${h.texto.substring(0, 100)}..."\n` +
@@ -338,9 +354,11 @@ export class SistemaEmergencia {
 
         const textoSecaoOriginal = secaoAtual.texto || this.historico.at(-1)?.texto || "contexto desconhecido";
         const padroes = this.analisarPadroes();
-
+        
         // 🆕 ATUALIZADO: Passa o texto da seção para seleção contextual
         const itensAmostra = this.getItensAmostra(textoSecaoOriginal);
+        // 🆕 NOVO: Adiciona lista de monstros
+        const monstrosAmostra = this.getMonstrosAmostra();
         
         return `
 Você é um 'Mestre de Jogo' que expande narrativas de forma COERENTE e ANCORADA.
@@ -416,15 +434,23 @@ ${historicoFormatado}
 4. Inclua SEMPRE pelo menos uma opção que seja claramente "continuar normal"
 5. Efeitos de energia: apenas se apropriado (-2 a +2, raramente maior)
 
-6. **(RARO E OPCIONAL) CONCEDER ITEM:** 
-   - Só dê itens se fizer SENTIDO narrativo claro
+6. **(RARO E OPCIONAL) CONCEDER ITEM:** - Só dê itens se fizer SENTIDO narrativo claro
    - Exemplos válidos: "encontrar em baú", "pegar de corpo", "achar no chão"
    - Formato: \`"efeitos": [{"tipo": "item", "item": "ID_EXATO"}]\`
    - **CRÍTICO:** Use APENAS IDs da lista abaixo
    - **Respeite a raridade:** Itens RAROS devem ser raríssimos, INCOMUNS ocasionais
 ${itensAmostra}
 
-**FORMATO (JSON PURO):**
+// 🆕 INÍCIO DA ADIÇÃO (REGRA 7 + FORMATO DE BATALHA)
+7. **(MUITO RARO - 5% CHANCE) INCLUIR OPÇÃO DE BATALHA:**
+   - Em 5% dos casos (eu aumentei para 100% para testar, pode manter 5% na sua lógica), adicione UMA opção à lista 'opcoes' com o formato especial "batalha_emergente".
+   - O "texto" da seção deve introduzir a *possibilidade* de um conflito (ex: 'Um rosnado ecoa do corredor', 'Uma figura se materializa das sombras').
+   - A seção DEVE ter OUTRAS opções (como 'fugir', 'ignorar', 'recuar'). O jogador NÃO PODE ser forçado a lutar.
+   - **Raridade do Monstro:** Prefira Comuns (60% chance), depois Incomuns (30%), e raramente Raros (10%).
+   - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
+${monstrosAmostra}
+
+**FORMATO (JSON PURO - Modo Normal):**
 
 {
   "modo": "expansao_natural" | "detalhe_perturbador" | "evento_menor",
@@ -436,6 +462,28 @@ ${itensAmostra}
   ],
   "efeitos": [{"tipo": "energia", "valor": X}]
 }
+
+**FORMATO (JSON PURO - Com Opção de Batalha - RARO 5%):**
+{
+  "modo": "evento_menor",
+  "texto": "[Texto coerente, ex: 'Algo se move nas sombras e um par de olhos vermelhos encara você...']",
+  "opcoes": [
+    {
+      "tipo": "batalha_emergente",
+      "texto": "[Opção de lutar, ex: 'Enfrentar a criatura']",
+      "batalha": "[ID_MONSTRO_VALIDO]",
+      "textoVitoria": "[Texto que o jogador vê após vencer a batalha]",
+      "opcoesVitoria": [
+         {"texto": "[Continuar explorando o local]", "tipo": "aprofundar"},
+         {"texto": "[Sair da sala]", "tipo": "recuar"}
+      ]
+    },
+    {"texto": "[Recuar lentamente]", "tipo": "recuar"},
+    {"texto": "[Tentar se esconder]", "tipo": "neutra"}
+  ],
+  "efeitos": []
+}
+// 🆕 FIM DA ADIÇÃO
 
 **LEMBRE-SE:** Expansão natural > Detalhe perturbador > Evento menor (em ordem de preferência)
 `;
@@ -495,10 +543,69 @@ ${itensAmostra}
         }
     }
 
+    // 🆕 MÉTODO ATUALIZADO (lógica de batalha em OPÇÃO)
     processarRespostaIA(respostaJSON, secaoDeOrigem, novoId) {
         const numeroSecaoOrigem = this.secaoOrigemEmergencia;
 
+        // Processa as opções...
         const opcoesProcessadas = respostaJSON.opcoes.map(op => {
+            
+            // 🆕 NOVO: OPÇÃO DE BATALHA
+            if (op.tipo === "batalha_emergente") {
+                console.log(`[EMERGÊNCIA] ⚔️ IA gerou uma OPÇÃO DE BATALHA: ${op.batalha}`);
+                
+                const vitoriaId = this.gerarIdEmergente();
+                const derrotaId = this.gerarIdEmergente(); // Precisa de um ID único também
+
+                // 1. Criar e armazenar a seção de DERROTA
+                this.gerarDerrotaEmergencia(derrotaId);
+
+                // 2. Criar e armazenar a seção de VITÓRIA
+                // Processa as opções *da seção de vitória*
+                const opcoesVitoriaProcessadas = op.opcoesVitoria.map(opV => {
+                    if (opV.tipo === "recuar") {
+                        return { // Recuar da vitória leva à seção original
+                            texto: opV.texto,
+                            secao: numeroSecaoOrigem,
+                            emergente: false,
+                            tipo: 'recuar'
+                        };
+                    } else {
+                        return { // Aprofundar da vitória leva a uma nova seção emergente
+                            texto: opV.texto,
+                            secao: this.gerarIdEmergente(),
+                            tipo: opV.tipo,
+                            emergente: true
+                        };
+                    }
+                });
+
+                const secaoVitoria = {
+                    texto: op.textoVitoria,
+                    opcoes: opcoesVitoriaProcessadas,
+                    efeitos: [], // A IA pode adicionar efeitos pós-batalha aqui se quisermos
+                    emergente: true,
+                    id: vitoriaId,
+                    origem: numeroSecaoOrigem,
+                    modo: respostaJSON.modo,
+                    profundidade: this.profundidadeAtual // Batalha não aumenta a profundidade
+                };
+                this.secoesEmergentes.set(vitoriaId, secaoVitoria);
+                console.log(`[EMERGÊNCIA] Seção de Vitória criada: ${vitoriaId}`);
+
+                // 3. Retorna a OPÇÃO DE BATALHA formatada para o narrativas.js
+                // Isso corresponde ao seu modelo em narrativas-data.js
+                return {
+                    texto: op.texto,
+                    batalha: op.batalha,
+                    vitoria: vitoriaId,
+                    derrota: derrotaId,
+                    emergente: true,
+                    tipo: 'batalha' // Apenas para nosso log
+                };
+            }
+            
+            // OPÇÃO DE RECUAR (lógica existente)
             if (op.tipo === "recuar") {
                 return {
                     texto: op.texto,
@@ -506,7 +613,10 @@ ${itensAmostra}
                     emergente: false,
                     tipo: 'recuar'
                 };
-            } else {
+            } 
+            
+            // OPÇÃO NORMAL (aprofundar / neutra) (lógica existente)
+            else {
                 return {
                     texto: op.texto,
                     secao: this.gerarIdEmergente(),
@@ -516,6 +626,7 @@ ${itensAmostra}
             }
         });
 
+        // Retorna a seção principal
         return {
             texto: respostaJSON.texto,
             opcoes: opcoesProcessadas,
@@ -528,6 +639,7 @@ ${itensAmostra}
         };
     }
 
+
     async processarOpcaoEmergente(opcao, secaoPai) {
         if (!opcao.emergente || opcao.tipo === "recuar") {
             this.emergenciaAtiva = false;
@@ -536,8 +648,17 @@ ${itensAmostra}
             return null;
         }
 
-        this.profundidadeAtual++;
-        console.log(`[EMERGÊNCIA] Profundidade: ${this.profundidadeAtual}/5`);
+        // 🆕 ATUALIZAÇÃO: Se a opção for uma batalha, o narrativas.js cuida disso.
+        // A profundidade só deve aumentar se NÃO for uma batalha (pois a vitória já é o próximo passo).
+        if (!opcao.batalha) {
+             this.profundidadeAtual++;
+             console.log(`[EMERGÊNCIA] Profundidade: ${this.profundidadeAtual}/5`);
+        } else {
+            console.log(`[EMERGÊNCIA] Batalha iniciada, profundidade mantida em: ${this.profundidadeAtual}`);
+            // Não retorna, pois o narrativas.js lidará com a opção de batalha.
+            // A próxima seção (vitória ou derrota) já foi registrada.
+            return null; 
+        }
 
         if (this.profundidadeAtual >= 5) {
             console.log('[EMERGÊNCIA] 🎯 PROFUNDIDADE MÁXIMA - Forçando convergência');
@@ -553,6 +674,8 @@ ${itensAmostra}
             const prompt = this.construirPromptContinuacao(secaoPai, opcao);
             const respostaIA = await this.chamarOraculoNarrativo(prompt);
 
+            // 🆕 ATUALIZAÇÃO: A resposta da IA (próxima seção) será processada
+            // e registrada com o ID que esta opção (opcao.secao) já carrega.
             const proximaSecao = this.processarRespostaIA(respostaIA, secaoPai, opcao.secao);
             this.secoesEmergentes.set(opcao.secao, proximaSecao);
 
@@ -562,6 +685,29 @@ ${itensAmostra}
             console.error("[EMERGÊNCIA] Falha ao aprofundar:", error);
             return this.gerarConvergenciaForcada();
         }
+    }
+
+    // 🆕 MÉTODO ATUALIZADO (recebe ID para consistência)
+    gerarDerrotaEmergencia(idDerrota) {
+        // Não reseta mais a emergência aqui, pois a derrota só acontece se o jogador perder.
+        // A emergência continua ativa na seção de vitória.
+        
+        const textoDerrota = "Você foi sobrepujado pela ameaça inesperada. A escuridão toma conta de sua visão enquanto suas forças se esvaem. Sua jornada termina aqui.";
+
+        const secaoDerrota = {
+            texto: textoDerrota,
+            opcoes: [], // Sem opções
+            final: true, // É um final de jogo
+            emergente: true,
+            id: idDerrota,
+            origem: this.secaoOrigemEmergencia,
+            convergencia: false,
+            final_emergencia: true
+        };
+        
+        this.secoesEmergentes.set(idDerrota, secaoDerrota);
+        console.log(`[EMERGÊNCIA] 💀 Seção de Derrota criada: ${idDerrota}`);
+        return secaoDerrota;
     }
 
     gerarConvergenciaForcada() {
@@ -599,6 +745,7 @@ ${itensAmostra}
         };
     }
 
+    // 🆕 PROMPT DE CONTINUAÇÃO ATUALIZADO (sem resumir)
     construirPromptContinuacao(secaoPai, opcao) {
         const textoPrimeiraEmergencia = this.secoesEmergentes.get('emergente_IA_1')?.texto.substring(0, 100) || secaoPai.texto.substring(0,100);
         const padroes = this.analisarPadroes();
@@ -607,8 +754,9 @@ ${itensAmostra}
             ? `\n**ESCOLHAS NA EMERGÊNCIA:** ${this.escolhasEmergentes.join(' → ')}\n` 
             : '';
 
-        // 🆕 ATUALIZADO: Itens contextuais também na continuação
+        // 🆕 ATUALIZADO: Itens e monstros contextuais também na continuação
         const itensAmostra = this.getItensAmostra(secaoPai.texto);
+        const monstrosAmostra = this.getMonstrosAmostra();
 
         return `
 Você é um Mestre de Jogo que mantém COERÊNCIA narrativa.
@@ -649,26 +797,53 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
    - Se profundidade < 3: normal (aprofundar/neutra/recuar)
    - Se profundidade >= 3: INCLUIR opção óbvia de "continuar/sair"
 
-   // VVVVVV ADICIONE ESTA NOVA REGRA 5 VVVVVV
-        5. **(RARO E OPCIONAL) CONCEDER ITEM:** Se fizer sentido contextual (ex: a consequência da escolha é encontrar algo), você pode adicionar um item.
-           - Formato: \`"efeitos": [{"tipo": "item", "item": "ID_DO_ITEM"}]\`
-           - **REGRA CRÍTICA:** Use APENAS IDs da lista abaixo. Não invente IDs.
-           - **Lista de Itens Válidos:**
+5. **(RARO E OPCIONAL) CONCEDER ITEM:** Se fizer sentido contextual (ex: a consequência da escolha é encontrar algo), você pode adicionar um item.
+   - Formato: \`"efeitos": [{"tipo": "item", "item": "ID_DO_ITEM"}]\`
+   - **REGRA CRÍTICA:** Use APENAS IDs da lista abaixo. Não invente IDs.
 ${itensAmostra}
-        // ^^^^^^ FIM DA NOVA REGRA 5 ^^^^^^
 
-**FORMATO (JSON PURO):**
+// 🆕 INÍCIO DA ADIÇÃO (REGRA 6 + FORMATO DE BATALHA)
+6. **(MUITO RARO - 5% CHANCE) INCLUIR OPÇÃO DE BATALHA:**
+   - Em 5% dos casos, adicione UMA opção 'batalha_emergente' à lista 'opcoes'.
+   - O "texto" da seção deve ser a consequência da escolha anterior E introduzir a ameaça.
+   - A seção DEVE ter outras opções (fugir, etc.). O jogador NÃO PODE ser forçado.
+   - **CRÍTICO:** Use APENAS IDs da lista de monstros. NÃO invente monstros.
+${monstrosAmostra}
+
+**FORMATO (JSON PURO - Modo Normal):**
 {
-  "modo": "expansao_natural" | "detalhe_perturbador" | "evento_menor",
+  "modo": "expansao_natural",
   "texto": "[80-150 palavras - ancorado e coerente]",
   "opcoes": [
-    {"texto": "...", "tipo": "..."},
-    ${this.profundidadeAtual >= 3 ? '{"texto": "[Opção clara de sair/continuar]", "tipo": "recuar"},' : ''}
+    {"texto": "...", "tipo": "aprofundar"},
+    ${this.profundidadeAtual >= 3 ? '{"texto": "[Opção clara de sair/continuar]", "tipo": "recuar"}' : '{"texto": "[Outra opção]", "tipo": "neutra"}'}
   ],
   "efeitos": [{"tipo": "energia", "valor": X}]
 }
+
+**FORMATO (JSON PURO - Com Opção de Batalha - RARO 5%):**
+{
+  "modo": "evento_menor",
+  "texto": "[Texto coerente, ex: 'Ao abrir a gaveta, um som rápido ecoa e...']",
+  "opcoes": [
+    {
+      "tipo": "batalha_emergente",
+      "texto": "[Opção de lutar, ex: 'Enfrentar a criatura']",
+      "batalha": "[ID_MONSTRO_VALIDO]",
+      "textoVitoria": "[Texto que o jogador vê após vencer]",
+      "opcoesVitoria": [
+         {"texto": "[Pegar o item da gaveta]", "tipo": "aprofundar"},
+         {"texto": "[Sair da sala]", "tipo": "recuar"}
+      ]
+    },
+    {"texto": "[Bater a gaveta e recuar]", "tipo": "recuar"}
+  ],
+  "efeitos": []
+}
+// 🆕 FIM DA ADIÇÃO
 `;
     }
+
 
     gerarIdEmergente() {
         return `emergente_IA_${++this.contadorSecoes}`;
@@ -684,4 +859,3 @@ ${itensAmostra}
         this.profundidadeAtual = 0;
     }
 }
-
