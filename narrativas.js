@@ -726,20 +726,29 @@ class SistemaNarrativas {
     }
 
     async verificarProgressoSalvo() {
-        if (!this.userId) return;
+    if (!this.userId) return;
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const secaoUrl = urlParams.get('secao');
+    const urlParams = new URLSearchParams(window.location.search);
+    const secaoUrl = urlParams.get('secao');
+    const narrativaUrl = urlParams.get('narrativa'); // NOVO
 
-        if (secaoUrl) {
-            for (const [narrativaId, narrativa] of Object.entries(NARRATIVAS)) {
-                if (narrativa.secoes[secaoUrl]) {
-                    await this.iniciarNarrativa(narrativaId);
-                    await this.mostrarSecao(parseInt(secaoUrl));
-                    return;
-                }
+    // Se vem de uma batalha com narrativa especificada
+    if (narrativaUrl && secaoUrl) {
+        if (NARRATIVAS[narrativaUrl]) {
+            await this.restaurarNarrativaAposRetorno(narrativaUrl, parseInt(secaoUrl));
+            return;
+        }
+    }
+
+    if (secaoUrl) {
+        for (const [narrativaId, narrativa] of Object.entries(NARRATIVAS)) {
+            if (narrativa.secoes[secaoUrl]) {
+                await this.iniciarNarrativa(narrativaId);
+                await this.mostrarSecao(parseInt(secaoUrl));
+                return;
             }
         }
+    }
 
         const playerDocRef = doc(db, "players", this.userId);
         const docSnap = await getDoc(playerDocRef);
@@ -778,28 +787,67 @@ class SistemaNarrativas {
         });
     }
 
+    
     mostrarOpcaoContinuar(progress) {
-        const container = document.getElementById('selecao-narrativas');
-        const continueDiv = document.createElement('div');
-        continueDiv.style.cssText = 'text-align: center; margin: 20px; padding: 20px; background: #f0f0f0; border-radius: 10px;';
-        continueDiv.innerHTML = `
-            <h3>Aventura em Progresso</h3>
-            <p>Você tem uma aventura em andamento na seção ${progress.currentSection}</p>
-            <button id="continue-saved" style="background: #4CAF50; color: white; padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer;">Continuar</button>
-            <button id="new-adventure" style="background: #f44336; color: white; padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer;">Nova Aventura</button>
-        `;
-        container.insertBefore(continueDiv, container.firstChild);
-        document.getElementById('continue-saved').addEventListener('click', async () => {
-            await this.iniciarNarrativa(progress.narrativeId);
-            await this.mostrarSecao(progress.currentSection);
-            continueDiv.remove();
-        });
-        document.getElementById('new-adventure').addEventListener('click', async () => {
-            await this.limparProgresso();
-            continueDiv.remove();
-        });
+    const container = document.getElementById('selecao-narrativas');
+    const continueDiv = document.createElement('div');
+    continueDiv.style.cssText = 'text-align: center; margin: 20px; padding: 20px; background: #f0f0f0; border-radius: 10px;';
+    continueDiv.innerHTML = `
+        <h3>Aventura em Progresso</h3>
+        <p>Você tem uma aventura em andamento na seção ${progress.currentSection}</p>
+        <button id="continue-saved" style="background: #4CAF50; color: white; padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer;">Continuar</button>
+        <button id="new-adventure" style="background: #f44336; color: white; padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer;">Nova Aventura</button>
+    `;
+    container.insertBefore(continueDiv, container.firstChild);
+    document.getElementById('continue-saved').addEventListener('click', async () => {
+        // MUDANÇA: Usar o novo método que restaura corretamente
+        await this.restaurarNarrativaAposRetorno(progress.narrativeId, progress.currentSection);
+        continueDiv.remove();
+    });
+    document.getElementById('new-adventure').addEventListener('click', async () => {
+        await this.limparProgresso();
+        continueDiv.remove();
+    });
+}
+
+async restaurarNarrativaAposRetorno(narrativeId, secao) {
+    // Restaura a narrativa corretamente após retorno de batalha
+    if (!NARRATIVAS[narrativeId]) {
+        console.error(`Narrativa ${narrativeId} não encontrada`);
+        return false;
     }
 
+    this.narrativaAtual = NARRATIVAS[narrativeId];
+    this.secaoAtual = secao;
+    
+    // Restaura a interface
+    document.getElementById('selecao-narrativas').className = 'tela-oculta';
+    document.getElementById('narrativa-ativa').className = 'tela-ativa';
+    document.getElementById('titulo-narrativa').textContent = this.narrativaAtual.titulo;
+
+    // Restaura listeners
+    document.getElementById('abrir-inventario-btn').onclick = () => {
+        this.abrirInventarioSemItem();
+    };
+
+    if (!this.visao3d) {
+        this.visao3d = new Visao3D('canvas-container');
+    }
+
+    document.addEventListener('opcaoClicada3D', (e) => {
+        this.processarOpcao(e.detail);
+    });
+
+    // Carrega dados do jogador
+    await this.carregarDadosJogador();
+    
+    // Mostra a seção
+    await this.mostrarSecao(secao);
+    
+    return true;
+}
+
+    
     async limparProgresso() {
         if (!this.userId) return;
         const playerDocRef = doc(db, "players", this.userId);
@@ -916,17 +964,20 @@ class SistemaNarrativas {
     }
 
     if (opcao.batalha) {
-        const playerDocRef = doc(db, "players", this.userId);
-        await updateDoc(playerDocRef, {
-            "narrativeProgress.battleReturn": {
-                vitoria: opcao.vitoria,
-                derrota: opcao.derrota,
-                active: true
-            }
-        });
-        window.location.href = `batalha.html?monstros=${opcao.batalha}`;
-        return;
-    } else if (opcao.teste) {
+    const playerDocRef = doc(db, "players", this.userId);
+    const narrativeId = Object.keys(NARRATIVAS).find(key => NARRATIVAS[key] === this.narrativaAtual);
+    
+    await updateDoc(playerDocRef, {
+        "narrativeProgress.battleReturn": {
+            vitoria: opcao.vitoria,
+            derrota: opcao.derrota,
+            narrativeId: narrativeId, // NOVO
+            active: true
+        }
+    });
+    window.location.href = `batalha.html?monstros=${opcao.batalha}`;
+    return;
+} else if (opcao.teste) {
         this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
     } else {
         await this.mostrarSecao(opcao.secao, this.secaoAtual);
@@ -990,6 +1041,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
