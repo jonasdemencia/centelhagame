@@ -1056,24 +1056,63 @@ window.createContinueAdventureButton = async function(db, userId) {
         const playerDocRef = doc(db, "players", userId);
         const docSnap = await getDoc(playerDocRef);
         if (!docSnap.exists()) return false;
+
         const playerData = docSnap.data();
         const battleReturn = playerData.narrativeProgress?.battleReturn;
         if (!battleReturn || !battleReturn.active) return false;
+
+        // Pega dados locais, se houver (prioridade para sessionStorage)
+        const narrativaLocal = sessionStorage.getItem("narrativa-id");
+        const origemLocal = sessionStorage.getItem("narrativa-origem");
+        const vitoriaLocal = sessionStorage.getItem("narrativa-vitoria");
+
+        // Decide a seção destino com prioridade: sessionStorage -> battleReturn.secaoOrigem -> vitoria
+        const targetSection =
+            origemLocal ||
+            battleReturn.secaoOrigem ||
+            vitoriaLocal ||
+            battleReturn.vitoria ||
+            null;
+
+        const narrativeId =
+            narrativaLocal ||
+            battleReturn.narrativeId ||
+            null;
+
+        if (!targetSection) return false; // sem destino válido
+
         const button = document.createElement('button');
         button.textContent = 'Continuar Aventura';
         button.style.cssText = 'background: #4CAF50; color: white; padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; cursor: pointer;';
+
         button.addEventListener('click', async () => {
-            const targetSection = battleReturn.vitoria;
-            await updateDoc(playerDocRef, {
-                "narrativeProgress.currentSection": targetSection,
-                "narrativeProgress.battleReturn.active": false
-            });
-            window.location.href = `narrativas.html?secao=${targetSection}`;
+            try {
+                await updateDoc(playerDocRef, {
+                    "narrativeProgress.currentSection": targetSection,
+                    "narrativeProgress.battleReturn.active": false
+                });
+
+                // Limpa dados locais relacionados à batalha
+                sessionStorage.removeItem("narrativa-vitoria");
+                sessionStorage.removeItem("narrativa-derrota");
+                sessionStorage.removeItem("narrativa-origem");
+                sessionStorage.removeItem("narrativa-id");
+
+                if (narrativeId) {
+                    window.location.href = `narrativas.html?narrativa=${narrativeId}&secao=${targetSection}`;
+                } else {
+                    window.location.href = `narrativas.html?secao=${targetSection}`;
+                }
+            } catch (err) {
+                console.error("Erro ao continuar aventura:", err);
+            }
         });
+
         const lootButton = document.getElementById('loot-button');
         if (lootButton && lootButton.parentNode) {
             lootButton.parentNode.insertBefore(button, lootButton.nextSibling);
         }
+
         return true;
     } catch (error) {
         console.error('Erro ao criar botão:', error);
@@ -1081,9 +1120,11 @@ window.createContinueAdventureButton = async function(db, userId) {
     }
 };
 
+
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
