@@ -44,6 +44,37 @@ export const monsterData = {
         ]
     },
 
+    "doberman": {
+    nome: "Doberman de Guarda",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um doberman ágil e feroz, treinado para proteger seu território.",
+    habilidade: 6,
+    couraça: 2,
+    energiaDados: "3d8",
+    experiencia: 70,
+    dano: "1D8", // Mantido para compatibilidade
+    ataques: [
+        {
+            id: "mordida",
+            nome: "Mordida Precisa",
+            dano: "1d8",
+            peso: 65,
+            pesoHPBaixo: 35,
+            telegrafado: false
+        },
+        {
+            id: "investida",
+            nome: "Investida Aterrorizante",
+            dano: "1d10+3", 
+            peso: 35,
+            pesoHPBaixo: 65,
+            telegrafado: true,
+            mensagemTelegraf: "O doberman rosna baixo, abaixa o corpo e se prepara para saltar com velocidade impressionante..."
+        }
+    ]
+},
+
+
     "coruja": {
     nome: "Coruja Sombria",
     imagem: "https://via.placeholder.com/150",
@@ -235,6 +266,7 @@ export const monsterData = {
 export function getMonsterById(monsterId) {
     return monsterData[monsterId] || null;
 }
+
 
 
 
