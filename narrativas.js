@@ -730,9 +730,8 @@ class SistemaNarrativas {
 
     const urlParams = new URLSearchParams(window.location.search);
     const secaoUrl = urlParams.get('secao');
-    const narrativaUrl = urlParams.get('narrativa'); // NOVO
+    const narrativaUrl = urlParams.get('narrativa');
 
-    // Se vem de uma batalha com narrativa especificada
     if (narrativaUrl && secaoUrl) {
         if (NARRATIVAS[narrativaUrl]) {
             await this.restaurarNarrativaAposRetorno(narrativaUrl, parseInt(secaoUrl));
@@ -971,7 +970,7 @@ async restaurarNarrativaAposRetorno(narrativeId, secao) {
             vitoria: opcao.vitoria,
             derrota: opcao.derrota,
             narrativeId: narrativeId,
-            secaoOrigem: this.secaoAtual,  // 🆕 NOVO: Salvar seção de origem
+            secaoOrigem: this.secaoAtual,
             active: true
         }
     });
@@ -995,7 +994,7 @@ async restaurarNarrativaAposRetorno(narrativeId, secao) {
         "narrativeProgress.battleReturn": {
             vitoria: secao.vitoria,
             derrota: secao.derrota,
-            secaoOrigem: this.secaoAtual,  // 🆕 NOVO: Salvar seção de origem
+            secaoOrigem: this.secaoAtual,
             active: true
         }
     });
@@ -1042,6 +1041,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
