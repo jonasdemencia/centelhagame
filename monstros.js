@@ -257,8 +257,8 @@ export const monsterData = {
             mensagemTelegraf: "A sombra sussurra sobre fracassos eternos..."
         }
     ]
-},
-
+}
+}
 
 
 
@@ -266,6 +266,7 @@ export const monsterData = {
 export function getMonsterById(monsterId) {
     return monsterData[monsterId] || null;
 }
+
 
 
 
