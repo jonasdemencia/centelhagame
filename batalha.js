@@ -3240,28 +3240,19 @@ async function createContinueAdventureButton(db, userId) {
         button.style.cssText = 'background: #4CAF50; color: white; padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; cursor: pointer;';
         
         button.addEventListener('click', async () => {
-
-    // 🆕 NOVO: Usar secaoOrigem se disponível, senão usar vitoria
     const targetSection = battleReturn.secaoOrigem || battleReturn.vitoria;
-
+    const narrativeId = battleReturn.narrativeId;
+    
     await updateDoc(playerDocRef, {
-
         "narrativeProgress.currentSection": targetSection,
-
         "narrativeProgress.battleReturn.active": false
-
     });
-
+    
     if (narrativeId) {
-
         window.location.href = `narrativas.html?narrativa=${narrativeId}&secao=${targetSection}`;
-
     } else {
-
         window.location.href = `narrativas.html?secao=${targetSection}`;
-
     }
-
 });
         
         const lootButton = document.getElementById('loot-button');
