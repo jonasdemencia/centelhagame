@@ -3224,49 +3224,74 @@ async function createContinueAdventureButton(db, userId) {
     try {
         const playerDocRef = doc(db, "players", userId);
         const docSnap = await getDoc(playerDocRef);
-        
         if (!docSnap.exists()) return false;
-        
+
         const playerData = docSnap.data();
         const battleReturn = playerData.narrativeProgress?.battleReturn;
-        
         if (!battleReturn || !battleReturn.active) return false;
-        
-        // 🆕 NOVO: Extrai o narrativeId do battleReturn
-        const narrativeId = battleReturn.narrativeId;
-        
-        const button = document.createElement('button');
-        button.textContent = 'Continuar Aventura';
-        button.style.cssText = 'background: #4CAF50; color: white; padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; cursor: pointer;';
-        
-        button.addEventListener('click', async () => {
-    const targetSection = battleReturn.secaoOrigem || battleReturn.vitoria;
-    const narrativeId = battleReturn.narrativeId;
-    
-    await updateDoc(playerDocRef, {
-        "narrativeProgress.currentSection": targetSection,
-        "narrativeProgress.battleReturn.active": false
-    });
-    
-    if (narrativeId) {
-        window.location.href = `narrativas.html?narrativa=${narrativeId}&secao=${targetSection}`;
-    } else {
-        window.location.href = `narrativas.html?secao=${targetSection}`;
-    }
-});
-        
-        const lootButton = document.getElementById('loot-button');
+
+        // --- NOVO: tenta recuperar dados locais para maior consistência ---
+        const narrativaLocal = sessionStorage.getItem("narrativa-id");
+        const origemLocal = sessionStorage.getItem("narrativa-origem");
+        const vitoriaLocal = sessionStorage.getItem("narrativa-vitoria");
+
+        // Decide a seção de destino com prioridade de dados locais
+        const targetSection =
+            origemLocal ||
+            battleReturn.secaoOrigem ||
+            vitoriaLocal ||
+            battleReturn.vitoria;
+
+        const narrativeId =
+            narrativaLocal ||
+            battleReturn.narrativeId ||
+            null;
+
+        // Cria botão
+        const button = document.createElement("button");
+        button.textContent = "Continuar Aventura";
+        button.style.cssText =
+            "background: #4CAF50; color: white; padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; cursor: pointer;";
+
+        button.addEventListener("click", async () => {
+            try {
+                // Marca a batalha como concluída no Firestore
+                await updateDoc(playerDocRef, {
+                    "narrativeProgress.currentSection": targetSection,
+                    "narrativeProgress.battleReturn.active": false,
+                });
+
+                // Limpa storage local
+                sessionStorage.removeItem("narrativa-vitoria");
+                sessionStorage.removeItem("narrativa-derrota");
+                sessionStorage.removeItem("narrativa-origem");
+                sessionStorage.removeItem("narrativa-id");
+
+                // Redireciona com base nos dados disponíveis
+                if (narrativeId && targetSection) {
+                    window.location.href = `narrativas.html?narrativa=${narrativeId}&secao=${targetSection}`;
+                } else if (targetSection) {
+                    window.location.href = `narrativas.html?secao=${targetSection}`;
+                } else {
+                    window.location.href = "narrativas.html";
+                }
+            } catch (err) {
+                console.error("Erro ao continuar aventura:", err);
+            }
+        });
+
+        // Posiciona o botão após o loot-button
+        const lootButton = document.getElementById("loot-button");
         if (lootButton && lootButton.parentNode) {
             lootButton.parentNode.insertBefore(button, lootButton.nextSibling);
         }
-        
+
         return true;
     } catch (error) {
-        console.error('Erro ao criar botão:', error);
+        console.error("Erro ao criar botão:", error);
         return false;
     }
 }
-
 
 function handlePostBattle(monster) {
     console.log("handlePostBattle chamado com monstro:", monster?.nome);
