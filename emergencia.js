@@ -1,4 +1,4 @@
-// emergencia.js - VERSÃO ANCORADA E COM DESFECHOS
+// emergencia.js - VERSÃO COM SISTEMA DE RARIDADE E POOLS INTELIGENTES
 
 export class SistemaEmergencia {
     constructor(itensNarrativas = {}) {
@@ -9,25 +9,252 @@ export class SistemaEmergencia {
         this.secaoOrigemEmergencia = null;
         this.workerUrl = "https://lucky-scene-6054.fabiorainersilva.workers.dev/";
         this.escolhasEmergentes = [];
-        this.itensNarrativas = itensNarrativas; // 👈 ADICIONE ESTA LINHA
-        this.profundidadeAtual = 0; // Rastreia profundidade da emergência
+        this.itensNarrativas = itensNarrativas;
+        this.profundidadeAtual = 0;
+        
+        // 🆕 NOVO: Classificar itens por raridade automaticamente
+        this.itensClassificados = this.classificarItensPorRaridade();
     }
 
-    getItensAmostra() {
-        // Retorna uma string formatada de itens "seguros" para a IA usar.
-        // Estes são itens comuns/consumíveis do seu narrativas.js.
-        // Você pode editar esta lista para incluir qualquer item que queira permitir.
-        return `
-- "pequenabolsaouro" (uma pequena bolsa de moedas)
-- "latadesardinha" (comida enlatada)
-- "pocao-cura-menor" (um pequeno frasco de cura)
-- "tocha" (uma tocha apagada)
-- "corda" (um rolo de corda)
-- "esqueiro" (um isqueiro)
-- "canivete" (um pequeno canivete)
-- "municao-9mm" (algumas balas 9mm)
-- "velas" (um pequeno pacote de velas)
-        `;
+    // 🆕 MÉTODO NOVO: Classifica todos os itens seguindo suas regras
+    classificarItensPorRaridade() {
+        const classificacao = {
+            comuns: [],
+            incomuns: [],
+            raros: []
+        };
+
+        for (const [id, item] of Object.entries(this.itensNarrativas)) {
+            // === ARMAS DE FOGO (raras, mais dano = mais raro) ===
+            if (item.ammoType) {
+                const dano = this.extrairValorDano(item.damage);
+                if (dano >= 25) { // 3d10+, 3d12, 2d18
+                    classificacao.raros.push(id);
+                } else if (dano >= 15) { // 2d10, 1d12+2
+                    classificacao.raros.push(id);
+                } else {
+                    classificacao.raros.push(id); // Todas armas de fogo são raras
+                }
+            }
+            // === MUNIÇÕES (baseado no calibre/dano) ===
+            else if (item.projectile) {
+                if (id.includes('473') || id.includes('762') || id.includes('50')) {
+                    classificacao.raros.push(id); // Alto calibre
+                } else if (id.includes('357') || id.includes('45') || id.includes('12')) {
+                    classificacao.incomuns.push(id); // Médio calibre
+                } else {
+                    classificacao.comuns.push(id); // 9mm, 38
+                }
+            }
+            // === ANÉIS E AMULETOS (sempre raros) ===
+            else if (item.slot === 'amulet' || item.slot === 'ring') {
+                classificacao.raros.push(id);
+            }
+            // === ARMAS BRANCAS (incomuns, mais dano = mais incomum) ===
+            else if (item.slot === 'weapon' && !item.ammoType) {
+                const dano = this.extrairValorDano(item.damage);
+                if (dano >= 12) { // 2D6+, 3d6
+                    classificacao.raros.push(id); // Bem raras
+                } else if (dano >= 8) { // 1D8, 1D10
+                    classificacao.incomuns.push(id);
+                } else {
+                    classificacao.incomuns.push(id); // Todas são pelo menos incomuns
+                }
+            }
+            // === ARMADURAS, ESCUDOS, CAPACETES (incomuns) ===
+            else if (item.slot === 'armor' || item.slot === 'shield' || item.slot === 'helmet') {
+                classificacao.incomuns.push(id);
+            }
+            // === CONSUMÍVEIS (comuns) ===
+            else if (item.consumable) {
+                classificacao.comuns.push(id);
+            }
+            // === COMPONENTES (incomuns) ===
+            else if (item.componente) {
+                classificacao.incomuns.push(id);
+            }
+            // === TESOUROS E RELÍQUIAS (incomuns) ===
+            else if (id.includes('reliquia') || id.includes('estatueta') || id.includes('calice') || id.includes('coroa')) {
+                classificacao.incomuns.push(id);
+            }
+            // === UTILITÁRIOS (comuns) ===
+            else if (id === 'corda' || id === 'esqueiro' || id === 'tocha' || id === 'velas') {
+                classificacao.comuns.push(id);
+            }
+            // === FALLBACK (comum por padrão) ===
+            else {
+                classificacao.comuns.push(id);
+            }
+        }
+
+        console.log(`[RARIDADE] Classificação:
+        - Comuns: ${classificacao.comuns.length}
+        - Incomuns: ${classificacao.incomuns.length}  
+        - Raros: ${classificacao.raros.length}`);
+
+        return classificacao;
+    }
+
+    // 🆕 MÉTODO AUXILIAR: Extrai valor numérico de dano
+    extrairValorDano(danoStr) {
+        if (!danoStr) return 0;
+        
+        // Remove espaços e converte para minúsculas
+        const limpo = danoStr.toLowerCase().replace(/\s/g, '');
+        
+        // Extrai números de dados (ex: "2d10" -> 2*10 = 20)
+        const match = limpo.match(/(\d+)d(\d+)/);
+        if (match) {
+            const quantidade = parseInt(match[1]);
+            const lados = parseInt(match[2]);
+            let base = quantidade * lados;
+            
+            // Adiciona bônus se houver (ex: "+2")
+            const bonus = limpo.match(/\+(\d+)/);
+            if (bonus) base += parseInt(bonus[1]);
+            
+            return base;
+        }
+        
+        return 0;
+    }
+
+    // 🆕 MÉTODO NOVO: Seleciona itens baseado no contexto E raridade
+    selecionarItensContextuais(textoSecao) {
+        const palavrasChave = textoSecao.toLowerCase();
+        const itensSelecionados = new Set();
+
+        // === ANÁLISE DE CONTEXTO ===
+        const contextos = {
+            combate: ['luta', 'batalha', 'inimigo', 'ataque', 'defesa', 'arma', 'monstro', 'criatura'],
+            exploracao: ['escuro', 'túnel', 'caverna', 'caminho', 'porta', 'corredor', 'sala'],
+            cura: ['ferido', 'machucado', 'sangue', 'dor', 'fraco', 'energia', 'vida'],
+            mistico: ['mágico', 'ritual', 'feitiço', 'místico', 'arcano', 'sobrenatural'],
+            tesouro: ['baú', 'cofre', 'riqueza', 'ouro', 'tesouro', 'relíquia', 'antigo']
+        };
+
+        const contextoDetectado = [];
+        for (const [tipo, palavras] of Object.entries(contextos)) {
+            if (palavras.some(p => palavrasChave.includes(p))) {
+                contextoDetectado.push(tipo);
+            }
+        }
+
+        // Se não detectou contexto, usa "geral"
+        if (contextoDetectado.length === 0) {
+            contextoDetectado.push('geral');
+        }
+
+        console.log(`[CONTEXTO] Detectado: ${contextoDetectado.join(', ')}`);
+
+        // === SELEÇÃO PONDERADA POR RARIDADE ===
+        // Comuns: 60% de chance
+        // Incomuns: 30% de chance  
+        // Raros: 10% de chance
+
+        const adicionarItens = (pool, quantidade, probabilidade) => {
+            const embaralhado = [...pool].sort(() => Math.random() - 0.5);
+            let adicionados = 0;
+            
+            for (const itemId of embaralhado) {
+                if (adicionados >= quantidade) break;
+                if (Math.random() < probabilidade) {
+                    // Verifica se o item é contextualmente relevante
+                    if (this.itemRelevante(itemId, contextoDetectado)) {
+                        itensSelecionados.add(itemId);
+                        adicionados++;
+                    }
+                }
+            }
+        };
+
+        // Adiciona itens por raridade
+        adicionarItens(this.itensClassificados.comuns, 6, 0.7);   // 6 comuns (70% chance cada)
+        adicionarItens(this.itensClassificados.incomuns, 4, 0.5); // 4 incomuns (50% chance)
+        adicionarItens(this.itensClassificados.raros, 2, 0.3);    // 2 raros (30% chance)
+
+        // Garante pelo menos 5 itens
+        if (itensSelecionados.size < 5) {
+            const extras = [...this.itensClassificados.comuns]
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 5 - itensSelecionados.size);
+            extras.forEach(id => itensSelecionados.add(id));
+        }
+
+        return Array.from(itensSelecionados);
+    }
+
+    // 🆕 MÉTODO AUXILIAR: Verifica se item é relevante ao contexto
+    itemRelevante(itemId, contextos) {
+        const item = this.itensNarrativas[itemId];
+        if (!item) return false;
+
+        for (const contexto of contextos) {
+            switch(contexto) {
+                case 'combate':
+                    if (item.slot === 'weapon' || item.projectile || 
+                        item.slot === 'armor' || item.slot === 'shield' ||
+                        item.effect === 'explosion' || item.effect === 'stun') return true;
+                    break;
+                
+                case 'exploracao':
+                    if (itemId.includes('tocha') || itemId.includes('corda') || 
+                        itemId.includes('esqueiro') || itemId.includes('vela') ||
+                        item.slot === 'helmet') return true;
+                    break;
+                
+                case 'cura':
+                    if (item.effect === 'heal' || itemId.includes('pocao') || 
+                        itemId.includes('kit') || itemId.includes('ervas')) return true;
+                    break;
+                
+                case 'mistico':
+                    if (item.componente || item.slot === 'amulet' || 
+                        item.slot === 'ring' || item.bonuses) return true;
+                    break;
+                
+                case 'tesouro':
+                    if (itemId.includes('reliquia') || itemId.includes('ouro') ||
+                        itemId.includes('estatueta') || itemId.includes('calice')) return true;
+                    break;
+                
+                case 'geral':
+                    return true; // Aceita qualquer item
+            }
+        }
+
+        return false;
+    }
+
+    // 🆕 MÉTODO ATUALIZADO: Gera string formatada de itens para o prompt
+    getItensAmostra(textoSecao = '') {
+        const itensSelecionados = this.selecionarItensContextuais(textoSecao);
+        
+        let output = '\n**ITENS DISPONÍVEIS PARA ESTA SEÇÃO:**\n';
+        output += '(Use APENAS estes IDs. Formato: {"tipo": "item", "item": "ID_DO_ITEM"})\n\n';
+
+        for (const itemId of itensSelecionados) {
+            const item = this.itensNarrativas[itemId];
+            if (item) {
+                const raridade = this.obterRaridade(itemId);
+                output += `- "${itemId}" (${item.content}) [${raridade}]\n`;
+                if (item.description) {
+                    output += `  └─ ${item.description}\n`;
+                }
+            }
+        }
+
+        output += `\n**TOTAL: ${itensSelecionados.length} itens disponíveis**\n`;
+        output += `**IMPORTANTE:** Dar itens é OPCIONAL. Só dê se fizer sentido narrativo!\n`;
+
+        return output;
+    }
+
+    // 🆕 MÉTODO AUXILIAR: Identifica raridade de um item
+    obterRaridade(itemId) {
+        if (this.itensClassificados.raros.includes(itemId)) return 'RARO';
+        if (this.itensClassificados.incomuns.includes(itemId)) return 'INCOMUM';
+        return 'COMUM';
     }
 
     analisarSecao(secao, numeroSecao, escolhaFeita = null) {
@@ -88,7 +315,7 @@ export class SistemaEmergencia {
             this.emergenciaAtiva = true;
             this.secaoOrigemEmergencia = pontoDeRetorno || 1;
             this.escolhasEmergentes = [];
-            this.profundidadeAtual = 1; // Reset profundidade
+            this.profundidadeAtual = 1;
 
             const secaoEmergente = this.processarRespostaIA(respostaIA, secaoAtual, idEmergente);
             this.secoesEmergentes.set(idEmergente, secaoEmergente);
@@ -112,8 +339,8 @@ export class SistemaEmergencia {
         const textoSecaoOriginal = secaoAtual.texto || this.historico.at(-1)?.texto || "contexto desconhecido";
         const padroes = this.analisarPadroes();
 
-        // 👇 ADICIONE ESTA LINHA EXATAMENTE AQUI 👇
-        const itensAmostra = this.getItensAmostra();
+        // 🆕 ATUALIZADO: Passa o texto da seção para seleção contextual
+        const itensAmostra = this.getItensAmostra(textoSecaoOriginal);
         
         return `
 Você é um 'Mestre de Jogo' que expande narrativas de forma COERENTE e ANCORADA.
@@ -189,13 +416,13 @@ ${historicoFormatado}
 4. Inclua SEMPRE pelo menos uma opção que seja claramente "continuar normal"
 5. Efeitos de energia: apenas se apropriado (-2 a +2, raramente maior)
 
-// VVVVVV ADICIONE ESTA NOVA REGRA 6 VVVVVV
-        6. **(RARO E OPCIONAL) CONCEDER ITEM:** Se o Modo 1 (Expansão Natural) for usado e fizer sentido contextual (ex: o jogador encontra algo num canto, num corpo, etc.), você pode adicionar um item.
-           - Use o formato: \`"efeitos": [{"tipo": "item", "item": "ID_DO_ITEM"}]\`
-           - **REGRA CRÍTICA:** Use APENAS IDs da lista abaixo. Não invente IDs.
-           - **Lista de Itens Válidos:**
+6. **(RARO E OPCIONAL) CONCEDER ITEM:** 
+   - Só dê itens se fizer SENTIDO narrativo claro
+   - Exemplos válidos: "encontrar em baú", "pegar de corpo", "achar no chão"
+   - Formato: \`"efeitos": [{"tipo": "item", "item": "ID_EXATO"}]\`
+   - **CRÍTICO:** Use APENAS IDs da lista abaixo
+   - **Respeite a raridade:** Itens RAROS devem ser raríssimos, INCOMUNS ocasionais
 ${itensAmostra}
-        // ^^^^^^ FIM DA NOVA REGRA 6 ^^^^^^
 
 **FORMATO (JSON PURO):**
 
@@ -271,14 +498,13 @@ ${itensAmostra}
     processarRespostaIA(respostaJSON, secaoDeOrigem, novoId) {
         const numeroSecaoOrigem = this.secaoOrigemEmergencia;
 
-        // CÓDIGO CORRIGIDO
         const opcoesProcessadas = respostaJSON.opcoes.map(op => {
             if (op.tipo === "recuar") {
                 return {
                     texto: op.texto,
                     secao: numeroSecaoOrigem,
                     emergente: false,
-                    tipo: 'recuar' // 👈 ADICIONE ESTA LINHA
+                    tipo: 'recuar'
                 };
             } else {
                 return {
@@ -303,24 +529,21 @@ ${itensAmostra}
     }
 
     async processarOpcaoEmergente(opcao, secaoPai) {
-    if (!opcao.emergente || opcao.tipo === "recuar") {
-        this.emergenciaAtiva = false;
-        this.escolhasEmergentes = [];
-        this.profundidadeAtual = 0;
-        // 🔹 IMPORTANTE: Não retorna aqui, para que narrativas.js possa resetar contador
-        return null;
-    }
+        if (!opcao.emergente || opcao.tipo === "recuar") {
+            this.emergenciaAtiva = false;
+            this.escolhasEmergentes = [];
+            this.profundidadeAtual = 0;
+            return null;
+        }
 
         this.profundidadeAtual++;
         console.log(`[EMERGÊNCIA] Profundidade: ${this.profundidadeAtual}/5`);
 
-        // FORÇAR CONVERGÊNCIA após 3-5 seções
         if (this.profundidadeAtual >= 5) {
             console.log('[EMERGÊNCIA] 🎯 PROFUNDIDADE MÁXIMA - Forçando convergência');
             return this.gerarConvergenciaForcada();
         }
 
-        // Entre 3-4 seções, aumentar chance de convergência
         if (this.profundidadeAtual >= 3 && Math.random() < 0.4) {
             console.log('[EMERGÊNCIA] 🎯 Convergência natural acionada');
             return this.gerarConvergenciaForcada();
@@ -384,8 +607,8 @@ ${itensAmostra}
             ? `\n**ESCOLHAS NA EMERGÊNCIA:** ${this.escolhasEmergentes.join(' → ')}\n` 
             : '';
 
-        // 👇 ADICIONE ESTA LINHA EXATAMENTE AQUI 👇
-        const itensAmostra = this.getItensAmostra();
+        // 🆕 ATUALIZADO: Itens contextuais também na continuação
+        const itensAmostra = this.getItensAmostra(secaoPai.texto);
 
         return `
 Você é um Mestre de Jogo que mantém COERÊNCIA narrativa.
@@ -461,6 +684,7 @@ ${itensAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
