@@ -753,21 +753,28 @@ class SistemaNarrativas {
         const docSnap = await getDoc(playerDocRef);
 
         if (docSnap.exists()) {
-            const allProgress = docSnap.data().narrativeProgress;
-            if (allProgress) {
-                const inProgressNarrativeId = Object.keys(allProgress).find(
-                    id => allProgress[id] && !allProgress[id].completed
-                );
+    const allProgress = docSnap.data().narrativeProgress;
+    if (allProgress) {
+        // Só considerar chaves que sejam IDs válidos em NARRATIVAS
+        const inProgressNarrativeId = Object.keys(allProgress).find(
+            id => NARRATIVAS[id] && allProgress[id] && !allProgress[id].completed
+        );
 
-                if (inProgressNarrativeId) {
-                    const progress = {
-                        ...allProgress[inProgressNarrativeId],
-                        narrativeId: inProgressNarrativeId
-                    };
-                    this.mostrarOpcaoContinuar(progress);
-                }
-            }
+        if (inProgressNarrativeId) {
+            const progress = {
+                ...allProgress[inProgressNarrativeId],
+                narrativeId: inProgressNarrativeId
+            };
+            this.mostrarOpcaoContinuar(progress);
+            return;
         }
+
+        // Se não houver narrativa em progresso, mas existir um battleReturn ativo,
+        // ignora-o aqui (ele é tratado pela página de batalha / sessionStorage).
+        // (Evita que 'battleReturn' seja interpretado como narrativa)
+    }
+}
+
     }
 
     mostrarAventuraCompleta() {
@@ -1124,6 +1131,7 @@ window.createContinueAdventureButton = async function(db, userId) {
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
