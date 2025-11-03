@@ -516,6 +516,45 @@ class SistemaNarrativas {
         const container = document.getElementById('opcoes-container');
         container.innerHTML = '';
 
+        // === INÍCIO DA ADIÇÃO ===
+        // Verifica se esta é a seção buffer de retorno de batalha emergente
+        const urlParams = new URLSearchParams(window.location.search);
+        const secaoRetornoId = urlParams.get('retorno');
+
+        if (this.secaoAtual == 99999 && secaoRetornoId) {
+            const btnRetorno = document.createElement('button');
+            btnRetorno.className = 'opcao-btn';
+            
+            // Tenta pegar o nome do aposento (opcional, como bônus)
+            let nomeAposento = "local anterior";
+            try {
+                // Tenta pegar as primeiras 3 palavras da seção de origem
+                const secaoOriginal = this.narrativaAtual.secoes[secaoRetornoId];
+                if (secaoOriginal && secaoOriginal.texto) {
+                     nomeAposento = secaoOriginal.texto.split(' ').slice(0, 3).join(' ') + "...";
+                }
+            } catch (e) { /* falha silenciosa, usa o fallback */ }
+
+            // Define o texto do botão como você sugeriu
+            btnRetorno.textContent = `Retornar a: "${nomeAposento}"`;
+
+            btnRetorno.addEventListener('click', () => {
+                // Remove o parâmetro 'retorno' da URL antes de prosseguir
+                const novaUrl = new URL(window.location);
+                novaUrl.searchParams.delete('retorno');
+                novaUrl.searchParams.set('secao', secaoRetornoId);
+                window.history.pushState({}, '', novaUrl); // Atualiza a URL sem recarregar
+
+                // Processa a opção para ir para a seção original
+                this.processarOpcao({
+                    texto: btnRetorno.textContent,
+                    secao: parseInt(secaoRetornoId) // A seção de retorno real
+                });
+            });
+            container.appendChild(btnRetorno);
+            return; // Impede que o resto da função crie outras opções
+        }
+
         if (isFinal) {
             const btnFinalizar = document.createElement('button');
             btnFinalizar.className = 'opcao-btn';
@@ -1129,7 +1168,7 @@ window.createContinueAdventureButton = async function(db, userId) {
         sessionStorage.removeItem("narrativa-id");
 
         // Redireciona diretamente para a seção correta na narrativa correta
-        window.location.href = `narrativas.html?narrativa=${narrativaIdFinal}&secao=${secaoOrigemFinal}`;
+        window.location.href = `narrativas.html?narrativa=${narrativaIdFinal}&secao=99999&retorno=${secaoOrigemFinal}`;
     } catch (err) {
         console.error("Erro ao continuar aventura:", err);
     }
@@ -1150,3 +1189,4 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
