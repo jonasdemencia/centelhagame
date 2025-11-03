@@ -2755,13 +2755,25 @@ export const NARRATIVAS = {
             ]
         },
 
-      320: {
-    texto: "Você foi derrotado em combate. Suas forças se esgotam e você cai no chão frio da arena. A escuridão toma conta de sua visão. Sua jornada termina aqui.",
-    efeitos: [{ tipo: "energia", valor: -10 }],
-    final: true
-}
+            320: {
+        texto: "Você foi derrotado em combate. Suas forças se esgotam e você cai no chão frio da arena. A escuridão toma conta de sua visão. Sua jornada termina aqui.",
+        efeitos: [{ tipo: "energia", valor: -10 }],
+        final: true
+      },
+
+      // === INÍCIO DA ADIÇÃO ===
+      // Seção buffer estática para retorno de batalha emergente
+      99999: {
+        texto: "Por um momento, pareceu um sonho, mas você derrotou o que havia de ser derrotado e agora está em segurança.",
+        opcoes: [
+          // Esta opção será gerada dinamicamente pelo narrativas.js
+        ]
+      }
+      // === FIM DA ADIÇÃO ===
 }
 },
+// Fim de "condominio-tempo-perdido"
+
 
    
 "vila-abandonada": {
@@ -3744,6 +3756,7 @@ export const NARRATIVAS = {
         }
     }
 };
+
 
 
 
