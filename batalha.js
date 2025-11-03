@@ -3245,28 +3245,31 @@ async function createContinueAdventureButton(db, userId) {
     button.textContent = "Continuar Aventura";
     button.style.cssText = "background:#4CAF50;color:#fff;padding:10px 20px;margin:10px;border:none;border-radius:5px;cursor:pointer;";
 
-    button.addEventListener("click", async () => {
-      try {
-        console.log("🔁 Retornando à narrativa:", narrativeId, "→ seção", origemCorreta);
+    button.addEventListener('click', async () => {
+    try {
+        const playerDocRef = doc(db, userId);
+        const docSnap = await getDoc(playerDocRef);
+        const battleReturn = docSnap.data()?.narrativeProgress?.battleReturn;
+        
+        if (!battleReturn) {
+            console.error('Dados de retorno não encontrados');
+            return;
+        }
 
-        // Atualiza o campo correto dentro da narrativa
+        const url = battleReturn.isEmergencia ?
+            `narrativas.html?narrativa=${battleReturn.narrativeId}&secao=99999&retorno=${battleReturn.secaoOrigem}` :
+            `narrativas.html?narrativa=${battleReturn.narrativeId}&secao=${battleReturn.vitoria}`;
+
+        // Limpa o battleReturn
         await updateDoc(playerDocRef, {
-          [`narrativeProgress.${narrativeId}.currentSection`]: origemCorreta,
-          "narrativeProgress.battleReturn.active": false
+            "narrativeProgress.battleReturn.active": false
         });
 
-        // Limpa dados locais
-        sessionStorage.removeItem("narrativa-vitoria");
-        sessionStorage.removeItem("narrativa-derrota");
-        sessionStorage.removeItem("narrativa-origem");
-        sessionStorage.removeItem("narrativa-id");
-
-        // Redireciona de volta à seção original
-        window.location.href = `narrativas.html?narrativa=${narrativeId}&secao=99999&retorno=${secaoOrigem}`;
-      } catch (err) {
-        console.error("Erro ao continuar aventura:", err);
-      }
-    });
+        window.location.href = url;
+    } catch (error) {
+        console.error('Erro:', error);
+    }
+});
 
     const lootButton = document.getElementById("loot-button");
     if (lootButton && lootButton.parentNode) {
