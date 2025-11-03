@@ -739,6 +739,15 @@ ${monstrosAmostra}
         const escolhasNaEmergencia = this.escolhasEmergentes.length > 0 
             ? `\n**ESCOLHAS NA EMERGÊNCIA:** ${this.escolhasEmergentes.join(' → ')}\n` 
             : '';
+        const alertaPerigo = opcao.tipo === 'perigo_oculto' ? `
+**⚠️ ATENÇÃO CRÍTICA: O jogador escolheu uma opção de "perigo_oculto"!**
+**VOCÊ DEVE OBRIGATORIAMENTE NESTA SEÇÃO:**
+1. Descrever a REVELAÇÃO do perigo (ex: "Ao tocar, uma sombra emerge!")
+2. Incluir opção com "tipo": "iniciar_batalha", "texto": "Enfrentar [criatura]", "monstro": "[ID_VALIDO]"
+3. O monstro deve fazer sentido físico com o ambiente
+4. Incluir outras opções (fugir, recuar, etc.)
+` : '';
+
 
         // 🆕 ATUALIZADO: Itens e monstros contextuais também na continuação
         const itensAmostra = this.getItensAmostra(secaoPai.texto);
@@ -757,6 +766,7 @@ Modo usado: ${secaoPai.modo || 'desconhecido'}
 Jogador escolheu: "${opcao.texto}" (tipo: ${opcao.tipo})
 
 ${escolhasNaEmergencia}
+${alertaPerigo}
 ${padroes ? `**${padroes}**\n` : ''}
 
 **ANCORAGEM OBRIGATÓRIA:**
@@ -859,5 +869,6 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
