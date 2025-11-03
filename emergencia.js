@@ -1,4 +1,5 @@
 // emergencia.js - VERSÃO COM SISTEMA DE RARIDADE, POOLS INTELIGENTES E BATALHAS EM OPÇÃO
+// (A MAIORIA DO ARQUIVO PERMANECE IGUAL - AS MUDANÇAS ESTÃO MARCADAS EM `processarRespostaIA`)
 
 export class SistemaEmergencia {
     constructor(itensNarrativas = {}) {
@@ -543,6 +544,9 @@ ${monstrosAmostra}
         }
     }
 
+    // =======================================================================
+    // === INÍCIO DA MODIFICAÇÃO ===
+    // =======================================================================
     // 🆕 MÉTODO ATUALIZADO (lógica de batalha em OPÇÃO)
     processarRespostaIA(respostaJSON, secaoDeOrigem, novoId) {
         const numeroSecaoOrigem = this.secaoOrigemEmergencia;
@@ -553,53 +557,23 @@ ${monstrosAmostra}
             // 🆕 NOVO: OPÇÃO DE BATALHA
             if (op.tipo === "batalha_emergente") {
                 console.log(`[EMERGÊNCIA] ⚔️ IA gerou uma OPÇÃO DE BATALHA: ${op.batalha}`);
+                console.log(`[EMERGÊNCIA] Redirecionando VITORIA para ${numeroSecaoOrigem} e DERROTA para 320.`);
                 
-                const vitoriaId = this.gerarIdEmergente();
-                const derrotaId = this.gerarIdEmergente(); // Precisa de um ID único também
-
-                // 1. Criar e armazenar a seção de DERROTA
-                this.gerarDerrotaEmergencia(derrotaId);
-
-                // 2. Criar e armazenar a seção de VITÓRIA
-                // Processa as opções *da seção de vitória*
-                const opcoesVitoriaProcessadas = op.opcoesVitoria.map(opV => {
-                    if (opV.tipo === "recuar") {
-                        return { // Recuar da vitória leva à seção original
-                            texto: opV.texto,
-                            secao: numeroSecaoOrigem,
-                            emergente: false,
-                            tipo: 'recuar'
-                        };
-                    } else {
-                        return { // Aprofundar da vitória leva a uma nova seção emergente
-                            texto: opV.texto,
-                            secao: this.gerarIdEmergente(),
-                            tipo: opV.tipo,
-                            emergente: true
-                        };
-                    }
-                });
-
-                const secaoVitoria = {
-                    texto: op.textoVitoria,
-                    opcoes: opcoesVitoriaProcessadas,
-                    efeitos: [], // A IA pode adicionar efeitos pós-batalha aqui se quisermos
-                    emergente: true,
-                    id: vitoriaId,
-                    origem: numeroSecaoOrigem,
-                    modo: respostaJSON.modo,
-                    profundidade: this.profundidadeAtual // Batalha não aumenta a profundidade
-                };
-                this.secoesEmergentes.set(vitoriaId, secaoVitoria);
-                console.log(`[EMERGÊNCIA] Seção de Vitória criada: ${vitoriaId}`);
-
+                // 🛑 REMOVIDO: Geração de vitoriaId e derrotaId.
+                // 🛑 REMOVIDO: Geração de secaoDerrota e secaoVitoria.
+                // Não precisamos mais criar seções emergentes de vitória ou derrota,
+                // pois vamos redirecionar para seções estáticas.
+                
                 // 3. Retorna a OPÇÃO DE BATALHA formatada para o narrativas.js
                 // Isso corresponde ao seu modelo em narrativas-data.js
                 return {
                     texto: op.texto,
                     batalha: op.batalha,
-                    vitoria: vitoriaId,
-                    derrota: derrotaId,
+                    // ✅ MODIFICADO: vitoria agora aponta para a seção *original* onde a emergência começou
+                    vitoria: numeroSecaoOrigem, 
+                    // ✅ MODIFICADO: derrota agora aponta para uma seção estática de "game over"
+                    //    (Usando a seção 320 de "condominio-tempo-perdido" como um "game over" genérico)
+                    derrota: 320, 
                     emergente: true,
                     tipo: 'batalha' // Apenas para nosso log
                 };
@@ -638,6 +612,9 @@ ${monstrosAmostra}
             profundidade: this.profundidadeAtual
         };
     }
+    // =======================================================================
+    // === FIM DA MODIFICAÇÃO ===
+    // =======================================================================
 
 
     async processarOpcaoEmergente(opcao, secaoPai) {
@@ -859,5 +836,3 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
-
-
