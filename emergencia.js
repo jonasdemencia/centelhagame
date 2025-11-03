@@ -443,12 +443,16 @@ ${historicoFormatado}
 ${itensAmostra}
 
 // 🆕 INÍCIO DA ADIÇÃO (REGRA 7 + FORMATO DE BATALHA)
-7. **(85% CHANCE) INCLUIR OPÇÃO DE BATALHA:**
-   - Em 85% dos casos, adicione UMA opção à lista 'opcoes' com o formato especial "batalha_emergente".
-   - O "texto" da seção deve introduzir a *possibilidade* de um conflito (ex: 'Um rosnado ecoa do corredor', 'Uma figura se materializa das sombras').
-   - A seção DEVE ter OUTRAS opções (como 'fugir', 'ignorar', 'recuar'). O jogador NÃO PODE ser forçado a lutar.
-   - **Raridade do Monstro:** Prefira Comuns (60% chance), depois Incomuns (30%), e raramente Raros (10%).
-   - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
+7. **(85% CHANCE) CRIAR OPÇÃO QUE PODE LEVAR A BATALHA:**
+   - Em 85% dos casos, crie UMA opção NEUTRA que PODE resultar em conflito.
+   - **CRÍTICO:** A opção NÃO PODE spoilar a consequência
+   - ❌ ERRADO: "Tocar a ampulheta e enfrentar a Sombra Errante"
+   - ✅ CERTO: "Tocar a ampulheta"
+   - A opção deve ser curiosa/tentadora, mas SEM revelar o perigo
+   - Marque esta opção com: "tipo": "armadilha_batalha"
+   - Adicione o campo: "monstroOculto": "[ID_MONSTRO_VALIDO]"
+   - **COERÊNCIA FÍSICA:** Monstro deve fazer sentido com o contexto (coruja só se houver janela/abertura, etc.)
+   - **CRÍTICO:** Use APENAS IDs da lista de monstros. NÃO invente monstros.
 ${monstrosAmostra}
 
 **FORMATO (JSON PURO - Modo Normal):**
@@ -464,26 +468,22 @@ ${monstrosAmostra}
   "efeitos": [{"tipo": "energia", "valor": X}]
 }
 
-**FORMATO (JSON PURO - Com Opção de Batalha - RARO 5%):**
+**FORMATO (JSON PURO - Com Armadilha de Batalha - 30%):**
 {
-  "modo": "evento_menor",
-  "texto": "[Texto coerente, ex: 'Algo se move nas sombras e um par de olhos vermelhos encara você...']",
+  "modo": "expansao_natural",
+  "texto": "[Texto normal, ex: 'Você vê uma ampulheta brilhante sobre a mesa...']",
   "opcoes": [
     {
-      "tipo": "batalha_emergente",
-      "texto": "[Opção de lutar, ex: 'Enfrentar a criatura']",
-      "batalha": "[ID_MONSTRO_VALIDO]",
-      "textoVitoria": "[Texto que o jogador vê após vencer a batalha]",
-      "opcoesVitoria": [
-         {"texto": "[Continuar explorando o local]", "tipo": "aprofundar"},
-         {"texto": "[Sair da sala]", "tipo": "recuar"}
-      ]
+      "tipo": "armadilha_batalha",
+      "texto": "[Opção NEUTRA sem spoiler, ex: 'Tocar a ampulheta']",
+      "monstroOculto": "[ID_MONSTRO_VALIDO]"
     },
-    {"texto": "[Recuar lentamente]", "tipo": "recuar"},
-    {"texto": "[Tentar se esconder]", "tipo": "neutra"}
+    {"texto": "[Examinar de longe]", "tipo": "neutra"},
+    {"texto": "[Sair da sala]", "tipo": "recuar"}
   ],
   "efeitos": []
 }
+
 // 🆕 FIM DA ADIÇÃO
 
 **LEMBRE-SE:** Expansão natural > Detalhe perturbador > Evento menor (em ordem de preferência)
@@ -554,30 +554,43 @@ ${monstrosAmostra}
         // Processa as opções...
         const opcoesProcessadas = respostaJSON.opcoes.map(op => {
             
-            // 🆕 NOVO: OPÇÃO DE BATALHA
-            if (op.tipo === "batalha_emergente") {
-                console.log(`[EMERGÊNCIA] ⚔️ IA gerou uma OPÇÃO DE BATALHA: ${op.batalha}`);
-                console.log(`[EMERGÊNCIA] Redirecionando VITORIA para ${numeroSecaoOrigem} e DERROTA para 320.`);
-                
-                // 🛑 REMOVIDO: Geração de vitoriaId e derrotaId.
-                // 🛑 REMOVIDO: Geração de secaoDerrota e secaoVitoria.
-                // Não precisamos mais criar seções emergentes de vitória ou derrota,
-                // pois vamos redirecionar para seções estáticas.
-                
-                // 3. Retorna a OPÇÃO DE BATALHA formatada para o narrativas.js
-                // Isso corresponde ao seu modelo em narrativas-data.js
-                return {
-                    texto: op.texto,
-                    batalha: op.batalha,
-                    // ✅ MODIFICADO: vitoria agora aponta para a seção *original* onde a emergência começou
-                    vitoria: numeroSecaoOrigem, 
-                    // ✅ MODIFICADO: derrota agora aponta para uma seção estática de "game over"
-                    //    (Usando a seção 320 de "condominio-tempo-perdido" como um "game over" genérico)
-                    derrota: 320, 
-                    emergente: true,
-                    tipo: 'batalha' // Apenas para nosso log
-                };
+            // 🆕 NOVO: ARMADILHA DE BATALHA (opção que leva a batalha)
+if (op.tipo === "armadilha_batalha") {
+    const idSecaoBatalha = this.gerarIdEmergente();
+    console.log(`[EMERGÊNCIA] 🎯 IA criou armadilha de batalha: ${op.monstroOculto} → ${idSecaoBatalha}`);
+    
+    // Cria seção intermediária que revela a batalha
+    const secaoBatalha = {
+        texto: `Ao realizar essa ação, algo inesperado acontece! Uma presença ameaçadora se manifesta diante de você.`,
+        opcoes: [
+            {
+                texto: `Enfrentar a ameaça`,
+                batalha: op.monstroOculto,
+                vitoria: numeroSecaoOrigem,
+                derrota: 320,
+                emergente: false
+            },
+            {
+                texto: `Tentar recuar`,
+                secao: numeroSecaoOrigem,
+                emergente: false
             }
+        ],
+        emergente: true,
+        id: idSecaoBatalha,
+        armadilha: true
+    };
+    
+    this.secoesEmergentes.set(idSecaoBatalha, secaoBatalha);
+    
+    return {
+        texto: op.texto,
+        secao: idSecaoBatalha,
+        tipo: 'armadilha',
+        emergente: true
+    };
+}
+
             
             // OPÇÃO DE RECUAR (lógica existente)
             if (op.tipo === "recuar") {
@@ -780,10 +793,15 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
 ${itensAmostra}
 
 // 🆕 INÍCIO DA ADIÇÃO (REGRA 6 + FORMATO DE BATALHA)
-6. **(85% CHANCE) INCLUIR OPÇÃO DE BATALHA:**
-   - Em 85% dos casos, adicione UMA opção 'batalha_emergente' à lista 'opcoes'.
-   - O "texto" da seção deve ser a consequência da escolha anterior E introduzir a ameaça.
-   - A seção DEVE ter outras opções (fugir, etc.). O jogador NÃO PODE ser forçado.
+6. **(85% CHANCE) CRIAR OPÇÃO QUE PODE LEVAR A BATALHA:**
+   - Em 85% dos casos, crie UMA opção NEUTRA que PODE resultar em conflito.
+   - **CRÍTICO:** A opção NÃO PODE spoilar a consequência
+   - ❌ ERRADO: "Tocar a ampulheta e enfrentar a Sombra Errante"
+   - ✅ CERTO: "Tocar a ampulheta"
+   - A opção deve ser curiosa/tentadora, mas SEM revelar o perigo
+   - Marque esta opção com: "tipo": "armadilha_batalha"
+   - Adicione o campo: "monstroOculto": "[ID_MONSTRO_VALIDO]"
+   - **COERÊNCIA FÍSICA:** Monstro deve fazer sentido com o contexto (coruja só se houver janela/abertura, etc.)
    - **CRÍTICO:** Use APENAS IDs da lista de monstros. NÃO invente monstros.
 ${monstrosAmostra}
 
@@ -798,25 +816,22 @@ ${monstrosAmostra}
   "efeitos": [{"tipo": "energia", "valor": X}]
 }
 
-**FORMATO (JSON PURO - Com Opção de Batalha - RARO 5%):**
+**FORMATO (JSON PURO - Com Armadilha de Batalha - 30%):**
 {
-  "modo": "evento_menor",
-  "texto": "[Texto coerente, ex: 'Ao abrir a gaveta, um som rápido ecoa e...']",
+  "modo": "expansao_natural",
+  "texto": "[Texto normal, ex: 'Você vê uma ampulheta brilhante sobre a mesa...']",
   "opcoes": [
     {
-      "tipo": "batalha_emergente",
-      "texto": "[Opção de lutar, ex: 'Enfrentar a criatura']",
-      "batalha": "[ID_MONSTRO_VALIDO]",
-      "textoVitoria": "[Texto que o jogador vê após vencer]",
-      "opcoesVitoria": [
-         {"texto": "[Pegar o item da gaveta]", "tipo": "aprofundar"},
-         {"texto": "[Sair da sala]", "tipo": "recuar"}
-      ]
+      "tipo": "armadilha_batalha",
+      "texto": "[Opção NEUTRA sem spoiler, ex: 'Tocar a ampulheta']",
+      "monstroOculto": "[ID_MONSTRO_VALIDO]"
     },
-    {"texto": "[Bater a gaveta e recuar]", "tipo": "recuar"}
+    {"texto": "[Examinar de longe]", "tipo": "neutra"},
+    {"texto": "[Sair da sala]", "tipo": "recuar"}
   ],
   "efeitos": []
 }
+
 // 🆕 FIM DA ADIÇÃO
 `;
     }
@@ -836,3 +851,4 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
