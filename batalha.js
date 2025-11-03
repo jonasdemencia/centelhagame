@@ -3262,7 +3262,7 @@ async function createContinueAdventureButton(db, userId) {
         sessionStorage.removeItem("narrativa-id");
 
         // Redireciona de volta à seção original
-        window.location.href = `narrativas.html?narrativa=${narrativeId}&secao=${origemCorreta}`;
+        window.location.href = `narrativas.html?narrativa=${narrativeId}&secao=99999&retorno=${secaoOrigem}`;
       } catch (err) {
         console.error("Erro ao continuar aventura:", err);
       }
