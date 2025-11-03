@@ -1038,10 +1038,6 @@ async restaurarNarrativaAposRetorno(narrativeId, secao) {
         }
     });
 
-    // Opcional: grava também no sessionStorage para retorno mais rápido
-    sessionStorage.setItem("narrativa-vitoria", opcao.vitoria || "");
-    sessionStorage.setItem("narrativa-derrota", opcao.derrota || "");
-    sessionStorage.setItem("narrativa-origem", origemParaSalvar || "");
 
     window.location.href = `batalha.html?monstros=${opcao.batalha}`;
     return;
@@ -1085,11 +1081,6 @@ async restaurarNarrativaAposRetorno(narrativeId, secao) {
         }
     });
 
-    // Grava localmente para garantir retorno imediato (caso Firestore demore)
-    sessionStorage.setItem("narrativa-vitoria", secao.vitoria || "");
-    sessionStorage.setItem("narrativa-derrota", secao.derrota || "");
-    sessionStorage.setItem("narrativa-origem", origemParaSalvar || "");
-    if (narrativeId) sessionStorage.setItem("narrativa-id", narrativeId);
 
     // Vai para a página de batalha
     window.location.href = `batalha.html?monstros=${secao.batalha}`;
@@ -1189,4 +1180,5 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
