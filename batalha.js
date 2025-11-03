@@ -3247,6 +3247,11 @@ async function createContinueAdventureButton(db, userId) {
 
     button.addEventListener('click', async () => {
     try {
+        if (!userId) {
+            console.error('userId não definido');
+            return;
+        }
+        
         const playerDocRef = doc(db, "players", userId);
         const docSnap = await getDoc(playerDocRef);
         const battleReturn = docSnap.data()?.narrativeProgress?.battleReturn;
@@ -3260,16 +3265,16 @@ async function createContinueAdventureButton(db, userId) {
             `narrativas.html?narrativa=${battleReturn.narrativeId}&secao=99999&retorno=${battleReturn.secaoOrigem}` :
             `narrativas.html?narrativa=${battleReturn.narrativeId}&secao=${battleReturn.vitoria}`;
 
-        // Limpa o battleReturn
         await updateDoc(playerDocRef, {
             "narrativeProgress.battleReturn.active": false
         });
 
         window.location.href = url;
     } catch (error) {
-        console.error('Erro:', error);
+        console.error('Erro ao continuar aventura:', error);
     }
 });
+
 
     const lootButton = document.getElementById("loot-button");
     if (lootButton && lootButton.parentNode) {
