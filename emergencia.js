@@ -443,16 +443,28 @@ ${historicoFormatado}
 ${itensAmostra}
 
 // 🆕 INÍCIO DA ADIÇÃO (REGRA 7 + FORMATO DE BATALHA)
-7. **(85% CHANCE) CRIAR OPÇÃO QUE PODE LEVAR A BATALHA:**
-   - Em 85% dos casos, crie UMA opção NEUTRA que PODE resultar em conflito.
-   - **CRÍTICO:** A opção NÃO PODE spoilar a consequência
+7.(90% chance) OPÇÃO QUE LEVA A PERIGO:**
+   - Em 90% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
+   - Esta opção deve ter: "tipo": "perigo_oculto"
+   - NÃO spoile a consequência no texto da opção
+   - A IA vai gerar automaticamente a próxima seção com a revelação do perigo
    - ❌ ERRADO: "Tocar a ampulheta e enfrentar a Sombra Errante"
    - ✅ CERTO: "Tocar a ampulheta"
    - A opção deve ser curiosa/tentadora, mas SEM revelar o perigo
-   - Marque esta opção com: "tipo": "armadilha_batalha"
-   - Adicione o campo: "monstroOculto": "[ID_MONSTRO_VALIDO]"
-   - **COERÊNCIA FÍSICA:** Monstro deve fazer sentido com o contexto (coruja só se houver janela/abertura, etc.)
-   - **CRÍTICO:** Use APENAS IDs da lista de monstros. NÃO invente monstros.
+   
+  8. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
+   - Se o jogador escolheu uma opção "perigo_oculto", ESTA seção DEVE:
+     * Descrever o que aconteceu (ex: "Ao tocar, uma sombra surge!")
+     * **OBRIGATÓRIO:** Incluir opção com "tipo": "iniciar_batalha"
+     * Formato da opção de batalha:
+       {
+         "tipo": "iniciar_batalha",
+         "texto": "Enfrentar a criatura",
+         "monstro": "[ID_MONSTRO_VALIDO]"
+       }
+     * Incluir outras opções (fugir, recuar, etc.)
+   - **COERÊNCIA FÍSICA:** Criatura deve caber no ambiente (não coloque coruja saindo de gaveta)
+   - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
 ${monstrosAmostra}
 
 **FORMATO (JSON PURO - Modo Normal):**
@@ -553,65 +565,49 @@ ${monstrosAmostra}
 
         // Processa as opções...
         const opcoesProcessadas = respostaJSON.opcoes.map(op => {
-            
-            // 🆕 NOVO: ARMADILHA DE BATALHA (opção que leva a batalha)
-if (op.tipo === "armadilha_batalha") {
-    const idSecaoBatalha = this.gerarIdEmergente();
-    console.log(`[EMERGÊNCIA] 🎯 IA criou armadilha de batalha: ${op.monstroOculto} → ${idSecaoBatalha}`);
     
-    // Cria seção intermediária que revela a batalha
-    const secaoBatalha = {
-        texto: `Ao realizar essa ação, algo inesperado acontece! Uma presença ameaçadora se manifesta diante de você.`,
-        opcoes: [
-            {
-                texto: `Enfrentar a ameaça`,
-                batalha: op.monstroOculto,
-                vitoria: numeroSecaoOrigem,
-                derrota: 320,
-                emergente: false
-            },
-            {
-                texto: `Tentar recuar`,
-                secao: numeroSecaoOrigem,
-                emergente: false
-            }
-        ],
-        emergente: true,
-        id: idSecaoBatalha,
-        armadilha: true
-    };
-    
-    this.secoesEmergentes.set(idSecaoBatalha, secaoBatalha);
-    
-    return {
-        texto: op.texto,
-        secao: idSecaoBatalha,
-        tipo: 'armadilha',
-        emergente: true
-    };
-}
+    // Opção que leva a perigo (não revela ainda)
+    if (op.tipo === "perigo_oculto") {
+        return {
+            texto: op.texto,
+            secao: this.gerarIdEmergente(),
+            tipo: 'perigo_oculto',
+            emergente: true
+        };
+    }
 
-            
-            // OPÇÃO DE RECUAR (lógica existente)
-            if (op.tipo === "recuar") {
-                return {
-                    texto: op.texto,
-                    secao: numeroSecaoOrigem,
-                    emergente: false,
-                    tipo: 'recuar'
-                };
-            } 
-            
-            // OPÇÃO NORMAL (aprofundar / neutra) (lógica existente)
-            else {
-                return {
-                    texto: op.texto,
-                    secao: this.gerarIdEmergente(),
-                    tipo: op.tipo,
-                    emergente: true
-                };
-            }
-        });
+    // Opção de iniciar batalha (revelada na seção seguinte)
+    if (op.tipo === "iniciar_batalha") {
+        return {
+            texto: op.texto,
+            batalha: op.monstro,
+            vitoria: numeroSecaoOrigem,
+            derrota: 320,
+            emergente: false
+        };
+    }
+    
+    // OPÇÃO DE RECUAR (lógica existente)
+    if (op.tipo === "recuar") {
+        return {
+            texto: op.texto,
+            secao: numeroSecaoOrigem,
+            emergente: false,
+            tipo: 'recuar'
+        };
+    } 
+    
+    // OPÇÃO NORMAL (aprofundar / neutra) (lógica existente)
+    else {
+        return {
+            texto: op.texto,
+            secao: this.gerarIdEmergente(),
+            tipo: op.tipo,
+            emergente: true
+        };
+    }
+});
+
 
         // Retorna a seção principal
         return {
@@ -793,16 +789,28 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
 ${itensAmostra}
 
 // 🆕 INÍCIO DA ADIÇÃO (REGRA 6 + FORMATO DE BATALHA)
-6. **(85% CHANCE) CRIAR OPÇÃO QUE PODE LEVAR A BATALHA:**
-   - Em 85% dos casos, crie UMA opção NEUTRA que PODE resultar em conflito.
-   - **CRÍTICO:** A opção NÃO PODE spoilar a consequência
+6. (90% chance) OPÇÃO QUE LEVA A PERIGO:**
+   - Em 90% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
+   - Esta opção deve ter: "tipo": "perigo_oculto"
+   - NÃO spoile a consequência no texto da opção
+   - A IA vai gerar automaticamente a próxima seção com a revelação do perigo
    - ❌ ERRADO: "Tocar a ampulheta e enfrentar a Sombra Errante"
    - ✅ CERTO: "Tocar a ampulheta"
    - A opção deve ser curiosa/tentadora, mas SEM revelar o perigo
-   - Marque esta opção com: "tipo": "armadilha_batalha"
-   - Adicione o campo: "monstroOculto": "[ID_MONSTRO_VALIDO]"
-   - **COERÊNCIA FÍSICA:** Monstro deve fazer sentido com o contexto (coruja só se houver janela/abertura, etc.)
-   - **CRÍTICO:** Use APENAS IDs da lista de monstros. NÃO invente monstros.
+   
+  7. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
+   - Se o jogador escolheu uma opção "perigo_oculto", ESTA seção DEVE:
+     * Descrever o que aconteceu (ex: "Ao tocar, uma sombra surge!")
+     * **OBRIGATÓRIO:** Incluir opção com "tipo": "iniciar_batalha"
+     * Formato da opção de batalha:
+       {
+         "tipo": "iniciar_batalha",
+         "texto": "Enfrentar a criatura",
+         "monstro": "[ID_MONSTRO_VALIDO]"
+       }
+     * Incluir outras opções (fugir, recuar, etc.)
+   - **COERÊNCIA FÍSICA:** Criatura deve caber no ambiente (não coloque coruja saindo de gaveta)
+   - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
 ${monstrosAmostra}
 
 **FORMATO (JSON PURO - Modo Normal):**
@@ -851,4 +859,5 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
