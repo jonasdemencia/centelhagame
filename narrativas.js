@@ -513,48 +513,25 @@ class SistemaNarrativas {
     }
 
     criarOpcoes(opcoes, isFinal = false) {
-        const container = document.getElementById('opcoes-container');
-        container.innerHTML = '';
+    const container = document.getElementById('opcoes-container');
+    container.innerHTML = '';
 
-        // === INÍCIO DA ADIÇÃO ===
-// Verifica se esta é a seção buffer de retorno de batalha emergente
-const urlParams = new URLSearchParams(window.location.search);
-const secaoRetornoId = urlParams.get('retorno');
-
-if (this.secaoAtual == 99999 && secaoRetornoId) {
-    const btnRetorno = document.createElement('button');
-    btnRetorno.className = 'opcao-btn';
-    
-    // Tenta pegar o nome do aposento (opcional, como bônus)
-    let nomeAposento = "local anterior";
-    try {
-        // Tenta pegar as primeiras 3 palavras da seção de origem
-        const secaoOriginal = this.narrativaAtual.secoes[secaoRetornoId];
-        if (secaoOriginal && secaoOriginal.texto) {
-             nomeAposento = secaoOriginal.texto.split(' ').slice(0, 3).join(' ') + "...";
+    // === SEÇÃO 99999 - BUFFER DE RETORNO DE BATALHA EMERGENTE ===
+    if (this.secaoAtual == 99999) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const secaoRetorno = urlParams.get('retorno');
+        
+        if (secaoRetorno) {
+            const btn = document.createElement('button');
+            btn.className = 'opcao-btn';
+            btn.textContent = 'Continuar jornada';
+            btn.addEventListener('click', () => {
+                this.mostrarSecao(parseInt(secaoRetorno));
+            });
+            container.appendChild(btn);
+            return; // Para aqui - não renderiza outras opções
         }
-    } catch (e) { /* falha silenciosa, usa o fallback */ }
-
-    // Define o texto do botão como você sugeriu
-    btnRetorno.textContent = `Retornar a: "${nomeAposento}"`;
-
-    btnRetorno.addEventListener('click', () => {
-        // Remove o parâmetro 'retorno' da URL antes de prosseguir
-        const novaUrl = new URL(window.location);
-        novaUrl.searchParams.delete('retorno');
-        novaUrl.searchParams.set('secao', secaoRetornoId);
-        window.history.pushState({}, '', novaUrl); // Atualiza a URL sem recarregar
-
-        // Processa a opção para ir para a seção original
-        this.processarOpcao({
-            texto: btnRetorno.textContent,
-            secao: parseInt(secaoRetornoId) // A seção de retorno real
-        });
-    });
-    container.appendChild(btnRetorno);
-    return; // Impede que o resto da função crie outras opções
-}
-// === FIM DA ADIÇÃO ===
+    }
 
         if (isFinal) {
             const btnFinalizar = document.createElement('button');
@@ -1213,6 +1190,7 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
