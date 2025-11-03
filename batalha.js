@@ -3247,7 +3247,7 @@ async function createContinueAdventureButton(db, userId) {
 
     button.addEventListener('click', async () => {
     try {
-        const playerDocRef = doc(db, userId);
+        const playerDocRef = doc(db, "players", userId);
         const docSnap = await getDoc(playerDocRef);
         const battleReturn = docSnap.data()?.narrativeProgress?.battleReturn;
         
