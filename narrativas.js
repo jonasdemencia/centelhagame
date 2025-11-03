@@ -1010,13 +1010,22 @@ async restaurarNarrativaAposRetorno(narrativeId, secao) {
     }
 
     if (opcao.batalha) {
-    // Determina origem correta: se há emergência ativa, usa origem da emergência
-    const origemParaSalvar =
-        (this.sistemaEmergencia && this.sistemaEmergencia.emergenciaAtiva)
-            ? (this.sistemaEmergencia.secaoOrigemEmergencia || this.secaoAtual)
-            : this.secaoAtual;
+    console.log(`[BATALHA] Iniciando batalha emergente: ${opcao.batalha}`);
+    
+    // 🆕 DETERMINA ORIGEM: Se emergência ativa, usa origem da emergência
+    const origemParaSalvar = this.sistemaEmergencia.emergenciaAtiva 
+        ? this.sistemaEmergencia.secaoOrigemEmergencia 
+        : this.secaoAtual;
 
-    // Calcula narrativeId de forma segura
+    console.log(`[BATALHA] Origem salva: ${origemParaSalvar}`);
+
+    // 🆕 DETERMINA DESTINO PÓS-BATALHA: 
+    // Se emergência ativa, vai para seção 99999 (buffer) com parâmetro de retorno
+    // Se não, segue o fluxo normal (vitoria/derrota da opção)
+    const destinoVitoria = this.sistemaEmergencia.emergenciaAtiva 
+        ? 99999  // Vai para o buffer
+        : (opcao.vitoria || null);
+    
     const narrativeId = (() => {
         try {
             return Object.keys(NARRATIVAS).find(
@@ -1031,14 +1040,22 @@ async restaurarNarrativaAposRetorno(narrativeId, secao) {
 
     await updateDoc(playerDocRef, {
         "narrativeProgress.battleReturn": {
-            vitoria: opcao.vitoria || null,
+            vitoria: destinoVitoria,
             derrota: opcao.derrota || null,
             narrativeId,
-            secaoOrigem: origemParaSalvar,
-            active: true
+            secaoOrigem: origemParaSalvar, // 🆕 Salva a origem REAL
+            active: true,
+            // 🆕 NOVO: Flag para indicar que é batalha emergente
+            isEmergencia: this.sistemaEmergencia.emergenciaAtiva
         }
     });
 
+    // 🆕 SE FOR EMERGÊNCIA, salva também no sessionStorage para garantir
+    if (this.sistemaEmergencia.emergenciaAtiva) {
+        sessionStorage.setItem("narrativa-origem", origemParaSalvar.toString());
+        sessionStorage.setItem("narrativa-id", narrativeId);
+        console.log(`[BATALHA-EMERGENCIA] SessionStorage salvo: origem=${origemParaSalvar}, narrative=${narrativeId}`);
+    }
 
     window.location.href = `batalha.html?monstros=${opcao.batalha}`;
     return;
@@ -1130,37 +1147,52 @@ window.createContinueAdventureButton = async function(db, userId) {
 
         button.addEventListener('click', async () => {
     try {
-        // Determina narrativa e seção finais com prioridade ao sessionStorage
-        const narrativaIdFinal =
-            narrativeId ||
+        // 🆕 PRIORIDADE: sessionStorage > battleReturn
+        const narrativaIdFinal = 
             sessionStorage.getItem("narrativa-id") ||
             battleReturn.narrativeId ||
             null;
 
-        const secaoOrigemFinal =
+        const secaoOrigemFinal = 
             sessionStorage.getItem("narrativa-origem") ||
             battleReturn.secaoOrigem ||
             null;
 
         if (!narrativaIdFinal || !secaoOrigemFinal) {
-            console.warn("[CONTINUAR] Dados insuficientes para retorno. narrativeId:", narrativaIdFinal, "secao:", secaoOrigemFinal);
+            console.warn("[CONTINUAR] Dados insuficientes para retorno.");
             return;
         }
 
-        // Atualiza dentro da narrativa correta (campo nested)
-        await updateDoc(playerDocRef, {
-            [`narrativeProgress.${narrativaIdFinal}.currentSection`]: secaoOrigemFinal,
-            "narrativeProgress.battleReturn.active": false
-        });
+        // 🆕 DETERMINA SE É BATALHA EMERGENTE
+        const isEmergencia = battleReturn.isEmergencia || 
+                            sessionStorage.getItem("narrativa-id") !== null;
 
-        // Limpando o sessionStorage local
-        sessionStorage.removeItem("narrativa-vitoria");
-        sessionStorage.removeItem("narrativa-derrota");
-        sessionStorage.removeItem("narrativa-origem");
-        sessionStorage.removeItem("narrativa-id");
+        console.log(`[CONTINUAR] Tipo: ${isEmergencia ? 'EMERGENCIA' : 'NORMAL'}`);
 
-        // Redireciona diretamente para a seção correta na narrativa correta
-        window.location.href = `narrativas.html?narrativa=${narrativaIdFinal}&secao=99999&retorno=${secaoOrigemFinal}`;
+        if (isEmergencia) {
+            // 🆕 FLUXO EMERGENTE: Vai para buffer 99999 com parâmetro de retorno
+            await updateDoc(playerDocRef, {
+                "narrativeProgress.battleReturn.active": false
+            });
+
+            // Limpa sessionStorage
+            sessionStorage.removeItem("narrativa-vitoria");
+            sessionStorage.removeItem("narrativa-derrota");
+            sessionStorage.removeItem("narrativa-origem");
+            sessionStorage.removeItem("narrativa-id");
+
+            // 🆕 REDIRECIONA PARA BUFFER COM PARÂMETRO DE RETORNO
+            window.location.href = `narrativas.html?narrativa=${narrativaIdFinal}&secao=99999&retorno=${secaoOrigemFinal}`;
+            
+        } else {
+            // Fluxo normal (existente)
+            await updateDoc(playerDocRef, {
+                [`narrativeProgress.${narrativaIdFinal}.currentSection`]: secaoOrigemFinal,
+                "narrativeProgress.battleReturn.active": false
+            });
+
+            window.location.href = `narrativas.html?narrativa=${narrativaIdFinal}&secao=${secaoOrigemFinal}`;
+        }
     } catch (err) {
         console.error("Erro ao continuar aventura:", err);
     }
@@ -1181,6 +1213,7 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
