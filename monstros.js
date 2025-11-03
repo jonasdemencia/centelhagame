@@ -2,7 +2,7 @@
 
 // Exporta o objeto monsterData para ser usado em outros arquivos
 export const monsterData = {
-    // Monstros originais
+    // Animais
     "lobo": {
     nome: "Lobo Faminto",
     imagem: "https://via.placeholder.com/150",
@@ -105,7 +105,279 @@ export const monsterData = {
     ]
 },
 
+    "jaguar": {
+    nome: "Jaguar da Selva",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um predador silencioso e letal, mestre da emboscada.",
+    habilidade: 7,
+    couraça: 3,
+    energiaDados: "4d8",
+    experiencia: 90,
+    dano: "1D12",
+    ataques: [
+        {
+            id: "mordida",
+            nome: "Mordida na Nuca",
+            dano: "1d10",
+            peso: 60,
+            pesoHPBaixo: 40,
+            telegrafado: false
+        },
+        {
+            id: "salto",
+            nome: "Salto Predatório",
+            dano: "2d6+2",
+            peso: 40,
+            pesoHPBaixo: 60,
+            telegrafado: true,
+            mensagemTelegraf: "O jaguar se agacha, músculos tensionados para um salto mortal..."
+        }
+    ]
+},
 
+"urso": {
+    nome: "Urso Pardo",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Uma fera massiva com garras que rasgam árvores.",
+    habilidade: 8,
+    couraça: 4,
+    energiaDados: "5d10",
+    experiencia: 150,
+    dano: "2D8",
+    ataques: [
+        {
+            id: "golpe",
+            nome: "Golpe Esmagador",
+            dano: "2d6",
+            peso: 50,
+            pesoHPBaixo: 30,
+            telegrafado: false
+        },
+        {
+            id: "abraco",
+            nome: "Abraço Esmagador",
+            dano: "3d6+4",
+            peso: 50,
+            pesoHPBaixo: 70,
+            telegrafado: true,
+            mensagemTelegraf: "O urso se ergue sobre as patas traseiras, mostrando sua altura impressionante..."
+        }
+    ]
+},
+
+"serpente": {
+    nome: "Serpente Constritora",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Uma cobra gigante que esmaga suas presas até a morte.",
+    habilidade: 6,
+    couraça: 2,
+    energiaDados: "3d10",
+    experiencia: 80,
+    dano: "1D8",
+    ataques: [
+        {
+            id: "picada",
+            nome: "Picada Venenosa",
+            dano: "1d6",
+            peso: 40,
+            pesoHPBaixo: 30,
+            telegrafado: false
+        },
+        {
+            id: "constricao",
+            nome: "Constrição Mortal",
+            dano: "2d8+3",
+            peso: 60,
+            pesoHPBaixo: 70,
+            telegrafado: true,
+            mensagemTelegraf: "A serpente enrola seu corpo, preparando-se para envolver a presa..."
+        }
+    ]
+},
+
+"aguia": {
+    nome: "Águia Real",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Uma ave de rapina com visão aguçada e garras afiadas.",
+    habilidade: 7,
+    couraça: 2,
+    energiaDados: "3d8",
+    experiencia: 75,
+    dano: "1D8",
+    ataques: [
+        {
+            id: "garrada",
+            nome: "Garrada Aérea",
+            dano: "1d8",
+            peso: 70,
+            pesoHPBaixo: 50,
+            telegrafado: false
+        },
+        {
+            id: "mergulho",
+            nome: "Mergulho da Morte",
+            dano: "2d8+2",
+            peso: 30,
+            pesoHPBaixo: 50,
+            telegrafado: true,
+            mensagemTelegraf: "A águia ganha altitude, preparando-se para um mergulho em alta velocidade..."
+        }
+    ]
+},
+
+"javali": {
+    nome: "Javali Enraivecido",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um animal territorial com presas afiadas e temperamento explosivo.",
+    habilidade: 5,
+    couraça: 3,
+    energiaDados: "4d8",
+    experiencia: 85,
+    dano: "1D10",
+    ataques: [
+        {
+            id: "chifrada",
+            nome: "Chifrada Brutal",
+            dano: "1d10",
+            peso: 65,
+            pesoHPBaixo: 45,
+            telegrafado: false
+        },
+        {
+            id: "carga",
+            nome: "Carga Incontrolável",
+            dano: "2d8+3",
+            peso: 35,
+            pesoHPBaixo: 55,
+            telegrafado: true,
+            mensagemTelegraf: "O javali raspa o chão com as patas, bufando furiosamente..."
+        }
+    ]
+},
+
+"escorpiao": {
+    nome: "Escorpião Gigante",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um aracnídeo venenoso com uma cauda letal.",
+    habilidade: 4,
+    couraça: 4,
+    energiaDados: "3d8",
+    experiencia: 70,
+    dano: "1D6",
+    ataques: [
+        {
+            id: "ferrao",
+            nome: "Ferrão Venenoso",
+            dano: "1d6+2",
+            peso: 50,
+            pesoHPBaixo: 70,
+            telegrafado: false
+        },
+        {
+            id: "pinças",
+            nome: "Aperto das Pinças",
+            dano: "1d8+1",
+            peso: 50,
+            pesoHPBaixo: 30,
+            telegrafado: true,
+            mensagemTelegraf: "O escorpião ergue a cauda, o ferrão brilhando com veneno..."
+        }
+    ]
+},
+
+"tigre": {
+    nome: "Tigre Siberiano",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um felino majestoso e extremamente perigoso.",
+    habilidade: 9,
+    couraça: 3,
+    energiaDados: "5d10",
+    experiencia: 180,
+    dano: "2D8",
+    ataques: [
+        {
+            id: "garras",
+            nome: "Garras Dilacerantes",
+            dano: "2d6",
+            peso: 55,
+            pesoHPBaixo: 35,
+            telegrafado: false
+        },
+        {
+            id: "rugido",
+            nome: "Rugido Paralisante",
+            dano: "1d10+4",
+            peso: 45,
+            pesoHPBaixo: 65,
+            telegrafado: true,
+            mensagemTelegraf: "O tigre enche o pulmão, preparando-se para um rugido ensurdecedor..."
+        }
+    ]
+},
+
+"crocodilo": {
+    nome: "Crocodilo do Pântano",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um réptil ancestral com mandíbulas capazes de esmagar ossos.",
+    habilidade: 6,
+    couraça: 5,
+    energiaDados: "4d12",
+    experiencia: 120,
+    dano: "2D8",
+    ataques: [
+        {
+            id: "mordida",
+            nome: "Mordida Esmagadora",
+            dano: "2d8",
+            peso: 70,
+            pesoHPBaixo: 50,
+            telegrafado: false
+        },
+        {
+            id: "rolamento",
+            nome: "Rolamento da Morte",
+            dano: "3d8+4",
+            peso: 30,
+            pesoHPBaixo: 50,
+            telegrafado: true,
+            mensagemTelegraf: "O crocodilo abre suas mandíbulas enormes, preparando o rolamento mortal..."
+        }
+    ]
+},
+
+"lobo_alfa": {
+    nome: "Lobo Alfa",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "O líder da alcateia, maior e mais experiente que os outros.",
+    habilidade: 8,
+    couraça: 3,
+    energiaDados: "4d10",
+    experiencia: 130,
+    dano: "1D12",
+    ataques: [
+        {
+            id: "mordida_lider",
+            nome: "Mordida do Alfa",
+            dano: "1d12",
+            peso: 60,
+            pesoHPBaixo: 40,
+            telegrafado: false
+        },
+        {
+            id: "uivo",
+            nome: "Uivo Assustador",
+            dano: "2d6+3",
+            peso: 40,
+            pesoHPBaixo: 60,
+            telegrafado: true,
+            mensagemTelegraf: "O lobo alfa levanta a cabeça, preparando-se para um uivo que convoca a alcateia..."
+        }
+    ]
+},
+
+
+// Assombrações e monstros
+    
 "zumbi": {
     nome: "Zumbi Putrefato",
     imagem: "https://via.placeholder.com/150",
@@ -266,3 +538,4 @@ export const monsterData = {
 export function getMonsterById(monsterId) {
     return monsterData[monsterId] || null;
 }
+
