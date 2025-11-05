@@ -444,16 +444,8 @@ ${historicoFormatado}
 4. Inclua SEMPRE pelo menos uma opção que seja claramente "continuar normal"
 5. Efeitos de energia: apenas se apropriado (-2 a +2, raramente maior)
 
-6. **CONCEDER ITENS:**
-   - Se a narrativa mencionar encontrar/pegar algo físico, dê 1-2 itens apropriados
-   - Exemplos: baú → item dentro, corpo → item equipado, mesa → item sobre ela
-   - Formato: \`"efeitos": [{"tipo": "item", "item": "ID_EXATO"}]\`
-   - **Priorize itens COMUNS (70%), INCOMUNS ocasionais (25%), RAROS raríssimos (5%)**
-   - **CRÍTICO:** Use APENAS IDs da lista abaixo
-${itensAmostra}
-
 // 🆕 INÍCIO DA ADIÇÃO (REGRA 7 + FORMATO DE BATALHA)
-7.(90% chance) OPÇÃO QUE LEVA A PERIGO:**
+6.(90% chance) OPÇÃO QUE LEVA A PERIGO:**
    - Em 90% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
    - Esta opção deve ter: "tipo": "perigo_oculto"
    - NÃO spoile a consequência no texto da opção
@@ -462,7 +454,7 @@ ${itensAmostra}
    - ✅ CERTO: "Tocar a ampulheta"
    - A opção deve ser curiosa/tentadora, mas SEM revelar o perigo
    
-  8. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
+  7. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
    - Se o jogador escolheu uma opção "perigo_oculto", ESTA seção DEVE:
      * Descrever o que aconteceu (ex: "Ao tocar, uma sombra surge!")
      * **OBRIGATÓRIO:** Incluir opção com "tipo": "iniciar_batalha"
@@ -492,6 +484,9 @@ ${monstrosAmostra}
     {"tipo": "item", "item": "tocha"}
   ]
 }
+
+**ITENS DISPONÍVEIS (use 1-3 se narrativa mencionar encontrar algo):**
+${itensAmostra}
 
 **FORMATO (JSON PURO - Com Armadilha de Batalha - 30%):**
 {
@@ -806,13 +801,8 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
    - Se profundidade < 3: normal (aprofundar/neutra/recuar)
    - Se profundidade >= 3: INCLUIR opção óbvia de "continuar/sair"
 
-5. **Se fizer sentido contextual (ex: a consequência da escolha é encontrar algo), você pode adicionar um item.
-   - Formato: \`"efeitos": [{"tipo": "item", "item": "ID_DO_ITEM"}]\`
-   - **REGRA CRÍTICA:** Use APENAS IDs da lista abaixo. Não invente IDs.
-${itensAmostra}
-
 // 🆕 INÍCIO DA ADIÇÃO (REGRA 6 + FORMATO DE BATALHA)
-6. (90% chance) OPÇÃO QUE LEVA A PERIGO:**
+5. (90% chance) OPÇÃO QUE LEVA A PERIGO:**
    - Em 90% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
    - Esta opção deve ter: "tipo": "perigo_oculto"
    - NÃO spoile a consequência no texto da opção
@@ -821,7 +811,7 @@ ${itensAmostra}
    - ✅ CERTO: "Tocar a ampulheta"
    - A opção deve ser curiosa/tentadora, mas SEM revelar o perigo
    
-  7. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
+  6. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
    - Se o jogador escolheu uma opção "perigo_oculto", ESTA seção DEVE:
      * Descrever o que aconteceu (ex: "Ao tocar, uma sombra surge!")
      * **OBRIGATÓRIO:** Incluir opção com "tipo": "iniciar_batalha"
@@ -849,6 +839,8 @@ ${monstrosAmostra}
     {"tipo": "item", "item": "tocha"}
   ]
 }
+**ITENS DISPONÍVEIS (use 1-3 se narrativa mencionar encontrar algo):**
+${itensAmostra}
 
 **FORMATO (JSON PURO - Com Armadilha de Batalha - 30%):**
 {
@@ -885,6 +877,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
