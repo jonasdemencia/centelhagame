@@ -837,11 +837,15 @@ ${monstrosAmostra}
         const alertaPerigo = opcao.tipo === 'perigo_oculto' ? `
 **⚠️ ATENÇÃO CRÍTICA: O jogador escolheu uma opção de "perigo_oculto"!**
 **VOCÊ DEVE OBRIGATORIAMENTE NESTA SEÇÃO:**
-1. Descrever a REVELAÇÃO do perigo (ex: "Ao tocar, uma sombra emerge!")
-2. Incluir opção com "tipo": "iniciar_batalha", "texto": "Enfrentar [criatura]", "monstro": "[ID_VALIDO]"
-3. O monstro deve fazer sentido físico com o ambiente
-4. Incluir outras opções (fugir, recuar, etc.)
+1. ESCOLHA um monstro da lista abaixo PRIMEIRO
+2. Descreva a revelação usando EXATAMENTE esse monstro (ex: "Ao tocar, uma ${monstroEscolhido} emerge!")
+3. **PROIBIDO:** Inventar criaturas não listadas (vespas, aranhas, etc)
+4. Incluir opção com "tipo": "iniciar_batalha", "monstro": "[ID_QUE_VOCÊ_ESCOLHEU]"
+5. O texto e o ID do monstro DEVEM ser coerentes
+6. O monstro deve fazer sentido físico com o ambiente
+7. Incluir outras opções (fugir, recuar, etc.)
 ` : '';
+
 
 
         // 🆕 ATUALIZADO: Itens e monstros contextuais também na continuação
@@ -965,6 +969,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
