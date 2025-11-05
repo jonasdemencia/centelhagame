@@ -258,7 +258,8 @@ export class SistemaEmergencia {
         }
 
         output += `\n**TOTAL: ${itensSelecionados.length} itens disponíveis**\n`;
-        output += `**IMPORTANTE:** Dar itens é OPCIONAL. Só dê se fizer sentido narrativo!\n`;
+        output += `**IMPORTANTE:** dar itens se o texto mencionar encontrar/pegar algo.\n`;
+
 
         return output;
     }
@@ -443,9 +444,12 @@ ${historicoFormatado}
 3. Crie 2-5 opções (varie livremente)
 4. Inclua SEMPRE pelo menos uma opção que seja claramente "continuar normal"
 5. Efeitos de energia: apenas se apropriado (-2 a +2, raramente maior)
+6. **ITENS** Se seu texto mencionar encontrar/abrir/pegar algo físico, adicione 1-2 itens nos efeitos.
+${itensAmostra}
+
 
 // 🆕 INÍCIO DA ADIÇÃO (REGRA 7 + FORMATO DE BATALHA)
-6.(90% chance) OPÇÃO QUE LEVA A PERIGO:**
+7.(90% chance) OPÇÃO QUE LEVA A PERIGO:**
    - Em 90% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
    - Esta opção deve ter: "tipo": "perigo_oculto"
    - NÃO spoile a consequência no texto da opção
@@ -454,7 +458,7 @@ ${historicoFormatado}
    - ✅ CERTO: "Tocar a ampulheta"
    - A opção deve ser curiosa/tentadora, mas SEM revelar o perigo
    
-  7. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
+  8. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
    - Se o jogador escolheu uma opção "perigo_oculto", ESTA seção DEVE:
      * Descrever o que aconteceu (ex: "Ao tocar, uma sombra surge!")
      * **OBRIGATÓRIO:** Incluir opção com "tipo": "iniciar_batalha"
@@ -485,8 +489,6 @@ ${monstrosAmostra}
   ]
 }
 
-**ITENS DISPONÍVEIS (use 1-3 se narrativa mencionar encontrar algo):**
-${itensAmostra}
 
 **FORMATO (JSON PURO - Com Armadilha de Batalha - 30%):**
 {
@@ -801,8 +803,11 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
    - Se profundidade < 3: normal (aprofundar/neutra/recuar)
    - Se profundidade >= 3: INCLUIR opção óbvia de "continuar/sair"
 
+5. **ITENS** Se seu texto mencionar encontrar/abrir/pegar algo físico, adicione 1-2 itens nos efeitos.
+${itensAmostra}
+
 // 🆕 INÍCIO DA ADIÇÃO (REGRA 6 + FORMATO DE BATALHA)
-5. (90% chance) OPÇÃO QUE LEVA A PERIGO:**
+6. (90% chance) OPÇÃO QUE LEVA A PERIGO:**
    - Em 90% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
    - Esta opção deve ter: "tipo": "perigo_oculto"
    - NÃO spoile a consequência no texto da opção
@@ -811,7 +816,7 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
    - ✅ CERTO: "Tocar a ampulheta"
    - A opção deve ser curiosa/tentadora, mas SEM revelar o perigo
    
-  6. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
+  7. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
    - Se o jogador escolheu uma opção "perigo_oculto", ESTA seção DEVE:
      * Descrever o que aconteceu (ex: "Ao tocar, uma sombra surge!")
      * **OBRIGATÓRIO:** Incluir opção com "tipo": "iniciar_batalha"
@@ -839,8 +844,6 @@ ${monstrosAmostra}
     {"tipo": "item", "item": "tocha"}
   ]
 }
-**ITENS DISPONÍVEIS (use 1-3 se narrativa mencionar encontrar algo):**
-${itensAmostra}
 
 **FORMATO (JSON PURO - Com Armadilha de Batalha - 30%):**
 {
@@ -877,6 +880,7 @@ ${itensAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
