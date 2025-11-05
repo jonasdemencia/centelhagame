@@ -836,14 +836,22 @@ ${monstrosAmostra}
             : '';
         const alertaPerigo = opcao.tipo === 'perigo_oculto' ? `
 **⚠️ ATENÇÃO CRÍTICA: O jogador escolheu uma opção de "perigo_oculto"!**
-**VOCÊ DEVE OBRIGATORIAMENTE NESTA SEÇÃO:**
-1. ESCOLHA um monstro da lista abaixo PRIMEIRO
-2. Descreva a revelação usando EXATAMENTE esse monstro (ex: "Ao tocar, uma ${monstroEscolhido} emerge!")
-3. **PROIBIDO:** Inventar criaturas não listadas (vespas, aranhas, etc)
-4. Incluir opção com "tipo": "iniciar_batalha", "monstro": "[ID_QUE_VOCÊ_ESCOLHEU]"
-5. O texto e o ID do monstro DEVEM ser coerentes
-6. O monstro deve fazer sentido físico com o ambiente
-7. Incluir outras opções (fugir, recuar, etc.)
+**PROCESSO OBRIGATÓRIO (NESTA ORDEM):**
+1. Olhe a lista de monstros abaixo
+2. ESCOLHA UM monstro válido da lista
+3. Escreva o texto usando o NOME REAL desse monstro (ex: "Uma coruja sombria emerge das trevas")
+4. Crie opção: {"tipo": "iniciar_batalha", "texto": "Enfrentar a [nome do monstro]", "monstro": "[ID_EXATO]"}
+5. **REGRA CRÍTICA:** O monstro no texto E no campo "monstro" devem ser O MESMO
+6. Incluir outras opções (fugir, recuar, etc)
+
+**EXEMPLO CORRETO:**
+- Escolhi: "lobo"
+- Texto: "Um lobo faminto salta das sombras, rosnando!"
+- Opção: {"tipo": "iniciar_batalha", "texto": "Enfrentar o lobo", "monstro": "lobo"}
+
+**EXEMPLO ERRADO:**
+- Texto: "Vespas gigantes aparecem!" ❌
+- Opção: {"monstro": "coruja"} ❌
 ` : '';
 
 
@@ -969,6 +977,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
