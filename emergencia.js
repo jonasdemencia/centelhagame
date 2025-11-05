@@ -488,7 +488,7 @@ ${monstrosAmostra}
     {"texto": "[Continuar normalmente]", "tipo": "recuar"}
   ],
   "efeitos": [
-    {"tipo": "energia", "valor": -1},
+    {"tipo": "energia", "valor": X},
     {"tipo": "item", "item": "tocha"}
   ]
 }
@@ -845,7 +845,7 @@ ${monstrosAmostra}
     ${this.profundidadeAtual >= 3 ? '{"texto": "[Opção clara de sair/continuar]", "tipo": "recuar"}' : '{"texto": "[Outra opção]", "tipo": "neutra"}'}
   ],
   "efeitos": [
-    {"tipo": "energia", "valor": -1},
+    {"tipo": "energia", "valor": X},
     {"tipo": "item", "item": "tocha"}
   ]
 }
@@ -885,6 +885,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
