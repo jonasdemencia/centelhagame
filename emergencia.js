@@ -16,12 +16,9 @@ export class SistemaEmergencia {
         // 🆕 NOVO: Classificar itens por raridade automaticamente
         this.itensClassificados = this.classificarItensPorRaridade();
 
-        // 🆕 NOVO: Classificar monstros por raridade (baseado em monstros.js)
-        this.monstrosClassificados = {
-            comuns: ["coruja", "zumbi", "sombra-errante"],
-            incomuns: ["lobo", "servo-pedra"],
-            raros: ["necromante", "sombra-antiga"]
-        };
+        // 🆕 NOVO: Classificar monstros por dificuldade (baseado em monstros.js)
+        this.monstrosClassificados = this.classificarMonstrosPorDificuldade();
+
     }
 
     // 🆕 MÉTODO NOVO: Classifica todos os itens seguindo suas regras
@@ -102,6 +99,45 @@ export class SistemaEmergencia {
 
         return classificacao;
     }
+
+    // Classifica monstros automaticamente por experiência
+classificarMonstrosPorDificuldade() {
+    const classificacao = {
+        comuns: [],
+        incomuns: [],
+        raros: []
+    };
+
+    // Importa dinamicamente se disponível, senão usa lista vazia
+    const monstros = this.itensNarrativas.monstros || {};
+
+    for (const [id, monstro] of Object.entries(monstros)) {
+        const exp = monstro.experiencia || 0;
+        
+        if (exp < 70) {
+            classificacao.comuns.push(id);
+        } else if (exp < 120) {
+            classificacao.incomuns.push(id);
+        } else {
+            classificacao.raros.push(id);
+        }
+    }
+
+    // Fallback se não houver monstros carregados
+    if (classificacao.comuns.length === 0) {
+        classificacao.comuns = ["coruja", "zumbi", "sombra-errante"];
+        classificacao.incomuns = ["lobo", "servo-pedra", "doberman", "jaguar"];
+        classificacao.raros = ["necromante", "sombra-antiga", "urso", "tigre"];
+    }
+
+    console.log(`[MONSTROS] Classificação:
+    - Comuns: ${classificacao.comuns.length}
+    - Incomuns: ${classificacao.incomuns.length}
+    - Raros: ${classificacao.raros.length}`);
+
+    return classificacao;
+}
+
 
     // 🆕 MÉTODO AUXILIAR: Extrai valor numérico de dano
     extrairValorDano(danoStr) {
@@ -880,6 +916,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
