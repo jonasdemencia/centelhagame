@@ -444,7 +444,7 @@ ${historicoFormatado}
 4. Inclua SEMPRE pelo menos uma opção que seja claramente "continuar normal"
 5. Efeitos de energia: apenas se apropriado (-2 a +2, raramente maior)
 
-6. **CONCEDER ITENS (30% de chance):**
+6. **CONCEDER ITENS (40% de chance):**
    - Se a narrativa mencionar encontrar/pegar algo físico, dê 1-2 itens apropriados
    - Exemplos: baú → item dentro, corpo → item equipado, mesa → item sobre ela
    - Formato: \`"efeitos": [{"tipo": "item", "item": "ID_EXATO"}]\`
@@ -879,6 +879,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
