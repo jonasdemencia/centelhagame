@@ -487,7 +487,10 @@ ${monstrosAmostra}
     {"texto": "[Opção 2]", "tipo": "neutra"},
     {"texto": "[Continuar normalmente]", "tipo": "recuar"}
   ],
-  "efeitos": [{"tipo": "energia", "valor": X}]
+  "efeitos": [
+    {"tipo": "energia", "valor": -1},
+    {"tipo": "item", "item": "tocha"}
+  ]
 }
 
 **FORMATO (JSON PURO - Com Armadilha de Batalha - 30%):**
@@ -841,7 +844,10 @@ ${monstrosAmostra}
     {"texto": "...", "tipo": "aprofundar"},
     ${this.profundidadeAtual >= 3 ? '{"texto": "[Opção clara de sair/continuar]", "tipo": "recuar"}' : '{"texto": "[Outra opção]", "tipo": "neutra"}'}
   ],
-  "efeitos": [{"tipo": "energia", "valor": X}]
+  "efeitos": [
+    {"tipo": "energia", "valor": -1},
+    {"tipo": "item", "item": "tocha"}
+  ]
 }
 
 **FORMATO (JSON PURO - Com Armadilha de Batalha - 30%):**
@@ -879,6 +885,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
