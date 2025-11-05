@@ -129,64 +129,73 @@ export class SistemaEmergencia {
 
     // 🆕 MÉTODO NOVO: Seleciona itens baseado no contexto E raridade
     selecionarItensContextuais(textoSecao) {
-        const palavrasChave = textoSecao.toLowerCase();
-        const itensSelecionados = new Set();
+    const palavrasChave = textoSecao.toLowerCase();
+    const itensSelecionados = new Set();
 
-        // === ANÁLISE DE CONTEXTO ===
-        const contextos = {
-            combate: ['luta', 'batalha', 'inimigo', 'ataque', 'defesa', 'arma', 'monstro', 'criatura'],
-            exploracao: ['escuro', 'túnel', 'caverna', 'caminho', 'porta', 'corredor', 'sala'],
-            cura: ['ferido', 'machucado', 'sangue', 'dor', 'fraco', 'energia', 'vida'],
-            mistico: ['mágico', 'ritual', 'feitiço', 'místico', 'arcano', 'sobrenatural'],
-            tesouro: ['baú', 'cofre', 'riqueza', 'ouro', 'tesouro', 'relíquia', 'antigo']
-        };
+    // 🆕 CONTEXTO SEMPRE INCLUI 'GERAL' AGORA
+    const contextos = ['geral']; // Base sempre inclui geral
+    
+    // Adiciona contextos específicos se detectados
+    const contextosEspecificos = {
+        combate: ['luta', 'batalha', 'inimigo', 'ataque', 'defesa', 'arma', 'monstro', 'criatura'],
+        exploracao: ['escuro', 'túnel', 'caverna', 'caminho', 'porta', 'corredor', 'sala'],
+        cura: ['ferido', 'machucado', 'sangue', 'dor', 'fraco', 'energia', 'vida'],
+        mistico: ['mágico', 'ritual', 'feitiço', 'místico', 'arcano', 'sobrenatural'],
+        tesouro: ['baú', 'cofre', 'riqueza', 'ouro', 'tesouro', 'relíquia', 'antigo']
+    };
 
-        const contextoDetectado = [];
-        for (const [tipo, palavras] of Object.entries(contextos)) {
-            if (palavras.some(p => palavrasChave.includes(p))) {
-                contextoDetectado.push(tipo);
-            }
+    for (const [tipo, palavras] of Object.entries(contextosEspecificos)) {
+        if (palavras.some(p => palavrasChave.includes(p))) {
+            contextos.push(tipo);
         }
+    }
 
-        // Se não detectou contexto, usa "geral"
-        if (contextoDetectado.length === 0) {
-            contextoDetectado.push('geral');
-        }
+    console.log(`[CONTEXTO] Detectado: ${contextos.join(', ')}`);
 
-        console.log(`[CONTEXTO] Detectado: ${contextoDetectado.join(', ')}`);
-
-        // === SELEÇÃO PONDERADA POR RARIDADE ===
-        const adicionarItens = (pool, quantidade, probabilidade) => {
-            const embaralhado = [...pool].sort(() => Math.random() - 0.5);
-            let adicionados = 0;
+    // 🆕 PROBABILIDADES MAIS ALTAS
+    const adicionarItens = (pool, quantidade, probabilidade) => {
+        const embaralhado = [...pool].sort(() => Math.random() - 0.5);
+        let adicionados = 0;
+        
+        for (const itemId of embaralhado) {
+            if (adicionados >= quantidade) break;
             
-            for (const itemId of embaralhado) {
-                if (adicionados >= quantidade) break;
-                if (Math.random() < probabilidade) {
-                    // Verifica se o item é contextualmente relevante
-                    if (this.itemRelevante(itemId, contextoDetectado)) {
-                        itensSelecionados.add(itemId);
-                        adicionados++;
-                    }
-                }
+            // 🆕 FILTRO RELAXADO - Aceita mais itens
+            const raridade = this.obterRaridade(itemId);
+            const chanceAjustada = (raridade === 'COMUM') ? probabilidade * 1.3 : probabilidade;
+            
+            if (Math.random() < chanceAjustada) {
+                itensSelecionados.add(itemId);
+                adicionados++;
             }
-        };
+        }
+    };
 
-        // Adiciona itens por raridade
+    // Adiciona itens por raridade
         adicionarItens(this.itensClassificados.comuns, 6, 0.7);   // 6 comuns (70% chance cada)
         adicionarItens(this.itensClassificados.incomuns, 4, 0.5); // 4 incomuns (50% chance)
         adicionarItens(this.itensClassificados.raros, 2, 0.3);    // 2 raros (30% chance)
 
-        // Garante pelo menos 5 itens
-        if (itensSelecionados.size < 5) {
-            const extras = [...this.itensClassificados.comuns]
-                .sort(() => Math.random() - 0.5)
-                .slice(0, 5 - itensSelecionados.size);
-            extras.forEach(id => itensSelecionados.add(id));
-        }
 
-        return Array.from(itensSelecionados);
+    // 🆕 GARANTE MÍNIMO DE 12 ITENS
+    if (itensSelecionados.size < 12) {
+        const todosDisponiveis = [
+            ...this.itensClassificados.comuns,
+            ...this.itensClassificados.incomuns,
+            ...this.itensClassificados.raros
+        ].filter(id => !itensSelecionados.has(id));
+        
+        const necessarios = 12 - itensSelecionados.size;
+        const extras = todosDisponiveis
+            .sort(() => Math.random() - 0.5)
+            .slice(0, necessarios);
+        
+        extras.forEach(id => itensSelecionados.add(id));
     }
+
+    console.log(`[ITENS] Selecionados: ${itensSelecionados.size} itens`);
+    return Array.from(itensSelecionados);
+}
 
     // 🆕 MÉTODO AUXILIAR: Verifica se item é relevante ao contexto
     itemRelevante(itemId, contextos) {
@@ -869,6 +878,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
