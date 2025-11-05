@@ -319,22 +319,18 @@ classificarMonstrosPorDificuldade() {
 
     // 🆕 MÉTODO NOVO: Gera string formatada de monstros para o prompt
     getMonstrosAmostra() {
-    // Seleciona monstros com rotação (evita repetir os 3 últimos)
     const comumSugerido = this.selecionarMonstroComRotacao('comuns');
     const incomumSugerido = this.selecionarMonstroComRotacao('incomuns');
     const raroSugerido = this.selecionarMonstroComRotacao('raros');
     
-    let output = '\n**MONSTROS SUGERIDOS PARA ESTA SEÇÃO (use um destes):**\n';
-    output += `**CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.\n`;
-    output += `- Comum (90% chance): "${comumSugerido}"\n`;
-    output += `- Incomum (9% chance): "${incomumSugerido}"\n`;
-    output += `- Raro (1% chance): "${raroSugerido}"\n`;
-    output += `\n**LISTA COMPLETA (caso precise variar):**\n`;
-    output += `- Comuns: "${this.monstrosClassificados.comuns.join('", "')}"\n`;
-    output += `- Incomuns: "${this.monstrosClassificados.incomuns.join('", "')}"\n`;
-    output += `- Raros: "${this.monstrosClassificados.raros.join('", "')}"\n`;
+    let output = '\n**MONSTROS DISPONÍVEIS PARA ESTA SEÇÃO:**\n';
+    output += `**CRÍTICO:** Use APENAS um destes 3 IDs. NÃO use outros monstros.\n`;
+    output += `- Comum (use em 90% dos casos): "${comumSugerido}"\n`;
+    output += `- Incomum (use em 9% dos casos): "${incomumSugerido}"\n`;
+    output += `- Raro (use em 1% dos casos): "${raroSugerido}"\n`;
     return output;
 }
+
 
 
     analisarSecao(secao, numeroSecao, escolhaFeita = null) {
@@ -977,6 +973,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
