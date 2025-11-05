@@ -444,7 +444,7 @@ ${historicoFormatado}
 4. Inclua SEMPRE pelo menos uma opção que seja claramente "continuar normal"
 5. Efeitos de energia: apenas se apropriado (-2 a +2, raramente maior)
 
-6. **CONCEDER ITENS (40% de chance):**
+6. **CONCEDER ITENS:**
    - Se a narrativa mencionar encontrar/pegar algo físico, dê 1-2 itens apropriados
    - Exemplos: baú → item dentro, corpo → item equipado, mesa → item sobre ela
    - Formato: \`"efeitos": [{"tipo": "item", "item": "ID_EXATO"}]\`
@@ -806,7 +806,7 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
    - Se profundidade < 3: normal (aprofundar/neutra/recuar)
    - Se profundidade >= 3: INCLUIR opção óbvia de "continuar/sair"
 
-5. **(RARO E OPCIONAL) CONCEDER ITEM:** Se fizer sentido contextual (ex: a consequência da escolha é encontrar algo), você pode adicionar um item.
+5. **Se fizer sentido contextual (ex: a consequência da escolha é encontrar algo), você pode adicionar um item.
    - Formato: \`"efeitos": [{"tipo": "item", "item": "ID_DO_ITEM"}]\`
    - **REGRA CRÍTICA:** Use APENAS IDs da lista abaixo. Não invente IDs.
 ${itensAmostra}
@@ -885,6 +885,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
