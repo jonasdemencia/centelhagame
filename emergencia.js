@@ -832,24 +832,11 @@ ${monstrosAmostra}
             : '';
         const alertaPerigo = opcao.tipo === 'perigo_oculto' ? `
 **⚠️ ATENÇÃO CRÍTICA: O jogador escolheu uma opção de "perigo_oculto"!**
-**PROCESSO OBRIGATÓRIO (NESTA ORDEM):**
-1. Olhe a lista de monstros abaixo
-2. ESCOLHA UM monstro válido da lista
-3. Escreva o texto usando o NOME REAL desse monstro (ex: "Uma coruja sombria emerge das trevas")
-4. Crie opção: {"tipo": "iniciar_batalha", "texto": "Enfrentar a [nome do monstro]", "monstro": "[ID_EXATO]"}
-5. **REGRA CRÍTICA:** O monstro no texto E no campo "monstro" devem ser O MESMO
-6. Incluir outras opções (fugir, recuar, etc)
-
-**EXEMPLO CORRETO:**
-- Escolhi: "lobo"
-- Texto: "Um lobo faminto salta das sombras, rosnando!"
-- Opção: {"tipo": "iniciar_batalha", "texto": "Enfrentar o lobo", "monstro": "lobo"}
-
-**EXEMPLO ERRADO:**
-- Texto: "Vespas gigantes aparecem!" ❌
-- Opção: {"monstro": "coruja"} ❌
+**VOCÊ DEVE OBRIGATORIAMENTE NESTA SEÇÃO:**
+1. Descrever a REVELAÇÃO do perigo (ex: "Ao tocar, uma sombra emerge!")
+2. Incluir opção com "tipo": "iniciar_batalha", "texto": "Enfrentar [criatura]", "monstro": "[ID_VALIDO]"
+3. Incluir outras opções (fugir, recuar, etc.)
 ` : '';
-
 
 
         // 🆕 ATUALIZADO: Itens e monstros contextuais também na continuação
@@ -973,6 +960,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
