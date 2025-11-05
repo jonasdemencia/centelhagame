@@ -444,11 +444,12 @@ ${historicoFormatado}
 4. Inclua SEMPRE pelo menos uma opção que seja claramente "continuar normal"
 5. Efeitos de energia: apenas se apropriado (-2 a +2, raramente maior)
 
-6. **(RARO E OPCIONAL) CONCEDER ITEM:** - Só dê itens se fizer SENTIDO narrativo claro
-   - Exemplos válidos: "encontrar em baú", "pegar de corpo", "achar no chão"
+6. **CONCEDER ITENS (30% de chance):**
+   - Se a narrativa mencionar encontrar/pegar algo físico, dê 1-2 itens apropriados
+   - Exemplos: baú → item dentro, corpo → item equipado, mesa → item sobre ela
    - Formato: \`"efeitos": [{"tipo": "item", "item": "ID_EXATO"}]\`
+   - **Priorize itens COMUNS (70%), INCOMUNS ocasionais (25%), RAROS raríssimos (5%)**
    - **CRÍTICO:** Use APENAS IDs da lista abaixo
-   - **Respeite a raridade:** Itens RAROS devem ser raríssimos, INCOMUNS ocasionais
 ${itensAmostra}
 
 // 🆕 INÍCIO DA ADIÇÃO (REGRA 7 + FORMATO DE BATALHA)
@@ -878,6 +879,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
