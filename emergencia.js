@@ -2,24 +2,26 @@
 // (A MAIORIA DO ARQUIVO PERMANECE IGUAL - AS MUDANÇAS ESTÃO MARCADAS EM `processarRespostaIA`)
 
 export class SistemaEmergencia {
-    constructor(itensNarrativas = {}) {
-        this.historico = [];
-        this.secoesEmergentes = new Map();
-        this.contadorSecoes = 0;
-        this.emergenciaAtiva = false;
-        this.secaoOrigemEmergencia = null;
-        this.workerUrl = "https://lucky-scene-6054.fabiorainersilva.workers.dev/";
-        this.escolhasEmergentes = [];
-        this.itensNarrativas = itensNarrativas;
-        this.profundidadeAtual = 0;
-        
-        // 🆕 NOVO: Classificar itens por raridade automaticamente
-        this.itensClassificados = this.classificarItensPorRaridade();
+    constructor(itensNarrativas = {}, monstrosData = {}) {
+    this.historico = [];
+    this.secoesEmergentes = new Map();
+    this.contadorSecoes = 0;
+    this.emergenciaAtiva = false;
+    this.secaoOrigemEmergencia = null;
+    this.workerUrl = "https://lucky-scene-6054.fabiorainersilva.workers.dev/";
+    this.escolhasEmergentes = [];
+    this.itensNarrativas = itensNarrativas;
+    this.monstrosData = monstrosData;
+    this.profundidadeAtual = 0;
+    this.monstrosUsadosRecentemente = []; // Histórico de rotação
+    
+    // 🆕 NOVO: Classificar itens por raridade automaticamente
+    this.itensClassificados = this.classificarItensPorRaridade();
 
-        // 🆕 NOVO: Classificar monstros por dificuldade (baseado em monstros.js)
-        this.monstrosClassificados = this.classificarMonstrosPorDificuldade();
+    // 🆕 NOVO: Classificar monstros por raridade e dificuldade
+    this.monstrosClassificados = this.classificarMonstrosPorDificuldade();
+}
 
-    }
 
     // 🆕 MÉTODO NOVO: Classifica todos os itens seguindo suas regras
     classificarItensPorRaridade() {
@@ -101,6 +103,7 @@ export class SistemaEmergencia {
     }
 
     // Classifica monstros automaticamente por experiência
+// 🆕 MÉTODO NOVO: Classifica monstros por experiência
 classificarMonstrosPorDificuldade() {
     const classificacao = {
         comuns: [],
@@ -108,35 +111,42 @@ classificarMonstrosPorDificuldade() {
         raros: []
     };
 
-    // Importa dinamicamente se disponível, senão usa lista vazia
-    const monstros = this.itensNarrativas.monstros || {};
-
-    for (const [id, monstro] of Object.entries(monstros)) {
-        const exp = monstro.experiencia || 0;
-        
-        if (exp < 70) {
-            classificacao.comuns.push(id);
-        } else if (exp < 120) {
-            classificacao.incomuns.push(id);
-        } else {
-            classificacao.raros.push(id);
+    // Se monstros foram carregados, classifica por experiência
+    if (Object.keys(this.monstrosData).length > 0) {
+        for (const [id, monstro] of Object.entries(this.monstrosData)) {
+            const exp = monstro.experiencia || 0;
+            
+            if (exp <= 70) {
+                classificacao.comuns.push(id);
+            } else if (exp <= 120) {
+                classificacao.incomuns.push(id);
+            } else {
+                classificacao.raros.push(id);
+            }
         }
-    }
-
-    // Fallback se não houver monstros carregados
-    if (classificacao.comuns.length === 0) {
-        classificacao.comuns = ["coruja", "zumbi", "sombra-errante"];
-        classificacao.incomuns = ["lobo", "servo-pedra", "doberman", "jaguar"];
-        classificacao.raros = ["necromante", "sombra-antiga", "urso", "tigre"];
+    } else {
+        // Fallback com TODOS os 19 monstros do seu arquivo
+        classificacao.comuns = [
+            "coruja", "zumbi", "sombra-errante", "doberman"
+        ];
+        classificacao.incomuns = [
+            "lobo", "servo-pedra", "jaguar", "serpente", 
+            "aguia", "javali", "escorpiao"
+        ];
+        classificacao.raros = [
+            "necromante", "sombra-antiga", "urso", "tigre", 
+            "crocodilo", "lobo_alfa"
+        ];
     }
 
     console.log(`[MONSTROS] Classificação:
-    - Comuns: ${classificacao.comuns.length}
-    - Incomuns: ${classificacao.incomuns.length}
-    - Raros: ${classificacao.raros.length}`);
+    - Comuns: ${classificacao.comuns.join(', ')}
+    - Incomuns: ${classificacao.incomuns.join(', ')}
+    - Raros: ${classificacao.raros.join(', ')}`);
 
     return classificacao;
 }
+
 
 
     // 🆕 MÉTODO AUXILIAR: Extrai valor numérico de dano
@@ -309,13 +319,23 @@ classificarMonstrosPorDificuldade() {
 
     // 🆕 MÉTODO NOVO: Gera string formatada de monstros para o prompt
     getMonstrosAmostra() {
-        let output = '\n**LISTA DE MONSTROS VÁLIDOS (para campo "batalha"):**\n';
-        output += `**CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.\n`;
-        output += `- Comuns: "${this.monstrosClassificados.comuns.join('", "')}"\n`;
-        output += `- Incomuns: "${this.monstrosClassificados.incomuns.join('", "')}"\n`;
-        output += `- Raros: "${this.monstrosClassificados.raros.join('", "')}"\n`;
-        return output;
-    }
+    // Seleciona monstros com rotação (evita repetir os 3 últimos)
+    const comumSugerido = this.selecionarMonstroComRotacao('comuns');
+    const incomumSugerido = this.selecionarMonstroComRotacao('incomuns');
+    const raroSugerido = this.selecionarMonstroComRotacao('raros');
+    
+    let output = '\n**MONSTROS SUGERIDOS PARA ESTA SEÇÃO (use um destes):**\n';
+    output += `**CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.\n`;
+    output += `- Comum (90% chance): "${comumSugerido}"\n`;
+    output += `- Incomum (9% chance): "${incomumSugerido}"\n`;
+    output += `- Raro (1% chance): "${raroSugerido}"\n`;
+    output += `\n**LISTA COMPLETA (caso precise variar):**\n`;
+    output += `- Comuns: "${this.monstrosClassificados.comuns.join('", "')}"\n`;
+    output += `- Incomuns: "${this.monstrosClassificados.incomuns.join('", "')}"\n`;
+    output += `- Raros: "${this.monstrosClassificados.raros.join('", "')}"\n`;
+    return output;
+}
+
 
     analisarSecao(secao, numeroSecao, escolhaFeita = null) {
         const contexto = {
@@ -334,6 +354,35 @@ classificarMonstrosPorDificuldade() {
 
         return contexto;
     }
+
+    // 🆕 MÉTODO NOVO: Seleciona monstro com rotação (evita repetição)
+selecionarMonstroComRotacao(raridade = 'comuns') {
+    let pool = [...this.monstrosClassificados[raridade]];
+    
+    // Remove monstros usados recentemente (últimos 3)
+    pool = pool.filter(id => !this.monstrosUsadosRecentemente.includes(id));
+    
+    // Se todos foram usados, reseta o histórico
+    if (pool.length === 0) {
+        console.log('[ROTAÇÃO] Todos os monstros foram usados, resetando histórico');
+        this.monstrosUsadosRecentemente = [];
+        pool = [...this.monstrosClassificados[raridade]];
+    }
+    
+    // Seleciona aleatoriamente
+    const escolhido = pool[Math.floor(Math.random() * pool.length)];
+    
+    // Adiciona ao histórico (mantém últimos 3)
+    this.monstrosUsadosRecentemente.push(escolhido);
+    if (this.monstrosUsadosRecentemente.length > 3) {
+        this.monstrosUsadosRecentemente.shift();
+    }
+    
+    console.log(`[ROTAÇÃO] Monstro escolhido: ${escolhido} | Histórico: [${this.monstrosUsadosRecentemente.join(', ')}]`);
+    
+    return escolhido;
+}
+
 
     analisarPadroes() {
         const ultimasEscolhas = this.historico.slice(-4)
@@ -916,6 +965,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
