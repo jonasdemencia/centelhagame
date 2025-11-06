@@ -16,19 +16,12 @@ export class SistemaEmergencia {
         // 🆕 NOVO: Classificar itens por raridade automaticamente
         this.itensClassificados = this.classificarItensPorRaridade();
 
-        // =======================================================================
-        // === INÍCIO DA MODIFICAÇÃO 1: VARIEDADE DE MONSTROS ===
-        // =======================================================================
-        // A lista antiga estava muito pequena e causava baixa variedade.
-        // Esta lista agora reflete TODOS os monstros do seu arquivo monstros (2).js
+
         this.monstrosClassificados = {
             comuns: ["coruja", "zumbi", "sombra-errante", "lobo", "escorpiao"],
             incomuns: ["doberman", "servo-pedra", "serpente", "javali", "aguia"],
             raros: ["necromante", "sombra-antiga", "jaguar", "urso", "tigre", "crocodilo", "lobo_alfa"]
         };
-        // =======================================================================
-        // === FIM DA MODIFICAÇÃO 1 ===
-        // =======================================================================
     }
 
     // 🆕 MÉTODO NOVO: Classifica todos os itens seguindo suas regras
@@ -882,4 +875,5 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
