@@ -318,59 +318,105 @@ export const monsterData = {
 "crocodilo": {
     nome: "Crocodilo do Pântano",
     imagem: "https://via.placeholder.com/150",
-    descricao: "Um réptil ancestral com mandíbulas capazes de esmagar ossos.",
-    habilidade: 6,
-    couraça: 5,
-    energiaDados: "4d12",
-    experiencia: 120,
-    dano: "2D8",
+    descricao: "Réptil gigante que habita águas escuras, conhecido por sua mordida esmagadora e rotação mortal.",
+    habilidade: 7,
+    couraça: 3,
+    energiaDados: "6d10",
+    experiencia: 110,
+    dano: "2D6",
     ataques: [
         {
-            id: "mordida",
+            id: "mordida_esmagadora",
             nome: "Mordida Esmagadora",
-            dano: "2d8",
-            peso: 70,
-            pesoHPBaixo: 50,
+            dano: "2d6+3",
+            peso: 55,
+            pesoHPBaixo: 25,
             telegrafado: false
         },
         {
-            id: "rolamento",
-            nome: "Rolamento da Morte",
-            dano: "3d8+4",
-            peso: 30,
-            pesoHPBaixo: 50,
+            id: "giro_mortal",
+            nome: "Giro da Morte",
+            dano: "3d6",
+            peso: 25,
+            pesoHPBaixo: 55,
             telegrafado: true,
-            mensagemTelegraf: "O crocodilo abre suas mandíbulas enormes, preparando o rolamento mortal..."
+            mensagemTelegraf: "O crocodilo prende firmemente e começa a girar violentamente seu corpo nas águas..."
+        },
+        {
+            id: "cauda_rabo",
+            nome: "Golpe de Cauda",
+            dano: "1d10+2",
+            peso: 20,
+            pesoHPBaixo: 20,
+            telegrafado: false
         }
     ]
 },
 
 "lobo_alfa": {
-    nome: "Lobo Alfa",
+    nome: "Lobo Alfa da Alcateia",
     imagem: "https://via.placeholder.com/150",
-    descricao: "O líder da alcateia, maior e mais experiente que os outros.",
+    descricao: "O líder da alcateia, maior, mais inteligente e muito mais perigoso que um lobo comum.",
     habilidade: 8,
-    couraça: 3,
-    energiaDados: "4d10",
-    experiencia: 130,
-    dano: "1D12",
+    couraça: 2,
+    energiaDados: "5d10",
+    experiencia: 120,
+    dano: "1D10",
     ataques: [
         {
-            id: "mordida_lider",
+            id: "mordida_alfa",
             nome: "Mordida do Alfa",
-            dano: "1d12",
-            peso: 60,
-            pesoHPBaixo: 40,
+            dano: "1d10+3",
+            peso: 50,
+            pesoHPBaixo: 30,
             telegrafado: false
         },
         {
-            id: "uivo",
-            nome: "Uivo Assustador",
-            dano: "2d6+3",
-            peso: 40,
-            pesoHPBaixo: 60,
+            id: "rugido_paralisante",
+            nome: "Rugido de Comando",
+            dano: "0",
+            peso: 30,
+            pesoHPBaixo: 50,
             telegrafado: true,
-            mensagemTelegraf: "O lobo alfa levanta a cabeça, preparando-se para um uivo que convoca a alcateia..."
+            mensagemTelegraf: "O lobo alfa infla o peito e emite um rugido profundo que ecoa pelo ambiente, congelando a presa..."
+        },
+        {
+            id: "investida_lider",
+            nome: "Investida do Líder",
+            dano: "2d6+2",
+            peso: 20,
+            pesoHPBaixo: 20,
+            telegrafado: false
+        }
+    ]
+},
+
+    "rato_gigante": {
+    nome: "Rato Gigante da Masmorra",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um roedor de tamanho anormal, agressivo e portador de doenças, comum em esgotos e masmorras.",
+    habilidade: 4,
+    couraça: 0,
+    energiaDados: "2d6",
+    experiencia: 20,
+    dano: "1D4",
+    ataques: [
+        {
+            id: "mordida_rapida",
+            nome: "Mordida Rápida",
+            dano: "1d4",
+            peso: 75,
+            pesoHPBaixo: 25,
+            telegrafado: false
+        },
+        {
+            id: "investida_roedor",
+            nome: "Investida Veloz",
+            dano: "1d6",
+            peso: 25,
+            pesoHPBaixo: 75,
+            telegrafado: true,
+            mensagemTelegraf: "O rato gigante rosna e se agacha, preparando-se para uma investida surpresa e veloz..."
         }
     ]
 },
@@ -378,6 +424,141 @@ export const monsterData = {
 
 // Assombrações e monstros
 
+    "golem_ferro": {
+    nome: "Golem de Ferro",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Construção mágica de ferro puro, praticamente indestrutível e capaz de liberar vapores tóxicos.",
+    habilidade: 6,
+    couraça: 6,
+    energiaDados: "8d10",
+    experiencia: 200,
+    dano: "2D8",
+    ataques: [
+        {
+            id: "soco_metalico",
+            nome: "Soco Metálico",
+            dano: "2d8+2",
+            peso: 60,
+            pesoHPBaixo: 20,
+            telegrafado: false
+        },
+        {
+            id: "vapor_toxico",
+            nome: "Nuvem de Vapor Tóxico",
+            dano: "3d6",
+            peso: 20,
+            pesoHPBaixo: 60,
+            telegrafado: true,
+            mensagemTelegraf: "Juntas do golem de ferro começam a soltar vapor quente e tóxico, formando uma nuvem letal..."
+        },
+        {
+            id: "pisada_sismica",
+            nome: "Pisada Sismica",
+            dano: "2d6+4",
+            peso: 20,
+            pesoHPBaixo: 20,
+            telegrafado: false
+        }
+    ]
+},
+
+    "harpia": {
+    nome: "Harpia Predadora",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Criatura alada com corpo de ave e torso humanoide, conhecida por seu canto hipnótico e garras afiadas.",
+    habilidade: 7,
+    couraça: 1,
+    energiaDados: "4d8",
+    experiencia: 90,
+    dano: "1D6",
+    ataques: [
+        {
+            id: "garra_afiada",
+            nome: "Garra Afiada",
+            dano: "1d6+2",
+            peso: 60,
+            pesoHPBaixo: 25,
+            telegrafado: false
+        },
+        {
+            id: "canto_hipnotico",
+            nome: "Canto Hipnótico",
+            dano: "0",
+            peso: 25,
+            pesoHPBaixo: 60,
+            telegrafado: true,
+            mensagemTelegraf: "A harpia abre seu bico e emite um canto melodioso e encantador que parece penetrar sua mente..."
+        },
+        {
+            id: "mergulho_predatorio",
+            nome: "Mergulho Predatório",
+            dano: "1d10+1",
+            peso: 15,
+            pesoHPBaixo: 15,
+            telegrafado: false
+        }
+    ]
+},
+
+"wight": {
+    nome: "Wight da Masmorra",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Morto-vivo mais poderoso que um zumbi, retendo parte de sua inteligência e habilidades de combate.",
+    habilidade: 6,
+    couraça: 2,
+    energiaDados: "4d8",
+    experiencia: 85,
+    dano: "1D8",
+    ataques: [
+        {
+            id: "golpe_espada",
+            nome: "Golpe de Espada Negra",
+            dano: "1d8+1",
+            peso: 65,
+            pesoHPBaixo: 35,
+            telegrafado: false
+        },
+        {
+            id: "toque_paralisante",
+            nome: "Toque Paralisante",
+            dano: "1d6+2",
+            peso: 35,
+            pesoHPBaixo: 65,
+            telegrafado: true,
+            mensagemTelegraf: "O wight estende sua mão pálida, dedos emitindo uma aura fria e paralisante..."
+        }
+    ]
+},
+
+"ghoul": {
+    nome: "Ghoul Faminto",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Morto-vivo que se alimenta de cadáveres, com garras afiadas e capacidade de paralisar vítimas.",
+    habilidade: 5,
+    couraça: 1,
+    energiaDados: "3d8",
+    experiencia: 65,
+    dano: "1D6",
+    ataques: [
+        {
+            id: "garra_suja",
+            nome: "Garrada Infectada",
+            dano: "1d6+1",
+            peso: 70,
+            pesoHPBaixo: 30,
+            telegrafado: false
+        },
+        {
+            id: "mordida_canibal",
+            nome: "Mordida Canibal",
+            dano: "1d8",
+            peso: 30,
+            pesoHPBaixo: 70,
+            telegrafado: true,
+            mensagemTelegraf: "O ghoul saliva profusamente e avança com a boca aberta, pronto para uma mordida canibal..."
+        }
+    ]
+},
 
 "goblin_guerreiro": {
     nome: "Goblin Guerreiro",
@@ -825,5 +1006,6 @@ export const monsterData = {
 export function getMonsterById(monsterId) {
     return monsterData[monsterId] || null;
 }
+
 
 
