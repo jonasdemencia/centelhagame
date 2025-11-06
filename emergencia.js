@@ -18,9 +18,9 @@ export class SistemaEmergencia {
 
 
         this.monstrosClassificados = {
-            comuns: ["coruja", "zumbi", "sombra-errante", "lobo", "escorpiao"],
-            incomuns: ["doberman", "servo-pedra", "serpente", "javali", "aguia"],
-            raros: ["necromante", "sombra-antiga", "jaguar", "urso", "tigre", "crocodilo", "lobo_alfa"]
+            comuns: ["coruja", "zumbi", "sombra-errante", "lobo", "escorpiao", "rato_gigante", "goblin_guerreiro", "esqueleto_armado", "morcego_vampiro", "aranha_venenosa", "goblin_ladrao", "esqueleto_arqueiro", "lacraia_gigante", "corvo_sombrio", "cachorro_selvagem", "lesma_acida", "morcego_comum", "lagarto_caverna", "goblin_xama", "abelha_gigante", "esqueleto_fracasso"],
+incomuns: ["doberman", "servo-pedra", "serpente", "javali", "aguia", "ghoul", "espectro", "minotauro", "aracnideo_gigante", "golem_barro", "harpia"],
+raros: ["necromante", "sombra-antiga", "jaguar", "urso", "tigre", "crocodilo", "lobo_alfa", "golem_ferro", "quimera", "lich_menor"]
         };
     }
 
@@ -875,5 +875,6 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
