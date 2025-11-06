@@ -196,7 +196,7 @@ export const NARRATIVAS = {
                 { texto: "Seguir até o fim do corredor", secao: 6 },
                 { texto: "Tocar as tapeçarias", secao: 7 },
                 { texto: "Retornar ao hall", secao: 1 },
-                { texto: "Abrir a porta à direita", secao: 8 }
+                { texto: "Abrir a porta à direita", secao: 8, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" }
             ]
         },
 
@@ -3756,6 +3756,7 @@ export const NARRATIVAS = {
         }
     }
 };
+
 
 
 
