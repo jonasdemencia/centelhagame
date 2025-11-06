@@ -220,9 +220,9 @@ export const NARRATIVAS = {
         5: {
             texto: "Degraus de mármore branco sobem em espiral. Corrimão de mogno. Você alcança o primeiro patamar. Três portas: uma vermelha, uma branca, uma de bronze.",
             opcoes: [
-                { texto: "Abrir a porta vermelha", secao: 12 },
-                { texto: "Abrir a porta branca", secao: 13 },
-                { texto: "Abrir a porta de bronze", secao: 14 },
+                { texto: "Abrir a porta vermelha", secao: 12, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
+                { texto: "Abrir a porta branca", secao: 13, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
+                { texto: "Abrir a porta de bronze", secao: 14, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portametal.mp3" },
                 { texto: "Descer ao hall", secao: 1 }
             ]
         },
@@ -232,7 +232,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Procurar por comida nos armários", secao: 15 },
                 { texto: "Examinar os talheres", secao: 16 },
-                { texto: "Sair pela porta oposta", secao: 17 },
+                { texto: "Sair pela porta oposta", secao: 17, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Retornar ao corredor", secao: 2 }
             ]
         },
@@ -266,7 +266,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Tocar uma tecla do piano", secao: 21 },
                 { texto: "Examinar as partituras", secao: 22 },
-                { texto: "Sair pela porta lateral", secao: 23 },
+                { texto: "Sair pela porta lateral", secao: 23, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Voltar à galeria", secao: 3 }
             ]
         },
@@ -283,7 +283,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Examinar o altar", secao: 24 },
                 { texto: "Sentar-se nos bancos", secao: 25 },
-                { texto: "Sair pela porta lateral", secao: 26 },
+                { texto: "Sair pela porta lateral", secao: 26, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Retornar ao patamar", secao: 5 }
             ]
         },
@@ -330,9 +330,9 @@ export const NARRATIVAS = {
         17: {
             texto: "Paredes simples, piso de pedra. Portas numeradas de 1 a 8. Iluminação natural de claraboias.",
             opcoes: [
-                { texto: "Abrir porta 1", secao: 33 },
-                { texto: "Abrir porta 4", secao: 34 },
-                { texto: "Abrir porta 8", secao: 35 },
+                { texto: "Abrir porta 1", secao: 33, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" },
+                { texto: "Abrir porta 4", secao: 34, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" },
+                { texto: "Abrir porta 8", secao: 35, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" },
                 { texto: "Seguir até o fim do corredor", secao: 36 }
             ]
         },
@@ -377,7 +377,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Beber da fonte", secao: 37 },
                 { texto: "Explorar o jardim", secao: 38 },
-                { texto: "Entrar pela porta oposta", secao: 39 },
+                { texto: "Entrar pela porta oposta", secao: 39, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Retornar ao salão", secao: 10 }
             ]
         },
@@ -402,7 +402,7 @@ export const NARRATIVAS = {
             texto: "Armários com vestes cerimoniais: brancas, douradas, púrpuras. Cálices de ouro. Incenso em caixas lacradas.",
             opcoes: [
                 { texto: "Examinar as vestes", secao: 41 },
-                { texto: "Sair pela porta dos fundos", secao: 42 },
+                { texto: "Sair pela porta dos fundos", secao: 42, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" },
                 { texto: "Retornar à capela", secao: 12 }
             ]
         },
@@ -477,7 +477,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Examinar as geladeiras", secao: 43 },
                 { texto: "Pegar uma faca", secao: 44 },
-                { texto: "Sair pela porta de serviço", secao: 45 },
+                { texto: "Sair pela porta de serviço", secao: 45, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" },
                 { texto: "Retornar ao corredor", secao: 17 }
             ]
         },
@@ -504,7 +504,7 @@ export const NARRATIVAS = {
             texto: "Estrutura de vidro e ferro. Plantas tropicais em vasos imensos. Umidade no ar. Temperatura elevada.",
             opcoes: [
                 { texto: "Explorar entre as plantas", secao: 49 },
-                { texto: "Sair pela porta oposta", secao: 50 },
+                { texto: "Sair pela porta oposta", secao: 50, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Retornar ao jardim", secao: 23 }
             ]
         },
@@ -552,7 +552,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Tentar abrir os portões", secao: 53 },
                 { texto: "Examinar as caixas", secao: 54 },
-                { texto: "Entrar pela porta lateral", secao: 55 },
+                { texto: "Entrar pela porta lateral", secao: 55, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portagaragem.mp3" },
                 { texto: "Retornar à cozinha", secao: 36 }
             ]
         },
@@ -593,7 +593,7 @@ export const NARRATIVAS = {
             texto: "Ferramentas penduradas: pás, tesouras, regadores. Terra em sacos. Sementes em envelopes rotulados.",
             opcoes: [
                 { texto: "Pegar uma ferramenta", secao: 60 },
-                { texto: "Sair pela porta externa", secao: 61 },
+                { texto: "Sair pela porta externa", secao: 61, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portametal.mp3" },
                 { texto: "Retornar ao conservatório", secao: 39 }
             ]
         },
@@ -616,7 +616,7 @@ export const NARRATIVAS = {
     texto: "Após derrotar a coruja, você pode explorar a sala com segurança. Mesa oval, vinte cadeiras. Quadro branco vazio. Projetor antigo coberto por lona.",
     opcoes: [
         { texto: "Examinar o quadro", secao: 62 },
-        { texto: "Sair pela porta dupla", secao: 63, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3" },
+        { texto: "Sair pela porta dupla", secao: 63, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" },
         { texto: "Retornar ao corredor", secao: 42 }
     ]
 },
@@ -718,7 +718,7 @@ export const NARRATIVAS = {
             texto: "Caldeira industrial desligada. Medidores em zero. Cheiro de metal e poeira.",
             opcoes: [
                 { texto: "Examinar a caldeira", secao: 71 },
-                { texto: "Sair pela porta dos fundos", secao: 72 },
+                { texto: "Sair pela porta dos fundos", secao: 72, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portametal.mp3" },
                 { texto: "Retornar ao corredor", secao: 55 }
             ]
         },
@@ -741,7 +741,7 @@ export const NARRATIVAS = {
         68: {
             texto: "Pedras brancas polidas. O caminho leva a uma porta de vidro.",
             opcoes: [
-                { texto: "Abrir a porta", secao: 74 },
+                { texto: "Abrir a porta", secao: 74, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Retornar", secao: 61 }
             ]
         },
@@ -757,7 +757,7 @@ export const NARRATIVAS = {
             texto: "Esculturas de bronze e mármore. Formas humanas distorcidas, abstratas. Pedestais numerados.",
             opcoes: [
                 { texto: "Examinar uma escultura", secao: 75 },
-                { texto: "Sair pela porta lateral", secao: 76 },
+                { texto: "Sair pela porta lateral", secao: 76, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Retornar à galeria", secao: 63 }
             ]
         },
@@ -772,7 +772,7 @@ export const NARRATIVAS = {
         72: {
             texto: "Pilhas de carvão. Pás encostadas na parede. Cheiro de mineral.",
             opcoes: [
-                { texto: "Sair pela porta externa", secao: 77 },
+                { texto: "Sair pela porta externa", secao: 77, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Retornar à sala", secao: 65 }
             ]
         },
@@ -789,7 +789,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Caminhar entre os espelhos", secao: 78 },
                 { texto: "Tocar um espelho", secao: 79 },
-                { texto: "Sair pela porta oposta", secao: 80 },
+                { texto: "Sair pela porta oposta", secao: 80, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Retornar", secao: 68 }
             ]
         },
@@ -839,7 +839,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Atravessar até o palco", secao: 85 },
                 { texto: "Examinar o lustre", secao: 86 },
-                { texto: "Sair pela porta lateral", secao: 87 },
+                { texto: "Sair pela porta lateral", secao: 87, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Retornar ao salão", secao: 74 }
             ]
         },
@@ -855,7 +855,7 @@ export const NARRATIVAS = {
             texto: "Pedra sob seus pés. Vista para jardins internos e telhados de outras alas. Céu azul, sem nuvens.",
             opcoes: [
                 { texto: "Observar a vista", secao: 88 },
-                { texto: "Entrar pela porta adjacente", secao: 89 },
+                { texto: "Entrar pela porta adjacente", secao: 89, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Retornar ao ateliê", secao: 76 }
             ]
         },
@@ -893,7 +893,7 @@ export const NARRATIVAS = {
             texto: "Espelhos com lâmpadas. Cadeiras estofadas. Nenhum cosmético, nenhuma roupa.",
             opcoes: [
                 { texto: "Examinar os espelhos", secao: 91 },
-                { texto: "Sair pela porta dos fundos", secao: 92 },
+                { texto: "Sair pela porta dos fundos", secao: 92, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Retornar à sala", secao: 80 }
             ]
         },
@@ -932,8 +932,8 @@ export const NARRATIVAS = {
         92: {
             texto: "Estreito, mal iluminado. Portas numeradas. Cheiro de poeira.",
             opcoes: [
-                { texto: "Abrir porta 3", secao: 96 },
-                { texto: "Abrir porta 7", secao: 97 },
+                { texto: "Abrir porta 3", secao: 96, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
+                { texto: "Abrir porta 7", secao: 97, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" },
                 { texto: "Seguir até o fim", secao: 98 },
                 { texto: "Retornar ao camarim", secao: 87 }
             ]
@@ -957,7 +957,7 @@ export const NARRATIVAS = {
         95: {
             texto: "Porta de carvalho maciço. Destrancada.",
             opcoes: [
-                { texto: "Abrir e sair", secao: 100 },
+                { texto: "Abrir e sair", secao: 100, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" },
                 { texto: "Retornar à biblioteca", secao: 89 }
             ]
         },
@@ -1012,8 +1012,8 @@ export const NARRATIVAS = {
             texto: "Teto altíssimo com afrescos de batalhas. Escadaria dupla ao fundo. Portas laterais fechadas.",
             opcoes: [
                 { texto: "Subir a escadaria", secao: 105 },
-                { texto: "Tentar a porta esquerda", secao: 106 },
-                { texto: "Tentar a porta direita", secao: 107 }
+                { texto: "Tentar a porta esquerda", secao: 106, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
+                { texto: "Tentar a porta direita", secao: 107, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" }
             ]
         },
 
@@ -1029,8 +1029,8 @@ export const NARRATIVAS = {
         104: {
             texto: "Janelas altas mostram céu cinza. Portas de mogno enfileiradas. Tapete vermelho gasto.",
             opcoes: [
-                { texto: "Abrir primeira porta", secao: 108 },
-                { texto: "Abrir segunda porta", secao: 109 },
+                { texto: "Abrir primeira porta", secao: 108, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" },
+                { texto: "Abrir segunda porta", secao: 109, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Continuar até o fim", secao: 110 }
             ]
         },
@@ -1057,7 +1057,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Beber água", secao: 115 },
                 { texto: "Examinar cadeiras", secao: 116 },
-                { texto: "Sair pela porta oposta", secao: 117 }
+                { texto: "Sair pela porta oposta", secao: 117, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" }
             ]
         },
 
@@ -1142,7 +1142,7 @@ export const NARRATIVAS = {
             texto: "Escudos heráldicos cobrem paredes. Leões, águias, cruzes. Nenhum reconhecível.",
             opcoes: [
                 { texto: "Examinar brasão central", secao: 131 },
-                { texto: "Porta ao fundo", secao: 132 },
+                { texto: "Porta ao fundo", secao: 132, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Retornar", secao: 107 }
             ]
         },
@@ -1182,7 +1182,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Sentar no trono", secao: 135 },
                 { texto: "Examinar janelas", secao: 136 },
-                { texto: "Porta lateral", secao: 137 },
+                { texto: "Porta lateral", secao: 137, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" },
                 { texto: "Retornar", secao: 110 }
             ]
         },
@@ -1200,7 +1200,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Ler documentos", secao: 139 },
                 { texto: "Examinar cadeiras", secao: 140 },
-                { texto: "Porta oposta", secao: 141 }
+                { texto: "Porta oposta", secao: 141, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" }
             ]
         },
 
@@ -1242,7 +1242,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Pegar besta", secao: 146 },
                 { texto: "Examinar flechas", secao: 147 },
-                { texto: "Porta ao fundo", secao: 148 }
+                { texto: "Porta ao fundo", secao: 148, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" }
             ]
         },
 
@@ -1393,7 +1393,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Pegar ferramentas", secao: 158 },
                 { texto: "Examinar bancada", secao: 159 },
-                { texto: "Porta lateral", secao: 160 }
+                { texto: "Porta lateral", secao: 160, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portametal.mp3" }
             ]
         },
 
@@ -1489,7 +1489,7 @@ export const NARRATIVAS = {
             texto: "Baias vazias. Feno fresco. Cheiro de cavalo ausente. Selas penduradas.",
             opcoes: [
                 { texto: "Examinar selas", secao: 169 },
-                { texto: "Porta oposta", secao: 170 },
+                { texto: "Porta oposta", secao: 170, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portametal.mp3" },
                 { texto: "Retornar", secao: 148 }
             ]
         },
@@ -1585,7 +1585,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Abrir barril", secao: 173 },
                 { texto: "Examinar garrafas", secao: 174 },
-                { texto: "Porta ao fundo", secao: 175 }
+                { texto: "Porta ao fundo", secao: 175, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" }
             ]
         },
 
@@ -1610,7 +1610,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Examinar fornos", secao: 177 },
                 { texto: "Pegar carvão", secao: 178 },
-                { texto: "Porta lateral", secao: 179 }
+                { texto: "Porta lateral", secao: 179, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" }
             ]
         },
 
@@ -1672,7 +1672,7 @@ export const NARRATIVAS = {
         183: {
             texto: "Corredor estreito. Portas de ferro. Tochas apagadas. Silêncio absoluto.",
             opcoes: [
-                { texto: "Entrar", secao: 184 },
+                { texto: "Entrar", secao: 184, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Retornar", secao: 175 }
             ]
         },
@@ -1697,7 +1697,7 @@ export const NARRATIVAS = {
             texto: "Mesa de madeira. Instrumentos pendurados. Limpos. Nunca usados.",
             opcoes: [
                 { texto: "Examinar instrumentos", secao: 187 },
-                { texto: "Porta oposta", secao: 188 },
+                { texto: "Porta oposta", secao: 188, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" },
                 { texto: "Retornar", secao: 184 }
             ]
         },
@@ -1761,7 +1761,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Examinar livros", secao: 196 },
                 { texto: "Globo iluminado", secao: 197 },
-                { texto: "Abrir a porta", secao: 198, requer: "engrenagem-prata" }
+                { texto: "Abrir a porta", secao: 198, requer: "engrenagem-prata", som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portametal.mp3" }
             ]
         },
 
@@ -1818,8 +1818,8 @@ export const NARRATIVAS = {
        202: {
             texto: "Mármore branco, lustres de cristal, portas de mogno. Silêncio absoluto.",
             opcoes: [
-                { texto: "Porta à esquerda", secao: 205 },
-                { texto: "Porta à direita", secao: 206 },
+                { texto: "Porta à esquerda", secao: 205, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" },
+                { texto: "Porta à direita", secao: 206, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Escadaria em caracol ascendente", secao: 207 }
             ]
         },
@@ -1846,7 +1846,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Examinar mapa", secao: 210 },
                 { texto: "Examinar armadura", secao: 211 },
-                { texto: "Porta oposta", secao: 212 }
+                { texto: "Porta oposta", secao: 212, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" }
             ]
         },
 
@@ -1855,7 +1855,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Comer grãos", secao: 213 },
                 { texto: "Examinar sacos", secao: 214 },
-                { texto: "Porta ao fundo", secao: 215 }
+                { texto: "Porta ao fundo", secao: 215, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" }
             ]
         },
 
@@ -1904,7 +1904,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Procurar comida", secao: 220 },
                 { texto: "Examinar fogão", secao: 221 },
-                { texto: "Porta lateral", secao: 222 }
+                { texto: "Porta lateral", secao: 222, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" }
             ]
         },
 
@@ -1928,16 +1928,16 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Sentar", secao: 223 },
                 { texto: "Examinar pratos", secao: 224 },
-                { texto: "Porta dupla", secao: 225 }
+                { texto: "Porta dupla", secao: 225, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" }
             ]
         },
 
         216: {
             texto: "Corredor circular com portas numeradas. Candelabros acesos sem chama visível.",
             opcoes: [
-                { texto: "Porta 1", secao: 226 },
-                { texto: "Porta 2", secao: 227 },
-                { texto: "Porta 3", secao: 228 },
+                { texto: "Porta 1", secao: 226, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
+                { texto: "Porta 2", secao: 227, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
+                { texto: "Porta 3", secao: 228, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" },
                 { texto: "Continuar subindo", secao: 229 }
             ]
         },
@@ -1987,7 +1987,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Descansar", secao: 234 },
                 { texto: "Examinar beliches", secao: 235 },
-                { texto: "Porta ao fundo", secao: 236 }
+                { texto: "Porta ao fundo", secao: 236, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" }
             ]
         },
 
@@ -2044,8 +2044,8 @@ export const NARRATIVAS = {
         229: {
             texto: "Corredor mais estreito, portas de metal, ar mais frio.",
             opcoes: [
-                { texto: "Porta de ferro", secao: 246 },
-                { texto: "Porta de bronze", secao: 247 },
+                { texto: "Porta de ferro", secao: 246, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portametal.mp3" },
+                { texto: "Porta de bronze", secao: 247, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portametal.mp3" },
                 { texto: "Continuar subindo", secao: 248 }
             ]
         },
@@ -2063,7 +2063,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Pegar pá", secao: 250 },
                 { texto: "Pegar martelo", secao: 250 },
-                { texto: "Porta lateral", secao: 251 }
+                { texto: "Porta lateral", secao: 251, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" }
             ]
         },
 
@@ -2103,7 +2103,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Examinar frascos", secao: 252 },
                 { texto: "Examinar camas", secao: 253 },
-                { texto: "Porta oposta", secao: 254 }
+                { texto: "Porta oposta", secao: 254, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" }
             ]
         },
 
@@ -2199,7 +2199,7 @@ export const NARRATIVAS = {
             texto: "Corredor com vitrais coloridos. Luz difusa sem fonte aparente.",
             opcoes: [
                 { texto: "Examinar vitrais", secao: 265 },
-                { texto: "Porta ornamentada", secao: 266 },
+                { texto: "Porta ornamentada", secao: 266, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Continuar subindo", secao: 267 }
             ]
         },
@@ -2225,7 +2225,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Ler documentos", secao: 269 },
                 { texto: "Examinar candelabro", secao: 270 },
-                { texto: "Porta lateral", secao: 271 }
+                { texto: "Porta lateral", secao: 271, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" }
             ]
         },
 
@@ -2250,7 +2250,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Examinar baús", secao: 274 },
                 { texto: "Ler quadro-negro", secao: 275 },
-                { texto: "Porta ao fundo", secao: 276 }
+                { texto: "Porta ao fundo", secao: 276, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" }
             ]
         },
 
@@ -2350,16 +2350,16 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Examinar livros", secao: 283 },
                 { texto: "Ler pergaminho", secao: 284 },
-                { texto: "Porta secreta", secao: 285 }
+                { texto: "Porta secreta", secao: 285, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portamadeira.mp3" }
             ]
         },
 
         267: {
             texto: "Corredor circular, portas idênticas, eco estranho dos passos.",
             opcoes: [
-                { texto: "Porta A", secao: 286 },
-                { texto: "Porta B", secao: 287 },
-                { texto: "Porta C", secao: 288 },
+                { texto: "Porta A", secao: 286, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
+                { texto: "Porta B", secao: 287, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
+                { texto: "Porta C", secao: 288, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Continuar subindo", secao: 289 }
             ]
         },
@@ -2392,7 +2392,7 @@ export const NARRATIVAS = {
             opcoes: [
                 { texto: "Entrar na gaiola", secao: 292 },
                 { texto: "Examinar correntes", secao: 293 },
-                { texto: "Porta oposta", secao: 294 }
+                { texto: "Porta oposta", secao: 294, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portametal.mp3" }
             ]
         },
 
@@ -2535,7 +2535,7 @@ export const NARRATIVAS = {
             texto: "Sala circular com janelas em todas as direções. Escada termina aqui.",
             opcoes: [
                 { texto: "Examinar janelas", secao: 304 },
-                { texto: "Porta para terraço", secao: 303 },
+                { texto: "Porta para terraço", secao: 303, som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/porta1.mp3" },
                 { texto: "Descer", secao: 267 }
             ]
         },
@@ -2573,7 +2573,7 @@ export const NARRATIVAS = {
         294: {
             texto: "Alavancas controlam a gaiola. Painel com instruções em latim. Há um corredor estreito que termina em uma porta de ferro.",
             opcoes: [
-                { texto: "Abrir a porta", secao: 308, requer: "chave-ferro-azul" },
+                { texto: "Abrir a porta", secao: 308, requer: "chave-ferro-azul", som: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/portametal.mp3" },
                 { texto: "Acionar alavanca", secao: 316 },
                 { texto: "Sair", secao: 271 }
             ]
@@ -3756,6 +3756,7 @@ export const NARRATIVAS = {
         }
     }
 };
+
 
 
 
