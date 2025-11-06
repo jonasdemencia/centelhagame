@@ -16,12 +16,19 @@ export class SistemaEmergencia {
         // 🆕 NOVO: Classificar itens por raridade automaticamente
         this.itensClassificados = this.classificarItensPorRaridade();
 
-        // 🆕 NOVO: Classificar monstros por raridade (baseado em monstros.js)
+        // =======================================================================
+        // === INÍCIO DA MODIFICAÇÃO 1: VARIEDADE DE MONSTROS ===
+        // =======================================================================
+        // A lista antiga estava muito pequena e causava baixa variedade.
+        // Esta lista agora reflete TODOS os monstros do seu arquivo monstros (2).js
         this.monstrosClassificados = {
-            comuns: ["coruja", "zumbi", "sombra-errante"],
-            incomuns: ["lobo", "servo-pedra"],
-            raros: ["necromante", "sombra-antiga"]
+            comuns: ["coruja", "zumbi", "sombra-errante", "lobo", "escorpiao"],
+            incomuns: ["doberman", "servo-pedra", "serpente", "javali", "aguia"],
+            raros: ["necromante", "sombra-antiga", "jaguar", "urso", "tigre", "crocodilo", "lobo_alfa"]
         };
+        // =======================================================================
+        // === FIM DA MODIFICAÇÃO 1 ===
+        // =======================================================================
     }
 
     // 🆕 MÉTODO NOVO: Classifica todos os itens seguindo suas regras
@@ -489,23 +496,20 @@ ${monstrosAmostra}
   ]
 }
 
-
-**FORMATO (JSON PURO - Com Armadilha de Batalha - 30%):**
+**FORMATO (JSON PURO - Com Armadilha de Perigo - 30%):**
 {
   "modo": "expansao_natural",
   "texto": "[Texto normal, ex: 'Você vê uma ampulheta brilhante sobre a mesa...']",
   "opcoes": [
     {
-      "tipo": "armadilha_batalha",
-      "texto": "[Opção NEUTRA sem spoiler, ex: 'Tocar a ampulheta']",
-      "monstroOculto": "[ID_MONSTRO_VALIDO]"
+      "tipo": "perigo_oculto",
+      "texto": "[Opção NEUTRA sem spoiler, ex: 'Tocar a ampulheta']"
     },
     {"texto": "[Examinar de longe]", "tipo": "neutra"},
     {"texto": "[Sair da sala]", "tipo": "recuar"}
   ],
   "efeitos": []
 }
-
 // 🆕 FIM DA ADIÇÃO
 
 **LEMBRE-SE:** Expansão natural > Detalhe perturbador > Evento menor (em ordem de preferência)
@@ -845,15 +849,14 @@ ${monstrosAmostra}
   ]
 }
 
-**FORMATO (JSON PURO - Com Armadilha de Batalha - 30%):**
+**FORMATO (JSON PURO - Com Armadilha de Perigo - 30%):**
 {
   "modo": "expansao_natural",
   "texto": "[Texto normal, ex: 'Você vê uma ampulheta brilhante sobre a mesa...']",
   "opcoes": [
     {
-      "tipo": "armadilha_batalha",
-      "texto": "[Opção NEUTRA sem spoiler, ex: 'Tocar a ampulheta']",
-      "monstroOculto": "[ID_MONSTRO_VALIDO]"
+      "tipo": "perigo_oculto",
+      "texto": "[Opção NEUTRA sem spoiler, ex: 'Tocar a ampulheta']"
     },
     {"texto": "[Examinar de longe]", "tipo": "neutra"},
     {"texto": "[Sair da sala]", "tipo": "recuar"}
@@ -861,7 +864,6 @@ ${monstrosAmostra}
   "efeitos": []
 }
 
-// 🆕 FIM DA ADIÇÃO
 `;
     }
 
@@ -880,3 +882,4 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
