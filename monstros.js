@@ -2,7 +2,7 @@
 
 // Exporta o objeto monsterData para ser usado em outros arquivos
 export const monsterData = {
-    // Animais
+ 
     "lobo": {
     nome: "Lobo Faminto",
     imagem: "https://via.placeholder.com/150",
@@ -500,35 +500,7 @@ export const monsterData = {
     ]
 },
 
-"wight": {
-    nome: "Wight da Masmorra",
-    imagem: "https://via.placeholder.com/150",
-    descricao: "Morto-vivo mais poderoso que um zumbi, retendo parte de sua inteligência e habilidades de combate.",
-    habilidade: 6,
-    couraça: 2,
-    energiaDados: "4d8",
-    experiencia: 85,
-    dano: "1D8",
-    ataques: [
-        {
-            id: "golpe_espada",
-            nome: "Golpe de Espada Negra",
-            dano: "1d8+1",
-            peso: 65,
-            pesoHPBaixo: 35,
-            telegrafado: false
-        },
-        {
-            id: "toque_paralisante",
-            nome: "Toque Paralisante",
-            dano: "1d6+2",
-            peso: 35,
-            pesoHPBaixo: 65,
-            telegrafado: true,
-            mensagemTelegraf: "O wight estende sua mão pálida, dedos emitindo uma aura fria e paralisante..."
-        }
-    ]
-},
+
 
 "ghoul": {
     nome: "Ghoul Faminto",
@@ -845,6 +817,372 @@ export const monsterData = {
         }
     ]
 },
+
+    "aranha_venenosa": {
+    nome: "Aranha Venenosa",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Uma aranha de tamanho médio com veneno paralisante, comum em cantos escuros.",
+    habilidade: 4,
+    couraça: 0,
+    energiaDados: "2d6",
+    experiencia: 25,
+    dano: "1D4",
+    ataques: [
+        {
+            id: "mordida_pequena",
+            nome: "Mordida Venenosa",
+            dano: "1d4",
+            peso: 75,
+            pesoHPBaixo: 40,
+            telegrafado: false
+        },
+        {
+            id: "salto_venenoso",
+            nome: "Salto Surpresa",
+            dano: "1d6",
+            peso: 25,
+            pesoHPBaixo: 60,
+            telegrafado: true,
+            mensagemTelegraf: "A aranha se agacha e prepara suas patas traseiras para um salto rápido..."
+        }
+    ]
+},
+
+"goblin_ladrao": {
+    nome: "Goblin Ladrão",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Pequeno e astuto, especializado em ataques sorrateiros e furtividade.",
+    habilidade: 5,
+    couraça: 0,
+    energiaDados: "2d6",
+    experiencia: 30,
+    dano: "1D4",
+    ataques: [
+        {
+            id: "adaga_sorrateira",
+            nome: "Golpe de Adaga",
+            dano: "1d4+1",
+            peso: 70,
+            pesoHPBaixo: 40,
+            telegrafado: false
+        },
+        {
+            id: "finta_veloz",
+            nome: "Finta Veloz",
+            dano: "1d6+2",
+            peso: 30,
+            pesoHPBaixo: 60,
+            telegrafado: true,
+            mensagemTelegraf: "O goblin sorri maliciosamente e se prepara para uma manobra traiçoeira..."
+        }
+    ]
+},
+
+"esqueleto_arqueiro": {
+    nome: "Esqueleto Arqueiro",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Restos mortais que mantiveram sua habilidade com arco mesmo na morte.",
+    habilidade: 4,
+    couraça: 1,
+    energiaDados: "2d8",
+    experiencia: 35,
+    dano: "1D6",
+    ataques: [
+        {
+            id: "flecha_ossea",
+            nome: "Flecha Óssea",
+            dano: "1d6",
+            peso: 65,
+            pesoHPBaixo: 35,
+            telegrafado: false
+        },
+        {
+            id: "chuva_flechas",
+            nome: "Chuva de Flechas",
+            dano: "2d4",
+            peso: 35,
+            pesoHPBaixo: 65,
+            telegrafado: true,
+            mensagemTelegraf: "O esqueleto puxa múltiplas flechas de sua aljava, preparando um ataque em área..."
+        }
+    ]
+},
+
+"lacraia_gigante": {
+    nome: "Lacraia Gigante",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um centopeia de tamanho anormal com picada dolorosa e movimento rápido.",
+    habilidade: 5,
+    couraça: 1,
+    energiaDados: "3d6",
+    experiencia: 40,
+    dano: "1D4",
+    ataques: [
+        {
+            id: "picada_dolorosa",
+            nome: "Picada Dolorosa",
+            dano: "1d4+1",
+            peso: 70,
+            pesoHPBaixo: 45,
+            telegrafado: false
+        },
+        {
+            id: "envolvimento_rapido",
+            nome: "Envolvimento Rápido",
+            dano: "1d8",
+            peso: 30,
+            pesoHPBaixo: 55,
+            telegrafado: true,
+            mensagemTelegraf: "A lacraia serpenteia rapidamente, preparando-se para envolver sua presa..."
+        }
+    ]
+},
+
+"corvo_sombrio": {
+    nome: "Corvo Sombrio",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Ave de mau agouro com bico afiado e grasnidos perturbadores.",
+    habilidade: 4,
+    couraça: 0,
+    energiaDados: "2d4",
+    experiencia: 20,
+    dano: "1D4",
+    ataques: [
+        {
+            id: "bicada_rapida",
+            nome: "Bicada Rápida",
+            dano: "1d4",
+            peso: 80,
+            pesoHPBaixo: 50,
+            telegrafado: false
+        },
+        {
+            id: "voo_cegante",
+            nome: "Voo Cegante",
+            dano: "1d6",
+            peso: 20,
+            pesoHPBaixo: 50,
+            telegrafado: true,
+            mensagemTelegraf: "O corvo bate as asas violentamente, levantando poeira e detritos..."
+        }
+    ]
+},
+
+
+
+"cachorro_selvagem": {
+    nome: "Cachorro Selvagem",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Canino domesticado que retornou à selvageria, caçando em pequenos bandos.",
+    habilidade: 4,
+    couraça: 1,
+    energiaDados: "2d8",
+    experiencia: 25,
+    dano: "1D6",
+    ataques: [
+        {
+            id: "mordida_canina",
+            nome: "Mordida Canina",
+            dano: "1d6",
+            peso: 75,
+            pesoHPBaixo: 45,
+            telegrafado: false
+        },
+        {
+            id: "perseguicao",
+            nome: "Perseguição Incansável",
+            dano: "1d8",
+            peso: 25,
+            pesoHPBaixo: 55,
+            telegrafado: true,
+            mensagemTelegraf: "O cachorro rosna baixo e se prepara para uma perseguição veloz..."
+        }
+    ]
+},
+
+"lesma_acida": {
+    nome: "Lesma Ácida",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Molusco que secreta um muco corrosivo capaz de dissolver metais.",
+    habilidade: 2,
+    couraça: 3,
+    energiaDados: "3d6",
+    experiencia: 35,
+    dano: "1D4",
+    ataques: [
+        {
+            id: "secrecao_acida",
+            nome: "Secreção Ácida",
+            dano: "1d4",
+            peso: 70,
+            pesoHPBaixo: 40,
+            telegrafado: false
+        },
+        {
+            id: "jato_corrosivo",
+            nome: "Jato Corrosivo",
+            dano: "1d8",
+            peso: 30,
+            pesoHPBaixo: 60,
+            telegrafado: true,
+            mensagemTelegraf: "A lesma incha e aponta sua cavidade oral para a frente..."
+        }
+    ]
+},
+
+"morcego_comum": {
+    nome: "Morcego da Caverna",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Enxame de morcegos pequenos que atacam em grupo para confundir presas.",
+    habilidade: 3,
+    couraça: 0,
+    energiaDados: "2d4",
+    experiencia: 15,
+    dano: "1D3",
+    ataques: [
+        {
+            id: "mordida_pequena",
+            nome: "Mordida em Enxame",
+            dano: "1d3",
+            peso: 80,
+            pesoHPBaixo: 60,
+            telegrafado: false
+        },
+        {
+            id: "confusao_sonora",
+            nome: "Confusão Sônica",
+            dano: "1d4+1",
+            peso: 20,
+            pesoHPBaixo: 40,
+            telegrafado: true,
+            mensagemTelegraf: "Os morcegos emitem gritos agudos em uníssono, criando uma cacofonia ensurdecedora..."
+        }
+    ]
+},
+
+"lagarto_caverna": {
+    nome: "Lagarto da Caverna",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Réptil de pele dura que se camufla em ambientes rochosos.",
+    habilidade: 4,
+    couraça: 2,
+    energiaDados: "2d8",
+    experiencia: 30,
+    dano: "1D6",
+    ataques: [
+        {
+            id: "mordida_reptiliana",
+            nome: "Mordida Reptiliana",
+            dano: "1d6",
+            peso: 70,
+            pesoHPBaixo: 40,
+            telegrafado: false
+        },
+        {
+            id: "cauda_esmagadora",
+            nome: "Golpe de Cauda",
+            dano: "1d8",
+            peso: 30,
+            pesoHPBaixo: 60,
+            telegrafado: true,
+            mensagemTelegraf: "O lagarto gira seu corpo, preparando a cauda para um golpe contundente..."
+        }
+    ]
+},
+
+
+
+"goblin_xama": {
+    nome: "Goblin Xamã",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Goblin com conhecimentos tribais de magia primitiva e feitiçaria.",
+    habilidade: 4,
+    couraça: 0,
+    energiaDados: "2d6",
+    experiencia: 40,
+    dano: "1D4",
+    ataques: [
+        {
+            id: "cajado_magico",
+            nome: "Golpe de Cajado",
+            dano: "1d4",
+            peso: 60,
+            pesoHPBaixo: 30,
+            telegrafado: false
+        },
+        {
+            id: "feitiço_primitivo",
+            nome: "Feitiço Primitivo",
+            dano: "1d8+1",
+            peso: 40,
+            pesoHPBaixo: 70,
+            telegrafado: true,
+            mensagemTelegraf: "O xamã goblin começa a dançar e cantar em uma língua antiga..."
+        }
+    ]
+},
+
+"abelha_gigante": {
+    nome: "Abelha Gigante",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Inseto voador de tamanho anormal com ferrão doloroso e venenoso.",
+    habilidade: 5,
+    couraça: 0,
+    energiaDados: "2d6",
+    experiencia: 35,
+    dano: "1D4",
+    ataques: [
+        {
+            id: "ferrao_venenoso",
+            nome: "Ferrão Venenoso",
+            dano: "1d4+1",
+            peso: 70,
+            pesoHPBaixo: 45,
+            telegrafado: false
+        },
+        {
+            id: "zumbido_ensurdecedor",
+            nome: "Zumbido Enfurecido",
+            dano: "1d6",
+            peso: 30,
+            pesoHPBaixo: 55,
+            telegrafado: true,
+            mensagemTelegraf: "A abelha vibra suas asas violentamente, criando um zumbido ensurdecedor..."
+        }
+    ]
+},
+
+"esqueleto_fracasso": {
+    nome: "Esqueleto Fracassado",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Restos mortais de um aventureiro inexperiente, mal preservado pela magia negra.",
+    habilidade: 3,
+    couraça: 1,
+    energiaDados: "2d6",
+    experiencia: 20,
+    dano: "1D4",
+    ataques: [
+        {
+            id: "osso_quebrado",
+            nome: "Golpe com Osso",
+            dano: "1d4",
+            peso: 80,
+            pesoHPBaixo: 50,
+            telegrafado: false
+        },
+        {
+            id: "investida_desesperada",
+            nome: "Investida Desesperada",
+            dano: "1d6",
+            peso: 20,
+            pesoHPBaixo: 50,
+            telegrafado: true,
+            mensagemTelegraf: "O esqueleto range os ossos e avança de forma descoordenada..."
+        }
+    ]
+},
+
+
     
 "zumbi": {
     nome: "Zumbi Putrefato",
@@ -1006,6 +1344,7 @@ export const monsterData = {
 export function getMonsterById(monsterId) {
     return monsterData[monsterId] || null;
 }
+
 
 
 
