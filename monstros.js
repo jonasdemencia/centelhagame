@@ -377,6 +377,293 @@ export const monsterData = {
 
 
 // Assombrações e monstros
+
+
+"goblin_guerreiro": {
+    nome: "Goblin Guerreiro",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um goblin mais organizado e equipado que seus primos selvagens, usando armaduras improvisadas.",
+    habilidade: 5,
+    couraça: 1,
+    energiaDados: "2d8",
+    experiencia: 35,
+    dano: "1D6",
+    ataques: [
+        {
+            id: "golpe_espada",
+            nome: "Golpe de Espada Curta",
+            dano: "1d6+1",
+            peso: 70,
+            pesoHPBaixo: 30,
+            telegrafado: false
+        },
+        {
+            id: "arremesso_adaga",
+            nome: "Arremesso de Adaga",
+            dano: "1d4+2",
+            peso: 30,
+            pesoHPBaixo: 70,
+            telegrafado: true,
+            mensagemTelegraf: "O goblin puxa uma adaga de sua cintura e se prepara para arremessá-la com precisão surpreendente..."
+        }
+    ]
+},
+
+"esqueleto_armado": {
+    nome: "Esqueleto Armado",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Restos mortais animados por magia negra, vestindo armaduras enferrujadas e empunhando armas antigas.",
+    habilidade: 4,
+    couraça: 2,
+    energiaDados: "2d8",
+    experiencia: 25,
+    dano: "1D6",
+    ataques: [
+        {
+            id: "golpe_espada",
+            nome: "Golpe de Espada Longa",
+            dano: "1d6",
+            peso: 80,
+            pesoHPBaixo: 20,
+            telegrafado: false
+        },
+        {
+            id: "investida_ossea",
+            nome: "Investida Óssea",
+            dano: "1d8",
+            peso: 20,
+            pesoHPBaixo: 80,
+            telegrafado: true,
+            mensagemTelegraf: "O esqueleto ajusta sua postura, ossos rangendo, e se prepara para uma investida desesperada..."
+        }
+    ]
+},
+
+"morcego_vampiro": {
+    nome: "Morcego Vampiro Gigante",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Uma espécie rara de morcego que se alimenta de sangue, com envergadura impressionante e presas afiadas.",
+    habilidade: 6,
+    couraça: 0,
+    energiaDados: "3d6",
+    experiencia: 45,
+    dano: "1D4",
+    ataques: [
+        {
+            id: "mordida_sanguinaria",
+            nome: "Mordida Sanguinária",
+            dano: "1d4+1",
+            peso: 65,
+            pesoHPBaixo: 35,
+            telegrafado: false
+        },
+        {
+            id: "voo_rapido",
+            nome: "Ataque em Voo Rápido",
+            dano: "1d6+2",
+            peso: 35,
+            pesoHPBaixo: 65,
+            telegrafado: true,
+            mensagemTelegraf: "O morcego ganha altitude rapidamente, preparando-se para um mergulho veloz e preciso..."
+        }
+    ]
+},
+
+"quimera": {
+    nome: "Quimera Caótica",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Uma aberração com cabeça de leão, corpo de cabra e cauda de serpente, capaz de múltiplos ataques.",
+    habilidade: 8,
+    couraça: 3,
+    energiaDados: "7d10",
+    experiencia: 160,
+    dano: "2D6",
+    ataques: [
+        {
+            id: "mordida_leao",
+            nome: "Mordida do Leão",
+            dano: "2d6+2",
+            peso: 40,
+            pesoHPBaixo: 30,
+            telegrafado: false
+        },
+        {
+            id: "chifres_cabra",
+            nome: "Golpe de Chifres",
+            dano: "1d10+3",
+            peso: 30,
+            pesoHPBaixo: 30,
+            telegrafado: false
+        },
+        {
+            id: "picada_serpente",
+            nome: "Picada Venenosa",
+            dano: "1d8+2",
+            peso: 30,
+            pesoHPBaixo: 40,
+            telegrafado: true,
+            mensagemTelegraf: "A cauda de serpente da quimera se ergue, pronta para injetar seu veneno paralisante..."
+        }
+    ]
+},
+
+"lich_menor": {
+    nome: "Lich Aprendiz",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um mago que alcançou a imortalidade através de magia negra, comandando feitiços arcanos poderosos.",
+    habilidade: 8,
+    couraça: 2,
+    energiaDados: "6d8",
+    experiencia: 150,
+    dano: "1D8",
+    ataques: [
+        {
+            id: "raio_arcano",
+            nome: "Raio Arcano",
+            dano: "2d6+2",
+            peso: 50,
+            pesoHPBaixo: 30,
+            telegrafado: false
+        },
+        {
+            id: "explosao_necrotique",
+            nome: "Explosão Necrótica",
+            dano: "3d6",
+            peso: 30,
+            pesoHPBaixo: 50,
+            telegrafado: true,
+            mensagemTelegraf: "O lich ergue suas mãos esqueléticas, reunindo energia necrótica em uma esfera crescente de poder..."
+        },
+        {
+            id: "drenar_vida",
+            nome: "Drenar Vida",
+            dano: "1d10+3",
+            peso: 20,
+            pesoHPBaixo: 20,
+            telegrafado: false
+        }
+    ]
+},
+
+    "espectro": {
+    nome: "Espectro Sombrio",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Uma entidade etérea que se alimenta de energia vital, capaz de atravessar matéria sólida.",
+    habilidade: 7,
+    couraça: 1,
+    energiaDados: "4d8",
+    experiencia: 85,
+    dano: "1D6",
+    ataques: [
+        {
+            id: "toque_spectral",
+            nome: "Toque Spectral",
+            dano: "1d6+2",
+            peso: 70,
+            pesoHPBaixo: 30,
+            telegrafado: false
+        },
+        {
+            id: "drenar_energia",
+            nome: "Drenar Energia Vital",
+            dano: "1d8+3",
+            peso: 30,
+            pesoHPBaixo: 70,
+            telegrafado: true,
+            mensagemTelegraf: "O espectro emana uma aura fria e estende suas mãos translúcidas em sua direção..."
+        }
+    ]
+},
+
+"minotauro": {
+    nome: "Minotauro da Masmorra",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Uma criatura poderosa com cabeça de touro, conhecida por sua força bruta e fúria incontrolável.",
+    habilidade: 8,
+    couraça: 3,
+    energiaDados: "5d10",
+    experiencia: 110,
+    dano: "2D6",
+    ataques: [
+        {
+            id: "machadada",
+            nome: "Golpe de Machado",
+            dano: "2d6+2",
+            peso: 60,
+            pesoHPBaixo: 40,
+            telegrafado: false
+        },
+        {
+            id: "investida_cornada",
+            nome: "Investida com Cornada",
+            dano: "2d8+4",
+            peso: 40,
+            pesoHPBaixo: 60,
+            telegrafado: true,
+            mensagemTelegraf: "O minotauro baixa a cabeça, bufando furiosamente enquanto prepara uma investida devastadora..."
+        }
+    ]
+},
+
+"aracnideo_gigante": {
+    nome: "Aranha Gigante da Caverna",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Uma aranha do tamanho de um cavalo, capaz de tecer teias resistentes e injetar veneno paralisante.",
+    habilidade: 6,
+    couraça: 2,
+    energiaDados: "4d10",
+    experiencia: 95,
+    dano: "1D8",
+    ataques: [
+        {
+            id: "mordida_venenosa",
+            nome: "Mordida Venenosa",
+            dano: "1d8+1",
+            peso: 55,
+            pesoHPBaixo: 45,
+            telegrafado: false
+        },
+        {
+            id: "lançar_teia",
+            nome: "Lançar Teia Paralisante",
+            dano: "0",
+            peso: 45,
+            pesoHPBaixo: 55,
+            telegrafado: true,
+            mensagemTelegraf: "A aranha ergue seu abdômen, preparando-se para lançar uma teia grudenta e paralisante..."
+        }
+    ]
+},
+
+"golem_barro": {
+    nome: "Golem de Barro",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Uma construção mágica de terra e barro, lentamente mas extremamente resistente a danos físicos.",
+    habilidade: 5,
+    couraça: 4,
+    energiaDados: "6d8",
+    experiencia: 100,
+    dano: "2D6",
+    ataques: [
+        {
+            id: "soco_esmagador",
+            nome: "Soco Esmagador",
+            dano: "2d6+1",
+            peso: 80,
+            pesoHPBaixo: 20,
+            telegrafado: false
+        },
+        {
+            id: "arremesso_lodo",
+            nome: "Arremesso de Lodo",
+            dano: "1d10+2",
+            peso: 20,
+            pesoHPBaixo: 80,
+            telegrafado: true,
+            mensagemTelegraf: "O golem de barro coleta uma massa de lodo de seu corpo, preparando-se para arremessá-la com força..."
+        }
+    ]
+},
     
 "zumbi": {
     nome: "Zumbi Putrefato",
@@ -538,4 +825,5 @@ export const monsterData = {
 export function getMonsterById(monsterId) {
     return monsterData[monsterId] || null;
 }
+
 
