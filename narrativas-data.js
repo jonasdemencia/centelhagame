@@ -182,11 +182,6 @@ export const NARRATIVAS = {
     secoes: {
         1: {
             texto: "Você abre os olhos sobre mármore polido. O teto se perde em altura, sustentado por colunas de granito negro. Lustres de cristal pendem imóveis. Silêncio absoluto. Seu corpo está intacto, suas roupas limpas.",
-           efeitos: [
-        { tipo: "item", item: "pequenabolsaouro" },
-        { tipo: "item", item: "corda" },
-              { tipo: "item", item: "kitmedico" }
-    ],
             opcoes: [
                 { texto: "Explorar o corredor à esquerda", secao: 2 },
                 { texto: "Explorar o corredor à direita", secao: 3 },
@@ -3761,6 +3756,7 @@ export const NARRATIVAS = {
         }
     }
 };
+
 
 
 
