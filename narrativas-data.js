@@ -185,7 +185,7 @@ export const NARRATIVAS = {
            efeitos: [
         { tipo: "item", item: "pequenabolsaouro" },
         { tipo: "item", item: "corda" },
-              { tipo: "item", item: "corda" }
+              { tipo: "item", item: "kitmedico" }
     ],
             opcoes: [
                 { texto: "Explorar o corredor à esquerda", secao: 2 },
@@ -3761,6 +3761,7 @@ export const NARRATIVAS = {
         }
     }
 };
+
 
 
 
