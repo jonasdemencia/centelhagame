@@ -92,22 +92,22 @@ class SistemaNarrativas {
 
             // === CONSUMÍVEIS ===
             "bolsa-de-escriba": { id: "bolsa-de-escriba", content: "Bolsa de escriba", uuid: "extra-bolsa-de-escriba", consumable: true, quantity: 1, effect: "expand_inventory", value: 2, description: "Bolsa para guardar pergaminhos e penas.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/bolsa-de-escriba.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thubolsa-de-escriba.png" },
-            "granada-de-concussao": { id: "granada-de-concussao", content: "Granada de Concussão", uuid: "extra-granada-de-concussao", consumable: true, quantity: 3, effect: "stun", damage: "3D4", description: "Explosivo de concussão de área (raio 2).", areaEffect: true, areaRadius: 2, allowsResistance: false, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/granada-de-concussao.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thugranada-de-concussao.png" },
-            "granada-incendiaria": { id: "granada-incendiaria", content: "Granada Incendiária", uuid: "extra-granada-incendiaria", consumable: true, quantity: 3, effect: "explosion", damage: "2D6", description: "Explosivo incendiário de área (raio 3).", areaEffect: true, areaRadius: 3, allowsResistance: false, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/granada-incendiaria.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thugranada-incendiaria.png" },
-            "granada-mao": { id: "granada-mao", content: "Granada de Mão", uuid: "extra-granada-mao", consumable: true, quantity: 3, effect: "explosion", damage: "3D8", description: "Explosivo portátil de área (raio 3).", areaEffect: true, areaRadius: 3, allowsResistance: false, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/granada-mao.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thugranada-mao.png" },
-            "kitmedico": { id: "kitmedico", content: "Kit Médico", consumable: true, uuid: "extra-kitmedico", quantity: 2, effect: "heal", value: 5, description: "Restaura uma pequena quantidade de energia vital.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/kitmedico.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thukitmedico.png" },
-            "latadesardinha": { id: "latadesardinha", content: "Lata de Sardinha", consumable: true, uuid: "extra-latadesardinha", quantity: 2, effect: "heal", value: 4, description: "Iguaria do mar. Restaura uma pequena quantidade de energia vital.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/latadesardinha.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thulatadesardinha.png" },
-            "pao-mofado": { id: "pao-mofado", content: "Pão Mofado", uuid: "extra-pao-mofado", consumable: true, quantity: 3, effect: "damage", value: 5, description: "Pedaço de pão velho e mofado.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pao-mofado.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupao-mofado.png" },
-            "pequeno-saco-ervas": { id: "pequeno-saco-ervas", content: "Pequeno saco com ervas medicinais", consumable: true, uuid: "extra-pequeno-saco-ervas", quantity: 5, effect: "heal", value: 1, description: "Plantas capazes de curar feridas leves.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pequeno-saco-ervas.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupequeno-saco-ervas.png" },
-            "pocao-cura-completa": { id: "pocao-cura-completa", content: "Poção de Cura Completa", consumable: true, uuid: "extra-pocao-cura-completa", quantity: 10, effect: "heal", value: 150, description: "Restaura uma massiva quantidade de energia vital.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pocao-cura-completa.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupocao-cura-completa.png" },
-            "pocao-cura-menor": { id: "pocao-cura-menor", content: "Poção de Cura Menor", consumable: true, uuid: "extra-pocao-cura-menor", quantity: 2, effect: "heal", value: 3, description: "Restaura uma pequena quantidade de energia vital.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pocao-cura-menor.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupocao-cura-menor.png" },
-            "tocha": { id: "tocha", content: "Tocha", uuid: "extra-tocha", consumable: true, quantity: 3, description: "Bastão de madeira envolto em trapos embebidos em óleo.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/tocha.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thutocha.png" },
+            "granada-de-concussao": { id: "granada-de-concussao", stackable: true, content: "Granada de Concussão", uuid: "extra-granada-de-concussao", consumable: true, quantity: 3, effect: "stun", damage: "3D4", description: "Explosivo de concussão de área (raio 2).", areaEffect: true, areaRadius: 2, allowsResistance: false, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/granada-de-concussao.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thugranada-de-concussao.png" },
+            "granada-incendiaria": { id: "granada-incendiaria", stackable: true, content: "Granada Incendiária", uuid: "extra-granada-incendiaria", consumable: true, quantity: 3, effect: "explosion", damage: "2D6", description: "Explosivo incendiário de área (raio 3).", areaEffect: true, areaRadius: 3, allowsResistance: false, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/granada-incendiaria.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thugranada-incendiaria.png" },
+            "granada-mao": { id: "granada-mao", stackable: true, content: "Granada de Mão", uuid: "extra-granada-mao", consumable: true, quantity: 3, effect: "explosion", damage: "3D8", description: "Explosivo portátil de área (raio 3).", areaEffect: true, areaRadius: 3, allowsResistance: false, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/granada-mao.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thugranada-mao.png" },
+            "kitmedico": { id: "kitmedico", content: "Kit Médico", stackable: true,  consumable: true, uuid: "extra-kitmedico", quantity: 2, effect: "heal", value: 5, description: "Restaura uma pequena quantidade de energia vital.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/kitmedico.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thukitmedico.png" },
+            "latadesardinha": { id: "latadesardinha", content: "Lata de Sardinha", stackable: true, consumable: true, uuid: "extra-latadesardinha", quantity: 2, effect: "heal", value: 4, description: "Iguaria do mar. Restaura uma pequena quantidade de energia vital.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/latadesardinha.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thulatadesardinha.png" },
+            "pao-mofado": { id: "pao-mofado", content: "Pão Mofado", uuid: "extra-pao-mofado", stackable: true, consumable: true, quantity: 3, effect: "damage", value: 5, description: "Pedaço de pão velho e mofado.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pao-mofado.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupao-mofado.png" },
+            "pequeno-saco-ervas": { id: "pequeno-saco-ervas", stackable: true, content: "Pequeno saco com ervas medicinais", consumable: true, uuid: "extra-pequeno-saco-ervas", quantity: 5, effect: "heal", value: 1, description: "Plantas capazes de curar feridas leves.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pequeno-saco-ervas.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupequeno-saco-ervas.png" },
+            "pocao-cura-completa": { id: "pocao-cura-completa", stackable: true, content: "Poção de Cura Completa", consumable: true, uuid: "extra-pocao-cura-completa", quantity: 10, effect: "heal", value: 150, description: "Restaura uma massiva quantidade de energia vital.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pocao-cura-completa.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupocao-cura-completa.png" },
+            "pocao-cura-menor": { id: "pocao-cura-menor", stackable: true, content: "Poção de Cura Menor", consumable: true, uuid: "extra-pocao-cura-menor", quantity: 2, effect: "heal", value: 3, description: "Restaura uma pequena quantidade de energia vital.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pocao-cura-menor.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupocao-cura-menor.png" },
+            "tocha": { id: "tocha", content: "Tocha", uuid: "extra-tocha", stackable: true, consumable: true, quantity: 3, description: "Bastão de madeira envolto em trapos embebidos em óleo.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/tocha.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thutocha.png" },
 
             // === COMPONENTES ===
             "grilo": { id: "grilo", content: "Grilo", uuid: "extra-grilo", description: "Um pequeno inseto saltitante.", componente: true, energia: { total: 1, inicial: 1 }, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/grilo.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thugrilo.png" },
-            "la": { id: "la", content: "Lã", uuid: "extra-la", description: "Componente mágico para magias de atordoamento.", componente: true, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/la.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thula.png" },
-            "pedaco-couro": { id: "pedaco-couro", content: "Pedaço de couro", uuid: "extra-pedaco-couro", description: "Tira endurecida para magias.", componente: true, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pedaco-couro.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupedaco-couro.png" },
-            "velas": { id: "velas", content: "Velas", description: "Fontes de luz portáteis.", uuid: "extra-velas", componente: true, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/velas.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuvelas.png" },
+            "la": { id: "la", content: "Lã", stackable: true, uuid: "extra-la", description: "Componente mágico para magias de atordoamento.", componente: true, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/la.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thula.png" },
+            "pedaco-couro": { id: "pedaco-couro", stackable: true, content: "Pedaço de couro", uuid: "extra-pedaco-couro", description: "Tira endurecida para magias.", componente: true, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pedaco-couro.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupedaco-couro.png" },
+            "velas": { id: "velas", content: "Velas", stackable: true, description: "Fontes de luz portáteis.", uuid: "extra-velas", componente: true, image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/velas.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuvelas.png" },
 
             // === TESOUROS E RELÍQUIAS ===
             "calicereliquia": { id: "calicereliquia", content: "Calíce Relíquia", uuid: "extra-calicereliquia", description: "O gênio de Granul um dia bebeu nela. Antiquário de valor incomum.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/calicereliquia.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thucalicereliquia.png" },
@@ -619,22 +619,23 @@ class SistemaNarrativas {
                 return;
             }
 
-            if (itemData.stackable === false) {
-                const novoItem = { ...itemData, uuid: crypto.randomUUID() };
+            if (itemData.stackable === true) {
+    const existeItem = chest.find(item => item.id === itemId);
+    if (existeItem) {
+        existeItem.quantity = (existeItem.quantity || 1) + 1;
+    } else {
+        chest.push({ ...itemData, quantity: 1, uuid: crypto.randomUUID() });
+    }
+} else {
+    const novoItem = { ...itemData, uuid: crypto.randomUUID() };
 
-                if (itemId === "pequenabolsaouro") {
-                    novoItem.goldValue = Math.floor(Math.random() * 10) + 1;
-                }
+    if (itemId === "pequenabolsaouro") {
+        novoItem.goldValue = Math.floor(Math.random() * 10) + 1;
+    }
 
-                chest.push(novoItem);
-            } else {
-                const existeItem = chest.find(item => item.id === itemId);
-                if (existeItem) {
-                    existeItem.quantity = (existeItem.quantity || 1) + 1;
-                } else {
-                    chest.push({ ...itemData, quantity: 1, uuid: crypto.randomUUID() });
-                }
-            }
+    chest.push(novoItem);
+}
+
 
             await updateDoc(playerDocRef, {
                 "inventory.itemsInChest": chest
@@ -1190,6 +1191,7 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
