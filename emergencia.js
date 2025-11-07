@@ -471,7 +471,10 @@ ${itensAmostra}
      * Incluir outras opções (fugir, recuar, etc.)
    - **COERÊNCIA FÍSICA:** Criatura deve caber no ambiente (não coloque coruja saindo de gaveta)
    - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
-${monstrosAmostra}
+   ${monstrosAmostra}
+   - Se inventar um monstro, o sistema VAI QUEBRAR
+  - NUNCA crie nomes novos, SEMPRE escolha da lista
+   
 
 9. **TESTES DE ATRIBUTOS**
    - Pode criar opções que exigem teste de atributo
@@ -943,6 +946,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
