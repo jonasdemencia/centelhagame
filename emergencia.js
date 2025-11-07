@@ -475,19 +475,20 @@ ${itensAmostra}
    - Se inventar um monstro, o sistema VAI QUEBRAR
   - NUNCA crie nomes novos, SEMPRE escolha da lista
    
-9. **TESTES DE ATRIBUTOS (30% de chance)**
-   - Pode criar opções que exigem teste de atributo
+9. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 60% de chance)**
+   - **VARIE AS OPÇÕES:** Você DEVE tentar ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
+   - **INCLUA TESTES:** Pelo menos 60% do tempo, UMA das opções deve ser um "teste" de atributo.
    - Atributos válidos: "magia", "habilidade", "carisma", "sorte"
    - Dificuldades: 10 (fácil), 15 (médio), 20 (difícil)
    - Formato:
      {
-       "texto": "Forçar a porta",
+       "texto": "Forçar a porta (Teste de Habilidade)",
        "tipo": "aprofundar",
        "teste": "habilidade",
        "dificuldade": 15,
        "secao": "[ID_PROXIMA_SECAO]"
      }
-   - Use para ações físicas/mentais desafiadoras
+   - **CRÍTICO:** O texto da opção deve sugerir o teste (ex: "Tentar decifrar", "Forçar a porta").
    - Exemplos: Forçar = habilidade, Persuadir = carisma, Decifrar = magia, Evitar = sorte
 
 
@@ -525,7 +526,7 @@ ${itensAmostra}
 
 **LEMBRE-SE:** Expansão natural > Detalhe perturbador > Evento menor (em ordem de preferência)
 
-**FORMATO (JSON com Teste - Opcional):**
+**FORMATO (JSON com Teste):**
 {
   "modo": "expansao_natural",
   "texto": "[Texto descrevendo desafio]",
@@ -865,19 +866,20 @@ ${itensAmostra}
    - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
 ${monstrosAmostra}
 
-8. **TESTES DE ATRIBUTOS (30% de chance)**
-   - Pode criar opções que exigem teste de atributo
+8. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 60% de chance)**
+   - **VARIE AS OPÇÕES:** Você DEVE tentar ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
+   - **INCLUA TESTES:** Pelo menos 60% do tempo, UMA das opções deve ser um "teste" de atributo.
    - Atributos válidos: "magia", "habilidade", "carisma", "sorte"
    - Dificuldades: 10 (fácil), 15 (médio), 20 (difícil)
    - Formato:
      {
-       "texto": "Forçar a porta",
+       "texto": "Forçar a porta (Teste de Habilidade)",
        "tipo": "aprofundar",
        "teste": "habilidade",
        "dificuldade": 15,
        "secao": "[ID_PROXIMA_SECAO]"
      }
-   - Use para ações físicas/mentais desafiadoras
+   - **CRÍTICO:** O texto da opção deve sugerir o teste (ex: "Tentar decifrar", "Forçar a porta").
    - Exemplos: Forçar = habilidade, Persuadir = carisma, Decifrar = magia, Evitar = sorte
 
 **FORMATO (JSON PURO - Modo Normal):**
@@ -909,7 +911,7 @@ ${monstrosAmostra}
   "efeitos": []
 }
 
-**FORMATO (JSON com Teste - Opcional):**
+**FORMATO (JSON com Teste):**
 {
   "modo": "expansao_natural",
   "texto": "[Texto descrevendo desafio]",
@@ -945,6 +947,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
