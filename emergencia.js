@@ -473,6 +473,22 @@ ${itensAmostra}
    - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
 ${monstrosAmostra}
 
+9. **TESTES DE ATRIBUTOS**
+   - Pode criar opções que exigem teste de atributo
+   - Atributos válidos: "magia", "habilidade", "carisma", "sorte"
+   - Dificuldades: 10 (fácil), 15 (médio), 20 (difícil)
+   - Formato:
+     {
+       "texto": "Forçar a porta",
+       "tipo": "aprofundar",
+       "teste": "habilidade",
+       "dificuldade": 15,
+       "secao": "[ID_PROXIMA_SECAO]"
+     }
+   - Use para ações físicas/mentais desafiadoras
+   - Exemplos: Forçar = habilidade, Persuadir = carisma, Decifrar = magia, Evitar = sorte
+
+
 **FORMATO (JSON PURO - Modo Normal):**
 
 {
@@ -506,6 +522,25 @@ ${monstrosAmostra}
 // 🆕 FIM DA ADIÇÃO
 
 **LEMBRE-SE:** Expansão natural > Detalhe perturbador > Evento menor (em ordem de preferência)
+
+**FORMATO (JSON com Teste - Opcional):**
+{
+  "modo": "expansao_natural",
+  "texto": "[Texto descrevendo desafio]",
+  "opcoes": [
+    {
+      "texto": "Escalar o muro",
+      "tipo": "aprofundar",
+      "teste": "habilidade",
+      "dificuldade": 15,
+      "secao": "[ID]"
+    },
+    {"texto": "[Outra opção]", "tipo": "neutra", "secao": "[ID]"}
+  ],
+  "efeitos": []
+}
+
+
 `;
     }
 
@@ -828,6 +863,21 @@ ${itensAmostra}
    - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
 ${monstrosAmostra}
 
+8. **TESTES DE ATRIBUTOS**
+   - Pode criar opções que exigem teste de atributo
+   - Atributos válidos: "magia", "habilidade", "carisma", "sorte"
+   - Dificuldades: 10 (fácil), 15 (médio), 20 (difícil)
+   - Formato:
+     {
+       "texto": "Forçar a porta",
+       "tipo": "aprofundar",
+       "teste": "habilidade",
+       "dificuldade": 15,
+       "secao": "[ID_PROXIMA_SECAO]"
+     }
+   - Use para ações físicas/mentais desafiadoras
+   - Exemplos: Forçar = habilidade, Persuadir = carisma, Decifrar = magia, Evitar = sorte
+
 **FORMATO (JSON PURO - Modo Normal):**
 {
   "modo": "expansao_natural",
@@ -857,6 +907,24 @@ ${monstrosAmostra}
   "efeitos": []
 }
 
+**FORMATO (JSON com Teste - Opcional):**
+{
+  "modo": "expansao_natural",
+  "texto": "[Texto descrevendo desafio]",
+  "opcoes": [
+    {
+      "texto": "Escalar o muro",
+      "tipo": "aprofundar",
+      "teste": "habilidade",
+      "dificuldade": 15,
+      "secao": "[ID]"
+    },
+    {"texto": "[Outra opção]", "tipo": "neutra", "secao": "[ID]"}
+  ],
+  "efeitos": []
+}
+
+
 `;
     }
 
@@ -875,6 +943,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
