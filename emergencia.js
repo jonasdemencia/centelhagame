@@ -477,8 +477,19 @@ ${itensAmostra}
    
 9. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 40% de chance)**
    - **VARIE AS OPÇÕES:** Você DEVE tentar ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
-   - **INCLUA TESTES:** Pelo menos 60% do tempo, UMA das opções deve ser um "teste" de atributo.
-   - Atributos válidos: "habilidade", "carisma", "sorte"
+   - **INCLUA TESTES:** Pelo menos 40% do tempo, UMA das opções deve ser um "teste" de atributo.
+   - Atributos válidos: 
+   **ATRIBUTOS VÁLIDOS:**
+   - **"habilidade"** → Ações físicas OU mentais que exigem perícia
+     * Físico: Forçar porta, escalar, equilibrar, desarmar armadilha
+     * Mental: Decifrar código, lembrar informação, resolver enigma
+   
+   - **"sorte"** → Evitar consequências nefastas ou perigos aleatórios
+     * Evitar pedra caindo, não pisar em armadilha, escapar de desabamento
+   
+   - **"carisma"** → Interações sociais, persuasão, negociação
+     * Convencer alguém, negociar, acalmar criatura, intimidar, mentir
+
    - Dificuldades: 10 (fácil), 15 (médio), 20 (difícil)
    - Formato:
      {
@@ -873,8 +884,19 @@ ${monstrosAmostra}
 
 8. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 40% de chance)**
    - **VARIE AS OPÇÕES:** Você DEVE tentar ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
-   - **INCLUA TESTES:** Pelo menos 60% do tempo, UMA das opções deve ser um "teste" de atributo.
-   - Atributos válidos: "habilidade", "carisma", "sorte"
+   - **INCLUA TESTES:** Pelo menos 40% do tempo, UMA das opções deve ser um "teste" de atributo.
+   - Atributos válidos: 
+**ATRIBUTOS VÁLIDOS:**
+   - **"habilidade"** → Ações físicas OU mentais que exigem perícia
+     * Físico: Forçar porta, escalar, equilibrar, desarmar armadilha
+     * Mental: Decifrar código, lembrar informação, resolver enigma
+   
+   - **"sorte"** → Evitar consequências nefastas ou perigos aleatórios
+     * Evitar pedra caindo, não pisar em armadilha, escapar de desabamento
+   
+   - **"carisma"** → Interações sociais, persuasão, negociação
+     * Convencer alguém, negociar, acalmar criatura, intimidar, mentir
+
    - Dificuldades: 10 (fácil), 15 (médio), 20 (difícil)
    - Formato:
      {
@@ -952,6 +974,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
