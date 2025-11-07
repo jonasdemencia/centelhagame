@@ -1,4 +1,4 @@
-// emergencia.js - VERSÃO COM SISTEMA DE RARIDADE, POOLS INTELIGENTES E BATALHAS EM OPÇÃO
+// emergencia.js - VERSÃO COM SISTEMA DE RARIDADE, POOLS INTELIGENTES E BATALHAS EM OPÇÃOo
 // (A MAIORIA DO ARQUIVO PERMANECE IGUAL - AS MUDANÇAS ESTÃO MARCADAS EM `processarRespostaIA`)
 
 export class SistemaEmergencia {
@@ -952,6 +952,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
