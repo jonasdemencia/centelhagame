@@ -475,8 +475,7 @@ ${itensAmostra}
    - Se inventar um monstro, o sistema VAI QUEBRAR
   - NUNCA crie nomes novos, SEMPRE escolha da lista
    
-
-9. **TESTES DE ATRIBUTOS**
+9. **TESTES DE ATRIBUTOS (30% de chance)**
    - Pode criar opções que exigem teste de atributo
    - Atributos válidos: "magia", "habilidade", "carisma", "sorte"
    - Dificuldades: 10 (fácil), 15 (médio), 20 (difícil)
@@ -866,7 +865,7 @@ ${itensAmostra}
    - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
 ${monstrosAmostra}
 
-8. **TESTES DE ATRIBUTOS**
+8. **TESTES DE ATRIBUTOS (30% de chance)**
    - Pode criar opções que exigem teste de atributo
    - Atributos válidos: "magia", "habilidade", "carisma", "sorte"
    - Dificuldades: 10 (fácil), 15 (médio), 20 (difícil)
@@ -946,6 +945,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
