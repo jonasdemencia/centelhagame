@@ -649,6 +649,11 @@ ${itensAmostra}
             secao: this.gerarIdEmergente(),
             tipo: op.tipo,
             emergente: true
+
+            // 🆕 CORREÇÃO PARA TESTES DE ATRIBUTO
+                    teste: op.teste, // Copia o 'teste' (será undefined se não for um teste)
+                    dificuldade: op.dificuldade, // Copia a 'dificuldade' (será undefined se não for um teste)
+            
         };
     }
 });
@@ -947,6 +952,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
