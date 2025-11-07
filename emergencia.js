@@ -475,10 +475,10 @@ ${itensAmostra}
    - Se inventar um monstro, o sistema VAI QUEBRAR
   - NUNCA crie nomes novos, SEMPRE escolha da lista
    
-9. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 60% de chance)**
+9. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 40% de chance)**
    - **VARIE AS OPÇÕES:** Você DEVE tentar ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
    - **INCLUA TESTES:** Pelo menos 60% do tempo, UMA das opções deve ser um "teste" de atributo.
-   - Atributos válidos: "magia", "habilidade", "carisma", "sorte"
+   - Atributos válidos: "habilidade", "carisma", "sorte"
    - Dificuldades: 10 (fácil), 15 (médio), 20 (difícil)
    - Formato:
      {
@@ -489,7 +489,7 @@ ${itensAmostra}
        "secao": "[ID_PROXIMA_SECAO]"
      }
    - **CRÍTICO:** O texto da opção deve sugerir o teste (ex: "Tentar decifrar", "Forçar a porta").
-   - Exemplos: Forçar = habilidade, Persuadir = carisma, Decifrar = magia, Evitar = sorte
+   - Exemplos: Forçar = habilidade, Persuadir = carisma, Evitar = sorte
 
 
 **FORMATO (JSON PURO - Modo Normal):**
@@ -871,10 +871,10 @@ ${itensAmostra}
    - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
 ${monstrosAmostra}
 
-8. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 60% de chance)**
+8. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 40% de chance)**
    - **VARIE AS OPÇÕES:** Você DEVE tentar ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
    - **INCLUA TESTES:** Pelo menos 60% do tempo, UMA das opções deve ser um "teste" de atributo.
-   - Atributos válidos: "magia", "habilidade", "carisma", "sorte"
+   - Atributos válidos: "habilidade", "carisma", "sorte"
    - Dificuldades: 10 (fácil), 15 (médio), 20 (difícil)
    - Formato:
      {
@@ -885,7 +885,7 @@ ${monstrosAmostra}
        "secao": "[ID_PROXIMA_SECAO]"
      }
    - **CRÍTICO:** O texto da opção deve sugerir o teste (ex: "Tentar decifrar", "Forçar a porta").
-   - Exemplos: Forçar = habilidade, Persuadir = carisma, Decifrar = magia, Evitar = sorte
+   - Exemplos: Forçar = habilidade, Persuadir = carisma, Evitar = sorte
 
 **FORMATO (JSON PURO - Modo Normal):**
 {
@@ -952,6 +952,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
