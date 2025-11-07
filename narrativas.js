@@ -907,146 +907,148 @@ async restaurarNarrativaAposRetorno(narrativeId, secao) {
     }
 
     async processarOpcao(opcao) {
-    this.ultimaEscolhaFeita = opcao.texto;
+        this.ultimaEscolhaFeita = opcao.texto;
 
-    // DESATIVA EMERGÊNCIA E RESETA CONTADOR
-    if (this.sistemaEmergencia && this.sistemaEmergencia.emergenciaAtiva) {
-        if (opcao.tipo === 'recuar' || opcao.convergencia) {
-            console.log(`[NARRATIVAS] ✅ Desativando emergência - ${opcao.tipo}`);
-            this.sistemaEmergencia.emergenciaAtiva = false;
-            this.contadorSecoesParaEmergencia = 0; // 🔹 RESET DO CONTADOR
-            console.log(`[NARRATIVAS] 🔄 Contador resetado ao sair da emergência: ${this.contadorSecoesParaEmergencia}`);
-        }
-    }
-
-    // Processar opção emergente se aplicável
-    if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
-        console.log(`[NARRATIVAS] Processando opção emergente: ${opcao.tipo}`);
-        
-        const resultadoEmergencia = await this.sistemaEmergencia.processarOpcaoEmergente(
-            opcao, 
-            this.secaoEmergentePai
-        );
-
-        if (resultadoEmergencia && resultadoEmergencia.ativada) {
-            this.secaoEmergentePai = resultadoEmergencia.secao;
-
-            const overlay = document.createElement('div');
-            overlay.className = 'fade-overlay';
-            document.body.appendChild(overlay);
-
-            setTimeout(() => overlay.classList.add('active'), 10);
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Aplicar efeitos da seção emergente
-            if (resultadoEmergencia.secao.efeitos) {
-                for (const efeito of resultadoEmergencia.secao.efeitos) {
-                    if (efeito.tipo === 'energia') {
-                        await this.modificarEnergia(efeito.valor);
-                    }
-                }
+        // 1. LÓGICA DE RECUO (Se for opção de sair da emergência)
+        if (this.sistemaEmergencia && this.sistemaEmergencia.emergenciaAtiva) {
+            if (opcao.tipo === 'recuar' || opcao.convergencia) {
+                console.log(`[NARRATIVAS] ✅ Desativando emergência - ${opcao.tipo}`);
+                this.sistemaEmergencia.emergenciaAtiva = false;
+                this.contadorSecoesParaEmergencia = 0; // 🔹 RESET DO CONTADOR
+                console.log(`[NARRATIVAS] 🔄 Contador resetado ao sair da emergência: ${this.contadorSecoesParaEmergencia}`);
             }
+        }
 
-            await this.mostrarSecao(resultadoEmergencia.idSecao);
+        // 2. FADE OUT E SOM
+        const overlay = document.createElement('div');
+        overlay.className = 'fade-overlay';
+        document.body.appendChild(overlay);
 
+        setTimeout(() => overlay.classList.add('active'), 10);
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        try {
+            const audio = new Audio(opcao.som || 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
+            await audio.play();
+            await new Promise(resolve => setTimeout(resolve, 1500));
+        } catch (error) {
+            console.log('Erro ao tocar som:', error);
+        }
+
+        // 3. APLICAR CUSTOS
+        if (opcao.custo_oculto) {
+            console.log('[NARRATIVAS] Aplicando custo oculto:', opcao.custo_oculto);
+            if (opcao.custo_oculto.tipo === 'energia') {
+                await this.modificarEnergia(opcao.custo_oculto.valor);
+            }
+        }
+        if (opcao.requer) {
+            await this.consumirItem(opcao.requer);
+        }
+
+        // 4. PROCESSAR AÇÃO (ORDEM CORRIGIDA)
+        
+        // 4a. SE FOR UM TESTE (Prioridade máxima)
+        if (opcao.teste) {
+            console.log(`[TESTE] Iniciando teste: ${opcao.teste}`);
+            
+            // Se for um teste EMERGENTE, precisamos PRÉ-GERAR a seção de sucesso
+            if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
+                console.log(`[NARRATIVAS] Pré-gerando seção de sucesso emergente: ${opcao.secao}`);
+                // Chama o processador de emergência SÓ PARA GERAR E SALVAR a próxima seção
+                // mas não para exibi-la ainda.
+                await this.sistemaEmergencia.processarOpcaoEmergente(
+                    opcao, 
+                    this.secaoEmergentePai
+                );
+                // O resultado (sucesso) já está salvo no map 'secoesEmergentes'
+            }
+            
+            // Agora, inicie o teste.
             overlay.classList.remove('active');
             setTimeout(() => overlay.remove(), 1200);
-
-            return;
+            
+            this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
+            return; // O teste cuida do próximo passo
         }
-    }
+        
+        // 4b. SE FOR UMA BATALHA
+        if (opcao.batalha) {
+            console.log(`[BATALHA] Iniciando batalha: ${opcao.batalha}`);
+            // A lógica de batalha (linhas 979-1014 originais) já está correta
+            const origemParaSalvar = this.sistemaEmergencia.emergenciaAtiva 
+                ? this.sistemaEmergencia.secaoOrigemEmergencia 
+                : this.secaoAtual;
+            
+            const destinoVitoria = this.sistemaEmergencia.emergenciaAtiva 
+                ? 99999
+                : (opcao.vitoria || null);
+            
+            const narrativeId = (() => {
+                try {
+                    return Object.keys(NARRATIVAS).find(
+                        key => NARRATIVAS[key] === this.narrativaAtual
+                    ) || null;
+                } catch (e) {
+                    return null;
+                }
+            })();
 
-    // Criar overlay de fade
-    const overlay = document.createElement('div');
-    overlay.className = 'fade-overlay';
-    document.body.appendChild(overlay);
+            const playerDocRef = doc(db, "players", this.userId);
 
-    // Fade to black
-    setTimeout(() => overlay.classList.add('active'), 10);
-    await new Promise(resolve => setTimeout(resolve, 500));
+            await updateDoc(playerDocRef, {
+                "narrativeProgress.battleReturn": {
+                    vitoria: destinoVitoria,
+                    derrota: opcao.derrota || null,
+                    narrativeId,
+                    secaoOrigem: origemParaSalvar,
+                    active: true,
+                    isEmergencia: this.sistemaEmergencia.emergenciaAtiva
+                }
+            });
 
-    // Tocar som
-    try {
-        const audio = new Audio(opcao.som || 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
-        await audio.play();
-        await new Promise(resolve => setTimeout(resolve, 1500));
-    } catch (error) {
-        console.log('Erro ao tocar som:', error);
-    }
+            if (this.sistemaEmergencia.emergenciaAtiva) {
+                sessionStorage.setItem("narrativa-origem", origemParaSalvar.toString());
+                sessionStorage.setItem("narrativa-id", narrativeId);
+            }
 
-    // ⭐ Aplicar custos ocultos
-    if (opcao.custo_oculto) {
-        console.log('[NARRATIVAS] Aplicando custo oculto:', opcao.custo_oculto);
-        if (opcao.custo_oculto.tipo === 'energia') {
-            await this.modificarEnergia(opcao.custo_oculto.valor);
+            window.location.href = `batalha.html?monstros=${opcao.batalha}`;
+            return; // Batalha cuida do próximo passo
         }
-    }
+        
+        // 4c. SE FOR UMA OPÇÃO DE APROFUNDAMENTO (EMERGENTE, SEM TESTE/BATALHA)
+        if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
+            console.log(`[NARRATIVAS] Processando opção emergente: ${opcao.tipo}`);
+            
+            const resultadoEmergencia = await this.sistemaEmergencia.processarOpcaoEmergente(
+                opcao, 
+                this.secaoEmergentePai
+            );
 
-    // Processar mudança (no escuro)
-    if (opcao.requer) {
-        await this.consumirItem(opcao.requer);
-    }
-
-    if (opcao.batalha) {
-    console.log(`[BATALHA] Iniciando batalha emergente: ${opcao.batalha}`);
-    
-    // 🆕 DETERMINA ORIGEM: Se emergência ativa, usa origem da emergência
-    const origemParaSalvar = this.sistemaEmergencia.emergenciaAtiva 
-        ? this.sistemaEmergencia.secaoOrigemEmergencia 
-        : this.secaoAtual;
-
-    console.log(`[BATALHA] Origem salva: ${origemParaSalvar}`);
-
-    // 🆕 DETERMINA DESTINO PÓS-BATALHA: 
-    // Se emergência ativa, vai para seção 99999 (buffer) com parâmetro de retorno
-    // Se não, segue o fluxo normal (vitoria/derrota da opção)
-    const destinoVitoria = this.sistemaEmergencia.emergenciaAtiva 
-        ? 99999  // Vai para o buffer
-        : (opcao.vitoria || null);
-    
-    const narrativeId = (() => {
-        try {
-            return Object.keys(NARRATIVAS).find(
-                key => NARRATIVAS[key] === this.narrativaAtual
-            ) || null;
-        } catch (e) {
-            return null;
+            if (resultadoEmergencia && resultadoEmergencia.ativada) {
+                this.secaoEmergentePai = resultadoEmergencia.secao;
+                if (resultadoEmergencia.secao.efeitos) {
+                    for (const efeito of resultadoEmergencia.secao.efeitos) {
+                        if (efeito.tipo === 'energia') {
+                            await this.modificarEnergia(efeito.valor);
+                        }
+                    }
+                }
+                await this.mostrarSecao(resultadoEmergencia.idSecao);
+                
+                overlay.classList.remove('active');
+                setTimeout(() => overlay.remove(), 1200);
+                return;
+            }
         }
-    })();
-
-    const playerDocRef = doc(db, "players", this.userId);
-
-    await updateDoc(playerDocRef, {
-        "narrativeProgress.battleReturn": {
-            vitoria: destinoVitoria,
-            derrota: opcao.derrota || null,
-            narrativeId,
-            secaoOrigem: origemParaSalvar, // 🆕 Salva a origem REAL
-            active: true,
-            // 🆕 NOVO: Flag para indicar que é batalha emergente
-            isEmergencia: this.sistemaEmergencia.emergenciaAtiva
-        }
-    });
-
-    // 🆕 SE FOR EMERGÊNCIA, salva também no sessionStorage para garantir
-    if (this.sistemaEmergencia.emergenciaAtiva) {
-        sessionStorage.setItem("narrativa-origem", origemParaSalvar.toString());
-        sessionStorage.setItem("narrativa-id", narrativeId);
-        console.log(`[BATALHA-EMERGENCIA] SessionStorage salvo: origem=${origemParaSalvar}, narrative=${narrativeId}`);
+        
+        // 4d. SE FOR UMA OPÇÃO NORMAL (NÃO-EMERGENTE, NÃO-TESTE, NÃO-BATALHA)
+        await this.mostrarSecao(opcao.secao, this.secaoAtual);
+        
+        // 5. FADE IN
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 1200);
     }
-
-    window.location.href = `batalha.html?monstros=${opcao.batalha}`;
-    return;
-} else if (opcao.teste) {
-    this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
-} else {
-    await this.mostrarSecao(opcao.secao, this.secaoAtual);
-}
-    
-    // Fade in
-    overlay.classList.remove('active');
-    setTimeout(() => overlay.remove(), 1200);
-}
     
 
    async processarBatalhaAutomatica(secao) {
@@ -1191,6 +1193,7 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
