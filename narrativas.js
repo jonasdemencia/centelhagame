@@ -772,9 +772,15 @@ class SistemaNarrativas {
         // Fluxo normal (não-emergente)
         this.mostrarSecao(this.testeAtual.secaoSucesso);
     } else {
+    // 🆕 VERIFICA SE É TESTE MORTAL
+    if (this.testeAtual.falha_mortal) {
+        console.log('[TESTE] ☠️ FALHA MORTAL');
+        await this.modificarEnergia(-999);
+    } else {
         await this.modificarEnergia(-2);
-        this.mostrarSecao(this.secaoAtual);
     }
+    this.mostrarSecao(this.secaoAtual);
+}
 }
 
 
@@ -1230,6 +1236,7 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
