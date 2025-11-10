@@ -821,7 +821,9 @@ O jogador fez um teste de ${resultadoTeste.atributo} (dificuldade ${resultadoTes
 
 ${resultadoTeste.sucesso 
   ? '✅ Você DEVE descrever o SUCESSO da ação. O jogador conseguiu realizar o que tentou.'
-  : '❌ Você DEVE descrever a FALHA. O jogador não conseguiu.'}
+  : `❌ Descreva a FALHA. **OBRIGATÓRIO:** Adicione nos efeitos:
+     {"tipo": "energia", "valor": -15}
+     (Dano fixo por falha em teste)`}
 ` : '';
 
 const alertaMorte = this.profundidadeAtual >= 2 ? 
@@ -886,8 +888,11 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
 5. **ITENS** Se seu texto mencionar encontrar/abrir/pegar algo físico, adicione 1-2 itens nos efeitos.
 ${itensAmostra}
 
-// 🆕 INÍCIO DA ADIÇÃO (REGRA 6 + FORMATO DE BATALHA)
-6. (80% chance) OPÇÃO QUE LEVA A PERIGO:**
+6. **FALHA EM TESTE = DANO OBRIGATÓRIO**
+   - Se alertaTeste mostra FALHA → adicione {"tipo": "energia", "valor": -15} nos efeitos
+   - Sem dano = resposta inválida
+
+7. (80% chance) OPÇÃO QUE LEVA A PERIGO:**
    - Em 80% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
    - Esta opção deve ter: "tipo": "perigo_oculto"
    - NÃO spoile a consequência no texto da opção
@@ -896,7 +901,7 @@ ${itensAmostra}
    - ✅ CERTO: "Tocar a ampulheta"
    - A opção deve ser curiosa/tentadora, mas SEM revelar o perigo
    
-  7. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
+  8. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
    - Se o jogador escolheu uma opção "perigo_oculto", ESTA seção DEVE:
      * Descrever o que aconteceu (ex: "Ao tocar, uma sombra surge!")
      * **OBRIGATÓRIO:** Incluir opção com "tipo": "iniciar_batalha"
@@ -911,7 +916,7 @@ ${itensAmostra}
    - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
 ${monstrosAmostra}
 
-8. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 20% de chance)**
+9. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 20% de chance)**
    - **VARIE AS OPÇÕES:** Você DEVE ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
    - **INCLUA TESTES:** Pelo menos 30% do tempo, UMA das opções deve ser um "teste" de atributo.
    - Atributos válidos: 
@@ -1011,6 +1016,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
