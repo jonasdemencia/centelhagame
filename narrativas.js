@@ -773,17 +773,55 @@ class SistemaNarrativas {
         // Fluxo normal (não-emergente)
         this.mostrarSecao(this.testeAtual.secaoSucesso);
     } else {
-    // 🆕 VERIFICA SE É TESTE MORTAL
+    // ðŸ†• VERIFICA SE É TESTE MORTAL
     if (this.testeAtual.falha_mortal) {
         console.log('[TESTE] ☠️ FALHA MORTAL');
         await this.modificarEnergia(-999);
-    } else {
-        await this.modificarEnergia(-2);
+        this.mostrarSecao(this.secaoAtual);
+        return;
     }
+    
+    // ðŸ†• APLICA DANO PADRÃO
+    await this.modificarEnergia(-2);
+    
+    // ðŸ†• SE FOR TESTE EMERGENTE, GERA SEÇÃO DE FALHA
+    if (this.sistemaEmergencia.emergenciaAtiva) {
+        const secaoAtual = this.sistemaEmergencia.secoesEmergentes.get(this.secaoAtual) || 
+                           this.secaoEmergentePai;
+        
+        if (secaoAtual) {
+            const opcaoOriginal = secaoAtual.opcoes.find(op => 
+                op.teste && op.dificuldade === this.testeAtual.dificuldade
+            );
+            
+            if (opcaoOriginal && opcaoOriginal.emergente) {
+                const resultadoParaIA = {
+                    atributo: this.testeAtual.atributo,
+                    dificuldade: this.testeAtual.dificuldade,
+                    sucesso: false // ðŸ"¹ DIFERENÇA: Agora é false
+                };
+                
+                console.log('[TESTE] Gerando seção de FALHA COM resultado:', resultadoParaIA);
+                
+                const resultado = await this.sistemaEmergencia.processarOpcaoEmergente(
+                    opcaoOriginal,
+                    secaoAtual,
+                    resultadoParaIA
+                );
+                
+                if (resultado && resultado.ativada) {
+                    this.secaoEmergentePai = resultado.secao;
+                    await this.mostrarSecao(resultado.idSecao);
+                    return;
+                }
+            }
+        }
+    }
+    
+    // ðŸ†• FALLBACK: Se não gerou seção emergente, volta para seção atual
     this.mostrarSecao(this.secaoAtual);
 }
 }
-
 
 
     async verificarProgressoSalvo() {
@@ -1237,14 +1275,3 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
-
-
-
-
-
-
-
-
-
-
-
