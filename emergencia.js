@@ -484,11 +484,11 @@ ${itensAmostra}
    - **INCLUA TESTES:** Pelo menos 30% do tempo, UMA das opções deve ser um "teste" de atributo.
    - Atributos válidos: 
    **ATRIBUTOS VÁLIDOS (use TODOS, não só habilidade):**
-   - **"habilidade"** → Ações físicas OU mentais que exigem perícia (45% dos testes)
+   - **"habilidade"** → Ações físicas OU mentais que exigem perícia (35% dos testes)
      * Físico: Forçar porta, escalar, equilibrar, desarmar armadilha
      * Mental: Decifrar código, lembrar informação, resolver enigma
    
-   - **"sorte"** → Evitar consequências nefastas ou perigos aleatórios (45% dos testes)
+   - **"sorte"** → Evitar consequências nefastas ou perigos aleatórios (55% dos testes)
      * Evitar pedra caindo, não pisar em armadilha, escapar de desabamento
      * **CONTEXTOS IDEAIS:** Ambientes instáveis, escuridão, estruturas antigas
    
@@ -916,16 +916,16 @@ ${itensAmostra}
    - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
 ${monstrosAmostra}
 
-9. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 20% de chance)**
+9. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 10% de chance)**
    - **VARIE AS OPÇÕES:** Você DEVE ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
    - **INCLUA TESTES:** Pelo menos 30% do tempo, UMA das opções deve ser um "teste" de atributo.
    - Atributos válidos: 
    **ATRIBUTOS VÁLIDOS (use TODOS, não só habilidade):**
-   - **"habilidade"** → Ações físicas OU mentais que exigem perícia (45% dos testes)
+   - **"habilidade"** → Ações físicas OU mentais que exigem perícia (35% dos testes)
      * Físico: Forçar porta, escalar, equilibrar, desarmar armadilha
      * Mental: Decifrar código, lembrar informação, resolver enigma
    
-   - **"sorte"** → Evitar consequências nefastas ou perigos aleatórios (45% dos testes)
+   - **"sorte"** → Evitar consequências nefastas ou perigos aleatórios (55% dos testes)
      * Evitar pedra caindo, não pisar em armadilha, escapar de desabamento
      * **CONTEXTOS IDEAIS:** Ambientes instáveis, escuridão, estruturas antigas
    
@@ -1016,6 +1016,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
