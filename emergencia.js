@@ -695,7 +695,7 @@ ${itensAmostra}
     // =======================================================================
 
 
-    async processarOpcaoEmergente(opcao, secaoPai) {
+    async processarOpcaoEmergente(opcao, secaoPai, resultadoTeste = null) {
         if (!opcao.emergente || opcao.tipo === "recuar") {
             this.emergenciaAtiva = false;
             this.escolhasEmergentes = [];
@@ -726,7 +726,7 @@ ${itensAmostra}
         }
 
         try {
-            const prompt = this.construirPromptContinuacao(secaoPai, opcao);
+            const prompt = this.construirPromptContinuacao(secaoPai, opcao, resultadoTeste);
             const respostaIA = await this.chamarOraculoNarrativo(prompt);
 
             // 🆕 ATUALIZAÇÃO: A resposta da IA (próxima seção) será processada
@@ -801,13 +801,24 @@ ${itensAmostra}
     }
 
     // 🆕 PROMPT DE CONTINUAÇÃO ATUALIZADO (sem resumir)
-    construirPromptContinuacao(secaoPai, opcao) {
+    construirPromptContinuacao(secaoPai, opcao, resultadoTeste = null) {
         const textoPrimeiraEmergencia = this.secoesEmergentes.get('emergente_IA_1')?.texto.substring(0, 100) || secaoPai.texto.substring(0,100);
         const padroes = this.analisarPadroes();
         
         const escolhasNaEmergencia = this.escolhasEmergentes.length > 0 
             ? `\n**ESCOLHAS NA EMERGÊNCIA:** ${this.escolhasEmergentes.join(' → ')}\n` 
             : '';
+
+        const alertaTeste = resultadoTeste ? `
+**🎲 RESULTADO DO TESTE:**
+O jogador fez um teste de ${resultadoTeste.atributo} (dificuldade ${resultadoTeste.dificuldade}).
+**RESULTADO: ${resultadoTeste.sucesso ? 'SUCESSO' : 'FALHA'}**
+
+${resultadoTeste.sucesso 
+  ? '✅ Você DEVE descrever o SUCESSO da ação. O jogador conseguiu realizar o que tentou.'
+  : '❌ Você DEVE descrever a FALHA. O jogador não conseguiu.'}
+` : '';
+
         const alertaPerigo = opcao.tipo === 'perigo_oculto' ? `
 **⚠️ ATENÇÃO CRÍTICA: O jogador escolheu uma opção de "perigo_oculto"!**
 **VOCÊ DEVE OBRIGATORIAMENTE NESTA SEÇÃO:**
@@ -835,8 +846,10 @@ Modo usado: ${secaoPai.modo || 'desconhecido'}
 Jogador escolheu: "${opcao.texto}" (tipo: ${opcao.tipo})
 
 ${escolhasNaEmergencia}
+${alertaTeste}
 ${alertaPerigo}
 ${padroes ? `**${padroes}**\n` : ''}
+
 
 **ANCORAGEM OBRIGATÓRIA:**
 Referência ao contexto original: "${textoPrimeiraEmergencia}..."
@@ -990,6 +1003,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
