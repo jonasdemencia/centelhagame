@@ -581,11 +581,14 @@ ${itensAmostra}
                 body: JSON.stringify({ prompt })
             });
 
-            if (response.status === 503 && tentativa < maxTentativas) {
-                console.log(`[ORÁCULO] Erro 503, tentando novamente em 2s... (${tentativa}/${maxTentativas})`);
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                return this.chamarOraculoNarrativo(prompt, tentativa + 1);
-            }
+            // 🆕 Retry para 503 E 429 (rate limit)
+if ((response.status === 503 || response.status === 429) && tentativa < maxTentativas) {
+    const delay = tentativa * 3000; // 3s, 6s, 9s
+    console.log(`[ORÁCULO] Erro ${response.status}, aguardando ${delay}ms... (${tentativa}/${maxTentativas})`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+    return this.chamarOraculoNarrativo(prompt, tentativa + 1);
+}
+
 
             if (!response.ok) {
                 throw new Error(`Erro no Worker: ${response.status} ${response.statusText}`);
@@ -1008,6 +1011,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
