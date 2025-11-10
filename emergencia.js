@@ -443,7 +443,7 @@ ${historicoFormatado}
 2. Gere texto (80-180 palavras) - MENOR que o original
 3. Crie 2-5 opções (varie livremente)
 4. Inclua SEMPRE pelo menos uma opção que seja claramente "continuar normal"
-5. Efeitos de energia: apenas se apropriado (-2 a +2, raramente maior)
+5. Efeitos de energia: apenas se apropriado (-50 a +2, raramente maior)
 6. **ITENS** Se seu texto mencionar encontrar/abrir/pegar algo físico, adicione 1-2 itens nos efeitos.
 ${itensAmostra}
 
@@ -475,20 +475,28 @@ ${itensAmostra}
    - Se inventar um monstro, o sistema VAI QUEBRAR
   - NUNCA crie nomes novos, SEMPRE escolha da lista
    
-9. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 40% de chance)**
-   - **VARIE AS OPÇÕES:** Você DEVE tentar ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
-   - **INCLUA TESTES:** Pelo menos 40% do tempo, UMA das opções deve ser um "teste" de atributo.
+9. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 30% de chance)**
+   - **VARIE AS OPÇÕES:** Você DEVE ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
+   - **INCLUA TESTES:** Pelo menos 30% do tempo, UMA das opções deve ser um "teste" de atributo.
    - Atributos válidos: 
-   **ATRIBUTOS VÁLIDOS:**
-   - **"habilidade"** → Ações físicas OU mentais que exigem perícia
+   **ATRIBUTOS VÁLIDOS (use TODOS, não só habilidade):**
+   - **"habilidade"** → Ações físicas OU mentais que exigem perícia (45% dos testes)
      * Físico: Forçar porta, escalar, equilibrar, desarmar armadilha
      * Mental: Decifrar código, lembrar informação, resolver enigma
    
-   - **"sorte"** → Evitar consequências nefastas ou perigos aleatórios
+   - **"sorte"** → Evitar consequências nefastas ou perigos aleatórios (45% dos testes)
      * Evitar pedra caindo, não pisar em armadilha, escapar de desabamento
+     * **CONTEXTOS IDEAIS:** Ambientes instáveis, escuridão, estruturas antigas
    
-   - **"carisma"** → Interações sociais, persuasão, negociação
+   - **"carisma"** → Interações sociais, persuasão, negociação (10% dos testes)
      * Convencer alguém, negociar, acalmar criatura, intimidar, mentir
+     * **CONTEXTOS IDEAIS:** Presença de NPCs, criaturas inteligentes, animais
+
+     **EXEMPLOS PRÁTICOS POR CONTEXTO:**
+   - Corredor escuro → "Avançar sem tropeçar (Teste de Sorte)"
+   - Teto rachado → "Evitar escombros caindo (Teste de Sorte)"
+   - Criatura hostil → "Acalmar a criatura (Teste de Carisma)"
+   - Porta trancada → "Forçar a porta (Teste de Habilidade)"
 
    - Dificuldades: 10 (fácil), 15 (médio), 20 (difícil)
    - Formato:
@@ -499,7 +507,7 @@ ${itensAmostra}
        "dificuldade": 15,
        "secao": "[ID_PROXIMA_SECAO]"
      }
-   - **CRÍTICO:** O texto da opção deve sugerir o teste (ex: "Tentar decifrar", "Forçar a porta").
+   - **CRÍTICO:** O texto da opção deve sugerir o teste (ex: "Tentar decifrar", "Forçar a porta", "evitar escombros caindo").
    - Exemplos: Forçar = habilidade, Persuadir = carisma, Evitar = sorte
 
 
@@ -882,20 +890,28 @@ ${itensAmostra}
    - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
 ${monstrosAmostra}
 
-8. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 40% de chance)**
-   - **VARIE AS OPÇÕES:** Você DEVE tentar ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
-   - **INCLUA TESTES:** Pelo menos 40% do tempo, UMA das opções deve ser um "teste" de atributo.
+8. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 30% de chance)**
+   - **VARIE AS OPÇÕES:** Você DEVE ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
+   - **INCLUA TESTES:** Pelo menos 30% do tempo, UMA das opções deve ser um "teste" de atributo.
    - Atributos válidos: 
-**ATRIBUTOS VÁLIDOS:**
-   - **"habilidade"** → Ações físicas OU mentais que exigem perícia
+   **ATRIBUTOS VÁLIDOS (use TODOS, não só habilidade):**
+   - **"habilidade"** → Ações físicas OU mentais que exigem perícia (45% dos testes)
      * Físico: Forçar porta, escalar, equilibrar, desarmar armadilha
      * Mental: Decifrar código, lembrar informação, resolver enigma
    
-   - **"sorte"** → Evitar consequências nefastas ou perigos aleatórios
+   - **"sorte"** → Evitar consequências nefastas ou perigos aleatórios (45% dos testes)
      * Evitar pedra caindo, não pisar em armadilha, escapar de desabamento
+     * **CONTEXTOS IDEAIS:** Ambientes instáveis, escuridão, estruturas antigas
    
-   - **"carisma"** → Interações sociais, persuasão, negociação
+   - **"carisma"** → Interações sociais, persuasão, negociação (10% dos testes)
      * Convencer alguém, negociar, acalmar criatura, intimidar, mentir
+     * **CONTEXTOS IDEAIS:** Presença de NPCs, criaturas inteligentes, animais
+
+     **EXEMPLOS PRÁTICOS POR CONTEXTO:**
+   - Corredor escuro → "Avançar sem tropeçar (Teste de Sorte)"
+   - Teto rachado → "Evitar escombros caindo (Teste de Sorte)"
+   - Criatura hostil → "Acalmar a criatura (Teste de Carisma)"
+   - Porta trancada → "Forçar a porta (Teste de Habilidade)"
 
    - Dificuldades: 10 (fácil), 15 (médio), 20 (difícil)
    - Formato:
@@ -974,6 +990,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
