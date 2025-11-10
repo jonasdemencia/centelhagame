@@ -475,7 +475,7 @@ ${itensAmostra}
    - Se inventar um monstro, o sistema VAI QUEBRAR
   - NUNCA crie nomes novos, SEMPRE escolha da lista
    
-9. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 30% de chance)**
+9. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 20% de chance)**
    - **VARIE AS OPÇÕES:** Você DEVE ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
    - **INCLUA TESTES:** Pelo menos 30% do tempo, UMA das opções deve ser um "teste" de atributo.
    - Atributos válidos: 
@@ -890,7 +890,7 @@ ${itensAmostra}
    - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
 ${monstrosAmostra}
 
-8. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 30% de chance)**
+8. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 20% de chance)**
    - **VARIE AS OPÇÕES:** Você DEVE ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
    - **INCLUA TESTES:** Pelo menos 30% do tempo, UMA das opções deve ser um "teste" de atributo.
    - Atributos válidos: 
@@ -990,6 +990,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
