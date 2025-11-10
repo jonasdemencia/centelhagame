@@ -737,34 +737,46 @@ class SistemaNarrativas {
     document.getElementById('rolar-dados').style.display = 'block';
     
     if (this.resultadoTeste) {
-        // 🆕 Se for teste emergente, passa resultado para IA
+        // 🆕 Se for teste emergente, GERA AGORA com resultado
         if (this.sistemaEmergencia.emergenciaAtiva) {
-            const resultadoParaIA = {
-                atributo: this.testeAtual.atributo,
-                dificuldade: this.testeAtual.dificuldade,
-                sucesso: true
-            };
+            const secaoAtual = this.sistemaEmergencia.secoesEmergentes.get(this.secaoAtual) || 
+                               this.secaoEmergentePai;
             
-            // Busca a opção original para reprocessar com resultado
-            const secaoAtual = this.sistemaEmergencia.secoesEmergentes.get(this.secaoAtual);
             if (secaoAtual) {
                 const opcaoOriginal = secaoAtual.opcoes.find(op => op.secao === this.testeAtual.secaoSucesso);
-                if (opcaoOriginal) {
-                    await this.sistemaEmergencia.processarOpcaoEmergente(
+                
+                if (opcaoOriginal && opcaoOriginal.emergente) {
+                    const resultadoParaIA = {
+                        atributo: this.testeAtual.atributo,
+                        dificuldade: this.testeAtual.dificuldade,
+                        sucesso: true
+                    };
+                    
+                    console.log('[TESTE] Gerando seção de sucesso COM resultado:', resultadoParaIA);
+                    
+                    const resultado = await this.sistemaEmergencia.processarOpcaoEmergente(
                         opcaoOriginal,
                         secaoAtual,
                         resultadoParaIA
                     );
+                    
+                    if (resultado && resultado.ativada) {
+                        this.secaoEmergentePai = resultado.secao;
+                        await this.mostrarSecao(resultado.idSecao);
+                        return;
+                    }
                 }
             }
         }
         
+        // Fluxo normal (não-emergente)
         this.mostrarSecao(this.testeAtual.secaoSucesso);
     } else {
         await this.modificarEnergia(-2);
         this.mostrarSecao(this.secaoAtual);
     }
 }
+
 
 
     async verificarProgressoSalvo() {
@@ -976,28 +988,16 @@ async restaurarNarrativaAposRetorno(narrativeId, secao) {
 if (opcao.teste) {
     console.log(`[TESTE] Iniciando teste: ${opcao.teste}`);
     
-    // Se for teste EMERGENTE, pré-gera seção de sucesso
-    if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
-        console.log(`[NARRATIVAS] Pré-gerando seção de sucesso emergente: ${opcao.secao}`);
+    // 🆕 NÃO PRÉ-GERA MAIS - Apenas verifica limite
+    if (this.sistemaEmergencia.emergenciaAtiva && this.sistemaEmergencia.profundidadeAtual >= 5) {
+        console.log('[NARRATIVAS] ⚠️ Profundidade máxima - forçando convergência');
+        const convergencia = this.sistemaEmergencia.gerarConvergenciaForcada();
         
-        // 🆕 CRÍTICO: Verifica se já atingiu profundidade máxima
-        if (this.sistemaEmergencia.profundidadeAtual >= 5) {
-            console.log('[NARRATIVAS] ⚠️ Profundidade máxima - forçando convergência');
-            const convergencia = this.sistemaEmergencia.gerarConvergenciaForcada();
-            this.secaoEmergentePai = convergencia.secao;
-            
-            overlay.classList.remove('active');
-            setTimeout(() => overlay.remove(), 1200);
-            
-            this.iniciarTeste(opcao.teste, opcao.dificuldade, convergencia.idSecao);
-            return;
-        }
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 1200);
         
-        // Gera normalmente se não atingiu limite
-        await this.sistemaEmergencia.processarOpcaoEmergente(
-            opcao, 
-            this.secaoEmergentePai
-        );
+        this.iniciarTeste(opcao.teste, opcao.dificuldade, convergencia.idSecao);
+        return;
     }
     
     overlay.classList.remove('active');
@@ -1006,6 +1006,7 @@ if (opcao.teste) {
     this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
     return;
 }
+
 
         
         // 4b. SE FOR UMA BATALHA
@@ -1229,6 +1230,7 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
