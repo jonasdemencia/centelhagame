@@ -449,8 +449,8 @@ ${itensAmostra}
 
 
 // 🆕 INÍCIO DA ADIÇÃO (REGRA 7 + FORMATO DE BATALHA)
-7.(90% chance) OPÇÃO QUE LEVA A PERIGO:**
-   - Em 90% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
+7.(80% chance) OPÇÃO QUE LEVA A PERIGO:**
+   - Em 80% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
    - Esta opção deve ter: "tipo": "perigo_oculto"
    - NÃO spoile a consequência no texto da opção
    - A IA vai gerar automaticamente a próxima seção com a revelação do perigo
@@ -866,8 +866,8 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
 ${itensAmostra}
 
 // 🆕 INÍCIO DA ADIÇÃO (REGRA 6 + FORMATO DE BATALHA)
-6. (90% chance) OPÇÃO QUE LEVA A PERIGO:**
-   - Em 90% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
+6. (80% chance) OPÇÃO QUE LEVA A PERIGO:**
+   - Em 80% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
    - Esta opção deve ter: "tipo": "perigo_oculto"
    - NÃO spoile a consequência no texto da opção
    - A IA vai gerar automaticamente a próxima seção com a revelação do perigo
@@ -990,6 +990,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
