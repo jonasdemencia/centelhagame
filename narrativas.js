@@ -700,13 +700,14 @@ class SistemaNarrativas {
         }
     }
 
-    iniciarTeste(atributo, dificuldade, secaoSucesso) {
-        this.testeAtual = { atributo, dificuldade, secaoSucesso };
-        document.getElementById('atributo-teste').textContent = atributo;
-        document.getElementById('dificuldade-teste').textContent = dificuldade;
-        document.getElementById('modal-teste').classList.remove('oculto');
-        document.getElementById('resultado-teste').classList.add('oculto');
-    }
+    iniciarTeste(atributo, dificuldade, secaoSucesso, falha_mortal = false) {
+    this.testeAtual = { atributo, dificuldade, secaoSucesso, falha_mortal };
+    document.getElementById('atributo-teste').textContent = atributo;
+    document.getElementById('dificuldade-teste').textContent = dificuldade;
+    document.getElementById('modal-teste').classList.remove('oculto');
+    document.getElementById('resultado-teste').classList.add('oculto');
+}
+
 
     rolarDados() {
         const atributoNome = this.testeAtual.atributo;
@@ -1009,7 +1010,7 @@ if (opcao.teste) {
     overlay.classList.remove('active');
     setTimeout(() => overlay.remove(), 1200);
     
-    this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao);
+    this.iniciarTeste(opcao.teste, opcao.dificuldade, opcao.secao, opcao.falha_mortal);
     return;
 }
 
@@ -1236,6 +1237,7 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
