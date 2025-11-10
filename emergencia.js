@@ -447,17 +447,26 @@ ${historicoFormatado}
 6. **ITENS** Se seu texto mencionar encontrar/abrir/pegar algo físico, adicione 1-2 itens nos efeitos.
 ${itensAmostra}
 
-7. **PERIGO E MORTE (OBRIGATÓRIO):**
-   - 50% das emergências DEVEM ter risco de morte
-   - DUAS formas de morte:
-     * Opção direta: "efeitos": [{"tipo": "vida", "valor": -999}]
-     * Teste mortal: {"teste": "sorte", "dificuldade": 18, "falha_mortal": true}
-   - VARIE os atributos: habilidade, sorte, carisma
-   - Exemplos mortais:
-     * Beber poção → -999 (sem teste)
-     * Abrir baú → teste sorte 16, falha_mortal: true
-     * Tocar símbolo → teste carisma 18, falha_mortal: true
-   - Dano severo não-mortal: -15 a -30
+7. **PERIGO E MORTE (OBRIGATÓRIO - 50% DAS EMERGÊNCIAS):**
+   - **FORMATO OBRIGATÓRIO PARA TESTES MORTAIS:**
+     {"teste": "sorte", "dificuldade": 18, "falha_mortal": true}
+   
+   - **REGRAS:**
+     * Dificuldade 18+ = SEMPRE incluir "falha_mortal": true
+     * 50% dos testes DEVEM ter "falha_mortal": true
+     * VARIE atributos: habilidade (30%), sorte (50%), carisma (20%)
+   
+   - **EXEMPLOS VÁLIDOS:**
+     * {"teste": "sorte", "dificuldade": 18, "falha_mortal": true} ← Evitar armadilha
+     * {"teste": "habilidade", "dificuldade": 20, "falha_mortal": true} ← Desarmar mecanismo
+     * {"teste": "carisma", "dificuldade": 16, "falha_mortal": false} ← Negociar
+   
+   - **MORTE DIRETA (sem teste):**
+     * "efeitos": [{"tipo": "energia", "valor": -999}]
+     * Use para: beber veneno, cair em abismo, tocar objeto amaldiçoado
+   
+   - **Dano severo não-mortal:** -15 a -30
+
 
 8.(80% chance) OPÇÃO QUE LEVA A PERIGO:**
    - Em 80% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
@@ -898,7 +907,14 @@ ${itensAmostra}
    - Se alertaTeste mostra FALHA → adicione {"tipo": "energia", "valor": -15} nos efeitos
    - Sem dano = resposta inválida
 
-7. (80% chance) OPÇÃO QUE LEVA A PERIGO:**
+   7. **TESTES MORTAIS (CRÍTICO):**
+   - Se criar teste com dificuldade 18+, DEVE incluir "falha_mortal": true
+   - Formato: {"teste": "sorte", "dificuldade": 18, "falha_mortal": true}
+   - 40% dos testes devem ser mortais
+   - Morte direta: {"tipo": "energia", "valor": -999} nos efeitos
+
+
+8. (80% chance) OPÇÃO QUE LEVA A PERIGO:**
    - Em 80% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
    - Esta opção deve ter: "tipo": "perigo_oculto"
    - NÃO spoile a consequência no texto da opção
@@ -907,7 +923,7 @@ ${itensAmostra}
    - ✅ CERTO: "Tocar a ampulheta"
    - A opção deve ser curiosa/tentadora, mas SEM revelar o perigo
    
-  8. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
+  9. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
    - Se o jogador escolheu uma opção "perigo_oculto", ESTA seção DEVE:
      * Descrever o que aconteceu (ex: "Ao tocar, uma sombra surge!")
      * **OBRIGATÓRIO:** Incluir opção com "tipo": "iniciar_batalha"
@@ -922,7 +938,7 @@ ${itensAmostra}
    - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
 ${monstrosAmostra}
 
-9. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 10% de chance)**
+10. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 10% de chance)**
    - **VARIE AS OPÇÕES:** Você DEVE ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
    - **INCLUA TESTES:** Pelo menos 30% do tempo, UMA das opções deve ser um "teste" de atributo.
    - Atributos válidos: 
@@ -1022,6 +1038,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
