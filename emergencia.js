@@ -447,11 +447,17 @@ ${historicoFormatado}
 6. **ITENS** Se seu texto mencionar encontrar/abrir/pegar algo físico, adicione 1-2 itens nos efeitos.
 ${itensAmostra}
 
-7. **PERIGO E MORTE (40% das emergências):**
-   - Dano severo: -15 a -30 | Morte: -999
-   - Sinais sutis: "chão range", "cheiro metálico", "dobradiças enferrujadas"
-   - Testes mortais: adicione "falha_mortal": true (falha = -999)
-   - Ex: Baú → agulha (-999), Alavanca → lâminas (-25), Chão → queda (-999)
+7. **PERIGO E MORTE (OBRIGATÓRIO):**
+   - 50% das emergências DEVEM ter risco de morte
+   - DUAS formas de morte:
+     * Opção direta: "efeitos": [{"tipo": "vida", "valor": -999}]
+     * Teste mortal: {"teste": "sorte", "dificuldade": 18, "falha_mortal": true}
+   - VARIE os atributos: habilidade, sorte, carisma
+   - Exemplos mortais:
+     * Beber poção → -999 (sem teste)
+     * Abrir baú → teste sorte 16, falha_mortal: true
+     * Tocar símbolo → teste carisma 18, falha_mortal: true
+   - Dano severo não-mortal: -15 a -30
 
 8.(80% chance) OPÇÃO QUE LEVA A PERIGO:**
    - Em 80% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
@@ -1016,6 +1022,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
