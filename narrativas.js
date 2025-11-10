@@ -781,9 +781,11 @@ class SistemaNarrativas {
         return;
     }
     
-    // 🆕 APLICA DANO VARIÁVEL (10-25)
-const danoAleatorio = -(Math.floor(Math.random() * 16) + 10);
-await this.modificarEnergia(danoAleatorio);
+       // 🆕 APLICA DANO VARIÁVEL (10-25)
+    const danoAleatorio = -(Math.floor(Math.random() * 16) + 10);
+    console.log(`[TESTE] Dano por falha: ${danoAleatorio}`);
+    await this.modificarEnergia(danoAleatorio);
+
 
     
     // ðŸ†• SE FOR TESTE EMERGENTE, GERA SEÇÃO DE FALHA
@@ -1277,4 +1279,5 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
