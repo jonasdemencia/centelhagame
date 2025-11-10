@@ -781,8 +781,10 @@ class SistemaNarrativas {
         return;
     }
     
-    // ðŸ†• APLICA DANO PADRÃO
-    await this.modificarEnergia(-2);
+    // 🆕 APLICA DANO VARIÁVEL (10-25)
+const danoAleatorio = -(Math.floor(Math.random() * 16) + 10);
+await this.modificarEnergia(danoAleatorio);
+
     
     // ðŸ†• SE FOR TESTE EMERGENTE, GERA SEÇÃO DE FALHA
     if (this.sistemaEmergencia.emergenciaAtiva) {
@@ -1275,3 +1277,4 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
