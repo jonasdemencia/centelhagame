@@ -447,9 +447,13 @@ ${historicoFormatado}
 6. **ITENS** Se seu texto mencionar encontrar/abrir/pegar algo físico, adicione 1-2 itens nos efeitos.
 ${itensAmostra}
 
+7. **PERIGO E MORTE (40% das emergências):**
+   - Dano severo: -15 a -30 | Morte: -999
+   - Sinais sutis: "chão range", "cheiro metálico", "dobradiças enferrujadas"
+   - Testes mortais: adicione "falha_mortal": true (falha = -999)
+   - Ex: Baú → agulha (-999), Alavanca → lâminas (-25), Chão → queda (-999)
 
-// 🆕 INÍCIO DA ADIÇÃO (REGRA 7 + FORMATO DE BATALHA)
-7.(80% chance) OPÇÃO QUE LEVA A PERIGO:**
+8.(80% chance) OPÇÃO QUE LEVA A PERIGO:**
    - Em 80% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
    - Esta opção deve ter: "tipo": "perigo_oculto"
    - NÃO spoile a consequência no texto da opção
@@ -458,7 +462,7 @@ ${itensAmostra}
    - ✅ CERTO: "Tocar a ampulheta"
    - A opção deve ser curiosa/tentadora, mas SEM revelar o perigo
    
-  8. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
+  9. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
    - Se o jogador escolheu uma opção "perigo_oculto", ESTA seção DEVE:
      * Descrever o que aconteceu (ex: "Ao tocar, uma sombra surge!")
      * **OBRIGATÓRIO:** Incluir opção com "tipo": "iniciar_batalha"
@@ -475,7 +479,7 @@ ${itensAmostra}
    - Se inventar um monstro, o sistema VAI QUEBRAR
   - NUNCA crie nomes novos, SEMPRE escolha da lista
    
-9. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 20% de chance)**
+10. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 20% de chance)**
    - **VARIE AS OPÇÕES:** Você DEVE ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
    - **INCLUA TESTES:** Pelo menos 30% do tempo, UMA das opções deve ser um "teste" de atributo.
    - Atributos válidos: 
@@ -620,9 +624,7 @@ ${itensAmostra}
         }
     }
 
-    // =======================================================================
-    // === INÍCIO DA MODIFICAÇÃO ===
-    // =======================================================================
+
     // 🆕 MÉTODO ATUALIZADO (lógica de batalha em OPÇÃO)
     processarRespostaIA(respostaJSON, secaoDeOrigem, novoId) {
         const numeroSecaoOrigem = this.secaoOrigemEmergencia;
@@ -675,6 +677,21 @@ ${itensAmostra}
             
         };
     }
+// OPÇÃO NORMAL (aprofundar / neutra) (lógica existente)
+else {
+    return {
+        texto: op.texto,
+        secao: this.gerarIdEmergente(),
+        tipo: op.tipo,
+        emergente: true,
+
+        // 🆕 CORREÇÃO PARA TESTES DE ATRIBUTO
+        teste: op.teste,
+        dificuldade: op.dificuldade,
+        falha_mortal: op.falha_mortal, // 🆕 ADICIONE AQUI
+        
+    };
+}            
 });
 
 
@@ -690,9 +707,7 @@ ${itensAmostra}
             profundidade: this.profundidadeAtual
         };
     }
-    // =======================================================================
-    // === FIM DA MODIFICAÇÃO ===
-    // =======================================================================
+ 
 
 
     async processarOpcaoEmergente(opcao, secaoPai, resultadoTeste = null) {
@@ -819,6 +834,9 @@ ${resultadoTeste.sucesso
   : '❌ Você DEVE descrever a FALHA. O jogador não conseguiu.'}
 ` : '';
 
+const alertaMorte = this.profundidadeAtual >= 2 ? 
+  `\n**☠️ Profundidade ${this.profundidadeAtual}: Dano -10 a -999 apropriado**\n` : '';
+        
         const alertaPerigo = opcao.tipo === 'perigo_oculto' ? `
 **⚠️ ATENÇÃO CRÍTICA: O jogador escolheu uma opção de "perigo_oculto"!**
 **VOCÊ DEVE OBRIGATORIAMENTE NESTA SEÇÃO:**
@@ -1003,6 +1021,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
