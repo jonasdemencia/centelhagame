@@ -443,7 +443,7 @@ ${historicoFormatado}
 2. Gere texto (80-180 palavras) - MENOR que o original
 3. Crie 2-5 opções (varie livremente)
 4. Inclua SEMPRE pelo menos uma opção que seja claramente "continuar normal"
-5. Efeitos de energia: apenas se apropriado (-50 a +2, raramente maior)
+5. Efeitos de energia: apenas se apropriado (-50 - acidente, amputação - a +10)
 6. **ITENS** Se seu texto mencionar encontrar/abrir/pegar algo físico, adicione 1-2 itens nos efeitos.
 ${itensAmostra}
 
@@ -990,6 +990,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
