@@ -570,10 +570,11 @@ ${itensAmostra}
   "texto": "[Texto descrevendo desafio]",
   "opcoes": [
     {
-      "texto": "Escalar o muro",
+      "texto": "Saltar sobre o abismo (Teste de Sorte)",
       "tipo": "aprofundar",
-      "teste": "habilidade",
-      "dificuldade": 15,
+      "teste": "sorte",
+      "dificuldade": 18,
+      "falha_mortal": true, // <-- INCLUIR ISSO QUANDO DIF 18+
       "secao": "[ID]"
     },
     {"texto": "[Outra opção]", "tipo": "neutra", "secao": "[ID]"}
@@ -829,6 +830,8 @@ else {
             ? `\n**ESCOLHAS NA EMERGÊNCIA:** ${this.escolhasEmergentes.join(' → ')}\n` 
             : '';
 
+        // 🔴 Em emergencia.js, SUBSTITUA a variável 'alertaTeste' no método construirPromptContinuacao:
+
         const alertaTeste = resultadoTeste ? `
 **🎲 RESULTADO DO TESTE:**
 O jogador fez um teste de ${resultadoTeste.atributo} (dificuldade ${resultadoTeste.dificuldade}).
@@ -836,9 +839,9 @@ O jogador fez um teste de ${resultadoTeste.atributo} (dificuldade ${resultadoTes
 
 ${resultadoTeste.sucesso 
   ? '✅ Você DEVE descrever o SUCESSO da ação. O jogador conseguiu realizar o que tentou.'
-  : `❌ Descreva a FALHA. **OBRIGATÓRIO:** Adicione nos efeitos:
-     {"tipo": "energia", "valor": -15}
-     (Dano fixo por falha em teste)`}
+  : `❌ Descreva a FALHA. O jogador já tomou dano automaticamente.
+     **NÃO adicione** efeitos de energia por esta falha.
+     Apenas narre a consequência da falha.`}
 ` : '';
 
 const alertaMorte = this.profundidadeAtual >= 2 ? 
@@ -903,9 +906,10 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
 5. **ITENS** Se seu texto mencionar encontrar/abrir/pegar algo físico, adicione 1-2 itens nos efeitos.
 ${itensAmostra}
 
-6. **FALHA EM TESTE = DANO OBRIGATÓRIO**
-   - Se alertaTeste mostra FALHA → adicione {"tipo": "energia", "valor": -15} nos efeitos
-   - Sem dano = resposta inválida
+6. **FALHA EM TESTE = DANO AUTOMÁTICO**
+   - Se alertaTeste mostra FALHA, o sistema JÁ aplicou dano.
+   - **NÃO** adicione efeitos de energia por esta falha no seu JSON.
+   - Apenas narre o que aconteceu.
 
    7. **TESTES MORTAIS (CRÍTICO):**
    - Se criar teste com dificuldade 18+, DEVE incluir "falha_mortal": true
@@ -1008,10 +1012,11 @@ ${monstrosAmostra}
   "texto": "[Texto descrevendo desafio]",
   "opcoes": [
     {
-      "texto": "Escalar o muro",
+      "texto": "Saltar sobre o abismo (Teste de Sorte)",
       "tipo": "aprofundar",
-      "teste": "habilidade",
-      "dificuldade": 15,
+      "teste": "sorte",
+      "dificuldade": 18,
+      "falha_mortal": true, // <-- INCLUIR ISSO QUANDO DIF 18+
       "secao": "[ID]"
     },
     {"texto": "[Outra opção]", "tipo": "neutra", "secao": "[ID]"}
@@ -1038,6 +1043,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
