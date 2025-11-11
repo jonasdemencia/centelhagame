@@ -475,7 +475,7 @@ ${itensAmostra}
         
 Você **DEVE** criar tensão e risco real. Em **CADA** emergência, você **OBRIGATORIAMENTE** deve incluir **UMA** das seguintes mecânicas de perigo, respeitando as regras de teste acima (REGRA 7).
     
-**1. OPÇÃO DE PERIGO OCULTO (Batalha) (Prioridade: 40%)**
+**1. OPÇÃO DE PERIGO OCULTO (Batalha) (Prioridade: 60%)**
     - Uma opção neutra que leva a uma batalha.
     - Ex: "Abrir o baú", "Tocar o orbe".
     - **Formato:** {"texto": "Tocar o orbe", "tipo": "perigo_oculto"}
@@ -483,7 +483,7 @@ Você **DEVE** criar tensão e risco real. Em **CADA** emergência, você **OBRI
     - Use os monstros da lista:
 ${monstrosAmostra}
 
-**2. OPÇÃO DE TESTE MORTAL (Prioridade: 30%)**
+**2. OPÇÃO DE TESTE MORTAL (Prioridade: 15%)**
     - Uma opção que exige um teste de atributo onde a falha é a morte.
     - **Dificuldade DEVE ser 18+** (use 18, 20, 22).
     - **DEVE incluir "falha_mortal": true**.
@@ -499,7 +499,7 @@ ${monstrosAmostra}
         "secao": "[ID_SUCESSO]"
       }
 
-**3. OPÇÃO DE MORTE IMEDIATA (Prioridade: 20%)**
+**3. OPÇÃO DE MORTE IMEDIATA (Prioridade: 10%)**
     - Uma opção que leva à morte instantânea (mas a IA vai descrevê-la primeiro).
     - Ex: "Beber o líquido estranho", "Pular no abismo", "Tocar o artefato amaldiçoado".
     - O texto da opção deve ser tolo ou curioso, mas não revelar a morte (ex: "Beber da fonte" > "Beber o veneno").
@@ -511,7 +511,7 @@ ${monstrosAmostra}
         "secao": "[ID_MORTE_DESCRITA]" 
       }
 
-**4. OPÇÃO DE TESTE NORMAL (Não-Mortal) (Prioridade: 10%)**
+**4. OPÇÃO DE TESTE NORMAL (Não-Mortal) (Prioridade: 15%)**
     - Apenas se nenhum dos acima for usado.
     - Dificuldade 10-15.
     - **Use as "REGRAS DE TESTES DE ATRIBUTO (REGRA 7)"** para decidir o atributo e o contexto.
@@ -624,104 +624,85 @@ if ((response.status === 503 || response.status === 429) && tentativa < maxTenta
 
 
     processarRespostaIA(respostaJSON, secaoDeOrigem, novoId) {
-    const numeroSecaoOrigem = this.secaoOrigemEmergencia;
+        const numeroSecaoOrigem = this.secaoOrigemEmergencia;
 
-    // Processa as opções...
-    const opcoesProcessadas = respostaJSON.opcoes.map(op => {
-        // 🆕 Opção de Morte Imediata (leva a uma descrição de morte)
-        if (op.morte_imediata) {
+        // Processa as opções...
+        const opcoesProcessadas = respostaJSON.opcoes.map(op => {
+    
+            // 🆕 Opção de Morte Imediata (leva a uma descrição de morte)
+            if (op.morte_imediata) {
+                return {
+                    texto: op.texto,
+                    secao: this.gerarIdEmergente(),
+                    tipo: 'aprofundar', // Trata como "aprofundar" para o fluxo
+                    emergente: true,
+                    morte_imediata: true // Propaga a flag
+                };
+            }
+
+            // Opção que leva a perigo (não revela ainda)
+            if (op.tipo === "perigo_oculto") {
+                return {
+                    texto: op.texto,
+                    secao: this.gerarIdEmergente(),
+                    tipo: 'perigo_oculto',
+                    emergente: true
+                };
+            }
+
+            // Opção de iniciar batalha (revelada na seção seguinte)
+            if (op.tipo === "iniciar_batalha") {
+                return {
+                    texto: op.texto,
+                    batalha: op.monstro,
+                    vitoria: numeroSecaoOrigem,
+                    derrota: 320,
+                    emergente: false
+                };
+            }
+            
+            // OPÇÃO DE RECUAR (lógica existente)
+            if (op.tipo === "recuar") {
+                return {
+                    texto: op.texto,
+                    secao: numeroSecaoOrigem,
+                    emergente: false,
+                    tipo: 'recuar'
+                };
+            } 
+            
+            
+        // OPÇÃO NORMAL (aprofundar / neutra) (lógica existente)
+        else {
             return {
                 texto: op.texto,
                 secao: this.gerarIdEmergente(),
-                tipo: 'aprofundar',
+                tipo: op.tipo,
                 emergente: true,
-                morte_imediata: true
-            };
-        }
 
-        // Opção que leva a perigo (não revela ainda)
-        if (op.tipo === "perigo_oculto") {
-            return {
-                texto: op.texto,
-                secao: this.gerarIdEmergente(),
-                tipo: 'perigo_oculto',
-                emergente: true
+                // 🆕 CORREÇÃO PARA TESTES DE ATRIBUTO
+                teste: op.teste,
+                dificuldade: op.dificuldade,
+                falha_mortal: op.falha_mortal, // 🆕 ADICIONE AQUI
+                
             };
-        }
-
-        // Opção de iniciar batalha
-        if (op.tipo === "iniciar_batalha") {
-            return {
-                texto: op.texto,
-                batalha: op.monstro,
-                vitoria: numeroSecaoOrigem,
-                derrota: 320,
-                emergente: false
-            };
-        }
-
-        // Opção de recuar
-        if (op.tipo === "recuar") {
-            return {
-                texto: op.texto,
-                secao: numeroSecaoOrigem,
-                emergente: false,
-                tipo: 'recuar'
-            };
-        }
-
-        // Opção normal
-        return {
-            texto: op.texto,
-            secao: this.gerarIdEmergente(),
-            tipo: op.tipo,
-            emergente: true,
-            teste: op.teste,
-            dificuldade: op.dificuldade,
-            falha_mortal: op.falha_mortal,
-        };
+        }            
     });
 
-    // 🧠 FALLBACK: Se nenhuma opção tem perigo, força uma batalha
-    const temPerigo = opcoesProcessadas.some(op =>
-        op.tipo === 'perigo_oculto' ||
-        op.falha_mortal ||
-        op.morte_imediata ||
-        op.batalha
-    );
 
-    if (!temPerigo && this.profundidadeAtual >= 2) {
-        console.log('[EMERGÊNCIA] ⚠️ IA não criou perigo - forçando batalha');
-        const monstroAleatorio = this.monstrosClassificados.comuns[
-            Math.floor(Math.random() * this.monstrosClassificados.comuns.length)
-        ];
-
-        opcoesProcessadas.push({
-            texto: "Investigar o ruído estranho",
-            secao: this.gerarIdEmergente(),
-            tipo: 'perigo_oculto',
+        // Retorna a seção principal
+        return {
+            texto: respostaJSON.texto,
+            opcoes: opcoesProcessadas,
+            efeitos: respostaJSON.efeitos || [],
             emergente: true,
-            batalha: monstroAleatorio.nome || "Monstro Desconhecido",
-            vitoria: numeroSecaoOrigem,
-            derrota: 320
-        });
+            id: novoId,
+            origem: numeroSecaoOrigem,
+            modo: respostaJSON.modo,
+            profundidade: this.profundidadeAtual,
+            final: respostaJSON.final || false // 🆕 Garante que a flag "final" seja passada
+        };
     }
-
-    // Retorna a seção principal
-    return {
-        texto: respostaJSON.texto,
-        opcoes: opcoesProcessadas,
-        efeitos: respostaJSON.efeitos || [],
-        emergente: true,
-        id: novoId,
-        origem: numeroSecaoOrigem,
-        modo: respostaJSON.modo,
-        profundidade: this.profundidadeAtual,
-        final: respostaJSON.final || false
-    };
-}
-
- 
 
 
     async processarOpcaoEmergente(opcao, secaoPai, resultadoTeste = null) {
@@ -968,7 +949,7 @@ ${itensAmostra}
         
 Você **DEVE** criar tensão e risco real. Em **CADA** emergência, você **OBRIGATORIAMENTE** deve incluir **UMA** das seguintes mecânicas de perigo, respeitando as regras de teste acima (REGRA 8).
 
-**1. OPÇÃO DE PERIGO OCULTO (Batalha) (Prioridade: 40%)** 🆕
+**1. OPÇÃO DE PERIGO OCULTO (Batalha) (Prioridade: 60%)** 🆕
     - Uma opção neutra que leva a uma batalha.
     - Ex: "Abrir o baú", "Tocar o orbe".
     - **Formato:** {"texto": "Tocar o orbe", "tipo": "perigo_oculto"}
@@ -976,7 +957,7 @@ Você **DEVE** criar tensão e risco real. Em **CADA** emergência, você **OBRI
     - Use os monstros da lista:
 ${monstrosAmostra}
 
-**2. OPÇÃO DE TESTE MORTAL (Prioridade: 30%)** 🆕
+**2. OPÇÃO DE TESTE MORTAL (Prioridade: 15%)** 🆕
     - Uma opção que exige um teste de atributo onde a falha é a morte.
     - **Dificuldade DEVE ser 18+** (use 18, 20, 22).
     - **DEVE incluir "falha_mortal": true**.
@@ -992,7 +973,7 @@ ${monstrosAmostra}
         "secao": "[ID_SUCESSO]"
       }
 
-**3. OPÇÃO DE MORTE IMEDIATA (Prioridade: 20%)** 🆕
+**3. OPÇÃO DE MORTE IMEDIATA (Prioridade: 10%)** 🆕
     - Uma opção que leva à morte instantânea (mas a IA vai descrevê-la primeiro).
     - Ex: "Beber o líquido estranho", "Pular no abismo", "Tocar o artefato amaldiçoado".
     - O texto da opção deve ser tolo ou curioso, mas não revelar a morte (ex: "Beber da fonte" > "Beber o veneno").
@@ -1004,7 +985,7 @@ ${monstrosAmostra}
         "secao": "[ID_MORTE_DESCRITA]" // <-- MUDANÇA (não é 320)
       }
 
-**4. OPÇÃO DE TESTE NORMAL (Não-Mortal) (Prioridade: 10%)**
+**4. OPÇÃO DE TESTE NORMAL (Não-Mortal) (Prioridade: 15%)**
     - Apenas se nenhum dos acima for usado e você ainda quiser um teste.
     - Dificuldade 10-15.
     - **Formato:**
@@ -1071,33 +1052,3 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
