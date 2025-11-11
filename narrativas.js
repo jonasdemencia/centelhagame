@@ -756,98 +756,136 @@ class SistemaNarrativas {
     }
 
     async continuarAposTeste() {
-    document.getElementById('modal-teste').classList.add('oculto');
-    document.getElementById('rolar-dados').style.display = 'block';
-    
-    if (this.resultadoTeste) {
-        // 🆕 Se for teste emergente, GERA AGORA com resultado
-        if (this.sistemaEmergencia.emergenciaAtiva) {
-            const secaoAtual = this.sistemaEmergencia.secoesEmergentes.get(this.secaoAtual) || 
-                               this.secaoEmergentePai;
-            
-            if (secaoAtual) {
-                const opcaoOriginal = secaoAtual.opcoes.find(op => op.secao === this.testeAtual.secaoSucesso);
+        document.getElementById('modal-teste').classList.add('oculto');
+        document.getElementById('rolar-dados').style.display = 'block';
+        
+        if (this.resultadoTeste) {
+            // 🆕 Se for teste emergente, GERA AGORA com resultado
+            if (this.sistemaEmergencia.emergenciaAtiva) {
+                const secaoAtual = this.sistemaEmergencia.secoesEmergentes.get(this.secaoAtual) || 
+                                   this.secaoEmergentePai;
                 
-                if (opcaoOriginal && opcaoOriginal.emergente) {
-                    const resultadoParaIA = {
-                        atributo: this.testeAtual.atributo,
-                        dificuldade: this.testeAtual.dificuldade,
-                        sucesso: true
-                    };
+                if (secaoAtual) {
+                    const opcaoOriginal = secaoAtual.opcoes.find(op => op.secao === this.testeAtual.secaoSucesso);
                     
-                    console.log('[TESTE] Gerando seção de sucesso COM resultado:', resultadoParaIA);
-                    
-                    const resultado = await this.sistemaEmergencia.processarOpcaoEmergente(
-                        opcaoOriginal,
-                        secaoAtual,
-                        resultadoParaIA
-                    );
-                    
-                    if (resultado && resultado.ativada) {
-                        this.secaoEmergentePai = resultado.secao;
-                        await this.mostrarSecao(resultado.idSecao);
-                        return;
+                    if (opcaoOriginal && opcaoOriginal.emergente) {
+                        const resultadoParaIA = {
+                            atributo: this.testeAtual.atributo,
+                            dificuldade: this.testeAtual.dificuldade,
+                            sucesso: true
+                        };
+                        
+                        console.log('[TESTE] Gerando seção de sucesso COM resultado:', resultadoParaIA);
+                        
+                        const resultado = await this.sistemaEmergencia.processarOpcaoEmergente(
+                            opcaoOriginal,
+                            secaoAtual,
+                            resultadoParaIA
+                        );
+                        
+                        if (resultado && resultado.ativada) {
+                            this.secaoEmergentePai = resultado.secao;
+                            await this.mostrarSecao(resultado.idSecao);
+                            return;
+                        }
                     }
                 }
             }
-        }
-        
-        // Fluxo normal (não-emergente)
-        this.mostrarSecao(this.testeAtual.secaoSucesso);
-    } else {
-        // ☠️ VERIFICA SE É TESTE MORTAL (LÓGICA CORRIGIDA)
-        if (this.testeAtual.falha_mortal) {
-            console.log('[TESTE] ☠️ FALHA MORTAL');
-            await this.modificarEnergia(-999); // Seta energia para -999
-            this.mostrarSecao(320); // VAI DIRETAMENTE PARA A SEÇÃO DE MORTE
-            return; // PARA A EXECUÇÃO AQUI
-        }
-        
-           // 🆕 APLICA DANO VARIÁVEL (10-25)
-        const danoAleatorio = -(Math.floor(Math.random() * 16) + 10);
-        console.log(`[TESTE] Dano por falha: ${danoAleatorio}`);
-        await this.modificarEnergia(danoAleatorio);
-
-
-    
-    // ðŸ†• SE FOR TESTE EMERGENTE, GERA SEÇÃO DE FALHA
-    if (this.sistemaEmergencia.emergenciaAtiva) {
-        const secaoAtual = this.sistemaEmergencia.secoesEmergentes.get(this.secaoAtual) || 
-                           this.secaoEmergentePai;
-        
-        if (secaoAtual) {
-            const opcaoOriginal = secaoAtual.opcoes.find(op => 
-                op.teste && op.dificuldade === this.testeAtual.dificuldade
-            );
             
-            if (opcaoOriginal && opcaoOriginal.emergente) {
-                const resultadoParaIA = {
-                    atributo: this.testeAtual.atributo,
-                    dificuldade: this.testeAtual.dificuldade,
-                    sucesso: false // ðŸ"¹ DIFERENÇA: Agora é false
-                };
+            // Fluxo normal (não-emergente)
+            this.mostrarSecao(this.testeAtual.secaoSucesso);
+        
+        } else {
+            // ☠️ VERIFICA SE É TESTE MORTAL (LÓGICA CORRIGIDA)
+            if (this.testeAtual.falha_mortal) {
+                console.log('[TESTE] ☠️ FALHA MORTAL');
+                await this.modificarEnergia(-999); // Seta energia para -999
+        
+                // 🆕 DEIXA A IA NARRAR A MORTE
+                if (this.sistemaEmergencia.emergenciaAtiva) {
+                    const secaoAtual = this.sistemaEmergencia.secoesEmergentes.get(this.secaoAtual) || 
+                                       this.secaoEmergentePai;
+                    
+                    if (secaoAtual) {
+                        const opcaoOriginal = secaoAtual.opcoes.find(op => 
+                            op.teste && op.dificuldade === this.testeAtual.dificuldade
+                        );
+                        
+                        if (opcaoOriginal && opcaoOriginal.emergente) {
+                            const resultadoParaIA = {
+                                atributo: this.testeAtual.atributo,
+                                dificuldade: this.testeAtual.dificuldade,
+                                sucesso: false,
+                                mortal: true // <-- 🆕 FLAG DE MORTE ENVIADA PARA IA
+                            };
+                            
+                            console.log('[TESTE] Gerando seção de MORTE COM resultado:', resultadoParaIA);
+                            
+                            const resultado = await this.sistemaEmergencia.processarOpcaoEmergente(
+                                opcaoOriginal,
+                                secaoAtual,
+                                resultadoParaIA
+                            );
+                            
+                            if (resultado && resultado.ativada) {
+                                this.secaoEmergentePai = resultado.secao;
+                                await this.mostrarSecao(resultado.idSecao); // Mostra a descrição da morte
+                                return;
+                            }
+                        }
+                    }
+                }
                 
-                console.log('[TESTE] Gerando seção de FALHA COM resultado:', resultadoParaIA);
+                // Fallback (se não for emergente ou IA falhar)
+                this.mostrarSecao(320); 
+                return;
+            }
+            
+            // 🆕 APLICA DANO VARIÁVEL (10-25)
+            const danoAleatorio = -(Math.floor(Math.random() * 16) + 10);
+            console.log(`[TESTE] Dano por falha: ${danoAleatorio}`);
+            await this.modificarEnergia(danoAleatorio);
+        
+        
+            // 🆕 SE FOR TESTE EMERGENTE, GERA SEÇÃO DE FALHA
+            if (this.sistemaEmergencia.emergenciaAtiva) {
+                const secaoAtual = this.sistemaEmergencia.secoesEmergentes.get(this.secaoAtual) || 
+                                   this.secaoEmergentePai;
                 
-                const resultado = await this.sistemaEmergencia.processarOpcaoEmergente(
-                    opcaoOriginal,
-                    secaoAtual,
-                    resultadoParaIA
-                );
-                
-                if (resultado && resultado.ativada) {
-                    this.secaoEmergentePai = resultado.secao;
-                    await this.mostrarSecao(resultado.idSecao);
-                    return;
+                if (secaoAtual) {
+                    const opcaoOriginal = secaoAtual.opcoes.find(op => 
+                        op.teste && op.dificuldade === this.testeAtual.dificuldade
+                    );
+                    
+                    if (opcaoOriginal && opcaoOriginal.emergente) {
+                        const resultadoParaIA = {
+                            atributo: this.testeAtual.atributo,
+                            dificuldade: this.testeAtual.dificuldade,
+                            sucesso: false, // 🆕 DIFERENÇA: Agora é false
+                            mortal: false // 🆕 DIFERENÇA: Não é mortal
+                        };
+                        
+                        console.log('[TESTE] Gerando seção de FALHA COM resultado:', resultadoParaIA);
+                        
+                        const resultado = await this.sistemaEmergencia.processarOpcaoEmergente(
+                            opcaoOriginal,
+                            secaoAtual,
+                            resultadoParaIA
+                        );
+                        
+                        if (resultado && resultado.ativada) {
+                            this.secaoEmergentePai = resultado.secao;
+                            await this.mostrarSecao(resultado.idSecao);
+                            return;
+                        }
+                    }
                 }
             }
+            
+            // 🆕 FALLBACK: Se não gerou seção emergente, volta para seção atual
+            this.mostrarSecao(this.secaoAtual);
         }
     }
-    
-    // ðŸ†• FALLBACK: Se não gerou seção emergente, volta para seção atual
-    this.mostrarSecao(this.secaoAtual);
-}
-}
 
 
     async verificarProgressoSalvo() {
@@ -1301,6 +1339,7 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
