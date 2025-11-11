@@ -356,6 +356,8 @@ raros: ["necromante", "sombra-antiga", "jaguar", "urso", "tigre", "crocodilo", "
     }
 
     
+    // EM emergencia.js, SUBSTITUA o método inteiro:
+
     construirPrompt(tituloNarrativa, secaoAtual) {
         const historicoFormatado = this.historico.map(h =>
             `Seção ${h.numero}: "${h.texto.substring(0, 100)}..."\n` +
@@ -445,14 +447,35 @@ ${historicoFormatado}
 6. **ITENS** Se seu texto mencionar encontrar/abrir/pegar algo físico, adicione 1-2 itens nos efeitos.
 ${itensAmostra}
 
+// 🆕 INÍCIO DO NOVO BLOCO DE REGRAS DE TESTE
 
-// 🆕 INÍCIO DO BLOCO DE PERIGO REESCRITO (AGORA OBRIGATÓRIO)
+**7. REGRAS DE TESTES DE ATRIBUTO (CRÍTICO - LEIA ATENTAMENTE)**
+    
+    **A. QUANDO CRIAR UM TESTE?**
+       - Um teste SÓ é necessário quando há **RISCO REAL** ou **INCERTEZA SIGNIFICATIVA**.
+       - **RISCO:** Se falhar, algo ruim acontece (dano, alarme, morte).
+       - **INCERTEZA:** O sucesso não é garantido (decifrar, negociar).
+       - ❌ **NÃO CRIE TESTES** para ações triviais: "limpar um espelho", "ler um livro", "andar por uma sala segura".
+       - ✅ **CRIE TESTES** para ações de risco: "escalar um muro desmoronando", "mexer em uma armadilha", "beber uma poção desconhecida".
+    
+    **B. LIMITE DE TESTES:**
+       - **MÁXIMO UM (1) TESTE DE ATRIBUTO POR SEÇÃO.** Se você incluir uma "OPÇÃO DE TESTE MORTAL", você não pode incluir uma "OPÇÃO DE TESTE NORMAL".
+    
+    **C. DISTRIBUIÇÃO DE ATRIBUTOS (Prioridades):**
+       - Você deve variar os atributos. A IA está usando "habilidade" demais. Use esta distribuição:
+       - **50% SORTE (LUCK):** Para perigos **passivos** e **ambientais**. O jogador não está *tentando* fazer algo, ele está *evitando* algo.
+         - *Exemplos:* "Evitar o desmoronamento do teto (Teste de Sorte)", "Não pisar na placa de pressão (Teste de Sorte)", "Passar pelo corredor sem atrair atenção (Teste de Sorte)".
+       - **40% HABILIDADE (SKILL):** Para ações **ativas** e **deliberadas** que exigem perícia. O jogador está *tentando* fazer algo.
+         - *Físico:* "Desarmar a armadilha (Teste de Habilidade)", "Forçar a fechadura (Teste de Habilidade)".
+         - *Mental:* "Decifrar o enigma (Teste de Habilidade)", "Lembrar do símbolo (Teste de Habilidade)".
+       - **10% CARISMA (CHARISMA):** Apenas para interação social.
+         - *Exemplos:* "Acalmar a criatura (Teste de Carisma)", "Intimidar o guarda (Teste de Carisma)".
 
-**7. INSTRUÇÕES DE PERIGO (CRÍTICO - ORDEM DIRETA)**
+**8. INSTRUÇÕES DE PERIGO (CRÍTICO - ORDEM DIRETA)**
         
-Você **DEVE** criar tensão e risco real. Em **CADA** emergência, você **OBRIGATORIAMENTE** deve incluir **UMA** das seguintes mecânicas de perigo. Não é opcional.
-
-**1. OPÇÃO DE PERIGO OCULTO (Batalha) (Prioridade: 40%)** 🆕
+Você **DEVE** criar tensão e risco real. Em **CADA** emergência, você **OBRIGATORIAMENTE** deve incluir **UMA** das seguintes mecânicas de perigo, respeitando as regras de teste acima (REGRA 7).
+    
+**1. OPÇÃO DE PERIGO OCULTO (Batalha) (Prioridade: 40%)**
     - Uma opção neutra que leva a uma batalha.
     - Ex: "Abrir o baú", "Tocar o orbe".
     - **Formato:** {"texto": "Tocar o orbe", "tipo": "perigo_oculto"}
@@ -460,11 +483,11 @@ Você **DEVE** criar tensão e risco real. Em **CADA** emergência, você **OBRI
     - Use os monstros da lista:
 ${monstrosAmostra}
 
-**2. OPÇÃO DE TESTE MORTAL (Prioridade: 30%)** 🆕
+**2. OPÇÃO DE TESTE MORTAL (Prioridade: 30%)**
     - Uma opção que exige um teste de atributo onde a falha é a morte.
     - **Dificuldade DEVE ser 18+** (use 18, 20, 22).
     - **DEVE incluir "falha_mortal": true**.
-    - **Atributos:** VARIE (50% sorte, 40% habilidade, 10% carisma).
+    - **Use as "REGRAS DE TESTES DE ATRIBUTO (REGRA 7)"** para decidir o atributo (priorize SORTE e HABILIDADE).
     - Texto da opção deve indicar o risco (ex: "Saltar sobre o abismo (Teste de Sorte)", "Tentar desarmar a armadilha (Teste de Habilidade)").
     - **Formato:**
       {
@@ -476,7 +499,7 @@ ${monstrosAmostra}
         "secao": "[ID_SUCESSO]"
       }
 
-**3. OPÇÃO DE MORTE IMEDIATA (Prioridade: 20%)** 🆕
+**3. OPÇÃO DE MORTE IMEDIATA (Prioridade: 20%)**
     - Uma opção que leva à morte instantânea (mas a IA vai descrevê-la primeiro).
     - Ex: "Beber o líquido estranho", "Pular no abismo", "Tocar o artefato amaldiçoado".
     - O texto da opção deve ser tolo ou curioso, mas não revelar a morte (ex: "Beber da fonte" > "Beber o veneno").
@@ -484,13 +507,14 @@ ${monstrosAmostra}
       {
         "texto": "Beber o líquido na taça", 
         "tipo": "aprofundar", 
-        "morte_imediata": true, // <-- MUDANÇA
-        "secao": "[ID_MORTE_DESCRITA]" // <-- MUDANÇA (não é 320)
+        "morte_imediata": true, 
+        "secao": "[ID_MORTE_DESCRITA]" 
       }
 
 **4. OPÇÃO DE TESTE NORMAL (Não-Mortal) (Prioridade: 10%)**
-    - Apenas se nenhum dos acima for usado e você ainda quiser um teste.
+    - Apenas se nenhum dos acima for usado.
     - Dificuldade 10-15.
+    - **Use as "REGRAS DE TESTES DE ATRIBUTO (REGRA 7)"** para decidir o atributo e o contexto.
     - **Formato:**
       {
         "texto": "Decifrar o enigma (Teste de Habilidade)", 
@@ -511,7 +535,7 @@ ${monstrosAmostra}
   "opcoes": [
     {"texto": "[Opção 1]", "tipo": "aprofundar"},
     {"texto": "[Opção 2]", "tipo": "neutra"},
-    {"texto": "[Continuar normally]", "tipo": "recuar"}
+    {"texto": "[Continuar normalmente]", "tipo": "recuar"}
   ],
   "efeitos": [
     {"tipo": "energia", "valor": X},
@@ -867,8 +891,7 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
 
 **INSTRUÇÕES:**
 
-1. **PRIORIDADE MÁXIMA: MORTE** 🆕
-   - Se \`${"alertaMorteImediata"}\` ou \`${"alertaTeste (mortal)"}\` estiverem ativos, IGNORE TODAS AS OUTRAS REGRAS.
+1. **PRIORIDADE MÁXIMA: MORTE** - Se \`${"alertaMorteImediata"}\` ou \`${"alertaTeste (mortal)"}\` estiverem ativos, IGNORE TODAS AS OUTRAS REGRAS.
    - Apenas escreva a descrição da morte e retorne \`"final": true\`.
    - Exemplo JSON: \`{"modo": "evento_menor", "texto": "Você morre...", "opcoes": [], "final": true}\`
 
@@ -878,7 +901,7 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
    - Exemplo: Em vez de "tempo se dobra" → "o relógio na parede parou"
 
 3. **PROFUNDIDADE ${this.profundidadeAtual}:**
-   ${this.profundidadeAtual < 3 ? '- Pode expandir normally' : ''}
+   ${this.profundidadeAtual < 3 ? '- Pode expandir normalmente' : ''}
    ${this.profundidadeAtual >= 3 ? '- CONSIDERE oferecer opção clara de "sair/encerrar"' : ''}
    ${this.profundidadeAtual >= 4 ? '- RECOMENDADO: faça próxima seção ser conclusão natural' : ''}
 
@@ -901,11 +924,33 @@ ${itensAmostra}
    - Apenas narre o que aconteceu.
 
 
-// 🆕 INÍCIO DO BLOCO DE PERIGO REESCRITO (AGORA OBRIGATÓRIO)
+// 🆕 INÍCIO DO NOVO BLOCO DE REGRAS DE TESTE
 
-**8. INSTRUÇÕES DE PERIGO (CRÍTICO - ORDEM DIRETA)** 🆕
+**8. REGRAS DE TESTES DE ATRIBUTO (CRÍTICO - LEIA ATENTAMENTE)**
+    
+    **A. QUANDO CRIAR UM TESTE?**
+       - Um teste SÓ é necessário quando há **RISCO REAL** ou **INCERTEZA SIGNIFICATIVA**.
+       - **RISCO:** Se falhar, algo ruim acontece (dano, alarme, morte).
+       - **INCERTEZA:** O sucesso não é garantido (decifrar, negociar).
+       - ❌ **NÃO CRIE TESTES** para ações triviais: "limpar um espelho", "ler um livro", "andar por uma sala segura".
+       - ✅ **CRIE TESTES** para ações de risco: "escalar um muro desmoronando", "mexer em uma armadilha", "beber uma poção desconhecida".
+    
+    **B. LIMITE DE TESTES:**
+       - **MÁXIMO UM (1) TESTE DE ATRIBUTO POR SEÇÃO.** Se você incluir uma "OPÇÃO DE TESTE MORTAL", você não pode incluir uma "OPÇÃO DE TESTE NORMAL".
+    
+    **C. DISTRIBUIÇÃO DE ATRIBUTOS (Prioridades):**
+       - Você deve variar os atributos. A IA está usando "habilidade" demais. Use esta distribuição:
+       - **50% SORTE (LUCK):** Para perigos **passivos** e **ambientais**. O jogador não está *tentando* fazer algo, ele está *evitando* algo.
+         - *Exemplos:* "Evitar o desmoronamento do teto (Teste de Sorte)", "Não pisar na placa de pressão (Teste de Sorte)", "Passar pelo corredor sem atrair atenção (Teste de Sorte)".
+       - **40% HABILIDADE (SKILL):** Para ações **ativas** e **deliberadas** que exigem perícia. O jogador está *tentando* fazer algo.
+         - *Físico:* "Desarmar a armadilha (Teste de Habilidade)", "Forçar a fechadura (Teste de Habilidade)".
+         - *Mental:* "Decifrar o enigma (Teste de Habilidade)", "Lembrar do símbolo (Teste de Habilidade)".
+       - **10% CARISMA (CHARISMA):** Apenas para interação social.
+         - *Exemplos:* "Acalmar a criatura (Teste de Carisma)", "Intimidar o guarda (Teste de Carisma)".
+
+**9. INSTRUÇÕES DE PERIGO (CRÍTICO - ORDEM DIRETA)** 🆕
         
-Você **DEVE** criar tensão e risco real. Em **CADA** emergência, você **OBRIGATORIAMENTE** deve incluir **UMA** das seguintes mecânicas de perigo. Não é opcional.
+Você **DEVE** criar tensão e risco real. Em **CADA** emergência, você **OBRIGATORIAMENTE** deve incluir **UMA** das seguintes mecânicas de perigo, respeitando as regras de teste acima (REGRA 8).
 
 **1. OPÇÃO DE PERIGO OCULTO (Batalha) (Prioridade: 40%)** 🆕
     - Uma opção neutra que leva a uma batalha.
@@ -1010,6 +1055,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
