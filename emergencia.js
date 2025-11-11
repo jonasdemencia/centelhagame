@@ -623,88 +623,104 @@ if ((response.status === 503 || response.status === 429) && tentativa < maxTenta
     }
 
 
-    // EM emergencia.js, SUBSTITUA o método inteiro:
-
     processarRespostaIA(respostaJSON, secaoDeOrigem, novoId) {
-        const numeroSecaoOrigem = this.secaoOrigemEmergencia;
+    const numeroSecaoOrigem = this.secaoOrigemEmergencia;
 
-        // Processa as opções...
-        const opcoesProcessadas = respostaJSON.opcoes.map(op => {
-    
-            // 🆕 Opção de Morte Imediata (leva a uma descrição de morte)
-            if (op.morte_imediata) {
-                return {
-                    texto: op.texto,
-                    secao: this.gerarIdEmergente(),
-                    tipo: 'aprofundar', // Trata como "aprofundar" para o fluxo
-                    emergente: true,
-                    morte_imediata: true // Propaga a flag
-                };
-            }
-
-            // Opção que leva a perigo (não revela ainda)
-            if (op.tipo === "perigo_oculto") {
-                return {
-                    texto: op.texto,
-                    secao: this.gerarIdEmergente(),
-                    tipo: 'perigo_oculto',
-                    emergente: true
-                };
-            }
-
-            // Opção de iniciar batalha (revelada na seção seguinte)
-            if (op.tipo === "iniciar_batalha") {
-                return {
-                    texto: op.texto,
-                    batalha: op.monstro,
-                    vitoria: numeroSecaoOrigem,
-                    derrota: 320,
-                    emergente: false
-                };
-            }
-            
-            // OPÇÃO DE RECUAR (lógica existente)
-            if (op.tipo === "recuar") {
-                return {
-                    texto: op.texto,
-                    secao: numeroSecaoOrigem,
-                    emergente: false,
-                    tipo: 'recuar'
-                };
-            } 
-            
-            
-        // OPÇÃO NORMAL (aprofundar / neutra) (lógica existente)
-        else {
+    // Processa as opções...
+    const opcoesProcessadas = respostaJSON.opcoes.map(op => {
+        // 🆕 Opção de Morte Imediata (leva a uma descrição de morte)
+        if (op.morte_imediata) {
             return {
                 texto: op.texto,
                 secao: this.gerarIdEmergente(),
-                tipo: op.tipo,
+                tipo: 'aprofundar',
                 emergente: true,
-
-                // 🆕 CORREÇÃO PARA TESTES DE ATRIBUTO
-                teste: op.teste,
-                dificuldade: op.dificuldade,
-                falha_mortal: op.falha_mortal, // 🆕 ADICIONE AQUI
-                
+                morte_imediata: true
             };
-        }            
+        }
+
+        // Opção que leva a perigo (não revela ainda)
+        if (op.tipo === "perigo_oculto") {
+            return {
+                texto: op.texto,
+                secao: this.gerarIdEmergente(),
+                tipo: 'perigo_oculto',
+                emergente: true
+            };
+        }
+
+        // Opção de iniciar batalha
+        if (op.tipo === "iniciar_batalha") {
+            return {
+                texto: op.texto,
+                batalha: op.monstro,
+                vitoria: numeroSecaoOrigem,
+                derrota: 320,
+                emergente: false
+            };
+        }
+
+        // Opção de recuar
+        if (op.tipo === "recuar") {
+            return {
+                texto: op.texto,
+                secao: numeroSecaoOrigem,
+                emergente: false,
+                tipo: 'recuar'
+            };
+        }
+
+        // Opção normal
+        return {
+            texto: op.texto,
+            secao: this.gerarIdEmergente(),
+            tipo: op.tipo,
+            emergente: true,
+            teste: op.teste,
+            dificuldade: op.dificuldade,
+            falha_mortal: op.falha_mortal,
+        };
     });
 
+    // 🧠 FALLBACK: Se nenhuma opção tem perigo, força uma batalha
+    const temPerigo = opcoesProcessadas.some(op =>
+        op.tipo === 'perigo_oculto' ||
+        op.falha_mortal ||
+        op.morte_imediata ||
+        op.batalha
+    );
 
-        // Retorna a seção principal
-        return {
-            texto: respostaJSON.texto,
-            opcoes: opcoesProcessadas,
-            efeitos: respostaJSON.efeitos || [],
+    if (!temPerigo && this.profundidadeAtual >= 2) {
+        console.log('[EMERGÊNCIA] ⚠️ IA não criou perigo - forçando batalha');
+        const monstroAleatorio = this.monstrosClassificados.comuns[
+            Math.floor(Math.random() * this.monstrosClassificados.comuns.length)
+        ];
+
+        opcoesProcessadas.push({
+            texto: "Investigar o ruído estranho",
+            secao: this.gerarIdEmergente(),
+            tipo: 'perigo_oculto',
             emergente: true,
-            id: novoId,
-            origem: numeroSecaoOrigem,
-            modo: respostaJSON.modo,
-            profundidade: this.profundidadeAtual,
-            final: respostaJSON.final || false // 🆕 Garante que a flag "final" seja passada
-        };
+            batalha: monstroAleatorio.nome || "Monstro Desconhecido",
+            vitoria: numeroSecaoOrigem,
+            derrota: 320
+        });
     }
+
+    // Retorna a seção principal
+    return {
+        texto: respostaJSON.texto,
+        opcoes: opcoesProcessadas,
+        efeitos: respostaJSON.efeitos || [],
+        emergente: true,
+        id: novoId,
+        origem: numeroSecaoOrigem,
+        modo: respostaJSON.modo,
+        profundidade: this.profundidadeAtual,
+        final: respostaJSON.final || false
+    };
+}
+
  
 
 
@@ -1055,6 +1071,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
