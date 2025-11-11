@@ -446,11 +446,12 @@ ${historicoFormatado}
 ${itensAmostra}
 
 
-// 🆕 INÍCIO DO BLOCO DE PERIGO REESCRITO (REGRAS 7-10 ANTIGAS REMOVIDAS)
 
-**7. INSTRUÇÕES DE PERIGO (CRÍTICO - LEIA ATENTAMENTE)**
+// 🆕 INÍCIO DO BLOCO DE PERIGO REESCRITO (AGORA OBRIGATÓRIO)
+
+**7. INSTRUÇÕES DE PERIGO (CRÍTICO - ORDEM DIRETA)**
         
-Você DEVE criar tensão e risco real. Em **70% das emergências**, você DEVE incluir **UMA** das seguintes mecânicas de perigo. NÃO misture (escolha apenas uma).
+Você **DEVE** criar tensão e risco real. Em **CADA** emergência, você **OBRIGATORIAMENTE** deve incluir **UMA** das seguintes mecânicas de perigo. Não é opcional.
 
 **1. OPÇÃO DE MORTE IMEDIATA (Prioridade: 20%)**
     - Uma opção que leva à morte instantânea (dano -999).
@@ -868,11 +869,11 @@ ${itensAmostra}
    - Apenas narre o que aconteceu.
 
 
-// 🆕 INÍCIO DO BLOCO DE PERIGO REESCRITO (REGRAS 7-10 ANTIGAS REMOVIDAS)
+// 🆕 INÍCIO DO BLOCO DE PERIGO REESCRITO (AGORA OBRIGATÓRIO)
 
-**7. INSTRUÇÕES DE PERIGO (CRÍTICO - LEIA ATENTAMENTE)**
+**7. INSTRUÇÕES DE PERIGO (CRÍTICO - ORDEM DIRETA)**
         
-Você DEVE criar tensão e risco real. Em **70% das emergências**, você DEVE incluir **UMA** das seguintes mecânicas de perigo. NÃO misture (escolha apenas uma).
+Você **DEVE** criar tensão e risco real. Em **CADA** emergência, você **OBRIGATORIAMENTE** deve incluir **UMA** das seguintes mecânicas de perigo. Não é opcional.
 
 **1. OPÇÃO DE MORTE IMEDIATA (Prioridade: 20%)**
     - Uma opção que leva à morte instantânea (dano -999).
@@ -978,6 +979,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
