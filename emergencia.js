@@ -355,7 +355,7 @@ raros: ["necromante", "sombra-antiga", "jaguar", "urso", "tigre", "crocodilo", "
         }
     }
 
-    // 🆕 PROMPT ATUALIZADO (lógica de batalha em OPÇÃO)
+
     construirPrompt(tituloNarrativa, secaoAtual) {
         const historicoFormatado = this.historico.map(h =>
             `Seção ${h.numero}: "${h.texto.substring(0, 100)}..."\n` +
@@ -366,9 +366,7 @@ raros: ["necromante", "sombra-antiga", "jaguar", "urso", "tigre", "crocodilo", "
         const textoSecaoOriginal = secaoAtual.texto || this.historico.at(-1)?.texto || "contexto desconhecido";
         const padroes = this.analisarPadroes();
         
-        // 🆕 ATUALIZADO: Passa o texto da seção para seleção contextual
         const itensAmostra = this.getItensAmostra(textoSecaoOriginal);
-        // 🆕 NOVO: Adiciona lista de monstros
         const monstrosAmostra = this.getMonstrosAmostra();
         
         return `
@@ -447,87 +445,63 @@ ${historicoFormatado}
 6. **ITENS** Se seu texto mencionar encontrar/abrir/pegar algo físico, adicione 1-2 itens nos efeitos.
 ${itensAmostra}
 
-7. **PERIGO E MORTE (OBRIGATÓRIO - 50% DAS EMERGÊNCIAS):**
-   - **FORMATO OBRIGATÓRIO PARA TESTES MORTAIS:**
-     {"teste": "sorte", "dificuldade": 18, "falha_mortal": true}
-   
-   - **REGRAS:**
-     * Dificuldade 18+ = SEMPRE incluir "falha_mortal": true
-     * 50% dos testes DEVEM ter "falha_mortal": true
-     * VARIE atributos: habilidade (30%), sorte (50%), carisma (20%)
-   
-   - **EXEMPLOS VÁLIDOS:**
-     * {"teste": "sorte", "dificuldade": 18, "falha_mortal": true} ← Evitar armadilha
-     * {"teste": "habilidade", "dificuldade": 20, "falha_mortal": true} ← Desarmar mecanismo
-     * {"teste": "carisma", "dificuldade": 16, "falha_mortal": false} ← Negociar
-   
-   - **MORTE DIRETA (sem teste):**
-     * "efeitos": [{"tipo": "energia", "valor": -999}]
-     * Use para: beber veneno, cair em abismo, tocar objeto amaldiçoado
-   
-   - **Dano severo não-mortal:** -15 a -30
 
+// 🆕 INÍCIO DO BLOCO DE PERIGO REESCRITO (REGRAS 7-10 ANTIGAS REMOVIDAS)
 
-8.(80% chance) OPÇÃO QUE LEVA A PERIGO:**
-   - Em 80% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
-   - Esta opção deve ter: "tipo": "perigo_oculto"
-   - NÃO spoile a consequência no texto da opção
-   - A IA vai gerar automaticamente a próxima seção com a revelação do perigo
-   - ❌ ERRADO: "Tocar a ampulheta e enfrentar a Sombra Errante"
-   - ✅ CERTO: "Tocar a ampulheta"
-   - A opção deve ser curiosa/tentadora, mas SEM revelar o perigo
-   
-  9. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
-   - Se o jogador escolheu uma opção "perigo_oculto", ESTA seção DEVE:
-     * Descrever o que aconteceu (ex: "Ao tocar, uma sombra surge!")
-     * **OBRIGATÓRIO:** Incluir opção com "tipo": "iniciar_batalha"
-     * Formato da opção de batalha:
-       {
-         "tipo": "iniciar_batalha",
-         "texto": "Enfrentar a criatura",
-         "monstro": "[ID_MONSTRO_VALIDO]"
-       }
-     * Incluir outras opções (fugir, recuar, etc.)
-   - **COERÊNCIA FÍSICA:** Criatura deve caber no ambiente (não coloque coruja saindo de gaveta)
-   - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
-   ${monstrosAmostra}
-   - Se inventar um monstro, o sistema VAI QUEBRAR
-  - NUNCA crie nomes novos, SEMPRE escolha da lista
-   
-10. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 20% de chance)**
-   - **VARIE AS OPÇÕES:** Você DEVE ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
-   - **INCLUA TESTES:** Pelo menos 30% do tempo, UMA das opções deve ser um "teste" de atributo.
-   - Atributos válidos: 
-   **ATRIBUTOS VÁLIDOS (use TODOS, não só habilidade):**
-   - **"habilidade"** → Ações físicas OU mentais que exigem perícia (35% dos testes)
-     * Físico: Forçar porta, escalar, equilibrar, desarmar armadilha
-     * Mental: Decifrar código, lembrar informação, resolver enigma
-   
-   - **"sorte"** → Evitar consequências nefastas ou perigos aleatórios (55% dos testes)
-     * Evitar pedra caindo, não pisar em armadilha, escapar de desabamento
-     * **CONTEXTOS IDEAIS:** Ambientes instáveis, escuridão, estruturas antigas
-   
-   - **"carisma"** → Interações sociais, persuasão, negociação (10% dos testes)
-     * Convencer alguém, negociar, acalmar criatura, intimidar, mentir
-     * **CONTEXTOS IDEAIS:** Presença de NPCs, criaturas inteligentes, animais
+**7. INSTRUÇÕES DE PERIGO (CRÍTICO - LEIA ATENTAMENTE)**
+        
+Você DEVE criar tensão e risco real. Em **70% das emergências**, você DEVE incluir **UMA** das seguintes mecânicas de perigo. NÃO misture (escolha apenas uma).
 
-     **EXEMPLOS PRÁTICOS POR CONTEXTO:**
-   - Corredor escuro → "Avançar sem tropeçar (Teste de Sorte)"
-   - Teto rachado → "Evitar escombros caindo (Teste de Sorte)"
-   - Criatura hostil → "Acalmar a criatura (Teste de Carisma)"
-   - Porta trancada → "Forçar a porta (Teste de Habilidade)"
+**1. OPÇÃO DE MORTE IMEDIATA (Prioridade: 20%)**
+    - Uma opção que leva à morte instantânea (dano -999).
+    - Ex: "Beber o líquido estranho", "Pular no abismo", "Tocar o artefato amaldiçoado".
+    - O texto da opção deve ser tolo ou curioso, mas não revelar a morte (ex: "Beber da fonte" > "Beber o veneno").
+    - **Formato:**
+      {
+        "texto": "Beber o líquido na taça", 
+        "tipo": "aprofundar", 
+        "efeitos": [{"tipo": "energia", "valor": -999}],
+        "secao": 320 // Manda direto para a seção de morte
+      }
+    - **NÃO use "falha_mortal" aqui.** Apenas o efeito de energia.
 
-   - Dificuldades: 10 (fácil), 15 (médio), 20 (difícil)
-   - Formato:
-     {
-       "texto": "Forçar a porta (Teste de Habilidade)",
-       "tipo": "aprofundar",
-       "teste": "habilidade",
-       "dificuldade": 15,
-       "secao": "[ID_PROXIMA_SECAO]"
-     }
-   - **CRÍTICO:** O texto da opção deve sugerir o teste (ex: "Tentar decifrar", "Forçar a porta", "evitar escombros caindo").
-   - Exemplos: Forçar = habilidade, Persuadir = carisma, Evitar = sorte
+**2. OPÇÃO DE TESTE MORTAL (Prioridade: 40%)**
+    - Uma opção que exige um teste de atributo onde a falha é a morte.
+    - **Dificuldade DEVE ser 18+** (use 18, 20, 22).
+    - **DEVE incluir "falha_mortal": true**.
+    - **Atributos:** VARIE (50% sorte, 40% habilidade, 10% carisma).
+    - Texto da opção deve indicar o risco (ex: "Saltar sobre o abismo (Teste de Sorte)", "Tentar desarmar a armadilha (Teste de Habilidade)").
+    - **Formato:**
+      {
+        "texto": "Saltar sobre o abismo (Teste de Sorte)", 
+        "tipo": "aprofundar", 
+        "teste": "sorte", 
+        "dificuldade": 20, 
+        "falha_mortal": true, 
+        "secao": "[ID_SUCESSO]"
+      }
+
+**3. OPÇÃO DE PERIGO OCULTO (Batalha) (Prioridade: 30%)**
+    - Uma opção neutra que leva a uma batalha.
+    - Ex: "Abrir o baú", "Tocar o orbe".
+    - **Formato:** {"texto": "Tocar o orbe", "tipo": "perigo_oculto"}
+    - (O prompt de continuação lidará com a revelação da batalha).
+    - Use os monstros da lista:
+${monstrosAmostra}
+
+**4. OPÇÃO DE TESTE NORMAL (Não-Mortal) (Prioridade: 10%)**
+    - Apenas se nenhum dos acima for usado e você ainda quiser um teste.
+    - Dificuldade 10-15.
+    - **Formato:**
+      {
+        "texto": "Decifrar o enigma (Teste de Habilidade)", 
+        "tipo": "aprofundar", 
+        "teste": "habilidade", 
+        "dificuldade": 15, 
+        "secao": "[ID_SUCESSO]"
+      }
+
+// 🆕 FIM DO BLOCO DE PERIGO REESCRITO
 
 
 **FORMATO (JSON PURO - Modo Normal):**
@@ -546,36 +520,18 @@ ${itensAmostra}
   ]
 }
 
-**FORMATO (JSON PURO - Com Armadilha de Perigo - 30%):**
-{
-  "modo": "expansao_natural",
-  "texto": "[Texto normal, ex: 'Você vê uma ampulheta brilhante sobre a mesa...']",
-  "opcoes": [
-    {
-      "tipo": "perigo_oculto",
-      "texto": "[Opção NEUTRA sem spoiler, ex: 'Tocar a ampulheta']"
-    },
-    {"texto": "[Examinar de longe]", "tipo": "neutra"},
-    {"texto": "[Sair da sala]", "tipo": "recuar"}
-  ],
-  "efeitos": []
-}
-// 🆕 FIM DA ADIÇÃO
-
-**LEMBRE-SE:** Expansão natural > Detalhe perturbador > Evento menor (em ordem de preferência)
-
-**FORMATO (JSON com Teste):**
+**FORMATO (JSON com Teste Mortal):**
 {
   "modo": "expansao_natural",
   "texto": "[Texto descrevendo desafio]",
   "opcoes": [
     {
-      "texto": "Saltar sobre o abismo (Teste de Sorte)",
+      "texto": "Escalar o muro instável (Teste de Habilidade)",
       "tipo": "aprofundar",
-      "teste": "sorte",
+      "teste": "habilidade",
       "dificuldade": 18,
-      "falha_mortal": true, // <-- INCLUIR ISSO QUANDO DIF 18+
-      "secao": "[ID]"
+      "falha_mortal": true, 
+      "secao": "[ID_SUCESSO]"
     },
     {"texto": "[Outra opção]", "tipo": "neutra", "secao": "[ID]"}
   ],
@@ -821,7 +777,7 @@ else {
         };
     }
 
-    // 🆕 PROMPT DE CONTINUAÇÃO ATUALIZADO (sem resumir)
+
     construirPromptContinuacao(secaoPai, opcao, resultadoTeste = null) {
         const textoPrimeiraEmergencia = this.secoesEmergentes.get('emergente_IA_1')?.texto.substring(0, 100) || secaoPai.texto.substring(0,100);
         const padroes = this.analisarPadroes();
@@ -830,8 +786,7 @@ else {
             ? `\n**ESCOLHAS NA EMERGÊNCIA:** ${this.escolhasEmergentes.join(' → ')}\n` 
             : '';
 
-        // 🔴 Em emergencia.js, SUBSTITUA a variável 'alertaTeste' no método construirPromptContinuacao:
-
+        // 🆕 LÓGICA DE ALERTA DE TESTE ATUALIZADA
         const alertaTeste = resultadoTeste ? `
 **🎲 RESULTADO DO TESTE:**
 O jogador fez um teste de ${resultadoTeste.atributo} (dificuldade ${resultadoTeste.dificuldade}).
@@ -840,12 +795,13 @@ O jogador fez um teste de ${resultadoTeste.atributo} (dificuldade ${resultadoTes
 ${resultadoTeste.sucesso 
   ? '✅ Você DEVE descrever o SUCESSO da ação. O jogador conseguiu realizar o que tentou.'
   : `❌ Descreva a FALHA. O jogador já tomou dano automaticamente.
-     **NÃO adicione** efeitos de energia por esta falha.
-     Apenas narre a consequência da falha.`}
+     **CRÍTICO: NÃO DÊ ITENS NESTA SEÇÃO DE FALHA.**
+     O jogador falhou. Não o recompense com itens. Apenas narre a falha.
+     **NÃO adicione** efeitos de energia por esta falha.`}
 ` : '';
 
-const alertaMorte = this.profundidadeAtual >= 2 ? 
-  `\n**☠️ Profundidade ${this.profundidadeAtual}: Dano -10 a -999 apropriado**\n` : '';
+        const alertaMorte = this.profundidadeAtual >= 2 ? 
+          `\n**☠️ Profundidade ${this.profundidadeAtual}: Dano -10 a -999 apropriado**\n` : '';
         
         const alertaPerigo = opcao.tipo === 'perigo_oculto' ? `
 **⚠️ ATENÇÃO CRÍTICA: O jogador escolheu uma opção de "perigo_oculto"!**
@@ -857,7 +813,6 @@ const alertaMorte = this.profundidadeAtual >= 2 ?
 ` : '';
 
 
-        // 🆕 ATUALIZADO: Itens e monstros contextuais também na continuação
         const itensAmostra = this.getItensAmostra(secaoPai.texto);
         const monstrosAmostra = this.getMonstrosAmostra();
 
@@ -903,79 +858,73 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
    - Se profundidade < 3: normal (aprofundar/neutra/recuar)
    - Se profundidade >= 3: INCLUIR opção óbvia de "continuar/sair"
 
-5. **ITENS** Se seu texto mencionar encontrar/abrir/pegar algo físico, adicione 1-2 itens nos efeitos.
+5. **ITENS** - Se seu texto mencionar encontrar/abrir/pegar algo físico, adicione 1-2 itens nos efeitos.
+   - **EXCEÇÃO:** Se ${"`alertaTeste`"} indicar FALHA, **NÃO DÊ ITENS**.
 ${itensAmostra}
 
 6. **FALHA EM TESTE = DANO AUTOMÁTICO**
-   - Se alertaTeste mostra FALHA, o sistema JÁ aplicou dano.
+   - Se ${"`alertaTeste`"} mostra FALHA, o sistema JÁ aplicou dano.
    - **NÃO** adicione efeitos de energia por esta falha no seu JSON.
    - Apenas narre o que aconteceu.
 
-   7. **TESTES MORTAIS (CRÍTICO):**
-   - Se criar teste com dificuldade 18+, DEVE incluir "falha_mortal": true
-   - Formato: {"teste": "sorte", "dificuldade": 18, "falha_mortal": true}
-   - 40% dos testes devem ser mortais
-   - Morte direta: {"tipo": "energia", "valor": -999} nos efeitos
 
+// 🆕 INÍCIO DO BLOCO DE PERIGO REESCRITO (REGRAS 7-10 ANTIGAS REMOVIDAS)
 
-8. (80% chance) OPÇÃO QUE LEVA A PERIGO:**
-   - Em 80% dos casos, crie UMA opção neutra/curiosa (ex: "Tocar o objeto", "Abrir a gaveta")
-   - Esta opção deve ter: "tipo": "perigo_oculto"
-   - NÃO spoile a consequência no texto da opção
-   - A IA vai gerar automaticamente a próxima seção com a revelação do perigo
-   - ❌ ERRADO: "Tocar a ampulheta e enfrentar a Sombra Errante"
-   - ✅ CERTO: "Tocar a ampulheta"
-   - A opção deve ser curiosa/tentadora, mas SEM revelar o perigo
-   
-  9. **(APENAS SE SEÇÃO ANTERIOR TINHA "perigo_oculto") REVELAR BATALHA:**
-   - Se o jogador escolheu uma opção "perigo_oculto", ESTA seção DEVE:
-     * Descrever o que aconteceu (ex: "Ao tocar, uma sombra surge!")
-     * **OBRIGATÓRIO:** Incluir opção com "tipo": "iniciar_batalha"
-     * Formato da opção de batalha:
-       {
-         "tipo": "iniciar_batalha",
-         "texto": "Enfrentar a criatura",
-         "monstro": "[ID_MONSTRO_VALIDO]"
-       }
-     * Incluir outras opções (fugir, recuar, etc.)
-   - **COERÊNCIA FÍSICA:** Criatura deve caber no ambiente (não coloque coruja saindo de gaveta)
-   - **CRÍTICO:** Use APENAS IDs desta lista. NÃO invente monstros.
+**7. INSTRUÇÕES DE PERIGO (CRÍTICO - LEIA ATENTAMENTE)**
+        
+Você DEVE criar tensão e risco real. Em **70% das emergências**, você DEVE incluir **UMA** das seguintes mecânicas de perigo. NÃO misture (escolha apenas uma).
+
+**1. OPÇÃO DE MORTE IMEDIATA (Prioridade: 20%)**
+    - Uma opção que leva à morte instantânea (dano -999).
+    - Ex: "Beber o líquido estranho", "Pular no abismo", "Tocar o artefato amaldiçoado".
+    - O texto da opção deve ser tolo ou curioso, mas não revelar a morte (ex: "Beber da fonte" > "Beber o veneno").
+    - **Formato:**
+      {
+        "texto": "Beber o líquido na taça", 
+        "tipo": "aprofundar", 
+        "efeitos": [{"tipo": "energia", "valor": -999}],
+        "secao": 320 // Manda direto para a seção de morte
+      }
+    - **NÃO use "falha_mortal" aqui.** Apenas o efeito de energia.
+
+**2. OPÇÃO DE TESTE MORTAL (Prioridade: 40%)**
+    - Uma opção que exige um teste de atributo onde a falha é a morte.
+    - **Dificuldade DEVE ser 18+** (use 18, 20, 22).
+    - **DEVE incluir "falha_mortal": true**.
+    - **Atributos:** VARIE (50% sorte, 40% habilidade, 10% carisma).
+    - Texto da opção deve indicar o risco (ex: "Saltar sobre o abismo (Teste de Sorte)", "Tentar desarmar a armadilha (Teste de Habilidade)").
+    - **Formato:**
+      {
+        "texto": "Saltar sobre o abismo (Teste de Sorte)", 
+        "tipo": "aprofundar", 
+        "teste": "sorte", 
+        "dificuldade": 20, 
+        "falha_mortal": true, 
+        "secao": "[ID_SUCESSO]"
+      }
+
+**3. OPÇÃO DE PERIGO OCULTO (Batalha) (Prioridade: 30%)**
+    - Uma opção neutra que leva a uma batalha.
+    - Ex: "Abrir o baú", "Tocar o orbe".
+    - **Formato:** {"texto": "Tocar o orbe", "tipo": "perigo_oculto"}
+    - (O prompt de continuação lidará com a revelação da batalha).
+    - Use os monstros da lista:
 ${monstrosAmostra}
 
-10. **(NOVO) TESTES DE ATRIBUTOS (Prioridade: 10% de chance)**
-   - **VARIE AS OPÇÕES:** Você DEVE ativamente misturar os tipos de opções. Não crie *apenas* "perigo_oculto".
-   - **INCLUA TESTES:** Pelo menos 30% do tempo, UMA das opções deve ser um "teste" de atributo.
-   - Atributos válidos: 
-   **ATRIBUTOS VÁLIDOS (use TODOS, não só habilidade):**
-   - **"habilidade"** → Ações físicas OU mentais que exigem perícia (35% dos testes)
-     * Físico: Forçar porta, escalar, equilibrar, desarmar armadilha
-     * Mental: Decifrar código, lembrar informação, resolver enigma
-   
-   - **"sorte"** → Evitar consequências nefastas ou perigos aleatórios (55% dos testes)
-     * Evitar pedra caindo, não pisar em armadilha, escapar de desabamento
-     * **CONTEXTOS IDEAIS:** Ambientes instáveis, escuridão, estruturas antigas
-   
-   - **"carisma"** → Interações sociais, persuasão, negociação (10% dos testes)
-     * Convencer alguém, negociar, acalmar criatura, intimidar, mentir
-     * **CONTEXTOS IDEAIS:** Presença de NPCs, criaturas inteligentes, animais
+**4. OPÇÃO DE TESTE NORMAL (Não-Mortal) (Prioridade: 10%)**
+    - Apenas se nenhum dos acima for usado e você ainda quiser um teste.
+    - Dificuldade 10-15.
+    - **Formato:**
+      {
+        "texto": "Decifrar o enigma (Teste de Habilidade)", 
+        "tipo": "aprofundar", 
+        "teste": "habilidade", 
+        "dificuldade": 15, 
+        "secao": "[ID_SUCESSO]"
+      }
 
-     **EXEMPLOS PRÁTICOS POR CONTEXTO:**
-   - Corredor escuro → "Avançar sem tropeçar (Teste de Sorte)"
-   - Teto rachado → "Evitar escombros caindo (Teste de Sorte)"
-   - Criatura hostil → "Acalmar a criatura (Teste de Carisma)"
-   - Porta trancada → "Forçar a porta (Teste de Habilidade)"
+// 🆕 FIM DO BLOCO DE PERIGO REESCRITO
 
-   - Dificuldades: 10 (fácil), 15 (médio), 20 (difícil)
-   - Formato:
-     {
-       "texto": "Forçar a porta (Teste de Habilidade)",
-       "tipo": "aprofundar",
-       "teste": "habilidade",
-       "dificuldade": 15,
-       "secao": "[ID_PROXIMA_SECAO]"
-     }
-   - **CRÍTICO:** O texto da opção deve sugerir o teste (ex: "Tentar decifrar", "Forçar a porta").
-   - Exemplos: Forçar = habilidade, Persuadir = carisma, Evitar = sorte
 
 **FORMATO (JSON PURO - Modo Normal):**
 {
@@ -991,33 +940,19 @@ ${monstrosAmostra}
   ]
 }
 
-**FORMATO (JSON PURO - Com Armadilha de Perigo - 30%):**
-{
-  "modo": "expansao_natural",
-  "texto": "[Texto normal, ex: 'Você vê uma ampulheta brilhante sobre a mesa...']",
-  "opcoes": [
-    {
-      "tipo": "perigo_oculto",
-      "texto": "[Opção NEUTRA sem spoiler, ex: 'Tocar a ampulheta']"
-    },
-    {"texto": "[Examinar de longe]", "tipo": "neutra"},
-    {"texto": "[Sair da sala]", "tipo": "recuar"}
-  ],
-  "efeitos": []
-}
 
-**FORMATO (JSON com Teste):**
+**FORMATO (JSON com Teste Mortal):**
 {
   "modo": "expansao_natural",
   "texto": "[Texto descrevendo desafio]",
   "opcoes": [
     {
-      "texto": "Saltar sobre o abismo (Teste de Sorte)",
+      "texto": "Escalar o muro instável (Teste de Habilidade)",
       "tipo": "aprofundar",
-      "teste": "sorte",
+      "teste": "habilidade",
       "dificuldade": 18,
-      "falha_mortal": true, // <-- INCLUIR ISSO QUANDO DIF 18+
-      "secao": "[ID]"
+      "falha_mortal": true, 
+      "secao": "[ID_SUCESSO]"
     },
     {"texto": "[Outra opção]", "tipo": "neutra", "secao": "[ID]"}
   ],
@@ -1043,6 +978,7 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
