@@ -209,6 +209,18 @@ class SistemaNarrativas {
 
     async mostrarSecao(numeroSecao, secaoDeOrigem = null) {
     console.log(`[NARRATIVAS] mostrarSecao chamado com: ${numeroSecao}`);
+
+        // 🆕 CHECAGEM DE MORTE
+    // Se o jogador está com 0 ou menos de energia, e a seção
+    // que estamos tentando carregar NÃO é a seção de morte (320)
+    // ou um buffer de retorno (99999), force a seção de morte.
+    if (this.playerData && this.playerData.energy && this.playerData.energy.total <= 0) {
+        if (numeroSecao != 320 && numeroSecao != 99999) {
+            console.log(`[MORTE] Energia <= 0 detectada. Forçando seção 320.`);
+            numeroSecao = 320; 
+            secaoDeOrigem = null; 
+        }
+    }
     
     let secao;
 
@@ -646,22 +658,32 @@ class SistemaNarrativas {
         }
     }
 
-    async modificarEnergia(valor) {
-        if (!this.userId) return;
-        const playerDocRef = doc(db, "players", this.userId);
-        const docSnap = await getDoc(playerDocRef);
-        if (docSnap.exists()) {
-            const playerData = docSnap.data();
-            const energiaAtual = playerData.energy?.total || 20;
-            const energiaMaxima = playerData.energy?.initial || 20;
-            const novaEnergia = Math.max(0, Math.min(energiaMaxima, energiaAtual + valor));
-            await updateDoc(playerDocRef, {
-                "energy.total": novaEnergia
-            });
-            this.playerData.energy.total = novaEnergia;
-            console.log('Energia modificada:', valor, 'Nova energia:', novaEnergia);
+   async modificarEnergia(valor) {
+    if (!this.userId) return;
+    const playerDocRef = doc(db, "players", this.userId);
+    const docSnap = await getDoc(playerDocRef);
+    if (docSnap.exists()) {
+        const playerData = docSnap.data();
+        const energiaAtual = playerData.energy?.total || 20;
+        const energiaMaxima = playerData.energy?.initial || 20;
+        
+        // LÓGICA DE MORTE CORRIGIDA
+        let novaEnergia;
+        if (valor === -999) {
+            novaEnergia = -999; // Permite morte instantânea
+        } else {
+            const calculada = energiaAtual + valor;
+            // Clampa o dano normal em 0, e a cura no máximo.
+            novaEnergia = Math.max(0, Math.min(energiaMaxima, calculada));
         }
+
+        await updateDoc(playerDocRef, {
+            "energy.total": novaEnergia
+        });
+        this.playerData.energy.total = novaEnergia;
+        console.log('Energia modificada:', valor, 'Nova energia:', novaEnergia);
     }
+}
 
     async consumirItem(itemId) {
         if (!this.userId) return;
@@ -773,18 +795,18 @@ class SistemaNarrativas {
         // Fluxo normal (não-emergente)
         this.mostrarSecao(this.testeAtual.secaoSucesso);
     } else {
-    // ðŸ†• VERIFICA SE É TESTE MORTAL
-    if (this.testeAtual.falha_mortal) {
-        console.log('[TESTE] ☠️ FALHA MORTAL');
-        await this.modificarEnergia(-999);
-        this.mostrarSecao(this.secaoAtual);
-        return;
-    }
-    
-       // 🆕 APLICA DANO VARIÁVEL (10-25)
-    const danoAleatorio = -(Math.floor(Math.random() * 16) + 10);
-    console.log(`[TESTE] Dano por falha: ${danoAleatorio}`);
-    await this.modificarEnergia(danoAleatorio);
+        // ☠️ VERIFICA SE É TESTE MORTAL (LÓGICA CORRIGIDA)
+        if (this.testeAtual.falha_mortal) {
+            console.log('[TESTE] ☠️ FALHA MORTAL');
+            await this.modificarEnergia(-999); // Seta energia para -999
+            this.mostrarSecao(320); // VAI DIRETAMENTE PARA A SEÇÃO DE MORTE
+            return; // PARA A EXECUÇÃO AQUI
+        }
+        
+           // 🆕 APLICA DANO VARIÁVEL (10-25)
+        const danoAleatorio = -(Math.floor(Math.random() * 16) + 10);
+        console.log(`[TESTE] Dano por falha: ${danoAleatorio}`);
+        await this.modificarEnergia(danoAleatorio);
 
 
     
@@ -1279,5 +1301,6 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
