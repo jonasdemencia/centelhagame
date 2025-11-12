@@ -623,6 +623,7 @@ if ((response.status === 503 || response.status === 429) && tentativa < maxTenta
     }
 
 
+
     processarRespostaIA(respostaJSON, secaoDeOrigem, novoId) {
         const numeroSecaoOrigem = this.secaoOrigemEmergencia;
 
@@ -636,7 +637,8 @@ if ((response.status === 503 || response.status === 429) && tentativa < maxTenta
                     secao: this.gerarIdEmergente(),
                     tipo: 'aprofundar', // Trata como "aprofundar" para o fluxo
                     emergente: true,
-                    morte_imediata: true // Propaga a flag
+                    morte_imediata: true, // Propaga a flag
+                    efeitos: op.efeitos || [] // 🆕 GARANTE PROPAGAÇÃO DE EFEITOS
                 };
             }
 
@@ -646,7 +648,8 @@ if ((response.status === 503 || response.status === 429) && tentativa < maxTenta
                     texto: op.texto,
                     secao: this.gerarIdEmergente(),
                     tipo: 'perigo_oculto',
-                    emergente: true
+                    emergente: true,
+                    efeitos: op.efeitos || [] // 🆕 GARANTE PROPAGAÇÃO DE EFEITOS
                 };
             }
 
@@ -657,7 +660,8 @@ if ((response.status === 503 || response.status === 429) && tentativa < maxTenta
                     batalha: op.monstro,
                     vitoria: numeroSecaoOrigem,
                     derrota: 320,
-                    emergente: false
+                    emergente: false,
+                    efeitos: op.efeitos || [] // 🆕 GARANTE PROPAGAÇÃO DE EFEITOS
                 };
             }
             
@@ -667,7 +671,8 @@ if ((response.status === 503 || response.status === 429) && tentativa < maxTenta
                     texto: op.texto,
                     secao: numeroSecaoOrigem,
                     emergente: false,
-                    tipo: 'recuar'
+                    tipo: 'recuar',
+                    efeitos: op.efeitos || [] // 🆕 GARANTE PROPAGAÇÃO DE EFEITOS
                 };
             } 
             
@@ -679,12 +684,10 @@ if ((response.status === 503 || response.status === 429) && tentativa < maxTenta
                 secao: this.gerarIdEmergente(),
                 tipo: op.tipo,
                 emergente: true,
-
-                // 🆕 CORREÇÃO PARA TESTES DE ATRIBUTO
                 teste: op.teste,
                 dificuldade: op.dificuldade,
-                falha_mortal: op.falha_mortal, // 🆕 ADICIONE AQUI
-                
+                falha_mortal: op.falha_mortal,
+                efeitos: op.efeitos || [] // 🆕 GARANTE PROPAGAÇÃO DE EFEITOS
             };
         }            
     });
@@ -700,9 +703,10 @@ if ((response.status === 503 || response.status === 429) && tentativa < maxTenta
             origem: numeroSecaoOrigem,
             modo: respostaJSON.modo,
             profundidade: this.profundidadeAtual,
-            final: respostaJSON.final || false // 🆕 Garante que a flag "final" seja passada
+            final: respostaJSON.final || false 
         };
     }
+
 
 
     async processarOpcaoEmergente(opcao, secaoPai, resultadoTeste = null) {
@@ -997,8 +1001,25 @@ ${monstrosAmostra}
         "secao": "[ID_SUCESSO]"
       }
 
-// 🆕 FIM DO BLOCO DE PERIGO REESCRITO
-
+**10. MODIFICAÇÃO PERSISTENTE**
+   - **OBJETIVO:** Plantar uma semente para uma mudança permanente no mundo.
+   - **COMO:** você criará uma opção que dispara uma mudança no "esqueleto" da narrativa.
+   - **GATILHO:** A opção deve conter um efeito "gerar_patch_persistente".
+   - **CRÍTICO - `secao_alvo`:** A flag DEVE ter um `secao_alvo` que seja um número de uma seção que o jogador JÁ VISITOU (baseado no `HISTÓRICO` ou `CONTEXTO`).
+   - **NÃO** use a seção atual. Use uma seção anterior (ex: 1, 2, 4).
+   - **Formato:**
+     {
+       "texto": "Puxar a alavanca (um estrondo ecoa ao longe)",
+       "tipo": "aprofundar", 
+       "secao": "[ID_DA_PROXIMA_SECAO_EMERGENTE]",
+       "efeitos": [
+         {
+           "tipo": "gerar_patch_persistente",
+           "flag": "ALAVANCA_PORAO_PUXADA",
+           "secao_alvo": 2 // <-- NÚMERO DE UMA SEÇÃO JÁ VISITADA
+         }
+       ]
+     }
 
 **FORMATO (JSON PURO - Modo Normal):**
 {
@@ -1037,7 +1058,99 @@ ${monstrosAmostra}
 `;
     }
     
+// =======================================================================
+    // === INÍCIO DO NOVO MÉTODO (gerarPatchPersistente) ===
+    // =======================================================================
+    async gerarPatchPersistente(secaoOriginal, flagNome, historicoJogador) {
+        console.log(`[PATCH] Gerando patch para Seção ${secaoOriginal.id} acionado por: ${flagNome}`);
 
+        const prompt = `
+Você é um 'Mestre de Jogo' que implementa mudanças permanentes no mundo (Backtracking Dinâmico).
+
+**MISSÃO:**
+O jogador ativou uma flag ("${flagNome}"). Agora, você deve criar um "patch" de modificação para uma seção do esqueleto que ele irá revisitar. A mudança deve ser uma consequência LÓGICA da flag.
+
+**FLAG ATIVADA:**
+"${flagNome}"
+
+**HISTÓRICO DO JOGADOR (Contexto):**
+${historicoJogador}
+
+**DADOS DA SEÇÃO ORIGINAL (ID: ${secaoOriginal.id}) QUE SERÁ MODIFICADA:**
+* **Texto Original:** "${secaoOriginal.texto}"
+* **Opções Originais:**
+${secaoOriginal.opcoes.map((op, i) => `    - [${i}] "${op.texto}"`).join('\n')}
+
+**REGRAS DE PATCH (CRÍTICO):**
+
+1.  **PRESERVAR O ESQUELETO:** O jogador DEVE poder continuar a história original. NÃO remova opções que quebrem o fluxo principal.
+2.  **ADICIONAR, NÃO SUBSTITUIR:** Você só pode ADICIONAR 1 ou 2 novas opções.
+3.  **SUBSEÇÕES (NOVAS SEÇÕES):**
+    * As "novas_opcoes" devem apontar para IDs de "novas_secoes" (ex: "persistente_IA_1").
+    * Você deve criar de 1 a 3 "novas_secoes" no total.
+    * Cada "nova_secao" é uma expansão livre (texto, opções, itens, monstros).
+    * **OBRIGATÓRIO:** Cada "nova_secao" DEVE ter pelo menos uma opção para "Retornar" (ex: `{"texto": "Retornar ao corredor", "secao": ${secaoOriginal.id}}`), permitindo ao jogador sair da subseção.
+4.  **MONSTROS E ITENS:** Você pode usar as listas abaixo para adicionar batalhas ou itens nas novas seções.
+
+${this.getItensAmostra(secaoOriginal.texto)}
+${this.getMonstrosAmostra()}
+
+**FORMATO DA RESPOSTA (JSON PURO - APENAS O PATCH):**
+
+{
+  "novas_opcoes": [
+    {
+      "texto": "[Texto da NOVA opção (ex: Investigar a porta agora aberta)]",
+      "secao": "persistente_IA_1" 
+    }
+  ],
+  "novas_secoes": {
+    "persistente_IA_1": {
+      "texto": "[Texto da nova subseção, consequência da flag]",
+      "batalha": "servo-pedra",
+      "vitoria": "persistente_IA_2",
+      "derrota": 320
+    },
+    "persistente_IA_2": {
+      "texto": "[Texto após a batalha...]",
+      "efeitos": [{"tipo": "item", "item": "adaga"}],
+      "opcoes": [
+        {"texto": "Examinar o baú que o monstro guardava", "secao": "persistente_IA_3"},
+        {"texto": "Retornar ao corredor principal", "secao": ${secaoOriginal.id}} 
+      ]
+    },
+    "persistente_IA_3": {
+       "texto": "...",
+       "opcoes": [
+         {"texto": "Retornar ao corredor principal", "secao": ${secaoOriginal.id}}
+       ]
+    }
+  }
+}
+`;
+
+        try {
+            // Usa o mesmo oráculo para gerar o patch
+            const patchJSON = await this.chamarOraculoNarrativo(prompt);
+            
+            // Validação básica do patch
+            if (!patchJSON.novas_opcoes || !patchJSON.novas_secoes) {
+                throw new Error("IA retornou um patch mal formatado.");
+            }
+
+            console.log(`[PATCH] Patch gerado com sucesso para Seção ${secaoOriginal.id}`);
+            return patchJSON;
+
+        } catch (error) {
+            console.error(`[PATCH] Falha ao gerar patch:`, error);
+            return null; // Retorna nulo em caso de falha
+        }
+    }
+    // =======================================================================
+    // === FIM DO NOVO MÉTODO ===
+    // =======================================================================
+
+    
     gerarIdEmergente() {
         return `emergente_IA_${++this.contadorSecoes}`;
     }
@@ -1052,3 +1165,4 @@ ${monstrosAmostra}
         this.profundidadeAtual = 0;
     }
 }
+
