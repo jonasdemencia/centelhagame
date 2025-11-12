@@ -1007,22 +1007,20 @@ ${monstrosAmostra}
 - **GATILHO:** A opção deve conter um efeito "gerar_patch_persistente".
 - **CRÍTICO - secao_alvo:** A flag DEVE ter um secao_alvo que seja um número de uma seção que o jogador JÁ VISITOU (baseado no HISTÓRICO ou CONTEXTO).
 - **NÃO** use a seção atual. Use uma seção anterior (ex: 1, 2, 4).
-- **Formato:**
+   - **Formato:**
+     {
+       \\"texto\\": \\"Puxar a alavanca (um estrondo ecoa ao longe)\\",
+       \\"tipo\\": \\"aprofundar\\", 
+       \\"secao\\": \\"[ID_DA_PROXIMA_SECAO_EMERGENTE]\\",
+       \\"efeitos\\": [
+         {
+           \\"tipo\\": \\"gerar_patch_persistente\\",
+           \\"flag\\": \\"ALAVANCA_PORAO_PUXADA\\",
+           \\"secao_alvo\\": 2
+         }
+       ]
+     }
 
-\`\`\`json
-{
-  "texto": "Puxar a alavanca (um estrondo ecoa ao longe)",
-  "tipo": "aprofundar", 
-  "secao": "[ID_DA_PROXIMA_SECAO_EMERGENTE]",
-  "efeitos": [
-    {
-      "tipo": "gerar_patch_persistente",
-      "flag": "ALAVANCA_PORAO_PUXADA",
-      "secao_alvo": 2
-    }
-  ]
-}
-\`\`\`
 
 
 **FORMATO (JSON PURO - Modo Normal):**
@@ -1169,5 +1167,6 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
