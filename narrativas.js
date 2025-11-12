@@ -1226,75 +1226,72 @@ if (opcao.teste) {
         }
 
         // 4c. VERIFICAR SE A OPÇÃO GERA UM PATCH PERSISTENTE
-        console.log('[PATCH] 🔍 Verificando opção:', opcao); // 🆕 LOG ADICIONAL
+console.log('[PATCH] 🔍 Verificando opção:', opcao);
+
 if (opcao.efeitos && opcao.efeitos.length > 0) {
     console.log('[PATCH] Verificando efeitos:', opcao.efeitos);
     
-    const efeitoPatch = opcao.efeitos.find(e => e.tipo === 'gerar_patch_persistente');
+    const efeitoPatch = opcao.efeitos.find(e => {
+        console.log('[PATCH] Tipo do efeito:', e.tipo); // 🆕 LOG CRÍTICO
+        return e.tipo === 'gerar_patch_persistente';
+    });
     
     if (efeitoPatch) {
-        console.log('[PATCH] Efeito de patch encontrado:', efeitoPatch);
+        console.log('[PATCH] ✅ Efeito de patch encontrado:', efeitoPatch);
         const secaoAlvoNum = efeitoPatch.secao_alvo;
         const flagNome = efeitoPatch.flag;
         
-        // 1. Verifica se a flag já existe (para não gerar patch duas vezes)
+        // Verifica se já foi processado
         if (!this.playerData.worldState[flagNome]) {
-            console.log(`[PATCH] Acionando geração de patch para Seção ${secaoAlvoNum} via flag ${flagNome}`);
+            console.log(`[PATCH] 🚀 Gerando patch para Seção ${secaoAlvoNum} com flag ${flagNome}`);
             
-            // 2. Busca a seção original - CORREÇÃO IMPORTANTE
             const secaoOriginal = this.narrativaAtual.secoes[secaoAlvoNum];
             if (!secaoOriginal) {
-                console.error(`[PATCH] Seção ${secaoAlvoNum} não encontrada na narrativa atual`);
-                return;
-            }
-            
-            secaoOriginal.id = secaoAlvoNum; // Garante que a IA saiba o ID
-            
-            // 3. Pede o patch à IA (emergencia.js)
-            const historicoFormatado = this.sistemaEmergencia.historico
-                .map(h => `Seção ${h.numero}: ${h.texto.substring(0, 50)}...`)
-                .join('\n');
-
-            console.log(`[PATCH] Chamando gerarPatchPersistente...`);
-            const patch = await this.sistemaEmergencia.gerarPatchPersistente(
-                secaoOriginal, 
-                flagNome, 
-                historicoFormatado
-            );
-            
-            if (patch) {
-                console.log(`[PATCH] Patch gerado com sucesso:`, patch);
-                
-                // 4. Salva a flag e o patch no Firebase
-                const playerDocRef = doc(db, "players", this.userId);
-                
-                // Usando dot-notation para atualizar campos aninhados
-                const updates = {};
-                updates[`worldState.${flagNome}`] = true;
-                updates[`patches.${secaoAlvoNum}`] = patch;
-                
-                await updateDoc(playerDocRef, updates);
-
-                // 5. Atualiza o cache local
-                this.playerData.worldState[flagNome] = true;
-                this.playerData.patches[secaoAlvoNum] = patch;
-                console.log(`[PATCH] Flag e Patch salvos no Firebase.`);
-                
-                // 6. Aplica o patch IMEDIATAMENTE para a sessão atual
-                console.log(`[PATCH] Aplicando patch na sessão atual...`);
-                this.narrativaAtual.secoes = {
-                    ...this.narrativaAtual.secoes,
-                    ...patch.novas_secoes
-                };
-                
+                console.error(`[PATCH] ❌ Seção ${secaoAlvoNum} não encontrada`);
             } else {
-                console.error(`[PATCH] A IA falhou em gerar um patch para ${flagNome}.`);
+                secaoOriginal.id = secaoAlvoNum;
+                
+                const historicoFormatado = this.sistemaEmergencia.historico
+                    .map(h => `Seção ${h.numero}: ${h.texto.substring(0, 50)}...`)
+                    .join('\n');
+
+                const patch = await this.sistemaEmergencia.gerarPatchPersistente(
+                    secaoOriginal, 
+                    flagNome, 
+                    historicoFormatado
+                );
+                
+                if (patch) {
+                    console.log(`[PATCH] ✅ Patch gerado:`, patch);
+                    
+                    const playerDocRef = doc(db, "players", this.userId);
+                    const updates = {};
+                    updates[`worldState.${flagNome}`] = true;
+                    updates[`patches.${secaoAlvoNum}`] = patch;
+                    
+                    await updateDoc(playerDocRef, updates);
+                    
+                    this.playerData.worldState[flagNome] = true;
+                    this.playerData.patches[secaoAlvoNum] = patch;
+                    
+                    this.narrativaAtual.secoes = {
+                        ...this.narrativaAtual.secoes,
+                        ...patch.novas_secoes
+                    };
+                    
+                    console.log(`[PATCH] 💾 Salvo no Firebase`);
+                } else {
+                    console.error(`[PATCH] ❌ IA falhou em gerar patch`);
+                }
             }
         } else {
-            console.log(`[PATCH] Flag ${flagNome} já existe, pulando geração.`);
+            console.log(`[PATCH] ⏭️ Flag ${flagNome} já existe`);
         }
+    } else {
+        console.log('[PATCH] ℹ️ Nenhum efeito de patch nesta opção');
     }
 }
+
         
         // 4d. SE FOR UMA OPÇÃO DE APROFUNDAMENTO (EMERGENTE, SEM TESTE/BATALHA)
         if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
@@ -1473,6 +1470,7 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
