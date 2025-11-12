@@ -1209,25 +1209,6 @@ ${this.historico.map(h => '- Seção ' + h.numero + ': "' + h.texto.substring(0,
 `;
     }
 
-## ✅ Checklist de Verificação
-
-Após fazer essas 3 modificações:
-
-1. **Salve** o arquivo `emergencia.js`
-2. **Recarregue** a página (Ctrl+F5 / Cmd+Shift+R)
-3. **Entre** em uma emergência
-4. **Verifique** o console do navegador
-
-Você **DEVE** ver:
-```
-[PATCH] 🔍 Resposta completa da IA: {...}
-[PATCH] ✅ Opção 0 TEM efeitos: [...]
-[PATCH] 🎯 PATCH DETECTADO! {tipo: 'gerar_patch_persistente', ...}
-```
-
-Se aparecer:
-```
-[PATCH] ⚠️ A IA NÃO GEROU NENHUM PATCH nesta seção!
     
 // =======================================================================
 // === INÍCIO DO MÉTODO (gerarPatchPersistente) COM LOGS COMPLETOS ===
@@ -1369,6 +1350,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
