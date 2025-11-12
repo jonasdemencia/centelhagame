@@ -631,6 +631,8 @@ if ((response.status === 503 || response.status === 429) && tentativa < maxTenta
             }
 
             const data = await response.json();
+            console.log('[ORÁCULO] 📦 Resposta completa:', JSON.stringify(data).substring(0, 500)); // 🆕 LOG
+
 
             let jsonText = null;
 
@@ -1060,25 +1062,34 @@ ${monstrosAmostra}
         "secao": "[ID_SUCESSO]"
       }
 
-**10. MODIFICAÇÃO PERSISTENTE**
-- **OBJETIVO:** Plantar uma semente para uma mudança permanente no mundo.
-- **COMO:** você criará uma opção que dispara uma mudança no "esqueleto" da narrativa.
-- **GATILHO:** A opção deve conter um efeito "gerar_patch_persistente".
-- **CRÍTICO - secao_alvo:** A flag DEVE ter um secao_alvo que seja um número de uma seção que o jogador JÁ VISITOU (baseado no HISTÓRICO ou CONTEXTO).
-- **NÃO** use a seção atual. Use uma seção anterior (ex: 1, 2, 4).
-   - **Formato:**
-     {
-       "texto": "Puxar a alavanca (um estrondo ecoa ao longe)",
-       "tipo": "aprofundar", 
-       "secao": "[ID_DA_PROXIMA_SECAO_EMERGENTE]",
-       "efeitos": [
-         {
-           "tipo": "gerar_patch_persistente",
-           "flag": "ALAVANCA_PORAO_PUXADA",
-           "secao_alvo": 2
-         }
-       ]
-     }
+**10. MODIFICAÇÃO PERSISTENTE (OBRIGATÓRIO - 30% DAS SEÇÕES)**
+
+⚠️ **ATENÇÃO CRÍTICA:** Você DEVE incluir pelo menos UMA opção com patch em 30% das seções emergentes.
+
+**QUANDO USAR:**
+- Quando o jogador ativa algo (alavanca, mecanismo, ritual)
+- Quando algo muda permanentemente o ambiente
+- Quando uma descoberta afeta locais anteriores
+
+**FORMATO OBRIGATÓRIO:**
+{
+  "texto": "Puxar a alavanca antiga",
+  "tipo": "aprofundar",
+  "secao": "emergente_IA_X",
+  "efeitos": [
+    {
+      "tipo": "gerar_patch_persistente",
+      "flag": "ALAVANCA_PUXADA",
+      "secao_alvo": 5
+    }
+  ]
+}
+
+**REGRAS:**
+- secao_alvo DEVE ser um número (ex: 1, 2, 5, 13) de seção que o jogador JÁ VISITOU
+- flag DEVE ser MAIÚSCULA_COM_UNDERSCORES
+- Inclua isso em PELO MENOS 1 de cada 3 seções emergentes
+
 
 **⚠️ CRÍTICO - FORMATO DE RESPOSTA:**
 - Retorne APENAS JSON válido
@@ -1086,6 +1097,11 @@ ${monstrosAmostra}
 - NÃO use markdown
 - Comece DIRETAMENTE com {
 - Termine DIRETAMENTE com }
+
+**⚠️ LEMBRETE CRÍTICO - PATCHES:**
+- Se esta seção envolve ativar/descobrir algo, ADICIONE um efeito de patch
+- Exemplo: Puxar alavanca → patch na seção 2
+- Formato: {"tipo": "gerar_patch_persistente", "flag": "NOME_FLAG", "secao_alvo": 2}
 
 
 **FORMATO (JSON PURO - Modo Normal):**
@@ -1297,6 +1313,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
