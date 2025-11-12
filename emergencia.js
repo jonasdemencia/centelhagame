@@ -635,10 +635,10 @@ if ((response.status === 503 || response.status === 429) && tentativa < maxTenta
                 return {
                     texto: op.texto,
                     secao: this.gerarIdEmergente(),
-                    tipo: 'aprofundar', // Trata como "aprofundar" para o fluxo
+                    tipo: 'aprofundar',
                     emergente: true,
-                    morte_imediata: true, // Propaga a flag
-                    efeitos: op.efeitos || [] // 🆕 GARANTE PROPAGAÇÃO DE EFEITOS
+                    morte_imediata: true,
+                    efeitos: op.efeitos || []
                 };
             }
 
@@ -649,7 +649,7 @@ if ((response.status === 503 || response.status === 429) && tentativa < maxTenta
                     secao: this.gerarIdEmergente(),
                     tipo: 'perigo_oculto',
                     emergente: true,
-                    efeitos: op.efeitos || [] // 🆕 GARANTE PROPAGAÇÃO DE EFEITOS
+                    efeitos: op.efeitos || []
                 };
             }
 
@@ -661,7 +661,7 @@ if ((response.status === 503 || response.status === 429) && tentativa < maxTenta
                     vitoria: numeroSecaoOrigem,
                     derrota: 320,
                     emergente: false,
-                    efeitos: op.efeitos || [] // 🆕 GARANTE PROPAGAÇÃO DE EFEITOS
+                    efeitos: op.efeitos || []
                 };
             }
             
@@ -672,22 +672,22 @@ if ((response.status === 503 || response.status === 429) && tentativa < maxTenta
                     secao: numeroSecaoOrigem,
                     emergente: false,
                     tipo: 'recuar',
-                    efeitos: op.efeitos || [] // 🆕 GARANTE PROPAGAÇÃO DE EFEITOS
+                    efeitos: op.efeitos || []
                 };
             } 
             
             
-        // OPÇÃO NORMAL (aprofundar / neutra) (lógica existente)
+        // OPÇÃO NORMAL (aprofundar / neutra / TESTE) (lógica existente)
         else {
             return {
                 texto: op.texto,
                 secao: this.gerarIdEmergente(),
                 tipo: op.tipo,
                 emergente: true,
-                teste: op.teste,
-                dificuldade: op.dificuldade,
-                falha_mortal: op.falha_mortal,
-                efeitos: op.efeitos || [] // 🆕 GARANTE PROPAGAÇÃO DE EFEITOS
+                teste: op.teste, // 🆕 CAMPO DE TESTE
+                dificuldade: op.dificuldade, // 🆕 CAMPO DE TESTE
+                falha_mortal: op.falha_mortal, // 🆕 CAMPO DE TESTE
+                efeitos: op.efeitos || [] // 🆕 CAMPO DE EFEITOS (PARA PATCH)
             };
         }            
     });
@@ -1067,6 +1067,7 @@ ${monstrosAmostra}
     async gerarPatchPersistente(secaoOriginal, flagNome, historicoJogador) {
         console.log(`[PATCH] Gerando patch para Seção ${secaoOriginal.id} acionado por: ${flagNome}`);
 
+        // 🆕 PROMPT CORRIGIDO (Usa aspas simples ' nos exemplos para evitar SyntaxError)
         const prompt = `
 Você é um 'Mestre de Jogo' que implementa mudanças permanentes no mundo (Backtracking Dinâmico).
 
@@ -1092,7 +1093,7 @@ ${secaoOriginal.opcoes.map((op, i) => `    - [${i}] "${op.texto}"`).join('\n')}
     * As "novas_opcoes" devem apontar para IDs de "novas_secoes" (ex: "persistente_IA_1").
     * Você deve criar de 1 a 3 "novas_secoes" no total.
     * Cada "nova_secao" é uma expansão livre (texto, opções, itens, monstros).
-    * **OBRIGATÓRIO:** Cada "nova_secao" DEVE ter pelo menos uma opção para "Retornar" (ex: `{"texto": "Retornar ao corredor", "secao": ${secaoOriginal.id}}`), permitindo ao jogador sair da subseção.
+    * **OBRIGATÓRIO:** Cada "nova_secao" DEVE ter pelo menos uma opção para "Retornar" (ex: '{"texto": "Retornar ao corredor", "secao": ${secaoOriginal.id}}'), permitindo ao jogador sair da subseção.
 4.  **MONSTROS E ITENS:** Você pode usar as listas abaixo para adicionar batalhas ou itens nas novas seções.
 
 ${this.getItensAmostra(secaoOriginal.texto)}
@@ -1168,6 +1169,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
