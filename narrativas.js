@@ -177,6 +177,15 @@ class SistemaNarrativas {
         const docSnap = await getDoc(playerDocRef);
         if (docSnap.exists()) {
             this.playerData = docSnap.data();
+            
+            // 🆕 INICIALIZA OS OBJETOS DE ESTADO
+            if (!this.playerData.worldState) {
+                this.playerData.worldState = {};
+            }
+            if (!this.playerData.patches) {
+                this.playerData.patches = {};
+            }
+            
             console.log('Dados do jogador carregados:', this.playerData);
         } else {
             console.log('Nenhum dado do jogador encontrado');
@@ -207,35 +216,88 @@ class SistemaNarrativas {
         this.mostrarSecao(1);
     }
 
-    async mostrarSecao(numeroSecao, secaoDeOrigem = null) {
-    console.log(`[NARRATIVAS] mostrarSecao chamado com: ${numeroSecao}`);
-
-        // 🆕 CHECAGEM DE MORTE
-    // Se o jogador está com 0 ou menos de energia, e a seção
-    // que estamos tentando carregar NÃO é a seção de morte (320)
-    // ou um buffer de retorno (99999), force a seção de morte.
-    if (this.playerData && this.playerData.energy && this.playerData.energy.total <= 0) {
-        if (numeroSecao != 320 && numeroSecao != 99999) {
-            console.log(`[MORTE] Energia <= 0 detectada. Forçando seção 320.`);
-            numeroSecao = 320; 
-            secaoDeOrigem = null; 
+    // =======================================================================
+    // === INÍCIO DO NOVO MÉTODO (aplicarPatchPersistente) ===
+    // =======================================================================
+    aplicarPatchPersistente(numeroSecao, secaoOriginal) {
+        // 1. Verifica se this.playerData e patches existem
+        if (!this.playerData || !this.playerData.patches) {
+            return secaoOriginal;
         }
+
+        // 2. Tenta encontrar um patch para esta seção
+        const patch = this.playerData.patches[numeroSecao];
+
+        // 3. Se não houver patch, retorna a seção original intacta
+        if (!patch) {
+            return secaoOriginal;
+        }
+
+        console.log(`[PATCH] Aplicando patch persistente salvo na Seção ${numeroSecao}`);
+
+        // 4. Clona a seção original para não modificar o NARRATIVAS-DATA
+        const secaoModificada = JSON.parse(JSON.stringify(secaoOriginal));
+
+        // 5. Aplica as novas opções do patch
+        if (patch.novas_opcoes && Array.isArray(patch.novas_opcoes)) {
+            secaoModificada.opcoes.push(...patch.novas_opcoes);
+        }
+
+        // 6. Injeta as novas subseções na árvore da narrativa ATUAL
+        // Isso as torna "reais" para esta sessão de jogo
+        if (patch.novas_secoes && typeof patch.novas_secoes === 'object') {
+            for (const [idSecaoNova, dadosSecaoNova] of Object.entries(patch.novas_secoes)) {
+                // Adiciona verificando se já não existe (evita duplicação em recargas)
+                if (!this.narrativaAtual.secoes[idSecaoNova]) {
+                    this.narrativaAtual.secoes[idSecaoNova] = dadosSecaoNova;
+                    console.log(`[PATCH] Subseção persistente "${idSecaoNova}" injetada.`);
+                }
+            }
+        }
+        
+        // 7. Retorna a seção "remendada"
+        return secaoModificada;
     }
+    // =======================================================================
+    // === FIM DO NOVO MÉTODO ===
+    // =======================================================================
+
+    async mostrarSecao(numeroSecao, secaoDeOrigem = null) {
+        console.log(`[NARRATIVAS] mostrarSecao chamado com: ${numeroSecao}`);
     
-    let secao;
+        // ... (o bloco de checagem de morte permanece igual)
+        if (this.playerData && this.playerData.energy && this.playerData.energy.total <= 0) {
+            if (numeroSecao != 320 && numeroSecao != 99999) {
+                console.log(`[MORTE] Energia <= 0 detectada. Forçando seção 320.`);
+                numeroSecao = 320; 
+                secaoDeOrigem = null; 
+            }
+        }
+        
+        let secao;
 
-    if (typeof numeroSecao === 'string' && numeroSecao.startsWith('emergente_')) {
-        console.log(`[NARRATIVAS] Buscando seção emergente: ${numeroSecao}`);
-        secao = this.sistemaEmergencia.secoesEmergentes.get(numeroSecao);
-        console.log(`[NARRATIVAS] Seção encontrada:`, secao);
-    } else {
-        secao = this.narrativaAtual.secoes[numeroSecao];
-    }
+        if (typeof numeroSecao === 'string' && numeroSecao.startsWith('emergente_')) {
+            // ... (lógica de buscar seção emergente)
+            secao = this.sistemaEmergencia.secoesEmergentes.get(numeroSecao);
+        } else if (typeof numeroSecao === 'string' && numeroSecao.startsWith('persistente_')) {
+            // 🆕 LÓGICA PARA CARREGAR SEÇÕES DO PATCH (se já não foram injetadas)
+            console.log(`[PATCH] Buscando seção persistente: ${numeroSecao}`);
+            secao = this.narrativaAtual.secoes[numeroSecao];
+        } else {
+            // É uma seção do esqueleto (número)
+            secao = this.narrativaAtual.secoes[numeroSecao];
+            
+            // 🆕 APLICA O PATCH ANTES DE CONTINUAR
+            // Só aplica se os dados do jogador estiverem carregados
+            if (this.playerData) {
+                 secao = this.aplicarPatchPersistente(numeroSecao, secao);
+            }
+        }
 
-    if (!secao) {
-        console.error('Seção não encontrada:', numeroSecao);
-        return;
-    }
+        if (!secao) {
+            console.error('Seção não encontrada:', numeroSecao);
+            return;
+        }
 
     this.secaoAtual = numeroSecao;
 
@@ -1161,8 +1223,57 @@ if (opcao.teste) {
             window.location.href = `batalha.html?monstros=${opcao.batalha}`;
             return; // Batalha cuida do próximo passo
         }
+
+        // 4c. VERIFICAR SE A OPÇÃO GERA UM PATCH PERSISTENTE
+        if (opcao.efeitos && opcao.efeitos.length > 0) {
+            const efeitoPatch = opcao.efeitos.find(e => e.tipo === 'gerar_patch_persistente');
+            
+            if (efeitoPatch) {
+                const secaoAlvoNum = efeitoPatch.secao_alvo;
+                const flagNome = efeitoPatch.flag;
+                
+                // 1. Verifica se a flag já existe (para não gerar patch duas vezes)
+                if (!this.playerData.worldState[flagNome]) {
+                    console.log(`[PATCH] Acionando geração de patch para Seção ${secaoAlvoNum} via flag ${flagNome}`);
+
+                    // 2. Busca a seção original
+                    const secaoOriginal = NARRATIVAS[this.narrativaAtual.id].secoes[secaoAlvoNum];
+                    secaoOriginal.id = secaoAlvoNum; // Garante que a IA saiba o ID
+                    
+                    // 3. Pede o patch à IA (emergencia.js)
+                    const historicoFormatado = this.sistemaEmergencia.historico
+                        .map(h => `Seção ${h.numero}: ${h.texto.substring(0, 50)}...`)
+                        .join('\n');
+
+                    const patch = await this.sistemaEmergencia.gerarPatchPersistente(
+                        secaoOriginal, 
+                        flagNome, 
+                        historicoFormatado
+                    );
+                    
+                    if (patch) {
+                        // 4. Salva a flag e o patch no Firebase
+                        const playerDocRef = doc(db, "players", this.userId);
+                        
+                        // Usando dot-notation para atualizar campos aninhados
+                        const updates = {};
+                        updates[`worldState.${flagNome}`] = true;
+                        updates[`patches.${secaoAlvoNum}`] = patch;
+                        
+                        await updateDoc(playerDocRef, updates);
+
+                        // 5. Atualiza o cache local
+                        this.playerData.worldState[flagNome] = true;
+                        this.playerData.patches[secaoAlvoNum] = patch;
+                        console.log(`[PATCH] Flag e Patch salvos no Firebase.`);
+                    } else {
+                        console.error(`[PATCH] A IA falhou em gerar um patch para ${flagNome}.`);
+                    }
+                }
+            }
+        }
         
-        // 4c. SE FOR UMA OPÇÃO DE APROFUNDAMENTO (EMERGENTE, SEM TESTE/BATALHA)
+        // 4d. SE FOR UMA OPÇÃO DE APROFUNDAMENTO (EMERGENTE, SEM TESTE/BATALHA)
         if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
             console.log(`[NARRATIVAS] Processando opção emergente: ${opcao.tipo}`);
             
@@ -1188,7 +1299,7 @@ if (opcao.teste) {
             }
         }
         
-        // 4d. SE FOR UMA OPÇÃO NORMAL (NÃO-EMERGENTE, NÃO-TESTE, NÃO-BATALHA)
+        // 4e. SE FOR UMA OPÇÃO NORMAL (NÃO-EMERGENTE, NÃO-TESTE, NÃO-BATALHA)
         await this.mostrarSecao(opcao.secao, this.secaoAtual);
         
         // 5. FADE IN
@@ -1339,6 +1450,7 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
