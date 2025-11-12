@@ -1208,7 +1208,7 @@ ${this.historico.map(h => '- Seção ' + h.numero + ': "' + h.texto.substring(0,
 
 `;
     }
-```
+
 
 ---
 
@@ -1372,6 +1372,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
