@@ -1133,8 +1133,6 @@ Se esta cena se conecta naturalmente com algo que poderia modificar locais conhe
 \`\`\`
 
 **Lembre-se:** As melhores modificações persistentes surgem naturalmente da história, não como mecânicas forçadas.
-`;
-
 
 `;
     }
@@ -1279,6 +1277,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
