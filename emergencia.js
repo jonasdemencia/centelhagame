@@ -604,9 +604,6 @@ Se sua cena inclui algo que poderia ter consequências em locais que o jogador j
 - Um desmoronamento que abre novos caminhos em áreas conhecidas
 
 `;
-
-
-`;
     }
 
     async chamarOraculoNarrativo(prompt, tentativa = 1) {
@@ -1277,6 +1274,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
