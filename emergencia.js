@@ -1062,13 +1062,17 @@ ${monstrosAmostra}
     }
     
 // =======================================================================
-    // === INÍCIO DO NOVO MÉTODO (gerarPatchPersistente) ===
-    // =======================================================================
-    async gerarPatchPersistente(secaoOriginal, flagNome, historicoJogador) {
-        console.log(`[PATCH] Gerando patch para Seção ${secaoOriginal.id} acionado por: ${flagNome}`);
+// === INÍCIO DO MÉTODO (gerarPatchPersistente) COM LOGS COMPLETOS ===
+// =======================================================================
+async gerarPatchPersistente(secaoOriginal, flagNome, historicoJogador) {
+    console.log(`[PATCH] 🔧 INICIANDO gerarPatchPersistente`);
+    console.log(`[PATCH] Flag: "${flagNome}"`);
+    console.log(`[PATCH] Seção Alvo: ${secaoOriginal.id}`);
+    console.log(`[PATCH] Texto Original: "${secaoOriginal.texto.substring(0, 100)}..."`);
+    console.log(`[PATCH] Opções Originais: ${secaoOriginal.opcoes ? secaoOriginal.opcoes.length : 0}`);
 
-        // 🆕 PROMPT CORRIGIDO (Usa aspas simples ' nos exemplos para evitar SyntaxError)
-        const prompt = `
+    // 🆕 PROMPT CORRIGIDO (Usa aspas simples ' nos exemplos para evitar SyntaxError)
+    const prompt = `
 Você é um 'Mestre de Jogo' que implementa mudanças permanentes no mundo (Backtracking Dinâmico).
 
 **MISSÃO:**
@@ -1083,7 +1087,7 @@ ${historicoJogador}
 **DADOS DA SEÇÃO ORIGINAL (ID: ${secaoOriginal.id}) QUE SERÁ MODIFICADA:**
 * **Texto Original:** "${secaoOriginal.texto}"
 * **Opções Originais:**
-${secaoOriginal.opcoes.map((op, i) => `    - [${i}] "${op.texto}"`).join('\n')}
+${secaoOriginal.opcoes ? secaoOriginal.opcoes.map((op, i) => `    - [${i}] "${op.texto}"`).join('\n') : '    - Nenhuma opção'}
 
 **REGRAS DE PATCH (CRÍTICO):**
 
@@ -1133,26 +1137,54 @@ ${this.getMonstrosAmostra()}
 }
 `;
 
-        try {
-            // Usa o mesmo oráculo para gerar o patch
-            const patchJSON = await this.chamarOraculoNarrativo(prompt);
-            
-            // Validação básica do patch
-            if (!patchJSON.novas_opcoes || !patchJSON.novas_secoes) {
-                throw new Error("IA retornou um patch mal formatado.");
-            }
-
-            console.log(`[PATCH] Patch gerado com sucesso para Seção ${secaoOriginal.id}`);
-            return patchJSON;
-
-        } catch (error) {
-            console.error(`[PATCH] Falha ao gerar patch:`, error);
-            return null; // Retorna nulo em caso de falha
+    try {
+        console.log(`[PATCH] 📡 Enviando prompt para IA...`);
+        console.log(`[PATCH] Tamanho do prompt: ${prompt.length} caracteres`);
+        
+        const patchJSON = await this.chamarOraculoNarrativo(prompt);
+        
+        console.log(`[PATCH] ✅ Resposta da IA recebida:`, patchJSON);
+        
+        // Validação básica do patch
+        if (!patchJSON) {
+            console.error(`[PATCH] ❌ Resposta da IA é nula`);
+            throw new Error("IA retornou resposta nula.");
         }
+        
+        if (!patchJSON.novas_opcoes) {
+            console.error(`[PATCH] ❌ Patch mal formatado - faltando 'novas_opcoes'`);
+            throw new Error("IA retornou um patch sem 'novas_opcoes'.");
+        }
+        
+        if (!patchJSON.novas_secoes) {
+            console.error(`[PATCH] ❌ Patch mal formatado - faltando 'novas_secoes'`);
+            throw new Error("IA retornou um patch sem 'novas_secoes'.");
+        }
+
+        console.log(`[PATCH] 🎉 Patch gerado com sucesso para Seção ${secaoOriginal.id}`);
+        console.log(`[PATCH] Novas opções: ${patchJSON.novas_opcoes.length}`);
+        console.log(`[PATCH] Novas seções: ${Object.keys(patchJSON.novas_secoes).join(', ')}`);
+        
+        // Log detalhado do conteúdo
+        patchJSON.novas_opcoes.forEach((op, idx) => {
+            console.log(`[PATCH] Nova opção ${idx + 1}: "${op.texto}" → ${op.secao}`);
+        });
+        
+        Object.entries(patchJSON.novas_secoes).forEach(([id, secao]) => {
+            console.log(`[PATCH] Nova seção ${id}: "${secao.texto.substring(0, 50)}..."`);
+        });
+        
+        return patchJSON;
+
+    } catch (error) {
+        console.error(`[PATCH] 💥 Falha ao gerar patch:`, error);
+        console.error(`[PATCH] Stack trace:`, error.stack);
+        return null; // Retorna nulo em caso de falha
     }
-    // =======================================================================
-    // === FIM DO NOVO MÉTODO ===
-    // =======================================================================
+}
+// =======================================================================
+// === FIM DO MÉTODO ===
+// =======================================================================
 
     
     gerarIdEmergente() {
@@ -1169,6 +1201,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
