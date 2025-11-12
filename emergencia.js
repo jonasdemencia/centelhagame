@@ -1009,17 +1009,18 @@ ${monstrosAmostra}
 - **NÃO** use a seção atual. Use uma seção anterior (ex: 1, 2, 4).
    - **Formato:**
      {
-       \\"texto\\": \\"Puxar a alavanca (um estrondo ecoa ao longe)\\",
-       \\"tipo\\": \\"aprofundar\\", 
-       \\"secao\\": \\"[ID_DA_PROXIMA_SECAO_EMERGENTE]\\",
-       \\"efeitos\\": [
+       "texto": "Puxar a alavanca (um estrondo ecoa ao longe)",
+       "tipo": "aprofundar", 
+       "secao": "[ID_DA_PROXIMA_SECAO_EMERGENTE]",
+       "efeitos": [
          {
-           \\"tipo\\": \\"gerar_patch_persistente\\",
-           \\"flag\\": \\"ALAVANCA_PORAO_PUXADA\\",
-           \\"secao_alvo\\": 2
+           "tipo": "gerar_patch_persistente",
+           "flag": "ALAVANCA_PORAO_PUXADA",
+           "secao_alvo": 2
          }
        ]
      }
+
 
 
 
@@ -1167,6 +1168,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
