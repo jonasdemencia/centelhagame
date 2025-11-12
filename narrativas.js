@@ -1226,6 +1226,7 @@ if (opcao.teste) {
         }
 
         // 4c. VERIFICAR SE A OPÇÃO GERA UM PATCH PERSISTENTE
+        console.log('[PATCH] 🔍 Verificando opção:', opcao); // 🆕 LOG ADICIONAL
 if (opcao.efeitos && opcao.efeitos.length > 0) {
     console.log('[PATCH] Verificando efeitos:', opcao.efeitos);
     
@@ -1472,6 +1473,7 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
