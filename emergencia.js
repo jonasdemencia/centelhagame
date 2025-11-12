@@ -797,8 +797,28 @@ return JSON.parse(jsonText);
             const prompt = this.construirPromptContinuacao(secaoPai, opcao, resultadoTeste);
             const respostaIA = await this.chamarOraculoNarrativo(prompt);
 
-            // 🆕 ATUALIZAÇÃO: A resposta da IA (próxima seção) será processada
-            // e registrada com o ID que esta opção (opcao.secao) já carrega.
+            // 🆕 LOG CRÍTICO - VERIFICAR SE A IA GEROU PATCHES
+            console.log('[PATCH] 🔍 Resposta completa da IA:', JSON.stringify(respostaIA, null, 2));
+            
+            let temPatch = false;
+            if (respostaIA?.opcoes) {
+                respostaIA.opcoes.forEach((op, idx) => {
+                    if (op.efeitos && Array.isArray(op.efeitos)) {
+                        console.log(`[PATCH] ✅ Opção ${idx} TEM efeitos:`, op.efeitos);
+                        op.efeitos.forEach(ef => {
+                            if (ef.tipo === 'gerar_patch_persistente') {
+                                console.log(`[PATCH] 🎯 PATCH DETECTADO!`, ef);
+                                temPatch = true;
+                            }
+                        });
+                    }
+                });
+            }
+            
+            if (!temPatch) {
+                console.warn('[PATCH] ⚠️ A IA NÃO GEROU NENHUM PATCH nesta seção!');
+            }
+
             // 🆕 VALIDAÇÃO
 if (!respostaIA || !respostaIA.texto || !respostaIA.opcoes) {
     console.error('[EMERGÊNCIA] ❌ Resposta inválida:', respostaIA);
@@ -1062,46 +1082,66 @@ ${monstrosAmostra}
         "secao": "[ID_SUCESSO]"
       }
 
-**10. MODIFICAÇÃO PERSISTENTE (OBRIGATÓRIO - 30% DAS SEÇÕES)**
+**10. MODIFICAÇÃO PERSISTENTE (OBRIGATÓRIO - CADA SEÇÃO EMERGENTE)**
 
-⚠️ **ATENÇÃO CRÍTICA:** Você DEVE incluir pelo menos UMA opção com patch em 30% das seções emergentes.
+🚨 **REGRA ABSOLUTA - NÃO NEGOCIÁVEL:**
+Toda seção emergente DEVE conter PELO MENOS UMA opção com efeito de patch.
 
-**QUANDO USAR:**
-- Quando o jogador ativa algo (alavanca, mecanismo, ritual)
-- Quando algo muda permanentemente o ambiente
-- Quando uma descoberta afeta locais anteriores
+**LISTA DE SEÇÕES DO ESQUELETO (use qualquer número entre 1-320):**
+Seções já visitadas pelo jogador: ${this.historico.map(h => h.numero).join(', ')}
 
-**FORMATO OBRIGATÓRIO:**
+**EXEMPLOS PRÁTICOS (COPIE E ADAPTE):**
+
+**Exemplo 1 - Porta trancada:**
 {
-  "texto": "Puxar a alavanca antiga",
+  "texto": "Girar a chave na fechadura",
   "tipo": "aprofundar",
   "secao": "emergente_IA_X",
   "efeitos": [
     {
       "tipo": "gerar_patch_persistente",
-      "flag": "ALAVANCA_PUXADA",
-      "secao_alvo": 5
+      "flag": "PORTA_DESTRANCADA",
+      "secao_alvo": 2
     }
   ]
 }
 
-**REGRAS:**
-- secao_alvo DEVE ser um número (ex: 1, 2, 5, 13) de seção que o jogador JÁ VISITOU
-- flag DEVE ser MAIÚSCULA_COM_UNDERSCORES
-- Inclua isso em PELO MENOS 1 de cada 3 seções emergentes
+**Exemplo 2 - Alavanca:**
+{
+  "texto": "Puxar a alavanca de ferro",
+  "tipo": "aprofundar",
+  "secao": "emergente_IA_X",
+  "efeitos": [
+    {
+      "tipo": "gerar_patch_persistente",
+      "flag": "MECANISMO_ATIVADO",
+      "secao_alvo": 6
+    }
+  ]
+}
 
+**Exemplo 3 - Item mágico:**
+{
+  "texto": "Ativar o cristal antigo",
+  "tipo": "aprofundar",
+  "secao": "emergente_IA_X",
+  "efeitos": [
+    {
+      "tipo": "gerar_patch_persistente",
+      "flag": "CRISTAL_ATIVADO",
+      "secao_alvo": 17
+    }
+  ]
+}
 
-**⚠️ CRÍTICO - FORMATO DE RESPOSTA:**
-- Retorne APENAS JSON válido
-- NÃO adicione texto explicativo antes ou depois
-- NÃO use markdown
-- Comece DIRETAMENTE com {
-- Termine DIRETAMENTE com }
+**⚠️ VALIDAÇÃO DO SEU JSON:**
+Antes de retornar sua resposta, VERIFIQUE:
+- [ ] Pelo menos UMA opção tem array "efeitos"?
+- [ ] O efeito tem "tipo": "gerar_patch_persistente"?
+- [ ] A "flag" está em MAIÚSCULAS_COM_UNDERSCORES?
+- [ ] A "secao_alvo" é um número entre 1-320?
 
-**⚠️ LEMBRETE CRÍTICO - PATCHES:**
-- Se esta seção envolve ativar/descobrir algo, ADICIONE um efeito de patch
-- Exemplo: Puxar alavanca → patch na seção 2
-- Formato: {"tipo": "gerar_patch_persistente", "flag": "NOME_FLAG", "secao_alvo": 2}
+❌ **SE NÃO TIVER PATCH = JSON INVÁLIDO**
 
 
 **FORMATO (JSON PURO - Modo Normal):**
@@ -1137,41 +1177,60 @@ ${monstrosAmostra}
   "efeitos": []
 }
 
-**12. CONSTRUINDO SOBRE AÇÕES ANTERIORES**
+**PATCH OBRIGATÓRIO (COPIE E COLE UM EXEMPLO)**
 
-Se esta cena se conecta naturalmente com algo que poderia modificar locais conhecidos, considere usar o sistema de patches para criar essas conexões.
+🚨 **VOCÊ DEVE INCLUIR ISTO EM PELO MENOS UMA OPÇÃO:**
 
-**PENSE EM:**
-- "Que segredos esta descoberta poderia revelar em áreas que o jogador já explorou?"
-- "Como esta ação poderia ressoar através do mundo do jogo?"
-- "Que portas invisíveis esta chave poderia abrir?"
-
-**EXEMPLO ORGÂNICO:**
-
-\`\`\`json
 {
-  "texto": "O artefato antigo emite uma luz suave, e você sente que algo mudou no ambiente...",
-  "opcoes": [
+  "texto": "[Ação que muda algo no mundo]",
+  "tipo": "aprofundar",
+  "secao": "emergente_IA_X",
+  "efeitos": [
     {
-      "texto": "Investigar a sensação de mudança",
-      "tipo": "aprofundar",
-      "secao": "emergente_IA_Y", 
-      "efeitos": [
-        {
-          "tipo": "gerar_patch_persistente",
-          "flag": "ARTEFATO_ATIVADO",
-          "secao_alvo": 4
-        }
-      ]
+      "tipo": "gerar_patch_persistente",
+      "flag": "[NOME_AÇÃO]",
+      "secao_alvo": ${this.historico[0]?.numero || 1}
     }
   ]
 }
-\`\`\`
 
-**Lembre-se:** As melhores modificações persistentes surgem naturalmente da história, não como mecânicas forçadas.
+**Exemplos de FLAGS válidas:**
+- PORTA_DESTRANCADA
+- ALAVANCA_PUXADA  
+- MECANISMO_ATIVADO
+- RITUAL_COMPLETADO
+- CRISTAL_QUEBRADO
+
+**Seções disponíveis para patch:**
+${this.historico.map(h => `- Seção ${h.numero}: "${h.texto.substring(0, 50)}..."`).join('\n')}
+
+⚠️ **SEU JSON SERÁ REJEITADO SE NÃO TIVER UM PATCH!**
 
 `;
     }
+```
+
+---
+
+## ✅ Checklist de Verificação
+
+Após fazer essas 3 modificações:
+
+1. **Salve** o arquivo `emergencia.js`
+2. **Recarregue** a página (Ctrl+F5 / Cmd+Shift+R)
+3. **Entre** em uma emergência
+4. **Verifique** o console do navegador
+
+Você **DEVE** ver:
+```
+[PATCH] 🔍 Resposta completa da IA: {...}
+[PATCH] ✅ Opção 0 TEM efeitos: [...]
+[PATCH] 🎯 PATCH DETECTADO! {tipo: 'gerar_patch_persistente', ...}
+```
+
+Se aparecer:
+```
+[PATCH] ⚠️ A IA NÃO GEROU NENHUM PATCH nesta seção!
     
 // =======================================================================
 // === INÍCIO DO MÉTODO (gerarPatchPersistente) COM LOGS COMPLETOS ===
@@ -1313,6 +1372,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
