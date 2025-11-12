@@ -1202,7 +1202,7 @@ Antes de retornar sua resposta, VERIFIQUE:
 - CRISTAL_QUEBRADO
 
 **Seções disponíveis para patch:**
-${this.historico.map(h => `- Seção ${h.numero}: "${h.texto.substring(0, 50)}..."`).join('\n')}
+${this.historico.map(h => '- Seção ' + h.numero + ': "' + h.texto.substring(0, 50) + '..."').join('\n')}
 
 ⚠️ **SEU JSON SERÁ REJEITADO SE NÃO TIVER UM PATCH!**
 
@@ -1372,6 +1372,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
