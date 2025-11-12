@@ -1209,9 +1209,6 @@ ${this.historico.map(h => '- Seção ' + h.numero + ': "' + h.texto.substring(0,
 `;
     }
 
-
----
-
 ## ✅ Checklist de Verificação
 
 Após fazer essas 3 modificações:
@@ -1372,6 +1369,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
