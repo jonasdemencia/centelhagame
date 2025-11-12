@@ -634,26 +634,37 @@ if ((response.status === 503 || response.status === 429) && tentativa < maxTenta
 
             let jsonText = null;
 
-            if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-                jsonText = data.candidates[0].content.parts[0].text;
-            } else if (data.error) {
-                throw new Error(`Erro da Gemini: ${data.error.message}`);
-            } else {
-                throw new Error("Resposta da Gemini em formato inesperado.");
-            }
+if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+    jsonText = data.candidates[0].content.parts[0].text;
+} else if (data.error) {
+    throw new Error(`Erro da Gemini: ${data.error.message}`);
+} else {
+    throw new Error("Resposta da Gemini em formato inesperado.");
+}
 
-            jsonText = jsonText
-                .replace(/```json/g, "")
-                .replace(/```/g, "")
-                .trim();
+// 🆕 LIMPEZA MAIS AGRESSIVA
+jsonText = jsonText
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .replace(/^[^{]*/, "") // Remove tudo antes do primeiro {
+    .replace(/[^}]*$/, "") // Remove tudo depois do último }
+    .trim();
 
-            if (!jsonText) {
-                throw new Error("Resposta vazia após extração.");
-            }
+if (!jsonText || !jsonText.startsWith('{')) {
+    console.error('[ORÁCULO] ❌ Resposta não é JSON:', jsonText.substring(0, 200));
+    throw new Error("IA retornou texto puro em vez de JSON.");
+}
 
-            return JSON.parse(jsonText);
+return JSON.parse(jsonText);
+
 
         } catch (err) {
+            // 🆕 RETRY ESPECÍFICO PARA JSON INVÁLIDO
+    if (err instanceof SyntaxError && tentativa < maxTentativas) {
+        console.log(`[ORÁCULO] ⚠️ JSON inválido, tentando novamente... (${tentativa}/${maxTentativas})`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return this.chamarOraculoNarrativo(prompt + "\n\n**ATENÇÃO: Retorne APENAS JSON válido, sem texto adicional.**", tentativa + 1);
+    }
             if (tentativa >= maxTentativas) {
                 throw err;
             }
@@ -786,8 +797,15 @@ if ((response.status === 503 || response.status === 429) && tentativa < maxTenta
 
             // 🆕 ATUALIZAÇÃO: A resposta da IA (próxima seção) será processada
             // e registrada com o ID que esta opção (opcao.secao) já carrega.
-            const proximaSecao = this.processarRespostaIA(respostaIA, secaoPai, opcao.secao);
-            this.secoesEmergentes.set(opcao.secao, proximaSecao);
+            // 🆕 VALIDAÇÃO
+if (!respostaIA || !respostaIA.texto || !respostaIA.opcoes) {
+    console.error('[EMERGÊNCIA] ❌ Resposta inválida:', respostaIA);
+    throw new Error("IA retornou resposta mal formatada.");
+}
+
+const proximaSecao = this.processarRespostaIA(respostaIA, secaoPai, opcao.secao);
+this.secoesEmergentes.set(opcao.secao, proximaSecao);
+
 
             return { ativada: true, idSecao: opcao.secao, secao: proximaSecao };
 
@@ -1062,7 +1080,12 @@ ${monstrosAmostra}
        ]
      }
 
-
+**⚠️ CRÍTICO - FORMATO DE RESPOSTA:**
+- Retorne APENAS JSON válido
+- NÃO adicione texto explicativo antes ou depois
+- NÃO use markdown
+- Comece DIRETAMENTE com {
+- Termine DIRETAMENTE com }
 
 
 **FORMATO (JSON PURO - Modo Normal):**
@@ -1274,6 +1297,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
