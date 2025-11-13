@@ -193,10 +193,15 @@ class SistemaNarrativas {
         console.log('Nenhum dado do jogador encontrado');
     }
 }
+    
     async iniciarNarrativa(narrativaId) {
         await this.carregarDadosJogador();
         this.narrativaAtual = NARRATIVAS[narrativaId];
         this.secaoAtual = 1;
+
+        // 🆕 CORREÇÃO: Aplica todos os patches ANTES de mostrar a seção
+        this.aplicarTodosOsPatches();
+
         this.sistemaEmergencia.resetar();
         document.getElementById('selecao-narrativas').className = 'tela-oculta';
         document.getElementById('narrativa-ativa').className = 'tela-ativa';
@@ -218,49 +223,52 @@ class SistemaNarrativas {
     }
 
     // =======================================================================
-    // === INÍCIO DO NOVO MÉTODO (aplicarPatchPersistente) ===
+    // === MÉTODO ATUALIZADO (aplicarTodosOsPatches) ===
     // =======================================================================
-    aplicarPatchPersistente(numeroSecao, secaoOriginal) {
-        // 1. Verifica se this.playerData e patches existem
+    aplicarTodosOsPatches() {
+        // 1. Garante que os dados do jogador e os patches existam
         if (!this.playerData || !this.playerData.patches) {
-            return secaoOriginal;
+            console.log("[PATCH] Nenhum patch para aplicar.");
+            return;
         }
 
-        // 2. Tenta encontrar um patch para esta seção
-        const patch = this.playerData.patches[numeroSecao];
-
-        // 3. Se não houver patch, retorna a seção original intacta
-        if (!patch) {
-            return secaoOriginal;
-        }
-
-        console.log(`[PATCH] Aplicando patch persistente salvo na Seção ${numeroSecao}`);
-
-        // 4. Clona a seção original para não modificar o NARRATIVAS-DATA
-        const secaoModificada = JSON.parse(JSON.stringify(secaoOriginal));
-
-        // 5. Aplica as novas opções do patch
-        if (patch.novas_opcoes && Array.isArray(patch.novas_opcoes)) {
-            secaoModificada.opcoes.push(...patch.novas_opcoes);
-        }
-
-        // 6. Injeta as novas subseções na árvore da narrativa ATUAL
-        // Isso as torna "reais" para esta sessão de jogo
-        if (patch.novas_secoes && typeof patch.novas_secoes === 'object') {
-            for (const [idSecaoNova, dadosSecaoNova] of Object.entries(patch.novas_secoes)) {
-                // Adiciona verificando se já não existe (evita duplicação em recargas)
-                if (!this.narrativaAtual.secoes[idSecaoNova]) {
-                    this.narrativaAtual.secoes[idSecaoNova] = dadosSecaoNova;
-                    console.log(`[PATCH] Subseção persistente "${idSecaoNova}" injetada.`);
+        console.log("[PATCH] Verificando e aplicando todos os patches...");
+        
+        // 2. Itera sobre todos os patches salvos (ex: "1", "3")
+        for (const [idSecaoEsqueleto, patch] of Object.entries(this.playerData.patches)) {
+            
+            // 3. Encontra a seção do esqueleto original que será modificada
+            const secaoOriginal = this.narrativaAtual.secoes[idSecaoEsqueleto];
+            
+            if (secaoOriginal) {
+                
+                // 4. Adiciona as novas opções (se ainda não existirem)
+                if (patch.novas_opcoes && Array.isArray(patch.novas_opcoes)) {
+                    patch.novas_opcoes.forEach(novaOp => {
+                        // Verifica se uma opção com a *mesma seção de destino* já existe
+                        if (!secaoOriginal.opcoes.find(op => op.secao === novaOp.secao)) {
+                            console.log(`[PATCH]... aplicando nova opção para Seção ${idSecaoEsqueleto}`);
+                            secaoOriginal.opcoes.push(novaOp);
+                        }
+                    });
                 }
+                
+                // 5. Adiciona as novas subseções (persistente_IA_X) à árvore principal
+                if (patch.novas_secoes && typeof patch.novas_secoes === 'object') {
+                    for (const [idSecaoNova, dadosSecaoNova] of Object.entries(patch.novas_secoes)) {
+                        if (!this.narrativaAtual.secoes[idSecaoNova]) {
+                            this.narrativaAtual.secoes[idSecaoNova] = dadosSecaoNova;
+                            console.log(`[PATCH]... subseção persistente "${idSecaoNova}" injetada na memória.`);
+                        }
+                    }
+                }
+            } else {
+                console.warn(`[PATCH] Seção alvo ${idSecaoEsqueleto} não encontrada no esqueleto.`);
             }
         }
-        
-        // 7. Retorna a seção "remendada"
-        return secaoModificada;
     }
     // =======================================================================
-    // === FIM DO NOVO MÉTODO ===
+    // === FIM DO MÉTODO ===
     // =======================================================================
 
     async mostrarSecao(numeroSecao, secaoDeOrigem = null) {
@@ -278,21 +286,16 @@ class SistemaNarrativas {
         let secao;
 
         if (typeof numeroSecao === 'string' && numeroSecao.startsWith('emergente_')) {
-            // ... (lógica de buscar seção emergente)
             secao = this.sistemaEmergencia.secoesEmergentes.get(numeroSecao);
         } else if (typeof numeroSecao === 'string' && numeroSecao.startsWith('persistente_')) {
-            // 🆕 LÓGICA PARA CARREGAR SEÇÕES DO PATCH (se já não foram injetadas)
             console.log(`[PATCH] Buscando seção persistente: ${numeroSecao}`);
-            secao = this.narrativaAtual.secoes[numeroSecao];
+            secao = this.narrativaAtual.secoes[numeroSecao]; // Agora deve funcionar
         } else {
             // É uma seção do esqueleto (número)
             secao = this.narrativaAtual.secoes[numeroSecao];
             
-            // 🆕 APLICA O PATCH ANTES DE CONTINUAR
-            // Só aplica se os dados do jogador estiverem carregados
-            if (this.playerData) {
-                 secao = this.aplicarPatchPersistente(numeroSecao, secao);
-            }
+            // 🆕 REMOVIDO: A chamada a aplicarPatchPersistente(numeroSecao, secao) foi removida
+            // porque agora é tratada globalmente em iniciarNarrativa/restaurarNarrativa.
         }
 
         if (!secao) {
@@ -1045,41 +1048,44 @@ class SistemaNarrativas {
 }
 
 async restaurarNarrativaAposRetorno(narrativeId, secao) {
-    // Restaura a narrativa corretamente após retorno de batalha
-    if (!NARRATIVAS[narrativeId]) {
-        console.error(`Narrativa ${narrativeId} não encontrada`);
-        return false;
+        // Restaura a narrativa corretamente após retorno de batalha
+        if (!NARRATIVAS[narrativeId]) {
+            console.error(`Narrativa ${narrativeId} não encontrada`);
+            return false;
+        }
+
+        this.narrativaAtual = NARRATIVAS[narrativaId];
+        this.secaoAtual = secao;
+        
+        // Restaura a interface
+        document.getElementById('selecao-narrativas').className = 'tela-oculta';
+        document.getElementById('narrativa-ativa').className = 'tela-ativa';
+        document.getElementById('titulo-narrativa').textContent = this.narrativaAtual.titulo;
+
+        // Restaura listeners
+        document.getElementById('abrir-inventario-btn').onclick = () => {
+            this.abrirInventarioSemItem();
+        };
+
+        if (!this.visao3d) {
+            this.visao3d = new Visao3D('canvas-container');
+        }
+
+        document.addEventListener('opcaoClicada3D', (e) => {
+            this.processarOpcao(e.detail);
+        });
+
+        // Carrega dados do jogador
+        await this.carregarDadosJogador(); 
+        
+        // 🆕 CORREÇÃO: Aplica todos os patches ANTES de mostrar a seção
+        this.aplicarTodosOsPatches();
+        
+        // Mostra a seção
+        await this.mostrarSecao(secao);
+        
+        return true;
     }
-
-    this.narrativaAtual = NARRATIVAS[narrativeId];
-    this.secaoAtual = secao;
-    
-    // Restaura a interface
-    document.getElementById('selecao-narrativas').className = 'tela-oculta';
-    document.getElementById('narrativa-ativa').className = 'tela-ativa';
-    document.getElementById('titulo-narrativa').textContent = this.narrativaAtual.titulo;
-
-    // Restaura listeners
-    document.getElementById('abrir-inventario-btn').onclick = () => {
-        this.abrirInventarioSemItem();
-    };
-
-    if (!this.visao3d) {
-        this.visao3d = new Visao3D('canvas-container');
-    }
-
-    document.addEventListener('opcaoClicada3D', (e) => {
-        this.processarOpcao(e.detail);
-    });
-
-    // Carrega dados do jogador
-    await this.carregarDadosJogador();
-    
-    // Mostra a seção
-    await this.mostrarSecao(secao);
-    
-    return true;
-}
 
     
     async limparProgresso() {
@@ -1472,4 +1478,5 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
