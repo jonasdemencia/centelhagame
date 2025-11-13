@@ -305,7 +305,7 @@ class SistemaNarrativas {
     // 🔹 ADICIONE LOG AQUI
     // Só incrementa se não for seção emergente
     if (typeof numeroSecao === 'number' || !numeroSecao.startsWith('emergente_')) {
-        // this.contadorSecoesParaEmergencia++;
+        this.contadorSecoesParaEmergencia++;
         console.log(`[NARRATIVAS] 📊 Contador para emergência: ${this.contadorSecoesParaEmergencia}/4`);
     }
 
@@ -1470,6 +1470,7 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
