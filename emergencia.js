@@ -1244,7 +1244,7 @@ ${secaoOriginal.opcoes ? secaoOriginal.opcoes.map((op, i) => `    - [${i}] "${op
 2.  **ADICIONAR, NÃO SUBSTITUIR:** Você só pode ADICIONAR 1 ou 2 novas opções.
 3.  **SUBSEÇÕES (NOVAS SEÇÕES):**
     * As "novas_opcoes" devem apontar para IDs de "novas_secoes" (ex: "persistente_IA_1").
-    * Você deve criar de 1 a 3 "novas_secoes" no total.
+    * Você deve criar de 3 a 5 "novas_secoes" no total.
     * Cada "nova_secao" é uma expansão livre (texto, opções, itens, monstros).
     * **OBRIGATÓRIO:** Cada "nova_secao" DEVE ter pelo menos uma opção para "Retornar" (ex: '{"texto": "Retornar ao corredor", "secao": ${secaoOriginal.id}}'), permitindo ao jogador sair da subseção.
 4.  **MONSTROS E ITENS:** Você pode usar as listas abaixo para adicionar batalhas ou itens nas novas seções.
@@ -1350,3 +1350,4 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
