@@ -960,7 +960,8 @@ class SistemaNarrativas {
 
     if (narrativaUrl && secaoUrl) {
         if (NARRATIVAS[narrativaUrl]) {
-            await this.restaurarNarrativaAposRetorno(narrativaUrl, parseInt(secaoUrl));
+            // 🆕 CORREÇÃO: Remove parseInt para aceitar IDs de texto (ex: "persistente_IA_1")
+            await this.restaurarNarrativaAposRetorno(narrativaUrl, secaoUrl); 
             return;
         }
     }
@@ -968,10 +969,11 @@ class SistemaNarrativas {
     if (secaoUrl) {
         for (const [narrativaId, narrativa] of Object.entries(NARRATIVAS)) {
             if (narrativa.secoes[secaoUrl]) {
-                await this.iniciarNarrativa(narrativaId);
-                await this.mostrarSecao(parseInt(secaoUrl));
-                return;
-            }
+            await this.iniciarNarrativa(narrativaId);
+            // 🆕 CORREÇÃO: Remove parseInt
+            await this.mostrarSecao(secaoUrl);
+            return;
+        }
         }
     }
 
@@ -1470,3 +1472,4 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
