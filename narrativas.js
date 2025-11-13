@@ -1470,13 +1470,3 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
-
-
-
-
-
-
-
-
-
-
