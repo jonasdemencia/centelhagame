@@ -322,7 +322,7 @@ raros: ["necromante", "sombra-antiga", "jaguar", "urso", "tigre", "crocodilo", "
 
         // ⚠️ ATENÇÃO: Mudado para 1 para TESTES, como você mencionou.
         // Mude para `contador < 4` para voltar ao normal (gatilho a cada 4 seções).
-        if (contador < 4) { 
+        if (contador < 10) { 
             return null;
         }
 
@@ -1350,5 +1350,6 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
