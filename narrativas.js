@@ -306,7 +306,7 @@ class SistemaNarrativas {
     // Só incrementa se não for seção emergente
     if (typeof numeroSecao === 'number' || !numeroSecao.startsWith('emergente_')) {
         this.contadorSecoesParaEmergencia++;
-        console.log(`[NARRATIVAS] 📊 Contador para emergência: ${this.contadorSecoesParaEmergencia}/10`);
+        console.log(`[NARRATIVAS] 📊 Contador para emergência: ${this.contadorSecoesParaEmergencia}/6`);
     }
 
     const contextoAtual = this.sistemaEmergencia.analisarSecao(
@@ -352,7 +352,7 @@ class SistemaNarrativas {
     } 
     // Se a emergência DEVERIA TER SIDO ATIVADA (contador >= 4) mas FALHOU (API error, etc.)
     // E a emergência não está já ativa (garantia extra)
-    else if (this.contadorSecoesParaEmergencia >= 10 && !this.sistemaEmergencia.emergenciaAtiva) {
+    else if (this.contadorSecoesParaEmergencia >= 6 && !this.sistemaEmergencia.emergenciaAtiva) {
         console.log(`[NARRATIVAS] ⚠️ Emergência falhou (API?) ou foi desativada. Resetando contador.`);
         this.contadorSecoesParaEmergencia = 0; // 🔹 RESET NA FALHA
         console.log(`[NARRATIVAS] 🔄 Contador resetado após FALHA na emergência: ${this.contadorSecoesParaEmergencia}`);
@@ -1470,5 +1470,6 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
