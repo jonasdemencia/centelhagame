@@ -1267,102 +1267,213 @@ ${this.historico.map(h => '- Seção ' + h.numero + ': "' + h.texto.substring(0,
 `;
     }
 
-    // =======================================================================
-    // === 🆕 INÍCIO: NOVO MÉTODO (construirPromptBranchCompleto) ===
-    // =======================================================================
     construirPromptBranchCompleto(tituloNarrativa, secaoAtual) {
-        const historicoFormatado = this.historico.map(h =>
-            `Seção ${h.numero}: "${h.texto.substring(0, 100)}..."\n` +
-            `Opções: [${h.opcoes.join(', ')}]` +
-            (h.escolhaFeita ? `\nEscolha: "${h.escolhaFeita}"` : '')
-        ).join('\n\n');
+    const historicoFormatado = this.historico.map(h =>
+        `Seção ${h.numero}: "${h.texto.substring(0, 100)}..."\n` +
+        `Opções: [${h.opcoes.join(', ')}]` +
+        (h.escolhaFeita ? `\nEscolha: "${h.escolhaFeita}"` : '')
+    ).join('\n\n');
 
-        const textoSecaoOriginal = secaoAtual.texto || this.historico.at(-1)?.texto || "contexto desconhecido";
-        const padroes = this.analisarPadroes();
-        const itensAmostra = this.getItensAmostra(textoSecaoOriginal);
-        const monstrosAmostra = this.getMonstrosAmostra();
+    const textoSecaoOriginal = secaoAtual.texto || this.historico.at(-1)?.texto || "contexto desconhecido";
+    const padroes = this.analisarPadroes();
+    const itensAmostra = this.getItensAmostra(textoSecaoOriginal);
+    const monstrosAmostra = this.getMonstrosAmostra();
 
-        return `
-Você é um 'Mestre de Jogo' no estilo de Aventuras Fantásticas.
-Sua missão é gerar um "branch" narrativo completo (um desvio) de 10 seções de profundidade.
+    return `
+Você é um Mestre de Jogo COERENTE no estilo das Aventuras Fantásticas de Steve Jackson e Ian Livingstone.
+Aventura: "${tituloNarrativa}"
 
-**REGRAS:**
-1.  **Geração em Lote:** Você deve gerar um JSON contendo um objeto "secoes" e um objeto "patches".
-2.  **Objeto "secoes":**
-    * Deve conter 10 seções: "emergente_IA_1" até "emergente_IA_10".
-    * Cada seção deve ter "texto", "opcoes", e opcionalmente "efeitos", "batalha", "teste", etc.
-    * O "texto" deve ser curto (50-100 palavras).
-    * As opções devem se conectar (ex: "emergente_IA_1" leva a "emergente_IA_2", que leva a "emergente_IA_3", etc.).
-    * Você DEVE criar ramificações dentro do branch (ex: "emergente_IA_2" pode ter opções para "emergente_IA_3" ou "emergente_IA_4").
-    * Pelo menos uma trilha deve atingir a profundidade 10.
-    * Seções de beco-sem-saída ou de profundidade 10 devem ter uma opção de "recuar" (tipo: "recuar") para a seção de origem da aventura.
-3.  **Lógica de Perigo (Regra 8 do prompt antigo):** Distribua as opções de perigo (perigo_oculto, teste_mortal, morte_imediata, teste_normal) entre as 10 seções. Nem toda seção precisa de perigo, mas o branch deve ser arriscado.
-4.  **Lógica de Patch (Regra 10 do prompt antigo - CHANCE DE 20%):**
-    * **Opcionalmente** (20% de chance, não é obrigatório), uma das seções emergentes (ex: "emergente_IA_4") pode ter uma opção com um efeito "gerar_patch_persistente".
-    * Se você criar esse efeito, você DEVE também adicionar um objeto "patches" na raiz da sua resposta JSON.
+${padroes ? `**${padroes}**\n` : ''}
+
+**MISSÃO CRÍTICA:**
+Gerar um branch narrativo completo de 10 seções ("emergente_IA_1" até "emergente_IA_10") em um único JSON.
 
 **CONTEXTO ATUAL (Seção ${secaoAtual.numero}):**
 "${textoSecaoOriginal}"
 
-**HISTÓRICO (Seções já visitadas):**
+**HISTÓRICO:**
 ${historicoFormatado}
 
+**REGRAS ABSOLUTAS:**
+
+**1. ESTRUTURA DO BRANCH:**
+   - 10 seções obrigatórias: "emergente_IA_1" até "emergente_IA_10"
+   - Criar ramificações (ex: emergente_IA_2 pode levar a IA_3 OU IA_4)
+   - Pelo menos UMA trilha deve chegar até IA_10
+   - Seções finais (profundidade 10) devem ter opção "recuar"
+
+**2. QUALIDADE NARRATIVA (CRÍTICO):**
+   - Texto: 50-150 palavras por seção 
+   - Estilo: Aventuras Fantásticas (descritivo, atmosférico, tenso, imersivo)
+   - Tom: Manter coerência com contexto original
+   - 3-4 opções por seção 
+   - Criar dilemas morais e escolhas difíceis
+
+**3. ANCORAGEM FÍSICA:**
+   - Referencie elementos CONCRETOS da seção original
+   - Evite abstrações cósmicas
+   - Mantenha escala controlada
+   - Preferência: adicionar detalhes sobre causar estranhamento
+
+**4. MODOS NARRATIVOS:**
+   - EXPANSÃO NATURAL (60%): Continua normalmente com mais detalhes
+   - DETALHE PERTURBADOR (30%): Pequeno detalhe físico está errado
+   - EVENTO MENOR (10%): Algo pequeno ACONTECE (físico, tangível)
+
+**5. ITENS (OBRIGATÓRIO):**
+   - Se texto mencionar "encontrar", "abrir", "pegar", "descobrir" → ADICIONE 1-3 itens nos "efeitos"
+   - Use APENAS IDs da lista abaixo
+   - Formato: {"tipo": "item", "item": "ID_DO_ITEM"}
+   - Pelo menos 4 seções do branch devem ter itens
 ${itensAmostra}
+
+**6. TESTES DE ATRIBUTO:**
+   - Máximo 1 teste por seção
+   - Só crie teste se houver RISCO REAL ou INCERTEZA SIGNIFICATIVA
+   - ❌ NÃO: "limpar espelho", "ler livro", "andar em sala segura"
+   - ✅ SIM: "escalar muro desmoronando", "desarmar armadilha", "beber poção desconhecida"
+   
+   **DISTRIBUIÇÃO:**
+   - 50% SORTE (luck): Perigos passivos/ambientais
+   - 40% HABILIDADE (skill): Ações ativas/deliberadas
+   - 10% CARISMA (charisma): Interação social
+   
+   **DIFICULDADES:**
+   - Teste mortal: 18-22
+   - Teste normal: 10-15
+   
+   **FORMATO TESTE MORTAL:**
+   {"texto": "Saltar sobre o abismo (Teste de Sorte)", "tipo": "aprofundar", "teste": "sorte", "dificuldade": 20, "falha_mortal": true, "secao": "emergente_IA_X"}
+   
+   **FORMATO TESTE NORMAL:**
+   {"texto": "Decifrar o enigma (Teste de Habilidade)", "tipo": "aprofundar", "teste": "habilidade", "dificuldade": 12, "secao": "emergente_IA_X"}
+
+**7. PERIGOS (DISTRIBUIR ENTRE AS 10 SEÇÕES):**
+   - 60% Perigo Oculto: {"texto": "Tocar o orbe", "tipo": "perigo_oculto", "secao": "emergente_IA_X"}
+   - 15% Teste Mortal: (ver formato acima)
+   - 10% Morte Imediata: {"texto": "Beber da taça", "tipo": "aprofundar", "morte_imediata": true, "secao": "emergente_IA_X"}
+   - 15% Teste Normal: (ver formato acima)
+
+**8. BATALHAS:**
+   - Use APENAS monstros da lista
+   - Quando revelar perigo_oculto, descreva revelação do monstro
+   - Formato: {"texto": "Enfrentar", "tipo": "iniciar_batalha", "monstro": "ID_MONSTRO"}
+   - Sempre ofereça fugir: {"texto": "Fugir", "tipo": "recuar"}
+   - Pelo menos 3 batalhas no branch
 ${monstrosAmostra}
 
-**FORMATO DA RESPOSTA (JSON PURO - OBRIGATÓRIO):**
+**9. EFEITOS DE ENERGIA:**
+   - Profundidade 1-3: -5 a +5
+   - Profundidade 4-7: -10 a +10
+   - Profundidade 8-10: -20 a +15
+
+**10. PATCHES PERSISTENTES (20% chance):**
+   - 1-2 seções podem ter efeito de patch
+   - Formato: {"tipo": "gerar_patch_persistente", "flag": "ACAO_FEITA", "secao_alvo": ${this.historico[0]?.numero || 1}}
+   - Se usar, adicione objeto "patches" na raiz
+   - Flags: PORTA_DESTRANCADA, ALAVANCA_PUXADA, MECANISMO_ATIVADO, RITUAL_COMPLETADO
+
+**FORMATO DA RESPOSTA (JSON PURO):**
 
 {
   "secoes": {
     "emergente_IA_1": {
-      "texto": "[Texto da primeira seção...]",
+      "texto": "[100-200 palavras descritivas]",
       "opcoes": [
-        {"texto": "[Opção A]", "tipo": "aprofundar", "secao": "emergente_IA_2"},
-        {"texto": "[Opção B]", "tipo": "aprofundar", "secao": "emergente_IA_3"},
+        {"texto": "[Opção 1]", "tipo": "aprofundar", "secao": "emergente_IA_2"},
+        {"texto": "[Opção 2]", "tipo": "aprofundar", "secao": "emergente_IA_3"},
+        {"texto": "[Opção 3 - teste]", "tipo": "aprofundar", "teste": "sorte", "dificuldade": 15, "secao": "emergente_IA_4"},
         {"texto": "Continuar normalmente", "tipo": "recuar"}
-      ]
+      ],
+      "efeitos": [{"tipo": "item", "item": "tocha"}]
     },
     "emergente_IA_2": {
-      "texto": "[Texto da consequência A...]",
+      "texto": "[Consequência opção 1]",
       "opcoes": [
-        {"texto": "Tocar o orbe", "tipo": "perigo_oculto", "secao": "emergente_IA_5"}
-      ]
-    },
-    "emergente_IA_3": {
-      "texto": "[Texto da consequência B...]",
-      "opcoes": [
-        {"texto": "Puxar a alavanca (estrondo)", "tipo": "aprofundar", "secao": "emergente_IA_4",
-         "efeitos": [{"tipo": "gerar_patch_persistente", "flag": "ALAVANCA_PUXADA", "secao_alvo": ${this.historico[0]?.numero || 1}}]
-        }
-      ]
-    },
-    "emergente_IA_4": {
-      "texto": "[Texto após puxar alavanca...]",
-      "opcoes": [
+        {"texto": "Tocar o orbe", "tipo": "perigo_oculto", "secao": "emergente_IA_5"},
+        {"texto": "Ignorar", "tipo": "aprofundar", "secao": "emergente_IA_6"},
         {"texto": "Voltar", "tipo": "recuar"}
       ]
     },
+    "emergente_IA_3": {
+      "texto": "[Consequência opção 2]",
+      "opcoes": [
+        {"texto": "Puxar alavanca", "tipo": "aprofundar", "secao": "emergente_IA_7", "efeitos": [{"tipo": "gerar_patch_persistente", "flag": "ALAVANCA_PUXADA", "secao_alvo": ${this.historico[0]?.numero || 1}}]},
+        {"texto": "Examinar", "tipo": "aprofundar", "secao": "emergente_IA_8"},
+        {"texto": "Voltar", "tipo": "recuar"}
+      ],
+      "efeitos": [{"tipo": "item", "item": "adaga"}]
+    },
+    "emergente_IA_4": {
+      "texto": "[Resultado teste - sistema processa]",
+      "opcoes": [
+        {"texto": "Continuar", "tipo": "aprofundar", "secao": "emergente_IA_9"}
+      ]
+    },
     "emergente_IA_5": {
-      "texto": "[Revelação do perigo: Um monstro surge!]",
+      "texto": "[REVELAÇÃO: Um servo de pedra emerge!]",
       "opcoes": [
         {"texto": "Lutar", "tipo": "iniciar_batalha", "monstro": "servo-pedra"},
         {"texto": "Fugir", "tipo": "recuar"}
       ]
+    },
+    "emergente_IA_6": {
+      "texto": "[Continuação caminho ignorar]",
+      "opcoes": [
+        {"texto": "Avançar", "tipo": "aprofundar", "secao": "emergente_IA_9"},
+        {"texto": "Retornar", "tipo": "recuar"}
+      ],
+      "efeitos": [{"tipo": "energia", "valor": -5}]
+    },
+    "emergente_IA_7": {
+      "texto": "[Após puxar alavanca]",
+      "opcoes": [
+        {"texto": "Investigar ruído", "tipo": "aprofundar", "secao": "emergente_IA_10"},
+        {"texto": "Voltar", "tipo": "recuar"}
+      ]
+    },
+    "emergente_IA_8": {
+      "texto": "[Caminho examinar]",
+      "opcoes": [
+        {"texto": "Seguir", "tipo": "aprofundar", "secao": "emergente_IA_10"},
+        {"texto": "Retornar", "tipo": "recuar"}
+      ],
+      "efeitos": [{"tipo": "item", "item": "pocao_cura"}]
+    },
+    "emergente_IA_9": {
+      "texto": "[Quase no fim]",
+      "opcoes": [
+        {"texto": "Última decisão", "tipo": "aprofundar", "secao": "emergente_IA_10"},
+        {"texto": "Desistir", "tipo": "recuar"}
+      ]
+    },
+    "emergente_IA_10": {
+      "texto": "[CONCLUSÃO - profundidade máxima]",
+      "opcoes": [
+        {"texto": "Retornar à aventura principal", "tipo": "recuar"}
+      ],
+      "efeitos": [{"tipo": "item", "item": "espada"}, {"tipo": "energia", "valor": 10}]
     }
-    // ... continue até "emergente_IA_10"
   },
   "patches": {
-    "emergente_IA_3": { 
+    "emergente_IA_3": {
       "flag": "ALAVANCA_PUXADA",
       "secao_alvo": ${this.historico[0]?.numero || 1}
     }
   }
 }
+
+**VALIDAÇÃO FINAL:**
+- [ ] 10 seções criadas?
+- [ ] Textos com 50-150 palavras?
+- [ ] 3-4 opções por seção?
+- [ ] Pelo menos 2 seções com itens?
+- [ ] Pelo menos 2 batalhas/perigos?
+- [ ] Pelo menos 3 testes?
+- [ ] Narrativa coerente e atmosférica?
 `;
-    }
-    // =======================================================================
-    // === 🆕 FIM: NOVO MÉTODO (construirPromptBranchCompleto) ===
-    // =======================================================================
+}
+
     
 // =======================================================================
 // === INÍCIO DO MÉTODO (gerarPatchPersistente) COM LOGS COMPLETOS ===
@@ -1504,6 +1615,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
