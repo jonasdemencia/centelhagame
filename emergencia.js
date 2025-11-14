@@ -441,7 +441,7 @@ ${historicoFormatado}
 
 1. Escolha UM dos 3 modos
 2. Gere texto (80-180 palavras) - MENOR que o original
-3. Crie 2-4 opções (varie livremente)
+3. Crie 2-5 opções (varie livremente)
 4. Inclua SEMPRE pelo menos uma opção que seja claramente "continuar normal"
 5. Efeitos de energia: apenas se apropriado (-50 - acidente, amputação - a +10)
 6. **ITENS** Se seu texto mencionar encontrar/abrir/pegar algo físico, adicione 1-2 itens nos efeitos.
@@ -1244,7 +1244,7 @@ ${secaoOriginal.opcoes ? secaoOriginal.opcoes.map((op, i) => `    - [${i}] "${op
 2.  **ADICIONAR, NÃO SUBSTITUIR:** Você só pode ADICIONAR 1 ou 2 novas opções.
 3.  **SUBSEÇÕES (NOVAS SEÇÕES):**
     * As "novas_opcoes" devem apontar para IDs de "novas_secoes" (ex: "persistente_IA_1").
-    * Você deve criar de 3 a 5 "novas_secoes" no total.
+    * Você deve criar de 1 a 3 "novas_secoes" no total.
     * Cada "nova_secao" é uma expansão livre (texto, opções, itens, monstros).
     * **OBRIGATÓRIO:** Cada "nova_secao" DEVE ter pelo menos uma opção para "Retornar" (ex: '{"texto": "Retornar ao corredor", "secao": ${secaoOriginal.id}}'), permitindo ao jogador sair da subseção.
 4.  **MONSTROS E ITENS:** Você pode usar as listas abaixo para adicionar batalhas ou itens nas novas seções.
@@ -1350,5 +1350,3 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
-
-
