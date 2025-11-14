@@ -953,7 +953,7 @@ O jogador falhou. Não o recompense com itens. Apenas narre a falha.
 Você é um Mestre de Jogo que mantém COERÊNCIA narrativa.
 
 **PROFUNDIDADE ATUAL: ${this.profundidadeAtual}/5**
-${this.profundidadeAtual >= 3 ? '⚠️ PRÓXIMO DO LIMITE - Considere convergir naturalmente' : ''}
+${this.profundidadeAtual >= 4 ? '⚠️ PRÓXIMO DO LIMITE - Considere convergir naturalmente' : ''}
 
 **CONTEXTO:**
 Texto anterior: "${secaoPai.texto.substring(0, 150)}..."
@@ -1350,6 +1350,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
