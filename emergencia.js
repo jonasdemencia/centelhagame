@@ -440,7 +440,7 @@ ${historicoFormatado}
 **INSTRUÇÕES FINAIS:**
 
 1. Escolha UM dos 3 modos
-2. Gere texto (80-180 palavras) - MENOR que o original
+2. Gere texto (50-100 palavras) - CONCISO e direto
 3. Crie 2-4 opções (busque tensão entre escolhas e dilemas)
 4. Inclua SEMPRE pelo menos uma opção que seja claramente "continuar normal"
 5. Efeitos de energia: apenas se apropriado (-50 - acidente, amputação - a +10)
@@ -531,7 +531,7 @@ ${monstrosAmostra}
 
 {
   "modo": "expansao_natural" | "detalhe_perturbador" | "evento_menor",
-  "texto": "[Texto coerente e ancorado - 80-180 palavras]",
+    "texto": "[Texto coerente e ancorado - 50-100 palavras]",
   "opcoes": [
     {"texto": "[Opção 1]", "tipo": "aprofundar"},
     {"texto": "[Opção 2]", "tipo": "neutra"},
@@ -775,7 +775,7 @@ return JSON.parse(jsonText);
         // A profundidade só deve aumentar se NÃO for uma batalha (pois a vitória já é o próximo passo).
         if (!opcao.batalha) {
              this.profundidadeAtual++;
-             console.log(`[EMERGÊNCIA] Profundidade: ${this.profundidadeAtual}/5`);
+             console.log(`[EMERGÊNCIA] Profundidade: ${this.profundidadeAtual}/10`);
         } else {
             console.log(`[EMERGÊNCIA] Batalha iniciada, profundidade mantida em: ${this.profundidadeAtual}`);
             // Não retorna, pois o narrativas.js lidará com a opção de batalha.
@@ -783,7 +783,7 @@ return JSON.parse(jsonText);
             return null; 
         }
 
-        if (this.profundidadeAtual >= 5) {
+        if (this.profundidadeAtual >= 10) {
             console.log('[EMERGÊNCIA] 🎯 PROFUNDIDADE MÁXIMA - Forçando convergência');
             return this.gerarConvergenciaForcada();
         }
@@ -952,8 +952,9 @@ O jogador falhou. Não o recompense com itens. Apenas narre a falha.
         return `
 Você é um Mestre de Jogo que mantém COERÊNCIA narrativa.
 
-**PROFUNDIDADE ATUAL: ${this.profundidadeAtual}/5**
-${this.profundidadeAtual >= 4 ? '⚠️ PRÓXIMO DO LIMITE - Considere convergir naturalmente' : ''}
+**PROFUNDIDADE ATUAL: ${this.profundidadeAtual}/10**
+${this.profundidadeAtual >= 8 ? '⚠️ PRÓXIMO DO LIMITE - Considere convergir naturalmente' : ''}
+
 
 **CONTEXTO:**
 Texto anterior: "${secaoPai.texto.substring(0, 150)}..."
@@ -985,7 +986,7 @@ Referência ao contexto original: "${textoPrimeiraEmergencia}..."
 3. **PROFUNDIDADE ${this.profundidadeAtual}:**
    ${this.profundidadeAtual < 3 ? '- Pode expandir normalmente' : ''}
    ${this.profundidadeAtual >= 3 ? '- CONSIDERE oferecer opção clara de "sair/encerrar"' : ''}
-   ${this.profundidadeAtual >= 4 ? '- RECOMENDADO: faça próxima seção ser conclusão natural' : ''}
+   ${this.profundidadeAtual >= 9 ? '- RECOMENDADO: faça próxima seção ser conclusão natural' : ''}
 
 4. **CONSEQUÊNCIA DA ESCOLHA:**
    - Deve ser física e tangível
@@ -1244,7 +1245,7 @@ ${secaoOriginal.opcoes ? secaoOriginal.opcoes.map((op, i) => `    - [${i}] "${op
 2.  **ADICIONAR, NÃO SUBSTITUIR:** Você só pode ADICIONAR 1 ou 2 novas opções.
 3.  **SUBSEÇÕES (NOVAS SEÇÕES):**
     * As "novas_opcoes" devem apontar para IDs de "novas_secoes" (ex: "persistente_IA_1").
-    * Você deve criar de 2 a 4 "novas_secoes" no total.
+    * Você deve criar de 2 a 3 "novas_secoes" no total.
     * Cada "nova_secao" é uma expansão livre (texto, opções, itens, monstros).
     * **OBRIGATÓRIO:** Cada "nova_secao" DEVE ter pelo menos uma opção para "Retornar" (ex: '{"texto": "Retornar ao corredor", "secao": ${secaoOriginal.id}}'), permitindo ao jogador sair da subseção.
 4.  **MONSTROS E ITENS:** Você pode usar as listas abaixo para adicionar batalhas ou itens nas novas seções.
@@ -1350,6 +1351,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
