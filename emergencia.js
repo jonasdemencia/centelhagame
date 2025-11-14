@@ -352,8 +352,10 @@ raros: ["necromante", "sombra-antiga", "jaguar", "urso", "tigre", "crocodilo", "
             sessionStorage.setItem('emergencia_branch', JSON.stringify(branchData.secoes));
             sessionStorage.setItem('emergencia_patches', JSON.stringify(branchData.patches || {}));
             
-            // Salva apenas a primeira seção no Map local
-            this.secoesEmergentes.set(idEmergente, this.processarRespostaIA(secaoInicial, secaoAtual, idEmergente));
+            // 🆕 Usa o NOVO processador de batch
+const secaoProcessada = this.processarSecaoBatch(secaoInicial);
+this.secoesEmergentes.set(idEmergente, secaoProcessada);
+
 
             console.log(`[EMERGÊNCIA] ✅ Branch completo (10 seções) gerado e salvo no sessionStorage.`);
             console.log(`[EMERGÊNCIA] Patches gerados:`, (branchData.patches ? Object.keys(branchData.patches).length : 0));
@@ -775,7 +777,39 @@ return JSON.parse(jsonText);
         };
     }
 
+// =======================================================================
+    // === 🆕 INÍCIO: NOVO MÉTODO (processarSecaoBatch) ===
+    // =======================================================================
+    // Este método processa uma seção do branch, preservando seus IDs de seção
+    // e apenas adicionando flags necessárias (como 'emergente: true')
+    processarSecaoBatch(secaoJSON) {
+        if (!secaoJSON || !secaoJSON.opcoes) {
+            console.warn("[BATCH] processarSecaoBatch recebeu seção nula ou sem opções.");
+            return secaoJSON;
+        }
 
+        const opcoesProcessadas = secaoJSON.opcoes.map(op => {
+            // Apenas adiciona a flag 'emergente' se não for recuar ou batalha
+            if (op.tipo === 'recuar' || op.tipo === 'iniciar_batalha') {
+                return op; // Retorna a opção como está
+            }
+            
+            // Para todas as outras (aprofundar, neutra, perigo_oculto, teste, etc.)
+            // garante que a flag 'emergente' exista
+            return {
+                ...op,
+                emergente: true 
+            };
+        });
+
+        return {
+            ...secaoJSON,
+            opcoes: opcoesProcessadas
+        };
+    }
+    // =======================================================================
+    // === 🆕 FIM: NOVO MÉTODO (processarSecaoBatch) ===
+    // =======================================================================
 
     // =======================================================================
     // === SUBSTITUA ESTE MÉTODO (processarOpcaoEmergente) ===
@@ -837,7 +871,9 @@ return JSON.parse(jsonText);
             }
 
             // 6. Processa a próxima seção (para IDs internos e formatação)
-            const secaoProcessada = this.processarRespostaIA(proximaSecao, secaoPai, proximaSecaoID);
+// 🆕 Usa o NOVO processador de batch
+const secaoProcessada = this.processarSecaoBatch(proximaSecao);
+
             this.secoesEmergentes.set(proximaSecaoID, secaoProcessada);
 
             return { 
@@ -1468,6 +1504,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
