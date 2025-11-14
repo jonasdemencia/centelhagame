@@ -1293,15 +1293,73 @@ if (opcao.efeitos && opcao.efeitos.length > 0) {
 }
 
         
+        // ===================================================================
+        // === 🆕 INÍCIO DA SUBSTITUIÇÃO (BLOCO 4d) ===
+        // ===================================================================
+        
         // 4d. SE FOR UMA OPÇÃO DE APROFUNDAMENTO (EMERGENTE, SEM TESTE/BATALHA)
         if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
-            console.log(`[NARRATIVAS] Processando opção emergente: ${opcao.tipo}`);
+            console.log(`[NARRATIVAS] Processando opção emergente (do cache): ${opcao.tipo}`);
             
+            // 1. Pega a próxima seção do cache (NÃO CHAMA MAIS A IA)
             const resultadoEmergencia = await this.sistemaEmergencia.processarOpcaoEmergente(
                 opcao, 
                 this.secaoEmergentePai
             );
 
+            // 2. VERIFICA SE A RESPOSTA VEIO COM UM PATCH PARA SALVAR
+            if (resultadoEmergencia && resultadoEmergencia.patchParaSalvar) {
+                const patch = resultadoEmergencia.patchParaSalvar;
+                const flagNome = patch.flag;
+                const secaoAlvoNum = patch.secao_alvo;
+
+                if (secaoAlvoNum && flagNome && !this.playerData.worldState[flagNome]) {
+                    console.log(`[PATCH] 🚀 Gerando patch (via branch cache) para Seção ${secaoAlvoNum} com flag ${flagNome}`);
+                    
+                    const secaoOriginal = NARRATIVAS[this.narrativaAtual.id].secoes[secaoAlvoNum];
+                    if (secaoOriginal) {
+                        secaoOriginal.id = secaoAlvoNum; // Garante que a IA saiba o ID
+                        
+                        const historicoFormatado = this.sistemaEmergencia.historico
+                            .map(h => `Seção ${h.numero}: ${h.texto.substring(0, 50)}...`)
+                            .join('\n');
+
+                        // CHAMA A IA (SEPARADAMENTE) PARA GERAR O PATCH
+                        const patchJSON = await this.sistemaEmergencia.gerarPatchPersistente(
+                            secaoOriginal, 
+                            flagNome, 
+                            historicoFormatado
+                        );
+                        
+                        if (patchJSON) {
+                            console.log(`[PATCH] ✅ Patch gerado:`, patchJSON);
+                            const playerDocRef = doc(db, "players", this.userId);
+                            const updates = {};
+                            updates[`worldState.${flagNome}`] = true;
+                            updates[`patches.${secaoAlvoNum}`] = patchJSON;
+                            
+                            await updateDoc(playerDocRef, updates);
+                            
+                            // Atualiza o cache local
+                            this.playerData.worldState[flagNome] = true;
+                            this.playerData.patches[secaoAlvoNum] = patchJSON;
+                            
+                            // Injeta as novas seções na árvore atual
+                            this.aplicarTodosOsPatches();
+                            
+                            console.log(`[PATCH] 💾 Salvo no Firebase e injetado na memória.`);
+                        } else {
+                            console.error(`[PATCH] ❌ IA falhou em gerar patch`);
+                        }
+                    } else {
+                        console.error(`[PATCH] ❌ Seção ${secaoAlvoNum} não encontrada`);
+                    }
+                } else if (secaoAlvoNum && flagNome && this.playerData.worldState[flagNome]) {
+                    console.log(`[PATCH] ⏭️ Flag ${flagNome} já existe (patch não gerado)`);
+                }
+            }
+
+            // 3. MOSTRA A PRÓXIMA SEÇÃO (da emergência)
             if (resultadoEmergencia && resultadoEmergencia.ativada) {
                 this.secaoEmergentePai = resultadoEmergencia.secao;
                 if (resultadoEmergencia.secao.efeitos) {
@@ -1318,6 +1376,9 @@ if (opcao.efeitos && opcao.efeitos.length > 0) {
                 return;
             }
         }
+        // ===================================================================
+        // === 🆕 FIM DA SUBSTITUIÇÃO (BLOCO 4d) ===
+        // ===================================================================
         
         // 4e. SE FOR UMA OPÇÃO NORMAL (NÃO-EMERGENTE, NÃO-TESTE, NÃO-BATALHA)
         await this.mostrarSecao(opcao.secao, this.secaoAtual);
@@ -1470,6 +1531,7 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
