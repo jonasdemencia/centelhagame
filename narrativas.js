@@ -352,7 +352,7 @@ class SistemaNarrativas {
     } 
     // Se a emergência DEVERIA TER SIDO ATIVADA (contador >= 4) mas FALHOU (API error, etc.)
     // E a emergência não está já ativa (garantia extra)
-    else if (this.contadorSecoesParaEmergencia >= 4 && !this.sistemaEmergencia.emergenciaAtiva) {
+    else if (this.contadorSecoesParaEmergencia >= 10 && !this.sistemaEmergencia.emergenciaAtiva) {
         console.log(`[NARRATIVAS] ⚠️ Emergência falhou (API?) ou foi desativada. Resetando contador.`);
         this.contadorSecoesParaEmergencia = 0; // 🔹 RESET NA FALHA
         console.log(`[NARRATIVAS] 🔄 Contador resetado após FALHA na emergência: ${this.contadorSecoesParaEmergencia}`);
@@ -1470,3 +1470,4 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
