@@ -361,7 +361,7 @@ this.secoesEmergentes.set(idEmergente, secaoProcessada);
             console.log(`[EMERGÊNCIA] Patches gerados:`, (branchData.patches ? Object.keys(branchData.patches).length : 0));
             
             // 5. Retorna apenas a primeira seção para ser exibida
-            return { ativada: true, idSecao: idEmergente, secao: secaoInicial };
+            return { ativada: true, idSecao: idEmergente, secao: secaoProcessada }
 
         } catch (error) {
             console.error("[EMERGÊNCIA] Falha ao chamar o Oráculo (Batch):", error);
@@ -1504,6 +1504,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
