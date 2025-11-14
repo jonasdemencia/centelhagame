@@ -372,7 +372,7 @@ raros: ["necromante", "sombra-antiga", "jaguar", "urso", "tigre", "crocodilo", "
         const monstrosAmostra = this.getMonstrosAmostra();
         
         return `
-Você é um 'Mestre de Jogo' que expande narrativas de forma COERENTE e ANCORADA.
+Você é um Mestre de Jogo no estilo das Aventuras Fantásticas de Steve Jackson e Ian Livingstone, expandindo narrativas COESAS e bem ANCORADAS.
 Aventura: "${tituloNarrativa}"
 
 ${padroes ? `\n**${padroes}**\n` : ''}
@@ -1350,6 +1350,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
