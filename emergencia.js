@@ -815,81 +815,85 @@ return JSON.parse(jsonText);
     // === SUBSTITUA ESTE MÉTODO (processarOpcaoEmergente) ===
     // =======================================================================
     async processarOpcaoEmergente(opcao, secaoPai, resultadoTeste = null) {
-        // 1. Lógica de saída (recuar ou convergência forçada)
-        if (!opcao.emergente || opcao.tipo === "recuar") {
-            this.emergenciaAtiva = false;
-            this.escolhasEmergentes = [];
-            this.profundidadeAtual = 0;
-            sessionStorage.removeItem('emergencia_branch'); // Limpa o cache
-            sessionStorage.removeItem('emergencia_patches');
-            return null;
-        }
-
-        // 2. Incrementa profundidade
-        if (!opcao.batalha) {
-             this.profundidadeAtual++;
-             console.log(`[EMERGÊNCIA] Profundidade: ${this.profundidadeAtual}/10`);
-        } else {
-            console.log(`[EMERGÊNCIA] Batalha iniciada, profundidade mantida em: ${this.profundidadeAtual}`);
-            return null; // Batalha é tratada por narrativas.js
-        }
-
-        // 3. Força convergência se for muito fundo
-        if (this.profundidadeAtual >= 10) {
-            console.log('[EMERGÊNCIA] 🎯 PROFUNDIDADE MÁXIMA - Forçando convergência');
-            sessionStorage.removeItem('emergencia_branch');
-            sessionStorage.removeItem('emergencia_patches');
-            return this.gerarConvergenciaForcada();
-        }
-
-        // 4. LÊ O BRANCH DO CACHE (NÃO CHAMA MAIS A IA)
-        try {
-            const branch = JSON.parse(sessionStorage.getItem('emergencia_branch'));
-            if (!branch) {
-                throw new Error("Branch de emergência não encontrado no sessionStorage.");
-            }
-
-            const proximaSecaoID = opcao.secao;
-            const proximaSecao = branch[proximaSecaoID];
-
-            if (!proximaSecao) {
-                throw new Error(`Seção "${proximaSecaoID}" não encontrada no branch cacheado.`);
-            }
-            
-            // 5. VERIFICA SE HÁ UM PATCH PARA SALVAR NESTA TRANSIÇÃO
-            const patches = JSON.parse(sessionStorage.getItem('emergencia_patches'));
-            let patchParaSalvar = null;
-            
-            if (patches && patches[proximaSecaoID]) {
-                // Encontrou um patch associado à *próxima* seção (ex: "emergente_IA_3" como no prompt)
-                patchParaSalvar = patches[proximaSecaoID];
-                console.log(`[PATCH] 📦 Encontrado patch no branch para ser salvo:`, patchParaSalvar);
-                
-                // Remove o patch do cache para não ser salvo duas vezes
-                delete patches[proximaSecaoID];
-                sessionStorage.setItem('emergencia_patches', JSON.stringify(patches));
-            }
-
-            // 6. Processa a próxima seção (para IDs internos e formatação)
-// 🆕 Usa o NOVO processador de batch
-const secaoProcessada = this.processarSecaoBatch(proximaSecao);
-
-            this.secoesEmergentes.set(proximaSecaoID, secaoProcessada);
-
-            return { 
-                ativada: true, 
-                idSecao: proximaSecaoID, 
-                secao: secaoProcessada,
-                patchParaSalvar: patchParaSalvar // 🆕 ENVIA O PATCH PARA narrativas.js
-            };
-
-        } catch (error) {
-            console.error("[EMERGÊNCIA] Falha ao processar opção do cache:", error);
-            sessionStorage.removeItem('emergencia_branch');
-            sessionStorage.removeItem('emergencia_patches');
-            return this.gerarConvergenciaForcada();
-        }
+    // 1. Lógica de saída (recuar ou convergência forçada)
+    if (!opcao.emergente || opcao.tipo === "recuar") {
+        this.emergenciaAtiva = false;
+        this.escolhasEmergentes = [];
+        this.profundidadeAtual = 0;
+        sessionStorage.removeItem('emergencia_branch');
+        sessionStorage.removeItem('emergencia_patches');
+        return null;
     }
+
+    // 2. Incrementa profundidade
+    if (!opcao.batalha) {
+         this.profundidadeAtual++;
+         console.log(`[EMERGÊNCIA] Profundidade: ${this.profundidadeAtual}/10`);
+    } else {
+        console.log(`[EMERGÊNCIA] Batalha iniciada, profundidade mantida em: ${this.profundidadeAtual}`);
+        return null;
+    }
+
+    // 3. Força convergência se for muito fundo
+    if (this.profundidadeAtual >= 10) {
+        console.log('[EMERGÊNCIA] 🎯 PROFUNDIDADE MÁXIMA - Forçando convergência');
+        sessionStorage.removeItem('emergencia_branch');
+        sessionStorage.removeItem('emergencia_patches');
+        return this.gerarConvergenciaForcada();
+    }
+
+    // 4. LÊ O BRANCH DO CACHE
+    try {
+        const branch = JSON.parse(sessionStorage.getItem('emergencia_branch'));
+        if (!branch) {
+            throw new Error("Branch de emergência não encontrado no sessionStorage.");
+        }
+
+        // 🆕 DETECTA SE É TESTE E ESCOLHE SEÇÃO CORRETA
+        let proximaSecaoID = opcao.secao;
+        
+        if (resultadoTeste && opcao.teste) {
+            const sufixo = resultadoTeste.sucesso ? '_sucesso' : '_falha';
+            proximaSecaoID = opcao.secao.replace(/_sucesso$|_falha$/, '') + sufixo;
+            console.log(`[TESTE] Resultado: ${resultadoTeste.sucesso ? 'SUCESSO' : 'FALHA'} → ${proximaSecaoID}`);
+        }
+
+        const proximaSecao = branch[proximaSecaoID];
+
+        if (!proximaSecao) {
+            throw new Error(`Seção "${proximaSecaoID}" não encontrada no branch cacheado.`);
+        }
+        
+        // 5. VERIFICA PATCHES
+        const patches = JSON.parse(sessionStorage.getItem('emergencia_patches'));
+        let patchParaSalvar = null;
+        
+        if (patches && patches[proximaSecaoID]) {
+            patchParaSalvar = patches[proximaSecaoID];
+            console.log(`[PATCH] 📦 Encontrado patch no branch para ser salvo:`, patchParaSalvar);
+            delete patches[proximaSecaoID];
+            sessionStorage.setItem('emergencia_patches', JSON.stringify(patches));
+        }
+
+        // 6. Processa a próxima seção
+        const secaoProcessada = this.processarSecaoBatch(proximaSecao);
+        this.secoesEmergentes.set(proximaSecaoID, secaoProcessada);
+
+        return { 
+            ativada: true, 
+            idSecao: proximaSecaoID, 
+            secao: secaoProcessada,
+            patchParaSalvar: patchParaSalvar
+        };
+
+    } catch (error) {
+        console.error("[EMERGÊNCIA] Falha ao processar opção do cache:", error);
+        sessionStorage.removeItem('emergencia_branch');
+        sessionStorage.removeItem('emergencia_patches');
+        return this.gerarConvergenciaForcada();
+    }
+}
+
     // =======================================================================
     // === FIM DA SUBSTITUIÇÃO (processarOpcaoEmergente) ===
     // =======================================================================
@@ -1280,7 +1284,7 @@ ${this.historico.map(h => '- Seção ' + h.numero + ': "' + h.texto.substring(0,
     const monstrosAmostra = this.getMonstrosAmostra();
 
     return `
-Você é um Mestre de Jogo COERENTE no estilo das Aventuras Fantásticas de Steve Jackson e Ian Livingstone.
+Você é um Mestre de Jogo no estilo das Aventuras Fantásticas de Steve Jackson e Ian Livingstone, expandindo narrativas COESAS e bem ANCORADAS.
 Aventura: "${tituloNarrativa}"
 
 ${padroes ? `**${padroes}**\n` : ''}
@@ -1302,61 +1306,131 @@ ${historicoFormatado}
    - Pelo menos UMA trilha deve chegar até IA_10
    - Seções finais (profundidade 10) devem ter opção "recuar"
 
-**2. QUALIDADE NARRATIVA (CRÍTICO):**
-   - Texto: 50-150 palavras por seção 
+**2. MODOS NARRATIVOS (escolha apropriado para cada seção):**
+   - **MODO 1: EXPANSÃO NATURAL (60%)** - Continua NORMALMENTE com mais detalhes/opções. Não muda tom, apenas EXPANDE o que existe.
+   - **MODO 2: DETALHE PERTURBADOR (30%)** - Um PEQUENO detalhe físico está errado. ANCORAGEM OBRIGATÓRIA a algo CONCRETO.
+   - **MODO 3: EVENTO MENOR (10%)** - Algo pequeno ACONTECE (físico, tangível, explicável).
+
+**3. QUALIDADE NARRATIVA (CRÍTICO):**
+   - Texto: 100-200 palavras por seção (MÍNIMO 100!)
    - Estilo: Aventuras Fantásticas (descritivo, atmosférico, tenso, imersivo)
    - Tom: Manter coerência com contexto original
-   - 3-4 opções por seção 
+   - 3-5 opções por seção (NUNCA apenas 2!)
    - Criar dilemas morais e escolhas difíceis
+   - Busque tensão entre escolhas
 
-**3. ANCORAGEM FÍSICA:**
-   - Referencie elementos CONCRETOS da seção original
-   - Evite abstrações cósmicas
-   - Mantenha escala controlada
+**4. ANCORAGEM FÍSICA OBRIGATÓRIA:**
+   - SEMPRE referencie elementos CONCRETOS da seção original
+   - Sala → descreva a sala | Objeto → o que acontece com objeto | Pessoa → como pessoa age
+   - NUNCA: "realidade se fragmenta", "dimensões colidem", "vazio cósmico"
+   - Mudanças devem ser PEQUENAS
    - Preferência: adicionar detalhes sobre causar estranhamento
-
-**4. MODOS NARRATIVOS:**
-   - EXPANSÃO NATURAL (60%): Continua normalmente com mais detalhes
-   - DETALHE PERTURBADOR (30%): Pequeno detalhe físico está errado
-   - EVENTO MENOR (10%): Algo pequeno ACONTECE (físico, tangível)
+   - Um detalhe errado > múltiplos impossíveis
 
 **5. ITENS (OBRIGATÓRIO):**
    - Se texto mencionar "encontrar", "abrir", "pegar", "descobrir" → ADICIONE 1-3 itens nos "efeitos"
    - Use APENAS IDs da lista abaixo
    - Formato: {"tipo": "item", "item": "ID_DO_ITEM"}
    - Pelo menos 4 seções do branch devem ter itens
+   - **EXCEÇÃO:** Seções de FALHA em teste NÃO dão itens
 ${itensAmostra}
 
-**6. TESTES DE ATRIBUTO:**
-   - Máximo 1 teste por seção
-   - Só crie teste se houver RISCO REAL ou INCERTEZA SIGNIFICATIVA
+**6. TESTES DE ATRIBUTO (CRÍTICO - GERAR SUCESSO E FALHA):**
+   
+   **A. QUANDO CRIAR UM TESTE?**
+   - Só quando há RISCO REAL ou INCERTEZA SIGNIFICATIVA
+   - RISCO: Se falhar, algo ruim acontece (dano, alarme, morte)
+   - INCERTEZA: Sucesso não é garantido (decifrar, negociar)
    - ❌ NÃO: "limpar espelho", "ler livro", "andar em sala segura"
    - ✅ SIM: "escalar muro desmoronando", "desarmar armadilha", "beber poção desconhecida"
    
-   **DISTRIBUIÇÃO:**
-   - 50% SORTE (luck): Perigos passivos/ambientais
-   - 40% HABILIDADE (skill): Ações ativas/deliberadas
-   - 10% CARISMA (charisma): Interação social
+   **B. LIMITE:**
+   - MÁXIMO 1 teste por seção
+   - Se incluir teste mortal, não pode incluir teste normal
    
-   **DIFICULDADES:**
+   **C. DISTRIBUIÇÃO DE ATRIBUTOS:**
+   - 50% SORTE (luck): Perigos PASSIVOS/AMBIENTAIS (evitar desmoronamento, não pisar em armadilha, passar sem atrair atenção)
+   - 40% HABILIDADE (skill): Ações ATIVAS/DELIBERADAS (desarmar armadilha, forçar fechadura, decifrar enigma)
+   - 10% CARISMA (charisma): Interação SOCIAL (acalmar criatura, intimidar guarda)
+   
+   **D. DIFICULDADES:**
    - Teste mortal: 18-22
    - Teste normal: 10-15
    
-   **FORMATO TESTE MORTAL:**
-   {"texto": "Saltar sobre o abismo (Teste de Sorte)", "tipo": "aprofundar", "teste": "sorte", "dificuldade": 20, "falha_mortal": true, "secao": "emergente_IA_X"}
+   **E. GERAR DUAS SEÇÕES PARA CADA TESTE (OBRIGATÓRIO):**
+   Quando criar um teste, você DEVE gerar DUAS seções:
+   - Uma para SUCESSO (ex: "emergente_IA_4_sucesso")
+   - Uma para FALHA (ex: "emergente_IA_4_falha")
    
-   **FORMATO TESTE NORMAL:**
-   {"texto": "Decifrar o enigma (Teste de Habilidade)", "tipo": "aprofundar", "teste": "habilidade", "dificuldade": 12, "secao": "emergente_IA_X"}
+   **EXEMPLO COMPLETO:**
+   "emergente_IA_3": {
+     "texto": "[Você vê um abismo...]",
+     "opcoes": [
+       {"texto": "Saltar sobre o abismo (Teste de Sorte)", "tipo": "aprofundar", "teste": "sorte", "dificuldade": 18, "falha_mortal": false, "secao": "emergente_IA_4_sucesso"},
+       {"texto": "Procurar outro caminho", "tipo": "aprofundar", "secao": "emergente_IA_5"}
+     ]
+   },
+   "emergente_IA_4_sucesso": {
+     "texto": "[100-200 palavras: Você consegue! Descreva o sucesso, a sensação de alívio...]",
+     "opcoes": [
+       {"texto": "Continuar", "tipo": "aprofundar", "secao": "emergente_IA_6"}
+     ],
+     "efeitos": [{"tipo": "item", "item": "adaga"}]
+   },
+   "emergente_IA_4_falha": {
+     "texto": "[100-200 palavras: Você falha e cai! Descreva a queda, a dor, as consequências...]",
+     "opcoes": [
+       {"texto": "Levantar-se com dificuldade", "tipo": "aprofundar", "secao": "emergente_IA_7"}
+     ],
+     "efeitos": [{"tipo": "energia", "valor": -10}]
+   }
+   
+   **F. REGRAS PARA SEÇÕES DE FALHA:**
+   - NÃO dê itens em seções de falha
+   - Pode adicionar dano extra nos efeitos (-5 a -15)
+   - Descreva as consequências físicas da falha
+   - Texto deve ser tão rico quanto o de sucesso (100-200 palavras)
 
-**7. PERIGOS (DISTRIBUIR ENTRE AS 10 SEÇÕES):**
-   - 60% Perigo Oculto: {"texto": "Tocar o orbe", "tipo": "perigo_oculto", "secao": "emergente_IA_X"}
-   - 15% Teste Mortal: (ver formato acima)
-   - 10% Morte Imediata: {"texto": "Beber da taça", "tipo": "aprofundar", "morte_imediata": true, "secao": "emergente_IA_X"}
-   - 15% Teste Normal: (ver formato acima)
+**7. PERIGOS (DISTRIBUIR ENTRE AS 10 SEÇÕES - OBRIGATÓRIO):**
+   
+   **A. OPÇÃO DE PERIGO OCULTO (Batalha) - 60%:**
+   - Opção neutra que leva a uma batalha
+   - Ex: "Abrir o baú", "Tocar o orbe", "Investigar o som"
+   - Formato: {"texto": "Tocar o orbe misterioso", "tipo": "perigo_oculto", "secao": "emergente_IA_X"}
+   - A seção seguinte DEVE revelar o monstro e oferecer batalha
+   - Exemplo de revelação:
+     "emergente_IA_5": {
+       "texto": "[REVELAÇÃO: Ao tocar o orbe, um servo de pedra emerge das sombras! Seus olhos brilham com fúria...]",
+       "opcoes": [
+         {"texto": "Enfrentar a criatura", "tipo": "iniciar_batalha", "monstro": "servo-pedra"},
+         {"texto": "Fugir rapidamente", "tipo": "recuar"}
+       ]
+     }
+   
+   **B. OPÇÃO DE TESTE MORTAL - 15%:**
+   - Teste onde falha = morte
+   - Dificuldade 18-22
+   - DEVE incluir "falha_mortal": true
+   - Texto deve indicar risco
+   - DEVE gerar seção de sucesso E seção de morte
+   - Formato: {"texto": "Saltar sobre abismo (Teste de Sorte)", "tipo": "aprofundar", "teste": "sorte", "dificuldade": 20, "falha_mortal": true, "secao": "emergente_IA_X_sucesso"}
+   - Seção de morte: {"texto": "[Você cai no abismo. A escuridão te engole...]", "opcoes": [], "final": true}
+   
+   **C. OPÇÃO DE MORTE IMEDIATA - 10%:**
+   - Leva à morte instantânea (IA descreve primeiro)
+   - Ex: "Beber líquido estranho", "Pular no abismo", "Tocar artefato amaldiçoado"
+   - Texto não deve revelar a morte
+   - Formato: {"texto": "Beber da taça dourada", "tipo": "aprofundar", "morte_imediata": true, "secao": "emergente_IA_X"}
+   - Seção seguinte descreve a morte: {"texto": "[O líquido queima sua garganta. Veneno! Você cai...]", "opcoes": [], "final": true}
+   
+   **D. OPÇÃO DE TESTE NORMAL - 15%:**
+   - Apenas se nenhum dos acima for usado
+   - Dificuldade 10-15
+   - DEVE gerar seção de sucesso E seção de falha (não-mortal)
 
 **8. BATALHAS:**
    - Use APENAS monstros da lista
-   - Quando revelar perigo_oculto, descreva revelação do monstro
+   - Quando revelar perigo_oculto, descreva revelação do monstro (100-200 palavras)
    - Formato: {"texto": "Enfrentar", "tipo": "iniciar_batalha", "monstro": "ID_MONSTRO"}
    - Sempre ofereça fugir: {"texto": "Fugir", "tipo": "recuar"}
    - Pelo menos 3 batalhas no branch
@@ -1366,93 +1440,83 @@ ${monstrosAmostra}
    - Profundidade 1-3: -5 a +5
    - Profundidade 4-7: -10 a +10
    - Profundidade 8-10: -20 a +15
+   - Use quando apropriado (acidentes, quedas, cura, descanso)
 
-**10. PATCHES PERSISTENTES (20% chance):**
+**10. PATCHES PERSISTENTES (20% chance - OPCIONAL):**
    - 1-2 seções podem ter efeito de patch
+   - Ações que mudam algo no mundo (puxar alavanca, ativar mecanismo, quebrar selo)
    - Formato: {"tipo": "gerar_patch_persistente", "flag": "ACAO_FEITA", "secao_alvo": ${this.historico[0]?.numero || 1}}
    - Se usar, adicione objeto "patches" na raiz
    - Flags: PORTA_DESTRANCADA, ALAVANCA_PUXADA, MECANISMO_ATIVADO, RITUAL_COMPLETADO
+   - Seções visitadas: ${this.historico.map(h => h.numero).join(', ')}
 
-**FORMATO DA RESPOSTA (JSON PURO):**
+**FORMATO DA RESPOSTA (JSON PURO - OBRIGATÓRIO):**
 
 {
   "secoes": {
     "emergente_IA_1": {
-      "texto": "[100-200 palavras descritivas]",
+      "texto": "[100-200 palavras descritivas, atmosféricas, imersivas]",
       "opcoes": [
-        {"texto": "[Opção 1]", "tipo": "aprofundar", "secao": "emergente_IA_2"},
-        {"texto": "[Opção 2]", "tipo": "aprofundar", "secao": "emergente_IA_3"},
-        {"texto": "[Opção 3 - teste]", "tipo": "aprofundar", "teste": "sorte", "dificuldade": 15, "secao": "emergente_IA_4"},
+        {"texto": "[Opção 1 - ação ativa]", "tipo": "aprofundar", "secao": "emergente_IA_2"},
+        {"texto": "[Opção 2 - ação cautelosa]", "tipo": "aprofundar", "secao": "emergente_IA_3"},
+        {"texto": "[Opção 3 - teste]", "tipo": "aprofundar", "teste": "sorte", "dificuldade": 15, "secao": "emergente_IA_4_sucesso"},
         {"texto": "Continuar normalmente", "tipo": "recuar"}
       ],
       "efeitos": [{"tipo": "item", "item": "tocha"}]
     },
     "emergente_IA_2": {
-      "texto": "[Consequência opção 1]",
+      "texto": "[Consequência opção 1...]",
       "opcoes": [
         {"texto": "Tocar o orbe", "tipo": "perigo_oculto", "secao": "emergente_IA_5"},
-        {"texto": "Ignorar", "tipo": "aprofundar", "secao": "emergente_IA_6"},
-        {"texto": "Voltar", "tipo": "recuar"}
+        {"texto": "Ignorar", "tipo": "aprofundar", "secao": "emergente_IA_6"}
       ]
     },
     "emergente_IA_3": {
-      "texto": "[Consequência opção 2]",
+      "texto": "[Consequência opção 2...]",
       "opcoes": [
         {"texto": "Puxar alavanca", "tipo": "aprofundar", "secao": "emergente_IA_7", "efeitos": [{"tipo": "gerar_patch_persistente", "flag": "ALAVANCA_PUXADA", "secao_alvo": ${this.historico[0]?.numero || 1}}]},
-        {"texto": "Examinar", "tipo": "aprofundar", "secao": "emergente_IA_8"},
-        {"texto": "Voltar", "tipo": "recuar"}
+        {"texto": "Examinar", "tipo": "aprofundar", "secao": "emergente_IA_8"}
       ],
       "efeitos": [{"tipo": "item", "item": "adaga"}]
     },
-    "emergente_IA_4": {
-      "texto": "[Resultado teste - sistema processa]",
-      "opcoes": [
-        {"texto": "Continuar", "tipo": "aprofundar", "secao": "emergente_IA_9"}
-      ]
+    "emergente_IA_4_sucesso": {
+      "texto": "[Sucesso no teste...]",
+      "opcoes": [{"texto": "Continuar", "tipo": "aprofundar", "secao": "emergente_IA_9"}],
+      "efeitos": [{"tipo": "item", "item": "pocao_cura"}]
+    },
+    "emergente_IA_4_falha": {
+      "texto": "[Falha no teste...]",
+      "opcoes": [{"texto": "Levantar-se", "tipo": "aprofundar", "secao": "emergente_IA_9"}],
+      "efeitos": [{"tipo": "energia", "valor": -10}]
     },
     "emergente_IA_5": {
-      "texto": "[REVELAÇÃO: Um servo de pedra emerge!]",
+      "texto": "[REVELAÇÃO: Monstro emerge!]",
       "opcoes": [
         {"texto": "Lutar", "tipo": "iniciar_batalha", "monstro": "servo-pedra"},
         {"texto": "Fugir", "tipo": "recuar"}
       ]
     },
     "emergente_IA_6": {
-      "texto": "[Continuação caminho ignorar]",
-      "opcoes": [
-        {"texto": "Avançar", "tipo": "aprofundar", "secao": "emergente_IA_9"},
-        {"texto": "Retornar", "tipo": "recuar"}
-      ],
-      "efeitos": [{"tipo": "energia", "valor": -5}]
+      "texto": "[Caminho ignorar...]",
+      "opcoes": [{"texto": "Avançar", "tipo": "aprofundar", "secao": "emergente_IA_10"}]
     },
     "emergente_IA_7": {
-      "texto": "[Após puxar alavanca]",
-      "opcoes": [
-        {"texto": "Investigar ruído", "tipo": "aprofundar", "secao": "emergente_IA_10"},
-        {"texto": "Voltar", "tipo": "recuar"}
-      ]
+      "texto": "[Após alavanca...]",
+      "opcoes": [{"texto": "Investigar", "tipo": "aprofundar", "secao": "emergente_IA_10"}]
     },
     "emergente_IA_8": {
-      "texto": "[Caminho examinar]",
-      "opcoes": [
-        {"texto": "Seguir", "tipo": "aprofundar", "secao": "emergente_IA_10"},
-        {"texto": "Retornar", "tipo": "recuar"}
-      ],
-      "efeitos": [{"tipo": "item", "item": "pocao_cura"}]
+      "texto": "[Caminho examinar...]",
+      "opcoes": [{"texto": "Seguir", "tipo": "aprofundar", "secao": "emergente_IA_10"}],
+      "efeitos": [{"tipo": "item", "item": "espada"}]
     },
     "emergente_IA_9": {
-      "texto": "[Quase no fim]",
-      "opcoes": [
-        {"texto": "Última decisão", "tipo": "aprofundar", "secao": "emergente_IA_10"},
-        {"texto": "Desistir", "tipo": "recuar"}
-      ]
+      "texto": "[Quase no fim...]",
+      "opcoes": [{"texto": "Última decisão", "tipo": "aprofundar", "secao": "emergente_IA_10"}]
     },
     "emergente_IA_10": {
       "texto": "[CONCLUSÃO - profundidade máxima]",
-      "opcoes": [
-        {"texto": "Retornar à aventura principal", "tipo": "recuar"}
-      ],
-      "efeitos": [{"tipo": "item", "item": "espada"}, {"tipo": "energia", "valor": 10}]
+      "opcoes": [{"texto": "Retornar à aventura principal", "tipo": "recuar"}],
+      "efeitos": [{"tipo": "energia", "valor": 10}]
     }
   },
   "patches": {
@@ -1464,13 +1528,15 @@ ${monstrosAmostra}
 }
 
 **VALIDAÇÃO FINAL:**
-- [ ] 10 seções criadas?
-- [ ] Textos com 50-150 palavras?
-- [ ] 3-4 opções por seção?
-- [ ] Pelo menos 2 seções com itens?
-- [ ] Pelo menos 2 batalhas/perigos?
-- [ ] Pelo menos 3 testes?
+- [ ] 10 seções base criadas?
+- [ ] Seções extras para testes (_sucesso e _falha)?
+- [ ] Textos com 100-200 palavras?
+- [ ] 3-5 opções por seção?
+- [ ] Pelo menos 4 seções com itens?
+- [ ] Pelo menos 3 batalhas/perigos?
+- [ ] Pelo menos 2 testes (com suas variantes)?
 - [ ] Narrativa coerente e atmosférica?
+- [ ] Seções de falha SEM itens?
 `;
 }
 
@@ -1615,6 +1681,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
