@@ -317,44 +317,58 @@ raros: ["necromante", "sombra-antiga", "jaguar", "urso", "tigre", "crocodilo", "
         return null;
     }
 
+    // =======================================================================
+    // === SUBSTITUA ESTE MÉTODO (verificarEAtivarEmergencia) ===
+    // =======================================================================
     async verificarEAtivarEmergencia(contador, tituloNarrativa, secaoAtual, pontoDeRetorno, habilitada) {
         if (this.emergenciaAtiva || !habilitada) return null;
 
-        // ⚠️ ATENÇÃO: Mudado para 1 para TESTES, como você mencionou.
-        // Mude para `contador < 4` para voltar ao normal (gatilho a cada 4 seções).
-        if (contador < 6) { 
+        if (contador < 6) { // Mantendo seu gatilho de 6 seções
             return null;
         }
 
         console.log(`[EMERGÊNCIA] 🎯 GATILHO: Contador ${contador} atingiu o limite.`);
 
         try {
-            const prompt = this.construirPrompt(tituloNarrativa, secaoAtual);
-            const respostaIA = await this.chamarOraculoNarrativo(prompt);
+            // 1. CHAMA O NOVO PROMPT DE BRANCH
+            const prompt = this.construirPromptBranchCompleto(tituloNarrativa, secaoAtual);
+            const branchData = await this.chamarOraculoNarrativo(prompt);
             
-            if (!respostaIA || !respostaIA.texto || !respostaIA.opcoes) {
-                throw new Error("Resposta da IA está mal formatada (faltando texto ou opções).");
+            // 2. VALIDAÇÃO MÍNIMA
+            if (!branchData || !branchData.secoes || !branchData.secoes['emergente_IA_1']) {
+                throw new Error("Resposta da IA está mal formatada (faltando 'secoes' ou 'emergente_IA_1').");
             }
 
-            const idEmergente = this.gerarIdEmergente();
+            const idEmergente = 'emergente_IA_1';
+            const secaoInicial = branchData.secoes[idEmergente];
 
+            // 3. ATIVA A EMERGÊNCIA E SALVA TUDO NO SESSIONSTORAGE
             this.emergenciaAtiva = true;
             this.secaoOrigemEmergencia = pontoDeRetorno || 1;
             this.escolhasEmergentes = [];
             this.profundidadeAtual = 1;
 
-            const secaoEmergente = this.processarRespostaIA(respostaIA, secaoAtual, idEmergente);
-            this.secoesEmergentes.set(idEmergente, secaoEmergente);
+            // 4. SALVA O BRANCH E OS PATCHES
+            sessionStorage.setItem('emergencia_branch', JSON.stringify(branchData.secoes));
+            sessionStorage.setItem('emergencia_patches', JSON.stringify(branchData.patches || {}));
+            
+            // Salva apenas a primeira seção no Map local
+            this.secoesEmergentes.set(idEmergente, this.processarRespostaIA(secaoInicial, secaoAtual, idEmergente));
 
-            console.log(`[EMERGÊNCIA] ✅ IA gerou a seção: ${idEmergente}`);
-            return { ativada: true, idSecao: idEmergente, secao: secaoEmergente };
+            console.log(`[EMERGÊNCIA] ✅ Branch completo (10 seções) gerado e salvo no sessionStorage.`);
+            console.log(`[EMERGÊNCIA] Patches gerados:`, (branchData.patches ? Object.keys(branchData.patches).length : 0));
+            
+            // 5. Retorna apenas a primeira seção para ser exibida
+            return { ativada: true, idSecao: idEmergente, secao: secaoInicial };
 
         } catch (error) {
-            console.error("[EMERGÊNCIA] Falha ao chamar o Oráculo:", error);
+            console.error("[EMERGÊNCIA] Falha ao chamar o Oráculo (Batch):", error);
             return null;
         }
     }
-
+    // =======================================================================
+    // === FIM DA SUBSTITUIÇÃO (verificarEAtivarEmergencia) ===
+    // =======================================================================
     
     // EM emergencia.js, SUBSTITUA o método inteiro:
 
@@ -763,79 +777,86 @@ return JSON.parse(jsonText);
 
 
 
+    // =======================================================================
+    // === SUBSTITUA ESTE MÉTODO (processarOpcaoEmergente) ===
+    // =======================================================================
     async processarOpcaoEmergente(opcao, secaoPai, resultadoTeste = null) {
+        // 1. Lógica de saída (recuar ou convergência forçada)
         if (!opcao.emergente || opcao.tipo === "recuar") {
             this.emergenciaAtiva = false;
             this.escolhasEmergentes = [];
             this.profundidadeAtual = 0;
+            sessionStorage.removeItem('emergencia_branch'); // Limpa o cache
+            sessionStorage.removeItem('emergencia_patches');
             return null;
         }
 
-        // 🆕 ATUALIZAÇÃO: Se a opção for uma batalha, o narrativas.js cuida disso.
-        // A profundidade só deve aumentar se NÃO for uma batalha (pois a vitória já é o próximo passo).
+        // 2. Incrementa profundidade
         if (!opcao.batalha) {
              this.profundidadeAtual++;
              console.log(`[EMERGÊNCIA] Profundidade: ${this.profundidadeAtual}/10`);
         } else {
             console.log(`[EMERGÊNCIA] Batalha iniciada, profundidade mantida em: ${this.profundidadeAtual}`);
-            // Não retorna, pois o narrativas.js lidará com a opção de batalha.
-            // A próxima seção (vitória ou derrota) já foi registrada.
-            return null; 
+            return null; // Batalha é tratada por narrativas.js
         }
 
+        // 3. Força convergência se for muito fundo
         if (this.profundidadeAtual >= 10) {
             console.log('[EMERGÊNCIA] 🎯 PROFUNDIDADE MÁXIMA - Forçando convergência');
+            sessionStorage.removeItem('emergencia_branch');
+            sessionStorage.removeItem('emergencia_patches');
             return this.gerarConvergenciaForcada();
         }
 
-        if (this.profundidadeAtual >= 8 && Math.random() < 0.1) {
-            console.log('[EMERGÊNCIA] 🎯 Convergência natural acionada');
-            return this.gerarConvergenciaForcada();
-        }
-
+        // 4. LÊ O BRANCH DO CACHE (NÃO CHAMA MAIS A IA)
         try {
-            const prompt = this.construirPromptContinuacao(secaoPai, opcao, resultadoTeste);
-            const respostaIA = await this.chamarOraculoNarrativo(prompt);
-
-            // 🆕 LOG CRÍTICO - VERIFICAR SE A IA GEROU PATCHES
-            console.log('[PATCH] 🔍 Resposta completa da IA:', JSON.stringify(respostaIA, null, 2));
-            
-            let temPatch = false;
-            if (respostaIA?.opcoes) {
-                respostaIA.opcoes.forEach((op, idx) => {
-                    if (op.efeitos && Array.isArray(op.efeitos)) {
-                        console.log(`[PATCH] ✅ Opção ${idx} TEM efeitos:`, op.efeitos);
-                        op.efeitos.forEach(ef => {
-                            if (ef.tipo === 'gerar_patch_persistente') {
-                                console.log(`[PATCH] 🎯 PATCH DETECTADO!`, ef);
-                                temPatch = true;
-                            }
-                        });
-                    }
-                });
-            }
-            
-            if (!temPatch) {
-                console.warn('[PATCH] ⚠️ A IA NÃO GEROU NENHUM PATCH nesta seção!');
+            const branch = JSON.parse(sessionStorage.getItem('emergencia_branch'));
+            if (!branch) {
+                throw new Error("Branch de emergência não encontrado no sessionStorage.");
             }
 
-            // 🆕 VALIDAÇÃO
-if (!respostaIA || !respostaIA.texto || !respostaIA.opcoes) {
-    console.error('[EMERGÊNCIA] ❌ Resposta inválida:', respostaIA);
-    throw new Error("IA retornou resposta mal formatada.");
-}
+            const proximaSecaoID = opcao.secao;
+            const proximaSecao = branch[proximaSecaoID];
 
-const proximaSecao = this.processarRespostaIA(respostaIA, secaoPai, opcao.secao);
-this.secoesEmergentes.set(opcao.secao, proximaSecao);
+            if (!proximaSecao) {
+                throw new Error(`Seção "${proximaSecaoID}" não encontrada no branch cacheado.`);
+            }
+            
+            // 5. VERIFICA SE HÁ UM PATCH PARA SALVAR NESTA TRANSIÇÃO
+            const patches = JSON.parse(sessionStorage.getItem('emergencia_patches'));
+            let patchParaSalvar = null;
+            
+            if (patches && patches[proximaSecaoID]) {
+                // Encontrou um patch associado à *próxima* seção (ex: "emergente_IA_3" como no prompt)
+                patchParaSalvar = patches[proximaSecaoID];
+                console.log(`[PATCH] 📦 Encontrado patch no branch para ser salvo:`, patchParaSalvar);
+                
+                // Remove o patch do cache para não ser salvo duas vezes
+                delete patches[proximaSecaoID];
+                sessionStorage.setItem('emergencia_patches', JSON.stringify(patches));
+            }
 
+            // 6. Processa a próxima seção (para IDs internos e formatação)
+            const secaoProcessada = this.processarRespostaIA(proximaSecao, secaoPai, proximaSecaoID);
+            this.secoesEmergentes.set(proximaSecaoID, secaoProcessada);
 
-            return { ativada: true, idSecao: opcao.secao, secao: proximaSecao };
+            return { 
+                ativada: true, 
+                idSecao: proximaSecaoID, 
+                secao: secaoProcessada,
+                patchParaSalvar: patchParaSalvar // 🆕 ENVIA O PATCH PARA narrativas.js
+            };
 
         } catch (error) {
-            console.error("[EMERGÊNCIA] Falha ao aprofundar:", error);
+            console.error("[EMERGÊNCIA] Falha ao processar opção do cache:", error);
+            sessionStorage.removeItem('emergencia_branch');
+            sessionStorage.removeItem('emergencia_patches');
             return this.gerarConvergenciaForcada();
         }
     }
+    // =======================================================================
+    // === FIM DA SUBSTITUIÇÃO (processarOpcaoEmergente) ===
+    // =======================================================================
 
     // 🆕 MÉTODO ATUALIZADO (recebe ID para consistência)
     gerarDerrotaEmergencia(idDerrota) {
@@ -1210,6 +1231,102 @@ ${this.historico.map(h => '- Seção ' + h.numero + ': "' + h.texto.substring(0,
 `;
     }
 
+    // =======================================================================
+    // === 🆕 INÍCIO: NOVO MÉTODO (construirPromptBranchCompleto) ===
+    // =======================================================================
+    construirPromptBranchCompleto(tituloNarrativa, secaoAtual) {
+        const historicoFormatado = this.historico.map(h =>
+            `Seção ${h.numero}: "${h.texto.substring(0, 100)}..."\n` +
+            `Opções: [${h.opcoes.join(', ')}]` +
+            (h.escolhaFeita ? `\nEscolha: "${h.escolhaFeita}"` : '')
+        ).join('\n\n');
+
+        const textoSecaoOriginal = secaoAtual.texto || this.historico.at(-1)?.texto || "contexto desconhecido";
+        const padroes = this.analisarPadroes();
+        const itensAmostra = this.getItensAmostra(textoSecaoOriginal);
+        const monstrosAmostra = this.getMonstrosAmostra();
+
+        return `
+Você é um 'Mestre de Jogo' no estilo de Aventuras Fantásticas.
+Sua missão é gerar um "branch" narrativo completo (um desvio) de 10 seções de profundidade.
+
+**REGRAS:**
+1.  **Geração em Lote:** Você deve gerar um JSON contendo um objeto "secoes" e um objeto "patches".
+2.  **Objeto "secoes":**
+    * Deve conter 10 seções: "emergente_IA_1" até "emergente_IA_10".
+    * Cada seção deve ter "texto", "opcoes", e opcionalmente "efeitos", "batalha", "teste", etc.
+    * O "texto" deve ser curto (50-100 palavras).
+    * As opções devem se conectar (ex: "emergente_IA_1" leva a "emergente_IA_2", que leva a "emergente_IA_3", etc.).
+    * Você DEVE criar ramificações dentro do branch (ex: "emergente_IA_2" pode ter opções para "emergente_IA_3" ou "emergente_IA_4").
+    * Pelo menos uma trilha deve atingir a profundidade 10.
+    * Seções de beco-sem-saída ou de profundidade 10 devem ter uma opção de "recuar" (tipo: "recuar") para a seção de origem da aventura.
+3.  **Lógica de Perigo (Regra 8 do prompt antigo):** Distribua as opções de perigo (perigo_oculto, teste_mortal, morte_imediata, teste_normal) entre as 10 seções. Nem toda seção precisa de perigo, mas o branch deve ser arriscado.
+4.  **Lógica de Patch (Regra 10 do prompt antigo - CHANCE DE 20%):**
+    * **Opcionalmente** (20% de chance, não é obrigatório), uma das seções emergentes (ex: "emergente_IA_4") pode ter uma opção com um efeito "gerar_patch_persistente".
+    * Se você criar esse efeito, você DEVE também adicionar um objeto "patches" na raiz da sua resposta JSON.
+
+**CONTEXTO ATUAL (Seção ${secaoAtual.numero}):**
+"${textoSecaoOriginal}"
+
+**HISTÓRICO (Seções já visitadas):**
+${historicoFormatado}
+
+${itensAmostra}
+${monstrosAmostra}
+
+**FORMATO DA RESPOSTA (JSON PURO - OBRIGATÓRIO):**
+
+{
+  "secoes": {
+    "emergente_IA_1": {
+      "texto": "[Texto da primeira seção...]",
+      "opcoes": [
+        {"texto": "[Opção A]", "tipo": "aprofundar", "secao": "emergente_IA_2"},
+        {"texto": "[Opção B]", "tipo": "aprofundar", "secao": "emergente_IA_3"},
+        {"texto": "Continuar normalmente", "tipo": "recuar"}
+      ]
+    },
+    "emergente_IA_2": {
+      "texto": "[Texto da consequência A...]",
+      "opcoes": [
+        {"texto": "Tocar o orbe", "tipo": "perigo_oculto", "secao": "emergente_IA_5"}
+      ]
+    },
+    "emergente_IA_3": {
+      "texto": "[Texto da consequência B...]",
+      "opcoes": [
+        {"texto": "Puxar a alavanca (estrondo)", "tipo": "aprofundar", "secao": "emergente_IA_4",
+         "efeitos": [{"tipo": "gerar_patch_persistente", "flag": "ALAVANCA_PUXADA", "secao_alvo": ${this.historico[0]?.numero || 1}}]
+        }
+      ]
+    },
+    "emergente_IA_4": {
+      "texto": "[Texto após puxar alavanca...]",
+      "opcoes": [
+        {"texto": "Voltar", "tipo": "recuar"}
+      ]
+    },
+    "emergente_IA_5": {
+      "texto": "[Revelação do perigo: Um monstro surge!]",
+      "opcoes": [
+        {"texto": "Lutar", "tipo": "iniciar_batalha", "monstro": "servo-pedra"},
+        {"texto": "Fugir", "tipo": "recuar"}
+      ]
+    }
+    // ... continue até "emergente_IA_10"
+  },
+  "patches": {
+    "emergente_IA_3": { 
+      "flag": "ALAVANCA_PUXADA",
+      "secao_alvo": ${this.historico[0]?.numero || 1}
+    }
+  }
+}
+`;
+    }
+    // =======================================================================
+    // === 🆕 FIM: NOVO MÉTODO (construirPromptBranchCompleto) ===
+    // =======================================================================
     
 // =======================================================================
 // === INÍCIO DO MÉTODO (gerarPatchPersistente) COM LOGS COMPLETOS ===
@@ -1351,6 +1468,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
