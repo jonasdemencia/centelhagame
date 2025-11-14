@@ -951,57 +951,63 @@ class SistemaNarrativas {
     }
 
 
+    // =======================================================================
+    // === SUBSTITUA ESTE MÉTODO (verificarProgressoSalvo) ===
+    // =======================================================================
     async verificarProgressoSalvo() {
-    if (!this.userId) return;
+        if (!this.userId) return;
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const secaoUrl = urlParams.get('secao');
-    const narrativaUrl = urlParams.get('narrativa');
+        const urlParams = new URLSearchParams(window.location.search);
+        const secaoUrl = urlParams.get('secao');
+        const narrativaUrl = urlParams.get('narrativa');
 
-    if (narrativaUrl && secaoUrl) {
-        if (NARRATIVAS[narrativaUrl]) {
-            await this.restaurarNarrativaAposRetorno(narrativaUrl, parseInt(secaoUrl));
-            return;
-        }
-    }
-
-    if (secaoUrl) {
-        for (const [narrativaId, narrativa] of Object.entries(NARRATIVAS)) {
-            if (narrativa.secoes[secaoUrl]) {
-                await this.iniciarNarrativa(narrativaId);
-                await this.mostrarSecao(parseInt(secaoUrl));
+        // 1. Se a URL tiver ?narrativa=...&secao=... (Ex: vindo da batalha)
+        if (narrativaUrl && secaoUrl) {
+            if (NARRATIVAS[narrativaUrl]) {
+                // 🆕 CORREÇÃO: Remove parseInt() de secaoUrl
+                await this.restaurarNarrativaAposRetorno(narrativaUrl, secaoUrl);
                 return;
             }
         }
-    }
 
+        // 2. Se a URL tiver SÓ ?secao=... (legado, mas corrigido)
+        if (secaoUrl) {
+            // 🆕 CORREÇÃO LÓGICA: Encontra o narrativaId PRIMEIRO
+            const foundNarrativaId = Object.keys(NARRATIVAS).find(id => NARRATIVAS[id].secoes[secaoUrl]);
+            
+            if (foundNarrativaId) {
+                await this.iniciarNarrativa(foundNarrativaId);
+                // 🆕 CORREÇÃO: Remove parseInt()
+                await this.mostrarSecao(secaoUrl);
+                return;
+            }
+        }
+
+        // 3. Se não houver URL, verifica o progresso salvo no Firebase
         const playerDocRef = doc(db, "players", this.userId);
         const docSnap = await getDoc(playerDocRef);
 
         if (docSnap.exists()) {
-    const allProgress = docSnap.data().narrativeProgress;
-    if (allProgress) {
-        // Só considerar chaves que sejam IDs válidos em NARRATIVAS
-        const inProgressNarrativeId = Object.keys(allProgress).find(
-            id => NARRATIVAS[id] && allProgress[id] && !allProgress[id].completed
-        );
+            const allProgress = docSnap.data().narrativeProgress;
+            if (allProgress) {
+                const inProgressNarrativeId = Object.keys(allProgress).find(
+                    id => NARRATIVAS[id] && allProgress[id] && !allProgress[id].completed
+                );
 
-        if (inProgressNarrativeId) {
-            const progress = {
-                ...allProgress[inProgressNarrativeId],
-                narrativeId: inProgressNarrativeId
-            };
-            this.mostrarOpcaoContinuar(progress);
-            return;
+                if (inProgressNarrativeId) {
+                    const progress = {
+                        ...allProgress[inProgressNarrativeId],
+                        narrativeId: inProgressNarrativeId
+                    };
+                    this.mostrarOpcaoContinuar(progress);
+                    return;
+                }
+            }
         }
-
-        // Se não houver narrativa em progresso, mas existir um battleReturn ativo,
-        // ignora-o aqui (ele é tratado pela página de batalha / sessionStorage).
-        // (Evita que 'battleReturn' seja interpretado como narrativa)
     }
-}
-
-    }
+    // =======================================================================
+    // === FIM DA SUBSTITUIÇÃO (verificarProgressoSalvo) ===
+    // =======================================================================
 
     mostrarAventuraCompleta() {
         const container = document.getElementById('selecao-narrativas');
@@ -1531,6 +1537,7 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
+
 
 
 
