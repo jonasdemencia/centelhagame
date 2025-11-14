@@ -2756,7 +2756,7 @@ export const NARRATIVAS = {
         },
 
             320: {
-        texto: "Você foi derrotado em combate. Suas forças se esgotam e você cai no chão frio da arena. A escuridão toma conta de sua visão. Sua jornada termina aqui.",
+        texto: "A escuridão toma conta de sua visão.. e suas forças se esgotam..  Sua jornada termina aqui.",
         efeitos: [{ tipo: "energia", valor: -10 }],
         final: true
       },
@@ -3756,6 +3756,7 @@ export const NARRATIVAS = {
         }
     }
 };
+
 
 
 
