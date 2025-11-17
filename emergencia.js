@@ -788,7 +788,7 @@ return JSON.parse(jsonText);
             return this.gerarConvergenciaForcada();
         }
 
-        if (this.profundidadeAtual >= 3 && Math.random() < 0.2) {
+        if (this.profundidadeAtual >= 4 && Math.random() < 0.1) {
             console.log('[EMERGÊNCIA] 🎯 Convergência natural acionada');
             return this.gerarConvergenciaForcada();
         }
@@ -1350,6 +1350,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
