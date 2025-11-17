@@ -306,7 +306,7 @@ class SistemaNarrativas {
     // Só incrementa se não for seção emergente
     if (typeof numeroSecao === 'number' || !numeroSecao.startsWith('emergente_')) {
         this.contadorSecoesParaEmergencia++;
-        console.log(`[NARRATIVAS] 📊 Contador para emergência: ${this.contadorSecoesParaEmergencia}/6`);
+        console.log(`[NARRATIVAS] 📊 Contador para emergência: ${this.contadorSecoesParaEmergencia}/4`);
     }
 
     const contextoAtual = this.sistemaEmergencia.analisarSecao(
@@ -352,7 +352,7 @@ class SistemaNarrativas {
     } 
     // Se a emergência DEVERIA TER SIDO ATIVADA (contador >= 4) mas FALHOU (API error, etc.)
     // E a emergência não está já ativa (garantia extra)
-    else if (this.contadorSecoesParaEmergencia >= 6 && !this.sistemaEmergencia.emergenciaAtiva) {
+    else if (this.contadorSecoesParaEmergencia >= 4 && !this.sistemaEmergencia.emergenciaAtiva) {
         console.log(`[NARRATIVAS] ⚠️ Emergência falhou (API?) ou foi desativada. Resetando contador.`);
         this.contadorSecoesParaEmergencia = 0; // 🔹 RESET NA FALHA
         console.log(`[NARRATIVAS] 🔄 Contador resetado após FALHA na emergência: ${this.contadorSecoesParaEmergencia}`);
@@ -951,63 +951,57 @@ class SistemaNarrativas {
     }
 
 
-    // =======================================================================
-    // === SUBSTITUA ESTE MÉTODO (verificarProgressoSalvo) ===
-    // =======================================================================
     async verificarProgressoSalvo() {
-        if (!this.userId) return;
+    if (!this.userId) return;
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const secaoUrl = urlParams.get('secao');
-        const narrativaUrl = urlParams.get('narrativa');
+    const urlParams = new URLSearchParams(window.location.search);
+    const secaoUrl = urlParams.get('secao');
+    const narrativaUrl = urlParams.get('narrativa');
 
-        // 1. Se a URL tiver ?narrativa=...&secao=... (Ex: vindo da batalha)
-        if (narrativaUrl && secaoUrl) {
-            if (NARRATIVAS[narrativaUrl]) {
-                // 🆕 CORREÇÃO: Remove parseInt() de secaoUrl
-                await this.restaurarNarrativaAposRetorno(narrativaUrl, secaoUrl);
+    if (narrativaUrl && secaoUrl) {
+        if (NARRATIVAS[narrativaUrl]) {
+            await this.restaurarNarrativaAposRetorno(narrativaUrl, parseInt(secaoUrl));
+            return;
+        }
+    }
+
+    if (secaoUrl) {
+        for (const [narrativaId, narrativa] of Object.entries(NARRATIVAS)) {
+            if (narrativa.secoes[secaoUrl]) {
+                await this.iniciarNarrativa(narrativaId);
+                await this.mostrarSecao(parseInt(secaoUrl));
                 return;
             }
         }
+    }
 
-        // 2. Se a URL tiver SÓ ?secao=... (legado, mas corrigido)
-        if (secaoUrl) {
-            // 🆕 CORREÇÃO LÓGICA: Encontra o narrativaId PRIMEIRO
-            const foundNarrativaId = Object.keys(NARRATIVAS).find(id => NARRATIVAS[id].secoes[secaoUrl]);
-            
-            if (foundNarrativaId) {
-                await this.iniciarNarrativa(foundNarrativaId);
-                // 🆕 CORREÇÃO: Remove parseInt()
-                await this.mostrarSecao(secaoUrl);
-                return;
-            }
-        }
-
-        // 3. Se não houver URL, verifica o progresso salvo no Firebase
         const playerDocRef = doc(db, "players", this.userId);
         const docSnap = await getDoc(playerDocRef);
 
         if (docSnap.exists()) {
-            const allProgress = docSnap.data().narrativeProgress;
-            if (allProgress) {
-                const inProgressNarrativeId = Object.keys(allProgress).find(
-                    id => NARRATIVAS[id] && allProgress[id] && !allProgress[id].completed
-                );
+    const allProgress = docSnap.data().narrativeProgress;
+    if (allProgress) {
+        // Só considerar chaves que sejam IDs válidos em NARRATIVAS
+        const inProgressNarrativeId = Object.keys(allProgress).find(
+            id => NARRATIVAS[id] && allProgress[id] && !allProgress[id].completed
+        );
 
-                if (inProgressNarrativeId) {
-                    const progress = {
-                        ...allProgress[inProgressNarrativeId],
-                        narrativeId: inProgressNarrativeId
-                    };
-                    this.mostrarOpcaoContinuar(progress);
-                    return;
-                }
-            }
+        if (inProgressNarrativeId) {
+            const progress = {
+                ...allProgress[inProgressNarrativeId],
+                narrativeId: inProgressNarrativeId
+            };
+            this.mostrarOpcaoContinuar(progress);
+            return;
         }
+
+        // Se não houver narrativa em progresso, mas existir um battleReturn ativo,
+        // ignora-o aqui (ele é tratado pela página de batalha / sessionStorage).
+        // (Evita que 'battleReturn' seja interpretado como narrativa)
     }
-    // =======================================================================
-    // === FIM DA SUBSTITUIÇÃO (verificarProgressoSalvo) ===
-    // =======================================================================
+}
+
+    }
 
     mostrarAventuraCompleta() {
         const container = document.getElementById('selecao-narrativas');
@@ -1299,73 +1293,15 @@ if (opcao.efeitos && opcao.efeitos.length > 0) {
 }
 
         
-        // ===================================================================
-        // === 🆕 INÍCIO DA SUBSTITUIÇÃO (BLOCO 4d) ===
-        // ===================================================================
-        
         // 4d. SE FOR UMA OPÇÃO DE APROFUNDAMENTO (EMERGENTE, SEM TESTE/BATALHA)
         if (this.sistemaEmergencia.emergenciaAtiva && opcao.emergente) {
-            console.log(`[NARRATIVAS] Processando opção emergente (do cache): ${opcao.tipo}`);
+            console.log(`[NARRATIVAS] Processando opção emergente: ${opcao.tipo}`);
             
-            // 1. Pega a próxima seção do cache (NÃO CHAMA MAIS A IA)
             const resultadoEmergencia = await this.sistemaEmergencia.processarOpcaoEmergente(
                 opcao, 
                 this.secaoEmergentePai
             );
 
-            // 2. VERIFICA SE A RESPOSTA VEIO COM UM PATCH PARA SALVAR
-            if (resultadoEmergencia && resultadoEmergencia.patchParaSalvar) {
-                const patch = resultadoEmergencia.patchParaSalvar;
-                const flagNome = patch.flag;
-                const secaoAlvoNum = patch.secao_alvo;
-
-                if (secaoAlvoNum && flagNome && !this.playerData.worldState[flagNome]) {
-                    console.log(`[PATCH] 🚀 Gerando patch (via branch cache) para Seção ${secaoAlvoNum} com flag ${flagNome}`);
-                    
-                    const secaoOriginal = NARRATIVAS[this.narrativaAtual.id].secoes[secaoAlvoNum];
-                    if (secaoOriginal) {
-                        secaoOriginal.id = secaoAlvoNum; // Garante que a IA saiba o ID
-                        
-                        const historicoFormatado = this.sistemaEmergencia.historico
-                            .map(h => `Seção ${h.numero}: ${h.texto.substring(0, 50)}...`)
-                            .join('\n');
-
-                        // CHAMA A IA (SEPARADAMENTE) PARA GERAR O PATCH
-                        const patchJSON = await this.sistemaEmergencia.gerarPatchPersistente(
-                            secaoOriginal, 
-                            flagNome, 
-                            historicoFormatado
-                        );
-                        
-                        if (patchJSON) {
-                            console.log(`[PATCH] ✅ Patch gerado:`, patchJSON);
-                            const playerDocRef = doc(db, "players", this.userId);
-                            const updates = {};
-                            updates[`worldState.${flagNome}`] = true;
-                            updates[`patches.${secaoAlvoNum}`] = patchJSON;
-                            
-                            await updateDoc(playerDocRef, updates);
-                            
-                            // Atualiza o cache local
-                            this.playerData.worldState[flagNome] = true;
-                            this.playerData.patches[secaoAlvoNum] = patchJSON;
-                            
-                            // Injeta as novas seções na árvore atual
-                            this.aplicarTodosOsPatches();
-                            
-                            console.log(`[PATCH] 💾 Salvo no Firebase e injetado na memória.`);
-                        } else {
-                            console.error(`[PATCH] ❌ IA falhou em gerar patch`);
-                        }
-                    } else {
-                        console.error(`[PATCH] ❌ Seção ${secaoAlvoNum} não encontrada`);
-                    }
-                } else if (secaoAlvoNum && flagNome && this.playerData.worldState[flagNome]) {
-                    console.log(`[PATCH] ⏭️ Flag ${flagNome} já existe (patch não gerado)`);
-                }
-            }
-
-            // 3. MOSTRA A PRÓXIMA SEÇÃO (da emergência)
             if (resultadoEmergencia && resultadoEmergencia.ativada) {
                 this.secaoEmergentePai = resultadoEmergencia.secao;
                 if (resultadoEmergencia.secao.efeitos) {
@@ -1382,9 +1318,6 @@ if (opcao.efeitos && opcao.efeitos.length > 0) {
                 return;
             }
         }
-        // ===================================================================
-        // === 🆕 FIM DA SUBSTITUIÇÃO (BLOCO 4d) ===
-        // ===================================================================
         
         // 4e. SE FOR UMA OPÇÃO NORMAL (NÃO-EMERGENTE, NÃO-TESTE, NÃO-BATALHA)
         await this.mostrarSecao(opcao.secao, this.secaoAtual);
@@ -1537,8 +1470,3 @@ return true;
 document.addEventListener('DOMContentLoaded', () => {
     new SistemaNarrativas();
 });
-
-
-
-
-
