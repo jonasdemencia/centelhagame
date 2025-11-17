@@ -835,7 +835,7 @@ return JSON.parse(jsonText);
     }
 
     // 3. Força convergência se for muito fundo
-    if (this.profundidadeAtual >= 10) {
+    if (this.profundidadeAtual >= 7) {
         console.log('[EMERGÊNCIA] 🎯 PROFUNDIDADE MÁXIMA - Forçando convergência');
         sessionStorage.removeItem('emergencia_branch');
         sessionStorage.removeItem('emergencia_patches');
@@ -1290,7 +1290,7 @@ Aventura: "${tituloNarrativa}"
 ${padroes ? `**${padroes}**\n` : ''}
 
 **MISSÃO CRÍTICA:**
-Gerar um branch narrativo completo de 10 seções ("emergente_IA_1" até "emergente_IA_10") em um único JSON.
+Gerar um branch narrativo completo de 7 seções ("emergente_IA_1" até "emergente_IA_10") em um único JSON.
 
 **CONTEXTO ATUAL (Seção ${secaoAtual.numero}):**
 "${textoSecaoOriginal}"
@@ -1681,6 +1681,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
