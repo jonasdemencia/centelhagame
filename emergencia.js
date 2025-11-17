@@ -441,7 +441,7 @@ ${historicoFormatado}
 
 1. Escolha UM dos 3 modos
 2. Gere texto (80-180 palavras) - MENOR que o original
-3. Crie 2-5 opções (varie livremente)
+3. Crie 2-4 opções (varie coerentemente)
 4. Inclua SEMPRE pelo menos uma opção que seja claramente "continuar normal"
 5. Efeitos de energia: apenas se apropriado (-50 - acidente, amputação - a +10)
 6. **ITENS** Se seu texto mencionar encontrar/abrir/pegar algo físico, adicione 1-2 itens nos efeitos.
@@ -783,7 +783,7 @@ return JSON.parse(jsonText);
             return null; 
         }
 
-        if (this.profundidadeAtual >= 5) {
+        if (this.profundidadeAtual >= 7) {
             console.log('[EMERGÊNCIA] 🎯 PROFUNDIDADE MÁXIMA - Forçando convergência');
             return this.gerarConvergenciaForcada();
         }
@@ -952,8 +952,8 @@ O jogador falhou. Não o recompense com itens. Apenas narre a falha.
         return `
 Você é um Mestre de Jogo que mantém COERÊNCIA narrativa.
 
-**PROFUNDIDADE ATUAL: ${this.profundidadeAtual}/5**
-${this.profundidadeAtual >= 3 ? '⚠️ PRÓXIMO DO LIMITE - Considere convergir naturalmente' : ''}
+**PROFUNDIDADE ATUAL: ${this.profundidadeAtual}/7**
+${this.profundidadeAtual >= 6 ? '⚠️ PRÓXIMO DO LIMITE - Considere convergir naturalmente' : ''}
 
 **CONTEXTO:**
 Texto anterior: "${secaoPai.texto.substring(0, 150)}..."
@@ -1350,6 +1350,7 @@ ${this.getMonstrosAmostra()}
         this.profundidadeAtual = 0;
     }
 }
+
 
 
 
