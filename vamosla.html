@@ -128,7 +128,7 @@
 <script type="module">
     import * as webllm from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/+esm";
 
-    const selectedModel = "Llama-3.2-3B-Instruct-q4f16_1-MLC";
+    const selectedModel = "Llama-3.1-8B-Instruct-q4f16_1-MLC";
     
     const systemPrompt = "Responda de forma breve (máximo de 2 linhas) e seca. Você é um narrador de uma história de sobrevivência obscura e punitiva.";
 
@@ -163,7 +163,12 @@
 
             engine = await webllm.CreateMLCEngine(
                 selectedModel,
-                { initProgressCallback: initProgressCallback }
+                { 
+                    initProgressCallback: initProgressCallback,
+                    appConfig: {
+                        useIndexedDBCache: true
+                    }
+                }
             );
 
             loadingContainer.style.display = 'none';
@@ -176,7 +181,7 @@
 
         } catch (error) {
             console.error("Erro ao carregar IA:", error);
-            progressText.textContent = "Erro: " + error.message;
+            progressText.textContent = "Erro: " + error.message + " | Seu PC precisa ter pelo menos 8GB de RAM e GPU compatível com WebGPU.";
             progressText.style.color = "#a13d3d";
         }
     }
@@ -198,7 +203,7 @@
             const reply = await engine.chat.completions.create({
                 messages: conversationHistory,
                 temperature: 0.7,
-                max_tokens: 100
+                max_tokens: 150
             });
 
             const respostaIA = reply.choices[0].message.content;
