@@ -2,205 +2,129 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sobrevivência - Engine Qwen</title>
+    <title>Centelha - Motor Narrativo</title>
     <style>
-        /* Mantendo sua estética PS1/Retro Horror */
-        body {
-            background-color: #1a1a14;
-            background-image: radial-gradient(#2b2a24 1px, transparent 1px);
-            background-size: 4px 4px;
-            color: #b5a68b;
-            font-family: 'Courier New', Courier, monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            image-rendering: pixelated;
-        }
-
-        #game-container {
-            width: 100%;
-            max-width: 650px;
-            background: #141311;
-            padding: 20px;
-            border: 4px solid #3a3228;
-            box-shadow: 6px 6px 0px #080808;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        #loading-container {
-            border: 2px solid #4a3f35;
-            background: #0a0a08;
-            padding: 10px;
-            text-align: center;
-            font-size: 14px;
-            color: #8c7d66;
-        }
-        
-        #progress-bar {
-            width: 0%;
-            height: 10px;
-            background-color: #5c2c2c;
-            transition: width 0.2s;
-        }
-
-        #chat-box {
-            height: 350px;
-            overflow-y: auto;
-            border: 2px inset #2a251e;
-            padding: 15px;
-            background: #0d0c0a;
-        }
-
-        .message { margin-bottom: 15px; line-height: 1.5; }
-        .narrator { color: #a13d3d; }
-        .player { color: #7a8c66; }
-        .system { color: #666; font-style: italic; }
-
-        #input-area { display: flex; gap: 10px; }
-        
-        input[type="text"] {
-            flex: 1;
-            padding: 12px;
-            background: #1a1815;
-            border: 2px solid #3a3228;
-            color: #d1c5b4;
-            font-family: inherit;
-            outline: none;
-        }
-
-        button {
-            padding: 12px 20px;
-            background: #2a251e;
-            border: 2px solid #4a3f35;
-            color: #b5a68b;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        
-        button:disabled { opacity: 0.5; }
+        body { background: #1a1a14; color: #b5a68b; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        #game-container { width: 90%; max-width: 650px; background: #141311; padding: 20px; border: 4px solid #3a3228; box-shadow: 6px 6px 0px #000; }
+        #chat-box { height: 300px; overflow-y: auto; border: 2px inset #2a251e; padding: 15px; background: #0d0c0a; margin-bottom: 15px; }
+        .narrator { color: #a13d3d; margin-bottom: 10px; }
+        .player { color: #7a8c66; margin-bottom: 10px; }
+        #progress-bar-container { width: 100%; background: #2a251e; height: 12px; margin-bottom: 10px; display: block; }
+        #progress-bar { width: 0%; height: 100%; background: #5c2c2c; transition: width 0.3s; }
+        input { width: 80%; padding: 10px; background: #1a1815; border: 1px solid #3a3228; color: #d1c5b4; }
+        button { padding: 10px; cursor: pointer; background: #3a3228; color: #fff; border: none; }
+        button:disabled { opacity: 0.3; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div id="loading-container">
-        <div id="progress-text">Buscando Qwen-2.5-3B (Otimizada para WebGPU)...</div>
-        <div style="width: 100%; background: #1a1815; margin-top: 5px;">
-            <div id="progress-bar"></div>
-        </div>
-    </div>
-
-    <div id="chat-box">
-        <div class="message system">Aguardando inicialização da GPU local...</div>
-    </div>
+    <div id="status">Iniciando...</div>
+    <div id="progress-bar-container"><div id="progress-bar"></div></div>
     
-    <div id="input-area">
+    <div id="chat-box"></div>
+    
+    <div id="controls">
         <input type="text" id="player-input" placeholder="Sua ação..." disabled>
-        <button id="btn-enviar" onclick="enviarAcao()" disabled>Agir</button>
+        <button id="btn-enviar" onclick="enviarAcao()" disabled>AGIR</button>
     </div>
 </div>
 
 <script type="module">
-    import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
+    // Usando uma versão fixa e estável para evitar quebras de atualização
+    import * as webllm from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/+esm";
 
-    // MUDANÇA CHAVE: Usando Qwen-2.5-3B. 
-    // É inteligente o suficiente para entender "secura" e "sobrenatural" mas leve.
-    const selectedModel = "Qwen2.5-3B-Instruct-q4f16_1-MLC";
+    // Configuração manual do modelo para ignorar o erro de "model_list undefined"
+    const MY_MODEL_ID = "Qwen2.5-3B-Instruct-q4f16_1-MLC";
     
-    const systemPrompt = "Você é um narrador cruel de um jogo de sobrevivência horror. Responda de forma extremamente breve (máximo 2 linhas), seca e sombria.";
+    const appConfig = {
+        model_list: [
+            {
+                model_id: MY_MODEL_ID,
+                model: "https://huggingface.co/mlc-ai/Qwen2.5-3B-Instruct-q4f16_1-MLC",
+                model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-gpu-models/v0_2_46/Qwen2.5-3B-Instruct-q4f16_1-MLC/Qwen2.5-3B-Instruct-q4f16_1-MLC-webgpu.wasm",
+            }
+        ]
+    };
 
+    const systemPrompt = "Você é o narrador de um jogo de sobrevivência. Responda sempre em português, de forma seca, breve (máximo 2 linhas) e cruel.";
+    
     let engine;
-    let conversationHistory = [{ role: "system", content: systemPrompt }];
+    let chatHistory = [{ role: "system", content: systemPrompt }];
 
-    const chatBox = document.getElementById('chat-box');
-    const playerInput = document.getElementById('player-input');
-    const btnEnviar = document.getElementById('btn-enviar');
-    const progressText = document.getElementById('progress-text');
-    const progressBar = document.getElementById('progress-bar');
+    async function init() {
+        const status = document.getElementById("status");
+        const pb = document.getElementById("progress-bar");
 
-    async function inicializarIA() {
         try {
-            engine = await CreateMLCEngine(selectedModel, {
-                initProgressCallback: (p) => {
-                    progressText.textContent = p.text;
-                    const match = p.text.match(/\[(\d+)\/(\d+)\]/);
-                    if (match) progressBar.style.width = (parseInt(match[1]) / parseInt(match[2]) * 100) + '%';
-                },
-                // OTIMIZAÇÃO DE MEMÓRIA: Limitando o contexto para evitar "Out of Memory"
-                appConfig: {
-                    kvConfig: {
-                        context_window_size: 2048, // 2k de tokens é mais que o suficiente para o chat
-                    }
-                }
+            if (!navigator.gpu) throw new Error("WebGPU não detectado.");
+
+            engine = new webllm.MLCEngine();
+            
+            engine.setInitProgressCallback((report) => {
+                status.innerText = report.text;
+                const progress = report.progress * 100;
+                pb.style.width = `${progress}%`;
             });
 
-            document.getElementById('loading-container').style.display = 'none';
-            playerInput.disabled = false;
-            btnEnviar.disabled = false;
-            chatBox.innerHTML = '';
-            adicionarMensagem("O rádio chia. A neve bloqueia a porta da cabana. Você está sozinho e o óleo da lanterna está acabando.", 'narrator');
+            // Carrega o modelo usando a nossa configuração manual (appConfig)
+            await engine.reload(MY_MODEL_ID, { appConfig });
+
+            document.getElementById("progress-bar-container").style.display = "none";
+            status.innerText = "Motor Narrativo Online";
+            document.getElementById("player-input").disabled = false;
+            document.getElementById("btn-enviar").disabled = false;
             
-        } catch (error) {
-            progressText.textContent = "Erro: Hardware sem VRAM suficiente para este modelo.";
-            console.error(error);
+            addMsg("O silêncio da floresta morta é interrompido pelo estalo de um galho. O que você faz?", "narrator");
+
+        } catch (err) {
+            status.innerText = "Erro Crítico: " + err.message;
+            console.error(err);
         }
     }
 
-    window.enviarAcao = async function() {
-        const text = playerInput.value.trim();
-        if (!text || !engine) return;
+    window.enviarAcao = async () => {
+        const input = document.getElementById("player-input");
+        const text = input.value.trim();
+        if (!text) return;
 
-        playerInput.disabled = true;
-        btnEnviar.disabled = true;
-        adicionarMensagem(text, 'player');
+        addMsg(text, "player");
+        chatHistory.push({ role: "user", content: text });
+        input.value = "";
         
-        conversationHistory.push({ role: "user", content: text });
-        playerInput.value = '';
-        const loadingId = adicionarMensagem("...", 'narrator');
+        document.getElementById("btn-enviar").disabled = true;
+        const tempId = addMsg("...", "narrator");
 
         try {
-            const reply = await engine.chat.completions.create({
-                messages: conversationHistory,
-                temperature: 0.8,
-                max_tokens: 128 // Garante respostas curtas e economiza processamento
+            const result = await engine.chat.completions.create({ 
+                messages: chatHistory,
+                temperature: 0.7,
+                max_tokens: 100 
             });
 
-            const respostaIA = reply.choices[0].message.content;
-            document.getElementById(loadingId).innerText = respostaIA;
-            conversationHistory.push({ role: "assistant", content: respostaIA });
-
-            // Limpeza de histórico simples para não estourar a memória em sessões longas
-            if (conversationHistory.length > 15) {
-                conversationHistory.splice(1, 2); // Mantém o System Prompt e remove o início da conversa
-            }
+            const answer = result.choices[0].message.content;
+            document.getElementById(tempId).innerText = answer;
+            chatHistory.push({ role: "assistant", content: answer });
 
         } catch (e) {
-            document.getElementById(loadingId).innerText = "[Falha Crítica na GPU]";
+            document.getElementById(tempId).innerText = "A mente do narrador colapsou (Erro de GPU).";
         } finally {
-            playerInput.disabled = false;
-            btnEnviar.disabled = false;
-            playerInput.focus();
+            document.getElementById("btn-enviar").disabled = false;
         }
+    };
+
+    function addMsg(txt, cls) {
+        const box = document.getElementById("chat-box");
+        const div = document.createElement("div");
+        div.className = cls;
+        div.id = "msg-" + Date.now();
+        div.innerText = (cls === 'player' ? "> " : "") + txt;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+        return div.id;
     }
 
-    function adicionarMensagem(texto, classe) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${classe}`;
-        const id = 'msg-' + Date.now();
-        msgDiv.id = id;
-        msgDiv.innerText = (classe === 'player' ? '> ' : '') + texto;
-        chatBox.appendChild(msgDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
-        return id;
-    }
-
-    playerInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') enviarAcao(); });
-    inicializarIA();
+    init();
 </script>
 </body>
 </html>
