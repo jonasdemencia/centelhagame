@@ -126,12 +126,10 @@
 </div>
 
 <script type="module">
-    import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+    import * as webllm from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/+esm";
 
-    // O modelo selecionado. Se o Nemo ficar muito pesado, altere para "Llama-3.2-3B-Instruct-q4f16_1-MLC"
-const selectedModel = "Llama-3.1-8B-Instruct-q4f32_1-MLC";
+    const selectedModel = "Llama-3.2-3B-Instruct-q4f16_1-MLC";
     
-    // Prerrogativa narrativa estrita
     const systemPrompt = "Responda de forma breve (máximo de 2 linhas) e seca. Você é um narrador de uma história de sobrevivência obscura e punitiva.";
 
     let engine;
@@ -146,10 +144,8 @@ const selectedModel = "Llama-3.1-8B-Instruct-q4f32_1-MLC";
     const progressBar = document.getElementById('progress-bar');
     const loadingContainer = document.getElementById('loading-container');
 
-    // Função para rastrear o download do modelo
     const initProgressCallback = (initProgress) => {
         progressText.textContent = initProgress.text;
-        // Tenta extrair a porcentagem do texto de progresso do WebLLM
         const match = initProgress.text.match(/\[(\d+)\/(\d+)\]/);
         if (match) {
             const percent = (parseInt(match[1]) / parseInt(match[2])) * 100;
@@ -159,12 +155,10 @@ const selectedModel = "Llama-3.1-8B-Instruct-q4f32_1-MLC";
         }
     };
 
-    // Inicializa a IA no navegador
     async function inicializarIA() {
         try {
-            // Verifica se o navegador suporta WebGPU
             if (!navigator.gpu) {
-                throw new Error("Seu navegador não suporta WebGPU. O jogo não pode ser executado.");
+                throw new Error("Seu navegador não suporta WebGPU. Use Chrome/Edge 113+ com placa de vídeo compatível.");
             }
 
             engine = await webllm.CreateMLCEngine(
@@ -172,28 +166,25 @@ const selectedModel = "Llama-3.1-8B-Instruct-q4f32_1-MLC";
                 { initProgressCallback: initProgressCallback }
             );
 
-            // Carregamento concluído
             loadingContainer.style.display = 'none';
             playerInput.disabled = false;
             btnEnviar.disabled = false;
             
-            chatBox.innerHTML = ''; // Limpa mensagens de sistema
+            chatBox.innerHTML = '';
             adicionarMensagem("O vento uiva do lado de fora da cabana em ruínas. Você tem apenas suas roupas esfarrapadas e o frio está aumentando.", 'narrator');
             playerInput.focus();
 
         } catch (error) {
             console.error("Erro ao carregar IA:", error);
-            progressText.textContent = "Erro crítico: " + error.message;
+            progressText.textContent = "Erro: " + error.message;
             progressText.style.color = "#a13d3d";
         }
     }
 
-    // Função atrelada ao botão e ao input no escopo global
     window.enviarAcao = async function() {
         const text = playerInput.value.trim();
         if (!text || !engine) return;
 
-        // Desabilita input enquanto a IA "pensa"
         playerInput.disabled = true;
         btnEnviar.disabled = true;
 
@@ -204,20 +195,19 @@ const selectedModel = "Llama-3.1-8B-Instruct-q4f32_1-MLC";
         const loadingId = adicionarMensagem("...", 'narrator');
 
         try {
-            // Chamada para a IA gerar a resposta
             const reply = await engine.chat.completions.create({
                 messages: conversationHistory,
-                temperature: 0.7, // Um pouco de criatividade, mas mantendo a secura
+                temperature: 0.7,
+                max_tokens: 100
             });
 
             const respostaIA = reply.choices[0].message.content;
             
-            // Atualiza a interface e a memória da IA
             document.getElementById(loadingId).innerText = respostaIA;
             conversationHistory.push({ role: "assistant", content: respostaIA });
 
         } catch (error) {
-            document.getElementById(loadingId).innerText = "[Erro ao processar ação. O modelo pode ter ficado sem memória.]";
+            document.getElementById(loadingId).innerText = "[Erro ao processar ação]";
             console.error(error);
         } finally {
             playerInput.disabled = false;
@@ -244,10 +234,8 @@ const selectedModel = "Llama-3.1-8B-Instruct-q4f32_1-MLC";
         if (e.key === 'Enter') window.enviarAcao();
     });
 
-    // Inicia o processo assim que a página carrega
     inicializarIA();
 </script>
 
 </body>
-
 </html>
