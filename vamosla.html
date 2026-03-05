@@ -1,41 +1,17 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <title>Centelha - Motor Narrativo</title>
-    <style>
-        body { background: #1a1a14; color: #b5a68b; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        #game-container { width: 90%; max-width: 650px; background: #141311; padding: 20px; border: 4px solid #3a3228; box-shadow: 6px 6px 0px #000; }
-        #chat-box { height: 300px; overflow-y: auto; border: 2px inset #2a251e; padding: 15px; background: #0d0c0a; margin-bottom: 15px; }
-        .narrator { color: #a13d3d; margin-bottom: 10px; }
-        .player { color: #7a8c66; margin-bottom: 10px; }
-        #progress-bar-container { width: 100%; background: #2a251e; height: 12px; margin-bottom: 10px; display: block; }
-        #progress-bar { width: 0%; height: 100%; background: #5c2c2c; transition: width 0.3s; }
-        input { width: 80%; padding: 10px; background: #1a1815; border: 1px solid #3a3228; color: #d1c5b4; }
-        button { padding: 10px; cursor: pointer; background: #3a3228; color: #fff; border: none; }
-        button:disabled { opacity: 0.3; }
-    </style>
-</head>
-<body>
-
-<div id="game-container">
-    <div id="status">Iniciando...</div>
-    <div id="progress-bar-container"><div id="progress-bar"></div></div>
-    
-    <div id="chat-box"></div>
-    
-    <div id="controls">
-        <input type="text" id="player-input" placeholder="Sua ação..." disabled>
-        <button id="btn-enviar" onclick="enviarAcao()" disabled>AGIR</button>
-    </div>
-</div>
-
 <script type="module">
     import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
-    const MY_MODEL_ID = "Qwen2.5-3B-Instruct-q4f16_1-MLC";
+    // Llama-3.2-3B é conhecido por ser mais "falante" e criativo que o Qwen em RPGs
+    const MY_MODEL_ID = "Llama-3.2-3B-Instruct-q4f16_1-MLC";
     
-    const systemPrompt = "Você é o narrador de um jogo de sobrevivência. Responda sempre em português, de forma seca e breve (máximo 2 linhas)";
+    // NOVO PROMPT: Damos a ela o poder de CRIAR e a estética PS1 Horror
+    const systemPrompt = `Você é o Mestre Narrador de um jogo de horror de sobrevivência estilo PS1 (Resident Evil/Silent Hill). 
+    REGRAS CRÍTICAS:
+    1. Você tem autoridade total: se o jogador perguntar algo que não foi definido (idade, clima, ferimentos), VOCÊ INVENTA na hora de forma cruel.
+    2. Estética: Descrições viscerais, melancólicas e curtas. 
+    3. Idioma: Sempre Português do Brasil.
+    4. Responda em no máximo 3 linhas. 
+    5. Nunca admita que você é uma IA. Você é a voz da floresta.`;
     
     let engine;
     let chatHistory = [{ role: "system", content: systemPrompt }];
@@ -47,6 +23,8 @@
         try {
             if (!navigator.gpu) throw new Error("WebGPU não detectado.");
 
+            status.innerText = "Despertando o Narrador...";
+            
             engine = await CreateMLCEngine(MY_MODEL_ID, {
                 initProgressCallback: (report) => {
                     status.innerText = report.text;
@@ -56,14 +34,14 @@
             });
 
             document.getElementById("progress-bar-container").style.display = "none";
-            status.innerText = "Motor Narrativo Online";
+            status.innerText = "O Pesadelo Começou.";
             document.getElementById("player-input").disabled = false;
             document.getElementById("btn-enviar").disabled = false;
             
-            addMsg("O silêncio da floresta morta é interrompido pelo estalo de um galho. O que você faz?", "narrator");
+            addMsg("Você acorda com o gosto de ferro na boca. O frio corta sua pele como navalhas. Onde você está?", "narrator");
 
         } catch (err) {
-            status.innerText = "Erro Crítico: " + err.message;
+            status.innerText = "Erro: " + err.message;
             console.error(err);
         }
     }
@@ -83,8 +61,8 @@
         try {
             const result = await engine.chat.completions.create({ 
                 messages: chatHistory,
-                temperature: 0.7,
-                max_tokens: 100 
+                temperature: 0.9, // Aumentamos a temperatura para mais criatividade
+                max_tokens: 150 
             });
 
             const answer = result.choices[0].message.content;
@@ -92,7 +70,7 @@
             chatHistory.push({ role: "assistant", content: answer });
 
         } catch (e) {
-            document.getElementById(tempId).innerText = "A mente do narrador colapsou (Erro de GPU).";
+            document.getElementById(tempId).innerText = "[A conexão com a realidade falhou]";
         } finally {
             document.getElementById("btn-enviar").disabled = false;
         }
@@ -100,7 +78,7 @@
 
     function addMsg(txt, cls) {
         const box = document.getElementById("chat-box");
-        const div = document.createElement("div");
+        const div = document.createElement('div');
         div.className = cls;
         div.id = "msg-" + Date.now();
         div.innerText = (cls === 'player' ? "> " : "") + txt;
@@ -111,6 +89,3 @@
 
     init();
 </script>
-</body>
-</html>
-
