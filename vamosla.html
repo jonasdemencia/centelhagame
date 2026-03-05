@@ -126,7 +126,7 @@
 </div>
 
 <script type="module">
-    import * as webllm from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/+esm";
+    import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
     const selectedModel = "Llama-3.1-8B-Instruct-q4f16_1-MLC";
     
@@ -161,14 +161,9 @@
                 throw new Error("Seu navegador não suporta WebGPU. Use Chrome/Edge 113+ com placa de vídeo compatível.");
             }
 
-            engine = await webllm.CreateMLCEngine(
+            engine = await CreateMLCEngine(
                 selectedModel,
-                { 
-                    initProgressCallback: initProgressCallback,
-                    appConfig: {
-                        useIndexedDBCache: true
-                    }
-                }
+                { initProgressCallback: initProgressCallback }
             );
 
             loadingContainer.style.display = 'none';
@@ -181,7 +176,7 @@
 
         } catch (error) {
             console.error("Erro ao carregar IA:", error);
-            progressText.textContent = "Erro: " + error.message + " | Seu PC precisa ter pelo menos 8GB de RAM e GPU compatível com WebGPU.";
+            progressText.textContent = "Erro: " + error.message;
             progressText.style.color = "#a13d3d";
         }
     }
