@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aventura de Sobrevivência - WebLLM</title>
+    <style>
+        /* Estética Retrô / Survival Horror */
+        body {
+            background-color: #1a1a14;
+            background-image: radial-gradient(#2b2a24 1px, transparent 1px);
+            background-size: 4px 4px;
+            color: #b5a68b;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            image-rendering: pixelated;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 650px;
+            background: #141311;
+            padding: 20px;
+            border: 4px solid #3a3228;
+            box-shadow: 6px 6px 0px #080808;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Barra de Carregamento do Modelo */
+        #loading-container {
+            border: 2px solid #4a3f35;
+            background: #0a0a08;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            color: #8c7d66;
+        }
+        
+        #progress-text { margin-bottom: 5px; }
+        
+        #progress-bar {
+            width: 0%;
+            height: 10px;
+            background-color: #5c2c2c; /* Vermelho ferrugem */
+            transition: width 0.2s;
+        }
+
+        /* Área de Texto */
+        #chat-box {
+            height: 350px;
+            overflow-y: auto;
+            border: 2px inset #2a251e;
+            padding: 15px;
+            background: #0d0c0a;
+            scrollbar-width: thin;
+            scrollbar-color: #3a3228 #0d0c0a;
+        }
+
+        .message { margin-bottom: 15px; line-height: 1.5; text-shadow: 1px 1px #000; }
+        .narrator { color: #a13d3d; } /* Vermelho sangue seco */
+        .player { color: #7a8c66; } /* Verde musgo pálido */
+        .system { color: #666; font-style: italic; }
+
+        /* Controles */
+        #input-area { display: flex; gap: 10px; }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            background: #1a1815;
+            border: 2px solid #3a3228;
+            color: #d1c5b4;
+            font-family: inherit;
+            font-size: 16px;
+            outline: none;
+        }
+        
+        input[type="text"]:focus { border-color: #5c2c2c; }
+
+        button {
+            padding: 12px 20px;
+            background: #2a251e;
+            border: 2px solid #4a3f35;
+            color: #b5a68b;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        button:hover:not(:disabled) {
+            background: #3a3228;
+            color: #fff;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="loading-container">
+        <div id="progress-text">Inicializando Motor de IA (Aguarde o download do modelo...)</div>
+        <div style="width: 100%; background: #1a1815; margin-top: 5px;">
+            <div id="progress-bar"></div>
+        </div>
+    </div>
+
+    <div id="chat-box">
+        <div class="message system">O sistema está sendo carregado. Por favor, aguarde. O primeiro acesso fará o download de vários Gigabytes para o cache do seu navegador.</div>
+    </div>
+    
+    <div id="input-area">
+        <input type="text" id="player-input" placeholder="Sua ação..." autocomplete="off" disabled>
+        <button id="btn-enviar" onclick="enviarAcao()" disabled>Agir</button>
+    </div>
+</div>
+
+<script type="module">
+    import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+
+    // O modelo selecionado. Se o Nemo ficar muito pesado, altere para "Llama-3.2-3B-Instruct-q4f16_1-MLC"
+    const selectedModel = "Mistral-Nemo-Instruct-2407-q4f16_1-MLC";
+    
+    // Prerrogativa narrativa estrita
+    const systemPrompt = "Responda de forma breve (máximo de 2 linhas) e seca. Você é um narrador de uma história de sobrevivência obscura e punitiva.";
+
+    let engine;
+    let conversationHistory = [
+        { role: "system", content: systemPrompt }
+    ];
+
+    const chatBox = document.getElementById('chat-box');
+    const playerInput = document.getElementById('player-input');
+    const btnEnviar = document.getElementById('btn-enviar');
+    const progressText = document.getElementById('progress-text');
+    const progressBar = document.getElementById('progress-bar');
+    const loadingContainer = document.getElementById('loading-container');
+
+    // Função para rastrear o download do modelo
+    const initProgressCallback = (initProgress) => {
+        progressText.textContent = initProgress.text;
+        // Tenta extrair a porcentagem do texto de progresso do WebLLM
+        const match = initProgress.text.match(/\[(\d+)\/(\d+)\]/);
+        if (match) {
+            const percent = (parseInt(match[1]) / parseInt(match[2])) * 100;
+            progressBar.style.width = percent + '%';
+        } else {
+            progressBar.style.width = '100%';
+        }
+    };
+
+    // Inicializa a IA no navegador
+    async function inicializarIA() {
+        try {
+            // Verifica se o navegador suporta WebGPU
+            if (!navigator.gpu) {
+                throw new Error("Seu navegador não suporta WebGPU. O jogo não pode ser executado.");
+            }
+
+            engine = await webllm.CreateMLCEngine(
+                selectedModel,
+                { initProgressCallback: initProgressCallback }
+            );
+
+            // Carregamento concluído
+            loadingContainer.style.display = 'none';
+            playerInput.disabled = false;
+            btnEnviar.disabled = false;
+            
+            chatBox.innerHTML = ''; // Limpa mensagens de sistema
+            adicionarMensagem("O vento uiva do lado de fora da cabana em ruínas. Você tem apenas suas roupas esfarrapadas e o frio está aumentando.", 'narrator');
+            playerInput.focus();
+
+        } catch (error) {
+            console.error("Erro ao carregar IA:", error);
+            progressText.textContent = "Erro crítico: " + error.message;
+            progressText.style.color = "#a13d3d";
+        }
+    }
+
+    // Função atrelada ao botão e ao input no escopo global
+    window.enviarAcao = async function() {
+        const text = playerInput.value.trim();
+        if (!text || !engine) return;
+
+        // Desabilita input enquanto a IA "pensa"
+        playerInput.disabled = true;
+        btnEnviar.disabled = true;
+
+        adicionarMensagem(text, 'player');
+        conversationHistory.push({ role: "user", content: text });
+        playerInput.value = '';
+
+        const loadingId = adicionarMensagem("...", 'narrator');
+
+        try {
+            // Chamada para a IA gerar a resposta
+            const reply = await engine.chat.completions.create({
+                messages: conversationHistory,
+                temperature: 0.7, // Um pouco de criatividade, mas mantendo a secura
+            });
+
+            const respostaIA = reply.choices[0].message.content;
+            
+            // Atualiza a interface e a memória da IA
+            document.getElementById(loadingId).innerText = respostaIA;
+            conversationHistory.push({ role: "assistant", content: respostaIA });
+
+        } catch (error) {
+            document.getElementById(loadingId).innerText = "[Erro ao processar ação. O modelo pode ter ficado sem memória.]";
+            console.error(error);
+        } finally {
+            playerInput.disabled = false;
+            btnEnviar.disabled = false;
+            playerInput.focus();
+        }
+    }
+
+    function adicionarMensagem(texto, classe) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${classe}`;
+        const id = 'msg-' + Date.now();
+        msgDiv.id = id;
+        
+        const prefixo = classe === 'player' ? '> ' : '';
+        msgDiv.innerText = prefixo + texto;
+        
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        return id;
+    }
+
+    playerInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') window.enviarAcao();
+    });
+
+    // Inicia o processo assim que a página carrega
+    inicializarIA();
+</script>
+
+</body>
+</html>
