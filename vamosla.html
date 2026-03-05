@@ -31,22 +31,10 @@
 </div>
 
 <script type="module">
-    // Usando uma versão fixa e estável para evitar quebras de atualização
-    import * as webllm from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/+esm";
+    import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
-    // Configuração manual do modelo para ignorar o erro de "model_list undefined"
     const MY_MODEL_ID = "Qwen2.5-3B-Instruct-q4f16_1-MLC";
     
-    const appConfig = {
-        model_list: [
-            {
-                model_id: MY_MODEL_ID,
-                model: "https://huggingface.co/mlc-ai/Qwen2.5-3B-Instruct-q4f16_1-MLC",
-                model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-gpu-models/v0_2_46/Qwen2.5-3B-Instruct-q4f16_1-MLC/Qwen2.5-3B-Instruct-q4f16_1-MLC-webgpu.wasm",
-            }
-        ]
-    };
-
     const systemPrompt = "Você é o narrador de um jogo de sobrevivência. Responda sempre em português, de forma seca, breve (máximo 2 linhas) e cruel.";
     
     let engine;
@@ -59,16 +47,13 @@
         try {
             if (!navigator.gpu) throw new Error("WebGPU não detectado.");
 
-            engine = new webllm.MLCEngine();
-            
-            engine.setInitProgressCallback((report) => {
-                status.innerText = report.text;
-                const progress = report.progress * 100;
-                pb.style.width = `${progress}%`;
+            engine = await CreateMLCEngine(MY_MODEL_ID, {
+                initProgressCallback: (report) => {
+                    status.innerText = report.text;
+                    const progress = report.progress * 100;
+                    pb.style.width = `${progress}%`;
+                }
             });
-
-            // Carrega o modelo usando a nossa configuração manual (appConfig)
-            await engine.reload(MY_MODEL_ID, { appConfig });
 
             document.getElementById("progress-bar-container").style.display = "none";
             status.innerText = "Motor Narrativo Online";
