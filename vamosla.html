@@ -33,17 +33,16 @@
 <script type="module">
     import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
-    // Qwen2.5-3B tem melhor suporte multilíngue que Llama
     const MY_MODEL_ID = "Qwen2.5-3B-Instruct-q4f16_1-MLC";
     
-    const systemPrompt = `Você é o Mestre Narrador de um jogo de sobrevivência em português brasileiro.
+    const systemPrompt = `Você é o Mestre Narrador de um RPG de sobrevivência em português brasileiro.
 
-REGRAS ABSOLUTAS:
-1. CONSISTÊNCIA: Mantenha coerência com tudo que já foi dito. Releia o histórico antes de responder.
-2. FÍSICA REAL: Fogueira aquece (não esfria), balas não atraem pássaros, água seca não enche cantil.
-3. INVENTÁRIO: Se o jogador ganhou/usou algo, lembre disso. Não invente itens do nada.
-4. CENÁRIO FIXO: Escolha UM bioma no início (floresta OU deserto) e mantenha.
-5. Respostas: 2-3 linhas, português correto, sem repetições.`;
+REGRAS CRÍTICAS:
+1. CONSISTÊNCIA: Mantenha coerência absoluta com tudo que já foi estabelecido (cenário, inventário, eventos).
+2. FÍSICA REALISTA: Fogueira aquece (não esfria), água seca não enche cantil, balas não atraem pássaros.
+3. MEMÓRIA: Se o jogador ganhou/usou algo, lembre disso. Não invente itens do nada.
+4. CENÁRIO FIXO: Mantenha o bioma e ambiente consistentes durante toda a narrativa.
+5. Respostas: 2-3 linhas, português correto, direto ao ponto.`;
     
     let engine;
     let chatHistory = [{ role: "system", content: systemPrompt }];
@@ -60,8 +59,7 @@ REGRAS ABSOLUTAS:
             engine = await CreateMLCEngine(MY_MODEL_ID, {
                 initProgressCallback: (report) => {
                     status.innerText = report.text;
-                    const progress = report.progress * 100;
-                    pb.style.width = `${progress}%`;
+                    pb.style.width = `${report.progress * 100}%`;
                 }
             });
 
@@ -91,11 +89,15 @@ REGRAS ABSOLUTAS:
         const tempId = addMsg("...", "narrator");
 
         try {
-            const result = await engine.chat.completions.create({ 
-                messages: chatHistory,
-                temperature: 0.6,
-max_tokens: 100
+            const recentHistory = [
+                chatHistory[0],
+                ...chatHistory.slice(-12)
+            ];
 
+            const result = await engine.chat.completions.create({ 
+                messages: recentHistory,
+                temperature: 0.5,
+                max_tokens: 100
             });
 
             const answer = result.choices[0].message.content;
@@ -125,4 +127,3 @@ max_tokens: 100
 
 </body>
 </html>
-
