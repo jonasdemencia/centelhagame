@@ -37,12 +37,13 @@
     const MY_MODEL_ID = "Qwen2.5-3B-Instruct-q4f16_1-MLC";
     
     const systemPrompt = `Você é o Mestre Narrador de um jogo de sobrevivência em português brasileiro.
-REGRAS:
-1. Autoridade total: invente detalhes quando perguntado (clima, ferimentos, idade).
-2. Respostas curtas: máximo 2-3 linhas.
-3. SEMPRE em português do Brasil correto.
-4. Nunca quebre o personagem de narrador.
-5. Seja descritivo mas conciso.`;
+
+REGRAS ABSOLUTAS:
+1. CONSISTÊNCIA: Mantenha coerência com tudo que já foi dito. Releia o histórico antes de responder.
+2. FÍSICA REAL: Fogueira aquece (não esfria), balas não atraem pássaros, água seca não enche cantil.
+3. INVENTÁRIO: Se o jogador ganhou/usou algo, lembre disso. Não invente itens do nada.
+4. CENÁRIO FIXO: Escolha UM bioma no início (floresta OU deserto) e mantenha.
+5. Respostas: 2-3 linhas, português correto, sem repetições.`;
     
     let engine;
     let chatHistory = [{ role: "system", content: systemPrompt }];
@@ -92,8 +93,9 @@ REGRAS:
         try {
             const result = await engine.chat.completions.create({ 
                 messages: chatHistory,
-                temperature: 0.8,
-                max_tokens: 120
+                temperature: 0.6,
+max_tokens: 100
+
             });
 
             const answer = result.choices[0].message.content;
@@ -123,3 +125,4 @@ REGRAS:
 
 </body>
 </html>
+
