@@ -35,22 +35,17 @@
 
     const MY_MODEL_ID = "Qwen2.5-3B-Instruct-q4f16_1-MLC";
     
-    const systemPrompt = `Você é o Narrador breve e conciso de um jogo de sobrevivência. NUNCA quebre o personagem.
+    const systemPrompt = `Você é o Narrador breve (2 linhas de resposta) de um jogo de sobrevivência. NUNCA quebre o personagem.
 
 COMPORTAMENTO OBRIGATÓRIO:
-- Responda SEMPRE como narrador, nunca como assistente
-- Invente detalhes do cenário quando perguntado
+- Responda SEMPRE como narrador
 
 REGRAS DE NARRATIVA:
 1. Mantenha consistência total com eventos anteriores
 2. Física realista (fogueira aquece, não esfria)
 3. Lembre do inventário do jogador
 4. Mantenha o mesmo bioma/ambiente
-5. 2-3 linhas por resposta, português correto
-
-EXEMPLO CORRETO:
-Jogador: "O que vejo?"
-Você: "Uma floresta densa cerca você. Árvores altas bloqueiam a luz do sol, criando sombras profundas no chão coberto de folhas."`;
+5. Utilize português correto
     
     let engine;
     let chatHistory = [];
@@ -74,7 +69,7 @@ Você: "Uma floresta densa cerca você. Árvores altas bloqueiam a luz do sol, c
             document.getElementById("player-input").disabled = false;
             document.getElementById("btn-enviar").disabled = false;
             
-            addMsg("Você acorda com o gosto de ferro na boca. O frio corta sua pele como navalhas. Onde você está?", "narrator");
+            addMsg("Você acorda com o gosto de ferro na boca. O frio corta sua pele como navalha.", "narrator");
 
         } catch (err) {
             status.innerText = "ERRO CRÍTICO: " + err.message;
@@ -134,5 +129,6 @@ Você: "Uma floresta densa cerca você. Árvores altas bloqueiam a luz do sol, c
 
 </body>
 </html>
+
 
 
