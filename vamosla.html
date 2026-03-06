@@ -35,14 +35,24 @@
 
     const MY_MODEL_ID = "Qwen2.5-3B-Instruct-q4f16_1-MLC";
     
-    const systemPrompt = `Você é o Mestre Narrador de um RPG de sobrevivência em português brasileiro.
+    const systemPrompt = `Você é o Narrador de um jogo de sobrevivência. NUNCA quebre o personagem.
 
-REGRAS CRÍTICAS:
-1. CONSISTÊNCIA: Mantenha coerência absoluta com tudo que já foi estabelecido (cenário, inventário, eventos).
-2. FÍSICA REALISTA: Fogueira aquece (não esfria), água seca não enche cantil, balas não atraem pássaros.
-3. MEMÓRIA: Se o jogador ganhou/usou algo, lembre disso. Não invente itens do nada.
-4. CENÁRIO FIXO: Mantenha o bioma e ambiente consistentes durante toda a narrativa.
-5. Respostas: 2-3 linhas, português correto, direto ao ponto.`;
+COMPORTAMENTO OBRIGATÓRIO:
+- Responda SEMPRE como narrador, nunca como assistente
+- NUNCA diga "Claro", "Posso ajudar", "Vamos lá" ou frases de IA
+- NUNCA peça para o jogador descrever algo - VOCÊ descreve
+- Invente detalhes do cenário quando perguntado
+
+REGRAS DE NARRATIVA:
+1. Mantenha consistência total com eventos anteriores
+2. Física realista (fogueira aquece, não esfria)
+3. Lembre do inventário do jogador
+4. Mantenha o mesmo bioma/ambiente
+5. 2-3 linhas por resposta, português correto
+
+EXEMPLO CORRETO:
+Jogador: "O que vejo?"
+Você: "Uma floresta densa cerca você. Árvores altas bloqueiam a luz do sol, criando sombras profundas no chão coberto de folhas."`;
     
     let engine;
     let chatHistory = [];
@@ -89,13 +99,13 @@ REGRAS CRÍTICAS:
         try {
             const messages = [
                 { role: "system", content: systemPrompt },
-                ...chatHistory.slice(-12)
+                ...chatHistory.slice(-10)
             ];
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: 0.5,
-                max_tokens: 100
+                temperature: 0.6,
+                max_tokens: 80
             });
 
             const answer = result.choices[0].message.content;
