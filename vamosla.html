@@ -33,19 +33,16 @@
 <script type="module">
     import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
-    const MY_MODEL_ID = "Qwen2.5-3B-Instruct-q4f16_1-MLC";
+    const MY_MODEL_ID = "Qwen2.5-7B-Instruct-q4f16_1-MLC";
     
-    const systemPrompt = `Você é o Narrador breve (2 linhas de resposta) de um jogo de sobrevivência. NUNCA quebre o personagem.
+    const systemPrompt = `Você é o Narrador breve (máximo 3 linhas) de um jogo de sobrevivência em português brasileiro.
 
-COMPORTAMENTO OBRIGATÓRIO:
-- Responda SEMPRE como narrador
-
-REGRAS DE NARRATIVA:
+REGRAS:
 1. Mantenha consistência total com eventos anteriores
-2. Física realista (fogueira aquece, não esfria)
+2. Física realista
 3. Lembre do inventário do jogador
 4. Mantenha o mesmo bioma/ambiente
-5. Utilize português correto`;
+5. Respostas com português correto`;
     
     let engine;
     let chatHistory = [];
@@ -97,8 +94,8 @@ REGRAS DE NARRATIVA:
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: 0.6,
-                max_tokens: 80
+                temperature: 0.7,
+                max_tokens: 100
             });
 
             const answer = result.choices[0].message.content;
