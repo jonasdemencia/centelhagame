@@ -45,7 +45,7 @@ REGRAS CRÍTICAS:
 5. Respostas: 2-3 linhas, português correto, direto ao ponto.`;
     
     let engine;
-    let chatHistory = [{ role: "system", content: systemPrompt }];
+    let chatHistory = [];
 
     async function init() {
         const status = document.getElementById("status");
@@ -87,13 +87,13 @@ REGRAS CRÍTICAS:
         const tempId = addMsg("...", "narrator");
 
         try {
-            const recentHistory = [
-                chatHistory[0],
+            const messages = [
+                { role: "system", content: systemPrompt },
                 ...chatHistory.slice(-12)
             ];
 
             const result = await engine.chat.completions.create({ 
-                messages: recentHistory,
+                messages: messages,
                 temperature: 0.5,
                 max_tokens: 100
             });
