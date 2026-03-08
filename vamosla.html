@@ -40,11 +40,10 @@
 FILOSOFIA NARRATIVA:
 - O mundo tem segredos que o jogador ainda não descobriu
 - Cada local esconde algo interessante (objeto, perigo, mistério)
-- Sempre termine respostas com elemento que provoca curiosidade
+- termine respostas com elemento que provoca curiosidade
 
 ESTRUTURA (2-3 linhas):
 - Responda a ação do jogador
-- Adicione detalhe sensorial
 - Revele algo que puxa a narrativa (som distante, objeto parcialmente visível, mudança no ambiente)
 
 REGRAS:
@@ -104,8 +103,8 @@ REGRAS:
 
             const result = await engine.chat.completions.create({ 
     messages: messages,
-    temperature: 0.8,
-    max_tokens: 200,
+    temperature: 0.6,
+    max_tokens: 140,
     top_p: 0.75,
     frequency_penalty: 0.7,
     presence_penalty: 0.6,
@@ -146,6 +145,7 @@ REGRAS:
 
 </body>
 </html>
+
 
 
 
