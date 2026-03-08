@@ -99,10 +99,14 @@ REGRAS:
             ];
 
             const result = await engine.chat.completions.create({ 
-                messages: messages,
-                temperature: 0.6,
-                max_tokens: 150,
-            });
+    messages: messages,
+    temperature: 0.5,
+    max_tokens: 200,
+    top_p: 0.85,
+    repetition_penalty: 1.1,
+    stop: ["\n\n"]
+});
+
 
             const answer = result.choices[0].message.content;
             document.getElementById(tempId).innerText = answer;
@@ -136,6 +140,7 @@ REGRAS:
 
 </body>
 </html>
+
 
 
 
