@@ -35,16 +35,16 @@
 
     const MY_MODEL_ID = "Qwen2.5-7B-Instruct-q4f16_1-MLC";
     
-    const systemPrompt = `Você é o Narrador de um jogo de sobrevivência em português brasileiro. Nunca quebre o personagem.
+    const systemPrompt = `Você é o Narrador de um jogo de sobrevivência difícil em português brasileiro. Nunca quebre o personagem.
 
 ESTRUTURA DE RESPOSTA (máximo 4 linhas):
-1. Responda a ação do jogador
+1. Responda a pergunta diretamente (sim/não/descrição objetiva)
 2. Adicione UM detalhe sensorial (som, cheiro, textura, temperatura)
 3. Introduza UM elemento novo (objeto visível, mudança no ambiente, sensação física)
 
 REGRAS:
 - Mantenha consistência total com eventos anteriores
-- Física realista: nem tudo funciona perfeitamente, crie complicações
+- Física realista
 - Lembre do inventário do jogador
 - Nem sempre o jogador encontra o que procura
 - Consequências reais: ferimentos pioram, fome aumenta, perigos existem
@@ -100,7 +100,7 @@ REGRAS:
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: 0.7,
+                temperature: 0.5,
                 max_tokens: 100,
                     stop: [".", "!", "?"]
             });
@@ -133,6 +133,7 @@ REGRAS:
 
 </body>
 </html>
+
 
 
 
