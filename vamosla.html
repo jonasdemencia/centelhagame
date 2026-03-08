@@ -37,7 +37,7 @@
     
     const systemPrompt = `Você é o Narrador de um jogo de sobrevivência em português brasileiro. Nunca quebre o personagem.
 
-ESTRUTURA DE RESPOSTA (máximo 3-4 linhas):
+ESTRUTURA DE RESPOSTA (máximo 2-3 linhas):
 - Responda a pergunta diretamente
 - Adicione detalhes sensoriais (som, cheiro, textura, temperatura)
 - Descreva elementos do ambiente que chamam atenção (objetos, sons distantes, trilhas, luzes)
@@ -100,8 +100,8 @@ REGRAS:
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: 0.5,
-                max_tokens: 100,
+                temperature: 0.6,
+                max_tokens: 150,
             });
 
             const answer = result.choices[0].message.content;
@@ -136,6 +136,7 @@ REGRAS:
 
 </body>
 </html>
+
 
 
 
