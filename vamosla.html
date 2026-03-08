@@ -37,18 +37,22 @@
     
     const systemPrompt = `Você é o Narrador de um jogo de sobrevivência em português brasileiro. Nunca quebre o personagem.
 
-ESTRUTURA DE RESPOSTA (máximo 2-3 linhas):
-- Responda a pergunta diretamente
-- Adicione detalhes sensoriais (som, cheiro, textura, temperatura)
-- Descreva elementos do ambiente que chamam atenção (objetos, sons distantes, trilhas, luzes)
+FILOSOFIA NARRATIVA:
+- O mundo tem segredos que o jogador ainda não descobriu
+- Cada local esconde algo interessante (objeto, perigo, mistério)
+- Sempre termine respostas com elemento que provoca curiosidade
+
+ESTRUTURA (2-3 linhas):
+- Responda a ação do jogador
+- Adicione detalhe sensorial
+- Revele algo que puxa a narrativa (som distante, objeto parcialmente visível, mudança no ambiente)
 
 REGRAS:
-- Mantenha consistência total com eventos anteriores
-- Física realista: nem tudo funciona, crie complicações
+- Consistência total
+- Física realista
 - Lembre do inventário do jogador
-- Consequências reais: ferimentos pioram, fome aumenta, perigos existem
-- Deixe pistas sutis através de descrições do ambiente
 - Português correto`;
+
     
     let engine;
     let chatHistory = [];
@@ -100,12 +104,14 @@ REGRAS:
 
             const result = await engine.chat.completions.create({ 
     messages: messages,
-    temperature: 0.5,
+    temperature: 0.8,
     max_tokens: 200,
-    top_p: 0.85,
-    repetition_penalty: 1.1,
-    stop: ["\n\n"]
+    top_p: 0.75,
+    frequency_penalty: 0.7,
+    presence_penalty: 0.6,
+    repetition_penalty: 1.1
 });
+
 
 
             const answer = result.choices[0].message.content;
@@ -140,6 +146,7 @@ REGRAS:
 
 </body>
 </html>
+
 
 
 
