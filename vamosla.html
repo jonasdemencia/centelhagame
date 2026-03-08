@@ -101,8 +101,8 @@ REGRAS:
             const result = await engine.chat.completions.create({ 
                 messages: messages,
                 temperature: 0.5,
-                max_tokens: 100,
-                    stop: [".", "!", "?"]
+                max_tokens: 120,
+                    "stop: [".", "!", "?"]"
             });
 
             const answer = result.choices[0].message.content;
@@ -133,6 +133,7 @@ REGRAS:
 
 </body>
 </html>
+
 
 
 
