@@ -43,6 +43,7 @@ FILOSOFIA NARRATIVA:
 
 ESTRUTURA (2-3 linhas):
 - Responda a ação do jogador
+- Se o jogador fizer múltiplas ações, resuma os resultados
 - Ocasionalmente revele algo que puxa a narrativa (som distante, objeto parcialmente visível, mudança no ambiente)
 
 REGRAS:
@@ -113,8 +114,37 @@ REGRAS:
 
 
             const answer = result.choices[0].message.content;
-            document.getElementById(tempId).innerText = answer;
-            chatHistory.push({ role: "assistant", content: answer });
+
+// Verifica se foi cortada
+const lastChar = answer.trim().slice(-1);
+const isIncomplete = !['.', '!', '?', '"'].includes(lastChar);
+
+if (isIncomplete) {
+    chatHistory.push({ role: "assistant", content: answer });
+    chatHistory.push({ role: "user", content: "[Continue]" });
+    
+    const continuation = await engine.chat.completions.create({
+        messages: [
+            { role: "system", content: systemPrompt },
+            ...chatHistory.slice(-12)
+        ],
+        temperature: 0.6,
+        max_tokens: 80,
+        top_p: 0.75,
+        frequency_penalty: 0.7,
+        presence_penalty: 0.6,
+        repetition_penalty: 1.1
+    });
+    
+    const fullAnswer = answer + " " + continuation.choices[0].message.content;
+    document.getElementById(tempId).innerText = fullAnswer;
+    chatHistory[chatHistory.length - 2].content = fullAnswer;
+    chatHistory.pop();
+} else {
+    document.getElementById(tempId).innerText = answer;
+    chatHistory.push({ role: "assistant", content: answer });
+}
+
 
         } catch (e) {
             document.getElementById(tempId).innerText = "[ERRO: " + e.message + "]";
@@ -144,6 +174,7 @@ REGRAS:
 
 </body>
 </html>
+
 
 
 
