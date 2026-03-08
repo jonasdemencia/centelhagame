@@ -101,7 +101,7 @@ REGRAS:
             const result = await engine.chat.completions.create({ 
                 messages: messages,
                 temperature: 0.5,
-                max_tokens: 120,
+                max_tokens: 100,
             });
 
             const answer = result.choices[0].message.content;
@@ -124,6 +124,10 @@ REGRAS:
         div.innerText = (cls === 'player' ? "> " : "") + txt;
         box.appendChild(div);
         box.scrollTop = box.scrollHeight;
+
+    // Debug: log quantas mensagens existem
+    console.log("Total de mensagens no chat:", box.children.length);
+        
         return div.id;
     }
 
@@ -132,6 +136,7 @@ REGRAS:
 
 </body>
 </html>
+
 
 
 
