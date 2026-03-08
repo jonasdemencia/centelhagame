@@ -138,16 +138,6 @@ if (isIncomplete) {
     chatHistory.push({ role: "assistant", content: answer });
 }
 
-    
-    const fullAnswer = answer + " " + continuation.choices[0].message.content;
-    document.getElementById(tempId).innerText = fullAnswer;
-    chatHistory[chatHistory.length - 2].content = fullAnswer;
-    chatHistory.pop();
-} else {
-    document.getElementById(tempId).innerText = answer;
-    chatHistory.push({ role: "assistant", content: answer });
-}
-
 
         } catch (e) {
             document.getElementById(tempId).innerText = "[ERRO: " + e.message + "]";
@@ -177,6 +167,7 @@ if (isIncomplete) {
 
 </body>
 </html>
+
 
 
 
