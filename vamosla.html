@@ -32,7 +32,6 @@
 
 <script type="module">
     import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
-    import nlp from "https://cdn.skypack.dev/compromise";
 
     const MY_MODEL_ID = "Qwen2.5-7B-Instruct-q4f16_1-MLC";
     
@@ -58,28 +57,23 @@ REGRAS:
     let chatHistory = [];
     let jogador = { habilidade: 10, carisma: 10, sorte: 10 };
 
-    // Sistema de detecção de testes
     function analisarAcao(texto) {
-    console.log("=== ANALISANDO AÇÃO ===");
-    console.log("Texto recebido:", texto);
+    const textoLower = texto.toLowerCase();
     
-    const doc = nlp(texto.toLowerCase());
-    const verbos = doc.verbs().out('array');
-    
-    console.log("Verbos detectados:", verbos);
-        
-        const verbosHabilidade = ['escalar', 'saltar', 'equilibrar', 'decifrar', 'hackear', 'forçar', 'arrombar', 'nadar', 'correr', 'lutar'];
-        const verbosCarisma = ['convencer', 'persuadir', 'intimidar', 'seduzir', 'negociar', 'mentir', 'enganar'];
-        const verbosAleatorios = ['procurar', 'explorar', 'investigar', 'vasculhar'];
-        
-        for (let verbo of verbos) {
-            if (verbosHabilidade.includes(verbo)) return { tipo: 'HABILIDADE', verbo };
-            if (verbosCarisma.includes(verbo)) return { tipo: 'CARISMA', verbo };
-            if (verbosAleatorios.includes(verbo)) return { tipo: 'SORTE', verbo };
-        }
-        
-        return null;
+    if (/escalar|saltar|equilibrar|decifrar|hackear|forçar|arrombar|nadar|correr|lutar|pular|subir|descer/.test(textoLower)) {
+        return { tipo: 'HABILIDADE' };
     }
+    
+    if (/convencer|persuadir|intimidar|seduzir|negociar|mentir|enganar|subornar/.test(textoLower)) {
+        return { tipo: 'CARISMA' };
+    }
+    
+    if (/vasculhar|procurar|explorar|investigar|buscar|examinar|revistar/.test(textoLower)) {
+        return { tipo: 'SORTE' };
+    }
+    
+    return null;
+}
 
     function rolarTeste(tipo) {
         const dado = Math.floor(Math.random() * 20) + 1;
@@ -243,4 +237,5 @@ ESTRUTURA:
 
 </body>
 </html>
+
 
