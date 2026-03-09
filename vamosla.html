@@ -84,68 +84,96 @@ REGRAS:
     }
 
     window.enviarAcao = async () => {
-        const input = document.getElementById("player-input");
-        const text = input.value.trim();
-        if (!text) return;
+        const input = document.getElementById("player-input");
+        const text = input.value.trim();
+        if (!text) return;
 
-        addMsg(text, "player");
-        chatHistory.push({ role: "user", content: text });
-        input.value = "";
+        addMsg(text, "player");
+        chatHistory.push({ role: "user", content: text });
+        input.value = "";
+        
+        document.getElementById("btn-enviar").disabled = true;
+        const tempId = addMsg("...", "narrator");
+
+        // 1. O Diretor Invisível: Tabela de injeções dinâmicas
+        const injecoesSutis = [
+            "Concentre-se apenas na ação imediata.",
+            "Descreva sutilmente uma mudança na temperatura ou na iluminação do ambiente.",
+            "Mencione um som abafado, distante ou irreconhecível vindo de outra direção.",
+            "Faça o jogador notar um detalhe peculiar, enferrujado ou velho no cenário que não tinha visto antes.",
+            "Concentre-se apenas na ação imediata.", // Repetido para diminuir a frequência do mistério
+            "Use um tom levemente perturbador, como se algo estivesse observando a cena de longe."
+        ];
         
-        document.getElementById("btn-enviar").disabled = true;
-        const tempId = addMsg("...", "narrator");
+        // Sorteia uma diretriz para este turno específico
+        const diretrizAtual = injecoesSutis[Math.floor(Math.random() * injecoesSutis.length)];
 
-        try {
-            const messages = [
-                { role: "system", content: systemPrompt },
-                ...chatHistory.slice(-10)
-            ];
+        // O novo prompt funde o sistema base, a injeção do turno e a técnica de Chain-of-Thought
+        const dynamicSystemPrompt = `${systemPrompt}
+        
+DIRETRIZ SECRETA PARA ESTE TURNO: ${diretrizAtual}
 
-            const result = await engine.chat.completions.create({ 
-    messages: messages,
-    temperature: 0.6,
-    max_tokens: 180,
-    top_p: 0.85,
-    frequency_penalty: 0.3,
-presence_penalty: 0.3,
-repetition_penalty: 1.05
-});
+INSTRUÇÃO DE FORMATO OBRIGATÓRIA:
+Antes de responder, você DEVE escrever seu raciocínio dentro de tags <pensamento> e </pensamento>. Pense sobre a física, o que revelar e como aplicar a diretriz secreta. Só depois escreva a narrativa final que o jogador lerá.`;
 
+        try {
+            const messages = [
+                { role: "system", content: dynamicSystemPrompt },
+                ...chatHistory.slice(-10)
+            ];
 
+            const result = await engine.chat.completions.create({ 
+                messages: messages,
+                temperature: 0.72, // Aumentado para mais criatividade
+                max_tokens: 250,   // Aumentado para acomodar a tag de <pensamento>
+                top_p: 0.9,
+                frequency_penalty: 0.4,
+                presence_penalty: 0.75, // CRUCIAL: Força o modelo a falar de coisas novas no cenário
+                repetition_penalty: 1.05
+            });
 
-            const answer = result.choices[0].message.content;
+            let answer = result.choices[0].message.content;
 
-// Verifica se foi cortada
-const lastChar = answer.trim().slice(-1);
-const isIncomplete = !['.', '!', '?', '"'].includes(lastChar);
+            // 2. Limpeza do Chain-of-Thought: Esconde o raciocínio do jogador
+            const pensamentoRegex = /<pensamento>[\s\S]*?<\/pensamento>\n*/g;
+            let textoVisivel = answer.replace(pensamentoRegex, "").trim();
 
-if (isIncomplete) {
-    const continuation = await engine.chat.completions.create({
-        messages: [
-            { role: "system", content: "Complete esta frase em português. Escreva apenas o final que falta, sem repetir." },
-            { role: "user", content: answer }
-        ],
-        temperature: 0.4,
-        max_tokens: 40,
-        top_p: 0.9
-    });
-    
-    const fullAnswer = answer + continuation.choices[0].message.content;
-    document.getElementById(tempId).innerText = fullAnswer;
-    chatHistory.push({ role: "assistant", content: fullAnswer });
-} else {
-    document.getElementById(tempId).innerText = answer;
-    chatHistory.push({ role: "assistant", content: answer });
-}
+            // Fallback caso o modelo não tenha usado a tag corretamente ou a resposta tenha ficado vazia
+            if (!textoVisivel) textoVisivel = answer;
 
+            // Verifica se foi cortada (agora validando o texto limpo)
+            const lastChar = textoVisivel.slice(-1);
+            const isIncomplete = !['.', '!', '?', '"'].includes(lastChar);
 
-        } catch (e) {
-            document.getElementById(tempId).innerText = "[ERRO: " + e.message + "]";
-            console.error("Erro detalhado:", e);
-        } finally {
-            document.getElementById("btn-enviar").disabled = false;
-        }
-    };
+            if (isIncomplete) {
+                // ... (seu código de continuação original se mantém aqui, apenas atualize 'answer' para 'textoVisivel') ...
+                const continuation = await engine.chat.completions.create({
+                    messages: [
+                        { role: "system", content: "Complete esta frase em português. Escreva apenas o final que falta." },
+                        { role: "user", content: textoVisivel }
+                    ],
+                    temperature: 0.4,
+                    max_tokens: 40,
+                    top_p: 0.9
+                });
+                
+                const fullAnswer = textoVisivel + continuation.choices[0].message.content;
+                document.getElementById(tempId).innerText = fullAnswer;
+                chatHistory.push({ role: "assistant", content: fullAnswer }); // Mantemos só a parte limpa no histórico
+            } else {
+                document.getElementById(tempId).innerText = textoVisivel;
+                chatHistory.push({ role: "assistant", content: textoVisivel }); // Oculta o pensamento da memória de longo prazo
+            }
+
+        } catch (e) {
+            document.getElementById(tempId).innerText = "[ERRO: " + e.message + "]";
+            console.error("Erro detalhado:", e);
+        } finally {
+            document.getElementById("btn-enviar").disabled = false;
+            // Retorna o foco para o input para fluidez no gameplay
+            document.getElementById("player-input").focus(); 
+        }
+    };
 
     function addMsg(txt, cls) {
         const box = document.getElementById("chat-box");
@@ -167,6 +195,7 @@ if (isIncomplete) {
 
 </body>
 </html>
+
 
 
 
