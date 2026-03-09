@@ -95,74 +95,70 @@ REGRAS:
         document.getElementById("btn-enviar").disabled = true;
         const tempId = addMsg("...", "narrator");
 
-        // 1. O Diretor Invisível: Tabela de injeções dinâmicas
+        // INJEÇÕES SENSORIAIS CRUAS (Sem emoções, apenas física e ambiente)
         const injecoesSutis = [
-            "Concentre-se apenas na ação imediata.",
-            "Descreva sutilmente uma mudança na temperatura ou na iluminação do ambiente.",
-            "Mencione um som abafado, distante ou irreconhecível vindo de outra direção.",
-            "Faça o jogador notar um detalhe peculiar, enferrujado ou velho no cenário que não tinha visto antes.",
-            "Concentre-se apenas na ação imediata.", // Repetido para diminuir a frequência do mistério
-            "Use um tom levemente perturbador, como se algo estivesse observando a cena de longe."
+            "Foque estritamente na ação imediata de forma seca.",
+            "Mencione um cheiro metálico, de mofo ou poeira levantando com o movimento.",
+            "Descreva a textura de algo próximo (áspero, enferrujado, úmido).",
+            "Mencione a iluminação: uma sombra que se alonga ou uma luz que pisca sutilmente.",
+            "Foque estritamente na ação imediata de forma seca.",
+            "Descreva um som físico leve: madeira rangendo, vento passando por uma fresta, gotejamento."
         ];
         
-        // Sorteia uma diretriz para este turno específico
         const diretrizAtual = injecoesSutis[Math.floor(Math.random() * injecoesSutis.length)];
 
-        // O novo prompt funde o sistema base, a injeção do turno e a técnica de Chain-of-Thought
-        const dynamicSystemPrompt = `${systemPrompt}
-        
-DIRETRIZ SECRETA PARA ESTE TURNO: ${diretrizAtual}
+        // NOVO PROMPT: Focado na "Câmera Objetiva"
+        const dynamicSystemPrompt = `Você é o motor narrativo de um jogo de sobrevivência em português. 
 
-INSTRUÇÃO DE FORMATO OBRIGATÓRIA:
-Antes de responder, você DEVE escrever seu raciocínio dentro de tags <pensamento> e </pensamento>. Pense sobre a física, o que revelar e como aplicar a diretriz secreta. Só depois escreva a narrativa final que o jogador lerá.`;
+REGRA DE OURO (CÂMERA OBJETIVA):
+- PROIBIDO usar adjetivos de emoção ou conclusão (ex: não use "assustador", "misterioso", "estranho", "terrível").
+- Descreva apenas o que pode ser VISTO, OUVIDO, TOCADO ou CHEIRADO. 
+- Seja seco, cru e direto. Deixe o jogador tirar suas próprias conclusões sobre o perigo.
+
+ESTRUTURA:
+1. Resolva a ação do jogador logicamente.
+2. Integre sutilmente este elemento ambiental na cena: [ ${diretrizAtual} ]
+3. Responda em no máximo 3 frases curtas.`;
 
         try {
             const messages = [
                 { role: "system", content: dynamicSystemPrompt },
-                ...chatHistory.slice(-10)
+                ...chatHistory.slice(-8) // Reduzido o histórico para poupar tokens de leitura
             ];
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: 0.72, // Aumentado para mais criatividade
-                max_tokens: 250,   // Aumentado para acomodar a tag de <pensamento>
-                top_p: 0.9,
-                frequency_penalty: 0.4,
-                presence_penalty: 0.75, // CRUCIAL: Força o modelo a falar de coisas novas no cenário
-                repetition_penalty: 1.05
+                temperature: 0.55, // Reduzido para evitar alucinações e textos clichês
+                max_tokens: 120,   // Limite rígido para forçar respostas rápidas e curtas
+                top_p: 0.85,
+                frequency_penalty: 0.3,
+                presence_penalty: 0.4, // Moderado para introduzir novidade sem forçar demais
+                repetition_penalty: 1.1
             });
 
-            let answer = result.choices[0].message.content;
+            const answer = result.choices[0].message.content.trim();
 
-            // 2. Limpeza do Chain-of-Thought: Esconde o raciocínio do jogador
-            const pensamentoRegex = /<pensamento>[\s\S]*?<\/pensamento>\n*/g;
-            let textoVisivel = answer.replace(pensamentoRegex, "").trim();
-
-            // Fallback caso o modelo não tenha usado a tag corretamente ou a resposta tenha ficado vazia
-            if (!textoVisivel) textoVisivel = answer;
-
-            // Verifica se foi cortada (agora validando o texto limpo)
-            const lastChar = textoVisivel.slice(-1);
+            // Verifica se foi cortada
+            const lastChar = answer.slice(-1);
             const isIncomplete = !['.', '!', '?', '"'].includes(lastChar);
 
             if (isIncomplete) {
-                // ... (seu código de continuação original se mantém aqui, apenas atualize 'answer' para 'textoVisivel') ...
                 const continuation = await engine.chat.completions.create({
                     messages: [
-                        { role: "system", content: "Complete esta frase em português. Escreva apenas o final que falta." },
-                        { role: "user", content: textoVisivel }
+                        { role: "system", content: "Complete esta frase de forma seca. Escreva apenas o final." },
+                        { role: "user", content: answer }
                     ],
                     temperature: 0.4,
-                    max_tokens: 40,
+                    max_tokens: 30,
                     top_p: 0.9
                 });
                 
-                const fullAnswer = textoVisivel + continuation.choices[0].message.content;
+                const fullAnswer = answer + continuation.choices[0].message.content;
                 document.getElementById(tempId).innerText = fullAnswer;
-                chatHistory.push({ role: "assistant", content: fullAnswer }); // Mantemos só a parte limpa no histórico
+                chatHistory.push({ role: "assistant", content: fullAnswer }); 
             } else {
-                document.getElementById(tempId).innerText = textoVisivel;
-                chatHistory.push({ role: "assistant", content: textoVisivel }); // Oculta o pensamento da memória de longo prazo
+                document.getElementById(tempId).innerText = answer;
+                chatHistory.push({ role: "assistant", content: answer }); 
             }
 
         } catch (e) {
@@ -170,7 +166,6 @@ Antes de responder, você DEVE escrever seu raciocínio dentro de tags <pensamen
             console.error("Erro detalhado:", e);
         } finally {
             document.getElementById("btn-enviar").disabled = false;
-            // Retorna o foco para o input para fluidez no gameplay
             document.getElementById("player-input").focus(); 
         }
     };
@@ -195,6 +190,7 @@ Antes de responder, você DEVE escrever seu raciocínio dentro de tags <pensamen
 
 </body>
 </html>
+
 
 
 
