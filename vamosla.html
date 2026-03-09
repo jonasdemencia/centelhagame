@@ -132,15 +132,16 @@ REGRAS:
 console.log("Resultado da análise:", teste);
 
 if (teste) {
-    console.log("TESTE DETECTADO:", teste.tipo, teste.verbo);
+    console.log("TESTE DETECTADO:", teste.tipo);
     const resultado = rolarTeste(teste.tipo);
     console.log("Resultado do dado:", resultado);
-            const mensagemTeste = resultado.sucesso 
-                ? `[O jogador conseguiu ${teste.verbo}]`
-                : `[O jogador falhou ao tentar ${teste.verbo}]`;
-            
-            chatHistory.push({ role: "system", content: mensagemTeste });
-        }
+    const mensagemTeste = resultado.sucesso 
+        ? `[O jogador conseguiu no teste de ${teste.tipo}]`
+        : `[O jogador falhou no teste de ${teste.tipo}]`;
+    
+    chatHistory.push({ role: "user", content: mensagemTeste });
+}
+
 
         // INJEÇÕES SENSORIAIS CRUAS (Sem emoções, apenas física e ambiente)
         const injecoesSutis = [
@@ -237,5 +238,6 @@ ESTRUTURA:
 
 </body>
 </html>
+
 
 
