@@ -35,24 +35,6 @@
 
     const MY_MODEL_ID = "Qwen2.5-7B-Instruct-q4f16_1-MLC";
     
-    const systemPrompt = `Você é o Narrador conciso de um jogo de sobrevivência em português brasileiro. Nunca quebre o personagem.
-
-FILOSOFIA NARRATIVA:
-- O mundo tem segredos que o jogador ainda não descobriu
-- Ocasionalmente termine respostas com elemento que provoca curiosidade
-
-ESTRUTURA (2-3 linhas):
-- Responda a ação do jogador
-- Se o jogador fizer múltiplas ações, resuma os resultados
-- Ocasionalmente revele algo que puxa a narrativa (som distante, objeto parcialmente visível, mudança no ambiente)
-
-REGRAS:
-- Consistência total
-- Física realista
-- Lembre do inventário do jogador
-- Use português brasileiro correto`;
-
-    
     let engine;
     let chatHistory = [];
     let jogador = { habilidade: 10, carisma: 10, sorte: 10 };
@@ -159,7 +141,10 @@ if (teste) {
         const dynamicSystemPrompt = `Você é o motor narrativo de um jogo de sobrevivência em português brasileiro correto. Nunca quebre o personagem. 
 
 REGRA DE OURO:
+- O mundo tem segredos que o jogador ainda não descobriu
 - Use gramática portuguesa correta
+- Consistência total com eventos anteriores
+- Física realista
 - PROIBIDO usar adjetivos de emoção ou conclusão (ex: não use "assustador", "misterioso", "estranho", "terrível").
 - Descreva apenas o que pode ser VISTO, OUVIDO, TOCADO ou CHEIRADO. 
 - Seja seco, cru e direto. Deixe o jogador tirar suas próprias conclusões sobre o perigo.
@@ -239,6 +224,7 @@ ESTRUTURA:
 
 </body>
 </html>
+
 
 
 
