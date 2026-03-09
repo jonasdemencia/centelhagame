@@ -60,8 +60,13 @@ REGRAS:
 
     // Sistema de detecção de testes
     function analisarAcao(texto) {
-        const doc = nlp(texto.toLowerCase());
-        const verbos = doc.verbs().out('array');
+    console.log("=== ANALISANDO AÇÃO ===");
+    console.log("Texto recebido:", texto);
+    
+    const doc = nlp(texto.toLowerCase());
+    const verbos = doc.verbs().out('array');
+    
+    console.log("Verbos detectados:", verbos);
         
         const verbosHabilidade = ['escalar', 'saltar', 'equilibrar', 'decifrar', 'hackear', 'forçar', 'arrombar', 'nadar', 'correr', 'lutar'];
         const verbosCarisma = ['convencer', 'persuadir', 'intimidar', 'seduzir', 'negociar', 'mentir', 'enganar'];
@@ -130,9 +135,12 @@ REGRAS:
 
         // Analisa se precisa de teste
         const teste = analisarAcao(text);
-        
-        if (teste) {
-            const resultado = rolarTeste(teste.tipo);
+console.log("Resultado da análise:", teste);
+
+if (teste) {
+    console.log("TESTE DETECTADO:", teste.tipo, teste.verbo);
+    const resultado = rolarTeste(teste.tipo);
+    console.log("Resultado do dado:", resultado);
             const mensagemTeste = resultado.sucesso 
                 ? `[O jogador conseguiu ${teste.verbo}]`
                 : `[O jogador falhou ao tentar ${teste.verbo}]`;
@@ -235,3 +243,4 @@ ESTRUTURA:
 
 </body>
 </html>
+
