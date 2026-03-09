@@ -156,9 +156,9 @@ if (teste) {
         const diretrizAtual = injecoesSutis[Math.floor(Math.random() * injecoesSutis.length)];
 
         // NOVO PROMPT: Focado na "Câmera Objetiva"
-        const dynamicSystemPrompt = `Você é o motor narrativo de um jogo de sobrevivência em português. 
+        const dynamicSystemPrompt = `Você é o motor narrativo de um jogo de sobrevivência em português. Nunca quebre o personagem. 
 
-REGRA DE OURO (CÂMERA OBJETIVA):
+REGRA DE OURO:
 - PROIBIDO usar adjetivos de emoção ou conclusão (ex: não use "assustador", "misterioso", "estranho", "terrível").
 - Descreva apenas o que pode ser VISTO, OUVIDO, TOCADO ou CHEIRADO. 
 - Seja seco, cru e direto. Deixe o jogador tirar suas próprias conclusões sobre o perigo.
@@ -176,7 +176,7 @@ ESTRUTURA:
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: 0.55,
+                temperature: 0.65,
                 max_tokens: 120,
                 top_p: 0.85,
                 frequency_penalty: 0.3,
@@ -238,6 +238,7 @@ ESTRUTURA:
 
 </body>
 </html>
+
 
 
 
