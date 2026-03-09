@@ -125,18 +125,6 @@ if (teste) {
 }
 
 
-        // INJEÇÕES SENSORIAIS CRUAS (Sem emoções, apenas física e ambiente)
-        const injecoesSutis = [
-            "Foque estritamente na ação imediata de forma seca.",
-            "Mencione um cheiro",
-            "Descreva a textura de algo próximo (áspero, enferrujado, úmido).",
-            "Mencione a iluminação",
-            "Foque estritamente na ação imediata de forma seca.",
-            "Descreva um som físico leve"
-        ];
-        
-        const diretrizAtual = injecoesSutis[Math.floor(Math.random() * injecoesSutis.length)];
-
         // NOVO PROMPT
         const dynamicSystemPrompt = `Você é o motor narrativo de um jogo de sobrevivência em português brasileiro correto. Nunca quebre o personagem. 
 
@@ -151,7 +139,7 @@ REGRA DE OURO:
 
 ESTRUTURA:
 1. Resolva a ação do jogador logicamente.
-2. Integre sutilmente este elemento ambiental na cena: [ ${diretrizAtual} ]
+2. Adicione 1 detalhe sensorial se relevante (som, cheiro, textura, luz)
 3. Responda em no máximo 3 frases curtas.`;
 
         try {
@@ -224,6 +212,7 @@ ESTRUTURA:
 
 </body>
 </html>
+
 
 
 
