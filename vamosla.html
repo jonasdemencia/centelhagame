@@ -32,6 +32,7 @@
 
 <script type="module">
     import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
+    import nlp from "https://cdn.skypack.dev/compromise";
 
     const MY_MODEL_ID = "Qwen2.5-7B-Instruct-q4f16_1-MLC";
     
@@ -55,6 +56,38 @@ REGRAS:
     
     let engine;
     let chatHistory = [];
+    let jogador = { habilidade: 10, carisma: 10, sorte: 10 };
+
+    // Sistema de detecção de testes
+    function analisarAcao(texto) {
+        const doc = nlp(texto.toLowerCase());
+        const verbos = doc.verbs().out('array');
+        
+        const verbosHabilidade = ['escalar', 'saltar', 'equilibrar', 'decifrar', 'hackear', 'forçar', 'arrombar', 'nadar', 'correr', 'lutar'];
+        const verbosCarisma = ['convencer', 'persuadir', 'intimidar', 'seduzir', 'negociar', 'mentir', 'enganar'];
+        const verbosAleatorios = ['procurar', 'explorar', 'investigar', 'vasculhar'];
+        
+        for (let verbo of verbos) {
+            if (verbosHabilidade.includes(verbo)) return { tipo: 'HABILIDADE', verbo };
+            if (verbosCarisma.includes(verbo)) return { tipo: 'CARISMA', verbo };
+            if (verbosAleatorios.includes(verbo)) return { tipo: 'SORTE', verbo };
+        }
+        
+        return null;
+    }
+
+    function rolarTeste(tipo) {
+        const dado = Math.floor(Math.random() * 20) + 1;
+        const atributo = jogador[tipo.toLowerCase()];
+        const dificuldade = 12;
+        const resultado = dado + atributo;
+        
+        return {
+            sucesso: resultado >= dificuldade,
+            dado: dado,
+            total: resultado
+        };
+    }
 
     async function init() {
         const status = document.getElementById("status");
@@ -84,16 +117,28 @@ REGRAS:
     }
 
     window.enviarAcao = async () => {
-        const input = document.getElementById("player-input");
-        const text = input.value.trim();
-        if (!text) return;
+        const input = document.getElementById("player-input");
+        const text = input.value.trim();
+        if (!text) return;
 
-        addMsg(text, "player");
-        chatHistory.push({ role: "user", content: text });
-        input.value = "";
-        
-        document.getElementById("btn-enviar").disabled = true;
-        const tempId = addMsg("...", "narrator");
+        addMsg(text, "player");
+        chatHistory.push({ role: "user", content: text });
+        input.value = "";
+        
+        document.getElementById("btn-enviar").disabled = true;
+        const tempId = addMsg("...", "narrator");
+
+        // Analisa se precisa de teste
+        const teste = analisarAcao(text);
+        
+        if (teste) {
+            const resultado = rolarTeste(teste.tipo);
+            const mensagemTeste = resultado.sucesso 
+                ? `[O jogador conseguiu ${teste.verbo}]`
+                : `[O jogador falhou ao tentar ${teste.verbo}]`;
+            
+            chatHistory.push({ role: "system", content: mensagemTeste });
+        }
 
         // INJEÇÕES SENSORIAIS CRUAS (Sem emoções, apenas física e ambiente)
         const injecoesSutis = [
@@ -120,23 +165,23 @@ ESTRUTURA:
 2. Integre sutilmente este elemento ambiental na cena: [ ${diretrizAtual} ]
 3. Responda em no máximo 3 frases curtas.`;
 
-        try {
-            const messages = [
-                { role: "system", content: dynamicSystemPrompt },
-                ...chatHistory.slice(-8) // Reduzido o histórico para poupar tokens de leitura
-            ];
+        try {
+            const messages = [
+                { role: "system", content: dynamicSystemPrompt },
+                ...chatHistory.slice(-8)
+            ];
 
-            const result = await engine.chat.completions.create({ 
-                messages: messages,
-                temperature: 0.55, // Reduzido para evitar alucinações e textos clichês
-                max_tokens: 120,   // Limite rígido para forçar respostas rápidas e curtas
-                top_p: 0.85,
-                frequency_penalty: 0.3,
-                presence_penalty: 0.4, // Moderado para introduzir novidade sem forçar demais
-                repetition_penalty: 1.1
-            });
+            const result = await engine.chat.completions.create({ 
+                messages: messages,
+                temperature: 0.55,
+                max_tokens: 120,
+                top_p: 0.85,
+                frequency_penalty: 0.3,
+                presence_penalty: 0.4,
+                repetition_penalty: 1.1
+            });
 
-            const answer = result.choices[0].message.content.trim();
+            const answer = result.choices[0].message.content.trim();
 
             // Verifica se foi cortada
             const lastChar = answer.slice(-1);
@@ -144,31 +189,31 @@ ESTRUTURA:
 
             if (isIncomplete) {
                 const continuation = await engine.chat.completions.create({
-                    messages: [
-                        { role: "system", content: "Complete esta frase de forma seca. Escreva apenas o final." },
-                        { role: "user", content: answer }
-                    ],
-                    temperature: 0.4,
-                    max_tokens: 30,
-                    top_p: 0.9
-                });
-                
-                const fullAnswer = answer + continuation.choices[0].message.content;
-                document.getElementById(tempId).innerText = fullAnswer;
-                chatHistory.push({ role: "assistant", content: fullAnswer }); 
+                    messages: [
+                        { role: "system", content: "Complete esta frase de forma seca. Escreva apenas o final." },
+                        { role: "user", content: answer }
+                    ],
+                    temperature: 0.4,
+                    max_tokens: 30,
+                    top_p: 0.9
+                });
+                
+                const fullAnswer = answer + continuation.choices[0].message.content;
+                document.getElementById(tempId).innerText = fullAnswer;
+                chatHistory.push({ role: "assistant", content: fullAnswer }); 
             } else {
-                document.getElementById(tempId).innerText = answer;
-                chatHistory.push({ role: "assistant", content: answer }); 
+                document.getElementById(tempId).innerText = answer;
+                chatHistory.push({ role: "assistant", content: answer }); 
             }
 
-        } catch (e) {
-            document.getElementById(tempId).innerText = "[ERRO: " + e.message + "]";
-            console.error("Erro detalhado:", e);
-        } finally {
-            document.getElementById("btn-enviar").disabled = false;
+        } catch (e) {
+            document.getElementById(tempId).innerText = "[ERRO: " + e.message + "]";
+            console.error("Erro detalhado:", e);
+        } finally {
+            document.getElementById("btn-enviar").disabled = false;
             document.getElementById("player-input").focus(); 
-        }
-    };
+        }
+    };
 
     function addMsg(txt, cls) {
         const box = document.getElementById("chat-box");
@@ -190,31 +235,3 @@ ESTRUTURA:
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
