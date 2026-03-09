@@ -147,14 +147,15 @@ ESTRUTURA:
             ];
 
             const result = await engine.chat.completions.create({ 
-                messages: messages,
-                temperature: 0.6,
-                max_tokens: 110,
-                top_p: 0.85,
-                frequency_penalty: 0.3,
-                presence_penalty: 0.4,
-                repetition_penalty: 1.1
-            });
+    messages: messages,
+    temperature: 0.6,
+    max_tokens: 90,
+    top_p: 0.85,
+    frequency_penalty: 0.2,      // ⬇️ Reduzido
+    presence_penalty: 0.2,       // ⬇️ Reduzido
+    repetition_penalty: 1.05     // ⬇️ Reduzido
+});
+
 
             const answer = result.choices[0].message.content.trim();
 
@@ -210,6 +211,7 @@ ESTRUTURA:
 
 </body>
 </html>
+
 
 
 
