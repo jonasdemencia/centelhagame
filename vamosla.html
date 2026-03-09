@@ -140,7 +140,7 @@ REGRA DE OURO:
 ESTRUTURA:
 1. Resolva a ação do jogador logicamente.
 2. Adicione 1 detalhe sensorial se relevante (som, cheiro, textura, luz)
-3. Responda em no máximo 3 frases curtas.`;
+3. Responda em no máximo 4 frases curtas.`;
 
         try {
             const messages = [
@@ -151,7 +151,7 @@ ESTRUTURA:
             const result = await engine.chat.completions.create({ 
                 messages: messages,
                 temperature: 0.65,
-                max_tokens: 150,
+                max_tokens: 160,
                 top_p: 0.85,
                 frequency_penalty: 0.3,
                 presence_penalty: 0.4,
@@ -212,6 +212,7 @@ ESTRUTURA:
 
 </body>
 </html>
+
 
 
 
