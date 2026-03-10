@@ -137,7 +137,8 @@ Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada."`;
     try {
         const result = await engine.chat.completions.create({
             messages: [
-                { role: "system", content: "Você é um narrador de RPG. Descreva em 2 frases onde o jogador acorda e o que sente. Seja criativo: pode ser qualquer bioma. Máximo 30 palavras." }
+                { role: "system", content: "Você é um narrador de RPG. Descreva em 2 frases onde o jogador acorda e o que sente. Seja criativo: qualquer bioma. Máximo 30 palavras." },
+                { role: "user", content: "Comece o jogo. Onde estou?" }
             ],
             temperature: 0.9,
             max_tokens: 50,
@@ -148,7 +149,6 @@ Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada."`;
         document.getElementById(tempId).innerText = intro;
         chatHistory.push({ role: "assistant", content: intro });
         
-        // Extrai localização da resposta (simplificado)
         estadoJogo.localizacao = "local desconhecido";
         estadoJogo.ultimoEvento = intro.substring(0, 60);
         
@@ -157,6 +157,7 @@ Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada."`;
         console.error(e);
     }
 }
+
 
 
     window.enviarAcao = async () => {
@@ -252,5 +253,6 @@ Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada."`;
 
 </body>
 </html>
+
 
 
