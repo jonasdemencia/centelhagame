@@ -45,23 +45,23 @@
         ultimoEvento: "acordou com gosto de ferro na boca"
     };
 
-    const BASE_PROMPT = `Você é um narrador preciso de RPG de sobrevivência. Responda APENAS o que foi perguntado.
+    const BASE_PROMPT = `Você é um narrador preciso e impiedoso de RPG de sobrevivência. Nao quebre o personagem.
 
 REGRAS CRÍTICAS:
-2. NUNCA adicione ameaças ou criaturas sem o jogador encontrá-las primeiro
-3. Responda a pergunta diretamente em 1-2 frases
-4. Use apenas informações do histórico e estado atual
-5. Se não sabe algo, descreva o ambiente imediato
+- Responda em EXATAMENTE 2 frases curtas e completas
+- SEMPRE termine com ponto final - NUNCA deixe frase incompleta
+- Use apenas informações do histórico e estado atual
+- Máximo 35 palavras total
 
 EXEMPLOS:
 Jogador: "onde estou?"
-Narrador: "Você está em uma caverna úmida. Paredes de pedra cercam você, e o ar cheira a mofo."
+Narrador: "Você está em uma caverna úmida. Paredes de pedra cercam você."
 
 Jogador: "o que vejo ao redor?"
-Narrador: "Rochas irregulares, poças d'água escura no chão. Um túnel estreito à sua frente."
+Narrador: "Rochas irregulares e poças escuras no chão. Um túnel estreito à frente."
 
 Jogador: "examinar a parede"
-Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada ao tocá-la."`;
+Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada."`;
 
     function analisarAcao(texto) {
         const textoLower = texto.toLowerCase();
@@ -74,7 +74,7 @@ Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada ao 
             return { tipo: 'carisma' };
         }
         
-        if (/vasculhar|procurar|explorar|investigar|buscar|examinar|revistar|ouvir|farejar/.test(textoLower)) {
+        if (/vasculhar|procurar|explorar|investigar|buscar|examinar|revistar|ouvir|farejar|iluminar|ver/.test(textoLower)) {
             return { tipo: 'sorte' };
         }
         
@@ -165,19 +165,27 @@ Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada ao 
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: 0.65,          // ⬇️ REDUZIDO: mais factual, menos inventivo
+                temperature: 0.5,
                 max_tokens: 55,
-                top_p: 0.85,               // ⬇️ REDUZIDO: foca em respostas mais prováveis
-                frequency_penalty: 0.3,    // ⬆️ Evita repetir frases, mas não inventa
-                presence_penalty: 0.1      // ⬆️ Leve penalidade para não adicionar tópicos novos
+                top_p: 0.85,
+                frequency_penalty: 0.3,
+                presence_penalty: 0.1,
+                stop: ["\n\n", "Jogador:", ">", "\n>"]  // ⭐ PARA em quebras duplas ou nova ação
             });
 
-            const answer = result.choices[0].message.content.trim();
+            let answer = result.choices[0].message.content.trim();
+            
+            // ⭐ CORREÇÃO PÓS-PROCESSAMENTO: Remove frase incompleta se houver
+            const frases = answer.split(/[.!?]/);
+            if (frases.length > 1 && frases[frases.length - 1].trim().length > 0 && frases[frases.length - 1].trim().length < 15) {
+                // Última "frase" é muito curta = provavelmente cortada
+                frases.pop();
+                answer = frases.join('.') + '.';
+            }
 
             document.getElementById(tempId).innerText = answer;
             chatHistory.push({ role: "assistant", content: answer });
             
-            // Atualiza último evento para manter coerência
             estadoJogo.ultimoEvento = answer.substring(0, 60) + "...";
 
             if (chatHistory.length > 20) {
