@@ -104,21 +104,24 @@ PISTAS ESCONDIDAS:
         ultimoEvento: ""
     };
 
-    const PROMPT_BASE = `Você é um narrador impiedoso de RPG de sobrevivência.
+    const PROMPT_BASE = `Você é um narrador direto de RPG de sobrevivência em português brasileiro.
 
-REGRAS:
-1. Responda o que foi perguntado MAS adicione 1 elemento novo relevante
-2. Em ações exploratórias (entrar, seguir, continuar, andar), SEMPRE introduza descoberta, perigo ou pista
-3. Use elementos do CONTEXTO DO MUNDO quando relevante
-4. 2 frases completas, máximo 30 palavras
-5. SEMPRE termine com ponto final
+REGRAS OBRIGATÓRIAS:
+1. Use português brasileiro correto e simples
+2. MÁXIMO 2 frases curtas (15 palavras cada)
+3. Em ações exploratórias, adicione 1 descoberta, perigo ou detalhe
+4. Use elementos do CONTEXTO DO MUNDO
+5. SEMPRE termine com ponto final completo
 
 EXEMPLOS:
 Jogador: "entrar no porão"
-Narrador: "Você desce ao porão escuro. Gás verde escapa do Container 23-B aberto."
+Narrador: "Você desce ao porão escuro. Gás verde escapa do Container 23-B."
 
 Jogador: "continuar"
-Narrador: "Você avança entre containers. Algo grande se move nas sombras à frente."`;
+Narrador: "Você avança entre containers. Algo grande range nas sombras."
+
+Jogador: "examinar sala"
+Narrador: "A sala está revirada. Sangue seco mancha o chão."`;
 
     function ehAcaoExploratoria(texto) {
         return /entrar|seguir|continuar|andar|avançar|prosseguir|ir|caminhar|mover|descer|subir/.test(texto.toLowerCase());
@@ -193,20 +196,35 @@ ESTADO ATUAL:
             
             const resultIntro = await engine.chat.completions.create({
                 messages: [
-                    { role: "system", content: `Baseado neste cenário:\n${MUNDO_PREDEFINIDO.documentoCompleto}\n\nReescreva a cena de abertura de forma única mas mantendo os fatos: local (${MUNDO_PREDEFINIDO.localizacaoInicial}), sensações físicas. 2 frases, máximo 30 palavras.` },
+                    { role: "system", content: `Baseado neste cenário:\n${MUNDO_PREDEFINIDO.documentoCompleto}\n\nEscreva a cena de abertura: local (${MUNDO_PREDEFINIDO.localizacaoInicial}) e sensação física. Use português brasileiro simples. 2 frases curtas, máximo 25 palavras TOTAL.` },
                     { role: "user", content: "Descreva a cena inicial." }
                 ],
-                temperature: 0.7,
-                max_tokens: 55,
-                stop: ["\n\n", "Jogador:"]
+                temperature: 0.6,
+                max_tokens: 45,
+                stop: ["\n\n", "Jogador:", "Você se"]
             });
 
             let intro = resultIntro.choices[0].message.content.trim();
             
-            const frases = intro.split(/[.!?]/);
-            if (frases.length > 1 && frases[frases.length - 1].trim().length > 0 && frases[frases.length - 1].trim().length < 15) {
-                frases.pop();
-                intro = frases.join('.') + '.';
+            const frasesCompletas = [];
+            const frasesTemp = intro.split(/[.!?]/);
+
+            for (let i = 0; i < frasesTemp.length - 1; i++) {
+                if (frasesTemp[i].trim().length > 5) {
+                    frasesCompletas.push(frasesTemp[i].trim());
+                }
+            }
+
+            const ultimaFrase = frasesTemp[frasesTemp.length - 1].trim();
+            if (ultimaFrase.length > 10 && !/[.!?]$/.test(intro)) {
+                // Descarta frase incompleta
+            } else if (ultimaFrase.length > 5) {
+                frasesCompletas.push(ultimaFrase);
+            }
+
+            intro = frasesCompletas.join('. ');
+            if (intro && !/[.!?]$/.test(intro)) {
+                intro += '.';
             }
 
             addMsg(intro, "narrator");
@@ -292,20 +310,36 @@ ESTADO ATUAL:
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: ehExploracao ? 0.65 : 0.5,
-                max_tokens: 55,
-                top_p: 0.88,
-                frequency_penalty: 0.2,
-                presence_penalty: 0.15,
-                stop: ["\n\n", "Jogador:", ">", "\n>"]
+                temperature: ehExploracao ? 0.6 : 0.45,
+                max_tokens: 45,
+                top_p: 0.82,
+                frequency_penalty: 0.4,
+                presence_penalty: 0.2,
+                stop: ["\n\n", "Jogador:", ">", "\n>", "...", " -"]
             });
 
             let answer = result.choices[0].message.content.trim();
-            
-            const frases = answer.split(/[.!?]/);
-            if (frases.length > 1 && frases[frases.length - 1].trim().length > 0 && frases[frases.length - 1].trim().length < 15) {
-                frases.pop();
-                answer = frases.join('.') + '.';
+
+            // Pós-processamento melhorado
+            const frasesCompletas = [];
+            const frasesTemp = answer.split(/[.!?]/);
+
+            for (let i = 0; i < frasesTemp.length - 1; i++) {
+                if (frasesTemp[i].trim().length > 5) {
+                    frasesCompletas.push(frasesTemp[i].trim());
+                }
+            }
+
+            const ultimaFrase = frasesTemp[frasesTemp.length - 1].trim();
+            if (ultimaFrase.length > 10 && !/[.!?]$/.test(answer)) {
+                // Descarta frase incompleta
+            } else if (ultimaFrase.length > 5) {
+                frasesCompletas.push(ultimaFrase);
+            }
+
+            answer = frasesCompletas.join('. ');
+            if (answer && !/[.!?]$/.test(answer)) {
+                answer += '.';
             }
 
             document.getElementById(tempId).innerText = answer;
