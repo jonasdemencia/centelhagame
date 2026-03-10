@@ -9,6 +9,7 @@
         #chat-box { height: 300px; overflow-y: auto; border: 2px inset #2a251e; padding: 15px; background: #0d0c0a; margin-bottom: 15px; }
         .narrator { color: #a13d3d; margin-bottom: 10px; }
         .player { color: #7a8c66; margin-bottom: 10px; }
+        .system { color: #6b6b4a; margin-bottom: 10px; font-style: italic; font-size: 0.9em; }
         #progress-bar-container { width: 100%; background: #2a251e; height: 12px; margin-bottom: 10px; display: block; }
         #progress-bar { width: 0%; height: 100%; background: #5c2c2c; transition: width 0.3s; }
         input { width: 80%; padding: 10px; background: #1a1815; border: 1px solid #3a3228; color: #d1c5b4; }
@@ -38,30 +39,29 @@
     let engine;
     let chatHistory = [];
     let jogador = { habilidade: 10, carisma: 10, sorte: 10 };
+    let documentoMestre = null; // A "bíblia" do jogo
     let estadoJogo = {
-        localizacao: "caverna escura e fria",
-        itens: ["espada enferrujada", "escudo de couro", "lanterna acesa"],
+        localizacao: "",
+        itens: [],
         condicao: "saudável",
-        ultimoEvento: "acordou com gosto de ferro na boca"
+        ultimoEvento: ""
     };
 
-    const BASE_PROMPT = `Você é um narrador preciso e impiedoso de RPG de sobrevivência. Nao quebre o personagem.
+    const PROMPT_JOGO = `Você é um narrador preciso de RPG de sobrevivência. Responda APENAS o que foi perguntado.
 
 REGRAS CRÍTICAS:
-- Responda em EXATAMENTE 2 frases curtas e completas
-- SEMPRE termine com ponto final - NUNCA deixe frase incompleta
-- Use apenas informações do histórico e estado atual
-- Máximo 35 palavras total
+1. NUNCA invente eventos que não aconteceram
+2. NUNCA adicione elementos que não estão no CONTEXTO DO MUNDO
+3. Responda em EXATAMENTE 1-2 frases curtas e completas
+4. SEMPRE termine com ponto final - NUNCA deixe frase incompleta
+5. Máximo 25 palavras total
 
 EXEMPLOS:
 Jogador: "onde estou?"
 Narrador: "Você está em uma caverna úmida. Paredes de pedra cercam você."
 
-Jogador: "o que vejo ao redor?"
-Narrador: "Rochas irregulares e poças escuras no chão. Um túnel estreito à frente."
-
-Jogador: "examinar a parede"
-Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada."`;
+Jogador: "o que vejo?"
+Narrador: "Rochas irregulares e poças escuras. Um túnel estreito à frente."`;
 
     function analisarAcao(texto) {
         const textoLower = texto.toLowerCase();
@@ -95,13 +95,120 @@ Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada."`;
     }
 
     function gerarSystemPrompt() {
-        const estado = `ESTADO ATUAL:
-- Local: ${estadoJogo.localizacao}
-- Inventário: ${estadoJogo.itens.join(", ")}
+        const resumoMundo = documentoMestre ? documentoMestre.resumo : "Mundo desconhecido";
+        const estado = `CONTEXTO DO MUNDO:
+${resumoMundo}
+
+ESTADO ATUAL DO JOGADOR:
+- Local exato: ${estadoJogo.localizacao}
+- Inventário: ${estadoJogo.itens.join(", ") || "vazio"}
 - Condição: ${estadoJogo.condicao}
 - Último evento: ${estadoJogo.ultimoEvento}`;
         
-        return `${BASE_PROMPT}\n\n${estado}`;
+        return `${PROMPT_JOGO}\n\n${estado}`;
+    }
+
+    async function gerarDocumentoMestre() {
+        addMsg("Tecendo o destino do mundo...", "system");
+        
+        try {
+            const result = await engine.chat.completions.create({
+                messages: [
+                    { 
+                        role: "system", 
+                        content: `Você é um mestre de RPG criando um cenário de sobrevivência. Gere um documento estruturado com:
+
+1. CENÁRIO: Onde o jogo acontece (floresta, ruínas, navio, deserto, cidade abandonada, etc)
+2. SITUAÇÃO INICIAL: Como e onde o jogador acorda
+3. ITENS INICIAIS: 2-3 itens que o jogador carrega
+4. AMEAÇAS: Perigos do ambiente (clima, criaturas, armadilhas)
+5. OBJETIVO IMPLÍCITO: O que o jogador precisa descobrir ou alcançar
+6. ELEMENTOS ÚNICOS: 2-3 detalhes que tornam este mundo memorável
+
+Seja criativo e específico. Use 150-200 palavras.` 
+                    },
+                    { role: "user", content: "Crie o mundo do jogo." }
+                ],
+                temperature: 0.95,
+                max_tokens: 300,
+                top_p: 0.95
+            });
+
+            const documentoCompleto = result.choices[0].message.content.trim();
+            
+            // Agora gera um RESUMO compacto para usar no jogo
+            const resultResumo = await engine.chat.completions.create({
+                messages: [
+                    { role: "system", content: "Resuma o seguinte cenário de RPG em 80 palavras, mantendo: local, itens iniciais, ameaças principais e objetivo." },
+                    { role: "user", content: documentoCompleto }
+                ],
+                temperature: 0.3,
+                max_tokens: 120
+            });
+
+            const resumo = resultResumo.choices[0].message.content.trim();
+
+            // Extrai informações estruturadas
+            const itensMatch = documentoCompleto.match(/ITENS INICIAIS[:\s]+(.*?)(?=\n\d|\n[A-Z]|$)/is);
+            const localMatch = documentoCompleto.match(/CENÁRIO[:\s]+(.*?)(?=\n\d|\n[A-Z]|$)/is);
+            
+            documentoMestre = {
+                completo: documentoCompleto,
+                resumo: resumo
+            };
+
+            // Extrai itens (simplificado)
+            if (itensMatch) {
+                const itensTexto = itensMatch[1].toLowerCase();
+                estadoJogo.itens = itensTexto.match(/[a-záàâãéêíóôõúç\s]+/g)
+                    ?.filter(i => i.trim().length > 3)
+                    ?.slice(0, 3) || ["mãos vazias"];
+            }
+
+            // Extrai localização
+            if (localMatch) {
+                estadoJogo.localizacao = localMatch[1].trim().split('\n')[0].substring(0, 50);
+            }
+
+            // Gera a introdução narrativa baseada no documento
+            const resultIntro = await engine.chat.completions.create({
+                messages: [
+                    { role: "system", content: `Baseado neste cenário:\n${documentoCompleto}\n\nEscreva APENAS a cena de abertura: onde o jogador acorda e o que sente. 2 frases completas, máximo 35 palavras.` },
+                    { role: "user", content: "Descreva a cena inicial." }
+                ],
+                temperature: 0.7,
+                max_tokens: 60,
+                stop: ["\n\n", "Jogador:"]
+            });
+
+            let intro = resultIntro.choices[0].message.content.trim();
+            
+            // Remove frase incompleta
+            const frases = intro.split(/[.!?]/);
+            if (frases.length > 1 && frases[frases.length - 1].trim().length > 0 && frases[frases.length - 1].trim().length < 15) {
+                frases.pop();
+                intro = frases.join('.') + '.';
+            }
+
+            addMsg(intro, "narrator");
+            chatHistory.push({ role: "assistant", content: intro });
+            estadoJogo.ultimoEvento = intro.substring(0, 60);
+
+            console.log("=== DOCUMENTO MESTRE ===");
+            console.log(documentoCompleto);
+            console.log("\n=== RESUMO ===");
+            console.log(resumo);
+
+        } catch (e) {
+            addMsg("Falha ao tecer o destino. Começando em local genérico.", "system");
+            documentoMestre = { 
+                completo: "Mundo genérico de sobrevivência", 
+                resumo: "Você está em um ambiente hostil e precisa sobreviver." 
+            };
+            estadoJogo.localizacao = "local desconhecido";
+            estadoJogo.itens = ["mãos vazias"];
+            console.error(e);
+        }
     }
 
     async function init() {
@@ -119,46 +226,21 @@ Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada."`;
             });
 
             document.getElementById("progress-bar-container").style.display = "none";
+            status.innerText = "Gerando o mundo... (pode demorar)";
+
+            // FASE 1: Gera o documento mestre
+            await gerarDocumentoMestre();
+
             status.innerText = "O Pesadelo Começou.";
             document.getElementById("player-input").disabled = false;
             document.getElementById("btn-enviar").disabled = false;
-            
-            gerarIntroducao();
+            document.getElementById("player-input").focus();
 
         } catch (err) {
             status.innerText = "ERRO CRÍTICO: " + err.message;
             console.error(err);
         }
     }
-
-    async function gerarIntroducao() {
-    const tempId = addMsg("...", "narrator");
-    
-    try {
-        const result = await engine.chat.completions.create({
-            messages: [
-                { role: "system", content: "Você é um narrador de RPG. Descreva em 2 frases onde o jogador acorda e o que sente. Seja criativo: qualquer bioma. Máximo 30 palavras." },
-                { role: "user", content: "Comece o jogo. Onde estou?" }
-            ],
-            temperature: 0.9,
-            max_tokens: 50,
-            top_p: 0.95
-        });
-        
-        const intro = result.choices[0].message.content.trim();
-        document.getElementById(tempId).innerText = intro;
-        chatHistory.push({ role: "assistant", content: intro });
-        
-        estadoJogo.localizacao = "local desconhecido";
-        estadoJogo.ultimoEvento = intro.substring(0, 60);
-        
-    } catch (e) {
-        document.getElementById(tempId).innerText = "Você acorda desorientado.";
-        console.error(e);
-    }
-}
-
-
 
     window.enviarAcao = async () => {
         const input = document.getElementById("player-input");
@@ -176,8 +258,8 @@ Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada."`;
         if (teste) {
             const resultado = rolarTeste(teste.tipo);
             const resultadoTexto = resultado.sucesso 
-                ? `[TESTE ${teste.tipo.toUpperCase()}: SUCESSO - ação bem-sucedida]`
-                : `[TESTE ${teste.tipo.toUpperCase()}: FALHA - ação fracassou, consequência física]`;
+                ? `[TESTE ${teste.tipo.toUpperCase()}: SUCESSO]`
+                : `[TESTE ${teste.tipo.toUpperCase()}: FALHA - consequência física]`;
             acaoCompleta = `${text}\n${resultadoTexto}`;
         }
 
@@ -192,20 +274,19 @@ Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada."`;
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: 0.6,
-                max_tokens: 55,
+                temperature: 0.5,
+                max_tokens: 50,
                 top_p: 0.85,
                 frequency_penalty: 0.3,
                 presence_penalty: 0.1,
-                stop: ["\n\n", "Jogador:", ">", "\n>"]  // ⭐ PARA em quebras duplas ou nova ação
+                stop: ["\n\n", "Jogador:", ">", "\n>"]
             });
 
             let answer = result.choices[0].message.content.trim();
             
-            // ⭐ CORREÇÃO PÓS-PROCESSAMENTO: Remove frase incompleta se houver
+            // Remove frase incompleta
             const frases = answer.split(/[.!?]/);
             if (frases.length > 1 && frases[frases.length - 1].trim().length > 0 && frases[frases.length - 1].trim().length < 15) {
-                // Última "frase" é muito curta = provavelmente cortada
                 frases.pop();
                 answer = frases.join('.') + '.';
             }
@@ -213,7 +294,7 @@ Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada."`;
             document.getElementById(tempId).innerText = answer;
             chatHistory.push({ role: "assistant", content: answer });
             
-            estadoJogo.ultimoEvento = answer.substring(0, 60) + "...";
+            estadoJogo.ultimoEvento = answer.substring(0, 60);
 
             if (chatHistory.length > 20) {
                 chatHistory = chatHistory.slice(-20);
@@ -253,6 +334,3 @@ Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada."`;
 
 </body>
 </html>
-
-
-
