@@ -35,12 +35,68 @@
     import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
     const MY_MODEL_ID = "Qwen2.5-7B-Instruct-q4f16_1-MLC";
+
+    const MUNDO_PREDEFINIDO = {
+        nome: "Cargueiro MV Teseu",
+        
+        resumo: "Você está no cargueiro MV Teseu, à deriva no Atlântico Sul. A tripulação desapareceu. Você tem 3 dias de água potável. Objetivo: descobrir o que aconteceu e enviar SOS pela ponte de comando. Ameaças: tempestade se aproximando, carga desconhecida no porão vazando gás, motor morto.",
+        
+        localizacaoInicial: "Camarote 7, Convés B",
+        
+        itens: ["canivete enferrujado", "isqueiro zippo", "mapa náutico rasgado"],
+        
+        elementos: [
+            "Ponte de comando trancada",
+            "Porão com containers vazando gás verde",
+            "Sala de máquinas alagada",
+            "Cozinha com comida ainda quente",
+            "Bote salva-vidas faltando"
+        ],
+        
+        documentoCompleto: `CENÁRIO: Cargueiro de Carga MV Teseu
+Um navio cargueiro de 180 metros à deriva no Atlântico Sul, a 400km da costa brasileira. Construído em 1987, transportava containers da China para Santos. Agora está morto na água, motores silenciosos, sem tripulação visível.
+
+SITUAÇÃO INICIAL:
+Você acorda no Camarote 7 do Convés B. Sua cabeça sangra. A última memória: um estrondo metálico e gritos abafados. O navio balança violentamente - tempestade chegando. Você não lembra como chegou aqui. Não há ninguém. O silêncio é perturbador, quebrado apenas pelo ranger do metal e ondas batendo no casco.
+
+ITENS INICIAIS:
+- Canivete enferrujado: encontrado no bolso, não é seu
+- Isqueiro Zippo: gravado "Capitão Voss 1992"
+- Mapa náutico rasgado: mostra rota até "Ponto de Encontro X" marcado a lápis
+
+AMEAÇAS:
+- Tempestade tropical se aproximando (6-8 horas até impacto total)
+- Containers no porão vazando gás verde desconhecido (causa tontura e alucinações)
+- Motor principal morto, navio à deriva em direção a recifes
+- Água potável: apenas 3 dias nos tanques de emergência
+- Algo grande se movendo no porão inferior
+
+OBJETIVO IMPLÍCITO:
+Descobrir o que aconteceu com as 14 pessoas da tripulação. Reativar o rádio de emergência na ponte de comando para enviar SOS. Sobreviver à tempestade que se aproxima. Decidir: investigar a carga suspeita ou fugir no bote salva-vidas restante.
+
+ELEMENTOS ÚNICOS:
+1. PONTE DE COMANDO (Convés A): Porta trancada por dentro. Rádio de emergência lá dentro. Janelas mostram cadeira do capitão virada para o mar.
+
+2. PORÃO INFERIOR: 47 containers empilhados. Container 23-B está aberto, vazando gás verde. Marcas de arranhões nas paredes metálicas. Algo se move entre as sombras.
+
+3. SALA DE MÁQUINAS: Parcialmente alagada (1 metro de água salgada). Motor principal sabotado - cabos cortados propositalmente. Caixa de ferramentas flutuando.
+
+4. COZINHA/REFEITÓRIO: Panelas no fogão ainda mornas. Pratos com comida pela metade. Cadeiras derrubadas. Faca de cozinha cravada na mesa. Nenhum sinal de luta.
+
+5. BOTE SALVA-VIDAS: Dos 4 botes, apenas 1 permanece. Os outros foram ejetados recentemente (cabos cortados). O bote restante tem capacidade para 2 pessoas e suprimentos para 5 dias.
+
+PISTAS ESCONDIDAS:
+- Diário do capitão no camarote principal (Convés A)
+- Manifesto de carga falso na sala de rádio
+- Pegadas molhadas que não são suas levando ao porão
+- Sangue seco na escada entre Convés B e C`
+    };
     
     let engine;
     let chatHistory = [];
     let jogador = { habilidade: 10, carisma: 10, sorte: 10 };
     let documentoMestre = null;
-    let elementosMundo = []; // Elementos extraídos do documento para usar
+    let elementosMundo = [];
     let estadoJogo = {
         localizacao: "",
         itens: [],
@@ -48,7 +104,7 @@
         ultimoEvento: ""
     };
 
-    const PROMPT_BASE = `Você é um narrador dinâmico de RPG de sobrevivência.
+    const PROMPT_BASE = `Você é um narrador impiedoso de RPG de sobrevivência.
 
 REGRAS:
 1. Responda o que foi perguntado MAS adicione 1 elemento novo relevante
@@ -58,14 +114,14 @@ REGRAS:
 5. SEMPRE termine com ponto final
 
 EXEMPLOS:
-Jogador: "entrar no túnel"
-Narrador: "Você entra no túnel escuro. Marcas de garras cobrem as paredes."
+Jogador: "entrar no porão"
+Narrador: "Você desce ao porão escuro. Gás verde escapa do Container 23-B aberto."
 
 Jogador: "continuar"
-Narrador: "Você avança e tropeça em ossos antigos. Um som de água ecoa à frente."`;
+Narrador: "Você avança entre containers. Algo grande se move nas sombras à frente."`;
 
     function ehAcaoExploratoria(texto) {
-        return /entrar|seguir|continuar|andar|avançar|prosseguir|ir|caminhar|mover/.test(texto.toLowerCase());
+        return /entrar|seguir|continuar|andar|avançar|prosseguir|ir|caminhar|mover|descer|subir/.test(texto.toLowerCase());
     }
 
     function gerarEvento() {
@@ -106,7 +162,7 @@ Narrador: "Você avança e tropeça em ossos antigos. Um som de água ecoa à fr
         };
     }
 
-    function gerarSystemPrompt(ehExploracao) {
+    function gerarSystemPrompt() {
         const resumoMundo = documentoMestre ? documentoMestre.resumo : "Mundo desconhecido";
         const elementos = elementosMundo.length > 0 ? `\nELEMENTOS DISPONÍVEIS: ${elementosMundo.join(", ")}` : "";
         
@@ -123,76 +179,21 @@ ESTADO ATUAL:
     }
 
     async function gerarDocumentoMestre() {
-        addMsg("Tecendo o destino do mundo...", "system");
+        addMsg("Preparando o mundo...", "system");
         
         try {
-            const result = await engine.chat.completions.create({
-                messages: [
-                    { 
-                        role: "system", 
-                        content: `Você é um mestre de RPG criando um cenário de sobrevivência. Gere um documento estruturado com:
-
-1. CENÁRIO: Onde o jogo acontece (floresta, ruínas, navio, deserto, cidade abandonada, etc)
-2. SITUAÇÃO INICIAL: Como e onde o jogador acorda
-3. ITENS INICIAIS: 2-3 itens que o jogador carrega
-4. AMEAÇAS: Perigos do ambiente (clima, criaturas, armadilhas)
-5. OBJETIVO IMPLÍCITO: O que o jogador precisa descobrir ou alcançar
-6. ELEMENTOS ÚNICOS: 2-3 detalhes que tornam este mundo memorável (locais, objetos, criaturas)
-
-Seja criativo e específico. Use 150-200 palavras.` 
-                    },
-                    { role: "user", content: "Crie o mundo do jogo." }
-                ],
-                temperature: 0.95,
-                max_tokens: 300,
-                top_p: 0.95
-            });
-
-            const documentoCompleto = result.choices[0].message.content.trim();
-            
-            const resultResumo = await engine.chat.completions.create({
-                messages: [
-                    { role: "system", content: "Resuma o seguinte cenário de RPG em 80 palavras, mantendo: local, itens iniciais, ameaças principais e objetivo." },
-                    { role: "user", content: documentoCompleto }
-                ],
-                temperature: 0.3,
-                max_tokens: 120
-            });
-
-            const resumo = resultResumo.choices[0].message.content.trim();
-
-            // Extrai elementos únicos para usar no jogo
-            const elementosMatch = documentoCompleto.match(/ELEMENTOS ÚNICOS[:\s]+(.*?)(?=\n\d|\n[A-Z]{2,}|$)/is);
-            if (elementosMatch) {
-                elementosMundo = elementosMatch[1]
-                    .split(/[,\n\-•]/)
-                    .map(e => e.trim())
-                    .filter(e => e.length > 5)
-                    .slice(0, 5);
-            }
-
-            const itensMatch = documentoCompleto.match(/ITENS INICIAIS[:\s]+(.*?)(?=\n\d|\n[A-Z]{2,}|$)/is);
-            const localMatch = documentoCompleto.match(/CENÁRIO[:\s]+(.*?)(?=\n\d|\n[A-Z]{2,}|$)/is);
-            
             documentoMestre = {
-                completo: documentoCompleto,
-                resumo: resumo
+                completo: MUNDO_PREDEFINIDO.documentoCompleto,
+                resumo: MUNDO_PREDEFINIDO.resumo
             };
-
-            if (itensMatch) {
-                const itensTexto = itensMatch[1].toLowerCase();
-                estadoJogo.itens = itensTexto.match(/[a-záàâãéêíóôõúç\s]+/g)
-                    ?.filter(i => i.trim().length > 3)
-                    ?.slice(0, 3) || ["mãos vazias"];
-            }
-
-            if (localMatch) {
-                estadoJogo.localizacao = localMatch[1].trim().split('\n')[0].substring(0, 50);
-            }
-
+            
+            estadoJogo.localizacao = MUNDO_PREDEFINIDO.localizacaoInicial;
+            estadoJogo.itens = [...MUNDO_PREDEFINIDO.itens];
+            elementosMundo = [...MUNDO_PREDEFINIDO.elementos];
+            
             const resultIntro = await engine.chat.completions.create({
                 messages: [
-                    { role: "system", content: `Baseado neste cenário:\n${documentoCompleto}\n\nEscreva APENAS a cena de abertura: onde o jogador acorda e o que sente. 2 frases completas, máximo 30 palavras.` },
+                    { role: "system", content: `Baseado neste cenário:\n${MUNDO_PREDEFINIDO.documentoCompleto}\n\nReescreva a cena de abertura de forma única mas mantendo os fatos: local (${MUNDO_PREDEFINIDO.localizacaoInicial}), sensações físicas. 2 frases, máximo 30 palavras.` },
                     { role: "user", content: "Descreva a cena inicial." }
                 ],
                 temperature: 0.7,
@@ -212,21 +213,13 @@ Seja criativo e específico. Use 150-200 palavras.`
             chatHistory.push({ role: "assistant", content: intro });
             estadoJogo.ultimoEvento = intro.substring(0, 60);
 
-            console.log("=== DOCUMENTO MESTRE ===");
-            console.log(documentoCompleto);
-            console.log("\n=== RESUMO ===");
-            console.log(resumo);
-            console.log("\n=== ELEMENTOS ===");
+            console.log("=== MUNDO CARREGADO ===");
+            console.log(MUNDO_PREDEFINIDO.nome);
+            console.log("\n=== ELEMENTOS DISPONÍVEIS ===");
             console.log(elementosMundo);
 
         } catch (e) {
-            addMsg("Falha ao tecer o destino. Começando em local genérico.", "system");
-            documentoMestre = { 
-                completo: "Mundo genérico de sobrevivência", 
-                resumo: "Você está em um ambiente hostil e precisa sobreviver." 
-            };
-            estadoJogo.localizacao = "local desconhecido";
-            estadoJogo.itens = ["mãos vazias"];
+            addMsg("Falha ao carregar o mundo.", "system");
             console.error(e);
         }
     }
@@ -246,7 +239,7 @@ Seja criativo e específico. Use 150-200 palavras.`
             });
 
             document.getElementById("progress-bar-container").style.display = "none";
-            status.innerText = "Gerando o mundo... (pode demorar)";
+            status.innerText = "Carregando o mundo...";
 
             await gerarDocumentoMestre();
 
@@ -275,7 +268,6 @@ Seja criativo e específico. Use 150-200 palavras.`
         const teste = analisarAcao(text);
         let acaoCompleta = text;
 
-        // Sistema de eventos para ações exploratórias
         if (ehExploracao) {
             const tipoEvento = gerarEvento();
             acaoCompleta += `\n[AÇÃO EXPLORATÓRIA - Gere um ${tipoEvento}]`;
@@ -294,13 +286,13 @@ Seja criativo e específico. Use 150-200 palavras.`
 
         try {
             const messages = [
-                { role: "system", content: gerarSystemPrompt(ehExploracao) },
+                { role: "system", content: gerarSystemPrompt() },
                 ...chatHistory.slice(-12)
             ];
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: ehExploracao ? 0.65 : 0.5, // Mais criativo em exploração
+                temperature: ehExploracao ? 0.65 : 0.5,
                 max_tokens: 55,
                 top_p: 0.88,
                 frequency_penalty: 0.2,
