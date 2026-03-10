@@ -38,28 +38,52 @@
     let engine;
     let chatHistory = [];
     let jogador = { habilidade: 10, carisma: 10, sorte: 10 };
+    let estadoJogo = {
+        localizacao: "caverna escura",
+        itens: ["espada enferrujada", "escudo de couro", "lanterna acesa"],
+        condicao: "saudável"
+    };
+
+    // PROMPT FIXO - Definido uma vez, com exemplos concretos
+    const SYSTEM_PROMPT = `Você é um narrador de RPG de terror sombrio. Responda em 2-3 frases curtas e impactantes.
+
+REGRAS:
+- Use verbos fortes e concretos
+- Foque em sensações físicas: dor, frio, sons, cheiros
+- Evite adjetivos decorativos
+- Máximo de 50 palavras
+
+EXEMPLOS:
+Jogador: "escalar a parede rochosa"
+Narrador: "Suas mãos escorregam na pedra úmida. Você despenca. O impacto quebra algo no seu braço esquerdo."
+
+Jogador: "convencer o guarda a me deixar passar"
+Narrador: "O guarda ri da sua cara. Ele cospe no chão e aperta o cabo da espada."
+
+Jogador: "procurar por armadilhas"
+Narrador: "Você nota fios quase invisíveis cruzando o corredor. Atrás deles, buracos na parede gotejam algo verde."`;
 
     function analisarAcao(texto) {
-    const textoLower = texto.toLowerCase();
-    
-    if (/escalar|saltar|equilibrar|decifrar|hackear|forçar|arrombar|nadar|correr|lutar|pular|subir|descer/.test(textoLower)) {
-        return { tipo: 'HABILIDADE' };
+        const textoLower = texto.toLowerCase();
+        
+        if (/escalar|saltar|equilibrar|decifrar|hackear|forçar|arrombar|nadar|correr|lutar|pular|subir|descer|esquivar|rolar/.test(textoLower)) {
+            return { tipo: 'habilidade' };
+        }
+        
+        if (/convencer|persuadir|intimidar|seduzir|negociar|mentir|enganar|subornar|ameaçar/.test(textoLower)) {
+            return { tipo: 'carisma' };
+        }
+        
+        if (/vasculhar|procurar|explorar|investigar|buscar|examinar|revistar|ouvir|farejar/.test(textoLower)) {
+            return { tipo: 'sorte' };
+        }
+        
+        return null;
     }
-    
-    if (/convencer|persuadir|intimidar|seduzir|negociar|mentir|enganar|subornar/.test(textoLower)) {
-        return { tipo: 'CARISMA' };
-    }
-    
-    if (/vasculhar|procurar|explorar|investigar|buscar|examinar|revistar/.test(textoLower)) {
-        return { tipo: 'SORTE' };
-    }
-    
-    return null;
-}
 
     function rolarTeste(tipo) {
         const dado = Math.floor(Math.random() * 20) + 1;
-        const atributo = jogador[tipo.toLowerCase()];
+        const atributo = jogador[tipo];
         const dificuldade = 18;
         const resultado = dado + atributo;
         
@@ -68,6 +92,10 @@
             dado: dado,
             total: resultado
         };
+    }
+
+    function gerarContextoEstado() {
+        return `[ESTADO ATUAL: Local=${estadoJogo.localizacao} | Itens=${estadoJogo.itens.join(", ")} | Condição=${estadoJogo.condicao}]`;
     }
 
     async function init() {
@@ -89,7 +117,11 @@
             document.getElementById("player-input").disabled = false;
             document.getElementById("btn-enviar").disabled = false;
             
-            addMsg("Você acorda com o gosto de ferro na boca. O frio corta sua pele como navalha.", "narrator");
+            const introMsg = "Você acorda com o gosto de ferro na boca. O frio corta sua pele como navalha.";
+            addMsg(introMsg, "narrator");
+            
+            // Adiciona intro ao histórico
+            chatHistory.push({ role: "assistant", content: introMsg });
 
         } catch (err) {
             status.innerText = "ERRO CRÍTICO: " + err.message;
@@ -107,63 +139,62 @@
         document.getElementById("btn-enviar").disabled = true;
         const tempId = addMsg("...", "narrator");
 
+        // Adiciona ação do jogador ao histórico
+        chatHistory.push({ role: "user", content: text });
+
         // Analisa se precisa de teste
         const teste = analisarAcao(text);
-        let systemDirective = "";
+        let resultadoMensagem = null;
 
         if (teste) {
             const resultado = rolarTeste(teste.tipo);
-            // Instrução clara e separada para o modelo entender o resultado mecânico
-            systemDirective = resultado.sucesso 
-                ? `[SISTEMA: O jogador obteve SUCESSO na ação de ${teste.tipo}. Permita o progresso, mas mantenha a tensão.]`
-                : `[SISTEMA: O jogador FALHOU na ação de ${teste.tipo}. Aplique consequências físicas imediatas, dano ou piore muito a situação.]`;
+            // Cria mensagem de sistema SEPARADA com o resultado
+            resultadoMensagem = {
+                role: "system",
+                content: resultado.sucesso 
+                    ? `RESULTADO: SUCESSO na ação de ${teste.tipo.toUpperCase()}. Permita progresso mas mantenha tensão.`
+                    : `RESULTADO: FALHA na ação de ${teste.tipo.toUpperCase()}. Aplique consequência física imediata: dano, ferimento ou piora da situação.`
+            };
         }
 
-        // Adiciona a intenção do jogador + o resultado do sistema (se houver) no histórico
-        const conteudoUsuario = systemDirective ? `${text}\n${systemDirective}` : text;
-        chatHistory.push({ role: "user", content: conteudoUsuario });
         input.value = "";
 
-        // O PROMPT TELEGRÁFICO E LETAL
-        const dynamicSystemPrompt = `Você é um motor de RPG de texto cru e impiedoso. 
-
-REGRAS DE FORMATAÇÃO (CRÍTICO):
-1. MÁXIMO ABSOLUTO DE 3 FRASES CURTAS.
-2. NUNCA ultrapasse 40 palavras.
-3. Seja telegráfico, seco e direto. 
-
-ESTILO NARRATIVO:
-- Omitir detalhes inúteis. Vá direto à consequência da ação.
-- Foco apenas no físico e tátil: dor, frio, cheiro, som agudo, escuridão.
-- SEM adjetivos poéticos. SEM descrições longas de ambiente.
-- Se houver [FALHA], descreva o ferimento ou perda imediatamente.
-- Encerre a resposta logo após estabelecer a consequência. Ponto final.`;
-
         try {
+            // Monta mensagens: system fixo + contexto de estado + histórico recente + resultado do teste
             const messages = [
-                { role: "system", content: dynamicSystemPrompt },
-                ...chatHistory.slice(-6) // Reduzido ainda mais: apenas as últimas 3 interações (ida e volta)
+                { role: "system", content: SYSTEM_PROMPT },
+                { role: "system", content: gerarContextoEstado() },
+                ...chatHistory.slice(-10), // Últimas 10 mensagens (5 turnos)
             ];
+
+            // Adiciona resultado do teste se houver
+            if (resultadoMensagem) {
+                messages.push(resultadoMensagem);
+            }
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: 0.4,          // ⬇️ DRASTICAMENTE REDUZIDO: Força o modelo a ser direto e previsível, matando a poesia.
-                max_tokens: 70,            // ⬇️ Teto baixo. Garante que o processamento acabe rápido (reduz o tempo de 1.5m para segundos).
-                top_p: 0.8,                // ⬇️ Foco em palavras comuns e diretas.
-                frequency_penalty: 0.2,    // ⬇️ Reduzido. Se for muito alto, ele tenta inventar palavras novas e acaba divagando.
-                presence_penalty: 0.0      // ⬇️ Zerado. Não queremos que ele invente elementos novos (como lanternas ou musgo do nada).
+                temperature: 0.75,         // ⬆️ Aumentado para criatividade
+                max_tokens: 60,            // Mantido baixo para eficiência
+                top_p: 0.9,                // ⬆️ Mais opções criativas
+                frequency_penalty: 0.0,    // Zerado
+                presence_penalty: 0.0      // Zerado
             });
 
             const answer = result.choices[0].message.content.trim();
 
             document.getElementById(tempId).innerText = answer;
-            chatHistory.push({ role: "assistant", content: answer }); 
+            chatHistory.push({ role: "assistant", content: answer });
+
+            // Limita histórico total para economizar memória (mantém últimas 16 mensagens = 8 turnos)
+            if (chatHistory.length > 16) {
+                chatHistory = chatHistory.slice(-16);
+            }
 
         } catch (e) {
             document.getElementById(tempId).innerText = "[SISTEMA: O mundo vacilou. Tente novamente.]";
             console.error("Erro no motor:", e);
-            // Remove a última entrada do jogador para não corromper o histórico em caso de erro
-            chatHistory.pop(); 
+            chatHistory.pop(); // Remove última entrada em caso de erro
         } finally {
             document.getElementById("btn-enviar").disabled = false;
             document.getElementById("player-input").focus(); 
@@ -174,40 +205,25 @@ ESTILO NARRATIVO:
         const box = document.getElementById("chat-box");
         const div = document.createElement('div');
         div.className = cls;
-div.id = "msg-" + Date.now() + "-" + Math.random();
+        div.id = "msg-" + Date.now() + "-" + Math.random();
         div.innerText = (cls === 'player' ? "> " : "") + txt;
         box.appendChild(div);
         box.scrollTop = box.scrollHeight;
-
-    // Debug: log quantas mensagens existem
-    console.log("Total de mensagens no chat:", box.children.length);
         
         return div.id;
     }
+
+    // Permite enviar com Enter
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('player-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !document.getElementById('btn-enviar').disabled) {
+                enviarAcao();
+            }
+        });
+    });
 
     init();
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
