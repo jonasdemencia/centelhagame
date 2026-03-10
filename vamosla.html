@@ -44,8 +44,7 @@
         condicao: "saudável"
     };
 
-    // PROMPT FIXO - Definido uma vez, com exemplos concretos
-    const SYSTEM_PROMPT = `Você é um narrador de RPG de sobrevivência. Responda em 2-3 frases curtas e impactantes.
+    const BASE_PROMPT = `Você é um narrador de RPG de terror sombrio. Responda em 2-3 frases curtas e impactantes.
 
 REGRAS:
 - Use verbos fortes e concretos
@@ -94,8 +93,9 @@ Narrador: "Você nota fios quase invisíveis cruzando o corredor. Atrás deles, 
         };
     }
 
-    function gerarContextoEstado() {
-        return `[ESTADO ATUAL: Local=${estadoJogo.localizacao} | Itens=${estadoJogo.itens.join(", ")} | Condição=${estadoJogo.condicao}]`;
+    function gerarSystemPrompt() {
+        const estado = `[ESTADO: Local=${estadoJogo.localizacao} | Itens=${estadoJogo.itens.join(", ")} | Condição=${estadoJogo.condicao}]`;
+        return `${BASE_PROMPT}\n\n${estado}`;
     }
 
     async function init() {
@@ -119,8 +119,6 @@ Narrador: "Você nota fios quase invisíveis cruzando o corredor. Atrás deles, 
             
             const introMsg = "Você acorda com o gosto de ferro na boca. O frio corta sua pele como navalha.";
             addMsg(introMsg, "narrator");
-            
-            // Adiciona intro ao histórico
             chatHistory.push({ role: "assistant", content: introMsg });
 
         } catch (err) {
@@ -139,46 +137,33 @@ Narrador: "Você nota fios quase invisíveis cruzando o corredor. Atrás deles, 
         document.getElementById("btn-enviar").disabled = true;
         const tempId = addMsg("...", "narrator");
 
-        // Adiciona ação do jogador ao histórico
-        chatHistory.push({ role: "user", content: text });
-
-        // Analisa se precisa de teste
         const teste = analisarAcao(text);
-        let resultadoMensagem = null;
+        let acaoCompleta = text;
 
         if (teste) {
             const resultado = rolarTeste(teste.tipo);
-            // Cria mensagem de sistema SEPARADA com o resultado
-            resultadoMensagem = {
-                role: "system",
-                content: resultado.sucesso 
-                    ? `RESULTADO: SUCESSO na ação de ${teste.tipo.toUpperCase()}. Permita progresso mas mantenha tensão.`
-                    : `RESULTADO: FALHA na ação de ${teste.tipo.toUpperCase()}. Aplique consequência física imediata: dano, ferimento ou piora da situação.`
-            };
+            const resultadoTexto = resultado.sucesso 
+                ? `[SUCESSO em ${teste.tipo.toUpperCase()}: permita progresso mas mantenha tensão]`
+                : `[FALHA em ${teste.tipo.toUpperCase()}: aplique dano físico ou piora imediata]`;
+            acaoCompleta = `${text}\n${resultadoTexto}`;
         }
 
+        chatHistory.push({ role: "user", content: acaoCompleta });
         input.value = "";
 
         try {
-            // Monta mensagens: system fixo + contexto de estado + histórico recente + resultado do teste
             const messages = [
-                { role: "system", content: SYSTEM_PROMPT },
-                { role: "system", content: gerarContextoEstado() },
-                ...chatHistory.slice(-10), // Últimas 10 mensagens (5 turnos)
+                { role: "system", content: gerarSystemPrompt() },
+                ...chatHistory.slice(-10)
             ];
-
-            // Adiciona resultado do teste se houver
-            if (resultadoMensagem) {
-                messages.push(resultadoMensagem);
-            }
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: 0.75,         // ⬆️ Aumentado para criatividade
-                max_tokens: 60,            // Mantido baixo para eficiência
-                top_p: 0.9,                // ⬆️ Mais opções criativas
-                frequency_penalty: 0.0,    // Zerado
-                presence_penalty: 0.0      // Zerado
+                temperature: 0.75,
+                max_tokens: 60,
+                top_p: 0.9,
+                frequency_penalty: 0.0,
+                presence_penalty: 0.0
             });
 
             const answer = result.choices[0].message.content.trim();
@@ -186,7 +171,6 @@ Narrador: "Você nota fios quase invisíveis cruzando o corredor. Atrás deles, 
             document.getElementById(tempId).innerText = answer;
             chatHistory.push({ role: "assistant", content: answer });
 
-            // Limita histórico total para economizar memória (mantém últimas 16 mensagens = 8 turnos)
             if (chatHistory.length > 16) {
                 chatHistory = chatHistory.slice(-16);
             }
@@ -194,7 +178,7 @@ Narrador: "Você nota fios quase invisíveis cruzando o corredor. Atrás deles, 
         } catch (e) {
             document.getElementById(tempId).innerText = "[SISTEMA: O mundo vacilou. Tente novamente.]";
             console.error("Erro no motor:", e);
-            chatHistory.pop(); // Remove última entrada em caso de erro
+            chatHistory.pop();
         } finally {
             document.getElementById("btn-enviar").disabled = false;
             document.getElementById("player-input").focus(); 
@@ -209,11 +193,9 @@ Narrador: "Você nota fios quase invisíveis cruzando o corredor. Atrás deles, 
         div.innerText = (cls === 'player' ? "> " : "") + txt;
         box.appendChild(div);
         box.scrollTop = box.scrollHeight;
-        
         return div.id;
     }
 
-    // Permite enviar com Enter
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('player-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !document.getElementById('btn-enviar').disabled) {
@@ -227,4 +209,3 @@ Narrador: "Você nota fios quase invisíveis cruzando o corredor. Atrás deles, 
 
 </body>
 </html>
-
