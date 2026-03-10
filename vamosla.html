@@ -39,33 +39,34 @@
     let chatHistory = [];
     let jogador = { habilidade: 10, carisma: 10, sorte: 10 };
     let estadoJogo = {
-        localizacao: "caverna escura",
+        localizacao: "caverna escura e fria",
         itens: ["espada enferrujada", "escudo de couro", "lanterna acesa"],
-        condicao: "saudável"
+        condicao: "saudável",
+        ultimoEvento: "acordou com gosto de ferro na boca"
     };
 
-    const BASE_PROMPT = `Você é um narrador impiedoso e sombrio de um RPG de sobrevivência. Responda em 2-3 frases curtas e impactantes.
+    const BASE_PROMPT = `Você é um narrador preciso de RPG de sobrevivência. Responda APENAS o que foi perguntado.
 
-REGRAS:
-- Use verbos fortes e concretos
-- Foque em sensações físicas: dor, frio, sons, cheiros
-- Evite adjetivos decorativos
-- Máximo de 50 palavras
+REGRAS CRÍTICAS:
+2. NUNCA adicione ameaças ou criaturas sem o jogador encontrá-las primeiro
+3. Responda a pergunta diretamente em 1-2 frases
+4. Use apenas informações do histórico e estado atual
+5. Se não sabe algo, descreva o ambiente imediato
 
 EXEMPLOS:
-Jogador: "escalar a parede rochosa"
-Narrador: "Suas mãos escorregam na pedra úmida. Você despenca. O impacto quebra algo no seu braço esquerdo."
+Jogador: "onde estou?"
+Narrador: "Você está em uma caverna úmida. Paredes de pedra cercam você, e o ar cheira a mofo."
 
-Jogador: "convencer o guarda a me deixar passar"
-Narrador: "O guarda ri da sua cara. Ele cospe no chão e aperta o cabo da espada."
+Jogador: "o que vejo ao redor?"
+Narrador: "Rochas irregulares, poças d'água escura no chão. Um túnel estreito à sua frente."
 
-Jogador: "procurar por armadilhas"
-Narrador: "Você nota fios quase invisíveis cruzando o corredor. Atrás deles, buracos na parede gotejam algo verde."`;
+Jogador: "examinar a parede"
+Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada ao tocá-la."`;
 
     function analisarAcao(texto) {
         const textoLower = texto.toLowerCase();
         
-        if (/escalar|saltar|equilibrar|decifrar|hackear|forçar|arrombar|nadar|correr|lutar|pular|subir|descer|esquivar|rolar/.test(textoLower)) {
+        if (/escalar|saltar|equilibrar|decifrar|hackear|forçar|arrombar|nadar|correr|lutar|pular|subir|descer|esquivar|rolar|atacar/.test(textoLower)) {
             return { tipo: 'habilidade' };
         }
         
@@ -94,7 +95,12 @@ Narrador: "Você nota fios quase invisíveis cruzando o corredor. Atrás deles, 
     }
 
     function gerarSystemPrompt() {
-        const estado = `[ESTADO: Local=${estadoJogo.localizacao} | Itens=${estadoJogo.itens.join(", ")} | Condição=${estadoJogo.condicao}]`;
+        const estado = `ESTADO ATUAL:
+- Local: ${estadoJogo.localizacao}
+- Inventário: ${estadoJogo.itens.join(", ")}
+- Condição: ${estadoJogo.condicao}
+- Último evento: ${estadoJogo.ultimoEvento}`;
+        
         return `${BASE_PROMPT}\n\n${estado}`;
     }
 
@@ -143,8 +149,8 @@ Narrador: "Você nota fios quase invisíveis cruzando o corredor. Atrás deles, 
         if (teste) {
             const resultado = rolarTeste(teste.tipo);
             const resultadoTexto = resultado.sucesso 
-                ? `[SUCESSO em ${teste.tipo.toUpperCase()}: permita progresso mas mantenha tensão]`
-                : `[FALHA em ${teste.tipo.toUpperCase()}: aplique dano físico ou piora imediata]`;
+                ? `[TESTE ${teste.tipo.toUpperCase()}: SUCESSO - ação bem-sucedida]`
+                : `[TESTE ${teste.tipo.toUpperCase()}: FALHA - ação fracassou, consequência física]`;
             acaoCompleta = `${text}\n${resultadoTexto}`;
         }
 
@@ -154,25 +160,28 @@ Narrador: "Você nota fios quase invisíveis cruzando o corredor. Atrás deles, 
         try {
             const messages = [
                 { role: "system", content: gerarSystemPrompt() },
-                ...chatHistory.slice(-10)
+                ...chatHistory.slice(-12)
             ];
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: 0.75,
-                max_tokens: 60,
-                top_p: 0.9,
-                frequency_penalty: 0.0,
-                presence_penalty: 0.0
+                temperature: 0.65,          // ⬇️ REDUZIDO: mais factual, menos inventivo
+                max_tokens: 55,
+                top_p: 0.85,               // ⬇️ REDUZIDO: foca em respostas mais prováveis
+                frequency_penalty: 0.3,    // ⬆️ Evita repetir frases, mas não inventa
+                presence_penalty: 0.1      // ⬆️ Leve penalidade para não adicionar tópicos novos
             });
 
             const answer = result.choices[0].message.content.trim();
 
             document.getElementById(tempId).innerText = answer;
             chatHistory.push({ role: "assistant", content: answer });
+            
+            // Atualiza último evento para manter coerência
+            estadoJogo.ultimoEvento = answer.substring(0, 60) + "...";
 
-            if (chatHistory.length > 16) {
-                chatHistory = chatHistory.slice(-16);
+            if (chatHistory.length > 20) {
+                chatHistory = chatHistory.slice(-20);
             }
 
         } catch (e) {
@@ -209,4 +218,3 @@ Narrador: "Você nota fios quase invisíveis cruzando o corredor. Atrás deles, 
 
 </body>
 </html>
-
