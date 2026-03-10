@@ -36,24 +36,15 @@
 
     const MY_MODEL_ID = "Qwen2.5-7B-Instruct-q4f16_1-MLC";
 
-    const MUNDO_PREDEFINIDO = {
-        nome: "Cargueiro MV Teseu",
-        
-        resumo: "Você está no cargueiro MV Teseu, à deriva no Atlântico Sul. A tripulação desapareceu. Você tem 3 dias de água potável. Objetivo: descobrir o que aconteceu e enviar SOS pela ponte de comando. Ameaças: tempestade se aproximando, carga desconhecida no porão vazando gás, motor morto.",
-        
-        localizacaoInicial: "Camarote 7, Convés B",
-        
-        itens: ["canivete enferrujado", "isqueiro zippo", "mapa náutico rasgado"],
-        
-        elementos: [
-            "Ponte de comando trancada",
-            "Porão com containers vazando gás verde",
-            "Sala de máquinas alagada",
-            "Cozinha com comida ainda quente",
-            "Bote salva-vidas faltando"
-        ],
-        
-        documentoCompleto: `CENÁRIO: Cargueiro de Carga MV Teseu
+    const MUNDOS = [
+        {
+            nome: "Cargueiro MV Teseu",
+            resumo: "Você está no cargueiro MV Teseu, à deriva no Atlântico Sul. A tripulação desapareceu. Você tem 3 dias de água potável. Objetivo: descobrir o que aconteceu e enviar SOS pela ponte de comando. Ameaças: tempestade se aproximando, carga desconhecida no porão vazando gás, motor morto.",
+            localizacaoInicial: "Camarote 7, Convés B",
+            itens: ["canivete enferrujado", "isqueiro zippo", "mapa náutico rasgado"],
+            elementos: ["Ponte de comando trancada", "Porão com containers vazando gás verde", "Sala de máquinas alagada", "Cozinha com comida ainda quente", "Bote salva-vidas faltando"],
+            locais: ["Camarote 7 (Convés B)", "Corredor Convés B", "Porão Inferior", "Sala de Máquinas", "Cozinha (Convés Superior)", "Alojamento Marinheiros", "Armazém Suprimentos", "Convés A", "Ponte de Comando"],
+            documentoCompleto: `CENÁRIO: Cargueiro de Carga MV Teseu
 Um navio cargueiro de 180 metros à deriva no Atlântico Sul, a 400km da costa brasileira. Construído em 1987, transportava containers da China para Santos. Agora está morto na água, motores silenciosos, sem tripulação visível.
 
 SITUAÇÃO INICIAL:
@@ -76,13 +67,9 @@ Descobrir o que aconteceu com as 14 pessoas da tripulação. Reativar o rádio d
 
 ELEMENTOS ÚNICOS:
 1. PONTE DE COMANDO (Convés A): Porta trancada por dentro. Rádio de emergência lá dentro. Janelas mostram cadeira do capitão virada para o mar.
-
 2. PORÃO INFERIOR: 47 containers empilhados. Container 23-B está aberto, vazando gás verde. Marcas de arranhões nas paredes metálicas. Algo se move entre as sombras.
-
 3. SALA DE MÁQUINAS: Parcialmente alagada (1 metro de água salgada). Motor principal sabotado - cabos cortados propositalmente. Caixa de ferramentas flutuando.
-
 4. COZINHA/REFEITÓRIO: Panelas no fogão ainda mornas. Pratos com comida pela metade. Cadeiras derrubadas. Faca de cozinha cravada na mesa. Nenhum sinal de luta.
-
 5. BOTE SALVA-VIDAS: Dos 4 botes, apenas 1 permanece. Os outros foram ejetados recentemente (cabos cortados). O bote restante tem capacidade para 2 pessoas e suprimentos para 5 dias.
 
 PISTAS ESCONDIDAS:
@@ -90,13 +77,59 @@ PISTAS ESCONDIDAS:
 - Manifesto de carga falso na sala de rádio
 - Pegadas molhadas que não são suas levando ao porão
 - Sangue seco na escada entre Convés B e C`
-    };
+        },
+        {
+            nome: "Estação Subterrânea Abandonada",
+            resumo: "Você está na Estação Metro-7, abandonada há 15 anos após um acidente. Objetivo: encontrar a saída antes que as baterias da lanterna acabem (2 horas). Ameaças: túneis colapsados, água contaminada subindo, criaturas nos trilhos, ar rarefeito.",
+            localizacaoInicial: "Plataforma Central, Nível -2",
+            itens: ["lanterna de mão", "barra de ferro", "bilhete de metrô antigo"],
+            elementos: ["Sala de controle trancada", "Túnel norte colapsado", "Reservatório de água contaminada", "Oficina de manutenção", "Escada de emergência bloqueada"],
+            locais: ["Plataforma Central (Nível -2)", "Túnel Sul", "Túnel Norte", "Sala de Controle", "Oficina de Manutenção", "Reservatório", "Escadaria Emergência", "Nível -3 (Trilhos)", "Sala Elétrica"],
+            documentoCompleto: `CENÁRIO: Estação Metro-7 Abandonada
+Uma estação de metrô subterrânea a 40 metros de profundidade, abandonada desde 2008 após um desabamento que matou 23 pessoas. Localizada sob o centro da cidade, agora é um labirinto de concreto rachado, água escura e escuridão absoluta.
+
+SITUAÇÃO INICIAL:
+Você acorda na Plataforma Central do Nível -2. Sua lanterna está acesa, mas a bateria marca 30%. A última memória: você estava explorando ruínas urbanas quando o chão cedeu. Agora está preso aqui embaixo. O ar é pesado e úmido. Você ouve água pingando e algo se movendo nos trilhos abaixo.
+
+ITENS INICIAIS:
+- Lanterna de mão: bateria em 30%, dura aproximadamente 2 horas
+- Barra de ferro: encontrada ao seu lado, enferrujada mas sólida
+- Bilhete de metrô antigo: datado de 12/09/2008, último dia de operação
+
+AMEAÇAS:
+- Bateria da lanterna acabando (2 horas até escuridão total)
+- Água contaminada subindo lentamente dos níveis inferiores
+- Ar rarefeito - quanto mais fundo, menos oxigênio
+- Criaturas nos trilhos (ratos gigantes ou algo pior)
+- Estrutura instável - risco de novos desabamentos
+
+OBJETIVO IMPLÍCITO:
+Encontrar a saída de emergência antes que a lanterna apague. Descobrir o que realmente aconteceu em 2008. Evitar o que vive nos túneis. Subir para a superfície antes que a água suba demais.
+
+ELEMENTOS ÚNICOS:
+1. SALA DE CONTROLE (Nível -2): Porta de metal trancada. Dentro há mapas da estação e o sistema de ventilação de emergência.
+2. TÚNEL NORTE: Parcialmente colapsado. Passagem estreita entre escombros leva ao Nível -1 (mais próximo da superfície).
+3. OFICINA DE MANUTENÇÃO: Ferramentas enferrujadas, uniformes de funcionários, e um diário de engenheiro com anotações estranhas sobre "sons nos túneis".
+4. RESERVATÓRIO: Tanque de água subterrâneo agora contaminado e transbordando. Algo grande nada lá dentro.
+5. ESCADA DE EMERGÊNCIA: Bloqueada por destroços no Nível -1. Precisa ser desobstruída para alcançar a superfície.
+
+PISTAS ESCONDIDAS:
+- Mapa da estação na sala de controle mostra rota alternativa
+- Diário do engenheiro menciona "Túnel de Serviço Secreto"
+- Marcas de arranhões nas paredes não são de ferramentas
+- Esqueletos nos trilhos têm marcas de mordidas`
+        }
+    ];
+
+    const MUNDO_ESCOLHIDO = MUNDOS[Math.floor(Math.random() * MUNDOS.length)];
     
     let engine;
     let chatHistory = [];
     let jogador = { habilidade: 10, carisma: 10, sorte: 10 };
     let documentoMestre = null;
     let elementosMundo = [];
+    let locaisDisponiveis = [];
+    let locaisVisitados = [];
     let estadoJogo = {
         localizacao: "",
         itens: [],
@@ -112,6 +145,7 @@ REGRAS OBRIGATÓRIAS:
 3. Em ações exploratórias, adicione 1 descoberta, perigo ou detalhe
 4. Use elementos do CONTEXTO DO MUNDO
 5. SEMPRE termine com ponto final completo
+6. Mantenha coerência com a localização atual do jogador
 
 EXEMPLOS:
 Jogador: "entrar no porão"
@@ -125,6 +159,24 @@ Narrador: "A sala está revirada. Sangue seco mancha o chão."`;
 
     function ehAcaoExploratoria(texto) {
         return /entrar|seguir|continuar|andar|avançar|prosseguir|ir|caminhar|mover|descer|subir/.test(texto.toLowerCase());
+    }
+
+    function atualizarLocalizacao(resposta) {
+        const respostaLower = resposta.toLowerCase();
+        for (const local of locaisDisponiveis) {
+            const localLower = local.toLowerCase();
+            const palavrasChave = localLower.split(/[\s,()]+/).filter(p => p.length > 4);
+            
+            for (const palavra of palavrasChave) {
+                if (respostaLower.includes(palavra)) {
+                    if (!locaisVisitados.includes(local)) {
+                        locaisVisitados.push(local);
+                    }
+                    estadoJogo.localizacao = local;
+                    return;
+                }
+            }
+        }
     }
 
     function gerarEvento() {
@@ -168,12 +220,13 @@ Narrador: "A sala está revirada. Sangue seco mancha o chão."`;
     function gerarSystemPrompt() {
         const resumoMundo = documentoMestre ? documentoMestre.resumo : "Mundo desconhecido";
         const elementos = elementosMundo.length > 0 ? `\nELEMENTOS DISPONÍVEIS: ${elementosMundo.join(", ")}` : "";
+        const visitados = locaisVisitados.length > 0 ? `\nLOCAIS JÁ VISITADOS: ${locaisVisitados.join(", ")}` : "";
         
         const estado = `CONTEXTO DO MUNDO:
-${resumoMundo}${elementos}
+${resumoMundo}${elementos}${visitados}
 
 ESTADO ATUAL:
-- Local: ${estadoJogo.localizacao}
+- Local EXATO onde jogador está AGORA: ${estadoJogo.localizacao}
 - Inventário: ${estadoJogo.itens.join(", ") || "vazio"}
 - Condição: ${estadoJogo.condicao}
 - Último evento: ${estadoJogo.ultimoEvento}`;
@@ -186,17 +239,19 @@ ESTADO ATUAL:
         
         try {
             documentoMestre = {
-                completo: MUNDO_PREDEFINIDO.documentoCompleto,
-                resumo: MUNDO_PREDEFINIDO.resumo
+                completo: MUNDO_ESCOLHIDO.documentoCompleto,
+                resumo: MUNDO_ESCOLHIDO.resumo
             };
             
-            estadoJogo.localizacao = MUNDO_PREDEFINIDO.localizacaoInicial;
-            estadoJogo.itens = [...MUNDO_PREDEFINIDO.itens];
-            elementosMundo = [...MUNDO_PREDEFINIDO.elementos];
+            estadoJogo.localizacao = MUNDO_ESCOLHIDO.localizacaoInicial;
+            estadoJogo.itens = [...MUNDO_ESCOLHIDO.itens];
+            elementosMundo = [...MUNDO_ESCOLHIDO.elementos];
+            locaisDisponiveis = [...MUNDO_ESCOLHIDO.locais];
+            locaisVisitados.push(MUNDO_ESCOLHIDO.localizacaoInicial);
             
             const resultIntro = await engine.chat.completions.create({
                 messages: [
-                    { role: "system", content: `Baseado neste cenário:\n${MUNDO_PREDEFINIDO.documentoCompleto}\n\nEscreva a cena de abertura: local (${MUNDO_PREDEFINIDO.localizacaoInicial}) e sensação física. Use português brasileiro simples. 2 frases curtas, máximo 25 palavras TOTAL.` },
+                    { role: "system", content: `Baseado neste cenário:\n${MUNDO_ESCOLHIDO.documentoCompleto}\n\nEscreva a cena de abertura: local (${MUNDO_ESCOLHIDO.localizacaoInicial}) e sensação física. Use português brasileiro simples. 2 frases curtas, máximo 25 palavras TOTAL.` },
                     { role: "user", content: "Descreva a cena inicial." }
                 ],
                 temperature: 0.6,
@@ -232,7 +287,7 @@ ESTADO ATUAL:
             estadoJogo.ultimoEvento = intro.substring(0, 60);
 
             console.log("=== MUNDO CARREGADO ===");
-            console.log(MUNDO_PREDEFINIDO.nome);
+            console.log(MUNDO_ESCOLHIDO.nome);
             console.log("\n=== ELEMENTOS DISPONÍVEIS ===");
             console.log(elementosMundo);
 
@@ -310,17 +365,17 @@ ESTADO ATUAL:
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: ehExploracao ? 0.6 : 0.45,
+                temperature: ehExploracao ? 0.65 : 0.48,
                 max_tokens: 45,
                 top_p: 0.82,
-                frequency_penalty: 0.4,
+                frequency_penalty: 0.25,
                 presence_penalty: 0.2,
                 stop: ["\n\n", "Jogador:", ">", "\n>", "...", " -"]
             });
 
             let answer = result.choices[0].message.content.trim();
 
-            // Pós-processamento melhorado
+            // Pós-processamento
             const frasesCompletas = [];
             const frasesTemp = answer.split(/[.!?]/);
 
@@ -341,6 +396,9 @@ ESTADO ATUAL:
             if (answer && !/[.!?]$/.test(answer)) {
                 answer += '.';
             }
+
+            // Atualiza localização baseado na resposta
+            atualizarLocalizacao(answer);
 
             document.getElementById(tempId).innerText = answer;
             chatHistory.push({ role: "assistant", content: answer });
