@@ -39,7 +39,8 @@
     let engine;
     let chatHistory = [];
     let jogador = { habilidade: 10, carisma: 10, sorte: 10 };
-    let documentoMestre = null; // A "bíblia" do jogo
+    let documentoMestre = null;
+    let elementosMundo = []; // Elementos extraídos do documento para usar
     let estadoJogo = {
         localizacao: "",
         itens: [],
@@ -47,21 +48,32 @@
         ultimoEvento: ""
     };
 
-    const PROMPT_JOGO = `Você é um narrador preciso de RPG de sobrevivência. Responda APENAS o que foi perguntado.
+    const PROMPT_BASE = `Você é um narrador dinâmico de RPG de sobrevivência.
 
-REGRAS CRÍTICAS:
-1. NUNCA invente eventos que não aconteceram
-2. NUNCA adicione elementos que não estão no CONTEXTO DO MUNDO
-3. Responda em EXATAMENTE 1-2 frases curtas e completas
-4. SEMPRE termine com ponto final - NUNCA deixe frase incompleta
-5. Máximo 25 palavras total
+REGRAS:
+1. Responda o que foi perguntado MAS adicione 1 elemento novo relevante
+2. Em ações exploratórias (entrar, seguir, continuar, andar), SEMPRE introduza descoberta, perigo ou pista
+3. Use elementos do CONTEXTO DO MUNDO quando relevante
+4. 2 frases completas, máximo 30 palavras
+5. SEMPRE termine com ponto final
 
 EXEMPLOS:
-Jogador: "onde estou?"
-Narrador: "Você está em uma caverna úmida. Paredes de pedra cercam você."
+Jogador: "entrar no túnel"
+Narrador: "Você entra no túnel escuro. Marcas de garras cobrem as paredes."
 
-Jogador: "o que vejo?"
-Narrador: "Rochas irregulares e poças escuras. Um túnel estreito à frente."`;
+Jogador: "continuar"
+Narrador: "Você avança e tropeça em ossos antigos. Um som de água ecoa à frente."`;
+
+    function ehAcaoExploratoria(texto) {
+        return /entrar|seguir|continuar|andar|avançar|prosseguir|ir|caminhar|mover/.test(texto.toLowerCase());
+    }
+
+    function gerarEvento() {
+        const tipo = Math.random();
+        if (tipo < 0.4) return "DESCOBERTA";
+        if (tipo < 0.7) return "PERIGO";
+        return "ATMOSFERA";
+    }
 
     function analisarAcao(texto) {
         const textoLower = texto.toLowerCase();
@@ -94,18 +106,20 @@ Narrador: "Rochas irregulares e poças escuras. Um túnel estreito à frente."`;
         };
     }
 
-    function gerarSystemPrompt() {
+    function gerarSystemPrompt(ehExploracao) {
         const resumoMundo = documentoMestre ? documentoMestre.resumo : "Mundo desconhecido";
+        const elementos = elementosMundo.length > 0 ? `\nELEMENTOS DISPONÍVEIS: ${elementosMundo.join(", ")}` : "";
+        
         const estado = `CONTEXTO DO MUNDO:
-${resumoMundo}
+${resumoMundo}${elementos}
 
-ESTADO ATUAL DO JOGADOR:
-- Local exato: ${estadoJogo.localizacao}
+ESTADO ATUAL:
+- Local: ${estadoJogo.localizacao}
 - Inventário: ${estadoJogo.itens.join(", ") || "vazio"}
 - Condição: ${estadoJogo.condicao}
 - Último evento: ${estadoJogo.ultimoEvento}`;
         
-        return `${PROMPT_JOGO}\n\n${estado}`;
+        return `${PROMPT_BASE}\n\n${estado}`;
     }
 
     async function gerarDocumentoMestre() {
@@ -123,7 +137,7 @@ ESTADO ATUAL DO JOGADOR:
 3. ITENS INICIAIS: 2-3 itens que o jogador carrega
 4. AMEAÇAS: Perigos do ambiente (clima, criaturas, armadilhas)
 5. OBJETIVO IMPLÍCITO: O que o jogador precisa descobrir ou alcançar
-6. ELEMENTOS ÚNICOS: 2-3 detalhes que tornam este mundo memorável
+6. ELEMENTOS ÚNICOS: 2-3 detalhes que tornam este mundo memorável (locais, objetos, criaturas)
 
 Seja criativo e específico. Use 150-200 palavras.` 
                     },
@@ -136,7 +150,6 @@ Seja criativo e específico. Use 150-200 palavras.`
 
             const documentoCompleto = result.choices[0].message.content.trim();
             
-            // Agora gera um RESUMO compacto para usar no jogo
             const resultResumo = await engine.chat.completions.create({
                 messages: [
                     { role: "system", content: "Resuma o seguinte cenário de RPG em 80 palavras, mantendo: local, itens iniciais, ameaças principais e objetivo." },
@@ -148,16 +161,24 @@ Seja criativo e específico. Use 150-200 palavras.`
 
             const resumo = resultResumo.choices[0].message.content.trim();
 
-            // Extrai informações estruturadas
-            const itensMatch = documentoCompleto.match(/ITENS INICIAIS[:\s]+(.*?)(?=\n\d|\n[A-Z]|$)/is);
-            const localMatch = documentoCompleto.match(/CENÁRIO[:\s]+(.*?)(?=\n\d|\n[A-Z]|$)/is);
+            // Extrai elementos únicos para usar no jogo
+            const elementosMatch = documentoCompleto.match(/ELEMENTOS ÚNICOS[:\s]+(.*?)(?=\n\d|\n[A-Z]{2,}|$)/is);
+            if (elementosMatch) {
+                elementosMundo = elementosMatch[1]
+                    .split(/[,\n\-•]/)
+                    .map(e => e.trim())
+                    .filter(e => e.length > 5)
+                    .slice(0, 5);
+            }
+
+            const itensMatch = documentoCompleto.match(/ITENS INICIAIS[:\s]+(.*?)(?=\n\d|\n[A-Z]{2,}|$)/is);
+            const localMatch = documentoCompleto.match(/CENÁRIO[:\s]+(.*?)(?=\n\d|\n[A-Z]{2,}|$)/is);
             
             documentoMestre = {
                 completo: documentoCompleto,
                 resumo: resumo
             };
 
-            // Extrai itens (simplificado)
             if (itensMatch) {
                 const itensTexto = itensMatch[1].toLowerCase();
                 estadoJogo.itens = itensTexto.match(/[a-záàâãéêíóôõúç\s]+/g)
@@ -165,25 +186,22 @@ Seja criativo e específico. Use 150-200 palavras.`
                     ?.slice(0, 3) || ["mãos vazias"];
             }
 
-            // Extrai localização
             if (localMatch) {
                 estadoJogo.localizacao = localMatch[1].trim().split('\n')[0].substring(0, 50);
             }
 
-            // Gera a introdução narrativa baseada no documento
             const resultIntro = await engine.chat.completions.create({
                 messages: [
-                    { role: "system", content: `Baseado neste cenário:\n${documentoCompleto}\n\nEscreva APENAS a cena de abertura: onde o jogador acorda e o que sente. 2 frases completas, máximo 35 palavras.` },
+                    { role: "system", content: `Baseado neste cenário:\n${documentoCompleto}\n\nEscreva APENAS a cena de abertura: onde o jogador acorda e o que sente. 2 frases completas, máximo 30 palavras.` },
                     { role: "user", content: "Descreva a cena inicial." }
                 ],
                 temperature: 0.7,
-                max_tokens: 60,
+                max_tokens: 55,
                 stop: ["\n\n", "Jogador:"]
             });
 
             let intro = resultIntro.choices[0].message.content.trim();
             
-            // Remove frase incompleta
             const frases = intro.split(/[.!?]/);
             if (frases.length > 1 && frases[frases.length - 1].trim().length > 0 && frases[frases.length - 1].trim().length < 15) {
                 frases.pop();
@@ -198,6 +216,8 @@ Seja criativo e específico. Use 150-200 palavras.`
             console.log(documentoCompleto);
             console.log("\n=== RESUMO ===");
             console.log(resumo);
+            console.log("\n=== ELEMENTOS ===");
+            console.log(elementosMundo);
 
         } catch (e) {
             addMsg("Falha ao tecer o destino. Começando em local genérico.", "system");
@@ -228,7 +248,6 @@ Seja criativo e específico. Use 150-200 palavras.`
             document.getElementById("progress-bar-container").style.display = "none";
             status.innerText = "Gerando o mundo... (pode demorar)";
 
-            // FASE 1: Gera o documento mestre
             await gerarDocumentoMestre();
 
             status.innerText = "O Pesadelo Começou.";
@@ -252,15 +271,22 @@ Seja criativo e específico. Use 150-200 palavras.`
         document.getElementById("btn-enviar").disabled = true;
         const tempId = addMsg("...", "narrator");
 
+        const ehExploracao = ehAcaoExploratoria(text);
         const teste = analisarAcao(text);
         let acaoCompleta = text;
+
+        // Sistema de eventos para ações exploratórias
+        if (ehExploracao) {
+            const tipoEvento = gerarEvento();
+            acaoCompleta += `\n[AÇÃO EXPLORATÓRIA - Gere um ${tipoEvento}]`;
+        }
 
         if (teste) {
             const resultado = rolarTeste(teste.tipo);
             const resultadoTexto = resultado.sucesso 
                 ? `[TESTE ${teste.tipo.toUpperCase()}: SUCESSO]`
                 : `[TESTE ${teste.tipo.toUpperCase()}: FALHA - consequência física]`;
-            acaoCompleta = `${text}\n${resultadoTexto}`;
+            acaoCompleta += `\n${resultadoTexto}`;
         }
 
         chatHistory.push({ role: "user", content: acaoCompleta });
@@ -268,23 +294,22 @@ Seja criativo e específico. Use 150-200 palavras.`
 
         try {
             const messages = [
-                { role: "system", content: gerarSystemPrompt() },
+                { role: "system", content: gerarSystemPrompt(ehExploracao) },
                 ...chatHistory.slice(-12)
             ];
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: 0.5,
-                max_tokens: 50,
-                top_p: 0.85,
-                frequency_penalty: 0.3,
-                presence_penalty: 0.1,
+                temperature: ehExploracao ? 0.65 : 0.5, // Mais criativo em exploração
+                max_tokens: 55,
+                top_p: 0.88,
+                frequency_penalty: 0.2,
+                presence_penalty: 0.15,
                 stop: ["\n\n", "Jogador:", ">", "\n>"]
             });
 
             let answer = result.choices[0].message.content.trim();
             
-            // Remove frase incompleta
             const frases = answer.split(/[.!?]/);
             if (frases.length > 1 && frases[frases.length - 1].trim().length > 0 && frases[frases.length - 1].trim().length < 15) {
                 frases.pop();
