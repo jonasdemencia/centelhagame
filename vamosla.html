@@ -103,89 +103,63 @@
         if (!text) return;
 
         addMsg(text, "player");
-        chatHistory.push({ role: "user", content: text });
-        input.value = "";
         
         document.getElementById("btn-enviar").disabled = true;
         const tempId = addMsg("...", "narrator");
 
         // Analisa se precisa de teste
         const teste = analisarAcao(text);
-console.log("Resultado da análise:", teste);
+        let systemDirective = "";
 
-if (teste) {
-    console.log("TESTE DETECTADO:", teste.tipo);
-    const resultado = rolarTeste(teste.tipo);
-    console.log("Resultado do dado:", resultado);
-    const mensagemTeste = resultado.sucesso 
-        ? `[O jogador conseguiu no teste de ${teste.tipo}]`
-        : `[O jogador falhou no teste de ${teste.tipo}]`;
-    
-    chatHistory.push({ role: "user", content: mensagemTeste });
-}
+        if (teste) {
+            const resultado = rolarTeste(teste.tipo);
+            // Instrução clara e separada para o modelo entender o resultado mecânico
+            systemDirective = resultado.sucesso 
+                ? `[SISTEMA: O jogador obteve SUCESSO na ação de ${teste.tipo}. Permita o progresso, mas mantenha a tensão.]`
+                : `[SISTEMA: O jogador FALHOU na ação de ${teste.tipo}. Aplique consequências físicas imediatas, dano ou piore muito a situação.]`;
+        }
 
+        // Adiciona a intenção do jogador + o resultado do sistema (se houver) no histórico
+        const conteudoUsuario = systemDirective ? `${text}\n${systemDirective}` : text;
+        chatHistory.push({ role: "user", content: conteudoUsuario });
+        input.value = "";
 
-        // NOVO PROMPT
-        const dynamicSystemPrompt = `Você é o motor narrativo de um jogo de sobrevivência misterioso em português brasileiro correto. Nunca quebre o personagem. 
+        // O PROMPT DO NARRADOR IMPLACÁVEL
+        const dynamicSystemPrompt = `Você é o motor narrativo de um RPG de sobrevivência letal e realista. Você não é um assistente, é um mundo implacável.
 
-REGRA DE OURO:
-- O mundo tem segredos que o jogador ainda não descobriu
-- Consistência total com eventos anteriores
-- Física realista
-- Implemente desafios e dificuldades. Jogador pode morrer a qualquer momento. 
-- PROIBIDO usar adjetivos de emoção ou conclusão (ex: não use "assustador", "misterioso", "estranho", "terrível").
-- Descreva apenas o que pode ser VISTO, OUVIDO, TOCADO ou CHEIRADO. 
-- Seja seco, cru e direto. Deixe o jogador tirar suas próprias conclusões sobre o perigo.
-
-ESTRUTURA:
-- Resolva a ação do jogador logicamente.
-- Responda de forma breve, máximo 4 linhas de resposta.`;
+DIRETRIZES ABSOLUTAS:
+1. ATMOSFERA CRUA: Descreva apenas o que é VISTO, OUVIDO, TOCADO ou CHEIRADO. Foque em texturas ásperas, cheiro de ferrugem, escuridão e sons abafados. 
+2. PROIBIDO ADJETIVOS DE EMOÇÃO: Nunca use palavras como "assustador", "misterioso", "terrível" ou "estranho". Deixe a situação falar por si.
+3. SEM PIEDADE: O mundo não se importa com o jogador. Se o sistema indicar [FALHA], puna com ferimentos, perda de recursos ou becos sem saída. Não o proteja.
+4. DIRETO AO PONTO: Sem introduções, sem moralismos. 
+5. FORMATO: Responda em no máximo dois parágrafos curtos. Termine sempre com o resultado da ação do jogador, deixando o perigo iminente.`;
 
         try {
+            // Contexto enxuto para evitar perda de foco do modelo de 7B
             const messages = [
                 { role: "system", content: dynamicSystemPrompt },
-                ...chatHistory.slice(-12)
+                ...chatHistory.slice(-8) // Reduzido para focar na memória de curto prazo e economizar RAM
             ];
 
             const result = await engine.chat.completions.create({ 
-    messages: messages,
-    temperature: 0.6,
-    max_tokens: 90,
-    top_p: 0.85,
-    frequency_penalty: 0.2,      // ⬇️ Reduzido
-    presence_penalty: 0.2,       // ⬇️ Reduzido
-    repetition_penalty: 1.05     // ⬇️ Reduzido
-});
-
+                messages: messages,
+                temperature: 0.75,         // Ligeiramente maior para criatividade tática, sem perder coesão
+                max_tokens: 140,           // Espaço suficiente para terminar a ideia sem precisar de uma 2ª chamada
+                top_p: 0.85,
+                frequency_penalty: 0.6,    // AUMENTADO drasticamente para matar a repetição de vícios de linguagem
+                presence_penalty: 0.5,     // AUMENTADO para forçar o modelo a avançar a cena e introduzir novos elementos
+            });
 
             const answer = result.choices[0].message.content.trim();
 
-            // Verifica se foi cortada
-            const lastChar = answer.slice(-1);
-            const isIncomplete = !['.', '!', '?', '"'].includes(lastChar);
-
-            if (isIncomplete) {
-                const continuation = await engine.chat.completions.create({
-                    messages: [
-                        { role: "system", content: "Complete esta frase de forma seca. Escreva apenas o final." },
-                        { role: "user", content: answer }
-                    ],
-                    temperature: 0.4,
-                    max_tokens: 30,
-                    top_p: 0.9
-                });
-                
-                const fullAnswer = answer + continuation.choices[0].message.content;
-                document.getElementById(tempId).innerText = fullAnswer;
-                chatHistory.push({ role: "assistant", content: fullAnswer }); 
-            } else {
-                document.getElementById(tempId).innerText = answer;
-                chatHistory.push({ role: "assistant", content: answer }); 
-            }
+            document.getElementById(tempId).innerText = answer;
+            chatHistory.push({ role: "assistant", content: answer }); 
 
         } catch (e) {
-            document.getElementById(tempId).innerText = "[ERRO: " + e.message + "]";
-            console.error("Erro detalhado:", e);
+            document.getElementById(tempId).innerText = "[SISTEMA: O mundo vacilou. Tente novamente.]";
+            console.error("Erro no motor:", e);
+            // Remove a última entrada do jogador para não corromper o histórico em caso de erro
+            chatHistory.pop(); 
         } finally {
             document.getElementById("btn-enviar").disabled = false;
             document.getElementById("player-input").focus(); 
@@ -212,6 +186,7 @@ div.id = "msg-" + Date.now() + "-" + Math.random();
 
 </body>
 </html>
+
 
 
 
