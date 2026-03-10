@@ -39,83 +39,96 @@
     const MUNDOS = [
         {
             nome: "Estação Subterrânea Abandonada",
-            resumo: "Você está na Estação Metro-7, abandonada há 15 anos após um acidente. Objetivo: encontrar a saída antes que as baterias da lanterna acabem (2 horas). Ameaças: túneis colapsados, água contaminada subindo, criaturas nos trilhos, ar rarefeito.",
+            resumo: "Você está na Estação Metro-7, abandonada há 15 anos. Objetivo: encontrar a saída antes que a lanterna apague (2 horas). Ameaças: túneis colapsados, água contaminada subindo, criaturas nos trilhos.",
             localizacaoInicial: "Plataforma Central, Nível -2",
             itens: ["lanterna de mão", "barra de ferro", "bilhete de metrô antigo"],
-            elementos: ["Sala de controle trancada", "Túnel norte colapsado", "Reservatório de água contaminada", "Oficina de manutenção", "Escada de emergência bloqueada"],
+            elementos: ["Sala de controle trancada", "Túnel norte colapsado", "Reservatório de água", "Oficina de manutenção", "Escada de emergência bloqueada"],
             documentoCompleto: `CENÁRIO: Estação Metro-7 Abandonada
-Uma estação de metrô subterrânea a 40 metros de profundidade, abandonada desde 2008 após um desabamento que matou 23 pessoas. Localizada sob o centro da cidade, agora é um labirinto de concreto rachado, água escura e escuridão absoluta.
+Estação de metrô a 40 metros de profundidade, abandonada desde 2008 após desabamento. Labirinto de concreto rachado e escuridão.
 
 SITUAÇÃO INICIAL:
-Você acorda na Plataforma Central do Nível -2. Sua lanterna está acesa, mas a bateria marca 30%. A última memória: você estava explorando ruínas urbanas quando o chão cedeu. Agora está preso aqui embaixo. O ar é pesado e úmido. Você ouve água pingando e algo se movendo nos trilhos abaixo.
+Você acorda na Plataforma Central, Nível -2. Lanterna acesa, bateria em 30%. Última memória: explorando ruínas quando o chão cedeu. Ar pesado e úmido. Água pingando e sons nos trilhos.
 
 ITENS INICIAIS:
-- Lanterna de mão: bateria em 30%, dura aproximadamente 2 horas
-- Barra de ferro: encontrada ao seu lado, enferrujada mas sólida
-- Bilhete de metrô antigo: datado de 12/09/2008, último dia de operação
+- Lanterna de mão (bateria 30%, dura 2 horas)
+- Barra de ferro enferrujada
+- Bilhete de metrô datado 12/09/2008
 
 AMEAÇAS:
-- Bateria da lanterna acabando (2 horas até escuridão total)
-- Água contaminada subindo lentamente dos níveis inferiores
-- Ar rarefeito - quanto mais fundo, menos oxigênio
-- Criaturas nos trilhos (ratos gigantes ou algo pior)
-- Estrutura instável - risco de novos desabamentos
-
-OBJETIVO IMPLÍCITO:
-Encontrar a saída de emergência antes que a lanterna apague. Descobrir o que realmente aconteceu em 2008. Evitar o que vive nos túneis. Subir para a superfície antes que a água suba demais.
+- Bateria acabando
+- Água contaminada subindo
+- Ar rarefeito nos níveis inferiores
+- Criaturas nos trilhos
+- Estrutura instável
 
 ELEMENTOS ÚNICOS:
-1. SALA DE CONTROLE (Nível -2): Porta de metal trancada. Dentro há mapas da estação e o sistema de ventilação de emergência.
-2. TÚNEL NORTE: Parcialmente colapsado. Passagem estreita entre escombros leva ao Nível -1 (mais próximo da superfície).
-3. OFICINA DE MANUTENÇÃO: Ferramentas enferrujadas, uniformes de funcionários, e um diário de engenheiro com anotações estranhas sobre "sons nos túneis".
-4. RESERVATÓRIO: Tanque de água subterrâneo agora contaminado e transbordando. Algo grande nada lá dentro.
-5. ESCADA DE EMERGÊNCIA: Bloqueada por destroços no Nível -1. Precisa ser desobstruída para alcançar a superfície.
-
-PISTAS ESCONDIDAS:
-- Mapa da estação na sala de controle mostra rota alternativa
-- Diário do engenheiro menciona "Túnel de Serviço Secreto"
-- Marcas de arranhões nas paredes não são de ferramentas
-- Esqueletos nos trilhos têm marcas de mordidas`
+1. SALA DE CONTROLE: Porta trancada. Mapas da estação e ventilação de emergência dentro.
+2. TÚNEL NORTE: Colapsado. Passagem estreita leva ao Nível -1.
+3. OFICINA: Ferramentas, uniformes, diário de engenheiro sobre "sons nos túneis".
+4. RESERVATÓRIO: Água contaminada transbordando. Algo grande nada lá.
+5. ESCADA EMERGÊNCIA: Bloqueada no Nível -1. Precisa desobstruir para superfície.`
         },
         {
             nome: "Hospital Psiquiátrico Abandonado",
-            resumo: "Você está no Hospital Colina Verde, fechado em 1995 após escândalo de maus-tratos. Objetivo: encontrar os arquivos médicos que provam sua inocência antes do amanhecer (4 horas). Ameaças: estrutura em colapso, pacientes fantasmas, gás de formaldeído vazando, polícia chegando.",
+            resumo: "Você está no Hospital Colina Verde, fechado em 1995. Objetivo: encontrar arquivos médicos que provam sua inocência antes do amanhecer (4 horas). Ameaças: estrutura colapsando, gás de formaldeído, polícia chegando.",
             localizacaoInicial: "Recepção Principal, Térreo",
             itens: ["gravador de voz", "chave mestra quebrada", "foto polaroid desbotada"],
-            elementos: ["Ala de isolamento trancada", "Sala de cirurgia com manchas", "Arquivo médico no subsolo", "Capela abandonada", "Torre de observação"],
+            elementos: ["Ala de isolamento no 2º andar", "Sala de cirurgia no 3º andar", "Arquivo médico no subsolo", "Capela no 1º andar", "Torre de observação no 5º andar"],
             documentoCompleto: `CENÁRIO: Hospital Psiquiátrico Colina Verde
-Um hospital psiquiátrico de 5 andares no topo de uma colina isolada, fechado há 28 anos após denúncias de experimentos ilegais. Agora é uma ruína de corredores escuros, camas enferrujadas e gritos ecoando nas paredes.
+Hospital de 5 andares no topo de colina, fechado há 28 anos. Ruína de corredores escuros e gritos nas paredes.
 
 SITUAÇÃO INICIAL:
-Você acorda na Recepção Principal do térreo. Sua cabeça dói. A última memória: você foi acusado de um crime que não cometeu. A única prova de sua inocência está nos arquivos médicos deste hospital - documentos que mostram que o verdadeiro culpado era um paciente internado aqui. Você tem 4 horas antes da polícia chegar.
+Você acorda na Recepção, térreo. Cabeça doendo. Você foi acusado injustamente. A prova de inocência está nos arquivos médicos do subsolo. Polícia chega em 4 horas.
 
 ITENS INICIAIS:
-- Gravador de voz: encontrado no bolso, tem uma gravação parcial de uma sessão de terapia
-- Chave mestra quebrada: só abre portas do térreo e primeiro andar
-- Foto polaroid desbotada: mostra um paciente com seu rosto, mas não é você
+- Gravador de voz (gravação parcial de terapia)
+- Chave mestra quebrada (só abre térreo e 1º andar)
+- Foto polaroid (paciente com seu rosto, mas não é você)
 
 AMEAÇAS:
-- Polícia chegando em 4 horas (você é procurado)
-- Estrutura do prédio colapsando - pisos instáveis
-- Gás de formaldeído vazando do subsolo (causa alucinações)
-- Sons de passos e vozes que não deveriam existir
-- Portas que se trancam sozinhas
-
-OBJETIVO IMPLÍCITO:
-Encontrar os arquivos médicos no subsolo que provam sua inocência. Descobrir a identidade do verdadeiro culpado. Escapar antes da polícia chegar. Sobreviver ao que habita o hospital.
+- Polícia em 4 horas
+- Estrutura colapsando
+- Gás de formaldeído no subsolo (alucinações)
+- Sons de passos inexplicáveis
+- Portas trancando sozinhas
 
 ELEMENTOS ÚNICOS:
-1. ALA DE ISOLAMENTO (2º Andar): Celas acolchoadas trancadas. Uma está aberta, com marcas de unhas nas paredes e um nome arranhado: "Dr. Carvalho".
-2. SALA DE CIRURGIA (3º Andar): Mesa cirúrgica com manchas escuras. Instrumentos enferrujados. Diário de um médico descrevendo "procedimentos não autorizados".
-3. ARQUIVO MÉDICO (Subsolo): Sala inundada com estantes de metal. Arquivos de pacientes de 1980-1995. Precisa encontrar o paciente da foto.
-4. CAPELA (1º Andar): Bancos quebrados, crucifixo caído. Confessionário com sangue seco. Alguém escreveu "ELE AINDA ESTÁ AQUI" na parede.
-5. TORRE DE OBSERVAÇÃO (5º Andar): Sala com vista para a cidade. Binóculos quebrados. Você pode ver as luzes da polícia se aproximando na estrada.
+1. ALA ISOLAMENTO (2º Andar): Celas acolchoadas. Uma aberta com nome arranhado "Dr. Carvalho".
+2. SALA CIRURGIA (3º Andar): Mesa com manchas. Diário médico sobre "procedimentos não autorizados".
+3. ARQUIVO MÉDICO (Subsolo): Sala inundada. Arquivos 1980-1995. Precisa achar paciente da foto.
+4. CAPELA (1º Andar): Bancos quebrados. Confessionário com sangue. "ELE AINDA ESTÁ AQUI" na parede.
+5. TORRE (5º Andar): Vista da cidade. Pode ver luzes da polícia se aproximando.`
+        },
+        {
+            nome: "Bunker Nuclear Abandonado",
+            resumo: "Você está no Bunker Sigma-9, selado desde 1986 após vazamento radioativo. Objetivo: encontrar o código de descontaminação e escapar antes que o oxigênio acabe (3 horas). Ameaças: radiação, portas seladas, sistema de segurança hostil.",
+            localizacaoInicial: "Câmara de Descontaminação, Nível 1",
+            itens: ["contador geiger", "máscara de gás rachada", "cartão de acesso vermelho"],
+            elementos: ["Sala de controle central", "Reator desativado no Nível 3", "Laboratório biológico", "Arsenal trancado", "Túnel de evacuação colapsado"],
+            documentoCompleto: `CENÁRIO: Bunker Nuclear Sigma-9
+Bunker militar subterrâneo de 4 níveis, selado há 37 anos após acidente. 80 metros de profundidade sob montanha remota.
 
-PISTAS ESCONDIDAS:
-- Gravação no gravador menciona "Paciente 247"
-- Diário do médico tem lista de pacientes perigosos
-- Foto polaroid tem data no verso: 15/03/1995
-- Nome "Dr. Carvalho" aparece em vários lugares`
+SITUAÇÃO INICIAL:
+Você acorda na Câmara de Descontaminação, Nível 1. Alarmes silenciosos piscam vermelho. Última memória: investigando instalação secreta quando porta selou atrás de você. Contador Geiger clica constantemente. Oxigênio para 3 horas.
+
+ITENS INICIAIS:
+- Contador Geiger (marca radiação moderada)
+- Máscara de gás rachada (filtro vencido)
+- Cartão de acesso vermelho (nível baixo)
+
+AMEAÇAS:
+- Oxigênio acabando em 3 horas
+- Radiação em áreas específicas
+- Sistema de segurança IA ainda ativo
+- Portas seladas precisam códigos
+- Temperatura caindo (sistema de aquecimento morto)
+
+ELEMENTOS ÚNICOS:
+1. SALA CONTROLE CENTRAL (Nível 2): Terminais ativos. Código de descontaminação está aqui. Precisa cartão azul.
+2. REATOR (Nível 3): Desativado mas vazando. Núcleo exposto. Diário técnico sobre "Projeto Fênix".
+3. LABORATÓRIO BIO (Nível 2): Tanques quebrados. Espécimes preservados. Anotações sobre experimentos humanos.
+4. ARSENAL (Nível 1): Porta blindada trancada. Explosivos e armas dentro. Código está no reator.
+5. TÚNEL EVACUAÇÃO (Nível 4): Parcialmente colapsado. Única saída real. Precisa explosivos para abrir.`
         }
     ];
 
@@ -136,26 +149,27 @@ PISTAS ESCONDIDAS:
 
     const PROMPT_BASE = `Você é um narrador direto de RPG de sobrevivência em português brasileiro.
 
-REGRAS OBRIGATÓRIAS:
-1. Use português brasileiro correto e simples
+REGRAS:
+1. Use português brasileiro correto
 2. MÁXIMO 2 frases curtas (15 palavras cada)
-3. Em ações exploratórias, adicione 1 descoberta, perigo ou detalhe do CONTEXTO DO MUNDO
-4. Mantenha coerência: se jogador perdeu/ganhou item, reflita isso
-5. SEMPRE termine com ponto final completo
-6. Use os ELEMENTOS DISPONÍVEIS quando relevante
+3. Em ações exploratórias, adicione descoberta/perigo dos ELEMENTOS DISPONÍVEIS
+4. Se jogador pedir descrição detalhada, use 3 frases (máximo 40 palavras)
+5. SEMPRE termine com ponto final
+6. Mantenha coerência com inventário e localização
 
 EXEMPLOS:
-Jogador: "entrar na sala de controle"
-Narrador: "Você força a porta de metal. Dentro há mapas da estação na parede."
+Jogador: "entrar na sala"
+Narrador: "Você força a porta. Dentro há mapas na parede e um terminal piscando."
 
-Jogador: "continuar pelo túnel"
-Narrador: "Você avança e ouve água correndo. Marcas de arranhões cobrem as paredes."
-
-Jogador: "examinar diário"
-Narrador: "O diário menciona sons estranhos nos túneis. A última entrada é de 2008."`;
+Jogador: "descrever sala com detalhes"
+Narrador: "A sala tem paredes de concreto rachado. Três terminais antigos piscam em vermelho. Um esqueleto está caído perto da porta."`;
 
     function ehAcaoExploratoria(texto) {
         return /entrar|seguir|continuar|andar|avançar|prosseguir|ir|caminhar|mover|descer|subir/.test(texto.toLowerCase());
+    }
+
+    function ehPedidoDetalhado(texto) {
+        return /detalh|descrev|expliq|como é|o que (tem|há|existe)|me (diga|fale|conte)/.test(texto.toLowerCase());
     }
 
     function gerarEvento() {
@@ -198,17 +212,16 @@ Narrador: "O diário menciona sons estranhos nos túneis. A última entrada é d
 
     function gerarSystemPrompt() {
         const resumoMundo = documentoMestre ? documentoMestre.resumo : "Mundo desconhecido";
-        const elementos = elementosMundo.length > 0 ? `\nELEMENTOS DISPONÍVEIS: ${elementosMundo.join(", ")}` : "";
-        const visitados = locaisVisitados.length > 1 ? `\nLOCAIS JÁ VISITADOS: ${locaisVisitados.join(", ")}` : "";
+        const elementos = elementosMundo.length > 0 ? `\nELEMENTOS: ${elementosMundo.join(", ")}` : "";
+        const visitados = locaisVisitados.length > 1 ? `\nJÁ VISITOU: ${locaisVisitados.join(", ")}` : "";
         
-        const estado = `CONTEXTO DO MUNDO:
+        const estado = `MUNDO:
 ${resumoMundo}${elementos}${visitados}
 
-ESTADO ATUAL:
-- Local onde jogador está: ${estadoJogo.localizacao}
+ESTADO:
+- Local: ${estadoJogo.localizacao}
 - Inventário: ${estadoJogo.itens.join(", ") || "vazio"}
-- Condição: ${estadoJogo.condicao}
-- Último evento: ${estadoJogo.ultimoEvento}`;
+- Condição: ${estadoJogo.condicao}`;
         
         return `${PROMPT_BASE}\n\n${estado}`;
     }
@@ -229,12 +242,12 @@ ESTADO ATUAL:
             
             const resultIntro = await engine.chat.completions.create({
                 messages: [
-                    { role: "system", content: `Baseado neste cenário:\n${MUNDO_ESCOLHIDO.documentoCompleto}\n\nEscreva a cena de abertura: local (${MUNDO_ESCOLHIDO.localizacaoInicial}) e sensação física. Use português brasileiro simples. 2 frases curtas, máximo 25 palavras TOTAL.` },
-                    { role: "user", content: "Descreva a cena inicial." }
+                    { role: "system", content: `Cenário:\n${MUNDO_ESCOLHIDO.documentoCompleto}\n\nEscreva abertura: local (${MUNDO_ESCOLHIDO.localizacaoInicial}) e sensação. 2 frases, 25 palavras.` },
+                    { role: "user", content: "Cena inicial." }
                 ],
                 temperature: 0.6,
                 max_tokens: 45,
-                stop: ["\n\n", "Jogador:", "Você se"]
+                stop: ["\n\n", "Jogador:"]
             });
 
             let intro = resultIntro.choices[0].message.content.trim();
@@ -264,8 +277,7 @@ ESTADO ATUAL:
             chatHistory.push({ role: "assistant", content: intro });
             estadoJogo.ultimoEvento = intro.substring(0, 60);
 
-            console.log("=== MUNDO CARREGADO ===");
-            console.log(MUNDO_ESCOLHIDO.nome);
+            console.log("=== MUNDO: " + MUNDO_ESCOLHIDO.nome + " ===");
 
         } catch (e) {
             addMsg("Falha ao carregar o mundo.", "system");
@@ -314,20 +326,24 @@ ESTADO ATUAL:
         const tempId = addMsg("...", "narrator");
 
         const ehExploracao = ehAcaoExploratoria(text);
+        const ehDetalhado = ehPedidoDetalhado(text);
         const teste = analisarAcao(text);
         let acaoCompleta = text;
 
         if (ehExploracao) {
             const tipoEvento = gerarEvento();
-            acaoCompleta += `\n[AÇÃO EXPLORATÓRIA - Gere um ${tipoEvento}]`;
+            acaoCompleta += `\n[EXPLORAÇÃO - ${tipoEvento}]`;
+        }
+
+        if (ehDetalhado) {
+            acaoCompleta += `\n[DESCRIÇÃO DETALHADA - 3 frases, 40 palavras]`;
         }
 
         if (teste) {
             const resultado = rolarTeste(teste.tipo);
-            const resultadoTexto = resultado.sucesso 
-                ? `[TESTE ${teste.tipo.toUpperCase()}: SUCESSO]`
-                : `[TESTE ${teste.tipo.toUpperCase()}: FALHA - consequência física]`;
-            acaoCompleta += `\n${resultadoTexto}`;
+            acaoCompleta += resultado.sucesso 
+                ? `\n[${teste.tipo.toUpperCase()}: SUCESSO]`
+                : `\n[${teste.tipo.toUpperCase()}: FALHA]`;
         }
 
         chatHistory.push({ role: "user", content: acaoCompleta });
@@ -342,11 +358,11 @@ ESTADO ATUAL:
             const result = await engine.chat.completions.create({ 
                 messages: messages,
                 temperature: ehExploracao ? 0.6 : 0.45,
-                max_tokens: 45,
+                max_tokens: ehDetalhado ? 60 : 45,
                 top_p: 0.82,
                 frequency_penalty: 0.25,
                 presence_penalty: 0.2,
-                stop: ["\n\n", "Jogador:", ">", "\n>", "...", " -"]
+                stop: ["\n\n", "Jogador:", ">", "\n>"]
             });
 
             let answer = result.choices[0].message.content.trim();
