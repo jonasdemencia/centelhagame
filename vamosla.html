@@ -124,30 +124,34 @@
         chatHistory.push({ role: "user", content: conteudoUsuario });
         input.value = "";
 
-        // O PROMPT DO NARRADOR IMPLACÁVEL
-        const dynamicSystemPrompt = `Você é o motor narrativo de um RPG de sobrevivência letal e realista. Você não é um assistente, é um mundo implacável.
+        // O PROMPT TELEGRÁFICO E LETAL
+        const dynamicSystemPrompt = `Você é um motor de RPG de texto cru e impiedoso. 
 
-DIRETRIZES ABSOLUTAS:
-1. ATMOSFERA CRUA: Descreva apenas o que é VISTO, OUVIDO, TOCADO ou CHEIRADO. Foque em texturas ásperas, cheiro de ferrugem, escuridão e sons abafados. 
-2. PROIBIDO ADJETIVOS DE EMOÇÃO: Nunca use palavras como "assustador", "misterioso", "terrível" ou "estranho". Deixe a situação falar por si.
-3. SEM PIEDADE: O mundo não se importa com o jogador. Se o sistema indicar [FALHA], puna com ferimentos, perda de recursos ou becos sem saída. Não o proteja.
-4. DIRETO AO PONTO: Sem introduções, sem moralismos. 
-5. FORMATO: Responda em no máximo dois parágrafos curtos. Termine sempre com o resultado da ação do jogador, deixando o perigo iminente.`;
+REGRAS DE FORMATAÇÃO (CRÍTICO):
+1. MÁXIMO ABSOLUTO DE 3 FRASES CURTAS.
+2. NUNCA ultrapasse 40 palavras.
+3. Seja telegráfico, seco e direto. 
+
+ESTILO NARRATIVO:
+- Omitir detalhes inúteis. Vá direto à consequência da ação.
+- Foco apenas no físico e tátil: dor, frio, cheiro, som agudo, escuridão.
+- SEM adjetivos poéticos. SEM descrições longas de ambiente.
+- Se houver [FALHA], descreva o ferimento ou perda imediatamente.
+- Encerre a resposta logo após estabelecer a consequência. Ponto final.`;
 
         try {
-            // Contexto enxuto para evitar perda de foco do modelo de 7B
             const messages = [
                 { role: "system", content: dynamicSystemPrompt },
-                ...chatHistory.slice(-8) // Reduzido para focar na memória de curto prazo e economizar RAM
+                ...chatHistory.slice(-6) // Reduzido ainda mais: apenas as últimas 3 interações (ida e volta)
             ];
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: 0.75,         // Ligeiramente maior para criatividade tática, sem perder coesão
-                max_tokens: 140,           // Espaço suficiente para terminar a ideia sem precisar de uma 2ª chamada
-                top_p: 0.85,
-                frequency_penalty: 0.6,    // AUMENTADO drasticamente para matar a repetição de vícios de linguagem
-                presence_penalty: 0.5,     // AUMENTADO para forçar o modelo a avançar a cena e introduzir novos elementos
+                temperature: 0.4,          // ⬇️ DRASTICAMENTE REDUZIDO: Força o modelo a ser direto e previsível, matando a poesia.
+                max_tokens: 70,            // ⬇️ Teto baixo. Garante que o processamento acabe rápido (reduz o tempo de 1.5m para segundos).
+                top_p: 0.8,                // ⬇️ Foco em palavras comuns e diretas.
+                frequency_penalty: 0.2,    // ⬇️ Reduzido. Se for muito alto, ele tenta inventar palavras novas e acaba divagando.
+                presence_penalty: 0.0      // ⬇️ Zerado. Não queremos que ele invente elementos novos (como lanternas ou musgo do nada).
             });
 
             const answer = result.choices[0].message.content.trim();
@@ -186,6 +190,7 @@ div.id = "msg-" + Date.now() + "-" + Math.random();
 
 </body>
 </html>
+
 
 
 
