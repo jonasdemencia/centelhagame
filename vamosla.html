@@ -123,15 +123,41 @@ Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada."`;
             document.getElementById("player-input").disabled = false;
             document.getElementById("btn-enviar").disabled = false;
             
-            const introMsg = "Você acorda com o gosto de ferro na boca. O frio corta sua pele como navalha.";
-            addMsg(introMsg, "narrator");
-            chatHistory.push({ role: "assistant", content: introMsg });
+            gerarIntroducao();
 
         } catch (err) {
             status.innerText = "ERRO CRÍTICO: " + err.message;
             console.error(err);
         }
     }
+
+    async function gerarIntroducao() {
+    const tempId = addMsg("...", "narrator");
+    
+    try {
+        const result = await engine.chat.completions.create({
+            messages: [
+                { role: "system", content: "Você é um narrador de RPG. Descreva em 2 frases onde o jogador acorda e o que sente. Seja criativo: pode ser qualquer bioma. Máximo 30 palavras." }
+            ],
+            temperature: 0.9,
+            max_tokens: 50,
+            top_p: 0.95
+        });
+        
+        const intro = result.choices[0].message.content.trim();
+        document.getElementById(tempId).innerText = intro;
+        chatHistory.push({ role: "assistant", content: intro });
+        
+        // Extrai localização da resposta (simplificado)
+        estadoJogo.localizacao = "local desconhecido";
+        estadoJogo.ultimoEvento = intro.substring(0, 60);
+        
+    } catch (e) {
+        document.getElementById(tempId).innerText = "Você acorda desorientado.";
+        console.error(e);
+    }
+}
+
 
     window.enviarAcao = async () => {
         const input = document.getElementById("player-input");
@@ -226,4 +252,5 @@ Narrador: "A parede é áspera e coberta de limo. Você sente umidade gelada."`;
 
 </body>
 </html>
+
 
