@@ -12,12 +12,9 @@
         .system { color: #6b6b4a; margin-bottom: 10px; font-style: italic; font-size: 0.9em; }
         #progress-bar-container { width: 100%; background: #2a251e; height: 12px; margin-bottom: 10px; display: block; }
         #progress-bar { width: 0%; height: 100%; background: #5c2c2c; transition: width 0.3s; }
-        input { width: 80%; padding: 10px; background: #1a1815; border: 1px solid #3a3228; color: #d1c5b4; outline: none; }
-        button { padding: 10px; cursor: pointer; background: #3a3228; color: #fff; border: none; font-weight: bold; }
-        button:disabled { opacity: 0.3; cursor: not-allowed; }
-        
-        /* Adicionando um indicador visual de local no cabeçalho */
-        #location-header { background: #2a251e; padding: 5px 10px; font-size: 0.8em; margin-bottom: 10px; border: 1px solid #3a3228; color: #d1c5b4; font-weight: bold; text-transform: uppercase;}
+        input { width: 80%; padding: 10px; background: #1a1815; border: 1px solid #3a3228; color: #d1c5b4; }
+        button { padding: 10px; cursor: pointer; background: #3a3228; color: #fff; border: none; }
+        button:disabled { opacity: 0.3; }
     </style>
 </head>
 <body>
@@ -26,12 +23,10 @@
     <div id="status">Iniciando...</div>
     <div id="progress-bar-container"><div id="progress-bar"></div></div>
     
-    <div id="location-header">Local: Desconhecido</div>
-    
     <div id="chat-box"></div>
     
     <div id="controls">
-        <input type="text" id="player-input" placeholder="Sua ação..." autocomplete="off" disabled>
+        <input type="text" id="player-input" placeholder="Sua ação..." disabled>
         <button id="btn-enviar" onclick="enviarAcao()" disabled>AGIR</button>
     </div>
 </div>
@@ -41,83 +36,69 @@
 
     const MY_MODEL_ID = "Qwen2.5-7B-Instruct-q4f16_1-MLC";
 
-    // O Segredo: Substituímos o array "elementos" por um Grafo de Nodos (mapa)
     const MUNDOS = [
+       
         {
             nome: "Hospital Psiquiátrico Abandonado",
-            resumo: "Você está no Hospital Colina Verde, fechado em 1995. Objetivo: achar provas no subsolo (4 horas restantes). Ameaças: estrutura colapsando, gás.",
-            localizacaoInicial: "Recepção Principal",
+            resumo: "Você está no Hospital Colina Verde, fechado em 1995. Objetivo: encontrar arquivos médicos que provam sua inocência antes do amanhecer (4 horas). Ameaças: estrutura colapsando, gás de formaldeído, polícia chegando.",
+            localizacaoInicial: "Recepção Principal, Térreo",
             itens: ["gravador de voz", "chave mestra quebrada", "foto polaroid desbotada"],
-            mapa: {
-                "Recepção Principal": {
-                    detalhes: "Térreo. Balcão apodrecido. Janelas bloqueadas com tábuas. Escadas levam para cima.",
-                    conexoes: ["Capela (1º Andar)", "Corredor Norte"]
-                },
-                "Corredor Norte": {
-                    detalhes: "Corredor escuro no térreo. Há uma porta pesada trancada para o subsolo.",
-                    conexoes: ["Recepção Principal", "Arquivo Médico (Subsolo)"]
-                },
-                "Arquivo Médico (Subsolo)": {
-                    detalhes: "Sala inundada. Cheiro forte de formaldeído. Armários cheios de fichas antigas de 1980 a 1995.",
-                    conexoes: ["Corredor Norte"]
-                },
-                "Capela (1º Andar)": {
-                    detalhes: "Bancos quebrados. Confessionário com sangue seco. Escrito na parede: 'ELE AINDA ESTÁ AQUI'.",
-                    conexoes: ["Recepção Principal", "Ala de Isolamento (2º Andar)"]
-                },
-                "Ala de Isolamento (2º Andar)": {
-                    detalhes: "Celas acolchoadas. Uma está aberta com o nome 'Dr. Carvalho' arranhado na porta.",
-                    conexoes: ["Capela (1º Andar)", "Sala de Cirurgia (3º Andar)"]
-                },
-                "Sala de Cirurgia (3º Andar)": {
-                    detalhes: "Mesa enferrujada com manchas escuras. Um diário médico está jogado no chão. Acesso à torre.",
-                    conexoes: ["Ala de Isolamento (2º Andar)", "Torre (5º Andar)"]
-                },
-                "Torre (5º Andar)": {
-                    detalhes: "Vento uivando pelas janelas quebradas. Vista da cidade com luzes vermelhas e azuis da polícia se aproximando.",
-                    conexoes: ["Sala de Cirurgia (3º Andar)"]
-                }
-            }
+            elementos: ["Ala de isolamento no 2º andar", "Sala de cirurgia no 3º andar", "Arquivo médico no subsolo", "Capela no 1º andar", "Torre de observação no 5º andar"],
+            documentoCompleto: `CENÁRIO: Hospital Psiquiátrico Colina Verde
+Hospital de 5 andares no topo de colina, fechado há 28 anos. Ruína de corredores escuros e gritos nas paredes.
+
+SITUAÇÃO INICIAL:
+Você acorda na Recepção, térreo. Cabeça doendo. Você foi acusado injustamente. A prova de inocência está nos arquivos médicos do subsolo. Polícia chega em 4 horas.
+
+ITENS INICIAIS:
+- Gravador de voz (gravação parcial de terapia)
+- Chave mestra quebrada (só abre térreo e 1º andar)
+- Foto polaroid (paciente com seu rosto, mas não é você)
+
+AMEAÇAS:
+- Polícia em 4 horas
+- Estrutura colapsando
+- Gás de formaldeído no subsolo (alucinações)
+- Sons de passos inexplicáveis
+- Portas trancando sozinhas
+
+ELEMENTOS ÚNICOS:
+1. ALA ISOLAMENTO (2º Andar): Celas acolchoadas. Uma aberta com nome arranhado "Dr. Carvalho".
+2. SALA CIRURGIA (3º Andar): Mesa com manchas. Diário médico sobre "procedimentos não autorizados".
+3. ARQUIVO MÉDICO (Subsolo): Sala inundada. Arquivos 1980-1995. Precisa achar paciente da foto.
+4. CAPELA (1º Andar): Bancos quebrados. Confessionário com sangue. "ELE AINDA ESTÁ AQUI" na parede.
+5. TORRE (5º Andar): Vista da cidade. Pode ver luzes da polícia se aproximando.`
         },
         {
             nome: "Bunker Nuclear Abandonado",
-            resumo: "Bunker militar subterrâneo Sigma-9, selado desde 1986. Oxigênio para 3 horas. Precisa do código de descontaminação para escapar.",
-            localizacaoInicial: "Câmara de Descontaminação (Nível 1)",
+            resumo: "Você está no Bunker Sigma-9, selado desde 1986 após vazamento radioativo. Objetivo: encontrar o código de descontaminação e escapar antes que o oxigênio acabe (3 horas). Ameaças: radiação, portas seladas, sistema de segurança hostil.",
+            localizacaoInicial: "Câmara de Descontaminação, Nível 1",
             itens: ["contador geiger", "máscara de gás rachada", "cartão de acesso vermelho"],
-            mapa: {
-                "Câmara de Descontaminação (Nível 1)": {
-                    detalhes: "Alarmes silenciosos piscam vermelho. Há bloqueios selados, exceto por uma porta de aço pressurizada.",
-                    conexoes: ["Corredor Principal (Nível 1)"]
-                },
-                "Corredor Principal (Nível 1)": {
-                    detalhes: "Amplo corredor metálico. Placas indicam o Arsenal e as Escadas para níveis inferiores.",
-                    conexoes: ["Câmara de Descontaminação (Nível 1)", "Arsenal (Nível 1)", "Poço da Escada Central"]
-                },
-                "Arsenal (Nível 1)": {
-                    detalhes: "Porta blindada pesada. Cofres de armas e explosivos. Um terminal exige o código do reator.",
-                    conexoes: ["Corredor Principal (Nível 1)"]
-                },
-                "Poço da Escada Central": {
-                    detalhes: "Estrutura de metal rangendo no escuro. Permite trânsito entre os níveis principais.",
-                    conexoes: ["Corredor Principal (Nível 1)", "Sala de Controle Central (Nível 2)", "Setor do Reator (Nível 3)"]
-                },
-                "Sala de Controle Central (Nível 2)": {
-                    detalhes: "Terminais ainda ativos emitindo luz verde. O código de descontaminação pode estar nestes computadores.",
-                    conexoes: ["Poço da Escada Central", "Laboratório Biológico (Nível 2)"]
-                },
-                "Laboratório Biológico (Nível 2)": {
-                    detalhes: "Tanques de vidro quebrados. Espécimes preservados e anotações sinistras espalhadas no chão.",
-                    conexoes: ["Sala de Controle Central (Nível 2)"]
-                },
-                "Setor do Reator (Nível 3)": {
-                    detalhes: "Calor opressivo. O núcleo exposto vaza radiação (seu contador Geiger enlouquece aqui).",
-                    conexoes: ["Poço da Escada Central", "Túnel de Evacuação (Nível 4)"]
-                },
-                "Túnel de Evacuação (Nível 4)": {
-                    detalhes: "Parcialmente colapsado. Há escombros bloqueando a saída principal. Talvez explosivos resolvam.",
-                    conexoes: ["Setor do Reator (Nível 3)"]
-                }
-            }
+            elementos: ["Sala de controle central", "Reator desativado no Nível 3", "Laboratório biológico", "Arsenal trancado", "Túnel de evacuação colapsado"],
+            documentoCompleto: `CENÁRIO: Bunker Nuclear Sigma-9
+Bunker militar subterrâneo de 4 níveis, selado há 37 anos após acidente. 80 metros de profundidade sob montanha remota.
+
+SITUAÇÃO INICIAL:
+Você acorda na Câmara de Descontaminação, Nível 1. Alarmes silenciosos piscam vermelho. Última memória: investigando instalação secreta quando porta selou atrás de você. Contador Geiger clica constantemente. Oxigênio para 3 horas.
+
+ITENS INICIAIS:
+- Contador Geiger (marca radiação moderada)
+- Máscara de gás rachada (filtro vencido)
+- Cartão de acesso vermelho (nível baixo)
+
+AMEAÇAS:
+- Oxigênio acabando em 3 horas
+- Radiação em áreas específicas
+- Sistema de segurança IA ainda ativo
+- Portas seladas precisam códigos
+- Temperatura caindo (sistema de aquecimento morto)
+
+ELEMENTOS ÚNICOS:
+1. SALA CONTROLE CENTRAL (Nível 2): Terminais ativos. Código de descontaminação está aqui. Precisa cartão azul.
+2. REATOR (Nível 3): Desativado mas vazando. Núcleo exposto. Diário técnico sobre "Projeto Fênix".
+3. LABORATÓRIO BIO (Nível 2): Tanques quebrados. Espécimes preservados. Anotações sobre experimentos humanos.
+4. ARSENAL (Nível 1): Porta blindada trancada. Explosivos e armas dentro. Código está no reator.
+5. TÚNEL EVACUAÇÃO (Nível 4): Parcialmente colapsado. Única saída real. Precisa explosivos para abrir.`
         }
     ];
 
@@ -126,33 +107,39 @@
     let engine;
     let chatHistory = [];
     let jogador = { habilidade: 10, carisma: 10, sorte: 10 };
+    let documentoMestre = null;
+    let elementosMundo = [];
     let locaisVisitados = [];
     let estadoJogo = {
         localizacao: "",
         itens: [],
-        condicao: "saudável"
+        condicao: "saudável",
+        ultimoEvento: ""
     };
 
-    // Prompt ajustado para navegação rígida baseada em mapa
     const PROMPT_BASE = `Você é um narrador direto de RPG de sobrevivência em português brasileiro.
 
-REGRAS RÍGIDAS:
-1. MÁXIMO 2 frases curtas (15 palavras cada). Exceção: pedidos detalhados (máximo 3 frases, 40 palavras).
-2. NAVEGAÇÃO ESPACIAL: O jogador SÓ PODE navegar para os locais listados em "SAÍDAS DISPONÍVEIS". Não invente salas, corredores ou portas que não estão listados.
-3. Se o jogador pedir para ir para uma das "SAÍDAS DISPONÍVEIS" e for bem sucedido, narre a transição de forma breve e OBRIGATORIAMENTE adicione a seguinte tag exata no final da sua resposta: [IR: Nome da Saída]
-4. Em ações exploratórias, use o texto em "CENÁRIO DO LOCAL ATUAL" para guiar sua resposta.
-5. SEMPRE termine com ponto final.`;
+REGRAS:
+1. Use português brasileiro correto
+2. MÁXIMO 2 frases curtas (15 palavras cada)
+3. Em ações exploratórias, adicione descoberta/perigo dos ELEMENTOS DISPONÍVEIS
+4. Se jogador pedir descrição detalhada, use 3 frases (máximo 40 palavras)
+5. SEMPRE termine com ponto final
+6. Mantenha coerência com inventário e localização
 
-    function atualizarCabecalhoLocal() {
-        document.getElementById("location-header").innerText = `Local: ${estadoJogo.localizacao}`;
-    }
+EXEMPLOS:
+Jogador: "entrar na sala"
+Narrador: "Você força a porta. Dentro há mapas na parede e um terminal piscando."
+
+Jogador: "descrever sala com detalhes"
+Narrador: "A sala tem paredes de concreto rachado. Três terminais antigos piscam em vermelho. Um esqueleto está caído perto da porta."`;
 
     function ehAcaoExploratoria(texto) {
-        return /entrar|seguir|continuar|andar|avançar|prosseguir|ir|caminhar|mover|descer|subir|voltar/.test(texto.toLowerCase());
+        return /entrar|seguir|continuar|andar|avançar|prosseguir|ir|caminhar|mover|descer|subir/.test(texto.toLowerCase());
     }
 
     function ehPedidoDetalhado(texto) {
-        return /detalh|descrev|expliq|como é|o que (tem|há|existe)|me (diga|fale|conte)|olhar ao redor/.test(texto.toLowerCase());
+        return /detalh|descrev|expliq|como é|o que (tem|há|existe)|me (diga|fale|conte)/.test(texto.toLowerCase());
     }
 
     function gerarEvento() {
@@ -164,15 +151,19 @@ REGRAS RÍGIDAS:
 
     function analisarAcao(texto) {
         const textoLower = texto.toLowerCase();
+        
         if (/escalar|saltar|equilibrar|decifrar|hackear|forçar|arrombar|nadar|correr|lutar|pular|subir|descer|esquivar|rolar|atacar/.test(textoLower)) {
             return { tipo: 'habilidade' };
         }
+        
         if (/convencer|persuadir|intimidar|seduzir|negociar|mentir|enganar|subornar|ameaçar/.test(textoLower)) {
             return { tipo: 'carisma' };
         }
+        
         if (/vasculhar|procurar|explorar|investigar|buscar|examinar|revistar|ouvir|farejar|iluminar|ver/.test(textoLower)) {
             return { tipo: 'sorte' };
         }
+        
         return null;
     }
 
@@ -181,50 +172,80 @@ REGRAS RÍGIDAS:
         const atributo = jogador[tipo];
         const dificuldade = 18;
         const resultado = dado + atributo;
-        return { sucesso: resultado >= dificuldade, dado: dado, total: resultado };
+        
+        return {
+            sucesso: resultado >= dificuldade,
+            dado: dado,
+            total: resultado
+        };
     }
 
-    // Injeção de contexto altamente focada e econômica em RAM
     function gerarSystemPrompt() {
-        const localAtual = MUNDO_ESCOLHIDO.mapa[estadoJogo.localizacao];
+        const resumoMundo = documentoMestre ? documentoMestre.resumo : "Mundo desconhecido";
+        const elementos = elementosMundo.length > 0 ? `\nELEMENTOS: ${elementosMundo.join(", ")}` : "";
         const visitados = locaisVisitados.length > 1 ? `\nJÁ VISITOU: ${locaisVisitados.join(", ")}` : "";
         
-        const estado = `MUNDO: ${MUNDO_ESCOLHIDO.resumo}${visitados}
+        const estado = `MUNDO:
+${resumoMundo}${elementos}${visitados}
 
-LOCAL ATUAL: ${estadoJogo.localizacao}
-CENÁRIO DO LOCAL ATUAL: ${localAtual.detalhes}
-SAÍDAS DISPONÍVEIS: ${localAtual.conexoes.join(" | ")}
-
-ESTADO DO JOGADOR:
+ESTADO:
+- Local: ${estadoJogo.localizacao}
 - Inventário: ${estadoJogo.itens.join(", ") || "vazio"}
 - Condição: ${estadoJogo.condicao}`;
         
         return `${PROMPT_BASE}\n\n${estado}`;
     }
 
-    async function iniciarMundo() {
-        addMsg("Preparando o motor narrativo...", "system");
+    async function gerarDocumentoMestre() {
+        addMsg("Preparando o mundo...", "system");
         
         try {
+            documentoMestre = {
+                completo: MUNDO_ESCOLHIDO.documentoCompleto,
+                resumo: MUNDO_ESCOLHIDO.resumo
+            };
+            
             estadoJogo.localizacao = MUNDO_ESCOLHIDO.localizacaoInicial;
             estadoJogo.itens = [...MUNDO_ESCOLHIDO.itens];
+            elementosMundo = [...MUNDO_ESCOLHIDO.elementos];
             locaisVisitados.push(MUNDO_ESCOLHIDO.localizacaoInicial);
-            atualizarCabecalhoLocal();
-            
-            const promptAbertura = `Você está em: ${estadoJogo.localizacao}. Cenário: ${MUNDO_ESCOLHIDO.mapa[estadoJogo.localizacao].detalhes}\nEscreva a abertura despertando neste local. 2 frases curtas, tom sombrio.`;
             
             const resultIntro = await engine.chat.completions.create({
                 messages: [
-                    { role: "system", content: "Você é o narrador do jogo." },
-                    { role: "user", content: promptAbertura }
+                    { role: "system", content: `Cenário:\n${MUNDO_ESCOLHIDO.documentoCompleto}\n\nEscreva abertura: local (${MUNDO_ESCOLHIDO.localizacaoInicial}) e sensação. 2 frases, 25 palavras.` },
+                    { role: "user", content: "Cena inicial." }
                 ],
                 temperature: 0.6,
-                max_tokens: 45
+                max_tokens: 45,
+                stop: ["\n\n", "Jogador:"]
             });
 
             let intro = resultIntro.choices[0].message.content.trim();
+            
+            const frasesCompletas = [];
+            const frasesTemp = intro.split(/[.!?]/);
+
+            for (let i = 0; i < frasesTemp.length - 1; i++) {
+                if (frasesTemp[i].trim().length > 5) {
+                    frasesCompletas.push(frasesTemp[i].trim());
+                }
+            }
+
+            const ultimaFrase = frasesTemp[frasesTemp.length - 1].trim();
+            if (ultimaFrase.length > 10 && !/[.!?]$/.test(intro)) {
+                // Descarta
+            } else if (ultimaFrase.length > 5) {
+                frasesCompletas.push(ultimaFrase);
+            }
+
+            intro = frasesCompletas.join('. ');
+            if (intro && !/[.!?]$/.test(intro)) {
+                intro += '.';
+            }
+
             addMsg(intro, "narrator");
             chatHistory.push({ role: "assistant", content: intro });
+            estadoJogo.ultimoEvento = intro.substring(0, 60);
 
             console.log("=== MUNDO: " + MUNDO_ESCOLHIDO.nome + " ===");
 
@@ -239,7 +260,7 @@ ESTADO DO JOGADOR:
         const pb = document.getElementById("progress-bar");
 
         try {
-            status.innerText = "Carregando IA Local...";
+            status.innerText = "Despertando o Narrador...";
             
             engine = await CreateMLCEngine(MY_MODEL_ID, {
                 initProgressCallback: (report) => {
@@ -249,10 +270,11 @@ ESTADO DO JOGADOR:
             });
 
             document.getElementById("progress-bar-container").style.display = "none";
-            status.innerText = MUNDO_ESCOLHIDO.nome;
+            status.innerText = "Carregando o mundo...";
 
-            await iniciarMundo();
+            await gerarDocumentoMestre();
 
+            status.innerText = "O Pesadelo Começou.";
             document.getElementById("player-input").disabled = false;
             document.getElementById("btn-enviar").disabled = false;
             document.getElementById("player-input").focus();
@@ -278,8 +300,14 @@ ESTADO DO JOGADOR:
         const teste = analisarAcao(text);
         let acaoCompleta = text;
 
-        if (ehExploracao) acaoCompleta += `\n[SISTEMA: Avalie se o jogador quer ir para as SAÍDAS DISPONÍVEIS.]`;
-        if (ehDetalhado) acaoCompleta += `\n[SISTEMA: O jogador quer detalhes. Descreva os arredores e mencione visualmente as SAÍDAS DISPONÍVEIS (3 frases, 40 palavras).]`;
+        if (ehExploracao) {
+            const tipoEvento = gerarEvento();
+            acaoCompleta += `\n[EXPLORAÇÃO - ${tipoEvento}]`;
+        }
+
+        if (ehDetalhado) {
+            acaoCompleta += `\n[DESCRIÇÃO DETALHADA - 3 frases, 40 palavras]`;
+        }
 
         if (teste) {
             const resultado = rolarTeste(teste.tipo);
@@ -294,46 +322,49 @@ ESTADO DO JOGADOR:
         try {
             const messages = [
                 { role: "system", content: gerarSystemPrompt() },
-                ...chatHistory.slice(-10) // Mantendo contexto curto para poupar RAM
+                ...chatHistory.slice(-12)
             ];
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
-                temperature: ehExploracao ? 0.3 : 0.45, // Mais baixo em exploração para forçar obediência ao mapa
-                max_tokens: ehDetalhado ? 65 : 45,
+                temperature: ehExploracao ? 0.6 : 0.45,
+                max_tokens: ehDetalhado ? 60 : 45,
                 top_p: 0.82,
-                frequency_penalty: 0.2,
-                presence_penalty: 0.2
+                frequency_penalty: 0.25,
+                presence_penalty: 0.2,
+                stop: ["\n\n", "Jogador:", ">", "\n>"]
             });
 
             let answer = result.choices[0].message.content.trim();
 
-            // Interceptador de Mapa: Procura pela tag que criamos nas regras
-            const regexMudanca = /\[IR:\s*(.+?)\]/i;
-            const matchTag = answer.match(regexMudanca);
+            const frasesCompletas = [];
+            const frasesTemp = answer.split(/[.!?]/);
 
-            if (matchTag) {
-                let novoLocalTentativa = matchTag[1].trim();
-                // Limpeza básica caso o modelo adicione ponto final dentro do colchete
-                novoLocalTentativa = novoLocalTentativa.replace(/[.!?\]]+$/, '').trim();
-
-                // Verifica se o local exigido realmente existe nas conexões possíveis
-                const localAtualMap = MUNDO_ESCOLHIDO.mapa[estadoJogo.localizacao];
-                if (localAtualMap.conexoes.includes(novoLocalTentativa) || MUNDO_ESCOLHIDO.mapa[novoLocalTentativa]) {
-                    estadoJogo.localizacao = novoLocalTentativa;
-                    if (!locaisVisitados.includes(novoLocalTentativa)) locaisVisitados.push(novoLocalTentativa);
-                    atualizarCabecalhoLocal();
+            for (let i = 0; i < frasesTemp.length - 1; i++) {
+                if (frasesTemp[i].trim().length > 5) {
+                    frasesCompletas.push(frasesTemp[i].trim());
                 }
-                
-                // Remove a tag do texto final que o jogador vai ler
-                answer = answer.replace(regexMudanca, '').trim();
+            }
+
+            const ultimaFrase = frasesTemp[frasesTemp.length - 1].trim();
+            if (ultimaFrase.length > 10 && !/[.!?]$/.test(answer)) {
+                // Descarta
+            } else if (ultimaFrase.length > 5) {
+                frasesCompletas.push(ultimaFrase);
+            }
+
+            answer = frasesCompletas.join('. ');
+            if (answer && !/[.!?]$/.test(answer)) {
+                answer += '.';
             }
 
             document.getElementById(tempId).innerText = answer;
             chatHistory.push({ role: "assistant", content: answer });
+            
+            estadoJogo.ultimoEvento = answer.substring(0, 60);
 
-            if (chatHistory.length > 16) {
-                chatHistory = chatHistory.slice(-16);
+            if (chatHistory.length > 20) {
+                chatHistory = chatHistory.slice(-20);
             }
 
         } catch (e) {
@@ -350,7 +381,7 @@ ESTADO DO JOGADOR:
         const box = document.getElementById("chat-box");
         const div = document.createElement('div');
         div.className = cls;
-        div.id = "msg-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+        div.id = "msg-" + Date.now() + "-" + Math.random();
         div.innerText = (cls === 'player' ? "> " : "") + txt;
         box.appendChild(div);
         box.scrollTop = box.scrollHeight;
@@ -370,3 +401,4 @@ ESTADO DO JOGADOR:
 
 </body>
 </html>
+
