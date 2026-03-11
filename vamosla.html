@@ -329,13 +329,13 @@ ESTADO:
         try {
             const messages = [
                 { role: "system", content: gerarSystemPrompt() },
-                ...chatHistory.slice(-12)
+                ...chatHistory.slice(-8)
             ];
 
             const result = await engine.chat.completions.create({ 
                 messages: messages,
                 temperature: ehExploracao ? 0.6 : 0.45,
-                max_tokens: ehDetalhado ? 60 : 45,
+                max_tokens: ehDetalhado ? 80 : 65,
                 top_p: 0.82,
                 frequency_penalty: 0.25,
                 presence_penalty: 0.2,
@@ -429,3 +429,4 @@ ESTADO:
 
 </body>
 </html>
+
