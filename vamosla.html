@@ -126,7 +126,12 @@ REGRAS:
 4. Se jogador pedir descrição detalhada, use 3 frases (máximo 40 palavras)
 5. SEMPRE termine com ponto final
 6. Mantenha coerência com inventário e localização
+7. REGRA DE MOVIMENTO: Se a ação do jogador resultar em uma mudança de ambiente, OBRIGATORIAMENTE inicie sua resposta com a tag [LOCAL: Nome do Novo Local].
 
+EXEMPLOS:
+Jogador: "entrar na sala de cirurgia"
+Narrador: "[LOCAL: Sala de Cirurgia] Você força a porta. Dentro há mapas na parede e uma mesa manchada."
+    
 EXEMPLOS:
 Jogador: "entrar na sala"
 Narrador: "Você força a porta. Dentro há mapas na parede e um terminal piscando."
@@ -337,6 +342,22 @@ ESTADO:
 
             let answer = result.choices[0].message.content.trim();
 
+// --- INJEÇÃO: RASTREADOR ESPACIAL ---
+            const matchLocal = answer.match(/^\[LOCAL:\s*(.+?)\]/i);
+            if (matchLocal) {
+                // Atualiza o estado do jogo com o novo local
+                estadoJogo.localizacao = matchLocal[1].trim();
+                
+                // Registra nos locais visitados, se for novo
+                if (!locaisVisitados.includes(estadoJogo.localizacao)) {
+                    locaisVisitados.push(estadoJogo.localizacao);
+                }
+                
+                // Remove a tag da resposta para o jogador não ver
+                answer = answer.replace(/^\[LOCAL:\s*(.+?)\]\s*/i, '').trim();
+            }
+            // ------------------------------------
+            
             const frasesCompletas = [];
             const frasesTemp = answer.split(/[.!?]/);
 
@@ -401,4 +422,5 @@ ESTADO:
 
 </body>
 </html>
+
 
