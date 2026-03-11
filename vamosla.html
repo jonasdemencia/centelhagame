@@ -6,6 +6,7 @@
     <style>
         body { background: #1a1a14; color: #b5a68b; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         #game-container { width: 90%; max-width: 650px; background: #141311; padding: 20px; border: 4px solid #3a3228; box-shadow: 6px 6px 0px #000; }
+        #local-atual { color: #ffaa00; margin-bottom: 8px; font-size: 14px; border-bottom: 1px solid #3a3228; padding-bottom: 4px; }
         #chat-box { height: 300px; overflow-y: auto; border: 2px inset #2a251e; padding: 15px; background: #0d0c0a; margin-bottom: 15px; }
         .narrator { color: #a13d3d; margin-bottom: 10px; }
         .player { color: #7a8c66; margin-bottom: 10px; }
@@ -23,6 +24,10 @@
     <div id="status">Iniciando...</div>
     <div id="progress-bar-container"><div id="progress-bar"></div></div>
     
+    <div id="local-atual">
+        📍 Local: <span id="local-span">Carregando...</span>
+    </div>
+    
     <div id="chat-box"></div>
     
     <div id="controls">
@@ -34,7 +39,7 @@
 <script type="module">
     import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
-    const MY_MODEL_ID = "Qwen2.5-7B-Instruct-q4f16_1-MLC";
+    const MY_MODEL_ID = "Qwen2.5-7B-Instruct-q4f16_1-MLC"; // ou "Llama-3.1-8B-Instruct-q4f16_1-MLC"
 
     const MUNDOS = [
        
@@ -119,25 +124,21 @@ ELEMENTOS ÚNICOS:
 
     const PROMPT_BASE = `Você é um narrador direto de RPG de sobrevivência em português brasileiro.
 
-REGRAS:
-1. Use português brasileiro correto
-2. MÁXIMO 2 frases curtas (15 palavras cada)
-3. Em ações exploratórias, adicione descoberta/perigo dos ELEMENTOS DISPONÍVEIS
-4. Se jogador pedir descrição detalhada, use 3 frases (máximo 40 palavras)
-5. SEMPRE termine com ponto final
-6. Mantenha coerência com inventário e localização
-7. REGRA DE MOVIMENTO: Se a ação do jogador resultar em uma mudança de ambiente, OBRIGATORIAMENTE inicie sua resposta com a tag [LOCAL: Nome do Novo Local].
+REGRAS ABSOLUTAS:
+1. Use português brasileiro correto.
+2. Máximo 2 frases curtas (até 15 palavras cada), a menos que o jogador peça descrição detalhada (aí pode usar 3 frases, máximo 40 palavras).
+3. Sempre termine com ponto final.
+4. Mantenha coerência com inventário e localização atual.
+5. **REGRA DE MOVIMENTO: SE a ação do jogador resultar em MUDANÇA DE LOCAL, você DEVE iniciar sua resposta com a tag exata [LOCAL: Nome do Novo Local].**  
+   - Exemplo: se o jogador diz "entrar na sala de cirurgia", e isso muda o local, sua resposta deve começar com "[LOCAL: Sala de Cirurgia]".
+   - Se a ação NÃO muda de local, NÃO use a tag.
 
 EXEMPLOS:
 Jogador: "entrar na sala de cirurgia"
-Narrador: "[LOCAL: Sala de Cirurgia] Você força a porta. Dentro há mapas na parede e uma mesa manchada."
-    
-EXEMPLOS:
-Jogador: "entrar na sala"
-Narrador: "Você força a porta. Dentro há mapas na parede e um terminal piscando."
+Narrador: "[LOCAL: Sala de Cirurgia] Você empurra a porta enferrujada. O cheiro de podridão é forte."
 
-Jogador: "descrever sala com detalhes"
-Narrador: "A sala tem paredes de concreto rachado. Três terminais antigos piscam em vermelho. Um esqueleto está caído perto da porta."`;
+Jogador: "examinar a mesa"
+Narrador: "A mesa está manchada de sangue seco. Instrumentos cirúrgicos estão espalhados."`;
 
     function ehAcaoExploratoria(texto) {
         return /entrar|seguir|continuar|andar|avançar|prosseguir|ir|caminhar|mover|descer|subir/.test(texto.toLowerCase());
@@ -211,6 +212,7 @@ ESTADO:
             };
             
             estadoJogo.localizacao = MUNDO_ESCOLHIDO.localizacaoInicial;
+            document.getElementById('local-span').innerText = estadoJogo.localizacao; // Atualiza na tela
             estadoJogo.itens = [...MUNDO_ESCOLHIDO.itens];
             elementosMundo = [...MUNDO_ESCOLHIDO.elementos];
             locaisVisitados.push(MUNDO_ESCOLHIDO.localizacaoInicial);
@@ -341,12 +343,16 @@ ESTADO:
             });
 
             let answer = result.choices[0].message.content.trim();
+            
+            console.log("🔍 Resposta BRUTA do modelo:", answer); // LOG
 
-// --- INJEÇÃO: RASTREADOR ESPACIAL ---
+            // --- INJEÇÃO: RASTREADOR ESPACIAL ---
             const matchLocal = answer.match(/^\[LOCAL:\s*(.+?)\]/i);
             if (matchLocal) {
+                console.log("✅ TAG LOCAL detectada:", matchLocal[1]); // LOG
                 // Atualiza o estado do jogo com o novo local
                 estadoJogo.localizacao = matchLocal[1].trim();
+                document.getElementById('local-span').innerText = estadoJogo.localizacao; // Atualiza na tela
                 
                 // Registra nos locais visitados, se for novo
                 if (!locaisVisitados.includes(estadoJogo.localizacao)) {
@@ -355,6 +361,7 @@ ESTADO:
                 
                 // Remove a tag da resposta para o jogador não ver
                 answer = answer.replace(/^\[LOCAL:\s*(.+?)\]\s*/i, '').trim();
+                console.log("🧹 Resposta LIMPA (sem tag):", answer); // LOG
             }
             // ------------------------------------
             
@@ -422,5 +429,3 @@ ESTADO:
 
 </body>
 </html>
-
-
