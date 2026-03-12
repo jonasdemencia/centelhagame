@@ -51,7 +51,7 @@
     let engine;
     let salaAtual = null;
     let inventario = [];
-    let aguardandoModelo = false; // para evitar múltiplas chamadas simultâneas
+    let aguardandoModelo = false;
 
     // ------------------------------------------------------------
     // Classe Sala
@@ -62,10 +62,10 @@
             this.nome = nome;
             this.descricao = descricao;
             this.itens = [];
-            this.estado = {};               // flags: porta_trancada, etc.
-            this.saidas = {};                // mapa direcao -> id da sala (ex: {"norte": "sala_2"})
-            this.descricoesItens = {};        // cache de descrições para itens examinados
-            this.ultimasAcoes = [];           // últimas 5 ações (para contexto do modelo)
+            this.estado = {};
+            this.saidas = {};
+            this.descricoesItens = {};
+            this.ultimasAcoes = [];
             this.criadoEm = Date.now();
             this.modificadoEm = Date.now();
         }
@@ -140,14 +140,11 @@
     // ------------------------------------------------------------
     function interpretarComando(texto) {
         texto = texto.toLowerCase().trim();
-        // Remove artigos e preposições simples para facilitar
         const palavras = texto.split(/\s+/);
         
-        // Tenta identificar verbo e objeto
         let verbo = palavras[0];
         let objeto = palavras.slice(1).join(' ');
         
-        // Mapeia sinônimos
         const verbos = {
             'ir': 'movimento',
             'vou': 'movimento',
@@ -172,168 +169,149 @@
             'ver': 'examinar',
             'inspecionar': 'examinar',
             'abrir': 'abrir',
-            'fechar': 'fechar',
-            'acender': 'acender',
-            'apagar': 'apagar'
+            'fechar': 'fechar'
         };
 
-        // Se a primeira palavra for uma direção simples
         if (['norte', 'sul', 'leste', 'oeste', 'nordeste', 'noroeste', 'sudeste', 'sudoeste'].includes(verbo)) {
             return { tipo: 'movimento', direcao: verbo };
         }
 
-        // Se começar com "ir para" ou "ir"
         if (verbo === 'ir' && palavras.length >= 2) {
-            const direcao = palavras[palavras.length - 1]; // pega a última palavra como direção
+            const direcao = palavras[palavras.length - 1];
             return { tipo: 'movimento', direcao: direcao };
         }
 
-        // Se for "entrar em [direcao]" ou "entrar [direcao]"
         if (verbo === 'entrar') {
             const direcao = palavras[palavras.length - 1];
             return { tipo: 'movimento', direcao: direcao };
         }
 
-        // Comando com verbo mapeado
         if (verbos[verbo]) {
             return { tipo: verbos[verbo], objeto: objeto };
         }
 
-        // Se não reconheceu, trata como ação livre (chama modelo)
         return { tipo: 'desconhecido', original: texto };
     }
 
     // ------------------------------------------------------------
-    // Regras para ações comuns (instantâneas)
+    // Regras para ações comuns
     // ------------------------------------------------------------
 
     // Movimento
-    function processarMovimento(direcao) {
+    async function processarMovimento(direcao) {
         direcao = direcao.toLowerCase();
         const saidas = salaAtual.saidas;
         if (!saidas[direcao]) {
-            return "Não há passagem nessa direção.";
+            return { tipo: 'erro', mensagem: "Não há passagem nessa direção." };
         }
         const idDestino = saidas[direcao];
-        // Salva sala atual antes de sair
         salvarSala(salaAtual);
         
         let novaSala = carregarSala(idDestino);
         if (!novaSala) {
-            // Sala ainda não existe: vamos gerar com modelo (chamada assíncrona)
-            // Mas como estamos em uma função síncrona, precisamos retornar um indicador
-            // e lidar fora. Vamos lançar uma exceção ou retornar um objeto especial?
-            // Melhor: em movimento, se a sala não existir, chamamos o modelo e depois atualizamos.
-            // Para simplificar, vamos fazer a chamada ao modelo de forma assíncrona,
-            // mas o processo de enviarAcao já é async. Então podemos retornar uma promessa.
-            // Porém, como essa função é chamada dentro de enviarAcao, podemos torná-la async.
-            // Vamos ajustar: todas as funções de regra serão async e podem chamar o modelo se necessário.
-            // Mas para movimento, se a sala não existir, queremos gerar a sala e depois exibir.
-            // Vamos fazer: se não existir, chamamos gerarNovaSala(idDestino, direcao) e depois fazemos a transição.
-            // Retornamos null para indicar que a transição será tratada separadamente.
             return { tipo: 'gerar_sala', idDestino, direcao };
         }
-        // Sala existe
         salaAtual = novaSala;
         atualizarDisplayLocal();
-        // Exibe descrição da nova sala (se tiver) ou mensagem de entrada
-        if (salaAtual.descricao) {
-            return salaAtual.descricao;
-        } else {
-            return `Você entra em ${salaAtual.nome}.`;
-        }
+        return { tipo: 'sucesso', mensagem: salaAtual.descricao || `Você entra em ${salaAtual.nome}.` };
     }
 
     // Pegar item
     function processarPegar(objeto) {
-        if (!objeto) return "Pegar o quê?";
-        // Procura o item na sala (case insensitive, correspondência parcial)
+        if (!objeto) return { tipo: 'erro', mensagem: "Pegar o quê?" };
         const item = salaAtual.itens.find(i => i.toLowerCase().includes(objeto.toLowerCase()));
-        if (!item) return "Não há isso aqui.";
-        // Remove da sala e adiciona ao inventário
+        if (!item) return { tipo: 'erro', mensagem: "Não há isso aqui." };
         salaAtual.itens = salaAtual.itens.filter(i => i !== item);
         inventario.push(item);
         salvarSala(salaAtual);
         salvarInventario();
-        return `Você pegou ${item}.`;
+        return { tipo: 'sucesso', mensagem: `Você pegou ${item}.` };
     }
 
     // Largar item
     function processarLargar(objeto) {
-        if (!objeto) return "Largar o quê?";
+        if (!objeto) return { tipo: 'erro', mensagem: "Largar o quê?" };
         const item = inventario.find(i => i.toLowerCase().includes(objeto.toLowerCase()));
-        if (!item) return "Você não tem isso.";
+        if (!item) return { tipo: 'erro', mensagem: "Você não tem isso." };
         inventario = inventario.filter(i => i !== item);
         salaAtual.itens.push(item);
         salvarSala(salaAtual);
         salvarInventario();
-        return `Você largou ${item}.`;
+        return { tipo: 'sucesso', mensagem: `Você largou ${item}.` };
     }
 
-    // Usar item em algo (simples, apenas para ações predefinidas)
+    // Usar item (básico)
     function processarUsar(objeto) {
-        // Exemplo: "usar chave" – se houver uma porta trancada, destranca
-        // Formato: "usar [item] em [alvo]" ou "usar [item]"
-        // Vamos fazer uma versão simples: se a sala tem estado "porta_trancada" e o jogador tem "chave", destranca.
-        // Podemos expandir depois.
-        if (!objeto) return "Usar o quê?";
+        if (!objeto) return { tipo: 'erro', mensagem: "Usar o quê?" };
         const partes = objeto.split(/\s+em\s+/);
         const itemNome = partes[0].trim();
         const alvo = partes.length > 1 ? partes[1].trim() : null;
 
         const item = inventario.find(i => i.toLowerCase().includes(itemNome.toLowerCase()));
-        if (!item) return "Você não tem isso.";
+        if (!item) return { tipo: 'erro', mensagem: "Você não tem isso." };
 
-        // Regras específicas
         if (item.toLowerCase().includes('chave') && salaAtual.estado.porta_trancada) {
             salaAtual.estado.porta_trancada = false;
             salvarSala(salaAtual);
-            return "Você usou a chave e destrancou a porta.";
+            return { tipo: 'sucesso', mensagem: "Você usou a chave e destrancou a porta." };
         }
-        // Se não houver regra, chama o modelo
-        return { tipo: 'acao_complexa', descricao: `usar ${item}${alvo ? ' em ' + alvo : ''}` };
+        // Se não houver regra, chama modelo
+        return { tipo: 'complexa', descricao: `usar ${item}${alvo ? ' em ' + alvo : ''}` };
     }
 
-    // Examinar item ou ambiente
+    // Examinar
     function processarExaminar(objeto) {
         if (!objeto) {
-            // Examina a sala
-            return salaAtual.descricao || "Você olha ao redor, mas não vê nada especial.";
+            return { tipo: 'sucesso', mensagem: salaAtual.descricao || "Você olha ao redor, mas não vê nada especial." };
         }
-        // Examina um item da sala ou inventário
         const itemSala = salaAtual.itens.find(i => i.toLowerCase().includes(objeto.toLowerCase()));
         const itemInv = inventario.find(i => i.toLowerCase().includes(objeto.toLowerCase()));
         const item = itemSala || itemInv;
-        if (!item) return "Não há isso para examinar.";
-        // Verifica se há descrição cacheada
+        if (!item) return { tipo: 'erro', mensagem: "Não há isso para examinar." };
         if (salaAtual.descricoesItens[item]) {
-            return salaAtual.descricoesItens[item];
+            return { tipo: 'sucesso', mensagem: salaAtual.descricoesItens[item] };
         } else {
-            // Se não tiver, chama modelo para gerar descrição (e armazenar)
             return { tipo: 'descrever_item', item };
         }
     }
 
-    // Abrir (porta, gaveta, etc.) – exemplo simples
+    // Abrir (exemplo)
     function processarAbrir(objeto) {
-        if (!objeto) return "Abrir o quê?";
+        if (!objeto) return { tipo: 'erro', mensagem: "Abrir o quê?" };
         if (objeto.includes('porta')) {
-            if (salaAtual.estado.porta_trancada) return "A porta está trancada.";
-            // Se não há flag, assume que está aberta?
-            return "A porta já está aberta.";
+            if (salaAtual.estado.porta_trancada) return { tipo: 'erro', mensagem: "A porta está trancada." };
+            return { tipo: 'sucesso', mensagem: "A porta já está aberta." };
         }
-        return { tipo: 'acao_complexa', descricao: `abrir ${objeto}` };
+        return { tipo: 'complexa', descricao: `abrir ${objeto}` };
     }
 
     function processarFechar(objeto) {
-        return { tipo: 'acao_complexa', descricao: `fechar ${objeto}` };
+        return { tipo: 'complexa', descricao: `fechar ${objeto}` };
     }
 
     // ------------------------------------------------------------
     // Funções que chamam o modelo
     // ------------------------------------------------------------
 
-    // Gera uma nova sala (quando o jogador entra em local inexplorado)
+    async function gerarRespostaModelo(messages, maxTokens = 150, temperatura = 0.7) {
+        try {
+            const result = await engine.chat.completions.create({
+                messages,
+                temperature: temperatura,
+                max_tokens: maxTokens,
+                top_p: 0.9,
+                frequency_penalty: 0.2,
+                presence_penalty: 0.2,
+                stop: ["\n\n", "Jogador:", ">"]
+            });
+            return result.choices[0].message.content.trim();
+        } catch (e) {
+            console.error("Erro no modelo:", e);
+            return null;
+        }
+    }
+
+    // Gera uma nova sala
     async function gerarNovaSala(idSala, direcao) {
         addMsg("O narrador descreve um novo local...", "system");
         const prompt = `Com base na direção ${direcao} a partir de ${salaAtual.nome} (${salaAtual.descricao}), crie uma nova sala de um cenário de sobrevivência realista e sombrio. Forneça:
@@ -342,40 +320,48 @@
 - Itens presentes (lista separada por vírgula, se houver)
 - Estado inicial (ex: porta_trancada=true, perigo=desabamento, etc.) no formato chave=valor, separado por vírgula
 - Saídas possíveis (mapeamento direção -> nome da sala de destino, ex: norte: "Salão Principal", leste: "Corredor Escuro")
-Responda em JSON puro, sem comentários adicionais. Exemplo:
+
+Responda em formato JSON puro, sem comentários adicionais. Exemplo:
 {"nome": "Porão", "descricao": "Escuro e úmido. Fungos crescem nas paredes.", "itens": ["lanterna", "corda"], "estado": {"porta_trancada": false}, "saidas": {"norte": "Salão"}}`;
 
         const messages = [
             { role: "system", content: "Você é um gerador de salas para RPG. Responda apenas com JSON válido." },
             { role: "user", content: prompt }
         ];
+        const resposta = await gerarRespostaModelo(messages, 250, 0.7);
+        if (!resposta) {
+            // Fallback
+            const fallback = new Sala(idSala, "Local Indefinido", "Um lugar estranho e vazio.");
+            fallback.saidas = { norte: idSala };
+            salvarSala(fallback);
+            return fallback;
+        }
+        // Extrair JSON da resposta (pode vir com texto antes/depois)
+        const jsonMatch = resposta.match(/\{.*\}/s);
+        if (!jsonMatch) {
+            const fallback = new Sala(idSala, "Local Indefinido", "Um lugar estranho e vazio.");
+            fallback.saidas = { norte: idSala };
+            salvarSala(fallback);
+            return fallback;
+        }
         try {
-            const resposta = await engine.chat.completions.create({
-                messages,
-                temperature: 0.7,
-                max_tokens: 200,
-                response_format: { type: "json_object" }
-            });
-            const texto = resposta.choices[0].message.content.trim();
-            const dados = JSON.parse(texto);
-            // Cria a nova sala
-            const novaSala = new Sala(idSala, dados.nome, dados.descricao);
+            const dados = JSON.parse(jsonMatch[0]);
+            const novaSala = new Sala(idSala, dados.nome || idSala, dados.descricao || "Sem descrição.");
             novaSala.itens = dados.itens || [];
             novaSala.estado = dados.estado || {};
             novaSala.saidas = dados.saidas || {};
             salvarSala(novaSala);
             return novaSala;
         } catch (e) {
-            console.error("Erro ao gerar sala:", e);
-            // Fallback: sala genérica
+            console.error("Erro ao parsear JSON da sala:", e);
             const fallback = new Sala(idSala, "Local Indefinido", "Um lugar estranho e vazio.");
-            fallback.saidas = { "norte": idSala }; // evita loop
+            fallback.saidas = { norte: idSala };
             salvarSala(fallback);
             return fallback;
         }
     }
 
-    // Gera descrição para um item (examinar)
+    // Gera descrição para um item
     async function gerarDescricaoItem(item) {
         addMsg("O narrador examina o item...", "system");
         const prompt = `Descreva o item "${item}" no contexto de um jogo de sobrevivência sombrio. Use 1-2 frases curtas. Seja imersivo.`;
@@ -383,24 +369,14 @@ Responda em JSON puro, sem comentários adicionais. Exemplo:
             { role: "system", content: "Você é um narrador de RPG." },
             { role: "user", content: prompt }
         ];
-        try {
-            const resposta = await engine.chat.completions.create({
-                messages,
-                temperature: 0.6,
-                max_tokens: 60
-            });
-            const desc = resposta.choices[0].message.content.trim();
-            // Armazena no cache da sala
-            salaAtual.descricoesItens[item] = desc;
-            salvarSala(salaAtual);
-            return desc;
-        } catch (e) {
-            console.error("Erro ao descrever item:", e);
-            return "Você não vê nada de especial nisso.";
-        }
+        const desc = await gerarRespostaModelo(messages, 60, 0.6);
+        if (!desc) return "Você não vê nada de especial nisso.";
+        salaAtual.descricoesItens[item] = desc;
+        salvarSala(salaAtual);
+        return desc;
     }
 
-    // Processa uma ação complexa não reconhecida pelas regras
+    // Processa ação complexa
     async function processarAcaoComplexa(acao) {
         addMsg("O narrador reflete sobre sua ação...", "system");
         const prompt = `Você é um narrador de RPG de sobrevivência. O jogador está em ${salaAtual.nome}. Descrição: ${salaAtual.descricao}. Itens na sala: ${salaAtual.itens.join(', ') || 'nenhum'}. Estado: ${JSON.stringify(salaAtual.estado)}. Inventário: ${inventario.join(', ') || 'vazio'}. Ele realizou a ação: "${acao}". Narre as consequências de forma coerente com o ambiente, em 1-2 frases. Se a ação modificar o estado ou itens, inclua uma tag [UPDATE: ...] no final com as modificações (formato item:remover, item:adicionar, estado:chave=valor). Se resultar em mudança de sala, inclua [SAIR: id_da_sala].`;
@@ -409,17 +385,8 @@ Responda em JSON puro, sem comentários adicionais. Exemplo:
             { role: "system", content: "Você é um narrador conciso." },
             { role: "user", content: prompt }
         ];
-        try {
-            const resposta = await engine.chat.completions.create({
-                messages,
-                temperature: 0.7,
-                max_tokens: 120
-            });
-            return resposta.choices[0].message.content.trim();
-        } catch (e) {
-            console.error("Erro na ação complexa:", e);
-            return "Nada de especial acontece.";
-        }
+        const resposta = await gerarRespostaModelo(messages, 150, 0.7);
+        return resposta || "Nada de especial acontece.";
     }
 
     // ------------------------------------------------------------
@@ -447,7 +414,6 @@ Responda em JSON puro, sem comentários adicionais. Exemplo:
         return { texto: textoSemUpdates, updates, saidaId };
     }
 
-    // Aplica atualizações (similar ao código anterior)
     function aplicarUpdates(updates) {
         for (let upd of updates) {
             upd = upd.trim();
@@ -484,7 +450,7 @@ Responda em JSON puro, sem comentários adicionais. Exemplo:
     }
 
     // ------------------------------------------------------------
-    // Inicialização do mundo (livre)
+    // Inicialização do mundo
     // ------------------------------------------------------------
     async function iniciarMundoLivre() {
         addMsg("O narrador começa a tecer o mundo...", "system");
@@ -506,16 +472,25 @@ Use o formato JSON:
             { role: "user", content: promptCriacao }
         ];
 
+        const resposta = await gerarRespostaModelo(messages, 300, 0.8);
+        if (!resposta) {
+            // Fallback
+            const fallback = new Sala("inicio", "Local Desconhecido", "Um lugar estranho e vazio.");
+            salaAtual = fallback;
+            atualizarDisplayLocal();
+            addMsg("Você acorda em um lugar estranho, sem memória.", "narrator");
+            return;
+        }
+        const jsonMatch = resposta.match(/\{.*\}/s);
+        if (!jsonMatch) {
+            const fallback = new Sala("inicio", "Local Desconhecido", "Um lugar estranho e vazio.");
+            salaAtual = fallback;
+            atualizarDisplayLocal();
+            addMsg("Você acorda em um lugar estranho, sem memória.", "narrator");
+            return;
+        }
         try {
-            const resposta = await engine.chat.completions.create({
-                messages,
-                temperature: 0.8,
-                max_tokens: 250,
-                response_format: { type: "json_object" }
-            });
-            const texto = resposta.choices[0].message.content.trim();
-            const dados = JSON.parse(texto);
-
+            const dados = JSON.parse(jsonMatch[0]);
             const nomeSala = dados.nome || "Local Desconhecido";
             const descricao = dados.descricao || "Um lugar estranho.";
             const contexto = dados.contexto || "Você não lembra como chegou aqui.";
@@ -543,8 +518,7 @@ Use o formato JSON:
 
             addMsg(salaAtual.descricao, "narrator");
         } catch (e) {
-            console.error("Erro ao gerar mundo:", e);
-            // Fallback
+            console.error("Erro ao processar mundo:", e);
             const fallback = new Sala("inicio", "Local Desconhecido", "Um lugar estranho e vazio.");
             salaAtual = fallback;
             atualizarDisplayLocal();
@@ -569,104 +543,130 @@ Use o formato JSON:
         input.value = "";
         document.getElementById("btn-enviar").disabled = true;
 
-        // Interpreta comando
         const comando = interpretarComando(textoAcao);
-        let respostaTexto = "";
-        let precisaModelo = false;
-        let acaoParaModelo = textoAcao;
+        let resultado;
 
         try {
-            // Processa de acordo com o tipo
             switch (comando.tipo) {
-                case 'movimento': {
-                    const resultado = await processarMovimento(comando.direcao); // pode ser async se precisar gerar sala
-                    if (resultado && typeof resultado === 'object' && resultado.tipo === 'gerar_sala') {
-                        // Precisa gerar nova sala
+                case 'movimento':
+                    resultado = await processarMovimento(comando.direcao);
+                    if (resultado.tipo === 'erro') {
+                        addMsg(resultado.mensagem, "narrator");
+                    } else if (resultado.tipo === 'gerar_sala') {
                         aguardandoModelo = true;
                         const novaSala = await gerarNovaSala(resultado.idDestino, resultado.direcao);
                         salaAtual = novaSala;
                         atualizarDisplayLocal();
                         addMsg(novaSala.descricao || `Você entra em ${novaSala.nome}.`, "narrator");
                         aguardandoModelo = false;
-                    } else if (resultado) {
-                        addMsg(resultado, "narrator");
-                    }
-                    break;
-                }
-                case 'pegar':
-                    respostaTexto = processarPegar(comando.objeto);
-                    addMsg(respostaTexto, "narrator");
-                    break;
-                case 'largar':
-                    respostaTexto = processarLargar(comando.objeto);
-                    addMsg(respostaTexto, "narrator");
-                    break;
-                case 'usar': {
-                    const resultado = processarUsar(comando.objeto);
-                    if (resultado && typeof resultado === 'object' && resultado.tipo === 'acao_complexa') {
-                        precisaModelo = true;
-                        acaoParaModelo = resultado.descricao;
                     } else {
-                        addMsg(resultado, "narrator");
+                        addMsg(resultado.mensagem, "narrator");
                     }
                     break;
-                }
-                case 'examinar': {
-                    const resultado = processarExaminar(comando.objeto);
-                    if (resultado && typeof resultado === 'object' && resultado.tipo === 'descrever_item') {
+
+                case 'pegar':
+                    resultado = processarPegar(comando.objeto);
+                    addMsg(resultado.mensagem, "narrator");
+                    break;
+
+                case 'largar':
+                    resultado = processarLargar(comando.objeto);
+                    addMsg(resultado.mensagem, "narrator");
+                    break;
+
+                case 'usar':
+                    resultado = processarUsar(comando.objeto);
+                    if (resultado.tipo === 'complexa') {
+                        aguardandoModelo = true;
+                        const resp = await processarAcaoComplexa(resultado.descricao);
+                        const { texto, updates, saidaId } = processarRespostaModelo(resp);
+                        if (texto) addMsg(texto, "narrator");
+                        if (updates.length) aplicarUpdates(updates);
+                        if (saidaId) {
+                            salvarSala(salaAtual);
+                            let novaSala = carregarSala(saidaId);
+                            if (!novaSala) novaSala = await gerarNovaSala(saidaId, "desconhecida");
+                            salaAtual = novaSala;
+                            atualizarDisplayLocal();
+                            addMsg(salaAtual.descricao || `Você entra em ${salaAtual.nome}.`, "narrator");
+                        }
+                        aguardandoModelo = false;
+                    } else {
+                        addMsg(resultado.mensagem, "narrator");
+                    }
+                    break;
+
+                case 'examinar':
+                    resultado = processarExaminar(comando.objeto);
+                    if (resultado.tipo === 'descrever_item') {
                         aguardandoModelo = true;
                         const desc = await gerarDescricaoItem(resultado.item);
                         addMsg(desc, "narrator");
                         aguardandoModelo = false;
                     } else {
-                        addMsg(resultado, "narrator");
+                        addMsg(resultado.mensagem, "narrator");
                     }
                     break;
-                }
-                case 'abrir': {
-                    const resultado = processarAbrir(comando.objeto);
-                    if (resultado && typeof resultado === 'object' && resultado.tipo === 'acao_complexa') {
-                        precisaModelo = true;
-                        acaoParaModelo = resultado.descricao;
-                    } else {
-                        addMsg(resultado, "narrator");
-                    }
-                    break;
-                }
-                case 'fechar': {
-                    const resultado = processarFechar(comando.objeto);
-                    if (resultado && typeof resultado === 'object' && resultado.tipo === 'acao_complexa') {
-                        precisaModelo = true;
-                        acaoParaModelo = resultado.descricao;
-                    } else {
-                        addMsg(resultado, "narrator");
-                    }
-                    break;
-                }
-                default: // desconhecido
-                    precisaModelo = true;
-                    acaoParaModelo = textoAcao;
-            }
 
-            if (precisaModelo && !aguardandoModelo) {
-                aguardandoModelo = true;
-                const respostaModelo = await processarAcaoComplexa(acaoParaModelo);
-                const { texto, updates, saidaId } = processarRespostaModelo(respostaModelo);
-                if (texto) addMsg(texto, "narrator");
-                if (updates.length > 0) aplicarUpdates(updates);
-                if (saidaId) {
-                    // Transição para nova sala (pode já existir ou não)
-                    if (salaAtual) salvarSala(salaAtual);
-                    let novaSala = carregarSala(saidaId);
-                    if (!novaSala) {
-                        // Se não existir, gera
-                        novaSala = await gerarNovaSala(saidaId, "desconhecida");
+                case 'abrir':
+                    resultado = processarAbrir(comando.objeto);
+                    if (resultado.tipo === 'complexa') {
+                        aguardandoModelo = true;
+                        const resp = await processarAcaoComplexa(resultado.descricao);
+                        const { texto, updates, saidaId } = processarRespostaModelo(resp);
+                        if (texto) addMsg(texto, "narrator");
+                        if (updates.length) aplicarUpdates(updates);
+                        if (saidaId) {
+                            salvarSala(salaAtual);
+                            let novaSala = carregarSala(saidaId);
+                            if (!novaSala) novaSala = await gerarNovaSala(saidaId, "desconhecida");
+                            salaAtual = novaSala;
+                            atualizarDisplayLocal();
+                            addMsg(salaAtual.descricao || `Você entra em ${salaAtual.nome}.`, "narrator");
+                        }
+                        aguardandoModelo = false;
+                    } else {
+                        addMsg(resultado.mensagem, "narrator");
                     }
-                    salaAtual = novaSala;
-                    atualizarDisplayLocal();
-                    addMsg(salaAtual.descricao || `Você entra em ${salaAtual.nome}.`, "narrator");
-                }
-                aguardandoModelo = false;
+                    break;
+
+                case 'fechar':
+                    resultado = processarFechar(comando.objeto);
+                    if (resultado.tipo === 'complexa') {
+                        aguardandoModelo = true;
+                        const resp = await processarAcaoComplexa(resultado.descricao);
+                        const { texto, updates, saidaId } = processarRespostaModelo(resp);
+                        if (texto) addMsg(texto, "narrator");
+                        if (updates.length) aplicarUpdates(updates);
+                        if (saidaId) {
+                            salvarSala(salaAtual);
+                            let novaSala = carregarSala(saidaId);
+                            if (!novaSala) novaSala = await gerarNovaSala(saidaId, "desconhecida");
+                            salaAtual = novaSala;
+                            atualizarDisplayLocal();
+                            addMsg(salaAtual.descricao || `Você entra em ${salaAtual.nome}.`, "narrator");
+                        }
+                        aguardandoModelo = false;
+                    } else {
+                        addMsg(resultado.mensagem, "narrator");
+                    }
+                    break;
+
+                default: // desconhecido
+                    aguardandoModelo = true;
+                    const resp = await processarAcaoComplexa(textoAcao);
+                    const { texto, updates, saidaId } = processarRespostaModelo(resp);
+                    if (texto) addMsg(texto, "narrator");
+                    if (updates.length) aplicarUpdates(updates);
+                    if (saidaId) {
+                        salvarSala(salaAtual);
+                        let novaSala = carregarSala(saidaId);
+                        if (!novaSala) novaSala = await gerarNovaSala(saidaId, "desconhecida");
+                        salaAtual = novaSala;
+                        atualizarDisplayLocal();
+                        addMsg(salaAtual.descricao || `Você entra em ${salaAtual.nome}.`, "narrator");
+                    }
+                    aguardandoModelo = false;
             }
         } catch (e) {
             console.error("Erro no processamento:", e);
