@@ -207,7 +207,7 @@
     // ------------------------------------------------------------
     // Interação com o modelo (LLM)
     // ------------------------------------------------------------
-    async function gerarResposta(messages, maxTokens = 100, temperatura = 0.6) {
+    async function gerarResposta(messages, maxTokens = 80, temperatura = 0.6) {
         try {
             const result = await engine.chat.completions.create({
                 messages: messages,
@@ -468,3 +468,4 @@ SAÍDAS: ...`;
 
 </body>
 </html>
+
