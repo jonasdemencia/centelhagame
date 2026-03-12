@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Centelha - Motor Narrativo Híbrido</title>
+    <title>Centelha - Motor Narrativo</title>
     <style>
         body { background: #1a1a14; color: #b5a68b; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         #game-container { width: 90%; max-width: 650px; background: #141311; padding: 20px; border: 4px solid #3a3228; box-shadow: 6px 6px 0px #000; }
@@ -16,7 +16,6 @@
         input { width: 80%; padding: 10px; background: #1a1815; border: 1px solid #3a3228; color: #d1c5b4; }
         button { padding: 10px; cursor: pointer; background: #3a3228; color: #fff; border: none; }
         button:disabled { opacity: 0.3; }
-        .loading { display: inline-block; width: 20px; text-align: center; }
     </style>
 </head>
 <body>
@@ -40,646 +39,229 @@
 <script type="module">
     import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
-    // ------------------------------------------------------------
-    // Configurações
-    // ------------------------------------------------------------
-    const MY_MODEL_ID = "Qwen2.5-7B-Instruct-q4f16_1-MLC";
-    
-    // ------------------------------------------------------------
-    // Estado global
-    // ------------------------------------------------------------
-    let engine;
-    let salaAtual = null;
-    let inventario = [];
-    let aguardandoModelo = false;
+    const MY_MODEL_ID = "Qwen2.5-7B-Instruct-q4f16_1-MLC"; // ou "Llama-3.1-8B-Instruct-q4f16_1-MLC"
 
-    // ------------------------------------------------------------
-    // Classe Sala
-    // ------------------------------------------------------------
-    class Sala {
-        constructor(id, nome, descricao = "") {
-            this.id = id;
-            this.nome = nome;
-            this.descricao = descricao;
-            this.itens = [];
-            this.estado = {};
-            this.saidas = {};
-            this.descricoesItens = {};
-            this.ultimasAcoes = [];
-            this.criadoEm = Date.now();
-            this.modificadoEm = Date.now();
+    const MUNDOS = [
+       
+        {
+            nome: "Hospital Psiquiátrico Abandonado",
+            resumo: "Você está no Hospital Colina Verde, fechado em 1995. Objetivo: encontrar arquivos médicos que provam sua inocência antes do amanhecer (4 horas). Ameaças: estrutura colapsando, gás de formaldeído, polícia chegando.",
+            localizacaoInicial: "Recepção Principal, Térreo",
+            itens: ["gravador de voz", "chave mestra quebrada", "foto polaroid desbotada"],
+            elementos: ["Ala de isolamento no 2º andar", "Sala de cirurgia no 3º andar", "Arquivo médico no subsolo", "Capela no 1º andar", "Torre de observação no 5º andar"],
+            documentoCompleto: `CENÁRIO: Hospital Psiquiátrico Colina Verde
+Hospital de 5 andares no topo de colina, fechado há 28 anos. Ruína de corredores escuros e gritos nas paredes.
+
+SITUAÇÃO INICIAL:
+Você acorda na Recepção, térreo. Cabeça doendo. Você foi acusado injustamente. A prova de inocência está nos arquivos médicos do subsolo. Polícia chega em 4 horas.
+
+ITENS INICIAIS:
+- Gravador de voz (gravação parcial de terapia)
+- Chave mestra quebrada (só abre térreo e 1º andar)
+- Foto polaroid (paciente com seu rosto, mas não é você)
+
+AMEAÇAS:
+- Polícia em 4 horas
+- Estrutura colapsando
+- Gás de formaldeído no subsolo (alucinações)
+- Sons de passos inexplicáveis
+- Portas trancando sozinhas
+
+ELEMENTOS ÚNICOS:
+1. ALA ISOLAMENTO (2º Andar): Celas acolchoadas. Uma aberta com nome arranhado "Dr. Carvalho".
+2. SALA CIRURGIA (3º Andar): Mesa com manchas. Diário médico sobre "procedimentos não autorizados".
+3. ARQUIVO MÉDICO (Subsolo): Sala inundada. Arquivos 1980-1995. Precisa achar paciente da foto.
+4. CAPELA (1º Andar): Bancos quebrados. Confessionário com sangue. "ELE AINDA ESTÁ AQUI" na parede.
+5. TORRE (5º Andar): Vista da cidade. Pode ver luzes da polícia se aproximando.`
+        },
+        {
+            nome: "Bunker Nuclear Abandonado",
+            resumo: "Você está no Bunker Sigma-9, selado desde 1986 após vazamento radioativo. Objetivo: encontrar o código de descontaminação e escapar antes que o oxigênio acabe (3 horas). Ameaças: radiação, portas seladas, sistema de segurança hostil.",
+            localizacaoInicial: "Câmara de Descontaminação, Nível 1",
+            itens: ["contador geiger", "máscara de gás rachada", "cartão de acesso vermelho"],
+            elementos: ["Sala de controle central", "Reator desativado no Nível 3", "Laboratório biológico", "Arsenal trancado", "Túnel de evacuação colapsado"],
+            documentoCompleto: `CENÁRIO: Bunker Nuclear Sigma-9
+Bunker militar subterrâneo de 4 níveis, selado há 37 anos após acidente. 80 metros de profundidade sob montanha remota.
+
+SITUAÇÃO INICIAL:
+Você acorda na Câmara de Descontaminação, Nível 1. Alarmes silenciosos piscam vermelho. Última memória: investigando instalação secreta quando porta selou atrás de você. Contador Geiger clica constantemente. Oxigênio para 3 horas.
+
+ITENS INICIAIS:
+- Contador Geiger (marca radiação moderada)
+- Máscara de gás rachada (filtro vencido)
+- Cartão de acesso vermelho (nível baixo)
+
+AMEAÇAS:
+- Oxigênio acabando em 3 horas
+- Radiação em áreas específicas
+- Sistema de segurança IA ainda ativo
+- Portas seladas precisam códigos
+- Temperatura caindo (sistema de aquecimento morto)
+
+ELEMENTOS ÚNICOS:
+1. SALA CONTROLE CENTRAL (Nível 2): Terminais ativos. Código de descontaminação está aqui. Precisa cartão azul.
+2. REATOR (Nível 3): Desativado mas vazando. Núcleo exposto. Diário técnico sobre "Projeto Fênix".
+3. LABORATÓRIO BIO (Nível 2): Tanques quebrados. Espécimes preservados. Anotações sobre experimentos humanos.
+4. ARSENAL (Nível 1): Porta blindada trancada. Explosivos e armas dentro. Código está no reator.
+5. TÚNEL EVACUAÇÃO (Nível 4): Parcialmente colapsado. Única saída real. Precisa explosivos para abrir.`
         }
+    ];
+
+    const MUNDO_ESCOLHIDO = MUNDOS[Math.floor(Math.random() * MUNDOS.length)];
+    
+    let engine;
+    let chatHistory = [];
+    let jogador = { habilidade: 10, carisma: 10, sorte: 10 };
+    let documentoMestre = null;
+    let elementosMundo = [];
+    let locaisVisitados = [];
+    let estadoJogo = {
+        localizacao: "",
+        itens: [],
+        condicao: "saudável",
+        ultimoEvento: ""
+    };
+
+    const PROMPT_BASE = `Você é um narrador direto de RPG de sobrevivência em português brasileiro.
+
+REGRAS ABSOLUTAS:
+1. Use português brasileiro correto.
+2. Máximo 2 frases curtas (até 15 palavras cada), a menos que o jogador peça descrição detalhada (aí pode usar 3 frases, máximo 40 palavras).
+3. Sempre termine com ponto final.
+4. Mantenha coerência com inventário e localização atual.
+5. **REGRA DE MOVIMENTO: SE a ação do jogador resultar em MUDANÇA DE LOCAL, você DEVE iniciar sua resposta com a tag exata [LOCAL: Nome do Novo Local].**  
+   - Exemplo: se o jogador diz "entrar na sala de cirurgia", e isso muda o local, sua resposta deve começar com "[LOCAL: Sala de Cirurgia]".
+   - Se a ação NÃO muda de local, NÃO use a tag.
+
+EXEMPLOS:
+Jogador: "entrar na sala de cirurgia"
+Narrador: "[LOCAL: Sala de Cirurgia] Você empurra a porta enferrujada. O cheiro de podridão é forte."
+
+Jogador: "examinar a mesa"
+Narrador: "A mesa está manchada de sangue seco. Instrumentos cirúrgicos estão espalhados."`;
+
+    function ehAcaoExploratoria(texto) {
+        return /entrar|seguir|continuar|andar|avançar|prosseguir|ir|caminhar|mover|descer|subir/.test(texto.toLowerCase());
     }
 
-    // ------------------------------------------------------------
-    // Persistência
-    // ------------------------------------------------------------
-    function carregarSala(id) {
-        const chave = `sala_${id}`;
-        const data = localStorage.getItem(chave);
-        if (data) {
-            try {
-                const obj = JSON.parse(data);
-                const sala = new Sala(obj.id, obj.nome, obj.descricao);
-                sala.itens = obj.itens || [];
-                sala.estado = obj.estado || {};
-                sala.saidas = obj.saidas || {};
-                sala.descricoesItens = obj.descricoesItens || {};
-                sala.ultimasAcoes = obj.ultimasAcoes || [];
-                return sala;
-            } catch (e) {
-                console.error("Erro ao carregar sala", e);
-                return null;
-            }
+    function ehPedidoDetalhado(texto) {
+        return /detalh|descrev|expliq|como é|o que (tem|há|existe)|me (diga|fale|conte)/.test(texto.toLowerCase());
+    }
+
+    function gerarEvento() {
+        const tipo = Math.random();
+        if (tipo < 0.4) return "DESCOBERTA";
+        if (tipo < 0.7) return "PERIGO";
+        return "ATMOSFERA";
+    }
+
+    function analisarAcao(texto) {
+        const textoLower = texto.toLowerCase();
+        
+        if (/escalar|saltar|equilibrar|decifrar|hackear|forçar|arrombar|nadar|correr|lutar|pular|subir|descer|esquivar|rolar|atacar/.test(textoLower)) {
+            return { tipo: 'habilidade' };
         }
+        
+        if (/convencer|persuadir|intimidar|seduzir|negociar|mentir|enganar|subornar|ameaçar/.test(textoLower)) {
+            return { tipo: 'carisma' };
+        }
+        
+        if (/vasculhar|procurar|explorar|investigar|buscar|examinar|revistar|ouvir|farejar|iluminar|ver/.test(textoLower)) {
+            return { tipo: 'sorte' };
+        }
+        
         return null;
     }
 
-    function salvarSala(sala) {
-        if (!sala || !sala.id) return;
-        sala.modificadoEm = Date.now();
-        const chave = `sala_${sala.id}`;
-        localStorage.setItem(chave, JSON.stringify(sala));
-    }
-
-    function carregarInventario() {
-        const data = localStorage.getItem('jogador_inventario');
-        if (data) {
-            try {
-                inventario = JSON.parse(data);
-            } catch (e) {
-                inventario = [];
-            }
-        } else {
-            inventario = [];
-        }
-    }
-
-    function salvarInventario() {
-        localStorage.setItem('jogador_inventario', JSON.stringify(inventario));
-    }
-
-    // ------------------------------------------------------------
-    // Utilitários de interface
-    // ------------------------------------------------------------
-    function atualizarDisplayLocal() {
-        document.getElementById('local-span').innerText = salaAtual ? salaAtual.nome : 'Desconhecido';
-    }
-
-    function addMsg(txt, cls) {
-        const box = document.getElementById("chat-box");
-        const div = document.createElement('div');
-        div.className = cls;
-        div.innerText = (cls === 'player' ? "> " : "") + txt;
-        box.appendChild(div);
-        box.scrollTop = box.scrollHeight;
-    }
-
-    // ------------------------------------------------------------
-    // Interpretador de comandos
-    // ------------------------------------------------------------
-    function interpretarComando(texto) {
-        texto = texto.toLowerCase().trim();
-        const palavras = texto.split(/\s+/);
+    function rolarTeste(tipo) {
+        const dado = Math.floor(Math.random() * 20) + 1;
+        const atributo = jogador[tipo];
+        const dificuldade = 18;
+        const resultado = dado + atributo;
         
-        let verbo = palavras[0];
-        let objeto = palavras.slice(1).join(' ');
-        
-        const verbos = {
-            'ir': 'movimento',
-            'vou': 'movimento',
-            'siga': 'movimento',
-            'andar': 'movimento',
-            'caminhar': 'movimento',
-            'norte': 'movimento',
-            'sul': 'movimento',
-            'leste': 'movimento',
-            'oeste': 'movimento',
-            'entrar': 'movimento',
-            'pegar': 'pegar',
-            'pegue': 'pegar',
-            'apanhar': 'pegar',
-            'largar': 'largar',
-            'largue': 'largar',
-            'soltar': 'largar',
-            'usar': 'usar',
-            'utilizar': 'usar',
-            'examinar': 'examinar',
-            'olhar': 'examinar',
-            'ver': 'examinar',
-            'inspecionar': 'examinar',
-            'abrir': 'abrir',
-            'fechar': 'fechar'
+        return {
+            sucesso: resultado >= dificuldade,
+            dado: dado,
+            total: resultado
         };
-
-        if (['norte', 'sul', 'leste', 'oeste', 'nordeste', 'noroeste', 'sudeste', 'sudoeste'].includes(verbo)) {
-            return { tipo: 'movimento', direcao: verbo };
-        }
-
-        if (verbo === 'ir' && palavras.length >= 2) {
-            const direcao = palavras[palavras.length - 1];
-            return { tipo: 'movimento', direcao: direcao };
-        }
-
-        if (verbo === 'entrar') {
-            const direcao = palavras[palavras.length - 1];
-            return { tipo: 'movimento', direcao: direcao };
-        }
-
-        if (verbos[verbo]) {
-            return { tipo: verbos[verbo], objeto: objeto };
-        }
-
-        return { tipo: 'desconhecido', original: texto };
     }
 
-    // ------------------------------------------------------------
-    // Regras para ações comuns
-    // ------------------------------------------------------------
-
-    // Movimento
-    async function processarMovimento(direcao) {
-        direcao = direcao.toLowerCase();
-        const saidas = salaAtual.saidas;
-        if (!saidas[direcao]) {
-            return { tipo: 'erro', mensagem: "Não há passagem nessa direção." };
-        }
-        const idDestino = saidas[direcao];
-        salvarSala(salaAtual);
+    function gerarSystemPrompt() {
+        const resumoMundo = documentoMestre ? documentoMestre.resumo : "Mundo desconhecido";
+        const elementos = elementosMundo.length > 0 ? `\nELEMENTOS: ${elementosMundo.join(", ")}` : "";
+        const visitados = locaisVisitados.length > 1 ? `\nJÁ VISITOU: ${locaisVisitados.join(", ")}` : "";
         
-        let novaSala = carregarSala(idDestino);
-        if (!novaSala) {
-            return { tipo: 'gerar_sala', idDestino, direcao };
-        }
-        salaAtual = novaSala;
-        atualizarDisplayLocal();
-        return { tipo: 'sucesso', mensagem: salaAtual.descricao || `Você entra em ${salaAtual.nome}.` };
+        const estado = `MUNDO:
+${resumoMundo}${elementos}${visitados}
+
+ESTADO:
+- Local: ${estadoJogo.localizacao}
+- Inventário: ${estadoJogo.itens.join(", ") || "vazio"}
+- Condição: ${estadoJogo.condicao}`;
+        
+        return `${PROMPT_BASE}\n\n${estado}`;
     }
 
-    // Pegar item
-    function processarPegar(objeto) {
-        if (!objeto) return { tipo: 'erro', mensagem: "Pegar o quê?" };
-        const item = salaAtual.itens.find(i => i.toLowerCase().includes(objeto.toLowerCase()));
-        if (!item) return { tipo: 'erro', mensagem: "Não há isso aqui." };
-        salaAtual.itens = salaAtual.itens.filter(i => i !== item);
-        inventario.push(item);
-        salvarSala(salaAtual);
-        salvarInventario();
-        return { tipo: 'sucesso', mensagem: `Você pegou ${item}.` };
-    }
-
-    // Largar item
-    function processarLargar(objeto) {
-        if (!objeto) return { tipo: 'erro', mensagem: "Largar o quê?" };
-        const item = inventario.find(i => i.toLowerCase().includes(objeto.toLowerCase()));
-        if (!item) return { tipo: 'erro', mensagem: "Você não tem isso." };
-        inventario = inventario.filter(i => i !== item);
-        salaAtual.itens.push(item);
-        salvarSala(salaAtual);
-        salvarInventario();
-        return { tipo: 'sucesso', mensagem: `Você largou ${item}.` };
-    }
-
-    // Usar item (básico)
-    function processarUsar(objeto) {
-        if (!objeto) return { tipo: 'erro', mensagem: "Usar o quê?" };
-        const partes = objeto.split(/\s+em\s+/);
-        const itemNome = partes[0].trim();
-        const alvo = partes.length > 1 ? partes[1].trim() : null;
-
-        const item = inventario.find(i => i.toLowerCase().includes(itemNome.toLowerCase()));
-        if (!item) return { tipo: 'erro', mensagem: "Você não tem isso." };
-
-        if (item.toLowerCase().includes('chave') && salaAtual.estado.porta_trancada) {
-            salaAtual.estado.porta_trancada = false;
-            salvarSala(salaAtual);
-            return { tipo: 'sucesso', mensagem: "Você usou a chave e destrancou a porta." };
-        }
-        // Se não houver regra, chama modelo
-        return { tipo: 'complexa', descricao: `usar ${item}${alvo ? ' em ' + alvo : ''}` };
-    }
-
-    // Examinar
-    function processarExaminar(objeto) {
-        if (!objeto) {
-            return { tipo: 'sucesso', mensagem: salaAtual.descricao || "Você olha ao redor, mas não vê nada especial." };
-        }
-        const itemSala = salaAtual.itens.find(i => i.toLowerCase().includes(objeto.toLowerCase()));
-        const itemInv = inventario.find(i => i.toLowerCase().includes(objeto.toLowerCase()));
-        const item = itemSala || itemInv;
-        if (!item) return { tipo: 'erro', mensagem: "Não há isso para examinar." };
-        if (salaAtual.descricoesItens[item]) {
-            return { tipo: 'sucesso', mensagem: salaAtual.descricoesItens[item] };
-        } else {
-            return { tipo: 'descrever_item', item };
-        }
-    }
-
-    // Abrir (exemplo)
-    function processarAbrir(objeto) {
-        if (!objeto) return { tipo: 'erro', mensagem: "Abrir o quê?" };
-        if (objeto.includes('porta')) {
-            if (salaAtual.estado.porta_trancada) return { tipo: 'erro', mensagem: "A porta está trancada." };
-            return { tipo: 'sucesso', mensagem: "A porta já está aberta." };
-        }
-        return { tipo: 'complexa', descricao: `abrir ${objeto}` };
-    }
-
-    function processarFechar(objeto) {
-        return { tipo: 'complexa', descricao: `fechar ${objeto}` };
-    }
-
-    // ------------------------------------------------------------
-    // Funções que chamam o modelo
-    // ------------------------------------------------------------
-
-    async function gerarRespostaModelo(messages, maxTokens = 150, temperatura = 0.7) {
+    async function gerarDocumentoMestre() {
+        addMsg("Preparando o mundo...", "system");
+        
         try {
-            const result = await engine.chat.completions.create({
-                messages,
-                temperature: temperatura,
-                max_tokens: maxTokens,
-                top_p: 0.9,
-                frequency_penalty: 0.2,
-                presence_penalty: 0.2,
-                stop: ["\n\n", "Jogador:", ">"]
+            documentoMestre = {
+                completo: MUNDO_ESCOLHIDO.documentoCompleto,
+                resumo: MUNDO_ESCOLHIDO.resumo
+            };
+            
+            estadoJogo.localizacao = MUNDO_ESCOLHIDO.localizacaoInicial;
+            document.getElementById('local-span').innerText = estadoJogo.localizacao; // Atualiza na tela
+            estadoJogo.itens = [...MUNDO_ESCOLHIDO.itens];
+            elementosMundo = [...MUNDO_ESCOLHIDO.elementos];
+            locaisVisitados.push(MUNDO_ESCOLHIDO.localizacaoInicial);
+            
+            const resultIntro = await engine.chat.completions.create({
+                messages: [
+                    { role: "system", content: `Cenário:\n${MUNDO_ESCOLHIDO.documentoCompleto}\n\nEscreva abertura: local (${MUNDO_ESCOLHIDO.localizacaoInicial}) e sensação. 2 frases, 25 palavras.` },
+                    { role: "user", content: "Cena inicial." }
+                ],
+                temperature: 0.6,
+                max_tokens: 45,
+                stop: ["\n\n", "Jogador:"]
             });
-            return result.choices[0].message.content.trim();
-        } catch (e) {
-            console.error("Erro no modelo:", e);
-            return null;
-        }
-    }
 
-    // Gera uma nova sala
-    async function gerarNovaSala(idSala, direcao) {
-        addMsg("O narrador descreve um novo local...", "system");
-        const prompt = `Com base na direção ${direcao} a partir de ${salaAtual.nome} (${salaAtual.descricao}), crie uma nova sala de um cenário de sobrevivência realista e sombrio. Forneça:
-- Nome da sala (curto)
-- Descrição visual (2 frases)
-- Itens presentes (lista separada por vírgula, se houver)
-- Estado inicial (ex: porta_trancada=true, perigo=desabamento, etc.) no formato chave=valor, separado por vírgula
-- Saídas possíveis (mapeamento direção -> nome da sala de destino, ex: norte: "Salão Principal", leste: "Corredor Escuro")
+            let intro = resultIntro.choices[0].message.content.trim();
+            
+            const frasesCompletas = [];
+            const frasesTemp = intro.split(/[.!?]/);
 
-Responda em formato JSON puro, sem comentários adicionais. Exemplo:
-{"nome": "Porão", "descricao": "Escuro e úmido. Fungos crescem nas paredes.", "itens": ["lanterna", "corda"], "estado": {"porta_trancada": false}, "saidas": {"norte": "Salão"}}`;
-
-        const messages = [
-            { role: "system", content: "Você é um gerador de salas para RPG. Responda apenas com JSON válido." },
-            { role: "user", content: prompt }
-        ];
-        const resposta = await gerarRespostaModelo(messages, 250, 0.7);
-        if (!resposta) {
-            // Fallback
-            const fallback = new Sala(idSala, "Local Indefinido", "Um lugar estranho e vazio.");
-            fallback.saidas = { norte: idSala };
-            salvarSala(fallback);
-            return fallback;
-        }
-        // Extrair JSON da resposta (pode vir com texto antes/depois)
-        const jsonMatch = resposta.match(/\{.*\}/s);
-        if (!jsonMatch) {
-            const fallback = new Sala(idSala, "Local Indefinido", "Um lugar estranho e vazio.");
-            fallback.saidas = { norte: idSala };
-            salvarSala(fallback);
-            return fallback;
-        }
-        try {
-            const dados = JSON.parse(jsonMatch[0]);
-            const novaSala = new Sala(idSala, dados.nome || idSala, dados.descricao || "Sem descrição.");
-            novaSala.itens = dados.itens || [];
-            novaSala.estado = dados.estado || {};
-            novaSala.saidas = dados.saidas || {};
-            salvarSala(novaSala);
-            return novaSala;
-        } catch (e) {
-            console.error("Erro ao parsear JSON da sala:", e);
-            const fallback = new Sala(idSala, "Local Indefinido", "Um lugar estranho e vazio.");
-            fallback.saidas = { norte: idSala };
-            salvarSala(fallback);
-            return fallback;
-        }
-    }
-
-    // Gera descrição para um item
-    async function gerarDescricaoItem(item) {
-        addMsg("O narrador examina o item...", "system");
-        const prompt = `Descreva o item "${item}" no contexto de um jogo de sobrevivência sombrio. Use 1-2 frases curtas. Seja imersivo.`;
-        const messages = [
-            { role: "system", content: "Você é um narrador de RPG." },
-            { role: "user", content: prompt }
-        ];
-        const desc = await gerarRespostaModelo(messages, 60, 0.6);
-        if (!desc) return "Você não vê nada de especial nisso.";
-        salaAtual.descricoesItens[item] = desc;
-        salvarSala(salaAtual);
-        return desc;
-    }
-
-    // Processa ação complexa
-    async function processarAcaoComplexa(acao) {
-        addMsg("O narrador reflete sobre sua ação...", "system");
-        const prompt = `Você é um narrador de RPG de sobrevivência. O jogador está em ${salaAtual.nome}. Descrição: ${salaAtual.descricao}. Itens na sala: ${salaAtual.itens.join(', ') || 'nenhum'}. Estado: ${JSON.stringify(salaAtual.estado)}. Inventário: ${inventario.join(', ') || 'vazio'}. Ele realizou a ação: "${acao}". Narre as consequências de forma coerente com o ambiente, em 1-2 frases. Se a ação modificar o estado ou itens, inclua uma tag [UPDATE: ...] no final com as modificações (formato item:remover, item:adicionar, estado:chave=valor). Se resultar em mudança de sala, inclua [SAIR: id_da_sala].`;
-
-        const messages = [
-            { role: "system", content: "Você é um narrador conciso." },
-            { role: "user", content: prompt }
-        ];
-        const resposta = await gerarRespostaModelo(messages, 150, 0.7);
-        return resposta || "Nada de especial acontece.";
-    }
-
-    // ------------------------------------------------------------
-    // Processador de resposta do modelo (tags)
-    // ------------------------------------------------------------
-    function processarRespostaModelo(resposta) {
-        const updates = [];
-        let saidaId = null;
-
-        const updateRegex = /\[UPDATE:\s*(.*?)\]/g;
-        let match;
-        while ((match = updateRegex.exec(resposta)) !== null) {
-            updates.push(match[1]);
-        }
-        let textoSemUpdates = resposta.replace(/\[UPDATE:\s*.*?\]/g, '');
-
-        const sairRegex = /\[SAIR:\s*(.+?)\]/;
-        const sairMatch = sairRegex.exec(textoSemUpdates);
-        if (sairMatch) {
-            saidaId = sairMatch[1].trim();
-            textoSemUpdates = textoSemUpdates.replace(sairRegex, '');
-        }
-
-        textoSemUpdates = textoSemUpdates.trim();
-        return { texto: textoSemUpdates, updates, saidaId };
-    }
-
-    function aplicarUpdates(updates) {
-        for (let upd of updates) {
-            upd = upd.trim();
-            if (upd.startsWith('item:remover ')) {
-                const item = upd.substring('item:remover '.length).trim();
-                const index = salaAtual.itens.indexOf(item);
-                if (index !== -1) {
-                    salaAtual.itens.splice(index, 1);
-                    inventario.push(item);
-                    addMsg(`[Sistema: você pegou ${item}]`, 'system');
+            for (let i = 0; i < frasesTemp.length - 1; i++) {
+                if (frasesTemp[i].trim().length > 5) {
+                    frasesCompletas.push(frasesTemp[i].trim());
                 }
             }
-            else if (upd.startsWith('item:adicionar ')) {
-                const item = upd.substring('item:adicionar '.length).trim();
-                if (!salaAtual.itens.includes(item)) {
-                    salaAtual.itens.push(item);
-                }
-            }
-            else if (upd.startsWith('estado:')) {
-                const parte = upd.substring('estado:'.length);
-                const igualIndex = parte.indexOf('=');
-                if (igualIndex !== -1) {
-                    const chave = parte.substring(0, igualIndex).trim();
-                    let valor = parte.substring(igualIndex + 1).trim();
-                    if (valor === 'true') valor = true;
-                    else if (valor === 'false') valor = false;
-                    else if (!isNaN(valor) && valor !== '') valor = Number(valor);
-                    salaAtual.estado[chave] = valor;
-                }
-            }
-        }
-        salvarSala(salaAtual);
-        salvarInventario();
-    }
 
-    // ------------------------------------------------------------
-    // Inicialização do mundo
-    // ------------------------------------------------------------
-    async function iniciarMundoLivre() {
-        addMsg("O narrador começa a tecer o mundo...", "system");
-
-        const promptCriacao = `Crie um cenário de RPG de sobrevivência realista e desafiador em português brasileiro. 
-O jogador acorda em um local desconhecido, com um objetivo claro e perigos iminentes. 
-Forneça:
-- Nome do local inicial (ex: "Porão úmido", "Cabana abandonada")
-- Uma descrição curta do local (2 frases)
-- Contexto: por que o jogador está aqui? O que ele precisa fazer? (máx 3 frases)
-- Itens que ele tem no início (lista curta, se houver)
-- Saídas iniciais (mapeamento direção -> nome da sala de destino, ex: norte: "Salão Principal")
-
-Use o formato JSON:
-{"nome": "...", "descricao": "...", "contexto": "...", "itens": [...], "saidas": {"norte": "..."}}`;
-
-        const messages = [
-            { role: "system", content: "Você é um gerador de cenários de RPG. Responda apenas com JSON válido." },
-            { role: "user", content: promptCriacao }
-        ];
-
-        const resposta = await gerarRespostaModelo(messages, 300, 0.8);
-        if (!resposta) {
-            // Fallback
-            const fallback = new Sala("inicio", "Local Desconhecido", "Um lugar estranho e vazio.");
-            salaAtual = fallback;
-            atualizarDisplayLocal();
-            addMsg("Você acorda em um lugar estranho, sem memória.", "narrator");
-            return;
-        }
-        const jsonMatch = resposta.match(/\{.*\}/s);
-        if (!jsonMatch) {
-            const fallback = new Sala("inicio", "Local Desconhecido", "Um lugar estranho e vazio.");
-            salaAtual = fallback;
-            atualizarDisplayLocal();
-            addMsg("Você acorda em um lugar estranho, sem memória.", "narrator");
-            return;
-        }
-        try {
-            const dados = JSON.parse(jsonMatch[0]);
-            const nomeSala = dados.nome || "Local Desconhecido";
-            const descricao = dados.descricao || "Um lugar estranho.";
-            const contexto = dados.contexto || "Você não lembra como chegou aqui.";
-            const itensIniciais = dados.itens || [];
-            const saidas = dados.saidas || {};
-
-            addMsg(contexto, "narrator");
-
-            let salaInicial = carregarSala(nomeSala);
-            if (!salaInicial) {
-                salaInicial = new Sala(nomeSala, nomeSala, descricao);
-                salaInicial.itens = itensIniciais;
-                salaInicial.saidas = saidas;
-                salvarSala(salaInicial);
+            const ultimaFrase = frasesTemp[frasesTemp.length - 1].trim();
+            if (ultimaFrase.length > 10 && !/[.!?]$/.test(intro)) {
+                // Descarta
+            } else if (ultimaFrase.length > 5) {
+                frasesCompletas.push(ultimaFrase);
             }
 
-            salaAtual = salaInicial;
-            atualizarDisplayLocal();
-
-            carregarInventario();
-            if (inventario.length === 0 && itensIniciais.length > 0) {
-                inventario = [...itensIniciais];
-                salvarInventario();
+            intro = frasesCompletas.join('. ');
+            if (intro && !/[.!?]$/.test(intro)) {
+                intro += '.';
             }
 
-            addMsg(salaAtual.descricao, "narrator");
+            addMsg(intro, "narrator");
+            chatHistory.push({ role: "assistant", content: intro });
+            estadoJogo.ultimoEvento = intro.substring(0, 60);
+
+            console.log("=== MUNDO: " + MUNDO_ESCOLHIDO.nome + " ===");
+
         } catch (e) {
-            console.error("Erro ao processar mundo:", e);
-            const fallback = new Sala("inicio", "Local Desconhecido", "Um lugar estranho e vazio.");
-            salaAtual = fallback;
-            atualizarDisplayLocal();
-            addMsg("Você acorda em um lugar estranho, sem memória.", "narrator");
+            addMsg("Falha ao carregar o mundo.", "system");
+            console.error(e);
         }
     }
 
-    // ------------------------------------------------------------
-    // Loop principal
-    // ------------------------------------------------------------
-    window.enviarAcao = async () => {
-        if (aguardandoModelo) {
-            addMsg("Aguarde, o narrador está pensando...", "system");
-            return;
-        }
-
-        const input = document.getElementById("player-input");
-        const textoAcao = input.value.trim();
-        if (!textoAcao) return;
-
-        addMsg(textoAcao, "player");
-        input.value = "";
-        document.getElementById("btn-enviar").disabled = true;
-
-        const comando = interpretarComando(textoAcao);
-        let resultado;
-
-        try {
-            switch (comando.tipo) {
-                case 'movimento':
-                    resultado = await processarMovimento(comando.direcao);
-                    if (resultado.tipo === 'erro') {
-                        addMsg(resultado.mensagem, "narrator");
-                    } else if (resultado.tipo === 'gerar_sala') {
-                        aguardandoModelo = true;
-                        const novaSala = await gerarNovaSala(resultado.idDestino, resultado.direcao);
-                        salaAtual = novaSala;
-                        atualizarDisplayLocal();
-                        addMsg(novaSala.descricao || `Você entra em ${novaSala.nome}.`, "narrator");
-                        aguardandoModelo = false;
-                    } else {
-                        addMsg(resultado.mensagem, "narrator");
-                    }
-                    break;
-
-                case 'pegar':
-                    resultado = processarPegar(comando.objeto);
-                    addMsg(resultado.mensagem, "narrator");
-                    break;
-
-                case 'largar':
-                    resultado = processarLargar(comando.objeto);
-                    addMsg(resultado.mensagem, "narrator");
-                    break;
-
-                case 'usar':
-                    resultado = processarUsar(comando.objeto);
-                    if (resultado.tipo === 'complexa') {
-                        aguardandoModelo = true;
-                        const resp = await processarAcaoComplexa(resultado.descricao);
-                        const { texto, updates, saidaId } = processarRespostaModelo(resp);
-                        if (texto) addMsg(texto, "narrator");
-                        if (updates.length) aplicarUpdates(updates);
-                        if (saidaId) {
-                            salvarSala(salaAtual);
-                            let novaSala = carregarSala(saidaId);
-                            if (!novaSala) novaSala = await gerarNovaSala(saidaId, "desconhecida");
-                            salaAtual = novaSala;
-                            atualizarDisplayLocal();
-                            addMsg(salaAtual.descricao || `Você entra em ${salaAtual.nome}.`, "narrator");
-                        }
-                        aguardandoModelo = false;
-                    } else {
-                        addMsg(resultado.mensagem, "narrator");
-                    }
-                    break;
-
-                case 'examinar':
-                    resultado = processarExaminar(comando.objeto);
-                    if (resultado.tipo === 'descrever_item') {
-                        aguardandoModelo = true;
-                        const desc = await gerarDescricaoItem(resultado.item);
-                        addMsg(desc, "narrator");
-                        aguardandoModelo = false;
-                    } else {
-                        addMsg(resultado.mensagem, "narrator");
-                    }
-                    break;
-
-                case 'abrir':
-                    resultado = processarAbrir(comando.objeto);
-                    if (resultado.tipo === 'complexa') {
-                        aguardandoModelo = true;
-                        const resp = await processarAcaoComplexa(resultado.descricao);
-                        const { texto, updates, saidaId } = processarRespostaModelo(resp);
-                        if (texto) addMsg(texto, "narrator");
-                        if (updates.length) aplicarUpdates(updates);
-                        if (saidaId) {
-                            salvarSala(salaAtual);
-                            let novaSala = carregarSala(saidaId);
-                            if (!novaSala) novaSala = await gerarNovaSala(saidaId, "desconhecida");
-                            salaAtual = novaSala;
-                            atualizarDisplayLocal();
-                            addMsg(salaAtual.descricao || `Você entra em ${salaAtual.nome}.`, "narrator");
-                        }
-                        aguardandoModelo = false;
-                    } else {
-                        addMsg(resultado.mensagem, "narrator");
-                    }
-                    break;
-
-                case 'fechar':
-                    resultado = processarFechar(comando.objeto);
-                    if (resultado.tipo === 'complexa') {
-                        aguardandoModelo = true;
-                        const resp = await processarAcaoComplexa(resultado.descricao);
-                        const { texto, updates, saidaId } = processarRespostaModelo(resp);
-                        if (texto) addMsg(texto, "narrator");
-                        if (updates.length) aplicarUpdates(updates);
-                        if (saidaId) {
-                            salvarSala(salaAtual);
-                            let novaSala = carregarSala(saidaId);
-                            if (!novaSala) novaSala = await gerarNovaSala(saidaId, "desconhecida");
-                            salaAtual = novaSala;
-                            atualizarDisplayLocal();
-                            addMsg(salaAtual.descricao || `Você entra em ${salaAtual.nome}.`, "narrator");
-                        }
-                        aguardandoModelo = false;
-                    } else {
-                        addMsg(resultado.mensagem, "narrator");
-                    }
-                    break;
-
-                default: // desconhecido
-                    aguardandoModelo = true;
-                    const resp = await processarAcaoComplexa(textoAcao);
-                    const { texto, updates, saidaId } = processarRespostaModelo(resp);
-                    if (texto) addMsg(texto, "narrator");
-                    if (updates.length) aplicarUpdates(updates);
-                    if (saidaId) {
-                        salvarSala(salaAtual);
-                        let novaSala = carregarSala(saidaId);
-                        if (!novaSala) novaSala = await gerarNovaSala(saidaId, "desconhecida");
-                        salaAtual = novaSala;
-                        atualizarDisplayLocal();
-                        addMsg(salaAtual.descricao || `Você entra em ${salaAtual.nome}.`, "narrator");
-                    }
-                    aguardandoModelo = false;
-            }
-        } catch (e) {
-            console.error("Erro no processamento:", e);
-            addMsg("[Sistema: O mundo vacilou. Tente novamente.]", "system");
-        } finally {
-            document.getElementById("btn-enviar").disabled = false;
-            document.getElementById("player-input").focus();
-        }
-    };
-
-    // ------------------------------------------------------------
-    // Inicialização
-    // ------------------------------------------------------------
     async function init() {
         const status = document.getElementById("status");
         const pb = document.getElementById("progress-bar");
@@ -695,9 +277,9 @@ Use o formato JSON:
             });
 
             document.getElementById("progress-bar-container").style.display = "none";
-            status.innerText = "Criando o mundo...";
+            status.innerText = "Carregando o mundo...";
 
-            await iniciarMundoLivre();
+            await gerarDocumentoMestre();
 
             status.innerText = "O Pesadelo Começou.";
             document.getElementById("player-input").disabled = false;
@@ -710,9 +292,133 @@ Use o formato JSON:
         }
     }
 
+    window.enviarAcao = async () => {
+        const input = document.getElementById("player-input");
+        const text = input.value.trim();
+        if (!text) return;
+
+        addMsg(text, "player");
+        
+        document.getElementById("btn-enviar").disabled = true;
+        const tempId = addMsg("...", "narrator");
+
+        const ehExploracao = ehAcaoExploratoria(text);
+        const ehDetalhado = ehPedidoDetalhado(text);
+        const teste = analisarAcao(text);
+        let acaoCompleta = text;
+
+        if (ehExploracao) {
+            const tipoEvento = gerarEvento();
+            acaoCompleta += `\n[EXPLORAÇÃO - ${tipoEvento}]`;
+        }
+
+        if (ehDetalhado) {
+            acaoCompleta += `\n[DESCRIÇÃO DETALHADA - 3 frases, 40 palavras]`;
+        }
+
+        if (teste) {
+            const resultado = rolarTeste(teste.tipo);
+            acaoCompleta += resultado.sucesso 
+                ? `\n[${teste.tipo.toUpperCase()}: SUCESSO]`
+                : `\n[${teste.tipo.toUpperCase()}: FALHA]`;
+        }
+
+        chatHistory.push({ role: "user", content: acaoCompleta });
+        input.value = "";
+
+        try {
+            const messages = [
+                { role: "system", content: gerarSystemPrompt() },
+                ...chatHistory.slice(-8)
+            ];
+
+            const result = await engine.chat.completions.create({ 
+                messages: messages,
+                temperature: ehExploracao ? 0.6 : 0.45,
+                max_tokens: ehDetalhado ? 80 : 65,
+                top_p: 0.82,
+                frequency_penalty: 0.25,
+                presence_penalty: 0.2,
+                stop: ["\n\n", "Jogador:", ">", "\n>"]
+            });
+
+            let answer = result.choices[0].message.content.trim();
+            
+            console.log("🔍 Resposta BRUTA do modelo:", answer); // LOG
+
+            // --- INJEÇÃO: RASTREADOR ESPACIAL ---
+            const matchLocal = answer.match(/^\[LOCAL:\s*(.+?)\]/i);
+            if (matchLocal) {
+                console.log("✅ TAG LOCAL detectada:", matchLocal[1]); // LOG
+                // Atualiza o estado do jogo com o novo local
+                estadoJogo.localizacao = matchLocal[1].trim();
+                document.getElementById('local-span').innerText = estadoJogo.localizacao; // Atualiza na tela
+                
+                // Registra nos locais visitados, se for novo
+                if (!locaisVisitados.includes(estadoJogo.localizacao)) {
+                    locaisVisitados.push(estadoJogo.localizacao);
+                }
+                
+                // Remove a tag da resposta para o jogador não ver
+                answer = answer.replace(/^\[LOCAL:\s*(.+?)\]\s*/i, '').trim();
+                console.log("🧹 Resposta LIMPA (sem tag):", answer); // LOG
+            }
+            // ------------------------------------
+            
+            const frasesCompletas = [];
+            const frasesTemp = answer.split(/[.!?]/);
+
+            for (let i = 0; i < frasesTemp.length - 1; i++) {
+                if (frasesTemp[i].trim().length > 5) {
+                    frasesCompletas.push(frasesTemp[i].trim());
+                }
+            }
+
+            const ultimaFrase = frasesTemp[frasesTemp.length - 1].trim();
+            if (ultimaFrase.length > 10 && !/[.!?]$/.test(answer)) {
+                // Descarta
+            } else if (ultimaFrase.length > 5) {
+                frasesCompletas.push(ultimaFrase);
+            }
+
+            answer = frasesCompletas.join('. ');
+            if (answer && !/[.!?]$/.test(answer)) {
+                answer += '.';
+            }
+
+            document.getElementById(tempId).innerText = answer;
+            chatHistory.push({ role: "assistant", content: answer });
+            
+            estadoJogo.ultimoEvento = answer.substring(0, 60);
+
+            if (chatHistory.length > 20) {
+                chatHistory = chatHistory.slice(-20);
+            }
+
+        } catch (e) {
+            document.getElementById(tempId).innerText = "[SISTEMA: O mundo vacilou. Tente novamente.]";
+            console.error("Erro no motor:", e);
+            chatHistory.pop();
+        } finally {
+            document.getElementById("btn-enviar").disabled = false;
+            document.getElementById("player-input").focus(); 
+        }
+    };
+
+    function addMsg(txt, cls) {
+        const box = document.getElementById("chat-box");
+        const div = document.createElement('div');
+        div.className = cls;
+        div.id = "msg-" + Date.now() + "-" + Math.random();
+        div.innerText = (cls === 'player' ? "> " : "") + txt;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+        return div.id;
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('player-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !document.getElementById('btn-enviar').disabled && !aguardandoModelo) {
+            if (e.key === 'Enter' && !document.getElementById('btn-enviar').disabled) {
                 enviarAcao();
             }
         });
@@ -723,3 +429,4 @@ Use o formato JSON:
 
 </body>
 </html>
+
