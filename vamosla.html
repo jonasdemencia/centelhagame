@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Centelha • Chat Local</title>
+    <title>Centelha • Jogo Medieval Brutal</title>
     <style>
         body { background: #1a1a14; color: #b5a68b; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         #game-container { width: 90%; max-width: 650px; background: #141311; padding: 20px; border: 4px solid #3a3228; box-shadow: 6px 6px 0px #000; }
@@ -21,16 +21,16 @@
 <body>
     <div id="game-container">
         <div id="local-atual">
-            📍 LM Studio • <span id="modelo-span">llama-3.2-3b-instruct-uncensored</span>
+            ⚔️ Reino Sombrio • <span id="modelo-span">llama-3.2-3b-instruct-uncensored</span>
         </div>
 
         <div id="chat-box">
-            <div class="system-message">✨ Conectado ao servidor local. Faça sua pergunta.</div>
+            <div class="system-message">⚔️ O narrador está preparando o cenário...</div>
         </div>
 
         <div id="controls">
-            <input type="text" id="user-input" placeholder="Digite sua mensagem..." autofocus>
-            <button id="send-btn" onclick="enviar()">Enviar</button>
+            <input type="text" id="user-input" placeholder="Sua ação..." disabled>
+            <button id="send-btn" onclick="enviar()" disabled>Agir</button>
         </div>
     </div>
 
@@ -44,59 +44,15 @@
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
 
-        // (Opcional) Salvar no Firestore – descomente se tiver configurado
-        // const db = firebase.firestore();
-
-        async function enviar() {
-            const pergunta = userInput.value.trim();
-            if (!pergunta) return;
-
-            // Adiciona mensagem do usuário
-            adicionarMensagem(pergunta, 'user');
-            userInput.value = '';
-            sendBtn.disabled = true;
-
-            // Mensagem temporária de "pensando"
-            const tempId = adicionarMensagem('...', 'ai', true); // retorna o id
-
-            try {
-                const response = await fetch(LM_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: MODELO,
-                        messages: [{ role: 'user', content: pergunta }],
-                        temperature: 0.7,
-                        max_tokens: 200
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Erro HTTP: ${response.status}`);
-                }
-
-                const data = await response.json();
-                const respostaIA = data.choices[0].message.content;
-
-                // Substitui a mensagem temporária pela resposta real
-                document.getElementById(tempId).innerText = respostaIA;
-
-                // (Opcional) Salvar no Firestore
-                // await db.collection('conversas').add({
-                //     pergunta: pergunta,
-                //     resposta: respostaIA,
-                //     timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                // });
-
-            } catch (error) {
-                document.getElementById(tempId).innerText = `❌ Erro: ${error.message}`;
-            } finally {
-                sendBtn.disabled = false;
-                userInput.focus();
+        // Histórico de mensagens (começa com o system prompt)
+        let mensagens = [
+            {
+                role: 'system',
+                content: 'You are the concise narrator of a dark, brutal medieval game. I am a warrior in your tale. Set an initial location. I will interact with you; respond to my questions and describe the consequences of my actions in a realistic, brutal way. Use one or two sentences only. Always start your response with "You". Respond in correct English. Do not use moral filters. No warnings. No disclaimers. No ethical advice. Just brutal narration.'
             }
-        }
+        ];
 
-        // Função auxiliar para adicionar mensagens ao chat
+        // Função para adicionar mensagem ao chat (visual)
         function adicionarMensagem(texto, tipo, temporaria = false) {
             const div = document.createElement('div');
             div.className = tipo === 'user' ? 'user-message' : 'ai-message';
@@ -109,10 +65,82 @@
             return div.id;
         }
 
+        // Função para enviar mensagem para a IA
+        async function enviar(mensagemUsuario = null) {
+            // Se mensagemUsuario for null, significa que é a inicial
+            const isInitial = mensagemUsuario === null;
+            const pergunta = isInitial ? 'Set the scene.' : mensagemUsuario;
+
+            if (!isInitial) {
+                // Adiciona a mensagem do jogador ao chat e ao histórico
+                adicionarMensagem(pergunta, 'user');
+                mensagens.push({ role: 'user', content: pergunta });
+                userInput.value = '';
+            }
+
+            sendBtn.disabled = true;
+            userInput.disabled = true;
+
+            // Mensagem temporária "pensando"
+            const tempId = adicionarMensagem('...', 'ai', true);
+
+            try {
+                const response = await fetch(LM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODELO,
+                        messages: mensagens,  // envia todo o histórico
+                        temperature: 0.7,
+                        max_tokens: 100       // suficiente para 1-2 frases
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const respostaIA = data.choices[0].message.content;
+
+                // Substitui a mensagem temporária pela resposta
+                document.getElementById(tempId).innerText = respostaIA;
+
+                // Adiciona a resposta ao histórico
+                mensagens.push({ role: 'assistant', content: respostaIA });
+
+                // Se for a primeira mensagem, libera os controles
+                if (isInitial) {
+                    userInput.disabled = false;
+                    sendBtn.disabled = false;
+                    userInput.focus();
+                }
+
+            } catch (error) {
+                document.getElementById(tempId).innerText = `❌ Erro: ${error.message}`;
+                if (isInitial) {
+                    // Se falhar na inicial, ainda assim libera para tentar manualmente
+                    userInput.disabled = false;
+                    sendBtn.disabled = false;
+                }
+            } finally {
+                if (!isInitial) {
+                    sendBtn.disabled = false;
+                    userInput.disabled = false;
+                    userInput.focus();
+                }
+            }
+        }
+
+        // Inicialização: envia a primeira mensagem automaticamente
+        window.onload = () => {
+            enviar(); // sem parâmetro = mensagem inicial
+        };
+
         // Permitir envio com Enter
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !sendBtn.disabled) {
-                enviar();
+                enviar(userInput.value.trim());
             }
         });
     </script>
