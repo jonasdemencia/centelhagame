@@ -1,41 +1,120 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-    <title>Chat com modelo local</title>
+    <meta charset="UTF-8">
+    <title>Centelha • Chat Local</title>
+    <style>
+        body { background: #1a1a14; color: #b5a68b; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        #game-container { width: 90%; max-width: 650px; background: #141311; padding: 20px; border: 4px solid #3a3228; box-shadow: 6px 6px 0px #000; }
+        #local-atual { color: #ffaa00; margin-bottom: 8px; font-size: 14px; border-bottom: 1px solid #3a3228; padding-bottom: 4px; }
+        #chat-box { height: 300px; overflow-y: auto; border: 2px inset #2a251e; padding: 15px; background: #0d0c0a; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; }
+        .user-message { color: #7a8c66; align-self: flex-end; background: #1e2a1a; padding: 6px 12px; border-radius: 12px 0 12px 12px; max-width: 80%; word-wrap: break-word; }
+        .ai-message { color: #a13d3d; align-self: flex-start; background: #2a1a1a; padding: 6px 12px; border-radius: 0 12px 12px 12px; max-width: 80%; word-wrap: break-word; }
+        .system-message { color: #6b6b4a; text-align: center; font-style: italic; font-size: 0.9em; margin: 5px 0; }
+        #controls { display: flex; gap: 10px; }
+        input { flex: 1; padding: 12px; background: #1a1815; border: 1px solid #3a3228; color: #d1c5b4; font-family: inherit; font-size: 16px; }
+        button { padding: 12px 20px; cursor: pointer; background: #3a3228; color: #fff; border: none; font-family: inherit; font-size: 16px; transition: 0.2s; }
+        button:hover:not(:disabled) { background: #5a4a38; }
+        button:disabled { opacity: 0.3; cursor: not-allowed; }
+    </style>
 </head>
 <body>
-    <h1>Converse com o modelo</h1>
-    <input type="text" id="pergunta" placeholder="Digite sua pergunta">
-    <button onclick="enviar()">Enviar</button>
-    <div id="resposta"></div>
+    <div id="game-container">
+        <div id="local-atual">
+            📍 LM Studio • <span id="modelo-span">llama-3.2-3b-instruct-uncensored</span>
+        </div>
+
+        <div id="chat-box">
+            <div class="system-message">✨ Conectado ao servidor local. Faça sua pergunta.</div>
+        </div>
+
+        <div id="controls">
+            <input type="text" id="user-input" placeholder="Digite sua mensagem..." autofocus>
+            <button id="send-btn" onclick="enviar()">Enviar</button>
+        </div>
+    </div>
 
     <script>
-    async function enviar() {
-        const pergunta = document.getElementById('pergunta').value;
-        const respostaDiv = document.getElementById('resposta');
-        respostaDiv.textContent = 'Carregando...';
+        // Configuração do LM Studio
+        const LM_URL = 'http://localhost:1234/v1/chat/completions';
+        const MODELO = 'llama-3.2-3b-instruct-uncensored'; // Altere se necessário
 
-        try {
-            const response = await fetch('http://localhost:1234/v1/chat/completions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: 'llama-3.2-3b-instruct-uncensored',
-                    messages: [{ role: 'user', content: pergunta }],
-                    temperature: 0.7
-                })
-            });
+        // Referências DOM
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
 
-            const data = await response.json();
-            respostaDiv.textContent = data.choices[0].message.content;
+        // (Opcional) Salvar no Firestore – descomente se tiver configurado
+        // const db = firebase.firestore();
 
-            // Opcional: salvar no Firestore (precisa de SDK do Firebase no front-end)
-            // Isso exigiria configurar o Firebase no lado do cliente (com regras de segurança)
+        async function enviar() {
+            const pergunta = userInput.value.trim();
+            if (!pergunta) return;
 
-        } catch (error) {
-            respostaDiv.textContent = 'Erro: ' + error.message;
+            // Adiciona mensagem do usuário
+            adicionarMensagem(pergunta, 'user');
+            userInput.value = '';
+            sendBtn.disabled = true;
+
+            // Mensagem temporária de "pensando"
+            const tempId = adicionarMensagem('...', 'ai', true); // retorna o id
+
+            try {
+                const response = await fetch(LM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODELO,
+                        messages: [{ role: 'user', content: pergunta }],
+                        temperature: 0.7,
+                        max_tokens: 200
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const respostaIA = data.choices[0].message.content;
+
+                // Substitui a mensagem temporária pela resposta real
+                document.getElementById(tempId).innerText = respostaIA;
+
+                // (Opcional) Salvar no Firestore
+                // await db.collection('conversas').add({
+                //     pergunta: pergunta,
+                //     resposta: respostaIA,
+                //     timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                // });
+
+            } catch (error) {
+                document.getElementById(tempId).innerText = `❌ Erro: ${error.message}`;
+            } finally {
+                sendBtn.disabled = false;
+                userInput.focus();
+            }
         }
-    }
+
+        // Função auxiliar para adicionar mensagens ao chat
+        function adicionarMensagem(texto, tipo, temporaria = false) {
+            const div = document.createElement('div');
+            div.className = tipo === 'user' ? 'user-message' : 'ai-message';
+            div.innerText = texto;
+            if (temporaria) {
+                div.id = 'temp-' + Date.now() + '-' + Math.random();
+            }
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return div.id;
+        }
+
+        // Permitir envio com Enter
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !sendBtn.disabled) {
+                enviar();
+            }
+        });
     </script>
 </body>
 </html>
