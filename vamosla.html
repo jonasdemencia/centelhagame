@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Centelha • Jogo Medieval Brutal</title>
+    <title>Centelha • Jogo Medieval Brutal (com testes visíveis)</title>
     <style>
         body { background: #1a1a14; color: #b5a68b; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         #game-container { width: 90%; max-width: 650px; background: #141311; padding: 20px; border: 4px solid #3a3228; box-shadow: 6px 6px 0px #000; }
@@ -35,11 +35,25 @@
     </div>
 
     <script>
+        // ============================================================
         // Configuração do LM Studio
+        // ============================================================
         const LM_URL = 'http://localhost:1234/v1/chat/completions';
         const MODELO = 'llama-3.2-3b-instruct-uncensored'; // Altere se necessário
 
+        // ============================================================
+        // Atributos do jogador (futuramente virão do Firestore)
+        // ============================================================
+        const jogadorStats = {
+            FISICA: 6,
+            MENTAL: 5,
+            CARISMA: 3,
+            SORTE: 4
+        };
+
+        // ============================================================
         // Referências DOM
+        // ============================================================
         const chatBox = document.getElementById('chat-box');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
@@ -52,10 +66,12 @@
             }
         ];
 
-        // Função para adicionar mensagem ao chat (visual)
+        // ============================================================
+        // Funções auxiliares
+        // ============================================================
         function adicionarMensagem(texto, tipo, temporaria = false) {
             const div = document.createElement('div');
-            div.className = tipo === 'user' ? 'user-message' : 'ai-message';
+            div.className = tipo === 'user' ? 'user-message' : tipo === 'system' ? 'system-message' : 'ai-message';
             div.innerText = texto;
             if (temporaria) {
                 div.id = 'temp-' + Date.now() + '-' + Math.random();
@@ -65,24 +81,17 @@
             return div.id;
         }
 
-        // Função para enviar mensagem para a IA
-        async function enviar(mensagemUsuario = null) {
-            // Se mensagemUsuario for null, significa que é a inicial
-            const isInitial = mensagemUsuario === null;
-            const pergunta = isInitial ? 'Set the scene.' : mensagemUsuario;
-
-            if (!isInitial) {
-                // Adiciona a mensagem do jogador ao chat e ao histórico
-                adicionarMensagem(pergunta, 'user');
-                mensagens.push({ role: 'user', content: pergunta });
-                userInput.value = '';
-            }
-
-            sendBtn.disabled = true;
-            userInput.disabled = true;
-
-            // Mensagem temporária "pensando"
-            const tempId = adicionarMensagem('...', 'ai', true);
+        // ============================================================
+        // Função 1: O Juiz Invisível (classifica a ação)
+        // ============================================================
+        async function avaliarAcao(acaoUsuario) {
+            const promptJuiz = [
+                { 
+                    role: 'system', 
+                    content: 'Você é um classificador de ações de RPG. Classifique a ação do jogador em uma destas categorias: FISICA, MENTAL, CARISMA, SORTE, ou NENHUM. Não explique. Retorne APENAS uma dessas palavras em maiúsculas.' 
+                },
+                { role: 'user', content: acaoUsuario }
+            ];
 
             try {
                 const response = await fetch(LM_URL, {
@@ -90,9 +99,93 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: MODELO,
-                        messages: mensagens,  // envia todo o histórico
+                        messages: promptJuiz,
+                        temperature: 0.1,       // baixa para não inventar
+                        max_tokens: 10
+                    })
+                });
+                const data = await response.json();
+                const classificacao = data.choices[0].message.content.trim().toUpperCase();
+                // Garantir que seja uma das categorias válidas
+                if (['FISICA', 'MENTAL', 'CARISMA', 'SORTE', 'NENHUM'].includes(classificacao)) {
+                    return classificacao;
+                } else {
+                    console.warn('Classificação inválida:', classificacao);
+                    return 'NENHUM';
+                }
+            } catch (error) {
+                console.error('Erro no juiz:', error);
+                return 'NENHUM'; // fallback seguro
+            }
+        }
+
+        // ============================================================
+        // Função 2: Motor de Regras (rola o dado)
+        // ============================================================
+        function rolarTeste(atributo) {
+            if (atributo === 'NENHUM' || !jogadorStats[atributo]) return null;
+            
+            const valorAtributo = jogadorStats[atributo];
+            const rolagem = Math.floor(Math.random() * 10) + 1; // 1d10 (quanto menor, melhor)
+            const sucesso = rolagem <= valorAtributo;
+            
+            return sucesso ? 'SUCESSO' : 'FALHA';
+        }
+
+        // ============================================================
+        // Função principal de envio (modificada)
+        // ============================================================
+        async function enviar(mensagemUsuario = null) {
+            const isInitial = mensagemUsuario === null;
+            const pergunta = isInitial ? 'Set the scene.' : mensagemUsuario;
+
+            if (!isInitial) {
+                // Adiciona a mensagem do jogador ao chat (visual) imediatamente
+                adicionarMensagem(pergunta, 'user');
+                userInput.value = '';
+            }
+
+            // Desabilita controles enquanto processa
+            sendBtn.disabled = true;
+            userInput.disabled = true;
+
+            // Mensagem temporária "pensando"
+            const tempId = adicionarMensagem('...', 'ai', true);
+
+            try {
+                let mensagemParaNarrador = pergunta;
+
+                // Se não for a inicial, executa o sistema de testes
+                if (!isInitial) {
+                    // 1. Descobre o tipo de ação
+                    const tipoAcao = await avaliarAcao(pergunta);
+                    
+                    // 2. Rola os dados, se aplicável
+                    const resultadoTeste = rolarTeste(tipoAcao);
+                    
+                    // 3. Exibe o resultado do teste no chat (para o jogador ver)
+                    if (resultadoTeste) {
+                        adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
+                    }
+                    
+                    // 4. Se houve teste, adiciona a nota do sistema (invisível para o jogador, mas enviada ao modelo)
+                    if (resultadoTeste) {
+                        mensagemParaNarrador += `\n\n[Nota do Sistema: O jogador realizou uma ação que exigiu um teste de ${tipoAcao}. O resultado mecânico foi: ${resultadoTeste}. Narre o resultado dessa ação baseando-se estritamente neste desfecho.]`;
+                    }
+                }
+
+                // Adiciona a mensagem (possivelmente com nota) ao histórico
+                mensagens.push({ role: 'user', content: mensagemParaNarrador });
+
+                // Chamada principal ao narrador
+                const response = await fetch(LM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODELO,
+                        messages: mensagens,
                         temperature: 0.6,
-                        max_tokens: 120       // suficiente para 1-2 frases
+                        max_tokens: 120
                     })
                 });
 
@@ -119,7 +212,6 @@
             } catch (error) {
                 document.getElementById(tempId).innerText = `❌ Erro: ${error.message}`;
                 if (isInitial) {
-                    // Se falhar na inicial, ainda assim libera para tentar manualmente
                     userInput.disabled = false;
                     sendBtn.disabled = false;
                 }
@@ -132,12 +224,13 @@
             }
         }
 
-        // Inicialização: envia a primeira mensagem automaticamente
+        // ============================================================
+        // Inicialização e eventos
+        // ============================================================
         window.onload = () => {
-            enviar(); // sem parâmetro = mensagem inicial
+            enviar(); // mensagem inicial
         };
 
-        // Permitir envio com Enter
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !sendBtn.disabled) {
                 enviar(userInput.value.trim());
