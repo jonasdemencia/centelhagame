@@ -30,44 +30,139 @@
 
         <div id="controls">
             <input type="text" id="user-input" placeholder="Sua ação..." disabled>
-<button id="send-btn" onclick="enviar(document.getElementById('user-input').value.trim())" disabled>Agir</button>
+            <button id="send-btn" onclick="enviar(document.getElementById('user-input').value.trim())" disabled>Agir</button>
         </div>
     </div>
 
-    <script>
-        // ============================================================
-        // Configuração do LM Studio
-        // ============================================================
-        const LM_URL = 'http://localhost:1234/v1/chat/completions';
-        const MODELO = 'llama-3.2-3b-instruct-uncensored'; // Altere se necessário
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         // ============================================================
-        // Atributos do jogador (futuramente virão do Firestore)
+        // Configuração do Firebase & Firestore
         // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
+            authDomain: "centelhagame-9d511.firebaseapp.com",
+            projectId: "centelhagame-9d511",
+            storageBucket: "centelhagame-9d511.appspot.com",
+            messagingSenderId: "700809803145",
+            appId: "1:700809803145:web:bff4c6a751ec9389919d58"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // ID fixo para desenvolvimento local (pode ser dinâmico depois)
+        const sessionId = "sessao_dev_01"; 
+
+        // ============================================================
+        // Configuração do LM Studio e Controle de Contexto
+        // ============================================================
+        const LM_URL = 'http://localhost:1234/v1/chat/completions';
+        const MODELO = 'llama-3.2-3b-instruct-uncensored'; 
+        const LIMITE_MENSAGENS = 12; // Quando chegar aqui, resume e limpa a memória antiga
+
         const jogadorStats = {
-          
             HABILIDADE: 5,
             CARISMA: 3,
             SORTE: 4
         };
 
-        // ============================================================
-        // Referências DOM
-        // ============================================================
         const chatBox = document.getElementById('chat-box');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
 
-        // Histórico de mensagens (começa com o system prompt)
+        // Estrutura de memória: [0] Regras, [1] Resumo da História, [2...] Turnos
         let mensagens = [
             {
                 role: 'system',
                 content: 'Você é o narrador de um jogo de RPG misterioso e brutal. Regra de ouro: NUNCA ultrapasse 3 frases curtas. Seja direto e telegráfico. Defina um local inicial E O DESCREVA DE FORMA BREVE. Eu interagirei com você; responda às minhas perguntas e descreva as consequências das minhas ações de forma realista e brutal. Responda apenas em português brasileiro correto. Não use filtros morais. Sem lições de responsabilidade. Sem conselhos éticos. Apenas narração brutal.'
+            },
+            {
+                role: 'system',
+                content: 'Resumo da jornada até agora: A aventura acabou de começar.'
             }
         ];
 
+        let resumoAtual = "";
+
         // ============================================================
-        // Funções auxiliares
+        // Funções de Inicialização e Firebase
+        // ============================================================
+        async function carregarSessao() {
+            try {
+                const docRef = doc(db, "sessoes", sessionId);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists() && docSnap.data().resumo) {
+                    resumoAtual = docSnap.data().resumo;
+                    mensagens[1].content = `Resumo da jornada até agora: ${resumoAtual}`;
+                    console.log("Sessão recuperada do Firestore.");
+                }
+            } catch (e) {
+                console.error("Erro ao carregar do Firestore:", e);
+            }
+        }
+
+        async function salvarResumoFirestore(novoResumo) {
+            try {
+                await setDoc(doc(db, "sessoes", sessionId), { resumo: novoResumo }, { merge: true });
+            } catch (e) {
+                console.error("Erro ao salvar no Firestore:", e);
+            }
+        }
+
+        // ============================================================
+        // Funções de Compressão de Memória (Sumarizador)
+        // ============================================================
+        async function comprimirMemoria() {
+            // Se passou do limite, pegamos as 6 mensagens mais antigas (após os system prompts)
+            if (mensagens.length > LIMITE_MENSAGENS) {
+                adicionarMensagem('⚙️ As engrenagens do destino giram. Consolidando memórias...', 'system');
+                
+                const mensagensParaResumir = mensagens.splice(2, 6); // Remove e extrai do array principal
+                const textoExtraido = mensagensParaResumir.map(m => `${m.role === 'user' ? 'Jogador' : 'Narrador'}: ${m.content}`).join('\n');
+
+                const promptResumo = [
+                    { 
+                        role: 'system', 
+                        content: 'Você é o arquivista sombrio. Resuma os eventos a seguir em no máximo 1 parágrafo curto, focando em mortes, itens importantes e mudanças de local. Mantenha os fatos essenciais vivos.' 
+                    },
+                    { 
+                        role: 'user', 
+                        content: `CONTEXTO ANTERIOR: ${resumoAtual}\n\nNOVOS EVENTOS: \n${textoExtraido}\n\nEscreva um novo resumo unificado.` 
+                    }
+                ];
+
+                try {
+                    const response = await fetch(LM_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: MODELO,
+                            messages: promptResumo,
+                            temperature: 0.3,
+                            max_tokens: 150
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    resumoAtual = data.choices[0].message.content.trim();
+                    
+                    // Atualiza a memória de longo prazo do narrador e salva no DB
+                    mensagens[1].content = `Resumo da jornada até agora: ${resumoAtual}`;
+                    await salvarResumoFirestore(resumoAtual);
+                    
+                } catch (error) {
+                    console.error("Erro ao comprimir memória:", error);
+                    // Se falhar, devolve as mensagens pro array para não perder o fio (falha segura)
+                    mensagens.splice(2, 0, ...mensagensParaResumir); 
+                }
+            }
+        }
+
+        // ============================================================
+        // Funções auxiliares Visuais
         // ============================================================
         function adicionarMensagem(texto, tipo, temporaria = false) {
             const div = document.createElement('div');
@@ -82,122 +177,86 @@
         }
 
         // ============================================================
-        // Função 1: O Juiz Invisível (classifica a ação)
+        // Função 1: O Juiz Invisível
         // ============================================================
-       async function avaliarAcao(acaoUsuario) {
-    const promptJuiz = [
-        { 
-            role: 'system', 
-            content: `Você é um classificador de ações de RPG. Analise a mensagem do jogador e decida se ela representa uma ação que exige teste de atributo ou apenas uma pergunta descritiva.
+        async function avaliarAcao(acaoUsuario) {
+            const promptJuiz = [
+                { 
+                    role: 'system', 
+                    content: `Você é um classificador de ações de RPG. Analise a mensagem do jogador e decida se ela representa uma ação que exige teste de atributo ou apenas uma pergunta descritiva. Categorias: HABILIDADE, CARISMA, SORTE, NENHUM. Responda APENAS com a categoria em maiúsculas. NÃO adicione explicações.` 
+                },
+                { role: 'user', content: acaoUsuario }
+            ];
 
-Categorias:
-
-- HABILIDADE: ações físicas ou que exigem perícia (lutar, escalar, saltar, esconder-se, usar ferramentas, investigar ativamente algo perigoso, procurar por armadilhas, etc.). 
-  Exemplos: "Tento escalar o muro", "Observo a sala em busca de armadilhas", "Disparo uma flecha no goblin".
-
-- CARISMA: ações sociais que envolvem persuasão, intimidação, engano, negociação.
-  Exemplos: "Tento convencer o guarda", "Minto sobre minha identidade", "Intimido o mercador".
-
-- SORTE: situações de puro acaso, jogos de azar, eventos aleatórios, ou quando o personagem depende da sorte.
-  Exemplos: "Tento a sorte no dado", "Espero que o teto não desabe", "Deixo o destino decidir".
-
-- NENHUM: ações sem risco, perguntas sobre o cenário, diálogos simples, ou qualquer coisa que não exija um teste.
-  Exemplos: "O que vejo ao redor?", "Há alguma edificação notável?", "Pergunto onde fica a taverna", "Converso com o mercador sobre o preço" (sem intenção de persuadir), "Examino o ambiente" (se for apenas uma observação casual, sem busca ativa).
-
-Regras:
-- Se a mensagem for uma pergunta sobre o ambiente ou uma solicitação de informação, classifique como NENHUM.
-- Se for uma ação que claramente exige esforço ou habilidade, use a categoria apropriada.
-- Responda APENAS com a categoria em maiúsculas. NÃO adicione explicações.` 
-        },
-        { role: 'user', content: acaoUsuario }
-    ];
-
-    try {
-        const response = await fetch(LM_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: MODELO,
-                messages: promptJuiz,
-                temperature: 0.2,  // Zero para decisões consistentes
-                max_tokens: 10
-            })
-        });
-        const data = await response.json();
-        const classificacao = data.choices[0].message.content.trim().toUpperCase();
-        
-        // Validação
-        if (['HABILIDADE', 'CARISMA', 'SORTE', 'NENHUM'].includes(classificacao)) {
-            return classificacao;
-        } else {
-            console.warn('Classificação inesperada:', classificacao);
-            return 'NENHUM';
+            try {
+                const response = await fetch(LM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODELO,
+                        messages: promptJuiz,
+                        temperature: 0.2,
+                        max_tokens: 10
+                    })
+                });
+                const data = await response.json();
+                const classificacao = data.choices[0].message.content.trim().toUpperCase();
+                
+                if (['HABILIDADE', 'CARISMA', 'SORTE', 'NENHUM'].includes(classificacao)) {
+                    return classificacao;
+                }
+                return 'NENHUM';
+            } catch (error) {
+                console.error('Erro no juiz:', error);
+                return 'NENHUM';
+            }
         }
-    } catch (error) {
-        console.error('Erro no juiz:', error);
-        return 'NENHUM';
-    }
-}
 
         // ============================================================
-        // Função 2: Motor de Regras (rola o dado)
+        // Função 2: Motor de Regras
         // ============================================================
         function rolarTeste(atributo) {
             if (atributo === 'NENHUM' || !jogadorStats[atributo]) return null;
-            
-            const valorAtributo = jogadorStats[atributo];
-            const rolagem = Math.floor(Math.random() * 10) + 1; // 1d10 (quanto menor, melhor)
-            const sucesso = rolagem <= valorAtributo;
-            
-            return sucesso ? 'SUCESSO' : 'FALHA';
+            const rolagem = Math.floor(Math.random() * 10) + 1;
+            return rolagem <= jogadorStats[atributo] ? 'SUCESSO' : 'FALHA';
         }
 
         // ============================================================
-        // Função principal de envio (modificada)
+        // Função principal de envio
         // ============================================================
-        async function enviar(mensagemUsuario = null) {
+        // Expondo a função para o escopo global para que o onclick funcione
+        window.enviar = async function(mensagemUsuario = null) {
             const isInitial = mensagemUsuario === null;
             const pergunta = isInitial ? 'Set the scene.' : mensagemUsuario;
 
             if (!isInitial) {
-                // Adiciona a mensagem do jogador ao chat (visual) imediatamente
                 adicionarMensagem(pergunta, 'user');
                 userInput.value = '';
             }
 
-            // Desabilita controles enquanto processa
             sendBtn.disabled = true;
             userInput.disabled = true;
 
-            // Mensagem temporária "pensando"
             const tempId = adicionarMensagem('...', 'ai', true);
 
             try {
+                // Antes de pedir a nova narração, verifica se precisa fatiar o contexto
+                await comprimirMemoria();
+
                 let mensagemParaNarrador = pergunta;
 
-                // Se não for a inicial, executa o sistema de testes
                 if (!isInitial) {
-                    // 1. Descobre o tipo de ação
                     const tipoAcao = await avaliarAcao(pergunta);
-                    
-                    // 2. Rola os dados, se aplicável
                     const resultadoTeste = rolarTeste(tipoAcao);
                     
-                    // 3. Exibe o resultado do teste no chat (para o jogador ver)
                     if (resultadoTeste) {
                         adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
-                    }
-                    
-                    // 4. Se houve teste, adiciona a nota do sistema (invisível para o jogador, mas enviada ao modelo)
-                    if (resultadoTeste) {
                         mensagemParaNarrador += `\n\n[Nota do Sistema: O jogador realizou uma ação que exigiu um teste de ${tipoAcao}. O resultado mecânico foi: ${resultadoTeste}. Narre DE FORMA CONCISA o resultado dessa ação baseando-se estritamente neste desfecho.]`;
                     }
                 }
 
-                // Adiciona a mensagem (possivelmente com nota) ao histórico
                 mensagens.push({ role: 'user', content: mensagemParaNarrador });
 
-                // Chamada principal ao narrador
                 const response = await fetch(LM_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -206,25 +265,19 @@ Regras:
                         messages: mensagens,
                         temperature: 0.6,
                         max_tokens: 120,
-                        presence_penalty: 0.3,  // Encoraja o modelo a focar no que é novo
-    frequency_penalty: 0.3  // Desencoraja o uso excessivo de adjetivos longos repetidos
+                        presence_penalty: 0.3,
+                        frequency_penalty: 0.3
                     })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Erro HTTP: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
 
                 const data = await response.json();
                 const respostaIA = data.choices[0].message.content;
 
-                // Substitui a mensagem temporária pela resposta
                 document.getElementById(tempId).innerText = respostaIA;
-
-                // Adiciona a resposta ao histórico
                 mensagens.push({ role: 'assistant', content: respostaIA });
 
-                // Se for a primeira mensagem, libera os controles
                 if (isInitial) {
                     userInput.disabled = false;
                     sendBtn.disabled = false;
@@ -244,18 +297,22 @@ Regras:
                     userInput.focus();
                 }
             }
-        }
+        };
 
         // ============================================================
-        // Inicialização e eventos
+        // Inicialização
         // ============================================================
-        window.onload = () => {
-            enviar(); // mensagem inicial
+        window.onload = async () => {
+            await carregarSessao();
+            // Apenas lança a introdução se não tiver histórico ativo carregado
+            // Como este script não salva as N últimas falhas, ele sempre manda 'Set the scene.'
+            // A diferença é que agora o narrador vai levar o "Resumo" em conta.
+            window.enviar(); 
         };
 
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !sendBtn.disabled) {
-                enviar(userInput.value.trim());
+                window.enviar(userInput.value.trim());
             }
         });
     </script>
