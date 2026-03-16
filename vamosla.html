@@ -45,8 +45,8 @@
         // Atributos do jogador (futuramente virão do Firestore)
         // ============================================================
         const jogadorStats = {
-            FISICA: 6,
-            MENTAL: 5,
+          
+            HABILIDADE: 5,
             CARISMA: 3,
             SORTE: 4
         };
@@ -88,7 +88,7 @@
             const promptJuiz = [
                 { 
                     role: 'system', 
-                    content: 'Você é um classificador de ações de RPG. Classifique a ação do jogador em uma destas categorias: FISICA, MENTAL, CARISMA, SORTE, ou NENHUM. Não explique. Retorne APENAS uma dessas palavras em maiúsculas.' 
+                    content: 'Você é um classificador de ações de RPG. Classifique a ação do jogador em uma destas categorias: HABILIDADE, CARISMA, SORTE, ou NENHUM. Não explique. Retorne APENAS uma dessas palavras em maiúsculas.' 
                 },
                 { role: 'user', content: acaoUsuario }
             ];
