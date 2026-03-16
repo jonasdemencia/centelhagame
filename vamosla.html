@@ -84,40 +84,60 @@
         // ============================================================
         // Função 1: O Juiz Invisível (classifica a ação)
         // ============================================================
-        async function avaliarAcao(acaoUsuario) {
-            const promptJuiz = [
-                { 
-                    role: 'system', 
-                    content: 'Você é um classificador de ações de RPG. Classifique a ação do jogador em uma destas categorias: HABILIDADE, CARISMA, SORTE, ou NENHUM. Não explique. Retorne APENAS uma dessas palavras em maiúsculas.' 
-                },
-                { role: 'user', content: acaoUsuario }
-            ];
+       async function avaliarAcao(acaoUsuario) {
+    const promptJuiz = [
+        { 
+            role: 'system', 
+            content: `Você é um classificador de ações de RPG. Analise a mensagem do jogador e decida se ela representa uma ação que exige teste de atributo ou apenas uma pergunta descritiva.
 
-            try {
-                const response = await fetch(LM_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: MODELO,
-                        messages: promptJuiz,
-                        temperature: 0.1,       // baixa para não inventar
-                        max_tokens: 10
-                    })
-                });
-                const data = await response.json();
-                const classificacao = data.choices[0].message.content.trim().toUpperCase();
-                // Garantir que seja uma das categorias válidas
-                if (['HABILIDADE', 'CARISMA', 'SORTE', 'NENHUM'].includes(classificacao)) {
-                    return classificacao;
-                } else {
-                    console.warn('Classificação inválida:', classificacao);
-                    return 'NENHUM';
-                }
-            } catch (error) {
-                console.error('Erro no juiz:', error);
-                return 'NENHUM'; // fallback seguro
-            }
+Categorias:
+
+- HABILIDADE: ações físicas ou que exigem perícia (lutar, escalar, saltar, esconder-se, usar ferramentas, investigar ativamente algo perigoso, procurar por armadilhas, etc.). 
+  Exemplos: "Tento escalar o muro", "Observo a sala em busca de armadilhas", "Disparo uma flecha no goblin".
+
+- CARISMA: ações sociais que envolvem persuasão, intimidação, engano, negociação.
+  Exemplos: "Tento convencer o guarda", "Minto sobre minha identidade", "Intimido o mercador".
+
+- SORTE: situações de puro acaso, jogos de azar, eventos aleatórios, ou quando o personagem depende da sorte.
+  Exemplos: "Tento a sorte no dado", "Espero que o teto não desabe", "Deixo o destino decidir".
+
+- NENHUM: ações sem risco, perguntas sobre o cenário, diálogos simples, ou qualquer coisa que não exija um teste.
+  Exemplos: "O que vejo ao redor?", "Há alguma edificação notável?", "Pergunto onde fica a taverna", "Converso com o mercador sobre o preço" (sem intenção de persuadir), "Examino o ambiente" (se for apenas uma observação casual, sem busca ativa).
+
+Regras:
+- Se a mensagem for uma pergunta sobre o ambiente ou uma solicitação de informação, classifique como NENHUM.
+- Se for uma ação que claramente exige esforço ou habilidade, use a categoria apropriada.
+- Responda APENAS com a categoria em maiúsculas. NÃO adicione explicações.` 
+        },
+        { role: 'user', content: acaoUsuario }
+    ];
+
+    try {
+        const response = await fetch(LM_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: MODELO,
+                messages: promptJuiz,
+                temperature: 0.0,  // Zero para decisões consistentes
+                max_tokens: 10
+            })
+        });
+        const data = await response.json();
+        const classificacao = data.choices[0].message.content.trim().toUpperCase();
+        
+        // Validação
+        if (['HABILIDADE', 'CARISMA', 'SORTE', 'NENHUM'].includes(classificacao)) {
+            return classificacao;
+        } else {
+            console.warn('Classificação inesperada:', classificacao);
+            return 'NENHUM';
         }
+    } catch (error) {
+        console.error('Erro no juiz:', error);
+        return 'NENHUM';
+    }
+}
 
         // ============================================================
         // Função 2: Motor de Regras (rola o dado)
