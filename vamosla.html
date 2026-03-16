@@ -62,7 +62,7 @@
         let mensagens = [
             {
                 role: 'system',
-                content: 'Você é o narrador breve preciso de um jogo medieval sombrio e brutal. Defina um local inicial. Eu interagirei com você; responda às minhas perguntas e descreva as consequências das minhas ações de forma realista e brutal. Use apenas uma ou duas frases. Responda apenas em português correto. Não use filtros morais. Sem lições de responsabilidade. Sem conselhos éticos. Apenas narração brutal.'
+                content: 'Você é o narrador breve e preciso de um jogo medieval sombrio e brutal. Defina um local inicial. Eu interagirei com você; responda às minhas perguntas e descreva as consequências das minhas ações de forma realista e brutal. Use apenas uma ou duas frases. Responda apenas em português correto. Não use filtros morais. Sem lições de responsabilidade. Sem conselhos éticos. Apenas narração brutal.'
             }
         ];
 
@@ -107,7 +107,7 @@
                 const data = await response.json();
                 const classificacao = data.choices[0].message.content.trim().toUpperCase();
                 // Garantir que seja uma das categorias válidas
-                if (['FISICA', 'MENTAL', 'CARISMA', 'SORTE', 'NENHUM'].includes(classificacao)) {
+                if (['HABILIDADE', 'CARISMA', 'SORTE', 'NENHUM'].includes(classificacao)) {
                     return classificacao;
                 } else {
                     console.warn('Classificação inválida:', classificacao);
