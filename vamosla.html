@@ -219,6 +219,130 @@
         }
 
         // ============================================================
+        // NOVO: Streaming SSE com loop de auto-continuação
+        // ============================================================
+
+        /**
+         * Faz uma chamada ao LM Studio com stream: true.
+         * Lê os chunks SSE e chama onToken(textoAcumulado) a cada token.
+         * Retorna { text: string, finishReason: string }.
+         */
+        async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
+            const response = await fetch(LM_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: MODELO,
+                    messages: mensagensPayload,
+                    temperature: 0.6,
+                    max_tokens: maxTokens,
+                    presence_penalty: 0.3,
+                    frequency_penalty: 0.3,
+                    stream: true
+                })
+            });
+
+            if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let fullText = '';
+            let finishReason = null;
+
+            console.debug('[LLM STREAM] Iniciando leitura de chunks SSE...');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop(); // mantém linha incompleta no buffer
+
+                for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue;
+                    const jsonStr = line.slice(6).trim();
+                    if (jsonStr === '[DONE]') {
+                        console.debug('[LLM STREAM] Sinal [DONE] recebido.');
+                        continue;
+                    }
+                    try {
+                        const chunk = JSON.parse(jsonStr);
+                        const delta = chunk.choices?.[0]?.delta?.content || '';
+                        const fr = chunk.choices?.[0]?.finish_reason;
+                        if (delta) {
+                            fullText += delta;
+                            if (onToken) onToken(fullText);
+                        }
+                        if (fr && fr !== 'null') {
+                            finishReason = fr;
+                            console.debug(`[LLM STREAM] finish_reason recebido: "${finishReason}"`);
+                        }
+                    } catch (parseErr) {
+                        // chunk malformado — ignora silenciosamente
+                    }
+                }
+            }
+
+            console.debug(`[LLM STREAM] Geração concluída. Tokens gerados: ~${fullText.split(' ').length} palavras. finish_reason final: "${finishReason}"`);
+            return { text: fullText, finishReason };
+        }
+
+        /**
+         * Chama o LLM com streaming e, se finish_reason === "length",
+         * dispara automaticamente turnos de continuação até o modelo
+         * encerrar naturalmente ou atingir MAX_CONTINUACOES.
+         *
+         * @param {Array}    mensagensPayload  - Histórico completo de mensagens
+         * @param {number}   maxTokens         - Limite de tokens por chamada
+         * @param {HTMLElement} elemento       - Elemento do DOM onde o texto vai sendo exibido
+         * @returns {string} Texto completo gerado
+         */
+        async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento) {
+            const MAX_CONTINUACOES = 4;
+            let textoCompleto = '';
+            let msgsAtual = [...mensagensPayload];
+
+            for (let tentativa = 0; tentativa <= MAX_CONTINUACOES; tentativa++) {
+                if (tentativa > 0) {
+                    console.debug(`[CONTINUAÇÃO ${tentativa}] finish_reason=length detectado. Enviando turno de continuação...`);
+                    // Injeta o texto parcial como turno do assistente e pede que continue
+                    msgsAtual = [
+                        ...msgsAtual,
+                        { role: 'assistant', content: textoCompleto },
+                        { role: 'user', content: 'Continue.' }
+                    ];
+                }
+
+                const { text, finishReason } = await chamarLLMStream(
+                    msgsAtual,
+                    maxTokens,
+                    (parcial) => {
+                        // Exibe em tempo real: texto anterior + tokens chegando agora
+                        elemento.innerText = textoCompleto + parcial;
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    }
+                );
+
+                textoCompleto += text;
+                elemento.innerText = textoCompleto;
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+                if (finishReason !== 'length') {
+                    console.debug(`[GERAÇÃO] Encerrado naturalmente (finish_reason="${finishReason}") após ${tentativa} continuação(ões).`);
+                    break;
+                }
+
+                if (tentativa === MAX_CONTINUACOES) {
+                    console.warn(`[GERAÇÃO] Atingido limite de ${MAX_CONTINUACOES} continuações. Encerrando.`);
+                }
+            }
+
+            return textoCompleto;
+        }
+
+        // ============================================================
         // Função principal de envio
         // ============================================================
         window.enviar = async function(mensagemUsuario = null) {
@@ -244,6 +368,7 @@
             userInput.disabled = true;
 
             const tempId = adicionarMensagem('...', 'ai', true);
+            const elementoDisplay = document.getElementById(tempId);
 
             try {
                 await comprimirMemoria();
@@ -271,25 +396,11 @@
 
                 mensagens.push({ role: 'user', content: mensagemParaNarrador });
 
-                const response = await fetch(LM_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: MODELO,
-                        messages: mensagens,
-                        temperature: 0.6,
-                        max_tokens: (isInitial && !resumoAtual) ? 600 : 120, 
-                        presence_penalty: 0.3,
-                        frequency_penalty: 0.3
-                    })
-                });
+                const maxTokens = (isInitial && !resumoAtual) ? 600 : 120;
 
-                if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+                // ── SUBSTITUIÇÃO: fetch simples → streaming com auto-continuação ──
+                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay);
 
-                const data = await response.json();
-                const respostaIA = data.choices[0].message.content;
-
-                document.getElementById(tempId).innerText = respostaIA;
                 mensagens.push({ role: 'assistant', content: respostaIA });
 
                 if (isInitial) {
@@ -299,7 +410,7 @@
                 }
 
             } catch (error) {
-                document.getElementById(tempId).innerText = `❌ Erro: ${error.message}`;
+                elementoDisplay.innerText = `❌ Erro: ${error.message}`;
                 if (isInitial) {
                     userInput.disabled = false;
                     sendBtn.disabled = false;
