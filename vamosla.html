@@ -254,18 +254,18 @@
                     const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
                     
-                    // REFORÇO DINÂMICO DE LINGUAGEM E RITMO
-                    mensagemParaNarrador += `\n\n[Nota do Sistema: Responda com NO MÁXIMO 3 frases curtas e telegráficas. Use um português brasileiro autêntico e brutal, sem estruturas traduzidas do inglês.]`;
+                    // REFORÇO DINÂMICO DE LINGUAGEM E RITMO SEM COLCHETES
+                    mensagemParaNarrador += `\n\nDIRETRIZES DE ESTILO: Economia de Palavras. Responda em no máximo 2 ou 3 linhas. Mantenha o ritmo ágil. Sem metalinguagem. Foco na Ação: Termine sempre descrevendo a situação atual e aguardando a reação do jogador. Agência do Jogador: NUNCA decida o que o meu personagem sente ou faz.`;
 
                     // MOTOR LÓGICO DE CONSEQUÊNCIAS
                     if (resultadoTeste) {
                         adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
                         
                         let logicaFisica = resultadoTeste === 'FALHA'
-                            ? 'A ação do jogador DEU ERRADO (ex: errou o tiro, a arma travou, o inimigo desviou). É OBRIGATÓRIO que o alvo saia ileso ou a ação não tenha o efeito desejado.'
-                            : 'A ação do jogador FOI UM SUCESSO absoluto. A execução foi perfeita e impactante.';
+                            ? 'A ação falhou e DEU ERRADO. O alvo sai ileso e a consequência é brutal.'
+                            : 'A ação FOI UM SUCESSO absoluto e impactante.';
                             
-                        mensagemParaNarrador += `\n[Mecânica: Teste de ${tipoAcao} resultou em ${resultadoTeste}. LÓGICA: ${logicaFisica} Narre o desfecho de forma visceral e realista.]`;
+                        mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. LÓGICA: ${logicaFisica}`;
                     }
                 }
 
