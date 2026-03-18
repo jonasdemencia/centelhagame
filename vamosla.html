@@ -318,16 +318,18 @@ ${SSR_TEMPLATE}`
         }
 
         /**
-         * Chama o LLM com streaming e, se finish_reason === "length",
-         * dispara automaticamente turnos de continuação até o modelo
-         * encerrar naturalmente ou atingir MAX_CONTINUACOES.
+         * Chama o LLM com streaming e, opcionalmente, dispara turnos de
+         * auto-continuação se finish_reason === "length".
          *
-         * @param {Array}    mensagensPayload  - Histórico completo de mensagens
-         * @param {number}   maxTokens         - Limite de tokens por chamada
-         * @param {HTMLElement} elemento       - Elemento do DOM onde o texto vai sendo exibido
+         * @param {Array}    mensagensPayload    - Histórico completo de mensagens
+         * @param {number}   maxTokens           - Limite de tokens por chamada
+         * @param {HTMLElement} elemento         - Elemento do DOM onde o texto vai sendo exibido
+         * @param {boolean}  permitirContinuacao - TRUE apenas na abertura longa (600 tokens).
+         *                                         Para turnos normais (120 tokens) deve ser FALSE:
+         *                                         o corte em 120 é INTENCIONAL e não deve gerar loop.
          * @returns {string} Texto completo gerado
          */
-        async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento) {
+        async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento, permitirContinuacao = false) {
             const MAX_CONTINUACOES = 4;
             let textoCompleto = '';
             let msgsAtual = [...mensagensPayload];
@@ -335,7 +337,6 @@ ${SSR_TEMPLATE}`
             for (let tentativa = 0; tentativa <= MAX_CONTINUACOES; tentativa++) {
                 if (tentativa > 0) {
                     console.debug(`[CONTINUAÇÃO ${tentativa}] finish_reason=length detectado. Enviando turno de continuação...`);
-                    // Injeta o texto parcial como turno do assistente e pede que continue
                     msgsAtual = [
                         ...msgsAtual,
                         { role: 'assistant', content: textoCompleto },
@@ -347,7 +348,6 @@ ${SSR_TEMPLATE}`
                     msgsAtual,
                     maxTokens,
                     (parcial) => {
-                        // Exibe em tempo real: texto anterior + tokens chegando agora
                         elemento.innerText = textoCompleto + parcial;
                         chatBox.scrollTop = chatBox.scrollHeight;
                     }
@@ -356,6 +356,12 @@ ${SSR_TEMPLATE}`
                 textoCompleto += text;
                 elemento.innerText = textoCompleto;
                 chatBox.scrollTop = chatBox.scrollHeight;
+
+                // Turno normal: limite de 120 tokens é proposital — não continua jamais.
+                if (!permitirContinuacao) {
+                    console.debug(`[GERAÇÃO] Modo sem continuação (finish_reason="${finishReason}"). Encerrando.`);
+                    break;
+                }
 
                 if (finishReason !== 'length') {
                     console.debug(`[GERAÇÃO] Encerrado naturalmente (finish_reason="${finishReason}") após ${tentativa} continuação(ões).`);
@@ -426,8 +432,11 @@ ${SSR_TEMPLATE}`
 
                 const maxTokens = (isInitial && !resumoAtual) ? 600 : 120;
 
-                // ── SUBSTITUIÇÃO: fetch simples → streaming com auto-continuação ──
-                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay);
+                // Continuação automática APENAS na abertura longa (600 tokens).
+                // Turnos normais têm 120 tokens por design — não devem continuar.
+                const permitirContinuacao = (isInitial && !resumoAtual);
+
+                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, permitirContinuacao);
 
                 mensagens.push({ role: 'assistant', content: respostaIA });
 
