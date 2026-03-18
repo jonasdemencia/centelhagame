@@ -227,10 +227,8 @@
             let pergunta;
             if (isInitial) {
                 if (!resumoAtual) {
-                    // Jogo Novo: Comando explícito para ignorar a regra das 3 frases e caprichar no texto
-                    pergunta = 'EXCEÇÃO TEMPORÁRIA À REGRA: Esta é a introdução do jogo. Escreva uma abertura longa, atmosférica e densa (mínimo de 4 parágrafos), estabelecendo o tom sombrio bem ao estilo do livro-jogo "A Mansão Infernal" (House of Hell) de Steve Jackson. Descreva os arredores macabros, o sentimento de isolamento e o perigo iminente. Apenas nesta resposta, IGNORE a regra de "3 frases curtas". Termine a longa descrição colocando o jogador diante de uma situação que exige ação imediata.';
+                    pergunta = 'EXCEÇÃO TEMPORÁRIA À REGRA: Esta é a introdução do jogo. Escreva uma abertura longa, atmosférica e densa (mínimo de 3 parágrafos), estabelecendo o tom sombrio bem ao estilo do livro-jogo "A Mansão Infernal" (House of Hell) de Steve Jackson. Descreva os arredores macabros, o sentimento de isolamento e o perigo iminente. Apenas nesta resposta, IGNORE a regra de "3 frases curtas". Termine a longa descrição colocando o jogador diante de uma situação que exige ação.';
                 } else {
-                    // Jogo Carregado do Firebase
                     pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
                 }
             } else {
@@ -256,9 +254,12 @@
                     const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
                     
+                    // REFORÇO DINÂMICO: Garante que a IA não herde o estilo longo da introdução
+                    mensagemParaNarrador += `\n\n[Nota do Sistema: Responda obrigatoriamente com NO MÁXIMO 3 frases curtas, secas e brutais. O ritmo deve ser telegráfico.]`;
+
                     if (resultadoTeste) {
                         adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
-                        mensagemParaNarrador += `\n\n[Nota do Sistema: O jogador realizou uma ação que exigiu um teste de ${tipoAcao}. O resultado mecânico foi: ${resultadoTeste}. Narre DE FORMA CONCISA o resultado dessa ação baseando-se estritamente neste desfecho.]`;
+                        mensagemParaNarrador += `\n[Mecânica: Ação exigiu teste de ${tipoAcao}. Resultado: ${resultadoTeste}. Narre o desfecho com base nisso.]`;
                     }
                 }
 
@@ -271,8 +272,8 @@
                         model: MODELO,
                         messages: mensagens,
                         temperature: 0.6,
-                        // Se for a intro de um jogo novo, dá até 800 tokens. Senão, volta para o padrão de 120.
-                        max_tokens: (isInitial && !resumoAtual) ? 800 : 120, 
+                        // Margem de segurança de 250 em vez de 120 para evitar cortes abruptos
+                        max_tokens: (isInitial && !resumoAtual) ? 600 : 120, 
                         presence_penalty: 0.3,
                         frequency_penalty: 0.3
                     })
