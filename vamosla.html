@@ -116,11 +116,10 @@
         // Funções de Compressão de Memória (Sumarizador)
         // ============================================================
         async function comprimirMemoria() {
-            // Se passou do limite, pegamos as 6 mensagens mais antigas (após os system prompts)
             if (mensagens.length > LIMITE_MENSAGENS) {
                 adicionarMensagem('⚙️ As engrenagens do destino giram. Consolidando memórias...', 'system');
                 
-                const mensagensParaResumir = mensagens.splice(2, 6); // Remove e extrai do array principal
+                const mensagensParaResumir = mensagens.splice(2, 6); 
                 const textoExtraido = mensagensParaResumir.map(m => `${m.role === 'user' ? 'Jogador' : 'Narrador'}: ${m.content}`).join('\n');
 
                 const promptResumo = [
@@ -149,13 +148,11 @@
                     const data = await response.json();
                     resumoAtual = data.choices[0].message.content.trim();
                     
-                    // Atualiza a memória de longo prazo do narrador e salva no DB
                     mensagens[1].content = `Resumo da jornada até agora: ${resumoAtual}`;
                     await salvarResumoFirestore(resumoAtual);
                     
                 } catch (error) {
                     console.error("Erro ao comprimir memória:", error);
-                    // Se falhar, devolve as mensagens pro array para não perder o fio (falha segura)
                     mensagens.splice(2, 0, ...mensagensParaResumir); 
                 }
             }
@@ -224,10 +221,21 @@
         // ============================================================
         // Função principal de envio
         // ============================================================
-        // Expondo a função para o escopo global para que o onclick funcione
         window.enviar = async function(mensagemUsuario = null) {
             const isInitial = mensagemUsuario === null;
-            const pergunta = isInitial ? 'Set the scene.' : mensagemUsuario;
+            
+            let pergunta;
+            if (isInitial) {
+                if (!resumoAtual) {
+                    // Jogo Novo: Comando explícito para ignorar a regra das 3 frases e caprichar no texto
+                    pergunta = 'EXCEÇÃO TEMPORÁRIA À REGRA: Esta é a introdução do jogo. Escreva uma abertura longa, atmosférica e densa (mínimo de 4 parágrafos), estabelecendo o tom sombrio bem ao estilo do livro-jogo "A Mansão Infernal" (House of Hell) de Steve Jackson. Descreva os arredores macabros, o sentimento de isolamento e o perigo iminente. Apenas nesta resposta, IGNORE a regra de "3 frases curtas". Termine a longa descrição colocando o jogador diante de uma situação que exige ação imediata.';
+                } else {
+                    // Jogo Carregado do Firebase
+                    pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
+                }
+            } else {
+                pergunta = mensagemUsuario;
+            }
 
             if (!isInitial) {
                 adicionarMensagem(pergunta, 'user');
@@ -240,7 +248,6 @@
             const tempId = adicionarMensagem('...', 'ai', true);
 
             try {
-                // Antes de pedir a nova narração, verifica se precisa fatiar o contexto
                 await comprimirMemoria();
 
                 let mensagemParaNarrador = pergunta;
@@ -264,7 +271,8 @@
                         model: MODELO,
                         messages: mensagens,
                         temperature: 0.6,
-                        max_tokens: isInitial ? 500 : 120,  // <-- alteração aqui
+                        // Se for a intro de um jogo novo, dá até 800 tokens. Senão, volta para o padrão de 120.
+                        max_tokens: (isInitial && !resumoAtual) ? 800 : 120, 
                         presence_penalty: 0.3,
                         frequency_penalty: 0.3
                     })
@@ -304,9 +312,6 @@
         // ============================================================
         window.onload = async () => {
             await carregarSessao();
-            // Apenas lança a introdução se não tiver histórico ativo carregado
-            // Como este script não salva as N últimas falhas, ele sempre manda 'Set the scene.'
-            // A diferença é que agora o narrador vai levar o "Resumo" em conta.
             window.enviar(); 
         };
 
