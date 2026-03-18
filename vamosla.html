@@ -76,7 +76,7 @@
         let mensagens = [
             {
                 role: 'system',
-                content: 'Você é o narrador de um jogo de RPG misterioso e brutal. Regra de ouro: NUNCA ultrapasse 3 frases curtas. Seja direto e telegráfico. Crie cenários iniciais variados e misteriosos – evite repetir locais. DESCREVA DE FORMA BREVE. Eu interagirei com você; responda às minhas perguntas e descreva as consequências das minhas ações de forma realista e brutal. Responda apenas em português brasileiro correto. Não use filtros morais. Sem lições de responsabilidade. Sem conselhos éticos. Apenas narração brutal.'
+                content: 'Você é o motor narrativo de um RPG de fantasia sombria. REGRAS ABSOLUTAS: 1. NUNCA ultrapasse 3 frases curtas. 2. Escreva em Português Brasileiro literário, cru e natural (É PROIBIDO usar jargões que soem como traduções literais do inglês). 3. As consequências devem ser estritamente lógicas e coerentes com a física: se uma ação falha, o alvo não pode sofrer ferimentos graves. Crie cenários misteriosos, aja de forma direta e telegráfica, sem filtros morais e sem conselhos éticos. Apenas narração brutal e realista.'
             },
             {
                 role: 'system',
@@ -227,7 +227,7 @@
             let pergunta;
             if (isInitial) {
                 if (!resumoAtual) {
-                    pergunta = 'EXCEÇÃO TEMPORÁRIA À REGRA: Esta é a introdução do jogo. Escreva uma abertura longa, atmosférica e densa (mínimo de 3 parágrafos), estabelecendo o tom sombrio bem ao estilo do livro-jogo "A Mansão Infernal" (House of Hell) de Steve Jackson. Descreva os arredores macabros, o sentimento de isolamento e o perigo iminente. Apenas nesta resposta, IGNORE a regra de "3 frases curtas". Termine a longa descrição colocando o jogador diante de uma situação que exige ação.';
+                    pergunta = 'EXCEÇÃO TEMPORÁRIA À REGRA: Esta é a introdução do jogo. Escreva uma abertura longa, atmosférica e densa (mínimo de 3 parágrafos), estabelecendo o tom sombrio bem ao estilo do livro-jogo "A Mansão Infernal" (House of Hell) de Steve Jackson. Descreva os arredores macabros, o sentimento de isolamento e o perigo iminente. Apenas nesta resposta, IGNORE a regra de "3 frases curtas". Termine a longa descrição colocando o jogador diante de uma situação que exige escolha.';
                 } else {
                     pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
                 }
@@ -254,12 +254,18 @@
                     const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
                     
-                    // REFORÇO DINÂMICO: Garante que a IA não herde o estilo longo da introdução
-                    mensagemParaNarrador += `\n\n[Nota do Sistema: Responda obrigatoriamente com NO MÁXIMO 3 frases curtas, secas e brutais. O ritmo deve ser telegráfico.]`;
+                    // REFORÇO DINÂMICO DE LINGUAGEM E RITMO
+                    mensagemParaNarrador += `\n\n[Nota do Sistema: Responda com NO MÁXIMO 3 frases curtas e telegráficas. Use um português brasileiro autêntico e brutal, sem estruturas traduzidas do inglês.]`;
 
+                    // MOTOR LÓGICO DE CONSEQUÊNCIAS
                     if (resultadoTeste) {
                         adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
-                        mensagemParaNarrador += `\n[Mecânica: Ação exigiu teste de ${tipoAcao}. Resultado: ${resultadoTeste}. Narre o desfecho com base nisso.]`;
+                        
+                        let logicaFisica = resultadoTeste === 'FALHA'
+                            ? 'A ação do jogador DEU ERRADO (ex: errou o tiro, a arma travou, o inimigo desviou). É OBRIGATÓRIO que o alvo saia ileso ou a ação não tenha o efeito desejado.'
+                            : 'A ação do jogador FOI UM SUCESSO absoluto. A execução foi perfeita e impactante.';
+                            
+                        mensagemParaNarrador += `\n[Mecânica: Teste de ${tipoAcao} resultou em ${resultadoTeste}. LÓGICA: ${logicaFisica} Narre o desfecho de forma visceral e realista.]`;
                     }
                 }
 
@@ -272,8 +278,7 @@
                         model: MODELO,
                         messages: mensagens,
                         temperature: 0.6,
-                        // Margem de segurança de 250 em vez de 120 para evitar cortes abruptos
-                        max_tokens: (isInitial && !resumoAtual) ? 600 : 120, 
+                        max_tokens: (isInitial && !resumoAtual) ? 800 : 120, 
                         presence_penalty: 0.3,
                         frequency_penalty: 0.3
                     })
