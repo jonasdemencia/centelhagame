@@ -113,23 +113,45 @@
         }
 
         // ============================================================
-        // Funções de Compressão de Memória (Sumarizador)
+        // Funções de Compressão de Memória — Structured State Representation (SSR)
         // ============================================================
+
+        // Template vazio do estado estruturado. É o "esqueleto" que o modelo preenche.
+        // Campos são fixos para garantir que o narrador sempre tenha os dados que precisa.
+        const SSR_TEMPLATE = `LOCAL: [onde o jogador está agora]
+NPCS: [lista de personagens encontrados e seu estado atual: nome/descrição, relação, vivo/morto/desconhecido]
+ITENS: [itens carregados ou relevantes no cenário]
+EVENTOS_CHAVE: [lista de fatos consumados, em ordem, sem atmosfera — apenas o que aconteceu]
+SITUACAO_ATUAL: [uma frase: o que o jogador está fazendo ou diante de agora]
+GANCHOS_ATIVOS: [pistas ou ameaças não resolvidas que devem ser lembradas]`;
+
         async function comprimirMemoria() {
             if (mensagens.length > LIMITE_MENSAGENS) {
                 adicionarMensagem('⚙️ As engrenagens do destino giram. Consolidando memórias...', 'system');
                 
                 const mensagensParaResumir = mensagens.splice(2, 6); 
-                const textoExtraido = mensagensParaResumir.map(m => `${m.role === 'user' ? 'Jogador' : 'Narrador'}: ${m.content}`).join('\n');
+                const textoExtraido = mensagensParaResumir
+                    .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
+                    .join('\n---\n');
 
+                // Prompt SSR: instrui o modelo a agir como extrator de estado, não narrador.
+                // Temperature 0.1 para máxima consistência e fidelidade factual.
                 const promptResumo = [
                     { 
                         role: 'system', 
-                        content: 'Você é o arquivista. Resuma os eventos a seguir em no máximo 1 parágrafo curto, focando em mortes, itens importantes e mudanças de local. Mantenha os fatos essenciais vivos.' 
+                        content: `Você é um extrator de estado de jogo. Sua única função é preencher o formulário abaixo com dados factuais extraídos dos eventos fornecidos. REGRAS ABSOLUTAS:
+1. ZERO prosa, ZERO atmosfera, ZERO adjetivos literários.
+2. Cada campo deve ser preenchido com fatos secos e objetivos.
+3. Se o estado anterior já tiver um campo, ATUALIZE-O com as novas informações — não apague o que ainda é verdade.
+4. Se não houver informação para um campo, escreva: [sem dados].
+5. Responda APENAS com o formulário preenchido, sem nenhum texto adicional antes ou depois.
+
+FORMULÁRIO:
+${SSR_TEMPLATE}`
                     },
                     { 
                         role: 'user', 
-                        content: `CONTEXTO ANTERIOR: ${resumoAtual}\n\nNOVOS EVENTOS: \n${textoExtraido}\n\nEscreva um novo resumo unificado.` 
+                        content: `ESTADO ANTERIOR:\n${resumoAtual || '[início da aventura — sem estado anterior]'}\n\nNOVOS EVENTOS:\n${textoExtraido}\n\nPreencha o formulário de estado atualizado agora.`
                     }
                 ];
 
@@ -140,15 +162,21 @@
                         body: JSON.stringify({
                             model: MODELO,
                             messages: promptResumo,
-                            temperature: 0.3,
-                            max_tokens: 300
+                            temperature: 0.1,   // baixíssima para fidelidade factual máxima
+                            max_tokens: 350
                         })
                     });
                     
                     const data = await response.json();
-                    resumoAtual = data.choices[0].message.content.trim();
+                    const novoSSR = data.choices[0].message.content.trim();
                     
-                    mensagens[1].content = `Resumo da jornada até agora: ${resumoAtual}`;
+                    console.debug('[SSR] Estado estruturado gerado:\n' + novoSSR);
+                    
+                    resumoAtual = novoSSR;
+                    
+                    // Injeta o SSR como bloco de dados — não como narrativa.
+                    // O narrador lê esses campos como "fatos do mundo", não como história.
+                    mensagens[1].content = `ESTADO ATUAL DO MUNDO (use como referência factual, não repita como narração):\n${resumoAtual}`;
                     await salvarResumoFirestore(resumoAtual);
                     
                 } catch (error) {
