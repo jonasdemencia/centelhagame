@@ -76,7 +76,17 @@
         let mensagens = [
             {
                 role: 'system',
-                content: 'Você é o motor narrativo de um RPG de fantasia sombria. REGRAS ABSOLUTAS: 1. NUNCA ultrapasse 3 frases curtas. 2. Escreva em Português Brasileiro literário, cru e natural (É PROIBIDO usar jargões que soem como traduções literais do inglês). 3. As consequências devem ser estritamente lógicas e coerentes com a física. Crie cenários misteriosos, aja de forma direta e telegráfica, sem filtros morais e sem conselhos éticos. Apenas narração brutal e realista.'
+                content: `Você é o motor narrativo de um RPG de fantasia sombria. Escreva em Português Brasileiro literário, cru e direto.
+
+CRAFT NARRATIVO — REGRAS DE OURO:
+1. MOSTRE, NÃO CONTE. Nunca diga o que o jogador sente ou pensa. Descreva apenas o que os sentidos captam: cheiro, textura, som, temperatura, visão. Errado: "você sente medo". Certo: "suas mãos não param de tremer".
+2. ANCORAGEM SENSORIAL. Cada beat narrativo deve conter ao menos um detalhe físico concreto e específico — nunca genérico. Errado: "o lugar era assustador". Certo: "o chão range sob um único prego solto".
+3. LEI DE CHEKHOV. Só introduza um elemento (objeto, pessoa, som) se ele puder ser relevante depois. Nunca insira detalhes decorativos que desaparecem sem rastro.
+4. FÍSICA INABALÁVEL. Consequências devem ser estritamente proporcionais à causa. Falha de CARISMA gera rejeição social — não explosão. Falha de HABILIDADE gera tropeço — não catástrofe. Nunca exagere além do que a física permitiria.
+5. MISTÉRIO POR OMISSÃO. O que não é mostrado é mais poderoso que o que é explicado. Revele parcialmente. Deixe lacunas intencionais que convidem à investigação. Nunca explique a origem de algo misterioso na mesma cena em que aparece.
+6. TENSÃO ABERTA. Cada resposta termina com algo instável — visível, audível ou tangível — que exige decisão. Nunca feche todos os ganchos numa mesma resposta.
+7. AGÊNCIA ABSOLUTA. NUNCA decida o que o personagem faz, sente, pensa ou decide. Você narra o mundo. O jogador narra a si mesmo.
+8. MÁXIMO 3 FRASES por turno normal. Telegráfico. Sem adornos. Sem metalinguagem. Sem conselhos éticos.`
             },
             {
                 role: 'system',
@@ -318,29 +328,24 @@ ${SSR_TEMPLATE}`
         }
 
         /**
-         * Chama o LLM com streaming e dispara até `maxContinuacoes` turnos extras
-         * se finish_reason === "length".
-         *
-         * Por que inteiro e não boolean:
-         *   - Intro  → maxTokens=800, maxContinuacoes=0: budget generoso, zero loop.
-         *              O modelo tem espaço para terminar; se ainda assim for cortado,
-         *              aceita o corte — não há risco de texto gigante.
-         *   - Normal → maxTokens=120, maxContinuacoes=1: permite UMA extensão (≤240
-         *              tokens no pior caso) para o modelo fechar a frase. Sem loop.
+         * Chama o LLM com streaming e, se finish_reason === "length",
+         * dispara automaticamente turnos de continuação até o modelo
+         * encerrar naturalmente ou atingir MAX_CONTINUACOES.
          *
          * @param {Array}    mensagensPayload  - Histórico completo de mensagens
          * @param {number}   maxTokens         - Limite de tokens por chamada
          * @param {HTMLElement} elemento       - Elemento do DOM onde o texto vai sendo exibido
-         * @param {number}   maxContinuacoes   - Máximo de extensões permitidas (0 = nenhuma)
          * @returns {string} Texto completo gerado
          */
-        async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento, maxContinuacoes = 0) {
+        async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento) {
+            const MAX_CONTINUACOES = 4;
             let textoCompleto = '';
             let msgsAtual = [...mensagensPayload];
 
-            for (let tentativa = 0; tentativa <= maxContinuacoes; tentativa++) {
+            for (let tentativa = 0; tentativa <= MAX_CONTINUACOES; tentativa++) {
                 if (tentativa > 0) {
-                    console.debug(`[CONTINUAÇÃO ${tentativa}/${maxContinuacoes}] finish_reason=length. Enviando extensão...`);
+                    console.debug(`[CONTINUAÇÃO ${tentativa}] finish_reason=length detectado. Enviando turno de continuação...`);
+                    // Injeta o texto parcial como turno do assistente e pede que continue
                     msgsAtual = [
                         ...msgsAtual,
                         { role: 'assistant', content: textoCompleto },
@@ -352,6 +357,7 @@ ${SSR_TEMPLATE}`
                     msgsAtual,
                     maxTokens,
                     (parcial) => {
+                        // Exibe em tempo real: texto anterior + tokens chegando agora
                         elemento.innerText = textoCompleto + parcial;
                         chatBox.scrollTop = chatBox.scrollHeight;
                     }
@@ -362,12 +368,12 @@ ${SSR_TEMPLATE}`
                 chatBox.scrollTop = chatBox.scrollHeight;
 
                 if (finishReason !== 'length') {
-                    console.debug(`[GERAÇÃO] Encerrado naturalmente (finish_reason="${finishReason}") na tentativa ${tentativa}.`);
+                    console.debug(`[GERAÇÃO] Encerrado naturalmente (finish_reason="${finishReason}") após ${tentativa} continuação(ões).`);
                     break;
                 }
 
-                if (tentativa === maxContinuacoes) {
-                    console.debug(`[GERAÇÃO] Limite de ${maxContinuacoes} continuação(ões) atingido. Encerrando.`);
+                if (tentativa === MAX_CONTINUACOES) {
+                    console.warn(`[GERAÇÃO] Atingido limite de ${MAX_CONTINUACOES} continuações. Encerrando.`);
                 }
             }
 
@@ -411,16 +417,33 @@ ${SSR_TEMPLATE}`
                     const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
                     
-                    // REFORÇO DINÂMICO DE LINGUAGEM E RITMO SEM COLCHETES
-                    mensagemParaNarrador += `\n\nDIRETRIZES DE ESTILO: Economia de Palavras. Responda em no máximo 2 ou 3 linhas. Mantenha o ritmo ágil. Sem metalinguagem. Foco na Ação: Termine sempre descrevendo a situação atual e aguardando a reação do jogador. Agência do Jogador: NUNCA decida o que o meu personagem sente ou faz.`;
+                    // DIRETRIZ DE TURNO — reforça o craft a cada chamada
+                    mensagemParaNarrador += `\n\nDIRETRIZ DESTE TURNO:
+- Beat narrativo: AÇÃO do jogador → CONSEQUÊNCIA física proporcional → NOVA TENSÃO aberta.
+- Use 1 detalhe sensorial concreto (cheiro, textura, som, temperatura). Nada genérico.
+- Termine com algo no mundo que exige decisão — nunca com o estado interno do personagem.
+- Máximo 3 frases. Sem metalinguagem. Sem adornos.`;
 
-                    // MOTOR LÓGICO DE CONSEQUÊNCIAS
+                    // MOTOR LÓGICO DE CONSEQUÊNCIAS — proporcionalidade explícita por atributo
                     if (resultadoTeste) {
                         adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
                         
-                        let logicaFisica = resultadoTeste === 'FALHA'
-                            ? 'A ação falhou e DEU ERRADO. O alvo sai ileso e a consequência é brutal.'
-                            : 'A ação FOI UM SUCESSO absoluto e impactante.';
+                        const logicaFisica = {
+                            SUCESSO: {
+                                HABILIDADE: 'A ação física foi executada com precisão. O resultado é tangível e imediato.',
+                                CARISMA:    'A abordagem social funcionou. A reação do outro personagem é crível e proporcional.',
+                                SORTE:      'Um fator externo favoreceu o jogador de forma sutil — não milagrosa.'
+                            },
+                            FALHA: {
+                                HABILIDADE: 'A ação física falhou de forma crível — tropeço, escorregão, objeto que cai. Nada catastrófico.',
+                                CARISMA:    'A abordagem social foi mal recebida. O outro personagem reage com frieza, desconfiança ou irritação — não violência.',
+                                SORTE:      'Um fator externo atrapalhou de forma sutil — um barulho, uma sombra, um objeto fora do lugar.'
+                            }
+                        }[resultadoTeste]?.[tipoAcao] ?? (
+                            resultadoTeste === 'FALHA'
+                                ? 'A ação falhou de forma crível e proporcional. Sem exagero.'
+                                : 'A ação teve sucesso de forma tangível e proporcional.'
+                        );
                             
                         mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. LÓGICA: ${logicaFisica}`;
                     }
@@ -428,17 +451,10 @@ ${SSR_TEMPLATE}`
 
                 mensagens.push({ role: 'user', content: mensagemParaNarrador });
 
-                // Intro: 800 tokens de budget, zero continuações — espaço generoso para
-                // terminar sem risco de loop. Se ainda assim cortar, aceita o corte.
-                // Normal: 120 tokens + 1 continuação permitida (≤240 total) — fecha a frase
-                // sem risco de loop infinito.
-                const isIntro = (isInitial && !resumoAtual);
-                const maxTokens        = isIntro ? 800 : 120;
-                const maxContinuacoes  = isIntro ?   0 :   1;
+                const maxTokens = (isInitial && !resumoAtual) ? 600 : 120;
 
-                console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
-
-                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
+                // ── SUBSTITUIÇÃO: fetch simples → streaming com auto-continuação ──
+                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay);
 
                 mensagens.push({ role: 'assistant', content: respostaIA });
 
