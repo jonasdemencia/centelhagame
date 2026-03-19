@@ -451,7 +451,7 @@ ${SSR_TEMPLATE}`
 
                 mensagens.push({ role: 'user', content: mensagemParaNarrador });
 
-                const maxTokens = (isInitial && !resumoAtual) ? 600 : 120;
+                const maxTokens = (isInitial && !resumoAtual) ? 300 : 120;
 
                 // ── SUBSTITUIÇÃO: fetch simples → streaming com auto-continuação ──
                 const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay);
