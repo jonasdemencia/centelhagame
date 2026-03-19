@@ -318,25 +318,29 @@ ${SSR_TEMPLATE}`
         }
 
         /**
-         * Chama o LLM com streaming e, opcionalmente, dispara turnos de
-         * auto-continuação se finish_reason === "length".
+         * Chama o LLM com streaming e dispara até `maxContinuacoes` turnos extras
+         * se finish_reason === "length".
          *
-         * @param {Array}    mensagensPayload    - Histórico completo de mensagens
-         * @param {number}   maxTokens           - Limite de tokens por chamada
-         * @param {HTMLElement} elemento         - Elemento do DOM onde o texto vai sendo exibido
-         * @param {boolean}  permitirContinuacao - TRUE apenas na abertura longa (600 tokens).
-         *                                         Para turnos normais (120 tokens) deve ser FALSE:
-         *                                         o corte em 120 é INTENCIONAL e não deve gerar loop.
+         * Por que inteiro e não boolean:
+         *   - Intro  → maxTokens=800, maxContinuacoes=0: budget generoso, zero loop.
+         *              O modelo tem espaço para terminar; se ainda assim for cortado,
+         *              aceita o corte — não há risco de texto gigante.
+         *   - Normal → maxTokens=120, maxContinuacoes=1: permite UMA extensão (≤240
+         *              tokens no pior caso) para o modelo fechar a frase. Sem loop.
+         *
+         * @param {Array}    mensagensPayload  - Histórico completo de mensagens
+         * @param {number}   maxTokens         - Limite de tokens por chamada
+         * @param {HTMLElement} elemento       - Elemento do DOM onde o texto vai sendo exibido
+         * @param {number}   maxContinuacoes   - Máximo de extensões permitidas (0 = nenhuma)
          * @returns {string} Texto completo gerado
          */
-        async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento, permitirContinuacao = false) {
-            const MAX_CONTINUACOES = 4;
+        async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento, maxContinuacoes = 0) {
             let textoCompleto = '';
             let msgsAtual = [...mensagensPayload];
 
-            for (let tentativa = 0; tentativa <= MAX_CONTINUACOES; tentativa++) {
+            for (let tentativa = 0; tentativa <= maxContinuacoes; tentativa++) {
                 if (tentativa > 0) {
-                    console.debug(`[CONTINUAÇÃO ${tentativa}] finish_reason=length detectado. Enviando turno de continuação...`);
+                    console.debug(`[CONTINUAÇÃO ${tentativa}/${maxContinuacoes}] finish_reason=length. Enviando extensão...`);
                     msgsAtual = [
                         ...msgsAtual,
                         { role: 'assistant', content: textoCompleto },
@@ -357,19 +361,13 @@ ${SSR_TEMPLATE}`
                 elemento.innerText = textoCompleto;
                 chatBox.scrollTop = chatBox.scrollHeight;
 
-                // Turno normal: limite de 120 tokens é proposital — não continua jamais.
-                if (!permitirContinuacao) {
-                    console.debug(`[GERAÇÃO] Modo sem continuação (finish_reason="${finishReason}"). Encerrando.`);
-                    break;
-                }
-
                 if (finishReason !== 'length') {
-                    console.debug(`[GERAÇÃO] Encerrado naturalmente (finish_reason="${finishReason}") após ${tentativa} continuação(ões).`);
+                    console.debug(`[GERAÇÃO] Encerrado naturalmente (finish_reason="${finishReason}") na tentativa ${tentativa}.`);
                     break;
                 }
 
-                if (tentativa === MAX_CONTINUACOES) {
-                    console.warn(`[GERAÇÃO] Atingido limite de ${MAX_CONTINUACOES} continuações. Encerrando.`);
+                if (tentativa === maxContinuacoes) {
+                    console.debug(`[GERAÇÃO] Limite de ${maxContinuacoes} continuação(ões) atingido. Encerrando.`);
                 }
             }
 
@@ -430,13 +428,17 @@ ${SSR_TEMPLATE}`
 
                 mensagens.push({ role: 'user', content: mensagemParaNarrador });
 
-                const maxTokens = (isInitial && !resumoAtual) ? 600 : 120;
+                // Intro: 800 tokens de budget, zero continuações — espaço generoso para
+                // terminar sem risco de loop. Se ainda assim cortar, aceita o corte.
+                // Normal: 120 tokens + 1 continuação permitida (≤240 total) — fecha a frase
+                // sem risco de loop infinito.
+                const isIntro = (isInitial && !resumoAtual);
+                const maxTokens        = isIntro ? 800 : 120;
+                const maxContinuacoes  = isIntro ?   0 :   1;
 
-                // Continuação automática APENAS na abertura longa (600 tokens).
-                // Turnos normais têm 120 tokens por design — não devem continuar.
-                const permitirContinuacao = (isInitial && !resumoAtual);
+                console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
 
-                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, permitirContinuacao);
+                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
 
                 mensagens.push({ role: 'assistant', content: respostaIA });
 
