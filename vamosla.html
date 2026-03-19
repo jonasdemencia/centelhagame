@@ -321,8 +321,12 @@ ${SSR_TEMPLATE}`
          * Chama o LLM com streaming e dispara até `maxContinuacoes` turnos extras
          * se finish_reason === "length".
          *
-         * Intro  → maxTokens=400, maxContinuacoes=0: budget único, sem loop. Corta e aceita.
-         * Normal → maxTokens=120, maxContinuacoes=1: uma extensão para fechar frase. Sem loop.
+         * Por que inteiro e não boolean:
+         *   - Intro  → maxTokens=800, maxContinuacoes=0: budget generoso, zero loop.
+         *              O modelo tem espaço para terminar; se ainda assim for cortado,
+         *              aceita o corte — não há risco de texto gigante.
+         *   - Normal → maxTokens=120, maxContinuacoes=1: permite UMA extensão (≤240
+         *              tokens no pior caso) para o modelo fechar a frase. Sem loop.
          *
          * @param {Array}    mensagensPayload  - Histórico completo de mensagens
          * @param {number}   maxTokens         - Limite de tokens por chamada
@@ -424,12 +428,13 @@ ${SSR_TEMPLATE}`
 
                 mensagens.push({ role: 'user', content: mensagemParaNarrador });
 
-                // Intro : 400 tokens, ZERO continuações — budget único, sem loop algum.
-                //         Se cortar nos 400, aceita. Não há segunda chance.
-                // Normal: 120 tokens, 1 continuação — fecha a frase se necessário (≤240 total).
-                const isIntro         = (isInitial && !resumoAtual);
-                const maxTokens       = isIntro ? 400 : 120;
-                const maxContinuacoes = isIntro ?   0 :   1;
+                // Intro: 800 tokens de budget, zero continuações — espaço generoso para
+                // terminar sem risco de loop. Se ainda assim cortar, aceita o corte.
+                // Normal: 120 tokens + 1 continuação permitida (≤240 total) — fecha a frase
+                // sem risco de loop infinito.
+                const isIntro = (isInitial && !resumoAtual);
+                const maxTokens        = isIntro ? 800 : 120;
+                const maxContinuacoes  = isIntro ?   0 :   1;
 
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
 
@@ -474,3 +479,4 @@ ${SSR_TEMPLATE}`
     </script>
 </body>
 </html>
+
