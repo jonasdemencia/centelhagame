@@ -76,11 +76,12 @@
         let mensagens = [
             {
                 role: 'system',
-                // MUDANÇA: "literário" substituído por "direto, concreto e objetivo".
-                // Proibições explícitas de adjetivos empilhados, metáforas excessivas e
-                // filosofia — que eram a raiz do estilo barroco/obscuro anterior.
-                // "Verbos de ação" orienta o modelo para clareza imediata.
-                content: 'Você é o narrador de um RPG de fantasia sombria no estilo dos livros-jogo de Steve Jackson. REGRAS ABSOLUTAS: 1. NUNCA ultrapasse 3 frases curtas por resposta. 2. Escreva em Português Brasileiro direto, concreto e objetivo — ZERO metáforas excessivas, ZERO adjetivos empilhados, ZERO filosofia. 3. Priorize o que o jogador VÊ, OUVE ou SENTE de forma imediata. Use verbos de ação. 4. As consequências devem ser estritamente lógicas e coerentes com a física do mundo. Sem filtros morais e sem conselhos éticos. Apenas narração crua, direta e precisa.'
+                // MUDANÇA: Adicionadas duas regras críticas:
+                // - Perspectiva: SEMPRE segunda pessoa (você). Proibido misturar com
+                //   primeira pessoa — era a causa de "vira-me", "olho", etc.
+                // - Consistência: NUNCA contradizer fatos já narrados na mesma cena —
+                //   era a causa de "levanta-se do chão" quando a figura estava de pé.
+                content: 'Você é o narrador de um RPG de fantasia sombria no estilo dos livros-jogo de Steve Jackson. REGRAS ABSOLUTAS: 1. NUNCA ultrapasse 3 frases curtas por resposta. 2. SEMPRE narre em segunda pessoa (você faz X, você vê Y). NUNCA use primeira pessoa nem misture perspectivas. 3. NUNCA contradiga fatos já estabelecidos na cena anterior — se a figura estava de pé, ela continua de pé até que algo mude isso. 4. Escreva em Português Brasileiro direto e concreto — ZERO metáforas excessivas, ZERO adjetivos empilhados. Descreva apenas o que o jogador vê, ouve ou sente agora. Use verbos de ação. 5. Consequências devem ser estritamente lógicas. Sem filtros morais, sem conselhos. Narração crua e precisa.'
             },
             {
                 role: 'system',
@@ -120,8 +121,6 @@
         // Funções de Compressão de Memória — Structured State Representation (SSR)
         // ============================================================
 
-        // Template vazio do estado estruturado. É o "esqueleto" que o modelo preenche.
-        // Campos são fixos para garantir que o narrador sempre tenha os dados que precisa.
         const SSR_TEMPLATE = `LOCAL: [onde o jogador está agora]
 NPCS: [lista de personagens encontrados e seu estado atual: nome/descrição, relação, vivo/morto/desconhecido]
 ITENS: [itens carregados ou relevantes no cenário]
@@ -138,8 +137,6 @@ GANCHOS_ATIVOS: [pistas ou ameaças não resolvidas que devem ser lembradas]`;
                     .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
                     .join('\n---\n');
 
-                // Prompt SSR: instrui o modelo a agir como extrator de estado, não narrador.
-                // Temperature 0.1 para máxima consistência e fidelidade factual.
                 const promptResumo = [
                     { 
                         role: 'system', 
@@ -166,7 +163,7 @@ ${SSR_TEMPLATE}`
                         body: JSON.stringify({
                             model: MODELO,
                             messages: promptResumo,
-                            temperature: 0.1,   // baixíssima para fidelidade factual máxima
+                            temperature: 0.1,
                             max_tokens: 350
                         })
                     });
@@ -177,9 +174,6 @@ ${SSR_TEMPLATE}`
                     console.debug('[SSR] Estado estruturado gerado:\n' + novoSSR);
                     
                     resumoAtual = novoSSR;
-                    
-                    // Injeta o SSR como bloco de dados — não como narrativa.
-                    // O narrador lê esses campos como "fatos do mundo", não como história.
                     mensagens[1].content = `ESTADO ATUAL DO MUNDO (use como referência factual, não repita como narração):\n${resumoAtual}`;
                     await salvarResumoFirestore(resumoAtual);
                     
@@ -251,14 +245,8 @@ ${SSR_TEMPLATE}`
         }
 
         // ============================================================
-        // NOVO: Streaming SSE com loop de auto-continuação
+        // Streaming SSE com loop de auto-continuação
         // ============================================================
-
-        /**
-         * Faz uma chamada ao LM Studio com stream: true.
-         * Lê os chunks SSE e chama onToken(textoAcumulado) a cada token.
-         * Retorna { text: string, finishReason: string }.
-         */
         async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
             const response = await fetch(LM_URL, {
                 method: 'POST',
@@ -290,7 +278,7 @@ ${SSR_TEMPLATE}`
 
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n');
-                buffer = lines.pop(); // mantém linha incompleta no buffer
+                buffer = lines.pop();
 
                 for (const line of lines) {
                     if (!line.startsWith('data: ')) continue;
@@ -321,23 +309,6 @@ ${SSR_TEMPLATE}`
             return { text: fullText, finishReason };
         }
 
-        /**
-         * Chama o LLM com streaming e dispara até `maxContinuacoes` turnos extras
-         * se finish_reason === "length".
-         *
-         * Por que inteiro e não boolean:
-         *   - Intro  → maxTokens=800, maxContinuacoes=0: budget generoso, zero loop.
-         *              O modelo tem espaço para terminar; se ainda assim for cortado,
-         *              aceita o corte — não há risco de texto gigante.
-         *   - Normal → maxTokens=160, maxContinuacoes=1: permite UMA extensão (≤320
-         *              tokens no pior caso) para o modelo fechar a frase. Sem loop.
-         *
-         * @param {Array}    mensagensPayload  - Histórico completo de mensagens
-         * @param {number}   maxTokens         - Limite de tokens por chamada
-         * @param {HTMLElement} elemento       - Elemento do DOM onde o texto vai sendo exibido
-         * @param {number}   maxContinuacoes   - Máximo de extensões permitidas (0 = nenhuma)
-         * @returns {string} Texto completo gerado
-         */
         async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento, maxContinuacoes = 0) {
             let textoCompleto = '';
             let msgsAtual = [...mensagensPayload];
@@ -387,10 +358,7 @@ ${SSR_TEMPLATE}`
             let pergunta;
             if (isInitial) {
                 if (!resumoAtual) {
-                    // MUDANÇA: Adicionada instrução de clareza na intro. Pedimos parágrafos
-                    // descritivos mas agora com a restrição explícita de usar frases diretas,
-                    // concretas e sem ornamentos — evitando o estilo barroco anterior.
-                    pergunta = 'EXCEÇÃO TEMPORÁRIA À REGRA DE TAMANHO: Esta é a introdução do jogo. Escreva uma abertura com 3 parágrafos curtos no estilo dos livros-jogo de Steve Jackson. MANTENHA AS OUTRAS REGRAS: frases diretas e concretas, zero adjetivos empilhados, zero metáforas excessivas. Descreva o cenário com detalhes físicos reais (o que o jogador vê, ouve, cheira). Termine colocando o jogador diante de uma decisão imediata.';
+                    pergunta = 'EXCEÇÃO TEMPORÁRIA À REGRA DE TAMANHO: Esta é a introdução do jogo. Escreva uma abertura com 3 parágrafos curtos no estilo dos livros-jogo de Steve Jackson. MANTENHA AS OUTRAS REGRAS: sempre segunda pessoa (você), frases diretas e concretas, zero adjetivos empilhados, zero metáforas excessivas. Descreva o cenário com detalhes físicos reais (o que o jogador vê, ouve, cheira). Termine colocando o jogador diante de uma decisão imediata.';
                 } else {
                     pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
                 }
@@ -415,11 +383,10 @@ ${SSR_TEMPLATE}`
                 let mensagemParaNarrador = pergunta;
 
                 if (!isInitial) {
-                    // MUDANÇA: Diretriz de estilo reforçada com "verbos de ação" e
-                    // proibição explícita de ornamentos — alinhada com o novo system prompt.
-                    mensagemParaNarrador += `\n\nDIRETRIZES DE ESTILO: Máximo 3 frases. Use verbos de ação. Descreva apenas o que é visível ou audível agora. ZERO ornamentos, ZERO filosofia. Termine sempre com a situação atual do jogador, aguardando sua próxima decisão. NUNCA decida o que o meu personagem sente ou faz.`;
+                    // MUDANÇA: Diretriz reforça segunda pessoa e consistência de cena
+                    // a cada turno, não apenas no system prompt global.
+                    mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva apenas o que é visível ou audível agora. Termine com a situação imediata do jogador. NUNCA decida o que o personagem sente ou faz.`;
 
-                    // MOTOR LÓGICO DE CONSEQUÊNCIAS
                     const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
 
@@ -436,10 +403,6 @@ ${SSR_TEMPLATE}`
 
                 mensagens.push({ role: 'user', content: mensagemParaNarrador });
 
-                // Intro: 800 tokens de budget, zero continuações — espaço generoso para
-                // terminar sem risco de loop.
-                // Normal: 160 tokens + 1 continuação permitida (≤320 total) — fecha a frase
-                // sem risco de loop infinito. Aumentado de 120→160 para reduzir cortes.
                 const isIntro = (isInitial && !resumoAtual);
                 const maxTokens        = isIntro ? 800 : 160;
                 const maxContinuacoes  = isIntro ?   0 :   1;
