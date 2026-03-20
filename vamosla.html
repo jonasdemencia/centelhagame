@@ -412,7 +412,7 @@ ${SSR_TEMPLATE}`
                 let mensagemParaNarrador = pergunta;
 
                 if (!isInitial) {
-mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda pessoa (você). O mundo reage às suas ações: NPCs respondem, atacam ou fogem; o ambiente muda. OBRIGATÓRIO: Termine a resposta SEMPRE com um "Gancho" (uma nova complicação, uma pista visual intrigante, uma reação inesperada do NPC ou um perigo iminente que force o jogador a tomar uma decisão). NUNCA termine apenas descrevendo o estado do jogador. NUNCA decida a ação do personagem.`;
+mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda pessoa (você). O mundo reage às suas ações: NPCs respondem, atacam ou fogem; o ambiente muda. OBRIGATÓRIO: Termine a resposta SEMPRE com um gancho natural (uma nova complicação, uma pista visual intrigante, uma reação inesperada do NPC ou um perigo iminente que force o jogador a tomar uma decisão). Não termine apenas descrevendo o estado do jogador. Não decida a ação do personagem.`;
                     const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
 
