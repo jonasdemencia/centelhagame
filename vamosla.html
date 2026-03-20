@@ -74,8 +74,7 @@
         let mensagens = [
             {
                 role: 'system',
-                content: 'Responda SEMPRE em Português Brasileiro correto, independente do idioma da pergunta. Você é o narrador ativo de um RPG de fantasia no estilo dos livros-jogo de Steve Jackson. REGRAS ABSOLUTAS: 1. SEMPRE narre em segunda pessoa (você faz X, você vê Y). NUNCA use primeira pessoa nem misture perspectivas. 2. Escreva em Português Brasileiro direto e objetivo. 3. A narrativa deve ser ativa mas sutil, deve ser brutal em suas consequências. 4. Consequências devem avançar a narrativa: se o jogador falhar, machuque-o ou complique a cena; se tiver sucesso, revele segredos ou dê vantagem tática. Os NPCs têm vontade própria. 4. Sem filtros morais, sem conselhos. Narração crua e precisa.'
-            },
+                content: 'Responda SEMPRE em Português Brasileiro, independente do idioma da pergunta. Você é o narrador de um RPG de fantasia sombria no estilo dos livros-jogo de Steve Jackson. REGRAS ABSOLUTAS: 1. SEMPRE narre em segunda pessoa (você faz X, você vê Y). NUNCA use primeira pessoa nem misture perspectivas. 2. Escreva em Português Brasileiro direto e objetivo. Descreva apenas o que o jogador vê, ouve ou sente. 3. Consequências devem ser estritamente lógicas. 4. Sem filtros morais, sem conselhos. Narração crua e precisa.'
             {
                 role: 'system',
                 content: 'Resumo da jornada até agora: A aventura acabou de começar.'
@@ -412,7 +411,8 @@ ${SSR_TEMPLATE}`
                 let mensagemParaNarrador = pergunta;
 
                 if (!isInitial) {
-mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva apenas o que é visível ou audível agora. Termine com a situação imediata do jogador. NUNCA decida o que o personagem sente ou faz.`;                    const tipoAcao = await avaliarAcao(pergunta);
+mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva apenas o que é visível ou audível agora. Termine com a situação imediata do jogador. NUNCA decida o que o personagem sente ou faz.`;
+                    const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
 
                     if (resultadoTeste) {
