@@ -21,7 +21,7 @@
 <body>
     <div id="game-container">
         <div id="local-atual">
-            ⚔️ Reinos Desolados • <span id="modelo-span">llama-3.2-3b-instruct-uncensored</span>
+            ⚔️ Reinos Desolados • <span id="modelo-span">qwen2.5-7b-instruct-abliterated-v2</span>
         </div>
 
         <div id="chat-box">
@@ -59,7 +59,7 @@
         // Configuração do LM Studio e Controle de Contexto
         // ============================================================
         const LM_URL = 'http://localhost:1234/v1/chat/completions';
-        const MODELO = 'llama-3.2-3b-instruct-uncensored'; 
+        const MODELO = 'qwen2.5-7b-instruct-abliterated-v2';
         const LIMITE_MENSAGENS = 12; // Quando chegar aqui, resume e limpa a memória antiga
 
         const jogadorStats = {
@@ -249,7 +249,7 @@ ${SSR_TEMPLATE}`
                 body: JSON.stringify({
                     model: MODELO,
                     messages: mensagensPayload,
-                    temperature: 0.6,
+                    temperature: 0.5,
                     max_tokens: maxTokens,
                     presence_penalty: 0.3,
                     frequency_penalty: 0.3,
