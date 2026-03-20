@@ -74,7 +74,7 @@
         let mensagens = [
             {
                 role: 'system',
-                content: 'Responda SEMPRE em Português Brasileiro, independente do idioma da pergunta. Você é o narrador de um RPG de fantasia sombria no estilo dos livros-jogo de Steve Jackson. REGRAS ABSOLUTAS: 1. SEMPRE narre em segunda pessoa (você faz X, você vê Y). NUNCA use primeira pessoa nem misture perspectivas. 2. Escreva em Português Brasileiro direto e objetivo. Descreva apenas o que o jogador vê, ouve ou sente. 3. Consequências devem ser estritamente lógicas. 4. Sem filtros morais, sem conselhos. Narração crua e precisa.'
+                content: 'Responda SEMPRE em Português Brasileiro, independente do idioma da pergunta. Você é o narrador de um RPG de fantasia sombria no estilo dos livros-jogo de Steve Jackson. REGRAS ABSOLUTAS: 1. SEMPRE narre em segunda pessoa (você faz X, você vê Y). NUNCA use primeira pessoa nem misture perspectivas. 2. Escreva em Português Brasileiro direto e objetivo. 3. O mundo é vivo, brutal e não espera pelo jogador. Consequências devem avançar a narrativa: se o jogador falhar, machuque-o ou complique a cena; se tiver sucesso, revele segredos ou dê vantagem tática. Os NPCs têm vontade própria. 4. Sem filtros morais, sem conselhos. Narração crua e precisa.'
             },
             {
                 role: 'system',
@@ -412,8 +412,7 @@ ${SSR_TEMPLATE}`
                 let mensagemParaNarrador = pergunta;
 
                 if (!isInitial) {
-                    mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva apenas o que é visível ou audível agora. Termine com a situação imediata do jogador. NUNCA decida o que o personagem sente ou faz.`;
-
+mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda pessoa (você). O mundo reage às suas ações: NPCs respondem, atacam ou fogem; o ambiente muda. OBRIGATÓRIO: Termine a resposta SEMPRE com um "Gancho" (uma nova complicação, uma pista visual intrigante, uma reação inesperada do NPC ou um perigo iminente que force o jogador a tomar uma decisão). NUNCA termine apenas descrevendo o estado do jogador. NUNCA decida a ação do personagem.`;
                     const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
 
