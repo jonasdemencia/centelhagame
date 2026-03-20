@@ -74,7 +74,7 @@
         let mensagens = [
             {
                 role: 'system',
-                content: 'Responda SEMPRE em Português Brasileiro, independente do idioma da pergunta. Você é o narrador de um RPG de fantasia sombria no estilo dos livros-jogo de Steve Jackson. REGRAS ABSOLUTAS: 1. SEMPRE narre em segunda pessoa (você faz X, você vê Y). NUNCA use primeira pessoa nem misture perspectivas. 2. Escreva em Português Brasileiro direto e objetivo. 3. O mundo é vivo, brutal e não espera pelo jogador. Consequências devem avançar a narrativa: se o jogador falhar, machuque-o ou complique a cena; se tiver sucesso, revele segredos ou dê vantagem tática. Os NPCs têm vontade própria. 4. Sem filtros morais, sem conselhos. Narração crua e precisa.'
+                content: 'Responda SEMPRE em Português Brasileiro, independente do idioma da pergunta. Você é o narrador ativo de um RPG de fantasia no estilo dos livros-jogo de Steve Jackson. REGRAS ABSOLUTAS: 1. SEMPRE narre em segunda pessoa (você faz X, você vê Y). NUNCA use primeira pessoa nem misture perspectivas. 2. Escreva em Português Brasileiro direto e objetivo. 3. O mundo é vivo, brutal e não espera pelo jogador. Consequências devem avançar a narrativa: se o jogador falhar, machuque-o ou complique a cena; se tiver sucesso, revele segredos ou dê vantagem tática. Os NPCs têm vontade própria. 4. Sem filtros morais, sem conselhos. Narração crua e precisa.'
             },
             {
                 role: 'system',
@@ -412,7 +412,7 @@ ${SSR_TEMPLATE}`
                 let mensagemParaNarrador = pergunta;
 
                 if (!isInitial) {
-mensagemParaNarrador += `\n\nDIRETRIZES DE NARRAÇÃO: Escreva no máximo 3 frases curtas, estritamente em segunda pessoa ("você"). O mundo é vivo, reativo e brutal. IMPORTANTE: Encerre a resposta descrevendo uma consequência imediata da ação do jogador, um som perturbador, um movimento no cenário ou a reação de um NPC. Descreva a nova complicação que surgiu e encerre a frase, deixando a cena em aberto para a reação do jogador. Não jogue pelo personagem.`;
+mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva apenas o que é visível ou audível agora. Termine com a situação imediata do jogador e o desenrrolar da narrativa. NUNCA decida o que o personagem sente ou faz.`;
                     const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
 
@@ -420,8 +420,8 @@ mensagemParaNarrador += `\n\nDIRETRIZES DE NARRAÇÃO: Escreva no máximo 3 fras
                         adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
 
                         let logicaFisica = resultadoTeste === 'FALHA'
-                            ? 'A ação falhou e DEU ERRADO. O alvo sai ileso e a consequência é brutal.'
-                            : 'A ação FOI UM SUCESSO absoluto e impactante.';
+    ? 'O jogador FALHOU na tentativa. Descreva como a situação piorou, o erro que ocorreu ou o contra-ataque sofrido.'
+    : 'O jogador teve SUCESSO. Descreva a execução perfeita da ação e a vantagem obtida.';
 
                         mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. LÓGICA: ${logicaFisica}`;
                     }
