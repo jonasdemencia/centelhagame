@@ -51,16 +51,15 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        
-        // ID fixo para desenvolvimento local (pode ser dinâmico depois)
-        const sessionId = "sessao_dev_01"; 
+
+        const sessionId = "sessao_dev_01";
 
         // ============================================================
         // Configuração do LM Studio e Controle de Contexto
         // ============================================================
         const LM_URL = 'http://localhost:1234/v1/chat/completions';
         const MODELO = 'qwen2.5-7b-instruct-abliterated-v2';
-        const LIMITE_MENSAGENS = 24; // Quando chegar aqui, resume e limpa a memória antiga
+        const LIMITE_MENSAGENS = 24;
 
         const jogadorStats = {
             HABILIDADE: 5,
@@ -72,7 +71,6 @@
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
 
-        // Estrutura de memória: [0] Regras, [1] Resumo da História, [2...] Turnos
         let mensagens = [
             {
                 role: 'system',
@@ -93,10 +91,9 @@
             try {
                 const docRef = doc(db, "sessoes", sessionId);
                 const docSnap = await getDoc(docRef);
-                
                 if (docSnap.exists() && docSnap.data().resumo) {
                     resumoAtual = docSnap.data().resumo;
-                    mensagens[1].content = `Resumo da jornada até agora: ${resumoAtual}`;
+                    mensagens[1].content = `ESTADO ATUAL DO MUNDO (use como referência factual, não repita como narração):\n${resumoAtual}`;
                     console.log("Sessão recuperada do Firestore.");
                 }
             } catch (e) {
@@ -116,66 +113,102 @@
         // Funções de Compressão de Memória — Structured State Representation (SSR)
         // ============================================================
 
-        const SSR_TEMPLATE = `LOCAL: [onde o jogador está agora]
-NPCS: [lista de personagens encontrados e seu estado atual: nome/descrição, relação, vivo/morto/desconhecido]
-ITENS: [itens carregados ou relevantes no cenário]
-EVENTOS_CHAVE: [lista de fatos consumados, em ordem, sem atmosfera — apenas o que aconteceu]
-SITUACAO_ATUAL: [uma frase: o que o jogador está fazendo ou diante de agora]
-GANCHOS_ATIVOS: [pistas ou ameaças não resolvidas que devem ser lembradas]`;
+        // MUDANÇA: Template enriquecido com instruções mais exigentes por campo.
+        // Cada campo agora tem uma descrição do que é obrigatório preencher,
+        // forçando o modelo a extrair NPCs, eventos e ganchos em vez de deixar [sem dados].
+        const SSR_TEMPLATE = `LOCAL: [nome do local atual + descrição física em 1 frase]
+NPCS: [OBRIGATÓRIO — liste TODOS os personagens mencionados. Formato: Nome | descrição física curta | relação com o jogador | status (vivo/morto/desconhecido). Se nenhum foi mencionado, escreva [nenhum encontrado].]
+ITENS: [liste todos os itens carregados pelo jogador ou objetos relevantes no cenário. Se nenhum, escreva [nenhum].]
+EVENTOS_CHAVE: [OBRIGATÓRIO — liste em ordem cronológica TUDO que aconteceu, um evento por linha, começando com verbo no passado. Ex: "Jogador chegou à vila de Brindley." "Açougueiro ignorou o jogador apesar da moeda de ouro." Mínimo de 3 eventos se houver histórico.]
+SITUACAO_ATUAL: [uma frase objetiva: onde o jogador está agora e o que está diante dele]
+GANCHOS_ATIVOS: [OBRIGATÓRIO — liste pistas, ameaças ou missões abertas não resolvidas. Ex: "Fera selvagem na floresta perto da colmeia dos Hargraves — ainda não investigada." Se nenhum, escreva [nenhum].]`;
 
-        async function comprimirMemoria() {
-            if (mensagens.length > LIMITE_MENSAGENS) {
-                adicionarMensagem('⚙️ As engrenagens do destino giram. Consolidando memórias...', 'system');
-                
-                const mensagensParaResumir = mensagens.splice(2, 6); 
-                const textoExtraido = mensagensParaResumir
-                    .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
-                    .join('\n---\n');
+        // ============================================================
+        // MUDANÇA PRINCIPAL: comprimirMemoria agora é NÃO-BLOQUEANTE.
+        //
+        // Problema anterior: o splice + SSR + Firestore bloqueavam o jogo por
+        // até 112 segundos (conforme logs). O jogador ficava travado esperando.
+        //
+        // Solução: separar em duas etapas:
+        //   1. splice() — síncrono, instantâneo. Reduz o array imediatamente,
+        //      garantindo que a próxima chamada ao narrador já use menos contexto.
+        //   2. gerarSSRBackground() — assíncrono, dispara em background sem await.
+        //      Gera o resumo e salva no Firestore enquanto o jogo continua.
+        //
+        // O narrador usa o resumoAtual anterior (ainda válido) até o novo chegar.
+        // Quando o SSR terminar, atualiza mensagens[1] e resumoAtual silenciosamente.
+        // ============================================================
+        function comprimirMemoria() {
+            if (mensagens.length <= LIMITE_MENSAGENS) return;
 
-                const promptResumo = [
-                    { 
-                        role: 'system', 
-                        content: `Você é um extrator de estado de jogo. Sua única função é preencher o formulário abaixo com dados factuais extraídos dos eventos fornecidos. REGRAS ABSOLUTAS:
+            // MUDANÇA: splice(2, 6) → splice(2, 14).
+            // Antes comprimia apenas 3 turnos (6 mensagens), deixando NPCs e
+            // eventos dos turnos seguintes fora do resumo.
+            // Agora comprime 7 turnos (14 mensagens) por ciclo — resumo muito mais rico.
+            const mensagensParaResumir = mensagens.splice(2, 14);
+
+            console.debug(`[SSR] ${mensagensParaResumir.length} mensagens removidas do contexto. Gerando resumo em background...`);
+
+            // Dispara em background — NÃO bloqueia o fluxo do jogo.
+            gerarSSRBackground(mensagensParaResumir);
+        }
+
+        async function gerarSSRBackground(mensagensParaResumir) {
+            const textoExtraido = mensagensParaResumir
+                .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
+                .join('\n---\n');
+
+            const promptResumo = [
+                {
+                    role: 'system',
+                    // MUDANÇA: Instruções SSR reforçadas.
+                    // "FORMULÁRIO:" no output era o modelo ecoando o cabeçalho — agora proibido.
+                    // Campos NPCS, EVENTOS_CHAVE e GANCHOS_ATIVOS marcados como OBRIGATÓRIOS.
+                    content: `Você é um extrator de estado de jogo. Sua única função é preencher o formulário abaixo com dados factuais extraídos dos eventos fornecidos. REGRAS ABSOLUTAS:
 1. ZERO prosa, ZERO atmosfera, ZERO adjetivos literários.
-2. Cada campo deve ser preenchido com fatos secos e objetivos.
-3. Se o estado anterior já tiver um campo, ATUALIZE-O com as novas informações — não apague o que ainda é verdade.
-4. Se não houver informação para um campo, escreva: [sem dados].
-5. Responda APENAS com o formulário preenchido, sem nenhum texto adicional antes ou depois.
+2. Preencha TODOS os campos — campos marcados como OBRIGATÓRIO não podem ficar como [sem dados].
+3. Se o estado anterior já tiver um campo, ATUALIZE-O — não apague o que ainda é verdade.
+4. NÃO escreva "FORMULÁRIO:" nem qualquer cabeçalho antes da resposta. Comece direto com "LOCAL:".
+5. Responda APENAS com os campos preenchidos, sem texto adicional antes ou depois.
 
 FORMULÁRIO:
 ${SSR_TEMPLATE}`
-                    },
-                    { 
-                        role: 'user', 
-                        content: `ESTADO ANTERIOR:\n${resumoAtual || '[início da aventura — sem estado anterior]'}\n\nNOVOS EVENTOS:\n${textoExtraido}\n\nPreencha o formulário de estado atualizado agora.`
-                    }
-                ];
-
-                try {
-                    const response = await fetch(LM_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            model: MODELO,
-                            messages: promptResumo,
-                            temperature: 0.1,
-                            max_tokens: 350
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    const novoSSR = data.choices[0].message.content.trim();
-                    
-                    console.debug('[SSR] Estado estruturado gerado:\n' + novoSSR);
-                    
-                    resumoAtual = novoSSR;
-                    mensagens[1].content = `ESTADO ATUAL DO MUNDO (use como referência factual, não repita como narração):\n${resumoAtual}`;
-                    await salvarResumoFirestore(resumoAtual);
-                    
-                } catch (error) {
-                    console.error("Erro ao comprimir memória:", error);
-                    mensagens.splice(2, 0, ...mensagensParaResumir); 
+                },
+                {
+                    role: 'user',
+                    content: `ESTADO ANTERIOR:\n${resumoAtual || '[início da aventura — sem estado anterior]'}\n\nNOVOS EVENTOS:\n${textoExtraido}\n\nPreencha o formulário de estado atualizado agora.`
                 }
+            ];
+
+            try {
+                // MUDANÇA: max_tokens 350 → 500 para comportar NPCS e EVENTOS_CHAVE detalhados.
+                const response = await fetch(LM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODELO,
+                        messages: promptResumo,
+                        temperature: 0.1,
+                        max_tokens: 500
+                    })
+                });
+
+                const data = await response.json();
+                const novoSSR = data.choices[0].message.content.trim();
+
+                console.debug('[SSR] Estado estruturado gerado:\n' + novoSSR);
+
+                resumoAtual = novoSSR;
+                mensagens[1].content = `ESTADO ATUAL DO MUNDO (use como referência factual, não repita como narração):\n${resumoAtual}`;
+
+                // Salva no Firestore silenciosamente — o jogo já seguiu em frente.
+                await salvarResumoFirestore(resumoAtual);
+                adicionarMensagem('💾 Memórias consolidadas.', 'system');
+
+            } catch (error) {
+                console.error("Erro ao gerar SSR em background:", error);
+                // Em caso de falha, reinsere as mensagens para não perder contexto.
+                mensagens.splice(2, 0, ...mensagensParaResumir);
             }
         }
 
@@ -199,9 +232,9 @@ ${SSR_TEMPLATE}`
         // ============================================================
         async function avaliarAcao(acaoUsuario) {
             const promptJuiz = [
-                { 
-                    role: 'system', 
-                    content: `Você é um classificador de ações de RPG. Analise a mensagem do jogador e decida se ela representa uma ação que exige teste de atributo ou apenas uma pergunta descritiva. Categorias: HABILIDADE, CARISMA, SORTE, NENHUM. Responda APENAS com a categoria em maiúsculas. NÃO adicione explicações.` 
+                {
+                    role: 'system',
+                    content: `Você é um classificador de ações de RPG. Analise a mensagem do jogador e decida se ela representa uma ação que exige teste de atributo ou apenas uma pergunta descritiva. Categorias: HABILIDADE, CARISMA, SORTE, NENHUM. Responda APENAS com a categoria em maiúsculas. NÃO adicione explicações.`
                 },
                 { role: 'user', content: acaoUsuario }
             ];
@@ -219,7 +252,6 @@ ${SSR_TEMPLATE}`
                 });
                 const data = await response.json();
                 const classificacao = data.choices[0].message.content.trim().toUpperCase();
-                
                 if (['HABILIDADE', 'CARISMA', 'SORTE', 'NENHUM'].includes(classificacao)) {
                     return classificacao;
                 }
@@ -349,7 +381,7 @@ ${SSR_TEMPLATE}`
         // ============================================================
         window.enviar = async function(mensagemUsuario = null) {
             const isInitial = mensagemUsuario === null;
-            
+
             let pergunta;
             if (isInitial) {
                 if (!resumoAtual) {
@@ -373,13 +405,13 @@ ${SSR_TEMPLATE}`
             const elementoDisplay = document.getElementById(tempId);
 
             try {
-                await comprimirMemoria();
+                // MUDANÇA: comprimirMemoria agora é síncrona (não usa await).
+                // O splice acontece imediatamente; o SSR roda em background.
+                comprimirMemoria();
 
                 let mensagemParaNarrador = pergunta;
 
                 if (!isInitial) {
-                    // MUDANÇA: Diretriz reforça segunda pessoa e consistência de cena
-                    // a cada turno, não apenas no system prompt global.
                     mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva apenas o que é visível ou audível agora. Termine com a situação imediata do jogador. NUNCA decida o que o personagem sente ou faz.`;
 
                     const tipoAcao = await avaliarAcao(pergunta);
@@ -387,11 +419,11 @@ ${SSR_TEMPLATE}`
 
                     if (resultadoTeste) {
                         adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
-                        
+
                         let logicaFisica = resultadoTeste === 'FALHA'
                             ? 'A ação falhou e DEU ERRADO. O alvo sai ileso e a consequência é brutal.'
                             : 'A ação FOI UM SUCESSO absoluto e impactante.';
-                            
+
                         mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. LÓGICA: ${logicaFisica}`;
                     }
                 }
@@ -399,8 +431,8 @@ ${SSR_TEMPLATE}`
                 mensagens.push({ role: 'user', content: mensagemParaNarrador });
 
                 const isIntro = (isInitial && !resumoAtual);
-                const maxTokens        = isIntro ? 800 : 160;
-                const maxContinuacoes  = isIntro ?   0 :   1;
+                const maxTokens       = isIntro ? 800 : 160;
+                const maxContinuacoes = isIntro ?   0 :   1;
 
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
 
@@ -434,7 +466,7 @@ ${SSR_TEMPLATE}`
         // ============================================================
         window.onload = async () => {
             await carregarSessao();
-            window.enviar(); 
+            window.enviar();
         };
 
         userInput.addEventListener('keypress', (e) => {
