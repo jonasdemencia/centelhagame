@@ -75,6 +75,7 @@
         // Roteiro Vivo — estado e configuração
         // ============================================================
         let roteiro = "";
+        let poolUsados = []; // índices dos encontros já consumidos
         let turnsSinceEvent = 0;
         const BEAT_THRESHOLD = 5;
 
@@ -135,6 +136,9 @@ REGRAS ABSOLUTAS:
                         roteiro = docSnap.data().roteiro;
                         console.debug("[ROTEIRO] Recuperado do Firestore.");
                     }
+                    if (docSnap.data().poolUsados) {
+                        poolUsados = docSnap.data().poolUsados;
+                    }
                 }
             } catch (e) {
                 console.error("Erro ao carregar do Firestore:", e);
@@ -152,9 +156,10 @@ REGRAS ABSOLUTAS:
         // ============================================================
         // gerarRoteiro
         //
-        // MUDANÇA 1: "RESPONDA APENAS EM PORTUGUÊS BRASILEIRO" adicionado
-        // como primeira instrução do system prompt — evita que o modelo
-        // misture inglês nos campos, como ocorreu no primeiro teste.
+        // MUDANÇA 1: max_tokens 700 → 900.
+        // Nos testes, o roteiro atingia finish_reason="length" e era
+        // cortado no meio do campo SEGREDO. 900 tokens dá margem para
+        // todos os campos sem truncamento.
         // ============================================================
         async function gerarRoteiro() {
             console.debug('[ROTEIRO] Gerando plano da aventura...');
@@ -186,13 +191,13 @@ REGRAS ABSOLUTAS:
                         model: MODELO,
                         messages: prompt,
                         temperature: 0.8,
-                        max_tokens: 700
+                        max_tokens: 900   // era 700 — cortava o SEGREDO
                     })
                 });
                 const data = await response.json();
                 roteiro = data.choices[0].message.content.trim();
                 console.debug('[ROTEIRO] Gerado:\n' + roteiro);
-                await setDoc(doc(db, "sessoes", sessionId), { roteiro }, { merge: true });
+                await setDoc(doc(db, "sessoes", sessionId), { roteiro, poolUsados: [] }, { merge: true });
             } catch (e) {
                 console.error("Erro ao gerar roteiro:", e);
                 roteiro = "";
@@ -200,47 +205,66 @@ REGRAS ABSOLUTAS:
         }
 
         // ============================================================
-        // extrairContextoAtivo — NOVO
+        // extrairGanchoDoPool — NOVO (substitui extrairContextoAtivo
+        // e construirHintDeTextura)
         //
-        // Problema identificado: o roteiro no system prompt distante não
-        // era suficiente para um modelo 7B conectar antagonista e missão
-        // à narração de cada turno. O modelo "esquecia" o conflito central
-        // e inventava plot próprio (diamante aparecendo em lama de gruta
-        // sem relação com os goblins do roteiro).
+        // MUDANÇA 2 + 3 — o problema central dos testes:
         //
-        // Solução: extrair MISSÃO + ANTAGONISTA + PRESSÃO do roteiro e
-        // injetar como uma linha compacta em CADA turno dentro de
-        // DIRETRIZES — onde o modelo tem atenção máxima por estar no
-        // final da sequência de tokens.
+        // O CONTEXTO_ATIVO injetado em CADA turno repetia MISSÃO +
+        // ANTAGONISTA + PRESSÃO toda resposta. O narrador lia "sussurros"
+        // no contexto e costurava "sussurros" em toda narração — não por
+        // má construção de tensão, mas por obediência mecânica ao prompt.
+        //
+        // A solução Steve Jackson: o narrador narra livremente a partir
+        // do roteiro no system prompt (que já tem tudo). Quando o mundo
+        // precisa agir (beat counter >= threshold), recebe UM ÚNICO
+        // gancho concreto extraído do POOL_ENCONTROS — não uma filosofia
+        // sobre tensão, mas um evento específico e diegético:
+        //   "Um peregrino carregando um conto sobre o rei adormecido"
+        //   "Uma aranha gigante que ainda não te notou"
+        //
+        // O narrador pode tecer esse gancho naturalmente na cena ou
+        // ignorá-lo se a cena já tiver peso — igual a um GM de mesa.
+        // Isso produz tensão acumulada e variada, não repetição mecânica.
+        //
+        // Tracking de itens usados: poolUsados[] garante que cada
+        // encontro do POOL emerge no máximo uma vez por aventura.
+        // Quando todos foram usados, o beat silencia (a aventura já
+        // tem energia suficiente para se sustentar sozinha).
         // ============================================================
-        function extrairContextoAtivo() {
+        function extrairGanchoDoPool() {
             if (!roteiro) return '';
 
-            const objetivoMatch    = roteiro.match(/OBJETIVO_FINAL:\s*([^\n]+)/);
-            const antagonistaMatch = roteiro.match(/ANTAGONISTA:\s*([^\n]+)/);
-            const pressaoMatch     = roteiro.match(/PRESS[AÃO]+_CRESCENTE:\s*([^\n]+)/i);
+            // Extrai o bloco POOL_ENCONTROS até o próximo campo
+            const poolMatch = roteiro.match(/POOL_ENCONTROS:\s*([\s\S]*?)(?=\nSEGREDO:|$)/i);
+            if (!poolMatch) return '';
 
-            const partes = [];
+            const linhas = poolMatch[1]
+                .split('\n')
+                .map(l => l.replace(/^\d+\.\s*/, '').trim())
+                .filter(l => l.length > 10);
 
-            if (objetivoMatch) {
-                partes.push(`MISSÃO: ${objetivoMatch[1].trim()}`);
-            }
+            // Filtra itens ainda não usados
+            const disponiveis = linhas
+                .map((l, i) => ({ i, l }))
+                .filter(({ i }) => !poolUsados.includes(i));
 
-            if (antagonistaMatch) {
-                // Formato esperado: Nome | motivação | o que faz agora
-                const campos    = antagonistaMatch[1].split('|');
-                const nome      = campos[0]?.trim();
-                const acaoAtual = campos[2]?.trim();
-                if (nome) {
-                    partes.push(`ANTAGONISTA ATIVO: ${nome}${acaoAtual ? ' — ' + acaoAtual : ''}`);
-                }
-            }
+            if (disponiveis.length === 0) return ''; // pool esgotado — silencia
 
-            if (pressaoMatch) {
-                partes.push(`PRESSÃO: ${pressaoMatch[1].trim()}`);
-            }
+            // Escolhe aleatoriamente entre os disponíveis
+            const escolhido = disponiveis[Math.floor(Math.random() * disponiveis.length)];
 
-            return partes.length > 0 ? partes.join(' | ') : '';
+            // Marca como usado e persiste (fire-and-forget)
+            poolUsados.push(escolhido.i);
+            setDoc(doc(db, "sessoes", sessionId), { poolUsados }, { merge: true }).catch(() => {});
+
+            // Extrai apenas a descrição (campo do meio: TIPO | descrição | contexto)
+            const partes = escolhido.l.split('|');
+            const descricao = (partes[1] || partes[0]).trim();
+
+            console.debug(`[BEAT] Gancho do pool #${escolhido.i} injetado: "${descricao}"`);
+
+            return `\nGANCHO: ${descricao} — surge agora se couber organicamente na cena; ignore se a cena já tiver tensão suficiente.`;
         }
 
         // ============================================================
@@ -258,11 +282,8 @@ ENCONTROS_USADOS: [quais itens do POOL_ENCONTROS já foram consumidos. Se nenhum
 
         function comprimirMemoria() {
             if (mensagens.length <= LIMITE_MENSAGENS) return;
-
             const mensagensParaResumir = mensagens.splice(2, 14);
-
             console.debug(`[SSR] ${mensagensParaResumir.length} mensagens removidas do contexto. Gerando resumo em background...`);
-
             gerarSSRBackground(mensagensParaResumir);
         }
 
@@ -301,18 +322,13 @@ ${SSR_TEMPLATE}`
                         max_tokens: 600
                     })
                 });
-
                 const data = await response.json();
                 const novoSSR = data.choices[0].message.content.trim();
-
                 console.debug('[SSR] Estado estruturado gerado:\n' + novoSSR);
-
                 resumoAtual = novoSSR;
                 mensagens[1].content = `ESTADO ATUAL DO MUNDO (use como referência factual, não repita como narração):\n${resumoAtual}`;
-
                 await salvarResumoFirestore(resumoAtual);
                 adicionarMensagem('💾 Memórias consolidadas.', 'system');
-
             } catch (error) {
                 console.error("Erro ao gerar SSR em background:", error);
                 mensagens.splice(2, 0, ...mensagensParaResumir);
@@ -379,26 +395,10 @@ ${SSR_TEMPLATE}`
         }
 
         // ============================================================
-        // detectarEventoPlot — REESCRITO
-        //
-        // Problema anterior: verbos genéricos como "avança" e "se aproxima"
-        // apareciam em quase toda resposta do narrador, fazendo o contador
-        // resetar em ~80% dos turnos. O threshold de 5 nunca era atingido.
-        //
-        // Nova lógica em duas camadas:
-        //
-        // CAMADA 1 — Palavras-chave do roteiro (primária):
-        //   Extrai nomes próprios do ANTAGONISTA e do POOL_ENCONTROS e
-        //   verifica se aparecem na resposta. "Goblins" no roteiro →
-        //   "Você ouve risadas de goblins" dispara. "Você avança" não.
-        //
-        // CAMADA 2 — Agência externa estrutural (fallback):
-        //   Só dispara quando o padrão é "artigo + substantivo + verbo de
-        //   aparição" — garantindo que o SUJEITO da frase é externo ao
-        //   jogador. "Um vulto surge" dispara. "Você avança" não dispara.
+        // detectarEventoPlot
         // ============================================================
         function detectarEventoPlot(texto) {
-            // --- CAMADA 1: entidades nomeadas do roteiro ---
+            // CAMADA 1: entidades nomeadas do roteiro
             if (roteiro) {
                 const entidades = roteiro.match(/[A-ZÁÉÍÓÚÀÃÕÂÊÔÇ][a-záéíóúàãõâêôçA-Z]{3,}/g) || [];
                 const stopWords = new Set([
@@ -409,28 +409,18 @@ ${SSR_TEMPLATE}`
                     'FINAL', 'CRESCENTE', 'TURNOS', 'TIPO'
                 ]);
                 const filtradas = [...new Set(entidades.filter(e => !stopWords.has(e)))];
-
                 if (filtradas.length > 0) {
                     const regex = new RegExp(`\\b(${filtradas.slice(0, 15).join('|')})\\b`, 'i');
                     if (regex.test(texto)) {
-                        console.debug('[BEAT] Entidade do roteiro detectada na resposta.');
+                        console.debug('[BEAT] Entidade do roteiro detectada — contador resetado.');
                         return true;
                     }
                 }
             }
 
-            // --- CAMADA 2: padrão estrutural de agência externa ---
-            // "Um/Uma/O/A [substantivo] [verbo de aparição]"
-            // Garante que o sujeito é externo, não o jogador.
+            // CAMADA 2: padrão estrutural de agência externa
             const agenciaExterna = /\b(um|uma|o|a)\s+\w+\s+(surge|aparece|chega|entra|irrompe|bloqueia|ataca|sussurra|grita|revela|tomba|intercepta|avança em sua direção)\b/i;
             return agenciaExterna.test(texto);
-        }
-
-        // ============================================================
-        // construirHintDeTextura
-        // ============================================================
-        function construirHintDeTextura() {
-            return `\n\nTEXTURA DO MUNDO: O mundo respira fora do campo de visão do jogador. Neste momento, algo do horizonte da aventura pode emergir organicamente — um detalhe ambiental que ecoa o conflito maior, um personagem com agenda própria que cruza o caminho, um som ou cheiro que sugere o que se aproxima. Integre apenas se couber na cena sem forçar; caso a ação atual já carregue tensão suficiente, ignore este lembrete.`;
         }
 
         // ============================================================
@@ -464,11 +454,9 @@ ${SSR_TEMPLATE}`
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n');
                 buffer = lines.pop();
-
                 for (const line of lines) {
                     if (!line.startsWith('data: ')) continue;
                     const jsonStr = line.slice(6).trim();
@@ -529,7 +517,6 @@ ${SSR_TEMPLATE}`
                     console.debug(`[GERAÇÃO] Encerrado naturalmente (finish_reason="${finishReason}") na tentativa ${tentativa}.`);
                     break;
                 }
-
                 if (tentativa === maxContinuacoes) {
                     console.debug(`[GERAÇÃO] Limite de ${maxContinuacoes} continuação(ões) atingido. Encerrando.`);
                 }
@@ -578,26 +565,31 @@ ${SSR_TEMPLATE}`
                     mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva apenas o que é visível ou audível agora. Termine com a situação imediata do jogador. NUNCA decida o que o personagem sente ou faz.`;
 
                     // --------------------------------------------------------
-                    // CONTEXTO_ATIVO — injetado em TODOS os turnos
+                    // GANCHO DO POOL — só quando beat counter dispara.
                     //
-                    // MUDANÇA 2: diferente do hint de textura (que só dispara
-                    // a cada 5 turnos tranquilos), o contexto ativo é
-                    // injetado sempre. Mantém o antagonista e a missão
-                    // acessíveis no final da cadeia de tokens — onde a
-                    // atenção do modelo é mais forte — a cada resposta.
-                    // --------------------------------------------------------
-                    const contextoAtivo = extrairContextoAtivo();
-                    if (contextoAtivo) {
-                        mensagemParaNarrador += `\nCONTEXTO_ATIVO: ${contextoAtivo}`;
-                        console.debug(`[CONTEXTO] Injetado: ${contextoAtivo}`);
-                    }
-
-                    // --------------------------------------------------------
-                    // Hint de textura — só quando beat counter dispara
+                    // MUDANÇA 2+3: o CONTEXTO_ATIVO foi removido.
+                    //
+                    // Injetar MISSÃO+ANTAGONISTA+PRESSÃO em CADA turno
+                    // causava repetição mecânica do tema dominante da
+                    // aventura (no teste: "sussurros" em toda resposta).
+                    // O roteiro já está no system prompt — o narrador já
+                    // sabe o que está em jogo. Não precisa ser lembrado
+                    // toda resposta.
+                    //
+                    // Quando o beat counter dispara, em vez de um lembrete
+                    // vago ("o mundo respira..."), o narrador recebe UM
+                    // evento concreto do POOL — algo específico, diegético,
+                    // que ele pode tecer na cena ou ignorar se ela já
+                    // tiver tensão. Isso gera variedade real entre beats,
+                    // não repetição do mesmo tema.
                     // --------------------------------------------------------
                     if (turnsSinceEvent >= BEAT_THRESHOLD) {
-                        mensagemParaNarrador += construirHintDeTextura();
-                        console.debug(`[BEAT] Hint de textura injetado após ${turnsSinceEvent} turnos tranquilos.`);
+                        const gancho = extrairGanchoDoPool();
+                        if (gancho) {
+                            mensagemParaNarrador += gancho;
+                            turnsSinceEvent = 0; // reseta ao disparar, não ao detectar
+                            console.debug(`[BEAT] Threshold atingido. Gancho injetado.`);
+                        }
                     }
 
                     const tipoAcao = await avaliarAcao(pergunta);
@@ -605,11 +597,9 @@ ${SSR_TEMPLATE}`
 
                     if (resultadoTeste) {
                         adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
-
                         let logicaFisica = resultadoTeste === 'FALHA'
                             ? 'O jogador FALHOU na tentativa. Descreva como a situação piorou, o erro que ocorreu ou o contra-ataque sofrido.'
                             : 'O jogador teve SUCESSO. Descreva a execução perfeita da ação e a vantagem obtida.';
-
                         mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. LÓGICA: ${logicaFisica}`;
                     }
                 }
@@ -627,7 +617,7 @@ ${SSR_TEMPLATE}`
                 mensagens.push({ role: 'assistant', content: respostaIA });
 
                 // --------------------------------------------------------
-                // Atualiza beat counter com base na resposta gerada
+                // Atualiza beat counter
                 // --------------------------------------------------------
                 if (!isInitial) {
                     if (detectarEventoPlot(respostaIA)) {
