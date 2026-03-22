@@ -73,24 +73,11 @@
 
         // ============================================================
         // Roteiro Vivo — estado e configuração
-        //
-        // roteiro:           o plano da aventura, gerado uma vez e persistido
-        // turnsSinceEvent:   contador de turnos sem que um evento de plot emergiu
-        // BEAT_THRESHOLD:    a partir de quantos turnos quietos o narrador recebe
-        //                    um lembrete suave de que o mundo tem vida própria.
-        //                    5 é deliberado: menos que isso cria pressão mecânica;
-        //                    mais que isso e a aventura fica passiva demais.
         // ============================================================
         let roteiro = "";
         let turnsSinceEvent = 0;
         const BEAT_THRESHOLD = 5;
 
-        // ============================================================
-        // Template do Roteiro Vivo
-        //
-        // Compacto por design: cada campo cabe em 1–2 linhas para não
-        // inflar o system prompt além do necessário.
-        // ============================================================
         const ROTEIRO_TEMPLATE = `OBJETIVO_FINAL: [o que o jogador precisa realizar — concreto, atingível]
 ANTAGONISTA: [nome | motivação em 1 frase | o que está fazendo AGORA enquanto o jogador age]
 PRESSAO_CRESCENTE: [ameaça autônoma mensurável — ex: "a cada 8 turnos o ritual avança 1 estágio de 5"]
@@ -101,10 +88,6 @@ A4_CLIMAX (turnos 400-500): [confronto final possível + forma de resolução]
 POOL_ENCONTROS: [5 encontros prontos para emergir organicamente — 1 por linha: TIPO | descrição em 1 frase | contexto ideal de aparição]
 SEGREDO: [verdade oculta que o jogador pode ou não descobrir — altera tudo se revelada]`;
 
-        // ============================================================
-        // Mensagens — o system prompt em [0] começa vazio e é preenchido
-        // após o roteiro ser carregado/gerado, via montarSystemPrompt().
-        // ============================================================
         let mensagens = [
             {
                 role: 'system',
@@ -119,17 +102,14 @@ SEGREDO: [verdade oculta que o jogador pode ou não descobrir — altera tudo se
         let resumoAtual = "";
 
         // ============================================================
-        // montarSystemPrompt — constrói o system message [0] com o
-        // roteiro embutido como memória do narrador, não como instrução
-        // externa. A distinção de fraseamento é intencional: o narrador
-        // "lembra" da aventura que preparou, não "recebe ordens" sobre ela.
+        // montarSystemPrompt
         // ============================================================
         function montarSystemPrompt() {
             const blocoRoteiro = roteiro
                 ? `\n\nAVENTURA QUE VOCÊ PREPAROU:\n${roteiro}\n\nVocê conhece este roteiro de cor. Ele é o horizonte da história — não um script a ser lido em voz alta, mas a memória do que está em jogo. O antagonista age enquanto o jogador hesita. A pressão cresce sozinha. Os encontros do POOL aguardam o momento certo para emergir.`
                 : '';
 
-            mensagens[0].content = `Responda SEMPRE em Português Brasileiro, independente do idioma da pergunta. Você é o narrador impetuoso de um RPG de fantasia no estilo dos livros-jogo de Steve Jackson.
+            mensagens[0].content = `Responda SEMPRE em Português Brasileiro, independente do idioma da pergunta. Você é o narrador de um RPG de fantasia sombria no estilo dos livros-jogo de Steve Jackson.
 
 REGRAS ABSOLUTAS:
 1. SEMPRE narre em segunda pessoa (você faz X, você vê Y). NUNCA use primeira pessoa nem misture perspectivas.
@@ -170,23 +150,27 @@ REGRAS ABSOLUTAS:
         }
 
         // ============================================================
-        // gerarRoteiro — chamado UMA vez, na primeira sessão.
-        // Gera o plano completo da aventura e persiste no Firestore.
-        // temperature: 0.8 — queremos variação criativa aqui, diferente
-        // do SSR (0.1) que precisa de extração factual fria.
+        // gerarRoteiro
+        //
+        // MUDANÇA 1: "RESPONDA APENAS EM PORTUGUÊS BRASILEIRO" adicionado
+        // como primeira instrução do system prompt — evita que o modelo
+        // misture inglês nos campos, como ocorreu no primeiro teste.
         // ============================================================
         async function gerarRoteiro() {
             console.debug('[ROTEIRO] Gerando plano da aventura...');
             const prompt = [
                 {
                     role: 'system',
-                    content: `Você é um designer de aventuras no estilo Fighting Fantasy de Steve Jackson. Crie um roteiro de aventura sombria medieval preenchendo o formulário abaixo.
+                    content: `RESPONDA APENAS EM PORTUGUÊS BRASILEIRO. Nenhuma palavra em outro idioma.
+
+Você é um designer de aventuras no estilo Fighting Fantasy de Steve Jackson. Crie um roteiro de aventura sombria medieval preenchendo o formulário abaixo.
 REGRAS ABSOLUTAS:
 1. Zero prosa, zero adjetivos literários. Campos factuais e concretos.
 2. O ANTAGONISTA deve ter um plano ATIVO e específico — não genérico como "quer dominar o mundo".
 3. A PRESSAO_CRESCENTE deve ser mensurável (ex: "a cada 8 turnos o ritual avança 1 estágio de 5").
 4. O POOL_ENCONTROS deve ter 5 entradas variadas: misture criaturas, NPCs com agenda, dilemas morais, armadilhas e descobertas.
-5. NÃO escreva "FORMULÁRIO:" nem qualquer cabeçalho — comece direto com "OBJETIVO_FINAL:".`
+5. NÃO escreva "FORMULÁRIO:" nem qualquer cabeçalho — comece direto com "OBJETIVO_FINAL:".
+6. TODOS os campos obrigatoriamente em Português Brasileiro.`
                 },
                 {
                     role: 'user',
@@ -211,10 +195,52 @@ REGRAS ABSOLUTAS:
                 await setDoc(doc(db, "sessoes", sessionId), { roteiro }, { merge: true });
             } catch (e) {
                 console.error("Erro ao gerar roteiro:", e);
-                // Falha silenciosa: a aventura continua sem roteiro.
-                // O narrador cai para o comportamento reativo padrão.
                 roteiro = "";
             }
+        }
+
+        // ============================================================
+        // extrairContextoAtivo — NOVO
+        //
+        // Problema identificado: o roteiro no system prompt distante não
+        // era suficiente para um modelo 7B conectar antagonista e missão
+        // à narração de cada turno. O modelo "esquecia" o conflito central
+        // e inventava plot próprio (diamante aparecendo em lama de gruta
+        // sem relação com os goblins do roteiro).
+        //
+        // Solução: extrair MISSÃO + ANTAGONISTA + PRESSÃO do roteiro e
+        // injetar como uma linha compacta em CADA turno dentro de
+        // DIRETRIZES — onde o modelo tem atenção máxima por estar no
+        // final da sequência de tokens.
+        // ============================================================
+        function extrairContextoAtivo() {
+            if (!roteiro) return '';
+
+            const objetivoMatch    = roteiro.match(/OBJETIVO_FINAL:\s*([^\n]+)/);
+            const antagonistaMatch = roteiro.match(/ANTAGONISTA:\s*([^\n]+)/);
+            const pressaoMatch     = roteiro.match(/PRESS[AÃO]+_CRESCENTE:\s*([^\n]+)/i);
+
+            const partes = [];
+
+            if (objetivoMatch) {
+                partes.push(`MISSÃO: ${objetivoMatch[1].trim()}`);
+            }
+
+            if (antagonistaMatch) {
+                // Formato esperado: Nome | motivação | o que faz agora
+                const campos    = antagonistaMatch[1].split('|');
+                const nome      = campos[0]?.trim();
+                const acaoAtual = campos[2]?.trim();
+                if (nome) {
+                    partes.push(`ANTAGONISTA ATIVO: ${nome}${acaoAtual ? ' — ' + acaoAtual : ''}`);
+                }
+            }
+
+            if (pressaoMatch) {
+                partes.push(`PRESSÃO: ${pressaoMatch[1].trim()}`);
+            }
+
+            return partes.length > 0 ? partes.join(' | ') : '';
         }
 
         // ============================================================
@@ -230,9 +256,6 @@ BEAT_ATUAL: [qual ato está ativo (A1/A2/A3/A4) + estimativa de turno]
 PRESSAO_STATUS: [estágio atual da ameaça crescente — descreva como ela avançou desde o último resumo]
 ENCONTROS_USADOS: [quais itens do POOL_ENCONTROS já foram consumidos. Se nenhum, escreva [nenhum].]`;
 
-        // ============================================================
-        // comprimirMemoria — síncrono e não-bloqueante (igual ao original).
-        // ============================================================
         function comprimirMemoria() {
             if (mensagens.length <= LIMITE_MENSAGENS) return;
 
@@ -356,37 +379,55 @@ ${SSR_TEMPLATE}`
         }
 
         // ============================================================
-        // detectarEventoPlot — heurística leve para identificar se a
-        // resposta do narrador introduziu algo novo (NPC, ameaça, pista,
-        // evento externo) vs. apenas reagir ao que o jogador fez.
+        // detectarEventoPlot — REESCRITO
         //
-        // A lógica: verbos de aparição/chegada/revelação indicam que o
-        // mundo agiu por conta própria. Verbos de consequência direta
-        // (cai, sangra, falha) indicam reação à ação do jogador — esses
-        // não resetam o contador, porque não constituem beat de plot.
+        // Problema anterior: verbos genéricos como "avança" e "se aproxima"
+        // apareciam em quase toda resposta do narrador, fazendo o contador
+        // resetar em ~80% dos turnos. O threshold de 5 nunca era atingido.
+        //
+        // Nova lógica em duas camadas:
+        //
+        // CAMADA 1 — Palavras-chave do roteiro (primária):
+        //   Extrai nomes próprios do ANTAGONISTA e do POOL_ENCONTROS e
+        //   verifica se aparecem na resposta. "Goblins" no roteiro →
+        //   "Você ouve risadas de goblins" dispara. "Você avança" não.
+        //
+        // CAMADA 2 — Agência externa estrutural (fallback):
+        //   Só dispara quando o padrão é "artigo + substantivo + verbo de
+        //   aparição" — garantindo que o SUJEITO da frase é externo ao
+        //   jogador. "Um vulto surge" dispara. "Você avança" não dispara.
         // ============================================================
         function detectarEventoPlot(texto) {
-            const verbosDeAparição = /\b(aparece|surge|chega|entra|avança|revela|sussurra|grita ao longe|ecoa|se aproxima|emerge|irrompe|tomba sobre|bloqueia o caminho|intercepta|carrega uma mensagem|porta se abre|chão treme|fumaça|trovão|sinal|facho|vulto)\b/i;
-            return verbosDeAparição.test(texto);
+            // --- CAMADA 1: entidades nomeadas do roteiro ---
+            if (roteiro) {
+                const entidades = roteiro.match(/[A-ZÁÉÍÓÚÀÃÕÂÊÔÇ][a-záéíóúàãõâêôçA-Z]{3,}/g) || [];
+                const stopWords = new Set([
+                    'Você', 'Para', 'Agora', 'Quando', 'Onde', 'Como', 'Depois',
+                    'Antes', 'Cada', 'Este', 'Esta', 'Esse', 'Essa', 'Numa', 'Neste',
+                    'OBJETIVO', 'ANTAGONISTA', 'PRESSAO', 'POOL', 'SEGREDO',
+                    'INCITADOR', 'COMPLICACAO', 'CRISE', 'CLIMAX', 'ENCONTROS',
+                    'FINAL', 'CRESCENTE', 'TURNOS', 'TIPO'
+                ]);
+                const filtradas = [...new Set(entidades.filter(e => !stopWords.has(e)))];
+
+                if (filtradas.length > 0) {
+                    const regex = new RegExp(`\\b(${filtradas.slice(0, 15).join('|')})\\b`, 'i');
+                    if (regex.test(texto)) {
+                        console.debug('[BEAT] Entidade do roteiro detectada na resposta.');
+                        return true;
+                    }
+                }
+            }
+
+            // --- CAMADA 2: padrão estrutural de agência externa ---
+            // "Um/Uma/O/A [substantivo] [verbo de aparição]"
+            // Garante que o sujeito é externo, não o jogador.
+            const agenciaExterna = /\b(um|uma|o|a)\s+\w+\s+(surge|aparece|chega|entra|irrompe|bloqueia|ataca|sussurra|grita|revela|tomba|intercepta|avança em sua direção)\b/i;
+            return agenciaExterna.test(texto);
         }
 
         // ============================================================
-        // construirHintDeTextura — gera o lembrete orgânico que é
-        // inserido dentro do bloco DIRETRIZES quando o contador dispara.
-        //
-        // DECISÃO DE DESIGN — por que dentro das DIRETRIZES e não como
-        // mensagem separada:
-        //   • Mensagens separadas (role: 'user') criam um turno artificial
-        //     visível no histórico — o modelo pode "responder" a elas
-        //     diretamente, quebrando o fluxo.
-        //   • Dentro das DIRETRIZES, o hint é tratado como contexto da
-        //     mesma ação do jogador, não como um turno independente.
-        //
-        // DECISÃO DE DESIGN — por que "pode" e não "deve":
-        //   • "Deve" cria injeção mecânica — o narrador força um elemento
-        //     mesmo que a cena não comporte, resultando em quebra de imersão.
-        //   • "Pode" dá ao narrador autonomia: se a cena já está tensa o
-        //     suficiente, ele ignora o hint naturalmente.
+        // construirHintDeTextura
         // ============================================================
         function construirHintDeTextura() {
             return `\n\nTEXTURA DO MUNDO: O mundo respira fora do campo de visão do jogador. Neste momento, algo do horizonte da aventura pode emergir organicamente — um detalhe ambiental que ecoa o conflito maior, um personagem com agenda própria que cruza o caminho, um som ou cheiro que sugere o que se aproxima. Integre apenas se couber na cena sem forçar; caso a ação atual já carregue tensão suficiente, ignore este lembrete.`;
@@ -402,7 +443,7 @@ ${SSR_TEMPLATE}`
                 body: JSON.stringify({
                     model: MODELO,
                     messages: mensagensPayload,
-                    temperature: 0.55,
+                    temperature: 0.5,
                     max_tokens: maxTokens,
                     presence_penalty: 0.3,
                     frequency_penalty: 0.3,
@@ -537,10 +578,22 @@ ${SSR_TEMPLATE}`
                     mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva apenas o que é visível ou audível agora. Termine com a situação imediata do jogador. NUNCA decida o que o personagem sente ou faz.`;
 
                     // --------------------------------------------------------
-                    // Hint de textura — inserido organicamente dentro das
-                    // DIRETRIZES quando o beat counter atingir o limiar.
-                    // Não é um turno separado; é contexto adicional da mesma
-                    // mensagem, invisível ao jogador.
+                    // CONTEXTO_ATIVO — injetado em TODOS os turnos
+                    //
+                    // MUDANÇA 2: diferente do hint de textura (que só dispara
+                    // a cada 5 turnos tranquilos), o contexto ativo é
+                    // injetado sempre. Mantém o antagonista e a missão
+                    // acessíveis no final da cadeia de tokens — onde a
+                    // atenção do modelo é mais forte — a cada resposta.
+                    // --------------------------------------------------------
+                    const contextoAtivo = extrairContextoAtivo();
+                    if (contextoAtivo) {
+                        mensagemParaNarrador += `\nCONTEXTO_ATIVO: ${contextoAtivo}`;
+                        console.debug(`[CONTEXTO] Injetado: ${contextoAtivo}`);
+                    }
+
+                    // --------------------------------------------------------
+                    // Hint de textura — só quando beat counter dispara
                     // --------------------------------------------------------
                     if (turnsSinceEvent >= BEAT_THRESHOLD) {
                         mensagemParaNarrador += construirHintDeTextura();
@@ -574,9 +627,7 @@ ${SSR_TEMPLATE}`
                 mensagens.push({ role: 'assistant', content: respostaIA });
 
                 // --------------------------------------------------------
-                // Atualiza beat counter com base na resposta gerada.
-                // Reseta se o narrador introduziu algo novo por conta
-                // própria; incrementa se a resposta foi apenas reativa.
+                // Atualiza beat counter com base na resposta gerada
                 // --------------------------------------------------------
                 if (!isInitial) {
                     if (detectarEventoPlot(respostaIA)) {
@@ -611,12 +662,6 @@ ${SSR_TEMPLATE}`
 
         // ============================================================
         // Inicialização
-        //
-        // Ordem deliberada:
-        // 1. carregarSessao() — recupera resumo e roteiro do Firestore
-        // 2. gerarRoteiro()   — só chamado se não existe roteiro salvo
-        // 3. montarSystemPrompt() — constrói [0] com o roteiro disponível
-        // 4. enviar()         — inicia a narração
         // ============================================================
         window.onload = async () => {
             await carregarSessao();
