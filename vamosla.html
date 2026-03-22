@@ -71,18 +71,46 @@
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
 
+        // ============================================================
+        // Roteiro Vivo — estado e configuração
+        //
+        // roteiro:           o plano da aventura, gerado uma vez e persistido
+        // turnsSinceEvent:   contador de turnos sem que um evento de plot emergiu
+        // BEAT_THRESHOLD:    a partir de quantos turnos quietos o narrador recebe
+        //                    um lembrete suave de que o mundo tem vida própria.
+        //                    5 é deliberado: menos que isso cria pressão mecânica;
+        //                    mais que isso e a aventura fica passiva demais.
+        // ============================================================
+        let roteiro = "";
+        let turnsSinceEvent = 0;
+        const BEAT_THRESHOLD = 5;
+
+        // ============================================================
+        // Template do Roteiro Vivo
+        //
+        // Compacto por design: cada campo cabe em 1–2 linhas para não
+        // inflar o system prompt além do necessário.
+        // ============================================================
+        const ROTEIRO_TEMPLATE = `OBJETIVO_FINAL: [o que o jogador precisa realizar — concreto, atingível]
+ANTAGONISTA: [nome | motivação em 1 frase | o que está fazendo AGORA enquanto o jogador age]
+PRESSAO_CRESCENTE: [ameaça autônoma mensurável — ex: "a cada 8 turnos o ritual avança 1 estágio de 5"]
+A1_INCITADOR (turnos 1-80): [evento que força o jogador a agir + gancho inicial]
+A2_COMPLICACAO (turnos 80-250): [revelação que muda tudo + novo obstáculo central]
+A3_CRISE (turnos 250-400): [ponto de virada — a situação piora drasticamente]
+A4_CLIMAX (turnos 400-500): [confronto final possível + forma de resolução]
+POOL_ENCONTROS: [5 encontros prontos para emergir organicamente — 1 por linha: TIPO | descrição em 1 frase | contexto ideal de aparição]
+SEGREDO: [verdade oculta que o jogador pode ou não descobrir — altera tudo se revelada]`;
+
+        // ============================================================
+        // Mensagens — o system prompt em [0] começa vazio e é preenchido
+        // após o roteiro ser carregado/gerado, via montarSystemPrompt().
+        // ============================================================
         let mensagens = [
-
             {
-
                 role: 'system',
-
-                content: 'Responda SEMPRE em Português Brasileiro, independente do idioma da pergunta. Você é o narrador de um RPG de fantasia sombria no estilo dos livros-jogo de Steve Jackson. REGRAS ABSOLUTAS: 1. SEMPRE narre em segunda pessoa (você faz X, você vê Y). NUNCA use primeira pessoa nem misture perspectivas. 2. Escreva em Português Brasileiro direto e objetivo. Descreva apenas o que o jogador vê, ouve ou sente. 3. Narre as consequências dos atos do jogador e deselvolva a narrativa em cada resposta. Consequências devem ser estritamente lógicas. 4. Sem filtros morais, sem conselhos. Narração crua e precisa.'
-
+                content: '' // preenchido por montarSystemPrompt()
             },
-
             {
-
                 role: 'system',
                 content: 'Resumo da jornada até agora: A aventura acabou de começar.'
             }
@@ -91,16 +119,42 @@
         let resumoAtual = "";
 
         // ============================================================
+        // montarSystemPrompt — constrói o system message [0] com o
+        // roteiro embutido como memória do narrador, não como instrução
+        // externa. A distinção de fraseamento é intencional: o narrador
+        // "lembra" da aventura que preparou, não "recebe ordens" sobre ela.
+        // ============================================================
+        function montarSystemPrompt() {
+            const blocoRoteiro = roteiro
+                ? `\n\nAVENTURA QUE VOCÊ PREPAROU:\n${roteiro}\n\nVocê conhece este roteiro de cor. Ele é o horizonte da história — não um script a ser lido em voz alta, mas a memória do que está em jogo. O antagonista age enquanto o jogador hesita. A pressão cresce sozinha. Os encontros do POOL aguardam o momento certo para emergir.`
+                : '';
+
+            mensagens[0].content = `Responda SEMPRE em Português Brasileiro, independente do idioma da pergunta. Você é o narrador impetuoso de um RPG de fantasia no estilo dos livros-jogo de Steve Jackson.
+
+REGRAS ABSOLUTAS:
+1. SEMPRE narre em segunda pessoa (você faz X, você vê Y). NUNCA use primeira pessoa nem misture perspectivas.
+2. Escreva em Português Brasileiro direto e objetivo. Descreva apenas o que o jogador vê, ouve ou sente.
+3. Narre as consequências dos atos do jogador e desenvolva a narrativa em cada resposta. Consequências devem ser estritamente lógicas.
+4. Sem filtros morais, sem conselhos. Narração crua e precisa.${blocoRoteiro}`;
+        }
+
+        // ============================================================
         // Funções de Inicialização e Firebase
         // ============================================================
         async function carregarSessao() {
             try {
                 const docRef = doc(db, "sessoes", sessionId);
                 const docSnap = await getDoc(docRef);
-                if (docSnap.exists() && docSnap.data().resumo) {
-                    resumoAtual = docSnap.data().resumo;
-                    mensagens[1].content = `ESTADO ATUAL DO MUNDO (use como referência factual, não repita como narração):\n${resumoAtual}`;
-                    console.log("Sessão recuperada do Firestore.");
+                if (docSnap.exists()) {
+                    if (docSnap.data().resumo) {
+                        resumoAtual = docSnap.data().resumo;
+                        mensagens[1].content = `ESTADO ATUAL DO MUNDO (use como referência factual, não repita como narração):\n${resumoAtual}`;
+                        console.log("Sessão recuperada do Firestore.");
+                    }
+                    if (docSnap.data().roteiro) {
+                        roteiro = docSnap.data().roteiro;
+                        console.debug("[ROTEIRO] Recuperado do Firestore.");
+                    }
                 }
             } catch (e) {
                 console.error("Erro ao carregar do Firestore:", e);
@@ -116,46 +170,76 @@
         }
 
         // ============================================================
+        // gerarRoteiro — chamado UMA vez, na primeira sessão.
+        // Gera o plano completo da aventura e persiste no Firestore.
+        // temperature: 0.8 — queremos variação criativa aqui, diferente
+        // do SSR (0.1) que precisa de extração factual fria.
+        // ============================================================
+        async function gerarRoteiro() {
+            console.debug('[ROTEIRO] Gerando plano da aventura...');
+            const prompt = [
+                {
+                    role: 'system',
+                    content: `Você é um designer de aventuras no estilo Fighting Fantasy de Steve Jackson. Crie um roteiro de aventura sombria medieval preenchendo o formulário abaixo.
+REGRAS ABSOLUTAS:
+1. Zero prosa, zero adjetivos literários. Campos factuais e concretos.
+2. O ANTAGONISTA deve ter um plano ATIVO e específico — não genérico como "quer dominar o mundo".
+3. A PRESSAO_CRESCENTE deve ser mensurável (ex: "a cada 8 turnos o ritual avança 1 estágio de 5").
+4. O POOL_ENCONTROS deve ter 5 entradas variadas: misture criaturas, NPCs com agenda, dilemas morais, armadilhas e descobertas.
+5. NÃO escreva "FORMULÁRIO:" nem qualquer cabeçalho — comece direto com "OBJETIVO_FINAL:".`
+                },
+                {
+                    role: 'user',
+                    content: `Crie o roteiro da aventura agora.\n\n${ROTEIRO_TEMPLATE}`
+                }
+            ];
+
+            try {
+                const response = await fetch(LM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODELO,
+                        messages: prompt,
+                        temperature: 0.8,
+                        max_tokens: 700
+                    })
+                });
+                const data = await response.json();
+                roteiro = data.choices[0].message.content.trim();
+                console.debug('[ROTEIRO] Gerado:\n' + roteiro);
+                await setDoc(doc(db, "sessoes", sessionId), { roteiro }, { merge: true });
+            } catch (e) {
+                console.error("Erro ao gerar roteiro:", e);
+                // Falha silenciosa: a aventura continua sem roteiro.
+                // O narrador cai para o comportamento reativo padrão.
+                roteiro = "";
+            }
+        }
+
+        // ============================================================
         // Funções de Compressão de Memória — Structured State Representation (SSR)
         // ============================================================
-
-        // MUDANÇA: Template enriquecido com instruções mais exigentes por campo.
-        // Cada campo agora tem uma descrição do que é obrigatório preencher,
-        // forçando o modelo a extrair NPCs, eventos e ganchos em vez de deixar [sem dados].
         const SSR_TEMPLATE = `LOCAL: [nome do local atual + descrição física em 1 frase]
 NPCS: [OBRIGATÓRIO — liste TODOS os personagens mencionados. Formato: Nome | descrição física curta | relação com o jogador | status (vivo/morto/desconhecido). Se nenhum foi mencionado, escreva [nenhum encontrado].]
 ITENS: [liste todos os itens carregados pelo jogador ou objetos relevantes no cenário. Se nenhum, escreva [nenhum].]
 EVENTOS_CHAVE: [OBRIGATÓRIO — liste em ordem cronológica TUDO que aconteceu, um evento por linha, começando com verbo no passado. Ex: "Jogador chegou à vila de Brindley." "Açougueiro ignorou o jogador apesar da moeda de ouro." Mínimo de 3 eventos se houver histórico.]
 SITUACAO_ATUAL: [uma frase objetiva: onde o jogador está agora e o que está diante dele]
-GANCHOS_ATIVOS: [OBRIGATÓRIO — liste pistas, ameaças ou missões abertas não resolvidas. Ex: "Fera selvagem na floresta perto da colmeia dos Hargraves — ainda não investigada." Se nenhum, escreva [nenhum].]`;
+GANCHOS_ATIVOS: [OBRIGATÓRIO — liste pistas, ameaças ou missões abertas não resolvidas. Ex: "Fera selvagem na floresta perto da colmeia dos Hargraves — ainda não investigada." Se nenhum, escreva [nenhum].]
+BEAT_ATUAL: [qual ato está ativo (A1/A2/A3/A4) + estimativa de turno]
+PRESSAO_STATUS: [estágio atual da ameaça crescente — descreva como ela avançou desde o último resumo]
+ENCONTROS_USADOS: [quais itens do POOL_ENCONTROS já foram consumidos. Se nenhum, escreva [nenhum].]`;
 
         // ============================================================
-        // MUDANÇA PRINCIPAL: comprimirMemoria agora é NÃO-BLOQUEANTE.
-        //
-        // Problema anterior: o splice + SSR + Firestore bloqueavam o jogo por
-        // até 112 segundos (conforme logs). O jogador ficava travado esperando.
-        //
-        // Solução: separar em duas etapas:
-        //   1. splice() — síncrono, instantâneo. Reduz o array imediatamente,
-        //      garantindo que a próxima chamada ao narrador já use menos contexto.
-        //   2. gerarSSRBackground() — assíncrono, dispara em background sem await.
-        //      Gera o resumo e salva no Firestore enquanto o jogo continua.
-        //
-        // O narrador usa o resumoAtual anterior (ainda válido) até o novo chegar.
-        // Quando o SSR terminar, atualiza mensagens[1] e resumoAtual silenciosamente.
+        // comprimirMemoria — síncrono e não-bloqueante (igual ao original).
         // ============================================================
         function comprimirMemoria() {
             if (mensagens.length <= LIMITE_MENSAGENS) return;
 
-            // MUDANÇA: splice(2, 6) → splice(2, 14).
-            // Antes comprimia apenas 3 turnos (6 mensagens), deixando NPCs e
-            // eventos dos turnos seguintes fora do resumo.
-            // Agora comprime 7 turnos (14 mensagens) por ciclo — resumo muito mais rico.
             const mensagensParaResumir = mensagens.splice(2, 14);
 
             console.debug(`[SSR] ${mensagensParaResumir.length} mensagens removidas do contexto. Gerando resumo em background...`);
 
-            // Dispara em background — NÃO bloqueia o fluxo do jogo.
             gerarSSRBackground(mensagensParaResumir);
         }
 
@@ -167,9 +251,6 @@ GANCHOS_ATIVOS: [OBRIGATÓRIO — liste pistas, ameaças ou missões abertas nã
             const promptResumo = [
                 {
                     role: 'system',
-                    // MUDANÇA: Instruções SSR reforçadas.
-                    // "FORMULÁRIO:" no output era o modelo ecoando o cabeçalho — agora proibido.
-                    // Campos NPCS, EVENTOS_CHAVE e GANCHOS_ATIVOS marcados como OBRIGATÓRIOS.
                     content: `Você é um extrator de estado de jogo. Sua única função é preencher o formulário abaixo com dados factuais extraídos dos eventos fornecidos. REGRAS ABSOLUTAS:
 1. ZERO prosa, ZERO atmosfera, ZERO adjetivos literários.
 2. Preencha TODOS os campos — campos marcados como OBRIGATÓRIO não podem ficar como [sem dados].
@@ -187,7 +268,6 @@ ${SSR_TEMPLATE}`
             ];
 
             try {
-                // MUDANÇA: max_tokens 350 → 500 para comportar NPCS e EVENTOS_CHAVE detalhados.
                 const response = await fetch(LM_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -195,7 +275,7 @@ ${SSR_TEMPLATE}`
                         model: MODELO,
                         messages: promptResumo,
                         temperature: 0.1,
-                        max_tokens: 500
+                        max_tokens: 600
                     })
                 });
 
@@ -207,13 +287,11 @@ ${SSR_TEMPLATE}`
                 resumoAtual = novoSSR;
                 mensagens[1].content = `ESTADO ATUAL DO MUNDO (use como referência factual, não repita como narração):\n${resumoAtual}`;
 
-                // Salva no Firestore silenciosamente — o jogo já seguiu em frente.
                 await salvarResumoFirestore(resumoAtual);
                 adicionarMensagem('💾 Memórias consolidadas.', 'system');
 
             } catch (error) {
                 console.error("Erro ao gerar SSR em background:", error);
-                // Em caso de falha, reinsere as mensagens para não perder contexto.
                 mensagens.splice(2, 0, ...mensagensParaResumir);
             }
         }
@@ -278,6 +356,43 @@ ${SSR_TEMPLATE}`
         }
 
         // ============================================================
+        // detectarEventoPlot — heurística leve para identificar se a
+        // resposta do narrador introduziu algo novo (NPC, ameaça, pista,
+        // evento externo) vs. apenas reagir ao que o jogador fez.
+        //
+        // A lógica: verbos de aparição/chegada/revelação indicam que o
+        // mundo agiu por conta própria. Verbos de consequência direta
+        // (cai, sangra, falha) indicam reação à ação do jogador — esses
+        // não resetam o contador, porque não constituem beat de plot.
+        // ============================================================
+        function detectarEventoPlot(texto) {
+            const verbosDeAparição = /\b(aparece|surge|chega|entra|avança|revela|sussurra|grita ao longe|ecoa|se aproxima|emerge|irrompe|tomba sobre|bloqueia o caminho|intercepta|carrega uma mensagem|porta se abre|chão treme|fumaça|trovão|sinal|facho|vulto)\b/i;
+            return verbosDeAparição.test(texto);
+        }
+
+        // ============================================================
+        // construirHintDeTextura — gera o lembrete orgânico que é
+        // inserido dentro do bloco DIRETRIZES quando o contador dispara.
+        //
+        // DECISÃO DE DESIGN — por que dentro das DIRETRIZES e não como
+        // mensagem separada:
+        //   • Mensagens separadas (role: 'user') criam um turno artificial
+        //     visível no histórico — o modelo pode "responder" a elas
+        //     diretamente, quebrando o fluxo.
+        //   • Dentro das DIRETRIZES, o hint é tratado como contexto da
+        //     mesma ação do jogador, não como um turno independente.
+        //
+        // DECISÃO DE DESIGN — por que "pode" e não "deve":
+        //   • "Deve" cria injeção mecânica — o narrador força um elemento
+        //     mesmo que a cena não comporte, resultando em quebra de imersão.
+        //   • "Pode" dá ao narrador autonomia: se a cena já está tensa o
+        //     suficiente, ele ignora o hint naturalmente.
+        // ============================================================
+        function construirHintDeTextura() {
+            return `\n\nTEXTURA DO MUNDO: O mundo respira fora do campo de visão do jogador. Neste momento, algo do horizonte da aventura pode emergir organicamente — um detalhe ambiental que ecoa o conflito maior, um personagem com agenda própria que cruza o caminho, um som ou cheiro que sugere o que se aproxima. Integre apenas se couber na cena sem forçar; caso a ação atual já carregue tensão suficiente, ignore este lembrete.`;
+        }
+
+        // ============================================================
         // Streaming SSE com loop de auto-continuação
         // ============================================================
         async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
@@ -287,7 +402,7 @@ ${SSR_TEMPLATE}`
                 body: JSON.stringify({
                     model: MODELO,
                     messages: mensagensPayload,
-                    temperature: 0.5,
+                    temperature: 0.55,
                     max_tokens: maxTokens,
                     presence_penalty: 0.3,
                     frequency_penalty: 0.3,
@@ -411,14 +526,27 @@ ${SSR_TEMPLATE}`
             const elementoDisplay = document.getElementById(tempId);
 
             try {
-                // MUDANÇA: comprimirMemoria agora é síncrona (não usa await).
-                // O splice acontece imediatamente; o SSR roda em background.
                 comprimirMemoria();
 
                 let mensagemParaNarrador = pergunta;
 
                 if (!isInitial) {
-mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva apenas o que é visível ou audível agora. Termine com a situação imediata do jogador. NUNCA decida o que o personagem sente ou faz.`;
+                    // --------------------------------------------------------
+                    // DIRETRIZES base (inalteradas)
+                    // --------------------------------------------------------
+                    mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva apenas o que é visível ou audível agora. Termine com a situação imediata do jogador. NUNCA decida o que o personagem sente ou faz.`;
+
+                    // --------------------------------------------------------
+                    // Hint de textura — inserido organicamente dentro das
+                    // DIRETRIZES quando o beat counter atingir o limiar.
+                    // Não é um turno separado; é contexto adicional da mesma
+                    // mensagem, invisível ao jogador.
+                    // --------------------------------------------------------
+                    if (turnsSinceEvent >= BEAT_THRESHOLD) {
+                        mensagemParaNarrador += construirHintDeTextura();
+                        console.debug(`[BEAT] Hint de textura injetado após ${turnsSinceEvent} turnos tranquilos.`);
+                    }
+
                     const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
 
@@ -426,8 +554,8 @@ mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda
                         adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
 
                         let logicaFisica = resultadoTeste === 'FALHA'
-    ? 'O jogador FALHOU na tentativa. Descreva como a situação piorou, o erro que ocorreu ou o contra-ataque sofrido.'
-    : 'O jogador teve SUCESSO. Descreva a execução perfeita da ação e a vantagem obtida.';
+                            ? 'O jogador FALHOU na tentativa. Descreva como a situação piorou, o erro que ocorreu ou o contra-ataque sofrido.'
+                            : 'O jogador teve SUCESSO. Descreva a execução perfeita da ação e a vantagem obtida.';
 
                         mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. LÓGICA: ${logicaFisica}`;
                     }
@@ -444,6 +572,21 @@ mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda
                 const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
 
                 mensagens.push({ role: 'assistant', content: respostaIA });
+
+                // --------------------------------------------------------
+                // Atualiza beat counter com base na resposta gerada.
+                // Reseta se o narrador introduziu algo novo por conta
+                // própria; incrementa se a resposta foi apenas reativa.
+                // --------------------------------------------------------
+                if (!isInitial) {
+                    if (detectarEventoPlot(respostaIA)) {
+                        turnsSinceEvent = 0;
+                        console.debug('[BEAT] Evento de plot detectado — contador resetado.');
+                    } else {
+                        turnsSinceEvent++;
+                        console.debug(`[BEAT] Sem evento de plot. Contador: ${turnsSinceEvent}/${BEAT_THRESHOLD}`);
+                    }
+                }
 
                 if (isInitial) {
                     userInput.disabled = false;
@@ -468,9 +611,19 @@ mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda
 
         // ============================================================
         // Inicialização
+        //
+        // Ordem deliberada:
+        // 1. carregarSessao() — recupera resumo e roteiro do Firestore
+        // 2. gerarRoteiro()   — só chamado se não existe roteiro salvo
+        // 3. montarSystemPrompt() — constrói [0] com o roteiro disponível
+        // 4. enviar()         — inicia a narração
         // ============================================================
         window.onload = async () => {
             await carregarSessao();
+            if (!roteiro) {
+                await gerarRoteiro();
+            }
+            montarSystemPrompt();
             window.enviar();
         };
 
