@@ -403,15 +403,27 @@ ${SSR_TEMPLATE}`
                         // Substitua a sua variável logicaFisica atual por esta estrutura:
 let logicaFisica = '';
 if (resultadoTeste === 'FALHA') {
-    // Escolhemos uma consequência brutal aleatória via código, não via IA
-    const consequencias = [
-        'Ação FALHOU CRITICAMENTE. O jogador sofreu DANO FÍSICO GRAVE. Descreva a dor e o ferimento sangrento sem amenizar.',
-        'Ação FALHOU. O jogador perdeu muito sangue. Seja descritivo e cruel.',
-        'Ação FALHOU. O ambiente se voltou contra o jogador de forma letal. Descreva uma consequência punitiva e dolorosa.'
-    ];
-    logicaFisica = consequencias[Math.floor(Math.random() * consequencias.length)];
-} else {
-    logicaFisica = 'A ação FOI UM SUCESSO. Descreva o triunfo de forma crua e rápida.';
+    // DEPOIS — consequências por atributo:
+const consequenciasPorAtributo = {
+    HABILIDADE: [
+        'Ação FALHOU CRITICAMENTE. O jogador errou o movimento e sofreu DANO FÍSICO. Descreva o ferimento com crueza.',
+        'Ação FALHOU. O corpo do jogador cedeu no momento decisivo. Descreva a dor física e a posição vulnerável em que ficou.',
+        'Ação FALHOU. A falta de destreza custou caro. Descreva um erro mecânico com consequências físicas imediatas.'
+    ],
+    CARISMA: [
+        'Ação FALHOU. O jogador disse a coisa errada. O interlocutor reagiu com HOSTILIDADE ABERTA — descreva a rejeição humilhante, o silêncio cortante ou a ameaça que surgiu.',
+        'Ação FALHOU. O jogador foi ignorado ou escarnecido. Descreva a frieza do outro personagem, talvez acompanhada de riso ou desprezo. A situação social piorou.',
+        'Ação FALHOU. A abordagem irritou o interlocutor. Descreva como ele se fechou, virou as costas ou sinalizou que a conversa acabou — de forma ameaçadora ou humilhante.'
+    ],
+    SORTE: [
+        'Ação FALHOU. O destino foi cruel. Descreva uma reviravolta inesperada e punitiva do ambiente ou da situação.',
+        'Ação FALHOU. O azar se materializou de forma concreta. Descreva o que deu errado por pura má sorte.',
+        'Ação FALHOU. O universo conspirou contra o jogador. Descreva uma coincidência brutal que complica tudo.'
+    ]
+};
+
+const lista = consequenciasPorAtributo[tipoAcao] || consequenciasPorAtributo['HABILIDADE'];
+logicaFisica = lista[Math.floor(Math.random() * lista.length)];
 }
 
 mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. DIRETRIZ OBRIGATÓRIA: ${logicaFisica}`;
