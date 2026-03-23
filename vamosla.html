@@ -51,15 +51,16 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
-        const sessionId = "sessao_dev_01";
+        
+        // ID fixo para desenvolvimento local (pode ser dinâmico depois)
+        const sessionId = "sessao_dev_01"; 
 
         // ============================================================
         // Configuração do LM Studio e Controle de Contexto
         // ============================================================
         const LM_URL = 'http://localhost:1234/v1/chat/completions';
         const MODELO = 'qwen2.5-7b-instruct-abliterated-v2';
-        const LIMITE_MENSAGENS = 24;
+        const LIMITE_MENSAGENS = 24; // Quando chegar aqui, resume e limpa a memória antiga
 
         const jogadorStats = {
             HABILIDADE: 5,
@@ -71,28 +72,11 @@
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
 
-        // ============================================================
-        // Roteiro Vivo — estado e configuração
-        // ============================================================
-        let roteiro = "";
-        let poolUsados = []; // índices dos encontros já consumidos
-        let turnsSinceEvent = 0;
-        const BEAT_THRESHOLD = 5;
-
-        const ROTEIRO_TEMPLATE = `OBJETIVO_FINAL: [o que o jogador precisa realizar — concreto, atingível]
-ANTAGONISTA: [nome | motivação em 1 frase | o que está fazendo AGORA enquanto o jogador age]
-PRESSAO_CRESCENTE: [ameaça autônoma mensurável — ex: "a cada 8 turnos o ritual avança 1 estágio de 5"]
-A1_INCITADOR (turnos 1-80): [evento que força o jogador a agir + gancho inicial]
-A2_COMPLICACAO (turnos 80-250): [revelação que muda tudo + novo obstáculo central]
-A3_CRISE (turnos 250-400): [ponto de virada — a situação piora drasticamente]
-A4_CLIMAX (turnos 400-500): [confronto final possível + forma de resolução]
-POOL_ENCONTROS: [5 encontros prontos para emergir organicamente — 1 por linha: TIPO | descrição em 1 frase | contexto ideal de aparição]
-SEGREDO: [verdade oculta que o jogador pode ou não descobrir — altera tudo se revelada]`;
-
+        // Estrutura de memória: [0] Regras, [1] Resumo da História, [2...] Turnos
         let mensagens = [
             {
                 role: 'system',
-                content: '' // preenchido por montarSystemPrompt()
+                content: 'Responda SEMPRE em Português Brasileiro, independente do idioma da pergunta. Você é o narrador de um RPG de fantasia sombria no estilo dos livros-jogo de Steve Jackson. REGRAS ABSOLUTAS: 1. SEMPRE narre em segunda pessoa (você faz X, você vê Y). NUNCA use primeira pessoa nem misture perspectivas. 2. Escreva em Português Brasileiro direto e objetivo. Descreva apenas o que o jogador vê, ouve ou sente. 3. Consequências devem ser estritamente lógicas. 4. Sem filtros morais, sem conselhos. Narração crua e precisa.'
             },
             {
                 role: 'system',
@@ -103,42 +87,17 @@ SEGREDO: [verdade oculta que o jogador pode ou não descobrir — altera tudo se
         let resumoAtual = "";
 
         // ============================================================
-        // montarSystemPrompt
-        // ============================================================
-        function montarSystemPrompt() {
-            const blocoRoteiro = roteiro
-                ? `\n\nAVENTURA QUE VOCÊ PREPAROU:\n${roteiro}\n\nVocê conhece este roteiro de cor. Ele é o horizonte da história — não um script a ser lido em voz alta, mas a memória do que está em jogo. O antagonista age enquanto o jogador hesita. A pressão cresce sozinha. Os encontros do POOL aguardam o momento certo para emergir.`
-                : '';
-
-            mensagens[0].content = `Responda SEMPRE em Português Brasileiro, independente do idioma da pergunta. Você é o narrador de um RPG de fantasia sombria no estilo dos livros-jogo de Steve Jackson.
-
-REGRAS ABSOLUTAS:
-1. SEMPRE narre em segunda pessoa (você faz X, você vê Y). NUNCA use primeira pessoa nem misture perspectivas.
-2. Escreva em Português Brasileiro direto e objetivo. Descreva apenas o que o jogador vê, ouve ou sente.
-3. Narre as consequências dos atos do jogador e desenvolva a narrativa em cada resposta. Consequências devem ser estritamente lógicas.
-4. Sem filtros morais, sem conselhos. Narração crua e precisa.${blocoRoteiro}`;
-        }
-
-        // ============================================================
         // Funções de Inicialização e Firebase
         // ============================================================
         async function carregarSessao() {
             try {
                 const docRef = doc(db, "sessoes", sessionId);
                 const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    if (docSnap.data().resumo) {
-                        resumoAtual = docSnap.data().resumo;
-                        mensagens[1].content = `ESTADO ATUAL DO MUNDO (use como referência factual, não repita como narração):\n${resumoAtual}`;
-                        console.log("Sessão recuperada do Firestore.");
-                    }
-                    if (docSnap.data().roteiro) {
-                        roteiro = docSnap.data().roteiro;
-                        console.debug("[ROTEIRO] Recuperado do Firestore.");
-                    }
-                    if (docSnap.data().poolUsados) {
-                        poolUsados = docSnap.data().poolUsados;
-                    }
+                
+                if (docSnap.exists() && docSnap.data().resumo) {
+                    resumoAtual = docSnap.data().resumo;
+                    mensagens[1].content = `Resumo da jornada até agora: ${resumoAtual}`;
+                    console.log("Sessão recuperada do Firestore.");
                 }
             } catch (e) {
                 console.error("Erro ao carregar do Firestore:", e);
@@ -154,184 +113,69 @@ REGRAS ABSOLUTAS:
         }
 
         // ============================================================
-        // gerarRoteiro
-        //
-        // MUDANÇA 1: max_tokens 700 → 900.
-        // Nos testes, o roteiro atingia finish_reason="length" e era
-        // cortado no meio do campo SEGREDO. 900 tokens dá margem para
-        // todos os campos sem truncamento.
-        // ============================================================
-        async function gerarRoteiro() {
-            console.debug('[ROTEIRO] Gerando plano da aventura...');
-            const prompt = [
-                {
-                    role: 'system',
-                    content: `RESPONDA APENAS EM PORTUGUÊS BRASILEIRO. Nenhuma palavra em outro idioma.
-
-Você é um designer de aventuras no estilo Fighting Fantasy de Steve Jackson. Crie um roteiro de aventura sombria medieval preenchendo o formulário abaixo.
-REGRAS ABSOLUTAS:
-1. Zero prosa, zero adjetivos literários. Campos factuais e concretos.
-2. O ANTAGONISTA deve ter um plano ATIVO e específico — não genérico como "quer dominar o mundo".
-3. A PRESSAO_CRESCENTE deve ser mensurável (ex: "a cada 8 turnos o ritual avança 1 estágio de 5").
-4. O POOL_ENCONTROS deve ter 5 entradas variadas: misture criaturas, NPCs com agenda, dilemas morais, armadilhas e descobertas.
-5. NÃO escreva "FORMULÁRIO:" nem qualquer cabeçalho — comece direto com "OBJETIVO_FINAL:".
-6. TODOS os campos obrigatoriamente em Português Brasileiro.`
-                },
-                {
-                    role: 'user',
-                    content: `Crie o roteiro da aventura agora.\n\n${ROTEIRO_TEMPLATE}`
-                }
-            ];
-
-            try {
-                const response = await fetch(LM_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: MODELO,
-                        messages: prompt,
-                        temperature: 0.8,
-                        max_tokens: 900   // era 700 — cortava o SEGREDO
-                    })
-                });
-                const data = await response.json();
-                roteiro = data.choices[0].message.content.trim();
-                console.debug('[ROTEIRO] Gerado:\n' + roteiro);
-                await setDoc(doc(db, "sessoes", sessionId), { roteiro, poolUsados: [] }, { merge: true });
-            } catch (e) {
-                console.error("Erro ao gerar roteiro:", e);
-                roteiro = "";
-            }
-        }
-
-        // ============================================================
-        // extrairGanchoDoPool — NOVO (substitui extrairContextoAtivo
-        // e construirHintDeTextura)
-        //
-        // MUDANÇA 2 + 3 — o problema central dos testes:
-        //
-        // O CONTEXTO_ATIVO injetado em CADA turno repetia MISSÃO +
-        // ANTAGONISTA + PRESSÃO toda resposta. O narrador lia "sussurros"
-        // no contexto e costurava "sussurros" em toda narração — não por
-        // má construção de tensão, mas por obediência mecânica ao prompt.
-        //
-        // A solução Steve Jackson: o narrador narra livremente a partir
-        // do roteiro no system prompt (que já tem tudo). Quando o mundo
-        // precisa agir (beat counter >= threshold), recebe UM ÚNICO
-        // gancho concreto extraído do POOL_ENCONTROS — não uma filosofia
-        // sobre tensão, mas um evento específico e diegético:
-        //   "Um peregrino carregando um conto sobre o rei adormecido"
-        //   "Uma aranha gigante que ainda não te notou"
-        //
-        // O narrador pode tecer esse gancho naturalmente na cena ou
-        // ignorá-lo se a cena já tiver peso — igual a um GM de mesa.
-        // Isso produz tensão acumulada e variada, não repetição mecânica.
-        //
-        // Tracking de itens usados: poolUsados[] garante que cada
-        // encontro do POOL emerge no máximo uma vez por aventura.
-        // Quando todos foram usados, o beat silencia (a aventura já
-        // tem energia suficiente para se sustentar sozinha).
-        // ============================================================
-        function extrairGanchoDoPool() {
-            if (!roteiro) return '';
-
-            // Extrai o bloco POOL_ENCONTROS até o próximo campo
-            const poolMatch = roteiro.match(/POOL_ENCONTROS:\s*([\s\S]*?)(?=\nSEGREDO:|$)/i);
-            if (!poolMatch) return '';
-
-            const linhas = poolMatch[1]
-                .split('\n')
-                .map(l => l.replace(/^\d+\.\s*/, '').trim())
-                .filter(l => l.length > 10);
-
-            // Filtra itens ainda não usados
-            const disponiveis = linhas
-                .map((l, i) => ({ i, l }))
-                .filter(({ i }) => !poolUsados.includes(i));
-
-            if (disponiveis.length === 0) return ''; // pool esgotado — silencia
-
-            // Escolhe aleatoriamente entre os disponíveis
-            const escolhido = disponiveis[Math.floor(Math.random() * disponiveis.length)];
-
-            // Marca como usado e persiste (fire-and-forget)
-            poolUsados.push(escolhido.i);
-            setDoc(doc(db, "sessoes", sessionId), { poolUsados }, { merge: true }).catch(() => {});
-
-            // Extrai apenas a descrição (campo do meio: TIPO | descrição | contexto)
-            const partes = escolhido.l.split('|');
-            const descricao = (partes[1] || partes[0]).trim();
-
-            console.debug(`[BEAT] Gancho do pool #${escolhido.i} injetado: "${descricao}"`);
-
-            return `\nGANCHO: ${descricao} — surge agora se couber organicamente na cena; ignore se a cena já tiver tensão suficiente.`;
-        }
-
-        // ============================================================
         // Funções de Compressão de Memória — Structured State Representation (SSR)
         // ============================================================
-        const SSR_TEMPLATE = `LOCAL: [nome do local atual + descrição física em 1 frase]
-NPCS: [OBRIGATÓRIO — liste TODOS os personagens mencionados. Formato: Nome | descrição física curta | relação com o jogador | status (vivo/morto/desconhecido). Se nenhum foi mencionado, escreva [nenhum encontrado].]
-ITENS: [liste todos os itens carregados pelo jogador ou objetos relevantes no cenário. Se nenhum, escreva [nenhum].]
-EVENTOS_CHAVE: [OBRIGATÓRIO — liste em ordem cronológica TUDO que aconteceu, um evento por linha, começando com verbo no passado. Ex: "Jogador chegou à vila de Brindley." "Açougueiro ignorou o jogador apesar da moeda de ouro." Mínimo de 3 eventos se houver histórico.]
-SITUACAO_ATUAL: [uma frase objetiva: onde o jogador está agora e o que está diante dele]
-GANCHOS_ATIVOS: [OBRIGATÓRIO — liste pistas, ameaças ou missões abertas não resolvidas. Ex: "Fera selvagem na floresta perto da colmeia dos Hargraves — ainda não investigada." Se nenhum, escreva [nenhum].]
-BEAT_ATUAL: [qual ato está ativo (A1/A2/A3/A4) + estimativa de turno]
-PRESSAO_STATUS: [estágio atual da ameaça crescente — descreva como ela avançou desde o último resumo]
-ENCONTROS_USADOS: [quais itens do POOL_ENCONTROS já foram consumidos. Se nenhum, escreva [nenhum].]`;
 
-        function comprimirMemoria() {
-            if (mensagens.length <= LIMITE_MENSAGENS) return;
-            const mensagensParaResumir = mensagens.splice(2, 14);
-            console.debug(`[SSR] ${mensagensParaResumir.length} mensagens removidas do contexto. Gerando resumo em background...`);
-            gerarSSRBackground(mensagensParaResumir);
-        }
+        const SSR_TEMPLATE = `LOCAL: [onde o jogador está agora]
+NPCS: [lista de personagens encontrados e seu estado atual: nome/descrição, relação, vivo/morto/desconhecido]
+ITENS: [itens carregados ou relevantes no cenário]
+EVENTOS_CHAVE: [lista de fatos consumados, em ordem, sem atmosfera — apenas o que aconteceu]
+SITUACAO_ATUAL: [uma frase: o que o jogador está fazendo ou diante de agora]
+GANCHOS_ATIVOS: [pistas ou ameaças não resolvidas que devem ser lembradas]`;
 
-        async function gerarSSRBackground(mensagensParaResumir) {
-            const textoExtraido = mensagensParaResumir
-                .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
-                .join('\n---\n');
+        async function comprimirMemoria() {
+            if (mensagens.length > LIMITE_MENSAGENS) {
+                adicionarMensagem('⚙️ As engrenagens do destino giram. Consolidando memórias...', 'system');
+                
+                const mensagensParaResumir = mensagens.splice(2, 6); 
+                const textoExtraido = mensagensParaResumir
+                    .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
+                    .join('\n---\n');
 
-            const promptResumo = [
-                {
-                    role: 'system',
-                    content: `Você é um extrator de estado de jogo. Sua única função é preencher o formulário abaixo com dados factuais extraídos dos eventos fornecidos. REGRAS ABSOLUTAS:
+                const promptResumo = [
+                    { 
+                        role: 'system', 
+                        content: `Você é um extrator de estado de jogo. Sua única função é preencher o formulário abaixo com dados factuais extraídos dos eventos fornecidos. REGRAS ABSOLUTAS:
 1. ZERO prosa, ZERO atmosfera, ZERO adjetivos literários.
-2. Preencha TODOS os campos — campos marcados como OBRIGATÓRIO não podem ficar como [sem dados].
-3. Se o estado anterior já tiver um campo, ATUALIZE-O — não apague o que ainda é verdade.
-4. NÃO escreva "FORMULÁRIO:" nem qualquer cabeçalho antes da resposta. Comece direto com "LOCAL:".
-5. Responda APENAS com os campos preenchidos, sem texto adicional antes ou depois.
+2. Cada campo deve ser preenchido com fatos secos e objetivos.
+3. Se o estado anterior já tiver um campo, ATUALIZE-O com as novas informações — não apague o que ainda é verdade.
+4. Se não houver informação para um campo, escreva: [sem dados].
+5. Responda APENAS com o formulário preenchido, sem nenhum texto adicional antes ou depois.
 
 FORMULÁRIO:
 ${SSR_TEMPLATE}`
-                },
-                {
-                    role: 'user',
-                    content: `ESTADO ANTERIOR:\n${resumoAtual || '[início da aventura — sem estado anterior]'}\n\nNOVOS EVENTOS:\n${textoExtraido}\n\nPreencha o formulário de estado atualizado agora.`
-                }
-            ];
+                    },
+                    { 
+                        role: 'user', 
+                        content: `ESTADO ANTERIOR:\n${resumoAtual || '[início da aventura — sem estado anterior]'}\n\nNOVOS EVENTOS:\n${textoExtraido}\n\nPreencha o formulário de estado atualizado agora.`
+                    }
+                ];
 
-            try {
-                const response = await fetch(LM_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: MODELO,
-                        messages: promptResumo,
-                        temperature: 0.1,
-                        max_tokens: 600
-                    })
-                });
-                const data = await response.json();
-                const novoSSR = data.choices[0].message.content.trim();
-                console.debug('[SSR] Estado estruturado gerado:\n' + novoSSR);
-                resumoAtual = novoSSR;
-                mensagens[1].content = `ESTADO ATUAL DO MUNDO (use como referência factual, não repita como narração):\n${resumoAtual}`;
-                await salvarResumoFirestore(resumoAtual);
-                adicionarMensagem('💾 Memórias consolidadas.', 'system');
-            } catch (error) {
-                console.error("Erro ao gerar SSR em background:", error);
-                mensagens.splice(2, 0, ...mensagensParaResumir);
+                try {
+                    const response = await fetch(LM_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: MODELO,
+                            messages: promptResumo,
+                            temperature: 0.1,
+                            max_tokens: 350
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    const novoSSR = data.choices[0].message.content.trim();
+                    
+                    console.debug('[SSR] Estado estruturado gerado:\n' + novoSSR);
+                    
+                    resumoAtual = novoSSR;
+                    mensagens[1].content = `ESTADO ATUAL DO MUNDO (use como referência factual, não repita como narração):\n${resumoAtual}`;
+                    await salvarResumoFirestore(resumoAtual);
+                    
+                } catch (error) {
+                    console.error("Erro ao comprimir memória:", error);
+                    mensagens.splice(2, 0, ...mensagensParaResumir); 
+                }
             }
         }
 
@@ -355,9 +199,9 @@ ${SSR_TEMPLATE}`
         // ============================================================
         async function avaliarAcao(acaoUsuario) {
             const promptJuiz = [
-                {
-                    role: 'system',
-                    content: `Você é um classificador de ações de RPG. Analise a mensagem do jogador e decida se ela representa uma ação que exige teste de atributo ou apenas uma pergunta descritiva. Categorias: HABILIDADE, CARISMA, SORTE, NENHUM. Responda APENAS com a categoria em maiúsculas. NÃO adicione explicações.`
+                { 
+                    role: 'system', 
+                    content: `Você é um classificador de ações de RPG. Analise a mensagem do jogador e decida se ela representa uma ação que exige teste de atributo ou apenas uma pergunta descritiva. Categorias: HABILIDADE, CARISMA, SORTE, NENHUM. Responda APENAS com a categoria em maiúsculas. NÃO adicione explicações.` 
                 },
                 { role: 'user', content: acaoUsuario }
             ];
@@ -375,6 +219,7 @@ ${SSR_TEMPLATE}`
                 });
                 const data = await response.json();
                 const classificacao = data.choices[0].message.content.trim().toUpperCase();
+                
                 if (['HABILIDADE', 'CARISMA', 'SORTE', 'NENHUM'].includes(classificacao)) {
                     return classificacao;
                 }
@@ -395,35 +240,6 @@ ${SSR_TEMPLATE}`
         }
 
         // ============================================================
-        // detectarEventoPlot
-        // ============================================================
-        function detectarEventoPlot(texto) {
-            // CAMADA 1: entidades nomeadas do roteiro
-            if (roteiro) {
-                const entidades = roteiro.match(/[A-ZÁÉÍÓÚÀÃÕÂÊÔÇ][a-záéíóúàãõâêôçA-Z]{3,}/g) || [];
-                const stopWords = new Set([
-                    'Você', 'Para', 'Agora', 'Quando', 'Onde', 'Como', 'Depois',
-                    'Antes', 'Cada', 'Este', 'Esta', 'Esse', 'Essa', 'Numa', 'Neste',
-                    'OBJETIVO', 'ANTAGONISTA', 'PRESSAO', 'POOL', 'SEGREDO',
-                    'INCITADOR', 'COMPLICACAO', 'CRISE', 'CLIMAX', 'ENCONTROS',
-                    'FINAL', 'CRESCENTE', 'TURNOS', 'TIPO'
-                ]);
-                const filtradas = [...new Set(entidades.filter(e => !stopWords.has(e)))];
-                if (filtradas.length > 0) {
-                    const regex = new RegExp(`\\b(${filtradas.slice(0, 15).join('|')})\\b`, 'i');
-                    if (regex.test(texto)) {
-                        console.debug('[BEAT] Entidade do roteiro detectada — contador resetado.');
-                        return true;
-                    }
-                }
-            }
-
-            // CAMADA 2: padrão estrutural de agência externa
-            const agenciaExterna = /\b(um|uma|o|a)\s+\w+\s+(surge|aparece|chega|entra|irrompe|bloqueia|ataca|sussurra|grita|revela|tomba|intercepta|avança em sua direção)\b/i;
-            return agenciaExterna.test(texto);
-        }
-
-        // ============================================================
         // Streaming SSE com loop de auto-continuação
         // ============================================================
         async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
@@ -433,7 +249,7 @@ ${SSR_TEMPLATE}`
                 body: JSON.stringify({
                     model: MODELO,
                     messages: mensagensPayload,
-                    temperature: 0.55,
+                    temperature: 0.5,
                     max_tokens: maxTokens,
                     presence_penalty: 0.3,
                     frequency_penalty: 0.3,
@@ -454,9 +270,11 @@ ${SSR_TEMPLATE}`
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
+
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n');
                 buffer = lines.pop();
+
                 for (const line of lines) {
                     if (!line.startsWith('data: ')) continue;
                     const jsonStr = line.slice(6).trim();
@@ -517,6 +335,7 @@ ${SSR_TEMPLATE}`
                     console.debug(`[GERAÇÃO] Encerrado naturalmente (finish_reason="${finishReason}") na tentativa ${tentativa}.`);
                     break;
                 }
+
                 if (tentativa === maxContinuacoes) {
                     console.debug(`[GERAÇÃO] Limite de ${maxContinuacoes} continuação(ões) atingido. Encerrando.`);
                 }
@@ -530,7 +349,7 @@ ${SSR_TEMPLATE}`
         // ============================================================
         window.enviar = async function(mensagemUsuario = null) {
             const isInitial = mensagemUsuario === null;
-
+            
             let pergunta;
             if (isInitial) {
                 if (!resumoAtual) {
@@ -554,52 +373,25 @@ ${SSR_TEMPLATE}`
             const elementoDisplay = document.getElementById(tempId);
 
             try {
-                comprimirMemoria();
+                await comprimirMemoria();
 
                 let mensagemParaNarrador = pergunta;
 
                 if (!isInitial) {
-                    // --------------------------------------------------------
-                    // DIRETRIZES base (inalteradas)
-                    // --------------------------------------------------------
+                    // MUDANÇA: Diretriz reforça segunda pessoa e consistência de cena
+                    // a cada turno, não apenas no system prompt global.
                     mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva apenas o que é visível ou audível agora. Termine com a situação imediata do jogador. NUNCA decida o que o personagem sente ou faz.`;
-
-                    // --------------------------------------------------------
-                    // GANCHO DO POOL — só quando beat counter dispara.
-                    //
-                    // MUDANÇA 2+3: o CONTEXTO_ATIVO foi removido.
-                    //
-                    // Injetar MISSÃO+ANTAGONISTA+PRESSÃO em CADA turno
-                    // causava repetição mecânica do tema dominante da
-                    // aventura (no teste: "sussurros" em toda resposta).
-                    // O roteiro já está no system prompt — o narrador já
-                    // sabe o que está em jogo. Não precisa ser lembrado
-                    // toda resposta.
-                    //
-                    // Quando o beat counter dispara, em vez de um lembrete
-                    // vago ("o mundo respira..."), o narrador recebe UM
-                    // evento concreto do POOL — algo específico, diegético,
-                    // que ele pode tecer na cena ou ignorar se ela já
-                    // tiver tensão. Isso gera variedade real entre beats,
-                    // não repetição do mesmo tema.
-                    // --------------------------------------------------------
-                    if (turnsSinceEvent >= BEAT_THRESHOLD) {
-                        const gancho = extrairGanchoDoPool();
-                        if (gancho) {
-                            mensagemParaNarrador += gancho;
-                            turnsSinceEvent = 0; // reseta ao disparar, não ao detectar
-                            console.debug(`[BEAT] Threshold atingido. Gancho injetado.`);
-                        }
-                    }
 
                     const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
 
                     if (resultadoTeste) {
                         adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
+                        
                         let logicaFisica = resultadoTeste === 'FALHA'
-                            ? 'O jogador FALHOU na tentativa. Descreva como a situação piorou, o erro que ocorreu ou o contra-ataque sofrido.'
-                            : 'O jogador teve SUCESSO. Descreva a execução perfeita da ação e a vantagem obtida.';
+                            ? 'A ação falhou e DEU ERRADO. O alvo sai ileso e a consequência é brutal.'
+                            : 'A ação FOI UM SUCESSO absoluto e impactante.';
+                            
                         mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. LÓGICA: ${logicaFisica}`;
                     }
                 }
@@ -607,27 +399,14 @@ ${SSR_TEMPLATE}`
                 mensagens.push({ role: 'user', content: mensagemParaNarrador });
 
                 const isIntro = (isInitial && !resumoAtual);
-                const maxTokens       = isIntro ? 800 : 200;
-                const maxContinuacoes = isIntro ?   0 :   1;
+                const maxTokens        = isIntro ? 800 : 160;
+                const maxContinuacoes  = isIntro ?   0 :   1;
 
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
 
                 const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
 
                 mensagens.push({ role: 'assistant', content: respostaIA });
-
-                // --------------------------------------------------------
-                // Atualiza beat counter
-                // --------------------------------------------------------
-                if (!isInitial) {
-                    if (detectarEventoPlot(respostaIA)) {
-                        turnsSinceEvent = 0;
-                        console.debug('[BEAT] Evento de plot detectado — contador resetado.');
-                    } else {
-                        turnsSinceEvent++;
-                        console.debug(`[BEAT] Sem evento de plot. Contador: ${turnsSinceEvent}/${BEAT_THRESHOLD}`);
-                    }
-                }
 
                 if (isInitial) {
                     userInput.disabled = false;
@@ -655,11 +434,7 @@ ${SSR_TEMPLATE}`
         // ============================================================
         window.onload = async () => {
             await carregarSessao();
-            if (!roteiro) {
-                await gerarRoteiro();
-            }
-            montarSystemPrompt();
-            window.enviar();
+            window.enviar(); 
         };
 
         userInput.addEventListener('keypress', (e) => {
