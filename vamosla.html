@@ -353,7 +353,7 @@ ${SSR_TEMPLATE}`
             let pergunta;
             if (isInitial) {
                 if (!resumoAtual) {
-                    pergunta = 'EXCEÇÃO TEMPORÁRIA À REGRA DE TAMANHO: Esta é a introdução do jogo. Escreva uma abertura com 3 parágrafos curtos no estilo dos livros-jogo de Steve Jackson. MANTENHA AS OUTRAS REGRAS: sempre segunda pessoa (você), frases diretas e concretas, zero adjetivos empilhados, zero metáforas excessivas. Descreva o cenário com detalhes físicos reais (o que o jogador vê, ouve, cheira). Termine colocando o jogador diante de uma decisão imediata.';
+                    pergunta = 'EXCEÇÃO TEMPORÁRIA À REGRA DE TAMANHO: Esta é a introdução do jogo. Escreva uma abertura com 4 parágrafos curtos no estilo dos livros-jogo de Steve Jackson. MANTENHA AS OUTRAS REGRAS: sempre segunda pessoa (você), frases diretas e concretas, zero adjetivos empilhados, zero metáforas excessivas. Descreva o cenário com detalhes físicos reais (o que o jogador vê, ouve, cheira). Termine colocando o jogador diante de uma decisão imediata.';
                 } else {
                     pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
                 }
@@ -380,7 +380,7 @@ ${SSR_TEMPLATE}`
                 if (!isInitial) {
                     // MUDANÇA: Diretriz reforça segunda pessoa e consistência de cena
                     // a cada turno, não apenas no system prompt global.
-                    mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 3 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva apenas o que é visível ou audível agora. Termine com a situação imediata do jogador. NUNCA decida o que o personagem sente ou faz.`;
+                    mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 5 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva o que é visível, olfativo ou audível agora. Termine com a situação imediata do jogador. NUNCA decida o que o personagem sente ou faz.`;
 
                     const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
@@ -389,7 +389,7 @@ ${SSR_TEMPLATE}`
                         adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
                         
                         let logicaFisica = resultadoTeste === 'FALHA'
-                            ? 'A ação falhou e DEU ERRADO. O alvo sai ileso e a consequência é brutal.'
+                            ? 'A ação falhou e DEU ERRADO.'
                             : 'A ação FOI UM SUCESSO absoluto e impactante.';
                             
                         mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. LÓGICA: ${logicaFisica}`;
