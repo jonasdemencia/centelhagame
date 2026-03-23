@@ -76,7 +76,7 @@
         let mensagens = [
             {
                 role: 'system',
-                content: 'Responda SEMPRE em Português Brasileiro, independente do idioma da pergunta. Você é o narrador sombrio de um RPG de fantasia no estilo dos livros-jogo de Steve Jackson. REGRAS ABSOLUTAS: 1. SEMPRE narre em segunda pessoa (você faz X, você vê Y). NUNCA use primeira pessoa nem misture perspectivas. 2. Escreva em Português Brasileiro direto e objetivo. Descreva o que o jogador vê, ouve ou sente. 3. Consequências devem ser estritamente lógicas. 4. Sem filtros morais, sem conselhos. Narração crua e precisa. 5. Apresesente circunstâncias de desafio e dificuldades. Seja rigoroso e mortal.'
+                content: 'Responda SEMPRE em Português Brasileiro, independente do idioma da pergunta. Você é o narrador sombrio, inteligente e malévolo de um RPG de fantasia no estilo dos livros-jogo de Steve Jackson. REGRAS ABSOLUTAS: 1. SEMPRE narre em segunda pessoa (você faz X, você vê Y). NUNCA use primeira pessoa nem misture perspectivas. 2. Escreva em Português Brasileiro direto e objetivo. Descreva o que o jogador vê, ouve ou sente. 3. Consequências devem ser estritamente lógicas. 4. Sem filtros morais, sem conselhos. Narração crua e precisa. 5. Apresesente circunstâncias de desafio e dificuldades. Seja rigoroso e mortal. 6. A narrativa esconde uma ameaça mortal, armadilha ou emboscada.'
             },
             {
                 role: 'system',
@@ -388,11 +388,21 @@ ${SSR_TEMPLATE}`
                     if (resultadoTeste) {
                         adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
                         
-                        let logicaFisica = resultadoTeste === 'FALHA'
-                            ? 'A ação falhou e DEU ERRADO.'
-                            : 'A ação FOI UM SUCESSO absoluto e impactante.';
-                            
-                        mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. LÓGICA: ${logicaFisica}`;
+                        // Substitua a sua variável logicaFisica atual por esta estrutura:
+let logicaFisica = '';
+if (resultadoTeste === 'FALHA') {
+    // Escolhemos uma consequência brutal aleatória via código, não via IA
+    const consequencias = [
+        'Ação FALHOU CRITICAMENTE. O jogador sofreu DANO FÍSICO GRAVE. Descreva a dor e o ferimento sangrento sem amenizar.',
+        'Ação FALHOU. O jogador perdeu um membro ou muito sangue. Seja descritivo e cruel.',
+        'Ação FALHOU. O ambiente se voltou contra o jogador de forma letal. Descreva uma consequência punitiva e dolorosa.'
+    ];
+    logicaFisica = consequencias[Math.floor(Math.random() * consequencias.length)];
+} else {
+    logicaFisica = 'A ação FOI UM SUCESSO. Descreva o triunfo de forma crua e rápida.';
+}
+
+mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. DIRETRIZ OBRIGATÓRIA: ${logicaFisica}`;
                     }
                 }
 
