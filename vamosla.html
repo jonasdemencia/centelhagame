@@ -76,7 +76,7 @@
         let mensagens = [
             {
                 role: 'system',
-    content: `Você é narrador de um RPG brutal no estilo Fighting Fantasy de Steve Jackson. Responda SEMPRE em Português Brasileiro.
+    content: `Você é narrador de um RPG brutal no estilo Fighting Fantasy de Steve Jackson. Responda SEMPRE em Português Brasileiro CORRETO.
 
 EXEMPLO DO ESTILO CORRETO — imite este tom e estrutura:
 "O chão da taverna está coberto de serragem encharcada de sangue velho. Um homem sem orelhas vigia a porta. Você está sentado numa mesa encardida com uma moeda de cobre no bolso e uma faca enferrujada na bota. O dono limpa um copo com um pano sujo e não olha para você — mas você sabe que ele sabe que você está aqui."
@@ -86,7 +86,6 @@ REGRAS:
 - Frases curtas. No máximo uma vírgula por frase.
 - Detalhes físicos concretos e desagradáveis: texturas, cheiros ruins, sons perturbadores.
 - O mundo é sujo, perigoso e indiferente. Sempre há algo errado na cena.
-- NUNCA: florestas ensolaradas, pássaros cantando, flores, riachos cristalinos, clareiras, paz.
 - NUNCA resolva desafios pelo jogador. NUNCA descreva o que ele sente emocionalmente.
 - Termine sempre com o jogador diante de uma decisão imediata com consequência real.`
             },
@@ -261,7 +260,7 @@ ${SSR_TEMPLATE}`
                 body: JSON.stringify({
                     model: MODELO,
                     messages: mensagensPayload,
-                    temperature: 0.65,
+                    temperature: 0.6,
                     max_tokens: maxTokens,
                     presence_penalty: 0.3,
                     frequency_penalty: 0.3,
@@ -365,7 +364,7 @@ ${SSR_TEMPLATE}`
             let pergunta;
             if (isInitial) {
                 if (!resumoAtual) {
-                    pergunta = 'EXCEÇÃO TEMPORÁRIA À REGRA DE TAMANHO: Esta é a introdução do jogo. Narre a abertura de um mundo fantástico e brutal de RPG com 4 parágrafos curtos no estilo dos livros-jogo de Steve Jackson. MANTENHA AS OUTRAS REGRAS: sempre segunda pessoa (você), frases diretas e concretas, zero adjetivos empilhados, zero metáforas excessivas. Descreva o cenário com detalhes físicos reais (o que o jogador vê, ouve, cheira). Termine colocando o jogador diante de uma decisão imediata.';
+                    pergunta = 'EXCEÇÃO TEMPORÁRIA À REGRA DE TAMANHO: Esta é a introdução do jogo. Narre a abertura de um mundo fantástico e brutal de RPG com 5 parágrafos no estilo dos livros-jogo de Steve Jackson. MANTENHA AS OUTRAS REGRAS: sempre segunda pessoa (você), frases diretas e concretas, zero adjetivos empilhados, zero metáforas excessivas. Descreva o cenário com detalhes físicos reais (o que o jogador vê, ouve, cheira). Termine colocando o jogador diante de uma decisão imediata.';
                 } else {
                     pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
                 }
@@ -433,7 +432,7 @@ mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. 
                 mensagens.push({ role: 'user', content: mensagemParaNarrador });
 
                 const isIntro = (isInitial && !resumoAtual);
-                const maxTokens        = isIntro ? 800 : 160;
+                const maxTokens        = isIntro ? 1000 : 200;
                 const maxContinuacoes  = isIntro ?   0 :   1;
 
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
