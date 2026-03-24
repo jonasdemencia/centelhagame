@@ -60,7 +60,7 @@
         // ============================================================
         const LM_URL = 'http://localhost:1234/v1/chat/completions';
         const MODELO = 'qwen2.5-7b-instruct-abliterated-v2';
-        const LIMITE_MENSAGENS = 24; // Quando chegar aqui, resume e limpa a memória antiga
+        const LIMITE_MENSAGENS = 24;
 
         const jogadorStats = {
             HABILIDADE: 5,
@@ -76,10 +76,7 @@
         let mensagens = [
             {
                 role: 'system',
-    content: `Você é narrador de um RPG brutal no estilo Fighting Fantasy de Steve Jackson. Responda SEMPRE em Português Brasileiro CORRETO.
-
-EXEMPLO DO ESTILO CORRETO — imite este tom e estrutura:
-"A neblina é fria e te envolve. Você sente o cheiro de terra molhada e ferro enferrujado. Os portões de ferro da mansão estão entreabertos. O rangido é seco, ritmado. A lua ilumina o chão, nada mais. Dentro, um barulho seco: algo sendo arrastado. Talvez um corpo. Talvez uma armadilha. Você não vê o que. O que você faz?"
+                content: `Você é narrador de um RPG brutal no estilo Fighting Fantasy de Steve Jackson. Responda SEMPRE em Português Brasileiro CORRETO.
 
 REGRAS:
 - Segunda pessoa sempre: "Você vê", "Você ouve", "Você cheira".
@@ -356,6 +353,25 @@ ${SSR_TEMPLATE}`
         }
 
         // ============================================================
+        // Prompt de introdução — estrutura Fighting Fantasy
+        // Cada bloco mapeia um elemento da anatomia do background:
+        // 1. MUNDO   → cenário nomeado, crise instalada, detalhe físico da ruptura
+        // 2. VOCÊ    → arquétipo, motivação, sem nome, sem emoções
+        // 3. AMEAÇA  → antagonista nomeado e localizado, outros falharam, mistério preservado
+        // 4. MISSÃO  → objetivo concreto + apostas pessoais e coletivas
+        // 5. PARTIDA → posição geográfica, urgência, movimento final, decisão imediata
+        // ============================================================
+        const PROMPT_INTRO = `Esta é a introdução da aventura. Escreva em exatamente 5 parágrafos, um para cada bloco abaixo. NÃO use títulos ou marcadores — apenas prosa corrida.
+
+BLOCO 1 — O MUNDO: apresente o cenário com nome próprio. Mostre que o equilíbrio foi rompido. Use um detalhe físico concreto que prove a crise (fumaça, silêncio, ruínas, ausência de pessoas).
+BLOCO 2 — VOCÊ: quem você é. Um arquétipo claro (mercenário, caçador de recompensas, espião, ladrão, etc). Sua razão para agir. Sem nome próprio. Sem emoções descritas.
+BLOCO 3 — A AMEAÇA: o antagonista ou força maligna. Dê um nome. Localize-o. Deixe claro que outros tentaram e falharam. Não explique a origem — preserve o mistério.
+BLOCO 4 — A MISSÃO E AS APOSTAS: o que você precisa fazer (um objetivo concreto e tangível). O que acontece se falhar — para você e para o mundo ao redor.
+BLOCO 5 — A PARTIDA: onde você está agora (um lugar físico específico). Um elemento de urgência (tempo, ameaça chegando, janela fechando). Termine com um movimento seu — você cruza, entra, parte — e uma decisão imediata que obrigue o jogador a agir.
+
+MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos, zero emoções descritas, zero adjetivos empilhados.`;
+
+        // ============================================================
         // Função principal de envio
         // ============================================================
         window.enviar = async function(mensagemUsuario = null) {
@@ -364,7 +380,7 @@ ${SSR_TEMPLATE}`
             let pergunta;
             if (isInitial) {
                 if (!resumoAtual) {
-                    pergunta = 'EXCEÇÃO TEMPORÁRIA À REGRA DE TAMANHO: Esta é a introdução do jogo. Narre a abertura de um mundo fantástico e brutal de RPG com 5 parágrafos no estilo dos livros-jogo de Steve Jackson. MANTENHA AS OUTRAS REGRAS: sempre segunda pessoa (você), frases diretas e concretas, zero adjetivos empilhados, zero metáforas excessivas. Descreva o cenário com detalhes físicos reais (o que o jogador vê, ouve, cheira). Termine colocando o jogador diante de uma decisão imediata.';
+                    pergunta = PROMPT_INTRO;
                 } else {
                     pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
                 }
@@ -389,8 +405,6 @@ ${SSR_TEMPLATE}`
                 let mensagemParaNarrador = pergunta;
 
                 if (!isInitial) {
-                    // MUDANÇA: Diretriz reforça segunda pessoa e consistência de cena
-                    // a cada turno, não apenas no system prompt global.
                     mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 5 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva o que é visível. Construa tensão: use um detalhe sensorial novo (som, cheiro, visão) e termine com uma pergunta ou situação que obrigue o jogador a agir. NUNCA decida o que o personagem sente ou faz.`;
 
                     const tipoAcao = await avaliarAcao(pergunta);
@@ -399,41 +413,40 @@ ${SSR_TEMPLATE}`
                     if (resultadoTeste) {
                         adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
                         
-                        // Substitua a sua variável logicaFisica atual por esta estrutura:
-let logicaFisica = '';
-if (resultadoTeste === 'FALHA') {
-    // DEPOIS — consequências por atributo:
-const consequenciasPorAtributo = {
-    HABILIDADE: [
-        'Ação FALHOU CRITICAMENTE. O jogador errou o movimento e sofreu DANO FÍSICO. Descreva o ferimento com crueza.',
-        'Ação FALHOU. O corpo do jogador cedeu no momento decisivo. Descreva a dor física e a posição vulnerável em que ficou.',
-        'Ação FALHOU. A falta de destreza custou caro. Descreva um erro mecânico com consequências físicas imediatas.'
-    ],
-    CARISMA: [
-        'Ação FALHOU. O jogador disse a coisa errada. O interlocutor reagiu com HOSTILIDADE ABERTA — descreva a rejeição humilhante, o silêncio cortante ou a ameaça que surgiu.',
-        'Ação FALHOU. O jogador foi ignorado ou escarnecido. Descreva a frieza do outro personagem, talvez acompanhada de riso ou desprezo. A situação social piorou.',
-        'Ação FALHOU. A abordagem irritou o interlocutor. Descreva como ele se fechou, virou as costas ou sinalizou que a conversa acabou — de forma ameaçadora ou humilhante.'
-    ],
-    SORTE: [
-        'Ação FALHOU. O destino foi cruel. Descreva uma reviravolta inesperada e punitiva do ambiente ou da situação.',
-        'Ação FALHOU. O azar se materializou de forma concreta. Descreva o que deu errado por pura má sorte.',
-        'Ação FALHOU. O universo conspirou contra o jogador. Descreva uma coincidência brutal que complica tudo.'
-    ]
-};
+                        let logicaFisica = '';
+                        if (resultadoTeste === 'FALHA') {
+                            const consequenciasPorAtributo = {
+                                HABILIDADE: [
+                                    'Ação FALHOU CRITICAMENTE. O jogador errou o movimento e sofreu DANO FÍSICO. Descreva o ferimento com crueza.',
+                                    'Ação FALHOU. O corpo do jogador cedeu no momento decisivo. Descreva a dor física e a posição vulnerável em que ficou.',
+                                    'Ação FALHOU. A falta de destreza custou caro. Descreva um erro mecânico com consequências físicas imediatas.'
+                                ],
+                                CARISMA: [
+                                    'Ação FALHOU. O jogador disse a coisa errada. O interlocutor reagiu com HOSTILIDADE ABERTA — descreva a rejeição humilhante, o silêncio cortante ou a ameaça que surgiu.',
+                                    'Ação FALHOU. O jogador foi ignorado ou escarnecido. Descreva a frieza do outro personagem, talvez acompanhada de riso ou desprezo. A situação social piorou.',
+                                    'Ação FALHOU. A abordagem irritou o interlocutor. Descreva como ele se fechou, virou as costas ou sinalizou que a conversa acabou — de forma ameaçadora ou humilhante.'
+                                ],
+                                SORTE: [
+                                    'Ação FALHOU. O destino foi cruel. Descreva uma reviravolta inesperada e punitiva do ambiente ou da situação.',
+                                    'Ação FALHOU. O azar se materializou de forma concreta. Descreva o que deu errado por pura má sorte.',
+                                    'Ação FALHOU. O universo conspirou contra o jogador. Descreva uma coincidência brutal que complica tudo.'
+                                ]
+                            };
 
-const lista = consequenciasPorAtributo[tipoAcao] || consequenciasPorAtributo['HABILIDADE'];
-logicaFisica = lista[Math.floor(Math.random() * lista.length)];
-}
+                            const lista = consequenciasPorAtributo[tipoAcao] || consequenciasPorAtributo['HABILIDADE'];
+                            logicaFisica = lista[Math.floor(Math.random() * lista.length)];
+                        }
 
-mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. DIRETRIZ OBRIGATÓRIA: ${logicaFisica}`;
+                        mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. DIRETRIZ OBRIGATÓRIA: ${logicaFisica}`;
                     }
                 }
 
                 mensagens.push({ role: 'user', content: mensagemParaNarrador });
 
                 const isIntro = (isInitial && !resumoAtual);
-                const maxTokens        = isIntro ? 1000 : 200;
-                const maxContinuacoes  = isIntro ?   0 :   1;
+                // Intro recebe 1 continuação para garantir os 5 blocos completos sem corte
+                const maxTokens       = isIntro ? 1000 : 200;
+                const maxContinuacoes = isIntro ?    1 :   1;
 
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
 
