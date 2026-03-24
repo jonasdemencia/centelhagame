@@ -130,13 +130,13 @@ REGRAS DE OURO:
         // ============================================================
         function obterDiretrizDeFase() {
             if (turnosJogados < 50) {
-                return "FASE 1 - RASTROS (Lentidão): O perigo é apenas um sussurro, uma lenda ou um rastro perturbador no cenário. É ESTRITAMENTE PROIBIDO mostrar a ameaça principal. Foco no mistério e na exploração do infamiliar.";
+                return "FASE 1 - RASTROS: O perigo é apenas um sussurro ou rastro perturbador. É PROIBIDO mostrar a ameaça principal. Foco no mistério e na estranheza do ambiente.";
             } else if (turnosJogados < 250) {
-                return "FASE 2 - PARANOIA: Os sinais da ameaça são recentes. O ambiente reage a algo invisível (animais mortos, cheiro de podridão, NPCs aterrorizados). O perigo é iminente, mas ainda indireto.";
+                return "FASE 2 - PARANOIA: Os sinais da ameaça são recentes. O ambiente reage a algo invisível. O perigo é iminente, mas ainda indireto.";
             } else if (turnosJogados < 450) {
-                return "FASE 3 - PERSEGUIÇÃO: O jogador vê a ameaça de relance. Sobrevivência se torna o foco. O cerco está se fechando. Tensão alta, descreva o som e o impacto da ameaça no ambiente.";
+                return "FASE 3 - PERSEGUIÇÃO: O jogador vê a ameaça de relance. Sobrevivência é o foco. O cerco está se fechando.";
             } else {
-                return "FASE 4 - O CLÍMAX: O confronto direto, visceral e inevitável. Apostas máximas. Descreva a brutalidade do embate.";
+                return "FASE 4 - CLÍMAX: Confronto direto, visceral e inevitável. Apostas máximas.";
             }
         }
 
@@ -270,7 +270,7 @@ ${SSR_TEMPLATE}`
         // Streaming SSE com loop de auto-continuação
         // ============================================================
         async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
-            console.log("🔥 Temperatura usada:", window._introGenerating ? 0.85 : 0.55);
+            console.log("🔥 Temperatura usada:", window._introGenerating ? 0.95 : 0.55);
             try {
                 const response = await fetch(LM_URL, {
                     method: 'POST',
@@ -278,10 +278,10 @@ ${SSR_TEMPLATE}`
                     body: JSON.stringify({
                         model: MODELO,
                         messages: mensagensPayload,
-                        temperature: window._introGenerating ? 0.85 : 0.55,
+                        temperature: window._introGenerating ? 0.95 : 0.55,
                         max_tokens: maxTokens,
-                        presence_penalty: 0.3,
-                        frequency_penalty: 0.3,
+                        presence_penalty: window._introGenerating ? 0.9 : 0.3,
+                        frequency_penalty: window._introGenerating ? 0.9 : 0.3,
                         stream: true
                     })
                 });
@@ -294,14 +294,9 @@ ${SSR_TEMPLATE}`
                 let fullText = '';
                 let finishReason = null;
 
-                console.debug('[LLM STREAM] Iniciando leitura de chunks SSE...');
-
                 while (true) {
                     const { done, value } = await reader.read();
-                    if (done) {
-                        console.debug('[LLM STREAM] Leitor finalizado (done=true)');
-                        break;
-                    }
+                    if (done) break;
 
                     buffer += decoder.decode(value, { stream: true });
                     const lines = buffer.split('\n');
@@ -310,40 +305,27 @@ ${SSR_TEMPLATE}`
                     for (const line of lines) {
                         if (!line.startsWith('data: ')) continue;
                         const jsonStr = line.slice(6).trim();
-                        if (jsonStr === '[DONE]') {
-                            console.debug('[LLM STREAM] Sinal [DONE] recebido.');
-                            continue;
-                        }
+                        if (jsonStr === '[DONE]') continue;
                         try {
                             const chunk = JSON.parse(jsonStr);
                             const delta = chunk.choices?.[0]?.delta?.content || '';
                             const fr = chunk.choices?.[0]?.finish_reason;
-
-                            if (fr && fr !== 'null') {
-                                console.debug(`[LLM STREAM] finish_reason recebido: "${fr}"`);
-                            }
-
                             if (delta) {
                                 fullText += delta;
                                 if (onToken) onToken(fullText);
                             }
-                            if (fr && fr !== 'null') {
-                                finishReason = fr;
-                            }
-
-                            if (chunk.error) {
-                                console.error('[LLM STREAM] Erro no chunk:', chunk.error);
-                            }
+                            if (fr && fr !== 'null') finishReason = fr;
+                            if (chunk.error) console.error('[LLM STREAM] Erro no chunk:', chunk.error);
                         } catch (parseErr) {
-                            console.error('[LLM STREAM] Erro ao parsear chunk:', parseErr, 'Linha:', line);
+                            console.error('[LLM STREAM] Erro ao parsear chunk:', parseErr);
                         }
                     }
                 }
 
-                console.debug(`[LLM STREAM] Geração concluída. Tokens gerados: ~${fullText.split(' ').length} palavras. finish_reason final: "${finishReason}"`);
+                console.debug(`[LLM STREAM] Concluído. ~${fullText.split(' ').length} palavras. finish_reason: "${finishReason}"`);
                 return { text: fullText, finishReason };
             } catch (error) {
-                console.error('[LLM STREAM] Falha na requisição fetch:', error);
+                console.error('[LLM STREAM] Falha:', error);
                 throw error;
             }
         }
@@ -354,7 +336,6 @@ ${SSR_TEMPLATE}`
 
             for (let tentativa = 0; tentativa <= maxContinuacoes; tentativa++) {
                 if (tentativa > 0) {
-                    console.debug(`[CONTINUAÇÃO ${tentativa}/${maxContinuacoes}] finish_reason=length. Enviando extensão...`);
                     msgsAtual = [
                         ...msgsAtual,
                         { role: 'assistant', content: textoCompleto },
@@ -375,153 +356,106 @@ ${SSR_TEMPLATE}`
                 elemento.innerText = textoCompleto;
                 chatBox.scrollTop = chatBox.scrollHeight;
 
-                if (finishReason !== 'length') {
-                    console.debug(`[GERAÇÃO] Encerrado naturalmente (finish_reason="${finishReason}") na tentativa ${tentativa}.`);
-                    break;
-                }
-
-                if (tentativa === maxContinuacoes) {
-                    console.debug(`[GERAÇÃO] Limite de ${maxContinuacoes} continuação(ões) atingido. Encerrando.`);
-                }
+                if (finishReason !== 'length') break;
             }
 
             return textoCompleto;
         }
 
         // ============================================================
-        // PROMPT DE INTRODUÇÃO — Dimensional Seeding + Structural Modes
+        // PROMPT DE INTRODUÇÃO
         //
-        // Técnica 1: DIMENSIONAL SEEDING
-        //   Um número aleatório é injetado a cada carregamento. O modelo
-        //   não usa o número matematicamente, mas o trata como uma
-        //   "impressão digital" da sessão — forçando-o a divergir de
-        //   gerações anteriores que tiveram sementes diferentes.
+        // Filosofia: nenhum conteúdo é prescrito. O modelo recebe:
         //
-        // Técnica 2: EIXOS ORTOGONAIS
-        //   Quatro dimensões independentes (Cenário, Protagonista, Crise,
-        //   Estrutura) com 20-30 opções cada. A combinatória é vasta o
-        //   suficiente para cobrir todo o corpus Fighting Fantasy —
-        //   incluindo House of Hell, Seas of Blood, Starship Traveller,
-        //   Creature of Havoc, Appointment with F.E.A.R., etc.
+        //   1. SEMENTE ABSTRATA — um número que não indexa lista alguma.
+        //      É apresentado como "frequência" da sessão — âncora
+        //      psicológica que sinaliza singularidade irrepetível.
         //
-        // Técnica 3: STRUCTURAL MODES
-        //   Cinco modos narrativos de abertura genuinamente distintos.
-        //   Nenhum deles impõe a sequência rígida Mundo→Você→Ameaça→Missão.
-        //   O modelo escolhe um por sessão, quebrando a previsibilidade
-        //   estrutural independentemente do cenário.
+        //   2. INSTRUÇÕES DE PROCESSO — perguntas que o modelo responde
+        //      internamente antes de escrever. Isso ativa deliberação
+        //      criativa em vez de geração por média estatística.
+        //
+        //   3. PROIBIÇÕES (não prescrições) — o que NÃO fazer. Uma
+        //      proibição é aberta (infinitas alternativas); uma prescrição
+        //      é fechada (N alternativas). Proibir padrões comuns empurra
+        //      o modelo para fora da sua distribuição central sem ditar
+        //      destino. Cada sessão a lista de proibições rotaciona,
+        //      bloqueando fatias diferentes da média.
+        //
+        //   4. RESTRIÇÕES FORMAIS — controlam a forma do texto, não o
+        //      conteúdo. Criam pressão criativa sem reduzir o espaço
+        //      semântico disponível.
         // ============================================================
         const PROMPT_INTRO = (() => {
-            // Semente numérica única por sessão — força divergência entre gerações
-            const seed = Math.floor(Math.random() * 99999);
+            const seed = Math.floor(Math.random() * 999983);
 
-            // Listas de eixos — o modelo seleciona internamente, sem revelar ao jogador
-            const cenarios = [
-                "oceano abissal (criaturas, pressão, escuridão, estações submersas)",
-                "espaço sideral (nave, vácuo, planetas hostis, anomalias)",
-                "mansão amaldiçoada (cômodos impossíveis, mortos inquietos, segredos enterrados)",
-                "coliseu ou arena de gladiadores (plateia, apostas, sangue, política disfarçada de espetáculo)",
-                "metrópole industrial vitoriana (fumaça, pobreza, máquinas vivas, conspirações)",
-                "floresta primordial que se move ou respira",
-                "deserto de sal e ossos (ruínas, miragens, tribos, calor que mata)",
-                "pântano de névoa tóxica (afogamento lento, fauna letal, segredos submersos)",
-                "tundra ártica ou glacial (frio que mata, criatura sob o gelo, isolamento)",
-                "vulcão habitado (culto, lava, sacrifícios, mineral precioso proibido)",
-                "cidade flutuante em colapso iminente",
-                "ruínas de civilização extinta há milênios (armadilhas ainda ativas)",
-                "catacumbas sem fim sob uma cidade viva",
-                "monastério de assassinos em montanha inacessível",
-                "navio pirata ou navio fantasma à deriva",
-                "labirinto vivo (paredes que se movem, entidade que o habita)",
-                "planeta alienígena com ecologia incompreensível",
-                "fábrica de experimentos proibidos (alquimia, vivisecção, autômatos)",
-                "campo de batalha suspenso no tempo — guerra que nunca terminou",
-                "mercado negro interdimensional (portais, câmbio de almas, mercadores de memória)",
-                "interior de um ser vivo colossal (órgãos como biomas, anticorpos como inimigos)",
-                "arquipélago de ilhas voadoras (gravidade instável, piratas do ar)",
-                "cidade submarina de civilização antiga ainda operando",
-                "prisão em alto mar ou no espaço (motim, fuga, guardiões corrompidos)",
-                "floresta de fungos bioluminescentes com esporos alucinógenos",
-                "castelo que muda de planta a cada amanhecer"
+            // Proibições rotatórias — cada grupo bloqueia uma fatia
+            // diferente da distribuição média do modelo.
+            // O grupo é selecionado pela semente, sem hard-coding de conteúdo.
+            const gruposDeProibicoes = [
+                // Grupo A — bloqueia clichês de fantasia épica
+                `— Nenhum castelo, masmorra, dungeon ou calabouço genérico.
+— Nenhum herói que acorda com uma profecia ou missão sagrada.
+— Nenhuma taverna, pousada ou cidade murada como ponto de partida.
+— Nenhum "mal antigo" sem rosto, forma ou comportamento concreto.
+— Nenhum protagonista que sabe exatamente quem é e o que deve fazer.`,
+
+                // Grupo B — bloqueia clichês de horror e suspense
+                `— Nenhuma mansão, casa abandonada ou cemitério.
+— Nenhuma névoa inexplicável como recurso de atmosfera.
+— Nenhum monstro que aparece no escuro sem ter sido estabelecido antes.
+— Nenhum protagonista que "desperta" ou "não se lembra de como chegou aqui".
+— Nenhuma vila isolada com moradores desconfiados como abertura.`,
+
+                // Grupo C — bloqueia clichês de ficção científica pulp
+                `— Nenhuma nave em colapso como ponto de partida.
+— Nenhum despertar em câmara criogênica ou cápsula de emergência.
+— Nenhuma IA ou computador como primeiro elemento de cena.
+— Nenhuma missão de resgate em estação espacial abandonada.
+— Nenhum protagonista que é o único sobrevivente de algo.`,
+
+                // Grupo D — bloqueia clichês de aventura de ação
+                `— Nenhum protagonista em perseguição ou fuga no início.
+— Nenhuma missão recebida de um empregador, rei, ou mentor.
+— Nenhum mapa, artefato ou objeto sagrado como MacGuffin inicial.
+— Nenhuma batalha, duelo ou confronto físico nos dois primeiros parágrafos.
+— Nenhum grupo de companheiros: o protagonista começa sozinho e sem aliados óbvios.`,
+
+                // Grupo E — bloqueia clichês de aventura política e espionagem
+                `— Nenhuma conspiração revelada por um informante no início.
+— Nenhum protagonista disfarçado cuja cobertura está prestes a ser descoberta.
+— Nenhuma organização secreta como contexto imediato.
+— Nenhum assassinato político como gatilho inicial.
+— Nenhum documento, mapa ou código como primeiro objeto do cenário.`
             ];
 
-            const protagonistas = [
-                "mercenário com uma dívida que não pode ser paga em dinheiro",
-                "prisioneiro que acorda em um lugar desconhecido sem memória do crime",
-                "monstro ou criatura que ganhou consciência e não sabe o que é",
-                "capitão que perdeu navio, tripulação e nome — nessa ordem",
-                "espião infiltrado cuja identidade foi descoberta",
-                "gladiador disputando sua última luta antes da execução",
-                "caçador de recompensas cujo alvo desta vez é alguém inocente",
-                "único sobrevivente de algo que não deveria ter acontecido",
-                "criatura não-humana (demônio, golem, espectro) com agenda própria",
-                "criminoso em fuga com algo que não deveria ter roubado",
-                "morto que voltou — com uma tarefa que não escolheu e não entende",
-                "nobre destituído, caçado pelos próprios antigos aliados",
-                "escravo que escapou e carrega um segredo que vale vidas",
-                "alquimista cujo experimento deu errado de forma catastrófica",
-                "tripulante comum jogado em situação extraordinária sem preparo",
-                "agente de uma ordem secreta em missão que a própria ordem nega",
-                "prisioneiro de guerra solto para uma missão suicida"
-            ];
+            const idxGrupo = seed % gruposDeProibicoes.length;
+            const proibicoes = gruposDeProibicoes[idxGrupo];
 
-            const crises = [
-                "um antagonista nomeado, localizado, com poder consolidado — e uma fraqueza desconhecida",
-                "uma praga, corrupção ou maldição sem rosto que se expande",
-                "o próprio ambiente quer matar: clima, fauna, física do lugar",
-                "conspiração política em colapso — várias facções, nenhuma confiável",
-                "um ritual em curso que deve ser interrompido — ou, surpreendentemente, completado",
-                "o jogador É o problema: amaldiçoado, caçado, ou perigoso sem saber por quê",
-                "uma descoberta proibida que não pode ser desfeita nem guardada com segurança",
-                "uma entidade que não deveria existir — e que não pode ser morta",
-                "a estrutura física do lugar está em colapso iminente e irreversível",
-                "o tempo está literalmente acabando: contagem regressiva, maldição temporal, ciclo prestes a se fechar",
-                "guerra entre facções onde o jogador está no meio sem ter escolhido lado",
-                "uma dívida, um contrato ou um juramento que transforma em missão impossível",
-                "algo foi roubado, corrompido ou destruído — e a culpa recaiu sobre o jogador",
-                "uma criança, cidade ou conceito abstrato (memória, linguagem, cor) está desaparecendo do mundo"
-            ];
+            console.debug(`[INTRO] Seed: ${seed} | Grupo de proibições: ${idxGrupo}`);
 
-            const modos = [
-                `[MODO: CLÁSSICO] Apresente o mundo, depois o protagonista, depois a crise, depois a missão e suas apostas, depois a posição atual e a decisão imediata. Cada elemento em seu próprio parágrafo.`,
-                `[MODO: IN MEDIAS RES] Comece no meio do perigo — o protagonista já está em risco, em movimento, ou diante de algo irreversível. O contexto (quem é, por que está aqui) emerge em fragmentos dentro da ação, não antes dela.`,
-                `[MODO: INVERSÃO] O protagonista é visto como a ameaça pelo mundo ao redor. Ele foge, se esconde, ou é caçado. A crise não é o que ele enfrenta — é o que ele representa para os outros. A missão emerge do ponto de vista de quem é perseguido.`,
-                `[MODO: BRIEFING] Um terceiro (contratante, prisioneiro, moribundo, voz sem corpo) revela a crise ao protagonista. O background é contado como uma conversa, um documento encontrado, ou uma gravação. O protagonista recebe a missão — e descobre que não tem escolha.`,
-                `[MODO: DESCOBERTA] O protagonista tropeça no problema sem ter sido chamado. Ele não é um herói — estava passando. A crise se revela aos poucos, e a missão nasce da impossibilidade de ignorar o que foi visto.`
-            ];
+            return `FREQUÊNCIA DESTA SESSÃO: ${seed}
 
-            // Seleção baseada na semente para garantir distribuição diferente a cada sessão
-            const idxCenario  = seed % cenarios.length;
-            const idxProtag   = Math.floor(seed / 7)  % protagonistas.length;
-            const idxCrise    = Math.floor(seed / 13) % crises.length;
-            const idxModo     = Math.floor(seed / 31) % modos.length;
+Você é um escritor de ficção de aventura interativa. Sua reputação foi construída sobre uma única recusa: nunca começar duas histórias da mesma forma. Esta sessão tem uma frequência única — use-a como âncora. O que você escrever agora existe apenas uma vez.
 
-            const cenario    = cenarios[idxCenario];
-            const protagonista = protagonistas[idxProtag];
-            const crise      = crises[idxCrise];
-            const modo       = modos[idxModo];
+PROCESSO INTERNO — responda a estas perguntas mentalmente antes de escrever. Não as escreva. Não as mencione:
+→ Qual é a coisa mais inesperada que poderia acontecer na primeira frase desta aventura?
+→ O protagonista sabe onde está? Sabe quem é? Tem um corpo intacto?
+→ O perigo é visível, invisível, social, físico, ambiental, cósmico — ou algo que não tem nome ainda?
+→ Qual detalhe sensorial concreto e específico (não genérico) abre esta história?
+→ Qual é a estrutura narrativa desta abertura — clássica, em fragmentos, em segunda cena, como documento encontrado, como voz que vem de fora?
 
-            console.debug(`[INTRO SEED: ${seed}] Cenário[${idxCenario}]: ${cenario}`);
-            console.debug(`[INTRO SEED: ${seed}] Protagonista[${idxProtag}]: ${protagonista}`);
-            console.debug(`[INTRO SEED: ${seed}] Crise[${idxCrise}]: ${crise}`);
-            console.debug(`[INTRO SEED: ${seed}] Modo[${idxModo}]: ${modo}`);
+PROIBIÇÕES DESTA SESSÃO — estas escolhas estão bloqueadas:
+${proibicoes}
 
-            return `Esta é a abertura da aventura. Siga as instruções abaixo com precisão.
+RESTRIÇÕES DE FORMA — obrigatórias:
+— A primeira frase NÃO começa com a palavra "Você".
+— Cada parágrafo contém exatamente um detalhe sensorial concreto: textura, cheiro, temperatura, som ou sabor — nunca uma emoção descrita.
+— O protagonista não tem nome próprio.
+— A ameaça ou crise não precisa ser nomeada nem completamente compreendida no início.
+— O quinto parágrafo termina com uma circunstância que torna a inação impossível — não uma pergunta, mas uma situação.
 
-SEMENTE DE SESSÃO: ${seed} — esta aventura deve ser radicalmente diferente de qualquer geração anterior.
-
-ELEMENTOS DEFINIDOS PARA ESTA SESSÃO:
-• CENÁRIO: ${cenario}
-• PROTAGONISTA: ${protagonista}
-• CRISE: ${crise}
-• ${modo}
-
-INSTRUÇÕES DE ESCRITA:
-— Escreva em 5 parágrafos de prosa corrida. Zero títulos. Zero marcadores. Zero meta-comentários.
-— Segunda pessoa: "você". Frases curtas e secas.
-— Um detalhe sensorial concreto por parágrafo (cheiro, textura, som, temperatura — nunca emoção).
-— Preserve mistério: o jogador não sabe tudo sobre a crise nem sobre si mesmo.
-— Não revele a Semente nem os elementos escolhidos. Apenas escreva.
-— Termine com uma circunstância que force uma decisão imediata e irreversível.`;
+Escreva 5 parágrafos de prosa corrida. Zero títulos. Zero marcadores. Zero meta-comentários. Segunda pessoa ("você"). Frases curtas e secas.`;
         })();
 
         // ============================================================
@@ -530,9 +464,7 @@ INSTRUÇÕES DE ESCRITA:
         window.enviar = async function(mensagemUsuario = null) {
             const isInitial = mensagemUsuario === null;
             
-            if (!isInitial) {
-                turnosJogados++;
-            }
+            if (!isInitial) turnosJogados++;
 
             let pergunta;
             if (isInitial) {
@@ -564,12 +496,10 @@ INSTRUÇÕES DE ESCRITA:
                 if (!isInitial) {
                     const faseAtual = obterDiretrizDeFase();
 
-                    const diretrizes = `\n\n[DIRETRIZES DE DIREÇÃO]: 
-1. ESTADO DO JOGO: ${faseAtual}
-2. REGRA DE ESTILO: Máximo 4 frases. Frases secas, curtas. Segunda pessoa do singular.
-3. TENSÃO: Não use clichês emocionais. Construa medo pelo que FALTA ou pelo que está QUEBRADO no ambiente. Mostre, não conte. Oculte informações do jogador.`;
-
-                    mensagemParaNarrador += diretrizes;
+                    mensagemParaNarrador += `\n\n[DIRETRIZES]:
+1. FASE: ${faseAtual}
+2. ESTILO: Máximo 4 frases. Secas, curtas. Segunda pessoa do singular.
+3. TENSÃO: Construa medo pelo que FALTA ou pelo que está QUEBRADO. Mostre — não conte. Oculte informação do jogador.`;
 
                     const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
@@ -591,7 +521,7 @@ INSTRUÇÕES DE ESCRITA:
                                     'Ação FALHOU. A abordagem irritou o interlocutor. Descreva como ele se fechou, virou as costas ou sinalizou que a conversa acabou — de forma ameaçadora ou humilhante.'
                                 ],
                                 SORTE: [
-                                    'Ação FALHOU. O destino foi cruel: Descreva uma consequência mortal ou quase letal para o azar do jogador.',
+                                    'Ação FALHOU. O destino foi cruel: descreva uma consequência mortal ou quase letal para o azar do jogador.',
                                 ]
                             };
 
@@ -608,8 +538,6 @@ INSTRUÇÕES DE ESCRITA:
                 const isIntro = (isInitial && !resumoAtual);
                 const maxTokens       = isIntro ? 1000 : 200;
                 const maxContinuacoes = isIntro ?    1 :   1;
-
-                console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
 
                 if (isIntro) window._introGenerating = true;
 
