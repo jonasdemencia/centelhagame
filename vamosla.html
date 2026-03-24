@@ -77,17 +77,14 @@
         // Estrutura de memória: [0] Regras, [1] Resumo da História, [2...] Turnos
         let mensagens = [
             {
-                role: 'system',
-                content: `Você é narrador de um RPG brutal no estilo Fighting Fantasy de Steve Jackson. Responda SEMPRE em Português Brasileiro CORRETO. NUNCA use palavras ou frases em qualquer outro idioma.
-
-REGRAS:
-- Segunda pessoa sempre: "Você vê", "Você ouve", "Você cheira".
-- Frases curtas. No máximo uma vírgula por frase.
-- Detalhes físicos concretos: texturas, cheiros ruins, sons perturbadores.
-- O mundo é perigoso e indiferente. Sempre há algo estranho ou errado na cena.
-- NUNCA resolva desafios pelo jogador. NUNCA descreva o que ele sente emocionalmente.
-- Seu objetivo maior é construir tensão, apresentar desafios e dificuldades MORTAIS para o jogador.`
-            },
+    role: 'system',
+    content: `Você é um motor narrativo de um RPG de fantasia brutal e punitiva. Responda APENAS em PT-BR nunca escreva em outro idioma.
+REGRAS DE OURO:
+- Tensão Psicológica: O verdadeiro horror está no que não é dito ou mostrado. Mostre as consequências (cadáveres, loucura, ruínas), atrase o monstro.
+- Realismo Sujo: Evite adjetivos bonitos. Use verbos de ação e substantivos concretos (barro, sangue coagulado, ferrugem, silêncio sufocante).
+- Imparcialidade Cruel: Nunca decida o que o jogador sente (ex: "Você sente medo"). Apenas descreva o ambiente hostil com frieza.
+- Mecânica: Nunca resolva um obstáculo pelo jogador.`
+},
             {
                 role: 'system',
                 content: 'Resumo da jornada até agora: A aventura acabou de começar.'
@@ -253,7 +250,7 @@ ${SSR_TEMPLATE}`
         // Streaming SSE com loop de auto-continuação
         // ============================================================
         async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
-                console.log("🔥 Temperatura usada:", window._introGenerating ? 0.75 : 0.6);  // ← aqui
+                console.log("🔥 Temperatura usada:", window._introGenerating ? 0.85 : 0.55);  // ← aqui
 
             const response = await fetch(LM_URL, {
                 method: 'POST',
@@ -261,7 +258,7 @@ ${SSR_TEMPLATE}`
                 body: JSON.stringify({
                     model: MODELO,
                     messages: mensagensPayload,
-                    temperature: window._introGenerating ? 0.75 : 0.6,
+                    temperature: window._introGenerating ? 0.85 : 0.55,
                     max_tokens: maxTokens,
                     presence_penalty: 0.3,
                     frequency_penalty: 0.3,
