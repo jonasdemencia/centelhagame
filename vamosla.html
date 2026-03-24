@@ -61,8 +61,10 @@
         const LM_URL = 'http://localhost:1234/v1/chat/completions';
         const MODELO = 'qwen2.5-7b-instruct-abliterated-v2';
         const LIMITE_MENSAGENS = 24;
-        window._introGenerating = false;   // ← adicione esta linha
+        window._introGenerating = false;   // ← adicionada esta linha
 
+        // Variáveis globais
+        let turnosJogados = 0;  // ← contador de ações do jogador
 
         const jogadorStats = {
             HABILIDADE: 5,
@@ -101,10 +103,15 @@ REGRAS DE OURO:
                 const docRef = doc(db, "sessoes", sessionId);
                 const docSnap = await getDoc(docRef);
                 
-                if (docSnap.exists() && docSnap.data().resumo) {
-                    resumoAtual = docSnap.data().resumo;
-                    mensagens[1].content = `Resumo da jornada até agora: ${resumoAtual}`;
-                    console.log("Sessão recuperada do Firestore.");
+                if (docSnap.exists()) {
+                    if (docSnap.data().resumo) {
+                        resumoAtual = docSnap.data().resumo;
+                        mensagens[1].content = `Resumo da jornada até agora: ${resumoAtual}`;
+                    }
+                    // Carrega o contador de turnos
+                    if (docSnap.data().turnos !== undefined) {
+                        turnosJogados = docSnap.data().turnos;
+                    }
                 }
             } catch (e) {
                 console.error("Erro ao carregar do Firestore:", e);
@@ -113,9 +120,27 @@ REGRAS DE OURO:
 
         async function salvarResumoFirestore(novoResumo) {
             try {
-                await setDoc(doc(db, "sessoes", sessionId), { resumo: novoResumo }, { merge: true });
+                await setDoc(doc(db, "sessoes", sessionId), { 
+                    resumo: novoResumo,
+                    turnos: turnosJogados 
+                }, { merge: true });
             } catch (e) {
                 console.error("Erro ao salvar no Firestore:", e);
+            }
+        }
+
+        // ============================================================
+        // Função do Diretor de Fases
+        // ============================================================
+        function obterDiretrizDeFase() {
+            if (turnosJogados < 50) {
+                return "FASE 1 - RASTROS (Lentidão): O perigo é apenas um sussurro, uma lenda ou um rastro perturbador no cenário (sangue seco, portas arrombadas). É ESTRITAMENTE PROIBIDO mostrar a ameaça principal. Foco no mistério e na exploração do infamiliar.";
+            } else if (turnosJogados < 250) {
+                return "FASE 2 - PARANOIA: Os sinais da ameaça são recentes. O ambiente reage a algo invisível (animais mortos, cheiro de podridão, NPCs aterrorizados). O perigo é iminente, mas ainda indireto.";
+            } else if (turnosJogados < 450) {
+                return "FASE 3 - PERSEGUIÇÃO: O jogador vê a ameaça de relance. Sobrevivência se torna o foco. O cerco está se fechando. Tensão alta, descreva o som e o impacto da ameaça no ambiente.";
+            } else {
+                return "FASE 4 - O CLÍMAX: O confronto direto, visceral e inevitável. Apostas máximas. Descreva a brutalidade do embate.";
             }
         }
 
@@ -250,7 +275,7 @@ ${SSR_TEMPLATE}`
         // Streaming SSE com loop de auto-continuação
         // ============================================================
         async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
-                console.log("🔥 Temperatura usada:", window._introGenerating ? 0.85 : 0.55);  // ← aqui
+            console.log("🔥 Temperatura usada:", window._introGenerating ? 0.85 : 0.55);  // ← aqui
 
             const response = await fetch(LM_URL, {
                 method: 'POST',
@@ -378,6 +403,11 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
         window.enviar = async function(mensagemUsuario = null) {
             const isInitial = mensagemUsuario === null;
             
+            // Incrementa o contador de turnos se não for a primeira mensagem (introdução)
+            if (!isInitial) {
+                turnosJogados++;
+            }
+
             let pergunta;
             if (isInitial) {
                 if (!resumoAtual) {
@@ -406,7 +436,17 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
                 let mensagemParaNarrador = pergunta;
 
                 if (!isInitial) {
-                    mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 5 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva o que é visível. Construa tensão. NUNCA decida o que o personagem sente ou faz.`;
+                    // Diretrizes antigas foram removidas; agora usamos as novas com fase
+                    // Primeiro obtém a fase atual
+                    const faseAtual = obterDiretrizDeFase();
+
+                    // Diretrizes novas (injetadas dinamicamente)
+                    const diretrizes = `\n\n[DIRETRIZES DE DIREÇÃO]: 
+1. ESTADO DO JOGO: ${faseAtual}
+2. REGRA DE ESTILO: Máximo 4 frases. Frases secas, curtas. Segunda pessoa do singular.
+3. TENSÃO: Não use clichês emocionais. Construa medo pelo que FALTA ou pelo que está QUEBRADO no ambiente. Mostre, não conte. Oculte informações do jogador.`;
+
+                    mensagemParaNarrador += diretrizes;
 
                     const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
@@ -451,12 +491,16 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
 
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
 
-if (isIntro) window._introGenerating = true;      // ativa temperatura alta
+                if (isIntro) window._introGenerating = true;      // ativa temperatura alta
 
-const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
+                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
 
-if (isIntro) window._introGenerating = false;     // desativa após terminar
+                if (isIntro) window._introGenerating = false;     // desativa após terminar
+
                 mensagens.push({ role: 'assistant', content: respostaIA });
+
+                // Salva o estado atual no Firestore (inclui turnos)
+                await salvarResumoFirestore(resumoAtual);
 
                 if (isInitial) {
                     userInput.disabled = false;
