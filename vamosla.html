@@ -270,7 +270,7 @@ ${SSR_TEMPLATE}`
         // Streaming SSE com loop de auto-continuação
         // ============================================================
         async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
-            console.log("🔥 Temperatura usada:", window._introGenerating ? 0.95 : 0.55);
+            console.log("🔥 Temperatura usada:", window._introGenerating ? 0.8 : 0.55);
             try {
                 const response = await fetch(LM_URL, {
                     method: 'POST',
@@ -278,7 +278,7 @@ ${SSR_TEMPLATE}`
                     body: JSON.stringify({
                         model: MODELO,
                         messages: mensagensPayload,
-                        temperature: window._introGenerating ? 0.95 : 0.55,
+                        temperature: window._introGenerating ? 0.8 : 0.55,
                         max_tokens: maxTokens,
                         presence_penalty: window._introGenerating ? 0.9 : 0.3,
                         frequency_penalty: window._introGenerating ? 0.9 : 0.3,
