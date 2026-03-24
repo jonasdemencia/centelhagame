@@ -61,6 +61,8 @@
         const LM_URL = 'http://localhost:1234/v1/chat/completions';
         const MODELO = 'qwen2.5-7b-instruct-abliterated-v2';
         const LIMITE_MENSAGENS = 24;
+        window._introGenerating = false;   // ← adicione esta linha
+
 
         const jogadorStats = {
             HABILIDADE: 5,
@@ -257,7 +259,7 @@ ${SSR_TEMPLATE}`
                 body: JSON.stringify({
                     model: MODELO,
                     messages: mensagensPayload,
-                    temperature: 0.6,
+                    temperature: window._introGenerating ? 0.85 : 0.6,
                     max_tokens: maxTokens,
                     presence_penalty: 0.3,
                     frequency_penalty: 0.3,
@@ -450,8 +452,11 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
 
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
 
-                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
+if (isIntro) window._introGenerating = true;      // ativa temperatura alta
 
+const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
+
+if (isIntro) window._introGenerating = false;     // desativa após terminar
                 mensagens.push({ role: 'assistant', content: respostaIA });
 
                 if (isInitial) {
