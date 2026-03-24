@@ -391,7 +391,7 @@ ${SSR_TEMPLATE}`
                 if (!isInitial) {
                     // MUDANÇA: Diretriz reforça segunda pessoa e consistência de cena
                     // a cada turno, não apenas no system prompt global.
-                    mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 5 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva o que é visível, olfativo ou audível agora. Termine com a situação imediata do jogador. NUNCA decida o que o personagem sente ou faz.`;
+                    mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 5 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva o que é visível. Construa tensão: use um detalhe sensorial novo (som, cheiro, visão) e termine com uma pergunta ou situação que obrigue o jogador a agir. NUNCA decida o que o personagem sente ou faz.`;
 
                     const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
