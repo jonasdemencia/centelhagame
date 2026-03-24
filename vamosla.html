@@ -275,68 +275,87 @@ ${SSR_TEMPLATE}`
         // Streaming SSE com loop de auto-continuação
         // ============================================================
         async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
-            console.log("🔥 Temperatura usada:", window._introGenerating ? 0.85 : 0.55);  // ← aqui
+    console.log("🔥 Temperatura usada:", window._introGenerating ? 0.85 : 0.55);
+    try {
+        const response = await fetch(LM_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: MODELO,
+                messages: mensagensPayload,
+                temperature: window._introGenerating ? 0.85 : 0.55,
+                max_tokens: maxTokens,
+                presence_penalty: 0.3,
+                frequency_penalty: 0.3,
+                stream: true
+            })
+        });
 
-            const response = await fetch(LM_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: MODELO,
-                    messages: mensagensPayload,
-                    temperature: window._introGenerating ? 0.85 : 0.55,
-                    max_tokens: maxTokens,
-                    presence_penalty: 0.3,
-                    frequency_penalty: 0.3,
-                    stream: true
-                })
-            });
+        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
 
-            if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let fullText = '';
+        let finishReason = null;
 
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
-            let fullText = '';
-            let finishReason = null;
+        console.debug('[LLM STREAM] Iniciando leitura de chunks SSE...');
 
-            console.debug('[LLM STREAM] Iniciando leitura de chunks SSE...');
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                buffer = lines.pop();
-
-                for (const line of lines) {
-                    if (!line.startsWith('data: ')) continue;
-                    const jsonStr = line.slice(6).trim();
-                    if (jsonStr === '[DONE]') {
-                        console.debug('[LLM STREAM] Sinal [DONE] recebido.');
-                        continue;
-                    }
-                    try {
-                        const chunk = JSON.parse(jsonStr);
-                        const delta = chunk.choices?.[0]?.delta?.content || '';
-                        const fr = chunk.choices?.[0]?.finish_reason;
-                        if (delta) {
-                            fullText += delta;
-                            if (onToken) onToken(fullText);
-                        }
-                        if (fr && fr !== 'null') {
-                            finishReason = fr;
-                            console.debug(`[LLM STREAM] finish_reason recebido: "${finishReason}"`);
-                        }
-                    } catch (parseErr) {
-                        // chunk malformado — ignora silenciosamente
-                    }
-                }
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+                console.debug('[LLM STREAM] Leitor finalizado (done=true)');
+                break;
             }
 
-            console.debug(`[LLM STREAM] Geração concluída. Tokens gerados: ~${fullText.split(' ').length} palavras. finish_reason final: "${finishReason}"`);
-            return { text: fullText, finishReason };
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+
+            for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                const jsonStr = line.slice(6).trim();
+                if (jsonStr === '[DONE]') {
+                    console.debug('[LLM STREAM] Sinal [DONE] recebido.');
+                    continue;
+                }
+                try {
+                    const chunk = JSON.parse(jsonStr);
+                    const delta = chunk.choices?.[0]?.delta?.content || '';
+                    const fr = chunk.choices?.[0]?.finish_reason;
+
+                    // Log de cada chunk com finish_reason diferente de null
+                    if (fr && fr !== 'null') {
+                        console.debug(`[LLM STREAM] finish_reason recebido: "${fr}"`);
+                    } else if (fr === 'null') {
+                        console.debug('[LLM STREAM] finish_reason = null (ignorado)');
+                    }
+
+                    if (delta) {
+                        fullText += delta;
+                        if (onToken) onToken(fullText);
+                    }
+                    if (fr && fr !== 'null') {
+                        finishReason = fr;
+                    }
+
+                    // Log de chunks com erro (se o servidor enviar)
+                    if (chunk.error) {
+                        console.error('[LLM STREAM] Erro no chunk:', chunk.error);
+                    }
+                } catch (parseErr) {
+                    console.error('[LLM STREAM] Erro ao parsear chunk:', parseErr, 'Linha:', line);
+                }
+            }
         }
+
+        console.debug(`[LLM STREAM] Geração concluída. Tokens gerados: ~${fullText.split(' ').length} palavras. finish_reason final: "${finishReason}"`);
+        return { text: fullText, finishReason };
+    } catch (error) {
+        console.error('[LLM STREAM] Falha na requisição fetch:', error);
+        throw error; // repassa para quem chamou
+    }
+}
 
         async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento, maxContinuacoes = 0) {
             let textoCompleto = '';
