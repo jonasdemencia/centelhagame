@@ -78,7 +78,7 @@
         let mensagens = [
             {
                 role: 'system',
-                content: `Você é narrador de um RPG brutal no estilo Fighting Fantasy de Steve Jackson. Responda SEMPRE em Português Brasileiro CORRETO.
+                content: `Você é narrador de um RPG brutal no estilo Fighting Fantasy de Steve Jackson. Responda SEMPRE em Português Brasileiro CORRETO. NUNCA use palavras ou frases em qualquer outro idioma.
 
 REGRAS:
 - Segunda pessoa sempre: "Você vê", "Você ouve", "Você cheira".
@@ -409,7 +409,7 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
                 let mensagemParaNarrador = pergunta;
 
                 if (!isInitial) {
-                    mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 5 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva o que é visível. Construa tensão: use um detalhe sensorial novo (som, cheiro, visão) e termine com uma pergunta ou situação que obrigue o jogador a agir. NUNCA decida o que o personagem sente ou faz.`;
+                    mensagemParaNarrador += `\n\nDIRETRIZES: Máximo 5 frases curtas. SEMPRE segunda pessoa (você). NÃO contradiga o que foi descrito na última cena. Use verbos de ação. Descreva o que é visível. Construa tensão. NUNCA decida o que o personagem sente ou faz.`;
 
                     const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
