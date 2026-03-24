@@ -52,6 +52,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
+        // ID fixo para desenvolvimento locall (pode ser dinâmico depois)
         const sessionId = "sessao_dev_01"; 
 
         // ============================================================
@@ -60,9 +61,10 @@
         const LM_URL = 'http://localhost:1234/v1/chat/completions';
         const MODELO = 'qwen2.5-7b-instruct-abliterated-v2';
         const LIMITE_MENSAGENS = 24;
-        window._introGenerating = false;
+        window._introGenerating = false;   // ← adicionada esta linha
 
-        let turnosJogados = 0;
+        // Variáveis globais
+        let turnosJogados = 0;  // ← contador de ações do jogador
 
         const jogadorStats = {
             HABILIDADE: 5,
@@ -74,16 +76,17 @@
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
 
+        // Estrutura de memória: [0] Regras, [1] Resumo da História, [2...] Turnos
         let mensagens = [
             {
-                role: 'system',
-                content: `Você é um motor narrativo de um RPG de fantasia brutal e punitiva. Responda APENAS em Português Brasileiro CORRETO. Nunca escreva em outro idioma.
+    role: 'system',
+    content: `Você é um motor narrativo de um RPG de fantasia brutal e punitiva. Responda APENAS em Português Brasileiro CORRETO. Nunca escreva em outro idioma.
 REGRAS DE OURO:
 - Tensão Psicológica: O verdadeiro horror está no que não é dito ou mostrado. Mostre as consequências (cadáveres, loucura, ruínas), atrase o monstro.
 - Realismo Sujo: Evite adjetivos bonitos. Use verbos de ação e substantivos concretos (barro, sangue coagulado, ferrugem, silêncio sufocante).
 - Imparcialidade Cruel: Nunca decida o que o jogador sente (ex: "Você sente medo"). Apenas descreva o ambiente hostil com frieza.
 - Mecânica: Nunca resolva um obstáculo pelo jogador.`
-            },
+},
             {
                 role: 'system',
                 content: 'Resumo da jornada até agora: A aventura acabou de começar.'
@@ -105,6 +108,7 @@ REGRAS DE OURO:
                         resumoAtual = docSnap.data().resumo;
                         mensagens[1].content = `Resumo da jornada até agora: ${resumoAtual}`;
                     }
+                    // Carrega o contador de turnos
                     if (docSnap.data().turnos !== undefined) {
                         turnosJogados = docSnap.data().turnos;
                     }
@@ -130,19 +134,20 @@ REGRAS DE OURO:
         // ============================================================
         function obterDiretrizDeFase() {
             if (turnosJogados < 50) {
-                return "FASE 1 - RASTROS: O perigo é apenas um sussurro ou rastro perturbador. É PROIBIDO mostrar a ameaça principal. Foco no mistério e na estranheza do ambiente.";
+                return "FASE 1 - RASTROS (Lentidão): O perigo é apenas um sussurro, uma lenda ou um rastro perturbador no cenário (sangue seco, portas arrombadas). É ESTRITAMENTE PROIBIDO mostrar a ameaça principal. Foco no mistério e na exploração do infamiliar.";
             } else if (turnosJogados < 250) {
-                return "FASE 2 - PARANOIA: Os sinais da ameaça são recentes. O ambiente reage a algo invisível. O perigo é iminente, mas ainda indireto.";
+                return "FASE 2 - PARANOIA: Os sinais da ameaça são recentes. O ambiente reage a algo invisível (animais mortos, cheiro de podridão, NPCs aterrorizados). O perigo é iminente, mas ainda indireto.";
             } else if (turnosJogados < 450) {
-                return "FASE 3 - PERSEGUIÇÃO: O jogador vê a ameaça de relance. Sobrevivência é o foco. O cerco está se fechando.";
+                return "FASE 3 - PERSEGUIÇÃO: O jogador vê a ameaça de relance. Sobrevivência se torna o foco. O cerco está se fechando. Tensão alta, descreva o som e o impacto da ameaça no ambiente.";
             } else {
-                return "FASE 4 - CLÍMAX: Confronto direto, visceral e inevitável. Apostas máximas.";
+                return "FASE 4 - O CLÍMAX: O confronto direto, visceral e inevitável. Apostas máximas. Descreva a brutalidade do embate.";
             }
         }
 
         // ============================================================
         // Funções de Compressão de Memória — Structured State Representation (SSR)
         // ============================================================
+
         const SSR_TEMPLATE = `LOCAL: [onde o jogador está agora]
 NPCS: [lista de personagens encontrados e seu estado atual: nome/descrição, relação, vivo/morto/desconhecido]
 ITENS: [itens carregados ou relevantes no cenário]
@@ -270,65 +275,87 @@ ${SSR_TEMPLATE}`
         // Streaming SSE com loop de auto-continuação
         // ============================================================
         async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
-            console.log("🔥 Temperatura usada:", window._introGenerating ? 0.8 : 0.55);
-            try {
-                const response = await fetch(LM_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: MODELO,
-                        messages: mensagensPayload,
-                        temperature: window._introGenerating ? 0.8 : 0.55,
-                        max_tokens: maxTokens,
-                        presence_penalty: window._introGenerating ? 0.9 : 0.3,
-                        frequency_penalty: window._introGenerating ? 0.9 : 0.3,
-                        stream: true
-                    })
-                });
+    console.log("🔥 Temperatura usada:", window._introGenerating ? 0.85 : 0.55);
+    try {
+        const response = await fetch(LM_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: MODELO,
+                messages: mensagensPayload,
+                temperature: window._introGenerating ? 0.85 : 0.55,
+                max_tokens: maxTokens,
+                presence_penalty: 0.3,
+                frequency_penalty: 0.3,
+                stream: true
+            })
+        });
 
-                if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
 
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = '';
-                let fullText = '';
-                let finishReason = null;
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let fullText = '';
+        let finishReason = null;
 
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
+        console.debug('[LLM STREAM] Iniciando leitura de chunks SSE...');
 
-                    buffer += decoder.decode(value, { stream: true });
-                    const lines = buffer.split('\n');
-                    buffer = lines.pop();
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+                console.debug('[LLM STREAM] Leitor finalizado (done=true)');
+                break;
+            }
 
-                    for (const line of lines) {
-                        if (!line.startsWith('data: ')) continue;
-                        const jsonStr = line.slice(6).trim();
-                        if (jsonStr === '[DONE]') continue;
-                        try {
-                            const chunk = JSON.parse(jsonStr);
-                            const delta = chunk.choices?.[0]?.delta?.content || '';
-                            const fr = chunk.choices?.[0]?.finish_reason;
-                            if (delta) {
-                                fullText += delta;
-                                if (onToken) onToken(fullText);
-                            }
-                            if (fr && fr !== 'null') finishReason = fr;
-                            if (chunk.error) console.error('[LLM STREAM] Erro no chunk:', chunk.error);
-                        } catch (parseErr) {
-                            console.error('[LLM STREAM] Erro ao parsear chunk:', parseErr);
-                        }
-                    }
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+
+            for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                const jsonStr = line.slice(6).trim();
+                if (jsonStr === '[DONE]') {
+                    console.debug('[LLM STREAM] Sinal [DONE] recebido.');
+                    continue;
                 }
+                try {
+                    const chunk = JSON.parse(jsonStr);
+                    const delta = chunk.choices?.[0]?.delta?.content || '';
+                    const fr = chunk.choices?.[0]?.finish_reason;
 
-                console.debug(`[LLM STREAM] Concluído. ~${fullText.split(' ').length} palavras. finish_reason: "${finishReason}"`);
-                return { text: fullText, finishReason };
-            } catch (error) {
-                console.error('[LLM STREAM] Falha:', error);
-                throw error;
+                    // Log de cada chunk com finish_reason diferente de null
+                    if (fr && fr !== 'null') {
+                        console.debug(`[LLM STREAM] finish_reason recebido: "${fr}"`);
+                    } else if (fr === 'null') {
+                        console.debug('[LLM STREAM] finish_reason = null (ignorado)');
+                    }
+
+                    if (delta) {
+                        fullText += delta;
+                        if (onToken) onToken(fullText);
+                    }
+                    if (fr && fr !== 'null') {
+                        finishReason = fr;
+                    }
+
+                    // Log de chunks com erro (se o servidor enviar)
+                    if (chunk.error) {
+                        console.error('[LLM STREAM] Erro no chunk:', chunk.error);
+                    }
+                } catch (parseErr) {
+                    console.error('[LLM STREAM] Erro ao parsear chunk:', parseErr, 'Linha:', line);
+                }
             }
         }
+
+        console.debug(`[LLM STREAM] Geração concluída. Tokens gerados: ~${fullText.split(' ').length} palavras. finish_reason final: "${finishReason}"`);
+        return { text: fullText, finishReason };
+    } catch (error) {
+        console.error('[LLM STREAM] Falha na requisição fetch:', error);
+        throw error; // repassa para quem chamou
+    }
+}
 
         async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento, maxContinuacoes = 0) {
             let textoCompleto = '';
@@ -336,6 +363,7 @@ ${SSR_TEMPLATE}`
 
             for (let tentativa = 0; tentativa <= maxContinuacoes; tentativa++) {
                 if (tentativa > 0) {
+                    console.debug(`[CONTINUAÇÃO ${tentativa}/${maxContinuacoes}] finish_reason=length. Enviando extensão...`);
                     msgsAtual = [
                         ...msgsAtual,
                         { role: 'assistant', content: textoCompleto },
@@ -356,107 +384,37 @@ ${SSR_TEMPLATE}`
                 elemento.innerText = textoCompleto;
                 chatBox.scrollTop = chatBox.scrollHeight;
 
-                if (finishReason !== 'length') break;
+                if (finishReason !== 'length') {
+                    console.debug(`[GERAÇÃO] Encerrado naturalmente (finish_reason="${finishReason}") na tentativa ${tentativa}.`);
+                    break;
+                }
+
+                if (tentativa === maxContinuacoes) {
+                    console.debug(`[GERAÇÃO] Limite de ${maxContinuacoes} continuação(ões) atingido. Encerrando.`);
+                }
             }
 
             return textoCompleto;
         }
 
         // ============================================================
-        // PROMPT DE INTRODUÇÃO
-        //
-        // Filosofia: nenhum conteúdo é prescrito. O modelo recebe:
-        //
-        //   1. SEMENTE ABSTRATA — um número que não indexa lista alguma.
-        //      É apresentado como "frequência" da sessão — âncora
-        //      psicológica que sinaliza singularidade irrepetível.
-        //
-        //   2. INSTRUÇÕES DE PROCESSO — perguntas que o modelo responde
-        //      internamente antes de escrever. Isso ativa deliberação
-        //      criativa em vez de geração por média estatística.
-        //
-        //   3. PROIBIÇÕES (não prescrições) — o que NÃO fazer. Uma
-        //      proibição é aberta (infinitas alternativas); uma prescrição
-        //      é fechada (N alternativas). Proibir padrões comuns empurra
-        //      o modelo para fora da sua distribuição central sem ditar
-        //      destino. Cada sessão a lista de proibições rotaciona,
-        //      bloqueando fatias diferentes da média.
-        //
-        //   4. RESTRIÇÕES FORMAIS — controlam a forma do texto, não o
-        //      conteúdo. Criam pressão criativa sem reduzir o espaço
-        //      semântico disponível.
+        // Prompt de introdução — estrutura Fighting Fantasy
+        // Cada bloco mapeia um elemento da anatomia do background:
+        // 1. MUNDO   → cenário nomeado, crise instalada, detalhe físico da ruptura
+        // 2. VOCÊ    → arquétipo, motivação, sem nome, sem emoções
+        // 3. AMEAÇA  → antagonista nomeado e localizado, outros falharam, mistério preservado
+        // 4. MISSÃO  → objetivo concreto + apostas pessoais e coletivas
+        // 5. PARTIDA → posição geográfica, urgência, movimento final, decisão imediata
         // ============================================================
-        const PROMPT_INTRO = (() => {
-            const seed = Math.floor(Math.random() * 999983);
+        const PROMPT_INTRO = `Esta é a introdução da aventura. Escreva em exatamente 5 parágrafos. NÃO use títulos ou marcadores — apenas prosa corrida. Apresente os seguintes elementos de forma entrelaçada:
 
-            // Proibições rotatórias — cada grupo bloqueia uma fatia
-            // diferente da distribuição média do modelo.
-            // O grupo é selecionado pela semente, sem hard-coding de conteúdo.
-            const gruposDeProibicoes = [
-                // Grupo A — bloqueia clichês de fantasia épica
-                `— Nenhum castelo, masmorra, dungeon ou calabouço genérico.
-— Nenhum herói que acorda com uma profecia ou missão sagrada.
-— Nenhuma taverna, pousada ou cidade murada como ponto de partida.
-— Nenhum "mal antigo" sem rosto, forma ou comportamento concreto.
-— Nenhum protagonista que sabe exatamente quem é e o que deve fazer.`,
+1 — Apresente o cenário com nome próprio. Mostre as particularidades e mistérios do mundo. 
+2 — Apresente quem é o jogador. Um arquétipo claro. Sua razão para agir. Sem nome próprio. Sem emoções descritas.
+3 — Apresente a AMEAÇA. o antagonista, acontecimento perturbador ou força maligna. Dê um nome. Localize-o. Deixe claro que outros tentaram e falharam. Não explique a origem — preserve o mistério.
+4 — Apresente a MISSÃO E AS APOSTAS: o que o jogador precisa fazer (um objetivo concreto e tangível). O que acontece se falhar — para o jogador e para o mundo ao redor.
+5 — Apresente onde o jogador está agora (um lugar físico específico). Termine com uma circunstância que obrigue o jogador a agir.
 
-                // Grupo B — bloqueia clichês de horror e suspense
-                `— Nenhuma mansão, casa abandonada ou cemitério.
-— Nenhuma névoa inexplicável como recurso de atmosfera.
-— Nenhum monstro que aparece no escuro sem ter sido estabelecido antes.
-— Nenhum protagonista que "desperta" ou "não se lembra de como chegou aqui".
-— Nenhuma vila isolada com moradores desconfiados como abertura.`,
-
-                // Grupo C — bloqueia clichês de ficção científica pulp
-                `— Nenhuma nave em colapso como ponto de partida.
-— Nenhum despertar em câmara criogênica ou cápsula de emergência.
-— Nenhuma IA ou computador como primeiro elemento de cena.
-— Nenhuma missão de resgate em estação espacial abandonada.
-— Nenhum protagonista que é o único sobrevivente de algo.`,
-
-                // Grupo D — bloqueia clichês de aventura de ação
-                `— Nenhum protagonista em perseguição ou fuga no início.
-— Nenhuma missão recebida de um empregador, rei, ou mentor.
-— Nenhum mapa, artefato ou objeto sagrado como MacGuffin inicial.
-— Nenhuma batalha, duelo ou confronto físico nos dois primeiros parágrafos.
-— Nenhum grupo de companheiros: o protagonista começa sozinho e sem aliados óbvios.`,
-
-                // Grupo E — bloqueia clichês de aventura política e espionagem
-                `— Nenhuma conspiração revelada por um informante no início.
-— Nenhum protagonista disfarçado cuja cobertura está prestes a ser descoberta.
-— Nenhuma organização secreta como contexto imediato.
-— Nenhum assassinato político como gatilho inicial.
-— Nenhum documento, mapa ou código como primeiro objeto do cenário.`
-            ];
-
-            const idxGrupo = seed % gruposDeProibicoes.length;
-            const proibicoes = gruposDeProibicoes[idxGrupo];
-
-            console.debug(`[INTRO] Seed: ${seed} | Grupo de proibições: ${idxGrupo}`);
-
-            return `FREQUÊNCIA DESTA SESSÃO: ${seed}
-
-Você é um escritor de ficção de aventura interativa. Sua reputação foi construída sobre uma única recusa: nunca começar duas histórias da mesma forma. Esta sessão tem uma frequência única — use-a como âncora. O que você escrever agora existe apenas uma vez.
-
-PROCESSO INTERNO — responda a estas perguntas mentalmente antes de escrever. Não as escreva. Não as mencione:
-→ Qual é a coisa mais inesperada que poderia acontecer na primeira frase desta aventura?
-→ O protagonista sabe onde está? Sabe quem é? Tem um corpo intacto?
-→ O perigo é visível, invisível, social, físico, ambiental, cósmico — ou algo que não tem nome ainda?
-→ Qual detalhe sensorial concreto e específico (não genérico) abre esta história?
-→ Qual é a estrutura narrativa desta abertura — clássica, em fragmentos, em segunda cena, como documento encontrado, como voz que vem de fora?
-
-PROIBIÇÕES DESTA SESSÃO — estas escolhas estão bloqueadas:
-${proibicoes}
-
-RESTRIÇÕES DE FORMA — obrigatórias:
-— A primeira frase NÃO começa com a palavra "Você".
-— Cada parágrafo contém exatamente um detalhe sensorial concreto: textura, cheiro, temperatura, som ou sabor — nunca uma emoção descrita.
-— O protagonista não tem nome próprio.
-— A ameaça ou crise não precisa ser nomeada nem completamente compreendida no início.
-— O quinto parágrafo termina com uma circunstância que torna a inação impossível — não uma pergunta, mas uma situação.
-
-Escreva 5 parágrafos de prosa corrida. Zero títulos. Zero marcadores. Zero meta-comentários. Segunda pessoa ("você"). Frases curtas e secas.`;
-        })();
+MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos, zero emoções descritas, zero adjetivos empilhados.`;
 
         // ============================================================
         // Função principal de envio
@@ -464,7 +422,10 @@ Escreva 5 parágrafos de prosa corrida. Zero títulos. Zero marcadores. Zero met
         window.enviar = async function(mensagemUsuario = null) {
             const isInitial = mensagemUsuario === null;
             
-            if (!isInitial) turnosJogados++;
+            // Incrementa o contador de turnos se não for a primeira mensagem (introdução)
+            if (!isInitial) {
+                turnosJogados++;
+            }
 
             let pergunta;
             if (isInitial) {
@@ -494,12 +455,17 @@ Escreva 5 parágrafos de prosa corrida. Zero títulos. Zero marcadores. Zero met
                 let mensagemParaNarrador = pergunta;
 
                 if (!isInitial) {
+                    // Diretrizes antigas foram removidas; agora usamos as novas com fase
+                    // Primeiro obtém a fase atual
                     const faseAtual = obterDiretrizDeFase();
 
-                    mensagemParaNarrador += `\n\n[DIRETRIZES]:
-1. FASE: ${faseAtual}
-2. ESTILO: Máximo 4 frases. Secas, curtas. Segunda pessoa do singular.
-3. TENSÃO: Construa medo pelo que FALTA ou pelo que está QUEBRADO. Mostre — não conte. Oculte informação do jogador.`;
+                    // Diretrizes novas (injetadas dinamicamente)
+                    const diretrizes = `\n\n[DIRETRIZES DE DIREÇÃO]: 
+1. ESTADO DO JOGO: ${faseAtual}
+2. REGRA DE ESTILO: Máximo 4 frases. Frases secas, curtas. Segunda pessoa do singular.
+3. TENSÃO: Não use clichês emocionais. Construa medo pelo que FALTA ou pelo que está QUEBRADO no ambiente. Mostre, não conte. Oculte informações do jogador.`;
+
+                    mensagemParaNarrador += diretrizes;
 
                     const tipoAcao = await avaliarAcao(pergunta);
                     const resultadoTeste = rolarTeste(tipoAcao);
@@ -521,7 +487,7 @@ Escreva 5 parágrafos de prosa corrida. Zero títulos. Zero marcadores. Zero met
                                     'Ação FALHOU. A abordagem irritou o interlocutor. Descreva como ele se fechou, virou as costas ou sinalizou que a conversa acabou — de forma ameaçadora ou humilhante.'
                                 ],
                                 SORTE: [
-                                    'Ação FALHOU. O destino foi cruel: descreva uma consequência mortal ou quase letal para o azar do jogador.',
+                                    'Ação FALHOU. O destino foi cruel: Descreva uma consequência mortal ou quase letal para o azar do jogador.',
                                 ]
                             };
 
@@ -536,17 +502,21 @@ Escreva 5 parágrafos de prosa corrida. Zero títulos. Zero marcadores. Zero met
                 mensagens.push({ role: 'user', content: mensagemParaNarrador });
 
                 const isIntro = (isInitial && !resumoAtual);
+                // Intro recebe 1 continuação para garantir os 5 blocos completos sem corte
                 const maxTokens       = isIntro ? 1000 : 200;
                 const maxContinuacoes = isIntro ?    1 :   1;
 
-                if (isIntro) window._introGenerating = true;
+                console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
+
+                if (isIntro) window._introGenerating = true;      // ativa temperatura alta
 
                 const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
 
-                if (isIntro) window._introGenerating = false;
+                if (isIntro) window._introGenerating = false;     // desativa após terminar
 
                 mensagens.push({ role: 'assistant', content: respostaIA });
 
+                // Salva o estado atual no Firestore (inclui turnos)
                 await salvarResumoFirestore(resumoAtual);
 
                 if (isInitial) {
