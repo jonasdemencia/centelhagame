@@ -22,8 +22,8 @@
     <div id="game-container">
        <div id="local-atual" style="display: flex; justify-content: space-between;">
     <span>⚔️ Reinos Desolados • <span id="modelo-span">qwen2.5-7b-instruct-abliterated-v2</span></span>
-    <span id="energia-span" style="color: #a13d3d; font-weight: bold;">🩸 Vitalidade: 10/10</span>
-</div>
+<span id="energia-span" style="color: #a13d3d; font-weight: bold;">🩸 Energia: 10/10</span>
+       </div>
 
         <div id="chat-box">
             <div class="system-message">⚔️ O narrador está preparando o cenário...</div>
@@ -119,8 +119,7 @@ REGRAS DE OURO:
 // Carrega a energia se existir no banco
 if (docSnap.data().energia !== undefined) {
     energia = docSnap.data().energia;
-    document.getElementById('energia-span').innerText = `🩸 Vitalidade: ${energia}/10`;
-}
+document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;}
                 }
             } catch (e) {
                 console.error("Erro ao carregar do Firestore:", e);
