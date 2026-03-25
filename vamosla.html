@@ -20,9 +20,10 @@
 </head>
 <body>
     <div id="game-container">
-        <div id="local-atual">
-            ⚔️ Reinos Desolados • <span id="modelo-span">qwen2.5-7b-instruct-abliterated-v2</span>
-        </div>
+       <div id="local-atual" style="display: flex; justify-content: space-between;">
+    <span>⚔️ Reinos Desolados • <span id="modelo-span">qwen2.5-7b-instruct-abliterated-v2</span></span>
+    <span id="energia-span" style="color: #a13d3d; font-weight: bold;">🩸 Vitalidade: 10/10</span>
+</div>
 
         <div id="chat-box">
             <div class="system-message">⚔️ O narrador está preparando o cenário...</div>
@@ -65,6 +66,7 @@
 
         // Variáveis globais
         let turnosJogados = 0;  // ← contador de ações do jogador
+        let energia = 10;
 
         const jogadorStats = {
             HABILIDADE: 5,
@@ -82,10 +84,12 @@
     role: 'system',
     content: `Você é um motor narrativo de um RPG de fantasia brutal e punitiva. Responda APENAS em Português Brasileiro CORRETO. Nunca escreva em outro idioma.
 REGRAS DE OURO:
+- Malevolência Ativa: O mundo quer consumir o jogador. Se ele agir com passividade, tomar decisões óbvias, investigar algo letal ou demorar demais, PUNA-O. 
+- O Fio da Vida: Para ferir fisicamente ou psicologicamente o jogador fora de testes, você tem permissão OBRIGATÓRIA de adicionar no fim da sua resposta a tag [DANO: X] (onde X é de 1 a 3). Seja sádico e injusto.
 - Tensão Psicológica: O verdadeiro horror está no que não é dito ou mostrado. Mostre as consequências (cadáveres, loucura, ruínas), atrase o monstro.
 - Realismo Sujo: Evite adjetivos bonitos. Use verbos de ação e substantivos concretos (barro, sangue coagulado, ferrugem, silêncio sufocante).
 - Imparcialidade Cruel: Nunca decida o que o jogador sente (ex: "Você sente medo"). Apenas descreva o ambiente hostil com frieza.
-- Mecânica: Nunca resolva um obstáculo pelo jogador.`
+- Mecânica: Nunca resolva um obstáculo pelo jogador. Se a situação for letal e ele errar, aplique [DANO: 3].`
 },
             {
                 role: 'system',
@@ -110,8 +114,13 @@ REGRAS DE OURO:
                     }
                     // Carrega o contador de turnos
                     if (docSnap.data().turnos !== undefined) {
-                        turnosJogados = docSnap.data().turnos;
-                    }
+    turnosJogados = docSnap.data().turnos;
+}
+// Carrega a energia se existir no banco
+if (docSnap.data().energia !== undefined) {
+    energia = docSnap.data().energia;
+    document.getElementById('energia-span').innerText = `🩸 Vitalidade: ${energia}/10`;
+}
                 }
             } catch (e) {
                 console.error("Erro ao carregar do Firestore:", e);
@@ -121,9 +130,10 @@ REGRAS DE OURO:
         async function salvarResumoFirestore(novoResumo) {
             try {
                 await setDoc(doc(db, "sessoes", sessionId), { 
-                    resumo: novoResumo,
-                    turnos: turnosJogados 
-                }, { merge: true });
+    resumo: novoResumo,
+    turnos: turnosJogados,
+    energia: energia   // ← salva a vitalidade
+}, { merge: true });
             } catch (e) {
                 console.error("Erro ao salvar no Firestore:", e);
             }
@@ -476,20 +486,20 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
                         let logicaFisica = '';
                         if (resultadoTeste === 'FALHA') {
                             const consequenciasPorAtributo = {
-                                HABILIDADE: [
-                                    'Ação FALHOU CRITICAMENTE. O jogador errou o movimento e sofreu DANO FÍSICO. Descreva o ferimento com crueza.',
-                                    'Ação FALHOU. O corpo do jogador cedeu no momento decisivo. Descreva a dor física e a posição vulnerável em que ficou.',
-                                    'Ação FALHOU. A falta de destreza custou caro. Descreva um erro mecânico com consequências físicas imediatas.'
-                                ],
+                               HABILIDADE: [
+        'Ação FALHOU CRITICAMENTE. O jogador errou o movimento e sofreu DANO FÍSICO. Descreva o ferimento com crueza. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 2] ou superior.',
+        'Ação FALHOU. O corpo do jogador cedeu no momento decisivo. Descreva a dor física e a posição vulnerável em que ficou. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 1] ou superior.',
+        'Ação FALHOU. A falta de destreza custou caro. Descreva um erro mecânico com consequências físicas imediatas. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 2] ou superior.'
+    ],
                                 CARISMA: [
                                     'Ação FALHOU. O jogador disse a coisa errada. O interlocutor reagiu com HOSTILIDADE ABERTA — descreva a rejeição humilhante, o silêncio cortante ou a ameaça que surgiu.',
                                     'Ação FALHOU. O jogador foi ignorado ou escarnecido. Descreva a frieza do outro personagem, talvez acompanhada de riso ou desprezo. A situação social piorou.',
                                     'Ação FALHOU. A abordagem irritou o interlocutor. Descreva como ele se fechou, virou as costas ou sinalizou que a conversa acabou — de forma ameaçadora ou humilhante.'
                                 ],
                                 SORTE: [
-                                    'Ação FALHOU. O destino foi cruel: Descreva uma consequência mortal ou quase letal para o azar do jogador.',
-                                ]
-                            };
+        'Ação FALHOU. O destino foi cruel: Descreva uma consequência mortal ou quase letal para o azar do jogador. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 3] ou superior.',
+    ]
+};
 
                             const lista = consequenciasPorAtributo[tipoAcao] || consequenciasPorAtributo['HABILIDADE'];
                             logicaFisica = lista[Math.floor(Math.random() * lista.length)];
@@ -511,6 +521,26 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
                 if (isIntro) window._introGenerating = true;      // ativa temperatura alta
 
                 const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
+
+                // --- INÍCIO DO SISTEMA DE DANO E MORTE ---
+const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
+if (danoMatch) {
+    const valorDano = parseInt(danoMatch[1]);
+    energia -= valorDano;
+    document.getElementById('energia-span').innerText = `🩸 Vitalidade: ${Math.max(0, energia)}/10`;
+    
+    // Opcional: Adiciona um feedback de sistema brutal
+    adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Vitalidade.]`, 'system');
+
+    if (energia <= 0) {
+        adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
+        userInput.disabled = true;
+        sendBtn.disabled = true;
+        await salvarResumoFirestore(resumoAtual);
+        return; // Mata a execução do script. O jogo acaba aqui.
+    }
+}
+// --- FIM DO SISTEMA DE DANO E MORTE ---
 
                 if (isIntro) window._introGenerating = false;     // desativa após terminar
 
