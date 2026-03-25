@@ -82,13 +82,14 @@
         let mensagens = [
             {
     role: 'system',
-    content: `Você é um motor narrativo de um RPG de fantasia brutal e punitiva. Responda APENAS em Português Brasileiro CORRETO. Nunca escreva em outro idioma.
+    content: `Você é um motor narrativo de um RPG de fantasia brutal e punitiva. Responda APENAS em Português Brasileiro CORRETO. Nunca escreva em outro idioma. Você NUNCA dá conselhos ao jogador, NUNCA dialoga com ele como um assistente e NUNCA repete as instruções do jogador.
 REGRAS DE OURO:
 - Malevolência Ativa: O mundo quer consumir o jogador. Se ele agir com passividade, tomar decisões óbvias, investigar algo letal ou demorar demais, PUNA-O. 
 - O Fio da Vida: Para ferir fisicamente ou psicologicamente o jogador fora de testes, você tem permissão OBRIGATÓRIA de adicionar no fim da sua resposta a tag [DANO: X] (onde X é de 1 a 3). Seja sádico e injusto.
 - Tensão Psicológica: O verdadeiro horror está no que não é dito ou mostrado. Mostre as consequências (cadáveres, loucura, ruínas), atrase o monstro.
 - Realismo Sujo: Evite adjetivos bonitos. Use verbos de ação e substantivos concretos (barro, sangue coagulado, ferrugem, silêncio sufocante).
 - Imparcialidade Cruel: Nunca decida o que o jogador sente (ex: "Você sente medo"). Apenas descreva o ambiente hostil com frieza.
+- DESENVOLVIMENTO NARRATIVO: Faça o ambiente reagir. NPCs agem por conta própria. O tempo passa. Algo sempre muda (seguindo uma coerencia narrativa) entre uma ação e outra.
 - Mecânica: Nunca resolva um obstáculo pelo jogador. Se a situação for letal e ele errar, aplique [DANO: 3].`
 },
             {
@@ -284,7 +285,7 @@ ${SSR_TEMPLATE}`
         // Streaming SSE com loop de auto-continuação
         // ============================================================
         async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
-    console.log("🔥 Temperatura usada:", window._introGenerating ? 0.85 : 0.55);
+    console.log("🔥 Temperatura usada:", window._introGenerating ? 0.85 : 0.65);
     try {
         const response = await fetch(LM_URL, {
             method: 'POST',
@@ -292,7 +293,7 @@ ${SSR_TEMPLATE}`
             body: JSON.stringify({
                 model: MODELO,
                 messages: mensagensPayload,
-                temperature: window._introGenerating ? 0.85 : 0.55,
+                temperature: window._introGenerating ? 0.85 : 0.65,
                 max_tokens: maxTokens,
                 presence_penalty: 0.3,
                 frequency_penalty: 0.3,
@@ -471,7 +472,7 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
                     // Diretrizes novas (injetadas dinamicamente)
                     const diretrizes = `\n\n[DIRETRIZES DE DIREÇÃO]: 
 1. ESTADO DO JOGO: ${faseAtual}
-2. REGRA DE ESTILO: Máximo 4 frases. Frases secas, curtas. Segunda pessoa do singular.
+2. REGRA DE ESTILO: Máximo 6 frases. Frases secas, mantenha o tom sombrio e direto. Segunda pessoa do singular.
 3. TENSÃO: Não use clichês emocionais. Construa medo pelo que FALTA ou pelo que está QUEBRADO no ambiente. Mostre, não conte. Oculte informações do jogador.`;
 
                     mensagemParaNarrador += diretrizes;
