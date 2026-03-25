@@ -187,7 +187,7 @@ REGRAS DE OURO:
                         model: MODELO,
                         messages: promptLore,
                         temperature: 0.1,
-                        max_tokens: 80
+                        max_tokens: 150
                     })
                 });
                 const data = await response.json();
@@ -574,8 +574,8 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
 
                 // ── Gera memória longa logo após a intro ──────────────
                 if (isIntro) {
-                    await gerarMemoriaLonga(respostaIA);
-                }
+    gerarMemoriaLonga(respostaIA); // disparo em segundo plano, sem await
+}
                 // ─────────────────────────────────────────────────────
 
                 // --- INÍCIO DO SISTEMA DE DANO E MORTE ---
