@@ -527,10 +527,8 @@ const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
 if (danoMatch) {
     const valorDano = parseInt(danoMatch[1]);
     energia -= valorDano;
-    document.getElementById('energia-span').innerText = `🩸 Vitalidade: ${Math.max(0, energia)}/10`;
-    
-    // Opcional: Adiciona um feedback de sistema brutal
-    adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Vitalidade.]`, 'system');
+    document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
+adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
 
     if (energia <= 0) {
         adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
