@@ -53,7 +53,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
-        // ID fixo para desenvolvimento locall (pode ser dinâmico depois)
+        // ID fixo para desenvolvimento local (pode ser dinâmico depois)
         const sessionId = "sessao_dev_01"; 
 
         // ============================================================
@@ -62,11 +62,17 @@
         const LM_URL = 'http://localhost:1234/v1/chat/completions';
         const MODELO = 'qwen2.5-7b-instruct-abliterated-v2';
         const LIMITE_MENSAGENS = 24;
-        window._introGenerating = false;   // ← adicionada esta linha
+        window._introGenerating = false;
 
         // Variáveis globais
-        let turnosJogados = 0;  // ← contador de ações do jogador
+        let turnosJogados = 0;
         let energia = 10;
+
+        // ── MEMÓRIA LONGA ─────────────────────────────────────────
+        // Gerada uma única vez após a intro e nunca sobrescrita.
+        // Ocupa mensagens[1] e persiste no Firestore como "memoriaLonga".
+        let memoriaLonga = "";
+        // ──────────────────────────────────────────────────────────
 
         const jogadorStats = {
             HABILIDADE: 5,
@@ -78,11 +84,15 @@
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
 
-        // Estrutura de memória: [0] Regras, [1] Resumo da História, [2...] Turnos
+        // Estrutura de memória:
+        //   [0] Regras do sistema    — imutável
+        //   [1] Lore permanente      — imutável, gerado uma vez após a intro  ← NOVO
+        //   [2] Resumo SSR           — atualizado pela compressão
+        //   [3…] Turnos da conversa
         let mensagens = [
             {
-    role: 'system',
-    content: `Você é um motor narrativo de um RPG de fantasia brutal e punitiva. Responda APENAS em Português Brasileiro CORRETO. Nunca escreva em outro idioma. Você NUNCA dá conselhos ao jogador, NUNCA dialoga com ele como um assistente e NUNCA repete as instruções do jogador.
+                role: 'system',
+                content: `Você é um motor narrativo de um RPG de fantasia brutal e punitiva. Responda APENAS em Português Brasileiro CORRETO. Nunca escreva em outro idioma. Você NUNCA dá conselhos ao jogador, NUNCA dialoga com ele como um assistente e NUNCA repete as instruções do jogador.
 REGRAS DE OURO:
 - Malevolência Ativa: O mundo quer consumir o jogador. Se ele agir com passividade, tomar decisões óbvias, investigar algo letal ou demorar demais, PUNA-O. 
 - O Fio da Vida: Para ferir fisicamente ou psicologicamente o jogador fora de testes, você tem permissão OBRIGATÓRIA de adicionar no fim da sua resposta a tag [DANO: X] (onde X é de 1 a 3). Seja sádico e injusto.
@@ -91,7 +101,13 @@ REGRAS DE OURO:
 - Imparcialidade Cruel: Nunca decida o que o jogador sente (ex: "Você sente medo"). Apenas descreva o ambiente hostil com frieza.
 - DESENVOLVIMENTO NARRATIVO: Faça o ambiente reagir. NPCs agem por conta própria. O tempo passa. Algo sempre muda (seguindo uma coerencia narrativa) entre uma ação e outra.
 - Mecânica: Nunca resolva um obstáculo pelo jogador. Se a situação for letal e ele errar, aplique [DANO: 3].`
-},
+            },
+            // [1] — Slot da memória longa. Preenchido após a intro, nunca comprimido.
+            {
+                role: 'system',
+                content: ''
+            },
+            // [2] — SSR de curto prazo, atualizado pela compressão.
             {
                 role: 'system',
                 content: 'Resumo da jornada até agora: A aventura acabou de começar.'
@@ -109,18 +125,23 @@ REGRAS DE OURO:
                 const docSnap = await getDoc(docRef);
                 
                 if (docSnap.exists()) {
+                    // ── Carrega memória longa (imutável) ──────────────
+                    if (docSnap.data().memoriaLonga) {
+                        memoriaLonga = docSnap.data().memoriaLonga;
+                        mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta — nunca contradiga nem altere):\n${memoriaLonga}`;
+                    }
+                    // ── Carrega SSR de curto prazo ────────────────────
                     if (docSnap.data().resumo) {
                         resumoAtual = docSnap.data().resumo;
-                        mensagens[1].content = `Resumo da jornada até agora: ${resumoAtual}`;
+                        mensagens[2].content = `Resumo da jornada até agora: ${resumoAtual}`;
                     }
-                    // Carrega o contador de turnos
                     if (docSnap.data().turnos !== undefined) {
-    turnosJogados = docSnap.data().turnos;
-}
-// Carrega a energia se existir no banco
-if (docSnap.data().energia !== undefined) {
-    energia = docSnap.data().energia;
-document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;}
+                        turnosJogados = docSnap.data().turnos;
+                    }
+                    if (docSnap.data().energia !== undefined) {
+                        energia = docSnap.data().energia;
+                        document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
+                    }
                 }
             } catch (e) {
                 console.error("Erro ao carregar do Firestore:", e);
@@ -130,12 +151,53 @@ document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10
         async function salvarResumoFirestore(novoResumo) {
             try {
                 await setDoc(doc(db, "sessoes", sessionId), { 
-    resumo: novoResumo,
-    turnos: turnosJogados,
-    energia: energia   // ← salva a vitalidade
-}, { merge: true });
+                    resumo: novoResumo,
+                    turnos: turnosJogados,
+                    energia: energia
+                }, { merge: true });
             } catch (e) {
                 console.error("Erro ao salvar no Firestore:", e);
+            }
+        }
+
+        // ============================================================
+        // MEMÓRIA LONGA — gerada uma única vez após a intro
+        // Extrai: nome do mundo, ameaça principal, arquétipo, missão.
+        // Salva em Firestore como campo separado e imutável.
+        // ============================================================
+        async function gerarMemoriaLonga(textoIntro) {
+            if (memoriaLonga) return; // já existe — nunca sobrescreve
+
+            const promptLore = [
+                {
+                    role: 'system',
+                    content: 'Você é um extrator de lore. Dado o texto de introdução de um RPG, produza 1 a 2 frases secas e objetivas contendo: nome do cenário/mundo, nome e natureza da ameaça principal, arquétipo do jogador e objetivo central da missão. Zero prosa. Zero adjetivos literários. Apenas fatos essenciais que devem permanecer consistentes para sempre.'
+                },
+                {
+                    role: 'user',
+                    content: `Texto da introdução:\n${textoIntro}\n\nGere a memória permanente agora.`
+                }
+            ];
+
+            try {
+                const response = await fetch(LM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODELO,
+                        messages: promptLore,
+                        temperature: 0.1,
+                        max_tokens: 80
+                    })
+                });
+                const data = await response.json();
+                memoriaLonga = data.choices[0].message.content.trim();
+                mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta — nunca contradiga nem altere):\n${memoriaLonga}`;
+                // Salva separado no Firestore — campo nunca será sobrescrito pelas compressões
+                await setDoc(doc(db, "sessoes", sessionId), { memoriaLonga }, { merge: true });
+                console.debug('[MEMÓRIA LONGA] Gerada e salva:', memoriaLonga);
+            } catch (e) {
+                console.error('Erro ao gerar memória longa:', e);
             }
         }
 
@@ -169,7 +231,8 @@ GANCHOS_ATIVOS: [pistas ou ameaças não resolvidas que devem ser lembradas]`;
             if (mensagens.length > LIMITE_MENSAGENS) {
                 adicionarMensagem('⚙️ As engrenagens do destino giram. Consolidando memórias...', 'system');
                 
-                const mensagensParaResumir = mensagens.splice(2, 6); 
+                // Conversa começa em [3] — [0..2] são slots de sistema protegidos
+                const mensagensParaResumir = mensagens.splice(3, 6);
                 const textoExtraido = mensagensParaResumir
                     .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
                     .join('\n---\n');
@@ -211,12 +274,12 @@ ${SSR_TEMPLATE}`
                     console.debug('[SSR] Estado estruturado gerado:\n' + novoSSR);
                     
                     resumoAtual = novoSSR;
-                    mensagens[1].content = `ESTADO ATUAL DO MUNDO (use como referência factual, não repita como narração):\n${resumoAtual}`;
+                    mensagens[2].content = `ESTADO ATUAL DO MUNDO (use como referência factual, não repita como narração):\n${resumoAtual}`;
                     await salvarResumoFirestore(resumoAtual);
                     
                 } catch (error) {
                     console.error("Erro ao comprimir memória:", error);
-                    mensagens.splice(2, 0, ...mensagensParaResumir); 
+                    mensagens.splice(3, 0, ...mensagensParaResumir);
                 }
             }
         }
@@ -334,7 +397,6 @@ ${SSR_TEMPLATE}`
                     const delta = chunk.choices?.[0]?.delta?.content || '';
                     const fr = chunk.choices?.[0]?.finish_reason;
 
-                    // Log de cada chunk com finish_reason diferente de null
                     if (fr && fr !== 'null') {
                         console.debug(`[LLM STREAM] finish_reason recebido: "${fr}"`);
                     } else if (fr === 'null') {
@@ -349,7 +411,6 @@ ${SSR_TEMPLATE}`
                         finishReason = fr;
                     }
 
-                    // Log de chunks com erro (se o servidor enviar)
                     if (chunk.error) {
                         console.error('[LLM STREAM] Erro no chunk:', chunk.error);
                     }
@@ -363,7 +424,7 @@ ${SSR_TEMPLATE}`
         return { text: fullText, finishReason };
     } catch (error) {
         console.error('[LLM STREAM] Falha na requisição fetch:', error);
-        throw error; // repassa para quem chamou
+        throw error;
     }
 }
 
@@ -409,12 +470,6 @@ ${SSR_TEMPLATE}`
 
         // ============================================================
         // Prompt de introdução — estrutura Fighting Fantasy
-        // Cada bloco mapeia um elemento da anatomia do background:
-        // 1. MUNDO   → cenário nomeado, crise instalada, detalhe físico da ruptura
-        // 2. VOCÊ    → arquétipo, motivação, sem nome, sem emoções
-        // 3. AMEAÇA  → antagonista nomeado e localizado, outros falharam, mistério preservado
-        // 4. MISSÃO  → objetivo concreto + apostas pessoais e coletivas
-        // 5. PARTIDA → posição geográfica, urgência, movimento final, decisão imediata
         // ============================================================
         const PROMPT_INTRO = `Esta é a introdução da aventura. Escreva em exatamente 5 parágrafos. NÃO use títulos ou marcadores — apenas prosa corrida. Apresente os seguintes elementos de forma entrelaçada:
 
@@ -432,7 +487,6 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
         window.enviar = async function(mensagemUsuario = null) {
             const isInitial = mensagemUsuario === null;
             
-            // Incrementa o contador de turnos se não for a primeira mensagem (introdução)
             if (!isInitial) {
                 turnosJogados++;
             }
@@ -465,11 +519,8 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
                 let mensagemParaNarrador = pergunta;
 
                 if (!isInitial) {
-                    // Diretrizes antigas foram removidas; agora usamos as novas com fase
-                    // Primeiro obtém a fase atual
                     const faseAtual = obterDiretrizDeFase();
 
-                    // Diretrizes novas (injetadas dinamicamente)
                     const diretrizes = `\n\n[DIRETRIZES DE DIREÇÃO]: 
 1. ESTADO DO JOGO: ${faseAtual}
 2. REGRA DE ESTILO: Máximo 6 frases. Frases secas, mantenha o tom sombrio e direto. Segunda pessoa do singular.
@@ -512,39 +563,43 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
                 mensagens.push({ role: 'user', content: mensagemParaNarrador });
 
                 const isIntro = (isInitial && !resumoAtual);
-                // Intro recebe 1 continuação para garantir os 5 blocos completos sem corte
                 const maxTokens       = isIntro ? 1000 : 200;
                 const maxContinuacoes = isIntro ?    1 :   1;
 
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
 
-                if (isIntro) window._introGenerating = true;      // ativa temperatura alta
+                if (isIntro) window._introGenerating = true;
 
                 const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
 
+                // ── Gera memória longa logo após a intro ──────────────
+                if (isIntro) {
+                    await gerarMemoriaLonga(respostaIA);
+                }
+                // ─────────────────────────────────────────────────────
+
                 // --- INÍCIO DO SISTEMA DE DANO E MORTE ---
-const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
-if (danoMatch) {
-    const valorDano = parseInt(danoMatch[1]);
-    energia -= valorDano;
-    document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
-adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
+                const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
+                if (danoMatch) {
+                    const valorDano = parseInt(danoMatch[1]);
+                    energia -= valorDano;
+                    document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
+                    adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
 
-    if (energia <= 0) {
-        adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
-        userInput.disabled = true;
-        sendBtn.disabled = true;
-        await salvarResumoFirestore(resumoAtual);
-        return; // Mata a execução do script. O jogo acaba aqui.
-    }
-}
-// --- FIM DO SISTEMA DE DANO E MORTE ---
+                    if (energia <= 0) {
+                        adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
+                        userInput.disabled = true;
+                        sendBtn.disabled = true;
+                        await salvarResumoFirestore(resumoAtual);
+                        return;
+                    }
+                }
+                // --- FIM DO SISTEMA DE DANO E MORTE ---
 
-                if (isIntro) window._introGenerating = false;     // desativa após terminar
+                if (isIntro) window._introGenerating = false;
 
                 mensagens.push({ role: 'assistant', content: respostaIA });
 
-                // Salva o estado atual no Firestore (inclui turnos)
                 await salvarResumoFirestore(resumoAtual);
 
                 if (isInitial) {
