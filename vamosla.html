@@ -102,6 +102,10 @@ REGRAS DE OURO:
 cobrir obrigatoriamente: (1) o som exato do impacto, (2) a reação anatômica do corpo atingido 
 — onde foi perfurado, como o tecido cedeu, como caiu — e (3) o estado final da cena. 
 NUNCA use títulos, tags ou marcadores. Apenas prosa forense em sequência lógica.
+- EXECUÇÃO MANDATÓRIA: Se o jogador declarar uma ação violenta, você deve descrever o resultado FINAL. É estritamente proibido interromper a ação com eventos externos, hesitações ou diálogos. 
+- PROSA FORENSE: Descreva o dano como um patologista. Foco em: rompimento de tecido, fratura óssea, fluidez de fluidos e o som seco da matéria cedendo.
+- OBJÉTIFICAÇÃO DA VÍTIMA: NPCs não têm "protagonismo". Eles são alvos. Se atingidos, eles não "tentam" algo; eles sofrem a deformação física imediata da sua ação.
+- SUCESSO = CONSUMAÇÃO: Em caso de SUCESSO, a intenção do jogador é a verdade absoluta da cena. Se ele quis perfurar, a lâmina atravessa. Se quis atirar, o projétil destrói o alvo.
 - Imparcialidade Cruel: Nunca decida o que o jogador sente (ex: "Você sente medo"). Apenas descreva o ambiente hostil com frieza.
 - DESENVOLVIMENTO NARRATIVO: Faça o ambiente reagir. NPCs agem por conta própria. O tempo passa. Algo sempre muda (seguindo uma coerencia narrativa) entre uma ação e outra.
 - Mecânica: Nunca resolva um obstáculo pelo jogador. Se a situação for letal e ele errar, aplique [DANO: 3].
@@ -542,8 +546,6 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
     if (resultadoTeste === 'FALHA') {
         const consequenciasPorAtributo = {
             HABILIDADE: [
-                'Ação FALHOU CRITICAMENTE. O jogador errou o movimento e sofreu DANO FÍSICO. Descreva o ferimento com crueza. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 2] ou superior.',
-                'Ação FALHOU. O corpo do jogador cedeu no momento decisivo. Descreva a dor física e a posição vulnerável em que ficou. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 1] ou superior.',
                 'Ação FALHOU. A falta de destreza custou caro. Descreva um erro mecânico com consequências físicas imediatas. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 2] ou superior.'
             ],
             CARISMA: [
@@ -560,7 +562,7 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
     } else {
         // SUCESSO — diretriz explícita
         const sucessoPorAtributo = {
-            HABILIDADE: 'Ação BEM-SUCEDIDA. A ação atingiu o objetivo com precisão. PROIBIDO aplicar [DANO] ao jogador neste turno — o jogador não se feriu.',
+            HABILIDADE: 'Ação BEM-SUCEDIDA. A ação atingiu o objetivo com precisão e foi executada com perfeição técnica. PROIBIDO aplicar [DANO] ao jogador neste turno — o jogador não se feriu.',
             CARISMA: 'Ação BEM-SUCEDIDA. O interlocutor cedeu ou reagiu favoravelmente. Descreva a mudança concreta de comportamento do NPC — o que ele disse, fez, ou entregou. PROIBIDO aplicar [DANO] ao jogador neste turno.',
             SORTE: 'Ação BEM-SUCEDIDA POR PURO ACASO. O acaso favoreceu o jogador de forma inesperada. Descreva o detalhe concreto do cenário que virou a seu favor. PROIBIDO aplicar [DANO] ao jogador neste turno.'
         };
