@@ -105,7 +105,8 @@ REGRAS DE OURO:
 Em seguida, funda essas três ideias em um parágrafo fluido e brutal.
 - Imparcialidade Cruel: Nunca decida o que o jogador sente (ex: "Você sente medo"). Apenas descreva o ambiente hostil com frieza.
 - DESENVOLVIMENTO NARRATIVO: Faça o ambiente reagir. NPCs agem por conta própria. O tempo passa. Algo sempre muda (seguindo uma coerencia narrativa) entre uma ação e outra.
-- Mecânica: Nunca resolva um obstáculo pelo jogador. Se a situação for letal e ele errar, aplique [DANO: 3].`
+- Mecânica: Nunca resolva um obstáculo pelo jogador. Se a situação for letal e ele errar, aplique [DANO: 3].
+- MECÂNICA DE TESTES: Quando a instrução MECÂNICA disser SUCESSO, a ação do jogador FUNCIONOU. Descreva o sucesso com brutalidade. JAMAIS aplique [DANO] ao jogador num turno de SUCESSO declarado — isso viola a mecânica.`
             },
             // [1] — Slot da memória longa. Preenchido após a intro, nunca comprimido.
             {
@@ -536,30 +537,39 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
                     const resultadoTeste = rolarTeste(tipoAcao);
 
                     if (resultadoTeste) {
-                        adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
-                        
-                        let logicaFisica = '';
-                        if (resultadoTeste === 'FALHA') {
-                            const consequenciasPorAtributo = {
-                               HABILIDADE: [
-    'Ação FALHOU. A ação não atingiu o objetivo. O jogador sofreu Uma consequência física direta do erro. [DANO: 2]',
-],
-                                CARISMA: [
-                                    'Ação FALHOU. O jogador disse a coisa errada. O interlocutor reagiu com HOSTILIDADE ABERTA — descreva a rejeição humilhante, o silêncio cortante ou a ameaça que surgiu.',
-                                    'Ação FALHOU. O jogador foi ignorado ou escarnecido. Descreva a frieza do outro personagem, talvez acompanhada de riso ou desprezo. A situação social piorou.',
-                                    'Ação FALHOU. A abordagem irritou o interlocutor. Descreva como ele se fechou, virou as costas ou sinalizou que a conversa acabou — de forma ameaçadora ou humilhante.'
-                                ],
-                                SORTE: [
-    'Ação FALHOU POR AZAR PURO. O destino virou contra o jogador num detalhe inesperado DO PRÓPRIO CENÁRIO JÁ DESCRITO — não invente elementos novos. Use algo já presente na cena para gerar a consequência cruel. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 3] ou superior.',
-]
-};
+    adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
+    
+    let logicaFisica = '';
+    if (resultadoTeste === 'FALHA') {
+        const consequenciasPorAtributo = {
+            HABILIDADE: [
+                'Ação FALHOU CRITICAMENTE. O jogador errou o movimento e sofreu DANO FÍSICO. Descreva o ferimento com crueza. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 2] ou superior.',
+                'Ação FALHOU. O corpo do jogador cedeu no momento decisivo. Descreva a dor física e a posição vulnerável em que ficou. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 1] ou superior.',
+                'Ação FALHOU. A falta de destreza custou caro. Descreva um erro mecânico com consequências físicas imediatas. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 2] ou superior.'
+            ],
+            CARISMA: [
+                'Ação FALHOU. O jogador disse a coisa errada. O interlocutor reagiu com HOSTILIDADE ABERTA — descreva a rejeição humilhante, o silêncio cortante ou a ameaça que surgiu.',
+                'Ação FALHOU. O jogador foi ignorado ou escarnecido. Descreva a frieza do outro personagem, talvez acompanhada de riso ou desprezo. A situação social piorou.',
+                'Ação FALHOU. A abordagem irritou o interlocutor. Descreva como ele se fechou, virou as costas ou sinalizou que a conversa acabou — de forma ameaçadora ou humilhante.'
+            ],
+            SORTE: [
+                'Ação FALHOU POR AZAR PURO. O destino virou contra o jogador num detalhe inesperado DO PRÓPRIO CENÁRIO JÁ DESCRITO — não invente elementos novos. Use algo já presente na cena para gerar a consequência cruel. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 3] ou superior.',
+            ]
+        };
+        const lista = consequenciasPorAtributo[tipoAcao] || consequenciasPorAtributo['HABILIDADE'];
+        logicaFisica = lista[Math.floor(Math.random() * lista.length)];
+    } else {
+        // SUCESSO — diretriz explícita
+        const sucessoPorAtributo = {
+            HABILIDADE: 'Ação BEM-SUCEDIDA. A ação atingiu o objetivo com precisão. Descreva o impacto físico usando obrigatoriamente: som do impacto, reação anatômica do alvo (o que o corpo faz, onde é atingido, como cai), e o resultado visual da cena. Prosa brutal, seca, forense. PROIBIDO aplicar [DANO] ao jogador neste turno — o jogador não se feriu.',
+            CARISMA: 'Ação BEM-SUCEDIDA. O interlocutor cedeu ou reagiu favoravelmente. Descreva a mudança concreta de comportamento do NPC — o que ele disse, fez, ou entregou. PROIBIDO aplicar [DANO] ao jogador neste turno.',
+            SORTE: 'Ação BEM-SUCEDIDA POR PURO ACASO. O acaso favoreceu o jogador de forma inesperada. Descreva o detalhe concreto do cenário que virou a seu favor. PROIBIDO aplicar [DANO] ao jogador neste turno.'
+        };
+        logicaFisica = sucessoPorAtributo[tipoAcao] || sucessoPorAtributo['HABILIDADE'];
+    }
 
-                            const lista = consequenciasPorAtributo[tipoAcao] || consequenciasPorAtributo['HABILIDADE'];
-                            logicaFisica = lista[Math.floor(Math.random() * lista.length)];
-                        }
-
-                        mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. DIRETRIZ OBRIGATÓRIA: ${logicaFisica}`;
-                    }
+    mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. DIRETRIZ OBRIGATÓRIA: ${logicaFisica}`;
+}
                 }
 
                 mensagens.push({ role: 'user', content: mensagemParaNarrador });
