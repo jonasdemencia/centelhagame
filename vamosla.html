@@ -235,7 +235,7 @@ GANCHOS_ATIVOS: [pistas ou ameaças não resolvidas que devem ser lembradas]`;
                 adicionarMensagem('⚙️ As engrenagens do destino giram. Consolidando memórias...', 'system');
                 
                 // Conversa começa em [3] — [0..2] são slots de sistema protegidos
-const mensagensParaResumir = mensagens.splice(3, 8); // era 6
+const mensagensParaResumir = mensagens.splice(3, 10); // era 6
                 const textoExtraido = mensagensParaResumir
                     .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
                     .join('\n---\n');
@@ -612,7 +612,7 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
         mensagens.push({ role: 'user', content: mensagemParaNarrador });
 
         const isIntro = (isInitial && !resumoAtual);
-        const maxTokens = isIntro ? 1000 : 250;
+        const maxTokens = isIntro ? 500 : 200;
         const maxContinuacoes = isIntro ? 1 : 0;
 
         console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
