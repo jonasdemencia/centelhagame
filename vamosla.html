@@ -61,13 +61,13 @@
         // ============================================================
         const LM_URL = 'http://localhost:1234/v1/chat/completions';
         const MODELO = 'qwen2.5-7b-instruct-abliterated-v2';
-const LIMITE_MENSAGENS = 16; // era 24
+        const LIMITE_MENSAGENS = 16; // era 24
         window._introGenerating = false;
 
         // Variáveis globais
         let turnosJogados = 0;
         let energia = 10;
-                // Variáveis para pré-avaliação do Juiz
+        // Variáveis para pré-avaliação do Juiz (ainda declaradas, mas sem listener ativo)
         let precomputedJuizPromise = null;
         let precomputedJuizText = '';
         let juizDebounceTimer = null;
@@ -169,9 +169,7 @@ cobrir obrigatoriamente: (1) o som exato do impacto, (2) a reação anatômica d
         }
 
         // ============================================================
-        // MEMÓRIA LONGA — gerada uma única vez após a intro
-        // Extrai: nome do mundo, ameaça principal, arquétipo, missão.
-        // Salva em Firestore como campo separado e imutável.
+        // MEMÓRIA LONGA — gerada uma única vez após a intro (fallback)
         // ============================================================
         async function gerarMemoriaLonga(textoIntro) {
             if (memoriaLonga) return; // já existe — nunca sobrescreve
@@ -179,7 +177,8 @@ cobrir obrigatoriamente: (1) o som exato do impacto, (2) a reação anatômica d
             const promptLore = [
                 {
                     role: 'system',
-content: 'Você é um extrator de lore. Dado o texto de introdução de um RPG, preencha os campos abaixo com dados factuais extraídos do texto. Zero prosa. Zero adjetivos literários. Apenas nomes e fatos secos.\n\nMUNDO: [nome do cenário/reino principal]\nAMEAÇA: [nome e natureza da ameaça principal]\nARQUÉTIPO: [arquétipo do jogador]\nMISSÃO: [objetivo concreto da missão]\nLOCALIZAÇÕES: [lista separada por vírgulas de TODOS os lugares nomeados: reinos, regiões, vilas, rios, montanhas, pântanos, locais específicos — apenas os nomes, sem descrição]\n\nResponda APENAS com os campos preenchidos, sem texto adicional.'                },
+                    content: 'Você é um extrator de lore. Dado o texto de introdução de um RPG, preencha os campos abaixo com dados factuais extraídos do texto. Zero prosa. Zero adjetivos literários. Apenas nomes e fatos secos.\n\nMUNDO: [nome do cenário/reino principal]\nAMEAÇA: [nome e natureza da ameaça principal]\nARQUÉTIPO: [arquétipo do jogador]\nMISSÃO: [objetivo concreto da missão]\nLOCALIZAÇÕES: [lista separada por vírgulas de TODOS os lugares nomeados: reinos, regiões, vilas, rios, montanhas, pântanos, locais específicos — apenas os nomes, sem descrição]\n\nResponda APENAS com os campos preenchidos, sem texto adicional.'
+                },
                 {
                     role: 'user',
                     content: `Texto da introdução:\n${textoIntro}\n\nGere a memória permanente agora.`
@@ -200,7 +199,6 @@ content: 'Você é um extrator de lore. Dado o texto de introdução de um RPG, 
                 const data = await response.json();
                 memoriaLonga = data.choices[0].message.content.trim();
                 mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta — nunca contradiga nem altere):\n${memoriaLonga}`;
-                // Salva separado no Firestore — campo nunca será sobrescrito pelas compressões
                 await setDoc(doc(db, "sessoes", sessionId), { memoriaLonga }, { merge: true });
                 console.debug('[MEMÓRIA LONGA] Gerada e salva:', memoriaLonga);
             } catch (e) {
@@ -239,7 +237,7 @@ GANCHOS_ATIVOS: [pistas ou ameaças não resolvidas que devem ser lembradas]`;
                 adicionarMensagem('⚙️ As engrenagens do destino giram. Consolidando memórias...', 'system');
                 
                 // Conversa começa em [3] — [0..2] são slots de sistema protegidos
-const mensagensParaResumir = mensagens.splice(3, 10); // era 6
+                const mensagensParaResumir = mensagens.splice(3, 10); // era 6
                 const textoExtraido = mensagensParaResumir
                     .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
                     .join('\n---\n');
@@ -310,11 +308,11 @@ ${SSR_TEMPLATE}`
         // Função 1: O Juiz Invisível
         // ============================================================
         async function avaliarAcao(acaoUsuario) {
-    const promptJuiz = [
-        { 
-            role: 'system', 
-            content: `Você é o Juiz de Intenção de um RPG. Analise a mensagem do jogador e classifique-a em dois eixos.
-            
+            const promptJuiz = [
+                { 
+                    role: 'system', 
+                    content: `Você é o Juiz de Intenção de um RPG. Analise a mensagem do jogador e classifique-a em dois eixos.
+                    
 EIXO 1 (POSTURA): 
 - OBSERVACAO: O jogador está apenas olhando, perguntando detalhes, pedindo direções ou refletindo. 
 - INTERACAO: O jogador está tentando agir sobre o mundo (abrir, pegar, mover, falar).
@@ -328,39 +326,39 @@ EIXO 2 (MECÂNICA — seja MUITO CONSERVADOR. Na dúvida, escolha NENHUM):
 REGRA DE OURO: Se a ação não envolver risco CONCRETO e IMEDIATO de falha com consequência séria, use NENHUM.
 
 Responda APENAS no formato: POSTURA | MECÂNICA. Exemplo: OBSERVACAO | NENHUM` 
-        },
-        { role: 'user', content: acaoUsuario }
-    ];
+                },
+                { role: 'user', content: acaoUsuario }
+            ];
 
             try {
-        const response = await fetch(LM_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: MODELO,
-                messages: promptJuiz,
-                temperature: 0.2,
-                max_tokens: 20
-            })
-        });
-        const data = await response.json();
-        const classificacao = data.choices[0].message.content.trim().toUpperCase();
-        
-        const partes = classificacao.split('|');
-        if (partes.length === 2) {
-            const postura = partes[0].trim();
-            const mecanica = partes[1].trim();
-            if (['OBSERVACAO', 'INTERACAO'].includes(postura) && 
-                ['HABILIDADE', 'CARISMA', 'SORTE', 'NENHUM'].includes(mecanica)) {
-                return classificacao; // "POSTURA | MECÂNICA"
+                const response = await fetch(LM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODELO,
+                        messages: promptJuiz,
+                        temperature: 0.2,
+                        max_tokens: 20
+                    })
+                });
+                const data = await response.json();
+                const classificacao = data.choices[0].message.content.trim().toUpperCase();
+                
+                const partes = classificacao.split('|');
+                if (partes.length === 2) {
+                    const postura = partes[0].trim();
+                    const mecanica = partes[1].trim();
+                    if (['OBSERVACAO', 'INTERACAO'].includes(postura) && 
+                        ['HABILIDADE', 'CARISMA', 'SORTE', 'NENHUM'].includes(mecanica)) {
+                        return classificacao; // "POSTURA | MECÂNICA"
+                    }
+                }
+                return 'OBSERVACAO | NENHUM';
+            } catch (error) {
+                console.error('Erro no juiz:', error);
+                return 'OBSERVACAO | NENHUM';
             }
         }
-        return 'OBSERVACAO | NENHUM';
-    } catch (error) {
-        console.error('Erro no juiz:', error);
-        return 'OBSERVACAO | NENHUM';
-    }
-}
 
         // ============================================================
         // Função 2: Motor de Regras
@@ -375,85 +373,85 @@ Responda APENAS no formato: POSTURA | MECÂNICA. Exemplo: OBSERVACAO | NENHUM`
         // Streaming SSE com loop de auto-continuação
         // ============================================================
         async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
-    console.log("🔥 Temperatura usada:", window._introGenerating ? 0.8 : 0.6);
-    try {
-        const response = await fetch(LM_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: MODELO,
-                messages: mensagensPayload,
-                temperature: window._introGenerating ? 0.8 : 0.6,
-                max_tokens: maxTokens,
-                presence_penalty: 0.3,
-                frequency_penalty: 0.3,
-                stream: true
-            })
-        });
+            console.log("🔥 Temperatura usada:", window._introGenerating ? 0.8 : 0.6);
+            try {
+                const response = await fetch(LM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODELO,
+                        messages: mensagensPayload,
+                        temperature: window._introGenerating ? 0.8 : 0.6,
+                        max_tokens: maxTokens,
+                        presence_penalty: 0.3,
+                        frequency_penalty: 0.3,
+                        stream: true
+                    })
+                });
 
-        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+                if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-        let fullText = '';
-        let finishReason = null;
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let fullText = '';
+                let finishReason = null;
 
-        console.debug('[LLM STREAM] Iniciando leitura de chunks SSE...');
+                console.debug('[LLM STREAM] Iniciando leitura de chunks SSE...');
 
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-                console.debug('[LLM STREAM] Leitor finalizado (done=true)');
-                break;
-            }
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        console.debug('[LLM STREAM] Leitor finalizado (done=true)');
+                        break;
+                    }
 
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop();
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
 
-            for (const line of lines) {
-                if (!line.startsWith('data: ')) continue;
-                const jsonStr = line.slice(6).trim();
-                if (jsonStr === '[DONE]') {
-                    console.debug('[LLM STREAM] Sinal [DONE] recebido.');
-                    continue;
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        const jsonStr = line.slice(6).trim();
+                        if (jsonStr === '[DONE]') {
+                            console.debug('[LLM STREAM] Sinal [DONE] recebido.');
+                            continue;
+                        }
+                        try {
+                            const chunk = JSON.parse(jsonStr);
+                            const delta = chunk.choices?.[0]?.delta?.content || '';
+                            const fr = chunk.choices?.[0]?.finish_reason;
+
+                            if (fr && fr !== 'null') {
+                                console.debug(`[LLM STREAM] finish_reason recebido: "${fr}"`);
+                            } else if (fr === 'null') {
+                                console.debug('[LLM STREAM] finish_reason = null (ignorado)');
+                            }
+
+                            if (delta) {
+                                fullText += delta;
+                                if (onToken) onToken(fullText);
+                            }
+                            if (fr && fr !== 'null') {
+                                finishReason = fr;
+                            }
+
+                            if (chunk.error) {
+                                console.error('[LLM STREAM] Erro no chunk:', chunk.error);
+                            }
+                        } catch (parseErr) {
+                            console.error('[LLM STREAM] Erro ao parsear chunk:', parseErr, 'Linha:', line);
+                        }
+                    }
                 }
-                try {
-                    const chunk = JSON.parse(jsonStr);
-                    const delta = chunk.choices?.[0]?.delta?.content || '';
-                    const fr = chunk.choices?.[0]?.finish_reason;
 
-                    if (fr && fr !== 'null') {
-                        console.debug(`[LLM STREAM] finish_reason recebido: "${fr}"`);
-                    } else if (fr === 'null') {
-                        console.debug('[LLM STREAM] finish_reason = null (ignorado)');
-                    }
-
-                    if (delta) {
-                        fullText += delta;
-                        if (onToken) onToken(fullText);
-                    }
-                    if (fr && fr !== 'null') {
-                        finishReason = fr;
-                    }
-
-                    if (chunk.error) {
-                        console.error('[LLM STREAM] Erro no chunk:', chunk.error);
-                    }
-                } catch (parseErr) {
-                    console.error('[LLM STREAM] Erro ao parsear chunk:', parseErr, 'Linha:', line);
-                }
+                console.debug(`[LLM STREAM] Geração concluída. Tokens gerados: ~${fullText.split(' ').length} palavras. finish_reason final: "${finishReason}"`);
+                return { text: fullText, finishReason };
+            } catch (error) {
+                console.error('[LLM STREAM] Falha na requisição fetch:', error);
+                throw error;
             }
         }
-
-        console.debug(`[LLM STREAM] Geração concluída. Tokens gerados: ~${fullText.split(' ').length} palavras. finish_reason final: "${finishReason}"`);
-        return { text: fullText, finishReason };
-    } catch (error) {
-        console.error('[LLM STREAM] Falha na requisição fetch:', error);
-        throw error;
-    }
-}
 
         async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento, maxContinuacoes = 0) {
             let textoCompleto = '';
@@ -500,10 +498,9 @@ Responda APENAS no formato: POSTURA | MECÂNICA. Exemplo: OBSERVACAO | NENHUM`
         // ============================================================
         async function preAquecerCache() {
             try {
-                // Monta o contexto exato que será usado no próximo turno
                 const contextoPreaecido = [
                     ...mensagens,
-                    { role: 'user', content: '...' }  // placeholder mínimo
+                    { role: 'user', content: '...' }
                 ];
                 
                 await fetch(LM_URL, {
@@ -523,10 +520,8 @@ Responda APENAS no formato: POSTURA | MECÂNICA. Exemplo: OBSERVACAO | NENHUM`
             }
         }
 
-        
-
         // ============================================================
-        // Prompt de introdução — estrutura Fighting Fantasy
+        // Prompt de introdução — estrutura Fighting Fantasy com extração de Lore embutida
         // ============================================================
         const PROMPT_INTRO = `Esta é a introdução da aventura. Escreva em exatamente 5 parágrafos. NÃO use títulos ou marcadores — apenas prosa corrida. Apresente os seguintes elementos de forma entrelaçada:
 
@@ -536,187 +531,205 @@ Responda APENAS no formato: POSTURA | MECÂNICA. Exemplo: OBSERVACAO | NENHUM`
 4 — Apresente a MISSÃO E AS APOSTAS: o que o jogador precisa fazer (um objetivo concreto e tangível). O que acontece se falhar — para o jogador e para o mundo ao redor.
 5 — Apresente onde o jogador está agora (um lugar físico específico). Termine com uma circunstância que obrigue o jogador a agir.
 
-MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos, zero emoções descritas, zero adjetivos empilhados.`;
+MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos, zero emoções descritas, zero adjetivos empilhados.
+
+IMPORTANTE: Ao final da resposta, adicione uma linha com a tag [LORE:] seguida dos dados no formato:
+MUNDO: [nome]
+AMEAÇA: [nome e natureza]
+ARQUÉTIPO: [arquétipo do jogador]
+MISSÃO: [objetivo concreto]
+LOCALIZAÇÕES: [lista separada por vírgulas]
+
+A tag deve ser a última coisa, em uma linha separada. Não adicione explicações.`;
 
         // ============================================================
         // Função principal de envio
         // ============================================================
         window.enviar = async function(mensagemUsuario = null) {
-    const isInitial = mensagemUsuario === null;
-    
-    if (!isInitial) {
-        turnosJogados++;
-    }
+            const isInitial = mensagemUsuario === null;
+            
+            if (!isInitial) {
+                turnosJogados++;
+            }
 
-    let pergunta;
-    if (isInitial) {
-        if (!resumoAtual) {
-            pergunta = PROMPT_INTRO;
-        } else {
-            pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
-        }
-    } else {
-        pergunta = mensagemUsuario;
-    }
+            let pergunta;
+            if (isInitial) {
+                if (!resumoAtual) {
+                    pergunta = PROMPT_INTRO;
+                } else {
+                    pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
+                }
+            } else {
+                pergunta = mensagemUsuario;
+            }
 
-    if (!isInitial) {
-        adicionarMensagem(pergunta, 'user');
-        userInput.value = '';
-    }
+            if (!isInitial) {
+                adicionarMensagem(pergunta, 'user');
+                userInput.value = '';
+            }
 
-    sendBtn.disabled = true;
-    userInput.disabled = true;
+            sendBtn.disabled = true;
+            userInput.disabled = true;
 
-    const tempId = adicionarMensagem('...', 'ai', true);
-    const elementoDisplay = document.getElementById(tempId);
+            const tempId = adicionarMensagem('...', 'ai', true);
+            const elementoDisplay = document.getElementById(tempId);
 
-    try {
-        await comprimirMemoria();
+            try {
+                await comprimirMemoria();
 
-        let mensagemParaNarrador = pergunta;
+                let mensagemParaNarrador = pergunta;
 
-        if (!isInitial) {
-            const faseAtual = obterDiretrizDeFase();
+                if (!isInitial) {
+                    const faseAtual = obterDiretrizDeFase();
 
-            const diretrizes = `\n\n[DIRETRIZES DE DIREÇÃO]: 
+                    const diretrizes = `\n\n[DIRETRIZES DE DIREÇÃO]: 
 1. ESTADO DO JOGO: ${faseAtual}
 2. REGRA DE ESTILO: Máximo 6 frases. Frases secas, mantenha o tom sombrio e direto. Segunda pessoa do singular.
 3. TENSÃO: Não use clichês emocionais. Construa medo pelo que FALTA ou pelo que está QUEBRADO no ambiente. Mostre, não conte. Oculte informações do jogador.`;
 
-            mensagemParaNarrador += diretrizes;
+                    mensagemParaNarrador += diretrizes;
 
-            // --- NOVO: Classificação em dois eixos ---
-                        let classificacaoCompleta;
-            // Tenta usar resultado pré‑computado
-            if (precomputedJuizPromise && precomputedJuizText === pergunta) {
-                classificacaoCompleta = await precomputedJuizPromise;
-                console.debug('[JUIZ] Resultado pré‑computado aproveitado:', classificacaoCompleta);
-                // Limpa para não reutilizar em ações futuras
-                precomputedJuizPromise = null;
-                precomputedJuizText = '';
-            } else {
-                classificacaoCompleta = await avaliarAcao(pergunta);
-            }
-            const [postura, tipoAcao] = classificacaoCompleta.split(' | ');
+                    // Classificação em dois eixos
+                    let classificacaoCompleta;
+                    // Tenta usar resultado pré‑computado (se houver)
+                    if (precomputedJuizPromise && precomputedJuizText === pergunta) {
+                        classificacaoCompleta = await precomputedJuizPromise;
+                        console.debug('[JUIZ] Resultado pré‑computado aproveitado:', classificacaoCompleta);
+                        // Limpa para não reutilizar em ações futuras
+                        precomputedJuizPromise = null;
+                        precomputedJuizText = '';
+                    } else {
+                        classificacaoCompleta = await avaliarAcao(pergunta);
+                    }
+                    const [postura, tipoAcao] = classificacaoCompleta.split(' | ');
 
-            // Rola o teste APENAS se tipoAcao for HABILIDADE, CARISMA ou SORTE
-            let resultadoTeste = null;
-            if (['HABILIDADE', 'CARISMA', 'SORTE'].includes(tipoAcao)) {
-                resultadoTeste = rolarTeste(tipoAcao); // SUCESSO ou FALHA
-            }
+                    let resultadoTeste = null;
+                    if (['HABILIDADE', 'CARISMA', 'SORTE'].includes(tipoAcao)) {
+                        resultadoTeste = rolarTeste(tipoAcao);
+                    }
 
-            if (resultadoTeste) {
-                adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
-            }
+                    if (resultadoTeste) {
+                        adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
+                    }
 
-            // Construção das diretrizes usando a postura
-            let diretrizesAdicionais = '';
+                    let diretrizesAdicionais = '';
 
-            if (postura === 'OBSERVACAO') {
-                diretrizesAdicionais = `\n[DIRETRIZ DE POSTURA: OBSERVACAO] Foque na densidade atmosférica e na "Pista Morta": descreva um detalhe que não serve para a ação imediata, mas sugere o passado do lugar. O mundo deve parecer estar "esperando" o jogador agir.`;
-            } else if (postura === 'INTERACAO') {
-                diretrizesAdicionais = `\n[DIRETRIZ DE POSTURA: INTERACAO] Foque na causalidade: toda ação gera uma mudança estrutural no ambiente. O jogador não age no vácuo.`;
-            }
+                    if (postura === 'OBSERVACAO') {
+                        diretrizesAdicionais = `\n[DIRETRIZ DE POSTURA: OBSERVACAO] Foque na densidade atmosférica e na "Pista Morta": descreva um detalhe que não serve para a ação imediata, mas sugere o passado do lugar. O mundo deve parecer estar "esperando" o jogador agir.`;
+                    } else if (postura === 'INTERACAO') {
+                        diretrizesAdicionais = `\n[DIRETRIZ DE POSTURA: INTERACAO] Foque na causalidade: toda ação gera uma mudança estrutural no ambiente. O jogador não age no vácuo.`;
+                    }
 
-            // Se houve teste, adiciona a diretriz de mecânica
-            if (resultadoTeste) {
-                let logicaFisica = '';
-                if (resultadoTeste === 'FALHA') {
-                    const consequenciasPorAtributo = {
-                        HABILIDADE: [
-                            'Ação FALHOU. A falta de destreza custou caro. Descreva um erro mecânico com consequências físicas imediatas. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 2] ou superior.'
-                        ],
-                        CARISMA: [
-    'FALHA NO TESTE DE CARISMA. O interlocutor NÃO fornece o que o jogador deseja. Descreva uma recusa definitiva: silêncio hostil, mentira descarada, resposta inútil, afastamento, humilhação ou qualquer outra forma que bloqueie completamente o objetivo. Use a personalidade do NPC, mas o resultado deve ser claro: o jogador não conseguiu o que queria.'
-],
-                        SORTE: [
-                            'Ação FALHOU POR AZAR PURO. O destino virou contra o jogador num detalhe inesperado DO PRÓPRIO CENÁRIO JÁ DESCRITO — não invente elementos novos. Use algo já presente na cena para gerar a consequência cruel. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 3] ou superior.',
-                        ]
-                    };
-                    const lista = consequenciasPorAtributo[tipoAcao] || consequenciasPorAtributo['HABILIDADE'];
-                    logicaFisica = lista[Math.floor(Math.random() * lista.length)];
-                    diretrizesAdicionais += `\nMECÂNICA: Teste de ${tipoAcao} = FALHA. DIRETRIZ OBRIGATÓRIA: ${logicaFisica}`;
-                } else if (resultadoTeste === 'SUCESSO') {
-                    const sucessoPorAtributo = {
-                        HABILIDADE: 'Ação BEM-SUCEDIDA. A ação atingiu o objetivo com precisão e foi executada com perfeição técnica. PROIBIDO aplicar [DANO] ao jogador neste turno — o jogador não se feriu.',
-                        CARISMA: 'Ação BEM-SUCEDIDA. O interlocutor cedeu ou reagiu favoravelmente. Descreva a mudança concreta de comportamento do NPC — o que ele disse, fez, ou entregou. PROIBIDO aplicar [DANO] ao jogador neste turno.',
-                        SORTE: 'Ação BEM-SUCEDIDA POR PURO ACASO. O acaso favoreceu o jogador de forma inesperada. Descreva o detalhe concreto do cenário que virou a seu favor. PROIBIDO aplicar [DANO] ao jogador neste turno.'
-                    };
-                    logicaFisica = sucessoPorAtributo[tipoAcao] || sucessoPorAtributo['HABILIDADE'];
-                    diretrizesAdicionais += `\nMECÂNICA: Teste de ${tipoAcao} = SUCESSO. DIRETRIZ OBRIGATÓRIA: ${logicaFisica}`;
+                    if (resultadoTeste) {
+                        let logicaFisica = '';
+                        if (resultadoTeste === 'FALHA') {
+                            const consequenciasPorAtributo = {
+                                HABILIDADE: [
+                                    'Ação FALHOU. A falta de destreza custou caro. Descreva um erro mecânico com consequências físicas imediatas. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 2] ou superior.'
+                                ],
+                                CARISMA: [
+                                    'FALHA NO TESTE DE CARISMA. O interlocutor NÃO fornece o que o jogador deseja. Descreva uma recusa definitiva: silêncio hostil, mentira descarada, resposta inútil, afastamento, humilhação ou qualquer outra forma que bloqueie completamente o objetivo. Use a personalidade do NPC, mas o resultado deve ser claro: o jogador não conseguiu o que queria.'
+                                ],
+                                SORTE: [
+                                    'Ação FALHOU POR AZAR PURO. O destino virou contra o jogador num detalhe inesperado DO PRÓPRIO CENÁRIO JÁ DESCRITO — não invente elementos novos. Use algo já presente na cena para gerar a consequência cruel. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 3] ou superior.',
+                                ]
+                            };
+                            const lista = consequenciasPorAtributo[tipoAcao] || consequenciasPorAtributo['HABILIDADE'];
+                            logicaFisica = lista[Math.floor(Math.random() * lista.length)];
+                            diretrizesAdicionais += `\nMECÂNICA: Teste de ${tipoAcao} = FALHA. DIRETRIZ OBRIGATÓRIA: ${logicaFisica}`;
+                        } else if (resultadoTeste === 'SUCESSO') {
+                            const sucessoPorAtributo = {
+                                HABILIDADE: 'Ação BEM-SUCEDIDA. A ação atingiu o objetivo com precisão e foi executada com perfeição técnica. PROIBIDO aplicar [DANO] ao jogador neste turno — o jogador não se feriu.',
+                                CARISMA: 'Ação BEM-SUCEDIDA. O interlocutor cedeu ou reagiu favoravelmente. Descreva a mudança concreta de comportamento do NPC — o que ele disse, fez, ou entregou. PROIBIDO aplicar [DANO] ao jogador neste turno.',
+                                SORTE: 'Ação BEM-SUCEDIDA POR PURO ACASO. O acaso favoreceu o jogador de forma inesperada. Descreva o detalhe concreto do cenário que virou a seu favor. PROIBIDO aplicar [DANO] ao jogador neste turno.'
+                            };
+                            logicaFisica = sucessoPorAtributo[tipoAcao] || sucessoPorAtributo['HABILIDADE'];
+                            diretrizesAdicionais += `\nMECÂNICA: Teste de ${tipoAcao} = SUCESSO. DIRETRIZ OBRIGATÓRIA: ${logicaFisica}`;
+                        }
+                    } else {
+                        diretrizesAdicionais += `\nMECÂNICA: Nenhum teste necessário. Ação trivial. Descreva a cena sem rolagens.`;
+                    }
+
+                    mensagemParaNarrador += diretrizesAdicionais;
                 }
-            } else {
-                // Sem teste (tipoAcao == NENHUM)
-                diretrizesAdicionais += `\nMECÂNICA: Nenhum teste necessário. Ação trivial. Descreva a cena sem rolagens.`;
-            }
 
-            mensagemParaNarrador += diretrizesAdicionais;
-        } // fecha o if (!isInitial)
+                mensagens.push({ role: 'user', content: mensagemParaNarrador });
 
-        mensagens.push({ role: 'user', content: mensagemParaNarrador });
+                const isIntro = (isInitial && !resumoAtual);
+                const maxTokens = isIntro ? 500 : 200;
+                const maxContinuacoes = isIntro ? 1 : 0;
 
-        const isIntro = (isInitial && !resumoAtual);
-        const maxTokens = isIntro ? 500 : 200;
-        const maxContinuacoes = isIntro ? 1 : 0;
+                console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
 
-        console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
+                if (isIntro) window._introGenerating = true;
 
-        if (isIntro) window._introGenerating = true;
+                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
 
-        const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
+                // ===== EXTRAÇÃO DE LORE EMBUTIDA NA INTRO =====
+                if (isIntro) {
+                    const loreMatch = respostaIA.match(/\[LORE:\]([\s\S]+)$/);
+                    if (loreMatch) {
+                        const loreTexto = loreMatch[1].trim();
+                        memoriaLonga = loreTexto;
+                        mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta — nunca contradiga nem altere):\n${memoriaLonga}`;
+                        await setDoc(doc(db, "sessoes", sessionId), { memoriaLonga }, { merge: true });
+                        // Remove a tag da mensagem exibida ao jogador
+                        const respostaVisivel = respostaIA.replace(/\[LORE:\][\s\S]+$/, '').trim();
+                        elementoDisplay.innerText = respostaVisivel;
+                    } else {
+                        // Fallback: se a tag não aparecer, usa o método antigo (chamada separada)
+                        gerarMemoriaLonga(respostaIA);
+                    }
+                }
+                // =================================================
 
-        // ── Gera memória longa logo após a intro ──────────────
-        if (isIntro) {
-            gerarMemoriaLonga(respostaIA); // disparo em segundo plano, sem await
-        }
-        // ─────────────────────────────────────────────────────
+                // --- INÍCIO DO SISTEMA DE DANO E MORTE ---
+                const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
+                if (danoMatch) {
+                    const valorDano = parseInt(danoMatch[1]);
+                    energia -= valorDano;
+                    document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
+                    adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
 
-        // --- INÍCIO DO SISTEMA DE DANO E MORTE ---
-        const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
-        if (danoMatch) {
-            const valorDano = parseInt(danoMatch[1]);
-            energia -= valorDano;
-            document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
-            adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
+                    if (energia <= 0) {
+                        adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
+                        userInput.disabled = true;
+                        sendBtn.disabled = true;
+                        await salvarResumoFirestore(resumoAtual);
+                        return;
+                    }
+                }
+                // --- FIM DO SISTEMA DE DANO E MORTE ---
 
-            if (energia <= 0) {
-                adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
-                userInput.disabled = true;
-                sendBtn.disabled = true;
-                await salvarResumoFirestore(resumoAtual);
-                return;
-            }
-        }
-        // --- FIM DO SISTEMA DE DANO E MORTE ---
+                if (isIntro) window._introGenerating = false;
 
-        if (isIntro) window._introGenerating = false;
-
-        mensagens.push({ role: 'assistant', content: respostaIA });
+                mensagens.push({ role: 'assistant', content: respostaIA });
                 // Dispara o pré-aquecimento em segundo plano
-        preAquecerCache();
+                preAquecerCache();
 
-        await salvarResumoFirestore(resumoAtual);
+                await salvarResumoFirestore(resumoAtual);
 
-        if (isInitial) {
-            userInput.disabled = false;
-            sendBtn.disabled = false;
-            userInput.focus();
-        }
+                if (isInitial) {
+                    userInput.disabled = false;
+                    sendBtn.disabled = false;
+                    userInput.focus();
+                }
 
-    } catch (error) {
-        elementoDisplay.innerText = `❌ Erro: ${error.message}`;
-        if (isInitial) {
-            userInput.disabled = false;
-            sendBtn.disabled = false;
-        }
-    } finally {
-        if (!isInitial) {
-            sendBtn.disabled = false;
-            userInput.disabled = false;
-            userInput.focus();
-        }
-    }
-};
+            } catch (error) {
+                elementoDisplay.innerText = `❌ Erro: ${error.message}`;
+                if (isInitial) {
+                    userInput.disabled = false;
+                    sendBtn.disabled = false;
+                }
+            } finally {
+                if (!isInitial) {
+                    sendBtn.disabled = false;
+                    userInput.disabled = false;
+                    userInput.focus();
+                }
+            }
+        };
+
         // ============================================================
         // Inicialização
         // ============================================================
@@ -731,20 +744,9 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
             }
         });
 
-
-                // Pré-avaliação do Juiz enquanto o jogador digita
-        userInput.addEventListener('input', () => {
-            const texto = userInput.value.trim();
-            if (texto.length < 4) return;
-
-            if (juizDebounceTimer) clearTimeout(juizDebounceTimer);
-            
-            juizDebounceTimer = setTimeout(() => {
-                precomputedJuizText = texto;
-                precomputedJuizPromise = avaliarAcao(texto);
-                console.debug('[JUIZ] Pré-avaliação iniciada para:', texto);
-            }, 600);
-        });
+        // *** REMOVIDO o listener de input que pré‑computava o Juiz ***
+        // Isso evita múltiplas requisições concorrentes que atrapalhavam o cache.
+        // O Juiz agora é chamado apenas no momento do envio, quando necessário.
     </script>
 </body>
 </html>
