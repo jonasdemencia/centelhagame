@@ -61,7 +61,7 @@
         // ============================================================
         const LM_URL = 'http://localhost:1234/v1/chat/completions';
         const MODELO = 'qwen2.5-7b-instruct-abliterated-v2';
-        const LIMITE_MENSAGENS = 24;
+const LIMITE_MENSAGENS = 16; // era 24
         window._introGenerating = false;
 
         // Variáveis globais
@@ -240,7 +240,7 @@ GANCHOS_ATIVOS: [pistas ou ameaças não resolvidas que devem ser lembradas]`;
                 adicionarMensagem('⚙️ As engrenagens do destino giram. Consolidando memórias...', 'system');
                 
                 // Conversa começa em [3] — [0..2] são slots de sistema protegidos
-                const mensagensParaResumir = mensagens.splice(3, 6);
+const mensagensParaResumir = mensagens.splice(3, 8); // era 6
                 const textoExtraido = mensagensParaResumir
                     .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
                     .join('\n---\n');
@@ -577,7 +577,7 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
 
                 const isIntro = (isInitial && !resumoAtual);
                 const maxTokens       = isIntro ? 1000 : 250;
-                const maxContinuacoes = isIntro ?    1 :   1;
+               const maxContinuacoes = isIntro ? 1 : 0; // era 1
 
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
 
