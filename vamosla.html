@@ -454,6 +454,30 @@ Responda APENAS no formato: POSTURA | MECÂNICA. Exemplo: OBSERVACAO | NENHUM`
             }
         }
 
+        // ============================================================
+        // Sanitização de Output — bloqueia prompt injection / troca de idioma
+        // Detecta o primeiro caractere CJK (Chinês/Japonês/Coreano) ou árabe
+        // e trunca o texto naquele ponto, descartando o lixo silenciosamente.
+        // ============================================================
+        function sanitizarOutput(texto) {
+            // Regex cobre blocos Unicode: CJK, Árabe, Hebraico, Devanágari, Tailandês, etc.
+            const padraoContaminacao = /[\u2E80-\u2FFF\u3000-\u9FFF\uAC00-\uD7FF\uF900-\uFAFF\uFE30-\uFE4F\u0600-\u06FF\u0900-\u097F\u0E00-\u0E7F]/;
+            const match = padraoContaminacao.exec(texto);
+            if (match) {
+                // Trunca na última frase completa antes da contaminação
+                const textoLimpo = texto.slice(0, match.index);
+                const ultimoPonto = Math.max(
+                    textoLimpo.lastIndexOf('.'),
+                    textoLimpo.lastIndexOf('!'),
+                    textoLimpo.lastIndexOf('?')
+                );
+                const resultado = ultimoPonto > 0 ? textoLimpo.slice(0, ultimoPonto + 1) : textoLimpo.trimEnd();
+                console.warn(`[SANITIZAÇÃO] Contaminação detectada no índice ${match.index} (char: "${match[0]}" U+${match[0].charCodeAt(0).toString(16).toUpperCase()}). Texto truncado na última sentença completa.`);
+                return resultado;
+            }
+            return texto;
+        }
+
         async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento, maxContinuacoes = 0) {
             let textoCompleto = '';
             let msgsAtual = [...mensagensPayload];
@@ -472,12 +496,24 @@ Responda APENAS no formato: POSTURA | MECÂNICA. Exemplo: OBSERVACAO | NENHUM`
                     msgsAtual,
                     maxTokens,
                     (parcial) => {
-                        elemento.innerText = textoCompleto + parcial;
+                        // Sanitiza durante o streaming para não exibir lixo ao usuário
+                        elemento.innerText = textoCompleto + sanitizarOutput(parcial);
                         chatBox.scrollTop = chatBox.scrollHeight;
                     }
                 );
 
                 textoCompleto += text;
+
+                // Sanitiza o texto final antes de salvar no histórico
+                const textoSanitizado = sanitizarOutput(textoCompleto);
+                if (textoSanitizado !== textoCompleto) {
+                    textoCompleto = textoSanitizado;
+                    elemento.innerText = textoCompleto;
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                    console.warn('[SANITIZAÇÃO] Resposta final truncada. Interrompendo continuações.');
+                    break; // Não tenta continuar uma resposta contaminada
+                }
+
                 elemento.innerText = textoCompleto;
                 chatBox.scrollTop = chatBox.scrollHeight;
 
