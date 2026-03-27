@@ -509,173 +509,171 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
         // Função principal de envio
         // ============================================================
         window.enviar = async function(mensagemUsuario = null) {
-            const isInitial = mensagemUsuario === null;
-            
-            if (!isInitial) {
-                turnosJogados++;
-            }
+    const isInitial = mensagemUsuario === null;
+    
+    if (!isInitial) {
+        turnosJogados++;
+    }
 
-            let pergunta;
-            if (isInitial) {
-                if (!resumoAtual) {
-                    pergunta = PROMPT_INTRO;
-                } else {
-                    pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
-                }
-            } else {
-                pergunta = mensagemUsuario;
-            }
+    let pergunta;
+    if (isInitial) {
+        if (!resumoAtual) {
+            pergunta = PROMPT_INTRO;
+        } else {
+            pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
+        }
+    } else {
+        pergunta = mensagemUsuario;
+    }
 
-            if (!isInitial) {
-                adicionarMensagem(pergunta, 'user');
-                userInput.value = '';
-            }
+    if (!isInitial) {
+        adicionarMensagem(pergunta, 'user');
+        userInput.value = '';
+    }
 
-            sendBtn.disabled = true;
-            userInput.disabled = true;
+    sendBtn.disabled = true;
+    userInput.disabled = true;
 
-            const tempId = adicionarMensagem('...', 'ai', true);
-            const elementoDisplay = document.getElementById(tempId);
+    const tempId = adicionarMensagem('...', 'ai', true);
+    const elementoDisplay = document.getElementById(tempId);
 
-            try {
-                await comprimirMemoria();
+    try {
+        await comprimirMemoria();
 
-                let mensagemParaNarrador = pergunta;
+        let mensagemParaNarrador = pergunta;
 
-                if (!isInitial) {
-    const faseAtual = obterDiretrizDeFase();
+        if (!isInitial) {
+            const faseAtual = obterDiretrizDeFase();
 
-    const diretrizes = `\n\n[DIRETRIZES DE DIREÇÃO]: 
+            const diretrizes = `\n\n[DIRETRIZES DE DIREÇÃO]: 
 1. ESTADO DO JOGO: ${faseAtual}
 2. REGRA DE ESTILO: Máximo 6 frases. Frases secas, mantenha o tom sombrio e direto. Segunda pessoa do singular.
 3. TENSÃO: Não use clichês emocionais. Construa medo pelo que FALTA ou pelo que está QUEBRADO no ambiente. Mostre, não conte. Oculte informações do jogador.`;
 
-    mensagemParaNarrador += diretrizes;
+            mensagemParaNarrador += diretrizes;
 
-    // --- NOVO: Classificação em dois eixos ---
-    const classificacaoCompleta = await avaliarAcao(pergunta); // Ex: "OBSERVACAO | HABILIDADE"
-    const [postura, tipoAcao] = classificacaoCompleta.split(' | ');
+            // --- NOVO: Classificação em dois eixos ---
+            const classificacaoCompleta = await avaliarAcao(pergunta); // Ex: "OBSERVACAO | HABILIDADE"
+            const [postura, tipoAcao] = classificacaoCompleta.split(' | ');
 
-    // Rola o teste APENAS se tipoAcao for HABILIDADE, CARISMA ou SORTE
-    let resultadoTeste = null;
-    if (['HABILIDADE', 'CARISMA', 'SORTE'].includes(tipoAcao)) {
-        resultadoTeste = rolarTeste(tipoAcao); // SUCESSO ou FALHA
-    }
-
-    if (resultadoTeste) {
-        adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
-    }
-
-    // Construção das diretrizes usando a postura
-    let diretrizesAdicionais = '';
-
-    if (postura === 'OBSERVACAO') {
-        diretrizesAdicionais = `\n[DIRETRIZ DE POSTURA: OBSERVACAO] Foque na densidade atmosférica e na "Pista Morta": descreva um detalhe que não serve para a ação imediata, mas sugere o passado do lugar. O mundo deve parecer estar "esperando" o jogador agir.`;
-    } else if (postura === 'INTERACAO') {
-        diretrizesAdicionais = `\n[DIRETRIZ DE POSTURA: INTERACAO] Foque na causalidade: toda ação gera uma mudança estrutural no ambiente. O jogador não age no vácuo.`;
-    }
-
-    // Se houve teste, adiciona a diretriz de mecânica
-    if (resultadoTeste) {
-        let logicaFisica = '';
-        if (resultadoTeste === 'FALHA') {
-            const consequenciasPorAtributo = {
-                HABILIDADE: [
-                    'Ação FALHOU. A falta de destreza custou caro. Descreva um erro mecânico com consequências físicas imediatas. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 2] ou superior.'
-                ],
-                CARISMA: [
-                    'Ação FALHOU. O jogador disse a coisa errada. O interlocutor reagiu com HOSTILIDADE ABERTA — descreva a rejeição humilhante, o silêncio cortante ou a ameaça que surgiu.',
-                    'Ação FALHOU. O jogador foi ignorado ou escarnecido. Descreva a frieza do outro personagem, talvez acompanhada de riso ou desprezo. A situação social piorou.',
-                    'Ação FALHOU. A abordagem irritou o interlocutor. Descreva como ele se fechou, virou as costas ou sinalizou que a conversa acabou — de forma ameaçadora ou humilhante.'
-                ],
-                SORTE: [
-                    'Ação FALHOU POR AZAR PURO. O destino virou contra o jogador num detalhe inesperado DO PRÓPRIO CENÁRIO JÁ DESCRITO — não invente elementos novos. Use algo já presente na cena para gerar a consequência cruel. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 3] ou superior.',
-                ]
-            };
-            const lista = consequenciasPorAtributo[tipoAcao] || consequenciasPorAtributo['HABILIDADE'];
-            logicaFisica = lista[Math.floor(Math.random() * lista.length)];
-            diretrizesAdicionais += `\nMECÂNICA: Teste de ${tipoAcao} = FALHA. DIRETRIZ OBRIGATÓRIA: ${logicaFisica}`;
-        } else if (resultadoTeste === 'SUCESSO') {
-            const sucessoPorAtributo = {
-                HABILIDADE: 'Ação BEM-SUCEDIDA. A ação atingiu o objetivo com precisão e foi executada com perfeição técnica. PROIBIDO aplicar [DANO] ao jogador neste turno — o jogador não se feriu.',
-                CARISMA: 'Ação BEM-SUCEDIDA. O interlocutor cedeu ou reagiu favoravelmente. Descreva a mudança concreta de comportamento do NPC — o que ele disse, fez, ou entregou. PROIBIDO aplicar [DANO] ao jogador neste turno.',
-                SORTE: 'Ação BEM-SUCEDIDA POR PURO ACASO. O acaso favoreceu o jogador de forma inesperada. Descreva o detalhe concreto do cenário que virou a seu favor. PROIBIDO aplicar [DANO] ao jogador neste turno.'
-            };
-            logicaFisica = sucessoPorAtributo[tipoAcao] || sucessoPorAtributo['HABILIDADE'];
-            diretrizesAdicionais += `\nMECÂNICA: Teste de ${tipoAcao} = SUCESSO. DIRETRIZ OBRIGATÓRIA: ${logicaFisica}`;
-        }
-    } else {
-        // Sem teste (tipoAcao == NENHUM)
-        diretrizesAdicionais += `\nMECÂNICA: Nenhum teste necessário. Ação trivial. Descreva a cena sem rolagens.`;
-    }
-
-    mensagemParaNarrador += diretrizesAdicionais;
-}
-                }
-
-                mensagens.push({ role: 'user', content: mensagemParaNarrador });
-
-                const isIntro = (isInitial && !resumoAtual);
-                const maxTokens       = isIntro ? 1000 : 250;
-               const maxContinuacoes = isIntro ? 1 : 0; // era 1
-
-                console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
-
-                if (isIntro) window._introGenerating = true;
-
-                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
-
-                // ── Gera memória longa logo após a intro ──────────────
-                if (isIntro) {
-    gerarMemoriaLonga(respostaIA); // disparo em segundo plano, sem await
-}
-                // ─────────────────────────────────────────────────────
-
-                // --- INÍCIO DO SISTEMA DE DANO E MORTE ---
-                const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
-                if (danoMatch) {
-                    const valorDano = parseInt(danoMatch[1]);
-                    energia -= valorDano;
-                    document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
-                    adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
-
-                    if (energia <= 0) {
-                        adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
-                        userInput.disabled = true;
-                        sendBtn.disabled = true;
-                        await salvarResumoFirestore(resumoAtual);
-                        return;
-                    }
-                }
-                // --- FIM DO SISTEMA DE DANO E MORTE ---
-
-                if (isIntro) window._introGenerating = false;
-
-                mensagens.push({ role: 'assistant', content: respostaIA });
-
-                await salvarResumoFirestore(resumoAtual);
-
-                if (isInitial) {
-                    userInput.disabled = false;
-                    sendBtn.disabled = false;
-                    userInput.focus();
-                }
-
-            } catch (error) {
-                elementoDisplay.innerText = `❌ Erro: ${error.message}`;
-                if (isInitial) {
-                    userInput.disabled = false;
-                    sendBtn.disabled = false;
-                }
-            } finally {
-                if (!isInitial) {
-                    sendBtn.disabled = false;
-                    userInput.disabled = false;
-                    userInput.focus();
-                }
+            // Rola o teste APENAS se tipoAcao for HABILIDADE, CARISMA ou SORTE
+            let resultadoTeste = null;
+            if (['HABILIDADE', 'CARISMA', 'SORTE'].includes(tipoAcao)) {
+                resultadoTeste = rolarTeste(tipoAcao); // SUCESSO ou FALHA
             }
-        };
 
+            if (resultadoTeste) {
+                adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
+            }
+
+            // Construção das diretrizes usando a postura
+            let diretrizesAdicionais = '';
+
+            if (postura === 'OBSERVACAO') {
+                diretrizesAdicionais = `\n[DIRETRIZ DE POSTURA: OBSERVACAO] Foque na densidade atmosférica e na "Pista Morta": descreva um detalhe que não serve para a ação imediata, mas sugere o passado do lugar. O mundo deve parecer estar "esperando" o jogador agir.`;
+            } else if (postura === 'INTERACAO') {
+                diretrizesAdicionais = `\n[DIRETRIZ DE POSTURA: INTERACAO] Foque na causalidade: toda ação gera uma mudança estrutural no ambiente. O jogador não age no vácuo.`;
+            }
+
+            // Se houve teste, adiciona a diretriz de mecânica
+            if (resultadoTeste) {
+                let logicaFisica = '';
+                if (resultadoTeste === 'FALHA') {
+                    const consequenciasPorAtributo = {
+                        HABILIDADE: [
+                            'Ação FALHOU. A falta de destreza custou caro. Descreva um erro mecânico com consequências físicas imediatas. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 2] ou superior.'
+                        ],
+                        CARISMA: [
+                            'Ação FALHOU. O jogador disse a coisa errada. O interlocutor reagiu com HOSTILIDADE ABERTA — descreva a rejeição humilhante, o silêncio cortante ou a ameaça que surgiu.',
+                            'Ação FALHOU. O jogador foi ignorado ou escarnecido. Descreva a frieza do outro personagem, talvez acompanhada de riso ou desprezo. A situação social piorou.',
+                            'Ação FALHOU. A abordagem irritou o interlocutor. Descreva como ele se fechou, virou as costas ou sinalizou que a conversa acabou — de forma ameaçadora ou humilhante.'
+                        ],
+                        SORTE: [
+                            'Ação FALHOU POR AZAR PURO. O destino virou contra o jogador num detalhe inesperado DO PRÓPRIO CENÁRIO JÁ DESCRITO — não invente elementos novos. Use algo já presente na cena para gerar a consequência cruel. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 3] ou superior.',
+                        ]
+                    };
+                    const lista = consequenciasPorAtributo[tipoAcao] || consequenciasPorAtributo['HABILIDADE'];
+                    logicaFisica = lista[Math.floor(Math.random() * lista.length)];
+                    diretrizesAdicionais += `\nMECÂNICA: Teste de ${tipoAcao} = FALHA. DIRETRIZ OBRIGATÓRIA: ${logicaFisica}`;
+                } else if (resultadoTeste === 'SUCESSO') {
+                    const sucessoPorAtributo = {
+                        HABILIDADE: 'Ação BEM-SUCEDIDA. A ação atingiu o objetivo com precisão e foi executada com perfeição técnica. PROIBIDO aplicar [DANO] ao jogador neste turno — o jogador não se feriu.',
+                        CARISMA: 'Ação BEM-SUCEDIDA. O interlocutor cedeu ou reagiu favoravelmente. Descreva a mudança concreta de comportamento do NPC — o que ele disse, fez, ou entregou. PROIBIDO aplicar [DANO] ao jogador neste turno.',
+                        SORTE: 'Ação BEM-SUCEDIDA POR PURO ACASO. O acaso favoreceu o jogador de forma inesperada. Descreva o detalhe concreto do cenário que virou a seu favor. PROIBIDO aplicar [DANO] ao jogador neste turno.'
+                    };
+                    logicaFisica = sucessoPorAtributo[tipoAcao] || sucessoPorAtributo['HABILIDADE'];
+                    diretrizesAdicionais += `\nMECÂNICA: Teste de ${tipoAcao} = SUCESSO. DIRETRIZ OBRIGATÓRIA: ${logicaFisica}`;
+                }
+            } else {
+                // Sem teste (tipoAcao == NENHUM)
+                diretrizesAdicionais += `\nMECÂNICA: Nenhum teste necessário. Ação trivial. Descreva a cena sem rolagens.`;
+            }
+
+            mensagemParaNarrador += diretrizesAdicionais;
+        } // fecha o if (!isInitial)
+
+        mensagens.push({ role: 'user', content: mensagemParaNarrador });
+
+        const isIntro = (isInitial && !resumoAtual);
+        const maxTokens = isIntro ? 1000 : 250;
+        const maxContinuacoes = isIntro ? 1 : 0;
+
+        console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
+
+        if (isIntro) window._introGenerating = true;
+
+        const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
+
+        // ── Gera memória longa logo após a intro ──────────────
+        if (isIntro) {
+            gerarMemoriaLonga(respostaIA); // disparo em segundo plano, sem await
+        }
+        // ─────────────────────────────────────────────────────
+
+        // --- INÍCIO DO SISTEMA DE DANO E MORTE ---
+        const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
+        if (danoMatch) {
+            const valorDano = parseInt(danoMatch[1]);
+            energia -= valorDano;
+            document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
+            adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
+
+            if (energia <= 0) {
+                adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
+                userInput.disabled = true;
+                sendBtn.disabled = true;
+                await salvarResumoFirestore(resumoAtual);
+                return;
+            }
+        }
+        // --- FIM DO SISTEMA DE DANO E MORTE ---
+
+        if (isIntro) window._introGenerating = false;
+
+        mensagens.push({ role: 'assistant', content: respostaIA });
+
+        await salvarResumoFirestore(resumoAtual);
+
+        if (isInitial) {
+            userInput.disabled = false;
+            sendBtn.disabled = false;
+            userInput.focus();
+        }
+
+    } catch (error) {
+        elementoDisplay.innerText = `❌ Erro: ${error.message}`;
+        if (isInitial) {
+            userInput.disabled = false;
+            sendBtn.disabled = false;
+        }
+    } finally {
+        if (!isInitial) {
+            sendBtn.disabled = false;
+            userInput.disabled = false;
+            userInput.focus();
+        }
+    }
+};
         // ============================================================
         // Inicialização
         // ============================================================
