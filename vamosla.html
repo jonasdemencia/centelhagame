@@ -67,6 +67,10 @@ const LIMITE_MENSAGENS = 16; // era 24
         // Variáveis globais
         let turnosJogados = 0;
         let energia = 10;
+                // Variáveis para pré-avaliação do Juiz
+        let precomputedJuizPromise = null;
+        let precomputedJuizText = '';
+        let juizDebounceTimer = null;
 
         // ── MEMÓRIA LONGA ─────────────────────────────────────────
         // Gerada uma única vez após a intro e nunca sobrescrita.
@@ -492,6 +496,36 @@ Responda APENAS no formato: POSTURA | MECÂNICA. Exemplo: OBSERVACAO | NENHUM`
         }
 
         // ============================================================
+        // Pré-aquecimento do KV Cache (Ghost Request)
+        // ============================================================
+        async function preAquecerCache() {
+            try {
+                // Monta o contexto exato que será usado no próximo turno
+                const contextoPreaecido = [
+                    ...mensagens,
+                    { role: 'user', content: '...' }  // placeholder mínimo
+                ];
+                
+                await fetch(LM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODELO,
+                        messages: contextoPreaecido,
+                        max_tokens: 1,
+                        temperature: 0.1,
+                        stream: false
+                    })
+                });
+                console.debug('[PRÉ-AQUECIMENTO] KV Cache carregado para o próximo turno.');
+            } catch (e) {
+                console.debug('[PRÉ-AQUECIMENTO] Erro (ignorado):', e.message);
+            }
+        }
+
+        
+
+        // ============================================================
         // Prompt de introdução — estrutura Fighting Fantasy
         // ============================================================
         const PROMPT_INTRO = `Esta é a introdução da aventura. Escreva em exatamente 5 parágrafos. NÃO use títulos ou marcadores — apenas prosa corrida. Apresente os seguintes elementos de forma entrelaçada:
@@ -552,7 +586,17 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
             mensagemParaNarrador += diretrizes;
 
             // --- NOVO: Classificação em dois eixos ---
-            const classificacaoCompleta = await avaliarAcao(pergunta); // Ex: "OBSERVACAO | HABILIDADE"
+                        let classificacaoCompleta;
+            // Tenta usar resultado pré‑computado
+            if (precomputedJuizPromise && precomputedJuizText === pergunta) {
+                classificacaoCompleta = await precomputedJuizPromise;
+                console.debug('[JUIZ] Resultado pré‑computado aproveitado:', classificacaoCompleta);
+                // Limpa para não reutilizar em ações futuras
+                precomputedJuizPromise = null;
+                precomputedJuizText = '';
+            } else {
+                classificacaoCompleta = await avaliarAcao(pergunta);
+            }
             const [postura, tipoAcao] = classificacaoCompleta.split(' | ');
 
             // Rola o teste APENAS se tipoAcao for HABILIDADE, CARISMA ou SORTE
@@ -648,6 +692,8 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
         if (isIntro) window._introGenerating = false;
 
         mensagens.push({ role: 'assistant', content: respostaIA });
+                // Dispara o pré-aquecimento em segundo plano
+        preAquecerCache();
 
         await salvarResumoFirestore(resumoAtual);
 
@@ -683,6 +729,21 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
             if (e.key === 'Enter' && !sendBtn.disabled) {
                 window.enviar(userInput.value.trim());
             }
+        });
+
+
+                // Pré-avaliação do Juiz enquanto o jogador digita
+        userInput.addEventListener('input', () => {
+            const texto = userInput.value.trim();
+            if (texto.length < 4) return;
+
+            if (juizDebounceTimer) clearTimeout(juizDebounceTimer);
+            
+            juizDebounceTimer = setTimeout(() => {
+                precomputedJuizText = texto;
+                precomputedJuizPromise = avaliarAcao(texto);
+                console.debug('[JUIZ] Pré-avaliação iniciada para:', texto);
+            }, 600);
         });
     </script>
 </body>
