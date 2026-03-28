@@ -459,113 +459,128 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
         // ============================================================
         // Função principal de envio
         // ============================================================
-        window.enviar = async function(mensagemUsuario = null) {
-            const isInitial = mensagemUsuario === null;
-            
-            if (!isInitial) {
-                turnosJogados++;
-            }
-
-            let pergunta;
-            if (isInitial) {
-                if (!resumoAtual) {
-                    pergunta = PROMPT_INTRO;
-                } else {
-                    pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
-                }
-            } else {
-                pergunta = mensagemUsuario;
-            }
-
-            if (!isInitial) {
-                adicionarMensagem(pergunta, 'user');
-                userInput.value = '';
-            }
-
-            sendBtn.disabled = true;
-            userInput.disabled = true;
-
-            const tempId = adicionarMensagem('...', 'ai', true);
-            const elementoDisplay = document.getElementById(tempId);
-
-            try {
-                await comprimirMemoria();
-
-                let mensagemFinal = pergunta;
-
-                // SE NÃO FOR A INTRODUÇÃO, GERA A SEMENTE E INJETA NA MENSAGEM DO JOGADOR
-                if (!isInitial) {
-                    const semente = Math.floor(Math.random() * 10) + 1; // Semente de 1 a 10 gerada localmente
-                    const metadados = `\n[SISTEMA: HABILIDADE(${jogadorStats.HABILIDADE}), CARISMA(${jogadorStats.CARISMA}), SORTE(${jogadorStats.SORTE}) | SEMENTE: ${semente}]`;
-                    mensagemFinal += metadados;
-                }
-
-                mensagens.push({ role: 'user', content: mensagemFinal });
-
-                const isIntro = (isInitial && !resumoAtual);
-                const maxTokens       = isIntro ? 500 : 250;
-                const maxContinuacoes = isIntro ?    1 :   1;
-
-                console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
-
-                if (isIntro) window._introGenerating = true;
-const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
-
-// 1. Extrai dano imediatamente
-const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
-
-// 2. Remove qualquer tag [TESTE:...] que possa ter ficado
-let respostaLimpa = respostaIA;
-if (respostaLimpa.includes('[TESTE:')) {
-    respostaLimpa = respostaLimpa.replace(/\[TESTE:[^\]]+\]/g, '').trim();
-}
-
-// 3. Exibe mensagem de falha se houver dano (apenas para ações do jogador)
-if (!isInitial && danoMatch && parseInt(danoMatch[1]) > 0) {
-    const div = document.createElement('div');
-    div.className = 'system-message';
-    div.innerHTML = `<em style="color:#e53935; font-weight:bold;">[FALHA NO TESTE: CONSEQUÊNCIA APLICADA]</em>`;
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-// 4. Atualiza o elemento com a resposta limpa
-elementoDisplay.innerText = respostaLimpa;
-
-// 5. Gera memória longa logo após a intro (se necessário)
-if (isIntro) {
-    gerarMemoriaLonga(respostaIA); // em segundo plano
-}
-
-// 6. Processa o dano (já temos danoMatch)
-if (danoMatch && parseInt(danoMatch[1]) > 0) {
-    const valorDano = parseInt(danoMatch[1]);
-    energia -= valorDano;
-    document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
-    adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
-
-    if (energia <= 0) {
-        adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
-        userInput.disabled = true;
-        sendBtn.disabled = true;
-        await salvarResumoFirestore(resumoAtual);
-        return;
+      
+window.enviar = async function(mensagemUsuario = null) {
+    const isInitial = mensagemUsuario === null;
+    
+    if (!isInitial) {
+        turnosJogados++;
     }
-}
 
-if (isIntro) window._introGenerating = false;
+    let pergunta;
+    if (isInitial) {
+        if (!resumoAtual) {
+            pergunta = PROMPT_INTRO;
+        } else {
+            pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
+        }
+    } else {
+        pergunta = mensagemUsuario;
+    }
 
-mensagens.push({ role: 'assistant', content: respostaIA });
+    if (!isInitial) {
+        adicionarMensagem(pergunta, 'user');
+        userInput.value = '';
+    }
 
-await salvarResumoFirestore(resumoAtual);
+    sendBtn.disabled = true;
+    userInput.disabled = true;
 
-if (isInitial) {
-    userInput.disabled = false;
-    sendBtn.disabled = false;
-    userInput.focus();
-}
+    const tempId = adicionarMensagem('...', 'ai', true);
+    const elementoDisplay = document.getElementById(tempId);
+
+    try {
+        await comprimirMemoria();
+
+        let mensagemFinal = pergunta;
+
+        // SE NÃO FOR A INTRODUÇÃO, GERA A SEMENTE E INJETA NA MENSAGEM DO JOGADOR
+        if (!isInitial) {
+            const semente = Math.floor(Math.random() * 10) + 1; // Semente de 1 a 10 gerada localmente
+            const metadados = `\n[SISTEMA: HABILIDADE(${jogadorStats.HABILIDADE}), CARISMA(${jogadorStats.CARISMA}), SORTE(${jogadorStats.SORTE}) | SEMENTE: ${semente}]`;
+            mensagemFinal += metadados;
+        }
+
+        mensagens.push({ role: 'user', content: mensagemFinal });
+
+        const isIntro = (isInitial && !resumoAtual);
+        const maxTokens       = isIntro ? 500 : 250;
+        const maxContinuacoes = isIntro ?    1 :   1;
+
+        console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
+
+        if (isIntro) window._introGenerating = true;
+
+        const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
+
+        // 1. Extrai dano imediatamente
+        const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
+
+        // 2. Remove qualquer tag [TESTE:...] que possa ter ficado
+        let respostaLimpa = respostaIA;
+        if (respostaLimpa.includes('[TESTE:')) {
+            respostaLimpa = respostaLimpa.replace(/\[TESTE:[^\]]+\]/g, '').trim();
+        }
+
+        // 3. Exibe mensagem de falha se houver dano (apenas para ações do jogador)
+        if (!isInitial && danoMatch && parseInt(danoMatch[1]) > 0) {
+            const div = document.createElement('div');
+            div.className = 'system-message';
+            div.innerHTML = `<em style="color:#e53935; font-weight:bold;">[FALHA NO TESTE: CONSEQUÊNCIA APLICADA]</em>`;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // 4. Atualiza o elemento com a resposta limpa
+        elementoDisplay.innerText = respostaLimpa;
+
+        // 5. Gera memória longa logo após a intro (se necessário)
+        if (isIntro) {
+            gerarMemoriaLonga(respostaIA); // em segundo plano
+        }
+
+        // 6. Processa o dano (já temos danoMatch)
+        if (danoMatch && parseInt(danoMatch[1]) > 0) {
+            const valorDano = parseInt(danoMatch[1]);
+            energia -= valorDano;
+            document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
+            adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
+
+            if (energia <= 0) {
+                adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
+                userInput.disabled = true;
+                sendBtn.disabled = true;
+                await salvarResumoFirestore(resumoAtual);
+                return;
             }
-        };
+        }
+
+        if (isIntro) window._introGenerating = false;
+
+        mensagens.push({ role: 'assistant', content: respostaIA });
+
+        await salvarResumoFirestore(resumoAtual);
+
+        if (isInitial) {
+            userInput.disabled = false;
+            sendBtn.disabled = false;
+            userInput.focus();
+        }
+
+    } catch (error) {
+        elementoDisplay.innerText = `❌ Erro: ${error.message}`;
+        if (isInitial) {
+            userInput.disabled = false;
+            sendBtn.disabled = false;
+        }
+    } finally {
+        if (!isInitial) {
+            sendBtn.disabled = false;
+            userInput.disabled = false;
+            userInput.focus();
+        }
+    }
+};
 
         // ============================================================
         // Inicialização
