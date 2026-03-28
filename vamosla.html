@@ -509,16 +509,18 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
 
                 if (isIntro) window._introGenerating = true;
+const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
 
-                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
+// 1. Extrai dano imediatamente
+const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
 
-                // Remove qualquer tag [TESTE:...] que possa ter ficado no texto
+// 2. Remove qualquer tag [TESTE:...] que possa ter ficado
 let respostaLimpa = respostaIA;
 if (respostaLimpa.includes('[TESTE:')) {
-    respostaLimpa = respostaLimpa.replace(/^\[TESTE:[^\]]+\]\n?/, '').trim();
+    respostaLimpa = respostaLimpa.replace(/\[TESTE:[^\]]+\]/g, '').trim();
 }
 
-// Exibe mensagem de falha se houver dano (indica que o teste falhou)
+// 3. Exibe mensagem de falha se houver dano (apenas para ações do jogador)
 if (!isInitial && danoMatch && parseInt(danoMatch[1]) > 0) {
     const div = document.createElement('div');
     div.className = 'system-message';
@@ -527,57 +529,41 @@ if (!isInitial && danoMatch && parseInt(danoMatch[1]) > 0) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// Atualiza o elemento com a resposta limpa (sem a tag de teste)
+// 4. Atualiza o elemento com a resposta limpa
 elementoDisplay.innerText = respostaLimpa;
 
-                // ── Gera memória longa logo após a intro ──────────────
-                if (isIntro) {
-    gerarMemoriaLonga(respostaIA); // disparo em segundo plano, sem await
+// 5. Gera memória longa logo após a intro (se necessário)
+if (isIntro) {
+    gerarMemoriaLonga(respostaIA); // em segundo plano
 }
-                // ─────────────────────────────────────────────────────
 
-                // --- INÍCIO DO SISTEMA DE DANO E MORTE ---
-                const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
+// 6. Processa o dano (já temos danoMatch)
 if (danoMatch && parseInt(danoMatch[1]) > 0) {
     const valorDano = parseInt(danoMatch[1]);
-                    energia -= valorDano;
-                    document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
-                    adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
+    energia -= valorDano;
+    document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
+    adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
 
-                    if (energia <= 0) {
-                        adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
-                        userInput.disabled = true;
-                        sendBtn.disabled = true;
-                        await salvarResumoFirestore(resumoAtual);
-                        return;
-                    }
-                }
-                // --- FIM DO SISTEMA DE DANO E MORTE ---
+    if (energia <= 0) {
+        adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
+        userInput.disabled = true;
+        sendBtn.disabled = true;
+        await salvarResumoFirestore(resumoAtual);
+        return;
+    }
+}
 
-                if (isIntro) window._introGenerating = false;
+if (isIntro) window._introGenerating = false;
 
-                mensagens.push({ role: 'assistant', content: respostaIA });
+mensagens.push({ role: 'assistant', content: respostaIA });
 
-                await salvarResumoFirestore(resumoAtual);
+await salvarResumoFirestore(resumoAtual);
 
-                if (isInitial) {
-                    userInput.disabled = false;
-                    sendBtn.disabled = false;
-                    userInput.focus();
-                }
-
-            } catch (error) {
-                elementoDisplay.innerText = `❌ Erro: ${error.message}`;
-                if (isInitial) {
-                    userInput.disabled = false;
-                    sendBtn.disabled = false;
-                }
-            } finally {
-                if (!isInitial) {
-                    sendBtn.disabled = false;
-                    userInput.disabled = false;
-                    userInput.focus();
-                }
+if (isInitial) {
+    userInput.disabled = false;
+    sendBtn.disabled = false;
+    userInput.focus();
+}
             }
         };
 
