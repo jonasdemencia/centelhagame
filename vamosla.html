@@ -109,7 +109,7 @@ O jogador enviará a ação seguida de metadados: [SISTEMA: HABILIDADE(X), CARIS
 1. Classifique a ação: exige HABILIDADE, CARISMA ou SORTE? Apenas ações de risco exigem teste. Falas e observações comuns ignoram o teste.
 2. Sucesso (SEMENTE <= Atributo): A intenção do jogador se realiza plenamente. Proibido causar dano.
 3. Falha (SEMENTE > Atributo): A ação falha de forma trágica ou violenta. Você DEVE narrar a consequência física/social desastrosa antes de aplicar a tag.
-4. Obrigatório em Falha: Inclua [DANO: X] ao final (X de 1 a 10). Narre a consequência lógica da ação falha resultando em dor, sangue ou humilhação que justifica esse valor.`
+4. Obrigatório em Falha: Inclua [DANO: X] ao final (X de 1 a 10). Narre a consequência lógica da ação falha resultando em dor, sangue ou humilhação que justifica esse valor. NUNCA mencione SEMENTE, atributos ou cálculos na narração. NUNCA use [DANO: 0] — em Falha o mínimo é [DANO: 1].`
             },
             // [1] — Slot da memória longa. Preenchido após a intro, nunca comprimido.
             {
@@ -519,7 +519,7 @@ if (respostaLimpa.includes('[TESTE:')) {
 }
 
 // Exibe mensagem de falha se houver dano (indica que o teste falhou)
-if (!isInitial && respostaIA.includes('[DANO:')) {
+if (!isInitial && danoMatch && parseInt(danoMatch[1]) > 0) {
     const div = document.createElement('div');
     div.className = 'system-message';
     div.innerHTML = `<em style="color:#e53935; font-weight:bold;">[FALHA NO TESTE: CONSEQUÊNCIA APLICADA]</em>`;
