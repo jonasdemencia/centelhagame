@@ -92,7 +92,7 @@
         let mensagens = [
             {
                 role: 'system',
-                content: `Você é um mestre de RPG de fantasia brutal e punitiva. Responda APENAS em Português Brasileiro.
+                content: `Você é um mestre de RPG de fantasia brutal e punitiva. Responda APENAS em Português Brasileiro CORRETO. Nunca escreva em outro idioma.
 REGRAS DE NARRATIVA:
 - Tensão Psicológica: O verdadeiro horror está no que não é dito ou mostrado. Mostre as consequências (cadáveres, loucura, ruínas), atrase o monstro.
 - Realismo Sujo: Evite adjetivos bonitos. Use verbos de ação e substantivos concretos. 
@@ -322,7 +322,7 @@ ${SSR_TEMPLATE}`
         // Streaming SSE com loop de auto-continuação
         // ============================================================
         async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
-    console.log("🔥 Temperatura usada:", window._introGenerating ? 0.8 : 0.6);
+    console.log("🔥 Temperatura usada:", window._introGenerating ? 0.75 : 0.6);
     try {
         const response = await fetch(LM_URL, {
             method: 'POST',
@@ -330,7 +330,7 @@ ${SSR_TEMPLATE}`
             body: JSON.stringify({
                 model: MODELO,
                 messages: mensagensPayload,
-                temperature: window._introGenerating ? 0.8 : 0.6,
+                temperature: window._introGenerating ? 0.75 : 0.6,
                 max_tokens: maxTokens,
                 presence_penalty: 0.3,
                 frequency_penalty: 0.3,
