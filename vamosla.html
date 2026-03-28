@@ -106,6 +106,7 @@ REGRAS DE NARRATIVA:
 
 REGRAS DO JUIZ INVISÍVEL (MECÂNICA):
 O jogador enviará a ação dele seguida de metadados como: [SISTEMA: HABILIDADE(X), CARISMA(Y), SORTE(Z) | SEMENTE: W].
+0. OBRIGATÓRIO: Antes de narrar qualquer coisa, escreva EXATAMENTE na primeira linha: [TESTE:ATRIBUTO:RESULTADO] — onde ATRIBUTO é HABILIDADE, CARISMA ou SORTE, e RESULTADO é SUCESSO ou FALHA. Se a ação não exigir teste (só fala), omita esta linha.
 1. Classifique a ação do jogador: exige HABILIDADE, CARISMA ou SORTE? (Se for só fala, ignore testes).
 2. Compare a SEMENTE com o Atributo usado. Se SEMENTE <= Atributo, é SUCESSO. Se SEMENTE > Atributo, é FALHA.
 3. Se SUCESSO: A intenção do jogador acontece. Proibido dar dano.
@@ -510,6 +511,21 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
 
                 const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
 
+                // Extrai e exibe o resultado do teste visualmente
+const testeMatch = respostaIA.match(/^\[TESTE:(HABILIDADE|CARISMA|SORTE):(SUCESSO|FALHA)\]/i);
+if (testeMatch && !isInitial) {
+    const atributo = testeMatch[1].toUpperCase();
+    const resultado = testeMatch[2].toUpperCase();
+    const isSucesso = resultado === 'SUCESSO';
+    const div = document.createElement('div');
+    div.className = 'system-message';
+    div.innerHTML = `<em style="color:${isSucesso ? '#4caf50' : '#e53935'}; font-weight:bold;">[TESTE DE ${atributo}: ${resultado}]</em>`;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    // Remove a tag da narração exibida
+    elementoDisplay.innerText = respostaIA.replace(/^\[TESTE:[^\]]+\]\n?/, '').trim();
+}
+
                 // ── Gera memória longa logo após a intro ──────────────
                 if (isIntro) {
     gerarMemoriaLonga(respostaIA); // disparo em segundo plano, sem await
@@ -518,8 +534,8 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
 
                 // --- INÍCIO DO SISTEMA DE DANO E MORTE ---
                 const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
-                if (danoMatch) {
-                    const valorDano = parseInt(danoMatch[1]);
+if (danoMatch && parseInt(danoMatch[1]) > 0) {
+    const valorDano = parseInt(danoMatch[1]);
                     energia -= valorDano;
                     document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
                     adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
