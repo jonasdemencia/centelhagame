@@ -507,13 +507,16 @@ if (!isInitial) {
     const metadados = `\n[SISTEMA: ${attr} | RESULTADO: ${resultadoTexto} | DANO SE FALHA: 2]`;
 
     if (!isSucesso) {
-        mensagemFinal += `${metadados}\n(Regra: A ação do jogador FALHOU. Ele não conseguiu o que queria. Narre a humilhação ou o impedimento e aplique o dano.)`;
+        mensagemFinal += `${metadados}\n(Regra: A ação do jogador FALHOU. Narre a falha e o dano em PORTUGUÊS.)`;
     } else {
-        mensagemFinal += `${metadados}\n(Regra: A ação do jogador foi bem-sucedida. Narre a consumação.)`;
+        mensagemFinal += `${metadados}\n(Regra: A ação do jogador foi bem-sucedida. Narre em PORTUGUÊS.)`;
     }
+
+    // ADICIONE ESTA LINHA LOGO ABAIXO:
+    mensagemFinal += "\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]";
 }
 
-        mensagens.push({ role: 'user', content: mensagemFinal });
+mensagens.push({ role: 'user', content: mensagemFinal });
 
         const isIntro = (isInitial && !resumoAtual);
         const maxTokens       = isIntro ? 500 : 250;
