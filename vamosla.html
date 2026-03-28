@@ -92,18 +92,25 @@
         let mensagens = [
             {
                 role: 'system',
-                content: `Você é um mestre de RPG de fantasia brutal e punitiva. Responda APENAS em Português Brasileiro CORRETO. Nunca escreva em outro idioma. Você NUNCA dá conselhos ao jogador, NUNCA dialoga com ele como um assistente e NUNCA repete as instruções do jogador.
-REGRAS DE OURO:
+                content: `Você é um mestre de RPG de fantasia brutal e punitiva. Responda APENAS em Português Brasileiro.
+REGRAS DE NARRATIVA:
 - Tensão Psicológica: O verdadeiro horror está no que não é dito ou mostrado. Mostre as consequências (cadáveres, loucura, ruínas), atrase o monstro.
 - Realismo Sujo: Evite adjetivos bonitos. Use verbos de ação e substantivos concretos. 
-- EXECUÇÃO MANDATÓRIA: Se o jogador declarar uma ação violenta, você deve descrever o resultado FINAL. É estritamente proibido interromper a ação com eventos externos, hesitações ou diálogos. 
+- EXECUÇÃO MANDATÓRIA: Se o jogador declarar uma ação violenta, você deve descrever o resultado FINAL.
 - PROSA FORENSE: Descreva todo dano como um patologista. Foco em: rompimento de tecido, fratura óssea, fluidez de fluidos e o som seco da matéria cedendo.
 - OBJÉTIFICAÇÃO DA VÍTIMA: NPCs não têm "protagonismo". Eles são alvos. Se atingidos, eles não "tentam" algo; eles sofrem a deformação física imediata da sua ação.
 - SUCESSO = CONSUMAÇÃO: Em caso de SUCESSO, a intenção do jogador é a verdade absoluta da cena. Se ele quis perfurar, a lâmina atravessa. Se quis atirar, o projétil destrói o alvo.
 - Imparcialidade Cruel: Nunca decida o que o jogador sente (ex: "Você sente medo"). Apenas descreva o ambiente hostil com frieza.
-- DESENVOLVIMENTO NARRATIVO: Faça o ambiente reagir. NPCs agem por conta própria. O tempo passa. Algo sempre muda (seguindo uma coerencia narrativa) entre uma ação e outra.
-- Mecânica: Nunca resolva um obstáculo pelo jogador. Se a situação for letal e ele errar, aplique [DANO: 3].
-- MECÂNICA DE TESTES: Quando a instrução MECÂNICA disser SUCESSO, a ação do jogador FUNCIONOU. Descreva o sucesso com brutalidade. JAMAIS aplique [DANO] ao jogador num turno de SUCESSO declarado — isso viola a mecânica.`
+- DESENVOLVIMENTO NARRATIVO: Faça o ambiente reagir. NPCs agem por conta própria. O tempo passa. Algo sempre muda ou surge sempre um evento (seguindo uma coerencia narrativa) entre uma ação e outra.
+- Mecânica: Nunca resolva um obstáculo pelo jogador.
+
+REGRAS DO JUIZ INVISÍVEL (MECÂNICA):
+O jogador enviará a ação dele seguida de metadados como: [SISTEMA: HABILIDADE(X), CARISMA(Y), SORTE(Z) | SEMENTE: W].
+1. Classifique a ação do jogador: exige HABILIDADE, CARISMA ou SORTE? (Se for só fala, ignore testes).
+2. Compare a SEMENTE com o Atributo usado. Se SEMENTE <= Atributo, é SUCESSO. Se SEMENTE > Atributo, é FALHA.
+3. Se SUCESSO: A intenção do jogador acontece. Proibido dar dano.
+4. Se FALHA: A ação dá errado de forma catastrófica. Você DEVE incluir a tag [DANO: X] no final da sua resposta, onde X é um número de 1 a 10 dependendo da gravidade do erro.
+5. Imparcialidade Cruel: Narre o resultado matemático sem piedade.`
             },
             // [1] — Slot da memória longa. Preenchido após a intro, nunca comprimido.
             {
@@ -302,42 +309,6 @@ ${SSR_TEMPLATE}`
         }
 
         // ============================================================
-        // Função 1: O Juiz Invisível
-        // ============================================================
-        async function avaliarAcao(acaoUsuario) {
-            const promptJuiz = [
-                { 
-                    role: 'system', 
-                    content: `Você é um classificador de ações de RPG. Analise a mensagem do jogador e decida se ela representa uma ação que exige teste de atributo ou apenas uma pergunta descritiva. Categorias: HABILIDADE, CARISMA, SORTE, NENHUM. Responda APENAS com a categoria em maiúsculas. NÃO adicione explicações.` 
-                },
-                { role: 'user', content: acaoUsuario }
-            ];
-
-            try {
-                const response = await fetch(LM_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: MODELO,
-                        messages: promptJuiz,
-                        temperature: 0.2,
-                        max_tokens: 10
-                    })
-                });
-                const data = await response.json();
-                const classificacao = data.choices[0].message.content.trim().toUpperCase();
-                
-                if (['HABILIDADE', 'CARISMA', 'SORTE', 'NENHUM'].includes(classificacao)) {
-                    return classificacao;
-                }
-                return 'NENHUM';
-            } catch (error) {
-                console.error('Erro no juiz:', error);
-                return 'NENHUM';
-            }
-        }
-
-        // ============================================================
         // Função 2: Motor de Regras
         // ============================================================
         function rolarTeste(atributo) {
@@ -518,57 +489,19 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
             try {
                 await comprimirMemoria();
 
-                let mensagemParaNarrador = pergunta;
+                let mensagemFinal = pergunta;
 
+                // SE NÃO FOR A INTRODUÇÃO, GERA A SEMENTE E INJETA NA MENSAGEM DO JOGADOR
                 if (!isInitial) {
-                    const faseAtual = obterDiretrizDeFase();
-
-                    const diretrizes = `\n\n[DIRETRIZES DE DIREÇÃO]: 
-1. ESTADO DO JOGO: ${faseAtual}
-2. REGRA DE ESTILO: Máximo 6 frases. Frases secas, mantenha o tom sombrio e direto. Segunda pessoa do singular.
-3. TENSÃO: Não use clichês emocionais. Construa medo pelo que FALTA ou pelo que está QUEBRADO no ambiente. Mostre, não conte. Oculte informações do jogador.`;
-
-                    mensagemParaNarrador += diretrizes;
-
-                    const tipoAcao = await avaliarAcao(pergunta);
-                    const resultadoTeste = rolarTeste(tipoAcao);
-
-                    if (resultadoTeste) {
-    adicionarMensagem(`[Teste de ${tipoAcao}: ${resultadoTeste}]`, 'system');
-    
-    let logicaFisica = '';
-    if (resultadoTeste === 'FALHA') {
-        const consequenciasPorAtributo = {
-            HABILIDADE: [
-                'Ação FALHOU. A falta de destreza custou caro. Descreva um erro mecânico com consequências físicas imediatas. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 2] ou superior.'
-            ],
-            CARISMA: [
-                'Ação FALHOU. O jogador disse a coisa errada. O interlocutor reagiu com HOSTILIDADE ABERTA — descreva a rejeição humilhante, o silêncio cortante ou a ameaça que surgiu.',
-            ],
-            SORTE: [
-                'Ação FALHOU POR AZAR PURO. O destino virou contra o jogador num detalhe inesperado DO PRÓPRIO CENÁRIO JÁ DESCRITO — não invente elementos novos. Use algo já presente na cena para gerar a consequência cruel. OBRIGATÓRIO: Conclua a resposta aplicando a tag [DANO: 3] ou superior.',
-            ]
-        };
-        const lista = consequenciasPorAtributo[tipoAcao] || consequenciasPorAtributo['HABILIDADE'];
-        logicaFisica = lista[Math.floor(Math.random() * lista.length)];
-    } else {
-        // SUCESSO — diretriz explícita
-        const sucessoPorAtributo = {
-            HABILIDADE: 'Ação BEM-SUCEDIDA. A ação atingiu o objetivo com precisão e foi executada com perfeição técnica. PROIBIDO aplicar [DANO] ao jogador neste turno — o jogador não se feriu.',
-            CARISMA: 'Ação BEM-SUCEDIDA. O interlocutor cedeu ou reagiu favoravelmente. Descreva a mudança concreta de comportamento do NPC — o que ele disse, fez, ou entregou. PROIBIDO aplicar [DANO] ao jogador neste turno.',
-            SORTE: 'Ação BEM-SUCEDIDA POR PURO ACASO. O acaso favoreceu o jogador de forma inesperada. Descreva o detalhe concreto do cenário que virou a seu favor. PROIBIDO aplicar [DANO] ao jogador neste turno.'
-        };
-        logicaFisica = sucessoPorAtributo[tipoAcao] || sucessoPorAtributo['HABILIDADE'];
-    }
-
-    mensagemParaNarrador += `\nMECÂNICA: Teste de ${tipoAcao} = ${resultadoTeste}. DIRETRIZ OBRIGATÓRIA: ${logicaFisica}`;
-}
+                    const semente = Math.floor(Math.random() * 10) + 1; // Semente de 1 a 10 gerada localmente
+                    const metadados = `\n[SISTEMA: HABILIDADE(${jogadorStats.HABILIDADE}), CARISMA(${jogadorStats.CARISMA}), SORTE(${jogadorStats.SORTE}) | SEMENTE: ${semente}]`;
+                    mensagemFinal += metadados;
                 }
 
-                mensagens.push({ role: 'user', content: mensagemParaNarrador });
+                mensagens.push({ role: 'user', content: mensagemFinal });
 
                 const isIntro = (isInitial && !resumoAtual);
-                const maxTokens       = isIntro ? 500 : 200;
+                const maxTokens       = isIntro ? 500 : 250;
                 const maxContinuacoes = isIntro ?    1 :   1;
 
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
