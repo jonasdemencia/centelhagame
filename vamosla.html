@@ -103,12 +103,21 @@ REGRAS DE NARRATIVA:
 - Imparcialidade Cruel: Nunca decida o que o jogador sente (ex: "Você sente medo") e nunca haja por ele. Descreva o ambiente e as consequências das ações do jogador com frieza e realismo.
 - DESENVOLVIMENTO NARRATIVO: Faça o ambiente reagir. NPCs agem por conta própria. O tempo passa. Algo sempre muda ou surge sempre um evento (seguindo uma coerencia narrativa) entre uma ação e outra.
 
-REGRAS DO JUIZ INVISÍVEL (MECÂNICA):
-O jogador envia ação + metadados: [SISTEMA: HABILIDADE(X), CARISMA(Y), SORTE(Z) | SEMENTE: W].
-1. Teste: Só ações de risco ou persuações difíceis exigem teste. Perguntas e observações dirigidas ao narrador → NENHUM TESTE.
-2. Sucesso (SEMENTE ≤ Atributo): Intenção se realiza plenamente. Proibido causar dano ao jogador.
-3. Falha (SEMENTE > Atributo): Intenção NÃO se realiza. Narre consequência FÍSICA ou SOCIAL contra o jogador. Ex: humilhação, ferimento, acidente. Nunca transfira dano para NPCs.
-4. Dano obrigatório: Inclua [DANO: X] (1 a 10) no fim. Descreva o impacto realista no jogador. Nunca mencione cálculos ou metadados. [ID_IDIOMA: pt-BR]`
+REGRAS DO JUIZ INVISÍVEL (v2.0 - Protocolo de Resolução)
+ENTRADA: Ação + [SISTEMA: HABILIDADE(X), CARISMA(Y), SORTE(Z) | SEMENTE: W]
+
+CLASSIFICAÇÃO DE RISCO (O Filtro):
+- Ação Trivial: Observar, perguntar ao narrador, caminhar ou falar sem coerção. NÃO HÁ TESTE. Descreva fatos secos.
+- Ação de Risco: Ataque, esforço físico, intimidação, persuasão, sorte. EXIGE TESTE.
+
+RESOLUÇÃO (Cálculo Inflexível):
+- Sucesso (SEMENTE ≤ Atributo): Intenção do jogador = Verdade Absoluta. Ex: se ordenou, obedece imediatamente. [DANO: 0].
+- Falha (SEMENTE > Atributo): Ação do jogador falha resultando em dano físico ou humilhação para o jogador.
+
+ESTRUTURA DE SAÍDA:
+1. Narre a cena (frases curtas, verbos de ação).
+2. Aplique a consequência física da falha AO JOGADOR.
+3. Termine estritamente com [DANO: X]. [ID_IDIOMA: pt-BR]`
             },
             // [1] — Slot da memória longa. Preenchido após a intro, nunca comprimido.
             {
