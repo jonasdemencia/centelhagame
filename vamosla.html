@@ -22,7 +22,7 @@
     <div id="game-container">
        <div id="local-atual" style="display: flex; justify-content: space-between;">
     <span>⚔️ Reinos Desolados • <span id="modelo-span">qwen2.5-7b-instruct-abliterated-v2</span></span>
-<span id="energia-span" style="color: #a13d3d; font-weight: bold;">🩸 Energia: 50/50</span>
+<span id="energia-span" style="color: #a13d3d; font-weight: bold;">🩸 Energia: 10/10</span>
        </div>
 
         <div id="chat-box">
@@ -66,7 +66,7 @@
 
         // Variáveis globais
         let turnosJogados = 0;
-        let energia = 50;
+        let energia = 10;
 
         // ── MEMÓRIA LONGA ─────────────────────────────────────────
         // Gerada uma única vez após a intro e nunca sobrescrita.
@@ -105,11 +105,10 @@ REGRAS DE NARRATIVA:
 
 REGRAS DO JUIZ INVISÍVEL (MECÂNICA):
 O jogador envia ação + metadados: [SISTEMA: HABILIDADE(X), CARISMA(Y), SORTE(Z) | SEMENTE: W].
-1. Teste: Só ações de risco exigem teste. Perguntas e observações → NENHUM.
+1. Teste: Só ações de risco ou persuações difíceis exigem teste. Perguntas e observações dirigidas ao narrador → NENHUM TESTE.
 2. Sucesso (SEMENTE ≤ Atributo): Intenção se realiza plenamente. Proibido causar dano ao jogador.
 3. Falha (SEMENTE > Atributo): Intenção NÃO se realiza. Narre consequência FÍSICA ou SOCIAL contra o jogador. Ex: humilhação, ferimento, acidente. Nunca transfira dano para NPCs.
-4. Dano obrigatório: Inclua [DANO: X] (1 a 10) no fim. Descreva o impacto realista no jogador. Nunca mencione cálculos ou metadados.
-[ID_IDIOMA: pt-BR]
+4. Dano obrigatório: Inclua [DANO: X] (1 a 10) no fim. Descreva o impacto realista no jogador. Nunca mencione cálculos ou metadados. [ID_IDIOMA: pt-BR]`
             },
             // [1] — Slot da memória longa. Preenchido após a intro, nunca comprimido.
             {
@@ -175,47 +174,39 @@ O jogador envia ação + metadados: [SISTEMA: HABILIDADE(X), CARISMA(Y), SORTE(Z
         // Salva em Firestore como campo separado e imutável.
         // ============================================================
         async function gerarMemoriaLonga(textoIntro) {
-    if (memoriaLonga) return;
+            if (memoriaLonga) return; // já existe — nunca sobrescreve
 
-    const promptLore = [
-        {
-            role: 'system',
-            content: `Você é um extrator de lore. Dado o texto de introdução de um RPG, preencha os campos abaixo com dados factuais extraídos do texto. Zero prosa. Zero adjetivos literários. Apenas nomes e fatos secos.
+            const promptLore = [
+                {
+                    role: 'system',
+content: 'Você é um extrator de lore. Dado o texto de introdução de um RPG, preencha os campos abaixo com dados factuais extraídos do texto. Zero prosa. Zero adjetivos literários. Apenas nomes e fatos secos.\n\nMUNDO: [nome do cenário/reino principal]\nAMEAÇA: [nome e natureza da ameaça principal]\nARQUÉTIPO: [arquétipo do jogador]\nMISSÃO: [objetivo concreto da missão]\nLOCALIZAÇÕES: [lista separada por vírgulas de TODOS os lugares nomeados: reinos, regiões, vilas, rios, montanhas, pântanos, locais específicos — apenas os nomes, sem descrição]\n\nResponda APENAS com os campos preenchidos, sem texto adicional.'                },
+                {
+                    role: 'user',
+                    content: `Texto da introdução:\n${textoIntro}\n\nGere a memória permanente agora.`
+                }
+            ];
 
-MUNDO: [nome do cenário/reino principal]
-AMEAÇA: [nome e natureza da ameaça principal]
-ARQUÉTIPO: [arquétipo do jogador]
-MISSÃO: [objetivo concreto da missão]
-LOCALIZAÇÕES: [lista separada por vírgulas de TODOS os lugares nomeados: reinos, regiões, vilas, rios, montanhas, pântanos, locais específicos — apenas os nomes, sem descrição]
-
-Responda APENAS com os campos preenchidos, sem texto adicional.`
-        },
-        {
-            role: 'user',
-            content: `Texto da introdução:\n${textoIntro}\n\nGere a memória permanente agora.`
+            try {
+                const response = await fetch(LM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODELO,
+                        messages: promptLore,
+                        temperature: 0.1,
+                        max_tokens: 250
+                    })
+                });
+                const data = await response.json();
+                memoriaLonga = data.choices[0].message.content.trim();
+                mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta — nunca contradiga nem altere):\n${memoriaLonga}`;
+                // Salva separado no Firestore — campo nunca será sobrescrito pelas compressões
+                await setDoc(doc(db, "sessoes", sessionId), { memoriaLonga }, { merge: true });
+                console.debug('[MEMÓRIA LONGA] Gerada e salva:', memoriaLonga);
+            } catch (e) {
+                console.error('Erro ao gerar memória longa:', e);
+            }
         }
-    ];
-
-    try {
-        const response = await fetch(LM_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: MODELO,
-                messages: promptLore,
-                temperature: 0.1,
-                max_tokens: 250
-            })
-        });
-        const data = await response.json();
-        memoriaLonga = data.choices[0].message.content.trim();
-        mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta — nunca contradiga nem altere):\n${memoriaLonga}`;
-        await setDoc(doc(db, "sessoes", sessionId), { memoriaLonga }, { merge: true });
-        console.debug('[MEMÓRIA LONGA] Gerada e salva:', memoriaLonga);
-    } catch (e) {
-        console.error('Erro ao gerar memória longa:', e);
-    }
-}
 
         // ============================================================
         // Função do Diretor de Fases
