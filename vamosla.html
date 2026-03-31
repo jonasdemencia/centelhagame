@@ -16,6 +16,12 @@
         button { padding: 12px 20px; cursor: pointer; background: #3a3228; color: #fff; border: none; font-family: inherit; font-size: 16px; transition: 0.2s; }
         button:hover:not(:disabled) { background: #5a4a38; }
         button:disabled { opacity: 0.3; cursor: not-allowed; }
+        .teste-reveal { color: #4caf50; font-style: italic; font-weight: bold; text-align: center; letter-spacing: 2px; margin: 10px 0; }
+.resultado-dado { color: #b5a68b; text-align: center; font-style: italic; margin: 4px 0; font-size: 0.9em; }
+.resultado-sucesso { color: #4caf50; font-weight: bold; text-align: center; letter-spacing: 3px; margin: 4px 0; }
+.resultado-falha { color: #e53935; font-weight: bold; text-align: center; letter-spacing: 3px; margin: 4px 0; }
+#rolar-btn { display: block; margin: 10px auto; padding: 10px 28px; background: #1a2e12; color: #4caf50; border: 1px solid #4caf50; font-family: inherit; font-size: 15px; font-style: italic; letter-spacing: 1px; cursor: pointer; transition: 0.2s; }
+#rolar-btn:hover { background: #253d19; }
     </style>
 </head>
 <body>
@@ -505,6 +511,40 @@ ATRIBUTO (apenas se ARRISCADA):
     const data = await response.json();
     return JSON.parse(data.choices[0].message.content);
 }
+
+        async function animarTextoTeste(texto) {
+    const div = document.createElement('div');
+    div.className = 'teste-reveal';
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    for (const char of texto) {
+        div.innerText += char;
+        await new Promise(r => setTimeout(r, 40));
+    }
+}
+
+function criarBotaoRolar() {
+    return new Promise(resolve => {
+        const btn = document.createElement('button');
+        btn.id = 'rolar-btn';
+        btn.innerText = '⚄ ROLAR DADO';
+        chatBox.appendChild(btn);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        btn.addEventListener('click', () => { btn.remove(); resolve(); }, { once: true });
+    });
+}
+
+function mostrarResultadoDado(semente, atributo, valorAtributo, resultado) {
+    const divDado = document.createElement('div');
+    divDado.className = 'resultado-dado';
+    divDado.innerText = `Rolagem: ${semente} vs ${atributo} ${valorAtributo}`;
+    chatBox.appendChild(divDado);
+    const divRes = document.createElement('div');
+    divRes.className = resultado === 'SUCESSO' ? 'resultado-sucesso' : 'resultado-falha';
+    divRes.innerText = resultado;
+    chatBox.appendChild(divRes);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
       
 window.enviar = async function(mensagemUsuario = null) {
     const isInitial = mensagemUsuario === null;
@@ -550,15 +590,20 @@ if (!isInitial) {
     let danoBase = 0;
 
     if (tipo === 'ARRISCADA' && atributo !== 'NENHUM') {
+        await animarTextoTeste(`TESTE DE ${atributo}`);
+        await criarBotaoRolar();
+
         const semente = Math.floor(Math.random() * 10) + 1;
         const valorAtributo = jogadorStats[atributo] ?? 0;
         resultado = semente <= valorAtributo ? 'SUCESSO' : 'FALHA';
         if (resultado === 'FALHA') {
             danoBase = Math.max(1, Math.floor((semente - valorAtributo) / 2));
         }
+
+        mostrarResultadoDado(semente, atributo, valorAtributo, resultado);
+        await new Promise(r => setTimeout(r, 600));
     }
 
-    // FASE 2: narrador recebe o resultado já calculado — só escreve prosa
     const contextoDecidido = tipo === 'TRIVIAL'
         ? `[AÇÃO TRIVIAL — narre diretamente sem mencionar teste. Termine com [DANO: 0]]`
         : `[AÇÃO ARRISCADA — TESTE DE ${atributo}: ${resultado}. Dano mínimo se falha: ${danoBase}. Narre a cena. Termine com [DANO: ${resultado === 'FALHA' ? danoBase : 0}]]`;
