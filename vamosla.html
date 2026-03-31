@@ -2,11 +2,11 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Centelha • Jogo Medieval Brutal (com testes visíveis)</title>
+    <title>Centelha • Jogo Medieval Brutal (Teste com Dado Manual)</title>
     <style>
         body { background: #1a1a14; color: #b5a68b; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        #game-container { width: 90%; max-width: 650px; background: #141311; padding: 20px; border: 4px solid #3a3228; box-shadow: 6px 6px 0px #000; }
-        #local-atual { color: #ffaa00; margin-bottom: 8px; font-size: 14px; border-bottom: 1px solid #3a3228; padding-bottom: 4px; }
+        #game-container { width: 90%; max-width: 650px; background: #141311; padding: 20px; border: 4px solid #3a3228; box-shadow: 6px 6px 0px #000; position: relative; }
+        #local-atual { color: #ffaa00; margin-bottom: 8px; font-size: 14px; border-bottom: 1px solid #3a3228; padding-bottom: 4px; display: flex; justify-content: space-between; }
         #chat-box { height: 300px; overflow-y: auto; border: 2px inset #2a251e; padding: 15px; background: #0d0c0a; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; }
         .user-message { color: #7a8c66; align-self: flex-end; background: #1e2a1a; padding: 6px 12px; border-radius: 12px 0 12px 12px; max-width: 80%; word-wrap: break-word; }
         .ai-message { color: #a13d3d; align-self: flex-start; background: #2a1a1a; padding: 6px 12px; border-radius: 0 12px 12px 12px; max-width: 80%; word-wrap: break-word; }
@@ -16,14 +16,53 @@
         button { padding: 12px 20px; cursor: pointer; background: #3a3228; color: #fff; border: none; font-family: inherit; font-size: 16px; transition: 0.2s; }
         button:hover:not(:disabled) { background: #5a4a38; }
         button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* Modal do dado */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #1e1c18;
+            border: 4px solid #6a4a2a;
+            padding: 30px;
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #e0c080;
+            box-shadow: 8px 8px 0 #000;
+            max-width: 400px;
+        }
+        .dice-button {
+            background: #6a4a2a;
+            font-size: 2rem;
+            padding: 15px 30px;
+            margin: 20px;
+            border: none;
+            color: #f0e0a0;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .dice-button:hover { background: #8a623a; }
+        .dice-result {
+            font-size: 1.2rem;
+            margin-top: 15px;
+            color: #c0a060;
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
-       <div id="local-atual" style="display: flex; justify-content: space-between;">
-    <span>⚔️ Reinos Desolados • <span id="modelo-span">qwen2.5-7b-instruct-abliterated-v2</span></span>
-<span id="energia-span" style="color: #a13d3d; font-weight: bold;">🩸 Energia: 10/10</span>
-       </div>
+        <div id="local-atual">
+            <span>⚔️ Reinos Desolados • <span id="modelo-span">qwen2.5-7b-instruct-abliterated-v2</span></span>
+            <span id="energia-span" style="color: #a13d3d; font-weight: bold;">🩸 Energia: 10/10</span>
+        </div>
 
         <div id="chat-box">
             <div class="system-message">⚔️ O narrador está preparando o cenário...</div>
@@ -31,7 +70,16 @@
 
         <div id="controls">
             <input type="text" id="user-input" placeholder="Sua ação..." disabled>
-            <button id="send-btn" onclick="enviar(document.getElementById('user-input').value.trim())" disabled>Agir</button>
+            <button id="send-btn" onclick="enviar()" disabled>Agir</button>
+        </div>
+    </div>
+
+    <!-- Modal de rolagem de dado -->
+    <div id="diceModal" class="modal">
+        <div class="modal-content">
+            <div>🎲 TESTE DE <span id="teste-atributo">???</span> 🎲</div>
+            <button id="rollDiceBtn" class="dice-button">ROLAR DADO (d10)</button>
+            <div id="diceResult" class="dice-result"></div>
         </div>
     </div>
 
@@ -39,9 +87,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // ============================================================
-        // Configuração do Firebase & Firestore
-        // ============================================================
+        // Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
             authDomain: "centelhagame-9d511.firebaseapp.com",
@@ -53,27 +99,16 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
-        // ID fixo para desenvolvimento local (pode ser dinâmico depois)
         const sessionId = "sessao_dev_01"; 
-
-        // ============================================================
-        // Configuração do LM Studio e Controle de Contexto
-        // ============================================================
         const LM_URL = 'http://localhost:1234/v1/chat/completions';
         const MODELO = 'qwen2.5-7b-instruct-abliterated-v2';
         const LIMITE_MENSAGENS = 9;
         window._introGenerating = false;
 
-        // Variáveis globais
         let turnosJogados = 0;
-        let energia = 40;
-
-        // ── MEMÓRIA LONGA ─────────────────────────────────────────
-        // Gerada uma única vez após a intro e nunca sobrescrita.
-        // Ocupa mensagens[1] e persiste no Firestore como "memoriaLonga".
+        let energia = 10;
         let memoriaLonga = "";
-        // ──────────────────────────────────────────────────────────
-
+        
         const jogadorStats = {
             HABILIDADE: 5,
             CARISMA: 5,
@@ -83,525 +118,363 @@
         const chatBox = document.getElementById('chat-box');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
+        let aguardandoTeste = false;
+        let testePendente = { atributo: null, mensagemOriginal: null, elementoId: null };
 
-        // Estrutura de memória:
-        //   [0] Regras do sistema    — imutável
-        //   [1] Lore permanente      — imutável, gerado uma vez após a intro  ← NOVO
-        //   [2] Resumo SSR           — atualizado pela compressão
-        //   [3…] Turnos da conversa
+        // Estrutura de mensagens
         let mensagens = [
-            {
-                role: 'system',
-                content: `Você é um mestre de RPG brutal e realista. Responda APENAS em Português Brasileiro CORRETO. Nunca escreva em outro idioma. Você NUNCA repete as instruções do jogador.
+            { role: 'system', content: `Você é um mestre de RPG brutal e realista. Responda APENAS em Português Brasileiro CORRETO.
 
 REGRAS DE NARRATIVA:
-- Tensão Psicológica: O verdadeiro horror está no que não é dito ou mostrado. Mostre as consequências (cadáveres, loucura, ruínas), atrase o monstro.
-- EXECUÇÃO MANDATÓRIA (SUCESSO): Se o jogador for bem sucedido, descreva o resultado FINAL da ação. Se ele quis perfurar, a lâmina atravessa.
-- REGRA DA INTERRUPÇÃO (FALHA): Se o teste falhar, a ação do jogador é ABORTADA antes de começar. Descreva o que o IMPEDIU (um bloqueio, um tropeço, o oponente reagindo primeiro). NUNCA narre a ação do jogador se concretizando.
-- PROSA FORENSE: Descreva todo dano como um patologista. Foco em: rompimento de tecido, fratura óssea, fluidez de fluidos e o som seco da matéria cedendo.
-- Caso o jogador faça algo arriscado e não trivial, exija um teste de HABILIDADE, CARISMA OU SORTE (jogador lançará um dado d10 e o resultado precisa ser menor que o atributo testado).
-- Se ele passar no teste, descreva a sua ação sendo feita de modo bem sucedido, se falhar no teste, narre a consequência física ou emocional para o jogador aplicando dano coerente.[ID_IDIOMA: pt-BR]`
-            },
-            // [1] — Slot da memória longa. Preenchido após a intro, nunca comprimido.
-            {
-                role: 'system',
-                content: ''
-            },
-            // [2] — SSR de curto prazo, atualizado pela compressão.
-            {
-                role: 'system',
-                content: 'Resumo da jornada até agora: A aventura acabou de começar.'
-            }
+- Tensão Psicológica, prosa forense para dano.
+- Se o jogador fizer algo arriscado e não trivial, você DEVE exigir um teste de HABILIDADE, CARISMA ou SORTE.
+- Para exigir o teste, escreva no final da sua mensagem exatamente assim: [TESTE_REQUERIDO: Atributo] onde Atributo é HABILIDADE, CARISMA ou SORTE.
+- NÃO faça você mesmo a rolagem. O sistema mostrará uma janela para o jogador rolar.
+- Após o jogador rolar, ele enviará [RESULTADO_TESTE: atributo | rolagem: X | sucesso: SIM/NAO]. Então você narrará o resultado conforme o sucesso ou falha, aplicando dano coerente se falhar.
+- NUNCA narre o sucesso se o teste falhou. Interrompa a ação.
+- Descreva dano como patologista.
+- Use segunda pessoa, frases curtas.
+- Só emita UM pedido de teste por mensagem.` },
+            { role: 'system', content: '' },  // slot memoriaLonga
+            { role: 'system', content: 'Resumo da jornada até agora: A aventura acabou de começar.' }
         ];
-
         let resumoAtual = "";
 
-        // ============================================================
-        // Funções de Inicialização e Firebase
-        // ============================================================
-        async function carregarSessao() {
-            try {
-                const docRef = doc(db, "sessoes", sessionId);
-                const docSnap = await getDoc(docRef);
-                
-                if (docSnap.exists()) {
-                    // ── Carrega memória longa (imutável) ──────────────
-                    if (docSnap.data().memoriaLonga) {
-                        memoriaLonga = docSnap.data().memoriaLonga;
-                        mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta — nunca contradiga nem altere):\n${memoriaLonga}`;
-                    }
-                    // ── Carrega SSR de curto prazo ────────────────────
-                    if (docSnap.data().resumo) {
-                        resumoAtual = docSnap.data().resumo;
-                        mensagens[2].content = `Resumo da jornada até agora: ${resumoAtual}`;
-                    }
-                    if (docSnap.data().turnos !== undefined) {
-                        turnosJogados = docSnap.data().turnos;
-                    }
-                    if (docSnap.data().energia !== undefined) {
-                        energia = docSnap.data().energia;
-                        document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
-                    }
-                }
-            } catch (e) {
-                console.error("Erro ao carregar do Firestore:", e);
-            }
-        }
-
-        async function salvarResumoFirestore(novoResumo) {
-            try {
-                await setDoc(doc(db, "sessoes", sessionId), { 
-                    resumo: novoResumo,
-                    turnos: turnosJogados,
-                    energia: energia
-                }, { merge: true });
-            } catch (e) {
-                console.error("Erro ao salvar no Firestore:", e);
-            }
-        }
-
-        // ============================================================
-        // MEMÓRIA LONGA — gerada uma única vez após a intro
-        // Extrai: nome do mundo, ameaça principal, arquétipo, missão.
-        // Salva em Firestore como campo separado e imutável.
-        // ============================================================
-        async function gerarMemoriaLonga(textoIntro) {
-            if (memoriaLonga) return; // já existe — nunca sobrescreve
-
-            const promptLore = [
-                {
-                    role: 'system',
-content: 'Você é um extrator de lore. Dado o texto de introdução de um RPG, preencha os campos abaixo com dados factuais extraídos do texto. Zero prosa. Zero adjetivos literários. Apenas nomes e fatos secos.\n\nMUNDO: [nome do cenário/reino principal]\nAMEAÇA: [nome e natureza da ameaça principal]\nARQUÉTIPO: [arquétipo do jogador]\nMISSÃO: [objetivo concreto da missão]\nLOCALIZAÇÕES: [lista separada por vírgulas de TODOS os lugares nomeados: reinos, regiões, vilas, rios, montanhas, pântanos, locais específicos — apenas os nomes, sem descrição]\n\nResponda APENAS com os campos preenchidos, sem texto adicional.'                },
-                {
-                    role: 'user',
-                    content: `Texto da introdução:\n${textoIntro}\n\nGere a memória permanente agora.`
-                }
-            ];
-
-            try {
-                const response = await fetch(LM_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: MODELO,
-                        messages: promptLore,
-                        temperature: 0.1,
-                        max_tokens: 250
-                    })
-                });
-                const data = await response.json();
-                memoriaLonga = data.choices[0].message.content.trim();
-                mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta — nunca contradiga nem altere):\n${memoriaLonga}`;
-                // Salva separado no Firestore — campo nunca será sobrescrito pelas compressões
-                await setDoc(doc(db, "sessoes", sessionId), { memoriaLonga }, { merge: true });
-                console.debug('[MEMÓRIA LONGA] Gerada e salva:', memoriaLonga);
-            } catch (e) {
-                console.error('Erro ao gerar memória longa:', e);
-            }
-        }
-
-        // ============================================================
-        // Função do Diretor de Fases
-        // ============================================================
-        function obterDiretrizDeFase() {
-            if (turnosJogados < 50) {
-                return "FASE 1 - RASTROS (Lentidão): O perigo é apenas um sussurro, uma lenda ou um rastro perturbador no cenário. É ESTRITAMENTE PROIBIDO mostrar a ameaça principal. Foco no mistério e na exploração do infamiliar.";
-            } else if (turnosJogados < 250) {
-                return "FASE 2 - PARANOIA: Os sinais da ameaça são recentes. O ambiente reage a algo invisível (animais mortos, cheiro de podridão, NPCs aterrorizados). O perigo é iminente, mas ainda indireto.";
-            } else if (turnosJogados < 450) {
-                return "FASE 3 - PERSEGUIÇÃO: O jogador vê a ameaça de relance. Sobrevivência se torna o foco. O cerco está se fechando. Tensão alta, descreva o som e o impacto da ameaça no ambiente.";
-            } else {
-                return "FASE 4 - O CLÍMAX: O confronto direto, visceral e inevitável. Apostas máximas. Descreva a brutalidade do embate.";
-            }
-        }
-
-        // ============================================================
-        // Funções de Compressão de Memória — Structured State Representation (SSR)
-        // ============================================================
-
-        const SSR_TEMPLATE = `LOCAL: [onde o jogador está agora]
-NPCS: [lista de personagens encontrados e seu estado atual: nome/descrição, relação, vivo/morto/desconhecido]
-ITENS: [itens carregados ou relevantes no cenário]
-EVENTOS_CHAVE: [lista de fatos consumados, em ordem, sem atmosfera — apenas o que aconteceu]
-SITUACAO_ATUAL: [uma frase: o que o jogador está fazendo ou diante de agora]
-GANCHOS_ATIVOS: [pistas ou ameaças não resolvidas que devem ser lembradas]`;
-
-        async function comprimirMemoria() {
-            if (mensagens.length > LIMITE_MENSAGENS) {
-                adicionarMensagem('⚙️ As engrenagens do destino giram. Consolidando memórias...', 'system');
-                
-                // Conversa começa em [3] — [0..2] são slots de sistema protegidos
-                const mensagensParaResumir = mensagens.splice(3, 6);
-                const textoExtraido = mensagensParaResumir
-                    .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
-                    .join('\n---\n');
-
-                const promptResumo = [
-                    { 
-                        role: 'system', 
-                        content: `Você é um extrator de estado de jogo. Sua única função é preencher o formulário abaixo com dados factuais extraídos dos eventos fornecidos. REGRAS ABSOLUTAS:
-1. ZERO prosa, ZERO atmosfera, ZERO adjetivos literários.
-2. Cada campo deve ser preenchido com fatos secos e objetivos.
-3. Se o estado anterior já tiver um campo, ATUALIZE-O com as novas informações — não apague o que ainda é verdade.
-4. Se não houver informação para um campo, escreva: [sem dados].
-5. Responda APENAS com o formulário preenchido, sem nenhum texto adicional antes ou depois.
-
-FORMULÁRIO:
-${SSR_TEMPLATE}`
-                    },
-                    { 
-                        role: 'user', 
-                        content: `ESTADO ANTERIOR:\n${resumoAtual || '[início da aventura — sem estado anterior]'}\n\nNOVOS EVENTOS:\n${textoExtraido}\n\nPreencha o formulário de estado atualizado agora.`
-                    }
-                ];
-
-                try {
-                    const response = await fetch(LM_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            model: MODELO,
-                            messages: promptResumo,
-                            temperature: 0.3,
-                            max_tokens: 350
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    const novoSSR = data.choices[0].message.content.trim();
-                    
-                    console.debug('[SSR] Estado estruturado gerado:\n' + novoSSR);
-                    
-                    resumoAtual = novoSSR;
-                    mensagens[2].content = `ESTADO ATUAL DO MUNDO (use como referência factual, não repita como narração):\n${resumoAtual}`;
-                    await salvarResumoFirestore(resumoAtual);
-                    
-                } catch (error) {
-                    console.error("Erro ao comprimir memória:", error);
-                    mensagens.splice(3, 0, ...mensagensParaResumir);
-                }
-            }
-        }
-
-        // ============================================================
-        // Funções auxiliares Visuais
-        // ============================================================
+        // ========== Funções auxiliares ==========
         function adicionarMensagem(texto, tipo, temporaria = false) {
             const div = document.createElement('div');
             div.className = tipo === 'user' ? 'user-message' : tipo === 'system' ? 'system-message' : 'ai-message';
             div.innerText = texto;
-            if (temporaria) {
-                div.id = 'temp-' + Date.now() + '-' + Math.random();
-            }
+            if (temporaria) div.id = 'temp-' + Date.now() + '-' + Math.random();
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
             return div.id;
         }
 
-        // ============================================================
-        // Função 2: Motor de Regras
-        // ============================================================
-        function rolarTeste(atributo) {
-            if (atributo === 'NENHUM' || !jogadorStats[atributo]) return null;
-            const rolagem = Math.floor(Math.random() * 10) + 1;
-            return rolagem <= jogadorStats[atributo] ? 'SUCESSO' : 'FALHA';
+        function removerMensagemTemporaria(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
         }
 
-        // ============================================================
-        // Streaming SSE com loop de auto-continuação
-        // ============================================================
-        async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
-    console.log("🔥 Temperatura usada:", window._introGenerating ? 0.75 : 0.6);
-    try {
-        const response = await fetch(LM_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: MODELO,
-                messages: mensagensPayload,
-                temperature: window._introGenerating ? 0.75 : 0.4,
-                max_tokens: maxTokens,
-                presence_penalty: 0.3,
-                frequency_penalty: 0.3,
-                stream: true
-            })
-        });
+        async function salvarEstadoFirestore() {
+            try {
+                await setDoc(doc(db, "sessoes", sessionId), { 
+                    resumo: resumoAtual,
+                    turnos: turnosJogados,
+                    energia: energia,
+                    memoriaLonga: memoriaLonga
+                }, { merge: true });
+            } catch (e) { console.error("Erro ao salvar:", e); }
+        }
 
-        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-        let fullText = '';
-        let finishReason = null;
-
-        console.debug('[LLM STREAM] Iniciando leitura de chunks SSE...');
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-                console.debug('[LLM STREAM] Leitor finalizado (done=true)');
-                break;
-            }
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop();
-
-            for (const line of lines) {
-                if (!line.startsWith('data: ')) continue;
-                const jsonStr = line.slice(6).trim();
-                if (jsonStr === '[DONE]') {
-                    console.debug('[LLM STREAM] Sinal [DONE] recebido.');
-                    continue;
+        async function carregarSessao() {
+            try {
+                const docRef = doc(db, "sessoes", sessionId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    if (docSnap.data().memoriaLonga) {
+                        memoriaLonga = docSnap.data().memoriaLonga;
+                        mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta):\n${memoriaLonga}`;
+                    }
+                    if (docSnap.data().resumo) {
+                        resumoAtual = docSnap.data().resumo;
+                        mensagens[2].content = `Resumo da jornada: ${resumoAtual}`;
+                    }
+                    if (docSnap.data().turnos !== undefined) turnosJogados = docSnap.data().turnos;
+                    if (docSnap.data().energia !== undefined) {
+                        energia = docSnap.data().energia;
+                        document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
+                    }
                 }
+            } catch (e) { console.error("Erro ao carregar:", e); }
+        }
+
+        async function gerarMemoriaLonga(textoIntro) {
+            if (memoriaLonga) return;
+            const promptLore = [
+                { role: 'system', content: 'Você é um extrator de lore. Extraia MUNDO, AMEAÇA, ARQUÉTIPO, MISSÃO, LOCALIZAÇÕES do texto. Responda só com campos.' },
+                { role: 'user', content: `Texto:\n${textoIntro}` }
+            ];
+            try {
+                const response = await fetch(LM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: MODELO, messages: promptLore, temperature: 0.1, max_tokens: 250 })
+                });
+                const data = await response.json();
+                memoriaLonga = data.choices[0].message.content.trim();
+                mensagens[1].content = `LORE PERMANENTE DO MUNDO:\n${memoriaLonga}`;
+                await setDoc(doc(db, "sessoes", sessionId), { memoriaLonga }, { merge: true });
+            } catch (e) { console.error('Erro gerar memória:', e); }
+        }
+
+        async function comprimirMemoria() {
+            if (mensagens.length > LIMITE_MENSAGENS) {
+                const mensagensParaResumir = mensagens.splice(3, 6);
+                const textoExtraido = mensagensParaResumir.map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`).join('\n---\n');
+                const promptResumo = [
+                    { role: 'system', content: `Extraia estado factual: LOCAL, NPCS, ITENS, EVENTOS_CHAVE, SITUACAO_ATUAL, GANCHOS_ATIVOS.` },
+                    { role: 'user', content: `Estado anterior:\n${resumoAtual || 'início'}\n\nEventos:\n${textoExtraido}` }
+                ];
                 try {
-                    const chunk = JSON.parse(jsonStr);
-                    const delta = chunk.choices?.[0]?.delta?.content || '';
-                    const fr = chunk.choices?.[0]?.finish_reason;
-
-                    if (fr && fr !== 'null') {
-                        console.debug(`[LLM STREAM] finish_reason recebido: "${fr}"`);
-                    } else if (fr === 'null') {
-                        console.debug('[LLM STREAM] finish_reason = null (ignorado)');
-                    }
-
-                    if (delta) {
-                        fullText += delta;
-                        if (onToken) onToken(fullText);
-                    }
-                    if (fr && fr !== 'null') {
-                        finishReason = fr;
-                    }
-
-                    if (chunk.error) {
-                        console.error('[LLM STREAM] Erro no chunk:', chunk.error);
-                    }
-                } catch (parseErr) {
-                    console.error('[LLM STREAM] Erro ao parsear chunk:', parseErr, 'Linha:', line);
-                }
+                    const response = await fetch(LM_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ model: MODELO, messages: promptResumo, temperature: 0.3, max_tokens: 350 })
+                    });
+                    const data = await response.json();
+                    resumoAtual = data.choices[0].message.content.trim();
+                    mensagens[2].content = `ESTADO ATUAL:\n${resumoAtual}`;
+                    await salvarEstadoFirestore();
+                } catch (error) { console.error("Erro compressão:", error); mensagens.splice(3, 0, ...mensagensParaResumir); }
             }
         }
 
-        console.debug(`[LLM STREAM] Geração concluída. Tokens gerados: ~${fullText.split(' ').length} palavras. finish_reason final: "${finishReason}"`);
-        return { text: fullText, finishReason };
-    } catch (error) {
-        console.error('[LLM STREAM] Falha na requisição fetch:', error);
-        throw error;
-    }
-}
+        async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
+            const response = await fetch(LM_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: MODELO,
+                    messages: mensagensPayload,
+                    temperature: window._introGenerating ? 0.75 : 0.4,
+                    max_tokens: maxTokens,
+                    stream: true
+                })
+            });
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '', fullText = '';
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
+                for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue;
+                    const jsonStr = line.slice(6).trim();
+                    if (jsonStr === '[DONE]') continue;
+                    try {
+                        const chunk = JSON.parse(jsonStr);
+                        const delta = chunk.choices?.[0]?.delta?.content || '';
+                        if (delta) {
+                            fullText += delta;
+                            if (onToken) onToken(fullText);
+                        }
+                    } catch (e) { console.error('Parse error', e); }
+                }
+            }
+            return fullText;
+        }
 
-        async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento, maxContinuacoes = 0) {
+        async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elementoDisplay, maxContinuacoes = 1) {
             let textoCompleto = '';
             let msgsAtual = [...mensagensPayload];
-
             for (let tentativa = 0; tentativa <= maxContinuacoes; tentativa++) {
                 if (tentativa > 0) {
-                    console.debug(`[CONTINUAÇÃO ${tentativa}/${maxContinuacoes}] finish_reason=length. Enviando extensão...`);
-                    msgsAtual = [
-                        ...msgsAtual,
-                        { role: 'assistant', content: textoCompleto },
-{ role: 'user', content: 'Continue a narração em português brasileiro.' }
-                    ];
+                    msgsAtual.push({ role: 'assistant', content: textoCompleto }, { role: 'user', content: 'Continue a narração em português brasileiro.' });
                 }
-
-                const { text, finishReason } = await chamarLLMStream(
-                    msgsAtual,
-                    maxTokens,
-                    (parcial) => {
-                        elemento.innerText = textoCompleto + parcial;
-                        chatBox.scrollTop = chatBox.scrollHeight;
-                    }
-                );
-
+                const text = await chamarLLMStream(msgsAtual, maxTokens, (parcial) => {
+                    elementoDisplay.innerText = textoCompleto + parcial;
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                });
                 textoCompleto += text;
-                elemento.innerText = textoCompleto;
+                elementoDisplay.innerText = textoCompleto;
                 chatBox.scrollTop = chatBox.scrollHeight;
-
-                if (finishReason !== 'length') {
-                    console.debug(`[GERAÇÃO] Encerrado naturalmente (finish_reason="${finishReason}") na tentativa ${tentativa}.`);
-                    break;
-                }
-
-                if (tentativa === maxContinuacoes) {
-                    console.debug(`[GERAÇÃO] Limite de ${maxContinuacoes} continuação(ões) atingido. Encerrando.`);
-                }
+                if (!text.includes('length')) break;
             }
-
             return textoCompleto;
         }
 
-        // ============================================================
-        // Prompt de introdução — estrutura Fighting Fantasy
-        // ============================================================
-        /* PROMPT ORIGINAL — COMENTADO PARA TESTES DE VELOCIDADE
-        const PROMPT_INTRO = `Esta é a introdução da aventura. Escreva em exatamente 5 parágrafos. NÃO use títulos ou marcadores — apenas prosa corrida. Apresente os seguintes elementos de forma entrelaçada:
-1 — Apresente o cenário com nome próprio. Mostre as particularidades e mistérios do mundo. 
-2 — Apresente quem é o jogador. Um arquétipo claro. Sua razão para agir. Sem nome próprio. Sem emoções descritas.
-3 — Apresente a AMEAÇA. o antagonista, acontecimento perturbador ou força maligna. Dê um nome. Localize-o. Deixe claro que outros tentaram e falharam. Não explique a origem — preserve o mistério.
-4 — Apresente a MISSÃO E AS APOSTAS: o que o jogador precisa fazer (um objetivo concreto e tangível). O que acontece se falhar — para o jogador e para o mundo ao redor.
-5 — Apresente onde o jogador está agora (um lugar físico específico). Termine com uma circunstância que obrigue o jogador a agir.
-MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos, zero emoções descritas, zero adjetivos empilhados.`;
-        */
-
-        // PROMPT DE TESTE — cena fixa para medir velocidade de resposta
-        const PROMPT_INTRO = `Descreva em 3 frases curtas a seguinte cena, em segunda pessoa: Você está numa sala de pedra. Há uma mesa, um espelho rachado e uma vela quase apagada. Uma mulher jovem e bela de cabelos escuros está de frente para você. O que você faz?`;
-
-        // ============================================================
-        // Função principal de envio
-        // ============================================================
-      
-window.enviar = async function(mensagemUsuario = null) {
-    const isInitial = mensagemUsuario === null;
-    
-    if (!isInitial) {
-        turnosJogados++;
-    }
-
-    let pergunta;
-    if (isInitial) {
-        if (!resumoAtual) {
-            pergunta = PROMPT_INTRO;
-        } else {
-            pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
+        // ========== Dado Modal ==========
+        function mostrarModalTeste(atributo, mensagemOriginalId, respostaOriginal) {
+            aguardandoTeste = true;
+            testePendente = { atributo, mensagemOriginal: respostaOriginal, elementoId: mensagemOriginalId };
+            const modal = document.getElementById('diceModal');
+            const spanAtributo = document.getElementById('teste-atributo');
+            spanAtributo.innerText = atributo;
+            document.getElementById('diceResult').innerHTML = '';
+            modal.style.display = 'flex';
         }
-    } else {
-        pergunta = mensagemUsuario;
-    }
 
-    if (!isInitial) {
-        adicionarMensagem(pergunta, 'user');
-        userInput.value = '';
-    }
+        function fecharModal() {
+            document.getElementById('diceModal').style.display = 'none';
+            aguardandoTeste = false;
+            testePendente = null;
+        }
 
-    sendBtn.disabled = true;
-    userInput.disabled = true;
-
-    const tempId = adicionarMensagem('...', 'ai', true);
-    const elementoDisplay = document.getElementById(tempId);
-
-    try {
-        await comprimirMemoria();
-
-        let mensagemFinal = pergunta;
-
-       // SE NÃO FOR A INTRODUÇÃO, APENAS GERA A SEMENTE E OS ATRIBUTOS
-if (!isInitial) {
-    // Gera a rolagem de dados (apenas o "dado")
-    const semente = Math.floor(Math.random() * 10) + 1; // 1d10
-
-    // Metadados crus: atributos do jogador + a rolagem
-    const metadados = `\n[SISTEMA - ATRIBUTOS: HAB(${jogadorStats.HABILIDADE}), CAR(${jogadorStats.CARISMA}), SOR(${jogadorStats.SORTE}) | ROLAGEM D10: ${semente}]`;
-
-    mensagemFinal += `${metadados}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
-}
-
-mensagens.push({ role: 'user', content: mensagemFinal });
-
-        const isIntro = (isInitial && !resumoAtual);
-        const maxTokens       = isIntro ? 500 : 250;
-        const maxContinuacoes = isIntro ?    1 :   1;
-
-        console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
-
-        if (isIntro) window._introGenerating = true;
-
-        const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
-
-        // 1. O JS caça o bloco gerado pelo LLM para entender o que aconteceu
-        const resolucaoMatch = respostaIA.match(/\[RESOLUCAO\s*\|\s*(.*?)\]/i);
-        let respostaLimpa = respostaIA;
-        let valorDano = 0;
-        let infoTeste = "";
-
-        if (resolucaoMatch) {
-            // Remove o bloco da narração final que vai pra tela
-            respostaLimpa = respostaIA.replace(resolucaoMatch[0], '').trim();
+        async function finalizarTeste(rolagem, sucesso) {
+            const { atributo, elementoId, mensagemOriginal } = testePendente;
+            fecharModal();
             
-            const detalhes = resolucaoMatch[1]; 
+            // Remove a mensagem temporária e coloca a versão sem marcador
+            removerMensagemTemporaria(elementoId);
+            const textoLimpo = mensagemOriginal.replace(/\[TESTE_REQUERIDO:\s*\w+\]/i, '').trim();
+            adicionarMensagem(textoLimpo, 'ai');
+            mensagens.push({ role: 'assistant', content: textoLimpo });
             
-            // Tenta extrair o Dano desse bloco
-            const danoMatch = detalhes.match(/Dano:\s*(\d+)/i);
-            if (danoMatch) valorDano = parseInt(danoMatch[1]);
-
-            // Verifica se houve falha no texto extraído
-            const isFalha = detalhes.toUpperCase().includes('FALHA');
-
-            // Formata o aviso para o jogador saber o que foi testado (apenas se não for ação trivial)
-            if (!detalhes.toUpperCase().includes('TRIVIAL')) {
-                 const corTeste = isFalha ? '#e53935' : '#7a8c66';
-                 infoTeste = `<div style="background: #1a1815; border-left: 3px solid ${corTeste}; padding: 8px; margin-bottom: 10px; font-size: 0.85em; color: #b5a68b; font-family: monospace;">
-                    🎲 <strong>TESTE DE SISTEMA:</strong> ${detalhes.replace(/\|/g, '•')}
-                 </div><br>`;
-            }
-        } else {
-            // Fallback de segurança caso o modelo falhe no formato
-            const fallbackDano = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
-            if (fallbackDano) valorDano = parseInt(fallbackDano[1]);
-            respostaLimpa = respostaIA.replace(/\[DANO:\s*\d+\]/i, '').trim();
-        }
-
-        // 2. Atualiza a tela com a narração limpa, precedida pela informação do teste (Usando innerHTML em vez de innerText)
-        elementoDisplay.innerHTML = infoTeste + respostaLimpa;
-
-        // 3. Gera memória longa logo após a intro (Mantido do seu original)
-        if (isIntro) {
-            gerarMemoriaLonga(respostaIA); 
-        }
-
-        // 4. Processa o dano mecânico no HUD
-        if (valorDano > 0) {
-            energia -= valorDano;
-            document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
-            adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
-
-            if (energia <= 0) {
-                adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
-                userInput.disabled = true;
-                sendBtn.disabled = true;
-                await salvarResumoFirestore(resumoAtual);
-                return;
-            }
-        }
-
-        if (isIntro) window._introGenerating = false;
-
-        // 5. Salva APENAS a resposta limpa na memória da IA (Isso é crucial)
-        mensagens.push({ role: 'assistant', content: respostaLimpa });
-
-        await salvarResumoFirestore(resumoAtual);
-
-        if (isInitial) {
+            // Exibe resultado do teste como sistema
+            const resultadoStr = sucesso ? "✅ Sucesso!" : "❌ Falha!";
+            adicionarMensagem(`🎲 Teste de ${atributo}: rolou ${rolagem} (atributo ${jogadorStats[atributo]}). ${resultadoStr}`, 'system');
+            
+            // Prepara nova mensagem de usuário com resultado
+            const msgTeste = `[RESULTADO_TESTE: ${atributo} | rolagem: ${rolagem} | sucesso: ${suesso ? "SIM" : "NAO"}]`;
+            
+            // Adiciona essa mensagem e chama novamente a IA para continuar
+            mensagens.push({ role: 'user', content: msgTeste });
+            
+            // Reativa controles e chama enviar novamente (mas sem incrementar turno)
             userInput.disabled = false;
             sendBtn.disabled = false;
             userInput.focus();
+            
+            // Chama a continuação (mesmo fluxo de enviar, mas sem incrementar turno)
+            await continuarAposTeste();
         }
-
-    } catch (error) {
-        elementoDisplay.innerText = `❌ Erro: ${error.message}`;
-        if (isInitial) {
-            userInput.disabled = false;
-            sendBtn.disabled = false;
+        
+        async function continuarAposTeste() {
+            const tempId = adicionarMensagem('...', 'ai', true);
+            const elementoDisplay = document.getElementById(tempId);
+            try {
+                await comprimirMemoria();
+                const respostaIA = await gerarRespostaComContinuacao(mensagens, 300, elementoDisplay, 1);
+                
+                // Remove possível marcador residual
+                const respostaLimpa = respostaIA.replace(/\[TESTE_REQUERIDO:\s*\w+\]/i, '').trim();
+                elementoDisplay.innerText = respostaLimpa;
+                mensagens.push({ role: 'assistant', content: respostaLimpa });
+                
+                // Verifica dano implícito (fallback)
+                const danoMatch = respostaIA.match(/dano:\s*(\d+)/i);
+                if (danoMatch) {
+                    const dano = parseInt(danoMatch[1]);
+                    if (dano > 0) {
+                        energia -= dano;
+                        document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
+                        adicionarMensagem(`[Você perdeu ${dano} de Energia.]`, 'system');
+                        if (energia <= 0) {
+                            adicionarMensagem("💀 SEU CORPO CEDE. FIM.", 'system');
+                            userInput.disabled = true; sendBtn.disabled = true;
+                            return;
+                        }
+                    }
+                }
+                await salvarEstadoFirestore();
+            } catch (err) {
+                elementoDisplay.innerText = `❌ Erro: ${err.message}`;
+            } finally {
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                userInput.focus();
+            }
         }
-    } finally {
-        if (!isInitial) {
-            sendBtn.disabled = false;
-            userInput.disabled = false;
-            userInput.focus();
-        }
-    }
-};
-
-        // ============================================================
-        // Inicialização
-        // ============================================================
+        
+        // ========== Função principal de envio ==========
+        window.enviar = async function(mensagemUsuario = null) {
+            if (aguardandoTeste) return; // evita múltiplas ações
+            
+            const isInitial = mensagemUsuario === null;
+            if (!isInitial) {
+                turnosJogados++;
+                adicionarMensagem(mensagemUsuario, 'user');
+                userInput.value = '';
+            }
+            
+            sendBtn.disabled = true;
+            userInput.disabled = true;
+            
+            const tempId = adicionarMensagem('...', 'ai', true);
+            const elementoDisplay = document.getElementById(tempId);
+            
+            try {
+                await comprimirMemoria();
+                
+                let pergunta = mensagemUsuario;
+                if (isInitial) {
+                    pergunta = !resumoAtual ? 
+                        "Descreva em 3 frases curtas a seguinte cena: Você está numa sala de pedra. Há uma mesa, um espelho rachado e uma vela quase apagada. Uma mulher jovem e bela de cabelos escuros está de frente para você. O que você faz?" 
+                        : "O jogo foi recarregado. Narre rapidamente a cena atual e pergunte o que faço.";
+                }
+                
+                mensagens.push({ role: 'user', content: pergunta });
+                
+                const isIntro = (isInitial && !resumoAtual);
+                const maxTokens = isIntro ? 500 : 300;
+                const maxContinuacoes = 1;
+                if (isIntro) window._introGenerating = true;
+                
+                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
+                if (isIntro) window._introGenerating = false;
+                
+                // Verifica se há pedido de teste
+                const testeMatch = respostaIA.match(/\[TESTE_REQUERIDO:\s*(\w+)\]/i);
+                if (testeMatch && !isInitial) { // só interrompe se não for a intro
+                    const atributo = testeMatch[1].toUpperCase();
+                    // Mostra modal e guarda contexto
+                    mostrarModalTeste(atributo, tempId, respostaIA);
+                    // Não adiciona a mensagem final ainda, aguarda o teste
+                    return; // para aqui, não prossegue
+                }
+                
+                // Sem teste: finaliza normalmente
+                const respostaLimpa = respostaIA.replace(/\[TESTE_REQUERIDO:\s*\w+\]/i, '').trim();
+                elementoDisplay.innerText = respostaLimpa;
+                mensagens.push({ role: 'assistant', content: respostaLimpa });
+                
+                // Possível dano direto (fallback)
+                const danoMatch = respostaIA.match(/dano:\s*(\d+)/i);
+                if (danoMatch) {
+                    const dano = parseInt(danoMatch[1]);
+                    if (dano > 0) {
+                        energia -= dano;
+                        document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
+                        adicionarMensagem(`[Você perdeu ${dano} de Energia.]`, 'system');
+                        if (energia <= 0) {
+                            adicionarMensagem("💀 SEU CORPO CEDE. FIM.", 'system');
+                            userInput.disabled = true; sendBtn.disabled = true;
+                            return;
+                        }
+                    }
+                }
+                
+                if (isInitial) {
+                    gerarMemoriaLonga(respostaIA);
+                }
+                
+                await salvarEstadoFirestore();
+                
+            } catch (error) {
+                elementoDisplay.innerText = `❌ Erro: ${error.message}`;
+            } finally {
+                if (!aguardandoTeste) {
+                    sendBtn.disabled = false;
+                    userInput.disabled = false;
+                    userInput.focus();
+                }
+            }
+        };
+        
+        // ========== Configurar botão do dado ==========
+        document.getElementById('rollDiceBtn').addEventListener('click', () => {
+            if (!testePendente) return;
+            const atributo = testePendente.atributo;
+            const valorAtributo = jogadorStats[atributo];
+            const rolagem = Math.floor(Math.random() * 10) + 1;
+            const sucesso = rolagem <= valorAtributo;
+            document.getElementById('diceResult').innerHTML = `🎲 Resultado: ${rolagem} (precisa ≤ ${valorAtributo})<br>${sucesso ? "✨ SUCESSO!" : "💀 FALHA!"}`;
+            document.getElementById('rollDiceBtn').disabled = true;
+            setTimeout(() => finalizarTeste(rolagem, sucesso), 1500);
+        });
+        
+        // ========== Inicialização ==========
         window.onload = async () => {
             await carregarSessao();
-            window.enviar(); 
+            window.enviar();
         };
-
+        
         userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !sendBtn.disabled) {
+            if (e.key === 'Enter' && !sendBtn.disabled && !aguardandoTeste) {
                 window.enviar(userInput.value.trim());
             }
         });
