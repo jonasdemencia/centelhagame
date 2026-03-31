@@ -99,25 +99,25 @@ REGRAS DE NARRATIVA:
 - Realismo Sujo: Evite adjetivos bonitos. Use verbos de ação e substantivos concretos. 
 - EXECUÇÃO MANDATÓRIA: Se o jogador declarar uma ação violenta e ela for bem sucedida no teste de atributo, você deve descrever o resultado FINAL.
 - PROSA FORENSE: Descreva todo dano como um patologista. Foco em: rompimento de tecido, fratura óssea, fluidez de fluidos e o som seco da matéria cedendo.
-- SUCESSO = CONSUMAÇÃO: Em caso de SUCESSO, a intenção do jogador é a verdade absoluta da cena. Se ele quis perfurar, a lâmina atravessa. Se quis atirar, o projétil destrói o alvo. 
-- DESENVOLVIMENTO NARRATIVO: Faça o ambiente reagir. NPCs agem por conta própria. O tempo passa. Algo sempre muda ou surge sempre um evento (seguindo uma coerencia narrativa) entre uma ação e outra. JAMAIS HAJA PELO JOGADOR.
+- SUCESSO = CONSUMAÇÃO: Em caso de SUCESSO, a intenção do jogador é a verdade absoluta da cena. Se ele quis perfurar, a lâmina atravessa. Se quis atirar, o projétil destrói o alvo.
+- Imparcialidade Cruel: Nunca decida o que o jogador sente (ex: "Você sente medo") e nunca haja por ele. Descreva o ambiente e as consequências das ações do jogador com frieza e realismo.
+- DESENVOLVIMENTO NARRATIVO: Faça o ambiente reagir. NPCs agem por conta própria. O tempo passa. Algo sempre muda ou surge sempre um evento (seguindo uma coerencia narrativa) entre uma ação e outra.
 
+REGRAS DO JUIZ INVISÍVEL (v2.0 - Protocolo de Resolução)
+ENTRADA: Ação + [SISTEMA: HABILIDADE(X), CARISMA(Y), SORTE(Z) | SEMENTE: W]
 
-REGRAS DO JUIZ INVISÍVEL (Protocolo de Resolução de Conflitos)
-A cada turno do jogador, você receberá a ação dele e os dados do sistema [ATRIBUTOS | ROLAGEM D10]. Siga ESTA LÓGICA RIGOROSAMENTE:
+CLASSIFICAÇÃO DE RISCO (O Filtro):
+- Ação Trivial: Observar, perguntar ao narrador, caminhar ou falar sem coerção. NÃO HÁ TESTE. Descreva fatos secos.
+- Ação de Risco: Ataque, esforço físico, intimidação, persuasão, sorte. EXIGE TESTE.
 
-PASSO 1: AVALIE O RISCO DA AÇÃO
-- Ação Trivial: Observar, falar, caminhar, investigar, ou ações preparatórias (ex: sacar uma arma, apontar). NÃO HÁ TESTE. Ignore a Rolagem D10. Narre os fatos e termine obrigatoriamente com [DANO: 0].
-- Ação de Risco: Atacar, pular, convencer sob tensão, fugir. EXIGE TESTE. Vá para o Passo 2.
+RESOLUÇÃO (Cálculo Inflexível):
+- Sucesso (SEMENTE ≤ Atributo): Intenção do jogador = Verdade Absoluta. Ex: se ordenou, obedece imediatamente. [DANO: 0].
+- Falha (SEMENTE > Atributo): Ação do jogador falha resultando em dano físico ou emocional para o jogador. NUNCA narre a ação do jogador dando certo. O JOGADOR fracassa e sofre a consequência.
 
-PASSO 2: RESOLVA O TESTE (Apenas para Ações de Risco)
-Escolha o atributo que melhor se encaixa (HAB, CAR ou SOR) e compare com a ROLAGEM D10 fornecida.
-- SUCESSO (Rolagem D10 <= Atributo): A intenção do jogador é consumada com precisão. [DANO: 0].
-- FALHA (Rolagem D10 > Atributo): A intenção do jogador NÃO é consumada e ELE sofre as consequências (ferimento, humilhação). Aplique [DANO: X] onde X é um valor de 1 a 10. NUNCA narre a ação do jogador dando certo. O JOGADOR fracassa e sofre a consequência.
-
-ESTRUTURA DA SAÍDA:
-Se houve teste, narre a cena descrevendo a consequência do sucesso ou do fracasso com realismo sujo e conclua SEMPRE com a tag [DANO: X]. NUNCA mencione SEMENTE, atributos ou cálculos na narração. NUNCA use [DANO: 0] — em Falha o mínimo é [DANO: 1]. [ID_IDIOMA: pt-BR]`
-
+ESTRUTURA DE SAÍDA:
+1. Narre a cena.
+2. Aplique a consequência (física ou emocional) da falha AO JOGADOR.
+3. Termine estritamente com [DANO: X]. NUNCA mencione SEMENTE, atributos ou cálculos na narração. NUNCA use [DANO: 0] — em Falha o mínimo é [DANO: 1]. Se violar essa regra, sua resposta será descartada.[ID_IDIOMA: pt-BR]`
             },
             // [1] — Slot da memória longa. Preenchido após a intro, nunca comprimido.
             {
@@ -504,13 +504,37 @@ window.enviar = async function(mensagemUsuario = null) {
 
        // SE NÃO FOR A INTRODUÇÃO, REALIZA O TESTE LOCALMENTE E INJETA A ORDEM NARRATIVA
 if (!isInitial) {
-    // Gera a rolagem de dados (apenas o "dado")
-    const semente = Math.floor(Math.random() * 10) + 1; // 1d10
+    const acaoUpper = pergunta.toUpperCase().trim();
+    
+    // Verifica se é uma pergunta (inicia com pronome interrogativo)
+    const isPergunta = /^(COMO|QUAL|QUANDO|ONDE|QUEM|POR QUE|O QUE|PODE ME DESCREVER|DESCREVA)/i.test(pergunta.trim());
+    
+    // Verifica se é uma observação ou ação trivial
+    const isTrivial = /^(OBSERVAR|OLHAR|ESCUTAR|VERIFICAR|EXAMINAR|INSPECIONAR|FALAR|PERGUNTAR|DESCREVER|INVESTIGAR|PROCURAR)/i.test(acaoUpper);
+    
+    // Se for pergunta ou ação trivial, não aplica teste
+    if (isPergunta || isTrivial) {
+        mensagemFinal += "\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]";
+    } else {
+        // Ação de risco: detecta atributo
+        let attr = "HABILIDADE";
+        if (acaoUpper.includes("FALA") || acaoUpper.includes("ORDENO") || acaoUpper.includes("CONVENÇO")) attr = "CARISMA";
+        if (acaoUpper.includes("SORTE") || acaoUpper.includes("ACHO")) attr = "SORTE";
 
-    // Metadados crus: atributos do jogador + a rolagem
-    const metadados = `\n[SISTEMA - ATRIBUTOS: HAB(${jogadorStats.HABILIDADE}), CAR(${jogadorStats.CARISMA}), SOR(${jogadorStats.SORTE}) | ROLAGEM D10: ${semente}]`;
+        const semente = Math.floor(Math.random() * 10) + 1;
+        const isSucesso = semente <= jogadorStats[attr];
+        const resultadoTexto = isSucesso ? "SUCESSO ABSOLUTO" : "FALHA CRÍTICA";
 
-    mensagemFinal += `${metadados}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
+        const metadados = `\n[SISTEMA: ${attr} | RESULTADO: ${resultadoTexto} | DANO SE FALHA: 2]`;
+
+        if (!isSucesso) {
+            mensagemFinal += `${metadados}\n(Regra: A ação do jogador FALHOU. Narre a falha e o dano em PORTUGUÊS.)`;
+        } else {
+            mensagemFinal += `${metadados}\n(Regra: A ação do jogador foi bem-sucedida. Narre em PORTUGUÊS.)`;
+        }
+
+        mensagemFinal += "\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]";
+    }
 }
 
 mensagens.push({ role: 'user', content: mensagemFinal });
