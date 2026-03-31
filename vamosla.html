@@ -61,12 +61,12 @@
         // ============================================================
         const LM_URL = 'http://localhost:1234/v1/chat/completions';
         const MODELO = 'qwen2.5-7b-instruct-abliterated-v2';
-        const LIMITE_MENSAGENS = 24;
+        const LIMITE_MENSAGENS = 15;
         window._introGenerating = false;
 
         // Variáveis globais
         let turnosJogados = 0;
-        let energia = 10;
+        let energia = 40;
 
         // ── MEMÓRIA LONGA ─────────────────────────────────────────
         // Gerada uma única vez após a intro e nunca sobrescrita.
@@ -76,7 +76,7 @@
 
         const jogadorStats = {
             HABILIDADE: 5,
-            CARISMA: 3,
+            CARISMA: 5,
             SORTE: 4
         };
 
