@@ -96,24 +96,21 @@
 
 REGRAS DE NARRATIVA:
 - Tensão Psicológica: O verdadeiro horror está no que não é dito ou mostrado. Mostre as consequências (cadáveres, loucura, ruínas), atrase o monstro.
-- EXECUÇÃO MANDATÓRIA: Se o jogador declarar uma ação violenta e ela for bem sucedida no teste de atributo, você deve descrever o resultado FINAL.
+- EXECUÇÃO MANDATÓRIA (SUCESSO): Se o jogador for bem sucedido, descreva o resultado FINAL da ação. Se ele quis perfurar, a lâmina atravessa.
+- REGRA DA INTERRUPÇÃO (FALHA): Se o teste falhar, a ação do jogador é ABORTADA antes de começar. Descreva o que o IMPEDIU (um bloqueio, um tropeço, o oponente reagindo primeiro). NUNCA narre a ação do jogador se concretizando.
 - PROSA FORENSE: Descreva todo dano como um patologista. Foco em: rompimento de tecido, fratura óssea, fluidez de fluidos e o som seco da matéria cedendo.
 
-REGRAS DO JUIZ INVISÍVEL
-ENTRADA: Ação + [SISTEMA: HABILIDADE(X), CARISMA(Y), SORTE(Z) | SEMENTE: W]
+PROTOCOLO DE RESOLUÇÃO INEXORÁVEL:
+Quando o jogador tentar uma ação arriscada, o sistema enviará os Atributos e a Rolagem. 
+Você DEVE, OBRIGATORIAMENTE, iniciar sua resposta com o seguinte bloco de cálculo exato (em uma única linha), ANTES de qualquer narração:
+[RESOLUCAO | Atributo: NOME_DO_ATRIBUTO | Alvo: X | Dado: Y | Resultado: SUCESSO_OU_FALHA | Dano: Z]
 
-CLASSIFICAÇÃO DE RISCO: 
--Ações que geram consequências negativas para o jogador ou alteram significativamente o estado do mundo exigem teste.
--Perguntas ao narrador, ações puramente informativas ou rotineiras são triviais.
-
-RESOLUÇÃO (Cálculo Inflexível):
-- Sucesso (SEMENTE ≤ Atributo): Intenção do jogador se concretiza de forma precisa. Ex: se ordenou, obedece imediatamente. [DANO: 0].
-- Falha (SEMENTE > Atributo): A ação não se concretiza de forma eficaz resultando em dano físico ou emocional para o jogador. NUNCA narre a intenção do jogador se concretizando. O JOGADOR fracassa e sofre a consequência.
-
-ESTRUTURA DE SAÍDA:
-1. Narre a cena de forma REALISTA: Descreva as consequências das ações do jogador e JUSTIFIQUE o dano sofrido (físico ou emocional). Ex: "Ela te ignorou, o que fez doer o seu ego".
-2. Em caso de teste fracassado, a intenção do jogador não se concretiza: narre e aplique a consequência (física ou emocional) da falha AO JOGADOR.
-3. Termine estritamente com [DANO: X]. NUNCA mencione SEMENTE, atributos ou cálculos na narração. NUNCA use [DANO: 0] — em Falha o mínimo é [DANO: 1]. Se violar essa regra, sua resposta será descartada.[ID_IDIOMA: pt-BR]`
+Como calcular:
+1. Escolha logicamente o Atributo (HABILIDADE para físico/combate, CARISMA para social/magia, SORTE para o imprevisível).
+2. "Alvo" é o valor do atributo escolhido. "Dado" é a rolagem fornecida pelo sistema.
+3. Se Dado <= Alvo: Resultado = SUCESSO e Dano = 0.
+4. Se Dado > Alvo: Resultado = FALHA e Dano = 1 a 3 (dependendo da gravidade).
+5. Se for uma ação trivial que não exija teste, inicie com [RESOLUCAO | Acao Trivial | Dano: 0].[ID_IDIOMA: pt-BR]`
             },
             // [1] — Slot da memória longa. Preenchido após a intro, nunca comprimido.
             {
@@ -521,35 +518,49 @@ mensagens.push({ role: 'user', content: mensagemFinal });
 
         const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
 
-        // 1. Extrai dano imediatamente
-        const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
-
-        // 2. Remove qualquer tag [TESTE:...] que possa ter ficado
+        // 1. O JS caça o bloco gerado pelo LLM para entender o que aconteceu
+        const resolucaoMatch = respostaIA.match(/\[RESOLUCAO\s*\|\s*(.*?)\]/i);
         let respostaLimpa = respostaIA;
-        if (respostaLimpa.includes('[TESTE:')) {
-            respostaLimpa = respostaLimpa.replace(/\[TESTE:[^\]]+\]/g, '').trim();
+        let valorDano = 0;
+        let infoTeste = "";
+
+        if (resolucaoMatch) {
+            // Remove o bloco da narração final que vai pra tela
+            respostaLimpa = respostaIA.replace(resolucaoMatch[0], '').trim();
+            
+            const detalhes = resolucaoMatch[1]; 
+            
+            // Tenta extrair o Dano desse bloco
+            const danoMatch = detalhes.match(/Dano:\s*(\d+)/i);
+            if (danoMatch) valorDano = parseInt(danoMatch[1]);
+
+            // Verifica se houve falha no texto extraído
+            const isFalha = detalhes.toUpperCase().includes('FALHA');
+
+            // Formata o aviso para o jogador saber o que foi testado (apenas se não for ação trivial)
+            if (!detalhes.toUpperCase().includes('TRIVIAL')) {
+                 const corTeste = isFalha ? '#e53935' : '#7a8c66';
+                 infoTeste = `<div style="background: #1a1815; border-left: 3px solid ${corTeste}; padding: 8px; margin-bottom: 10px; font-size: 0.85em; color: #b5a68b; font-family: monospace;">
+                    🎲 <strong>TESTE DE SISTEMA:</strong> ${detalhes.replace(/\|/g, '•')}
+                 </div><br>`;
+            }
+        } else {
+            // Fallback de segurança caso o modelo falhe no formato
+            const fallbackDano = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
+            if (fallbackDano) valorDano = parseInt(fallbackDano[1]);
+            respostaLimpa = respostaIA.replace(/\[DANO:\s*\d+\]/i, '').trim();
         }
 
-        // 3. Exibe mensagem de falha se houver dano (apenas para ações do jogador)
-        if (!isInitial && danoMatch && parseInt(danoMatch[1]) > 0) {
-            const div = document.createElement('div');
-            div.className = 'system-message';
-            div.innerHTML = `<em style="color:#e53935; font-weight:bold;">[FALHA NO TESTE: CONSEQUÊNCIA APLICADA]</em>`;
-            chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+        // 2. Atualiza a tela com a narração limpa, precedida pela informação do teste (Usando innerHTML em vez de innerText)
+        elementoDisplay.innerHTML = infoTeste + respostaLimpa;
 
-        // 4. Atualiza o elemento com a resposta limpa
-        elementoDisplay.innerText = respostaLimpa;
-
-        // 5. Gera memória longa logo após a intro (se necessário)
+        // 3. Gera memória longa logo após a intro (Mantido do seu original)
         if (isIntro) {
-            gerarMemoriaLonga(respostaIA); // em segundo plano
+            gerarMemoriaLonga(respostaIA); 
         }
 
-        // 6. Processa o dano (já temos danoMatch)
-        if (danoMatch && parseInt(danoMatch[1]) > 0) {
-            const valorDano = parseInt(danoMatch[1]);
+        // 4. Processa o dano mecânico no HUD
+        if (valorDano > 0) {
             energia -= valorDano;
             document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
             adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
@@ -565,7 +576,8 @@ mensagens.push({ role: 'user', content: mensagemFinal });
 
         if (isIntro) window._introGenerating = false;
 
-        mensagens.push({ role: 'assistant', content: respostaIA });
+        // 5. Salva APENAS a resposta limpa na memória da IA (Isso é crucial)
+        mensagens.push({ role: 'assistant', content: respostaLimpa });
 
         await salvarResumoFirestore(resumoAtual);
 
