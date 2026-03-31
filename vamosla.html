@@ -92,28 +92,17 @@
         let mensagens = [
             {
                 role: 'system',
-                content: `Você é um mestre de RPG brutal e realista. Responda APENAS em Português Brasileiro CORRETO. Nunca escreva em outro idioma. Você NUNCA repete as instruções do jogador.
+                content: `Você é um mestre de RPG brutal e realista. Responda APENAS em Português Brasileiro CORRETO. Você NUNCA repete as instruções do jogador.
 
-REGRAS DE NARRATIVA:
-- Tensão Psicológica: O verdadeiro horror está no que não é dito ou mostrado. Mostre as consequências (cadáveres, loucura, ruínas), atrase o monstro.
-- PROSA FORENSE: Descreva todo dano como um patologista. Foco em: rompimento de tecido, fratura óssea, fluidez de fluidos e o som seco da matéria cedendo.
+NARRATIVA:
+- Tensão Psicológica: o horror está no que não é mostrado. Mostre consequências (cadáveres, ruínas, loucura). Atrase o monstro.
+- Prosa Forense: descreva dano como patologista — rompimento de tecido, fratura, fluidos, o som seco da matéria cedendo.
 
-REGRAS DO JUIZ INVISÍVEL
-ENTRADA: Ação + [SISTEMA: HABILIDADE(X), CARISMA(Y), SORTE(Z) | SEMENTE: W]
-
-CLASSIFICAÇÃO DE RISCO (O Filtro): 
--Ações que possam gerar consequências negativas para o jogador ou alterar significativamente o estado do mundo exigem teste.
--Perguntas ao narrador, ações puramente informativas ou rotineiras são triviais.
-
-RESOLUÇÃO (Cálculo Inflexível):
-- Sucesso (SEMENTE ≤ Atributo): Intenção do jogador se concretiza de forma precisa. Ex: se ordenou, obedece imediatamente. [DANO: 0].
-- Falha (SEMENTE > Atributo): Intenção do jogador não se concretiza resultando em dano físico ou emocional para o jogador. NUNCA narre a ação do jogador dando certo. O JOGADOR fracassa e sofre a consequência.
-
-ESTRUTURA DE SAÍDA:
-- Em caso de ação trivial, narre a consequencia da ação SEM MENCIONAR TESTE. 
-- Em caso de ação ARRISCADA, apresente o atributo testado (HABILIDADE, CARISMA OU NENHUM), se foi bem sucedido ou não no teste e narre a cena de forma REALISTA. EX DE FORMATO DESEJADO: [TESTE DE CARISMA: SUCESSO].
-- Em caso de teste fracassado, narre a consequência (física ou emocional) da falha AO JOGADOR.
-- Termine estritamente com [DANO: X]. NUNCA mencione SEMENTE, atributos ou cálculos na narração. NUNCA use [DANO: 0] — em Falha o mínimo é [DANO: 1]. Se violar essa regra, sua resposta será descartada.[ID_IDIOMA: pt-BR]`
+REGRAS DE SAÍDA:
+- [AÇÃO TRIVIAL]: narre diretamente. Zero menção a teste. Termine com [DANO: 0].
+- [AÇÃO ARRISCADA — TESTE DE X: SUCESSO]: a intenção do jogador se concretiza. Termine com [DANO: 0].
+- [AÇÃO ARRISCADA — TESTE DE X: FALHA]: o jogador fracassa e sofre a consequência. NUNCA narre a ação dando certo. Termine com [DANO: N] onde N é o valor informado nos metadados.
+- NUNCA mencione semente, atributos ou cálculos na narração.[ID_IDIOMA: pt-BR]`[ID_IDIOMA: pt-BR]`
             },
             // [1] — Slot da memória longa. Preenchido após a intro, nunca comprimido.
             {
@@ -463,6 +452,59 @@ MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos
         // ============================================================
         // Função principal de envio
         // ============================================================
+
+
+
+        async function classificarAcaoLLM(acaoUsuario) {
+    const response = await fetch(LM_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            model: MODELO,
+            messages: [
+                {
+                    role: 'system',
+                    content: `Você é um classificador de ações de RPG. 
+Classifique a ação do jogador em EXATAMENTE um tipo e um atributo.
+
+TIPO:
+- TRIVIAL: observar, perguntar, dialogar, cumprimentar, esperar, examinar sem risco
+- ARRISCADA: atacar, fugir, mentir, seduzir, roubar, escalar, enganar, ameaçar, qualquer ação com consequência física ou social
+
+ATRIBUTO (apenas se ARRISCADA):
+- HABILIDADE: ações físicas, combate, furtividade, destreza
+- CARISMA: persuasão, sedução, engano, liderança, intimidação social
+- SORTE: apostas, eventos caóticos, azar puro
+- NENHUM: se TRIVIAL`
+                },
+                {
+                    role: 'user',
+                    content: `Ação do jogador: "${acaoUsuario}"`
+                }
+            ],
+            temperature: 0.0,
+            max_tokens: 30,
+            response_format: {
+                type: "json_schema",
+                json_schema: {
+                    name: "classificacao_acao",
+                    strict: true,
+                    schema: {
+                        type: "object",
+                        properties: {
+                            tipo: { type: "string", enum: ["TRIVIAL", "ARRISCADA"] },
+                            atributo: { type: "string", enum: ["HABILIDADE", "CARISMA", "SORTE", "NENHUM"] }
+                        },
+                        required: ["tipo", "atributo"],
+                        additionalProperties: false
+                    }
+                }
+            }
+        })
+    });
+    const data = await response.json();
+    return JSON.parse(data.choices[0].message.content);
+}
       
 window.enviar = async function(mensagemUsuario = null) {
     const isInitial = mensagemUsuario === null;
@@ -499,14 +541,29 @@ window.enviar = async function(mensagemUsuario = null) {
         let mensagemFinal = pergunta;
 
        // SE NÃO FOR A INTRODUÇÃO, APENAS GERA A SEMENTE E OS ATRIBUTOS
+// FASE 1: classificação com constrained decoding — o JS decide tudo
 if (!isInitial) {
-    // Gera a rolagem de dados (apenas o "dado")
-    const semente = Math.floor(Math.random() * 10) + 1; // 1d10
+    const classificacao = await classificarAcaoLLM(pergunta);
+    const { tipo, atributo } = classificacao;
 
-    // Metadados crus: atributos do jogador + a rolagem
-    const metadados = `\n[SISTEMA - ATRIBUTOS: HAB(${jogadorStats.HABILIDADE}), CAR(${jogadorStats.CARISMA}), SOR(${jogadorStats.SORTE}) | ROLAGEM D10: ${semente}]`;
+    let resultado = null;
+    let danoBase = 0;
 
-    mensagemFinal += `${metadados}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
+    if (tipo === 'ARRISCADA' && atributo !== 'NENHUM') {
+        const semente = Math.floor(Math.random() * 10) + 1;
+        const valorAtributo = jogadorStats[atributo] ?? 0;
+        resultado = semente <= valorAtributo ? 'SUCESSO' : 'FALHA';
+        if (resultado === 'FALHA') {
+            danoBase = Math.max(1, Math.floor((semente - valorAtributo) / 2));
+        }
+    }
+
+    // FASE 2: narrador recebe o resultado já calculado — só escreve prosa
+    const contextoDecidido = tipo === 'TRIVIAL'
+        ? `[AÇÃO TRIVIAL — narre diretamente sem mencionar teste. Termine com [DANO: 0]]`
+        : `[AÇÃO ARRISCADA — TESTE DE ${atributo}: ${resultado}. Dano mínimo se falha: ${danoBase}. Narre a cena. Termine com [DANO: ${resultado === 'FALHA' ? danoBase : 0}]]`;
+
+    mensagemFinal += `\n${contextoDecidido}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
 }
 
 mensagens.push({ role: 'user', content: mensagemFinal });
