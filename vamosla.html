@@ -21,7 +21,7 @@
 <body>
     <div id="game-container">
        <div id="local-atual" style="display: flex; justify-content: space-between;">
-    <span>⚔️ Reinos Desolados • <span id="modelo-span">qwen2.5-14b-instruct-abliterated-v2</span></span>
+    <span>⚔️ Reinos Desolados • <span id="modelo-span">qwen2.5-7b-instruct-abliterated-v2</span></span>
 <span id="energia-span" style="color: #a13d3d; font-weight: bold;">🩸 Energia: 10/10</span>
        </div>
 
@@ -60,7 +60,7 @@
         // Configuração do LM Studio e Controle de Contexto
         // ============================================================
         const LM_URL = 'http://localhost:1234/v1/chat/completions';
-        const MODELO = 'qwen2.5-14b-instruct-abliterated-v2';
+        const MODELO = 'qwen2.5-7b-instruct-abliterated-v2';
         const LIMITE_MENSAGENS = 24;
         window._introGenerating = false;
 
@@ -92,7 +92,7 @@
         let mensagens = [
             {
                 role: 'system',
-                content: `Você é um mestre de RPG brutal e realista. Responda APENAS em Português Brasileiro CORRETO. Nunca escreva em outro idioma. Você NUNCA dá conselhos ao jogador, NUNCA dialoga com ele como um assistente e NUNCA repete as instruções do jogador.
+                content: `Você é um mestre de RPG brutal e realista. Responda APENAS em Português Brasileiro CORRETO. Nunca escreva em outro idioma. Você NUNCA repete as instruções do jogador.
 
 REGRAS DE NARRATIVA:
 - Tensão Psicológica: O verdadeiro horror está no que não é dito ou mostrado. Mostre as consequências (cadáveres, loucura, ruínas), atrase o monstro.
@@ -103,19 +103,19 @@ REGRAS DE NARRATIVA:
 - Imparcialidade Cruel: Nunca decida o que o jogador sente (ex: "Você sente medo") e nunca haja por ele. Descreva o ambiente e as consequências das ações do jogador com frieza e realismo.
 - DESENVOLVIMENTO NARRATIVO: Faça o ambiente reagir. NPCs agem por conta própria. O tempo passa. Algo sempre muda ou surge sempre um evento (seguindo uma coerencia narrativa) entre uma ação e outra.
 
-REGRAS DO JUIZ INVISÍVEL (v2.0 - Protocolo de Resolução)
+REGRAS DO JUIZ INVISÍVEL
 ENTRADA: Ação + [SISTEMA: HABILIDADE(X), CARISMA(Y), SORTE(Z) | SEMENTE: W]
 
 CLASSIFICAÇÃO DE RISCO (O Filtro):
-- Ação Trivial: Observar, perguntar ao narrador, caminhar ou falar sem coerção. NÃO HÁ TESTE. Descreva fatos secos.
+- Ação Trivial: Observar, perguntar ao narrador, caminhar ou falar sem coerção. NÃO HÁ TESTE. 
 - Ação de Risco: Ataque, esforço físico, intimidação, persuasão, sorte. EXIGE TESTE.
 
 RESOLUÇÃO (Cálculo Inflexível):
-- Sucesso (SEMENTE ≤ Atributo): A Intenção do jogador se concretiza de forma precisa. Ex: se ordenou, obedece imediatamente. [DANO: 0].
-- Falha (SEMENTE > Atributo): A intenção do jogador não se concretiza, resultando em dano físico ou emocional para o jogador. NUNCA narre a ação do jogador dando certo. O JOGADOR fracassa e sofre a consequência.
+- Sucesso (SEMENTE ≤ Atributo): Intenção do jogador se concretiza de forma precisa. Ex: se ordenou, obedece imediatamente. [DANO: 0].
+- Falha (SEMENTE > Atributo): Intenção do jogador não se concretiza resultando em dano físico ou emocional para o jogador. NUNCA narre a ação do jogador dando certo. O JOGADOR fracassa e sofre a consequência.
 
 ESTRUTURA DE SAÍDA:
-1. Narre a cena e a consequência da ação do jogador.
+1. Narre a cena.
 2. Aplique a consequência (física ou emocional) da falha AO JOGADOR.
 3. Termine estritamente com [DANO: X]. NUNCA mencione SEMENTE, atributos ou cálculos na narração. NUNCA use [DANO: 0] — em Falha o mínimo é [DANO: 1]. Se violar essa regra, sua resposta será descartada.[ID_IDIOMA: pt-BR]`
             },
@@ -528,7 +528,7 @@ if (!isInitial) {
         const metadados = `\n[SISTEMA: ${attr} | RESULTADO: ${resultadoTexto} | DANO SE FALHA: 2]`;
 
         if (!isSucesso) {
-    mensagemFinal += `${metadados}\n⚠️ REGRA ABSOLUTA: O teste FALHOU. É PROIBIDO descrever a ação do jogador tendo qualquer efeito positivo ou neutro. O jogador sofre a consequência FÍSICA. Narre em PORTUGUÊS BRASILEIRO.`;
+            mensagemFinal += `${metadados}\n(Regra: A ação do jogador FALHOU. Narre a falha e o dano em PORTUGUÊS.)`;
         } else {
             mensagemFinal += `${metadados}\n(Regra: A ação do jogador foi bem-sucedida. Narre em PORTUGUÊS.)`;
         }
