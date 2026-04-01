@@ -347,7 +347,14 @@ Saída correta: "Jogador fez a jovem engolir uma pedra."`
                 })
             });
 
+            if (!response.ok) {
+                const errBody = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errBody}`);
+            }
             const data = await response.json();
+            if (!data.choices?.[0]?.message?.content) {
+                throw new Error('Resposta inválida do servidor de compressão');
+            }
             const jsonObj = JSON.parse(data.choices[0].message.content);
 
             // Reconstrói o texto que o narrador vai usar
