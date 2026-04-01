@@ -70,9 +70,8 @@
         const LIMITE_MENSAGENS = 11;
         window._introGenerating = false;
 
-        // Variáveis globais
         let turnosJogados = 0;
-        let energia = 40;
+        let energia = 0; // O valor real virá do Firestore
 
         // ── MEMÓRIA LONGA ─────────────────────────────────────────
         // Gerada uma única vez após a intro e nunca sobrescrita.
@@ -80,10 +79,10 @@
         let memoriaLonga = "";
         // ──────────────────────────────────────────────────────────
 
-        const jogadorStats = {
-            HABILIDADE: 5,
-            CARISMA: 5,
-            SORTE: 4
+        let jogadorStats = {
+            HABILIDADE: 0,
+            CARISMA: 0,
+            SORTE: 0
         };
 
         const chatBox = document.getElementById('chat-box');
@@ -143,12 +142,32 @@ REGRAS DE SAÍDA:
                         resumoAtual = docSnap.data().resumo;
                         mensagens[2].content = `Resumo da jornada até agora: ${resumoAtual}`;
                     }
-                    if (docSnap.data().turnos !== undefined) {
-                        turnosJogados = docSnap.data().turnos;
+                    const data = docSnap.data();
+                    
+                    if (data.turnos !== undefined) {
+                        turnosJogados = data.turnos;
                     }
-                    if (docSnap.data().energia !== undefined) {
-                        energia = docSnap.data().energia;
+                    
+                    // 1. Carregando a Energia (energy.total)
+                    if (data?.energy?.total !== undefined) {
+                        energia = data.energy.total;
+                        // Nota: Ajuste o "/10" na string abaixo se a sua energia máxima variar
                         document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
+                    } else if (data.energia !== undefined) {
+                        // Fallback de segurança para o seu formato antigo, caso o banco não tenha atualizado
+                        energia = data.energia;
+                        document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
+                    }
+
+                    // 2. Carregando os Atributos (skill, charisma, luck)
+                    if (data?.skill?.total !== undefined) {
+                        jogadorStats.HABILIDADE = data.skill.total;
+                    }
+                    if (data?.charisma?.total !== undefined) {
+                        jogadorStats.CARISMA = data.charisma.total;
+                    }
+                    if (data?.luck?.total !== undefined) {
+                        jogadorStats.SORTE = data.luck.total;
                     }
                 }
             } catch (e) {
@@ -593,7 +612,7 @@ if (!isInitial) {
         await animarTextoTeste(`TESTE DE ${atributo}`);
         await criarBotaoRolar();
 
-        const semente = Math.floor(Math.random() * 10) + 1;
+        const semente = Math.floor(Math.random() * 20) + 1;
         const valorAtributo = jogadorStats[atributo] ?? 0;
         resultado = semente <= valorAtributo ? 'SUCESSO' : 'FALHA';
         if (resultado === 'FALHA') {
