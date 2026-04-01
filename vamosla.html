@@ -17,11 +17,11 @@
         button:hover:not(:disabled) { background: #5a4a38; }
         button:disabled { opacity: 0.3; cursor: not-allowed; }
         .teste-reveal { color: #4caf50; font-style: italic; font-weight: bold; text-align: center; letter-spacing: 2px; margin: 10px 0; }
-.resultado-dado { color: #b5a68b; text-align: center; font-style: italic; margin: 4px 0; font-size: 0.9em; }
-.resultado-sucesso { color: #4caf50; font-weight: bold; text-align: center; letter-spacing: 3px; margin: 4px 0; }
-.resultado-falha { color: #e53935; font-weight: bold; text-align: center; letter-spacing: 3px; margin: 4px 0; }
-#rolar-btn { display: block; margin: 10px auto; padding: 10px 28px; background: #1a2e12; color: #4caf50; border: 1px solid #4caf50; font-family: inherit; font-size: 15px; font-style: italic; letter-spacing: 1px; cursor: pointer; transition: 0.2s; }
-#rolar-btn:hover { background: #253d19; }
+        .resultado-dado { color: #b5a68b; text-align: center; font-style: italic; margin: 4px 0; font-size: 0.9em; }
+        .resultado-sucesso { color: #4caf50; font-weight: bold; text-align: center; letter-spacing: 3px; margin: 4px 0; }
+        .resultado-falha { color: #e53935; font-weight: bold; text-align: center; letter-spacing: 3px; margin: 4px 0; }
+        #rolar-btn { display: block; margin: 10px auto; padding: 10px 28px; background: #1a2e12; color: #4caf50; border: 1px solid #4caf50; font-family: inherit; font-size: 15px; font-style: italic; letter-spacing: 1px; cursor: pointer; transition: 0.2s; }
+        #rolar-btn:hover { background: #253d19; }
     </style>
 </head>
 <body>
@@ -42,8 +42,12 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        // ============================================================
+        // Importações Firebase (versão compatível com o inventário)
+        // ============================================================
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
         // ============================================================
         // Configuração do Firebase & Firestore
@@ -58,10 +62,8 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
         
-        // ID fixo para desenvolvimento local (pode ser dinâmico depois)
-        const sessionId = "sessao_dev_01"; 
-
         // ============================================================
         // Configuração do LM Studio e Controle de Contexto
         // ============================================================
@@ -72,10 +74,9 @@
 
         let turnosJogados = 0;
         let energia = 0; // O valor real virá do Firestore
+        let uidAtual = null; // UID do jogador autenticado
 
         // ── MEMÓRIA LONGA ─────────────────────────────────────────
-        // Gerada uma única vez após a intro e nunca sobrescrita.
-        // Ocupa mensagens[1] e persiste no Firestore como "memoriaLonga".
         let memoriaLonga = "";
         // ──────────────────────────────────────────────────────────
 
@@ -89,11 +90,7 @@
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
 
-        // Estrutura de memória:
-        //   [0] Regras do sistema    — imutável
-        //   [1] Lore permanente      — imutável, gerado uma vez após a intro  ← NOVO
-        //   [2] Resumo SSR           — atualizado pela compressão
-        //   [3…] Turnos da conversa
+        // Estrutura de memória (igual ao original)
         let mensagens = [
             {
                 role: 'system',
@@ -109,113 +106,124 @@ REGRAS DE SAÍDA:
 - [AÇÃO ARRISCADA — TESTE DE X: FALHA]: o jogador fracassa e sofre a consequência. NUNCA narre a ação dando certo. Termine com [DANO: N] onde N é o valor informado nos metadados.
 - NUNCA mencione semente, atributos ou cálculos na narração.[ID_IDIOMA: pt-BR]`
             },
-            // [1] — Slot da memória longa. Preenchido após a intro, nunca comprimido.
-            {
-                role: 'system',
-                content: ''
-            },
-            // [2] — SSR de curto prazo, atualizado pela compressão.
-            {
-                role: 'system',
-                content: 'Resumo da jornada até agora: A aventura acabou de começar.'
-            }
+            // [1] — Slot da memória longa
+            { role: 'system', content: '' },
+            // [2] — SSR de curto prazo
+            { role: 'system', content: 'Resumo da jornada até agora: A aventura acabou de começar.' }
         ];
 
         let resumoAtual = "";
 
         // ============================================================
-        // Funções de Inicialização e Firebase
+        // Função para carregar dados do jogador (coleção players)
         // ============================================================
-        async function carregarSessao() {
-    try {
-        const docRef = doc(db, "sessoes", sessionId);
-        const docSnap = await getDoc(docRef);
-        
-        // LOG 1: verificar se o documento existe e mostrar dados brutos
-        console.log('[Firestore] Documento sessoes carregado:', docSnap.exists() ? docSnap.data() : 'não existe');
+        async function carregarDadosJogador(uid) {
+            try {
+                const docRef = doc(db, "players", uid);
+                const docSnap = await getDoc(docRef);
+                console.log('[Firestore] Documento players carregado:', docSnap.exists() ? docSnap.data() : 'não existe');
 
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            // LOG 2: mostrar campos específicos que vamos usar
-            console.log('[Firestore] Dados brutos:', data);
-            console.log('[Firestore] energy.total:', data?.energy?.total);
-            console.log('[Firestore] skill.total:', data?.skill?.total);
-            console.log('[Firestore] charisma.total:', data?.charisma?.total);
-            console.log('[Firestore] luck.total:', data?.luck?.total);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    console.log('[Firestore] Dados brutos:', data);
+                    console.log('[Firestore] energy.total:', data?.energy?.total);
+                    console.log('[Firestore] skill.total:', data?.skill?.total);
+                    console.log('[Firestore] charisma.total:', data?.charisma?.total);
+                    console.log('[Firestore] luck.total:', data?.luck?.total);
 
-            // ── Carrega memória longa (imutável) ──────────────
-            if (data.memoriaLonga) {
-                memoriaLonga = data.memoriaLonga;
-                mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta — nunca contradiga nem altere):\n${memoriaLonga}`;
-            }
-            // ── Carrega SSR de curto prazo ────────────────────
-            if (data.resumo) {
-                resumoAtual = data.resumo;
-                mensagens[2].content = `Resumo da jornada até agora: ${resumoAtual}`;
-            }
-            
-            if (data.turnos !== undefined) {
-                turnosJogados = data.turnos;
-            }
-            
-            // 1. Carregando a Energia (energy.total)
-            if (data?.energy?.total !== undefined) {
-                energia = data.energy.total;
-                document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
-                console.log('[Jogador] Energia carregada:', energia);   // LOG 3
-            } else if (data.energia !== undefined) {
-                energia = data.energia;
-                document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
-                console.log('[Jogador] Energia carregada (fallback):', energia);   // LOG 4
-            }
+                    // Carrega memória longa
+                    if (data.memoriaLonga) {
+                        memoriaLonga = data.memoriaLonga;
+                        mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta — nunca contradiga nem altere):\n${memoriaLonga}`;
+                    }
+                    // Carrega resumo
+                    if (data.resumo) {
+                        resumoAtual = data.resumo;
+                        mensagens[2].content = `Resumo da jornada até agora: ${resumoAtual}`;
+                    }
+                    
+                    if (data.turnos !== undefined) {
+                        turnosJogados = data.turnos;
+                    }
+                    
+                    // Energia
+                    if (data?.energy?.total !== undefined) {
+                        energia = data.energy.total;
+                        document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
+                        console.log('[Jogador] Energia carregada:', energia);
+                    } else if (data.energia !== undefined) {
+                        energia = data.energia;
+                        document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
+                        console.log('[Jogador] Energia carregada (fallback):', energia);
+                    }
 
-            // 2. Carregando os Atributos (skill, charisma, luck)
-            if (data?.skill?.total !== undefined) {
-                jogadorStats.HABILIDADE = data.skill.total;
+                    // Atributos
+                    if (data?.skill?.total !== undefined) {
+                        jogadorStats.HABILIDADE = data.skill.total;
+                    }
+                    if (data?.charisma?.total !== undefined) {
+                        jogadorStats.CARISMA = data.charisma.total;
+                    }
+                    if (data?.luck?.total !== undefined) {
+                        jogadorStats.SORTE = data.luck.total;
+                    }
+                    console.log('[Jogador] Atributos após carregamento:', jogadorStats);
+                } else {
+                    console.log('[Firestore] Jogador não encontrado. Criando documento padrão...');
+                    // Cria documento padrão
+                    const dadosPadrao = {
+                        energy: { total: 40, initial: 40 },
+                        skill: { total: 5 },
+                        charisma: { total: 5 },
+                        luck: { total: 4 },
+                        turnos: 0,
+                        resumo: "",
+                        memoriaLonga: ""
+                    };
+                    await setDoc(doc(db, "players", uid), dadosPadrao, { merge: true });
+                    // Recarrega os dados padrão
+                    await carregarDadosJogador(uid);
+                }
+            } catch (e) {
+                console.error("Erro ao carregar do Firestore:", e);
             }
-            if (data?.charisma?.total !== undefined) {
-                jogadorStats.CARISMA = data.charisma.total;
-            }
-            if (data?.luck?.total !== undefined) {
-                jogadorStats.SORTE = data.luck.total;
-            }
-            // LOG 5: mostrar atributos após carregamento
-            console.log('[Jogador] Atributos após carregamento:', jogadorStats);
         }
-    } catch (e) {
-        console.error("Erro ao carregar do Firestore:", e);
-    }
-}
-        async function salvarResumoFirestore(novoResumo) {
-    try {
-        console.log('[Firestore] Salvando resumo e energia:', { 
-            resumo: novoResumo, 
-            turnos: turnosJogados, 
-            energia 
-        });   // LOG 6
-        await setDoc(doc(db, "sessoes", sessionId), { 
-            resumo: novoResumo,
-            turnos: turnosJogados,
-            energia: energia
-        }, { merge: true });
-        console.log('[Firestore] Dados salvos com sucesso.');   // LOG 7
-    } catch (e) {
-        console.error("Erro ao salvar no Firestore:", e);
-    }
-}
+
+        // ============================================================
+        // Função para salvar estado do jogador (coleção players)
+        // ============================================================
+        async function salvarEstadoJogador() {
+            if (!uidAtual) return;
+            try {
+                const dadosAtualizados = {
+                    turnos: turnosJogados,
+                    resumo: resumoAtual,
+                    energia: energia,               // fallback
+                    "energy.total": energia,
+                    memoriaLonga: memoriaLonga,
+                    "skill.total": jogadorStats.HABILIDADE,
+                    "charisma.total": jogadorStats.CARISMA,
+                    "luck.total": jogadorStats.SORTE
+                };
+                console.log('[Firestore] Salvando estado do jogador:', dadosAtualizados);
+                await setDoc(doc(db, "players", uidAtual), dadosAtualizados, { merge: true });
+                console.log('[Firestore] Estado salvo com sucesso.');
+            } catch (e) {
+                console.error("Erro ao salvar estado do jogador:", e);
+            }
+        }
 
         // ============================================================
         // MEMÓRIA LONGA — gerada uma única vez após a intro
-        // Extrai: nome do mundo, ameaça principal, arquétipo, missão.
-        // Salva em Firestore como campo separado e imutável.
         // ============================================================
         async function gerarMemoriaLonga(textoIntro) {
-            if (memoriaLonga) return; // já existe — nunca sobrescreve
+            if (memoriaLonga) return;
 
             const promptLore = [
                 {
                     role: 'system',
-content: 'Você é um extrator de lore. Dado o texto de introdução de um RPG, preencha os campos abaixo com dados factuais extraídos do texto. Zero prosa. Zero adjetivos literários. Apenas nomes e fatos secos.\n\nMUNDO: [nome do cenário/reino principal]\nAMEAÇA: [nome e natureza da ameaça principal]\nARQUÉTIPO: [arquétipo do jogador]\nMISSÃO: [objetivo concreto da missão]\nLOCALIZAÇÕES: [lista separada por vírgulas de TODOS os lugares nomeados: reinos, regiões, vilas, rios, montanhas, pântanos, locais específicos — apenas os nomes, sem descrição]\n\nResponda APENAS com os campos preenchidos, sem texto adicional.'                },
+                    content: 'Você é um extrator de lore. Dado o texto de introdução de um RPG, preencha os campos abaixo com dados factuais extraídos do texto. Zero prosa. Zero adjetivos literários. Apenas nomes e fatos secos.\n\nMUNDO: [nome do cenário/reino principal]\nAMEAÇA: [nome e natureza da ameaça principal]\nARQUÉTIPO: [arquétipo do jogador]\nMISSÃO: [objetivo concreto da missão]\nLOCALIZAÇÕES: [lista separada por vírgulas de TODOS os lugares nomeados: reinos, regiões, vilas, rios, montanhas, pântanos, locais específicos — apenas os nomes, sem descrição]\n\nResponda APENAS com os campos preenchidos, sem texto adicional.'
+                },
                 {
                     role: 'user',
                     content: `Texto da introdução:\n${textoIntro}\n\nGere a memória permanente agora.`
@@ -236,8 +244,10 @@ content: 'Você é um extrator de lore. Dado o texto de introdução de um RPG, 
                 const data = await response.json();
                 memoriaLonga = data.choices[0].message.content.trim();
                 mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta — nunca contradiga nem altere):\n${memoriaLonga}`;
-                // Salva separado no Firestore — campo nunca será sobrescrito pelas compressões
-                await setDoc(doc(db, "sessoes", sessionId), { memoriaLonga }, { merge: true });
+                // Salva no documento do jogador
+                if (uidAtual) {
+                    await setDoc(doc(db, "players", uidAtual), { memoriaLonga }, { merge: true });
+                }
                 console.debug('[MEMÓRIA LONGA] Gerada e salva:', memoriaLonga);
             } catch (e) {
                 console.error('Erro ao gerar memória longa:', e);
@@ -245,7 +255,7 @@ content: 'Você é um extrator de lore. Dado o texto de introdução de um RPG, 
         }
 
         // ============================================================
-        // Função do Diretor de Fases
+        // Função do Diretor de Fases (inalterada)
         // ============================================================
         function obterDiretrizDeFase() {
             if (turnosJogados < 50) {
@@ -260,9 +270,8 @@ content: 'Você é um extrator de lore. Dado o texto de introdução de um RPG, 
         }
 
         // ============================================================
-        // Funções de Compressão de Memória — Structured State Representation (SSR)
+        // Funções de Compressão de Memória — SSR
         // ============================================================
-
         const SSR_TEMPLATE = `LOCAL: [onde o jogador está agora]
 NPCS: [lista de personagens encontrados e seu estado atual: nome/descrição, relação, vivo/morto/desconhecido]
 ITENS: [itens carregados ou relevantes no cenário]
@@ -274,7 +283,6 @@ GANCHOS_ATIVOS: [pistas ou ameaças não resolvidas que devem ser lembradas]`;
             if (mensagens.length > LIMITE_MENSAGENS) {
                 adicionarMensagem('⚙️ As engrenagens do destino giram. Consolidando memórias...', 'system');
                 
-                // Conversa começa em [3] — [0..2] são slots de sistema protegidos
                 const mensagensParaResumir = mensagens.splice(3, 6);
                 const textoExtraido = mensagensParaResumir
                     .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
@@ -318,7 +326,7 @@ ${SSR_TEMPLATE}`
                     
                     resumoAtual = novoSSR;
                     mensagens[2].content = `ESTADO ATUAL DO MUNDO (use como referência factual, não repita como narração):\n${resumoAtual}`;
-                    await salvarResumoFirestore(resumoAtual);
+                    await salvarEstadoJogador();
                     
                 } catch (error) {
                     console.error("Erro ao comprimir memória:", error);
@@ -328,7 +336,7 @@ ${SSR_TEMPLATE}`
         }
 
         // ============================================================
-        // Funções auxiliares Visuais
+        // Funções auxiliares Visuais (inalteradas)
         // ============================================================
         function adicionarMensagem(texto, tipo, temporaria = false) {
             const div = document.createElement('div');
@@ -343,97 +351,88 @@ ${SSR_TEMPLATE}`
         }
 
         // ============================================================
-        // Função 2: Motor de Regras
-        // ============================================================
-        function rolarTeste(atributo) {
-            if (atributo === 'NENHUM' || !jogadorStats[atributo]) return null;
-            const rolagem = Math.floor(Math.random() * 10) + 1;
-            return rolagem <= jogadorStats[atributo] ? 'SUCESSO' : 'FALHA';
-        }
-
-        // ============================================================
-        // Streaming SSE com loop de auto-continuação
+        // Streaming SSE com loop de auto-continuação (inalterado)
         // ============================================================
         async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
-    console.log("🔥 Temperatura usada:", window._introGenerating ? 0.75 : 0.6);
-    try {
-        const response = await fetch(LM_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: MODELO,
-                messages: mensagensPayload,
-                temperature: window._introGenerating ? 0.75 : 0.6,
-                max_tokens: maxTokens,
-                presence_penalty: 0.3,
-                frequency_penalty: 0.3,
-                stream: true
-            })
-        });
+            console.log("🔥 Temperatura usada:", window._introGenerating ? 0.75 : 0.6);
+            try {
+                const response = await fetch(LM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODELO,
+                        messages: mensagensPayload,
+                        temperature: window._introGenerating ? 0.75 : 0.6,
+                        max_tokens: maxTokens,
+                        presence_penalty: 0.3,
+                        frequency_penalty: 0.3,
+                        stream: true
+                    })
+                });
 
-        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+                if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-        let fullText = '';
-        let finishReason = null;
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let fullText = '';
+                let finishReason = null;
 
-        console.debug('[LLM STREAM] Iniciando leitura de chunks SSE...');
+                console.debug('[LLM STREAM] Iniciando leitura de chunks SSE...');
 
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-                console.debug('[LLM STREAM] Leitor finalizado (done=true)');
-                break;
-            }
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        console.debug('[LLM STREAM] Leitor finalizado (done=true)');
+                        break;
+                    }
 
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop();
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
 
-            for (const line of lines) {
-                if (!line.startsWith('data: ')) continue;
-                const jsonStr = line.slice(6).trim();
-                if (jsonStr === '[DONE]') {
-                    console.debug('[LLM STREAM] Sinal [DONE] recebido.');
-                    continue;
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        const jsonStr = line.slice(6).trim();
+                        if (jsonStr === '[DONE]') {
+                            console.debug('[LLM STREAM] Sinal [DONE] recebido.');
+                            continue;
+                        }
+                        try {
+                            const chunk = JSON.parse(jsonStr);
+                            const delta = chunk.choices?.[0]?.delta?.content || '';
+                            const fr = chunk.choices?.[0]?.finish_reason;
+
+                            if (fr && fr !== 'null') {
+                                console.debug(`[LLM STREAM] finish_reason recebido: "${fr}"`);
+                            } else if (fr === 'null') {
+                                console.debug('[LLM STREAM] finish_reason = null (ignorado)');
+                            }
+
+                            if (delta) {
+                                fullText += delta;
+                                if (onToken) onToken(fullText);
+                            }
+                            if (fr && fr !== 'null') {
+                                finishReason = fr;
+                            }
+
+                            if (chunk.error) {
+                                console.error('[LLM STREAM] Erro no chunk:', chunk.error);
+                            }
+                        } catch (parseErr) {
+                            console.error('[LLM STREAM] Erro ao parsear chunk:', parseErr, 'Linha:', line);
+                        }
+                    }
                 }
-                try {
-                    const chunk = JSON.parse(jsonStr);
-                    const delta = chunk.choices?.[0]?.delta?.content || '';
-                    const fr = chunk.choices?.[0]?.finish_reason;
 
-                    if (fr && fr !== 'null') {
-                        console.debug(`[LLM STREAM] finish_reason recebido: "${fr}"`);
-                    } else if (fr === 'null') {
-                        console.debug('[LLM STREAM] finish_reason = null (ignorado)');
-                    }
-
-                    if (delta) {
-                        fullText += delta;
-                        if (onToken) onToken(fullText);
-                    }
-                    if (fr && fr !== 'null') {
-                        finishReason = fr;
-                    }
-
-                    if (chunk.error) {
-                        console.error('[LLM STREAM] Erro no chunk:', chunk.error);
-                    }
-                } catch (parseErr) {
-                    console.error('[LLM STREAM] Erro ao parsear chunk:', parseErr, 'Linha:', line);
-                }
+                console.debug(`[LLM STREAM] Geração concluída. Tokens gerados: ~${fullText.split(' ').length} palavras. finish_reason final: "${finishReason}"`);
+                return { text: fullText, finishReason };
+            } catch (error) {
+                console.error('[LLM STREAM] Falha na requisição fetch:', error);
+                throw error;
             }
         }
-
-        console.debug(`[LLM STREAM] Geração concluída. Tokens gerados: ~${fullText.split(' ').length} palavras. finish_reason final: "${finishReason}"`);
-        return { text: fullText, finishReason };
-    } catch (error) {
-        console.error('[LLM STREAM] Falha na requisição fetch:', error);
-        throw error;
-    }
-}
 
         async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento, maxContinuacoes = 0) {
             let textoCompleto = '';
@@ -445,7 +444,7 @@ ${SSR_TEMPLATE}`
                     msgsAtual = [
                         ...msgsAtual,
                         { role: 'assistant', content: textoCompleto },
-{ role: 'user', content: 'Continue a narração em português brasileiro.' }
+                        { role: 'user', content: 'Continue a narração em português brasileiro.' }
                     ];
                 }
 
@@ -476,37 +475,23 @@ ${SSR_TEMPLATE}`
         }
 
         // ============================================================
-        // Prompt de introdução — estrutura Fighting Fantasy
+        // Prompt de introdução (inalterado)
         // ============================================================
-        /* PROMPT ORIGINAL — COMENTADO PARA TESTES DE VELOCIDADE
-        const PROMPT_INTRO = `Esta é a introdução da aventura. Escreva em exatamente 5 parágrafos. NÃO use títulos ou marcadores — apenas prosa corrida. Apresente os seguintes elementos de forma entrelaçada:
-1 — Apresente o cenário com nome próprio. Mostre as particularidades e mistérios do mundo. 
-2 — Apresente quem é o jogador. Um arquétipo claro. Sua razão para agir. Sem nome próprio. Sem emoções descritas.
-3 — Apresente a AMEAÇA. o antagonista, acontecimento perturbador ou força maligna. Dê um nome. Localize-o. Deixe claro que outros tentaram e falharam. Não explique a origem — preserve o mistério.
-4 — Apresente a MISSÃO E AS APOSTAS: o que o jogador precisa fazer (um objetivo concreto e tangível). O que acontece se falhar — para o jogador e para o mundo ao redor.
-5 — Apresente onde o jogador está agora (um lugar físico específico). Termine com uma circunstância que obrigue o jogador a agir.
-MANTENHA: segunda pessoa ("você"), frases curtas, detalhes sensoriais concretos, zero emoções descritas, zero adjetivos empilhados.`;
-        */
-
-        // PROMPT DE TESTE — cena fixa para medir velocidade de resposta
         const PROMPT_INTRO = `Descreva em 3 frases curtas a seguinte cena, em segunda pessoa: Você está numa sala de pedra. Há uma mesa, um espelho rachado e uma vela quase apagada. Uma mulher jovem e bela de cabelos escuros está de frente para você. O que você faz?`;
 
         // ============================================================
-        // Função principal de envio
+        // Função de classificação de ação (inalterada)
         // ============================================================
-
-
-
         async function classificarAcaoLLM(acaoUsuario) {
-    const response = await fetch(LM_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            model: MODELO,
-            messages: [
-                {
-                    role: 'system',
-                    content: `Você é um classificador de ações de RPG. 
+            const response = await fetch(LM_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: MODELO,
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `Você é um classificador de ações de RPG. 
 Classifique a ação do jogador em EXATAMENTE um tipo e um atributo.
 
 TIPO:
@@ -518,226 +503,233 @@ ATRIBUTO (apenas se ARRISCADA):
 - CARISMA: persuasão, sedução, engano, liderança, intimidação social
 - SORTE: apostas, eventos caóticos, azar puro
 - NENHUM: se TRIVIAL`
-                },
-                {
-                    role: 'user',
-                    content: `Ação do jogador: "${acaoUsuario}"`
-                }
-            ],
-            temperature: 0.0,
-            max_tokens: 30,
-            response_format: {
-                type: "json_schema",
-                json_schema: {
-                    name: "classificacao_acao",
-                    strict: true,
-                    schema: {
-                        type: "object",
-                        properties: {
-                            tipo: { type: "string", enum: ["TRIVIAL", "ARRISCADA"] },
-                            atributo: { type: "string", enum: ["HABILIDADE", "CARISMA", "SORTE", "NENHUM"] }
                         },
-                        required: ["tipo", "atributo"],
-                        additionalProperties: false
+                        {
+                            role: 'user',
+                            content: `Ação do jogador: "${acaoUsuario}"`
+                        }
+                    ],
+                    temperature: 0.0,
+                    max_tokens: 30,
+                    response_format: {
+                        type: "json_schema",
+                        json_schema: {
+                            name: "classificacao_acao",
+                            strict: true,
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    tipo: { type: "string", enum: ["TRIVIAL", "ARRISCADA"] },
+                                    atributo: { type: "string", enum: ["HABILIDADE", "CARISMA", "SORTE", "NENHUM"] }
+                                },
+                                required: ["tipo", "atributo"],
+                                additionalProperties: false
+                            }
+                        }
                     }
-                }
-            }
-        })
-    });
-    const data = await response.json();
-    return JSON.parse(data.choices[0].message.content);
-}
+                })
+            });
+            const data = await response.json();
+            return JSON.parse(data.choices[0].message.content);
+        }
 
+        // ============================================================
+        // Funções de interface de rolagem (inalteradas)
+        // ============================================================
         async function animarTextoTeste(texto) {
-    const div = document.createElement('div');
-    div.className = 'teste-reveal';
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
-    for (const char of texto) {
-        div.innerText += char;
-        await new Promise(r => setTimeout(r, 40));
-    }
-}
-
-function criarBotaoRolar() {
-    return new Promise(resolve => {
-        const btn = document.createElement('button');
-        btn.id = 'rolar-btn';
-        btn.innerText = '⚄ ROLAR DADO';
-        chatBox.appendChild(btn);
-        chatBox.scrollTop = chatBox.scrollHeight;
-        btn.addEventListener('click', () => { btn.remove(); resolve(); }, { once: true });
-    });
-}
-
-function mostrarResultadoDado(semente, atributo, valorAtributo, resultado) {
-    const divDado = document.createElement('div');
-    divDado.className = 'resultado-dado';
-    divDado.innerText = `Rolagem: ${semente} vs ${atributo} ${valorAtributo}`;
-    chatBox.appendChild(divDado);
-    const divRes = document.createElement('div');
-    divRes.className = resultado === 'SUCESSO' ? 'resultado-sucesso' : 'resultado-falha';
-    divRes.innerText = resultado;
-    chatBox.appendChild(divRes);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-      
-window.enviar = async function(mensagemUsuario = null) {
-    const isInitial = mensagemUsuario === null;
-    
-    if (!isInitial) {
-        turnosJogados++;
-    }
-
-    let pergunta;
-    if (isInitial) {
-        if (!resumoAtual) {
-            pergunta = PROMPT_INTRO;
-        } else {
-            pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
-        }
-    } else {
-        pergunta = mensagemUsuario;
-    }
-
-    if (!isInitial) {
-        adicionarMensagem(pergunta, 'user');
-        userInput.value = '';
-    }
-
-    sendBtn.disabled = true;
-    userInput.disabled = true;
-
-    const tempId = adicionarMensagem('...', 'ai', true);
-    const elementoDisplay = document.getElementById(tempId);
-
-    try {
-        await comprimirMemoria();
-
-        let mensagemFinal = pergunta;
-
-       // SE NÃO FOR A INTRODUÇÃO, APENAS GERA A SEMENTE E OS ATRIBUTOS
-// FASE 1: classificação com constrained decoding — o JS decide tudo
-if (!isInitial) {
-    const classificacao = await classificarAcaoLLM(pergunta);
-    const { tipo, atributo } = classificacao;
-
-    let resultado = null;
-    let danoBase = 0;
-
-    if (tipo === 'ARRISCADA' && atributo !== 'NENHUM') {
-    console.log('[Teste] Atributo:', atributo, 'Valor:', jogadorStats[atributo]);   // LOG 10
-    await animarTextoTeste(`TESTE DE ${atributo}`);
-    await criarBotaoRolar();
-
-    const semente = Math.floor(Math.random() * 20) + 1;
-    const valorAtributo = jogadorStats[atributo] ?? 0;
-    resultado = semente <= valorAtributo ? 'SUCESSO' : 'FALHA';
-    if (resultado === 'FALHA') {
-        danoBase = Math.max(1, Math.floor((semente - valorAtributo) / 2));
-    }
-
-    mostrarResultadoDado(semente, atributo, valorAtributo, resultado);
-    await new Promise(r => setTimeout(r, 600));
-}
-
-    const contextoDecidido = tipo === 'TRIVIAL'
-        ? `[AÇÃO TRIVIAL — narre diretamente sem mencionar teste. Termine com [DANO: 0]]`
-        : `[AÇÃO ARRISCADA — TESTE DE ${atributo}: ${resultado}. Dano mínimo se falha: ${danoBase}. Narre a cena. Termine com [DANO: ${resultado === 'FALHA' ? danoBase : 0}]]`;
-
-    mensagemFinal += `\n${contextoDecidido}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
-}
-
-mensagens.push({ role: 'user', content: mensagemFinal });
-
-        const isIntro = (isInitial && !resumoAtual);
-        const maxTokens       = isIntro ? 500 : 250;
-        const maxContinuacoes = isIntro ?    1 :   1;
-
-        console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
-
-        if (isIntro) window._introGenerating = true;
-
-        const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
-
-        // 1. Extrai dano imediatamente
-        const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
-
-        // 2. Remove qualquer tag [TESTE:...] que possa ter ficado
-        let respostaLimpa = respostaIA;
-        if (respostaLimpa.includes('[TESTE:')) {
-            respostaLimpa = respostaLimpa.replace(/\[TESTE:[^\]]+\]/g, '').trim();
-        }
-
-        // 3. Exibe mensagem de falha se houver dano (apenas para ações do jogador)
-        if (!isInitial && danoMatch && parseInt(danoMatch[1]) > 0) {
             const div = document.createElement('div');
-            div.className = 'system-message';
-            div.innerHTML = `<em style="color:#e53935; font-weight:bold;">[FALHA NO TESTE: CONSEQUÊNCIA APLICADA]</em>`;
+            div.className = 'teste-reveal';
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        // 4. Atualiza o elemento com a resposta limpa
-        elementoDisplay.innerText = respostaLimpa;
-
-        // 5. Gera memória longa logo após a intro (se necessário)
-        if (isIntro) {
-            gerarMemoriaLonga(respostaIA); // em segundo plano
-        }
-
-        // 6. Processa o dano (já temos danoMatch)
-        if (danoMatch && parseInt(danoMatch[1]) > 0) {
-            const valorDano = parseInt(danoMatch[1]);
-            energia -= valorDano;
-            document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
-            adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
-
-            if (energia <= 0) {
-                adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
-                userInput.disabled = true;
-                sendBtn.disabled = true;
-                await salvarResumoFirestore(resumoAtual);
-                return;
+            for (const char of texto) {
+                div.innerText += char;
+                await new Promise(r => setTimeout(r, 40));
             }
         }
 
-        if (isIntro) window._introGenerating = false;
-
-        mensagens.push({ role: 'assistant', content: respostaIA });
-
-        await salvarResumoFirestore(resumoAtual);
-
-        if (isInitial) {
-            userInput.disabled = false;
-            sendBtn.disabled = false;
-            userInput.focus();
+        function criarBotaoRolar() {
+            return new Promise(resolve => {
+                const btn = document.createElement('button');
+                btn.id = 'rolar-btn';
+                btn.innerText = '⚄ ROLAR DADO';
+                chatBox.appendChild(btn);
+                chatBox.scrollTop = chatBox.scrollHeight;
+                btn.addEventListener('click', () => { btn.remove(); resolve(); }, { once: true });
+            });
         }
 
-    } catch (error) {
-        elementoDisplay.innerText = `❌ Erro: ${error.message}`;
-        if (isInitial) {
-            userInput.disabled = false;
-            sendBtn.disabled = false;
+        function mostrarResultadoDado(semente, atributo, valorAtributo, resultado) {
+            const divDado = document.createElement('div');
+            divDado.className = 'resultado-dado';
+            divDado.innerText = `Rolagem: ${semente} vs ${atributo} ${valorAtributo}`;
+            chatBox.appendChild(divDado);
+            const divRes = document.createElement('div');
+            divRes.className = resultado === 'SUCESSO' ? 'resultado-sucesso' : 'resultado-falha';
+            divRes.innerText = resultado;
+            chatBox.appendChild(divRes);
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
-    } finally {
-        if (!isInitial) {
-            sendBtn.disabled = false;
-            userInput.disabled = false;
-            userInput.focus();
-        }
-    }
-};
+      
+        // ============================================================
+        // Função principal de envio (apenas trocamos salvarResumoFirestore por salvarEstadoJogador)
+        // ============================================================
+        window.enviar = async function(mensagemUsuario = null) {
+            const isInitial = mensagemUsuario === null;
+            
+            if (!isInitial) {
+                turnosJogados++;
+            }
+
+            let pergunta;
+            if (isInitial) {
+                if (!resumoAtual) {
+                    pergunta = PROMPT_INTRO;
+                } else {
+                    pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
+                }
+            } else {
+                pergunta = mensagemUsuario;
+            }
+
+            if (!isInitial) {
+                adicionarMensagem(pergunta, 'user');
+                userInput.value = '';
+            }
+
+            sendBtn.disabled = true;
+            userInput.disabled = true;
+
+            const tempId = adicionarMensagem('...', 'ai', true);
+            const elementoDisplay = document.getElementById(tempId);
+
+            try {
+                await comprimirMemoria();
+
+                let mensagemFinal = pergunta;
+
+                if (!isInitial) {
+                    const classificacao = await classificarAcaoLLM(pergunta);
+                    const { tipo, atributo } = classificacao;
+
+                    let resultado = null;
+                    let danoBase = 0;
+
+                    if (tipo === 'ARRISCADA' && atributo !== 'NENHUM') {
+                        console.log('[Teste] Atributo:', atributo, 'Valor:', jogadorStats[atributo]);
+                        await animarTextoTeste(`TESTE DE ${atributo}`);
+                        await criarBotaoRolar();
+
+                        const semente = Math.floor(Math.random() * 20) + 1;
+                        const valorAtributo = jogadorStats[atributo] ?? 0;
+                        resultado = semente <= valorAtributo ? 'SUCESSO' : 'FALHA';
+                        if (resultado === 'FALHA') {
+                            danoBase = Math.max(1, Math.floor((semente - valorAtributo) / 2));
+                        }
+
+                        mostrarResultadoDado(semente, atributo, valorAtributo, resultado);
+                        await new Promise(r => setTimeout(r, 600));
+                    }
+
+                    const contextoDecidido = tipo === 'TRIVIAL'
+                        ? `[AÇÃO TRIVIAL — narre diretamente sem mencionar teste. Termine com [DANO: 0]]`
+                        : `[AÇÃO ARRISCADA — TESTE DE ${atributo}: ${resultado}. Dano mínimo se falha: ${danoBase}. Narre a cena. Termine com [DANO: ${resultado === 'FALHA' ? danoBase : 0}]]`;
+
+                    mensagemFinal += `\n${contextoDecidido}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
+                }
+
+                mensagens.push({ role: 'user', content: mensagemFinal });
+
+                const isIntro = (isInitial && !resumoAtual);
+                const maxTokens       = isIntro ? 500 : 250;
+                const maxContinuacoes = isIntro ?    1 :   1;
+
+                console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
+
+                if (isIntro) window._introGenerating = true;
+
+                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
+
+                const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
+
+                let respostaLimpa = respostaIA;
+                if (respostaLimpa.includes('[TESTE:')) {
+                    respostaLimpa = respostaLimpa.replace(/\[TESTE:[^\]]+\]/g, '').trim();
+                }
+
+                if (!isInitial && danoMatch && parseInt(danoMatch[1]) > 0) {
+                    const div = document.createElement('div');
+                    div.className = 'system-message';
+                    div.innerHTML = `<em style="color:#e53935; font-weight:bold;">[FALHA NO TESTE: CONSEQUÊNCIA APLICADA]</em>`;
+                    chatBox.appendChild(div);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+
+                elementoDisplay.innerText = respostaLimpa;
+
+                if (isIntro) {
+                    gerarMemoriaLonga(respostaIA);
+                }
+
+                if (danoMatch && parseInt(danoMatch[1]) > 0) {
+                    const valorDano = parseInt(danoMatch[1]);
+                    energia -= valorDano;
+                    document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
+                    adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
+
+                    if (energia <= 0) {
+                        adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
+                        userInput.disabled = true;
+                        sendBtn.disabled = true;
+                        await salvarEstadoJogador();
+                        return;
+                    }
+                }
+
+                if (isIntro) window._introGenerating = false;
+
+                mensagens.push({ role: 'assistant', content: respostaIA });
+
+                await salvarEstadoJogador();
+
+                if (isInitial) {
+                    userInput.disabled = false;
+                    sendBtn.disabled = false;
+                    userInput.focus();
+                }
+
+            } catch (error) {
+                elementoDisplay.innerText = `❌ Erro: ${error.message}`;
+                if (isInitial) {
+                    userInput.disabled = false;
+                    sendBtn.disabled = false;
+                }
+            } finally {
+                if (!isInitial) {
+                    sendBtn.disabled = false;
+                    userInput.disabled = false;
+                    userInput.focus();
+                }
+            }
+        };
 
         // ============================================================
-        // Inicialização
+        // Inicialização com autenticação
         // ============================================================
         window.onload = async () => {
-    await carregarSessao();
-    console.log('[Inicialização] Energia atual:', energia);          // LOG 8
-    console.log('[Inicialização] Atributos atuais:', jogadorStats);  // LOG 9
-    window.enviar(); 
-};
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    uidAtual = user.uid;
+                    console.log("Usuário autenticado:", uidAtual);
+                    await carregarDadosJogador(uidAtual);
+                    console.log('[Inicialização] Energia atual:', energia);
+                    console.log('[Inicialização] Atributos atuais:', jogadorStats);
+                    window.enviar();
+                } else {
+                    console.warn("Usuário não autenticado. Redirecionando para login...");
+                    window.location.href = "login.html";
+                }
+            });
+        };
 
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !sendBtn.disabled) {
