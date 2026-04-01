@@ -127,65 +127,82 @@ REGRAS DE SAÍDA:
         // Funções de Inicialização e Firebase
         // ============================================================
         async function carregarSessao() {
-            try {
-                const docRef = doc(db, "sessoes", sessionId);
-                const docSnap = await getDoc(docRef);
-                
-                if (docSnap.exists()) {
-                    // ── Carrega memória longa (imutável) ──────────────
-                    if (docSnap.data().memoriaLonga) {
-                        memoriaLonga = docSnap.data().memoriaLonga;
-                        mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta — nunca contradiga nem altere):\n${memoriaLonga}`;
-                    }
-                    // ── Carrega SSR de curto prazo ────────────────────
-                    if (docSnap.data().resumo) {
-                        resumoAtual = docSnap.data().resumo;
-                        mensagens[2].content = `Resumo da jornada até agora: ${resumoAtual}`;
-                    }
-                    const data = docSnap.data();
-                    
-                    if (data.turnos !== undefined) {
-                        turnosJogados = data.turnos;
-                    }
-                    
-                    // 1. Carregando a Energia (energy.total)
-                    if (data?.energy?.total !== undefined) {
-                        energia = data.energy.total;
-                        // Nota: Ajuste o "/10" na string abaixo se a sua energia máxima variar
-                        document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
-                    } else if (data.energia !== undefined) {
-                        // Fallback de segurança para o seu formato antigo, caso o banco não tenha atualizado
-                        energia = data.energia;
-                        document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
-                    }
+    try {
+        const docRef = doc(db, "sessoes", sessionId);
+        const docSnap = await getDoc(docRef);
+        
+        // LOG 1: verificar se o documento existe e mostrar dados brutos
+        console.log('[Firestore] Documento sessoes carregado:', docSnap.exists() ? docSnap.data() : 'não existe');
 
-                    // 2. Carregando os Atributos (skill, charisma, luck)
-                    if (data?.skill?.total !== undefined) {
-                        jogadorStats.HABILIDADE = data.skill.total;
-                    }
-                    if (data?.charisma?.total !== undefined) {
-                        jogadorStats.CARISMA = data.charisma.total;
-                    }
-                    if (data?.luck?.total !== undefined) {
-                        jogadorStats.SORTE = data.luck.total;
-                    }
-                }
-            } catch (e) {
-                console.error("Erro ao carregar do Firestore:", e);
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            // LOG 2: mostrar campos específicos que vamos usar
+            console.log('[Firestore] Dados brutos:', data);
+            console.log('[Firestore] energy.total:', data?.energy?.total);
+            console.log('[Firestore] skill.total:', data?.skill?.total);
+            console.log('[Firestore] charisma.total:', data?.charisma?.total);
+            console.log('[Firestore] luck.total:', data?.luck?.total);
+
+            // ── Carrega memória longa (imutável) ──────────────
+            if (data.memoriaLonga) {
+                memoriaLonga = data.memoriaLonga;
+                mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta — nunca contradiga nem altere):\n${memoriaLonga}`;
             }
-        }
+            // ── Carrega SSR de curto prazo ────────────────────
+            if (data.resumo) {
+                resumoAtual = data.resumo;
+                mensagens[2].content = `Resumo da jornada até agora: ${resumoAtual}`;
+            }
+            
+            if (data.turnos !== undefined) {
+                turnosJogados = data.turnos;
+            }
+            
+            // 1. Carregando a Energia (energy.total)
+            if (data?.energy?.total !== undefined) {
+                energia = data.energy.total;
+                document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
+                console.log('[Jogador] Energia carregada:', energia);   // LOG 3
+            } else if (data.energia !== undefined) {
+                energia = data.energia;
+                document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
+                console.log('[Jogador] Energia carregada (fallback):', energia);   // LOG 4
+            }
 
+            // 2. Carregando os Atributos (skill, charisma, luck)
+            if (data?.skill?.total !== undefined) {
+                jogadorStats.HABILIDADE = data.skill.total;
+            }
+            if (data?.charisma?.total !== undefined) {
+                jogadorStats.CARISMA = data.charisma.total;
+            }
+            if (data?.luck?.total !== undefined) {
+                jogadorStats.SORTE = data.luck.total;
+            }
+            // LOG 5: mostrar atributos após carregamento
+            console.log('[Jogador] Atributos após carregamento:', jogadorStats);
+        }
+    } catch (e) {
+        console.error("Erro ao carregar do Firestore:", e);
+    }
+}
         async function salvarResumoFirestore(novoResumo) {
-            try {
-                await setDoc(doc(db, "sessoes", sessionId), { 
-                    resumo: novoResumo,
-                    turnos: turnosJogados,
-                    energia: energia
-                }, { merge: true });
-            } catch (e) {
-                console.error("Erro ao salvar no Firestore:", e);
-            }
-        }
+    try {
+        console.log('[Firestore] Salvando resumo e energia:', { 
+            resumo: novoResumo, 
+            turnos: turnosJogados, 
+            energia 
+        });   // LOG 6
+        await setDoc(doc(db, "sessoes", sessionId), { 
+            resumo: novoResumo,
+            turnos: turnosJogados,
+            energia: energia
+        }, { merge: true });
+        console.log('[Firestore] Dados salvos com sucesso.');   // LOG 7
+    } catch (e) {
+        console.error("Erro ao salvar no Firestore:", e);
+    }
+}
 
         // ============================================================
         // MEMÓRIA LONGA — gerada uma única vez após a intro
@@ -609,19 +626,20 @@ if (!isInitial) {
     let danoBase = 0;
 
     if (tipo === 'ARRISCADA' && atributo !== 'NENHUM') {
-        await animarTextoTeste(`TESTE DE ${atributo}`);
-        await criarBotaoRolar();
+    console.log('[Teste] Atributo:', atributo, 'Valor:', jogadorStats[atributo]);   // LOG 10
+    await animarTextoTeste(`TESTE DE ${atributo}`);
+    await criarBotaoRolar();
 
-        const semente = Math.floor(Math.random() * 20) + 1;
-        const valorAtributo = jogadorStats[atributo] ?? 0;
-        resultado = semente <= valorAtributo ? 'SUCESSO' : 'FALHA';
-        if (resultado === 'FALHA') {
-            danoBase = Math.max(1, Math.floor((semente - valorAtributo) / 2));
-        }
-
-        mostrarResultadoDado(semente, atributo, valorAtributo, resultado);
-        await new Promise(r => setTimeout(r, 600));
+    const semente = Math.floor(Math.random() * 20) + 1;
+    const valorAtributo = jogadorStats[atributo] ?? 0;
+    resultado = semente <= valorAtributo ? 'SUCESSO' : 'FALHA';
+    if (resultado === 'FALHA') {
+        danoBase = Math.max(1, Math.floor((semente - valorAtributo) / 2));
     }
+
+    mostrarResultadoDado(semente, atributo, valorAtributo, resultado);
+    await new Promise(r => setTimeout(r, 600));
+}
 
     const contextoDecidido = tipo === 'TRIVIAL'
         ? `[AÇÃO TRIVIAL — narre diretamente sem mencionar teste. Termine com [DANO: 0]]`
@@ -715,9 +733,11 @@ mensagens.push({ role: 'user', content: mensagemFinal });
         // Inicialização
         // ============================================================
         window.onload = async () => {
-            await carregarSessao();
-            window.enviar(); 
-        };
+    await carregarSessao();
+    console.log('[Inicialização] Energia atual:', energia);          // LOG 8
+    console.log('[Inicialização] Atributos atuais:', jogadorStats);  // LOG 9
+    window.enviar(); 
+};
 
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !sendBtn.disabled) {
