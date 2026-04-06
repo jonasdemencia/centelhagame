@@ -506,7 +506,7 @@ SITUAÇÃO: ${jsonObj.situacao_atual}`;
                     msgsAtual = [
                         ...msgsAtual,
                         { role: 'assistant', content: textoCompleto },
-                        { role: 'user', content: 'Continue a narração em português brasileiro.' }
+{ role: 'user', content: 'Continue a narração em português brasileiro. Não repita o que já foi dito. Termine com [DANO: N].' }
                     ];
                 }
 
@@ -775,7 +775,7 @@ ATRIBUTO (apenas se ARRISCADA):
                 mensagens.push({ role: 'user', content: mensagemFinal });
 
                 const isIntro = (isInitial && !resumoAtual);
-                const maxTokens       = isIntro ? 400 : 200;
+                const maxTokens       = isIntro ? 350 : 250;
                 const maxContinuacoes = isIntro ?    1 :   1;
 
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
