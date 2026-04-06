@@ -622,7 +622,7 @@ function construirContextoNarrador(tipoAcao) {
         slots.push(mensagens[2]);
     }
 
-    const trocas = tipoAcao === 'TRIVIAL' ? 2 : 4;
+const trocas = 4;
     const historico = mensagens.slice(3);
     const janelaHistorico = historico
         .slice(-(trocas * 2))
