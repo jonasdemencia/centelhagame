@@ -775,7 +775,7 @@ ATRIBUTO (apenas se ARRISCADA):
                 mensagens.push({ role: 'user', content: mensagemFinal });
 
                 const isIntro = (isInitial && !resumoAtual);
-                const maxTokens       = isIntro ? 350 : 250;
+                const maxTokens       = isIntro ? 500 : 400;
                 const maxContinuacoes = isIntro ?    1 :   1;
 
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
