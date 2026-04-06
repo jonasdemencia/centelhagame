@@ -86,6 +86,16 @@
             SORTE: 0
         };
 
+                // ── Contexto para o classificador ────────────────────────────────────
+        let entityIndex = {};        // { "joana": "morta", "guarda": "inconsciente" }
+        let entidadeEmFoco = null;   // { nome: "joana", estado: "morta" }
+        let ssrJson = null;
+
+        const PRONOMES_FEMININOS  = ['ela', 'dela', 'nela', 'a ela', 'sua', 'a mulher', 'o corpo dela'];
+        const PRONOMES_MASCULINOS = ['ele', 'dele', 'nele', 'a ele', 'seu', 'o homem', 'o corpo dele'];
+        const PRONOMES_NEUTROS    = ['o corpo', 'o cadáver', 'o alvo', 'ele/ela'];
+        
+
         const chatBox = document.getElementById('chat-box');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
@@ -141,6 +151,12 @@ REGRAS DE SAÍDA:
                         resumoAtual = data.resumo;
                         mensagens[2].content = `Resumo da jornada até agora: ${resumoAtual}`;
                     }
+
+                    // ===== NOVO =====
+                    if (data.ssrJson) {
+                        ssrJson = data.ssrJson;
+                        buildEntityIndex(ssrJson);   // reconstrói o índice de entidades
+                    }
                     
                     if (data.turnos !== undefined) {
                         turnosJogados = data.turnos;
@@ -195,15 +211,16 @@ REGRAS DE SAÍDA:
         async function salvarEstadoJogador() {
             if (!uidAtual) return;
             try {
-                const dadosAtualizados = {
+                                const dadosAtualizados = {
                     turnos: turnosJogados,
                     resumo: resumoAtual,
-                    energia: energia,               // fallback
+                    energia: energia,
                     "energy.total": energia,
                     memoriaLonga: memoriaLonga,
                     "skill.total": jogadorStats.HABILIDADE,
                     "charisma.total": jogadorStats.CARISMA,
-                    "luck.total": jogadorStats.SORTE
+                    "luck.total": jogadorStats.SORTE,
+                    ssrJson: ssrJson   // ← adiciona esta linha
                 };
                 console.log('[Firestore] Salvando estado do jogador:', dadosAtualizados);
                 await setDoc(doc(db, "players", uidAtual), dadosAtualizados, { merge: true });
@@ -356,6 +373,9 @@ Saída correta: "Jogador fez a jovem engolir uma pedra."`
                 throw new Error('Resposta inválida do servidor de compressão');
             }
             const jsonObj = JSON.parse(data.choices[0].message.content);
+                        buildEntityIndex(jsonObj);   // ← atualiza o índice de entidades
+
+            ssrJson = jsonObj;
 
             // Reconstrói o texto que o narrador vai usar
             resumoAtual = `LOCAL: ${jsonObj.local}
@@ -521,10 +541,74 @@ SITUAÇÃO: ${jsonObj.situacao_atual}`;
         // ============================================================
         const PROMPT_INTRO = `Descreva em 3 frases curtas a seguinte cena, em segunda pessoa: Você está numa sala de pedra. Há uma mesa, um espelho rachado e uma vela quase apagada. Uma mulher jovem e bela de cabelos escuros está de frente para você. O que você faz?`;
 
+
+                // ============================================================
+        // Entity Index e Micro-Contexto
+        // ============================================================
+        function buildEntityIndex(ssrJson) {
+            entityIndex = {};
+            entidadeEmFoco = null;
+
+            for (const entrada of (ssrJson?.npcs || [])) {
+                const virgulaIdx = entrada.indexOf(',');
+                if (virgulaIdx === -1) continue;
+                const nome   = entrada.slice(0, virgulaIdx).trim().toLowerCase();
+                const estado = entrada.slice(virgulaIdx + 1).trim().toLowerCase();
+                entityIndex[nome] = estado;
+            }
+
+            // Entidade em foco = primeiro NPC listado no situacao_atual, ou primeiro do índice
+            const situacao = ssrJson?.situacao_atual?.toLowerCase() || '';
+            for (const [nome, estado] of Object.entries(entityIndex)) {
+                if (situacao.includes(nome)) {
+                    entidadeEmFoco = { nome, estado };
+                    break;
+                }
+            }
+            // Fallback: primeiro do índice
+            if (!entidadeEmFoco && Object.keys(entityIndex).length > 0) {
+                const [nome, estado] = Object.entries(entityIndex)[0];
+                entidadeEmFoco = { nome, estado };
+            }
+
+            console.debug('[EntityIndex]', entityIndex, '| Foco:', entidadeEmFoco);
+        }
+
+        function resolverMicroContexto(acao) {
+            const lower = acao.toLowerCase();
+
+            // 1. Busca nome explícito na ação
+            for (const [nome, estado] of Object.entries(entityIndex)) {
+                if (lower.includes(nome)) {
+                    return `[${nome}: ${estado}]`;
+                }
+            }
+
+            // 2. Busca pronome e resolve para entidade em foco
+            if (entidadeEmFoco) {
+                const todosPronomes = [...PRONOMES_FEMININOS, ...PRONOMES_MASCULINOS, ...PRONOMES_NEUTROS];
+                const temPronome = todosPronomes.some(p => lower.includes(p));
+                if (temPronome) {
+                    return `[${entidadeEmFoco.nome}: ${entidadeEmFoco.estado}]`;
+                }
+            }
+
+            // 3. Sem referência identificável — não injeta nada
+            return '';
+        }
+
+        
         // ============================================================
         // Função de classificação de ação (inalterada)
         // ============================================================
-        async function classificarAcaoLLM(acaoUsuario) {
+                async function classificarAcaoLLM(acaoUsuario) {
+            // ── NOVO: resolve micro-contexto antes da chamada ──────────────
+            const microContexto = resolverMicroContexto(acaoUsuario);
+            const acaoComContexto = microContexto
+                ? `Ação do jogador: "${acaoUsuario}" ${microContexto}`
+                : `Ação do jogador: "${acaoUsuario}"`;
+            // ──────────────────────────────────────────────────────────────
+
             const response = await fetch(LM_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -537,8 +621,10 @@ SITUAÇÃO: ${jsonObj.situacao_atual}`;
 Classifique a ação do jogador em EXATAMENTE um tipo e um atributo.
 
 TIPO:
-- TRIVIAL: observar, perguntar, dialogar, cumprimentar, esperar, examinar sem risco
-- ARRISCADA: atacar, fugir, mentir, seduzir, roubar, escalar, enganar, ameaçar, qualquer ação com consequência física ou social
+- TRIVIAL: observar, perguntar, dialogar, cumprimentar, esperar, examinar sem risco,
+  qualquer ação sobre alvo morto, inconsciente ou imóvel
+- ARRISCADA: atacar, fugir, mentir, seduzir, roubar, escalar, enganar, ameaçar,
+  qualquer ação com consequência física ou social sobre alvo VIVO e ATIVO
 
 ATRIBUTO (apenas se ARRISCADA):
 - HABILIDADE: ações físicas, combate, furtividade, destreza
@@ -548,7 +634,7 @@ ATRIBUTO (apenas se ARRISCADA):
                         },
                         {
                             role: 'user',
-                            content: `Ação do jogador: "${acaoUsuario}"`
+                            content: acaoComContexto
                         }
                     ],
                     temperature: 0.0,
