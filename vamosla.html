@@ -408,6 +408,7 @@ SITUAÇÃO: ${jsonObj.situacao_atual}`;
                         max_tokens: maxTokens,
                         presence_penalty: 0.3,
                         frequency_penalty: 0.3,
+                        stop: ["[TRIVIAL]", "[SUCESSO]", "[FALHA]", "\n\n\n"], // corta overgen
                         stream: true
                     })
                 });
