@@ -408,7 +408,6 @@ SITUAÇÃO: ${jsonObj.situacao_atual}`;
                         max_tokens: maxTokens,
                         presence_penalty: 0.3,
                         frequency_penalty: 0.3,
-                        stop: ["[TRIVIAL]", "[SUCESSO]", "[FALHA]", "\n\n\n"], // corta overgen
                         stream: true
                     })
                 });
@@ -682,7 +681,7 @@ ATRIBUTO (apenas se ARRISCADA):
                 mensagens.push({ role: 'user', content: mensagemFinal });
 
                 const isIntro = (isInitial && !resumoAtual);
-                const maxTokens       = isIntro ? 500 : 90;
+                const maxTokens       = isIntro ? 500 : 200;
                 const maxContinuacoes = isIntro ?    1 :   1;
 
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
