@@ -107,7 +107,7 @@
                 content: `Você é um mestre de RPG brutal e realista. Responda APENAS em Português Brasileiro CORRETO, NUNCA em outros idiomas. Você NUNCA repete as instruções do jogador.
 
 NARRATIVA:
-- Tensão Psicológica: o horror está no que não é mostrado. Mostre consequências (cadáveres, ruínas, loucura). Atrase o monstro.
+- Narração Ativa: a cada turno, o mundo age sozinho — um NPC se move, um som irrompe, algo muda. O cenário nunca espera. Mostre consequências do passado e sinais do que está por vir.
 - Prosa Forense: descreva dano como patologista — rompimento de tecido, fratura, fluidos, o som seco da matéria cedendo.
 
 REGRAS DE SAÍDA:
@@ -141,11 +141,11 @@ REGRAS DE SAÍDA:
                     console.log('[Firestore] charisma.total:', data?.charisma?.total);
                     console.log('[Firestore] luck.total:', data?.luck?.total);
 
-                    // Carrega memória longa
-                    if (data.memoriaLonga) {
-                        memoriaLonga = data.memoriaLonga;
-                        mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta — nunca contradiga nem altere):\n${memoriaLonga}`;
-                    }
+                    // Carrega memória longa — DESABILITADO
+// if (data.memoriaLonga) {
+//     memoriaLonga = data.memoriaLonga;
+//     mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta — nunca contradiga nem altere):\n${memoriaLonga}`;
+// }
                     // Carrega resumo
                     if (data.resumo) {
                         resumoAtual = data.resumo;
@@ -426,8 +426,8 @@ SITUAÇÃO: ${jsonObj.situacao_atual}`;
                         messages: mensagensPayload,
                         temperature: window._introGenerating ? 0.75 : 0.6,
                         max_tokens: maxTokens,
-                        presence_penalty: 0.3,
-                        frequency_penalty: 0.3,
+                        presence_penalty: 0.0,
+                        frequency_penalty: 0.0,
                         stream: true
                     })
                 });
@@ -775,7 +775,7 @@ ATRIBUTO (apenas se ARRISCADA):
                 mensagens.push({ role: 'user', content: mensagemFinal });
 
                 const isIntro = (isInitial && !resumoAtual);
-                const maxTokens       = isIntro ? 500 : 200;
+                const maxTokens       = isIntro ? 500 : 350;
                 const maxContinuacoes = isIntro ?    1 :   1;
 
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
@@ -802,8 +802,8 @@ ATRIBUTO (apenas se ARRISCADA):
                 elementoDisplay.innerText = respostaLimpa;
 
                 if (isIntro) {
-                    gerarMemoriaLonga(respostaIA);
-                }
+    // gerarMemoriaLonga(respostaIA);   // DESABILITADO
+}
 
                 if (danoMatch && parseInt(danoMatch[1]) > 0) {
                     const valorDano = parseInt(danoMatch[1]);
