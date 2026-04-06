@@ -239,7 +239,7 @@ REGRAS DE SAÍDA:
             const promptLore = [
                 {
                     role: 'system',
-                    content: 'Você é um extrator de lore. Dado o texto de introdução de um RPG, preencha os campos abaixo com dados factuais extraídos do texto. Zero prosa. Zero adjetivos literários. Apenas nomes e fatos secos.\n\nMUNDO: [nome do cenário/reino principal]\nAMEAÇA: [nome e natureza da ameaça principal]\nMISSÃO: [objetivo concreto da missão]\nLOCALIZAÇÕES: [lista separada por vírgulas de TODOS os lugares nomeados: reinos, regiões, vilas, rios, montanhas, pântanos, locais específicos — apenas os nomes, sem descrição]\n\nResponda APENAS com os campos preenchidos, sem texto adicional.'
+                    content: 'Você é um extrator de lore. Dado o texto de introdução de um RPG, preencha os campos abaixo com dados factuais extraídos do texto. Zero prosa. Zero adjetivos literários. Apenas nomes e fatos secos.\n\nMUNDO: [nome do cenário/reino principal]\nAMEAÇA: [nome e natureza da ameaça principal]\nARQUÉTIPO: [arquétipo do jogador]\nMISSÃO: [objetivo concreto da missão]\nLOCALIZAÇÕES: [lista separada por vírgulas de TODOS os lugares nomeados: reinos, regiões, vilas, rios, montanhas, pântanos, locais específicos — apenas os nomes, sem descrição]\n\nResponda APENAS com os campos preenchidos, sem texto adicional.'
                 },
                 {
                     role: 'user',
@@ -426,8 +426,8 @@ SITUAÇÃO: ${jsonObj.situacao_atual}`;
                         messages: mensagensPayload,
                         temperature: window._introGenerating ? 0.75 : 0.6,
                         max_tokens: maxTokens,
-                        presence_penalty: 0.0,
-                        frequency_penalty: 0.0,
+                        presence_penalty: 0.3,
+                        frequency_penalty: 0.3,
                         stream: true
                     })
                 });
@@ -506,7 +506,7 @@ SITUAÇÃO: ${jsonObj.situacao_atual}`;
                     msgsAtual = [
                         ...msgsAtual,
                         { role: 'assistant', content: textoCompleto },
-{ role: 'user', content: 'Continue a narração em português brasileiro. Não repita o que já foi dito. Termine com [DANO: N].' }
+                        { role: 'user', content: 'Continue a narração em português brasileiro.' }
                     ];
                 }
 
@@ -597,40 +597,6 @@ SITUAÇÃO: ${jsonObj.situacao_atual}`;
             return '';
         }
 
-
-function limparMensagemHistorica(msg) {
-    if (msg.role !== 'user') return msg;
-    return {
-        ...msg,
-        content: msg.content
-            .replace(/\n\[AÇÃO (TRIVIAL|ARRISCADA)[^\]]*\]/g, '')
-            .replace(/\n\[RESPOSTA OBRIGATORIAMENTE[^\]]*\]/g, '')
-            .replace(/\n\[DANO:[^\]]*\]/g, '')
-            .trim()
-    };
-}
-
-function construirContextoNarrador(tipoAcao) {
-    const slots = [mensagens[0]];
-
-    if (mensagens[1].content.trim()) {
-        slots.push(mensagens[1]);
-    }
-
-    const ssrVazio = 'Resumo da jornada até agora: A aventura acabou de começar.';
-    if (mensagens[2].content !== ssrVazio) {
-        slots.push(mensagens[2]);
-    }
-
-const trocas = 4;
-    const historico = mensagens.slice(3);
-    const janelaHistorico = historico
-        .slice(-(trocas * 2))
-        .map(limparMensagemHistorica);
-
-    return [...slots, ...janelaHistorico];
-}
-
         
         // ============================================================
         // Função de classificação de ação (inalterada)
@@ -713,7 +679,7 @@ ATRIBUTO (apenas se ARRISCADA):
             chatBox.scrollTop = chatBox.scrollHeight;
             for (const char of texto) {
                 div.innerText += char;
-                await new Promise(r => setTimeout(r, 10));
+                await new Promise(r => setTimeout(r, 40));
             }
         }
 
@@ -775,13 +741,10 @@ ATRIBUTO (apenas se ARRISCADA):
             try {
 
                 let mensagemFinal = pergunta;
-let tipo = 'TRIVIAL';
-let atributo = 'NENHUM';
 
-if (!isInitial) {
-    const classificacao = await classificarAcaoLLM(pergunta);
-    tipo = classificacao.tipo;
-    atributo = classificacao.atributo;
+                if (!isInitial) {
+                    const classificacao = await classificarAcaoLLM(pergunta);
+                    const { tipo, atributo } = classificacao;
 
                     let resultado = null;
                     let danoBase = 0;
@@ -812,17 +775,14 @@ if (!isInitial) {
                 mensagens.push({ role: 'user', content: mensagemFinal });
 
                 const isIntro = (isInitial && !resumoAtual);
-                const maxTokens       = isIntro ? 500 : 400;
+                const maxTokens       = isIntro ? 500 : 200;
                 const maxContinuacoes = isIntro ?    1 :   1;
 
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
 
                 if (isIntro) window._introGenerating = true;
 
-                const payloadNarrador = construirContextoNarrador(
-    isInitial ? 'TRIVIAL' : (tipo ?? 'TRIVIAL')
-);
-const respostaIA = await gerarRespostaComContinuacao(payloadNarrador, maxTokens, elementoDisplay, maxContinuacoes);
+                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
 
                 const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
 
@@ -842,7 +802,7 @@ const respostaIA = await gerarRespostaComContinuacao(payloadNarrador, maxTokens,
                 elementoDisplay.innerText = respostaLimpa;
 
                 if (isIntro) {
-                    // gerarMemoriaLonga(respostaIA);   // desabilitado temporariamente
+                    gerarMemoriaLonga(respostaIA);
                 }
 
                 if (danoMatch && parseInt(danoMatch[1]) > 0) {
@@ -862,10 +822,7 @@ const respostaIA = await gerarRespostaComContinuacao(payloadNarrador, maxTokens,
 
                 if (isIntro) window._introGenerating = false;
 
-                               const respostaParaHistorico = respostaIA
-    .replace(/\[DANO:\s*\d+\]/gi, '')
-    .trim();
-mensagens.push({ role: 'assistant', content: respostaParaHistorico });
+                               mensagens.push({ role: 'assistant', content: respostaIA });
 
                 // Dispara salvamento e compressão em segundo plano (sem await)
                 setTimeout(() => {
