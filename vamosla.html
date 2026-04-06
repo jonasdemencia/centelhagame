@@ -679,7 +679,7 @@ ATRIBUTO (apenas se ARRISCADA):
             chatBox.scrollTop = chatBox.scrollHeight;
             for (const char of texto) {
                 div.innerText += char;
-                await new Promise(r => setTimeout(r, 40));
+                await new Promise(r => setTimeout(r, 10));
             }
         }
 
