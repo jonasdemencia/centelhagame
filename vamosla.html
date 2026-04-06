@@ -424,7 +424,7 @@ SITUAÇÃO: ${jsonObj.situacao_atual}`;
                     body: JSON.stringify({
                         model: MODELO,
                         messages: mensagensPayload,
-                        temperature: window._introGenerating ? 0.75 : 0.6,
+                        temperature: window._introGenerating ? 0.75 : 0.5,
                         max_tokens: maxTokens,
                         presence_penalty: 0.3,
                         frequency_penalty: 0.3,
@@ -646,7 +646,7 @@ ATRIBUTO (apenas se ARRISCADA):
                 }
             ],
             temperature: 0.0,
-            max_tokens: 30,
+            max_tokens: 20,
             response_format: {
                 type: "json_schema",
                 json_schema: {
@@ -679,7 +679,7 @@ ATRIBUTO (apenas se ARRISCADA):
             chatBox.scrollTop = chatBox.scrollHeight;
             for (const char of texto) {
                 div.innerText += char;
-                await new Promise(r => setTimeout(r, 40));
+                await new Promise(r => setTimeout(r, 10));
             }
         }
 
@@ -775,7 +775,7 @@ ATRIBUTO (apenas se ARRISCADA):
                 mensagens.push({ role: 'user', content: mensagemFinal });
 
                 const isIntro = (isInitial && !resumoAtual);
-                const maxTokens       = isIntro ? 300 : 180;
+                const maxTokens       = isIntro ? 300 : 160;
                 const maxContinuacoes = isIntro ?    1 :   1;
 
                 console.debug(`[ENVIO] isIntro=${isIntro} | maxTokens=${maxTokens} | maxContinuacoes=${maxContinuacoes}`);
