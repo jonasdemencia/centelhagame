@@ -601,23 +601,31 @@ SITUAÇÃO: ${jsonObj.situacao_atual}`;
         // ============================================================
         // Função de classificação de ação (inalterada)
         // ============================================================
-                async function classificarAcaoLLM(acaoUsuario) {
-            // ── NOVO: resolve micro-contexto antes da chamada ──────────────
-            const microContexto = resolverMicroContexto(acaoUsuario);
-            const acaoComContexto = microContexto
-                ? `Ação do jogador: "${acaoUsuario}" ${microContexto}`
-                : `Ação do jogador: "${acaoUsuario}"`;
-            // ──────────────────────────────────────────────────────────────
+               async function classificarAcaoLLM(acaoUsuario) {
+    // 1. Tenta pegar o contexto comprimido (SSR)
+    const microContexto = resolverMicroContexto(acaoUsuario);
+    
+    // 2. NOVO: Pega a última narrativa gerada pelo jogo (o que acabou de acontecer)
+    // Isso garante que mortes e eventos do turno imediatamente anterior sejam lidos pelo juiz
+    const ultimaMsgAssistente = mensagens.slice().reverse().find(m => m.role === 'assistant');
+    const contextoRecente = ultimaMsgAssistente ? `\nCena atual (resultado da última ação): "${ultimaMsgAssistente.content}"` : '';
 
-            const response = await fetch(LM_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: MODELO,
-                    messages: [
-                        {
-                            role: 'system',
-                            content: `Você é um classificador de ações de RPG. 
+    const acaoComContexto = microContexto
+        ? `Ação do jogador: "${acaoUsuario}" ${microContexto}`
+        : `Ação do jogador: "${acaoUsuario}"`;
+        
+    // Junta a ação do jogador com a descrição da cena onde o cadáver está
+    const promptFinal = acaoComContexto + contextoRecente;
+
+    const response = await fetch(LM_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            model: MODELO,
+            messages: [
+                {
+                    role: 'system',
+                    content: `Você é um classificador de ações de RPG. 
 Classifique a ação do jogador em EXATAMENTE um tipo e um atributo.
 
 TIPO:
@@ -631,35 +639,35 @@ ATRIBUTO (apenas se ARRISCADA):
 - CARISMA: persuasão, sedução, engano, liderança, intimidação social
 - SORTE: apostas, eventos caóticos, azar puro
 - NENHUM: se TRIVIAL`
+                },
+                {
+                    role: 'user',
+                    content: promptFinal
+                }
+            ],
+            temperature: 0.0,
+            max_tokens: 30,
+            response_format: {
+                type: "json_schema",
+                json_schema: {
+                    name: "classificacao_acao",
+                    strict: true,
+                    schema: {
+                        type: "object",
+                        properties: {
+                            tipo: { type: "string", enum: ["TRIVIAL", "ARRISCADA"] },
+                            atributo: { type: "string", enum: ["HABILIDADE", "CARISMA", "SORTE", "NENHUM"] }
                         },
-                        {
-                            role: 'user',
-                            content: acaoComContexto
-                        }
-                    ],
-                    temperature: 0.0,
-                    max_tokens: 30,
-                    response_format: {
-                        type: "json_schema",
-                        json_schema: {
-                            name: "classificacao_acao",
-                            strict: true,
-                            schema: {
-                                type: "object",
-                                properties: {
-                                    tipo: { type: "string", enum: ["TRIVIAL", "ARRISCADA"] },
-                                    atributo: { type: "string", enum: ["HABILIDADE", "CARISMA", "SORTE", "NENHUM"] }
-                                },
-                                required: ["tipo", "atributo"],
-                                additionalProperties: false
-                            }
-                        }
+                        required: ["tipo", "atributo"],
+                        additionalProperties: false
                     }
-                })
-            });
-            const data = await response.json();
-            return JSON.parse(data.choices[0].message.content);
-        }
+                }
+            }
+        })
+    });
+    const data = await response.json();
+    return JSON.parse(data.choices[0].message.content);
+}
 
         // ============================================================
         // Funções de interface de rolagem (inalteradas)
