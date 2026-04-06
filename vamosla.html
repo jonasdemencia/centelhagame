@@ -597,6 +597,40 @@ SITUAÇÃO: ${jsonObj.situacao_atual}`;
             return '';
         }
 
+
+function limparMensagemHistorica(msg) {
+    if (msg.role !== 'user') return msg;
+    return {
+        ...msg,
+        content: msg.content
+            .replace(/\n\[AÇÃO (TRIVIAL|ARRISCADA)[^\]]*\]/g, '')
+            .replace(/\n\[RESPOSTA OBRIGATORIAMENTE[^\]]*\]/g, '')
+            .replace(/\n\[DANO:[^\]]*\]/g, '')
+            .trim()
+    };
+}
+
+function construirContextoNarrador(tipoAcao) {
+    const slots = [mensagens[0]];
+
+    if (mensagens[1].content.trim()) {
+        slots.push(mensagens[1]);
+    }
+
+    const ssrVazio = 'Resumo da jornada até agora: A aventura acabou de começar.';
+    if (mensagens[2].content !== ssrVazio) {
+        slots.push(mensagens[2]);
+    }
+
+    const trocas = tipoAcao === 'TRIVIAL' ? 2 : 4;
+    const historico = mensagens.slice(3);
+    const janelaHistorico = historico
+        .slice(-(trocas * 2))
+        .map(limparMensagemHistorica);
+
+    return [...slots, ...janelaHistorico];
+}
+
         
         // ============================================================
         // Função de classificação de ação (inalterada)
@@ -741,10 +775,13 @@ ATRIBUTO (apenas se ARRISCADA):
             try {
 
                 let mensagemFinal = pergunta;
+let tipo = 'TRIVIAL';
+let atributo = 'NENHUM';
 
-                if (!isInitial) {
-                    const classificacao = await classificarAcaoLLM(pergunta);
-                    const { tipo, atributo } = classificacao;
+if (!isInitial) {
+    const classificacao = await classificarAcaoLLM(pergunta);
+    tipo = classificacao.tipo;
+    atributo = classificacao.atributo;
 
                     let resultado = null;
                     let danoBase = 0;
@@ -782,7 +819,10 @@ ATRIBUTO (apenas se ARRISCADA):
 
                 if (isIntro) window._introGenerating = true;
 
-                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
+                const payloadNarrador = construirContextoNarrador(
+    isInitial ? 'TRIVIAL' : (tipo ?? 'TRIVIAL')
+);
+const respostaIA = await gerarRespostaComContinuacao(payloadNarrador, maxTokens, elementoDisplay, maxContinuacoes);
 
                 const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
 
@@ -822,7 +862,10 @@ ATRIBUTO (apenas se ARRISCADA):
 
                 if (isIntro) window._introGenerating = false;
 
-                               mensagens.push({ role: 'assistant', content: respostaIA });
+                               const respostaParaHistorico = respostaIA
+    .replace(/\[DANO:\s*\d+\]/gi, '')
+    .trim();
+mensagens.push({ role: 'assistant', content: respostaParaHistorico });
 
                 // Dispara salvamento e compressão em segundo plano (sem await)
                 setTimeout(() => {
