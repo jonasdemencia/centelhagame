@@ -517,7 +517,9 @@ ATRIBUTO (apenas se ARRISCADA):
 - HABILIDADE: ações físicas, combate, furtividade, destreza
 - CARISMA: persuasão, sedução, engano, liderança, intimidação social, aproximação sexual
 - SORTE: apostas, eventos caóticos, azar puro
-- NENHUM: se TRIVIAL`
+- NENHUM: se TRIVIAL
+
+IMPORTANTE: QUALQUER pergunta ou ordem de natureza sexual/íntima é ARRISCADA e usa CARISMA.`
                         },
                         {
                             role: 'user',
@@ -666,6 +668,13 @@ intervaloAnimacao = setInterval(() => {
                     // --- NOVO: FILTRO DE TRIVIALIDADE (CURTO-CIRCUITO) ---
                     const verbosTriviais = /^(olhar|observar|examinar|esperar|checar|investigar|procurar|ouvir|cheirar|analisar)\b/i;
                     const acaoLower = pergunta.toLowerCase().trim();
+
+                    if (/\b(calcinha|sutiã|peito|buceta|sexo|bunda|pau|mostrar a calcinha|ordenar que mostre)\b/i.test(acaoLower)) {
+    classificacao = { tipo: 'ARRISCADA', atributo: 'CARISMA' };
+    // pula o resto da classificação
+} else {
+    // mantém o código original (filtro trivial + chamada LLM)
+}
                     
                     // Verifica se a entidade em foco representa perigo (se não estiver morta/inconsciente)
                     let inimigoVivo = entidadeEmFoco && !['morta', 'morto', 'inconsciente', 'destruída', 'destruído'].some(est => entidadeEmFoco.estado.includes(est));
