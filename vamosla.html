@@ -262,25 +262,24 @@ REGRAS DE SAÍDA:
 
         const SSR_TEMPLATE = `LOCAL: [onde o jogador está agora]\nNPCS: [lista de personagens encontrados e seu estado atual]\nITENS: [itens carregados ou relevantes no cenário]\nEVENTOS_CHAVE: [lista de fatos consumados]\nSITUACAO_ATUAL: [uma frase: o que o jogador está fazendo ou diante de agora]\nGANCHOS_ATIVOS: [pistas ou ameaças não resolvidas que devem ser lembradas]`;
 
-        async function comprimirMemoria() {
+       async function comprimirMemoria() {
             if (mensagens.length <= LIMITE_MENSAGENS) return;
 
-            // ESTADO FANTASMA: Slice para não alterar o array original precocemente
-            const mensagensParaResumir = mensagens.slice(3, 9)
-                .filter(m => m.content && m.content.trim() !== "");
-            
-            const textoExtraido = mensagensParaResumir
+            // ESTADO FANTASMA: Tira a foto das mensagens 3 a 9 (as 6 mais antigas após o sistema)
+            const fatosParaComprimir = mensagens.slice(3, 9)
+                .filter(m => m.content && m.content.trim() !== "")
                 .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
-                .join('\n---\n');
+                .join('\n');
 
-            const promptResumo = [
+            // Preparamos um prompt único e limpo para o 1.5B não se confundir com o histórico do 7B
+            const promptSimplificado = [
                 {
                     role: 'system',
-                    content: "Você é um extrator de fatos. Analise os NOVOS EVENTOS e atualize o ESTADO ANTERIOR. Retorne apenas o JSON conforme o esquema."
+                    content: "Você é um terminal de dados. Sua única função é atualizar o ESTADO ANTERIOR com os NOVOS EVENTOS fornecidos. Retorne estritamente o JSON solicitado."
                 },
                 {
                     role: 'user',
-                    content: `ESTADO ANTERIOR:\n${resumoAtual || 'Início'}\n\nNOVOS EVENTOS:\n${textoExtraido}`
+                    content: `ESTADO ANTERIOR:\n${resumoAtual || 'Início da jornada'}\n\nNOVOS EVENTOS:\n${fatosParaComprimir}`
                 }
             ];
 
@@ -290,14 +289,13 @@ REGRAS DE SAÍDA:
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: MODELO_JUIZ,
-                        messages: promptResumo,
+                        messages: promptSimplificado,
                         temperature: 0.1,
                         max_tokens: 500,
-                        // Ajustado para o padrão exigido pelo seu servidor (json_schema)
                         response_format: {
                             type: "json_schema",
                             json_schema: {
-                                name: "memoria_rpg",
+                                name: "extrator_fatos", // Nome simples sem caracteres especiais
                                 strict: true,
                                 schema: {
                                     type: "object",
@@ -316,25 +314,31 @@ REGRAS DE SAÍDA:
                     })
                 });
 
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                if (!response.ok) {
+                    const errorMsg = await response.text();
+                    throw new Error(`LM Studio Error: ${errorMsg}`);
+                }
 
                 const data = await response.json();
-                const jsonObj = JSON.parse(data.choices[0].message.content);
+                const textoJson = data.choices[0].message.content;
+                const jsonObj = JSON.parse(textoJson);
                 
-                // Atualização dos estados globais
+                // Sincroniza com o sistema de entidades do jogo
                 buildEntityIndex(jsonObj);   
                 ssrJson = jsonObj;
 
+                // Atualiza o resumo visual (Mensagem de sistema no índice 2)
                 resumoAtual = `LOCAL: ${jsonObj.local}\nNPCS: ${jsonObj.npcs.join(' | ')}\nITENS: ${jsonObj.itens_conhecidos.join(' | ')}\nEVENTOS: ${jsonObj.eventos_chave.join(' ➔ ')}\nSITUAÇÃO: ${jsonObj.situacao_atual}`;
                 mensagens[2].content = `ESTADO ATUAL DO MUNDO:\n${resumoAtual}`;
                 
-                // DELEÇÃO CIRÚRGICA: Agora sim removemos as mensagens do histórico
+                // DELEÇÃO ASSÍNCRONA: Limpa o histórico pesado apenas após o sucesso da compressão
                 mensagens.splice(3, 6);
+                console.log("[Memória] 1.5B comprimiu o histórico com sucesso.");
                 
-                // Salvamento com debounce natural (background)
-                salvarEstadoJogador();
+                salvarEstadoJogador().catch(e => console.error("Erro no salvamento pós-compressão:", e));
             } catch (error) {
                 console.error("Erro na compressão:", error);
+                // O histórico permanece intacto (Estado Fantasma) para que o narrador 7B não perca contexto se a compressão falhar
             } finally {
                 window._compressaoEmAndamento = false;
             }
