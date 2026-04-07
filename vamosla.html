@@ -120,10 +120,10 @@ let primeiroTokenRecebido = false;
         let mensagens = [
             {
                 role: 'system',
-                content: `Você é um mestre de RPG brutal e realista. Responda APENAS em Português Brasileiro CORRETO, NUNCA em outros idiomas. Você NUNCA repete as instruções do jogador.
+                content: `Você é um mestre de RPG brutal e realista. Responda APENAS em Português Brasileiro CORRETO, NUNCA em outros idiomas. Você NUNCA ecoa a voz do jogador
 
 NARRATIVA:
-- Narração Ativa: a cada turno VOCÊ age — empurre a história para frente com um evento concreto (ameaça, revelação, mudança de comportamento do NPC, sinal de perigo). O narrador nunca espera — ele provoca.
+- Narração Ativa: a cada turno VOCÊ age — empurre a história para frente com um evento concreto (ameaça, revelação, mudança de comportamento do NPC, sinal de perigo). O narrador NUNCA espera — ele provoca.
 - Prosa Forense: descreva dano como patologista — rompimento de tecido, fratura, fluidos, o som seco da matéria cedendo.
 
 REGRAS DE SAÍDA:
@@ -678,8 +678,9 @@ intervaloAnimacao = setInterval(() => {
                     }
 
                     const contextoDecidido = tipo === 'TRIVIAL'
-                        ? `[AÇÃO TRIVIAL — narre diretamente sem mencionar teste. Termine com [DANO: 0]]`
-                        : `[AÇÃO ARRISCADA — TESTE DE ${atributo}: ${resultado}. Dano mínimo se falha: ${danoBase}. Narre a cena. Termine com [DANO: ${resultado === 'FALHA' ? danoBase : 0}]]`;
+                        const contextoDecidido = tipo === 'TRIVIAL'
+    ? `[AÇÃO TRIVIAL: Avance a cena. Revele organicamente uma nova pista, tensão ou detalhe sombrio sem mencionar testes. Termine com [DANO: 0]]`
+    : `[AÇÃO ARRISCADA — TESTE DE ${atributo}: ${resultado}. Dano se falha: ${danoBase}. Narre a consequência física e o impacto brutal da ação no mundo. Termine com [DANO: ${resultado === 'FALHA' ? danoBase : 0}]]`;
 
                     mensagemFinal += `\n${contextoDecidido}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
                 }
