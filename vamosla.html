@@ -510,7 +510,9 @@ REGRAS DE SAÍDA:
         async function classificarAcaoLLM(acaoUsuario) {
             const microContexto = resolverMicroContexto(acaoUsuario);
             const ultimaMsgAssistente = mensagens.slice().reverse().find(m => m.role === 'assistant');
-            const contextoRecente = ultimaMsgAssistente ? `\nCena atual (resultado da última ação): "${ultimaMsgAssistente.content}"` : '';
+            const ultimaFrase = ultimaMsgAssistente?.content
+    ?.split('.').filter(Boolean).slice(-2).join('.').trim() || '';
+const contextoRecente = ultimaFrase ? `\nContexto: "${ultimaFrase}"` : '';
 
             const acaoComContexto = microContexto
                 ? `Ação do jogador: "${acaoUsuario}" ${microContexto}`
@@ -569,7 +571,9 @@ IMPORTANTE: QUALQUER pergunta ou ordem de natureza sexual/íntima é ARRISCADA e
                 })
             });
             const data = await response.json();
-            return JSON.parse(data.choices[0].message.content);
+const raw = data.choices[0].message.content;
+console.log('[JUIZ RAW]', raw);
+return JSON.parse(raw);
         }
 
         async function animarTextoTeste(texto) {
@@ -691,24 +695,28 @@ intervaloAnimacao = setInterval(() => {
                     const verbosTriviais = /^(olhar|observar|examinar|esperar|checar|investigar|procurar|ouvir|cheirar|analisar)\b/i;
                     const acaoLower = pergunta.toLowerCase().trim();
 
-                    if (/\b(calcinha|sutiã|peito|buceta|sexo|bunda|pau|mostrar a calcinha|ordenar que mostre)\b/i.test(acaoLower)) {
-    classificacao = { tipo: 'ARRISCADA', atributo: 'CARISMA' };
-    // pula o resto da classificação
-} else {
-    // mantém o código original (filtro trivial + chamada LLM)
-}
-                    
-                    // Verifica se a entidade em foco representa perigo (se não estiver morta/inconsciente)
-                    let inimigoVivo = entidadeEmFoco && !['morta', 'morto', 'inconsciente', 'destruída', 'destruído'].some(est => entidadeEmFoco.estado.includes(est));
+                    const inimigoVivo = entidadeEmFoco && !['morta', 'morto', 'inconsciente', 'destruída', 'destruído'].some(est => entidadeEmFoco.estado.includes(est));
+
+                    const acaoFisicaDireta = /\b(atacar|golpear|socar|chutar|esfaquear|enforcar|morder|atirar|arremessar|arrancar|cortar|ferir|matar|puxar|empurrar|escalar|roubar|furtar|fugir|correr|esquivar|rancar|cravar|estrangular|apunhalar)\b/i;
+                    const acaoSocialDireta = /\b(seduzir|convencer|persuadir|manipular|mentir|enganar|intimidar|ameaçar|ordenar|subornar|lisonjear|me conte|me diga|revele|confesse|extrair|chantagear)\b/i;
+                    const acaoSorteDireta  = /\b(apostar|arriscar|improvisar|torcer|rezar|tentar a sorte)\b/i;
 
                     let classificacao;
 
-                    if (verbosTriviais.test(acaoLower) && !inimigoVivo) {
+                    if (acaoFisicaDireta.test(acaoLower)) {
+                        classificacao = { tipo: 'ARRISCADA', atributo: 'HABILIDADE' };
+                        console.log('[PRÉ-CLASSIFICADOR] HABILIDADE');
+                    } else if (acaoSocialDireta.test(acaoLower)) {
+                        classificacao = { tipo: 'ARRISCADA', atributo: 'CARISMA' };
+                        console.log('[PRÉ-CLASSIFICADOR] CARISMA');
+                    } else if (acaoSorteDireta.test(acaoLower)) {
+                        classificacao = { tipo: 'ARRISCADA', atributo: 'SORTE' };
+                        console.log('[PRÉ-CLASSIFICADOR] SORTE');
+                    } else if (verbosTriviais.test(acaoLower) && !inimigoVivo) {
                         classificacao = { tipo: 'TRIVIAL', atributo: 'NENHUM' };
-                        console.log('[Filtro Bypass] Ação classificada como TRIVIAL para poupar processamento.');
+                        console.log('[PRÉ-CLASSIFICADOR] TRIVIAL');
                     } else {
-                        // --- NOVO: AVALIAÇÃO ASSÍNCRONA (MÁSCARA PS1) ---
-                        const tempJuizId = adicionarMensagem('⚖️ O Juiz invisível avalia a sua escolha...', 'system', true);
+                        const tempJuizId = adicionarMensagem('⚖️ O Juiz avalia...', 'system', true);
                         classificacao = await classificarAcaoLLM(pergunta);
                         const msgJuiz = document.getElementById(tempJuizId);
                         if (msgJuiz) msgJuiz.remove();
