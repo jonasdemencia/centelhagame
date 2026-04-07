@@ -9,7 +9,7 @@
         #local-atual { color: #ffaa00; margin-bottom: 8px; font-size: 14px; border-bottom: 1px solid #3a3228; padding-bottom: 4px; }
         #chat-box { height: 300px; overflow-y: auto; border: 2px inset #2a251e; padding: 15px; background: #0d0c0a; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; }
         .user-message { color: #7a8c66; align-self: flex-end; background: #1e2a1a; padding: 6px 12px; border-radius: 12px 0 12px 12px; max-width: 80%; word-wrap: break-word; }
-        .ai-message { color: #a13d3d; align-self: flex-start; background: #2a1a1a; padding: 6px 12px; border-radius: 0 12px 12px 12px; max-width: 80%; word-wrap: break-word; }
+        .ai-message { color: #a13d3d; align-self: flex-start; background: #2a1a1a; padding: 6px 12px; border-radius: 0 12px 12px 12px; max-width: 80%; word-wrap: break-word; font-family: 'Courier New', 'Noto Sans Syriac', monospace; }
         .system-message { color: #6b6b4a; text-align: center; font-style: italic; font-size: 0.9em; margin: 5px 0; }
         #controls { display: flex; gap: 10px; }
         input { flex: 1; padding: 12px; background: #1a1815; border: 1px solid #3a3228; color: #d1c5b4; font-family: inherit; font-size: 16px; }
@@ -97,6 +97,23 @@
         const PRONOMES_NEUTROS    = ['o corpo', 'o cadáver', 'o alvo', 'ele/ela'];
 
         const chatBox = document.getElementById('chat-box');
+
+        // Vocabulário real — Grego Antigo, Latim, Aramaico
+const PALAVRAS_SOMBRIAS = [
+    'ψυχή', 'σκότος', 'αἷμα', 'θάνατος', 'φόβος',
+    'νύξ', 'ἄβυσσος', 'δαίμων', 'πῦρ', 'σάρξ',
+    'λόγος', 'ἀρχή', 'χάος', 'κόσμος', 'ἀλήθεια',
+    'εἵμαρμένη', 'κατάρα', 'φάντασμα', 'νέκρος', 'ὀργή',
+    'sanguis', 'tenebrae', 'anima', 'mors', 'umbra',
+    'dolor', 'fatum', 'malum', 'ignis', 'spiritus',
+    'infernum', 'caedis', 'cruor', 'sepulcrum', 'damnatio',
+    'obscurus', 'perditio', 'iracundia', 'gehenna', 'pestis',
+    'ܡܘܬܐ', 'ܢܘܪܐ', 'ܪܘܚܐ', 'ܚܫܘܟܐ', 'ܕܡܐ',
+    'ܫܐܕܐ', 'ܓܗܢܐ', 'ܚܛܝܬܐ', 'ܕܚܠܬܐ', 'ܐܒܕܢܐ'
+];
+
+let intervaloAnimacao = null;
+let primeiroTokenRecebido = false;
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
 
@@ -384,9 +401,12 @@ REGRAS DE SAÍDA:
                     msgsAtual,
                     maxTokens,
                     (parcial) => {
-                        elemento.innerText = textoCompleto + parcial;
-                        chatBox.scrollTop = chatBox.scrollHeight;
-                    }
+    if (!primeiroTokenRecebido) {
+        primeiroTokenRecebido = true;
+    }
+    elemento.innerText = textoCompleto + parcial;
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
                 );
 
                 textoCompleto += text;
@@ -561,8 +581,26 @@ ATRIBUTO (apenas se ARRISCADA):
             sendBtn.disabled = true;
             userInput.disabled = true;
 
-            const tempId = adicionarMensagem('...', 'ai', true);
-            const elementoDisplay = document.getElementById(tempId);
+            const tempId = adicionarMensagem('', 'ai', true);
+const elementoDisplay = document.getElementById(tempId);
+
+// Inicia a animação de palavras sombrias
+let indicePalavra = Math.floor(Math.random() * PALAVRAS_SOMBRIAS.length);
+primeiroTokenRecebido = false;
+intervaloAnimacao = setInterval(() => {
+    if (!primeiroTokenRecebido) {
+        const palavra = PALAVRAS_SOMBRIAS[indicePalavra % PALAVRAS_SOMBRIAS.length];
+        elementoDisplay.innerText = palavra;
+        elementoDisplay.style.opacity = '0.6';
+        elementoDisplay.style.letterSpacing = '2px';
+        indicePalavra++;
+    } else {
+        clearInterval(intervaloAnimacao);
+        elementoDisplay.style.opacity = '1';
+        elementoDisplay.style.letterSpacing = 'normal';
+        intervaloAnimacao = null;
+    }
+}, 150); // troca a cada 150ms
 
             try {
                 let mensagemFinal = pergunta;
@@ -676,6 +714,7 @@ ATRIBUTO (apenas se ARRISCADA):
                 }
 
             } catch (error) {
+                if (intervaloAnimacao) clearInterval(intervaloAnimacao);
                 elementoDisplay.innerText = `❌ Erro: ${error.message}`;
                 if (isInitial) {
                     userInput.disabled = false;
