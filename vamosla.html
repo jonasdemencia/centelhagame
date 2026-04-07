@@ -516,7 +516,7 @@ TIPO:
 ATRIBUTO (apenas se ARRISCADA):
 - HABILIDADE: ações físicas, combate, furtividade, destreza
 - CARISMA: persuasão, sedução, engano, liderança, intimidação social
-- SORTE: apostas, eventos caóticos, azar puro, improviso, impulso
+- SORTE: apostas, eventos caóticos, azar puro, improviso
 - NENHUM: se TRIVIAL`
                         },
                         {
@@ -705,8 +705,8 @@ intervaloAnimacao = setInterval(() => {
                     }
 
                     const contextoDecidido = tipo === 'TRIVIAL'
-    ? `[AÇÃO TRIVIAL: Avance a cena. Revele organicamente uma nova pista, tensão ou detalhe sombrio sem mencionar testes. Termine com [DANO: 0]]`
-    : `[AÇÃO ARRISCADA — TESTE DE ${atributo}: ${resultado}. Dano se falha: ${danoBase}. Narre a consequência física e o impacto brutal da ação no mundo. Termine com [DANO: ${resultado === 'FALHA' ? danoBase : 0}]]`;
+    ? `[AÇÃO TRIVIAL: Avance a cena. Revele uma nova pista, tensão ou detalhe sombrio sem mencionar testes. Termine com [DANO: 0]]`
+    : `[AÇÃO ARRISCADA — TESTE DE ${atributo}: ${resultado}. REGRAS: Se SUCESSO, a intenção do jogador se efetiva totalmente. Se FALHA, a intenção é TOTALMENTE NEGADA/REJEITADA (o NPC recusa, o ataque erra, etc) e o jogador sofre a punição. Narre de forma sombria e visceral. Termine com [DANO: ${resultado === 'FALHA' ? danoBase : 0}]]`;
 
                     mensagemFinal += `\n${contextoDecidido}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
                 }
