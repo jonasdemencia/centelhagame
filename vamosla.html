@@ -585,22 +585,52 @@ ATRIBUTO (apenas se ARRISCADA):
 const elementoDisplay = document.getElementById(tempId);
 
 // Inicia a animação de palavras sombrias
+let contadorAnim = 0;
 let indicePalavra = Math.floor(Math.random() * PALAVRAS_SOMBRIAS.length);
+let exibindoPensando = false;
+let ciclosPensando = 0;
 primeiroTokenRecebido = false;
+
 intervaloAnimacao = setInterval(() => {
     if (!primeiroTokenRecebido) {
-        const palavra = PALAVRAS_SOMBRIAS[indicePalavra % PALAVRAS_SOMBRIAS.length];
-        elementoDisplay.innerText = palavra;
-        elementoDisplay.style.opacity = '0.6';
+        // A cada ~1.2 segundos (8 ciclos de 150ms), alterna para "pensando..." por 3 ciclos
+        if (contadorAnim % 8 === 0) {
+            exibindoPensando = true;
+            ciclosPensando = 0;
+        }
+        
+        let textoExibido = '';
+        if (exibindoPensando && ciclosPensando < 4) {
+            // Exibe "pensando..." com reticências variáveis
+            const pontos = '.'.repeat(ciclosPensando % 4);
+            textoExibido = `pensando${pontos}`;
+            ciclosPensando++;
+            if (ciclosPensando >= 4) exibindoPensando = false;
+        } else {
+            // Exibe palavra sombria
+            const palavra = PALAVRAS_SOMBRIAS[indicePalavra % PALAVRAS_SOMBRIAS.length];
+            const pontos = '.'.repeat((Math.floor(contadorAnim / 2) % 4));
+            textoExibido = `${palavra}${pontos}`;
+            indicePalavra++;
+        }
+        
+        elementoDisplay.innerText = textoExibido;
+        
+        // Pulsação suave (opacidade entre 0.4 e 0.9)
+        const opacidade = 0.4 + (Math.sin(Date.now() / 250) * 0.25);
+        elementoDisplay.style.opacity = opacidade;
         elementoDisplay.style.letterSpacing = '2px';
-        indicePalavra++;
+        elementoDisplay.style.transition = 'opacity 0.1s ease';
+        
+        contadorAnim++;
     } else {
         clearInterval(intervaloAnimacao);
         elementoDisplay.style.opacity = '1';
         elementoDisplay.style.letterSpacing = 'normal';
+        elementoDisplay.style.transition = '';
         intervaloAnimacao = null;
     }
-}, 150); // troca a cada 150ms
+}, 150);
 
             try {
                 let mensagemFinal = pergunta;
