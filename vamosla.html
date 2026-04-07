@@ -128,7 +128,7 @@ let primeiroTokenRecebido = false;
         let mensagens = [
             {
                 role: 'system',
-                content: `Você é um mestre de RPG brutal e realista. Responda APENAS em Português Brasileiro CORRETO, NUNCA em outros idiomas. Você NUNCA ecoa a voz do jogador
+                content: `Você é um mestre de RPG brutal e realista. Responda APENAS em Português Brasileiro CORRETO, NUNCA em outros idiomas. 
 
 NARRATIVA:
 - Narração Ativa: a cada turno VOCÊ age — empurre a história para frente com um evento concreto (ameaça, revelação, mudança de comportamento do NPC, sinal de perigo). O narrador NUNCA espera — ele provoca.
@@ -137,7 +137,7 @@ NARRATIVA:
 REGRAS DE SAÍDA:
 - [AÇÃO TRIVIAL]: narre diretamente. Zero menção a teste. Termine com [DANO: 0].
 - [AÇÃO ARRISCADA — TESTE DE X: SUCESSO]: a intenção do jogador se concretiza TOTALMENTE. Se a ação é violenta, aplique Prosa Forense sem piedade. Termine com [DANO: 0].
-- [AÇÃO ARRISCADA — TESTE DE X: FALHA]: o jogador fracassa e sofre a consequência. NUNCA narre a ação dando certo. Termine com [DANO: N] onde N é o valor informado nos metadados.
+- [AÇÃO ARRISCADA — TESTE DE X: FALHA]: a ação do jogador fracassa TOTALMENTE e sofre a consequência (física ou emocional). NUNCA narre a ação dando certo. Termine com [DANO: N] onde N é o valor informado nos metadados.
 - NUNCA mencione semente, atributos ou cálculos na narração.[ID_IDIOMA: pt-BR]`
             },
             { role: 'system', content: '' },
@@ -445,7 +445,7 @@ REGRAS DE SAÍDA:
             return textoCompleto;
         }
 
-        const PROMPT_INTRO = `Descreva em 3 frases curtas a seguinte cena, em segunda pessoa: Você está numa sala de pedra. Há uma mesa, um espelho rachado e uma vela quase apagada. Uma mulher jovem e bela de cabelos escuros está de frente para você. O que você faz?`;
+        const PROMPT_INTRO = `Descreva em 3 frases curtas a seguinte cena, em segunda pessoa: Você está numa sala de pedra. Há uma mesa, um espelho e uma vela quase apagada. Uma mulher jovem e bela de cabelos claros está de frente para você. O que você faz?`;
 
         function buildEntityIndex(ssrJson) {
             entityIndex = {};
@@ -516,7 +516,7 @@ TIPO:
 ATRIBUTO (apenas se ARRISCADA):
 - HABILIDADE: ações físicas, combate, furtividade, destreza
 - CARISMA: persuasão, sedução, engano, liderança, intimidação social
-- SORTE: apostas, eventos caóticos, azar puro
+- SORTE: apostas, eventos caóticos, azar puro, improviso, impulso
 - NENHUM: se TRIVIAL`
                         },
                         {
