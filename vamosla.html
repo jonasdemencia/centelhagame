@@ -75,6 +75,7 @@
 
         const LIMITE_MENSAGENS = 11;
         window._introGenerating = false;
+        window._compressaoEmAndamento = false;
 
         let turnosJogados = 0;
         let energia = 0; 
@@ -262,65 +263,77 @@ REGRAS DE SAÍDA:
         const SSR_TEMPLATE = `LOCAL: [onde o jogador está agora]\nNPCS: [lista de personagens encontrados e seu estado atual]\nITENS: [itens carregados ou relevantes no cenário]\nEVENTOS_CHAVE: [lista de fatos consumados]\nSITUACAO_ATUAL: [uma frase: o que o jogador está fazendo ou diante de agora]\nGANCHOS_ATIVOS: [pistas ou ameaças não resolvidas que devem ser lembradas]`;
 
         async function comprimirMemoria() {
-            if (mensagens.length > LIMITE_MENSAGENS) {
-                const mensagensParaResumir = mensagens.splice(3, 6);
-                const textoExtraido = mensagensParaResumir.map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`).join('\n---\n');
+            if (mensagens.length <= LIMITE_MENSAGENS) return;
 
-                const promptResumo = [
-                    {
-                        role: 'system',
-                        content: `Você é um sistema de log de banco de dados. Extraia fatos das interações e retorne APENAS um JSON.\nREGRAS:\n1. EVENTOS_CHAVE deve ser um array de strings extremamente curtas (máximo 7 palavras por evento).\n2. Escreva como um boletim de ocorrência policial.\n3. Combine o "ESTADO ANTERIOR" com os "NOVOS EVENTOS" para criar o novo estado.`
-                    },
-                    {
-                        role: 'user',
-                        content: `ESTADO ANTERIOR:\n${resumoAtual || 'Nenhum'}\n\nNOVOS EVENTOS:\n${textoExtraido}`
-                    }
-                ];
+            // ESTADO FANTASMA: Usa slice() para tirar uma cópia sem remover as mensagens principais ainda
+            const mensagensParaResumir = mensagens.slice(3, 9);
+            const textoExtraido = mensagensParaResumir.map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`).join('\n---\n');
 
-                try {
-                    const response = await fetch(LM_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            model: MODELO, // Compressão continua no modelo maior/principal se desejar, ou pode mudar para o menor
-                            messages: promptResumo,
-                            temperature: 0.1,
-                            max_tokens: 400,
-                            response_format: {
-                                type: "json_schema",
-                                json_schema: {
-                                    name: "extrator_memoria",
-                                    strict: true,
-                                    schema: {
-                                        type: "object",
-                                        properties: {
-                                            local: { type: "string" },
-                                            npcs: { type: "array", items: { type: "string" } },
-                                            itens_conhecidos: { type: "array", items: { type: "string" } },
-                                            eventos_chave: { type: "array", items: { type: "string" } },
-                                            situacao_atual: { type: "string" }
-                                        },
-                                        required: ["local", "npcs", "itens_conhecidos", "eventos_chave", "situacao_atual"],
-                                        additionalProperties: false
-                                    }
+            const promptResumo = [
+                {
+                    role: 'system',
+                    content: `Você é um sistema de extração de dados ESTRITO. Analise o ESTADO ANTERIOR e os NOVOS EVENTOS. Retorne APENAS o JSON solicitado.
+REGRAS:
+1. EVENTOS_CHAVE: Use frases curtas e secas (máximo 7 palavras por evento).
+2. Seja puramente objetivo. Extraia apenas fatos concretos, nomes de NPCs e itens.
+3. Atualize os dados do ESTADO ANTERIOR com os NOVOS EVENTOS de forma precisa e sem inventar nada.`
+                },
+                {
+                    role: 'user',
+                    content: `ESTADO ANTERIOR:\n${resumoAtual || 'Nenhum'}\n\nNOVOS EVENTOS:\n${textoExtraido}`
+                }
+            ];
+
+            try {
+                const response = await fetch(LM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODELO_JUIZ, // DELEGAÇÃO: Agora o 1.5B assume a tarefa
+                        messages: promptResumo,
+                        temperature: 0.1,
+                        max_tokens: 400,
+                        response_format: {
+                            type: "json_schema",
+                            json_schema: {
+                                name: "extrator_memoria",
+                                strict: true,
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        local: { type: "string" },
+                                        npcs: { type: "array", items: { type: "string" } },
+                                        itens_conhecidos: { type: "array", items: { type: "string" } },
+                                        eventos_chave: { type: "array", items: { type: "string" } },
+                                        situacao_atual: { type: "string" }
+                                    },
+                                    required: ["local", "npcs", "itens_conhecidos", "eventos_chave", "situacao_atual"],
+                                    additionalProperties: false
                                 }
                             }
-                        })
-                    });
+                        }
+                    })
+                });
 
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                    const data = await response.json();
-                    const jsonObj = JSON.parse(data.choices[0].message.content);
-                    buildEntityIndex(jsonObj);   
-                    ssrJson = jsonObj;
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                const jsonObj = JSON.parse(data.choices[0].message.content);
+                buildEntityIndex(jsonObj);   
+                ssrJson = jsonObj;
 
-                    resumoAtual = `LOCAL: ${jsonObj.local}\nNPCS: ${jsonObj.npcs.join(' | ')}\nITENS: ${jsonObj.itens_conhecidos.join(' | ')}\nEVENTOS: ${jsonObj.eventos_chave.join(' ➔ ')}\nSITUAÇÃO: ${jsonObj.situacao_atual}`;
-                    mensagens[2].content = `ESTADO ATUAL DO MUNDO:\n${resumoAtual}`;
-                    salvarEstadoJogador().catch(e => console.error(e));
-                } catch (error) {
-                    console.error("Erro ao comprimir memória:", error);
-                    mensagens.splice(3, 0, ...mensagensParaResumir);
-                }
+                resumoAtual = `LOCAL: ${jsonObj.local}\nNPCS: ${jsonObj.npcs.join(' | ')}\nITENS: ${jsonObj.itens_conhecidos.join(' | ')}\nEVENTOS: ${jsonObj.eventos_chave.join(' ➔ ')}\nSITUAÇÃO: ${jsonObj.situacao_atual}`;
+                mensagens[2].content = `ESTADO ATUAL DO MUNDO:\n${resumoAtual}`;
+                
+                // DELEÇÃO ASSÍNCRONA: Só agora, após o sucesso, deletamos as 6 mensagens antigas
+                // Como as de sistema estão em [0,1,2], removemos as 6 a partir do índice 3
+                mensagens.splice(3, 6);
+                
+                salvarEstadoJogador().catch(e => console.error(e));
+            } catch (error) {
+                console.error("Erro ao comprimir memória:", error);
+                // Como não removemos as mensagens do array principal antes, não há risco de perdê-las se houver erro
+            } finally {
+                window._compressaoEmAndamento = false;
             }
         }
 
@@ -737,10 +750,20 @@ intervaloAnimacao = setInterval(() => {
 
                 mensagens.push({ role: 'assistant', content: respostaIA });
 
+                // O NOVO GATILHO: IDLE-TIME PROCESSING
                 setTimeout(() => {
                     salvarEstadoJogador().catch(e => console.error('Erro no salvamento background:', e));
-                    if (mensagens.length > LIMITE_MENSAGENS) {
-                        comprimirMemoria().catch(e => console.error('Erro na compressão background:', e));
+                    
+                    if (mensagens.length > LIMITE_MENSAGENS && !window._compressaoEmAndamento) {
+                        window._compressaoEmAndamento = true;
+                        
+                        // Atrasa a requisição pesada em 4 segundos para ocorrer no tempo ocioso
+                        setTimeout(() => {
+                            comprimirMemoria().catch(e => {
+                                console.error('Erro na compressão background:', e);
+                                window._compressaoEmAndamento = false;
+                            });
+                        }, 4000); 
                     }
                 }, 0);
 
