@@ -265,22 +265,22 @@ REGRAS DE SAÍDA:
         async function comprimirMemoria() {
             if (mensagens.length <= LIMITE_MENSAGENS) return;
 
-            // ESTADO FANTASMA: Tira uma foto sem remover do array principal
-            const mensagensParaResumir = mensagens.slice(3, 9);
+            // ESTADO FANTASMA: Slice para não alterar o array original precocemente
+            const mensagensParaResumir = mensagens.slice(3, 9)
+                .filter(m => m.content && m.content.trim() !== "");
+            
             const textoExtraido = mensagensParaResumir
-                .filter(m => m.content && m.content.trim() !== "") // Garante que não enviamos mensagens vazias
                 .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
                 .join('\n---\n');
 
             const promptResumo = [
                 {
                     role: 'system',
-                    content: `Você é um extrator de dados. Analise os NOVOS EVENTOS e atualize o ESTADO ANTERIOR. 
-Retorne APENAS um objeto JSON com: local (string), npcs (array), itens_conhecidos (array), eventos_chave (array), situacao_atual (string).`
+                    content: "Você é um extrator de fatos. Analise os NOVOS EVENTOS e atualize o ESTADO ANTERIOR. Retorne apenas o JSON conforme o esquema."
                 },
                 {
                     role: 'user',
-                    content: `ESTADO ANTERIOR:\n${resumoAtual || 'Início da jornada'}\n\nNOVOS EVENTOS:\n${textoExtraido}`
+                    content: `ESTADO ANTERIOR:\n${resumoAtual || 'Início'}\n\nNOVOS EVENTOS:\n${textoExtraido}`
                 }
             ];
 
@@ -292,44 +292,54 @@ Retorne APENAS um objeto JSON com: local (string), npcs (array), itens_conhecido
                         model: MODELO_JUIZ,
                         messages: promptResumo,
                         temperature: 0.1,
-                        max_tokens: 400,
-                        // Simplificamos o response_format para evitar o Erro 400 em modelos que não suportam 'strict'
-                        response_format: { type: "json_object" } 
+                        max_tokens: 500,
+                        // Ajustado para o padrão exigido pelo seu servidor (json_schema)
+                        response_format: {
+                            type: "json_schema",
+                            json_schema: {
+                                name: "memoria_rpg",
+                                strict: true,
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        local: { type: "string" },
+                                        npcs: { type: "array", items: { type: "string" } },
+                                        itens_conhecidos: { type: "array", items: { type: "string" } },
+                                        eventos_chave: { type: "array", items: { type: "string" } },
+                                        situacao_atual: { type: "string" }
+                                    },
+                                    required: ["local", "npcs", "itens_conhecidos", "eventos_chave", "situacao_atual"],
+                                    additionalProperties: false
+                                }
+                            }
+                        }
                     })
                 });
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
-                }
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
                 const data = await response.json();
-                let rawContent = data.choices[0].message.content;
+                const jsonObj = JSON.parse(data.choices[0].message.content);
                 
-                // Limpeza básica caso o modelo coloque o JSON dentro de blocos de código ```json
-                rawContent = rawContent.replace(/```json/g, "").replace(/```/g, "").trim();
-                
-                const jsonObj = JSON.parse(rawContent);
-                
-                // Atualiza o índice e o resumo
+                // Atualização dos estados globais
                 buildEntityIndex(jsonObj);   
                 ssrJson = jsonObj;
 
-                resumoAtual = `LOCAL: ${jsonObj.local}\nNPCS: ${(jsonObj.npcs || []).join(' | ')}\nITENS: ${(jsonObj.itens_conhecidos || []).join(' | ')}\nEVENTOS: ${(jsonObj.eventos_chave || []).join(' ➔ ')}\nSITUAÇÃO: ${jsonObj.situacao_atual}`;
+                resumoAtual = `LOCAL: ${jsonObj.local}\nNPCS: ${jsonObj.npcs.join(' | ')}\nITENS: ${jsonObj.itens_conhecidos.join(' | ')}\nEVENTOS: ${jsonObj.eventos_chave.join(' ➔ ')}\nSITUAÇÃO: ${jsonObj.situacao_atual}`;
                 mensagens[2].content = `ESTADO ATUAL DO MUNDO:\n${resumoAtual}`;
                 
-                // Se tudo deu certo, removemos as mensagens antigas do array principal
+                // DELEÇÃO CIRÚRGICA: Agora sim removemos as mensagens do histórico
                 mensagens.splice(3, 6);
-                console.log("[Memória] Compressão concluída com sucesso.");
                 
-                salvarEstadoJogador().catch(e => console.error(e));
+                // Salvamento com debounce natural (background)
+                salvarEstadoJogador();
             } catch (error) {
-                console.error("Erro detalhado na compressão:", error);
+                console.error("Erro na compressão:", error);
             } finally {
                 window._compressaoEmAndamento = false;
             }
         }
-
+        
         function adicionarMensagem(texto, tipo, temporaria = false) {
             const div = document.createElement('div');
             div.className = tipo === 'user' ? 'user-message' : tipo === 'system' ? 'system-message' : 'ai-message';
