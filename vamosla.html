@@ -624,7 +624,7 @@ intervaloAnimacao = setInterval(() => {
         elementoDisplay.innerText = textoExibido;
         
         // Pulsação suave (opacidade entre 0.4 e 0.9)
-        const opacidade = 0.4 + (Math.sin(Date.now() / 250) * 0.25);
+        const opacidade = 0.4 + (Math.sin(Date.now() / 400) * 0.25);
         elementoDisplay.style.opacity = opacidade;
         elementoDisplay.style.letterSpacing = '2px';
         elementoDisplay.style.transition = 'opacity 0.1s ease';
