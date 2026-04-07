@@ -265,21 +265,20 @@ REGRAS DE SAÍDA:
        async function comprimirMemoria() {
             if (mensagens.length <= LIMITE_MENSAGENS) return;
 
-            // ESTADO FANTASMA: Tira a foto das mensagens 3 a 9 (as 6 mais antigas após o sistema)
             const fatosParaComprimir = mensagens.slice(3, 9)
                 .filter(m => m.content && m.content.trim() !== "")
                 .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
                 .join('\n');
 
-            // Preparamos um prompt único e limpo para o 1.5B não se confundir com o histórico do 7B
+            // Prompt otimizado para PERFORMANCE: obriga o 1.5B a ser monossilábico e rápido
             const promptSimplificado = [
                 {
                     role: 'system',
-                    content: "Você é um terminal de dados. Sua única função é atualizar o ESTADO ANTERIOR com os NOVOS EVENTOS fornecidos. Retorne estritamente o JSON solicitado."
+                    content: "Você é um terminal de dados ultra-eficiente. Atualize o ESTADO ANTERIOR com os NOVOS EVENTOS. REGRAS VITAIS DE PERFORMANCE:\n1. Seja extremamente conciso (máximo 3 palavras por item).\n2. NUNCA use aspas duplas dentro das descrições.\n3. Retorne estritamente o JSON."
                 },
                 {
                     role: 'user',
-                    content: `ESTADO ANTERIOR:\n${resumoAtual || 'Início da jornada'}\n\nNOVOS EVENTOS:\n${fatosParaComprimir}`
+                    content: `ESTADO ANTERIOR:\n${resumoAtual || 'Início'}\n\nNOVOS EVENTOS:\n${fatosParaComprimir}`
                 }
             ];
 
@@ -291,11 +290,11 @@ REGRAS DE SAÍDA:
                         model: MODELO_JUIZ,
                         messages: promptSimplificado,
                         temperature: 0.0,
-                        max_tokens: 350,
+                        max_tokens: 600, // Aumentado para dar margem, mas o prompt forçará a não usar tudo
                         response_format: {
                             type: "json_schema",
                             json_schema: {
-                                name: "extrator_fatos", // Nome simples sem caracteres especiais
+                                name: "extrator_fatos",
                                 strict: true,
                                 schema: {
                                     type: "object",
@@ -315,30 +314,53 @@ REGRAS DE SAÍDA:
                 });
 
                 if (!response.ok) {
-                    const errorMsg = await response.text();
-                    throw new Error(`LM Studio Error: ${errorMsg}`);
+                    throw new Error(`LM Studio HTTP Error: ${await response.text()}`);
                 }
 
                 const data = await response.json();
-                const textoJson = data.choices[0].message.content;
-                const jsonObj = JSON.parse(textoJson);
+                let textoJson = data.choices[0].message.content;
+                let jsonObj;
+
+                try {
+                    // Tenta o parse normal
+                    jsonObj = JSON.parse(textoJson);
+                } catch (parseError) {
+                    console.warn("⚠️ [Memória] JSON truncado. Tentando protocolo de recuperação de emergência...", parseError);
+                    
+                    // Válvula de Escape 1: Tenta fechar chaves e aspas automaticamente
+                    try {
+                        let fixedJson = textoJson.trim();
+                        if (!fixedJson.endsWith('}')) {
+                            // Se a última string ficou aberta, fecha ela
+                            if ((fixedJson.match(/"/g) || []).length % 2 !== 0) fixedJson += '"';
+                            // Fecha as estruturas do schema
+                            fixedJson += ']}}'; 
+                            // Limpa vírgulas sobrando antes de chaves (erro comum de truncamento)
+                            fixedJson = fixedJson.replace(/,\s*([\]}])/g, '$1');
+                        }
+                        jsonObj = JSON.parse(fixedJson);
+                        console.log("✅ [Memória] JSON recuperado com sucesso!");
+                    } catch (fatalError) {
+                        // Válvula de Escape 2: Destrói o loop para salvar o PC
+                        console.error("❌ [Memória] JSON irrecuperável. Aplicando amnésia forçada para não travar o jogo.", textoJson);
+                        mensagens.splice(3, 6); // Força a exclusão do histórico engarrafado
+                        return; // Aborta esta compressão específica
+                    }
+                }
                 
-                // Sincroniza com o sistema de entidades do jogo
                 buildEntityIndex(jsonObj);   
                 ssrJson = jsonObj;
 
-                // Atualiza o resumo visual (Mensagem de sistema no índice 2)
                 resumoAtual = `LOCAL: ${jsonObj.local}\nNPCS: ${jsonObj.npcs.join(' | ')}\nITENS: ${jsonObj.itens_conhecidos.join(' | ')}\nEVENTOS: ${jsonObj.eventos_chave.join(' ➔ ')}\nSITUAÇÃO: ${jsonObj.situacao_atual}`;
                 mensagens[2].content = `ESTADO ATUAL DO MUNDO:\n${resumoAtual}`;
                 
-                // DELEÇÃO ASSÍNCRONA: Limpa o histórico pesado apenas após o sucesso da compressão
+                // Limpeza oficial pós-sucesso
                 mensagens.splice(3, 6);
-                console.log("[Memória] 1.5B comprimiu o histórico com sucesso.");
+                console.log("💾 [Memória] Motor 1.5B comprimiu o histórico com sucesso.");
                 
                 salvarEstadoJogador().catch(e => console.error("Erro no salvamento pós-compressão:", e));
             } catch (error) {
-                console.error("Erro na compressão:", error);
-                // O histórico permanece intacto (Estado Fantasma) para que o narrador 7B não perca contexto se a compressão falhar
+                console.error("Erro geral na rede/compressão:", error);
             } finally {
                 window._compressaoEmAndamento = false;
             }
