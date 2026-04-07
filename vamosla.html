@@ -246,9 +246,9 @@ REGRAS DE SAÍDA:
         }
 
         function obterDiretrizDeFase() {
-            if (turnosJogados < 50) return "FASE 1 - RASTROS (Lentidão): O perigo é apenas um sussurro, uma lenda ou um rastro perturbador no cenário. É ESTRITAMENTE PROIBIDO mostrar a ameaça principal. Foco no mistério e na exploração do infamiliar.";
-            else if (turnosJogados < 250) return "FASE 2 - PARANOIA: Os sinais da ameaça são recentes. O ambiente reage a algo invisível (animais mortos, cheiro de podridão, NPCs aterrorizados). O perigo é iminente, mas ainda indireto.";
-            else if (turnosJogados < 450) return "FASE 3 - PERSEGUIÇÃO: O jogador vê a ameaça de relance. Sobrevivência se torna o foco. O cerco está se fechando. Tensão alta, descreva o som e o impacto da ameaça no ambiente.";
+            if (turnosJogados < 10) return "FASE 1 - RASTROS (Lentidão): O perigo é apenas um sussurro, uma lenda ou um rastro perturbador no cenário. É ESTRITAMENTE PROIBIDO mostrar a ameaça principal. Foco no mistério e na exploração do infamiliar.";
+            else if (turnosJogados < 25) return "FASE 2 - PARANOIA: Os sinais da ameaça são recentes. O ambiente reage a algo invisível (animais mortos, cheiro de podridão, NPCs aterrorizados). O perigo é iminente, mas ainda indireto.";
+            else if (turnosJogados < 45) return "FASE 3 - PERSEGUIÇÃO: O jogador vê a ameaça de relance. Sobrevivência se torna o foco. O cerco está se fechando. Tensão alta, descreva o som e o impacto da ameaça no ambiente.";
             else return "FASE 4 - O CLÍMAX: O confronto direto, visceral e inevitável. Apostas máximas. Descreva a brutalidade do embate.";
         }
 
