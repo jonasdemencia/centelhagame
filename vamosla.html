@@ -270,17 +270,17 @@ REGRAS DE SAÍDA:
                 .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
                 .join('\n');
 
-            // Prompt otimizado para PERFORMANCE: obriga o 1.5B a ser monossilábico e rápido
+           // Prompt otimizado para PERFORMANCE: Remove a carga de gerenciar eventos
             const promptSimplificado = [
-    {
-        role: 'system',
-        content: "Você é um terminal de dados ultra-eficiente. Atualize o ESTADO ANTERIOR com os NOVOS EVENTOS. REGRAS VITAIS:\n1. Mova as consequências dos eventos antigos para o estado dos NPCs (ex: se apanhou, o NPC vira 'ferido/hostil').\n2. Mantenha APENAS as ações mais recentes.\n3. Máximo 3 palavras por item. NUNCA use aspas duplas dentro das descrições.\n4. Retorne estritamente o JSON."
-    },
-    {
-        role: 'user',
-        content: `ESTADO ANTERIOR:\n${resumoAtual || 'Início'}\n\nNOVOS EVENTOS:\n${fatosParaComprimir}`
-    }
-];
+                {
+                    role: 'system',
+                    content: "Você é um terminal analítico. Atualize os estados físicos e psicológicos com base nos eventos. REGRAS:\n1. Foque no estado atual dos NPCs (ex: ferido, apavorado, confiante).\n2. Atualize itens ou o local se houver mudança.\n3. Retorne estritamente o JSON solicitado."
+                },
+                {
+                    role: 'user',
+                    content: `ESTADO ANTERIOR:\n${resumoAtual || 'Início'}\n\nEVENTOS PARA PROCESSAR:\n${fatosParaComprimir}`
+                }
+            ];
 
             try {
                 const response = await fetch(LM_URL, {
@@ -290,7 +290,7 @@ REGRAS DE SAÍDA:
                         model: MODELO_JUIZ,
                         messages: promptSimplificado,
                         temperature: 0.0,
-                        max_tokens: 600, // Aumentado para dar margem, mas o prompt forçará a não usar tudo
+                        max_tokens: 300,
                         response_format: {
                             type: "json_schema",
                             json_schema: {
@@ -302,10 +302,9 @@ REGRAS DE SAÍDA:
                                         local: { type: "string" },
                                         npcs: { type: "array", items: { type: "string" } },
                                         itens_conhecidos: { type: "array", items: { type: "string" } },
-                                        eventos_chave: { type: "array", items: { type: "string" } },
                                         situacao_atual: { type: "string" }
                                     },
-                                    required: ["local", "npcs", "itens_conhecidos", "eventos_chave", "situacao_atual"],
+                                    required: ["local", "npcs", "itens_conhecidos", "situacao_atual"],
                                     additionalProperties: false
                                 }
                             }
@@ -348,23 +347,20 @@ REGRAS DE SAÍDA:
                     }
                 }
                 
-               // --- INÍCIO DA GUILHOTINA DE MEMÓRIA (GARBAGE COLLECTOR) ---
-                // 1. Achata qualquer string encadeada que o modelo tenha criado
-                let eventosLimpos = [];
-                if (Array.isArray(jsonObj.eventos_chave)) {
-                    jsonObj.eventos_chave.forEach(ev => {
-                        if (typeof ev === 'string') {
-                            ev.split('➔').forEach(subEv => {
-                                if(subEv.trim()) eventosLimpos.push(subEv.trim());
-                            });
-                        }
+               // --- INÍCIO DA MEMÓRIA CRONOLÓGICA (VIA JAVASCRIPT) ---
+                // Em vez de pedir para a IA resumir, o código puxa cirurgicamente as últimas ações do jogador
+                const acoesRecentes = mensagens
+                    .filter(m => m.role === 'user' && !m.content.includes('Descreva em 3 frases'))
+                    .slice(-3)
+                    .map(m => {
+                        // Remove qualquer instrução de teste [AÇÃO ARRISCADA...] que o código injetou na string
+                        let acaoMuda = m.content.split('\n[')[0].trim();
+                        // Trunca em 45 caracteres para economizar tokens
+                        return acaoMuda.length > 45 ? acaoMuda.substring(0, 42) + "..." : acaoMuda;
                     });
-                }
-                
-                // 2. A MÁGICA PARA SALVAR SUA RAM E CONTEXTO: 
-                // Mantém APENAS os 3 últimos eventos. O resto é deletado para sempre.
-                jsonObj.eventos_chave = eventosLimpos.slice(-3);
-                // --- FIM DA GUILHOTINA ---
+
+                jsonObj.eventos_chave = acoesRecentes.length > 0 ? acoesRecentes : ["A jornada começou"];
+                // --- FIM DA MEMÓRIA CRONOLÓGICA ---
 
                 buildEntityIndex(jsonObj);   
                 ssrJson = jsonObj;
