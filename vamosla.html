@@ -272,15 +272,15 @@ REGRAS DE SAÍDA:
 
             // Prompt otimizado para PERFORMANCE: obriga o 1.5B a ser monossilábico e rápido
             const promptSimplificado = [
-                {
-                    role: 'system',
-                    content: "Você é um terminal de dados ultra-eficiente. Atualize o ESTADO ANTERIOR com os NOVOS EVENTOS. REGRAS VITAIS DE PERFORMANCE:\n1. Seja extremamente conciso (máximo 3 palavras por item).\n2. NUNCA use aspas duplas dentro das descrições.\n3. Retorne estritamente o JSON."
-                },
-                {
-                    role: 'user',
-                    content: `ESTADO ANTERIOR:\n${resumoAtual || 'Início'}\n\nNOVOS EVENTOS:\n${fatosParaComprimir}`
-                }
-            ];
+    {
+        role: 'system',
+        content: "Você é um terminal de dados ultra-eficiente. Atualize o ESTADO ANTERIOR com os NOVOS EVENTOS. REGRAS VITAIS:\n1. Mova as consequências dos eventos antigos para o estado dos NPCs (ex: se apanhou, o NPC vira 'ferido/hostil').\n2. Mantenha APENAS as ações mais recentes.\n3. Máximo 3 palavras por item. NUNCA use aspas duplas dentro das descrições.\n4. Retorne estritamente o JSON."
+    },
+    {
+        role: 'user',
+        content: `ESTADO ANTERIOR:\n${resumoAtual || 'Início'}\n\nNOVOS EVENTOS:\n${fatosParaComprimir}`
+    }
+];
 
             try {
                 const response = await fetch(LM_URL, {
@@ -348,6 +348,24 @@ REGRAS DE SAÍDA:
                     }
                 }
                 
+               // --- INÍCIO DA GUILHOTINA DE MEMÓRIA (GARBAGE COLLECTOR) ---
+                // 1. Achata qualquer string encadeada que o modelo tenha criado
+                let eventosLimpos = [];
+                if (Array.isArray(jsonObj.eventos_chave)) {
+                    jsonObj.eventos_chave.forEach(ev => {
+                        if (typeof ev === 'string') {
+                            ev.split('➔').forEach(subEv => {
+                                if(subEv.trim()) eventosLimpos.push(subEv.trim());
+                            });
+                        }
+                    });
+                }
+                
+                // 2. A MÁGICA PARA SALVAR SUA RAM E CONTEXTO: 
+                // Mantém APENAS os 3 últimos eventos. O resto é deletado para sempre.
+                jsonObj.eventos_chave = eventosLimpos.slice(-3);
+                // --- FIM DA GUILHOTINA ---
+
                 buildEntityIndex(jsonObj);   
                 ssrJson = jsonObj;
 
