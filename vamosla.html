@@ -508,49 +508,47 @@ REGRAS DE SAÍDA:
         }
 
         async function classificarAcaoLLM(acaoUsuario) {
-            const microContexto = resolverMicroContexto(acaoUsuario);
-            const ultimaMsgAssistente = mensagens.slice().reverse().find(m => m.role === 'assistant');
-            const ultimaFrase = ultimaMsgAssistente?.content
-    ?.split('.').filter(Boolean).slice(-2).join('.').trim() || '';
-const contextoRecente = ultimaFrase ? `\nContexto: "${ultimaFrase}"` : '';
+    const microContexto = resolverMicroContexto(acaoUsuario);
+    
+    // 1. Extraímos o histórico puro de intenções, ignorando a prosa do narrador.
+    const acoesJogador = mensagens.filter(m => m.role === 'user');
+    const acaoAnterior = acoesJogador.length > 1 ? acoesJogador[acoesJogador.length - 1].content : "Nenhuma";
 
-            const acaoComContexto = microContexto
-                ? `Ação do jogador: "${acaoUsuario}" ${microContexto}`
-                : `Ação do jogador: "${acaoUsuario}"`;
-                
-            const promptFinal = acaoComContexto + contextoRecente;
+    // 2. Montamos um prompt cirúrgico e seco para o 1.5B processar instantaneamente.
+    const promptFinal = `AÇÃO ANTERIOR DO JOGADOR: "${acaoAnterior}"
+MICRO-CONTEXTO DO ALVO: ${microContexto || "[Nenhum/Desconhecido]"}
+AÇÃO ATUAL DO JOGADOR: "${acaoUsuario}"`;
 
-            const response = await fetch(LM_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: MODELO_JUIZ, // <-- NOVO: Redirecionado para o modelo 1.5B (Motor Duplo)
-                    messages: [
-                        {
-                            role: 'system',
-                            content: `Você é um classificador de ações de RPG. 
-Classifique a ação do jogador em EXATAMENTE um tipo e um atributo.
+    const response = await fetch(LM_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            model: MODELO_JUIZ,
+            messages: [
+                {
+                    role: 'system',
+                    content: `Você é um classificador de ações de RPG. 
+Classifique a ação ATUAL do jogador em EXATAMENTE um tipo e um atributo.
 
 TIPO:
-- TRIVIAL (sem risco, sem intenção de influenciar): observar, perguntar, dialogar, cumprimentar, esperar, examinar sem risco,
-  qualquer ação sobre alvo morto, inconsciente ou imóvel
-- ARRISCADA (há risco de rejeição, fracasso ou consequência): atacar, fugir, seduzir, roubar, escalar, enganar, ameaçar, extrair segredo, ganhar confiança, pedir favor comprometedor, mentir, manipular
-  qualquer ação com consequência física ou social sobre alvo VIVO e ATIVO
+- TRIVIAL (sem risco de falha): observar, caminhar, conversar amigavelmente com aliados.
+- ARRISCADA (risco de rejeição, hostilidade ou fracasso): atacar, fugir, dar ordens a um alvo ferido/hostil, seduzir, extrair informações.
+
+REGRAS DE CONTEXTO:
+Se a "AÇÃO ANTERIOR" foi agressiva, violenta ou invasiva contra o alvo, QUALQUER pedido social subsequente (mesmo que pareça pacífico) torna-se imediatamente ARRISCADO devido à coerção e hostilidade gerada.
 
 ATRIBUTO (apenas se ARRISCADA):
-- HABILIDADE: ações físicas, combate, furtividade, destreza
-- CARISMA: persuasão, sedução, engano, liderança, intimidação social, aproximação sexual
-- SORTE: apostas, eventos caóticos, azar puro
-- NENHUM: se TRIVIAL
-
-IMPORTANTE: QUALQUER pergunta ou ordem de natureza sexual/íntima é ARRISCADA e usa CARISMA.`
-                        },
-                        {
-                            role: 'user',
-                            content: promptFinal
-                        }
-                    ],
-                    temperature: 0.0,
+- HABILIDADE: ações físicas, combate, furtividade, destreza.
+- CARISMA: persuasão, sedução, engano, coerção, aproximação íntima, ordens.
+- SORTE: roletas, eventos caóticos, apostas, tentativas.
+- NENHUM: se TRIVIAL.`
+                },
+                {
+                    role: 'user',
+                    content: promptFinal
+                }
+            ],
+            temperature: 0.0,
                     max_tokens: 30,
                     response_format: {
                         type: "json_schema",
