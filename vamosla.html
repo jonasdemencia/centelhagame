@@ -535,7 +535,7 @@ TIPO:
 - ARRISCADA (risco de rejeição, hostilidade ou fracasso): atacar, fugir, dar ordens a um alvo ferido/hostil, seduzir, extrair informações.
 
 REGRAS DE CONTEXTO:
-Se a "AÇÃO ANTERIOR" foi agressiva, violenta ou invasiva contra o alvo, QUALQUER pedido social subsequente (mesmo que pareça pacífico) torna-se imediatamente ARRISCADO devido à coerção e hostilidade gerada.
+Se a "AÇÃO ANTERIOR" foi agressiva ou invasiva contra o alvo, QUALQUER diálogo ou pedido social subsequente torna-se ARRISCADO e DEVE OBRIGATORIAMENTE testar CARISMA (Intimidação/Coerção). Jamais teste HABILIDADE para ações de fala.
 
 ATRIBUTO (apenas se ARRISCADA):
 - HABILIDADE: ações físicas, combate, furtividade, destreza.
@@ -743,19 +743,20 @@ intervaloAnimacao = setInterval(() => {
 
                     // --- INÍCIO DO NOVO CONTEXTO DINÂMICO ---
 let diretrizConsequencia = "";
-if (resultado === 'FALHA') {
-    if (atributo === 'HABILIDADE') {
-        diretrizConsequencia = "A ação fracassa e o jogador sofre uma punição física visceral (ossos quebrados, carne rasgada, dano material sonoro).";
-    } else if (atributo === 'CARISMA') {
-        diretrizConsequencia = "A tentativa social é totalmente rejeitada. O jogador sofre DANO PSICOLÓGICO/EMOCIONAL, hostilidade aguda ou uma humilhação aterradora. O alvo demonstra repulsa ou fúria, quebrando a moral do jogador. É proibido narrar dano físico ao jogador neste caso, foque no terror e na vergonha social.";
-    } else if (atributo === 'SORTE') {
-        diretrizConsequencia = "O azar se manifesta de forma impiedosa. Uma reviravolta cruel do ambiente ou do destino pune o jogador.";
-    }
+let diretrizSucesso = "A intenção do jogador se concretiza TOTALMENTE e sem ressalvas.";
+
+if (atributo === 'HABILIDADE') {
+    if (resultado === 'FALHA') diretrizConsequencia = "A ação fracassa e o jogador sofre uma punição física visceral (ossos quebrados, carne rasgada, dano material).";
+} else if (atributo === 'CARISMA') {
+    if (resultado === 'SUCESSO') diretrizSucesso = "A intenção do jogador se concretiza TOTALMENTE. ATENÇÃO: Se o contexto anterior envolver violência, o alvo obedece ao jogador por PURO TERROR ou submissão doentia, nunca por afeto. Narre a obediência forçada e a linguagem corporal de medo.";
+    if (resultado === 'FALHA') diretrizConsequencia = "A tentativa social é totalmente rejeitada. O alvo demonstra repulsa ou fúria, quebrando a moral do jogador. É proibido narrar dano físico ao jogador neste caso, foque na humilhação social e hostilidade.";
+} else if (atributo === 'SORTE') {
+    if (resultado === 'FALHA') diretrizConsequencia = "O azar se manifesta de forma impiedosa. Uma reviravolta cruel do ambiente pune o jogador.";
 }
 
 const contextoDecidido = tipo === 'TRIVIAL'
     ? `[AÇÃO TRIVIAL: Avance a cena diretamente. Revele uma nova tensão ou detalhe sombrio sem mencionar testes. Termine com [DANO: 0]]`
-    : `[AÇÃO ARRISCADA — TESTE DE ${atributo}: ${resultado}. REGRAS VITAIS: Se SUCESSO, a intenção se efetiva totalmente. Se FALHA, a intenção é TOTALMENTE NEGADA/REJEITADA e ${diretrizConsequencia} Narre o desfecho seco. Termine com [DANO: ${resultado === 'FALHA' ? danoBase : 0}]]`;
+    : `[AÇÃO ARRISCADA — TESTE DE ${atributo}: ${resultado}. REGRAS VITAIS: Se SUCESSO, ${diretrizSucesso} Se FALHA, a intenção é TOTALMENTE NEGADA/REJEITADA e ${diretrizConsequencia} Narre o desfecho seco. Termine com [DANO: ${resultado === 'FALHA' ? danoBase : 0}]]`;
 // --- FIM DO NOVO CONTEXTO DINÂMICO ---
 
                     mensagemFinal += `\n${contextoDecidido}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
