@@ -699,23 +699,34 @@ intervaloAnimacao = setInterval(() => {
                 let mensagemFinal = pergunta;
 
                 if (!isInitial) {
-        // --- FILTRO DE INTENÇÃO (CURTO-CIRCUITO MINIMALISTA) ---
-    const acaoLower = pergunta.toLowerCase().trim();
-    let classificacao;
+        // --- FILTRO DE INTENÇÃO ELABORADO (CURTO-CIRCUITO) ---
+const acaoLower = pergunta.toLowerCase().trim();
+let classificacao;
 
-    // Apenas metalinguagem / observação pura (sem risco)
-    const ehMetaOuVisao = /^(me descreva|descreva|olhar|observar|examinar|checar|onde|tem algo|analisar)\b/i.test(acaoLower);
+// 1. Verbos de Percepção Visual/Investigativa (O personagem agindo no mundo)
+const ehPercepcao = /^(olhar|observar|examinar|checar|analisar|inspecionar|ver|notar|procurar|investigar|vasculhar)\b/.test(acaoLower);
 
-    if (ehMetaOuVisao) {
-        classificacao = { tipo: 'TRIVIAL', atributo: 'NENHUM' };
-        console.log('[PRÉ-CLASSIFICADOR] TRIVIAL (metalinguagem/observação)');
-    } else {
-        // Tudo o que não for puramente observacional vai para o Juiz (1.5B)
-        const tempJuizId = adicionarMensagem('⚖️ O Juiz avalia...', 'system', true);
-        classificacao = await classificarAcaoLLM(pergunta);
-        const msgJuiz = document.getElementById(tempJuizId);
-        if (msgJuiz) msgJuiz.remove();
-    }
+// 2. Comandos Diretos ao Motor/Mestre (Metalinguagem pura)
+const ehDescricao = /^(me descreva|descreva|descrever|diga|me diga|detalhe)\b/.test(acaoLower);
+
+// 3. Perguntas Narrativas (Onde o seu "Como sao os quadris" vai ser pego)
+const ehPerguntaCenario = /^(como é|como sao|como são|qual a|qual o|quais|onde|o que|tem algo|existe|há|quantos)\b/.test(acaoLower);
+
+// 4. A TRAVA DE SEGURANÇA (Garante que se você falar COM o NPC, vá para o Juiz)
+// Ex: Se você digitar "Digo: como são os arredores?", isso anula a regra 3 e manda pro LLM.
+const ehFalaDireta = /^(digo|falo|grito|sussurro|pergunto|respondo|indago)\b/.test(acaoLower) || acaoLower.startsWith('"') || acaoLower.startsWith("'");
+
+// Avaliação Final do Filtro
+if ((ehPercepcao || ehDescricao || ehPerguntaCenario) && !ehFalaDireta) {
+    classificacao = { tipo: 'TRIVIAL', atributo: 'NENHUM' };
+    console.log('[SISTEMA] Interceptado: Pergunta ao Narrador / Exploração Visual.');
+} else {
+    // Se não for nada disso, OU se for uma fala (ehFalaDireta), chama o LLM 1.5B
+    const tempJuizId = adicionarMensagem('⚖️ O Juiz avalia...', 'system', true);
+    classificacao = await classificarAcaoLLM(pergunta);
+    const msgJuiz = document.getElementById(tempJuizId);
+    if (msgJuiz) msgJuiz.remove();
+}
 
     // Agora classificacao está definida em todos os caminhos
     const { tipo, atributo } = classificacao;
