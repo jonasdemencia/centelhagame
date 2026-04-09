@@ -170,12 +170,9 @@ REGRAS DE SAÍDA:
                     }
                     
                     if (data?.energy?.total !== undefined) {
-                        energia = data.energy.total;
-                        document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
-                    } else if (data.energia !== undefined) {
-                        energia = data.energia;
-                        document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
-                    }
+    energia = data.energy.total;
+    document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
+}
 
                     if (data?.skill?.total !== undefined) jogadorStats.HABILIDADE = data.skill.total;
                     if (data?.charisma?.total !== undefined) jogadorStats.CARISMA = data.charisma.total;
@@ -202,17 +199,16 @@ REGRAS DE SAÍDA:
             if (!uidAtual) return;
             try {
                 const dadosAtualizados = {
-                    turnos: turnosJogados,
-                    resumo: resumoAtual,
-                    energia: energia,
-                    "energy.total": energia,
-                    memoriaLonga: memoriaLonga,
-                    "skill.total": jogadorStats.HABILIDADE,
-                    "charisma.total": jogadorStats.CARISMA,
-                    "luck.total": jogadorStats.SORTE,
-                    ssrJson: ssrJson   
-                };
-                await setDoc(doc(db, "players", uidAtual), dadosAtualizados, { merge: true });
+    turnos: turnosJogados,
+    resumo: resumoAtual,
+    memoriaLonga: memoriaLonga,
+    "energy.total": energia,
+    "skill.total": jogadorStats.HABILIDADE,
+    "charisma.total": jogadorStats.CARISMA,
+    "luck.total": jogadorStats.SORTE,
+    ssrJson: ssrJson   
+};
+await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
             } catch (e) {
                 console.error("Erro ao salvar estado do jogador:", e);
             }
