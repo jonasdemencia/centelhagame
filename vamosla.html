@@ -544,7 +544,7 @@ TIPO:
 - ARRISCADA (risco de rejeição, hostilidade ou fracasso): atacar, fugir, dar ordens a um alvo ferido/hostil, seduzir, extrair informações.
 
 REGRAS DE CONTEXTO:
-Se a "AÇÃO ANTERIOR" foi agressiva ou invasiva contra o alvo, QUALQUER diálogo ou pedido social subsequente torna-se ARRISCADO e DEVE OBRIGATORIAMENTE testar CARISMA (Intimidação/Coerção). Jamais teste HABILIDADE para ações de fala.
+Se a "AÇÃO ANTERIOR" foi agressiva ou invasiva contra o NPC, QUALQUER diálogo subsequente com esse NPC torna-se ARRISCADO e DEVE OBRIGATORIAMENTE testar CARISMA (Intimidação/Coerção). Jamais teste HABILIDADE para ações de fala.
 
 ATRIBUTO (apenas se ARRISCADA):
 - HABILIDADE: APENAS esforço físico motor (correr, saltar, forçar portas, lutar, furtividade).
@@ -706,7 +706,8 @@ intervaloAnimacao = setInterval(() => {
     let classificacao;
 
     // 1. Exploração pura: perguntas sobre o cenário, observação, investigação
-    const ehExploracaoPura = /^(me descreva|descreva|olhar|observar|examinar|checar|onde|tem|existe|quais|analisar|investigar|procurar|ouvir|cheirar)\b/i.test(acaoLower);
+    const ehExploracaoPura = /^(me descreva|descreva|olhar|observar|examinar|checar|onde|tem|existe|quais|analisar|investigar|procurar|ouvir|subir|trepar|içar|pendurar|agarrar|equilibrar|pular|saltar|correr|fugir|descer|forçar|arrombar|romper|
+cair|escorregar|levantar|cheirar)\b/i.test(acaoLower);
 
     // 2. Pergunta metalinguística (fora do personagem): termina com "?" e não é fala explícita, e não há alvo claro (entidadeEmFoco)
     const ehMeta = /\?$/.test(acaoLower) && !/^(digo|falo|pergunto|grito|peço|ordeno)/i.test(acaoLower) && !entidadeEmFoco;
