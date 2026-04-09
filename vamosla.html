@@ -699,46 +699,58 @@ intervaloAnimacao = setInterval(() => {
                 let mensagemFinal = pergunta;
 
                 if (!isInitial) {
-                    // --- NOVO: FILTRO DE TRIVIALIDADE (CURTO-CIRCUITO) ---
-                    const verbosTriviais = /^(olhar|observar|examinar|descreva|onde estou|existem|tem algo|o que vejo|analisar|observar|esperar|checar|investigar|procurar|ouvir|cheirar|analisar)\b/i;
-                    const acaoLower = pergunta.toLowerCase().trim();
+                    // --- FILTRO DE INTENÇÃO (CURTO-CIRCUITO) ---
+const acaoLower = pergunta.toLowerCase().trim();
 
-                    const inimigoVivo = entidadeEmFoco && !['morta', 'morto', 'inconsciente', 'destruída', 'destruído'].some(est => entidadeEmFoco.estado.includes(est));
+// 1. Exploração pura: perguntas sobre o cenário, observação, investigação
+const ehExploracaoPura = /^(me descreva|descreva|olhar|observar|examinar|checar|onde|tem|existe|quais|analisar|investigar|procurar|ouvir|cheirar)\b/i.test(acaoLower);
 
-                    // Adicionamos uma detecção de fala explícita
-const verboFala = /^(digo|falo|grito|peço|ordeno|pergunto)[:\s]/i;
-const acaoFisicaDireta = /\b(atacar|golpear|socar|chutar|esfaquear|enforcar|morder|atirar|arremessar|arrancar|cortar|ferir|matar|puxar|empurrar|escalar|roubar|furtar|fugir|correr|esquivar|rancar|cravar|estrangular|apunhalar)\b/i;
-const acaoSocialDireta = /\b(seduzir|convencer|persuadir|manipular|mentir|pedir|enganar|intimidar|ameaçar|ordenar|subornar|lisonjear|me conte|me diga|revele|confesse|extrair|chantagear)\b/i;
-const acaoSorteDireta = /\b(apostar|arriscar|improvisar|torcer|rezar|tentar a sorte)\b/i; 
+// 2. Pergunta metalinguística (fora do personagem): termina com "?" e não é fala explícita, e não há alvo claro (entidadeEmFoco)
+const ehMeta = /\?$/.test(acaoLower) && !/^(digo|falo|pergunto|grito|peço|ordeno)/i.test(acaoLower) && !entidadeEmFoco;
 
-let classificacao;
-
-// 1º Filtro: Se começou falando ou usou verbos sociais puros, é persuasão/coerção
-if (verboFala.test(acaoLower) || acaoSocialDireta.test(acaoLower)) {
-    classificacao = { tipo: 'ARRISCADA', atributo: 'CARISMA' };
-    console.log('[PRÉ-CLASSIFICADOR] CARISMA (Diálogo detectado)');
-} 
-// 2º Filtro: Ações físicas diretas (agora não vão roubar ações de diálogo)
-else if (acaoFisicaDireta.test(acaoLower)) {
-    classificacao = { tipo: 'ARRISCADA', atributo: 'HABILIDADE' };
-    console.log('[PRÉ-CLASSIFICADOR] HABILIDADE');
-} 
-// 3º Filtro: Ações de sorte
-else if (acaoSorteDireta.test(acaoLower)) {
-    classificacao = { tipo: 'ARRISCADA', atributo: 'SORTE' };
-    console.log('[PRÉ-CLASSIFICADOR] SORTE');
-} 
-// 4º Filtro: Trivial
-else if (verbosTriviais.test(acaoLower) && !inimigoVivo) {
+// Se for exploração ou meta, já classificamos como TRIVIAL (sem teste)
+if (ehExploracaoPura || ehMeta) {
     classificacao = { tipo: 'TRIVIAL', atributo: 'NENHUM' };
-    console.log('[PRÉ-CLASSIFICADOR] TRIVIAL');
-} 
-// Se nada capturar, chama o Juiz invisível (1.5B)
-else {
-    const tempJuizId = adicionarMensagem('⚖️ O Juiz avalia...', 'system', true);
-    classificacao = await classificarAcaoLLM(pergunta);
-    const msgJuiz = document.getElementById(tempJuizId);
-    if (msgJuiz) msgJuiz.remove();
+    console.log('[PRÉ-CLASSIFICADOR] TRIVIAL (exploração ou metalinguagem)');
+} else {
+    // --- SE NÃO FOR EXPLORAÇÃO, APLICAMOS OS FILTROS NORMAS (combate, social, etc.) ---
+    const verboFala = /^(digo|falo|grito|peço|ordeno|pergunto)[:\s]/i;
+    const acaoFisicaDireta = /\b(atacar|golpear|socar|chutar|esfaquear|enforcar|morder|atirar|arremessar|arrancar|cortar|ferir|matar|puxar|empurrar|escalar|roubar|furtar|fugir|correr|esquivar|rancar|cravar|estrangular|apunhalar)\b/i;
+    const acaoSocialDireta = /\b(seduzir|convencer|persuadir|manipular|mentir|pedir|enganar|intimidar|ameaçar|ordenar|subornar|lisonjear|me conte|me diga|revele|confesse|extrair|chantagear)\b/i;
+    const acaoSorteDireta = /\b(apostar|arriscar|improvisar|torcer|rezar|tentar a sorte)\b/i;
+    const verbosTriviais = /^(olhar|observar|examinar|esperar|checar|investigar|procurar|ouvir|cheirar)\b/i; // sem os de exploração já tratados
+
+    const inimigoVivo = entidadeEmFoco && !['morta', 'morto', 'inconsciente', 'destruída', 'destruído'].some(est => entidadeEmFoco.estado.includes(est));
+
+    let classificacao; // será preenchida nos ifs seguintes
+
+    // 1º Filtro: fala explícita ou social
+    if (verboFala.test(acaoLower) || acaoSocialDireta.test(acaoLower)) {
+        classificacao = { tipo: 'ARRISCADA', atributo: 'CARISMA' };
+        console.log('[PRÉ-CLASSIFICADOR] CARISMA (diálogo)');
+    }
+    // 2º Filtro: ações físicas
+    else if (acaoFisicaDireta.test(acaoLower)) {
+        classificacao = { tipo: 'ARRISCADA', atributo: 'HABILIDADE' };
+        console.log('[PRÉ-CLASSIFICADOR] HABILIDADE');
+    }
+    // 3º Filtro: sorte
+    else if (acaoSorteDireta.test(acaoLower)) {
+        classificacao = { tipo: 'ARRISCADA', atributo: 'SORTE' };
+        console.log('[PRÉ-CLASSIFICADOR] SORTE');
+    }
+    // 4º Filtro: triviais (observar, etc. – mas não os de exploração já tratados)
+    else if (verbosTriviais.test(acaoLower) && !inimigoVivo) {
+        classificacao = { tipo: 'TRIVIAL', atributo: 'NENHUM' };
+        console.log('[PRÉ-CLASSIFICADOR] TRIVIAL');
+    }
+    // Se nada capturar, chama o Juiz (1.5B)
+    else {
+        const tempJuizId = adicionarMensagem('⚖️ O Juiz avalia...', 'system', true);
+        classificacao = await classificarAcaoLLM(pergunta);
+        const msgJuiz = document.getElementById(tempJuizId);
+        if (msgJuiz) msgJuiz.remove();
+    }
 }
                     // -----------------------------------------------------
 
