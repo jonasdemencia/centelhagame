@@ -274,7 +274,7 @@ REGRAS DE SAÍDA:
             const promptSimplificado = [
                 {
                     role: 'system',
-                    content: "Você é um terminal analítico. Atualize os estados físicos e psicológicos com base nos eventos. REGRAS:\n1. Foque no estado atual dos NPCs (ex: ferido, apavorado, confiante).\n2. Atualize itens ou o local se houver mudança.\n3. Retorne estritamente o JSON solicitado."
+                    content: "Você é um terminal analítico. Atualize os estados físicos e psicológicos com base nos eventos. REGRAS:\n1. Foque no estado atual dos NPCs (ex: ferido, apavorado, confiante).\n2. Atualize o local se houver mudança.\n3. Retorne estritamente o JSON solicitado."
                 },
                 {
                     role: 'user',
@@ -299,12 +299,11 @@ REGRAS DE SAÍDA:
                                 schema: {
                                     type: "object",
                                     properties: {
-                                        local: { type: "string" },
-                                        npcs: { type: "array", items: { type: "string" } },
-                                        itens_conhecidos: { type: "array", items: { type: "string" } },
-                                        situacao_atual: { type: "string" }
-                                    },
-                                    required: ["local", "npcs", "itens_conhecidos", "situacao_atual"],
+    local: { type: "string" },
+    npcs: { type: "array", items: { type: "string" } },
+    situacao_atual: { type: "string" }
+},
+required: ["local", "npcs", "situacao_atual"],
                                     additionalProperties: false
                                 }
                             }
@@ -365,7 +364,7 @@ REGRAS DE SAÍDA:
                 buildEntityIndex(jsonObj);   
                 ssrJson = jsonObj;
 
-                resumoAtual = `LOCAL: ${jsonObj.local}\nNPCS: ${jsonObj.npcs.join(' | ')}\nITENS: ${jsonObj.itens_conhecidos.join(' | ')}\nEVENTOS: ${jsonObj.eventos_chave.join(' ➔ ')}\nSITUAÇÃO: ${jsonObj.situacao_atual}`;
+                resumoAtual = `LOCAL: ${jsonObj.local}\nNPCS: ${jsonObj.npcs.join(' | ')}\nEVENTOS: ${jsonObj.eventos_chave.join(' ➔ ')}\nSITUAÇÃO: ${jsonObj.situacao_atual}`;
                 mensagens[2].content = `ESTADO ATUAL DO MUNDO:\n${resumoAtual}`;
                 
                 // Limpeza oficial pós-sucesso
