@@ -704,32 +704,40 @@ intervaloAnimacao = setInterval(() => {
 
                     const inimigoVivo = entidadeEmFoco && !['morta', 'morto', 'inconsciente', 'destruída', 'destruído'].some(est => entidadeEmFoco.estado.includes(est));
 
-                    const acaoFisicaDireta = /\b(atacar|golpear|socar|chutar|esfaquear|enforcar|morder|atirar|arremessar|arrancar|cortar|ferir|matar|puxar|empurrar|escalar|roubar|furtar|fugir|correr|esquivar|rancar|cravar|estrangular|apunhalar)\b/i;
-                    const acaoSocialDireta = /\b(seduzir|convencer|persuadir|manipular|mentir|pedir|enganar|intimidar|ameaçar|ordenar|subornar|lisonjear|me conte|me diga|revele|confesse|extrair|chantagear)\b/i;
-                    const acaoSorteDireta  = /\b(apostar|arriscar|improvisar|torcer|rezar|tentar a sorte)\b/i;
-                    const acaoDiscursoDireto = /^(digo|falo|pergunto|sussurro|grito|murmuro|respondo|provoco|brinco)[\s:,]/i;
+                    // Adicionamos uma detecção de fala explícita
+const verboFala = /^(digo|falo|grito|peço|ordeno|pergunto)[:\s]/i;
+const acaoFisicaDireta = /\b(atacar|golpear|socar|chutar|esfaquear|enforcar|morder|atirar|arremessar|arrancar|cortar|ferir|matar|puxar|empurrar|escalar|roubar|furtar|fugir|correr|esquivar|rancar|cravar|estrangular|apunhalar)\b/i;
+const acaoSocialDireta = /\b(seduzir|convencer|persuadir|manipular|mentir|pedir|enganar|intimidar|ameaçar|ordenar|subornar|lisonjear|me conte|me diga|revele|confesse|extrair|chantagear)\b/i;
 
+let classificacao;
 
-                    let classificacao;
-
-                    // Precisa ficar assim:
-if (acaoFisicaDireta.test(acaoLower)) {
+// 1º Filtro: Se começou falando ou usou verbos sociais puros, é persuasão/coerção
+if (verboFala.test(acaoLower) || acaoSocialDireta.test(acaoLower)) {
+    classificacao = { tipo: 'ARRISCADA', atributo: 'CARISMA' };
+    console.log('[PRÉ-CLASSIFICADOR] CARISMA (Diálogo detectado)');
+} 
+// 2º Filtro: Ações físicas diretas (agora não vão roubar ações de diálogo)
+else if (acaoFisicaDireta.test(acaoLower)) {
     classificacao = { tipo: 'ARRISCADA', atributo: 'HABILIDADE' };
-} else if (acaoSocialDireta.test(acaoLower)) {
-    classificacao = { tipo: 'ARRISCADA', atributo: 'CARISMA' };
-} else if (acaoDiscursoDireto.test(acaoLower)) {
-    classificacao = { tipo: 'ARRISCADA', atributo: 'CARISMA' };
-    console.log('[PRÉ-CLASSIFICADOR] CARISMA (discurso direto)');
-} else if (acaoSorteDireta.test(acaoLower)) {
-                    } else if (verbosTriviais.test(acaoLower) && !inimigoVivo) {
-                        classificacao = { tipo: 'TRIVIAL', atributo: 'NENHUM' };
-                        console.log('[PRÉ-CLASSIFICADOR] TRIVIAL');
-                    } else {
-                        const tempJuizId = adicionarMensagem('⚖️ O Juiz avalia...', 'system', true);
-                        classificacao = await classificarAcaoLLM(pergunta);
-                        const msgJuiz = document.getElementById(tempJuizId);
-                        if (msgJuiz) msgJuiz.remove();
-                    }
+    console.log('[PRÉ-CLASSIFICADOR] HABILIDADE');
+} 
+// 3º Filtro: Ações de sorte
+else if (acaoSorteDireta.test(acaoLower)) {
+    classificacao = { tipo: 'ARRISCADA', atributo: 'SORTE' };
+    console.log('[PRÉ-CLASSIFICADOR] SORTE');
+} 
+// 4º Filtro: Trivial
+else if (verbosTriviais.test(acaoLower) && !inimigoVivo) {
+    classificacao = { tipo: 'TRIVIAL', atributo: 'NENHUM' };
+    console.log('[PRÉ-CLASSIFICADOR] TRIVIAL');
+} 
+// Se nada capturar, chama o Juiz invisível (1.5B)
+else {
+    const tempJuizId = adicionarMensagem('⚖️ O Juiz avalia...', 'system', true);
+    classificacao = await classificarAcaoLLM(pergunta);
+    const msgJuiz = document.getElementById(tempJuizId);
+    if (msgJuiz) msgJuiz.remove();
+}
                     // -----------------------------------------------------
 
                     const { tipo, atributo } = classificacao;
