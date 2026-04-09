@@ -547,10 +547,11 @@ REGRAS DE CONTEXTO:
 Se a "AÇÃO ANTERIOR" foi agressiva ou invasiva contra o alvo, QUALQUER diálogo ou pedido social subsequente torna-se ARRISCADO e DEVE OBRIGATORIAMENTE testar CARISMA (Intimidação/Coerção). Jamais teste HABILIDADE para ações de fala.
 
 ATRIBUTO (apenas se ARRISCADA):
-- HABILIDADE: ações físicas, combate, furtividade, destreza.
-- CARISMA: persuasão, sedução, engano, coerção, aproximação íntima, ordens.
+- HABILIDADE: APENAS esforço físico motor (correr, saltar, forçar portas, lutar, furtividade).
+- CARISMA: APENAS quando o jogador tenta convencer, enganar, intimidar ou seduzir um NPC que tenha vontade própria. 
 - SORTE: roletas, eventos caóticos, apostas, tentativas.
-- NENHUM: se TRIVIAL.`
+- NENHUM: se TRIVIAL.
+- ATENÇÃO: Se o jogador está apenas perguntando algo AO NARRADOR ou olhando o cenário, é TRIVIAL.`
                 },
                 {
                     role: 'user',
@@ -699,7 +700,7 @@ intervaloAnimacao = setInterval(() => {
 
                 if (!isInitial) {
                     // --- NOVO: FILTRO DE TRIVIALIDADE (CURTO-CIRCUITO) ---
-                    const verbosTriviais = /^(olhar|observar|examinar|esperar|checar|investigar|procurar|ouvir|cheirar|analisar)\b/i;
+                    const verbosTriviais = /^(olhar|observar|examinar|descreva|onde estou|existem|tem algo|o que vejo|analisar|observar|esperar|checar|investigar|procurar|ouvir|cheirar|analisar)\b/i;
                     const acaoLower = pergunta.toLowerCase().trim();
 
                     const inimigoVivo = entidadeEmFoco && !['morta', 'morto', 'inconsciente', 'destruída', 'destruído'].some(est => entidadeEmFoco.estado.includes(est));
