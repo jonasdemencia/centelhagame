@@ -707,18 +707,20 @@ intervaloAnimacao = setInterval(() => {
                     const acaoFisicaDireta = /\b(atacar|golpear|socar|chutar|esfaquear|enforcar|morder|atirar|arremessar|arrancar|cortar|ferir|matar|puxar|empurrar|escalar|roubar|furtar|fugir|correr|esquivar|rancar|cravar|estrangular|apunhalar)\b/i;
                     const acaoSocialDireta = /\b(seduzir|convencer|persuadir|manipular|mentir|pedir|enganar|intimidar|ameaçar|ordenar|subornar|lisonjear|me conte|me diga|revele|confesse|extrair|chantagear)\b/i;
                     const acaoSorteDireta  = /\b(apostar|arriscar|improvisar|torcer|rezar|tentar a sorte)\b/i;
+                    const acaoDiscursoDireto = /^(digo|falo|pergunto|sussurro|grito|murmuro|respondo|provoco|brinco)[\s:,]/i;
+
 
                     let classificacao;
 
-                    if (acaoFisicaDireta.test(acaoLower)) {
-                        classificacao = { tipo: 'ARRISCADA', atributo: 'HABILIDADE' };
-                        console.log('[PRÉ-CLASSIFICADOR] HABILIDADE');
-                    } else if (acaoSocialDireta.test(acaoLower)) {
-                        classificacao = { tipo: 'ARRISCADA', atributo: 'CARISMA' };
-                        console.log('[PRÉ-CLASSIFICADOR] CARISMA');
-                    } else if (acaoSorteDireta.test(acaoLower)) {
-                        classificacao = { tipo: 'ARRISCADA', atributo: 'SORTE' };
-                        console.log('[PRÉ-CLASSIFICADOR] SORTE');
+                    // Precisa ficar assim:
+if (acaoFisicaDireta.test(acaoLower)) {
+    classificacao = { tipo: 'ARRISCADA', atributo: 'HABILIDADE' };
+} else if (acaoSocialDireta.test(acaoLower)) {
+    classificacao = { tipo: 'ARRISCADA', atributo: 'CARISMA' };
+} else if (acaoDiscursoDireto.test(acaoLower)) {
+    classificacao = { tipo: 'ARRISCADA', atributo: 'CARISMA' };
+    console.log('[PRÉ-CLASSIFICADOR] CARISMA (discurso direto)');
+} else if (acaoSorteDireta.test(acaoLower)) {
                     } else if (verbosTriviais.test(acaoLower) && !inimigoVivo) {
                         classificacao = { tipo: 'TRIVIAL', atributo: 'NENHUM' };
                         console.log('[PRÉ-CLASSIFICADOR] TRIVIAL');
