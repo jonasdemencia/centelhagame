@@ -699,59 +699,22 @@ intervaloAnimacao = setInterval(() => {
                 let mensagemFinal = pergunta;
 
                 if (!isInitial) {
-    // --- FILTRO DE INTENÇÃO (CURTO-CIRCUITO) ---
+        // --- FILTRO DE INTENÇÃO (CURTO-CIRCUITO MINIMALISTA) ---
     const acaoLower = pergunta.toLowerCase().trim();
-
-    // DECLARAÇÃO DA VARIÁVEL (fora de qualquer bloco interno)
     let classificacao;
 
-    // 1. Exploração pura: perguntas sobre o cenário, observação, investigação
-    const ehExploracaoPura = /^(me descreva|descreva|olhar|observar|examinar|checar|onde|tem|existe|quais|analisar|investigar|procurar|ouvir|subir|trepar|içar|pendurar|agarrar|equilibrar|pular|saltar|correr|fugir|descer|forçar|arrombar|romper|cair|escorregar|levantar|cheirar)\b/i.test(acaoLower);
+    // Apenas metalinguagem / observação pura (sem risco)
+    const ehMetaOuVisao = /^(me descreva|descreva|olhar|observar|examinar|checar|onde|tem algo|analisar)\b/i.test(acaoLower);
 
-    // 2. Pergunta metalinguística (fora do personagem): termina com "?" e não é fala explícita, e não há alvo claro (entidadeEmFoco)
-    const ehMeta = /\?$/.test(acaoLower) && !/^(digo|falo|pergunto|grito|peço|ordeno)/i.test(acaoLower) && !entidadeEmFoco;
-
-    // Se for exploração ou meta, já classificamos como TRIVIAL (sem teste)
-    if (ehExploracaoPura || ehMeta) {
+    if (ehMetaOuVisao) {
         classificacao = { tipo: 'TRIVIAL', atributo: 'NENHUM' };
-        console.log('[PRÉ-CLASSIFICADOR] TRIVIAL (exploração ou metalinguagem)');
+        console.log('[PRÉ-CLASSIFICADOR] TRIVIAL (metalinguagem/observação)');
     } else {
-        // --- SE NÃO FOR EXPLORAÇÃO, APLICAMOS OS FILTROS NORMAIS (combate, social, etc.) ---
-        const verboFala = /^(digo|falo|grito|peço|ordeno|pergunto)[:\s]/i;
-        const acaoFisicaDireta = /\b(atacar|golpear|socar|chutar|esfaquear|enforcar|morder|atirar|arremessar|arrancar|cortar|ferir|matar|puxar|empurrar|escalar|roubar|furtar|fugir|correr|esquivar|rancar|cravar|estrangular|apunhalar)\b/i;
-        const acaoSocialDireta = /\b(seduzir|convencer|persuadir|manipular|mentir|pedir|enganar|intimidar|ameaçar|ordenar|subornar|lisonjear|me conte|me diga|revele|confesse|extrair|chantagear)\b/i;
-        const acaoSorteDireta = /\b(apostar|arriscar|improvisar|torcer|rezar|tentar a sorte)\b/i;
-        const verbosTriviais = /^(olhar|observar|examinar|esperar|checar|investigar|procurar|ouvir|cheirar)\b/i; // sem os de exploração já tratados
-
-        const inimigoVivo = entidadeEmFoco && !['morta', 'morto', 'inconsciente', 'destruída', 'destruído'].some(est => entidadeEmFoco.estado.includes(est));
-
-        // 1º Filtro: fala explícita ou social
-        if (verboFala.test(acaoLower) || acaoSocialDireta.test(acaoLower)) {
-            classificacao = { tipo: 'ARRISCADA', atributo: 'CARISMA' };
-            console.log('[PRÉ-CLASSIFICADOR] CARISMA (diálogo)');
-        }
-        // 2º Filtro: ações físicas
-        else if (acaoFisicaDireta.test(acaoLower)) {
-            classificacao = { tipo: 'ARRISCADA', atributo: 'HABILIDADE' };
-            console.log('[PRÉ-CLASSIFICADOR] HABILIDADE');
-        }
-        // 3º Filtro: sorte
-        else if (acaoSorteDireta.test(acaoLower)) {
-            classificacao = { tipo: 'ARRISCADA', atributo: 'SORTE' };
-            console.log('[PRÉ-CLASSIFICADOR] SORTE');
-        }
-        // 4º Filtro: triviais (observar, etc. – mas não os de exploração já tratados)
-        else if (verbosTriviais.test(acaoLower) && !inimigoVivo) {
-            classificacao = { tipo: 'TRIVIAL', atributo: 'NENHUM' };
-            console.log('[PRÉ-CLASSIFICADOR] TRIVIAL');
-        }
-        // Se nada capturar, chama o Juiz (1.5B)
-        else {
-            const tempJuizId = adicionarMensagem('⚖️ O Juiz avalia...', 'system', true);
-            classificacao = await classificarAcaoLLM(pergunta);
-            const msgJuiz = document.getElementById(tempJuizId);
-            if (msgJuiz) msgJuiz.remove();
-        }
+        // Tudo o que não for puramente observacional vai para o Juiz (1.5B)
+        const tempJuizId = adicionarMensagem('⚖️ O Juiz avalia...', 'system', true);
+        classificacao = await classificarAcaoLLM(pergunta);
+        const msgJuiz = document.getElementById(tempJuizId);
+        if (msgJuiz) msgJuiz.remove();
     }
 
     // Agora classificacao está definida em todos os caminhos
