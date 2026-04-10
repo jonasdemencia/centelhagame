@@ -652,7 +652,6 @@ function normalizarAcao(acao) {
         .replace(/^["'](.+)["']$/, '$1');
 }
 
-// --- CLASSIFICADOR PRINCIPAL (puramente determinístico) ---
 function classificarAcao(acaoOriginal) {
     const acao = normalizarAcao(acaoOriginal);
 
@@ -666,127 +665,36 @@ function classificarAcao(acaoOriginal) {
     const ehPercepcao = /^(olh[ao]|observ|examin|chec[ao]|analiso|inspecion|vejo|noto|procuro|investigo|vasculh|escuto|ouço|sinto o cheiro|cheiro|toco|palpo|tento (ver|ouvir|identificar|perceber|notar|entender|descobrir como|descobrir o que))\b/.test(acao);
     if (ehPercepcao) return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'percepção' };
 
-    // CAMADA 2: AÇÕES FÍSICAS (HABILIDADE)
-    const ehFisico = /\b(corro|fujo|salto|pulo|escalo|subo|desço|empurro|puxo|arrombo|forço|chuto|soco|ataco|golpeio|esfaqueio|disparo|lanço|arremesso|rolo|me jogo|me agacho|me escondo|me esquivo|desarmo|prendo|amarro|desvio|rasteio|nado|mergulho|trepo|agarro|aperto)\b/.test(acao);
-    if (ehFisico) return { tipo: 'ARRISCADA', atributo: 'HABILIDADE', fonte: 'físico' };
+    // CAMADA 2: AÇÃO FÍSICA CLARA (sempre HABILIDADE)
+    const ehFisicoClaro = /\b(corro|fujo|salto|pulo|escalo|subo|desço|empurro|puxo|arrombo|forço|chuto|soco|ataco|golpeio|esfaqueio|disparo|lanço|arremesso|rolo|me jogo|me agacho|me escondo|me esquivo|desarmo|prendo|amarro|desvio|rasteio|nado|mergulho|trepo|agarro|aperto)\b/.test(acao);
+    if (ehFisicoClaro) return { tipo: 'ARRISCADA', atributo: 'HABILIDADE', fonte: 'físico-claro' };
 
-    // CAMADA 2.5: AÇÃO DEMONSTRATIVA (mostrar/exibir algo para alguém)
+    // CAMADA 2.5: AÇÃO DEMONSTRATIVA (mostrar/exibir algo para alguém) – TRIVIAL
     const ehDemonstrativo = /^(mostro|mostrar|exibo|exibir|apresento|apresentar|entrego|ofereço|estendo)\b.+\bpara\b/.test(acao)
         || /^(mostro|mostrar|exibo|apresento)\b/.test(acao);
-    if (ehDemonstrativo) {
-        return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'demonstrativo' };
+    if (ehDemonstrativo) return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'demonstrativo' };
+
+    // CAMADA 3: VERIFICAÇÃO DE ALVO E CONTÁGIO
+    const estadoRelacional = entidadeEmFoco ? resolverEstadoRelacionalNPC(entidadeEmFoco) : null;
+    
+    // Se não há NPC vivo em cena → TRIVIAL
+    if (!entidadeEmFoco || estadoRelacional === 'morto' || estadoRelacional === 'ausente') {
+        return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'sem-alvo' };
     }
 
-    // CAMADA 3: AÇÕES SOCIAIS (CARISMA ou TRIVIAL com sistema de pesos)
-    const ehFalaDireta = /^(digo|falo|grito|sussurro|pergunto|respondo|indago|proponho|ofereço|imploro|rogo|ameaço|intimido|seduz|convenço|nego|discuto|discurso|chamo|chamo por|chamar)\b/.test(acao)
-        || acaoOriginal.trim().startsWith('"') || acaoOriginal.trim().startsWith("'");
-
-    // --- VERBOS DE INFLUÊNCIA DIRETA ---
-    const ehInfluencia = /\b(convencer|persuadir|intimidar|seduzir|enganar|mentir|negociar|blefar|chantagear|coagir|ameaçar|impressionar|agradar|humilhar|flertar|insinuar|assediar)\b/.test(acao);
-
-    // --- PROPOSIÇÃO ÍNTIMA (expandida) ---
-    const ehProposicaoIntima = /\b(beijar|me beij|me toqu|me acarici|transar|fazer sexo|sexo|me chupar|mamar|me mamar|me dar|se despir|tirar a roupa|abaixar|vir aqui|vem aqui|quer fazer|dá para|pode fazer|quero que você|relação sexual|foder|trepar|vamos para a cama|deita comigo|vem comigo|me come|me penetra)\b/.test(acao);
-
-    // --- Proposição íntima indireta (menção a sexo com verbo de resolução) ---
-    const ehMencaoSexo = /\b(sexo|sexual|relação sexual)\b/.test(acao) && /\b(resolver|aliviar|ajudar|melhorar|calmar|tensão|estresse)\b/.test(acao);
-
-    // --- PRIORIDADE MÁXIMA: qualquer proposição íntima vira CARISMA imediatamente ---
-    if (ehProposicaoIntima || ehMencaoSexo) {
-        return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'proposição-íntima' };
+    // Regra de contágio: se ação anterior foi violenta, qualquer ação agora é CARISMA
+    const acaoAnteriorFoiViolenta = (_ultimoTipoAcao === 'ARRISCADA' && _ultimoAtributo === 'HABILIDADE');
+    if (acaoAnteriorFoiViolenta) {
+        return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'contágio-violência' };
     }
 
-    // --- NOVAS CAMADAS DE DETECÇÃO ---
-    // 1. Influência indireta (perguntas educadas, sugestões)
-    const ehInfluenciaIndireta = /\b(você (poderia|pode|deveria|não deveria)? (me ajudar|me deixar|me dar|me mostrar|me contar|me dizer|me entregar|me informar|me permitir|me favorecer|me considerar))\b/i.test(acao)
-        || /^(será que|se você|caso você|quem sabe você) (.+)\?$/i.test(acao)
-        || /^([^?!.]+)\?$/.test(acao) && /\b(por favor|pf|pfv|please)\b/i.test(acao);
-
-    // 2. Urgência / desespero
-    const ehUrgencia = /(por favor){2,}|pelo amor de deus|urgente|rápido|depressa|não tenho tempo|vida ou morte|me salve|socorro/i.test(acao);
-
-    // 3. Ordem direta / tom imperativo
-    const ehOrdemDireta = /^(ordeno|mando|exijo|determino|exijo que|quero que|faça isso|pare|ande|vá|fique|cala a boca|silêncio|obedeça|submeta-se|ajoelhe-se)\b/i.test(acao);
-
-    // 4. Engano / falsa identidade / pretexto
-    const ehEngano = /\b(sou o|sou um|sou a|represento|venho em nome de|fui enviado por|estou aqui a mando de|meu nome é|sou conhecido como)\b/i.test(acao)
-        || /\b(acredite|confie em mim|pode confiar|pode acreditar|juro por|garanto que|prometo que)\b/i.test(acao);
-
-    // 5. Manipulação emocional (bajulação / insulto)
-    const ehManipulacaoEmocional = /\b(lindo|gostoso|bonito|forte|corajoso|valente|sábio|inteligente|poderoso)\b/i.test(acao)
-        || /\b(covarde|fraco|medroso|imbecil|idiota|inútil|fracassado|cretino|canalha|vil)\b/i.test(acao)
-        || /\b(grande (guerreiro|herói|mago|líder|rei|senhor))\b/i.test(acao);
-
-    // Se não for uma fala direta, nem nada social, sai da camada 3 (será tratado depois)
-    if (!ehFalaDireta && !ehInfluencia && !ehProposicaoIntima && !ehInfluenciaIndireta && !ehUrgencia && !ehOrdemDireta && !ehEngano && !ehManipulacaoEmocional) {
-        // Não é ação social aparente – pula para as próximas camadas
-    } else {
-        // É uma ação social (fala ou influência)
-        if (!entidadeEmFoco) return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'fala-sem-alvo' };
-        const estadoRelacional = resolverEstadoRelacionalNPC(entidadeEmFoco);
-        if (estadoRelacional === 'morto') return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'fala-morto' };
-
-        // Regra de contágio: se ação anterior foi violenta, qualquer fala agora é CARISMA
-        const acaoAnteriorFoiViolenta = (_ultimoTipoAcao === 'ARRISCADA' && _ultimoAtributo === 'HABILIDADE');
-        if (acaoAnteriorFoiViolenta) {
-            return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'fala-pós-violência' };
-        }
-
-        // --- SISTEMA DE PESOS PARA INTENÇÃO SOCIAL ---
-        let scoreSocial = 0;
-        if (ehInfluencia) scoreSocial += 3;
-        if (ehProposicaoIntima) scoreSocial += 3;
-        if (ehInfluenciaIndireta) scoreSocial += 2;
-        if (ehUrgencia) scoreSocial += 1;
-        if (ehOrdemDireta) scoreSocial += 2;
-        if (ehEngano) scoreSocial += 2;
-        if (ehManipulacaoEmocional) scoreSocial += 1;
-
-        // Se score = 0 e é apenas uma fala direta (sem influência), pode ser trivial
-        if (scoreSocial === 0 && ehFalaDireta && !ehInfluencia) {
-            // Conversa informacional com neutro/aliado = trivial
-            if (estadoRelacional === 'aliado' || estadoRelacional === 'neutro') {
-                return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'fala-neutra' };
-            }
-            // Se estiver hostil ou submisso, mesmo uma pergunta inocente exige teste
-            if (estadoRelacional === 'hostil' || estadoRelacional === 'submisso') {
-                return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'fala-hostil-submisso' };
-            }
-        }
-
-        // Score >= 1: precisa avaliar se há resistência real
-        if (scoreSocial >= 1) {
-            const temResistencia = (estadoRelacional === 'hostil' || estadoRelacional === 'submisso');
-            if (scoreSocial >= 3 || temResistencia) {
-                return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'social-score-alto' };
-            } else {
-                // score 1 ou 2 e aliado/neutro -> pode ser trivial
-                return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'social-score-baixo' };
-            }
-        }
-
-        // Fallback (não deveria chegar aqui)
-        return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'social-default' };
-    }
-
-    // CAMADA 4: SORTE
-    const ehSorte = /\b(aposto|jogo|arrisca|tento a sorte|rolo|dou sorte|torço|rezo|cruzo os dedos|confio no destino)\b/.test(acao);
-    if (ehSorte) return { tipo: 'ARRISCADA', atributo: 'SORTE', fonte: 'sorte' };
-
-    // CAMADA 5: DEFAULT INTELIGENTE (antes de cair no árbitro)
-    if (/^tento\b/.test(acao) && entidadeEmFoco && resolverEstadoRelacionalNPC(entidadeEmFoco) !== 'morto')
-        return { tipo: 'ARRISCADA', atributo: 'HABILIDADE', fonte: 'default-tento' };
-
-    if (!entidadeEmFoco || resolverEstadoRelacionalNPC(entidadeEmFoco) === 'morto')
-        return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'default-sem-alvo' };
-
-    // --- CAMADA 6: ÁRBITRO 1.5B (apenas casos ambíguos com NPC vivo) ---
-    return { async: true };
+    // Se chegou aqui: NPC vivo em cena, ação não é meta, percepção, física clara, demonstrativa.
+    // A intenção é ambígua – delegamos ao árbitro 1.5B para decidir se é influência ou não.
+    return null;  // sinaliza que precisa do árbitro
 }
 
-// --- FUNÇÃO DO ÁRBITRO (chama o 1.5B apenas quando necessário) ---
 async function classificarComArbitro(acaoOriginal, entidade) {
     const estadoRelacional = resolverEstadoRelacionalNPC(entidade);
-    const contexto = `NPC: ${entidade.nome} (${estadoRelacional}). AÇÃO ANTERIOR: ${_ultimoAtributo !== 'NENHUM' ? _ultimoAtributo : 'nenhuma'}`;
 
     try {
         const response = await fetch(LM_URL, {
@@ -797,28 +705,30 @@ async function classificarComArbitro(acaoOriginal, entidade) {
                 messages: [
                     {
                         role: 'system',
-                        content: `Classifique a ação do jogador em UMA categoria:
-FISICA: esforço corporal direto (atacar, correr, escalar, forçar, empurrar).
-SOCIAL: comunicação com intenção de influenciar o NPC (convencer, ameaçar, seduzir, enganar, questionar com pressão).
-PASSIVA: observação, movimento sem risco, ação sobre o ambiente sem NPC envolvido.
-
-Retorne apenas o JSON. Nada mais.`
+                        content: `Você analisa ações em jogos de RPG.
+Responda apenas: o jogador está tentando INFLUENCIAR o NPC de alguma forma?
+INFLUENCIAR inclui: pedir algo, propor algo, pressionar, seduzir, ameaçar, questionar com intenção, fazer qualquer solicitação verbal ou gestual dirigida ao NPC.
+NÃO É INFLUENCIAR: observar o NPC, mover-se sem interagir, agir no ambiente.
+Retorne apenas o JSON.`
                     },
-                    { role: 'user', content: `CONTEXTO: ${contexto}\nAÇÃO: "${acaoOriginal}"` }
+                    {
+                        role: 'user',
+                        content: `NPC: ${entidade.nome} (estado: ${estadoRelacional})\nAção: "${acaoOriginal}"`
+                    }
                 ],
                 temperature: 0.0,
-                max_tokens: 20,
+                max_tokens: 15,
                 response_format: {
                     type: "json_schema",
                     json_schema: {
-                        name: "arbitro",
+                        name: "arbitro_binario",
                         strict: true,
                         schema: {
                             type: "object",
                             properties: {
-                                categoria: { type: "string", enum: ["FISICA", "SOCIAL", "PASSIVA"] }
+                                influencia: { type: "boolean" }
                             },
-                            required: ["categoria"],
+                            required: ["influencia"],
                             additionalProperties: false
                         }
                     }
@@ -826,22 +736,23 @@ Retorne apenas o JSON. Nada mais.`
             })
         });
         const data = await response.json();
-        const { categoria } = JSON.parse(data.choices[0].message.content);
+        const { influencia } = JSON.parse(data.choices[0].message.content);
+        console.log(`[ÁRBITRO] influencia=${influencia} | estado=${estadoRelacional}`);
 
-        if (categoria === 'PASSIVA') return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'árbitro-passiva' };
-        if (categoria === 'FISICA')  return { tipo: 'ARRISCADA', atributo: 'HABILIDADE', fonte: 'árbitro-física' };
-        if (categoria === 'SOCIAL') {
-            const semResistencia = (estadoRelacional === 'aliado' || estadoRelacional === 'neutro') && _ultimoAtributo !== 'HABILIDADE';
-            return semResistencia
-                ? { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'árbitro-social-neutra' }
-                : { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'árbitro-social-carisma' };
+        if (!influencia) {
+            return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'árbitro-passivo' };
         }
+
+        // Se o árbitro detectou intenção de influenciar, é CARISMA
+        return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'árbitro-influência' };
+
     } catch (e) {
         console.warn('[ÁRBITRO] Falhou, aplicando fallback conservador.', e);
+        // Fallback: com NPC vivo e ação ambígua, assume influência → CARISMA
+        return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'árbitro-fallback' };
     }
-    return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'árbitro-fallback' };
 }
-
+        
 // --- PARSER DE ESTADO DE ENTIDADES (roda após CADA resposta do narrador) ---
 function parsearEstadoEntidades(textoNarrador) {
     const match = textoNarrador.match(/\[NPCS:\s*([^\]]+)\]/i);
@@ -971,7 +882,7 @@ intervaloAnimacao = setInterval(() => {
 const classificacaoRaw = classificarAcao(pergunta);
 let classificacao;
 
-if (classificacaoRaw.async) {
+if (classificacaoRaw === null) {
     // Caso ambíguo com NPC vivo: chama o árbitro (1.5B)
     const tempJuizId = adicionarMensagem('⚖️ Árbitro avaliando a ação...', 'system', true);
     classificacao = await classificarComArbitro(pergunta, entidadeEmFoco);
