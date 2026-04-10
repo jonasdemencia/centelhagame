@@ -774,6 +774,14 @@ function parsearEstadoEntidades(textoNarrador) {
         if (nome && estado) novoIndex[nome] = estado;
     }
 
+    // --- GUARDA: estado "morto" é irreversível ---
+    // Se um NPC já estava morto no índice anterior, mantém "morto" no novo índice.
+    for (const [nome, estadoAntigo] of Object.entries(entityIndex)) {
+        if (estadoAntigo === 'morto') {
+            novoIndex[nome] = 'morto';
+        }
+    }
+
     entityIndex = novoIndex;
 
     const situacao = ssrJson?.situacao_atual?.toLowerCase() || '';
