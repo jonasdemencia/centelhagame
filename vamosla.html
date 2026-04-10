@@ -941,7 +941,16 @@ const contextoDecidido = tipo === 'TRIVIAL'
     : `[AÇÃO ARRISCADA — TESTE DE ${atributo}: ${resultado}. REGRAS VITAIS: Se SUCESSO, ${diretrizSucesso} Se FALHA, a intenção é TOTALMENTE NEGADA/REJEITADA e ${diretrizConsequencia} Narre o desfecho seco. Termine com [DANO: ${resultado === 'FALHA' ? danoBase : 0}]]`;
 // --- FIM DO NOVO CONTEXTO DINÂMICO ---
 
-                    mensagemFinal += `\n${contextoDecidido}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
+                    const npcsMortos = Object.entries(entityIndex)
+    .filter(([_, estado]) => estado === 'morto')
+    .map(([nome]) => nome)
+    .join(', ');
+
+const alertaMortos = npcsMortos
+    ? `[MORTOS: ${npcsMortos} — cadáveres NÃO reagem, NÃO respiram, NÃO se movem. Ações sobre eles são interações com matéria inerte.]`
+    : '';
+
+mensagemFinal += `\n${contextoDecidido}\n${alertaMortos}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
                 }
 
                 mensagens.push({ role: 'user', content: mensagemFinal });
