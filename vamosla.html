@@ -705,18 +705,18 @@ async function classificarComArbitro(acaoOriginal, entidade) {
                 messages: [
                     {
                         role: 'system',
-                       content: `Você analisa ações em jogos de RPG.
-A ação do jogador envolve tentar INFLUENCIAR o NPC?
+                       content: `Você é um árbitro social de RPG. Avalie se a ação do jogador afeta o NPC emocionalmente.
 
-INFLUENCIAR = sim: pedir favor, propor algo, pressionar, seduzir, ameaçar,
-manipular, fazer exigência, tentar convencer, qualquer pergunta ou comentário
-de natureza sexual ou íntima (independente de ser pergunta ou afirmação).
+INFLUENCIAR = true (Requer Teste):
+1. Assédio, perguntas íntimas, referências sexuais ou comentários sobre o corpo.
+2. Insultos, deboches, provocações, xingamentos ou grosserias.
+3. Ordens, exigências, persuasão, flerte ou ameaças.
 
-INFLUENCIAR = não: perguntar nome, localização, descrição do ambiente,
-fazer pergunta informacional neutra sem intenção de obter ação ou reação do NPC.
+INFLUENCIAR = false (Não requer Teste):
+1. Perguntas factuais/geográficas puras (ex: "onde estamos?", "qual o seu nome?").
+2. Observações inofensivas.
 
-Chave: o jogador quer que o NPC FAÇA, CONCORDE ou REAJA a algo pessoal?
-Se sim → influencia: true. Se só quer informação factual → influencia: false.
+REGRA DE OURO: Se a fala do jogador viola o espaço pessoal do NPC, é desrespeitosa, ou testa os limites morais do alvo, retorne OBRIGATORIAMENTE influencia: true.
 
 Retorne apenas o JSON.`
                     },
