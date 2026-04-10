@@ -665,32 +665,29 @@ function classificarAcao(acaoOriginal) {
     const ehPercepcao = /^(olh[ao]|observ|examin|chec[ao]|analiso|inspecion|vejo|noto|procuro|investigo|vasculh|escuto|ouço|sinto o cheiro|cheiro|toco|palpo|tento (ver|ouvir|identificar|perceber|notar|entender|descobrir como|descobrir o que))\b/.test(acao);
     if (ehPercepcao) return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'percepção' };
 
-    // CAMADA 2: AÇÃO FÍSICA CLARA (sempre HABILIDADE)
-    const ehFisicoClaro = /\b(corro|fujo|salto|pulo|escalo|subo|desço|empurro|puxo|arrombo|forço|chuto|soco|ataco|golpeio|esfaqueio|disparo|lanço|arremesso|rolo|me jogo|me agacho|me escondo|me esquivo|desarmo|prendo|amarro|desvio|rasteio|nado|mergulho|trepo|agarro|aperto)\b/.test(acao);
+    // CAMADA 2: AÇÃO FÍSICA CLARA (sempre HABILIDADE) — sem âncora ^, escaneia a frase inteira
+    const ehFisicoClaro = /\b(corro|fujo|salto|pulo|escalo|subo|desço|empurro|puxo|arrombo|forço|chuto|soco|ataco|golpeio|esfaqueio|disparo|arremesso|rolo|me jogo|me agacho|me esquivo|desarmo|prendo|amarro|rasteio|nado|mergulho|agarro|trepo|cotovelada|murro|estrangulo|derrubо|bato|agrido|luto|combato)\b/.test(acao);
     if (ehFisicoClaro) return { tipo: 'ARRISCADA', atributo: 'HABILIDADE', fonte: 'físico-claro' };
 
-    // CAMADA 2.5: AÇÃO DEMONSTRATIVA (mostrar/exibir algo para alguém) – TRIVIAL
+    // CAMADA 2.5: AÇÃO DEMONSTRATIVA (sempre TRIVIAL)
     const ehDemonstrativo = /^(mostro|mostrar|exibo|exibir|apresento|apresentar|entrego|ofereço|estendo)\b.+\bpara\b/.test(acao)
         || /^(mostro|mostrar|exibo|apresento)\b/.test(acao);
     if (ehDemonstrativo) return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'demonstrativo' };
 
     // CAMADA 3: VERIFICAÇÃO DE ALVO E CONTÁGIO
     const estadoRelacional = entidadeEmFoco ? resolverEstadoRelacionalNPC(entidadeEmFoco) : null;
-    
-    // Se não há NPC vivo em cena → TRIVIAL
+
     if (!entidadeEmFoco || estadoRelacional === 'morto' || estadoRelacional === 'ausente') {
         return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'sem-alvo' };
     }
 
-    // Regra de contágio: se ação anterior foi violenta, qualquer ação agora é CARISMA
     const acaoAnteriorFoiViolenta = (_ultimoTipoAcao === 'ARRISCADA' && _ultimoAtributo === 'HABILIDADE');
     if (acaoAnteriorFoiViolenta) {
         return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'contágio-violência' };
     }
 
-    // Se chegou aqui: NPC vivo em cena, ação não é meta, percepção, física clara, demonstrativa.
-    // A intenção é ambígua – delegamos ao árbitro 1.5B para decidir se é influência ou não.
-    return null;  // sinaliza que precisa do árbitro
+    // Ambíguo — delega ao árbitro
+    return null;
 }
 
 async function classificarComArbitro(acaoOriginal, entidade) {
@@ -705,18 +702,12 @@ async function classificarComArbitro(acaoOriginal, entidade) {
                 messages: [
                     {
                         role: 'system',
-                       content: `Você é um árbitro social de RPG. Avalie se a ação do jogador afeta o NPC emocionalmente.
+                        content: `Você analisa ações em jogos de RPG.
+Classifique a ação em UMA categoria:
 
-INFLUENCIAR = true (Requer Teste):
-1. Assédio, perguntas íntimas, referências sexuais ou comentários sobre o corpo.
-2. Insultos, deboches, provocações, xingamentos ou grosserias.
-3. Ordens, exigências, persuasão, flerte ou ameaças.
-
-INFLUENCIAR = false (Não requer Teste):
-1. Perguntas factuais/geográficas puras (ex: "onde estamos?", "qual o seu nome?").
-2. Observações inofensivas.
-
-REGRA DE OURO: Se a fala do jogador é desrespeitosa ou testa os limites morais do alvo, retorne OBRIGATORIAMENTE influencia: true.
+FISICA: esforço corporal direto sobre o ambiente ou NPC (golpear, empurrar, agarrar, correr, escalar, forçar objetos).
+INFLUENCIA: tentar que o NPC faça, concorde ou reaja a algo — inclui qualquer pergunta ou proposta de natureza sexual ou íntima.
+PASSIVA: obter informação factual neutra, observar, mover-se sem interagir com o NPC.
 
 Retorne apenas o JSON.`
                     },
@@ -730,34 +721,31 @@ Retorne apenas o JSON.`
                 response_format: {
                     type: "json_schema",
                     json_schema: {
-                        name: "arbitro_binario",
+                        name: "arbitro_categorico",
                         strict: true,
                         schema: {
                             type: "object",
                             properties: {
-                                influencia: { type: "boolean" }
+                                categoria: { type: "string", enum: ["FISICA", "INFLUENCIA", "PASSIVA"] }
                             },
-                            required: ["influencia"],
+                            required: ["categoria"],
                             additionalProperties: false
                         }
                     }
                 }
             })
         });
+
         const data = await response.json();
-        const { influencia } = JSON.parse(data.choices[0].message.content);
-        console.log(`[ÁRBITRO] influencia=${influencia} | estado=${estadoRelacional}`);
+        const { categoria } = JSON.parse(data.choices[0].message.content);
+        console.log(`[ÁRBITRO] categoria=${categoria} | estado=${estadoRelacional}`);
 
-        if (!influencia) {
-            return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'árbitro-passivo' };
-        }
-
-        // Se o árbitro detectou intenção de influenciar, é CARISMA
-        return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'árbitro-influência' };
+        if (categoria === 'PASSIVA')    return { tipo: 'TRIVIAL',   atributo: 'NENHUM',     fonte: 'árbitro-passivo' };
+        if (categoria === 'FISICA')     return { tipo: 'ARRISCADA', atributo: 'HABILIDADE', fonte: 'árbitro-físico' };
+        if (categoria === 'INFLUENCIA') return { tipo: 'ARRISCADA', atributo: 'CARISMA',    fonte: 'árbitro-influência' };
 
     } catch (e) {
         console.warn('[ÁRBITRO] Falhou, aplicando fallback conservador.', e);
-        // Fallback: com NPC vivo e ação ambígua, assume influência → CARISMA
         return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'árbitro-fallback' };
     }
 }
