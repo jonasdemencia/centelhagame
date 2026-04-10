@@ -670,45 +670,99 @@ function classificarAcao(acaoOriginal) {
     const ehFisico = /\b(corro|fujo|salto|pulo|escalo|subo|desço|empurro|puxo|arrombo|forço|chuto|soco|ataco|golpeio|esfaqueio|disparo|lanço|arremesso|rolo|me jogo|me agacho|me escondo|me esquivo|desarmo|prendo|amarro|desvio|rasteio|nado|mergulho|trepo|agarro|aperto)\b/.test(acao);
     if (ehFisico) return { tipo: 'ARRISCADA', atributo: 'HABILIDADE', fonte: 'físico' };
 
-        // CAMADA 2.5: AÇÃO DEMONSTRATIVA (mostrar/exibir algo para alguém)
+    // CAMADA 2.5: AÇÃO DEMONSTRATIVA (mostrar/exibir algo para alguém)
     const ehDemonstrativo = /^(mostro|mostrar|exibo|exibir|apresento|apresentar|entrego|ofereço|estendo)\b.+\bpara\b/.test(acao)
         || /^(mostro|mostrar|exibo|apresento)\b/.test(acao);
     if (ehDemonstrativo) {
         return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'demonstrativo' };
     }
 
-    // CAMADA 3: AÇÕES SOCIAIS (CARISMA ou TRIVIAL dependendo do estado)
+    // CAMADA 3: AÇÕES SOCIAIS (CARISMA ou TRIVIAL com sistema de pesos)
     const ehFalaDireta = /^(digo|falo|grito|sussurro|pergunto|respondo|indago|proponho|ofereço|imploro|rogo|ameaço|intimido|seduz|convenço|nego|discuto|discurso|chamo|chamo por|chamar)\b/.test(acao)
         || acaoOriginal.trim().startsWith('"') || acaoOriginal.trim().startsWith("'");
-        const ehInfluencia = /\b(convencer|persuadir|intimidar|seduzir|enganar|mentir|negociar|blefar|chantagear|coagir|ameaçar|impressionar|agradar|humilhar|flertar|insinuar|assediar)\b/.test(acao);
 
-    // NOVO: proposição íntima/sexual em linguagem direta
+    // --- VERBOS DE INFLUÊNCIA DIRETA ---
+    const ehInfluencia = /\b(convencer|persuadir|intimidar|seduzir|enganar|mentir|negociar|blefar|chantagear|coagir|ameaçar|impressionar|agradar|humilhar|flertar|insinuar|assediar)\b/.test(acao);
+
+    // --- PROPOSIÇÃO ÍNTIMA ---
     const ehProposicaoIntima = /\b(beijar|me beij|me toqu|me acarici|transar|fazer sexo|me chupar|mamar|me mamar|me dar|se despir|tirar a roupa|abaixar|vir aqui|vem aqui|quer fazer|dá para|pode fazer|quero que você)\b/.test(acao);
 
-    if (ehFalaDireta || /^(tento (convencer|persuadir|intimidar|seduzir|enganar|mentir|negociar|blefar|chantagear|coagir|ameaçar))\b/.test(acao)) {
+    // --- NOVAS CAMADAS DE DETECÇÃO ---
+    // 1. Influência indireta (perguntas educadas, sugestões)
+    const ehInfluenciaIndireta = /\b(você (poderia|pode|deveria|não deveria)? (me ajudar|me deixar|me dar|me mostrar|me contar|me dizer|me entregar|me informar|me permitir|me favorecer|me considerar))\b/i.test(acao)
+        || /^(será que|se você|caso você|quem sabe você) (.+)\?$/i.test(acao)
+        || /^([^?!.]+)\?$/.test(acao) && /\b(por favor|pf|pfv|please)\b/i.test(acao);
+
+    // 2. Urgência / desespero
+    const ehUrgencia = /(por favor){2,}|pelo amor de deus|urgente|rápido|depressa|não tenho tempo|vida ou morte|me salve|socorro/i.test(acao);
+
+    // 3. Ordem direta / tom imperativo
+    const ehOrdemDireta = /^(ordeno|mando|exijo|determino|exijo que|quero que|faça isso|pare|ande|vá|fique|cala a boca|silêncio|obedeça|submeta-se|ajoelhe-se)\b/i.test(acao);
+
+    // 4. Engano / falsa identidade / pretexto
+    const ehEngano = /\b(sou o|sou um|sou a|represento|venho em nome de|fui enviado por|estou aqui a mando de|meu nome é|sou conhecido como)\b/i.test(acao)
+        || /\b(acredite|confie em mim|pode confiar|pode acreditar|juro por|garanto que|prometo que)\b/i.test(acao);
+
+    // 5. Manipulação emocional (bajulação / insulto)
+    const ehManipulacaoEmocional = /\b(lindo|gostoso|bonito|forte|corajoso|valente|sábio|inteligente|poderoso)\b/i.test(acao)
+        || /\b(covarde|fraco|medroso|imbecil|idiota|inútil|fracassado|cretino|canalha|vil)\b/i.test(acao)
+        || /\b(grande (guerreiro|herói|mago|líder|rei|senhor))\b/i.test(acao);
+
+    // Se não for uma fala direta, nem nada social, sai da camada 3 (será tratado depois)
+    if (!ehFalaDireta && !ehInfluencia && !ehProposicaoIntima && !ehInfluenciaIndireta && !ehUrgencia && !ehOrdemDireta && !ehEngano && !ehManipulacaoEmocional) {
+        // Não é ação social aparente – pula para as próximas camadas
+    } else {
+        // É uma ação social (fala ou influência)
         if (!entidadeEmFoco) return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'fala-sem-alvo' };
         const estadoRelacional = resolverEstadoRelacionalNPC(entidadeEmFoco);
         if (estadoRelacional === 'morto') return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'fala-morto' };
 
+        // Regra de contágio: se ação anterior foi violenta, qualquer fala agora é CARISMA
         const acaoAnteriorFoiViolenta = (_ultimoTipoAcao === 'ARRISCADA' && _ultimoAtributo === 'HABILIDADE');
-        if (acaoAnteriorFoiViolenta) return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'fala-pós-violência' };
-
-        if (estadoRelacional === 'hostil' || estadoRelacional === 'submisso')
-            return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: `fala-${estadoRelacional}` };
-
-                // CORREÇÃO DO BUG 2: aliança não elimina resistência íntima.
-        // Para proposições íntimas, SEMPRE testa CARISMA se NPC tem vontade própria.
-        const ehEstadoComResistencia = ehProposicaoIntima
-            ? true  // proposição íntima sempre exige teste, qualquer estado
-            : (estadoRelacional === 'hostil' || estadoRelacional === 'submisso' || _ultimoAtributo === 'HABILIDADE');
-
-        if (ehInfluencia || ehProposicaoIntima) {
-            return ehEstadoComResistencia
-                ? { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: ehProposicaoIntima ? 'proposição-íntima' : 'fala-influência' }
-                : { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'fala-neutra' };
+        if (acaoAnteriorFoiViolenta) {
+            return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'fala-pós-violência' };
         }
-        // Se não for influência nem proposição íntima, é fala neutra
-        return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'fala-neutra' };
+
+        // --- SISTEMA DE PESOS PARA INTENÇÃO SOCIAL ---
+        let scoreSocial = 0;
+        if (ehInfluencia) scoreSocial += 3;
+        if (ehProposicaoIntima) scoreSocial += 3;
+        if (ehInfluenciaIndireta) scoreSocial += 2;
+        if (ehUrgencia) scoreSocial += 1;
+        if (ehOrdemDireta) scoreSocial += 2;
+        if (ehEngano) scoreSocial += 2;
+        if (ehManipulacaoEmocional) scoreSocial += 1;
+
+        // Proposição íntima sempre exige teste (independente do score)
+        if (ehProposicaoIntima) {
+            return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'proposição-íntima' };
+        }
+
+        // Se score = 0 e é apenas uma fala direta (sem influência), pode ser trivial
+        if (scoreSocial === 0 && ehFalaDireta && !ehInfluencia) {
+            // Conversa informacional com neutro/aliado = trivial
+            if (estadoRelacional === 'aliado' || estadoRelacional === 'neutro') {
+                return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'fala-neutra' };
+            }
+            // Se estiver hostil ou submisso, mesmo uma pergunta inocente exige teste
+            if (estadoRelacional === 'hostil' || estadoRelacional === 'submisso') {
+                return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'fala-hostil-submisso' };
+            }
+        }
+
+        // Score >= 1: precisa avaliar se há resistência real
+        if (scoreSocial >= 1) {
+            const temResistencia = (estadoRelacional === 'hostil' || estadoRelacional === 'submisso');
+            if (scoreSocial >= 3 || temResistencia) {
+                return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'social-score-alto' };
+            } else {
+                // score 1 ou 2 e aliado/neutro -> pode ser trivial
+                return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'social-score-baixo' };
+            }
+        }
+
+        // Fallback (não deveria chegar aqui)
+        return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'social-default' };
     }
 
     // CAMADA 4: SORTE
@@ -723,7 +777,7 @@ function classificarAcao(acaoOriginal) {
         return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'default-sem-alvo' };
 
     // --- CAMADA 6: ÁRBITRO 1.5B (apenas casos ambíguos com NPC vivo) ---
-    return { async: true };  // indica que precisa do árbitro
+    return { async: true };
 }
 
 // --- FUNÇÃO DO ÁRBITRO (chama o 1.5B apenas quando necessário) ---
