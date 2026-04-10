@@ -774,10 +774,10 @@ function parsearEstadoEntidades(textoNarrador) {
         if (nome && estado) novoIndex[nome] = estado;
     }
 
-    // --- GUARDA: estado "morto" é irreversível ---
-    // Se um NPC já estava morto no índice anterior, mantém "morto" no novo índice.
+   // --- GUARDA: estado "morto" é irreversível ---
+    // Usa o resolverEstadoRelacionalNPC para capturar "morta", "cadáver", etc.
     for (const [nome, estadoAntigo] of Object.entries(entityIndex)) {
-        if (estadoAntigo === 'morto') {
+        if (resolverEstadoRelacionalNPC({estado: estadoAntigo}) === 'morto') {
             novoIndex[nome] = 'morto';
         }
     }
@@ -941,7 +941,18 @@ const contextoDecidido = tipo === 'TRIVIAL'
     : `[AÇÃO ARRISCADA — TESTE DE ${atributo}: ${resultado}. REGRAS VITAIS: Se SUCESSO, ${diretrizSucesso} Se FALHA, a intenção é TOTALMENTE NEGADA/REJEITADA e ${diretrizConsequencia} Narre o desfecho seco. Termine com [DANO: ${resultado === 'FALHA' ? danoBase : 0}]]`;
 // --- FIM DO NOVO CONTEXTO DINÂMICO ---
 
-                    mensagemFinal += `\n${contextoDecidido}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
+// --- INJEÇÃO DA REALIDADE FÍSICA DO NPC PARA O NARRADOR ---
+let contextoNPC = "";
+if (entidadeEmFoco) {
+    const estadoReal = resolverEstadoRelacionalNPC(entidadeEmFoco);
+    if (estadoReal === 'morto') {
+        contextoNPC = `\n[LEI DA FÍSICA: ${entidadeEmFoco.nome.toUpperCase()} ESTÁ MORTA(O). É UM CADÁVER INERTE. NÃO respira, NÃO reage. Descreva a morbidez e a frieza do corpo.]`;
+    } else {
+        contextoNPC = `\n[NPC EM FOCO: ${entidadeEmFoco.nome.toUpperCase()} - Estado: ${entidadeEmFoco.estado.toUpperCase()}]`;
+    }
+}
+
+mensagemFinal += `\n${contextoDecidido}${contextoNPC}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
                 }
 
                 mensagens.push({ role: 'user', content: mensagemFinal });
