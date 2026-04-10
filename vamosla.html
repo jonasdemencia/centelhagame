@@ -708,15 +708,15 @@ async function classificarComArbitro(acaoOriginal, entidade) {
                        content: `Você analisa ações em jogos de RPG.
 A ação do jogador envolve tentar INFLUENCIAR o NPC?
 
-INFLUENCIAR = sim: pedir favor, propor algo, pressionar, seduzir, ameaçar, 
-manipular, fazer exigência, tentar convencer de qualquer coisa.
+INFLUENCIAR = sim: pedir favor, propor algo, pressionar, seduzir, ameaçar,
+manipular, fazer exigência, tentar convencer, qualquer pergunta ou comentário
+de natureza sexual ou íntima (independente de ser pergunta ou afirmação).
 
-INFLUENCIAR = não: perguntar o nome, perguntar sobre o local, 
-pedir uma descrição, fazer pergunta informacional neutra, 
-observar o NPC, aproximar-se sem intenção declarada.
+INFLUENCIAR = não: perguntar nome, localização, descrição do ambiente,
+fazer pergunta informacional neutra sem intenção de obter ação ou reação do NPC.
 
-A distinção chave: o jogador quer que o NPC FAÇA ou CONCORDE com algo? 
-Se sim → influencia: true. Se só quer INFORMAÇÃO sem outra intenção → influencia: false.
+Chave: o jogador quer que o NPC FAÇA, CONCORDE ou REAJA a algo pessoal?
+Se sim → influencia: true. Se só quer informação factual → influencia: false.
 
 Retorne apenas o JSON.`
                     },
