@@ -684,8 +684,16 @@ function classificarAcao(acaoOriginal) {
     // --- VERBOS DE INFLUÊNCIA DIRETA ---
     const ehInfluencia = /\b(convencer|persuadir|intimidar|seduzir|enganar|mentir|negociar|blefar|chantagear|coagir|ameaçar|impressionar|agradar|humilhar|flertar|insinuar|assediar)\b/.test(acao);
 
-    // --- PROPOSIÇÃO ÍNTIMA ---
-    const ehProposicaoIntima = /\b(beijar|me beij|me toqu|me acarici|transar|fazer sexo|me chupar|mamar|me mamar|me dar|se despir|tirar a roupa|abaixar|vir aqui|vem aqui|quer fazer|dá para|pode fazer|quero que você)\b/.test(acao);
+    // --- PROPOSIÇÃO ÍNTIMA (expandida) ---
+    const ehProposicaoIntima = /\b(beijar|me beij|me toqu|me acarici|transar|fazer sexo|sexo|me chupar|mamar|me mamar|me dar|se despir|tirar a roupa|abaixar|vir aqui|vem aqui|quer fazer|dá para|pode fazer|quero que você|relação sexual|foder|trepar|vamos para a cama|deita comigo|vem comigo|me come|me penetra)\b/.test(acao);
+
+    // --- Proposição íntima indireta (menção a sexo com verbo de resolução) ---
+    const ehMencaoSexo = /\b(sexo|sexual|relação sexual)\b/.test(acao) && /\b(resolver|aliviar|ajudar|melhorar|calmar|tensão|estresse)\b/.test(acao);
+
+    // --- PRIORIDADE MÁXIMA: qualquer proposição íntima vira CARISMA imediatamente ---
+    if (ehProposicaoIntima || ehMencaoSexo) {
+        return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'proposição-íntima' };
+    }
 
     // --- NOVAS CAMADAS DE DETECÇÃO ---
     // 1. Influência indireta (perguntas educadas, sugestões)
@@ -732,11 +740,6 @@ function classificarAcao(acaoOriginal) {
         if (ehOrdemDireta) scoreSocial += 2;
         if (ehEngano) scoreSocial += 2;
         if (ehManipulacaoEmocional) scoreSocial += 1;
-
-        // Proposição íntima sempre exige teste (independente do score)
-        if (ehProposicaoIntima) {
-            return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'proposição-íntima' };
-        }
 
         // Se score = 0 e é apenas uma fala direta (sem influência), pode ser trivial
         if (scoreSocial === 0 && ehFalaDireta && !ehInfluencia) {
