@@ -670,10 +670,20 @@ function classificarAcao(acaoOriginal) {
     const ehFisico = /\b(corro|fujo|salto|pulo|escalo|subo|desço|empurro|puxo|arrombo|forço|chuto|soco|ataco|golpeio|esfaqueio|disparo|lanço|arremesso|rolo|me jogo|me agacho|me escondo|me esquivo|desarmo|prendo|amarro|desvio|rasteio|nado|mergulho|trepo|agarro|aperto)\b/.test(acao);
     if (ehFisico) return { tipo: 'ARRISCADA', atributo: 'HABILIDADE', fonte: 'físico' };
 
+        // CAMADA 2.5: AÇÃO DEMONSTRATIVA (mostrar/exibir algo para alguém)
+    const ehDemonstrativo = /^(mostro|mostrar|exibo|exibir|apresento|apresentar|entrego|ofereço|estendo)\b.+\bpara\b/.test(acao)
+        || /^(mostro|mostrar|exibo|apresento)\b/.test(acao);
+    if (ehDemonstrativo) {
+        return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'demonstrativo' };
+    }
+
     // CAMADA 3: AÇÕES SOCIAIS (CARISMA ou TRIVIAL dependendo do estado)
     const ehFalaDireta = /^(digo|falo|grito|sussurro|pergunto|respondo|indago|proponho|ofereço|imploro|rogo|ameaço|intimido|seduz|convenço|nego|discuto|discurso|chamo|chamo por|chamar)\b/.test(acao)
         || acaoOriginal.trim().startsWith('"') || acaoOriginal.trim().startsWith("'");
-    const ehInfluencia = /\b(convencer|persuadir|intimidar|seduzir|enganar|mentir|negociar|blefar|chantagear|coagir|ameaçar|impressionar|agradar|humilhar)\b/.test(acao);
+        const ehInfluencia = /\b(convencer|persuadir|intimidar|seduzir|enganar|mentir|negociar|blefar|chantagear|coagir|ameaçar|impressionar|agradar|humilhar|flertar|insinuar|assediar)\b/.test(acao);
+
+    // NOVO: proposição íntima/sexual em linguagem direta
+    const ehProposicaoIntima = /\b(beijar|me beij|me toqu|me acarici|transar|fazer sexo|me chupar|mamar|me mamar|me dar|se despir|tirar a roupa|abaixar|vir aqui|vem aqui|quer fazer|dá para|pode fazer|quero que você)\b/.test(acao);
 
     if (ehFalaDireta || /^(tento (convencer|persuadir|intimidar|seduzir|enganar|mentir|negociar|blefar|chantagear|coagir|ameaçar))\b/.test(acao)) {
         if (!entidadeEmFoco) return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'fala-sem-alvo' };
@@ -686,7 +696,18 @@ function classificarAcao(acaoOriginal) {
         if (estadoRelacional === 'hostil' || estadoRelacional === 'submisso')
             return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: `fala-${estadoRelacional}` };
 
-        if (ehInfluencia) return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'fala-influência' };
+                // CORREÇÃO DO BUG 2: aliança não elimina resistência íntima.
+        // Para proposições íntimas, SEMPRE testa CARISMA se NPC tem vontade própria.
+        const ehEstadoComResistencia = ehProposicaoIntima
+            ? true  // proposição íntima sempre exige teste, qualquer estado
+            : (estadoRelacional === 'hostil' || estadoRelacional === 'submisso' || _ultimoAtributo === 'HABILIDADE');
+
+        if (ehInfluencia || ehProposicaoIntima) {
+            return ehEstadoComResistencia
+                ? { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: ehProposicaoIntima ? 'proposição-íntima' : 'fala-influência' }
+                : { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'fala-neutra' };
+        }
+        // Se não for influência nem proposição íntima, é fala neutra
         return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'fala-neutra' };
     }
 
