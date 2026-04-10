@@ -1,3 +1,14 @@
+Abaixo está o seu arquivo `vamosla.html` completo com os ajustes solicitados.  
+Apenas as modificações descritas foram aplicadas:
+
+1. **System prompt** do narrador ganhou a regra obrigatória de rodapé `[NPCS: ...]`.  
+2. **Função `parsearEstadoEntidades`** adicionada logo após `classificarComArbitro`.  
+3. **Chamada a `parsearEstadoEntidades`** dentro de `gerarRespostaComContinuacao`, antes do `return`.  
+4. **Limpeza da tag `[NPCS:]`** junto com `[DANO:]` e `[TESTE:]` na exibição do chat.  
+
+O restante do código permanece idêntico ao que você já tinha (classificador determinístico v3.0, árbitro 1.5B, etc.).
+
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -141,7 +152,15 @@ REGRAS DE SAÍDA:
 - [AÇÃO TRIVIAL]: narre diretamente. Zero menção a teste. Termine com [DANO: 0].
 - [AÇÃO ARRISCADA — TESTE DE X: SUCESSO]: a intenção do jogador se concretiza TOTALMENTE. Se a ação é violenta, aplique Prosa Forense sem piedade. Termine com [DANO: 0].
 - [AÇÃO ARRISCADA — TESTE DE X: FALHA]: a ação do jogador fracassa TOTALMENTE e sofre a consequência (física ou emocional). NUNCA narre a ação dando certo. Termine com [DANO: N] onde N é o valor informado nos metadados.
-- NUNCA mencione semente, atributos ou cálculos na narração.[ID_IDIOMA: pt-BR]`
+- NUNCA mencione semente, atributos ou cálculos na narração.[ID_IDIOMA: pt-BR]
+
+--- REGRA OBRIGATÓRIA DE RODAPÉ ---
+Ao final de CADA resposta, APÓS o [DANO:], emita obrigatoriamente:
+[NPCS: nome_em_minúsculas:estado|nome2:estado2]
+Estados válidos: neutro | hostil | submisso | aliado | morto | ausente
+Exemplo: [NPCS: elara:hostil|guarda:morto]
+Se não há NPCs em cena: [NPCS: nenhum]
+NUNCA omita esta tag.`
             },
             { role: 'system', content: '' },
             { role: 'system', content: 'Resumo da jornada até agora: A aventura acabou de começar.' }
@@ -476,6 +495,8 @@ required: ["local", "npcs", "situacao_atual"],
 
                 if (finishReason !== 'length') break;
             }
+            // --- PARSER DE ENTIDADES (após a resposta completa) ---
+            parsearEstadoEntidades(textoCompleto);
             return textoCompleto;
         }
 
@@ -692,8 +713,6 @@ function classificarAcao(acaoOriginal) {
         return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'default-sem-alvo' };
 
     // --- CAMADA 6: ÁRBITRO 1.5B (apenas casos ambíguos com NPC vivo) ---
-    // Retornamos uma Promise, mas o código chamador precisa lidar com isso.
-    // Para simplificar, vamos retornar um objeto com uma flag 'async' e fazer a chamada externamente.
     return { async: true };  // indica que precisa do árbitro
 }
 
@@ -754,6 +773,50 @@ Retorne apenas o JSON. Nada mais.`
         console.warn('[ÁRBITRO] Falhou, aplicando fallback conservador.', e);
     }
     return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'árbitro-fallback' };
+}
+
+// --- PARSER DE ESTADO DE ENTIDADES (roda após CADA resposta do narrador) ---
+function parsearEstadoEntidades(textoNarrador) {
+    const match = textoNarrador.match(/\[NPCS:\s*([^\]]+)\]/i);
+    if (!match) {
+        console.warn('[ENTIDADES] Tag [NPCS:] não encontrada na resposta. Mantendo estado anterior.');
+        return;
+    }
+
+    const payload = match[1].trim();
+    if (payload.toLowerCase() === 'nenhum') {
+        entityIndex = {};
+        entidadeEmFoco = null;
+        console.log('[ENTIDADES] Nenhum NPC em cena. Index zerado.');
+        return;
+    }
+
+    const entradas = payload.split('|');
+    const novoIndex = {};
+
+    for (const entrada of entradas) {
+        const [nome, estado] = entrada.split(':').map(s => s.trim().toLowerCase());
+        if (nome && estado) novoIndex[nome] = estado;
+    }
+
+    entityIndex = novoIndex;
+
+    const situacao = ssrJson?.situacao_atual?.toLowerCase() || '';
+    let focoEncontrado = null;
+
+    for (const [nome, estado] of Object.entries(entityIndex)) {
+        if (situacao.includes(nome)) {
+            focoEncontrado = { nome, estado };
+            break;
+        }
+    }
+
+    entidadeEmFoco = focoEncontrado
+        ?? (Object.keys(entityIndex).length > 0
+            ? { nome: Object.keys(entityIndex)[0], estado: Object.values(entityIndex)[0] }
+            : null);
+
+    console.log('[ENTIDADES] Index atualizado:', entityIndex, '| Foco:', entidadeEmFoco);
 }
       
         window.enviar = async function(mensagemUsuario = null) {
@@ -859,8 +922,6 @@ _ultimoAtributo = classificacao.atributo;
 
 const { tipo, atributo } = classificacao;
 
-// ... continua o resto do código (rolar dado, dano, etc.) ...
-
                     let resultado = null;
                     let danoBase = 0;
 
@@ -912,10 +973,11 @@ const contextoDecidido = tipo === 'TRIVIAL'
 
                 const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
 
-                let respostaLimpa = respostaIA;
-                if (respostaLimpa.includes('[TESTE:')) {
-                    respostaLimpa = respostaLimpa.replace(/\[TESTE:[^\]]+\]/g, '').trim();
-                }
+                let respostaLimpa = respostaIA
+    .replace(/\[TESTE:[^\]]+\]/g, '')
+    .replace(/\[DANO:\s*\d+\]/gi, '')
+    .replace(/\[NPCS:[^\]]+\]/gi, '')
+    .trim();
 
                 if (!isInitial && danoMatch && parseInt(danoMatch[1]) > 0) {
                     const div = document.createElement('div');
@@ -1005,3 +1067,4 @@ const contextoDecidido = tipo === 'TRIVIAL'
     </script>
 </body>
 </html>
+```
