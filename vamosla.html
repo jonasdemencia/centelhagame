@@ -43,11 +43,11 @@
 
     <script type="module">
         // ============================================================
-        // Importações Firebase
+        // Importações Firebase (versão compatível com o inventário)
         // ============================================================
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
         // ============================================================
         // Configuração do Firebase & Firestore
@@ -63,45 +63,27 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-
+        
         // ============================================================
         // Configuração do LM Studio e Controle de Contexto
         // ============================================================
         const LM_URL = 'http://localhost:1234/v1/chat/completions';
         const MODELO = 'qwen2.5-7b-instruct-abliterated-v2';
-        const MODELO_JUIZ = 'qwen2.5-1.5b-instruct';
+        
+        // --- NOVO: O MODELO MICRO PARA O JUIZ INVISÍVEL ---
+        const MODELO_JUIZ = 'qwen2.5-1.5b-instruct'; // Certifique-se de carregar este modelo no LM Studio
 
         const LIMITE_MENSAGENS = 11;
-
-        // ============================================================
-        // DUNGEON SYSTEM — CONSTANTES E VARIÁVEIS
-        // ============================================================
-        const NUM_SALAS  = 5;  
-        const NUM_ZONAS  = Math.max(1, Math.floor(NUM_SALAS / 10)); 
-
-        let dungeonEsqueleto  = null;  
-        let salaAtualId       = null;  
-        let salaAtualDados    = null;  
-        let elementosEstado   = {};    
-        let inventarioJogador = [];    
-        let dungeonTema       = "";    
-        let _pendingMoveId    = null;  
-
-        // [AJUSTE: ACELERAÇÃO VIA CACHE E LOCKS DE PROMESSA]
-        const cacheSalas = {}; // RAM Cache para transições instantâneas
-        const geracaoSalasPromises = {}; // Filas de pre-fetch para não afogar a GPU
-
-        // ============================================================
-        // Variáveis de estado existentes (intocadas)
-        // ============================================================
         window._introGenerating = false;
         window._compressaoEmAndamento = false;
 
         let turnosJogados = 0;
-        let energia = 0;
-        let uidAtual = null;
-        let _ultimoTipoAcao = 'TRIVIAL';
-        let _ultimoAtributo  = 'NENHUM';
+        let energia = 0; 
+        let uidAtual = null; 
+        // --- ESTADO PERSISTENTE DO CLASSIFICADOR ---
+let _ultimoTipoAcao = 'TRIVIAL';   // rastreia o tipo da ação anterior
+let _ultimoAtributo  = 'NENHUM';   // rastreia o atributo da ação anterior
+
         let memoriaLonga = "";
 
         let jogadorStats = {
@@ -110,8 +92,8 @@
             SORTE: 0
         };
 
-        let entityIndex = {};
-        let entidadeEmFoco = null;
+        let entityIndex = {};        
+        let entidadeEmFoco = null;   
         let ssrJson = null;
 
         const PRONOMES_FEMININOS  = ['ela', 'dela', 'nela', 'a ela', 'sua', 'a mulher', 'o corpo dela'];
@@ -120,62 +102,54 @@
 
         const chatBox = document.getElementById('chat-box');
 
-        const PALAVRAS_SOMBRIAS = [
-            'ψυχή', 'σκότος', 'αἷμα', 'θάνατος', 'φόβος',
-            'νύξ', 'ἄβυσσος', 'δαίμων', 'πῦρ', 'σάρξ',
-            'λόγος', 'ἀρχή', 'χάος', 'κόσμος', 'ἀλήθεια',
-            'εἵμαρμένη', 'κατάρα', 'φάντασμα', 'νέκρος', 'ὀργή',
-            'SANGUIS', 'TENEBRAE', 'ANIMA', 'MORS', 'UMBRA',
-            'DOLOR', 'FATUM', 'MALUM', 'IGNIS', 'SPIRITUS',
-            'INFERNUM', 'CAEDIS', 'CRUOR', 'SEPULCRUM', 'DAMNATIO',
-            'OBSCURUS', 'PERDITIO', 'IRACUNDIA', 'GEHENNA', 'PESTIS',
-            'ܡܘܬܐ', 'ܢܘܪܐ', 'ܪܘܚܐ', 'ܚܫܘܟܐ', 'ܕܡܐ',
-            'ܫܐܕܐ', 'ܓܗܢܐ', 'ܚܛܝܬܐ', 'ܕܚܠܬܐ', 'ܐܒܕܢܐ',
-            'מָוֶת', 'חֹשֶׁךְ', 'צֵל', 'רוּחַ', 'נֶפֶשׁ',
-            'אָפֵל', 'שְׁאוֹל', 'לֵיל', 'דָּם', 'אֵשׁ',
-            'קֶבֶר', 'זְוָעָה', 'אָרוּר', 'שַׁחַת', 'כְּאֵב'
-        ];
+        // Vocabulário real — Grego Antigo, Latim, Aramaico
+const PALAVRAS_SOMBRIAS = [
+    // Grego Antigo
+    'ψυχή', 'σκότος', 'αἷμα', 'θάνατος', 'φόβος',
+    'νύξ', 'ἄβυσσος', 'δαίμων', 'πῦρ', 'σάρξ',
+    'λόγος', 'ἀρχή', 'χάος', 'κόσμος', 'ἀλήθεια',
+    'εἵμαρμένη', 'κατάρα', 'φάντασμα', 'νέκρος', 'ὀργή',
+    // Latim (MAIÚSCULAS)
+    'SANGUIS', 'TENEBRAE', 'ANIMA', 'MORS', 'UMBRA',
+    'DOLOR', 'FATUM', 'MALUM', 'IGNIS', 'SPIRITUS',
+    'INFERNUM', 'CAEDIS', 'CRUOR', 'SEPULCRUM', 'DAMNATIO',
+    'OBSCURUS', 'PERDITIO', 'IRACUNDIA', 'GEHENNA', 'PESTIS',
+    // Aramaico
+    'ܡܘܬܐ', 'ܢܘܪܐ', 'ܪܘܚܐ', 'ܚܫܘܟܐ', 'ܕܡܐ',
+    'ܫܐܕܐ', 'ܓܗܢܐ', 'ܚܛܝܬܐ', 'ܕܚܠܬܐ', 'ܐܒܕܢܐ',
+    // Hebraico
+    'מָוֶת', 'חֹשֶׁךְ', 'צֵל', 'רוּחַ', 'נֶפֶשׁ',
+    'אָפֵל', 'שְׁאוֹל', 'לֵיל', 'דָּם', 'אֵשׁ',
+    'קֶבֶר', 'זְוָעָה', 'אָרוּר', 'שַׁחַת', 'כְּאֵב'
+];
 
-        let intervaloAnimacao = null;
-        let primeiroTokenRecebido = false;
+let intervaloAnimacao = null;
+let primeiroTokenRecebido = false;
         const userInput = document.getElementById('user-input');
-        const sendBtn   = document.getElementById('send-btn');
+        const sendBtn = document.getElementById('send-btn');
 
         let mensagens = [
             {
                 role: 'system',
-                content: `Você é um mestre de RPG brutal, sádico e hiper-realista. Responda APENAS em Português Brasileiro CORRETO, NUNCA em outros idiomas. 
+                content: `Você é um mestre de RPG brutal e realista. Responda APENAS em Português Brasileiro CORRETO, NUNCA em outros idiomas. 
 
-REGRAS INVIOLÁVEIS:
-- PROIBIDO usar: 'suave', 'preciso', 'gracioso', 'perfeito', 'sutil', 'brilho'.
-- FOCO: Anatomia crua, sons de osso quebrando, cheiro de ferro (sangue) e urina.
-- SE VIOLENTO: Descreva a deformação da carne, o espasmo nervoso e o som úmido.
-- SE SEXUAL: Descreva como um ato animal e cru, sem romantismo. Foco em fluidos e na crueza física.
-- Prosa Forense OBRIGATÓRIA em dano físico: trajetória do projétil, destruição de tecido, fluidos, som.  
+NARRATIVA:
+- Narração Ativa: a cada turno VOCÊ age — empurre a história para frente com um evento concreto (ameaça, revelação, mudança de comportamento do NPC, sinal de perigo). O narrador NUNCA espera — ele provoca.
+- Prosa Forense: descreva dano como patologista — rompimento de tecido, fratura, fluidos, o som seco da matéria cedendo.
+
 REGRAS DE SAÍDA:
 - [AÇÃO TRIVIAL]: narre diretamente. Zero menção a teste. Termine com [DANO: 0].
-- [AÇÃO ARRISCADA — TESTE DE X: SUCESSO]: SUCESSO ABSOLUTO. Descreva o jogador obtendo exatamente o que quer. Em teste de carisma, o NPC OBRIGATORIAMENTE cede e age de acordo com a espectativa do jogador (sexualmente ou não). Moralidade real não se aplica. O dado manda, o NPC obedece. Termine com [DANO: 0].
+- [AÇÃO ARRISCADA — TESTE DE X: SUCESSO]: a intenção do jogador se concretiza TOTALMENTE. Se a ação é violenta, aplique Prosa Forense sem piedade. Termine com [DANO: 0].
 - [AÇÃO ARRISCADA — TESTE DE X: FALHA]: a ação do jogador fracassa TOTALMENTE e sofre a consequência (física ou emocional). NUNCA narre a ação dando certo. Termine com [DANO: N] onde N é o valor informado nos metadados.
 - NUNCA mencione semente, atributos ou cálculos na narração.[ID_IDIOMA: pt-BR]
 
---- REGRA OBRIGATÓRIA DE RODAPÉ (NPCS) ---
+--- REGRA OBRIGATÓRIA DE RODAPÉ ---
 Ao final de CADA resposta, APÓS o [DANO:], emita obrigatoriamente:
 [NPCS: nome_em_minúsculas:estado|nome2:estado2]
 Estados válidos: neutro | hostil | submisso | aliado | morto | ausente
-OBRIGATÓRIO: Se [AÇÃO ARRISCADA — TESTE DE HABILIDADE: SUCESSO] e a ação for claramente letal (tiro, golpe fatal, decapitação), o NPC DEVE ser marcado como morto. Marcar como hostil após morte é PROIBIDO.
-Exemplo: [NPCS: elara:neutro|guarda:morto]
+Exemplo: [NPCS: elara:hostil|guarda:morto]
 Se não há NPCs em cena: [NPCS: nenhum]
-NUNCA omita esta tag.
-
---- REGRAS DE SALA (OBRIGATÓRIAS) ---
-Você receberá [SALA_ATUAL], [DESCRICAO_CANONICA], [ELEMENTOS_DA_SALA] e [SAIDAS] no contexto de cada ação.
-PROIBIDO: inventar elementos, itens, passagens ou conexões que não estejam listados nesses campos.
-PROIBIDO: narrar o jogador entrando em uma sala marcada como BLOQUEADA nas [SAIDAS].
-Ao final de CADA resposta, após [NPCS:], emita OBRIGATORIAMENTE:
-[ELEMENTOS_MUT: id:novo_estado|id2:novo_estado2] — apenas elementos que mudaram NESTE turno (ex: jogador pegou item → coletado, abriu porta → aberto). Se nenhum mudou: [ELEMENTOS_MUT: nenhum]
-Estados válidos de elemento: presente | coletado | usado | aberto | fechado | trancado | ativado | destruido
-[MOVER: sala_id] — SOMENTE se o jogador se deslocou com SUCESSO para outra sala. A sala_id deve ser EXATAMENTE o ID listado em [SAIDAS]. Se não houve deslocamento: OMITA esta tag completamente.
-IRREVERSÍVEL: estados "coletado" e "destruido" nunca retrocedem. NUNCA ressuscite um elemento destruído ou coletado.`
+NUNCA omita esta tag.`
             },
             { role: 'system', content: '' },
             { role: 'system', content: 'Resumo da jornada até agora: A aventura acabou de começar.' }
@@ -183,655 +157,902 @@ IRREVERSÍVEL: estados "coletado" e "destruido" nunca retrocedem. NUNCA ressusci
 
         let resumoAtual = "";
 
-        // ============================================================
-        // DUNGEON SYSTEM — FUNÇÕES
-        // ============================================================
-
-        function validarGrafo(esq) {
-            const { salas, conexoes, bloqueios, itens_chave, sala_inicio, sala_fim } = esq;
-            if (!salas || !sala_inicio || !sala_fim) return false;
-            if (!salas.includes(sala_inicio) || !salas.includes(sala_fim)) return false;
-
-            const adj = {};
-            salas.forEach(s => { adj[s] = new Set(); });
-            (conexoes || []).forEach(c => {
-                if (adj[c.a] && adj[c.b]) { adj[c.a].add(c.b); adj[c.b].add(c.a); }
-            });
-
-            const vis = new Set([sala_inicio]);
-            const fila = [sala_inicio];
-            while (fila.length) {
-                const cur = fila.shift();
-                for (const viz of adj[cur]) {
-                    if (!vis.has(viz)) { vis.add(viz); fila.push(viz); }
-                }
-            }
-            if (vis.size !== salas.length) return false;
-
-            const itemIds = new Set((itens_chave || []).map(i => i.id));
-            for (const b of (bloqueios || [])) {
-                if (!itemIds.has(b.chave)) return false;
-                const item = itens_chave.find(i => i.id === b.chave);
-                if (item && item.sala === b.de) return false;
-            }
-            return true;
-        }
-
-        function gerarEsqueletoFallback(n) {
-            const salas = Array.from({ length: n }, (_, i) => `s${i + 1}`);
-            const conexoes = salas.slice(0, -1).map((s, i) => ({ a: s, b: salas[i + 1] }));
-            return {
-                tema: "Masmorra de pedra negra e silêncio opressivo",
-                salas,
-                conexoes,
-                bloqueios: [{ de: "s2", para: "s3", chave: "chave_enferrujada" }],
-                itens_chave: [{ id: "chave_enferrujada", sala: "s1" }],
-                sala_inicio: "s1",
-                sala_fim: `s${n}`
-            };
-        }
-
-        async function gerarDungeon() {
-            adicionarMensagem('⚙️ Arquiteto das trevas forjando o dungeon...', 'system');
-
-            const numBloqueios = Math.max(1, Math.floor(NUM_SALAS / 3));
-            let esqueleto = null;
-            let tentativas = 0;
-
-            while (!esqueleto && tentativas < 3) {
-                tentativas++;
-                try {
-                    const response = await fetch(LM_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            model: MODELO,
-                            messages: [
-                                {
-                                    role: 'system',
-                                    content: `Você é um arquiteto de masmorras sombrias e brutais. Gere APENAS o esqueleto lógico — zero prosa, apenas estrutura JSON.
-
-REGRAS ABSOLUTAS:
-1. IDs de salas: use exatamente "s1", "s2", ..., "s${NUM_SALAS}" — nada mais.
-2. Todas as salas devem ser conectadas (grafo totalmente conectado).
-3. Cada conexão é bidirecional — liste-a UMA ÚNICA VEZ com {a, b}.
-4. sala_inicio sempre acessível sem itens. sala_fim requer progressão.
-5. Cada item_chave.sala deve ser diferente de qualquer bloqueio que esse item desbloqueie.
-6. IDs de chaves: strings descritivas minúsculas sem espaços (ex: "chave_bronze", "olho_de_vidro").
-7. Retorne APENAS o JSON. Sem texto adicional.`
-                                },
-                                {
-                                    role: 'user',
-                                    content: `Crie um esqueleto para uma masmorra de EXATAMENTE ${NUM_SALAS} salas.
-Tema livre e original — sombrio, medieval, brutal.
-Inclua exatamente ${numBloqueios} bloqueios com chaves distintas.
-Garanta que sala_fim (s${NUM_SALAS}) só seja alcançável após resolver os bloqueios.`
-                                }
-                            ],
-                            temperature: 0.25,
-                            max_tokens: Math.max(600, NUM_SALAS * 60),
-                            response_format: {
-                                type: "json_schema",
-                                json_schema: {
-                                    name: "esqueleto_dungeon",
-                                    strict: true,
-                                    schema: {
-                                        type: "object",
-                                        properties: {
-                                            tema: { type: "string" },
-                                            salas: { type: "array", items: { type: "string" } },
-                                            conexoes: {
-                                                type: "array",
-                                                items: { type: "object", properties: { a: { type: "string" }, b: { type: "string" } }, required: ["a", "b"], additionalProperties: false }
-                                            },
-                                            bloqueios: {
-                                                type: "array",
-                                                items: { type: "object", properties: { de: { type: "string" }, para: { type: "string" }, chave: { type: "string" } }, required: ["de", "para", "chave"], additionalProperties: false }
-                                            },
-                                            itens_chave: {
-                                                type: "array",
-                                                items: { type: "object", properties: { id: { type: "string" }, sala: { type: "string" } }, required: ["id", "sala"], additionalProperties: false }
-                                            },
-                                            sala_inicio: { type: "string" },
-                                            sala_fim: { type: "string" }
-                                        },
-                                        required: ["tema", "salas", "conexoes", "bloqueios", "itens_chave", "sala_inicio", "sala_fim"],
-                                        additionalProperties: false
-                                    }
-                                }
-                            }
-                        })
-                    });
-
-                    const data = await response.json();
-                    const parsed = JSON.parse(data.choices[0].message.content);
-                    if (validarGrafo(parsed)) esqueleto = parsed;
-                } catch (e) {
-                    console.warn(`[DUNGEON] Tentativa ${tentativas} falhou com erro:`, e);
-                }
-            }
-
-            if (!esqueleto) esqueleto = gerarEsqueletoFallback(NUM_SALAS);
-
-            dungeonEsqueleto  = esqueleto;
-            dungeonTema       = esqueleto.tema;
-            salaAtualId       = esqueleto.sala_inicio;
-            elementosEstado   = {};
-            inventarioJogador = [];
-
-            await updateDoc(doc(db, "players", uidAtual), {
-                "dungeon.esqueleto":      esqueleto,
-                "dungeon.tema":           dungeonTema,
-                "dungeon.salaAtual":      salaAtualId,
-                "dungeon.elementosEstado": {},
-                "dungeon.inventario":     []
-            });
-
-            await carregarSala(salaAtualId);
-            adicionarMensagem(`▶ ${salaAtualDados?.nome ?? salaAtualId}`, 'system');
-        }
-
-        async function gerarConteudoSala(salaId) {
-            const itensNaSala     = (dungeonEsqueleto.itens_chave || []).filter(i => i.sala === salaId);
-            const bloqueiosRelac  = (dungeonEsqueleto.bloqueios   || []).filter(b => b.de === salaId || b.para === salaId);
-            const ehFim           = salaId === dungeonEsqueleto.sala_fim;
-            const ehInicio        = salaId === dungeonEsqueleto.sala_inicio;
-            const vizinhos = (dungeonEsqueleto.conexoes || []).filter(c => c.a === salaId || c.b === salaId).map(c => c.a === salaId ? c.b : c.a);
-
-            const contextoLogico = [
-                `SALA: ${salaId} de ${NUM_SALAS}`,
-                `TEMA DO DUNGEON: ${dungeonTema}`,
-                `PAPEL: ${ehInicio ? 'sala inicial' : ehFim ? 'sala final' : 'sala intermediária'}`,
-                `VIZINHOS DIRETOS: ${vizinhos.join(', ') || 'nenhum'}`,
-                `ITENS QUE DEVEM EXISTIR AQUI: ${itensNaSala.map(i => i.id).join(', ') || 'nenhum'}`,
-                `BLOQUEIOS RELACIONADOS: ${bloqueiosRelac.map(b => `${b.de}→${b.para} requer "${b.chave}"`).join(' | ') || 'nenhum'}`
-            ].join('\n');
-
-            const response = await fetch(LM_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: MODELO,
-                    messages: [
-                        { role: 'system', content: `Você é um designer de dungeons sombrios e criativos. Crie o conteúdo de uma sala de RPG medieval brutal.\nREGRAS:\n- descricao_fixa: 2-3 frases sensoriais.\n- Mantenha id e tipos EXATOS fornecidos.\n- Retorne APENAS o JSON.` },
-                        { role: 'user', content: contextoLogico }
-                    ],
-                    temperature: 0.72,
-                    max_tokens: 700,
-                    response_format: {
-                        type: "json_schema",
-                        json_schema: {
-                            name: "conteudo_sala",
-                            strict: true,
-                            schema: {
-                                type: "object",
-                                properties: {
-                                    nome: { type: "string" },
-                                    descricao_fixa: { type: "string" },
-                                    elementos: { type: "array", items: { type: "object", properties: { id: { type: "string" }, tipo: { type: "string", enum: ["passagem", "item", "mecanismo", "npc", "armadilha"] }, descricao: { type: "string" }, estado_inicial: { type: "string" } }, required: ["id", "tipo", "descricao", "estado_inicial"], additionalProperties: false } },
-                                    conexoes: { type: "object", properties: { norte: { type: "string" }, sul: { type: "string" }, leste: { type: "string" }, oeste: { type: "string" } }, required: ["norte", "sul", "leste", "oeste"], additionalProperties: false }
-                                },
-                                required: ["nome", "descricao_fixa", "elementos", "conexoes"],
-                                additionalProperties: false
-                            }
-                        }
-                    }
-                })
-            });
-
-            const data = await response.json();
-            return JSON.parse(data.choices[0].message.content);
-        }
-
-        // [AJUSTE: ACELERAÇÃO] Pré-geração assíncrona oculta
-        function preCarregarVizinhos(conexoes) {
-            if (!conexoes) return;
-            for (const vizinhoId of Object.values(conexoes)) {
-                if (!vizinhoId || geracaoSalasPromises[vizinhoId]) continue;
-                
-                // Aguarda 3 segundos para a UI e a CPU relaxarem antes de solicitar o vizinho
-                setTimeout(() => {
-                    if (geracaoSalasPromises[vizinhoId]) return;
-                    geracaoSalasPromises[vizinhoId] = (async () => {
-                        try {
-                            const salaRef = doc(db, "players", uidAtual, "salas", vizinhoId);
-                            const salaSnap = await getDoc(salaRef);
-                            if (salaSnap.exists()) {
-                                const data = salaSnap.data();
-                                cacheSalas[vizinhoId] = data;
-                                return data;
-                            } else {
-                                const data = await gerarConteudoSala(vizinhoId);
-                                await setDoc(salaRef, data);
-                                cacheSalas[vizinhoId] = data;
-                                return data;
-                            }
-                        } catch (e) {
-                            delete geracaoSalasPromises[vizinhoId];
-                        }
-                    })();
-                }, 3000);
-            }
-        }
-
-        // [AJUSTE: ACELERAÇÃO] Carregamento rápido via Cache / Promises
-        async function carregarSala(salaId) {
-            if (!geracaoSalasPromises[salaId]) {
-                geracaoSalasPromises[salaId] = (async () => {
-                    const salaRef  = doc(db, "players", uidAtual, "salas", salaId);
-                    const salaSnap = await getDoc(salaRef);
-                    if (salaSnap.exists()) return salaSnap.data();
-                    
-                    const data = await gerarConteudoSala(salaId);
-                    await setDoc(salaRef, data);
-                    return data;
-                })();
-            }
-
-            salaAtualDados = await geracaoSalasPromises[salaId];
-            cacheSalas[salaId] = salaAtualDados;
-
-            for (const elem of (salaAtualDados.elementos || [])) {
-                const chave = `${salaId}:${elem.id}`;
-                if (!(chave in elementosEstado)) {
-                    elementosEstado[chave] = elem.estado_inicial;
-                }
-            }
-
-            document.getElementById('modelo-span').innerText = salaAtualDados.nome ?? 'Motor Duplo (7B + 1.5B)';
-
-            // Dispara pré-geração silenciosa dos próximos aposentos
-            preCarregarVizinhos(salaAtualDados.conexoes);
-        }
-
-        // [AJUSTE: PERSISTÊNCIA REAL] Vincula NPCs mortos e itens abandonados permanentemente na sala
-        function construirContextoSala() {
-            if (!salaAtualDados || !dungeonEsqueleto) return '';
-
-            const nativosSet = new Set();
-            let elementosStr = (salaAtualDados.elementos || []).map(elem => {
-                nativosSet.add(elem.id);
-                const chave  = `${salaAtualId}:${elem.id}`;
-                const estado = elementosEstado[chave] ?? elem.estado_inicial;
-                return `  ${elem.id}[${elem.tipo}]:${estado} — ${elem.descricao}`;
-            }).join('\n');
-
-            // Vasculha tudo que foi largado ou morto na sala e expõe como parte do cenário
-            for (const [chave, estado] of Object.entries(elementosEstado)) {
-                if (chave.startsWith(`${salaAtualId}:`)) {
-                    const idOriginal = chave.replace(`${salaAtualId}:`, '');
-                    if (!nativosSet.has(idOriginal)) {
-                        const tipo = idOriginal.startsWith('npc_') ? 'npc' : 'dinamico';
-                        const nomeReal = idOriginal.replace('npc_', '');
-                        elementosStr += `\n  ${nomeReal}[${tipo}]:${estado}`;
-                    }
-                }
-            }
-
-            const saidasArr = [];
-            for (const [dir, vizinhoId] of Object.entries(salaAtualDados.conexoes || {})) {
-                if (!vizinhoId) continue;
-                const bloqueio = (dungeonEsqueleto.bloqueios || []).find(b =>
-                    (b.de === salaAtualId && b.para === vizinhoId) ||
-                    (b.de === vizinhoId   && b.para === salaAtualId)
-                );
-                let status = 'livre';
-                if (bloqueio && !inventarioJogador.includes(bloqueio.chave)) {
-                    status = `BLOQUEADA — requer "${bloqueio.chave}"`;
-                }
-                saidasArr.push(`${dir.toUpperCase()}→${vizinhoId} [${status}]`);
-            }
-
-            return `\n[SALA_ATUAL: ${salaAtualId} — ${salaAtualDados.nome}]` +
-                   `\n[DESCRICAO_CANONICA: ${salaAtualDados.descricao_fixa}]` +
-                   `\n[ELEMENTOS_DA_SALA:\n${elementosStr || '  (nenhum)'}]` +
-                   `\n[SAIDAS: ${saidasArr.join(' | ') || 'nenhuma'}]`;
-        }
-
-        function parsearMutacoesSala(textoNarrador) {
-            const elemMatch = textoNarrador.match(/\[ELEMENTOS_MUT:\s*([^\]]+)\]/i);
-            if (elemMatch && elemMatch[1].toLowerCase() !== 'nenhum') {
-                const partes = elemMatch[1].split('|');
-                for (const parte of partes) {
-                    const colonIdx = parte.indexOf(':');
-                    if (colonIdx === -1) continue;
-                    const idElem     = parte.slice(0, colonIdx).trim();
-                    const novoEstado = parte.slice(colonIdx + 1).trim();
-                    if (!idElem || !novoEstado) continue;
-
-                    const chave       = `${salaAtualId}:${idElem}`;
-                    const estadoAtual = elementosEstado[chave];
-
-                    if (estadoAtual === 'destruido' || estadoAtual === 'coletado') continue;
-                    elementosEstado[chave] = novoEstado;
-
-                    if (novoEstado === 'coletado' && !inventarioJogador.includes(idElem)) {
-                        inventarioJogador.push(idElem);
-                    }
-                }
-            }
-
-            const moverMatch = textoNarrador.match(/\[MOVER:\s*([^\]]+)\]/i);
-            if (!moverMatch) return null;
-            const novaSalaId = moverMatch[1].trim();
-            if (!dungeonEsqueleto?.salas.includes(novaSalaId)) return null;
-
-            const conexoesDaSala = salaAtualDados?.conexoes || {};
-            if (!Object.values(conexoesDaSala).includes(novaSalaId)) return null;
-
-            const bloqueio = (dungeonEsqueleto.bloqueios || []).find(b => (b.de === salaAtualId && b.para === novaSalaId) || (b.de === novaSalaId  && b.para === salaAtualId));
-            if (bloqueio && !inventarioJogador.includes(bloqueio.chave)) return null;
-
-            return novaSalaId;
-        }
-
-        // [AJUSTE: PERSISTÊNCIA REAL] Desconecta o jogador dos NPCs quando muda de sala
-        async function aplicarMovimento(novaSalaId) {
-            const salaAnterior = salaAtualId;
-            salaAtualId    = novaSalaId;
-            salaAtualDados = null; 
-
-            // Amnésia geográfica: limpa o foco para os cadáveres não te seguirem para o próximo aposento
-            entityIndex = {};
-            entidadeEmFoco = null;
-            if (ssrJson && ssrJson.npcs) {
-                ssrJson.npcs = [];
-            }
-
-            try {
-                await carregarSala(novaSalaId);
-                adicionarMensagem(`▶ ${salaAtualDados?.nome ?? novaSalaId}`, 'system');
-
-                await updateDoc(doc(db, "players", uidAtual), {
-                    "dungeon.salaAtual": novaSalaId
-                });
-            } catch (e) {
-                salaAtualId = salaAnterior; 
-            }
-        }
-
-        // ============================================================
-        // FUNÇÕES EXISTENTES
-        // ============================================================
-
         async function carregarDadosJogador(uid) {
             try {
-                const docRef  = doc(db, "players", uid);
+                const docRef = doc(db, "players", uid);
                 const docSnap = await getDoc(docRef);
+                console.log('[Firestore] Documento players carregado:', docSnap.exists() ? docSnap.data() : 'não existe');
 
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    if (data.resumo) { resumoAtual = data.resumo; mensagens[2].content = `Resumo: ${resumoAtual}`; }
-                    if (data.ssrJson) { ssrJson = data.ssrJson; buildEntityIndex(ssrJson); }
-                    if (data.turnos !== undefined) turnosJogados = data.turnos;
-                    if (data?.energy?.total !== undefined) { energia = data.energy.total; document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`; }
-                    if (data?.skill?.total    !== undefined) jogadorStats.HABILIDADE = data.skill.total;
-                    if (data?.charisma?.total !== undefined) jogadorStats.CARISMA    = data.charisma.total;
-                    if (data?.luck?.total     !== undefined) jogadorStats.SORTE      = data.luck.total;
-
-                    if (data.dungeon?.esqueleto) {
-                        dungeonEsqueleto  = data.dungeon.esqueleto;
-                        dungeonTema       = data.dungeon.tema      ?? "";
-                        salaAtualId       = data.dungeon.salaAtual ?? dungeonEsqueleto.sala_inicio;
-                        elementosEstado   = data.dungeon.elementosEstado ?? {};
-                        inventarioJogador = data.dungeon.inventario       ?? [];
-                        await carregarSala(salaAtualId);
-                    } else {
-                        await gerarDungeon();
+                    
+                    if (data.resumo) {
+                        resumoAtual = data.resumo;
+                        mensagens[2].content = `Resumo da jornada até agora: ${resumoAtual}`;
                     }
+
+                    if (data.ssrJson) {
+                        ssrJson = data.ssrJson;
+                        buildEntityIndex(ssrJson);   
+                    }
+                    
+                    if (data.turnos !== undefined) {
+                        turnosJogados = data.turnos;
+                    }
+                    
+                    if (data?.energy?.total !== undefined) {
+    energia = data.energy.total;
+    document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
+}
+
+                    if (data?.skill?.total !== undefined) jogadorStats.HABILIDADE = data.skill.total;
+                    if (data?.charisma?.total !== undefined) jogadorStats.CARISMA = data.charisma.total;
+                    if (data?.luck?.total !== undefined) jogadorStats.SORTE = data.luck.total;
                 } else {
-                    const dadosPadrao = { energy: { total: 40, initial: 40 }, skill: { total: 5 }, charisma: { total: 5 }, luck: { total: 4 }, turnos: 0, resumo: "", memoriaLonga: "" };
+                    const dadosPadrao = {
+                        energy: { total: 40, initial: 40 },
+                        skill: { total: 5 },
+                        charisma: { total: 5 },
+                        luck: { total: 4 },
+                        turnos: 0,
+                        resumo: "",
+                        memoriaLonga: ""
+                    };
                     await setDoc(doc(db, "players", uid), dadosPadrao, { merge: true });
                     await carregarDadosJogador(uid);
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error("Erro ao carregar do Firestore:", e);
+            }
         }
 
         async function salvarEstadoJogador() {
             if (!uidAtual) return;
             try {
                 const dadosAtualizados = {
-                    turnos: turnosJogados, resumo: resumoAtual, memoriaLonga: memoriaLonga, "energy.total": energia, "skill.total": jogadorStats.HABILIDADE, "charisma.total": jogadorStats.CARISMA, "luck.total": jogadorStats.SORTE, ssrJson: ssrJson,
-                    "dungeon.salaAtual": salaAtualId, "dungeon.elementosEstado": elementosEstado, "dungeon.inventario": inventarioJogador
-                };
-                await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
-            } catch (e) {}
+    turnos: turnosJogados,
+    resumo: resumoAtual,
+    memoriaLonga: memoriaLonga,
+    "energy.total": energia,
+    "skill.total": jogadorStats.HABILIDADE,
+    "charisma.total": jogadorStats.CARISMA,
+    "luck.total": jogadorStats.SORTE,
+    ssrJson: ssrJson   
+};
+await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
+            } catch (e) {
+                console.error("Erro ao salvar estado do jogador:", e);
+            }
         }
 
-        async function comprimirMemoria() {
-            if (mensagens.length <= LIMITE_MENSAGENS) return;
-            const fatos = mensagens.slice(3, 9).filter(m => m.content && m.content.trim() !== "").map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`).join('\n');
-            const p = [{ role: 'system', content: "Você é um terminal analítico. Atualize os estados físicos e psicológicos. Retorne JSON." }, { role: 'user', content: `ESTADO ANTERIOR:\n${resumoAtual}\n\nEVENTOS:\n${fatos}` }];
+        async function gerarMemoriaLonga(textoIntro) {
+            if (memoriaLonga) return;
+            const promptLore = [
+                {
+                    role: 'system',
+                    content: 'Você é um extrator de lore. Dado o texto de introdução de um RPG, preencha os campos abaixo com dados factuais extraídos do texto. Zero prosa. Zero adjetivos literários. Apenas nomes e fatos secos.\n\nMUNDO: [nome do cenário/reino principal]\nAMEAÇA: [nome e natureza da ameaça principal]\nARQUÉTIPO: [arquétipo do jogador]\nMISSÃO: [objetivo concreto da missão]\nLOCALIZAÇÕES: [lista separada por vírgulas de TODOS os lugares nomeados: reinos, regiões, vilas, rios, montanhas, pântanos, locais específicos — apenas os nomes, sem descrição]\n\nResponda APENAS com os campos preenchidos, sem texto adicional.'
+                },
+                {
+                    role: 'user',
+                    content: `Texto da introdução:\n${textoIntro}\n\nGere a memória permanente agora.`
+                }
+            ];
 
             try {
                 const response = await fetch(LM_URL, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: MODELO_JUIZ, messages: p, temperature: 0.0, max_tokens: 300, response_format: { type: "json_schema", json_schema: { name: "extrator", strict: true, schema: { type: "object", properties: { local: { type: "string" }, npcs: { type: "array", items: { type: "string" } }, situacao_atual: { type: "string" } }, required: ["local", "npcs", "situacao_atual"], additionalProperties: false } } } })
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODELO,
+                        messages: promptLore,
+                        temperature: 0.1,
+                        max_tokens: 250
+                    })
                 });
-
                 const data = await response.json();
-                let jsonObj = JSON.parse(data.choices[0].message.content);
-                const acoesRecentes = mensagens.filter(m => m.role === 'user' && !m.content.includes('Descreva em')).slice(-3).map(m => m.content.split('\n[')[0].trim().substring(0, 42));
-                jsonObj.eventos_chave = acoesRecentes.length > 0 ? acoesRecentes : ["A jornada começou"];
-
-                buildEntityIndex(jsonObj);
-                ssrJson = jsonObj;
-                resumoAtual = `LOCAL: ${jsonObj.local}\nNPCS: ${jsonObj.npcs.join(' | ')}\nEVENTOS: ${jsonObj.eventos_chave.join(' ➔ ')}\nSITUAÇÃO: ${jsonObj.situacao_atual}`;
-                mensagens[2].content = `ESTADO ATUAL DO MUNDO:\n${resumoAtual}`;
-                mensagens.splice(3, 6);
-                salvarEstadoJogador();
-            } catch (error) { } finally { window._compressaoEmAndamento = false; }
+                memoriaLonga = data.choices[0].message.content.trim();
+                mensagens[1].content = `LORE PERMANENTE DO MUNDO (verdade absoluta — nunca contradiga nem altere):\n${memoriaLonga}`;
+                if (uidAtual) {
+                    await setDoc(doc(db, "players", uidAtual), { memoriaLonga }, { merge: true });
+                }
+            } catch (e) {
+                console.error('Erro ao gerar memória longa:', e);
+            }
         }
 
+        function obterDiretrizDeFase() {
+            if (turnosJogados < 10) return "FASE 1 - RASTROS (Lentidão): O perigo é apenas um sussurro, uma lenda ou um rastro perturbador no cenário. É ESTRITAMENTE PROIBIDO mostrar a ameaça principal. Foco no mistério e na exploração do infamiliar.";
+            else if (turnosJogados < 25) return "FASE 2 - PARANOIA: Os sinais da ameaça são recentes. O ambiente reage a algo invisível (animais mortos, cheiro de podridão, NPCs aterrorizados). O perigo é iminente, mas ainda indireto.";
+            else if (turnosJogados < 45) return "FASE 3 - PERSEGUIÇÃO: O jogador vê a ameaça de relance. Sobrevivência se torna o foco. O cerco está se fechando. Tensão alta, descreva o som e o impacto da ameaça no ambiente.";
+            else return "FASE 4 - O CLÍMAX: O confronto direto, visceral e inevitável. Apostas máximas. Descreva a brutalidade do embate.";
+        }
+
+        const SSR_TEMPLATE = `LOCAL: [onde o jogador está agora]\nNPCS: [lista de personagens encontrados e seu estado atual]\nITENS: [itens carregados ou relevantes no cenário]\nEVENTOS_CHAVE: [lista de fatos consumados]\nSITUACAO_ATUAL: [uma frase: o que o jogador está fazendo ou diante de agora]\nGANCHOS_ATIVOS: [pistas ou ameaças não resolvidas que devem ser lembradas]`;
+
+       async function comprimirMemoria() {
+            if (mensagens.length <= LIMITE_MENSAGENS) return;
+
+            const fatosParaComprimir = mensagens.slice(3, 9)
+                .filter(m => m.content && m.content.trim() !== "")
+                .map(m => `${m.role === 'user' ? 'JOGADOR' : 'NARRADOR'}: ${m.content}`)
+                .join('\n');
+
+           // Prompt otimizado para PERFORMANCE: Remove a carga de gerenciar eventos
+            const promptSimplificado = [
+                {
+                    role: 'system',
+                    content: "Você é um terminal analítico. Atualize os estados físicos e psicológicos com base nos eventos. REGRAS:\n1. Foque no estado atual dos NPCs (ex: ferido, apavorado, confiante).\n2. Atualize o local se houver mudança.\n3. Retorne estritamente o JSON solicitado."
+                },
+                {
+                    role: 'user',
+                    content: `ESTADO ANTERIOR:\n${resumoAtual || 'Início'}\n\nEVENTOS PARA PROCESSAR:\n${fatosParaComprimir}`
+                }
+            ];
+
+            try {
+                const response = await fetch(LM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODELO_JUIZ,
+                        messages: promptSimplificado,
+                        temperature: 0.0,
+                        max_tokens: 300,
+                        response_format: {
+                            type: "json_schema",
+                            json_schema: {
+                                name: "extrator_fatos",
+                                strict: true,
+                                schema: {
+                                    type: "object",
+                                    properties: {
+    local: { type: "string" },
+    npcs: { type: "array", items: { type: "string" } },
+    situacao_atual: { type: "string" }
+},
+required: ["local", "npcs", "situacao_atual"],
+                                    additionalProperties: false
+                                }
+                            }
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`LM Studio HTTP Error: ${await response.text()}`);
+                }
+
+                const data = await response.json();
+                let textoJson = data.choices[0].message.content;
+                let jsonObj;
+
+                try {
+                    // Tenta o parse normal
+                    jsonObj = JSON.parse(textoJson);
+                } catch (parseError) {
+                    console.warn("⚠️ [Memória] JSON truncado. Tentando protocolo de recuperação de emergência...", parseError);
+                    
+                    // Válvula de Escape 1: Tenta fechar chaves e aspas automaticamente
+                    try {
+                        let fixedJson = textoJson.trim();
+                        if (!fixedJson.endsWith('}')) {
+                            // Se a última string ficou aberta, fecha ela
+                            if ((fixedJson.match(/"/g) || []).length % 2 !== 0) fixedJson += '"';
+                            // Fecha as estruturas do schema
+                            fixedJson += ']}}'; 
+                            // Limpa vírgulas sobrando antes de chaves (erro comum de truncamento)
+                            fixedJson = fixedJson.replace(/,\s*([\]}])/g, '$1');
+                        }
+                        jsonObj = JSON.parse(fixedJson);
+                        console.log("✅ [Memória] JSON recuperado com sucesso!");
+                    } catch (fatalError) {
+                        // Válvula de Escape 2: Destrói o loop para salvar o PC
+                        console.error("❌ [Memória] JSON irrecuperável. Aplicando amnésia forçada para não travar o jogo.", textoJson);
+                        mensagens.splice(3, 6); // Força a exclusão do histórico engarrafado
+                        return; // Aborta esta compressão específica
+                    }
+                }
+                
+               // --- INÍCIO DA MEMÓRIA CRONOLÓGICA (VIA JAVASCRIPT) ---
+                // Em vez de pedir para a IA resumir, o código puxa cirurgicamente as últimas ações do jogador
+                const acoesRecentes = mensagens
+                    .filter(m => m.role === 'user' && !m.content.includes('Descreva em 3 frases'))
+                    .slice(-3)
+                    .map(m => {
+                        // Remove qualquer instrução de teste [AÇÃO ARRISCADA...] que o código injetou na string
+                        let acaoMuda = m.content.split('\n[')[0].trim();
+                        // Trunca em 45 caracteres para economizar tokens
+                        return acaoMuda.length > 45 ? acaoMuda.substring(0, 42) + "..." : acaoMuda;
+                    });
+
+                jsonObj.eventos_chave = acoesRecentes.length > 0 ? acoesRecentes : ["A jornada começou"];
+                // --- FIM DA MEMÓRIA CRONOLÓGICA ---
+
+                buildEntityIndex(jsonObj);   
+                ssrJson = jsonObj;
+
+                resumoAtual = `LOCAL: ${jsonObj.local}\nNPCS: ${jsonObj.npcs.join(' | ')}\nEVENTOS: ${jsonObj.eventos_chave.join(' ➔ ')}\nSITUAÇÃO: ${jsonObj.situacao_atual}`;
+                mensagens[2].content = `ESTADO ATUAL DO MUNDO:\n${resumoAtual}`;
+                
+                // Limpeza oficial pós-sucesso
+                mensagens.splice(3, 6);
+                console.log("💾 [Memória] Motor 1.5B comprimiu o histórico com sucesso.");
+                
+                salvarEstadoJogador().catch(e => console.error("Erro no salvamento pós-compressão:", e));
+            } catch (error) {
+                console.error("Erro geral na rede/compressão:", error);
+            } finally {
+                window._compressaoEmAndamento = false;
+            }
+        }
+        
         function adicionarMensagem(texto, tipo, temporaria = false) {
             const div = document.createElement('div');
             div.className = tipo === 'user' ? 'user-message' : tipo === 'system' ? 'system-message' : 'ai-message';
             div.innerText = texto;
-            if (temporaria) div.id = 'temp-' + Date.now() + '-' + Math.random();
-            chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
+            if (temporaria) {
+                div.id = 'temp-' + Date.now() + '-' + Math.random();
+            }
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
             return div.id;
         }
 
-        async function chamarLLMStream(msgs, tokens, onToken) {
-            const response = await fetch(LM_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODELO, messages: msgs, temperature: window._introGenerating ? 0.75 : 0.6, max_tokens: tokens, stream: true }) });
-            const reader  = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '', fullText = '', finishReason = null;
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n'); buffer = lines.pop();
-                for (const line of lines) {
-                    if (!line.startsWith('data: ')) continue;
-                    const jsonStr = line.slice(6).trim();
-                    if (jsonStr === '[DONE]') continue;
-                    try {
-                        const chunk = JSON.parse(jsonStr);
-                        const delta = chunk.choices?.[0]?.delta?.content || '';
-                        const fr    = chunk.choices?.[0]?.finish_reason;
-                        if (delta) { fullText += delta; if (onToken) onToken(fullText); }
-                        if (fr && fr !== 'null') finishReason = fr;
-                    } catch (e) {}
+        async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
+            try {
+                const response = await fetch(LM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODELO,
+                        messages: mensagensPayload,
+                        temperature: window._introGenerating ? 0.75 : 0.6,
+                        max_tokens: maxTokens,
+                        presence_penalty: 0.0,
+                        frequency_penalty: 0.0,
+                        stream: true
+                    })
+                });
+
+                if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let fullText = '';
+                let finishReason = null;
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        const jsonStr = line.slice(6).trim();
+                        if (jsonStr === '[DONE]') continue;
+                        try {
+                            const chunk = JSON.parse(jsonStr);
+                            const delta = chunk.choices?.[0]?.delta?.content || '';
+                            const fr = chunk.choices?.[0]?.finish_reason;
+
+                            if (delta) {
+                                fullText += delta;
+                                if (onToken) onToken(fullText);
+                            }
+                            if (fr && fr !== 'null') finishReason = fr;
+                        } catch (parseErr) {}
+                    }
                 }
+                return { text: fullText, finishReason };
+            } catch (error) {
+                throw error;
             }
-            return { text: fullText, finishReason };
         }
 
-        async function gerarRespostaComContinuacao(msgs, tokens, elemento) {
+        async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento, maxContinuacoes = 0) {
             let textoCompleto = '';
-            const { text } = await chamarLLMStream(msgs, tokens, (parcial) => {
-                primeiroTokenRecebido = true;
-                elemento.innerText = parcial;
+            let msgsAtual = [...mensagensPayload];
+
+            for (let tentativa = 0; tentativa <= maxContinuacoes; tentativa++) {
+                if (tentativa > 0) {
+                    msgsAtual = [
+                        ...msgsAtual,
+                        { role: 'assistant', content: textoCompleto },
+                        { role: 'user', content: 'Continue a narração em português brasileiro.' }
+                    ];
+                }
+
+                const { text, finishReason } = await chamarLLMStream(
+                    msgsAtual,
+                    maxTokens,
+                    (parcial) => {
+    if (!primeiroTokenRecebido) {
+        primeiroTokenRecebido = true;
+    }
+    elemento.innerText = textoCompleto + parcial;
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+                );
+
+                textoCompleto += text;
+                elemento.innerText = textoCompleto;
                 chatBox.scrollTop = chatBox.scrollHeight;
-            });
-            textoCompleto += text;
+
+                if (finishReason !== 'length') break;
+            }
+            // --- PARSER DE ENTIDADES (após a resposta completa) ---
             parsearEstadoEntidades(textoCompleto);
             return textoCompleto;
         }
 
-        const PROMPT_INTRO = `Descreva a cena atual em 2-3 frases curtas, em segunda pessoa. Use APENAS os elementos presentes em [DESCRICAO_CANONICA] e [ELEMENTOS_DA_SALA]. Não invente nada. Termine perguntando o que eu faço.`;
+        const PROMPT_INTRO = `Descreva em 3 frases curtas a seguinte cena, em segunda pessoa: Você está trancado numa sala de pedra. Voce precisa descobrir uma maneira de sair. Uma mulher jovem e bela de cabelos claros está de frente para você. O que você faz?`;
 
         function buildEntityIndex(ssrJson) {
-            entityIndex = {}; entidadeEmFoco = null;
+            entityIndex = {};
+            entidadeEmFoco = null;
+
             for (const entrada of (ssrJson?.npcs || [])) {
-                const vIdx = entrada.indexOf(','); if (vIdx === -1) continue;
-                entityIndex[entrada.slice(0, vIdx).trim().toLowerCase()] = entrada.slice(vIdx + 1).trim().toLowerCase();
+                const virgulaIdx = entrada.indexOf(',');
+                if (virgulaIdx === -1) continue;
+                const nome   = entrada.slice(0, virgulaIdx).trim().toLowerCase();
+                const estado = entrada.slice(virgulaIdx + 1).trim().toLowerCase();
+                entityIndex[nome] = estado;
+            }
+
+            const situacao = ssrJson?.situacao_atual?.toLowerCase() || '';
+            for (const [nome, estado] of Object.entries(entityIndex)) {
+                if (situacao.includes(nome)) {
+                    entidadeEmFoco = { nome, estado };
+                    break;
+                }
+            }
+            if (!entidadeEmFoco && Object.keys(entityIndex).length > 0) {
+                const [nome, estado] = Object.entries(entityIndex)[0];
+                entidadeEmFoco = { nome, estado };
             }
         }
 
-        function resolverEstadoRelacionalNPC(ent) {
-            if (!ent) return 'desconhecido';
-            if (/mort[ao]|cadáver|sem vida/.test(ent.estado)) return 'morto';
-            if (/hostil|agressiv/.test(ent.estado)) return 'hostil';
-            if (/aliado|amigo/.test(ent.estado)) return 'aliado';
-            if (/apavorad|submiss/.test(ent.estado)) return 'submisso';
-            return 'neutro';
+        function resolverMicroContexto(acao) {
+            const lower = acao.toLowerCase();
+            for (const [nome, estado] of Object.entries(entityIndex)) {
+                if (lower.includes(nome)) return `[${nome}: ${estado}]`;
+            }
+            if (entidadeEmFoco) {
+                const todosPronomes = [...PRONOMES_FEMININOS, ...PRONOMES_MASCULINOS, ...PRONOMES_NEUTROS];
+                const temPronome = todosPronomes.some(p => lower.includes(p));
+                if (temPronome) return `[${entidadeEmFoco.nome}: ${entidadeEmFoco.estado}]`;
+            }
+            return '';
         }
 
-        function classificarAcao(acaoOriginal) {
-            const acao = acaoOriginal.toLowerCase().trim();
-            if (/^(me descreva|descreva|como é|olh[ao])\b/.test(acao)) return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'meta' };
-            if (/\b(corro|fujo|chuto|soco|ataco)\b/.test(acao)) return { tipo: 'ARRISCADA', atributo: 'HABILIDADE', fonte: 'físico-claro' };
-            return null;
-        }
+        async function classificarAcaoLLM(acaoUsuario) {
+    const microContexto = resolverMicroContexto(acaoUsuario);
+    
+    // 1. Extraímos o histórico puro de intenções, ignorando a prosa do narrador.
+    const acoesJogador = mensagens.filter(m => m.role === 'user');
+    const acaoAnterior = acoesJogador.length > 1 ? acoesJogador[acoesJogador.length - 1].content : "Nenhuma";
 
-        async function classificarComArbitro(acaoOriginal, entidade) {
-            const estado = resolverEstadoRelacionalNPC(entidade);
-            try {
-                const r = await fetch(LM_URL, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: MODELO_JUIZ, messages: [{ role: 'system', content: `Classifique a ação em: FISICA, INFLUENCIA ou PASSIVA. Retorne apenas JSON.` }, { role: 'user', content: `NPC: ${entidade?.nome} (${estado})\nAção: "${acaoOriginal}"` }], temperature: 0.0, max_tokens: 15, response_format: { type: "json_schema", json_schema: { name: "arb", strict: true, schema: { type: "object", properties: { categoria: { type: "string", enum: ["FISICA", "INFLUENCIA", "PASSIVA"] } }, required: ["categoria"], additionalProperties: false } } } })
-                });
-                const { categoria } = JSON.parse((await r.json()).choices[0].message.content);
-                if (categoria === 'PASSIVA') return { tipo: 'TRIVIAL', atributo: 'NENHUM' };
-                if (categoria === 'FISICA') return { tipo: 'ARRISCADA', atributo: 'HABILIDADE' };
-                return { tipo: 'ARRISCADA', atributo: 'CARISMA' };
-            } catch (e) { return { tipo: 'ARRISCADA', atributo: 'CARISMA' }; }
+    // 2. Montamos um prompt cirúrgico e seco para o 1.5B processar instantaneamente.
+    const promptFinal = `AÇÃO ANTERIOR DO JOGADOR: "${acaoAnterior}"
+MICRO-CONTEXTO DO ALVO: ${microContexto || "[Nenhum/Desconhecido]"}
+AÇÃO ATUAL DO JOGADOR: "${acaoUsuario}"`;
+
+    const response = await fetch(LM_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            model: MODELO_JUIZ,
+            messages: [
+                {
+                    role: 'system',
+                    content: `Você é um classificador de ações de RPG. 
+Classifique a ação ATUAL do jogador em EXATAMENTE um tipo e um atributo.
+
+TIPO:
+- TRIVIAL (sem risco de falha): observar, caminhar, conversar amigavelmente com aliados.
+- ARRISCADA (risco de rejeição, hostilidade ou fracasso): atacar, fugir, dar ordens a um alvo ferido/hostil, seduzir, extrair informações.
+
+REGRAS DE CONTEXTO:
+Se a "AÇÃO ANTERIOR" foi agressiva ou invasiva contra o NPC, QUALQUER diálogo subsequente com esse NPC torna-se ARRISCADO e DEVE OBRIGATORIAMENTE testar CARISMA (Intimidação/Coerção). Jamais teste HABILIDADE para ações de fala.
+
+ATRIBUTO (apenas se ARRISCADA):
+- HABILIDADE: APENAS esforço físico motor (correr, saltar, forçar portas, lutar, furtividade).
+- CARISMA: APENAS quando o jogador tenta convencer, enganar, intimidar ou seduzir um NPC que tenha vontade própria. 
+- SORTE: roletas, eventos caóticos, apostas, tentativas.
+- NENHUM: se TRIVIAL.
+- ATENÇÃO: Se o jogador está apenas perguntando algo AO NARRADOR ou olhando o cenário, é TRIVIAL.`
+                },
+                {
+                    role: 'user',
+                    content: promptFinal
+                }
+            ],
+            temperature: 0.0,
+                    max_tokens: 30,
+                    response_format: {
+                        type: "json_schema",
+                        json_schema: {
+                            name: "classificacao_acao",
+                            strict: true,
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    tipo: { type: "string", enum: ["TRIVIAL", "ARRISCADA"] },
+                                    atributo: { type: "string", enum: ["HABILIDADE", "CARISMA", "SORTE", "NENHUM"] }
+                                },
+                                required: ["tipo", "atributo"],
+                                additionalProperties: false
+                            }
+                        }
+                    }
+                })
+            });
+            const data = await response.json();
+const raw = data.choices[0].message.content;
+console.log('[JUIZ RAW]', raw);
+return JSON.parse(raw);
         }
 
         async function animarTextoTeste(texto) {
-            const div = document.createElement('div'); div.className = 'teste-reveal'; chatBox.appendChild(div);
-            for (const char of texto) { div.innerText += char; await new Promise(r => setTimeout(r, 40)); }
-        }
-
-        function criarBotaoRolar() { return new Promise(res => { const btn = document.createElement('button'); btn.id = 'rolar-btn'; btn.innerText = '⚄ ROLAR DADO'; chatBox.appendChild(btn); btn.addEventListener('click', () => { btn.remove(); res(); }, { once: true }); }); }
-        
-        function mostrarResultadoDado(s, a, v, r) {
-            const d1 = document.createElement('div'); d1.className = 'resultado-dado'; d1.innerText = `Rolagem: ${s} vs ${a} ${v}`; chatBox.appendChild(d1);
-            const d2 = document.createElement('div'); d2.className = r === 'SUCESSO' ? 'resultado-sucesso' : 'resultado-falha'; d2.innerText = r; chatBox.appendChild(d2);
-        }
-
-        // [AJUSTE: PERSISTÊNCIA REAL] Adiciona os NPCs encontrados permanentemente no "chão" daquela sala para salvar
-        function parsearEstadoEntidades(textoNarrador) {
-            const match = textoNarrador.match(/\[NPCS:\s*([^\]]+)\]/i);
-            if (!match) return;
-
-            const payload = match[1].trim();
-            if (payload.toLowerCase() === 'nenhum') { entityIndex = {}; entidadeEmFoco = null; return; }
-
-            const entradas = payload.split('|');
-            const novoIndex = {};
-
-            for (const entrada of entradas) {
-                const [nome, estado] = entrada.split(':').map(s => s.trim().toLowerCase());
-                if (nome && estado) {
-                    novoIndex[nome] = estado;
-                    // Persiste o NPC na sala atual
-                    if (salaAtualId) elementosEstado[`${salaAtualId}:npc_${nome}`] = estado;
-                }
+            const div = document.createElement('div');
+            div.className = 'teste-reveal';
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            for (const char of texto) {
+                div.innerText += char;
+                await new Promise(r => setTimeout(r, 40));
             }
-
-            for (const [nome, estAntigo] of Object.entries(entityIndex)) {
-                if (estAntigo === 'morto') {
-                    novoIndex[nome] = 'morto';
-                    if (salaAtualId) elementosEstado[`${salaAtualId}:npc_${nome}`] = 'morto';
-                }
-            }
-            entityIndex = novoIndex;
         }
 
+        function criarBotaoRolar() {
+            return new Promise(resolve => {
+                const btn = document.createElement('button');
+                btn.id = 'rolar-btn';
+                btn.innerText = '⚄ ROLAR DADO';
+                chatBox.appendChild(btn);
+                chatBox.scrollTop = chatBox.scrollHeight;
+                btn.addEventListener('click', () => { btn.remove(); resolve(); }, { once: true });
+            });
+        }
+
+        function mostrarResultadoDado(semente, atributo, valorAtributo, resultado) {
+            const divDado = document.createElement('div');
+            divDado.className = 'resultado-dado';
+            divDado.innerText = `Rolagem: ${semente} vs ${atributo} ${valorAtributo}`;
+            chatBox.appendChild(divDado);
+            const divRes = document.createElement('div');
+            divRes.className = resultado === 'SUCESSO' ? 'resultado-sucesso' : 'resultado-falha';
+            divRes.innerText = resultado;
+            chatBox.appendChild(divRes);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // --- RESOLVEDOR DE ESTADO RELACIONAL ---
+function resolverEstadoRelacionalNPC(entidade) {
+    if (!entidade) return 'desconhecido';
+    const estado = entidade.estado || '';
+
+    if (/mort[ao]|cadáver|sem vida|desmaiou|inconsciente/.test(estado)) return 'morto';
+    if (/hostil|agressiv|furios|raivos|ameaç|atacando/.test(estado))     return 'hostil';
+    if (/aliado|amigo|confia|ajudando|parceiro/.test(estado))            return 'aliado';
+    if (/apavorad|assustad|tremendo|submisos|rendid/.test(estado))       return 'submisso';
+    return 'neutro';
+}
+
+// --- NORMALIZADOR DE INPUT ---
+function normalizarAcao(acao) {
+    return acao
+        .toLowerCase()
+        .trim()
+        .replace(/^(mestre|narrador|gm)[,:]?\s*/i, '')
+        .replace(/^["'](.+)["']$/, '$1');
+}
+
+// --- CLASSIFICADOR PRINCIPAL (puramente determinístico) ---
+function classificarAcao(acaoOriginal) {
+    const acao = normalizarAcao(acaoOriginal);
+
+    // CAMADA 0: METALINGUAGEM (sempre TRIVIAL)
+    const ehMeta = /^(me descreva|descreva|descrever|diga|me diga|detalhe|explique|me conte|conte|me mostr|mostr|narre)\b/.test(acao)
+        || /^(como é|como s[aã]o|qual [ao]|quais|onde fica|o que [eé]|tem algo|existe|h[aá]|quantos)\b/.test(acao)
+        || /^(me ajude|ajude|status|inventário|mapa)\b/.test(acao);
+    if (ehMeta) return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'meta' };
+
+    // CAMADA 1: PERCEPÇÃO PASSIVA (sempre TRIVIAL)
+    const ehPercepcao = /^(olh[ao]|observ|examin|chec[ao]|analiso|inspecion|vejo|noto|procuro|investigo|vasculh|escuto|ouço|sinto o cheiro|cheiro|toco|palpo|tento (ver|ouvir|identificar|perceber|notar|entender|descobrir como|descobrir o que))\b/.test(acao);
+    if (ehPercepcao) return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'percepção' };
+
+    // CAMADA 2: AÇÕES FÍSICAS (HABILIDADE)
+    const ehFisico = /\b(corro|fujo|salto|pulo|escalo|subo|desço|empurro|puxo|arrombo|forço|chuto|soco|ataco|golpeio|esfaqueio|disparo|lanço|arremesso|rolo|me jogo|me agacho|me escondo|me esquivo|desarmo|prendo|amarro|desvio|rasteio|nado|mergulho|trepo|agarro|aperto)\b/.test(acao);
+    if (ehFisico) return { tipo: 'ARRISCADA', atributo: 'HABILIDADE', fonte: 'físico' };
+
+    // CAMADA 3: AÇÕES SOCIAIS (CARISMA ou TRIVIAL dependendo do estado)
+    const ehFalaDireta = /^(digo|falo|grito|sussurro|pergunto|respondo|indago|proponho|ofereço|imploro|rogo|ameaço|intimido|seduz|convenço|nego|discuto|discurso|chamo|chamo por|chamar)\b/.test(acao)
+        || acaoOriginal.trim().startsWith('"') || acaoOriginal.trim().startsWith("'");
+    const ehInfluencia = /\b(convencer|persuadir|intimidar|seduzir|enganar|mentir|negociar|blefar|chantagear|coagir|ameaçar|impressionar|agradar|humilhar)\b/.test(acao);
+
+    if (ehFalaDireta || /^(tento (convencer|persuadir|intimidar|seduzir|enganar|mentir|negociar|blefar|chantagear|coagir|ameaçar))\b/.test(acao)) {
+        if (!entidadeEmFoco) return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'fala-sem-alvo' };
+        const estadoRelacional = resolverEstadoRelacionalNPC(entidadeEmFoco);
+        if (estadoRelacional === 'morto') return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'fala-morto' };
+
+        const acaoAnteriorFoiViolenta = (_ultimoTipoAcao === 'ARRISCADA' && _ultimoAtributo === 'HABILIDADE');
+        if (acaoAnteriorFoiViolenta) return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'fala-pós-violência' };
+
+        if (estadoRelacional === 'hostil' || estadoRelacional === 'submisso')
+            return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: `fala-${estadoRelacional}` };
+
+        if (ehInfluencia) return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'fala-influência' };
+        return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'fala-neutra' };
+    }
+
+    // CAMADA 4: SORTE
+    const ehSorte = /\b(aposto|jogo|arrisca|tento a sorte|rolo|dou sorte|torço|rezo|cruzo os dedos|confio no destino)\b/.test(acao);
+    if (ehSorte) return { tipo: 'ARRISCADA', atributo: 'SORTE', fonte: 'sorte' };
+
+    // CAMADA 5: DEFAULT INTELIGENTE (antes de cair no árbitro)
+    if (/^tento\b/.test(acao) && entidadeEmFoco && resolverEstadoRelacionalNPC(entidadeEmFoco) !== 'morto')
+        return { tipo: 'ARRISCADA', atributo: 'HABILIDADE', fonte: 'default-tento' };
+
+    if (!entidadeEmFoco || resolverEstadoRelacionalNPC(entidadeEmFoco) === 'morto')
+        return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'default-sem-alvo' };
+
+    // --- CAMADA 6: ÁRBITRO 1.5B (apenas casos ambíguos com NPC vivo) ---
+    return { async: true };  // indica que precisa do árbitro
+}
+
+// --- FUNÇÃO DO ÁRBITRO (chama o 1.5B apenas quando necessário) ---
+async function classificarComArbitro(acaoOriginal, entidade) {
+    const estadoRelacional = resolverEstadoRelacionalNPC(entidade);
+    const contexto = `NPC: ${entidade.nome} (${estadoRelacional}). AÇÃO ANTERIOR: ${_ultimoAtributo !== 'NENHUM' ? _ultimoAtributo : 'nenhuma'}`;
+
+    try {
+        const response = await fetch(LM_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: MODELO_JUIZ,
+                messages: [
+                    {
+                        role: 'system',
+                        content: `Classifique a ação do jogador em UMA categoria:
+FISICA: esforço corporal direto (atacar, correr, escalar, forçar, empurrar).
+SOCIAL: comunicação com intenção de influenciar o NPC (convencer, ameaçar, seduzir, enganar, questionar com pressão).
+PASSIVA: observação, movimento sem risco, ação sobre o ambiente sem NPC envolvido.
+
+Retorne apenas o JSON. Nada mais.`
+                    },
+                    { role: 'user', content: `CONTEXTO: ${contexto}\nAÇÃO: "${acaoOriginal}"` }
+                ],
+                temperature: 0.0,
+                max_tokens: 20,
+                response_format: {
+                    type: "json_schema",
+                    json_schema: {
+                        name: "arbitro",
+                        strict: true,
+                        schema: {
+                            type: "object",
+                            properties: {
+                                categoria: { type: "string", enum: ["FISICA", "SOCIAL", "PASSIVA"] }
+                            },
+                            required: ["categoria"],
+                            additionalProperties: false
+                        }
+                    }
+                }
+            })
+        });
+        const data = await response.json();
+        const { categoria } = JSON.parse(data.choices[0].message.content);
+
+        if (categoria === 'PASSIVA') return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'árbitro-passiva' };
+        if (categoria === 'FISICA')  return { tipo: 'ARRISCADA', atributo: 'HABILIDADE', fonte: 'árbitro-física' };
+        if (categoria === 'SOCIAL') {
+            const semResistencia = (estadoRelacional === 'aliado' || estadoRelacional === 'neutro') && _ultimoAtributo !== 'HABILIDADE';
+            return semResistencia
+                ? { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'árbitro-social-neutra' }
+                : { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'árbitro-social-carisma' };
+        }
+    } catch (e) {
+        console.warn('[ÁRBITRO] Falhou, aplicando fallback conservador.', e);
+    }
+    return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'árbitro-fallback' };
+}
+
+// --- PARSER DE ESTADO DE ENTIDADES (roda após CADA resposta do narrador) ---
+function parsearEstadoEntidades(textoNarrador) {
+    const match = textoNarrador.match(/\[NPCS:\s*([^\]]+)\]/i);
+    if (!match) {
+        console.warn('[ENTIDADES] Tag [NPCS:] não encontrada na resposta. Mantendo estado anterior.');
+        return;
+    }
+
+    const payload = match[1].trim();
+    if (payload.toLowerCase() === 'nenhum') {
+        entityIndex = {};
+        entidadeEmFoco = null;
+        console.log('[ENTIDADES] Nenhum NPC em cena. Index zerado.');
+        return;
+    }
+
+    const entradas = payload.split('|');
+    const novoIndex = {};
+
+    for (const entrada of entradas) {
+        const [nome, estado] = entrada.split(':').map(s => s.trim().toLowerCase());
+        if (nome && estado) novoIndex[nome] = estado;
+    }
+
+    entityIndex = novoIndex;
+
+    const situacao = ssrJson?.situacao_atual?.toLowerCase() || '';
+    let focoEncontrado = null;
+
+    for (const [nome, estado] of Object.entries(entityIndex)) {
+        if (situacao.includes(nome)) {
+            focoEncontrado = { nome, estado };
+            break;
+        }
+    }
+
+    entidadeEmFoco = focoEncontrado
+        ?? (Object.keys(entityIndex).length > 0
+            ? { nome: Object.keys(entityIndex)[0], estado: Object.values(entityIndex)[0] }
+            : null);
+
+    console.log('[ENTIDADES] Index atualizado:', entityIndex, '| Foco:', entidadeEmFoco);
+}
+      
         window.enviar = async function(mensagemUsuario = null) {
             const isInitial = mensagemUsuario === null;
-            if (!isInitial) turnosJogados++;
-            let pergunta = isInitial ? (!resumoAtual ? PROMPT_INTRO : 'O jogo foi recarregado. Narre a cena atual.') : mensagemUsuario;
-            if (!isInitial) { adicionarMensagem(pergunta, 'user'); userInput.value = ''; }
+            
+            if (!isInitial) {
+                turnosJogados++;
+            }
 
-            sendBtn.disabled = true; userInput.disabled = true;
-            const tempId = adicionarMensagem('', 'ai', true);
-            const elDisp = document.getElementById(tempId);
-
-            let cAnim = 0; let iPalavra = 0; primeiroTokenRecebido = false;
-            intervaloAnimacao = setInterval(() => {
-                if (!primeiroTokenRecebido) {
-                    elDisp.innerText = PALAVRAS_SOMBRIAS[iPalavra % PALAVRAS_SOMBRIAS.length] + '.'.repeat((Math.floor(cAnim / 2) % 4));
-                    elDisp.style.opacity = 0.4 + (Math.sin(Date.now() / 400) * 0.25);
-                    cAnim++; iPalavra++;
+            let pergunta;
+            if (isInitial) {
+                if (!resumoAtual) {
+                    pergunta = PROMPT_INTRO;
                 } else {
-                    clearInterval(intervaloAnimacao); elDisp.style.opacity = '1';
+                    pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
                 }
-            }, 150);
+            } else {
+                pergunta = mensagemUsuario;
+            }
+
+            if (!isInitial) {
+                adicionarMensagem(pergunta, 'user');
+                userInput.value = '';
+            }
+
+            sendBtn.disabled = true;
+            userInput.disabled = true;
+
+            const tempId = adicionarMensagem('', 'ai', true);
+const elementoDisplay = document.getElementById(tempId);
+
+// Inicia a animação de palavras sombrias
+let contadorAnim = 0;
+let indicePalavra = Math.floor(Math.random() * PALAVRAS_SOMBRIAS.length);
+let exibindoPensando = false;
+let ciclosPensando = 0;
+primeiroTokenRecebido = false;
+
+intervaloAnimacao = setInterval(() => {
+    if (!primeiroTokenRecebido) {
+        // A cada ~1.2 segundos (8 ciclos de 150ms), alterna para "pensando..." por 3 ciclos
+        if (contadorAnim % 8 === 0) {
+            exibindoPensando = true;
+            ciclosPensando = 0;
+        }
+        
+        let textoExibido = '';
+        if (exibindoPensando && ciclosPensando < 4) {
+            // Exibe "pensando..." com reticências variáveis
+            const pontos = '.'.repeat(ciclosPensando % 4);
+            textoExibido = `pensando${pontos}`;
+            ciclosPensando++;
+            if (ciclosPensando >= 4) exibindoPensando = false;
+        } else {
+            // Exibe palavra sombria
+            const palavra = PALAVRAS_SOMBRIAS[indicePalavra % PALAVRAS_SOMBRIAS.length];
+            const pontos = '.'.repeat((Math.floor(contadorAnim / 2) % 4));
+            textoExibido = `${palavra}${pontos}`;
+            indicePalavra++;
+        }
+        
+        elementoDisplay.innerText = textoExibido;
+        
+        // Pulsação suave (opacidade entre 0.4 e 0.9)
+        const opacidade = 0.4 + (Math.sin(Date.now() / 400) * 0.25);
+        elementoDisplay.style.opacity = opacidade;
+        elementoDisplay.style.letterSpacing = '2px';
+        elementoDisplay.style.transition = 'opacity 0.1s ease';
+        
+        contadorAnim++;
+    } else {
+        clearInterval(intervaloAnimacao);
+        elementoDisplay.style.opacity = '1';
+        elementoDisplay.style.letterSpacing = 'normal';
+        elementoDisplay.style.transition = '';
+        intervaloAnimacao = null;
+    }
+}, 150);
 
             try {
-                let msgFinal = pergunta;
+                let mensagemFinal = pergunta;
 
                 if (!isInitial) {
-                    let classif = classificarAcao(pergunta) || await classificarComArbitro(pergunta, entidadeEmFoco);
-                    let { tipo, atributo } = classif;
-                    let res = null, dano = 0;
+        // --- CLASSIFICADOR DETERMINÍSTICO v3.0 (com árbitro 1.5B opcional) ---
+const classificacaoRaw = classificarAcao(pergunta);
+let classificacao;
+
+if (classificacaoRaw.async) {
+    // Caso ambíguo com NPC vivo: chama o árbitro (1.5B)
+    const tempJuizId = adicionarMensagem('⚖️ Árbitro avaliando a ação...', 'system', true);
+    classificacao = await classificarComArbitro(pergunta, entidadeEmFoco);
+    const msgJuiz = document.getElementById(tempJuizId);
+    if (msgJuiz) msgJuiz.remove();
+} else {
+    classificacao = classificacaoRaw;
+}
+
+console.log(`[CLASSIFICADOR v3] ${classificacao.fonte.toUpperCase()} →`, classificacao);
+
+// Atualiza estado persistente ANTES de processar o resultado
+_ultimoTipoAcao = classificacao.tipo;
+_ultimoAtributo = classificacao.atributo;
+
+const { tipo, atributo } = classificacao;
+
+                    let resultado = null;
+                    let danoBase = 0;
 
                     if (tipo === 'ARRISCADA' && atributo !== 'NENHUM') {
-                        await animarTextoTeste(`TESTE DE ${atributo}`); await criarBotaoRolar();
-                        const semente = Math.floor(Math.random() * 20) + 1; const val = jogadorStats[atributo] ?? 0;
-                        res = semente <= val ? 'SUCESSO' : 'FALHA';
-                        if (res === 'FALHA') dano = Math.max(1, Math.floor((semente - val) / 2));
-                        mostrarResultadoDado(semente, atributo, val, res);
-                        await new Promise(r => setTimeout(r, 600));
+                        await animarTextoTeste(`TESTE DE ${atributo}`);
+                        await criarBotaoRolar();
+
+                        const semente = Math.floor(Math.random() * 20) + 1;
+                        const valorAtributo = jogadorStats[atributo] ?? 0;
+                        resultado = semente <= valorAtributo ? 'SUCESSO' : 'FALHA';
+                        if (resultado === 'FALHA') {
+                            danoBase = Math.max(1, Math.floor((semente - valorAtributo) / 2));
+                        }
+
+                        mostrarResultadoDado(semente, atributo, valorAtributo, resultado);
+                        await new Promise(r => setTimeout(r, 600)); // Pequena pausa dramática
                     }
-                    
-                    msgFinal += tipo === 'TRIVIAL' ? `\n[AÇÃO TRIVIAL: Termine com [DANO: 0]]` : `\n[TESTE DE ${atributo}: ${res}. Termine com [DANO: ${dano}]]`;
+
+                    // --- INÍCIO DO NOVO CONTEXTO DINÂMICO ---
+let diretrizConsequencia = "";
+let diretrizSucesso = "A intenção do jogador se concretiza TOTALMENTE e sem ressalvas.";
+
+if (atributo === 'HABILIDADE') {
+    if (resultado === 'FALHA') diretrizConsequencia = "A ação fracassa e o jogador sofre uma punição física visceral (ossos quebrados, carne rasgada, dano material).";
+} else if (atributo === 'CARISMA') {
+    if (resultado === 'SUCESSO') diretrizSucesso = "A intenção do jogador se concretiza TOTALMENTE. ATENÇÃO: Se o contexto anterior envolver violência, o alvo obedece ao jogador por PURO TERROR ou submissão doentia, nunca por afeto. Narre a obediência forçada e a linguagem corporal de medo.";
+    if (resultado === 'FALHA') diretrizConsequencia = "A tentativa social é totalmente rejeitada. O alvo demonstra repulsa ou fúria, quebrando a moral do jogador. É proibido narrar dano físico ao jogador neste caso, foque na humilhação social e hostilidade.";
+} else if (atributo === 'SORTE') {
+    if (resultado === 'FALHA') diretrizConsequencia = "O azar se manifesta de forma impiedosa. Uma reviravolta cruel do ambiente pune o jogador.";
+}
+
+const contextoDecidido = tipo === 'TRIVIAL'
+    ? `[AÇÃO TRIVIAL: Avance a cena diretamente. Revele uma nova tensão ou detalhe sombrio sem mencionar testes. Termine com [DANO: 0]]`
+    : `[AÇÃO ARRISCADA — TESTE DE ${atributo}: ${resultado}. REGRAS VITAIS: Se SUCESSO, ${diretrizSucesso} Se FALHA, a intenção é TOTALMENTE NEGADA/REJEITADA e ${diretrizConsequencia} Narre o desfecho seco. Termine com [DANO: ${resultado === 'FALHA' ? danoBase : 0}]]`;
+// --- FIM DO NOVO CONTEXTO DINÂMICO ---
+
+                    mensagemFinal += `\n${contextoDecidido}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
                 }
 
-                msgFinal += construirContextoSala();
-                mensagens.push({ role: 'user', content: msgFinal });
-                if (isInitial && !resumoAtual) window._introGenerating = true;
+                mensagens.push({ role: 'user', content: mensagemFinal });
 
-                const respIA = await gerarRespostaComContinuacao(mensagens, isInitial ? 500 : 300, elDisp);
-                const danoMatch = respIA.match(/\[DANO:\s*(\d+)\]/i);
-                
-                elDisp.innerText = respIA.replace(/\[TESTE:[^\]]+\]/g, '').replace(/\[DANO:\s*\d+\]/gi, '').replace(/\[NPCS:[^\]]+\]/gi, '').replace(/\[ELEMENTOS_MUT:[^\]]+\]/gi, '').replace(/\[MOVER:[^\]]+\]/gi, '').trim();
+                const isIntro = (isInitial && !resumoAtual);
+                const maxTokens       = isIntro ? 500 : 300;
+                const maxContinuacoes = isIntro ?    1 :   1;
+
+                if (isIntro) window._introGenerating = true;
+
+                const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
+
+                const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
+
+                let respostaLimpa = respostaIA
+    .replace(/\[TESTE:[^\]]+\]/g, '')
+    .replace(/\[DANO:\s*\d+\]/gi, '')
+    .replace(/\[NPCS:[^\]]+\]/gi, '')
+    .trim();
+
+                if (!isInitial && danoMatch && parseInt(danoMatch[1]) > 0) {
+                    const div = document.createElement('div');
+                    div.className = 'system-message';
+                    div.innerHTML = `<em style="color:#e53935; font-weight:bold;">[FALHA NO TESTE: CONSEQUÊNCIA APLICADA]</em>`;
+                    chatBox.appendChild(div);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+
+                elementoDisplay.innerText = respostaLimpa;
 
                 if (danoMatch && parseInt(danoMatch[1]) > 0) {
-                    energia -= parseInt(danoMatch[1]);
+                    const valorDano = parseInt(danoMatch[1]);
+                    energia -= valorDano;
                     document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
+                    adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
+
+                    if (energia <= 0) {
+                        adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
+                        userInput.disabled = true;
+                        sendBtn.disabled = true;
+                        await salvarEstadoJogador();
+                        return;
+                    }
                 }
 
-                window._introGenerating = false;
-                mensagens.push({ role: 'assistant', content: respIA });
+                if (isIntro) window._introGenerating = false;
 
-                _pendingMoveId = parsearMutacoesSala(respIA);
-                if (_pendingMoveId) {
-                    sendBtn.disabled = true; userInput.disabled = true;
-                    await aplicarMovimento(_pendingMoveId);
-                    _pendingMoveId = null;
+                mensagens.push({ role: 'assistant', content: respostaIA });
+
+                // O NOVO GATILHO: IDLE-TIME PROCESSING
+                setTimeout(() => {
+                    salvarEstadoJogador().catch(e => console.error('Erro no salvamento background:', e));
+                    
+                    if (mensagens.length > LIMITE_MENSAGENS && !window._compressaoEmAndamento) {
+                        window._compressaoEmAndamento = true;
+                        
+                        // Atrasa a requisição pesada em 4 segundos para ocorrer no tempo ocioso
+                        setTimeout(() => {
+                            comprimirMemoria().catch(e => {
+                                console.error('Erro na compressão background:', e);
+                                window._compressaoEmAndamento = false;
+                            });
+                        }, 4000); 
+                    }
+                }, 0);
+
+                if (isInitial) {
+                    userInput.disabled = false;
+                    sendBtn.disabled = false;
+                    userInput.focus();
                 }
 
-                setTimeout(() => { salvarEstadoJogador(); if (mensagens.length > LIMITE_MENSAGENS) comprimirMemoria(); }, 0);
-            } catch (e) {
-                if (intervaloAnimacao) clearInterval(intervaloAnimacao); elDisp.innerText = `❌ Erro: ${e.message}`;
+            } catch (error) {
+                if (intervaloAnimacao) clearInterval(intervaloAnimacao);
+                elementoDisplay.innerText = `❌ Erro: ${error.message}`;
+                if (isInitial) {
+                    userInput.disabled = false;
+                    sendBtn.disabled = false;
+                }
             } finally {
-                sendBtn.disabled = false; userInput.disabled = false; userInput.focus();
+                if (!isInitial) {
+                    sendBtn.disabled = false;
+                    userInput.disabled = false;
+                    userInput.focus();
+                }
             }
         };
 
         window.onload = async () => {
             onAuthStateChanged(auth, async (user) => {
-                if (user) { uidAtual = user.uid; await carregarDadosJogador(uidAtual); window.enviar(); } 
-                else { window.location.href = "login.html"; }
+                if (user) {
+                    uidAtual = user.uid;
+                    await carregarDadosJogador(uidAtual);
+                    window.enviar();
+                } else {
+                    window.location.href = "login.html";
+                }
             });
         };
 
-        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !sendBtn.disabled) window.enviar(userInput.value.trim()); });
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !sendBtn.disabled) {
+                window.enviar(userInput.value.trim());
+            }
+        });
     </script>
 </body>
 </html>
