@@ -1161,6 +1161,21 @@ mensagemFinal += `\n${alertaMortos}\n${contextoMapa}\n${contextoDecidido}\n[RESP
 
                 mensagens.push({ role: 'assistant', content: respostaIA });
 
+                // Manter apenas as últimas 4 mensagens da conversa (mais os 3 system prompts)
+const MAX_CONV_MSG = 4; // número máximo de mensagens de conversa (usuário + assistente)
+const SYSTEM_COUNT = 3; // as três primeiras são system
+
+// total de mensagens = system + conversa
+const totalAtual = mensagens.length;
+const conversaAtual = totalAtual - SYSTEM_COUNT;
+
+if (conversaAtual > MAX_CONV_MSG) {
+    // quantas mensagens de conversa precisam ser removidas
+    const remover = conversaAtual - MAX_CONV_MSG;
+    // remove as primeiras `remover` mensagens de conversa (índices SYSTEM_COUNT até SYSTEM_COUNT+remover-1)
+    mensagens.splice(SYSTEM_COUNT, remover);
+}
+
                 // GATILHO: IDLE-TIME PROCESSING
                 setTimeout(() => {
                     salvarEstadoJogador().catch(e => console.error('Erro no salvamento background:', e));
