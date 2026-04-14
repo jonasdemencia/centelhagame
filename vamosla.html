@@ -1139,7 +1139,7 @@ mensagemFinal += `\n${alertaMortos}\n${contextoMapa}\n${contextoDecidido}\n[RESP
                 mensagens.push({ role: 'user', content: mensagemFinal });
 
                 const isIntro = (isInitial && !resumoAtual);
-                const maxTokens       = isIntro ? 500 : 300;
+                const maxTokens       = isIntro ? 500 : 200;
                 const maxContinuacoes = isIntro ?    1 :   1;
 
                 if (isIntro) window._introGenerating = true;
