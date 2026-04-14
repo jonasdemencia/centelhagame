@@ -958,12 +958,17 @@ function atualizarBotoesNavegacao() {
 
             let pergunta;
             if (isInitial) {
-                if (!resumoAtual) {
-                    pergunta = PROMPT_INTRO;
-                } else {
-                    pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
-                }
-            } else {
+    // Se já temos um mapa carregado (da Groq) e a sala 1 existe
+    if (mapaMundo && mapaMundo["1"] && mapaMundo["1"].texto_logico) {
+        // Em vez de usar o PROMPT_INTRO, constrói uma requisição para o Qwen descrever a sala 1
+        pergunta = `[AÇÃO DE SISTEMA]: Início do jogo. Descreva o local usando a base estrutural: "${mapaMundo["1"].texto_logico}". Aplique as regras de brutalidade e hiper-realismo. Não liste opções de saída.`;
+    } else if (!resumoAtual) {
+        // Fallback: se não há mapa, usa o prompt antigo
+        pergunta = PROMPT_INTRO;
+    } else {
+        pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
+    }
+} else {
                 pergunta = mensagemUsuario;
             }
 
