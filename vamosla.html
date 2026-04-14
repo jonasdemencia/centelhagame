@@ -151,7 +151,6 @@ let primeiroTokenRecebido = false;
                 content: `Você é um mestre de RPG brutal, sádico e hiper-realista. Responda APENAS em Português Brasileiro CORRETO, NUNCA em outros idiomas. 
 
 REGRAS INVIOLÁVEIS:
-- PROIBIDO usar: 'suave', 'preciso', 'gracioso', 'perfeito', 'sutil', 'brilho'.
 - FOCO: Anatomia crua, sons de osso quebrando, cheiro de ferro (sangue) e urina.
 - SE VIOLENTO: Descreva a deformação da carne, o espasmo nervoso e o som úmido.
 - SE SEXUAL: Descreva como um ato animal e cru, sem romantismo. Foco em fluidos e na crueza física.
@@ -519,7 +518,7 @@ required: ["local", "npcs", "situacao_atual"],
                     body: JSON.stringify({
                         model: MODELO,
                         messages: mensagensPayload,
-                        temperature: window._introGenerating ? 0.4 : 0.2,
+                        temperature: window._introGenerating ? 0.3 : 0.2,
                         max_tokens: maxTokens,
                         presence_penalty: 0.0,
                         frequency_penalty: 0.0,
