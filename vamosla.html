@@ -182,8 +182,27 @@ NUNCA omita esta tag.`
             response_format: formato,
         }),
     });
-    if (!response.ok) throw new Error(`Erro no Worker: ${response.status}`);
-    return await response.json();
+
+    // Captura o body independente do status HTTP
+    const data = await response.json();
+    console.log('[Groq] Resposta raw do Worker:', JSON.stringify(data).slice(0, 400));
+
+    if (!response.ok) {
+        // Worker retornou HTTP 4xx/5xx — loga o body para diagnóstico
+        throw new Error(`Erro no Worker [${response.status}]: ${JSON.stringify(data)}`);
+    }
+
+    // Groq retornou HTTP 200 mas com body de erro (ex: rate limit, token expirado)
+    if (data.error) {
+        throw new Error(`Erro da Groq API: ${data.error.message ?? JSON.stringify(data.error)}`);
+    }
+
+    // Valida shape mínimo antes de retornar
+    if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+        throw new Error(`Resposta da Groq sem 'choices': ${JSON.stringify(data).slice(0, 300)}`);
+    }
+
+    return data;
 }
 
         async function carregarDadosJogador(uid) {
@@ -318,13 +337,26 @@ async function gerarGrafoGroq(cenarioTema) {
     try {
         const data = await chamarGroq([{ role: "user", content: promptGroq }], 0.3, { type: "json_object" });
         const conteudo = data.choices[0].message.content;
-        mapaMundo = JSON.parse(conteudo);
+
+        let mapaParseado;
+        try {
+            mapaParseado = JSON.parse(conteudo);
+        } catch (parseErr) {
+            throw new Error(`JSON do mapa inválido: ${parseErr.message} | Raw: ${conteudo.slice(0, 200)}`);
+        }
+
+        // Valida que o mapa tem pelo menos a sala "1"
+        if (!mapaParseado["1"] || !mapaParseado["1"].texto_logico) {
+            throw new Error(`Mapa gerado sem estrutura válida. Keys: ${Object.keys(mapaParseado).join(', ')}`);
+        }
+
+        mapaMundo = mapaParseado;
         secaoAtualId = "1";
         await salvarEstadoJogador();
         adicionarMensagem("✅ Mapa estrutural carregado na memória.", "system");
     } catch (error) {
         console.error("Erro ao gerar mapa na Groq:", error);
-        adicionarMensagem("❌ Falha ao criar a arquitetura do mundo.", "system");
+        adicionarMensagem(`❌ Falha ao criar a arquitetura do mundo. (${error.message})`, "system");
     }
 }
         
