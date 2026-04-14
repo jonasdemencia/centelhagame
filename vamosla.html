@@ -73,6 +73,19 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
         // --- NOVO: O MODELO MICRO PARA O JUIZ INVISÍVEL ---
         const MODELO_JUIZ = 'qwen2.5-1.5b-instruct'; // Certifique-se de carregar este modelo no LM Studio
 
+// ============================================================
+// Configuração da Groq (Arquiteto de Mundo)
+// ============================================================
+import { GROQ_API_KEY } from './config.js';  // ← chave vinda do config.js
+
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const MODELO_GROQ = "llama3-70b-8192";
+
+// Controle de Mapa
+let mapaMundo = null;
+let secaoAtualId = "1";
+        
+
         const LIMITE_MENSAGENS = 11;
         window._introGenerating = false;
         window._compressaoEmAndamento = false;
@@ -191,16 +204,23 @@ NUNCA omita esta tag.`
                     if (data?.skill?.total !== undefined) jogadorStats.HABILIDADE = data.skill.total;
                     if (data?.charisma?.total !== undefined) jogadorStats.CARISMA = data.charisma.total;
                     if (data?.luck?.total !== undefined) jogadorStats.SORTE = data.luck.total;
+
+
+if (data.mapaMundo) mapaMundo = data.mapaMundo;
+    if (data.secaoAtualId) secaoAtualId = data.secaoAtualId;
+                    
                 } else {
                     const dadosPadrao = {
-                        energy: { total: 40, initial: 40 },
-                        skill: { total: 5 },
-                        charisma: { total: 5 },
-                        luck: { total: 4 },
-                        turnos: 0,
-                        resumo: "",
-                        memoriaLonga: ""
-                    };
+    energy: { total: 40, initial: 40 },
+    skill: { total: 5 },
+    charisma: { total: 5 },
+    luck: { total: 4 },
+    turnos: 0,
+    resumo: "",
+    memoriaLonga: "",
+    mapaMundo: null,        // 🆕
+    secaoAtualId: "1"       // 🆕
+};
                     await setDoc(doc(db, "players", uid), dadosPadrao, { merge: true });
                     await carregarDadosJogador(uid);
                 }
@@ -220,7 +240,9 @@ NUNCA omita esta tag.`
     "skill.total": jogadorStats.HABILIDADE,
     "charisma.total": jogadorStats.CARISMA,
     "luck.total": jogadorStats.SORTE,
-    ssrJson: ssrJson   
+    ssrJson: ssrJson,
+    mapaMundo: mapaMundo,       // 🆕
+    secaoAtualId: secaoAtualId  // 🆕
 };
 await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
             } catch (e) {
@@ -262,6 +284,52 @@ await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
                 console.error('Erro ao gerar memória longa:', e);
             }
         }
+
+
+async function gerarGrafoGroq(cenarioTema) {
+    adicionarMensagem("⚙️ [Arquiteto Groq] Gerando estrutura do mundo...", "system", true);
+    
+    const promptGroq = `
+    Atue como um arquiteto de narrativa. Gere um grafo JSON de 25 seções para um RPG de sobrevivência sombrio. Tema: ${cenarioTema}.
+    
+    Regras do JSON:
+    1. Retorne APENAS o JSON, sem markdown, sem introduções.
+    2. Estrutura obrigatória:
+    {
+      "1": { "texto_logico": "Descrição seca do ambiente", "opcoes": [{ "texto": "ação", "destino": 2 }] },
+      "2": { ... }
+    }
+    3. Crie caminhos não lineares (loops, becos sem saída, atalhos). O ID máximo de destino é 25.
+    `;
+
+    try {
+        const response = await fetch(GROQ_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${GROQ_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: MODELO_GROQ,
+                messages: [{ role: "user", content: promptGroq }],
+                temperature: 0.3, // Baixa temperatura para JSON consistente
+                response_format: { type: "json_object" } // Força saída JSON na Groq
+            })
+        });
+
+        const data = await response.json();
+        mapaMundo = JSON.parse(data.choices[0].message.content);
+        secaoAtualId = "1"; // Inicia no nó 1
+        
+        await salvarEstadoJogador();
+        adicionarMensagem("✅ Mapa estrutural carregado na memória.", "system");
+        
+    } catch (error) {
+        console.error("Erro ao gerar mapa na Groq:", error);
+        adicionarMensagem("❌ Falha ao criar a arquitetura do mundo.", "system");
+    }
+}
+        
 
         function obterDiretrizDeFase() {
             if (turnosJogados < 10) return "FASE 1 - RASTROS (Lentidão): O perigo é apenas um sussurro, uma lenda ou um rastro perturbador no cenário. É ESTRITAMENTE PROIBIDO mostrar a ameaça principal. Foco no mistério e na exploração do infamiliar.";
@@ -953,8 +1021,24 @@ const alertaMortos = npcsMortos
     ? `[MORTOS: ${npcsMortos} — cadáveres NÃO reagem, NÃO respiram, NÃO se movem. Ações sobre eles são interações com matéria inerte.]`
     : '';
 
-mensagemFinal += `\n${alertaMortos}\n${contextoDecidido}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
-                }
+// Injeção do Grafo Groq no contexto do Qwen
+let contextoMapa = "";
+if (mapaMundo && mapaMundo[secaoAtualId]) {
+    const salaAtual = mapaMundo[secaoAtualId];
+    
+    // Transforma as opções lógicas do JSON em texto legível para o Qwen basear a narrativa
+    const opcoesTexto = salaAtual.opcoes.map(op => `- ${op.texto} (leva à área ${op.destino})`).join('\n');
+    
+    contextoMapa = `
+[ARQUITETURA DO CENÁRIO ATUAL (SALA ${secaoAtualId})]:
+Base estrutural: "${salaAtual.texto_logico}"
+Caminhos possíveis:
+${opcoesTexto}
+
+[DIRETRIZ PARA O NARRADOR]: Narre os arredores com base na "Base estrutural". Se a ação do jogador consistir em avançar por um dos "Caminhos possíveis", guie a narrativa para essa transição.`;
+}
+
+mensagemFinal += `\n${alertaMortos}\n${contextoMapa}\n${contextoDecidido}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;                }
 
                 mensagens.push({ role: 'user', content: mensagemFinal });
 
@@ -1043,16 +1127,22 @@ mensagemFinal += `\n${alertaMortos}\n${contextoDecidido}\n[RESPOSTA OBRIGATORIAM
         };
 
         window.onload = async () => {
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    uidAtual = user.uid;
-                    await carregarDadosJogador(uidAtual);
-                    window.enviar();
-                } else {
-                    window.location.href = "login.html";
-                }
-            });
-        };
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            uidAtual = user.uid;
+            await carregarDadosJogador(uidAtual);
+            
+            // 🆕 Se o jogador é novo e não tem mapa, gera agora
+            if (!mapaMundo) {
+                await gerarGrafoGroq("O Condomínio do Tempo Perdido");
+            }
+            
+            window.enviar();
+        } else {
+            window.location.href = "login.html";
+        }
+    });
+};
 
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !sendBtn.disabled) {
