@@ -512,7 +512,7 @@ required: ["local", "npcs", "situacao_atual"],
                     body: JSON.stringify({
                         model: MODELO,
                         messages: mensagensPayload,
-                        temperature: window._introGenerating ? 0.75 : 0.6,
+                        temperature: window._introGenerating ? 0.4 : 0.2,
                         max_tokens: maxTokens,
                         presence_penalty: 0.0,
                         frequency_penalty: 0.0,
