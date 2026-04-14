@@ -76,14 +76,13 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 // ============================================================
 // Configuração da Groq (Arquiteto de Mundo)
 // ============================================================
-import { GROQ_API_KEY } from './config.js';  // ← chave vinda do config.js
-
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+// Configuração do Worker proxy (substitua pela URL do seu Worker)
+const WORKER_URL = "https://groq-proxy.seu-subdominio.workers.dev";
 const MODELO_GROQ = "llama3-70b-8192";
 
-// Controle de Mapa
 let mapaMundo = null;
 let secaoAtualId = "1";
+
         
 
         const LIMITE_MENSAGENS = 11;
@@ -172,6 +171,20 @@ NUNCA omita esta tag.`
         ];
 
         let resumoAtual = "";
+
+        async function chamarGroq(messages, temperatura = 0.3, formato = { type: "json_object" }) {
+    const response = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            messages: messages,
+            temperature: temperatura,
+            response_format: formato,
+        }),
+    });
+    if (!response.ok) throw new Error(`Erro no Worker: ${response.status}`);
+    return await response.json();
+}
 
         async function carregarDadosJogador(uid) {
             try {
@@ -303,27 +316,12 @@ async function gerarGrafoGroq(cenarioTema) {
     `;
 
     try {
-        const response = await fetch(GROQ_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${GROQ_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: MODELO_GROQ,
-                messages: [{ role: "user", content: promptGroq }],
-                temperature: 0.3, // Baixa temperatura para JSON consistente
-                response_format: { type: "json_object" } // Força saída JSON na Groq
-            })
-        });
-
-        const data = await response.json();
-        mapaMundo = JSON.parse(data.choices[0].message.content);
-        secaoAtualId = "1"; // Inicia no nó 1
-        
+        const data = await chamarGroq([{ role: "user", content: promptGroq }], 0.3, { type: "json_object" });
+        const conteudo = data.choices[0].message.content;
+        mapaMundo = JSON.parse(conteudo);
+        secaoAtualId = "1";
         await salvarEstadoJogador();
         adicionarMensagem("✅ Mapa estrutural carregado na memória.", "system");
-        
     } catch (error) {
         console.error("Erro ao gerar mapa na Groq:", error);
         adicionarMensagem("❌ Falha ao criar a arquitetura do mundo.", "system");
