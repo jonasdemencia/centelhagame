@@ -211,73 +211,80 @@ NUNCA omita esta tag.`
 }
 
         async function carregarDadosJogador(uid) {
-            try {
-                const docRef = doc(db, "players", uid);
-                const docSnap = await getDoc(docRef);
-                console.log('[Firestore] Documento players carregado:', docSnap.exists() ? docSnap.data() : 'não existe');
+    try {
+        const docRef = doc(db, "players", uid);
+        const docSnap = await getDoc(docRef);
+        console.log('[Firestore] Documento players carregado:', docSnap.exists() ? docSnap.data() : 'não existe');
 
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    
-                    if (data.resumo) {
-                        resumoAtual = data.resumo;
-                        mensagens[2].content = `Resumo da jornada até agora: ${resumoAtual}`;
-                    }
-
-                    if (data.ssrJson) {
-                        ssrJson = data.ssrJson;
-                        buildEntityIndex(ssrJson);   
-                    }
-                    
-                    if (data.turnos !== undefined) {
-                        turnosJogados = data.turnos;
-                    }
-                    
-                    if (data?.energy?.total !== undefined) {
-    energia = data.energy.total;
-    document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
-}
-
-                    if (data?.skill?.total !== undefined) jogadorStats.HABILIDADE = data.skill.total;
-                    if (data?.charisma?.total !== undefined) jogadorStats.CARISMA = data.charisma.total;
-                    if (data?.luck?.total !== undefined) jogadorStats.SORTE = data.luck.total;
-
-
-if (data.mapaMundo) mapaMundo = data.mapaMundo;
-    if (data.secaoAtualId) secaoAtualId = data.secaoAtualId;
-                    
-                } else {
-                    const dadosPadrao = {
-    energy: { total: 40, initial: 40 },
-    skill: { total: 5 },
-    charisma: { total: 5 },
-    luck: { total: 4 },
-    turnos: 0,
-    resumo: "",
-    memoriaLonga: "",
-    mapaMundo: null,        // 🆕
-    secaoAtualId: "1"       // 🆕
-};
-                    await setDoc(doc(db, "players", uid), dadosPadrao, { merge: true });
-                    await carregarDadosJogador(uid);
-                }
-            } catch (e) {
-                console.error("Erro ao carregar do Firestore:", e);
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            
+            // ==========================================
+            // CARREGAMENTO SUSPENSO (comentado)
+            // ==========================================
+            /*
+            if (data.resumo) {
+                resumoAtual = data.resumo;
+                mensagens[2].content = `Resumo da jornada até agora: ${resumoAtual}`;
             }
+
+            if (data.ssrJson) {
+                ssrJson = data.ssrJson;
+                buildEntityIndex(ssrJson);   
+            }
+            */
+            
+            // ==========================================
+            // CARREGAMENTO ATIVO (mantido)
+            // ==========================================
+            if (data.turnos !== undefined) {
+                turnosJogados = data.turnos;
+            }
+            
+            if (data?.energy?.total !== undefined) {
+                energia = data.energy.total;
+                document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
+            }
+
+            if (data?.skill?.total !== undefined) jogadorStats.HABILIDADE = data.skill.total;
+            if (data?.charisma?.total !== undefined) jogadorStats.CARISMA = data.charisma.total;
+            if (data?.luck?.total !== undefined) jogadorStats.SORTE = data.luck.total;
+
+            if (data.mapaMundo) mapaMundo = data.mapaMundo;
+            if (data.secaoAtualId) secaoAtualId = data.secaoAtualId;
+            
+        } else {
+            const dadosPadrao = {
+                energy: { total: 40, initial: 40 },
+                skill: { total: 5 },
+                charisma: { total: 5 },
+                luck: { total: 4 },
+                turnos: 0,
+                resumo: "",
+                memoriaLonga: "",
+                mapaMundo: null,
+                secaoAtualId: "1"
+            };
+            await setDoc(doc(db, "players", uid), dadosPadrao, { merge: true });
+            await carregarDadosJogador(uid);
         }
+    } catch (e) {
+        console.error("Erro ao carregar do Firestore:", e);
+    }
+}
 
         async function salvarEstadoJogador() {
             if (!uidAtual) return;
             try {
                 const dadosAtualizados = {
     turnos: turnosJogados,
-    resumo: resumoAtual,
-    memoriaLonga: memoriaLonga,
+    // resumo: resumoAtual,
+    // memoriaLonga: memoriaLonga,
     "energy.total": energia,
     "skill.total": jogadorStats.HABILIDADE,
     "charisma.total": jogadorStats.CARISMA,
     "luck.total": jogadorStats.SORTE,
-    ssrJson: ssrJson,
+    // ssrJson: ssrJson,
     mapaMundo: mapaMundo,       // 🆕
     secaoAtualId: secaoAtualId  // 🆕
 };
@@ -1155,14 +1162,16 @@ mensagemFinal += `\n${alertaMortos}\n${contextoMapa}\n${contextoDecidido}\n[RESP
 
                 mensagens.push({ role: 'assistant', content: respostaIA });
 
-                // O NOVO GATILHO: IDLE-TIME PROCESSING
+                // GATILHO: IDLE-TIME PROCESSING
                 setTimeout(() => {
                     salvarEstadoJogador().catch(e => console.error('Erro no salvamento background:', e));
                     
-                    if (mensagens.length > LIMITE_MENSAGENS && !window._compressaoEmAndamento) {
+                    // ==========================================
+                    // COMPRESSÃO DE MEMÓRIA SUSPENSA
+                    // O contexto da sala atual já ancora a narrativa.
+                    // ==========================================
+                    /* if (mensagens.length > LIMITE_MENSAGENS && !window._compressaoEmAndamento) {
                         window._compressaoEmAndamento = true;
-                        
-                        // Atrasa a requisição pesada em 4 segundos para ocorrer no tempo ocioso
                         setTimeout(() => {
                             comprimirMemoria().catch(e => {
                                 console.error('Erro na compressão background:', e);
@@ -1170,6 +1179,7 @@ mensagemFinal += `\n${alertaMortos}\n${contextoMapa}\n${contextoDecidido}\n[RESP
                             });
                         }, 4000); 
                     }
+                    */
                 }, 0);
 
                 if (isInitial) {
