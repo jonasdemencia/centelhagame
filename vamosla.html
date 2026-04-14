@@ -1166,19 +1166,24 @@ mensagemFinal += `\n${alertaMortos}\n${contextoMapa}\n${contextoDecidido}\n[RESP
 
                 mensagens.push({ role: 'assistant', content: respostaIA });
 
-                // Manter apenas as últimas 4 mensagens da conversa (mais os 3 system prompts)
-const MAX_CONV_MSG = 4; // número máximo de mensagens de conversa (usuário + assistente)
-const SYSTEM_COUNT = 3; // as três primeiras são system
+                                // Manter apenas as últimas mensagens da conversa (mais os 3 system prompts)
+                const MAX_CONV_MSG = 6; // Aumente para 6 ou 8 para ele não esquecer a sala tão rápido
+                const SYSTEM_COUNT = 3; // as três primeiras são system
 
-// total de mensagens = system + conversa
-const totalAtual = mensagens.length;
-const conversaAtual = totalAtual - SYSTEM_COUNT;
+                const totalAtual = mensagens.length;
+                const conversaAtual = totalAtual - SYSTEM_COUNT;
 
-if (conversaAtual > MAX_CONV_MSG) {
-    const remover = conversaAtual - MAX_CONV_MSG;
-    mensagens.splice(SYSTEM_COUNT, remover);
-    console.log('mensagens length após corte:', mensagens.length);
-}
+                if (conversaAtual > MAX_CONV_MSG) {
+                    let remover = conversaAtual - MAX_CONV_MSG;
+                    
+                    // Garante que o corte seja sempre par (User + Assistant)
+                    if (remover % 2 !== 0) {
+                        remover += 1;
+                    }
+                    
+                    mensagens.splice(SYSTEM_COUNT, remover);
+                    console.log('mensagens length após corte (sempre par):', mensagens.length);
+                }
 
                 // GATILHO: IDLE-TIME PROCESSING
                 setTimeout(() => {
