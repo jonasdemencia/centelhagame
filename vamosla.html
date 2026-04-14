@@ -22,6 +22,9 @@
         .resultado-falha { color: #e53935; font-weight: bold; text-align: center; letter-spacing: 3px; margin: 4px 0; }
         #rolar-btn { display: block; margin: 10px auto; padding: 10px 28px; background: #1a2e12; color: #4caf50; border: 1px solid #4caf50; font-family: inherit; font-size: 15px; font-style: italic; letter-spacing: 1px; cursor: pointer; transition: 0.2s; }
         #rolar-btn:hover { background: #253d19; }
+        #map-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.nav-btn { background: #2a251e; color: #b5a68b; border: 1px solid #5a4a38; padding: 8px 12px; font-size: 14px; font-style: italic; border-radius: 4px; }
+.nav-btn:hover { background: #3a3228; color: #ffaa00; border-color: #ffaa00; }
     </style>
 </head>
 <body>
@@ -34,6 +37,8 @@
         <div id="chat-box">
             <div class="system-message">⚔️ O narrador está preparando o cenário...</div>
         </div>
+
+        <div id="map-controls"></div>
 
         <div id="controls">
             <input type="text" id="user-input" placeholder="Sua ação..." disabled>
@@ -902,6 +907,41 @@ function parsearEstadoEntidades(textoNarrador) {
 
     console.log('[ENTIDADES] Index atualizado:', entityIndex, '| Foco:', entidadeEmFoco);
 }
+
+// --- RENDERIZADOR DE NAVEGAÇÃO DO MAPA ---
+function atualizarBotoesNavegacao() {
+    const container = document.getElementById('map-controls');
+    container.innerHTML = ''; // Limpa os botões antigos
+
+    // Se o mapa não carregou ou a sala não existe, não faz nada
+    if (!mapaMundo || !mapaMundo[secaoAtualId]) return;
+
+    const salaAtual = mapaMundo[secaoAtualId];
+
+    // Cria um botão para cada opção de saída do JSON da Groq
+    salaAtual.opcoes.forEach(opcao => {
+        const btn = document.createElement('button');
+        btn.className = 'nav-btn';
+        btn.innerText = `🧭 ${opcao.texto}`;
+        
+        btn.onclick = () => {
+            // 1. Oculta os botões para evitar duplo clique
+            container.innerHTML = '';
+            
+            // 2. Atualiza a variável de estado para a nova sala
+            secaoAtualId = opcao.destino.toString();
+            
+            // 3. Salva no Firebase instantaneamente
+            salvarEstadoJogador();
+            
+            // 4. Envia o comando para o Qwen narrar a transição
+            window.enviar(`[AÇÃO DE SISTEMA]: Eu me movo em direção a: "${opcao.texto}". Descreva minha chegada ao novo local.`);
+        };
+        
+        container.appendChild(btn);
+    });
+}
+        
       
         window.enviar = async function(mensagemUsuario = null) {
             const isInitial = mensagemUsuario === null;
@@ -1052,20 +1092,18 @@ const alertaMortos = npcsMortos
     : '';
 
 // Injeção do Grafo Groq no contexto do Qwen
+// Injeção do Grafo Groq no contexto do Qwen
 let contextoMapa = "";
 if (mapaMundo && mapaMundo[secaoAtualId]) {
     const salaAtual = mapaMundo[secaoAtualId];
     
-    // Transforma as opções lógicas do JSON em texto legível para o Qwen basear a narrativa
-    const opcoesTexto = salaAtual.opcoes.map(op => `- ${op.texto} (leva à área ${op.destino})`).join('\n');
-    
+    // Omitimos a lista de saídas no prompt do Qwen, pois os botões já fazem isso.
+    // O foco do modelo agora é APENAS expandir a descrição crua da Groq.
     contextoMapa = `
 [ARQUITETURA DO CENÁRIO ATUAL (SALA ${secaoAtualId})]:
 Base estrutural: "${salaAtual.texto_logico}"
-Caminhos possíveis:
-${opcoesTexto}
 
-[DIRETRIZ PARA O NARRADOR]: Narre os arredores com base na "Base estrutural". Se a ação do jogador consistir em avançar por um dos "Caminhos possíveis", guie a narrativa para essa transição.`;
+[DIRETRIZ PARA O NARRADOR]: Narre o ambiente ao redor usando a "Base estrutural" como esqueleto, mas aplicando as regras invioláveis de brutalidade e hiper-realismo. Se o jogador acabou de se mover, narre a transição e a chegada. Não liste opções de saída no seu texto, o sistema visual fará isso.`;
 }
 
 mensagemFinal += `\n${alertaMortos}\n${contextoMapa}\n${contextoDecidido}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;                }
@@ -1140,6 +1178,8 @@ mensagemFinal += `\n${alertaMortos}\n${contextoMapa}\n${contextoDecidido}\n[RESP
                     userInput.focus();
                 }
 
+
+            atualizarBotoesNavegacao();
             } catch (error) {
                 if (intervaloAnimacao) clearInterval(intervaloAnimacao);
                 elementoDisplay.innerText = `❌ Erro: ${error.message}`;
@@ -1166,7 +1206,8 @@ mensagemFinal += `\n${alertaMortos}\n${contextoMapa}\n${contextoDecidido}\n[RESP
             if (!mapaMundo) {
                 await gerarGrafoGroq("O Condomínio do Tempo Perdido");
             }
-            
+
+            atualizarBotoesNavegacao(); // <-- ADICIONE AQUI
             window.enviar();
         } else {
             window.location.href = "login.html";
