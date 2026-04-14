@@ -1175,10 +1175,9 @@ const totalAtual = mensagens.length;
 const conversaAtual = totalAtual - SYSTEM_COUNT;
 
 if (conversaAtual > MAX_CONV_MSG) {
-    // quantas mensagens de conversa precisam ser removidas
     const remover = conversaAtual - MAX_CONV_MSG;
-    // remove as primeiras `remover` mensagens de conversa (índices SYSTEM_COUNT até SYSTEM_COUNT+remover-1)
     mensagens.splice(SYSTEM_COUNT, remover);
+    console.log('mensagens length após corte:', mensagens.length);
 }
 
                 // GATILHO: IDLE-TIME PROCESSING
