@@ -806,9 +806,11 @@ function classificarAcao(acaoOriginal) {
     // CAMADA 3: VERIFICAÇÃO DE ALVO E CONTÁGIO
     const estadoRelacional = entidadeEmFoco ? resolverEstadoRelacionalNPC(entidadeEmFoco) : null;
 
-    if (!entidadeEmFoco || estadoRelacional === 'morto' || estadoRelacional === 'ausente') {
-        return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'sem-alvo' };
-    }
+    if (estadoRelacional === 'morto' || estadoRelacional === 'ausente') {
+    return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'sem-alvo' };
+}
+// Sem NPC OU NPC irrelevante para a ação → árbitro avalia dificuldade intrínseca
+return null;
 
     const acaoAnteriorFoiViolenta = (_ultimoTipoAcao === 'ARRISCADA' && _ultimoAtributo === 'HABILIDADE');
     if (acaoAnteriorFoiViolenta) {
@@ -834,15 +836,15 @@ async function classificarComArbitro(acaoOriginal, entidade) {
                         content: `Você analisa ações em jogos de RPG.
 Classifique a ação em UMA categoria:
 
-FISICA: esforço corporal direto sobre o ambiente ou NPC (golpear, empurrar, agarrar, correr, escalar, forçar objetos).
-INFLUENCIA: tentar que o NPC faça, concorde ou reaja a algo — inclui qualquer pergunta ou proposta de natureza sexual ou íntima.
-PASSIVA: obter informação factual neutra, observar, mover-se sem interagir com o NPC.
+FISICA: qualquer ação que exige coordenação, precisão, força ou habilidade motora com risco real de falha — atirar, dançar com dificuldade, escalar, forçar algo, hackear, operar equipamento sob pressão, acrobacias. Independe de haver NPC.
+INFLUENCIA: tentar que um NPC faça, concorde ou reaja a algo — convencer, seduzir, intimidar, enganar. Só se aplica quando há NPC com vontade própria.
+PASSIVA: ação sem risco de falha — observar, caminhar, pegar objeto acessível, falar com aliado disposto.
 
 Retorne apenas o JSON.`
                     },
                     {
                         role: 'user',
-                        content: `NPC: ${entidade.nome} (estado: ${estadoRelacional})\nAção: "${acaoOriginal}"`
+                        content: `NPC: ${entidade ? `${entidade.nome} (estado: ${estadoRelacional})` : 'nenhum'}\nAção: "${acaoOriginal}"`
                     }
                 ],
                 temperature: 0.0,
