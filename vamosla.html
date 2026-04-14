@@ -334,7 +334,7 @@ async function gerarGrafoGroq(cenarioTema) {
     adicionarMensagem("⚙️ [Arquiteto Groq] Gerando estrutura do mundo...", "system", true);
     
     const promptGroq = `
-    Atue como um arquiteto de narrativa. Gere um grafo JSON de 25 seções para um RPG de sobrevivência sombrio. Tema: ${cenarioTema}.
+    Atue como um arquiteto de narrativa inspirado em Steve Jackson e a série de livros-jogos "Aventuras Fantásticas" (Fighting Fantasy). Gere um grafo JSON de 25 seções para um RPG de sobrevivência sombrio. Tema: ${cenarioTema}.
     
     Regras do JSON:
     1. Retorne APENAS o JSON, sem markdown, sem introduções.
@@ -347,7 +347,7 @@ async function gerarGrafoGroq(cenarioTema) {
     `;
 
     try {
-        const data = await chamarGroq([{ role: "user", content: promptGroq }], 0.3, { type: "json_object" });
+        const data = await chamarGroq([{ role: "user", content: promptGroq }], 0.6, { type: "json_object" });
         const conteudo = data.choices[0].message.content;
 
         let mapaParseado;
