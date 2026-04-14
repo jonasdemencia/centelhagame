@@ -333,7 +333,24 @@ async function gerarGrafoGroq(cenarioTema) {
     adicionarMensagem("⚙️ [Arquiteto Groq] Gerando estrutura do mundo...", "system", true);
     
     const promptGroq = `
-    Atue como um arquiteto de narrativa inspirado em Steve Jackson e a série de livros-jogos "Aventuras Fantásticas" (Fighting Fantasy). Gere um grafo JSON de 25 seções para um RPG de sobrevivência sombrio. Tema: ${cenarioTema}.
+    Atue como um arquiteto de level design sádico e mestre de RPG focado em Dark Fantasy e Survival Horror hiper-realista.
+    Sua missão é gerar um mapa em grafo JSON de 25 seções (salas) para o tema: "${cenarioTema}".
+
+    REGRAS DE CONTEÚDO E TOM (INVIOLÁVEIS):
+    1. O ambiente é DECRÉPITO, OPRESSIVO e FORENSE. Descreva a arquitetura com foco na textura do horror (ferrugem, cheiro de cobre/sangue, madeira podre, umidade, escuridão, sons úmidos, ossos, correntes).
+    2. As "opcoes" devem refletir ações de sobrevivência tensas e específicas (ex: "Forçar a grade enferrujada", "Rastejar pelo duto estreito") e NUNCA genéricas ("Explorar a sala", "Continuar").
+    3. Crie becos sem saída letais e retornos claustrofóbicos. Nenhuma escolha deve parecer "segura".
+
+    EXEMPLO DE PADRÃO DE QUALIDADE ESPERADO:
+    {
+      "1": { 
+        "texto_logico": "O corredor cheira a urina velha e ferrugem. As paredes estão descascadas, revelando tijolos escurecidos por incêndios antigos. No final, uma porta de ferro pesada bloqueia o caminho, ladeada por ganchos de açougue.", 
+        "opcoes": [
+          { "texto": "Tentar erguer a porta de ferro", "destino": 2 }, 
+          { "texto": "Inspecionar os ganchos sujos", "destino": 3 }
+        ] 
+      }
+    }
     
     Regras do JSON:
     1. Retorne APENAS o JSON, sem markdown, sem introduções.
