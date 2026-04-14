@@ -346,7 +346,7 @@ async function gerarGrafoGroq(cenarioTema) {
     `;
 
     try {
-        const data = await chamarGroq([{ role: "user", content: promptGroq }], 0.6, { type: "json_object" });
+        const data = await chamarGroq([{ role: "user", content: promptGroq }], 0.7, { type: "json_object" });
         const conteudo = data.choices[0].message.content;
 
         let mapaParseado;
