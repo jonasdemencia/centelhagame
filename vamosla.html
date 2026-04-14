@@ -941,7 +941,7 @@ function atualizarBotoesNavegacao() {
             salvarEstadoJogador();
             
             // 4. Envia o comando para o Qwen narrar a transição
-            window.enviar(`[AÇÃO DE SISTEMA]: Eu me movo em direção a: "${opcao.texto}". Descreva minha chegada ao novo local.`);
+            window.enviar(`[AÇÃO DE SISTEMA]: O jogador realiza a ação: "${opcao.texto}". Descreva o resultado dessa ação, aplicando as regras de brutalidade e realismo. Se a ação implicar mudança de local, narre a transição; caso contrário, descreva a interação com o ambiente.`);
         };
         
         container.appendChild(btn);
