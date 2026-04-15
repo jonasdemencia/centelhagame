@@ -1143,6 +1143,8 @@ if (resultado === 'SUCESSO') {
     // Força o dano a zero no código, independente do que a IA alucinar
     danoBase = 0;
     console.log("[SEGURANÇA] Sucesso detectado, dano forçado para 0.");
+    // Adicione isso para garantir que o texto não venha com [DANO]
+pergunta += " (Nota do sistema: Sucesso garantido, sem ferimentos)";
 } else if (resultado === 'FALHA') {
     console.log(`[SEGURANÇA] Falha confirmada, dano base: ${danoBase}`);
 }
@@ -1175,50 +1177,33 @@ const alertaMortos = npcsMortos
     ? `[MORTOS: ${npcsMortos} — cadáveres NÃO reagem, NÃO respiram, NÃO se movem. Ações sobre eles são interações com matéria inerte.]`
     : '';
 
-// Injeção do Grafo Groq no contexto do Qwen
-// --- INÍCIO DA CONSTRUÇÃO BLINDADA DO PROMPT ---
+// --- INÍCIO DA REESTRUTURAÇÃO CIRÚRGICA ---
 
-// --- NOVO BLOCO DE CONSTRUÇÃO CIRÚRGICA (SUBSTITUA O ANTIGO) ---
-let promptPrioritario = "";
-
-if (mapaMundo && mapaMundo[secaoAtualId]) {
-    const salaAtual = mapaMundo[secaoAtualId];
-    const isMovimento = pergunta.startsWith("[AÇÃO DE SISTEMA]");
-    
-    if (isMovimento) {
-        // Ação de navegação: foco no ambiente
-        promptPrioritario = `
-[CONTEXTO DE AMBIENTE (ATIVO)]:
-${salaAtual.texto_logico}
-
-[DIRETRIZ]: Narre a transição e a chegada ao novo local. Use a descrição acima como base. Liste as opções de saída disponíveis.
-`;
-    } else {
-        // Ação livre: foco na ação, ambiente é passivo
-        promptPrioritario = `
-[CONTEXTO DE AMBIENTE (PASSIVO - APENAS CENÁRIO DE FUNDO)]:
-${salaAtual.texto_logico.substring(0, 200)}...
-
-[ESTADO DO SISTEMA]:
-Atributo testado: ${atributo}
-Resultado do dado: ${resultado}
-Dano obrigatório: ${resultado === 'FALHA' ? danoBase : 0}
-
-[COMANDO DE EXECUÇÃO OBRIGATÓRIA]:
-O jogador executou a ação: "${pergunta}"
-
-Narre o desfecho desta ação específica. 
-ATENÇÃO: Ignore portas, janelas ou objetos do cenário a menos que a ação do jogador interaja diretamente com eles.
-Se o resultado for SUCESSO, é PROIBIDO causar dano ou descrever falha.
-`;
-    }
+// 1. Definimos o tom do resultado baseado no dado
+let instrucaoResultado = "";
+if (resultado === "SUCESSO") {
+    instrucaoResultado = "O jogador obteve SUCESSO ABSOLUTO. É PROIBIDO narrar dor, falha ou ferimentos. A ação deve ser executada com perfeição.";
 } else {
-    // Fallback (sem mapa)
-    promptPrioritario = `[CONTEXTO]: Cenário desconhecido.\n[ESTADO]: Teste de ${atributo}: ${resultado}\n[AÇÃO]: "${pergunta}"\nNarre o resultado.`;
+    instrucaoResultado = "O jogador FALHOU. Aplique uma consequência brutal, física e realista condizente com o erro.";
 }
 
-// Montagem final do prompt (com a ação no final)
-let mensagemFinal = `${alertaMortos}\n${promptPrioritario}\n${contextoDecidido}\n\n>>> AÇÃO DO JOGADOR (ÚLTIMA COISA LIDA): "${pergunta}" <<<\n\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
+// 2. Montamos o prompt com hierarquia (Cenário em cima, Ação embaixo)
+let promptBlindado = `
+### AMBIENTE (CONTEXTO PASSIVO)
+${mapaMundo[secaoAtualId].texto_logico}
+
+### REGRAS DO MESTRE
+- Estilo: Dark Fantasy, Brutal, Hiper-realista.
+- ${instrucaoResultado}
+- Restrição: NÃO narre interações com objetos do cenário (portas, ganchos, etc) a menos que a ação do jogador mencione-os explicitamente.
+
+### EXECUÇÃO PRIORITÁRIA
+O jogador realizou a seguinte ação: "${pergunta}"
+
+Narre o desfecho agora:`.trim();
+
+let mensagemFinal = promptBlindado;
+// --- FIM DA REESTRUTURAÇÃO ---
 
 // --- FIM DO NOVO BLOCO ---
                 }
