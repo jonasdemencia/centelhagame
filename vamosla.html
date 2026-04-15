@@ -824,6 +824,50 @@ return null;
 async function classificarComArbitro(acaoOriginal, entidade) {
     const estadoRelacional = resolverEstadoRelacionalNPC(entidade);
 
+    // Sem NPC: INFLUENCIA é impossível — árbitro binário FISICA vs PASSIVA
+    if (!entidade) {
+        const r = await fetch(LM_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: MODELO_JUIZ,
+                messages: [
+                    {
+                        role: 'system',
+                        content: `Classifique a ação em UMA categoria:
+FISICA: exige coordenação, precisão, força ou habilidade motora com risco real de falha (atirar, dançar com dificuldade, escalar, acrobacia, operar equipamento sob pressão).
+PASSIVA: sem risco de falha (observar, caminhar, pegar objeto acessível).
+Retorne apenas o JSON.`
+                    },
+                    { role: 'user', content: `Ação: "${acaoOriginal}"` }
+                ],
+                temperature: 0.0,
+                max_tokens: 15,
+                response_format: {
+                    type: "json_schema",
+                    json_schema: {
+                        name: "arbitro_sem_npc",
+                        strict: true,
+                        schema: {
+                            type: "object",
+                            properties: {
+                                categoria: { type: "string", enum: ["FISICA", "PASSIVA"] }
+                            },
+                            required: ["categoria"],
+                            additionalProperties: false
+                        }
+                    }
+                }
+            })
+        });
+        const d = await r.json();
+        const { categoria } = JSON.parse(d.choices[0].message.content);
+        console.log(`[ÁRBITRO SEM-NPC] categoria=${categoria}`);
+        return categoria === 'FISICA'
+            ? { tipo: 'ARRISCADA', atributo: 'HABILIDADE', fonte: 'árbitro-sem-npc' }
+            : { tipo: 'TRIVIAL',   atributo: 'NENHUM',     fonte: 'árbitro-sem-npc' };
+    }
+
     try {
         const response = await fetch(LM_URL, {
             method: 'POST',
