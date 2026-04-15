@@ -1020,6 +1020,8 @@ function atualizarBotoesNavegacao() {
             }
 
             let pergunta;
+            let resultado = null;   // <-- adicione
+            let danoBase = 0;       // <-- adicione
             if (isInitial) {
     // Se já temos um mapa carregado (da Groq) e a sala 1 existe
     if (mapaMundo && mapaMundo["1"] && mapaMundo["1"].texto_logico) {
@@ -1095,7 +1097,7 @@ intervaloAnimacao = setInterval(() => {
 }, 150);
 
             try {
-                let mensagemFinal = pergunta;
+                //let mensagemFinal = pergunta;
 
                 if (!isInitial) {
         // --- CLASSIFICADOR DETERMINÍSTICO v3.0 (com árbitro 1.5B opcional) ---
@@ -1130,12 +1132,21 @@ const { tipo, atributo } = classificacao;
                         const semente = Math.floor(Math.random() * 20) + 1;
                         const valorAtributo = jogadorStats[atributo] ?? 0;
                         resultado = semente <= valorAtributo ? 'SUCESSO' : 'FALHA';
+                        console.log(`[DADO] Valor: ${semente}, Atributo: ${valorAtributo}, Resultado Final: ${resultado}`);
                         if (resultado === 'FALHA') {
                             danoBase = Math.max(1, Math.floor((semente - valorAtributo) / 2));
                         }
 
                         mostrarResultadoDado(semente, atributo, valorAtributo, resultado);
                         await new Promise(r => setTimeout(r, 600)); // Pequena pausa dramática
+                        // --- TRAVA DE SEGURANÇA PÓS-ROLAGEM ---
+if (resultado === 'SUCESSO') {
+    // Força o dano a zero no código, independente do que a IA alucinar
+    danoBase = 0;
+    console.log("[SEGURANÇA] Sucesso detectado, dano forçado para 0.");
+} else if (resultado === 'FALHA') {
+    console.log(`[SEGURANÇA] Falha confirmada, dano base: ${danoBase}`);
+}
                     }
 
                     // --- INÍCIO DO NOVO CONTEXTO DINÂMICO ---
@@ -1168,29 +1179,49 @@ const alertaMortos = npcsMortos
 // Injeção do Grafo Groq no contexto do Qwen
 // --- INÍCIO DA CONSTRUÇÃO BLINDADA DO PROMPT ---
 
-let contextoMapa = "";
-let instrucaoFoco = "";
+// --- NOVO BLOCO DE CONSTRUÇÃO CIRÚRGICA (SUBSTITUA O ANTIGO) ---
+let promptPrioritario = "";
 
 if (mapaMundo && mapaMundo[secaoAtualId]) {
     const salaAtual = mapaMundo[secaoAtualId];
-    
-    // Verifica se a ação veio de um botão do mapa (Ação de Sistema) ou do chat (Livre)
     const isMovimento = pergunta.startsWith("[AÇÃO DE SISTEMA]");
     
     if (isMovimento) {
-        instrucaoFoco = `Narre a transição, a chegada e o ambiente ao redor usando a "Base estrutural" como esqueleto. Liste as opções de saída.`;
-    } else {
-        instrucaoFoco = `Foque ESTRITAMENTE em narrar a execução e a consequência da AÇÃO DO JOGADOR. A "Base estrutural" é apenas cenário de fundo, NÃO narre interações com objetos do cenário a menos que o jogador tenha pedido.`;
-    }
+        // Ação de navegação: foco no ambiente
+        promptPrioritario = `
+[CONTEXTO DE AMBIENTE (ATIVO)]:
+${salaAtual.texto_logico}
 
-    contextoMapa = `[ARQUITETURA DO CENÁRIO (SALA ${secaoAtualId})]:\nBase estrutural: "${salaAtual.texto_logico}"\n[DIRETRIZ DE FOCO]: ${instrucaoFoco}`;
+[DIRETRIZ]: Narre a transição e a chegada ao novo local. Use a descrição acima como base. Liste as opções de saída disponíveis.
+`;
+    } else {
+        // Ação livre: foco na ação, ambiente é passivo
+        promptPrioritario = `
+[CONTEXTO DE AMBIENTE (PASSIVO - APENAS CENÁRIO DE FUNDO)]:
+${salaAtual.texto_logico.substring(0, 200)}...
+
+[ESTADO DO SISTEMA]:
+Atributo testado: ${atributo}
+Resultado do dado: ${resultado}
+Dano obrigatório: ${resultado === 'FALHA' ? danoBase : 0}
+
+[COMANDO DE EXECUÇÃO OBRIGATÓRIA]:
+O jogador executou a ação: "${pergunta}"
+
+Narre o desfecho desta ação específica. 
+ATENÇÃO: Ignore portas, janelas ou objetos do cenário a menos que a ação do jogador interaja diretamente com eles.
+Se o resultado for SUCESSO, é PROIBIDO causar dano ou descrever falha.
+`;
+    }
+} else {
+    // Fallback (sem mapa)
+    promptPrioritario = `[CONTEXTO]: Cenário desconhecido.\n[ESTADO]: Teste de ${atributo}: ${resultado}\n[AÇÃO]: "${pergunta}"\nNarre o resultado.`;
 }
 
-// A MÁGICA: Inversão de Ordem (Recency Bias)
-// O LLM presta mais atenção no final do prompt. A ação do jogador DEVE ser a última coisa lida.
-let mensagemFinal = `${alertaMortos}\n${contextoMapa}\n${contextoDecidido}\n\n>>> AÇÃO DO JOGADOR: "${pergunta}" <<<\n\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
+// Montagem final do prompt (com a ação no final)
+let mensagemFinal = `${alertaMortos}\n${promptPrioritario}\n${contextoDecidido}\n\n>>> AÇÃO DO JOGADOR (ÚLTIMA COISA LIDA): "${pergunta}" <<<\n\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
 
-// --- FIM DA CONSTRUÇÃO BLINDADA DO PROMPT ---
+// --- FIM DO NOVO BLOCO ---
                 }
 
                 mensagens.push({ role: 'user', content: mensagemFinal });
@@ -1202,6 +1233,7 @@ let mensagemFinal = `${alertaMortos}\n${contextoMapa}\n${contextoDecidido}\n\n>>
                 if (isIntro) window._introGenerating = true;
 
                 const respostaIA = await gerarRespostaComContinuacao(mensagens, maxTokens, elementoDisplay, maxContinuacoes);
+                console.log(`[PROMPT ENVIADO] ${mensagemFinal.substring(0, 500)}...`);
 
                 const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
 
