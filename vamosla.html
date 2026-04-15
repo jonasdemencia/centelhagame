@@ -1166,18 +1166,29 @@ const alertaMortos = npcsMortos
     : '';
 
 // Injeção do Grafo Groq no contexto do Qwen
-// Injeção do Grafo Groq no contexto do Qwen
 let contextoMapa = "";
 if (mapaMundo && mapaMundo[secaoAtualId]) {
     const salaAtual = mapaMundo[secaoAtualId];
     
-    // Omitimos a lista de saídas no prompt do Qwen, pois os botões já fazem isso.
-    // O foco do modelo agora é APENAS expandir a descrição crua da Groq.
-    contextoMapa = `
+    // Verifica se a ação do usuário é um comando de movimento do sistema
+    const isMovementAction = pergunta.startsWith("[AÇÃO DE SISTEMA]: O jogador realiza a ação:");
+    // Verifica se é o primeiro prompt do jogo
+    const isFirstPrompt = pergunta.startsWith("[AÇÃO DE SISTEMA]: Início do jogo.");
+
+    if (isMovementAction || isFirstPrompt) {
+        // Se estiver entrando em uma nova sala, foca bastante na descrição do novo ambiente
+        contextoMapa = `
 [ARQUITETURA DO CENÁRIO ATUAL (SALA ${secaoAtualId})]:
 Base estrutural: "${salaAtual.texto_logico}"
 
-[DIRETRIZ PARA O NARRADOR]: Narre o ambiente ao redor usando a "Base estrutural" como esqueleto, mas aplicando as regras invioláveis de brutalidade e hiper-realismo. Se o jogador acabou de se mover, narre a transição e a chegada. Não liste opções de saída no seu texto, o sistema visual fará isso.`;
+[DIRETRIZ PARA O NARRADOR]: Narre a transição, a chegada e o ambiente ao redor usando a "Base estrutural" como esqueleto. Aplique as regras invioláveis de brutalidade e hiper-realismo. Não liste opções de saída.`;
+    } else {
+        // Se for uma ação específica (como um mortal para trás), a sala é apenas contexto de fundo
+        contextoMapa = `
+[CONTEXTO DO AMBIENTE (SALA ${secaoAtualId})]: "${salaAtual.texto_logico}"
+
+[DIRETRIZ PARA O NARRADOR]: Foque estritamente em narrar a AÇÃO DO JOGADOR e sua consequência. Use o ambiente apenas como cenário de fundo se necessário.`;
+    }
 }
 
 mensagemFinal += `\n${alertaMortos}\n${contextoMapa}\n${contextoDecidido}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;                }
