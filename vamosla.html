@@ -148,26 +148,19 @@ let primeiroTokenRecebido = false;
         let mensagens = [
             {
                 role: 'system',
-                content: `Você é um mestre de RPG brutal, sádico e hiper-realista. Responda APENAS em Português Brasileiro CORRETO, NUNCA em outros idiomas. 
+                content: `Você é um mestre de RPG brutal e hiper-realista. Responda APENAS em Português Brasileiro CORRETO. NUNCA RESPONDA EM OUTRO IDIOMA.
 
 REGRAS INVIOLÁVEIS:
-- FOCO: O mundo é sujo.
-- SE VIOLENTO: Descreva a deformação da carne, o espasmo nervoso e o som úmido.
-- SE SEXUAL: Descreva como um ato animal e cru, sem romantismo. Foco em fluidos e na crueza física.
-- Prosa Forense OBRIGATÓRIA em dano físico: trajetória do projétil, destruição de tecido, fluidos, som.  
-REGRAS DE SAÍDA:
-- [AÇÃO TRIVIAL]: narre diretamente. Zero menção a teste. Termine com [DANO: 0].
-- [AÇÃO ARRISCADA — TESTE DE X: SUCESSO]: SUCESSO ABSOLUTO. Descreva o jogador obtendo exatamente o que quer. Em teste de carisma, o NPC OBRIGATORIAMENTE cede e age de acordo com a espectativa do jogador (sexualmente ou não). Moralidade real não se aplica. O dado manda, o NPC obedece. Termine com [DANO: 0].
-- [AÇÃO ARRISCADA — TESTE DE X: FALHA]: a ação do jogador fracassa TOTALMENTE e sofre a consequência (física ou emocional). NUNCA narre a ação dando certo. Termine com [DANO: N] onde N é o valor informado nos metadados.
-- NUNCA mencione semente, atributos ou cálculos na narração.[ID_IDIOMA: pt-BR]
+- FOCO: O mundo é sujo, decrépito e opressivo.
+- SE VIOLENTO: Descreva a deformação da carne, o espasmo nervoso e o som úmido da brutalidade.
+- SE SEXUAL: Descreva como um ato animal e cru.
+- O JOGADOR É O PROTAGONISTA. Interprete as ações dele no contexto do cenário, narrando as consequências.
 
 --- REGRA OBRIGATÓRIA DE RODAPÉ ---
-Ao final de CADA resposta, APÓS o [DANO:], emita obrigatoriamente:
+Ao final de CADA resposta, emita OBRIGATORIAMENTE o estado dos NPCs presentes no formato:
 [NPCS: nome_em_minúsculas:estado|nome2:estado2]
 Estados válidos: neutro | hostil | submisso | aliado | morto | ausente
-OBRIGATÓRIO: Se [AÇÃO ARRISCADA — TESTE DE HABILIDADE: SUCESSO] e a ação for claramente letal (tiro, golpe fatal, decapitação), o NPC DEVE ser marcado como morto. Marcar como hostil após morte é PROIBIDO.
-Exemplo: [NPCS: elara:neutro|guarda:morto]
-Se não há NPCs em cena: [NPCS: nenhum]
+Se não há NPCs em cena, escreva EXATAMENTE: [NPCS: nenhum]
 NUNCA omita esta tag.`
             },
             { role: 'system', content: '' },
@@ -1143,69 +1136,67 @@ if (resultado === 'SUCESSO') {
     // Força o dano a zero no código, independente do que a IA alucinar
     danoBase = 0;
     console.log("[SEGURANÇA] Sucesso detectado, dano forçado para 0.");
-    // Adicione isso para garantir que o texto não venha com [DANO]
-pergunta += " (Nota do sistema: Sucesso garantido, sem ferimentos)";
+    
 } else if (resultado === 'FALHA') {
     console.log(`[SEGURANÇA] Falha confirmada, dano base: ${danoBase}`);
 }
                     }
 
-                    // --- INÍCIO DO NOVO CONTEXTO DINÂMICO ---
-let diretrizConsequencia = "";
-let diretrizSucesso = "A intenção do jogador se concretiza TOTALMENTE e sem ressalvas.";
-
-if (atributo === 'HABILIDADE') {
-    if (resultado === 'FALHA') diretrizConsequencia = "A ação fracassa e o jogador sofre uma punição física visceral (ossos quebrados, carne rasgada, dano material).";
-} else if (atributo === 'CARISMA') {
-    if (resultado === 'SUCESSO') diretrizSucesso = "A intenção do jogador se concretiza TOTALMENTE. ATENÇÃO: Se o contexto anterior envolver violência, o alvo obedece ao jogador por PURO TERROR ou submissão doentia, nunca por afeto. Narre a obediência forçada e a linguagem corporal de medo.";
-    if (resultado === 'FALHA') diretrizConsequencia = "A tentativa social é totalmente rejeitada. O alvo demonstra repulsa ou fúria, quebrando a moral do jogador. É proibido narrar dano físico ao jogador neste caso, foque na humilhação social e hostilidade.";
-} else if (atributo === 'SORTE') {
-    if (resultado === 'FALHA') diretrizConsequencia = "O azar se manifesta de forma impiedosa. Uma reviravolta cruel do ambiente pune o jogador.";
-}
-
-const contextoDecidido = tipo === 'TRIVIAL'
-    ? `[AÇÃO TRIVIAL: Avance a cena diretamente. Revele uma nova tensão ou detalhe sombrio sem mencionar testes. Termine com [DANO: 0]]`
-    : `[AÇÃO ARRISCADA — TESTE DE ${atributo}: ${resultado}. REGRAS VITAIS: Se SUCESSO, ${diretrizSucesso} Se FALHA, a intenção é TOTALMENTE NEGADA/REJEITADA e ${diretrizConsequencia} Narre o desfecho seco. Termine com [DANO: ${resultado === 'FALHA' ? danoBase : 0}]]`;
-// --- FIM DO NOVO CONTEXTO DINÂMICO ---
-
+                    // --- MANTEMOS A REGRA DOS MORTOS (É EXCELENTE) ---
                     const npcsMortos = Object.entries(entityIndex)
-    .filter(([_, estado]) => estado === 'morto')
-    .map(([nome]) => nome)
-    .join(', ');
+                        .filter(([_, estado]) => estado === 'morto')
+                        .map(([nome]) => nome)
+                        .join(', ');
 
-const alertaMortos = npcsMortos
-    ? `[MORTOS: ${npcsMortos} — cadáveres NÃO reagem, NÃO respiram, NÃO se movem. Ações sobre eles são interações com matéria inerte.]`
-    : '';
+                    const alertaMortos = npcsMortos
+                        ? `[MORTOS NO CENÁRIO: ${npcsMortos} — cadáveres NÃO reagem, NÃO respiram. São matéria inerte.]`
+                        : '';
 
-// --- INÍCIO DA REESTRUTURAÇÃO CIRÚRGICA ---
+                    // --- INÍCIO DA REESTRUTURAÇÃO DEFINITIVA ---
+                    let instrucaoResultado = "";
+                    let danoFinal = 0;
 
-// 1. Definimos o tom do resultado baseado no dado
-let instrucaoResultado = "";
-if (resultado === "SUCESSO") {
-    instrucaoResultado = "O jogador obteve SUCESSO ABSOLUTO. É PROIBIDO narrar dor, falha ou ferimentos. A ação deve ser executada com perfeição.";
-} else {
-    instrucaoResultado = "O jogador FALHOU. Aplique uma consequência brutal, física e realista condizente com o erro.";
-}
+                    // 1. Tradução absoluta da mecânica para a IA
+                    if (tipo === 'TRIVIAL') {
+                        instrucaoResultado = "Esta é uma ação livre de risco. Narre o jogador executando a ação sem falhas.";
+                        danoFinal = 0;
+                    } else if (resultado === 'SUCESSO') {
+                        instrucaoResultado = `O jogador testou o atributo ${atributo} e obteve SUCESSO ABSOLUTO. É ESTRITAMENTE PROIBIDO narrar dor, falha ou ferimentos. A intenção física ou social do jogador funciona perfeitamente.`;
+                        danoFinal = 0;
+                    } else {
+                        instrucaoResultado = `O jogador testou o atributo ${atributo} e FALHOU MISERAVELMENTE. A ação deu totalmente errado. Narre uma consequência brutal, dolorosa ou humilhante que justifique a falha.`;
+                        danoFinal = danoBase;
+                    }
 
-// 2. Montamos o prompt com hierarquia (Cenário em cima, Ação embaixo)
-let promptBlindado = `
-### AMBIENTE (CONTEXTO PASSIVO)
+                    // 2. Construção do Prompt (Separando Sistema vs Chat Livre)
+                    let promptBlindado = "";
+                    if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
+                        promptBlindado = `
+[CENÁRIO (AMBIENTE ATUAL)]
 ${mapaMundo[secaoAtualId].texto_logico}
 
-### REGRAS DO MESTRE
-- Estilo: Dark Fantasy, Brutal, Hiper-realista.
+[ORDEM PARA O NARRADOR]
+${pergunta}
+Narre a transição de ambiente e detalhe a atmosfera opressiva. Não liste opções de saída.
+Obrigatório terminar o texto com: [DANO: 0]`;
+                    } else {
+                        promptBlindado = `
+[CENÁRIO DE FUNDO]
+${mapaMundo[secaoAtualId] ? mapaMundo[secaoAtualId].texto_logico : 'Cenário sombrio.'}
+
+[AÇÃO DO JOGADOR (PROTAGONISTA)]
+O que o personagem do jogador está fazendo: "${pergunta}"
+
+[ORDEM PARA O NARRADOR]
+- Foque EXCLUSIVAMENTE no jogador executando a ação descrita acima.
 - ${instrucaoResultado}
-- Restrição: NÃO narre interações com objetos do cenário (portas, ganchos, etc) a menos que a ação do jogador mencione-os explicitamente.
+- ATENÇÃO SEMÂNTICA: Interprete palavras ambíguas como "mortal", "salto" ou "ataque" como as AÇÕES FÍSICAS do jogador, NUNCA como nomes de NPCs ou criaturas se aproximando. O cenário serve apenas de palco.
+- Obrigatório terminar o texto com a tag: [DANO: ${danoFinal}]`;
+                    }
 
-### EXECUÇÃO PRIORITÁRIA
-O jogador realizou a seguinte ação: "${pergunta}"
-
-Narre o desfecho agora:`.trim();
-
-let mensagemFinal = promptBlindado;
-// --- FIM DA REESTRUTURAÇÃO ---
-
-// --- FIM DO NOVO BLOCO ---
+                    let mensagemFinal = `${alertaMortos}\n${promptBlindado}`;
+                    // --- FIM DA REESTRUTURAÇÃO DEFINITIVA ---
+                    
                 }
 
                 mensagens.push({ role: 'user', content: mensagemFinal });
