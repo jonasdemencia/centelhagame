@@ -1166,32 +1166,32 @@ const alertaMortos = npcsMortos
     : '';
 
 // Injeção do Grafo Groq no contexto do Qwen
+// --- INÍCIO DA CONSTRUÇÃO BLINDADA DO PROMPT ---
+
 let contextoMapa = "";
+let instrucaoFoco = "";
+
 if (mapaMundo && mapaMundo[secaoAtualId]) {
     const salaAtual = mapaMundo[secaoAtualId];
     
-    // Verifica se a ação do usuário é um comando de movimento do sistema
-    const isMovementAction = pergunta.startsWith("[AÇÃO DE SISTEMA]: O jogador realiza a ação:");
-    // Verifica se é o primeiro prompt do jogo
-    const isFirstPrompt = pergunta.startsWith("[AÇÃO DE SISTEMA]: Início do jogo.");
-
-    if (isMovementAction || isFirstPrompt) {
-        // Se estiver entrando em uma nova sala, foca bastante na descrição do novo ambiente
-        contextoMapa = `
-[ARQUITETURA DO CENÁRIO ATUAL (SALA ${secaoAtualId})]:
-Base estrutural: "${salaAtual.texto_logico}"
-
-[DIRETRIZ PARA O NARRADOR]: Narre a transição, a chegada e o ambiente ao redor usando a "Base estrutural" como esqueleto. Aplique as regras invioláveis de brutalidade e hiper-realismo. Não liste opções de saída.`;
+    // Verifica se a ação veio de um botão do mapa (Ação de Sistema) ou do chat (Livre)
+    const isMovimento = pergunta.startsWith("[AÇÃO DE SISTEMA]");
+    
+    if (isMovimento) {
+        instrucaoFoco = `Narre a transição, a chegada e o ambiente ao redor usando a "Base estrutural" como esqueleto. Liste as opções de saída.`;
     } else {
-        // Se for uma ação específica (como um mortal para trás), a sala é apenas contexto de fundo
-        contextoMapa = `
-[CONTEXTO DO AMBIENTE (SALA ${secaoAtualId})]: "${salaAtual.texto_logico}"
-
-[DIRETRIZ PARA O NARRADOR]: Foque estritamente em narrar a AÇÃO DO JOGADOR e sua consequência. Use o ambiente apenas como cenário de fundo se necessário.`;
+        instrucaoFoco = `Foque ESTRITAMENTE em narrar a execução e a consequência da AÇÃO DO JOGADOR. A "Base estrutural" é apenas cenário de fundo, NÃO narre interações com objetos do cenário a menos que o jogador tenha pedido.`;
     }
+
+    contextoMapa = `[ARQUITETURA DO CENÁRIO (SALA ${secaoAtualId})]:\nBase estrutural: "${salaAtual.texto_logico}"\n[DIRETRIZ DE FOCO]: ${instrucaoFoco}`;
 }
 
-mensagemFinal += `\n${alertaMortos}\n${contextoMapa}\n${contextoDecidido}\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;                }
+// A MÁGICA: Inversão de Ordem (Recency Bias)
+// O LLM presta mais atenção no final do prompt. A ação do jogador DEVE ser a última coisa lida.
+let mensagemFinal = `${alertaMortos}\n${contextoMapa}\n${contextoDecidido}\n\n>>> AÇÃO DO JOGADOR: "${pergunta}" <<<\n\n[RESPOSTA OBRIGATORIAMENTE EM PORTUGUÊS BRASILEIRO]`;
+
+// --- FIM DA CONSTRUÇÃO BLINDADA DO PROMPT ---
+                }
 
                 mensagens.push({ role: 'user', content: mensagemFinal });
 
