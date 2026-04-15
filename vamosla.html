@@ -151,7 +151,7 @@ let primeiroTokenRecebido = false;
                 content: `Você é um mestre de RPG brutal e hiper-realista. Responda APENAS em Português Brasileiro CORRETO. NUNCA RESPONDA EM OUTRO IDIOMA.
 
 REGRAS INVIOLÁVEIS:
-- FOCO: O mundo é sujo, decrépito e opressivo.
+- FOCO: o jogador é o herói em um mundo decrépito e opressivo.
 - SE VIOLENTO: Descreva a deformação da carne, o espasmo nervoso e o som úmido da brutalidade.
 - SE SEXUAL: Descreva como um ato animal e cru.
 - O JOGADOR É O PROTAGONISTA. Interprete as ações dele no contexto do cenário, narrando as consequências.
@@ -1161,7 +1161,7 @@ if (resultado === 'SUCESSO') {
                         instrucaoResultado = "Esta é uma ação livre de risco. Narre o jogador executando a ação sem falhas.";
                         danoFinal = 0;
                     } else if (resultado === 'SUCESSO') {
-                        instrucaoResultado = `O jogador testou o atributo ${atributo} e obteve SUCESSO ABSOLUTO. É ESTRITAMENTE PROIBIDO narrar dor, falha ou ferimentos. A intenção física ou social do jogador funciona perfeitamente.`;
+                        instrucaoResultado = `O jogador testou o atributo ${atributo} e obteve SUCESSO ABSOLUTO. ESTRUTURA OBRIGATÓRIA DE SUCESSO: (1) O jogador inicia a ação com intenção clara. (2) Executa com precisão e controle total. (3) Conclui com êxito perceptível. A brutalidade do cenário é apenas pano de fundo visual — ela NÃO interfere no resultado. Zero tropeços, zero dor, zero falha.`;
                         danoFinal = 0;
                     } else {
                         instrucaoResultado = `O jogador testou o atributo ${atributo} e FALHOU MISERAVELMENTE. A ação deu totalmente errado. Narre uma consequência brutal, dolorosa ou humilhante que justifique a falha.`;
@@ -1177,7 +1177,7 @@ ${mapaMundo[secaoAtualId].texto_logico}
 
 [ORDEM PARA O NARRADOR]
 ${pergunta}
-Narre a transição de ambiente e detalhe a atmosfera opressiva. Não liste opções de saída.
+Narre a transição de ambiente e detalhe a atmosfera opressiva.
 Obrigatório terminar o texto com: [DANO: 0]`;
                     } else {
                         promptBlindado = `
@@ -1185,7 +1185,8 @@ Obrigatório terminar o texto com: [DANO: 0]`;
 ${mapaMundo[secaoAtualId] ? mapaMundo[secaoAtualId].texto_logico : 'Cenário sombrio.'}
 
 [AÇÃO DO JOGADOR (PROTAGONISTA)]
-O que o personagem do jogador está fazendo: "${pergunta}"
+O que o personagem executa com maestria: "${pergunta}"  ← se SUCESSO
+O que o personagem tenta desesperadamente fazer: "${pergunta}"  ← se FALHA
 
 [ORDEM PARA O NARRADOR]
 - Foque EXCLUSIVAMENTE no jogador executando a ação descrita acima.
