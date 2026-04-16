@@ -334,6 +334,8 @@ async function gerarGrafoGroq(cenarioTema) {
       "2": { ... }
     }
     3. Crie caminhos não lineares (loops, becos sem saída, atalhos). O ID máximo de destino é 25.
+    4. DENSIDADE DE ESCOLHAS: Cada sala (ID) deve obrigatoriamente ter entre 2 e 4 opções de destino. Evite salas com apenas uma saída, a menos que seja um beco sem saída estratégico.
+    5. COMPLEXIDADE DO GRAFO: Crie um design de mapa "em teia". Isso significa que caminhos diferentes podem levar ao mesmo ID, e alguns IDs devem apontar para salas anteriores (backtracking), forçando o jogador a explorar.
     `;
 
     try {
@@ -1164,7 +1166,7 @@ intervaloAnimacao = setInterval(() => {
 
 
                     const isIntro = (isInitial && !resumoAtual);
-                    const maxTokens       = isIntro ? 500 : 200;
+                    const maxTokens       = isIntro ? 200 : 180;
                     const maxContinuacoes = isIntro ?    1 :   1;
 
                     if (isIntro) window._introGenerating = true;
