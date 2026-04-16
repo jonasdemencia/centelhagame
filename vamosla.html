@@ -1140,11 +1140,19 @@ intervaloAnimacao = setInterval(() => {
                         danoFinal = danoBase;
                     }
 
-                    const descricaoSala = mapaMundo && mapaMundo[secaoAtualId] ? mapaMundo[secaoAtualId].texto_logico : 'Cenário sombrio.';
+                    const salaAtual = mapaMundo && mapaMundo[secaoAtualId] ? mapaMundo[secaoAtualId] : null;
+                    const descricaoSala = salaAtual ? salaAtual.texto_logico : 'Cenário sombrio.';
+                    
+                    // Extrai as opções dos botões para forçar o modelo a mencioná-las no cenário
+                    let elementosInterativos = "";
+                    if (salaAtual && salaAtual.opcoes) {
+                        const textosOpcoes = salaAtual.opcoes.map(opcao => opcao.texto).join(" | ");
+                        elementosInterativos = `\n[PONTOS DE INTERESSE DO AMBIENTE]: Você DEVE mencionar a presença física dos seguintes elementos na sua narração: ${textosOpcoes}. Integre-os organicamente na descrição do cenário. NUNCA crie listas numeradas (1, 2, 3...).`;
+                    }
 
                     const systemPrompt = {
                         role: 'system',
-                        content: `Você é um mestre de RPG brutal e hiper-realista. Responda APENAS em Português Brasileiro CORRETO. NUNCA RESPONDA EM OUTRO IDIOMA.\n\nREGRAS INVIOLÁVEIS:\n- Seja seco e objetivo em suas narrações. Escreva frases curtas, evite advérbios e adjetivos dramáticos.\n- FOCO: o jogador é o herói em um mundo decrépito e opressivo.\n- SE VIOLENTO: Descreva a deformação da carne, o espasmo nervoso e o som úmido da brutalidade.\n- SE SEXUAL: Descreva como um ato animal e cru.\n- O JOGADOR É O PROTAGONISTA. Interprete as ações dele no contexto do cenário, narrando as consequências.\n\n[CENÁRIO (AMBIENTE ATUAL)]\n${descricaoSala}${alertaMortos}`
+                        content: `Você é um mestre de RPG brutal e hiper-realista. Responda APENAS em Português Brasileiro CORRETO. NUNCA RESPONDA EM OUTRO IDIOMA.\n\nREGRAS INVIOLÁVEIS:\n- Seja seco e objetivo em suas narrações. Escreva frases curtas, evite advérbios e adjetivos dramáticos.\n- FOCO: o jogador é o herói em um mundo opressivo.\n- SE VIOLENTO: Descreva a deformação da carne, o espasmo nervoso e o som úmido da brutalidade.\n- SE SEXUAL: Descreva como um ato animal e cru.\n- O JOGADOR É O PROTAGONISTA. Interprete as ações dele no contexto do cenário, narrando as consequências.\n\n[CENÁRIO (AMBIENTE ATUAL)]\n${descricaoSala}${alertaMortos}`
                     };
 
                     let conteudoUser = "";
