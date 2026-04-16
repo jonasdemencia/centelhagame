@@ -315,13 +315,14 @@ async function gerarGrafoGroq(cenarioTema) {
     2. As "opcoes" devem refletir ações de sobrevivência tensas e específicas (ex: "Forçar a grade enferrujada", "Rastejar pelo duto estreito") e NUNCA genéricas ("Explorar a sala", "Continuar").
     3. Crie becos sem saída letais e retornos claustrofóbicos. Nenhuma escolha deve parecer "segura".
 
-    EXEMPLO DE PADRÃO DE QUALIDADE ESPERADO:
+        EXEMPLO DE PADRÃO DE QUALIDADE ESPERADO:
     {
       "1": { 
         "texto_logico": "O corredor cheira a urina velha e ferrugem. As paredes estão descascadas, revelando tijolos escurecidos por incêndios antigos. No final, uma porta de ferro pesada bloqueia o caminho, ladeada por ganchos de açougue.", 
         "opcoes": [
           { "texto": "Tentar erguer a porta de ferro", "destino": 2 }, 
-          { "texto": "Inspecionar os ganchos sujos", "destino": 3 }
+          { "texto": "Inspecionar os ganchos sujos", "destino": 3 },
+          { "texto": "Examinar as paredes descascadas", "destino": 4 }
         ] 
       }
     }
