@@ -150,7 +150,7 @@ let primeiroTokenRecebido = false;
 
         let resumoAtual = "";
 
-        async function chamarGroq(messages, temperatura = 0.3, formato = { type: "json_object" }) {
+        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }) {
     const response = await fetch(WORKER_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -304,18 +304,37 @@ await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
 
 
 async function gerarGrafoGroq(cenarioTema) {
-    adicionarMensagem("⚙️ [Arquiteto Groq] Gerando estrutura do mundo...", "system", true);
+    adicionarMensagem("⚙️ [Arquiteto Groq] Gerando estrutura única do mundo...", "system", true);
     
+    // --- INJETOR DE ENTROPIA (quebra o determinismo do prompt) ---
+    const sementeCaos = Math.random().toString(36).substring(2, 10); // Ex: "k4f8x2a1"
+    const timestamp = Date.now();
+    const variaveisDeHorror = [
+        "Foco em sons úmidos e claustrofobia corporal",
+        "Foco em decadência arquitetônica e poeira sufocante",
+        "Foco em objetos religiosos profanados e silêncio absoluto",
+        "Foco em iluminação bruxuleante e sombras que parecem se mover",
+        "Foco em frio extremo, geada sobre ossos e metal congelado",
+        "Foco em cheiro de decomposição doce e insetos rastejantes",
+        "Foco em ecos distantes e a sensação de estar sendo observado"
+    ];
+    const tomSorteado = variaveisDeHorror[Math.floor(Math.random() * variaveisDeHorror.length)];
+    // -----------------------------------------------------------
+
     const promptGroq = `
+    [ID DE SESSÃO ÚNICA: ${sementeCaos}-${timestamp}]
+    [DIRETRIZ ESTÉTICA DESTA RUN: ${tomSorteado}]
+
     Atue como um arquiteto de level design sádico e mestre de RPG focado em Dark Fantasy e Survival Horror hiper-realista.
     Sua missão é gerar um mapa em grafo JSON de 25 seções (salas) para o tema: "${cenarioTema}".
 
     REGRAS DE CONTEÚDO E TOM (INVIOLÁVEIS):
-    1. O ambiente é DECRÉPITO, OPRESSIVO e FORENSE. Descreva a arquitetura com foco na textura do horror (ferrugem, cheiro de cobre/sangue, madeira podre, umidade, escuridão, sons úmidos, ossos, correntes).
-    2. As "opcoes" devem refletir ações de sobrevivência tensas e específicas (ex: "Forçar a grade enferrujada", "Rastejar pelo duto estreito") e NUNCA genéricas ("Explorar a sala", "Continuar").
-    3. Crie becos sem saída letais e retornos claustrofóbicos. Nenhuma escolha deve parecer "segura".
+    1. O ambiente é OPRESSIVO e FORENSE. ${tomSorteado}.
+    2. NUNCA repita layouts de sessões anteriores. Use o ID DE SESSÃO para criar uma estrutura geográfica inédita.
+    3. As "opcoes" devem refletir ações de sobrevivência tensas e específicas (ex: "Forçar a grade enferrujada", "Rastejar pelo duto estreito") e NUNCA genéricas ("Explorar a sala", "Continuar").
+    4. Crie becos sem saída letais e retornos claustrofóbicos. Nenhuma escolha deve parecer "segura".
 
-        EXEMPLO DE PADRÃO DE QUALIDADE ESPERADO:
+    EXEMPLO DE PADRÃO DE QUALIDADE ESPERADO:
     {
       "1": { 
         "texto_logico": "O corredor cheira a urina velha e ferrugem. As paredes estão descascadas, revelando tijolos escurecidos por incêndios antigos. No final, uma porta de ferro pesada bloqueia o caminho, ladeada por ganchos de açougue.", 
@@ -340,7 +359,8 @@ async function gerarGrafoGroq(cenarioTema) {
     `;
 
     try {
-        const data = await chamarGroq([{ role: "user", content: promptGroq }], 0.7, { type: "json_object" });
+        // Temperatura elevada para 0.85 para estimular a criatividade e diversidade
+        const data = await chamarGroq([{ role: "user", content: promptGroq }], 0.85, { type: "json_object" });
         const conteudo = data.choices[0].message.content;
 
         let mapaParseado;
@@ -358,7 +378,7 @@ async function gerarGrafoGroq(cenarioTema) {
         mapaMundo = mapaParseado;
         secaoAtualId = "1";
         await salvarEstadoJogador();
-        adicionarMensagem("✅ Mapa estrutural carregado na memória.", "system");
+        adicionarMensagem("✅ Mapa estrutural único carregado na memória.", "system");
     } catch (error) {
         console.error("Erro ao gerar mapa na Groq:", error);
         adicionarMensagem(`❌ Falha ao criar a arquitetura do mundo. (${error.message})`, "system");
