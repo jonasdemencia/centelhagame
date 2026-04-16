@@ -1209,6 +1209,8 @@ O que o personagem tenta desesperadamente fazer: "${pergunta}"  ← se FALHA
                         const userIntro = { role: 'user', content: pergunta };
                         payloadAPI = [systemIntro, userIntro];
                     }
+                    }  // ← este fecha o if (!isInitial) externo que abriu na linha 1075
+
 
                     const isIntro = (isInitial && !resumoAtual);
                     const maxTokens       = isIntro ? 500 : 200;
@@ -1217,7 +1219,7 @@ O que o personagem tenta desesperadamente fazer: "${pergunta}"  ← se FALHA
                     if (isIntro) window._introGenerating = true;
 
                     const respostaIA = await gerarRespostaComContinuacao(payloadAPI, maxTokens, elementoDisplay, maxContinuacoes);
-                console.log(`[PROMPT ENVIADO] ${mensagemFinal.substring(0, 500)}...`);
+                console.log(`[PROMPT ENVIADO]`, JSON.stringify(payloadAPI).substring(0, 500));
 
                 const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
 
