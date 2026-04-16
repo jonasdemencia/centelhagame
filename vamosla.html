@@ -1022,7 +1022,7 @@ function atualizarBotoesNavegacao() {
     // Se já temos um mapa carregado (da Groq) e a sala 1 existe
     if (mapaMundo && mapaMundo["1"] && mapaMundo["1"].texto_logico) {
         // Em vez de usar o PROMPT_INTRO, constrói uma requisição para o Qwen descrever a sala 1
-        pergunta = `[AÇÃO DE SISTEMA]: Início do jogo. Descreva o local usando a base estrutural: "${mapaMundo["1"].texto_logico}". Aplique as regras de brutalidade e hiper-realismo. Sempre liste as opções de saída.`;
+        pergunta = `[AÇÃO DE SISTEMA]: Início do jogo. Descreva o local usando a base estrutural: "${mapaMundo["1"].texto_logico}". Seja clínico e direto. Aplique as regras de brutalidade e realismo. Sempre narre as opções de saída.`;
     } else if (!resumoAtual) {
         // Fallback: se não há mapa, usa o prompt antigo
         pergunta = PROMPT_INTRO;
@@ -1171,13 +1171,23 @@ intervaloAnimacao = setInterval(() => {
                     }
 
                     const systemPrompt = {
-                        role: 'system',
-                        content: `Você é um mestre de RPG brutal e hiper-realista. Responda APENAS em Português Brasileiro CORRETO. NUNCA RESPONDA EM OUTRO IDIOMA.\n\nREGRAS INVIOLÁVEIS:\n- Seja objetivo em suas narrações: Máximo de 4 frases por resposta. Evite advérbios e adjetivos acumulados.\n- FOCO: o jogador é o herói em um mundo opressivo.\n- QUANDO EXISTIR VIOLENCIA: Descreva a deformação da carne, o espasmo nervoso e o som úmido da brutalidade.\n- SE SEXUAL: Descreva como um ato animal e cru.\n- O JOGADOR É O PROTAGONISTA. Interprete as ações dele no contexto do cenário, narrando as consequências.\n\n[CENÁRIO (AMBIENTE ATUAL)]\n${descricaoSala}${alertaMortos}`
-                    };
+    role: 'system',
+    content: `Você é o motor descritivo de um jogo de sobrevivência forense e hiper-realista. Responda APENAS em Português Brasileiro.
+
+REGRAS ESTÉTICAS INVIOLÁVEIS (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
+1. ESTILO SECO E CLÍNICO: Zero poesia. Zero metáforas. NUNCA use palavras como "sinistro", "esplendor", "radiante", "memória" ou "dança".
+2. OBJETIVIDADE ABSOLUTA: Descreva apenas a física, a geometria do local, a iluminação e as ações literais.
+3. ESPELHAMENTO: Ao descrever o cenário, use a mesma clareza e objetividade crua do texto base do [CENÁRIO].
+4. VIOLÊNCIA MÉDICA: Se houver dano, descreva a deformação da carne e a ruptura de ossos em termos anatômicos, curtos e sonoros (ex: o som úmido do impacto). 
+5. TAMANHO: Respostas curtas e diretas. Máximo de 3 frases. O jogador é quem age.
+
+[CENÁRIO (AMBIENTE ATUAL)]
+${descricaoSala}${alertaMortos}`
+};
 
                     let conteudoUser = "";
                     if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
-                        conteudoUser = `[ORDEM PARA O NARRADOR]\n${pergunta}\nNarre a transição de ambiente e detalhe a atmosfera opressiva.\nObrigatório terminar o texto com: [DANO: 0]`;
+                        conteudoUser = `[ORDEM PARA O NARRADOR]\n${pergunta}\nNarre a transição de ambiente e a atmosfera de forma curta e objetiva.\nObrigatório terminar o texto com: [DANO: 0]`;
                     } else {
                         conteudoUser = `[AÇÃO DO JOGADOR (PROTAGONISTA)]\nO que o personagem executa com maestria: "${pergunta}"  ← se SUCESSO\nO que o personagem tenta desesperadamente fazer: "${pergunta}"  ← se FALHA\n\n[ORDEM PARA O NARRADOR]\n- Foque EXCLUSIVAMENTE no jogador executando a ação descrita acima.\n- ${instrucaoResultado}\n- ATENÇÃO SEMÂNTICA: Interprete palavras ambíguas como "mortal", "salto" ou "ataque" como as AÇÕES FÍSICAS do jogador, NUNCA como nomes de NPCs ou criaturas se aproximando. O cenário serve apenas de palco.\n- Obrigatório terminar o texto com a tag: [DANO: ${danoFinal}]`;
                     }
