@@ -1071,29 +1071,25 @@ intervaloAnimacao = setInterval(() => {
 
             try {
                 let mensagemFinal = pergunta;
+                let payloadAPI = []; // 1. DECLARAÇÃO NO TOPO (FIX DO ERRO)
 
                 if (!isInitial) {
-        // --- CLASSIFICADOR DETERMINÍSTICO v3.0 (com árbitro 1.5B opcional) ---
-const classificacaoRaw = classificarAcao(pergunta);
-let classificacao;
+                    // --- CLASSIFICADOR DETERMINÍSTICO v3.0 (com árbitro 1.5B opcional) ---
+                    const classificacaoRaw = classificarAcao(pergunta);
+                    let classificacao;
 
-if (classificacaoRaw === null) {
-    // Caso ambíguo com NPC vivo: chama o árbitro (1.5B)
-    const tempJuizId = adicionarMensagem('⚖️ Árbitro avaliando a ação...', 'system', true);
-    classificacao = await classificarComArbitro(pergunta, entidadeEmFoco);
-    const msgJuiz = document.getElementById(tempJuizId);
-    if (msgJuiz) msgJuiz.remove();
-} else {
-    classificacao = classificacaoRaw;
-}
+                    if (classificacaoRaw === null) {
+                        const tempJuizId = adicionarMensagem('⚖️ Árbitro avaliando a ação...', 'system', true);
+                        classificacao = await classificarComArbitro(pergunta, entidadeEmFoco);
+                        const msgJuiz = document.getElementById(tempJuizId);
+                        if (msgJuiz) msgJuiz.remove();
+                    } else {
+                        classificacao = classificacaoRaw;
+                    }
 
-console.log(`[CLASSIFICADOR v3] ${classificacao.fonte.toUpperCase()} →`, classificacao);
-
-// Atualiza estado persistente ANTES de processar o resultado
-_ultimoTipoAcao = classificacao.tipo;
-_ultimoAtributo = classificacao.atributo;
-
-const { tipo, atributo } = classificacao;
+                    _ultimoTipoAcao = classificacao.tipo;
+                    _ultimoAtributo = classificacao.atributo;
+                    const { tipo, atributo } = classificacao;
 
                     let resultado = null;
                     let danoBase = 0;
@@ -1101,115 +1097,70 @@ const { tipo, atributo } = classificacao;
                     if (tipo === 'ARRISCADA' && atributo !== 'NENHUM') {
                         await animarTextoTeste(`TESTE DE ${atributo}`);
                         await criarBotaoRolar();
-
                         const semente = Math.floor(Math.random() * 20) + 1;
                         const valorAtributo = jogadorStats[atributo] ?? 0;
                         resultado = semente <= valorAtributo ? 'SUCESSO' : 'FALHA';
-                        console.log(`[DADO] Valor: ${semente}, Atributo: ${valorAtributo}, Resultado Final: ${resultado}`);
+                        
                         if (resultado === 'FALHA') {
                             danoBase = Math.max(1, Math.floor((semente - valorAtributo) / 2));
                         }
 
                         mostrarResultadoDado(semente, atributo, valorAtributo, resultado);
-                        await new Promise(r => setTimeout(r, 600)); // Pequena pausa dramática
-                        // --- TRAVA DE SEGURANÇA PÓS-ROLAGEM ---
-if (resultado === 'SUCESSO') {
-    // Força o dano a zero no código, independente do que a IA alucinar
-    danoBase = 0;
-    console.log("[SEGURANÇA] Sucesso detectado, dano forçado para 0.");
-    
-} else if (resultado === 'FALHA') {
-    console.log(`[SEGURANÇA] Falha confirmada, dano base: ${danoBase}`);
-}
+                        await new Promise(r => setTimeout(r, 600));
+
+                        if (resultado === 'SUCESSO') {
+                            danoBase = 0; // Trava de segurança mantida
+                        }
                     }
 
-                    let payloadAPI = [];
+                    // --- MANTEMOS A REGRA DOS MORTOS ---
+                    const npcsMortos = Object.entries(entityIndex)
+                        .filter(([_, estado]) => estado === 'morto')
+                        .map(([nome]) => nome)
+                        .join(', ');
 
-                    if (!isInitial) {
-                        // --- MANTEMOS A REGRA DOS MORTOS (É EXCELENTE) ---
-                        const npcsMortos = Object.entries(entityIndex)
-                            .filter(([_, estado]) => estado === 'morto')
-                            .map(([nome]) => nome)
-                            .join(', ');
+                    const alertaMortos = npcsMortos
+                        ? `\n[MORTOS NO CENÁRIO: ${npcsMortos} — cadáveres NÃO reagem, NÃO respiram. São matéria inerte.]`
+                        : '';
 
-                        const alertaMortos = npcsMortos
-                            ? `\n[MORTOS NO CENÁRIO: ${npcsMortos} — cadáveres NÃO reagem, NÃO respiram. São matéria inerte.]`
-                            : '';
+                    let instrucaoResultado = "";
+                    let danoFinal = 0;
 
-                        // --- TRADUÇÃO ABSOLUTA DA MECÂNICA (Sua Finesa Mantida) ---
-                        let instrucaoResultado = "";
-                        let danoFinal = 0;
-
-                        if (tipo === 'TRIVIAL') {
-                            instrucaoResultado = "Esta é uma ação livre de risco. Narre o jogador executando a ação sem falhas.";
-                            danoFinal = 0;
-                        } else if (resultado === 'SUCESSO') {
-                            instrucaoResultado = `O jogador testou o atributo ${atributo} e obteve SUCESSO ABSOLUTO. ESTRUTURA OBRIGATÓRIA DE SUCESSO: (1) O jogador inicia a ação com intenção clara. (2) Executa com precisão e controle total. (3) Conclui com êxito perceptível. A brutalidade do cenário é apenas pano de fundo visual — ela NÃO interfere no resultado. Zero tropeços, zero dor, zero falha.`;
-                            danoFinal = 0;
-                        } else {
-                            instrucaoResultado = `O jogador testou o atributo ${atributo} e FALHOU MISERAVELMENTE. A ação deu totalmente errado. Narre uma consequência brutal, dolorosa ou humilhante que justifique a falha.`;
-                            danoFinal = danoBase;
-                        }
-
-                        // =================================================================
-                        // 1. O SYSTEM PROMPT DINÂMICO (Regras Fixas + Cenário Atual)
-                        // =================================================================
-                        const descricaoSala = mapaMundo && mapaMundo[secaoAtualId] ? mapaMundo[secaoAtualId].texto_logico : 'Cenário sombrio.';
-
-                        const systemPrompt = {
-                            role: 'system',
-                            content: `Você é um mestre de RPG brutal e hiper-realista. Responda APENAS em Português Brasileiro CORRETO. NUNCA RESPONDA EM OUTRO IDIOMA.
-
-REGRAS INVIOLÁVEIS:
-- FOCO: o jogador é o herói em um mundo decrépito e opressivo.
-- SE VIOLENTO: Descreva a deformação da carne, o espasmo nervoso e o som úmido da brutalidade.
-- SE SEXUAL: Descreva como um ato animal e cru.
-- O JOGADOR É O PROTAGONISTA. Interprete as ações dele no contexto do cenário, narrando as consequências.
-
-[CENÁRIO (AMBIENTE ATUAL)]
-${descricaoSala}${alertaMortos}`
-                        };
-
-                        // =================================================================
-                        // 2. A AÇÃO ATUAL DO USUÁRIO (Sua Estrutura Blindada)
-                        // =================================================================
-                        let conteudoUser = "";
-                        
-                        if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
-                            conteudoUser = `[ORDEM PARA O NARRADOR]\n${pergunta}\nNarre a transição de ambiente e detalhe a atmosfera opressiva.\nObrigatório terminar o texto com: [DANO: 0]`;
-                        } else {
-                            conteudoUser = `[AÇÃO DO JOGADOR (PROTAGONISTA)]
-O que o personagem executa com maestria: "${pergunta}"  ← se SUCESSO
-O que o personagem tenta desesperadamente fazer: "${pergunta}"  ← se FALHA
-
-[ORDEM PARA O NARRADOR]
-- Foque EXCLUSIVAMENTE no jogador executando a ação descrita acima.
-- ${instrucaoResultado}
-- ATENÇÃO SEMÂNTICA: Interprete palavras ambíguas como "mortal", "salto" ou "ataque" como as AÇÕES FÍSICAS do jogador, NUNCA como nomes de NPCs ou criaturas se aproximando. O cenário serve apenas de palco.
-- Obrigatório terminar o texto com a tag: [DANO: ${danoFinal}]`;
-                        }
-
-                        const userPrompt = {
-                            role: 'user',
-                            content: conteudoUser
-                        };
-
-                        // =================================================================
-                        // 3. MONTAGEM DO PAYLOAD DA API
-                        // =================================================================
-                        const conversaRecente = historicoConversa.slice(-6); 
-                        payloadAPI = [systemPrompt, ...conversaRecente, userPrompt];
-
+                    if (tipo === 'TRIVIAL') {
+                        instrucaoResultado = "Esta é uma ação livre de risco. Narre o jogador executando a ação sem falhas.";
+                        danoFinal = 0;
+                    } else if (resultado === 'SUCESSO') {
+                        instrucaoResultado = `O jogador testou o atributo ${atributo} e obteve SUCESSO ABSOLUTO. ESTRUTURA OBRIGATÓRIA DE SUCESSO: (1) O jogador inicia a ação com intenção clara. (2) Executa com precisão e controle total. (3) Conclui com êxito perceptível. A brutalidade do cenário é apenas pano de fundo visual — ela NÃO interfere no resultado. Zero tropeços, zero dor, zero falha.`;
+                        danoFinal = 0;
                     } else {
-                        // Configuração para a primeira mensagem do jogo (Intro)
-                        const systemIntro = { 
-                            role: 'system', 
-                            content: 'Você é um mestre de RPG brutal. Narre a introdução com tom opressivo e pergunte o que o jogador faz.' 
-                        };
-                        const userIntro = { role: 'user', content: pergunta };
-                        payloadAPI = [systemIntro, userIntro];
+                        instrucaoResultado = `O jogador testou o atributo ${atributo} e FALHOU MISERAVELMENTE. A ação deu totalmente errado. Narre uma consequência brutal, dolorosa ou humilhante que justifique a falha.`;
+                        danoFinal = danoBase;
                     }
-                    }  // ← este fecha o if (!isInitial) externo que abriu na linha 1075
+
+                    const descricaoSala = mapaMundo && mapaMundo[secaoAtualId] ? mapaMundo[secaoAtualId].texto_logico : 'Cenário sombrio.';
+
+                    const systemPrompt = {
+                        role: 'system',
+                        content: `Você é um mestre de RPG brutal e hiper-realista. Responda APENAS em Português Brasileiro CORRETO. NUNCA RESPONDA EM OUTRO IDIOMA.\n\nREGRAS INVIOLÁVEIS:\n- FOCO: o jogador é o herói em um mundo decrépito e opressivo.\n- SE VIOLENTO: Descreva a deformação da carne, o espasmo nervoso e o som úmido da brutalidade.\n- SE SEXUAL: Descreva como um ato animal e cru.\n- O JOGADOR É O PROTAGONISTA. Interprete as ações dele no contexto do cenário, narrando as consequências.\n\n[CENÁRIO (AMBIENTE ATUAL)]\n${descricaoSala}${alertaMortos}`
+                    };
+
+                    let conteudoUser = "";
+                    if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
+                        conteudoUser = `[ORDEM PARA O NARRADOR]\n${pergunta}\nNarre a transição de ambiente e detalhe a atmosfera opressiva.\nObrigatório terminar o texto com: [DANO: 0]`;
+                    } else {
+                        conteudoUser = `[AÇÃO DO JOGADOR (PROTAGONISTA)]\nO que o personagem executa com maestria: "${pergunta}"  ← se SUCESSO\nO que o personagem tenta desesperadamente fazer: "${pergunta}"  ← se FALHA\n\n[ORDEM PARA O NARRADOR]\n- Foque EXCLUSIVAMENTE no jogador executando a ação descrita acima.\n- ${instrucaoResultado}\n- ATENÇÃO SEMÂNTICA: Interprete palavras ambíguas como "mortal", "salto" ou "ataque" como as AÇÕES FÍSICAS do jogador, NUNCA como nomes de NPCs ou criaturas se aproximando. O cenário serve apenas de palco.\n- Obrigatório terminar o texto com a tag: [DANO: ${danoFinal}]`;
+                    }
+
+                    const conversaRecente = historicoConversa.slice(-6); 
+                    payloadAPI = [systemPrompt, ...conversaRecente, { role: 'user', content: conteudoUser }];
+
+                } else {
+                    // --- LÓGICA DE INTRODUÇÃO (FIX DE ALCANCE) ---
+                    payloadAPI = [
+                        { role: 'system', content: 'Você é um mestre de RPG brutal. Narre a introdução com tom opressivo e pergunte o que o jogador faz.' },
+                        { role: 'user', content: pergunta }
+                    ];
+                }
 
 
                     const isIntro = (isInitial && !resumoAtual);
