@@ -956,18 +956,22 @@ function atualizarBotoesNavegacao() {
         btn.innerText = `🧭 ${opcao.texto}`;
         
         btn.onclick = () => {
-            // 1. Oculta os botões para evitar duplo clique
-            container.innerHTML = '';
-            
-            // 2. Atualiza a variável de estado para a nova sala
-            secaoAtualId = opcao.destino.toString();
-            
-            // 3. Salva no Firebase instantaneamente
-            salvarEstadoJogador();
-            
-            // 4. Envia o comando para o Qwen narrar a transição
-            window.enviar(`[AÇÃO DE SISTEMA]: O jogador realizou a ação: "${opcao.texto}". Descreva o resultado sendo ABSOLUTAMENTE FIEL aos fatos da nova sala.`);
-        };
+    container.innerHTML = '';
+    secaoAtualId = opcao.destino.toString();
+    salvarEstadoJogador();
+
+    // Renderiza o texto do 70B diretamente — sem passar pelo 7B
+    const novaSala = mapaMundo[secaoAtualId];
+    if (novaSala && novaSala.texto_logico) {
+        adicionarMensagem(novaSala.texto_logico, 'ai');
+        // Registra no histórico para o 7B ter contexto nas próximas ações
+        historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
+        atualizarBotoesNavegacao();
+    } else {
+        // Fallback: sala sem texto (não deveria ocorrer)
+        window.enviar(`[AÇÃO DE SISTEMA]: O jogador realiza a ação: "${opcao.texto}".`);
+    }
+};
         
         container.appendChild(btn);
     });
