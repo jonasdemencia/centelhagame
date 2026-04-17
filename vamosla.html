@@ -965,7 +965,7 @@ function atualizarBotoesNavegacao() {
             salvarEstadoJogador();
             
             // 4. Envia o comando para o Qwen narrar a transição
-            window.enviar(`[AÇÃO DE SISTEMA]: O jogador realiza a ação: "${opcao.texto}". Descreva o resultado dessa ação, aplicando as regras de brutalidade e realismo.`);
+            window.enviar(`[AÇÃO DE SISTEMA]: O jogador realizou a ação: "${opcao.texto}". Descreva o resultado sendo ABSOLUTAMENTE FIEL aos fatos da nova sala.`);
         };
         
         container.appendChild(btn);
@@ -1147,13 +1147,13 @@ if (tipo === 'LIVRE') {
 
                     const systemPrompt = {
     role: 'system',
-    content: `Você é o motor descritivo de um jogo de sobrevivência forense e hiper-realista. Responda APENAS em Português Brasileiro. Nunca narre em outro idioma.
+    content: `Você é o motor descritivo de um jogo de sobrevivência forense. Responda APENAS em Português Brasileiro. Nunca narre em outro idioma.
 
-    REGRAS DE ESTILO:
-1. MUNDO SECO: Descrições de ambiente devem ser curtas, frias e sem adjetivos poéticos. Tamanho: Respostas curtas e diretas. Máximo de 4 frases. 
-2. OBJETIVIDADE ABSOLUTA: Descreva apenas a física, a geometria do local, a iluminação, o odor e as ações literais. 
-3. VIOLÊNCIA CRUA: Em caso de dano ou impacto físico narrado, ABANDONE a brevidade (regra 1 de estilo). Descreva minuciosamente a destruição de tecidos, o som de ossos partindo e a reação biológica do corpo. Seja visceral e detalhado no sofrimento físico. Tamanho: respostas longas e minuciosas. Máximo de 6 frases.
-4. ESPELHAMENTO: Ao descrever o cenário, use a mesma clareza e objetividade crua do texto base do [CENÁRIO].
+REGRAS DE ESTILO E FIDELIDADE (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
+1. FIDELIDADE ABSOLUTA AO CENÁRIO: O texto em [CENÁRIO] é a verdade matemática da sala. Você é ESTRITAMENTE PROIBIDO de omitir qualquer fato, pista ou detalhe lógico contido nele. Se o cenário diz que "um grafite aponta para um local", você DEVE explicitar isso na sua narração. A sua função é hiper-realizar a informação, NUNCA ignorá-la.
+2. MUNDO SECO E ANTI-POÉTICO: Proibido usar expressões como "âmbar do crepúsculo", "sombras dançantes" ou "espaço confinado pressionando". Seja literal, frio e geométrico. Máximo de 4 frases.
+3. OBJETIVIDADE: Descreva apenas a física, a iluminação, o odor e os fatos mecânicos literais.
+4. VIOLÊNCIA CRUA: APENAS em caso de impacto físico contra corpos, abandone a brevidade. Descreva minuciosamente a destruição de tecidos e ossos (máximo 6 frases).
 
 [CENÁRIO (AMBIENTE ATUAL)]
 ${descricaoSala}${alertaMortos}`
