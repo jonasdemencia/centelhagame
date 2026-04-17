@@ -779,91 +779,32 @@ function normalizarAcao(acao) {
 }
 
 function classificarAcao(acaoOriginal) {
-    const acao = normalizarAcao(acaoOriginal);
-
-    // CAMADA 0: METALINGUAGEM (sempre TRIVIAL)
-    const ehMeta = /^(me descreva|descreva|descrever|diga|me diga|detalhe|explique|me conte|conte|me mostr|mostr|narre)\b/.test(acao)
-        || /^(como é|como s[aã]o|qual [ao]|quais|onde fica|o que [eé]|tem algo|existe|h[aá]|quantos)\b/.test(acao)
-        || /^(me ajude|ajude|status|inventário|mapa)\b/.test(acao);
-    if (ehMeta) return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'meta' };
-
-    // CAMADA 1: PERCEPÇÃO PASSIVA (sempre TRIVIAL)
-    const ehPercepcao = /^(olh[ao]|observ|examin|chec[ao]|analiso|inspecion|vejo|noto|procuro|investigo|vasculh|escuto|ouço|sinto o cheiro|cheiro|toco|palpo|tento (ver|ouvir|identificar|perceber|notar|entender|descobrir como|descobrir o que))\b/.test(acao);
-    if (ehPercepcao) return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'percepção' };
-
-    // CAMADA 2: AÇÃO FÍSICA CLARA (sempre HABILIDADE) — sem âncora ^, escaneia a frase inteira
-    const ehFisicoClaro = /\b(corro|fujo|salto|pulo|escalo|subo|desço|empurro|puxo|arrombo|forço|chuto|soco|ataco|golpeio|esfaqueio|disparo|arremesso|rolo|me jogo|me agacho|me esquivo|desarmo|prendo|amarro|rasteio|nado|mergulho|agarro|trepo|cotovelada|murro|estrangulo|derrubо|bato|agrido|luto|combato)\b/.test(acao);
-    if (ehFisicoClaro) return { tipo: 'ARRISCADA', atributo: 'HABILIDADE', fonte: 'físico-claro' };
-
-    // CAMADA 2.5: AÇÃO DEMONSTRATIVA (sempre TRIVIAL)
-    const ehDemonstrativo = /^(mostro|mostrar|exibo|exibir|apresento|apresentar|entrego|ofereço|estendo)\b.+\bpara\b/.test(acao)
-        || /^(mostro|mostrar|exibo|apresento)\b/.test(acao);
-    if (ehDemonstrativo) return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'demonstrativo' };
-
-    // CAMADA 3: VERIFICAÇÃO DE ALVO E CONTÁGIO
-    const estadoRelacional = entidadeEmFoco ? resolverEstadoRelacionalNPC(entidadeEmFoco) : null;
-
-    if (estadoRelacional === 'morto' || estadoRelacional === 'ausente') {
-    return { tipo: 'TRIVIAL', atributo: 'NENHUM', fonte: 'sem-alvo' };
-}
-// Sem NPC OU NPC irrelevante para a ação → árbitro avalia dificuldade intrínseca
-return null;
-
-    const acaoAnteriorFoiViolenta = (_ultimoTipoAcao === 'ARRISCADA' && _ultimoAtributo === 'HABILIDADE');
-    if (acaoAnteriorFoiViolenta) {
-        return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'contágio-violência' };
+    // Prefixo de sistema → sempre LIVRE, sem teste
+    if (acaoOriginal.startsWith('[AÇÃO DE SISTEMA]')) {
+        return { tipo: 'LIVRE', atributo: 'NENHUM', fonte: 'sistema' };
     }
 
-    // Ambíguo — delega ao árbitro
+    const acao = normalizarAcao(acaoOriginal);
+
+    // Metalinguagem: perguntas ao narrador, pedidos de status/mapa → LIVRE
+    const ehMeta = /^(me descreva|descreva|diga|me diga|explique|me conte|conte|narre|como é|como s[aã]o|qual|quais|onde fica|o que [eé]|tem algo|existe|h[aá]|quantos|me ajude|ajude|status|inventário|mapa)\b/.test(acao);
+    if (ehMeta) return { tipo: 'LIVRE', atributo: 'NENHUM', fonte: 'meta' };
+
+    // NPC morto em foco → ação sobre matéria inerte é LIVRE
+    const estadoRelacional = entidadeEmFoco ? resolverEstadoRelacionalNPC(entidadeEmFoco) : null;
+    if (estadoRelacional === 'morto') {
+        return { tipo: 'LIVRE', atributo: 'NENHUM', fonte: 'sem-alvo' };
+    }
+
+    // Tudo mais → árbitro 1.5B decide com exemplos concretos
     return null;
 }
 
 async function classificarComArbitro(acaoOriginal, entidade) {
-    const estadoRelacional = resolverEstadoRelacionalNPC(entidade);
-
-    // Sem NPC: INFLUENCIA é impossível — árbitro binário FISICA vs PASSIVA
-    if (!entidade) {
-        const r = await fetch(LM_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: MODELO_JUIZ,
-                messages: [
-                    {
-                        role: 'system',
-                        content: `Classifique a ação em UMA categoria:
-FISICA: exige coordenação, precisão, força ou habilidade motora com risco real de falha (atirar, dançar com dificuldade, escalar, acrobacia, operar equipamento sob pressão).
-PASSIVA: sem risco de falha (observar, caminhar, pegar objeto acessível).
-Retorne apenas o JSON.`
-                    },
-                    { role: 'user', content: `Ação: "${acaoOriginal}"` }
-                ],
-                temperature: 0.0,
-                max_tokens: 15,
-                response_format: {
-                    type: "json_schema",
-                    json_schema: {
-                        name: "arbitro_sem_npc",
-                        strict: true,
-                        schema: {
-                            type: "object",
-                            properties: {
-                                categoria: { type: "string", enum: ["FISICA", "PASSIVA"] }
-                            },
-                            required: ["categoria"],
-                            additionalProperties: false
-                        }
-                    }
-                }
-            })
-        });
-        const d = await r.json();
-        const { categoria } = JSON.parse(d.choices[0].message.content);
-        console.log(`[ÁRBITRO SEM-NPC] categoria=${categoria}`);
-        return categoria === 'FISICA'
-            ? { tipo: 'ARRISCADA', atributo: 'HABILIDADE', fonte: 'árbitro-sem-npc' }
-            : { tipo: 'TRIVIAL',   atributo: 'NENHUM',     fonte: 'árbitro-sem-npc' };
-    }
+    const estadoRelacional = entidade ? resolverEstadoRelacionalNPC(entidade) : 'nenhum';
+    const contextoNPC = entidade
+        ? `NPC presente: ${entidade.nome} (estado: ${estadoRelacional})`
+        : `Sem NPC em cena.`;
 
     try {
         const response = await fetch(LM_URL, {
@@ -874,33 +815,67 @@ Retorne apenas o JSON.`
                 messages: [
                     {
                         role: 'system',
-                        content: `Você analisa ações em jogos de RPG.
-Classifique a ação em UMA categoria:
+                        content: `Você classifica ações de um jogador de RPG em exatamente uma de três categorias.
 
-FISICA: qualquer ação que exige coordenação, precisão, força ou habilidade motora com risco real de falha — atirar, dançar com dificuldade, escalar, forçar algo, hackear, operar equipamento sob pressão, acrobacias. Independe de haver NPC.
-INFLUENCIA: tentar que um NPC faça, concorde ou reaja a algo — convencer, seduzir, intimidar, enganar. Só se aplica quando há NPC com vontade própria.
-PASSIVA: ação sem risco de falha — observar, caminhar, pegar objeto acessível, falar com aliado disposto.
+PERGUNTA-CHAVE: "Uma pessoa competente faria isso notavelmente diferente de uma desajeitada? E a falha causa dano real ou hostilidade?"
 
-Retorne apenas o JSON.`
+LIVRE: nenhuma diferença de competência. Qualquer pessoa faz igual.
+EXPRESSAO: competência importa, mas a falha NÃO causa dano físico nem hostilidade — apenas resultado de qualidade ruim ou constrangimento.
+RISCO: competência importa E a falha pode causar dano físico, atrair inimigos ou provocar rejeição hostil de um NPC.
+
+EXEMPLOS OBRIGATÓRIOS — trate como verdade absoluta:
+
+"Olho ao redor da sala" → LIVRE / NENHUM
+"Pego o objeto da mesa" → LIVRE / NENHUM
+"Caminho até a porta" → LIVRE / NENHUM
+"Sento e descanso" → LIVRE / NENHUM
+"Grito pelo nome de alguém" → LIVRE / NENHUM
+"Falo com meu aliado de forma amigável" → LIVRE / NENHUM
+
+"Imito o grasnado de um corvo para distrair alguém" → EXPRESSAO / CARISMA
+"Dou um passo de dança elaborado" → EXPRESSAO / HABILIDADE
+"Imito a voz do capitão para enganar um mensageiro" → EXPRESSAO / CARISMA
+"Faço malabarismo com três pedras" → EXPRESSAO / HABILIDADE
+"Canto uma melodia para acalmar alguém" → EXPRESSAO / CARISMA
+"Esculpo um rosto no barro com as mãos" → EXPRESSAO / HABILIDADE
+"Conto uma piada para aliviar a tensão" → EXPRESSAO / CARISMA
+
+"Salto sobre o precipício" → RISCO / HABILIDADE
+"Forço a porta enferrujada com o ombro" → RISCO / HABILIDADE
+"Passo furtivamente pelo guarda" → RISCO / HABILIDADE
+"Ataco o mercenário com a faca" → RISCO / HABILIDADE
+"Escalo o muro externo" → RISCO / HABILIDADE
+"Convencer o guarda hostil de que sou aliado" → RISCO / CARISMA
+"Intimido o prisioneiro a revelar o esconderijo" → RISCO / CARISMA
+"Seduzir a viúva do barão para obter a chave" → RISCO / CARISMA
+"Nego estar no local ao ser interrogado pelo oficial" → RISCO / CARISMA
+"Arremesso a faca no alvo a 10 metros" → RISCO / HABILIDADE
+
+ATRIBUTOS:
+HABILIDADE: esforço físico motor com variação de qualidade.
+CARISMA: influência sobre NPC com vontade própria.
+SORTE: eventos caóticos sem competência que mitigue.
+NENHUM: apenas se LIVRE.`
                     },
                     {
                         role: 'user',
-                        content: `NPC: ${entidade ? `${entidade.nome} (estado: ${estadoRelacional})` : 'nenhum'}\nAção: "${acaoOriginal}"`
+                        content: `${contextoNPC}\nAção do jogador: "${acaoOriginal}"`
                     }
                 ],
                 temperature: 0.0,
-                max_tokens: 15,
+                max_tokens: 20,
                 response_format: {
                     type: "json_schema",
                     json_schema: {
-                        name: "arbitro_categorico",
+                        name: "arbitro_tripartite",
                         strict: true,
                         schema: {
                             type: "object",
                             properties: {
-                                categoria: { type: "string", enum: ["FISICA", "INFLUENCIA", "PASSIVA"] }
+                                tipo:     { type: "string", enum: ["LIVRE", "EXPRESSAO", "RISCO"] },
+                                atributo: { type: "string", enum: ["HABILIDADE", "CARISMA", "SORTE", "NENHUM"] }
                             },
-                            required: ["categoria"],
+                            required: ["tipo", "atributo"],
                             additionalProperties: false
                         }
                     }
@@ -909,16 +884,13 @@ Retorne apenas o JSON.`
         });
 
         const data = await response.json();
-        const { categoria } = JSON.parse(data.choices[0].message.content);
-        console.log(`[ÁRBITRO] categoria=${categoria} | estado=${estadoRelacional}`);
-
-        if (categoria === 'PASSIVA')    return { tipo: 'TRIVIAL',   atributo: 'NENHUM',     fonte: 'árbitro-passivo' };
-        if (categoria === 'FISICA')     return { tipo: 'ARRISCADA', atributo: 'HABILIDADE', fonte: 'árbitro-físico' };
-        if (categoria === 'INFLUENCIA') return { tipo: 'ARRISCADA', atributo: 'CARISMA',    fonte: 'árbitro-influência' };
+        const { tipo, atributo } = JSON.parse(data.choices[0].message.content);
+        console.log(`[ÁRBITRO] tipo=${tipo} | atributo=${atributo} | npc=${estadoRelacional}`);
+        return { tipo, atributo, fonte: 'árbitro-tripartite' };
 
     } catch (e) {
-        console.warn('[ÁRBITRO] Falhou, aplicando fallback conservador.', e);
-        return { tipo: 'ARRISCADA', atributo: 'CARISMA', fonte: 'árbitro-fallback' };
+        console.warn('[ÁRBITRO] Falhou, fallback conservador.', e);
+        return { tipo: 'LIVRE', atributo: 'NENHUM', fonte: 'árbitro-fallback' };
     }
 }
         
@@ -1117,7 +1089,7 @@ intervaloAnimacao = setInterval(() => {
                     let resultado = null;
                     let danoBase = 0;
 
-                    if (tipo === 'ARRISCADA' && atributo !== 'NENHUM') {
+                   if ((tipo === 'RISCO' || tipo === 'EXPRESSAO') && atributo !== 'NENHUM') {
                         await animarTextoTeste(`TESTE DE ${atributo}`);
                         await criarBotaoRolar();
                         const semente = Math.floor(Math.random() * 20) + 1;
@@ -1147,18 +1119,29 @@ intervaloAnimacao = setInterval(() => {
                         : '';
 
                     let instrucaoResultado = "";
-                    let danoFinal = 0;
+let danoFinal = 0;
 
-                    if (tipo === 'TRIVIAL') {
-                        instrucaoResultado = "Esta é uma ação livre de risco. Narre o jogador executando a ação sem falhas.";
-                        danoFinal = 0;
-                    } else if (resultado === 'SUCESSO') {
-                        instrucaoResultado = `O jogador testou o atributo ${atributo} e obteve SUCESSO ABSOLUTO. ESTRUTURA OBRIGATÓRIA DE SUCESSO: (1) O jogador inicia a ação com intenção clara. (2) Executa com precisão e controle total. (3) Conclui com êxito perceptível. A brutalidade do cenário é apenas pano de fundo visual — ela NÃO interfere no resultado. Zero tropeços, zero dor, zero falha.`;
-                        danoFinal = 0;
-                    } else {
-                        instrucaoResultado = `O jogador testou o atributo ${atributo} e FALHOU MISERAVELMENTE. A ação deu totalmente errado. Narre uma consequência brutal, dolorosa ou humilhante que justifique a falha.`;
-                        danoFinal = danoBase;
-                    }
+if (tipo === 'LIVRE') {
+    instrucaoResultado = "Ação livre, sem teste. Narre o jogador executando sem falhas.";
+    danoFinal = 0;
+} else if (tipo === 'EXPRESSAO') {
+    // Competência importa, mas falhar nunca dói — apenas constrange
+    danoFinal = 0;
+    if (resultado === 'SUCESSO') {
+        instrucaoResultado = `O jogador testou ${atributo} e obteve SUCESSO. Descreva a ação executada com elegância, precisão ou carisma visível. Nenhum dano, nenhum risco.`;
+    } else {
+        instrucaoResultado = `O jogador testou ${atributo} e FALHOU. A ação foi executada de forma desajeitada, fora do ritmo ou pouco convincente. O resultado é ruim ou constrangedor, mas sem dano físico e sem reação hostil. Narre isso com brevidade.`;
+    }
+} else {
+    // RISCO: falhar tem peso real
+    if (resultado === 'SUCESSO') {
+        instrucaoResultado = `O jogador testou ${atributo} e obteve SUCESSO ABSOLUTO. ESTRUTURA OBRIGATÓRIA: (1) inicia com intenção clara. (2) executa com precisão total. (3) conclui com êxito perceptível. Zero tropeços, zero dor.`;
+        danoFinal = 0;
+    } else {
+        instrucaoResultado = `O jogador testou ${atributo} e FALHOU MISERAVELMENTE. A ação deu totalmente errado. Narre uma consequência brutal, dolorosa ou humilhante.`;
+        danoFinal = danoBase;
+    }
+}
 
                     const salaAtual = mapaMundo && mapaMundo[secaoAtualId] ? mapaMundo[secaoAtualId] : null;
                     const descricaoSala = salaAtual ? salaAtual.texto_logico : 'Cenário sombrio.';
