@@ -304,85 +304,164 @@ await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
 
 
 async function gerarGrafoGroq(cenarioTema) {
-    adicionarMensagem("⚙️ [Arquiteto Groq] Gerando estrutura única do mundo...", "system", true);
-    
-    // --- INJETOR DE ENTROPIA (quebra o determinismo do prompt) ---
-    const sementeCaos = Math.random().toString(36).substring(2, 10); // Ex: "k4f8x2a1"
-    const timestamp = Date.now();
+
+    const sementeCaos = Math.random().toString(36).substring(2, 10);
+    const timestamp   = Date.now();
     const variaveisDeHorror = [
-        "Foco em sons úmidos e claustrofobia corporal",
-        "Foco em decadência arquitetônica e poeira sufocante",
-        "Foco em objetos religiosos profanados e silêncio absoluto",
-        "Foco em iluminação bruxuleante e sombras que parecem se mover",
-        "Foco em frio extremo, geada sobre ossos e metal congelado",
-        "Foco em cheiro de decomposição doce e insetos rastejantes",
-        "Foco em ecos distantes e a sensação de estar sendo observado"
+        "Sons úmidos e claustrofobia corporal",
+        "Decadência arquitetônica e poeira sufocante",
+        "Objetos religiosos profanados e silêncio absoluto",
+        "Iluminação bruxuleante e sombras móveis",
+        "Frio extremo, geada sobre ossos e metal congelado",
+        "Cheiro de decomposição doce e insetos rastejantes",
+        "Ecos distantes e a sensação de ser observado"
     ];
     const tomSorteado = variaveisDeHorror[Math.floor(Math.random() * variaveisDeHorror.length)];
-    // -----------------------------------------------------------
 
-    const promptGroq = `
-    [ID DE SESSÃO ÚNICA: ${sementeCaos}-${timestamp}]
-    [DIRETRIZ ESTÉTICA DESTA RUN: ${tomSorteado}]
+    // ============================================================
+    // FASE 1 — DNA NARRATIVO
+    // O modelo pensa na estrutura completa ANTES de escrever salas.
+    // ============================================================
+    const promptDNA = `[ID: ${sementeCaos}-${timestamp}] [TOM: ${tomSorteado}]
 
-    Atue como um arquiteto de level design sádico e mestre de RPG focado em Dark Fantasy e Survival Horror hiper-realista.
-    Sua missão é gerar um mapa em grafo JSON de 25 seções (salas) para o tema: "${cenarioTema}".
+Você é Steve Jackson projetando uma aventura solo antes de escrever uma única sala.
+Tema: "${cenarioTema}"
 
-    REGRAS DE CONTEÚDO E TOM (INVIOLÁVEIS):
-    1. O ambiente é OPRESSIVO e FORENSE. ${tomSorteado}.
-    2. NUNCA repita layouts de sessões anteriores. Use o ID DE SESSÃO para criar uma estrutura geográfica inédita.
-    3. As "opcoes" devem refletir ações de sobrevivência tensas e específicas (ex: "Forçar a grade enferrujada", "Rastejar pelo duto estreito") e NUNCA genéricas ("Explorar a sala", "Continuar").
-    4. COERÊNCIA NARRATIVA OBRIGATÓRIA: cada elemento físico referenciado nas "opcoes" DEVE aparecer mencionado no "texto_logico" da mesma sala. Se uma opção diz "Seguir o som de pingos de água", o texto_logico deve mencionar o som da água. Se diz "Subir as escadas rangentes", o texto_logico deve mencionar as escadas. O texto_logico é a justificativa sensorial das escolhas.
-    5. Crie becos sem saída letais e retornos claustrofóbicos. Nenhuma escolha deve parecer "segura".
+Construa o ESQUELETO narrativo de uma aventura de 25 seções. Nenhuma prosa ainda — apenas arquitetura.
 
-    EXEMPLO DE PADRÃO DE QUALIDADE ESPERADO:
-    {
-      "1": { 
-        "texto_logico": "O corredor cheira a urina velha e ferrugem. As paredes estão descascadas, revelando tijolos escurecidos por incêndios antigos. No final, uma porta de ferro pesada bloqueia o caminho, ladeada por ganchos de açougue.", 
-        "opcoes": [
-          { "texto": "Tentar erguer a porta de ferro", "destino": 2 }, 
-          { "texto": "Inspecionar os ganchos sujos", "destino": 3 },
-          { "texto": "Examinar as paredes descascadas", "destino": 4 }
-        ] 
-      }
-    }
-    
-    Regras do JSON:
-    1. Retorne APENAS o JSON, sem markdown, sem introduções.
-    2. Estrutura obrigatória:
-    {
-      "1": { "texto_logico": "Descrição seca do ambiente", "opcoes": [{ "texto": "ação", "destino": 2 }] },
-      "2": { ... }
-    }
-    3. Crie caminhos não lineares (loops, becos sem saída, atalhos). O ID máximo de destino é 25.
-    4. DENSIDADE DE ESCOLHAS: Cada sala (ID) deve obrigatoriamente ter entre 2 e 4 opções de destino. Evite salas com apenas uma saída, a menos que seja um beco sem saída estratégico.
-    5. COMPLEXIDADE DO GRAFO: Crie um design de mapa "em teia". Isso significa que caminhos diferentes podem levar ao mesmo ID, e alguns IDs devem apontar para salas anteriores (backtracking), forçando o jogador a explorar.
-    `;
+Retorne APENAS este JSON:
+{
+  "ameaca_central": "o que ameaça o jogador neste lugar e por quê",
+  "condicao_vitoria": "o que o jogador precisa fazer ou descobrir para sobreviver",
+  "objetos_chave": [
+    { "nome": "nome do objeto", "sala_origem": N, "sala_uso": N, "consequencia": "o que muda quando usado" },
+    { "nome": "...", "sala_origem": N, "sala_uso": N, "consequencia": "..." },
+    { "nome": "...", "sala_origem": N, "sala_uso": N, "consequencia": "..." }
+  ],
+  "revelacoes": [
+    { "sala": N, "conteudo": "o que o jogador descobre aqui que muda sua compreensão do lugar" },
+    { "sala": N, "conteudo": "..." },
+    { "sala": N, "conteudo": "..." },
+    { "sala": N, "conteudo": "..." },
+    { "sala": N, "conteudo": "..." }
+  ],
+  "becos_sem_saida": [N, N, N],
+  "atalhos_secretos": [ { "de": N, "para": N, "condicao": "o que o jogador precisa ter feito antes" } ],
+  "arco": {
+    "ato1_estabelecimento": "o que o jogador aprende nas salas 1-8",
+    "ato2_complicacao": "o que vira de cabeça para baixo nas salas 9-18",
+    "ato3_climax": "como tudo converge nas salas 19-25"
+  }
+}`;
+
+    // ============================================================
+    // FASE 2 — GERAÇÃO DAS 25 SALAS COM DNA COMO CONTEXTO
+    // ============================================================
+    const promptSalas = (dna) => `[ID: ${sementeCaos}-${timestamp}] [TOM: ${tomSorteado}]
+
+Você é Steve Jackson escrevendo a aventura "${cenarioTema}".
+Você tem o esqueleto completo. Agora construa as 25 salas.
+
+ESQUELETO DA AVENTURA:
+${JSON.stringify(dna, null, 2)}
+
+REGRAS DE JACKSON (invioláveis):
+
+1. OPÇÕES COM PESO: cada opção deve implicar uma consequência clara. O jogador deve sentir que escolher errado custa algo. Nunca crie opções intercambiáveis.
+
+2. PROIBIÇÕES ABSOLUTAS nas opções (se aparecerem, você falhou):
+   - "Procurar por mais informações"
+   - "Desistir e voltar"
+   - "Explorar a sala"
+   - "Investigar o local"
+   - Qualquer opção que comece com "Procurar por" sem nomear o objeto exato
+
+3. ESPECIFICIDADE: nomeie o elemento físico exato. "Forçar a grade enferrujada com o ombro" não "Ir para o corredor".
+
+4. COERÊNCIA TEXTO→OPÇÃO: cada elemento físico nas opções DEVE aparecer mencionado no texto_logico. O texto é a justificativa sensorial das escolhas.
+
+5. OBJETOS-CHAVE: nas salas de origem, o objeto deve aparecer no texto de forma encontrável mas não óbvia. Na sala de uso, a opção que usa o objeto deve existir como uma das escolhas.
+
+6. REVELAÇÕES: nas salas marcadas, o texto_logico deve conter a revelação de forma visceral e concreta.
+
+7. BECOS SEM SAÍDA: salas marcadas como becos devem ter no máximo 2 saídas, ambas com risco claro implícito.
+
+8. TOPOLOGIA: crie caminhos não lineares. IDs de destino podem ser menores que o ID atual (backtracking com propósito). Máximo de destino: 25.
+
+Retorne APENAS o JSON:
+{
+  "1": { "texto_logico": "descrição seca e forense", "opcoes": [{ "texto": "ação específica com peso", "destino": N }] },
+  "2": { ... },
+  ...
+  "25": { ... }
+}`;
+
+    // ============================================================
+    // FASE 3 — INSPEÇÃO EDITORIAL JACKSON
+    // Um editor brutal que descarta qualquer fraqueza estrutural.
+    // ============================================================
+    const promptJackson = (dna, mapaRaw) => `Você é o editor de Steve Jackson. Sua única função: identificar salas fracas e corrigi-las.
+
+CRITÉRIOS DE FALHA — corrija imediatamente qualquer sala que contenha:
+- Opções genéricas ("Procurar por mais informações", "Desistir e voltar", "Explorar", "Investigar o local")
+- Duas ou mais opções com estrutura verbal idêntica ("Examinar X", "Examinar Y", "Examinar Z")
+- texto_logico que não menciona os elementos referenciados nas opções
+- Opções com destinos que não fazem sentido narrativo dado o contexto da sala
+
+DNA original para referência:
+${JSON.stringify(dna, null, 2)}
+
+MAPA A REVISAR:
+${JSON.stringify(mapaRaw, null, 2)}
+
+Retorne o mapa COMPLETO. Salas aprovadas: mantenha intactas. Salas reprovadas: reescreva apenas as partes fracas.
+Retorne APENAS o JSON no mesmo formato.`;
 
     try {
-        // Temperatura elevada para 0.85 para estimular a criatividade e diversidade
-        const data = await chamarGroq([{ role: "user", content: promptGroq }], 0.85, { type: "json_object" });
-        const conteudo = data.choices[0].message.content;
+        // --- FASE 1 ---
+        const id1 = adicionarMensagem("⚙️ Fase 1/3 — Forjando o DNA narrativo...", "system", true);
+        const dataDNA = await chamarGroq(
+            [{ role: "user", content: promptDNA }],
+            0.65,
+            { type: "json_object" }
+        );
+        const dna = JSON.parse(dataDNA.choices[0].message.content);
+        document.getElementById(id1)?.remove();
+        console.log('[Groq Fase 1] DNA:', dna);
 
-        let mapaParseado;
-        try {
-            mapaParseado = JSON.parse(conteudo);
-        } catch (parseErr) {
-            throw new Error(`JSON do mapa inválido: ${parseErr.message} | Raw: ${conteudo.slice(0, 200)}`);
+        // --- FASE 2 ---
+        const id2 = adicionarMensagem("⚙️ Fase 2/3 — Construindo as 25 salas...", "system", true);
+        const dataSalas = await chamarGroq(
+            [{ role: "user", content: promptSalas(dna) }],
+            0.8,
+            { type: "json_object" }
+        );
+        const mapaRaw = JSON.parse(dataSalas.choices[0].message.content);
+        document.getElementById(id2)?.remove();
+        console.log('[Groq Fase 2] Salas geradas:', Object.keys(mapaRaw).length);
+
+        // --- FASE 3 ---
+        const id3 = adicionarMensagem("⚙️ Fase 3/3 — Inspeção editorial...", "system", true);
+        const dataFinal = await chamarGroq(
+            [{ role: "user", content: promptJackson(dna, mapaRaw) }],
+            0.4,
+            { type: "json_object" }
+        );
+        const mapaFinal = JSON.parse(dataFinal.choices[0].message.content);
+        document.getElementById(id3)?.remove();
+
+        if (!mapaFinal["1"]?.texto_logico) {
+            throw new Error(`Mapa final sem estrutura válida.`);
         }
 
-        // Valida que o mapa tem pelo menos a sala "1"
-        if (!mapaParseado["1"] || !mapaParseado["1"].texto_logico) {
-            throw new Error(`Mapa gerado sem estrutura válida. Keys: ${Object.keys(mapaParseado).join(', ')}`);
-        }
-
-        mapaMundo = mapaParseado;
+        mapaMundo = mapaFinal;
         secaoAtualId = "1";
         await salvarEstadoJogador();
-        adicionarMensagem("✅ Mapa estrutural único carregado na memória.", "system");
+        adicionarMensagem("✅ Estrutura narrativa completa.", "system");
+
     } catch (error) {
-        console.error("Erro ao gerar mapa na Groq:", error);
-        adicionarMensagem(`❌ Falha ao criar a arquitetura do mundo. (${error.message})`, "system");
+        console.error("Erro na geração do mapa:", error);
+        adicionarMensagem(`❌ Falha na geração. (${error.message})`, "system");
     }
 }
         
