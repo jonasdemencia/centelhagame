@@ -1161,7 +1161,7 @@ ${descricaoSala}${alertaMortos}`
 
                     let conteudoUser = "";
                     if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
-                        conteudoUser = `[ORDEM PARA O NARRADOR]\n${pergunta}\nNarre a transição de ambiente e a atmosfera de forma curta e objetiva.\nObrigatório terminar o texto com: [DANO: 0]`;
+                        conteudoUser = `[ORDEM PARA O NARRADOR]\n${pergunta}\nO resultado exato da sua visão AGORA está no bloco [CENÁRIO (AMBIENTE ATUAL)] acima. TRANSCREVA essa realidade na sua narração SEM OMITIR NENHUMA PISTA, MENSAGEM OU FATO LÓGICO. Apele para a secura forense.\nObrigatório terminar o texto com: [DANO: 0]`;
                     } else {
                         conteudoUser = `[AÇÃO DO JOGADOR (PROTAGONISTA)]\nO que o personagem executa com maestria: "${pergunta}"  ← se SUCESSO\nO que o personagem tenta desesperadamente fazer: "${pergunta}"  ← se FALHA\n\n[ORDEM PARA O NARRADOR]\n- Foque EXCLUSIVAMENTE no jogador executando a ação descrita acima.\n- ${instrucaoResultado}\n- ATENÇÃO SEMÂNTICA: Interprete palavras ambíguas como "mortal", "salto" ou "ataque" como as AÇÕES FÍSICAS do jogador, NUNCA como nomes de NPCs ou criaturas se aproximando. O cenário serve apenas de palco.\n- Obrigatório terminar o texto com a tag: [DANO: ${danoFinal}]`;
                     }
