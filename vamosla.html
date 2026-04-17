@@ -815,31 +815,38 @@ async function classificarComArbitro(acaoOriginal, entidade) {
                 messages: [
                     {
                         role: 'system',
-                        content: `Você é um classificador lógico de RPG. Analise a ação e retorne EXATAMENTE UM JSON. Nenhuma palavra a mais.
+                        content: `Você atua com a lógica e sensibilidade de um Mestre de RPG veterano (estilo Advanced Dungeons & Dragons).
+Temos apenas três atributos no sistema. Faça o mapeamento mental:
+- HABILIDADE engloba Força, Destreza e Constituição. Esforço físico, acrobacia, combate, reflexos.
+- CARISMA engloba persuasão, intimidação, liderança. Só afeta seres vivos conscientes.
+- Ações mentais (Inteligência, Sabedoria) como investigar, procurar, observar, não exigem teste de atributo físico/social aqui, são narrativas.
 
-REGRAS DE CLASSIFICAÇÃO:
+REGRA ABSOLUTA DE ATRIBUTO:
+NUNCA use Carisma para ações solitárias ou exames. Carisma exige um ouvinte/espectador consciente.
 
-1. LIVRE (Ações básicas cotidianas): 
-Caminhar, olhar, cheirar, sentar, conversar normalmente, pegar itens comuns.
+CLASSIFIQUE EM TIPO E ATRIBUTO:
+
+1. LIVRE (Ações narrativas, perceptivas ou passivas):
+Examinar cadáveres, caminhar, sentar, olhar o ambiente, refletir, pegar um item comum no chão.
 -> Atributo OBRIGATÓRIO: NENHUM
 
-2. EXPRESSAO (Exige talento, mas falhar NÃO machuca e NÃO causa ataque):
-Dançar, esculpir, cantar, imitar vozes, malabarismo, acrobacia por diversão. Se errar, passa vergonha, mas não sofre dano.
--> Atributo OBRIGATÓRIO: HABILIDADE (corpo) ou CARISMA (social)
+2. EXPRESSAO (Ação puramente estética ou de treino; exige perícia, mas falhar não machuca nem atrai ataques):
+Dar um golpe de artes marciais no ar sozinho, dançar elaboradamente, esculpir, cantar uma canção.
+-> Atributo: HABILIDADE (se envolver esforço/coordenação física) ou CARISMA (se envolver atuação social).
 
-3. RISCO (Exige talento E falhar causa Dano, Morte ou Reação Hostil):
-Pular precipício, atacar, arrombar porta pesada, atirar, esquivar, escalar parede alta, intimidar, mentir para guarda armado, seduzir inimigo.
--> Atributo OBRIGATÓRIO: HABILIDADE (físico/combate) ou CARISMA (manipulação tensa)
+3. RISCO (Falhar causa Dano, Morte, Perda de Recursos ou Ataque Iminente):
+Atirar num alvo distante/em movimento, pular um abismo, forçar uma porta de ferro, lutar contra um inimigo (HABILIDADE).
+Mentir sob interrogatório para guardas armados, intimidar um bandido (CARISMA).
 
-Retorne estritamente o formato JSON solicitado.`
+Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
                     },
                     {
                         role: 'user',
-                        content: `${contextoNPC}\nAção: "${acaoOriginal}"`
+                        content: `${contextoNPC}\nAção do jogador: "${acaoOriginal}"`
                     }
                 ],
                 temperature: 0.0,
-                max_tokens: 60, // AUMENTADO: Evita que o JSON seja cortado no meio (causa do erro Unterminated string)
+                max_tokens: 60,
                 response_format: {
                     type: "json_schema",
                     json_schema: {
@@ -862,20 +869,19 @@ Retorne estritamente o formato JSON solicitado.`
         const data = await response.json();
         let rawText = data.choices[0].message.content;
         
-        // FILTRO DE SEGURANÇA: Extrai apenas o conteúdo entre as primeiras chaves { }
-        // Isso impede que textos extras gerados pelo modelo quebrem o jogo
+        // Proteção anti-crash: isola o JSON caso o modelo injete conversas como "Aqui está:"
         const match = rawText.match(/\{[\s\S]*\}/);
         if (match) {
             rawText = match[0];
         }
 
         const { tipo, atributo } = JSON.parse(rawText);
-        console.log(`[ÁRBITRO] tipo=${tipo} | atributo=${atributo} | npc=${estadoRelacional}`);
+        console.log(`[ÁRBITRO AD&D] tipo=${tipo} | atributo=${atributo} | npc=${estadoRelacional}`);
         return { tipo, atributo, fonte: 'árbitro-tripartite' };
 
     } catch (e) {
-        console.error('[ÁRBITRO ERROR RAW]:', e); // Log detalhado para você inspecionar se falhar de novo
-        console.warn('[ÁRBITRO] Falhou, ativando fallback conservador para não travar o jogo.');
+        console.error('[ÁRBITRO ERROR RAW]:', e);
+        console.warn('[ÁRBITRO] Falhou, ativando fallback conservador.');
         return { tipo: 'LIVRE', atributo: 'NENHUM', fonte: 'árbitro-fallback' };
     }
 }
