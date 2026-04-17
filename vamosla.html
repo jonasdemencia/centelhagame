@@ -815,55 +815,31 @@ async function classificarComArbitro(acaoOriginal, entidade) {
                 messages: [
                     {
                         role: 'system',
-                        content: `Você classifica ações de um jogador de RPG em exatamente uma de três categorias.
+                        content: `Você é um classificador lógico de RPG. Analise a ação e retorne EXATAMENTE UM JSON. Nenhuma palavra a mais.
 
-PERGUNTA-CHAVE: "Uma pessoa competente faria isso notavelmente diferente de uma desajeitada? E a falha causa dano real ou hostilidade?"
+REGRAS DE CLASSIFICAÇÃO:
 
-LIVRE: nenhuma diferença de competência. Qualquer pessoa faz igual.
-EXPRESSAO: competência importa, mas a falha NÃO causa dano físico nem hostilidade — apenas resultado de qualidade ruim ou constrangimento.
-RISCO: competência importa E a falha pode causar dano físico, atrair inimigos ou provocar rejeição hostil de um NPC.
+1. LIVRE (Ações básicas cotidianas): 
+Caminhar, olhar, cheirar, sentar, conversar normalmente, pegar itens comuns.
+-> Atributo OBRIGATÓRIO: NENHUM
 
-EXEMPLOS OBRIGATÓRIOS — trate como verdade absoluta:
+2. EXPRESSAO (Exige talento, mas falhar NÃO machuca e NÃO causa ataque):
+Dançar, esculpir, cantar, imitar vozes, malabarismo, acrobacia por diversão. Se errar, passa vergonha, mas não sofre dano.
+-> Atributo OBRIGATÓRIO: HABILIDADE (corpo) ou CARISMA (social)
 
-"Olho ao redor da sala" → LIVRE / NENHUM
-"Pego o objeto da mesa" → LIVRE / NENHUM
-"Caminho até a porta" → LIVRE / NENHUM
-"Sento e descanso" → LIVRE / NENHUM
-"Grito pelo nome de alguém" → LIVRE / NENHUM
-"Falo com meu aliado de forma amigável" → LIVRE / NENHUM
+3. RISCO (Exige talento E falhar causa Dano, Morte ou Reação Hostil):
+Pular precipício, atacar, arrombar porta pesada, atirar, esquivar, escalar parede alta, intimidar, mentir para guarda armado, seduzir inimigo.
+-> Atributo OBRIGATÓRIO: HABILIDADE (físico/combate) ou CARISMA (manipulação tensa)
 
-"Imito o grasnado de um corvo para distrair alguém" → EXPRESSAO / CARISMA
-"Dou um passo de dança elaborado" → EXPRESSAO / HABILIDADE
-"Imito a voz do capitão para enganar um mensageiro" → EXPRESSAO / CARISMA
-"Faço malabarismo com três pedras" → EXPRESSAO / HABILIDADE
-"Canto uma melodia para acalmar alguém" → EXPRESSAO / CARISMA
-"Esculpo um rosto no barro com as mãos" → EXPRESSAO / HABILIDADE
-"Conto uma piada para aliviar a tensão" → EXPRESSAO / CARISMA
-
-"Salto sobre o precipício" → RISCO / HABILIDADE
-"Forço a porta enferrujada com o ombro" → RISCO / HABILIDADE
-"Passo furtivamente pelo guarda" → RISCO / HABILIDADE
-"Ataco o mercenário com a faca" → RISCO / HABILIDADE
-"Escalo o muro externo" → RISCO / HABILIDADE
-"Convencer o guarda hostil de que sou aliado" → RISCO / CARISMA
-"Intimido o prisioneiro a revelar o esconderijo" → RISCO / CARISMA
-"Seduzir a viúva do barão para obter a chave" → RISCO / CARISMA
-"Nego estar no local ao ser interrogado pelo oficial" → RISCO / CARISMA
-"Arremesso a faca no alvo a 10 metros" → RISCO / HABILIDADE
-
-ATRIBUTOS:
-HABILIDADE: esforço físico motor com variação de qualidade.
-CARISMA: influência sobre NPC com vontade própria.
-SORTE: eventos caóticos sem competência que mitigue.
-NENHUM: apenas se LIVRE.`
+Retorne estritamente o formato JSON solicitado.`
                     },
                     {
                         role: 'user',
-                        content: `${contextoNPC}\nAção do jogador: "${acaoOriginal}"`
+                        content: `${contextoNPC}\nAção: "${acaoOriginal}"`
                     }
                 ],
                 temperature: 0.0,
-                max_tokens: 20,
+                max_tokens: 60, // AUMENTADO: Evita que o JSON seja cortado no meio (causa do erro Unterminated string)
                 response_format: {
                     type: "json_schema",
                     json_schema: {
@@ -884,12 +860,22 @@ NENHUM: apenas se LIVRE.`
         });
 
         const data = await response.json();
-        const { tipo, atributo } = JSON.parse(data.choices[0].message.content);
+        let rawText = data.choices[0].message.content;
+        
+        // FILTRO DE SEGURANÇA: Extrai apenas o conteúdo entre as primeiras chaves { }
+        // Isso impede que textos extras gerados pelo modelo quebrem o jogo
+        const match = rawText.match(/\{[\s\S]*\}/);
+        if (match) {
+            rawText = match[0];
+        }
+
+        const { tipo, atributo } = JSON.parse(rawText);
         console.log(`[ÁRBITRO] tipo=${tipo} | atributo=${atributo} | npc=${estadoRelacional}`);
         return { tipo, atributo, fonte: 'árbitro-tripartite' };
 
     } catch (e) {
-        console.warn('[ÁRBITRO] Falhou, fallback conservador.', e);
+        console.error('[ÁRBITRO ERROR RAW]:', e); // Log detalhado para você inspecionar se falhar de novo
+        console.warn('[ÁRBITRO] Falhou, ativando fallback conservador para não travar o jogo.');
         return { tipo: 'LIVRE', atributo: 'NENHUM', fonte: 'árbitro-fallback' };
     }
 }
