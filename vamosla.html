@@ -1225,7 +1225,7 @@ if (tipo === 'LIVRE') {
                         elementosInterativos = `\n\n[SAÍDAS/OPÇÕES VISÍVEIS]:\nVocê É OBRIGADO a citar a presença destes elementos físicos no local:\n${textosOpcoes}`;
                     }
 
-                    conteudoUser = "";
+                    let conteudoUser = "";
                     let conversaRecenteParaEnvio = [];
 
                     if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
@@ -1254,15 +1254,7 @@ REGRAS DE CONVERSÃO (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
 FATOS A SEREM TRANSCRITOS: ${descricaoSala}${alertaMortos}${elementosInterativos}` // <-- Variável adicionada aqui!
 };
 
-                    let conteudoUser = "";
-                    if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
-                        conteudoUser = `[ORDEM DIRETA]\nO jogador acabou de entrar neste local.\nConverta OBRIGATORIAMENTE todos os fatos do [CENÁRIO] acima (incluindo notas lidas, textos e itens) e os [ELEMENTOS FÍSICOS OBRIGATÓRIOS] para uma visão em segunda pessoa.\nSeja seco. Não esconda NENHUMA informação que a Groq gerou.\nObrigatório terminar o texto com: [DANO: 0]`;
-                    } else {
-                        conteudoUser = `[AÇÃO DO JOGADOR (PROTAGONISTA)]\nO que o personagem executa com maestria: "${pergunta}"  ← se SUCESSO\nO que o personagem tenta desesperadamente fazer: "${pergunta}"  ← se FALHA\n\n[ORDEM PARA O NARRADOR]\n- Foque EXCLUSIVAMENTE no jogador executando a ação descrita acima.\n- ${instrucaoResultado}\n- ATENÇÃO SEMÂNTICA: Interprete palavras ambíguas como "mortal", "salto" ou "ataque" como as AÇÕES FÍSICAS do jogador, NUNCA como nomes de NPCs ou criaturas se aproximando. O cenário serve apenas de palco.\n- Obrigatório terminar o texto com a tag: [DANO: ${danoFinal}]`;
-                    }
-
-                    const conversaRecente = historicoConversa.slice(-6); 
-                    payloadAPI = [systemPrompt, ...conversaRecente, { role: 'user', content: conteudoUser }];
+                    payloadAPI = [systemPrompt, ...conversaRecenteParaEnvio, { role: 'user', content: conteudoUser }];
 
                 } else {
                     // --- LÓGICA DE INTRODUÇÃO (FIX DE ALCANCE) ---
