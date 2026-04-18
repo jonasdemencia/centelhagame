@@ -519,12 +519,16 @@ OBRIGAÇÕES
 ✓ Opções usam verbos de ação física: Forçar / Arrancar / Mergulhar / Escalar / Destruir / Empurrar / Puxar / Cortar / Desligar / Travar / Destrancar / Gritar / Esconder / Fingir / Esperar / Fugir / Abrir / Fechar / Atirar / Quebrar / Dobrar / Pressionar / Segurar / Soltar
 ✓ Cada beco deve ensinar algo que NENHUM outro caminho ensina
 
+PROCESSO OBRIGATÓRIO POR SALA — siga esta ordem sem exceção:
+1. Escreva "opcoes" PRIMEIRO. Decida quais ações físicas o jogador pode executar.
+2. Escreva "texto_logico" DEPOIS. A descrição deve justificar fisicamente cada opção. Se uma opção diz "Forçar a porta à esquerda", o texto_logico DEVE mencionar uma porta à esquerda. Se uma opção diz "Puxar o cabo da centrifugadora", o texto_logico DEVE mencionar a centrifugadora e o cabo. SEM EXCEÇÃO — cada substantivo físico de cada opção deve estar no texto.
+
 Retorne APENAS este JSON:
 {
   "salas": {
-    "${salaInicio}": { "texto_logico": "...", "opcoes": [{ "texto": "...", "destino": N }] },
-    "${salaInicio+1}": { "texto_logico": "...", "opcoes": [{ "texto": "...", "destino": N }] },
-    "${salaFim}": { "texto_logico": "...", "opcoes": [{ "texto": "...", "destino": N }] }
+    "${salaInicio}": { "opcoes": [{ "texto": "ação física com objeto nomeado", "destino": N }], "texto_logico": "descrição que contém obrigatoriamente cada objeto físico de cada opção acima" },
+    "${salaInicio+1}": { "opcoes": [{ "texto": "...", "destino": N }], "texto_logico": "..." },
+    "${salaFim}": { "opcoes": [{ "texto": "...", "destino": N }], "texto_logico": "..." }
   },
   "ganchos_para_proxima_zona": {
     "salas_fronteira": [N, N],
@@ -1370,8 +1374,10 @@ if (tipo === 'LIVRE') {
                     // Formatação simplificada e direta para as saídas
                     let elementosInterativos = "";
                     if (salaAtual && salaAtual.opcoes) {
-                        const textosOpcoes = salaAtual.opcoes.map(opcao => `-> "${opcao.texto}"`).join("\n");
-                        elementosInterativos = `\n\n[SAÍDAS/OPÇÕES VISÍVEIS]:\nVocê É OBRIGADO a citar a presença destes elementos físicos no local:\n${textosOpcoes}`;
+                        const textosOpcoes = salaAtual.opcoes.map(opcao => `- "${opcao.texto}"`).join("\n");
+                        elementosInterativos = `\n\n[BOTÕES QUE O JOGADOR VERÁ APÓS SUA NARRAÇÃO]:
+${textosOpcoes}
+REGRA CRÍTICA: cada objeto físico mencionado nesses botões DEVE aparecer na sua narração. Se o botão diz "Forçar a porta à esquerda", você DEVE descrever uma porta à esquerda. Se o botão diz "Puxar o cabo", você DEVE mencionar o cabo. O jogador não pode ver um botão referenciando algo que sua narração não mostrou.`;
                     }
 
                     let conteudoUser = "";
