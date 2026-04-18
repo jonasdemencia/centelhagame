@@ -403,71 +403,102 @@ async function gerarZona(numeroZona, ganchosPrevios = null) {
     ) || [];
 
     const contextoGancho = ganchosPrevios ? `
-GANCHOS NÃO RESOLVIDOS DA ZONA ANTERIOR (você DEVE continuar estes fios):
-- Objetos não usados: ${ganchosPrevios.objetos_nao_usados?.join(', ') || 'nenhum'}
-- Informação pendente: ${ganchosPrevios.informacao_pendente || 'nenhuma'}
-- Salas de fronteira que chegam aqui: ${ganchosPrevios.salas_fronteira?.join(', ') || 'nenhuma'}
+CONTINUIDADE DA ZONA ANTERIOR — estes fios DEVEM aparecer em salas desta zona:
+- Objetos sem resolução: ${ganchosPrevios.objetos_nao_usados?.join(', ') || 'nenhum'}
+- Informação que o jogador carrega mas não entende: ${ganchosPrevios.informacao_pendente || 'nenhuma'}
+- Salas de entrada vindas da zona anterior: ${ganchosPrevios.salas_fronteira?.join(', ') || 'nenhuma'}
 ` : '';
 
-    const prompt = `[SEMENTE: ${semente}] [ZONA ${numeroZona}: "${infoZona.nome}"] [SALAS ${salaInicio}–${salaFim}]
+    const prompt = `[SEMENTE ÚNICA: ${semente}]
+[ZONA ${numeroZona} — "${infoZona.nome}"] [SALAS ${salaInicio} a ${salaFim}]
 
-Você é Steve Jackson construindo uma zona de uma aventura que nunca termina.
-Estas 25 salas são uma FATIA do mundo — não uma história completa.
-O jogador deve terminar esta zona com mais perguntas do que respostas.
-
-DNA DO MUNDO:
-- Mistério (irresolúvel): ${dnaGlobal?.misterio_central}
-- Leis do lugar: ${dnaGlobal?.leis_do_lugar?.join(' | ')}
-- Economia de informação: ${dnaGlobal?.economia_de_informacao}
-
-IDENTIDADE DESTA ZONA:
-- Tom sensorial: ${infoZona.tom_sensorial}
-- Segredo local (plante pistas — nunca revele completamente): ${infoZona.segredo_local}
-- Objetos presentes nesta zona: ${JSON.stringify(objetosDaZona)}
-- Entidades com pistas aqui: ${entidadesDaZona.map(e => e.nome).join(', ') || 'nenhuma ainda'}
+Você é Steve Jackson. Não um assistente tentando imitar Jackson. Você É Jackson.
+Tema do mundo: "${dnaGlobal?.misterio_central || 'um lugar que não obedece as leis do tempo'}"
+Tom desta zona: ${infoZona.tom_sensorial}
+O que esta zona esconde (plante pistas físicas — jamais explique diretamente): ${infoZona.segredo_local}
+Objetos físicos desta zona: ${objetosDaZona.map(o => o.nome).join(', ') || 'a definir por você'}
 ${contextoGancho}
 
-=== PROCESSO JACKSON — siga esta ordem dentro do JSON ===
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CALIBRAÇÃO DE QUALIDADE — memorize estes exemplos como padrão absoluto
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-ETAPA 1 (campo "topologia"): Antes de gerar qualquer sala, escreva o grafo completo em texto.
-Formato: "Sala N→A,B. Sala A→C(beco). Sala B→C,D. Sala C→A(custo)..."
-Regras do grafo:
-- 3 nós centrais (3+ conexões entrando e saindo)
-- 4 becos reais (máximo 2 saídas, ambas com custo implícito)
-- 3 loops (caminhos que voltam a salas anteriores com propósito narrativo)
-- 2 salas-fronteira com destino entre ${salaFim + 1} e ${salaFim + 5} (zona seguinte)
-- PROIBIDO destino > ${salaFim + 5}
+❌ SALA RUIM (o que você NÃO vai produzir):
+{
+  "texto_logico": "A sala contém um mecanismo. Pode estar relacionado ao relógio.",
+  "opcoes": [
+    { "texto": "Investigar o mecanismo — pode ser perigoso", "destino": 5 },
+    { "texto": "Retornar à sala anterior — pode haver mais a descobrir", "destino": 2 }
+  ]
+}
+Motivo da falha: "pode ser" é hedging. "Retornar à sala anterior" é genérico. "Mecanismo" sem corpo físico não existe. O jogador não consegue visualizar onde está.
 
-ETAPA 2 (campo "salas"): Com a topologia definida, gere as ${SALAS_POR_ZONA} salas.
+✅ SALA BOA (este é o padrão mínimo aceitável):
+{
+  "texto_logico": "O corredor termina numa escada de ferro que desce dois andares. Os degraus estão cobertos de graxa preta. No terceiro degrau a partir do topo, há uma marca gravada a faca: uma seta apontando para baixo com um X cortando-a. A ferrugem ao redor da marca é mais nova do que o resto.",
+  "opcoes": [
+    { "texto": "Descer a escada pisando nas bordas dos degraus para evitar o barulho", "destino": 8 },
+    { "texto": "Arrancar o terceiro degrau — a marca foi gravada por dentro, não por fora", "destino": 11 }
+  ]
+}
+Motivo do sucesso: o jogador vê, cheira, entende a física. As opções são ações físicas irrevogáveis com consequências implícitas diferentes. A marca cria curiosidade sem explicar nada.
 
-REGRAS JACKSON — violação = falha total:
+✅ OUTRA SALA BOA:
+{
+  "texto_logico": "Uma porta de correr está travada com um cadeado de combinação numérica. O mecanismo tem quatro discos — o terceiro gira livremente demais, como se já tivesse sido forçado antes. Atrás da porta, pelo vão inferior, você vê luz artificial. A luz pulsa em intervalos irregulares.",
+  "opcoes": [
+    { "texto": "Forçar o terceiro disco com o pedaço de metal que você carrega", "destino": 14 },
+    { "texto": "Deitar no chão e observar o padrão da luz por um minuto completo", "destino": 9 },
+    { "texto": "Bater na porta três vezes e recuar para a parede", "destino": 17 }
+  ]
+}
+Motivo do sucesso: três opções com verbos completamente diferentes. Cada uma revela um personagem diferente — o que força, o que observa, o que arrisca contato. O jogador escolhe quem ele é.
 
-PROIBIÇÕES ABSOLUTAS nas opções:
-✗ "Voltar ao corredor" / "Continuar explorando" / "Procurar por mais pistas" / "Investigar o local"
-✗ Duas opções com o mesmo verbo inicial na mesma sala ("Examinar X" + "Examinar Y" = falha)
-✗ Qualquer opção sem nomear o elemento físico exato
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REGRAS ESTRUTURAIS (TOPOLOGIA PRIMEIRO)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-OBRIGAÇÕES:
-✓ Cada opção nomeia o risco ou custo na própria frase ("Forçar a grade — o barulho vai ecoar")
-✓ Mínimo 4 salas desta zona referenciam explicitamente algo de outra sala ("a mesma marca que você viu na sala anterior")
-✓ Objetos nomeados aparecem em 3 salas diferentes: encontrado → pista sobre uso → consequência
-✓ texto_logico menciona TODOS os elementos físicos referenciados nas opcoes
-✓ Mínimo 1 sala que recontextualiza algo que o jogador já viu ("agora você entende que...")
-✓ Becos punem mas ensinam — o jogador sai com informação que não teria de outro jeito
+ETAPA 1 — campo "topologia": escreva o grafo ANTES de gerar as salas.
+Descreva cada conexão: "Sala ${salaInicio}→${salaInicio+1},${salaInicio+2}. Sala ${salaInicio+1}→${salaInicio+3}(beco-que-ensina). ..."
+Exija:
+- 3 nós centrais com 3+ conexões
+- 4 becos que punem mas revelam algo que não existe em outro caminho
+- 3 loops com propósito (voltar muda algo porque o jogador agora sabe X)
+- 2 salas com destino entre ${salaFim+1} e ${salaFim+3} (fronteira para próxima zona)
+
+ETAPA 2 — campo "salas": gere as ${SALAS_POR_ZONA} salas com o grafo como planta baixa.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LISTA NEGRA — qualquer ocorrência invalida a sala inteira
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✗ "pode ser perigoso" / "pode ser impossível" / "pode haver mais" / "pode levar" / "talvez" / "parece"
+✗ Duas opções com o mesmo verbo inicial ("Examinar X" + "Examinar Y")
+✗ "Retornar à sala" / "Voltar para" / "Continuar explorando" / "Investigar o local"
+✗ texto_logico com menos de 3 elementos físicos concretos e nomeados
+✗ Qualquer opção que não descreva uma ação física específica com objeto nomeado
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OBRIGAÇÕES DE QUALIDADE JACKSON
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Pelo menos 5 salas desta zona devem mencionar explicitamente algo físico de outra sala desta mesma zona ("a mesma marca em X que você viu na grade lá atrás")
+✓ Objetos físicos nomeados aparecem em pelo menos 3 salas: descoberto → contexto novo → consequência de uso
+✓ Pelo menos 1 sala onde o jogador entende retrospectivamente algo que viu antes ("agora você percebe que a mancha no teto não era umidade")
+✓ Becos ensinam algo que nenhum outro caminho ensina — o jogador perde tempo mas ganha informação exclusiva
+✓ Cada opção implica um personagem diferente — quem força a porta é diferente de quem a observa
 
 Retorne APENAS este JSON:
 {
-  "topologia": "texto descrevendo o grafo completo antes das salas",
+  "topologia": "descrição textual do grafo completo",
   "salas": {
-    "${salaInicio}": { "texto_logico": "descrição seca, forense, sem poesia", "opcoes": [{ "texto": "ação específica com custo implícito", "destino": N }] },
-    "${salaInicio + 1}": { ... },
-    ...
-    "${salaFim}": { ... }
+    "${salaInicio}": { "texto_logico": "...", "opcoes": [{ "texto": "...", "destino": N }] },
+    "${salaInicio + 1}": { "texto_logico": "...", "opcoes": [{ "texto": "...", "destino": N }] },
+    "...todas até ${salaFim}...": {},
+    "${salaFim}": { "texto_logico": "...", "opcoes": [{ "texto": "...", "destino": N }] }
   },
   "ganchos_para_proxima_zona": {
     "salas_fronteira": [N, N],
-    "objetos_nao_usados": ["nome do objeto que ainda não teve consequência"],
-    "informacao_pendente": "o que o jogador sabe mas ainda não entende completamente"
+    "objetos_nao_usados": ["nome físico exato do objeto sem resolução"],
+    "informacao_pendente": "frase concreta do que o jogador carrega sem entender"
   }
 }`;
 
@@ -482,14 +513,13 @@ Retorne APENAS este JSON:
             throw new Error(`Zona ${numeroZona} sem estrutura válida.`);
         }
 
-        // Merge nas salas existentes
         if (!mapaMundo) mapaMundo = {};
         Object.assign(mapaMundo, zonaData.salas);
 
         zonaAtual = numeroZona;
         await salvarEstadoJogador();
 
-        console.log(`[Zona ${numeroZona}] ${Object.keys(zonaData.salas).length} salas geradas. Topologia: ${zonaData.topologia?.substring(0, 100)}...`);
+        console.log(`[Zona ${numeroZona}] ${Object.keys(zonaData.salas).length} salas. Topologia: ${zonaData.topologia?.substring(0, 120)}...`);
         adicionarMensagem(`✅ Zona ${numeroZona} carregada — ${Object.keys(zonaData.salas).length} salas.`, "system");
 
         return zonaData.ganchos_para_proxima_zona || null;
