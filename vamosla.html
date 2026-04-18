@@ -87,6 +87,10 @@ const MODELO_GROQ = "llama-3.3-70b-versatile";
         
 let mapaMundo = null;
 let secaoAtualId = "1";
+let dnaGlobal = null;
+let zonaAtual = 1;
+let _expansaoEmAndamento = false;
+const SALAS_POR_ZONA = 25;
 
         
 
@@ -225,6 +229,8 @@ let primeiroTokenRecebido = false;
 
             if (data.mapaMundo) mapaMundo = data.mapaMundo;
             if (data.secaoAtualId) secaoAtualId = data.secaoAtualId;
+            if (data.dnaGlobal) dnaGlobal = data.dnaGlobal;
+            if (data.zonaAtual) zonaAtual = data.zonaAtual;
             
         } else {
             const dadosPadrao = {
@@ -251,16 +257,17 @@ let primeiroTokenRecebido = false;
             try {
                 const dadosAtualizados = {
     turnos: turnosJogados,
-    // resumo: resumoAtual,
-    // memoriaLonga: memoriaLonga,
     "energy.total": energia,
     "skill.total": jogadorStats.HABILIDADE,
     "charisma.total": jogadorStats.CARISMA,
     "luck.total": jogadorStats.SORTE,
-    // ssrJson: ssrJson,
-    mapaMundo: mapaMundo,       // 🆕
-    secaoAtualId: secaoAtualId  // 🆕
+    mapaMundo: mapaMundo,
+    secaoAtualId: secaoAtualId,
+    dnaGlobal: dnaGlobal,
+    zonaAtual: zonaAtual
 };
+
+                
 await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
             } catch (e) {
                 console.error("Erro ao salvar estado do jogador:", e);
@@ -304,164 +311,226 @@ await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
 
 
 async function gerarGrafoGroq(cenarioTema) {
+    // Gera o DNA global uma única vez. Se já existe, pula direto para a zona.
+    if (!dnaGlobal) {
+        await gerarDNAGlobal(cenarioTema);
+    }
+    await gerarZona(1);
+}
 
-    const sementeCaos = Math.random().toString(36).substring(2, 10);
-    const timestamp   = Date.now();
-    const variaveisDeHorror = [
-        "Sons úmidos e claustrofobia corporal",
-        "Decadência arquitetônica e poeira sufocante",
-        "Objetos religiosos profanados e silêncio absoluto",
-        "Iluminação bruxuleante e sombras móveis",
-        "Frio extremo, geada sobre ossos e metal congelado",
-        "Cheiro de decomposição doce e insetos rastejantes",
-        "Ecos distantes e a sensação de ser observado"
-    ];
-    const tomSorteado = variaveisDeHorror[Math.floor(Math.random() * variaveisDeHorror.length)];
+// ============================================================
+// DNA GLOBAL — gerado uma única vez, governa todas as zonas
+// ============================================================
+async function gerarDNAGlobal(cenarioTema) {
+    const semente = Math.random().toString(36).substring(2, 10);
 
-    // ============================================================
-    // FASE 1 — DNA NARRATIVO
-    // O modelo pensa na estrutura completa ANTES de escrever salas.
-    // ============================================================
-    const promptDNA = `[ID: ${sementeCaos}-${timestamp}] [TOM: ${tomSorteado}]
-
-Você é Steve Jackson projetando uma aventura solo antes de escrever uma única sala.
+    const prompt = `[SEMENTE: ${semente}]
+Você é o arquiteto de um mundo que nunca termina.
 Tema: "${cenarioTema}"
 
-Construa o ESQUELETO narrativo de uma aventura de 25 seções. Nenhuma prosa ainda — apenas arquitetura.
+Este mundo terá 400+ salas em 16 zonas. Você está definindo o DNA que governa TUDO.
+Não há vitória. Não há conclusão. Há apenas aprofundamento de um mistério que não tem fundo.
 
 Retorne APENAS este JSON:
 {
-  "ameaca_central": "o que ameaça o jogador neste lugar e por quê",
-  "condicao_vitoria": "o que o jogador precisa fazer ou descobrir para sobreviver",
-  "objetos_chave": [
-    { "nome": "nome do objeto", "sala_origem": N, "sala_uso": N, "consequencia": "o que muda quando usado" },
-    { "nome": "...", "sala_origem": N, "sala_uso": N, "consequencia": "..." },
-    { "nome": "...", "sala_origem": N, "sala_uso": N, "consequencia": "..." }
+  "misterio_central": "a pergunta que o jogador nunca vai responder completamente — deve ser perturbadora e aberta",
+  "leis_do_lugar": [
+    "lei física ou temporal anômala que torna este lugar único",
+    "segunda lei",
+    "terceira lei"
   ],
-  "revelacoes": [
-    { "sala": N, "conteudo": "o que o jogador descobre aqui que muda sua compreensão do lugar" },
-    { "sala": N, "conteudo": "..." },
-    { "sala": N, "conteudo": "..." },
-    { "sala": N, "conteudo": "..." },
-    { "sala": N, "conteudo": "..." }
+  "economia_de_informacao": "que tipo de conhecimento é poder aqui — o que o jogador acumula que muda como ele lê o ambiente",
+  "entidades": [
+    { "nome": "nome concreto", "natureza": "o que é sem romanticismo", "zona_primeira_pista": 1, "nunca_explicar_completamente": true },
+    { "nome": "...", "natureza": "...", "zona_primeira_pista": 2, "nunca_explicar_completamente": true },
+    { "nome": "...", "natureza": "...", "zona_primeira_pista": 4, "nunca_explicar_completamente": true }
   ],
-  "becos_sem_saida": [N, N, N],
-  "atalhos_secretos": [ { "de": N, "para": N, "condicao": "o que o jogador precisa ter feito antes" } ],
-  "arco": {
-    "ato1_estabelecimento": "o que o jogador aprende nas salas 1-8",
-    "ato2_complicacao": "o que vira de cabeça para baixo nas salas 9-18",
-    "ato3_climax": "como tudo converge nas salas 19-25"
+  "objetos_transzonais": [
+    { "nome": "nome concreto e físico", "zona_origem": 1, "zonas_relevantes": [2, 4, 7], "o_que_desvela": "informação que revela quando encontrado/usado" },
+    { "nome": "...", "zona_origem": 2, "zonas_relevantes": [3, 5], "o_que_desvela": "..." },
+    { "nome": "...", "zona_origem": 3, "zonas_relevantes": [6, 8], "o_que_desvela": "..." },
+    { "nome": "...", "zona_origem": 1, "zonas_relevantes": [9], "o_que_desvela": "..." },
+    { "nome": "...", "zona_origem": 5, "zonas_relevantes": [10, 12], "o_que_desvela": "..." }
+  ],
+  "zonas": [
+    { "id": 1, "nome": "nome evocativo da zona", "tom_sensorial": "1 frase crua sobre o que domina os sentidos aqui", "segredo_local": "algo que só esta zona revela sobre o mistério central", "conecta_com": [2, 3] },
+    { "id": 2, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [1, 4, 5] },
+    { "id": 3, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [1, 6] },
+    { "id": 4, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [2, 7] },
+    { "id": 5, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [2, 3, 8] },
+    { "id": 6, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [3, 9] },
+    { "id": 7, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [4, 10] },
+    { "id": 8, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [5, 11] },
+    { "id": 9, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [6, 12] },
+    { "id": 10, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [7, 13] },
+    { "id": 11, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [8, 14] },
+    { "id": 12, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [9, 15] },
+    { "id": 13, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [10, 16] },
+    { "id": 14, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [11, 15] },
+    { "id": 15, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [12, 14, 16] },
+    { "id": 16, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [13, 15] }
+  ]
+}`;
+
+    const idMsg = adicionarMensagem("⚙️ Forjando o DNA do mundo...", "system", true);
+    const data = await chamarGroq([{ role: "user", content: prompt }], 0.65, { type: "json_object" });
+    dnaGlobal = JSON.parse(data.choices[0].message.content);
+    document.getElementById(idMsg)?.remove();
+    console.log('[DNA Global]', dnaGlobal);
+}
+
+// ============================================================
+// GERAÇÃO DE ZONA — 1 chamada, 25 salas com qualidade Jackson
+// ============================================================
+async function gerarZona(numeroZona, ganchosPrevios = null) {
+    const salaInicio = (numeroZona - 1) * SALAS_POR_ZONA + 1;
+    const salaFim    = numeroZona * SALAS_POR_ZONA;
+    const semente    = Math.random().toString(36).substring(2, 10);
+
+    const infoZona = dnaGlobal?.zonas?.find(z => z.id === numeroZona) || {
+        nome: `Zona ${numeroZona}`,
+        tom_sensorial: "opressivo e forense",
+        segredo_local: "algo perturbador ainda não nomeado",
+        conecta_com: [numeroZona + 1]
+    };
+
+    const objetosDaZona = dnaGlobal?.objetos_transzonais?.filter(
+        o => o.zona_origem === numeroZona || o.zonas_relevantes?.includes(numeroZona)
+    ) || [];
+
+    const entidadesDaZona = dnaGlobal?.entidades?.filter(
+        e => e.zona_primeira_pista <= numeroZona
+    ) || [];
+
+    const contextoGancho = ganchosPrevios ? `
+GANCHOS NÃO RESOLVIDOS DA ZONA ANTERIOR (você DEVE continuar estes fios):
+- Objetos não usados: ${ganchosPrevios.objetos_nao_usados?.join(', ') || 'nenhum'}
+- Informação pendente: ${ganchosPrevios.informacao_pendente || 'nenhuma'}
+- Salas de fronteira que chegam aqui: ${ganchosPrevios.salas_fronteira?.join(', ') || 'nenhuma'}
+` : '';
+
+    const prompt = `[SEMENTE: ${semente}] [ZONA ${numeroZona}: "${infoZona.nome}"] [SALAS ${salaInicio}–${salaFim}]
+
+Você é Steve Jackson construindo uma zona de uma aventura que nunca termina.
+Estas 25 salas são uma FATIA do mundo — não uma história completa.
+O jogador deve terminar esta zona com mais perguntas do que respostas.
+
+DNA DO MUNDO:
+- Mistério (irresolúvel): ${dnaGlobal?.misterio_central}
+- Leis do lugar: ${dnaGlobal?.leis_do_lugar?.join(' | ')}
+- Economia de informação: ${dnaGlobal?.economia_de_informacao}
+
+IDENTIDADE DESTA ZONA:
+- Tom sensorial: ${infoZona.tom_sensorial}
+- Segredo local (plante pistas — nunca revele completamente): ${infoZona.segredo_local}
+- Objetos presentes nesta zona: ${JSON.stringify(objetosDaZona)}
+- Entidades com pistas aqui: ${entidadesDaZona.map(e => e.nome).join(', ') || 'nenhuma ainda'}
+${contextoGancho}
+
+=== PROCESSO JACKSON — siga esta ordem dentro do JSON ===
+
+ETAPA 1 (campo "topologia"): Antes de gerar qualquer sala, escreva o grafo completo em texto.
+Formato: "Sala N→A,B. Sala A→C(beco). Sala B→C,D. Sala C→A(custo)..."
+Regras do grafo:
+- 3 nós centrais (3+ conexões entrando e saindo)
+- 4 becos reais (máximo 2 saídas, ambas com custo implícito)
+- 3 loops (caminhos que voltam a salas anteriores com propósito narrativo)
+- 2 salas-fronteira com destino entre ${salaFim + 1} e ${salaFim + 5} (zona seguinte)
+- PROIBIDO destino > ${salaFim + 5}
+
+ETAPA 2 (campo "salas"): Com a topologia definida, gere as ${SALAS_POR_ZONA} salas.
+
+REGRAS JACKSON — violação = falha total:
+
+PROIBIÇÕES ABSOLUTAS nas opções:
+✗ "Voltar ao corredor" / "Continuar explorando" / "Procurar por mais pistas" / "Investigar o local"
+✗ Duas opções com o mesmo verbo inicial na mesma sala ("Examinar X" + "Examinar Y" = falha)
+✗ Qualquer opção sem nomear o elemento físico exato
+
+OBRIGAÇÕES:
+✓ Cada opção nomeia o risco ou custo na própria frase ("Forçar a grade — o barulho vai ecoar")
+✓ Mínimo 4 salas desta zona referenciam explicitamente algo de outra sala ("a mesma marca que você viu na sala anterior")
+✓ Objetos nomeados aparecem em 3 salas diferentes: encontrado → pista sobre uso → consequência
+✓ texto_logico menciona TODOS os elementos físicos referenciados nas opcoes
+✓ Mínimo 1 sala que recontextualiza algo que o jogador já viu ("agora você entende que...")
+✓ Becos punem mas ensinam — o jogador sai com informação que não teria de outro jeito
+
+Retorne APENAS este JSON:
+{
+  "topologia": "texto descrevendo o grafo completo antes das salas",
+  "salas": {
+    "${salaInicio}": { "texto_logico": "descrição seca, forense, sem poesia", "opcoes": [{ "texto": "ação específica com custo implícito", "destino": N }] },
+    "${salaInicio + 1}": { ... },
+    ...
+    "${salaFim}": { ... }
+  },
+  "ganchos_para_proxima_zona": {
+    "salas_fronteira": [N, N],
+    "objetos_nao_usados": ["nome do objeto que ainda não teve consequência"],
+    "informacao_pendente": "o que o jogador sabe mas ainda não entende completamente"
   }
 }`;
 
-    // ============================================================
-    // FASE 2 — GERAÇÃO DAS 25 SALAS COM DNA COMO CONTEXTO
-    // ============================================================
-    const promptSalas = (dna) => `[ID: ${sementeCaos}-${timestamp}] [TOM: ${tomSorteado}]
-
-Você é Steve Jackson escrevendo a aventura "${cenarioTema}".
-Você tem o esqueleto completo. Agora construa as 25 salas.
-
-ESQUELETO DA AVENTURA:
-${JSON.stringify(dna, null, 2)}
-
-REGRAS DE JACKSON (invioláveis):
-
-1. OPÇÕES COM PESO: cada opção deve implicar uma consequência clara. O jogador deve sentir que escolher errado custa algo. Nunca crie opções intercambiáveis.
-
-2. PROIBIÇÕES ABSOLUTAS nas opções (se aparecerem, você falhou):
-   - "Procurar por mais informações"
-   - "Desistir e voltar"
-   - "Explorar a sala"
-   - "Investigar o local"
-   - Qualquer opção que comece com "Procurar por" sem nomear o objeto exato
-
-3. ESPECIFICIDADE: nomeie o elemento físico exato. "Forçar a grade enferrujada com o ombro" não "Ir para o corredor".
-
-4. COERÊNCIA TEXTO→OPÇÃO: cada elemento físico nas opções DEVE aparecer mencionado no texto_logico. O texto é a justificativa sensorial das escolhas.
-
-5. OBJETOS-CHAVE: nas salas de origem, o objeto deve aparecer no texto de forma encontrável mas não óbvia. Na sala de uso, a opção que usa o objeto deve existir como uma das escolhas.
-
-6. REVELAÇÕES: nas salas marcadas, o texto_logico deve conter a revelação de forma visceral e concreta.
-
-7. BECOS SEM SAÍDA: salas marcadas como becos devem ter no máximo 2 saídas, ambas com risco claro implícito.
-
-8. TOPOLOGIA: crie caminhos não lineares. IDs de destino podem ser menores que o ID atual (backtracking com propósito). Máximo de destino: 25.
-
-Retorne APENAS o JSON:
-{
-  "1": { "texto_logico": "descrição seca e forense", "opcoes": [{ "texto": "ação específica com peso", "destino": N }] },
-  "2": { ... },
-  ...
-  "25": { ... }
-}`;
-
-    // ============================================================
-    // FASE 3 — INSPEÇÃO EDITORIAL JACKSON
-    // Um editor brutal que descarta qualquer fraqueza estrutural.
-    // ============================================================
-    const promptJackson = (dna, mapaRaw) => `Você é o editor de Steve Jackson. Sua única função: identificar salas fracas e corrigi-las.
-
-CRITÉRIOS DE FALHA — corrija imediatamente qualquer sala que contenha:
-- Opções genéricas ("Procurar por mais informações", "Desistir e voltar", "Explorar", "Investigar o local")
-- Duas ou mais opções com estrutura verbal idêntica ("Examinar X", "Examinar Y", "Examinar Z")
-- texto_logico que não menciona os elementos referenciados nas opções
-- Opções com destinos que não fazem sentido narrativo dado o contexto da sala
-
-DNA original para referência:
-${JSON.stringify(dna, null, 2)}
-
-MAPA A REVISAR:
-${JSON.stringify(mapaRaw, null, 2)}
-
-Retorne o mapa COMPLETO. Salas aprovadas: mantenha intactas. Salas reprovadas: reescreva apenas as partes fracas.
-Retorne APENAS o JSON no mesmo formato.`;
+    const idMsg = adicionarMensagem(`⚙️ Gerando Zona ${numeroZona} — "${infoZona.nome}" (salas ${salaInicio}–${salaFim})...`, "system", true);
 
     try {
-        // --- FASE 1 ---
-        const id1 = adicionarMensagem("⚙️ Fase 1/3 — Forjando o DNA narrativo...", "system", true);
-        const dataDNA = await chamarGroq(
-            [{ role: "user", content: promptDNA }],
-            0.65,
-            { type: "json_object" }
-        );
-        const dna = JSON.parse(dataDNA.choices[0].message.content);
-        document.getElementById(id1)?.remove();
-        console.log('[Groq Fase 1] DNA:', dna);
+        const data = await chamarGroq([{ role: "user", content: prompt }], 0.82, { type: "json_object" });
+        const zonaData = JSON.parse(data.choices[0].message.content);
+        document.getElementById(idMsg)?.remove();
 
-        // --- FASE 2 ---
-        const id2 = adicionarMensagem("⚙️ Fase 2/3 — Construindo as 25 salas...", "system", true);
-        const dataSalas = await chamarGroq(
-            [{ role: "user", content: promptSalas(dna) }],
-            0.8,
-            { type: "json_object" }
-        );
-        const mapaRaw = JSON.parse(dataSalas.choices[0].message.content);
-        document.getElementById(id2)?.remove();
-        console.log('[Groq Fase 2] Salas geradas:', Object.keys(mapaRaw).length);
-
-        // --- FASE 3 ---
-        const id3 = adicionarMensagem("⚙️ Fase 3/3 — Inspeção editorial...", "system", true);
-        const dataFinal = await chamarGroq(
-            [{ role: "user", content: promptJackson(dna, mapaRaw) }],
-            0.4,
-            { type: "json_object" }
-        );
-        const mapaFinal = JSON.parse(dataFinal.choices[0].message.content);
-        document.getElementById(id3)?.remove();
-
-        if (!mapaFinal["1"]?.texto_logico) {
-            throw new Error(`Mapa final sem estrutura válida.`);
+        if (!zonaData.salas?.[String(salaInicio)]?.texto_logico) {
+            throw new Error(`Zona ${numeroZona} sem estrutura válida.`);
         }
 
-        mapaMundo = mapaFinal;
-        secaoAtualId = "1";
+        // Merge nas salas existentes
+        if (!mapaMundo) mapaMundo = {};
+        Object.assign(mapaMundo, zonaData.salas);
+
+        zonaAtual = numeroZona;
         await salvarEstadoJogador();
-        adicionarMensagem("✅ Estrutura narrativa completa.", "system");
+
+        console.log(`[Zona ${numeroZona}] ${Object.keys(zonaData.salas).length} salas geradas. Topologia: ${zonaData.topologia?.substring(0, 100)}...`);
+        adicionarMensagem(`✅ Zona ${numeroZona} carregada — ${Object.keys(zonaData.salas).length} salas.`, "system");
+
+        return zonaData.ganchos_para_proxima_zona || null;
 
     } catch (error) {
-        console.error("Erro na geração do mapa:", error);
-        adicionarMensagem(`❌ Falha na geração. (${error.message})`, "system");
+        document.getElementById(idMsg)?.remove();
+        console.error(`Erro ao gerar zona ${numeroZona}:`, error);
+        adicionarMensagem(`❌ Falha na Zona ${numeroZona}. (${error.message})`, "system");
+        return null;
+    }
+}
+
+// ============================================================
+// EXPANSÃO AUTOMÁTICA — dispara em background quando necessário
+// ============================================================
+async function verificarEExpandirMundo() {
+    if (_expansaoEmAndamento) return;
+
+    const salaAtualNum = parseInt(secaoAtualId);
+    const limiteZonaAtual = zonaAtual * SALAS_POR_ZONA;
+
+    // Dispara quando o jogador está a 8 salas da fronteira da zona atual
+    if (salaAtualNum >= limiteZonaAtual - 8) {
+        const proximaZona = zonaAtual + 1;
+        const primeiraSalaProxima = proximaZona * SALAS_POR_ZONA - SALAS_POR_ZONA + 1;
+
+        // Só gera se a próxima zona ainda não existe
+        if (!mapaMundo?.[String(primeiraSalaProxima)]) {
+            _expansaoEmAndamento = true;
+            console.log(`[Expansão] Jogador em sala ${salaAtualNum}. Gerando Zona ${proximaZona} em background...`);
+
+            // Recupera ganchos salvos se existirem
+            const ganchosSalvos = null; // futuramente pode vir do Firestore
+
+            gerarZona(proximaZona, ganchosSalvos)
+                .then(() => { _expansaoEmAndamento = false; })
+                .catch(e => {
+                    console.error('[Expansão] Falhou:', e);
+                    _expansaoEmAndamento = false;
+                });
+        }
     }
 }
         
@@ -1319,6 +1388,7 @@ FATOS A SEREM TRANSCRITOS: ${descricaoSala}${alertaMortos}${elementosInterativos
                 // GATILHO: IDLE-TIME PROCESSING
                 setTimeout(() => {
                     salvarEstadoJogador().catch(e => console.error('Erro no salvamento background:', e));
+                    verificarEExpandirMundo();
                     
                     // ==========================================
                     // COMPRESSÃO DE MEMÓRIA SUSPENSA
@@ -1369,6 +1439,9 @@ FATOS A SEREM TRANSCRITOS: ${descricaoSala}${alertaMortos}${elementosInterativos
             // 🆕 Se o jogador é novo e não tem mapa, gera agora
             if (!mapaMundo) {
                 await gerarGrafoGroq("O Condomínio do Tempo Perdido");
+            } else if (!dnaGlobal) {
+                // Mapa existe mas DNA foi perdido — reconstrói sem apagar o mapa
+                await gerarDNAGlobal("O Condomínio do Tempo Perdido");
             }
 
             atualizarBotoesNavegacao(); // <-- ADICIONE AQUI
