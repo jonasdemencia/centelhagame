@@ -379,9 +379,6 @@ Retorne APENAS este JSON:
     console.log('[DNA Global]', dnaGlobal);
 }
 
-// ============================================================
-// GERAÇÃO DE ZONA — 1 chamada, 25 salas com qualidade Jackson
-// ============================================================
 async function gerarZona(numeroZona, ganchosPrevios = null) {
     const salaInicio = (numeroZona - 1) * SALAS_POR_ZONA + 1;
     const salaFim    = numeroZona * SALAS_POR_ZONA;
@@ -389,128 +386,181 @@ async function gerarZona(numeroZona, ganchosPrevios = null) {
 
     const infoZona = dnaGlobal?.zonas?.find(z => z.id === numeroZona) || {
         nome: `Zona ${numeroZona}`,
-        tom_sensorial: "opressivo e forense",
-        segredo_local: "algo perturbador ainda não nomeado",
+        tom_sensorial: "opressivo e industrial em decadência",
+        segredo_local: "algo perturbador que esta zona esconde",
         conecta_com: [numeroZona + 1]
     };
 
-    const objetosDaZona = dnaGlobal?.objetos_transzonais?.filter(
-        o => o.zona_origem === numeroZona || o.zonas_relevantes?.includes(numeroZona)
-    ) || [];
-
-    const entidadesDaZona = dnaGlobal?.entidades?.filter(
-        e => e.zona_primeira_pista <= numeroZona
-    ) || [];
+    const objetosDaZona = (dnaGlobal?.objetos_transzonais || []).filter(
+        o => o.zona_origem === numeroZona || (o.zonas_relevantes || []).includes(numeroZona)
+    );
 
     const contextoGancho = ganchosPrevios ? `
-CONTINUIDADE DA ZONA ANTERIOR — estes fios DEVEM aparecer em salas desta zona:
+FIOS DA ZONA ANTERIOR (devem aparecer fisicamente em salas desta zona):
 - Objetos sem resolução: ${ganchosPrevios.objetos_nao_usados?.join(', ') || 'nenhum'}
-- Informação que o jogador carrega mas não entende: ${ganchosPrevios.informacao_pendente || 'nenhuma'}
-- Salas de entrada vindas da zona anterior: ${ganchosPrevios.salas_fronteira?.join(', ') || 'nenhuma'}
+- Informação que o jogador carrega sem entender: ${ganchosPrevios.informacao_pendente || 'nenhuma'}
+- Salas de entrada: ${ganchosPrevios.salas_fronteira?.join(', ') || 'nenhuma'}
 ` : '';
 
-    const prompt = `[SEMENTE ÚNICA: ${semente}]
-[ZONA ${numeroZona} — "${infoZona.nome}"] [SALAS ${salaInicio} a ${salaFim}]
+    // ══════════════════════════════════════════════════════════
+    // CHAMADA A — PLANO ESTRUTURAL
+    // O modelo define o esqueleto completo antes de escrever prosa.
+    // ══════════════════════════════════════════════════════════
+    const promptPlano = `[SEMENTE: ${semente}] [ZONA ${numeroZona}: "${infoZona.nome}"] [SALAS ${salaInicio}–${salaFim}]
 
-Você é Steve Jackson. Não um assistente tentando imitar Jackson. Você É Jackson.
-Tema do mundo: "${dnaGlobal?.misterio_central || 'um lugar que não obedece as leis do tempo'}"
-Tom desta zona: ${infoZona.tom_sensorial}
-O que esta zona esconde (plante pistas físicas — jamais explique diretamente): ${infoZona.segredo_local}
-Objetos físicos desta zona: ${objetosDaZona.map(o => o.nome).join(', ') || 'a definir por você'}
+Você é o arquiteto da aventura. Não escreva prosa ainda — apenas projete a estrutura.
+Tema do mundo: "${dnaGlobal?.misterio_central || 'um lugar que distorce o tempo'}"
+Tom sensorial desta zona: ${infoZona.tom_sensorial}
+O que esta zona esconde: ${infoZona.segredo_local}
+Objetos físicos disponíveis: ${objetosDaZona.map(o => o.nome).join(', ') || 'a definir'}
 ${contextoGancho}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CALIBRAÇÃO DE QUALIDADE — memorize estes exemplos como padrão absoluto
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TAREFA: Defina o esqueleto de ${SALAS_POR_ZONA} salas (${salaInicio} a ${salaFim}).
 
-❌ SALA RUIM (o que você NÃO vai produzir):
-{
-  "texto_logico": "A sala contém um mecanismo. Pode estar relacionado ao relógio.",
-  "opcoes": [
-    { "texto": "Investigar o mecanismo — pode ser perigoso", "destino": 5 },
-    { "texto": "Retornar à sala anterior — pode haver mais a descobrir", "destino": 2 }
-  ]
-}
-Motivo da falha: "pode ser" é hedging. "Retornar à sala anterior" é genérico. "Mecanismo" sem corpo físico não existe. O jogador não consegue visualizar onde está.
-
-✅ SALA BOA (este é o padrão mínimo aceitável):
-{
-  "texto_logico": "O corredor termina numa escada de ferro que desce dois andares. Os degraus estão cobertos de graxa preta. No terceiro degrau a partir do topo, há uma marca gravada a faca: uma seta apontando para baixo com um X cortando-a. A ferrugem ao redor da marca é mais nova do que o resto.",
-  "opcoes": [
-    { "texto": "Descer a escada pisando nas bordas dos degraus para evitar o barulho", "destino": 8 },
-    { "texto": "Arrancar o terceiro degrau — a marca foi gravada por dentro, não por fora", "destino": 11 }
-  ]
-}
-Motivo do sucesso: o jogador vê, cheira, entende a física. As opções são ações físicas irrevogáveis com consequências implícitas diferentes. A marca cria curiosidade sem explicar nada.
-
-✅ OUTRA SALA BOA:
-{
-  "texto_logico": "Uma porta de correr está travada com um cadeado de combinação numérica. O mecanismo tem quatro discos — o terceiro gira livremente demais, como se já tivesse sido forçado antes. Atrás da porta, pelo vão inferior, você vê luz artificial. A luz pulsa em intervalos irregulares.",
-  "opcoes": [
-    { "texto": "Forçar o terceiro disco com o pedaço de metal que você carrega", "destino": 14 },
-    { "texto": "Deitar no chão e observar o padrão da luz por um minuto completo", "destino": 9 },
-    { "texto": "Bater na porta três vezes e recuar para a parede", "destino": 17 }
-  ]
-}
-Motivo do sucesso: três opções com verbos completamente diferentes. Cada uma revela um personagem diferente — o que força, o que observa, o que arrisca contato. O jogador escolhe quem ele é.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-REGRAS ESTRUTURAIS (TOPOLOGIA PRIMEIRO)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-ETAPA 1 — campo "topologia": escreva o grafo ANTES de gerar as salas.
-Descreva cada conexão: "Sala ${salaInicio}→${salaInicio+1},${salaInicio+2}. Sala ${salaInicio+1}→${salaInicio+3}(beco-que-ensina). ..."
-Exija:
-- 3 nós centrais com 3+ conexões
-- 4 becos que punem mas revelam algo que não existe em outro caminho
-- 3 loops com propósito (voltar muda algo porque o jogador agora sabe X)
-- 2 salas com destino entre ${salaFim+1} e ${salaFim+3} (fronteira para próxima zona)
-
-ETAPA 2 — campo "salas": gere as ${SALAS_POR_ZONA} salas com o grafo como planta baixa.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-LISTA NEGRA — qualquer ocorrência invalida a sala inteira
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✗ "pode ser perigoso" / "pode ser impossível" / "pode haver mais" / "pode levar" / "talvez" / "parece"
-✗ Duas opções com o mesmo verbo inicial ("Examinar X" + "Examinar Y")
-✗ "Retornar à sala" / "Voltar para" / "Continuar explorando" / "Investigar o local"
-✗ texto_logico com menos de 3 elementos físicos concretos e nomeados
-✗ Qualquer opção que não descreva uma ação física específica com objeto nomeado
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-OBRIGAÇÕES DE QUALIDADE JACKSON
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ Pelo menos 5 salas desta zona devem mencionar explicitamente algo físico de outra sala desta mesma zona ("a mesma marca em X que você viu na grade lá atrás")
-✓ Objetos físicos nomeados aparecem em pelo menos 3 salas: descoberto → contexto novo → consequência de uso
-✓ Pelo menos 1 sala onde o jogador entende retrospectivamente algo que viu antes ("agora você percebe que a mancha no teto não era umidade")
-✓ Becos ensinam algo que nenhum outro caminho ensina — o jogador perde tempo mas ganha informação exclusiva
-✓ Cada opção implica um personagem diferente — quem força a porta é diferente de quem a observa
+REGRAS DO ESQUELETO:
+1. "local_fisico": nome específico e concreto. PROIBIDO: "uma sala", "um quarto", "um corredor". OBRIGATÓRIO: "lavanderia com três centrifugadoras enferrujadas", "escadaria de serviço com corrimão dobrado"
+2. "objeto_central": um único objeto físico concreto que justifica a sala existir. Deve ser ÚNICO no mapa.
+3. "proposito": o que o jogador ganha ao passar por aqui — informação, objeto, atalho, punição que ensina
+4. "saidas": lista de IDs destino. Becos têm no máximo 2 saídas.
+5. "tipo": entrada | hub | corredor | beco | fronteira
+6. Topologia obrigatória: 3 hubs (3+ conexões), 4 becos, 3 loops com propósito, 2 salas fronteira com destino ${salaFim+1}–${salaFim+3}
 
 Retorne APENAS este JSON:
 {
-  "topologia": "descrição textual do grafo completo",
+  "plano": {
+    "${salaInicio}": { "tipo": "entrada", "local_fisico": "...", "objeto_central": "...", "proposito": "...", "saidas": [N, N], "para_proxima_zona": false },
+    "${salaInicio+1}": { "tipo": "corredor", "local_fisico": "...", "objeto_central": "...", "proposito": "...", "saidas": [N, N], "para_proxima_zona": false },
+    "... todas as salas até ${salaFim} ...": {},
+    "${salaFim}": { "tipo": "fronteira", "local_fisico": "...", "objeto_central": "...", "proposito": "...", "saidas": [N, ${salaFim+1}], "para_proxima_zona": true }
+  },
+  "conexoes_narrativas": [
+    { "sala_a": N, "sala_b": N, "elemento_fisico_compartilhado": "o traço físico exato que aparece nas duas salas" },
+    { "sala_a": N, "sala_b": N, "elemento_fisico_compartilhado": "..." },
+    { "sala_a": N, "sala_b": N, "elemento_fisico_compartilhado": "..." },
+    { "sala_a": N, "sala_b": N, "elemento_fisico_compartilhado": "..." },
+    { "sala_a": N, "sala_b": N, "elemento_fisico_compartilhado": "..." }
+  ]
+}`;
+
+    // ══════════════════════════════════════════════════════════
+    // CHAMADA B — GERAÇÃO DAS SALAS COM O PLANO COMO ÂNCORA DURA
+    // ══════════════════════════════════════════════════════════
+    const promptSalas = (plano, conexoes) => {
+        const planoStr = Object.entries(plano).map(([id, sala]) =>
+            `Sala ${id}: ${sala.local_fisico} | objeto: ${sala.objeto_central} | propósito: ${sala.proposito} | saídas: [${sala.saidas.join(',')}]`
+        ).join('\n');
+
+        const conexoesStr = conexoes.map(c =>
+            `Salas ${c.sala_a} e ${c.sala_b} compartilham: "${c.elemento_fisico_compartilhado}"`
+        ).join('\n');
+
+        return `[ZONA ${numeroZona}] [SALAS ${salaInicio}–${salaFim}]
+
+Você é Steve Jackson executando um plano já definido. Não invente novos lugares ou objetos — execute o esqueleto abaixo.
+
+ESQUELETO (lei absoluta — não desvie):
+${planoStr}
+
+CONEXÕES NARRATIVAS OBRIGATÓRIAS (cada par deve ter o elemento físico mencionado explicitamente em ambas as salas):
+${conexoesStr}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXEMPLO DE SALA RUIM — nunca produza isso:
+{
+  "texto_logico": "Uma sala com uma estante de livros. Sobre a estante, há um livro.",
+  "opcoes": [
+    { "texto": "Examinar o livro", "destino": 5 },
+    { "texto": "Olhar pela janela", "destino": 3 }
+  ]
+}
+Falhas: "Uma sala com" é início proibido. "Examinar" e "Olhar" são verbos banidos. As opções não têm consequência física implícita. Não há tensão.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXEMPLO DE SALA BOA — este é o padrão mínimo:
+{
+  "texto_logico": "A lavanderia cheira a amoníaco velho e metal quente. Três centrifugadoras industriais estão enfileiradas — duas paradas, a terceira girando em silêncio apesar de não estar ligada na tomada. O tambor da máquina central projeta uma sombra que não bate com a posição da única lâmpada fluorescente no teto. No rodapé atrás da máquina da esquerda, o mesmo símbolo em ferradura que você viu gravado na grade da entrada.",
+  "opcoes": [
+    { "texto": "Abrir o tambor da centrifugadora que gira sem estar ligada", "destino": 8 },
+    { "texto": "Arrancar o rodapé atrás da máquina da esquerda onde está o símbolo", "destino": 12 },
+    { "texto": "Desligar o disjuntor no quadro de força na parede oposta", "destino": 6 }
+  ]
+}
+Acertos: começa com sensação física. Três verbos diferentes (abrir/arrancar/desligar). Cada opção implica consequência diferente. A centrifugadora girando sem energia é perturbadora. O símbolo cria continuidade com outra sala.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXEMPLO DE BECO BOM — becos ensinam algo exclusivo:
+{
+  "texto_logico": "O corredor termina numa parede de alvenaria. O reboco está trincado em padrão concêntrico — o impacto veio de dentro da parede, não de fora. No chão, cinco marcas de arranhão paralelas se estendem por três metros em direção à parede. A última marca para abruptamente a 40 centímetros dela. Não há como continuar daqui.",
+  "opcoes": [
+    { "texto": "Medir com a palma a distância entre as marcas de arranhão", "destino": 4 },
+    { "texto": "Pressionar o centro do padrão concêntrico na parede", "destino": 4 }
+  ]
+}
+Acerto: as duas saídas voltam à mesma sala (beco real) mas ensinam coisas diferentes. As marcas de arranhão e o impacto de dentro recontextualizam o lugar inteiro.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LISTA NEGRA ABSOLUTA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROIBIDO em texto_logico:
+✗ Começar com "Uma sala", "Um quarto", "Um corredor", "A sala contém"
+✗ Qualquer frase com "pode ser", "talvez", "parece", "provavelmente"
+
+PROIBIDO em opcoes (texto das opções):
+✗ Verbos: Examinar / Olhar / Verificar / Checar / Inspecionar / Investigar / Observar
+✗ "Retornar" / "Voltar" / "Continuar explorando" / qualquer coisa genérica sem objeto físico nomeado
+✗ Duas opções na mesma sala com o mesmo verbo inicial
+✗ Qualquer opção sem nomear o objeto físico exato que será manipulado
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OBRIGAÇÕES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Cada texto_logico deve ter: cheiro OU temperatura OU textura + objeto central do plano + pelo menos 1 elemento perturbador concreto
+✓ As 5 conexões narrativas DEVEM aparecer mencionadas explicitamente nas duas salas de cada par
+✓ Opções usam verbos de ação física: Forçar / Arrancar / Mergulhar / Escalar / Destruir / Empurrar / Puxar / Cortar / Desligar / Travar / Destrancar / Gritar / Esconder / Fingir / Esperar / Fugir / Abrir / Fechar / Atirar / Quebrar / Dobrar / Pressionar / Segurar / Soltar
+✓ Cada beco deve ensinar algo que NENHUM outro caminho ensina
+
+Retorne APENAS este JSON:
+{
   "salas": {
     "${salaInicio}": { "texto_logico": "...", "opcoes": [{ "texto": "...", "destino": N }] },
-    "${salaInicio + 1}": { "texto_logico": "...", "opcoes": [{ "texto": "...", "destino": N }] },
-    "...todas até ${salaFim}...": {},
+    "${salaInicio+1}": { "texto_logico": "...", "opcoes": [{ "texto": "...", "destino": N }] },
     "${salaFim}": { "texto_logico": "...", "opcoes": [{ "texto": "...", "destino": N }] }
   },
   "ganchos_para_proxima_zona": {
     "salas_fronteira": [N, N],
-    "objetos_nao_usados": ["nome físico exato do objeto sem resolução"],
+    "objetos_nao_usados": ["nome físico exato"],
     "informacao_pendente": "frase concreta do que o jogador carrega sem entender"
   }
 }`;
+    };
 
-    const idMsg = adicionarMensagem(`⚙️ Gerando Zona ${numeroZona} — "${infoZona.nome}" (salas ${salaInicio}–${salaFim})...`, "system", true);
+    const idMsg = adicionarMensagem(`⚙️ Projetando Zona ${numeroZona} — "${infoZona.nome}"...`, "system", true);
 
     try {
-        const data = await chamarGroq([{ role: "user", content: prompt }], 0.82, { type: "json_object" });
-        const zonaData = JSON.parse(data.choices[0].message.content);
+        // --- CHAMADA A: PLANO ---
+        const dataPlano = await chamarGroq([{ role: "user", content: promptPlano }], 0.6, { type: "json_object" });
+        const planoData = JSON.parse(dataPlano.choices[0].message.content);
+
+        if (!planoData.plano?.[String(salaInicio)]) {
+            throw new Error(`Plano da Zona ${numeroZona} inválido — sala ${salaInicio} ausente.`);
+        }
+        console.log(`[Zona ${numeroZona}] Plano gerado:`, Object.keys(planoData.plano).length, 'salas planejadas');
+
+        // Atualiza mensagem de status
+        const msgEl = document.getElementById(idMsg);
+        if (msgEl) msgEl.innerText = `⚙️ Escrevendo Zona ${numeroZona} — "${infoZona.nome}" (${SALAS_POR_ZONA} salas)...`;
+
+        // --- CHAMADA B: SALAS ---
+        const dataSalas = await chamarGroq(
+            [{ role: "user", content: promptSalas(planoData.plano, planoData.conexoes_narrativas || []) }],
+            0.85,
+            { type: "json_object" }
+        );
+        const zonaData = JSON.parse(dataSalas.choices[0].message.content);
         document.getElementById(idMsg)?.remove();
 
         if (!zonaData.salas?.[String(salaInicio)]?.texto_logico) {
-            throw new Error(`Zona ${numeroZona} sem estrutura válida.`);
+            throw new Error(`Zona ${numeroZona} sem salas válidas.`);
         }
 
         if (!mapaMundo) mapaMundo = {};
@@ -519,15 +569,15 @@ Retorne APENAS este JSON:
         zonaAtual = numeroZona;
         await salvarEstadoJogador();
 
-        console.log(`[Zona ${numeroZona}] ${Object.keys(zonaData.salas).length} salas. Topologia: ${zonaData.topologia?.substring(0, 120)}...`);
-        adicionarMensagem(`✅ Zona ${numeroZona} carregada — ${Object.keys(zonaData.salas).length} salas.`, "system");
+        adicionarMensagem(`✅ Zona ${numeroZona} — ${Object.keys(zonaData.salas).length} salas prontas.`, "system");
+        console.log(`[Zona ${numeroZona}] Completa. Ganchos:`, zonaData.ganchos_para_proxima_zona);
 
         return zonaData.ganchos_para_proxima_zona || null;
 
     } catch (error) {
         document.getElementById(idMsg)?.remove();
-        console.error(`Erro ao gerar zona ${numeroZona}:`, error);
-        adicionarMensagem(`❌ Falha na Zona ${numeroZona}. (${error.message})`, "system");
+        console.error(`Erro na Zona ${numeroZona}:`, error);
+        adicionarMensagem(`❌ Falha na Zona ${numeroZona}: ${error.message}`, "system");
         return null;
     }
 }
