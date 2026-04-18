@@ -499,29 +499,46 @@ EXEMPLO DE BECO BOM — becos ensinam algo exclusivo:
 Acerto: as duas saídas voltam à mesma sala (beco real) mas ensinam coisas diferentes. As marcas de arranhão e o impacto de dentro recontextualizam o lugar inteiro.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-LISTA NEGRA ABSOLUTA
+A LEI DE OURO: PROIBIDO TELETRANSPORTE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PROIBIDO em texto_logico:
-✗ Começar com "Uma sala", "Um quarto", "Um corredor", "A sala contém"
-✗ Qualquer frase com "pode ser", "talvez", "parece", "provavelmente"
+O jogador é um humano físico. Ele não se teletransporta. 
+Se uma opção tem um "destino" que é um ID DIFERENTE da sala atual, a ação OBRIGATORIAMENTE tem que ser de LOCOMOÇÃO FÍSICA (atravessar uma porta, descer uma escada, pular um buraco).
 
-PROIBIDO em opcoes (texto das opções):
-✗ Verbos: Examinar / Olhar / Verificar / Checar / Inspecionar / Investigar / Observar
-✗ "Retornar" / "Voltar" / "Continuar explorando" / qualquer coisa genérica sem objeto físico nomeado
-✗ Duas opções na mesma sala com o mesmo verbo inicial
-✗ Qualquer opção sem nomear o objeto físico exato que será manipulado
+✗ ABSURDO E PROIBIDO: 
+{ "texto": "Ligar a televisão", "destino": 5 } (Ligar uma TV não te move fisicamente para a Sala 5).
+{ "texto": "Pegar a cama", "destino": 16 } (Você não pode colocar uma cama no bolso para ir para outra sala).
+{ "texto": "Sentar no sofá", "destino": 12 } (Sentar não muda de cômodo).
+
+✓ CORRETO (Transição de Sala): 
+{ "texto": "Abrir a porta de metal enferrujada", "destino": 5 }
+{ "texto": "Rastejar pelo duto de ar manchado de sangue", "destino": 16 }
+
+✓ CORRETO (Passagem Secreta):
+{ "texto": "Puxar o livro azul, revelando uma escadaria oculta na parede", "destino": 8 }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LISTA NEGRA ABSOLUTA DE VERBOS NAS OPÇÕES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✗ PROIBIDO em opcoes (texto das opções):
+✗ Verbos: Examinar / Olhar / Verificar / Checar / Inspecionar / Investigar / Observar / Pegar / Tocar / Sentar / Ligar (a menos que a interação abra uma passagem física explícita e seja descrita como tal).
+✗ "Retornar" / "Voltar" / "Continuar explorando" / qualquer coisa genérica sem objeto físico nomeado.
+✗ Duas opções na mesma sala com o mesmo verbo inicial.
+✗ NUNCA crie uma opção como "Pegar [Objeto Gigante]" (ex: "Pegar a mesa", "Pegar a cama", "Pegar o sofá").
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 OBRIGAÇÕES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ Cada texto_logico deve ter: cheiro OU temperatura OU textura + objeto central do plano + pelo menos 1 elemento perturbador concreto
-✓ As 5 conexões narrativas DEVEM aparecer mencionadas explicitamente nas duas salas de cada par
-✓ Opções usam verbos de ação física: Forçar / Arrancar / Mergulhar / Escalar / Destruir / Empurrar / Puxar / Cortar / Desligar / Travar / Destrancar / Gritar / Esconder / Fingir / Esperar / Fugir / Abrir / Fechar / Atirar / Quebrar / Dobrar / Pressionar / Segurar / Soltar
-✓ Cada beco deve ensinar algo que NENHUM outro caminho ensina
+✓ Cada texto_logico deve ter: cheiro OU temperatura OU textura + objeto central do plano + pelo menos 1 elemento perturbador concreto.
+✓ As 5 conexões narrativas DEVEM aparecer mencionadas explicitamente nas duas salas de cada par.
+✓ Opções de locomoção usam verbos físicos que descrevem o movimento: Forçar / Arrancar / Empurrar / Puxar / Abrir / Atravessar / Descer / Subir / Rastejar / Escalar / Mergulhar / Pular.
+✓ Cada beco deve ensinar algo que NENHUM outro caminho ensina.
 
 PROCESSO OBRIGATÓRIO POR SALA — siga esta ordem sem exceção:
-1. Escreva "opcoes" PRIMEIRO. Decida quais ações físicas o jogador pode executar.
-2. Escreva "texto_logico" DEPOIS. A descrição deve justificar fisicamente cada opção. Se uma opção diz "Forçar a porta à esquerda", o texto_logico DEVE mencionar uma porta à esquerda. Se uma opção diz "Puxar o cabo da centrifugadora", o texto_logico DEVE mencionar a centrifugadora e o cabo. SEM EXCEÇÃO — cada substantivo físico de cada opção deve estar no texto.
+1. Olhe as saídas exigidas no ESQUELETO (campo "saidas").
+2. Para cada saída que leva a um ID DIFERENTE, crie UMA OPÇÃO DE LOCOMOÇÃO FÍSICA que descreva claramente a passagem (ex: "Abrir a porta dupla", "Descer a escada de concreto").
+3. Se o ESQUELETO exige um objeto central (ex: "Televisão"), use-o no "texto_logico" para atmosfera, mas NÃO o transforme em botão de saída a menos que interagir com ele abra uma passagem física explícita.
+4. Escreva "opcoes" PRIMEIRO. Decida as ações físicas de locomoção.
+5. Escreva "texto_logico" DEPOIS. A descrição deve justificar fisicamente cada opção. Se a opção diz "Forçar a porta à esquerda", o texto_logico DEVE mencionar uma porta à esquerda. SEM EXCEÇÃO.
 
 Retorne APENAS este JSON:
 {
