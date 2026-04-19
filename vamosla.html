@@ -154,38 +154,57 @@ let primeiroTokenRecebido = false;
 
         let resumoAtual = "";
 
-        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }) {
-    const response = await fetch(WORKER_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            messages: messages,
-            temperature: temperatura,
-            response_format: formato,
-        }),
-    });
+        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, tentativas = 3) {
+            for (let i = 0; i < tentativas; i++) {
+                const response = await fetch(WORKER_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        messages: messages,
+                        temperature: temperatura,
+                        response_format: formato,
+                    }),
+                });
 
-    // Captura o body independente do status HTTP
-    const data = await response.json();
-    console.log('[Groq] Resposta raw do Worker:', JSON.stringify(data).slice(0, 400));
+                const data = await response.json();
 
-    if (!response.ok) {
-        // Worker retornou HTTP 4xx/5xx — loga o body para diagnóstico
-        throw new Error(`Erro no Worker [${response.status}]: ${JSON.stringify(data)}`);
-    }
+                // 1. Detecta erro de limite da Groq (HTTP 429 ou erro explícito no JSON)
+                const isRateLimit = (!response.ok && response.status === 429) || 
+                                    (data.error && data.error.message && data.error.message.includes("Rate limit"));
 
-    // Groq retornou HTTP 200 mas com body de erro (ex: rate limit, token expirado)
-    if (data.error) {
-        throw new Error(`Erro da Groq API: ${data.error.message ?? JSON.stringify(data.error)}`);
-    }
+                if (isRateLimit && i < tentativas - 1) {
+                    const errMsg = data.error?.message || "";
+                    
+                    // 2. Extrai da própria mensagem de erro o tempo que a Groq quer que você espere (ex: "try again in 10.8s")
+                    const match = errMsg.match(/try again in ([\d\.]+)s/);
+                    
+                    // 3. Pega o tempo exigido + 2 segundos de margem de segurança (ou 15 segs por padrão)
+                    const waitTime = match ? (parseFloat(match[1]) * 1000) + 2000 : 15000;
+                    
+                    console.warn(`⏳ [Groq] Limite de tokens atingido. Pausando ${(waitTime/1000).toFixed(1)}s antes da tentativa ${i+2}/${tentativas}...`);
+                    
+                    // 4. Pausa a execução sem travar a interface do jogo
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                    continue; // Pula o resto e reinicia o loop para tentar de novo
+                }
 
-    // Valida shape mínimo antes de retornar
-    if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
-        throw new Error(`Resposta da Groq sem 'choices': ${JSON.stringify(data).slice(0, 300)}`);
-    }
+                console.log('[Groq] Resposta raw do Worker:', JSON.stringify(data).slice(0, 400));
 
-    return data;
-}
+                if (!response.ok) {
+                    throw new Error(`Erro no Worker [${response.status}]: ${JSON.stringify(data)}`);
+                }
+
+                if (data.error) {
+                    throw new Error(`Erro da Groq API: ${data.error.message ?? JSON.stringify(data.error)}`);
+                }
+
+                if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+                    throw new Error(`Resposta da Groq sem 'choices': ${JSON.stringify(data).slice(0, 300)}`);
+                }
+
+                return data;
+            }
+        }
 
         async function carregarDadosJogador(uid) {
     try {
