@@ -1566,12 +1566,27 @@ FATOS A SEREM TRANSCRITOS: ${descricaoSala}${alertaMortos}${elementosInterativos
             await carregarDadosJogador(uidAtual);
             
             // 🆕 Se o jogador é novo e não tem mapa, gera agora
-            if (!mapaMundo) {
-                await gerarGrafoGroq("O Condomínio do Tempo Perdido");
-            } else if (!dnaGlobal) {
-                // Mapa existe mas DNA foi perdido — reconstrói sem apagar o mapa
-                await gerarDNAGlobal("O Condomínio do Tempo Perdido");
-            }
+            // Lista de temas sombrios variados (adicione quantos quiser)
+const temas = [
+    "O Condomínio do Tempo Perdido",
+    "O Sanatório dos Espelhos Quebrados",
+    "A Catedral Submersa de Sal",
+    "O Arquipélago das Máscaras de Pele",
+    "A Mina onde as Paredes Sangram",
+    "O Orfanato da Fome Eterna",
+    "A Floresta que Devolve os Gritos",
+    "O Elevador que Desce Há 300 Anos",
+    "A Cidade onde os Mortos Caminham para o Trabalho",
+    "O Hospital onde os Médicos não Têm Rosto"
+];
+
+if (!mapaMundo) {
+    const temaSorteado = temas[Math.floor(Math.random() * temas.length)];
+    await gerarGrafoGroq(temaSorteado);
+} else if (!dnaGlobal) {
+    // Se o DNA foi perdido mas o mapa existe, usa um tema neutro (não afetará o mapa existente)
+    await gerarDNAGlobal("Reconstrução de DNA");
+}
 
             atualizarBotoesNavegacao(); // <-- ADICIONE AQUI
             window.enviar();
