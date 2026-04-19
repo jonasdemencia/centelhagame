@@ -421,17 +421,17 @@ REGRAS DO ESQUELETO:
 1. "local_fisico": nome específico e concreto. PROIBIDO: "uma sala", "um quarto", "um corredor". OBRIGATÓRIO: "lavanderia com três centrifugadoras enferrujadas", "escadaria de serviço com corrimão dobrado"
 2. "objeto_central": um único objeto físico concreto que justifica a sala existir. Deve ser ÚNICO no mapa.
 3. "proposito": o que o jogador ganha ao passar por aqui — informação, objeto, atalho, punição que ensina
-4. "saidas": lista de IDs destino. Becos têm no máximo 2 saídas.
+4. "saidas": lista de objetos { "destino": N, "acao": "verbo físico que descreve o movimento exato" }. Becos têm no máximo 2 saídas. REGRA DE OURO: a "acao" deve ser fisicamente coerente com o "local_fisico" do destino. Se o destino é um terraço, a ação é "Abrir a porta-janela para o terraço". Se o destino é um porão, a ação é "Descer a escada para o porão". Uma janela NUNCA leva a um beco fechado. Uma escada NUNCA desce para uma sala no mesmo andar. A ação define a física da transição — o destino deve ser fisicamente alcançável por ela.
 5. "tipo": entrada | hub | corredor | beco | fronteira
 6. Topologia obrigatória: 3 hubs (3+ conexões), 4 becos, 3 loops com propósito, 2 salas fronteira com destino ${salaFim+1}–${salaFim+3}
 
 Retorne APENAS este JSON:
 {
   "plano": {
-    "${salaInicio}": { "tipo": "entrada", "local_fisico": "...", "objeto_central": "...", "proposito": "...", "saidas": [N, N], "para_proxima_zona": false },
-    "${salaInicio+1}": { "tipo": "corredor", "local_fisico": "...", "objeto_central": "...", "proposito": "...", "saidas": [N, N], "para_proxima_zona": false },
+    "${salaInicio}": { "tipo": "entrada", "local_fisico": "...", "objeto_central": "...", "proposito": "...", "saidas": [{"destino": N, "acao": "verbo físico exato"}, {"destino": N, "acao": "..."}], "para_proxima_zona": false },
+    "${salaInicio+1}": { "tipo": "corredor", "local_fisico": "...", "objeto_central": "...", "proposito": "...", "saidas": [{"destino": N, "acao": "..."}, {"destino": N, "acao": "..."}], "para_proxima_zona": false },
     "... todas as salas até ${salaFim} ...": {},
-    "${salaFim}": { "tipo": "fronteira", "local_fisico": "...", "objeto_central": "...", "proposito": "...", "saidas": [N, ${salaFim+1}], "para_proxima_zona": true }
+    "${salaFim}": { "tipo": "fronteira", "local_fisico": "...", "objeto_central": "...", "proposito": "...", "saidas": [{"destino": N, "acao": "..."}, {"destino": ${salaFim+1}, "acao": "..."}], "para_proxima_zona": true }
   },
   "conexoes_narrativas": [
     { "sala_a": N, "sala_b": N, "elemento_fisico_compartilhado": "o traço físico exato que aparece nas duas salas" },
@@ -446,9 +446,26 @@ Retorne APENAS este JSON:
     // CHAMADA B — GERAÇÃO DAS SALAS COM O PLANO COMO ÂNCORA DURA
     // ══════════════════════════════════════════════════════════
     const promptSalas = (plano, conexoes) => {
-        const planoStr = Object.entries(plano).map(([id, sala]) =>
-            `Sala ${id}: ${sala.local_fisico} | objeto: ${sala.objeto_central} | propósito: ${sala.proposito} | saídas: [${sala.saidas.join(',')}]`
-        ).join('\n');
+        // Constrói mapa de entradas invertendo as saídas do plano
+        const entradasPorSala = {};
+        Object.entries(plano).forEach(([idOrigem, salaOrigem]) => {
+            (salaOrigem.saidas || []).forEach(saida => {
+                const idDest = String(saida.destino ?? saida);
+                if (!entradasPorSala[idDest]) entradasPorSala[idDest] = [];
+                entradasPorSala[idDest].push({ de: idOrigem, acao: saida.acao || '?' });
+            });
+        });
+
+        const planoStr = Object.entries(plano).map(([id, sala]) => {
+            const saidasStr = (sala.saidas || []).map(s =>
+                `→sala ${s.destino ?? s} via "${s.acao ?? '?'}"`
+            ).join(', ');
+            const entradas = entradasPorSala[id] || [];
+            const entradasStr = entradas.length > 0
+                ? `ENTRA-SE AQUI: ${entradas.map(e => `da sala ${e.de} via "${e.acao}"`).join(' | ')}`
+                : `SALA DE ENTRADA DO JOGO`;
+            return `Sala ${id} [${sala.tipo}]: ${sala.local_fisico} | objeto: ${sala.objeto_central} | ${entradasStr} | saídas: ${saidasStr}`;
+        }).join('\n');
 
         const conexoesStr = conexoes.map(c =>
             `Salas ${c.sala_a} e ${c.sala_b} compartilham: "${c.elemento_fisico_compartilhado}"`
@@ -461,7 +478,16 @@ Você é Steve Jackson executando um plano já definido. Não invente novos luga
 ESQUELETO (lei absoluta — não desvie):
 ${planoStr}
 
-CONEXÕES NARRATIVAS OBRIGATÓRIAS (cada par deve ter o elemento físico mencionado explicitamente em ambas as salas):
+LEI DE COERÊNCIA FÍSICA DE ENTRADA — MAIS IMPORTANTE QUE QUALQUER OUTRA REGRA:
+Para cada sala, o campo "ENTRA-SE AQUI" mostra qual ação o jogador executou para chegar lá.
+O texto_logico DEVE descrever um espaço fisicamente acessível por essa ação.
+- "da sala X via 'Abrir a janela à esquerda'" → a sala DEVE ser exterior, varanda, ou espaço visível por janela. NUNCA beco fechado.
+- "da sala X via 'Descer as escadas'" → a sala DEVE estar em nível inferior. NUNCA no mesmo andar.
+- "da sala X via 'Rastejar pelo duto'" → a sala DEVE ser estreita ou acessível por abertura pequena.
+- "da sala X via 'Forçar a porta'" → a sala DEVE estar atrás de uma porta.
+Se o texto_logico que você escreveu não é fisicamente acessível pela ação de entrada, VOCÊ QUEBROU O JOGO.
+
+CONEXÕES NARRATIVAS OBRIGATÓRIAS:
 ${conexoesStr}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
