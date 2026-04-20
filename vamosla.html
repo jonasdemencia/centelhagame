@@ -1305,7 +1305,7 @@ function mitigarFalhaTopologica(acao, descricaoDestino) {
     // Se já temos um mapa carregado (da Groq) e a sala 1 existe
     if (mapaMundo && mapaMundo["1"] && mapaMundo["1"].texto_logico) {
         // Em vez de usar o PROMPT_INTRO, constrói uma requisição para o Qwen descrever a sala 1
-        pergunta = `[AÇÃO DE SISTEMA]: Início do jogo. Descreva o local usando a base estrutural: "${mapaMundo["1"].texto_logico}". Seja clínico e direto. Aplique as regras de brutalidade e realismo. Sempre narre as opções de saída.`;
+        pergunta = `[AÇÃO DE SISTEMA]: Início do jogo. Descreva o local usando a base estrutural: "${mapaMundo["1"].texto_logico}". MÁXIMO ABSOLUTO DE 4 FRASES CURTAS. Seja clínico e direto. Não elabore além do necessário. Termine com: [DANO: 0]`;
     } else if (!resumoAtual) {
         // Fallback: se não há mapa, usa o prompt antigo
         pergunta = PROMPT_INTRO;
@@ -1513,7 +1513,7 @@ FATOS A SEREM TRANSCRITOS: ${descricaoValidada}${alertaMortos}${elementosInterat
 
 
                                     const isIntro = (isInitial && !resumoAtual);
-                const maxTokens       = isIntro ? 200 : 180;
+                const maxTokens       = isIntro ? 350 : 200;
                 const maxContinuacoes = 0; // NUNCA continua após atingir o limite de tokens
 
                     if (isIntro) window._introGenerating = true;
