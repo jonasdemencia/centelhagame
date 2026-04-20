@@ -1462,20 +1462,43 @@ REGRA CRÍTICA: cada objeto físico mencionado nesses botões DEVE aparecer na s
                     }
 
                     let conteudoUser = "";
-                    let conversaRecenteParaEnvio = [];
 
-                    if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
-    conteudoUser = `[MUDANÇA DE CENA: TRANSIÇÃO CONTÍNUA]
-AÇÃO FÍSICA DO JOGADOR: "${pergunta.replace('[AÇÃO DE SISTEMA]: O jogador realizou a ação: ', '').replace('". Descreva o resultado sendo ABSOLUTAMENTE FIEL aos fatos da nova sala.', '')}"
+// IDENTIFICADOR DE ESTADO: Transição vs Interação
+const ehTransicao = pergunta.startsWith("[AÇÃO DE SISTEMA]");
 
-[FATOS IMUTÁVEIS DO DESTINO]:
-${descricaoValidada}${alertaMortos}${elementosInterativos}
+if (ehTransicao) {
+    // --- LÓGICA DE MUDANÇA DE SALA (SÓ QUANDO CLICA EM BOTAO) ---
+    const acaoLimpa = pergunta.replace('[AÇÃO DE SISTEMA]: O jogador realizou a ação: ', '').split('.')[0];
+    
+    conteudoUser = `[SITUAÇÃO: TRANSIÇÃO DE CENÁRIO]
+AÇÃO FÍSICA: "${acaoLimpa}"
+FATOS DA NOVA SALA: ${salaAtual ? salaAtual.texto_logico : ''}
+${typeof alertaMortos !== 'undefined' ? alertaMortos : ''}
 
-[REGRA DE NARRAÇÃO - ESTILO LIVRO-JOGO]:
-1. INICIE A NARRAÇÃO descrevendo a consequência imediata e o movimento físico da "AÇÃO FÍSICA DO JOGADOR".
-2. Conecte esse movimento visualmente aos [FATOS IMUTÁVEIS DO DESTINO].
-3. Se a ação for "abrir uma janela", descreva o jogador passando ou olhando pela janela para ver o cenário. Se for "descer escadas", descreva o som dos passos chegando ao novo andar. O jogador NÃO se teletransporta.
-4. MÁXIMO DE 4 FRASES. Termine com: [DANO: 0]`;
+[REGRA CRÍTICA]: Use a regra de Steve Jackson. Narre o movimento de entrada e a primeira impressão. 
+Não repita frases inteiras do 'FATOS DA NOVA SALA', transforme-os em narrativa fluida.`;
+
+} else {
+    // --- LÓGICA DE EXPLORAÇÃO LIVRE (LENDO PRONTUÁRIO, EXAMINANDO) ---
+    conteudoUser = `[SITUAÇÃO: INTERAÇÃO DENTRO DA SALA]
+O JOGADOR JÁ ESTÁ NESTE LOCAL: ${salaAtual ? salaAtual.texto_logico : ''}
+AÇÃO ATUAL: "${pergunta}"
+
+[REGRA CRÍTICA]: 
+1. O jogador NÃO se moveu. Ele está interagindo com algo que já viu.
+2. FOQUE apenas na ação "${pergunta}". Descreva o que ele descobre ou sente.
+3. JAMAIS repita a descrição de como ele chegou na sala ou o som dos seus passos na entrada.
+4. Se a ação for "ler prontuário", descreva o conteúdo do papel baseado no tema sombrio do local.`;
+}
+
+// AGORA, CONCATENAMOS AS REGRAS DE SISTEMA QUE VOCÊ JÁ TINHA (NÃO REMOVER)
+conteudoUser += `
+[REGRAS DE SISTEMA E ATRIBUTOS]:
+- Se a ação for perigosa, aplique [TESTE: ATRIBUTO, DIFICULDADE].
+- Se falhar, aplique [DANO: X].
+- Considere a Memória Longa: ${typeof memoriaLonga !== 'undefined' ? memoriaLonga : ''}
+- DNA Global do Medo: ${typeof dnaGlobal !== 'undefined' ? dnaGlobal : ''}
+- Sempre termine com [DANO: 0] se não houver ferimento.`;
     
     conversaRecenteParaEnvio = []; // Histórico zerado na transição
 }
