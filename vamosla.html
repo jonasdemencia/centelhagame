@@ -588,9 +588,9 @@ PROCESSO OBRIGATÓRIO POR SALA — siga esta ordem sem exceção:
 Retorne APENAS este JSON:
 {
   "salas": {
-    "${salaInicio}": { "opcoes": [{ "texto": "ação física com objeto nomeado", "destino": N }], "texto_logico": "descrição que contém obrigatoriamente cada objeto físico de cada opção acima" },
-    "${salaInicio+1}": { "opcoes": [{ "texto": "...", "destino": N }], "texto_logico": "..." },
-    "${salaFim}": { "opcoes": [{ "texto": "...", "destino": N }], "texto_logico": "..." }
+    "${salaInicio}": { "opcoes": [{ "texto": "ação física com objeto nomeado", "destino": N }], "ancora_de_entrada": "Descreva exatamente o elemento físico por onde o jogador acabou de entrar nesta sala (ex: a janela aberta, a escada descida, a porta de carvalho)", "texto_logico": "O texto da sala, OBRIGATORIAMENTE começando pela descrição visual da 'ancora_de_entrada'. ..." },
+    "${salaInicio+1}": { "opcoes": [{ "texto": "...", "destino": N }], "ancora_de_entrada": "...", "texto_logico": "..." },
+    "${salaFim}": { "opcoes": [{ "texto": "...", "destino": N }], "ancora_de_entrada": "...", "texto_logico": "..." }
   },
   "ganchos_para_proxima_zona": {
     "salas_fronteira": [N, N],
@@ -1266,6 +1266,30 @@ function atualizarBotoesNavegacao() {
         container.appendChild(btn);
     });
 }
+
+function mitigarFalhaTopologica(acao, descricaoDestino) {
+    const acaoLower = acao.toLowerCase();
+    const destLower = descricaoDestino.toLowerCase();
+    
+    const regrasIncompativeis = [
+        { acao: 'janela', proibidoNoDestino: ['corredor sem janelas', 'porão fechado'] },
+        { acao: 'escada', proibidoNoDestino: ['mesmo andar'] },
+    ];
+
+    let conflitoDetectado = false;
+    for (let regra of regrasIncompativeis) {
+        if (acaoLower.includes(regra.acao) && regra.proibidoNoDestino.some(p => destLower.includes(p))) {
+            conflitoDetectado = true;
+            break;
+        }
+    }
+
+    if (!acaoLower.includes('porta') && !acaoLower.includes('corredor') && destLower.includes('corredor')) {
+         return descricaoDestino + "\n[DIRETRIZ DE EMERGÊNCIA AO NARRADOR: O mapa gerou um erro topológico. Justifique narrativamente como o jogador foi parar neste ambiente a partir da ação tomada, mesmo que pareça estranho (ex: o ambiente mudou magicamente, a janela dava para um duto que levou ao corredor, etc).]";
+    }
+
+    return descricaoDestino;
+}
         
       
         window.enviar = async function(mensagemUsuario = null) {
@@ -1431,7 +1455,8 @@ if (tipo === 'LIVRE') {
 }
 
                     const salaAtual = mapaMundo && mapaMundo[secaoAtualId] ? mapaMundo[secaoAtualId] : null;
-                    const descricaoSala = salaAtual ? salaAtual.texto_logico : 'Cenário sombrio.';
+const descricaoSala = salaAtual ? salaAtual.texto_logico : 'Cenário sombrio.';
+const descricaoValidada = mitigarFalhaTopologica(pergunta, descricaoSala);
                     
                     // Formatação simplificada e direta para as saídas
                     let elementosInterativos = "";
@@ -1446,6 +1471,20 @@ REGRA CRÍTICA: cada objeto físico mencionado nesses botões DEVE aparecer na s
                     let conversaRecenteParaEnvio = [];
 
                     if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
+    conteudoUser = `[MUDANÇA DE CENA: TRANSIÇÃO CONTÍNUA]
+AÇÃO FÍSICA DO JOGADOR: "${pergunta.replace('[AÇÃO DE SISTEMA]: O jogador realizou a ação: ', '').replace('". Descreva o resultado sendo ABSOLUTAMENTE FIEL aos fatos da nova sala.', '')}"
+
+[FATOS IMUTÁVEIS DO DESTINO]:
+${descricaoValidada}${alertaMortos}${elementosInterativos}
+
+[REGRA DE NARRAÇÃO - ESTILO LIVRO-JOGO]:
+1. INICIE A NARRAÇÃO descrevendo a consequência imediata e o movimento físico da "AÇÃO FÍSICA DO JOGADOR".
+2. Conecte esse movimento visualmente aos [FATOS IMUTÁVEIS DO DESTINO].
+3. Se a ação for "abrir uma janela", descreva o jogador passando ou olhando pela janela para ver o cenário. Se for "descer escadas", descreva o som dos passos chegando ao novo andar. O jogador NÃO se teletransporta.
+4. MÁXIMO DE 4 FRASES. Termine com: [DANO: 0]`;
+    
+    conversaRecenteParaEnvio = []; // Histórico zerado na transição
+}
                         // MODO TRANSIÇÃO: Isolamento total. Cortamos o histórico para ele não repetir a sala antiga.
                         conteudoUser = `[MUDANÇA DE CENA]\nAção que trouxe o jogador até aqui: "${pergunta.replace('[AÇÃO DE SISTEMA]: ', '')}"\n\n[ORDEM DE EXECUÇÃO]:\nTranscreva a chegada ao novo ambiente usando APENAS os fatos abaixo. MÁXIMO ABSOLUTO DE 4 FRASES CURTAS E SECAS. Zero enrolação.\n\n[FATOS DA NOVA SALA]\n${descricaoSala}${alertaMortos}${elementosInterativos}\n\nTermine o texto com: [DANO: 0]`;
                         
@@ -1468,7 +1507,7 @@ REGRAS DE CONVERSÃO (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
 4. VIOLÊNCIA CRUA: APENAS em caso de impacto físico contra corpos, abandone a brevidade. Descreva minuciosamente a destruição de tecidos e ossos (máximo 6 frases).
 
 [CENÁRIO (AMBIENTE ATUAL)]
-FATOS A SEREM TRANSCRITOS: ${descricaoSala}${alertaMortos}${elementosInterativos}` // <-- Variável adicionada aqui!
+FATOS A SEREM TRANSCRITOS: ${descricaoValidada}${alertaMortos}${elementosInterativos}` // <-- Variável adicionada aqui!
 };
 
                     payloadAPI = [systemPrompt, ...conversaRecenteParaEnvio, { role: 'user', content: conteudoUser }];
