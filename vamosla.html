@@ -1485,16 +1485,7 @@ ${descricaoValidada}${alertaMortos}${elementosInterativos}
     
     conversaRecenteParaEnvio = []; // Histórico zerado na transição
 }
-                        // MODO TRANSIÇÃO: Isolamento total. Cortamos o histórico para ele não repetir a sala antiga.
-                        conteudoUser = `[MUDANÇA DE CENA]\nAção que trouxe o jogador até aqui: "${pergunta.replace('[AÇÃO DE SISTEMA]: ', '')}"\n\n[ORDEM DE EXECUÇÃO]:\nTranscreva a chegada ao novo ambiente usando APENAS os fatos abaixo. MÁXIMO ABSOLUTO DE 4 FRASES CURTAS E SECAS. Zero enrolação.\n\n[FATOS DA NOVA SALA]\n${descricaoSala}${alertaMortos}${elementosInterativos}\n\nTermine o texto com: [DANO: 0]`;
                         
-                        conversaRecenteParaEnvio = []; // <-- A MÁGICA AQUI: Histórico zerado na transição.
-                    } else {
-                        // MODO AÇÃO NORMAL
-                        conteudoUser = `[AÇÃO DO JOGADOR (PROTAGONISTA)]\nO que o personagem executa com maestria: "${pergunta}"  ← se SUCESSO\nO que o personagem tenta desesperadamente fazer: "${pergunta}"  ← se FALHA\n\n[ORDEM PARA O NARRADOR]\n- Foque EXCLUSIVAMENTE no jogador executando a ação descrita acima.\n- ${instrucaoResultado}\n- ATENÇÃO SEMÂNTICA: Interprete palavras ambíguas como "mortal", "salto" ou "ataque" como as AÇÕES FÍSICAS do jogador.\n- Obrigatório terminar o texto com a tag: [DANO: ${danoFinal}]`;
-                        
-                        conversaRecenteParaEnvio = historicoConversa.slice(-4); // Reduzido de 6 para 4 para focar a atenção do 7B.
-                    }
 
                     const systemPrompt = {
     role: 'system',
