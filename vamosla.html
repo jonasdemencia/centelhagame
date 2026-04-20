@@ -465,8 +465,18 @@ Retorne APENAS este JSON:
     // CHAMADA B — GERAÇÃO DAS SALAS COM O PLANO COMO ÂNCORA DURA
     // ══════════════════════════════════════════════════════════
    const promptSalas = (plano, conexoes) => {
+  // Serializa as saídas do plano como restrição dura para o modelo
+  const restricoesConexoes = Object.entries(plano).map(([id, sala]) => {
+    const saidasStr = (sala.saidas || []).map(s => `${s.destino} ("${s.acao}")`).join(' | ');
+    return `  Sala ${id} → [${saidasStr}]`;
+  }).join('\n');
+
   return `Você é o Arquiteto de Mundo de um RPG de horror visceral. 
 Seu objetivo é gerar um JSON puramente técnico que represente uma zona do mapa chamada: "${infoZona.nome}".
+
+[RESTRIÇÃO ABSOLUTA DE DESTINOS — NÃO NEGOCIÁVEL]
+Os destinos de cada sala foram definidos na fase de planejamento. Você DEVE usar EXATAMENTE estes destinos nas opcoes. É PROIBIDO inventar destinos que não estejam na lista abaixo. Para cada sala, escreva exatamente uma opção por destino listado, usando a ação como base para o texto do botão:
+${restricoesConexoes}
 
 [REGRAS DE OURO DA ARQUITETURA NARRATIVA]
 1. ANCORAGEM RETROATIVA (Obrigatório): O campo "texto_logico" de cada sala NÃO deve começar descrevendo a sala, mas sim validando a transição. Exemplo: Se o jogador veio de uma "Escada", o texto começa com "Os degraus terminam em...". Como você gera o grafo todo, garanta que o texto faça sentido vindo de qualquer uma das salas vizinhas conectadas.
