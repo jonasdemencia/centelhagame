@@ -465,18 +465,8 @@ Retorne APENAS este JSON:
     // CHAMADA B — GERAÇÃO DAS SALAS COM O PLANO COMO ÂNCORA DURA
     // ══════════════════════════════════════════════════════════
    const promptSalas = (plano, conexoes) => {
-  // Serializa as saídas do plano como restrição dura para o modelo
-  const restricoesConexoes = Object.entries(plano).map(([id, sala]) => {
-    const saidasStr = (sala.saidas || []).map(s => `${s.destino} ("${s.acao}")`).join(' | ');
-    return `  Sala ${id} → [${saidasStr}]`;
-  }).join('\n');
-
   return `Você é o Arquiteto de Mundo de um RPG de horror visceral. 
 Seu objetivo é gerar um JSON puramente técnico que represente uma zona do mapa chamada: "${infoZona.nome}".
-
-[RESTRIÇÃO ABSOLUTA DE DESTINOS — NÃO NEGOCIÁVEL]
-Os destinos de cada sala foram definidos na fase de planejamento. Você DEVE usar EXATAMENTE estes destinos nas opcoes. É PROIBIDO inventar destinos que não estejam na lista abaixo. Para cada sala, escreva exatamente uma opção por destino listado, usando a ação como base para o texto do botão:
-${restricoesConexoes}
 
 [REGRAS DE OURO DA ARQUITETURA NARRATIVA]
 1. ANCORAGEM RETROATIVA (Obrigatório): O campo "texto_logico" de cada sala NÃO deve começar descrevendo a sala, mas sim validando a transição. Exemplo: Se o jogador veio de uma "Escada", o texto começa com "Os degraus terminam em...". Como você gera o grafo todo, garanta que o texto faça sentido vindo de qualquer uma das salas vizinhas conectadas.
@@ -538,6 +528,34 @@ Responda APENAS o JSON, sem introduções.`;
         if (!zonaData.salas?.[String(salaInicio)]?.texto_logico) {
             throw new Error(`Zona ${numeroZona} sem salas válidas.`);
         }
+
+        // ── CORREÇÃO TOPOLÓGICA PÓS-GERAÇÃO ──────────────────────────────
+        // A Chamada B escreve narrativa com liberdade, mas frequentemente
+        // inventa destinos incoerentes. O plano da Chamada A é a fonte de
+        // verdade para a topologia. Aqui remapeamos os destinos das opcoes
+        // pelo índice (opcao[0] → plano.saidas[0].destino, etc.),
+        // preservando integralmente o texto criativo dos botões.
+        if (planoData?.plano) {
+            let correcoes = 0;
+            Object.entries(zonaData.salas).forEach(([id, sala]) => {
+                const planoSala = planoData.plano[id];
+                if (!planoSala?.saidas || !Array.isArray(sala.opcoes)) return;
+                sala.opcoes.forEach((opcao, idx) => {
+                    const destinoCorreto = planoSala.saidas[idx]?.destino;
+                    if (destinoCorreto !== undefined && opcao.destino !== destinoCorreto) {
+                        console.warn(`[Topologia] Sala ${id}, opcao ${idx}: destino ${opcao.destino} → ${destinoCorreto} (corrigido pelo plano)`);
+                        opcao.destino = destinoCorreto;
+                        correcoes++;
+                    }
+                });
+                // Se o modelo gerou mais opcoes do que saidas no plano, trunca o excesso
+                if (sala.opcoes.length > planoSala.saidas.length) {
+                    sala.opcoes.splice(planoSala.saidas.length);
+                }
+            });
+            if (correcoes > 0) console.log(`[Topologia] ${correcoes} destinos corrigidos pelo plano da Chamada A.`);
+        }
+        // ─────────────────────────────────────────────────────────────────
 
         if (!mapaMundo) mapaMundo = {};
         Object.assign(mapaMundo, zonaData.salas);
