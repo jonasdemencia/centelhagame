@@ -154,7 +154,8 @@ let primeiroTokenRecebido = false;
 
         let resumoAtual = "";
 
-        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, tentativas = 3) {
+        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, tentativas = 3, maxTokens = 4096) {
+
             for (let i = 0; i < tentativas; i++) {
                 const response = await fetch(WORKER_URL, {
                     method: "POST",
@@ -163,6 +164,7 @@ let primeiroTokenRecebido = false;
                         messages: messages,
                         temperature: temperatura,
                         response_format: formato,
+                        max_tokens: maxTokens,
                     }),
                 });
 
@@ -585,11 +587,14 @@ PROCESSO OBRIGATÓRIO POR SALA — siga esta ordem sem exceção:
 4. Escreva "opcoes" PRIMEIRO. Decida as ações físicas de locomoção.
 5. Escreva "texto_logico" DEPOIS. A descrição deve justificar fisicamente cada opção. Se a opção diz "Forçar a porta à esquerda", o texto_logico DEVE mencionar uma porta à esquerda. SEM EXCEÇÃO.
 
+OBRIGAÇÃO ABSOLUTA: o JSON deve conter TODAS as ${SALAS_POR_ZONA} salas, dos IDs ${salaInicio} até ${salaFim} sem exceção. JSON com menos de ${SALAS_POR_ZONA} entradas em "salas" é uma falha crítica.
+
 Retorne APENAS este JSON:
 {
   "salas": {
     "${salaInicio}": { "opcoes": [{ "texto": "ação física com objeto nomeado", "destino": N }], "ancora_de_entrada": "Descreva exatamente o elemento físico por onde o jogador acabou de entrar nesta sala (ex: a janela aberta, a escada descida, a porta de carvalho)", "texto_logico": "O texto da sala, OBRIGATORIAMENTE começando pela descrição visual da 'ancora_de_entrada'. ..." },
     "${salaInicio+1}": { "opcoes": [{ "texto": "...", "destino": N }], "ancora_de_entrada": "...", "texto_logico": "..." },
+    "(repita para TODOS os IDs de ${salaInicio+2} até ${salaFim-1})": {},
     "${salaFim}": { "opcoes": [{ "texto": "...", "destino": N }], "ancora_de_entrada": "...", "texto_logico": "..." }
   },
   "ganchos_para_proxima_zona": {
@@ -620,7 +625,9 @@ Retorne APENAS este JSON:
         const dataSalas = await chamarGroq(
             [{ role: "user", content: promptSalas(planoData.plano, planoData.conexoes_narrativas || []) }],
             0.85,
-            { type: "json_object" }
+            { type: "json_object" },
+            3,
+            8000
         );
         const zonaData = JSON.parse(dataSalas.choices[0].message.content);
         document.getElementById(idMsg)?.remove();
