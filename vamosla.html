@@ -464,140 +464,40 @@ Retorne APENAS este JSON:
     // ══════════════════════════════════════════════════════════
     // CHAMADA B — GERAÇÃO DAS SALAS COM O PLANO COMO ÂNCORA DURA
     // ══════════════════════════════════════════════════════════
-    const promptSalas = (plano, conexoes) => {
-        // Constrói mapa de entradas invertendo as saídas do plano
-        const entradasPorSala = {};
-        Object.entries(plano).forEach(([idOrigem, salaOrigem]) => {
-            (salaOrigem.saidas || []).forEach(saida => {
-                const idDest = String(saida.destino ?? saida);
-                if (!entradasPorSala[idDest]) entradasPorSala[idDest] = [];
-                entradasPorSala[idDest].push({ de: idOrigem, acao: saida.acao || '?' });
-            });
-        });
+   const promptSalas = (plano, conexoes) => {
+  return `Você é o Arquiteto de Mundo de um RPG de horror visceral. 
+Seu objetivo é gerar um JSON puramente técnico que represente uma zona do mapa chamada: "${infoZona.nome}".
 
-        const planoStr = Object.entries(plano).map(([id, sala]) => {
-            const saidasStr = (sala.saidas || []).map(s =>
-                `→sala ${s.destino ?? s} via "${s.acao ?? '?'}"`
-            ).join(', ');
-            const entradas = entradasPorSala[id] || [];
-            const entradasStr = entradas.length > 0
-                ? `ENTRA-SE AQUI: ${entradas.map(e => `da sala ${e.de} via "${e.acao}"`).join(' | ')}`
-                : `SALA DE ENTRADA DO JOGO`;
-            return `Sala ${id} [${sala.tipo}]: ${sala.local_fisico} | objeto: ${sala.objeto_central} | ${entradasStr} | saídas: ${saidasStr}`;
-        }).join('\n');
+[REGRAS DE OURO DA ARQUITETURA NARRATIVA]
+1. ANCORAGEM RETROATIVA (Obrigatório): O campo "texto_logico" de cada sala NÃO deve começar descrevendo a sala, mas sim validando a transição. Exemplo: Se o jogador veio de uma "Escada", o texto começa com "Os degraus terminam em...". Como você gera o grafo todo, garanta que o texto faça sentido vindo de qualquer uma das salas vizinhas conectadas.
+2. PREPARAÇÃO PROSPECTIVA (Obrigatório): Todo item presente no array "opcoes" DEVE ter uma "âncora visual" explícita no "texto_logico". Se uma opção é "Investigar o altar", o texto_logico PRECISA descrever o altar. Não pode haver botões "fantasmagóricos" que surgem do nada.
+3. ESTILO: Seco, direto, focado em materialidade e perigo. Evite clichês de "você se encontra em". Vá direto ao que é visto e sentido.
 
-        const conexoesStr = conexoes.map(c =>
-            `Salas ${c.sala_a} e ${c.sala_b} compartilham: "${c.elemento_fisico_compartilhado}"`
-        ).join('\n');
-
-        return `[ZONA ${numeroZona}] [SALAS ${salaInicio}–${salaFim}]
-
-Você é Steve Jackson executando um plano já definido. Não invente novos lugares ou objetos — execute o esqueleto abaixo.
-
-ESQUELETO (lei absoluta — não desvie):
-${planoStr}
-
-LEI DE COERÊNCIA FÍSICA DE ENTRADA — MAIS IMPORTANTE QUE QUALQUER OUTRA REGRA:
-Para cada sala, o campo "ENTRA-SE AQUI" mostra qual ação o jogador executou para chegar lá.
-O texto_logico DEVE descrever um espaço fisicamente acessível por essa ação.
-- "da sala X via 'Abrir a janela à esquerda'" → a sala DEVE ser exterior, varanda, ou espaço visível por janela. NUNCA beco fechado.
-- "da sala X via 'Descer as escadas'" → a sala DEVE estar em nível inferior. NUNCA no mesmo andar.
-- "da sala X via 'Rastejar pelo duto'" → a sala DEVE ser estreita ou acessível por abertura pequena.
-- "da sala X via 'Forçar a porta'" → a sala DEVE estar atrás de uma porta.
-Se o texto_logico que você escreveu não é fisicamente acessível pela ação de entrada, VOCÊ QUEBROU O JOGO.
-
-CONEXÕES NARRATIVAS OBRIGATÓRIAS:
-${conexoesStr}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-EXEMPLO DE SALA RUIM — nunca produza isso:
-{
-  "texto_logico": "Uma sala com uma estante de livros. Sobre a estante, há um livro.",
-  "opcoes": [
-    { "texto": "Examinar o livro", "destino": 5 },
-    { "texto": "Olhar pela janela", "destino": 3 }
-  ]
-}
-Falhas: "Uma sala com" é início proibido. "Examinar" e "Olhar" são verbos banidos. As opções não têm consequência física implícita. Não há tensão.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-EXEMPLO DE SALA BOA — este é o padrão mínimo:
-{
-  "texto_logico": "A lavanderia cheira a amoníaco velho e metal quente. Três centrifugadoras industriais estão enfileiradas — duas paradas, a terceira girando em silêncio apesar de não estar ligada na tomada. O tambor da máquina central projeta uma sombra que não bate com a posição da única lâmpada fluorescente no teto. No rodapé atrás da máquina da esquerda, o mesmo símbolo em ferradura que você viu gravado na grade da entrada.",
-  "opcoes": [
-    { "texto": "Abrir o tambor da centrifugadora que gira sem estar ligada", "destino": 8 },
-    { "texto": "Arrancar o rodapé atrás da máquina da esquerda onde está o símbolo", "destino": 12 },
-    { "texto": "Desligar o disjuntor no quadro de força na parede oposta", "destino": 6 }
-  ]
-}
-Acertos: começa com sensação física. Três verbos diferentes (abrir/arrancar/desligar). Cada opção implica consequência diferente. A centrifugadora girando sem energia é perturbadora. O símbolo cria continuidade com outra sala.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-EXEMPLO DE BECO BOM — becos ensinam algo exclusivo:
-{
-  "texto_logico": "O corredor termina numa parede de alvenaria. O reboco está trincado em padrão concêntrico — o impacto veio de dentro da parede, não de fora. No chão, cinco marcas de arranhão paralelas se estendem por três metros em direção à parede. A última marca para abruptamente a 40 centímetros dela. Não há como continuar daqui.",
-  "opcoes": [
-    { "texto": "Medir com a palma a distância entre as marcas de arranhão", "destino": 4 },
-    { "texto": "Pressionar o centro do padrão concêntrico na parede", "destino": 4 }
-  ]
-}
-Acerto: as duas saídas voltam à mesma sala (beco real) mas ensinam coisas diferentes. As marcas de arranhão e o impacto de dentro recontextualizam o lugar inteiro.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-A LEI DE OURO: PROIBIDO TELETRANSPORTE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-O jogador é um humano físico. Ele não se teletransporta. 
-Se uma opção tem um "destino" que é um ID DIFERENTE da sala atual, a ação OBRIGATORIAMENTE tem que ser de LOCOMOÇÃO FÍSICA (atravessar uma porta, descer uma escada, pular um buraco).
-
-✗ ABSURDO E PROIBIDO: 
-{ "texto": "Ligar a televisão", "destino": 5 } (Ligar uma TV não te move fisicamente para a Sala 5).
-{ "texto": "Pegar a cama", "destino": 16 } (Você não pode colocar uma cama no bolso para ir para outra sala).
-{ "texto": "Sentar no sofá", "destino": 12 } (Sentar não muda de cômodo).
-
-✓ CORRETO (Transição de Sala): 
-{ "texto": "Abrir a porta de metal enferrujada", "destino": 5 }
-{ "texto": "Rastejar pelo duto de ar manchado de sangue", "destino": 16 }
-
-✓ CORRETO (Passagem Secreta):
-{ "texto": "Puxar o livro azul, revelando uma escadaria oculta na parede", "destino": 8 }
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-LISTA NEGRA ABSOLUTA DE VERBOS NAS OPÇÕES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✗ PROIBIDO em opcoes (texto das opções):
-✗ Verbos: Examinar / Olhar / Verificar / Checar / Inspecionar / Investigar / Observar / Pegar / Tocar / Sentar / Ligar (a menos que a interação abra uma passagem física explícita e seja descrita como tal).
-✗ "Retornar" / "Voltar" / "Continuar explorando" / qualquer coisa genérica sem objeto físico nomeado.
-✗ Duas opções na mesma sala com o mesmo verbo inicial.
-✗ NUNCA crie uma opção como "Pegar [Objeto Gigante]" (ex: "Pegar a mesa", "Pegar a cama", "Pegar o sofá").
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-OBRIGAÇÕES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ Cada texto_logico deve ter: cheiro OU temperatura OU textura + objeto central do plano + pelo menos 1 elemento perturbador concreto.
-✓ As 5 conexões narrativas DEVEM aparecer mencionadas explicitamente nas duas salas de cada par.
-✓ Opções de locomoção usam verbos físicos que descrevem o movimento: Forçar / Arrancar / Empurrar / Puxar / Abrir / Atravessar / Descer / Subir / Rastejar / Escalar / Mergulhar / Pular.
-✓ Cada beco deve ensinar algo que NENHUM outro caminho ensina.
-
-PROCESSO OBRIGATÓRIO POR SALA — siga esta ordem sem exceção:
-1. Olhe as saídas exigidas no ESQUELETO (campo "saidas").
-2. Para cada saída que leva a um ID DIFERENTE, crie UMA OPÇÃO DE LOCOMOÇÃO FÍSICA que descreva claramente a passagem (ex: "Abrir a porta dupla", "Descer a escada de concreto").
-3. Se o ESQUELETO exige um objeto central (ex: "Televisão"), use-o no "texto_logico" para atmosfera, mas NÃO o transforme em botão de saída a menos que interagir com ele abra uma passagem física explícita.
-4. Escreva "opcoes" PRIMEIRO. Decida as ações físicas de locomoção.
-5. Escreva "texto_logico" DEPOIS. A descrição deve justificar fisicamente cada opção. Se a opção diz "Forçar a porta à esquerda", o texto_logico DEVE mencionar uma porta à esquerda. SEM EXCEÇÃO.
-
-Retorne APENAS este JSON:
+[ESTRUTURA DO JSON]
 {
   "salas": {
-    "${salaInicio}": { "opcoes": [{ "texto": "ação física com objeto nomeado", "destino": N }], "texto_logico": "descrição que contém obrigatoriamente cada objeto físico de cada opção acima" },
-    "${salaInicio+1}": { "opcoes": [{ "texto": "...", "destino": N }], "texto_logico": "..." },
-    "${salaFim}": { "opcoes": [{ "texto": "...", "destino": N }], "texto_logico": "..." }
+    "1": {
+      "texto_logico": "Texto que conecta o movimento anterior (ancoragem) e semeia os objetos interativos (preparação).",
+      "opcoes": [
+        {"texto": "Ação física objetiva", "destino": 2},
+        {"texto": "Outra ação", "destino": 3}
+      ]
+    },
+    "2": { ... },
+    "3": { ... },
+    "4": { ... }
   },
   "ganchos_para_proxima_zona": {
-    "salas_fronteira": [N, N],
-    "objetos_nao_usados": ["nome físico exato"],
-    "informacao_pendente": "frase concreta do que o jogador carrega sem entender"
+    "salas_fronteira": [4],
+    "objetos_nao_usados": [],
+    "informacao_pendente": ""
   }
-}`;
+}
+
+Gere exatamente ${SALAS_POR_ZONA} salas interconectadas. Garanta que o grafo seja navegável (sem becos sem saída isolados). 
+Os IDs das salas devem seguir a numeração sequencial a partir de ${salaInicio} até ${salaFim}.
+Responda APENAS o JSON, sem introduções.`;
+};
     };
 
     const idMsg = adicionarMensagem(`⚙️ Projetando Zona ${numeroZona} — "${infoZona.nome}"...`, "system", true);
@@ -1446,8 +1346,18 @@ REGRA CRÍTICA: cada objeto físico mencionado nesses botões DEVE aparecer na s
                     let conversaRecenteParaEnvio = [];
 
                     if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
-                        // MODO TRANSIÇÃO: Isolamento total. Cortamos o histórico para ele não repetir a sala antiga.
-                        conteudoUser = `[MUDANÇA DE CENA]\nAção que trouxe o jogador até aqui: "${pergunta.replace('[AÇÃO DE SISTEMA]: ', '')}"\n\n[ORDEM DE EXECUÇÃO]:\nTranscreva a chegada ao novo ambiente usando APENAS os fatos abaixo. MÁXIMO ABSOLUTO DE 4 FRASES CURTAS E SECAS. Zero enrolação.\n\n[FATOS DA NOVA SALA]\n${descricaoSala}${alertaMortos}${elementosInterativos}\n\nTermine o texto com: [DANO: 0]`;
+                       conteudoUser = `
+[DADOS ESTRUTURAIS DO ARQUITETO]
+Local: ${descricaoSala}
+Interações Disponíveis: ${elementosInterativos}
+
+[MISSÃO DO NARRADOR]
+Sua tarefa é expandir o "texto_logico" acima em uma narrativa em segunda pessoa.
+1. Use a ANCORAGEM contida no texto para narrar a chegada física.
+2. Use a PREPARAÇÃO contida no texto para dar ênfase visual aos objetos das opções.
+3. Mantenha a fidelidade absoluta: se o Arquiteto não mencionou um objeto, você não o inventa.
+
+Termine com: [DANO: 0]`;
                         
                         conversaRecenteParaEnvio = []; // <-- A MÁGICA AQUI: Histórico zerado na transição.
                     } else {
