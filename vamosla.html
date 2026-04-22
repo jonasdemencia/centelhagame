@@ -465,38 +465,40 @@ Retorne APENAS este JSON:
     // CHAMADA B — GERAÇÃO DAS SALAS COM O PLANO COMO ÂNCORA DURA
     // ══════════════════════════════════════════════════════════
    const promptSalas = (plano, conexoes) => {
-  return `Você é o Arquiteto de Mundo de um RPG de horror visceral. 
-Seu objetivo é gerar um JSON puramente técnico que represente uma zona do mapa chamada: "${infoZona.nome}".
+    // Transforma o plano num formato fácil para o modelo ler as saídas que ele DEVE incluir no texto
+    const resumoPlano = Object.entries(plano).map(([id, sala]) => {
+        const acoes = sala.saidas.map(s => s.acao).join(" | ");
+        return `SALA ${id} (${sala.local_fisico}): O texto DEVE preparar o terreno para estas ações exatas -> [${acoes}]`;
+    }).join("\n");
+
+    return `Você é o Arquiteto de Mundo de um RPG de horror visceral. 
+Seu objetivo é gerar a prosa (texto_logico) para uma zona do mapa chamada: "${infoZona.nome}".
+
+[O PLANO ESTRUTURAL]
+O esqueleto das salas já está definido. Sua única função é escrever o "texto_logico" de cada uma.
+${resumoPlano}
 
 [REGRAS DE OURO DA ARQUITETURA NARRATIVA]
-1. ANCORAGEM RETROATIVA (Obrigatório): O campo "texto_logico" de cada sala NÃO deve começar descrevendo a sala, mas sim validando a transição. Exemplo: Se o jogador veio de uma "Escada", o texto começa com "Os degraus terminam em...". Como você gera o grafo todo, garanta que o texto faça sentido vindo de qualquer uma das salas vizinhas conectadas.
-2. PREPARAÇÃO PROSPECTIVA (Obrigatório): Todo item presente no array "opcoes" DEVE ter uma "âncora visual" explícita no "texto_logico". Se uma opção é "Investigar o altar", o texto_logico PRECISA descrever o altar. Não pode haver botões "fantasmagóricos" que surgem do nada.
-3. ESTILO: Seco, direto, focado em materialidade e perigo. Evite clichês de "você se encontra em". Vá direto ao que é visto e sentido.
+1. ANCORAGEM RETROATIVA: O texto não deve começar descrevendo a sala de forma isolada, mas validando a entrada.
+2. PREPARAÇÃO PROSPECTIVA OBRIGATÓRIA: Para cada sala listada acima, há ações específicas. O seu "texto_logico" DEVE descrever fisicamente os objetos ou locais que essas ações exigem. Não crie botões fantasmagóricos.
+3. ESTILO: Seco, direto, material e perigoso. Zero floreios heroicos.
 
 [ESTRUTURA DO JSON]
+Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o texto bruto.
 {
   "salas": {
     "1": {
-      "texto_logico": "Texto que conecta o movimento anterior (ancoragem) e semeia os objetos interativos (preparação).",
-      "opcoes": [
-        {"texto": "Ação física objetiva", "destino": 2},
-        {"texto": "Outra ação", "destino": 3}
-      ]
+      "texto_logico": "Texto denso e descritivo que ancora a chegada e descreve os caminhos disponíveis..."
     },
     "2": { ... },
-    "3": { ... },
-    "4": { ... }
+    "3": { ... }
   },
   "ganchos_para_proxima_zona": {
-    "salas_fronteira": [4],
+    "salas_fronteira": [],
     "objetos_nao_usados": [],
     "informacao_pendente": ""
   }
-}
-
-Gere exatamente ${SALAS_POR_ZONA} salas interconectadas. Garanta que o grafo seja navegável (sem becos sem saída isolados). 
-Os IDs das salas devem seguir a numeração sequencial a partir de ${salaInicio} até ${salaFim}.
-Responda APENAS o JSON, sem introduções.`;
+}`;
 };
     
 
@@ -529,32 +531,30 @@ Responda APENAS o JSON, sem introduções.`;
             throw new Error(`Zona ${numeroZona} sem salas válidas.`);
         }
 
-        // ── CORREÇÃO TOPOLÓGICA PÓS-GERAÇÃO ──────────────────────────────
-        // A Chamada B escreve narrativa com liberdade, mas frequentemente
-        // inventa destinos incoerentes. O plano da Chamada A é a fonte de
-        // verdade para a topologia. Aqui remapeamos os destinos das opcoes
-        // pelo índice (opcao[0] → plano.saidas[0].destino, etc.),
-        // preservando integralmente o texto criativo dos botões.
-        if (planoData?.plano) {
-            let correcoes = 0;
-            Object.entries(zonaData.salas).forEach(([id, sala]) => {
-                const planoSala = planoData.plano[id];
-                if (!planoSala?.saidas || !Array.isArray(sala.opcoes)) return;
-                sala.opcoes.forEach((opcao, idx) => {
-                    const destinoCorreto = planoSala.saidas[idx]?.destino;
-                    if (destinoCorreto !== undefined && opcao.destino !== destinoCorreto) {
-                        console.warn(`[Topologia] Sala ${id}, opcao ${idx}: destino ${opcao.destino} → ${destinoCorreto} (corrigido pelo plano)`);
-                        opcao.destino = destinoCorreto;
-                        correcoes++;
-                    }
-                });
-                // Se o modelo gerou mais opcoes do que saidas no plano, trunca o excesso
-                if (sala.opcoes.length > planoSala.saidas.length) {
-                    sala.opcoes.splice(planoSala.saidas.length);
-                }
-            });
-            if (correcoes > 0) console.log(`[Topologia] ${correcoes} destinos corrigidos pelo plano da Chamada A.`);
-        }
+                // ── FUSÃO DETERMINÍSTICA (A + B) ──────────────────────────────
+        // O plano (Chamada A) é a fonte absoluta de verdade para topologia e ações.
+        // O zonaData (Chamada B) entra APENAS com a narrativa visual (texto_logico).
+        // Aqui mesclamos os dois: pegamos as opcoes do plano e o texto da chamada B.
+        const mapaFinalMesclado = {};
+        
+        Object.entries(planoData.plano).forEach(([idSala, dadosEstruturais]) => {
+            // Pega a prosa gerada em B (ou fallback caso o modelo tenha pulado a sala)
+            const prosa = zonaData.salas[idSala]?.texto_logico || "Uma sala escura onde as paredes parecem respirar.";
+            
+            // Converte as 'saidas' do Plano (A) diretamente no formato de 'opcoes' que o frontend espera
+            const opcoesGeradas = dadosEstruturais.saidas.map(saida => ({
+                texto: saida.acao,
+                destino: saida.destino
+            }));
+
+            mapaFinalMesclado[idSala] = {
+                texto_logico: prosa,
+                opcoes: opcoesGeradas
+            };
+        });
+        
+        // Substitui as salas geradas pela versão mesclada (mantendo ganchos, se existirem)
+        zonaData.salas = mapaFinalMesclado;
         // ─────────────────────────────────────────────────────────────────
 
         if (!mapaMundo) mapaMundo = {};
