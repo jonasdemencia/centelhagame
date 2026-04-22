@@ -90,7 +90,7 @@ let secaoAtualId = "1";
 let dnaGlobal = null;
 let zonaAtual = 1;
 let _expansaoEmAndamento = false;
-const SALAS_POR_ZONA = 25;
+const SALAS_POR_ZONA = 10;
 
         
 
@@ -439,26 +439,18 @@ TAREFA: Defina o esqueleto de ${SALAS_POR_ZONA} salas (${salaInicio} a ${salaFim
 REGRAS DO ESQUELETO:
 1. "local_fisico": nome específico e concreto. PROIBIDO: "uma sala", "um quarto", "um corredor". OBRIGATÓRIO: "lavanderia com três centrifugadoras enferrujadas", "escadaria de serviço com corrimão dobrado"
 2. "objeto_central": um único objeto físico concreto que justifica a sala existir. Deve ser ÚNICO no mapa.
-3. "proposito": o que o jogador ganha ao passar por aqui — informação, objeto, atalho, punição que ensina
-4. "saidas": lista de objetos { "destino": N, "acao": "verbo físico que descreve o movimento exato" }. Becos têm no máximo 2 saídas. REGRA DE OURO: a "acao" deve ser fisicamente coerente com o "local_fisico" do destino. Se o destino é um terraço, a ação é "Abrir a porta-janela para o terraço". Se o destino é um porão, a ação é "Descer a escada para o porão". Uma janela NUNCA leva a um beco fechado. Uma escada NUNCA desce para uma sala no mesmo andar. A ação define a física da transição — o destino deve ser fisicamente alcançável por ela.
-5. "tipo": entrada | hub | corredor | beco | fronteira
-6. Topologia obrigatória: 3 hubs (3+ conexões), 4 becos, 3 loops com propósito, 2 salas fronteira com destino ${salaFim+1}–${salaFim+3}
+3. "saidas": lista de objetos { "destino": N, "acao": "verbo físico que descreve o movimento exato" }. Becos têm no máximo 2 saídas. REGRA DE OURO: a "acao" deve ser fisicamente coerente com o "local_fisico" do destino. Se o destino é um terraço, a ação é "Abrir a porta-janela para o terraço". Se o destino é um porão, a ação é "Descer a escada para o porão". Uma janela NUNCA leva a um beco fechado. Uma escada NUNCA desce para uma sala no mesmo andar. A ação define a física da transição — o destino deve ser fisicamente alcançável por ela.
+4. "tipo": entrada | hub | corredor | beco | fronteira
+5. Topologia obrigatória para 10 salas: 1 hub (3+ conexões), 2 becos, 1 loop com propósito, 1 sala fronteira com destino ${salaFim+1}
 
 Retorne APENAS este JSON:
 {
   "plano": {
-    "${salaInicio}": { "tipo": "entrada", "local_fisico": "...", "objeto_central": "...", "proposito": "...", "saidas": [{"destino": N, "acao": "verbo físico exato"}, {"destino": N, "acao": "..."}], "para_proxima_zona": false },
-    "${salaInicio+1}": { "tipo": "corredor", "local_fisico": "...", "objeto_central": "...", "proposito": "...", "saidas": [{"destino": N, "acao": "..."}, {"destino": N, "acao": "..."}], "para_proxima_zona": false },
+    "${salaInicio}": { "tipo": "entrada", "local_fisico": "...", "objeto_central": "...", "saidas": [{"destino": N, "acao": "verbo físico exato"}, {"destino": N, "acao": "..."}], "para_proxima_zona": false },
+    "${salaInicio+1}": { "tipo": "corredor", "local_fisico": "...", "objeto_central": "...", "saidas": [{"destino": N, "acao": "..."}, {"destino": N, "acao": "..."}], "para_proxima_zona": false },
     "... todas as salas até ${salaFim} ...": {},
-    "${salaFim}": { "tipo": "fronteira", "local_fisico": "...", "objeto_central": "...", "proposito": "...", "saidas": [{"destino": N, "acao": "..."}, {"destino": ${salaFim+1}, "acao": "..."}], "para_proxima_zona": true }
+    "${salaFim}": { "tipo": "fronteira", "local_fisico": "...", "objeto_central": "...", "saidas": [{"destino": N, "acao": "..."}, {"destino": ${salaFim+1}, "acao": "..."}], "para_proxima_zona": true }
   },
-  "conexoes_narrativas": [
-    { "sala_a": N, "sala_b": N, "elemento_fisico_compartilhado": "o traço físico exato que aparece nas duas salas" },
-    { "sala_a": N, "sala_b": N, "elemento_fisico_compartilhado": "..." },
-    { "sala_a": N, "sala_b": N, "elemento_fisico_compartilhado": "..." },
-    { "sala_a": N, "sala_b": N, "elemento_fisico_compartilhado": "..." },
-    { "sala_a": N, "sala_b": N, "elemento_fisico_compartilhado": "..." }
-  ]
 }`;
 
     // ══════════════════════════════════════════════════════════
