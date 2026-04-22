@@ -1149,6 +1149,7 @@ function parsearEstadoEntidades(textoNarrador) {
 }
 
 // --- RENDERIZADOR DE NAVEGAÇÃO DO MAPA ---
+// --- RENDERIZADOR DE NAVEGAÇÃO DO MAPA ---
 function atualizarBotoesNavegacao() {
     const container = document.getElementById('map-controls');
     container.innerHTML = ''; // Limpa os botões antigos
@@ -1165,17 +1166,25 @@ function atualizarBotoesNavegacao() {
         btn.innerText = `🧭 ${opcao.texto}`;
         
         btn.onclick = () => {
-            // 1. Oculta os botões para evitar duplo clique
             container.innerHTML = '';
             
-            // 2. Atualiza a variável de estado para a nova sala
             secaoAtualId = opcao.destino.toString();
-            
-            // 3. Salva no Firebase instantaneamente
             salvarEstadoJogador();
-            
-            // 4. Envia o comando para o Qwen narrar a transição
-            window.enviar(`[AÇÃO DE SISTEMA]: O jogador realizou a ação: "${opcao.texto}". Descreva o resultado sendo ABSOLUTAMENTE FIEL aos fatos da nova sala.`);
+            verificarEExpandirMundo();
+
+            // Exibe texto_logico da Groq diretamente, sem passar pelo 7B
+            const novaSala = mapaMundo[secaoAtualId];
+            if (novaSala?.texto_logico) {
+                adicionarMensagem(`🧭 ${opcao.texto}`, 'user');
+                adicionarMensagem(novaSala.texto_logico, 'ai');
+                // Mantém o histórico coerente para quando o jogador agir livremente
+                historicoConversa.push({ role: 'user', content: opcao.texto });
+                historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
+                // Garante que o histórico não cresça indefinidamente
+                if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
+            }
+
+            atualizarBotoesNavegacao();
         };
         
         container.appendChild(btn);
@@ -1193,12 +1202,17 @@ function atualizarBotoesNavegacao() {
             let pergunta;
             
             if (isInitial) {
-    // Se já temos um mapa carregado (da Groq) e a sala 1 existe
-    if (mapaMundo && mapaMundo["1"] && mapaMundo["1"].texto_logico) {
-        // Em vez de usar o PROMPT_INTRO, constrói uma requisição para o Qwen descrever a sala 1
-        pergunta = `[AÇÃO DE SISTEMA]: Início do jogo. Descreva o local usando a base estrutural: "${mapaMundo["1"].texto_logico}". Seja clínico e direto. Aplique as regras de brutalidade e realismo. Sempre narre as opções de saída.`;
+    // Se já temos um mapa carregado e a sala 1 existe, exibe diretamente sem o 7B
+    if (mapaMundo && mapaMundo["1"]?.texto_logico) {
+        adicionarMensagem(mapaMundo["1"].texto_logico, 'ai');
+        historicoConversa.push({ role: 'assistant', content: mapaMundo["1"].texto_logico });
+        userInput.disabled = false;
+        sendBtn.disabled = false;
+        userInput.focus();
+        atualizarBotoesNavegacao();
+        return; // não chama o 7B
     } else if (!resumoAtual) {
-        // Fallback: se não há mapa, usa o prompt antigo
+        // Fallback: se não há mapa, usa o prompt antigo (irá chamar o 7B)
         pergunta = PROMPT_INTRO;
     } else {
         pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
