@@ -421,30 +421,45 @@ FIOS DA ZONA ANTERIOR (devem aparecer fisicamente em salas desta zona):
 - Salas de entrada: ${ganchosPrevios.salas_fronteira?.join(', ') || 'nenhuma'}
 ` : '';
 
+  
     // ══════════════════════════════════════════════════════════
-    // CHAMADA A — PLANO ESTRUTURAL
-    // O modelo define o esqueleto completo antes de escrever prosa.
+    // CHAMADA A — PLANO ESTRUTURAL (FORÇANDO GRAFO MATEMÁTICO)
     // ══════════════════════════════════════════════════════════
-    const promptPlano = `[SEMENTE: ${semente}] [ZONA ${numeroZona}: "${infoZona.nome}"] [SALAS ${salaInicio}–${salaFim}]
+    const promptPlano = `[SEMENTE: ${semente}] [ZONA ${numeroZona}] [SALAS ${salaInicio} a ${salaFim}]
 
-Você é um Arquiteto de Níveis (Level Designer) veterano, criando a estrutura de um Livro-Jogo (estilo Steve Jackson/Ian Livingstone).
-Seu trabalho é estritamente matemático e espacial. Você vai projetar um grafo perfeito de ${SALAS_POR_ZONA} salas (IDs ${salaInicio} a ${salaFim}).
+Você é um gerador de matrizes de adjacência para um motor de jogo. 
+Sua tarefa é mapear ${SALAS_POR_ZONA} nós interconectados.
 
-Tema do mundo: "${dnaGlobal?.misterio_central || 'um lugar que distorce o tempo'}"
-O que esta zona esconde: ${infoZona.segredo_local}
+TEMA DO LOCAL: "${infoZona.nome}"
 
-LEIS TOPOLÓGICAS INQUEBRÁVEIS (FALHAR AQUI DESTRÓI O JOGO):
-1. A ESPINHA DORSAL (Obrigatório): Você DEVE garantir um caminho conectando a sala de entrada (${salaInicio}) até a fronteira (${salaFim}). A sala ${salaFim} NUNCA pode ficar isolada. Alguma sala anterior OBRIGATORIAMENTE deve ter uma saída apontando para o destino ${salaFim}.
-2. SIMETRIA BIDIRECIONAL (A Lei de Ouro): Se a Sala X tem uma "acao" levando para a Sala Y (Ex: "Descer a escada para o porão" -> Destino Y), a Sala Y DEVE OBRIGATORIAMENTE ter uma saída de volta para a Sala X (Ex: "Subir a escada de volta" -> Destino X). O mapa deve ser fisicamente navegável em ambas as direções.
-3. COERÊNCIA MATERIAL: A "acao" de saída deve ser um verbo físico interagindo com o "local_fisico". Uma janela não leva para um corredor fechado.
-4. FRONTEIRA: APENAS a sala ${salaFim} possui uma saída com destino para a próxima zona (sala ${salaFim+1}). Nenhuma outra sala avança de zona.
+REGRAS MATEMÁTICAS INQUEBRÁVEIS DO GRAFO:
+1. NÓS VÁLIDOS: Os IDs das salas DEVERÃO ser estritamente os números de ${salaInicio} até ${salaFim}.
+2. BIDIRECIONALIDADE ABSOLUTA: Se o nó [A] tem uma saída para o destino [B], então o nó [B] DEVE ter uma saída para o destino [A]. Verifique isso cruzando os dados antes de gerar o JSON.
+3. SEM ILHAS: Todos os nós devem ser acessíveis a partir do nó inicial (${salaInicio}).
+4. FRONTEIRA ÚNICA: APENAS o último nó (${salaFim}) terá permissão para ter uma saída com destino ${salaFim + 1}.
 
-Retorne APENAS este JSON válido, garantindo mentalmente que todo caminho que vai, também volta:
+REGRAS DE SEMÂNTICA FÍSICA (VERBOS DE TRANSIÇÃO):
+1. A ação de transição DEVE ser uma locomoção física (Ex: "Atravessar o arco", "Subir a escada de ferro", "Rastejar pelo túnel").
+2. É ESTRITAMENTE PROIBIDO usar "Abrir a porta" ou "Fechar a porta" como ação de transição. Portas não movem pessoas. Use "Passar pela porta" ou "Entrar na sala".
+3. A ação do nó [B] voltando para [A] deve refletir a física invertida (Ex: Se [A]->[B] foi "Subir", [B]->[A] deve ser "Descer").
+
+ESTRUTURA DE DADOS ESPERADA (GERAR APENAS ISSO):
 {
   "plano": {
-    "${salaInicio}": { "tipo": "entrada", "local_fisico": "nome muito especifico e fisico", "objeto_central": "...", "saidas": [{"destino": N, "acao": "verbo físico exato"}, {"destino": N, "acao": "..."}], "para_proxima_zona": false },
-    "... (projete as salas intermediárias focando na Regra 2 de Bidirecionalidade) ...": {},
-    "${salaFim}": { "tipo": "fronteira", "local_fisico": "...", "objeto_central": "...", "saidas": [{"destino": N_ANTERIOR, "acao": "Voltar para..."}, {"destino": ${salaFim+1}, "acao": "Avançar para..."}], "para_proxima_zona": true }
+    "${salaInicio}": {
+      "local_fisico": "Descreva o espaço fisicamente (Ex: 'Pátio inalado por neblina')",
+      "saidas": [
+        {"destino": ${salaInicio + 1}, "acao": "Caminhar pela calçada estreita"}
+      ]
+    },
+    "...": { ... },
+    "${salaFim}": {
+      "local_fisico": "Fronteira da zona (Ex: 'Portão de ferro fundido')",
+      "saidas": [
+        {"destino": N_ANTERIOR, "acao": "Voltar para o..."},
+        {"destino": ${salaFim + 1}, "acao": "Avançar pela escuridão para a próxima zona"}
+      ]
+    }
   }
 }`;
 
