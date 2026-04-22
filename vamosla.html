@@ -1362,11 +1362,14 @@ ${textosOpcoes}
 REGRA CRÍTICA: cada objeto físico mencionado nesses botões DEVE aparecer na sua narração. Se o botão diz "Forçar a porta à esquerda", você DEVE descrever uma porta à esquerda. Se o botão diz "Puxar o cabo", você DEVE mencionar o cabo. O jogador não pode ver um botão referenciando algo que sua narração não mostrou.`;
                     }
 
-                    let conteudoUser = "";
+                                        let conteudoUser = "";
                     let conversaRecenteParaEnvio = [];
 
                     if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
                        conteudoUser = `
+[CENÁRIO (AMBIENTE ATUAL)]
+FATOS A SEREM TRANSCRITOS: ${descricaoSala}${alertaMortos}${elementosInterativos}
+
 [DADOS ESTRUTURAIS DO ARQUITETO]
 Local: ${descricaoSala}
 Interações Disponíveis: ${elementosInterativos}
@@ -1379,12 +1382,23 @@ Sua tarefa é expandir o "texto_logico" acima em uma narrativa em segunda pessoa
 
 Termine com: [DANO: 0]`;
                         
-                        conversaRecenteParaEnvio = []; // <-- A MÁGICA AQUI: Histórico zerado na transição.
+                        conversaRecenteParaEnvio = []; // Histórico zerado na transição.
                     } else {
                         // MODO AÇÃO NORMAL
-                        conteudoUser = `[AÇÃO DO JOGADOR (PROTAGONISTA)]\nO que o personagem executa com maestria: "${pergunta}"  ← se SUCESSO\nO que o personagem tenta desesperadamente fazer: "${pergunta}"  ← se FALHA\n\n[ORDEM PARA O NARRADOR]\n- Foque EXCLUSIVAMENTE no jogador executando a ação descrita acima.\n- ${instrucaoResultado}\n- ATENÇÃO SEMÂNTICA: Interprete palavras ambíguas como "mortal", "salto" ou "ataque" como as AÇÕES FÍSICAS do jogador.\n- Obrigatório terminar o texto com a tag: [DANO: ${danoFinal}]`;
+                        conteudoUser = `[CENÁRIO (AMBIENTE ATUAL)]
+FATOS A SEREM TRANSCRITOS: ${descricaoSala}${alertaMortos}${elementosInterativos}
+
+[AÇÃO DO JOGADOR (PROTAGONISTA)]
+O que o personagem executa com maestria: "${pergunta}"  ← se SUCESSO
+O que o personagem tenta desesperadamente fazer: "${pergunta}"  ← se FALHA
+
+[ORDEM PARA O NARRADOR]
+- Foque EXCLUSIVAMENTE no jogador executando a ação descrita acima.
+- ${instrucaoResultado}
+- ATENÇÃO SEMÂNTICA: Interprete palavras ambíguas como "mortal", "salto" ou "ataque" como as AÇÕES FÍSICAS do jogador.
+- Obrigatório terminar o texto com a tag: [DANO: ${danoFinal}]`;
                         
-                        conversaRecenteParaEnvio = historicoConversa.slice(-4); // Reduzido de 6 para 4 para focar a atenção do 7B.
+                        conversaRecenteParaEnvio = historicoConversa.slice(-4); // Reduzido de 6 para 4
                     }
 
                     const systemPrompt = {
@@ -1395,10 +1409,7 @@ REGRAS DE CONVERSÃO (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
 1. TRANSFORMAÇÃO LITERAL: Sua única função é pegar os fatos secos do [CENÁRIO] e reescrevê-los para a segunda pessoa ("Você..."). Seja OBJETIVO, máximo 4 frases. 
 2. RETENÇÃO DE 100% DOS FATOS: Se o [CENÁRIO] cita um pedaço de papel, um texto escrito, um arquiteto, uma janela ou uma fechadura, você É OBRIGADO a incluir essas informações exatas. Omitir pistas estruturais quebra o jogo.
 3. PROIBIÇÃO DE POESIA: Não invente descrições atmosféricas (é proibido usar clichês como "atmosfera cortando", "tempo estático", "lâmina"). Seja clínico, direto, objetivo e literal.
-4. VIOLÊNCIA CRUA: APENAS em caso de impacto físico contra corpos, abandone a brevidade. Descreva minuciosamente a destruição de tecidos e ossos (máximo 6 frases).
-
-[CENÁRIO (AMBIENTE ATUAL)]
-FATOS A SEREM TRANSCRITOS: ${descricaoSala}${alertaMortos}${elementosInterativos}` // <-- Variável adicionada aqui!
+4. VIOLÊNCIA CRUA: APENAS em caso de impacto físico contra corpos, abandone a brevidade. Descreva minuciosamente a destruição de tecidos e ossos (máximo 6 frases).`
 };
 
                     payloadAPI = [systemPrompt, ...conversaRecenteParaEnvio, { role: 'user', content: conteudoUser }];
