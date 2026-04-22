@@ -569,8 +569,13 @@ const MAX_TENTATIVAS_PLANO = 3;
 for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_PLANO; tentativa++) {
     const dataPlano = await chamarGroq([{ role: "user", content: promptPlano }], 0.6, { type: "json_object" });
     const candidato = JSON.parse(dataPlano.choices[0].message.content);
-    
-    const erros = validarPlanoTopologia(candidato.plano || {}, salaInicio, salaFim);
+
+// Injeta para_proxima_zona deterministicamente — o modelo ignora esse campo
+if (candidato.plano?.[String(salaFim)]) {
+    candidato.plano[String(salaFim)].para_proxima_zona = true;
+}
+
+const erros = validarPlanoTopologia(candidato.plano || {}, salaInicio, salaFim);
     
     if (erros.length === 0) {
         planoData = candidato;
