@@ -398,6 +398,59 @@ Retorne APENAS este JSON:
     console.log('[DNA Global]', dnaGlobal);
 }
 
+        function validarPlanoTopologia(plano, salaInicio, salaFim) {
+    const erros = [];
+    const ids = Object.keys(plano).map(Number);
+    
+    // 1. Todas as salas do intervalo existem?
+    for (let i = salaInicio; i <= salaFim; i++) {
+        if (!plano[String(i)]) erros.push(`Sala ${i} ausente no plano.`);
+    }
+    
+    // 2. Bidirecionalidade: se X→Y existe, Y→X deve existir
+    for (const [idStr, sala] of Object.entries(plano)) {
+        const id = Number(idStr);
+        for (const saida of (sala.saidas || [])) {
+            const destino = saida.destino;
+            if (destino > salaFim) continue; // fronteira para próxima zona, OK
+            const destinoPlano = plano[String(destino)];
+            if (!destinoPlano) { erros.push(`Sala ${id} aponta para ${destino} que não existe.`); continue; }
+            const temVolta = destinoPlano.saidas?.some(s => s.destino === id);
+            if (!temVolta) erros.push(`Sem volta: Sala ${destino} não retorna para Sala ${id}.`);
+        }
+    }
+    
+    // 3. Conectividade: toda sala alcançável a partir de salaInicio (BFS)
+    const visitados = new Set();
+    const fila = [salaInicio];
+    while (fila.length > 0) {
+        const atual = fila.shift();
+        if (visitados.has(atual)) continue;
+        visitados.add(atual);
+        const sala = plano[String(atual)];
+        if (!sala) continue;
+        for (const saida of (sala.saidas || [])) {
+            if (saida.destino <= salaFim && !visitados.has(saida.destino)) {
+                fila.push(saida.destino);
+            }
+        }
+    }
+    for (let i = salaInicio; i <= salaFim; i++) {
+        if (!visitados.has(i)) erros.push(`Sala ${i} inacessível a partir da entrada.`);
+    }
+    
+    // 4. Hub: pelo menos uma sala com 3+ conexões
+    const temHub = Object.values(plano).some(s => (s.saidas || []).length >= 3);
+    if (!temHub) erros.push(`Nenhum hub encontrado. Mapa é linear — rejeitado.`);
+    
+    // 5. Sala de fronteira deve ser salaFim
+    const salaFronteira = Object.entries(plano).find(([_, s]) => s.para_proxima_zona === true);
+    if (!salaFronteira) erros.push(`Nenhuma sala de fronteira (para_proxima_zona: true).`);
+    else if (Number(salaFronteira[0]) !== salaFim) erros.push(`Fronteira está em sala ${salaFronteira[0]}, deveria estar em ${salaFim}.`);
+    
+    return erros;
+}
+
 async function gerarZona(numeroZona, ganchosPrevios = null) {
     const salaInicio = (numeroZona - 1) * SALAS_POR_ZONA + 1;
     const salaFim    = numeroZona * SALAS_POR_ZONA;
@@ -432,11 +485,11 @@ Sua tarefa é mapear ${SALAS_POR_ZONA} nós interconectados.
 
 TEMA DO LOCAL: "${infoZona.nome}"
 
-REGRAS MATEMÁTICAS INQUEBRÁVEIS DO GRAFO:
-1. NÓS VÁLIDOS: Os IDs das salas DEVERÃO ser estritamente os números de ${salaInicio} até ${salaFim}.
-2. BIDIRECIONALIDADE ABSOLUTA: Se o nó [A] tem uma saída para o destino [B], então o nó [B] DEVE ter uma saída para o destino [A]. Verifique isso cruzando os dados antes de gerar o JSON.
-3. SEM ILHAS: Todos os nós devem ser acessíveis a partir do nó inicial (${salaInicio}).
-4. FRONTEIRA ÚNICA: APENAS o último nó (${salaFim}) terá permissão para ter uma saída com destino ${salaFim + 1}.
+REGRAS TOPOLÓGICAS (violá-las causa REJEIÇÃO AUTOMÁTICA do plano):
+1. HUB OBRIGATÓRIO: Pelo menos UMA sala deve ter 3 ou mais saídas. Exemplo: Sala ${salaInicio+3} com saídas para ${salaInicio+2}, ${salaInicio+4} e ${salaInicio+6}.
+2. BIDIRECIONALIDADE TOTAL: Se Sala X tem saída para Sala Y, então Sala Y DEVE ter saída para Sala X. Sem exceções, exceto a fronteira para a próxima zona.
+3. CONECTIVIDADE: Toda sala de ${salaInicio} a ${salaFim} deve ser alcançável partindo de ${salaInicio}. Nenhuma sala isolada.
+4. FRONTEIRA ÚNICA: Apenas a sala ${salaFim} pode ter uma saída apontando para ${salaFim+1}. Nenhuma outra.
 
 REGRAS DE SEMÂNTICA FÍSICA (VERBOS DE TRANSIÇÃO):
 1. A ação de transição DEVE ser uma locomoção física (Ex: "Atravessar o arco", "Subir a escada de ferro", "Rastejar pelo túnel").
@@ -507,14 +560,32 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
     const idMsg = adicionarMensagem(`⚙️ Projetando Zona ${numeroZona} — "${infoZona.nome}"...`, "system", true);
 
     try {
-        // --- CHAMADA A: PLANO ---
-        const dataPlano = await chamarGroq([{ role: "user", content: promptPlano }], 0.6, { type: "json_object" });
-        const planoData = JSON.parse(dataPlano.choices[0].message.content);
+        // --- CHAMADA A: PLANO (com validação e retry automático) ---
+let planoData = null;
+const MAX_TENTATIVAS_PLANO = 3;
 
-        if (!planoData.plano?.[String(salaInicio)]) {
-            throw new Error(`Plano da Zona ${numeroZona} inválido — sala ${salaInicio} ausente.`);
+for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_PLANO; tentativa++) {
+    const dataPlano = await chamarGroq([{ role: "user", content: promptPlano }], 0.6, { type: "json_object" });
+    const candidato = JSON.parse(dataPlano.choices[0].message.content);
+    
+    const erros = validarPlanoTopologia(candidato.plano || {}, salaInicio, salaFim);
+    
+    if (erros.length === 0) {
+        planoData = candidato;
+        console.log(`[Plano] ✅ Topologia válida na tentativa ${tentativa}.`);
+        break;
+    } else {
+        console.warn(`[Plano] ❌ Tentativa ${tentativa}/${MAX_TENTATIVAS_PLANO} rejeitada:`, erros);
+        if (tentativa === MAX_TENTATIVAS_PLANO) {
+            throw new Error(`Plano rejeitado após ${MAX_TENTATIVAS_PLANO} tentativas. Erros: ${erros.join(' | ')}`);
         }
-        console.log(`[Zona ${numeroZona}] Plano gerado:`, Object.keys(planoData.plano).length, 'salas planejadas');
+    }
+}
+
+if (!planoData?.plano?.[String(salaInicio)]) {
+    throw new Error(`Plano da Zona ${numeroZona} inválido — sala ${salaInicio} ausente.`);
+}
+console.log(`[Zona ${numeroZona}] Plano gerado:`, Object.keys(planoData.plano).length, 'salas planejadas');
 
         // Atualiza mensagem de status
         const msgEl = document.getElementById(idMsg);
