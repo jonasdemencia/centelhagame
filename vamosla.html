@@ -528,8 +528,14 @@ Retorne exclusivamente um objeto JSON válido.`;
         return `SALA ${id} (${sala.local_fisico}): O texto DEVE preparar o terreno para estas ações exatas -> [${acoes}]`;
     }).join("\n");
 
-    return `Você é o Arquiteto de Mundo de um RPG de horror visceral. 
+    return `Você é o Arquiteto de Mundo de um RPG de horror visceral.
 Seu objetivo é gerar a prosa (texto_logico) para uma zona do mapa chamada: "${infoZona.nome}".
+
+[TOM SENSORIAL OBRIGATÓRIO]
+"${tom}"
+
+[SEGREDO LATENTE DESTA ZONA]
+"${segredo}"
 
 [O PLANO ESTRUTURAL]
 O esqueleto das salas já está definido. Sua única função é escrever o "texto_logico" de cada uma.
