@@ -443,12 +443,12 @@ Retorne APENAS este JSON:
     const temHub = Object.values(plano).some(s => (s.saidas || []).length >= 3);
     if (!temHub) erros.push(`Nenhum hub encontrado. Mapa é linear — rejeitado.`);
 
-            // 5. Beco: pelo menos uma sala intermediária com grau 1
-const becos = Object.entries(plano).filter(([idStr, s]) => {
-    const id = Number(idStr);
-    return id !== salaInicio && id !== salaFim && (s.saidas || []).length === 1;
-});
-if (becos.length === 0) erros.push(`Nenhum beco encontrado. É obrigatória ao menos uma sala intermediária com exatamente 1 saída.`);
+            // 5. Becos: pelo menos DUAS salas intermediárias com grau 1
+    const becos = Object.entries(plano).filter(([idStr, s]) => {
+        const id = Number(idStr);
+        return id !== salaInicio && id !== salaFim && (s.saidas || []).length === 1;
+    });
+    if (becos.length < 2) erros.push(`Quantidade insuficiente de becos (${becos.length} encontrados). São obrigatórias ao menos DUAS salas intermediárias (que não a entrada ou saída) com exatamente 1 saída.`);
     
     // 6. Sala de fronteira deve ser salaFim
     const salaFronteira = Object.entries(plano).find(([_, s]) => s.para_proxima_zona === true);
@@ -497,7 +497,7 @@ REGRAS TOPOLÓGICAS (violá-las causa REJEIÇÃO AUTOMÁTICA do plano):
 2. BIDIRECIONALIDADE TOTAL: Se Sala X tem saída para Sala Y, então Sala Y DEVE ter saída para Sala X. Sem exceções, exceto a fronteira para a próxima zona.
 3. CONECTIVIDADE: Toda sala de ${salaInicio} a ${salaFim} deve ser alcançável partindo de ${salaInicio}. Nenhuma sala isolada.
 4. FRONTEIRA ÚNICA: Apenas a sala ${salaFim} pode ter uma saída apontando para ${salaFim+1}. Nenhuma outra.
-5. BECO OBRIGATÓRIO: Pelo menos UMA sala intermediária (não a ${salaInicio} nem a ${salaFim}) deve ter exatamente 1 saída — de volta para a sala que a conecta. Exemplo: Sala ${salaInicio+5} com apenas {"destino": ${salaInicio+3}, "acao": "Voltar pelo..."} e nenhuma outra saída. 
+5. BECOS OBRIGATÓRIOS: Pelo menos DUAS salas intermediárias distintas (nenhuma delas pode ser a ${salaInicio} nem a ${salaFim}) devem ser "becos sem saída", ou seja, ter exatamente 1 saída — apenas o caminho de volta para a sala que as conectou. Exemplo: Sala ${salaInicio+5} com apenas {"destino": ${salaInicio+3}, "acao": "Voltar pelo..."} e nenhuma outra saída.
 
 REGRAS DE SEMÂNTICA FÍSICA (VERBOS DE TRANSIÇÃO):
 1. A ação de transição DEVE ser uma locomoção física (Ex: "Atravessar o arco", "Subir a escada de ferro", "Rastejar pelo túnel").
