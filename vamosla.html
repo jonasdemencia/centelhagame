@@ -442,8 +442,15 @@ Retorne APENAS este JSON:
     // 4. Hub: pelo menos uma sala com 3+ conexões
     const temHub = Object.values(plano).some(s => (s.saidas || []).length >= 3);
     if (!temHub) erros.push(`Nenhum hub encontrado. Mapa é linear — rejeitado.`);
+
+            // 5. Beco: pelo menos uma sala intermediária com grau 1
+const becos = Object.entries(plano).filter(([idStr, s]) => {
+    const id = Number(idStr);
+    return id !== salaInicio && id !== salaFim && (s.saidas || []).length === 1;
+});
+if (becos.length === 0) erros.push(`Nenhum beco encontrado. É obrigatória ao menos uma sala intermediária com exatamente 1 saída.`);
     
-    // 5. Sala de fronteira deve ser salaFim
+    // 6. Sala de fronteira deve ser salaFim
     const salaFronteira = Object.entries(plano).find(([_, s]) => s.para_proxima_zona === true);
     if (!salaFronteira) erros.push(`Nenhuma sala de fronteira (para_proxima_zona: true).`);
     else if (Number(salaFronteira[0]) !== salaFim) erros.push(`Fronteira está em sala ${salaFronteira[0]}, deveria estar em ${salaFim}.`);
@@ -490,6 +497,7 @@ REGRAS TOPOLÓGICAS (violá-las causa REJEIÇÃO AUTOMÁTICA do plano):
 2. BIDIRECIONALIDADE TOTAL: Se Sala X tem saída para Sala Y, então Sala Y DEVE ter saída para Sala X. Sem exceções, exceto a fronteira para a próxima zona.
 3. CONECTIVIDADE: Toda sala de ${salaInicio} a ${salaFim} deve ser alcançável partindo de ${salaInicio}. Nenhuma sala isolada.
 4. FRONTEIRA ÚNICA: Apenas a sala ${salaFim} pode ter uma saída apontando para ${salaFim+1}. Nenhuma outra.
+5. BECO OBRIGATÓRIO: Pelo menos UMA sala intermediária (não a ${salaInicio} nem a ${salaFim}) deve ter exatamente 1 saída — de volta para a sala que a conecta. Exemplo: Sala ${salaInicio+5} com apenas {"destino": ${salaInicio+3}, "acao": "Voltar pelo..."} e nenhuma outra saída. 
 
 REGRAS DE SEMÂNTICA FÍSICA (VERBOS DE TRANSIÇÃO):
 1. A ação de transição DEVE ser uma locomoção física (Ex: "Atravessar o arco", "Subir a escada de ferro", "Rastejar pelo túnel").
