@@ -398,6 +398,75 @@ Retorne APENAS este JSON:
     console.log('[DNA Global]', dnaGlobal);
 }
 
+        function autoCorrigirPlano(plano, salaInicio, salaFim) {
+    // 1. Garantir que todas as salas do intervalo existam (Evita quebras se o LLM pular números)
+    for (let i = salaInicio; i <= salaFim; i++) {
+        if (!plano[String(i)]) {
+            plano[String(i)] = { local_fisico: "Corredor escuro e indistinto", saidas: [] };
+        }
+    }
+
+    // 2. Costura de Bidirecionalidade (O que vai, tem que voltar)
+    for (let i = salaInicio; i <= salaFim; i++) {
+        const id = String(i);
+        const sala = plano[id];
+        if (!sala.saidas) sala.saidas = [];
+
+        for (const saida of sala.saidas) {
+            const destinoId = saida.destino;
+            if (destinoId > salaFim) continue; // Ignora a fronteira da zona
+
+            const salaDestino = plano[String(destinoId)];
+            if (salaDestino) {
+                if (!salaDestino.saidas) salaDestino.saidas = [];
+                const temVolta = salaDestino.saidas.some(s => s.destino === Number(id));
+                
+                // Se a sala de destino não tem caminho de volta, criamos um.
+                if (!temVolta) {
+                    salaDestino.saidas.push({
+                        destino: Number(id),
+                        acao: `Retornar` // O LLM na Chamada B vai dar contexto visual a isso
+                    });
+                }
+            }
+        }
+    }
+
+    // 3. Costura de Conectividade (Resgate de Ilhas Inacessíveis)
+    let visitados = new Set();
+    let fila = [salaInicio];
+    visitados.add(salaInicio);
+
+    // Mapeia todas as salas alcançáveis
+    while (fila.length > 0) {
+        const atual = fila.shift();
+        const sala = plano[String(atual)];
+        for (const saida of (sala.saidas || [])) {
+            if (saida.destino <= salaFim && !visitados.has(saida.destino)) {
+                visitados.add(saida.destino);
+                fila.push(saida.destino);
+            }
+        }
+    }
+
+    // Se alguma sala não foi visitada, ela é uma ilha. Conectamos ela à sala principal.
+    for (let i = salaInicio; i <= salaFim; i++) {
+        if (!visitados.has(i)) {
+            plano[String(salaInicio)].saidas.push({
+                destino: i,
+                acao: "Avançar por uma passagem estreita recém-descoberta"
+            });
+            plano[String(i)].saidas.push({
+                destino: salaInicio,
+                acao: "Voltar para a entrada"
+            });
+            visitados.add(i);
+        }
+    }
+
+    return plano;
+}
+
         function validarPlanoTopologia(plano, salaInicio, salaFim) {
     const erros = [];
     const ids = Object.keys(plano).map(Number);
@@ -587,12 +656,17 @@ for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_PLANO; tentativa++) {
     const dataPlano = await chamarGroq([{ role: "user", content: promptPlano }], 0.6, { type: "json_object" });
     const candidato = JSON.parse(dataPlano.choices[0].message.content);
 
-// Injeta para_proxima_zona deterministicamente — o modelo ignora esse campo
-if (candidato.plano?.[String(salaFim)]) {
-    candidato.plano[String(salaFim)].para_proxima_zona = true;
-}
+    // 🛠️ INJEÇÃO DA AUTO-COSTURA AQUI 🛠️
+    if (candidato.plano) {
+        candidato.plano = autoCorrigirPlano(candidato.plano, salaInicio, salaFim);
+    }
 
-const erros = validarPlanoTopologia(candidato.plano || {}, salaInicio, salaFim);
+    // Injeta para_proxima_zona deterministicamente — o modelo ignora esse campo
+    if (candidato.plano?.[String(salaFim)]) {
+        candidato.plano[String(salaFim)].para_proxima_zona = true;
+    }
+
+    const erros = validarPlanoTopologia(candidato.plano || {}, salaInicio, salaFim);
     
     if (erros.length === 0) {
         planoData = candidato;
