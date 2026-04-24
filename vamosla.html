@@ -464,11 +464,12 @@ function validarTextoLogico(textoLogico, acaoChegadaEsperada) {
     // Se temos a ação de chegada esperada, extrai o substantivo principal
     // e verifica se ele reaparece após a primeira frase como objeto/rota
     if (acaoChegadaEsperada) {
+                const stopwords = ['para', 'pela', 'pelo', 'com', 'como', 'sobre', 'entre', 'trás', 'frente', 'lado'];
         const palavrasChave = acaoChegadaEsperada
             .toLowerCase()
             .replace(/^(subir|descer|atravessar|rastejar|passar|entrar|avançar|cruzar)\s+/i, '')
             .split(/\s+/)
-            .filter(p => p.length > 3); // filtra artigos e preposições curtas
+            .filter(p => p.length > 3 && !stopwords.includes(p));
 
         const primeiraSentenca = textoLogico.split(/[.!?]/)[0];
         const restoDoTexto = textoLogico.slice(primeiraSentenca.length);
@@ -581,15 +582,16 @@ Retorne exclusivamente um objeto JSON válido.`;
     }
     // ─────────────────────────────────────────────────
 
-    const resumoPlano = Object.entries(plano).map(([id, sala]) => {
+        const resumoPlano = Object.entries(plano).map(([id, sala]) => {
+        const idAtual = parseInt(id);
         const acoes = sala.saidas
+            .filter(s => s.destino > idAtual) // Oculta TODAS as rotas que apontam para trás
             .map(s => s.acao)
-            .filter(acao => !acao.toLowerCase().includes('voltar') && !acao.toLowerCase().includes('retornar'))
             .join(" | ");
         
         // ── NOVO: Âncora de chegada injetada deterministicamente ──
-        const chegada = acaoChegada[id]
-            ? `[ÂNCORA OBRIGATÓRIA: O jogador chegou aqui via "${acaoChegada[id]}". Inicie com este verbo no passado: "Depois de ${acaoChegada[id].toLowerCase()}, você...". O substantivo desta ação NÃO existe mais como objeto ou rota visível na sala.]`
+                const chegada = acaoChegada[id]
+            ? `[ÂNCORA OBRIGATÓRIA: Inicie a primeira frase OBRIGATORIAMENTE com "Depois de ${acaoChegada[id].toLowerCase()}, você...". Imediatamente após isso, foque a visão exclusivamente no que está adiante. O caminho que ficou para trás desapareceu narrativamente.]`
             : `[SALA DE ENTRADA DA ZONA: sem âncora de chegada. Inicie descrevendo o que o jogador vê à frente.]`;
         // ──────────────────────────────────────────────────────────
 
@@ -605,12 +607,8 @@ ${resumoPlano}
 
 [REGRAS DE OURO DA ARQUITETURA NARRATIVA]
 1. ÂNCORA DE CHEGADA (REGRA ABSOLUTA):
-   - A primeira frase DEVE usar o [ÂNCORA OBRIGATÓRIA] fornecido acima, com o verbo no passado.
-   - Formato exigido: "Depois de [verbo de chegada], você [descreve o que está À FRENTE]."
-   - O substantivo da âncora (ex.: "escada", "túnel", "arco") NÃO é um objeto da sala atual.
-     Após a primeira frase, aja como se o ponto de entrada não tivesse forma física — ele não existe, não bloqueia, não oferece rota.
-   - PROIBIDO começar com: "Você se encontra", "Você está", "Você nota", "Você percebe".
-   - PROIBIDO mencionar o substantivo da âncora como rota de volta ou elemento visual após a frase de abertura.
+   - Inicie a primeira frase exatamente com a âncora fornecida.
+   - NÃO descreva o ponto de entrada como parte do cenário visual atual. Direcione toda a descrição para a frente, preparando as opções futuras listadas.
 2. PREPARAÇÃO PROSPECTIVA OBRIGATÓRIA: Descreva fisicamente os objetos ou locais que as ações listadas acima exigem. Não crie botões fantasmagóricos.
 3. ESTILO: Apenas matéria sensorial – visão, som, cheiro. PROÍBIDO mencionar "história", "segredo", "destino" ou julgar o ambiente.
 
