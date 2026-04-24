@@ -547,14 +547,14 @@ ESTRUTURA DE DADOS ESPERADA (GERAR APENAS ISSO):
 {
   "plano": {
     "${salaInicio}": {
-      "local_fisico": "Descreva o espaço fisicamente (Ex: 'Pátio inalado por neblina')",
+      "local_fisico": "Nome curto do espaço + 1 detalhe físico marcante que o singulariza (Ex: 'Pátio com pilhas de caixotes apodrecendo junto à parede norte', 'Câmara circular com um poço seco no centro', 'Corredor com manchas escuras no teto')",
       "saidas": [
         {"destino": ${salaInicio + 1}, "acao": "Caminhar pela calçada estreita"}
       ]
     },
     "...": { ... },
     "${salaFim}": {
-      "local_fisico": "Fronteira da zona (Ex: 'Portão de ferro fundido')",
+      "local_fisico": "Nome curto da fronteira + 1 detalhe físico que a torna ameaçadora (Ex: 'Portão de ferro fundido com correntes enroladas nos batentes')",
       "saidas": [
         {"destino": N_ANTERIOR, "acao": "Voltar para o..."},
         {"destino": ${salaFim + 1}, "acao": "Avançar pela escuridão para a próxima zona"}
@@ -611,6 +611,7 @@ ${resumoPlano}
    - NÃO descreva o ponto de entrada como parte do cenário visual atual. Direcione toda a descrição para a frente, preparando as opções futuras listadas.
 2. PREPARAÇÃO PROSPECTIVA OBRIGATÓRIA: Descreva fisicamente os objetos ou locais que as ações listadas acima exigem. Não crie botões fantasmagóricos.
 3. ESTILO: Apenas matéria sensorial – visão, som, cheiro. PROÍBIDO mencionar "história", "segredo", "destino" ou julgar o ambiente.
+4. DENSIDADE AMBIENTAL OBRIGATÓRIA: Além dos caminhos preparados na Regra 2, inclua OBRIGATORIAMENTE 2 a 3 elementos descritivos independentes por sala — objetos, mobília, vestígios de uso humano ou animal, marcas estruturais, resquícios de eventos anteriores. Esses elementos NÃO precisam ser caminhos nem interações: existem apenas para habitar o espaço e singularizá-lo. Distribua-os naturalmente no corpo do texto, não no final. Exemplos do registro correto: uma cadeira tombada com correias de couro podres; ferrugem escorrendo pela parede em veias escuras; um casaco rasgado pendurado num prego enferrujado; ossos pequenos espalhados junto à base da parede; marcas de dedos no pó sobre uma superfície plana; um candelabro com velas consumidas até a base, cera solidificada no chão abaixo; uma caixa de metal amassada, o trinco forçado para fora; runas entalhadas toscamente na pedra, algumas incompletas; um cheiro de queimado sem fonte visível; manchas escuras que podem ser óleo ou sangue velho.
 
 [ESTRUTURA DO JSON]
 Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o texto bruto.
