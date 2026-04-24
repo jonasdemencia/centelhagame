@@ -568,18 +568,26 @@ Retorne exclusivamente um objeto JSON válido.`;
     // ══════════════════════════════════════════════════════════
     // CHAMADA B — GERAÇÃO DAS SALAS COM O PLANO COMO ÂNCORA DURA
     // ══════════════════════════════════════════════════════════
-  const promptSalas = (plano, conexoes) => {
+    const promptSalas = (plano, conexoes) => {
     
-    // ── NOVO: Mapa determinístico de ações de chegada ──
+    // ── CORREÇÃO: Mapa determinístico de ações de chegada ──
     const acaoChegada = {};
+    const idPrimeiraSala = Math.min(...Object.keys(plano).map(Number));
+
     for (const [idStr, sala] of Object.entries(plano)) {
+        const idAtual = parseInt(idStr);
         for (const saida of (sala.saidas || [])) {
-            const destKey = String(saida.destino);
-            if (!acaoChegada[destKey]) {
-                acaoChegada[destKey] = saida.acao; // primeira ação que aponta para esta sala
+            // IGNORA ROTAS DE RETORNO: Apenas ações de avanço definem âncora de chegada
+            if (saida.destino > idAtual) {
+                const destKey = String(saida.destino);
+                if (!acaoChegada[destKey]) {
+                    acaoChegada[destKey] = saida.acao;
+                }
             }
         }
     }
+    // Proteção absoluta: garante que a entrada da zona seja zerada
+    delete acaoChegada[String(idPrimeiraSala)];
     // ─────────────────────────────────────────────────
 
         const resumoPlano = Object.entries(plano).map(([id, sala]) => {
@@ -611,7 +619,8 @@ ${resumoPlano}
    - NÃO descreva o ponto de entrada como parte do cenário visual atual. Direcione toda a descrição para a frente, preparando as opções futuras listadas.
 2. PREPARAÇÃO PROSPECTIVA OBRIGATÓRIA: Descreva fisicamente os objetos ou locais que as ações listadas acima exigem. Não crie botões fantasmagóricos.
 3. ESTILO: Apenas matéria sensorial – visão, som, cheiro. PROÍBIDO mencionar "história", "segredo", "destino" ou julgar o ambiente.
-4. DENSIDADE AMBIENTAL OBRIGATÓRIA: Além dos caminhos preparados na Regra 2, inclua OBRIGATORIAMENTE 2 a 3 elementos descritivos independentes por sala — objetos, mobília, vestígios de uso humano ou animal, marcas estruturais, resquícios de eventos anteriores. Esses elementos NÃO precisam ser caminhos nem interações: existem apenas para habitar o espaço e singularizá-lo. Distribua-os naturalmente no corpo do texto, não no final. Exemplos do registro correto: uma cadeira tombada com correias de couro podres; ferrugem escorrendo pela parede em veias escuras; um casaco rasgado pendurado num prego enferrujado; ossos pequenos espalhados junto à base da parede; marcas de dedos no pó sobre uma superfície plana; um candelabro com velas consumidas até a base, cera solidificada no chão abaixo; uma caixa de metal amassada, o trinco forçado para fora; runas entalhadas toscamente na pedra, algumas incompletas; um cheiro de queimado sem fonte visível; manchas escuras que podem ser óleo ou sangue velho.
+4. DENSIDADE AMBIENTAL OBRIGATÓRIA: Além dos caminhos preparados na Regra 2, inclua OBRIGATORIAMENTE 1 a 2 elementos descritivos independentes por sala. Exemplos do registro correto: uma cadeira tombada com correias de couro podres; ossos pequenos espalhados; marcas de dedos no pó.
+5. CEGUEIRA DE INTERFACE (REGRA ABSOLUTA): NUNCA escreva frases informativas como "Você pode escolher entre X ou Y" ou "Você tem a opção de...". NUNCA liste rotas. Apenas descreva a existência orgânica e visual dos elementos no ambiente.
 
 [SEGREDO LOCAL DA ZONA]
 ${infoZona.segredo_local || "Há algo oculto que destoa do ambiente."}
@@ -698,16 +707,24 @@ console.log(`[Zona ${numeroZona}] Plano gerado:`, Object.keys(planoData.plano).l
             // Pega a prosa gerada em B (ou fallback caso o modelo tenha pulado a sala)
             let prosa = zonaData.salas[idSala]?.texto_logico || "Uma sala escura onde as paredes parecem respirar.";
             
-            // ── NOVO: Validação de qualidade narrativa ──
-            const acaoChegadaLocal = {}; // Mapa local, igual ao criado no promptSalas
+                        // ── NOVO: Validação de qualidade narrativa ──
+            const acaoChegadaLocal = {};
+            const idPrimeiraSalaLocal = Math.min(...Object.keys(planoData.plano).map(Number));
+
             for (const [idStr, sala] of Object.entries(planoData.plano)) {
+                const idAtual = parseInt(idStr);
                 for (const saida of (sala.saidas || [])) {
-                    const destKey = String(saida.destino);
-                    if (!acaoChegadaLocal[destKey]) {
-                        acaoChegadaLocal[destKey] = saida.acao;
+                    // Reflete a mesma regra de ignorar retornos
+                    if (saida.destino > idAtual) {
+                        const destKey = String(saida.destino);
+                        if (!acaoChegadaLocal[destKey]) {
+                            acaoChegadaLocal[destKey] = saida.acao;
+                        }
                     }
                 }
             }
+            delete acaoChegadaLocal[String(idPrimeiraSalaLocal)];
+
             const acaoEntrada = acaoChegadaLocal[idSala];
             const errosNarrativa = validarTextoLogico(prosa, acaoEntrada);
             if (errosNarrativa.length > 0) {
