@@ -542,7 +542,7 @@ REGRAS DE SEMÂNTICA FÍSICA (VERBOS DE TRANSIÇÃO):
 1. A ação de transição DEVE ser uma locomoção física (Ex: "Atravessar o arco", "Subir a escada de ferro", "Rastejar pelo túnel").
 2. É ESTRITAMENTE PROIBIDO usar "Abrir a porta" ou "Fechar a porta" como ação de transição. Portas não movem pessoas. Use "Passar pela porta" ou "Entrar na sala".
 3. A ação do nó [B] voltando para [A] deve refletir a física invertida (Ex: Se [A]->[B] foi "Subir", [B]->[A] deve ser "Descer").
-
+4. SIMETRIA ESTRITA DE VOCABULÁRIO: A ação de retorno (B→A) DEVE usar o MESMO substantivo da ação de ida (A→B). Ex.: se A→B é "Caminhar pelo túnel de entrada", B→A deve ser "Voltar pelo túnel de entrada" ou "Caminhar de volta pelo túnel de entrada". 
 ESTRUTURA DE DADOS ESPERADA (GERAR APENAS ISSO):
 {
   "plano": {
