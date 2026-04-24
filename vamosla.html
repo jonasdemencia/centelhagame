@@ -398,75 +398,6 @@ Retorne APENAS este JSON:
     console.log('[DNA Global]', dnaGlobal);
 }
 
-        function autoCorrigirPlano(plano, salaInicio, salaFim) {
-    // 1. Garantir que todas as salas do intervalo existam (Evita quebras se o LLM pular números)
-    for (let i = salaInicio; i <= salaFim; i++) {
-        if (!plano[String(i)]) {
-            plano[String(i)] = { local_fisico: "Corredor escuro e indistinto", saidas: [] };
-        }
-    }
-
-    // 2. Costura de Bidirecionalidade (O que vai, tem que voltar)
-    for (let i = salaInicio; i <= salaFim; i++) {
-        const id = String(i);
-        const sala = plano[id];
-        if (!sala.saidas) sala.saidas = [];
-
-        for (const saida of sala.saidas) {
-            const destinoId = saida.destino;
-            if (destinoId > salaFim) continue; // Ignora a fronteira da zona
-
-            const salaDestino = plano[String(destinoId)];
-            if (salaDestino) {
-                if (!salaDestino.saidas) salaDestino.saidas = [];
-                const temVolta = salaDestino.saidas.some(s => s.destino === Number(id));
-                
-                // Se a sala de destino não tem caminho de volta, criamos um.
-                if (!temVolta) {
-                    salaDestino.saidas.push({
-                        destino: Number(id),
-                        acao: `Retornar` // O LLM na Chamada B vai dar contexto visual a isso
-                    });
-                }
-            }
-        }
-    }
-
-    // 3. Costura de Conectividade (Resgate de Ilhas Inacessíveis)
-    let visitados = new Set();
-    let fila = [salaInicio];
-    visitados.add(salaInicio);
-
-    // Mapeia todas as salas alcançáveis
-    while (fila.length > 0) {
-        const atual = fila.shift();
-        const sala = plano[String(atual)];
-        for (const saida of (sala.saidas || [])) {
-            if (saida.destino <= salaFim && !visitados.has(saida.destino)) {
-                visitados.add(saida.destino);
-                fila.push(saida.destino);
-            }
-        }
-    }
-
-    // Se alguma sala não foi visitada, ela é uma ilha. Conectamos ela à sala principal.
-    for (let i = salaInicio; i <= salaFim; i++) {
-        if (!visitados.has(i)) {
-            plano[String(salaInicio)].saidas.push({
-                destino: i,
-                acao: "Avançar por uma passagem estreita recém-descoberta"
-            });
-            plano[String(i)].saidas.push({
-                destino: salaInicio,
-                acao: "Voltar para a entrada"
-            });
-            visitados.add(i);
-        }
-    }
-
-    return plano;
-}
-
         function validarPlanoTopologia(plano, salaInicio, salaFim) {
     const erros = [];
     const ids = Object.keys(plano).map(Number);
@@ -511,15 +442,8 @@ Retorne APENAS este JSON:
     // 4. Hub: pelo menos uma sala com 3+ conexões
     const temHub = Object.values(plano).some(s => (s.saidas || []).length >= 3);
     if (!temHub) erros.push(`Nenhum hub encontrado. Mapa é linear — rejeitado.`);
-
-            // 5. Becos: pelo menos DUAS salas intermediárias com grau 1
-    const becos = Object.entries(plano).filter(([idStr, s]) => {
-        const id = Number(idStr);
-        return id !== salaInicio && id !== salaFim && (s.saidas || []).length === 1;
-    });
-    if (becos.length < 2) erros.push(`Quantidade insuficiente de becos (${becos.length} encontrados). São obrigatórias ao menos DUAS salas intermediárias (que não a entrada ou saída) com exatamente 1 saída.`);
     
-    // 6. Sala de fronteira deve ser salaFim
+    // 5. Sala de fronteira deve ser salaFim
     const salaFronteira = Object.entries(plano).find(([_, s]) => s.para_proxima_zona === true);
     if (!salaFronteira) erros.push(`Nenhuma sala de fronteira (para_proxima_zona: true).`);
     else if (Number(salaFronteira[0]) !== salaFim) erros.push(`Fronteira está em sala ${salaFronteira[0]}, deveria estar em ${salaFim}.`);
@@ -566,14 +490,11 @@ REGRAS TOPOLÓGICAS (violá-las causa REJEIÇÃO AUTOMÁTICA do plano):
 2. BIDIRECIONALIDADE TOTAL: Se Sala X tem saída para Sala Y, então Sala Y DEVE ter saída para Sala X. Sem exceções, exceto a fronteira para a próxima zona.
 3. CONECTIVIDADE: Toda sala de ${salaInicio} a ${salaFim} deve ser alcançável partindo de ${salaInicio}. Nenhuma sala isolada.
 4. FRONTEIRA ÚNICA: Apenas a sala ${salaFim} pode ter uma saída apontando para ${salaFim+1}. Nenhuma outra.
-5. BECOS OBRIGATÓRIOS: Pelo menos DUAS salas intermediárias distintas (nenhuma delas pode ser a ${salaInicio} nem a ${salaFim}) devem ser "becos sem saída", ou seja, ter exatamente 1 saída — apenas o caminho de volta para a sala que as conectou. Exemplo: Sala ${salaInicio+5} com apenas {"destino": ${salaInicio+3}, "acao": "Voltar pelo..."} e nenhuma outra saída.
 
 REGRAS DE SEMÂNTICA FÍSICA (VERBOS DE TRANSIÇÃO):
 1. A ação de transição DEVE ser uma locomoção física (Ex: "Atravessar o arco", "Subir a escada de ferro", "Rastejar pelo túnel").
 2. É ESTRITAMENTE PROIBIDO usar "Abrir a porta" ou "Fechar a porta" como ação de transição. Portas não movem pessoas. Use "Passar pela porta" ou "Entrar na sala".
 3. A ação do nó [B] voltando para [A] deve refletir a física invertida (Ex: Se [A]->[B] foi "Subir", [B]->[A] deve ser "Descer").
-4. Dentro de uma mesma sala, cada "acao" DEVE ser única. É PROIBIDO repetir o mesmo texto de ação na lista de saídas de uma sala.
-5. Cada saída DEVE incluir um campo "descritor_fisico": uma descrição física concreta e específica do objeto ou passagem usado na transição (Ex: "escada de madeira com degraus gastos pela resina", "arco de basalto negro com marcas de queimado"). Este descritor será compartilhado pelas duas salas que a aresta conecta — seja preciso e concreto.
 
 ESTRUTURA DE DADOS ESPERADA (GERAR APENAS ISSO):
 {
@@ -581,15 +502,15 @@ ESTRUTURA DE DADOS ESPERADA (GERAR APENAS ISSO):
     "${salaInicio}": {
       "local_fisico": "Descreva o espaço fisicamente (Ex: 'Pátio inalado por neblina')",
       "saidas": [
-        {"destino": ${salaInicio + 1}, "acao": "Caminhar pela calçada estreita", "descritor_fisico": "calçada de paralelepípedo úmido, bordas cobertas de musgo preto"}
+        {"destino": ${salaInicio + 1}, "acao": "Caminhar pela calçada estreita"}
       ]
     },
     "...": { ... },
     "${salaFim}": {
       "local_fisico": "Fronteira da zona (Ex: 'Portão de ferro fundido')",
       "saidas": [
-        {"destino": N_ANTERIOR, "acao": "Voltar para o...", "descritor_fisico": "descritor físico do caminho de volta"},
-        {"destino": ${salaFim + 1}, "acao": "Avançar pela escuridão para a próxima zona", "descritor_fisico": "abertura na parede de pedra bruta, ar frio vindo do outro lado"}
+        {"destino": N_ANTERIOR, "acao": "Voltar para o..."},
+        {"destino": ${salaFim + 1}, "acao": "Avançar pela escuridão para a próxima zona"}
       ]
     }
   }
@@ -600,31 +521,15 @@ Retorne exclusivamente um objeto JSON válido.`;
     // ══════════════════════════════════════════════════════════
     // CHAMADA B — GERAÇÃO DAS SALAS COM O PLANO COMO ÂNCORA DURA
     // ══════════════════════════════════════════════════════════
-   const promptSalas = (plano, conexoes, mapaArestas) => {
-    // Constrói resumo com descritores físicos canônicos por aresta
+   const promptSalas = (plano, conexoes) => {
+    // Transforma o plano num formato fácil para o modelo ler as saídas que ele DEVE incluir no texto
     const resumoPlano = Object.entries(plano).map(([id, sala]) => {
-        const idNum = parseInt(id);
-        const saidas = sala.saidas.map(s => {
-            const a = Math.min(idNum, s.destino);
-            const b = Math.max(idNum, s.destino);
-            const obj = (mapaArestas && mapaArestas[`${a}_${b}`]) || "(passagem sem descritor)";
-            return `  → "${s.acao}": mencione EXATAMENTE este objeto físico no texto: "${obj}"`;
-        }).join("\n");
+        const acoes = sala.saidas.map(s => s.acao).join(" | ");
+        return `SALA ${id} (${sala.local_fisico}): O texto DEVE preparar o terreno para estas ações exatas -> [${acoes}]`;
+    }).join("\n");
 
-        return `SALA ${id} (${sala.local_fisico}):
-SAÍDAS — cada item abaixo DEVE aparecer literalmente no texto_logico desta sala:
-${saidas}
-PROIBIDO: mencionar qualquer porta, escada, túnel, arco ou passagem que não esteja listada acima.`;
-    }).join("\n\n");
-
-    return `Você é o Arquiteto de Mundo de um RPG de horror visceral.
+    return `Você é o Arquiteto de Mundo de um RPG de horror visceral. 
 Seu objetivo é gerar a prosa (texto_logico) para uma zona do mapa chamada: "${infoZona.nome}".
-
-[TOM SENSORIAL OBRIGATÓRIO]
-"${infoZona.tom_sensorial}"
-
-[SEGREDO LATENTE DESTA ZONA]
-"${infoZona.segredo_local}"
 
 [O PLANO ESTRUTURAL]
 O esqueleto das salas já está definido. Sua única função é escrever o "texto_logico" de cada uma.
@@ -634,9 +539,6 @@ ${resumoPlano}
 1. ANCORAGEM RETROATIVA: O texto não deve começar descrevendo a sala de forma isolada, mas validando a entrada.
 2. PREPARAÇÃO PROSPECTIVA OBRIGATÓRIA: Para cada sala listada acima, há ações específicas. O seu "texto_logico" DEVE descrever fisicamente os objetos ou locais que essas ações exigem. Não crie botões fantasmagóricos.
 3. ESTILO: Seco, direto, material e perigoso. Zero floreios heroicos.
-4. 3. PROIBIÇÃO DE ANCORAGEM REVERSA: NUNCA descreva o caminho de volta no texto_logico. 
-Frases como "atrás de você...", "pelo qual você pode ter vindo...", "agora se apresenta como opção para voltar..." são PROIBIDAS. 
-Foque 100% no que está À FRENTE e ao REDOR do jogador na sala atual.
 
 [ESTRUTURA DO JSON]
 Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o texto bruto.
@@ -668,17 +570,12 @@ for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_PLANO; tentativa++) {
     const dataPlano = await chamarGroq([{ role: "user", content: promptPlano }], 0.6, { type: "json_object" });
     const candidato = JSON.parse(dataPlano.choices[0].message.content);
 
-    // 🛠️ INJEÇÃO DA AUTO-COSTURA AQUI 🛠️
-    if (candidato.plano) {
-        candidato.plano = autoCorrigirPlano(candidato.plano, salaInicio, salaFim);
-    }
+// Injeta para_proxima_zona deterministicamente — o modelo ignora esse campo
+if (candidato.plano?.[String(salaFim)]) {
+    candidato.plano[String(salaFim)].para_proxima_zona = true;
+}
 
-    // Injeta para_proxima_zona deterministicamente — o modelo ignora esse campo
-    if (candidato.plano?.[String(salaFim)]) {
-        candidato.plano[String(salaFim)].para_proxima_zona = true;
-    }
-
-    const erros = validarPlanoTopologia(candidato.plano || {}, salaInicio, salaFim);
+const erros = validarPlanoTopologia(candidato.plano || {}, salaInicio, salaFim);
     
     if (erros.length === 0) {
         planoData = candidato;
@@ -697,28 +594,13 @@ if (!planoData?.plano?.[String(salaInicio)]) {
 }
 console.log(`[Zona ${numeroZona}] Plano gerado:`, Object.keys(planoData.plano).length, 'salas planejadas');
 
-        // Constrói mapa canônico de arestas (descritor_fisico compartilhado por ambos os nós)
-        const mapaArestas = {};
-        Object.entries(planoData.plano).forEach(([idSala, sala]) => {
-            (sala.saidas || []).forEach(saida => {
-                const a = Math.min(parseInt(idSala), saida.destino);
-                const b = Math.max(parseInt(idSala), saida.destino);
-                const key = `${a}_${b}`;
-                if (!mapaArestas[key] && saida.descritor_fisico) {
-                    mapaArestas[key] = saida.descritor_fisico;
-                }
-            });
-        });
-        planoData.mapaArestas = mapaArestas;
-        console.log(`[Zona ${numeroZona}] Arestas canônicas:`, Object.keys(mapaArestas).length, 'descritores gerados');
-
         // Atualiza mensagem de status
         const msgEl = document.getElementById(idMsg);
         if (msgEl) msgEl.innerText = `⚙️ Escrevendo Zona ${numeroZona} — "${infoZona.nome}" (${SALAS_POR_ZONA} salas)...`;
 
         // --- CHAMADA B: SALAS ---
         const dataSalas = await chamarGroq(
-            [{ role: "user", content: promptSalas(planoData.plano, planoData.conexoes_narrativas || [], planoData.mapaArestas || {}) }],
+            [{ role: "user", content: promptSalas(planoData.plano, planoData.conexoes_narrativas || []) }],
             0.85,
             { type: "json_object" }
         );
