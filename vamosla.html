@@ -451,6 +451,52 @@ Retorne APENAS este JSON:
     return erros;
 }
 
+        // ── NOVO: Funções de validação e correção narrativa ──
+function validarTextoLogico(textoLogico, acaoChegadaEsperada) {
+    const erros = [];
+
+    // Padrões de ancoragem ruim — "Você se encontra/está/nota sem ter chegado de algum lugar"
+    const ancoramentoGenerico = /^você (se encontra|está|fica|note|percebe|avança|para diante)/i;
+    if (ancoramentoGenerico.test(textoLogico.trim())) {
+        erros.push('ancoragem genérica: texto começa sem verbo de chegada passado');
+    }
+
+    // Se temos a ação de chegada esperada, extrai o substantivo principal
+    // e verifica se ele reaparece após a primeira frase como objeto/rota
+    if (acaoChegadaEsperada) {
+        const palavrasChave = acaoChegadaEsperada
+            .toLowerCase()
+            .replace(/^(subir|descer|atravessar|rastejar|passar|entrar|avançar|cruzar)\s+/i, '')
+            .split(/\s+/)
+            .filter(p => p.length > 3); // filtra artigos e preposições curtas
+
+        const primeiraSentenca = textoLogico.split(/[.!?]/)[0];
+        const restoDoTexto = textoLogico.slice(primeiraSentenca.length);
+
+        for (const palavra of palavrasChave) {
+            if (new RegExp(`\\b${palavra}`, 'i').test(restoDoTexto)) {
+                erros.push(`entry-point leak: "${palavra}" (da ação de chegada) reaparece após a primeira frase`);
+            }
+        }
+    }
+
+    return erros;
+}
+
+function corrigirAncoragem(textoLogico, acaoChegada) {
+    const ancoramentoGenerico = /^você (se encontra|está|fica|nota|percebe)/i;
+    if (acaoChegada && ancoramentoGenerico.test(textoLogico.trim())) {
+        const verboCorrido = acaoChegada.toLowerCase();
+        // Substitui o início genérico pelo padrão correto
+        return textoLogico.replace(
+            /^você (se encontra|está|fica|nota|percebe)\s*/i,
+            `Depois de ${verboCorrido}, você `
+        );
+    }
+    return textoLogico;
+}
+// ─────────────────────────────────────────────────
+
 async function gerarZona(numeroZona, ganchosPrevios = null) {
     const salaInicio = (numeroZona - 1) * SALAS_POR_ZONA + 1;
     const salaFim    = numeroZona * SALAS_POR_ZONA;
@@ -521,16 +567,34 @@ Retorne exclusivamente um objeto JSON válido.`;
     // ══════════════════════════════════════════════════════════
     // CHAMADA B — GERAÇÃO DAS SALAS COM O PLANO COMO ÂNCORA DURA
     // ══════════════════════════════════════════════════════════
-   const promptSalas = (plano, conexoes) => {
-    // Transforma o plano num formato fácil, ocultando ações de retorno explícitas 
-    // para que o Arquiteto não sinta a obrigação narrativa de apontar para trás.
+  const promptSalas = (plano, conexoes) => {
+    
+    // ── NOVO: Mapa determinístico de ações de chegada ──
+    const acaoChegada = {};
+    for (const [idStr, sala] of Object.entries(plano)) {
+        for (const saida of (sala.saidas || [])) {
+            const destKey = String(saida.destino);
+            if (!acaoChegada[destKey]) {
+                acaoChegada[destKey] = saida.acao; // primeira ação que aponta para esta sala
+            }
+        }
+    }
+    // ─────────────────────────────────────────────────
+
     const resumoPlano = Object.entries(plano).map(([id, sala]) => {
         const acoes = sala.saidas
             .map(s => s.acao)
             .filter(acao => !acao.toLowerCase().includes('voltar') && !acao.toLowerCase().includes('retornar'))
             .join(" | ");
-        return `SALA ${id} (${sala.local_fisico}): O texto DEVE preparar o terreno para estas ações -> [${acoes || 'Foco apenas no ambiente'}]`;
-    }).join("\n");
+        
+        // ── NOVO: Âncora de chegada injetada deterministicamente ──
+        const chegada = acaoChegada[id]
+            ? `[ÂNCORA OBRIGATÓRIA: O jogador chegou aqui via "${acaoChegada[id]}". Inicie com este verbo no passado: "Depois de ${acaoChegada[id].toLowerCase()}, você...". O substantivo desta ação NÃO existe mais como objeto ou rota visível na sala.]`
+            : `[SALA DE ENTRADA DA ZONA: sem âncora de chegada. Inicie descrevendo o que o jogador vê à frente.]`;
+        // ──────────────────────────────────────────────────────────
+
+        return `SALA ${id} (${sala.local_fisico}):\n${chegada}\nAções futuras disponíveis -> [${acoes || 'Foco apenas no ambiente'}]`;
+    }).join("\n\n");
 
     return `Você é o Arquiteto de Mundo de um RPG de horror visceral. 
 Seu objetivo é gerar a prosa (texto_logico) para uma zona do mapa chamada: "${infoZona.nome}".
@@ -540,7 +604,13 @@ O esqueleto das salas já está definido. Sua única função é escrever o "tex
 ${resumoPlano}
 
 [REGRAS DE OURO DA ARQUITETURA NARRATIVA]
-1. ANCORAGEM SEM RETORNO: Use a ação de chegada (ex.: a saída da sala anterior que aponta para esta) como um verbo no passado para iniciar o texto. Ex.: "Depois de subir a escada de ferro, você chega a...". Proibido descrever a escada/porta como objeto visível da sala. A interface cuida do botão de volta.
+1. ÂNCORA DE CHEGADA (REGRA ABSOLUTA):
+   - A primeira frase DEVE usar o [ÂNCORA OBRIGATÓRIA] fornecido acima, com o verbo no passado.
+   - Formato exigido: "Depois de [verbo de chegada], você [descreve o que está À FRENTE]."
+   - O substantivo da âncora (ex.: "escada", "túnel", "arco") NÃO é um objeto da sala atual.
+     Após a primeira frase, aja como se o ponto de entrada não tivesse forma física — ele não existe, não bloqueia, não oferece rota.
+   - PROIBIDO começar com: "Você se encontra", "Você está", "Você nota", "Você percebe".
+   - PROIBIDO mencionar o substantivo da âncora como rota de volta ou elemento visual após a frase de abertura.
 2. PREPARAÇÃO PROSPECTIVA OBRIGATÓRIA: Descreva fisicamente os objetos ou locais que as ações listadas acima exigem. Não crie botões fantasmagóricos.
 3. ESTILO: Apenas matéria sensorial – visão, som, cheiro. PROÍBIDO mencionar "história", "segredo", "destino" ou julgar o ambiente.
 
@@ -621,9 +691,28 @@ console.log(`[Zona ${numeroZona}] Plano gerado:`, Object.keys(planoData.plano).l
         // Aqui mesclamos os dois: pegamos as opcoes do plano e o texto da chamada B.
         const mapaFinalMesclado = {};
         
-        Object.entries(planoData.plano).forEach(([idSala, dadosEstruturais]) => {
+                Object.entries(planoData.plano).forEach(([idSala, dadosEstruturais]) => {
             // Pega a prosa gerada em B (ou fallback caso o modelo tenha pulado a sala)
-            const prosa = zonaData.salas[idSala]?.texto_logico || "Uma sala escura onde as paredes parecem respirar.";
+            let prosa = zonaData.salas[idSala]?.texto_logico || "Uma sala escura onde as paredes parecem respirar.";
+            
+            // ── NOVO: Validação de qualidade narrativa ──
+            const acaoChegadaLocal = {}; // Mapa local, igual ao criado no promptSalas
+            for (const [idStr, sala] of Object.entries(planoData.plano)) {
+                for (const saida of (sala.saidas || [])) {
+                    const destKey = String(saida.destino);
+                    if (!acaoChegadaLocal[destKey]) {
+                        acaoChegadaLocal[destKey] = saida.acao;
+                    }
+                }
+            }
+            const acaoEntrada = acaoChegadaLocal[idSala];
+            const errosNarrativa = validarTextoLogico(prosa, acaoEntrada);
+            if (errosNarrativa.length > 0) {
+                console.warn(`[ValidadorNarrativo] Sala ${idSala}:`, errosNarrativa);
+                // Aplica patch automático se possível
+                prosa = corrigirAncoragem(prosa, acaoEntrada);
+            }
+            // ───────────────────────────────────────────
             
             // Converte as 'saidas' do Plano (A) diretamente no formato de 'opcoes' que o frontend espera
             const opcoesGeradas = dadosEstruturais.saidas.map(saida => ({
