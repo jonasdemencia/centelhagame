@@ -540,11 +540,9 @@ O esqueleto das salas já está definido. Sua única função é escrever o "tex
 ${resumoPlano}
 
 [REGRAS DE OURO DA ARQUITETURA NARRATIVA]
-1. ANCORAGEM RETROATIVA: O texto não deve começar descrevendo a sala de forma isolada, mas validando a entrada no local.
+1. ANCORAGEM SEM RETORNO: Use a ação de chegada (ex.: a saída da sala anterior que aponta para esta) como um verbo no passado para iniciar o texto. Ex.: "Depois de subir a escada de ferro, você chega a...". Proibido descrever a escada/porta como objeto visível da sala. A interface cuida do botão de volta.
 2. PREPARAÇÃO PROSPECTIVA OBRIGATÓRIA: Descreva fisicamente os objetos ou locais que as ações listadas acima exigem. Não crie botões fantasmagóricos.
-3. CEGUEIRA DE RETORNO (CRÍTICA): É ESTRITAMENTE PROIBIDO descrever o caminho pelo qual o jogador acabou de chegar ou convites para voltar (ex: NUNCA escreva "Atrás de você, a porta...", "A escada que te trouxe permite descer"). A interface do jogo cuida dos botões de retorno automaticamente. O texto deve focar APENAS no ambiente presente e no que há pela frente.
-4. CEGUEIRA DE PASSADO: Você NÃO PODE descrever a porta, túnel ou caminho de onde o personagem acabou de vir. Foque 100% no ambiente presente e no que está à frente.
-5. ESTILO: Apenas matéria sensorial – visão, som, cheiro. PROÍBIDO mencionar "história", "segredo", "destino" ou julgar o ambiente.
+3. ESTILO: Apenas matéria sensorial – visão, som, cheiro. PROÍBIDO mencionar "história", "segredo", "destino" ou julgar o ambiente.
 
 [ESTRUTURA DO JSON]
 Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o texto bruto.
