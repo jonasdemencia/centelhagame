@@ -572,6 +572,8 @@ REGRAS DE SEMÂNTICA FÍSICA (VERBOS DE TRANSIÇÃO):
 1. A ação de transição DEVE ser uma locomoção física (Ex: "Atravessar o arco", "Subir a escada de ferro", "Rastejar pelo túnel").
 2. É ESTRITAMENTE PROIBIDO usar "Abrir a porta" ou "Fechar a porta" como ação de transição. Portas não movem pessoas. Use "Passar pela porta" ou "Entrar na sala".
 3. A ação do nó [B] voltando para [A] deve refletir a física invertida (Ex: Se [A]->[B] foi "Subir", [B]->[A] deve ser "Descer").
+4. Dentro de uma mesma sala, cada "acao" DEVE ser única. É PROIBIDO repetir o mesmo texto de ação na lista de saídas de uma sala.
+5. Cada saída DEVE incluir um campo "descritor_fisico": uma descrição física concreta e específica do objeto ou passagem usado na transição (Ex: "escada de madeira com degraus gastos pela resina", "arco de basalto negro com marcas de queimado"). Este descritor será compartilhado pelas duas salas que a aresta conecta — seja preciso e concreto.
 
 ESTRUTURA DE DADOS ESPERADA (GERAR APENAS ISSO):
 {
@@ -579,15 +581,15 @@ ESTRUTURA DE DADOS ESPERADA (GERAR APENAS ISSO):
     "${salaInicio}": {
       "local_fisico": "Descreva o espaço fisicamente (Ex: 'Pátio inalado por neblina')",
       "saidas": [
-        {"destino": ${salaInicio + 1}, "acao": "Caminhar pela calçada estreita"}
+        {"destino": ${salaInicio + 1}, "acao": "Caminhar pela calçada estreita", "descritor_fisico": "calçada de paralelepípedo úmido, bordas cobertas de musgo preto"}
       ]
     },
     "...": { ... },
     "${salaFim}": {
       "local_fisico": "Fronteira da zona (Ex: 'Portão de ferro fundido')",
       "saidas": [
-        {"destino": N_ANTERIOR, "acao": "Voltar para o..."},
-        {"destino": ${salaFim + 1}, "acao": "Avançar pela escuridão para a próxima zona"}
+        {"destino": N_ANTERIOR, "acao": "Voltar para o...", "descritor_fisico": "descritor físico do caminho de volta"},
+        {"destino": ${salaFim + 1}, "acao": "Avançar pela escuridão para a próxima zona", "descritor_fisico": "abertura na parede de pedra bruta, ar frio vindo do outro lado"}
       ]
     }
   }
@@ -598,12 +600,22 @@ Retorne exclusivamente um objeto JSON válido.`;
     // ══════════════════════════════════════════════════════════
     // CHAMADA B — GERAÇÃO DAS SALAS COM O PLANO COMO ÂNCORA DURA
     // ══════════════════════════════════════════════════════════
-   const promptSalas = (plano, conexoes) => {
-    // Transforma o plano num formato fácil para o modelo ler as saídas que ele DEVE incluir no texto
+   const promptSalas = (plano, conexoes, mapaArestas) => {
+    // Constrói resumo com descritores físicos canônicos por aresta
     const resumoPlano = Object.entries(plano).map(([id, sala]) => {
-        const acoes = sala.saidas.map(s => s.acao).join(" | ");
-        return `SALA ${id} (${sala.local_fisico}): O texto DEVE preparar o terreno para estas ações exatas -> [${acoes}]`;
-    }).join("\n");
+        const idNum = parseInt(id);
+        const saidas = sala.saidas.map(s => {
+            const a = Math.min(idNum, s.destino);
+            const b = Math.max(idNum, s.destino);
+            const obj = (mapaArestas && mapaArestas[`${a}_${b}`]) || "(passagem sem descritor)";
+            return `  → "${s.acao}": mencione EXATAMENTE este objeto físico no texto: "${obj}"`;
+        }).join("\n");
+
+        return `SALA ${id} (${sala.local_fisico}):
+SAÍDAS — cada item abaixo DEVE aparecer literalmente no texto_logico desta sala:
+${saidas}
+PROIBIDO: mencionar qualquer porta, escada, túnel, arco ou passagem que não esteja listada acima.`;
+    }).join("\n\n");
 
     return `Você é o Arquiteto de Mundo de um RPG de horror visceral.
 Seu objetivo é gerar a prosa (texto_logico) para uma zona do mapa chamada: "${infoZona.nome}".
@@ -685,13 +697,28 @@ if (!planoData?.plano?.[String(salaInicio)]) {
 }
 console.log(`[Zona ${numeroZona}] Plano gerado:`, Object.keys(planoData.plano).length, 'salas planejadas');
 
+        // Constrói mapa canônico de arestas (descritor_fisico compartilhado por ambos os nós)
+        const mapaArestas = {};
+        Object.entries(planoData.plano).forEach(([idSala, sala]) => {
+            (sala.saidas || []).forEach(saida => {
+                const a = Math.min(parseInt(idSala), saida.destino);
+                const b = Math.max(parseInt(idSala), saida.destino);
+                const key = `${a}_${b}`;
+                if (!mapaArestas[key] && saida.descritor_fisico) {
+                    mapaArestas[key] = saida.descritor_fisico;
+                }
+            });
+        });
+        planoData.mapaArestas = mapaArestas;
+        console.log(`[Zona ${numeroZona}] Arestas canônicas:`, Object.keys(mapaArestas).length, 'descritores gerados');
+
         // Atualiza mensagem de status
         const msgEl = document.getElementById(idMsg);
         if (msgEl) msgEl.innerText = `⚙️ Escrevendo Zona ${numeroZona} — "${infoZona.nome}" (${SALAS_POR_ZONA} salas)...`;
 
         // --- CHAMADA B: SALAS ---
         const dataSalas = await chamarGroq(
-            [{ role: "user", content: promptSalas(planoData.plano, planoData.conexoes_narrativas || []) }],
+            [{ role: "user", content: promptSalas(planoData.plano, planoData.conexoes_narrativas || [], planoData.mapaArestas || {}) }],
             0.85,
             { type: "json_object" }
         );
