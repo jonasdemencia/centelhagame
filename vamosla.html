@@ -522,10 +522,14 @@ Retorne exclusivamente um objeto JSON válido.`;
     // CHAMADA B — GERAÇÃO DAS SALAS COM O PLANO COMO ÂNCORA DURA
     // ══════════════════════════════════════════════════════════
    const promptSalas = (plano, conexoes) => {
-    // Transforma o plano num formato fácil para o modelo ler as saídas que ele DEVE incluir no texto
+    // Transforma o plano num formato fácil, ocultando ações de retorno explícitas 
+    // para que o Arquiteto não sinta a obrigação narrativa de apontar para trás.
     const resumoPlano = Object.entries(plano).map(([id, sala]) => {
-        const acoes = sala.saidas.map(s => s.acao).join(" | ");
-        return `SALA ${id} (${sala.local_fisico}): O texto DEVE preparar o terreno para estas ações exatas -> [${acoes}]`;
+        const acoes = sala.saidas
+            .map(s => s.acao)
+            .filter(acao => !acao.toLowerCase().includes('voltar') && !acao.toLowerCase().includes('retornar'))
+            .join(" | ");
+        return `SALA ${id} (${sala.local_fisico}): O texto DEVE preparar o terreno para estas ações -> [${acoes || 'Foco apenas no ambiente'}]`;
     }).join("\n");
 
     return `Você é o Arquiteto de Mundo de um RPG de horror visceral. 
@@ -536,16 +540,17 @@ O esqueleto das salas já está definido. Sua única função é escrever o "tex
 ${resumoPlano}
 
 [REGRAS DE OURO DA ARQUITETURA NARRATIVA]
-1. ANCORAGEM RETROATIVA: O texto não deve começar descrevendo a sala de forma isolada, mas validando a entrada.
-2. PREPARAÇÃO PROSPECTIVA OBRIGATÓRIA: Para cada sala listada acima, há ações específicas. O seu "texto_logico" DEVE descrever fisicamente os objetos ou locais que essas ações exigem. Não crie botões fantasmagóricos.
-3. ESTILO: Seco, direto, material e perigoso. Zero floreios heroicos.
+1. ANCORAGEM RETROATIVA: O texto não deve começar descrevendo a sala de forma isolada, mas validando a entrada no local.
+2. PREPARAÇÃO PROSPECTIVA OBRIGATÓRIA: Descreva fisicamente os objetos ou locais que as ações listadas acima exigem. Não crie botões fantasmagóricos.
+3. CEGUEIRA DE RETORNO (CRÍTICA): É ESTRITAMENTE PROIBIDO descrever o caminho pelo qual o jogador acabou de chegar ou convites para voltar (ex: NUNCA escreva "Atrás de você, a porta...", "A escada que te trouxe permite descer"). A interface do jogo cuida dos botões de retorno automaticamente. O texto deve focar APENAS no ambiente presente e no que há pela frente.
+4. ESTILO: Seco, direto, material e perigoso. Zero floreios heroicos.
 
 [ESTRUTURA DO JSON]
 Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o texto bruto.
 {
   "salas": {
     "1": {
-      "texto_logico": "Texto denso e descritivo que ancora a chegada e descreve os caminhos disponíveis..."
+      "texto_logico": "Texto denso e descritivo que ancora a chegada e descreve os caminhos disponíveis (exceto o caminho pelo qual o jogador acabou de chegar)..."
     },
     "2": { ... },
     "3": { ... }
