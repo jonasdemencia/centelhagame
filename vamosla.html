@@ -463,7 +463,7 @@ function validarTextoLogico(textoLogico, acaoChegadaEsperada) {
 
     // Se temos a ação de chegada esperada, extrai o substantivo principal
     // e verifica se ele reaparece após a primeira frase como objeto/rota
-    if (acaoChegadaEsperada) {
+        if (acaoChegadaEsperada && acaoChegadaEsperada !== "MULTIPLAS_ENTRADAS") {
                 const stopwords = ['para', 'pela', 'pelo', 'com', 'como', 'sobre', 'entre', 'trás', 'frente', 'lado'];
         const palavrasChave = acaoChegadaEsperada
             .toLowerCase()
@@ -487,12 +487,18 @@ function validarTextoLogico(textoLogico, acaoChegadaEsperada) {
 function corrigirAncoragem(textoLogico, acaoChegada) {
     const ancoramentoGenerico = /^você (se encontra|está|fica|nota|percebe)/i;
     if (acaoChegada && ancoramentoGenerico.test(textoLogico.trim())) {
-        const verboCorrido = acaoChegada.toLowerCase();
-        // Substitui o início genérico pelo padrão correto
-        return textoLogico.replace(
-            /^você (se encontra|está|fica|nota|percebe)\s*/i,
-            `Depois de ${verboCorrido}, você `
-        );
+        if (acaoChegada === "MULTIPLAS_ENTRADAS") {
+            return textoLogico.replace(
+                /^você (se encontra|está|fica|nota|percebe)\s*/i,
+                `Ao avançar para este local, você `
+            );
+        } else {
+            const verboCorrido = acaoChegada.toLowerCase();
+            return textoLogico.replace(
+                /^você (se encontra|está|fica|nota|percebe)\s*/i,
+                `Depois de ${verboCorrido}, você `
+            );
+        }
     }
     return textoLogico;
 }
@@ -570,24 +576,28 @@ Retorne exclusivamente um objeto JSON válido.`;
     // ══════════════════════════════════════════════════════════
     const promptSalas = (plano, conexoes) => {
     
-    // ── CORREÇÃO: Mapa determinístico de ações de chegada ──
-    const acaoChegada = {};
+    // ── CORREÇÃO: Mapa determinístico de ações de chegada (HUB AWARE) ──
+    const acoesChegada = {}; // Agora guarda um array de ações possíveis
     const idPrimeiraSala = Math.min(...Object.keys(plano).map(Number));
 
     for (const [idStr, sala] of Object.entries(plano)) {
         const idAtual = parseInt(idStr);
         for (const saida of (sala.saidas || [])) {
-            // IGNORA ROTAS DE RETORNO: Apenas ações de avanço definem âncora de chegada
+            // IGNORA ROTAS DE RETORNO: Apenas ações de avanço definem âncora
             if (saida.destino > idAtual) {
                 const destKey = String(saida.destino);
-                if (!acaoChegada[destKey]) {
-                    acaoChegada[destKey] = saida.acao;
+                if (!acoesChegada[destKey]) {
+                    acoesChegada[destKey] = [];
+                }
+                // Adiciona a ação apenas se for nova
+                if (!acoesChegada[destKey].includes(saida.acao)) {
+                    acoesChegada[destKey].push(saida.acao);
                 }
             }
         }
     }
     // Proteção absoluta: garante que a entrada da zona seja zerada
-    delete acaoChegada[String(idPrimeiraSala)];
+    delete acoesChegada[String(idPrimeiraSala)];
     // ─────────────────────────────────────────────────
 
         const resumoPlano = Object.entries(plano).map(([id, sala]) => {
@@ -597,10 +607,21 @@ Retorne exclusivamente um objeto JSON válido.`;
             .map(s => s.acao)
             .join(" | ");
         
-        // ── NOVO: Âncora de chegada injetada deterministicamente ──
-                const chegada = acaoChegada[id]
-            ? `[ÂNCORA OBRIGATÓRIA: Inicie a primeira frase OBRIGATORIAMENTE com "Depois de ${acaoChegada[id].toLowerCase()}, você...". Imediatamente após isso, foque a visão exclusivamente no que está adiante. O caminho que ficou para trás desapareceu narrativamente.]`
-            : `[SALA DE ENTRADA DA ZONA: sem âncora de chegada. Inicie descrevendo o que o jogador vê à frente.]`;
+                // ── NOVO: Âncora Dinâmica Baseada em Topologia ──
+        let chegada;
+        const acoesDestino = acoesChegada[id] || [];
+        
+        if (id == idPrimeiraSala) {
+            chegada = `[SALA DE ENTRADA DA ZONA: sem âncora de chegada. Inicie descrevendo o que o jogador vê à frente.]`;
+        } else if (acoesDestino.length > 1) {
+            // Convergência: Múltiplas entradas. Força âncora neutra!
+            chegada = `[ÂNCORA NEUTRA OBRIGATÓRIA: Esta sala é um ponto de convergência. Inicie a primeira frase OBRIGATORIAMENTE com "Ao avançar para este local, você...". Imediatamente após isso, foque a visão exclusivamente no que está adiante. O caminho que ficou para trás desapareceu narrativamente.]`;
+        } else if (acoesDestino.length === 1) {
+            // Caminho linear: Âncora específica segura.
+            chegada = `[ÂNCORA OBRIGATÓRIA: Inicie a primeira frase OBRIGATORIAMENTE com "Depois de ${acoesDestino[0].toLowerCase()}, você...". Imediatamente após isso, foque a visão exclusivamente no que está adiante. O caminho que ficou para trás desapareceu narrativamente.]`;
+        } else {
+            chegada = `[SALA SEM ÂNCORA: Inicie descrevendo o ambiente à frente.]`;
+        }
         // ──────────────────────────────────────────────────────────
 
         return `SALA ${id} (${sala.local_fisico}):\n${chegada}\nAções futuras disponíveis -> [${acoes || 'Foco apenas no ambiente'}]`;
@@ -707,25 +728,28 @@ console.log(`[Zona ${numeroZona}] Plano gerado:`, Object.keys(planoData.plano).l
             // Pega a prosa gerada em B (ou fallback caso o modelo tenha pulado a sala)
             let prosa = zonaData.salas[idSala]?.texto_logico || "Uma sala escura onde as paredes parecem respirar.";
             
-                        // ── NOVO: Validação de qualidade narrativa ──
-            const acaoChegadaLocal = {};
+                                    // ── NOVO: Validação de qualidade narrativa (HUB AWARE) ──
+            const acoesChegadaLocal = {};
             const idPrimeiraSalaLocal = Math.min(...Object.keys(planoData.plano).map(Number));
 
             for (const [idStr, sala] of Object.entries(planoData.plano)) {
                 const idAtual = parseInt(idStr);
                 for (const saida of (sala.saidas || [])) {
-                    // Reflete a mesma regra de ignorar retornos
                     if (saida.destino > idAtual) {
                         const destKey = String(saida.destino);
-                        if (!acaoChegadaLocal[destKey]) {
-                            acaoChegadaLocal[destKey] = saida.acao;
+                        if (!acoesChegadaLocal[destKey]) acoesChegadaLocal[destKey] = [];
+                        if (!acoesChegadaLocal[destKey].includes(saida.acao)) {
+                            acoesChegadaLocal[destKey].push(saida.acao);
                         }
                     }
                 }
             }
-            delete acaoChegadaLocal[String(idPrimeiraSalaLocal)];
+            delete acoesChegadaLocal[String(idPrimeiraSalaLocal)];
 
-            const acaoEntrada = acaoChegadaLocal[idSala];
+            const rotasEntrada = acoesChegadaLocal[idSala] || [];
+            // Flag especial se houver múltiplas entradas
+            const acaoEntrada = rotasEntrada.length === 1 ? rotasEntrada[0] : (rotasEntrada.length > 1 ? "MULTIPLAS_ENTRADAS" : null);
+
             const errosNarrativa = validarTextoLogico(prosa, acaoEntrada);
             if (errosNarrativa.length > 0) {
                 console.warn(`[ValidadorNarrativo] Sala ${idSala}:`, errosNarrativa);
