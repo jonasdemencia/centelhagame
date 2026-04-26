@@ -576,20 +576,21 @@ Retorne exclusivamente um objeto JSON válido.`;
     // ══════════════════════════════════════════════════════════
     const promptSalas = (plano, conexoes) => {
     
-    // ── CORREÇÃO: Mapa determinístico de ações de chegada (HUB AWARE) ──
-    const acoesChegada = {}; // Agora guarda um array de ações possíveis
+        // ── CORREÇÃO: Mapa determinístico de ações de chegada (SEMÂNTICO) ──
+    const acoesChegada = {}; 
     const idPrimeiraSala = Math.min(...Object.keys(plano).map(Number));
 
     for (const [idStr, sala] of Object.entries(plano)) {
-        const idAtual = parseInt(idStr);
         for (const saida of (sala.saidas || [])) {
-            // IGNORA ROTAS DE RETORNO: Apenas ações de avanço definem âncora
-            if (saida.destino > idAtual) {
+            // Abandona a regra de IDs (que falha em loops) e foca na semântica.
+            // Rotas de exploração NÃO começam com "Voltar".
+            const isRetorno = /^voltar\b/i.test(saida.acao.trim());
+            
+            if (!isRetorno) {
                 const destKey = String(saida.destino);
                 if (!acoesChegada[destKey]) {
                     acoesChegada[destKey] = [];
                 }
-                // Adiciona a ação apenas se for nova
                 if (!acoesChegada[destKey].includes(saida.acao)) {
                     acoesChegada[destKey].push(saida.acao);
                 }
@@ -602,8 +603,8 @@ Retorne exclusivamente um objeto JSON válido.`;
 
         const resumoPlano = Object.entries(plano).map(([id, sala]) => {
         const idAtual = parseInt(id);
-        const acoes = sala.saidas
-            .filter(s => s.destino > idAtual) // Oculta TODAS as rotas que apontam para trás
+                const acoes = sala.saidas
+            .filter(s => !/^voltar\b/i.test(s.acao.trim())) // Oculta rotas de retorno pela semântica
             .map(s => s.acao)
             .join(" | ");
         
@@ -728,14 +729,15 @@ console.log(`[Zona ${numeroZona}] Plano gerado:`, Object.keys(planoData.plano).l
             // Pega a prosa gerada em B (ou fallback caso o modelo tenha pulado a sala)
             let prosa = zonaData.salas[idSala]?.texto_logico || "Uma sala escura onde as paredes parecem respirar.";
             
-                                    // ── NOVO: Validação de qualidade narrativa (HUB AWARE) ──
+                                                // ── NOVO: Validação de qualidade narrativa (SEMÂNTICA) ──
             const acoesChegadaLocal = {};
             const idPrimeiraSalaLocal = Math.min(...Object.keys(planoData.plano).map(Number));
 
             for (const [idStr, sala] of Object.entries(planoData.plano)) {
-                const idAtual = parseInt(idStr);
                 for (const saida of (sala.saidas || [])) {
-                    if (saida.destino > idAtual) {
+                    const isRetorno = /^voltar\b/i.test(saida.acao.trim());
+                    
+                    if (!isRetorno) {
                         const destKey = String(saida.destino);
                         if (!acoesChegadaLocal[destKey]) acoesChegadaLocal[destKey] = [];
                         if (!acoesChegadaLocal[destKey].includes(saida.acao)) {
@@ -747,7 +749,6 @@ console.log(`[Zona ${numeroZona}] Plano gerado:`, Object.keys(planoData.plano).l
             delete acoesChegadaLocal[String(idPrimeiraSalaLocal)];
 
             const rotasEntrada = acoesChegadaLocal[idSala] || [];
-            // Flag especial se houver múltiplas entradas
             const acaoEntrada = rotasEntrada.length === 1 ? rotasEntrada[0] : (rotasEntrada.length > 1 ? "MULTIPLAS_ENTRADAS" : null);
 
             const errosNarrativa = validarTextoLogico(prosa, acaoEntrada);
