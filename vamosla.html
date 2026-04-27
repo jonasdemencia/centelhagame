@@ -584,7 +584,7 @@ async function abrirInventarioComItem(itemId, spanElement, idSala) {
 
         // Mostra a tela de inventário usando a classe 'ativo'
         const invTela = document.getElementById('inventario-narrativa');
-        invTela.classList.add('ativo');
+        invTela.style.display = 'flex';
 
         // Configura a imagem no preview (usa os IDs do inventário)
         document.getElementById('preview-image').src = itemData.image;
@@ -666,7 +666,7 @@ async function confirmarPegarItem(overlay) {
 function fecharInventario(overlay) {
     // Esconde a tela de inventário
     const invTela = document.getElementById('inventario-narrativa');
-    invTela.classList.remove('ativo');
+    invTela.style.display = 'none';
 
     // Reexibe o container principal do jogo
     document.getElementById('game-container').style.display = 'block';
