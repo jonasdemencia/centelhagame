@@ -576,50 +576,46 @@ Retorne exclusivamente um objeto JSON válido.`;
     // ══════════════════════════════════════════════════════════
     const promptSalas = (plano, conexoes) => {
     
-        // ── CORREÇÃO: Mapa determinístico de ações de chegada (SEMÂNTICO) ──
-    const acoesChegada = {}; 
+            // ── CORREÇÃO: Mapa determinístico de chegada — conta origens únicas ──
     const idPrimeiraSala = Math.min(...Object.keys(plano).map(Number));
 
+    // Passo 1: mapeia destino → [{ origemId, acao }] (todas as arestas)
+    const entradasPorSala = {};
     for (const [idStr, sala] of Object.entries(plano)) {
         for (const saida of (sala.saidas || [])) {
-            // Abandona a regra de IDs (que falha em loops) e foca na semântica.
-            // Rotas de exploração NÃO começam com "Voltar".
-            const isRetorno = /^voltar\b/i.test(saida.acao.trim());
-            
-            if (!isRetorno) {
-                const destKey = String(saida.destino);
-                if (!acoesChegada[destKey]) {
-                    acoesChegada[destKey] = [];
-                }
-                if (!acoesChegada[destKey].includes(saida.acao)) {
-                    acoesChegada[destKey].push(saida.acao);
-                }
-            }
+            const destKey = String(saida.destino);
+            if (!entradasPorSala[destKey]) entradasPorSala[destKey] = [];
+            entradasPorSala[destKey].push({ origem: idStr, acao: saida.acao });
         }
     }
-    // Proteção absoluta: garante que a entrada da zona seja zerada
-    delete acoesChegada[String(idPrimeiraSala)];
+    delete entradasPorSala[String(idPrimeiraSala)]; // entrada da zona sem âncora
     // ─────────────────────────────────────────────────
 
         const resumoPlano = Object.entries(plano).map(([id, sala]) => {
         const idAtual = parseInt(id);
-                const acoes = sala.saidas
+        const acoes = sala.saidas
             .filter(s => !/^voltar\b/i.test(s.acao.trim())) // Oculta rotas de retorno pela semântica
             .map(s => s.acao)
             .join(" | ");
         
-                // ── NOVO: Âncora Dinâmica Baseada em Topologia ──
+        // ── Âncora Dinâmica — baseada em contagem de nós de origem ──
         let chegada;
-        const acoesDestino = acoesChegada[id] || [];
-        
+        const entradas = entradasPorSala[id] || [];
+        const origensUnicas = new Set(entradas.map(e => e.origem)).size;
+
         if (id == idPrimeiraSala) {
             chegada = `[SALA DE ENTRADA DA ZONA: sem âncora de chegada. Inicie descrevendo o que o jogador vê à frente.]`;
-        } else if (acoesDestino.length > 1) {
-            // Convergência: Múltiplas entradas. Força âncora neutra!
+        } else if (origensUnicas > 1) {
+            // 2+ salas distintas podem chegar aqui → âncora neutra obrigatória
             chegada = `[ÂNCORA NEUTRA OBRIGATÓRIA: Esta sala é um ponto de convergência. Inicie a primeira frase OBRIGATORIAMENTE com "Ao avançar para este local, você...". Imediatamente após isso, foque a visão exclusivamente no que está adiante. O caminho que ficou para trás desapareceu narrativamente.]`;
-        } else if (acoesDestino.length === 1) {
-            // Caminho linear: Âncora específica segura.
-            chegada = `[ÂNCORA OBRIGATÓRIA: Inicie a primeira frase OBRIGATORIAMENTE com "Depois de ${acoesDestino[0].toLowerCase()}, você...". Imediatamente após isso, foque a visão exclusivamente no que está adiante. O caminho que ficou para trás desapareceu narrativamente.]`;
+        } else if (origensUnicas === 1) {
+            // Única origem: usa a ação de exploração (não-Voltar) se existir; senão, neutra
+            const acaoForward = entradas.find(e => !/^voltar\b/i.test(e.acao.trim()));
+            if (acaoForward) {
+                chegada = `[ÂNCORA OBRIGATÓRIA: Inicie a primeira frase OBRIGATORIAMENTE com "Depois de ${acaoForward.acao.toLowerCase()}, você...". Imediatamente após isso, foque a visão exclusivamente no que está adiante. O caminho que ficou para trás desapareceu narrativamente.]`;
+            } else {
+                chegada = `[ÂNCORA NEUTRA: Esta sala tem acesso único por retorno. Inicie com "Ao adentrar este local, você...". Foque no que está à frente.]`;
+            }
         } else {
             chegada = `[SALA SEM ÂNCORA: Inicie descrevendo o ambiente à frente.]`;
         }
@@ -730,26 +726,23 @@ console.log(`[Zona ${numeroZona}] Plano gerado:`, Object.keys(planoData.plano).l
             let prosa = zonaData.salas[idSala]?.texto_logico || "Uma sala escura onde as paredes parecem respirar.";
             
                                                 // ── NOVO: Validação de qualidade narrativa (SEMÂNTICA) ──
-            const acoesChegadaLocal = {};
-            const idPrimeiraSalaLocal = Math.min(...Object.keys(planoData.plano).map(Number));
+const idPrimeiraSalaLocal = Math.min(...Object.keys(planoData.plano).map(Number));
+const entradasLocal = {};
+for (const [idStr, sala] of Object.entries(planoData.plano)) {
+    for (const saida of (sala.saidas || [])) {
+        const destKey = String(saida.destino);
+        if (!entradasLocal[destKey]) entradasLocal[destKey] = [];
+        entradasLocal[destKey].push({ origem: idStr, acao: saida.acao });
+    }
+}
+delete entradasLocal[String(idPrimeiraSalaLocal)];
 
-            for (const [idStr, sala] of Object.entries(planoData.plano)) {
-                for (const saida of (sala.saidas || [])) {
-                    const isRetorno = /^voltar\b/i.test(saida.acao.trim());
-                    
-                    if (!isRetorno) {
-                        const destKey = String(saida.destino);
-                        if (!acoesChegadaLocal[destKey]) acoesChegadaLocal[destKey] = [];
-                        if (!acoesChegadaLocal[destKey].includes(saida.acao)) {
-                            acoesChegadaLocal[destKey].push(saida.acao);
-                        }
-                    }
-                }
-            }
-            delete acoesChegadaLocal[String(idPrimeiraSalaLocal)];
-
-            const rotasEntrada = acoesChegadaLocal[idSala] || [];
-            const acaoEntrada = rotasEntrada.length === 1 ? rotasEntrada[0] : (rotasEntrada.length > 1 ? "MULTIPLAS_ENTRADAS" : null);
+const entradasDaSala = entradasLocal[idSala] || [];
+const origensUnicasLocal = new Set(entradasDaSala.map(e => e.origem)).size;
+const acaoForwardLocal = entradasDaSala.find(e => !/^voltar\b/i.test(e.acao.trim()));
+const acaoEntrada = origensUnicasLocal > 1
+    ? "MULTIPLAS_ENTRADAS"
+    : (acaoForwardLocal ? acaoForwardLocal.acao : null);
 
             const errosNarrativa = validarTextoLogico(prosa, acaoEntrada);
             if (errosNarrativa.length > 0) {
