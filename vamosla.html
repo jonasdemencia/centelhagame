@@ -532,6 +532,32 @@ function fecharInventario(overlay) {
     atualizarLootRoom();
 }
 
+        function atualizarLootRoom() {
+    const lootContainer = document.getElementById('loot-area');
+    lootContainer.innerHTML = ''; 
+
+    if (!mapaMundo || !mapaMundo[secaoAtualId]) return;
+    
+    const salaAtual = mapaMundo[secaoAtualId];
+    
+    if (salaAtual.itens && salaAtual.itens.length > 0) {
+        salaAtual.itens.forEach(idItem => {
+            const itemDados = ITENS_DB[idItem];
+            if (!itemDados) return;
+
+            const span = document.createElement('span');
+            span.className = 'item-coletavel';
+            span.innerHTML = `⟡ ${itemDados.content}`;
+            
+            span.onclick = () => {
+                abrirInventarioComItem(idItem, span, secaoAtualId);
+            };
+            
+            lootContainer.appendChild(span);
+        });
+    }
+}
+
         async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, tentativas = 3) {
             for (let i = 0; i < tentativas; i++) {
                 const response = await fetch(WORKER_URL, {
