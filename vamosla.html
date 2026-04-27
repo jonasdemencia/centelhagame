@@ -576,51 +576,47 @@ Retorne exclusivamente um objeto JSON válido.`;
     // ══════════════════════════════════════════════════════════
     const promptSalas = (plano, conexoes) => {
     
-            // ── CORREÇÃO: Mapa determinístico de chegada — conta origens únicas ──
+                // ── CORREÇÃO: Mapa determinístico de ações de chegada (SEMÂNTICO) ──
+    const acoesChegada = {}; 
     const idPrimeiraSala = Math.min(...Object.keys(plano).map(Number));
 
-    // Passo 1: mapeia destino → [{ origemId, acao }] (todas as arestas)
-    const entradasPorSala = {};
     for (const [idStr, sala] of Object.entries(plano)) {
         for (const saida of (sala.saidas || [])) {
-            const destKey = String(saida.destino);
-            if (!entradasPorSala[destKey]) entradasPorSala[destKey] = [];
-            entradasPorSala[destKey].push({ origem: idStr, acao: saida.acao });
+            const isRetorno = /^voltar\b/i.test(saida.acao.trim());
+            if (!isRetorno) {
+                const destKey = String(saida.destino);
+                if (!acoesChegada[destKey]) {
+                    acoesChegada[destKey] = [];
+                }
+                if (!acoesChegada[destKey].includes(saida.acao)) {
+                    acoesChegada[destKey].push(saida.acao);
+                }
+            }
         }
     }
-    delete entradasPorSala[String(idPrimeiraSala)]; // entrada da zona sem âncora
+    delete acoesChegada[String(idPrimeiraSala)];
     // ─────────────────────────────────────────────────
 
         const resumoPlano = Object.entries(plano).map(([id, sala]) => {
         const idAtual = parseInt(id);
         const acoes = sala.saidas
-            .filter(s => !/^voltar\b/i.test(s.acao.trim())) // Oculta rotas de retorno pela semântica
+            .filter(s => !/^voltar\b/i.test(s.acao.trim()))
             .map(s => s.acao)
             .join(" | ");
         
-        // ── Âncora Dinâmica — baseada em contagem de nós de origem ──
         let chegada;
-        const entradas = entradasPorSala[id] || [];
-        const origensUnicas = new Set(entradas.map(e => e.origem)).size;
-
+        const acoesDestino = acoesChegada[id] || [];
+        
         if (id == idPrimeiraSala) {
             chegada = `[SALA DE ENTRADA DA ZONA: sem âncora de chegada. Inicie descrevendo o que o jogador vê à frente.]`;
-        } else if (origensUnicas > 1) {
-            // 2+ salas distintas podem chegar aqui → âncora neutra obrigatória
+        } else if (acoesDestino.length > 1) {
             chegada = `[ÂNCORA NEUTRA OBRIGATÓRIA: Esta sala é um ponto de convergência. Inicie a primeira frase OBRIGATORIAMENTE com "Ao avançar para este local, você...". Imediatamente após isso, foque a visão exclusivamente no que está adiante. O caminho que ficou para trás desapareceu narrativamente.]`;
-        } else if (origensUnicas === 1) {
-            // Única origem: usa a ação de exploração (não-Voltar) se existir; senão, neutra
-            const acaoForward = entradas.find(e => !/^voltar\b/i.test(e.acao.trim()));
-            if (acaoForward) {
-                chegada = `[ÂNCORA OBRIGATÓRIA: Inicie a primeira frase OBRIGATORIAMENTE com "Depois de ${acaoForward.acao.toLowerCase()}, você...". Imediatamente após isso, foque a visão exclusivamente no que está adiante. O caminho que ficou para trás desapareceu narrativamente.]`;
-            } else {
-                chegada = `[ÂNCORA NEUTRA: Esta sala tem acesso único por retorno. Inicie com "Ao adentrar este local, você...". Foque no que está à frente.]`;
-            }
+        } else if (acoesDestino.length === 1) {
+            chegada = `[ÂNCORA OBRIGATÓRIA: Inicie a primeira frase OBRIGATORIAMENTE com "Depois de ${acoesDestino[0].toLowerCase()}, você...". Imediatamente após isso, foque a visão exclusivamente no que está adiante. O caminho que ficou para trás desapareceu narrativamente.]`;
         } else {
             chegada = `[SALA SEM ÂNCORA: Inicie descrevendo o ambiente à frente.]`;
         }
         // ──────────────────────────────────────────────────────────
-
         return `SALA ${id} (${sala.local_fisico}):\n${chegada}\nAções futuras disponíveis -> [${acoes || 'Foco apenas no ambiente'}]`;
     }).join("\n\n");
 
@@ -726,23 +722,26 @@ console.log(`[Zona ${numeroZona}] Plano gerado:`, Object.keys(planoData.plano).l
             let prosa = zonaData.salas[idSala]?.texto_logico || "Uma sala escura onde as paredes parecem respirar.";
             
                                                 // ── NOVO: Validação de qualidade narrativa (SEMÂNTICA) ──
-const idPrimeiraSalaLocal = Math.min(...Object.keys(planoData.plano).map(Number));
-const entradasLocal = {};
-for (const [idStr, sala] of Object.entries(planoData.plano)) {
-    for (const saida of (sala.saidas || [])) {
-        const destKey = String(saida.destino);
-        if (!entradasLocal[destKey]) entradasLocal[destKey] = [];
-        entradasLocal[destKey].push({ origem: idStr, acao: saida.acao });
-    }
-}
-delete entradasLocal[String(idPrimeiraSalaLocal)];
+            // ── NOVO: Validação de qualidade narrativa (SEMÂNTICA) ──
+            const acoesChegadaLocal = {};
+            const idPrimeiraSalaLocal = Math.min(...Object.keys(planoData.plano).map(Number));
 
-const entradasDaSala = entradasLocal[idSala] || [];
-const origensUnicasLocal = new Set(entradasDaSala.map(e => e.origem)).size;
-const acaoForwardLocal = entradasDaSala.find(e => !/^voltar\b/i.test(e.acao.trim()));
-const acaoEntrada = origensUnicasLocal > 1
-    ? "MULTIPLAS_ENTRADAS"
-    : (acaoForwardLocal ? acaoForwardLocal.acao : null);
+            for (const [idStr, sala] of Object.entries(planoData.plano)) {
+                for (const saida of (sala.saidas || [])) {
+                    const isRetorno = /^voltar\b/i.test(saida.acao.trim());
+                    if (!isRetorno) {
+                        const destKey = String(saida.destino);
+                        if (!acoesChegadaLocal[destKey]) acoesChegadaLocal[destKey] = [];
+                        if (!acoesChegadaLocal[destKey].includes(saida.acao)) {
+                            acoesChegadaLocal[destKey].push(saida.acao);
+                        }
+                    }
+                }
+            }
+            delete acoesChegadaLocal[String(idPrimeiraSalaLocal)];
+
+            const rotasEntrada = acoesChegadaLocal[idSala] || [];
+            const acaoEntrada = rotasEntrada.length === 1 ? rotasEntrada[0] : (rotasEntrada.length > 1 ? "MULTIPLAS_ENTRADAS" : null);
 
             const errosNarrativa = validarTextoLogico(prosa, acaoEntrada);
             if (errosNarrativa.length > 0) {
@@ -1372,8 +1371,21 @@ function parsearEstadoEntidades(textoNarrador) {
     console.log('[ENTIDADES] Index atualizado:', entityIndex, '| Foco:', entidadeEmFoco);
 }
 
-// --- RENDERIZADOR DE NAVEGAÇÃO DO MAPA ---
-// --- RENDERIZADOR DE NAVEGAÇÃO DO MAPA ---
+
+        function prepararTextoChegada(textoLogico, acaoUsada) {
+    if (!acaoUsada) return textoLogico;
+
+    const isRetorno = /^voltar\b/i.test(acaoUsada.trim());
+    if (!isRetorno) return textoLogico; // exploração legítima — âncora original está correta
+
+    // Chegada via Voltar: a âncora queimada no texto está errada para este caminho.
+    // Substitui apenas a primeira frase (a âncora) por uma neutra.
+    // O restante do ambiente — que descreve o que está à frente — permanece intacto.
+    const semAncora = textoLogico.replace(/^[^.!?]+[.!?]\s*/, '');
+    return `Ao retornar, você se encontra novamente aqui. ${semAncora}`;
+}
+        
+        // --- RENDERIZADOR DE NAVEGAÇÃO DO MAPA ---
 function atualizarBotoesNavegacao() {
     const container = document.getElementById('map-controls');
     container.innerHTML = ''; // Limpa os botões antigos
@@ -1400,7 +1412,8 @@ function atualizarBotoesNavegacao() {
             const novaSala = mapaMundo[secaoAtualId];
             if (novaSala?.texto_logico) {
                 adicionarMensagem(`🧭 ${opcao.texto}`, 'user');
-                adicionarMensagem(novaSala.texto_logico, 'ai');
+                const textoFinal = prepararTextoChegada(novaSala.texto_logico, opcao.texto);
+                adicionarMensagem(textoFinal, 'ai');
                 // Mantém o histórico coerente para quando o jogador agir livremente
                 historicoConversa.push({ role: 'user', content: opcao.texto });
                 historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
