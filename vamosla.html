@@ -574,6 +574,18 @@ Retorne exclusivamente um objeto JSON válido.`;
     // ══════════════════════════════════════════════════════════
     // CHAMADA B — GERAÇÃO DAS SALAS COM O PLANO COMO ÂNCORA DURA
     // ══════════════════════════════════════════════════════════
+
+    // Extrai o substantivo físico de uma ação de transição, removendo o verbo de locomoção
+    // e preposições. Ex: "Atravessar o arco de pedra" → "arco de pedra"
+    function extrairElementoFisico(acao) {
+        return acao
+            // Remove verbo de locomoção inicial + preposição/artigo
+            .replace(/^(caminhar|atravessar|rastejar|subir|descer|avançar|entrar|sair|passar|seguir|cruzar|escalar|saltar|deslizar|correr|andar|voltar)\s+(pela?s?|pelos?|por\s+(?:uma?|o|a)|ao?\s+(?:longo|lado)\s+d[ao]s?|num?a?|(?:de\s+)?volta?\s+(?:pela?|pelo?|por)|até\s+(?:a|o)|em\s+(?:direção\s+a(?:o)?)?|ao?s?\s+|uma?\s+|o\s+|a\s+)/i, '')
+            // Segunda passagem para preposições simples que sobraram
+            .replace(/^(pela?s?|pelos?|por|ao?|um[a]?|o\s+|a\s+)/i, '')
+            .trim();
+    }
+
     const promptSalas = (plano, conexoes) => {
     
                 // ── CORREÇÃO: Mapa determinístico de ações de chegada (TOPOLÓGICO/BFS) ──
@@ -621,11 +633,24 @@ Retorne exclusivamente um objeto JSON válido.`;
 
         const resumoPlano = Object.entries(plano).map(([id, sala]) => {
         const idAtual = parseInt(id);
-                const acoes = sala.saidas
-            .filter(s => distancias[idAtual] <= distancias[s.destino]) // Filtro Topológico Matemático
-            .map(s => s.acao)
-            .join(" | ");
-        
+
+        const saidasForward = sala.saidas
+            .filter(s => distancias[idAtual] <= distancias[s.destino]); // Filtro Topológico Matemático
+
+        const acoes = saidasForward.map(s => s.acao).join(" | ");
+
+        // ── PREPARAÇÃO PROSPECTIVA DETERMINÍSTICA ──────────────────────
+        // Extrai o substantivo físico de cada ação forward e gera uma lista
+        // de elementos que DEVEM aparecer no texto_logico desta sala.
+        const saidasParaDescrever = saidasForward.filter(s => s.destino <= Math.max(...Object.keys(plano).map(Number)));
+        const elementosObrigatorios = saidasParaDescrever
+            .map(s => `    • "${extrairElementoFisico(s.acao)}" — este elemento DEVE estar descrito visualmente no ambiente`)
+            .join("\n");
+        const blocoElementos = elementosObrigatorios
+            ? `\n⚠️  ELEMENTOS FÍSICOS OBRIGATÓRIOS (VIOLAÇÃO = FALHA CRÍTICA):\n${elementosObrigatorios}`
+            : '';
+        // ──────────────────────────────────────────────────────────────
+
         let chegada;
         const acoesDestino = acoesChegada[id] || [];
         
@@ -639,7 +664,7 @@ Retorne exclusivamente um objeto JSON válido.`;
             chegada = `[SALA SEM ÂNCORA: Inicie descrevendo o ambiente à frente.]`;
         }
         // ──────────────────────────────────────────────────────────
-        return `SALA ${id} (${sala.local_fisico}):\n${chegada}\nAções futuras disponíveis -> [${acoes || 'Foco apenas no ambiente'}]`;
+        return `SALA ${id} (${sala.local_fisico}):\n${chegada}\nAções futuras disponíveis -> [${acoes || 'Foco apenas no ambiente'}]${blocoElementos}`;
     }).join("\n\n");
 
     return `Você é o Arquiteto de Mundo de um RPG de horror visceral. 
@@ -653,7 +678,7 @@ ${resumoPlano}
 1. ÂNCORA DE CHEGADA (REGRA ABSOLUTA):
    - Inicie a primeira frase exatamente com a âncora fornecida.
    - NÃO descreva o ponto de entrada como parte do cenário visual atual. Direcione toda a descrição para a frente, preparando as opções futuras listadas.
-2. PREPARAÇÃO PROSPECTIVA OBRIGATÓRIA: Descreva fisicamente os objetos ou locais que as ações listadas acima exigem. Não crie botões fantasmagóricos.
+2. PREPARAÇÃO PROSPECTIVA (REGRA ABSOLUTA — FALHA CRÍTICA SE VIOLADA): Cada sala tem uma lista de ⚠️ ELEMENTOS FÍSICOS OBRIGATÓRIOS. Esses substantivos foram extraídos diretamente das ações disponíveis. O texto DEVE descrever cada um desses elementos de forma visualmente concreta — o jogador precisa VÊ-LOS antes de poder escolher a ação correspondente. Se o elemento não aparecer no texto, a ação é um "botão fantasma" e o jogo quebra a imersão. Exemplo: se a ação é "Rastejar pelo túnel baixo", o texto deve descrever "um túnel baixo" visível no ambiente.
 3. ESTILO: Apenas matéria sensorial – visão, som, cheiro. PROÍBIDO mencionar "história", "segredo", "destino" ou julgar o ambiente.
 4. DENSIDADE AMBIENTAL OBRIGATÓRIA: Além dos caminhos preparados na Regra 2, inclua OBRIGATORIAMENTE 1 a 2 elementos descritivos independentes por sala. Exemplos do registro correto: uma cadeira tombada com correias de couro podres; ossos pequenos espalhados; marcas de dedos no pó.
 5. CEGUEIRA DE INTERFACE (REGRA ABSOLUTA): NUNCA escreva frases informativas como "Você pode escolher entre X ou Y" ou "Você tem a opção de...". NUNCA liste rotas. Apenas descreva a existência orgânica e visual dos elementos no ambiente.
