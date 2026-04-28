@@ -501,7 +501,8 @@
         function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal) {
             const seedHash = sementeGlobal.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0);
             const sementeSala = seedHash + parseInt(idSala);
-            
+
+            const rngSpawn = Math.random();
             if (rngSpawn > 0.35) return [];
 
             const textoCombinado = (textoLogico + " " + nomeLocal).toLowerCase();
