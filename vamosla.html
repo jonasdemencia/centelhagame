@@ -92,6 +92,26 @@
         font-family: 'VT323', monospace; font-size: 16px; cursor: pointer; margin: 5px;
     }
     #btn-sim-inv:hover, #btn-nao-inv:hover { background: #555; }
+/* 1. Desloca o container para cima */
+#inventario-narrativa .container {
+    position: relative;
+    top: -20px; /* Ajuste este valor para subir mais ou menos */
+}
+
+/* 2. Mantém o botão no lugar original e diminui seu tamanho */
+#carregar-municao-btn {
+    position: relative;
+    top: 20px; /* Deve ser o valor oposto do 'top' do container para neutralizar o movimento */
+    
+    /* Diminui o tamanho do botão */
+    transform: scale(0.8); /* Reduz em 20% o tamanho visual */
+    transform-origin: center; /* Garante que ele diminua a partir do centro */
+    
+    /* Ajuste fino de preenchimento e fonte */
+    padding: 5px 12px !important; 
+    font-size: 14px !important;
+}
+        
 </style>
 </head>
 <body>
