@@ -2355,7 +2355,6 @@ REGRAS DE CONVERSÃO (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
     <script src="arcanum-conditions.js"></script>
     <script src="weather-effects.js"></script>
     <script>
-    // Correção definitiva da desseleção para o vamosla
     document.addEventListener('mousedown', (e) => {
     const inventario = document.getElementById('inventario-narrativa');
     if (!inventario || inventario.style.display === 'none') return;
@@ -2375,6 +2374,11 @@ REGRAS DE CONVERSÃO (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
             if (previewDesc) previewDesc.textContent = '';
             if (previewImg) previewImg.style.display = 'none';
             if (previewContainer) previewContainer.style.display = 'none';
+
+            // 🔁 Reseta os contadores de clique dos itens
+            document.querySelectorAll('.item').forEach(item => {
+                item.clickCount = 0;
+            });
         }
     }
 });
