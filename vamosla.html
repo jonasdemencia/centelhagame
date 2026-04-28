@@ -2355,20 +2355,38 @@ REGRAS DE CONVERSÃO (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
     <script src="arcanum-conditions.js"></script>
     <script src="weather-effects.js"></script>
     <script>
-        // Corrige a desseleção de itens no inventário do vamoslá
-        document.addEventListener('mousedown', (e) => {
-            const inventario = document.getElementById('inventario-narrativa');
-            if (!inventario || inventario.style.display === 'none') return;
-            if (inventario.contains(e.target)) {
-                // Se o clique não for em um slot nem em um botão, remove a seleção
-                if (!e.target.closest('.slot') && !e.target.closest('button')) {
-                    document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
-                    if (window.selectedItem !== undefined) window.selectedItem = null;
-                    const btnMunicao = document.getElementById('carregar-municao-btn');
-                    if (btnMunicao) btnMunicao.style.display = 'none';
-                }
+    // Correção definitiva da desseleção para o vamosla
+    document.addEventListener('mousedown', (e) => {
+        const inventario = document.getElementById('inventario-narrativa');
+        
+        // Se o inventário não existe ou está escondido, não faz nada
+        if (!inventario || inventario.style.display === 'none') return;
+
+        // Verifica se o clique foi dentro da área do inventário/baú
+        if (inventario.contains(e.target)) {
+            
+            // Se o clique NÃO foi em um item, NÃO foi em um slot e NÃO foi em um botão
+            if (!e.target.closest('.item') && !e.target.closest('.slot') && !e.target.closest('button')) {
+                
+                console.log("Clique no vazio detectado: Limpando seleções...");
+
+                // 1. Limpa a classe 'selected' de TUDO (itens do baú e slots do inventário)
+                document.querySelectorAll('.item, .slot').forEach(el => {
+                    el.classList.remove('selected');
+                });
+
+                // 2. Limpa a variável global (caso o inventário.js a tenha exposto)
+                if (window.selectedItem !== undefined) window.selectedItem = null;
+                
+                // 3. Garante que o itemPendente (usado no vamosla) também seja limpo
+                window.itemPendente = null;
+
+                // 4. Esconde botões de ação que deveriam sumir sem seleção
+                const btnMunicao = document.getElementById('carregar-municao-btn');
+                if (btnMunicao) btnMunicao.style.display = 'none';
             }
-        });
-    </script>
+        }
+    });
+</script>
 </body>
 </html>
