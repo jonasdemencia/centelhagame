@@ -35,317 +35,7 @@
         .inv-btn-container { margin-top: 15px; display: flex; justify-content: space-between; gap: 10px; }
         .inv-btn { flex: 1; background: #2a251e; border: 1px solid #5a4a38; color: #b5a68b; padding: 10px; cursor: pointer; font-family: inherit; font-weight: bold; }
         .inv-btn:hover { background: #5a4a38; color: #fff; }
-
-        /* Overlay de fade (usado na transição para o inventário) */
-        .fade-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: black;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 1s ease;
-            z-index: 10000;
-        }
-        .fade-overlay.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        
-
-/* Inventário */
-#inventario-narrativa .preview-image-container {
-    width: 130px;
-    height: 96px;
-    background: #000039 url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/preview-background.png') center/cover no-repeat;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-    margin-top: -65px;
-    margin-left: 14px;
-    box-shadow: 
-        0 0 0 1px #999,
-        inset 0 0 0 1px #999,
-        inset 2px 2px 4px rgba(0, 0, 0, 0.6),
-        2px 2px 6px rgba(0, 0, 0, 0.4);
-}
-
-/* Canvas 3D */
-#canvas-container {
-    background: #000;
-    border: 2px solid #444;
-    overflow: hidden;
-    position: relative;
-    z-index: 1;  /* Abaixo do fade */
-}
-
-#three-canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-}
-
-        
-        
-        /* Regra para exibir o inventário */
-        #inventario-narrativa.ativo {
-            display: flex;
-        }
     </style>
-    @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'VT323', monospace;
-    background: #1a1a1a;
-    color: #e0e0e0;
-    font-size: 18px;
-    image-rendering: pixelated;
-}
-
-.container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.tela-ativa {
-    display: block;
-}
-
-.tela-oculta {
-    display: none;
-}
-
-/* Seleção de Narrativas */
-h1 {
-    text-align: center;
-    margin-bottom: 30px;
-    color: #ffd700;
-    font-size: 32px;
-}
-
-.lista-narrativas {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.narrativa-card {
-    background: #2a2a2a;
-    border: 2px solid #444;
-    padding: 20px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.narrativa-card:hover {
-    border-color: #ffd700;
-    background: #333;
-}
-
-.narrativa-card h3 {
-    color: #ffd700;
-    margin-bottom: 10px;
-    font-size: 24px;
-}
-
-/* Narrativa Ativa */
-.cabecalho {
-    display: flex;
-    align-items: center;
-    margin-bottom: 30px;
-    gap: 20px;
-}
-
-#voltar-selecao {
-    background: #444;
-    color: #e0e0e0;
-    border: 2px solid #666;
-    padding: 10px 15px;
-    font-family: 'VT323', monospace;
-    font-size: 18px;
-    cursor: pointer;
-}
-
-#voltar-selecao:hover {
-    background: #555;
-}
-
-#titulo-narrativa {
-    color: #ffd700;
-    font-size: 28px;
-}
-
-.secao-atual {
-    background: #2a2a2a;
-    border: 2px solid #444;
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.numero-secao {
-    color: #888;
-    margin-bottom: 20px;
-    font-size: 16px;
-}
-
-.texto-narrativa {
-    line-height: 1.6;
-    margin-bottom: 30px;
-    font-size: 20px;
-}
-
-.opcoes-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.opcao-btn {
-    background: #333;
-    color: #e0e0e0;
-    border: 2px solid #555;
-    padding: 15px 20px;
-    text-align: left;
-    font-family: 'VT323', monospace;
-    font-size: 18px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.opcao-btn:hover {
-    background: #444;
-    border-color: #ffd700;
-}
-
-.opcao-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Modal */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background: #2a2a2a;
-    border: 2px solid #ffd700;
-    padding: 30px;
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-}
-
-.modal h3 {
-    color: #ffd700;
-    margin-bottom: 20px;
-    font-size: 24px;
-}
-
-#rolar-dados, #continuar-teste {
-    background: #444;
-    color: #e0e0e0;
-    border: 2px solid #666;
-    padding: 10px 20px;
-    font-family: 'VT323', monospace;
-    font-size: 18px;
-    cursor: pointer;
-    margin-top: 15px;
-}
-
-#rolar-dados:hover, #continuar-teste:hover {
-    background: #555;
-}
-
-.oculto {
-    display: none;
-}
-
-#resultado-teste {
-    margin-top: 20px;
-}
-
-#status-teste {
-    font-weight: bold;
-    margin: 10px 0;
-}
-
-.sucesso {
-    color: #4CAF50;
-}
-
-.falha {
-    color: #f44336;
-}
-
-/* Fade Overlay */
-.fade-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: black;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 1s ease;
-    z-index: 10000;  /* Aumentado para cobrir tudo */
-}
-
-.fade-overlay.active {
-    opacity: 1;
-}
-
-/* Inventário */
-#inventario-narrativa .preview-image-container {
-    width: 130px;
-    height: 96px;
-    background: #000039 url('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/backgrounds/preview-background.png') center/cover no-repeat;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-    margin-top: -65px;
-    margin-left: 14px;
-    box-shadow: 
-        0 0 0 1px #999,
-        inset 0 0 0 1px #999,
-        inset 2px 2px 4px rgba(0, 0, 0, 0.6),
-        2px 2px 6px rgba(0, 0, 0, 0.4);
-}
-
-/* Canvas 3D */
-#canvas-container {
-    background: #000;
-    border: 2px solid #444;
-    overflow: hidden;
-    position: relative;
-    z-index: 1;  /* Abaixo do fade */
-}
-
-#three-canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-}
 </head>
 <body>
     <div id="game-container">
@@ -368,186 +58,13 @@ h1 {
         </div>
     </div>
 
-    <!-- TELA DE INVENTÁRIO (inicialmente oculta) -->
-    <div id="inventario-narrativa" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #141311; z-index: 1001; flex-direction: column; align-items: center; justify-content: center;">
-        <!-- Conteúdo completo do inventario (9).html, copiado abaixo -->
-        <div class="container">
-            <button id="carregar-municao-btn" style="display:none;">Carregar Munição</button>
-            <button onclick="resetInventory()" style="background: red; color: white; padding: 10px; display:none;">RESETAR INVENTÁRIO (TEMPORÁRIO)</button>
-            
-            <!-- Botão para expandir/recolher -->
-            <button id="expand-btn" class="expand-button">⚔️</button>
-            <button id="fechar-inventario-btn" style="position: absolute; top: 10px; right: 10px; z-index: 10; background: #a13d3d; color: white; border: none; padding: 10px 15px; font-family: 'VT323', monospace; font-size: 18px; cursor: pointer;">Fechar</button>
-            
-            <!-- Container da parte inferior (inicialmente no topo) -->
-            <div class="bottom-section" id="bottom-section">
-                <div class="carousel-wrapper">
-                    <div class="carousel-container">
-                        <div class="carousel-slide active" id="inventory-window">
-                            <div class="chest-area">
-                                <div class="left-panel">
-                                    <div class="name-panel">
-                                        <span id="char-name-display">Nome do Personagem</span>
-                                    </div>
-                                    
-                                    <div class="profile-info-container">
-                                        <img id="portrait-image" src="" alt="Retrato do Personagem" style="display: none;">
-                                        <div class="info-panel">
-    <iframe src="ecg.html" style="position: absolute; top: -38px; left: -35px; width: 300px; height: 80px; border: none; transform: scale(0.2); z-index: 5; overflow: hidden;" scrolling="no"></iframe>
-                                            <div><span id="char-class-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-race-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-alignment-info" class="green-text">-</span></div>
-                                            <div><span id="char-age-info" class="green-text">-</span> ANOS&nbsp;&nbsp;&nbsp;<span id="char-hand-info" class="green-text">-</span>&nbsp;&nbsp;&nbsp;HEM: <span id="char-hemisphere-info" class="green-text">-</span></div>
-                                            <div>HA: <span id="char-skill-info" class="green-text">-</span>&nbsp;&nbsp;CA: <span id="char-charisma-info" class="green-text">-</span>&nbsp;&nbsp;MA: <span id="char-magic-info" class="green-text">-</span>&nbsp;&nbsp;SO: <span id="char-luck-info" class="green-text">-</span></div>
-                                            <div>COURAÇA: <span id="char-couraca-info" class="green-text">0</span>&nbsp;&nbsp;DANO: <span id="char-dano-info" class="green-text">1</span>&nbsp;&nbsp;DIA: <span id="char-day-info" class="green-text">1</span></div>
-                                            <div>P.OURO: <span id="char-po-info" class="green-text">0</span>&nbsp;&nbsp;NÍVEL: <span id="char-level-info" class="green-text">1</span></div>
-                                        </div>
-                                    </div>
-
-                                    <div class="item-preview">
-                                        <div class="preview-image-window">
-                                            <div class="preview-image-container">
-                                                <img id="preview-image" src="" alt="Item Preview" style="display: none;">
-                                            </div>
-                                        </div>
-                                        <div class="preview-info-window">
-                                            <div class="preview-info">
-                                                <h3 id="preview-name"></h3>
-                                                <p id="preview-description"></p>
-                                            </div>
-                                        </div>
-                                        <div class="item-actions-window" id="item-actions-window" style="display: none;">
-                                            <div class="action-buttons">
-        <button class="action-btn" id="action-usar">Usar</button>
-        <button class="action-btn" id="action-combinar">Combinar</button>
-        <button class="action-btn" id="action-checar">Checar</button>
-        <button class="action-btn" id="action-descartar">Descartar</button>
-    </div>
-
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="right-panel">
-                                    <div class="chest">
-                                        <div class="items">
-                                            <div class="item">
-                                                Item de Exemplo
-                                                <span class="item-expand-toggle">+</span>
-                                                <div class="item-description" style="display: none;">
-                                                    Descrição deste item de exemplo.
-                                                </div>
-                                            </div>
-                                        </div>
-                                       
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="carousel-slide" id="character-sheet">
-                            <div class="sheet-grid-container">
-                                <div class="sheet-header">
-                                    <p><strong>Nome:</strong> <span id="char-name">-</span></p>
-                                    <p><strong>Classe:</strong> <span id="char-class">-</span></p>
-                                    <p><strong>Raça:</strong> <span id="char-race">-</span></p>
-                                </div>
-                                <div class="sheet-main-status">
-                                    <div class="attribute">
-                                        <span class="label">Energia</span>
-                                        <span id="char-energy">0/0</span>
-                                        <div class="barra-hp-container">
-                                            <div id="barra-hp-inventario" class="barra-hp"></div>
-                                        </div>
-                                    </div>
-                                    <div class="attribute xp-attribute">
-                                        <span class="label">Nível</span>
-                                        <span id="char-level">1</span>
-                                        <div class="xp-container">
-                                            <span id="char-xp">0/100</span>
-                                            <div class="barra-xp-container">
-                                                <div id="barra-xp-inventario" class="barra-xp"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="sheet-stats-grid">
-                                    <div class="stat-box"><span class="label">Habilidade</span><span id="char-skill">0</span></div>
-                                    <div class="stat-box"><span class="label">Couraça</span><span id="char-couraca">0</span></div>
-                                    <div class="stat-box"><span class="label">Carisma</span><span id="char-charisma">0</span></div>
-                                    <div class="stat-box"><span class="label">Dano</span><span id="char-dano">0</span></div>
-                                    <div class="stat-box"><span class="label">Magia</span><span id="char-magic">0</span></div>
-                                    <div class="stat-box"><span class="label">Sorte</span><span id="char-luck">0</span></div>
-                                </div>
-                                <div class="sheet-footer">
-                                    <span><strong>Alinhamento:</strong> <span id="char-alignment">-</span></span>
-                                    <span><strong>Mão:</strong> <span id="char-hand">-</span></span>
-                                    <span><strong>Hemisfério:</strong> <span id="char-hemisphere">-</span></span>
-                                    <span><strong>Dia:</strong> <span id="char-day">1</span></span>
-                                    <span><strong>Idade:</strong> <span id="char-idade">-</span></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="carousel-slide" id="dice-window">
-                            <div class="dice-slots-container">
-                                <h3>Dados Equipados</h3>
-                                <div class="dice-slots-grid">
-                                    <div class="dice-slot-row">
-                                        <div class="dice-slot" data-dice="D3">D3</div>
-                                        <div class="dice-slot" data-dice="D4">D4</div>
-                                        <div class="dice-slot" data-dice="D6">D6</div>
-                                    </div>
-                                    <div class="dice-slot-row">
-                                        <div class="dice-slot" data-dice="D8">D8</div>
-                                        <div class="dice-slot" data-dice="D10">D10</div>
-                                        <div class="dice-slot" data-dice="D12">D12</div>
-                                    </div>
-                                    <div class="dice-slot-row">
-                                        <div class="dice-slot" data-dice="D20">D20</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="chest dice-chest">
-                                <h2>Coleção de Dados</h2>
-                                <div class="dice-items">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="carousel-nav">
-                        <div class="carousel-buttons">
-                            <button id="prevBtn">◀</button>
-                            <button id="nextBtn">▶</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Container da parte superior (slots de equipamentos) -->
-            <div class="top-section" id="top-section">
-                <div class="character">
-                    <div class="equipment">
-        <div class="slot-row helmet-row">
-            <div class="slot" id="helmet" data-slot="helmet">Cabeça</div>
-        </div>
-        <div class="slot-row weapon-shield-row">
-            <div class="slot" id="weapon" data-slot="weapon">Mão Esquerda</div>
-            <div class="slot" id="shield" data-slot="shield">Mão Direita</div>
-        </div>
-        <div class="slot-row gloves-amulet-row">
-            <div class="slot" id="gloves" data-slot="gloves">Luvas</div>
-            <div class="slot" id="amulet" data-slot="amulet">Amuleto</div>
-        </div>
-        <div class="slot-row armor-row">
-            <div class="slot" id="armor" data-slot="armor">Peitoral</div>
-        </div>
-        <div class="slot-row rings-row">
-            <div class="slot" id="ring" data-slot="ring">Anel</div>
-            <div class="slot" id="ring2" data-slot="ring">Anel</div>
-        </div>
-    </div>
-
-                </div>
+    <div id="inventario-modal">
+        <div class="inv-content">
+            <img id="inv-preview-image" src="" alt="Item Oculto">
+            <div id="inv-preview-desc" style="font-size: 15px; line-height: 1.4; margin-bottom: 5px;"></div>
+            <div class="inv-btn-container" id="inv-btn-group">
+                <button class="inv-btn" id="btn-sim-inv">PEGAR</button>
+                <button class="inv-btn" id="btn-nao-inv">DEIXAR</button>
             </div>
         </div>
     </div>
@@ -557,8 +74,8 @@ h1 {
         // Importações Firebase (versão compatível com o inventário)
         // ============================================================
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
         // ============================================================
         // Configuração do Firebase & Firestore
@@ -801,481 +318,8 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal) {
 }
 
 // ============================================================
-// SISTEMA DE INVENTÁRIO COMPLETO (exatamente como inventario (34).js)
+// SISTEMA DE INVENTÁRIO (Adaptado de narrativas.js)
 // ============================================================
-let itemPendenteGlobal = null;
-let inventoryListener = null;
-let selectedItem = null;
-
-// --- Funções de UI do inventário (escopadas ao modal) ---
-function loadInventoryUI(inventoryData) {
-    const root = document.getElementById('inventario-narrativa');
-    if (!root) return;
-    const chestElement = root.querySelector('.items');
-    chestElement.innerHTML = '';
-
-    const allItemsArr = Object.values(ITENS_DB);
-    const largeItemElements = [];
-    const smallItemElements = [];
-
-    inventoryData.itemsInChest.forEach(dbItem => {
-        const fullItemData = allItemsArr.find(localItem => localItem.id === dbItem.id);
-        if (!fullItemData) return;
-
-        const newItem = document.createElement('div');
-        newItem.classList.add('item');
-        if (fullItemData.large) newItem.classList.add('large');
-        newItem.dataset.item = fullItemData.id;
-        newItem.dataset.uuid = dbItem.uuid || crypto.randomUUID();
-        newItem.dataset.itemName = fullItemData.content;
-
-        let energiaHTML = "";
-        if (fullItemData.energia) {
-            const porcentagem = (fullItemData.energia.total / fullItemData.energia.inicial) * 100;
-            let cor = "#4CAF50";
-            if (porcentagem <= 50) cor = "#FFA500";
-            if (porcentagem <= 25) cor = "#FF0000";
-            energiaHTML = `<div class="item-energy-bar"><div class="item-energy-fill" style="width: ${porcentagem}%; background-color: ${cor};"></div><span class="item-energy-text">${fullItemData.energia.total}/${fullItemData.energia.inicial}</span></div>`;
-        }
-
-        let itemHTML = `<img src="${fullItemData.thumbnailImage || fullItemData.image}" alt="${fullItemData.content}" />${energiaHTML}`;
-
-        if (fullItemData.consumable || fullItemData.projectile) {
-            const quantity = dbItem.quantity || fullItemData.quantity;
-            newItem.dataset.quantity = quantity;
-            if (fullItemData.consumable) {
-                newItem.dataset.consumable = 'true';
-                if (fullItemData.effect) newItem.dataset.effect = fullItemData.effect;
-                if (fullItemData.value) newItem.dataset.value = fullItemData.value;
-            }
-            if (fullItemData.projectile) newItem.dataset.projectile = 'true';
-            if (quantity > 0) itemHTML += `<span class="item-quantity">${quantity}</span>`;
-        }
-
-        if (fullItemData.ammoType) {
-            const savedAmmo = inventoryData.weaponAmmoCounts?.[fullItemData.content] || 0;
-            if (savedAmmo > 0) itemHTML += `<span class="weapon-ammo">${savedAmmo}</span>`;
-        }
-
-        newItem.innerHTML = itemHTML;
-        if (fullItemData.large) largeItemElements.push(newItem);
-        else smallItemElements.push(newItem);
-        addItemClickListener(newItem);
-    });
-
-    largeItemElements.forEach(item => chestElement.appendChild(item));
-    smallItemElements.forEach(item => chestElement.appendChild(item));
-
-    const inventorySpaces = inventoryData.inventorySpaces || 50;
-    const occupiedSpace = largeItemElements.length * 2 + smallItemElements.length;
-    for (let i = 0; i < Math.max(0, inventorySpaces - occupiedSpace); i++) {
-        const emptySlot = document.createElement('div');
-        emptySlot.classList.add('item', 'empty-slot');
-        chestElement.appendChild(emptySlot);
-    }
-
-    const slots = root.querySelectorAll('.slot');
-    slots.forEach(slot => {
-        const equippedItemName = inventoryData.equippedItems[slot.id];
-        const item = allItemsArr.find(i => i.content === equippedItemName);
-        if (item) {
-            let slotHTML = `<img src="${item.thumbnailImage || item.image}" alt="${item.content}" />`;
-            slot.dataset.itemName = item.content;
-            if (slot.dataset.slot === "weapon" && item.twoHanded) slot.classList.add('two-handed');
-            else if (slot.dataset.slot === "weapon") slot.classList.remove('two-handed');
-            if (slot.dataset.slot === "weapon" && item.ammoType) {
-                const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
-                if (loadedAmmo > 0) slotHTML += `<span class="slot-weapon-ammo">${loadedAmmo}</span>`;
-            }
-            slot.innerHTML = slotHTML;
-        } else {
-            slot.innerHTML = slot.dataset.slot;
-            delete slot.dataset.itemName;
-        }
-        slot.classList.toggle('equipped', !!equippedItemName);
-    });
-    updateSlotCompatibility();
-}
-
-function updateCharacterSheetModal(playerData) {
-    const root = document.getElementById('inventario-narrativa');
-    if (!root) return;
-    root.querySelector("#char-name").innerText = playerData.name || "-";
-    root.querySelector("#char-name-display").innerText = playerData.name || "Nome do Personagem";
-    root.querySelector("#char-race").innerText = playerData.race || "-";
-    root.querySelector("#char-class").innerText = playerData.class || "-";
-    root.querySelector("#char-alignment").innerText = playerData.alignment || "-";
-    root.querySelector("#char-day-info").innerText = playerData.gameTime?.currentDay ?? 1;
-    root.querySelector("#char-po-info").innerText = playerData.po || "0";
-    root.querySelector("#char-class-info").innerText = playerData.class || "-";
-    root.querySelector("#char-race-info").innerText = playerData.race || "-";
-    root.querySelector("#char-alignment-info").innerText = playerData.alignment || "-";
-    root.querySelector("#char-age-info").innerText = playerData.idade || "-";
-    const handText = playerData.maoDominante === "esquerda" ? "Canhoto" : playerData.maoDominante === "direita" ? "Destro" : "-";
-    root.querySelector("#char-hand-info").innerText = handText;
-    root.querySelector("#char-hemisphere-info").innerText = playerData.hemisferioDominante || "-";
-    root.querySelector("#char-skill-info").innerText = (playerData.skill?.total ?? 0);
-    root.querySelector("#char-charisma-info").innerText = (playerData.charisma?.total ?? 0);
-    root.querySelector("#char-magic-info").innerText = (playerData.magic?.total ?? 0);
-    root.querySelector("#char-luck-info").innerText = (playerData.luck?.total ?? 0);
-    root.querySelector("#char-couraca-info").innerText = playerData.couraca || "0";
-    root.querySelector("#char-energy").innerText = `${playerData.energy?.total ?? 0}/${playerData.energy?.initial ?? 0}`;
-    root.querySelector("#char-level").innerText = "1";
-    root.querySelector("#char-xp").innerText = "0/100";
-    root.querySelector("#char-skill").innerText = playerData.skill?.total ?? "-";
-    root.querySelector("#char-couraca").innerText = playerData.couraca || "0";
-    root.querySelector("#char-charisma").innerText = playerData.charisma?.total ?? "-";
-    root.querySelector("#char-magic").innerText = playerData.magic?.total ?? "-";
-    root.querySelector("#char-luck").innerText = playerData.luck?.total ?? "-";
-    root.querySelector("#char-dano").innerText = "1";
-    root.querySelector("#char-hand").innerText = handText;
-    root.querySelector("#char-hemisphere").innerText = playerData.hemisferioDominante || "-";
-    root.querySelector("#char-day").innerText = playerData.gameTime?.currentDay ?? 1;
-    root.querySelector("#char-idade").innerText = playerData.idade || "-";
-    const barraHP = root.querySelector("#barra-hp-inventario");
-    if (barraHP && playerData.energy?.initial) {
-        barraHP.style.width = `${Math.max(0, (playerData.energy.total / playerData.energy.initial) * 100)}%`;
-    }
-}
-
-function addItemClickListener(item) {
-    item.clickCount = 0;
-    item.addEventListener('click', (event) => {
-        if (event.target.classList.contains('item-expand-toggle')) return;
-        document.querySelectorAll('#inventario-narrativa .item').forEach(other => { if (other !== item) other.clickCount = 0; });
-        item.clickCount++;
-        if (item.clickCount === 1) {
-            clearHighlights();
-            selectedItem = item;
-            item.classList.add('selected');
-            const itemData = Object.values(ITENS_DB).find(i => i.id === item.dataset.item);
-            if (itemData && itemData.slot) {
-                document.querySelectorAll('#inventario-narrativa .slot').forEach(slot => {
-                    if (slot.dataset.slot === itemData.slot) slot.classList.add('highlight');
-                });
-            }
-            const previewImage = document.querySelector('#inventario-narrativa #preview-image');
-            const previewName = document.querySelector('#inventario-narrativa #preview-name');
-            const previewDesc = document.querySelector('#inventario-narrativa #preview-description');
-            const previewContainer = document.querySelector('#inventario-narrativa .preview-image-container');
-            if (itemData) {
-                previewImage.src = itemData.image || "";
-                previewImage.style.display = 'block';
-                previewName.textContent = itemData.content;
-                previewDesc.textContent = '';
-                previewContainer.style.display = 'flex';
-            }
-        } else if (item.clickCount === 2) {
-            showItemActions();
-            item.clickCount = 0;
-        }
-    });
-    item.addEventListener('dblclick', (e) => { e.preventDefault(); showItemActions(); });
-}
-
-function clearHighlights() {
-    document.querySelectorAll('#inventario-narrativa .item').forEach(i => i.classList.remove('selected'));
-    document.querySelectorAll('#inventario-narrativa .slot').forEach(s => s.classList.remove('highlight'));
-}
-
-function showItemActions() {
-    const actionsWindow = document.getElementById('item-actions-window');
-    if (actionsWindow) {
-        actionsWindow.style.display = 'block';
-        requestAnimationFrame(() => actionsWindow.classList.add('active'));
-    }
-}
-
-function hideItemActions() {
-    const actionsWindow = document.getElementById('item-actions-window');
-    if (actionsWindow) {
-        actionsWindow.classList.remove('active');
-        setTimeout(() => actionsWindow.style.display = 'none', 400);
-    }
-}
-
-function updateSlotCompatibility() {
-    const weaponSlot = document.querySelector('#inventario-narrativa .slot[data-slot="weapon"]');
-    const shieldSlot = document.querySelector('#inventario-narrativa .slot[data-slot="shield"]');
-    if (!weaponSlot || !shieldSlot) return;
-    const weaponName = weaponSlot.dataset.itemName;
-    if (weaponName) {
-        const weaponData = Object.values(ITENS_DB).find(i => i.content === weaponName);
-        shieldSlot.classList.toggle('blocked', !!(weaponData && weaponData.twoHanded));
-    } else {
-        shieldSlot.classList.remove('blocked');
-    }
-}
-
-// --- Handlers dos slots e botões de ação ---
-async function slotClickHandler(e) {
-    if (!uidAtual) return;
-    const slot = e.currentTarget;
-    const playerRef = doc(db, "players", uidAtual);
-    const playerSnap = await getDoc(playerRef);
-    if (!playerSnap.exists()) return;
-    const inventoryData = playerSnap.data().inventory;
-    if (!inventoryData) return;
-
-    const slotId = slot.id;
-    const slotType = slot.dataset.slot;
-    const currentlyEquippedName = inventoryData.equippedItems[slotId];
-    const fullItem = Object.values(ITENS_DB).find(i => i.content === currentlyEquippedName);
-
-    if (selectedItem) {
-        const newItemData = Object.values(ITENS_DB).find(i => i.id === selectedItem.dataset.item);
-        if (newItemData && slotType === newItemData.slot) {
-            if (slotType === "shield") {
-                const weaponSlot = document.querySelector('#inventario-narrativa .slot[data-slot="weapon"]');
-                const weaponName = weaponSlot?.dataset.itemName;
-                if (weaponName) {
-                    const weaponData = Object.values(ITENS_DB).find(i => i.content === weaponName);
-                    if (weaponData && weaponData.twoHanded) {
-                        alert("Não é possível equipar escudo com arma de duas mãos!");
-                        return;
-                    }
-                }
-            }
-            if (slotType === "weapon" && newItemData.twoHanded) {
-                const shieldSlot = document.querySelector('#inventario-narrativa .slot[data-slot="shield"]');
-                const shieldName = shieldSlot?.dataset.itemName;
-                if (shieldName) {
-                    const shieldData = Object.values(ITENS_DB).find(i => i.content === shieldName);
-                    inventoryData.itemsInChest.push({ ...shieldData, uuid: crypto.randomUUID() });
-                    inventoryData.equippedItems.shield = null;
-                    alert("Escudo foi desequipado para usar arma de duas mãos!");
-                }
-            }
-            if (currentlyEquippedName && fullItem) {
-                if (fullItem.ammoType && inventoryData.equippedItems.weapon_loadedAmmo) {
-                    inventoryData.weaponAmmoCounts = inventoryData.weaponAmmoCounts || {};
-                    inventoryData.weaponAmmoCounts[currentlyEquippedName] = inventoryData.equippedItems.weapon_loadedAmmo;
-                }
-                inventoryData.itemsInChest.push({ ...fullItem, uuid: crypto.randomUUID() });
-            }
-            const idx = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
-            if (idx > -1) inventoryData.itemsInChest.splice(idx, 1);
-            inventoryData.equippedItems[slotId] = newItemData.content;
-            delete inventoryData.equippedItems.weapon_loadedAmmo;
-            if (newItemData.ammoType) {
-                inventoryData.weaponAmmoCounts = inventoryData.weaponAmmoCounts || {};
-                const savedAmmo = inventoryData.weaponAmmoCounts[newItemData.content] || 0;
-                inventoryData.equippedItems.weapon_loadedAmmo = savedAmmo;
-            }
-        }
-    } else if (currentlyEquippedName && fullItem) {
-        inventoryData.equippedItems[slotId] = null;
-        delete inventoryData.equippedItems.weapon_loadedAmmo;
-        inventoryData.itemsInChest.push({ ...fullItem, uuid: crypto.randomUUID() });
-    }
-    await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-    selectedItem = null;
-    clearHighlights();
-    hideItemActions();
-}
-
-async function actionUsarHandler() {
-    if (!selectedItem || !uidAtual) return;
-    const playerRef = doc(db, "players", uidAtual);
-    const playerSnap = await getDoc(playerRef);
-    if (!playerSnap.exists()) return;
-    const inventoryData = playerSnap.data().inventory;
-    const itemData = Object.values(ITENS_DB).find(i => i.id === selectedItem.dataset.item);
-    if (itemData?.consumable) {
-        const idx = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
-        if (idx > -1) {
-            inventoryData.itemsInChest[idx].quantity--;
-            if (inventoryData.itemsInChest[idx].quantity <= 0) inventoryData.itemsInChest.splice(idx, 1);
-            await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-        }
-    }
-    selectedItem = null;
-    clearHighlights();
-    hideItemActions();
-}
-
-async function actionDescartarHandler() {
-    if (!selectedItem || !uidAtual) return;
-    const playerRef = doc(db, "players", uidAtual);
-    const playerSnap = await getDoc(playerRef);
-    if (!playerSnap.exists()) return;
-    const inventoryData = playerSnap.data().inventory;
-    const idx = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
-    if (idx > -1) {
-        inventoryData.itemsInChest.splice(idx, 1);
-        inventoryData.discardedItems = inventoryData.discardedItems || [];
-        inventoryData.discardedItems.push(selectedItem.dataset.uuid);
-        await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-    }
-    selectedItem = null;
-    clearHighlights();
-    hideItemActions();
-}
-
-function actionChecarHandler() {
-    if (selectedItem) {
-        const itemData = Object.values(ITENS_DB).find(i => i.id === selectedItem.dataset.item);
-        if (itemData) {
-            const previewDesc = document.querySelector('#inventario-narrativa #preview-description');
-            previewDesc.textContent = '';
-            typeWriterDescription(itemData.description || '', previewDesc);
-        }
-    }
-}
-
-function typeWriterDescription(message, element) {
-    element.textContent = '';
-    let i = 0;
-    const speed = 30;
-    const id = setInterval(() => {
-        if (i < message.length) { element.textContent += message.charAt(i); i++; }
-        else clearInterval(id);
-    }, speed);
-}
-
-// --- Configuração do listener do Firestore para o inventário ---
-function iniciarInventario(uid) {
-    if (inventoryListener) inventoryListener();
-    const playerRef = doc(db, "players", uid);
-    inventoryListener = onSnapshot(playerRef, (docSnap) => {
-        if (!docSnap.exists() || !docSnap.data().inventory) return;
-        const data = docSnap.data();
-        loadInventoryUI(data.inventory);
-        updateCharacterSheetModal(data);
-    });
-}
-
-// --- Vincula eventos estáticos (slots, botões) uma única vez ---
-function bindInventoryEvents() {
-    document.querySelectorAll('#inventario-narrativa .slot').forEach(slot => {
-        slot.removeEventListener('click', slotClickHandler);
-        slot.addEventListener('click', slotClickHandler);
-    });
-    document.getElementById('action-usar')?.removeEventListener('click', actionUsarHandler);
-    document.getElementById('action-usar')?.addEventListener('click', actionUsarHandler);
-    document.getElementById('action-descartar')?.removeEventListener('click', actionDescartarHandler);
-    document.getElementById('action-descartar')?.addEventListener('click', actionDescartarHandler);
-    document.getElementById('action-checar')?.removeEventListener('click', actionChecarHandler);
-    document.getElementById('action-checar')?.addEventListener('click', actionChecarHandler);
-}
-
-// --- Funções de transição (abrir/fechar inventário para coleta) ---
-async function abrirInventarioComItem(itemId, spanElement, idSala) {
-    const itemData = ITENS_DB[itemId];
-    if (!itemData) return;
-
-    // Verifica espaço
-    if (uidAtual) {
-        const docRef = doc(db, "players", uidAtual);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            const inv = docSnap.data().inventory || {};
-            const chest = inv.itemsInChest || [];
-            const slots = inv.inventorySpaces || 50;
-            let ocupado = 0;
-            chest.forEach(i => ocupado += (ITENS_DB[i.id]?.large ? 2 : 1));
-            if (ocupado + (itemData.large ? 2 : 1) > slots) {
-                adicionarMensagem(`Seus bolsos estão pesados. Você não tem espaço suficiente para carregar ${itemData.content}.`, "system");
-                return;
-            }
-        }
-    }
-
-    window.narrativeActionInProgress = true;
-    itemPendenteGlobal = { id: itemId, span: spanElement, salaId: idSala };
-
-    const overlay = document.createElement('div');
-    overlay.className = 'fade-overlay';
-    document.body.appendChild(overlay);
-    setTimeout(() => overlay.classList.add('active'), 10);
-
-    setTimeout(() => {
-        document.getElementById('game-container').style.display = 'none';
-        const invTela = document.getElementById('inventario-narrativa');
-        invTela.classList.add('ativo');
-
-        const fecharBtn = document.getElementById('fechar-inventario-btn');
-        if (fecharBtn) fecharBtn.onclick = () => fecharInventario(null);
-        const expandBtn = document.getElementById('expand-btn');
-        if (expandBtn) expandBtn.onclick = () => invTela.classList.toggle('expanded');
-
-        document.getElementById('preview-image').src = itemData.image;
-        document.getElementById('preview-image').style.display = 'block';
-        document.querySelector('#inventario-narrativa .preview-image-container').style.display = 'flex';
-        document.getElementById('preview-name').textContent = '';
-        const texto = `Você pegará a ${itemData.content}?`;
-        const descEl = document.getElementById('preview-description');
-        descEl.innerHTML = '';
-        let i = 0;
-        const typeWriter = setInterval(() => {
-            if (i < texto.length) {
-                descEl.textContent += texto.charAt(i);
-                i++;
-            } else {
-                clearInterval(typeWriter);
-                descEl.innerHTML += '<br><button id="btn-sim-inv">Sim</button> <button id="btn-nao-inv">Não</button>';
-                document.getElementById('btn-sim-inv').addEventListener('click', () => confirmarPegarItem(overlay));
-                document.getElementById('btn-nao-inv').addEventListener('click', () => {
-                    document.getElementById('preview-image').src = '';
-                    document.getElementById('preview-image').style.display = 'none';
-                    document.querySelector('#inventario-narrativa .preview-image-container').style.display = 'none';
-                    document.getElementById('preview-name').textContent = '';
-                    descEl.innerHTML = '';
-                    itemPendenteGlobal = null;
-                    window.narrativeActionInProgress = false;
-                });
-            }
-        }, 50);
-
-        overlay.classList.remove('active');
-        setTimeout(() => overlay.remove(), 200);
-    }, 1500);
-}
-
-async function confirmarPegarItem(overlay) {
-    if (!itemPendenteGlobal) return;
-    const { id, salaId } = itemPendenteGlobal;
-    const itemNome = ITENS_DB[id].content;
-    const descEl = document.getElementById('preview-description');
-    descEl.innerHTML = '';
-
-    const sucesso = await adicionarItem(id);
-    if (sucesso) {
-        if (mapaMundo[salaId] && mapaMundo[salaId].itens) {
-            mapaMundo[salaId].itens = mapaMundo[salaId].itens.filter(i => i !== id);
-            await salvarEstadoJogador();
-        }
-        if (itemPendenteGlobal.span) itemPendenteGlobal.span.remove();
-        const texto = `Você pegou ${itemNome}.`;
-        let i = 0;
-        const typeWriter = setInterval(() => {
-            if (i < texto.length) { descEl.textContent += texto.charAt(i); i++; }
-            else { clearInterval(typeWriter); setTimeout(() => fecharInventario(null), 2000); }
-        }, 30);
-    } else {
-        descEl.textContent = `Não foi possível pegar ${itemNome}.`;
-        descEl.innerHTML = '<br><button id="btn-sim-inv">Sim</button> <button id="btn-nao-inv">Não</button>';
-        document.getElementById('btn-sim-inv').addEventListener('click', () => confirmarPegarItem(overlay));
-        document.getElementById('btn-nao-inv').addEventListener('click', () => fecharInventario(overlay));
-    }
-}
-
-function fecharInventario(overlay) {
-    const invTela = document.getElementById('inventario-narrativa');
-    invTela.classList.remove('ativo');
-    document.getElementById('game-container').style.display = 'block';
-    document.getElementById('preview-image').src = '';
-    document.getElementById('preview-image').style.display = 'none';
-    document.getElementById('preview-name').textContent = '';
-    document.getElementById('preview-description').innerHTML = '';
-    document.querySelector('#inventario-narrativa .preview-image-container').style.display = 'none';
-    if (overlay && overlay.parentNode) overlay.remove();
-    itemPendenteGlobal = null;
-    window.narrativeActionInProgress = false;
-    atualizarLootRoom();
-}
-
-// Função adicionarItem (já existente, mas agora será chamada pela confirmação)
 async function adicionarItem(itemId) {
     if (!uidAtual) return false;
     const docRef = doc(db, "players", uidAtual);
@@ -1285,6 +329,7 @@ async function adicionarItem(itemId) {
         const inventory = playerData.inventory || { inventorySpaces: 50, itemsInChest: [] };
         const chest = inventory.itemsInChest || [];
         const itemData = ITENS_DB[itemId];
+        
         if (!itemData) return false;
 
         const totalSlots = inventory.inventorySpaces || 50;
@@ -1294,25 +339,97 @@ async function adicionarItem(itemId) {
             const itemInfo = ITENS_DB[item.id] || item;
             slotsOcupados += itemInfo?.large ? 2 : 1;
         });
-        if (slotsOcupados + slotsNecessarios > totalSlots) return false;
+
+        if (slotsOcupados + slotsNecessarios > totalSlots) {
+            return false;
+        }
 
         if (itemData.stackable === true) {
             const existeItem = chest.find(item => item.id === itemId);
-            if (existeItem) existeItem.quantity = (existeItem.quantity || 1) + 1;
-            else chest.push({ ...itemData, quantity: 1, uuid: crypto.randomUUID() });
+            if (existeItem) {
+                existeItem.quantity = (existeItem.quantity || 1) + 1;
+            } else {
+                chest.push({ ...itemData, quantity: 1, uuid: crypto.randomUUID() });
+            }
         } else {
             const novoItem = { ...itemData, uuid: crypto.randomUUID() };
-            if (itemId === "pequenabolsaouro") novoItem.goldValue = Math.floor(Math.random() * 10) + 1;
+            if (itemId === "pequenabolsaouro") {
+                novoItem.goldValue = Math.floor(Math.random() * 10) + 1;
+            }
             chest.push(novoItem);
         }
+
         await setDoc(docRef, { inventory: { ...inventory, itemsInChest: chest } }, { merge: true });
         return true;
     }
     return false;
 }
 
+async function abrirInventarioComItem(itemId, spanElement, idSala) {
+    const itemData = ITENS_DB[itemId];
+    window.itemPendente = { id: itemId, span: spanElement, salaId: idSala };
+
+    const docRef = doc(db, "players", uidAtual);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        const inv = docSnap.data().inventory || {};
+        const chest = inv.itemsInChest || [];
+        const slots = inv.inventorySpaces || 50;
+        let ocupado = 0;
+        chest.forEach(i => ocupado += (ITENS_DB[i.id]?.large ? 2 : 1));
         
-        function atualizarLootRoom() {
+        if (ocupado + (itemData.large ? 2 : 1) > slots) {
+            adicionarMensagem(`Seus bolsos estão pesados. Você não tem espaço suficiente para carregar ${itemData.content}.`, "system");
+            window.itemPendente = null;
+            return;
+        }
+    }
+
+    document.getElementById('inv-preview-image').src = itemData.image;
+    document.getElementById('inv-preview-desc').innerHTML = `Apanhar ${itemData.content}?`;
+    document.getElementById('inventario-modal').style.display = 'flex';
+
+    document.getElementById('btn-sim-inv').onclick = confirmarPegarItem;
+    document.getElementById('btn-nao-inv').onclick = fecharInventario;
+}
+
+async function confirmarPegarItem() {
+    if (!window.itemPendente) return;
+    
+    // Altera interface para mostrar que está processando
+    const desc = document.getElementById('inv-preview-desc');
+    desc.innerHTML = `Guardando...`;
+    document.getElementById('inv-btn-group').style.display = 'none';
+
+    const { id, salaId } = window.itemPendente;
+    const itemNome = ITENS_DB[id].content;
+
+    const sucesso = await adicionarItem(id);
+    
+    if (sucesso) {
+        // Remove o item do mapa para não respawnar
+        if (mapaMundo[salaId] && mapaMundo[salaId].itens) {
+            mapaMundo[salaId].itens = mapaMundo[salaId].itens.filter(i => i !== id);
+            await salvarEstadoJogador();
+        }
+        adicionarMensagem(`[VOCÊ GUARDOU: ${itemNome}]`, 'system');
+        atualizarLootRoom();
+    } else {
+        adicionarMensagem(`[FALHA AO GUARDAR: ${itemNome}]`, 'system');
+    }
+    
+    setTimeout(() => {
+        fecharInventario();
+    }, 800);
+}
+
+function fecharInventario() {
+    document.getElementById('inventario-modal').style.display = 'none';
+    document.getElementById('inv-btn-group').style.display = 'flex';
+    window.itemPendente = null;
+}
+
+function atualizarLootRoom() {
     const lootContainer = document.getElementById('loot-area');
     lootContainer.innerHTML = ''; 
 
@@ -3032,8 +2149,6 @@ REGRAS DE CONVERSÃO (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
         if (user) {
             uidAtual = user.uid;
             await carregarDadosJogador(uidAtual);
-                        iniciarInventario(uidAtual);
-            bindInventoryEvents();
             
             // 🆕 Se o jogador é novo e não tem mapa, gera agora
             // Lista de temas sombrios variados (adicione quantos quiser)
