@@ -87,11 +87,25 @@
     }
     #fechar-inventario-btn:hover { background: #555; }
     
-    #btn-sim-inv, #btn-nao-inv {
+        #btn-sim-inv, #btn-nao-inv {
         background: #444; color: #e0e0e0; border: 2px solid #666; padding: 5px 15px;
         font-family: 'VT323', monospace; font-size: 16px; cursor: pointer; margin: 5px;
     }
     #btn-sim-inv:hover, #btn-nao-inv:hover { background: #555; }
+
+    /* Botão de munição menor */
+    #inventario-narrativa #carregar-municao-btn {
+        padding: 4px 8px !important;
+        font-size: 14px !important;
+        min-width: auto !important;
+        margin: 5px !important;
+    }
+
+    /* Container principal mais para cima */
+    #inventario-narrativa .container {
+        position: relative !important;
+        top: -30px !important;  /* ajuste o valor conforme necessário */
+    }
 </style>
 </head>
 <body>
