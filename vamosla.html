@@ -486,17 +486,123 @@
         };
 
         const KEYWORDS_LOOT = {
-            medico: ['sangue', 'ferid', 'cadáver', 'dor', 'macabro', 'carne', 'gemido'],
-            combate_corpo: ['ferro', 'forja', 'batalha', 'guarda', 'osso', 'quebrad', 'luta'],
-            combate_fogo: ['pólvora', 'metal', 'caixote', 'militar', 'ferrugem', 'trincheira'],
-            ocultismo: ['altar', 'vela', 'escuro', 'sombra', 'sussurro', 'ritual', 'símbolo', 'círculo'],
-            sobrevivencia: ['mochila', 'bolsa', 'armário', 'estante', 'acampamento', 'fogo', 'poço']
-        };
+    medico: [
+        'sangue', 'sangramento', 'ferid', 'ferimento', 'corte', 'machucado',
+        'cadáver', 'dor', 'macabro', 'carne', 'gemido', 'enfermaria',
+        'curativo', 'bandagem', 'remédio', 'cura', 'infecção', 'podridão',
+        'pus', 'médico', 'cirurgia', 'sutura', 'antisséptico', 'gaze',
+        'atadura', 'seringa', 'agulha', 'lanceta', 'soro', 'analgésico',
+        'morfina', 'hemorragia', 'fratura', 'desinfetar'
+    ],
+    combate_corpo: [
+        'ferro', 'forja', 'batalha', 'guarda', 'osso', 'quebrad', 'luta',
+        'porrete', 'cajado', 'clava', 'lança', 'espada', 'escudo',
+        'capacete', 'armadura', 'couraça', 'elmo', 'sabre', 'gládio',
+        'machado', 'martelo de guerra', 'maça', 'alfange', 'facão',
+        'faca', 'punhal', 'adaga', 'espada longa', 'montante',
+        'cimitarra', 'combate mortal', 'corpo a corpo', 'duelo',
+        'esgrima', 'parada', 'riposte', 'ataque pesado', 'defesa',
+        'bloqueio', 'esquiva', 'soco', 'chute'
+    ],
+    combate_fogo: [
+        'pólvora', 'metal', 'caixote', 'militar', 'ferrugem', 'trincheira',
+        'tiro', 'balística', 'projétil', 'cartucho', 'espingarda', 'rifle',
+        'carabina', 'submetralhadora', 'pistola', 'revólver', 'canhão',
+        'morteiro', 'granada', 'explosão', 'detonação', 'estopim',
+        'espoleta', 'alvo', 'recarga', 'mira', 'silenciador', 'bala',
+        'estilhaço', 'fogo cerrado', 'ataque a distância', 'arma de fogo',
+        'munição', 'coldre', 'gatilho', 'câmara de explosão'
+    ],
+    ocultismo: [
+        'altar', 'vela', 'escuro', 'sombra', 'sussurro', 'ritual',
+        'símbolo', 'círculo', 'magia', 'feiticeiro', 'invocação',
+        'encantamento', 'símbolo arcano', 'pentagrama', 'círculo mágico',
+        'grimório', 'pergaminho', 'poção', 'elixir', 'ervas místicas',
+        'cristal', 'amuletos', 'talismã', 'sigilo', 'maldição', 'praga',
+        'possessão', 'demônio', 'espírito', 'fantasma', 'assombração',
+        'necromancia', 'ritual de invocação', 'oferenda', 'vela preta',
+        'incenso', 'mirra', 'runas', 'desenho misterioso'
+    ],
+    sobrevivencia: [
+        'mochila', 'bolsa', 'armário', 'estante', 'acampamento', 'fogo',
+        'poço', 'comida', 'ração', 'água potável', 'fonte de água',
+        'rio', 'lago', 'cachoeira', 'frutos', 'bagas', 'caça',
+        'animal abatido', 'armadilha', 'fogueira', 'abrigo', 'tenda',
+        'barraca', 'cobertor', 'saco de dormir', 'cantil', 'garrafa',
+        'purificador', 'bússola', 'mapa', 'fósforos', 'isco', 'anzol',
+        'linha de pesca', 'arco e flecha', 'estilingue', 'faca de mato',
+        'machado de sobrevivência', 'kit de primeiros socorros',
+        'remédio natural', 'corda de fibra', 'lanterna', 'pilhas',
+        'rádio', 'sinalizador', 'colete refletivo', 'saco de lona',
+        'ferramenta multiúso', 'canivete suíço', 'frasco', 'filtro de água'
+    ]
+};
 
         function pseudoRandom(seed) {
             let x = Math.sin(seed++) * 10000;
             return x - Math.floor(x);
         }
+
+
+function analisarContexto(texto) {
+    if (!texto) return 'sobrevivencia';  // fallback original do seu sistema
+
+    // 1. Tokenização Inteligente e Normalização
+    const tokens = texto.toLowerCase()
+        .replace(/[.,!?;:()]/g, '')
+        .split(/\s+/)
+        .filter(w => w.length > 2);
+
+    if (tokens.length === 0) return 'sobrevivencia';
+
+    // 2. Frequência de Termos (TF) do Texto Atual
+    const tfDoc = {};
+    tokens.forEach(term => tfDoc[term] = (tfDoc[term] || 0) + 1);
+
+    const scores = {};
+
+    // 3. Cálculo de Similaridade de Cosseno por Vetor de Tema
+    for (const [tema, keywords] of Object.entries(KEYWORDS_LOOT)) {
+        let dotProduct = 0;
+        let magnitudeA = 0;
+        let magnitudeB = 0;
+
+        const themeVector = {};
+        keywords.forEach(k => {
+            themeVector[k] = k.includes(' ') ? 3 : 1;
+        });
+
+        for (const term in tfDoc) {
+            if (themeVector[term]) {
+                dotProduct += tfDoc[term] * themeVector[term];
+            }
+            magnitudeA += Math.pow(tfDoc[term], 2);
+        }
+
+        for (const term in themeVector) {
+            magnitudeB += Math.pow(themeVector[term], 2);
+        }
+
+        magnitudeA = Math.sqrt(magnitudeA);
+        magnitudeB = Math.sqrt(magnitudeB);
+
+        scores[tema] = (magnitudeA && magnitudeB) ? (dotProduct / (magnitudeA * magnitudeB)) : 0;
+    }
+
+    // 4. Decisão com threshold mínimo
+    let vencedor = 'sobrevivencia';
+    let maxSimilarity = 0.15;
+
+    for (const [tema, sim] of Object.entries(scores)) {
+        if (sim > maxSimilarity) {
+            maxSimilarity = sim;
+            vencedor = tema;
+        }
+    }
+
+    return vencedor;
+}
+        
 
 function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historicoItens = []) {
     const seedHash = sementeGlobal.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0);
@@ -506,22 +612,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
             if (rngSpawn > 0.15) return [];
 
             const textoCombinado = (textoLogico + " " + nomeLocal).toLowerCase();
-            let scores = { medico: 0, combate_corpo: 0, combate_fogo: 0, ocultismo: 0, sobrevivencia: 0 };
-            
-            for (const [tema, palavras] of Object.entries(KEYWORDS_LOOT)) {
-                palavras.forEach(palavra => {
-                    if (textoCombinado.includes(palavra)) scores[tema]++;
-                });
-            }
-
-            let temaVencedor = 'sobrevivencia';
-            let maxScore = 0;
-            for (const [tema, score] of Object.entries(scores)) {
-                if (score > maxScore) {
-                    maxScore = score;
-                    temaVencedor = tema;
-                }
-            }
+const temaVencedor = analisarContexto(textoCombinado);
 
             const pool = LOOT_POOLS[temaVencedor];
 
