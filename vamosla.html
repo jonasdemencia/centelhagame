@@ -2354,5 +2354,21 @@ REGRAS DE CONVERSÃO (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
     <script type="module" src="inventario.js"></script>
     <script src="arcanum-conditions.js"></script>
     <script src="weather-effects.js"></script>
+    <script>
+        // Corrige a desseleção de itens no inventário do vamoslá
+        document.addEventListener('mousedown', (e) => {
+            const inventario = document.getElementById('inventario-narrativa');
+            if (!inventario || inventario.style.display === 'none') return;
+            if (inventario.contains(e.target)) {
+                // Se o clique não for em um slot nem em um botão, remove a seleção
+                if (!e.target.closest('.slot') && !e.target.closest('button')) {
+                    document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+                    if (window.selectedItem !== undefined) window.selectedItem = null;
+                    const btnMunicao = document.getElementById('carregar-municao-btn');
+                    if (btnMunicao) btnMunicao.style.display = 'none';
+                }
+            }
+        });
+    </script>
 </body>
 </html>
