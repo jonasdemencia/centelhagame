@@ -545,7 +545,7 @@
 
 
 function analisarContexto(texto) {
-    if (!texto) return 'sobrevivencia';  // fallback original do seu sistema
+    if (!texto) return null;
 
     // 1. Tokenização Inteligente e Normalização
     const tokens = texto.toLowerCase()
@@ -553,7 +553,7 @@ function analisarContexto(texto) {
         .split(/\s+/)
         .filter(w => w.length > 2);
 
-    if (tokens.length === 0) return 'sobrevivencia';
+    if (tokens.length === 0) return null;
 
     // 2. Frequência de Termos (TF) do Texto Atual
     const tfDoc = {};
@@ -590,11 +590,11 @@ function analisarContexto(texto) {
     }
 
     // 4. Decisão com threshold mínimo
-    let vencedor = 'sobrevivencia';
-    let maxSimilarity = 0.15;
+    let vencedor = null;
+    let maxSimilarity = 0.12; // Ajustável conforme seus testes
 
     for (const [tema, sim] of Object.entries(scores)) {
-        if (sim > maxSimilarity) {
+        if (sim > maxSimilarity && (vencedor === null || sim > scores[vencedor])) {
             maxSimilarity = sim;
             vencedor = tema;
         }
@@ -606,43 +606,45 @@ function analisarContexto(texto) {
 
 function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historicoItens = []) {
     const seedHash = sementeGlobal.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0);
-            const sementeSala = seedHash + parseInt(idSala);
+    const sementeSala = seedHash + parseInt(idSala);
 
-            const rngSpawn = Math.random();
-            if (rngSpawn > 0.15) return [];
+    // Deterministic spawn chance (exatamente 15% a longo prazo)
+    const spawnSeed = seedHash + parseInt(idSala) + 999999;
+    if (pseudoRandom(spawnSeed) > 0.15) return [];
 
-            const textoCombinado = (textoLogico + " " + nomeLocal).toLowerCase();
-const temaVencedor = analisarContexto(textoCombinado);
+    const textoCombinado = (textoLogico + " " + nomeLocal).toLowerCase();
+    const temaVencedor = analisarContexto(textoCombinado);
+    if (temaVencedor === null) return []; // sem tema, sem item
 
-            const pool = LOOT_POOLS[temaVencedor];
+    const pool = LOOT_POOLS[temaVencedor];
 
-// --- Evita repetições (máximo 3 itens iguais consecutivos ou próximos) ---
-let itemEscolhido = null;
-let tentativas = 0;
-const MAX_TENTATIVAS = 5;
+    // --- Evita repetições (máximo 3 itens iguais consecutivos ou próximos) ---
+    let itemEscolhido = null;
+    let tentativas = 0;
+    const MAX_TENTATIVAS = 5;
 
-while (tentativas < MAX_TENTATIVAS && itemEscolhido === null) {
-    const idx = Math.floor(pseudoRandom(sementeSala + tentativas + 1) * pool.length);
-    const candidato = pool[idx];
-    if (!historicoItens.includes(candidato)) {
-        itemEscolhido = candidato;
-    }
-    tentativas++;
-}
-
-// Fallback: se não encontrou item fora do histórico, usa o primeiro do pool
-if (itemEscolhido === null) {
-    itemEscolhido = pool[0];
-}
-
-// Atualiza o histórico (mantém apenas os últimos 3 itens)
-historicoItens.push(itemEscolhido);
-if (historicoItens.length > 3) {
-    historicoItens.shift();
-}
-
-return [itemEscolhido];
+    while (tentativas < MAX_TENTATIVAS && itemEscolhido === null) {
+        const idx = Math.floor(pseudoRandom(sementeSala + tentativas + 1) * pool.length);
+        const candidato = pool[idx];
+        if (!historicoItens.includes(candidato)) {
+            itemEscolhido = candidato;
         }
+        tentativas++;
+    }
+
+    // Fallback: se não encontrou item fora do histórico, usa o primeiro do pool
+    if (itemEscolhido === null) {
+        itemEscolhido = pool[0];
+    }
+
+    // Atualiza o histórico (mantém apenas os últimos 3 itens)
+    historicoItens.push(itemEscolhido);
+    if (historicoItens.length > 3) {
+        historicoItens.shift();
+    }
+
+    return [itemEscolhido];
+}
 
         // ============================================================
         // SISTEMA DE INVENTÁRIO (PONTE ATUALIZADA)
