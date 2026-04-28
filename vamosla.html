@@ -2111,7 +2111,7 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
                         adicionarMensagem(textoFinal, 'ai');
                         historicoConversa.push({ role: 'user', content: opcao.texto });
                         historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
-                        if (historicoConversa.length > 6) historicoConversa.splice(0, 2);
+                        if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
                     }
 
                     atualizarBotoesNavegacao();
@@ -2443,9 +2443,9 @@ REGRAS DE CONVERSÃO (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
                 historicoConversa.push({ role: 'assistant', content: respostaLimpa });
 
                 // Trava fundamental para que o array não estoure a capacidade do KV Cache de 2048 tokens
-                if (historicoConversa.length > 6) {
-    historicoConversa.splice(0, 2);
-}
+                if (historicoConversa.length > 10) {
+                    historicoConversa.splice(0, 2);
+                }
 
                 setTimeout(() => {
                     salvarEstadoJogador().catch(e => console.error('Erro no salvamento background:', e));
