@@ -2375,10 +2375,17 @@ REGRAS DE CONVERSÃO (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
             if (previewImg) previewImg.style.display = 'none';
             if (previewContainer) previewContainer.style.display = 'none';
 
-            // 🔁 Reseta os contadores de clique dos itens
+            // Reseta contadores de clique
             document.querySelectorAll('.item').forEach(item => {
                 item.clickCount = 0;
             });
+
+            // Fecha a janela de ações (Usar, Combinar, Checar, Descartar)
+            const actionsWindow = document.getElementById('item-actions-window');
+            if (actionsWindow) {
+                actionsWindow.style.display = 'none';
+                actionsWindow.classList.remove('active');
+            }
         }
     }
 });
