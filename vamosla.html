@@ -637,33 +637,46 @@
             }, 1500);
         };
 
-        window.confirmarPegarItem = async function() {
-            if (!window.itemPendente) return;
-            
-            const desc = document.getElementById('preview-description');
-            desc.innerHTML = `Guardando...`;
-            
-            const btnSim = document.getElementById('btn-sim-inv');
-            const btnNao = document.getElementById('btn-nao-inv');
-            if(btnSim) btnSim.style.display = 'none';
-            if(btnNao) btnNao.style.display = 'none';
+       window.confirmarPegarItem = async function() {
+    if (!window.itemPendente) return;
+    
+    const desc = document.getElementById('preview-description');
+    const { id, salaId } = window.itemPendente;
+    const itemNome = ITENS_DB[id].content;
 
-            const { id, salaId } = window.itemPendente;
-            const itemNome = ITENS_DB[id].content;
+    // Oculta os botões Sim/Não imediatamente
+    const btnSim = document.getElementById('btn-sim-inv');
+    const btnNao = document.getElementById('btn-nao-inv');
+    if(btnSim) btnSim.style.display = 'none';
+    if(btnNao) btnNao.style.display = 'none';
 
-            const sucesso = await adicionarItem(id);
-            
-            if (sucesso) {
-                if (mapaMundo[salaId] && mapaMundo[salaId].itens) {
-                    mapaMundo[salaId].itens = mapaMundo[salaId].itens.filter(i => i !== id);
-                    await salvarEstadoJogador();
-                }
-                adicionarMensagem(`[VOCÊ GUARDOU: ${itemNome}]`, 'system');
-                atualizarLootRoom();
-            } else {
-                adicionarMensagem(`[FALHA AO GUARDAR: ${itemNome}]`, 'system');
-            }
-            
+    const sucesso = await adicionarItem(id);
+    
+    // Atualiza o mundo do jogo (se necessário)
+    if (sucesso) {
+        if (mapaMundo[salaId] && mapaMundo[salaId].itens) {
+            mapaMundo[salaId].itens = mapaMundo[salaId].itens.filter(i => i !== id);
+            await salvarEstadoJogador();
+        }
+        adicionarMensagem(`[VOCÊ GUARDOU: ${itemNome}]`, 'system');
+        atualizarLootRoom();
+    } else {
+        adicionarMensagem(`[FALHA AO GUARDAR: ${itemNome}]`, 'system');
+    }
+
+    // Prepara a mensagem de confirmação para o typewriter
+    const texto = sucesso ? `Você pegou ${itemNome}.` : `Falha ao guardar ${itemNome}.`;
+    desc.innerHTML = ''; // limpa qualquer texto anterior
+    
+    // Efeito typewriter
+    let i = 0;
+    const interval = setInterval(() => {
+        if (i < texto.length) {
+            desc.textContent += texto.charAt(i);
+            i++;
+        } else {
+            clearInterval(interval);
+            // Aguarda 2 segundos e depois fecha o inventário
             setTimeout(() => {
                 document.getElementById('preview-image').style.display = 'none';
                 document.getElementById('preview-image').src = '';
@@ -673,8 +686,10 @@
                 
                 window.itemPendente = null;
                 fecharInventario();
-            }, 1000);
-        };
+            }, 2000);
+        }
+    }, 50); // velocidade da digitação (50ms por caractere)
+};
 
         window.fecharInventario = function() {
             document.getElementById('inventario-narrativa').classList.remove('ativo');
