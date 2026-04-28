@@ -2352,18 +2352,8 @@ REGRAS DE CONVERSÃO (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
     </script>
     
     <script type="module" src="inventario.js"></script>
-<!-- Firebase compat (apenas para expor funções globais como window.doc) -->
-<script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
-<script>
-  // Expõe as funções que o arcanum-conditions.js espera
-  window.doc = firebase.firestore.doc;
-  window.getDoc = firebase.firestore.getDoc;
-  window.setDoc = firebase.firestore.setDoc;
-  window.updateDoc = firebase.firestore.updateDoc;
-  window.getFirestore = firebase.firestore.getFirestore;
-</script>
-<script src="arcanum-conditions.js"></script>    <script src="weather-effects.js"></script>
+<script src="arcanum-conditions.js"></script>
+    <script src="weather-effects.js"></script>
     <script>
     document.addEventListener('mousedown', (e) => {
     const inventario = document.getElementById('inventario-narrativa');
