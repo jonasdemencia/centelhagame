@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Centelha • Jogo Medieval Brutal (com testes visíveis)</title>
     
-    <!-- ✅ CORREÇÃO 1: VT323 agora carregado — sem isso o inventário usa monospace como fallback -->
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="inventario.css">
@@ -2332,7 +2331,8 @@ O que o personagem tenta desesperadamente fazer: "${pergunta}"  ← se FALHA
 - ATENÇÃO SEMÂNTICA: Interprete palavras ambíguas como "mortal", "salto" ou "ataque" como as AÇÕES FÍSICAS do jogador.
 - Obrigatório terminar o texto com a tag: [DANO: ${danoFinal}]`;
                         
-                        conversaRecenteParaEnvio = historicoConversa.slice(-2); 
+                        // Alteração principal para preservar o prefixo do Cache KV exatamente como no turno anterior
+                        conversaRecenteParaEnvio = [...historicoConversa]; 
                     }
 
                     const systemPrompt = {
@@ -2400,9 +2400,18 @@ REGRAS DE CONVERSÃO (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
                 if (isIntro) window._introGenerating = false;
 
                 if (!isInitial) {
+                    // Armazena exatamente o que foi enviado para a API (conteudoUser) no lugar da simples 'pergunta'
+                    // Isso é o segredo matemático para LM Studio espelhar 100% os tokens e dar Cache Hit
+                    historicoConversa.push({ role: 'user', content: conteudoUser });
+                } else {
                     historicoConversa.push({ role: 'user', content: pergunta });
                 }
                 historicoConversa.push({ role: 'assistant', content: respostaLimpa });
+
+                // Trava fundamental para que o array não estoure a capacidade do KV Cache de 2048 tokens
+                if (historicoConversa.length > 10) {
+                    historicoConversa.splice(0, 2);
+                }
 
                 setTimeout(() => {
                     salvarEstadoJogador().catch(e => console.error('Erro no salvamento background:', e));
