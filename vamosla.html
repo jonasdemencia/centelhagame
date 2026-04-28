@@ -88,7 +88,7 @@
     
     #btn-sim-inv, #btn-nao-inv {
         background: #444; color: #e0e0e0; border: 2px solid #666; padding: 5px 15px;
-        font-family: 'VT323', monospace; font-size: 16px; cursor: pointer; margin: 5px;
+        font-family: 'VT323', monospace; font-size: 16px; cursor: margin: 5px;
     }
     #btn-sim-inv:hover, #btn-nao-inv:hover { background: #555; }
 /* 1. Desloca o container para cima */
@@ -2207,6 +2207,7 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             try {
                 let mensagemFinal = pergunta;
                 let payloadAPI = []; 
+                let conteudoUser = ""; // <-- CORREÇÃO: Variável movida para cá para ficar acessível em todo o escopo do bloco try
 
                 if (!isInitial) {
                     const classificacaoRaw = classificarAcao(pergunta);
@@ -2296,7 +2297,6 @@ REGRA CRÍTICA: cada objeto físico mencionado nesses botões DEVE aparecer na s
                         textoItensOculto = `\n[NOTA NARRATIVA: Há loot físico no chão/ambiente: ${nomesLoot}. Descreva visualmente a presença deles de forma imersiva e sutil na cena.]`;
                     }
 
-                    let conteudoUser = "";
                     let conversaRecenteParaEnvio = [];
 
                     if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
