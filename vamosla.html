@@ -2328,8 +2328,6 @@ if (salaAtual && salaAtual.itens && salaAtual.itens.length > 0) {
     textoItensOculto = `\n[ITENS NO CHÃO]: Há loot físico (${nomesLoot}). Descreva-os sutilmente.`;
 }
 
-// 1. O MILAGRE: O System Prompt carrega o peso do mundo.
-// Isso tira o cenário do histórico iterativo, economizando milhares de tokens.
 const systemPromptContent = `Você é um terminal de transcrição forense e narrador brutal. Responda APENAS em Português Brasileiro.
 
 REGRAS ABSOLUTAS:
@@ -2348,12 +2346,11 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
 const systemPrompt = { role: 'system', content: systemPromptContent };
 
 let conversaRecenteParaEnvio = [];
-let acaoSimplesUser = "";
+let acaoSimplesUser = "";   // <--- DEFINIDA AQUI, no escopo externo do if (!isInitial)
 
-// 2. AÇÃO CONDENSADA (Delta): O histórico só guarda as ações, não o peso do cenário.
 if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
     acaoSimplesUser = `[AÇÃO DO SISTEMA]: Transcreva a chegada ao cenário ancorando os itens e botões visíveis.\n[DANO OBRIGATÓRIO NA TAG FINAL]: [DANO: 0]`;
-    conversaRecenteParaEnvio = []; // Limpa o contexto para a descrição fluir limpa
+    conversaRecenteParaEnvio = [];
 } else {
     acaoSimplesUser = `[AÇÃO DO JOGADOR]: "${pergunta}"\n[RESULTADO DEFINIDO PELO ÁRBITRO]: ${instrucaoResultado}\n[DANO OBRIGATÓRIO NA TAG FINAL]: [DANO: ${danoFinal}]`;
     conversaRecenteParaEnvio = [...historicoConversa];
@@ -2413,15 +2410,12 @@ payloadAPI = [systemPrompt, ...conversaRecenteParaEnvio, { role: 'user', content
                 if (isIntro) window._introGenerating = false;
 
                 if (!isInitial) {
-    // Armazena a versão super leve da ação (apenas o delta)
     historicoConversa.push({ role: 'user', content: acaoSimplesUser });
 } else {
     historicoConversa.push({ role: 'user', content: pergunta });
 }
 historicoConversa.push({ role: 'assistant', content: respostaLimpa });
 
-// Como cada turno agora pesa meros ~80 tokens em vez de 600, 
-// podemos manter 8 mensagens com segurança e longe dos 2048 de limite.
 if (historicoConversa.length > 8) {
     historicoConversa.splice(0, 2);
 }
