@@ -1674,13 +1674,13 @@ const historicoItensZona = [];
             return div.id;
         }
 
-        async function chamarLLMStream(mensagensPayload, maxTokens, onToken) {
+        async function chamarLLMStream(mensagensPayload, maxTokens, onToken, modelo = MODELO) {
             try {
                 const response = await fetch(LM_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        model: MODELO,
+                        model: modelo,
                         messages: mensagensPayload,
                         temperature: window._introGenerating ? 0.4 : 0.4,
                         max_tokens: maxTokens,
@@ -1729,7 +1729,7 @@ const historicoItensZona = [];
             }
         }
 
-        async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento, maxContinuacoes = 0) {
+        async function gerarRespostaComContinuacao(mensagensPayload, maxTokens, elemento, maxContinuacoes = 0, modelo = MODELO) {
             let textoCompleto = '';
             let msgsAtual = [...mensagensPayload];
 
@@ -1751,7 +1751,8 @@ const historicoItensZona = [];
                         }
                         elemento.innerText = textoCompleto + parcial;
                         chatBox.scrollTop = chatBox.scrollHeight;
-                    }
+                    },
+                    modelo
                 );
 
                 textoCompleto += text;
@@ -2395,7 +2396,12 @@ REGRAS DE CONVERSÃO (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
 
                 if (isIntro) window._introGenerating = true;
 
-                const respostaIA = await gerarRespostaComContinuacao(payloadAPI, maxTokens, elementoDisplay, maxContinuacoes);
+                // ── DELEGAÇÃO AO 1.5B ──────────────────────────────────────────
+                // Ações LIVRE não têm dado, sem dano, sem ambiguidade de alvo.
+                // O 1.5B as executa em <5s. O 7B fica reservado para RISCO/EXPRESSAO.
+                const modeloNarrador = (!isInitial && _ultimoTipoAcao === 'LIVRE') ? MODELO_JUIZ : MODELO;
+
+                const respostaIA = await gerarRespostaComContinuacao(payloadAPI, maxTokens, elementoDisplay, maxContinuacoes, modeloNarrador);
                 console.log(`[PROMPT ENVIADO] ${mensagemFinal.substring(0, 500)}...`);
 
                 const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
@@ -2434,15 +2440,17 @@ REGRAS DE CONVERSÃO (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
                 if (isIntro) window._introGenerating = false;
 
                 if (!isInitial) {
-                    // Armazena exatamente o que foi enviado para a API (conteudoUser) no lugar da simples 'pergunta'
-                    // Isso é o segredo matemático para LM Studio espelhar 100% os tokens e dar Cache Hit
-                    historicoConversa.push({ role: 'user', content: conteudoUser });
+                    // Armazena apenas a ação crua do jogador (pergunta), não o conteudoUser completo.
+                    // Isso reduz ~500 tokens por par para ~100, tornando o histórico sustentável
+                    // infinitamente dentro de 2048 tokens. O conteudoUser é sempre remontado fresh.
+                    historicoConversa.push({ role: 'user', content: pergunta });
                 } else {
                     historicoConversa.push({ role: 'user', content: pergunta });
                 }
                 historicoConversa.push({ role: 'assistant', content: respostaLimpa });
 
-                // Trava fundamental para que o array não estoure a capacidade do KV Cache de 2048 tokens
+                // Com histórico slim (~100 tok/par), 10 pares = ~1000 tokens.
+                // System (~442) + histórico (~1000) + mensagem atual (~500) = ~1942 < 2048. Seguro.
                 if (historicoConversa.length > 10) {
                     historicoConversa.splice(0, 2);
                 }
