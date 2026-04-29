@@ -2123,37 +2123,41 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         }
 
 // ============================================================================
-// 🚀 OTIMIZAÇÃO RADICAL DE LATÊNCIA (KV CACHE HIT – LM STUDIO)
+// 🚀 OTIMIZAÇÃO RADICAL DE LATÊNCIA + ESTABILIDADE (KV CACHE HIT + ANCORAGEM)
 // ============================================================================
-// Antes: 50+ segundos por ação   →   Agora: < 9 segundos.
-// 
-// O LM Studio (llama.cpp) mantém um cache do “prefixo” da conversa (tokens já
-// processados). Se o prefixo for IDÊNTICO entre duas requisições, o prompt não
-// é reprocessado; ele reutiliza o estado interno (KV cache) e só gera novos
-// tokens.
+// Antes: 50+ segundos por ação, com crashes frequentes (Vulkan shift).
+// Agora: estável (sem crashes) e tempo de resposta de 10 - 12 segundos no 7B,
+//        e 2–4 segundos no 1.5B.
 //
-// Mudanças implementadas (dentro de window.enviar):
+// Técnicas aplicadas (dentro de window.enviar):
 //
-// 1. histórico agora guarda a mensagem COMPLETA do usuário:
-//      historicoConversa.push({ role: 'user', content: conteudoUser })
-//    (antes era apenas a pergunta resumida "pergunta", que diferia a cada ação)
+// 1. ANCORAGEM DINÂMICA (System Prompt carrega o peso do mundo)
+//    - O system prompt agora contém a descrição completa da sala, itens e botões.
+//    - Isso retirou o cenário do histórico iterativo, reduzindo drasticamente o
+//      crescimento de tokens a cada turno (de ~600 para ~80 tokens por ação).
 //
-// 2. Na montagem do payload, enviar TODO o histórico:
-//      conversaRecenteParaEnvio = [...historicoConversa]
-//    (antes usava .slice(-2), que quebrava a continuidade do cache)
+// 2. HISTÓRICO CONDENSADO (apenas o delta da ação)
+//    - Em vez de guardar o enorme 'conteudoUser', armazenamos 'acaoSimplesUser',
+//      que contém apenas a ação do jogador + resultado do árbitro + tag de dano.
+//    - O prefixo do prompt permanece IDÊNTICO entre ações consecutivas (system
+//      + histórico fixo), garantindo Cache Hit no LM Studio.
 //
-// 3. Limitar o histórico a 10 mensagens para não exceder os 2048 tokens de
-//    contexto do modelo:
-//      if (historicoConversa.length > 10) historicoConversa.splice(0, 2)
+// 3. LIMITE DE HISTÓRICO REDUZIDO
+//    - De 10 mensagens (5 pares) passou para 8 mensagens (4 pares).
+//    - Cada interação agora pesa ~80 tokens, portanto 8 mensagens ocupam ~640
+//      tokens, longe do limite de 2048, sem risco de estouro.
 //
-// 4. System prompt fixo e respostas do assistente intactas – garantem que
-//    o prefixo (system + todas as mensagens anteriores) seja matematicamente
-//    igual entre um passo e o seguinte.
+// 4. HARDWARE E ESTABILIDADE
+//    - O modelo 7B (narrador) roda com GPU Offload = 0 (apenas CPU) porque o
+//      backend Vulkan da Intel Iris Xe causava crashes durante o shift do cache.
+//    - O modelo 1.5B (árbitro) roda com GPU Offload = 28 (todas as camadas) e
+//      CPU Thread Pool = 4, garantindo resposta rápida na classificação.
 //
-// Resultado: após a primeira ação (que ainda processa o prompt inteiro), todas
-// as ações subsequentes na mesma sessão rodam com custo de prompt ZERO.
-// A latência cai para aproximadamente o tempo de geração dos tokens de saída
-// (cerca de 8–9 segundos no modelo 7B Q4_K_M).
+// Resultado final:
+//   - Primeira ação de uma sessão: ainda processa o prompt inteiro (lento).
+//   - Ações subsequentes: Cache Hit total → tempo de resposta dominado apenas
+//     pela geração de tokens de saída (7B: 10–12s; 1.5B: 2–4s).
+//   - Sem crashes, sem estouro de contexto, sem necessidade de trocar de modelo.
 // ============================================================================
         
         window.enviar = async function(mensagemUsuario = null) {
