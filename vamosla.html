@@ -2241,8 +2241,7 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             try {
                 let mensagemFinal = pergunta;
                 let payloadAPI = []; 
-                let conteudoUser = ""; // <-- CORREÇÃO: Variável movida para cá para ficar acessível em todo o escopo do bloco try
-
+                let acaoSimplesUser = ""; // <--- CORREÇÃO 1: Declarada aqui, acessível em todo o try!
                 if (!isInitial) {
                     const classificacaoRaw = classificarAcao(pergunta);
                     let classificacao;
@@ -2346,7 +2345,6 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
 const systemPrompt = { role: 'system', content: systemPromptContent };
 
 let conversaRecenteParaEnvio = [];
-let acaoSimplesUser = "";   // <--- DEFINIDA AQUI, no escopo externo do if (!isInitial)
 
 if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
     acaoSimplesUser = `[AÇÃO DO SISTEMA]: Transcreva a chegada ao cenário ancorando os itens e botões visíveis.\n[DANO OBRIGATÓRIO NA TAG FINAL]: [DANO: 0]`;
@@ -2420,10 +2418,6 @@ if (historicoConversa.length > 8) {
     historicoConversa.splice(0, 2);
 }
 
-                // Trava fundamental para que o array não estoure a capacidade do KV Cache de 2048 tokens
-                if (historicoConversa.length > 10) {
-                    historicoConversa.splice(0, 2);
-                }
 
                 setTimeout(() => {
                     salvarEstadoJogador().catch(e => console.error('Erro no salvamento background:', e));
