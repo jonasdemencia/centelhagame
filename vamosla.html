@@ -2315,72 +2315,51 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
                     }
 
                     const salaAtual = mapaMundo && mapaMundo[secaoAtualId] ? mapaMundo[secaoAtualId] : null;
-                    const descricaoSala = salaAtual ? salaAtual.texto_logico : 'Cenário sombrio.';
-                    
-                    let elementosInterativos = "";
-                    if (salaAtual && salaAtual.opcoes) {
-                        const textosOpcoes = salaAtual.opcoes.map(opcao => `- "${opcao.texto}"`).join("\n");
-                        elementosInterativos = `\n\n[BOTÕES QUE O JOGADOR VERÁ APÓS SUA NARRAÇÃO]:
-${textosOpcoes}
-REGRA CRÍTICA: cada objeto físico mencionado nesses botões DEVE aparecer na sua narração. Se o botão diz "Forçar a porta à esquerda", você DEVE descrever uma porta à esquerda. Se o botão diz "Puxar o cabo", você DEVE mencionar o cabo. O jogador não pode ver um botão referenciando algo que sua narração não mostrou.`;
-                    }
+const descricaoSala = salaAtual ? salaAtual.texto_logico : 'Cenário sombrio.';
 
-                    let textoItensOculto = "";
-                    if (salaAtual && salaAtual.itens && salaAtual.itens.length > 0) {
-                        const nomesLoot = salaAtual.itens.map(id => ITENS_DB[id].content).join(", ");
-                        textoItensOculto = `\n[NOTA NARRATIVA: Há loot físico no chão/ambiente: ${nomesLoot}. Descreva visualmente a presença deles de forma imersiva e sutil na cena.]`;
-                    }
+let elementosInterativos = "";
+if (salaAtual && salaAtual.opcoes) {
+    elementosInterativos = salaAtual.opcoes.map(opcao => `- "${opcao.texto}"`).join("\n");
+}
 
-                    let conversaRecenteParaEnvio = [];
+let textoItensOculto = "";
+if (salaAtual && salaAtual.itens && salaAtual.itens.length > 0) {
+    const nomesLoot = salaAtual.itens.map(id => ITENS_DB[id].content).join(", ");
+    textoItensOculto = `\n[ITENS NO CHÃO]: Há loot físico (${nomesLoot}). Descreva-os sutilmente.`;
+}
 
-                    if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
-                        conteudoUser = `
-[CENÁRIO (AMBIENTE ATUAL)]
-FATOS A SEREM TRANSCRITOS: ${descricaoSala}${alertaMortos}${elementosInterativos}${textoItensOculto}
+// 1. O MILAGRE: O System Prompt carrega o peso do mundo.
+// Isso tira o cenário do histórico iterativo, economizando milhares de tokens.
+const systemPromptContent = `Você é um terminal de transcrição forense e narrador brutal. Responda APENAS em Português Brasileiro.
 
-[DADOS ESTRUTURAIS DO ARQUITETO]
-Local: ${descricaoSala}
-Interações Disponíveis: ${elementosInterativos}
+REGRAS ABSOLUTAS:
+1. FOCO: Narre em segunda pessoa ("Você..."). Máximo de 4 frases. Seja seco e clínico.
+2. PROIBIÇÃO DE POESIA: Não use clichês ou atmosfera poética. Seja literal e visceral.
+3. ESTADO ATUAL DO MUNDO (NÃO INVENTE NADA FORA DISSO):
+---
+[CENÁRIO]: ${descricaoSala}
+${alertaMortos ? `[CORPOS NO LOCAL]: ${npcsMortos}\n` : ''}${textoItensOculto}
+[BOTÕES VISÍVEIS (Interações Reais)]:
+${elementosInterativos || 'Nenhum'}
+---
+REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se de descrevê-los organicamente.
+4. VIOLÊNCIA: Em caso de falha física, descreva a destruição anatômica de forma direta.`;
 
-[MISSÃO DO NARRADOR]
-Sua tarefa é expandir o "texto_logico" acima em uma narrativa em segunda pessoa.
-1. Use a ANCORAGEM contida no texto para narrar a chegada física.
-2. Use a PREPARAÇÃO contida no texto para dar ênfase visual aos objetos das opções.
-3. Mantenha a fidelidade absoluta: se o Arquiteto não mencionou um objeto, você não o inventa.
+const systemPrompt = { role: 'system', content: systemPromptContent };
 
-Termine com: [DANO: 0]`;
-                        
-                        conversaRecenteParaEnvio = []; 
-                    } else {
-                        conteudoUser = `[CENÁRIO (AMBIENTE ATUAL)]
-FATOS A SEREM TRANSCRITOS: ${descricaoSala}${alertaMortos}${elementosInterativos}${textoItensOculto}
+let conversaRecenteParaEnvio = [];
+let acaoSimplesUser = "";
 
-[AÇÃO DO JOGADOR (PROTAGONISTA)]
-O que o personagem executa com maestria: "${pergunta}"  ← se SUCESSO
-O que o personagem tenta desesperadamente fazer: "${pergunta}"  ← se FALHA
+// 2. AÇÃO CONDENSADA (Delta): O histórico só guarda as ações, não o peso do cenário.
+if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
+    acaoSimplesUser = `[AÇÃO DO SISTEMA]: Transcreva a chegada ao cenário ancorando os itens e botões visíveis.\n[DANO OBRIGATÓRIO NA TAG FINAL]: [DANO: 0]`;
+    conversaRecenteParaEnvio = []; // Limpa o contexto para a descrição fluir limpa
+} else {
+    acaoSimplesUser = `[AÇÃO DO JOGADOR]: "${pergunta}"\n[RESULTADO DEFINIDO PELO ÁRBITRO]: ${instrucaoResultado}\n[DANO OBRIGATÓRIO NA TAG FINAL]: [DANO: ${danoFinal}]`;
+    conversaRecenteParaEnvio = [...historicoConversa];
+}
 
-[ORDEM PARA O NARRADOR]
-- Foque EXCLUSIVAMENTE no jogador executando a ação descrita acima.
-- ${instrucaoResultado}
-- ATENÇÃO SEMÂNTICA: Interprete palavras ambíguas como "mortal", "salto" ou "ataque" como as AÇÕES FÍSICAS do jogador.
-- Obrigatório terminar o texto com a tag: [DANO: ${danoFinal}]`;
-                        
-                        // Alteração principal para preservar o prefixo do Cache KV exatamente como no turno anterior
-                        conversaRecenteParaEnvio = [...historicoConversa]; 
-                    }
-
-                    const systemPrompt = {
-                        role: 'system',
-                        content: `Você é um terminal de transcrição de dados forenses. Responda APENAS em Português Brasileiro. Nunca responda em outro idioma.
-
-REGRAS DE CONVERSÃO (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
-1. TRANSFORMAÇÃO LITERAL: Sua única função é pegar os fatos secos do [CENÁRIO] e reescrevê-los para a segunda pessoa ("Você..."). Seja OBJETIVO, máximo 4 frases. 
-2. RETENÇÃO: Se o [CENÁRIO] cita um pedaço de papel, um texto escrito, uma janela ou uma fechadura, você É OBRIGADO a incluir essas informações exatas. Omitir pistas estruturais quebra o jogo.
-3. PROIBIÇÃO DE POESIA: Não invente descrições atmosféricas (é proibido usar clichês como "atmosfera cortando", "tempo estático", "lâmina"). Seja clínico, direto, objetivo e literal.
-4. VIOLÊNCIA CRUA: APENAS em caso de impacto físico contra corpos, abandone a brevidade. Descreva minuciosamente a destruição de tecidos e ossos (máximo 6 frases).`
-                    };
-
-                    payloadAPI = [systemPrompt, ...conversaRecenteParaEnvio, { role: 'user', content: conteudoUser }];
+payloadAPI = [systemPrompt, ...conversaRecenteParaEnvio, { role: 'user', content: acaoSimplesUser }];
 
                 } else {
                     payloadAPI = [
@@ -2434,13 +2413,18 @@ REGRAS DE CONVERSÃO (PUNIÇÃO MÁXIMA SE DESCUMPRIR):
                 if (isIntro) window._introGenerating = false;
 
                 if (!isInitial) {
-                    // Armazena exatamente o que foi enviado para a API (conteudoUser) no lugar da simples 'pergunta'
-                    // Isso é o segredo matemático para LM Studio espelhar 100% os tokens e dar Cache Hit
-                    historicoConversa.push({ role: 'user', content: conteudoUser });
-                } else {
-                    historicoConversa.push({ role: 'user', content: pergunta });
-                }
-                historicoConversa.push({ role: 'assistant', content: respostaLimpa });
+    // Armazena a versão super leve da ação (apenas o delta)
+    historicoConversa.push({ role: 'user', content: acaoSimplesUser });
+} else {
+    historicoConversa.push({ role: 'user', content: pergunta });
+}
+historicoConversa.push({ role: 'assistant', content: respostaLimpa });
+
+// Como cada turno agora pesa meros ~80 tokens em vez de 600, 
+// podemos manter 8 mensagens com segurança e longe dos 2048 de limite.
+if (historicoConversa.length > 8) {
+    historicoConversa.splice(0, 2);
+}
 
                 // Trava fundamental para que o array não estoure a capacidade do KV Cache de 2048 tokens
                 if (historicoConversa.length > 10) {
