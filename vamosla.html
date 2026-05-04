@@ -374,6 +374,7 @@
         let jogadorStats = {
             HABILIDADE: 0,
             CARISMA: 0,
+            MAGIA: 0,          // adicionado
             SORTE: 0
         };
 
@@ -995,6 +996,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
                     if (data?.skill?.total !== undefined) jogadorStats.HABILIDADE = data.skill.total;
                     if (data?.charisma?.total !== undefined) jogadorStats.CARISMA = data.charisma.total;
                     if (data?.luck?.total !== undefined) jogadorStats.SORTE = data.luck.total;
+                    if (data?.magic?.total !== undefined) jogadorStats.MAGIA = data.magic.total;
 
                     if (data.mapaMundo) mapaMundo = data.mapaMundo;
                     if (data.arcanumIudicium?.magiasMemorizadas) magiasMemorizadas = data.arcanumIudicium.magiasMemorizadas;
@@ -1031,6 +1033,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
                     "skill.total": jogadorStats.HABILIDADE,
                     "charisma.total": jogadorStats.CARISMA,
                     "luck.total": jogadorStats.SORTE,
+                    "magic.total": jogadorStats.MAGIA,
                     mapaMundo: mapaMundo,
                     secaoAtualId: secaoAtualId,
                     dnaGlobal: dnaGlobal,
@@ -1986,6 +1989,9 @@ console.log('[MAGIA] ID encontrado:', encontrada.id, '| Memorizadas:', magiasMem
     }
 }
 
+    // Se a magia existe e está memorizada → teste de MAGIA, sem precisar do árbitro
+    return { tipo: 'RISCO', atributo: 'MAGIA', fonte: 'magic-classifier' };
+}
 return null;
         }
 
