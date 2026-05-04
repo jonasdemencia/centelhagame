@@ -364,6 +364,7 @@
 
         let turnosJogados = 0;
         let energia = 0; 
+        let magiasMemorizadas = [];
         let uidAtual = null; 
         let _ultimoTipoAcao = 'TRIVIAL';   
         let _ultimoAtributo  = 'NENHUM';   
@@ -401,6 +402,33 @@
             'אָפֵל', 'שְׁאוֹל', 'לֵיל', 'דָּם', 'אֵשׁ',
             'קֶבֶר', 'זְוָעָה', 'אָרוּר', 'שַׁחַת', 'כְּאֵב'
         ];
+
+        const CATALOGO_MAGIAS = [
+    { id: "armadura-arcana",          nomes: ["armadura arcana", "vestes de recusa"] },
+    { id: "toque-vampirico",          nomes: ["toque vampírico", "toque vampirico", "thermovorus", "sede da alma faminta"] },
+    { id: "mao-interposta-bigby",     nomes: ["mão interposta de bigby", "mao interposta de bigby", "palma etérea de bigby"] },
+    { id: "animar-mortos",            nomes: ["animar os mortos", "animar mortos", "mortuum", "sussurros dos ossos despertos"] },
+    { id: "cone-glacial",             nomes: ["cone glacial", "nefrigum", "conus frigidus"] },
+    { id: "pele-rochosa",             nomes: ["pele rochosa", "lapideocutis", "armamento da rocha viva"] },
+    { id: "assassino-fantasmagorico", nomes: ["assassino fantasmagórico", "assassino fantasmagorico", "leviatã das sombras silenciosas"] },
+    { id: "relampago",                nomes: ["relâmpago", "relampago", "aerotremoris", "tremor do céu partido"] },
+    { id: "esfera-flamejante",        nomes: ["esfera flamejante", "orbe da ira ardente"] },
+    { id: "velocidade",               nomes: ["velocidade", "celeritas duplex"] },
+    { id: "causar-medo",              nomes: ["causar medo", "timoris", "eco do berro não nascido"] },
+    { id: "cura-maior",               nomes: ["cura maior", "cântico do coração que teima"] },
+    { id: "cura-menor",               nomes: ["cura menor", "sanitas", "murmúrio do sangue quieto"] },
+    { id: "missil-magico",            nomes: ["dardos místicos", "dardos misticos", "fulmen", "olhar afiado do inominado"] },
+    { id: "escudo-arcano",            nomes: ["escudo arcano", "aegis", "círculo do não-tocar"] },
+    { id: "luz",                      nomes: ["luz", "lumina", "vislumbre da aurora que queima"] },
+    { id: "pasmar",                   nomes: ["pasmar", "obstupra", "silêncio do instante rachado"] },
+    { id: "raio-acido",               nomes: ["raio de ácido", "raio acido", "corrodo", "chuva da boca amarga"] },
+    { id: "sono",                     nomes: ["sono", "quiescas", "cântico da pálpebra frágil"] },
+    { id: "toque-chocante",           nomes: ["toque chocante", "fulgor", "dedos da tempestade guardada"] },
+    { id: "flecha-acida-melf",        nomes: ["flecha ácida de melf", "flecha acida de melf", "sagittamelfax", "seta do ventre que corrói"] },
+    { id: "voo",                      nomes: ["voo", "volatus", "asas do pensamento leve"] },
+    { id: "escudo-do-fogo",           nomes: ["escudo do fogo", "scutum ignis", "muralha ígnea retaliadora"] },
+    { id: "toque-macabro",            nomes: ["toque macabro", "exsanguo", "frieza que suga a cor"] }
+];
 
         let intervaloAnimacao = null;
         let primeiroTokenRecebido = false;
@@ -969,6 +997,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
                     if (data?.luck?.total !== undefined) jogadorStats.SORTE = data.luck.total;
 
                     if (data.mapaMundo) mapaMundo = data.mapaMundo;
+                    if (data.magiasMemorizadas) magiasMemorizadas = data.magiasMemorizadas;
                     if (data.secaoAtualId) secaoAtualId = data.secaoAtualId;
                     if (data.dnaGlobal) dnaGlobal = data.dnaGlobal;
                     if (data.zonaAtual) zonaAtual = data.zonaAtual;
@@ -1937,6 +1966,19 @@ ATRIBUTO (apenas se ARRISCADA):
                 return { tipo: 'LIVRE', atributo: 'NENHUM', fonte: 'sem-alvo' };
             }
 
+            // ===== INÍCIO DO BLOCO INSERIDO (Mudança 4) =====
+    const intentoMagico = /\b(lan[cç]o|lançar|conjuro|conjurar|invoco|invocar|pronuncio|recito|ativo|uso a magia|uso minha magia|uso o feitiço|uso meu feitiço)\b/.test(acao);
+    if (intentoMagico && magiasMemorizadas.length > 0) {
+        const acaoNorm = acao.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        const encontrada = CATALOGO_MAGIAS.find(m =>
+            m.nomes.some(n => acaoNorm.includes(n.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()))
+        );
+        if (encontrada && !magiasMemorizadas.includes(encontrada.id)) {
+            return { tipo: 'BLOQUEADA_MAGIA', atributo: 'NENHUM', fonte: 'pre-classifier-magias' };
+        }
+    }
+    // ===== FIM DO BLOCO INSERIDO =====
+
             return null;
         }
 
@@ -2258,6 +2300,16 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
                     } else {
                         classificacao = classificacaoRaw;
                     }
+
+                    // ===== INÍCIO DO BLOCO INSERIDO (Mudança 5) =====
+        if (classificacao.tipo === 'BLOQUEADA_MAGIA') {
+            adicionarMensagem('Você tenta conjurar algo que não habita seu grimório. As palavras se dissolvem antes de tomar forma.', 'system');
+            sendBtn.disabled = false;
+            userInput.disabled = false;
+            userInput.focus();
+            return;
+        }
+        // ===== FIM DO BLOCO INSERIDO =====
 
                     _ultimoTipoAcao = classificacao.tipo;
                     _ultimoAtributo = classificacao.atributo;
