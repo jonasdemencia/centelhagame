@@ -1967,19 +1967,19 @@ ATRIBUTO (apenas se ARRISCADA):
             }
 
             // ===== INÍCIO DO BLOCO INSERIDO (Mudança 4) =====
-    const intentoMagico = /\b(lan[cç]o|lançar|conjuro|conjurar|invoco|invocar|pronuncio|recito|ativo|uso a magia|uso minha magia|uso o feitiço|uso meu feitiço)\b/.test(acao);
-    if (intentoMagico && magiasMemorizadas.length > 0) {
-        const acaoNorm = acao.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-        const encontrada = CATALOGO_MAGIAS.find(m =>
-            m.nomes.some(n => acaoNorm.includes(n.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()))
-        );
-        if (encontrada && !magiasMemorizadas.includes(encontrada.id)) {
-            return { tipo: 'BLOQUEADA_MAGIA', atributo: 'NENHUM', fonte: 'pre-classifier-magias' };
-        }
-    }
-    // ===== FIM DO BLOCO INSERIDO =====
+   const intentoMagico = /\b(lan[cç]o|lançar|conjuro|conjurar|invoco|invocar|pronuncio|recito|ativo|uso( a magia| minha magia| o feitiço| meu feitiço)?|usar( a magia| minha magia| o feitiço| meu feitiço)?)\b/.test(acao);
 
-            return null;
+if (intentoMagico) {
+    const acaoNorm = acao.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const encontrada = CATALOGO_MAGIAS.find(m =>
+        m.nomes.some(n => acaoNorm.includes(n.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()))
+    );
+    if (encontrada && !magiasMemorizadas.includes(encontrada.id)) {
+        return { tipo: 'BLOQUEADA_MAGIA', atributo: 'NENHUM', fonte: 'pre-classifier-magias' };
+    }
+}
+
+return null;
         }
 
         async function classificarComArbitro(acaoOriginal, entidade) {
