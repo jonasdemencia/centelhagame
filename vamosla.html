@@ -1955,45 +1955,44 @@ ATRIBUTO (apenas se ARRISCADA):
         }
 
         function classificarAcao(acaoOriginal) {
-            if (acaoOriginal.startsWith('[AÇÃO DE SISTEMA]')) {
-                return { tipo: 'LIVRE', atributo: 'NENHUM', fonte: 'sistema' };
-            }
-
-            const acao = normalizarAcao(acaoOriginal);
-
-            const ehMeta = /^(me descreva|descreva|diga|me diga|explique|me conte|conte|narre|como é|como s[aã]o|qual|quais|onde fica|o que [eé]|tem algo|existe|h[aá]|quantos|me ajude|ajude|status|inventário|mapa)\b/.test(acao);
-            if (ehMeta) return { tipo: 'LIVRE', atributo: 'NENHUM', fonte: 'meta' };
-
-            const estadoRelacional = entidadeEmFoco ? resolverEstadoRelacionalNPC(entidadeEmFoco) : null;
-            if (estadoRelacional === 'morto') {
-                return { tipo: 'LIVRE', atributo: 'NENHUM', fonte: 'sem-alvo' };
-            }
-
-            // ===== INÍCIO DO BLOCO INSERIDO (Mudança 4) =====
-   const intentoMagico = /\b(lan[cç]o|lançar|conjuro|conjurar|invoco|invocar|pronuncio|recito|ativo|uso( a magia| minha magia| o feitiço| meu feitiço)?|usar( a magia| minha magia| o feitiço| meu feitiço)?)\b/.test(acao);
-
-if (intentoMagico) {
-    const acaoNorm = acao.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-    const encontrada = CATALOGO_MAGIAS.find(m =>
-        m.nomes.some(n => acaoNorm.includes(n.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()))
-    );
-
-    if (!encontrada) {
-        // Magia inexistente no mundo
-        return { tipo: 'MAGIA_INEXISTENTE', atributo: 'NENHUM', fonte: 'pre-classifier-magias' };
+    if (acaoOriginal.startsWith('[AÇÃO DE SISTEMA]')) {
+        return { tipo: 'LIVRE', atributo: 'NENHUM', fonte: 'sistema' };
     }
-console.log('[MAGIA] ID encontrado:', encontrada.id, '| Memorizadas:', magiasMemorizadas);
-    if (!magiasMemorizadas.includes(encontrada.id)) {
-        // Magia válida mas não memorizada
-        return { tipo: 'BLOQUEADA_MAGIA', atributo: 'NENHUM', fonte: 'pre-classifier-magias' };
-    }
-}
 
-    // Se a magia existe e está memorizada → teste de MAGIA, sem precisar do árbitro
-    return { tipo: 'RISCO', atributo: 'MAGIA', fonte: 'magic-classifier' };
-}
-return null;
+    const acao = normalizarAcao(acaoOriginal);
+
+    const ehMeta = /^(me descreva|descreva|diga|me diga|explique|me conte|conte|narre|como é|como s[aã]o|qual|quais|onde fica|o que [eé]|tem algo|existe|h[aá]|quantos|me ajude|ajude|status|inventário|mapa)\b/.test(acao);
+    if (ehMeta) return { tipo: 'LIVRE', atributo: 'NENHUM', fonte: 'meta' };
+
+    const estadoRelacional = entidadeEmFoco ? resolverEstadoRelacionalNPC(entidadeEmFoco) : null;
+    if (estadoRelacional === 'morto') {
+        return { tipo: 'LIVRE', atributo: 'NENHUM', fonte: 'sem-alvo' };
+    }
+
+    // ===== CLASSIFICAÇÃO DE MAGIA (Mudança 4) =====
+    const intentoMagico = /\b(lan[cç]o|lançar|conjuro|conjurar|invoco|invocar|pronuncio|recito|ativo|uso( a magia| minha magia| o feitiço| meu feitiço)?|usar( a magia| minha magia| o feitiço| meu feitiço)?)\b/.test(acao);
+
+    if (intentoMagico) {
+        const acaoNorm = acao.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        const encontrada = CATALOGO_MAGIAS.find(m =>
+            m.nomes.some(n => acaoNorm.includes(n.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()))
+        );
+
+        if (!encontrada) {
+            return { tipo: 'MAGIA_INEXISTENTE', atributo: 'NENHUM', fonte: 'pre-classifier-magias' };
         }
+        console.log('[MAGIA] ID encontrado:', encontrada.id, '| Memorizadas:', magiasMemorizadas);
+        if (!magiasMemorizadas.includes(encontrada.id)) {
+            return { tipo: 'BLOQUEADA_MAGIA', atributo: 'NENHUM', fonte: 'pre-classifier-magias' };
+        }
+
+        // Magia existe e está memorizada → teste de MAGIA
+        return { tipo: 'RISCO', atributo: 'MAGIA', fonte: 'magic-classifier' };
+    }
+
+    // Nenhuma magia detectada → deixa o árbitro decidir
+    return null;
+}
 
         async function classificarComArbitro(acaoOriginal, entidade) {
             const estadoRelacional = entidade ? resolverEstadoRelacionalNPC(entidade) : 'nenhum';
