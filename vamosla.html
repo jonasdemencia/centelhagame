@@ -1979,7 +1979,7 @@ if (intentoMagico) {
         // Magia inexistente no mundo
         return { tipo: 'MAGIA_INEXISTENTE', atributo: 'NENHUM', fonte: 'pre-classifier-magias' };
     }
-
+console.log('[MAGIA] ID encontrado:', encontrada.id, '| Memorizadas:', magiasMemorizadas);
     if (!magiasMemorizadas.includes(encontrada.id)) {
         // Magia válida mas não memorizada
         return { tipo: 'BLOQUEADA_MAGIA', atributo: 'NENHUM', fonte: 'pre-classifier-magias' };
