@@ -1974,7 +1974,14 @@ if (intentoMagico) {
     const encontrada = CATALOGO_MAGIAS.find(m =>
         m.nomes.some(n => acaoNorm.includes(n.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()))
     );
-    if (encontrada && !magiasMemorizadas.includes(encontrada.id)) {
+
+    if (!encontrada) {
+        // Magia inexistente no mundo
+        return { tipo: 'MAGIA_INEXISTENTE', atributo: 'NENHUM', fonte: 'pre-classifier-magias' };
+    }
+
+    if (!magiasMemorizadas.includes(encontrada.id)) {
+        // Magia válida mas não memorizada
         return { tipo: 'BLOQUEADA_MAGIA', atributo: 'NENHUM', fonte: 'pre-classifier-magias' };
     }
 }
@@ -2310,6 +2317,16 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             return;
         }
         // ===== FIM DO BLOCO INSERIDO =====
+
+                    // ===== NOVO BLOCO =====
+if (classificacao.tipo === 'MAGIA_INEXISTENTE') {
+    adicionarMensagem('Você pronuncia palavras que não correspondem a magia alguma deste mundo. Nada acontece.', 'system');
+    sendBtn.disabled = false;
+    userInput.disabled = false;
+    userInput.focus();
+    return;
+}
+// ======================
 
                     _ultimoTipoAcao = classificacao.tipo;
                     _ultimoAtributo = classificacao.atributo;
