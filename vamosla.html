@@ -997,7 +997,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
                     if (data?.luck?.total !== undefined) jogadorStats.SORTE = data.luck.total;
 
                     if (data.mapaMundo) mapaMundo = data.mapaMundo;
-                    if (data.magiasMemorizadas) magiasMemorizadas = data.magiasMemorizadas;
+                    if (data.arcanumIudicium?.magiasMemorizadas) magiasMemorizadas = data.arcanumIudicium.magiasMemorizadas;
                     if (data.secaoAtualId) secaoAtualId = data.secaoAtualId;
                     if (data.dnaGlobal) dnaGlobal = data.dnaGlobal;
                     if (data.zonaAtual) zonaAtual = data.zonaAtual;
