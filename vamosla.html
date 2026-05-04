@@ -2308,25 +2308,27 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
                         classificacao = classificacaoRaw;
                     }
 
-                    // ===== INÍCIO DO BLOCO INSERIDO (Mudança 5) =====
-        if (classificacao.tipo === 'BLOQUEADA_MAGIA') {
-            adicionarMensagem('Você tenta conjurar algo que não habita seu grimório. As palavras se dissolvem antes de tomar forma.', 'system');
-            sendBtn.disabled = false;
-            userInput.disabled = false;
-            userInput.focus();
-            return;
-        }
-        // ===== FIM DO BLOCO INSERIDO =====
+                   if (classificacao.tipo === 'BLOQUEADA_MAGIA') {
+    clearInterval(intervaloAnimacao);
+    document.getElementById(tempId)?.remove();
 
-                    // ===== NOVO BLOCO =====
-if (classificacao.tipo === 'MAGIA_INEXISTENTE') {
-    adicionarMensagem('Você pronuncia palavras que não correspondem a magia alguma deste mundo. Nada acontece.', 'system');
+    adicionarMensagem('Você tenta conjurar algo que não habita seu grimório...', 'system');
     sendBtn.disabled = false;
     userInput.disabled = false;
     userInput.focus();
     return;
 }
-// ======================
+
+if (classificacao.tipo === 'MAGIA_INEXISTENTE') {
+    clearInterval(intervaloAnimacao);
+    document.getElementById(tempId)?.remove();
+
+    adicionarMensagem('Você pronuncia palavras que não correspondem a magia alguma...', 'system');
+    sendBtn.disabled = false;
+    userInput.disabled = false;
+    userInput.focus();
+    return;
+}
 
                     _ultimoTipoAcao = classificacao.tipo;
                     _ultimoAtributo = classificacao.atributo;
