@@ -435,6 +435,77 @@
     { id: "toque-macabro",            custo: 3,  nomes: ["toque macabro", "exsanguo", "frieza que suga a cor"] }
 ];
 
+        // ============================================================
+// HANDLER GENÉRICO DE PUZZLES (independente do tipo e solução)
+// ============================================================
+function processarInteracaoPuzzle(acaoUsuario) {
+    const salaAtual = mapaMundo && mapaMundo[secaoAtualId];
+    if (!salaAtual || !salaAtual.puzzle_status) return null;
+
+    const puzzle = salaAtual.puzzle_status;
+    if (puzzle.resolvido) return null; // já resolvido, nada a fazer
+
+    const acaoLower = acaoUsuario.toLowerCase().trim();
+
+    // Detecta interações por palavras-chave genéricas
+    const match = acaoLower.match(/(?:apertar|pressionar|puxar|acionar|girar|mover)\s+(?:o\s+|a\s+)?(?:bot[aã]o|alavanca|interruptor)\s*(\d+)?/i);
+    if (!match) return null;
+
+    const numero = match[1] ? parseInt(match[1]) : 1; // se não informar número, assume 1
+    const chaveEstado = `botao_${numero}`; // padroniza para botao_N (pode expandir para alavanca_N)
+    if (!(chaveEstado in (puzzle.estados || {}))) return null; // botão não existe no puzzle
+
+    // Alterna ou ativa o botão? Depende do tipo. Aqui faremos: ligar se estiver false.
+    if (puzzle.estados[chaveEstado] === false) {
+        puzzle.estados[chaveEstado] = true;
+    } else {
+        // Já está pressionado, podemos ignorar ou alternar. Por simplicidade, ignoramos.
+        adicionarMensagem(`O ${chaveEstado.replace('_',' ')} já está pressionado.`, 'system');
+        return null;
+    }
+
+    // Feedback imediato
+    adicionarMensagem(`Você pressiona o ${chaveEstado.replace('_',' ')}. Um som metálico ecoa.`, 'system');
+
+    // Verifica se a sequência atual resolve o puzzle
+    if (verificarSolucaoPuzzle(puzzle)) {
+        puzzle.resolvido = true;
+        adicionarMensagem('🧩 O mecanismo se encaixa! Algo mudou no ambiente.', 'system');
+        // Aqui você pode disparar consequências, como liberar uma nova saída.
+        // Exemplo: se a solução do puzzle abrir uma passagem, vamos recarregar as opções.
+        atualizarBotoesNavegacao();
+    }
+
+    salvarEstadoJogador(); // persiste imediatamente
+    return true; // indica que uma ação de puzzle foi processada
+}
+
+function verificarSolucaoPuzzle(puzzle) {
+    // Solução padrão: comparar a sequência de estados true com a solução descrita.
+    if (!puzzle.solucao) return false;
+
+    const solucaoLower = puzzle.solucao.toLowerCase();
+
+    // Exemplo de solução: "Pressione os botões na sequência 2-1-3."
+    const match = solucaoLower.match(/(\d[\s\-\d]*)/);
+    if (!match) return false; // não conseguiu extrair sequência
+
+    const sequencia = match[1].split(/[\s\-]+/).map(Number);
+    if (sequencia.length === 0) return false;
+
+    // Verifica se, na ordem correta, os botões correspondentes estão true
+    for (let i = 0; i < sequencia.length; i++) {
+        const chave = `botao_${sequencia[i]}`;
+        if (!(chave in puzzle.estados) || puzzle.estados[chave] !== true) {
+            // Se qualquer botão da sequência ainda não foi pressionado, não está resolvido
+            return false;
+        }
+    }
+
+    // Todos os botões da sequência estão pressionados? Pode ser necessário que apenas a sequência correta tenha sido seguida, mas aqui simplificamos: se todos estão true, ok.
+    return true;
+}
+
         let intervaloAnimacao = null;
         let primeiroTokenRecebido = false;
         const userInput = document.getElementById('user-input');
@@ -2299,6 +2370,17 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             
             if (!isInitial) {
                 turnosJogados++;
+                // ---- NOVA VERIFICAÇÃO DE PUZZLE ----
+    const resultadoPuzzle = processarInteracaoPuzzle(mensagemUsuario);
+    if (resultadoPuzzle) {
+        // A ação foi consumida pelo puzzle. Não chama o LLM narrativo para isso.
+        sendBtn.disabled = false;
+        userInput.disabled = false;
+        userInput.value = '';
+        userInput.focus();
+        return;
+    }
+    // ------------------------------------
             }
 
             let pergunta;
