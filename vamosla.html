@@ -118,6 +118,8 @@
        <div id="local-atual" style="display: flex; justify-content: space-between;">
             <span>⚔️ Reinos Desolados • <span id="modelo-span">Motor Duplo (7B + 1.5B)</span></span>
             <span id="energia-span" style="color: #a13d3d; font-weight: bold;">🩸 Energia: 10/10</span>
+           <span id="magia-span" style="color: #5b8dd9; font-weight: bold;">✨ Magia: 0</span>
+
        </div>
 
         <div id="chat-box">
@@ -364,6 +366,7 @@
 
         let turnosJogados = 0;
         let energia = 0; 
+        let magiaAtual = 0;
         let magiasMemorizadas = [];
         let uidAtual = null; 
         let _ultimoTipoAcao = 'TRIVIAL';   
@@ -405,30 +408,30 @@
         ];
 
         const CATALOGO_MAGIAS = [
-    { id: "armadura-arcana",          nomes: ["armadura arcana", "vestes de recusa"] },
-    { id: "toque-vampirico",          nomes: ["toque vampírico", "toque vampirico", "thermovorus", "sede da alma faminta"] },
-    { id: "mao-interposta-bigby",     nomes: ["mão interposta de bigby", "mao interposta de bigby", "palma etérea de bigby"] },
-    { id: "animar-mortos",            nomes: ["animar os mortos", "animar mortos", "mortuum", "sussurros dos ossos despertos"] },
-    { id: "cone-glacial",             nomes: ["cone glacial", "nefrigum", "conus frigidus"] },
-    { id: "pele-rochosa",             nomes: ["pele rochosa", "lapideocutis", "armamento da rocha viva"] },
-    { id: "assassino-fantasmagorico", nomes: ["assassino fantasmagórico", "assassino fantasmagorico", "leviatã das sombras silenciosas"] },
-    { id: "relampago",                nomes: ["relâmpago", "relampago", "aerotremoris", "tremor do céu partido"] },
-    { id: "esfera-flamejante",        nomes: ["esfera flamejante", "orbe da ira ardente"] },
-    { id: "velocidade",               nomes: ["velocidade", "celeritas duplex"] },
-    { id: "causar-medo",              nomes: ["causar medo", "timoris", "eco do berro não nascido"] },
-    { id: "cura-maior",               nomes: ["cura maior", "cântico do coração que teima"] },
-    { id: "cura-menor",               nomes: ["cura menor", "sanitas", "murmúrio do sangue quieto"] },
-    { id: "missil-magico",            nomes: ["dardos místicos", "dardos misticos", "fulmen", "olhar afiado do inominado"] },
-    { id: "escudo-arcano",            nomes: ["escudo arcano", "aegis", "círculo do não-tocar"] },
-    { id: "luz",                      nomes: ["luz", "lumina", "vislumbre da aurora que queima"] },
-    { id: "pasmar",                   nomes: ["pasmar", "obstupra", "silêncio do instante rachado"] },
-    { id: "raio-acido",               nomes: ["raio de ácido", "raio acido", "corrodo", "chuva da boca amarga"] },
-    { id: "sono",                     nomes: ["sono", "quiescas", "cântico da pálpebra frágil"] },
-    { id: "toque-chocante",           nomes: ["toque chocante", "fulgor", "dedos da tempestade guardada"] },
-    { id: "flecha-acida-melf",        nomes: ["flecha ácida de melf", "flecha acida de melf", "sagittamelfax", "seta do ventre que corrói"] },
-    { id: "voo",                      nomes: ["voo", "volatus", "asas do pensamento leve"] },
-    { id: "escudo-do-fogo",           nomes: ["escudo do fogo", "scutum ignis", "muralha ígnea retaliadora"] },
-    { id: "toque-macabro",            nomes: ["toque macabro", "exsanguo", "frieza que suga a cor"] }
+    { id: "armadura-arcana",          custo: 3,  nomes: ["armadura arcana", "vestes de recusa"] },
+    { id: "toque-vampirico",          custo: 10, nomes: ["toque vampírico", "toque vampirico", "thermovorus", "sede da alma faminta"] },
+    { id: "mao-interposta-bigby",     custo: 2,  nomes: ["mão interposta de bigby", "mao interposta de bigby", "palma etérea de bigby"] },
+    { id: "animar-mortos",            custo: 2,  nomes: ["animar os mortos", "animar mortos", "mortuum", "sussurros dos ossos despertos"] },
+    { id: "cone-glacial",             custo: 2,  nomes: ["cone glacial", "nefrigum", "conus frigidus"] },
+    { id: "pele-rochosa",             custo: 2,  nomes: ["pele rochosa", "lapideocutis", "armamento da rocha viva"] },
+    { id: "assassino-fantasmagorico", custo: 1,  nomes: ["assassino fantasmagórico", "assassino fantasmagorico", "leviatã das sombras silenciosas"] },
+    { id: "relampago",                custo: 10, nomes: ["relâmpago", "relampago", "aerotremoris", "tremor do céu partido"] },
+    { id: "esfera-flamejante",        custo: 4,  nomes: ["esfera flamejante", "orbe da ira ardente"] },
+    { id: "velocidade",               custo: 10, nomes: ["velocidade", "celeritas duplex"] },
+    { id: "causar-medo",              custo: 3,  nomes: ["causar medo", "timoris", "eco do berro não nascido"] },
+    { id: "cura-maior",               custo: 2,  nomes: ["cura maior", "cântico do coração que teima"] },
+    { id: "cura-menor",               custo: 2,  nomes: ["cura menor", "sanitas", "murmúrio do sangue quieto"] },
+    { id: "missil-magico",            custo: 1,  nomes: ["dardos místicos", "dardos misticos", "fulmen", "olhar afiado do inominado"] },
+    { id: "escudo-arcano",            custo: 3,  nomes: ["escudo arcano", "aegis", "círculo do não-tocar"] },
+    { id: "luz",                      custo: 2,  nomes: ["luz", "lumina", "vislumbre da aurora que queima"] },
+    { id: "pasmar",                   custo: 3,  nomes: ["pasmar", "obstupra", "silêncio do instante rachado"] },
+    { id: "raio-acido",               custo: 1,  nomes: ["raio de ácido", "raio acido", "corrodo", "chuva da boca amarga"] },
+    { id: "sono",                     custo: 5,  nomes: ["sono", "quiescas", "cântico da pálpebra frágil"] },
+    { id: "toque-chocante",           custo: 2,  nomes: ["toque chocante", "fulgor", "dedos da tempestade guardada"] },
+    { id: "flecha-acida-melf",        custo: 8,  nomes: ["flecha ácida de melf", "flecha acida de melf", "sagittamelfax", "seta do ventre que corrói"] },
+    { id: "voo",                      custo: 5,  nomes: ["voo", "volatus", "asas do pensamento leve"] },
+    { id: "escudo-do-fogo",           custo: 8,  nomes: ["escudo do fogo", "scutum ignis", "muralha ígnea retaliadora"] },
+    { id: "toque-macabro",            custo: 3,  nomes: ["toque macabro", "exsanguo", "frieza que suga a cor"] }
 ];
 
         let intervaloAnimacao = null;
@@ -997,6 +1000,8 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
                     if (data?.charisma?.total !== undefined) jogadorStats.CARISMA = data.charisma.total;
                     if (data?.luck?.total !== undefined) jogadorStats.SORTE = data.luck.total;
                     if (data?.magic?.total !== undefined) jogadorStats.MAGIA = data.magic.total;
+                    magiaAtual = data?.magic?.current ?? jogadorStats.MAGIA;
+document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
 
                     if (data.mapaMundo) mapaMundo = data.mapaMundo;
                     if (data.arcanumIudicium?.magiasMemorizadas) magiasMemorizadas = data.arcanumIudicium.magiasMemorizadas;
@@ -1030,6 +1035,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
                 const dadosAtualizados = {
                     turnos: turnosJogados,
                     "energy.total": energia,
+                    "magic.current": magiaAtual,
                     "skill.total": jogadorStats.HABILIDADE,
                     "charisma.total": jogadorStats.CARISMA,
                     "luck.total": jogadorStats.SORTE,
@@ -1987,7 +1993,8 @@ ATRIBUTO (apenas se ARRISCADA):
         }
 
         // Magia existe e está memorizada → teste de MAGIA
-        return { tipo: 'RISCO', atributo: 'MAGIA', fonte: 'magic-classifier' };
+        return { tipo: 'MAGIA_SUCESSO', atributo: 'MAGIA', custo: encontrada.custo ?? 0, fonte: 'magic-classifier' };
+
     }
 
     // Nenhuma magia detectada → deixa o árbitro decidir
@@ -2335,6 +2342,22 @@ if (classificacao.tipo === 'MAGIA_INEXISTENTE') {
     return;
 }
 
+                    // Inserir antes de: _ultimoTipoAcao = classificacao.tipo;
+if (classificacao.tipo === 'MAGIA_SUCESSO') {
+    const custo = classificacao.custo ?? 0;
+    if (magiaAtual < custo) {
+        clearInterval(intervaloAnimacao);
+        document.getElementById(tempId)?.remove();
+        adicionarMensagem(`Seus reservatórios arcanos estão esgotados. Custo: ${custo} — Disponível: ${magiaAtual}.`, 'system');
+        sendBtn.disabled = false;
+        userInput.disabled = false;
+        userInput.focus();
+        return;
+    }
+    magiaAtual -= custo;
+    document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
+}
+
                     _ultimoTipoAcao = classificacao.tipo;
                     _ultimoAtributo = classificacao.atributo;
                     const { tipo, atributo } = classificacao;
@@ -2373,9 +2396,13 @@ if (classificacao.tipo === 'MAGIA_INEXISTENTE') {
                     let instrucaoResultado = "";
                     let danoFinal = 0;
 
-                    if (tipo === 'LIVRE') {
-                        instrucaoResultado = "Ação livre, sem teste. Narre o jogador executando sem falhas.";
-                        danoFinal = 0;
+                    // DEPOIS
+if (tipo === 'MAGIA_SUCESSO') {
+    instrucaoResultado = `Magia executada com plena potência. OBRIGATÓRIO: descreva o efeito acontecendo de forma concreta e visível. Nenhuma hesitação, nenhuma falha.`;
+    danoFinal = 0;
+} else if (tipo === 'LIVRE') {
+    instrucaoResultado = "Ação livre, sem teste. Narre o jogador executando sem falhas.";
+    danoFinal = 0;
                     } else if (tipo === 'EXPRESSAO') {
                         danoFinal = 0;
                         if (resultado === 'SUCESSO') {
@@ -2475,6 +2502,8 @@ payloadAPI = [systemPrompt, ...conversaRecenteParaEnvio, { role: 'user', content
                     energia -= valorDano;
                     document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
                     adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
+                    document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
+
 
                     if (energia <= 0) {
                         adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
