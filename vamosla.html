@@ -1712,8 +1712,17 @@ const historicoItensZona = [];
                 const idMsgPuzzle = adicionarMensagem(`🧩 Mixtral está escondendo enigmas na Zona ${numeroZona}...`, "system", true);
                 try {
                     const salasComPuzzles = await injetarPuzzles(zonaData.salas, numeroZona, dnaGlobal);
-                    // Substitui as salas originais pelas que contêm puzzles
-                    zonaData.salas = salasComPuzzles;
+// Mescla os puzzles sem perder as salas não alteradas
+if (salasComPuzzles && typeof salasComPuzzles === 'object') {
+    for (const [id, sala] of Object.entries(salasComPuzzles)) {
+        if (zonaData.salas[id]) {
+            zonaData.salas[id] = { ...zonaData.salas[id], ...sala };
+        } else {
+            // Caso o Mixtral injete uma sala extra (não esperado, mas seguro)
+            zonaData.salas[id] = sala;
+        }
+    }
+}
                 } catch (e) {
                     console.error("Erro ao injetar puzzles, mantendo salas originais:", e);
                 }
