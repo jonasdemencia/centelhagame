@@ -350,6 +350,7 @@
 
         const WORKER_URL = "https://morning-cake-d5f8.fabiorainersilva.workers.dev";
         const MODELO_GROQ = "llama-3.3-70b-versatile";
+        const MODELO_PUZZLE = "qwen/qwen3-32b";   // antes era mixtral-8x7b-32768
         
         let mapaMundo = null;
         let secaoAtualId = "1";
@@ -978,6 +979,100 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
             }
         }
 
+        // --- NOVA FUNÇÃO: chamarGroqModelo ---
+        // Permite especificar o modelo da Groq dinamicamente (ex: Mixtral para puzzles)
+        async function chamarGroqModelo(messages, modelo, temperatura = 0.7, formato = { type: "json_object" }, tentativas = 3) {
+            for (let i = 0; i < tentativas; i++) {
+                const response = await fetch(WORKER_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        model: modelo,            // ← campo adicionado
+                        messages: messages,
+                        temperature: temperatura,
+                        response_format: formato,
+                    }),
+                });
+
+                const data = await response.json();
+
+                const isRateLimit = (!response.ok && response.status === 429) || 
+                                    (data.error && data.error.message && data.error.message.includes("Rate limit"));
+
+                if (isRateLimit && i < tentativas - 1) {
+                    const errMsg = data.error?.message || "";
+                    const match = errMsg.match(/try again in ([\d\.]+)s/);
+                    const waitTime = match ? (parseFloat(match[1]) * 1000) + 2000 : 15000;
+                    console.warn(`⏳ [Groq ${modelo}] Rate limit. Aguardando ${(waitTime/1000).toFixed(1)}s...`);
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                    continue;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`Erro no Worker [${response.status}]: ${JSON.stringify(data)}`);
+                }
+                if (data.error) {
+                    throw new Error(`Erro da Groq API: ${data.error.message ?? JSON.stringify(data.error)}`);
+                }
+                if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+                    throw new Error(`Resposta sem 'choices': ${JSON.stringify(data).slice(0, 300)}`);
+                }
+                return data;
+            }
+        }
+
+        // --- NOVA FUNÇÃO: injetarPuzzles ---
+        // Envia as salas para o Mixtral e retorna as mesmas com puzzle_status embutido
+        async function injetarPuzzles(planoSalas, numeroZona, dnaGlobal) {
+            // Prepara o contexto do DNA para dar coerência
+            const contextoDNA = {
+                misterio_central: dnaGlobal?.misterio_central || '',
+                tom_geral: dnaGlobal?.zonas?.find(z => z.id === numeroZona)?.tom_sensorial || ''
+            };
+
+            const promptPuzzle = `
+Você é um arquiteto de enigmas no estilo Survival Horror (Resident Evil / Silent Hill).
+
+Receba o JSON de uma zona com ${Object.keys(planoSalas).length} salas. Seu objetivo é selecionar 2 ou 3 dessas salas e injetar puzzles lógicos e atmosféricos, reescrevendo APENAS o campo "texto_logico" e adicionando um novo campo "puzzle_status".
+
+REGRAS RÍGIDAS:
+1. NÃO altere os IDs das salas, nem a estrutura de "opcoes" (rotas de navegação).
+2. Para cada sala que receber puzzle, reescreva "texto_logico" incluindo as pistas visuais e mecânicas do enigma. Mantenha o tom brutal e melancólico do cenário.
+3. Adicione o campo "puzzle_status" (objeto) com a seguinte estrutura:
+   {
+     "tipo": "sequencia_botoes" | "alavanca" | "insercao_item" | "ordem_estatuas" | "outro",
+     "resolvido": false,
+     "dica": "Uma frase curta que o jogador pode descobrir inspecionando",
+     "solucao": "descrição exata do que o jogador precisa fazer",
+     "estados": {}  // opcional, para puzzles com múltiplos estágios
+   }
+4. O puzzle DEVE ser resolvido sem que o jogador precise carregar itens no inventário. Se houver um item necessário, ele já está no cenário (descrito no texto) e é usado no local (ex: "inserir a manivela no buraco"). O "puzzle_status" pode conter, por exemplo, "manivela_inserida": false.
+5. Integre a solução ao ambiente. Ex: para apertar botões, o texto deve descrever painéis, botões e o que acontece quando pressionados.
+6. O retorno deve ser EXATAMENTE o JSON completo das ${Object.keys(planoSalas).length} salas, com as alterações apenas nas salas escolhidas.
+
+CONTEXTO DO MUNDO:
+${JSON.stringify(contextoDNA)}
+
+PLANO ATUAL DAS SALAS:
+${JSON.stringify(planoSalas)}
+
+Retorne APENAS o JSON.`;
+
+            const data = await chamarGroqModelo(
+                [
+                    { role: "system", content: "Você é um mestre de puzzles engenhosos. Retorne apenas JSON." },
+                    { role: "user", content: promptPuzzle }
+                ],
+                MODELO_PUZZLE,   // usa o Mixtral
+                0.5,
+                { type: "json_object" },
+                3
+            );
+
+            const resultado = JSON.parse(data.choices[0].message.content);
+            return resultado;
+        }
+
         async function carregarDadosJogador(uid) {
             try {
                 const docRef = doc(db, "players", uid);
@@ -1541,6 +1636,18 @@ const historicoItensZona = [];
                 });
                 
                 zonaData.salas = mapaFinalMesclado;
+
+                // ---- INJEÇÃO DE PUZZLES (Mixtral) ----
+                const idMsgPuzzle = adicionarMensagem(`🧩 Mixtral está escondendo enigmas na Zona ${numeroZona}...`, "system", true);
+                try {
+                    const salasComPuzzles = await injetarPuzzles(zonaData.salas, numeroZona, dnaGlobal);
+                    // Substitui as salas originais pelas que contêm puzzles
+                    zonaData.salas = salasComPuzzles;
+                } catch (e) {
+                    console.error("Erro ao injetar puzzles, mantendo salas originais:", e);
+                }
+                document.getElementById(idMsgPuzzle)?.remove();
+                // --------------------------------------
 
                 if (!mapaMundo) mapaMundo = {};
                 Object.assign(mapaMundo, zonaData.salas);
@@ -2185,40 +2292,7 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
 // ============================================================================
 // 🚀 OTIMIZAÇÃO RADICAL DE LATÊNCIA + ESTABILIDADE (KV CACHE HIT + ANCORAGEM)
 // ============================================================================
-// Antes: 50+ segundos por ação, com crashes frequentes (Vulkan shift).
-// Agora: estável (sem crashes) e tempo de resposta de 10 - 12 segundos no 7B,
-//        e 2–4 segundos no 1.5B.
-//
-// Técnicas aplicadas (dentro de window.enviar):
-//
-// 1. ANCORAGEM DINÂMICA (System Prompt carrega o peso do mundo)
-//    - O system prompt agora contém a descrição completa da sala, itens e botões.
-//    - Isso retirou o cenário do histórico iterativo, reduzindo drasticamente o
-//      crescimento de tokens a cada turno (de ~600 para ~80 tokens por ação).
-//
-// 2. HISTÓRICO CONDENSADO (apenas o delta da ação)
-//    - Em vez de guardar o enorme 'conteudoUser', armazenamos 'acaoSimplesUser',
-//      que contém apenas a ação do jogador + resultado do árbitro + tag de dano.
-//    - O prefixo do prompt permanece IDÊNTICO entre ações consecutivas (system
-//      + histórico fixo), garantindo Cache Hit no LM Studio.
-//
-// 3. LIMITE DE HISTÓRICO REDUZIDO
-//    - De 10 mensagens (5 pares) passou para 8 mensagens (4 pares).
-//    - Cada interação agora pesa ~80 tokens, portanto 8 mensagens ocupam ~640
-//      tokens, longe do limite de 2048, sem risco de estouro.
-//
-// 4. HARDWARE E ESTABILIDADE
-//    - O modelo 7B (narrador) roda com GPU Offload = 0 (apenas CPU) porque o
-//      backend Vulkan da Intel Iris Xe causava crashes durante o shift do cache.
-//    - O modelo 1.5B (árbitro) roda com GPU Offload = 28 (todas as camadas) e
-//      CPU Thread Pool = 4, garantindo resposta rápida na classificação.
-//
-// Resultado final:
-//   - Primeira ação de uma sessão: ainda processa o prompt inteiro (lento).
-//   - Ações subsequentes: Cache Hit total → tempo de resposta dominado apenas
-//     pela geração de tokens de saída (7B: 10–12s; 1.5B: 2–4s).
-//   - Sem crashes, sem estouro de contexto, sem necessidade de trocar de modelo.
-// ============================================================================
+// (comentários mantidos, sem alteração)
         
         window.enviar = async function(mensagemUsuario = null) {
             const isInitial = mensagemUsuario === null;
