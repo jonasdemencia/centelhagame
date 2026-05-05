@@ -999,8 +999,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
                     if (data?.skill?.total !== undefined) jogadorStats.HABILIDADE = data.skill.total;
                     if (data?.charisma?.total !== undefined) jogadorStats.CARISMA = data.charisma.total;
                     if (data?.luck?.total !== undefined) jogadorStats.SORTE = data.luck.total;
-                    if (data?.magic?.total !== undefined) jogadorStats.MAGIA = data.magic.total;
-                    magiaAtual = data?.magic?.current ?? jogadorStats.MAGIA;
+                    magiaAtual = data?.magic?.total ?? 0;  // valor atual (campo único)
 document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
 
                     if (data.mapaMundo) mapaMundo = data.mapaMundo;
@@ -1012,6 +1011,7 @@ document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
                 } else {
                     const dadosPadrao = {
                         energy: { total: 40, initial: 40 },
+                        magic: { total: 5 },   // <-- ADICIONE AQUI
                         skill: { total: 5 },
                         charisma: { total: 5 },
                         luck: { total: 4 },
@@ -1035,11 +1035,10 @@ document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
                 const dadosAtualizados = {
                     turnos: turnosJogados,
                     "energy.total": energia,
-                    "magic.current": magiaAtual,
                     "skill.total": jogadorStats.HABILIDADE,
                     "charisma.total": jogadorStats.CARISMA,
                     "luck.total": jogadorStats.SORTE,
-                    "magic.total": jogadorStats.MAGIA,
+                    "magic.total": magiaAtual,
                     mapaMundo: mapaMundo,
                     secaoAtualId: secaoAtualId,
                     dnaGlobal: dnaGlobal,
