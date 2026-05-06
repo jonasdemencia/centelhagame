@@ -2545,6 +2545,16 @@ ${elementosInterativos || 'Nenhum'}
 REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se de descrevê-los organicamente.
 4. VIOLÊNCIA: Em caso de falha física, descreva a destruição anatômica de forma direta.`;
 
+                    // --- Contexto sutil de puzzle (não revela solução) ---
+const salaPuzzle = mapaMundo?.[secaoAtualId];
+if (salaPuzzle?.puzzle_status) {
+    if (salaPuzzle.puzzle_status.resolvido) {
+        systemPromptContent += `\n[AMBIENTE]: O mecanismo do enigma já foi ativado nesta sala. Qualquer porta ou passagem protegida está agora acessível.`;
+    } else {
+        systemPromptContent += `\n[AMBIENTE]: Há um mecanismo oculto nesta sala que parece aguardar uma ação específica. Descreva os elementos do cenário como parte da paisagem, sem sugerir a solução.`;
+    }
+}
+
 const systemPrompt = { role: 'system', content: systemPromptContent };
 
 let conversaRecenteParaEnvio = [];
