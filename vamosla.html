@@ -991,6 +991,12 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
     2. Nas salas escolhidas para puzzle: reescreva o "texto_logico" para incluir pistas visuais (ex: estátuas que precisam olhar para o norte, quadros com números, engrenagens faltando) e adicione a propriedade "puzzle_status": { "resolvido": false, "dica": "...", "solucao": "..." }.
     3. Nas demais salas: copie o "texto_logico" original sem alterações. Não adicione "puzzle_status".
     4. O tom deve ser brutal, melancólico e misterioso.
+    5. PONTES ENTRE ZONAS (atalhos dimensionais): 
+       Se o puzzle estiver em uma sala de final de zona (ID terminado em 9 ou 0) ou em qualquer sala estratégica, 
+       a 'nova_opcao' pode apontar para um destino de outra zona, pulando uma ou mais zonas. 
+       Exemplo: { "texto": "Ativar o Elevador de Carga", "destino": 31 } (isso levaria à sala 1 da Zona 4). 
+       O jogo gerará essa zona automaticamente quando o jogador usar a passagem.
+       Se o puzzle NÃO for uma ponte entre zonas, mantenha 'nova_opcao' com um destino da zona atual.
     
     JSON DAS SALAS BASE:
     ${JSON.stringify(planoZonal)}
@@ -2197,43 +2203,54 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             return `Ao retornar, você se encontra novamente aqui. ${semAncora}`;
         }
         
-        function atualizarBotoesNavegacao() {
-            const container = document.getElementById('map-controls');
-            container.innerHTML = ''; 
+       function atualizarBotoesNavegacao() {
+    const container = document.getElementById('map-controls');
+    container.innerHTML = '';
+    const sala = mapaMundo?.[secaoAtualId];
+    if (!sala || !sala.opcoes) return;
 
-            if (!mapaMundo || !mapaMundo[secaoAtualId]) return;
+    const puzzleResolvido = sala.puzzle_status?.resolvido !== false; // true ou undefined
 
-            const salaAtual = mapaMundo[secaoAtualId];
-
-            salaAtual.opcoes.forEach(opcao => {
-                const btn = document.createElement('button');
-                btn.className = 'nav-btn';
-                btn.innerText = `🧭 ${opcao.texto}`;
-                
-                btn.onclick = () => {
-                    container.innerHTML = '';
-                    
-                    secaoAtualId = opcao.destino.toString();
-                    salvarEstadoJogador();
-                    verificarEExpandirMundo();
-
-                    const novaSala = mapaMundo[secaoAtualId];
-                    if (novaSala?.texto_logico) {
-                        adicionarMensagem(`🧭 ${opcao.texto}`, 'user');
-                        const textoFinal = prepararTextoChegada(novaSala.texto_logico, opcao.texto, parseInt(secaoAtualId), opcao.destino);
-                        adicionarMensagem(textoFinal, 'ai');
-                        historicoConversa.push({ role: 'user', content: opcao.texto });
-                        historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
-                        if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
-                    }
-
-                    atualizarBotoesNavegacao();
-                    atualizarLootRoom();
-                };
-                
-                container.appendChild(btn);
-            });
+    sala.opcoes.forEach(opcao => {
+        // Se há um puzzle pendente e a opção é de "avanço" (destino maior que a sala atual), bloqueia
+        const ehAvanco = opcao.destino > parseInt(secaoAtualId);
+        if (!puzzleResolvido && ehAvanco) {
+            // Cria um botão desabilitado apenas como feedback
+            const btnLocked = document.createElement('button');
+            btnLocked.className = 'nav-btn';
+            btnLocked.style.opacity = '0.5';
+            btnLocked.style.textDecoration = 'line-through';
+            btnLocked.innerText = '🔒 ' + opcao.texto;
+            btnLocked.title = 'Resolva o enigma para prosseguir.';
+            container.appendChild(btnLocked);
+            return;
         }
+
+        const btn = document.createElement('button');
+        btn.className = 'nav-btn';
+        btn.innerText = `🧭 ${opcao.texto}`;
+        btn.onclick = () => {
+            container.innerHTML = '';
+            secaoAtualId = opcao.destino.toString();
+            salvarEstadoJogador();
+            verificarEExpandirMundo();
+
+            const novaSala = mapaMundo[secaoAtualId];
+            if (novaSala?.texto_logico) {
+                adicionarMensagem(`🧭 ${opcao.texto}`, 'user');
+                const textoFinal = prepararTextoChegada(novaSala.texto_logico, opcao.texto, parseInt(secaoAtualId), opcao.destino);
+                adicionarMensagem(textoFinal, 'ai');
+                historicoConversa.push({ role: 'user', content: opcao.texto });
+                historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
+                if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
+            }
+
+            atualizarBotoesNavegacao();
+            atualizarLootRoom();
+        };
+        container.appendChild(btn);
+    });
+}
 
 // ============================================================================
 // 🚀 OTIMIZAÇÃO RADICAL DE LATÊNCIA + ESTABILIDADE (KV CACHE HIT + ANCORAGEM)
@@ -2413,6 +2430,33 @@ if (classificacao.tipo === 'MAGIA_SUCESSO') {
                     _ultimoTipoAcao = classificacao.tipo;
                     _ultimoAtributo = classificacao.atributo;
                     const { tipo, atributo } = classificacao;
+
+                    // --- VERIFICAÇÃO DE PUZZLE (Juiz local) ---
+const salaAtual = mapaMundo?.[secaoAtualId];
+if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
+    const promptPuzzle = `Ação do Jogador: "${pergunta}"\nSolução do Enigma: "${salaAtual.puzzle_status.solucao}"\nO jogador executou a ação correta para resolver o enigma? Responda apenas com o JSON:\n{"resolvido": true/false}`;
+
+    const resPuzzle = await fetch(LM_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            model: MODELO_JUIZ,
+            messages: [{ role: 'user', content: promptPuzzle }],
+            temperature: 0.0,
+            response_format: { type: "json_object" }
+        })
+    });
+    const puzzleData = await resPuzzle.json();
+    const resultado = JSON.parse(puzzleData.choices[0].message.content);
+
+    if (resultado.resolvido) {
+        salaAtual.puzzle_status.resolvido = true;
+        adicionarMensagem("🔓 Mecanismo oculto foi ativado...", "system");
+        await salvarEstadoJogador();
+        atualizarBotoesNavegacao();
+        // Opcional: já podemos parar por aqui e não narrar? Vamos permitir que o narrador ainda descreva.
+    }
+}
 
                     let resultado = null;
                     let danoBase = 0;
