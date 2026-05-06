@@ -984,19 +984,21 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
         async function injetarPuzzles(planoZonal, zonaId) {
     const promptPuzzle = `
     Você é um Narrative Designer especializado em Survival Horror (estilo Resident Evil PS1).
-    Receba este JSON de 10 salas e selecione 2 ou 3 salas para injetar puzzles engenhosos.
+    Receba este JSON de ${SALAS_POR_ZONA} salas e selecione 2 ou 3 salas para injetar puzzles engenhosos.
     
     REGRAS DE INJEÇÃO:
-    1. Não altere os IDs numéricos das salas, não remova propriedades existentes e mantenha as conexões (saidas) intactas.
-    2. Reescreva a descrição da sala para incluir pistas visuais do puzzle (ex: estátuas que precisam olhar para o norte, quadros que contam uma idade, engrenagens faltando).
-    3. Crie uma nova propriedade no objeto da sala afetada chamada 'puzzle_status' com: { "resolvido": false, "dica": "...", "solucao": "..." }.
-    4. Integre a solução com a necessidade de uma interação inteligente do jogador.
-    5. O tom deve ser brutal, melancólico e misterioso.
+    1. Retorne TODAS as ${SALAS_POR_ZONA} salas no JSON. Não omita nenhuma — mesmo as que não recebem puzzle devem aparecer idênticas à entrada.
+    2. Nas salas escolhidas para puzzle: reescreva o "texto_logico" para incluir pistas visuais (ex: estátuas que precisam olhar para o norte, quadros com números, engrenagens faltando) e adicione a propriedade "puzzle_status": { "resolvido": false, "dica": "...", "solucao": "..." }.
+    3. Nas demais salas: copie o "texto_logico" original sem alterações. Não adicione "puzzle_status".
+    4. O tom deve ser brutal, melancólico e misterioso.
     
     JSON DAS SALAS BASE:
     ${JSON.stringify(planoZonal)}
     
-    Retorne APENAS o JSON completo das 10 salas atualizado.`;
+    Estrutura esperada do retorno (substitua N pelo ID de cada sala):
+    { "N": { "texto_logico": "..." }, "N": { "texto_logico": "...", "puzzle_status": { "resolvido": false, "dica": "...", "solucao": "..." } }, ... }
+    
+    Retorne APENAS o JSON com todas as ${SALAS_POR_ZONA} salas.`;
 
     // Note que estamos passando MODELO_PUZZLE como o 4º parâmetro
     const data = await chamarGroq([
@@ -1496,21 +1498,23 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
 
                 let zonaData = JSON.parse(dataSalas.choices[0].message.content);
 
-                // --- INÍCIO DO AJUSTE: INJEÇÃO DE PUZZLES VIA MIXTRAL ---
-                const idMsgPuzzle = adicionarMensagem("🧩 A arquitetura está se contorcendo... ocultando enigmas...", "system", true);
-                try {
-                    // Passa o plano gerado pelo Llama para o Mixtral injetar enigmas
-                    // Usamos a chave 'salas' do zonaData que contém os textos lógicos recém-gerados
-                    const zonaComPuzzles = await injetarPuzzles(zonaData.salas, numeroZona);
-                    
-                    // Atualiza o objeto zonaData com a nova versão "enigmática" do Mixtral
-                    zonaData.salas = zonaComPuzzles;
-                    console.log(`[Mixtral] ✅ Puzzles injetados com sucesso na Zona ${numeroZona}`);
-                } catch (e) {
-                    console.error("Erro na injeção de puzzles pelo Mixtral. Mantendo o plano original do Llama:", e);
-                }
-                document.getElementById(idMsgPuzzle)?.remove();
-                // --- FIM DO AJUSTE ---
+// --- INÍCIO DO AJUSTE: INJEÇÃO DE PUZZLES ---
+const salasOriginais = { ...zonaData.salas }; // backup antes de qualquer sobrescrita
+const idMsgPuzzle = adicionarMensagem("🧩 A arquitetura está se contorcendo... ocultando enigmas...", "system", true);
+try {
+    const zonaComPuzzles = await injetarPuzzles(salasOriginais, numeroZona);
+    // Merge: base = original, overlay = retorno do puzzle (apenas o que o modelo devolveu)
+    // Salas ausentes no retorno do puzzle ficam intactas com o texto original
+    zonaData.salas = {};
+    for (const id of Object.keys(salasOriginais)) {
+        zonaData.salas[id] = { ...salasOriginais[id], ...(zonaComPuzzles[id] || {}) };
+    }
+    console.log(`[Puzzle] ✅ Puzzles injetados com sucesso na Zona ${numeroZona}`);
+} catch (e) {
+    console.error("[Puzzle] Erro na injeção. Mantendo o plano original:", e);
+}
+document.getElementById(idMsgPuzzle)?.remove();
+// --- FIM DO AJUSTE ---
 
                 document.getElementById(idMsg)?.remove();
 
@@ -1580,11 +1584,13 @@ const historicoItensZona = [];
                     // ↓↓↓ LINHA MODIFICADA (agora com 5 argumentos) ↓↓↓
     const itensNaSala = distribuirItens(prosa, dadosEstruturais.local_fisico, idSala, semente, historicoItensZona);
 
-                    mapaFinalMesclado[idSala] = {
-                        texto_logico: prosa,
-                        opcoes: opcoesGeradas,
-                        itens: itensNaSala
-                    };
+                    const puzzleStatus = zonaData.salas[idSala]?.puzzle_status;
+mapaFinalMesclado[idSala] = {
+    texto_logico: prosa,
+    opcoes: opcoesGeradas,
+    itens: itensNaSala,
+    ...(puzzleStatus ? { puzzle_status: puzzleStatus } : {})
+};
                 });
                 
                 zonaData.salas = mapaFinalMesclado;
