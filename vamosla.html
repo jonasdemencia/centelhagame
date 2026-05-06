@@ -342,6 +342,7 @@
         // Expor funções do Firestore para scripts externos (arcanum-conditions.js)
 window.doc = doc;
 window.getDoc = getDoc;
+window.setDoc = setDoc;   // ← nova linha
 window.updateDoc = updateDoc;
 window.db = db;
         const auth = getAuth(app);
@@ -2445,15 +2446,29 @@ if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
     let puzzleResolvido = false;
     try {
         const resPuzzle = await fetch(LM_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: MODELO_JUIZ,
-                messages: [{ role: 'user', content: promptPuzzle }],
-                temperature: 0.0,
-                response_format: { type: "json_object" }
-            })
-        });
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        model: MODELO_JUIZ,
+        messages: [{ role: 'user', content: promptPuzzle }],
+        temperature: 0.0,
+        response_format: {
+            type: "json_schema",
+            json_schema: {
+                name: "puzzle_check",
+                strict: true,
+                schema: {
+                    type: "object",
+                    properties: {
+                        resolvido: { type: "boolean" }
+                    },
+                    required: ["resolvido"],
+                    additionalProperties: false
+                }
+            }
+        }
+    })
+});
 
         if (!resPuzzle.ok) {
             const errorText = await resPuzzle.text();
