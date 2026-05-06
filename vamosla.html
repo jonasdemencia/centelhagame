@@ -339,6 +339,11 @@
         // Evita erro de "App already exists" porque o inventario.js também inicializa
         const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
         const db = getFirestore(app);
+        // Expor funções do Firestore para scripts externos (arcanum-conditions.js)
+window.doc = doc;
+window.getDoc = getDoc;
+window.updateDoc = updateDoc;
+window.db = db;
         const auth = getAuth(app);
         
         // ============================================================
@@ -2431,30 +2436,44 @@ if (classificacao.tipo === 'MAGIA_SUCESSO') {
                     _ultimoAtributo = classificacao.atributo;
                     const { tipo, atributo } = classificacao;
 
-                    // --- VERIFICAÇÃO DE PUZZLE (Juiz local) ---
+                    // --- VERIFICAÇÃO DE PUZZLE (Juiz local - blindada) ---
 let salaAtual = mapaMundo?.[secaoAtualId];
 if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
-    const promptPuzzle = `Ação do Jogador: "${pergunta}"\nSolução do Enigma: "${salaAtual.puzzle_status.solucao}"\nO jogador executou a ação correta para resolver o enigma? Responda apenas com o JSON:\n{"resolvido": true/false}`;
+    // Prompt reforçado com a palavra "JSON" (exigência de alguns modelos)
+    const promptPuzzle = `Ação do Jogador: "${pergunta}"\nSolução do Enigma: "${salaAtual.puzzle_status.solucao}"\nO jogador executou a ação correta para resolver o enigma? Responda apenas com um objeto JSON.\nFormato: {"resolvido": true} ou {"resolvido": false}`;
 
-    const resPuzzle = await fetch(LM_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            model: MODELO_JUIZ,
-            messages: [{ role: 'user', content: promptPuzzle }],
-            temperature: 0.0,
-            response_format: { type: "json_object" }
-        })
-    });
-    const puzzleData = await resPuzzle.json();
-    const resultado = JSON.parse(puzzleData.choices[0].message.content);
+    let puzzleResolvido = false;
+    try {
+        const resPuzzle = await fetch(LM_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: MODELO_JUIZ,
+                messages: [{ role: 'user', content: promptPuzzle }],
+                temperature: 0.0,
+                response_format: { type: "json_object" }
+            })
+        });
 
-    if (resultado.resolvido) {
+        if (!resPuzzle.ok) {
+            const errorText = await resPuzzle.text();
+            console.error('❌ Erro na verificação do puzzle:', errorText);
+        } else {
+            const puzzleData = await resPuzzle.json();
+            if (puzzleData.choices && puzzleData.choices[0]) {
+                const resultado = JSON.parse(puzzleData.choices[0].message.content);
+                puzzleResolvido = resultado.resolvido || false;
+            }
+        }
+    } catch (e) {
+        console.error('❌ Exceção na verificação do puzzle:', e);
+    }
+
+    if (puzzleResolvido) {
         salaAtual.puzzle_status.resolvido = true;
         adicionarMensagem("🔓 Mecanismo oculto foi ativado...", "system");
         await salvarEstadoJogador();
         atualizarBotoesNavegacao();
-        // Opcional: já podemos parar por aqui e não narrar? Vamos permitir que o narrador ainda descreva.
     }
 }
 
