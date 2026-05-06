@@ -350,7 +350,7 @@
 
         const WORKER_URL = "https://morning-cake-d5f8.fabiorainersilva.workers.dev";
         const MODELO_GROQ = "llama-3.3-70b-versatile";
-        const MODELO_PUZZLE = "qwen/qwen3-32b";   // antes era mixtral-8x7b-32768
+        const MODELO_PUZZLE = "mixtral-8x7b-32768"; // Nova constante para os puzzles
         
         let mapaMundo = null;
         let secaoAtualId = "1";
@@ -434,77 +434,6 @@
     { id: "escudo-do-fogo",           custo: 8,  nomes: ["escudo do fogo", "scutum ignis", "muralha ígnea retaliadora"] },
     { id: "toque-macabro",            custo: 3,  nomes: ["toque macabro", "exsanguo", "frieza que suga a cor"] }
 ];
-
-        // ============================================================
-// HANDLER GENÉRICO DE PUZZLES (independente do tipo e solução)
-// ============================================================
-function processarInteracaoPuzzle(acaoUsuario) {
-    const salaAtual = mapaMundo && mapaMundo[secaoAtualId];
-    if (!salaAtual || !salaAtual.puzzle_status) return null;
-
-    const puzzle = salaAtual.puzzle_status;
-    if (puzzle.resolvido) return null; // já resolvido, nada a fazer
-
-    const acaoLower = acaoUsuario.toLowerCase().trim();
-
-    // Detecta interações por palavras-chave genéricas
-    const match = acaoLower.match(/(?:apertar|pressionar|puxar|acionar|girar|mover)\s+(?:o\s+|a\s+)?(?:bot[aã]o|alavanca|interruptor)\s*(\d+)?/i);
-    if (!match) return null;
-
-    const numero = match[1] ? parseInt(match[1]) : 1; // se não informar número, assume 1
-    const chaveEstado = `botao_${numero}`; // padroniza para botao_N (pode expandir para alavanca_N)
-    if (!(chaveEstado in (puzzle.estados || {}))) return null; // botão não existe no puzzle
-
-    // Alterna ou ativa o botão? Depende do tipo. Aqui faremos: ligar se estiver false.
-    if (puzzle.estados[chaveEstado] === false) {
-        puzzle.estados[chaveEstado] = true;
-    } else {
-        // Já está pressionado, podemos ignorar ou alternar. Por simplicidade, ignoramos.
-        adicionarMensagem(`O ${chaveEstado.replace('_',' ')} já está pressionado.`, 'system');
-        return null;
-    }
-
-    // Feedback imediato
-    adicionarMensagem(`Você pressiona o ${chaveEstado.replace('_',' ')}. Um som metálico ecoa.`, 'system');
-
-    // Verifica se a sequência atual resolve o puzzle
-    if (verificarSolucaoPuzzle(puzzle)) {
-        puzzle.resolvido = true;
-        adicionarMensagem('🧩 O mecanismo se encaixa! Algo mudou no ambiente.', 'system');
-        // Aqui você pode disparar consequências, como liberar uma nova saída.
-        // Exemplo: se a solução do puzzle abrir uma passagem, vamos recarregar as opções.
-        atualizarBotoesNavegacao();
-    }
-
-    salvarEstadoJogador(); // persiste imediatamente
-    return true; // indica que uma ação de puzzle foi processada
-}
-
-function verificarSolucaoPuzzle(puzzle) {
-    // Solução padrão: comparar a sequência de estados true com a solução descrita.
-    if (!puzzle.solucao) return false;
-
-    const solucaoLower = puzzle.solucao.toLowerCase();
-
-    // Exemplo de solução: "Pressione os botões na sequência 2-1-3."
-    const match = solucaoLower.match(/(\d[\s\-\d]*)/);
-    if (!match) return false; // não conseguiu extrair sequência
-
-    const sequencia = match[1].split(/[\s\-]+/).map(Number);
-    if (sequencia.length === 0) return false;
-
-    // Verifica se, na ordem correta, os botões correspondentes estão true
-    for (let i = 0; i < sequencia.length; i++) {
-        const chave = `botao_${sequencia[i]}`;
-        if (!(chave in puzzle.estados) || puzzle.estados[chave] !== true) {
-            // Se qualquer botão da sequência ainda não foi pressionado, não está resolvido
-            return false;
-        }
-    }
-
-    // Todos os botões da sequência estão pressionados? Pode ser necessário que apenas a sequência correta tenha sido seguida, mas aqui simplificamos: se todos estão true, ok.
-    return true;
-}
 
         let intervaloAnimacao = null;
         let primeiroTokenRecebido = false;
@@ -1005,17 +934,18 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
         // RESTANTE DO CÓDIGO DA GROQ, LM STUDIO E LÓGICA DO JOGO (INTACTO)
         // ============================================================
         
-        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, tentativas = 3) {
-            for (let i = 0; i < tentativas; i++) {
-                const response = await fetch(WORKER_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        messages: messages,
-                        temperature: temperatura,
-                        response_format: formato,
-                    }),
-                });
+        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_GROQ, tentativas = 3) {
+    for (let i = 0; i < tentativas; i++) {
+        const response = await fetch(WORKER_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                model: modeloPadrao, // <-- O modelo agora é dinâmico
+                messages: messages,
+                temperature: temperatura,
+                response_format: formato,
+            }),
+        });
 
                 const data = await response.json();
 
@@ -1050,99 +980,32 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
             }
         }
 
-        // --- NOVA FUNÇÃO: chamarGroqModelo ---
-        // Permite especificar o modelo da Groq dinamicamente (ex: Mixtral para puzzles)
-        async function chamarGroqModelo(messages, modelo, temperatura = 0.7, formato = { type: "json_object" }, tentativas = 3) {
-            for (let i = 0; i < tentativas; i++) {
-                const response = await fetch(WORKER_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        model: modelo,            // ← campo adicionado
-                        messages: messages,
-                        temperature: temperatura,
-                        response_format: formato,
-                    }),
-                });
 
-                const data = await response.json();
+        async function injetarPuzzles(planoZonal, zonaId) {
+    const promptPuzzle = `
+    Você é um Narrative Designer especializado em Survival Horror (estilo Resident Evil PS1).
+    Receba este JSON de 10 salas e selecione 2 ou 3 salas para injetar puzzles engenhosos.
+    
+    REGRAS DE INJEÇÃO:
+    1. Não altere os IDs numéricos das salas, não remova propriedades existentes e mantenha as conexões (saidas) intactas.
+    2. Reescreva a descrição da sala para incluir pistas visuais do puzzle (ex: estátuas que precisam olhar para o norte, quadros que contam uma idade, engrenagens faltando).
+    3. Crie uma nova propriedade no objeto da sala afetada chamada 'puzzle_status' com: { "resolvido": false, "dica": "...", "solucao": "..." }.
+    4. Integre a solução com a necessidade de uma interação inteligente do jogador.
+    5. O tom deve ser brutal, melancólico e misterioso.
+    
+    JSON DAS SALAS BASE:
+    ${JSON.stringify(planoZonal)}
+    
+    Retorne APENAS o JSON completo das 10 salas atualizado.`;
 
-                const isRateLimit = (!response.ok && response.status === 429) || 
-                                    (data.error && data.error.message && data.error.message.includes("Rate limit"));
+    // Note que estamos passando MODELO_PUZZLE como o 4º parâmetro
+    const data = await chamarGroq([
+        { role: "system", content: "Você é um mestre de enigmas em um mundo dark fantasy. Responda apenas com o JSON estruturado." },
+        { role: "user", content: promptPuzzle }
+    ], 0.5, { type: "json_object" }, MODELO_PUZZLE, 3); 
 
-                if (isRateLimit && i < tentativas - 1) {
-                    const errMsg = data.error?.message || "";
-                    const match = errMsg.match(/try again in ([\d\.]+)s/);
-                    const waitTime = match ? (parseFloat(match[1]) * 1000) + 2000 : 15000;
-                    console.warn(`⏳ [Groq ${modelo}] Rate limit. Aguardando ${(waitTime/1000).toFixed(1)}s...`);
-                    await new Promise(resolve => setTimeout(resolve, waitTime));
-                    continue;
-                }
-
-                if (!response.ok) {
-                    throw new Error(`Erro no Worker [${response.status}]: ${JSON.stringify(data)}`);
-                }
-                if (data.error) {
-                    throw new Error(`Erro da Groq API: ${data.error.message ?? JSON.stringify(data.error)}`);
-                }
-                if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
-                    throw new Error(`Resposta sem 'choices': ${JSON.stringify(data).slice(0, 300)}`);
-                }
-                return data;
-            }
-        }
-
-        // --- NOVA FUNÇÃO: injetarPuzzles ---
-        // Envia as salas para o Mixtral e retorna as mesmas com puzzle_status embutido
-        async function injetarPuzzles(planoSalas, numeroZona, dnaGlobal) {
-            // Prepara o contexto do DNA para dar coerência
-            const contextoDNA = {
-                misterio_central: dnaGlobal?.misterio_central || '',
-                tom_geral: dnaGlobal?.zonas?.find(z => z.id === numeroZona)?.tom_sensorial || ''
-            };
-
-            const promptPuzzle = `
-Você é um arquiteto de enigmas no estilo Survival Horror (Resident Evil / Silent Hill).
-
-Receba o JSON de uma zona com ${Object.keys(planoSalas).length} salas. Seu objetivo é selecionar 2 ou 3 dessas salas e injetar puzzles lógicos e atmosféricos, reescrevendo APENAS o campo "texto_logico" e adicionando um novo campo "puzzle_status".
-
-REGRAS RÍGIDAS:
-1. NÃO altere os IDs das salas, nem a estrutura de "opcoes" (rotas de navegação).
-2. Para cada sala que receber puzzle, reescreva "texto_logico" incluindo as pistas visuais e mecânicas do enigma. Mantenha o tom brutal e melancólico do cenário.
-3. Adicione o campo "puzzle_status" (objeto) com a seguinte estrutura:
-   {
-     "tipo": "sequencia_botoes" | "alavanca" | "insercao_item" | "ordem_estatuas" | "outro",
-     "resolvido": false,
-     "dica": "Uma frase curta que o jogador pode descobrir inspecionando",
-     "solucao": "descrição exata do que o jogador precisa fazer",
-     "estados": {}  // opcional, para puzzles com múltiplos estágios
-   }
-4. O puzzle DEVE ser resolvido sem que o jogador precise carregar itens no inventário. Se houver um item necessário, ele já está no cenário (descrito no texto) e é usado no local (ex: "inserir a manivela no buraco"). O "puzzle_status" pode conter, por exemplo, "manivela_inserida": false.
-5. Integre a solução ao ambiente. Ex: para apertar botões, o texto deve descrever painéis, botões e o que acontece quando pressionados.
-6. O retorno deve ser EXATAMENTE o JSON completo das ${Object.keys(planoSalas).length} salas, com as alterações apenas nas salas escolhidas.
-
-CONTEXTO DO MUNDO:
-${JSON.stringify(contextoDNA)}
-
-PLANO ATUAL DAS SALAS:
-${JSON.stringify(planoSalas)}
-
-Retorne APENAS o JSON.`;
-
-            const data = await chamarGroqModelo(
-                [
-                    { role: "system", content: "Você é um mestre de puzzles engenhosos. Retorne apenas JSON." },
-                    { role: "user", content: promptPuzzle }
-                ],
-                MODELO_PUZZLE,   // usa o Mixtral
-                0.5,
-                { type: "json_object" },
-                3
-            );
-
-            const resultado = JSON.parse(data.choices[0].message.content);
-            return resultado;
-        }
+    return JSON.parse(data.choices[0].message.content);
+}
 
         async function carregarDadosJogador(uid) {
             try {
@@ -1707,27 +1570,6 @@ const historicoItensZona = [];
                 });
                 
                 zonaData.salas = mapaFinalMesclado;
-
-                // ---- INJEÇÃO DE PUZZLES (Mixtral) ----
-                const idMsgPuzzle = adicionarMensagem(`🧩 Mixtral está escondendo enigmas na Zona ${numeroZona}...`, "system", true);
-                try {
-                    const salasComPuzzles = await injetarPuzzles(zonaData.salas, numeroZona, dnaGlobal);
-// Mescla os puzzles sem perder as salas não alteradas
-if (salasComPuzzles && typeof salasComPuzzles === 'object') {
-    for (const [id, sala] of Object.entries(salasComPuzzles)) {
-        if (zonaData.salas[id]) {
-            zonaData.salas[id] = { ...zonaData.salas[id], ...sala };
-        } else {
-            // Caso o Mixtral injete uma sala extra (não esperado, mas seguro)
-            zonaData.salas[id] = sala;
-        }
-    }
-}
-                } catch (e) {
-                    console.error("Erro ao injetar puzzles, mantendo salas originais:", e);
-                }
-                document.getElementById(idMsgPuzzle)?.remove();
-                // --------------------------------------
 
                 if (!mapaMundo) mapaMundo = {};
                 Object.assign(mapaMundo, zonaData.salas);
@@ -2372,24 +2214,46 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
 // ============================================================================
 // 🚀 OTIMIZAÇÃO RADICAL DE LATÊNCIA + ESTABILIDADE (KV CACHE HIT + ANCORAGEM)
 // ============================================================================
-// (comentários mantidos, sem alteração)
+// Antes: 50+ segundos por ação, com crashes frequentes (Vulkan shift).
+// Agora: estável (sem crashes) e tempo de resposta de 10 - 12 segundos no 7B,
+//        e 2–4 segundos no 1.5B.
+//
+// Técnicas aplicadas (dentro de window.enviar):
+//
+// 1. ANCORAGEM DINÂMICA (System Prompt carrega o peso do mundo)
+//    - O system prompt agora contém a descrição completa da sala, itens e botões.
+//    - Isso retirou o cenário do histórico iterativo, reduzindo drasticamente o
+//      crescimento de tokens a cada turno (de ~600 para ~80 tokens por ação).
+//
+// 2. HISTÓRICO CONDENSADO (apenas o delta da ação)
+//    - Em vez de guardar o enorme 'conteudoUser', armazenamos 'acaoSimplesUser',
+//      que contém apenas a ação do jogador + resultado do árbitro + tag de dano.
+//    - O prefixo do prompt permanece IDÊNTICO entre ações consecutivas (system
+//      + histórico fixo), garantindo Cache Hit no LM Studio.
+//
+// 3. LIMITE DE HISTÓRICO REDUZIDO
+//    - De 10 mensagens (5 pares) passou para 8 mensagens (4 pares).
+//    - Cada interação agora pesa ~80 tokens, portanto 8 mensagens ocupam ~640
+//      tokens, longe do limite de 2048, sem risco de estouro.
+//
+// 4. HARDWARE E ESTABILIDADE
+//    - O modelo 7B (narrador) roda com GPU Offload = 0 (apenas CPU) porque o
+//      backend Vulkan da Intel Iris Xe causava crashes durante o shift do cache.
+//    - O modelo 1.5B (árbitro) roda com GPU Offload = 28 (todas as camadas) e
+//      CPU Thread Pool = 4, garantindo resposta rápida na classificação.
+//
+// Resultado final:
+//   - Primeira ação de uma sessão: ainda processa o prompt inteiro (lento).
+//   - Ações subsequentes: Cache Hit total → tempo de resposta dominado apenas
+//     pela geração de tokens de saída (7B: 10–12s; 1.5B: 2–4s).
+//   - Sem crashes, sem estouro de contexto, sem necessidade de trocar de modelo.
+// ============================================================================
         
         window.enviar = async function(mensagemUsuario = null) {
             const isInitial = mensagemUsuario === null;
             
             if (!isInitial) {
                 turnosJogados++;
-                // ---- NOVA VERIFICAÇÃO DE PUZZLE ----
-    const resultadoPuzzle = processarInteracaoPuzzle(mensagemUsuario);
-    if (resultadoPuzzle) {
-        // A ação foi consumida pelo puzzle. Não chama o LLM narrativo para isso.
-        sendBtn.disabled = false;
-        userInput.disabled = false;
-        userInput.value = '';
-        userInput.focus();
-        return;
-    }
-    // ------------------------------------
             }
 
             let pergunta;
