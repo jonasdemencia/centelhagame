@@ -1493,7 +1493,25 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
                     0.85,
                     { type: "json_object" }
                 );
-                const zonaData = JSON.parse(dataSalas.choices[0].message.content);
+
+                let zonaData = JSON.parse(dataSalas.choices[0].message.content);
+
+                // --- INÍCIO DO AJUSTE: INJEÇÃO DE PUZZLES VIA MIXTRAL ---
+                const idMsgPuzzle = adicionarMensagem("🧩 A arquitetura está se contorcendo... ocultando enigmas...", "system", true);
+                try {
+                    // Passa o plano gerado pelo Llama para o Mixtral injetar enigmas
+                    // Usamos a chave 'salas' do zonaData que contém os textos lógicos recém-gerados
+                    const zonaComPuzzles = await injetarPuzzles(zonaData.salas, numeroZona);
+                    
+                    // Atualiza o objeto zonaData com a nova versão "enigmática" do Mixtral
+                    zonaData.salas = zonaComPuzzles;
+                    console.log(`[Mixtral] ✅ Puzzles injetados com sucesso na Zona ${numeroZona}`);
+                } catch (e) {
+                    console.error("Erro na injeção de puzzles pelo Mixtral. Mantendo o plano original do Llama:", e);
+                }
+                document.getElementById(idMsgPuzzle)?.remove();
+                // --- FIM DO AJUSTE ---
+
                 document.getElementById(idMsg)?.remove();
 
                 if (!zonaData.salas?.[String(salaInicio)]?.texto_logico) {
