@@ -2564,7 +2564,7 @@ if (salaAtual && salaAtual.itens && salaAtual.itens.length > 0) {
     textoItensOculto = `\n[ITENS NO CHÃO]: Há loot físico (${nomesLoot}). Descreva-os sutilmente.`;
 }
 
-const systemPromptContent = `Você é um terminal de transcrição forense e narrador brutal. Responda APENAS em Português Brasileiro.
+let systemPromptContent = `Você é um terminal de transcrição forense e narrador brutal. Responda APENAS em Português Brasileiro.
 
 REGRAS ABSOLUTAS:
 1. FOCO: Narre em segunda pessoa ("Você..."). Máximo de 4 frases. Seja seco e clínico.
