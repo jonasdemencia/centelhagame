@@ -2432,7 +2432,7 @@ if (classificacao.tipo === 'MAGIA_SUCESSO') {
                     const { tipo, atributo } = classificacao;
 
                     // --- VERIFICAÇÃO DE PUZZLE (Juiz local) ---
-const salaAtual = mapaMundo?.[secaoAtualId];
+let salaAtual = mapaMundo?.[secaoAtualId];
 if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
     const promptPuzzle = `Ação do Jogador: "${pergunta}"\nSolução do Enigma: "${salaAtual.puzzle_status.solucao}"\nO jogador executou a ação correta para resolver o enigma? Responda apenas com o JSON:\n{"resolvido": true/false}`;
 
@@ -2516,7 +2516,7 @@ if (tipo === 'MAGIA_SUCESSO') {
                         }
                     }
 
-                    const salaAtual = mapaMundo && mapaMundo[secaoAtualId] ? mapaMundo[secaoAtualId] : null;
+                    
 const descricaoSala = salaAtual ? salaAtual.texto_logico : 'Cenário sombrio.';
 
 let elementosInterativos = "";
