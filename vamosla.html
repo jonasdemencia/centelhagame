@@ -993,12 +993,15 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
     Receba este JSON de ${SALAS_POR_ZONA} salas e selecione 1 ou 2 salas para injetar puzzles engenhosos.
     
     REGRAS DE INJEÇÃO:
-    1. Retorne TODAS as ${SALAS_POR_ZONA} salas no JSON. Não omita nenhuma — mesmo as que não recebem puzzle devem aparecer idênticas à entrada.
-    2. Nas salas escolhidas para puzzle: reescreva o "texto_logico" para incluir pistas visuais (ex: estátuas que precisam olhar para o norte, quadros com números, engrenagens faltando) e adicione a propriedade "puzzle_status": { "resolvido": false, "dica": "...", "solucao": "..." }.
-    3. Nas demais salas: copie o "texto_logico" original sem alterações. Não adicione "puzzle_status".
-    4. O tom deve ser brutal, melancólico e misterioso.
-    5. PUZZLE PORTAL: O puzzle NÃO bloqueia saídas locais. Em vez disso, a solução revela uma fenda ou passagem secreta para um local muito distante. O valor de "portal_destino" deve ser obrigatoriamente o ID da primeira sala de uma zona remota (Ex: se a zona atual é ${zonaId}, faça o portal levar para a sala ${((zonaId + 2) * SALAS_POR_ZONA) + 1}). A dica e a solução usam elementos visíveis na sala atual.    
-    
+1. Retorne TODAS as ${SALAS_POR_ZONA} salas no JSON. Não omita nenhuma — mesmo as que não recebem puzzle devem aparecer idênticas à entrada.
+2. Nas salas escolhidas para puzzle:
+   - Crie uma "dica" que seja uma observação sensorial sutil e indireta (ex: "A luz que entra pelas frestas do arco projeta sombras nos símbolos da roda"). A dica jamais deve ser um comando ("gire a roda"), mas uma descrição que instigue a curiosidade.
+   - Reescreva o "texto_logico" da sala de forma a incorporar naturalmente essa dica no final da descrição, como um detalhe que o jogador percebe ao olhar ao redor. O texto deve fornecer todos os elementos visuais mencionados na dica e na solução (ex: se a solução envolve uma roda, o texto deve descrever a roda e a luz que incide sobre ela).
+   - Adicione a propriedade "puzzle_status": { "resolvido": false, "dica": "...", "solucao": "...", "portal_destino": NUMERO }.
+3. Nas demais salas: copie o "texto_logico" original sem alterações. Não adicione "puzzle_status".
+4. O tom deve ser brutal, melancólico e misterioso, mas sempre ancorado em detalhes físicos concretos.
+5. PUZZLE PORTAL: O puzzle NÃO bloqueia saídas locais. Em vez disso, a solução revela uma fenda ou passagem secreta para um local muito distante. O valor de "portal_destino" deve ser obrigatoriamente o ID da primeira sala de uma zona remota (Ex: se a zona atual é ${zonaId}, faça o portal levar para a sala ${((zonaId + 2) * SALAS_POR_ZONA) + 1}). A dica e a solução usam elementos visíveis na sala atual, e a dica pode sugerir sutilmente a natureza extraordinária do portal ("uma distorção no ar", "um eco de outro lugar").
+
     JSON DAS SALAS BASE:
     ${JSON.stringify(planoZonal)}
     
@@ -1517,6 +1520,19 @@ try {
         zonaData.salas[id] = { ...salasOriginais[id], ...(zonaComPuzzles[id] || {}) };
     }
     console.log(`[Puzzle] ✅ Puzzles injetados com sucesso na Zona ${numeroZona}`);
+// Garantia de exibição da dica no texto_logico
+for (const id in zonaData.salas) {
+    const sala = zonaData.salas[id];
+    if (sala.puzzle_status && sala.puzzle_status.dica) {
+        const dica = sala.puzzle_status.dica;
+        const texto = sala.texto_logico || '';
+        if (!texto.toLowerCase().includes(dica.toLowerCase().substring(0, 20))) {
+            sala.texto_logico = texto + ' ' + dica;
+        }
+    }
+}
+
+    
 } catch (e) {
     console.error("[Puzzle] Erro na injeção. Mantendo o plano original:", e);
 }
@@ -2443,6 +2459,14 @@ if (classificacao.tipo === 'MAGIA_SUCESSO') {
 
                     // --- VERIFICAÇÃO DE PUZZLE (Juiz local - blindada) ---
 let salaAtual = mapaMundo?.[secaoAtualId];
+
+// Investigação: destaca a dica do puzzle não resolvido
+const acaoMinuscula = pergunta.toLowerCase();
+const termosInvestigacao = ["examinar", "olhar", "investigar", "procurar", "checar", "inspecionar", "observar"];
+if (termosInvestigacao.some(t => acaoMinuscula.includes(t)) && salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
+    adicionarMensagem(`🔍 Você observa com mais atenção: ${salaAtual.puzzle_status.dica}`, "system");
+}
+
 if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
     // Prompt reforçado com a palavra "JSON" (exigência de alguns modelos)
     const promptPuzzle = `Ação do Jogador: "${pergunta}"\nSolução do Enigma: "${salaAtual.puzzle_status.solucao}"\nO jogador executou a ação correta para resolver o enigma? Responda apenas com um objeto JSON.\nFormato: {"resolvido": true} ou {"resolvido": false}`;
@@ -2450,29 +2474,29 @@ if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
     let puzzleResolvido = false;
     try {
         const resPuzzle = await fetch(LM_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-        model: MODELO_JUIZ,
-        messages: [{ role: 'user', content: promptPuzzle }],
-        temperature: 0.0,
-        response_format: {
-            type: "json_schema",
-            json_schema: {
-                name: "puzzle_check",
-                strict: true,
-                schema: {
-                    type: "object",
-                    properties: {
-                        resolvido: { type: "boolean" }
-                    },
-                    required: ["resolvido"],
-                    additionalProperties: false
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: MODELO_JUIZ,
+                messages: [{ role: 'user', content: promptPuzzle }],
+                temperature: 0.0,
+                response_format: {
+                    type: "json_schema",
+                    json_schema: {
+                        name: "puzzle_check",
+                        strict: true,
+                        schema: {
+                            type: "object",
+                            properties: {
+                                resolvido: { type: "boolean" }
+                            },
+                            required: ["resolvido"],
+                            additionalProperties: false
+                        }
+                    }
                 }
-            }
-        }
-    })
-});
+            })
+        });
 
         if (!resPuzzle.ok) {
             const errorText = await resPuzzle.text();
