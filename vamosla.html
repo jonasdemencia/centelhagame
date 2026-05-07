@@ -997,15 +997,15 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
     2. Nas salas escolhidas para puzzle: reescreva o "texto_logico" para incluir pistas visuais (ex: estátuas que precisam olhar para o norte, quadros com números, engrenagens faltando) e adicione a propriedade "puzzle_status": { "resolvido": false, "dica": "...", "solucao": "..." }.
     3. Nas demais salas: copie o "texto_logico" original sem alterações. Não adicione "puzzle_status".
     4. O tom deve ser brutal, melancólico e misterioso.
-    5. 5. PUZZLE LOCAL: O puzzle bloqueia as saídas da sala. A solução é uma ação executada dentro dessa mesma sala, usando apenas elementos visíveis nela. A dica aponta para algo no próprio ambiente. A solução nunca menciona números de outras salas. Não crie "nova_opcao" nem destinos fora do plano.
+    5. PUZZLE PORTAL: O puzzle NÃO bloqueia saídas locais. Em vez disso, a solução revela uma fenda ou passagem secreta para um local muito distante. O valor de "portal_destino" deve ser obrigatoriamente o ID da primeira sala de uma zona remota (Ex: se a zona atual é ${zonaId}, faça o portal levar para a sala ${((zonaId + 2) * SALAS_POR_ZONA) + 1}). A dica e a solução usam elementos visíveis na sala atual.    
     
     JSON DAS SALAS BASE:
     ${JSON.stringify(planoZonal)}
     
-    Estrutura esperada do retorno (substitua N pelo ID de cada sala):
-    { "N": { "texto_logico": "..." }, "N": { "texto_logico": "...", "puzzle_status": { "resolvido": false, "dica": "...", "solucao": "..." } }, ... }
+    Estrutura esperada do retorno:
+    { "N": { "texto_logico": "..." }, "N": { "texto_logico": "...", "puzzle_status": { "resolvido": false, "dica": "...", "solucao": "...", "portal_destino": 31 } }, ... }
     
-    Retorne APENAS o JSON com todas as ${SALAS_POR_ZONA} salas.`;
+    Retorne APENAS o JSON.`;
 
     // Note que estamos passando MODELO_PUZZLE como o 4º parâmetro
     const data = await chamarGroq([
@@ -2210,35 +2210,45 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
     const sala = mapaMundo?.[secaoAtualId];
     if (!sala || !sala.opcoes) return;
 
-    const puzzleResolvido = sala.puzzle_status?.resolvido !== false; // true ou undefined
-
     sala.opcoes.forEach(opcao => {
-        // Se há um puzzle pendente e a opção é de "avanço" (destino maior que a sala atual), bloqueia
-        const ehAvanco = opcao.destino > parseInt(secaoAtualId);
-        if (!puzzleResolvido && ehAvanco) {
-            // Cria um botão desabilitado apenas como feedback
-            const btnLocked = document.createElement('button');
-            btnLocked.className = 'nav-btn';
-            btnLocked.style.opacity = '0.5';
-            btnLocked.style.textDecoration = 'line-through';
-            btnLocked.innerText = '🔒 ' + opcao.texto;
-            btnLocked.title = 'Resolva o enigma para prosseguir.';
-            container.appendChild(btnLocked);
-            return;
-        }
-
         const btn = document.createElement('button');
         btn.className = 'nav-btn';
-        btn.innerText = `🧭 ${opcao.texto}`;
-        btn.onclick = () => {
+        
+        // Estiliza de forma diferente se for um portal (pulos muito grandes)
+        const saltoLongo = Math.abs(opcao.destino - parseInt(secaoAtualId)) > SALAS_POR_ZONA;
+        btn.innerText = saltoLongo ? `🌀 ${opcao.texto}` : `🧭 ${opcao.texto}`;
+        
+        if (saltoLongo) {
+            btn.style.color = "#a13d3d";
+            btn.style.borderColor = "#a13d3d";
+        }
+
+        btn.onclick = async () => {
             container.innerHTML = '';
-            secaoAtualId = opcao.destino.toString();
+            const destinoStr = opcao.destino.toString();
+
+            // 1. Checa se o destino existe. Se não, invoca o gerador antes de prosseguir!
+            if (!mapaMundo[destinoStr]) {
+                const zonaAlvo = Math.ceil(opcao.destino / SALAS_POR_ZONA);
+                const idLoading = adicionarMensagem(`⚙️ A fenda pulsa violentamente... construindo os horrores da Zona ${zonaAlvo}...`, "system", true);
+                
+                window._expansaoEmAndamento = true;
+                await gerarZona(zonaAlvo, null);
+                window._expansaoEmAndamento = false;
+                
+                document.getElementById(idLoading)?.remove();
+            }
+
+            // 2. Transição normal de sala
+            secaoAtualId = destinoStr;
+            zonaAtual = Math.ceil(parseInt(secaoAtualId) / SALAS_POR_ZONA); // Sincroniza a zona local
+            
             salvarEstadoJogador();
-            verificarEExpandirMundo();
+            verificarEExpandirMundo(); // Mantém a expansão de background rodando pra zona atual
 
             const novaSala = mapaMundo[secaoAtualId];
             if (novaSala?.texto_logico) {
-                adicionarMensagem(`🧭 ${opcao.texto}`, 'user');
+                adicionarMensagem(btn.innerText, 'user');
                 const textoFinal = prepararTextoChegada(novaSala.texto_logico, opcao.texto, parseInt(secaoAtualId), opcao.destino);
                 adicionarMensagem(textoFinal, 'ai');
                 historicoConversa.push({ role: 'user', content: opcao.texto });
@@ -2252,7 +2262,6 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         container.appendChild(btn);
     });
 }
-
 // ============================================================================
 // 🚀 OTIMIZAÇÃO RADICAL DE LATÊNCIA + ESTABILIDADE (KV CACHE HIT + ANCORAGEM)
 // ============================================================================
@@ -2481,7 +2490,22 @@ if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
 
     if (puzzleResolvido) {
         salaAtual.puzzle_status.resolvido = true;
-        adicionarMensagem("🔓 Mecanismo oculto foi ativado...", "system");
+        adicionarMensagem("🔓 Um som profundo ecoa. Uma fenda distorcida se abre nas sombras...", "system");
+
+        // Injeta dinamicamente o portal como opção de navegação
+        if (salaAtual.puzzle_status.portal_destino) {
+            const destinoPortal = parseInt(salaAtual.puzzle_status.portal_destino);
+            
+            // Evita duplicar a opção se o jogador recarregar o save
+            const jaExiste = salaAtual.opcoes.some(o => o.destino === destinoPortal);
+            if (!jaExiste) {
+                salaAtual.opcoes.push({
+                    destino: destinoPortal,
+                    texto: "Adentrar a fenda dimensional secreta"
+                });
+            }
+        }
+
         await salvarEstadoJogador();
         atualizarBotoesNavegacao();
     }
