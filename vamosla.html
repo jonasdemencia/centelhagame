@@ -997,12 +997,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
     2. Nas salas escolhidas para puzzle: reescreva o "texto_logico" para incluir pistas visuais (ex: estátuas que precisam olhar para o norte, quadros com números, engrenagens faltando) e adicione a propriedade "puzzle_status": { "resolvido": false, "dica": "...", "solucao": "..." }.
     3. Nas demais salas: copie o "texto_logico" original sem alterações. Não adicione "puzzle_status".
     4. O tom deve ser brutal, melancólico e misterioso.
-    5. PONTES ENTRE ZONAS (atalhos dimensionais): 
-       Se o puzzle estiver em uma sala de final de zona (ID terminado em 9 ou 0) ou em qualquer sala estratégica, 
-       a 'nova_opcao' pode apontar para um destino de outra zona, pulando uma ou mais zonas. 
-       Exemplo: { "texto": "Ativar o Elevador de Carga", "destino": 31 } (isso levaria à sala 1 da Zona 4). 
-       O jogo gerará essa zona automaticamente quando o jogador usar a passagem.
-       Se o puzzle NÃO for uma ponte entre zonas, mantenha 'nova_opcao' com um destino da zona atual.
+    5. 5. PUZZLE LOCAL: O puzzle bloqueia as saídas da sala. A solução é uma ação executada dentro dessa mesma sala, usando apenas elementos visíveis nela. A dica aponta para algo no próprio ambiente. A solução nunca menciona números de outras salas. Não crie "nova_opcao" nem destinos fora do plano.
     
     JSON DAS SALAS BASE:
     ${JSON.stringify(planoZonal)}
