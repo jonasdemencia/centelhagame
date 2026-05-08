@@ -995,7 +995,11 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
     REGRAS DE INJEÇÃO:
     1. Retorne TODAS as ${SALAS_POR_ZONA} salas no JSON.
     2. ANATOMIA DO PUZZLE (A PONTE DEDUTIVA):
-   - Escolha um objeto físico concreto no cenário (Mecanismo): válvula, roda, painel, alavanca.
+   Escolha um objeto físico concreto presente na sala (mecanismo) DENTRE estas categorias variadas:
+     * Mecânico: válvula, alavanca, engrenagem, manivela, trilho, pistão.
+     * Elétrico: painel de botões, disjuntor, painel de controle, alavanca de força.
+     * Estrutural: espelho, placa de metal, ladrilho solto, cano, porta, escotilha.
+     * Sensorial óptico: lente, mostrador, visor, medidor.
    - Crie uma "dica" que descreva um ESTADO FÍSICO IRREGULAR nesse objeto (algo quebrado, torto, emperrado, desalinhado). NUNCA use conceitos abstratos ("energia", "distorção", "portal").
      ❌ RUIM: "Uma energia estranha emana do painel." (abstrato, não sugere ação)
      ✅ BOM: "O terceiro botão do painel está afundado e não acende como os outros." (sugere pressionar ou puxar)
