@@ -1002,6 +1002,10 @@ Um puzzle resolvível e instigante NUNCA depende de adivinhação. Ele SEMPRE po
 REGRA DE OURO DA VISIBILIDADE:
 Se a solução exige uma senha, o texto DEVE conter os números ou letras (mesmo que camuflados). 
 Se exige um padrão, o texto DEVE descrever esse padrão. NUNCA diga "há uma inscrição". Diga O QUE ESTÁ ESCRITO na inscrição.
+REGRA DE TRANSFORMAÇÃO MÍNIMA (OBRIGATÓRIA):
+O gabarito jamais deve ser usado como resposta literal. A solução DEVE exigir uma operação simples sobre os elementos visíveis: inverter ordem, somar um valor fixo, usar o sentido contrário de uma marca, substituir símbolos, ou seguir uma sequência espacial indicada por outra pista (mapa, sombra, etc.).
+VIOLAÇÕES PROIBIDAS:
+- "O papel diz 12-34-56, então insira 12-34-56."
 
 === COMO CONSTRUIR A SALA DO PUZZLE ===
 Nas salas escolhidas, você reescreverá o "texto_logico" para incluir a Fechadura e o Gabarito naturalmente na narrativa.
@@ -1009,8 +1013,12 @@ Nas salas escolhidas, você reescreverá o "texto_logico" para incluir a Fechadu
 Exemplo de Construção Genial:
 ❌ RUIM: "Há um cofre. Há um quadro com a senha." (Óbvio demais)
 ❌ RUIM: "Há um relógio e um texto em latim." (Irresolvível, o jogador não sabe o texto)
+❌ QUASE BOM (MAS PROIBIDO): "Uma porta com uma trava de metal. Ao lado, um baú contém um papel com '12-34-56'. Solução: alinhar os números na trava."
+Problemas: a trava não tem interface descrita (não se sabe como alinhar), e os números estão literais — a solução é uma cópia. ESSE TIPO DE CONSTRUÇÃO SERÁ REJEITADO.
+Você pode inventar estátuas, relógios, inscrições, etc. — não está preso ao texto original.
 ✅ GENIAL: "Um busto de pedra de um rei cego possui três órbitas vazias onde deveriam estar os olhos. No chão, a luz da lua ilumina um mosaico de constelações, mas apenas três estrelas estão marcadas com calcário: O Corvo, A Serpente e O Cálice." 
 (Fechadura: órbitas do busto. Gabarito: constelações marcadas. Solução lógica: colocar objetos ou pedras com esses símbolos nas órbitas).
+⚠️  DESCREVA A INTERFACE DA FECHADURA: O texto DEVE mostrar COMO o jogador interage. Use termos concretos: "três anéis giratórios com números de 0 a 9", "duas alavancas que se movem para esquerda e direita", "botões de pressão com símbolos". NUNCA use descrições genéricas como "trava de metal" ou "painel de controle".
 
 === ESTRUTURA DOS DADOS ===
 Para as salas com puzzle, adicione o campo "puzzle_status":
