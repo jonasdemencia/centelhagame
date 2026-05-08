@@ -1019,7 +1019,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
     const data = await chamarGroq([
         { role: "system", content: "Você é um mestre de enigmas em um mundo dark fantasy. Responda apenas com o JSON estruturado." },
         { role: "user", content: promptPuzzle }
-    ], 0.5, { type: "json_object" }, MODELO_PUZZLE, 3); 
+    ], 0.65, { type: "json_object" }, MODELO_PUZZLE, 3); // temperatura era 0.5 mudamos para 0.65 para ser um pouco mais criativo
 
     return JSON.parse(data.choices[0].message.content);
 }
