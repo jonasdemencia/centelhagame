@@ -992,57 +992,58 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 Você é um Master Game Designer especializado em Survival Horror e Text Adventures clássicos.
 Mundo: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}. Atmosfera: ${dnaGlobal?.atmosfera || "brutal, dark fantasy"}.
 
-Seu objetivo é analisar este JSON com ${SALAS_POR_ZONA} salas, escolher entre 2 a 3 salas, e OBRIGATORIAMENTE injetar puzzles brilhantes.
+Seu objetivo é analisar este JSON com ${SALAS_POR_ZONA} salas, escolher entre 2 a 3 salas, e OBRIGATORIAMENTE injetar puzzles instigantes, lógicos e resolvíveis.
 
-=== A TEORIA DO PUZZLE PERFEITO (OBRIGATÓRIO) ===
-Um puzzle resolvível e instigante NUNCA depende de adivinhação. Ele SEMPRE possui duas partes que o jogador pode LER no texto da sala:
-1. A FECHADURA (O Mecanismo): Um objeto interativo claro que pode ser manipulado (ex: botões, mostradores, válvulas, pesos, espelhos).
-2. O GABARITO (A Pista Escondida): Um detalhe no cenário que contém a resposta, mas está disfarçado de outra coisa (ex: um quadro na parede, um poema, a sombra de um objeto, marcas de sangue específicas).
+=== A ANATOMIA DO PUZZLE INTELIGENTE (OBRIGATÓRIO) ===
+Um puzzle genial faz o jogador PENSAR. Ele não pode ser óbvio (copiar e colar uma senha) e NÃO PODE SER IMPOSSÍVEL (faltar informação).
+Todo puzzle DEVE possuir a TRÍADE DO ENIGMA descrita fisicamente no texto da sala:
 
-REGRA DE OURO DA VISIBILIDADE:
-Se a solução exige uma senha, o texto DEVE conter os números ou letras (mesmo que camuflados). 
-Se exige um padrão, o texto DEVE descrever esse padrão. NUNCA diga "há uma inscrição". Diga O QUE ESTÁ ESCRITO na inscrição.
-REGRA DE TRANSFORMAÇÃO MÍNIMA (OBRIGATÓRIA):
-O gabarito jamais deve ser usado como resposta literal. A solução DEVE exigir uma operação simples sobre os elementos visíveis: inverter ordem, somar um valor fixo, usar o sentido contrário de uma marca, substituir símbolos, ou seguir uma sequência espacial indicada por outra pista (mapa, sombra, etc.).
-VIOLAÇÕES PROIBIDAS:
-- "O papel diz 12-34-56, então insira 12-34-56."
+1. A INTERFACE (A Fechadura): Onde o jogador insere a resposta. DEVE ser concreto. (Ex: um painel com 4 números, 3 anéis com símbolos, válvulas, alavancas).
+2. A PISTA BRUTA (O Gabarito): A informação explícita na sala. DEVE ser legível. (Ex: um poema com 4 versos, as idades de 3 cadáveres, uma sequência de 4 cores na parede).
+3. O FATOR DE TRANSFORMAÇÃO (O Pulo do Gato): Este é o segredo para fazer o jogador PENSAR. A Pista Bruta NUNCA é a resposta direta. O jogador precisa aplicar uma lógica sobre ela, e ESSA LÓGICA DEVE SER SUGERIDA no cenário.
+   - Exemplo de Fator: A pista está escrita ao contrário num espelho (Sugere inverter).
+   - Exemplo de Fator: O diário fala sobre "avançar 2 dias" (Sugere somar +2 nos números).
+   - Exemplo de Fator: A sala está de ponta-cabeça (Sugere ler os símbolos ao contrário).
+
+=== REGRAS DE VISIBILIDADE (TOLERÂNCIA ZERO PARA FALHAS) ===
+- SE a interface pede números, a Pista Bruta e o Fator de Transformação devem resultar em números exatos.
+- NUNCA ocupe uma resposta com algo que não foi dito. Se a resposta exige ler uma inscrição, DIGA EXATAMENTE O QUE ESTÁ ESCRITO na inscrição. 
+- O jogador NUNCA deve ter que "adivinhar". Ele deve JUNTAR AS PEÇAS.
 
 === COMO CONSTRUIR A SALA DO PUZZLE ===
-Nas salas escolhidas, você reescreverá o "texto_logico" para incluir a Fechadura e o Gabarito naturalmente na narrativa.
+Nas salas escolhidas, você reescreverá o "texto_logico" integrando a Tríade do Enigma naturalmente na narrativa.
 
-Exemplo de Construção Genial:
-❌ RUIM: "Há um cofre. Há um quadro com a senha." (Óbvio demais)
-❌ RUIM: "Há um relógio e um texto em latim." (Irresolvível, o jogador não sabe o texto)
-❌ QUASE BOM (MAS PROIBIDO): "Uma porta com uma trava de metal. Ao lado, um baú contém um papel com '12-34-56'. Solução: alinhar os números na trava."
-Problemas: a trava não tem interface descrita (não se sabe como alinhar), e os números estão literais — a solução é uma cópia. ESSE TIPO DE CONSTRUÇÃO SERÁ REJEITADO.
-Você pode inventar estátuas, relógios, inscrições, etc. — não está preso ao texto original.
-✅ GENIAL: "Um busto de pedra de um rei cego possui três órbitas vazias onde deveriam estar os olhos. No chão, a luz da lua ilumina um mosaico de constelações, mas apenas três estrelas estão marcadas com calcário: O Corvo, A Serpente e O Cálice." 
-(Fechadura: órbitas do busto. Gabarito: constelações marcadas. Solução lógica: colocar objetos ou pedras com esses símbolos nas órbitas).
-⚠️  DESCREVA A INTERFACE DA FECHADURA: O texto DEVE mostrar COMO o jogador interage. Use termos concretos: "três anéis giratórios com números de 0 a 9", "duas alavancas que se movem para esquerda e direita", "botões de pressão com símbolos". NUNCA use descrições genéricas como "trava de metal" ou "painel de controle".
+❌ IMPOSSÍVEL (Falta Pista Bruta): "Há um cadeado de 3 letras e um texto em latim." (O jogador não sabe o texto).
+❌ ÓBVIO DEMAIS (Falta Fator de Transformação): "O cadáver segura um papel escrito 7-4-2. No cofre, insira 7-4-2."
+✅ INTELIGENTE E RESOLVÍVEL: "Uma porta de metal possui um teclado numérico manchado de sangue. Ao lado, quatro crânios estão enfileirados em prateleiras, cada um com um número entalhado na testa: 2, 5, 8, 1. No centro da sala, um pedestal exibe a estátua de um corvo de cabeça para baixo, apontando o bico para a prateleira da direita."
+(Interface: teclado. Pista Bruta: 2, 5, 8, 1. Fator de Transformação: Corvo invertido apontando da direita pra esquerda. Solução deduzida pelo jogador: 1-8-5-2).
 
-=== ESTRUTURA DOS DADOS ===
-Para as salas com puzzle, adicione o campo "puzzle_status":
-- "dica": Uma observação sensorial sutil que conecta a Fechadura ao Gabarito, REVELANDO A OPERAÇÃO necessária SEM ENTREGAR a solução completa. (Ex: "A poeira nas órbitas do rei cego parece ter a mesma textura do calcário no chão.")
-- "solucao": A ação física exata e lógica que o jogador deve tomar. (Ex: "Pressionar as marcações do Corvo, Serpente e Cálice no mosaico e transferir o pó de calcário para as órbitas do busto.")
-- "portal_destino": ${((zonaId + 2) * SALAS_POR_ZONA) + 1} (A solução SEMPRE abre uma fenda/passagem para esta zona distante).
-- "resolvido": false
+=== ESTRUTURA DOS DADOS (CHAIN OF THOUGHT) ===
+Para as salas com puzzle, você DEVE gerar um campo "puzzle_status" com a seguinte estrutura. O campo "logica_interna" é para você pensar ANTES de escrever o texto lógico:
+
+"puzzle_status": {
+  "logica_interna": "Explique brevemente para si mesmo qual é a interface, qual é a pista bruta e qual é o fator de transformação, provando que é resolvível.",
+  "dica": "Uma observação sensorial sutil que chama a atenção do jogador para o Fator de Transformação. (Ex: 'A poeira ao redor do corvo invertido sugere que ele foi propositalmente posicionado para olhar do fim para o início').",
+  "solucao": "A ação exata. (Ex: 'Digitar 1-8-5-2 no teclado numérico').",
+  "portal_destino": ${((zonaId + 2) * SALAS_POR_ZONA) + 1},
+  "resolvido": false
+}
 
 Nas salas SEM puzzle, copie o "texto_logico" original intacto, sem o campo "puzzle_status".
 
 JSON DAS SALAS BASE:
 ${JSON.stringify(planoZonal)}
 
-Retorne APENAS o JSON válido com todas as ${SALAS_POR_ZONA} salas formatadas.
-`;
+Retorne APENAS o JSON válido com todas as ${SALAS_POR_ZONA} salas formatadas.`;
 
     const data = await chamarGroq([
-        { role: "system", content: "Você é um Master Game Designer. Crie puzzles baseados na regra de Fechadura (mecanismo físico) e Gabarito (pista visível no ambiente). Responda estritamente com JSON." },
+        { role: "system", content: "Você é um Master Game Designer. Crie puzzles baseados na Tríade do Enigma: Interface explícita, Pista Bruta exata e um Fator de Transformação sugerido no cenário. Responda estritamente com JSON." },
         { role: "user", content: promptPuzzle }
-    ], 0.7, { type: "json_object" }, MODELO_PUZZLE, 3); // Recomendo subir levemente a temperatura (0.7) para permitir combinações mais criativas de Fechaduras e Gabaritos.
+    ], 0.7, { type: "json_object" }, MODELO_PUZZLE, 3);
 
     return JSON.parse(data.choices[0].message.content);
 }
-
+        
         async function carregarDadosJogador(uid) {
             try {
                 const docRef = doc(db, "players", uid);
