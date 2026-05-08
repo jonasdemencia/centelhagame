@@ -998,17 +998,19 @@ Receba este JSON de ${SALAS_POR_ZONA} salas e selecione 1 ou 2 salas para injeta
 PRINCÍPIOS (não são regras de estrutura — são critérios de qualidade):
 
 1. EMERGÊNCIA: O puzzle deve nascer dos objetos, história e atmosfera JÁ DESCRITOS no "texto_logico" da sala. 
-   Pergunte: "o que este lugar específico já esconde?".
+   Não invente um mecanismo genérico e cole na sala. Pergunte: "o que este lugar específico já esconde?"
    Um puzzle num matadouro é diferente de um puzzle num laboratório alquímico — mesmo que ambos usem alavancas.
 
 2. UNICIDADE: O puzzle deve ser intransplantável. Se puder funcionar em qualquer outra sala, está errado.
 
-3. CONCRETUDE: A "dica" deve descrever um defeito físico observável (algo quebrado, torto, emperrado, desalinhado, solto, corroído, manchado). A "solucao" é a ação física para corrigi-lo. PROIBIDO conceitos abstratos ("energia", "distorção", "portal", "sombra", "aura", "essência"). Se o puzzle não puder ser resolvido por uma pessoa comum com as mãos, está errado.
+3. CONCRETUDE: A solução deve ser uma ação física que qualquer pessoa consegue deduzir por observação.
+   Nada de "sentir a energia" ou "usar o poder interior". Empurrar, girar, posicionar, despejar, acender — ações reais.
 
-4. RESOLVIBILIDADE: A "dica" deve conter TODA a informação necessária para deduzir a "solucao" sem adivinhação. O jogador inteligente deve conseguir resolver sem tentativa e erro.
+4. RESOLVIBILIDADE: A "dica" deve conter TODA a informação necessária para deduzir a "solucao" sem adivinhação.
+   O jogador inteligente deve conseguir resolver sem tentativa e erro.
 
-5. SURPRESA LÓGICA: A solução deve parecer não-óbvia à primeira vista, mas inevitável quando descoberta. "Como não percebi isso antes?" — esse é o sentimento alvo.
-
+5. SURPRESA LÓGICA: A solução deve parecer não-óbvia à primeira vista, mas inevitável quando descoberta.
+   "Como não percebi isso antes?" — esse é o sentimento alvo.
 
 RESTRIÇÕES ESTRUTURAIS (estas sim são rígidas):
 - "puzzle_status": { "resolvido": false, "dica": "...", "solucao": "...", "portal_destino": NUMERO }
@@ -1016,7 +1018,6 @@ RESTRIÇÕES ESTRUTURAIS (estas sim são rígidas):
 - "portal_destino" = primeira sala de zona remota: ${((zonaId + 2) * SALAS_POR_ZONA) + 1}
 - Nas salas sem puzzle: copie "texto_logico" original intacto. Sem "puzzle_status".
 - Reescreva o "texto_logico" das salas escolhidas para que o mecanismo do puzzle exista no texto, integrado à atmosfera.
-- A dica deve ser incorporada organicamente ao final do "texto_logico", como uma observação natural do ambiente.
 
 JSON DAS SALAS BASE:
 ${JSON.stringify(planoZonal)}
@@ -1027,7 +1028,7 @@ Retorne APENAS o JSON com todas as ${SALAS_POR_ZONA} salas.
     const data = await chamarGroq([
         { role: "system", content: `Você é um arquiteto de enigmas. Seu trabalho não é seguir fórmulas — é descobrir que enigma cada ambiente já contém dentro de si. Responda apenas com JSON estruturado.` },
         { role: "user", content: promptPuzzle }
-    ], 0.7, { type: "json_object" }, MODELO_PUZZLE, 3);
+    ], 0.65, { type: "json_object" }, MODELO_PUZZLE, 3);
 
     return JSON.parse(data.choices[0].message.content);
 }
