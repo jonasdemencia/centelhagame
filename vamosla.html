@@ -989,46 +989,48 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 
         async function injetarPuzzles(planoZonal, zonaId) {
     const promptPuzzle = `
-Você é um arquiteto de enigmas num mundo chamado: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}.
-Tom e atmosfera deste mundo: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy com horror cósmico"}.
-Tema central: ${dnaGlobal?.tema_central || "sobrevivência e desespero"}.
+Você é um Master Game Designer especializado em Survival Horror e Text Adventures clássicos.
+Mundo: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}. Atmosfera: ${dnaGlobal?.atmosfera || "brutal, dark fantasy"}.
 
-Receba este JSON de ${SALAS_POR_ZONA} salas e selecione 1 ou 2 salas para injetar puzzles.
+Seu objetivo é analisar este JSON com ${SALAS_POR_ZONA} salas, escolher 1 ou 2 salas, e injetar puzzles brilhantes.
 
-PRINCÍPIOS (não são regras de estrutura — são critérios de qualidade):
+=== A TEORIA DO PUZZLE PERFEITO (OBRIGATÓRIO) ===
+Um puzzle resolvível e instigante NUNCA depende de adivinhação. Ele SEMPRE possui duas partes que o jogador pode LER no texto da sala:
+1. A FECHADURA (O Mecanismo): Um objeto interativo claro que pode ser manipulado (ex: botões, mostradores, válvulas, pesos, espelhos).
+2. O GABARITO (A Pista Escondida): Um detalhe no cenário que contém a resposta, mas está disfarçado de outra coisa (ex: um quadro na parede, um poema, a sombra de um objeto, marcas de sangue específicas).
 
-1. EMERGÊNCIA: O puzzle deve nascer dos objetos, história e atmosfera JÁ DESCRITOS no "texto_logico" da sala. 
-   Não invente um mecanismo genérico e cole na sala. Pergunte: "o que este lugar específico já esconde?"
-   Um puzzle num matadouro é diferente de um puzzle num laboratório alquímico — mesmo que ambos usem alavancas.
+REGRA DE OURO DA VISIBILIDADE:
+Se a solução exige uma senha, o texto DEVE conter os números ou letras (mesmo que camuflados). 
+Se exige um padrão, o texto DEVE descrever esse padrão. NUNCA diga "há uma inscrição". Diga O QUE ESTÁ ESCRITO na inscrição.
 
-2. UNICIDADE: O puzzle deve ser intransplantável. Se puder funcionar em qualquer outra sala, está errado.
+=== COMO CONSTRUIR A SALA DO PUZZLE ===
+Nas salas escolhidas, você reescreverá o "texto_logico" para incluir a Fechadura e o Gabarito naturalmente na narrativa.
 
-3. CONCRETUDE: A solução deve ser uma ação física que qualquer pessoa consegue deduzir por observação.
-   Nada de "sentir a energia" ou "usar o poder interior". Empurrar, girar, posicionar, despejar, acender — ações reais.
+Exemplo de Construção Genial:
+❌ RUIM: "Há um cofre. Há um quadro com a senha." (Óbvio demais)
+❌ RUIM: "Há um relógio e um texto em latim." (Irresolvível, o jogador não sabe o texto)
+✅ GENIAL: "Um busto de pedra de um rei cego possui três órbitas vazias onde deveriam estar os olhos. No chão, a luz da lua ilumina um mosaico de constelações, mas apenas três estrelas estão marcadas com calcário: O Corvo, A Serpente e O Cálice." 
+(Fechadura: órbitas do busto. Gabarito: constelações marcadas. Solução lógica: colocar objetos ou pedras com esses símbolos nas órbitas).
 
-4. RESOLVIBILIDADE: A "dica" deve conter TODA a informação necessária para deduzir a "solucao" sem adivinhação.
-   O jogador inteligente deve conseguir resolver sem tentativa e erro.
+=== ESTRUTURA DOS DADOS ===
+Para as salas com puzzle, adicione o campo "puzzle_status":
+- "dica": Uma observação sensorial sutil que conecta a Fechadura ao Gabarito. O narrador guiando o olhar do jogador. (Ex: "A poeira nas órbitas do rei cego parece ter a mesma textura do calcário no chão.")
+- "solucao": A ação física exata e lógica que o jogador deve tomar. (Ex: "Pressionar as marcações do Corvo, Serpente e Cálice no mosaico e transferir o pó de calcário para as órbitas do busto.")
+- "portal_destino": ${((zonaId + 2) * SALAS_POR_ZONA) + 1} (A solução SEMPRE abre uma fenda/passagem para esta zona distante).
+- "resolvido": false
 
-5. SURPRESA LÓGICA: A solução deve parecer não-óbvia à primeira vista, mas inevitável quando descoberta.
-   "Como não percebi isso antes?" — esse é o sentimento alvo.
-
-RESTRIÇÕES ESTRUTURAIS (estas sim são rígidas):
-- "puzzle_status": { "resolvido": false, "dica": "...", "solucao": "...", "portal_destino": NUMERO }
-- A solução NÃO destranca portas locais. Revela uma passagem oculta para zona distante.
-- "portal_destino" = primeira sala de zona remota: ${((zonaId + 2) * SALAS_POR_ZONA) + 1}
-- Nas salas sem puzzle: copie "texto_logico" original intacto. Sem "puzzle_status".
-- Reescreva o "texto_logico" das salas escolhidas para que o mecanismo do puzzle exista no texto, integrado à atmosfera.
+Nas salas SEM puzzle, copie o "texto_logico" original intacto, sem o campo "puzzle_status".
 
 JSON DAS SALAS BASE:
 ${JSON.stringify(planoZonal)}
 
-Retorne APENAS o JSON com todas as ${SALAS_POR_ZONA} salas.
-{ "N": { "texto_logico": "..." }, "N": { "texto_logico": "...", "puzzle_status": { ... } }, ... }`;
+Retorne APENAS o JSON válido com todas as ${SALAS_POR_ZONA} salas formatadas.
+`;
 
     const data = await chamarGroq([
-        { role: "system", content: `Você é um arquiteto de enigmas. Seu trabalho não é seguir fórmulas — é descobrir que enigma cada ambiente já contém dentro de si. Responda apenas com JSON estruturado.` },
+        { role: "system", content: "Você é um Master Game Designer. Crie puzzles baseados na regra de Fechadura (mecanismo físico) e Gabarito (pista visível no ambiente). Responda estritamente com JSON." },
         { role: "user", content: promptPuzzle }
-    ], 0.65, { type: "json_object" }, MODELO_PUZZLE, 3);
+    ], 0.7, { type: "json_object" }, MODELO_PUZZLE, 3); // Recomendo subir levemente a temperatura (0.7) para permitir combinações mais criativas de Fechaduras e Gabaritos.
 
     return JSON.parse(data.choices[0].message.content);
 }
