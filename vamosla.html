@@ -992,7 +992,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 Você é um Master Game Designer especializado em Survival Horror e Text Adventures clássicos.
 Mundo: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}. Atmosfera: ${dnaGlobal?.atmosfera || "brutal, dark fantasy"}.
 
-Seu objetivo é analisar este JSON com ${SALAS_POR_ZONA} salas, escolher 1 ou 2 salas, e injetar puzzles brilhantes.
+Seu objetivo é analisar este JSON com ${SALAS_POR_ZONA} salas, escolher 2 salas, e OBRIGATORIAMENTE injetar puzzles brilhantes.
 
 === A TEORIA DO PUZZLE PERFEITO (OBRIGATÓRIO) ===
 Um puzzle resolvível e instigante NUNCA depende de adivinhação. Ele SEMPRE possui duas partes que o jogador pode LER no texto da sala:
@@ -1536,6 +1536,15 @@ try {
         zonaData.salas[id] = { ...salasOriginais[id], ...(zonaComPuzzles[id] || {}) };
     }
     console.log(`[Puzzle] ✅ Puzzles injetados com sucesso na Zona ${numeroZona}`);
+
+        // Patch – Verificação real de puzzles injetados
+    const totalSalas = Object.keys(zonaData.salas).length;
+    const salasComPuzzle = Object.values(zonaData.salas).filter(s => s.puzzle_status).length;
+    console.log(`[Puzzle] Salas com puzzle: ${salasComPuzzle}/${totalSalas}`);
+    if (salasComPuzzle === 0) {
+        console.warn("[Puzzle] ⚠️ NENHUM puzzle foi injetado! O modelo pode ter ignorado a instrução.");
+    }
+    
 // Garantia de exibição da dica no texto_logico (Fuzzy Check)
 for (const id in zonaData.salas) {
     const sala = zonaData.salas[id];
