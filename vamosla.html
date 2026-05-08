@@ -989,37 +989,45 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 
         async function injetarPuzzles(planoZonal, zonaId) {
     const promptPuzzle = `
-    Você é um Narrative Designer especializado em Survival Horror (estilo Resident Evil PS1).
-    Receba este JSON de ${SALAS_POR_ZONA} salas e selecione 1 ou 2 salas para injetar puzzles engenhosos.
-    
-    REGRAS DE INJEÇÃO:
-    1. Retorne TODAS as ${SALAS_POR_ZONA} salas no JSON.
-    2. ANATOMIA DO PUZZLE (A PONTE DEDUTIVA):
-   - Escolha um objeto físico concreto no cenário (Mecanismo): válvula, roda, painel, alavanca.
-   - Crie uma "dica" que descreva um ESTADO FÍSICO IRREGULAR nesse objeto (algo quebrado, torto, emperrado, desalinhado). NUNCA use conceitos abstratos ("energia", "distorção", "portal").
-     ❌ RUIM: "Uma energia estranha emana do painel." (abstrato, não sugere ação)
-     ✅ BOM: "O terceiro botão do painel está afundado e não acende como os outros." (sugere pressionar ou puxar)
-     ✅ BOM: "A roda dentada está deslocada dois dentes para a esquerda em relação ao trilho." (sugere girá-la)
-   - A "solucao" deve ser a ação física de corrigir essa irregularidade (girar, pressionar, alinhar, puxar, encaixar).
-       - Reescreva o "texto_logico" para incorporar a "dica" no final da descrição visual, garantindo que o mecanismo físico exista no texto.
-       - Adicione a propriedade: "puzzle_status": { "resolvido": false, "dica": "...", "solucao": "...", "portal_destino": NUMERO }.
-    3. Nas demais salas: copie o "texto_logico" original sem alterações. Não adicione "puzzle_status".
-    4. O tom deve ser brutal, melancólico e misterioso, mas sempre ancorado em detalhes físicos concretos.
-    5. PUZZLE PORTAL: A "solucao" NÃO destranca portas locais. Ela sempre revela uma fenda/passagem oculta para uma zona distante. O valor de "portal_destino" deve ser o ID da primeira sala de uma zona remota (Ex: se a zona atual é ${zonaId}, faça o portal levar para a sala ${((zonaId + 2) * SALAS_POR_ZONA) + 1}).
+Você é um arquiteto de enigmas num mundo chamado: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}.
+Tom e atmosfera deste mundo: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy com horror cósmico"}.
+Tema central: ${dnaGlobal?.tema_central || "sobrevivência e desespero"}.
 
-    JSON DAS SALAS BASE:
-    ${JSON.stringify(planoZonal)}
-    
-    Estrutura esperada do retorno:
-    { "N": { "texto_logico": "..." }, "N": { "texto_logico": "...", "puzzle_status": { "resolvido": false, "dica": "...", "solucao": "...", "portal_destino": 31 } }, ... }
-    
-    Retorne APENAS o JSON.`;
+Receba este JSON de ${SALAS_POR_ZONA} salas e selecione 1 ou 2 salas para injetar puzzles.
 
-    // Note que estamos passando MODELO_PUZZLE como o 4º parâmetro
+PRINCÍPIOS (não são regras de estrutura — são critérios de qualidade):
+
+1. EMERGÊNCIA: O puzzle deve nascer dos objetos, história e atmosfera JÁ DESCRITOS no "texto_logico" da sala. 
+   Pergunte: "o que este lugar específico já esconde?".
+   Um puzzle num matadouro é diferente de um puzzle num laboratório alquímico — mesmo que ambos usem alavancas.
+
+2. UNICIDADE: O puzzle deve ser intransplantável. Se puder funcionar em qualquer outra sala, está errado.
+
+3. CONCRETUDE: A "dica" deve descrever um defeito físico observável (algo quebrado, torto, emperrado, desalinhado, solto, corroído, manchado). A "solucao" é a ação física para corrigi-lo. PROIBIDO conceitos abstratos ("energia", "distorção", "portal", "sombra", "aura", "essência"). Se o puzzle não puder ser resolvido por uma pessoa comum com as mãos, está errado.
+
+4. RESOLVIBILIDADE: A "dica" deve conter TODA a informação necessária para deduzir a "solucao" sem adivinhação. O jogador inteligente deve conseguir resolver sem tentativa e erro.
+
+5. SURPRESA LÓGICA: A solução deve parecer não-óbvia à primeira vista, mas inevitável quando descoberta. "Como não percebi isso antes?" — esse é o sentimento alvo.
+
+
+RESTRIÇÕES ESTRUTURAIS (estas sim são rígidas):
+- "puzzle_status": { "resolvido": false, "dica": "...", "solucao": "...", "portal_destino": NUMERO }
+- A solução NÃO destranca portas locais. Revela uma passagem oculta para zona distante.
+- "portal_destino" = primeira sala de zona remota: ${((zonaId + 2) * SALAS_POR_ZONA) + 1}
+- Nas salas sem puzzle: copie "texto_logico" original intacto. Sem "puzzle_status".
+- Reescreva o "texto_logico" das salas escolhidas para que o mecanismo do puzzle exista no texto, integrado à atmosfera.
+- A dica deve ser incorporada organicamente ao final do "texto_logico", como uma observação natural do ambiente.
+
+JSON DAS SALAS BASE:
+${JSON.stringify(planoZonal)}
+
+Retorne APENAS o JSON com todas as ${SALAS_POR_ZONA} salas.
+{ "N": { "texto_logico": "..." }, "N": { "texto_logico": "...", "puzzle_status": { ... } }, ... }`;
+
     const data = await chamarGroq([
-        { role: "system", content: "Você é um mestre de enigmas em um mundo dark fantasy. Responda apenas com o JSON estruturado." },
+        { role: "system", content: `Você é um arquiteto de enigmas. Seu trabalho não é seguir fórmulas — é descobrir que enigma cada ambiente já contém dentro de si. Responda apenas com JSON estruturado.` },
         { role: "user", content: promptPuzzle }
-    ], 0.5, { type: "json_object" }, MODELO_PUZZLE, 3); 
+    ], 0.7, { type: "json_object" }, MODELO_PUZZLE, 3);
 
     return JSON.parse(data.choices[0].message.content);
 }
