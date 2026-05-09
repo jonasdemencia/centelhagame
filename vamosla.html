@@ -992,42 +992,29 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 Você é um Master Game Designer especializado em Survival Horror clássico (estilo Resident Evil e Silent Hill).
 Mundo: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}. Atmosfera: ${dnaGlobal?.atmosfera || "brutal, dark fantasy"}.
 
-Seu objetivo é analisar este JSON com ${SALAS_POR_ZONA} salas, escolher entre 1 a 2 salas, e OBRIGATORIAMENTE injetar puzzles de lógica indireta.
+Seu objetivo é analisar este JSON com ${SALAS_POR_ZONA} salas, escolher entre 1 a 2 salas, e OBRIGATORIAMENTE injetar puzzles de lógica indireta ("Cifra e Chave").
+
+=== O ERRO FATAL: OBJETOS FANTASMAS (PROIBIDO) ===
+O MAIOR ERRO que você pode cometer é criar uma mecânica maravilhosa no JSON ("logica_interna") e ESQUECER de descrevê-la no "texto_logico".
+Se o seu puzzle exige um "painel com 4 alavancas astrológicas", essas EXATAS palavras precisam estar descritas no texto_logico da sala. 
+Se a pista é um "esboço de uma asa, uma engrenagem e uma válvula", o texto_logico DEVE descrever o papel com esses desenhos.
+NUNCA esconda os detalhes visuais do puzzle nos metadados. O jogador só joga o que está no texto_logico.
 
 === A FILOSOFIA DO PUZZLE (A REGRA DA CIFRA E CHAVE) ===
-A resposta mecânica NUNCA pode estar escrita de forma literal no cenário. O jogador deve traduzir uma pista narrativa ou visual (A) para um formato mecânico (B) usando uma lógica inegável presente no ambiente. Sem adivinhações. Sem saltos lógicos absurdos.
+1. A FECHADURA (Interface Física): O mecanismo bloqueador (ex: teclado numérico de 5 dígitos, 4 válvulas, 3 estátuas de animais).
+2. A CIFRA (A Pista): A informação disfarçada no ambiente. O FORMATO DA CIFRA DEVE SER DIFERENTE DA FECHADURA. Se a fechadura pede números, a cifra deve ser um poema, um nome (ex: GALAN) ou contagem de objetos. Se pede símbolos, a cifra deve ser uma ordem narrativa (ex: ciclo da vida).
+3. A CHAVE (A Tradução): A ponte lógica inegável entre a Cifra e a Fechadura (ex: Converter letras em sua posição no alfabeto, A=1, B=2).
 
-=== OS 4 COMPONENTES OBRIGATÓRIOS ===
-
-1. A FECHADURA (A Interface Física)
-   O mecanismo que bloqueia o progresso e precisa ser manipulado. DEVE ter um formato de entrada restrito.
-   Ex: Painel com botões de animais, teclado numérico enferrujado, válvulas de pressão, estátuas giratórias.
-
-2. A CIFRA (A Pista Narrativa/Visual)
-   A história, quadro, poema ou cena estática que contém a resposta disfarçada.
-   REGRA DE OURO ABSOLUTA: O formato da Cifra DEVE SER DIFERENTE do formato da Fechadura.
-   - Se a fechadura pede NÚMEROS, a Cifra deve ser TEXTO ou CONTAGEM DE OBJETOS (ex: um diário relatando a morte de 3 operários, depois 5 cães, depois 2 guardas = 3-5-2).
-   - Se a fechadura pede ORDEM DE SÍMBOLOS, a Cifra deve mostrar a ordem através de uma PROGRESSÃO NARRATIVA (ex: cadeia alimentar, ciclo da vida, horas do dia).
-   ❌ PROIBIDO: "A senha 3-5-2 está rabiscada na parede".
-
-3. A CHAVE (A Lógica de Tradução)
-   O raciocínio que o jogador precisa fazer para converter a Cifra na Fechadura. Tem que ser instintivo e fazer sentido com o cenário.
-   Ex: A fechadura tem símbolos astrológicos. A Cifra é um quadro de fases da lua. A lógica é alinhar os anéis na ordem do ciclo lunar (Nova, Crescente, Cheia, Minguante).
-
-4. A INTEGRAÇÃO ORGÂNICA (Texto Lógico)
-   Você DEVE reescrever o "texto_logico" original da sala escolhida para que a Fechadura e a Cifra façam parte orgânica da mobília e do cenário. Elas devem existir naturalmente. 
-   ❌ PROIBIDO: Usar as palavras "enigma", "puzzle", "pista" ou "segredo" no texto_logico. Apenas descreva a matéria.
-
-=== AUTO-VERIFICAÇÃO ANTES DE GERAR ===
-□ A Cifra está entregando o número/senha diretamente no formato que a fechadura pede? Se sim, REFAÇA. A punição por quebrar essa regra é severa.
-□ Um jogador prestando atenção consegue deduzir a resposta relacionando os textos, sem ter que chutar?
-□ A Fechadura e a Cifra foram fisicamente descritas DENTRO do texto_logico reescrito?
+=== INTEGRAÇÃO ORGÂNICA ===
+Você DEVE reescrever completamente o "texto_logico" original da sala escolhida. 
+Funda o cenário original com a sua Fechadura e a sua Cifra. Transforme itens genéricos (como "um baú" ou "um papel") nos componentes do seu puzzle.
+❌ PROIBIDO: Usar palavras como "enigma", "puzzle", "pista" ou "segredo". Descreva apenas matéria morta, textura, ferrugem, sangue e o maquinário.
 
 === ESTRUTURA ESTRITA DE DADOS ===
 Retorne um objeto JSON puro começando com a chave "salas".
 Para as salas COM puzzle, a estrutura DEVE ser:
 "ID_DA_SALA": {
-  "texto_logico": "O texto reescrito fundindo a ambientação original com a descrição natural e atmosférica da Fechadura e da Cifra...",
+  "texto_logico": "O texto reescrito que INCLUI OBRIGATORIAMENTE a descrição física da Fechadura e o conteúdo legível da Cifra, mesclados ao ambiente original.",
   "puzzle_status": {
     "logica_interna": {
       "interface": "Qual é a fechadura física e o que ela aceita?",
@@ -1036,8 +1023,8 @@ Para as salas COM puzzle, a estrutura DEVE ser:
       "acao_final": "Ação exata executada na interface.",
       "verificacao": "O que muda de forma audível ou visual no cenário quando resolvido?"
     },
-    "dica": "Uma observação sensorial muito sutil que foca a atenção na Cifra (ex: 'Há manchas de sangue coagulado marcando palavras específicas no poema...').",
-    "solucao": "A ação exata (Gabarito para o sistema checar a resposta do usuário).",
+    "dica": "Uma observação sensorial sutil que chama atenção para a Cifra (ex: 'O nome rabiscado parece destacar a posição de certas letras...').",
+    "solucao": "A ação exata (Gabarito mecânico para validação do sistema).",
     "portal_destino": ${((zonaId + 2) * SALAS_POR_ZONA) + 1},
     "resolvido": false
   }
