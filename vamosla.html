@@ -988,6 +988,12 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 
 
        async function injetarPuzzles(planoZonal, zonaId) {
+    // Strip: o modelo só precisa do ID e do texto para inventar o puzzle
+    const miniPlano = {};
+    for (const id in planoZonal) {
+        miniPlano[id] = { texto_logico: planoZonal[id].texto_logico };
+    }
+
     const promptPuzzle = `
 Você é um Master Game Designer especializado em Survival Horror clássico (estilo Resident Evil e Silent Hill).
 Mundo: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}. Atmosfera: ${dnaGlobal?.atmosfera || "brutal, dark fantasy"}.
