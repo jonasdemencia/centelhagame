@@ -1005,16 +1005,19 @@ Todo puzzle DEVE possuir a TRÍADE DO ENIGMA descrita fisicamente no texto da sa
    - Exemplo de Fator: O diário fala sobre "avançar 2 dias" (Sugere somar +2 nos números).
    - Exemplo de Fator: A sala está de ponta-cabeça (Sugere ler os símbolos ao contrário).
 
-=== REGRAS DE VISIBILIDADE (TOLERÂNCIA ZERO PARA FALHAS) ===
-- SE a interface pede números, a Pista Bruta e o Fator de Transformação devem resultar em números exatos.
-- NUNCA ocupe uma resposta com algo que não foi dito. Se a resposta exige ler uma inscrição, DIGA EXATAMENTE O QUE ESTÁ ESCRITO na inscrição. 
-- O jogador NUNCA deve ter que "adivinhar". Ele deve JUNTAR AS PEÇAS.
+=== O ERRO FATAL A EVITAR (RENDERIZAÇÃO OBRIGATÓRIA) ===
+O MAIOR ERRO que você pode cometer é criar a Interface e a Pista na sua "logica_interna" e ESQUECER de colocá-las no "texto_logico".
+O JOGADOR SÓ LÊ O "texto_logico"! 
+- Se a sua logica_interna diz que o jogador deve girar "Três anéis na parede", OS TRÊS ANÉIS DEVEM ESTAR DESCRITOS VISUALMENTE NO TEXTO LÓGICO.
+- Se a logica_interna diz para puxar "Alavancas com ícones", AS ALAVANCAS E OS ÍCONES DEVEM ESTAR NO TEXTO LÓGICO.
+A Tríade (Interface, Pista e Fator) TEM QUE ESTAR LÁ. Revisar o seu próprio texto para garantir que os objetos existem.
 
 === COMO CONSTRUIR A SALA DO PUZZLE ===
 Nas salas escolhidas, você reescreverá o "texto_logico" integrando a Tríade do Enigma naturalmente na narrativa.
 
-❌ IMPOSSÍVEL (Falta Pista Bruta): "Há um cadeado de 3 letras e um texto em latim." (O jogador não sabe o texto).
+❌ IMPOSSÍVEL (Falta Pista Bruta no texto): "Há um cadeado de 3 letras e um texto em latim." (O jogador não sabe o texto).
 ❌ ÓBVIO DEMAIS (Falta Fator de Transformação): "O cadáver segura um papel escrito 7-4-2. No cofre, insira 7-4-2."
+❌ FANTASMA (Falta Interface no texto): "Um poema fala sobre o sol, a lua e o mar. Solução: Puxar as alavancas do sol, lua e mar." (As alavancas nunca foram descritas na sala!)
 ✅ INTELIGENTE E RESOLVÍVEL: "Uma porta de metal possui um teclado numérico manchado de sangue. Ao lado, quatro crânios estão enfileirados em prateleiras, cada um com um número entalhado na testa: 2, 5, 8, 1. No centro da sala, um pedestal exibe a estátua de um corvo de cabeça para baixo, apontando o bico para a prateleira da direita."
 (Interface: teclado. Pista Bruta: 2, 5, 8, 1. Fator de Transformação: Corvo invertido apontando da direita pra esquerda. Solução deduzida pelo jogador: 1-8-5-2).
 
@@ -1022,8 +1025,8 @@ Nas salas escolhidas, você reescreverá o "texto_logico" integrando a Tríade d
 Para as salas com puzzle, você DEVE gerar um campo "puzzle_status" com a seguinte estrutura. O campo "logica_interna" é para você pensar ANTES de escrever o texto lógico:
 
 "puzzle_status": {
-  "logica_interna": "Explique brevemente para si mesmo qual é a interface, qual é a pista bruta e qual é o fator de transformação, provando que é resolvível.",
-  "dica": "Uma observação sensorial sutil que chama a atenção do jogador para o Fator de Transformação. (Ex: 'A poeira ao redor do corvo invertido sugere que ele foi propositalmente posicionado para olhar do fim para o início').",
+  "logica_interna": "Explique a Interface, a Pista e o Fator. DEPOIS, VERIFIQUE SE OS TRÊS FORAM INCLUÍDOS NO texto_logico.",
+  "dica": "Uma observação sensorial sutil que chama a atenção do jogador para o Fator de Transformação. (Ex: 'A poeira ao redor do corvo invertido sugere que ele foi posicionado para olhar do fim para o início').",
   "solucao": "A ação exata. (Ex: 'Digitar 1-8-5-2 no teclado numérico').",
   "portal_destino": ${((zonaId + 2) * SALAS_POR_ZONA) + 1},
   "resolvido": false
@@ -1037,7 +1040,7 @@ ${JSON.stringify(planoZonal)}
 Retorne APENAS o JSON válido com todas as ${SALAS_POR_ZONA} salas formatadas.`;
 
     const data = await chamarGroq([
-        { role: "system", content: "Você é um Master Game Designer. Crie puzzles baseados na Tríade do Enigma: Interface explícita, Pista Bruta exata e um Fator de Transformação sugerido no cenário. Responda estritamente com JSON." },
+        { role: "system", content: "Você é um Master Game Designer. Crie puzzles baseados na Tríade do Enigma: Interface explícita, Pista Bruta exata e Fator de Transformação sugerido. Todos os itens mecânicos DEVEM constar na descrição do texto_logico da sala. Responda estritamente com JSON." },
         { role: "user", content: promptPuzzle }
     ], 0.7, { type: "json_object" }, MODELO_PUZZLE, 3);
 
