@@ -992,59 +992,54 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 Você é um Master Game Designer especializado em Survival Horror e Text Adventures clássicos.
 Mundo: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}. Atmosfera: ${dnaGlobal?.atmosfera || "brutal, dark fantasy"}.
 
-Seu objetivo é analisar este JSON com ${SALAS_POR_ZONA} salas, escolher entre 2 a 3 salas, e OBRIGATORIAMENTE injetar puzzles instigantes, lógicos e resolvíveis.
+Seu objetivo é analisar este JSON com ${SALAS_POR_ZONA} salas, escolher entre 1 a 2 salas, e OBRIGATORIAMENTE injetar puzzles instigantes, lógicos e resolvíveis.
 
 === A ANATOMIA DO PUZZLE INTELIGENTE (OBRIGATÓRIO) ===
-Um puzzle genial faz o jogador PENSAR. Ele não pode ser óbvio (copiar e colar uma senha) e NÃO PODE SER IMPOSSÍVEL (faltar informação).
+Um puzzle genial faz o jogador PENSAR. Ele não pode ser óbvio e NÃO PODE SER IMPOSSÍVEL.
 Todo puzzle DEVE possuir a TRÍADE DO ENIGMA descrita fisicamente no texto da sala:
-
-1. A INTERFACE (A Fechadura): Onde o jogador insere a resposta. DEVE ser concreto. (Ex: um painel com 4 números, 3 anéis com símbolos, válvulas, alavancas).
-2. A PISTA BRUTA (O Gabarito): A informação explícita na sala. DEVE ser legível. (Ex: um poema com 4 versos, as idades de 3 cadáveres, uma sequência de 4 cores na parede).
-3. O FATOR DE TRANSFORMAÇÃO (O Pulo do Gato): Este é o segredo para fazer o jogador PENSAR. A Pista Bruta NUNCA é a resposta direta. O jogador precisa aplicar uma lógica sobre ela, e ESSA LÓGICA DEVE SER SUGERIDA no cenário.
-   - Exemplo de Fator: A pista está escrita ao contrário num espelho (Sugere inverter).
-   - Exemplo de Fator: O diário fala sobre "avançar 2 dias" (Sugere somar +2 nos números).
-   - Exemplo de Fator: A sala está de ponta-cabeça (Sugere ler os símbolos ao contrário).
+1. A INTERFACE (A Fechadura): Onde o jogador insere a resposta. DEVE ser concreto (ex: teclado, anéis, válvulas).
+2. A PISTA BRUTA (O Gabarito): A informação explícita na sala. DEVE ser legível e exata.
+3. O FATOR DE TRANSFORMAÇÃO (O Pulo do Gato): O jogador precisa aplicar uma lógica sobre a pista, e ESSA LÓGICA DEVE SER SUGERIDA no cenário (ex: um espelho sugere inverter; sangue cobrindo um lado sugere ler o outro).
 
 === O ERRO FATAL A EVITAR (RENDERIZAÇÃO OBRIGATÓRIA) ===
 O MAIOR ERRO que você pode cometer é criar a Interface e a Pista na sua "logica_interna" e ESQUECER de colocá-las no "texto_logico".
-O JOGADOR SÓ LÊ O "texto_logico"! 
-- Se a sua logica_interna diz que o jogador deve girar "Três anéis na parede", OS TRÊS ANÉIS DEVEM ESTAR DESCRITOS VISUALMENTE NO TEXTO LÓGICO.
-- Se a logica_interna diz para puxar "Alavancas com ícones", AS ALAVANCAS E OS ÍCONES DEVEM ESTAR NO TEXTO LÓGICO.
-A Tríade (Interface, Pista e Fator) TEM QUE ESTAR LÁ. Revisar o seu próprio texto para garantir que os objetos existem.
+- A Tríade (Interface, Pista e Fator) TEM QUE ESTAR LÁ. Se o jogador precisa girar anéis numerados, os anéis E os números devem constar na descrição da sala.
 
-=== COMO CONSTRUIR A SALA DO PUZZLE ===
-Nas salas escolhidas, você reescreverá o "texto_logico" integrando a Tríade do Enigma naturalmente na narrativa.
-
-❌ IMPOSSÍVEL (Falta Pista Bruta no texto): "Há um cadeado de 3 letras e um texto em latim." (O jogador não sabe o texto).
-❌ ÓBVIO DEMAIS (Falta Fator de Transformação): "O cadáver segura um papel escrito 7-4-2. No cofre, insira 7-4-2."
-❌ FANTASMA (Falta Interface no texto): "Um poema fala sobre o sol, a lua e o mar. Solução: Puxar as alavancas do sol, lua e mar." (As alavancas nunca foram descritas na sala!)
-✅ INTELIGENTE E RESOLVÍVEL: "Uma porta de metal possui um teclado numérico manchado de sangue. Ao lado, quatro crânios estão enfileirados em prateleiras, cada um com um número entalhado na testa: 2, 5, 8, 1. No centro da sala, um pedestal exibe a estátua de um corvo de cabeça para baixo, apontando o bico para a prateleira da direita."
-(Interface: teclado. Pista Bruta: 2, 5, 8, 1. Fator de Transformação: Corvo invertido apontando da direita pra esquerda. Solução deduzida pelo jogador: 1-8-5-2).
-
-=== ESTRUTURA DOS DADOS (CHAIN OF THOUGHT) ===
-Para as salas com puzzle, você DEVE gerar um campo "puzzle_status" com a seguinte estrutura. O campo "logica_interna" é para você pensar ANTES de escrever o texto lógico:
-
-"puzzle_status": {
-  "logica_interna": "Explique a Interface, a Pista e o Fator. DEPOIS, VERIFIQUE SE OS TRÊS FORAM INCLUÍDOS NO texto_logico.",
-  "dica": "Uma observação sensorial sutil que chama a atenção do jogador para o Fator de Transformação. (Ex: 'A poeira ao redor do corvo invertido sugere que ele foi posicionado para olhar do fim para o início').",
-  "solucao": "A ação exata. (Ex: 'Digitar 1-8-5-2 no teclado numérico').",
-  "portal_destino": ${((zonaId + 2) * SALAS_POR_ZONA) + 1},
-  "resolvido": false
+=== ESTRUTURA ESTRITA DE DADOS (IMPORTANTE) ===
+Você DEVE retornar um objeto JSON com uma única chave raiz chamada "salas".
+Para as salas COM puzzle, a estrutura DEVE ser:
+"ID_DA_SALA": {
+  "texto_logico": "O texto maravilhosamente reescrito CONTENDO a Interface, a Pista Bruta e o Fator de Transformação...",
+  "puzzle_status": {
+    "logica_interna": "Explique a Interface, a Pista e o Fator. DEPOIS, VERIFIQUE SE OS TRÊS FORAM INCLUÍDOS NO texto_logico.",
+    "dica": "Uma observação sensorial sutil que chama a atenção do jogador para a operação necessária.",
+    "solucao": "A ação exata.",
+    "portal_destino": ${((zonaId + 2) * SALAS_POR_ZONA) + 1},
+    "resolvido": false
+  }
 }
 
-Nas salas SEM puzzle, copie o "texto_logico" original intacto, sem o campo "puzzle_status".
+Para as salas SEM puzzle, copie o texto original:
+"ID_DA_SALA": {
+  "texto_logico": "Cópia exata do texto_logico original da sala."
+}
 
 JSON DAS SALAS BASE:
 ${JSON.stringify(planoZonal)}
 
-Retorne APENAS o JSON válido com todas as ${SALAS_POR_ZONA} salas formatadas.`;
+REGRA DE FORMATAÇÃO: RETORNE APENAS O JSON PURO COMEÇANDO COM {"salas": { ... }}. ZERO MARKDOWN. ZERO BLOCOS DE CÓDIGO. NUNCA USE \`\`\`json.
+`;
 
     const data = await chamarGroq([
-        { role: "system", content: "Você é um Master Game Designer. Crie puzzles baseados na Tríade do Enigma: Interface explícita, Pista Bruta exata e Fator de Transformação sugerido. Todos os itens mecânicos DEVEM constar na descrição do texto_logico da sala. Responda estritamente com JSON." },
+        { role: "system", content: "Você é um Master Game Designer. Crie puzzles baseados na Tríade do Enigma. Retorne EXATAMENTE um objeto JSON puro começando com a chave 'salas'. Não use formatação markdown." },
         { role: "user", content: promptPuzzle }
     ], 0.7, { type: "json_object" }, MODELO_PUZZLE, 3);
 
-    return JSON.parse(data.choices[0].message.content);
+    const parsedData = JSON.parse(data.choices[0].message.content);
+    
+    // Como forçamos a chave "salas" para evitar o erro do validador, 
+    // precisamos retornar apenas o miolo para o seu sistema fazer o merge corretamente.
+    return parsedData.salas || parsedData;
 }
         
         async function carregarDadosJogador(uid) {
