@@ -994,50 +994,12 @@ Mundo: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}. Atmosfera: ${dnaGlobal?.a
 
 Seu objetivo é analisar este JSON com ${SALAS_POR_ZONA} salas, escolher entre 1 a 2 salas, e OBRIGATORIAMENTE injetar puzzles instigantes, lógicos e resolvíveis.
 
-=== A ANATOMIA DO PUZZLE (4 COMPONENTES OBRIGATÓRIOS) ===
-
-1. INTERFACE (A Fechadura)
-   Objeto físico que RECEBE a resposta do jogador. Ele é passivo até o jogador agir nele.
-   Válido: anéis giráveis, alavancas ordenadas, teclado numérico, válvulas rotativas, gavetas com posições.
-   ❌ NÃO É INTERFACE: vela, espelho, inscrição, osso. Revelam pistas — não recebem respostas.
-
-2. PISTA BRUTA (O Gabarito)
-   Informação concreta e legível presente na sala, que contém a resposta em estado "cru" — ainda não utilizável.
-   Deve ser objetiva: um número, uma sequência de símbolos, posições, correspondências visuais.
-   ❌ "energia estranha", "segredo oculto" não são pistas. São decoração.
-
-3. INSINUAÇÃO (O Motor da Dedução) ← COMPONENTE MAIS CRÍTICO
-   Um detalhe físico do ambiente que REPRESENTA a operação que transforma a Pista Bruta na resposta.
-   A insinuação NUNCA nomeia a operação. Ela a encarna fisicamente. O jogador vê — e entende.
-
-   Como funciona:
-   - Espelho rachado projetando reflexos invertidos na parede → representa INVERSÃO de sequência
-   - Vento constante soprando da esquerda para a direita → representa ORDEM DIRECIONAL
-   - Balança com um lado mais pesado afundado → representa que o VALOR MAIOR domina
-   - Sombras crescendo da menor para a maior → representa ordenar em ESCALA CRESCENTE
-   - Engrenagem que gira no sentido anti-horário → representa INVERSÃO de ordem ou posição
-
-   Regras da insinuação:
-   ✅ Física e observável — não poética, não abstrata
-   ✅ Temática — coerente com o ambiente da sala (uma mina tem dutos, não espelhos venezianos)
-   ✅ Não-óbvia à primeira leitura, inevitável quando percebida
-   ✅ Presente no texto_logico como detalhe ambiental natural, não como aviso
-   ❌ NUNCA use operações matemáticas puras (somar, multiplicar, dividir) — não há como
-      representar aritmética com objetos físicos sem nomear a operação explicitamente
-   ❌ NUNCA diga "isso sugere que você deve inverter" — mostre o espelho, não a palavra inversão
-
-4. FECHAMENTO (A Solução)
-   A ação física exata executada NA INTERFACE com a resposta derivada de Pista + Insinuação.
-   Formato: "[verbo] [objeto da Interface] [especificação exata]"
-   ✅ "Girar os três anéis do cofre para: 6 – 8 – 9"
-   ❌ "Acender a vela para revelar a sequência" — revelar não é fechar. Nada foi inserido na Interface.
-
-=== AUTO-VERIFICAÇÃO (execute antes de finalizar cada puzzle) ===
-Responda internamente antes de escrever a solucao:
-□ Com apenas a Pista Bruta + a Insinuação, um jogador atento consegue derivar a resposta? Se não → redesenhe.
-□ A Insinuação está presente no texto_logico como detalhe ambiental concreto? Se não → insira.
-□ A Interface está descrita no texto_logico? Se não → insira.
-□ A solucao termina com o jogador fazendo algo físico na Interface? Se não → redesenhe.
+=== A ANATOMIA DO PUZZLE INTELIGENTE (OBRIGATÓRIO) ===
+Um puzzle genial faz o jogador PENSAR. Ele não pode ser óbvio e NÃO PODE SER IMPOSSÍVEL.
+Todo puzzle DEVE possuir a TRÍADE DO ENIGMA descrita fisicamente no texto da sala:
+1. A INTERFACE (A Fechadura): Onde o jogador insere a resposta. DEVE ser concreto (ex: teclado, anéis, válvulas).
+2. A PISTA BRUTA (O Gabarito): A informação explícita na sala. DEVE ser legível e exata.
+3. O FATOR DE TRANSFORMAÇÃO (O Pulo do Gato): O jogador precisa aplicar uma lógica sobre a pista, e ESSA LÓGICA DEVE SER SUGERIDA no cenário (ex: um espelho sugere inverter; sangue cobrindo um lado sugere ler o outro).
 
 === O ERRO FATAL A EVITAR (RENDERIZAÇÃO OBRIGATÓRIA) ===
 O MAIOR ERRO que você pode cometer é criar a Interface e a Pista na sua "logica_interna" e ESQUECER de colocá-las no "texto_logico".
@@ -1049,15 +1011,7 @@ Para as salas COM puzzle, a estrutura DEVE ser:
 "ID_DA_SALA": {
   "texto_logico": "O texto maravilhosamente reescrito CONTENDO a Interface, a Pista Bruta e o Fator de Transformação...",
   "puzzle_status": {
-    "logica_interna": {
-      "interface": "Descrição física do objeto que recebe a resposta.",
-      "pista_bruta": "A informação concreta e legível que contém a resposta em estado cru.",
-      "insinuacao": "O detalhe físico do ambiente + qual operação ele representa (ex: 'espelho rachado projetando reflexos invertidos → representa inversão da sequência').",
-      "operacao": "A transformação exata aplicada sobre a pista bruta para chegar à resposta.",
-      "resultado": "O valor ou sequência final calculada — o que entra na Interface.",
-      "acao_final": "A ação física na Interface com o resultado.",
-      "verificacao": "Após executar a solucao, o que muda fisicamente e visivelmente na sala?"
-    },
+    "logica_interna": "Explique a Interface, a Pista e o Fator. DEPOIS, VERIFIQUE SE OS TRÊS FORAM INCLUÍDOS NO texto_logico.",
     "dica": "Uma observação sensorial sutil que chama a atenção do jogador para a operação necessária.",
     "solucao": "A ação exata.",
     "portal_destino": ${((zonaId + 2) * SALAS_POR_ZONA) + 1},
