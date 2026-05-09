@@ -995,7 +995,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
     }
 
     const promptPuzzle = `
-Você é um designer de enigmas no estilo Resident Evil / Silent Hill. Horror físico, atmosfera densa.
+Você é um designer de enigmas engenhosos no estilo Resident Evil. 
 Mundo: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}. Tom: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy"}.
 
 Receba este JSON de ${SALAS_POR_ZONA} salas. Escolha 1 ou 2 salas e injete OBRIGATORIAMENTE um enigma em cada.
@@ -1011,6 +1011,19 @@ SALAS SEM ENIGMA: copie o texto_logico original sem alterações. Sem puzzle_sta
 
 JSON DAS SALAS:
 ${JSON.stringify(miniPlano)}
+
+SEPARAÇÃO OBRIGATÓRIA DE CAMPOS:
+
+O "texto_logico" descreve a sala no seu estado ATUAL, ANTES de qualquer interação.
+Ele mostra os objetos, a atmosfera, os detalhes físicos — como uma câmera fria observando a cena.
+❌ NUNCA descreva no texto_logico o que acontece quando o puzzle é resolvido.
+❌ NUNCA copie ou parafraseie o texto da "dica" dentro do texto_logico.
+❌ NUNCA revele a lógica da solução dentro do texto_logico.
+
+A "dica" é uma observação sutil — existe APENAS no campo "dica". Não no texto da sala.
+A "solucao" descreve a ação e a consequência — existe APENAS no campo "solucao". Não no texto da sala.
+
+O texto_logico termina quando o jogador entra na sala. O puzzle começa depois.
 
 Estrutura de retorno (JSON puro, sem markdown):
 {
