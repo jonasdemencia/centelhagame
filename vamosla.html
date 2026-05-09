@@ -987,84 +987,52 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
         }
 
 
-       async function injetarPuzzles(planoZonal, zonaId) {
-    // Strip: o modelo só precisa do ID e do texto para inventar o puzzle
+        async function injetarPuzzles(planoZonal, zonaId) {
+    // Envia só o texto — opcoes/itens são ruído para o modelo de puzzles
     const miniPlano = {};
     for (const id in planoZonal) {
         miniPlano[id] = { texto_logico: planoZonal[id].texto_logico };
     }
 
     const promptPuzzle = `
-Você é um designer de puzzles para um survival horror. Mundo: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}. Atmosfera: ${dnaGlobal?.atmosfera || "brutal, dark fantasy"}.
+Você é um designer de enigmas no estilo Resident Evil / Silent Hill. Horror físico, atmosfera densa.
+Mundo: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}. Tom: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy"}.
 
-**TAREFA OBRIGATÓRIA:**
-Analise o JSON abaixo com ${SALAS_POR_ZONA} salas. Você DEVE escolher EXATAMENTE 2 salas e injetar nelas um puzzle completo, seguindo a REGRA DA CIFRA E CHAVE.
+Receba este JSON de ${SALAS_POR_ZONA} salas. Escolha 1 ou 2 salas e injete OBRIGATORIAMENTE um enigma em cada.
 
-**REGRAS ABSOLUTAS:**
-1. **O JOGADOR SÓ LÊ O "texto_logico".** Tudo o que você planejar — interface (fechadura) e pista (cifra) — PRECISA ser descrito no texto_logico da sala.
-   - Se a fechadura é um "painel com 3 botões numerados", essas palavras devem constar no texto.
-   - Se a cifra é um "papel com os números 7, 6, 3", esse papel deve ser mencionado e os números descritos no texto.
+LIBERDADE CRIATIVA:
+- Você pode inventar QUALQUER tipo de enigma: mecânico, simbólico, sequencial, dedutivo, perceptivo, ambiental.
+- Você pode CRIAR objetos que não existem no texto original, desde que sejam coerentes com o ambiente geral das salas.
+- O enigma não precisa ser de "coisa desalinhada". Pode ser uma charada, um código, uma ordem, uma correspondência, qualquer lógica que faça sentido no espaço físico.
 
-2. **REGRA DA CIFRA E CHAVE:**
-   - **Interface (Fechadura):** Um mecanismo físico que bloqueia o caminho e ACEITA uma entrada (ex: teclado numérico, alavancas, anéis giratórios). Descreva-o visualmente no texto.
-   - **Cifra (Pista):** Informação BRUTA escondida no ambiente. Deve ser legível (ex: nome "GALAN", poema "Cinco sombras...", desenho de asa → engrenagem → válvula). Se a interface pede números, a cifra NUNCA pode ser números diretamente.
-   - **Chave (Tradução):** A lógica INEGÁVEL que converte a cifra na resposta (ex: converter letras em posição alfabética, A=1, B=2; ordem de eventos visível num mural).
+REGRAS INEGOCIÁVEIS:
+1. CONCRETUDE: Tudo que o jogador precisa ver e fazer deve existir como objeto físico no texto_logico. Nada de "energia", "aura", "presença".
+2. DICA FÍSICA: A "dica" aponta para algo OBSERVÁVEL na sala — uma anomalia, uma irregularidade, um detalhe que chama atenção. Nunca poética, sempre sensorial.
+3. SOLUÇÃO ACIONÁVEL: A "solucao" é uma ação física concreta que o jogador pode descrever em palavras (girar, pressionar, colocar, ordenar, digitar, puxar). Não é "revelar algo" — é FAZER algo.
+4. RENDERIZAÇÃO OBRIGATÓRIA: Todo elemento do enigma (a interface, a pista, o objeto) DEVE aparecer descrito no texto_logico reescrito. 
+5. PORTAL: A solução revela uma fenda ou passagem oculta para uma zona distante — nunca destranca porta local. portal_destino = ${((zonaId + 2) * SALAS_POR_ZONA) + 1}.
 
-3. **PROIBIÇÕES:**
-   - NUNCA use as palavras "enigma", "puzzle", "segredo", "charada", "pista", "solucao" no texto_logico.
-   - NUNCA descreva o puzzle sendo resolvido. Descreva apenas o ESTADO ATUAL da sala.
-   - NUNCA repita o texto original sem modificações na sala que recebe o puzzle.
+SALAS SEM ENIGMA: copie o texto_logico original sem alterações. Sem puzzle_status.
 
-4. **INTEGRAÇÃO ORGÂNICA:**
-   Reescreva completamente o texto_logico da sala escolhida. Misture o cenário original com os novos elementos do puzzle. Transforme objetos genéricos ("um baú", "uma mesa") nos seus componentes.
-
-**ESTRUTURA DO JSON DE RESPOSTA:**
-Retorne APENAS um objeto JSON puro começando com a chave "salas".
-
-Para as salas COM puzzle (EXATAMENTE 2):
-"ID_DA_SALA": {
-  "texto_logico": "Texto reescrito que INCLUI VISUALMENTE a Interface e a Cifra.",
-  "puzzle_status": {
-    "logica_interna": {
-      "interface": "Descrição exata da fechadura física.",
-      "cifra_pista": "A informação bruta legível que o jogador encontra.",
-      "chave_traducao": "A regra lógica para resolver.",
-      "acao_final": "Ação exata que o jogador executa na interface.",
-      "verificacao": "O que muda audível/visivelmente na sala ao resolver."
-    },
-    "dica": "Uma observação sensorial sutil que conecta a Cifra à Interface.",
-    "solucao": "A ação final exata (ex: 'Pressionar 5-3-2-1 nos botões da porta').",
-    "portal_destino": ${((zonaId + 2) * SALAS_POR_ZONA) + 1},
-    "resolvido": false
-  }
-}
-
-Para as demais salas (SEM puzzle):
-"ID_DA_SALA": {
-  "texto_logico": "Cópia exata do texto_logico original."
-}
-
-**ANTES DE FINALIZAR, VERIFIQUE:**
-- As 2 salas com puzzle realmente têm "puzzle_status" completo?
-- A interface e a cifra estão DESCRITAS no texto_logico dessas salas?
-- O campo "solucao" está preenchido com a ação exata?
-- O campo "portal_destino" está com o valor ${((zonaId + 2) * SALAS_POR_ZONA) + 1}?
-
-JSON DAS SALAS BASE:
+JSON DAS SALAS:
 ${JSON.stringify(miniPlano)}
 
-RETORNE SOMENTE O JSON PURO, SEM MARKDOWN, COMEÇANDO COM {"salas": { ... }}.
-`;
+Estrutura de retorno (JSON puro, sem markdown):
+{
+  "N": { "texto_logico": "..." },
+  "N": { "texto_logico": "texto reescrito com o enigma integrado...", "puzzle_status": { "resolvido": false, "dica": "...", "solucao": "...", "portal_destino": ${((zonaId + 2) * SALAS_POR_ZONA) + 1} } }
+}`;
 
     const data = await chamarGroq([
-        { role: "system", content: "Você é um designer de puzzles de survival horror. Retorne JSON puro começando com 'salas'. Não use markdown." },
+        { role: "system", content: "Você é um designer de enigmas. Crie puzzles físicos e originais para um jogo de horror. Retorne apenas JSON puro." },
         { role: "user", content: promptPuzzle }
-    ], 0.7, { type: "json_object" }, MODELO_PUZZLE, 3);
+    ], 0.85, { type: "json_object" }, MODELO_PUZZLE, 3);
 
-    const parsedData = JSON.parse(data.choices[0].message.content);
-    return parsedData.salas || parsedData;
+    const parsed = JSON.parse(data.choices[0].message.content);
+    // compatibilidade: aceita com ou sem chave "salas"
+    return parsed.salas || parsed;
 }
-        
+
         async function carregarDadosJogador(uid) {
             try {
                 const docRef = doc(db, "players", uid);
@@ -1566,28 +1534,6 @@ try {
         zonaData.salas[id] = { ...salasOriginais[id], ...(zonaComPuzzles[id] || {}) };
     }
     console.log(`[Puzzle] ✅ Puzzles injetados com sucesso na Zona ${numeroZona}`);
-
-    
-for (const id in zonaData.salas) {
-    const sala = zonaData.salas[id];
-    if (sala.puzzle_status) {
-        const ps = sala.puzzle_status;
-        if (!ps.solucao || !ps.portal_destino || ps.resolvido === undefined) {
-            console.warn(`[Puzzle] ⚠️ Sala ${id} com puzzle_status incompleto. Descartando puzzle.`);
-            delete sala.puzzle_status;
-            zonaData.salas[id].texto_logico = salasOriginais[id].texto_logico;
-        }
-    }
-}
-
-        // Patch – Verificação real de puzzles injetados
-    const totalSalas = Object.keys(zonaData.salas).length;
-    const salasComPuzzle = Object.values(zonaData.salas).filter(s => s.puzzle_status).length;
-    console.log(`[Puzzle] Salas com puzzle: ${salasComPuzzle}/${totalSalas}`);
-    if (salasComPuzzle === 0) {
-        console.warn("[Puzzle] ⚠️ NENHUM puzzle foi injetado! O modelo pode ter ignorado a instrução.");
-    }
-    
 // Garantia de exibição da dica no texto_logico (Fuzzy Check)
 for (const id in zonaData.salas) {
     const sala = zonaData.salas[id];
