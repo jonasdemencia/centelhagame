@@ -994,13 +994,32 @@ Mundo: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}. Atmosfera: ${dnaGlobal?.a
 
 Seu objetivo é analisar este JSON com ${SALAS_POR_ZONA} salas, escolher entre 1 a 2 salas, e OBRIGATORIAMENTE injetar puzzles instigantes, lógicos e resolvíveis.
 
-=== A ANATOMIA DO PUZZLE INTELIGENTE (OBRIGATÓRIO) ===
-Um puzzle genial faz o jogador PENSAR. Ele não pode ser óbvio e NÃO PODE SER IMPOSSÍVEL.
-Todo puzzle DEVE possuir a TRÍADE DO ENIGMA descrita fisicamente no texto da sala:
-1. A INTERFACE (A Fechadura): Onde o jogador insere a resposta. DEVE ser concreto (ex: teclado, anéis, válvulas).
-2. A PISTA BRUTA (O Gabarito): A informação explícita na sala. DEVE ser legível e exata.
-3. O FATOR DE TRANSFORMAÇÃO (O Pulo do Gato): O jogador precisa aplicar uma lógica sobre a pista, e ESSA LÓGICA DEVE SER SUGERIDA no cenário (ex: um espelho sugere inverter; sangue cobrindo um lado sugere ler o outro).
+=== A ANATOMIA DO PUZZLE INTELIGENTE ===
 
+Todo puzzle tem TRÊS COMPONENTES e um FECHAMENTO:
+
+1. INTERFACE (A Fechadura): Objeto físico com o qual o jogador interage para INSERIR uma resposta.
+   Deve aceitar input humano: anéis giráveis, alavancas, teclas, tampas, válvulas, gavetas com código.
+   ❌ NÃO É INTERFACE: vela, espelho, inscrição, osso. Esses são ferramentas ou pistas, não receptores de input.
+
+2. PISTA BRUTA (O Gabarito): Informação explícita e legível na sala que contém a resposta.
+   Deve ser objetiva: um número, uma sequência, uma posição, uma correspondência visual.
+   ❌ NÃO É PISTA: "energia estranha", "segredo oculto", qualquer coisa que requeira interpretação poética.
+
+3. FATOR DE TRANSFORMAÇÃO (O Pulo do Gato): A operação mental que o jogador aplica sobre a Pista para chegar à resposta.
+   Deve ser SUGERIDO por um elemento físico no cenário — não explicado, apenas insinuado.
+   ❌ Não cite exemplos de fatores. Invente um específico para esta sala.
+
+4. FECHAMENTO (Obrigatório): A "solucao" deve descrever UMA AÇÃO FÍSICA FINAL que muda o estado da Interface.
+   Depois que o jogador executa a solucao, algo muda fisicamente e visivelmente na sala.
+   A "solucao" NUNCA é apenas "revelar informação". Sempre termina com o jogador FAZENDO algo na Interface.
+   Formato: "[verbo de ação] [objeto da Interface] [especificação exata]"
+   Ex correto: "girar os três anéis do cilindro para a posição: cobra, lua, crânio"
+   Ex errado:  "acender a vela para revelar a sequência oculta"
+
+A "dica" deve descrever UMA ANOMALIA FÍSICA OBSERVÁVEL — algo visivelmente fora do lugar, incompleto ou irregular.
+   ❌ ERRADO: "A vela parece esconder segredos que só a luz revela." (poético, não aponta ação)
+   ✅ CORRETO: "O segundo anel do cilindro está travado na posição errada — uma mossa no metal marca onde deveria estar."
 === O ERRO FATAL A EVITAR (RENDERIZAÇÃO OBRIGATÓRIA) ===
 O MAIOR ERRO que você pode cometer é criar a Interface e a Pista na sua "logica_interna" e ESQUECER de colocá-las no "texto_logico".
 - A Tríade (Interface, Pista e Fator) TEM QUE ESTAR LÁ. Se o jogador precisa girar anéis numerados, os anéis E os números devem constar na descrição da sala.
@@ -1011,7 +1030,13 @@ Para as salas COM puzzle, a estrutura DEVE ser:
 "ID_DA_SALA": {
   "texto_logico": "O texto maravilhosamente reescrito CONTENDO a Interface, a Pista Bruta e o Fator de Transformação...",
   "puzzle_status": {
-    "logica_interna": "Explique a Interface, a Pista e o Fator. DEPOIS, VERIFIQUE SE OS TRÊS FORAM INCLUÍDOS NO texto_logico.",
+    "logica_interna": {
+      "interface": "Nome e descrição física do objeto onde o jogador insere a resposta.",
+      "pista_bruta": "A informação concreta e legível que contém a resposta.",
+      "fator": "A operação mental aplicada + o elemento do cenário que a sugere.",
+      "acao_final": "A ação exata que o jogador faz NA INTERFACE com a resposta calculada.",
+      "verificacao": "Após executar a solucao, o que muda fisicamente e visivelmente na sala?"
+    },
     "dica": "Uma observação sensorial sutil que chama a atenção do jogador para a operação necessária.",
     "solucao": "A ação exata.",
     "portal_destino": ${((zonaId + 2) * SALAS_POR_ZONA) + 1},
