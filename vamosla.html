@@ -989,37 +989,61 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 
        async function injetarPuzzles(planoZonal, zonaId) {
     const promptPuzzle = `
-Você é um Master Game Designer especializado em Survival Horror e Text Adventures clássicos.
+Você é um Master Game Designer especializado em Survival Horror clássico (estilo Resident Evil e Silent Hill).
 Mundo: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}. Atmosfera: ${dnaGlobal?.atmosfera || "brutal, dark fantasy"}.
 
-Seu objetivo é analisar este JSON com ${SALAS_POR_ZONA} salas, escolher entre 1 a 2 salas, e OBRIGATORIAMENTE injetar puzzles instigantes, lógicos e resolvíveis.
+Seu objetivo é analisar este JSON com ${SALAS_POR_ZONA} salas, escolher entre 1 a 2 salas, e OBRIGATORIAMENTE injetar puzzles de lógica indireta.
 
-=== A ANATOMIA DO PUZZLE INTELIGENTE (OBRIGATÓRIO) ===
-Um puzzle genial faz o jogador PENSAR. Ele não pode ser óbvio e NÃO PODE SER IMPOSSÍVEL.
-Todo puzzle DEVE possuir a TRÍADE DO ENIGMA descrita fisicamente no texto da sala:
-1. A INTERFACE (A Fechadura): Onde o jogador insere a resposta. DEVE ser concreto (ex: teclado, anéis, válvulas).
-2. A PISTA BRUTA (O Gabarito): A informação explícita na sala. DEVE ser legível e exata.
-3. O FATOR DE TRANSFORMAÇÃO (O Pulo do Gato): O jogador precisa aplicar uma lógica sobre a pista, e ESSA LÓGICA DEVE SER SUGERIDA no cenário (ex: um espelho sugere inverter; sangue cobrindo um lado sugere ler o outro).
+=== A FILOSOFIA DO PUZZLE (A REGRA DA CIFRA E CHAVE) ===
+A resposta mecânica NUNCA pode estar escrita de forma literal no cenário. O jogador deve traduzir uma pista narrativa ou visual (A) para um formato mecânico (B) usando uma lógica inegável presente no ambiente. Sem adivinhações. Sem saltos lógicos absurdos.
 
-=== O ERRO FATAL A EVITAR (RENDERIZAÇÃO OBRIGATÓRIA) ===
-O MAIOR ERRO que você pode cometer é criar a Interface e a Pista na sua "logica_interna" e ESQUECER de colocá-las no "texto_logico".
-- A Tríade (Interface, Pista e Fator) TEM QUE ESTAR LÁ. Se o jogador precisa girar anéis numerados, os anéis E os números devem constar na descrição da sala.
+=== OS 4 COMPONENTES OBRIGATÓRIOS ===
 
-=== ESTRUTURA ESTRITA DE DADOS (IMPORTANTE) ===
-Você DEVE retornar um objeto JSON com uma única chave raiz chamada "salas".
+1. A FECHADURA (A Interface Física)
+   O mecanismo que bloqueia o progresso e precisa ser manipulado. DEVE ter um formato de entrada restrito.
+   Ex: Painel com botões de animais, teclado numérico enferrujado, válvulas de pressão, estátuas giratórias.
+
+2. A CIFRA (A Pista Narrativa/Visual)
+   A história, quadro, poema ou cena estática que contém a resposta disfarçada.
+   REGRA DE OURO ABSOLUTA: O formato da Cifra DEVE SER DIFERENTE do formato da Fechadura.
+   - Se a fechadura pede NÚMEROS, a Cifra deve ser TEXTO ou CONTAGEM DE OBJETOS (ex: um diário relatando a morte de 3 operários, depois 5 cães, depois 2 guardas = 3-5-2).
+   - Se a fechadura pede ORDEM DE SÍMBOLOS, a Cifra deve mostrar a ordem através de uma PROGRESSÃO NARRATIVA (ex: cadeia alimentar, ciclo da vida, horas do dia).
+   ❌ PROIBIDO: "A senha 3-5-2 está rabiscada na parede".
+
+3. A CHAVE (A Lógica de Tradução)
+   O raciocínio que o jogador precisa fazer para converter a Cifra na Fechadura. Tem que ser instintivo e fazer sentido com o cenário.
+   Ex: A fechadura tem símbolos astrológicos. A Cifra é um quadro de fases da lua. A lógica é alinhar os anéis na ordem do ciclo lunar (Nova, Crescente, Cheia, Minguante).
+
+4. A INTEGRAÇÃO ORGÂNICA (Texto Lógico)
+   Você DEVE reescrever o "texto_logico" original da sala escolhida para que a Fechadura e a Cifra façam parte orgânica da mobília e do cenário. Elas devem existir naturalmente. 
+   ❌ PROIBIDO: Usar as palavras "enigma", "puzzle", "pista" ou "segredo" no texto_logico. Apenas descreva a matéria.
+
+=== AUTO-VERIFICAÇÃO ANTES DE GERAR ===
+□ A Cifra está entregando o número/senha diretamente no formato que a fechadura pede? Se sim, REFAÇA. A punição por quebrar essa regra é severa.
+□ Um jogador prestando atenção consegue deduzir a resposta relacionando os textos, sem ter que chutar?
+□ A Fechadura e a Cifra foram fisicamente descritas DENTRO do texto_logico reescrito?
+
+=== ESTRUTURA ESTRITA DE DADOS ===
+Retorne um objeto JSON puro começando com a chave "salas".
 Para as salas COM puzzle, a estrutura DEVE ser:
 "ID_DA_SALA": {
-  "texto_logico": "O texto maravilhosamente reescrito CONTENDO a Interface, a Pista Bruta e o Fator de Transformação...",
+  "texto_logico": "O texto reescrito fundindo a ambientação original com a descrição natural e atmosférica da Fechadura e da Cifra...",
   "puzzle_status": {
-    "logica_interna": "Explique a Interface, a Pista e o Fator. DEPOIS, VERIFIQUE SE OS TRÊS FORAM INCLUÍDOS NO texto_logico.",
-    "dica": "Uma observação sensorial sutil que chama a atenção do jogador para a operação necessária.",
-    "solucao": "A ação exata.",
+    "logica_interna": {
+      "interface": "Qual é a fechadura física e o que ela aceita?",
+      "cifra_pista": "O que o jogador lê/vê no ambiente (a charada disfarçada)?",
+      "chave_traducao": "Como a charada se converte logicamente na resposta da interface?",
+      "acao_final": "Ação exata executada na interface.",
+      "verificacao": "O que muda de forma audível ou visual no cenário quando resolvido?"
+    },
+    "dica": "Uma observação sensorial muito sutil que foca a atenção na Cifra (ex: 'Há manchas de sangue coagulado marcando palavras específicas no poema...').",
+    "solucao": "A ação exata (Gabarito para o sistema checar a resposta do usuário).",
     "portal_destino": ${((zonaId + 2) * SALAS_POR_ZONA) + 1},
     "resolvido": false
   }
 }
 
-Para as salas SEM puzzle, copie o texto original:
+Para as salas SEM puzzle, copie o texto original ESTRITAMENTE igual:
 "ID_DA_SALA": {
   "texto_logico": "Cópia exata do texto_logico original da sala."
 }
