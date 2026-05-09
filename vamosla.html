@@ -1001,16 +1001,11 @@ Mundo: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}. Tom: ${dnaGlobal?.atmosfe
 Receba este JSON de ${SALAS_POR_ZONA} salas. Escolha 1 ou 2 salas e injete OBRIGATORIAMENTE um enigma em cada.
 
 LIBERDADE CRIATIVA:
-- Você pode inventar QUALQUER tipo de enigma: mecânico, simbólico, sequencial, dedutivo, perceptivo, ambiental.
+- Você pode inventar QUALQUER tipo de enigma: mecânico, simbólico, sequencial, dedutivo, perceptivo, ambiental, charada.
 - Você pode CRIAR objetos que não existem no texto original, desde que sejam coerentes com o ambiente geral das salas.
-- O enigma não precisa ser de "coisa desalinhada". Pode ser uma charada, um código, uma ordem, uma correspondência, qualquer lógica que faça sentido no espaço físico.
 
-REGRAS INEGOCIÁVEIS:
-1. CONCRETUDE: Tudo que o jogador precisa ver e fazer deve existir como objeto físico no texto_logico. Nada de "energia", "aura", "presença".
-2. DICA FÍSICA: A "dica" aponta para algo OBSERVÁVEL na sala — uma anomalia, uma irregularidade, um detalhe que chama atenção. Nunca poética, sempre sensorial.
-3. SOLUÇÃO ACIONÁVEL: A "solucao" é uma ação física concreta que o jogador pode descrever em palavras (girar, pressionar, colocar, ordenar, digitar, puxar). Não é "revelar algo" — é FAZER algo.
-4. RENDERIZAÇÃO OBRIGATÓRIA: Todo elemento do enigma (a interface, a pista, o objeto) DEVE aparecer descrito no texto_logico reescrito. 
-5. PORTAL: A solução revela uma fenda ou passagem oculta para uma zona distante — nunca destranca porta local. portal_destino = ${((zonaId + 2) * SALAS_POR_ZONA) + 1}.
+REGRA INEGOCIÁVEl:
+1. PORTAL: A solução revela uma fenda ou passagem oculta para uma zona distante — nunca destranca porta local. portal_destino = ${((zonaId + 2) * SALAS_POR_ZONA) + 1}.
 
 SALAS SEM ENIGMA: copie o texto_logico original sem alterações. Sem puzzle_status.
 
