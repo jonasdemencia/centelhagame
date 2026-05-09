@@ -1000,20 +1000,29 @@ TEMA DO AMBIENTE: "${tema}"
 MUNDO: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}
 ATMOSFERA: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy"}
 
-Crie um enigma ORIGINAL, DEDUTÍVEL e AUTOCONTIDO. Você inventa os objetos — qualquer coisa coerente com o tema.
+Crie um enigma ORIGINAL, DEDUTÍVEL e AUTOCONTIDO.
 
-CRITÉRIOS DO BOM ENIGMA:
-- O jogador lê a "cena" e consegue deduzir a solução por raciocínio, sem adivinhar.
-- A solução é uma ação física concreta (girar, ordenar, pressionar, posicionar, encaixar...).
-- A lógica deve ser elegante: não-óbvia à primeira leitura, inevitável quando percebida.
-- Pode ser qualquer tipo: sequencial, simbólico, dedutivo, perceptivo, cifrado, ambiental.
-- PROIBIDO: palavras "enigma", "puzzle", "segredo", "portal". Descreva apenas matéria, textura, ferrugem.
+ESTRUTURA OBRIGATÓRIA DO ENIGMA:
+
+1. MECANISMO: O objeto ou sistema com o qual o jogador interage para resolver.
+2. PISTA BRUTA: A informação visível na cena que contém a resposta em estado cru.
+3. INSINUAÇÃO: Um detalhe ambiental físico que sugere COMO transformar a pista bruta na ação correta.
+   — Não nomeia a operação. Representa ela fisicamente.
+   — Ex: marcas de uso circulares indo para a direita → sugere girar no sentido horário
+   — Ex: três entalhes desgastados em ordem crescente de profundidade → sugere pressionar do menor para o maior
+   — Ex: musgo crescendo apenas do lado esquerdo dos símbolos → sugere ler da esquerda para a direita
+   A INSINUAÇÃO deve estar descrita na "cena". A "dica" aponta para ela.
+
+CRITÉRIOS:
+- A solução é uma ação física concreta e completa (girar, ordenar, pressionar, encaixar...).
+- Não-óbvia à primeira leitura. Inevitável quando percebida.
+- PROIBIDO: "enigma", "puzzle", "segredo", "portal". Apenas matéria, ferrugem, pedra, sangue.
 
 Retorne APENAS este JSON:
 {
-  "cena": "Dois a três parágrafos descrevendo o espaço físico do puzzle. Os objetos, a anomalia, o mecanismo. Tudo que o jogador precisa ver para resolver está aqui. Prosa densa, horror físico.",
-  "dica": "Uma frase. Uma anomalia física concreta e observável — algo irregular, fora do lugar, incompleto. Não poética. Sensorial.",
-  "solucao": "A ação exata e completa que resolve o enigma. Ex: 'Girar os três discos para as posições: lua, serpente, crânio.'"
+  "cena": "Dois a três parágrafos. Descreve o espaço e os objetos do enigma. Inclui o MECANISMO, a PISTA BRUTA e a INSINUAÇÃO — esta última como detalhe ambiental aparentemente secundário, não destacado. Prosa densa de horror físico.",
+  "dica": "Uma frase. Aponta para a INSINUAÇÃO — o detalhe físico que, quando percebido, torna o método dedutível. Concreta e sensorial. Não é a resposta. Não descreve o mecanismo geral.",
+  "solucao": "A ação exata e completa. Derivável da PISTA BRUTA + INSINUAÇÃO juntas."
 }`;
 
     const data = await chamarGroq([
