@@ -1584,26 +1584,6 @@ try {
     }
     console.log(`[Puzzle] ✅ Puzzles injetados com sucesso na Zona ${numeroZona}`);
 // Garantia de exibição da dica no texto_logico (Fuzzy Check)
-for (const id in zonaData.salas) {
-    const sala = zonaData.salas[id];
-    if (sala.puzzle_status && sala.puzzle_status.dica) {
-        const dica = sala.puzzle_status.dica;
-        const texto = sala.texto_logico || '';
-        
-        // Separa palavras com mais de 4 letras para comparar a essência da dica
-        const palavrasDica = dica.toLowerCase().split(/\s+/).filter(p => p.length > 4);
-        const palavrasTexto = texto.toLowerCase();
-        
-        // Conta quantas palavras-chave da dica já existem no texto_logico
-        const matches = palavrasDica.filter(p => palavrasTexto.includes(p));
-        
-        // Se menos de 40% da essência da dica está no texto, significa que o LLM ignorou a injeção orgânica
-        if (matches.length < (palavrasDica.length * 0.4)) {
-            sala.texto_logico = texto.trim() + ' ' + dica;
-        }
-    }
-}
-
     
 } catch (e) {
     console.error("[Puzzle] Erro na injeção. Mantendo o plano original:", e);
