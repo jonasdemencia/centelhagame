@@ -998,64 +998,63 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 Você é um Master Game Designer especializado em Survival Horror clássico (estilo Resident Evil e Silent Hill).
 Mundo: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}. Atmosfera: ${dnaGlobal?.atmosfera || "brutal, dark fantasy"}.
 
-Seu objetivo é analisar este JSON com ${SALAS_POR_ZONA} salas, escolher entre 1 a 2 salas, e OBRIGATORIAMENTE injetar puzzles de lógica indireta ("Cifra e Chave").
+Seu objetivo é analisar este JSON com ${SALAS_POR_ZONA} salas, escolher 1 ou 2 salas, e OBRIGATORIAMENTE injetar puzzles completos.
 
-=== O ERRO FATAL: OBJETOS FANTASMAS (PROIBIDO) ===
-O MAIOR ERRO que você pode cometer é criar uma mecânica maravilhosa no JSON ("logica_interna") e ESQUECER de descrevê-la no "texto_logico".
-Se o seu puzzle exige um "painel com 4 alavancas astrológicas", essas EXATAS palavras precisam estar descritas no texto_logico da sala. 
-Se a pista é um "esboço de uma asa, uma engrenagem e uma válvula", o texto_logico DEVE descrever o papel com esses desenhos.
-NUNCA esconda os detalhes visuais do puzzle nos metadados. O jogador só joga o que está no texto_logico.
+=== O ERRO FATAL: OBJETOS FANTASMAS (PROIBIÇÃO ABSOLUTA) ===
+O jogador SÓ LÊ o campo "texto_logico". Se um objeto não estiver descrito ali, ele NÃO EXISTE.
+Tudo o que você planejar nos metadados (painéis, alavancas, inscrições, desenhos) DEVE aparecer VISUALMENTE no texto_logico.
+Se o puzzle exige um "teclado numérico com 5 dígitos", essas palavras exatas devem estar no texto.
+Se a pista é "um esboço de uma asa, uma engrenagem e uma válvula", o texto deve descrever esse papel com esses desenhos.
 
-=== A FILOSOFIA DO PUZZLE (A REGRA DA CIFRA E CHAVE) ===
-1. A FECHADURA (Interface Física): O mecanismo bloqueador (ex: teclado numérico de 5 dígitos, 4 válvulas, 3 estátuas de animais).
-2. A CIFRA (A Pista): A informação disfarçada no ambiente. O FORMATO DA CIFRA DEVE SER DIFERENTE DA FECHADURA. Se a fechadura pede números, a cifra deve ser um poema, um nome (ex: GALAN) ou contagem de objetos. Se pede símbolos, a cifra deve ser uma ordem narrativa (ex: ciclo da vida).
-3. A CHAVE (A Tradução): A ponte lógica inegável entre a Cifra e a Fechadura (ex: Converter letras em sua posição no alfabeto, A=1, B=2).
+=== A REGRA DA CIFRA E CHAVE ===
+1. INTERFACE (A Fechadura): O mecanismo que BLOQUEIA o caminho e ACEITA uma entrada (teclado, alavancas, anéis giratórios, botões). Descreva-a fisicamente no texto.
+2. CIFRA (A Pista): A informação BRUTA e LEGÍVEL escondida no ambiente. Se a interface pede números, a cifra deve ser um poema, um nome, uma contagem de objetos ou marcas visuais. NUNCA use os números diretamente.
+3. CHAVE (A Tradução): A lógica INEGÁVEL que converte a cifra na resposta. Deve ser uma regra simples: posição alfabética (A=1, B=2), ordem de eventos visível num mural, direção de sombras, etc.
 
-=== INTEGRAÇÃO ORGÂNICA ===
-Você DEVE reescrever completamente o "texto_logico" original da sala escolhida. 
-Funda o cenário original com a sua Fechadura e a sua Cifra. Transforme itens genéricos (como "um baú" ou "um papel") nos componentes do seu puzzle.
-❌ PROIBIDO: Usar palavras como "enigma", "puzzle", "pista" ou "segredo". Descreva apenas matéria morta, textura, ferrugem, sangue e o maquinário.
+=== INTEGRAÇÃO ORGÂNICA (OBRIGATÓRIO) ===
+Reescreva COMPLETAMENTE o "texto_logico" original da sala escolhida.
+Misture o cenário original com a sua Interface e a sua Cifra. Transforme itens genéricos ("um baú", "um papel") nos componentes do seu puzzle.
+NUNCA use palavras proibidas: "enigma", "puzzle", "segredo", "charada", "pista". Apenas matéria morta: ferrugem, sangue, madeira podre, ecos.
+O texto NUNCA deve descrever a ação de resolver o puzzle. Descreva apenas o ESTADO da sala.
 
 === ESTRUTURA ESTRITA DE DADOS ===
-Retorne um objeto JSON puro começando com a chave "salas".
-Para as salas COM puzzle, a estrutura DEVE ser:
+Retorne um JSON puro com a chave "salas".
+
+Para as salas COM puzzle:
 "ID_DA_SALA": {
-  "texto_logico": "O texto reescrito que INCLUI OBRIGATORIAMENTE a descrição física da Fechadura e o conteúdo legível da Cifra, mesclados ao ambiente original.",
+  "texto_logico": "O texto reescrito que INCLUI VISUALMENTE a Interface e a Cifra.",
   "puzzle_status": {
     "logica_interna": {
-      "interface": "Qual é a fechadura física e o que ela aceita?",
-      "cifra_pista": "O que o jogador lê/vê no ambiente (a charada disfarçada)?",
-      "chave_traducao": "Como a charada se converte logicamente na resposta da interface?",
-      "acao_final": "Ação exata executada na interface.",
-      "verificacao": "O que muda de forma audível ou visual no cenário quando resolvido?"
+      "interface": "Descrição exata da fechadura física e o que ela aceita.",
+      "cifra_pista": "A informação bruta e legível que o jogador vê.",
+      "chave_traducao": "A regra lógica que converte a cifra na resposta.",
+      "acao_final": "Ação exata que o jogador executa NA INTERFACE com a resposta.",
+      "verificacao": "O que muda audível/visivelmente NA SALA ao resolver."
     },
-    "dica": "Uma observação sensorial sutil que chama atenção para a Cifra (ex: 'O nome rabiscado parece destacar a posição de certas letras...').",
-    "solucao": "A ação exata (Gabarito mecânico para validação do sistema).",
+    "dica": "Observação sensorial sutil que conecta a Cifra à Interface.",
+    "solucao": "A ação final exata (ex: 'Pressionar 5-3-2-1 nos botões da porta').",
     "portal_destino": ${((zonaId + 2) * SALAS_POR_ZONA) + 1},
     "resolvido": false
   }
 }
 
-Para as salas SEM puzzle, copie o texto original ESTRITAMENTE igual:
+Para as salas SEM puzzle, copie EXATAMENTE o texto original:
 "ID_DA_SALA": {
-  "texto_logico": "Cópia exata do texto_logico original da sala."
+  "texto_logico": "Cópia fiel do texto_logico original."
 }
 
 JSON DAS SALAS BASE:
-${JSON.stringify(planoZonal)}
+${JSON.stringify(miniPlano)}
 
-REGRA DE FORMATAÇÃO: RETORNE APENAS O JSON PURO COMEÇANDO COM {"salas": { ... }}. ZERO MARKDOWN. ZERO BLOCOS DE CÓDIGO. NUNCA USE \`\`\`json.
+RETORNE APENAS O JSON COMEÇANDO COM {"salas": { ... }}. NADA DE MARKDOWN.
 `;
 
     const data = await chamarGroq([
-        { role: "system", content: "Você é um Master Game Designer. Crie puzzles baseados na Tríade do Enigma. Retorne EXATAMENTE um objeto JSON puro começando com a chave 'salas'. Não use formatação markdown." },
+        { role: "system", content: "Você é um designer de puzzles. Retorne JSON puro começando com 'salas'. Sem markdown." },
         { role: "user", content: promptPuzzle }
     ], 0.7, { type: "json_object" }, MODELO_PUZZLE, 3);
 
     const parsedData = JSON.parse(data.choices[0].message.content);
-    
-    // Como forçamos a chave "salas" para evitar o erro do validador, 
-    // precisamos retornar apenas o miolo para o seu sistema fazer o merge corretamente.
     return parsedData.salas || parsedData;
 }
         
@@ -1560,6 +1559,19 @@ try {
         zonaData.salas[id] = { ...salasOriginais[id], ...(zonaComPuzzles[id] || {}) };
     }
     console.log(`[Puzzle] ✅ Puzzles injetados com sucesso na Zona ${numeroZona}`);
+
+    
+for (const id in zonaData.salas) {
+    const sala = zonaData.salas[id];
+    if (sala.puzzle_status) {
+        const ps = sala.puzzle_status;
+        if (!ps.solucao || !ps.portal_destino || ps.resolvido === undefined) {
+            console.warn(`[Puzzle] ⚠️ Sala ${id} com puzzle_status incompleto. Descartando puzzle.`);
+            delete sala.puzzle_status;
+            zonaData.salas[id].texto_logico = salasOriginais[id].texto_logico;
+        }
+    }
+}
 
         // Patch – Verificação real de puzzles injetados
     const totalSalas = Object.keys(zonaData.salas).length;
