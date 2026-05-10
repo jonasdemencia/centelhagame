@@ -993,8 +993,29 @@ async function gerarPuzzle(zonaId) {
     const portal_destino = ((zonaId + 2) * SALAS_POR_ZONA) + 1;
     const tema = dnaGlobal?.zonas?.find(z => z.id === zonaId)?.nome || `Zona ${zonaId}`;
 
+    // Array de sementes lógicas expandido (15 categorias)
+    const CATEGORIAS_MECANICAS = [
+        "PESO E EQUILÍBRIO: Envolve nivelar pratos de balança, distribuir volumes de fluidos (óleo, sangue) ou contrapesos físicos.",
+        "OCLUSÃO E LUZ: Envolve bloquear fontes de iluminação, alinhar projeções de sombras ou cobrir orifícios específicos.",
+        "ROTEAMENTO DE FLUXO: Envolve manipular válvulas, calhas ou veias estruturais para que uma substância alcance um destino sem vazar.",
+        "SIMETRIA DISTORCIDA: Envolve espelhar uma disposição de objetos de um lado da sala para o outro, mas aplicando uma regra invertida (ex: o que está aceso de um lado, fica apagado do outro).",
+        "TENSÃO MECÂNICA: Envolve esticar cordas, correntes ou molas até atingirem uma posição de tensão crítica ou harmonia estrutural.",
+        "DESTRUIÇÃO SELETIVA: Envolve quebrar, derreter ou corroer apenas um componente específico de um mecanismo (como um selo de cera ou pino enferrujado), sem danificar o resto.",
+        "RESSONÂNCIA ACÚSTICA: Envolve utilizar frequências sonoras (batidas, gritos, vibrações) para activar, quebrar ou afinar um mecanismo oculto.",
+        "DILATAÇÃO TÉRMICA: Envolve aquecer ou resfriar objectos metálicos, líquidos ou pedras para alterar o seu encaixe, volume ou estado.",
+        "CAPILARIDADE E ABSORÇÃO: Envolve transferir líquidos por meio de tecidos, cordas ou mechas até um recipiente colector para completar um circuito ou apagar um selo.",
+        "MAGNETISMO OCULTO: Envolve atrair ou repelir objectos metálicos com ímanes naturais (magnetite) ou electrizados, movendo peças à distância.",
+        "FRICÇÃO E DESGASTE: Envolve polir, lixar ou desgastar uma superfície específica (com pedra, areia ou osso) para reduzir atrito e libertar uma trava.",
+        "FLEXÃO E ALAVANCA: Envolve aplicar força num ponto exacto de uma haste, barra ou osso para mover um peso muito maior, exigindo o ponto de apoio correcto.",
+        "SIFÃO E PRESSÃO DE GÁS: Envolve criar vácuo ou diferença de pressão com recipientes selados, tubos e calor para mover líquidos ou gases e accionar um êmbolo.",
+        "SEDIMENTAÇÃO E DECANTAÇÃO: Envolve separar partículas ou líquidos por densidade (areia, óleo, água) deixando repousar ou agitando para revelar um código ou liberar uma passagem.",
+        "CONDUÇÃO ELÉTRICA RUDIMENTAR: Envolve fechar um circuito com metais, água salgada ou carvão para produzir uma faísca, accionar um eletroíman ou queimar um obstáculo."
+    ];
+    
+    const mecanicaSorteada = CATEGORIAS_MECANICAS[Math.floor(Math.random() * CATEGORIAS_MECANICAS.length)];
+
     const prompt = `
-Você é um designer de enigmas para jogos de horror textual (estilo Silent Hill, Resident Evil clássico).
+Você é um designer de enigmas para jogos de horror textual.
 
 TEMA DO AMBIENTE: "${tema}"
 MUNDO: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}
@@ -1002,27 +1023,27 @@ ATMOSFERA: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy"}
 
 Crie um enigma ORIGINAL, DEDUTÍVEL e AUTOCONTIDO.
 
+=== NATUREZA MECÂNICA OBRIGATÓRIA ===
+A solução deste puzzle DEVE se basear no seguinte princípio:
+[ ${mecanicaSorteada} ]
+É ESTRITAMENTE PROIBIDO criar enigmas de "alinhar 3 símbolos", "inserir senhas" ou "apertar botões em ordem crescente", a menos que o princípio acima exija isso.
+
 ESTRUTURA OBRIGATÓRIA DO ENIGMA:
 
 1. MECANISMO: O objeto ou sistema com o qual o jogador interage para resolver.
 2. PISTA BRUTA: A informação visível na cena que contém a resposta em estado cru.
-3. INSINUAÇÃO: Um detalhe ambiental físico que sugere COMO transformar a pista bruta na ação correta.
-   — Não nomeia a operação. Representa ela fisicamente.
-   — Ex: marcas de uso circulares indo para a direita → sugere girar no sentido horário
-   — Ex: três entalhes desgastados em ordem crescente de profundidade → sugere pressionar do menor para o maior
-   — Ex: musgo crescendo apenas do lado esquerdo dos símbolos → sugere ler da esquerda para a direita
-   A INSINUAÇÃO deve estar descrita na "cena". A "dica" aponta para ela.
+3. INSINUAÇÃO: Um detalhe ambiental físico que sugere COMO transformar a pista bruta na ação correta (a intuição física do movimento ou operação).
 
 CRITÉRIOS:
-- A solução é uma ação física concreta e completa (girar, ordenar, pressionar, encaixar...).
+- A solução é uma ação física concreta e completa.
 - Não-óbvia à primeira leitura. Inevitável quando percebida.
 - PROIBIDO: "enigma", "puzzle", "segredo", "portal". Apenas matéria, ferrugem, pedra, sangue.
 
 Retorne APENAS este JSON:
 {
-  "cena": "Dois a três parágrafos. Descreve o espaço e os objetos do enigma. Inclui o MECANISMO, a PISTA BRUTA e a INSINUAÇÃO — esta última como detalhe ambiental aparentemente secundário, não destacado. Prosa densa de horror físico.",
-  "dica": "Uma frase. Aponta para a INSINUAÇÃO — o detalhe físico que, quando percebido, torna o método dedutível. Concreta e sensorial. Não é a resposta. Não descreve o mecanismo geral.",
-  "solucao": "A ação exata e completa. Derivável da PISTA BRUTA + INSINUAÇÃO juntas."
+  "cena": "Dois a três parágrafos. Descreve o espaço e os objetos do enigma. Inclui o MECANISMO, a PISTA BRUTA e a INSINUAÇÃO — esta última como detalhe ambiental aparentemente secundário. Prosa densa de horror físico.",
+  "dica": "Uma frase. Aponta para a INSINUAÇÃO — o detalhe físico que, quando percebido, torna o método dedutível. Concreta e sensorial.",
+  "solucao": "A ação exata e completa para resolver. Derivável da PISTA BRUTA + INSINUAÇÃO."
 }`;
 
     const data = await chamarGroq([
