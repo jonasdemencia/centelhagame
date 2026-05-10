@@ -1043,42 +1043,52 @@ Retorne APENAS este JSON:
 
 async function injetarPuzzles(planoZonal, zonaId) {
     const ids = Object.keys(planoZonal).map(Number).sort((a, b) => a - b);
-    // Exclui primeira e última sala (entrada/fronteira)
-    const candidatos = ids.slice(1, -1);
-    if (candidatos.length === 0) return planoZonal;
+    const candidatos = ids.slice(1, -1); // exclui primeira e última sala
+    if (candidatos.length === 0) return {};
 
     const numPuzzles = Math.min(candidatos.length, Math.random() < 0.5 ? 1 : 2);
-
-    // Sorteia salas sem repetir
     const embaralhados = candidatos.sort(() => Math.random() - 0.5);
     const escolhidas   = embaralhados.slice(0, numPuzzles);
 
-    // Gera cada puzzle cego (paralelo para não bloquear)
     const puzzles = await Promise.all(
         Array.from({ length: numPuzzles }, () => gerarPuzzle(zonaId))
     );
 
-    // Monta resultado: copia tudo, sobrescreve salas escolhidas
-    const resultado = {};
-    for (const id in planoZonal) {
-        resultado[id] = { texto_logico: planoZonal[id].texto_logico };
-    }
+    const acoesConexao = [
+        "Examinar a fissura na parede lateral",
+        "Entrar pela abertura encoberta de musgo",
+        "Descer pelo alçapão enferrujado",
+        "Seguir o corredor oculto atrás da prateleira",
+        "Atravessar a passagem encoberta por tábuas",
+        "Rastejar pela fresta no fundo da sala",
+    ];
 
-    escolhidas.forEach((salaId, i) => {
-        const key    = String(salaId);
+    const resultado   = {};
+    const conexoes    = {}; // { connectorRoomId: puzzleRoomId }
+
+    escolhidas.forEach((salaConectoraId, i) => {
+        const puzzleRoomId = 10000 + (zonaId * SALAS_POR_ZONA) + i; // ex: 10010, 10011
         const puzzle = puzzles[i];
-        resultado[key] = {
-            // Texto original da sala + cena do puzzle como bloco adicional
-            texto_logico: (planoZonal[key]?.texto_logico || '').trim() + '\n\n' + puzzle.cena,
+        const acaoIda = acoesConexao[Math.floor(Math.random() * acoesConexao.length)];
+
+        // Sala de puzzle como entrada separada no resultado
+        resultado[String(puzzleRoomId)] = {
+            texto_logico: puzzle.cena,
             puzzle_status: {
                 resolvido:      false,
                 dica:           puzzle.dica,
                 solucao:        puzzle.solucao,
                 portal_destino: puzzle.portal_destino
-            }
+            },
+            _acaoVolta:    "Recuar pelo corredor sombrio",
+            _connectorId:  salaConectoraId,
+            _acaoIda:      acaoIda
         };
+
+        conexoes[String(salaConectoraId)] = { puzzleRoomId, acaoIda };
     });
 
+    resultado._conexoes = conexoes;
     return resultado;
 }
 
@@ -1572,21 +1582,29 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
                 let zonaData = JSON.parse(dataSalas.choices[0].message.content);
 
 // --- INÍCIO DO AJUSTE: INJEÇÃO DE PUZZLES ---
-const salasOriginais = { ...zonaData.salas }; // backup antes de qualquer sobrescrita
+const salasOriginais = { ...zonaData.salas };
 const idMsgPuzzle = adicionarMensagem("🧩 A arquitetura está se contorcendo... ocultando enigmas...", "system", true);
 try {
     const zonaComPuzzles = await injetarPuzzles(salasOriginais, numeroZona);
-    // Merge: base = original, overlay = retorno do puzzle (apenas o que o modelo devolveu)
-    // Salas ausentes no retorno do puzzle ficam intactas com o texto original
+    const conexoesPuzzle = zonaComPuzzles._conexoes || {};
+
+    // Merge: salas regulares ficam intactas
     zonaData.salas = {};
     for (const id of Object.keys(salasOriginais)) {
-        zonaData.salas[id] = { ...salasOriginais[id], ...(zonaComPuzzles[id] || {}) };
+        zonaData.salas[id] = { ...salasOriginais[id] };
     }
-    console.log(`[Puzzle] ✅ Puzzles injetados com sucesso na Zona ${numeroZona}`);
-// Garantia de exibição da dica no texto_logico (Fuzzy Check)
-    
+    // Adiciona salas de puzzle (IDs altos) diretamente
+    for (const key of Object.keys(zonaComPuzzles)) {
+        if (key === '_conexoes') continue;
+        zonaData.salas[key] = zonaComPuzzles[key];
+    }
+    // Guarda mapa de conexões para a construção do mapaFinalMesclado
+    zonaData._conexoesPuzzle = conexoesPuzzle;
+
+    console.log(`[Puzzle] ✅ Salas de puzzle criadas:`, Object.keys(zonaComPuzzles).filter(k => k !== '_conexoes'));
 } catch (e) {
     console.error("[Puzzle] Erro na injeção. Mantendo o plano original:", e);
+    zonaData._conexoesPuzzle = {};
 }
 document.getElementById(idMsgPuzzle)?.remove();
 // --- FIM DO AJUSTE ---
@@ -1667,6 +1685,29 @@ mapaFinalMesclado[idSala] = {
     ...(puzzleStatus ? { puzzle_status: puzzleStatus } : {})
 };
                 });
+
+// Adiciona salas de puzzle e afia as conexões nas salas regulares
+for (const [connectorIdStr, { puzzleRoomId, acaoIda }] of Object.entries(zonaData._conexoesPuzzle || {})) {
+    const puzzleIdStr = String(puzzleRoomId);
+    const puzzleSala  = zonaData.salas[puzzleIdStr];
+    if (!puzzleSala) continue;
+
+    // Injeta opcao extra na sala conectora já montada
+    if (mapaFinalMesclado[connectorIdStr]) {
+        mapaFinalMesclado[connectorIdStr].opcoes.push({
+            texto:   acaoIda,
+            destino: puzzleRoomId
+        });
+    }
+
+    // Monta sala de puzzle no mapaFinalMesclado
+    mapaFinalMesclado[puzzleIdStr] = {
+        texto_logico: puzzleSala.texto_logico,
+        opcoes: [{ texto: puzzleSala._acaoVolta || "Recuar pelo corredor sombrio", destino: parseInt(connectorIdStr) }],
+        itens:  [],
+        puzzle_status: puzzleSala.puzzle_status
+    };
+}
                 
                 zonaData.salas = mapaFinalMesclado;
 
@@ -1693,6 +1734,7 @@ mapaFinalMesclado[idSala] = {
             if (_expansaoEmAndamento) return;
 
             const salaAtualNum = parseInt(secaoAtualId);
+            if (salaAtualNum >= 10000) return; // sala de puzzle — não dispara expansão
             const limiteZonaAtual = zonaAtual * SALAS_POR_ZONA;
 
             if (salaAtualNum >= limiteZonaAtual - 8) {
@@ -2309,8 +2351,10 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
 
             // 2. Transição normal de sala
             secaoAtualId = destinoStr;
-            zonaAtual = Math.ceil(parseInt(secaoAtualId) / SALAS_POR_ZONA); // Sincroniza a zona local
-            
+if (parseInt(secaoAtualId) < 10000) {
+    zonaAtual = Math.ceil(parseInt(secaoAtualId) / SALAS_POR_ZONA);
+}
+// salas de puzzle (id >= 10000) não alteram zonaAtual            
             salvarEstadoJogador();
             verificarEExpandirMundo(); // Mantém a expansão de background rodando pra zona atual
 
