@@ -1010,10 +1010,16 @@ async function gerarPuzzle(zonaId) {
         "SEDIMENTAÇÃO E DECANTAÇÃO: Envolve separar partículas ou líquidos por densidade (areia, óleo, água) deixando repousar ou agitando para revelar um código ou liberar uma passagem.",
         "CONDUÇÃO ELÉTRICA RUDIMENTAR: Envolve fechar um circuito com metais, água salgada ou carvão para produzir uma faísca, accionar um eletroíman ou queimar um obstáculo."
     ];
-    
-    const mecanicaSorteada = CATEGORIAS_MECANICAS[Math.floor(Math.random() * CATEGORIAS_MECANICAS.length)];
 
-    const prompt = `
+    // Aqui abrimos a fenda: 30% de chance (ajuste como preferir) de abandonar a mecânica
+    const inovacaoRadical = Math.random() < 0.99;
+    
+    let prompt;
+
+    if (!inovacaoRadical) {
+        // --- O SEU PROMPT ORIGINAL EXATAMENTE COMO ESTAVA ---
+        const mecanicaSorteada = CATEGORIAS_MECANICAS[Math.floor(Math.random() * CATEGORIAS_MECANICAS.length)];
+        prompt = `
 Você é um designer de enigmas para jogos de horror textual.
 
 MUNDO: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}
@@ -1042,25 +1048,55 @@ CRITÉRIOS:
 
 Retorne APENAS este JSON:
 {
-  "_rascunho_logico": "TRAVA: [o que bloqueia a saída]. FERRAMENTA: [o único objeto manipulável]. MOVIMENTO: [a ação física exata]. SINAIS: [cada objeto manipulável] → [o detalhe passivo e visível que revela o que ele pode fazer]."
+  "_rascunho_logico": "TRAVA: [o que bloqueia a saída]. FERRAMENTA: [o único objeto manipulável]. MOVIMENTO: [a ação física exata]. SINAIS: [cada objeto manipulável] → [o detalhe passivo e visível que revela o que ele pode fazer].",
   "cena": "Dois a três parágrafos. Descreve o espaço e os objetos do enigma de forma integrada e puramente visual. ZERO EXPLICAÇÕES DE COMO RESOLVER. Apenas descreva o que os olhos veem de forma passiva.",  
   "dica": "Uma frase. Aponta para a INSINUAÇÃO — o detalhe físico que, quando percebido, torna o método dedutível. Concreta e sensorial.",
   "solucao": "A ação exata e completa para resolver. Derivável da PISTA BRUTA + INSINUAÇÃO."
 }`;
+    } else {
+        // --- O PROMPT DE CARTA BRANCA: LIBERDADE ESTRUTURAL ABSOLUTA ---
+        prompt = `
+Você é um master designer de enigmas (puzzles) para um RPG textual de horror visceral.
+
+MUNDO: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}
+ATMOSFERA: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy"}
+
+=== CARTA BRANCA: LIBERDADE ESTRUTURAL ABSOLUTA ===
+Você está PROIBIDO de usar mecânicas tradicionais de aventura (peso, alavancas, chaves, encaixes, fluidos). Sua missão é INVENTAR UMA ESTRUTURA DE ENIGMA INTEIRAMENTE NOVA e arquitetonicamente brilhante.
+
+O desafio deve surpreender um jogador veterano. Pode gravitar em eixos como:
+- Dedução linguística, paradoxos semânticos ou decifração de um padrão oculto no ambiente.
+- Lógica paradoxal, manipulação de regras de causa e efeito, ou geometria impossível.
+- Puzzles de indução, onde o jogador deve realizar uma ação conceitual específica (falar, interrogar a si mesmo, sacrificar algo intangível) baseada nas regras anômalas que você estabelecer.
+- Ou qualquer eixo de desafio inovador que você mesmo inventar agora.
+
+REGRAS INQUEBRÁVEIS:
+1. TEM QUE SER UM PUZZLE. Deve haver uma lógica interna rigorosa, implacável e dedutível. Não pode ser apenas um "evento bizarro" aleatório.
+2. A solução DEVE ser uma AÇÃO (verbal, mental descrita, ou física) que o jogador declara para provar que entendeu a regra oculta que você arquitetou.
+3. ZERO EXPLICAÇÕES DIRETAS. O texto da cena deve descrever a anomalia ou o padrão como um fato natural do ambiente. As variáveis do enigma devem estar camufladas na prosa.
+
+Retorne APENAS este JSON:
+{
+  "_rascunho_logico": "O EIXO INVENTADO: [qual é a regra nova]. A LÓGICA: [como o jogador deduz a resposta com as pistas]. SINAIS: [como a cena esconde isso].",
+  "cena": "A descrição do espaço e dos elementos (dois a três parágrafos). Textual, densa, sem entregar a resposta, mas contendo todas as variáveis necessárias para a dedução da regra que você criou.",
+  "dica": "Uma frase sutil e sensorial que aponte vagamente para a nova regra que você arquitetou.",
+  "solucao": "A ação exata, verbal ou abstrata, que o jogador precisa declarar ao sistema para solucionar."
+}`;
+    }
 
     const data = await chamarGroq([
-        { role: "system", content: "Você é um designer de enigmas de horror. Crie puzzles dedutíveis, físicos e originais. Retorne apenas JSON puro." },
+        { role: "system", content: "Você é um designer de enigmas inovadores. Retorne apenas JSON puro." },
         { role: "user", content: prompt }
     ], 0.8, { type: "json_object" }, MODELO_PUZZLE, 3);
 
     const p = JSON.parse(data.choices[0].message.content);
-return {
-    cena:             p.cena              || '',
-    dica:             p.dica              || '',
-    solucao:          p.solucao           || '',
-    _rascunho_logico: p._rascunho_logico  || '',   // ← novo
-    portal_destino:   portal_destino
-};
+    return {
+        cena:             p.cena              || '',
+        dica:             p.dica              || '',
+        solucao:          p.solucao           || '',
+        _rascunho_logico: p._rascunho_logico  || '',
+        portal_destino:   portal_destino
+    };
 }
 
 // Substitua injetarPuzzles inteira (linha ~990):
