@@ -991,7 +991,6 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 
 async function gerarPuzzle(zonaId) {
     const portal_destino = ((zonaId + 2) * SALAS_POR_ZONA) + 1;
-    const tema = dnaGlobal?.zonas?.find(z => z.id === zonaId)?.nome || `Zona ${zonaId}`;
 
     // Array de sementes lógicas expandido (15 categorias)
     const CATEGORIAS_MECANICAS = [
@@ -1017,7 +1016,6 @@ async function gerarPuzzle(zonaId) {
     const prompt = `
 Você é um designer de enigmas para jogos de horror textual.
 
-TEMA DO AMBIENTE: "${tema}"
 MUNDO: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}
 ATMOSFERA: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy"}
 
