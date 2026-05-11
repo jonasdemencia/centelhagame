@@ -946,11 +946,11 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                model: modeloPadrao, // <-- O modelo agora é dinâmico
-                messages: messages,
-                temperature: temperatura,
-                response_format: formato,
-            }),
+    model: modeloPadrao,
+    messages: messages,
+    temperature: temperatura,
+    ...(formato ? { response_format: formato } : {}),
+}),
         });
 
                 const data = await response.json();
