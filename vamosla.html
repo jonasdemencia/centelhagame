@@ -1090,9 +1090,9 @@ Retorne APENAS este JSON:
         let data;
     if (!inovacaoRadical) {
         data = await chamarGroq([
-            { role: "system", content: "Você é um designer de enigmas de horror. Crie puzzles dedutíveis, físicos e originais. Retorne apenas JSON puro." },
-            { role: "user", content: prompt }
-        ], 0.8, { type: "json_object" }, MODELO_PUZZLE, 3);
+    { role: "system", content: "Você é um designer de enigmas inovadores. Retorne apenas JSON puro, sem texto antes ou depois." },
+    { role: "user", content: prompt }
+], 0.7, null, MODELO_PUZZLE, 3);
     } else {
         data = await chamarGroq([
             { role: "system", content: "Você é um designer de enigmas inovadores. Retorne apenas JSON puro." },
@@ -1100,7 +1100,9 @@ Retorne APENAS este JSON:
         ], 0.7, { type: "json_object" }, MODELO_PUZZLE, 3);
     }
 
-    const p = JSON.parse(data.choices[0].message.content);
+    const raw = data.choices[0].message.content;
+const match = raw.match(/\{[\s\S]*\}/);
+const p = JSON.parse(match ? match[0] : raw);
     return {
         cena:             p.cena              || '',
         dica:             p.dica              || '',
