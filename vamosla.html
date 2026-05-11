@@ -1018,7 +1018,7 @@ async function gerarPuzzle(zonaId) {
     ];
 
     // A FENDA: 25% de chance do modelo abandonar a física e entrar no abismo psicológico
-    const ehAnomalia = Math.random() < 0.25; 
+    const ehAnomalia = Math.random() < 0.99; // estava: 0.25, aumentado para teste
     
     const categoriaSorteada = ehAnomalia 
         ? CATEGORIAS_ABISSAIS[Math.floor(Math.random() * CATEGORIAS_ABISSAIS.length)]
