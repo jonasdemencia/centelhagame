@@ -992,6 +992,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 async function gerarPuzzle(zonaId) {
     const portal_destino = ((zonaId + 2) * SALAS_POR_ZONA) + 1;
 
+    // Array de sementes lógicas expandido (15 categorias)
     const CATEGORIAS_MECANICAS = [
         "PESO E EQUILÍBRIO: Envolve nivelar pratos de balança, distribuir volumes de fluidos (óleo, sangue) ou contrapesos físicos.",
         "OCLUSÃO E LUZ: Envolve bloquear fontes de iluminação, alinhar projeções de sombras ou cobrir orifícios específicos.",
@@ -1009,28 +1010,8 @@ async function gerarPuzzle(zonaId) {
         "SEDIMENTAÇÃO E DECANTAÇÃO: Envolve separar partículas ou líquidos por densidade (areia, óleo, água) deixando repousar ou agitando para revelar um código ou liberar uma passagem.",
         "CONDUÇÃO ELÉTRICA RUDIMENTAR: Envolve fechar um circuito com metais, água salgada ou carvão para produzir uma faísca, accionar um eletroíman ou queimar um obstáculo."
     ];
-
-    const CATEGORIAS_ABISSAIS = [
-        "A FALHA NA INTERFACE: O ambiente responde à crença e não à física. O enigma exige que o jogador aja ignorando ativamente uma ilusão sensorial opressiva (ex: fechar os olhos e caminhar através de uma parede que visualmente parece sólida, mas acusticamente revela ser um abismo).",
-        "ANGÚSTIA E EXISTÊNCIA: O obstáculo não é mecânico, mas fenomenológico. O mecanismo requer que o jogador abandone o uso do objeto como 'ferramenta' e o confronte em sua forma mais bruta (ex: uma porta colossal que não possui maçaneta e só cede se o jogador aceitar seu fechamento e der as costas para ela).",
-        "O RETORNO DO RECALCADO: O enigma reflete um ato de auto-sabotagem ou um ciclo traumático do cenário. Exige que o jogador realize uma ação contra-intuitiva, repetindo um ato destrutivo ou ferindo o próprio reflexo/sombra para alinhar a realidade física com a realidade brutal do lugar.",
-        "RUPTURA DE SIGNIFICADO: Há um buraco na semântica da sala, uma ausência que não faz sentido lógico. A solução exige pegar um objeto mundano da cena e usá-lo de uma maneira completamente alienígena à sua função original para preencher essa lacuna de significado."
-    ];
-
-    // A FENDA: 25% de chance do modelo abandonar a física e entrar no abismo psicológico
-    const ehAnomalia = Math.random() < 0.99; // estava: 0.25, aumentado para teste
     
-    const categoriaSorteada = ehAnomalia 
-        ? CATEGORIAS_ABISSAIS[Math.floor(Math.random() * CATEGORIAS_ABISSAIS.length)]
-        : CATEGORIAS_MECANICAS[Math.floor(Math.random() * CATEGORIAS_MECANICAS.length)];
-
-    const instrucaoNatureza = ehAnomalia
-        ? `A solução deste puzzle DEVE se basear no seguinte princípio ANÔMALO E PSICOLÓGICO:
-[ ${categoriaSorteada} ]
-É ESTRITAMENTE PROIBIDO criar quebra-cabeças mecânicos convencionais aqui. O jogador deve subverter a percepção, a utilidade das coisas ou a própria lógica espacial. A solução AINDA DEVE SER UMA AÇÃO CONCRETA (ex: "andar de costas", "quebrar o próprio reflexo", "falar com a parede morta"), mas motivada por uma lógica surreal.`
-        : `A solução deste puzzle DEVE se basear no seguinte princípio FÍSICO E MECÂNICO:
-[ ${categoriaSorteada} ]
-É ESTRITAMENTE PROIBIDO criar enigmas de "alinhar 3 símbolos", "inserir senhas" ou "apertar botões em ordem crescente", a menos que o princípio acima exija isso.`;
+    const mecanicaSorteada = CATEGORIAS_MECANICAS[Math.floor(Math.random() * CATEGORIAS_MECANICAS.length)];
 
     const prompt = `
 Você é um designer de enigmas para jogos de horror textual.
@@ -1040,44 +1021,46 @@ ATMOSFERA: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy"}
 
 Crie um enigma ORIGINAL, DEDUTÍVEL e AUTOCONTIDO.
 
-=== NATUREZA OBRIGATÓRIA ===
-${instrucaoNatureza}
+=== NATUREZA MECÂNICA OBRIGATÓRIA ===
+A solução deste puzzle DEVE se basear no seguinte princípio:
+[ ${mecanicaSorteada} ]
+É ESTRITAMENTE PROIBIDO criar enigmas de "alinhar 3 símbolos", "inserir senhas" ou "apertar botões em ordem crescente", a menos que o princípio acima exija isso.
 
 ESTRUTURA OBRIGATÓRIA DO ENIGMA:
 
-1. MECANISMO/ANOMALIA: O objeto ou distorção com o qual o jogador interage para resolver.
-2. PISTA BRUTA: A informação visível (ou a falha na realidade) na cena que contém a resposta em estado cru.
+1. MECANISMO: O objeto ou sistema com o qual o jogador interage para resolver.
+2. PISTA BRUTA: A informação visível na cena que contém a resposta em estado cru.
 3. INSINUAÇÃO: Um detalhe ambiental físico que sugere COMO transformar a pista bruta na ação correta (a intuição física do movimento ou operação).
 
 CRITÉRIOS:
 - A solução é uma ação física concreta e completa.
 - Não-óbvia à primeira leitura. Inevitável quando percebida.
-- PROIBIDO DISTRAÇÕES (RED HERRINGS): O ambiente NÃO PODE conter objetos manipuláveis extras que confundam o jogador.
-- PROIBIDO: as palavras "enigma", "puzzle", "segredo", "portal". Apenas matéria, ferrugem, distorções, osso e sangue.
-- PROIBIDO NA PROSA: As palavras "MECANISMO", "PISTA BRUTA" e "INSINUAÇÃO" são rótulos internos. Descreva os três elementos de forma integrada e natural no texto, sem nomeá-los.
-- FOTOGRAFIA FUNCIONAL: A "cena" implementa obrigatoriamente cada entrada declarada em "_rascunho_logico".
+- PROIBIDO DISTRAÇÕES (RED HERRINGS): O ambiente NÃO PODE conter objetos manipuláveis extras que confundam o jogador (ex: se a solução usa areia, não coloque ossos, pedras soltas ou pedaços de pau soltos na cena).
+- PROIBIDO: "enigma", "puzzle", "segredo", "portal". Apenas matéria, ferrugem, pedra, sangue.
+- PROIBIDO NA PROSA: As palavras "MECANISMO", "PISTA BRUTA" e "INSINUAÇÃO" são rótulos internos de construção — jamais aparecem na cena. Descreva os três elementos de forma integrada e natural no texto, sem nomeá-los.
+- FOTOGRAFIA FUNCIONAL: A "cena" implementa obrigatoriamente cada entrada de SINAIS declarada em "_rascunho_logico". Critério de validade: ocultando "solucao", um leitor consegue identificar o objeto correto e a direção do movimento apenas pela "cena".
 
 Retorne APENAS este JSON:
 {
-  "_rascunho_logico": "TRAVA: [o que bloqueia]. FERRAMENTA: [o único objeto ou distorção]. MOVIMENTO: [a ação exata]. SINAIS: [detalhe passivo e visível que revela a solução].",
-  "cena": "Dois a três parágrafos. Descreve o espaço de forma integrada e puramente visual. ZERO EXPLICAÇÕES DE COMO RESOLVER.",  
-  "dica": "Uma frase sensorial. Aponta para a INSINUAÇÃO — o detalhe físico que torna o método dedutível.",
-  "solucao": "A ação exata e completa para resolver."
+  "_rascunho_logico": "TRAVA: [o que bloqueia a saída]. FERRAMENTA: [o único objeto manipulável]. MOVIMENTO: [a ação física exata]. SINAIS: [cada objeto manipulável] → [o detalhe passivo e visível que revela o que ele pode fazer]."
+  "cena": "Dois a três parágrafos. Descreve o espaço e os objetos do enigma de forma integrada e puramente visual. ZERO EXPLICAÇÕES DE COMO RESOLVER. Apenas descreva o que os olhos veem de forma passiva.",  
+  "dica": "Uma frase. Aponta para a INSINUAÇÃO — o detalhe físico que, quando percebido, torna o método dedutível. Concreta e sensorial.",
+  "solucao": "A ação exata e completa para resolver. Derivável da PISTA BRUTA + INSINUAÇÃO."
 }`;
 
     const data = await chamarGroq([
-        { role: "system", content: "Você é um designer de enigmas de horror. Crie puzzles dedutíveis, viscerais e originais. Retorne apenas JSON puro." },
+        { role: "system", content: "Você é um designer de enigmas de horror. Crie puzzles dedutíveis, físicos e originais. Retorne apenas JSON puro." },
         { role: "user", content: prompt }
-    ], 0.9, { type: "json_object" }, MODELO_PUZZLE, 3);
+    ], 0.8, { type: "json_object" }, MODELO_PUZZLE, 3);
 
     const p = JSON.parse(data.choices[0].message.content);
-    return {
-        cena:             p.cena              || '',
-        dica:             p.dica              || '',
-        solucao:          p.solucao           || '',
-        _rascunho_logico: p._rascunho_logico  || '',   
-        portal_destino:   portal_destino
-    };
+return {
+    cena:             p.cena              || '',
+    dica:             p.dica              || '',
+    solucao:          p.solucao           || '',
+    _rascunho_logico: p._rascunho_logico  || '',   // ← novo
+    portal_destino:   portal_destino
+};
 }
 
 // Substitua injetarPuzzles inteira (linha ~990):
