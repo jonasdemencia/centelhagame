@@ -1084,10 +1084,18 @@ Retorne APENAS este JSON:
 }`;
     }
 
-    const data = await chamarGroq([
-        { role: "system", content: "Você é um designer de enigmas inovadores. Retorne apenas JSON puro." },
-        { role: "user", content: prompt }
-    ], 0.8, { type: "json_object" }, MODELO_PUZZLE, 3);
+        let data;
+    if (!inovacaoRadical) {
+        data = await chamarGroq([
+            { role: "system", content: "Você é um designer de enigmas de horror. Crie puzzles dedutíveis, físicos e originais. Retorne apenas JSON puro." },
+            { role: "user", content: prompt }
+        ], 0.8, { type: "json_object" }, MODELO_PUZZLE, 3);
+    } else {
+        data = await chamarGroq([
+            { role: "system", content: "Você é um designer de enigmas inovadores. Retorne apenas JSON puro." },
+            { role: "user", content: prompt }
+        ], 0.7, { type: "json_object" }, MODELO_PUZZLE, 3);
+    }
 
     const p = JSON.parse(data.choices[0].message.content);
     return {
