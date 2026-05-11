@@ -1037,13 +1037,15 @@ ESTRUTURA OBRIGATÓRIA DO ENIGMA:
 CRITÉRIOS:
 - A solução é uma ação física concreta e completa.
 - Não-óbvia à primeira leitura. Inevitável quando percebida.
+- PROIBIDO DISTRAÇÕES (RED HERRINGS): O ambiente NÃO PODE conter objetos manipuláveis extras que confundam o jogador (ex: se a solução usa areia, não coloque ossos, pedras soltas ou pedaços de pau soltos na cena).
 - PROIBIDO: "enigma", "puzzle", "segredo", "portal". Apenas matéria, ferrugem, pedra, sangue.
 - PROIBIDO NA PROSA: As palavras "MECANISMO", "PISTA BRUTA" e "INSINUAÇÃO" são rótulos internos de construção — jamais aparecem na cena. Descreva os três elementos de forma integrada e natural no texto, sem nomeá-los.
-- CEGUEIRA DE SOLUÇÃO (REGRA ABSOLUTA): A "cena" é uma FOTOGRAFIA ESTÁTICA do ambiente antes de qualquer interação. É ESTRITAMENTE PROIBIDO escrever na "cena" como o mecanismo funciona, dar instruções de como operá-lo ou dizer o que acontece depois de resolvê-lo. NUNCA use estruturas como "ao fazer X, Y acontece", "deve ser apagado" ou "podem ser puxados para". A "cena" descreve APENAS a matéria física presente e estática. A resposta do enigma pertence EXCLUSIVAMENTE ao campo "solucao".
+- CEGUEIRA DE SOLUÇÃO (REGRA ABSOLUTA): A "cena" é uma FOTOGRAFIA ESTÁTICA do ambiente antes de qualquer interação. É ESTRITAMENTE PROIBIDO escrever na "cena" o que acontece depois de resolvê-lo. A "cena" descreve APENAS a matéria física presente e estática. A resposta do enigma pertence EXCLUSIVAMENTE ao campo "solucao".
 
 
 Retorne APENAS este JSON:
 {
+  "_rascunho_logico": "Em 1 frase, defina ESTRITAMENTE: Qual é a ÚNICA trava? Qual é a ÚNICA ferramenta na sala? Qual é o ÚNICO movimento físico para resolver? (O jogador não verá este campo, use-o para organizar sua lógica).",
   "cena": "Dois a três parágrafos. Descreve o espaço e os objetos do enigma de forma integrada e puramente visual. ZERO EXPLICAÇÕES DE COMO RESOLVER. Apenas descreva o que os olhos veem de forma passiva.",  
   "dica": "Uma frase. Aponta para a INSINUAÇÃO — o detalhe físico que, quando percebido, torna o método dedutível. Concreta e sensorial.",
   "solucao": "A ação exata e completa para resolver. Derivável da PISTA BRUTA + INSINUAÇÃO."
