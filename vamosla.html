@@ -1102,11 +1102,12 @@ async function injetarPuzzles(planoZonal, zonaId) {
         resultado[String(puzzleRoomId)] = {
             texto_logico: puzzle.cena,
             puzzle_status: {
-                resolvido:      false,
-                dica:           puzzle.dica,
-                solucao:        puzzle.solucao,
-                portal_destino: puzzle.portal_destino
-            },
+    resolvido:       false,
+    dica:            puzzle.dica,
+    solucao:         puzzle.solucao,
+    portal_destino:  puzzle.portal_destino,
+    _rascunho_logico: puzzle._rascunho_logico || ''   // ← ADICIONA ISTO
+},
             _acaoVolta:    "Recuar pelo corredor sombrio",
             _connectorId:  salaConectoraId,
             _acaoIda:      acaoIda
