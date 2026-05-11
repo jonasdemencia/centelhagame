@@ -1040,11 +1040,11 @@ CRITÉRIOS:
 - PROIBIDO DISTRAÇÕES (RED HERRINGS): O ambiente NÃO PODE conter objetos manipuláveis extras que confundam o jogador (ex: se a solução usa areia, não coloque ossos, pedras soltas ou pedaços de pau soltos na cena).
 - PROIBIDO: "enigma", "puzzle", "segredo", "portal". Apenas matéria, ferrugem, pedra, sangue.
 - PROIBIDO NA PROSA: As palavras "MECANISMO", "PISTA BRUTA" e "INSINUAÇÃO" são rótulos internos de construção — jamais aparecem na cena. Descreva os três elementos de forma integrada e natural no texto, sem nomeá-los.
-- FOTOGRAFIA FUNCIONAL (REGRA ABSOLUTA): A "cena" descreve APENAS o que é visível, audível ou tátil, sem revelar o que acontece depois. Cada objeto que será usado na "solucao" deve ser mostrado de forma que o seu POTENCIAL DE AÇÃO (affordance) fique evidente. Exemplos: uma grade deslizante deve ter marcas de arrasto, trilhos ou estar solta junto à parede; uma alavanca deve ter um eixo visível; um botão deve estar saliente; uma corda deve estar pendente, não enrolada e imóvel.
+- FOTOGRAFIA FUNCIONAL: A "cena" implementa obrigatoriamente cada entrada de SINAIS declarada em "_rascunho_logico". Critério de validade: ocultando "solucao", um leitor consegue identificar o objeto correto e a direção do movimento apenas pela "cena".
 
 Retorne APENAS este JSON:
 {
-  "_rascunho_logico": "Em 1 frase, defina ESTRITAMENTE: Qual é a ÚNICA trava? Qual é a ÚNICA ferramenta na sala? Qual é o ÚNICO movimento físico para resolver? (O jogador não verá este campo, use-o para organizar sua lógica).",
+  "_rascunho_logico": "TRAVA: [o que bloqueia a saída]. FERRAMENTA: [o único objeto manipulável]. MOVIMENTO: [a ação física exata]. SINAIS: [cada objeto manipulável] → [o detalhe passivo e visível que revela o que ele pode fazer]."
   "cena": "Dois a três parágrafos. Descreve o espaço e os objetos do enigma de forma integrada e puramente visual. ZERO EXPLICAÇÕES DE COMO RESOLVER. Apenas descreva o que os olhos veem de forma passiva.",  
   "dica": "Uma frase. Aponta para a INSINUAÇÃO — o detalhe físico que, quando percebido, torna o método dedutível. Concreta e sensorial.",
   "solucao": "A ação exata e completa para resolver. Derivável da PISTA BRUTA + INSINUAÇÃO."
