@@ -989,7 +989,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 
         // Linha ~988, ANTES de injetarPuzzles:
 
-async function gerarPuzzle(zonaId, ancora = '') {
+async function gerarPuzzle(zonaId) {
     const portal_destino = ((zonaId + 2) * SALAS_POR_ZONA) + 1;
     const tema = dnaGlobal?.zonas?.find(z => z.id === zonaId)?.nome || `Zona ${zonaId}`;
 
@@ -1017,8 +1017,7 @@ async function gerarPuzzle(zonaId, ancora = '') {
     const prompt = `
 Você é um designer de enigmas para jogos de horror textual.
 
-ZONA: "${tema}"
-SALA ADJACENTE: "${ancora || tema}"
+TEMA DO AMBIENTE: "${tema}"
 MUNDO: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}
 ATMOSFERA: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy"}
 
@@ -1078,12 +1077,8 @@ async function injetarPuzzles(planoZonal, zonaId) {
     const escolhidas   = embaralhados.slice(0, numPuzzles);
 
     const puzzles = await Promise.all(
-    escolhidas.slice(0, numPuzzles).map(salaId => {
-        const texto = planoZonal[String(salaId)]?.texto_logico || '';
-        const ancora = texto.split(/[.!?]/)[0].trim();
-        return gerarPuzzle(zonaId, ancora);
-    })
-);
+        Array.from({ length: numPuzzles }, () => gerarPuzzle(zonaId))
+    );
 
     const acoesConexao = [
         "Examinar a fissura na parede lateral",
@@ -2642,7 +2637,7 @@ if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
 
     if (puzzleResolvido) {
         salaAtual.puzzle_status.resolvido = true;
-        adicionarMensagem("🔓 Um ruído metálico ecoa pelo ambiente. Algo se moveu e uma nova passagem está acessível..", "system");
+        adicionarMensagem("🔓 Um ruído metálico ecoa: Uma nova passagem está acessível..", "system");
 
         // Injeta dinamicamente o portal como opção de navegação
         if (salaAtual.puzzle_status.portal_destino) {
