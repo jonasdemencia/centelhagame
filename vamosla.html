@@ -1074,10 +1074,13 @@ REGRAS INQUEBRÁVEIS:
 1. TEM QUE SER UM PUZZLE. Deve haver uma lógica interna rigorosa, implacável e dedutível. Não pode ser apenas um "evento bizarro" aleatório.
 2. A solução DEVE ser uma AÇÃO (verbal, mental descrita, ou física) que o jogador declara para provar que entendeu a regra oculta que você arquitetou.
 3. ZERO EXPLICAÇÕES DIRETAS. O texto da cena deve descrever a anomalia ou o padrão como um fato natural do ambiente. As variáveis do enigma devem estar camufladas na prosa.
+4. UNICIDADE OBRIGATÓRIA: a solução deve ser a ÚNICA resposta derivável das pistas. 
+Antes de escrever a "cena", verifique: existe outra resposta igualmente válida? 
+Se sim, o enigma é inválido — restrinja a regra até restar exatamente uma.
 
 Retorne APENAS este JSON:
 {
-  "_rascunho_logico": "O EIXO INVENTADO: [qual é a regra nova]. A LÓGICA: [como o jogador deduz a resposta com as pistas]. SINAIS: [como a cena esconde isso].",
+  "_rascunho_logico": "O EIXO INVENTADO: [qual é a regra nova]. A LÓGICA: [como o jogador deduz a resposta com as pistas]. VERIFICAÇÃO: [liste as outras respostas que um jogador poderia tentar e explique por que cada uma falha]. SINAIS: [como a cena esconde isso].",
   "cena": "A descrição do espaço e dos elementos (dois a três parágrafos). Textual, densa, sem entregar a resposta, mas contendo todas as variáveis necessárias para a dedução da regra que você criou.",
   "dica": "Uma frase sutil e sensorial que aponte vagamente para a nova regra que você arquitetou.",
   "solucao": "A ação exata, verbal ou abstrata, que o jogador precisa declarar ao sistema para solucionar."
