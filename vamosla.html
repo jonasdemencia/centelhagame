@@ -1041,7 +1041,7 @@ CRITÉRIOS:
 - PROIBIDO: "enigma", "puzzle", "segredo", "portal". Apenas matéria, ferrugem, pedra, sangue.
 - PROIBIDO NA PROSA: As palavras "MECANISMO", "PISTA BRUTA" e "INSINUAÇÃO" são rótulos internos de construção — jamais aparecem na cena. Descreva os três elementos de forma integrada e natural no texto, sem nomeá-los.
 - CEGUEIRA DE SOLUÇÃO (REGRA ABSOLUTA): A "cena" é uma FOTOGRAFIA ESTÁTICA do ambiente antes de qualquer interação. É ESTRITAMENTE PROIBIDO escrever na "cena" o que acontece depois de resolvê-lo. A "cena" descreve APENAS a matéria física presente e estática. A resposta do enigma pertence EXCLUSIVAMENTE ao campo "solucao".
-
+- CONSISTÊNCIA FÍSICA (REGRA ABSOLUTA): A "cena" deve conter, de forma VISÍVEL, AUDÍVEL ou TÁTIL, todos os elementos que a "solucao" utiliza. Se a solução depende de magnetismo, a cena DEVE mostrar um indício físico (ex: objetos metálicos tremendo, zumbido). Se a solução exige submergir algo, a cena DEVE conter líquido, não apenas gelo sólido. Se a solução usa calor, a cena DEVE ter uma fonte de calor acesa ou incandescente.
 
 Retorne APENAS este JSON:
 {
@@ -1054,15 +1054,16 @@ Retorne APENAS este JSON:
     const data = await chamarGroq([
         { role: "system", content: "Você é um designer de enigmas de horror. Crie puzzles dedutíveis, físicos e originais. Retorne apenas JSON puro." },
         { role: "user", content: prompt }
-    ], 0.9, { type: "json_object" }, MODELO_PUZZLE, 3);
+    ], 0.8, { type: "json_object" }, MODELO_PUZZLE, 3);
 
     const p = JSON.parse(data.choices[0].message.content);
-    return {
-        cena:           p.cena    || '',
-        dica:           p.dica    || '',
-        solucao:        p.solucao || '',
-        portal_destino: portal_destino
-    };
+return {
+    cena:             p.cena              || '',
+    dica:             p.dica              || '',
+    solucao:          p.solucao           || '',
+    _rascunho_logico: p._rascunho_logico  || '',   // ← novo
+    portal_destino:   portal_destino
+};
 }
 
 // Substitua injetarPuzzles inteira (linha ~990):
