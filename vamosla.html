@@ -2637,7 +2637,7 @@ if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
 
     if (puzzleResolvido) {
         salaAtual.puzzle_status.resolvido = true;
-        adicionarMensagem("🔓 Um som profundo ecoa. Uma fenda distorcida se abre nas sombras...", "system");
+        adicionarMensagem("🔓 Um ruído metálico ecoa pelo ambiente. Algo se moveu e uma nova passagem está acessível..", "system");
 
         // Injeta dinamicamente o portal como opção de navegação
         if (salaAtual.puzzle_status.portal_destino) {
@@ -2648,7 +2648,7 @@ if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
             if (!jaExiste) {
                 salaAtual.opcoes.push({
                     destino: destinoPortal,
-                    texto: "Adentrar a fenda dimensional secreta"
+                    texto: "Avançar pela passagem revelada"
                 });
             }
         }
