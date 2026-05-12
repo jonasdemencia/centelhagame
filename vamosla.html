@@ -1088,19 +1088,22 @@ Retorne APENAS este JSON:
 }`;
     }
 
-        let data;
+            // System prompt blindado contra marcação markdown (```json) e texto extra
+    const systemPrompt = "Você é um master designer de enigmas. OBRIGATÓRIO: Retorne APENAS um objeto JSON válido. NUNCA use formatação markdown (como ```json). A sua resposta deve começar estritamente com { e terminar com }.";
+
+    let data;
     if (!inovacaoRadical) {
         data = await chamarGroq([
-    { role: "system", content: "Você é um designer de enigmas inovadores. Retorne apenas JSON puro, sem texto antes ou depois." },
-    { role: "user", content: prompt }
-], 0.7, null, MODELO_PUZZLE, 3);
+            { role: "system", content: systemPrompt },
+            { role: "user", content: prompt }
+        ], 0.7, null, MODELO_PUZZLE, 3);
     } else {
         data = await chamarGroq([
-            { role: "system", content: "Você é um designer de enigmas inovadores. Retorne apenas JSON puro." },
+            { role: "system", content: systemPrompt },
             { role: "user", content: prompt }
         ], 0.7, { type: "json_object" }, MODELO_PUZZLE, 3);
     }
-
+    
     const raw = data.choices[0].message.content;
 const match = raw.match(/\{[\s\S]*\}/);
 const p = JSON.parse(match ? match[0] : raw);
