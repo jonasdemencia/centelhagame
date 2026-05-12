@@ -949,6 +949,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
     model: modeloPadrao,
     messages: messages,
     temperature: temperatura,
+    max_tokens: 4096,
     ...(formato ? { response_format: formato } : {}),
 }),
         });
