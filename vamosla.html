@@ -2451,16 +2451,23 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
     sala.opcoes.forEach(opcao => {
                 const destinoSala = mapaMundo?.[String(opcao.destino)];
         if (destinoSala?.bloqueio?.ativo) {
-            const btnBloqueado = document.createElement('button');
-            btnBloqueado.className = 'nav-btn';
-            btnBloqueado.disabled = true;
-            btnBloqueado.style.opacity = "0.35";
-            btnBloqueado.style.cursor = "not-allowed";
-            btnBloqueado.innerText = `🚫 ${opcao.texto} [${destinoSala.bloqueio.tipo}]`;
-            btnBloqueado.title = destinoSala.bloqueio.descricao;
-            container.appendChild(btnBloqueado);
-            return; // interrompe a execução deste item do forEach, não cria botão normal
-        }
+    const btnBloqueado = document.createElement('button');
+    btnBloqueado.className = 'nav-btn';
+    btnBloqueado.disabled = false;   // ← habilitado
+    btnBloqueado.style.opacity = "1";
+    btnBloqueado.style.cursor = "pointer";
+    btnBloqueado.innerText = `🧭 ${opcao.texto}`;
+    btnBloqueado.title = destinoSala.bloqueio.descricao;
+
+    // Ao clicar, mostra a mensagem do bloqueio e NÃO muda de sala
+    btnBloqueado.onclick = () => {
+        adicionarMensagem(`🚫 ${destinoSala.bloqueio.descricao}`, 'system');
+        // Opcional: também pode exibir uma dica sutil sobre onde resolver o puzzle
+        adicionarMensagem("Talvez haja uma forma de dissipar isso em outra área...", 'system');
+    };
+    container.appendChild(btnBloqueado);
+    return; // Impede a criação do botão normal
+}
         const btn = document.createElement('button');
         btn.className = 'nav-btn';
         
