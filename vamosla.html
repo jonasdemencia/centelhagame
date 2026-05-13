@@ -1665,7 +1665,7 @@ const TIPOS_BLOQUEIO = [
 const idsCandidatosBloqueio = Object.keys(planoData.plano).map(Number)
     .filter(id => id !== salaInicio && id !== salaFim)
     .sort(() => Math.random() - 0.5);
-const numBloqueios = Math.random() < 0.4 ? 1 : 0;
+const numBloqueios = Math.random() < 0.99 ? 1 : 0;
 for (let b = 0; b < Math.min(numBloqueios, idsCandidatosBloqueio.length); b++) {
     const sid = String(idsCandidatosBloqueio[b]);
     const tb = TIPOS_BLOQUEIO[Math.floor(Math.random() * TIPOS_BLOQUEIO.length)];
