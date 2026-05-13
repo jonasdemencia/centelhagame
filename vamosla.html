@@ -2765,18 +2765,30 @@ if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
         const salaAlvo = mapaMundo[String(salaAfetadaId)];
         salaAlvo.bloqueio.ativo = false;
         salaAlvo.texto_logico += `\n\n${salaAlvo.bloqueio.texto_apos_limpar}`;
-        console.log(`[Metroidvania] Sala ${salaAfetadaId} desbloqueada remotamente.`);
-    }
-
-    // Portal imediato (comportamento original)
-    if (salaAtual.puzzle_status.portal_destino) {
-        const destinoPortal = parseInt(salaAtual.puzzle_status.portal_destino);
-        const jaExiste = salaAtual.opcoes.some(o => o.destino === destinoPortal);
-        if (!jaExiste) {
-            salaAtual.opcoes.push({
-                destino: destinoPortal,
-                texto: "Avançar pela passagem revelada"
-            });
+        
+        // Adiciona nova opção na sala desbloqueada, apontando para o portal_destino
+        if (salaAtual.puzzle_status.portal_destino) {
+            const destinoPortal = parseInt(salaAtual.puzzle_status.portal_destino);
+            const jaExiste = salaAlvo.opcoes.some(o => o.destino === destinoPortal);
+            if (!jaExiste) {
+                salaAlvo.opcoes.push({
+                    destino: destinoPortal,
+                    texto: "Seguir pelo caminho agora livre"
+                });
+            }
+        }
+        console.log(`[Metroidvania] Sala ${salaAfetadaId} desbloqueada remotamente e nova opção adicionada.`);
+    } else {
+        // Se não há sala afetada, mantém o comportamento original de portal na sala do puzzle
+        if (salaAtual.puzzle_status.portal_destino) {
+            const destinoPortal = parseInt(salaAtual.puzzle_status.portal_destino);
+            const jaExiste = salaAtual.opcoes.some(o => o.destino === destinoPortal);
+            if (!jaExiste) {
+                salaAtual.opcoes.push({
+                    destino: destinoPortal,
+                    texto: "Avançar pela passagem revelada"
+                });
+            }
         }
     }
 
