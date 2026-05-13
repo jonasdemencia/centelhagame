@@ -345,6 +345,8 @@ window.getDoc = getDoc;
 window.setDoc = setDoc;   // ← nova linha
 window.updateDoc = updateDoc;
 window.db = db;
+        window.firebaseReady = true; 
+window.dispatchEvent(new Event('firebase-initialized'));
         const auth = getAuth(app);
         
         // ============================================================
