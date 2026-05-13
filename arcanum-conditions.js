@@ -3,8 +3,17 @@
 const ARCANUM_LAUNCH_DATE = new Date('2024-01-01T00:00:00Z');
 
 async function getArcanumConditions() {
+    // AJUSTE: Aguarda o Firebase estar disponível no window
+    if (!window.doc || !window.db) {
+        console.log("🔍 CONDIÇÕES DEBUG - Firebase ainda não carregado. Aguardando...");
+        await new Promise(resolve => {
+            window.addEventListener('firebase-initialized', resolve, { once: true });
+            // Fallback caso o evento já tenha passado
+            if (window.firebaseReady) resolve();
+        });
+    }
+
     console.log("🔍 CONDIÇÕES DEBUG - Função chamada");
-    
     try {
         console.log("🔍 CONDIÇÕES DEBUG - Tentando conectar ao Firestore");
         const conditionsRef = window.doc(window.db, "gameConditions", "current");
