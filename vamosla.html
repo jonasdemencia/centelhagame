@@ -990,8 +990,12 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 
         // Linha ~988, ANTES de injetarPuzzles:
 
-async function gerarPuzzle(zonaId) {
+async function gerarPuzzle(zonaId, salaAlvoId = null, tipoObstaculo = null) {
     const portal_destino = ((zonaId + 2) * SALAS_POR_ZONA) + 1;
+
+        const contextoRecompensa = salaAlvoId
+        ? `RECOMPENSA REMOTA: Resolver este puzzle remove um(a) "${tipoObstaculo}" que bloqueia outra área do mundo. A mecânica da solução deve ter uma consequência física plausível que se propague pelo ambiente (ex: drenar água via tubulação, quebrar trava de grade por vibração). O JSON deve incluir o campo "efeito_remoto": uma frase curta e sensorial descrevendo o som ou sensação que o jogador percebe ao resolver (ex: "Um estrondo surdo de correntes cedendo ecoa pelas paredes ao norte.").`
+        : `RECOMPENSA: Abrir uma passagem imediata nesta câmara.`;
 
     // Array de sementes lógicas expandido (15 categorias)
     const CATEGORIAS_MECANICAS = [
@@ -1025,6 +1029,7 @@ Você é um designer de enigmas para jogos de horror textual.
 
 MUNDO: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}
 ATMOSFERA: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy"}
+CONDIÇÃO DE VITÓRIA: ${contextoRecompensa}
 
 Crie um enigma ORIGINAL, DEDUTÍVEL e AUTOCONTIDO.
 
@@ -1061,6 +1066,7 @@ Você é um master designer de enigmas (puzzles) para um RPG textual de horror v
 
 MUNDO: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}
 ATMOSFERA: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy"}
+CONDIÇÃO DE VITÓRIA: ${contextoRecompensa}
 
 === CARTA BRANCA: LIBERDADE ESTRUTURAL ABSOLUTA ===
 Você está PROIBIDO de usar mecânicas tradicionais de aventura (peso, alavancas, chaves, encaixes, fluidos). Sua missão é INVENTAR UMA ESTRUTURA DE ENIGMA INTEIRAMENTE NOVA e arquitetonicamente brilhante.
@@ -1108,10 +1114,12 @@ Retorne APENAS este JSON:
     const raw = data.choices[0].message.content;
 const match = raw.match(/\{[\s\S]*\}/);
 const p = JSON.parse(match ? match[0] : raw);
-    return {
+        return {
         cena:             p.cena              || '',
         dica:             p.dica              || '',
         solucao:          p.solucao           || '',
+        efeito_remoto:    p.efeito_remoto     || '',
+        sala_afetada_id:  salaAlvoId,
         _rascunho_logico: p._rascunho_logico  || '',
         portal_destino:   portal_destino
     };
@@ -1121,15 +1129,21 @@ const p = JSON.parse(match ? match[0] : raw);
 
 async function injetarPuzzles(planoZonal, zonaId) {
     const ids = Object.keys(planoZonal).map(Number).sort((a, b) => a - b);
-    const candidatos = ids.slice(1, -1); // exclui primeira e última sala
+    const candidatos = ids.slice(1, -1);
     if (candidatos.length === 0) return {};
 
-    const numPuzzles = Math.min(candidatos.length, Math.random() < 0.5 ? 1 : 2);
-    const embaralhados = candidatos.sort(() => Math.random() - 0.5);
-    const escolhidas   = embaralhados.slice(0, numPuzzles);
+    const salasBloqueadas = candidatos.filter(id => planoZonal[String(id)]?.bloqueio?.ativo);
+    const naoBloquedas    = candidatos.filter(id => !planoZonal[String(id)]?.bloqueio?.ativo);
+
+    const numPuzzles = Math.min(naoBloquedas.length, Math.random() < 0.5 ? 1 : 2);
+    const escolhidas = naoBloquedas.sort(() => Math.random() - 0.5).slice(0, numPuzzles);
 
     const puzzles = await Promise.all(
-        Array.from({ length: numPuzzles }, () => gerarPuzzle(zonaId))
+        escolhidas.map((_, i) => {
+            const salaAlvoId   = salasBloqueadas[i] || null;
+            const tipoObstaculo = salaAlvoId ? planoZonal[String(salaAlvoId)]?.bloqueio?.tipo : null;
+            return gerarPuzzle(zonaId, salaAlvoId, tipoObstaculo);
+        })
     );
 
     const acoesConexao = [
@@ -1141,27 +1155,28 @@ async function injetarPuzzles(planoZonal, zonaId) {
         "Rastejar pela fresta no fundo da sala",
     ];
 
-    const resultado   = {};
-    const conexoes    = {}; // { connectorRoomId: puzzleRoomId }
+    const resultado = {};
+    const conexoes  = {};
 
     escolhidas.forEach((salaConectoraId, i) => {
-        const puzzleRoomId = 10000 + (zonaId * SALAS_POR_ZONA) + i; // ex: 10010, 10011
-        const puzzle = puzzles[i];
+        const puzzleRoomId = 10000 + (zonaId * SALAS_POR_ZONA) + i;
+        const puzzle  = puzzles[i];
         const acaoIda = acoesConexao[Math.floor(Math.random() * acoesConexao.length)];
 
-        // Sala de puzzle como entrada separada no resultado
         resultado[String(puzzleRoomId)] = {
             texto_logico: puzzle.cena,
             puzzle_status: {
-    resolvido:       false,
-    dica:            puzzle.dica,
-    solucao:         puzzle.solucao,
-    portal_destino:  puzzle.portal_destino,
-    _rascunho_logico: puzzle._rascunho_logico || ''   // ← ADICIONA ISTO
-},
-            _acaoVolta:    "Recuar pelo corredor sombrio",
-            _connectorId:  salaConectoraId,
-            _acaoIda:      acaoIda
+                resolvido:        false,
+                dica:             puzzle.dica,
+                solucao:          puzzle.solucao,
+                portal_destino:   puzzle.portal_destino,
+                efeito_remoto:    puzzle.efeito_remoto    || '',
+                sala_afetada_id:  puzzle.sala_afetada_id  || null,
+                _rascunho_logico: puzzle._rascunho_logico || ''
+            },
+            _acaoVolta:   "Recuar pelo corredor sombrio",
+            _connectorId: salaConectoraId,
+            _acaoIda:     acaoIda
         };
 
         conexoes[String(salaConectoraId)] = { puzzleRoomId, acaoIda };
@@ -1170,7 +1185,6 @@ async function injetarPuzzles(planoZonal, zonaId) {
     resultado._conexoes = conexoes;
     return resultado;
 }
-
         async function carregarDadosJogador(uid) {
             try {
                 const docRef = doc(db, "players", uid);
@@ -1575,7 +1589,10 @@ Retorne exclusivamente um objeto JSON válido.`;
                     } else {
                         chegada = `[SALA SEM ÂNCORA: Inicie descrevendo o ambiente à frente.]`;
                     }
-                    return `SALA ${id} (${sala.local_fisico}):\n${chegada}\nAções futuras disponíveis -> [${acoes || 'Foco apenas no ambiente'}]${blocoElementos}`;
+const notaBloqueio = sala.bloqueio?.ativo
+    ? `\n⚠️ OBSTÁCULO FÍSICO NESTA SALA: Uma saída está fisicamente bloqueada por [${sala.bloqueio.tipo}]. Descreva o obstáculo de forma visceral e integrada ao ambiente: "${sala.bloqueio.descricao_bloqueio}". As outras saídas permanecem acessíveis.`
+    : '';
+return `SALA ${id} (${sala.local_fisico}):\n${chegada}\nAções futuras disponíveis -> [${acoes || 'Foco apenas no ambiente'}]${blocoElementos}${notaBloqueio}`;
                 }).join("\n\n");
 
                 return `Você é o Arquiteto de Mundo de um RPG de horror visceral. 
@@ -1635,6 +1652,27 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
                     if (erros.length === 0) {
                         planoData = candidato;
                         console.log(`[Plano] ✅ Topologia válida na tentativa ${tentativa}.`);
+
+// === METROIDVANIA: marcar salas bloqueadas ===
+const TIPOS_BLOQUEIO = [
+    { tipo: "NÉVOA",     descricao: "Uma névoa esverdeada e densa obstrui completamente este caminho.", texto_apos_limpar: "A névoa se dissipa lentamente, revelando o corredor antes inacessível." },
+    { tipo: "GRADE",     descricao: "Uma grade de ferro corroído, trancada com corrente espessa, bloqueia a passagem.", texto_apos_limpar: "A corrente cede com um estalo seco. A grade range ao se abrir." },
+    { tipo: "ALAGAMENTO",descricao: "A passagem está submersa em água preta e imóvel, impossível de atravessar.", texto_apos_limpar: "A água drena com sucção. O piso úmido fica exposto." },
+    { tipo: "COLAPSO",   descricao: "Pedras e vigas caídas formam um bloqueio sólido cobrindo toda a saída.", texto_apos_limpar: "As pedras se deslocam e abrem espaço suficiente para passar." }
+];
+const idsCandidatosBloqueio = Object.keys(planoData.plano).map(Number)
+    .filter(id => id !== salaInicio && id !== salaFim)
+    .sort(() => Math.random() - 0.5);
+const numBloqueios = Math.random() < 0.4 ? 1 : 0;
+for (let b = 0; b < Math.min(numBloqueios, idsCandidatosBloqueio.length); b++) {
+    const sid = String(idsCandidatosBloqueio[b]);
+    const tb = TIPOS_BLOQUEIO[Math.floor(Math.random() * TIPOS_BLOQUEIO.length)];
+    planoData.plano[sid].bloqueio = { ativo: true, ...tb };
+    console.log(`[Metroidvania] Sala ${sid} marcada como bloqueada: ${tb.tipo}`);
+}
+// === FIM ===
+
+                        
                         break;
                     } else {
                         console.warn(`[Plano] ❌ Tentativa ${tentativa}/${MAX_TENTATIVAS_PLANO} rejeitada:`, erros);
@@ -1659,6 +1697,13 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
                 );
 
                 let zonaData = JSON.parse(dataSalas.choices[0].message.content);
+
+                // Transfere bloqueios do plano estrutural para as salas geradas
+Object.entries(planoData.plano).forEach(([id, dp]) => {
+    if (dp.bloqueio && zonaData.salas[id]) {
+        zonaData.salas[id].bloqueio = dp.bloqueio;
+    }
+});
 
 // --- INÍCIO DO AJUSTE: INJEÇÃO DE PUZZLES ---
 const salasOriginais = { ...zonaData.salas };
@@ -1757,11 +1802,13 @@ const historicoItensZona = [];
     const itensNaSala = distribuirItens(prosa, dadosEstruturais.local_fisico, idSala, semente, historicoItensZona);
 
                     const puzzleStatus = zonaData.salas[idSala]?.puzzle_status;
+const bloqueioSala = zonaData.salas[idSala]?.bloqueio;
 mapaFinalMesclado[idSala] = {
     texto_logico: prosa,
     opcoes: opcoesGeradas,
     itens: itensNaSala,
-    ...(puzzleStatus ? { puzzle_status: puzzleStatus } : {})
+    ...(puzzleStatus    ? { puzzle_status: puzzleStatus } : {}),
+    ...(bloqueioSala    ? { bloqueio: bloqueioSala }      : {})
 };
                 });
 
@@ -2400,6 +2447,18 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
     if (!sala || !sala.opcoes) return;
 
     sala.opcoes.forEach(opcao => {
+                const destinoSala = mapaMundo?.[String(opcao.destino)];
+        if (destinoSala?.bloqueio?.ativo) {
+            const btnBloqueado = document.createElement('button');
+            btnBloqueado.className = 'nav-btn';
+            btnBloqueado.disabled = true;
+            btnBloqueado.style.opacity = "0.35";
+            btnBloqueado.style.cursor = "not-allowed";
+            btnBloqueado.innerText = `🚫 ${opcao.texto} [${destinoSala.bloqueio.tipo}]`;
+            btnBloqueado.title = destinoSala.bloqueio.descricao;
+            container.appendChild(btnBloqueado);
+            return; // interrompe a execução deste item do forEach, não cria botão normal
+        }
         const btn = document.createElement('button');
         btn.className = 'nav-btn';
         
@@ -2688,26 +2747,39 @@ if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
     }
 
     if (puzzleResolvido) {
-        salaAtual.puzzle_status.resolvido = true;
-        adicionarMensagem("🔓 Um ruído metálico ecoa: Uma nova passagem está acessível..", "system");
+    salaAtual.puzzle_status.resolvido = true;
 
-        // Injeta dinamicamente o portal como opção de navegação
-        if (salaAtual.puzzle_status.portal_destino) {
-            const destinoPortal = parseInt(salaAtual.puzzle_status.portal_destino);
-            
-            // Evita duplicar a opção se o jogador recarregar o save
-            const jaExiste = salaAtual.opcoes.some(o => o.destino === destinoPortal);
-            if (!jaExiste) {
-                salaAtual.opcoes.push({
-                    destino: destinoPortal,
-                    texto: "Avançar pela passagem revelada"
-                });
-            }
-        }
+    const efeitoRemoto   = salaAtual.puzzle_status.efeito_remoto;
+    const salaAfetadaId  = salaAtual.puzzle_status.sala_afetada_id;
 
-        await salvarEstadoJogador();
-        atualizarBotoesNavegacao();
+    // Efeito sonoro/sensorial remoto
+    adicionarMensagem(efeitoRemoto
+        ? `🔊 ${efeitoRemoto}`
+        : "🔓 Um ruído metálico ecoa: Uma nova passagem está acessível.",
+        "system");
+
+    // Desbloquear sala afetada remotamente
+    if (salaAfetadaId && mapaMundo[String(salaAfetadaId)]?.bloqueio) {
+        const salaAlvo = mapaMundo[String(salaAfetadaId)];
+        salaAlvo.bloqueio.ativo = false;
+        salaAlvo.texto_logico += `\n\n${salaAlvo.bloqueio.texto_apos_limpar}`;
+        console.log(`[Metroidvania] Sala ${salaAfetadaId} desbloqueada remotamente.`);
     }
+
+    // Portal imediato (comportamento original)
+    if (salaAtual.puzzle_status.portal_destino) {
+        const destinoPortal = parseInt(salaAtual.puzzle_status.portal_destino);
+        const jaExiste = salaAtual.opcoes.some(o => o.destino === destinoPortal);
+        if (!jaExiste) {
+            salaAtual.opcoes.push({
+                destino: destinoPortal,
+                texto: "Avançar pela passagem revelada"
+            });
+        }
+    }
+
+    await salvarEstadoJogador();
+    atualizarBotoesNavegacao();
 }
 
                     let resultado = null;
