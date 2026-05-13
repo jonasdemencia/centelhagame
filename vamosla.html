@@ -1590,7 +1590,7 @@ Retorne exclusivamente um objeto JSON válido.`;
                         chegada = `[SALA SEM ÂNCORA: Inicie descrevendo o ambiente à frente.]`;
                     }
 const notaBloqueio = sala.bloqueio?.ativo
-    ? `\n⚠️ OBSTÁCULO FÍSICO NESTA SALA: Uma saída está fisicamente bloqueada por [${sala.bloqueio.tipo}]. Descreva o obstáculo de forma visceral e integrada ao ambiente: "${sala.bloqueio.descricao_bloqueio}". As outras saídas permanecem acessíveis.`
+    ? `\n⚠️ OBSTÁCULO FÍSICO NESTA SALA: Uma saída está fisicamente bloqueada por [${sala.bloqueio.tipo}]. Descreva o obstáculo de forma visceral e integrada ao ambiente: "${sala.bloqueio.descricao}". As outras saídas permanecem acessíveis.`
     : '';
 return `SALA ${id} (${sala.local_fisico}):\n${chegada}\nAções futuras disponíveis -> [${acoes || 'Foco apenas no ambiente'}]${blocoElementos}${notaBloqueio}`;
                 }).join("\n\n");
