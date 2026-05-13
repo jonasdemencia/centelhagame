@@ -2783,6 +2783,8 @@ if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
     await salvarEstadoJogador();
     atualizarBotoesNavegacao();
 }
+    }   // ← NOVA chave fechando o if(salaAtual?.puzzle_status...)
+
 
                     let resultado = null;
                     let danoBase = 0;
