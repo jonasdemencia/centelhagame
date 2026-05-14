@@ -1109,8 +1109,7 @@ Retorne APENAS este JSON:
     }
 
     // System prompt blindado contra marcação markdown (```json) e contra quebras de linha literais
-    const systemPrompt = "Você é um master designer de enigmas. OBRIGATÓRIO: Retorne APENAS um objeto JSON válido. NUNCA use formatação markdown (como 
-```json). A sua resposta deve começar estritamente com { e terminar com }. ATENÇÃO MÁXIMA: Nunca use quebras de linha literais dentro das strings. Para separar parágrafos, digite \\n\\n.";
+    const systemPrompt = "Você é um master designer de enigmas. OBRIGATÓRIO: Retorne APENAS um objeto JSON válido, sem formatação markdown. A sua resposta deve começar estritamente com { e terminar com }. Nunca use quebras de linha literais dentro das strings — para separar parágrafos escreva \\n\\n.";
 
     let data;
     // Forçamos o json_object nas duas ramificações para evitar que a Groq "esqueça" de formatar
