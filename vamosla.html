@@ -1045,13 +1045,13 @@ Crie um enigma ORIGINAL, DEDUTÍVEL e AUTOCONTIDO.
 === NATUREZA MECÂNICA OBRIGATÓRIA ===
 A solução deste puzzle DEVE se basear no seguinte princípio:
 [ ${mecanicaSorteada} ]
-É ESTRITAMENTE PROIBIDO criar enigmas de "alinhar 3 símbolos", "inserir senhas" ou "apertar botões em ordem crescente", a menos que o princípio acima exija isso.
 
 ESTRUTURA OBRIGATÓRIA DO ENIGMA:
 
-1. MECANISMO: O objeto ou sistema com o qual o jogador interage para resolver.
-2. PISTA BRUTA: A informação visível na cena que contém a resposta em estado cru.
-3. INSINUAÇÃO: Um detalhe ambiental físico que sugere COMO transformar a pista bruta na ação correta (a intuição física do movimento ou operação).
+1. MECANISMO: O objeto ou sistema com o qual o jogador interage.
+2. TENSÃO VISÍVEL (A MOTIVAÇÃO): O estado atual de desequilíbrio do mecanismo. Ele deve estar visivelmente sob estresse, travado, incompleto, pesado demais, ou resistindo a uma força. Algo ali parece "errado" ou "aguardando resolução" (ex: um cabo esticado ao limite por um peso, uma engrenagem que treme querendo girar mas está bloqueada).
+3. PISTA BRUTA: A informação visível na cena que contém a resposta em estado cru.
+4. INSINUAÇÃO: O detalhe ambiental que sugere COMO transformar a pista bruta na ação correta.
 
 CRITÉRIOS:
 - A solução é uma ação física concreta e completa.
@@ -1065,7 +1065,7 @@ CRITÉRIOS:
 Retorne APENAS este JSON:
 {
   "_rascunho_logico": "CÂMARA: [o que define este espaço como isolado]. FERRAMENTA: [o único objeto manipulável]. MOVIMENTO: [a ação física exata]. SINAIS: [cada objeto manipulável] → [o detalhe passivo e visível que revela o que ele pode fazer].",
-  "cena": "MÍNIMO DE 3 PARÁGRAFOS DENSOS E EXTENSOS. Descreva o espaço com extremo rigor espacial e sensorial. 1º Parágrafo (O Macro): Descreva as dimensões da câmara. 2º Parágrafo (A Topografia do Mecanismo): Descreva a disposição espacial exata dos objetos principais, deixando claro a distância e a relação física entre eles (ex: 'logo abaixo de', 'conectado por', 'em declive acentuado até'). 3º Parágrafo (A Materialidade): Foque na textura, cheiro, brilho e no estado físico das coisas (ferrugem esfarelando, pedra pesada, líquido viscoso). ZERO EXPLICAÇÕES DE COMO RESOLVER. Apenas visão e tato passivos.",
+  "cena": "MÍNIMO DE 3 PARÁGRAFOS DENSOS. 1º Parágrafo (O Macro): Dimensões, atmosfera e luz. 2º Parágrafo (A Topografia e a TENSÃO): A disposição exata dos objetos E o ESTADO DE DESEQUILÍBRIO do mecanismo. Descreva uma força reprimida, uma tensão mecânica, um peso esticando algo ao limite ou um sistema travado aguardando um catalisador. O jogador PRECISA VER que algo ali clama por alteração física. 3º Parágrafo (A Materialidade): Texturas, cheiros e a pista/insinuação camufladas na física dos objetos. ZERO EXPLICAÇÕES DE COMO RESOLVER. O jogador não sabe o que isso vai abrir fora da sala, mas deve ver claramente que o mecanismo na sala precisa de alívio ou intervenção.",
   "dica": "Uma frase. Aponta para a INSINUAÇÃO — o detalhe físico que, quando percebido, torna o método dedutível. Concreta e sensorial.",
   "solucao": "A ação exata e completa para resolver. Derivável da PISTA BRUTA + INSINUAÇÃO.",
   "efeito_remoto": "Uma frase sensorial descrevendo o som ou vibração percebido ao resolver — sem mencionar o que abriu ou onde. Ex: 'Um rangido surdo ecoa pelas paredes de pedra, vindo de longe.'"
