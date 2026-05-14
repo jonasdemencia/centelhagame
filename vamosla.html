@@ -1065,7 +1065,7 @@ CRITÉRIOS:
 Retorne APENAS este JSON:
 {
   "_rascunho_logico": "CÂMARA: [o que define este espaço como isolado]. FERRAMENTA: [o único objeto manipulável]. MOVIMENTO: [a ação física exata]. SINAIS: [cada objeto manipulável] → [o detalhe passivo e visível que revela o que ele pode fazer].",
-  "cena": "MÍNIMO DE 3 PARÁGRAFOS DENSOS. 1º Parágrafo (O Macro): Dimensões, atmosfera e luz. 2º Parágrafo (A Topografia e a TENSÃO): A disposição exata dos objetos E o ESTADO DE DESEQUILÍBRIO do mecanismo. Descreva uma força reprimida, uma tensão mecânica, um peso esticando algo ao limite ou um sistema travado aguardando um catalisador. O jogador PRECISA VER que algo ali clama por alteração física. 3º Parágrafo (A Materialidade): Texturas, cheiros e a pista/insinuação camufladas na física dos objetos. ZERO EXPLICAÇÕES DE COMO RESOLVER. O jogador não sabe o que isso vai abrir fora da sala, mas deve ver claramente que o mecanismo na sala precisa de alívio ou intervenção.",
+  "cena": "MÍNIMO DE 3 PARÁGRAFOS DENSOS (Use estritamente '\\n\\n' para separar os parágrafos. NUNCA quebre a linha de forma literal no JSON). 1º Parágrafo (O Macro): Dimensões, atmosfera e luz. 2º Parágrafo (A Topografia e a TENSÃO): A disposição exata dos objetos E o ESTADO DE DESEQUILÍBRIO do mecanismo. Descreva uma força reprimida, uma tensão mecânica, um peso esticando algo ao limite ou um sistema travado aguardando um catalisador. O jogador PRECISA VER que algo ali clama por alteração física. 3º Parágrafo (A Materialidade): Texturas, cheiros e a pista/insinuação camufladas na física dos objetos. ZERO EXPLICAÇÕES DE COMO RESOLVER. O jogador não sabe o que isso vai abrir fora da sala, mas deve ver claramente que o mecanismo na sala precisa de alívio ou intervenção.",
   "dica": "Uma frase. Aponta para a INSINUAÇÃO — o detalhe físico que, quando percebido, torna o método dedutível. Concreta e sensorial.",
   "solucao": "A ação exata e completa para resolver. Derivável da PISTA BRUTA + INSINUAÇÃO.",
   "efeito_remoto": "Uma frase sensorial descrevendo o som ou vibração percebido ao resolver — sem mencionar o que abriu ou onde. Ex: 'Um rangido surdo ecoa pelas paredes de pedra, vindo de longe.'"
@@ -1101,39 +1101,48 @@ Se sim, o enigma é inválido — restrinja a regra até restar exatamente uma.
 Retorne APENAS este JSON:
 {
   "_rascunho_logico": "O EIXO INVENTADO: [qual é a regra nova]. A LÓGICA: [como o jogador deduz a resposta com as pistas]. VERIFICAÇÃO: [liste as outras respostas que um jogador poderia tentar e explique por que cada uma falha]. SINAIS: [como a cena esconde isso].",
-  "cena": "MÍNIMO DE 3 PARÁGRAFOS DENSOS E EXTENSOS. A descrição deve ter rigor arquitetônico. O texto deve mapear o espaço claramente para a mente do jogador: comece descrevendo a geometria bizarra ou a atmosfera da sala, depois foque na anatomia exata da anomalia/mecanismo (a posição relativa de cada elemento) e finalize com as texturas, sons passivos e detalhes sensoriais que escondem as variáveis da sua regra. Construa a cena para que o jogador consiga 'ver' a física ou a lógica do lugar. ZERO EXPLICAÇÕES DE COMO RESOLVER.",
+  "cena": "MÍNIMO DE 3 PARÁGRAFOS DENSOS E EXTENSOS (Use estritamente '\\n\\n' para separar os parágrafos. NUNCA quebre a linha de forma literal no JSON). A descrição deve ter rigor arquitetônico. O texto deve mapear o espaço claramente para a mente do jogador: comece descrevendo a geometria bizarra ou a atmosfera da sala, depois foque na anatomia exata da anomalia/mecanismo (a posição relativa de cada elemento) e finalize com as texturas, sons passivos e detalhes sensoriais que escondem as variáveis da sua regra. Construa a cena para que o jogador consiga 'ver' a física ou a lógica do lugar. ZERO EXPLICAÇÕES DE COMO RESOLVER.",
   "dica": "Uma frase sutil e sensorial que aponte vagamente para a nova regra que você arquitetou.",
   "solucao": "A ação exata, verbal ou abstrata, que o jogador precisa declarar ao sistema para solucionar.",
   "efeito_remoto": "Uma frase sensorial descrevendo o som ou vibração percebido ao resolver — sem mencionar o que abriu ou onde. Ex: 'Um rangido surdo ecoa pelas paredes de pedra, vindo de longe.'"
 }`;
     }
 
-            // System prompt blindado contra marcação markdown (```json) e texto extra
-    const systemPrompt = "Você é um master designer de enigmas. OBRIGATÓRIO: Retorne APENAS um objeto JSON válido. NUNCA use formatação markdown (como ```json). A sua resposta deve começar estritamente com { e terminar com }.";
+    // System prompt blindado contra marcação markdown (```json) e contra quebras de linha literais
+    const systemPrompt = "Você é um master designer de enigmas. OBRIGATÓRIO: Retorne APENAS um objeto JSON válido. NUNCA use formatação markdown (como 
+```json). A sua resposta deve começar estritamente com { e terminar com }. ATENÇÃO MÁXIMA: Nunca use quebras de linha literais dentro das strings. Para separar parágrafos, digite \\n\\n.";
 
     let data;
+    // Forçamos o json_object nas duas ramificações para evitar que a Groq "esqueça" de formatar
+    const jsonMode = { type: "json_object" };
+
     if (!inovacaoRadical) {
         data = await chamarGroq([
             { role: "system", content: systemPrompt },
             { role: "user", content: prompt }
-        ], 0.7, null, MODELO_PUZZLE, 3);
+        ], 0.7, jsonMode, MODELO_PUZZLE, 3);
     } else {
         data = await chamarGroq([
             { role: "system", content: systemPrompt },
             { role: "user", content: prompt }
-        ], 0.7, { type: "json_object" }, MODELO_PUZZLE, 3);
+        ], 0.7, jsonMode, MODELO_PUZZLE, 3);
     }
     
-    const raw = data.choices[0].message.content;
-const match = raw.match(/\{[\s\S]*\}/);
-const p = JSON.parse(match ? match[0] : raw);
-        return {
-        cena:             p.cena              || '',
-        dica:             p.dica              || '',
-        solucao:          p.solucao           || '',
-        efeito_remoto:    p.efeito_remoto     || '',
+    let raw = data.choices[0].message.content;
+    
+    // Pequena limpeza de segurança caso o modelo insista em mandar quebras de linha reais dentro do JSON
+    raw = raw.replace(/\n(?=(?:[^"]*"[^"]*")*[^"]*$)/g, "");
+
+    const match = raw.match(/\{[\s\S]*\}/);
+    const p = JSON.parse(match ? match[0] : raw);
+    
+    return {
+        cena:             p.cena             || '',
+        dica:             p.dica             || '',
+        solucao:          p.solucao          || '',
+        efeito_remoto:    p.efeito_remoto    || '',
         sala_afetada_id:  salaAlvoId,
-        _rascunho_logico: p._rascunho_logico  || '',
+        _rascunho_logico: p._rascunho_logico || '',
         portal_destino:   portal_destino
     };
 }
