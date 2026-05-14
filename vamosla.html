@@ -995,9 +995,15 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 async function gerarPuzzle(zonaId, salaAlvoId = null, tipoObstaculo = null) {
     const portal_destino = ((zonaId + 2) * SALAS_POR_ZONA) + 1;
 
-        const contextoRecompensa = salaAlvoId
-        ? `RECOMPENSA REMOTA: Resolver este puzzle remove um(a) "${tipoObstaculo}" que bloqueia outra área do mundo. A mecânica da solução deve ter uma consequência física plausível que se propague pelo ambiente (ex: drenar água via tubulação, quebrar trava de grade por vibração). O JSON deve incluir o campo "efeito_remoto": uma frase curta e sensorial descrevendo o som ou sensação que o jogador percebe ao resolver (ex: "Um estrondo surdo de correntes cedendo ecoa pelas paredes ao norte.").`
-        : `RECOMPENSA: Abrir uma passagem imediata nesta câmara.`;
+        const MECANICAS_POR_OBSTACULO = {
+    "NÉVOA":      "ventilação, combustão controlada ou dissolução química",
+    "GRADE":      "tensão mecânica, magnetismo ou quebra de pino de trava",
+    "ALAGAMENTO": "drenagem, sifão ou desvio de fluxo de água",
+    "COLAPSO":    "remoção de suporte, vibração estrutural ou contrapeso"
+};
+const restricaoMecanica = salaAlvoId
+    ? `RESTRIÇÃO DE MECÂNICA: O mecanismo desta câmara deve ser fisicamente compatível com causar "${tipoObstaculo}" em outra área distante. Mecânicas compatíveis: ${MECANICAS_POR_OBSTACULO[tipoObstaculo] || "impacto físico propagável"}. A câmara contém o mecanismo; o efeito acontece em outro lugar, fora da visão do jogador.`
+    : '';
 
     // Array de sementes lógicas expandido (15 categorias)
     const CATEGORIAS_MECANICAS = [
@@ -1031,7 +1037,8 @@ Você é um designer de enigmas para jogos de horror textual.
 
 MUNDO: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}
 ATMOSFERA: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy"}
-CONDIÇÃO DE VITÓRIA: ${contextoRecompensa}
+${restricaoMecanica}
+
 
 Crie um enigma ORIGINAL, DEDUTÍVEL e AUTOCONTIDO.
 
@@ -1050,13 +1057,14 @@ CRITÉRIOS:
 - A solução é uma ação física concreta e completa.
 - Não-óbvia à primeira leitura. Inevitável quando percebida.
 - PROIBIDO DISTRAÇÕES (RED HERRINGS): O ambiente NÃO PODE conter objetos manipuláveis extras que confundam o jogador (ex: se a solução usa areia, não coloque ossos, pedras soltas ou pedaços de pau soltos na cena).
-- PROIBIDO: "enigma", "puzzle", "segredo", "portal". Apenas matéria, ferrugem, pedra, sangue.
+- PROIBIDO: "enigma", "puzzle", "segredo", "portal", "porta", "portão", "tranca", "passagem bloqueada", "saída selada". A câmara não tem saída visível — o jogador está apenas diante de um mecanismo.
+- PROIBIDO NA CENA: qualquer descrição de recompensa, abertura ou consequência da solução. 
 - PROIBIDO NA PROSA: As palavras "MECANISMO", "PISTA BRUTA" e "INSINUAÇÃO" são rótulos internos de construção — jamais aparecem na cena. Descreva os três elementos de forma integrada e natural no texto, sem nomeá-los.
 - FOTOGRAFIA FUNCIONAL: A "cena" implementa obrigatoriamente cada entrada de SINAIS declarada em "_rascunho_logico". Critério de validade: ocultando "solucao", um leitor consegue identificar o objeto correto e a direção do movimento apenas pela "cena".
 
 Retorne APENAS este JSON:
 {
-  "_rascunho_logico": "TRAVA: [o que bloqueia a saída]. FERRAMENTA: [o único objeto manipulável]. MOVIMENTO: [a ação física exata]. SINAIS: [cada objeto manipulável] → [o detalhe passivo e visível que revela o que ele pode fazer].",
+  "_rascunho_logico": "CÂMARA: [o que define este espaço como isolado]. FERRAMENTA: [o único objeto manipulável]. MOVIMENTO: [a ação física exata]. SINAIS: [cada objeto manipulável] → [o detalhe passivo e visível que revela o que ele pode fazer].",
   "cena": "Dois a três parágrafos. Descreve o espaço e os objetos do enigma de forma integrada e puramente visual. ZERO EXPLICAÇÕES DE COMO RESOLVER. Apenas descreva o que os olhos veem de forma passiva.",  
   "dica": "Uma frase. Aponta para a INSINUAÇÃO — o detalhe físico que, quando percebido, torna o método dedutível. Concreta e sensorial.",
   "solucao": "A ação exata e completa para resolver. Derivável da PISTA BRUTA + INSINUAÇÃO."
@@ -1068,7 +1076,7 @@ Você é um master designer de enigmas (puzzles) para um RPG textual de horror v
 
 MUNDO: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}
 ATMOSFERA: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy"}
-CONDIÇÃO DE VITÓRIA: ${contextoRecompensa}
+${restricaoMecanica}
 
 === CARTA BRANCA: LIBERDADE ESTRUTURAL ABSOLUTA ===
 Você está PROIBIDO de usar mecânicas tradicionais de aventura (peso, alavancas, chaves, encaixes, fluidos). Sua missão é INVENTAR UMA ESTRUTURA DE ENIGMA INTEIRAMENTE NOVA e arquitetonicamente brilhante.
@@ -1087,6 +1095,7 @@ REGRAS INQUEBRÁVEIS:
 4. UNICIDADE OBRIGATÓRIA: a solução deve ser a ÚNICA resposta derivável das pistas. 
 Antes de escrever a "cena", verifique: existe outra resposta igualmente válida? 
 Se sim, o enigma é inválido — restrinja a regra até restar exatamente uma.
+5. PROIBIDO NA CENA: portas, portões, trancas, saídas bloqueadas ou qualquer barreira que o jogador precise abrir. A câmara é autocontida — o mecanismo existe por razões próprias do mundo, não como guarda de uma passagem visível.
 
 Retorne APENAS este JSON:
 {
@@ -2896,7 +2905,7 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
 const salaPuzzle = mapaMundo?.[secaoAtualId];
 if (salaPuzzle?.puzzle_status) {
     if (salaPuzzle.puzzle_status.resolvido) {
-        systemPromptContent += `\n[AMBIENTE]: O mecanismo do enigma já foi ativado nesta sala. Qualquer porta ou passagem protegida está agora acessível.`;
+        systemPromptContent += `\n[AMBIENTE]: O mecanismo do enigma desta câmara já foi ativado. O espaço permanece o mesmo, mas o mecanismo está em repouso — resolvido.`;
     } else {
         systemPromptContent += `\n[AMBIENTE]: Há um mecanismo oculto nesta sala que parece aguardar uma ação específica. Descreva os elementos do cenário como parte da paisagem, sem sugerir a solução.`;
     }
