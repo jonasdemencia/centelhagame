@@ -1042,18 +1042,35 @@ Crie um enigma ORIGINAL, DEDUTÍVEL e AUTOCONTIDO.
 A solução deste puzzle DEVE se basear no seguinte princípio:
 [ ${mecanicaSorteada} ]
 
-ESTRUTURA OBRIGATÓRIA DO ENIGMA:
-1. MECANISMO: O objeto ou sistema MECÂNICO E REALISTA com o qual o jogador interage.
-2. PISTA BRUTA: A informação visível na cena que contém a resposta.
-3. INSINUAÇÃO: O detalhe ambiental que sugere COMO transformar a pista na ação correta.
+ESTRUTURA DO ENIGMA:
+1. MECANISMO: Um único objeto físico simples com um único estado alterável 
+   (enferrujado/limpo, frio/quente, bloqueado/livre, seco/úmido).
+   A ação do jogador é direta: uma coisa, um passo.
+2. PISTA BRUTA: A informação visível na cena que contém a resposta — 
+   mas que exige atenção e dedução para ser reconhecida como tal.
+3. INSINUAÇÃO: O detalhe ambiental sutil que, quando percebido, 
+   torna o método inevitável — mas não é óbvio à primeira leitura.
 
-CRITÉRIOS:
-- A solução é uma ação física concreta e completa.
-- Não-óbvia à primeira leitura. Inevitável quando percebida.
-- PROIBIDO DISTRAÇÕES (RED HERRINGS): O ambiente NÃO PODE conter objetos manipuláveis extras que confundam o jogador (ex: se a solução usa areia, não coloque ossos, pedras soltas ou pedaços de pau soltos na cena).
-- PROIBIDO: Mencionar portas se abrindo, consequências finais, ou palavras como "enigma", "puzzle".
-- PROIBIDO NA PROSA: As palavras "MECANISMO", "PISTA BRUTA" e "INSINUAÇÃO" são rótulos internos de construção — jamais aparecem na cena. Descreva os três elementos de forma integrada e natural no texto, sem nomeá-los.
-- FOTOGRAFIA FUNCIONAL: A "cena" implementa obrigatoriamente cada entrada de SINAIS declarada em "_rascunho_logico". Critério de validade: ocultando "solucao", um leitor consegue identificar o objeto correto e a direção do movimento apenas pela "cena".
+REGRA DE OURO — MECANISMO vs. DIFICULDADE:
+A dificuldade do enigma deve vir da SUTILEZA DA DEDUÇÃO, não da 
+complexidade do mecanismo físico.
+- MECANISMO simples: "raspar ferrugem de um eixo" ← um objeto, um passo
+- DIFICULDADE alta: saber QUAL eixo, POR QUE esse e não outro, 
+  e QUE OBJETO usar — tudo deduzido apenas da cena
+
+PROIBIDO: cadeias de causalidade com mais de um passo intermediário.
+"O jogador faz X → acontece Y" é o formato correto.
+"O jogador faz X → Y → Z → W → resultado" é o formato proibido.
+
+EXEMPLOS DO QUE É ACEITÁVEL:
+✓ Eixo enferrujado numa engrenagem oleada. Pedra de amolar visível.
+  → Solução: raspar a ferrugem do eixo. Mecanismo simples, dedução exige observação.
+✓ Anel de ferro frio prende duas hastes. Lupa e fresta de luz solar presentes.
+  → Solução: focar o calor da lupa no anel. Um passo, mas a conexão lupa→dilatação→liberação exige raciocínio.
+
+EXEMPLOS DO QUE É PROIBIDO:
+✗ Puxar correia → ferrolho solta → contrapeso cai → balança desequilibra → corrente puxa → pedra desliza.
+  (Mecanismo em cadeia: o jogador precisa imaginar 5 etapas invisíveis antes de agir.)
 
 
 Retorne APENAS este JSON:
