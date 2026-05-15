@@ -995,17 +995,17 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 async function gerarPuzzle(zonaId, salaAlvoId = null, tipoObstaculo = null) {
     const portal_destino = ((zonaId + 2) * SALAS_POR_ZONA) + 1;
 
-        const MECANICAS_POR_OBSTACULO = {
-    "NÉVOA":      "ventilação, combustão controlada ou dissolução química",
-    "GRADE":      "tensão mecânica, magnetismo ou quebra de pino de trava",
-    "ALAGAMENTO": "drenagem, sifão ou desvio de fluxo de água",
-    "COLAPSO":    "remoção de suporte, vibração estrutural ou contrapeso"
-};
-const restricaoMecanica = salaAlvoId
-    ? `RESTRIÇÃO DE MECÂNICA: O mecanismo desta câmara deve ser fisicamente compatível com causar "${tipoObstaculo}" em outra área distante. Mecânicas compatíveis: ${MECANICAS_POR_OBSTACULO[tipoObstaculo] || "impacto físico propagável"}. A câmara contém o mecanismo; o efeito acontece em outro lugar, fora da visão do jogador.`
-    : '';
+    const MECANICAS_POR_OBSTACULO = {
+        "NÉVOA":      "ventilação, combustão controlada ou dissolução química",
+        "GRADE":      "tensão mecânica, magnetismo ou quebra de pino de trava",
+        "ALAGAMENTO": "drenagem, sifão ou desvio de fluxo de água",
+        "COLAPSO":    "remoção de suporte, vibração estrutural ou contrapeso"
+    };
 
-    // Array de sementes lógicas expandido (15 categorias)
+    const restricaoMecanica = salaAlvoId
+        ? `RESTRIÇÃO DE MECÂNICA: O mecanismo desta câmara deve ser fisicamente compatível com causar "${tipoObstaculo}" em outra área distante. Mecânicas compatíveis: ${MECANICAS_POR_OBSTACULO[tipoObstaculo] || "impacto físico propagável"}. A câmara contém o mecanismo; o efeito acontece em outro lugar, fora da visão do jogador.`
+        : '';
+
     const CATEGORIAS_MECANICAS = [
         "PESO E EQUILÍBRIO: Envolve nivelar pratos de balança, distribuir volumes de fluidos (óleo, sangue) ou contrapesos físicos.",
         "OCLUSÃO E LUZ: Envolve bloquear fontes de iluminação, alinhar projeções de sombras ou cobrir orifícios específicos.",
@@ -1024,13 +1024,10 @@ const restricaoMecanica = salaAlvoId
         "CONDUÇÃO ELÉTRICA RUDIMENTAR: Envolve fechar um circuito com metais, água salgada ou carvão para produzir uma faísca, accionar um eletroíman ou queimar um obstáculo."
     ];
 
-    // Aqui abrimos a fenda: 30% de chance (ajuste como preferir) de abandonar a mecânica
     const inovacaoRadical = Math.random() < 0.15;
-    
     let prompt;
 
     if (!inovacaoRadical) {
-        // --- O SEU PROMPT ORIGINAL EXATAMENTE COMO ESTAVA ---
         const mecanicaSorteada = CATEGORIAS_MECANICAS[Math.floor(Math.random() * CATEGORIAS_MECANICAS.length)];
         prompt = `
 Você é um designer de enigmas para jogos de horror textual.
@@ -1039,7 +1036,6 @@ MUNDO: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}
 ATMOSFERA: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy"}
 ${restricaoMecanica}
 
-
 Crie um enigma ORIGINAL, DEDUTÍVEL e AUTOCONTIDO.
 
 === NATUREZA MECÂNICA OBRIGATÓRIA ===
@@ -1047,28 +1043,25 @@ A solução deste puzzle DEVE se basear no seguinte princípio:
 [ ${mecanicaSorteada} ]
 
 ESTRUTURA OBRIGATÓRIA DO ENIGMA:
-
 1. MECANISMO: O objeto ou sistema com o qual o jogador interage.
-2. TENSÃO VISÍVEL (A MOTIVAÇÃO): O estado atual de desequilíbrio do mecanismo. Ele deve estar visivelmente sob estresse, travado, incompleto, pesado demais, ou resistindo a uma força. Algo ali parece "errado" ou "aguardando resolução" (ex: um cabo esticado ao limite por um peso, uma engrenagem que treme querendo girar mas está bloqueada).
-3. PISTA BRUTA: A informação visível na cena que contém a resposta em estado cru.
-4. INSINUAÇÃO: O detalhe ambiental que sugere COMO transformar a pista bruta na ação correta.
+2. TENSÃO VISÍVEL (A MOTIVAÇÃO): O estado atual de desequilíbrio do mecanismo. Ele deve estar visivelmente sob estresse, travado, incompleto, pesado demais, ou resistindo a uma força.
+3. PISTA BRUTA: A informação visível na cena que contém a resposta.
+4. INSINUAÇÃO: O detalhe ambiental que sugere COMO transformar a pista na ação correta.
 
 CRITÉRIOS:
-- A solução é uma ação física concreta e completa.
-- Não-óbvia à primeira leitura. Inevitável quando percebida.
-- PROIBIDO DISTRAÇÕES (RED HERRINGS): O ambiente NÃO PODE conter objetos manipuláveis extras que confundam o jogador (ex: se a solução usa areia, não coloque ossos, pedras soltas ou pedaços de pau soltos na cena).
-- PROIBIDO: "enigma", "puzzle", "segredo", "portal", "porta", "portão", "tranca", "passagem bloqueada", "saída selada". A câmara não tem saída visível — o jogador está apenas diante de um mecanismo.
-- PROIBIDO NA CENA: qualquer descrição de recompensa, abertura ou consequência da solução. 
-- PROIBIDO NA PROSA: As palavras "MECANISMO", "PISTA BRUTA" e "INSINUAÇÃO" são rótulos internos de construção — jamais aparecem na cena. Descreva os três elementos de forma integrada e natural no texto, sem nomeá-los.
-- FOTOGRAFIA FUNCIONAL: A "cena" implementa obrigatoriamente cada entrada de SINAIS declarada em "_rascunho_logico". Critério de validade: ocultando "solucao", um leitor consegue identificar o objeto correto e a direção do movimento apenas pela "cena".
+- FÍSICA IMPECÁVEL E REALISTA: As engrenagens, cordas, fluidos e pesos devem obedecer rigorosamente às leis da física (gravidade, atrito, tensão, alavancagem). Nenhuma conexão pode ser mágica. A engenharia deve fazer sentido prático no mundo real.
+- PEDAGOGIA VISUAL: O texto deve guiar os olhos do jogador numa ordem lógica e anatômica (ex: da fonte de força até a peça final conectada), conectando as partes de forma que a cena possa ser facilmente desenhada num papel com base apenas na leitura.
+- A solução é uma ação física concreta e inevitável quando percebida.
+- PROIBIDO DISTRAÇÕES (RED HERRINGS): Sem objetos interativos extras inúteis.
+- PROIBIDO: Mencionar portas se abrindo, consequências finais, ou palavras como "enigma", "puzzle".
 
 Retorne APENAS este JSON:
 {
-  "_rascunho_logico": "CÂMARA: [o que define este espaço como isolado]. FERRAMENTA: [o único objeto manipulável]. MOVIMENTO: [a ação física exata]. SINAIS: [cada objeto manipulável] → [o detalhe passivo e visível que revela o que ele pode fazer].",
-  "cena": "MÍNIMO 3 PARÁGRAFOS (separe com \\n\\n, sem quebra literal). SÓ descreva matéria, posição e forças. PROIBIDO: cheiros, temperaturas, musgos, ecos, sensações vagas. CADA frase precisa informar um dado útil para o jogador.\n\n1º Parágrafo: dimensões, formato da sala, material, fonte de luz.\n\n2º Parágrafo: posição exata dos objetos e O SINTOMA MECÂNICO (corrente esticada, contrapeso tenso, engrenagem travada, fluxo desviado). O jogador precisa VER o desequilíbrio.\n\n3º Parágrafo: UMA a pista física camuflada na física dos objetos. Só mostre o fato. NUNCA interprete ('anseia', 'implora'). ZERO explicações de como resolver."
-  "dica": "Uma frase. Aponta para a INSINUAÇÃO — o detalhe físico que, quando percebido, torna o método dedutível. Concreta e sensorial.",
-  "solucao": "A ação exata e completa para resolver. Derivável da PISTA BRUTA + INSINUAÇÃO.",
-  "efeito_remoto": "Uma frase sensorial descrevendo o som ou vibração percebido ao resolver — sem mencionar o que abriu ou onde. Ex: 'Um rangido surdo ecoa pelas paredes de pedra, vindo de longe.'"
+  "_rascunho_logico": "CÂMARA: [ambiente]. FERRAMENTA: [objeto]. MOVIMENTO: [ação]. SINAIS: [como a física indica isso].",
+  "cena": "MÍNIMO DE 3 PARÁGRAFOS DENSOS. (ATENÇÃO MÁXIMA: Use EXATAMENTE a sequência '\\n\\n' para separar os parágrafos. Não quebre linhas de verdade). A descrição deve ser PEDAGÓGICA e anatomicamente clara. 1º Parágrafo (O Espaço): Formato, tamanho e iluminação. 2º Parágrafo (A Anatomia do Mecanismo): Descreva as peças mecânicas em sequência lógica, mostrando exatamente como uma se conecta à outra, e demonstre o SINTOMA MECÂNICO (o estado de tensão, peso ou travamento). 3º Parágrafo (A Pista e a Matéria): Texturas, desgaste e o detalhe físico camuflado que revela a solução. NUNCA dê explicações subjetivas ou diga o que fazer; apenas mostre a verdade mecânica do cenário.",
+  "dica": "Uma frase apontando para a INSINUAÇÃO sensorial e física.",
+  "solucao": "A ação exata baseada nas leis da física do local.",
+  "efeito_remoto": "Uma frase descrevendo o som ou vibração ao resolver, vindo de longe."
 }`;
     } else {
         // --- O PROMPT DE CARTA BRANCA: LIBERDADE ESTRUTURAL ABSOLUTA ---
