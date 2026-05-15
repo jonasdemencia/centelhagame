@@ -1043,25 +1043,25 @@ A solução deste puzzle DEVE se basear no seguinte princípio:
 [ ${mecanicaSorteada} ]
 
 ESTRUTURA OBRIGATÓRIA DO ENIGMA:
-1. MECANISMO: O objeto ou sistema com o qual o jogador interage.
-2. TENSÃO VISÍVEL (A MOTIVAÇÃO): O estado atual de desequilíbrio do mecanismo. Ele deve estar visivelmente sob estresse, travado, incompleto, pesado demais, ou resistindo a uma força.
-3. PISTA BRUTA: A informação visível na cena que contém a resposta.
-4. INSINUAÇÃO: O detalhe ambiental que sugere COMO transformar a pista na ação correta.
+1. MECANISMO: O objeto ou sistema MECÂNICO E REALISTA com o qual o jogador interage.
+2. PISTA BRUTA: A informação visível na cena que contém a resposta.
+3. INSINUAÇÃO: O detalhe ambiental que sugere COMO transformar a pista na ação correta.
 
 CRITÉRIOS:
-- FÍSICA IMPECÁVEL E REALISTA: As engrenagens, cordas, fluidos e pesos devem obedecer rigorosamente às leis da física (gravidade, atrito, tensão, alavancagem). Nenhuma conexão pode ser mágica. A engenharia deve fazer sentido prático no mundo real.
-- PEDAGOGIA VISUAL: O texto deve guiar os olhos do jogador numa ordem lógica e anatômica (ex: da fonte de força até a peça final conectada), conectando as partes de forma que a cena possa ser facilmente desenhada num papel com base apenas na leitura.
-- A solução é uma ação física concreta e inevitável quando percebida.
-- PROIBIDO DISTRAÇÕES (RED HERRINGS): Sem objetos interativos extras inúteis.
+- A solução é uma ação física concreta e completa.
+- Não-óbvia à primeira leitura. Inevitável quando percebida.
+- PROIBIDO DISTRAÇÕES (RED HERRINGS): O ambiente NÃO PODE conter objetos manipuláveis extras que confundam o jogador (ex: se a solução usa areia, não coloque ossos, pedras soltas ou pedaços de pau soltos na cena).
 - PROIBIDO: Mencionar portas se abrindo, consequências finais, ou palavras como "enigma", "puzzle".
+- PROIBIDO NA PROSA: As palavras "MECANISMO", "PISTA BRUTA" e "INSINUAÇÃO" são rótulos internos de construção — jamais aparecem na cena. Descreva os três elementos de forma integrada e natural no texto, sem nomeá-los.
+- FOTOGRAFIA FUNCIONAL: A "cena" implementa obrigatoriamente cada entrada de SINAIS declarada em "_rascunho_logico". Critério de validade: ocultando "solucao", um leitor consegue identificar o objeto correto e a direção do movimento apenas pela "cena".
+
 
 Retorne APENAS este JSON:
 {
-  "_rascunho_logico": "AMBIENTE. PROBLEMA VISÍVEL: desequilíbrio físico manifesto. FERRAMENTA: objeto manipulável. MOVIMENTO: ação. SINAIS: marcas ou indícios físicos que ligam ferramenta ao problema.",
-  "cena": "MÁXIMO 2 PARÁGRAFOS (separe com \\n\\n). CIRÚRGICO. Apenas matéria, posições e forças. 1º Parágrafo: dimensões, material, luz, e o estado de desequilíbrio como uma força represada que se manifesta por um sintoma físico (deformação, vibração, som, vazamento). 2º Parágrafo: a conexão causal entre as peças e UMA anomalia material que seja vestígio do uso ou do desequilíbrio. ZERO objetos citados como exemplo. ZERO mágica. Visualização em 10 segundos.",
-  "dica": "UMA frase. Apenas um fato material observável. Nenhuma interpretação.",
-  "solucao": "ação física que resolve o puzzle.",
-  "efeito_remoto": "Som mecânico distante."
+  "_rascunho_logico": "TRAVA: [o que bloqueia o mecanismo]. FERRAMENTA: [o único objeto manipulável]. MOVIMENTO: [a ação física exata]. SINAIS: [cada objeto manipulável] → [o detalhe passivo e visível que revela o que ele pode fazer].",
+  "cena": "Dois a três parágrafos. Descreve o espaço e os objetos do enigma de forma integrada e puramente visual. ZERO EXPLICAÇÕES DE COMO RESOLVER. Apenas descreva o que os olhos veem de forma passiva.",  
+  "dica": "Uma frase. Aponta para a INSINUAÇÃO — o detalhe físico que, quando percebido, torna o método dedutível. Concreta e sensorial.",
+  "solucao": "A ação exata e completa para resolver. Derivável da PISTA BRUTA + INSINUAÇÃO."
 }`;
     } else {
         // --- O PROMPT DE CARTA BRANCA: LIBERDADE ESTRUTURAL ABSOLUTA ---
@@ -1094,10 +1094,9 @@ Se sim, o enigma é inválido — restrinja a regra até restar exatamente uma.
 Retorne APENAS este JSON:
 {
   "_rascunho_logico": "O EIXO INVENTADO: [qual é a regra nova]. A LÓGICA: [como o jogador deduz a resposta com as pistas]. VERIFICAÇÃO: [liste as outras respostas que um jogador poderia tentar e explique por que cada uma falha]. SINAIS: [como a cena esconde isso].",
-  "cena": "MÍNIMO DE 3 PARÁGRAFOS DENSOS E EXTENSOS (Use estritamente '\\n\\n' para separar os parágrafos. NUNCA quebre a linha de forma literal no JSON). A descrição deve ter rigor arquitetônico. O texto deve mapear o espaço claramente para a mente do jogador: comece descrevendo a geometria bizarra ou a atmosfera da sala, depois foque na anatomia exata da anomalia/mecanismo (a posição relativa de cada elemento) e finalize com as texturas, sons passivos e detalhes sensoriais que escondem as variáveis da sua regra. Construa a cena para que o jogador consiga 'ver' a física ou a lógica do lugar. ZERO EXPLICAÇÕES DE COMO RESOLVER.",
+  "cena": "A descrição do espaço e dos elementos (dois a três parágrafos). Textual, densa, sem entregar a resposta, mas contendo todas as variáveis necessárias para a dedução da regra que você criou.",
   "dica": "Uma frase sutil e sensorial que aponte vagamente para a nova regra que você arquitetou.",
-  "solucao": "A ação exata, verbal ou abstrata, que o jogador precisa declarar ao sistema para solucionar.",
-  "efeito_remoto": "Uma frase sensorial descrevendo o som ou vibração percebido ao resolver — sem mencionar o que abriu ou onde. Ex: 'Um rangido surdo ecoa pelas paredes de pedra, vindo de longe.'"
+  "solucao": "A ação exata, verbal ou abstrata, que o jogador precisa declarar ao sistema para solucionar."
 }`;
     }
 
