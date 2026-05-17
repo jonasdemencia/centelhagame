@@ -995,17 +995,11 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 async function gerarPuzzle(zonaId, salaAlvoId = null, tipoObstaculo = null) {
     const portal_destino = ((zonaId + 2) * SALAS_POR_ZONA) + 1;
 
-    const MECANICAS_POR_OBSTACULO = {
-        "NÉVOA":      "ventilação, combustão controlada ou dissolução química",
-        "GRADE":      "tensão mecânica, magnetismo ou quebra de pino de trava",
-        "ALAGAMENTO": "drenagem, sifão ou desvio de fluxo de água",
-        "COLAPSO":    "remoção de suporte, vibração estrutural ou contrapeso"
-    };
+        const contextoRecompensa = salaAlvoId
+        ? `RECOMPENSA REMOTA: Resolver este puzzle remove um(a) "${tipoObstaculo}" que bloqueia outra área do mundo. A mecânica da solução deve ter uma consequência física plausível que se propague pelo ambiente (ex: drenar água via tubulação, quebrar trava de grade por vibração). O JSON deve incluir o campo "efeito_remoto": uma frase curta e sensorial descrevendo o som ou sensação que o jogador percebe ao resolver (ex: "Um estrondo surdo de correntes cedendo ecoa pelas paredes ao norte.").`
+        : `RECOMPENSA: Abrir uma passagem imediata nesta câmara.`;
 
-    const restricaoMecanica = salaAlvoId
-        ? `RESTRIÇÃO DE MECÂNICA: O mecanismo desta câmara deve ser fisicamente compatível com causar "${tipoObstaculo}" em outra área distante. Mecânicas compatíveis: ${MECANICAS_POR_OBSTACULO[tipoObstaculo] || "impacto físico propagável"}. A câmara contém o mecanismo; o efeito acontece em outro lugar, fora da visão do jogador.`
-        : '';
-
+    // Array de sementes lógicas expandido (15 categorias)
     const CATEGORIAS_MECANICAS = [
         "PESO E EQUILÍBRIO: Envolve nivelar pratos de balança, distribuir volumes de fluidos (óleo, sangue) ou contrapesos físicos.",
         "OCLUSÃO E LUZ: Envolve bloquear fontes de iluminação, alinhar projeções de sombras ou cobrir orifícios específicos.",
@@ -1024,17 +1018,20 @@ async function gerarPuzzle(zonaId, salaAlvoId = null, tipoObstaculo = null) {
         "CONDUÇÃO ELÉTRICA RUDIMENTAR: Envolve fechar um circuito com metais, água salgada ou carvão para produzir uma faísca, accionar um eletroíman ou queimar um obstáculo."
     ];
 
+    // Aqui abrimos a fenda: 30% de chance (ajuste como preferir) de abandonar a mecânica
     const inovacaoRadical = Math.random() < 0.15;
+    
     let prompt;
 
     if (!inovacaoRadical) {
+        // --- O SEU PROMPT ORIGINAL EXATAMENTE COMO ESTAVA ---
         const mecanicaSorteada = CATEGORIAS_MECANICAS[Math.floor(Math.random() * CATEGORIAS_MECANICAS.length)];
         prompt = `
 Você é um designer de enigmas para jogos de horror textual.
 
 MUNDO: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}
 ATMOSFERA: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy"}
-${restricaoMecanica}
+CONDIÇÃO DE VITÓRIA: ${contextoRecompensa}
 
 Crie um enigma ORIGINAL, DEDUTÍVEL e AUTOCONTIDO.
 
@@ -1042,47 +1039,26 @@ Crie um enigma ORIGINAL, DEDUTÍVEL e AUTOCONTIDO.
 A solução deste puzzle DEVE se basear no seguinte princípio:
 [ ${mecanicaSorteada} ]
 
-ESTRUTURA DO ENIGMA:
-1. MECANISMO: Um único objeto físico simples com um único estado alterável 
-   (enferrujado/limpo, frio/quente, bloqueado/livre, seco/úmido).
-   A ação do jogador é direta: uma coisa, um passo.
-2. PISTA BRUTA: A informação visível na cena que contém a resposta — 
-   mas que exige atenção e dedução para ser reconhecida como tal.
-3. INSINUAÇÃO: O detalhe ambiental sutil que, quando percebido, 
-   torna o método inevitável — mas não é óbvio à primeira leitura.
+ESTRUTURA OBRIGATÓRIA DO ENIGMA:
 
-REGRA DE OURO — MECANISMO vs. DIFICULDADE:
-A dificuldade do enigma deve vir da SUTILEZA DA DEDUÇÃO, não da 
-complexidade do mecanismo físico.
-- MECANISMO simples: "raspar ferrugem de um eixo" ← um objeto, um passo
-- DIFICULDADE alta: saber QUAL eixo, POR QUE esse e não outro, 
-  e QUE OBJETO usar — tudo deduzido apenas da cena
+1. MECANISMO: O objeto ou sistema com o qual o jogador interage para resolver.
+2. PISTA BRUTA: A informação visível na cena que contém a resposta em estado cru.
+3. INSINUAÇÃO: Um detalhe ambiental físico que sugere COMO transformar a pista bruta na ação correta (a intuição física do movimento ou operação).
 
-PROIBIDO: cadeias de causalidade com mais de um passo intermediário.
-"O jogador faz X → acontece Y" é o formato correto.
-"O jogador faz X → Y → Z → W → resultado" é o formato proibido.
-
-EXEMPLOS DO QUE É ACEITÁVEL:
-✓ Eixo enferrujado numa engrenagem oleada. Pedra de amolar visível.
-  → Solução: raspar a ferrugem do eixo. Mecanismo simples, dedução exige observação.
-✓ Anel de ferro frio prende duas hastes. Lupa e fresta de luz solar presentes.
-  → Solução: focar o calor da lupa no anel. Um passo, mas a conexão lupa→dilatação→liberação exige raciocínio.
-
-EXEMPLOS DO QUE É PROIBIDO:
-✗ Puxar correia → ferrolho solta → contrapeso cai → balança desequilibra → corrente puxa → pedra desliza.
-  (Mecanismo em cadeia: o jogador precisa imaginar 5 etapas invisíveis antes de agir.)
-
+CRITÉRIOS:
+- A solução é uma ação física concreta e completa.
+- Não-óbvia à primeira leitura. Inevitável quando percebida.
+- PROIBIDO DISTRAÇÕES (RED HERRINGS): O ambiente NÃO PODE conter objetos manipuláveis extras que confundam o jogador (ex: se a solução usa areia, não coloque ossos, pedras soltas ou pedaços de pau soltos na cena).
+- PROIBIDO: "enigma", "puzzle", "segredo", "portal". Apenas matéria, ferrugem, pedra, sangue.
+- PROIBIDO NA PROSA: As palavras "MECANISMO", "PISTA BRUTA" e "INSINUAÇÃO" são rótulos internos de construção — jamais aparecem na cena. Descreva os três elementos de forma integrada e natural no texto, sem nomeá-los.
+- FOTOGRAFIA FUNCIONAL: A "cena" implementa obrigatoriamente cada entrada de SINAIS declarada em "_rascunho_logico". Critério de validade: ocultando "solucao", um leitor consegue identificar o objeto correto e a direção do movimento apenas pela "cena".
 
 Retorne APENAS este JSON:
 {
-  "_rascunho_logico": "TRAVA: [o que bloqueia o mecanismo]. FERRAMENTA: [o único objeto manipulável]. MOVIMENTO: [a ação física exata]. SINAIS: [cada objeto manipulável] → [o detalhe passivo e visível que revela o que ele pode fazer].",
+  "_rascunho_logico": "TRAVA: [o que bloqueia a saída]. FERRAMENTA: [o único objeto manipulável]. MOVIMENTO: [a ação física exata]. SINAIS: [cada objeto manipulável] → [o detalhe passivo e visível que revela o que ele pode fazer].",
   "cena": "Dois a três parágrafos. Descreve o espaço e os objetos do enigma de forma integrada e puramente visual. ZERO EXPLICAÇÕES DE COMO RESOLVER. Apenas descreva o que os olhos veem de forma passiva.",  
   "dica": "Uma frase. Aponta para a INSINUAÇÃO — o detalhe físico que, quando percebido, torna o método dedutível. Concreta e sensorial.",
-  "solucao": "A ação direta do jogador sobre um único objeto. 
-Descreve o que o jogador FAZ — não o que acontece depois. 
-Máximo: sujeito + verbo + objeto + detalhe de precisão. 
-Exemplo correto: 'Raspe a crosta de ferrugem do eixo central com a pedra de amolar.' 
-Exemplo errado: 'Raspe a ferrugem, o pino se rompe, destravando a engrenagem, que aciona o contrapeso...'"
+  "solucao": "A ação exata e completa para resolver. Derivável da PISTA BRUTA + INSINUAÇÃO."
 }`;
     } else {
         // --- O PROMPT DE CARTA BRANCA: LIBERDADE ESTRUTURAL ABSOLUTA ---
@@ -1091,7 +1067,7 @@ Você é um master designer de enigmas (puzzles) para um RPG textual de horror v
 
 MUNDO: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}
 ATMOSFERA: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy"}
-${restricaoMecanica}
+CONDIÇÃO DE VITÓRIA: ${contextoRecompensa}
 
 === CARTA BRANCA: LIBERDADE ESTRUTURAL ABSOLUTA ===
 Você está PROIBIDO de usar mecânicas tradicionais de aventura (peso, alavancas, chaves, encaixes, fluidos). Sua missão é INVENTAR UMA ESTRUTURA DE ENIGMA INTEIRAMENTE NOVA e arquitetonicamente brilhante.
@@ -1110,7 +1086,6 @@ REGRAS INQUEBRÁVEIS:
 4. UNICIDADE OBRIGATÓRIA: a solução deve ser a ÚNICA resposta derivável das pistas. 
 Antes de escrever a "cena", verifique: existe outra resposta igualmente válida? 
 Se sim, o enigma é inválido — restrinja a regra até restar exatamente uma.
-5. PROIBIDO NA CENA: portas, portões, trancas, saídas bloqueadas ou qualquer barreira que o jogador precise abrir. A câmara é autocontida — o mecanismo existe por razões próprias do mundo, não como guarda de uma passagem visível.
 
 Retorne APENAS este JSON:
 {
