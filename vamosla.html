@@ -992,12 +992,28 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 
         // Linha ~988, ANTES de injetarPuzzles:
 
+// Histórico das últimas mecânicas usadas (índices), para forçar variância real
+const _historicoMecanicas = [];
+
+function sortearMecanicaSemRepeticao(categorias) {
+    const JANELA_EXCLUSAO = Math.min(7, Math.floor(categorias.length * 0.6));
+    const indicesRecentes = new Set(_historicoMecanicas.slice(-JANELA_EXCLUSAO));
+    const disponiveisIdx = categorias
+        .map((_, i) => i)
+        .filter(i => !indicesRecentes.has(i));
+    const poolIdx = disponiveisIdx.length > 0 ? disponiveisIdx : categorias.map((_, i) => i);
+    const idxSorteado = poolIdx[Math.floor(Math.random() * poolIdx.length)];
+    _historicoMecanicas.push(idxSorteado);
+    if (_historicoMecanicas.length > categorias.length) _historicoMecanicas.shift();
+    return { mecanica: categorias[idxSorteado], indice: idxSorteado };
+}
+
 async function gerarPuzzle(zonaId, salaAlvoId = null, tipoObstaculo = null) {
     const portal_destino = ((zonaId + 2) * SALAS_POR_ZONA) + 1;
 
         const contextoRecompensa = salaAlvoId
         ? `RECOMPENSA REMOTA: Resolver este puzzle remove um(a) "${tipoObstaculo}" que bloqueia outra área do mundo. A mecânica da solução deve ter uma consequência física plausível que se propague pelo ambiente (ex: drenar água via tubulação, quebrar trava de grade por vibração). O JSON deve incluir o campo "efeito_remoto": uma frase curta e sensorial descrevendo o som ou sensação que o jogador percebe ao resolver (ex: "Um estrondo surdo de correntes cedendo ecoa pelas paredes ao norte.").`
-        : `RECOMPENSA: Abrir uma passagem imediata nesta câmara.`;
+        : `RECOMPENSA: Ativar o mecanismo central desta câmara. A solução NÃO abre um portão externo — ela aciona um dispositivo cujo efeito (revelar via, deslocar obstáculo, liberar trava) é intrínseco à própria sala e ao mecanismo manipulado pelo jogador. Jamais descreva portão, grade ou cancela na cena.`;
 
     // Array de sementes lógicas expandido (15 categorias)
     const CATEGORIAS_MECANICAS = [
@@ -1018,14 +1034,21 @@ async function gerarPuzzle(zonaId, salaAlvoId = null, tipoObstaculo = null) {
         "CONDUÇÃO ELÉTRICA RUDIMENTAR: Envolve fechar um circuito com metais, água salgada ou carvão para produzir uma faísca, accionar um eletroíman ou queimar um obstáculo."
     ];
 
-    // Aqui abrimos a fenda: 30% de chance (ajuste como preferir) de abandonar a mecânica
+    // Aqui abrimos a fenda: 15% de chance de abandonar a mecânica catalogada
     const inovacaoRadical = Math.random() < 0.15;
+
+    if (inovacaoRadical) {
+        console.log(`[PUZZLE] 🎲 Mecânica selecionada: INOVAÇÃO RADICAL (carta branca — sem categoria)`);
+    }
     
     let prompt;
 
     if (!inovacaoRadical) {
-        // --- O SEU PROMPT ORIGINAL EXATAMENTE COMO ESTAVA ---
-        const mecanicaSorteada = CATEGORIAS_MECANICAS[Math.floor(Math.random() * CATEGORIAS_MECANICAS.length)];
+        // --- SELEÇÃO COM ANTI-REPETIÇÃO: garante variância real entre puzzles ---
+        const { mecanica: mecanicaSorteada, indice: idxMecanica } = sortearMecanicaSemRepeticao(CATEGORIAS_MECANICAS);
+        const nomeMecanica = mecanicaSorteada.split(':')[0].trim();
+        console.log(`[PUZZLE] 🎲 Mecânica selecionada [${idxMecanica + 1}/${CATEGORIAS_MECANICAS.length}]: ${nomeMecanica}`);
+        console.log(`[PUZZLE] 📜 Histórico de índices: [${_historicoMecanicas.join(', ')}]`);
         prompt = `
 Você é um designer de enigmas para jogos de horror textual.
 
@@ -1049,7 +1072,7 @@ CRITÉRIOS:
 - A solução é uma ação física concreta e completa.
 - Não-óbvia à primeira leitura. Inevitável quando percebida.
 - PROIBIDO DISTRAÇÕES (RED HERRINGS): O ambiente NÃO PODE conter objetos manipuláveis extras que confundam o jogador (ex: se a solução usa areia, não coloque ossos, pedras soltas ou pedaços de pau soltos na cena).
-- PROIBIDO: "enigma", "puzzle", "segredo", "portal". Apenas matéria, ferrugem, pedra, sangue.
+- PROIBIDO: "enigma", "puzzle", "segredo", "portal", "portão", "grade", "cancela". A cena jamais menciona portas externas — apenas matéria, ferrugem, pedra, sangue, o mecanismo.
 - PROIBIDO NA PROSA: As palavras "MECANISMO", "PISTA BRUTA" e "INSINUAÇÃO" são rótulos internos de construção — jamais aparecem na cena. Descreva os três elementos de forma integrada e natural no texto, sem nomeá-los.
 - FOTOGRAFIA FUNCIONAL: A "cena" implementa obrigatoriamente cada entrada de SINAIS declarada em "_rascunho_logico". Critério de validade: ocultando "solucao", um leitor consegue identificar o objeto correto e a direção do movimento apenas pela "cena".
 
@@ -1107,12 +1130,12 @@ Retorne APENAS este JSON:
         data = await chamarGroq([
             { role: "system", content: systemPrompt },
             { role: "user", content: prompt }
-        ], 0.7, jsonMode, MODELO_PUZZLE, 3);
+        ], 0.8, jsonMode, MODELO_PUZZLE, 3);
     } else {
         data = await chamarGroq([
             { role: "system", content: systemPrompt },
             { role: "user", content: prompt }
-        ], 0.7, jsonMode, MODELO_PUZZLE, 3);
+        ], 0.8, jsonMode, MODELO_PUZZLE, 3);
     }
     
     let raw = data.choices[0].message.content;
