@@ -1012,8 +1012,8 @@ async function gerarPuzzle(zonaId, salaAlvoId = null, tipoObstaculo = null) {
     const portal_destino = ((zonaId + 2) * SALAS_POR_ZONA) + 1;
 
         const contextoRecompensa = salaAlvoId
-        ? `RECOMPENSA REMOTA: Resolver este puzzle remove um(a) "${tipoObstaculo}" que bloqueia outra área do mundo. A mecânica da solução deve ter uma consequência física plausível que se propague pelo ambiente (ex: drenar água via tubulação, quebrar trava de grade por vibração). O JSON deve incluir o campo "efeito_remoto": uma frase curta e sensorial descrevendo o som ou sensação que o jogador percebe ao resolver (ex: "Um estrondo surdo de correntes cedendo ecoa pelas paredes ao norte.").`
-        : `RECOMPENSA: Ativar o mecanismo central desta câmara. A solução NÃO abre um portão externo — ela aciona um dispositivo cujo efeito (revelar via, deslocar obstáculo, liberar trava) é intrínseco à própria sala e ao mecanismo manipulado pelo jogador. Jamais descreva portão, grade ou cancela na cena.`;
+        ? `RECOMPENSA REMOTA: Resolver este puzzle remove um(a) "${tipoObstaculo}" que bloqueia outra área do mundo (A recompensa é a remoção do obstáculo, nunca um item físico como uma chave). A mecânica da solução deve ter uma consequência física plausível que se propague pelo ambiente (ex: drenar água via tubulação, quebrar trava de grade por vibração). O JSON deve incluir o campo "efeito_remoto": uma frase curta e sensorial descrevendo o som ou sensação que o jogador percebe ao resolver (ex: "Um estrondo surdo de correntes cedendo ecoa pelas paredes ao norte.").`
+        : `RECOMPENSA: Ativar o mecanismo central desta câmara. A solução NÃO abre um portão externo e NÃO gera nem revela itens (chaves, objetos) — ela aciona um dispositivo cujo efeito (revelar via, deslocar obstáculo, liberar trava) é intrínseco à própria sala e ao mecanismo manipulado pelo jogador. Jamais descreva portão, grade ou cancela na cena.`;
 
     // Array de sementes lógicas expandido (15 categorias)
     const CATEGORIAS_MECANICAS = [
