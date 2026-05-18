@@ -3212,7 +3212,7 @@ if (!window._mapaVisualInstalado) {
     for (const [id, sala] of Object.entries(mapaMundo)) {
       const p = window.mapCoords[id];
       if (!p || p.level !== window.mapState.level) continue;
-      const visitada = window.visitedRooms.has(id);
+      const visitada = true; // força todas as salas como visitadas. Antes essa linha era: const visitada = window.visitedRooms.has(id);
       const atual = (id === secaoAtualId);
       const puzzle = !!sala.puzzle_status;
 
