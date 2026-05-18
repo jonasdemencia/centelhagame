@@ -1012,9 +1012,9 @@ async function gerarPuzzle(zonaId, salaAlvoId = null, tipoObstaculo = null) {
     const portal_destino = ((zonaId + 2) * SALAS_POR_ZONA) + 1;
 
         const contextoRecompensa = salaAlvoId
-        ? `RECOMPENSA REMOTA: Resolver este puzzle remove um(a) "${tipoObstaculo}" que bloqueia outra área do mundo (A recompensa é a remoção do obstáculo, nunca um item físico como uma chave). A mecânica da solução deve ter uma consequência física plausível que se propague pelo ambiente (ex: drenar água via tubulação, quebrar trava de grade por vibração). O JSON deve incluir o campo "efeito_remoto": uma frase curta e sensorial descrevendo o som ou sensação que o jogador percebe ao resolver (ex: "Um estrondo surdo de correntes cedendo ecoa pelas paredes ao norte.").`
-        : `RECOMPENSA: Ativar o mecanismo central desta câmara. A solução NÃO abre um portão externo e NÃO gera nem revela itens (chaves, objetos) — ela aciona um dispositivo cujo efeito (revelar via, deslocar obstáculo, liberar trava) é intrínseco à própria sala e ao mecanismo manipulado pelo jogador. Jamais descreva portão, grade ou cancela na cena.`;
-
+        ? `CONSEQUÊNCIA REMOTA: A sala atual contém APENAS o mecanismo a ser ativado, sem nenhum obstáculo ou porta nela. A resolução do puzzle é estritamente a manipulação/ativação deste dispositivo central. Ao ser ativado, o mecanismo propaga um efeito físico invisível (vibração, fluxo de água, tensão) que destruirá um(a) "${tipoObstaculo}" localizado(a) em OUTRA sala distante. O JSON deve incluir o campo "efeito_remoto": uma frase curta e sensorial descrevendo o som ou vibração distante que o jogador percebe ao ativar o mecanismo, sinalizando que algo mudou longe dali (ex: "Um estrondo surdo de correntes cedendo ecoa pelas paredes ao norte.").`
+        : `CONSEQUÊNCIA LOCAL: Ativar o mecanismo central desta câmara. A solução NÃO abre portas/portões visíveis e NÃO gera itens (chaves, objetos). A recompensa é a própria ativação do dispositivo, cujo efeito (revelar uma passagem oculta, mover a arquitetura) é intrínseco à própria sala e ao mecanismo manipulado. Jamais descreva portão, grade ou cancela na cena, foque apenas na máquina/estrutura.`;
+    
     // Array de sementes lógicas expandido (15 categorias)
     const CATEGORIAS_MECANICAS = [
         "PESO E EQUILÍBRIO: Envolve nivelar pratos de balança, distribuir volumes de fluidos (óleo, sangue) ou contrapesos físicos.",
@@ -1075,6 +1075,7 @@ CRITÉRIOS:
 - PROIBIDO: "enigma", "puzzle", "segredo", "portal", "portão", "grade", "cancela". A cena jamais menciona portas externas — apenas matéria, ferrugem, pedra, sangue, o mecanismo.
 - PROIBIDO NA PROSA: As palavras "MECANISMO", "PISTA BRUTA" e "INSINUAÇÃO" são rótulos internos de construção — jamais aparecem na cena. Descreva os três elementos de forma integrada e natural no texto, sem nomeá-los.
 - FOTOGRAFIA FUNCIONAL: A "cena" implementa obrigatoriamente cada entrada de SINAIS declarada em "_rascunho_logico". Critério de validade: ocultando "solucao", um leitor consegue identificar o objeto correto e a direção do movimento apenas pela "cena".
+- ISOLAMENTO DO MECANISMO: O obstáculo a ser removído/afetado está em OUTRA área. A cena atual descreve APENAS a máquina/dispositivo que causa isso. NUNCA descreva o obstáculo, a passagem ou portas na descrição visual desta câmara.
 
 Retorne APENAS este JSON:
 {
@@ -1109,6 +1110,8 @@ REGRAS INQUEBRÁVEIS:
 4. UNICIDADE OBRIGATÓRIA: a solução deve ser a ÚNICA resposta derivável das pistas. 
 Antes de escrever a "cena", verifique: existe outra resposta igualmente válida? 
 Se sim, o enigma é inválido — restrinja a regra até restar exatamente uma.
+5. ISOLAMENTO DO MECANISMO: O obstáculo a ser removído/afetado está em OUTRA área. A cena atual descreve APENAS a máquina/dispositivo que causa isso. NUNCA descreva o obstáculo, a passagem ou portas na descrição visual desta câmara.
+
 
 Retorne APENAS este JSON:
 {
