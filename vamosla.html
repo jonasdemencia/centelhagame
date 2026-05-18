@@ -128,6 +128,7 @@
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <div id="loot-area" style="display: flex; flex-wrap: wrap; gap: 8px; min-height: 20px; padding: 5px; border: 1px dashed #2a251e; flex-grow: 1;"></div>
+            <button id="abrir-mapa-btn" class="nav-btn" style="margin-left: 10px; height: fit-content;" onclick="abrirMapaVisual()">🗺️ Mapa</button>
             <button id="abrir-inventario-btn" class="nav-btn" style="margin-left: 10px; height: fit-content;" onclick="abrirInventarioSemItem()">🎒 Inventário</button>
         </div>
         
@@ -3042,6 +3043,270 @@ if (historicoConversa.length > 8) {
                 }
             }
         };
+
+        // ============================================================
+// MÓDULO DE MAPA VISUAL (NÃO ALTERA O JOGO ORIGINAL)
+// ============================================================
+if (!window._mapaVisualInstalado) {
+  window._mapaVisualInstalado = true;
+
+  // --- Globais do mapa (se não existirem) ---
+  window.mapCoords = window.mapCoords || {};
+  window.mapState = window.mapState || { scale: 1, offsetX: 0, offsetY: 0, level: 0 };
+  window.visitedRooms = window.visitedRooms || new Set();
+
+  // --- Hook: Marcar sala atual como visitada e redesenhar ---
+  const originalAtualizarBotoes = atualizarBotoesNavegacao;
+  atualizarBotoesNavegacao = function() {
+    if (secaoAtualId) window.visitedRooms.add(secaoAtualId);
+    originalAtualizarBotoes();
+    if (document.getElementById('map-fullscreen')?.style.display === 'block') desenharMapaVisual();
+  };
+
+  // --- Persistência no Firestore ---
+  const originalSalvar = salvarEstadoJogador;
+  salvarEstadoJogador = async function() {
+    await originalSalvar();
+    if (uidAtual && window.visitedRooms) {
+      try {
+        await updateDoc(doc(db, "players", uidAtual), { 
+          visitedRooms: Array.from(window.visitedRooms),
+          mapCoords: window.mapCoords,
+          mapState: window.mapState
+        });
+      } catch(e) { console.warn("Erro ao salvar mapa", e); }
+    }
+  };
+
+  const originalCarregar = carregarDadosJogador;
+  carregarDadosJogador = async function(uid) {
+    await originalCarregar(uid);
+    const docRef = doc(db, "players", uid);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      if (data.visitedRooms) window.visitedRooms = new Set(data.visitedRooms);
+      if (data.mapCoords) window.mapCoords = data.mapCoords;
+      if (data.mapState) window.mapState = data.mapState;
+    }
+  };
+
+  // --- Inferência de direção a partir do texto da ação ---
+  function inferirDirecao(texto) {
+    const t = texto.toLowerCase();
+    if (t.includes('norte') || t.includes('north')) return 'north';
+    if (t.includes('sul') || t.includes('south')) return 'south';
+    if (t.includes('leste') || t.includes('east')) return 'east';
+    if (t.includes('oeste') || t.includes('west')) return 'west';
+    if (t.includes('subir') || t.includes('acima') || (t.includes('escada') && t.includes('cima'))) return 'above';
+    if (t.includes('descer') || t.includes('abaixo') || t.includes('alçapão')) return 'below';
+    return null;
+  }
+
+  // --- Colisão entre retângulos ---
+  function colidem(a, b, margem = 15) {
+    return !(b.x - margem > a.x + a.w ||
+             b.x + b.w + margem < a.x ||
+             b.y - margem > a.y + a.h ||
+             b.y + b.h + margem < a.y);
+  }
+
+  // --- Posiciona sala filha adjacente ao pai ---
+  function posicionarAdjacente(pai, filhoW, filhoH, dir, nivel, offsetExtra = 0) {
+    let x = pai.x, y = pai.y;
+    const espaco = 30 + offsetExtra;
+    switch(dir) {
+      case 'north': x = pai.x + (pai.w - filhoW)/2; y = pai.y - filhoH - espaco; break;
+      case 'south': x = pai.x + (pai.w - filhoW)/2; y = pai.y + pai.h + espaco; break;
+      case 'east':  x = pai.x + pai.w + espaco; y = pai.y + (pai.h - filhoH)/2; break;
+      case 'west':  x = pai.x - filhoW - espaco; y = pai.y + (pai.h - filhoH)/2; break;
+      case 'above': x = pai.x + (pai.w - filhoW)/2; y = pai.y - filhoH - espaco; nivel++; break;
+      case 'below': x = pai.x + (pai.w - filhoW)/2; y = pai.y + pai.h + espaco; nivel--; break;
+      default: return null;
+    }
+    return { x, y, w: filhoW, h: filhoH, level: nivel };
+  }
+
+  // --- Recalcula coordenadas de todas as salas (BFS a partir de "1") ---
+  async function recalcularCoordenadas() {
+    if (!mapaMundo || Object.keys(mapaMundo).length === 0) return;
+    const novas = {};
+    const fila = ["1"];
+    const processadas = new Set();
+    novas["1"] = window.mapCoords["1"] || { x: 0, y: 0, w: 60, h: 60, level: 0, shape: 'rect' };
+    processadas.add("1");
+
+    while (fila.length) {
+      const id = fila.shift();
+      const sala = mapaMundo[id];
+      if (!sala || !sala.opcoes) continue;
+      const pai = novas[id];
+      if (!pai) continue;
+
+      for (const op of sala.opcoes) {
+        const destId = String(op.destino);
+        if (processadas.has(destId) || !mapaMundo[destId]) continue;
+
+        let dir = inferirDirecao(op.texto) || 'east';
+        let w = 60, h = 60, shape = 'rect';
+        const destSala = mapaMundo[destId];
+        if (destSala.puzzle_status) { shape = 'octagon'; w = 45; h = 45; }
+        else if (destSala.texto_logico?.toLowerCase().includes('corredor')) { shape = 'corridor'; w = 80; h = 25; }
+
+        let tentativas = 0;
+        let pos = null;
+        while (tentativas < 12 && !pos) {
+          const offset = tentativas * 10;
+          const candidato = posicionarAdjacente(pai, w, h, dir, pai.level, offset);
+          if (candidato) {
+            let colide = false;
+            for (let [existId, coord] of Object.entries(novas)) {
+              if (existId === id) continue;
+              if (coord.level === candidato.level && colidem(coord, candidato, 15)) { colide = true; break; }
+            }
+            if (!colide) pos = candidato;
+          }
+          tentativas++;
+        }
+        if (!pos) pos = { x: pai.x + 200, y: pai.y + 200, w, h, level: pai.level, shape };
+        novas[destId] = pos;
+        processadas.add(destId);
+        fila.push(destId);
+      }
+    }
+    window.mapCoords = novas;
+    await (salvarEstadoJogador)(); // força persistência
+  }
+
+  // --- Desenha o mapa no canvas ---
+  function desenharMapaVisual() {
+    const canvas = document.getElementById('mapCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#050505';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(window.mapState.offsetX, window.mapState.offsetY);
+    ctx.translate(canvas.width/2, canvas.height/2);
+    ctx.scale(window.mapState.scale, window.mapState.scale);
+
+    // Conexões
+    for (const [id, sala] of Object.entries(mapaMundo)) {
+      const p = window.mapCoords[id];
+      if (!p || p.level !== window.mapState.level || !window.visitedRooms.has(id)) continue;
+      if (sala.opcoes) {
+        for (const op of sala.opcoes) {
+          const dp = window.mapCoords[String(op.destino)];
+          if (dp && dp.level === p.level) {
+            ctx.beginPath();
+            ctx.moveTo(p.x + p.w/2, p.y + p.h/2);
+            ctx.lineTo(dp.x + dp.w/2, dp.y + dp.h/2);
+            ctx.strokeStyle = '#d94';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+        }
+      }
+    }
+    // Salas
+    for (const [id, sala] of Object.entries(mapaMundo)) {
+      const p = window.mapCoords[id];
+      if (!p || p.level !== window.mapState.level) continue;
+      const visitada = window.visitedRooms.has(id);
+      const atual = (id === secaoAtualId);
+      const puzzle = !!sala.puzzle_status;
+
+      ctx.fillStyle = (atual ? '#aa2222' : (puzzle ? '#5a1a5a' : (visitada ? '#1a3a2a' : 'rgba(30,30,30,0.4)')));
+      ctx.strokeStyle = (visitada || atual) ? '#4a8' : '#444';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (p.shape === 'octagon') {
+        const x=p.x, y=p.y, w=p.w, h=p.h, c=10;
+        ctx.moveTo(x+c,y); ctx.lineTo(x+w-c,y); ctx.lineTo(x+w,y+c);
+        ctx.lineTo(x+w,y+h-c); ctx.lineTo(x+w-c,y+h); ctx.lineTo(x+c,y+h);
+        ctx.lineTo(x,y+h-c); ctx.lineTo(x,y+c); ctx.closePath();
+      } else ctx.rect(p.x, p.y, p.w, p.h);
+      ctx.fill();
+      ctx.stroke();
+      if (visitada || atual) {
+        ctx.fillStyle = '#fff';
+        ctx.font = '12px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(puzzle ? '?' : id, p.x + p.w/2, p.y + p.h/2);
+      }
+    }
+    ctx.restore();
+  }
+
+  // --- Interface de usuário (abrir/fechar/zoom/pan) ---
+  function criarContainerMapa() {
+    if (document.getElementById('map-fullscreen')) return;
+    const div = document.createElement('div');
+    div.id = 'map-fullscreen';
+    div.style.cssText = 'display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#050505;z-index:10000;';
+    div.innerHTML = `
+      <canvas id="mapCanvas" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);cursor:grab;"></canvas>
+      <div id="map-controls-ui" style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:6px;background:rgba(0,30,0,0.9);padding:8px;border:1px solid #383;border-radius:4px;">
+        <button onclick="changeMapLevel(1)">▲</button>
+        <span id="levelDisplay">1F</span>
+        <button onclick="changeMapLevel(-1)">▼</button>
+        <button onclick="resetMapView()">MAP</button>
+        <button onclick="fecharMapaVisual()">EXIT</button>
+      </div>`;
+    document.body.appendChild(div);
+    const canvas = div.querySelector('#mapCanvas');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    let drag = false, startX, startY;
+    canvas.addEventListener('mousedown', e => { drag = true; startX = e.clientX - window.mapState.offsetX; startY = e.clientY - window.mapState.offsetY; });
+    window.addEventListener('mousemove', e => { if (drag) { window.mapState.offsetX = e.clientX - startX; window.mapState.offsetY = e.clientY - startY; desenharMapaVisual(); } });
+    window.addEventListener('mouseup', () => drag = false);
+    canvas.addEventListener('wheel', e => { e.preventDefault(); window.mapState.scale = Math.min(3, Math.max(0.4, window.mapState.scale + (e.deltaY > 0 ? -0.1 : 0.1))); desenharMapaVisual(); });
+    window.changeMapLevel = function(delta) {
+      window.mapState.level += delta;
+      const lvl = (window.mapState.level === 0) ? "1F" : (window.mapState.level > 0 ? (window.mapState.level+1)+"F" : "B"+Math.abs(window.mapState.level));
+      const disp = document.getElementById('levelDisplay'); if (disp) disp.textContent = lvl;
+      desenharMapaVisual();
+    };
+    window.resetMapView = function() {
+      window.mapState.offsetX = 0; window.mapState.offsetY = 0; window.mapState.scale = 1;
+      if (window.mapCoords[secaoAtualId]) {
+        window.mapState.level = window.mapCoords[secaoAtualId].level;
+        const lvl = (window.mapState.level === 0) ? "1F" : (window.mapState.level > 0 ? (window.mapState.level+1)+"F" : "B"+Math.abs(window.mapState.level));
+        if (document.getElementById('levelDisplay')) document.getElementById('levelDisplay').textContent = lvl;
+      }
+      desenharMapaVisual();
+    };
+    window.fecharMapaVisual = () => { document.getElementById('map-fullscreen').style.display = 'none'; };
+  }
+
+  window.abrirMapaVisual = async function() {
+    if (window.narrativeActionInProgress) return;
+    await recalcularCoordenadas();
+    criarContainerMapa();
+    const canvas = document.getElementById('mapCanvas');
+    if (canvas) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    if (window.mapCoords[secaoAtualId]) {
+      window.mapState.level = window.mapCoords[secaoAtualId].level;
+      const lvl = (window.mapState.level === 0) ? "1F" : (window.mapState.level > 0 ? (window.mapState.level+1)+"F" : "B"+Math.abs(window.mapState.level));
+      const disp = document.getElementById('levelDisplay'); if (disp) disp.textContent = lvl;
+    }
+    document.getElementById('map-fullscreen').style.display = 'block';
+    desenharMapaVisual();
+  };
+
+  // --- Gatilho para recalcular sempre que uma nova zona for gerada ---
+  const originalGerarZona = gerarZona;
+  gerarZona = async function(...args) {
+    const result = await originalGerarZona(...args);
+    await recalcularCoordenadas();
+    return result;
+  };
+
+  // Inicialização atrasada
+  setTimeout(() => { if (mapaMundo && Object.keys(mapaMundo).length) recalcularCoordenadas(); }, 1000);
+}
 
         window.onload = async () => {
             onAuthStateChanged(auth, async (user) => {
