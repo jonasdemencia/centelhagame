@@ -1050,10 +1050,10 @@ async function gerarPuzzle(zonaId, salaAlvoId = null, tipoObstaculo = null) {
         console.log(`[PUZZLE] 🎲 Mecânica selecionada [${idxMecanica + 1}/${CATEGORIAS_MECANICAS.length}]: ${nomeMecanica}`);
         console.log(`[PUZZLE] 📜 Histórico de índices: [${_historicoMecanicas.join(', ')}]`);
         prompt = `
-Você é um designer de enigmas para jogos de horror textual.
+Você é um designer de enigmas para jogos de horror mitológico textual.
 
 MUNDO: ${dnaGlobal?.nome_mundo || "Reinos Desolados"}
-ATMOSFERA: ${dnaGlobal?.atmosfera || "brutal, melancólico, dark fantasy"}
+ATMOSFERA: ${dnaGlobal?.atmosfera || "mitológico, melancólico, deuses estranhos, ocultos e cruéis"}
 CONDIÇÃO DE VITÓRIA: ${contextoRecompensa}
 
 Crie um enigma ORIGINAL, DEDUTÍVEL e AUTOCONTIDO.
@@ -1078,7 +1078,7 @@ CRITÉRIOS:
 
 Retorne APENAS este JSON:
 {
-  "_rascunho_logico": "TRAVA: [o que bloqueia a saída]. FERRAMENTA: [o único objeto manipulável]. MOVIMENTO: [a ação física exata]. SINAIS: [cada objeto manipulável] → [o detalhe passivo e visível que revela o que ele pode fazer].",
+  "_rascunho_logico": "MECANISMO: [o dispositivo central desta câmara]. FERRAMENTA: [o único objeto manipulável]. MOVIMENTO: [a ação física exata]. SINAIS: [cada objeto manipulável] → [o detalhe passivo e visível que revela o que ele pode fazer].",
   "cena": "Dois a três parágrafos. Descreve o espaço e os objetos do enigma de forma integrada e puramente visual. ZERO EXPLICAÇÕES DE COMO RESOLVER. Apenas descreva o que os olhos veem de forma passiva.",  
   "dica": "Uma frase. Aponta para a INSINUAÇÃO — o detalhe físico que, quando percebido, torna o método dedutível. Concreta e sensorial.",
   "solucao": "A ação exata e completa para resolver. Derivável da PISTA BRUTA + INSINUAÇÃO."
