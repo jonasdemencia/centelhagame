@@ -3072,210 +3072,116 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
         return { w, h, shape };
     }
 
-    let nodes = {};
-    let edges = [];
+    function checarColisao(x, y, w, h, level, idIgnorado) {
+        // Margem minúscula (epsilon) para garantir que paredes tangentes não registrem colisão
+        const margem = 0.5; 
+        for (let id in window.mapCoords) {
+            if (id === idIgnorado) continue;
+            let outra = window.mapCoords[id];
+            if (outra.level !== level) continue;
+            
+            if (x + margem < outra.x + outra.w && 
+                x + w - margem > outra.x &&
+                y + margem < outra.y + outra.h && 
+                y + h - margem > outra.y) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    let salaRaiz = mapaMundo["1"];
+    let dimRaiz = obterDimensoesEShape("1", salaRaiz, false);
+    window.mapCoords["1"] = {
+        x: -dimRaiz.w / 2, y: -dimRaiz.h / 2,
+        w: dimRaiz.w, h: dimRaiz.h,
+        level: 0, shape: dimRaiz.shape
+    };
+
     let fila = ["1"];
     let visitados = new Set(["1"]);
 
-    let dimRaiz = obterDimensoesEShape("1", mapaMundo["1"], false);
-    nodes["1"] = { 
-        id: "1", 
-        x: -dimRaiz.w / 2, 
-        y: -dimRaiz.h / 2, 
-        w: dimRaiz.w, 
-        h: dimRaiz.h, 
-        shape: dimRaiz.shape, 
-        level: 0, 
-        vx: 0, 
-        vy: 0 
-    };
+    // Nova Heurística: Janela Deslizante de Perímetro
+    function encontrarEspacoAdjacente(pai, dimFilha) {
+        const passo = 10; // Testar a cada 10 pixels ao longo das paredes
+        const tentativas = [];
 
-    // 1. Extração do Grafo e Semântica Inicial
+        // 1. Desliza ao longo da face Norte (filha em cima)
+        for (let tx = pai.x - dimFilha.w; tx <= pai.x + pai.w; tx += passo) {
+            tentativas.push({ x: tx, y: pai.y - dimFilha.h });
+        }
+        // 2. Desliza ao longo da face Sul (filha embaixo)
+        for (let tx = pai.x - dimFilha.w; tx <= pai.x + pai.w; tx += passo) {
+            tentativas.push({ x: tx, y: pai.y + pai.h });
+        }
+        // 3. Desliza ao longo da face Leste (filha à direita)
+        for (let ty = pai.y - dimFilha.h; ty <= pai.y + pai.h; ty += passo) {
+            tentativas.push({ x: pai.x + pai.w, y: ty });
+        }
+        // 4. Desliza ao longo da face Oeste (filha à esquerda)
+        for (let ty = pai.y - dimFilha.h; ty <= pai.y + pai.h; ty += passo) {
+            tentativas.push({ x: pai.x - dimFilha.w, y: ty });
+        }
+
+        // Ordena as posições para priorizar o centro das faces, mantendo o layout coeso
+        tentativas.sort((a, b) => {
+            let distACentro = Math.pow((a.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((a.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
+            let distBCentro = Math.pow((b.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((b.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
+            return distACentro - distBCentro;
+        });
+
+        for (let pos of tentativas) {
+            if (!checarColisao(pos.x, pos.y, dimFilha.w, dimFilha.h, pai.level, null)) {
+                return pos;
+            }
+        }
+        return null;
+    }
+
     while (fila.length > 0) {
         let idAtual = fila.shift();
+        let pai = window.mapCoords[idAtual];
         let salaAtual = mapaMundo[idAtual];
+
         if (!salaAtual || !salaAtual.opcoes) continue;
 
-        let toggleVert = (parseInt(idAtual) % 2 === 0);
+        let filhosParaProcessar = salaAtual.opcoes
+            .filter(o => o.destino && !visitados.has(String(o.destino)))
+            .filter(o => o.texto !== "Atalho");
 
-        salaAtual.opcoes.forEach(opt => {
-            let idDest = String(opt.destino);
-            if (opt.texto === "Atalho") return; // Atalhos não puxam coordenadas físicas
+        let direcaoVerticalToggle = (parseInt(idAtual) % 2 === 0);
 
-            let t = opt.texto.toLowerCase();
-            edges.push({ source: idAtual, target: idDest, texto: t });
+        filhosParaProcessar.forEach((opcao) => {
+            let idFilha = String(opcao.destino);
+            let salaFilha = mapaMundo[idFilha];
+            if (!salaFilha) return;
 
-            if (!visitados.has(idDest) && mapaMundo[idDest]) {
-                visitados.add(idDest);
-                let dim = obterDimensoesEShape(idDest, mapaMundo[idDest], toggleVert);
-                
-                // Posição Inicial baseada em Semântica para guiar o motor de física
-                let nPai = nodes[idAtual];
-                let distance = (nPai.w + dim.w) / 2 + 20; // Folga inicial
-                let dx = (Math.random() - 0.5) * 10;
-                let dy = (Math.random() - 0.5) * 10;
+            let dim = obterDimensoesEShape(idFilha, salaFilha, direcaoVerticalToggle);
+            direcaoVerticalToggle = !direcaoVerticalToggle; 
 
-                if (t.includes("norte") || t.includes("subir") || t.includes("cima")) dy -= distance;
-                else if (t.includes("sul") || t.includes("descer") || t.includes("baixo")) dy += distance;
-                else if (t.includes("leste") || t.includes("direita")) dx += distance;
-                else if (t.includes("oeste") || t.includes("esquerda")) dx -= distance;
-                else {
-                    let angle = Math.random() * Math.PI * 2;
-                    dx += Math.cos(angle) * distance;
-                    dy += Math.sin(angle) * distance;
-                }
+            let pos = encontrarEspacoAdjacente(pai, dim);
 
-                nodes[idDest] = {
-                    id: idDest,
-                    x: nPai.x + dx,
-                    y: nPai.y + dy,
-                    w: dim.w,
-                    h: dim.h,
-                    shape: dim.shape,
-                    level: nPai.level,
-                    vx: 0, vy: 0
-                };
-                fila.push(idDest);
-            }
-        });
-    }
-
-    // 2. Motor de Física (Relaxamento Topológico)
-    // Isso resolve grafos cíclicos aproximando arestas conectadas e repelindo colisões
-    const ITERATIONS = 400;
-    const SPRING_K = 0.15; // Atração das arestas
-    const REPULSION = 0.6; // Força contra sobreposição
-    const DAMPING = 0.5;   // Fricção para estabilizar
-
-    for (let i = 0; i < ITERATIONS; i++) {
-        // A. Força de Atração (Springs entre conexões lógicas)
-        edges.forEach(edge => {
-            let n1 = nodes[edge.source];
-            let n2 = nodes[edge.target];
-            if (!n1 || !n2) return;
-
-            let cx1 = n1.x + n1.w / 2;
-            let cy1 = n1.y + n1.h / 2;
-            let cx2 = n2.x + n2.w / 2;
-            let cy2 = n2.y + n2.h / 2;
-
-            let dx = cx2 - cx1;
-            let dy = cy2 - cy1;
-            let dist = Math.hypot(dx, dy) || 1;
-
-            let isNorte = edge.texto.includes("norte") || edge.texto.includes("subir") || edge.texto.includes("cima");
-            let isSul = edge.texto.includes("sul") || edge.texto.includes("descer") || edge.texto.includes("baixo");
-            let isLeste = edge.texto.includes("leste") || edge.texto.includes("direita");
-            let isOeste = edge.texto.includes("oeste") || edge.texto.includes("esquerda");
-
-            let idealX = 0, idealY = 0;
-
-            if (isNorte || isSul || isLeste || isOeste) {
-                if (isNorte) idealY = -(n1.h + n2.h) / 2;
-                if (isSul) idealY = (n1.h + n2.h) / 2;
-                if (isLeste) idealX = (n1.w + n2.w) / 2;
-                if (isOeste) idealX = -(n1.w + n2.w) / 2;
+            if (pos) {
+                // Encaixe primário bem-sucedido na parede direta do pai
+                window.mapCoords[idFilha] = { x: pos.x, y: pos.y, w: dim.w, h: dim.h, level: pai.level, shape: dim.shape };
             } else {
-                // Genérico: puxar pela borda mais próxima sem eixo preferencial
-                let ratioX = Math.abs(dx / dist);
-                let ratioY = Math.abs(dy / dist);
-                let idealDist = ((n1.w + n2.w) / 2) * ratioX + ((n1.h + n2.h) / 2) * ratioY;
-                idealX = (dx / dist) * idealDist;
-                idealY = (dy / dist) * idealDist;
-            }
-
-            let forceX = (dx - idealX) * SPRING_K;
-            let forceY = (dy - idealY) * SPRING_K;
-
-            // Limita a força para evitar explosões matemáticas
-            forceX = Math.max(-20, Math.min(20, forceX));
-            forceY = Math.max(-20, Math.min(20, forceY));
-
-            n1.vx += forceX; n1.vy += forceY;
-            n2.vx -= forceX; n2.vy -= forceY;
-        });
-
-        // B. Força de Repulsão (Evitar Colisão AABB)
-        let nodeArray = Object.values(nodes);
-        for (let a = 0; a < nodeArray.length; a++) {
-            for (let b = a + 1; b < nodeArray.length; b++) {
-                let n1 = nodeArray[a];
-                let n2 = nodeArray[b];
-
-                let cx1 = n1.x + n1.w / 2;
-                let cy1 = n1.y + n1.h / 2;
-                let cx2 = n2.x + n2.w / 2;
-                let cy2 = n2.y + n2.h / 2;
-
-                let overlapX = (n1.w / 2 + n2.w / 2) - Math.abs(cx1 - cx2);
-                let overlapY = (n1.h / 2 + n2.h / 2) - Math.abs(cy1 - cy2);
-
-                // Só repele se houver sobreposição clara (margem de 0.5px para tangentes puras descansarem)
-                if (overlapX > 0.5 && overlapY > 0.5) {
-                    if (overlapX < overlapY) {
-                        let sign = Math.sign(cx1 - cx2) || 1;
-                        let push = (overlapX / 2) * REPULSION;
-                        n1.vx += push * sign;
-                        n2.vx -= push * sign;
-                    } else {
-                        let sign = Math.sign(cy1 - cy2) || 1;
-                        let push = (overlapY / 2) * REPULSION;
-                        n1.vx += push * sign;
-                        n2.vx -= push * sign;
-                    }
+                // Failsafe Topológico: Se a sala pai estiver 100% cercada por outras salas, 
+                // "inflamos" as paredes de busca do pai passo a passo. 
+                // Isso cria uma camada externa mantendo alinhamento grid/retilíneo.
+                let resolvida = false;
+                for (let folga = 20; folga <= 400 && !resolvida; folga += 20) {
+                     let paiExpandido = { x: pai.x - folga, y: pai.y - folga, w: pai.w + folga * 2, h: pai.h + folga * 2, level: pai.level };
+                     let posFailsafe = encontrarEspacoAdjacente(paiExpandido, dim);
+                     if (posFailsafe) {
+                         window.mapCoords[idFilha] = { x: posFailsafe.x, y: posFailsafe.y, w: dim.w, h: dim.h, level: pai.level, shape: dim.shape };
+                         resolvida = true;
+                     }
                 }
             }
-        }
 
-        // C. Integração Cinemática
-        nodeArray.forEach(n => {
-            if (n.id === "1") { n.vx = 0; n.vy = 0; } // Ancora o nó raiz de forma irrevogável
-            n.x += n.vx;
-            n.y += n.vy;
-            n.vx *= DAMPING;
-            n.vy *= DAMPING;
+            visitados.add(idFilha);
+            fila.push(idFilha);
         });
-    }
-
-    // 3. Tangência Rígida (Grid Snapping)
-    // Reduz coordenadas a múltiplos de 10. Como as dimensões (40, 60, 80, 120) 
-    // são divisíveis por 20 (raio de 10), isso "cola" perfeitamente arestas adjacentes.
-    Object.values(nodes).forEach(n => {
-        window.mapCoords[n.id] = {
-            x: Math.round(n.x / 10) * 10,
-            y: Math.round(n.y / 10) * 10,
-            w: n.w,
-            h: n.h,
-            level: n.level,
-            shape: n.shape
-        };
-    });
-
-    // Failsafe de Sobreposição (Resolve qualquer micro-colisão residual após o snap)
-    let coordArray = Object.values(window.mapCoords);
-    let resolved = false;
-    let failsafeLoops = 0;
-    while (!resolved && failsafeLoops < 10) {
-        resolved = true;
-        for (let a = 0; a < coordArray.length; a++) {
-            for (let b = a + 1; b < coordArray.length; b++) {
-                let n1 = coordArray[a];
-                let n2 = coordArray[b];
-                
-                let overlapX = (n1.w / 2 + n2.w / 2) - Math.abs((n1.x + n1.w/2) - (n2.x + n2.w/2));
-                let overlapY = (n1.h / 2 + n2.h / 2) - Math.abs((n1.y + n1.h/2) - (n2.y + n2.h/2));
-                
-                if (overlapX > 0.1 && overlapY > 0.1) {
-                    resolved = false;
-                    if (overlapX < overlapY) {
-                        n2.x += (Math.sign((n2.x + n2.w/2) - (n1.x + n1.w/2)) || 1) * Math.ceil(overlapX/10)*10;
-                    } else {
-                        n2.y += (Math.sign((n2.y + n2.h/2) - (n1.y + n1.h/2)) || 1) * Math.ceil(overlapY/10)*10;
-                    }
-                }
-            }
-        }
-        failsafeLoops++;
     }
 
     if (typeof salvarEstadoJogador === "function") await salvarEstadoJogador();
