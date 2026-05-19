@@ -3384,6 +3384,8 @@ async function abrirMapaVisual() {
         }
     }
 }
+
+        window.abrirMapaVisual = abrirMapaVisual;
         
         window.onload = async () => {
             onAuthStateChanged(auth, async (user) => {
