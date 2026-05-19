@@ -3352,6 +3352,40 @@ async function abrirMapaVisual() {
         }
     }
 }
+
+                    // CORREDORES DIAGONAIS (fallback para conexões distantes)
+            else {
+                let distancia = Math.hypot(
+                    (rA.x + rA.w/2) - (rB.x + rB.w/2),
+                    (rA.y + rA.h/2) - (rB.y + rB.h/2)
+                );
+                // Só desenha se estiverem razoavelmente próximos (evita linhas cruzando o mapa inteiro)
+                if (distancia < 250) {
+                    let cxA = offsetX + (rA.x + rA.w/2) * escala;
+                    let cyA = offsetY + (rA.y + rA.h/2) * escala;
+                    let cxB = offsetX + (rB.x + rB.w/2) * escala;
+                    let cyB = offsetY + (rB.y + rB.h/2) * escala;
+                    
+                    ctx.save();
+                    ctx.setLineDash([4, 4]);
+                    ctx.strokeStyle = "#5a4a38";
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(cxA, cyA);
+                    ctx.lineTo(cxB, cyB);
+                    ctx.stroke();
+                    
+                    // Pequeno círculo no meio indicando passagem
+                    let midX = (cxA + cxB) / 2;
+                    let midY = (cyA + cyB) / 2;
+                    ctx.fillStyle = "#f2a65a";
+                    ctx.beginPath();
+                    ctx.arc(midX, midY, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.restore();
+                }
+            }
         
 window.abrirMapaVisual = abrirMapaVisual;
         
