@@ -1524,6 +1524,7 @@ REGRAS TOPOLÓGICAS (violá-las causa REJEIÇÃO AUTOMÁTICA do plano):
 2. BIDIRECIONALIDADE TOTAL: Se Sala X tem saída para Sala Y, então Sala Y DEVE ter saída para Sala X. Sem exceções, exceto a fronteira para a próxima zona.
 3. CONECTIVIDADE: Toda sala de ${salaInicio} a ${salaFim} deve ser alcançável partindo de ${salaInicio}. Nenhuma sala isolada.
 4. FRONTEIRA ÚNICA: Apenas a sala ${salaFim} pode ter uma saída apontando para ${salaFim+1}. Nenhuma outra.
+5. LIMITE DE SAÍDAS FÍSICAS: Cada sala deve ter no MÁXIMO 3 saídas físicas reais (corredores, portas, escadas, rampas, pontes). Opcionalmente, pode ter 1 atalho lógico/oculto adicional, mas este deve ser nomeado como "Atalho" e será tratado como teleporte narrativo — sem representação física no mapa. O total de saídas por sala (físicas + atalho) nunca deve ultrapassar 4.
 
 REGRAS DE SEMÂNTICA FÍSICA (VERBOS DE TRANSIÇÃO):
 1. A ação de transição DEVE ser uma locomoção física (Ex: "Atravessar o arco", "Subir a escada de ferro", "Rastejar pelo túnel").
@@ -3112,7 +3113,9 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
         if (!salaAtual || !salaAtual.opcoes) continue;
 
         // Distribui os filhos de forma circular para ramificar organicamente
-        let filhosParaProcessar = salaAtual.opcoes.filter(o => o.destino && !visitados.has(String(o.destino)));
+                let filhosParaProcessar = salaAtual.opcoes
+            .filter(o => o.destino && !visitados.has(String(o.destino)))
+            .filter(o => o.texto !== "Atalho");
         let dirOffset = parseInt(idAtual) || 0; // Varia a direção inicial com base no ID para quebrar a linearidade
 
         filhosParaProcessar.forEach((opcao, index) => {
@@ -3301,6 +3304,7 @@ async function abrirMapaVisual() {
             let idB = String(opt.destino);
             let rB = window.mapCoords[idB];
             if (!rB) continue;
+                    if (opt.texto === "Atalho") continue;
 
             // Evita desenhar a porta duas vezes (A->B e B->A)
             let parKey = [idA, idB].sort().join('-');
