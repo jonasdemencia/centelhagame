@@ -3051,138 +3051,328 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
     if (!mapaMundo || !mapaMundo["1"]) return;
     window.mapCoords = {};
 
-    function obterDimensoesEShape(idSala, sala, eixoVertical = false) {
+    const CELL = 20; // Unidade fundamental do universo
+
+    // ─── 1. DIMENSÕES EM CÉLULAS (sempre múltiplos de CELL) ───
+    function getGridDim(idSala, sala) {
         let nome = (sala.nome || "").toLowerCase();
-        let w = 60, h = 60, shape = "rect";
+        let w = 3, h = 3, shape = "rect"; // 60x60
 
         if (sala.puzzle_status || sala.puzzle) {
-            w = 40; h = 40; shape = "octagon";
+            w = 2; h = 2; shape = "octagon"; // 40x40
         } else if (nome.includes("grande salão") || nome.includes("trono") || nome.includes("arsenal")) {
-            w = 120; h = 100; shape = "pillars";
+            w = 6; h = 5; shape = "pillars"; // 120x100
         } else if (nome.includes("torre") || nome.includes("mago") || nome.includes("observatório")) {
-            w = 60; h = 60; shape = "octagon";
+            w = 3; h = 3; shape = "octagon";
         } else if (nome.includes("corredor") || nome.includes("passagem") || nome.includes("galeria")) {
-            if (eixoVertical) { w = 40; h = 120; } 
-            else { w = 120; h = 40; }
+            w = 6; h = 2; shape = "rect"; // 120x40
         } else {
             let numId = parseInt(idSala) || 0;
-            if (numId % 3 === 1) { w = 40; h = 80; } 
-            else if (numId % 3 === 2) { w = 80; h = 40; }
+            if (numId % 3 === 1) { w = 2; h = 4; } // 40x80
+            else if (numId % 3 === 2) { w = 4; h = 2; } // 80x40
         }
         return { w, h, shape };
     }
 
-    function checarColisao(x, y, w, h, level, idIgnorado) {
-        // Margem minúscula (epsilon) para garantir que paredes tangentes não registrem colisão
-        const margem = 0.5; 
-        for (let id in window.mapCoords) {
-            if (id === idIgnorado) continue;
-            let outra = window.mapCoords[id];
-            if (outra.level !== level) continue;
-            
-            if (x + margem < outra.x + outra.w && 
-                x + w - margem > outra.x &&
-                y + margem < outra.y + outra.h && 
-                y + h - margem > outra.y) {
-                return true;
-            }
-        }
-        return false;
+    // ─── 2. SEMÂNTICA DIRECIONAL ───
+    function extrairDirecao(textoAcao) {
+        const t = textoAcao.toLowerCase();
+        if (t.includes("norte") || t.includes("subir") || t.includes("cima") || t.includes("acima") || t.includes("escada acima")) return "N";
+        if (t.includes("sul") || t.includes("descer") || t.includes("baixo") || t.includes("abaixo") || t.includes("escada abaixo")) return "S";
+        if (t.includes("leste") || t.includes("direita") || t.includes("este") || t.includes("orient")) return "E";
+        if (t.includes("oeste") || t.includes("esquerda") || t.includes("west") || t.includes("ocident")) return "W";
+        return null;
     }
 
-    let salaRaiz = mapaMundo["1"];
-    let dimRaiz = obterDimensoesEShape("1", salaRaiz, false);
-    window.mapCoords["1"] = {
-        x: -dimRaiz.w / 2, y: -dimRaiz.h / 2,
-        w: dimRaiz.w, h: dimRaiz.h,
-        level: 0, shape: dimRaiz.shape
-    };
+    // ─── 3. ESTRUTURAS DO GRID ───
+    const nodes = {}; // id -> dados da sala
+    const ocupacao = new Map(); // "gx,gy" -> idSala
 
-    let fila = ["1"];
-    let visitados = new Set(["1"]);
-
-    // Nova Heurística: Janela Deslizante de Perímetro
-    function encontrarEspacoAdjacente(pai, dimFilha) {
-        const passo = 10; // Testar a cada 10 pixels ao longo das paredes
-        const tentativas = [];
-
-        // 1. Desliza ao longo da face Norte (filha em cima)
-        for (let tx = pai.x - dimFilha.w; tx <= pai.x + pai.w; tx += passo) {
-            tentativas.push({ x: tx, y: pai.y - dimFilha.h });
+    function ocupar(id) {
+        const n = nodes[id];
+        for (let x = n.gx; x < n.gx + n.gw; x++) {
+            for (let y = n.gy; y < n.gy + n.gh; y++) {
+                ocupacao.set(`${x},${y}`, id);
+            }
         }
-        // 2. Desliza ao longo da face Sul (filha embaixo)
-        for (let tx = pai.x - dimFilha.w; tx <= pai.x + pai.w; tx += passo) {
-            tentativas.push({ x: tx, y: pai.y + pai.h });
-        }
-        // 3. Desliza ao longo da face Leste (filha à direita)
-        for (let ty = pai.y - dimFilha.h; ty <= pai.y + pai.h; ty += passo) {
-            tentativas.push({ x: pai.x + pai.w, y: ty });
-        }
-        // 4. Desliza ao longo da face Oeste (filha à esquerda)
-        for (let ty = pai.y - dimFilha.h; ty <= pai.y + pai.h; ty += passo) {
-            tentativas.push({ x: pai.x - dimFilha.w, y: ty });
-        }
+    }
 
-        // Ordena as posições para priorizar o centro das faces, mantendo o layout coeso
-        tentativas.sort((a, b) => {
-            let distACentro = Math.pow((a.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((a.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
-            let distBCentro = Math.pow((b.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((b.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
-            return distACentro - distBCentro;
-        });
+    function desocupar(id) {
+        const n = nodes[id];
+        for (let x = n.gx; x < n.gx + n.gw; x++) {
+            for (let y = n.gy; y < n.gy + n.gh; y++) {
+                if (ocupacao.get(`${x},${y}`) === id) ocupacao.delete(`${x},${y}`);
+            }
+        }
+    }
 
-        for (let pos of tentativas) {
-            if (!checarColisao(pos.x, pos.y, dimFilha.w, dimFilha.h, pai.level, null)) {
-                return pos;
+    function colide(gx, gy, gw, gh, ignoreId) {
+        for (let x = gx; x < gx + gw; x++) {
+            for (let y = gy; y < gy + gh; y++) {
+                const dono = ocupacao.get(`${x},${y}`);
+                if (dono && dono !== ignoreId) return dono;
             }
         }
         return null;
     }
 
-    while (fila.length > 0) {
-        let idAtual = fila.shift();
-        let pai = window.mapCoords[idAtual];
-        let salaAtual = mapaMundo[idAtual];
+    // ─── 4. OPERAÇÃO CHAVE: INSERÇÃO DE EIXO ───
+    // Quando não há espaço na parede, não empurramos para o lado aleatório.
+    // Abremos uma fresta no espaço-tempo, empurrando o sub-mapa inteiro.
+    function inserirLinhaVazia(gy, altura) {
+        const afetados = Object.values(nodes).filter(n => n.gy >= gy).sort((a,b) => b.gy - a.gy);
+        afetados.forEach(n => { desocupar(n.id); n.gy += altura; });
+        afetados.forEach(n => ocupar(n.id));
+    }
 
-        if (!salaAtual || !salaAtual.opcoes) continue;
+    function inserirColunaVazia(gx, largura) {
+        const afetados = Object.values(nodes).filter(n => n.gx >= gx).sort((a,b) => b.gx - a.gx);
+        afetados.forEach(n => { desocupar(n.id); n.gx += largura; });
+        afetados.forEach(n => ocupar(n.id));
+    }
 
-        let filhosParaProcessar = salaAtual.opcoes
-            .filter(o => o.destino && !visitados.has(String(o.destino)))
-            .filter(o => o.texto !== "Atalho");
+    // ─── 5. POSICIONAMENTO COM DESLIZE E INSERÇÃO ───
+    function calcularPosicaoIdeal(pai, filhoDim, dir) {
+        let gx = 0, gy = 0;
+        // Centralizado na parede do pai por padrão
+        if (dir === "N") {
+            gx = pai.gx + Math.floor((pai.gw - filhoDim.w) / 2);
+            gy = pai.gy - filhoDim.h;
+        } else if (dir === "S") {
+            gx = pai.gx + Math.floor((pai.gw - filhoDim.w) / 2);
+            gy = pai.gy + pai.gh;
+        } else if (dir === "E") {
+            gx = pai.gx + pai.gw;
+            gy = pai.gy + Math.floor((pai.gh - filhoDim.h) / 2);
+        } else if (dir === "W") {
+            gx = pai.gx - filhoDim.w;
+            gy = pai.gy + Math.floor((pai.gh - filhoDim.h) / 2);
+        } else {
+            // Sem direção: tenta Sul, depente Leste, Norte, Oeste
+            gx = pai.gx + Math.floor((pai.gw - filhoDim.w) / 2);
+            gy = pai.gy + pai.gh;
+        }
+        return { gx, gy };
+    }
 
-        let direcaoVerticalToggle = (parseInt(idAtual) % 2 === 0);
+    function tentarEncaixar(idPai, idFilho, dirPreferida) {
+        if (nodes[idFilho]) return true; // Já existe
+        const pai = nodes[idPai];
+        const dim = getGridDim(idFilho, mapaMundo[idFilho]);
 
-        filhosParaProcessar.forEach((opcao) => {
-            let idFilha = String(opcao.destino);
-            let salaFilha = mapaMundo[idFilha];
-            if (!salaFilha) return;
+        // Posição base centralizada
+        let base = calcularPosicaoIdeal(pai, dim, dirPreferida);
 
-            let dim = obterDimensoesEShape(idFilha, salaFilha, direcaoVerticalToggle);
-            direcaoVerticalToggle = !direcaoVerticalToggle; 
+        // Estratégia A: Deslizar ao longo da parede procurando slot livre
+        const deslizes = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 7, -7, 8, -8];
+        
+        for (const d of deslizes) {
+            let candGx = base.gx + (dirPreferida === "N" || dirPreferida === "S" ? d : 0);
+            let candGy = base.gy + (dirPreferida === "E" || dirPreferida === "W" ? d : 0);
+            
+            // Garantir que a filho ainda toca o pai (pelo menos 1 célula de parede compartilhada)
+            let toca = false;
+            if (dirPreferida === "N" && candGx + dim.w > pai.gx && candGx < pai.gx + pai.gw && candGy + dim.h === pai.gy) toca = true;
+            if (dirPreferida === "S" && candGx + dim.w > pai.gx && candGx < pai.gx + pai.gw && candGy === pai.gy + pai.gh) toca = true;
+            if (dirPreferida === "E" && candGy + dim.h > pai.gy && candGy < pai.gy + pai.gh && candGx === pai.gx + pai.gw) toca = true;
+            if (dirPreferida === "W" && candGy + dim.h > pai.gy && candGy < pai.gy + pai.gh && candGx + dim.w === pai.gx) toca = true;
+            if (!dirPreferida) toca = true; // Sem direção, qualquer lugar próximo vale
 
-            let pos = encontrarEspacoAdjacente(pai, dim);
+            if (!toca) continue;
 
-            if (pos) {
-                // Encaixe primário bem-sucedido na parede direta do pai
-                window.mapCoords[idFilha] = { x: pos.x, y: pos.y, w: dim.w, h: dim.h, level: pai.level, shape: dim.shape };
-            } else {
-                // Failsafe Topológico: Se a sala pai estiver 100% cercada por outras salas, 
-                // "inflamos" as paredes de busca do pai passo a passo. 
-                // Isso cria uma camada externa mantendo alinhamento grid/retilíneo.
-                let resolvida = false;
-                for (let folga = 20; folga <= 400 && !resolvida; folga += 20) {
-                     let paiExpandido = { x: pai.x - folga, y: pai.y - folga, w: pai.w + folga * 2, h: pai.h + folga * 2, level: pai.level };
-                     let posFailsafe = encontrarEspacoAdjacente(paiExpandido, dim);
-                     if (posFailsafe) {
-                         window.mapCoords[idFilha] = { x: posFailsafe.x, y: posFailsafe.y, w: dim.w, h: dim.h, level: pai.level, shape: dim.shape };
-                         resolvida = true;
-                     }
-                }
+            if (!colide(candGx, candGy, dim.w, dim.h, null)) {
+                nodes[idFilho] = { id: idFilho, gx: candGx, gy: candGy, gw: dim.w, gh: dim.h, shape: dim.shape };
+                ocupar(idFilho);
+                return true;
             }
+        }
 
-            visitados.add(idFilha);
-            fila.push(idFilha);
+        // Estratégia B: Inserção de Eixo (a fenda no espaço-tempo)
+        // Criamos espaço exato empurrando o sub-mapa
+        if (dirPreferida === "N") {
+            inserirLinhaVazia(pai.gy - dim.h, dim.h);
+            base.gy = pai.gy - dim.h;
+        } else if (dirPreferida === "S") {
+            inserirLinhaVazia(pai.gy + pai.gh, dim.h);
+            base.gy = pai.gy + pai.gh;
+        } else if (dirPreferida === "E") {
+            inserirColunaVazia(pai.gx + pai.gw, dim.w);
+            base.gx = pai.gx + pai.gw;
+        } else if (dirPreferida === "W") {
+            inserirColunaVazia(pai.gx - dim.w, dim.w);
+            base.gx = pai.gx - dim.w;
+        }
+
+        // Após abrir a fenda, tentamos o deslize novamente na nova realidade
+        for (const d of deslizes) {
+            let candGx = base.gx + (dirPreferida === "N" || dirPreferida === "S" ? d : 0);
+            let candGy = base.gy + (dirPreferida === "E" || dirPreferida === "W" ? d : 0);
+            if (!colide(candGx, candGy, dim.w, dim.h, null)) {
+                nodes[idFilho] = { id: idFilho, gx: candGx, gy: candGy, gw: dim.w, gh: dim.h, shape: dim.shape };
+                ocupar(idFilho);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // ─── 6. INICIALIZAÇÃO DA RAIZ ───
+    const dimRaiz = getGridDim("1", mapaMundo["1"]);
+    nodes["1"] = { id: "1", gx: 0, gy: 0, gw: dimRaiz.w, gh: dimRaiz.h, shape: dimRaiz.shape };
+    ocupar("1");
+
+    // ─── 7. COLETA DE ARESTAS ───
+    const edges = [];
+    const visitados = new Set(["1"]);
+    const fila = ["1"];
+
+    while (fila.length > 0) {
+        const idAtual = fila.shift();
+        const sala = mapaMundo[idAtual];
+        if (!sala || !sala.opcoes) continue;
+
+        sala.opcoes.forEach(opt => {
+            const idDest = String(opt.destino);
+            if (opt.texto === "Atalho") return;
+            const dir = extrairDirecao(opt.texto);
+            edges.push({ source: idAtual, target: idDest, dir, texto: opt.texto });
+            if (!visitados.has(idDest) && mapaMundo[idDest]) {
+                visitados.add(idDest);
+                fila.push(idDest);
+            }
         });
     }
+
+    // ─── 8. POSICIONAMENTO EM ORDEM BFS ───
+    const filaPos = ["1"];
+    const posicionados = new Set(["1"]);
+
+    while (filaPos.length > 0) {
+        const idAtual = filaPos.shift();
+        const sala = mapaMundo[idAtual];
+        if (!sala || !sala.opcoes) continue;
+
+        for (const opt of sala.opcoes) {
+            const idDest = String(opt.destino);
+            if (opt.texto === "Atalho" || posicionados.has(idDest)) continue;
+            
+            const dir = extrairDirecao(opt.texto);
+            const ok = tentarEncaixar(idAtual, idDest, dir);
+            
+            if (ok) {
+                posicionados.add(idDest);
+                filaPos.push(idDest);
+            } else {
+                // Último recurso: busca em espiral (raro, só para grafos muito patológicos)
+                const dim = getGridDim(idDest, mapaMundo[idDest]);
+                let achou = false;
+                for (let r = 1; r < 30 && !achou; r++) {
+                    for (let dx = -r; dx <= r && !achou; dx++) {
+                        for (let dy = -r; dy <= r && !achou; dy++) {
+                            if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue;
+                            const gx = nodes[idAtual].gx + dx * dim.w;
+                            const gy = nodes[idAtual].gy + dy * dim.h;
+                            if (!colide(gx, gy, dim.w, dim.h, null)) {
+                                nodes[idDest] = { id: idDest, gx, gy, gw: dim.w, gh: dim.h, shape: dim.shape };
+                                ocupar(idDest);
+                                posicionados.add(idDest);
+                                filaPos.push(idDest);
+                                achou = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ─── 9. RESOLUÇÃO DE CICLOS (ARESTAS ENTRE SALAS JÁ POSICIONADAS) ───
+    // Para cada aresta onde as salas não são adjacentes, tentamos forçar a tangência
+    // via slide ou inserção de eixo local.
+    for (const edge of edges) {
+        const a = nodes[edge.source];
+        const b = nodes[edge.target];
+        if (!a || !b) continue;
+
+        // Verifica adjacência real (paredes coladas com overlap de pelo menos 1 célula)
+        let adjacentes = false;
+        if (a.gx < b.gx + b.gw && a.gx + a.gw > b.gx) {
+            if (a.gy + a.gh === b.gy || b.gy + b.gh === a.gy) adjacentes = true;
+        }
+        if (a.gy < b.gy + b.gh && a.gy + a.gh > b.gy) {
+            if (a.gx + a.gw === b.gx || b.gx + b.gw === a.gx) adjacentes = true;
+        }
+
+        if (adjacentes) continue;
+
+        // Não são adjacentes. Tentar slide de B para encostar em A.
+        // Movemos B apenas no eixo perpendicular até encostar.
+        let movGx = b.gx, movGy = b.gy;
+        const dx = (a.gx + a.gw/2) - (b.gx + b.gw/2);
+        const dy = (a.gy + a.gh/2) - (b.gy + b.gh/2);
+
+        if (Math.abs(dx) > Math.abs(dy)) {
+            // B precisa se alinhar horizontalmente
+            if (dx > 0) movGx = a.gx + a.gw; // B vai para leste de A
+            else movGx = a.gx - b.gw; // B vai para oeste de A
+            // Ajusta Y para manter overlap vertical
+            movGy = a.gy + Math.floor((a.gh - b.gh) / 2);
+        } else {
+            if (dy > 0) movGy = a.gy + a.gh; // B vai para sul de A
+            else movGy = a.gy - b.gh; // B vai para norte de A
+            movGx = a.gx + Math.floor((a.gw - b.gw) / 2);
+        }
+
+        // Se a posição alvo está livre, movemos B e TODO o sub-mapa conectado a B
+        if (!colide(movGx, movGy, b.gw, b.gh, edge.target)) {
+            desocupar(edge.target);
+            const deltaX = movGx - b.gx;
+            const deltaY = movGy - b.gy;
+            b.gx = movGx; b.gy = movGy;
+            ocupar(edge.target);
+            
+            // Propaga o movimento para filhos de B (evita desencaixar o sub-mapa de B)
+            // Usamos BFS simples a partir de B
+            const filaProp = [edge.target];
+            const propVisitados = new Set([edge.target]);
+            while (filaProp.length > 0) {
+                const idP = filaProp.shift();
+                const salaP = mapaMundo[idP];
+                if (!salaP || !salaP.opcoes) continue;
+                for (const op of salaP.opcoes) {
+                    const idC = String(op.destino);
+                    if (idC === edge.source) continue; // Não empurra o pai que estamos tentando encostar
+                    if (nodes[idC] && !propVisitados.has(idC)) {
+                        propVisitados.add(idC);
+                        desocupar(idC);
+                        nodes[idC].gx += deltaX;
+                        nodes[idC].gy += deltaY;
+                        ocupar(idC);
+                        filaProp.push(idC);
+                    }
+                }
+            }
+        }
+    }
+
+    // ─── 10. CONVERSÃO PARA PIXELS E EXPORTAÇÃO ───
+    let minGx = Infinity, minGy = Infinity;
+    Object.values(nodes).forEach(n => {
+        if (n.gx < minGx) minGx = n.gx;
+        if (n.gy < minGy) minGy = n.gy;
+    });
+
+    Object.values(nodes).forEach(n => {
+        window.mapCoords[n.id] = {
+            x: (n.gx - minGx) * CELL,
+            y: (n.gy - minGy) * CELL,
+            w: n.gw * CELL,
+            h: n.gh * CELL,
+            level: 0,
+            shape: n.shape
+        };
+    });
 
     if (typeof salvarEstadoJogador === "function") await salvarEstadoJogador();
 }
