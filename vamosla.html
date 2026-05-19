@@ -3051,328 +3051,232 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
     if (!mapaMundo || !mapaMundo["1"]) return;
     window.mapCoords = {};
 
-    const CELL = 20; // Unidade fundamental do universo
-
-    // ─── 1. DIMENSÕES EM CÉLULAS (sempre múltiplos de CELL) ───
-    function getGridDim(idSala, sala) {
+    function obterDimensoesEShape(idSala, sala, eixoVertical = false) {
         let nome = (sala.nome || "").toLowerCase();
-        let w = 3, h = 3, shape = "rect"; // 60x60
+        let w = 60, h = 60, shape = "rect";
 
         if (sala.puzzle_status || sala.puzzle) {
-            w = 2; h = 2; shape = "octagon"; // 40x40
+            w = 40; h = 40; shape = "octagon";
         } else if (nome.includes("grande salão") || nome.includes("trono") || nome.includes("arsenal")) {
-            w = 6; h = 5; shape = "pillars"; // 120x100
+            w = 120; h = 100; shape = "pillars";
         } else if (nome.includes("torre") || nome.includes("mago") || nome.includes("observatório")) {
-            w = 3; h = 3; shape = "octagon";
+            w = 60; h = 60; shape = "octagon";
         } else if (nome.includes("corredor") || nome.includes("passagem") || nome.includes("galeria")) {
-            w = 6; h = 2; shape = "rect"; // 120x40
+            if (eixoVertical) { w = 40; h = 120; } 
+            else { w = 120; h = 40; }
         } else {
             let numId = parseInt(idSala) || 0;
-            if (numId % 3 === 1) { w = 2; h = 4; } // 40x80
-            else if (numId % 3 === 2) { w = 4; h = 2; } // 80x40
+            if (numId % 3 === 1) { w = 40; h = 80; } 
+            else if (numId % 3 === 2) { w = 80; h = 40; }
         }
         return { w, h, shape };
     }
 
-    // ─── 2. SEMÂNTICA DIRECIONAL ───
-    function extrairDirecao(textoAcao) {
-        const t = textoAcao.toLowerCase();
-        if (t.includes("norte") || t.includes("subir") || t.includes("cima") || t.includes("acima") || t.includes("escada acima")) return "N";
-        if (t.includes("sul") || t.includes("descer") || t.includes("baixo") || t.includes("abaixo") || t.includes("escada abaixo")) return "S";
-        if (t.includes("leste") || t.includes("direita") || t.includes("este") || t.includes("orient")) return "E";
-        if (t.includes("oeste") || t.includes("esquerda") || t.includes("west") || t.includes("ocident")) return "W";
-        return null;
-    }
+    let nodes = {};
+    let edges = [];
+    let fila = ["1"];
+    let visitados = new Set(["1"]);
 
-    // ─── 3. ESTRUTURAS DO GRID ───
-    const nodes = {}; // id -> dados da sala
-    const ocupacao = new Map(); // "gx,gy" -> idSala
+    let dimRaiz = obterDimensoesEShape("1", mapaMundo["1"], false);
+    nodes["1"] = { 
+        id: "1", 
+        x: -dimRaiz.w / 2, 
+        y: -dimRaiz.h / 2, 
+        w: dimRaiz.w, 
+        h: dimRaiz.h, 
+        shape: dimRaiz.shape, 
+        level: 0, 
+        vx: 0, 
+        vy: 0 
+    };
 
-    function ocupar(id) {
-        const n = nodes[id];
-        for (let x = n.gx; x < n.gx + n.gw; x++) {
-            for (let y = n.gy; y < n.gy + n.gh; y++) {
-                ocupacao.set(`${x},${y}`, id);
-            }
-        }
-    }
-
-    function desocupar(id) {
-        const n = nodes[id];
-        for (let x = n.gx; x < n.gx + n.gw; x++) {
-            for (let y = n.gy; y < n.gy + n.gh; y++) {
-                if (ocupacao.get(`${x},${y}`) === id) ocupacao.delete(`${x},${y}`);
-            }
-        }
-    }
-
-    function colide(gx, gy, gw, gh, ignoreId) {
-        for (let x = gx; x < gx + gw; x++) {
-            for (let y = gy; y < gy + gh; y++) {
-                const dono = ocupacao.get(`${x},${y}`);
-                if (dono && dono !== ignoreId) return dono;
-            }
-        }
-        return null;
-    }
-
-    // ─── 4. OPERAÇÃO CHAVE: INSERÇÃO DE EIXO ───
-    // Quando não há espaço na parede, não empurramos para o lado aleatório.
-    // Abremos uma fresta no espaço-tempo, empurrando o sub-mapa inteiro.
-    function inserirLinhaVazia(gy, altura) {
-        const afetados = Object.values(nodes).filter(n => n.gy >= gy).sort((a,b) => b.gy - a.gy);
-        afetados.forEach(n => { desocupar(n.id); n.gy += altura; });
-        afetados.forEach(n => ocupar(n.id));
-    }
-
-    function inserirColunaVazia(gx, largura) {
-        const afetados = Object.values(nodes).filter(n => n.gx >= gx).sort((a,b) => b.gx - a.gx);
-        afetados.forEach(n => { desocupar(n.id); n.gx += largura; });
-        afetados.forEach(n => ocupar(n.id));
-    }
-
-    // ─── 5. POSICIONAMENTO COM DESLIZE E INSERÇÃO ───
-    function calcularPosicaoIdeal(pai, filhoDim, dir) {
-        let gx = 0, gy = 0;
-        // Centralizado na parede do pai por padrão
-        if (dir === "N") {
-            gx = pai.gx + Math.floor((pai.gw - filhoDim.w) / 2);
-            gy = pai.gy - filhoDim.h;
-        } else if (dir === "S") {
-            gx = pai.gx + Math.floor((pai.gw - filhoDim.w) / 2);
-            gy = pai.gy + pai.gh;
-        } else if (dir === "E") {
-            gx = pai.gx + pai.gw;
-            gy = pai.gy + Math.floor((pai.gh - filhoDim.h) / 2);
-        } else if (dir === "W") {
-            gx = pai.gx - filhoDim.w;
-            gy = pai.gy + Math.floor((pai.gh - filhoDim.h) / 2);
-        } else {
-            // Sem direção: tenta Sul, depente Leste, Norte, Oeste
-            gx = pai.gx + Math.floor((pai.gw - filhoDim.w) / 2);
-            gy = pai.gy + pai.gh;
-        }
-        return { gx, gy };
-    }
-
-    function tentarEncaixar(idPai, idFilho, dirPreferida) {
-        if (nodes[idFilho]) return true; // Já existe
-        const pai = nodes[idPai];
-        const dim = getGridDim(idFilho, mapaMundo[idFilho]);
-
-        // Posição base centralizada
-        let base = calcularPosicaoIdeal(pai, dim, dirPreferida);
-
-        // Estratégia A: Deslizar ao longo da parede procurando slot livre
-        const deslizes = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 7, -7, 8, -8];
-        
-        for (const d of deslizes) {
-            let candGx = base.gx + (dirPreferida === "N" || dirPreferida === "S" ? d : 0);
-            let candGy = base.gy + (dirPreferida === "E" || dirPreferida === "W" ? d : 0);
-            
-            // Garantir que a filho ainda toca o pai (pelo menos 1 célula de parede compartilhada)
-            let toca = false;
-            if (dirPreferida === "N" && candGx + dim.w > pai.gx && candGx < pai.gx + pai.gw && candGy + dim.h === pai.gy) toca = true;
-            if (dirPreferida === "S" && candGx + dim.w > pai.gx && candGx < pai.gx + pai.gw && candGy === pai.gy + pai.gh) toca = true;
-            if (dirPreferida === "E" && candGy + dim.h > pai.gy && candGy < pai.gy + pai.gh && candGx === pai.gx + pai.gw) toca = true;
-            if (dirPreferida === "W" && candGy + dim.h > pai.gy && candGy < pai.gy + pai.gh && candGx + dim.w === pai.gx) toca = true;
-            if (!dirPreferida) toca = true; // Sem direção, qualquer lugar próximo vale
-
-            if (!toca) continue;
-
-            if (!colide(candGx, candGy, dim.w, dim.h, null)) {
-                nodes[idFilho] = { id: idFilho, gx: candGx, gy: candGy, gw: dim.w, gh: dim.h, shape: dim.shape };
-                ocupar(idFilho);
-                return true;
-            }
-        }
-
-        // Estratégia B: Inserção de Eixo (a fenda no espaço-tempo)
-        // Criamos espaço exato empurrando o sub-mapa
-        if (dirPreferida === "N") {
-            inserirLinhaVazia(pai.gy - dim.h, dim.h);
-            base.gy = pai.gy - dim.h;
-        } else if (dirPreferida === "S") {
-            inserirLinhaVazia(pai.gy + pai.gh, dim.h);
-            base.gy = pai.gy + pai.gh;
-        } else if (dirPreferida === "E") {
-            inserirColunaVazia(pai.gx + pai.gw, dim.w);
-            base.gx = pai.gx + pai.gw;
-        } else if (dirPreferida === "W") {
-            inserirColunaVazia(pai.gx - dim.w, dim.w);
-            base.gx = pai.gx - dim.w;
-        }
-
-        // Após abrir a fenda, tentamos o deslize novamente na nova realidade
-        for (const d of deslizes) {
-            let candGx = base.gx + (dirPreferida === "N" || dirPreferida === "S" ? d : 0);
-            let candGy = base.gy + (dirPreferida === "E" || dirPreferida === "W" ? d : 0);
-            if (!colide(candGx, candGy, dim.w, dim.h, null)) {
-                nodes[idFilho] = { id: idFilho, gx: candGx, gy: candGy, gw: dim.w, gh: dim.h, shape: dim.shape };
-                ocupar(idFilho);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    // ─── 6. INICIALIZAÇÃO DA RAIZ ───
-    const dimRaiz = getGridDim("1", mapaMundo["1"]);
-    nodes["1"] = { id: "1", gx: 0, gy: 0, gw: dimRaiz.w, gh: dimRaiz.h, shape: dimRaiz.shape };
-    ocupar("1");
-
-    // ─── 7. COLETA DE ARESTAS ───
-    const edges = [];
-    const visitados = new Set(["1"]);
-    const fila = ["1"];
-
+    // 1. Extração do Grafo e Semântica Inicial
     while (fila.length > 0) {
-        const idAtual = fila.shift();
-        const sala = mapaMundo[idAtual];
-        if (!sala || !sala.opcoes) continue;
+        let idAtual = fila.shift();
+        let salaAtual = mapaMundo[idAtual];
+        if (!salaAtual || !salaAtual.opcoes) continue;
 
-        sala.opcoes.forEach(opt => {
-            const idDest = String(opt.destino);
-            if (opt.texto === "Atalho") return;
-            const dir = extrairDirecao(opt.texto);
-            edges.push({ source: idAtual, target: idDest, dir, texto: opt.texto });
+        let toggleVert = (parseInt(idAtual) % 2 === 0);
+
+        salaAtual.opcoes.forEach(opt => {
+            let idDest = String(opt.destino);
+            if (opt.texto === "Atalho") return; // Atalhos não puxam coordenadas físicas
+
+            let t = opt.texto.toLowerCase();
+            edges.push({ source: idAtual, target: idDest, texto: t });
+
             if (!visitados.has(idDest) && mapaMundo[idDest]) {
                 visitados.add(idDest);
+                let dim = obterDimensoesEShape(idDest, mapaMundo[idDest], toggleVert);
+                
+                // Posição Inicial baseada em Semântica para guiar o motor de física
+                let nPai = nodes[idAtual];
+                let distance = (nPai.w + dim.w) / 2 + 20; // Folga inicial
+                let dx = (Math.random() - 0.5) * 10;
+                let dy = (Math.random() - 0.5) * 10;
+
+                if (t.includes("norte") || t.includes("subir") || t.includes("cima")) dy -= distance;
+                else if (t.includes("sul") || t.includes("descer") || t.includes("baixo")) dy += distance;
+                else if (t.includes("leste") || t.includes("direita")) dx += distance;
+                else if (t.includes("oeste") || t.includes("esquerda")) dx -= distance;
+                else {
+                    let angle = Math.random() * Math.PI * 2;
+                    dx += Math.cos(angle) * distance;
+                    dy += Math.sin(angle) * distance;
+                }
+
+                nodes[idDest] = {
+                    id: idDest,
+                    x: nPai.x + dx,
+                    y: nPai.y + dy,
+                    w: dim.w,
+                    h: dim.h,
+                    shape: dim.shape,
+                    level: nPai.level,
+                    vx: 0, vy: 0
+                };
                 fila.push(idDest);
             }
         });
     }
 
-    // ─── 8. POSICIONAMENTO EM ORDEM BFS ───
-    const filaPos = ["1"];
-    const posicionados = new Set(["1"]);
+    // 2. Motor de Física (Relaxamento Topológico)
+    // Isso resolve grafos cíclicos aproximando arestas conectadas e repelindo colisões
+    const ITERATIONS = 400;
+    const SPRING_K = 0.15; // Atração das arestas
+    const REPULSION = 0.6; // Força contra sobreposição
+    const DAMPING = 0.5;   // Fricção para estabilizar
 
-    while (filaPos.length > 0) {
-        const idAtual = filaPos.shift();
-        const sala = mapaMundo[idAtual];
-        if (!sala || !sala.opcoes) continue;
+    for (let i = 0; i < ITERATIONS; i++) {
+        // A. Força de Atração (Springs entre conexões lógicas)
+        edges.forEach(edge => {
+            let n1 = nodes[edge.source];
+            let n2 = nodes[edge.target];
+            if (!n1 || !n2) return;
 
-        for (const opt of sala.opcoes) {
-            const idDest = String(opt.destino);
-            if (opt.texto === "Atalho" || posicionados.has(idDest)) continue;
-            
-            const dir = extrairDirecao(opt.texto);
-            const ok = tentarEncaixar(idAtual, idDest, dir);
-            
-            if (ok) {
-                posicionados.add(idDest);
-                filaPos.push(idDest);
+            let cx1 = n1.x + n1.w / 2;
+            let cy1 = n1.y + n1.h / 2;
+            let cx2 = n2.x + n2.w / 2;
+            let cy2 = n2.y + n2.h / 2;
+
+            let dx = cx2 - cx1;
+            let dy = cy2 - cy1;
+            let dist = Math.hypot(dx, dy) || 1;
+
+            let isNorte = edge.texto.includes("norte") || edge.texto.includes("subir") || edge.texto.includes("cima");
+            let isSul = edge.texto.includes("sul") || edge.texto.includes("descer") || edge.texto.includes("baixo");
+            let isLeste = edge.texto.includes("leste") || edge.texto.includes("direita");
+            let isOeste = edge.texto.includes("oeste") || edge.texto.includes("esquerda");
+
+            let idealX = 0, idealY = 0;
+
+            if (isNorte || isSul || isLeste || isOeste) {
+                if (isNorte) idealY = -(n1.h + n2.h) / 2;
+                if (isSul) idealY = (n1.h + n2.h) / 2;
+                if (isLeste) idealX = (n1.w + n2.w) / 2;
+                if (isOeste) idealX = -(n1.w + n2.w) / 2;
             } else {
-                // Último recurso: busca em espiral (raro, só para grafos muito patológicos)
-                const dim = getGridDim(idDest, mapaMundo[idDest]);
-                let achou = false;
-                for (let r = 1; r < 30 && !achou; r++) {
-                    for (let dx = -r; dx <= r && !achou; dx++) {
-                        for (let dy = -r; dy <= r && !achou; dy++) {
-                            if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue;
-                            const gx = nodes[idAtual].gx + dx * dim.w;
-                            const gy = nodes[idAtual].gy + dy * dim.h;
-                            if (!colide(gx, gy, dim.w, dim.h, null)) {
-                                nodes[idDest] = { id: idDest, gx, gy, gw: dim.w, gh: dim.h, shape: dim.shape };
-                                ocupar(idDest);
-                                posicionados.add(idDest);
-                                filaPos.push(idDest);
-                                achou = true;
-                            }
-                        }
+                // Genérico: puxar pela borda mais próxima sem eixo preferencial
+                let ratioX = Math.abs(dx / dist);
+                let ratioY = Math.abs(dy / dist);
+                let idealDist = ((n1.w + n2.w) / 2) * ratioX + ((n1.h + n2.h) / 2) * ratioY;
+                idealX = (dx / dist) * idealDist;
+                idealY = (dy / dist) * idealDist;
+            }
+
+            let forceX = (dx - idealX) * SPRING_K;
+            let forceY = (dy - idealY) * SPRING_K;
+
+            // Limita a força para evitar explosões matemáticas
+            forceX = Math.max(-20, Math.min(20, forceX));
+            forceY = Math.max(-20, Math.min(20, forceY));
+
+            n1.vx += forceX; n1.vy += forceY;
+            n2.vx -= forceX; n2.vy -= forceY;
+        });
+
+        // B. Força de Repulsão (Evitar Colisão AABB)
+        let nodeArray = Object.values(nodes);
+        for (let a = 0; a < nodeArray.length; a++) {
+            for (let b = a + 1; b < nodeArray.length; b++) {
+                let n1 = nodeArray[a];
+                let n2 = nodeArray[b];
+
+                let cx1 = n1.x + n1.w / 2;
+                let cy1 = n1.y + n1.h / 2;
+                let cx2 = n2.x + n2.w / 2;
+                let cy2 = n2.y + n2.h / 2;
+
+                let overlapX = (n1.w / 2 + n2.w / 2) - Math.abs(cx1 - cx2);
+                let overlapY = (n1.h / 2 + n2.h / 2) - Math.abs(cy1 - cy2);
+
+                // Só repele se houver sobreposição clara (margem de 0.5px para tangentes puras descansarem)
+                if (overlapX > 0.5 && overlapY > 0.5) {
+                    if (overlapX < overlapY) {
+                        let sign = Math.sign(cx1 - cx2) || 1;
+                        let push = (overlapX / 2) * REPULSION;
+                        n1.vx += push * sign;
+                        n2.vx -= push * sign;
+                    } else {
+                        let sign = Math.sign(cy1 - cy2) || 1;
+                        let push = (overlapY / 2) * REPULSION;
+                        n1.vx += push * sign;
+                        n2.vx -= push * sign;
                     }
                 }
             }
         }
+
+        // C. Integração Cinemática
+        nodeArray.forEach(n => {
+            if (n.id === "1") { n.vx = 0; n.vy = 0; } // Ancora o nó raiz de forma irrevogável
+            n.x += n.vx;
+            n.y += n.vy;
+            n.vx *= DAMPING;
+            n.vy *= DAMPING;
+        });
     }
 
-    // ─── 9. RESOLUÇÃO DE CICLOS (ARESTAS ENTRE SALAS JÁ POSICIONADAS) ───
-    // Para cada aresta onde as salas não são adjacentes, tentamos forçar a tangência
-    // via slide ou inserção de eixo local.
-    for (const edge of edges) {
-        const a = nodes[edge.source];
-        const b = nodes[edge.target];
-        if (!a || !b) continue;
-
-        // Verifica adjacência real (paredes coladas com overlap de pelo menos 1 célula)
-        let adjacentes = false;
-        if (a.gx < b.gx + b.gw && a.gx + a.gw > b.gx) {
-            if (a.gy + a.gh === b.gy || b.gy + b.gh === a.gy) adjacentes = true;
-        }
-        if (a.gy < b.gy + b.gh && a.gy + a.gh > b.gy) {
-            if (a.gx + a.gw === b.gx || b.gx + b.gw === a.gx) adjacentes = true;
-        }
-
-        if (adjacentes) continue;
-
-        // Não são adjacentes. Tentar slide de B para encostar em A.
-        // Movemos B apenas no eixo perpendicular até encostar.
-        let movGx = b.gx, movGy = b.gy;
-        const dx = (a.gx + a.gw/2) - (b.gx + b.gw/2);
-        const dy = (a.gy + a.gh/2) - (b.gy + b.gh/2);
-
-        if (Math.abs(dx) > Math.abs(dy)) {
-            // B precisa se alinhar horizontalmente
-            if (dx > 0) movGx = a.gx + a.gw; // B vai para leste de A
-            else movGx = a.gx - b.gw; // B vai para oeste de A
-            // Ajusta Y para manter overlap vertical
-            movGy = a.gy + Math.floor((a.gh - b.gh) / 2);
-        } else {
-            if (dy > 0) movGy = a.gy + a.gh; // B vai para sul de A
-            else movGy = a.gy - b.gh; // B vai para norte de A
-            movGx = a.gx + Math.floor((a.gw - b.gw) / 2);
-        }
-
-        // Se a posição alvo está livre, movemos B e TODO o sub-mapa conectado a B
-        if (!colide(movGx, movGy, b.gw, b.gh, edge.target)) {
-            desocupar(edge.target);
-            const deltaX = movGx - b.gx;
-            const deltaY = movGy - b.gy;
-            b.gx = movGx; b.gy = movGy;
-            ocupar(edge.target);
-            
-            // Propaga o movimento para filhos de B (evita desencaixar o sub-mapa de B)
-            // Usamos BFS simples a partir de B
-            const filaProp = [edge.target];
-            const propVisitados = new Set([edge.target]);
-            while (filaProp.length > 0) {
-                const idP = filaProp.shift();
-                const salaP = mapaMundo[idP];
-                if (!salaP || !salaP.opcoes) continue;
-                for (const op of salaP.opcoes) {
-                    const idC = String(op.destino);
-                    if (idC === edge.source) continue; // Não empurra o pai que estamos tentando encostar
-                    if (nodes[idC] && !propVisitados.has(idC)) {
-                        propVisitados.add(idC);
-                        desocupar(idC);
-                        nodes[idC].gx += deltaX;
-                        nodes[idC].gy += deltaY;
-                        ocupar(idC);
-                        filaProp.push(idC);
-                    }
-                }
-            }
-        }
-    }
-
-    // ─── 10. CONVERSÃO PARA PIXELS E EXPORTAÇÃO ───
-    let minGx = Infinity, minGy = Infinity;
-    Object.values(nodes).forEach(n => {
-        if (n.gx < minGx) minGx = n.gx;
-        if (n.gy < minGy) minGy = n.gy;
-    });
-
+    // 3. Tangência Rígida (Grid Snapping)
+    // Reduz coordenadas a múltiplos de 10. Como as dimensões (40, 60, 80, 120) 
+    // são divisíveis por 20 (raio de 10), isso "cola" perfeitamente arestas adjacentes.
     Object.values(nodes).forEach(n => {
         window.mapCoords[n.id] = {
-            x: (n.gx - minGx) * CELL,
-            y: (n.gy - minGy) * CELL,
-            w: n.gw * CELL,
-            h: n.gh * CELL,
-            level: 0,
+            x: Math.round(n.x / 10) * 10,
+            y: Math.round(n.y / 10) * 10,
+            w: n.w,
+            h: n.h,
+            level: n.level,
             shape: n.shape
         };
     });
+
+    // Failsafe de Sobreposição (Resolve qualquer micro-colisão residual após o snap)
+    let coordArray = Object.values(window.mapCoords);
+    let resolved = false;
+    let failsafeLoops = 0;
+    while (!resolved && failsafeLoops < 10) {
+        resolved = true;
+        for (let a = 0; a < coordArray.length; a++) {
+            for (let b = a + 1; b < coordArray.length; b++) {
+                let n1 = coordArray[a];
+                let n2 = coordArray[b];
+                
+                let overlapX = (n1.w / 2 + n2.w / 2) - Math.abs((n1.x + n1.w/2) - (n2.x + n2.w/2));
+                let overlapY = (n1.h / 2 + n2.h / 2) - Math.abs((n1.y + n1.h/2) - (n2.y + n2.h/2));
+                
+                if (overlapX > 0.1 && overlapY > 0.1) {
+                    resolved = false;
+                    if (overlapX < overlapY) {
+                        n2.x += (Math.sign((n2.x + n2.w/2) - (n1.x + n1.w/2)) || 1) * Math.ceil(overlapX/10)*10;
+                    } else {
+                        n2.y += (Math.sign((n2.y + n2.h/2) - (n1.y + n1.h/2)) || 1) * Math.ceil(overlapY/10)*10;
+                    }
+                }
+            }
+        }
+        failsafeLoops++;
+    }
 
     if (typeof salvarEstadoJogador === "function") await salvarEstadoJogador();
 }
