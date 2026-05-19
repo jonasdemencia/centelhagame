@@ -3304,7 +3304,6 @@ async function abrirMapaVisual() {
             let idB = String(opt.destino);
             let rB = window.mapCoords[idB];
             if (!rB) continue;
-                    if (opt.texto === "Atalho") continue;
 
             // Evita desenhar a porta duas vezes (A->B e B->A)
             let parKey = [idA, idB].sort().join('-');
@@ -3349,11 +3348,7 @@ async function abrirMapaVisual() {
                 ctx.fillRect(-pW / 2, -1, pW, 2);
                 ctx.restore();
             }
-        }
-    }
-}
-
-                    // CORREDORES DIAGONAIS (fallback para conexões distantes)
+            // CORREDORES DIAGONAIS (fallback para conexões distantes)
             else {
                 let distancia = Math.hypot(
                     (rA.x + rA.w/2) - (rB.x + rB.w/2),
@@ -3365,7 +3360,7 @@ async function abrirMapaVisual() {
                     let cyA = offsetY + (rA.y + rA.h/2) * escala;
                     let cxB = offsetX + (rB.x + rB.w/2) * escala;
                     let cyB = offsetY + (rB.y + rB.h/2) * escala;
-                    
+
                     ctx.save();
                     ctx.setLineDash([4, 4]);
                     ctx.strokeStyle = "#5a4a38";
@@ -3374,7 +3369,7 @@ async function abrirMapaVisual() {
                     ctx.moveTo(cxA, cyA);
                     ctx.lineTo(cxB, cyB);
                     ctx.stroke();
-                    
+
                     // Pequeno círculo no meio indicando passagem
                     let midX = (cxA + cxB) / 2;
                     let midY = (cyA + cyB) / 2;
@@ -3382,12 +3377,13 @@ async function abrirMapaVisual() {
                     ctx.beginPath();
                     ctx.arc(midX, midY, 3, 0, Math.PI * 2);
                     ctx.fill();
-                    
+
                     ctx.restore();
                 }
             }
-        
-window.abrirMapaVisual = abrirMapaVisual;
+        }
+    }
+}
         
         window.onload = async () => {
             onAuthStateChanged(auth, async (user) => {
