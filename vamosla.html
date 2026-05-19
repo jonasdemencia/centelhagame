@@ -1246,6 +1246,7 @@ async function injetarPuzzles(planoZonal, zonaId) {
 document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
 
                     if (data.mapaMundo) mapaMundo = data.mapaMundo;
+                    window.mapaMundo = mapaMundo;
                     if (data.arcanumIudicium?.magiasMemorizadas) magiasMemorizadas = data.arcanumIudicium.magiasMemorizadas;
                     if (data.secaoAtualId) secaoAtualId = data.secaoAtualId;
                     if (data.dnaGlobal) dnaGlobal = data.dnaGlobal;
@@ -1875,6 +1876,7 @@ for (const [connectorIdStr, { puzzleRoomId, acaoIda }] of Object.entries(zonaDat
 
                 if (!mapaMundo) mapaMundo = {};
                 Object.assign(mapaMundo, zonaData.salas);
+                window.mapaMundo = mapaMundo;
 
                 zonaAtual = numeroZona;
                 await salvarEstadoJogador();
@@ -3347,7 +3349,7 @@ async function abrirMapaVisual() {
     }
 }
         
-
+window.abrirMapaVisual = abrirMapaVisual;
         
         window.onload = async () => {
             onAuthStateChanged(auth, async (user) => {
