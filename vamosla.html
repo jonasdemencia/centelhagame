@@ -3050,35 +3050,31 @@ if (historicoConversa.length > 8) {
 
     window.mapCoords = {};
 
-    function obterDimensoesEShape(idSala, sala, direcaoPai = "leste") {
-        let nome = (sala.texto_logico || sala.nome || "").toLowerCase();
-        let w = 60, h = 60, shape = "rect";
+    function obterDimensoesEShape(idSala, sala, direcaoGeometria = "leste") {
+        // Usa o texto_logico da sala (descrição) para identificar padrões
+        let texto = (sala.texto_logico || "").toLowerCase();
+        let w = 60;
+        let h = 60;
+        let shape = "rect";
+
         if (sala.puzzle_status) {
             w = 40; h = 40; shape = "octagon";
-        } else if (nome.includes("grande salão") || nome.includes("trono") || nome.includes("arsenal")) {
+        } else if (texto.includes("grande salão") || texto.includes("trono") || texto.includes("arsenal")) {
             w = 120; h = 100; shape = "pillars";
-        } else if (nome.includes("torre") || nome.includes("mago") || nome.includes("observatório")) {
+        } else if (texto.includes("torre") || texto.includes("mago") || texto.includes("observatório")) {
             w = 60; h = 60; shape = "octagon";
-        } else if (nome.includes("corredor") || nome.includes("passagem") || nome.includes("galeria")) {
-            if (direcaoPai === "norte" || direcaoPai === "sul") { w = 40; h = 120; }
-            else { w = 120; h = 40; }
+        } else if (texto.includes("corredor") || texto.includes("passagem") || texto.includes("galeria")) {
+            if (direcaoGeometria === "norte" || direcaoGeometria === "sul") {
+                w = 40; h = 120;
+            } else {
+                w = 120; h = 40;
+            }
         } else {
             let numId = parseInt(idSala) || 0;
             if (numId % 3 === 1) { w = 40; h = 80; }
             else if (numId % 3 === 2) { w = 80; h = 40; }
         }
         return { w, h, shape };
-    }
-
-    function inferirDirecao(texto) {
-        let t = (texto || "").toLowerCase();
-        if (t.includes("norte")) return "norte";
-        if (t.includes("sul")) return "sul";
-        if (t.includes("leste")) return "leste";
-        if (t.includes("oeste")) return "oeste";
-        if (t.includes("acima") || t.includes("subir")) return "above";
-        if (t.includes("abaixo") || t.includes("descer")) return "below";
-        return "leste";
     }
 
     function checarColisao(x, y, w, h, level, idIgnorado) {
@@ -3095,103 +3091,146 @@ if (historicoConversa.length > 8) {
     }
 
     let salaRaiz = mapaMundo["1"];
-    let dimRaiz = obterDimensoesEShape("1", salaRaiz);
-    window.mapCoords["1"] = { x: -30, y: -30, w: dimRaiz.w, h: dimRaiz.h, level: 0, shape: dimRaiz.shape };
+    let dimRaiz = obterDimensoesEShape("1", salaRaiz, "leste");
+    window.mapCoords["1"] = {
+        x: -dimRaiz.w / 2,
+        y: -dimRaiz.h / 2,
+        w: dimRaiz.w,
+        h: dimRaiz.h,
+        level: 0,
+        shape: dimRaiz.shape
+    };
 
     let fila = ["1"];
     let visitados = new Set(["1"]);
 
-    while (fila.length) {
+    while (fila.length > 0) {
         let idAtual = fila.shift();
         let paiCoords = window.mapCoords[idAtual];
         let salaAtual = mapaMundo[idAtual];
         if (!salaAtual || !salaAtual.opcoes) continue;
 
-        for (let opcao of salaAtual.opcoes) {
-            let idFilha = String(opcao.destino);
-            if (visitados.has(idFilha)) continue;
-            let salaFilha = mapaMundo[idFilha];
-            if (!salaFilha) continue;
+        let filhasValidas = salaAtual.opcoes.filter(o => o.destino && !visitados.has(String(o.destino)));
 
-            let direcaoOriginal = inferirDirecao(opcao.texto);
-            let dimFilha = obterDimensoesEShape(idFilha, salaFilha, direcaoOriginal);
-            let levelFilha = paiCoords.level;
-            let offsetXNivel = 0, offsetYNivel = 0;
-            if (direcaoOriginal === "above") { levelFilha += 1; offsetXNivel = 25; offsetYNivel = 25; }
-            else if (direcaoOriginal === "below") { levelFilha -= 1; offsetXNivel = 25; offsetYNivel = 25; }
+        filhasValidas.forEach((opcao, index) => {
+            let idFilha = String(opcao.destino);
+            let salaFilha = mapaMundo[idFilha];
+            if (!salaFilha) return;
+
+            let txt = (opcao.texto || "").toLowerCase();
+            let diferencaNivel = 0;
+            if (txt.includes("acima") || txt.includes("subir")) diferencaNivel = 1;
+            if (txt.includes("abaixo") || txt.includes("descer")) diferencaNivel = -1;
+
+            let levelFilha = paiCoords.level + diferencaNivel;
+            let eixosCardinais = ["leste", "sul", "oeste", "norte"];
+            let idxInicial = index % 4;
+            let direcoesParaTestar = [];
+            for (let i = 0; i < 4; i++) {
+                direcoesParaTestar.push(eixosCardinais[(idxInicial + i) % 4]);
+            }
 
             let posEncontrada = false;
-            let direcaoTeste = direcaoOriginal;
-            let direcoesPossiveis = ["norte", "sul", "leste", "oeste", "above", "below"];
 
-            for (let tentativaDir = 0; tentativaDir < 6 && !posEncontrada; tentativaDir++) {
-                if (tentativaDir > 0) {
-                    let outras = direcoesPossiveis.filter(d => d !== direcaoOriginal);
-                    direcaoTeste = outras[(tentativaDir - 1) % outras.length];
-                }
-
-                let alinhamentos = [0, 0.25, 0.5, 0.75, 1];
-                for (let Alig of alinhamentos) {
-                    let targetX = 0, targetY = 0;
-                    if (direcaoTeste === "norte") {
-                        targetY = paiCoords.y - dimFilha.h;
-                        targetX = paiCoords.x + (paiCoords.w - dimFilha.w) * Alig;
-                    } else if (direcaoTeste === "sul") {
-                        targetY = paiCoords.y + paiCoords.h;
-                        targetX = paiCoords.x + (paiCoords.w - dimFilha.w) * Alig;
-                    } else if (direcaoTeste === "leste") {
-                        targetX = paiCoords.x + paiCoords.w;
-                        targetY = paiCoords.y + (paiCoords.h - dimFilha.h) * Alig;
-                    } else if (direcaoTeste === "oeste") {
-                        targetX = paiCoords.x - dimFilha.w;
-                        targetY = paiCoords.y + (paiCoords.h - dimFilha.h) * Alig;
-                    } else {
-                        targetX = paiCoords.x + offsetXNivel;
-                        targetY = paiCoords.y + offsetYNivel;
+            if (diferencaNivel !== 0) {
+                let dimFilha = obterDimensoesEShape(idFilha, salaFilha, "leste");
+                let targetX = paiCoords.x + 25;
+                let targetY = paiCoords.y + 25;
+                window.mapCoords[idFilha] = {
+                    x: targetX, y: targetY, w: dimFilha.w, h: dimFilha.h,
+                    level: levelFilha, shape: dimFilha.shape
+                };
+                posEncontrada = true;
+            } else {
+                for (let dir of direcoesParaTestar) {
+                    let dimFilha = obterDimensoesEShape(idFilha, salaFilha, dir);
+                    let alinhamentos = [0.5, 0.25, 0.75, 0, 1];
+                    for (let alig of alinhamentos) {
+                        let targetX = 0, targetY = 0;
+                        if (dir === "norte") {
+                            targetY = paiCoords.y - dimFilha.h;
+                            targetX = paiCoords.x + (paiCoords.w - dimFilha.w) * alig;
+                        } else if (dir === "sul") {
+                            targetY = paiCoords.y + paiCoords.h;
+                            targetX = paiCoords.x + (paiCoords.w - dimFilha.w) * alig;
+                        } else if (dir === "leste") {
+                            targetX = paiCoords.x + paiCoords.w;
+                            targetY = paiCoords.y + (paiCoords.h - dimFilha.h) * alig;
+                        } else if (dir === "oeste") {
+                            targetX = paiCoords.x - dimFilha.w;
+                            targetY = paiCoords.y + (paiCoords.h - dimFilha.h) * alig;
+                        }
+                        if (!checarColisao(targetX, targetY, dimFilha.w, dimFilha.h, levelFilha, idFilha)) {
+                            window.mapCoords[idFilha] = {
+                                x: targetX, y: targetY, w: dimFilha.w, h: dimFilha.h,
+                                level: levelFilha, shape: dimFilha.shape
+                            };
+                            posEncontrada = true;
+                            break;
+                        }
                     }
-                    if (!checarColisao(targetX, targetY, dimFilha.w, dimFilha.h, levelFilha, idFilha)) {
-                        window.mapCoords[idFilha] = { x: targetX, y: targetY, w: dimFilha.w, h: dimFilha.h, level: levelFilha, shape: dimFilha.shape };
-                        posEncontrada = true;
-                        break;
-                    }
-                }
-                if (posEncontrada) break;
-
-                let push = 20;
-                for (let k = 0; k < 20; k++) {
-                    let targetX = 0, targetY = 0;
-                    if (direcaoTeste === "norte") {
-                        targetY = paiCoords.y - dimFilha.h - push;
-                        targetX = paiCoords.x + (paiCoords.w - dimFilha.w) * 0.5;
-                    } else if (direcaoTeste === "sul") {
-                        targetY = paiCoords.y + paiCoords.h + push;
-                        targetX = paiCoords.x + (paiCoords.w - dimFilha.w) * 0.5;
-                    } else if (direcaoTeste === "leste") {
-                        targetX = paiCoords.x + paiCoords.w + push;
-                        targetY = paiCoords.y + (paiCoords.h - dimFilha.h) * 0.5;
-                    } else if (direcaoTeste === "oeste") {
-                        targetX = paiCoords.x - dimFilha.w - push;
-                        targetY = paiCoords.y + (paiCoords.h - dimFilha.h) * 0.5;
-                    } else {
-                        targetX = paiCoords.x + offsetXNivel + push;
-                        targetY = paiCoords.y + offsetYNivel + push;
-                    }
-                    if (!checarColisao(targetX, targetY, dimFilha.w, dimFilha.h, levelFilha, idFilha)) {
-                        window.mapCoords[idFilha] = { x: targetX, y: targetY, w: dimFilha.w, h: dimFilha.h, level: levelFilha, shape: dimFilha.shape };
-                        posEncontrada = true;
-                        break;
-                    }
-                    push += 20;
+                    if (posEncontrada) break;
                 }
             }
 
             if (!posEncontrada) {
-                window.mapCoords[idFilha] = { x: paiCoords.x + 100, y: paiCoords.y + 100, w: dimFilha.w, h: dimFilha.h, level: levelFilha, shape: dimFilha.shape };
+                let push = 20;
+                for (let k = 0; k < 20; k++) {
+                    for (let dir of direcoesParaTestar) {
+                        let dimFilha = obterDimensoesEShape(idFilha, salaFilha, dir);
+                        let targetX = 0, targetY = 0;
+                        if (dir === "norte") {
+                            targetY = paiCoords.y - dimFilha.h - push;
+                            targetX = paiCoords.x + (paiCoords.w - dimFilha.w) * 0.5;
+                        } else if (dir === "sul") {
+                            targetY = paiCoords.y + paiCoords.h + push;
+                            targetX = paiCoords.x + (paiCoords.w - dimFilha.w) * 0.5;
+                        } else if (dir === "leste") {
+                            targetX = paiCoords.x + paiCoords.w + push;
+                            targetY = paiCoords.y + (paiCoords.h - dimFilha.h) * 0.5;
+                        } else if (dir === "oeste") {
+                            targetX = paiCoords.x - dimFilha.w - push;
+                            targetY = paiCoords.y + (paiCoords.h - dimFilha.h) * 0.5;
+                        }
+                        if (!checarColisao(targetX, targetY, dimFilha.w, dimFilha.h, levelFilha, idFilha)) {
+                            window.mapCoords[idFilha] = {
+                                x: targetX, y: targetY, w: dimFilha.w, h: dimFilha.h,
+                                level: levelFilha, shape: dimFilha.shape
+                            };
+                            posEncontrada = true;
+                            break;
+                        }
+                    }
+                    if (posEncontrada) break;
+                    push += 25;
+                }
+            }
+
+            if (!posEncontrada) {
+                let dimFilha = obterDimensoesEShape(idFilha, salaFilha, "leste");
+                let raioAnel = 150;
+                let alocadoAnel = false;
+                while (!alocadoAnel && raioAnel < 1000) {
+                    for (let angulo = 0; angulo < 360; angulo += 45) {
+                        let rad = (angulo * Math.PI) / 180;
+                        let targetX = paiCoords.x + Math.cos(rad) * raioAnel;
+                        let targetY = paiCoords.y + Math.sin(rad) * raioAnel;
+                        if (!checarColisao(targetX, targetY, dimFilha.w, dimFilha.h, levelFilha, idFilha)) {
+                            window.mapCoords[idFilha] = {
+                                x: targetX, y: targetY, w: dimFilha.w, h: dimFilha.h,
+                                level: levelFilha, shape: dimFilha.shape
+                            };
+                            alocadoAnel = true;
+                            break;
+                        }
+                    }
+                    raioAnel += 60;
+                }
             }
 
             visitados.add(idFilha);
             fila.push(idFilha);
-        }
+        });
     }
 
     let idsSalas = Object.keys(window.mapCoords);
@@ -3220,26 +3259,27 @@ if (historicoConversa.length > 8) {
     if (typeof salvarEstadoJogador === "function") await salvarEstadoJogador();
 }
 
-// FUNÇÃO DE DESENHO DO MAPA (ABRIR MAPA)
+// Função que abre o mapa (usa variáveis globais)
 window.abrirMapaVisual = async function() {
     if (!mapaMundo || !mapaMundo["1"]) {
         console.error("Mapa mundo inválido");
         return;
     }
+
     await recalcularCoordenadasPenochao(mapaMundo);
 
     let modal = document.getElementById("modal-mapa-visual");
     if (!modal) {
         modal = document.createElement("div");
         modal.id = "modal-mapa-visual";
-        modal.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.9);z-index:99999;display:flex;justify-content:center;align-items:center;";
+        modal.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.95);z-index:99999;display:flex;justify-content:center;align-items:center;";
         modal.innerHTML = `
             <div style="background:#141311;border:4px solid #3a3228;box-shadow:6px 6px 0 #000;padding:20px;max-width:95%;max-height:95%;display:flex;flex-direction:column;font-family:'VT323',monospace;">
                 <div style="display:flex;justify-content:space-between;margin-bottom:12px;border-bottom:2px solid #3a3228;padding-bottom:6px;">
-                    <span style="color:#ffaa00;font-size:28px;">PLANTA BAIXA</span>
+                    <span style="color:#ffaa00;font-size:26px;">PLANTA BAIXA</span>
                     <button onclick="this.closest('#modal-mapa-visual').style.display='none'" style="background:#3a3228;color:#b5a68b;border:2px solid #5a4d3e;font-family:'VT323';font-size:18px;cursor:pointer;">FECHAR [X]</button>
                 </div>
-                <canvas id="canvas-mapa" width="700" height="500" style="background:#0a0a08;border:2px solid #221c16;"></canvas>
+                <canvas id="canvas-mapa" width="750" height="520" style="background:#090907;border:2px solid #221c16;"></canvas>
             </div>
         `;
         document.body.appendChild(modal);
@@ -3254,85 +3294,113 @@ window.abrirMapaVisual = async function() {
     function desenharOctogono(c, x, y, w, h) {
         let corte = Math.min(w, h) * 0.25;
         c.beginPath();
-        c.moveTo(x+corte, y); c.lineTo(x+w-corte, y);
-        c.lineTo(x+w, y+corte); c.lineTo(x+w, y+h-corte);
-        c.lineTo(x+w-corte, y+h); c.lineTo(x+corte, y+h);
-        c.lineTo(x, y+h-corte); c.lineTo(x, y+corte);
+        c.moveTo(x + corte, y);
+        c.lineTo(x + w - corte, y);
+        c.lineTo(x + w, y + corte);
+        c.lineTo(x + w, y + h - corte);
+        c.lineTo(x + w - corte, y + h);
+        c.lineTo(x + corte, y + h);
+        c.lineTo(x, y + h - corte);
+        c.lineTo(x, y + corte);
         c.closePath();
         c.fill(); c.stroke();
     }
 
     function desenharPilares(c, x, y, w, h, corPilar) {
         c.beginPath(); c.rect(x, y, w, h); c.fill(); c.stroke();
-        let tam = Math.max(3, Math.min(w,h)*0.08);
+        let tam = Math.max(3, Math.min(w, h) * 0.08);
         c.fillStyle = corPilar;
-        c.fillRect(x+tam, y+tam, tam, tam);
-        c.fillRect(x+w-tam*2, y+tam, tam, tam);
-        c.fillRect(x+tam, y+h-tam*2, tam, tam);
-        c.fillRect(x+w-tam*2, y+h-tam*2, tam, tam);
+        c.fillRect(x + tam, y + tam, tam, tam);
+        c.fillRect(x + w - tam * 2, y + tam, tam, tam);
+        c.fillRect(x + tam, y + h - tam * 2, tam, tam);
+        c.fillRect(x + w - tam * 2, y + h - tam * 2, tam, tam);
     }
 
-    let minX=Infinity, maxX=-Infinity, minY=Infinity, maxY=-Infinity;
-    for (let r of Object.values(window.mapCoords)) {
-        minX = Math.min(minX, r.x); maxX = Math.max(maxX, r.x+r.w);
-        minY = Math.min(minY, r.y); maxY = Math.max(maxY, r.y+r.h);
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (let id in window.mapCoords) {
+        let r = window.mapCoords[id];
+        minX = Math.min(minX, r.x);
+        maxX = Math.max(maxX, r.x + r.w);
+        minY = Math.min(minY, r.y);
+        maxY = Math.max(maxY, r.y + r.h);
     }
-    let mapW = maxX-minX, mapH = maxY-minY;
-    let margem = 40;
-    let escala = Math.min((canvas.width-margem*2)/mapW, (canvas.height-margem*2)/mapH, 1.5);
-    let offsetX = (canvas.width - mapW*escala)/2 - minX*escala;
-    let offsetY = (canvas.height - mapH*escala)/2 - minY*escala;
+    let mapW = maxX - minX, mapH = maxY - minY;
+    let margem = 45;
+    let escala = Math.min((canvas.width - margem * 2) / mapW, (canvas.height - margem * 2) / mapH, 1.4);
+    let offsetX = (canvas.width - mapW * escala) / 2 - minX * escala;
+    let offsetY = (canvas.height - mapH * escala) / 2 - minY * escala;
 
+    // Conexões
     for (let idA in window.mapCoords) {
         let salaA = mapaMundo[idA];
         let cA = window.mapCoords[idA];
         if (!salaA || !salaA.opcoes) continue;
-        let ax = offsetX + (cA.x + cA.w/2)*escala;
-        let ay = offsetY + (cA.y + cA.h/2)*escala;
+        let ax = offsetX + (cA.x + cA.w/2) * escala;
+        let ay = offsetY + (cA.y + cA.h/2) * escala;
         for (let opt of salaA.opcoes) {
             let idB = String(opt.destino);
             let cB = window.mapCoords[idB];
             if (!cB) continue;
-            let bx = offsetX + (cB.x + cB.w/2)*escala;
-            let by = offsetY + (cB.y + cB.h/2)*escala;
+            let bx = offsetX + (cB.x + cB.w/2) * escala;
+            let by = offsetY + (cB.y + cB.h/2) * escala;
             ctx.beginPath();
             ctx.moveTo(ax, ay);
             ctx.lineTo(bx, by);
-            ctx.strokeStyle = opt.texto === "Atalho" ? "#7733ff" : "#3a3228";
-            ctx.lineWidth = opt.texto === "Atalho" ? 2 : 3;
-            if (opt.texto === "Atalho") ctx.setLineDash([4,4]);
-            else ctx.setLineDash([]);
+            if (opt.texto === "Atalho") {
+                ctx.strokeStyle = "#6622ee";
+                ctx.lineWidth = 2;
+                ctx.setLineDash([3,3]);
+            } else {
+                ctx.strokeStyle = "#352c22";
+                ctx.lineWidth = 3;
+                ctx.setLineDash([]);
+            }
             ctx.stroke();
         }
     }
     ctx.setLineDash([]);
 
+    // Salas
     for (let id in window.mapCoords) {
         let r = window.mapCoords[id];
-        let rx = offsetX + r.x*escala;
-        let ry = offsetY + r.y*escala;
-        let rw = r.w*escala;
-        let rh = r.h*escala;
+        let rx = offsetX + r.x * escala;
+        let ry = offsetY + r.y * escala;
+        let rw = r.w * escala;
+        let rh = r.h * escala;
+
         let ehAtual = (id === secaoAtualId);
-        ctx.fillStyle = ehAtual ? "#2a2212" : "#141311";
-        ctx.strokeStyle = ehAtual ? "#ffaa00" : "#5c4d3c";
+
+        ctx.fillStyle = ehAtual ? "#221a0f" : "#12110f";
+        ctx.strokeStyle = ehAtual ? "#ffaa00" : "#544637";
         ctx.lineWidth = ehAtual ? 3 : 2;
-        if (r.shape === "octagon") desenharOctogono(ctx, rx, ry, rw, rh);
-        else if (r.shape === "pillars") desenharPilares(ctx, rx, ry, rw, rh, ctx.strokeStyle);
-        else { ctx.beginPath(); ctx.rect(rx, ry, rw, rh); ctx.fill(); ctx.stroke(); }
-        if (r.level !== 0) {
-            ctx.fillStyle = r.level > 0 ? "#44aa44" : "#aa4444";
-            ctx.font = "11px 'Courier New'";
-            ctx.fillText((r.level>0?"Lvl +":"Lvl ")+r.level, rx+4, ry+rh-4);
+
+        if (r.shape === "octagon") {
+            desenharOctogono(ctx, rx, ry, rw, rh);
+        } else if (r.shape === "pillars") {
+            desenharPilares(ctx, rx, ry, rw, rh, ctx.strokeStyle);
+        } else {
+            ctx.beginPath();
+            ctx.rect(rx, ry, rw, rh);
+            ctx.fill();
+            ctx.stroke();
         }
-        ctx.fillStyle = ehAtual ? "#ffaa00" : "#b5a68b";
-        ctx.font = `${Math.max(13, Math.floor(15*escala))}px 'VT323'`;
+
+        if (r.level !== 0) {
+            ctx.fillStyle = r.level > 0 ? "#449944" : "#994444";
+            ctx.font = "10px 'Courier New'";
+            ctx.textAlign = "left";
+            ctx.fillText((r.level > 0 ? "Nível +" : "Nível ") + r.level, rx + 4, ry + rh - 4);
+        }
+
+        ctx.fillStyle = ehAtual ? "#ffaa00" : "#a89a80";
+        ctx.font = `${Math.max(12, Math.floor(14 * escala))}px 'VT323'`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(id, rx+rw/2, ry+rh/2);
+        // Exibe o ID da sala (já que não temos nome)
+        ctx.fillText(id, rx + rw/2, ry + rh/2);
     }
 };
-
+        
         window.onload = async () => {
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
