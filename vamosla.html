@@ -3044,34 +3044,26 @@ if (historicoConversa.length > 8) {
             }
         };
 
-
-        async function recalcularCoordenadasPenochao(mapaMundo) {
+async function recalcularCoordenadasPenochao(mapaMundo) {
     if (!mapaMundo || !mapaMundo["1"]) return;
-
     window.mapCoords = {};
 
-    function obterDimensoesEShape(idSala, sala, direcaoGeometria = "leste") {
-        // Usa o texto_logico da sala (descrição) para identificar padrões
-        let texto = (sala.texto_logico || "").toLowerCase();
-        let w = 60;
-        let h = 60;
-        let shape = "rect";
+    function obterDimensoesEShape(idSala, sala, eixoVertical = false) {
+        let nome = (sala.nome || "").toLowerCase();
+        let w = 60, h = 60, shape = "rect";
 
-        if (sala.puzzle_status) {
+        if (sala.puzzle_status || sala.puzzle) {
             w = 40; h = 40; shape = "octagon";
-        } else if (texto.includes("grande salão") || texto.includes("trono") || texto.includes("arsenal")) {
+        } else if (nome.includes("grande salão") || nome.includes("trono") || nome.includes("arsenal")) {
             w = 120; h = 100; shape = "pillars";
-        } else if (texto.includes("torre") || texto.includes("mago") || texto.includes("observatório")) {
+        } else if (nome.includes("torre") || nome.includes("mago") || nome.includes("observatório")) {
             w = 60; h = 60; shape = "octagon";
-        } else if (texto.includes("corredor") || texto.includes("passagem") || texto.includes("galeria")) {
-            if (direcaoGeometria === "norte" || direcaoGeometria === "sul") {
-                w = 40; h = 120;
-            } else {
-                w = 120; h = 40;
-            }
+        } else if (nome.includes("corredor") || nome.includes("passagem") || nome.includes("galeria")) {
+            if (eixoVertical) { w = 40; h = 120; } 
+            else { w = 120; h = 40; }
         } else {
             let numId = parseInt(idSala) || 0;
-            if (numId % 3 === 1) { w = 40; h = 80; }
+            if (numId % 3 === 1) { w = 40; h = 80; } 
             else if (numId % 3 === 2) { w = 80; h = 40; }
         }
         return { w, h, shape };
@@ -3082,8 +3074,9 @@ if (historicoConversa.length > 8) {
             if (id === idIgnorado) continue;
             let outra = window.mapCoords[id];
             if (outra.level !== level) continue;
-            if (x < outra.x + outra.w - 1 && x + w > outra.x + 1 &&
-                y < outra.y + outra.h - 1 && y + h > outra.y + 1) {
+            // Margem 0 significa que podem se tocar perfeitamente, mas não se sobrepor
+            if (x < outra.x + outra.w && x + w > outra.x &&
+                y < outra.y + outra.h && y + h > outra.y) {
                 return true;
             }
         }
@@ -3091,140 +3084,93 @@ if (historicoConversa.length > 8) {
     }
 
     let salaRaiz = mapaMundo["1"];
-    let dimRaiz = obterDimensoesEShape("1", salaRaiz, "leste");
+    let dimRaiz = obterDimensoesEShape("1", salaRaiz, false);
     window.mapCoords["1"] = {
-        x: -dimRaiz.w / 2,
-        y: -dimRaiz.h / 2,
-        w: dimRaiz.w,
-        h: dimRaiz.h,
-        level: 0,
-        shape: dimRaiz.shape
+        x: -dimRaiz.w / 2, y: -dimRaiz.h / 2,
+        w: dimRaiz.w, h: dimRaiz.h,
+        level: 0, shape: dimRaiz.shape
     };
 
     let fila = ["1"];
     let visitados = new Set(["1"]);
+    
+    // Direções: Leste, Sul, Oeste, Norte
+    let direcoes = [
+        { dx: 1, dy: 0, eixoV: false, nome: "leste" },
+        { dx: 0, dy: 1, eixoV: true, nome: "sul" },
+        { dx: -1, dy: 0, eixoV: false, nome: "oeste" },
+        { dx: 0, dy: -1, eixoV: true, nome: "norte" }
+    ];
 
     while (fila.length > 0) {
         let idAtual = fila.shift();
-        let paiCoords = window.mapCoords[idAtual];
+        let pai = window.mapCoords[idAtual];
         let salaAtual = mapaMundo[idAtual];
+
         if (!salaAtual || !salaAtual.opcoes) continue;
 
-        let filhasValidas = salaAtual.opcoes.filter(o => o.destino && !visitados.has(String(o.destino)));
+        // Distribui os filhos de forma circular para ramificar organicamente
+        let filhosParaProcessar = salaAtual.opcoes.filter(o => o.destino && !visitados.has(String(o.destino)));
+        let dirOffset = parseInt(idAtual) || 0; // Varia a direção inicial com base no ID para quebrar a linearidade
 
-        filhasValidas.forEach((opcao, index) => {
+        filhosParaProcessar.forEach((opcao, index) => {
             let idFilha = String(opcao.destino);
             let salaFilha = mapaMundo[idFilha];
             if (!salaFilha) return;
 
-            let txt = (opcao.texto || "").toLowerCase();
-            let diferencaNivel = 0;
-            if (txt.includes("acima") || txt.includes("subir")) diferencaNivel = 1;
-            if (txt.includes("abaixo") || txt.includes("descer")) diferencaNivel = -1;
-
-            let levelFilha = paiCoords.level + diferencaNivel;
-            let eixosCardinais = ["leste", "sul", "oeste", "norte"];
-            let idxInicial = index % 4;
-            let direcoesParaTestar = [];
-            for (let i = 0; i < 4; i++) {
-                direcoesParaTestar.push(eixosCardinais[(idxInicial + i) % 4]);
-            }
-
             let posEncontrada = false;
+            let nivel = pai.level;
 
-            if (diferencaNivel !== 0) {
-                let dimFilha = obterDimensoesEShape(idFilha, salaFilha, "leste");
-                let targetX = paiCoords.x + 25;
-                let targetY = paiCoords.y + 25;
-                window.mapCoords[idFilha] = {
-                    x: targetX, y: targetY, w: dimFilha.w, h: dimFilha.h,
-                    level: levelFilha, shape: dimFilha.shape
-                };
-                posEncontrada = true;
-            } else {
-                for (let dir of direcoesParaTestar) {
-                    let dimFilha = obterDimensoesEShape(idFilha, salaFilha, dir);
-                    let alinhamentos = [0.5, 0.25, 0.75, 0, 1];
-                    for (let alig of alinhamentos) {
-                        let targetX = 0, targetY = 0;
-                        if (dir === "norte") {
-                            targetY = paiCoords.y - dimFilha.h;
-                            targetX = paiCoords.x + (paiCoords.w - dimFilha.w) * alig;
-                        } else if (dir === "sul") {
-                            targetY = paiCoords.y + paiCoords.h;
-                            targetX = paiCoords.x + (paiCoords.w - dimFilha.w) * alig;
-                        } else if (dir === "leste") {
-                            targetX = paiCoords.x + paiCoords.w;
-                            targetY = paiCoords.y + (paiCoords.h - dimFilha.h) * alig;
-                        } else if (dir === "oeste") {
-                            targetX = paiCoords.x - dimFilha.w;
-                            targetY = paiCoords.y + (paiCoords.h - dimFilha.h) * alig;
-                        }
-                        if (!checarColisao(targetX, targetY, dimFilha.w, dimFilha.h, levelFilha, idFilha)) {
-                            window.mapCoords[idFilha] = {
-                                x: targetX, y: targetY, w: dimFilha.w, h: dimFilha.h,
-                                level: levelFilha, shape: dimFilha.shape
-                            };
+            // Tenta encaixar a sala nas 4 direções ao redor do pai
+            for (let i = 0; i < 4; i++) {
+                let dir = direcoes[(dirOffset + index + i) % 4];
+                let dim = obterDimensoesEShape(idFilha, salaFilha, dir.eixoV);
+                
+                // Testa alinhamentos deslizando pela parede (centro, inicio, fim)
+                let alinhamentos = [0.5, 0, 1]; 
+                
+                for (let alig of alinhamentos) {
+                    let tx = 0, ty = 0;
+
+                    if (dir.dx === 1) { // Leste
+                        tx = pai.x + pai.w;
+                        ty = pai.y + (pai.h - dim.h) * alig;
+                    } else if (dir.dx === -1) { // Oeste
+                        tx = pai.x - dim.w;
+                        ty = pai.y + (pai.h - dim.h) * alig;
+                    } else if (dir.dy === 1) { // Sul
+                        tx = pai.x + (pai.w - dim.w) * alig;
+                        ty = pai.y + pai.h;
+                    } else if (dir.dy === -1) { // Norte
+                        tx = pai.x + (pai.w - dim.w) * alig;
+                        ty = pai.y - dim.h;
+                    }
+
+                    if (!checarColisao(tx, ty, dim.w, dim.h, nivel, idFilha)) {
+                        window.mapCoords[idFilha] = { x: tx, y: ty, w: dim.w, h: dim.h, level: nivel, shape: dim.shape };
+                        posEncontrada = true;
+                        break;
+                    }
+                }
+                if (posEncontrada) break;
+            }
+
+            // Fallback: empurra radialmente se estiver muito lotado
+            if (!posEncontrada) {
+                let dimFallback = obterDimensoesEShape(idFilha, salaFilha, false);
+                let raio = 80;
+                let anguloBase = (dirOffset * 45) * Math.PI / 180;
+                while (!posEncontrada && raio < 1500) {
+                    for (let a = 0; a < 8; a++) {
+                        let tx = pai.x + Math.cos(anguloBase + (a * Math.PI / 4)) * raio;
+                        let ty = pai.y + Math.sin(anguloBase + (a * Math.PI / 4)) * raio;
+                        if (!checarColisao(tx, ty, dimFallback.w, dimFallback.h, nivel, idFilha)) {
+                            window.mapCoords[idFilha] = { x: tx, y: ty, w: dimFallback.w, h: dimFallback.h, level: nivel, shape: dimFallback.shape };
                             posEncontrada = true;
                             break;
                         }
                     }
-                    if (posEncontrada) break;
-                }
-            }
-
-            if (!posEncontrada) {
-                let push = 20;
-                for (let k = 0; k < 20; k++) {
-                    for (let dir of direcoesParaTestar) {
-                        let dimFilha = obterDimensoesEShape(idFilha, salaFilha, dir);
-                        let targetX = 0, targetY = 0;
-                        if (dir === "norte") {
-                            targetY = paiCoords.y - dimFilha.h - push;
-                            targetX = paiCoords.x + (paiCoords.w - dimFilha.w) * 0.5;
-                        } else if (dir === "sul") {
-                            targetY = paiCoords.y + paiCoords.h + push;
-                            targetX = paiCoords.x + (paiCoords.w - dimFilha.w) * 0.5;
-                        } else if (dir === "leste") {
-                            targetX = paiCoords.x + paiCoords.w + push;
-                            targetY = paiCoords.y + (paiCoords.h - dimFilha.h) * 0.5;
-                        } else if (dir === "oeste") {
-                            targetX = paiCoords.x - dimFilha.w - push;
-                            targetY = paiCoords.y + (paiCoords.h - dimFilha.h) * 0.5;
-                        }
-                        if (!checarColisao(targetX, targetY, dimFilha.w, dimFilha.h, levelFilha, idFilha)) {
-                            window.mapCoords[idFilha] = {
-                                x: targetX, y: targetY, w: dimFilha.w, h: dimFilha.h,
-                                level: levelFilha, shape: dimFilha.shape
-                            };
-                            posEncontrada = true;
-                            break;
-                        }
-                    }
-                    if (posEncontrada) break;
-                    push += 25;
-                }
-            }
-
-            if (!posEncontrada) {
-                let dimFilha = obterDimensoesEShape(idFilha, salaFilha, "leste");
-                let raioAnel = 150;
-                let alocadoAnel = false;
-                while (!alocadoAnel && raioAnel < 1000) {
-                    for (let angulo = 0; angulo < 360; angulo += 45) {
-                        let rad = (angulo * Math.PI) / 180;
-                        let targetX = paiCoords.x + Math.cos(rad) * raioAnel;
-                        let targetY = paiCoords.y + Math.sin(rad) * raioAnel;
-                        if (!checarColisao(targetX, targetY, dimFilha.w, dimFilha.h, levelFilha, idFilha)) {
-                            window.mapCoords[idFilha] = {
-                                x: targetX, y: targetY, w: dimFilha.w, h: dimFilha.h,
-                                level: levelFilha, shape: dimFilha.shape
-                            };
-                            alocadoAnel = true;
-                            break;
-                        }
-                    }
-                    raioAnel += 60;
+                    raio += 40;
                 }
             }
 
@@ -3233,57 +3179,40 @@ if (historicoConversa.length > 8) {
         });
     }
 
-    let idsSalas = Object.keys(window.mapCoords);
-    for (let i = 0; i < idsSalas.length; i++) {
-        for (let j = i + 1; j < idsSalas.length; j++) {
-            let idA = idsSalas[i], idB = idsSalas[j];
-            let cA = window.mapCoords[idA], cB = window.mapCoords[idB];
-            if (cA.level !== cB.level) continue;
-            let centroAX = cA.x + cA.w/2, centroAY = cA.y + cA.h/2;
-            let centroBX = cB.x + cB.w/2, centroBY = cB.y + cB.h/2;
-            let dist = Math.hypot(centroAX - centroBX, centroAY - centroBY);
-            if (dist < 150) {
-                let conectadas = false;
-                if (mapaMundo[idA] && mapaMundo[idA].opcoes && mapaMundo[idA].opcoes.some(o => String(o.destino) === idB)) conectadas = true;
-                if (mapaMundo[idB] && mapaMundo[idB].opcoes && mapaMundo[idB].opcoes.some(o => String(o.destino) === idA)) conectadas = true;
-                if (!conectadas) {
-                    if (!mapaMundo[idA].opcoes) mapaMundo[idA].opcoes = [];
-                    mapaMundo[idA].opcoes.push({ destino: idB, texto: "Atalho" });
-                    if (!mapaMundo[idB].opcoes) mapaMundo[idB].opcoes = [];
-                    mapaMundo[idB].opcoes.push({ destino: idA, texto: "Atalho" });
-                }
-            }
-        }
-    }
-
     if (typeof salvarEstadoJogador === "function") await salvarEstadoJogador();
 }
 
-// Função que abre o mapa (usa variáveis globais)
-window.abrirMapaVisual = async function() {
-    if (!mapaMundo || !mapaMundo["1"]) {
-        console.error("Mapa mundo inválido");
-        return;
-    }
+async function abrirMapaVisual() {
+    let idAtualGlobal = (typeof secaoAtualId !== 'undefined') ? secaoAtualId : "1";
+    let mapaMundoLocal = window.mapaMundo;
+    
+    if (!mapaMundoLocal || !mapaMundoLocal["1"]) return;
 
-    await recalcularCoordenadasPenochao(mapaMundo);
+    await recalcularCoordenadasPenochao(mapaMundoLocal);
 
     let modal = document.getElementById("modal-mapa-visual");
     if (!modal) {
         modal = document.createElement("div");
         modal.id = "modal-mapa-visual";
-        modal.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.95);z-index:99999;display:flex;justify-content:center;align-items:center;";
+        Object.assign(modal.style, {
+            position: "fixed", top: "0", left: "0", width: "100vw", height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.95)", zIndex: "99999",
+            display: "flex", justifyContent: "center", alignItems: "center"
+        });
+
         modal.innerHTML = `
-            <div style="background:#141311;border:4px solid #3a3228;box-shadow:6px 6px 0 #000;padding:20px;max-width:95%;max-height:95%;display:flex;flex-direction:column;font-family:'VT323',monospace;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:12px;border-bottom:2px solid #3a3228;padding-bottom:6px;">
-                    <span style="color:#ffaa00;font-size:26px;">PLANTA BAIXA</span>
-                    <button onclick="this.closest('#modal-mapa-visual').style.display='none'" style="background:#3a3228;color:#b5a68b;border:2px solid #5a4d3e;font-family:'VT323';font-size:18px;cursor:pointer;">FECHAR [X]</button>
+            <div style="background: #141311; border: 4px solid #3a3228; box-shadow: 6px 6px 0px #000; padding: 20px; max-width: 95%; max-height: 95%; display: flex; flex-direction: column; align-items: center; font-family: 'VT323', monospace;">
+                <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid #3a3228; padding-bottom: 6px;">
+                    <span style="color: #ffaa00; font-size: 26px; letter-spacing: 2px;">PLANTA BAIXA (RE)</span>
+                    <button onclick="document.getElementById('modal-mapa-visual').style.display='none'" style="background: #3a3228; color: #b5a68b; border: 2px solid #5a4d3e; font-family: 'VT323', monospace; font-size: 18px; cursor: pointer; padding: 2px 12px;">FECHAR [X]</button>
                 </div>
-                <canvas id="canvas-mapa" width="750" height="520" style="background:#090907;border:2px solid #221c16;"></canvas>
+                <canvas id="canvas-mapa" width="750" height="520" style="background: #090907; border: 2px solid #221c16; max-width: 100%; height: auto;"></canvas>
             </div>
         `;
         document.body.appendChild(modal);
-    } else modal.style.display = "flex";
+    } else {
+        modal.style.display = "flex";
+    }
 
     const canvas = document.getElementById("canvas-mapa");
     const ctx = canvas.getContext("2d");
@@ -3291,115 +3220,133 @@ window.abrirMapaVisual = async function() {
 
     if (!window.mapCoords || Object.keys(window.mapCoords).length === 0) return;
 
-    function desenharOctogono(c, x, y, w, h) {
-        let corte = Math.min(w, h) * 0.25;
-        c.beginPath();
-        c.moveTo(x + corte, y);
-        c.lineTo(x + w - corte, y);
-        c.lineTo(x + w, y + corte);
-        c.lineTo(x + w, y + h - corte);
-        c.lineTo(x + w - corte, y + h);
-        c.lineTo(x + corte, y + h);
-        c.lineTo(x, y + h - corte);
-        c.lineTo(x, y + corte);
-        c.closePath();
-        c.fill(); c.stroke();
-    }
-
-    function desenharPilares(c, x, y, w, h, corPilar) {
-        c.beginPath(); c.rect(x, y, w, h); c.fill(); c.stroke();
-        let tam = Math.max(3, Math.min(w, h) * 0.08);
-        c.fillStyle = corPilar;
-        c.fillRect(x + tam, y + tam, tam, tam);
-        c.fillRect(x + w - tam * 2, y + tam, tam, tam);
-        c.fillRect(x + tam, y + h - tam * 2, tam, tam);
-        c.fillRect(x + w - tam * 2, y + h - tam * 2, tam, tam);
-    }
-
+    // Calcula Bounding Box e Escala
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (let id in window.mapCoords) {
         let r = window.mapCoords[id];
-        minX = Math.min(minX, r.x);
-        maxX = Math.max(maxX, r.x + r.w);
-        minY = Math.min(minY, r.y);
-        maxY = Math.max(maxY, r.y + r.h);
+        if (r.x < minX) minX = r.x;
+        if (r.x + r.w > maxX) maxX = r.x + r.w;
+        if (r.y < minY) minY = r.y;
+        if (r.y + r.h > maxY) maxY = r.y + r.h;
     }
-    let mapW = maxX - minX, mapH = maxY - minY;
-    let margem = 45;
-    let escala = Math.min((canvas.width - margem * 2) / mapW, (canvas.height - margem * 2) / mapH, 1.4);
-    let offsetX = (canvas.width - mapW * escala) / 2 - minX * escala;
-    let offsetY = (canvas.height - mapH * escala) / 2 - minY * escala;
 
-    // Conexões
-    for (let idA in window.mapCoords) {
-        let salaA = mapaMundo[idA];
-        let cA = window.mapCoords[idA];
-        if (!salaA || !salaA.opcoes) continue;
-        let ax = offsetX + (cA.x + cA.w/2) * escala;
-        let ay = offsetY + (cA.y + cA.h/2) * escala;
-        for (let opt of salaA.opcoes) {
-            let idB = String(opt.destino);
-            let cB = window.mapCoords[idB];
-            if (!cB) continue;
-            let bx = offsetX + (cB.x + cB.w/2) * escala;
-            let by = offsetY + (cB.y + cB.h/2) * escala;
-            ctx.beginPath();
-            ctx.moveTo(ax, ay);
-            ctx.lineTo(bx, by);
-            if (opt.texto === "Atalho") {
-                ctx.strokeStyle = "#6622ee";
-                ctx.lineWidth = 2;
-                ctx.setLineDash([3,3]);
-            } else {
-                ctx.strokeStyle = "#352c22";
-                ctx.lineWidth = 3;
-                ctx.setLineDash([]);
-            }
-            ctx.stroke();
-        }
-    }
-    ctx.setLineDash([]);
+    let mWidth = maxX - minX, mHeight = maxY - minY, margemInterna = 50;
+    let escalaX = (canvas.width - margemInterna * 2) / (mWidth || 1);
+    let escalaY = (canvas.height - margemInterna * 2) / (mHeight || 1);
+    let escala = Math.min(escalaX, escalaY, 1.5);
+    let offsetX = (canvas.width - mWidth * escala) / 2 - minX * escala;
+    let offsetY = (canvas.height - mHeight * escala) / 2 - minY * escala;
 
-    // Salas
+    // PASSADA 1: Renderiza as Salas (Paredes visíveis)
     for (let id in window.mapCoords) {
         let r = window.mapCoords[id];
+        let sala = mapaMundoLocal[id];
         let rx = offsetX + r.x * escala;
         let ry = offsetY + r.y * escala;
         let rw = r.w * escala;
         let rh = r.h * escala;
+        let ehAtual = (String(id) === String(idAtualGlobal));
 
-        let ehAtual = (id === secaoAtualId);
-
+        // Estilo da Sala
         ctx.fillStyle = ehAtual ? "#221a0f" : "#12110f";
-        ctx.strokeStyle = ehAtual ? "#ffaa00" : "#544637";
+        ctx.strokeStyle = ehAtual ? "#ff0000" : "#544637"; // Destaque em vermelho/dourado
         ctx.lineWidth = ehAtual ? 3 : 2;
 
         if (r.shape === "octagon") {
-            desenharOctogono(ctx, rx, ry, rw, rh);
-        } else if (r.shape === "pillars") {
-            desenharPilares(ctx, rx, ry, rw, rh, ctx.strokeStyle);
-        } else {
+            let corte = Math.min(rw, rh) * 0.25;
             ctx.beginPath();
-            ctx.rect(rx, ry, rw, rh);
-            ctx.fill();
-            ctx.stroke();
+            ctx.moveTo(rx + corte, ry); ctx.lineTo(rx + rw - corte, ry);
+            ctx.lineTo(rx + rw, ry + corte); ctx.lineTo(rx + rw, ry + rh - corte);
+            ctx.lineTo(rx + rw - corte, ry + rh); ctx.lineTo(rx + corte, ry + rh);
+            ctx.lineTo(rx, ry + rh - corte); ctx.lineTo(rx, ry + corte);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+        } else {
+            ctx.fillRect(rx, ry, rw, rh);
+            ctx.strokeRect(rx, ry, rw, rh);
+            if (r.shape === "pillars") { // Salões
+                let pSize = Math.max(3, Math.min(rw, rh) * 0.08);
+                ctx.fillStyle = ctx.strokeStyle;
+                ctx.fillRect(rx + pSize, ry + pSize, pSize, pSize);
+                ctx.fillRect(rx + rw - pSize * 2, ry + pSize, pSize, pSize);
+                ctx.fillRect(rx + pSize, ry + rh - pSize * 2, pSize, pSize);
+                ctx.fillRect(rx + rw - pSize * 2, ry + rh - pSize * 2, pSize, pSize);
+            }
         }
 
-        if (r.level !== 0) {
-            ctx.fillStyle = r.level > 0 ? "#449944" : "#994444";
-            ctx.font = "10px 'Courier New'";
-            ctx.textAlign = "left";
-            ctx.fillText((r.level > 0 ? "Nível +" : "Nível ") + r.level, rx + 4, ry + rh - 4);
-        }
-
+        // Nome da sala
         ctx.fillStyle = ehAtual ? "#ffaa00" : "#a89a80";
-        ctx.font = `${Math.max(12, Math.floor(14 * escala))}px 'VT323'`;
+        ctx.font = `${Math.max(12, Math.floor(14 * escala))}px 'VT323', monospace`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        // Exibe o ID da sala (já que não temos nome)
-        ctx.fillText(id, rx + rw/2, ry + rh/2);
+        let textoId = id;
+        if (sala && sala.nome) {
+            let limitChars = Math.floor(r.w / 7);
+            textoId = sala.nome.length > limitChars ? sala.nome.substring(0, limitChars - 1) + "…" : sala.nome;
+        }
+        ctx.fillText(textoId, rx + rw / 2, ry + rh / 2);
     }
-};
+
+    // PASSADA 2: Renderiza Portas nas Intersecções
+    let paresDesenhados = new Set();
+    
+    for (let idA in window.mapCoords) {
+        let salaA = mapaMundoLocal[idA];
+        let rA = window.mapCoords[idA];
+        if (!salaA || !salaA.opcoes) continue;
+
+        for (let opt of salaA.opcoes) {
+            let idB = String(opt.destino);
+            let rB = window.mapCoords[idB];
+            if (!rB) continue;
+
+            // Evita desenhar a porta duas vezes (A->B e B->A)
+            let parKey = [idA, idB].sort().join('-');
+            if (paresDesenhados.has(parKey)) continue;
+            paresDesenhados.add(parKey);
+
+            // Calcula zonas de sobreposição (para ver se as paredes se tocam)
+            let overlapX1 = Math.max(rA.x, rB.x);
+            let overlapX2 = Math.min(rA.x + rA.w, rB.x + rB.w);
+            let overlapY1 = Math.max(rA.y, rB.y);
+            let overlapY2 = Math.min(rA.y + rA.h, rB.y + rB.h);
+
+            let pW = 14 * Math.min(1, escala); // Porta Horizontal
+            let pH = 6 * Math.min(1, escala);
+            ctx.fillStyle = "#f2a65a"; // Laranja/amarelo
+
+            // Se tocam Horizontalmente (Bordas laterais adjacentes)
+            if (overlapY2 > overlapY1 && (Math.abs((rA.x + rA.w) - rB.x) < 2 || Math.abs(rA.x - (rB.x + rB.w)) < 2)) {
+                let sharedX = (Math.abs((rA.x + rA.w) - rB.x) < 2) ? rA.x + rA.w : rA.x;
+                let midY = (overlapY1 + overlapY2) / 2;
+                
+                ctx.save();
+                ctx.translate(offsetX + sharedX * escala, offsetY + midY * escala);
+                // Desenha a porta verticalizada (w e h trocados)
+                ctx.fillRect(-pH / 2, -pW / 2, pH, pW);
+                // Linha preta sutil no meio da porta para profundidade
+                ctx.fillStyle = "#000";
+                ctx.fillRect(-1, -pW / 2, 2, pW);
+                ctx.restore();
+            }
+            // Se tocam Verticalmente (Bordas superior/inferior adjacentes)
+            else if (overlapX2 > overlapX1 && (Math.abs((rA.y + rA.h) - rB.y) < 2 || Math.abs(rA.y - (rB.y + rB.h)) < 2)) {
+                let sharedY = (Math.abs((rA.y + rA.h) - rB.y) < 2) ? rA.y + rA.h : rA.y;
+                let midX = (overlapX1 + overlapX2) / 2;
+                
+                ctx.save();
+                ctx.translate(offsetX + midX * escala, offsetY + sharedY * escala);
+                // Desenha porta horizontal
+                ctx.fillRect(-pW / 2, -pH / 2, pW, pH);
+                // Linha preta sutil no meio da porta
+                ctx.fillStyle = "#000";
+                ctx.fillRect(-pW / 2, -1, pW, 2);
+                ctx.restore();
+            }
+        }
+    }
+}
+        
         
         window.onload = async () => {
             onAuthStateChanged(auth, async (user) => {
