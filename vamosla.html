@@ -3051,158 +3051,165 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
     if (!mapaMundo || !mapaMundo["1"]) return;
     window.mapCoords = {};
 
-    // MANTIDO INTACTO: A lógica de dimensões e formato original.
-    function obterDimensoesEShape(idSala, sala, eixoVertical = false) {
-        let nome = (sala.nome || "").toLowerCase();
-        let w = 60, h = 60, shape = "rect";
-
-        if (sala.puzzle_status || sala.puzzle) {
-            w = 40; h = 40; shape = "octagon";
-        } else if (nome.includes("grande salão") || nome.includes("trono") || nome.includes("arsenal")) {
-            w = 120; h = 100; shape = "pillars";
-        } else if (nome.includes("torre") || nome.includes("mago") || nome.includes("observatório")) {
-            w = 60; h = 60; shape = "octagon";
-        } else if (nome.includes("corredor") || nome.includes("passagem") || nome.includes("galeria")) {
-            if (eixoVertical) { w = 40; h = 120; } 
-            else { w = 120; h = 40; }
-        } else {
-            let numId = parseInt(idSala) || 0;
-            if (numId % 3 === 1) { w = 40; h = 80; } 
-            else if (numId % 3 === 2) { w = 80; h = 40; }
+    // Hash determinístico por ID para dimensões consistentes entre recargas
+    function seededRand(id) {
+        let h = 0;
+        const s = String(id);
+        for (let i = 0; i < s.length; i++) {
+            h = Math.imul(31, h) + s.charCodeAt(i) | 0;
         }
-        return { w, h, shape };
+        return Math.abs(h) / 2147483647;
     }
 
-    let salaRaiz = mapaMundo["1"];
-    let dimRaiz = obterDimensoesEShape("1", salaRaiz, false);
-    
-    // Ponto zero para ancorar a topografia
+    // Dimensionamento semântico — usa texto_logico pois mapaMundo não tem campo nome
+    function obterDimensoesEShape(idSala, sala) {
+        const desc = (sala.texto_logico || "").toLowerCase();
+        let w, h, shape = "rect";
+
+        if (desc.includes("salão") || desc.includes("trono") || desc.includes("banquete") || desc.includes("arsenal")) {
+            w = 120; h = 100; shape = "pillars";
+        } else if (desc.includes("corredor") || desc.includes("passagem") || desc.includes("galeria") || desc.includes("túnel")) {
+            // Orientação decidida depois, no momento do posicionamento
+            w = 120; h = 30; shape = "rect";
+        } else if (desc.includes("torre") || desc.includes("laboratório") || desc.includes("observatório") || desc.includes("círculo arcano")) {
+            w = 60; h = 60; shape = "octagon";
+        } else if (desc.includes("caverna") || desc.includes("gruta") || desc.includes("fosso")) {
+            w = 100; h = 90; shape = "rect";
+        } else if (sala.puzzle_status || sala.puzzle) {
+            w = 50; h = 50; shape = "octagon";
+        } else {
+            const r = seededRand(idSala);
+            const r2 = seededRand(idSala + "b");
+            if (r < 0.25) {
+                const s = 40 + Math.floor(r2 * 30);
+                w = s; h = s;
+            } else if (r < 0.5) {
+                w = 50 + Math.floor(r2 * 30);
+                h = w + 20;
+            } else if (r < 0.75) {
+                h = 50 + Math.floor(r2 * 30);
+                w = h + 20;
+            } else {
+                w = 40 + Math.floor(r2 * 40);
+                h = 40 + Math.floor(seededRand(idSala + "c") * 40);
+            }
+        }
+        return { w: w || 60, h: h || 60, shape };
+    }
+
+    // Colisão com margem mínima (paredes que se tocam = OK)
+    function checarColisao(x, y, w, h, level) {
+        const m = 1;
+        for (let id in window.mapCoords) {
+            const o = window.mapCoords[id];
+            if (o.level !== level) continue;
+            if (x < o.x + o.w + m && x + w > o.x - m &&
+                y < o.y + o.h + m && y + h > o.y - m) return true;
+        }
+        return false;
+    }
+
+    // ── SNAP & FIT ──────────────────────────────────────────────────────────────
+    // Estratégia do Penochão: posicionar COLADO na direção correta,
+    // com 5 variações de alinhamento, antes de afastar progressivamente.
+    // Sem expansão de caixa (era isso que criava os "corredores fantasma").
+
+    const DIRS = ['east', 'south', 'west', 'north'];
+    const dirCursors = {}; // controla qual direção cada sala-pai usará na próxima filha
+
+    function proximaDirecao(idPai) {
+        if (dirCursors[idPai] === undefined) dirCursors[idPai] = 0;
+        return DIRS[(dirCursors[idPai]++) % DIRS.length];
+    }
+
+    // Tenta encaixar dim adjacente ao pai na direção dir, com vários alinhamentos
+    function tentarNaDirecao(pai, dim, dir) {
+        const alinhamentos = [0.5, 0, 1, 0.25, 0.75];
+        for (const a of alinhamentos) {
+            let tx, ty;
+            if (dir === 'north')      { ty = pai.y - dim.h;       tx = pai.x + (pai.w - dim.w) * a; }
+            else if (dir === 'south') { ty = pai.y + pai.h;        tx = pai.x + (pai.w - dim.w) * a; }
+            else if (dir === 'east')  { tx = pai.x + pai.w;        ty = pai.y + (pai.h - dim.h) * a; }
+            else                      { tx = pai.x - dim.w;        ty = pai.y + (pai.h - dim.h) * a; }
+
+            if (!checarColisao(tx, ty, dim.w, dim.h, pai.level)) return { x: tx, y: ty };
+        }
+        return null;
+    }
+
+    function calcularPosicao(pai, dim, dir) {
+        // 1ª passagem: encaixe direto, 5 alinhamentos
+        let pos = tentarNaDirecao(pai, dim, dir);
+        if (pos) return pos;
+
+        // 2ª passagem: afastar progressivamente na mesma direção (max 150px)
+        const cx = pai.x + pai.w / 2 - dim.w / 2;
+        const cy = pai.y + pai.h / 2 - dim.h / 2;
+        for (let push = 15; push <= 150; push += 15) {
+            let tx, ty;
+            if (dir === 'north')      { ty = pai.y - dim.h - push; tx = cx; }
+            else if (dir === 'south') { ty = pai.y + pai.h + push;  tx = cx; }
+            else if (dir === 'east')  { tx = pai.x + pai.w + push;  ty = cy; }
+            else                      { tx = pai.x - dim.w - push;  ty = cy; }
+            if (!checarColisao(tx, ty, dim.w, dim.h, pai.level)) return { x: tx, y: ty };
+        }
+
+        // 3ª passagem: tentar nas outras direções antes de desistir
+        for (const altDir of DIRS.filter(d => d !== dir)) {
+            pos = tentarNaDirecao(pai, dim, altDir);
+            if (pos) return pos;
+        }
+
+        // Emergência mínima (offset fixo pequeno — nunca 400px)
+        return { x: pai.x + pai.w + 20, y: pai.y + 20 };
+    }
+
+    // Sala raiz no centro
+    const dimRaiz = obterDimensoesEShape("1", mapaMundo["1"]);
     window.mapCoords["1"] = {
-        x: 0, y: 0,
+        x: -dimRaiz.w / 2, y: -dimRaiz.h / 2,
         w: dimRaiz.w, h: dimRaiz.h,
         level: 0, shape: dimRaiz.shape
     };
 
-    let fila = ["1"];
-    let visitados = new Set(["1"]);
-
-    // Vetores de direção circular (Norte, Leste, Sul, Oeste)
-    const DIRECOES = [
-        { nome: 'N', dx: 0, dy: -1 },
-        { nome: 'E', dx: 1, dy: 0 },
-        { nome: 'S', dx: 0, dy: 1 },
-        { nome: 'W', dx: -1, dy: 0 }
-    ];
+    const fila = ["1"];
+    const visitados = new Set(["1"]);
 
     while (fila.length > 0) {
-        let idAtual = fila.shift();
-        let pai = window.mapCoords[idAtual];
-        let salaAtual = mapaMundo[idAtual];
-
+        const idAtual = fila.shift();
+        const pai = window.mapCoords[idAtual];
+        const salaAtual = mapaMundo[idAtual];
         if (!salaAtual || !salaAtual.opcoes) continue;
 
-        let filhosParaProcessar = salaAtual.opcoes
+        const filhos = salaAtual.opcoes
             .filter(o => o.destino && !visitados.has(String(o.destino)))
             .filter(o => o.texto !== "Atalho");
 
-        let direcaoVerticalToggle = (parseInt(idAtual) % 2 === 0);
-        let direcoesUsadas = 0; // Para espalhar os filhos uniformemente
+        for (const opcao of filhos) {
+            const idFilha = String(opcao.destino);
+            const salaFilha = mapaMundo[idFilha];
+            if (!salaFilha) continue;
 
-        filhosParaProcessar.forEach((opcao) => {
-            let idFilha = String(opcao.destino);
-            let salaFilha = mapaMundo[idFilha];
-            if (!salaFilha) return;
+            const dim = obterDimensoesEShape(idFilha, salaFilha);
+            const dir = proximaDirecao(idAtual);
 
-            let dim = obterDimensoesEShape(idFilha, salaFilha, direcaoVerticalToggle);
-            direcaoVerticalToggle = !direcaoVerticalToggle; 
-
-            // Rotaciona as portas de saída
-            let dir = DIRECOES[direcoesUsadas % 4];
-            direcoesUsadas++;
-
-            let targetX = pai.x;
-            let targetY = pai.y;
-            
-            // Calcula a posição colada no pai, alinhada pelos centros
-            if (dir.nome === 'N') {
-                targetX = pai.x + (pai.w / 2) - (dim.w / 2);
-                targetY = pai.y - dim.h;
-            } else if (dir.nome === 'E') {
-                targetX = pai.x + pai.w;
-                targetY = pai.y + (pai.h / 2) - (dim.h / 2);
-            } else if (dir.nome === 'S') {
-                targetX = pai.x + (pai.w / 2) - (dim.w / 2);
-                targetY = pai.y + pai.h;
-            } else if (dir.nome === 'W') {
-                targetX = pai.x - dim.w;
-                targetY = pai.y + (pai.h / 2) - (dim.h / 2);
+            // Rotacionar corredores para alinhar com a direção de chegada
+            if (dim.w > dim.h * 1.5 && (dir === 'north' || dir === 'south')) {
+                [dim.w, dim.h] = [dim.h, dim.w];
+            } else if (dim.h > dim.w * 1.5 && (dir === 'east' || dir === 'west')) {
+                [dim.w, dim.h] = [dim.h, dim.w];
             }
 
-            // Verifica se a posição centralizada causa colisão
-            let temColisao = false;
-            const margemEpsilon = 2; // Impede que paredes apenas se tocando engatilhem colisão
-            
-            for (let idMapa in window.mapCoords) {
-                let outra = window.mapCoords[idMapa];
-                if (targetX + margemEpsilon < outra.x + outra.w && 
-                    targetX + dim.w - margemEpsilon > outra.x &&
-                    targetY + margemEpsilon < outra.y + outra.h && 
-                    targetY + dim.h - margemEpsilon > outra.y) {
-                    temColisao = true;
-                    break;
-                }
-            }
-
-            // O DESLOCAMENTO DE MASSA (GRID SHIFTING)
-            // Empurra a metade conflitante do mapa criando um vão vazio impecável
-            if (temColisao) {
-                const espacamento = 10; // Fenda visual para a nova sala
-                if (dir.nome === 'N') {
-                    let empuxo = dim.h + espacamento;
-                    for (let idMapa in window.mapCoords) {
-                        if (window.mapCoords[idMapa].y + window.mapCoords[idMapa].h <= pai.y + margemEpsilon) {
-                            window.mapCoords[idMapa].y -= empuxo;
-                        }
-                    }
-                    targetY -= empuxo;
-                } 
-                else if (dir.nome === 'E') {
-                    let empuxo = dim.w + espacamento;
-                    for (let idMapa in window.mapCoords) {
-                        if (window.mapCoords[idMapa].x >= pai.x + pai.w - margemEpsilon) {
-                            window.mapCoords[idMapa].x += empuxo;
-                        }
-                    }
-                } 
-                else if (dir.nome === 'S') {
-                    let empuxo = dim.h + espacamento;
-                    for (let idMapa in window.mapCoords) {
-                        if (window.mapCoords[idMapa].y >= pai.y + pai.h - margemEpsilon) {
-                            window.mapCoords[idMapa].y += empuxo;
-                        }
-                    }
-                } 
-                else if (dir.nome === 'W') {
-                    let empuxo = dim.w + espacamento;
-                    for (let idMapa in window.mapCoords) {
-                        if (window.mapCoords[idMapa].x + window.mapCoords[idMapa].w <= pai.x + margemEpsilon) {
-                            window.mapCoords[idMapa].x -= empuxo;
-                        }
-                    }
-                    targetX -= empuxo;
-                }
-            }
-
-            // Trava a sala nova na posição agora garantida
-            window.mapCoords[idFilha] = { 
-                x: targetX, y: targetY, 
-                w: dim.w, h: dim.h, 
-                level: pai.level + 1, shape: dim.shape 
+            const pos = calcularPosicao(pai, dim, dir);
+            window.mapCoords[idFilha] = {
+                x: pos.x, y: pos.y,
+                w: dim.w, h: dim.h,
+                level: pai.level, shape: dim.shape
             };
 
             visitados.add(idFilha);
             fila.push(idFilha);
-        });
+        }
     }
 
     if (typeof salvarEstadoJogador === "function") await salvarEstadoJogador();
