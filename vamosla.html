@@ -3073,13 +3073,17 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
     }
 
     function checarColisao(x, y, w, h, level, idIgnorado) {
+        // Margem minúscula (epsilon) para garantir que paredes tangentes não registrem colisão
+        const margem = 0.5; 
         for (let id in window.mapCoords) {
             if (id === idIgnorado) continue;
             let outra = window.mapCoords[id];
             if (outra.level !== level) continue;
-            // Margem 0 significa que podem se tocar perfeitamente, mas não se sobrepor
-            if (x < outra.x + outra.w && x + w > outra.x &&
-                y < outra.y + outra.h && y + h > outra.y) {
+            
+            if (x + margem < outra.x + outra.w && 
+                x + w - margem > outra.x &&
+                y + margem < outra.y + outra.h && 
+                y + h - margem > outra.y) {
                 return true;
             }
         }
@@ -3096,14 +3100,43 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
 
     let fila = ["1"];
     let visitados = new Set(["1"]);
-    
-    // Direções: Leste, Sul, Oeste, Norte
-    let direcoes = [
-        { dx: 1, dy: 0, eixoV: false, nome: "leste" },
-        { dx: 0, dy: 1, eixoV: true, nome: "sul" },
-        { dx: -1, dy: 0, eixoV: false, nome: "oeste" },
-        { dx: 0, dy: -1, eixoV: true, nome: "norte" }
-    ];
+
+    // Nova Heurística: Janela Deslizante de Perímetro
+    function encontrarEspacoAdjacente(pai, dimFilha) {
+        const passo = 10; // Testar a cada 10 pixels ao longo das paredes
+        const tentativas = [];
+
+        // 1. Desliza ao longo da face Norte (filha em cima)
+        for (let tx = pai.x - dimFilha.w; tx <= pai.x + pai.w; tx += passo) {
+            tentativas.push({ x: tx, y: pai.y - dimFilha.h });
+        }
+        // 2. Desliza ao longo da face Sul (filha embaixo)
+        for (let tx = pai.x - dimFilha.w; tx <= pai.x + pai.w; tx += passo) {
+            tentativas.push({ x: tx, y: pai.y + pai.h });
+        }
+        // 3. Desliza ao longo da face Leste (filha à direita)
+        for (let ty = pai.y - dimFilha.h; ty <= pai.y + pai.h; ty += passo) {
+            tentativas.push({ x: pai.x + pai.w, y: ty });
+        }
+        // 4. Desliza ao longo da face Oeste (filha à esquerda)
+        for (let ty = pai.y - dimFilha.h; ty <= pai.y + pai.h; ty += passo) {
+            tentativas.push({ x: pai.x - dimFilha.w, y: ty });
+        }
+
+        // Ordena as posições para priorizar o centro das faces, mantendo o layout coeso
+        tentativas.sort((a, b) => {
+            let distACentro = Math.pow((a.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((a.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
+            let distBCentro = Math.pow((b.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((b.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
+            return distACentro - distBCentro;
+        });
+
+        for (let pos of tentativas) {
+            if (!checarColisao(pos.x, pos.y, dimFilha.w, dimFilha.h, pai.level, null)) {
+                return pos;
+            }
+        }
+        return null;
+    }
 
     while (fila.length > 0) {
         let idAtual = fila.shift();
@@ -3112,70 +3145,37 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
 
         if (!salaAtual || !salaAtual.opcoes) continue;
 
-        // Distribui os filhos de forma circular para ramificar organicamente
-                let filhosParaProcessar = salaAtual.opcoes
+        let filhosParaProcessar = salaAtual.opcoes
             .filter(o => o.destino && !visitados.has(String(o.destino)))
             .filter(o => o.texto !== "Atalho");
-        let dirOffset = parseInt(idAtual) || 0; // Varia a direção inicial com base no ID para quebrar a linearidade
 
-        filhosParaProcessar.forEach((opcao, index) => {
+        let direcaoVerticalToggle = (parseInt(idAtual) % 2 === 0);
+
+        filhosParaProcessar.forEach((opcao) => {
             let idFilha = String(opcao.destino);
             let salaFilha = mapaMundo[idFilha];
             if (!salaFilha) return;
 
-            let posEncontrada = false;
-            let nivel = pai.level;
+            let dim = obterDimensoesEShape(idFilha, salaFilha, direcaoVerticalToggle);
+            direcaoVerticalToggle = !direcaoVerticalToggle; 
 
-            // Tenta encaixar a sala nas 4 direções ao redor do pai
-            for (let i = 0; i < 4; i++) {
-                let dir = direcoes[(dirOffset + index + i) % 4];
-                let dim = obterDimensoesEShape(idFilha, salaFilha, dir.eixoV);
-                
-                // Testa alinhamentos deslizando pela parede (centro, inicio, fim)
-                let alinhamentos = [0.5, 0, 1]; 
-                
-                for (let alig of alinhamentos) {
-                    let tx = 0, ty = 0;
+            let pos = encontrarEspacoAdjacente(pai, dim);
 
-                    if (dir.dx === 1) { // Leste
-                        tx = pai.x + pai.w;
-                        ty = pai.y + (pai.h - dim.h) * alig;
-                    } else if (dir.dx === -1) { // Oeste
-                        tx = pai.x - dim.w;
-                        ty = pai.y + (pai.h - dim.h) * alig;
-                    } else if (dir.dy === 1) { // Sul
-                        tx = pai.x + (pai.w - dim.w) * alig;
-                        ty = pai.y + pai.h;
-                    } else if (dir.dy === -1) { // Norte
-                        tx = pai.x + (pai.w - dim.w) * alig;
-                        ty = pai.y - dim.h;
-                    }
-
-                    if (!checarColisao(tx, ty, dim.w, dim.h, nivel, idFilha)) {
-                        window.mapCoords[idFilha] = { x: tx, y: ty, w: dim.w, h: dim.h, level: nivel, shape: dim.shape };
-                        posEncontrada = true;
-                        break;
-                    }
-                }
-                if (posEncontrada) break;
-            }
-
-            // Fallback: empurra radialmente se estiver muito lotado
-            if (!posEncontrada) {
-                let dimFallback = obterDimensoesEShape(idFilha, salaFilha, false);
-                let raio = 80;
-                let anguloBase = (dirOffset * 45) * Math.PI / 180;
-                while (!posEncontrada && raio < 1500) {
-                    for (let a = 0; a < 8; a++) {
-                        let tx = pai.x + Math.cos(anguloBase + (a * Math.PI / 4)) * raio;
-                        let ty = pai.y + Math.sin(anguloBase + (a * Math.PI / 4)) * raio;
-                        if (!checarColisao(tx, ty, dimFallback.w, dimFallback.h, nivel, idFilha)) {
-                            window.mapCoords[idFilha] = { x: tx, y: ty, w: dimFallback.w, h: dimFallback.h, level: nivel, shape: dimFallback.shape };
-                            posEncontrada = true;
-                            break;
-                        }
-                    }
-                    raio += 40;
+            if (pos) {
+                // Encaixe primário bem-sucedido na parede direta do pai
+                window.mapCoords[idFilha] = { x: pos.x, y: pos.y, w: dim.w, h: dim.h, level: pai.level, shape: dim.shape };
+            } else {
+                // Failsafe Topológico: Se a sala pai estiver 100% cercada por outras salas, 
+                // "inflamos" as paredes de busca do pai passo a passo. 
+                // Isso cria uma camada externa mantendo alinhamento grid/retilíneo.
+                let resolvida = false;
+                for (let folga = 20; folga <= 400 && !resolvida; folga += 20) {
+                     let paiExpandido = { x: pai.x - folga, y: pai.y - folga, w: pai.w + folga * 2, h: pai.h + folga * 2, level: pai.level };
+                     let posFailsafe = encontrarEspacoAdjacente(paiExpandido, dim);
+                     if (posFailsafe) {
+                         window.mapCoords[idFilha] = { x: posFailsafe.x, y: posFailsafe.y, w: dim.w, h: dim.h, level: pai.level, shape: dim.shape };
+                         resolvida = true;
+                     }
                 }
             }
 
