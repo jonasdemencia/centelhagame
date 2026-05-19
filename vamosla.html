@@ -3048,337 +3048,91 @@ if (historicoConversa.length > 8) {
         async function recalcularCoordenadasPenochao(mapaMundo) {
     if (!mapaMundo || !mapaMundo["1"]) return;
 
-    // Inicializa o objeto global de coordenadas
     window.mapCoords = {};
 
-    // 1. FUNÇÕES AUXILIARES DE DIMENSÃO E SHAPE
     function obterDimensoesEShape(idSala, sala, direcaoPai = "leste") {
-        let nome = (sala.nome || "").toLowerCase();
-        let w = 60;
-        let h = 60;
-        let shape = "rect";
-
-        if (sala.puzzle_status || sala.puzzle) {
-            w = 40;
-            h = 40;
-            shape = "octagon";
+        let nome = (sala.texto_logico || sala.nome || "").toLowerCase();
+        let w = 60, h = 60, shape = "rect";
+        if (sala.puzzle_status) {
+            w = 40; h = 40; shape = "octagon";
         } else if (nome.includes("grande salão") || nome.includes("trono") || nome.includes("arsenal")) {
-            w = 120;
-            h = 100;
-            shape = "pillars";
+            w = 120; h = 100; shape = "pillars";
         } else if (nome.includes("torre") || nome.includes("mago") || nome.includes("observatório")) {
-            w = 60;
-            h = 60;
-            shape = "octagon";
+            w = 60; h = 60; shape = "octagon";
         } else if (nome.includes("corredor") || nome.includes("passagem") || nome.includes("galeria")) {
-            // Rotação baseada na direção de chegada
-            if (direcaoPai === "norte" || direcaoPai === "sul") {
-                w = 40;
-                h = 120; // Vertical
-            } else {
-                w = 120;
-                h = 40;  // Horizontal
-            }
+            if (direcaoPai === "norte" || direcaoPai === "sul") { w = 40; h = 120; }
+            else { w = 120; h = 40; }
         } else {
-            // Sala normal: variação determinística baseada no ID
             let numId = parseInt(idSala) || 0;
-            if (numId % 3 === 1) {
-                w = 40; h = 80;
-            } else if (numId % 3 === 2) {
-                w = 80; h = 40;
-            }
+            if (numId % 3 === 1) { w = 40; h = 80; }
+            else if (numId % 3 === 2) { w = 80; h = 40; }
         }
         return { w, h, shape };
     }
 
-async function abrirMapaVisual(mapaMundo, idSalaAtual = "1") {
-    if (!mapaMundo || !mapaMundo["1"]) {
-        console.error("Mapa mundo inválido ou não carregado.");
-        return;
-    }
-
-    // 1. Processa e recalcula a matriz de coordenadas em window.mapCoords
-    await recalcularCoordenadasPenochao(mapaMundo);
-
-    // 2. Garante a existência do Modal/Overlay do mapa no DOM
-    let modal = document.getElementById("modal-mapa-visual");
-    if (!modal) {
-        modal = document.createElement("div");
-        modal.id = "modal-mapa-visual";
-        modal.style.position = "fixed";
-        modal.style.top = "0";
-        modal.style.left = "0";
-        modal.style.width = "100vw";
-        modal.style.height = "100vh";
-        modal.style.backgroundColor = "rgba(0, 0, 0, 0.9)";
-        modal.style.zIndex = "99999";
-        modal.style.display = "flex";
-        modal.style.justifyContent = "center";
-        modal.style.alignItems = "center";
-
-        modal.innerHTML = `
-            <div style="background: #141311; border: 4px solid #3a3228; box-shadow: 6px 6px 0px #000; padding: 20px; position: relative; max-width: 95%; max-height: 95%; display: flex; flex-direction: column; align-items: center; font-family: 'VT323', monospace;">
-                <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid #3a3228; padding-bottom: 6px;">
-                    <span style="color: #ffaa00; font-size: 28px; letter-spacing: 2px;">PLANTA BAIXA DA MASMORRA</span>
-                    <button onclick="document.getElementById('modal-mapa-visual').style.display='none'" style="background: #3a3228; color: #b5a68b; border: 2px solid #5a4d3e; font-family: 'VT323', monospace; font-size: 18px; cursor: pointer; padding: 2px 12px; box-shadow: 2px 2px 0px #000;">FECHAR [X]</button>
-                </div>
-                <canvas id="canvas-mapa" width="700" height="500" style="background: #0a0a08; border: 2px solid #221c16; max-width: 100%; height: auto;"></canvas>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    } else {
-        modal.style.display = "flex";
-    }
-
-    const canvas = document.getElementById("canvas-mapa");
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (!window.mapCoords || Object.keys(window.mapCoords).length === 0) return;
-
-    // 3. Funções internas de renderização de formas semânticas
-    function desenharOctogono(c, x, y, w, h) {
-        let corte = Math.min(w, h) * 0.25;
-        c.beginPath();
-        c.moveTo(x + corte, y);
-        c.lineTo(x + w - corte, y);
-        c.lineTo(x + w, y + corte);
-        c.lineTo(x + w, y + h - corte);
-        c.lineTo(x + w - corte, y + h);
-        c.lineTo(x + corte, y + h);
-        c.lineTo(x, y + h - corte);
-        c.lineTo(x, y + corte);
-        c.closePath();
-        c.fill();
-        c.stroke();
-    }
-
-    function desenharPilares(c, x, y, w, h, corPilar) {
-        c.beginPath();
-        c.rect(x, y, w, h);
-        c.fill();
-        c.stroke();
-        
-        // Renderiza 4 pilares internos nos cantos
-        let tamPilar = Math.max(3, Math.min(w, h) * 0.08);
-        c.fillStyle = corPilar;
-        c.fillRect(x + tamPilar, y + tamPilar, tamPilar, tamPilar);
-        c.fillRect(x + w - tamPilar * 2, y + tamPilar, tamPilar, tamPilar);
-        c.fillRect(x + tamPilar, y + h - tamPilar * 2, tamPilar, tamPilar);
-        c.fillRect(x + w - tamPilar * 2, y + h - tamPilar * 2, tamPilar, tamPilar);
-    }
-
-    // 4. Auto-ajuste de escala e centralização (Bounding Box)
-    let minX = Infinity, maxX = -Infinity;
-    let minY = Infinity, maxY = -Infinity;
-
-    for (let id in window.mapCoords) {
-        let r = window.mapCoords[id];
-        if (r.x < minX) minX = r.x;
-        if (r.x + r.w > maxX) maxX = r.x + r.w;
-        if (r.y < minY) minY = r.y;
-        if (r.y + r.h > maxY) maxY = r.y + r.h;
-    }
-
-    let mapW = maxX - minX;
-    let mapH = maxY - minY;
-    let margem = 40;
-
-    let escalaX = (canvas.width - margem * 2) / (mapW || 1);
-    let escalaY = (canvas.height - margem * 2) / (mapH || 1);
-    let escala = Math.min(escalaX, escalaY, 1.5); // Trava zoom excessivo em mapas pequenos
-
-    let offsetX = (canvas.width - mapW * escala) / 2 - minX * escala;
-    let offsetY = (canvas.height - mapH * escala) / 2 - minY * escala;
-
-    // 5. PRIMEIRA PASSADA: Desenha as conexões/linhas (ficam por baixo)
-    for (let idA in window.mapCoords) {
-        let salaA = mapaMundo[idA];
-        let cA = window.mapCoords[idA];
-        if (!salaA || !salaA.opcoes) continue;
-
-        let centroAX = offsetX + (cA.x + cA.w / 2) * escala;
-        let centroAY = offsetY + (cA.y + cA.h / 2) * escala;
-
-        for (let opt of salaA.opcoes) {
-            let idB = String(opt.destino);
-            let cB = window.mapCoords[idB];
-            if (!cB) continue;
-
-            let centroBX = offsetX + (cB.x + cB.w / 2) * escala;
-            let centroBY = offsetY + (cB.y + cB.h / 2) * escala;
-
-            ctx.beginPath();
-            ctx.moveTo(centroAX, centroAY);
-            ctx.lineTo(centroBX, centroBY);
-
-            if (opt.texto === "Atalho") {
-                ctx.strokeStyle = "#7733ff"; // Roxo místico para ciclos/atalhos descobertos
-                ctx.lineWidth = 2;
-                ctx.setLineDash([4, 4]); // Efeito pontilhado retro
-            } else {
-                ctx.strokeStyle = "#3a3228"; // Marrom escuro para conexões normais
-                ctx.lineWidth = 3;
-                ctx.setLineDash([]);
-            }
-            ctx.stroke();
-        }
-    }
-    ctx.setLineDash([]);
-
-    // 6. SEGUNDA PASSADA: Desenha os blocos das salas
-    for (let id in window.mapCoords) {
-        let r = window.mapCoords[id];
-        let sala = mapaMundo[id];
-
-        let rx = offsetX + r.x * escala;
-        let ry = offsetY + r.y * escala;
-        let rw = r.w * escala;
-        let rh = r.h * escala;
-
-        let ehAtual = (String(id) === String(idSalaAtual));
-
-        // Define paleta com base no estado da sala
-        if (ehAtual) {
-            ctx.fillStyle = "#2a2212";    // Fundo âmbar bem sutil
-            ctx.strokeStyle = "#ffaa00";  // Borda brilhante para localização do jogador
-            ctx.lineWidth = 3;
-        } else {
-            ctx.fillStyle = "#141311";    // Fundo padrão opaco
-            ctx.strokeStyle = "#5c4d3c";  // Borda envelhecida
-            ctx.lineWidth = 2;
-        }
-
-        // Aplica o desenho baseado no shape semântico guardado
-        if (r.shape === "octagon") {
-            desenharOctogono(ctx, rx, ry, rw, rh);
-        } else if (r.shape === "pillars") {
-            desenharPilares(ctx, rx, ry, rw, rh, ctx.strokeStyle);
-        } else {
-            ctx.beginPath();
-            ctx.rect(rx, ry, rw, rh);
-            ctx.fill();
-            ctx.stroke();
-        }
-
-        // Indicador numérico visual discreto para subníveis/andares (level != 0)
-        if (r.level !== 0) {
-            ctx.fillStyle = r.level > 0 ? "#44aa44" : "#aa4444";
-            ctx.font = "11px 'Courier New', monospace";
-            ctx.textAlign = "left";
-            ctx.fillText((r.level > 0 ? "Lvl +" : "Lvl ") + r.level, rx + 4, ry + rh - 4);
-        }
-
-        // Texto com o identificador/nome da sala
-        ctx.fillStyle = ehAtual ? "#ffaa00" : "#b5a68b";
-        ctx.font = `${Math.max(13, Math.floor(15 * escala))}px 'VT323', monospace`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-
-        let textoExibir = id;
-        if (sala && sala.nome) {
-            let maxChars = Math.floor(rw / 7);
-            textoExibir = sala.nome.length > maxChars ? sala.nome.substring(0, maxChars - 1) + "…" : sala.nome;
-        }
-        ctx.fillText(textoExibir, rx + rw / 2, ry + rh / 2);
-    }
-}
-
-            
     function inferirDirecao(texto) {
-        let txt = (texto || "").toLowerCase();
-        if (txt.includes("norte")) return "norte";
-        if (txt.includes("sul")) return "sul";
-        if (txt.includes("leste")) return "leste";
-        if (txt.includes("oeste")) return "oeste";
-        if (txt.includes("acima") || txt.includes("subir")) return "above";
-        if (txt.includes("abaixo") || txt.includes("descer")) return "below";
-        return "leste"; // Direção padrão
+        let t = (texto || "").toLowerCase();
+        if (t.includes("norte")) return "norte";
+        if (t.includes("sul")) return "sul";
+        if (t.includes("leste")) return "leste";
+        if (t.includes("oeste")) return "oeste";
+        if (t.includes("acima") || t.includes("subir")) return "above";
+        if (t.includes("abaixo") || t.includes("descer")) return "below";
+        return "leste";
     }
 
-    // Função de checagem de colisão (margem de -1 permite que as paredes se toquem)
     function checarColisao(x, y, w, h, level, idIgnorado) {
         for (let id in window.mapCoords) {
             if (id === idIgnorado) continue;
             let outra = window.mapCoords[id];
             if (outra.level !== level) continue;
-
-            // Margem de colisão de -1 nas fronteiras
-            if (x < outra.x + outra.w - 1 &&
-                x + w > outra.x + 1 &&
-                y < outra.y + outra.h - 1 &&
-                y + h > outra.y + 1) {
-                return true; // Colidiu
+            if (x < outra.x + outra.w - 1 && x + w > outra.x + 1 &&
+                y < outra.y + outra.h - 1 && y + h > outra.y + 1) {
+                return true;
             }
         }
         return false;
     }
 
-    // 2. POSICIONAMENTO DA SALA RAIZ "1"
     let salaRaiz = mapaMundo["1"];
     let dimRaiz = obterDimensoesEShape("1", salaRaiz);
-    window.mapCoords["1"] = {
-        x: -30, // Centralizada em relação ao centro (0,0)
-        y: -30,
-        w: dimRaiz.w,
-        h: dimRaiz.h,
-        level: 0,
-        shape: dimRaiz.shape
-    };
+    window.mapCoords["1"] = { x: -30, y: -30, w: dimRaiz.w, h: dimRaiz.h, level: 0, shape: dimRaiz.shape };
 
-    // 3. ALGORITMO BFS PARA DISTRIBUIR AS SALAS
     let fila = ["1"];
     let visitados = new Set(["1"]);
 
-    while (fila.length > 0) {
+    while (fila.length) {
         let idAtual = fila.shift();
         let paiCoords = window.mapCoords[idAtual];
         let salaAtual = mapaMundo[idAtual];
-
         if (!salaAtual || !salaAtual.opcoes) continue;
 
         for (let opcao of salaAtual.opcoes) {
             let idFilha = String(opcao.destino);
             if (visitados.has(idFilha)) continue;
-
             let salaFilha = mapaMundo[idFilha];
             if (!salaFilha) continue;
 
             let direcaoOriginal = inferirDirecao(opcao.texto);
             let dimFilha = obterDimensoesEShape(idFilha, salaFilha, direcaoOriginal);
-
-            // Ajuste de Nível (subir ou descer)
             let levelFilha = paiCoords.level;
-            let offsetXNivel = 0;
-            let offsetYNivel = 0;
-            if (direcaoOriginal === "above") {
-                levelFilha += 1;
-                offsetXNivel = 25;
-                offsetYNivel = 25;
-            } else if (direcaoOriginal === "below") {
-                levelFilha -= 1;
-                offsetXNivel = 25;
-                offsetYNivel = 25;
-            }
+            let offsetXNivel = 0, offsetYNivel = 0;
+            if (direcaoOriginal === "above") { levelFilha += 1; offsetXNivel = 25; offsetYNivel = 25; }
+            else if (direcaoOriginal === "below") { levelFilha -= 1; offsetXNivel = 25; offsetYNivel = 25; }
 
             let posEncontrada = false;
             let direcaoTeste = direcaoOriginal;
             let direcoesPossiveis = ["norte", "sul", "leste", "oeste", "above", "below"];
 
-            // Loop principal de tentativa (Direção Original -> Alternativas se falhar)
-            for (let tentativaDir = 0; tentativaDir < 6; tentativaDir++) {
+            for (let tentativaDir = 0; tentativaDir < 6 && !posEncontrada; tentativaDir++) {
                 if (tentativaDir > 0) {
-                    // Seleciona uma direção diferente se a original falhar em todos os alinhamentos e fallbacks
-                    let outrasDirecoes = direcoesPossiveis.filter(d => d !== direcaoOriginal);
-                    direcaoTeste = outrasDirecoes[(tentativaDir - 1) % outrasDirecoes.length];
+                    let outras = direcoesPossiveis.filter(d => d !== direcaoOriginal);
+                    direcaoTeste = outras[(tentativaDir - 1) % outras.length];
                 }
 
-                // 1. Tentar encaixar rente à parede usando os 5 alinhamentos (espaço = 0)
                 let alinhamentos = [0, 0.25, 0.5, 0.75, 1];
                 for (let Alig of alinhamentos) {
-                    let targetX = 0;
-                    let targetY = 0;
-
+                    let targetX = 0, targetY = 0;
                     if (direcaoTeste === "norte") {
                         targetY = paiCoords.y - dimFilha.h;
                         targetX = paiCoords.x + (paiCoords.w - dimFilha.w) * Alig;
@@ -3391,32 +3145,24 @@ async function abrirMapaVisual(mapaMundo, idSalaAtual = "1") {
                     } else if (direcaoTeste === "oeste") {
                         targetX = paiCoords.x - dimFilha.w;
                         targetY = paiCoords.y + (paiCoords.h - dimFilha.h) * Alig;
-                    } else { // Above / Below
+                    } else {
                         targetX = paiCoords.x + offsetXNivel;
                         targetY = paiCoords.y + offsetYNivel;
                     }
-
                     if (!checarColisao(targetX, targetY, dimFilha.w, dimFilha.h, levelFilha, idFilha)) {
-                        window.mapCoords[idFilha] = {
-                            x: targetX, y: targetY, w: dimFilha.w, h: dimFilha.h,
-                            level: levelFilha, shape: dimFilha.shape
-                        };
+                        window.mapCoords[idFilha] = { x: targetX, y: targetY, w: dimFilha.w, h: dimFilha.h, level: levelFilha, shape: dimFilha.shape };
                         posEncontrada = true;
                         break;
                     }
                 }
-
                 if (posEncontrada) break;
 
-                // 2. Estratégia de Fallback: Empurrar gradualmente (até 20 tentativas)
                 let push = 20;
                 for (let k = 0; k < 20; k++) {
-                    let targetX = 0;
-                    let targetY = 0;
-
+                    let targetX = 0, targetY = 0;
                     if (direcaoTeste === "norte") {
                         targetY = paiCoords.y - dimFilha.h - push;
-                        targetX = paiCoords.x + (paiCoords.w - dimFilha.w) * 0.5; // Centralizado no fallback
+                        targetX = paiCoords.x + (paiCoords.w - dimFilha.w) * 0.5;
                     } else if (direcaoTeste === "sul") {
                         targetY = paiCoords.y + paiCoords.h + push;
                         targetX = paiCoords.x + (paiCoords.w - dimFilha.w) * 0.5;
@@ -3426,35 +3172,21 @@ async function abrirMapaVisual(mapaMundo, idSalaAtual = "1") {
                     } else if (direcaoTeste === "oeste") {
                         targetX = paiCoords.x - dimFilha.w - push;
                         targetY = paiCoords.y + (paiCoords.h - dimFilha.h) * 0.5;
-                    } else { // Above / Below
+                    } else {
                         targetX = paiCoords.x + offsetXNivel + push;
                         targetY = paiCoords.y + offsetYNivel + push;
                     }
-
                     if (!checarColisao(targetX, targetY, dimFilha.w, dimFilha.h, levelFilha, idFilha)) {
-                        window.mapCoords[idFilha] = {
-                            x: targetX, y: targetY, w: dimFilha.w, h: dimFilha.h,
-                            level: levelFilha, shape: dimFilha.shape
-                        };
+                        window.mapCoords[idFilha] = { x: targetX, y: targetY, w: dimFilha.w, h: dimFilha.h, level: levelFilha, shape: dimFilha.shape };
                         posEncontrada = true;
                         break;
                     }
-                    push += 20; // Incremento ordenado
+                    push += 20;
                 }
-
-                if (posEncontrada) break;
             }
 
-            // Se ainda assim falhar completamente, aloca em uma posição segura padrão no nível
             if (!posEncontrada) {
-                window.mapCoords[idFilha] = {
-                    x: paiCoords.x + 100,
-                    y: paiCoords.y + 100,
-                    w: dimFilha.w,
-                    h: dimFilha.h,
-                    level: levelFilha,
-                    shape: dimFilha.shape
-                };
+                window.mapCoords[idFilha] = { x: paiCoords.x + 100, y: paiCoords.y + 100, w: dimFilha.w, h: dimFilha.h, level: levelFilha, shape: dimFilha.shape };
             }
 
             visitados.add(idFilha);
@@ -3462,58 +3194,144 @@ async function abrirMapaVisual(mapaMundo, idSalaAtual = "1") {
         }
     }
 
-    // 4. IDENTIFICAÇÃO DE CICLOS E CRIAÇÃO DE ATALHOS
     let idsSalas = Object.keys(window.mapCoords);
     for (let i = 0; i < idsSalas.length; i++) {
         for (let j = i + 1; j < idsSalas.length; j++) {
-            let idA = idsSalas[i];
-            let idB = idsSalas[j];
-            let cA = window.mapCoords[idA];
-            let cB = window.mapCoords[idB];
-
-            // Devem estar estritamente no mesmo nível
+            let idA = idsSalas[i], idB = idsSalas[j];
+            let cA = window.mapCoords[idA], cB = window.mapCoords[idB];
             if (cA.level !== cB.level) continue;
-
-            // Calcula os pontos centrais de cada sala
-            let centroAX = cA.x + cA.w / 2;
-            let centroAY = cA.y + cA.h / 2;
-            let centroBX = cB.x + cB.w / 2;
-            let centroBY = cB.y + cB.h / 2;
-
-            // Distância Euclidiana entre os centros
-            let dist = Math.sqrt(Math.pow(centroAX - centroBX, 2) + Math.pow(centroAY - centroBY, 2));
-
+            let centroAX = cA.x + cA.w/2, centroAY = cA.y + cA.h/2;
+            let centroBX = cB.x + cB.w/2, centroBY = cB.y + cB.h/2;
+            let dist = Math.hypot(centroAX - centroBX, centroAY - centroBY);
             if (dist < 150) {
-                // Verifica se já estão conectadas em mapaMundo de forma direta
                 let conectadas = false;
-                
-                if (mapaMundo[idA] && mapaMundo[idA].opcoes) {
-                    if (mapaMundo[idA].opcoes.some(o => String(o.destino) === idB)) conectadas = true;
-                }
-                if (mapaMundo[idB] && mapaMundo[idB].opcoes) {
-                    if (mapaMundo[idB].opcoes.some(o => String(o.destino) === idA)) conectadas = true;
-                }
-
-                // Se não estiverem conectadas, cria a conexão bidirecional de atalho
+                if (mapaMundo[idA] && mapaMundo[idA].opcoes && mapaMundo[idA].opcoes.some(o => String(o.destino) === idB)) conectadas = true;
+                if (mapaMundo[idB] && mapaMundo[idB].opcoes && mapaMundo[idB].opcoes.some(o => String(o.destino) === idA)) conectadas = true;
                 if (!conectadas) {
-                    if (mapaMundo[idA]) {
-                        if (!mapaMundo[idA].opcoes) mapaMundo[idA].opcoes = [];
-                        mapaMundo[idA].opcoes.push({ destino: idB, texto: "Atalho" });
-                    }
-                    if (mapaMundo[idB]) {
-                        if (!mapaMundo[idB].opcoes) mapaMundo[idB].opcoes = [];
-                        mapaMundo[idB].opcoes.push({ destino: idA, texto: "Atalho" });
-                    }
+                    if (!mapaMundo[idA].opcoes) mapaMundo[idA].opcoes = [];
+                    mapaMundo[idA].opcoes.push({ destino: idB, texto: "Atalho" });
+                    if (!mapaMundo[idB].opcoes) mapaMundo[idB].opcoes = [];
+                    mapaMundo[idB].opcoes.push({ destino: idA, texto: "Atalho" });
                 }
             }
         }
     }
 
-    // 5. PERSISTÊNCIA DO ESTADO
-    if (typeof salvarEstadoJogador === "function") {
-        await salvarEstadoJogador();
-    }
+    if (typeof salvarEstadoJogador === "function") await salvarEstadoJogador();
 }
+
+// FUNÇÃO DE DESENHO DO MAPA (ABRIR MAPA)
+window.abrirMapaVisual = async function() {
+    if (!mapaMundo || !mapaMundo["1"]) {
+        console.error("Mapa mundo inválido");
+        return;
+    }
+    await recalcularCoordenadasPenochao(mapaMundo);
+
+    let modal = document.getElementById("modal-mapa-visual");
+    if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "modal-mapa-visual";
+        modal.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.9);z-index:99999;display:flex;justify-content:center;align-items:center;";
+        modal.innerHTML = `
+            <div style="background:#141311;border:4px solid #3a3228;box-shadow:6px 6px 0 #000;padding:20px;max-width:95%;max-height:95%;display:flex;flex-direction:column;font-family:'VT323',monospace;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:12px;border-bottom:2px solid #3a3228;padding-bottom:6px;">
+                    <span style="color:#ffaa00;font-size:28px;">PLANTA BAIXA</span>
+                    <button onclick="this.closest('#modal-mapa-visual').style.display='none'" style="background:#3a3228;color:#b5a68b;border:2px solid #5a4d3e;font-family:'VT323';font-size:18px;cursor:pointer;">FECHAR [X]</button>
+                </div>
+                <canvas id="canvas-mapa" width="700" height="500" style="background:#0a0a08;border:2px solid #221c16;"></canvas>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    } else modal.style.display = "flex";
+
+    const canvas = document.getElementById("canvas-mapa");
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (!window.mapCoords || Object.keys(window.mapCoords).length === 0) return;
+
+    function desenharOctogono(c, x, y, w, h) {
+        let corte = Math.min(w, h) * 0.25;
+        c.beginPath();
+        c.moveTo(x+corte, y); c.lineTo(x+w-corte, y);
+        c.lineTo(x+w, y+corte); c.lineTo(x+w, y+h-corte);
+        c.lineTo(x+w-corte, y+h); c.lineTo(x+corte, y+h);
+        c.lineTo(x, y+h-corte); c.lineTo(x, y+corte);
+        c.closePath();
+        c.fill(); c.stroke();
+    }
+
+    function desenharPilares(c, x, y, w, h, corPilar) {
+        c.beginPath(); c.rect(x, y, w, h); c.fill(); c.stroke();
+        let tam = Math.max(3, Math.min(w,h)*0.08);
+        c.fillStyle = corPilar;
+        c.fillRect(x+tam, y+tam, tam, tam);
+        c.fillRect(x+w-tam*2, y+tam, tam, tam);
+        c.fillRect(x+tam, y+h-tam*2, tam, tam);
+        c.fillRect(x+w-tam*2, y+h-tam*2, tam, tam);
+    }
+
+    let minX=Infinity, maxX=-Infinity, minY=Infinity, maxY=-Infinity;
+    for (let r of Object.values(window.mapCoords)) {
+        minX = Math.min(minX, r.x); maxX = Math.max(maxX, r.x+r.w);
+        minY = Math.min(minY, r.y); maxY = Math.max(maxY, r.y+r.h);
+    }
+    let mapW = maxX-minX, mapH = maxY-minY;
+    let margem = 40;
+    let escala = Math.min((canvas.width-margem*2)/mapW, (canvas.height-margem*2)/mapH, 1.5);
+    let offsetX = (canvas.width - mapW*escala)/2 - minX*escala;
+    let offsetY = (canvas.height - mapH*escala)/2 - minY*escala;
+
+    for (let idA in window.mapCoords) {
+        let salaA = mapaMundo[idA];
+        let cA = window.mapCoords[idA];
+        if (!salaA || !salaA.opcoes) continue;
+        let ax = offsetX + (cA.x + cA.w/2)*escala;
+        let ay = offsetY + (cA.y + cA.h/2)*escala;
+        for (let opt of salaA.opcoes) {
+            let idB = String(opt.destino);
+            let cB = window.mapCoords[idB];
+            if (!cB) continue;
+            let bx = offsetX + (cB.x + cB.w/2)*escala;
+            let by = offsetY + (cB.y + cB.h/2)*escala;
+            ctx.beginPath();
+            ctx.moveTo(ax, ay);
+            ctx.lineTo(bx, by);
+            ctx.strokeStyle = opt.texto === "Atalho" ? "#7733ff" : "#3a3228";
+            ctx.lineWidth = opt.texto === "Atalho" ? 2 : 3;
+            if (opt.texto === "Atalho") ctx.setLineDash([4,4]);
+            else ctx.setLineDash([]);
+            ctx.stroke();
+        }
+    }
+    ctx.setLineDash([]);
+
+    for (let id in window.mapCoords) {
+        let r = window.mapCoords[id];
+        let rx = offsetX + r.x*escala;
+        let ry = offsetY + r.y*escala;
+        let rw = r.w*escala;
+        let rh = r.h*escala;
+        let ehAtual = (id === secaoAtualId);
+        ctx.fillStyle = ehAtual ? "#2a2212" : "#141311";
+        ctx.strokeStyle = ehAtual ? "#ffaa00" : "#5c4d3c";
+        ctx.lineWidth = ehAtual ? 3 : 2;
+        if (r.shape === "octagon") desenharOctogono(ctx, rx, ry, rw, rh);
+        else if (r.shape === "pillars") desenharPilares(ctx, rx, ry, rw, rh, ctx.strokeStyle);
+        else { ctx.beginPath(); ctx.rect(rx, ry, rw, rh); ctx.fill(); ctx.stroke(); }
+        if (r.level !== 0) {
+            ctx.fillStyle = r.level > 0 ? "#44aa44" : "#aa4444";
+            ctx.font = "11px 'Courier New'";
+            ctx.fillText((r.level>0?"Lvl +":"Lvl ")+r.level, rx+4, ry+rh-4);
+        }
+        ctx.fillStyle = ehAtual ? "#ffaa00" : "#b5a68b";
+        ctx.font = `${Math.max(13, Math.floor(15*escala))}px 'VT323'`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(id, rx+rw/2, ry+rh/2);
+    }
+};
 
         window.onload = async () => {
             onAuthStateChanged(auth, async (user) => {
