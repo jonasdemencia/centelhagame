@@ -3128,7 +3128,126 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
         window.mapCoords[id].y = window.mapCoords[id].gridY * TAMANHO_TILE;
     }
 
+    if (typeof salvarEstasync function recalcularCoordenadasPenochao(mapaMundo) {
+    if (!mapaMundo || !mapaMundo["1"]) return;
+    window.mapCoords = {};
+
+    const ocupados = new Map(); // Rastreia células "x,y" ocupadas
+    const TAMANHO_TILE = 80;    // Tamanho do bloco visual
+    const ESPACAMENTO = 5;      // Distância entre blocos
+
+    // PASSO 1: Mapear absolutamente todas as conexões (Grafo Bidirecional)
+    const nos = new Set();
+    const arestas = new Map();
+    
+    for (const [id, sala] of Object.entries(mapaMundo)) {
+        nos.add(id);
+        if (!arestas.has(id)) arestas.set(id, new Set());
+        
+        if (sala.opcoes) {
+            for (const op of sala.opcoes) {
+                if (op.destino) {
+                    const idDest = String(op.destino);
+                    nos.add(idDest);
+                    arestas.get(id).add(idDest);
+                    
+                    if (!arestas.has(idDest)) arestas.set(idDest, new Set());
+                    arestas.get(idDest).add(id); // Garante a via de mão dupla
+                }
+            }
+        }
+    }
+
+    // PASSO 2: Posicionamento Baseado em Centro de Gravidade
+    const naoColocados = new Set(nos);
+    
+    // A Sala 1 é o Marco Zero
+    window.mapCoords["1"] = { gridX: 0, gridY: 0, level: 0 };
+    ocupados.set("0,0", "1");
+    naoColocados.delete("1");
+
+    while (naoColocados.size > 0) {
+        let melhorNo = null;
+        let maxConexoesComPlataforma = -1;
+        let vizinhosJaColocados = [];
+
+        // 2.1: Qual sala não colocada tem MAIS conexões com as salas que JÁ ESTÃO no mapa?
+        for (const id of naoColocados) {
+            let colocados = [];
+            for (const vizinho of arestas.get(id)) {
+                if (!naoColocados.has(vizinho)) colocados.push(vizinho);
+            }
+            
+            if (colocados.length > maxConexoesComPlataforma) {
+                maxConexoesComPlataforma = colocados.length;
+                melhorNo = id;
+                vizinhosJaColocados = colocados;
+            }
+        }
+
+        // Se houver ilhas desconectadas no JSON, pega qualquer uma
+        if (!melhorNo) melhorNo = Array.from(naoColocados)[0];
+
+        // 2.2: Calcula o "Centro de Gravidade" ideal para esta sala
+        let idealX = 0, idealY = 0;
+        
+        if (vizinhosJaColocados.length > 0) {
+            for (const viz of vizinhosJaColocados) {
+                idealX += window.mapCoords[viz].gridX;
+                idealY += window.mapCoords[viz].gridY;
+            }
+            // A coordenada ideal é a média exata de todos os vizinhos
+            idealX = Math.round(idealX / vizinhosJaColocados.length);
+            idealY = Math.round(idealY / vizinhosJaColocados.length);
+        }
+
+        // 2.3: Busca em Espiral ao redor do Centro de Gravidade para achar a vaga mais próxima
+        let raio = 0;
+        let posFinal = null;
+        
+        buscaEspiral: while (raio < 150) {
+            if (raio === 0) {
+                if (!ocupados.has(`${idealX},${idealY}`)) {
+                    posFinal = { x: idealX, y: idealY };
+                    break buscaEspiral;
+                }
+            } else {
+                for (let i = -raio; i <= raio; i++) {
+                    for (let j = -raio; j <= raio; j++) {
+                        // Verifica apenas a "borda" atual da espiral
+                        if (Math.abs(i) === Math.abs(raio) || Math.abs(j) === Math.abs(raio)) {
+                            if (!ocupados.has(`${idealX + i},${idealY + j}`)) {
+                                posFinal = { x: idealX + i, y: idealY + j };
+                                break buscaEspiral;
+                            }
+                        }
+                    }
+                }
+            }
+            raio++;
+        }
+
+        // 2.4: Trava a sala na coordenada matematicamente mais próxima de todos os seus vizinhos
+        window.mapCoords[melhorNo] = {
+            gridX: posFinal.x,
+            gridY: posFinal.y,
+            w: TAMANHO_TILE - ESPACAMENTO,
+            h: TAMANHO_TILE - ESPACAMENTO,
+            shape: (mapaMundo[melhorNo]?.puzzle_status) ? "octagon" : "rect",
+            level: 0
+        };
+        ocupados.set(`${posFinal.x},${posFinal.y}`, melhorNo);
+        naoColocados.delete(melhorNo);
+    }
+
+    // PASSO 3: Converter o Grid Perfeito em Pixels para o Canvas do vamosla.html
+    for (let id in window.mapCoords) {
+        window.mapCoords[id].x = window.mapCoords[id].gridX * TAMANHO_TILE;
+        window.mapCoords[id].y = window.mapCoords[id].gridY * TAMANHO_TILE;
+    }
+
     if (typeof salvarEstadoJogador === "function") await salvarEstadoJogador();
+}oJogador();
 }
 
 async function abrirMapaVisual() {
