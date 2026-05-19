@@ -3182,7 +3182,8 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
     if (typeof salvarEstadoJogador === "function") await salvarEstadoJogador();
 }
 
-async function abrirMapaVisual() {
+window.abrirMapaVisual = async function() {
+
     let idAtualGlobal = (typeof secaoAtualId !== 'undefined') ? secaoAtualId : "1";
     let mapaMundoLocal = window.mapaMundo;
     
