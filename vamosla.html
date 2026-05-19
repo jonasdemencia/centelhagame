@@ -1736,6 +1736,481 @@ for (let b = 0; b < Math.min(numBloqueios, idsCandidatosBloqueio.length); b++) {
 
                 let zonaData = JSON.parse(dataSalas.choices[0].message.content);
 
+                // ============================================================================
+// 🗺️ SISTEMA DE MAPA VISUAL — GRID-NATIVO COM DIREÇÕES EXPLÍCITAS
+// Substitua recalcularCoordenadasPenochao e abrirMapaVisual
+// ============================================================================
+
+/**
+ * Atribui direções cardinais a todas as arestas do grafo de uma zona.
+ * Executado UMA VEZ após gerarZona(), antes de salvar no mapaMundo.
+ * Modifica o plano in-place: adiciona .direcao a cada saida.
+ */
+function atribuirDirecoesGrid(planoZona, salaInicio, salaFim) {
+    const ids = Object.keys(planoZona).map(Number).sort((a, b) => a - b);
+    const pos = {}; // id -> {gx, gy}
+    const grid = new Map(); // "gx,gy" -> id
+    const CELL = 1; // cada sala = 1 célula
+
+    // BFS com atribuição de direções
+    const fila = [String(salaInicio)];
+    pos[String(salaInicio)] = { gx: 0, gy: 0 };
+    grid.set("0,0", String(salaInicio));
+
+    // Direções opostas
+    const OPPOSTO = { N: 'S', S: 'N', L: 'O', O: 'L' };
+    const DELTA = { N: [0, -1], S: [0, 1], L: [1, 0], O: [-1, 0] };
+
+    while (fila.length > 0) {
+        const idAtual = fila.shift();
+        const pAtual = pos[idAtual];
+        const sala = planoZona[idAtual];
+        if (!sala || !sala.saidas) continue;
+
+        // Direções já usadas por este nó (para evitar conflitos)
+        const usadas = new Set();
+
+        // Primeiro: processa arestas para nós JÁ posicionados (verifica consistência)
+        for (const saida of sala.saidas) {
+            const idDest = String(saida.destino);
+            if (pos[idDest]) {
+                const pDest = pos[idDest];
+                let dir = null;
+                if (pDest.gy < pAtual.gy) dir = 'N';
+                else if (pDest.gy > pAtual.gy) dir = 'S';
+                else if (pDest.gx > pAtual.gx) dir = 'L';
+                else if (pDest.gx < pAtual.gx) dir = 'O';
+                
+                if (dir) {
+                    saida.direcao = dir;
+                    usadas.add(dir);
+                    // Garante reciprocidade no destino
+                    const salaDest = planoZona[idDest];
+                    if (salaDest && salaDest.saidas) {
+                        const volta = salaDest.saidas.find(s => String(s.destino) === idAtual);
+                        if (volta && !volta.direcao) volta.direcao = OPPOSTO[dir];
+                    }
+                }
+            }
+        }
+
+        // Depois: posiciona nós AINDA NÃO posicionados
+        for (const saida of sala.saidas) {
+            const idDest = String(saida.destino);
+            if (pos[idDest] || saida.direcao) continue; // já tem posição ou direção
+
+            // Encontra primeira direção livre em ordem preferencial
+            const preferencia = ['S', 'L', 'N', 'O']; // prioriza expandir para baixo/direita
+            let colocado = false;
+
+            for (const dir of preferencia) {
+                if (usadas.has(dir)) continue;
+                const [dx, dy] = DELTA[dir];
+                const ngx = pAtual.gx + dx;
+                const ngy = pAtual.gy + dy;
+
+                // Verifica se célula está livre
+                if (!grid.has(`${ngx},${ngy}`)) {
+                    pos[idDest] = { gx: ngx, gy: ngy };
+                    grid.set(`${ngx},${ngy}`, idDest);
+                    saida.direcao = dir;
+                    usadas.add(dir);
+
+                    // Garante reciprocidade
+                    const salaDest = planoZona[idDest];
+                    if (salaDest && salaDest.saidas) {
+                        const volta = salaDest.saidas.find(s => String(s.destino) === idAtual);
+                        if (volta) volta.direcao = OPPOSTO[dir];
+                    }
+
+                    fila.push(idDest);
+                    colocado = true;
+                    break;
+                }
+            }
+
+            // Fallback: espiral em busca de célula livre
+            if (!colocado) {
+                for (let raio = 2; raio <= 5 && !colocado; raio++) {
+                    for (let dx = -raio; dx <= raio && !colocado; dx++) {
+                        for (let dy = -raio; dy <= raio && !colocado; dy++) {
+                            if (Math.abs(dx) !== raio && Math.abs(dy) !== raio) continue;
+                            const ngx = pAtual.gx + dx;
+                            const ngy = pAtual.gy + dy;
+                            if (!grid.has(`${ngx},${ngy}`)) {
+                                pos[idDest] = { gx: ngx, gy: ngy };
+                                grid.set(`${ngx},${ngy}`, idDest);
+                                // Direção aproximada
+                                let dir = 'L';
+                                if (Math.abs(dy) > Math.abs(dx)) dir = dy < 0 ? 'N' : 'S';
+                                else dir = dx < 0 ? 'O' : 'L';
+                                saida.direcao = dir;
+                                usadas.add(dir);
+
+                                const salaDest = planoZona[idDest];
+                                if (salaDest && salaDest.saidas) {
+                                    const volta = salaDest.saidas.find(s => String(s.destino) === idAtual);
+                                    if (volta) volta.direcao = OPPOSTO[dir];
+                                }
+
+                                fila.push(idDest);
+                                colocado = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Marca salas sem direção atribuída (conexões cross-zone, etc)
+    for (const id in planoZona) {
+        const sala = planoZona[id];
+        if (!sala || !sala.saidas) continue;
+        for (const saida of sala.saidas) {
+            if (!saida.direcao) saida.direcao = 'REMOTO';
+        }
+    }
+
+    return pos; // retorna coordenadas para uso imediato se necessário
+}
+
+/**
+ * Recalcula coordenadas de pixel a partir das direções já atribuídas.
+ * O(1) por sala. Nenhuma busca, nenhum backtracking.
+ */
+async function recalcularCoordenadasPenochao(mapaMundo) {
+    if (!mapaMundo || !mapaMundo["1"]) return;
+    window.mapCoords = {};
+    window.mapGrid = {};
+
+    const CELL = 85;
+    const GAP = 10;
+
+    // Reconstrói posições grid a partir das direções já armazenadas
+    const posGrid = {}; // id -> {gx, gy, gw, gh, shape}
+    const visitados = new Set();
+
+    // Função para obter dimensões (mesma lógica, mas sem grau — usa conexões reais)
+    function obterDimensoesGrid(idSala, sala) {
+        const nome = (sala?.nome || "").toLowerCase();
+        let gw = 1, gh = 1, shape = "rect";
+        if (sala?.puzzle_status || sala?.puzzle || String(idSala).startsWith("100")) {
+            gw = 1; gh = 1; shape = "octagon";
+        } else if (nome.includes("grande salão") || nome.includes("trono") || nome.includes("arsenal")) {
+            gw = 2; gh = 2; shape = "pillars";
+        } else if (nome.includes("corredor") || nome.includes("passagem") || nome.includes("galeria")) {
+            if (parseInt(idSala) % 2 === 0) { gw = 2; gh = 1; }
+            else { gw = 1; gh = 2; }
+        }
+        // Hubs auto-expandem
+        const grau = (sala?.opcoes?.length || 0);
+        if (grau > 4 && shape === "rect") { gw = 2; gh = 2; }
+        return { gw, gh, shape };
+    }
+
+    // BFS para propagar coordenadas grid
+    const fila = ["1"];
+    posGrid["1"] = { gx: 0, gy: 0, ...obterDimensoesGrid("1", mapaMundo["1"]) };
+    visitados.add("1");
+
+    while (fila.length > 0) {
+        const idAtual = fila.shift();
+        const pAtual = posGrid[idAtual];
+        const sala = mapaMundo[idAtual];
+        if (!sala || !sala.opcoes) continue;
+
+        for (const opcao of sala.opcoes) {
+            const idDest = String(opcao.destino);
+            if (!mapaMundo[idDest] || visitados.has(idDest)) continue;
+
+            // Determina direção a partir do texto da ação ou da direção armazenada
+            let dir = opcao.direcao;
+            if (!dir) {
+                // Inferência por texto (fallback para dados antigos)
+                const acao = (opcao.texto || "").toLowerCase();
+                if (/norte|acima|subir|escada\s+para\s+cima/.test(acao)) dir = 'N';
+                else if (/sul|abaixo|descer|escada\s+para\s+baixo/.test(acao)) dir = 'S';
+                else if (/leste|direita|para\s+a\s+direita/.test(acao)) dir = 'L';
+                else if (/oeste|esquerda|para\s+a\s+esquerda/.test(acao)) dir = 'O';
+                else dir = 'S'; // default
+            }
+
+            const DELTA = { N: [0, -1], S: [0, 1], L: [1, 0], O: [-1, 0], REMOTO: [2, 0] };
+            const [dx, dy] = DELTA[dir] || [1, 0];
+
+            // Para salas multi-célula, o delta deve considerar o tamanho
+            const dimDest = obterDimensoesGrid(idDest, mapaMundo[idDest]);
+            let ngx = pAtual.gx + dx * Math.max(pAtual.gw, 1);
+            let ngy = pAtual.gy + dy * Math.max(pAtual.gh, 1);
+
+            // Ajuste para alinhamento de face (não canto)
+            if (dir === 'N') ngy = pAtual.gy - dimDest.gh;
+            else if (dir === 'S') ngy = pAtual.gy + pAtual.gh;
+            else if (dir === 'L') ngx = pAtual.gx + pAtual.gw;
+            else if (dir === 'O') ngx = pAtual.gx - dimDest.gw;
+
+            posGrid[idDest] = { gx: ngx, gy: ngy, ...dimDest };
+            visitados.add(idDest);
+            fila.push(idDest);
+        }
+    }
+
+    // Compactação
+    let minGx = Infinity, minGy = Infinity;
+    for (const id in posGrid) {
+        if (posGrid[id].gx < minGx) minGx = posGrid[id].gx;
+        if (posGrid[id].gy < minGy) minGy = posGrid[id].gy;
+    }
+    for (const id in posGrid) {
+        posGrid[id].gx -= minGx;
+        posGrid[id].gy -= minGy;
+    }
+
+    // Conversão para pixels
+    for (const id in posGrid) {
+        const p = posGrid[id];
+        const px = p.gx * (CELL + GAP);
+        const py = p.gy * (CELL + GAP);
+        const pw = p.gw * CELL + (p.gw - 1) * GAP;
+        const ph = p.gh * CELL + (p.gh - 1) * GAP;
+
+        window.mapCoords[id] = { x: px, y: py, w: pw, h: ph, level: 0, shape: p.shape };
+        window.mapGrid[id] = { gx: p.gx, gy: p.gy, gw: p.gw, gh: p.gh };
+    }
+
+    // Log de qualidade: verifica adjacências
+    let totalConexoes = 0, adjacenciasCorretas = 0;
+    for (const id in mapaMundo) {
+        const sala = mapaMundo[id];
+        if (!sala || !sala.opcoes) continue;
+        for (const op of sala.opcoes) {
+            const idDest = String(op.destino);
+            if (!window.mapGrid[idDest]) continue;
+            totalConexoes++;
+            const gA = window.mapGrid[id];
+            const gB = window.mapGrid[idDest];
+            if (gridAdjacentes(gA, gB)) adjacenciasCorretas++;
+        }
+    }
+    console.log(`[MAPA] Grid-nativo: ${adjacenciasCorretas}/${totalConexoes} conexões adjacentes (${((adjacenciasCorretas/totalConexoes)*100).toFixed(1)}%)`);
+
+    if (typeof salvarEstadoJogador === "function") await salvarEstadoJogador();
+}
+
+function gridAdjacentes(gA, gB) {
+    if (!gA || !gB) return false;
+    const adjX = (gA.gx + gA.gw === gB.gx || gB.gx + gB.gw === gA.gx) &&
+                 (gA.gy < gB.gy + gB.gh && gA.gy + gA.gh > gB.gy);
+    const adjY = (gA.gy + gA.gh === gB.gy || gB.gy + gB.gh === gA.gy) &&
+                 (gA.gx < gB.gx + gB.gw && gA.gx + gA.gw > gB.gx);
+    return adjX || adjY;
+}
+
+/**
+ * Renderização — usa direções armazenadas para decidir porta vs corredor
+ */
+async function abrirMapaVisual() {
+    let idAtualGlobal = (typeof secaoAtualId !== 'undefined') ? secaoAtualId : "1";
+    let mapaMundoLocal = window.mapaMundo;
+
+    if (!mapaMundoLocal || !mapaMundoLocal["1"]) return;
+
+    await recalcularCoordenadasPenochao(mapaMundoLocal);
+
+    let modal = document.getElementById("modal-mapa-visual");
+    if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "modal-mapa-visual";
+        Object.assign(modal.style, {
+            position: "fixed", top: "0", left: "0", width: "100vw", height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.95)", zIndex: "99999",
+            display: "flex", justifyContent: "center", alignItems: "center"
+        });
+
+        modal.innerHTML = `
+            <div style="background: #141311; border: 4px solid #3a3228; box-shadow: 6px 6px 0px #000; padding: 20px; max-width: 95%; max-height: 95%; display: flex; flex-direction: column; align-items: center; font-family: 'VT323', monospace;">
+                <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid #3a3228; padding-bottom: 6px;">
+                    <span style="color: #ffaa00; font-size: 26px; letter-spacing: 2px;">PLANTA BAIXA (RE)</span>
+                    <button onclick="document.getElementById('modal-mapa-visual').style.display='none'" style="background: #3a3228; color: #b5a68b; border: 2px solid #5a4d3e; font-family: 'VT323', monospace; font-size: 18px; cursor: pointer; padding: 2px 12px;">FECHAR [X]</button>
+                </div>
+                <canvas id="canvas-mapa" width="750" height="520" style="background: #090907; border: 2px solid #221c16; max-width: 100%; height: auto;"></canvas>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    } else {
+        modal.style.display = "flex";
+    }
+
+    const canvas = document.getElementById("canvas-mapa");
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (!window.mapCoords || Object.keys(window.mapCoords).length === 0) return;
+
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const id in window.mapCoords) {
+        const r = window.mapCoords[id];
+        if (r.x < minX) minX = r.x;
+        if (r.x + r.w > maxX) maxX = r.x + r.w;
+        if (r.y < minY) minY = r.y;
+        if (r.y + r.h > maxY) maxY = r.y + r.h;
+    }
+
+    const mWidth = maxX - minX || 1;
+    const mHeight = maxY - minY || 1;
+    const margemInterna = 50;
+    const escalaX = (canvas.width - margemInterna * 2) / mWidth;
+    const escalaY = (canvas.height - margemInterna * 2) / mHeight;
+    const escala = Math.min(escalaX, escalaY, 1.5);
+    const offsetX = (canvas.width - mWidth * escala) / 2 - minX * escala;
+    const offsetY = (canvas.height - mHeight * escala) / 2 - minY * escala;
+
+    // ─── PASSADA 1: SALAS ───
+    for (const id in window.mapCoords) {
+        const r = window.mapCoords[id];
+        const sala = mapaMundoLocal[id];
+        const ehAtual = (String(id) === String(idAtualGlobal));
+        const rx = offsetX + r.x * escala;
+        const ry = offsetY + r.y * escala;
+        const rw = r.w * escala;
+        const rh = r.h * escala;
+
+        ctx.fillStyle = ehAtual ? "#221a0f" : "#12110f";
+        ctx.strokeStyle = ehAtual ? "#ff0000" : "#544637";
+        ctx.lineWidth = ehAtual ? 3 : 2;
+
+        if (r.shape === "octagon") {
+            const corte = Math.min(rw, rh) * 0.25;
+            ctx.beginPath();
+            ctx.moveTo(rx + corte, ry); ctx.lineTo(rx + rw - corte, ry);
+            ctx.lineTo(rx + rw, ry + corte); ctx.lineTo(rx + rw, ry + rh - corte);
+            ctx.lineTo(rx + rw - corte, ry + rh); ctx.lineTo(rx + corte, ry + rh);
+            ctx.lineTo(rx, ry + rh - corte); ctx.lineTo(rx, ry + corte);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+        } else {
+            ctx.fillRect(rx, ry, rw, rh);
+            ctx.strokeRect(rx, ry, rw, rh);
+            if (r.shape === "pillars") {
+                const pSize = Math.max(3, Math.min(rw, rh) * 0.08);
+                ctx.fillStyle = ctx.strokeStyle;
+                ctx.fillRect(rx + pSize, ry + pSize, pSize, pSize);
+                ctx.fillRect(rx + rw - pSize * 2, ry + pSize, pSize, pSize);
+                ctx.fillRect(rx + pSize, ry + rh - pSize * 2, pSize, pSize);
+                ctx.fillRect(rx + rw - pSize * 2, ry + rh - pSize * 2, pSize, pSize);
+            }
+        }
+
+        ctx.fillStyle = ehAtual ? "#ffaa00" : "#a89a80";
+        ctx.font = `${Math.max(12, Math.floor(14 * escala))}px 'VT323', monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        let textoId = id;
+        if (sala && sala.nome) {
+            const limitChars = Math.floor(r.w / 7);
+            textoId = sala.nome.length > limitChars ? sala.nome.substring(0, limitChars - 1) + "…" : sala.nome;
+        }
+        ctx.fillText(textoId, rx + rw / 2, ry + rh / 2);
+    }
+
+    // ─── PASSADA 2: CONEXÕES ───
+    const paresDesenhados = new Set();
+
+    for (const idA in window.mapCoords) {
+        const salaA = mapaMundoLocal[idA];
+        const rA = window.mapCoords[idA];
+        const gA = window.mapGrid[idA];
+        if (!salaA || !salaA.opcoes) continue;
+
+        for (const op of salaA.opcoes) {
+            const idB = String(op.destino);
+            const rB = window.mapCoords[idB];
+            const gB = window.mapGrid[idB];
+            if (!rB || !gB) continue;
+
+            const parKey = [idA, idB].sort().join('-');
+            if (paresDesenhados.has(parKey)) continue;
+            paresDesenhados.add(parKey);
+
+            const saoAdjacentes = gridAdjacentes(gA, gB);
+            const ehRemoto = op.direcao === 'REMOTO';
+
+            if (saoAdjacentes && !ehRemoto) {
+                // PORTA
+                let px, py, pw, ph;
+
+                const faceLeste = gA.gx + gA.gw === gB.gx && 
+                    (gA.gy < gB.gy + gB.gh && gA.gy + gA.gh > gB.gy);
+                const faceOeste = gB.gx + gB.gw === gA.gx && 
+                    (gA.gy < gB.gy + gB.gh && gA.gy + gA.gh > gB.gy);
+                const faceSul = gA.gy + gA.gh === gB.gy && 
+                    (gA.gx < gB.gx + gB.gw && gA.gx + gA.gw > gB.gx);
+                const faceNorte = gB.gy + gB.gh === gA.gy && 
+                    (gA.gx < gB.gx + gB.gw && gA.gx + gA.gw > gB.gx);
+
+                if (faceLeste || faceOeste) {
+                    const sharedX = faceLeste ? rA.x + rA.w : rA.x;
+                    const y1 = Math.max(rA.y, rB.y);
+                    const y2 = Math.min(rA.y + rA.h, rB.y + rB.h);
+                    px = offsetX + sharedX * escala;
+                    py = offsetY + ((y1 + y2) / 2) * escala;
+                    pw = 6 * escala;
+                    ph = 14 * escala;
+                } else {
+                    const sharedY = faceSul ? rA.y + rA.h : rA.y;
+                    const x1 = Math.max(rA.x, rB.x);
+                    const x2 = Math.min(rA.x + rA.w, rB.x + rB.w);
+                    px = offsetX + ((x1 + x2) / 2) * escala;
+                    py = offsetY + sharedY * escala;
+                    pw = 14 * escala;
+                    ph = 6 * escala;
+                }
+
+                ctx.save();
+                ctx.translate(px, py);
+                ctx.fillStyle = "#f2a65a";
+                if (faceLeste || faceOeste) {
+                    ctx.fillRect(-pw / 2, -ph / 2, pw, ph);
+                    ctx.fillStyle = "#000";
+                    ctx.fillRect(-1, -ph / 2, 2, ph);
+                } else {
+                    ctx.fillRect(-pw / 2, -ph / 2, pw, ph);
+                    ctx.fillStyle = "#000";
+                    ctx.fillRect(-pw / 2, -1, pw, 2);
+                }
+                ctx.restore();
+
+            } else {
+                // CORREDOR/ATALHO (tracejado)
+                const cxA = offsetX + (rA.x + rA.w / 2) * escala;
+                const cyA = offsetY + (rA.y + rA.h / 2) * escala;
+                const cxB = offsetX + (rB.x + rB.w / 2) * escala;
+                const cyB = offsetY + (rB.y + rB.h / 2) * escala;
+
+                ctx.save();
+                ctx.setLineDash([4, 4]);
+                ctx.strokeStyle = "#5a4a38";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(cxA, cyA);
+                ctx.lineTo(cxB, cyB);
+                ctx.stroke();
+
+                const midX = (cxA + cxB) / 2;
+                const midY = (cyA + cyB) / 2;
+                ctx.fillStyle = "#f2a65a";
+                ctx.beginPath();
+                ctx.arc(midX, midY, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+    }
+}
+
+window.abrirMapaVisual = abrirMapaVisual;
+
                 // Transfere bloqueios do plano estrutural para as salas geradas
 Object.entries(planoData.plano).forEach(([id, dp]) => {
     if (dp.bloqueio && zonaData.salas[id]) {
