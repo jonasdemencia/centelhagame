@@ -3047,88 +3047,8 @@ if (historicoConversa.length > 8) {
             }
         };
 
+
 async function recalcularCoordenadasPenochao(mapaMundo) {
-    if (!mapaMundo || !mapaMundo["1"]) return;
-    window.mapCoords = {};
-
-    const ocupados = new Set();
-    const TAMANHO_TILE = 80; // Tamanho fixo que padroniza o grid
-    const ESPACAMENTO = 10;  // Distância visual interna do bloco (espessura das paredes)
-
-    // Busca em espiral (Manhattan) para achar a célula vazia exata
-    function acharGridVazio(startX, startY) {
-        if (!ocupados.has(`${startX},${startY}`)) return {x: startX, y: startY};
-        let raio = 1;
-        while(raio < 50) {
-            for (let i = -raio; i <= raio; i++) {
-                for (let j = -raio; j <= raio; j++) {
-                    if (Math.abs(i) === Math.abs(raio) || Math.abs(j) === Math.abs(raio)) {
-                        if (!ocupados.has(`${startX + i},${startY + j}`)) {
-                            return {x: startX + i, y: startY + j};
-                        }
-                    }
-                }
-            }
-            raio++;
-        }
-        return {x: startX, y: startY};
-    }
-
-    // N, S, E, W
-    const DIRS = [ {x:0, y:-1}, {x:0, y:1}, {x:1, y:0}, {x:-1, y:0} ]; 
-
-    window.mapCoords["1"] = { gridX: 0, gridY: 0, w: TAMANHO_TILE - ESPACAMENTO, h: TAMANHO_TILE - ESPACAMENTO, shape: "rect", level: 0 };
-    ocupados.add("0,0");
-
-    const fila = ["1"];
-    const visitados = new Set(["1"]);
-    let dirGlobalIdx = 0;
-
-    while (fila.length > 0) {
-        const idAtual = fila.shift();
-        const pai = window.mapCoords[idAtual];
-        const salaAtual = mapaMundo[idAtual];
-
-        if (!salaAtual || !salaAtual.opcoes) continue;
-
-        const filhos = salaAtual.opcoes
-            .filter(o => o.destino && !visitados.has(String(o.destino)) && o.texto !== "Atalho");
-
-        for (const opcao of filhos) {
-            const idFilha = String(opcao.destino);
-            
-            const d = DIRS[dirGlobalIdx % 4];
-            dirGlobalIdx++;
-            
-            // Tenta colocar exatamente ao lado
-            const idealX = pai.gridX + d.x;
-            const idealY = pai.gridY + d.y;
-
-            // Se ocupado, a espiral acha a próxima parede adjacente livre
-            const realPos = acharGridVazio(idealX, idealY);
-
-            window.mapCoords[idFilha] = {
-                gridX: realPos.x,
-                gridY: realPos.y,
-                w: TAMANHO_TILE - ESPACAMENTO,
-                h: TAMANHO_TILE - ESPACAMENTO,
-                shape: (mapaMundo[idFilha]?.puzzle_status) ? "octagon" : "rect",
-                level: pai.level
-            };
-
-            ocupados.add(`${realPos.x},${realPos.y}`);
-            visitados.add(idFilha);
-            fila.push(idFilha);
-        }
-    }
-
-    // Converte a grade lógica em pixels exatos na tela
-    for (let id in window.mapCoords) {
-        window.mapCoords[id].x = window.mapCoords[id].gridX * TAMANHO_TILE;
-        window.mapCoords[id].y = window.mapCoords[id].gridY * TAMANHO_TILE;
-    }
-
-    if (typeof salvarEstasync function recalcularCoordenadasPenochao(mapaMundo) {
     if (!mapaMundo || !mapaMundo["1"]) return;
     window.mapCoords = {};
 
@@ -3247,9 +3167,9 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
     }
 
     if (typeof salvarEstadoJogador === "function") await salvarEstadoJogador();
-}oJogador();
 }
 
+        
 async function abrirMapaVisual() {
     let idAtualGlobal = (typeof secaoAtualId !== 'undefined') ? secaoAtualId : "1";
     let mapaMundoLocal = window.mapaMundo;
