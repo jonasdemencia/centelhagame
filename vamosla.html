@@ -550,6 +550,85 @@ class GridLayoutEngine {
         console.warn("[Layout] Todos os templates falharam. Usando LINEAR como fallback.");
         return this.layoutZona(TEMPLATES_TOPOLOGICOS.LINEAR, idBase, seed);
     }
+
+    // ============================================================
+    // GERADOR PROCEDURAL ORGÂNICO (ACTIVE SET)
+    // ============================================================
+    gerarLayoutProceduralRamificado(idBase, seed) {
+        this.clear();
+        
+        // Mapeia nós locais para IDs globais (preservando a estrutura do seu dicionário)
+        const mapeamento = {};
+        for (let i = 1; i <= SALAS_POR_ZONA; i++) {
+            mapeamento[i] = idBase + i - 1;
+        }
+
+        // Gerador pseudo-aleatório consistente baseado na semente da zona
+        let seedHash = 0;
+        for (let i = 0; i < seed.length; i++) {
+            seedHash = ((seedHash << 5) - seedHash) + seed.charCodeAt(i);
+            seedHash = seedHash & seedHash;
+        }
+        const random = () => {
+            let x = Math.sin(seedHash++) * 10000;
+            return x - Math.floor(x);
+        };
+
+        // 1. Origem: Posiciona a sala inicial no centro geométrico local (0,0)
+        this._posicionarSala(mapeamento[1], 0, 0);
+
+        // 2. Active Set: Array temporário que guarda quais salas ainda têm paredes livres
+        let salasAbertas = [ { idLocal: 1, x: 0, y: 0 } ];
+
+        // 3. Loop de Crescimento: Distribui as salas restantes (Branching)
+        for (let i = 2; i <= SALAS_POR_ZONA; i++) {
+            let posicionado = false;
+
+            // O núcleo da ramificação: Embaralhamos as salas disponíveis. 
+            // Em vez de crescer só da última ponta, a engine tenta puxar novos "galhos" de qualquer nó aberto.
+            salasAbertas.sort(() => random() - 0.5);
+
+            for (let j = 0; j < salasAbertas.length; j++) {
+                const origem = salasAbertas[j];
+                const dirs = this._direcoes().sort(() => random() - 0.5);
+                let dirLivre = null;
+
+                // Verifica qual das 4 direções ao redor desta sala está vazia no grid
+                for (const dir of dirs) {
+                    const nx = origem.x + dir.dx;
+                    const ny = origem.y + dir.dy;
+                    if (!this._ocupada(nx, ny) && Math.abs(nx) < GRID_MAX_X && Math.abs(ny) < GRID_MAX_Y) {
+                        dirLivre = { x: nx, y: ny };
+                        break;
+                    }
+                }
+
+                if (dirLivre) {
+                    // Achou espaço. Posiciona na grade global de coordenadas.
+                    this._posicionarSala(mapeamento[i], dirLivre.x, dirLivre.y);
+                    salasAbertas.push({ idLocal: i, x: dirLivre.x, y: dirLivre.y });
+                    posicionado = true;
+                    break; 
+                } else {
+                    // Se a sala está cercada por todos os lados, remova-a do Active Set
+                    salasAbertas.splice(j, 1);
+                    j--; 
+                }
+            }
+
+            if (!posicionado) {
+                console.warn(`[Layout] Grade colapsada. Parando expansão na sala ${i}.`);
+                break;
+            }
+        }
+
+        return {
+            sucesso: true,
+            coords: new Map(this.coords),
+            mapeamento,
+            templateUsado: "Ramificação Orgânica"
+        };
+    }
     
     _hashString(str) {
         let hash = 0;
@@ -1330,7 +1409,7 @@ async function gerarZona(numeroZona, ganchosPrevios = null) {
     // PASSO 1: Gerar layout topológico e topográfico (SEM LLM)
     const idMsgLayout = adicionarMensagem(`⚙️ Arquitetando Zona ${numeroZona} — "${infoZona.nome}"...`, "system", true);
     
-    const layoutResult = window.gridEngine.gerarLayoutRobusto(salaInicio, semente + numeroZona);
+        const layoutResult = window.gridEngine.gerarLayoutProceduralRamificado(salaInicio, semente + numeroZona);
     if (!layoutResult.sucesso) {
         document.getElementById(idMsgLayout)?.remove();
         throw new Error(`Falha crítica no layout da Zona ${numeroZona}: ${layoutResult.erro}`);
