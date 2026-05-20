@@ -3101,25 +3101,30 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
     let fila = ["1"];
     let visitados = new Set(["1"]);
 
-    // Nova Heurística: Janela Deslizante de Perímetro
+    // Nova Heurística: Janela Deslizante de Perímetro (BLINDADA)
     function encontrarEspacoAdjacente(pai, dimFilha) {
         const passo = 10; // Testar a cada 10 pixels ao longo das paredes
+        
+        // FIX: Força uma sobreposição mínima de face de 20px.
+        // Impede que as salas escorreguem para as quinas, vedando o Face-Adjacency Leak.
+        const minOverlap = 20; 
+        
         const tentativas = [];
 
         // 1. Desliza ao longo da face Norte (filha em cima)
-        for (let tx = pai.x - dimFilha.w; tx <= pai.x + pai.w; tx += passo) {
+        for (let tx = pai.x - dimFilha.w + minOverlap; tx <= pai.x + pai.w - minOverlap; tx += passo) {
             tentativas.push({ x: tx, y: pai.y - dimFilha.h });
         }
         // 2. Desliza ao longo da face Sul (filha embaixo)
-        for (let tx = pai.x - dimFilha.w; tx <= pai.x + pai.w; tx += passo) {
+        for (let tx = pai.x - dimFilha.w + minOverlap; tx <= pai.x + pai.w - minOverlap; tx += passo) {
             tentativas.push({ x: tx, y: pai.y + pai.h });
         }
         // 3. Desliza ao longo da face Leste (filha à direita)
-        for (let ty = pai.y - dimFilha.h; ty <= pai.y + pai.h; ty += passo) {
+        for (let ty = pai.y - dimFilha.h + minOverlap; ty <= pai.y + pai.h - minOverlap; ty += passo) {
             tentativas.push({ x: pai.x + pai.w, y: ty });
         }
         // 4. Desliza ao longo da face Oeste (filha à esquerda)
-        for (let ty = pai.y - dimFilha.h; ty <= pai.y + pai.h; ty += passo) {
+        for (let ty = pai.y - dimFilha.h + minOverlap; ty <= pai.y + pai.h - minOverlap; ty += passo) {
             tentativas.push({ x: pai.x - dimFilha.w, y: ty });
         }
 
