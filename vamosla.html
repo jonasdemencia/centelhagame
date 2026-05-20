@@ -1475,14 +1475,14 @@ async function gerarZona(numeroZona, ganchosPrevios = null) {
             zona: numeroZona
         };
 
-        // Adiciona bloqueio se existir
+                // Adiciona bloqueio se existir
         if (bloqueiosPorSala[idGlobalStr]) {
             mapaFinalMesclado[idGlobalStr].bloqueio = {
                 ativo: true,
                 ...bloqueiosPorSala[idGlobalStr]
             };
         }
-    }}
+    }
 
     // PASSO 5: Injetar puzzles (preservado da lógica anterior)
     const idMsgPuzzle = adicionarMensagem("🧩 Ocultando enigmas na arquitetura...", "system", true);
