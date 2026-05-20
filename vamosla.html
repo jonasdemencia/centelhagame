@@ -3339,52 +3339,100 @@ else {
     let cBx = offsetX + (rB.x + rB.w/2) * escala;
     let cBy = offsetY + (rB.y + rB.h/2) * escala;
 
-    // Função auxiliar para calcular ponto na borda
-    function pontoNaBorda(sala, centroX, centroY, direcaoX, direcaoY) {
-        // direcaoX, direcaoY devem ser -1, 0 ou 1
-        let raioX = (sala.w/2) * escala;
-        let raioY = (sala.h/2) * escala;
-        let bordaX = centroX + direcaoX * raioX;
-        let bordaY = centroY + direcaoY * raioY;
-        return { x: bordaX, y: bordaY };
+    // Função: ponto onde a linha do centro até (dx, dy) cruza a borda do retângulo
+    function pontoNaBorda(rect, cx, cy, dx, dy) {
+        // rect: { x, y, w, h } em unidades originais (sem escala)
+        // cx, cy: centro em pixels
+        // dx, dy: vetor direção (normalizado ou não)
+        let escalaLocal = escala; // captura a escala de fora
+        let rx = offsetX + rect.x * escalaLocal;
+        let ry = offsetY + rect.y * escalaLocal;
+        let rw = rect.w * escalaLocal;
+        let rh = rect.h * escalaLocal;
+        
+        // Calcula interseção com as quatro bordas
+        let tMin = Infinity;
+        let ponto = { x: cx, y: cy };
+        
+        // Borda esquerda (x = rx)
+        if (dx !== 0) {
+            let t = (rx - cx) / dx;
+            let y = cy + t * dy;
+            if (t > 0 && y >= ry && y <= ry + rh && t < tMin) {
+                tMin = t;
+                ponto = { x: rx, y: y };
+            }
+        }
+        // Borda direita (x = rx+rw)
+        if (dx !== 0) {
+            let t = (rx + rw - cx) / dx;
+            let y = cy + t * dy;
+            if (t > 0 && y >= ry && y <= ry + rh && t < tMin) {
+                tMin = t;
+                ponto = { x: rx + rw, y: y };
+            }
+        }
+        // Borda superior (y = ry)
+        if (dy !== 0) {
+            let t = (ry - cy) / dy;
+            let x = cx + t * dx;
+            if (t > 0 && x >= rx && x <= rx + rw && t < tMin) {
+                tMin = t;
+                ponto = { x: x, y: ry };
+            }
+        }
+        // Borda inferior (y = ry+rh)
+        if (dy !== 0) {
+            let t = (ry + rh - cy) / dy;
+            let x = cx + t * dx;
+            if (t > 0 && x >= rx && x <= rx + rw && t < tMin) {
+                tMin = t;
+                ponto = { x: x, y: ry + rh };
+            }
+        }
+        return ponto;
     }
 
-    // Determina o primeiro segmento do caminho em L
-    let primeiroHorizontal = Math.abs(cAx - cBx) > Math.abs(cAy - cBy);
+    // Determina a direção do centro de A para o centro de B
+    let dxAB = cBx - cAx;
+    let dyAB = cBy - cAy;
+    let absDx = Math.abs(dxAB);
+    let absDy = Math.abs(dyAB);
     
-    let pontoSaida, pontoInflexao, pontoEntrada;
+    let pontoA, pontoB, pontoInflexao;
     
-    if (primeiroHorizontal) {
-        // Caminho: A → (cBx, cAy) → B
-        // Saída de A: horizontal (direita ou esquerda)
-        let dirX = (cBx > cAx) ? 1 : -1;
-        pontoSaida = pontoNaBorda(rA, cAx, cAy, dirX, 0);
-        let inflexaoX = cBx;
-        let inflexaoY = cAy;
-        // Entrada em B: vertical (cima ou baixo)
-        let dirY = (cBy > inflexaoY) ? 1 : -1;
-        pontoEntrada = pontoNaBorda(rB, cBx, cBy, 0, dirY);
-        pontoInflexao = { x: inflexaoX, y: inflexaoY };
+    if (absDx > absDy) {
+        // Caminho: sai de A horizontalmente, depois vertical para B
+        // Direção horizontal de A
+        let dirX = dxAB > 0 ? 1 : -1;
+        pontoA = pontoNaBorda(rA, cAx, cAy, dirX, 0);
+        // Ponto de inflexão: mesma altura de A, mas na coluna de B
+        let inflexX = cBx;
+        let inflexY = pontoA.y;
+        // Entrada em B: vertical
+        let dirY = (cBy - inflexY) > 0 ? 1 : -1;
+        pontoB = pontoNaBorda(rB, cBx, cBy, 0, dirY);
+        pontoInflexao = { x: inflexX, y: inflexY };
     } else {
-        // Caminho: A → (cAx, cBy) → B
-        // Saída de A: vertical
-        let dirY = (cBy > cAy) ? 1 : -1;
-        pontoSaida = pontoNaBorda(rA, cAx, cAy, 0, dirY);
-        let inflexaoX = cAx;
-        let inflexaoY = cBy;
+        // Caminho: sai de A verticalmente, depois horizontal para B
+        let dirY = dyAB > 0 ? 1 : -1;
+        pontoA = pontoNaBorda(rA, cAx, cAy, 0, dirY);
+        // Ponto de inflexão: mesma coluna de A, na altura de B
+        let inflexX = pontoA.x;
+        let inflexY = cBy;
         // Entrada em B: horizontal
-        let dirX = (cBx > inflexaoX) ? 1 : -1;
-        pontoEntrada = pontoNaBorda(rB, cBx, cBy, dirX, 0);
-        pontoInflexao = { x: inflexaoX, y: inflexaoY };
+        let dirX = (cBx - inflexX) > 0 ? 1 : -1;
+        pontoB = pontoNaBorda(rB, cBx, cBy, dirX, 0);
+        pontoInflexao = { x: inflexX, y: inflexY };
     }
 
     ctx.save();
     ctx.strokeStyle = "#5a4a38";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(pontoSaida.x, pontoSaida.y);
+    ctx.moveTo(pontoA.x, pontoA.y);
     ctx.lineTo(pontoInflexao.x, pontoInflexao.y);
-    ctx.lineTo(pontoEntrada.x, pontoEntrada.y);
+    ctx.lineTo(pontoB.x, pontoB.y);
     ctx.stroke();
     ctx.restore();
 }
