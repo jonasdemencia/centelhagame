@@ -103,7 +103,7 @@
     top: 10px; /* Deve ser o valor oposto do 'top' do container para neutralizar o movimento */
     
     /* Diminui o tamanho do botão */
-    transform: scale(0.8); /* Reduz em 20% o tamanho visuaal */
+    transform: scale(0.8); /* Reduz em 20% o tamanho visual */
     transform-origin: center; /* Garante que ele diminua a partir do centro */
     
     /* Ajuste fino de preenchimento e fonte */
@@ -3047,129 +3047,146 @@ if (historicoConversa.length > 8) {
             }
         };
 
-
 async function recalcularCoordenadasPenochao(mapaMundo) {
     if (!mapaMundo || !mapaMundo["1"]) return;
     window.mapCoords = {};
 
-    const ocupados = new Map(); // Rastreia células "x,y" ocupadas
-    const TAMANHO_TILE = 80;    // Tamanho do bloco visual
-    const ESPACAMENTO = 5;      // Distância entre blocos
+    function obterDimensoesEShape(idSala, sala, eixoVertical = false) {
+        let nome = (sala.nome || "").toLowerCase();
+        let w = 60, h = 60, shape = "rect";
 
-    // PASSO 1: Mapear absolutamente todas as conexões (Grafo Bidirecional)
-    const nos = new Set();
-    const arestas = new Map();
-    
-    for (const [id, sala] of Object.entries(mapaMundo)) {
-        nos.add(id);
-        if (!arestas.has(id)) arestas.set(id, new Set());
-        
-        if (sala.opcoes) {
-            for (const op of sala.opcoes) {
-                if (op.destino) {
-                    const idDest = String(op.destino);
-                    nos.add(idDest);
-                    arestas.get(id).add(idDest);
-                    
-                    if (!arestas.has(idDest)) arestas.set(idDest, new Set());
-                    arestas.get(idDest).add(id); // Garante a via de mão dupla
-                }
-            }
+        if (sala.puzzle_status || sala.puzzle) {
+            w = 40; h = 40; shape = "octagon";
+        } else if (nome.includes("grande salão") || nome.includes("trono") || nome.includes("arsenal")) {
+            w = 120; h = 100; shape = "pillars";
+        } else if (nome.includes("torre") || nome.includes("mago") || nome.includes("observatório")) {
+            w = 60; h = 60; shape = "octagon";
+        } else if (nome.includes("corredor") || nome.includes("passagem") || nome.includes("galeria")) {
+            if (eixoVertical) { w = 40; h = 120; } 
+            else { w = 120; h = 40; }
+        } else {
+            let numId = parseInt(idSala) || 0;
+            if (numId % 3 === 1) { w = 40; h = 80; } 
+            else if (numId % 3 === 2) { w = 80; h = 40; }
         }
+        return { w, h, shape };
     }
 
-    // PASSO 2: Posicionamento Baseado em Centro de Gravidade
-    const naoColocados = new Set(nos);
-    
-    // A Sala 1 é o Marco Zero
-    window.mapCoords["1"] = { gridX: 0, gridY: 0, level: 0 };
-    ocupados.set("0,0", "1");
-    naoColocados.delete("1");
-
-    while (naoColocados.size > 0) {
-        let melhorNo = null;
-        let maxConexoesComPlataforma = -1;
-        let vizinhosJaColocados = [];
-
-        // 2.1: Qual sala não colocada tem MAIS conexões com as salas que JÁ ESTÃO no mapa?
-        for (const id of naoColocados) {
-            let colocados = [];
-            for (const vizinho of arestas.get(id)) {
-                if (!naoColocados.has(vizinho)) colocados.push(vizinho);
-            }
+    function checarColisao(x, y, w, h, level, idIgnorado) {
+        // Margem minúscula (epsilon) para garantir que paredes tangentes não registrem colisão
+        const margem = 0.5; 
+        for (let id in window.mapCoords) {
+            if (id === idIgnorado) continue;
+            let outra = window.mapCoords[id];
+            if (outra.level !== level) continue;
             
-            if (colocados.length > maxConexoesComPlataforma) {
-                maxConexoesComPlataforma = colocados.length;
-                melhorNo = id;
-                vizinhosJaColocados = colocados;
+            if (x + margem < outra.x + outra.w && 
+                x + w - margem > outra.x &&
+                y + margem < outra.y + outra.h && 
+                y + h - margem > outra.y) {
+                return true;
             }
         }
-
-        // Se houver ilhas desconectadas no JSON, pega qualquer uma
-        if (!melhorNo) melhorNo = Array.from(naoColocados)[0];
-
-        // 2.2: Calcula o "Centro de Gravidade" ideal para esta sala
-        let idealX = 0, idealY = 0;
-        
-        if (vizinhosJaColocados.length > 0) {
-            for (const viz of vizinhosJaColocados) {
-                idealX += window.mapCoords[viz].gridX;
-                idealY += window.mapCoords[viz].gridY;
-            }
-            // A coordenada ideal é a média exata de todos os vizinhos
-            idealX = Math.round(idealX / vizinhosJaColocados.length);
-            idealY = Math.round(idealY / vizinhosJaColocados.length);
-        }
-
-        // 2.3: Busca em Espiral ao redor do Centro de Gravidade para achar a vaga mais próxima
-        let raio = 0;
-        let posFinal = null;
-        
-        buscaEspiral: while (raio < 150) {
-            if (raio === 0) {
-                if (!ocupados.has(`${idealX},${idealY}`)) {
-                    posFinal = { x: idealX, y: idealY };
-                    break buscaEspiral;
-                }
-            } else {
-                for (let i = -raio; i <= raio; i++) {
-                    for (let j = -raio; j <= raio; j++) {
-                        // Verifica apenas a "borda" atual da espiral
-                        if (Math.abs(i) === Math.abs(raio) || Math.abs(j) === Math.abs(raio)) {
-                            if (!ocupados.has(`${idealX + i},${idealY + j}`)) {
-                                posFinal = { x: idealX + i, y: idealY + j };
-                                break buscaEspiral;
-                            }
-                        }
-                    }
-                }
-            }
-            raio++;
-        }
-
-        // 2.4: Trava a sala na coordenada matematicamente mais próxima de todos os seus vizinhos
-        window.mapCoords[melhorNo] = {
-            gridX: posFinal.x,
-            gridY: posFinal.y,
-            w: TAMANHO_TILE - ESPACAMENTO,
-            h: TAMANHO_TILE - ESPACAMENTO,
-            shape: (mapaMundo[melhorNo]?.puzzle_status) ? "octagon" : "rect",
-            level: 0
-        };
-        ocupados.set(`${posFinal.x},${posFinal.y}`, melhorNo);
-        naoColocados.delete(melhorNo);
+        return false;
     }
 
-    // PASSO 3: Converter o Grid Perfeito em Pixels para o Canvas do vamosla.html
-    for (let id in window.mapCoords) {
-        window.mapCoords[id].x = window.mapCoords[id].gridX * TAMANHO_TILE;
-        window.mapCoords[id].y = window.mapCoords[id].gridY * TAMANHO_TILE;
+    let salaRaiz = mapaMundo["1"];
+    let dimRaiz = obterDimensoesEShape("1", salaRaiz, false);
+    window.mapCoords["1"] = {
+        x: -dimRaiz.w / 2, y: -dimRaiz.h / 2,
+        w: dimRaiz.w, h: dimRaiz.h,
+        level: 0, shape: dimRaiz.shape
+    };
+
+    let fila = ["1"];
+    let visitados = new Set(["1"]);
+
+    // Nova Heurística: Janela Deslizante de Perímetro
+    function encontrarEspacoAdjacente(pai, dimFilha) {
+        const passo = 10; // Testar a cada 10 pixels ao longo das paredes
+        const tentativas = [];
+
+        // 1. Desliza ao longo da face Norte (filha em cima)
+        for (let tx = pai.x - dimFilha.w; tx <= pai.x + pai.w; tx += passo) {
+            tentativas.push({ x: tx, y: pai.y - dimFilha.h });
+        }
+        // 2. Desliza ao longo da face Sul (filha embaixo)
+        for (let tx = pai.x - dimFilha.w; tx <= pai.x + pai.w; tx += passo) {
+            tentativas.push({ x: tx, y: pai.y + pai.h });
+        }
+        // 3. Desliza ao longo da face Leste (filha à direita)
+        for (let ty = pai.y - dimFilha.h; ty <= pai.y + pai.h; ty += passo) {
+            tentativas.push({ x: pai.x + pai.w, y: ty });
+        }
+        // 4. Desliza ao longo da face Oeste (filha à esquerda)
+        for (let ty = pai.y - dimFilha.h; ty <= pai.y + pai.h; ty += passo) {
+            tentativas.push({ x: pai.x - dimFilha.w, y: ty });
+        }
+
+        // Ordena as posições para priorizar o centro das faces, mantendo o layout coeso
+        tentativas.sort((a, b) => {
+            let distACentro = Math.pow((a.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((a.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
+            let distBCentro = Math.pow((b.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((b.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
+            return distACentro - distBCentro;
+        });
+
+        for (let pos of tentativas) {
+            if (!checarColisao(pos.x, pos.y, dimFilha.w, dimFilha.h, pai.level, null)) {
+                return pos;
+            }
+        }
+        return null;
+    }
+
+    while (fila.length > 0) {
+        let idAtual = fila.shift();
+        let pai = window.mapCoords[idAtual];
+        let salaAtual = mapaMundo[idAtual];
+
+        if (!salaAtual || !salaAtual.opcoes) continue;
+
+        let filhosParaProcessar = salaAtual.opcoes
+            .filter(o => o.destino && !visitados.has(String(o.destino)))
+            .filter(o => o.texto !== "Atalho");
+
+        let direcaoVerticalToggle = (parseInt(idAtual) % 2 === 0);
+
+        filhosParaProcessar.forEach((opcao) => {
+            let idFilha = String(opcao.destino);
+            let salaFilha = mapaMundo[idFilha];
+            if (!salaFilha) return;
+
+            let dim = obterDimensoesEShape(idFilha, salaFilha, direcaoVerticalToggle);
+            direcaoVerticalToggle = !direcaoVerticalToggle; 
+
+            let pos = encontrarEspacoAdjacente(pai, dim);
+
+            if (pos) {
+                // Encaixe primário bem-sucedido na parede direta do pai
+                window.mapCoords[idFilha] = { x: pos.x, y: pos.y, w: dim.w, h: dim.h, level: pai.level, shape: dim.shape };
+            } else {
+                // Failsafe Topológico: Se a sala pai estiver 100% cercada por outras salas, 
+                // "inflamos" as paredes de busca do pai passo a passo. 
+                // Isso cria uma camada externa mantendo alinhamento grid/retilíneo.
+                let resolvida = false;
+                for (let folga = 20; folga <= 400 && !resolvida; folga += 20) {
+                     let paiExpandido = { x: pai.x - folga, y: pai.y - folga, w: pai.w + folga * 2, h: pai.h + folga * 2, level: pai.level };
+                     let posFailsafe = encontrarEspacoAdjacente(paiExpandido, dim);
+                     if (posFailsafe) {
+                         window.mapCoords[idFilha] = { x: posFailsafe.x, y: posFailsafe.y, w: dim.w, h: dim.h, level: pai.level, shape: dim.shape };
+                         resolvida = true;
+                     }
+                }
+            }
+
+            visitados.add(idFilha);
+            fila.push(idFilha);
+        });
     }
 
     if (typeof salvarEstadoJogador === "function") await salvarEstadoJogador();
 }
 
-        
 async function abrirMapaVisual() {
     let idAtualGlobal = (typeof secaoAtualId !== 'undefined') ? secaoAtualId : "1";
     let mapaMundoLocal = window.mapaMundo;
@@ -3264,7 +3281,7 @@ async function abrirMapaVisual() {
 
         // Nome da sala
         ctx.fillStyle = ehAtual ? "#ffaa00" : "#a89a80";
-        ctx.font = `${Math.max(12, Math.floor(20 * escala))}px 'VT323', monospace`;
+        ctx.font = `${Math.max(12, Math.floor(14 * escala))}px 'VT323', monospace`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         let textoId = id;
@@ -3331,32 +3348,38 @@ async function abrirMapaVisual() {
                 ctx.fillRect(-pW / 2, -1, pW, 2);
                 ctx.restore();
             }
-            // CONEXÕES ORTOGONAIS (Roteamento em L para salas distantes)
+            // CORREDORES DIAGONAIS (fallback para conexões distantes)
             else {
-                let cxA = offsetX + (rA.x + rA.w/2) * escala;
-                let cyA = offsetY + (rA.y + rA.h/2) * escala;
-                let cxB = offsetX + (rB.x + rB.w/2) * escala;
-                let cyB = offsetY + (rB.y + rB.h/2) * escala;
+                let distancia = Math.hypot(
+                    (rA.x + rA.w/2) - (rB.x + rB.w/2),
+                    (rA.y + rA.h/2) - (rB.y + rB.h/2)
+                );
+                // Só desenha se estiverem razoavelmente próximos (evita linhas cruzando o mapa inteiro)
+                if (distancia < 250) {
+                    let cxA = offsetX + (rA.x + rA.w/2) * escala;
+                    let cyA = offsetY + (rA.y + rA.h/2) * escala;
+                    let cxB = offsetX + (rB.x + rB.w/2) * escala;
+                    let cyB = offsetY + (rB.y + rB.h/2) * escala;
 
-                ctx.save();
-                // Linha sólida, arquitetural. O pontilhado foi removido.
-                ctx.strokeStyle = "#5a4a38";
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(cxA, cyA);
+                    ctx.save();
+                    ctx.setLineDash([4, 4]);
+                    ctx.strokeStyle = "#5a4a38";
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(cxA, cyA);
+                    ctx.lineTo(cxB, cyB);
+                    ctx.stroke();
 
-                // Algoritmo de roteamento Manhattan (quebra a linha em 90 graus)
-                if (Math.abs(cxA - cxB) > Math.abs(cyA - cyB)) {
-                    ctx.lineTo(cxB, cyA); // avança no eixo X primeiro
-                    ctx.lineTo(cxB, cyB); // dobra no eixo Y
-                } else {
-                    ctx.lineTo(cxA, cyB); // avança no eixo Y primeiro
-                    ctx.lineTo(cxB, cyB); // dobra no eixo X
+                    // Pequeno círculo no meio indicando passagem
+                    let midX = (cxA + cxB) / 2;
+                    let midY = (cyA + cyB) / 2;
+                    ctx.fillStyle = "#f2a65a";
+                    ctx.beginPath();
+                    ctx.arc(midX, midY, 3, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore();
                 }
-                ctx.stroke();
-
-                ctx.restore();
-            
             }
         }
     }
