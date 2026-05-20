@@ -3101,48 +3101,62 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
     let fila = ["1"];
     let visitados = new Set(["1"]);
 
-    // Nova Heurística: Janela Deslizante de Perímetro (BLINDADA)
     function encontrarEspacoAdjacente(pai, dimFilha) {
-        const passo = 10; // Testar a cada 10 pixels ao longo das paredes
-        
-        // FIX: Força uma sobreposição mínima de face de 20px.
-        // Impede que as salas escorreguem para as quinas, vedando o Face-Adjacency Leak.
-        const minOverlap = 20; 
-        
-        const tentativas = [];
+    const passo = 10;
+    const minOverlap = 20;
+    
+    // ─── CONSOLE DE DIAGNÓSTICO: VAZAMENTO DE ADJACÊNCIA ───
+    let totalTentativas = 0;
+    let tentativasPorFace = { norte: 0, sul: 0, leste: 0, oeste: 0 };
+    let colisoesPorFace = { norte: 0, sul: 0, leste: 0, oeste: 0 };
+    let vazamentoDetectado = false;
+    // ───────────────────────────────────────────────────────
 
-        // 1. Desliza ao longo da face Norte (filha em cima)
-        for (let tx = pai.x - dimFilha.w + minOverlap; tx <= pai.x + pai.w - minOverlap; tx += passo) {
-            tentativas.push({ x: tx, y: pai.y - dimFilha.h });
-        }
-        // 2. Desliza ao longo da face Sul (filha embaixo)
-        for (let tx = pai.x - dimFilha.w + minOverlap; tx <= pai.x + pai.w - minOverlap; tx += passo) {
-            tentativas.push({ x: tx, y: pai.y + pai.h });
-        }
-        // 3. Desliza ao longo da face Leste (filha à direita)
-        for (let ty = pai.y - dimFilha.h + minOverlap; ty <= pai.y + pai.h - minOverlap; ty += passo) {
-            tentativas.push({ x: pai.x + pai.w, y: ty });
-        }
-        // 4. Desliza ao longo da face Oeste (filha à esquerda)
-        for (let ty = pai.y - dimFilha.h + minOverlap; ty <= pai.y + pai.h - minOverlap; ty += passo) {
-            tentativas.push({ x: pai.x - dimFilha.w, y: ty });
-        }
+    const tentativas = [];
 
-        // Ordena as posições para priorizar o centro das faces, mantendo o layout coeso
-        tentativas.sort((a, b) => {
-            let distACentro = Math.pow((a.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((a.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
-            let distBCentro = Math.pow((b.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((b.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
-            return distACentro - distBCentro;
-        });
-
-        for (let pos of tentativas) {
-            if (!checarColisao(pos.x, pos.y, dimFilha.w, dimFilha.h, pai.level, null)) {
-                return pos;
-            }
-        }
-        return null;
+    // 1. Desliza ao longo da face Norte (filha em cima)
+    for (let tx = pai.x - dimFilha.w + minOverlap; tx <= pai.x + pai.w - minOverlap; tx += passo) {
+        tentativas.push({ x: tx, y: pai.y - dimFilha.h, face: 'norte' });
+    }
+    // 2. Desliza ao longo da face Sul (filha embaixo)
+    for (let tx = pai.x - dimFilha.w + minOverlap; tx <= pai.x + pai.w - minOverlap; tx += passo) {
+        tentativas.push({ x: tx, y: pai.y + pai.h, face: 'sul' });
+    }
+    // 3. Desliza ao longo da face Leste (filha à direita)
+    for (let ty = pai.y - dimFilha.h + minOverlap; ty <= pai.y + pai.h - minOverlap; ty += passo) {
+        tentativas.push({ x: pai.x + pai.w, y: ty, face: 'leste' });
+    }
+    // 4. Desliza ao longo da face Oeste (filha à esquerda)
+    for (let ty = pai.y - dimFilha.h + minOverlap; ty <= pai.y + pai.h - minOverlap; ty += passo) {
+        tentativas.push({ x: pai.x - dimFilha.w, y: ty, face: 'oeste' });
     }
 
+    // Ordena as posições para priorizar o centro das faces
+    tentativas.sort((a, b) => {
+        let distACentro = Math.pow((a.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((a.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
+        let distBCentro = Math.pow((b.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((b.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
+        return distACentro - distBCentro;
+    });
+
+    for (let pos of tentativas) {
+        totalTentativas++;
+        tentativasPorFace[pos.face]++;
+        
+        if (checarColisao(pos.x, pos.y, dimFilha.w, dimFilha.h, pai.level, null)) {
+            colisoesPorFace[pos.face]++;
+        } else {
+            // Sucesso — encaixe encontrado, loga e retorna
+            console.log(`[ADJACENCY-OK] Face:${pos.face} | Tentativas:${totalTentativas} | Colisões:N${colisoesPorFace.norte}S${colisoesPorFace.sul}L${colisoesPorFace.leste}O${colisoesPorFace.oeste} | Pos:(${Math.round(pos.x)},${Math.round(pos.y)})`);
+            return pos;
+        }
+    }
+
+    // VAZAMENTO DETECTADO: nenhuma posição funcionou
+    vazamentoDetectado = true;
+    console.warn(`[ADJACENCY-LEAK] ⚠️ VAZAMENTO! | Total tentativas:${totalTentativas} | Norte:${tentativasPorFace.norte}(C:${colisoesPorFace.norte}) Sul:${tentativasPorFace.sul}(C:${colisoesPorFace.sul}) Leste:${tentativasPorFace.leste}(C:${colisoesPorFace.leste}) Oeste:${tentativasPorFace.oeste}(C:${colisoesPorFace.oeste}) | DimFilha:${dimFilha.w}x${dimFilha.h} | Pai:${pai.w}x${pai.h}@(${pai.x},${pai.y})`);
+    
+    return null;
+}
     while (fila.length > 0) {
         let idAtual = fila.shift();
         let pai = window.mapCoords[idAtual];
