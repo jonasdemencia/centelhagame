@@ -3332,32 +3332,62 @@ async function abrirMapaVisual() {
                 ctx.restore();
             }
             // CONEXÕES ORTOGONAIS (Roteamento em L para salas distantes)
-            else {
-                let cxA = offsetX + (rA.x + rA.w/2) * escala;
-                let cyA = offsetY + (rA.y + rA.h/2) * escala;
-                let cxB = offsetX + (rB.x + rB.w/2) * escala;
-                let cyB = offsetY + (rB.y + rB.h/2) * escala;
+else {
+    // Coordenadas dos centros (em pixels)
+    let cAx = offsetX + (rA.x + rA.w/2) * escala;
+    let cAy = offsetY + (rA.y + rA.h/2) * escala;
+    let cBx = offsetX + (rB.x + rB.w/2) * escala;
+    let cBy = offsetY + (rB.y + rB.h/2) * escala;
 
-                ctx.save();
-                // Linha sólida, arquitetural. O pontilhado foi removido.
-                ctx.strokeStyle = "#5a4a38";
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(cxA, cyA);
+    // Função auxiliar para calcular ponto na borda
+    function pontoNaBorda(sala, centroX, centroY, direcaoX, direcaoY) {
+        // direcaoX, direcaoY devem ser -1, 0 ou 1
+        let raioX = (sala.w/2) * escala;
+        let raioY = (sala.h/2) * escala;
+        let bordaX = centroX + direcaoX * raioX;
+        let bordaY = centroY + direcaoY * raioY;
+        return { x: bordaX, y: bordaY };
+    }
 
-                // Algoritmo de roteamento Manhattan (quebra a linha em 90 graus)
-                if (Math.abs(cxA - cxB) > Math.abs(cyA - cyB)) {
-                    ctx.lineTo(cxB, cyA); // avança no eixo X primeiro
-                    ctx.lineTo(cxB, cyB); // dobra no eixo Y
-                } else {
-                    ctx.lineTo(cxA, cyB); // avança no eixo Y primeiro
-                    ctx.lineTo(cxB, cyB); // dobra no eixo X
-                }
-                ctx.stroke();
+    // Determina o primeiro segmento do caminho em L
+    let primeiroHorizontal = Math.abs(cAx - cBx) > Math.abs(cAy - cBy);
+    
+    let pontoSaida, pontoInflexao, pontoEntrada;
+    
+    if (primeiroHorizontal) {
+        // Caminho: A → (cBx, cAy) → B
+        // Saída de A: horizontal (direita ou esquerda)
+        let dirX = (cBx > cAx) ? 1 : -1;
+        pontoSaida = pontoNaBorda(rA, cAx, cAy, dirX, 0);
+        let inflexaoX = cBx;
+        let inflexaoY = cAy;
+        // Entrada em B: vertical (cima ou baixo)
+        let dirY = (cBy > inflexaoY) ? 1 : -1;
+        pontoEntrada = pontoNaBorda(rB, cBx, cBy, 0, dirY);
+        pontoInflexao = { x: inflexaoX, y: inflexaoY };
+    } else {
+        // Caminho: A → (cAx, cBy) → B
+        // Saída de A: vertical
+        let dirY = (cBy > cAy) ? 1 : -1;
+        pontoSaida = pontoNaBorda(rA, cAx, cAy, 0, dirY);
+        let inflexaoX = cAx;
+        let inflexaoY = cBy;
+        // Entrada em B: horizontal
+        let dirX = (cBx > inflexaoX) ? 1 : -1;
+        pontoEntrada = pontoNaBorda(rB, cBx, cBy, dirX, 0);
+        pontoInflexao = { x: inflexaoX, y: inflexaoY };
+    }
 
-                ctx.restore();
-            
-            }
+    ctx.save();
+    ctx.strokeStyle = "#5a4a38";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(pontoSaida.x, pontoSaida.y);
+    ctx.lineTo(pontoInflexao.x, pontoInflexao.y);
+    ctx.lineTo(pontoEntrada.x, pontoEntrada.y);
+    ctx.stroke();
+    ctx.restore();
+}
         }
     }
 }
