@@ -1428,9 +1428,10 @@ async function gerarZona(numeroZona, ganchosPrevios = null) {
     const historicoItensZona = [];
 
     for (let i = 1; i <= SALAS_POR_ZONA; i++) {
-        const idGlobal = String(mapeamento[i]);
+        const idGlobal = mapeamento[i];              // número — consistente com coords Map e adjacencias
+        const idGlobalStr = String(idGlobal);        // string — para chaves de objetos
         const conexoes = adjacencias[idGlobal] || [];
-        
+
         // Constrói opções a partir das adjacências reais
         const opcoes = conexoes.map(c => ({
             texto: c.bloqueada 
@@ -1456,12 +1457,16 @@ async function gerarZona(numeroZona, ganchosPrevios = null) {
             "Uma sala escura onde as paredes parecem respirar.";
 
         // Distribui itens
-        const itensNaSala = distribuirItens(prosa, infoZona.nome, idGlobal, semente, historicoItensZona);
+        const itensNaSala = distribuirItens(prosa, infoZona.nome, idGlobalStr, semente, historicoItensZona);
 
-        // Coordenadas para o mapa visual
+        // Coordenadas para o mapa visual — usa número para buscar no Map
         const coord = coords.get(idGlobal);
+        if (!coord) {
+            console.error(`[ERRO] Coordenada não encontrada para sala ${idGlobal} (i=${i})`);
+            continue;
+        }
 
-        mapaFinalMesclado[idGlobal] = {
+        mapaFinalMesclado[idGlobalStr] = {
             texto_logico: prosa,
             opcoes: opcoes,
             itens: itensNaSala,
@@ -1471,13 +1476,13 @@ async function gerarZona(numeroZona, ganchosPrevios = null) {
         };
 
         // Adiciona bloqueio se existir
-        if (bloqueiosPorSala[idGlobal]) {
-            mapaFinalMesclado[idGlobal].bloqueio = {
+        if (bloqueiosPorSala[idGlobalStr]) {
+            mapaFinalMesclado[idGlobalStr].bloqueio = {
                 ativo: true,
-                ...bloqueiosPorSala[idGlobal]
+                ...bloqueiosPorSala[idGlobalStr]
             };
         }
-    }
+    }}
 
     // PASSO 5: Injetar puzzles (preservado da lógica anterior)
     const idMsgPuzzle = adicionarMensagem("🧩 Ocultando enigmas na arquitetura...", "system", true);
