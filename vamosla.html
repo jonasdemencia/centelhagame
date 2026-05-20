@@ -1415,7 +1415,7 @@ async function gerarZona(numeroZona, ganchosPrevios = null) {
         throw new Error(`Falha crítica no layout da Zona ${numeroZona}: ${layoutResult.erro}`);
     }
 
-    const { coords, mapeamento, nomeTemplate } = layoutResult;
+    const { coords, mapeamento, templateUsado: nomeTemplate } = layoutResult;
     console.log(`[Zona ${numeroZona}] Template: ${nomeTemplate}`);
     console.log(`[Zona ${numeroZona}] Layout gerado:`, Object.fromEntries(coords));
 
