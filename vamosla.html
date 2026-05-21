@@ -1412,6 +1412,13 @@ Retorne APENAS este JSON:
                     if (!destinoPlano) { erros.push(`Sala ${id} aponta para ${destino} que não existe.`); continue; }
                     const temVolta = destinoPlano.saidas?.some(s => s.destino === id);
                     if (!temVolta) erros.push(`Sem volta: Sala ${destino} não retorna para Sala ${id}.`);
+                    // --- NOVO: CÃO DE GUARDA DA PROXIMIDADE ---
+                    // Se a distância numérica entre as salas for maior que 3, rejeita o plano por risco de cruzamento 2D.
+                    // (Puzzle rooms >= 10000 são ignoradas aqui pois entram depois)
+                    if (Math.abs(id - destino) > 3 && destino >= salaInicio) {
+                        erros.push(`Falha de Adjacência 2D: Salto topológico proibido da sala ${id} para ${destino} (distância > 3).`);
+                    }
+                    // ------------------------------------------
                 }
             }
             
@@ -1526,6 +1533,7 @@ REGRAS TOPOLÓGICAS (violá-las causa REJEIÇÃO AUTOMÁTICA do plano):
 3. CONECTIVIDADE: Toda sala de ${salaInicio} a ${salaFim} deve ser alcançável partindo de ${salaInicio}. Nenhuma sala isolada.
 4. FRONTEIRA ÚNICA: Apenas a sala ${salaFim} pode ter uma saída apontando para ${salaFim+1}. Nenhuma outra.
 5. LIMITE DE SAÍDAS FÍSICAS: Cada sala deve ter no MÁXIMO 3 saídas físicas reais (corredores, portas, escadas, rampas, pontes). Opcionalmente, pode ter 1 atalho lógico/oculto adicional, mas este deve ser nomeado como "Atalho" e será tratado como teleporte narrativo — sem representação física no mapa. O total de saídas por sala (físicas + atalho) nunca deve ultrapassar 4.
+6. PROXIMIDADE GEOMÉTRICA (REGRA DE OURO): Para evitar vazamento de adjacência no mapa 2D, uma sala de ID "N" SÓ PODE se conectar com "N-1", "N+1" ou uma ramificação curta (máximo "N+3" ou "N-3"). É TERMINANTEMENTE PROIBIDO conectar IDs distantes (ex: Sala 2 ligada à Sala 8). Mantenha o grafo linear e contido.
 
 REGRAS DE SEMÂNTICA FÍSICA (VERBOS DE TRANSIÇÃO):
 1. A ação de transição DEVE ser uma locomoção física (Ex: "Atravessar o arco", "Subir a escada de ferro", "Rastejar pelo túnel").
@@ -3361,6 +3369,7 @@ async function abrirMapaVisual() {
                     (rA.y + rA.h/2) - (rB.y + rB.h/2)
                 );
                 // Só desenha se estiverem razoavelmente próximos (evita linhas cruzando o mapa inteiro)
+                /* // BLOCO DESATIVADO PARA EVITAR POLUIÇÃO VISUAL DE CORREDORES CRUZADOS
                 if (distancia < 250) {
                     let cxA = offsetX + (rA.x + rA.w/2) * escala;
                     let cyA = offsetY + (rA.y + rA.h/2) * escala;
@@ -3386,6 +3395,7 @@ async function abrirMapaVisual() {
 
                     ctx.restore();
                 }
+                */
             }
         }
     }
