@@ -1446,6 +1446,32 @@ Retorne APENAS este JSON:
             const salaFronteira = Object.entries(plano).find(([_, s]) => s.para_proxima_zona === true);
             if (!salaFronteira) erros.push(`Nenhuma sala de fronteira (para_proxima_zona: true).`);
             else if (Number(salaFronteira[0]) !== salaFim) erros.push(`Fronteira está em sala ${salaFronteira[0]}, deveria estar em ${salaFim}.`);
+
+            // --- NOVO: CÃO DE GUARDA CONTRA CICLOS (Estrutura de Árvore) ---
+    // Garante matematicamente que o mapa não possui anéis que quebram o grid 2D
+    let totalVertices = 0;
+    let totalArestas = 0;
+    
+    for (const [idStr, sala] of Object.entries(plano)) {
+        const id = Number(idStr);
+        // Analisa apenas as salas regulares da zona atual (ignora puzzles 10000+)
+        if (id >= salaInicio && id <= salaFim) {
+            totalVertices++;
+            for (const saida of (sala.saidas || [])) {
+                // Conta a aresta apenas uma vez (quando aponta para frente)
+                if (saida.destino > id && saida.destino <= salaFim) {
+                    totalArestas++;
+                }
+            }
+        }
+    }
+    
+    // Pela Teoria dos Grafos, uma árvore tem exatamente (Vértices - 1) arestas.
+    // Se tiver mais, o Groq fechou um circuito (ex: 4->5->6->7->4), o que destrói a renderização 2D.
+    if (totalArestas > totalVertices - 1) {
+        erros.push(`Falha Topológica 2D: O mapa gerou circuitos/anéis (${totalArestas} conexões para ${totalVertices} salas regulares). O layout deve ser uma árvore.`);
+    }
+    // --------------------------------------------------------------
             
             return erros;
         }
@@ -1533,7 +1559,7 @@ REGRAS TOPOLÓGICAS (violá-las causa REJEIÇÃO AUTOMÁTICA do plano):
 3. CONECTIVIDADE: Toda sala de ${salaInicio} a ${salaFim} deve ser alcançável partindo de ${salaInicio}. Nenhuma sala isolada.
 4. FRONTEIRA ÚNICA: Apenas a sala ${salaFim} pode ter uma saída apontando para ${salaFim+1}. Nenhuma outra.
 5. LIMITE DE SAÍDAS FÍSICAS: Cada sala deve ter no MÁXIMO 3 saídas físicas reais (corredores, portas, escadas, rampas, pontes). Opcionalmente, pode ter 1 atalho lógico/oculto adicional, mas este deve ser nomeado como "Atalho" e será tratado como teleporte narrativo — sem representação física no mapa. O total de saídas por sala (físicas + atalho) nunca deve ultrapassar 4.
-6. PROXIMIDADE GEOMÉTRICA (REGRA DE OURO): Para evitar vazamento de adjacência no mapa 2D, uma sala de ID "N" SÓ PODE se conectar com "N-1", "N+1" ou uma ramificação curta (máximo "N+3" ou "N-3"). É TERMINANTEMENTE PROIBIDO conectar IDs distantes (ex: Sala 2 ligada à Sala 8). Mantenha o grafo linear e contido.
+6. ESTRUTURA DE ÁRVORE (REGRA DE OURO 2D): O mapa NÃO PODE ter circuitos ou anéis sob nenhuma hipótese (ex: é proibido 4 ligar a 5, 5 ligar a 6 e a 6 voltar para a 4). O caminho principal deve ser linear. Ramificações fora do eixo principal devem ser estritamente BECOS SEM SAÍDA (ex: se a sala 4 liga à 7, a sala 7 SÓ PODE voltar para a 4 e não avança para mais nada). O grafo deve ramificar, mas nunca se reconectar à frente.
 
 REGRAS DE SEMÂNTICA FÍSICA (VERBOS DE TRANSIÇÃO):
 1. A ação de transição DEVE ser uma locomoção física (Ex: "Atravessar o arco", "Subir a escada de ferro", "Rastejar pelo túnel").
