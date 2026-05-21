@@ -3089,31 +3089,75 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
         return false;
     }
 
-    // ─── NOVO: Verifica se dois retângulos realmente compartilham uma borda ───
+    // ─── VERIFICA SE DOIS RETÂNGULOS COMPARTILHAM UMA BORDA ───
     function verificarAdjacenciaReal(pai, filho) {
-        // Margem de tolerância para floating point / escala
         const TOL = 1.0;
+        const minOverlap = 10;
 
-        // Pai à esquerda, filho à direita (ou vice-versa)
         const horizontalColado = (
             Math.abs((pai.x + pai.w) - filho.x) < TOL || 
             Math.abs((filho.x + filho.w) - pai.x) < TOL
         );
         const verticalOverlap = Math.min(pai.y + pai.h, filho.y + filho.h) - Math.max(pai.y, filho.y);
 
-        // Pai acima, filho abaixo (ou vice-versa)
         const verticalColado = (
             Math.abs((pai.y + pai.h) - filho.y) < TOL || 
             Math.abs((filho.y + filho.h) - pai.y) < TOL
         );
         const horizontalOverlap = Math.min(pai.x + pai.w, filho.x + filho.w) - Math.max(pai.x, filho.x);
 
-        // Precisam compartilhar uma borda E ter overlap significativo na outra dimensão
-        const minOverlap = 10;
-        const adjHorizontal = horizontalColado && verticalOverlap > minOverlap;
-        const adjVertical   = verticalColado   && horizontalOverlap > minOverlap;
+        return (horizontalColado && verticalOverlap > minOverlap) || 
+               (verticalColado && horizontalOverlap > minOverlap);
+    }
 
-        return adjHorizontal || adjVertical;
+    // ─── NOVO: VERIFICA SE A DISTÂNCIA ENTRE PAI E FILHO É TOPOLÓGICAMENTE VÁLIDA ───
+    // Uma conexão direta (pai→filho) deve resultar em adjacência real.
+    // Se a distância entre centros for maior que a soma das metades das dimensões + folga,
+    // significa que o filho foi "expulso" longe e a conexão virou corredor.
+    function verificarProximidadeTopologica(pai, filho, idPai, idFilha) {
+        const centroPaiX = pai.x + pai.w / 2;
+        const centroPaiY = pai.y + pai.h / 2;
+        const centroFilhoX = filho.x + filho.w / 2;
+        const centroFilhoY = filho.y + filho.h / 2;
+        
+        const distanciaCentros = Math.hypot(centroPaiX - centroFilhoX, centroPaiY - centroFilhoY);
+        
+        // Distância máxima aceitável: soma das diagonais / 2 + folga de 20px
+        // Isso garante que salas muito grandes ainda possam ser adjacentes,
+        // mas salas pequenas não fiquem a 200px de distância.
+        const diagonalPai = Math.hypot(pai.w, pai.h);
+        const diagonalFilho = Math.hypot(filho.w, filho.h);
+        const distanciaMaximaAceitavel = (diagonalPai + diagonalFilho) / 2 + 30;
+        
+        const distanciaParedes = Math.max(
+            Math.abs(centroPaiX - centroFilhoX) - (pai.w + filho.w) / 2,
+            Math.abs(centroPaiY - centroFilhoY) - (pai.h + filho.h) / 2
+        );
+
+        const estaAdjacente = verificarAdjacenciaReal(pai, filho);
+        const estaProximo = distanciaCentros <= distanciaMaximaAceitavel;
+        
+        // Se não está adjacente E está longe demais → CORREDOR RETARDADO DETECTADO
+        if (!estaAdjacente && !estaProximo) {
+            console.error(`[TOPOLOGY-FAIL] 💥 CONEXÃO CORROMPIDA: Sala ${idFilha} (filha de ${idPai}) está a ${Math.round(distanciaCentros)}px do pai. Máximo aceitável: ${Math.round(distanciaMaximaAceitavel)}px. Isso gerou um corredor diagonal retardado em vez de uma porta.`);
+            return false;
+        }
+        
+        // Se não está adjacente mas está próximo → pode ser um atalho/portal aceitável
+        if (!estaAdjacente && estaProximo) {
+            console.warn(`[TOPOLOGY-WARN] Sala ${idFilha} (filha de ${idPai}) não é adjacente ao pai, mas está próxima (${Math.round(distanciaCentros)}px). Verificar se é intencional (portal/atalho).`);
+        }
+        
+        // Se está adjacente → perfeito
+        if (estaAdjacente) {
+            const overlap = Math.min(
+                Math.min(pai.x + pai.w, filho.x + filho.w) - Math.max(pai.x, filho.x),
+                Math.min(pai.y + pai.h, filho.y + filho.h) - Math.max(pai.y, filho.y)
+            );
+            console.log(`[TOPOLOGY-OK] Sala ${idFilha}→${idPai} | Distância:${Math.round(distanciaCentros)}px | Overlap de parede:${Math.round(overlap)}px`);
+        }
+        
+        return true;
     }
 
     let salaRaiz = mapaMundo["1"];
@@ -3136,24 +3180,19 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
 
         const tentativas = [];
 
-        // 1. Desliza ao longo da face Norte (filha em cima)
         for (let tx = pai.x - dimFilha.w + minOverlap; tx <= pai.x + pai.w - minOverlap; tx += passo) {
             tentativas.push({ x: tx, y: pai.y - dimFilha.h, face: 'norte' });
         }
-        // 2. Desliza ao longo da face Sul (filha embaixo)
         for (let tx = pai.x - dimFilha.w + minOverlap; tx <= pai.x + pai.w - minOverlap; tx += passo) {
             tentativas.push({ x: tx, y: pai.y + pai.h, face: 'sul' });
         }
-        // 3. Desliza ao longo da face Leste (filha à direita)
         for (let ty = pai.y - dimFilha.h + minOverlap; ty <= pai.y + pai.h - minOverlap; ty += passo) {
             tentativas.push({ x: pai.x + pai.w, y: ty, face: 'leste' });
         }
-        // 4. Desliza ao longo da face Oeste (filha à esquerda)
         for (let ty = pai.y - dimFilha.h + minOverlap; ty <= pai.y + pai.h - minOverlap; ty += passo) {
             tentativas.push({ x: pai.x - dimFilha.w, y: ty, face: 'oeste' });
         }
 
-        // Ordena para priorizar o centro das faces
         tentativas.sort((a, b) => {
             let distA = Math.pow((a.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + 
                         Math.pow((a.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
@@ -3168,12 +3207,12 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
             if (checarColisao(pos.x, pos.y, dimFilha.w, dimFilha.h, pai.level, null)) {
                 colisoesPorFace[pos.face]++;
             } else {
-                console.log(`[ADJACENCY-OK] Sala ${idFilha}→${idPai} Face:${pos.face} | Tentativas:${totalTentativas} | Colisões:N${colisoesPorFace.norte}S${colisoesPorFace.sul}L${colisoesPorFace.leste}O${colisoesPorFace.oeste} | Pos:(${Math.round(pos.x)},${Math.round(pos.y)})`);
+                console.log(`[ADJACENCY-OK] Sala ${idFilha}→${idPai} Face:${pos.face} | Tentativas:${totalTentativas} | Colisões:N${colisoesPorFace.norte}S${colisoesPorFace.sul}L${colisoesPorFace.leste}O${colisoesPorFace.oeste}`);
                 return pos;
             }
         }
 
-        console.warn(`[ADJACENCY-LEAK] Sala ${idFilha}→${idPai} | Total:${totalTentativas} | N:${tentativasPorFace.norte}(C:${colisoesPorFace.norte}) S:${tentativasPorFace.sul}(C:${colisoesPorFace.sul}) L:${tentativasPorFace.leste}(C:${colisoesPorFace.leste}) O:${tentativasPorFace.oeste}(C:${colisoesPorFace.oeste}) | Dim:${dimFilha.w}x${dimFilha.h}`);
+        console.warn(`[ADJACENCY-LEAK] Sala ${idFilha}→${idPai} | Total:${totalTentativas} | N:${tentativasPorFace.norte}(C:${colisoesPorFace.norte}) S:${tentativasPorFace.sul}(C:${colisoesPorFace.sul}) L:${tentativasPorFace.leste}(C:${colisoesPorFace.leste}) O:${tentativasPorFace.oeste}(C:${colisoesPorFace.oeste})`);
         return null;
     }
 
@@ -3204,7 +3243,6 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
             if (pos) {
                 coordsFilha = { x: pos.x, y: pos.y, w: dim.w, h: dim.h, level: pai.level, shape: dim.shape };
             } else {
-                // FAILSAFE: expande paredes do pai
                 let resolvida = false;
                 for (let folga = 20; folga <= 400 && !resolvida; folga += 20) {
                      let paiExpandido = { 
@@ -3221,24 +3259,39 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
                      }
                 }
                 if (!resolvida) {
-                    // Último recurso: joga longe, mas loga como erro crítico
                     coordsFilha = { 
                         x: pai.x + pai.w + 200, 
                         y: pai.y + 200, 
                         w: dim.w, h: dim.h, 
                         level: pai.level, shape: dim.shape 
                     };
-                    console.error(`[ADJACENCY-CRITICAL] Sala ${idFilha} ORFÃ — colocada em posição arbitrária longe do pai ${idAtual}`);
+                    console.error(`[ADJACENCY-CRITICAL] Sala ${idFilha} ORFÃ — posicionada arbitrariamente longe do pai ${idAtual}`);
                 }
             }
 
-            // ─── NOVO: Validação pós-posicionamento ───
-            if (!verificarAdjacenciaReal(pai, coordsFilha)) {
-                const dist = Math.hypot(
-                    (pai.x + pai.w/2) - (coordsFilha.x + coordsFilha.w/2),
-                    (pai.y + pai.h/2) - (coordsFilha.y + coordsFilha.h/2)
-                );
-                console.warn(`[ADJACENCY-FAIL] Sala ${idFilha} (filha de ${idAtual}) NÃO É ADJACENTE. Distância ao pai: ${Math.round(dist)}px. Pos:(${Math.round(coordsFilha.x)},${Math.round(coordsFilha.y)}) vs Pai:(${Math.round(pai.x)},${Math.round(pai.y)})`);
+            // ─── VALIDAÇÃO TOPOLÓGICA RIGOROSA ───
+            const topologiaOk = verificarProximidadeTopologica(pai, coordsFilha, idAtual, idFilha);
+            
+            // Se falhou topologicamente, tenta corrigir empurrando na direção do pai
+            if (!topologiaOk) {
+                console.warn(`[TOPOLOGY-FIX] Tentando corrigir posição de ${idFilha} empurrando na direção do pai ${idAtual}...`);
+                
+                const dx = (pai.x + pai.w/2) - (coordsFilha.x + coordsFilha.w/2);
+                const dy = (pai.y + pai.h/2) - (coordsFilha.y + coordsFilha.h/2);
+                const dist = Math.hypot(dx, dy);
+                
+                if (dist > 0) {
+                    // Empurra o filho 50% do caminho de volta ao pai
+                    const fator = 0.5;
+                    coordsFilha.x += dx * fator;
+                    coordsFilha.y += dy * fator;
+                    
+                    // Verifica se a correção funcionou
+                    const corrigido = verificarProximidadeTopologica(pai, coordsFilha, idAtual, idFilha);
+                    if (!corrigido) {
+                        console.error(`[TOPOLOGY-FIX-FAIL] Correção falhou. Sala ${idFilha} continua longe do pai. Mapa comprometido.`);
+                    }
+                }
             }
 
             window.mapCoords[idFilha] = coordsFilha;
@@ -3246,6 +3299,54 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
             fila.push(idFilha);
         });
     }
+
+    // ─── VALIDAÇÃO GLOBAL FINAL: Verifica se todas as conexões do grafo são portas ou corredores aceitáveis ───
+    console.log("═══════════════════════════════════════════════════════");
+    console.log("[TOPOLOGY-AUDIT] AUDITORIA GLOBAL DE CONEXÕES");
+    console.log("═══════════════════════════════════════════════════════");
+    
+    let conexoesCorrompidas = 0;
+    let conexoesOk = 0;
+    
+    for (let idA in mapaMundo) {
+        let salaA = mapaMundo[idA];
+        if (!salaA || !salaA.opcoes) continue;
+        
+        let coordsA = window.mapCoords[idA];
+        if (!coordsA) continue;
+        
+        for (let opt of salaA.opcoes) {
+            let idB = String(opt.destino);
+            let coordsB = window.mapCoords[idB];
+            if (!coordsB) continue;
+            
+            // Pula atalhos (são intencionalmente longos)
+            if (opt.texto === "Atalho") continue;
+            
+            const distancia = Math.hypot(
+                (coordsA.x + coordsA.w/2) - (coordsB.x + coordsB.w/2),
+                (coordsA.y + coordsA.h/2) - (coordsB.y + coordsB.h/2)
+            );
+            
+            const maxAceitavel = (Math.hypot(coordsA.w, coordsA.h) + Math.hypot(coordsB.w, coordsB.h)) / 2 + 30;
+            const saoAdjacentes = verificarAdjacenciaReal(coordsA, coordsB);
+            
+            if (!saoAdjacentes && distancia > maxAceitavel) {
+                conexoesCorrompidas++;
+                console.error(`[TOPOLOGY-AUDIT-FAIL] Conexão ${idA}↔${idB} ("${opt.texto}") é um CORREDOR RETARDADO: ${Math.round(distancia)}px (máx:${Math.round(maxAceitavel)}px)`);
+            } else {
+                conexoesOk++;
+            }
+        }
+    }
+    
+    console.log(`[TOPOLOGY-AUDIT] Resultado: ${conexoesOk} conexões OK, ${conexoesCorrompidas} CORREDORES RETARDADOS detectados.`);
+    if (conexoesCorrompidas > 0) {
+        console.error(`[TOPOLOGY-AUDIT] ⚠️ MAPA COMPROMETIDO: ${conexoesCorrompidas} conexão(ões) não respeitam adjacência física.`);
+    } else {
+        console.log(`[TOPOLOGY-AUDIT] ✅ MAPA 100% ÍNTEGRO. Todas as conexões são portas locais válidas.`);
+    }
+    console.log("═══════════════════════════════════════════════════════");
 
     if (typeof salvarEstadoJogador === "function") await salvarEstadoJogador();
 }
