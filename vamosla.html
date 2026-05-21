@@ -3262,6 +3262,8 @@ async function abrirMapaVisual() {
     const canvas = document.getElementById("canvas-mapa");
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#000510";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     if (!window.mapCoords || Object.keys(window.mapCoords).length === 0) return;
 
@@ -3293,9 +3295,9 @@ async function abrirMapaVisual() {
         let ehAtual = (String(id) === String(idAtualGlobal));
 
         // Estilo da Sala
-        ctx.fillStyle = ehAtual ? "#221a0f" : "#12110f";
-        ctx.strokeStyle = ehAtual ? "#ff0000" : "#544637"; // Destaque em vermelho/dourado
-        ctx.lineWidth = ehAtual ? 3 : 2;
+        ctx.fillStyle = ehAtual ? "#660011" : "#0b3d0b";
+ctx.strokeStyle = ehAtual ? "#ff0040" : "#2d5a27";
+ctx.lineWidth = ehAtual ? 3 : 2;
 
         if (r.shape === "octagon") {
             let corte = Math.min(rw, rh) * 0.25;
@@ -3320,7 +3322,7 @@ async function abrirMapaVisual() {
         }
 
         // Nome da sala
-        ctx.fillStyle = ehAtual ? "#ffaa00" : "#a89a80";
+        ctx.fillStyle = ehAtual ? "#ffffff" : "#88aa88";
         ctx.font = `${Math.max(12, Math.floor(14 * escala))}px 'VT323', monospace`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -3358,7 +3360,7 @@ async function abrirMapaVisual() {
 
             let pW = 14 * Math.min(1, escala); // Porta Horizontal
             let pH = 6 * Math.min(1, escala);
-            ctx.fillStyle = "#f2a65a"; // Laranja/amarelo
+            ctx.fillStyle = "#ffcc00";
 
             // Se tocam Horizontalmente (Bordas laterais adjacentes)
             if (overlapY2 > overlapY1 && (Math.abs((rA.x + rA.w) - rB.x) < 2 || Math.abs(rA.x - (rB.x + rB.w)) < 2)) {
