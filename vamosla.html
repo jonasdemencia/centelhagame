@@ -3073,7 +3073,6 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
     }
 
     function checarColisao(x, y, w, h, level, idIgnorado) {
-        // Margem minúscula (epsilon) para garantir que paredes tangentes não registrem colisão
         const margem = 0.5; 
         for (let id in window.mapCoords) {
             if (id === idIgnorado) continue;
@@ -3090,6 +3089,33 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
         return false;
     }
 
+    // ─── NOVO: Verifica se dois retângulos realmente compartilham uma borda ───
+    function verificarAdjacenciaReal(pai, filho) {
+        // Margem de tolerância para floating point / escala
+        const TOL = 1.0;
+
+        // Pai à esquerda, filho à direita (ou vice-versa)
+        const horizontalColado = (
+            Math.abs((pai.x + pai.w) - filho.x) < TOL || 
+            Math.abs((filho.x + filho.w) - pai.x) < TOL
+        );
+        const verticalOverlap = Math.min(pai.y + pai.h, filho.y + filho.h) - Math.max(pai.y, filho.y);
+
+        // Pai acima, filho abaixo (ou vice-versa)
+        const verticalColado = (
+            Math.abs((pai.y + pai.h) - filho.y) < TOL || 
+            Math.abs((filho.y + filho.h) - pai.y) < TOL
+        );
+        const horizontalOverlap = Math.min(pai.x + pai.w, filho.x + filho.w) - Math.max(pai.x, filho.x);
+
+        // Precisam compartilhar uma borda E ter overlap significativo na outra dimensão
+        const minOverlap = 10;
+        const adjHorizontal = horizontalColado && verticalOverlap > minOverlap;
+        const adjVertical   = verticalColado   && horizontalOverlap > minOverlap;
+
+        return adjHorizontal || adjVertical;
+    }
+
     let salaRaiz = mapaMundo["1"];
     let dimRaiz = obterDimensoesEShape("1", salaRaiz, false);
     window.mapCoords["1"] = {
@@ -3101,62 +3127,56 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
     let fila = ["1"];
     let visitados = new Set(["1"]);
 
-    function encontrarEspacoAdjacente(pai, dimFilha) {
-    const passo = 10;
-    const minOverlap = 20;
-    
-    // ─── CONSOLE DE DIAGNÓSTICO: VAZAMENTO DE ADJACÊNCIA ───
-    let totalTentativas = 0;
-    let tentativasPorFace = { norte: 0, sul: 0, leste: 0, oeste: 0 };
-    let colisoesPorFace = { norte: 0, sul: 0, leste: 0, oeste: 0 };
-    let vazamentoDetectado = false;
-    // ───────────────────────────────────────────────────────
+    function encontrarEspacoAdjacente(pai, dimFilha, idPai, idFilha) {
+        const passo = 10;
+        const minOverlap = 20;
+        let totalTentativas = 0;
+        let tentativasPorFace = { norte: 0, sul: 0, leste: 0, oeste: 0 };
+        let colisoesPorFace = { norte: 0, sul: 0, leste: 0, oeste: 0 };
 
-    const tentativas = [];
+        const tentativas = [];
 
-    // 1. Desliza ao longo da face Norte (filha em cima)
-    for (let tx = pai.x - dimFilha.w + minOverlap; tx <= pai.x + pai.w - minOverlap; tx += passo) {
-        tentativas.push({ x: tx, y: pai.y - dimFilha.h, face: 'norte' });
-    }
-    // 2. Desliza ao longo da face Sul (filha embaixo)
-    for (let tx = pai.x - dimFilha.w + minOverlap; tx <= pai.x + pai.w - minOverlap; tx += passo) {
-        tentativas.push({ x: tx, y: pai.y + pai.h, face: 'sul' });
-    }
-    // 3. Desliza ao longo da face Leste (filha à direita)
-    for (let ty = pai.y - dimFilha.h + minOverlap; ty <= pai.y + pai.h - minOverlap; ty += passo) {
-        tentativas.push({ x: pai.x + pai.w, y: ty, face: 'leste' });
-    }
-    // 4. Desliza ao longo da face Oeste (filha à esquerda)
-    for (let ty = pai.y - dimFilha.h + minOverlap; ty <= pai.y + pai.h - minOverlap; ty += passo) {
-        tentativas.push({ x: pai.x - dimFilha.w, y: ty, face: 'oeste' });
-    }
-
-    // Ordena as posições para priorizar o centro das faces
-    tentativas.sort((a, b) => {
-        let distACentro = Math.pow((a.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((a.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
-        let distBCentro = Math.pow((b.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((b.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
-        return distACentro - distBCentro;
-    });
-
-    for (let pos of tentativas) {
-        totalTentativas++;
-        tentativasPorFace[pos.face]++;
-        
-        if (checarColisao(pos.x, pos.y, dimFilha.w, dimFilha.h, pai.level, null)) {
-            colisoesPorFace[pos.face]++;
-        } else {
-            // Sucesso — encaixe encontrado, loga e retorna
-            console.log(`[ADJACENCY-OK] Face:${pos.face} | Tentativas:${totalTentativas} | Colisões:N${colisoesPorFace.norte}S${colisoesPorFace.sul}L${colisoesPorFace.leste}O${colisoesPorFace.oeste} | Pos:(${Math.round(pos.x)},${Math.round(pos.y)})`);
-            return pos;
+        // 1. Desliza ao longo da face Norte (filha em cima)
+        for (let tx = pai.x - dimFilha.w + minOverlap; tx <= pai.x + pai.w - minOverlap; tx += passo) {
+            tentativas.push({ x: tx, y: pai.y - dimFilha.h, face: 'norte' });
         }
+        // 2. Desliza ao longo da face Sul (filha embaixo)
+        for (let tx = pai.x - dimFilha.w + minOverlap; tx <= pai.x + pai.w - minOverlap; tx += passo) {
+            tentativas.push({ x: tx, y: pai.y + pai.h, face: 'sul' });
+        }
+        // 3. Desliza ao longo da face Leste (filha à direita)
+        for (let ty = pai.y - dimFilha.h + minOverlap; ty <= pai.y + pai.h - minOverlap; ty += passo) {
+            tentativas.push({ x: pai.x + pai.w, y: ty, face: 'leste' });
+        }
+        // 4. Desliza ao longo da face Oeste (filha à esquerda)
+        for (let ty = pai.y - dimFilha.h + minOverlap; ty <= pai.y + pai.h - minOverlap; ty += passo) {
+            tentativas.push({ x: pai.x - dimFilha.w, y: ty, face: 'oeste' });
+        }
+
+        // Ordena para priorizar o centro das faces
+        tentativas.sort((a, b) => {
+            let distA = Math.pow((a.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + 
+                        Math.pow((a.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
+            let distB = Math.pow((b.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + 
+                        Math.pow((b.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
+            return distA - distB;
+        });
+
+        for (let pos of tentativas) {
+            totalTentativas++;
+            tentativasPorFace[pos.face]++;
+            if (checarColisao(pos.x, pos.y, dimFilha.w, dimFilha.h, pai.level, null)) {
+                colisoesPorFace[pos.face]++;
+            } else {
+                console.log(`[ADJACENCY-OK] Sala ${idFilha}→${idPai} Face:${pos.face} | Tentativas:${totalTentativas} | Colisões:N${colisoesPorFace.norte}S${colisoesPorFace.sul}L${colisoesPorFace.leste}O${colisoesPorFace.oeste} | Pos:(${Math.round(pos.x)},${Math.round(pos.y)})`);
+                return pos;
+            }
+        }
+
+        console.warn(`[ADJACENCY-LEAK] Sala ${idFilha}→${idPai} | Total:${totalTentativas} | N:${tentativasPorFace.norte}(C:${colisoesPorFace.norte}) S:${tentativasPorFace.sul}(C:${colisoesPorFace.sul}) L:${tentativasPorFace.leste}(C:${colisoesPorFace.leste}) O:${tentativasPorFace.oeste}(C:${colisoesPorFace.oeste}) | Dim:${dimFilha.w}x${dimFilha.h}`);
+        return null;
     }
 
-    // VAZAMENTO DETECTADO: nenhuma posição funcionou
-    vazamentoDetectado = true;
-    console.warn(`[ADJACENCY-LEAK] ⚠️ VAZAMENTO! | Total tentativas:${totalTentativas} | Norte:${tentativasPorFace.norte}(C:${colisoesPorFace.norte}) Sul:${tentativasPorFace.sul}(C:${colisoesPorFace.sul}) Leste:${tentativasPorFace.leste}(C:${colisoesPorFace.leste}) Oeste:${tentativasPorFace.oeste}(C:${colisoesPorFace.oeste}) | DimFilha:${dimFilha.w}x${dimFilha.h} | Pai:${pai.w}x${pai.h}@(${pai.x},${pai.y})`);
-    
-    return null;
-}
     while (fila.length > 0) {
         let idAtual = fila.shift();
         let pai = window.mapCoords[idAtual];
@@ -3178,26 +3198,50 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
             let dim = obterDimensoesEShape(idFilha, salaFilha, direcaoVerticalToggle);
             direcaoVerticalToggle = !direcaoVerticalToggle; 
 
-            let pos = encontrarEspacoAdjacente(pai, dim);
+            let pos = encontrarEspacoAdjacente(pai, dim, idAtual, idFilha);
+            let coordsFilha;
 
             if (pos) {
-                // Encaixe primário bem-sucedido na parede direta do pai
-                window.mapCoords[idFilha] = { x: pos.x, y: pos.y, w: dim.w, h: dim.h, level: pai.level, shape: dim.shape };
+                coordsFilha = { x: pos.x, y: pos.y, w: dim.w, h: dim.h, level: pai.level, shape: dim.shape };
             } else {
-                // Failsafe Topológico: Se a sala pai estiver 100% cercada por outras salas, 
-                // "inflamos" as paredes de busca do pai passo a passo. 
-                // Isso cria uma camada externa mantendo alinhamento grid/retilíneo.
+                // FAILSAFE: expande paredes do pai
                 let resolvida = false;
                 for (let folga = 20; folga <= 400 && !resolvida; folga += 20) {
-                     let paiExpandido = { x: pai.x - folga, y: pai.y - folga, w: pai.w + folga * 2, h: pai.h + folga * 2, level: pai.level };
-                     let posFailsafe = encontrarEspacoAdjacente(paiExpandido, dim);
+                     let paiExpandido = { 
+                         x: pai.x - folga, 
+                         y: pai.y - folga, 
+                         w: pai.w + folga * 2, 
+                         h: pai.h + folga * 2, 
+                         level: pai.level 
+                     };
+                     let posFailsafe = encontrarEspacoAdjacente(paiExpandido, dim, idAtual + `(exp${folga})`, idFilha);
                      if (posFailsafe) {
-                         window.mapCoords[idFilha] = { x: posFailsafe.x, y: posFailsafe.y, w: dim.w, h: dim.h, level: pai.level, shape: dim.shape };
+                         coordsFilha = { x: posFailsafe.x, y: posFailsafe.y, w: dim.w, h: dim.h, level: pai.level, shape: dim.shape };
                          resolvida = true;
                      }
                 }
+                if (!resolvida) {
+                    // Último recurso: joga longe, mas loga como erro crítico
+                    coordsFilha = { 
+                        x: pai.x + pai.w + 200, 
+                        y: pai.y + 200, 
+                        w: dim.w, h: dim.h, 
+                        level: pai.level, shape: dim.shape 
+                    };
+                    console.error(`[ADJACENCY-CRITICAL] Sala ${idFilha} ORFÃ — colocada em posição arbitrária longe do pai ${idAtual}`);
+                }
             }
 
+            // ─── NOVO: Validação pós-posicionamento ───
+            if (!verificarAdjacenciaReal(pai, coordsFilha)) {
+                const dist = Math.hypot(
+                    (pai.x + pai.w/2) - (coordsFilha.x + coordsFilha.w/2),
+                    (pai.y + pai.h/2) - (coordsFilha.y + coordsFilha.h/2)
+                );
+                console.warn(`[ADJACENCY-FAIL] Sala ${idFilha} (filha de ${idAtual}) NÃO É ADJACENTE. Distância ao pai: ${Math.round(dist)}px. Pos:(${Math.round(coordsFilha.x)},${Math.round(coordsFilha.y)}) vs Pai:(${Math.round(pai.x)},${Math.round(pai.y)})`);
+            }
+
+            window.mapCoords[idFilha] = coordsFilha;
             visitados.add(idFilha);
             fila.push(idFilha);
         });
