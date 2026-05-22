@@ -1554,16 +1554,12 @@ Sua tarefa é mapear ${SALAS_POR_ZONA} nós interconectados.
 TEMA DO LOCAL: "${infoZona.nome}"
 
 REGRAS TOPOLÓGICAS (violá-las causa REJEIÇÃO AUTOMÁTICA do plano):
-1. HUB OBRIGATÓRIO: Pelo menos UMA sala deve ter 3 ou mais saídas. Exemplo: Sala ${salaInicio+3} com saídas para ${salaInicio+2}, ${salaInicio+4} e ${salaInicio+6}.
-2. BIDIRECIONALIDADE TOTAL: Se Sala X tem saída para Sala Y, então Sala Y DEVE ter saída para Sala X. Sem exceções, exceto a fronteira para a próxima zona.
-3. CONECTIVIDADE: Toda sala de ${salaInicio} a ${salaFim} deve ser alcançável partindo de ${salaInicio}. Nenhuma sala isolada.
-4. FRONTEIRA ÚNICA: Apenas a sala ${salaFim} pode ter uma saída apontando para ${salaFim+1}. Nenhuma outra.
-5. LIMITE DE SAÍDAS FÍSICAS: Cada sala deve ter no MÁXIMO 3 saídas físicas reais (corredores, portas, escadas, rampas, pontes). Opcionalmente, pode ter 1 atalho lógico/oculto adicional, mas este deve ser nomeado como "Atalho" e será tratado como teleporte narrativo — sem representação física no mapa. O total de saídas por sala (físicas + atalho) nunca deve ultrapassar 4.
-6. ESTRUTURA DE ÁRVORE ESTRITA (OBRIGATÓRIO): O mapa NÃO PODE ter circuitos (anéis). Use esta arquitetura infalível para usar todas as salas sem quebrar a topologia:
-   - Crie um "Tronco Principal" (caminho do início até a fronteira).
-   - Use as salas restantes como "Galhos" (becos sem saída) anexados ao tronco.
-   - Exemplo estrutural para garantir conectividade de todas as salas sem criar anéis: Tronco (1 liga a 2, 2 a 4, 4 a 7, 7 a 10); Galhos anexos (2 liga a 3; 4 liga a 5 e 6; 7 liga a 8 e 9).
-   - NUNCA conecte a ponta de um galho de volta ao tronco ou a outro galho. TODAS as salas de ${salaInicio} a ${salaFim} DEVEM ser integradas à malha topológica desta forma.
+1. ÁRVORE EXPLORATÓRIA RICA (SOMENTE IDA): Você tem TOTAL LIBERDADE para ramificar o mapa. Crie corredores principais e becos sem saída bifurcados (ex: 1 liga a 2 e 3; 3 liga a 4; 4 liga a 5 e 6). A única restrição é NUNCA fechar um ciclo (não faça a 6 ligar de volta na 2).
+2. OBRIGAÇÃO DA NÃO-BIDIRECIONALIDADE: Para focar toda a sua capacidade na riqueza do layout, ESCREVA APENAS AS CONEXÕES PARA FRENTE (de um ID menor para um ID maior). NUNCA escreva a ação de retorno. O motor do jogo espelhará as rotas de volta usando a física correta.
+3. HUB OBRIGATÓRIO: Pelo menos UMA sala deve atuar como encruzilhada, tendo múltiplas saídas apontando para a frente.
+4. CONECTIVIDADE TOTAL: Toda sala de ${salaInicio} a ${salaFim} deve ser interligada à malha pelas rotas de ida. Não deixe números isolados.
+5. FRONTEIRA ÚNICA: Apenas a sala ${salaFim} pode ter uma saída apontando para a próxima zona (${salaFim+1}).
+6. LIMITE FÍSICO: Máximo de 3 saídas físicas (para frente) por sala.
    
 REGRAS DE SEMÂNTICA FÍSICA (VERBOS DE TRANSIÇÃO):
 1. A ação de transição DEVE ser uma locomoção física (Ex: "Atravessar o arco", "Subir a escada de ferro", "Rastejar pelo túnel").
@@ -1581,12 +1577,11 @@ ESTRUTURA DE DADOS ESPERADA (GERAR APENAS ISSO):
     },
     "...": { ... },
     "${salaFim}": {
-      "local_fisico": "Nome curto da fronteira + 1 detalhe físico que a torna ameaçadora (Ex: 'Portão de ferro fundido com correntes enroladas nos batentes')",
-      "saidas": [
-        {"destino": N_ANTERIOR, "acao": "Voltar para o..."},
-        {"destino": ${salaFim + 1}, "acao": "Avançar pela escuridão para a próxima zona"}
-      ]
-    }
+  "local_fisico": "Nome curto da fronteira + 1 detalhe físico...",
+  "saidas": [
+    {"destino": ${salaFim + 1}, "acao": "Avançar pela escuridão para a próxima zona"}
+  ]
+}
   }
 }
 
@@ -1719,6 +1714,32 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
                 for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_PLANO; tentativa++) {
                     const dataPlano = await chamarGroq([{ role: "user", content: promptPlano }], 0.6, { type: "json_object" });
                     const candidato = JSON.parse(dataPlano.choices[0].message.content);
+
+                    // --- NOVO: ESPELHAMENTO AUTOMÁTICO DE GRAFO ---
+// O LLM tem liberdade para criar ramificações ricas (Apenas Ida).
+// O JS injeta a consistência perfeita gerando as conexões de volta.
+if (candidato.plano) {
+    const plano = candidato.plano;
+    for (const [idA, salaA] of Object.entries(plano)) {
+        if (!salaA.saidas) continue;
+        for (const saida of [...salaA.saidas]) {
+            const idB = saida.destino;
+            // Apenas lida com ramificações para a frente criadas pelo LLM
+            if (idB > Number(idA) && idB <= salaFim) {
+                if (!plano[String(idB)]) plano[String(idB)] = { local_fisico: "Interior do local", saidas: [] };
+                if (!plano[String(idB)].saidas) plano[String(idB)].saidas = [];
+                
+                // Checa se a volta já não existe
+                if (!plano[String(idB)].saidas.some(s => s.destino === Number(idA))) {
+                    // Substitui dinamicamente o verbo de ida por "Voltar" (Ex: "Atravessar o túnel" -> "Voltar o túnel")
+                    const acaoVolta = saida.acao.replace(/^(caminhar|atravessar|rastejar|subir|descer|avançar|entrar|sair|passar|seguir|cruzar|escalar|saltar|deslizar|correr|andar)\b/i, "Voltar");
+                    plano[String(idB)].saidas.push({ destino: Number(idA), acao: acaoVolta });
+                }
+            }
+        }
+    }
+}
+// ----------------------------------------------
 
                     if (candidato.plano?.[String(salaFim)]) {
                         candidato.plano[String(salaFim)].para_proxima_zona = true;
