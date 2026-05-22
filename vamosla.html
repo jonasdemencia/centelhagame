@@ -1554,7 +1554,7 @@ Sua tarefa é mapear ${SALAS_POR_ZONA} nós interconectados.
 TEMA DO LOCAL: "${infoZona.nome}"
 
 REGRAS TOPOLÓGICAS (violá-las causa REJEIÇÃO AUTOMÁTICA do plano):
-1. ÁRVORE EXPLORATÓRIA RICA (SOMENTE IDA): Você tem TOTAL LIBERDADE para ramificar o mapa. Crie corredores principais e becos sem saída bifurcados (ex: 1 liga a 2 e 3; 3 liga a 4; 4 liga a 5 e 6). A única restrição é NUNCA fechar um ciclo (não faça a 6 ligar de volta na 2).
+1. ÁRVORE EXPLORATÓRIA RICA (RAMIFICAÇÃO PURA): Crie caminhos ramificados complexos (ex: Sala 1 liga a 2 e 3; Sala 2 liga a 4 e 5; Sala 3 liga a 6). ATENÇÃO CRÍTICA: Cada sala de destino (de 2 a 10) deve receber exatamente UMA única conexão vinda de trás. NUNCA faça duas salas diferentes convergirem para a mesma sala adiante, pois isso gera anéis geométricos ilegais.
 2. OBRIGAÇÃO DA NÃO-BIDIRECIONALIDADE: Para focar toda a sua capacidade na riqueza do layout, ESCREVA APENAS AS CONEXÕES PARA FRENTE (de um ID menor para um ID maior). NUNCA escreva a ação de retorno. O motor do jogo espelhará as rotas de volta usando a física correta.
 3. HUB OBRIGATÓRIO: Pelo menos UMA sala deve atuar como encruzilhada, tendo múltiplas saídas apontando para a frente.
 4. CONECTIVIDADE TOTAL: Toda sala de ${salaInicio} a ${salaFim} deve ser interligada à malha pelas rotas de ida. Não deixe números isolados.
@@ -1715,31 +1715,73 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
                     const dataPlano = await chamarGroq([{ role: "user", content: promptPlano }], 0.6, { type: "json_object" });
                     const candidato = JSON.parse(dataPlano.choices[0].message.content);
 
-                    // --- NOVO: ESPELHAMENTO AUTOMÁTICO DE GRAFO ---
-// O LLM tem liberdade para criar ramificações ricas (Apenas Ida).
-// O JS injeta a consistência perfeita gerando as conexões de volta.
+                    // --- MOTOR DE CONSISTÊNCIA TOPOLÓGICA BRUTAL ---
 if (candidato.plano) {
     const plano = candidato.plano;
-    for (const [idA, salaA] of Object.entries(plano)) {
-        if (!salaA.saidas) continue;
-        for (const saida of [...salaA.saidas]) {
-            const idB = saida.destino;
-            // Apenas lida com ramificações para a frente criadas pelo LLM
-            if (idB > Number(idA) && idB <= salaFim) {
-                if (!plano[String(idB)]) plano[String(idB)] = { local_fisico: "Interior do local", saidas: [] };
-                if (!plano[String(idB)].saidas) plano[String(idB)].saidas = [];
-                
-                // Checa se a volta já não existe
-                if (!plano[String(idB)].saidas.some(s => s.destino === Number(idA))) {
-                    // Substitui dinamicamente o verbo de ida por "Voltar" (Ex: "Atravessar o túnel" -> "Voltar o túnel")
+    const mapeamentoPais = {}; // Guarda o pai único de cada sala para impedir anéis
+
+    // 1. PASSO: Podar convergências de anel (Garantir Árvore Pura nas rotas de ida)
+    for (let id = salaInicio; id <= salaFim; id++) {
+        const sala = plano[String(id)];
+        if (!sala || !sala.saidas) continue;
+
+        sala.saidas = sala.saidas.filter(saida => {
+            const dest = Number(saida.destino);
+            
+            // Só analisamos conexões internas e para frente
+            if (dest > id && dest <= salaFim) {
+                if (!mapeamentoPais[dest]) {
+                    mapeamentoPais[dest] = id; // Define o primeiro como pai legítimo
+                    return true;
+                }
+                // Se a sala de destino já tem um pai, essa rota criaria um anel/circuito. Podamos aqui.
+                return false;
+            }
+            return true; // Mantém saídas de fronteira (ex: destino 11) ou atalhos lógicos
+        });
+    }
+
+    // 2. PASSO: Curar o isolamento (Garantir conectividade rica de salas esquecidas)
+    // Se o LLM esqueceu de conectar alguma sala, ligamos ela organicamente à anterior
+    for (let id = salaInicio + 1; id <= salaFim; id++) {
+        if (!mapeamentoPais[id]) {
+            const paiPadrao = id - 1;
+            mapeamentoPais[id] = paiPadrao;
+
+            if (!plano[String(paiPadrao)]) {
+                plano[String(paiPadrao)] = { local_fisico: "Corredor úmido de ligação", saidas: [] };
+            }
+            if (!plano[String(paiPadrao)].saidas) plano[String(paiPadrao)].saidas = [];
+
+            plano[String(paiPadrao)].saidas.push({
+                destino: id,
+                acao: "Avançar tateando as paredes até a próxima seção"
+            });
+        }
+    }
+
+    // 3. PASSO: Espelhamento bidirecional perfeito das rotas validadas
+    for (let id = salaInicio; id <= salaFim; id++) {
+        const sala = plano[String(id)];
+        if (!sala || !sala.saidas) continue;
+
+        for (const saida of [...sala.saidas]) {
+            const dest = Number(saida.destino);
+            if (dest > id && dest <= salaFim) {
+                if (!plano[String(dest)]) {
+                    plano[String(dest)] = { local_fisico: "Câmara adjacente escura", saidas: [] };
+                }
+                if (!plano[String(dest)].saidas) plano[String(dest)].saidas = [];
+
+                if (!plano[String(dest)].saidas.some(s => s.destino === id)) {
                     const acaoVolta = saida.acao.replace(/^(caminhar|atravessar|rastejar|subir|descer|avançar|entrar|sair|passar|seguir|cruzar|escalar|saltar|deslizar|correr|andar)\b/i, "Voltar");
-                    plano[String(idB)].saidas.push({ destino: Number(idA), acao: acaoVolta });
+                    plano[String(dest)].saidas.push({ destino: id, acao: acaoVolta });
                 }
             }
         }
     }
 }
-// ----------------------------------------------
+// ------------------------------------------------
 
                     if (candidato.plano?.[String(salaFim)]) {
                         candidato.plano[String(salaFim)].para_proxima_zona = true;
