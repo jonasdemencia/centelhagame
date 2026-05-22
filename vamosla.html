@@ -3085,26 +3085,55 @@ if (historicoConversa.length > 8) {
 async function recalcularCoordenadasPenochao(mapaMundo) {
     if (!mapaMundo || !mapaMundo["1"]) return;
     window.mapCoords = {};
+    
+    // Flag de otimização: Evita disparos desnecessários ao Firebase
+    let precisaSalvarDimensoes = false;
 
+    // --- SISTEMA PROCEDURAL DE DIMENSÕES ---
     function obterDimensoesEShape(idSala, sala, eixoVertical = false) {
-        let nome = (sala.nome || "").toLowerCase();
-        let w = 60, h = 60, shape = "rect";
+        // 1. PERSISTÊNCIA: Se a sala já possui dimensões geradas, utiliza-as.
+        // Isso garante que o mapa não mude de forma toda vez que o jogador abri-lo.
+        if (sala.dimensoes) {
+            return sala.dimensoes;
+        }
+
+        // 2. MOTOR SEMÂNTICO (Lê os dados extraídos pelo LLM no local_fisico)
+        let nome = (sala.local_fisico || sala.nome || "").toLowerCase();
+        let w, h, shape = "rect";
+
+        // 3. GRID SNAPPING PROCEDURAL
+        // Gera valores aleatórios estritamente em múltiplos de 20px para garantir
+        // o encaixe perfeito das paredes e a precisão do bounding box das portas.
+        const snap = (min, max) => Math.floor(Math.random() * ((max - min) / 20 + 1)) * 20 + min;
 
         if (sala.puzzle_status || sala.puzzle) {
-            w = 40; h = 40; shape = "octagon";
-        } else if (nome.includes("grande salão") || nome.includes("trono") || nome.includes("arsenal")) {
-            w = 120; h = 100; shape = "pillars";
-        } else if (nome.includes("torre") || nome.includes("mago") || nome.includes("observatório")) {
-            w = 60; h = 60; shape = "octagon";
-        } else if (nome.includes("corredor") || nome.includes("passagem") || nome.includes("galeria")) {
-            if (eixoVertical) { w = 40; h = 120; } 
-            else { w = 120; h = 40; }
+            w = snap(40, 80); h = snap(40, 80); shape = "octagon";
+        } else if (nome.includes("salão") || nome.includes("trono") || nome.includes("arsenal") || nome.includes("pátio") || nome.includes("câmara")) {
+            w = snap(100, 180); h = snap(100, 160); shape = "pillars";
+        } else if (nome.includes("torre") || nome.includes("mago") || nome.includes("observatório") || nome.includes("poço")) {
+            w = snap(60, 100); h = snap(60, 100); shape = "octagon";
+        } else if (nome.includes("corredor") || nome.includes("passagem") || nome.includes("galeria") || nome.includes("túnel")) {
+            if (eixoVertical) { 
+                w = snap(40, 60); h = snap(120, 200); 
+            } else { 
+                w = snap(120, 200); h = snap(40, 60); 
+            }
         } else {
-            let numId = parseInt(idSala) || 0;
-            if (numId % 3 === 1) { w = 40; h = 80; } 
-            else if (numId % 3 === 2) { w = 80; h = 40; }
+            // Salas genéricas: Variação orgânica maciça
+            w = snap(60, 140); h = snap(60, 140);
+            if (Math.random() > 0.85) shape = "pillars"; // 15% de chance de estrutura ornamentada
         }
-        return { w, h, shape };
+
+        // 4. FAILSAFES DE RENDERIZAÇÃO
+        // Impede que as variações aleatórias quebrem o desenho das formas especiais
+        if (shape === "octagon" && (w < 40 || h < 40)) shape = "rect";
+        if (shape === "pillars" && (w < 60 || h < 60)) shape = "rect";
+
+        // 5. MUTAÇÃO ESTADUAL
+        sala.dimensoes = { w, h, shape };
+        precisaSalvarDimensoes = true; // Aciona o gatilho do Firestore
+        
+        return sala.dimensoes;
     }
 
     function checarColisao(x, y, w, h, level, idIgnorado) {
@@ -3136,34 +3165,24 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
     let fila = ["1"];
     let visitados = new Set(["1"]);
 
-    // Nova Heurística: Janela Deslizante de Perímetro (BLINDADA)
     function encontrarEspacoAdjacente(pai, dimFilha) {
-        const passo = 10; // Testar a cada 10 pixels ao longo das paredes
-        
-        // FIX: Força uma sobreposição mínima de face de 20px.
-        // Impede que as salas escorreguem para as quinas, vedando o Face-Adjacency Leak.
+        const passo = 10; 
         const minOverlap = 20; 
-        
         const tentativas = [];
 
-        // 1. Desliza ao longo da face Norte (filha em cima)
         for (let tx = pai.x - dimFilha.w + minOverlap; tx <= pai.x + pai.w - minOverlap; tx += passo) {
             tentativas.push({ x: tx, y: pai.y - dimFilha.h });
         }
-        // 2. Desliza ao longo da face Sul (filha embaixo)
         for (let tx = pai.x - dimFilha.w + minOverlap; tx <= pai.x + pai.w - minOverlap; tx += passo) {
             tentativas.push({ x: tx, y: pai.y + pai.h });
         }
-        // 3. Desliza ao longo da face Leste (filha à direita)
         for (let ty = pai.y - dimFilha.h + minOverlap; ty <= pai.y + pai.h - minOverlap; ty += passo) {
             tentativas.push({ x: pai.x + pai.w, y: ty });
         }
-        // 4. Desliza ao longo da face Oeste (filha à esquerda)
         for (let ty = pai.y - dimFilha.h + minOverlap; ty <= pai.y + pai.h - minOverlap; ty += passo) {
             tentativas.push({ x: pai.x - dimFilha.w, y: ty });
         }
 
-        // Ordena as posições para priorizar o centro das faces, mantendo o layout coeso
         tentativas.sort((a, b) => {
             let distACentro = Math.pow((a.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((a.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
             let distBCentro = Math.pow((b.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((b.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
@@ -3202,12 +3221,8 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
             let pos = encontrarEspacoAdjacente(pai, dim);
 
             if (pos) {
-                // Encaixe primário bem-sucedido na parede direta do pai
                 window.mapCoords[idFilha] = { x: pos.x, y: pos.y, w: dim.w, h: dim.h, level: pai.level, shape: dim.shape };
             } else {
-                // Failsafe Topológico: Se a sala pai estiver 100% cercada por outras salas, 
-                // "inflamos" as paredes de busca do pai passo a passo. 
-                // Isso cria uma camada externa mantendo alinhamento grid/retilíneo.
                 let resolvida = false;
                 for (let folga = 20; folga <= 400 && !resolvida; folga += 20) {
                      let paiExpandido = { x: pai.x - folga, y: pai.y - folga, w: pai.w + folga * 2, h: pai.h + folga * 2, level: pai.level };
@@ -3224,7 +3239,11 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
         });
     }
 
-    if (typeof salvarEstadoJogador === "function") await salvarEstadoJogador();
+    // Grava as mutações das dimensões de volta no Banco de Dados 
+    // APENAS se novas salas foram avaliadas nesta execução.
+    if (precisaSalvarDimensoes && typeof salvarEstadoJogador === "function") {
+        await salvarEstadoJogador();
+    }
 }
 
 async function abrirMapaVisual() {
