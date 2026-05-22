@@ -1412,13 +1412,13 @@ Retorne APENAS este JSON:
                     if (!destinoPlano) { erros.push(`Sala ${id} aponta para ${destino} que não existe.`); continue; }
                     const temVolta = destinoPlano.saidas?.some(s => s.destino === id);
                     if (!temVolta) erros.push(`Sem volta: Sala ${destino} não retorna para Sala ${id}.`);
-                    // --- NOVO: CÃO DE GUARDA DA PROXIMIDADE ---
-                    // Se a distância numérica entre as salas for maior que 3, rejeita o plano por risco de cruzamento 2D.
-                    // (Puzzle rooms >= 10000 são ignoradas aqui pois entram depois)
-                    if (Math.abs(id - destino) > 3 && destino >= salaInicio) {
-                        erros.push(`Falha de Adjacência 2D: Salto topológico proibido da sala ${id} para ${destino} (distância > 3).`);
-                    }
-                    // ------------------------------------------
+                    // // --- NOVO: CÃO DE GUARDA DA PROXIMIDADE ---
+// // Se a distância numérica entre as salas for maior que 3, rejeita o plano por risco de cruzamento 2D.
+// // (Puzzle rooms >= 10000 são ignoradas aqui pois entram depois)
+// if (Math.abs(id - destino) > 3 && destino >= salaInicio) {
+//     erros.push(`Falha de Adjacência 2D: Salto topológico proibido da sala ${id} para ${destino} (distância > 3).`);
+// }
+// // ------------------------------------------
                 }
             }
             
@@ -1559,8 +1559,12 @@ REGRAS TOPOLÓGICAS (violá-las causa REJEIÇÃO AUTOMÁTICA do plano):
 3. CONECTIVIDADE: Toda sala de ${salaInicio} a ${salaFim} deve ser alcançável partindo de ${salaInicio}. Nenhuma sala isolada.
 4. FRONTEIRA ÚNICA: Apenas a sala ${salaFim} pode ter uma saída apontando para ${salaFim+1}. Nenhuma outra.
 5. LIMITE DE SAÍDAS FÍSICAS: Cada sala deve ter no MÁXIMO 3 saídas físicas reais (corredores, portas, escadas, rampas, pontes). Opcionalmente, pode ter 1 atalho lógico/oculto adicional, mas este deve ser nomeado como "Atalho" e será tratado como teleporte narrativo — sem representação física no mapa. O total de saídas por sala (físicas + atalho) nunca deve ultrapassar 4.
-6. ESTRUTURA DE ÁRVORE (REGRA DE OURO 2D): O mapa NÃO PODE ter circuitos ou anéis sob nenhuma hipótese (ex: é proibido 4 ligar a 5, 5 ligar a 6 e a 6 voltar para a 4). O caminho principal deve ser linear. Ramificações fora do eixo principal devem ser estritamente BECOS SEM SAÍDA (ex: se a sala 4 liga à 7, a sala 7 SÓ PODE voltar para a 4 e não avança para mais nada). O grafo deve ramificar, mas nunca se reconectar à frente.
-
+6. ESTRUTURA DE ÁRVORE ESTRITA (OBRIGATÓRIO): O mapa NÃO PODE ter circuitos (anéis). Use esta arquitetura infalível para usar todas as salas sem quebrar a topologia:
+   - Crie um "Tronco Principal" (caminho do início até a fronteira).
+   - Use as salas restantes como "Galhos" (becos sem saída) anexados ao tronco.
+   - Exemplo estrutural para garantir conectividade de todas as salas sem criar anéis: Tronco (1 liga a 2, 2 a 4, 4 a 7, 7 a 10); Galhos anexos (2 liga a 3; 4 liga a 5 e 6; 7 liga a 8 e 9).
+   - NUNCA conecte a ponta de um galho de volta ao tronco ou a outro galho. TODAS as salas de ${salaInicio} a ${salaFim} DEVEM ser integradas à malha topológica desta forma.
+   
 REGRAS DE SEMÂNTICA FÍSICA (VERBOS DE TRANSIÇÃO):
 1. A ação de transição DEVE ser uma locomoção física (Ex: "Atravessar o arco", "Subir a escada de ferro", "Rastejar pelo túnel").
 2. É ESTRITAMENTE PROIBIDO usar "Abrir a porta" ou "Fechar a porta" como ação de transição. Portas não movem pessoas. Use "Passar pela porta" ou "Entrar na sala".
