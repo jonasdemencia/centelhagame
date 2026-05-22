@@ -3246,12 +3246,19 @@ async function abrirMapaVisual() {
         });
 
         modal.innerHTML = `
-            <div style="background: #141311; border: 4px solid #3a3228; box-shadow: 6px 6px 0px #000; padding: 20px; max-width: 95%; max-height: 95%; display: flex; flex-direction: column; align-items: center; font-family: 'VT323', monospace;">
-                <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid #3a3228; padding-bottom: 6px;">
-                    <span style="color: #ffaa00; font-size: 26px; letter-spacing: 2px;">PLANTA BAIXA (RE)</span>
-                    <button onclick="document.getElementById('modal-mapa-visual').style.display='none'" style="background: #3a3228; color: #b5a68b; border: 2px solid #5a4d3e; font-family: 'VT323', monospace; font-size: 18px; cursor: pointer; padding: 2px 12px;">FECHAR [X]</button>
+            <div style="background: #020c14; border: 1px solid #1a3a5a; box-shadow: 0 0 40px rgba(0,80,160,0.12), 10px 10px 0px #000; padding: 18px 22px; max-width: 95%; max-height: 95%; display: flex; flex-direction: column; align-items: center; font-family: 'VT323', monospace; position: relative;">
+                <div style="position:absolute;top:8px;left:8px;width:14px;height:14px;border-top:2px solid #2a6090;border-left:2px solid #2a6090;pointer-events:none;"></div>
+                <div style="position:absolute;top:8px;right:8px;width:14px;height:14px;border-top:2px solid #2a6090;border-right:2px solid #2a6090;pointer-events:none;"></div>
+                <div style="position:absolute;bottom:8px;left:8px;width:14px;height:14px;border-bottom:2px solid #2a6090;border-left:2px solid #2a6090;pointer-events:none;"></div>
+                <div style="position:absolute;bottom:8px;right:8px;width:14px;height:14px;border-bottom:2px solid #2a6090;border-right:2px solid #2a6090;pointer-events:none;"></div>
+                <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #0e2a42; padding-bottom: 8px;">
+                    <div style="display:flex;flex-direction:column;gap:0;">
+                        <span style="color: #1e4a68; font-size: 10px; letter-spacing: 5px; display:block; line-height:1.3; font-family:'VT323',monospace;">ÁREA MAP</span>
+                        <span style="color: #c09040; font-size: 24px; letter-spacing: 3px; line-height:1; font-family:'VT323',monospace;">◈ PLANTA DE ZONA</span>
+                    </div>
+                    <button onclick="document.getElementById('modal-mapa-visual').style.display='none'" style="background: transparent; color: #2a6090; border: 1px solid #1a3a5a; font-family: 'VT323', monospace; font-size: 17px; cursor: pointer; padding: 4px 16px; letter-spacing: 2px;">✕ SAIR</button>
                 </div>
-                <canvas id="canvas-mapa" width="750" height="520" style="background: #090907; border: 2px solid #221c16; max-width: 100%; height: auto;"></canvas>
+                <canvas id="canvas-mapa" width="750" height="520" style="background: #020c14; border: 1px solid #0e2a42; max-width: 100%; height: auto; image-rendering: pixelated;"></canvas>
             </div>
         `;
         document.body.appendChild(modal);
@@ -3262,8 +3269,20 @@ async function abrirMapaVisual() {
     const canvas = document.getElementById("canvas-mapa");
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#000510";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#020c14";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Grade blueprint fina (estilo planta técnica)
+    ctx.save();
+    ctx.strokeStyle = "rgba(18, 42, 66, 0.85)";
+    ctx.lineWidth = 0.5;
+    for (let gx = 0; gx < canvas.width; gx += 20) {
+        ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, canvas.height); ctx.stroke();
+    }
+    for (let gy = 0; gy < canvas.height; gy += 20) {
+        ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(canvas.width, gy); ctx.stroke();
+    }
+    ctx.restore();
 
     if (!window.mapCoords || Object.keys(window.mapCoords).length === 0) return;
 
@@ -3284,7 +3303,7 @@ ctx.fillRect(0, 0, canvas.width, canvas.height);
     let offsetX = (canvas.width - mWidth * escala) / 2 - minX * escala;
     let offsetY = (canvas.height - mHeight * escala) / 2 - minY * escala;
 
-    // PASSADA 1: Renderiza as Salas (Paredes visíveis)
+    // PASSADA 1: Renderiza as Salas — estilo RE3 PS1 (planta fria com destaque quente)
     for (let id in window.mapCoords) {
         let r = window.mapCoords[id];
         let sala = mapaMundoLocal[id];
@@ -3294,36 +3313,77 @@ ctx.fillRect(0, 0, canvas.width, canvas.height);
         let rh = r.h * escala;
         let ehAtual = (String(id) === String(idAtualGlobal));
 
-        // Estilo da Sala
-        ctx.fillStyle = ehAtual ? "#660011" : "#0b3d0b";
-ctx.strokeStyle = ehAtual ? "#ff0040" : "#c0c0c0";
-ctx.lineWidth = ehAtual ? 2 : 1;
+        let wallInset   = Math.max(2, Math.min(rw * 0.14, rh * 0.14, 7));
+        let wallColor   = ehAtual ? "#1c0a00" : "#081520";
+        let floorColor  = ehAtual ? "#301600" : "#0e2440";
+        let strokeColor = ehAtual ? "#c07820" : "#1e4f70";
+        let strokeW     = ehAtual ? 1.5 : 1;
+
+        if (ehAtual) { ctx.shadowColor = "#c07820"; ctx.shadowBlur = 18; }
+        else { ctx.shadowBlur = 0; }
 
         if (r.shape === "octagon") {
             let corte = Math.min(rw, rh) * 0.25;
+            ctx.fillStyle = wallColor;
             ctx.beginPath();
             ctx.moveTo(rx + corte, ry); ctx.lineTo(rx + rw - corte, ry);
             ctx.lineTo(rx + rw, ry + corte); ctx.lineTo(rx + rw, ry + rh - corte);
             ctx.lineTo(rx + rw - corte, ry + rh); ctx.lineTo(rx + corte, ry + rh);
             ctx.lineTo(rx, ry + rh - corte); ctx.lineTo(rx, ry + corte);
             ctx.closePath();
-            ctx.fill(); ctx.stroke();
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            // Piso interno (octágono menor)
+            let ic = corte * 0.4;
+            let irx = rx + wallInset, iry = ry + wallInset, irw = rw - wallInset*2, irh = rh - wallInset*2;
+            ctx.fillStyle = floorColor;
+            ctx.beginPath();
+            ctx.moveTo(irx + ic, iry); ctx.lineTo(irx + irw - ic, iry);
+            ctx.lineTo(irx + irw, iry + ic); ctx.lineTo(irx + irw, iry + irh - ic);
+            ctx.lineTo(irx + irw - ic, iry + irh); ctx.lineTo(irx + ic, iry + irh);
+            ctx.lineTo(irx, iry + irh - ic); ctx.lineTo(irx, iry + ic);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = strokeColor; ctx.lineWidth = strokeW;
+            ctx.beginPath();
+            ctx.moveTo(rx + corte, ry); ctx.lineTo(rx + rw - corte, ry);
+            ctx.lineTo(rx + rw, ry + corte); ctx.lineTo(rx + rw, ry + rh - corte);
+            ctx.lineTo(rx + rw - corte, ry + rh); ctx.lineTo(rx + corte, ry + rh);
+            ctx.lineTo(rx, ry + rh - corte); ctx.lineTo(rx, ry + corte);
+            ctx.closePath();
+            ctx.stroke();
         } else {
+            ctx.fillStyle = wallColor;
             ctx.fillRect(rx, ry, rw, rh);
-            ctx.strokeRect(rx, ry, rw, rh);
-            if (r.shape === "pillars") { // Salões
-                let pSize = Math.max(3, Math.min(rw, rh) * 0.08);
-                ctx.fillStyle = ctx.strokeStyle;
-                ctx.fillRect(rx + pSize, ry + pSize, pSize, pSize);
-                ctx.fillRect(rx + rw - pSize * 2, ry + pSize, pSize, pSize);
-                ctx.fillRect(rx + pSize, ry + rh - pSize * 2, pSize, pSize);
-                ctx.fillRect(rx + rw - pSize * 2, ry + rh - pSize * 2, pSize, pSize);
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = floorColor;
+            ctx.fillRect(rx + wallInset, ry + wallInset, rw - wallInset*2, rh - wallInset*2);
+            if (r.shape === "pillars") {
+                let pSize = Math.max(2, Math.min(rw, rh) * 0.09);
+                ctx.fillStyle = strokeColor;
+                ctx.fillRect(rx + wallInset + 1, ry + wallInset + 1, pSize, pSize);
+                ctx.fillRect(rx + rw - wallInset - pSize - 1, ry + wallInset + 1, pSize, pSize);
+                ctx.fillRect(rx + wallInset + 1, ry + rh - wallInset - pSize - 1, pSize, pSize);
+                ctx.fillRect(rx + rw - wallInset - pSize - 1, ry + rh - wallInset - pSize - 1, pSize, pSize);
             }
+            ctx.strokeStyle = strokeColor; ctx.lineWidth = strokeW;
+            ctx.strokeRect(rx, ry, rw, rh);
         }
 
-        // Nome da sala
-        ctx.fillStyle = ehAtual ? "#ffffff" : "#88aa88";
-        ctx.font = `${Math.max(12, Math.floor(14 * escala))}px 'VT323', monospace`;
+        // Marcadores de canto internos para a sala atual (estilo RE3)
+        if (ehAtual) {
+            let bk = Math.max(4, Math.min(rw, rh) * 0.22);
+            ctx.strokeStyle = "#f0a030"; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(rx + wallInset + bk, ry + wallInset); ctx.lineTo(rx + wallInset, ry + wallInset); ctx.lineTo(rx + wallInset, ry + wallInset + bk); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(rx + rw - wallInset - bk, ry + wallInset); ctx.lineTo(rx + rw - wallInset, ry + wallInset); ctx.lineTo(rx + rw - wallInset, ry + wallInset + bk); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(rx + wallInset + bk, ry + rh - wallInset); ctx.lineTo(rx + wallInset, ry + rh - wallInset); ctx.lineTo(rx + wallInset, ry + rh - wallInset - bk); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(rx + rw - wallInset - bk, ry + rh - wallInset); ctx.lineTo(rx + rw - wallInset, ry + rh - wallInset); ctx.lineTo(rx + rw - wallInset, ry + rh - wallInset - bk); ctx.stroke();
+        }
+
+        // Label da sala
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = ehAtual ? "#dfa840" : "#1e4a68";
+        ctx.font = `${Math.max(9, Math.floor(11 * escala))}px 'VT323', monospace`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         let textoId = id;
@@ -3334,7 +3394,7 @@ ctx.lineWidth = ehAtual ? 2 : 1;
         ctx.fillText(textoId, rx + rw / 2, ry + rh / 2);
     }
 
-    // PASSADA 2: Renderiza Portas nas Intersecções
+    // PASSADA 2: Renderiza Portas — estilo RE3 PS1 (entalhes na parede com soleira âmbar)
     let paresDesenhados = new Set();
     
     for (let idA in window.mapCoords) {
@@ -3347,86 +3407,74 @@ ctx.lineWidth = ehAtual ? 2 : 1;
             let rB = window.mapCoords[idB];
             if (!rB) continue;
 
-            // Evita desenhar a porta duas vezes (A->B e B->A)
             let parKey = [idA, idB].sort().join('-');
             if (paresDesenhados.has(parKey)) continue;
             paresDesenhados.add(parKey);
 
-            // Calcula zonas de sobreposição (para ver se as paredes se tocam)
             let overlapX1 = Math.max(rA.x, rB.x);
             let overlapX2 = Math.min(rA.x + rA.w, rB.x + rB.w);
             let overlapY1 = Math.max(rA.y, rB.y);
             let overlapY2 = Math.min(rA.y + rA.h, rB.y + rB.h);
 
-            let pW = 14 * Math.min(1, escala); // Porta Horizontal
-            let pH = 6 * Math.min(1, escala);
-            ctx.fillStyle = "#ffcc00";
+            let pW = 12 * Math.min(1, escala); // comprimento da porta
+            let pH = 4 * Math.min(1, escala);  // espessura (largura do vão)
+            ctx.shadowBlur = 0;
 
-            // Se tocam Horizontalmente (Bordas laterais adjacentes)
+            // Conexão lateral (paredes esquerda/direita adjacentes)
             if (overlapY2 > overlapY1 && (Math.abs((rA.x + rA.w) - rB.x) < 2 || Math.abs(rA.x - (rB.x + rB.w)) < 2)) {
                 let sharedX = (Math.abs((rA.x + rA.w) - rB.x) < 2) ? rA.x + rA.w : rA.x;
                 let midY = (overlapY1 + overlapY2) / 2;
-                
                 ctx.save();
                 ctx.translate(offsetX + sharedX * escala, offsetY + midY * escala);
-                // Desenha a porta verticalizada (w e h trocados)
+                // Corte na parede (apaga o stroke nos dois lados)
+                ctx.fillStyle = "#020c14";
+                ctx.fillRect(-(pH + 2) / 2, -pW / 2, pH + 2, pW);
+                // Corpo da porta (âmbar escuro)
+                ctx.fillStyle = "#6a4a0e";
                 ctx.fillRect(-pH / 2, -pW / 2, pH, pW);
-                // Linha preta sutil no meio da porta para profundidade
-                ctx.fillStyle = "#000";
-                ctx.fillRect(-1, -pW / 2, 2, pW);
+                // Soleira central (linha mais clara)
+                ctx.fillStyle = "#b89028";
+                ctx.fillRect(-0.75, -pW / 2, 1.5, pW);
                 ctx.restore();
             }
-            // Se tocam Verticalmente (Bordas superior/inferior adjacentes)
+            // Conexão vertical (paredes superior/inferior adjacentes)
             else if (overlapX2 > overlapX1 && (Math.abs((rA.y + rA.h) - rB.y) < 2 || Math.abs(rA.y - (rB.y + rB.h)) < 2)) {
                 let sharedY = (Math.abs((rA.y + rA.h) - rB.y) < 2) ? rA.y + rA.h : rA.y;
                 let midX = (overlapX1 + overlapX2) / 2;
-                
                 ctx.save();
                 ctx.translate(offsetX + midX * escala, offsetY + sharedY * escala);
-                // Desenha porta horizontal
+                // Corte na parede
+                ctx.fillStyle = "#020c14";
+                ctx.fillRect(-pW / 2, -(pH + 2) / 2, pW, pH + 2);
+                // Corpo da porta
+                ctx.fillStyle = "#6a4a0e";
                 ctx.fillRect(-pW / 2, -pH / 2, pW, pH);
-                // Linha preta sutil no meio da porta
-                ctx.fillStyle = "#000";
-                ctx.fillRect(-pW / 2, -1, pW, 2);
+                // Soleira central
+                ctx.fillStyle = "#b89028";
+                ctx.fillRect(-pW / 2, -0.75, pW, 1.5);
                 ctx.restore();
             }
-            // CORREDORES DIAGONAIS (fallback para conexões distantes)
-            else {
-                let distancia = Math.hypot(
-                    (rA.x + rA.w/2) - (rB.x + rB.w/2),
-                    (rA.y + rA.h/2) - (rB.y + rB.h/2)
-                );
-                // Só desenha se estiverem razoavelmente próximos (evita linhas cruzando o mapa inteiro)
-                /* // BLOCO DESATIVADO PARA EVITAR POLUIÇÃO VISUAL DE CORREDORES CRUZADOS
-                if (distancia < 250) {
-                    let cxA = offsetX + (rA.x + rA.w/2) * escala;
-                    let cyA = offsetY + (rA.y + rA.h/2) * escala;
-                    let cxB = offsetX + (rB.x + rB.w/2) * escala;
-                    let cyB = offsetY + (rB.y + rB.h/2) * escala;
-
-                    ctx.save();
-                    ctx.setLineDash([4, 4]);
-                    ctx.strokeStyle = "#5a4a38";
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(cxA, cyA);
-                    ctx.lineTo(cxB, cyB);
-                    ctx.stroke();
-
-                    // Pequeno círculo no meio indicando passagem
-                    let midX = (cxA + cxB) / 2;
-                    let midY = (cyA + cyB) / 2;
-                    ctx.fillStyle = "#f2a65a";
-                    ctx.beginPath();
-                    ctx.arc(midX, midY, 3, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    ctx.restore();
-                }
-                */
-            }
+            // Conexões distantes — ignoradas (bloco desativado)
         }
     }
+
+    // Pós-processamento: scanlines CRT
+    ctx.save();
+    ctx.fillStyle = "rgba(0, 0, 0, 0.07)";
+    for (let sy = 0; sy < canvas.height; sy += 3) {
+        ctx.fillRect(0, sy, canvas.width, 1);
+    }
+    ctx.restore();
+
+    // Vinheta radial de canto (aprofunda as bordas)
+    let vignette = ctx.createRadialGradient(
+        canvas.width / 2, canvas.height / 2, canvas.height * 0.28,
+        canvas.width / 2, canvas.height / 2, canvas.height * 0.85
+    );
+    vignette.addColorStop(0, "rgba(0,0,0,0)");
+    vignette.addColorStop(1, "rgba(0,0,0,0.45)");
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
         window.abrirMapaVisual = abrirMapaVisual;
