@@ -1341,17 +1341,18 @@ document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
         async function gerarDNAGlobal(cenarioTema) {
             const semente = Math.random().toString(36).substring(2, 10);
             const prompt = `[SEMENTE: ${semente}]
-Você é o arquiteto de um mundo que nunca termina.
+Você é o arquiteto de um mundo que nunca termina. Você conhece profundamente teorias conspiratórias reais, mitologia pagã, hermetismo, gnosticismo e fatos históricos ocultos que o jogador nunca deveria ter lido.
 Tema: "${cenarioTema}"
 
 Este mundo terá 400+ salas em 16 zonas. Você está definindo o DNA que governa TUDO.
-Não há vitória. Não há conclusão. Há apenas aprofundamento de um mistério que não tem fundo.
+Não há vitória. Não há conclusão. Há apenas aprofundamento de um mistério real que não tem fundo.
+
 
 Retorne APENAS este JSON:
 {
   "misterio_central": "a pergunta que o jogador nunca vai responder completamente — deve ser perturbadora e aberta",
   "leis_do_lugar": [
-    "lei física ou temporal anômala que torna este lugar único",
+    "primeira lei - princípio hermético ou gnóstico real que torna esse lugar único",
     "segunda lei",
     "terceira lei"
   ],
@@ -3554,6 +3555,9 @@ async function abrirMapaVisual() {
                     
                     const temas = [
                         "O Condomínio do Tempo Perdido",
+                        "A Fita VHS das Crianças Enterradas",
+                        "O Diário da Criança que Não Morreu",
+                        "O Laboratório dos Deuses Adormecidos",
                         "O Sanatório dos Espelhos Quebrados",
                         "A Catedral Submersa de Sal",
                         "O Arquipélago das Máscaras de Pele",
