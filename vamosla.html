@@ -110,6 +110,52 @@
     padding: 5px 12px !important; 
     font-size: 14px !important;
 }
+
+    /* ─── MODAL IND (CINEMATICS) ─── */
+    #modal-ind {
+        display: none;
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0, 0, 0, 0.96);
+        z-index: 100000;
+        justify-content: center; align-items: center;
+        flex-direction: column;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    #ind-content-box {
+        background: #080806;
+        border: 2px solid #3a3228;
+        border-top: 4px solid #a13d3d;
+        border-bottom: 4px solid #a13d3d;
+        box-shadow: 0 0 40px rgba(161, 61, 61, 0.15), inset 0 0 20px rgba(0,0,0,1);
+        padding: 30px 40px;
+        max-width: 750px;
+        width: 100%;
+        text-align: justify;
+        position: relative;
+    }
+    #ind-text {
+        color: #d1c5b4;
+        font-family: 'Courier New', monospace;
+        font-size: 18px;
+        font-style: italic;
+        line-height: 1.7;
+        margin-bottom: 30px;
+        text-shadow: 1px 1px 2px #000;
+    }
+    #btn-continuar-ind {
+        background: #1a1815; color: #a13d3d;
+        border: 1px solid #3a3228;
+        padding: 10px 25px;
+        font-family: 'VT323', monospace; font-size: 22px;
+        cursor: pointer; transition: 0.3s;
+        display: block; margin: 0 auto;
+        letter-spacing: 2px;
+    }
+    #btn-continuar-ind:hover { background: #2a1a1a; color: #e53935; border-color: #a13d3d; }
+    .cinematic-bars { width: 100%; height: 12vh; background: black; position: absolute; left: 0; z-index: -1;}
+    .bar-top { top: 0; border-bottom: 1px solid #1a1a14; }
+    .bar-bottom { bottom: 0; border-top: 1px solid #1a1a14; }
         
 </style>
 <base target="_blank">
@@ -139,6 +185,16 @@
             <input type="text" id="user-input" placeholder="Sua ação..." disabled>
             <button id="send-btn" onclick="enviar(document.getElementById('user-input').value.trim())" disabled>Agir</button>
         </div>
+    </div>
+
+    <div id="modal-ind">
+        <div class="cinematic-bars bar-top"></div>
+        <div id="ind-content-box">
+            <div style="color: #4a3a2a; font-family: 'VT323', monospace; font-size: 22px; text-align: center; margin-bottom: 25px; letter-spacing: 5px; border-bottom: 1px solid #2a251e; padding-bottom: 10px;">◈ FRAGMENTO DE MEMÓRIA ◈</div>
+            <div id="ind-text"></div>
+            <button id="btn-continuar-ind">CONTINUAR</button>
+        </div>
+        <div class="cinematic-bars bar-bottom"></div>
     </div>
 
     <div id="inventario-narrativa">
@@ -361,7 +417,8 @@ window.dispatchEvent(new Event('firebase-initialized'));
         const WORKER_URL = "https://morning-cake-d5f8.fabiorainersilva.workers.dev";
         const MODELO_GROQ = "llama-3.3-70b-versatile";
         const MODELO_PUZZLE = "openai/gpt-oss-120b";
-        
+        const MODELO_IND = "qwen-2.5-32b"; // Modelo responsável pelas cinematics
+
         let mapaMundo = null;
         let secaoAtualId = "1";
         let dnaGlobal = null;
@@ -382,6 +439,7 @@ window.dispatchEvent(new Event('firebase-initialized'));
         let uidAtual = null; 
         let _ultimoTipoAcao = 'TRIVIAL';   
         let _ultimoAtributo  = 'NENHUM';   
+        let historicoIND = []; // Armazena as revelações já ocorridas
 
         let memoriaLonga = "";
 
@@ -584,7 +642,6 @@ window.dispatchEvent(new Event('firebase-initialized'));
             let x = Math.sin(seed++) * 10000;
             return x - Math.floor(x);
         }
-
 
 function analisarContexto(texto) {
     if (!texto) return null;
@@ -941,7 +998,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
         }
 
         // ============================================================
-        // RESTANTE DO CÓDIGO DA GROQ, LM STUDIO E LÓGICA DO JOGO (INTACTO)
+        // SISTEMA IND (CINEMATICS) E API
         // ============================================================
         
         async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_GROQ, tentativas = 3) {
@@ -991,8 +1048,54 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
             }
         }
 
+        async function gerarIND(idSala) {
+            const sala = mapaMundo[idSala];
+            const prompt = `Você é o diretor de cenas cinematográficas (cinematics) de um RPG de horror visceral e melancólico.
+MISTÉRIO CENTRAL: ${dnaGlobal?.misterio_central || "Desconhecido"}
+LEIS DO LUGAR: ${(dnaGlobal?.leis_do_lugar || []).join(", ")}
+ENTIDADES OCULTAS: ${JSON.stringify(dnaGlobal?.entidades || [])}
+CENÁRIO ATUAL: ${sala.texto_logico}
+REVELAÇÕES ANTERIORES (${historicoIND.length} ocorrências):
+${historicoIND.slice(-3).join("\n---\n")}
 
-        // Linha ~988, ANTES de injetarPuzzles:
+OBJETIVO:
+O jogador acabou de entrar nesta sala. Crie uma "Interrupção Narrativa Dinâmica" (IND).
+Esta cena DEVE ser um vislumbre perturbador, uma memória ecoando no ambiente, uma alucinação rápida, uma manifestação surreal, ou uma gravação perdida que revela lentamente pedaços do MISTÉRIO CENTRAL e da lore do mundo.
+
+REGRAS ESTRITAS:
+1. Em torno de 10 frases no total. Sem quebras drásticas de parágrafos.
+2. Em Português Brasileiro.
+3. Tom: Poético, sombrio e revelador. Como uma cutscene imersiva de Resident Evil clássico ou Silent Hill.
+4. NÃO DESCREVA O JOGADOR AGINDO. É um evento passivo que ele apenas assiste/escuta/percebe.
+5. Retorne APENAS o texto da narrativa final pronta para o jogador ler. Sem introduções e sem formatação Markdown.`;
+
+            const data = await chamarGroq([
+                { role: "system", content: "Você é um diretor de cinematics de dark fantasy. Retorne apenas prosa crua." },
+                { role: "user", content: prompt }
+            ], 0.7, null, MODELO_IND, 3);
+            
+            return data.choices[0].message.content.trim();
+        }
+
+        function exibirModalIND(texto) {
+            return new Promise(resolve => {
+                const modal = document.getElementById('modal-ind');
+                const content = document.getElementById('ind-text');
+                const btn = document.getElementById('btn-continuar-ind');
+                
+                content.innerText = texto;
+                modal.style.display = 'flex';
+                
+                btn.onclick = () => {
+                    modal.style.display = 'none';
+                    resolve();
+                };
+            });
+        }
+
+        // ============================================================
+        // PUZZLES & GERAÇÃO PROCEDURAL
+        // ============================================================
 
 // Histórico das últimas mecânicas usadas (índices), para forçar variância real
 const _historicoMecanicas = [];
@@ -1046,7 +1149,6 @@ async function gerarPuzzle(zonaId, salaAlvoId = null, tipoObstaculo = null) {
     let prompt;
 
     if (!inovacaoRadical) {
-        // --- SELEÇÃO COM ANTI-REPETIÇÃO: garante variância real entre puzzles ---
         const { mecanica: mecanicaSorteada, indice: idxMecanica } = sortearMecanicaSemRepeticao(CATEGORIAS_MECANICAS);
         const nomeMecanica = mecanicaSorteada.split(':')[0].trim();
         console.log(`[PUZZLE] 🎲 Mecânica selecionada [${idxMecanica + 1}/${CATEGORIAS_MECANICAS.length}]: ${nomeMecanica}`);
@@ -1087,7 +1189,6 @@ Retorne APENAS este JSON:
   "solucao": "A ação exata e completa para resolver. Derivável da PISTA BRUTA + INSINUAÇÃO."
 }`;
     } else {
-        // --- O PROMPT DE CARTA BRANCA: LIBERDADE ESTRUTURAL ABSOLUTA ---
         prompt = `
 Você é um master designer de enigmas (puzzles) para um RPG textual de horror visceral.
 
@@ -1118,17 +1219,15 @@ Se sim, o enigma é inválido — restrinja a regra até restar exatamente uma.
 Retorne APENAS este JSON:
 {
   "_rascunho_logico": "O EIXO INVENTADO: [qual é a regra nova]. A LÓGICA: [como o jogador deduz a resposta com as pistas]. VERIFICAÇÃO: [liste as outras respostas que um jogador poderia tentar e explique por que cada uma falha]. SINAIS: [como a cena esconde isso].",
-  "cena": "A descrição do espaço e dos elementos (dois a três parágrafos). Textual, densa, sem entregar a resposta, mas contendo todas as variáveis necessárias para a dedução da regra que você criou.",
+  "cena": "A descrição do espaço e dos elements (dois a três parágrafos). Textual, densa, sem entregar a resposta, mas contendo todas as variáveis necessárias para a dedução da regra que você criou.",
   "dica": "Uma frase sutil e sensorial que aponte vagamente para a nova regra que você arquitetou.",
   "solucao": "A ação exata, verbal ou abstrata, que o jogador precisa declarar ao sistema para solucionar."
 }`;
     }
 
-    // System prompt blindado contra marcação markdown (```json) e contra quebras de linha literais
     const systemPrompt = "Você é um master designer de enigmas. OBRIGATÓRIO: Retorne APENAS um objeto JSON válido, sem formatação markdown. A sua resposta deve começar estritamente com { e terminar com }. Nunca use quebras de linha literais dentro das strings — para separar parágrafos escreva \\n\\n.";
 
     let data;
-    // Forçamos o json_object nas duas ramificações para evitar que a Groq "esqueça" de formatar
     const jsonMode = { type: "json_object" };
 
     if (!inovacaoRadical) {
@@ -1145,7 +1244,6 @@ Retorne APENAS este JSON:
     
     let raw = data.choices[0].message.content;
     
-    // Pequena limpeza de segurança caso o modelo insista em mandar quebras de linha reais dentro do JSON
     raw = raw.replace(/\n(?=(?:[^"]*"[^"]*")*[^"]*$)/g, "");
 
     const match = raw.match(/\{[\s\S]*\}/);
@@ -1162,7 +1260,6 @@ Retorne APENAS este JSON:
     };
 }
 
-// Substitua injetarPuzzles inteira (linha ~990):
 
 async function injetarPuzzles(planoZonal, zonaId) {
     const ids = Object.keys(planoZonal).map(Number).sort((a, b) => a - b);
@@ -1243,8 +1340,8 @@ async function injetarPuzzles(planoZonal, zonaId) {
                     if (data?.skill?.total !== undefined) jogadorStats.HABILIDADE = data.skill.total;
                     if (data?.charisma?.total !== undefined) jogadorStats.CARISMA = data.charisma.total;
                     if (data?.luck?.total !== undefined) jogadorStats.SORTE = data.luck.total;
-                    magiaAtual = data?.magic?.total ?? 0;  // valor atual (campo único)
-document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
+                    magiaAtual = data?.magic?.total ?? 0;
+                    document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
 
                     if (data.mapaMundo) mapaMundo = data.mapaMundo;
                     window.mapaMundo = mapaMundo;
@@ -1253,10 +1350,13 @@ document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
                     if (data.dnaGlobal) dnaGlobal = data.dnaGlobal;
                     if (data.zonaAtual) zonaAtual = data.zonaAtual;
                     
+                    // CARREGA HISTÓRICO DE INDS
+                    if (data.historicoIND) historicoIND = data.historicoIND;
+                    
                 } else {
                     const dadosPadrao = {
                         energy: { total: 40, initial: 40 },
-                        magic: { total: 5 },   // <-- ADICIONE AQUI
+                        magic: { total: 5 },
                         skill: { total: 5 },
                         charisma: { total: 5 },
                         luck: { total: 4 },
@@ -1264,7 +1364,8 @@ document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
                         resumo: "",
                         memoriaLonga: "",
                         mapaMundo: null,
-                        secaoAtualId: "1"
+                        secaoAtualId: "1",
+                        historicoIND: []
                     };
                     await setDoc(doc(db, "players", uid), dadosPadrao, { merge: true });
                     await carregarDadosJogador(uid);
@@ -1287,7 +1388,8 @@ document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
                     mapaMundo: mapaMundo,
                     secaoAtualId: secaoAtualId,
                     dnaGlobal: dnaGlobal,
-                    zonaAtual: zonaAtual
+                    zonaAtual: zonaAtual,
+                    historicoIND: historicoIND
                 };
 
                 await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
@@ -1412,13 +1514,6 @@ Retorne APENAS este JSON:
                     if (!destinoPlano) { erros.push(`Sala ${id} aponta para ${destino} que não existe.`); continue; }
                     const temVolta = destinoPlano.saidas?.some(s => s.destino === id);
                     if (!temVolta) erros.push(`Sem volta: Sala ${destino} não retorna para Sala ${id}.`);
-                    // // --- NOVO: CÃO DE GUARDA DA PROXIMIDADE ---
-// // Se a distância numérica entre as salas for maior que 3, rejeita o plano por risco de cruzamento 2D.
-// // (Puzzle rooms >= 10000 são ignoradas aqui pois entram depois)
-// if (Math.abs(id - destino) > 3 && destino >= salaInicio) {
-//     erros.push(`Falha de Adjacência 2D: Salto topológico proibido da sala ${id} para ${destino} (distância > 3).`);
-// }
-// // ------------------------------------------
                 }
             }
             
@@ -1447,18 +1542,14 @@ Retorne APENAS este JSON:
             if (!salaFronteira) erros.push(`Nenhuma sala de fronteira (para_proxima_zona: true).`);
             else if (Number(salaFronteira[0]) !== salaFim) erros.push(`Fronteira está em sala ${salaFronteira[0]}, deveria estar em ${salaFim}.`);
 
-            // --- NOVO: CÃO DE GUARDA CONTRA CICLOS (Estrutura de Árvore) ---
-    // Garante matematicamente que o mapa não possui anéis que quebram o grid 2D
     let totalVertices = 0;
     let totalArestas = 0;
     
     for (const [idStr, sala] of Object.entries(plano)) {
         const id = Number(idStr);
-        // Analisa apenas as salas regulares da zona atual (ignora puzzles 10000+)
         if (id >= salaInicio && id <= salaFim) {
             totalVertices++;
             for (const saida of (sala.saidas || [])) {
-                // Conta a aresta apenas uma vez (quando aponta para frente)
                 if (saida.destino > id && saida.destino <= salaFim) {
                     totalArestas++;
                 }
@@ -1466,12 +1557,9 @@ Retorne APENAS este JSON:
         }
     }
     
-    // Pela Teoria dos Grafos, uma árvore tem exatamente (Vértices - 1) arestas.
-    // Se tiver mais, o Groq fechou um circuito (ex: 4->5->6->7->4), o que destrói a renderização 2D.
     if (totalArestas > totalVertices - 1) {
         erros.push(`Falha Topológica 2D: O mapa gerou circuitos/anéis (${totalArestas} conexões para ${totalVertices} salas regulares). O layout deve ser uma árvore.`);
     }
-    // --------------------------------------------------------------
             
             return erros;
         }
@@ -1715,12 +1803,10 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
                     const dataPlano = await chamarGroq([{ role: "user", content: promptPlano }], 0.6, { type: "json_object" });
                     const candidato = JSON.parse(dataPlano.choices[0].message.content);
 
-                    // --- MOTOR DE CONSISTÊNCIA TOPOLÓGICA BRUTAL ---
 if (candidato.plano) {
     const plano = candidato.plano;
-    const mapeamentoPais = {}; // Guarda o pai único de cada sala para impedir anéis
+    const mapeamentoPais = {};
 
-    // 1. PASSO: Podar convergências de anel (Garantir Árvore Pura nas rotas de ida)
     for (let id = salaInicio; id <= salaFim; id++) {
         const sala = plano[String(id)];
         if (!sala || !sala.saidas) continue;
@@ -1728,21 +1814,17 @@ if (candidato.plano) {
         sala.saidas = sala.saidas.filter(saida => {
             const dest = Number(saida.destino);
             
-            // Só analisamos conexões internas e para frente
             if (dest > id && dest <= salaFim) {
                 if (!mapeamentoPais[dest]) {
-                    mapeamentoPais[dest] = id; // Define o primeiro como pai legítimo
+                    mapeamentoPais[dest] = id; 
                     return true;
                 }
-                // Se a sala de destino já tem um pai, essa rota criaria um anel/circuito. Podamos aqui.
                 return false;
             }
-            return true; // Mantém saídas de fronteira (ex: destino 11) ou atalhos lógicos
+            return true; 
         });
     }
 
-    // 2. PASSO: Curar o isolamento (Garantir conectividade rica de salas esquecidas)
-    // Se o LLM esqueceu de conectar alguma sala, ligamos ela organicamente à anterior
     for (let id = salaInicio + 1; id <= salaFim; id++) {
         if (!mapeamentoPais[id]) {
             const paiPadrao = id - 1;
@@ -1760,7 +1842,6 @@ if (candidato.plano) {
         }
     }
 
-    // 3. PASSO: Espelhamento bidirecional perfeito das rotas validadas
     for (let id = salaInicio; id <= salaFim; id++) {
         const sala = plano[String(id)];
         if (!sala || !sala.saidas) continue;
@@ -1781,7 +1862,6 @@ if (candidato.plano) {
         }
     }
 }
-// ------------------------------------------------
 
                     if (candidato.plano?.[String(salaFim)]) {
                         candidato.plano[String(salaFim)].para_proxima_zona = true;
@@ -1793,7 +1873,6 @@ if (candidato.plano) {
                         planoData = candidato;
                         console.log(`[Plano] ✅ Topologia válida na tentativa ${tentativa}.`);
 
-// === METROIDVANIA: marcar salas bloqueadas ===
 const TIPOS_BLOQUEIO = [
     { tipo: "NÉVOA",     descricao: "Uma névoa esverdeada e densa obstrui completamente este caminho.", texto_apos_limpar: "A névoa se dissipa lentamente, revelando o corredor antes inacessível." },
     { tipo: "GRADE",     descricao: "Uma grade de ferro corroído, trancada com corrente espessa, bloqueia a passagem.", texto_apos_limpar: "A corrente cede com um estalo seco. A grade range ao se abrir." },
@@ -1810,8 +1889,6 @@ for (let b = 0; b < Math.min(numBloqueios, idsCandidatosBloqueio.length); b++) {
     planoData.plano[sid].bloqueio = { ativo: true, ...tb };
     console.log(`[Metroidvania] Sala ${sid} marcada como bloqueada: ${tb.tipo}`);
 }
-// === FIM ===
-
                         
                         break;
                     } else {
@@ -1838,31 +1915,26 @@ for (let b = 0; b < Math.min(numBloqueios, idsCandidatosBloqueio.length); b++) {
 
                 let zonaData = JSON.parse(dataSalas.choices[0].message.content);
 
-                // Transfere bloqueios do plano estrutural para as salas geradas
 Object.entries(planoData.plano).forEach(([id, dp]) => {
     if (dp.bloqueio && zonaData.salas[id]) {
         zonaData.salas[id].bloqueio = dp.bloqueio;
     }
 });
 
-// --- INÍCIO DO AJUSTE: INJEÇÃO DE PUZZLES ---
 const salasOriginais = { ...zonaData.salas };
 const idMsgPuzzle = adicionarMensagem("🧩 A arquitetura está se contorcendo... ocultando enigmas...", "system", true);
 try {
     const zonaComPuzzles = await injetarPuzzles(salasOriginais, numeroZona);
     const conexoesPuzzle = zonaComPuzzles._conexoes || {};
 
-    // Merge: salas regulares ficam intactas
     zonaData.salas = {};
     for (const id of Object.keys(salasOriginais)) {
         zonaData.salas[id] = { ...salasOriginais[id] };
     }
-    // Adiciona salas de puzzle (IDs altos) diretamente
     for (const key of Object.keys(zonaComPuzzles)) {
         if (key === '_conexoes') continue;
         zonaData.salas[key] = zonaComPuzzles[key];
     }
-    // Guarda mapa de conexões para a construção do mapaFinalMesclado
     zonaData._conexoesPuzzle = conexoesPuzzle;
 
     console.log(`[Puzzle] ✅ Salas de puzzle criadas:`, Object.keys(zonaComPuzzles).filter(k => k !== '_conexoes'));
@@ -1871,7 +1943,6 @@ try {
     zonaData._conexoesPuzzle = {};
 }
 document.getElementById(idMsgPuzzle)?.remove();
-// --- FIM DO AJUSTE ---
 
                 document.getElementById(idMsg)?.remove();
 
@@ -1881,7 +1952,6 @@ document.getElementById(idMsgPuzzle)?.remove();
 
                 const mapaFinalMesclado = {};
 
-                // ↓↓↓ LINHA ADICIONADA ↓↓↓
 const historicoItensZona = [];
                 
                 Object.entries(planoData.plano).forEach(([idSala, dadosEstruturais]) => {
@@ -1938,7 +2008,6 @@ const historicoItensZona = [];
                     }));
 
 
-                    // ↓↓↓ LINHA MODIFICADA (agora com 5 argumentos) ↓↓↓
     const itensNaSala = distribuirItens(prosa, dadosEstruturais.local_fisico, idSala, semente, historicoItensZona);
 
                     const puzzleStatus = zonaData.salas[idSala]?.puzzle_status;
@@ -1952,13 +2021,11 @@ mapaFinalMesclado[idSala] = {
 };
                 });
 
-// Adiciona salas de puzzle e afia as conexões nas salas regulares
 for (const [connectorIdStr, { puzzleRoomId, acaoIda }] of Object.entries(zonaData._conexoesPuzzle || {})) {
     const puzzleIdStr = String(puzzleRoomId);
     const puzzleSala  = zonaData.salas[puzzleIdStr];
     if (!puzzleSala) continue;
 
-    // Injeta opcao extra na sala conectora já montada
     if (mapaFinalMesclado[connectorIdStr]) {
         mapaFinalMesclado[connectorIdStr].opcoes.push({
             texto:   acaoIda,
@@ -1966,7 +2033,6 @@ for (const [connectorIdStr, { puzzleRoomId, acaoIda }] of Object.entries(zonaDat
         });
     }
 
-    // Monta sala de puzzle no mapaFinalMesclado
     mapaFinalMesclado[puzzleIdStr] = {
         texto_logico: puzzleSala.texto_logico,
         opcoes: [{ texto: puzzleSala._acaoVolta || "Recuar pelo corredor sombrio", destino: parseInt(connectorIdStr) }],
@@ -1975,6 +2041,20 @@ for (const [connectorIdStr, { puzzleRoomId, acaoIda }] of Object.entries(zonaDat
     };
 }
                 
+                // --- INÍCIO DO AJUSTE: IND (Interrupção Narrativa Dinâmica) ---
+                if (Math.random() < 0.8) {
+                    const candidatosIND = Object.keys(mapaFinalMesclado)
+                        .map(Number)
+                        .filter(id => id > salaInicio && id < salaFim && id < 10000);
+                    
+                    if (candidatosIND.length > 0) {
+                        const salaEscolhidaIND = candidatosIND[Math.floor(Math.random() * candidatosIND.length)];
+                        mapaFinalMesclado[String(salaEscolhidaIND)].ind_disponivel = true;
+                        console.log(`[IND] Sala ${salaEscolhidaIND} marcada para Cinematic.`);
+                    }
+                }
+                // --- FIM DO AJUSTE: IND ---
+
                 zonaData.salas = mapaFinalMesclado;
 
                 if (!mapaMundo) mapaMundo = {};
@@ -2001,7 +2081,7 @@ for (const [connectorIdStr, { puzzleRoomId, acaoIda }] of Object.entries(zonaDat
             if (_expansaoEmAndamento) return;
 
             const salaAtualNum = parseInt(secaoAtualId);
-            if (salaAtualNum >= 10000) return; // sala de puzzle — não dispara expansão
+            if (salaAtualNum >= 10000) return; 
             const limiteZonaAtual = zonaAtual * SALAS_POR_ZONA;
 
             if (salaAtualNum >= limiteZonaAtual - 8) {
@@ -2411,7 +2491,6 @@ ATRIBUTO (apenas se ARRISCADA):
         return { tipo: 'LIVRE', atributo: 'NENHUM', fonte: 'sem-alvo' };
     }
 
-    // ===== CLASSIFICAÇÃO DE MAGIA (Mudança 4) =====
     const intentoMagico = /\b(lan[cç]o|lançar|conjuro|conjurar|invoco|invocar|pronuncio|recito|ativo|uso( a magia| minha magia| o feitiço| meu feitiço)?|usar( a magia| minha magia| o feitiço| meu feitiço)?)\b/.test(acao);
 
     if (intentoMagico) {
@@ -2428,12 +2507,9 @@ ATRIBUTO (apenas se ARRISCADA):
             return { tipo: 'BLOQUEADA_MAGIA', atributo: 'NENHUM', fonte: 'pre-classifier-magias' };
         }
 
-        // Magia existe e está memorizada → teste de MAGIA
         return { tipo: 'MAGIA_SUCESSO', atributo: 'MAGIA', custo: encontrada.custo ?? 0, fonte: 'magic-classifier' };
-
     }
 
-    // Nenhuma magia detectada → deixa o árbitro decidir
     return null;
 }
 
@@ -2592,25 +2668,22 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         if (destinoSala?.bloqueio?.ativo) {
     const btnBloqueado = document.createElement('button');
     btnBloqueado.className = 'nav-btn';
-    btnBloqueado.disabled = false;   // ← habilitado
+    btnBloqueado.disabled = false;
     btnBloqueado.style.opacity = "1";
     btnBloqueado.style.cursor = "pointer";
     btnBloqueado.innerText = `🧭 ${opcao.texto}`;
     btnBloqueado.title = destinoSala.bloqueio.descricao;
 
-    // Ao clicar, mostra a mensagem do bloqueio e NÃO muda de sala
     btnBloqueado.onclick = () => {
         adicionarMensagem(`🚫 ${destinoSala.bloqueio.descricao}`, 'system');
-        // Opcional: também pode exibir uma dica sutil sobre onde resolver o puzzle
         adicionarMensagem("Talvez haja uma forma de dissipar isso em outra área...", 'system');
     };
     container.appendChild(btnBloqueado);
-    return; // Impede a criação do botão normal
+    return;
 }
         const btn = document.createElement('button');
         btn.className = 'nav-btn';
         
-        // Estiliza de forma diferente se for um portal (pulos muito grandes)
         const saltoLongo = Math.abs(opcao.destino - parseInt(secaoAtualId)) > SALAS_POR_ZONA;
         btn.innerText = saltoLongo ? `🌀 ${opcao.texto}` : `🧭 ${opcao.texto}`;
         
@@ -2623,7 +2696,6 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             container.innerHTML = '';
             const destinoStr = opcao.destino.toString();
 
-            // 1. Checa se o destino existe. Se não, invoca o gerador antes de prosseguir!
             if (!mapaMundo[destinoStr]) {
                 const zonaAlvo = Math.ceil(opcao.destino / SALAS_POR_ZONA);
                 const idLoading = adicionarMensagem(`⚙️ A fenda pulsa violentamente... construindo os horrores da Zona ${zonaAlvo}...`, "system", true);
@@ -2635,16 +2707,50 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
                 document.getElementById(idLoading)?.remove();
             }
 
-            // 2. Transição normal de sala
             secaoAtualId = destinoStr;
-if (parseInt(secaoAtualId) < 10000) {
-    zonaAtual = Math.ceil(parseInt(secaoAtualId) / SALAS_POR_ZONA);
-}
-// salas de puzzle (id >= 10000) não alteram zonaAtual            
-            salvarEstadoJogador();
-            verificarEExpandirMundo(); // Mantém a expansão de background rodando pra zona atual
+            if (parseInt(secaoAtualId) < 10000) {
+                zonaAtual = Math.ceil(parseInt(secaoAtualId) / SALAS_POR_ZONA);
+            }
+            await salvarEstadoJogador();
 
             const novaSala = mapaMundo[secaoAtualId];
+
+            // ============================================================
+            // DISPARO DO IND (INTERRUPÇÃO NARRATIVA DINÂMICA)
+            // ============================================================
+            if (novaSala && novaSala.ind_disponivel) {
+                novaSala.ind_disponivel = false; // Consome o evento para não repetir
+                await salvarEstadoJogador();
+                
+                const idLoadingIND = adicionarMensagem(`🎥 A realidade estremece... puxando sua mente para um vislumbre...`, "system", true);
+                
+                // Desabilita as interações e navegação enquanto processa e exibe
+                document.getElementById('controls').style.pointerEvents = 'none';
+                document.getElementById('map-controls').style.pointerEvents = 'none';
+
+                try {
+                    const textoIND = await gerarIND(secaoAtualId);
+                    document.getElementById(idLoadingIND)?.remove();
+                    
+                    historicoIND.push(textoIND);
+                    await salvarEstadoJogador();
+                    
+                    // Exibe modal e aguarda clique em "Continuar"
+                    await exibirModalIND(textoIND);
+                    
+                } catch (error) {
+                    console.error("[IND] Erro ao gerar cinematic:", error);
+                    document.getElementById(idLoadingIND)?.remove();
+                } finally {
+                    // Restaura interações
+                    document.getElementById('controls').style.pointerEvents = 'auto';
+                    document.getElementById('map-controls').style.pointerEvents = 'auto';
+                }
+            }
+            // ============================================================
+
+            verificarEExpandirMundo(); 
+
             if (novaSala?.texto_logico) {
                 adicionarMensagem(btn.innerText, 'user');
                 const textoFinal = prepararTextoChegada(novaSala.texto_logico, opcao.texto, parseInt(secaoAtualId), opcao.destino);
@@ -2660,43 +2766,6 @@ if (parseInt(secaoAtualId) < 10000) {
         container.appendChild(btn);
     });
 }
-// ============================================================================
-// 🚀 OTIMIZAÇÃO RADICAL DE LATÊNCIA + ESTABILIDADE (KV CACHE HIT + ANCORAGEM)
-// ============================================================================
-// Antes: 50+ segundos por ação, com crashes frequentes (Vulkan shift).
-// Agora: estável (sem crashes) e tempo de resposta de 10 - 12 segundos no 7B,
-//        e 2–4 segundos no 1.5B.
-//
-// Técnicas aplicadas (dentro de window.enviar):
-//
-// 1. ANCORAGEM DINÂMICA (System Prompt carrega o peso do mundo)
-//    - O system prompt agora contém a descrição completa da sala, itens e botões.
-//    - Isso retirou o cenário do histórico iterativo, reduzindo drasticamente o
-//      crescimento de tokens a cada turno (de ~600 para ~80 tokens por ação).
-//
-// 2. HISTÓRICO CONDENSADO (apenas o delta da ação)
-//    - Em vez de guardar o enorme 'conteudoUser', armazenamos 'acaoSimplesUser',
-//      que contém apenas a ação do jogador + resultado do árbitro + tag de dano.
-//    - O prefixo do prompt permanece IDÊNTICO entre ações consecutivas (system
-//      + histórico fixo), garantindo Cache Hit no LM Studio.
-//
-// 3. LIMITE DE HISTÓRICO REDUZIDO
-//    - De 10 mensagens (5 pares) passou para 8 mensagens (4 pares).
-//    - Cada interação agora pesa ~80 tokens, portanto 8 mensagens ocupam ~640
-//      tokens, longe do limite de 2048, sem risco de estouro.
-//
-// 4. HARDWARE E ESTABILIDADE
-//    - O modelo 7B (narrador) roda com GPU Offload = 0 (apenas CPU) porque o
-//      backend Vulkan da Intel Iris Xe causava crashes durante o shift do cache.
-//    - O modelo 1.5B (árbitro) roda com GPU Offload = 28 (todas as camadas) e
-//      CPU Thread Pool = 4, garantindo resposta rápida na classificação.
-//
-// Resultado final:
-//   - Primeira ação de uma sessão: ainda processa o prompt inteiro (lento).
-//   - Ações subsequentes: Cache Hit total → tempo de resposta dominado apenas
-//     pela geração de tokens de saída (7B: 10–12s; 1.5B: 2–4s).
-//   - Sem crashes, sem estouro de contexto, sem necessidade de trocar de modelo.
-// ============================================================================
         
         window.enviar = async function(mensagemUsuario = null) {
             const isInitial = mensagemUsuario === null;
@@ -2783,7 +2852,7 @@ if (parseInt(secaoAtualId) < 10000) {
             try {
                 let mensagemFinal = pergunta;
                 let payloadAPI = []; 
-                let acaoSimplesUser = ""; // <--- CORREÇÃO 1: Declarada aqui, acessível em todo o try!
+                let acaoSimplesUser = "";
                 if (!isInitial) {
                     const classificacaoRaw = classificarAcao(pergunta);
                     let classificacao;
@@ -2819,7 +2888,6 @@ if (classificacao.tipo === 'MAGIA_INEXISTENTE') {
     return;
 }
 
-                    // Inserir antes de: _ultimoTipoAcao = classificacao.tipo;
 if (classificacao.tipo === 'MAGIA_SUCESSO') {
     const custo = classificacao.custo ?? 0;
     if (magiaAtual < custo) {
@@ -2839,10 +2907,8 @@ if (classificacao.tipo === 'MAGIA_SUCESSO') {
                     _ultimoAtributo = classificacao.atributo;
                     const { tipo, atributo } = classificacao;
 
-                    // --- VERIFICAÇÃO DE PUZZLE (Juiz local - blindada) ---
 let salaAtual = mapaMundo?.[secaoAtualId];
 
-// Investigação: destaca a dica do puzzle não resolvido
 const acaoMinuscula = pergunta.toLowerCase();
 const termosInvestigacao = ["examinar", "olhar", "investigar", "procurar", "checar", "inspecionar", "observar"];
 if (termosInvestigacao.some(t => acaoMinuscula.includes(t)) && salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
@@ -2850,7 +2916,6 @@ if (termosInvestigacao.some(t => acaoMinuscula.includes(t)) && salaAtual?.puzzle
 }
 
 if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
-    // Prompt reforçado com a palavra "JSON" (exigência de alguns modelos)
     const promptPuzzle = `Ação do Jogador: "${pergunta}"\nSolução do Enigma: "${salaAtual.puzzle_status.solucao}"\nO jogador executou a ação correta para resolver o enigma? Responda apenas com um objeto JSON.\nFormato: {"resolvido": true} ou {"resolvido": false}`;
 
     let puzzleResolvido = false;
@@ -2900,19 +2965,16 @@ if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
     const efeitoRemoto   = salaAtual.puzzle_status.efeito_remoto;
     const salaAfetadaId  = salaAtual.puzzle_status.sala_afetada_id;
 
-    // Efeito sonoro/sensorial remoto
     adicionarMensagem(efeitoRemoto
         ? `🔊 ${efeitoRemoto}`
         : "🔓 Um ruído metálico ecoa: Uma nova passagem está acessível.",
         "system");
 
-    // Desbloquear sala afetada remotamente
     if (salaAfetadaId && mapaMundo[String(salaAfetadaId)]?.bloqueio) {
         const salaAlvo = mapaMundo[String(salaAfetadaId)];
         salaAlvo.bloqueio.ativo = false;
         salaAlvo.texto_logico += `\n\n${salaAlvo.bloqueio.texto_apos_limpar}`;
         
-        // Adiciona nova opção na sala desbloqueada, apontando para o portal_destino
         if (salaAtual.puzzle_status.portal_destino) {
             const destinoPortal = parseInt(salaAtual.puzzle_status.portal_destino);
             const jaExiste = salaAlvo.opcoes.some(o => o.destino === destinoPortal);
@@ -2925,7 +2987,6 @@ if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
         }
         console.log(`[Metroidvania] Sala ${salaAfetadaId} desbloqueada remotamente e nova opção adicionada.`);
     } else {
-        // Se não há sala afetada, mantém o comportamento original de portal na sala do puzzle
         if (salaAtual.puzzle_status.portal_destino) {
             const destinoPortal = parseInt(salaAtual.puzzle_status.portal_destino);
             const jaExiste = salaAtual.opcoes.some(o => o.destino === destinoPortal);
@@ -2941,7 +3002,7 @@ if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
     await salvarEstadoJogador();
     atualizarBotoesNavegacao();
 }
-    }   // ← NOVA chave fechando o if(salaAtual?.puzzle_status...)
+    }   
 
 
                     let resultado = null;
@@ -2978,7 +3039,6 @@ if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
                     let instrucaoResultado = "";
                     let danoFinal = 0;
 
-                    // DEPOIS
 if (tipo === 'MAGIA_SUCESSO') {
     instrucaoResultado = `Magia executada com plena potência. OBRIGATÓRIO: descreva o efeito acontecendo de forma concreta e visível. Nenhuma hesitação, nenhuma falha.`;
     danoFinal = 0;
@@ -3031,7 +3091,6 @@ ${elementosInterativos || 'Nenhum'}
 REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se de descrevê-los organicamente.
 4. VIOLÊNCIA: Em caso de falha física, descreva a destruição anatômica de forma direta.`;
 
-                    // --- Contexto sutil de puzzle (não revela solução) ---
 const salaPuzzle = mapaMundo?.[secaoAtualId];
 if (salaPuzzle?.puzzle_status) {
     if (salaPuzzle.puzzle_status.resolvido) {
@@ -3175,7 +3234,6 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
     }
 
     function checarColisao(x, y, w, h, level, idIgnorado) {
-        // Margem minúscula (epsilon) para garantir que paredes tangentes não registrem colisão
         const margem = 0.5; 
         for (let id in window.mapCoords) {
             if (id === idIgnorado) continue;
@@ -3203,34 +3261,26 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
     let fila = ["1"];
     let visitados = new Set(["1"]);
 
-    // Nova Heurística: Janela Deslizante de Perímetro (BLINDADA)
     function encontrarEspacoAdjacente(pai, dimFilha) {
-        const passo = 10; // Testar a cada 10 pixels ao longo das paredes
+        const passo = 10; 
         
-        // FIX: Força uma sobreposição mínima de face de 20px.
-        // Impede que as salas escorreguem para as quinas, vedando o Face-Adjacency Leak.
         const minOverlap = 20; 
         
         const tentativas = [];
 
-        // 1. Desliza ao longo da face Norte (filha em cima)
         for (let tx = pai.x - dimFilha.w + minOverlap; tx <= pai.x + pai.w - minOverlap; tx += passo) {
             tentativas.push({ x: tx, y: pai.y - dimFilha.h });
         }
-        // 2. Desliza ao longo da face Sul (filha embaixo)
         for (let tx = pai.x - dimFilha.w + minOverlap; tx <= pai.x + pai.w - minOverlap; tx += passo) {
             tentativas.push({ x: tx, y: pai.y + pai.h });
         }
-        // 3. Desliza ao longo da face Leste (filha à direita)
         for (let ty = pai.y - dimFilha.h + minOverlap; ty <= pai.y + pai.h - minOverlap; ty += passo) {
             tentativas.push({ x: pai.x + pai.w, y: ty });
         }
-        // 4. Desliza ao longo da face Oeste (filha à esquerda)
         for (let ty = pai.y - dimFilha.h + minOverlap; ty <= pai.y + pai.h - minOverlap; ty += passo) {
             tentativas.push({ x: pai.x - dimFilha.w, y: ty });
         }
 
-        // Ordena as posições para priorizar o centro das faces, mantendo o layout coeso
         tentativas.sort((a, b) => {
             let distACentro = Math.pow((a.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((a.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
             let distBCentro = Math.pow((b.x + dimFilha.w / 2) - (pai.x + pai.w / 2), 2) + Math.pow((b.y + dimFilha.h / 2) - (pai.y + pai.h / 2), 2);
@@ -3269,12 +3319,8 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
             let pos = encontrarEspacoAdjacente(pai, dim);
 
             if (pos) {
-                // Encaixe primário bem-sucedido na parede direta do pai
                 window.mapCoords[idFilha] = { x: pos.x, y: pos.y, w: dim.w, h: dim.h, level: pai.level, shape: dim.shape };
             } else {
-                // Failsafe Topológico: Se a sala pai estiver 100% cercada por outras salas, 
-                // "inflamos" as paredes de busca do pai passo a passo. 
-                // Isso cria uma camada externa mantendo alinhamento grid/retilíneo.
                 let resolvida = false;
                 for (let folga = 20; folga <= 400 && !resolvida; folga += 20) {
                      let paiExpandido = { x: pai.x - folga, y: pai.y - folga, w: pai.w + folga * 2, h: pai.h + folga * 2, level: pai.level };
@@ -3339,7 +3385,6 @@ async function abrirMapaVisual() {
     ctx.fillStyle = "#020c14";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Grade blueprint fina (estilo planta técnica)
     ctx.save();
     ctx.strokeStyle = "rgba(18, 42, 66, 0.85)";
     ctx.lineWidth = 0.5;
@@ -3353,7 +3398,6 @@ async function abrirMapaVisual() {
 
     if (!window.mapCoords || Object.keys(window.mapCoords).length === 0) return;
 
-    // Calcula Bounding Box e Escala
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (let id in window.mapCoords) {
         let r = window.mapCoords[id];
@@ -3370,7 +3414,6 @@ async function abrirMapaVisual() {
     let offsetX = (canvas.width - mWidth * escala) / 2 - minX * escala;
     let offsetY = (canvas.height - mHeight * escala) / 2 - minY * escala;
 
-    // PASSADA 1: Renderiza as Salas — estilo RE3 PS1 (planta fria com destaque quente)
     for (let id in window.mapCoords) {
         let r = window.mapCoords[id];
         let sala = mapaMundoLocal[id];
@@ -3400,7 +3443,6 @@ async function abrirMapaVisual() {
             ctx.closePath();
             ctx.fill();
             ctx.shadowBlur = 0;
-            // Piso interno (octágono menor)
             let ic = corte * 0.4;
             let irx = rx + wallInset, iry = ry + wallInset, irw = rw - wallInset*2, irh = rh - wallInset*2;
             ctx.fillStyle = floorColor;
@@ -3437,7 +3479,6 @@ async function abrirMapaVisual() {
             ctx.strokeRect(rx, ry, rw, rh);
         }
 
-        // Marcadores de canto internos para a sala atual (estilo RE3)
         if (ehAtual) {
             let bk = Math.max(4, Math.min(rw, rh) * 0.22);
             ctx.strokeStyle = "#f0a030"; ctx.lineWidth = 1.5;
@@ -3447,7 +3488,6 @@ async function abrirMapaVisual() {
             ctx.beginPath(); ctx.moveTo(rx + rw - wallInset - bk, ry + rh - wallInset); ctx.lineTo(rx + rw - wallInset, ry + rh - wallInset); ctx.lineTo(rx + rw - wallInset, ry + rh - wallInset - bk); ctx.stroke();
         }
 
-        // Label da sala
         ctx.shadowBlur = 0;
         ctx.fillStyle = ehAtual ? "#dfa840" : "#1e4a68";
         ctx.font = `${Math.max(9, Math.floor(11 * escala))}px 'VT323', monospace`;
@@ -3461,7 +3501,6 @@ async function abrirMapaVisual() {
         ctx.fillText(textoId, rx + rw / 2, ry + rh / 2);
     }
 
-    // PASSADA 2: Renderiza Portas — estilo RE3 PS1 (entalhes na parede com soleira âmbar)
     let paresDesenhados = new Set();
     
     for (let idA in window.mapCoords) {
@@ -3483,49 +3522,39 @@ async function abrirMapaVisual() {
             let overlapY1 = Math.max(rA.y, rB.y);
             let overlapY2 = Math.min(rA.y + rA.h, rB.y + rB.h);
 
-            let pW = 12 * Math.min(1, escala); // comprimento da porta
-            let pH = 4 * Math.min(1, escala);  // espessura (largura do vão)
+            let pW = 12 * Math.min(1, escala); 
+            let pH = 4 * Math.min(1, escala);  
             ctx.shadowBlur = 0;
 
-            // Conexão lateral (paredes esquerda/direita adjacentes)
             if (overlapY2 > overlapY1 && (Math.abs((rA.x + rA.w) - rB.x) < 2 || Math.abs(rA.x - (rB.x + rB.w)) < 2)) {
                 let sharedX = (Math.abs((rA.x + rA.w) - rB.x) < 2) ? rA.x + rA.w : rA.x;
                 let midY = (overlapY1 + overlapY2) / 2;
                 ctx.save();
                 ctx.translate(offsetX + sharedX * escala, offsetY + midY * escala);
-                // Corte na parede (apaga o stroke nos dois lados)
                 ctx.fillStyle = "#020c14";
                 ctx.fillRect(-(pH + 2) / 2, -pW / 2, pH + 2, pW);
-                // Corpo da porta (âmbar escuro)
                 ctx.fillStyle = "#6a4a0e";
                 ctx.fillRect(-pH / 2, -pW / 2, pH, pW);
-                // Soleira central (linha mais clara)
                 ctx.fillStyle = "#b89028";
                 ctx.fillRect(-0.75, -pW / 2, 1.5, pW);
                 ctx.restore();
             }
-            // Conexão vertical (paredes superior/inferior adjacentes)
             else if (overlapX2 > overlapX1 && (Math.abs((rA.y + rA.h) - rB.y) < 2 || Math.abs(rA.y - (rB.y + rB.h)) < 2)) {
                 let sharedY = (Math.abs((rA.y + rA.h) - rB.y) < 2) ? rA.y + rA.h : rA.y;
                 let midX = (overlapX1 + overlapX2) / 2;
                 ctx.save();
                 ctx.translate(offsetX + midX * escala, offsetY + sharedY * escala);
-                // Corte na parede
                 ctx.fillStyle = "#020c14";
                 ctx.fillRect(-pW / 2, -(pH + 2) / 2, pW, pH + 2);
-                // Corpo da porta
                 ctx.fillStyle = "#6a4a0e";
                 ctx.fillRect(-pW / 2, -pH / 2, pW, pH);
-                // Soleira central
                 ctx.fillStyle = "#b89028";
                 ctx.fillRect(-pW / 2, -0.75, pW, 1.5);
                 ctx.restore();
             }
-            // Conexões distantes — ignoradas (bloco desativado)
         }
     }
 
-    // Pós-processamento: scanlines CRT
     ctx.save();
     ctx.fillStyle = "rgba(0, 0, 0, 0.07)";
     for (let sy = 0; sy < canvas.height; sy += 3) {
@@ -3533,7 +3562,6 @@ async function abrirMapaVisual() {
     }
     ctx.restore();
 
-    // Vinheta radial de canto (aprofunda as bordas)
     let vignette = ctx.createRadialGradient(
         canvas.width / 2, canvas.height / 2, canvas.height * 0.28,
         canvas.width / 2, canvas.height / 2, canvas.height * 0.85
@@ -3602,7 +3630,6 @@ async function abrirMapaVisual() {
             if (window.selectedItem !== undefined) window.selectedItem = null;
             window.itemPendente = null;
 
-            // Limpa a pré‑visualização
             const previewName = document.getElementById('preview-name');
             const previewDesc = document.getElementById('preview-description');
             const previewImg = document.getElementById('preview-image');
