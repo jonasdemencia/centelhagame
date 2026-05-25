@@ -1029,7 +1029,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
         // RESTANTE DO CÓDIGO DA GROQ, LM STUDIO E LÓGICA DO JOGO (INTACTO)
         // ============================================================
         
-        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_GROQ, tentativas = 3) {
+        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_GROQ, tentativas = 3, maxTokens = 4096) {
     for (let i = 0; i < tentativas; i++) {
         const response = await fetch(WORKER_URL, {
             method: "POST",
@@ -1038,7 +1038,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
     model: modeloPadrao,
     messages: messages,
     temperature: temperatura,
-    max_tokens: 4096,
+    max_tokens: maxTokens,
     ...(formato ? { response_format: formato } : {}),
 }),
         });
@@ -1357,7 +1357,7 @@ CRITÉRIOS:
 Retorne APENAS este JSON:
 {
   "_rascunho_logico": "MECANISMO: [o dispositivo central desta câmara]. FERRAMENTA: [o único objeto manipulável]. MOVIMENTO: [a ação física exata]. SINAIS: [cada objeto manipulável] → [o detalhe passivo e visível que revela o que ele pode fazer].",
-  "cena": "Dois a três parágrafos. Descreve o espaço e os objetos do enigma de forma integrada e puramente visual. ZERO EXPLICAÇÕES DE COMO RESOLVER. Apenas descreva o que os olhos veem de forma passiva.",  
+  "cena": "Um parágrafo denso de 4 a 6 frases. Descreve o espaço e os objetos do enigma de forma integrada e puramente visual. ZERO EXPLICAÇÕES DE COMO RESOLVER. Apenas descreva o que os olhos veem de forma passiva.",  
   "dica": "Uma frase. Aponta para a INSINUAÇÃO — o detalhe físico que, quando percebido, torna o método dedutível. Concreta e sensorial.",
   "solucao": "A ação exata e completa para resolver. Derivável da PISTA BRUTA + INSINUAÇÃO."
 }`;
@@ -1392,8 +1392,8 @@ Se sim, o enigma é inválido — restrinja a regra até restar exatamente uma.
 
 Retorne APENAS este JSON:
 {
-  "_rascunho_logico": "O EIXO INVENTADO: [qual é a regra nova]. A LÓGICA: [como o jogador deduz a resposta com as pistas]. VERIFICAÇÃO: [liste as outras respostas que um jogador poderia tentar e explique por que cada uma falha]. SINAIS: [como a cena esconde isso].",
-  "cena": "A descrição do espaço e dos elementos (dois a três parágrafos). Textual, densa, sem entregar a resposta, mas contendo todas as variáveis necessárias para a dedução da regra que você criou.",
+  "_rascunho_logico": "O EIXO INVENTADO: [qual é a regra nova]. A LÓGICA: [como o jogador deduz a resposta com as pistas]. SINAIS: [como a cena esconde isso].",
+  "cena": "Um parágrafo denso de 4 a 6 frases. Descreve o espaço e os elementos de forma textual e densa, sem entregar a resposta, mas contendo todas as variáveis necessárias para a dedução da regra que você criou.",
   "dica": "Uma frase sutil e sensorial que aponte vagamente para a nova regra que você arquitetou.",
   "solucao": "A ação exata, verbal ou abstrata, que o jogador precisa declarar ao sistema para solucionar."
 }`;
@@ -1410,12 +1410,12 @@ Retorne APENAS este JSON:
         data = await chamarGroq([
             { role: "system", content: systemPrompt },
             { role: "user", content: prompt }
-        ], 0.8, jsonMode, MODELO_PUZZLE, 3);
+        ], 0.8, jsonMode, MODELO_PUZZLE, 3, 8192);
     } else {
         data = await chamarGroq([
             { role: "system", content: systemPrompt },
             { role: "user", content: prompt }
-        ], 0.8, jsonMode, MODELO_PUZZLE, 3);
+        ], 0.8, jsonMode, MODELO_PUZZLE, 3, 8192);
     }
     
     let raw = data.choices[0].message.content;
