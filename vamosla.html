@@ -1166,20 +1166,21 @@ DIRETRIZES ABSOLUTAS DE ESCRITA:
 10. PROIBIDO: clichês de horror genérico ("as sombras sussurraram", "um frio percorreu a espinha"), gore explícito sem contexto mítico, monstrinho sem contexto.
 ═══════════════════════════════════════
 
-Retorne APENAS o texto do fragmento em prosa corrida. Sem JSON, sem títulos, sem marcadores, sem explicações de estrutura.`;
+Retorne APENAS este JSON, sem texto fora dele: {"narrativa": "o texto completo aqui, com frases separadas por espaço, sem quebras de linha literais"}`;
 
     const data = await chamarGroq(
-        [{ role: "user", content: prompt }],
-        0.88,
-        null,               // sem response_format JSON — texto livre
-        "qwen/qwen3-32b",   // modelo especificado pelo usuário
-        2                   // 2 tentativas antes de desistir
-    );
+    [{ role: "user", content: prompt }],
+    0.88,
+    { type: "json_object" },   // ← forçar JSON
+    "qwen/qwen3-32b",
+    2,                         // ← tentativas
+    8192                       // ← maxTokens (evita truncamento)
+);
 
-    const textoGerado = (data.choices[0].message.content || "").trim()
-        // Remove tags <think>...</think> do qwen3 (chain-of-thought)
-        .replace(/<think>[\s\S]*?<\/think>/gi, '')
-        .trim();
+    const _rawIND = (data.choices[0].message.content || "")
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .trim();
+const textoGerado = JSON.parse(_rawIND).narrativa || _rawIND;
 
     // Persiste no histórico
     historicoIND.push({ salaId, texto: textoGerado, fragmento: fragmentoNum, timestamp: Date.now() });
