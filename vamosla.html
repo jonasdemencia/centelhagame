@@ -1065,9 +1065,13 @@ Esta cena DEVE ser um vislumbre perturbador, uma memória ecoando no ambiente, u
 REGRAS ESTRITAS:
 1. Em torno de 10 frases no total. Sem quebras drásticas de parágrafos.
 2. Em Português Brasileiro.
-3. Tom: Poético, sombrio e revelador. Como uma cutscene imersiva de Resident Evil clássico ou Silent Hill.
-4. NÃO DESCREVA O JOGADOR AGINDO. É um evento passivo que ele apenas assiste/escuta/percebe.
-5. Retorne APENAS o texto da narrativa final pronta para o jogador ler. Sem introduções e sem formatação Markdown.`;
+3. Tom: Sombrio e revelador. Como uma cutscene imersiva de Resident Evil clássico ou Silent Hill.
+4. Deve revelar algo NOVO — uma pista concreta, uma lei oculta do mundo, um padrão repetido através do tempo, um nome que nunca deveria ser pronunciado.
+5. Use o CENÁRIO IMEDIATO como âncora — o espaço físico deve ecoar no fragmento de alguma forma (não precisa ser óbvio).
+6. Tom: denso, inevitável, como se este conhecimento fosse proibido e o leitor não devesse tê-lo encontrado.
+7. NÃO resolva o mistério. Aprofunde-o. Torne-o mais vasto e perturbador.
+8. NÃO DESCREVA O JOGADOR AGINDO. É um evento passivo que ele apenas assiste/escuta/percebe.
+9. Retorne APENAS o texto da narrativa final pronta para o jogador ler. Sem introduções e sem formatação Markdown.`;
 
             const data = await chamarGroq([
                 { role: "system", content: "Você é um diretor de cinematics de dark fantasy. Retorne apenas prosa crua." },
